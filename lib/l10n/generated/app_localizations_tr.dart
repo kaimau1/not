@@ -5000,4 +5000,124 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get removeTextPart => 'Metni kaldır';
+
+  @override
+  String get transcriptTitle => 'Transkript';
+
+  @override
+  String get transcriptAction => 'Metne dök';
+
+  @override
+  String get transcriptFileSuffix => 'transkript';
+
+  @override
+  String get transcriptWorkingAudio => 'Ses metne dökülüyor…';
+
+  @override
+  String get transcriptWorkingVideo => 'Video metne dökülüyor…';
+
+  @override
+  String get transcriptWorkingImage => 'Görseldeki yazı okunuyor…';
+
+  @override
+  String get transcriptLongHint =>
+      'Uzun kayıtlarda birkaç dakika sürebilir; bu ekranı açık tut.';
+
+  @override
+  String get transcriptSaved => 'Nota metin eki olarak kaydedildi';
+
+  @override
+  String get transcriptInsertSelection => 'Seçimi nota ekle';
+
+  @override
+  String get transcriptInsertAll => 'Tümünü nota ekle';
+
+  @override
+  String get transcriptInserted => 'Nota eklendi';
+
+  @override
+  String get transcriptNewNote => 'Yeni not';
+
+  @override
+  String get transcriptRetryAi => 'AI ile yeniden dök';
+
+  @override
+  String get transcriptReadWithAi => 'AI ile oku (el yazısı)';
+
+  @override
+  String get transcriptShowTimes => 'Zaman damgaları';
+
+  @override
+  String get transcriptDelete => 'Transkripti sil';
+
+  @override
+  String get transcriptDeleteConfirm =>
+      'Transkript silinsin mi? Kaynak dosya notta kalır.';
+
+  @override
+  String get transcriptEmpty => 'Metin bulunamadı.';
+
+  @override
+  String transcriptTooLarge(int mb) {
+    return 'Kayıt $mb MB; dahili yapay zekâ en çok 15 MB alabiliyor. Ayarlar\'dan kendi Gemini anahtarını girersen büyük kayıtlar da dökülür.';
+  }
+
+  @override
+  String transcriptUnsupported(String format) {
+    return 'Bu kayıt biçimi ($format) metne dökülemiyor.';
+  }
+
+  @override
+  String get transcriptEdit => 'Düzenle';
+
+  @override
+  String get transcriptSave => 'Kaydet';
+
+  @override
+  String transcriptWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sözcük',
+      one: '1 sözcük',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transcriptNoteTitle(String name) {
+    return 'Transkript: $name';
+  }
+
+  @override
+  String get transcriptOnDevice =>
+      'Cihazda okundu · internet ve AI puanı harcanmadı';
+
+  @override
+  String get addAudioFile => 'Ses dosyası ekle';
+
+  @override
+  String get transcribeFile => 'Dosyayı metne dök';
+
+  @override
+  String get transcribeFileSubtitle =>
+      'Ses, video ya da görsel seç; metni nota yazılır';
+
+  @override
+  String cardTranscriptCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transkript',
+      one: 'Transkript',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transcriptPickTitle => 'Metne dökülecek dosya';
+
+  @override
+  String get transcriptUnsupportedFile =>
+      'Bu dosya türü metne dökülemiyor (ses, video ya da görsel seç).';
 }

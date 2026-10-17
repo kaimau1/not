@@ -42,6 +42,7 @@ class CardMediaPlan {
     required this.audioCount,
     required this.bubbleCount,
     required this.documentNote,
+    this.transcriptCount = 0,
   });
 
   /// Kartın tepesinde KENARDAN KENARA duran büyük kapak (görsel/video).
@@ -60,6 +61,9 @@ class CardMediaPlan {
   final List<Attachment> docs;
 
   final int audioCount;
+
+  /// Metin eki (transkript) sayısı — kartta tek satır.
+  final int transcriptCount;
 
   /// Belgedeki balon + vurgu sayısı (balonlu notu ayırt eden bilgi).
   final int bubbleCount;
@@ -95,7 +99,8 @@ class CardMediaPlan {
       heroDocument == null &&
       strip.isEmpty &&
       docs.isEmpty &&
-      audioCount == 0;
+      audioCount == 0 &&
+      transcriptCount == 0;
 
   static bool _visual(Attachment a) =>
       a.kind == AttachmentKind.image || a.kind == AttachmentKind.video;
@@ -155,6 +160,7 @@ class CardMediaPlan {
           if (!identical(d, heroDocument)) d,
       ],
       audioCount: all.where((a) => a.kind == AttachmentKind.audio).length,
+      transcriptCount: all.where((a) => a.kind == AttachmentKind.text).length,
       bubbleCount: bubbles,
       documentNote: documentNote,
     );
@@ -186,6 +192,7 @@ class CardMediaPlan {
     below += math.min(docs.length, maxDocs) * docRowHeight;
     if (docs.length > maxDocs) below += 16;
     if (audioCount > 0) below += docRowHeight;
+    if (transcriptCount > 0) below += docRowHeight;
     return h + below;
   }
 }
@@ -274,7 +281,9 @@ class CardMediaBody extends StatelessWidget {
       );
     }
     final docs = plan.docs.take(CardMediaPlan.maxDocs).toList();
-    if (docs.isNotEmpty || plan.audioCount > 0) gap();
+    if (docs.isNotEmpty || plan.audioCount > 0 || plan.transcriptCount > 0) {
+      gap();
+    }
     for (final d in docs) {
       children.add(
         _FileRow(
@@ -304,6 +313,16 @@ class CardMediaBody extends StatelessWidget {
           icon: Icons.graphic_eq,
           color: scheme.primary,
           label: l10n.cardAudioCount(plan.audioCount),
+          style: labelStyle,
+        ),
+      );
+    }
+    if (plan.transcriptCount > 0) {
+      children.add(
+        _FileRow(
+          icon: Icons.subject,
+          color: const Color(0xFF6D4C41),
+          label: l10n.cardTranscriptCount(plan.transcriptCount),
           style: labelStyle,
         ),
       );

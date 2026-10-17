@@ -983,6 +983,7 @@ class _ImageTools extends StatelessWidget {
     this.onSelectMany,
     this.onDetach,
     this.onVideoToNote,
+    this.onTranscribe,
     this.viewSwitch,
     this.copyIsLink = false,
     this.onOpenExternal,
@@ -1011,6 +1012,9 @@ class _ImageTools extends StatelessWidget {
 
   /// Videodan (görüntü + ses) AI ile not çıkarır — yalnız video ekinde dolu.
   final VoidCallback? onVideoToNote;
+
+  /// Görselin/videonun TRANSKRİPTİ (metne dök / kayıtlıysa aç).
+  final VoidCallback? onTranscribe;
 
   /// [onCopy] BAĞLANTI kopyalar (YouTube eki — dosyası yok, kopyalanacak şey
   /// adresi). Menüde "Bağlantıyı kopyala" olarak ÜSTTE görünür.
@@ -1056,6 +1060,7 @@ class _ImageTools extends StatelessWidget {
             onSelectMany != null ||
             onDetach != null ||
             onVideoToNote != null ||
+            onTranscribe != null ||
             onOpenExternal != null)
           PopupMenuButton<String>(
             tooltip: l10n.more,
@@ -1072,6 +1077,8 @@ class _ImageTools extends StatelessWidget {
                   onDetach?.call();
                 case 'videoToNote':
                   onVideoToNote?.call();
+                case 'transcribe':
+                  onTranscribe?.call();
                 case 'openExternal':
                   onOpenExternal?.call();
               }
@@ -1105,6 +1112,16 @@ class _ImageTools extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.auto_awesome_outlined),
                     title: Text(l10n.videoToNote),
+                  ),
+                ),
+              if (onTranscribe != null)
+                PopupMenuItem(
+                  value: 'transcribe',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.subtitles_outlined),
+                    title: Text(l10n.transcriptAction),
                   ),
                 ),
               if (onExtractText != null)
@@ -1296,6 +1313,7 @@ class NotePageCanvas extends StatefulWidget {
     this.onChangedMany,
     this.onDetach,
     this.onVideoToNote,
+    this.onTranscribe,
     this.onPinTop,
     this.onPinHover,
     this.onViewChange,
@@ -1381,6 +1399,9 @@ class NotePageCanvas extends StatefulWidget {
 
   /// Videodan AI ile not çıkarır; yalnız video ekinin menüsünde görünür.
   final ValueChanged<Attachment>? onVideoToNote;
+
+  /// Görselin/videonun transkripti (bkz. `TranscriptScreen`); PDF'te yok.
+  final ValueChanged<Attachment>? onTranscribe;
 
   /// **ÜSTE SABİTLE** (kullanıcı isteği 2026-10-11: "üstte video/resim, altta
   /// not — görseli sürükleyerek"): basılı tutup sürüklenen görsel ekranın
@@ -2818,6 +2839,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             widget.onVideoToNote == null || !isVideo || img.isWebVideo
             ? null
             : () => widget.onVideoToNote!(img),
+        onTranscribe: widget.onTranscribe == null || isPdf
+            ? null
+            : () => widget.onTranscribe!(img),
         // GÖRÜNÜM ANAHTARI panelin üst satırında: Sabit / Yüzen / Balonlu
         // (eskiden menüde "Üste sabitle", PDF'te "Balonlu görünüm").
         viewSwitch: widget.onViewChange == null

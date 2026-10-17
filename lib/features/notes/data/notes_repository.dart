@@ -92,7 +92,8 @@ int cloudAttachmentBytes(List<Note> notes) {
     // Yalnız bu cihazdaki notun ekleri bulutta yer tutmaz.
     if (note.localOnly) continue;
     for (final attachment in note.attachments) {
-      if (attachment.kind == AttachmentKind.video) continue;
+      // Metin eki de: içeriği not belgesinde, Storage'da değil.
+      if (attachment.skipsUpload) continue;
       total += attachment.sizeBytes;
     }
   }

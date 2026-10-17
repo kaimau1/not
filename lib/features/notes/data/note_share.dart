@@ -114,6 +114,8 @@ class NoteShare {
     final files = <String, Uint8List>{};
     if (attachments != null) {
       for (final attachment in note.attachments) {
+        // Metin eki içeriğini kaydında taşır; ayrı dosya gereksiz.
+        if (attachment.kind == AttachmentKind.text) continue;
         try {
           final bytes = await attachments.readBytes(attachment);
           if (bytes != null) files[attachment.id] = bytes;
@@ -143,8 +145,8 @@ class NoteShare {
     final stored = <Attachment>[];
     if (attachments != null) {
       for (final meta in source.attachments) {
-        // YouTube eki dosyasızdır: bağlantı olduğu gibi taşınır.
-        if (meta.isWebVideo) {
+        // YouTube eki ve metin eki dosyasızdır: kayıt olduğu gibi taşınır.
+        if (meta.isWebVideo || meta.kind == AttachmentKind.text) {
           stored.add(meta);
           continue;
         }

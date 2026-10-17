@@ -5029,4 +5029,128 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get removeTextPart => 'Usuń tekst';
+
+  @override
+  String get transcriptTitle => 'Transkrypcja';
+
+  @override
+  String get transcriptAction => 'Transkrybuj';
+
+  @override
+  String get transcriptFileSuffix => 'transkrypcja';
+
+  @override
+  String get transcriptWorkingAudio => 'Transkrypcja nagrania…';
+
+  @override
+  String get transcriptWorkingVideo => 'Transkrypcja wideo…';
+
+  @override
+  String get transcriptWorkingImage => 'Odczytywanie tekstu z obrazu…';
+
+  @override
+  String get transcriptLongHint =>
+      'Długie nagrania mogą zająć kilka minut; nie zamykaj tego ekranu.';
+
+  @override
+  String get transcriptSaved => 'Zapisano w notatce jako załącznik tekstowy';
+
+  @override
+  String get transcriptInsertSelection => 'Dodaj zaznaczenie do notatki';
+
+  @override
+  String get transcriptInsertAll => 'Dodaj wszystko do notatki';
+
+  @override
+  String get transcriptInserted => 'Dodano do notatki';
+
+  @override
+  String get transcriptNewNote => 'Nowa notatka';
+
+  @override
+  String get transcriptRetryAi => 'Transkrybuj ponownie z AI';
+
+  @override
+  String get transcriptReadWithAi => 'Odczytaj z AI (pismo odręczne)';
+
+  @override
+  String get transcriptShowTimes => 'Znaczniki czasu';
+
+  @override
+  String get transcriptDelete => 'Usuń transkrypcję';
+
+  @override
+  String get transcriptDeleteConfirm =>
+      'Usunąć transkrypcję? Plik źródłowy zostaje w notatce.';
+
+  @override
+  String get transcriptEmpty => 'Nie znaleziono tekstu.';
+
+  @override
+  String transcriptTooLarge(int mb) {
+    return 'Nagranie ma $mb MB; wbudowana AI przyjmuje do 15 MB. Z własnym kluczem Gemini (Ustawienia) można transkrybować także duże nagrania.';
+  }
+
+  @override
+  String transcriptUnsupported(String format) {
+    return 'Tego formatu nagrania ($format) nie można transkrybować.';
+  }
+
+  @override
+  String get transcriptEdit => 'Edytuj';
+
+  @override
+  String get transcriptSave => 'Zapisz';
+
+  @override
+  String transcriptWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count słowa',
+      many: '$count słów',
+      few: '$count słowa',
+      one: '1 słowo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transcriptNoteTitle(String name) {
+    return 'Transkrypcja: $name';
+  }
+
+  @override
+  String get transcriptOnDevice =>
+      'Odczytano na urządzeniu · bez internetu i punktów AI';
+
+  @override
+  String get addAudioFile => 'Dodaj plik audio';
+
+  @override
+  String get transcribeFile => 'Transkrybuj plik';
+
+  @override
+  String get transcribeFileSubtitle =>
+      'Wybierz audio, wideo lub obraz; tekst trafi do notatki';
+
+  @override
+  String cardTranscriptCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transkrypcji',
+      many: '$count transkrypcji',
+      few: '$count transkrypcje',
+      one: 'Transkrypcja',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transcriptPickTitle => 'Plik do transkrypcji';
+
+  @override
+  String get transcriptUnsupportedFile =>
+      'Tego typu pliku nie można transkrybować (wybierz audio, wideo lub obraz).';
 }

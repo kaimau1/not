@@ -5001,4 +5001,124 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get removeTextPart => 'टेक्स्ट हटाएँ';
+
+  @override
+  String get transcriptTitle => 'ट्रांसक्रिप्ट';
+
+  @override
+  String get transcriptAction => 'लिखित में बदलें';
+
+  @override
+  String get transcriptFileSuffix => 'ट्रांसक्रिप्ट';
+
+  @override
+  String get transcriptWorkingAudio => 'ऑडियो लिखित में बदला जा रहा है…';
+
+  @override
+  String get transcriptWorkingVideo => 'वीडियो लिखित में बदला जा रहा है…';
+
+  @override
+  String get transcriptWorkingImage => 'छवि का टेक्स्ट पढ़ा जा रहा है…';
+
+  @override
+  String get transcriptLongHint =>
+      'लंबी रिकॉर्डिंग में कुछ मिनट लग सकते हैं; यह स्क्रीन खुली रखें।';
+
+  @override
+  String get transcriptSaved => 'नोट में टेक्स्ट अटैचमेंट के रूप में सहेजा गया';
+
+  @override
+  String get transcriptInsertSelection => 'चयन नोट में जोड़ें';
+
+  @override
+  String get transcriptInsertAll => 'सब नोट में जोड़ें';
+
+  @override
+  String get transcriptInserted => 'नोट में जोड़ा गया';
+
+  @override
+  String get transcriptNewNote => 'नया नोट';
+
+  @override
+  String get transcriptRetryAi => 'AI से फिर से बदलें';
+
+  @override
+  String get transcriptReadWithAi => 'AI से पढ़ें (हस्तलेख)';
+
+  @override
+  String get transcriptShowTimes => 'टाइमस्टैम्प';
+
+  @override
+  String get transcriptDelete => 'ट्रांसक्रिप्ट हटाएँ';
+
+  @override
+  String get transcriptDeleteConfirm =>
+      'ट्रांसक्रिप्ट हटाएँ? मूल फ़ाइल नोट में रहेगी।';
+
+  @override
+  String get transcriptEmpty => 'कोई टेक्स्ट नहीं मिला।';
+
+  @override
+  String transcriptTooLarge(int mb) {
+    return 'रिकॉर्डिंग $mb MB की है; अंतर्निहित AI अधिकतम 15 MB लेता है। सेटिंग्स में अपनी Gemini कुंजी डालें तो बड़ी रिकॉर्डिंग भी बदली जा सकती है।';
+  }
+
+  @override
+  String transcriptUnsupported(String format) {
+    return 'यह रिकॉर्डिंग प्रारूप ($format) लिखित में नहीं बदला जा सकता।';
+  }
+
+  @override
+  String get transcriptEdit => 'संपादित करें';
+
+  @override
+  String get transcriptSave => 'सहेजें';
+
+  @override
+  String transcriptWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count शब्द',
+      one: '1 शब्द',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transcriptNoteTitle(String name) {
+    return 'ट्रांसक्रिप्ट: $name';
+  }
+
+  @override
+  String get transcriptOnDevice =>
+      'डिवाइस पर पढ़ा गया · इंटरनेट या AI अंक खर्च नहीं हुए';
+
+  @override
+  String get addAudioFile => 'ऑडियो फ़ाइल जोड़ें';
+
+  @override
+  String get transcribeFile => 'फ़ाइल को लिखित में बदलें';
+
+  @override
+  String get transcribeFileSubtitle =>
+      'ऑडियो, वीडियो या छवि चुनें; उसका टेक्स्ट नोट में जाएगा';
+
+  @override
+  String cardTranscriptCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ट्रांसक्रिप्ट',
+      one: 'ट्रांसक्रिप्ट',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transcriptPickTitle => 'लिखित में बदलने के लिए फ़ाइल';
+
+  @override
+  String get transcriptUnsupportedFile =>
+      'यह फ़ाइल प्रकार लिखित में नहीं बदला जा सकता (ऑडियो, वीडियो या छवि चुनें)।';
 }

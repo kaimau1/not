@@ -5021,4 +5021,122 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get removeTextPart => 'Hapus teks';
+
+  @override
+  String get transcriptTitle => 'Transkrip';
+
+  @override
+  String get transcriptAction => 'Transkripsikan';
+
+  @override
+  String get transcriptFileSuffix => 'transkrip';
+
+  @override
+  String get transcriptWorkingAudio => 'Mentranskripsikan audio…';
+
+  @override
+  String get transcriptWorkingVideo => 'Mentranskripsikan video…';
+
+  @override
+  String get transcriptWorkingImage => 'Membaca teks di gambar…';
+
+  @override
+  String get transcriptLongHint =>
+      'Rekaman panjang bisa memakan beberapa menit; biarkan layar ini terbuka.';
+
+  @override
+  String get transcriptSaved => 'Disimpan di catatan sebagai lampiran teks';
+
+  @override
+  String get transcriptInsertSelection => 'Tambahkan pilihan ke catatan';
+
+  @override
+  String get transcriptInsertAll => 'Tambahkan semua ke catatan';
+
+  @override
+  String get transcriptInserted => 'Ditambahkan ke catatan';
+
+  @override
+  String get transcriptNewNote => 'Catatan baru';
+
+  @override
+  String get transcriptRetryAi => 'Transkripsikan ulang dengan AI';
+
+  @override
+  String get transcriptReadWithAi => 'Baca dengan AI (tulisan tangan)';
+
+  @override
+  String get transcriptShowTimes => 'Stempel waktu';
+
+  @override
+  String get transcriptDelete => 'Hapus transkrip';
+
+  @override
+  String get transcriptDeleteConfirm =>
+      'Hapus transkrip? File sumber tetap ada di catatan.';
+
+  @override
+  String get transcriptEmpty => 'Teks tidak ditemukan.';
+
+  @override
+  String transcriptTooLarge(int mb) {
+    return 'Rekaman berukuran $mb MB; AI bawaan menerima maksimal 15 MB. Masukkan kunci Gemini milikmu di Pengaturan agar rekaman besar juga bisa ditranskripsikan.';
+  }
+
+  @override
+  String transcriptUnsupported(String format) {
+    return 'Format rekaman ini ($format) tidak bisa ditranskripsikan.';
+  }
+
+  @override
+  String get transcriptEdit => 'Edit';
+
+  @override
+  String get transcriptSave => 'Simpan';
+
+  @override
+  String transcriptWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count kata',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transcriptNoteTitle(String name) {
+    return 'Transkrip: $name';
+  }
+
+  @override
+  String get transcriptOnDevice =>
+      'Dibaca di perangkat · tanpa internet atau poin AI';
+
+  @override
+  String get addAudioFile => 'Tambah file audio';
+
+  @override
+  String get transcribeFile => 'Transkripsikan file';
+
+  @override
+  String get transcribeFileSubtitle =>
+      'Pilih audio, video, atau gambar; teksnya masuk ke catatan';
+
+  @override
+  String cardTranscriptCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transkrip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transcriptPickTitle => 'File untuk ditranskripsikan';
+
+  @override
+  String get transcriptUnsupportedFile =>
+      'Jenis file ini tidak bisa ditranskripsikan (pilih audio, video, atau gambar).';
 }

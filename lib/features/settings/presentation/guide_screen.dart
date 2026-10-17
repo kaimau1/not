@@ -148,6 +148,7 @@ List<TextSpan> guideInlineSpans(String text, TextStyle? bold) {
   'documents' => (icon: Icons.picture_as_pdf_outlined, route: null),
   'scan' => (icon: Icons.document_scanner_outlined, route: null),
   'voice' => (icon: Icons.mic_none, route: null),
+  'transcript' => (icon: Icons.subtitles_outlined, route: null),
   'ai' => (icon: Icons.auto_awesome_outlined, route: '/ai'),
   'organize' => (icon: Icons.folder_outlined, route: '/folders'),
   'reminders' => (icon: Icons.alarm_outlined, route: '/reminders'),

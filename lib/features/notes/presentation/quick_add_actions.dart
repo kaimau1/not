@@ -397,6 +397,12 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   Future<void> createYouTubeNote() =>
       _openBlankNote(NoteType.text, query: '?youtube=1');
 
+  /// "Dosyayı metne dök": ses kaydı, video ya da görsel seçilir; nota ek
+  /// olarak girer ve transkripti notun gövdesine yazılır (bkz. editördeki
+  /// `startTranscribe`). Seçim iptal edilirse boş not kendiliğinden silinir.
+  Future<void> createTranscribeNote() =>
+      _openBlankNote(NoteType.text, query: '?transcribe=1');
+
   /// İçerikten not alan seçeneklerin ortak ilk adımı: **balonlu mu klasik mi**
   /// (önizlemeli levha — bkz. `capture_mode_sheet.dart`).
   Future<CaptureChoice?> _askCaptureMode(String title, String kind) =>

@@ -121,6 +121,16 @@ Bir kelimeye ya da cümleye **PDF, görsel, video, YouTube** ya da nottaki herha
 - **Sesli yazdır** (sade mikrofon): konuştukça yazı imlecin olduğu yere düşer — kota harcamaz.
 - **Sesli not asistanı** (parıltılı mikrofon, ana ekranda da var): "yarın 9'da diş randevusu" de; not, liste ve hatırlatıcıyı kendisi oluşturur.
 - **Ses kaydı:** + Ekle → Ses kaydı; kayıt ek şeridinde oynatılır, yapay zekâ ile yazıya dökülür.
+- **Ses dosyası ekle:** + Ekle → Ses dosyası ekle; telefondaki MP3/M4A/WAV kaydı nota girer.
+
+## Transkript (metne dök) {#transcript}
+- Ses kaydı, video (YouTube dahil) ya da görselin ek döşemesindeki **altyazı simgesine** (ya da sayfadaki görselin/videonun ⋮ → **Metne dök**) dokun. Konuşma zaman damgalarıyla yazıya dökülür; görseldeki yazı cihazda (internetsiz) okunur.
+- Döküm nota **metin eki (.txt)** olarak kaydedilir: şeritte kâğıt rengi "TXT" döşemesi olarak durur, dokununca okunur. Bir daha AI puanı harcanmaz; simge dolu görünür.
+- Okurken metni parmakla seç → **Seçimi nota ekle** ya da **Yeni not**. Seçim yoksa alttaki düğme **Tümünü nota ekle** olur; zaman damgaları nota "1:23" olarak girer ve videoyu oraya sarar.
+- ⋮ menüsü: **Düzenle** (yanlış duyulan sözcüğü düzelt), **AI ile yeniden dök** / görselde **AI ile oku (el yazısı)**, zaman damgalarını gizle, transkripti sil. Üstteki düğmelerle kopyala ya da **.txt dosyası olarak paylaş**.
+- **Dosyayı metne dök** (+ menüsü ya da + Ekle): ses, video veya görsel seç; dosya nota girer ve yazısı doğrudan notun gövdesine yazılır.
+- Büyük kayıtlar: dahili yapay zekâ en çok 15 MB alır; Ayarlar'dan kendi Gemini anahtarını girersen uzun kayıtlar da dökülür. Android'de videonun yalnız SES izi gönderilir (çok daha küçük).
+- Transkriptler aramaya girer: kayıtta geçen bir söz, kaydın olduğu notu bulur.
 - **Sesli oku:** not menüsünden notu (ya da bir PDF/Word belgesini) sesli dinle; hız ve ses Ayarlar → Sesli okuma'dan.
 
 ## Yapay zekâ {#ai}

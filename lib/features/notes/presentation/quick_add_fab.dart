@@ -55,9 +55,13 @@ class QuickAddFab extends StatefulWidget {
     required this.onQrNote,
     this.onGalleryVideo,
     this.onYouTube,
+    this.onTranscribe,
     this.onTemplate,
     this.onShopping,
   });
+
+  /// "Dosyayı metne dök": ses/video/görsel seçilir, transkripti nota yazılır.
+  final VoidCallback? onTranscribe;
 
   /// Galerideki bir videodan not (kamera değil — var olan video).
   final VoidCallback? onGalleryVideo;
@@ -201,6 +205,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
       'slides': widget.onSlidesNote,
       'gvideo': widget.onGalleryVideo,
       'youtube': widget.onYouTube,
+      'transcribe': widget.onTranscribe,
       'shopping': widget.onShopping,
       'template': widget.onTemplate,
       'archive': () => widget.onCreate(NoteType.archive),
@@ -437,6 +442,13 @@ List<QuickAddMeta> quickAddCatalog(AppLocalizations l10n) => [
     group: QuickAddGroup.files,
     icon: Icons.smart_display_outlined,
     label: l10n.quickAddYouTube,
+  ),
+  // Ses/video/görselden metin notu (kullanıcı isteği 2026-10-17).
+  (
+    key: 'transcribe',
+    group: QuickAddGroup.files,
+    icon: Icons.subtitles_outlined,
+    label: l10n.transcribeFile,
   ),
   // DİĞER YAZ — şablonlar ve defter.
   (

@@ -46,6 +46,7 @@ IconData embedKindIcon(Attachment a) => a.isWebVideo
         AttachmentKind.video => Icons.videocam_outlined,
         AttachmentKind.audio => Icons.audiotrack_outlined,
         AttachmentKind.image => Icons.image_outlined,
+        AttachmentKind.text => Icons.subject,
       };
 
 /// Ekin türünün rengi — editördeki çip, seçici ve önizleme kartı aynı rengi
@@ -58,6 +59,7 @@ Color embedKindColor(Attachment a) => a.isWebVideo
         AttachmentKind.video => _videoColor,
         AttachmentKind.audio => _audioColor,
         AttachmentKind.image => _imageColor,
+        AttachmentKind.text => _textColor,
       };
 
 const _pdfColor = Color(0xFFD32F2F);
@@ -66,6 +68,7 @@ const _videoColor = Color(0xFF7B1FA2);
 const _webVideoColor = Color(0xFFAD1457);
 const _slideColor = Color(0xFFEF6C00);
 const _audioColor = Color(0xFF1565C0);
+const _textColor = Color(0xFF6D4C41);
 
 /// Notun bütün etiket adlarının (bağ etiketleri + dosya adları) görünümü.
 /// Çözüm kuralı editördeki `_attachmentForTag` ile aynı: aynı ad hem bağ

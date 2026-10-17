@@ -122,6 +122,8 @@ import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
 import '../viewers/video_viewer.dart';
 import '../viewers/text_recognize_screen.dart';
+import '../viewers/transcript_screen.dart';
+import '../../domain/transcript.dart';
 import 'tag_chips.dart';
 import 'tag_tap.dart';
 import 'text_wrap.dart';
@@ -344,6 +346,7 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     this.startSlides = false,
     this.startGalleryVideo = false,
     this.startYouTube = false,
+    this.startTranscribe = false,
   });
 
   final String noteId;
@@ -413,6 +416,10 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   /// (+) menüsündeki "YouTube videosu": açılışta bağlantı sorulur, video
   /// notun ÜSTÜNE sabitlenir ve izlerken altına not yazılır.
   final bool startYouTube;
+
+  /// (+) menüsündeki "Dosyayı metne dök": açılışta ses/video/görsel seçilir,
+  /// nota eklenir ve metne dökülür; metin notun gövdesine yazılır.
+  final bool startTranscribe;
 
   @override
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
@@ -553,6 +560,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _pendingSlides = false;
   bool _pendingGalleryVideo = false;
   bool _pendingYouTube = false;
+  bool _pendingTranscribe = false;
 
   void _runPendingIntents() {
     if (!mounted || _note == null) return;
@@ -607,6 +615,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         final added = await _addYouTube();
         if (added != null && mounted) _pinMediaTop(added);
       }());
+    }
+    if (_pendingTranscribe) {
+      _pendingTranscribe = false;
+      unawaited(_transcribeFile());
     }
   }
 
@@ -1022,6 +1034,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _pendingSlides = widget.startSlides;
     _pendingGalleryVideo = widget.startGalleryVideo;
     _pendingYouTube = widget.startYouTube;
+    _pendingTranscribe = widget.startTranscribe;
     WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
     final owner = widget.ownerId;
     _sub = ref.listenManual(owner == null
@@ -1914,6 +1927,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// düzenleme geri çağrılarıyla açılır. Kullanıcının istediği ayrım tam
   /// olarak bu — "tıklayınca önizlemesi açılır, bir butonla da düzenleme".
   void _openAttachmentTag(Attachment attachment, {required bool editing}) {
+    // Metin eki (transkript) dosyasız: okuma ekranında açılır.
+    if (attachment.kind == AttachmentKind.text) {
+      unawaited(_openTranscript(attachment));
+      return;
+    }
     // Drive'daki ek bu cihaza henüz inmediyse ŞİMDİ indirilir, sonra açılır
     // (bkz. drive_ui.dart — arka plan kuyruğunu beklemesin).
     if (!localFileExists(attachment.localPath) &&
@@ -1959,7 +1977,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           ),
           AttachmentKind.video => VideoViewerScreen(attachment: attachment),
           // Ses ekinin görüntüleyicisi yok; şeritteki oynatıcıdan çalınır.
-          AttachmentKind.audio => ImageViewerScreen(attachment: attachment),
+          // Metin eki yukarıda kendi ekranına gider; dal yalnız bütünlük için.
+          AttachmentKind.audio ||
+          AttachmentKind.text => ImageViewerScreen(attachment: attachment),
           AttachmentKind.image => ImageViewerScreen(attachment: attachment),
         },
       ),
@@ -3170,6 +3190,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onCopyMany: _copyAttachments,
       onDetach: (a) => _setImageAsFile(a, true),
       onVideoToNote: _videoToNote,
+      onTranscribe: _openTranscript,
       onPinTop: _pinMediaTop,
       onPinHover: _setPinHover,
       onViewChange: widget.readOnly
@@ -3285,6 +3306,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         await _addDrawing();
       case 'audio':
         await _recordAudio();
+      case 'audio-file':
+        await _pickAudioFile();
+      case 'transcribe':
+        await _transcribeFile();
       case 'video':
         await _addVideo();
       case 'video-gallery':
@@ -5156,6 +5181,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         ),
                       );
                   },
+            // PDF'in seçilebilir metni var; transkript ses/video/görselde.
+            onTranscribe: Transcripts.canTranscribe(pinned)
+                ? () => unawaited(_openTranscript(pinned))
+                : null,
             onDetach: widget.readOnly || pinned.isWebVideo
                 ? null
                 : () {
@@ -5229,6 +5258,212 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ),
       ],
     );
+  }
+
+  /// **TRANSKRİPT** — ekin metne dökümünü açar (kullanıcı isteği
+  /// 2026-10-17). [target] bir metin ekiyse doğrudan okunur; ses/video/
+  /// görselse kayıtlı transkripti açılır, yoksa döküm başlar ve bitince nota
+  /// METİN EKİ olarak kaydedilir. Ekrandan seçilen parça nota eklenir.
+  Future<void> _openTranscript(
+    Attachment target, {
+    bool autoInsert = false,
+  }) async {
+    final note = _note;
+    if (note == null) return;
+    _dismissKeyboard();
+    final Attachment? source;
+    final Attachment? existing;
+    if (target.kind == AttachmentKind.text) {
+      existing = target;
+      source = note.attachments
+          .where((a) => a.id == target.transcriptOf)
+          .firstOrNull;
+    } else {
+      source = target;
+      existing = Transcripts.of(note.attachments, target);
+    }
+    final suffix = context.l10n.transcriptFileSuffix;
+    final readOnly = widget.readOnly;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => TranscriptScreen(
+          source: source,
+          transcript: existing,
+          autoInsert: autoInsert,
+          onSave: readOnly
+              ? null
+              : (text, saved) {
+                  if (!mounted) return null;
+                  // Ekran açıkken başka cihaz/geri al eki değiştirmiş olabilir:
+                  // nottaki GÜNCEL kayıt esas alınır.
+                  final current = saved == null
+                      ? null
+                      : _note?.attachments
+                            .where((a) => a.id == saved.id)
+                            .firstOrNull;
+                  if (current != null) {
+                    final updated = Transcripts.withText(current, text);
+                    _updateAttachment(updated);
+                    return updated;
+                  }
+                  if (source == null) return null;
+                  final created = Transcripts.create(
+                    source,
+                    text,
+                    fileSuffix: suffix,
+                  );
+                  _mutate(
+                    (n) =>
+                        n.copyWith(attachments: [...n.attachments, created]),
+                    immediate: true,
+                  );
+                  return created;
+                },
+          onInsert: readOnly
+              ? null
+              : (text) {
+                  if (mounted) _appendText(text);
+                },
+          onCreateNote: (text) =>
+              _createNoteFromTranscript(text, source ?? target),
+          onDelete: readOnly
+              ? null
+              : (a) {
+                  if (mounted) _removeAttachment(a);
+                },
+        ),
+      ),
+    );
+  }
+
+  /// Transkriptten YENİ metin notu: başlık kaynağın adı, gövde seçilen metin,
+  /// klasör bu notunki.
+  Future<void> _createNoteFromTranscript(String text, Attachment media) async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null || text.trim().isEmpty) return;
+    final name = media.isWebVideo
+        ? media.fileName
+        : media.fileName.replaceAll(RegExp(r'\.[A-Za-z0-9]{1,5}$'), '');
+    final title = context.l10n.transcriptNoteTitle(name);
+    final id = await repo.createNote(
+      NoteType.text,
+      title: title,
+      body: text.trim(),
+      folderId: _note?.folderId,
+    );
+    if (mounted) context.pushNote(noteRoutePath(id));
+  }
+
+  /// **SES DOSYASI EKLE** — cihazdaki MP3/M4A/WAV... nota ses eki olur
+  /// (kayıt yolundan ayrı: adı korunur, türü dosyadan okunur).
+  Future<Attachment?> _pickAudioFile() async {
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) return null;
+    final l10n = context.l10n;
+    final picked = await DocPicker.pickOne(
+      const XTypeGroup(
+        label: 'audio',
+        mimeTypes: ['audio/*'],
+        extensions: [
+          'mp3', 'm4a', 'aac', 'wav', 'ogg', 'opus', 'flac', 'amr', 'webm',
+        ],
+      ),
+      chooserTitle: l10n.addAudioFile,
+    );
+    if (picked == null || !mounted) return null;
+    try {
+      final attachment = await repo.prepareAudioFile(
+        noteId: widget.noteId,
+        sourcePath: picked.path,
+        fileName: picked.name,
+      );
+      if (!mounted) return null;
+      _mutate(
+        (n) => n.copyWith(attachments: [...n.attachments, attachment]),
+        immediate: true,
+      );
+      return attachment;
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
+    } catch (e) {
+      if (mounted) _showSnack(l10n.attachmentFailed('$e'));
+    }
+    return null;
+  }
+
+  /// **DOSYAYI METNE DÖK** — ses, video ya da görsel seçilir, nota ek olarak
+  /// girer ve transkript ekranı açılır; metin bitince nota da yazılır
+  /// ("onları nota dönüştürme"). Görsel sayfaya değil şeride konur: gövdeye
+  /// gelen metin görselin etrafından akmasın.
+  Future<void> _transcribeFile() async {
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) return;
+    final l10n = context.l10n;
+    final picked = await DocPicker.pickOne(
+      const XTypeGroup(
+        label: 'media',
+        mimeTypes: ['audio/*', 'video/*', 'image/*'],
+        extensions: [
+          'mp3', 'm4a', 'aac', 'wav', 'ogg', 'opus', 'flac', 'amr', 'webm',
+          'mp4', 'mov', 'mkv', '3gp', 'jpg', 'jpeg', 'png', 'webp', 'heic',
+        ],
+      ),
+      chooserTitle: l10n.transcriptPickTitle,
+    );
+    if (picked == null || !mounted) return;
+    final kind = _mediaKindOf(picked.name.isEmpty ? picked.path : picked.name);
+    if (kind == null) {
+      _showSnack(l10n.transcriptUnsupportedFile);
+      return;
+    }
+    try {
+      final Attachment attachment;
+      switch (kind) {
+        case AttachmentKind.audio:
+          attachment = await repo.prepareAudioFile(
+            noteId: widget.noteId,
+            sourcePath: picked.path,
+            fileName: picked.name,
+          );
+        case AttachmentKind.video:
+          attachment = (await repo.prepareVideo(
+            noteId: widget.noteId,
+            sourcePath: picked.path,
+            duration: await VideoFrame.duration(picked.path),
+          )).copyWith(asFile: true);
+        default:
+          attachment = (await repo.prepareImage(
+            noteId: widget.noteId,
+            bytes: await picked.readAsBytes(),
+            fileName: picked.name.isEmpty ? 'gorsel.jpg' : picked.name,
+          )).copyWith(asFile: true);
+      }
+      if (!mounted) return;
+      _mutate(
+        (n) => n.copyWith(attachments: [...n.attachments, attachment]),
+        immediate: true,
+      );
+      await _openTranscript(attachment, autoInsert: true);
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
+    } catch (e) {
+      if (mounted) _showSnack(l10n.attachmentFailed('$e'));
+    }
+  }
+
+  /// Seçilen dosyanın ek türü (uzantıdan); metne dökülemiyorsa null.
+  static AttachmentKind? _mediaKindOf(String name) {
+    final dot = name.lastIndexOf('.');
+    final ext = dot < 0 ? '' : name.substring(dot + 1).toLowerCase();
+    const audio = {
+      'mp3', 'm4a', 'aac', 'wav', 'ogg', 'oga', 'opus', 'flac', 'amr',
+    };
+    const video = {'mp4', 'mov', 'mkv', '3gp', 'webm', 'm4v'};
+    const image = {'jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'bmp'};
+    if (audio.contains(ext)) return AttachmentKind.audio;
+    if (video.contains(ext)) return AttachmentKind.video;
+    if (image.contains(ext)) return AttachmentKind.image;
+    return null;
   }
 
   /// Videodan (görüntü + ses) detaylı not çıkarır ve gövdeye ekler.
@@ -7625,6 +7860,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       ? null
                       : (a) => _setImageAsFile(a, false),
                   onVideoToNote: _videoToNote,
+                  onTranscribe: _openTranscript,
                   expanded: ref.watch(attachmentsExpandedProvider),
                   onToggle: () => ref
                       .read(attachmentsExpandedProvider.notifier)
@@ -7969,6 +8205,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                         onAppendText: _appendText,
                                         onReplaceText: _replaceText,
                                         onCreateNote: _createNoteFromText,
+                                        onTranscribe: _openTranscript,
                                       ),
                                     ),
                                   ),

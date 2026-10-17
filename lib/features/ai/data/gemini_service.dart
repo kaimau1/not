@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 
 import '../../../core/constants.dart';
 import '../../../core/utils/markdown.dart';
@@ -65,6 +68,18 @@ class GeminiException implements Exception {
 
   @override
   String toString() => message;
+}
+
+/// Kayıt satır içi gönderilemeyecek kadar büyük ve onu Dosya API'sine
+/// yükleyecek anahtar yok (bkz. [GeminiService.transcribeMedia]). Arayüz
+/// boyutu söyleyip ne yapılacağını anlatır.
+class MediaTooLargeException implements Exception {
+  const MediaTooLargeException(this.sizeBytes);
+
+  final int sizeBytes;
+
+  @override
+  String toString() => 'MediaTooLargeException($sizeBytes)';
 }
 
 class ChatTurn {
@@ -325,6 +340,7 @@ class GeminiService {
     List<Map<String, dynamic>> contents, {
     bool jsonOutput = false,
     String? preferModel,
+    Duration? timeout,
   }) async {
     // Anahtar yoksa dahili yol: istek Firebase AI Logic üzerinden gider.
     final stored = await _keyStore.read(_provider);
@@ -337,6 +353,7 @@ class GeminiService {
         contents,
         jsonOutput: jsonOutput,
         preferModel: preferModel ?? _taskModel(AiTask.general),
+        timeout: timeout,
       );
     }
     final key = stored;
@@ -348,7 +365,10 @@ class GeminiService {
         key,
         (model) => _dio.post<Map<String, dynamic>>(
           chatPath(_provider, model),
-          options: Options(headers: _provider.authHeaders(key)),
+          options: Options(
+            headers: _provider.authHeaders(key),
+            receiveTimeout: timeout,
+          ),
           data: buildChatBody(
             provider: _provider,
             model: model,
@@ -567,6 +587,206 @@ class GeminiService {
               'sayıyorsa madde işaretli liste olarak yaz.',
         },
       ]);
+
+  /// Satır içi (base64) gönderilebilecek en büyük ses/video. Gemini isteği
+  /// ~20 MB'ta keser, base64 %33 büyütür: ham 15 MB güvenli sınır.
+  static const maxInlineMediaBytes = 15 * 1024 * 1024;
+
+  /// Transkript isteğinin zaman aşımı. Uzun bir kaydın dökümü dakikalar
+  /// sürebilir; genel 3 dk (REST) / 90 sn (dahili) sınırı yarım saatlik bir
+  /// derste isteği yolda kesiyordu.
+  static const transcribeTimeout = Duration(minutes: 8);
+
+  /// **TRANSKRİPT** — ses/video kaydını kelimesi kelimesine metne döker
+  /// (kullanıcı isteği 2026-10-17). [transcribeAudio]'dan farkı: kısa bir
+  /// sesli not için değil, uzun kayıt (ders, toplantı, röportaj, video) için;
+  /// paragraf başlarına zaman damgası koyar ki metin kayıtla eşleşsin (not
+  /// içindeki "1:23" damgası videoyu oraya sarar).
+  ///
+  /// Kaynak üç biçimden biri: [bytes] (bellekte), [filePath] (diskteki dosya
+  /// — büyükse belleğe hiç alınmadan Gemini Dosya API'sine akıtılır) ya da
+  /// [webUrl] (YouTube bağlantısı; dosya yok, model videoyu kendisi açar).
+  ///
+  /// Büyük dosya yalnız KENDİ Gemini anahtarıyla gönderilebilir (Dosya API'si
+  /// anahtar ister); dahili yolda satır içi sınırı aşan kayıt
+  /// [MediaTooLargeException] verir.
+  Future<String> transcribeMedia({
+    required String mimeType,
+    Uint8List? bytes,
+    String? filePath,
+    String? webUrl,
+    bool video = false,
+  }) async {
+    final stored = await _keyStore.read(_provider);
+    final hasKey = stored != null && stored.isNotEmpty;
+    // Başka sağlayıcıların tel biçiminde ses/video/bağlantı karşılığı yok:
+    // OpenAI çevirisi tanımadığı parçayı BOŞ metne indirgerdi ve model
+    // ortada kayıt yokken "transkript" uydururdu.
+    if (hasKey && _provider != AiProvider.gemini) {
+      throw GeminiException(
+        '${video ? 'Video' : 'Ses'} dökümü ${_provider.label} ile '
+        "yapılamıyor. Ayarlar'dan sağlayıcıyı Google Gemini'ye çevirebilir "
+        "ya da anahtarı kaldırıp dahili AI'ı kullanabilirsin.",
+      );
+    }
+    final Map<String, dynamic> media;
+    String? uploadedName;
+    if (webUrl != null && webUrl.isNotEmpty) {
+      media = {
+        'file_data': {'mime_type': 'video/mp4', 'file_uri': webUrl},
+      };
+    } else {
+      var data = bytes;
+      final length = data?.length ?? await File(filePath!).length();
+      if (length > maxInlineMediaBytes) {
+        if (!hasKey || filePath == null) throw MediaTooLargeException(length);
+        final uploaded = await _uploadGeminiFile(
+          stored,
+          filePath,
+          mimeType,
+          length,
+        );
+        uploadedName = uploaded.name;
+        media = {
+          'file_data': {'mime_type': uploaded.mime, 'file_uri': uploaded.uri},
+        };
+      } else {
+        data ??= await File(filePath!).readAsBytes();
+        media = {
+          'inline_data': {
+            'mime_type': mimeType,
+            'data': await _encodeBase64(data),
+          },
+        };
+      }
+    }
+    try {
+      final text = await _generateFromContents(
+        [
+          {
+            'role': 'user',
+            'parts': [
+              media,
+              {'text': _transcriptPrompt(video: video)},
+            ],
+          },
+        ],
+        preferModel: _taskModel(AiTask.document),
+        timeout: transcribeTimeout,
+      );
+      return stripMarkdown(text).trim();
+    } finally {
+      // Yüklenen kayıt Google'da 48 saat kalırdı; döküm bitince silinir.
+      if (uploadedName != null) {
+        unawaited(_deleteGeminiFile(stored!, uploadedName));
+      }
+    }
+  }
+
+  static String _transcriptPrompt({required bool video}) =>
+      'Bu ${video ? 'videodaki konuşmayı' : 'ses kaydını'} KELİMESİ '
+      'KELİMESİNE yazıya dök (transkript). Kurallar:\n'
+      '- Konuşulan dilde yaz; ÇEVİRME, ÖZETLEME, kısaltma.\n'
+      '- Konuşmayı anlam bütünlüğüne göre paragraflara böl; her paragrafın '
+      'başına kayıttaki başlangıç anını [d:ss] biçiminde yaz '
+      '(bir saatten uzunsa [s:dd:ss]). Örnek: [0:00] Merhaba...\n'
+      '- Birden çok konuşmacı varsa konuşmacı değiştiğinde yeni paragraf '
+      'aç ve başına "Konuşmacı 1:", "Konuşmacı 2:" yaz; ad söyleniyorsa adı '
+      'kullan.\n'
+      '- Dolgu seslerini (ııı, eee, hımm) at; noktalama ve büyük harfi '
+      'düzelt.\n'
+      '- Anlaşılmayan yeri [anlaşılmıyor] diye işaretle; tahmin edip '
+      'uydurma.\n'
+      '${video ? '- Ekranda okunan önemli yazı (slayt başlığı, tahtadaki '
+                'formül, altyazı dışı metin) varsa geçtiği yerde '
+                '[Ekranda: ...] olarak ekle.\n' : ''}'
+      '- Konuşma yoksa yalnızca "[Konuşma yok]" yaz.\n'
+      'Markdown kullanma: yıldız, kalın işareti veya # koyma. Yalnızca '
+      'transkripti yaz, giriş/açıklama ekleme.';
+
+  /// Gemini DOSYA API'sine devam ettirilebilir (resumable) yükleme: önce
+  /// oturum açılır, sonra dosya DİSKTEN AKITILARAK tek parçada gönderilir —
+  /// yüzlerce MB'lık video belleğe alınmaz. Video yüklendikten sonra
+  /// işlenir; `ACTIVE` olana dek beklenir.
+  Future<({String name, String uri, String mime})> _uploadGeminiFile(
+    String key,
+    String path,
+    String mimeType,
+    int length,
+  ) async {
+    const root = 'https://generativelanguage.googleapis.com';
+    try {
+      final start = await _dio.post<Object?>(
+        '$root/upload/v1beta/files',
+        options: Options(
+          headers: {
+            ..._provider.authHeaders(key),
+            'X-Goog-Upload-Protocol': 'resumable',
+            'X-Goog-Upload-Command': 'start',
+            'X-Goog-Upload-Header-Content-Length': '$length',
+            'X-Goog-Upload-Header-Content-Type': mimeType,
+          },
+          contentType: 'application/json',
+        ),
+        data: {
+          'file': {'display_name': p.basename(path)},
+        },
+      );
+      final uploadUrl = start.headers.value('x-goog-upload-url');
+      if (uploadUrl == null || uploadUrl.isEmpty) {
+        throw const GeminiException('Dosya yükleme oturumu açılamadı.');
+      }
+      final done = await _dio.post<Map<String, dynamic>>(
+        uploadUrl,
+        data: File(path).openRead(),
+        options: Options(
+          headers: {
+            Headers.contentLengthHeader: '$length',
+            'X-Goog-Upload-Offset': '0',
+            'X-Goog-Upload-Command': 'upload, finalize',
+          },
+          sendTimeout: const Duration(minutes: 15),
+          receiveTimeout: const Duration(minutes: 2),
+        ),
+      );
+      var file = (done.data?['file'] as Map?)?.cast<String, dynamic>();
+      if (file == null) {
+        throw const GeminiException('Dosya yüklenemedi.');
+      }
+      final name = file['name'] as String? ?? '';
+      // Video sunucuda İŞLENİR (kare çıkarma); hazır olmadan istek
+      // "FAILED_PRECONDITION" alır. 3 sn arayla en çok ~5 dk.
+      for (var i = 0; i < 100 && file?['state'] == 'PROCESSING'; i++) {
+        await Future<void>.delayed(const Duration(seconds: 3));
+        final polled = await _dio.get<Map<String, dynamic>>(
+          '$root/v1beta/$name',
+          options: Options(headers: _provider.authHeaders(key)),
+        );
+        file = polled.data;
+      }
+      if (file == null || file['state'] == 'FAILED') {
+        throw const GeminiException('Kayıt sunucuda işlenemedi.');
+      }
+      return (
+        name: name,
+        uri: file['uri'] as String? ?? '',
+        mime: file['mimeType'] as String? ?? mimeType,
+      );
+    } on DioException catch (e) {
+      throw _mapDioError(e);
+    }
+  }
+
+  Future<void> _deleteGeminiFile(String key, String name) async {
+    try {
+      await _dio.delete<Object?>(
+        'https://generativelanguage.googleapis.com/v1beta/$name',
+        options: Options(headers: _provider.authHeaders(key)),
+      );
+    } catch (_) {
+      // Silinemezse Google 48 saat sonra kendisi siler.
+    }
+  }
 
   /// Metni hedef dile çevirir.
   Future<String> translateText(String text, String targetLanguage) =>
@@ -966,12 +1186,21 @@ class GeminiService {
         'role': 'user',
         'parts': [
           for (final a in attachments)
-            {
-              'inline_data': {
-                'mime_type': a.mimeType,
-                'data': await _encodeBase64(a.bytes),
+            // Metin eki (transkript) düz METİN olarak gider: her sağlayıcı
+            // okur, base64 şişmesi yok.
+            if (a.mimeType == 'text/plain')
+              {
+                'text':
+                    'Ek "${a.fileName}" (metin/transkript):\n'
+                    '${utf8.decode(a.bytes, allowMalformed: true)}',
+              }
+            else
+              {
+                'inline_data': {
+                  'mime_type': a.mimeType,
+                  'data': await _encodeBase64(a.bytes),
+                },
               },
-            },
           {
             'text':
                 'Aşağıda bir notun içeriği'

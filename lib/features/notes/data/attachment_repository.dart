@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_storage/firebase_storage.dart';
@@ -13,6 +14,7 @@ import '../../ai/data/ai_gate.dart' show premiumProvider;
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/attachment.dart';
 import 'drive_store.dart';
+import 'media_transcriber.dart' show audioMimeFromName, audioMimeOf;
 import 'notes_repository.dart' show storageUsedBytesProvider;
 
 final attachmentRepositoryProvider = Provider<AttachmentRepository?>((ref) {
@@ -572,7 +574,12 @@ class AttachmentRepository {
     // Ses [_store]'a girmiyor (dosya kopyalanıyor), tavan kapısı burada.
     _checkQuota(sizeBytes);
     final id = _uuid.v4();
-    final fileName = 'kayit_${duration.inSeconds}s.m4a';
+    // GERÇEK biçim baytlardan: Google sesli girişinin kaydı AMR-NB ve
+    // eskiden ".m4a / audio/mp4" adıyla bağlanıyordu — oynatıcı içeriği
+    // kokladığı için çalıyordu ama AI dökümü yanlış türle reddediliyordu.
+    final mime = audioMimeOf(await _head(source), 'audio/mp4');
+    final ext = mime == 'audio/amr' ? '.amr' : '.m4a';
+    final fileName = 'kayit_${duration.inSeconds}s$ext';
     final dir = await _attachmentsDir(noteId);
     final file = await source.copy(p.join(dir.path, '${id}_$fileName'));
     await source.delete();
@@ -581,11 +588,54 @@ class AttachmentRepository {
       id: id,
       kind: AttachmentKind.audio,
       fileName: fileName,
-      mimeType: 'audio/mp4',
+      mimeType: mime,
       localPath: file.path,
       sizeBytes: sizeBytes,
       createdAt: DateTime.now(),
     );
+  }
+
+  /// **SES DOSYASI EKLE** (kullanıcı isteği 2026-10-17: "sonradan eklenmiş
+  /// ses dosyaları"): cihazdan seçilen MP3/M4A/WAV... nota ses eki olur.
+  /// Kayıttan farkı: dosyanın ADI korunur ve türü addan/baytlardan okunur.
+  /// Kaynak seçicinin önbellek kopyası olduğundan yerine taşınır.
+  Future<Attachment> prepareAudioFile({
+    required String noteId,
+    required String sourcePath,
+    String? fileName,
+  }) async {
+    if (kIsWeb) {
+      throw UnsupportedError('Tarayıcıda ses dosyası eki desteklenmiyor.');
+    }
+    final source = File(sourcePath);
+    final sizeBytes = await source.length();
+    if (sizeBytes > maxBytes) throw const FileTooLargeException();
+    _checkQuota(sizeBytes);
+    final id = _uuid.v4();
+    final name = p.basename(
+      (fileName == null || fileName.trim().isEmpty) ? sourcePath : fileName,
+    );
+    final mime = audioMimeOf(await _head(source), audioMimeFromName(name));
+    final dir = await _attachmentsDir(noteId);
+    final file = await source.copy(p.join(dir.path, '${id}_$name'));
+    return Attachment(
+      id: id,
+      kind: AttachmentKind.audio,
+      fileName: name,
+      mimeType: mime,
+      localPath: file.path,
+      sizeBytes: sizeBytes,
+      createdAt: DateTime.now(),
+    );
+  }
+
+  static Future<List<int>> _head(File file) async {
+    final raf = await file.open();
+    try {
+      return await raf.read(16);
+    } finally {
+      await raf.close();
+    }
   }
 
   /// Görüntülü not: kamerayla çekilen videoyu YALNIZCA cihaza kopyalar.
@@ -644,6 +694,19 @@ class AttachmentRepository {
     required String noteId,
     required Attachment source,
   }) async {
+    // Metin eki dosyasızdır: kopyası yeni kimlikli aynı metin.
+    if (source.kind == AttachmentKind.text) {
+      return Attachment(
+        id: _uuid.v4(),
+        kind: source.kind,
+        fileName: source.fileName,
+        mimeType: source.mimeType,
+        text: source.text,
+        transcriptOf: source.transcriptOf,
+        sizeBytes: source.sizeBytes,
+        createdAt: DateTime.now(),
+      );
+    }
     // YouTube eki dosyasızdır: kopyası yeni kimlikli aynı bağlantı.
     if (source.isWebVideo) {
       return Attachment(
@@ -705,6 +768,8 @@ class AttachmentRepository {
     required Attachment meta,
     required Uint8List bytes,
   }) async {
+    // Metin eki içeriğini kaydında taşır; yazılacak dosya yok.
+    if (meta.kind == AttachmentKind.text) return meta;
     var data = bytes;
     // Paketten gelen görsel başka bir uygulamadan/eski sürümden tam boyutlu
     // gelebilir; senkrona girmeden önce `prepareImage` ile aynı ölçüye
@@ -731,7 +796,7 @@ class AttachmentRepository {
   Future<Attachment?> upload(String noteId, Attachment attachment) async {
     // Görüntülü not cihazda kalır: kuyruk atlasa da burada ikinci bir kapı
     // var — yeni bir çağrı yeri eklenirse video yine yüklenmesin.
-    if (attachment.kind == AttachmentKind.video) return null;
+    if (attachment.skipsUpload) return null;
     if (attachment.isUploaded || attachment.localPath.isEmpty) return null;
     final file = File(attachment.localPath);
     if (!await file.exists()) return null;
@@ -759,7 +824,7 @@ class AttachmentRepository {
   ) async {
     final store = drive;
     if (store == null) return null;
-    if (attachment.kind == AttachmentKind.video) return null;
+    if (attachment.skipsUpload) return null;
     if (attachment.isInDrive || attachment.localPath.isEmpty) return null;
     final file = File(attachment.localPath);
     if (!await file.exists()) return null;
@@ -807,6 +872,11 @@ class AttachmentRepository {
   /// PDF baytlarını getirir: önce yerel kopya, yoksa Drive'dan (bağlıysa
   /// indirip yerel kopyaya da yazarak), o da yoksa Storage'dan.
   Future<Uint8List?> readBytes(Attachment attachment) async {
+    // Metin eki (transkript) dosyasızdır: içerik kaydın kendisinde. Paylaşım,
+    // dışa aktarma ve not paketi `.txt` baytlarını buradan alır.
+    if (attachment.kind == AttachmentKind.text) {
+      return Uint8List.fromList(utf8.encode(attachment.text));
+    }
     if (attachment.localPath.isNotEmpty) {
       final file = File(attachment.localPath);
       if (await file.exists()) return file.readAsBytes();

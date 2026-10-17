@@ -78,6 +78,29 @@ class ScanOcr {
     }
   }
 
+  /// Görseldeki metni OKUMA SIRASIYLA düz yazı olarak döndürür: blok içi
+  /// satırlar alt alta, bloklar arasında boş satır (paragraf). Transkript
+  /// (bkz. `MediaTranscriber`) bunu kullanır — kutular gerekmiyor.
+  static Future<String> recognizeImageText(String path) async {
+    if (!supported) return '';
+    final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    try {
+      final result = await recognizer.processImage(
+        InputImage.fromFilePath(path),
+      );
+      return [
+        for (final block in result.blocks)
+          if (block.text.trim().isNotEmpty)
+            [
+              for (final line in block.lines)
+                if (line.text.trim().isNotEmpty) line.text.trim(),
+            ].join('\n'),
+      ].join('\n\n');
+    } finally {
+      await recognizer.close();
+    }
+  }
+
   /// Sayfaları sırayla OCR'lar; [onProgress] sayfa sayfa ilerlemeyi bildirir
   /// (OCR sayfa başına birkaç saniye sürebilir).
   static Future<List<List<OcrLine>>> recognizePages(

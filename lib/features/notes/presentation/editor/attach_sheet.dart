@@ -89,6 +89,18 @@ List<({String id, IconData icon, String label})> attachSheetCatalog(
   (id: 'slide', icon: Icons.slideshow_outlined, label: l10n.addSlide),
   if (!kIsWeb) (id: 'audio', icon: Icons.mic_none, label: l10n.recordAudio),
   if (!kIsWeb)
+    (
+      id: 'audio-file',
+      icon: Icons.library_music_outlined,
+      label: l10n.addAudioFile,
+    ),
+  if (!kIsWeb)
+    (
+      id: 'transcribe',
+      icon: Icons.subtitles_outlined,
+      label: l10n.transcribeFile,
+    ),
+  if (!kIsWeb)
     (id: 'video', icon: Icons.videocam_outlined, label: l10n.newVideoNote),
   if (!kIsWeb)
     (
@@ -218,6 +230,19 @@ class _AttachSheet extends StatelessWidget {
       ),
       if (qrScanSupported)
         ('qr', Icons.qr_code_scanner, l10n.qrScanTitle, l10n.qrScanSubtitle),
+      // Sonradan eklenen SES DOSYASI (kayıttan ayrı) ve "dosyayı metne dök"
+      // (kullanıcı isteği 2026-10-17): ses/video/görsel seçilir, nota girer
+      // ve transkripti metin olarak nota yazılır. SONDA: YouTube satırı
+      // kaydırmadan görünür kalsın (bkz. menus_redesign testi).
+      if (!kIsWeb)
+        ('audio-file', Icons.library_music_outlined, l10n.addAudioFile, null),
+      if (!kIsWeb)
+        (
+          'transcribe',
+          Icons.subtitles_outlined,
+          l10n.transcribeFile,
+          l10n.transcribeFileSubtitle,
+        ),
       // "Renk" BURADAN KALKTI (kullanıcı isteği 2026-08-10: "sayfa rengi ve
       // yanındaki kısımları biçim menüsüne al"): sayfa görünümü artık alt
       // çubuktaki "Biçim" şeridinin palet düğmesinde (bkz. format_bar.dart).

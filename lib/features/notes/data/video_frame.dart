@@ -115,3 +115,32 @@ abstract final class VideoFrame {
     return frames;
   }
 }
+
+/// Videonun SES İZİNİ ayrı bir `.m4a` dosyasına çıkarır (Android;
+/// `MediaExtractor` → `MediaMuxer`, yeniden kodlamadan).
+///
+/// Transkript için: konuşmanın dökümüne görüntü gerekmez, ama video baytları
+/// sesten 20-50 kat büyük — bir dakikalık 1080p kayıt bile satır içi AI
+/// sınırını (15 MB) aşıyordu. Ses izi aynı kaydın birkaç MB'ı.
+abstract final class AudioTrack {
+  static const _channel = MethodChannel('dev.kaimau.notlar/system');
+
+  static bool get supported => !kIsWeb && Platform.isAndroid;
+
+  /// [videoPath]'in ses izini [outPath]'e yazar; başarılıysa true. İz yok,
+  /// AAC değil ya da köprü yoksa false — çağıran videonun kendisini kullanır.
+  static Future<bool> extract(String videoPath, String outPath) async {
+    if (!supported) return false;
+    try {
+      return await _channel.invokeMethod<bool>('extractAudio', {
+            'path': videoPath,
+            'out': outPath,
+          }) ??
+          false;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
+}

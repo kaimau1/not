@@ -5033,4 +5033,124 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get removeTextPart => 'Tekst verwijderen';
+
+  @override
+  String get transcriptTitle => 'Transcript';
+
+  @override
+  String get transcriptAction => 'Transcriberen';
+
+  @override
+  String get transcriptFileSuffix => 'transcript';
+
+  @override
+  String get transcriptWorkingAudio => 'Audio wordt getranscribeerd…';
+
+  @override
+  String get transcriptWorkingVideo => 'Video wordt getranscribeerd…';
+
+  @override
+  String get transcriptWorkingImage => 'Tekst in de afbeelding wordt gelezen…';
+
+  @override
+  String get transcriptLongHint =>
+      'Lange opnamen kunnen enkele minuten duren; houd dit scherm open.';
+
+  @override
+  String get transcriptSaved => 'Als tekstbijlage in de notitie opgeslagen';
+
+  @override
+  String get transcriptInsertSelection => 'Selectie aan notitie toevoegen';
+
+  @override
+  String get transcriptInsertAll => 'Alles aan notitie toevoegen';
+
+  @override
+  String get transcriptInserted => 'Aan notitie toegevoegd';
+
+  @override
+  String get transcriptNewNote => 'Nieuwe notitie';
+
+  @override
+  String get transcriptRetryAi => 'Opnieuw transcriberen met AI';
+
+  @override
+  String get transcriptReadWithAi => 'Lezen met AI (handschrift)';
+
+  @override
+  String get transcriptShowTimes => 'Tijdstempels';
+
+  @override
+  String get transcriptDelete => 'Transcript verwijderen';
+
+  @override
+  String get transcriptDeleteConfirm =>
+      'Transcript verwijderen? Het bronbestand blijft in de notitie.';
+
+  @override
+  String get transcriptEmpty => 'Geen tekst gevonden.';
+
+  @override
+  String transcriptTooLarge(int mb) {
+    return 'De opname is $mb MB; de ingebouwde AI accepteert maximaal 15 MB. Met je eigen Gemini-sleutel (Instellingen) worden ook grote opnamen getranscribeerd.';
+  }
+
+  @override
+  String transcriptUnsupported(String format) {
+    return 'Dit opnameformaat ($format) kan niet worden getranscribeerd.';
+  }
+
+  @override
+  String get transcriptEdit => 'Bewerken';
+
+  @override
+  String get transcriptSave => 'Opslaan';
+
+  @override
+  String transcriptWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count woorden',
+      one: '1 woord',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transcriptNoteTitle(String name) {
+    return 'Transcript: $name';
+  }
+
+  @override
+  String get transcriptOnDevice =>
+      'Op het apparaat gelezen · geen internet of AI-punten';
+
+  @override
+  String get addAudioFile => 'Audiobestand toevoegen';
+
+  @override
+  String get transcribeFile => 'Bestand transcriberen';
+
+  @override
+  String get transcribeFileSubtitle =>
+      'Kies audio, video of een afbeelding; de tekst gaat in de notitie';
+
+  @override
+  String cardTranscriptCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transcripten',
+      one: 'Transcript',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transcriptPickTitle => 'Bestand om te transcriberen';
+
+  @override
+  String get transcriptUnsupportedFile =>
+      'Dit bestandstype kan niet worden getranscribeerd (kies audio, video of een afbeelding).';
 }

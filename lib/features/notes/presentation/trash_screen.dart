@@ -536,6 +536,7 @@ class _TrashCard extends ConsumerWidget {
                       AttachmentKind.pdf => Icons.picture_as_pdf_outlined,
                       AttachmentKind.audio => Icons.mic_none,
                       AttachmentKind.slide => Icons.slideshow_outlined,
+                      AttachmentKind.text => Icons.subject,
                       _ => Icons.attach_file,
                     },
                     label: f.fileName,
