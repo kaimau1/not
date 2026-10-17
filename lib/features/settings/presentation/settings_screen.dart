@@ -25,6 +25,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
 import 'personalize_screen.dart' show PersonalizeModuleSwitches;
 import '../../../core/utils/doc_picker.dart';
+import '../../../core/widgets/pop_in.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/language_names.dart';
 import '../../../core/utils/note_fonts.dart';
@@ -363,6 +364,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords:
                 '${l10n.gridColumnsSetting} ${l10n.noteViewGrid} '
                 '${l10n.noteViewList} ${l10n.folderShelfSetting} sutun',
+          ),
+          // EKOSİSTEM (kullanıcı isteği 2026-10-17): kardeş uygulama Dosya
+          // Okuyucu kuruluysa dosya seçimi onda, istenen türe süzülmüş açılır.
+          // Kurulu değilse satır hiç çizilmez.
+          _SettingRow(
+            const _FileAppSwitch(),
+            title: l10n.fileAppPickerTitle,
+            keywords: 'dosya okuyucu secici dosya yoneticisi pdf ses ekle',
           ),
           _SettingRow(
             const _AttachmentSearchSwitch(),
@@ -836,31 +845,48 @@ class _SettingsArea extends StatelessWidget {
                 ),
               ),
             ),
-            if (open)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-                // DERLİ TOPLU SATIRLAR (kullanıcı isteği 2026-09-26: ekran
-                // görüntüsündeki alanlar "görsel ve işlevsel olarak
-                // geliştirilsin"). Anahtar satırlarının başlığı gövde
-                // metninden BÜYÜK, açıklaması başlık kadar iriydi; uzun
-                // açıklamalı beş satır ekranı dolduruyordu. Başlık 14/w600,
-                // açıklama küçük ve soluk — göz önce başlığı tarar.
-                child: ListTileTheme.merge(
-                  dense: true,
-                  titleTextStyle: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                  subtitleTextStyle: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        height: 1.3,
+            // AÇILIŞ/KAPANIŞ YUMUŞAK (2026-10-17 akıcılık turu): alan bir
+            // karede "pat" diye açılıyordu; artık yüksekliği kayarak açılır,
+            // içerik süzülerek belirir. Kapalıyken içerik ağaçta YOK (ayar
+            // satırlarının hepsini boşuna kurmasın).
+            AnimatedSize(
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: !open
+                  ? const SizedBox(width: double.infinity)
+                  : PopIn(
+                      from: 0.98,
+                      rise: 4,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                        // DERLİ TOPLU SATIRLAR (kullanıcı isteği 2026-09-26: ekran
+                        // görüntüsündeki alanlar "görsel ve işlevsel olarak
+                        // geliştirilsin"). Anahtar satırlarının başlığı gövde
+                        // metninden BÜYÜK, açıklaması başlık kadar iriydi; uzun
+                        // açıklamalı beş satır ekranı dolduruyordu. Başlık 14/w600,
+                        // açıklama küçük ve soluk — göz önce başlığı tarar.
+                        child: ListTileTheme.merge(
+                          dense: true,
+                          titleTextStyle: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                          subtitleTextStyle: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                                height: 1.3,
+                              ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: rows,
+                          ),
+                        ),
                       ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: rows,
-                  ),
-                ),
-              ),
+                    ),
+            ),
           ],
         ),
       ),
@@ -2089,6 +2115,54 @@ class _AttachmentSearchSwitch extends ConsumerWidget {
       value: ref.watch(attachmentSearchProvider),
       onChanged: (value) =>
           ref.read(attachmentSearchProvider.notifier).set(value),
+    );
+  }
+}
+
+/// "Dosyaları Dosya Okuyucu ile seç" — yalnız kardeş uygulama kuruluyken
+/// görünür (bkz. `DocPicker`).
+class _FileAppSwitch extends StatefulWidget {
+  const _FileAppSwitch();
+
+  @override
+  State<_FileAppSwitch> createState() => _FileAppSwitchState();
+}
+
+class _FileAppSwitchState extends State<_FileAppSwitch> {
+  bool _installed = false;
+  bool _value = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final installed = await DocPicker.fileAppInstalled();
+    final value = await DocPicker.useFileApp();
+    if (!mounted) return;
+    setState(() {
+      _installed = installed;
+      _value = value;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_installed) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    return SwitchListTile(
+      key: const ValueKey('settings-file-app'),
+      contentPadding: EdgeInsets.zero,
+      secondary: const Icon(Icons.folder_special_outlined),
+      title: Text(l10n.fileAppPickerTitle),
+      subtitle: Text(l10n.fileAppPickerInfo),
+      value: _value,
+      onChanged: (value) {
+        setState(() => _value = value);
+        DocPicker.setUseFileApp(value);
+      },
     );
   }
 }

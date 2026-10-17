@@ -34,10 +34,12 @@ void main() {
   );
 
   test('her ek türü kendi görünümlerini sunar', () {
+    // 2026-10-17: dördüncü kip "Ek" (alt şerit) her dosyalı ekte var.
     expect(availableViews(image), {
       AttachmentView.pinned,
       AttachmentView.floating,
       AttachmentView.bubbles,
+      AttachmentView.attached,
     });
     const pdf = Attachment(
       id: 'p',
@@ -57,14 +59,56 @@ void main() {
     expect(availableViews(video), {
       AttachmentView.pinned,
       AttachmentView.floating,
+      AttachmentView.attached,
     });
+    // YouTube'un dosyası yok: şeride inmez.
+    const youtube = Attachment(
+      id: 'y',
+      kind: AttachmentKind.video,
+      fileName: 'y',
+      mimeType: 'video/youtube',
+      webUrl: 'https://youtu.be/x',
+    );
+    expect(availableViews(youtube), {
+      AttachmentView.pinned,
+      AttachmentView.floating,
+    });
+    // SES 2026-10-17'de katıldı: sayfada ve tepede oynatıcı kartı.
     const audio = Attachment(
       id: 'a',
       kind: AttachmentKind.audio,
       fileName: 'a.m4a',
       mimeType: 'audio/mp4',
     );
-    expect(availableViews(audio), isEmpty);
+    expect(availableViews(audio), {
+      AttachmentView.pinned,
+      AttachmentView.floating,
+      AttachmentView.attached,
+    });
+    // METİN: dört kipin hepsi (balonlu = A4 belge).
+    const text = Attachment(
+      id: 't',
+      kind: AttachmentKind.text,
+      fileName: 't.txt',
+      mimeType: 'text/plain',
+      text: 'merhaba',
+    );
+    expect(availableViews(text), {
+      AttachmentView.pinned,
+      AttachmentView.floating,
+      AttachmentView.bubbles,
+      AttachmentView.attached,
+    });
+    const slide = Attachment(
+      id: 's',
+      kind: AttachmentKind.slide,
+      fileName: 's.pptx',
+      mimeType: 'application/vnd.ms-powerpoint',
+    );
+    expect(availableViews(slide), {
+      AttachmentView.bubbles,
+      AttachmentView.attached,
+    });
   });
 
   testWidgets('anahtar seçili kipi gösterir, öbürüne tek dokunuşla geçer', (

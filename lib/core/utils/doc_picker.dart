@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Belge seçimi — Android'de **uygulama seçiciyle**.
 ///
@@ -25,10 +26,50 @@ import 'package:flutter/services.dart';
 ///
 /// Köprü bulunamaz ya da hiçbir uygulama niyeti karşılamazsa sessizce
 /// `file_selector`a düşülür: özellik kaybolmaz, yalnız eski çekmece açılır.
+///
+/// **EKOSİSTEM — Dosya Okuyucu** (kullanıcı isteği 2026-10-17: "dosya
+/// eklerken açılan dosya yöneticisi istenen uzantıya göre süzmeli, şu an ana
+/// sayfa açılıyor, bulmak çok zor; bizim dosya yöneticisi programımız yüklü
+/// ise onunla senkron ve uyumlu çalışalım"): kardeş uygulama kuruluysa seçim
+/// seçici sorulmadan DOĞRUDAN onun seçicisinde açılır ve orada istenen türün
+/// bütün dosyaları (en yenisi üstte, aranabilir) listelenir. Uzantı listesi
+/// ve başlık niyetle gider; Dosya Okuyucu'daki "Diğer kaynaklar" düğmesi
+/// sistemin seçicisine (Drive, Galeri…) geçirir. Ayarlardan kapatılabilir
+/// ([useFileApp]).
 abstract final class DocPicker {
   static const _channel = MethodChannel('dev.kaimau.notlar/system');
 
   static bool get _useChooser => !kIsWeb && Platform.isAndroid;
+
+  /// "Dosyaları Dosya Okuyucu ile seç" tercihinin anahtarı (cihaz tercihi).
+  static const fileAppPrefKey = 'picker_file_app';
+
+  /// Dosya Okuyucu kuruluyken seçim onda mı açılsın (varsayılan: evet).
+  static Future<bool> useFileApp() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(fileAppPrefKey) ?? true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  static Future<void> setUseFileApp(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(fileAppPrefKey, value);
+  }
+
+  /// Dosya Okuyucu bu cihazda kurulu ve seçici kipini destekliyor mu.
+  static Future<bool> fileAppInstalled() async {
+    if (!_useChooser) return false;
+    try {
+      return await _channel.invokeMethod<bool>('fileAppInstalled') ?? false;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
 
   /// Tek belge seçtirir; iptalde null.
   static Future<XFile?> pickOne(
@@ -53,9 +94,14 @@ abstract final class DocPicker {
     if (_useChooser) {
       try {
         final raw = await _channel.invokeListMethod<Object?>('pickDocuments', {
-          'mimeTypes': _mimeTypes(group),
+          'mimeTypes': mimeTypesOf(group),
+          'extensions': [
+            for (final ext in group.extensions ?? const <String>[])
+              ext.toLowerCase(),
+          ],
           'multiple': multiple,
           'title': title,
+          'fileApp': await useFileApp(),
         });
         if (raw != null) {
           return [
@@ -78,12 +124,22 @@ abstract final class DocPicker {
   /// Niyete konacak MIME türleri. Grup MIME vermediyse uzantılardan türetilir;
   /// hiçbiri yoksa `*/*` (süzgeçsiz) — süzgeç uydurmak, seçilebilecek dosyayı
   /// gizlemekten iyidir.
-  static List<String> _mimeTypes(XTypeGroup group) {
+  @visibleForTesting
+  static List<String> mimeTypesOf(XTypeGroup group) {
     final mimes = {...?group.mimeTypes};
     for (final ext in group.extensions ?? const <String>[]) {
       final mime = _byExtension[ext.toLowerCase()];
       if (mime != null) mimes.add(mime);
     }
+    // Aile joker karakteri varsa (`audio/*`) o ailenin tek tek türleri
+    // gereksiz: liste kısa kalsın, aile türü niyetin `type`ına geçsin.
+    final families = {
+      for (final m in mimes)
+        if (m.endsWith('/*')) m.substring(0, m.length - 1),
+    };
+    mimes.removeWhere(
+      (m) => !m.endsWith('/*') && families.any((f) => m.startsWith(f)),
+    );
     return mimes.isEmpty ? const ['*/*'] : mimes.toList();
   }
 
@@ -96,6 +152,19 @@ abstract final class DocPicker {
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'pptx':
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'mp3': 'audio/mpeg',
+    'm4a': 'audio/mp4',
+    'aac': 'audio/aac',
+    'wav': 'audio/wav',
+    'ogg': 'audio/ogg',
+    'opus': 'audio/opus',
+    'flac': 'audio/flac',
+    'amr': 'audio/amr',
+    'mp4': 'video/mp4',
+    'mov': 'video/quicktime',
+    'mkv': 'video/x-matroska',
+    '3gp': 'video/3gpp',
+    'heic': 'image/heic',
     'jpg': 'image/jpeg',
     'jpeg': 'image/jpeg',
     'png': 'image/png',

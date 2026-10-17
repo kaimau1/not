@@ -1018,5 +1018,17 @@
   "transcribeFileSubtitle": "音声・動画・画像を選ぶと、その文字がメモに入ります",
   "cardTranscriptCount": "{count, plural, other{文字起こし {count} 件}}",
   "transcriptPickTitle": "文字起こしするファイル",
-  "transcriptUnsupportedFile": "このファイル形式は文字起こしできません（音声・動画・画像を選んでください）。"
+  "transcriptUnsupportedFile": "このファイル形式は文字起こしできません（音声・動画・画像を選んでください）。",
+  "pickPdfTitle": "PDFを選択",
+  "pickSlidesTitle": "プレゼンテーションを選択",
+  "pickImagesTitle": "画像を選択",
+  "pickDocumentTitle": "文書を選択",
+  "fileAppPickerTitle": "Dosya Okuyucu でファイルを選択",
+  "fileAppPickerInfo": "ファイル追加時に Dosya Okuyucu が直接開き、要求された種類のファイルだけを新しい順に表示します。オフにするとアプリを選択します。",
+  "viewModeAttached": "添付",
+  "viewModeAttachedHint": "添付として — 下部のバーに置く",
+  "textToBubblesPreparing": "テキストを文書にレイアウト中…",
+  "attachmentActions": "添付の操作",
+  "attachmentOpen": "開く",
+  "attachmentViewTitle": "どこに置く？"
 }

@@ -1018,5 +1018,17 @@
   "transcribeFileSubtitle": "ऑडियो, वीडियो या छवि चुनें; उसका टेक्स्ट नोट में जाएगा",
   "cardTranscriptCount": "{count, plural, =1{ट्रांसक्रिप्ट} other{{count} ट्रांसक्रिप्ट}}",
   "transcriptPickTitle": "लिखित में बदलने के लिए फ़ाइल",
-  "transcriptUnsupportedFile": "यह फ़ाइल प्रकार लिखित में नहीं बदला जा सकता (ऑडियो, वीडियो या छवि चुनें)।"
+  "transcriptUnsupportedFile": "यह फ़ाइल प्रकार लिखित में नहीं बदला जा सकता (ऑडियो, वीडियो या छवि चुनें)।",
+  "pickPdfTitle": "PDF चुनें",
+  "pickSlidesTitle": "प्रस्तुति चुनें",
+  "pickImagesTitle": "चित्र चुनें",
+  "pickDocumentTitle": "दस्तावेज़ चुनें",
+  "fileAppPickerTitle": "Dosya Okuyucu से फ़ाइलें चुनें",
+  "fileAppPickerInfo": "फ़ाइल जोड़ते समय सीधे Dosya Okuyucu खुलता है और केवल माँगे गए प्रकार की फ़ाइलें (नई पहले) दिखती हैं। बंद होने पर ऐप पूछा जाता है।",
+  "viewModeAttached": "संलग्न",
+  "viewModeAttachedHint": "संलग्नक के रूप में — नीचे की पट्टी में रहता है",
+  "textToBubblesPreparing": "पाठ को दस्तावेज़ में सजाया जा रहा है…",
+  "attachmentActions": "संलग्नक क्रियाएँ",
+  "attachmentOpen": "खोलें",
+  "attachmentViewTitle": "कहाँ रखें?"
 }

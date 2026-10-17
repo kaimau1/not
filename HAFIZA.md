@@ -4776,3 +4776,99 @@ ayrı bir Gradle/Kotlin 2.3.20 projesinde Robolectric `android-all` (API 34)
 jar'ına karşı DERLENDİ (repo1.maven.org açık; repo.maven.apache.org 429
 verebiliyor — `maven("https://repo1.maven.org/maven2/")` ver, 429'da tekrar
 dene). Tam APK yine CI'da. Cihazda GÖRÜLMEDİ.
+
+## 2026-10-17 (3. tur) — türe süzülen dosya seçici + Dosya Okuyucu ekosistemi, metin/ses için Sabit/Yüzen/Balonlu/Ek, iOS gibi geçişler
+
+Kullanıcı: (1) dosya eklerken açılan dosya yöneticisi istenen uzantıya göre
+süzmeli — "ana sayfa açılıyor, bulmak çok zor"; bizim dosya yöneticisi
+(Dosya Okuyucu) yüklüyse onunla uyumlu çalışalım, ekosistem; (2) TXT de
+sayfaya gömülsün / üste sabitlensin / balonluya geçsin, bu geçiş olabilecek
+TÜM türlerde, alttaki ek şeridinde de her türde uyumlu ve kolay; (3) "olmamış
+hissi" — iPhone/Mac gibi geçişler, akıcılık, performans. main'e merge, APK.
+
+### Dosya seçici (`core/utils/doc_picker.dart`, `MainActivity.pickDocuments`)
+* KÖK NEDEN 1: kullanıcının seçtiği dosya yöneticisi (Dosya Okuyucu) seçici
+  kipinde HER İSTEKTE kendi ana sayfasıyla açılıyordu — düzeltme o depoda
+  (dosya-okuyucu HAFIZA 2026-10-17: belirli tür isteğinde doğrudan o türün
+  bütün dosyaları, en yeni üstte, aranabilir).
+* KÖK NEDEN 2: birden çok MIME verilince niyetin `type`ı düz `*/*` oluyordu;
+  EXTRA_MIME_TYPES'a bakmayan yöneticiler her şeyi gösteriyordu. Artık hepsi
+  aynı aileden ise `type` = `aile/*` (`intentTypeOf`). `mimeTypesOf`: aile
+  joker karakteri (`audio/*`) varsa o ailenin tek tek türleri atılır.
+* EKOSİSTEM: Dosya Okuyucu (`com.dosyaokuyucu.dosya_okuyucu`, manifestte
+  `<queries><package>`) kuruluysa seçici SORULMADAN `setPackage` ile doğrudan
+  onda açılır. Ekstralar (iki depoda AYNI, değiştirme): `com.dosyaokuyucu.
+  extra.EXTENSIONS/CALLER/OTHER_SOURCES_OK`; sonuç `RESULT_FIRST_USER` +
+  `.OTHER_SOURCE` → aynı istekle sistem seçicisi açılır (Dosya Okuyucu
+  `EXTRA_EXCLUDE_COMPONENTS` ile listeden çıkarılır). Ayarlar → Notlar ve
+  klasörler → "Dosyaları Dosya Okuyucu ile seç" (`picker_file_app`, cihaz
+  tercihi; yalnız kuruluysa görünür). Çağrı yerleri başlık geçer ("PDF seç").
+* KASMA: seçilen dosyanın önbelleğe kopyası ANA iş parçacığındaydı (200 MB
+  video/ses saniyelerce donma, ANR riski) → ayrı `notlar-pick` iş parçacığı.
+* Kotlin, sökülmüş bir koşum dosyasında kotlinc 2.1.20 + Robolectric
+  android-all 34'e karşı derlendi (repo1 429 verirse Google aynası:
+  `maven-central.storage-download.googleapis.com/maven2/`).
+
+### Görünüm: dördüncü kip "Ek" + metin ve ses (`view_mode_switch.dart`)
+* `AttachmentView.attached` (alt şerit) eklendi; anahtar artık her yerde dört
+  durumu gösterir. `availableViews`: görsel/PDF/METİN → 4 kip (web'de balonlu
+  yok); video/SES → Sabit/Yüzen/Ek; YouTube → Sabit/Yüzen (dosyası yok);
+  sunum → Balonlu/Ek ("yüzen" sunumda zaten şerit demekti).
+* Model (`attachment.dart`): `stripByDefault` (PDF/metin/ses — sayfaya
+  `onPage` ile gömülür), `offPage`, `placedOnPage(bool)`; `isPinnedTop` metin
+  ve sesi de kapsar, `floatsOnPage` onPage'li metin/sesi. Editördeki dört
+  ayrı "PDF ise onPage, değilse asFile" dalı bu üç yardımcıya indi.
+* METİN SAYFADA (`text_page_box.dart`): PDF kutusunun karşılığı — kâğıt,
+  sabit REFERANS ölçüde (260 dp) dizilip `FittedBox` ile ölçeklenir ki
+  boyutlandırmak sayfa sonlarını kaydırmasın; sayfa `pdfPage`'de saklanır.
+  `TextPagination`: her sayfa bir SATIR BAŞINDAN başlayan dilim (açgözlü
+  kırma kararlı), pencere dizgisi (metnin tamamı değil), ilk 3 sayfa hemen,
+  kalanı 24 ms'lik parçalarla, önbellekli.
+  **TUZAK:** `SchedulerBinding.scheduleTask(Priority.idle)` KULLANMA — animasyon
+  sürerken görev ertelenir ama sıfır gecikmeli zamanlayıcı her olay
+  döngüsünde yeniden kurulur: cihazda boşa dönen döngü, testte SONSUZ döngü
+  (FakeAsync; test sessizce asılı kaldı).
+* METİN TEPEDE: `TextReaderView` (SelectionArea + paragraf paragraf tembel
+  liste). METİN BALONLU: `_textToBubbles` — `NotePdf.build` ile A4 belge,
+  `sourceId` = metin; yeni alan `Attachment.sourceDigest` (metnin SHA-1 öneki;
+  paket de taşır): metin düzenlendiyse belge `replaceDocumentBytes` ile AYNI
+  kimlikle yeniden dizilir (balonlar/sayfa notları korunur).
+* SES (`audio_card_box.dart`): sayfada/tepede oynatıcı kartı, TEMBEL
+  AudioPlayer; `_AudioTimeSource` video merkezine kaydolur → metindeki `1:23`
+  damgası sesi sarar, ⏱ sesin anını yazar, sabit bölme çubuğunun ±sn/hız
+  denetimi videodaki gibi çalışır. `_hasVideo` sesi de sayar; yalnız şeritte
+  duran ses varsa damga dokunuşu sesi tepeye sabitleyip o saniyeye sarar.
+* Sabit bölmeden çıkış (ayraç tepeye, ⋮ → Sayfaya göm) artık
+  `_setAttachmentView(floating)` — şeritten sabitlenen belge/metin/ses de
+  SAYFAYA iner (eskiden `_unpinMedia` onları şeride geri koyuyordu).
+* EK ŞERİDİ (`attachment_strip.dart`): her döşemenin altında AYNI küçük dört
+  kipli anahtar + ⋯ levhası (büyük anahtar "Nerede dursun?", Aç, Metne bağla,
+  Kopyala, Metne dök, Videodan not, Kaldır; basılı tutmak da açar). Eski
+  türe göre değişen köşe düğmeleri (sayfaya koy, ✨, kopyala) kalktı;
+  `onPlaceOnPage` parametresi yerine `viewOf`/`onSetView`.
+* Anahtar iOS bölümlü denetimi gibi: eşit dilimler (IntrinsicWidth + Expanded),
+  seçilinin altında KAYAN zemin (280 ms easeOutCubic), sınırlı genişlikte
+  yazılı hâli sığmazsa kendiliğinden simgelere iner (panelde Expanded içinde).
+
+### Akıcılık / geçişler
+* EKRAN GEÇİŞİ: Android+iOS `SmoothPageTransitionsBuilder` (Cupertino yığın
+  geçişi, 420/360 ms; üç tuşlu gezinmede kenardan parmakla geri). Eski
+  `PredictiveBack…` manifestte `enableOnBackInvokedCallback` olmadığı için
+  hep FadeForwards (800 ms, yerinde solma) oynuyordu. Öngörülü geri BİLEREK
+  açılmadı (FlutterFragmentActivity + cihazda denenmedi → geri tuşu
+  uygulamayı kapatabilir). Masaüstü solma kaldı.
+* MEDYA AÇILIŞI: `MediaRoute` (yakınlaşarak belirme, 320/240 ms) — görsel,
+  video, PDF, sunum tam ekranları (12 çağrı yeri). Hero BİLEREK kullanılmadı:
+  aynı ek büyük önizlemede ve sayfada aynı anda çizilebiliyor → çift etiket.
+* `PressScale` (kart basınca %3 çöker; Listener — jestlere karışmaz; 70 ms
+  gecikme + 10 px kayma iptali ki kaydırırken kartlar "nefes almasın"),
+  `PopIn` (araç paneli, YENİ şerit döşemesi — `createdAt` < 4 sn, ayar
+  alanı içeriği), ayar alanı `AnimatedSize` ile açılır, + menüsü yaylı
+  (easeOutBack), ana ekran yüklenirken çark yerine `NoteGridSkeleton`.
+
+### Ortam
+Flutter 3.44.6 `/opt/flutter` (oturumda indirildi; `flutter test --no-pub` —
+her çağrıda pub get koşmasın). 12 yeni anahtar 16 dilde elle yazıldı. Testler:
+`requests_2026_10_17_b_test.dart` (+15), `view_mode_switch_test` ve
+`youtube_video_test` YENİ davranışa güncellendi (ses artık sabitlenir, Ek
+kipi). Cihazda GÖRÜLMEDİ — APK CI'da.

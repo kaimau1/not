@@ -269,7 +269,8 @@ class _QuickAddFabState extends State<QuickAddFab> {
           onPressed: _open ? _close : _openMenu,
           child: AnimatedRotation(
             turns: _open ? 0.125 : 0, // + → × dönüşü
-            duration: const Duration(milliseconds: 160),
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOutBack,
             child: const Icon(Icons.add),
           ),
         ),
@@ -529,7 +530,7 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
 
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 200),
+    duration: const Duration(milliseconds: 280),
   )..forward();
 
   @override
@@ -786,17 +787,23 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
 
     final sized = SizedBox(width: width, child: panel);
     if (MediaQuery.disableAnimationsOf(context)) return sized;
-    final curve = CurvedAnimation(
+    // Saydamlık hızlı ve düz gelir; ölçek ise "+" düğmesinden YAYLI
+    // açılır (hafifçe taşıp yerine oturur — iOS menülerinin açılışı).
+    final fade = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeOutCubic,
+      curve: const Interval(0, 0.6, curve: Curves.easeOut),
+    );
+    final spring = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
     );
     return FadeTransition(
-      opacity: curve,
+      opacity: fade,
       child: AnimatedBuilder(
-        animation: curve,
+        animation: spring,
         child: sized,
         builder: (context, inner) => Transform.scale(
-          scale: 0.9 + 0.1 * curve.value,
+          scale: 0.86 + 0.14 * spring.value,
           alignment: Alignment.bottomRight,
           child: inner,
         ),

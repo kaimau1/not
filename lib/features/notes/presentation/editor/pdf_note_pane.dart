@@ -15,6 +15,7 @@ import '../viewers/pdf_viewer_screen.dart';
 import 'bubbles_overview.dart';
 import 'page_note_pane.dart';
 import 'text_wrap.dart';
+import '../../../../core/widgets/smooth_routes.dart';
 
 /// "PDF ekle not al" notunun gövdesi: ÜSTTE PDF sayfası, ALTTA (istenirse) o
 /// sayfanın notu.
@@ -161,7 +162,7 @@ class _PdfNotePaneState extends State<PdfNotePane> {
   }
 
   Future<void> _openFullScreen() => Navigator.of(context).push(
-    MaterialPageRoute<void>(
+    MediaRoute<void>(
       builder: (_) => PdfViewerScreen(
         attachment: widget.attachment,
         onChanged: widget.onAttachmentChanged,

@@ -5113,4 +5113,41 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get transcriptUnsupportedFile =>
       'لا يمكن تفريغ هذا النوع من الملفات (اختر صوتًا أو فيديو أو صورة).';
+
+  @override
+  String get pickPdfTitle => 'اختر ملف PDF';
+
+  @override
+  String get pickSlidesTitle => 'اختر عرضًا تقديميًا';
+
+  @override
+  String get pickImagesTitle => 'اختر صورًا';
+
+  @override
+  String get pickDocumentTitle => 'اختر مستندًا';
+
+  @override
+  String get fileAppPickerTitle => 'اختيار الملفات عبر Dosya Okuyucu';
+
+  @override
+  String get fileAppPickerInfo =>
+      'عند إضافة ملف يُفتح Dosya Okuyucu مباشرةً ويعرض ملفات النوع المطلوب فقط (الأحدث أولًا). عند الإيقاف يُسأل عن التطبيق.';
+
+  @override
+  String get viewModeAttached => 'مرفق';
+
+  @override
+  String get viewModeAttachedHint => 'كمرفق — يبقى في الشريط السفلي';
+
+  @override
+  String get textToBubblesPreparing => 'جارٍ تنسيق النص كمستند…';
+
+  @override
+  String get attachmentActions => 'إجراءات المرفق';
+
+  @override
+  String get attachmentOpen => 'فتح';
+
+  @override
+  String get attachmentViewTitle => 'أين يوضع؟';
 }

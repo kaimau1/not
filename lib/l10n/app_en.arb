@@ -1909,5 +1909,17 @@
   "transcribeFileSubtitle": "Pick audio, video or an image; its text goes into the note",
   "cardTranscriptCount": "{count, plural, =1{Transcript} other{{count} transcripts}}",
   "transcriptPickTitle": "File to transcribe",
-  "transcriptUnsupportedFile": "This file type can't be transcribed (pick audio, video or an image)."
+  "transcriptUnsupportedFile": "This file type can't be transcribed (pick audio, video or an image).",
+  "pickPdfTitle": "Choose a PDF",
+  "pickSlidesTitle": "Choose a presentation",
+  "pickImagesTitle": "Choose images",
+  "pickDocumentTitle": "Choose a document",
+  "fileAppPickerTitle": "Pick files with Dosya Okuyucu",
+  "fileAppPickerInfo": "Adding a file opens Dosya Okuyucu directly, listing only files of the requested type (newest first). When off, you're asked which app to use.",
+  "viewModeAttached": "Attached",
+  "viewModeAttachedHint": "As attachment — stays in the strip at the bottom",
+  "textToBubblesPreparing": "Laying out the text as a document…",
+  "attachmentActions": "Attachment actions",
+  "attachmentOpen": "Open",
+  "attachmentViewTitle": "Where should it go?"
 }

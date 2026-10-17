@@ -1018,5 +1018,17 @@
   "transcribeFileSubtitle": "Выберите аудио, видео или изображение — текст попадёт в заметку",
   "cardTranscriptCount": "{count, plural, =1{Расшифровка} few{{count} расшифровки} many{{count} расшифровок} other{{count} расшифровки}}",
   "transcriptPickTitle": "Файл для расшифровки",
-  "transcriptUnsupportedFile": "Этот тип файла нельзя расшифровать (выберите аудио, видео или изображение)."
+  "transcriptUnsupportedFile": "Этот тип файла нельзя расшифровать (выберите аудио, видео или изображение).",
+  "pickPdfTitle": "Выберите PDF",
+  "pickSlidesTitle": "Выберите презентацию",
+  "pickImagesTitle": "Выберите изображения",
+  "pickDocumentTitle": "Выберите документ",
+  "fileAppPickerTitle": "Выбирать файлы в Dosya Okuyucu",
+  "fileAppPickerInfo": "При добавлении файла сразу открывается Dosya Okuyucu только с файлами нужного типа (новые сверху). Если выключено — спрашивается приложение.",
+  "viewModeAttached": "Вложение",
+  "viewModeAttachedHint": "Как вложение — остаётся в полосе внизу",
+  "textToBubblesPreparing": "Текст верстается в документ…",
+  "attachmentActions": "Действия с вложением",
+  "attachmentOpen": "Открыть",
+  "attachmentViewTitle": "Где разместить?"
 }

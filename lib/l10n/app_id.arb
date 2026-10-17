@@ -1018,5 +1018,17 @@
   "transcribeFileSubtitle": "Pilih audio, video, atau gambar; teksnya masuk ke catatan",
   "cardTranscriptCount": "{count, plural, other{{count} transkrip}}",
   "transcriptPickTitle": "File untuk ditranskripsikan",
-  "transcriptUnsupportedFile": "Jenis file ini tidak bisa ditranskripsikan (pilih audio, video, atau gambar)."
+  "transcriptUnsupportedFile": "Jenis file ini tidak bisa ditranskripsikan (pilih audio, video, atau gambar).",
+  "pickPdfTitle": "Pilih PDF",
+  "pickSlidesTitle": "Pilih presentasi",
+  "pickImagesTitle": "Pilih gambar",
+  "pickDocumentTitle": "Pilih dokumen",
+  "fileAppPickerTitle": "Pilih file dengan Dosya Okuyucu",
+  "fileAppPickerInfo": "Saat menambah file, Dosya Okuyucu langsung terbuka dan hanya menampilkan file jenis yang diminta (terbaru di atas). Jika mati, aplikasi akan ditanyakan.",
+  "viewModeAttached": "Lampiran",
+  "viewModeAttachedHint": "Sebagai lampiran — tetap di strip bawah",
+  "textToBubblesPreparing": "Menata teks sebagai dokumen…",
+  "attachmentActions": "Tindakan lampiran",
+  "attachmentOpen": "Buka",
+  "attachmentViewTitle": "Ditaruh di mana?"
 }

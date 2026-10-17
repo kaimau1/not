@@ -8,7 +8,9 @@ import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
 import '../viewers/bubble_layer.dart';
 import 'note_images.dart';
+import 'audio_card_box.dart';
 import 'pdf_page_box.dart';
+import 'text_page_box.dart';
 import 'video_transport.dart';
 
 /// Sabit bölmenin yüksekliği bu sınırlar arasında kalır (dp / oran).
@@ -24,6 +26,11 @@ const double kPinnedBarHeight = 44;
 /// Yeni sabitlenen medyanın ilk yüksekliği: ekran genişliğinde medyanın kendi
 /// oranı, ekranın %45'ini geçmeden. Oranı bilinmeyen video 16:9 sayılır.
 double defaultPinnedHeight(Attachment media, Size screen) {
+  // Ses: oynatıcı kartı kadar; metin: okunacak kadar (ekranın %40'ı).
+  if (media.kind == AttachmentKind.audio) return 104;
+  if (media.kind == AttachmentKind.text) {
+    return (screen.height * 0.4).clamp(kPinnedMinHeight, screen.height * 0.5);
+  }
   final w = (media.width ?? 0).toDouble();
   final h = (media.height ?? 0).toDouble();
   final pdf = media.kind == AttachmentKind.pdf;
@@ -193,6 +200,10 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     final l10n = context.l10n;
     final isVideo = widget.media.kind == AttachmentKind.video;
     final isPdf = widget.media.kind == AttachmentKind.pdf;
+    final isText = widget.media.kind == AttachmentKind.text;
+    final isAudio = widget.media.kind == AttachmentKind.audio;
+    // Zamanlı medya: denetim çubuğu ve ilerleme çizgisi (video + ses).
+    final timed = isVideo || isAudio;
     return LayoutBuilder(
       builder: (context, constraints) {
         final max = constraints.maxHeight * kPinnedMaxFraction;
@@ -206,7 +217,22 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
           children: [
             SizedBox(
               height: height,
-              child: isPdf
+              child: isText
+                  // METİN (2026-10-17): kaydırılan, seçilebilen kâğıt. Basılı
+                  // tutmak metni SEÇER (görseldeki "aşağı çekip bırak"
+                  // jesti yok) — bölmeden çıkış anahtardan/menüden.
+                  ? TextReaderView(
+                      key: ValueKey('pinned-text-${widget.media.id}'),
+                      attachment: widget.media,
+                    )
+                  : isAudio
+                  // SES: oynatıcı kartı; ±sn, hız ve "Not al" çubukta.
+                  ? AudioCardBox(
+                      key: ValueKey('pinned-audio-${widget.media.id}'),
+                      attachment: widget.media,
+                      noteAtButton: false,
+                    )
+                  : isPdf
                   // Belge kutusu kendi jestlerini kullanır (yatay kaydırma
                   // sayfa çevirir, çubuğu sayfa atlar); bölmeden çıkış
                   // görünüm anahtarından.
@@ -348,7 +374,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                     children: [
                       _barRow(context, bar.maxWidth),
                       // Videonun ilerlemesi çubuğun üst kenarında ince çizgi.
-                      if (isVideo)
+                      if (timed)
                         Positioned(
                           left: 0,
                           right: 0,
@@ -373,19 +399,23 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final isVideo = widget.media.kind == AttachmentKind.video;
-    final noteAtLabel = !isVideo || width >= 430;
+    final isAudio = widget.media.kind == AttachmentKind.audio;
+    final timed = isVideo || isAudio;
+    final noteAtLabel = !timed || width >= 430;
     final showLink = !isVideo || width >= 360;
     return Row(
       children: [
-        _BarButton(
-          tooltip: l10n.fullscreen,
-          icon: Icons.fullscreen,
-          onPressed: widget.onOpen,
-        ),
+        // Sesin tam ekranı yok (kart kendisi oynatıcı).
+        if (!isAudio)
+          _BarButton(
+            tooltip: l10n.fullscreen,
+            icon: Icons.fullscreen,
+            onPressed: widget.onOpen,
+          ),
         // VİDEO DENETİMİ (kullanıcı isteği 2026-10-16): ±10 sn ve
         // oynat/durdur medyanın HEMEN ALTINDA — oynatıcının
-        // üstünü örtmez.
-        if (isVideo)
+        // üstünü örtmez. Ses de aynı çubuğu kullanır (2026-10-17).
+        if (timed)
           VideoTransportControls(
             video: widget.media,
             showTime: width >= 500,

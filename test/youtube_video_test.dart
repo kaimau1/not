@@ -164,7 +164,7 @@ void main() {
       expect(image.rememberedPinHeight, isNull);
     });
 
-    test('PDF de sabitlenir (2026-10-16), ses sabitlenmez', () {
+    test('PDF de sabitlenir (2026-10-16), ses de (2026-10-17)', () {
       const pdf = Attachment(
         id: 'p',
         kind: AttachmentKind.pdf,
@@ -184,7 +184,9 @@ void main() {
         mimeType: 'audio/mp4',
         pinHeight: 200,
       );
-      expect(audio.isPinnedTop, isFalse);
+      // 2026-10-17: ses de tepede oynatıcı kartı olarak sabitlenir
+      // (kullanıcı: "geçiş olabilecek TÜM türler için çalışmalı").
+      expect(audio.isPinnedTop, isTrue);
     });
 
     test('ilk yükseklik medyanın oranından, ekranın %45inde tavan', () {

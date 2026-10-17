@@ -1018,5 +1018,17 @@
   "transcribeFileSubtitle": "Audio, Video oder Bild wählen; der Text kommt in die Notiz",
   "cardTranscriptCount": "{count, plural, =1{Transkript} other{{count} Transkripte}}",
   "transcriptPickTitle": "Zu transkribierende Datei",
-  "transcriptUnsupportedFile": "Dieser Dateityp kann nicht transkribiert werden (Audio, Video oder Bild wählen)."
+  "transcriptUnsupportedFile": "Dieser Dateityp kann nicht transkribiert werden (Audio, Video oder Bild wählen).",
+  "pickPdfTitle": "PDF auswählen",
+  "pickSlidesTitle": "Präsentation auswählen",
+  "pickImagesTitle": "Bilder auswählen",
+  "pickDocumentTitle": "Dokument auswählen",
+  "fileAppPickerTitle": "Dateien mit Dosya Okuyucu auswählen",
+  "fileAppPickerInfo": "Beim Hinzufügen einer Datei öffnet sich direkt Dosya Okuyucu und zeigt nur Dateien des gewünschten Typs (neueste zuerst). Wenn aus, wird nach der App gefragt.",
+  "viewModeAttached": "Anhang",
+  "viewModeAttachedHint": "Als Anhang – bleibt in der Leiste unten",
+  "textToBubblesPreparing": "Text wird als Dokument gesetzt…",
+  "attachmentActions": "Anhang-Aktionen",
+  "attachmentOpen": "Öffnen",
+  "attachmentViewTitle": "Wo soll es stehen?"
 }

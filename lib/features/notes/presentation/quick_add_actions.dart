@@ -356,7 +356,10 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       extensions: ['jpg', 'jpeg', 'png', 'webp'],
       mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
     );
-    final files = await DocPicker.pickMany(group);
+    final files = await DocPicker.pickMany(
+      group,
+      chooserTitle: l10n.pickImagesTitle,
+    );
     if (files.isEmpty || !mounted) return;
     // Kırp/döndür ADIMI (kullanıcı isteği 2026-08-09): görseller belgeye
     // dizilmeden ya da nota eklenmeden önce burada düzeltilir.

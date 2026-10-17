@@ -12,6 +12,7 @@ import 'package:video_player/video_player.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
 import '../../../../core/widgets/customizable.dart';
+import '../../../../core/widgets/pop_in.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/video_time.dart';
 import '../../data/video_frame.dart';
@@ -24,11 +25,14 @@ import '../../../../core/utils/youtube.dart';
 import '../viewers/video_viewer.dart';
 import '../viewers/youtube_viewer.dart';
 import 'image_layout.dart';
+import 'audio_card_box.dart';
 import 'pdf_page_box.dart';
+import 'text_page_box.dart';
 import 'text_wrap.dart';
 import 'video_hub_scope.dart';
 import 'video_transport.dart';
 import 'view_mode_switch.dart';
+import '../../../../core/widgets/smooth_routes.dart';
 
 /// Görseli tam ekran açar (yoksa "henüz senkronlanmadı" der). Tam ekranda
 /// görselin üzerine elle yazılabilir; çizim [onChanged] ile ekin `ink`
@@ -49,7 +53,7 @@ void openImageViewer(
     return;
   }
   Navigator.of(context).push(
-    MaterialPageRoute<void>(
+    MediaRoute<void>(
       builder: (_) => ImageViewerScreen(
         attachment: img,
         // Tam ekranda yana kaydırarak nottaki diğer görsellere geçilir.
@@ -471,7 +475,7 @@ class _WebVideoBoxState extends State<_WebVideoBox> {
       return;
     }
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      MediaRoute<void>(
         builder: (_) => VideoViewerScreen(attachment: widget.video),
       ),
     );
@@ -1114,7 +1118,7 @@ class _ImageTools extends StatelessWidget {
   final double minWidthFrac;
   final ValueChanged<double> onWidthChanged;
   final ValueChanged<double> onWidthEnd;
-  final VoidCallback onFullscreen;
+  final VoidCallback? onFullscreen;
   final VoidCallback onRemove;
   final VoidCallback? onExtractText;
 
@@ -1157,12 +1161,13 @@ class _ImageTools extends StatelessWidget {
             onChangeEnd: onWidthEnd,
           ),
         ),
-        IconButton(
-          tooltip: l10n.fullscreen,
-          visualDensity: VisualDensity.compact,
-          icon: const Icon(Icons.fullscreen, size: 20),
-          onPressed: onFullscreen,
-        ),
+        if (onFullscreen != null)
+          IconButton(
+            tooltip: l10n.fullscreen,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.fullscreen, size: 20),
+            onPressed: onFullscreen,
+          ),
         IconButton(
           tooltip: l10n.removeAttachment,
           visualDensity: VisualDensity.compact,
@@ -1316,8 +1321,14 @@ class _ImageTools extends StatelessWidget {
                             ?.copyWith(color: scheme.onSurfaceVariant),
                       ),
                     ],
-                    const Spacer(),
-                    viewSwitch,
+                    // Anahtar kalan genişliği alır: sığmazsa kendisi
+                    // simgelere iner (bkz. AttachmentViewSwitch).
+                    Expanded(
+                      child: Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: viewSwitch,
+                      ),
+                    ),
                     const SizedBox(width: 4),
                   ],
                 ),
@@ -1845,7 +1856,13 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         img.height == null ||
         img.width! <= 0 ||
         img.height! <= 0) {
-      return 1.0;
+      // Metin/ses kutusunun ölçüsü yazılmadıysa (başka cihazdan gelen eski
+      // kayıt) kutunun KENDİ oranı — kare varsayımı kâğıdı ezerdi.
+      return switch (img.kind) {
+        AttachmentKind.text => kTextBoxWidth / kTextBoxHeight,
+        AttachmentKind.audio => kAudioBoxWidth / kAudioBoxHeight,
+        _ => 1.0,
+      };
     }
     if (img.kind == AttachmentKind.pdf) {
       return pdfBoxAspect(
@@ -2062,9 +2079,16 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   Timer? _floatTimer;
 
   void _openViewer(Attachment img) {
+    // Metnin "tam ekranı" okuma ekranıdır; sesin ayrı ekranı yok (kart
+    // kendisi oynatıcı).
+    if (img.kind == AttachmentKind.text) {
+      widget.onTranscribe?.call(img);
+      return;
+    }
+    if (img.kind == AttachmentKind.audio) return;
     if (img.kind == AttachmentKind.pdf) {
       Navigator.of(context).push(
-        MaterialPageRoute<void>(
+        MediaRoute<void>(
           builder: (_) => PdfViewerScreen(
             attachment: img,
             initialPage: img.pdfPage,
@@ -2077,9 +2101,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     }
     if (img.kind == AttachmentKind.video) {
       Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => VideoViewerScreen(attachment: img),
-        ),
+        MediaRoute<void>(builder: (_) => VideoViewerScreen(attachment: img)),
       );
       return;
     }
@@ -2097,6 +2119,22 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   /// yerinde oynayan [_VideoBox]. Videonun doğal boyutu ekte yoksa ilk
   /// çözümde kalıcılaştırılır (oran 1:1 varsayılanında kalmasın).
   Widget _boxFor(Attachment a, {BoxFit fit = BoxFit.cover}) {
+    // SAYFAYA GÖMÜLÜ METİN (2026-10-17): sayfası çevrilen kâğıt kutusu; ⤢
+    // okuma ekranını açar (bkz. TextPageBox).
+    if (a.kind == AttachmentKind.text) {
+      return TextPageBox(
+        attachment: a,
+        onChanged: widget.onChanged,
+        swipeToTurn: fit == BoxFit.cover,
+        onOpen: widget.onTranscribe == null
+            ? null
+            : () => widget.onTranscribe!(a),
+      );
+    }
+    // SAYFADAKİ SES: oynatıcı kartı (zaman damgaları onu sarar).
+    if (a.kind == AttachmentKind.audio) {
+      return AudioCardBox(attachment: a, noteAtButton: fit == BoxFit.cover);
+    }
     // SAYFAYA GÖMÜLÜ PDF: görselin kutusunun belge karşılığı — sayfası
     // çevrilebilir, yer imi konur, tam ekrana geçer (bkz. [PdfPageBox]).
     if (a.kind == AttachmentKind.pdf) {
@@ -2914,73 +2952,96 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     // OCR'a vermek yanlış araç olurdu (bkz. [PdfPageBox]).
     final isVideo = img.kind == AttachmentKind.video;
     final isPdf = img.kind == AttachmentKind.pdf;
+    // Metin ve ses kutusunda görsel işlemleri (OCR, metne dök) anlamsız.
+    final isPlain =
+        img.kind == AttachmentKind.text || img.kind == AttachmentKind.audio;
     return Positioned(
       left: 8,
       right: 8,
       top: r.top + r.h + 6,
-      child: _ImageTools(
-        key: _toolbarKey,
-        wFrac: wFrac,
-        minWidthFrac: _minWidthFrac,
-        onWidthChanged: (v) => setState(() {
-          _resizeId = img.id;
-          _resizeWFrac = v;
-        }),
-        onWidthEnd: (v) {
-          widget.onChanged(img.copyWith(displayWidth: v));
-          setState(() {
-            _resizeId = null;
-            _resizeWFrac = null;
-          });
-        },
-        onExtractText: widget.onExtractText == null || isVideo || isPdf
-            ? null
-            : () => widget.onExtractText!(img),
-        // YouTube ekinin kopyası BAĞLANTISIDIR (kullanıcı bulgusu
-        // 2026-10-11: "videoların bağlantı adresi kopyalanmıyor" — menüde
-        // video için kopyalama hiç yoktu).
-        onCopy: widget.onCopy == null || (isVideo && !img.isWebVideo)
-            ? null
-            : () => widget.onCopy!(img),
-        copyIsLink: img.isWebVideo,
-        onOpenExternal: img.isWebVideo
-            ? () => launchUrl(
-                Uri.parse(img.webUrl),
-                mode: LaunchMode.externalApplication,
-              )
-            : null,
-        onSelectMany: widget.onCopyMany == null || widget.images.length < 2
-            ? null
-            : () => _startMulti(img.id),
-        // YouTube ekinin dosyası yok — videodan not çıkarmak mümkün değil.
-        onVideoToNote:
-            widget.onVideoToNote == null || !isVideo || img.isWebVideo
-            ? null
-            : () => widget.onVideoToNote!(img),
-        onTranscribe: widget.onTranscribe == null || isPdf
-            ? null
-            : () => widget.onTranscribe!(img),
-        // GÖRÜNÜM ANAHTARI panelin üst satırında: Sabit / Yüzen / Balonlu
-        // (eskiden menüde "Üste sabitle", PDF'te "Balonlu görünüm").
-        viewSwitch: widget.onViewChange == null
-            ? null
-            : AttachmentViewSwitch(
-                current: AttachmentView.floating,
-                available: availableViews(img),
-                onChanged: (view) {
-                  _deselect();
-                  widget.onViewChange!(img, view);
-                },
-              ),
-        onDetach: widget.onDetach == null
-            ? null
-            : () {
-                _deselect();
-                widget.onDetach!(img);
-              },
-        onFullscreen: () => _openViewer(img),
-        onRemove: () => widget.onRemove(img),
+      // Panel seçilen ekin altından süzülerek belirir (her yeni seçimde).
+      child: PopIn(
+        key: ValueKey('tools-${img.id}'),
+        duration: const Duration(milliseconds: 200),
+        child: _toolbarBody(context, img, wFrac, isVideo, isPdf, isPlain),
       ),
+    );
+  }
+
+  Widget _toolbarBody(
+    BuildContext context,
+    Attachment img,
+    double wFrac,
+    bool isVideo,
+    bool isPdf,
+    bool isPlain,
+  ) {
+    return _ImageTools(
+      key: _toolbarKey,
+      wFrac: wFrac,
+      minWidthFrac: _minWidthFrac,
+      onWidthChanged: (v) => setState(() {
+        _resizeId = img.id;
+        _resizeWFrac = v;
+      }),
+      onWidthEnd: (v) {
+        widget.onChanged(img.copyWith(displayWidth: v));
+        setState(() {
+          _resizeId = null;
+          _resizeWFrac = null;
+        });
+      },
+      onExtractText: widget.onExtractText == null || isVideo || isPdf || isPlain
+          ? null
+          : () => widget.onExtractText!(img),
+      // YouTube ekinin kopyası BAĞLANTISIDIR (kullanıcı bulgusu
+      // 2026-10-11: "videoların bağlantı adresi kopyalanmıyor" — menüde
+      // video için kopyalama hiç yoktu).
+      onCopy: widget.onCopy == null || (isVideo && !img.isWebVideo)
+          ? null
+          : () => widget.onCopy!(img),
+      copyIsLink: img.isWebVideo,
+      onOpenExternal: img.isWebVideo
+          ? () => launchUrl(
+              Uri.parse(img.webUrl),
+              mode: LaunchMode.externalApplication,
+            )
+          : null,
+      onSelectMany: widget.onCopyMany == null || widget.images.length < 2
+          ? null
+          : () => _startMulti(img.id),
+      // YouTube ekinin dosyası yok — videodan not çıkarmak mümkün değil.
+      onVideoToNote: widget.onVideoToNote == null || !isVideo || img.isWebVideo
+          ? null
+          : () => widget.onVideoToNote!(img),
+      onTranscribe:
+          widget.onTranscribe == null ||
+              isPdf ||
+              img.kind == AttachmentKind.text
+          ? null
+          : () => widget.onTranscribe!(img),
+      // GÖRÜNÜM ANAHTARI panelin üst satırında: Sabit / Yüzen / Balonlu
+      // (eskiden menüde "Üste sabitle", PDF'te "Balonlu görünüm").
+      viewSwitch: widget.onViewChange == null
+          ? null
+          : AttachmentViewSwitch(
+              current: AttachmentView.floating,
+              available: availableViews(img),
+              onChanged: (view) {
+                _deselect();
+                widget.onViewChange!(img, view);
+              },
+            ),
+      onDetach: widget.onDetach == null
+          ? null
+          : () {
+              _deselect();
+              widget.onDetach!(img);
+            },
+      onFullscreen: img.kind == AttachmentKind.audio
+          ? null
+          : () => _openViewer(img),
+      onRemove: () => widget.onRemove(img),
     );
   }
 }

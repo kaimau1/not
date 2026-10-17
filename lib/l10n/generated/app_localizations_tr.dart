@@ -5120,4 +5120,41 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get transcriptUnsupportedFile =>
       'Bu dosya türü metne dökülemiyor (ses, video ya da görsel seç).';
+
+  @override
+  String get pickPdfTitle => 'PDF seç';
+
+  @override
+  String get pickSlidesTitle => 'Sunum seç';
+
+  @override
+  String get pickImagesTitle => 'Görsel seç';
+
+  @override
+  String get pickDocumentTitle => 'Belge seç';
+
+  @override
+  String get fileAppPickerTitle => 'Dosyaları Dosya Okuyucu ile seç';
+
+  @override
+  String get fileAppPickerInfo =>
+      'Dosya eklerken doğrudan Dosya Okuyucu açılır ve yalnız istenen türün dosyaları (en yenisi üstte) listelenir. Kapalıyken uygulama seçimi sorulur.';
+
+  @override
+  String get viewModeAttached => 'Ek';
+
+  @override
+  String get viewModeAttachedHint => 'Ek olarak — alttaki ek şeridinde durur';
+
+  @override
+  String get textToBubblesPreparing => 'Metin belgeye diziliyor…';
+
+  @override
+  String get attachmentActions => 'Ek işlemleri';
+
+  @override
+  String get attachmentOpen => 'Aç';
+
+  @override
+  String get attachmentViewTitle => 'Nerede dursun?';
 }

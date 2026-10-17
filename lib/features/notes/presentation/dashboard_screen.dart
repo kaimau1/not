@@ -65,6 +65,7 @@ import 'voice_assistant.dart';
 import 'voice_assistant_widgets.dart';
 import 'voice_capture_sheet.dart';
 import 'drive_ui.dart';
+import '../../../core/widgets/skeleton.dart';
 
 /// Ana ekran ızgarasının önbellek payı (px): görünen alanın altında/üstünde
 /// önceden kurulan kartlar — hızlı kaydırmada kart boş gelmesin diye ~2
@@ -1544,12 +1545,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           searchActive: searchActive,
                                           reorderEnabled: reorderActive,
                                         ),
+                                        // Yüklenirken kart İSKELETİ (tek
+                                        // çark yerine — bkz. skeleton.dart).
                                         loading: () => [
-                                          const SliverFillRemaining(
-                                            hasScrollBody: false,
-                                            child: Center(
-                                              child:
-                                                  CircularProgressIndicator(),
+                                          SliverToBoxAdapter(
+                                            child: NoteGridSkeleton(
+                                              columns: columns,
                                             ),
                                           ),
                                         ],

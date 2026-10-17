@@ -46,6 +46,7 @@ import 'viewers/pdf_viewer_screen.dart';
 import 'viewers/slide_viewer_screen.dart';
 import 'viewers/transcript_screen.dart';
 import 'viewers/video_viewer.dart';
+import '../../../core/widgets/smooth_routes.dart';
 
 /// **DEFTER** ekranı — sayfaları çevrilen, üstüne DOĞRUDAN yazılan bir arşiv
 /// defteri (bkz. [NoteType.archive]).
@@ -1397,7 +1398,11 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
       mimeTypes: ['application/pdf'],
     );
     final files = <({String name, Uint8List bytes})>[];
-    for (final file in await DocPicker.pickMany(group)) {
+    final picked = await DocPicker.pickMany(
+      group,
+      chooserTitle: context.l10n.pickPdfTitle,
+    );
+    for (final file in picked) {
       files.add((name: file.name, bytes: await file.readAsBytes()));
     }
     await _storeFiles(page, files);
@@ -1415,7 +1420,10 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       ],
     );
-    final file = await DocPicker.pickOne(group);
+    final file = await DocPicker.pickOne(
+      group,
+      chooserTitle: context.l10n.pickSlidesTitle,
+    );
     if (file == null) return;
     await _storeFiles(page, [
       (name: file.name, bytes: await file.readAsBytes()),
@@ -1638,7 +1646,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
       return;
     }
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      MediaRoute<void>(
         builder: (_) => switch (attachment.kind) {
           AttachmentKind.pdf => PdfViewerScreen(attachment: attachment),
           AttachmentKind.slide => SlideViewerScreen(attachment: attachment),

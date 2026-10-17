@@ -25,7 +25,10 @@ Future<void> pickAndReadDocument(BuildContext context) async {
       'text/plain',
     ],
   );
-  final file = await DocPicker.pickOne(group);
+  final file = await DocPicker.pickOne(
+    group,
+    chooserTitle: context.l10n.pickDocumentTitle,
+  );
   if (file == null || !context.mounted) return;
 
   final path = file.path;

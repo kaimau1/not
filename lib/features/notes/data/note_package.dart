@@ -113,6 +113,7 @@ Map<String, dynamic> _encodeAttachment(Attachment a) => {
   // Metin eki (transkript) içeriğini kaydında taşır — dosyası yok.
   if (a.text.isNotEmpty) 'text': a.text,
   if (a.transcriptOf.isNotEmpty) 'transcriptOf': a.transcriptOf,
+  if (a.sourceDigest.isNotEmpty) 'sourceDigest': a.sourceDigest,
 };
 
 /// Paket JSON'unu nota çevirir. Kimlik boş bırakılır: içe aktaran taraf notu
@@ -193,6 +194,7 @@ Attachment _decodeAttachment(Map<String, dynamic> map) => Attachment(
   bubblesHidden: map['bubblesHidden'] as bool? ?? false,
   text: map['text'] as String? ?? '',
   transcriptOf: map['transcriptOf'] as String? ?? '',
+  sourceDigest: map['sourceDigest'] as String? ?? '',
 );
 
 /// Notu ve ek baytlarını tek bir `.notpaket` (ZIP) dosyasına yazar.

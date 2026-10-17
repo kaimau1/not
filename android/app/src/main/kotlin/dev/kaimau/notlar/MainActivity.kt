@@ -29,6 +29,14 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
+/** Seçilen dosyaların önbelleğe kopyası (büyük video/ses saniyeler sürer —
+ *  video kapak karesi kuyruğunu bekletmesin diye ayrı iş parçacığı). */
+private val pickExecutor: java.util.concurrent.ExecutorService by lazy {
+    java.util.concurrent.Executors.newSingleThreadExecutor { r ->
+        Thread(r, "notlar-pick").apply { isDaemon = true }
+    }
+}
+
 /** Video karesi/süresi işleri için süreç ömürlü tek iş parçacığı. */
 private val sharedMediaExecutor: java.util.concurrent.ExecutorService by lazy {
     java.util.concurrent.Executors.newSingleThreadExecutor { r ->
@@ -308,34 +316,35 @@ class MainActivity : FlutterFragmentActivity() {
                                 ?: listOf("*/*")
                             val multiple = call.argument<Boolean>("multiple") ?: false
                             val title = call.argument<String>("title")
-                            val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-                                addCategory(Intent.CATEGORY_OPENABLE)
-                                // Tek MIME `type`e, gerisi EXTRA_MIME_TYPES'a:
-                                // yalnız extra verilirse bazı uygulamalar hiç
-                                // süzmüyor, yalnız type verilirse çoklu tür
-                                // anlatılamıyor.
-                                type = if (mimes.size == 1) mimes[0] else "*/*"
-                                if (mimes.size > 1) {
-                                    putExtra(Intent.EXTRA_MIME_TYPES, mimes.toTypedArray())
-                                }
-                                if (multiple) {
-                                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                                }
-                            }
-                            try {
-                                pickResult = result
-                                startActivityForResult(
-                                    Intent.createChooser(intent, title),
-                                    pickRequestCode
-                                )
-                            } catch (e: Exception) {
+                            val extensions = call.argument<List<String>>("extensions")
+                                ?: emptyList()
+                            val viaFileApp = call.argument<Boolean>("fileApp") ?: true
+                            val intent = getContentIntent(mimes, multiple, title, extensions)
+                            pickResult = result
+                            pickIntent = intent
+                            pickTitle = title
+                            // EKOSİSTEM (kullanıcı isteği 2026-10-17: "bizim
+                            // dosya yöneticisi programımız yüklü ise onunla
+                            // senkron ve uyumlu çalışalım"): Dosya Okuyucu
+                            // kuruluysa seçim DOĞRUDAN onun seçicisinde açılır
+                            // — istenen türün bütün dosyaları, en yenisi üstte
+                            // (bkz. dosya-okuyucu `PickFileScreen`). Orada
+                            // "Diğer kaynaklar"a basılırsa sonuç
+                            // RESULT_FIRST_USER döner ve aşağıdaki seçici açılır.
+                            val launched = viaFileApp && launchFileApp(intent)
+                            if (!launched && !launchChooser(intent, title, excludeFileApp = false)) {
                                 // Hiçbir uygulama karşılamadı: Dart tarafı
                                 // `file_selector` yoluna düşer.
                                 pickResult = null
-                                result.error("unavailable", "$e", null)
+                                pickIntent = null
+                                result.error("unavailable", "seçici yok", null)
                             }
                         }
                     }
+                    // Dosya Okuyucu (kardeş uygulama) kurulu mu — ayarlardaki
+                    // "Dosyaları Dosya Okuyucu ile seç" satırı yalnız o zaman
+                    // görünür.
+                    "fileAppInstalled" -> result.success(fileAppResolves())
                     // Videonun KAPAK KARESİ (balonlu görüntülü not): çekilen
                     // videodan tek bir kare çıkarılır ve o karenin üzerine
                     // balon/vurgu konabilen belge sayfası kurulur.
@@ -523,6 +532,19 @@ class MainActivity : FlutterFragmentActivity() {
     private var pickResult: MethodChannel.Result? = null
     private val pickRequestCode = 4713
 
+    /// Açık seçimin taban niyeti ve başlığı ("Diğer kaynaklar" dönüşünde
+    /// aynı istekle sistem seçicisi açılsın diye saklanır).
+    private var pickIntent: Intent? = null
+    private var pickTitle: String? = null
+
+    // ── EKOSİSTEM SÖZLEŞMESİ — Dosya Okuyucu (kardeş uygulama) ─────────
+    // İki depoda AYNI değerler: dosya-okuyucu `ci/PickerActivity.kt`.
+    private val fileAppPackage = "com.dosyaokuyucu.dosya_okuyucu"
+    private val extraExtensions = "com.dosyaokuyucu.extra.EXTENSIONS"
+    private val extraCaller = "com.dosyaokuyucu.extra.CALLER"
+    private val extraOtherSourcesOk = "com.dosyaokuyucu.extra.OTHER_SOURCES_OK"
+    private val extraOtherSource = "com.dosyaokuyucu.extra.OTHER_SOURCE"
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == pickRequestCode) {
@@ -579,11 +601,115 @@ class MainActivity : FlutterFragmentActivity() {
 
     // ---- Belge seçici ------------------------------------------------
 
+    /// Seçicinin taban niyeti: `ACTION_GET_CONTENT` + tür süzgeci.
+    ///
+    /// TÜR SÜZGECİ (kullanıcı bulgusu 2026-10-17: "dosya eklerken açılan
+    /// dosya yöneticisi istenen uzantıya göre süzmeli, şu an ana sayfa
+    /// açılıyor ve bulmak çok zor"): birden çok MIME verildiğinde `type`
+    /// eskiden düz `*/*` oluyordu — EXTRA_MIME_TYPES'a bakmayan dosya
+    /// yöneticileri (Dosya Okuyucu dahil) her şeyi gösteriyordu. Artık hepsi
+    /// aynı aileden geliyorsa (`image/jpeg` + `image/png`) `type` o aile
+    /// (`image/*`); kesin liste yine EXTRA_MIME_TYPES'ta. Uzantı listesi ve
+    /// başlık, Dosya Okuyucu'nun süzgeci için ayrı ekstralarla gider
+    /// (başka uygulamalar tanımadıkları ekstrayı yok sayar).
+    private fun getContentIntent(
+        mimes: List<String>,
+        multiple: Boolean,
+        title: String?,
+        extensions: List<String>,
+    ): Intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+        addCategory(Intent.CATEGORY_OPENABLE)
+        type = intentTypeOf(mimes)
+        if (mimes.size > 1) {
+            putExtra(Intent.EXTRA_MIME_TYPES, mimes.toTypedArray())
+        }
+        if (multiple) putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+        if (!title.isNullOrBlank()) putExtra(Intent.EXTRA_TITLE, title)
+        if (extensions.isNotEmpty()) {
+            putExtra(extraExtensions, extensions.map { it.lowercase() }.toTypedArray())
+        }
+        putExtra(extraCaller, getString(R.string.widget_title))
+        // Bu çağıran "Diğer kaynaklar" dönüşünü anlıyor: Dosya Okuyucu düğmeyi
+        // yalnız o zaman gösterir (başka bir uygulama RESULT_FIRST_USER'ı
+        // sessiz bir iptal sanardı).
+        putExtra(extraOtherSourcesOk, true)
+    }
+
+    /// Tek MIME → kendisi; hepsi aynı aileden → `aile/*`; yoksa `*/*`.
+    private fun intentTypeOf(mimes: List<String>): String {
+        if (mimes.isEmpty()) return "*/*"
+        if (mimes.size == 1) return mimes[0]
+        val families = mimes.map { it.substringBefore('/') }.toSet()
+        val family = families.singleOrNull()
+        return if (family != null && family != "*") "$family/*" else "*/*"
+    }
+
+    /// Dosya Okuyucu niyeti karşılayabiliyor mu (kurulu + seçici kipi var).
+    private fun fileAppResolves(): Boolean = try {
+        val probe = Intent(Intent.ACTION_GET_CONTENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+            setPackage(fileAppPackage)
+        }
+        packageManager.queryIntentActivities(probe, 0).isNotEmpty()
+    } catch (e: Exception) {
+        false
+    }
+
+    private fun launchFileApp(base: Intent): Boolean {
+        if (!fileAppResolves()) return false
+        return try {
+            startActivityForResult(Intent(base).setPackage(fileAppPackage), pickRequestCode)
+            true
+        } catch (e: Exception) {
+            Log.d(logTag, "dosya okuyucu acilamadi: $e")
+            false
+        }
+    }
+
+    /// Sıradan "hangi uygulamayla?" seçimi. [excludeFileApp]: Dosya
+    /// Okuyucu'dan "Diğer kaynaklar" ile gelindiyse listede tekrar çıkmasın.
+    private fun launchChooser(base: Intent, title: String?, excludeFileApp: Boolean): Boolean {
+        return try {
+            val chooser = Intent.createChooser(base, title)
+            if (excludeFileApp && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                val excluded = packageManager.queryIntentActivities(
+                    Intent(base).setPackage(fileAppPackage), 0
+                ).map {
+                    android.content.ComponentName(it.activityInfo.packageName, it.activityInfo.name)
+                }
+                if (excluded.isNotEmpty()) {
+                    chooser.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, excluded.toTypedArray())
+                }
+            }
+            startActivityForResult(chooser, pickRequestCode)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     /// Seçilen içerik URI'lerini önbelleğe kopyalar ve {path, name} listesi
     /// döndürür. İptalde BOŞ liste (hata değil) — çağıran sessizce vazgeçer.
+    ///
+    /// KASMA (2026-10-17): kopyalama eskiden ANA iş parçacığındaydı — 200 MB'lık
+    /// bir ses/video seçilince arayüz saniyelerce donuyor, uzun dosyada ANR
+    /// riski doğuyordu. Artık medya iş parçacığında; sonuç ana iş parçacığına
+    /// döner. URI okuma izni etkinlik ömrü boyunca geçerli, arka planda
+    /// okumak güvenli.
     private fun onPickResult(resultCode: Int, data: Intent?) {
         val pending = pickResult ?: return
+        // Dosya Okuyucu'nun "Diğer kaynaklar" düğmesi: aynı istekle sistem
+        // seçicisi açılır (Dosya Okuyucu hariç); sonuç yine buraya düşer.
+        if (resultCode == RESULT_FIRST_USER &&
+            data?.getBooleanExtra(extraOtherSource, false) == true
+        ) {
+            val base = pickIntent
+            if (base != null && launchChooser(base, pickTitle, excludeFileApp = true)) return
+        }
         pickResult = null
+        pickIntent = null
+        pickTitle = null
         if (resultCode != RESULT_OK || data == null) {
             pending.success(emptyList<Map<String, String>>())
             return
@@ -597,29 +723,31 @@ class MainActivity : FlutterFragmentActivity() {
         } else {
             data.data?.let(uris::add)
         }
-        val out = mutableListOf<Map<String, String>>()
-        for (uri in uris) {
-            val name = displayName(uri)
-            try {
-                // Ad ÖNBELLEK YOLUNDA korunur: çağıranların bir kısmı uzantıya
-                // bakıyor (PDF mi sunum mu) ve rastgele adlı bir kopya o
-                // denetimleri düşürürdü. Çakışmayı klasör önler.
-                val dir = java.io.File(cacheDir, "secim_${System.currentTimeMillis()}")
-                dir.mkdirs()
-                val file = java.io.File(dir, name)
-                contentResolver.openInputStream(uri)?.use { inp ->
-                    file.outputStream().use { out2 -> inp.copyTo(out2) }
+        pickExecutor.execute {
+            val out = mutableListOf<Map<String, String>>()
+            for (uri in uris) {
+                val name = displayName(uri)
+                try {
+                    // Ad ÖNBELLEK YOLUNDA korunur: çağıranların bir kısmı uzantıya
+                    // bakıyor (PDF mi sunum mu) ve rastgele adlı bir kopya o
+                    // denetimleri düşürürdü. Çakışmayı klasör önler.
+                    val dir = java.io.File(cacheDir, "secim_${System.nanoTime()}")
+                    dir.mkdirs()
+                    val file = java.io.File(dir, name)
+                    contentResolver.openInputStream(uri)?.use { inp ->
+                        file.outputStream().use { out2 -> inp.copyTo(out2, 256 * 1024) }
+                    }
+                    if (file.length() > 0) {
+                        out.add(mapOf("path" to file.absolutePath, "name" to name))
+                    } else {
+                        file.delete()
+                    }
+                } catch (e: Exception) {
+                    Log.d(logTag, "secim kopyalanamadi: $e")
                 }
-                if (file.length() > 0) {
-                    out.add(mapOf("path" to file.absolutePath, "name" to name))
-                } else {
-                    file.delete()
-                }
-            } catch (e: Exception) {
-                Log.d(logTag, "secim kopyalanamadi: $e")
             }
+            mainHandler.post { pending.success(out) }
         }
-        pending.success(out)
     }
 
     /// İçerik URI'sinin görünen adı; sağlayıcı vermezse damgalı bir ad.

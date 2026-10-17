@@ -1018,5 +1018,17 @@
   "transcribeFileSubtitle": "选择音频、视频或图片，其文字会写入笔记",
   "cardTranscriptCount": "{count, plural, other{{count} 份转写}}",
   "transcriptPickTitle": "要转写的文件",
-  "transcriptUnsupportedFile": "此文件类型无法转写（请选择音频、视频或图片）。"
+  "transcriptUnsupportedFile": "此文件类型无法转写（请选择音频、视频或图片）。",
+  "pickPdfTitle": "选择 PDF",
+  "pickSlidesTitle": "选择演示文稿",
+  "pickImagesTitle": "选择图片",
+  "pickDocumentTitle": "选择文档",
+  "fileAppPickerTitle": "使用 Dosya Okuyucu 选择文件",
+  "fileAppPickerInfo": "添加文件时直接打开 Dosya Okuyucu，只列出所需类型的文件（最新在前）。关闭后会询问使用哪个应用。",
+  "viewModeAttached": "附件",
+  "viewModeAttachedHint": "作为附件——留在底部栏",
+  "textToBubblesPreparing": "正在将文本排版为文档…",
+  "attachmentActions": "附件操作",
+  "attachmentOpen": "打开",
+  "attachmentViewTitle": "放在哪里？"
 }

@@ -1018,5 +1018,17 @@
   "transcribeFileSubtitle": "Kies audio, video of een afbeelding; de tekst gaat in de notitie",
   "cardTranscriptCount": "{count, plural, =1{Transcript} other{{count} transcripten}}",
   "transcriptPickTitle": "Bestand om te transcriberen",
-  "transcriptUnsupportedFile": "Dit bestandstype kan niet worden getranscribeerd (kies audio, video of een afbeelding)."
+  "transcriptUnsupportedFile": "Dit bestandstype kan niet worden getranscribeerd (kies audio, video of een afbeelding).",
+  "pickPdfTitle": "Kies een pdf",
+  "pickSlidesTitle": "Kies een presentatie",
+  "pickImagesTitle": "Kies afbeeldingen",
+  "pickDocumentTitle": "Kies een document",
+  "fileAppPickerTitle": "Bestanden kiezen met Dosya Okuyucu",
+  "fileAppPickerInfo": "Bij het toevoegen van een bestand opent Dosya Okuyucu direct met alleen bestanden van het gevraagde type (nieuwste eerst). Uit: er wordt gevraagd welke app.",
+  "viewModeAttached": "Bijlage",
+  "viewModeAttachedHint": "Als bijlage — blijft in de strook onderaan",
+  "textToBubblesPreparing": "Tekst wordt als document opgemaakt…",
+  "attachmentActions": "Bijlage-acties",
+  "attachmentOpen": "Openen",
+  "attachmentViewTitle": "Waar moet het staan?"
 }

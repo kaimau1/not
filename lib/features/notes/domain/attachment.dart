@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crypto/crypto.dart';
 
 import '../../../core/utils/local_file.dart';
 
@@ -651,8 +654,18 @@ class Attachment {
     this.bubblesHidden = false,
     this.text = '',
     this.transcriptOf = '',
+    this.sourceDigest = '',
     this.createdAt,
   });
+
+  /// TÜRETİLMİŞ belgenin üretildiği kaynak içeriğin özeti (yalnız metin →
+  /// balonlu belgede; bkz. [digestOf]). Metin sonradan düzenlenince özet
+  /// tutmaz ve belge balonluya geçişte yeniden dizilir. Boş = bilinmiyor.
+  final String sourceDigest;
+
+  /// Metnin kısa, kararlı özeti (SHA-1'in ilk 16 hanesi).
+  static String digestOf(String text) =>
+      sha1.convert(utf8.encode(text)).toString().substring(0, 16);
 
   /// METİN EKİNİN içeriği (yalnız [AttachmentKind.text]); öbür türlerde boş.
   /// Firestore belge sınırı (1 MiB) yüzünden [maxTextChars]'ta kesilir.
@@ -748,8 +761,8 @@ class Attachment {
   // yazılı — anlamını değiştirmek her eski notun PDF'ini bir anda sayfanın
   // ortasına taşırdı.
 
-  /// PDF eki sayfada mı duruyor? (Görsel/videoda yok sayılır — onların yeri
-  /// [asFile] ile belirlenir.)
+  /// PDF / metin / ses eki sayfada mı duruyor? (Görsel/videoda yok sayılır —
+  /// onların yeri [asFile] ile belirlenir; bkz. [stripByDefault].)
   final bool onPage;
 
   /// Sayfada gösterilen PDF sayfası (1 tabanlı). Notla birlikte senkronlanır:
@@ -845,20 +858,43 @@ class Attachment {
   /// sabitleme yapamıyorum"): bölmede sayfa çevrilebilen belge kutusu durur,
   /// not altında yazılır. Balonlu görünümden farkı: belge notun KENDİSİ
   /// olmaz, not metin notu kalır.
+  ///
+  /// METİN ve SES de sabitlenir (kullanıcı isteği 2026-10-17: "txt dosyaları
+  /// da ekrana gömme, yukarı sabitleme ve balonlu geçiş; bu geçiş olabilecek
+  /// TÜM türler için çalışmalı"): bölmede metin okunur ya da ses çalar, not
+  /// altında yazılır. Sunum sabitlenemez (bölmede çizicisi yok).
   bool get isPinnedTop =>
       pinHeight > 0 &&
       (kind == AttachmentKind.image ||
           kind == AttachmentKind.video ||
-          kind == AttachmentKind.pdf);
+          kind == AttachmentKind.pdf ||
+          kind == AttachmentKind.text ||
+          kind == AttachmentKind.audio);
+
+  /// Varsayılan yeri ALT ŞERİT olan türler: sayfaya [onPage] ile gömülürler
+  /// (görsel/video ise varsayılan olarak sayfadadır, şeride [asFile] ile
+  /// iner). Sunum hiçbir zaman sayfaya gömülmez.
+  bool get stripByDefault =>
+      kind == AttachmentKind.pdf ||
+      kind == AttachmentKind.text ||
+      kind == AttachmentKind.audio;
+
+  /// Ek sayfanın DIŞINDA mı (şeritte ya da yalnız bölmede)?
+  bool get offPage => stripByDefault ? !onPage : asFile;
+
+  /// Eki sayfaya koyan ([on]) ya da şeride indiren kopya — türün kendi
+  /// alanıyla ([onPage] / [asFile]).
+  Attachment placedOnPage(bool on) =>
+      stripByDefault ? copyWith(onPage: on) : copyWith(asFile: !on);
 
   /// Ek SAYFADA yüzüyor mu? Görseller gibi videolar da serbest tuvale
-  /// yerleşir ve olduğu yerde oynatılır (2026-08-06 isteği); PDF sayfaya
-  /// gömülünce ([onPage]) yüzer; ses/sunum hiçbir zaman yüzmez.
+  /// yerleşir ve olduğu yerde oynatılır (2026-08-06 isteği); PDF, metin ve
+  /// ses sayfaya gömülünce ([onPage]) yüzer; sunum hiçbir zaman yüzmez.
   bool get floatsOnPage =>
       ((kind == AttachmentKind.image || kind == AttachmentKind.video) &&
           !asFile &&
           !isPinnedTop) ||
-      (kind == AttachmentKind.pdf && onPage && !isPinnedTop);
+      (stripByDefault && onPage && !isPinnedTop);
 
   /// [uploaded] yüklemesinin ürettiği DEPO alanlarını bu ekin üzerine geçirir;
   /// düzen alanları (konum/boyut/hiza/çizim) bu ekten korunur.
@@ -932,6 +968,7 @@ class Attachment {
     bool? bubblesHidden,
     String? text,
     String? transcriptOf,
+    String? sourceDigest,
   }) => Attachment(
     id: id,
     kind: kind,
@@ -964,6 +1001,7 @@ class Attachment {
     bubblesHidden: bubblesHidden ?? this.bubblesHidden,
     text: text ?? this.text,
     transcriptOf: transcriptOf ?? this.transcriptOf,
+    sourceDigest: sourceDigest ?? this.sourceDigest,
     createdAt: createdAt,
   );
 
@@ -1014,6 +1052,7 @@ class Attachment {
         bubblesHidden: map['bubblesHidden'] as bool? ?? false,
         text: map['text'] as String? ?? '',
         transcriptOf: map['transcriptOf'] as String? ?? '',
+        sourceDigest: map['sourceDigest'] as String? ?? '',
         createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       );
 
@@ -1082,6 +1121,7 @@ class Attachment {
     // Metin eki: içerik ve kaynağı yalnız doluyken (öbür türlerde alan yok).
     if (text.isNotEmpty) 'text': text,
     if (transcriptOf.isNotEmpty) 'transcriptOf': transcriptOf,
+    if (sourceDigest.isNotEmpty) 'sourceDigest': sourceDigest,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),
