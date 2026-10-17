@@ -3,8 +3,9 @@
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
 ## 2026-10-17 (2. tur) — transkript, performans, simge i4, hatalar (CİHAZDA GÖRÜLMEDİ)
-- [ ] **`firebase deploy --only storage`** — storage.rules'a PPTX eklendi;
-  deploy edilmeden ortak not/web sunumları yine yüklenmez.
+- [ ] storage.rules'a PPTX eklendi — main CI'ındaki "Firebase + Cloudflare
+  Deploy" işi yeşil mi (kuralı o yayınlıyor); ortak nota eklenen sunum
+  yükleniyor mu.
 - [ ] **Play Console**: `assets/icon/play_store_512.png` mağaza simgesi olarak
   yüklenecek.
 - [ ] **Tüm cihazlar güncellenmeli** (Windows dahil): eski sürüm yeni metin

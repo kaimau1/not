@@ -4757,8 +4757,10 @@ performans araştırması; (3) "simgemiz olmamış" — Play'e gerçekten hazır
 ### Hata taraması (bulunup düzeltilenler)
 * storage.rules PPTX'i REDDEDİYORDU: ortak nota ya da web'den eklenen sunum
   Storage'a hiç yüklenmiyor, kuyruk 6 saate tırmanan aralıklarla boşuna
-  deniyordu → `attachmentTypes()`. **`firebase deploy --only storage`
-  GEREKİYOR** (oturumda Firebase CLI/yetki yok).
+  deniyordu → `attachmentTypes()`. Kurallar main'e giren her push'ta CI'ın
+  "Firebase + Cloudflare Deploy" işiyle (`firebase deploy --only
+  firestore,storage`) yayınlanıyor — elle deploy gerekmez, o işin yeşil
+  olduğuna bakılır.
 * Ses dosyası paylaşılamıyordu (manifestte audio/* yoktu).
 * AMR yanlış türü, simge kırpılması, bildirim gri karesi, büyük videoların
   belleğe okunması (yukarıda).
@@ -4769,5 +4771,8 @@ performans araştırması; (3) "simgemiz olmamış" — Play'e gerçekten hazır
 Flutter 3.44.6 `/opt/flutter` (oturumda indirildi). `flutter analyze` temiz,
 1262/1262 test (+25: `requests_2026_10_17_test.dart`,
 `transcribe_media_test.dart`, share_intake). 31 yeni çeviri anahtarı 16 dilde
-elle yazıldı. Android SDK yok — Kotlin (`extractAudio`, bildirim simgesi)
-yerelde DERLENMEDİ; APK CI'da. Cihazda GÖRÜLMEDİ.
+elle yazıldı. Android SDK yok (dl.google.com proxy'de kapalı): `extractAudio`
+ayrı bir Gradle/Kotlin 2.3.20 projesinde Robolectric `android-all` (API 34)
+jar'ına karşı DERLENDİ (repo1.maven.org açık; repo.maven.apache.org 429
+verebiliyor — `maven("https://repo1.maven.org/maven2/")` ver, 429'da tekrar
+dene). Tam APK yine CI'da. Cihazda GÖRÜLMEDİ.
