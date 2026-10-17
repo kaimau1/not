@@ -1030,5 +1030,11 @@
   "textToBubblesPreparing": "Tekst wordt als document opgemaakt…",
   "attachmentActions": "Bijlage-acties",
   "attachmentOpen": "Openen",
-  "attachmentViewTitle": "Waar moet het staan?"
+  "attachmentViewTitle": "Waar moet het staan?",
+  "attachmentUploadQueued": "Wacht op uploaden",
+  "attachmentWaitingOwner": "Wacht tot degene die het toevoegde het uploadt",
+  "attachmentsUploadingCount": "{count} bijlagen worden geüpload",
+  "sharedNoteNew": "Nieuw",
+  "sharedNoteUpdatedBy": "Bijgewerkt door {name}",
+  "sharedMarkAllRead": "Alles als gelezen markeren"
 }

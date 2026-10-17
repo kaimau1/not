@@ -2388,5 +2388,25 @@
   "textToBubblesPreparing": "Metin belgeye diziliyor…",
   "attachmentActions": "Ek işlemleri",
   "attachmentOpen": "Aç",
-  "attachmentViewTitle": "Nerede dursun?"
+  "attachmentViewTitle": "Nerede dursun?",
+  "attachmentUploadQueued": "Yüklenmeyi bekliyor",
+  "attachmentWaitingOwner": "Ekleyenin cihazından yüklenmesi bekleniyor",
+  "attachmentsUploadingCount": "{count} ek yükleniyor",
+  "@attachmentsUploadingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharedNoteNew": "Yeni",
+  "sharedNoteUpdatedBy": "{name} güncelledi",
+  "@sharedNoteUpdatedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sharedMarkAllRead": "Tümünü okundu say"
 }

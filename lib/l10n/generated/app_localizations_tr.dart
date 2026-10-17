@@ -5157,4 +5157,27 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get attachmentViewTitle => 'Nerede dursun?';
+
+  @override
+  String get attachmentUploadQueued => 'Yüklenmeyi bekliyor';
+
+  @override
+  String get attachmentWaitingOwner =>
+      'Ekleyenin cihazından yüklenmesi bekleniyor';
+
+  @override
+  String attachmentsUploadingCount(int count) {
+    return '$count ek yükleniyor';
+  }
+
+  @override
+  String get sharedNoteNew => 'Yeni';
+
+  @override
+  String sharedNoteUpdatedBy(String name) {
+    return '$name güncelledi';
+  }
+
+  @override
+  String get sharedMarkAllRead => 'Tümünü okundu say';
 }

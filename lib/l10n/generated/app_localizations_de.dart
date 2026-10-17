@@ -5192,4 +5192,27 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get attachmentViewTitle => 'Wo soll es stehen?';
+
+  @override
+  String get attachmentUploadQueued => 'Wartet auf Upload';
+
+  @override
+  String get attachmentWaitingOwner =>
+      'Wartet auf den Upload vom Gerät der hinzufügenden Person';
+
+  @override
+  String attachmentsUploadingCount(int count) {
+    return '$count Anhänge werden hochgeladen';
+  }
+
+  @override
+  String get sharedNoteNew => 'Neu';
+
+  @override
+  String sharedNoteUpdatedBy(String name) {
+    return 'Von $name aktualisiert';
+  }
+
+  @override
+  String get sharedMarkAllRead => 'Alle als gelesen markieren';
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../notes/data/note_shares_repository.dart';
+import '../../notes/data/shared_note_activity.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../../notes/presentation/shared_notes_screen.dart';
 import '../data/folder_activity.dart';
@@ -324,8 +325,20 @@ class FolderChip extends ConsumerWidget {
     final count = ref.watch(
       folderNoteCountsProvider.select((m) => m[folder.id] ?? 0),
     );
+    // Şerit çipinde de okunmamış rozeti (kullanıcı bulgusu 2026-10-17:
+    // "yeni bir şey geldiğinde anlaşılmıyor") — eskiden yalnız karo
+    // görünümünde vardı, varsayılan şeritte hareket hiç görünmüyordu.
+    final unread = folder.isShared
+        ? ref.watch(
+            folderUnreadProvider((
+              ownerId: folder.ownerId,
+              folderId: folder.id,
+            )),
+          )
+        : 0;
     return _ChipShell(
       accent: folder.accent,
+      unread: unread,
       icon: folder.iconData,
       label: folder.name,
       count: count,
@@ -357,8 +370,15 @@ class SharedFolderChip extends ConsumerWidget {
               )
               .maybeWhen(data: (notes) => notes.length, orElse: () => 0)
         : null;
+    final unread = ref.watch(
+      folderUnreadProvider((
+        ownerId: share.ownerId,
+        folderId: share.folderId,
+      )),
+    );
     return _ChipShell(
       accent: folderAccent(share.folderId),
+      unread: unread,
       icon: share.iconData,
       label: share.name,
       count: count,
@@ -385,6 +405,7 @@ class SharedNotesChip extends ConsumerWidget {
       sharedNotesWithMeProvider.select((s) => s.value?.length ?? 0),
     );
     if (count == 0) return const SizedBox.shrink();
+    final unread = ref.watch(sharedNoteUnreadProvider.select((s) => s.length));
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsetsDirectional.only(end: 6),
@@ -393,6 +414,7 @@ class SharedNotesChip extends ConsumerWidget {
         icon: Icons.people_alt_outlined,
         label: context.l10n.sharedWithMe,
         count: count,
+        unread: unread,
         onTap: () => SharedNotesScreen.open(context),
       ),
     );
@@ -436,7 +458,11 @@ class _ChipShell extends StatelessWidget {
     this.subtle = false,
     this.selected = false,
     this.onLongPress,
+    this.unread = 0,
   });
+
+  /// Okunmamış hareket: sayının yerine kırmızı rozet (bkz. [FolderUnreadBadge]).
+  final int unread;
 
   /// Seçili çip: klasör renginde kontur ve hafif zemin.
   final bool selected;
@@ -511,7 +537,10 @@ class _ChipShell extends StatelessWidget {
                   ),
                 ),
               ),
-              if (count != null) ...[
+              if (unread > 0) ...[
+                const SizedBox(width: 6),
+                _InlineUnreadBadge(count: unread),
+              ] else if (count != null) ...[
                 const SizedBox(width: 6),
                 Text(
                   '$count',
@@ -528,6 +557,37 @@ class _ChipShell extends StatelessWidget {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Çipin içindeki okunmamış sayacı — karodaki köşe rozetinin satır içi eşi
+/// (çip 40 px'lik şeritte; köşeye taşan rozet kırpılırdı).
+class _InlineUnreadBadge extends StatelessWidget {
+  const _InlineUnreadBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 5),
+      decoration: BoxDecoration(
+        color: scheme.error,
+        borderRadius: BorderRadius.circular(9),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        count > kFolderBadgeMax ? '$kFolderBadgeMax+' : '$count',
+        style: TextStyle(
+          fontSize: 11,
+          height: 1.1,
+          fontWeight: FontWeight.w700,
+          color: scheme.onError,
         ),
       ),
     );

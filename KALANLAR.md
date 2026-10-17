@@ -2,6 +2,24 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-10-17 (5. tur) — paylaşılan notlar (CİHAZDA GÖRÜLMEDİ)
+- [ ] **Geri tuşu**: ana ekran → Benimle paylaşılanlar → not aç → geri →
+  liste → geri → ANA EKRAN (uygulama kapanmamalı). Aynısı klasör sayfası
+  için. Ana ekranda geri → uygulama kapanır (eskisi gibi).
+- [ ] **Yeni izi**: ikinci hesapla bir notu paylaş / değiştir → ana ekran
+  şeridinde "Benimle paylaşılanlar" çipi BAŞA geçip kırmızı sayı gösteriyor
+  mu; bildirim ("… seninle bir not paylaştı") düşüyor mu, dokununca not
+  açılıyor mu; listede "Yeni" etiketi; notu açınca söner mi.
+- [ ] Hatırlatıcı bildiriminin "Tamam / 1 saat ertele" düğmeleri, bir
+  paylaşım bildirimi geldikten SONRA da çalışıyor mu.
+- [ ] **Ek paylaşımı**: Drive'lı hesapta eski (Drive'daki) görselli bir notu
+  paylaş → birkaç saniyede Storage'a çıkıp karşı tarafta görünüyor mu.
+  Web'den paylaşılan nota görsel/PDF ekle → sahibi telefonda görüyor mu.
+- [ ] **Yükleme göstergesi**: büyük PDF ekle → şerit döşemesinde saat →
+  yüzde; editör altında "1 ek yükleniyor · %…" çubuğu dolup kayboluyor mu.
+  Web'de PDF eklerken "Yükleniyor… %…".
+- [ ] 6 yeni çeviri anahtarı 16 dilde elle — anadil kontrolü.
+
 ## 2026-10-17 (2. tur) — transkript, performans, simge i4, hatalar (CİHAZDA GÖRÜLMEDİ)
 - [ ] storage.rules'a PPTX eklendi — main CI'ındaki "Firebase + Cloudflare
   Deploy" işi yeşil mi (kuralı o yayınlıyor); ortak nota eklenen sunum

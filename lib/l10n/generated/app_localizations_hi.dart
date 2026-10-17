@@ -5159,4 +5159,27 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get attachmentViewTitle => 'कहाँ रखें?';
+
+  @override
+  String get attachmentUploadQueued => 'अपलोड की प्रतीक्षा';
+
+  @override
+  String get attachmentWaitingOwner =>
+      'जोड़ने वाले के डिवाइस से अपलोड की प्रतीक्षा';
+
+  @override
+  String attachmentsUploadingCount(int count) {
+    return '$count अटैचमेंट अपलोड हो रहे हैं';
+  }
+
+  @override
+  String get sharedNoteNew => 'नया';
+
+  @override
+  String sharedNoteUpdatedBy(String name) {
+    return '$name ने अपडेट किया';
+  }
+
+  @override
+  String get sharedMarkAllRead => 'सभी को पढ़ा हुआ मानें';
 }

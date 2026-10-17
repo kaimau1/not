@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -210,6 +211,30 @@ class AttachmentRepository {
 
   static const _uuid = Uuid();
 
+  /// Süren DOĞRUDAN (web) yüklemenin oranı; null = yükleme yok.
+  static final ValueNotifier<double?> directUploadProgress =
+      ValueNotifier<double?>(null);
+
+  /// Yükleme görevini bitene dek bekler, ilerlemeyi [onProgress]'e aktarır.
+  static Future<void> _watchProgress(
+    UploadTask task,
+    void Function(double fraction)? onProgress,
+  ) async {
+    StreamSubscription<TaskSnapshot>? sub;
+    if (onProgress != null) {
+      sub = task.snapshotEvents.listen((snap) {
+        if (snap.totalBytes > 0) {
+          onProgress((snap.bytesTransferred / snap.totalBytes).clamp(0, 1));
+        }
+      }, onError: (Object _) {});
+    }
+    try {
+      await task;
+    } finally {
+      await sub?.cancel();
+    }
+  }
+
   /// Aynı sınırlarla, ekleri BAŞKA bir kullanıcının Storage yoluna
   /// (`users/{ownerUid}/…`) yazan kopya.
   ///
@@ -275,13 +300,22 @@ class AttachmentRepository {
     final storagePath = 'users/$uid/notes/$noteId/$objectName';
     final ref = _storage.ref(storagePath);
     // putFile'ın bayt karşılığı; web'de dosya tutamacı olmadığından tek yol.
-    await ref.putData(
-      bytes,
-      SettableMetadata(
-        contentType: meta.mimeType,
-        cacheControl: AppConstants.attachmentCacheControl,
-      ),
-    );
+    // Web'de ek DOĞRUDAN yükleniyor: ilerleme editörün "Yükleniyor" şeridine
+    // yüzde olarak yansır (bkz. [directUploadProgress]).
+    try {
+      await _watchProgress(
+        ref.putData(
+          bytes,
+          SettableMetadata(
+            contentType: meta.mimeType,
+            cacheControl: AppConstants.attachmentCacheControl,
+          ),
+        ),
+        (f) => directUploadProgress.value = f,
+      );
+    } finally {
+      directUploadProgress.value = null;
+    }
     return meta.copyWith(
       storagePath: storagePath,
       downloadUrl: await ref.getDownloadURL(),
@@ -814,7 +848,15 @@ class AttachmentRepository {
 
   /// Yerel kopyası olup henüz yüklenmemiş eki Storage'a gönderir ve
   /// indirme adresiyle birlikte güncellenmiş metadata'yı döner.
-  Future<Attachment?> upload(String noteId, Attachment attachment) async {
+  ///
+  /// [onProgress]: yüklenen oran (0..1) — şeritteki yüzde ve editör şeridi
+  /// (kullanıcı bulgusu 2026-10-17: "ek yüklerken sessizlik var, ne oluyor
+  /// anlaşılmıyor").
+  Future<Attachment?> upload(
+    String noteId,
+    Attachment attachment, {
+    void Function(double fraction)? onProgress,
+  }) async {
     // Görüntülü not cihazda kalır: kuyruk atlasa da burada ikinci bir kapı
     // var — yeni bir çağrı yeri eklenirse video yine yüklenmesin.
     if (attachment.skipsUpload) return null;
@@ -825,12 +867,15 @@ class AttachmentRepository {
     final storagePath =
         'users/$uid/notes/$noteId/${attachment.id}_${attachment.fileName}';
     final ref = _storage.ref(storagePath);
-    await ref.putFile(
-      file,
-      SettableMetadata(
-        contentType: attachment.mimeType,
-        cacheControl: AppConstants.attachmentCacheControl,
+    await _watchProgress(
+      ref.putFile(
+        file,
+        SettableMetadata(
+          contentType: attachment.mimeType,
+          cacheControl: AppConstants.attachmentCacheControl,
+        ),
       ),
+      onProgress,
     );
     final url = await ref.getDownloadURL();
     return attachment.copyWith(storagePath: storagePath, downloadUrl: url);

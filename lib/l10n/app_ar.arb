@@ -1030,5 +1030,11 @@
   "textToBubblesPreparing": "جارٍ تنسيق النص كمستند…",
   "attachmentActions": "إجراءات المرفق",
   "attachmentOpen": "فتح",
-  "attachmentViewTitle": "أين يوضع؟"
+  "attachmentViewTitle": "أين يوضع؟",
+  "attachmentUploadQueued": "في انتظار الرفع",
+  "attachmentWaitingOwner": "في انتظار رفعه من جهاز من أضافه",
+  "attachmentsUploadingCount": "جارٍ رفع {count} مرفقات",
+  "sharedNoteNew": "جديد",
+  "sharedNoteUpdatedBy": "حدّثه {name}",
+  "sharedMarkAllRead": "تعليم الكل كمقروء"
 }

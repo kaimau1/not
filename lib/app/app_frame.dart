@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/l10n_ext.dart';
+import '../features/folders/data/folder_activity.dart';
 import '../features/friends/presentation/friends_screen.dart';
 import '../features/inbox/data/inbox_repository.dart';
+import '../features/notes/data/shared_note_activity.dart';
 import '../features/settings/settings_providers.dart';
 import 'app_commands.dart';
 import 'split_shell.dart';
@@ -123,6 +125,12 @@ class _AppRail extends ConsumerWidget {
     final inboxCount = ref.watch(
       inboxNotesProvider.select((a) => a.value?.length ?? 0),
     );
+    // Paylaşılanlarda okunmamış hareket (klasörler + ortak notlar) —
+    // geniş ekranda/web'de klasör şeridi solda kalabalıkta kayboluyordu
+    // (kullanıcı bulgusu 2026-10-17: "yeni bir şey geldiğinde anlaşılmıyor").
+    final sharedUnread =
+        ref.watch(sharedUnreadTotalProvider) +
+        ref.watch(sharedNoteUnreadProvider.select((s) => s.length));
 
     return ColoredBox(
       color: scheme.surfaceContainerLow,
@@ -189,8 +197,17 @@ class _AppRail extends ConsumerWidget {
                                   // dursun, menüye girmeden görülsün.
                                   icon: Badge(
                                     isLabelVisible:
-                                        s == AppSection.inbox && inboxCount > 0,
-                                    label: Text('$inboxCount'),
+                                        (s == AppSection.inbox &&
+                                            inboxCount > 0) ||
+                                        (s == AppSection.folders &&
+                                            sharedUnread > 0),
+                                    label: Text(
+                                      s == AppSection.folders
+                                          ? (sharedUnread > kFolderBadgeMax
+                                                ? '$kFolderBadgeMax+'
+                                                : '$sharedUnread')
+                                          : '$inboxCount',
+                                    ),
                                     child: Icon(s.icon),
                                   ),
                                   selectedIcon: Icon(s.selectedIcon),

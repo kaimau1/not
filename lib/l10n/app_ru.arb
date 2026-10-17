@@ -1030,5 +1030,11 @@
   "textToBubblesPreparing": "Текст верстается в документ…",
   "attachmentActions": "Действия с вложением",
   "attachmentOpen": "Открыть",
-  "attachmentViewTitle": "Где разместить?"
+  "attachmentViewTitle": "Где разместить?",
+  "attachmentUploadQueued": "Ожидает загрузки",
+  "attachmentWaitingOwner": "Ждём, пока добавивший загрузит файл",
+  "attachmentsUploadingCount": "Загрузка вложений: {count}",
+  "sharedNoteNew": "Новое",
+  "sharedNoteUpdatedBy": "Обновил(а) {name}",
+  "sharedMarkAllRead": "Отметить всё как прочитанное"
 }

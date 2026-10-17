@@ -5150,4 +5150,26 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get attachmentViewTitle => 'أين يوضع؟';
+
+  @override
+  String get attachmentUploadQueued => 'في انتظار الرفع';
+
+  @override
+  String get attachmentWaitingOwner => 'في انتظار رفعه من جهاز من أضافه';
+
+  @override
+  String attachmentsUploadingCount(int count) {
+    return 'جارٍ رفع $count مرفقات';
+  }
+
+  @override
+  String get sharedNoteNew => 'جديد';
+
+  @override
+  String sharedNoteUpdatedBy(String name) {
+    return 'حدّثه $name';
+  }
+
+  @override
+  String get sharedMarkAllRead => 'تعليم الكل كمقروء';
 }

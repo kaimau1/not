@@ -4890,3 +4890,91 @@ APK". (Dosya Okuyucu tarafı o deponun HAFIZA'sında, aynı tarih.)
 * Basma hissi (`PressScale`) + menüsünün birincil düğmelerinde ve Ayarlar
   kısayol kartlarında da.
 * Testler: `requests_2026_10_17_c_test.dart` (+2); tam takım 1277/1277.
+
+## 2026-10-17 (5. tur) — paylaşılan notlardaki eksikler: geri tuşu, "yeni" izi, ek paylaşımı, yükleme sessizliği, web
+Kullanıcı: "paylaşılanlar sayfasından geri gidince uygulama kapanıyor ·
+paylaşılanlarda yeni bir şey geldiğinde anlaşılmıyor · eklerin paylaşımında
+sorun var · ek yüklerken sessizlik var · web tarafında eksikler var".
+
+### KÖK NEDEN — geri tuşu uygulamayı kapatıyordu (`app.dart → alwaysHandleBack`)
+Android'e "geri tuşunu Flutter mı karşılayacak" (`setFrameworkHandlesBack`)
+bilgisi GEÇMİŞİ EN SON DEĞİŞEN Navigator'ın bildiriminden gider. Klasör ve
+"Benimle paylaşılanlar" sayfaları iç kabuk Navigator'ına SAYFASIZ rota
+olarak açılıyor; oradan açılan not dış kabuğa (`/open/note/…`) biniyor.
+Not kapanınca DIŞ Navigator "geri alacak bir şeyim yok" (false) bildiriyor,
+bu iç Navigator'daki sayfasız rotadan habersiz platforma ulaşıyor →
+FlutterFragmentActivity geri çağrısını kapatıyor, sonraki geri tuşu
+Activity'yi BİTİRİYOR. Testte `handlePopRoute` bu yolu atladığı için hiçbir
+test yakalamıyordu (`binding.handlePopRoute` doğrudan yönlendiriciye gider;
+asıl kapı platform tarafındaki bayrak). Çözüm: `MaterialApp.router
+(onNavigationNotification: alwaysHandleBack)` — platforma hep "çerçeve
+karşılar"; geri alacak şey yoksa go_router `popRoute` false döner, Flutter
+`SystemNavigator.pop()` çağırır (ana ekrandan çıkış korunur, testli).
+Web'de varsayılan. **TUZAK:** sayfasız rota + kabuk dışı push düzeni
+her yerde (FolderScreen da) bu hatayı üretiyordu; tek tek ekranı GoRoute'a
+çevirmek yerine bayrak kökten düzeltildi.
+
+### "Yeni" izi (`data/shared_note_activity.dart`)
+* Ortak notun (NoteShare) hiçbir okunmamış izi yoktu; klasör rozetinin de
+  yalnız KARO görünümünde vardı (varsayılan şerit çipinde yok), ortak notlar
+  çipi şeridin SONUNDA ekran dışında kalıyordu, `sharedUnreadTotalProvider`
+  hiçbir yerde kullanılmıyordu.
+* `sharedNoteSeenProvider` (SharedPreferences `shared_note_seen_v1`,
+  paylaşım kimliği → ms; boş anahtar = izlemenin başladığı an). İlk görüşte
+  mevcut paylaşımlar BENİMSENİR (`adopt`, SharedActivityService) — güncellemeyi
+  kuran herkesi eski notlarla boğmamak için. Kural (`isSharedNoteUnread`):
+  damga yoksa yeni eklendim; varsa `updatedAt > damga && updatedBy != ben`.
+  Editör paylaşılan notu açık tuttukça her snapshot'ta `markSeen`.
+* Görünüm: şerit çiplerinde kırmızı satır içi sayaç (FolderChip paylaşılan,
+  SharedFolderChip, SharedNotesChip); okunmamışlı ortak notlar çipi ve
+  paylaşılan klasörler şeridin BAŞINA geçer; geniş ekran rayında Klasörler
+  bölümüne rozet; "Benimle paylaşılanlar"da yeniler başta, "Yeni" etiketi,
+  "Ayşe güncelledi" satırı, AppBar'da "Tümünü okundu say".
+* Bildirim: not başına tek bildirim ("Ayşe seninle bir not paylaştı" /
+  "… notu güncelledi"), dokununca not SAHİBİNİN altından açılır
+  (`shared:{sahip}/{not}` yükü). Editörde açık nota bildirim yok.
+* **KÖK NEDEN (yan bulgu):** `FlutterLocalNotificationsPlugin` tekil ve her
+  `initialize` dokunuş işleyicisini DEĞİŞTİRİR. Paylaşım servisi işleyicisiz
+  initialize ediyordu → ilk paylaşım bildiriminden sonra hatırlatıcının
+  "Tamam/1 saat ertele" düğmeleri ve dokunuşu ölüyordu. Artık iki servis de
+  `handleNotificationResponse` (reminder_service.dart) verir. YENİ bildirim
+  servisi eklenirse AYNI işlevi vermeli.
+
+### Ek paylaşımı (`upload_queue.dart`, editör)
+* **KÖK NEDEN (web):** editörün ek ekleyen 20 yolu ana depoyu
+  (`users/{BEN}/…`) kullanıyordu; web'de `_store` baytları hemen Storage'a
+  yazdığı için paylaşılan nota web'den eklenen dosya EKLEYENİN yoluna
+  gidiyor, sahip ve öbürleri okuyamıyordu. Artık `_attachments` getter'ı
+  (paylaşılan notta `forOwner(sahip)`, her çağrıda taze). Yalnız
+  `_copyToArchive` (kendi defterime kopya) ana depoda kaldı.
+* **KÖK NEDEN:** not PAYLAŞILINCA eklerinin hedefi Drive→Storage dönüyor ama
+  kuyruk yalnız not akışı değişince tarıyordu — paylaşmak notu değiştirmediği
+  için Drive'daki ekler not bir daha düzenlenene dek Storage'a çıkmıyordu.
+  `_sharedTargetsProvider` (paylaşılan not/klasör kümesinin imzası) dinlenir.
+  Drive'dan yeni inen ek de taramayı yeniden tetikler (paylaşılan notsa
+  Storage'a çıksın).
+* Paylaşılan nottaki kendi eklerimin hataları artık `uploadFailuresProvider`'a
+  yazılır (çark sonsuza dek dönüyordu), "yeniden dene" onları da tetikler,
+  ana ekrandaki bekleyen şeridi onları da sayar.
+* Paylaşılan notta dosyası bu cihazda olmayan, buluta da çıkmamış ek:
+  "Ekleyenin cihazından yüklenmesi bekleniyor" (kendi Drive'ımda aramak
+  anlamsızdı, 404 hatası basıyordu) — `AttachmentStrip.foreign`.
+
+### Yükleme sessizliği
+* `uploadProgressProvider` (ek id → 0..1, <0 = oran bilinmiyor/Drive):
+  `AttachmentRepository.upload(onProgress:)` Storage `snapshotEvents`'ten
+  besler; yüzde değişmedikçe yayın yok. Şerit rozeti: saat (sırada) /
+  dolan halka + yüzde / belirsiz halka. Editör altında `_NoteUploadsBanner`
+  ("2 ek yükleniyor · %45", belirli çubuk) — ek sayfaya gömülüyken ya da
+  şerit kapalıyken de görünür. Yüzde `formatUploadPercent` ile dilin
+  kuralıyla (tr "%45", en "45%").
+* Web: `AttachmentRepository.directUploadProgress` (doğrudan `putData`)
+  editörün "Yükleniyor…" şeridine yüzde olarak; PDF, sunum, ses dosyası ve
+  taranan belge eklemesi de artık `_runBusy` göstergesiyle (eskiden yalnız
+  görsel).
+
+### Ortam / test
+Flutter 3.44.6 yine `/opt/flutter`'a indirildi. 6 yeni anahtar 16 dilde elle.
+`requests_2026_10_17_d_test.dart` (+11): kök nedeni GÖSTEREN kontrol testi
+(varsayılan işleyiciyle son bayrak false), düzeltme, ana ekrandan çıkış,
+"yeni" kuralı + sağlayıcı + ekran, ilerleme özeti/kısma. Cihazda GÖRÜLMEDİ.

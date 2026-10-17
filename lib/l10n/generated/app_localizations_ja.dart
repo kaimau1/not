@@ -5072,4 +5072,26 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get attachmentViewTitle => 'どこに置く？';
+
+  @override
+  String get attachmentUploadQueued => 'アップロード待ち';
+
+  @override
+  String get attachmentWaitingOwner => '追加した人の端末からのアップロード待ち';
+
+  @override
+  String attachmentsUploadingCount(int count) {
+    return '$count 件の添付ファイルをアップロード中';
+  }
+
+  @override
+  String get sharedNoteNew => '新着';
+
+  @override
+  String sharedNoteUpdatedBy(String name) {
+    return '$name さんが更新';
+  }
+
+  @override
+  String get sharedMarkAllRead => 'すべて既読にする';
 }

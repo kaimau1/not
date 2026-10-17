@@ -1030,5 +1030,11 @@
   "textToBubblesPreparing": "Impaginazione del testo come documento…",
   "attachmentActions": "Azioni allegato",
   "attachmentOpen": "Apri",
-  "attachmentViewTitle": "Dove metterlo?"
+  "attachmentViewTitle": "Dove metterlo?",
+  "attachmentUploadQueued": "In attesa di caricamento",
+  "attachmentWaitingOwner": "In attesa che chi l'ha aggiunto lo carichi",
+  "attachmentsUploadingCount": "Caricamento di {count} allegati",
+  "sharedNoteNew": "Nuovo",
+  "sharedNoteUpdatedBy": "Aggiornato da {name}",
+  "sharedMarkAllRead": "Segna tutto come letto"
 }

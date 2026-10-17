@@ -1030,5 +1030,11 @@
   "textToBubblesPreparing": "पाठ को दस्तावेज़ में सजाया जा रहा है…",
   "attachmentActions": "संलग्नक क्रियाएँ",
   "attachmentOpen": "खोलें",
-  "attachmentViewTitle": "कहाँ रखें?"
+  "attachmentViewTitle": "कहाँ रखें?",
+  "attachmentUploadQueued": "अपलोड की प्रतीक्षा",
+  "attachmentWaitingOwner": "जोड़ने वाले के डिवाइस से अपलोड की प्रतीक्षा",
+  "attachmentsUploadingCount": "{count} अटैचमेंट अपलोड हो रहे हैं",
+  "sharedNoteNew": "नया",
+  "sharedNoteUpdatedBy": "{name} ने अपडेट किया",
+  "sharedMarkAllRead": "सभी को पढ़ा हुआ मानें"
 }

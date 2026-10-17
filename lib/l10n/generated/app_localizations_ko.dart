@@ -5078,4 +5078,26 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get attachmentViewTitle => '어디에 둘까요?';
+
+  @override
+  String get attachmentUploadQueued => '업로드 대기 중';
+
+  @override
+  String get attachmentWaitingOwner => '추가한 사람의 기기에서 업로드되기를 기다리는 중';
+
+  @override
+  String attachmentsUploadingCount(int count) {
+    return '첨부파일 $count개 업로드 중';
+  }
+
+  @override
+  String get sharedNoteNew => '새 항목';
+
+  @override
+  String sharedNoteUpdatedBy(String name) {
+    return '$name님이 업데이트함';
+  }
+
+  @override
+  String get sharedMarkAllRead => '모두 읽음으로 표시';
 }

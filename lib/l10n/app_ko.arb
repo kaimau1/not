@@ -1030,5 +1030,11 @@
   "textToBubblesPreparing": "텍스트를 문서로 배치하는 중…",
   "attachmentActions": "첨부 작업",
   "attachmentOpen": "열기",
-  "attachmentViewTitle": "어디에 둘까요?"
+  "attachmentViewTitle": "어디에 둘까요?",
+  "attachmentUploadQueued": "업로드 대기 중",
+  "attachmentWaitingOwner": "추가한 사람의 기기에서 업로드되기를 기다리는 중",
+  "attachmentsUploadingCount": "첨부파일 {count}개 업로드 중",
+  "sharedNoteNew": "새 항목",
+  "sharedNoteUpdatedBy": "{name}님이 업데이트함",
+  "sharedMarkAllRead": "모두 읽음으로 표시"
 }

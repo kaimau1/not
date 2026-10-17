@@ -29,6 +29,7 @@ import '../../ai/data/gemini_service.dart';
 import '../../ai/data/semantic_search.dart';
 import '../../folders/data/folder_order.dart';
 import '../../folders/data/folders_repository.dart';
+import '../../folders/data/folder_activity.dart';
 import '../../folders/data/shared_activity_service.dart';
 import '../../folders/domain/note_folder.dart';
 import '../../folders/presentation/folder_sheets.dart';
@@ -44,6 +45,7 @@ import '../../settings/presentation/permissions_onboarding.dart';
 import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
+import '../data/shared_note_activity.dart';
 import '../data/share_intake.dart';
 import '../data/place_reminders.dart';
 import '../data/upload_queue.dart';
@@ -2021,6 +2023,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// çipler. Yükseklik klasör sayısından BAĞIMSIZ — asıl kazanç bu.
   Widget _folderStrip(List<NoteFolder> folders, {String? selectedFolderId}) {
     final shared = ref.watch(sharedFolderRefsProvider).value ?? const [];
+    // YENİ HAREKET ÖNE (kullanıcı bulgusu 2026-10-17: "paylaşılanlarda yeni
+    // bir şey geldiğinde anlaşılmıyor"): ortak notlar çipi ve okunmamışı olan
+    // paylaşılan klasörler şeridin SONUNDAydı — birkaç klasörden sonra ekran
+    // dışında kalıyor, rozet görünmüyordu. Okunmamış varsa en başa geçerler.
+    final sharedNotesHot = ref.watch(
+      sharedNoteUnreadProvider.select((s) => s.isNotEmpty),
+    );
+    final hotShared = [
+      for (final share in shared)
+        if (ref.watch(
+              folderUnreadProvider((
+                ownerId: share.ownerId,
+                folderId: share.folderId,
+              )),
+            ) >
+            0)
+          share,
+    ];
+    final calmShared = [
+      for (final share in shared)
+        if (!hotShared.contains(share)) share,
+    ];
     return SliverToBoxAdapter(
       child: SizedBox(
         height: FolderChip.stripHeight,
@@ -2031,6 +2055,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
                 children: [
+                  if (sharedNotesHot) const SharedNotesChip(),
+                  for (final share in hotShared) ...[
+                    SharedFolderChip(
+                      key: ValueKey('shared-chip-${share.folderId}'),
+                      share: share,
+                    ),
+                    const SizedBox(width: 6),
+                  ],
                   for (final folder in folders) ...[
                     _EnsureVisible(
                       key: ValueKey('folder-chip-${folder.id}'),
@@ -2042,7 +2074,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     ),
                     const SizedBox(width: 6),
                   ],
-                  for (final share in shared) ...[
+                  for (final share in calmShared) ...[
                     SharedFolderChip(
                       key: ValueKey('shared-chip-${share.folderId}'),
                       share: share,
@@ -2050,7 +2082,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     const SizedBox(width: 6),
                   ],
                   // Ortak notlar (bkz. SharedNotesChip) — yoksa yer kaplamaz.
-                  const SharedNotesChip(),
+                  if (!sharedNotesHot) const SharedNotesChip(),
                   const NewFolderChip(),
                 ],
               ),

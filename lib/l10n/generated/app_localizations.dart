@@ -9323,6 +9323,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Nerede dursun?'**
   String get attachmentViewTitle;
+
+  /// No description provided for @attachmentUploadQueued.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yüklenmeyi bekliyor'**
+  String get attachmentUploadQueued;
+
+  /// No description provided for @attachmentWaitingOwner.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekleyenin cihazından yüklenmesi bekleniyor'**
+  String get attachmentWaitingOwner;
+
+  /// No description provided for @attachmentsUploadingCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} ek yükleniyor'**
+  String attachmentsUploadingCount(int count);
+
+  /// No description provided for @sharedNoteNew.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni'**
+  String get sharedNoteNew;
+
+  /// No description provided for @sharedNoteUpdatedBy.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} güncelledi'**
+  String sharedNoteUpdatedBy(String name);
+
+  /// No description provided for @sharedMarkAllRead.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü okundu say'**
+  String get sharedMarkAllRead;
 }
 
 class _AppLocalizationsDelegate

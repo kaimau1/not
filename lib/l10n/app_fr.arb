@@ -1030,5 +1030,11 @@
   "textToBubblesPreparing": "Mise en page du texte en document…",
   "attachmentActions": "Actions de la pièce jointe",
   "attachmentOpen": "Ouvrir",
-  "attachmentViewTitle": "Où le placer ?"
+  "attachmentViewTitle": "Où le placer ?",
+  "attachmentUploadQueued": "En attente d'envoi",
+  "attachmentWaitingOwner": "En attente de l'envoi par la personne qui l'a ajouté",
+  "attachmentsUploadingCount": "Envoi de {count} pièces jointes",
+  "sharedNoteNew": "Nouveau",
+  "sharedNoteUpdatedBy": "Mis à jour par {name}",
+  "sharedMarkAllRead": "Tout marquer comme lu"
 }

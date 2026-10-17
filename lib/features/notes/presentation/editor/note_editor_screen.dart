@@ -61,6 +61,8 @@ import '../../data/document_scan.dart';
 import '../../data/note_speech.dart';
 import '../../data/note_share.dart';
 import '../../data/note_shares_repository.dart';
+import '../../data/shared_note_activity.dart';
+import '../../data/upload_queue.dart';
 import '../../data/note_pdf.dart';
 import '../../data/notes_repository.dart';
 import '../../data/pdf_edit.dart';
@@ -651,6 +653,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _autoTitleEnabled = ref.read(autoTitleProvider);
   }
 
+  /// Yeni ek hazırlarken kullanılacak depo: paylaşılan notta SAHİBİN yolu.
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-10-17: "eklerin paylaşımında sorun",
+  /// "web tarafında eksikler"): ek ekleyen yolların hepsi ana depoyu
+  /// (`users/{BEN}/…`) kullanıyordu. Cihazda zararsızdı (önce yerel kopya,
+  /// kuyruk sonra sahibin yoluna yükler) ama WEB'de `_store` baytları HEMEN
+  /// Storage'a yazıyor — paylaşılan nota web'den eklenen dosya ekleyenin
+  /// kendi yoluna gidiyor, not sahibi ve öbür ortak çalışanlar onu hiç
+  /// okuyamıyordu (kural reddi). Her çağrıda taze okunur: Drive bağlanınca
+  /// ana depo değişiyor.
+  AttachmentRepository? get _attachments {
+    final base = ref.read(attachmentRepositoryProvider);
+    final owner = widget.ownerId;
+    return owner == null ? base : base?.forOwner(owner);
+  }
+
   /// Gövde metninin sayfa tepesinden uzaklığı (başlık + çip satırının altı).
   /// Görseller bunun üzerine çıkamaz; sarma hesabı da buna göre yapılır.
   double _bodyTop = 0;
@@ -1050,6 +1068,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     ) {
       final incoming = next.value;
       if (incoming == null) return;
+      // Paylaşılan notu açık tutmak = bakıyorum: gelen her değişiklik
+      // okunmuş sayılır (bkz. sharedNoteUnreadProvider — ana ekran rozeti
+      // ve bildirim bu damgaya bakar).
+      if (owner != null) {
+        ref
+            .read(sharedNoteSeenProvider.notifier)
+            .markSeen(sharedNoteKey(owner, widget.noteId));
+      }
       if (_note == null) {
         setState(() {
           _note = incoming;
@@ -1656,7 +1682,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     String fileName, {
     bool asFile = false,
   }) async {
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return null;
     try {
       // Sıkıştırma + diske yazma büyük fotoğrafta saniyeler sürüyor ve o süre
@@ -1812,13 +1838,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
     final pdfBytes = result.pdfBytes;
     if (pdfBytes != null) {
-      final repo = ref.read(attachmentRepositoryProvider);
+      final repo = _attachments;
       if (repo == null) return;
       try {
-        final attachment = await repo.preparePdf(
-          noteId: widget.noteId,
-          bytes: pdfBytes,
-          fileName: scanFileName(result.title, DateTime.now()),
+        final attachment = await _runBusy(
+          context.l10n.attachmentUploading,
+          () => repo.preparePdf(
+            noteId: widget.noteId,
+            bytes: pdfBytes,
+            fileName: scanFileName(result.title, DateTime.now()),
+          ),
         );
         _mutate(
           (n) => n.copyWith(attachments: [...n.attachments, attachment]),
@@ -2620,17 +2649,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (proceed != true) return null;
     }
     if (!mounted) return null;
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return null;
     try {
       // Başka bir Not kullanıcısının gönderdiği "balonlu PDF" ise damga
       // katmanı sökülür ve balonlar/çizimler DÜZENLENEBİLİR olarak geri
       // yüklenir (bkz. PdfEdit.readSharedPdf). Sıradan PDF'te null döner.
       final restored = await PdfEdit.readSharedPdfInBackground(bytes);
-      final attachment = await repo.preparePdf(
-        noteId: widget.noteId,
-        bytes: restored == null ? bytes : restored['bytes'] as Uint8List,
-        fileName: _documentFileName(file.name, '.pdf'),
+      if (!mounted) return null;
+      final attachment = await _runBusy(
+        context.l10n.attachmentUploading,
+        () => repo.preparePdf(
+          noteId: widget.noteId,
+          bytes: restored == null ? bytes : restored['bytes'] as Uint8List,
+          fileName: _documentFileName(file.name, '.pdf'),
+        ),
       );
       final stored = restored == null
           ? attachment
@@ -2718,13 +2751,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (proceed != true) return;
     }
     if (!mounted) return;
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return;
     try {
-      final attachment = await repo.prepareSlide(
-        noteId: widget.noteId,
-        bytes: bytes,
-        fileName: _documentFileName(file.name, '.pptx'),
+      final attachment = await _runBusy(
+        context.l10n.attachmentUploading,
+        () => repo.prepareSlide(
+          noteId: widget.noteId,
+          bytes: bytes,
+          fileName: _documentFileName(file.name, '.pptx'),
+        ),
       );
       _mutate(
         (n) => n.copyWith(attachments: [...n.attachments, attachment]),
@@ -2780,7 +2816,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   Future<void> _recordAudio() async {
     final result = await showAudioRecorderSheet(context);
     if (result == null) return;
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return;
     try {
       final attachment = await repo.prepareAudio(
@@ -2875,7 +2911,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (mounted) _showSnack(l10n.videoLinkCopied);
       return;
     }
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     final attachment = attachments.first;
     try {
       // Baytları okumak (bulut kopyasında: indirmek) uzun sürebilir; şeritte
@@ -2903,7 +2939,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Panodaki eki bu nota kopyalar (baytlar yeniden yazılır, yeni kimlik alır).
   Future<void> _pasteAttachment() async {
     final sources = ref.read(attachmentClipboardProvider);
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (sources.isEmpty || repo == null) return;
     try {
       // Baytların yeniden yazılması saniyeler sürebilir: gösterge şeritte
@@ -2988,7 +3024,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Görseli KALICI olarak kırpar (tam ekrandaki kırpma ekranından gelir).
   /// [frac] görsel oranında (0–1) seçilen alan.
   Future<void> _cropImage(Attachment image, Rect frac) async {
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return;
     try {
       final cropped = await repo.cropImage(
@@ -3028,7 +3064,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// kendini tazeleyebilsin (kullanıcı bulgusu 2026-08-16: "her döndürme
   /// işleminden sonra düzenleme ekranı kapanıyor"). Hata durumunda null.
   Future<Attachment?> _rotateImage(Attachment image, int quarterTurns) async {
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return null;
     try {
       final turned = await repo.rotateImage(
@@ -4439,7 +4475,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// ML Kit'in olmadığı yerde (masaüstü) eski model yolu KORUNUR — özellik
   /// büsbütün kaybolmasın.
   Future<void> _ocrImage(Attachment image) async {
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return;
     final l10n = context.l10n;
     if (ScanOcr.supported) {
@@ -4491,7 +4527,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   static const _maxVideoSeconds = 600;
 
   Future<void> _addVideo() async {
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return;
     final l10n = context.l10n;
     // Manifest'te CAMERA bildirildiği için Android çekim niyetini izin
@@ -4533,7 +4569,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// sınırı YOK (o sınır yalnız AI'a gönderim içindi — uzun videoda
   /// "videodan not çıkar" boyut uyarısını kendisi verir).
   Future<Attachment?> _addVideoFromGallery({bool asFile = false}) async {
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return null;
     final l10n = context.l10n;
     try {
@@ -5048,7 +5084,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _switchToBubbles(existing);
       return;
     }
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return;
     final l10n = context.l10n;
     _showSnack(l10n.imageNotePreparing);
@@ -5113,7 +5149,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   Future<void> _textToBubbles(Attachment textAttachment) async {
     final note = _note;
     if (note == null) return;
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return;
     final l10n = context.l10n;
     final existing = note.attachments
@@ -5532,7 +5568,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// **SES DOSYASI EKLE** — cihazdaki MP3/M4A/WAV... nota ses eki olur
   /// (kayıt yolundan ayrı: adı korunur, türü dosyadan okunur).
   Future<Attachment?> _pickAudioFile() async {
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return null;
     final l10n = context.l10n;
     final picked = await DocPicker.pickOne(
@@ -5547,10 +5583,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
     if (picked == null || !mounted) return null;
     try {
-      final attachment = await repo.prepareAudioFile(
-        noteId: widget.noteId,
-        sourcePath: picked.path,
-        fileName: picked.name,
+      final attachment = await _runBusy(
+        context.l10n.attachmentUploading,
+        () => repo.prepareAudioFile(
+          noteId: widget.noteId,
+          sourcePath: picked.path,
+          fileName: picked.name,
+        ),
       );
       if (!mounted) return null;
       _mutate(
@@ -5571,7 +5610,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// ("onları nota dönüştürme"). Görsel sayfaya değil şeride konur: gövdeye
   /// gelen metin görselin etrafından akmasın.
   Future<void> _transcribeFile() async {
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return;
     final l10n = context.l10n;
     final picked = await DocPicker.pickOne(
@@ -5643,7 +5682,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Videodan (görüntü + ses) detaylı not çıkarır ve gövdeye ekler.
   Future<void> _videoToNote(Attachment video) async {
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return;
     final l10n = context.l10n;
     // Satır içi gönderim sınırı: büyük video istekte reddediliyor ve hata
@@ -5951,7 +5990,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       bytes = await file.readAsBytes();
       name = file.name;
     }
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) return;
     try {
       final attachment = await repo.prepareImage(
@@ -6801,7 +6840,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Sesli yakalama levhasından dönen (dökümü yapılamamış) kaydı nota ek olarak
   /// bağlar. Yol levhadan devralınır: burada kullanılmazsa dosya silinir.
   Future<void> _attachVoiceAudio(String path, Duration duration) async {
-    final repo = ref.read(attachmentRepositoryProvider);
+    final repo = _attachments;
     if (repo == null) {
       File(path).delete().ignore();
       return;
@@ -6883,7 +6922,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final audioPath = res.audioPath;
     if (audioPath == null) return; // GET_AUDIO vermezse yalnız metin kalır.
     try {
-      final repo = ref.read(attachmentRepositoryProvider);
+      final repo = _attachments;
       if (repo == null) return;
       final attachment = await repo.prepareAudio(
         noteId: widget.noteId,
@@ -8047,6 +8086,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       : (a, view) => unawaited(_setAttachmentView(a, view)),
                   onVideoToNote: _videoToNote,
                   onTranscribe: _openTranscript,
+                  foreign: widget.ownerId != null,
                   expanded: ref.watch(attachmentsExpandedProvider),
                   onToggle: () => ref
                       .read(attachmentsExpandedProvider.notifier)
@@ -8082,7 +8122,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 // Dosya işleri (kopyalama/yapıştırma) için aynı şerit,
                 // ayrı simge: sessiz bekleme bitti (bkz. [_busyTask]).
                 if (_busyTask != null)
-                  _AiBanner(label: _busyTask!, icon: Icons.sync),
+                  // Web'de ek DOĞRUDAN yükleniyor: oran şeride yüzde olarak.
+                  ValueListenableBuilder<double?>(
+                    valueListenable: AttachmentRepository.directUploadProgress,
+                    builder: (context, fraction, _) => _AiBanner(
+                      label: fraction == null
+                          ? _busyTask!
+                          : '$_busyTask ${formatUploadPercent(context, fraction)}',
+                      icon: Icons.sync,
+                      progress: fraction,
+                    ),
+                  )
+                else
+                  // Arka planda buluta çıkan ekler (kullanıcı bulgusu
+                  // 2026-10-17: "ek yüklerken sessizlik var"): şerit kapalı
+                  // ya da ek sayfaya gömülüyken de görünür bir iz.
+                  _NoteUploadsBanner(attachments: note.attachments),
                 // Yatay ekranda klavye + çubuk ekranı aşabilir; çubuk taşmak
                 // yerine kendi içinde kaydırılır (Flexible + kaydırma).
                 //
@@ -8938,14 +8993,45 @@ class _PendingEmbedBanner extends StatelessWidget {
   }
 }
 
+/// Bu notun SÜREN ek yüklemeleri (bkz. [uploadProgressProvider]): yalnız
+/// yükleme varken çizilir, oran biliniyorsa çubuk dolar.
+class _NoteUploadsBanner extends ConsumerWidget {
+  const _NoteUploadsBanner({required this.attachments});
+
+  final List<Attachment> attachments;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final summary = uploadSummaryFor(
+      attachments,
+      ref.watch(uploadProgressProvider),
+    );
+    if (summary.count == 0) return const SizedBox.shrink();
+    final fraction = summary.fraction;
+    final l10n = context.l10n;
+    return _AiBanner(
+      label: fraction == null
+          ? l10n.attachmentsUploadingCount(summary.count)
+          : '${l10n.attachmentsUploadingCount(summary.count)} · '
+                '${formatUploadPercent(context, fraction)}',
+      icon: Icons.cloud_upload_outlined,
+      progress: fraction,
+    );
+  }
+}
+
 class _AiBanner extends StatelessWidget {
   const _AiBanner({
     required this.label,
     this.icon = Icons.auto_awesome,
     this.onTap,
+    this.progress,
   });
 
   final String label;
+
+  /// Dolu ise çubuk BELİRLİ (0..1) dolar; null = belirsiz akış.
+  final double? progress;
 
   /// Şeridin simgesi: AI işlerinde yıldız, dosya işlerinde eşitleme oku,
   /// canlı diktede mikrofon.
@@ -8967,6 +9053,7 @@ class _AiBanner extends StatelessWidget {
         children: [
           LinearProgressIndicator(
             minHeight: 2,
+            value: progress,
             backgroundColor: scheme.secondaryContainer,
           ),
           Padding(

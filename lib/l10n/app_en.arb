@@ -1921,5 +1921,11 @@
   "textToBubblesPreparing": "Laying out the text as a document…",
   "attachmentActions": "Attachment actions",
   "attachmentOpen": "Open",
-  "attachmentViewTitle": "Where should it go?"
+  "attachmentViewTitle": "Where should it go?",
+  "attachmentUploadQueued": "Waiting to upload",
+  "attachmentWaitingOwner": "Waiting for the person who added it to upload it",
+  "attachmentsUploadingCount": "Uploading {count} attachments",
+  "sharedNoteNew": "New",
+  "sharedNoteUpdatedBy": "Updated by {name}",
+  "sharedMarkAllRead": "Mark all as read"
 }

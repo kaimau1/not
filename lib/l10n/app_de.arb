@@ -1030,5 +1030,11 @@
   "textToBubblesPreparing": "Text wird als Dokument gesetzt…",
   "attachmentActions": "Anhang-Aktionen",
   "attachmentOpen": "Öffnen",
-  "attachmentViewTitle": "Wo soll es stehen?"
+  "attachmentViewTitle": "Wo soll es stehen?",
+  "attachmentUploadQueued": "Wartet auf Upload",
+  "attachmentWaitingOwner": "Wartet auf den Upload vom Gerät der hinzufügenden Person",
+  "attachmentsUploadingCount": "{count} Anhänge werden hochgeladen",
+  "sharedNoteNew": "Neu",
+  "sharedNoteUpdatedBy": "Von {name} aktualisiert",
+  "sharedMarkAllRead": "Alle als gelesen markieren"
 }

@@ -70,6 +70,14 @@ bool syncedTo(Attachment a, UploadTarget target) => switch (target) {
   },
 );
 
+/// [_sharedByMe]'nin karşılaştırılabilir imzası: küme değişti mi sorusu
+/// için (Set eşitliği kimliğe bakar).
+final _sharedTargetsProvider = Provider<String>((ref) {
+  final shared = _sharedByMe(ref);
+  return '${(shared.notes.toList()..sort()).join(',')}|'
+      '${(shared.folders.toList()..sort()).join(',')}';
+});
+
 bool _isShared(Note note, ({Set<String> notes, Set<String> folders}) shared) =>
     shared.notes.contains(note.id) ||
     (note.folderId != null && shared.folders.contains(note.folderId));
@@ -121,6 +129,63 @@ class UploadFailuresNotifier extends Notifier<Map<String, int>> {
   }
 }
 
+/// **SÜREN YÜKLEMELER**: ek id'si → yüklenen oran (0..1); negatif = oranı
+/// bilinmiyor (Drive yüklemesi ilerleme bildirmiyor).
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-10-17: "ek yüklerken yüklenme
+/// aşamasında sessizlik var, ne oluyor anlaşılmıyor"): şeritte yalnız
+/// 10 px'lik belirsiz bir çark dönüyordu — "sırada mı, yükleniyor mu, ne
+/// kadarı gitti" ayrımı yoktu, sayfaya gömülü ekte hiçbir iz yoktu. Kuyruk
+/// artık her yükleme boyunca burayı günceller; şerit döşemesi yüzde, editör
+/// alt şeridi "N ek yükleniyor · %X" gösterir.
+final uploadProgressProvider =
+    NotifierProvider<UploadProgressNotifier, Map<String, double>>(
+      UploadProgressNotifier.new,
+    );
+
+class UploadProgressNotifier extends Notifier<Map<String, double>> {
+  @override
+  Map<String, double> build() => const {};
+
+  /// Yüzde değişmedikçe durum yayınlanmaz: Storage saniyede onlarca
+  /// anlık görüntü üretebiliyor, her biri şeridi yeniden çizdirmesin.
+  void set(String attachmentId, double fraction) {
+    final previous = state[attachmentId];
+    if (previous != null &&
+        (previous * 100).floor() == (fraction * 100).floor()) {
+      return;
+    }
+    state = {...state, attachmentId: fraction};
+  }
+
+  void done(String attachmentId) {
+    if (!state.containsKey(attachmentId)) return;
+    state = {...state}..remove(attachmentId);
+  }
+}
+
+/// Bir notun SÜREN yüklemelerinin özeti (editör şeridi): kaç ek ve
+/// ortalama oran (null = oran bilinmiyor).
+({int count, double? fraction}) uploadSummaryFor(
+  Iterable<Attachment> attachments,
+  Map<String, double> progress,
+) {
+  var count = 0;
+  var sum = 0.0;
+  var known = true;
+  for (final a in attachments) {
+    final f = progress[a.id];
+    if (f == null) continue;
+    count++;
+    if (f < 0) {
+      known = false;
+    } else {
+      sum += f;
+    }
+  }
+  return (count: count, fraction: count == 0 || !known ? null : sum / count);
+}
+
 /// **BU CİHAZDA yüklenmeyi bekleyen ek sayısı** (kullanıcı isteği
 /// 2026-09-23: "çevrimdışı durum — senkron bekleyen ekler için belirgin
 /// gösterge"). Kuyruğun kendi süzgeciyle aynı kural: video buluta gitmez,
@@ -159,6 +224,17 @@ final pendingUploadsProvider =
           pending++;
           if (failures.containsKey(a.id)) failed++;
           if (target == UploadTarget.drive && !driveReady) waitingDrive = true;
+        }
+      }
+      // Paylaşılan nota (başkasının notu) BENİM eklediklerim de bu cihazın
+      // işi: eskiden sayılmıyordu, ortak nota eklenen görsel yüklenemese de
+      // ana ekranda hiçbir iz çıkmıyordu.
+      for (final entry in ref.watch(foreignEditableNotesProvider)) {
+        for (final a in entry.note.attachments) {
+          if (a.skipsUpload || a.isUploaded) continue;
+          if (!localFileExists(a.localPath)) continue;
+          pending++;
+          if (failures.containsKey(a.id)) failed++;
         }
       }
       return (pending: pending, failed: failed, needsDrive: waitingDrive);
@@ -242,6 +318,7 @@ class UploadQueue {
   ProviderSubscription<List<({String ownerId, Note note})>>? _foreignSub;
   Timer? _foreignDebounce;
   ProviderSubscription<int>? _limitSub;
+  ProviderSubscription<String>? _sharesSub;
   ProviderSubscription<DriveStore?>? _driveSub;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
 
@@ -280,6 +357,18 @@ class UploadQueue {
       if (next == null) return;
       final notes = _ref.read(notesStreamProvider).value;
       if (notes != null) _process(notes);
+    });
+
+    // Not PAYLAŞILINCA eklerinin hedefi Drive'dan Storage'a döner (ortak
+    // çalışan benim Drive'ıma erişemez). KÖK NEDEN (kullanıcı bulgusu
+    // 2026-10-17: "eklerin paylaşımında sorun var"): kuyruk yalnız not
+    // akışı değişince tarıyordu; paylaşmak notun kendisini değiştirmediği
+    // için Drive'daki ekler, not bir daha düzenlenene dek Storage'a hiç
+    // çıkmıyor, karşı taraf "senkronlanmadı" görüyordu.
+    _sharesSub = _ref.listen(_sharedTargetsProvider, (previous, next) {
+      if (previous == next) return;
+      final notes = _ref.read(notesStreamProvider).value;
+      if (notes != null) _scheduleProcess(notes);
     });
 
     _foreignSub = _ref.listen(foreignEditableNotesProvider, (previous, next) {
@@ -321,11 +410,19 @@ class UploadQueue {
                 _retryDelayFor(lastFailure.attempts)) {
           continue;
         }
+        // Dosyası bu cihazda olmayan ek başkasının (onun cihazı yükler).
+        if (!localFileExists(attachment.localPath)) continue;
         if (!_inFlight.add(key)) continue;
+        final progress = _ref.read(uploadProgressProvider.notifier);
+        progress.set(attachment.id, 0);
         try {
           final uploaded = await baseRepo
               .forOwner(ownerId)
-              .upload(note.id, attachment);
+              .upload(
+                note.id,
+                attachment,
+                onProgress: (f) => progress.set(attachment.id, f),
+              );
           if (uploaded != null) {
             await NotesRepository(
               FirebaseFirestore.instance,
@@ -334,12 +431,20 @@ class UploadQueue {
             ).patchAttachment(note.id, uploaded);
           }
           _lastFailure.remove(key);
+          _ref.read(uploadFailuresProvider.notifier).clear(attachment.id);
         } catch (e) {
           final attempts = (lastFailure?.attempts ?? 0) + 1;
           _lastFailure[key] = (at: DateTime.now(), attempts: attempts);
+          // Şerit döşemesinin "yüklenemedi — dokun" rozeti paylaşılan notta
+          // da çıksın (eskiden yalnız kendi notlarımda kaydediliyordu; çark
+          // sonsuza dek dönüyordu).
+          _ref
+              .read(uploadFailuresProvider.notifier)
+              .fail(attachment.id, attempts);
           debugPrint('Paylaşılan notun eki yüklenemedi ($key): $e');
         } finally {
           _inFlight.remove(key);
+          progress.done(attachment.id);
         }
       }
     }
@@ -353,6 +458,7 @@ class UploadQueue {
     _ref.read(uploadFailuresProvider.notifier).clear(attachmentId);
     final notes = _ref.read(notesStreamProvider).value;
     if (notes != null) unawaited(_process(notes));
+    unawaited(_processForeign(_ref.read(foreignEditableNotesProvider)));
   }
 
   Future<void> _process(List<Note> notes) async {
@@ -437,10 +543,17 @@ class UploadQueue {
       final key = '${note.id}/${attachment.id}';
       if (!_inFlight.add(key)) return;
       final lastFailure = _lastFailure[key];
+      final progress = _ref.read(uploadProgressProvider.notifier);
+      // Drive oran bildirmiyor: -1 = "yükleniyor, oranı bilinmiyor".
+      progress.set(attachment.id, job.target == UploadTarget.drive ? -1 : 0);
       try {
         final uploaded = job.target == UploadTarget.drive
             ? await attachmentRepo.uploadToDrive(note.id, attachment)
-            : await attachmentRepo.upload(note.id, attachment);
+            : await attachmentRepo.upload(
+                note.id,
+                attachment,
+                onProgress: (f) => progress.set(attachment.id, f),
+              );
         if (uploaded != null) {
           await notesRepo.patchAttachment(note.id, uploaded);
         }
@@ -455,6 +568,7 @@ class UploadQueue {
         debugPrint('Ek yüklenemedi ($key): $e');
       } finally {
         _inFlight.remove(key);
+        progress.done(attachment.id);
       }
     });
   }
@@ -504,7 +618,13 @@ class UploadQueue {
         _inFlight.remove(key);
       }
     });
-    if (fetched > 0) _ref.read(localFilesRevisionProvider.notifier).bump();
+    if (fetched > 0) {
+      _ref.read(localFilesRevisionProvider.notifier).bump();
+      // Drive'dan yeni inen ek PAYLAŞILAN bir notunsa Storage'a da çıkmalı
+      // (ortak çalışan Drive'ımı göremez); o tarama dosya inmeden atlamıştı.
+      // Döngü yok: ikinci turda inecek dosya kalmaz.
+      _scheduleProcess(notes);
+    }
   }
 
   /// Aynı anda en çok kaç ek yüklenir. 3: mobil bağlantıda bant genişliğini
@@ -535,6 +655,7 @@ class UploadQueue {
     _foreignSub?.close();
     _foreignDebounce?.cancel();
     _limitSub?.close();
+    _sharesSub?.close();
     _driveSub?.close();
     _connectivitySub?.cancel();
   }
