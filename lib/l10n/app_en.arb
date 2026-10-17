@@ -1927,5 +1927,10 @@
   "attachmentsUploadingCount": "Uploading {count} attachments",
   "sharedNoteNew": "New",
   "sharedNoteUpdatedBy": "Updated by {name}",
-  "sharedMarkAllRead": "Mark all as read"
+  "sharedMarkAllRead": "Mark all as read",
+  "attachmentSaveAs": "Save as",
+  "attachmentSavedAs": "{name} saved",
+  "attachmentSaveAsFailed": "Couldn't save the file",
+  "sharedHubTitle": "Received & shared",
+  "sharedHubInbox": "Received"
 }

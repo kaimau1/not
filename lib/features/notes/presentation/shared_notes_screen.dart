@@ -9,6 +9,7 @@ import '../data/shared_note_activity.dart';
 import '../domain/note.dart';
 import 'note_card.dart';
 import 'note_grid.dart';
+import '../../inbox/presentation/shared_hub_screen.dart';
 
 /// **BENİMLE PAYLAŞILAN NOTLAR** — ortak notun (bkz. [NoteShare]) alıcı
 /// tarafı. Notlar sahiplerinin koleksiyonundan TEK TEK canlı okunur; kart
@@ -17,9 +18,50 @@ import 'note_grid.dart';
 class SharedNotesScreen extends ConsumerWidget {
   const SharedNotesScreen({super.key});
 
-  static Future<void> open(BuildContext context) => Navigator.of(
-    context,
-  ).push(MaterialPageRoute<void>(builder: (_) => const SharedNotesScreen()));
+  /// "Gelen ve paylaşılanlar" ekranının Paylaşılanlar sekmesi açılır
+  /// (kullanıcı isteği 2026-10-17: "gelen ve paylaşılan notları birleştir,
+  /// tek alandan yönetilsin").
+  static Future<void> open(BuildContext context) =>
+      SharedHubScreen.open(context, tab: SharedHubTab.shared);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.sharedWithMe),
+        actions: const [SharedMarkAllReadButton()],
+      ),
+      body: const SharedNotesBody(),
+    );
+  }
+}
+
+/// "Tümünü okundu say" — yalnız okunmamış ortak not varken.
+class SharedMarkAllReadButton extends ConsumerWidget {
+  const SharedMarkAllReadButton({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unread = ref.watch(sharedNoteUnreadProvider);
+    if (unread.isEmpty) return const SizedBox.shrink();
+    return IconButton(
+      tooltip: context.l10n.sharedMarkAllRead,
+      icon: const Icon(Icons.done_all),
+      onPressed: () {
+        final seen = ref.read(sharedNoteSeenProvider.notifier);
+        for (final id in unread) {
+          seen.markSeen(id);
+        }
+      },
+    );
+  }
+}
+
+/// Benimle paylaşılan notların ızgarası (ayrı ekranda ve birleşik
+/// "Gelen ve paylaşılanlar" ekranının sekmesinde aynı gövde).
+class SharedNotesBody extends ConsumerWidget {
+  const SharedNotesBody({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -51,113 +93,90 @@ class SharedNotesScreen extends ConsumerWidget {
         a.note.updatedAt ?? DateTime(0),
       );
     });
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.sharedWithMe),
-        actions: [
-          if (unread.isNotEmpty)
-            IconButton(
-              tooltip: l10n.sharedMarkAllRead,
-              icon: const Icon(Icons.done_all),
-              onPressed: () {
-                final seen = ref.read(sharedNoteSeenProvider.notifier);
-                for (final id in unread) {
-                  seen.markSeen(id);
-                }
-              },
-            ),
-        ],
-      ),
-      body: entries.isEmpty
-          ? EmptyState(
-              icon: Icons.people_alt_outlined,
-              title: l10n.sharedWithMe,
-              subtitle: l10n.sharedWithMeEmpty,
-            )
-          : LayoutBuilder(
-              builder: (context, constraints) {
-                final columns = (constraints.maxWidth / 220).floor().clamp(
-                  2,
-                  6,
-                );
-                return NoteBalancedGrid(
-                  notes: [for (final e in entries) e.note],
-                  columns: columns,
-                  itemBuilder: (context, index) {
-                    final entry = entries[index];
-                    final isNew = unread.contains(entry.share.id);
-                    final scheme = Theme.of(context).colorScheme;
-                    final caption = sharedNoteCaption(
-                      l10n,
-                      entry.share,
-                      entry.note,
-                    );
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            NoteCard(
-                              note: entry.note,
-                              ownerId: entry.share.ownerId,
-                            ),
-                            if (isNew)
-                              PositionedDirectional(
-                                top: -4,
-                                end: -2,
-                                child: IgnorePointer(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 7,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: scheme.error,
-                                      borderRadius: BorderRadius.circular(9),
-                                    ),
-                                    child: Text(
-                                      l10n.sharedNoteNew,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color: scheme.onError,
-                                      ),
+    return entries.isEmpty
+        ? EmptyState(
+            icon: Icons.people_alt_outlined,
+            title: l10n.sharedWithMe,
+            subtitle: l10n.sharedWithMeEmpty,
+          )
+        : LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = (constraints.maxWidth / 220).floor().clamp(2, 6);
+              return NoteBalancedGrid(
+                notes: [for (final e in entries) e.note],
+                columns: columns,
+                itemBuilder: (context, index) {
+                  final entry = entries[index];
+                  final isNew = unread.contains(entry.share.id);
+                  final scheme = Theme.of(context).colorScheme;
+                  final caption = sharedNoteCaption(
+                    l10n,
+                    entry.share,
+                    entry.note,
+                  );
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          NoteCard(
+                            note: entry.note,
+                            ownerId: entry.share.ownerId,
+                          ),
+                          if (isNew)
+                            PositionedDirectional(
+                              top: -4,
+                              end: -2,
+                              child: IgnorePointer(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: scheme.error,
+                                    borderRadius: BorderRadius.circular(9),
+                                  ),
+                                  child: Text(
+                                    l10n.sharedNoteNew,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: scheme.onError,
                                     ),
                                   ),
                                 ),
                               ),
-                          ],
-                        ),
-                        if (caption.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsetsDirectional.only(
-                              start: 6,
-                              top: 3,
                             ),
-                            child: Text(
-                              caption,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    color: isNew
-                                        ? scheme.error
-                                        : scheme.onSurfaceVariant,
-                                    fontWeight: isNew
-                                        ? FontWeight.w700
-                                        : null,
-                                  ),
-                            ),
+                        ],
+                      ),
+                      if (caption.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(
+                            start: 6,
+                            top: 3,
                           ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-    );
+                          child: Text(
+                            caption,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: isNew
+                                      ? scheme.error
+                                      : scheme.onSurfaceVariant,
+                                  fontWeight: isNew ? FontWeight.w700 : null,
+                                ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              );
+            },
+          );
   }
 }
 

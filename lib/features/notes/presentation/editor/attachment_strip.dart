@@ -11,6 +11,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/widgets/pop_in.dart';
 import '../../../settings/settings_providers.dart';
+import '../../data/attachment_save.dart';
 import '../../data/upload_queue.dart';
 import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
@@ -46,7 +47,12 @@ class AttachmentStrip extends StatelessWidget {
     this.onVideoToNote,
     this.onTranscribe,
     this.foreign = false,
+    this.collapsedHandle = false,
   });
+
+  /// Kapalıyken "📎 Ekler (n) ⌃" tutamağı çizilsin mi (alt çubuktaki ataç
+  /// düğmesi gizlenmişse açmanın tek yolu bu).
+  final bool collapsedHandle;
 
   /// Not BAŞKASININ (paylaşılan not): dosyası bu cihazda olmayan, buluta da
   /// çıkmamış ek "ekleyenin cihazından yüklenmesi bekleniyor" der — kendi
@@ -95,6 +101,34 @@ class AttachmentStrip extends StatelessWidget {
   /// görüntülenir.
   final ValueChanged<Attachment>? onChanged;
 
+  Widget _stripTile(int index) => _AttachmentTile(
+    key: ValueKey('strip-${attachments[index].id}'),
+    attachment: attachments[index],
+    // Şeritteki GÖRSELLER bir galeri: tam ekranda yana kaydırarak
+    // hepsinde gezilir.
+    gallery: [
+      for (final a in attachments)
+        if (a.kind == AttachmentKind.image) a,
+    ],
+    onRemove: () => onRemove(attachments[index]),
+    onChanged: onChanged,
+    onCopy: onCopy,
+    onInsertTag: onInsertTag,
+    view: viewOf?.call(attachments[index]),
+    onSetView: onSetView,
+    onVideoToNote: onVideoToNote,
+    onTranscribe: onTranscribe,
+    foreign: foreign,
+    // Kaynağın transkripti zaten varsa düğme "aç" olarak işaretlenir.
+    transcribed:
+        attachments[index].kind != AttachmentKind.text &&
+        attachments.any(
+          (a) =>
+              a.kind == AttachmentKind.text &&
+              a.transcriptOf == attachments[index].id,
+        ),
+  );
+
   @override
   Widget build(BuildContext context) {
     if (attachments.isEmpty) return const SizedBox.shrink();
@@ -110,36 +144,17 @@ class AttachmentStrip extends StatelessWidget {
           height: _AttachmentTile.height + 12,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            itemCount: attachments.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 10),
-            itemBuilder: (context, index) => _AttachmentTile(
-              key: ValueKey('strip-${attachments[index].id}'),
-              attachment: attachments[index],
-              // Şeritteki GÖRSELLER bir galeri: tam ekranda yana kaydırarak
-              // hepsinde gezilir.
-              gallery: [
-                for (final a in attachments)
-                  if (a.kind == AttachmentKind.image) a,
-              ],
-              onRemove: () => onRemove(attachments[index]),
-              onChanged: onChanged,
-              onCopy: onCopy,
-              onInsertTag: onInsertTag,
-              view: viewOf?.call(attachments[index]),
-              onSetView: onSetView,
-              onVideoToNote: onVideoToNote,
-              onTranscribe: onTranscribe,
-              foreign: foreign,
-              // Kaynağın transkripti zaten varsa düğme "aç" olarak işaretlenir.
-              transcribed:
-                  attachments[index].kind != AttachmentKind.text &&
-                  attachments.any(
-                    (a) =>
-                        a.kind == AttachmentKind.text &&
-                        a.transcriptOf == attachments[index].id,
-                  ),
-            ),
+            padding: const EdgeInsetsDirectional.fromSTEB(6, 6, 16, 6),
+            itemCount: attachments.length + 1,
+            separatorBuilder: (_, index) =>
+                SizedBox(width: index == 0 ? 6 : 10),
+            // İLK öğe GİZLE tutamağı (kullanıcı bulgusu 2026-10-17: "alttaki
+            // ek alanı göster gizle yapılamıyor"): şeridi kapatmanın yolu
+            // yalnız alt çubuktaki ataç düğmesiydi; o düğme dar ekranda
+            // kaydırma dışında kalınca ya da gizlenince şerit kapanmıyordu.
+            itemBuilder: (context, i) => i == 0
+                ? _CollapseHandle(count: attachments.length, onTap: onToggle)
+                : _stripTile(i - 1),
           ),
         ),
       ],
@@ -161,9 +176,112 @@ class AttachmentStrip extends StatelessWidget {
     // dışında yakalandığı için de Builder'ın her karedeki yeniden çalışması
     // alt ağacı hiç yeniden kurmaz (aynı örnek → Flutter atlar).
     return Builder(
-      builder: (context) => Offstage(
-        offstage: !expanded || MediaQuery.viewInsetsOf(context).bottom > 0,
-        child: content,
+      builder: (context) {
+        final keyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!expanded && collapsedHandle && !keyboard)
+              _CollapsedHandle(count: attachments.length, onTap: onToggle),
+            Offstage(offstage: !expanded || keyboard, child: content),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Açık şeridin BAŞINDAKİ gizle tutamağı: dikey ince düğme, ⌄ + sayı.
+class _CollapseHandle extends StatelessWidget {
+  const _CollapseHandle({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: context.l10n.hideAttachments,
+      child: Material(
+        key: const ValueKey('strip-collapse'),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: SizedBox(
+            width: 30,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(height: 2),
+                Icon(
+                  Icons.attach_file,
+                  size: 14,
+                  color: scheme.onSurfaceVariant,
+                ),
+                Text(
+                  '$count',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Kapalı şeridin ince satırı — yalnız alt çubuktaki ataç gizlenmişse.
+class _CollapsedHandle extends StatelessWidget {
+  const _CollapsedHandle({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      key: const ValueKey('strip-expand'),
+      onTap: onTap,
+      child: Container(
+        height: 30,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: scheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.attach_file, size: 15, color: scheme.onSurfaceVariant),
+            const SizedBox(width: 4),
+            Text(
+              '${context.l10n.showAttachments} ($count)',
+              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+            ),
+            Icon(
+              Icons.keyboard_arrow_up_rounded,
+              size: 18,
+              color: scheme.onSurfaceVariant,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -748,6 +866,13 @@ class _AttachmentTile extends ConsumerWidget {
                   ),
                 if (onCopy != null)
                   tile('copy', Icons.copy_outlined, l10n.copy),
+                // EKİ FARKLI KAYDET (2026-10-17): kullanıcının seçtiği yere.
+                if (!attachment.isWebVideo)
+                  tile(
+                    'saveAs',
+                    Icons.save_alt_outlined,
+                    l10n.attachmentSaveAs,
+                  ),
                 if (onTranscribe != null && _canTranscribe)
                   tile(
                     'transcribe',
@@ -784,6 +909,8 @@ class _AttachmentTile extends ConsumerWidget {
         onInsertTag?.call(attachment);
       case 'copy':
         onCopy?.call(attachment);
+      case 'saveAs':
+        await AttachmentSaveAs.run(context, ref, attachment);
       case 'transcribe':
         onTranscribe?.call(attachment);
       case 'ai':

@@ -1036,5 +1036,10 @@
   "attachmentsUploadingCount": "Mengunggah {count} lampiran",
   "sharedNoteNew": "Baru",
   "sharedNoteUpdatedBy": "Diperbarui oleh {name}",
-  "sharedMarkAllRead": "Tandai semua sudah dibaca"
+  "sharedMarkAllRead": "Tandai semua sudah dibaca",
+  "attachmentSaveAs": "Simpan sebagai",
+  "attachmentSavedAs": "{name} disimpan",
+  "attachmentSaveAsFailed": "Tidak dapat menyimpan file",
+  "sharedHubTitle": "Diterima & dibagikan",
+  "sharedHubInbox": "Diterima"
 }

@@ -38,7 +38,7 @@ enum AttachmentView {
 
 /// [a]'nın geçebileceği görünümler. Video/YouTube ve ses balonlu olamaz
 /// (balon bir SAYFANIN oranlı uzayında yaşar — zaman damgalı not onların
-/// karşılığı); sunum sabit bölmede çizilemez ve sayfaya gömülmez.
+/// karşılığı). Sunum da sayfaya gömülür ve sabitlenir (2026-10-17).
 ///
 /// METİN ve SES 2026-10-17'de katıldı: metin sayfada sayfası çevrilen bir
 /// kâğıt kutusu (bkz. `TextPageBox`), tepede okunan bir bölme ve balonluda
@@ -68,7 +68,10 @@ Set<AttachmentView> availableViews(Attachment a) => switch (a.kind) {
     AttachmentView.floating,
     AttachmentView.attached,
   },
+  // SUNUM 2026-10-17'de sayfaya gömülür ve sabitlenir (bkz. SlidePageBox).
   AttachmentKind.slide => const {
+    AttachmentView.pinned,
+    AttachmentView.floating,
     AttachmentView.bubbles,
     AttachmentView.attached,
   },

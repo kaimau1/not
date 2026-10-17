@@ -10,7 +10,12 @@ class MenuAction {
     this.selected = false,
     this.count = 0,
     this.highlight = false,
+    this.neutral = false,
   });
+
+  /// Hızlı satırda GRİ (nötr) çizilsin mi — içerik değil uygulama işi olan
+  /// düğme (Ayarlar) öbür kısayollardan renkle ayrışsın.
+  final bool neutral;
 
   /// Levha kapanınca dönen anahtar.
   final String id;
@@ -189,13 +194,21 @@ class _QuickButton extends StatelessWidget {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: on ? scheme.primary : scheme.primaryContainer,
+                    color: on
+                        ? scheme.primary
+                        : action.neutral
+                        ? scheme.surfaceContainerHighest
+                        : scheme.primaryContainer,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     action.icon,
                     size: 22,
-                    color: on ? scheme.onPrimary : scheme.onPrimaryContainer,
+                    color: on
+                        ? scheme.onPrimary
+                        : action.neutral
+                        ? scheme.onSurfaceVariant
+                        : scheme.onPrimaryContainer,
                   ),
                 ),
                 if (action.count > 0)

@@ -55,7 +55,7 @@ enum AppSection {
     return switch (this) {
       AppSection.notes => l10n.navNotes,
       AppSection.folders => l10n.foldersTitle,
-      AppSection.inbox => l10n.inboxTitle,
+      AppSection.inbox => l10n.sharedHubTitle,
       AppSection.ai => l10n.aiHubTitle,
       AppSection.reminders => l10n.remindersTitle,
       AppSection.archive => l10n.archiveTitle,

@@ -5172,4 +5172,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sharedMarkAllRead => 'تعليم الكل كمقروء';
+
+  @override
+  String get attachmentSaveAs => 'حفظ باسم';
+
+  @override
+  String attachmentSavedAs(String name) {
+    return 'تم حفظ $name';
+  }
+
+  @override
+  String get attachmentSaveAsFailed => 'تعذّر حفظ الملف';
+
+  @override
+  String get sharedHubTitle => 'المستلمة والمشتركة';
+
+  @override
+  String get sharedHubInbox => 'المستلمة';
 }

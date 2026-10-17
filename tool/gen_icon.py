@@ -1,4 +1,13 @@
-"""Uygulama simgesinin kaynaklarini ve PNG'lerini uretir (i4, 2026-10-17:
+"""Uygulama simgesinin kaynaklarini ve PNG'lerini uretir.
+
+i5 (2026-10-17, kullanici secimi: "1 nolu tasarim guzel, onu simgemiz
+olarak yapalim" — DOGAL & KARALAMA / Playful Doodle): krem zemin, altta
+dalgali nane seridi, el cizimi koyu konturlu SARI yapiskan not (sol alt
+kosesi kivrik, dalgali yazi satirlari), capraz duran YESIL kalem (pembe
+silgi), kenarlarda karalama parıltilar. Susleme yalniz ZEMIN katmaninda
+(maskeyle kirpilabilir); not + kalem guvenli dairede.
+
+Onceki (i4, 2026-10-17:
 "simgemiz olmamis, arastir, gercekten Play'de cikmaya hazir bir simge yap").
 
 ARASTIRMA (bkz. HAFIZA.md 2026-10-17):
@@ -41,19 +50,66 @@ SRC = os.path.join(ROOT, 'assets', 'icon', 'src')
 ICON = os.path.join(ROOT, 'assets', 'icon')
 
 PALETTE = dict(
-    bg0='#5B5BF7', bg1='#3A2FC9', bg2='#7A3CF0',
-    paper0='#FFFFFF', paper1='#EEF0FF',
-    ink='#4338CA',
-    gold0='#FFE38A', gold1='#FFB020', gold2='#F08A00',
+    cream='#FFF5DF', mint='#BFE5D1', mint2='#A9DBC2',
+    paper0='#FFE58A', paper1='#FFD45C', curl='#F2C14E',
+    ink='#2F2A24', text='#6B5A3A',
+    pencil='#86CFA9', pencil2='#5FB58B', wood='#F6D7A7', lead='#2F2A24',
+    band='#C9CED6', eraser='#F49CA6',
 )
-# Geometri: 108 birimlik tuval, merkez (54,54), guvenli daire r=33.
-X0, Y0, X1, Y1, R, FOLD = 31, 31.5, 71, 80.5, 7.5, 12.5
-LINES = [(39.5, 48.5, 57), (39.5, 57.5, 63), (39.5, 66.5, 54.5)]
-SX, SY, SR = 68, 35, 9.6
-STROKE = 4.4
+INK_W = 2.2
+# Not: 108 birimlik tuvalde, merkez (54,54), guvenli daire r=33. Hafif
+# egik (-7 derece) el cizimi yapiskan not; sol alt kosesi kivrik.
+NX0, NY0, NX1, NY1 = 32, 35, 64, 76
+NCX, NCY, ROT = (NX0 + NX1) / 2, (NY0 + NY1) / 2, -7
+CURL = 9
+# Kalem: ucu (57,73), silgisi (75,35) yonunde; 42 birim boy, 9 birim en.
+TIP = (57.0, 73.0)
+ANGLE = math.degrees(math.atan2(35 - 73, 75 - 57))
+PL, PW = 42, 9
 
 
-def star(cx, cy, r, k=0.22):
+def wobble(points, amp=0.45):
+    """Noktalar arasinda hafif dalgali (el cizimi) yol: her kenarin ortasi
+    sirayla ice/disa itilir."""
+    d = f'M{points[0][0]:.2f} {points[0][1]:.2f}'
+    for i in range(1, len(points)):
+        (x0, y0), (x1, y1) = points[i - 1], points[i]
+        mx, my = (x0 + x1) / 2, (y0 + y1) / 2
+        nx, ny = -(y1 - y0), x1 - x0
+        n = math.hypot(nx, ny) or 1
+        k = amp * (1 if i % 2 else -1)
+        d += f'Q{mx + nx / n * k:.2f} {my + ny / n * k:.2f} {x1:.2f} {y1:.2f}'
+    return d
+
+
+def note_path():
+    """Kivrik sol alt koseli yapiskan not (el cizimi kenarlar)."""
+    return wobble([(NX0 + 1, NY0), (NX1, NY0 + 0.6), (NX1 - 0.4, NY1),
+                   (NX0 + CURL, NY1 - 0.3), (NX0, NY1 - CURL), (NX0 + 1, NY0)]) + 'Z'
+
+
+def curl_path():
+    """Kivrilan kose: kagidin arka yuzu."""
+    x, y = NX0, NY1
+    return (f'M{x + CURL:.2f} {y - 0.3:.2f}Q{x + CURL - 1.5:.2f} {y - CURL + 2:.2f} '
+            f'{x:.2f} {y - CURL:.2f}Q{x + 4:.2f} {y - 2:.2f} {x + CURL:.2f} {y - 0.3:.2f}Z')
+
+
+def text_lines():
+    """Notun ustundeki dalgali "yazi" satirlari."""
+    out = []
+    for i, (x0, y, x1) in enumerate([(37, 45, 58), (37, 52, 60), (37, 59, 55), (41, 66, 57)]):
+        segs = int((x1 - x0) / 3)
+        d = f'M{x0} {y}'
+        for j in range(segs):
+            xa = x0 + (j + 0.5) * (x1 - x0) / segs
+            xb = x0 + (j + 1) * (x1 - x0) / segs
+            d += f'Q{xa:.2f} {y + (1.1 if (j + i) % 2 else -1.1):.2f} {xb:.2f} {y}'
+        out.append(f'<path d="{d}"/>')
+    return ''.join(out)
+
+
+def star(cx, cy, r, k=0.26):
     """4 koseli parilti: uclar sivri, bel ice kavisli."""
     w = r * k
     return (f'M{cx:.2f} {cy - r:.2f}'
@@ -63,84 +119,123 @@ def star(cx, cy, r, k=0.22):
             f'C{cx - w:.2f} {cy - w:.2f} {cx - w:.2f} {cy - w:.2f} {cx:.2f} {cy - r:.2f}Z')
 
 
-def note_path():
-    """Sag alt kosesi katlanmis yuvarlak dikdortgen (yapiskan not)."""
-    r = R
-    return (f'M{X0 + r} {Y0}H{X1 - r}A{r} {r} 0 0 1 {X1} {Y0 + r}V{Y1 - FOLD}'
-            f'L{X1 - FOLD} {Y1}H{X0 + r}A{r} {r} 0 0 1 {X0} {Y1 - r}'
-            f'V{Y0 + r}A{r} {r} 0 0 1 {X0 + r} {Y0}Z')
-
-
-FOLD_PATH = f'M{X1 - FOLD} {Y1}V{Y1 - FOLD + 3}a3 3 0 0 1 3-3H{X1}Z'
+def pencil(fill=True):
+    """Yerel eksende (uc 0, silgi PL) cizilen kalem; donusumle yerine konur."""
+    p = PALETTE
+    h = PW / 2
+    t = f'translate({TIP[0]} {TIP[1]}) rotate({ANGLE:.2f})'
+    if not fill:
+        return (f'<g transform="{t}"><path d="M0 0L9 {-h}H{PL - 2}a2 2 0 0 1 2 2'
+                f'V{h - 2}a2 2 0 0 1-2 2H9Z" fill="#fff"/></g>')
+    ink = p['ink']
+    return (
+        f'<g transform="{t}" stroke="{ink}" stroke-width="{INK_W}" '
+        f'stroke-linejoin="round" stroke-linecap="round">'
+        f'<path d="M9 {-h}H{PL - 7}V{h}H9Z" fill="{p["pencil"]}"/>'
+        f'<path d="M9 {-h / 3:.2f}H{PL - 7}" stroke="{p["pencil2"]}" stroke-width="1.6" fill="none"/>'
+        f'<path d="M9 {h / 3:.2f}H{PL - 7}" stroke="{p["pencil2"]}" stroke-width="1.6" fill="none"/>'
+        f'<path d="M{PL - 7} {-h}H{PL - 4}V{h}H{PL - 7}Z" fill="{p["band"]}"/>'
+        f'<path d="M{PL - 4} {-h}H{PL - 2}a2 2 0 0 1 2 2V{h - 2}a2 2 0 0 1-2 2H{PL - 4}Z" '
+        f'fill="{p["eraser"]}"/>'
+        f'<path d="M9 {-h}L0 0L9 {h}Z" fill="{p["wood"]}"/>'
+        f'<path d="M3.2 {-h * 3.2 / 9:.2f}L0 0L3.2 {h * 3.2 / 9:.2f}Z" fill="{p["lead"]}" '
+        f'stroke-width="1"/>'
+        f'</g>'
+    )
 
 
 def defs():
     p = PALETTE
-    return f'''<defs>
-<linearGradient id="bg" x1="0" y1="0" x2="108" y2="108" gradientUnits="userSpaceOnUse">
-<stop offset="0" stop-color="{p['bg0']}"/><stop offset=".55" stop-color="{p['bg1']}"/><stop offset="1" stop-color="{p['bg2']}"/></linearGradient>
-<radialGradient id="glow" cx="40" cy="30" r="70" gradientUnits="userSpaceOnUse">
-<stop offset="0" stop-color="#FFFFFF" stop-opacity=".22"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>
-<linearGradient id="paper" x1="{X0}" y1="{Y0}" x2="{X1}" y2="{Y1}" gradientUnits="userSpaceOnUse">
-<stop offset="0" stop-color="{p['paper0']}"/><stop offset="1" stop-color="{p['paper1']}"/></linearGradient>
-<linearGradient id="fold" x1="{X1 - FOLD}" y1="{Y1 - FOLD}" x2="{X1}" y2="{Y1}" gradientUnits="userSpaceOnUse">
-<stop offset="0" stop-color="#C9CCF7"/><stop offset="1" stop-color="#F4F5FF"/></linearGradient>
-<linearGradient id="gold" x1="{SX - SR}" y1="{SY - SR}" x2="{SX + SR}" y2="{SY + SR}" gradientUnits="userSpaceOnUse">
-<stop offset="0" stop-color="{p['gold0']}"/><stop offset=".5" stop-color="{p['gold1']}"/><stop offset="1" stop-color="{p['gold2']}"/></linearGradient>
-<filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter>
-</defs>'''
+    return (
+        '<defs>'
+        f'<linearGradient id="paper" x1="{NX0}" y1="{NY0}" x2="{NX1}" y2="{NY1}" '
+        'gradientUnits="userSpaceOnUse">'
+        f'<stop offset="0" stop-color="{p["paper0"]}"/>'
+        f'<stop offset="1" stop-color="{p["paper1"]}"/></linearGradient>'
+        '<filter id="soft" x="-30%" y="-30%" width="160%" height="160%">'
+        '<feGaussianBlur stdDeviation="1.6"/></filter>'
+        '</defs>'
+    )
 
 
-def lines_svg():
-    return ''.join(f'<path d="M{a} {y}H{b}"/>' for a, y, b in LINES)
+def background():
+    """Krem zemin, altta dalgali NANE seridi, kenarlarda karalama
+    parıltilar (zemin maskeyle kirpilabilir — susleme burada)."""
+    p = PALETTE
+    ink = p['ink']
+    return (
+        f'<rect width="108" height="108" fill="{p["cream"]}"/>'
+        f'<path d="M0 70Q18 62 36 70T72 70T108 68V108H0Z" fill="{p["mint"]}"/>'
+        f'<path d="M0 82Q20 76 40 83T80 82T108 80V108H0Z" fill="{p["mint2"]}" opacity=".55"/>'
+        f'<g fill="none" stroke="{ink}" stroke-width="1.6" stroke-linecap="round" opacity=".8">'
+        '<path d="M26 31l2.5 2.5M24 37.5h3.4M29.5 26.5v3.4"/>'
+        '<path d="M78 80q4 3 1.5 6t-4 -0.5q-1-3 3-2.5"/>'
+        '</g>'
+        f'<path d="{star(84, 30, 4.2)}" fill="none" stroke="{ink}" stroke-width="1.4" '
+        'stroke-linejoin="round"/>'
+        f'<path d="{star(77, 22, 2.3)}" fill="{ink}"/>'
+        f'<path d="{star(24, 74, 2.6)}" fill="{ink}" opacity=".85"/>'
+    )
 
 
 def mark():
     p = PALETTE
     note = note_path()
-    return f'''<path d="{note}" transform="translate(0 2.2)" fill="#140B5C" opacity=".38" filter="url(#soft)"/>
-<path d="{note}" fill="url(#paper)"/>
-<path d="{FOLD_PATH}" fill="url(#fold)"/>
-<g stroke="{p['ink']}" stroke-width="{STROKE}" stroke-linecap="round" fill="none">{lines_svg()}</g>
-<clipPath id="onnote"><path d="{note}"/></clipPath>
-<path d="{star(SX, SY, SR + 2.4)}" fill="{p['bg1']}" clip-path="url(#onnote)"/>
-<path d="{star(SX, SY, SR)}" fill="url(#gold)"/>
-<path d="{star(SX - 2.2, SY - 2.6, 3.2)}" fill="#FFF8DC" opacity=".85"/>'''
+    rot = f'rotate({ROT} {NCX} {NCY})'
+    return (
+        f'<g transform="{rot}">'
+        f'<path d="{note}" transform="translate(1.2 2.4)" fill="#5A4A2A" opacity=".28" '
+        'filter="url(#soft)"/>'
+        f'<path d="{note}" fill="url(#paper)" stroke="{p["ink"]}" stroke-width="{INK_W}" '
+        'stroke-linejoin="round"/>'
+        f'<path d="{curl_path()}" fill="{p["curl"]}" stroke="{p["ink"]}" '
+        f'stroke-width="{INK_W - 0.4}" stroke-linejoin="round"/>'
+        f'<g stroke="{p["text"]}" stroke-width="1.7" stroke-linecap="round" fill="none">'
+        f'{text_lines()}</g>'
+        '</g>'
+        f'{pencil()}'
+        f'<g fill="none" stroke="{p["ink"]}" stroke-width="1.5" stroke-linecap="round">'
+        '<path d="M79 44l3.5-1.2M80 49.5h3.6M77.5 39.5l2.6-2.4"/></g>'
+    )
 
 
 def mono():
-    """Temali simge: not silueti, satirlar ve kat OYUK; yildiz ayri, aradaki
+    """Temali simge: not silueti (satirlar oyuk) + kalem silueti; aradaki
     bosluk oyuk (sistem rengi tek tondur, ayrintiyi yalniz alfa tasir)."""
-    return f'''<mask id="cut" maskUnits="userSpaceOnUse" x="0" y="0" width="108" height="108">
-<path d="{note_path()}" fill="#fff"/>
-<g stroke="#000" stroke-width="{STROKE}" stroke-linecap="round">{lines_svg()}</g>
-<path d="M{X1 - FOLD} {Y1}V{Y1 - FOLD + 3}a3 3 0 0 1 3-3H{X1}" fill="none" stroke="#000" stroke-width="2.2"/>
-<path d="{star(SX, SY, SR + 2.6)}" fill="#000"/>
-</mask>
-<rect width="108" height="108" fill="#fff" mask="url(#cut)"/>
-<path d="{star(SX, SY, SR)}" fill="#fff"/>'''
+    rot = f'rotate({ROT} {NCX} {NCY})'
+    h = PW / 2 + 2.4
+    return (
+        '<mask id="cut" maskUnits="userSpaceOnUse" x="0" y="0" width="108" height="108">'
+        f'<g transform="{rot}"><path d="{note_path()}" fill="#fff"/>'
+        '<g stroke="#000" stroke-width="2" stroke-linecap="round" fill="none">'
+        f'{text_lines()}</g></g>'
+        f'<g transform="translate({TIP[0]} {TIP[1]}) rotate({ANGLE:.2f})">'
+        f'<path d="M-1 0L8 {-h}H{PL + 2}V{h}H8Z" fill="#000"/></g>'
+        '</mask>'
+        '<rect width="108" height="108" fill="#fff" mask="url(#cut)"/>'
+        f'{pencil(fill=False)}'
+    )
 
 
 def svg(title, body, bg):
-    back = ('<rect width="108" height="108" fill="url(#bg)"/>'
-            '<rect width="108" height="108" fill="url(#glow)"/>') if bg else ''
+    back = background() if bg else ''
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" '
             f'width="108" height="108"><title>{title}</title>{defs()}{back}{body}</svg>')
 
 
 SOURCES = {
-    'icon_full': ('Notlar i4 — tam kompozisyon (zemin + isaret), 108 birim',
+    'icon_full': ('Notlar i5 — tam kompozisyon (zemin + isaret), 108 birim',
                   mark, True),
-    'icon_foreground': ('Notlar i4 — uyarlanabilir ON PLAN, inset YOK; isaret '
+    'icon_foreground': ('Notlar i5 — uyarlanabilir ON PLAN, inset YOK; isaret '
                         'ortadaki 66 birimlik dairede', mark, False),
-    'icon_background': ('Notlar i4 — uyarlanabilir ZEMIN', lambda: '', True),
-    'icon_monochrome': ('Notlar i4 — Android 13+ temali simge (yalniz alfa)',
+    'icon_background': ('Notlar i5 — uyarlanabilir ZEMIN', lambda: '', True),
+    'icon_monochrome': ('Notlar i5 — Android 13+ temali simge (yalniz alfa)',
                         mono, False),
 }
 
 
 def chromium():
-    for c in [os.environ.get('CHROME'), '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+    for c in [os.environ.get('CHROME'), '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', '/opt/pw-browsers/chromium',
               shutil.which('chromium'), shutil.which('google-chrome'), shutil.which('chrome')]:
         if c and os.path.exists(c):
             return c
@@ -184,17 +279,21 @@ def rounded(im, radius_frac):
 
 
 def check_geometry():
-    """Isaretin 66 birimlik guvenli dairede kaldigini dogrular."""
+    """Isaretin (egik not + kalem) 66 birimlik guvenli dairede kaldigini
+    dogrular."""
     c, safe = 54, 33
     worst = 0
-    for ax, ay in [(X0 + R, Y0 + R), (X1 - R, Y0 + R), (X0 + R, Y1 - R)]:
-        worst = max(worst, math.hypot(ax - c, ay - c) + R)
-    for px, py in [(X1, Y1 - FOLD), (X1 - FOLD, Y1)]:
-        worst = max(worst, math.hypot(px - c, py - c))
-    # Yildizin not disindaki halkasi notla kirpilir (bkz. mark) — yalniz
-    # altin yildizin kendisi sayilir.
-    for px, py in [(SX, SY - SR), (SX + SR, SY)]:
-        worst = max(worst, math.hypot(px - c, py - c))
+    t = math.radians(ROT)
+    for x, y in [(NX0, NY0), (NX1, NY0), (NX1, NY1), (NX0, NY1)]:
+        dx, dy = x - NCX, y - NCY
+        rx = NCX + dx * math.cos(t) - dy * math.sin(t)
+        ry = NCY + dx * math.sin(t) + dy * math.cos(t)
+        worst = max(worst, math.hypot(rx - c, ry - c))
+    a = math.radians(ANGLE)
+    for lx, ly in [(0, 0), (PL, PW / 2), (PL, -PW / 2)]:
+        gx = TIP[0] + lx * math.cos(a) - ly * math.sin(a)
+        gy = TIP[1] + lx * math.sin(a) + ly * math.cos(a)
+        worst = max(worst, math.hypot(gx - c, gy - c))
     assert worst <= safe + 0.01, f'isaret guvenli daireyi asiyor: {worst:.2f} > {safe}'
     return worst
 

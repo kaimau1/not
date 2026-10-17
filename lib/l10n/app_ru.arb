@@ -1036,5 +1036,10 @@
   "attachmentsUploadingCount": "Загрузка вложений: {count}",
   "sharedNoteNew": "Новое",
   "sharedNoteUpdatedBy": "Обновил(а) {name}",
-  "sharedMarkAllRead": "Отметить всё как прочитанное"
+  "sharedMarkAllRead": "Отметить всё как прочитанное",
+  "attachmentSaveAs": "Сохранить как",
+  "attachmentSavedAs": "{name} сохранён",
+  "attachmentSaveAsFailed": "Не удалось сохранить файл",
+  "sharedHubTitle": "Полученные и общие",
+  "sharedHubInbox": "Полученные"
 }

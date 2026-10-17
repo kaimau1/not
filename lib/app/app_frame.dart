@@ -5,8 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../core/l10n_ext.dart';
 import '../features/folders/data/folder_activity.dart';
 import '../features/friends/presentation/friends_screen.dart';
-import '../features/inbox/data/inbox_repository.dart';
-import '../features/notes/data/shared_note_activity.dart';
+import '../features/inbox/presentation/shared_hub_screen.dart';
 import '../features/settings/settings_providers.dart';
 import 'app_commands.dart';
 import 'split_shell.dart';
@@ -122,15 +121,14 @@ class _AppRail extends ConsumerWidget {
     final extended =
         ref.watch(railExtendedProvider) ?? width >= kRailAutoExtendBreakpoint;
     final collapsed = ref.watch(listPaneCollapsedProvider);
-    final inboxCount = ref.watch(
-      inboxNotesProvider.select((a) => a.value?.length ?? 0),
-    );
-    // Paylaşılanlarda okunmamış hareket (klasörler + ortak notlar) —
-    // geniş ekranda/web'de klasör şeridi solda kalabalıkta kayboluyordu
-    // (kullanıcı bulgusu 2026-10-17: "yeni bir şey geldiğinde anlaşılmıyor").
-    final sharedUnread =
-        ref.watch(sharedUnreadTotalProvider) +
-        ref.watch(sharedNoteUnreadProvider.select((s) => s.length));
+    // "Gelen ve paylaşılanlar" bölümü (2026-10-17): gelen notlar + okunmamış
+    // ortak notlar tek rozette (bkz. sharedHubBadgeProvider).
+    final inboxCount = ref.watch(sharedHubBadgeProvider);
+    // Paylaşılan KLASÖRLERDE okunmamış hareket — geniş ekranda/web'de klasör
+    // şeridi solda kalabalıkta kayboluyordu (kullanıcı bulgusu 2026-10-17:
+    // "yeni bir şey geldiğinde anlaşılmıyor"). Ortak notlar artık Gelen ve
+    // paylaşılanlar bölümünde sayılıyor.
+    final sharedUnread = ref.watch(sharedUnreadTotalProvider);
 
     return ColoredBox(
       color: scheme.surfaceContainerLow,

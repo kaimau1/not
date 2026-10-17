@@ -1036,5 +1036,10 @@
   "attachmentsUploadingCount": "Envoi de {count} pièces jointes",
   "sharedNoteNew": "Nouveau",
   "sharedNoteUpdatedBy": "Mis à jour par {name}",
-  "sharedMarkAllRead": "Tout marquer comme lu"
+  "sharedMarkAllRead": "Tout marquer comme lu",
+  "attachmentSaveAs": "Enregistrer sous",
+  "attachmentSavedAs": "{name} enregistré",
+  "attachmentSaveAsFailed": "Impossible d'enregistrer le fichier",
+  "sharedHubTitle": "Reçues et partagées",
+  "sharedHubInbox": "Reçues"
 }

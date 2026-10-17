@@ -165,7 +165,7 @@ void main() {
     await tester.tap(find.text('Klasörler'));
     await tester.pumpAndSettle();
     expect(currentLocation(router), '/folders');
-    await tester.tap(find.text('Gelen notlar'));
+    await tester.tap(find.text('Gelen ve paylaşılanlar').first);
     await tester.pumpAndSettle();
     expect(currentLocation(router), '/inbox');
   });

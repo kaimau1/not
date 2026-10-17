@@ -5199,4 +5199,21 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get sharedMarkAllRead => 'Tandai semua sudah dibaca';
+
+  @override
+  String get attachmentSaveAs => 'Simpan sebagai';
+
+  @override
+  String attachmentSavedAs(String name) {
+    return '$name disimpan';
+  }
+
+  @override
+  String get attachmentSaveAsFailed => 'Tidak dapat menyimpan file';
+
+  @override
+  String get sharedHubTitle => 'Diterima & dibagikan';
+
+  @override
+  String get sharedHubInbox => 'Diterima';
 }

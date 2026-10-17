@@ -5215,4 +5215,21 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sharedMarkAllRead => 'Alle als gelesen markieren';
+
+  @override
+  String get attachmentSaveAs => 'Speichern unter';
+
+  @override
+  String attachmentSavedAs(String name) {
+    return '$name gespeichert';
+  }
+
+  @override
+  String get attachmentSaveAsFailed => 'Datei konnte nicht gespeichert werden';
+
+  @override
+  String get sharedHubTitle => 'Empfangen & geteilt';
+
+  @override
+  String get sharedHubInbox => 'Empfangen';
 }

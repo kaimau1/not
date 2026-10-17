@@ -7,6 +7,7 @@ import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/note_card.dart';
 import '../data/inbox_repository.dart';
+import 'shared_hub_screen.dart';
 
 /// **GELEN NOTLAR** ekranı — kullanıcı isteği 2026-08-18: "paylaşılan not
 /// alıcıda farklı gelen notlar klasöründe görülsün ve oradan normal
@@ -18,9 +19,10 @@ import '../data/inbox_repository.dart';
 class InboxScreen extends ConsumerWidget {
   const InboxScreen({super.key});
 
-  static Future<void> open(BuildContext context) => Navigator.of(
-    context,
-  ).push(MaterialPageRoute<void>(builder: (_) => const InboxScreen()));
+  /// "Gelen ve paylaşılanlar" ekranının Gelen sekmesi (kullanıcı isteği
+  /// 2026-10-17: gelen ve paylaşılan notlar tek alandan yönetilsin).
+  static Future<void> open(BuildContext context) =>
+      SharedHubScreen.open(context, tab: SharedHubTab.inbox);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -45,24 +47,35 @@ class InboxScreen extends ConsumerWidget {
           ],
         ),
       ),
-      body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) =>
-            EmptyState(icon: Icons.error_outline, title: l10n.genericError('$e')),
-        data: (notes) => notes.isEmpty
-            ? EmptyState(
-                icon: Icons.move_to_inbox_outlined,
-                title: l10n.inboxEmpty,
-                subtitle: l10n.inboxEmptyHint,
-              )
-            : ListView.separated(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-                itemCount: notes.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
-                itemBuilder: (context, index) =>
-                    _InboxCard(note: notes[index]),
-              ),
-      ),
+      body: const InboxList(),
+    );
+  }
+}
+
+/// Gelen notların listesi (ayrı ekranda ve birleşik ekranın sekmesinde).
+class InboxList extends ConsumerWidget {
+  const InboxList({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final async = ref.watch(inboxNotesProvider);
+    return async.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) =>
+          EmptyState(icon: Icons.error_outline, title: l10n.genericError('$e')),
+      data: (notes) => notes.isEmpty
+          ? EmptyState(
+              icon: Icons.move_to_inbox_outlined,
+              title: l10n.inboxEmpty,
+              subtitle: l10n.inboxEmptyHint,
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+              itemCount: notes.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              itemBuilder: (context, index) => _InboxCard(note: notes[index]),
+            ),
     );
   }
 }

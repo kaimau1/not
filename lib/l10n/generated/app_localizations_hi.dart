@@ -5182,4 +5182,21 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get sharedMarkAllRead => 'सभी को पढ़ा हुआ मानें';
+
+  @override
+  String get attachmentSaveAs => 'इस रूप में सहेजें';
+
+  @override
+  String attachmentSavedAs(String name) {
+    return '$name सहेजा गया';
+  }
+
+  @override
+  String get attachmentSaveAsFailed => 'फ़ाइल सहेजी नहीं जा सकी';
+
+  @override
+  String get sharedHubTitle => 'प्राप्त और साझा';
+
+  @override
+  String get sharedHubInbox => 'प्राप्त';
 }

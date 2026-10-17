@@ -4978,3 +4978,73 @@ Flutter 3.44.6 yine `/opt/flutter`'a indirildi. 6 yeni anahtar 16 dilde elle.
 `requests_2026_10_17_d_test.dart` (+11): kök nedeni GÖSTEREN kontrol testi
 (varsayılan işleyiciyle son bayrak false), düzeltme, ana ekrandan çıkış,
 "yeni" kuralı + sağlayıcı + ekran, ilerleme özeti/kısma. Cihazda GÖRÜLMEDİ.
+
+## 2026-10-17 (6. tur) — yeni simge, ayarlar kısayolu, farklı kaydet, sunumun dört kipi, tek AI arama anahtarı, gelen+paylaşılan birleşimi, ek şeridi aç/kapa, kendiliğinden kapanan bildirimler
+Kullanıcı (ekran görüntüleriyle): "1 nolu tasarım simgemiz olsun · ayarlar
+üstteki 3'lü buton gibi ve gri · eki farklı kaydet · sunum gibi türlerde
+gömülü/Sabit/Balonlu seçeneklerinin hepsi, gömülü ve sabitken sayfa
+değişsin · arama kutusunda Metin/Anlam yerine tek AI işareti · üstteki AI
+düğmesi alttaki +'nın soluna, yerine gelen+paylaşılan düğmesi (rozetli),
+ikisi birleşsin · alttaki ek alanı göster/gizle yapılamıyor · 'Metin
+kaldırıldı' gibi bildirimler sürekli duruyor · main'e merge, APK".
+
+### KÖK NEDEN — eylemli bildirimler kapanmıyordu
+Bu Flutter sürümünde `SnackBar(action: …)` varsayılanı `persist: true`:
+ScaffoldMessenger zamanlayıcı KURMUYOR. Editörün "Metin kaldırıldı / Ek
+kaldırıldı" bildirimi kök messenger'da olduğu için ana ekrana dönünce de
+duruyordu. Çözüm `timedSnackBar` (core/widgets/undo_snackbar.dart):
+`persist: false` + bildirimin DİBİNDE incelen geri sayım şeridi; şeridin
+bitişi kapatır. Eylem düğmesi içerikte (şerit tam genişlik). Uygulamadaki
+6 eylemli bildirim + `showUndoSnackBar` buna geçti. **TUZAK:** YENİ eylemli
+bildirim `timedSnackBar` ile kurulmalı.
+
+### KÖK NEDEN — ek şeridi göster/gizle yapılamıyordu
+Şeridin tek aç/kapa yolu alt çubuk kapsülündeki ataç düğmesiydi ve kapsülün
+SONUNDAYDI; kapsül `SingleChildScrollView` içinde, dar ekranda düğme yatay
+kaydırmanın dışında kalıyordu (görüntüde A + ⊡ 🔍 paylaş görünüyor, ataç
+yok). Ayrıca kişiselleştirmede gizlenebiliyordu. Artık: ataç Ekle'nin hemen
+yanında; açık şeridin BAŞINDA dikey "gizle" tutamağı (`strip-collapse`);
+ataç gizliyse kapalı şerit ince "Göster (n)" satırı çizer
+(`AttachmentStrip.collapsedHandle`).
+
+### Sunum: Sabit / Yüzen / Balonlu / Ek
+`Attachment.stripByDefault` ve `isPinnedTop` sunumu kapsıyor; eski sunum
+ekleri `onPage` false olduğundan şeritte kalır (veri göçü yok).
+`SlidePageBox` (editor/slide_page_box.dart) PdfPageBox'ın karşılığı: tek
+slayt, ‹ n / N ›, yatay kaydırma, ⤢ tam ekran; sayfa `pdfPage`'de, oran
+ilk slayttan ekin width/height'ına yazılır. Ayrıştırılan deste
+`_deckCache` (indirme URL'si/yol anahtarlı) — aynı dosya bölmede ve sayfada.
+Sayfaya ilk konuşta 1600×900, genişlik 0.8.
+
+### Farklı kaydet
+`AttachmentSaveAs.run` (data/attachment_save.dart): Android `saveDocument`
+(MainActivity → ACTION_CREATE_DOCUMENT, istek kodu 4714, kopya pickExecutor'da),
+Windows `file_selector.getSaveLocation`, web `downloadBytes` (web_blob).
+Menüler: sayfadaki araç paneli ⋮, şerit ⋯ levhası (`strip-action-saveAs`),
+sabit bölme ⋮. YouTube'da yok (dosyası yok).
+
+### Ana ekran
+* Arama: `_SemanticToggle` (✨ kare; açık = dolu vurgu, anlamla arama).
+* Üst çubuk: hesap · `SharedHubButton` (rozet = gelen + okunmamış ortak not,
+  `sharedHubBadgeProvider`) · ⋮. Yapay zekâ "+"nın SOLUNDA (Positioned, end
+  84); asistan paneli ve geri-al bildirimi bu yüzden end 144.
+* ⋮ hızlı satır: Hatırlatıcılar · Arşiv · Çöp · **Ayarlar (gri,
+  `MenuAction.neutral`)**. "Gelen notlar" menüden kalktı.
+* `SharedHubScreen` (inbox/presentation): iki sekme (Gelen | Benimle
+  paylaşılanlar). `InboxScreen.open` / `SharedNotesScreen.open` / geniş
+  ekran `/inbox` hepsi buraya. Klasör şeridindeki "Benimle paylaşılanlar"
+  çipi ana ekrandan kalktı (klasörler ekranında duruyor).
+
+### Simge (i5)
+`tool/gen_icon.py` yeniden yazıldı: "Doğal & Karalama" — krem zemin, dalgalı
+nane şerit, koyu konturlu sarı yapışkan not (sol alt kıvrık), yeşil kalem.
+Süsleme yalnız zemin katmanında; not+kalem güvenli dairede (30,7/33).
+Üretim: `python3 tool/gen_icon.py && dart run flutter_launcher_icons`.
+
+### Ortam / test
+Flutter 3.44.6 yine `/opt/flutter` (root'ta `git config --global --add
+safe.directory /opt/flutter` gerekti). **TUZAK:** `dart format lib/` TÜM
+depoyu yeniden biçimliyor (depo biçimsiz dosyalar içeriyor) — yalnız
+değişen dosyaları biçimle. `requests_2026_10_17_e_test.dart` (+8),
+`view_mode_switch_test` sunumun yeni kiplerine güncellendi. Cihazda
+GÖRÜLMEDİ.

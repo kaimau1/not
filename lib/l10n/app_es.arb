@@ -1036,5 +1036,10 @@
   "attachmentsUploadingCount": "Subiendo {count} adjuntos",
   "sharedNoteNew": "Nuevo",
   "sharedNoteUpdatedBy": "Actualizado por {name}",
-  "sharedMarkAllRead": "Marcar todo como leído"
+  "sharedMarkAllRead": "Marcar todo como leído",
+  "attachmentSaveAs": "Guardar como",
+  "attachmentSavedAs": "{name} guardado",
+  "attachmentSaveAsFailed": "No se pudo guardar el archivo",
+  "sharedHubTitle": "Recibidas y compartidas",
+  "sharedHubInbox": "Recibidas"
 }

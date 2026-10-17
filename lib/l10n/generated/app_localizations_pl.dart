@@ -5214,4 +5214,21 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get sharedMarkAllRead => 'Oznacz wszystko jako przeczytane';
+
+  @override
+  String get attachmentSaveAs => 'Zapisz jako';
+
+  @override
+  String attachmentSavedAs(String name) {
+    return 'Zapisano $name';
+  }
+
+  @override
+  String get attachmentSaveAsFailed => 'Nie udało się zapisać pliku';
+
+  @override
+  String get sharedHubTitle => 'Odebrane i udostępnione';
+
+  @override
+  String get sharedHubInbox => 'Odebrane';
 }

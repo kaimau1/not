@@ -5211,4 +5211,21 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sharedMarkAllRead => 'Segna tutto come letto';
+
+  @override
+  String get attachmentSaveAs => 'Salva con nome';
+
+  @override
+  String attachmentSavedAs(String name) {
+    return '$name salvato';
+  }
+
+  @override
+  String get attachmentSaveAsFailed => 'Impossibile salvare il file';
+
+  @override
+  String get sharedHubTitle => 'Ricevute e condivise';
+
+  @override
+  String get sharedHubInbox => 'Ricevute';
 }

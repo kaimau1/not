@@ -5193,4 +5193,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sharedMarkAllRead => 'Mark all as read';
+
+  @override
+  String get attachmentSaveAs => 'Save as';
+
+  @override
+  String attachmentSavedAs(String name) {
+    return '$name saved';
+  }
+
+  @override
+  String get attachmentSaveAsFailed => 'Couldn\'t save the file';
+
+  @override
+  String get sharedHubTitle => 'Received & shared';
+
+  @override
+  String get sharedHubInbox => 'Received';
 }

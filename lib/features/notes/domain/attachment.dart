@@ -862,22 +862,26 @@ class Attachment {
   /// METİN ve SES de sabitlenir (kullanıcı isteği 2026-10-17: "txt dosyaları
   /// da ekrana gömme, yukarı sabitleme ve balonlu geçiş; bu geçiş olabilecek
   /// TÜM türler için çalışmalı"): bölmede metin okunur ya da ses çalar, not
-  /// altında yazılır. Sunum sabitlenemez (bölmede çizicisi yok).
+  /// altında yazılır. Sunum da sabitlenir (2026-10-17, bkz. `SlidePageBox`).
   bool get isPinnedTop =>
       pinHeight > 0 &&
       (kind == AttachmentKind.image ||
           kind == AttachmentKind.video ||
           kind == AttachmentKind.pdf ||
           kind == AttachmentKind.text ||
-          kind == AttachmentKind.audio);
+          kind == AttachmentKind.audio ||
+          kind == AttachmentKind.slide);
 
   /// Varsayılan yeri ALT ŞERİT olan türler: sayfaya [onPage] ile gömülürler
   /// (görsel/video ise varsayılan olarak sayfadadır, şeride [asFile] ile
-  /// iner). Sunum hiçbir zaman sayfaya gömülmez.
+  /// iner). SUNUM da 2026-10-17'den beri gömülür ve sabitlenir (bkz.
+  /// `SlidePageBox`; kullanıcı isteği: "sunum gibi diğer tipteki dosyalarda
+  /// gömülü, Sabit, Balonlu seçeneklerinin hepsi olmalı").
   bool get stripByDefault =>
       kind == AttachmentKind.pdf ||
       kind == AttachmentKind.text ||
-      kind == AttachmentKind.audio;
+      kind == AttachmentKind.audio ||
+      kind == AttachmentKind.slide;
 
   /// Ek sayfanın DIŞINDA mı (şeritte ya da yalnız bölmede)?
   bool get offPage => stripByDefault ? !onPage : asFile;

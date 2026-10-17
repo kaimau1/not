@@ -2408,5 +2408,17 @@
       }
     }
   },
-  "sharedMarkAllRead": "Tümünü okundu say"
+  "sharedMarkAllRead": "Tümünü okundu say",
+  "attachmentSaveAs": "Farklı kaydet",
+  "attachmentSavedAs": "{name} kaydedildi",
+  "attachmentSaveAsFailed": "Dosya kaydedilemedi",
+  "sharedHubTitle": "Gelen ve paylaşılanlar",
+  "sharedHubInbox": "Gelen",
+  "@attachmentSavedAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }
