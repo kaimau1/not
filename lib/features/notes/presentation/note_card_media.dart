@@ -789,6 +789,43 @@ class _LocalVideoCover extends StatelessWidget {
   }
 }
 
+/// Not sayfasındaki videonun KAPAK KARESİ — oynatıcı kurulmadan önce
+/// (bkz. `_VideoBox`'un tembel kurulumu). Kart kapağından büyük (720 px)
+/// üretilir: sayfa genişliğinde bulanık durmasın. Diskte önbelleklenir.
+class VideoPoster extends StatelessWidget {
+  const VideoPoster({super.key, required this.video, this.fit = BoxFit.cover});
+
+  final Attachment video;
+  final BoxFit fit;
+
+  @override
+  Widget build(BuildContext context) {
+    const fallback = ColoredBox(
+      color: Color(0xFF263238),
+      child: Center(
+        child: Icon(Icons.videocam_outlined, color: Colors.white54, size: 26),
+      ),
+    );
+    if (!VideoFrame.supported || !localFileExists(video.localPath)) {
+      return fallback;
+    }
+    return FutureBuilder<Uint8List?>(
+      future: CardThumbs.videoPoster(video),
+      builder: (context, snap) {
+        final bytes = snap.data;
+        if (bytes == null) return fallback;
+        return Image.memory(
+          bytes,
+          fit: fit,
+          cacheWidth: 720,
+          gaplessPlayback: true,
+          errorBuilder: (_, _, _) => fallback,
+        );
+      },
+    );
+  }
+}
+
 /// PDF'in (yer imli sayfası, yoksa ilk) sayfasının önbellekli küçük resmi —
 /// kartın dışında da kullanılır (not ekranının alt ek şeridi).
 class PdfFirstPageThumb extends StatelessWidget {
@@ -883,6 +920,17 @@ abstract final class CardThumbs {
     'v|${video.localPath}|${video.sizeBytes}',
     () => VideoFrame.thumbnail(video.localPath),
   );
+
+  /// Sayfadaki video kutusunun kapağı (bkz. [VideoPoster]) — 720 px.
+  static Future<Uint8List?> videoPoster(Attachment video) => _get(
+    'vp|${video.localPath}|${video.sizeBytes}',
+    () => VideoFrame.thumbnail(video.localPath, maxSide: 720),
+  );
+
+  /// Bellekteki küçük resim baytlarını bırakır (disk önbelleği kalır).
+  /// Uygulama arka plana geçince ve sistem bellek sıkışıklığı bildirince
+  /// çağrılır — geri dönüşte diskten anında okunur.
+  static void clearMemory() => _cache.clear();
 
   static Future<Uint8List?> pdfPage(Attachment pdf, int page) => _get(
     'p|${pdf.localPath}|${pdf.sizeBytes}|$page',

@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/data/media_transcriber.dart';
+import 'package:notlar/features/notes/data/notes_repository.dart'
+    show attachmentsDigest;
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
@@ -253,6 +256,41 @@ void main() {
       expect(saved?.text, 'doğru sözcük');
       expect(saved?.id, t.id);
       expect(find.textContaining('doğru sözcük'), findsOneWidget);
+    });
+  });
+
+  group('attachmentsDigest (değişmeyen ek listesi yazılmaz)', () {
+    List<Map<String, dynamic>> maps(String text) => [
+      {
+        ...Transcripts.create(audio, text, fileSuffix: 't').toMap(),
+        'createdAt': Timestamp(100, 5),
+      },
+    ];
+
+    test('aynı içerik aynı özet, yeni liste örneği olsa da', () {
+      final a = maps('bir');
+      final b = [
+        for (final m in a) {...m},
+      ];
+      expect(identical(a, b), isFalse);
+      expect(attachmentsDigest(a), attachmentsDigest(b));
+    });
+
+    test('içerik değişince özet değişir', () {
+      final a = maps('bir');
+      final b = [
+        {...a.first, 'text': 'iki'},
+      ];
+      expect(attachmentsDigest(a), isNot(attachmentsDigest(b)));
+      final c = [
+        {...a.first, 'createdAt': Timestamp(100, 6)},
+      ];
+      expect(attachmentsDigest(a), isNot(attachmentsDigest(c)));
+    });
+
+    test('boş ve eksik liste de özetlenir', () {
+      expect(attachmentsDigest(null), isNotEmpty);
+      expect(attachmentsDigest(const []), isNot(attachmentsDigest(null)));
     });
   });
 }

@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crypto/crypto.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -81,6 +83,23 @@ final notesStreamProvider = StreamProvider<List<Note>>((ref) {
     return notes;
   });
 });
+
+/// Ek listesinin (Firestore haritası biçiminde) İÇERİK özeti — SHA-1.
+///
+/// [NotesRepository.updateNote] değişmemiş listeyi yeniden yazmamak için
+/// kullanır. Zaman damgası/sunucu değeri gibi JSON'a çevrilemeyen alanlar
+/// kararlı metne çevrilir. Özet çakışması pratikte imkânsız (160 bit); yine
+/// de çakışırsa yalnız EK alanı bir kayıt gecikir, bir sonraki ek
+/// değişikliği tam yazar.
+String attachmentsDigest(Object? attachments) {
+  final text = jsonEncode(
+    attachments,
+    toEncodable: (o) => o is Timestamp
+        ? 'ts:${o.seconds}.${o.nanoseconds}'
+        : o.toString(),
+  );
+  return sha1.convert(utf8.encode(text)).toString();
+}
 
 /// Notların eklerinin BULUTTA kapladığı toplam alan (bayt).
 ///
@@ -449,17 +468,37 @@ class NotesRepository {
   /// çevrimdışıyken hiç tamamlanmayabilir; olağan çağrılar bekletmeden
   /// çalışır (çevrimdışı-önce), yalnız pencere kapanışı gibi "süreç ölmeden
   /// diske insin" noktaları kısa bir zaman aşımıyla bekler.
+  ///
+  /// **DEĞİŞMEYEN EK LİSTESİ YAZILMAZ** (pil/veri — 2026-10-17). Editör her
+  /// kayıtta (yazarken birkaç saniyede bir) notun TAMAMINI gönderiyordu; ek
+  /// listesi PDF çizimlerinin nokta dizilerini, balonları ve transkript
+  /// metinlerini taşıdığından tek bir harf için yüzlerce KB yeniden yazılıyor,
+  /// yerel önbelleğe işleniyor ve ağdan gidiyordu. Listenin İÇERİK özeti son
+  /// BAŞARILI yazımdakiyle aynıysa alan `merge` yazımından çıkarılır (sunucuda
+  /// olduğu gibi kalır). Liste örneğine (identical) bakılamaz: editör her
+  /// yankı anlık görüntüsünde ekleri yeniden birleştirip YENİ liste kuruyor.
+  /// Özet yalnız sunucu onayında saklanır: yazım reddedilirse (ya da
+  /// çevrimdışı bekliyorsa) sonraki kayıt listeyi yine tam gönderir.
   Future<void> updateNote(Note note) {
     if (isLocal(note.id)) {
       local!.merge(note.id, note.toMap());
       return Future.value();
     }
-    final write = _notes
-        .doc(note.id)
-        .set({...note.toMap(), 'updatedBy': editorUid}, SetOptions(merge: true));
+    final fields = {...note.toMap(), 'updatedBy': editorUid};
+    final digest = attachmentsDigest(fields['attachments']);
+    if (_writtenAttachments[note.id] == digest) fields.remove('attachments');
+    final write = _notes.doc(note.id).set(fields, SetOptions(merge: true));
+    write.then(
+      (_) => _writtenAttachments[note.id] = digest,
+      onError: (Object _) => _writtenAttachments.remove(note.id),
+    );
     unawaited(write);
     return write;
   }
+
+  /// Not kimliği → sunucuya son BAŞARIYLA yazılan ek listesinin özeti (bkz.
+  /// [updateNote]).
+  final Map<String, String> _writtenAttachments = {};
 
   void updateFields(String noteId, Map<String, dynamic> fields) {
     unawaited(updateFieldsAndWait(noteId, fields));

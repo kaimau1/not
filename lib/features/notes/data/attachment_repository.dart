@@ -723,6 +723,27 @@ class AttachmentRepository {
         createdAt: DateTime.now(),
       );
     }
+    // Yerel VİDEO dosyadan dosyaya kopyalanır (bellek): yüzlerce MB'lık
+    // kayıt eskiden önce tamamen belleğe okunuyordu.
+    if (source.kind == AttachmentKind.video &&
+        !kIsWeb &&
+        source.localPath.isNotEmpty &&
+        await File(source.localPath).exists()) {
+      final copy = await prepareVideo(
+        noteId: noteId,
+        sourcePath: source.localPath,
+        duration: Duration.zero,
+      );
+      // Ad kopyanın DİSKTEKİ adı kalır: yerel yol (notId, ekId, dosyaAdı)
+      // üçlüsünden türetiliyor (bkz. derivedAttachmentPath).
+      return copy.copyWith(
+        width: source.width,
+        height: source.height,
+        displayWidth: source.displayWidth,
+        align: source.align,
+        asFile: source.asFile,
+      );
+    }
     final bytes = await readBytes(source);
     if (bytes == null) throw const AttachmentMissingException();
     // Görüntülü not buluta hiç gitmediğinden boyut sınırına da girmez

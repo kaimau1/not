@@ -20,6 +20,7 @@ import 'core/utils/display_rate.dart';
 import 'core/utils/local_file.dart';
 import 'core/widgets/setup_required_screen.dart';
 import 'features/notes/data/local_notes_store.dart';
+import 'features/notes/presentation/note_card_media.dart' show CardThumbs;
 import 'features/settings/settings_providers.dart';
 import 'core/personalize.dart';
 import 'features/notes/presentation/viewers/bubble_layer.dart' show BubbleLook;
@@ -146,6 +147,7 @@ Future<void> main() async {
   unawaited(
     Future<void>.delayed(const Duration(seconds: 8), pruneTempFiles),
   );
+  WidgetsBinding.instance.addObserver(_MemoryPressure());
   _lifecycle = AppLifecycleListener(
     // Pil tasarrufu kipi uygulama arkadayken açılıp kapanabilir: yenileme
     // hızı kararı her öne gelişte yeniden verilir (bkz. [DisplayRate]).
@@ -157,11 +159,23 @@ Future<void> main() async {
     // soğuk açılışta her şeyi baştan yükler, bu da pili yakar.
     onPause: () {
       PaintingBinding.instance.imageCache.clear();
+      // Kart küçük resimleri de (diskte kalırlar, dönüşte anında okunur).
+      CardThumbs.clearMemory();
       // Yalnız bu cihazdaki notların bekleyen yazımı diske insin: arka
       // plandaki uygulama her an öldürülebilir (bkz. LocalNotesStore).
       unawaited(LocalNotesStore.flushAll());
     },
   );
+}
+
+/// Sistem BELLEK SIKIŞIKLIĞI bildirince (Android `onTrimMemory`) uygulamanın
+/// kendi önbellekleri de bırakılır. Çözülmüş görsel önbelleğini Flutter
+/// kendisi boşaltıyor; kart küçük resimleri ise bizim haritamızda kalıyordu —
+/// sıkışan telefonda arkadaki uygulama ilk öldürülenlerden olur, öldürülen
+/// uygulama da soğuk açılışta her şeyi baştan kurup pili yakar.
+class _MemoryPressure with WidgetsBindingObserver {
+  @override
+  void didHaveMemoryPressure() => CardThumbs.clearMemory();
 }
 
 /// Uygulama yaşam döngüsü dinleyicisi (bkz. [main]). Referans tutulur ki

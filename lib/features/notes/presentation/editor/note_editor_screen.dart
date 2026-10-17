@@ -5471,15 +5471,28 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final repo = ref.read(attachmentRepositoryProvider);
     if (repo == null) return;
     final l10n = context.l10n;
+    // Satır içi gönderim sınırı: büyük video istekte reddediliyor ve hata
+    // dakikalar sonra geliyordu. Sınır ÖNCEDEN, anlaşılır biçimde söylenir.
+    //
+    // BOYUT OKUMADAN ÖNCE (bellek — 2026-10-17): eskiden video TAMAMEN
+    // belleğe okunup sonra ölçülüyordu; 300 MB'lık bir kayıt, yalnız "çok
+    // büyük" demek için 300 MB ayırıyor, düşük bellekli telefonda uygulamayı
+    // öldürebiliyordu. Dosyanın boyu diskten okunur.
+    const maxInlineBytes = GeminiService.maxInlineMediaBytes;
+    final onDisk = localFileExists(video.localPath)
+        ? await File(video.localPath).length()
+        : video.sizeBytes;
+    if (!mounted) return;
+    if (onDisk > maxInlineBytes) {
+      _showSnack(l10n.videoTooBigForAi(onDisk ~/ (1024 * 1024)));
+      return;
+    }
     final bytes = await repo.readBytes(video);
     if (!mounted) return;
     if (bytes == null) {
       _showSnack(l10n.attachmentNotSynced);
       return;
     }
-    // Satır içi gönderim sınırı: büyük video istekte reddediliyor ve hata
-    // dakikalar sonra geliyordu. Sınır ÖNCEDEN, anlaşılır biçimde söylenir.
-    const maxInlineBytes = 15 * 1024 * 1024;
     if (bytes.length > maxInlineBytes) {
       _showSnack(l10n.videoTooBigForAi(bytes.length ~/ (1024 * 1024)));
       return;
