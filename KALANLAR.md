@@ -2,6 +2,12 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-10-17 — simge i3 + menü toparlaması (CİHAZDA GÖRÜLMEDİ)
+- [ ] Yeni simge: MIUI/Pixel başlatıcıda (yuvarlak/kare maske) sayfa ve
+  yıldız kırpılmadan görünüyor mu; Android 13+ temalı simge; Windows .ico.
+- [ ] Not ⋮ ve kart ⋮ menüleri sade mi; Kopyala/Arkadaşa gönder/Dışa aktar
+  Paylaş levhasından çalışıyor mu.
+
 ## 2026-10-16 (4. tur) — kişiselleştirme, ana ekran, balon odağı, "Tümü" (CİHAZDA GÖRÜLMEDİ)
 - [ ] **Balon odağı**: PDF bölmesinde yazılı balona dokun → belge HİÇ
   kaymamalı (okuma kartı yerinde). "Düzenle" → klavye açılır, başlık/çubuk

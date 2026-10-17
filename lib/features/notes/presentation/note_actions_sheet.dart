@@ -88,13 +88,12 @@ class _ActionsGrid extends StatelessWidget {
           note.starred ? Icons.star : Icons.star_outline,
           selected: note.starred,
         ),
-        // Tek "Paylaş": düz metin / not paketi / balonlu PDF seçimi levhada
-        // yapılır (bkz. showNoteShareSheet).
+        // Tek "Paylaş": düz metin, kopyala, PDF/görsel, ARKADAŞA GÖNDER, ortak
+        // not ve DIŞA AKTAR hepsi levhada (bkz. showNoteShareSheet).
+        // TOPARLAMA (kullanıcı isteği 2026-10-17: "tekrarlar düzelsin"):
+        // "Arkadaşa gönder", "Kopyala" ve "Dışa aktar" bu menüden kalktı —
+        // aynı işin iki kapısı kafa karıştırıyordu.
         MenuAction('share', l10n.share, Icons.share_outlined),
-        // **ARKADAŞA GÖNDER** (kullanıcı isteği 2026-08-18): sistem paylaşım
-        // levhasından AYRI — o notu uygulamanın DIŞINA çıkarır, bu bir
-        // kişinin gelen kutusuna bırakır.
-        MenuAction('sendToFriend', l10n.sendNoteAction, Icons.send_outlined),
         MenuAction('select', l10n.select, Icons.check_circle_outline),
       ],
       sections: [
@@ -104,9 +103,7 @@ class _ActionsGrid extends StatelessWidget {
           MenuAction('frame', l10n.frameColor, Icons.border_color_outlined),
         ]),
         MenuSection(l10n.menuSectionCopy, [
-          MenuAction('copy', l10n.copy, Icons.copy_outlined),
-          // **NOTU ÇOĞALT** (bkz. NotesRepository.duplicateNote). Simgesi
-          // "Kopyala"dan AYRI: ikisi aynı resmi taşıyordu.
+          // **NOTU ÇOĞALT** (bkz. NotesRepository.duplicateNote).
           MenuAction(
             'duplicate',
             l10n.duplicateNote,
@@ -119,9 +116,6 @@ class _ActionsGrid extends StatelessWidget {
               l10n.saveAsTemplate,
               Icons.bookmark_add_outlined,
             ),
-          // "PDF olarak dışa aktar" DEĞİL: belge notunda çıktı balonlu PDF de
-          // olabiliyor, metin notunda Word de üretiliyor.
-          MenuAction('pdf', l10n.exportTitle, Icons.ios_share_outlined),
         ]),
         MenuSection(l10n.menuSectionTools, [
           MenuAction('listen', l10n.listenToNote, Icons.headphones_outlined),

@@ -675,7 +675,9 @@ class _VideoSection extends StatelessWidget {
   }
 }
 
-/// Ana ekran tercihleri (Görünüm alanındakilerle AYNI kayıt — iki giriş).
+/// Ana ekranda NE GÖRÜNSÜN. Kartların görünüşü (zengin önizleme, liste
+/// maddeleri) Ayarlar → Görünüm'de — iki yerde aynı anahtar karışıklık
+/// yaratıyordu (toparlama 2026-10-17).
 class _HomeSection extends ConsumerWidget {
   const _HomeSection();
 
@@ -748,20 +750,6 @@ class _HomeSection extends ConsumerWidget {
             l10n.quickCaptureRowInfo,
             ref.watch(quickCaptureRowProvider),
             (v) => ref.read(quickCaptureRowProvider.notifier).set(v),
-          ),
-          tile(
-            const ValueKey('home-rich-preview'),
-            l10n.cardRichPreview,
-            l10n.cardRichPreviewInfo,
-            ref.watch(cardRichPreviewProvider),
-            (v) => ref.read(cardRichPreviewProvider.notifier).set(v),
-          ),
-          tile(
-            const ValueKey('home-expand-items'),
-            l10n.expandListItems,
-            l10n.expandListItemsInfo,
-            ref.watch(expandListItemsProvider),
-            (v) => ref.read(expandListItemsProvider.notifier).set(v),
           ),
         ],
       ),

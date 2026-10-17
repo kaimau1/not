@@ -22,7 +22,7 @@ Notların kart olarak, **BUGÜN / BU HAFTA / DAHA ÖNCE** gruplarıyla dizilir; 
 - **Ana ekran zemini:** ⋮ → Ana ekran zemini ile görsel ya da desen seç.
 - **Kartta medya:** üste sabitlenmiş ya da tek görsel/video kartın tepesinde kapak olarak görünür; video ▶, YouTube kırmızı düğmeyle işaretlidir. Balonlu notun belgesi de kartın tepesinde kapak olur: ilk sayfa, sol üstte **BALONLU PDF** rozeti, altta dosya adı ve balon sayısı; ses kayıtları ve öbür belgeler kartın altında satır olarak durur.
 - Sağ üstteki ⋮ alttan bir levha açar: en üstte **Hatırlatıcılar, Arşiv, Çöp Kutusu, Şablondan**; altında **Hesap ve kişiler** (hesap, kişiler, gelen notlar), **Ana ekran** (klasör sırası, zemin, gizli klasörler) ve **Uygulama** (ayarlar, bu kılavuz).
-- **Karttaki ⋮ ya da karta basılı tutma menüsü:** üst satırda sabitle, yıldızla, paylaş, arkadaşa gönder, seç; altında **Düzenle** (klasör, zemin rengi, çerçeve), **Kopyala ve dışa aktar** (kopyala, çoğalt, şablon, dışa aktar), **Araçlar** (sesli oku, istatistik), **Koruma ve depolama** (arşivle, kilitle, senkron); en altta Sil.
+- **Karttaki ⋮ ya da karta basılı tutma menüsü:** üst satırda sabitle, yıldızla, paylaş, seç; altında **Düzenle** (klasör, zemin rengi, çerçeve), **Kopyala ve dışa aktar** (çoğalt, şablon olarak kaydet), **Araçlar** (sesli oku, istatistik), **Koruma ve depolama** (arşivle, kilitle, senkron); en altta Sil.
 
 ## Yeni not oluşturma {#create}
 Sağ alttaki **+** düğmesi kısa bir panel açar — başparmağının olduğu yerden yukarı doğru:
@@ -38,7 +38,7 @@ Alt çubuk soldan sağa:
 - **🔍 — Notta ara:** eşleşmeler yazarken vurgulanır.
 - **Paylaş.**
 - Sağdaki renkli kapsül: **✦ Yapay zekâ** (bkz. Yapay zekâ bölümü), **asistan mikrofonu** ve **sesli yazdır** mikrofonu.
-Üst çubuk: **geri al / yinele**, sabitle, kişi ekle (ortak not) ve ⋮ menüsü. ⋮ menüsünün üst satırında yıldızla, paylaş, kopyala, notta ara ve **hesap makinesi**; altında **İçerik** (listeye/metne dönüştür, 2 sütun, maddeleri sırala, görselleri eke dönüştür, temizle), **Kopyala ve dışa aktar** (arkadaşa gönder, çoğalt, şablon olarak kaydet, arşiv defterine kopyala, dışa aktar), **Araçlar** (sesli oku, istatistikler, ayarlar), **Koruma ve depolama** (arşivle, kilitle, senkron).
+Üst çubuk: **geri al / yinele**, sabitle, kişi ekle (ortak not) ve ⋮ menüsü. ⋮ menüsünün üst satırında yıldızla, paylaş, notta ara ve **hesap makinesi**; altında **İçerik** (listeye/metne dönüştür, 2 sütun, maddeleri sırala, görselleri eke dönüştür, temizle), **Kopyala ve dışa aktar** (çoğalt, şablon olarak kaydet, arşiv defterine kopyala), **Araçlar** (sesli oku, istatistikler, ayarlar), **Koruma ve depolama** (arşivle, kilitle, senkron). Kopyalamak, arkadaşa göndermek ve dışa aktarmak **Paylaş** levhasında — menülerde ayrıca yok.
 - Liste notlarında maddeyi basılı tutup sürükleyerek sırala; "Seç" ile birden çok maddeyi kopyala/sil.
 - Başlığın sağındaki **+**: **Yeni sayfa**, alarm, konum hatırlatıcısı, klasör, etiket ve etiket/başlık önerisi.
 
@@ -161,7 +161,7 @@ Not ekranındaki **Paylaş** düğmesi: üstte gönderilecek metnin önizlemesi 
 - **Daha fazla:** ayarlı PDF/Word dışa aktarma (başlık, görsellerin yeri/boyu) ve **Balonlu PDF** (balonlar ve çizimler PDF'in içine basılır).
 Birlikte çalışma:
 - **Kişiler:** ⋮ → Kişiler'den arkadaş ekle.
-- **Arkadaşa gönder:** notun bir kopyası onun **Gelen notlar** kutusuna düşer.
+- **Arkadaşa gönder** (Paylaş levhasında): notun bir kopyası onun **Gelen notlar** kutusuna düşer.
 - **Ortak not:** üst çubuktaki kişi ekle düğmesi; ikiniz aynı notu aynı anda düzenlersiniz.
 - **Klasör paylaşımı:** okuma / yazma yetkisiyle; paylaşılan klasörün kendi sohbeti var.
 Başka uygulamalardan: herhangi bir uygulamada **Paylaş → Notlar** de (metin, bağlantı, görsel, PDF, sunum, video). Yeni not mu, var olan bir nota mı ekleneceğini seçersin.

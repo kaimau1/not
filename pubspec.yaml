@@ -206,12 +206,10 @@ flutter:
 #   chrome --headless --force-device-scale-factor=1 --window-size=1024,1024 \
 #          --default-background-color=00000000 --screenshot=icon.png dosya.html
 #
-# Zemin düz renk, o yüzden PNG değil doğrudan hex: araç bunu
-# values/colors.xml'e (ic_launcher_background) yazıyor. i2'de (2026-08-09)
-# kağıt tonu #F5EDD8 yerine **beyaz** — Dosya Okuyucu ve Ezan Vakti ile
-# ORTAK SİMGE DİLİ. Kurallar ve ölçüler assets/icon/src/*.svg başlıklarında;
-# özeti: beyaz zemin, tek renk dolu işaret, ayrıntılar zeminden oyuk,
-# işaretin uzun kenarı 66dp/108dp.
+# i3 (2026-10-17, "simge daha elit olsun"): zemin koyu mürekkep GRADYANI
+# (PNG — assets/icon/icon_background.png), işaret altın gradyanlı sayfa,
+# satırlar + yapay zekâ yıldızı zeminden oyuk. Kaynaklar tool/gen_icon.py ile
+# üretilir (eski i2 "beyaz zemin ortak simge dili" bu uygulamada bırakıldı).
 # Ön plan ayrı bir dosya ve ic_launcher.xml onu android:inset="16%" ile
 # sarıyor; SVG'deki ölçek bu küçülmeyi ÖNCEDEN telafi eder.
 #
@@ -222,7 +220,7 @@ flutter:
 flutter_launcher_icons:
   android: true
   image_path: "assets/icon/icon.png"
-  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_background: "assets/icon/icon_background.png"
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
   windows:
     generate: true

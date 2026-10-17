@@ -129,9 +129,11 @@ class _MenuGrid extends StatelessWidget {
           starred ? Icons.star : Icons.star_outline,
           selected: starred,
         ),
+        // TOPARLAMA (kullanıcı isteği 2026-10-17: "tekrarlar düzelsin"):
+        // "Kopyala", "Arkadaşa gönder" ve "Dışa aktar" bu menüden kalktı —
+        // üçü de Paylaş levhasında (Kopyala · Arkadaşa · Dışa aktar) tek
+        // dokunuşla duruyor. Menüde aynı işin iki kapısı kafa karıştırıyordu.
         MenuAction('share', l10n.share, Icons.share_outlined),
-        // TÜM NOTU KOPYALA (kullanıcı isteği 2026-09-26).
-        MenuAction('copyText', l10n.copy, Icons.copy_outlined),
         MenuAction('search', l10n.noteSearchTitle, Icons.manage_search),
         MenuAction(
           'calculator',
@@ -188,7 +190,6 @@ class _MenuGrid extends StatelessWidget {
           MenuAction('clear', l10n.clearNote, Icons.backspace_outlined),
         ]),
         MenuSection(l10n.menuSectionCopy, [
-          MenuAction('sendToFriend', l10n.sendNoteAction, Icons.send_outlined),
           MenuAction(
             'duplicate',
             l10n.duplicateNote,
@@ -208,8 +209,6 @@ class _MenuGrid extends StatelessWidget {
               l10n.archiveCopyHere,
               Icons.inventory_2_outlined,
             ),
-          // "PDF olarak dışa aktar" DEĞİL: çıktı Word/balonlu PDF de olabilir.
-          MenuAction('export', l10n.exportTitle, Icons.ios_share_outlined),
         ]),
         MenuSection(l10n.menuSectionTools, [
           MenuAction('listen', l10n.listenToNote, Icons.headphones_outlined),

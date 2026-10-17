@@ -1775,12 +1775,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             count: ref.read(archivedNotesProvider).value?.length ?? 0,
           ),
           MenuAction('trash', l10n.trashTitle, Icons.delete_outline),
-          // YENİ (2026-09-26): şablondan not — ana ekranın işi.
-          MenuAction(
-            'template',
-            l10n.fromTemplate,
-            Icons.dashboard_customize_outlined,
-          ),
+          // Şablondan not "+" menüsünde de var; burada YALNIZ orada
+          // gizlenmişse çıkar (toparlama 2026-10-17: aynı işin iki kapısı).
+          if (!Personalize.current.shows(UiItem.quickAdd('template')))
+            MenuAction(
+              'template',
+              l10n.fromTemplate,
+              Icons.dashboard_customize_outlined,
+            ),
         ],
         sections: [
           // **HESAP** (kullanıcı isteği 2026-08-18: "hesap seçeneklerini

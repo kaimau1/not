@@ -257,11 +257,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords: l10n.expandListItemsInfo,
           ),
           _SettingRow(
-            const _QuickCaptureRowSwitch(),
-            title: l10n.quickCaptureRowSetting,
-            keywords: l10n.quickCaptureRowInfo,
-          ),
-          _SettingRow(
             const _CardRichPreviewSwitch(),
             title: l10n.cardRichPreview,
             keywords: '${l10n.cardRichPreviewInfo} renk alti cizili kalin',
@@ -318,20 +313,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '${l10n.moduleDrawing} ${l10n.moduleTemplates} '
                 '${l10n.moduleTags} ${l10n.moduleCollaboration} eklenti ac kapa',
           ),
+          // TOPARLAMA (kullanıcı isteği 2026-10-17: "tekrarlar düzelsin,
+          // menüler anlaşılır olsun"): "Düzenleme modunu başlat" satırı
+          // buradan kalktı — aynı iş Ayarlar'ın tepesindeki "Düzenleme modu"
+          // kısayol kartında. Ana ekrandaki HIZLI NOT SATIRI bir görünürlük
+          // tercihi olduğu için Görünüm'den buraya taşındı (tek yer).
           _SettingRow(
-            ListTile(
-              key: const ValueKey('settings-edit-mode-row'),
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.touch_app_outlined),
-              title: Text(l10n.customizeStart),
-              subtitle: Text(l10n.customizeModeShort),
-              onTap: () {
-                Personalize.startEditing();
-                context.pop();
-              },
-            ),
-            title: l10n.customizeModeTitle,
-            keywords: 'duzenleme modu ekranda gizle goster',
+            const _QuickCaptureRowSwitch(),
+            title: l10n.quickCaptureRowSetting,
+            keywords: '${l10n.quickCaptureRowInfo} duzenleme modu',
           ),
         ],
       ),

@@ -40,7 +40,7 @@
     <color name="widget_icon_accent">#7D5703</color>
 
     <!-- flutter_launcher_icons tarafından yazılır (adaptive_icon_background). -->
-    <color name="ic_launcher_background">#FFFFFF</color>
+    <color name="ic_launcher_background">#211912</color>
 
     <!-- ============================================================
          AÇIK/KOYU AÇIK AÇIK (niteleyicisiz) ikizler.
