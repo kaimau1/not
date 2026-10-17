@@ -55,8 +55,19 @@ AttachmentKind? shareAttachmentKind(SharedMediaFile f) {
   if (mime.startsWith('video/') || f.type == SharedMediaType.video) {
     return AttachmentKind.video;
   }
+  // SES DOSYASI (kullanıcı isteği 2026-10-17: "sonradan eklenmiş ses
+  // dosyalarının transkripti"): sohbet uygulamasının sesli mesajı ya da
+  // ses kaydedicinin dosyası. Eklenti sesi `file` türüyle verir; MIME yoksa
+  // uzantı yedek ölçüt.
+  if (mime.startsWith('audio/') || _audioExtensions.contains(ext)) {
+    return AttachmentKind.audio;
+  }
   return null;
 }
+
+const _audioExtensions = {
+  '.mp3', '.m4a', '.aac', '.wav', '.ogg', '.oga', '.opus', '.flac', '.amr',
+};
 
 /// "Paylaş → Notlar" denince metin/link ve .txt/.md dosyaları gövde olur,
 /// görsel/PDF/sunum ek olarak yüklenir ve editör açılır. Dashboard bu
@@ -384,6 +395,17 @@ Future<List<Attachment>> _prepareAttachments(
             noteId: noteId,
             sourcePath: file.path,
             duration: await VideoFrame.duration(file.path),
+          ),
+        );
+        continue;
+      }
+      // Ses de belleğe okunmadan kopyalanır; adı ve türü korunur.
+      if (kind == AttachmentKind.audio) {
+        prepared.add(
+          await attachRepo.prepareAudioFile(
+            noteId: noteId,
+            sourcePath: file.path,
+            fileName: p.basename(file.path),
           ),
         );
         continue;

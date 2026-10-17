@@ -115,8 +115,20 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
 
   AttachmentKind? get _kind => widget.source?.kind;
 
-  String get _shown =>
-      _showTimes ? _text : Transcripts.stripTimestamps(_text);
+  /// Ekranda gösterilen metin. Önbellekli: seçim her değiştiğinde (sürükleme
+  /// boyunca kare kare) okunuyor; damga ayıklaması koca metinde her seferinde
+  /// koşmasın.
+  String get _shown {
+    final cache = _shownCache;
+    if (cache != null && identical(cache.$1, _text) && cache.$2 == _showTimes) {
+      return cache.$3;
+    }
+    final value = _showTimes ? _text : Transcripts.stripTimestamps(_text);
+    _shownCache = (_text, _showTimes, value);
+    return value;
+  }
+
+  (String, bool, String)? _shownCache;
 
   /// Nota giden biçim: damgalar notun tanıdığı düz biçimde ("1:23 söz").
   String _forNote(String text) => _showTimes

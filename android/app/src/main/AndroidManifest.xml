@@ -111,6 +111,10 @@
                 <!-- Galeriden/kameradan video paylaşımı da nota girer (video
                      cihazda kalır, buluta yüklenmez). -->
                 <data android:mimeType="video/*"/>
+                <!-- SES DOSYASI (2026-10-17): sohbet uygulamasının sesli
+                     mesajı ya da kayıt uygulamasının dosyası nota ses eki
+                     olarak girer, sonra metne dökülebilir. -->
+                <data android:mimeType="audio/*"/>
             </intent-filter>
             <!-- "Birlikte aç" (ACTION_VIEW) ile PDF/sunum açma. SEND filtresi
                  yalnız PAYLAŞ menüsünde çıkarıyordu; dosya yöneticisinden,
@@ -140,6 +144,10 @@
                 <!-- Galeriden/kameradan video paylaşımı da nota girer (video
                      cihazda kalır, buluta yüklenmez). -->
                 <data android:mimeType="video/*"/>
+                <!-- SES DOSYASI (2026-10-17): sohbet uygulamasının sesli
+                     mesajı ya da kayıt uygulamasının dosyası nota ses eki
+                     olarak girer, sonra metne dökülebilir. -->
+                <data android:mimeType="audio/*"/>
             </intent-filter>
             <!-- BİRDEN ÇOK BELGE paylaşımı (kullanıcı bulgusu 2026-09-05:
                  "PDF'leri paylaşırken Notlar uygulaması çıkmalı" — ekran

@@ -4447,10 +4447,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   /// Görüntülü not: kamerayla video çeker ve nota ek yapar. Video buluta
-  /// GİTMEZ, yalnızca cihazda kalır (kullanıcı isteği). Süre sınırı, videonun
-  /// AI'a satır içi gönderilebilmesi için gerekir — uzun kayıt modelin boyut
-  /// sınırına takılır.
-  static const _maxVideoSeconds = 60;
+  /// GİTMEZ, yalnızca cihazda kalır (kullanıcı isteği).
+  ///
+  /// Süre sınırı 60 sn'den 10 dk'ya (ses kaydıyla aynı) çıktı (2026-10-17):
+  /// 60 sn, videonun BÜTÜNÜYLE AI'a satır içi gönderilebilmesi içindi. Artık
+  /// transkript yalnız SES İZİNİ gönderiyor (Android'de ayrılır, dakikası
+  /// ~1 MB); "Videodan not çıkar" ise boyutu kendisi denetleyip büyük videoda
+  /// açıkça uyarıyor. Uzun ders/toplantı kaydı 60 sn'de kesiliyordu.
+  static const _maxVideoSeconds = 600;
 
   Future<void> _addVideo() async {
     final repo = ref.read(attachmentRepositoryProvider);
@@ -5339,6 +5343,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Transkriptten YENİ metin notu: başlık kaynağın adı, gövde seçilen metin,
   /// klasör bu notunki.
   Future<void> _createNoteFromTranscript(String text, Attachment media) async {
+    if (!mounted) return;
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null || text.trim().isEmpty) return;
     final name = media.isWebVideo
