@@ -238,7 +238,8 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
           widget.source!,
           context.l10n.transcriptFileSuffix,
         );
-    final safe = '${NotePdf.safeFileName(p.basenameWithoutExtension(name))}.txt';
+    final safe =
+        '${NotePdf.safeFileName(p.basenameWithoutExtension(name))}.txt';
     final bytes = Uint8List.fromList(utf8.encode(_shown));
     final XFile file;
     if (kIsWeb) {
@@ -322,9 +323,9 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -369,7 +370,9 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
                   _menuItem(
                     'ai',
                     Icons.auto_awesome_outlined,
-                    isImage ? l10n.transcriptReadWithAi : l10n.transcriptRetryAi,
+                    isImage
+                        ? l10n.transcriptReadWithAi
+                        : l10n.transcriptRetryAi,
                   ),
                 if (hasText && Transcripts.hasTimestamps(_text))
                   CheckedPopupMenuItem(
@@ -559,8 +562,7 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
                           _insert(picked);
                         },
                       ),
-                    if (widget.onCreateNote != null &&
-                        picked.trim().isNotEmpty)
+                    if (widget.onCreateNote != null && picked.trim().isNotEmpty)
                       ContextMenuButtonItem(
                         label: l10n.transcriptNewNote,
                         onPressed: () {

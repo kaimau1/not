@@ -38,10 +38,7 @@ class _Router implements HttpClientAdapter {
     var sent = '';
     if (requestStream != null) {
       final chunks = await requestStream.toList();
-      sent = utf8.decode(
-        [for (final c in chunks) ...c],
-        allowMalformed: true,
-      );
+      sent = utf8.decode([for (final c in chunks) ...c], allowMalformed: true);
     }
     bodies.add(sent);
     final path = options.uri.path;
@@ -141,9 +138,7 @@ void main() {
     final dir = await Directory.systemTemp.createTemp('transkript_test');
     addTearDown(() => dir.delete(recursive: true));
     final file = File('${dir.path}/uzun.m4a');
-    await file.writeAsBytes(
-      Uint8List(GeminiService.maxInlineMediaBytes + 10),
-    );
+    await file.writeAsBytes(Uint8List(GeminiService.maxInlineMediaBytes + 10));
     final (:service, :router) = _make();
     final text = await service.transcribeMedia(
       mimeType: 'audio/mp4',

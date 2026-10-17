@@ -72,8 +72,11 @@ void main() {
     });
 
     test('kayıtlı transkript bulunur, en yenisi seçilir', () {
-      final older = Transcripts.create(audio, 'eski', fileSuffix: 't')
-          .copyWith();
+      final older = Transcripts.create(
+        audio,
+        'eski',
+        fileSuffix: 't',
+      ).copyWith();
       final newer = Attachment(
         id: 'n',
         kind: AttachmentKind.text,
@@ -184,7 +187,10 @@ void main() {
     final note = Note(
       id: 'n',
       type: NoteType.text,
-      attachments: [audio, Transcripts.create(audio, 'x', fileSuffix: 't')],
+      attachments: [
+        audio,
+        Transcripts.create(audio, 'x', fileSuffix: 't'),
+      ],
     );
     final plan = CardMediaPlan.of(note);
     expect(plan.audioCount, 1);
@@ -218,8 +224,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('kayıtlı metin okunur; "Tümünü nota ekle" düz damgayla ekler',
-        (tester) async {
+    testWidgets('kayıtlı metin okunur; "Tümünü nota ekle" düz damgayla ekler', (
+      tester,
+    ) async {
       final t = Transcripts.create(
         audio,
         '[0:00] Merhaba dünya\n[0:15] İkinci paragraf',
