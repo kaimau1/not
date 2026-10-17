@@ -12,6 +12,7 @@ import '../../domain/attachment.dart';
 import '../../domain/note.dart';
 import '../../domain/page_notes.dart';
 import '../viewers/text_recognize_screen.dart';
+import '../../../../core/widgets/app_sheet.dart';
 
 /// **Not içinde arama** — gövde, maddeler, sayfa notları VE eklerin içi.
 ///
@@ -40,7 +41,7 @@ Future<void> showNoteSearchSheet(
   WidgetRef ref,
   Note note, {
   String initialQuery = '',
-}) => showModalBottomSheet<void>(
+}) => showAppSheet<void>(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,

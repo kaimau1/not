@@ -5,6 +5,7 @@ import '../../../core/l10n_ext.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import 'notes_providers.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// Kopya notlar levhası — Yapay Zeka sayfasındaki "Kopyaları temizle".
 ///
@@ -14,7 +15,7 @@ import 'notes_providers.dart';
 /// silmek yanlış eşleşmede veri kaybı demek olurdu. Silinenler çöp kutusuna
 /// gider (30 gün geri alınabilir), kalıcı silme değil.
 Future<void> showDuplicatesSheet(BuildContext context) =>
-    showModalBottomSheet<void>(
+    showAppSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

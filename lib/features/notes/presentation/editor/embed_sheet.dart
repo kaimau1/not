@@ -6,6 +6,7 @@ import '../../domain/note.dart';
 import 'note_images.dart';
 import 'pdf_page_box.dart';
 import 'tag_chips.dart';
+import '../../../../core/widgets/app_sheet.dart';
 
 /// YAZIYA GÖMME — baştan tasarım (kullanıcı isteği 2026-10-11: "PDF gömme
 /// doğru çalışmıyordu, gömme işini tamamen baştan tasarla; kelimeye video
@@ -100,7 +101,7 @@ Future<EmbedPick?> showEmbedPicker(
   required String label,
   required List<Attachment> attachments,
   bool allowCreate = true,
-}) => showModalBottomSheet<EmbedPick>(
+}) => showAppSheet<EmbedPick>(
   context: context,
   showDragHandle: true,
   useSafeArea: true,
@@ -405,7 +406,7 @@ Future<void> showEmbedPreview(
   required VoidCallback onUnlink,
   VoidCallback? onEdit,
   ValueChanged<Attachment>? onChanged,
-}) => showModalBottomSheet<void>(
+}) => showAppSheet<void>(
   context: context,
   showDragHandle: true,
   useSafeArea: true,

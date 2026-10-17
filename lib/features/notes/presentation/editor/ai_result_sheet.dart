@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../domain/note_type.dart';
+import '../../../../core/widgets/app_sheet.dart';
 
 /// AI çıktısını NOTA YAZMADAN ÖNCE gösteren geniş inceleme/düzenleme sayfası.
 ///
@@ -18,7 +19,7 @@ Future<void> showAiResultSheet(
   required String text,
   required void Function(String text) onInsert,
   required void Function(String text, {NoteType? asType}) onCreateNote,
-}) => showModalBottomSheet<void>(
+}) => showAppSheet<void>(
   context: context,
   isScrollControlled: true,
   showDragHandle: true,

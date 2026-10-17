@@ -13,6 +13,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/l10n_ext.dart';
 import '../../settings/settings_providers.dart';
 import 'dashboard_pattern.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// Ana ekranın zemini: **renk · desen · görsel** — seç / görünürlük / kaldır.
 ///
@@ -34,7 +35,7 @@ import 'dashboard_pattern.dart';
 /// geçici olabiliyor (Android paylaşım önbelleği), kopyalanmazsa zemin bir
 /// süre sonra kendiliğinden kayboluyordu.
 Future<void> showDashboardBackgroundSheet(BuildContext context) =>
-    showModalBottomSheet<void>(
+    showAppSheet<void>(
       context: context,
       showDragHandle: true,
       useSafeArea: true,

@@ -7,6 +7,7 @@ import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'capture_mode_sheet.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// Paylaşımla / "Birlikte aç" ile gelen içeriğin levhada görünen özeti.
 @immutable
@@ -98,7 +99,7 @@ Future<ShareDestination?> showShareTargetSheet(
   Map<String, String> folderNames = const {},
   bool askMode = false,
   String? newNoteLabel,
-}) => showModalBottomSheet<ShareDestination>(
+}) => showAppSheet<ShareDestination>(
   context: context,
   isScrollControlled: true,
   showDragHandle: true,

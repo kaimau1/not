@@ -7,6 +7,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/link_text.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// Okunan kod bir adresse kullanıcının seçtiği eylem.
 enum _QrAction { open, save, cancel }
@@ -123,7 +124,7 @@ class _QrScanScreenState extends State<QrScanScreen>
   /// üç seçenekten biri mutlaka seçilir.
   Future<_QrAction?> _askLinkAction(String url) {
     final l10n = context.l10n;
-    return showModalBottomSheet<_QrAction>(
+    return showAppSheet<_QrAction>(
       context: context,
       isDismissible: false,
       enableDrag: false,

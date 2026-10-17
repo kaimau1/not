@@ -7,6 +7,7 @@ import '../../../core/l10n_ext.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../data/friends_repository.dart';
 import '../domain/friend.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// **KİŞİLER** — arkadaş listesi, bekleyen istekler, e-postayla ekleme.
 ///
@@ -94,7 +95,7 @@ class FriendsScreen extends ConsumerWidget {
     ),
   );
 
-  Future<void> _addFriend(BuildContext context, WidgetRef ref) => showModalBottomSheet<void>(
+  Future<void> _addFriend(BuildContext context, WidgetRef ref) => showAppSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

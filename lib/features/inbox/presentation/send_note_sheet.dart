@@ -8,6 +8,7 @@ import '../../friends/domain/friend.dart';
 import '../../friends/presentation/friends_screen.dart';
 import '../../notes/domain/note.dart';
 import '../data/inbox_repository.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// **NOTU ARKADAŞA GÖNDER** (kullanıcı isteği 2026-08-18: "not paylaş
 /// seçeneği de lazım"). Arkadaş listesinden seçilen kişinin GELEN NOTLAR
@@ -28,7 +29,7 @@ Future<void> showSendNoteToFriendSheet(
     ).showSnackBar(SnackBar(content: Text(context.l10n.friendsNeedsAccount)));
     return;
   }
-  await showModalBottomSheet<void>(
+  await showAppSheet<void>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,

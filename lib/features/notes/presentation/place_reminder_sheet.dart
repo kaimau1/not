@@ -8,6 +8,7 @@ import '../../../core/utils/debouncer.dart';
 import '../../settings/data/permissions_service.dart';
 import '../data/place_reminders.dart';
 import '../domain/note.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// **KONUM HATIRLATICISI levhası** (kullanıcı isteği 2026-09-23: "markete
 /// gelince hatırlat").
@@ -25,7 +26,7 @@ Future<void> showPlaceReminderSheet(
 ) async {
   await ref.read(placeRemindersProvider.notifier).refresh();
   if (!context.mounted) return;
-  await showModalBottomSheet<void>(
+  await showAppSheet<void>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,

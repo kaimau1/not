@@ -10,6 +10,7 @@ import '../domain/note.dart';
 import '../domain/note_templates.dart';
 import '../domain/note_type.dart';
 import 'template_editor_screen.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// **ŞABLON GALERİSİ + ÖNİZLEME/DÜZENLEME** (bkz. [NoteTemplate]).
 ///
@@ -32,7 +33,7 @@ import 'template_editor_screen.dart';
 Future<NoteTemplateContent?> showNoteTemplateSheet(
   BuildContext context, {
   NoteTemplate? initial,
-}) => showModalBottomSheet<NoteTemplateContent>(
+}) => showAppSheet<NoteTemplateContent>(
   context: context,
   showDragHandle: true,
   isScrollControlled: true,
@@ -448,7 +449,7 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
 
   Future<void> _userMenu(UserTemplate template) async {
     final l10n = context.l10n;
-    final action = await showModalBottomSheet<String>(
+    final action = await showAppSheet<String>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(

@@ -16,6 +16,7 @@ import '../../../core/utils/language_names.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../settings/settings_providers.dart';
 import '../data/device_speech.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// Sesli yakalama levhası — ana ekran ve not editörünün ORTAK bileşeni.
 ///
@@ -104,7 +105,7 @@ String? voiceCaptureInstruction(VoiceCaptureAction action) => switch (action) {
 Future<VoiceCaptureResult?> showVoiceCaptureSheet(
   BuildContext context, {
   required VoiceCaptureTarget target,
-}) => showModalBottomSheet<VoiceCaptureResult>(
+}) => showAppSheet<VoiceCaptureResult>(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
@@ -413,7 +414,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   /// kullanıcı seçiyor — konuşulanlar hiçbir dalda sessizce çöpe gitmiyor.
   Future<void> _askBeforeClosing() async {
     final l10n = context.l10n;
-    final choice = await showModalBottomSheet<String>(
+    final choice = await showAppSheet<String>(
       context: context,
       builder: (sheetContext) => SafeArea(
         child: Column(

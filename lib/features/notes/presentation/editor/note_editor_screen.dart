@@ -133,6 +133,7 @@ import 'audio_card_box.dart' show kAudioBoxWidth, kAudioBoxHeight;
 import 'text_page_box.dart' show kTextBoxWidth, kTextBoxHeight;
 import 'view_mode_switch.dart';
 import '../../../../core/widgets/smooth_routes.dart';
+import '../../../../core/widgets/app_sheet.dart';
 
 bool get _isDesktop =>
     !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
@@ -3490,7 +3491,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (!note.tags.contains(tag)) tag,
     ];
     if (suggestions.isEmpty || !mounted) return;
-    final selected = await showModalBottomSheet<String>(
+    final selected = await showAppSheet<String>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
@@ -3828,7 +3829,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _showSnack(context.l10n.archiveNoNotebook);
       return;
     }
-    final chosen = await showModalBottomSheet<Note>(
+    final chosen = await showAppSheet<Note>(
       context: context,
       showDragHandle: true,
       useSafeArea: true,
@@ -4061,7 +4062,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final note = _note;
     if (note == null || note.items.isEmpty) return;
     final l10n = context.l10n;
-    final choice = await showModalBottomSheet<ItemSort>(
+    final choice = await showAppSheet<ItemSort>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
@@ -5704,7 +5705,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (note == null) return;
     _dismissKeyboard();
     final l10n = context.l10n;
-    final target = await showModalBottomSheet<String>(
+    final target = await showAppSheet<String>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
@@ -5809,7 +5810,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (note == null) return;
     _dismissKeyboard();
     final l10n = context.l10n;
-    await showModalBottomSheet<void>(
+    await showAppSheet<void>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,

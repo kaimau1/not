@@ -15,6 +15,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../notes/presentation/editor/drawing_screen.dart';
 import '../data/folder_chat_repository.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// **PAYLAŞILAN KLASÖRÜN SOHBETİ** (kullanıcı isteği 2026-08-18: "birde
 /// birbirine mesaj gönderme alanı olabilir").
@@ -93,7 +94,7 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
   Future<void> _sendImage() async {
     final l10n = context.l10n;
     final mobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
-    final source = await showModalBottomSheet<ImageSource>(
+    final source = await showAppSheet<ImageSource>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
@@ -128,7 +129,7 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
     if (picked == null || !mounted) return;
     var bytes = await picked.readAsBytes();
     if (!mounted) return;
-    final draw = await showModalBottomSheet<bool>(
+    final draw = await showAppSheet<bool>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
@@ -420,7 +421,7 @@ class _MessageBubble extends ConsumerWidget {
 
   Future<void> _menu(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
-    final action = await showModalBottomSheet<String>(
+    final action = await showAppSheet<String>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(

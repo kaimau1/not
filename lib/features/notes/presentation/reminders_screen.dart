@@ -12,6 +12,7 @@ import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'note_card.dart';
 import 'notes_providers.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// Kullanıcının "ne zaman?" sorusuna en sık verdiği üç cevap. Tarih+saat
 /// seçici İKİ ayrı diyalog demek (önce takvim, sonra saat); "yarın sabah"
@@ -46,7 +47,7 @@ class RemindersScreen extends ConsumerWidget {
     DateTime initial,
   ) async {
     final l10n = context.l10n;
-    final choice = await showModalBottomSheet<_QuickWhen>(
+    final choice = await showAppSheet<_QuickWhen>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(

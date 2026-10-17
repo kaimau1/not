@@ -320,10 +320,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       return;
     }
     if (!mounted) return;
-    for (final id in ids) {
-      repo.softDelete(id);
-    }
     ref.read(selectedNoteIdsProvider.notifier).clear();
+    // Seçili kartlar birlikte küçülüp solar, sonra silinir (bkz.
+    // leavingNotesProvider).
+    await ref.read(leavingNotesProvider.notifier).leave(ids, () {
+      for (final id in ids) {
+        repo.softDelete(id);
+      }
+    });
+    if (!mounted) return;
     showUndoSnackBar(
       context,
       message: l10n.notesDeletedCount(ids.length),

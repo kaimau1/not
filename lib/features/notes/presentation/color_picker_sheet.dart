@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
 import '../domain/note.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// Not zemini ya da çerçevesi için renk seçen ortak alt şerit. Hem editör,
 /// hem kart üç-nokta menüsü, hem de çoklu seçim toplu işlemi kullanır —
@@ -23,7 +24,7 @@ Future<NoteColor?> showNoteColorPicker(
   NoteColor? current,
   ValueChanged<NoteColor>? onChanged,
 }) {
-  return showModalBottomSheet<NoteColor>(
+  return showAppSheet<NoteColor>(
     context: context,
     showDragHandle: true,
     // Canlı seçimde karartı YOK ve levha dar: kullanıcı rengi seçerken

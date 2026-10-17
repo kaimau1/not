@@ -11,6 +11,7 @@ import '../../../app/theme/note_colors.dart';
 import '../../../core/utils/rich_text.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// Çöp kutusu: silinen notlar geri alınabilir veya kalıcı silinebilir.
 ///
@@ -418,7 +419,7 @@ class _TrashCard extends ConsumerWidget {
   Future<void> _showActions(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final action = await showModalBottomSheet<String>(
+    final action = await showAppSheet<String>(
       context: context,
       showDragHandle: true,
       constraints: const BoxConstraints(maxWidth: 520),

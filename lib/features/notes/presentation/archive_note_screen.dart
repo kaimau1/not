@@ -47,6 +47,7 @@ import 'viewers/slide_viewer_screen.dart';
 import 'viewers/transcript_screen.dart';
 import 'viewers/video_viewer.dart';
 import '../../../core/widgets/smooth_routes.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// **DEFTER** ekranı — sayfaları çevrilen, üstüne DOĞRUDAN yazılan bir arşiv
 /// defteri (bkz. [NoteType.archive]).
@@ -510,7 +511,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
       ArchiveTemplate.todo => Icons.checklist_outlined,
       ArchiveTemplate.reading => Icons.menu_book_outlined,
     };
-    final picked = await showModalBottomSheet<ArchiveTemplate>(
+    final picked = await showAppSheet<ArchiveTemplate>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
@@ -822,7 +823,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     };
     // null = desen seçilmedi; `pickedColor` = renk şeridi istendi.
     const pickedColor = 'color';
-    final picked = await showModalBottomSheet<Object>(
+    final picked = await showAppSheet<Object>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
@@ -1118,7 +1119,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   /// Girdiyi BAŞKA bir sayfaya taşır (metin ya da dosya).
   Future<void> _moveEntry(Note note, ArchiveEntry entry) async {
     final names = archivePageNames(note);
-    final target = await showModalBottomSheet<String>(
+    final target = await showAppSheet<String>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
@@ -1663,7 +1664,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   Future<void> _addSheet(Note note, String page) async {
     final l10n = context.l10n;
     final mobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
-    final action = await showModalBottomSheet<String>(
+    final action = await showAppSheet<String>(
       context: context,
       showDragHandle: true,
       // Levha KAYDIRILIR: yedi seçenek kısa ekranda (yatay tutulan telefon,
@@ -1766,7 +1767,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     final l10n = context.l10n;
     final names = archivePageNames(note);
     final paper = NoteColors.surface(context, note.color);
-    final picked = await showModalBottomSheet<int>(
+    final picked = await showAppSheet<int>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,

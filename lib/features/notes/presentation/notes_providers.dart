@@ -602,6 +602,37 @@ class SelectedNoteIdsNotifier extends Notifier<Set<String>> {
 }
 
 /// Seçili etiket (null = etiket filtresi yok).
+/// **ÇIKMAKTA OLAN kartlar** (kullanıcı isteği 2026-10-17: "olmamış hissi"):
+/// silinen not ızgaradan bir karede yok olmuyor, kartı küçülüp solarak
+/// gidiyor; ızgara ancak ardından yerleşiyor. Kart bu kümeyi `select` ile
+/// izler — yalnız silinen kart yeniden çizilir.
+final leavingNotesProvider =
+    NotifierProvider<LeavingNotesNotifier, Set<String>>(
+      LeavingNotesNotifier.new,
+    );
+
+class LeavingNotesNotifier extends Notifier<Set<String>> {
+  /// Kartın çıkış hareketinin süresi ([NoteCard]'daki animasyonla aynı).
+  static const exit = Duration(milliseconds: 220);
+
+  @override
+  Set<String> build() => const {};
+
+  /// [ids]'nin kartlarını çıkış hareketine sokar, hareket bitince [then]'i
+  /// (asıl silme) çağırır. Ekranda olmayan kartlar için yalnız gecikme olur.
+  Future<void> leave(Iterable<String> ids, void Function() then) async {
+    final set = ids.toSet();
+    if (set.isEmpty) return;
+    state = {...state, ...set};
+    await Future<void>.delayed(exit);
+    then();
+    state = {
+      for (final s in state)
+        if (!set.contains(s)) s,
+    };
+  }
+}
+
 final selectedTagProvider = NotifierProvider<SelectedTagNotifier, String?>(
   SelectedTagNotifier.new,
 );
@@ -697,10 +728,8 @@ List<SwipeStop> swipeFilterStops({
   required NoteFilter filter,
   required String? tag,
 }) {
-  final tags = <String>{
-    for (final n in notes) ...n.tags,
-    ?tag,
-  }.toList()..sort();
+  final tags = <String>{for (final n in notes) ...n.tags, ?tag}.toList()
+    ..sort();
   return [
     for (final f in NoteFilter.values)
       if (f == NoteFilter.all ||
@@ -862,10 +891,14 @@ final folderNotesProvider = Provider.family<AsyncValue<List<Note>>, String>((
       ? ref.watch(noteActivityProvider)
       : const <String, int>{};
   return notes.whenData(
-    (list) => _sortedNotes([
-      for (final n in list)
-        if (n.folderId == folderId && n.archivedAt == null && !n.isEmpty) n,
-    ], sort, activity),
+    (list) => _sortedNotes(
+      [
+        for (final n in list)
+          if (n.folderId == folderId && n.archivedAt == null && !n.isEmpty) n,
+      ],
+      sort,
+      activity,
+    ),
   );
 });
 

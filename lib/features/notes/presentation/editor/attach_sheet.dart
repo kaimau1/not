@@ -6,6 +6,7 @@ import '../../../../core/personalize.dart';
 import '../../../../core/widgets/customizable.dart';
 import '../../data/document_scan.dart';
 import '../qr_scan_screen.dart';
+import '../../../../core/widgets/app_sheet.dart';
 
 /// Not editörünün "Ekle" levhası: TEK sayfada, İKİ SÜTUNLU ızgara.
 ///
@@ -38,7 +39,7 @@ Future<String?> showAttachSheet(
   bool pageNote = false,
   bool canEmbed = false,
   String? copiedAttachmentName,
-}) => showModalBottomSheet<String>(
+}) => showAppSheet<String>(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,

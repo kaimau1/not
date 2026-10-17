@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../data/permissions_service.dart';
 import '../settings_providers.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// Uygulama İLK açıldığında bir kez gösterilen izin tanıtımı: hangi iznin
 /// hangi özellik için gerektiğini söyler ve isteyen kullanıcıya hepsini tek
@@ -26,7 +27,7 @@ class PermissionsOnboarding {
     // (izinler Ayarlar > İzinler'den her zaman yönetilebilir).
     await prefs.setBool(_key, true);
     if (!context.mounted) return;
-    await showModalBottomSheet<void>(
+    await showAppSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,

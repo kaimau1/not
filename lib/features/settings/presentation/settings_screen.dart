@@ -55,6 +55,8 @@ import '../../notes/presentation/drive_ui.dart';
 import '../data/permissions_service.dart';
 import '../settings_providers.dart';
 import 'notes_settings.dart';
+import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/press_scale.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key, this.initialArea});
@@ -950,58 +952,62 @@ class _ShortcutTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: color.withValues(alpha: 0.08),
-      borderRadius: BorderRadius.circular(16),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(11),
+    // Basınca hafifçe çöker (bkz. PressScale).
+    return PressScale(
+      scale: 0.97,
+      child: Material(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: Icon(icon, size: 20, color: color),
                 ),
-                child: Icon(icon, size: 20, color: color),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    Text(
-                      subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: scheme.onSurfaceVariant,
+                      Text(
+                        subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: scheme.onSurfaceVariant,
-              ),
-            ],
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1437,7 +1443,7 @@ class _LanguageSelector extends ConsumerWidget {
     Map<String, String> languages,
     String? selected,
   ) async {
-    final choice = await showModalBottomSheet<String>(
+    final choice = await showAppSheet<String>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
@@ -1996,7 +2002,7 @@ Future<void> _showAppFontSheet(BuildContext context, WidgetRef ref) {
     NoteFontGroup.mono => l10n.fontGroupMono,
     NoteFontGroup.hand => l10n.fontGroupHand,
   };
-  return showModalBottomSheet<void>(
+  return showAppSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -2894,7 +2900,7 @@ Widget _modelPickerTile({
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () async {
-          final picked = await showModalBottomSheet<_ModelChoice>(
+          final picked = await showAppSheet<_ModelChoice>(
             context: context,
             isScrollControlled: true,
             useSafeArea: true,
@@ -3564,7 +3570,7 @@ class _VoiceSection extends ConsumerWidget {
             title: Text(l10n.speechVoicePickerTitle),
             subtitle: Text(l10n.speechVoiceAutoInfo),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => showModalBottomSheet<void>(
+            onTap: () => showAppSheet<void>(
               context: context,
               isScrollControlled: true,
               showDragHandle: true,

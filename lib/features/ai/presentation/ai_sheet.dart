@@ -24,6 +24,7 @@ import 'listen_screen.dart';
 import '../data/gemini_service.dart';
 import 'brainstorm_screen.dart';
 import 'doc_chat_screen.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// "Notu değiştir" geri çağırması: AI çıktısı notun içeriğiyle değiştirilir;
 /// [asType] verilirse notun çalışma modu da o tipe geçer (madde/sıralı liste).
@@ -41,7 +42,7 @@ Future<void> showAiSheet(
   ReplaceTextCallback? onReplaceText,
   ReplaceTextCallback? onCreateNote,
   ValueChanged<Attachment>? onTranscribe,
-}) => showModalBottomSheet<void>(
+}) => showAppSheet<void>(
   context: context,
   isScrollControlled: true,
   showDragHandle: true,

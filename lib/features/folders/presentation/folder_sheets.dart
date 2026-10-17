@@ -14,6 +14,7 @@ import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
 import 'folder_chat_screen.dart';
 import 'folder_tile.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// Klasör oluşturma/düzenleme diyaloğu: ad alanı + simge seçici.
 /// [existing] verilirse düzenleme modunda açılır. Oluşturulan/düzenlenen
@@ -187,7 +188,7 @@ Future<void> showFolderActionsSheet(
   NoteFolder folder,
 ) async {
   final l10n = context.l10n;
-  final action = await showModalBottomSheet<String>(
+  final action = await showAppSheet<String>(
     context: context,
     showDragHandle: true,
     builder: (sheetContext) => SafeArea(
@@ -320,7 +321,7 @@ Future<String?> showFolderPickSheet(
       if (!f.hidden || revealed || f.id == currentFolderId) f,
   ];
   const newSentinel = '__new__';
-  final picked = await showModalBottomSheet<String>(
+  final picked = await showAppSheet<String>(
     context: context,
     showDragHandle: true,
     builder: (sheetContext) => SafeArea(
@@ -371,7 +372,7 @@ Future<void> showFolderShareSheet(
   WidgetRef ref,
   NoteFolder folder,
 ) async {
-  await showModalBottomSheet<void>(
+  await showAppSheet<void>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
@@ -587,7 +588,7 @@ class _ColorDot extends StatelessWidget {
 /// ekranın klasör şeridinde, Klasörler sayfasında, "klasöre taşı"
 /// listesinde ve yana çekişte AYNI.
 Future<void> showFolderOrderSheet(BuildContext context) =>
-    showModalBottomSheet<void>(
+    showAppSheet<void>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
