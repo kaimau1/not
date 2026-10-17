@@ -1036,5 +1036,10 @@
   "attachmentsUploadingCount": "正在上传 {count} 个附件",
   "sharedNoteNew": "新",
   "sharedNoteUpdatedBy": "{name} 更新了",
-  "sharedMarkAllRead": "全部标为已读"
+  "sharedMarkAllRead": "全部标为已读",
+  "attachmentSaveAs": "另存为",
+  "attachmentSavedAs": "已保存 {name}",
+  "attachmentSaveAsFailed": "无法保存文件",
+  "sharedHubTitle": "收到与共享",
+  "sharedHubInbox": "收到"
 }

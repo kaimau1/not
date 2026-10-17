@@ -4,3 +4,7 @@
 String createBlobUrl(List<int> bytes, String mimeType) {
   throw UnsupportedError('createBlobUrl yalnız web\'de kullanılabilir.');
 }
+
+void downloadBytes(List<int> bytes, String mimeType, String fileName) {
+  throw UnsupportedError('downloadBytes yalnız web\'de kullanılabilir.');
+}

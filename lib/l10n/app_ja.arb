@@ -1036,5 +1036,10 @@
   "attachmentsUploadingCount": "{count} 件の添付ファイルをアップロード中",
   "sharedNoteNew": "新着",
   "sharedNoteUpdatedBy": "{name} さんが更新",
-  "sharedMarkAllRead": "すべて既読にする"
+  "sharedMarkAllRead": "すべて既読にする",
+  "attachmentSaveAs": "名前を付けて保存",
+  "attachmentSavedAs": "{name} を保存しました",
+  "attachmentSaveAsFailed": "ファイルを保存できませんでした",
+  "sharedHubTitle": "受信・共有",
+  "sharedHubInbox": "受信"
 }

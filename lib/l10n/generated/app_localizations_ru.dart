@@ -5206,4 +5206,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sharedMarkAllRead => 'Отметить всё как прочитанное';
+
+  @override
+  String get attachmentSaveAs => 'Сохранить как';
+
+  @override
+  String attachmentSavedAs(String name) {
+    return '$name сохранён';
+  }
+
+  @override
+  String get attachmentSaveAsFailed => 'Не удалось сохранить файл';
+
+  @override
+  String get sharedHubTitle => 'Полученные и общие';
+
+  @override
+  String get sharedHubInbox => 'Полученные';
 }

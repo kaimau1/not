@@ -33,19 +33,18 @@ import '../../folders/data/folder_activity.dart';
 import '../../folders/data/shared_activity_service.dart';
 import '../../folders/domain/note_folder.dart';
 import '../../folders/presentation/folder_sheets.dart';
-import '../../inbox/data/inbox_repository.dart';
 import '../../folders/presentation/folder_tile.dart';
 import '../../auth/presentation/account_sheet.dart';
 import '../../friends/data/friends_repository.dart';
 import '../../friends/presentation/friends_screen.dart';
 import '../../friends/presentation/home_invites.dart';
 import '../../inbox/presentation/inbox_screen.dart';
+import '../../inbox/presentation/shared_hub_screen.dart';
 import '../../settings/settings_providers.dart';
 import '../../settings/presentation/permissions_onboarding.dart';
 import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
-import '../data/shared_note_activity.dart';
 import '../data/share_intake.dart';
 import '../data/place_reminders.dart';
 import '../data/upload_queue.dart';
@@ -710,14 +709,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
+        // Geri sayımla kendiliğinden kapanır (bkz. timedSnackBar).
+        timedSnackBar(
           content: Text(l10n.assistantNoteCreated),
-          duration: const Duration(seconds: 3),
-          // TUZAK: bu Flutter sürümünde AKSİYONLU SnackBar'ın varsayılanı
-          // `persist: true` — zamanlayıcı hiç kurulmuyor ve "Not oluşturuldu"
-          // uyarısı elle kapatılana dek ekranda KALIYORDU. persist: false
-          // eski davranışı (süre dolunca kapan) geri getirir.
-          persist: false,
+          duration: const Duration(seconds: 4),
           action: SnackBarAction(
             label: l10n.openNote,
             onPressed: () => _openNew(id),
@@ -1306,41 +1301,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           id: UiItem.homeAccount,
                                           child: AccountAvatarButton(),
                                         ),
-                                        // Yapay Zeka yeniden KENDİ düğmesi oldu.
-                                        // Bir süre ⋮ menüsünde durmuştu çünkü arama
-                                        // alanının içindeki ✨ (akıllı arama) ile
-                                        // karışıyordu; o ✨ artık Metin/Anlam
-                                        // segmenti olduğundan karışıklık kalktı.
-                                        Customizable(
-                                          id: UiItem.homeAi,
-                                          child: Tooltip(
-                                              message: l10n.aiHubTitle,
-                                              child: SizedBox(
-                                                width: 44,
-                                                height: 44,
-                                                child: Material(
-                                                  color: Theme.of(
-                                                    context,
-                                                  ).colorScheme.secondaryContainer,
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                  child: InkWell(
-                                                    borderRadius:
-                                                        BorderRadius.circular(12),
-                                                    onTap: () =>
-                                                        context.push('/ai'),
-                                                    child: Icon(
-                                                      Icons.auto_awesome,
-                                                      size: 22,
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .onSecondaryContainer,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                        ),
+                                        const SizedBox(width: 6),
+                                        // GELEN VE PAYLAŞILANLAR (kullanıcı
+                                        // isteği 2026-10-17): Yapay zekâ
+                                        // düğmesinin yeri; o alttaki "+"nın
+                                        // SOLUNA indi. Gelen not ya da yeni
+                                        // ortak not varsa köşede sayı rozeti.
+                                        const SharedHubButton(),
                                         const SizedBox(width: 6),
                                         // ⋮ ARTIK ALT LEVHA (kullanıcı isteği
                                         // 2026-10-11: "menüler yeniden dizayn
@@ -1601,10 +1568,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 // Sağda düğme sütunu kadar boşluk bırakılır.
                 const PositionedDirectional(
                   start: 8,
-                  end: 88,
+                  end: 144,
                   bottom: 16,
                   child: VoiceAssistantPanel(),
                 ),
+                // YAPAY ZEKÂ "+"nın SOLUNDA (kullanıcı isteği 2026-10-17:
+                // "üstteki AI butonunu alttaki artı butonunun soluna al").
+                // "+" 56 dp; AI 48 dp — dikey ortaları hizalı.
+                if (!selectionActive)
+                  PositionedDirectional(
+                    end: 16 + 56 + 12,
+                    bottom: 16 + 4,
+                    child: Customizable(
+                      id: UiItem.homeAi,
+                      child: _DashVoiceButton(
+                        key: const ValueKey('home-ai'),
+                        tooltip: l10n.aiHubTitle,
+                        icon: Icons.auto_awesome,
+                        onTap: () => context.push('/ai'),
+                      ),
+                    ),
+                  ),
                 // Düğmeler Scaffold.floatingActionButton yerine BURADA durur:
                 // Scaffold bir FAB tanıdığında yüzen bildirimleri ("not
                 // silindi") onun ÜSTÜne iter. Düğmeler Stack'te olunca
@@ -1785,6 +1769,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             count: ref.read(archivedNotesProvider).value?.length ?? 0,
           ),
           MenuAction('trash', l10n.trashTitle, Icons.delete_outline),
+          // AYARLAR hızlı satırda, GRİ (kullanıcı isteği 2026-10-17:
+          // "ayarlar butonunu üstteki 3'lü buton gibi yap ve oraya al,
+          // rengini de ayrıştır gri olsun").
+          MenuAction(
+            'settings',
+            l10n.settings,
+            Icons.settings_outlined,
+            neutral: true,
+          ),
           // Şablondan not "+" menüsünde de var; burada YALNIZ orada
           // gizlenmişse çıkar (toparlama 2026-10-17: aynı işin iki kapısı).
           if (!Personalize.current.shows(UiItem.quickAdd('template')))
@@ -1804,13 +1797,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               Icons.account_circle_outlined,
             ),
             MenuAction('friends', l10n.friendsTitle, Icons.people_outline),
-            MenuAction(
-              'inbox',
-              l10n.inboxTitle,
-              Icons.move_to_inbox_outlined,
-              count: ref.read(inboxNotesProvider).value?.length ?? 0,
-              highlight: true,
-            ),
+            // GELEN NOTLAR menüden kalktı: üst çubuktaki "Gelen ve
+            // paylaşılanlar" düğmesinde (bkz. SharedHubButton).
           ]),
           MenuSection(l10n.menuSectionHome, [
             MenuAction('folderOrder', l10n.folderOrderTitle, Icons.swap_vert),
@@ -1831,7 +1819,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               ),
           ]),
           MenuSection(l10n.menuSectionApp, [
-            MenuAction('settings', l10n.settings, Icons.settings_outlined),
             // KİŞİSELLEŞTİR (kullanıcı isteği 2026-10-16): hangi alan ve
             // düğme görünsün — menüden; ekranda kalıcı ayar düğmesi yok.
             MenuAction(
@@ -1961,14 +1948,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         SliverToBoxAdapter(
           child: Row(
             children: [
-              // Ortak notlar karo görünümünde de ulaşılabilir kalsın.
-              const Padding(
-                padding: EdgeInsetsDirectional.only(start: 12),
-                child: SizedBox(
-                  height: FolderChip.stripHeight - 8,
-                  child: SharedNotesChip(),
-                ),
-              ),
+              // Ortak notlar artık üst çubuktaki "Gelen ve paylaşılanlar"
+              // düğmesinde (bkz. SharedHubButton).
               const Spacer(),
               TextButton.icon(
                 onPressed: () =>
@@ -2024,12 +2005,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   Widget _folderStrip(List<NoteFolder> folders, {String? selectedFolderId}) {
     final shared = ref.watch(sharedFolderRefsProvider).value ?? const [];
     // YENİ HAREKET ÖNE (kullanıcı bulgusu 2026-10-17: "paylaşılanlarda yeni
-    // bir şey geldiğinde anlaşılmıyor"): ortak notlar çipi ve okunmamışı olan
-    // paylaşılan klasörler şeridin SONUNDAydı — birkaç klasörden sonra ekran
-    // dışında kalıyor, rozet görünmüyordu. Okunmamış varsa en başa geçerler.
-    final sharedNotesHot = ref.watch(
-      sharedNoteUnreadProvider.select((s) => s.isNotEmpty),
-    );
+    // bir şey geldiğinde anlaşılmıyor"): okunmamışı olan paylaşılan
+    // klasörler şeridin SONUNDAydı — birkaç klasörden sonra ekran dışında
+    // kalıyor, rozet görünmüyordu. Okunmamış varsa en başa geçerler.
+    // ORTAK NOTLAR çipi şeritten kalktı (2026-10-17: "gelen ve paylaşılan
+    // notları birleştir, tek alandan yönetilsin") — üst çubuktaki rozetli
+    // "Gelen ve paylaşılanlar" düğmesinde (bkz. SharedHubButton).
     final hotShared = [
       for (final share in shared)
         if (ref.watch(
@@ -2055,7 +2036,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
                 children: [
-                  if (sharedNotesHot) const SharedNotesChip(),
                   for (final share in hotShared) ...[
                     SharedFolderChip(
                       key: ValueKey('shared-chip-${share.folderId}'),
@@ -2081,8 +2061,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     ),
                     const SizedBox(width: 6),
                   ],
-                  // Ortak notlar (bkz. SharedNotesChip) — yoksa yer kaplamaz.
-                  if (!sharedNotesHot) const SharedNotesChip(),
                   const NewFolderChip(),
                 ],
               ),
@@ -2796,42 +2774,14 @@ class _SearchField extends ConsumerWidget {
                 ref.read(searchQueryProvider.notifier).set('');
               },
             ),
-          Padding(
-            padding: const EdgeInsets.all(2),
-            child: Container(
-              decoration: BoxDecoration(
-                color: scheme.surface,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.all(2),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _SearchModeTab(
-                    label: l10n.searchModeText,
-                    selected: !semantic,
-                    onTap: () {
-                      if (semantic) {
-                        ref
-                            .read(semanticSearchEnabledProvider.notifier)
-                            .toggle();
-                      }
-                    },
-                  ),
-                  _SearchModeTab(
-                    label: l10n.searchModeMeaning,
-                    selected: semantic,
-                    onTap: () {
-                      if (!semantic) {
-                        ref
-                            .read(semanticSearchEnabledProvider.notifier)
-                            .toggle();
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
+          // TEK AI ANAHTARI (kullanıcı isteği 2026-10-17: "metin/anlam
+          // yazıları çok yer kaplıyor, sadece bir AI işareti olsun, basınca
+          // açılıp kapansın — metin ve anlam arasında geçiş"): açıkken dolu
+          // vurgu rengi (anlamla arama), kapalıyken soluk çerçeve (metin).
+          _SemanticToggle(
+            on: semantic,
+            onTap: () =>
+                ref.read(semanticSearchEnabledProvider.notifier).toggle(),
           ),
           const SizedBox(width: 4),
         ],
@@ -2916,36 +2866,48 @@ class _RecentSearches extends ConsumerWidget {
   }
 }
 
-class _SearchModeTab extends StatelessWidget {
-  const _SearchModeTab({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+class _SemanticToggle extends StatelessWidget {
+  const _SemanticToggle({required this.on, required this.onTap});
 
-  final String label;
-  final bool selected;
+  final bool on;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: selected ? scheme.primary : Colors.transparent,
-      borderRadius: BorderRadius.circular(6),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(6),
-        onTap: onTap,
-        child: Container(
-          height: 26,
-          padding: const EdgeInsets.symmetric(horizontal: 9),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
+    final l10n = context.l10n;
+    return Tooltip(
+      message: l10n.semanticSearchToggle,
+      child: Semantics(
+        toggled: on,
+        button: true,
+        label: l10n.searchModeMeaning,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: AnimatedContainer(
+            key: const ValueKey('search-ai-toggle'),
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: on ? scheme.primary : scheme.surface,
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(
+                color: on ? scheme.primary : scheme.outlineVariant,
+              ),
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(9),
+                onTap: onTap,
+                child: Icon(
+                  on ? Icons.auto_awesome : Icons.auto_awesome_outlined,
+                  size: 18,
+                  color: on ? scheme.onPrimary : scheme.onSurfaceVariant,
+                ),
+              ),
             ),
           ),
         ),
@@ -3326,6 +3288,7 @@ class _PinchColumnsState extends State<_PinchColumns> {
 /// çubuğundaki ikili ile bilerek aynı görünür — aynı iş, aynı simge.
 class _DashVoiceButton extends StatelessWidget {
   const _DashVoiceButton({
+    super.key,
     required this.tooltip,
     required this.icon,
     required this.onTap,

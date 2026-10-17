@@ -5214,4 +5214,21 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get sharedMarkAllRead => 'Alles als gelezen markeren';
+
+  @override
+  String get attachmentSaveAs => 'Opslaan als';
+
+  @override
+  String attachmentSavedAs(String name) {
+    return '$name opgeslagen';
+  }
+
+  @override
+  String get attachmentSaveAsFailed => 'Bestand kon niet worden opgeslagen';
+
+  @override
+  String get sharedHubTitle => 'Ontvangen en gedeeld';
+
+  @override
+  String get sharedHubInbox => 'Ontvangen';
 }

@@ -10,6 +10,7 @@ import '../viewers/bubble_layer.dart';
 import 'note_images.dart';
 import 'audio_card_box.dart';
 import 'pdf_page_box.dart';
+import 'slide_page_box.dart';
 import 'text_page_box.dart';
 import 'video_transport.dart';
 
@@ -36,7 +37,8 @@ double defaultPinnedHeight(Attachment media, Size screen) {
   final pdf = media.kind == AttachmentKind.pdf;
   final ratio = w > 0 && h > 0
       ? (pdf ? 1 / pdfBoxAspect(w, h, media.pdfTurns) : h / w)
-      : (media.kind == AttachmentKind.video
+      : (media.kind == AttachmentKind.video ||
+                media.kind == AttachmentKind.slide
             ? 9 / 16
             : pdf
             ? 1.41
@@ -74,6 +76,7 @@ class PinnedMediaPane extends StatefulWidget {
     this.bubbleDoc,
     this.onRemove,
     this.onDetach,
+    this.onSaveAs,
     this.onTranscribe,
   });
 
@@ -90,6 +93,9 @@ class PinnedMediaPane extends StatefulWidget {
 
   /// Eki sabit bölmeden alıp alttaki ek şeridine DOSYA olarak koyar.
   final VoidCallback? onDetach;
+
+  /// EKİ FARKLI KAYDET (2026-10-17). null ise menüde yok.
+  final VoidCallback? onSaveAs;
 
   /// GÖRSELDEN TÜRETİLMİŞ balonlu belge (bkz. `Attachment.sourceId`).
   /// Kullanıcı isteği 2026-10-16: "balonludan üste sabitlemeye alınca da
@@ -202,6 +208,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     final isPdf = widget.media.kind == AttachmentKind.pdf;
     final isText = widget.media.kind == AttachmentKind.text;
     final isAudio = widget.media.kind == AttachmentKind.audio;
+    final isSlide = widget.media.kind == AttachmentKind.slide;
     // Zamanlı medya: denetim çubuğu ve ilerleme çizgisi (video + ses).
     final timed = isVideo || isAudio;
     return LayoutBuilder(
@@ -231,6 +238,14 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                       key: ValueKey('pinned-audio-${widget.media.id}'),
                       attachment: widget.media,
                       noteAtButton: false,
+                    )
+                  : isSlide
+                  // SUNUM (2026-10-17): slayt çevrilebilen kutu; bölmeden
+                  // çıkış görünüm anahtarından.
+                  ? SlidePageBox(
+                      key: ValueKey('pinned-slide-${widget.media.id}'),
+                      attachment: widget.media,
+                      onChanged: widget.onChanged ?? (_) {},
                     )
                   : isPdf
                   // Belge kutusu kendi jestlerini kullanır (yatay kaydırma
@@ -516,7 +531,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   bool get hasMenu =>
       widget.onRemove != null ||
       widget.onDetach != null ||
-      widget.onTranscribe != null;
+      widget.onTranscribe != null ||
+      widget.onSaveAs != null;
 
   /// YAZILI işlemler: sayfaya göm (yüzen), alta ek olarak, bağlantı, kaldır.
   Widget _menu(BuildContext context) {
@@ -542,6 +558,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             widget.onCopyLink?.call();
           case 'transcribe':
             widget.onTranscribe?.call();
+          case 'saveAs':
+            widget.onSaveAs?.call();
           case 'remove':
             widget.onRemove?.call();
         }
@@ -565,6 +583,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
           PopupMenuItem(
             value: 'transcribe',
             child: item(Icons.subtitles_outlined, l10n.transcriptAction),
+          ),
+        if (widget.onSaveAs != null && !widget.media.isWebVideo)
+          PopupMenuItem(
+            value: 'saveAs',
+            child: item(Icons.save_alt_outlined, l10n.attachmentSaveAs),
           ),
         if (widget.onRemove != null) ...[
           const PopupMenuDivider(),

@@ -64,7 +64,7 @@ void main() {
       expect(image.placedOnPage(false).floatsOnPage, isFalse);
     });
 
-    test('metin ve ses üste sabitlenir, sunum sabitlenmez', () {
+    test('metin, ses ve sunum üste sabitlenir', () {
       expect(_text.copyWith(pinHeight: 200).isPinnedTop, isTrue);
       expect(_audio.copyWith(pinHeight: 104).isPinnedTop, isTrue);
       // Sabitken sayfada yüzmez (ikisi birden olmaz).
@@ -78,7 +78,10 @@ void main() {
         fileName: 's.pptx',
         mimeType: 'application/vnd.ms-powerpoint',
       );
-      expect(slide.copyWith(pinHeight: 200).isPinnedTop, isFalse);
+      // 6. tur (kullanıcı isteği: "sunum gibi diğer tipteki dosyalarda
+      // gömülü, Sabit, Balonlu seçeneklerinin hepsi olmalı"): sunum da
+      // sabitlenir (bkz. SlidePageBox).
+      expect(slide.copyWith(pinHeight: 200).isPinnedTop, isTrue);
     });
 
     test('metin özeti kararlı ve kayıtta taşınır', () {

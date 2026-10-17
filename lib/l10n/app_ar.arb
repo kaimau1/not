@@ -1036,5 +1036,10 @@
   "attachmentsUploadingCount": "جارٍ رفع {count} مرفقات",
   "sharedNoteNew": "جديد",
   "sharedNoteUpdatedBy": "حدّثه {name}",
-  "sharedMarkAllRead": "تعليم الكل كمقروء"
+  "sharedMarkAllRead": "تعليم الكل كمقروء",
+  "attachmentSaveAs": "حفظ باسم",
+  "attachmentSavedAs": "تم حفظ {name}",
+  "attachmentSaveAsFailed": "تعذّر حفظ الملف",
+  "sharedHubTitle": "المستلمة والمشتركة",
+  "sharedHubInbox": "المستلمة"
 }

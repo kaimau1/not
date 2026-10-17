@@ -1036,5 +1036,10 @@
   "attachmentsUploadingCount": "{count} अटैचमेंट अपलोड हो रहे हैं",
   "sharedNoteNew": "नया",
   "sharedNoteUpdatedBy": "{name} ने अपडेट किया",
-  "sharedMarkAllRead": "सभी को पढ़ा हुआ मानें"
+  "sharedMarkAllRead": "सभी को पढ़ा हुआ मानें",
+  "attachmentSaveAs": "इस रूप में सहेजें",
+  "attachmentSavedAs": "{name} सहेजा गया",
+  "attachmentSaveAsFailed": "फ़ाइल सहेजी नहीं जा सकी",
+  "sharedHubTitle": "प्राप्त और साझा",
+  "sharedHubInbox": "प्राप्त"
 }

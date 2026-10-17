@@ -5067,4 +5067,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sharedMarkAllRead => '全部标为已读';
+
+  @override
+  String get attachmentSaveAs => '另存为';
+
+  @override
+  String attachmentSavedAs(String name) {
+    return '已保存 $name';
+  }
+
+  @override
+  String get attachmentSaveAsFailed => '无法保存文件';
+
+  @override
+  String get sharedHubTitle => '收到与共享';
+
+  @override
+  String get sharedHubInbox => '收到';
 }

@@ -5100,4 +5100,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get sharedMarkAllRead => '모두 읽음으로 표시';
+
+  @override
+  String get attachmentSaveAs => '다른 이름으로 저장';
+
+  @override
+  String attachmentSavedAs(String name) {
+    return '$name 저장됨';
+  }
+
+  @override
+  String get attachmentSaveAsFailed => '파일을 저장할 수 없습니다';
+
+  @override
+  String get sharedHubTitle => '받은 노트 및 공유';
+
+  @override
+  String get sharedHubInbox => '받은 노트';
 }

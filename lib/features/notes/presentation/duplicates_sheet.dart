@@ -6,6 +6,7 @@ import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import 'notes_providers.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 
 /// Kopya notlar levhası — Yapay Zeka sayfasındaki "Kopyaları temizle".
 ///
@@ -108,7 +109,7 @@ class _DuplicatesSheet extends ConsumerWidget {
                   ScaffoldMessenger.of(context)
                     ..hideCurrentSnackBar()
                     ..showSnackBar(
-                      SnackBar(
+                      timedSnackBar(
                         content: Text(l10n.duplicatesDone(ids.length)),
                         // Toplu silmede yanlış eşleşme en pahalı hata:
                         // çöpten tek tek çıkarmak yerine tek dokunuş.

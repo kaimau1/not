@@ -27,6 +27,8 @@ import '../viewers/youtube_viewer.dart';
 import 'image_layout.dart';
 import 'audio_card_box.dart';
 import 'pdf_page_box.dart';
+import '../viewers/slide_viewer_screen.dart';
+import 'slide_page_box.dart';
 import 'text_page_box.dart';
 import 'text_wrap.dart';
 import 'video_hub_scope.dart';
@@ -1109,7 +1111,11 @@ class _ImageTools extends StatelessWidget {
     this.viewSwitch,
     this.copyIsLink = false,
     this.onOpenExternal,
+    this.onSaveAs,
   });
+
+  /// EKİ FARKLI KAYDET (2026-10-17): dosya kullanıcının seçtiği yere.
+  final VoidCallback? onSaveAs;
 
   /// Üst satırdaki görünüm anahtarı (Sabit / Yüzen / Balonlu).
   final Widget? viewSwitch;
@@ -1184,7 +1190,8 @@ class _ImageTools extends StatelessWidget {
             onDetach != null ||
             onVideoToNote != null ||
             onTranscribe != null ||
-            onOpenExternal != null)
+            onOpenExternal != null ||
+            onSaveAs != null)
           PopupMenuButton<String>(
             tooltip: l10n.more,
             icon: const Icon(Icons.more_vert, size: 20),
@@ -1204,6 +1211,8 @@ class _ImageTools extends StatelessWidget {
                   onTranscribe?.call();
                 case 'openExternal':
                   onOpenExternal?.call();
+                case 'saveAs':
+                  onSaveAs?.call();
               }
             },
             itemBuilder: (context) => [
@@ -1275,6 +1284,16 @@ class _ImageTools extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.checklist),
                     title: Text(l10n.selectImages),
+                  ),
+                ),
+              if (onSaveAs != null)
+                PopupMenuItem(
+                  value: 'saveAs',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.save_alt_outlined),
+                    title: Text(l10n.attachmentSaveAs),
                   ),
                 ),
               if (onDetach != null)
@@ -1443,6 +1462,7 @@ class NotePageCanvas extends StatefulWidget {
     this.onDetach,
     this.onVideoToNote,
     this.onTranscribe,
+    this.onSaveAs,
     this.onPinTop,
     this.onPinHover,
     this.onViewChange,
@@ -1531,6 +1551,9 @@ class NotePageCanvas extends StatefulWidget {
 
   /// Görselin/videonun transkripti (bkz. `TranscriptScreen`); PDF'te yok.
   final ValueChanged<Attachment>? onTranscribe;
+
+  /// Eki FARKLI KAYDET (dosyası olan her tür; YouTube bağlantısında yok).
+  final ValueChanged<Attachment>? onSaveAs;
 
   /// **ÜSTE SABİTLE** (kullanıcı isteği 2026-10-11: "üstte video/resim, altta
   /// not — görseli sürükleyerek"): basılı tutup sürüklenen görsel ekranın
@@ -2105,6 +2128,15 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       );
       return;
     }
+    if (img.kind == AttachmentKind.slide) {
+      Navigator.of(context).push(
+        MediaRoute<void>(
+          builder: (_) =>
+              SlideViewerScreen(attachment: img, onChanged: widget.onChanged),
+        ),
+      );
+      return;
+    }
     openImageViewer(
       context,
       img,
@@ -2151,6 +2183,14 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                 _deselect();
                 widget.onDetach!(a);
               },
+      );
+    }
+    // SAYFAYA GÖMÜLÜ SUNUM (2026-10-17): slaytı çevrilebilen kutu.
+    if (a.kind == AttachmentKind.slide) {
+      return SlidePageBox(
+        attachment: a,
+        onChanged: widget.onChanged,
+        swipeToTurn: fit == BoxFit.cover,
       );
     }
     return NoteMediaBox(
@@ -3032,6 +3072,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                 widget.onViewChange!(img, view);
               },
             ),
+      onSaveAs: widget.onSaveAs == null || img.isWebVideo
+          ? null
+          : () => widget.onSaveAs!(img),
       onDetach: widget.onDetach == null
           ? null
           : () {

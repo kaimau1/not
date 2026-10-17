@@ -45,6 +45,7 @@ import '../../../../core/utils/youtube.dart';
 import '../../../../core/widgets/customizable.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
+import '../../data/attachment_save.dart';
 import '../../../inbox/presentation/send_note_sheet.dart';
 import '../../../ai/data/ai_gate.dart';
 import '../../../ai/data/gemini_service.dart';
@@ -1591,6 +1592,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               width: kAudioBoxWidth,
               height: kAudioBoxHeight,
             ),
+            // Sunum 16:9 başlar; kutu ilk slaydı açınca gerçek oranı yazar
+            // (bkz. SlidePageBox).
+            AttachmentKind.slide => placed.copyWith(width: 1600, height: 900),
             _ => placed,
           };
     // PDF kutusu GENİŞ başlar: 0,32 genişlikte bir sayfada yazı okunmuyor,
@@ -1599,7 +1603,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // ses kartı da düğmeleri sığacak kadar geniş başlar.
     final width = switch (image.kind) {
       AttachmentKind.pdf => 0.6,
-      AttachmentKind.text || AttachmentKind.audio => 0.8,
+      AttachmentKind.text ||
+      AttachmentKind.audio ||
+      AttachmentKind.slide => 0.8,
       _ => 0.32,
     };
     final pageWidth = _pageBox()?.size.width ?? 0;
@@ -3262,6 +3268,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onDetach: (a) => _setImageAsFile(a, true),
       onVideoToNote: _videoToNote,
       onTranscribe: _openTranscript,
+      onSaveAs: (a) => unawaited(AttachmentSaveAs.run(context, ref, a)),
       onPinTop: _pinMediaTop,
       onPinHover: _setPinHover,
       onViewChange: widget.readOnly
@@ -4017,7 +4024,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
+        timedSnackBar(
           content: Text(message),
           action: SnackBarAction(label: l10n.undo, onPressed: _undo),
         ),
@@ -4956,7 +4963,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (a.isPinnedTop) return AttachmentView.pinned;
     // Belge notunda (balonlu) her ek şeritte durur; klasikte şeritteki ek
     // "Ek" kipindedir.
-    if (note.type.isPageNoteType || a.offPage || a.kind == AttachmentKind.slide) {
+    if (note.type.isPageNoteType || a.offPage) {
       return AttachmentView.attached;
     }
     return AttachmentView.floating;
@@ -5058,7 +5065,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     var next = latest.pinHeight > 0
         ? latest.copyWith(pinHeight: -latest.pinHeight)
         : latest;
-    if (next.offPage && next.kind != AttachmentKind.slide) {
+    if (next.offPage) {
       final moved = next.placedOnPage(true);
       next = moved.x != null || moved.pageY != null
           ? moved
@@ -5382,7 +5389,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     ScaffoldMessenger.of(context)
                       ..hideCurrentSnackBar()
                       ..showSnackBar(
-                        SnackBar(
+                        timedSnackBar(
                           content: Text(l10n.attachmentRemoved),
                           action: SnackBarAction(
                             label: l10n.undo,
@@ -5395,6 +5402,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             onTranscribe: Transcripts.canTranscribe(pinned)
                 ? () => unawaited(_openTranscript(pinned))
                 : null,
+            onSaveAs: pinned.isWebVideo
+                ? null
+                : () => unawaited(AttachmentSaveAs.run(context, ref, pinned)),
             onDetach: widget.readOnly || pinned.isWebVideo
                 ? null
                 : () {
@@ -8091,6 +8101,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   onToggle: () => ref
                       .read(attachmentsExpandedProvider.notifier)
                       .toggle(),
+                  // Alt çubuktaki ataç kişiselleştirmede gizlendiyse şerit
+                  // kapalıyken kendi ince tutamağını gösterir — açmanın
+                  // yolu hiç kaybolmasın.
+                  collapsedHandle: !Personalize.current.shows(
+                    UiItem.barAttachments,
+                  ),
                 ),
                 // BAĞLAMA KİPİ şeridi: hangi dosyanın bağlanmayı
                 // beklediğini söyler ve seçilen yazıya bağlar.
@@ -8334,6 +8350,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             id: UiItem.barAdd,
                             child: _addToolButton(l10n),
                           ),
+                        // EKLER Ekle'nin hemen YANINDA (kullanıcı bulgusu
+                        // 2026-10-17: "alttaki ek alanı göster gizle
+                        // yapılamıyor"): kapsülün SONUNDAYKEN dar ekranda
+                        // yatay kaydırmanın dışında kalıyor, görünmüyordu.
+                        if (showAttachments)
+                          Customizable(
+                            id: UiItem.barAttachments,
+                            child: _attachmentsToggle(
+                              l10n,
+                              fileAttachments.length,
+                            ),
+                          ),
                         if (showSelect)
                           Customizable(
                             id: UiItem.barSelect,
@@ -8360,14 +8388,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                               icon: Icons.share_outlined,
                               label: l10n.share,
                               onTap: () => unawaited(_share()),
-                            ),
-                          ),
-                        if (showAttachments)
-                          Customizable(
-                            id: UiItem.barAttachments,
-                            child: _attachmentsToggle(
-                              l10n,
-                              fileAttachments.length,
                             ),
                           ),
                       ];

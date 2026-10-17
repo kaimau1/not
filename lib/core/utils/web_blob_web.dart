@@ -19,3 +19,16 @@ String createBlobUrl(List<int> bytes, String mimeType) {
   );
   return web.URL.createObjectURL(blob);
 }
+
+/// Baytları tarayıcının İNDİRME akışıyla [fileName] adıyla kaydettirir
+/// (ekin "Farklı kaydet"i — bkz. attachment_save.dart).
+void downloadBytes(List<int> bytes, String mimeType, String fileName) {
+  final url = createBlobUrl(bytes, mimeType);
+  final anchor = web.HTMLAnchorElement()
+    ..href = url
+    ..download = fileName
+    ..style.display = 'none';
+  web.document.body?.append(anchor);
+  anchor.click();
+  anchor.remove();
+}

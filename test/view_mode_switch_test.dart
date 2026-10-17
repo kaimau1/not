@@ -105,7 +105,12 @@ void main() {
       fileName: 's.pptx',
       mimeType: 'application/vnd.ms-powerpoint',
     );
+    // SUNUM 2026-10-17'de dört kipe katıldı (kullanıcı isteği: "sunum
+    // gibi diğer tipteki dosyalarda gömülü, Sabit, Balonlu, Ek seçeneklerinin
+    // hepsi olmalı").
     expect(availableViews(slide), {
+      AttachmentView.pinned,
+      AttachmentView.floating,
       AttachmentView.bubbles,
       AttachmentView.attached,
     });

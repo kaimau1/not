@@ -9359,6 +9359,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tümünü okundu say'**
   String get sharedMarkAllRead;
+
+  /// No description provided for @attachmentSaveAs.
+  ///
+  /// In tr, this message translates to:
+  /// **'Farklı kaydet'**
+  String get attachmentSaveAs;
+
+  /// No description provided for @attachmentSavedAs.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} kaydedildi'**
+  String attachmentSavedAs(String name);
+
+  /// No description provided for @attachmentSaveAsFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya kaydedilemedi'**
+  String get attachmentSaveAsFailed;
+
+  /// No description provided for @sharedHubTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelen ve paylaşılanlar'**
+  String get sharedHubTitle;
+
+  /// No description provided for @sharedHubInbox.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelen'**
+  String get sharedHubInbox;
 }
 
 class _AppLocalizationsDelegate

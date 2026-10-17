@@ -5180,4 +5180,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get sharedMarkAllRead => 'Tümünü okundu say';
+
+  @override
+  String get attachmentSaveAs => 'Farklı kaydet';
+
+  @override
+  String attachmentSavedAs(String name) {
+    return '$name kaydedildi';
+  }
+
+  @override
+  String get attachmentSaveAsFailed => 'Dosya kaydedilemedi';
+
+  @override
+  String get sharedHubTitle => 'Gelen ve paylaşılanlar';
+
+  @override
+  String get sharedHubInbox => 'Gelen';
 }

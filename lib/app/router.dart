@@ -11,7 +11,7 @@ import '../features/ai/presentation/chat_screen.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/folders/presentation/folders_screen.dart';
-import '../features/inbox/presentation/inbox_screen.dart';
+import '../features/inbox/presentation/shared_hub_screen.dart';
 import '../features/notes/data/notes_repository.dart';
 import '../features/notes/domain/note_type.dart';
 import '../features/notes/presentation/archive_note_screen.dart';
@@ -243,7 +243,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/inbox',
-            builder: (context, state) => const InboxScreen(),
+            // Gelen ve paylaşılanlar TEK bölümde (2026-10-17).
+            builder: (context, state) => const SharedHubScreen(),
           ),
         ],
       ),

@@ -1036,5 +1036,10 @@
   "attachmentsUploadingCount": "{count} bijlagen worden geüpload",
   "sharedNoteNew": "Nieuw",
   "sharedNoteUpdatedBy": "Bijgewerkt door {name}",
-  "sharedMarkAllRead": "Alles als gelezen markeren"
+  "sharedMarkAllRead": "Alles als gelezen markeren",
+  "attachmentSaveAs": "Opslaan als",
+  "attachmentSavedAs": "{name} opgeslagen",
+  "attachmentSaveAsFailed": "Bestand kon niet worden opgeslagen",
+  "sharedHubTitle": "Ontvangen en gedeeld",
+  "sharedHubInbox": "Ontvangen"
 }

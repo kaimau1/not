@@ -19,55 +19,103 @@ void showUndoSnackBar(
   required VoidCallback onUndo,
   Duration duration = const Duration(seconds: 4),
 }) {
-  final scheme = Theme.of(context).colorScheme;
   final messenger =
       rootScaffoldMessengerKey.currentState ?? ScaffoldMessenger.of(context);
   messenger
     ..hideCurrentSnackBar()
     ..showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        // Sağda mikrofon/"+" düğmeleri için yer bırakılır: bildirim onların
-        // ÜSTÜne çıkmak yerine SOLUNDA, ekranın dibinde durur. (width ile
-        // margin birlikte kullanılamaz; konumu margin belirler.)
-        margin: const EdgeInsetsDirectional.only(start: 12, end: 88, bottom: 12),
-        // ScaffoldMessenger'ın kendi zamanlayıcısı bu süre dolunca bildirimi
-        // kapatır — sayfa değişse de sayaç bu süreden bağımsız sıfırlanmaz.
+      timedSnackBar(
+        content: Text(message),
         duration: duration,
-        content: Row(
+        action: SnackBarAction(label: undoLabel, onPressed: onUndo),
+        // Sağda mikrofon/"+" ve "+"nın solundaki Yapay zekâ düğmesi için yer
+        // bırakılır: bildirim onların ÜSTÜne çıkmak yerine SOLUNDA durur.
+        margin: const EdgeInsetsDirectional.only(
+          start: 12,
+          end: 144,
+          bottom: 12,
+        ),
+      ),
+    );
+}
+
+/// EYLEMLİ (geri al, notu aç…) bildirim — **GERİ SAYIMLA KENDİLİĞİNDEN
+/// KAPANIR** ve kalan süre bildirimin DİBİNDE incelen bir şeritte akar.
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-10-17: "bu tür 'metin kaldırıldı' gibi
+/// bildirimler sürekli duruyor, bir geri sayımla kapansın"): bu Flutter
+/// sürümünde aksiyonlu `SnackBar`ın varsayılanı `persist: true` —
+/// ScaffoldMessenger zamanlayıcı KURMUYOR, bildirim elle kapatılana dek
+/// ekranda kalıyordu (editörden çıkınca ana ekranda bile). Burada
+/// `persist: false` + şeridin kendi bitişi kapatır (messenger zamanlayıcısı
+/// erişilebilirlik kipinde hiç başlamayabiliyor). YENİ eylemli bildirim bu
+/// yardımcıyla kurulmalı.
+SnackBar timedSnackBar({
+  required Widget content,
+  SnackBarAction? action,
+  Duration duration = const Duration(seconds: 5),
+  EdgeInsetsGeometry? margin,
+}) {
+  return SnackBar(
+    behavior: margin == null ? null : SnackBarBehavior.floating,
+    margin: margin,
+    duration: duration,
+    persist: false,
+    padding: EdgeInsets.zero,
+    clipBehavior: Clip.antiAlias,
+    // Eylem düğmesi İÇERİKTE: şerit bildirimin TAM genişliğinde aksın
+    // (SnackBar.action içerikle yan yana ayrı bir sütun açıyor).
+    content: Builder(
+      builder: (context) {
+        final scheme = Theme.of(context).colorScheme;
+        final messenger = ScaffoldMessenger.of(context);
+        return Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(child: Text(message)),
-            const SizedBox(width: 12),
-            // Kalan süre: "Geri al"ın hemen yanında küçük dairesel gösterge.
-            // Kapatmayı da BU gösterge yapar: ScaffoldMessenger'ın kendi
-            // zamanlayıcısı bazı durumlarda (ör. erişilebilirlik modu)
-            // hiç başlamıyor ve bildirim ekranda kalıyordu.
+            Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(
+                16,
+                action == null ? 14 : 4,
+                action == null ? 16 : 6,
+                action == null ? 12 : 2,
+              ),
+              child: Row(
+                children: [
+                  Expanded(child: content),
+                  if (action != null)
+                    TextButton(
+                      key: const ValueKey('snack-action'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: scheme.inversePrimary,
+                      ),
+                      onPressed: () {
+                        messenger.hideCurrentSnackBar(
+                          reason: SnackBarClosedReason.action,
+                        );
+                        action.onPressed();
+                      },
+                      child: Text(action.label),
+                    ),
+                ],
+              ),
+            ),
             TweenAnimationBuilder<double>(
+              key: const ValueKey('snack-countdown'),
               tween: Tween<double>(begin: 1, end: 0),
               duration: duration,
               onEnd: messenger.hideCurrentSnackBar,
-              builder: (context, value, _) => SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  value: value,
-                  strokeWidth: 2,
-                  color: scheme.inversePrimary,
-                  backgroundColor: scheme.inversePrimary.withValues(
-                    alpha: 0.25,
-                  ),
+              builder: (context, value, _) => Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: FractionallySizedBox(
+                  widthFactor: value,
+                  child: Container(height: 3, color: scheme.inversePrimary),
                 ),
               ),
             ),
           ],
-        ),
-        // TUZAK: bu Flutter sürümünde aksiyonlu SnackBar varsayılan olarak
-        // `persist: true` — messenger zamanlayıcısı hiç kurulmuyor. Buradaki
-        // dairesel gösterge kapatmayı zaten kendisi yapıyor ama persist'i
-        // yine de kapatıyoruz ki iki mekanizma da aynı şeyi söylesin.
-        persist: false,
-        action: SnackBarAction(label: undoLabel, onPressed: onUndo),
-      ),
-    );
+        );
+      },
+    ),
+  );
 }

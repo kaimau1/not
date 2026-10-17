@@ -345,6 +345,29 @@ class MainActivity : FlutterFragmentActivity() {
                     // "Dosyaları Dosya Okuyucu ile seç" satırı yalnız o zaman
                     // görünür.
                     "fileAppInstalled" -> result.success(fileAppResolves())
+                    // EKİ FARKLI KAYDET (kullanıcı isteği 2026-10-17): kullanıcı
+                    // yeri ve adı sistemin kaydet penceresinde seçer; dosya
+                    // oraya kopyalanır. true = kaydedildi, false = iptal.
+                    "saveDocument" -> {
+                        val path = call.argument<String>("path")
+                        if (saveResult != null || path == null) {
+                            result.error("busy", "Kaydetme penceresi zaten açık", null)
+                        } else {
+                            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+                                .addCategory(Intent.CATEGORY_OPENABLE)
+                                .setType(call.argument<String>("mimeType") ?: "*/*")
+                                .putExtra(Intent.EXTRA_TITLE, call.argument<String>("name") ?: "ek")
+                            saveResult = result
+                            saveSource = path
+                            try {
+                                startActivityForResult(intent, saveRequestCode)
+                            } catch (e: Exception) {
+                                saveResult = null
+                                saveSource = null
+                                result.error("unavailable", "kaydetme penceresi yok", null)
+                            }
+                        }
+                    }
                     // Videonun KAPAK KARESİ (balonlu görüntülü not): çekilen
                     // videodan tek bir kare çıkarılır ve o karenin üzerine
                     // balon/vurgu konabilen belge sayfası kurulur.
@@ -532,6 +555,12 @@ class MainActivity : FlutterFragmentActivity() {
     private var pickResult: MethodChannel.Result? = null
     private val pickRequestCode = 4713
 
+    // EKİ FARKLI KAYDET: sistemin "kaydet" penceresi (ACTION_CREATE_DOCUMENT)
+    // açıkken bekleyen yanıt ve kopyalanacak kaynak dosya.
+    private var saveResult: MethodChannel.Result? = null
+    private var saveSource: String? = null
+    private val saveRequestCode = 4714
+
     /// Açık seçimin taban niyeti ve başlığı ("Diğer kaynaklar" dönüşünde
     /// aynı istekle sistem seçicisi açılsın diye saklanır).
     private var pickIntent: Intent? = null
@@ -549,6 +578,10 @@ class MainActivity : FlutterFragmentActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == pickRequestCode) {
             onPickResult(resultCode, data)
+            return
+        }
+        if (requestCode == saveRequestCode) {
+            onSaveResult(resultCode, data)
             return
         }
         if (requestCode != voiceInputRequestCode) return
@@ -697,6 +730,31 @@ class MainActivity : FlutterFragmentActivity() {
     /// riski doğuyordu. Artık medya iş parçacığında; sonuç ana iş parçacığına
     /// döner. URI okuma izni etkinlik ömrü boyunca geçerli, arka planda
     /// okumak güvenli.
+    private fun onSaveResult(resultCode: Int, data: Intent?) {
+        val pending = saveResult ?: return
+        val source = saveSource
+        saveResult = null
+        saveSource = null
+        val uri = data?.data
+        if (resultCode != RESULT_OK || uri == null || source == null) {
+            pending.success(false)
+            return
+        }
+        pickExecutor.execute {
+            val ok = try {
+                contentResolver.openOutputStream(uri, "w")?.use { out ->
+                    java.io.File(source).inputStream().use { inp -> inp.copyTo(out, 256 * 1024) }
+                } != null
+            } catch (e: Exception) {
+                Log.d(logTag, "farkli kaydet yazilamadi: $e")
+                false
+            }
+            mainHandler.post {
+                if (ok) pending.success(true) else pending.error("write", "yazılamadı", null)
+            }
+        }
+    }
+
     private fun onPickResult(resultCode: Int, data: Intent?) {
         val pending = pickResult ?: return
         // Dosya Okuyucu'nun "Diğer kaynaklar" düğmesi: aynı istekle sistem

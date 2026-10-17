@@ -1036,5 +1036,10 @@
   "attachmentsUploadingCount": "{count} Anhänge werden hochgeladen",
   "sharedNoteNew": "Neu",
   "sharedNoteUpdatedBy": "Von {name} aktualisiert",
-  "sharedMarkAllRead": "Alle als gelesen markieren"
+  "sharedMarkAllRead": "Alle als gelesen markieren",
+  "attachmentSaveAs": "Speichern unter",
+  "attachmentSavedAs": "{name} gespeichert",
+  "attachmentSaveAsFailed": "Datei konnte nicht gespeichert werden",
+  "sharedHubTitle": "Empfangen & geteilt",
+  "sharedHubInbox": "Empfangen"
 }

@@ -5094,4 +5094,21 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sharedMarkAllRead => 'すべて既読にする';
+
+  @override
+  String get attachmentSaveAs => '名前を付けて保存';
+
+  @override
+  String attachmentSavedAs(String name) {
+    return '$name を保存しました';
+  }
+
+  @override
+  String get attachmentSaveAsFailed => 'ファイルを保存できませんでした';
+
+  @override
+  String get sharedHubTitle => '受信・共有';
+
+  @override
+  String get sharedHubInbox => '受信';
 }

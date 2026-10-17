@@ -11,6 +11,7 @@ import '../domain/note_templates.dart';
 import '../domain/note_type.dart';
 import 'template_editor_screen.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 
 /// **ŞABLON GALERİSİ + ÖNİZLEME/DÜZENLEME** (bkz. [NoteTemplate]).
 ///
@@ -498,7 +499,7 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
       messenger
         ?..hideCurrentSnackBar()
         ..showSnackBar(
-          SnackBar(
+          timedSnackBar(
             content: Text(l10n.templateDeleted(template.name)),
             action: SnackBarAction(
               label: l10n.undo,
