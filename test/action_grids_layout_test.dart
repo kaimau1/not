@@ -41,7 +41,9 @@ void main() {
 
     // Başlık + tüm işlemler görünür (eskiden "Sil" kaydırma gerektiriyordu).
     expect(find.text('Kitaplık planı'), findsOneWidget);
-    for (final label in ['Sabitle', 'Paylaş', 'Kopyala', 'Seç', 'Sil']) {
+    // Kopyala/Arkadaşa gönder/Dışa aktar Paylaş levhasında (2026-10-17).
+    expect(find.text('Arkadaşa gönder'), findsNothing);
+    for (final label in ['Sabitle', 'Paylaş', 'Notu çoğalt', 'Seç', 'Sil']) {
       expect(find.text(label), findsOneWidget, reason: '$label görünmeli');
     }
 

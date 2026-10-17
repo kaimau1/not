@@ -1,30 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-<title>Notlar — adaptive on plan katmani (i2, ortak simge dili)</title>
-<desc>Android adaptive icon on plani. Zemin saydam; zemin rengi pubspec'teki
-adaptive_icon_background hex'inden (#FFFFFF) ve values/colors.xml'deki
-ic_launcher_background'dan gelir.
-
-BOYUT (ortak dilin 3. maddesi): isaretin uzun kenari, EKRANA BASILDIGINDA
-66dp / 108dp tuval olmali — gorunur 72dp'lik alanin %92'si. Ama ic_launcher.xml
-on plani android:inset="16%" ile sariyor, yani bu PNG %68'e kuculerek basiliyor.
-Bu yuzden burada ONCEDEN TELAFI edilir:
-    olcek = (66/108 * 1024) / 0.68 / 67 = 13.7352
-(kaynak isaret kutusu 50x67, merkez 38/40.5). Basilan yukseklik 920 px = 97,0dp,
-inset sonrasi 66,0dp. Inset'i XML'den silmeye kalkma: flutter_launcher_icons
-her calismada dosyayi bastan yaziyor ve inset'i geri koyuyor — telafi burada
-durursa arac calissa da olcu bozulmaz.
-
-NEDEN 66: maskeler 72dp'lik alana uygulanir ama hepsi KARE degil. Bu belge
-oraniyla (50x67, kose 5) MIUI'nin squircle maskesine sigan en buyuk olcu
-67,8dp; 66 secildi ki pay kalsin. Daire maskesi (Pixel) bu olcude koseleri
-hafifce tirasliyor — sigmasi icin 60,6dp'ye inmek gerekirdi, yani bilincli
-bir odunc (hedef cihaz MIUI, ucu simge de ayni kurali kullaniyor).
-
-Kat ucgeni ve satirlar OYULMUS degil, zemin rengiyle BOYANMISTIR; zemin rengi
-degisirse o iki dolgu da guncellenmeli.</desc>
-<g transform="translate(512,512) scale(13.7352) translate(-38,-40.5)">
-<path d="M13 7h33.5L63 23.5V69a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5V12a5 5 0 0 1 5-5z" fill="#7D5703"/>
-<path d="M46.5 7L63 23.5H50.5a4 4 0 0 1-4-4V7z" fill="#FFFFFF"/>
-<path d="M25 35h26M25 47h26M25 59h15" stroke="#FFFFFF" stroke-width="5.4" stroke-linecap="round"/>
-</g>
-</svg>
+<title>Notlar — adaptive on plan (i3). ic_launcher.xml bunu %16 inset ile sarar; olcek 13.0 bunu telafi eder.</title>
+<defs><linearGradient id="gold" x1="13" y1="7" x2="63" y2="74" gradientUnits="userSpaceOnUse">
+<stop offset="0" stop-color="#FBEBC2"/><stop offset=".45" stop-color="#E6BF6E"/><stop offset="1" stop-color="#A9761F"/></linearGradient>
+<linearGradient id="fold" x1="46.5" y1="7" x2="58" y2="20" gradientUnits="userSpaceOnUse">
+<stop offset="0" stop-color="#FFF7E0"/><stop offset="1" stop-color="#E9C77C"/></linearGradient>
+<radialGradient id="bg" cx="512" cy="430" r="720" gradientUnits="userSpaceOnUse">
+<stop offset="0" stop-color="#3A2C1B"/><stop offset=".55" stop-color="#211912"/><stop offset="1" stop-color="#0E0B08"/></radialGradient></defs><g transform="translate(512,512) scale(13.0) translate(-38,-40.5)">
+<path d="M14.6 9.2h33.5L64.6 25.7V71.2a5 5 0 0 1-5 5H19.6a5 5 0 0 1-5-5V14.2a5 5 0 0 1 5-5z" fill="#000" opacity=".35"/>
+<path d="M13 7h33.5L63 23.5V69a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5V12a5 5 0 0 1 5-5z" fill="url(#gold)"/>
+<path d="M46.5 7L63 23.5H50.5a4 4 0 0 1-4-4V7z" fill="url(#fold)"/>
+<path d="M46.5 7v12.5a4 4 0 0 0 4 4H63" fill="none" stroke="#8A5F17" stroke-width=".8" opacity=".55"/>
+<path d="M25 35h26M25 47h26M25 59h13" stroke="#17120C" stroke-width="4.6" stroke-linecap="round"/>
+<path d="M50.5 52.4C52.15 57.35 52.15 57.35 57.1 59C52.15 60.65 52.15 60.65 50.5 65.6C48.85 60.65 48.85 60.65 43.9 59C48.85 57.35 48.85 57.35 50.5 52.4z" fill="#17120C"/>
+</g></svg>

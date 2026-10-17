@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<title>Notlar — adaptive zemin (i3)</title><defs><linearGradient id="gold" x1="13" y1="7" x2="63" y2="74" gradientUnits="userSpaceOnUse">
+<stop offset="0" stop-color="#FBEBC2"/><stop offset=".45" stop-color="#E6BF6E"/><stop offset="1" stop-color="#A9761F"/></linearGradient>
+<linearGradient id="fold" x1="46.5" y1="7" x2="58" y2="20" gradientUnits="userSpaceOnUse">
+<stop offset="0" stop-color="#FFF7E0"/><stop offset="1" stop-color="#E9C77C"/></linearGradient>
+<radialGradient id="bg" cx="512" cy="430" r="720" gradientUnits="userSpaceOnUse">
+<stop offset="0" stop-color="#3A2C1B"/><stop offset=".55" stop-color="#211912"/><stop offset="1" stop-color="#0E0B08"/></radialGradient></defs><rect width="1024" height="1024" fill="url(#bg)"/></svg>

@@ -4618,3 +4618,31 @@ ekranın %34'ü, açıkken sık kullanılanlar satırı yerine ince "Daha az".
 ### Ortam
 Flutter 3.44.6 `/opt/flutter` (oturumda indirildi). analyze temiz, 1237/1237
 test (+9 `requests_2026_10_16_d_test.dart`). Cihazda GÖRÜLMEDİ — APK CI'da.
+
+## 2026-10-17 — elit simge (i3) + menü toparlaması
+
+### Simge i3
+Kullanıcı: "uygulama simgemizi daha elit kaliteli bir şey yap". i2'nin "beyaz
+zemin, tek renk — Dosya Okuyucu/Ezan Vakti ile ortak simge dili" kuralı BU
+uygulamada bırakıldı. Yeni: koyu mürekkep radyal zemin (#3A2C1B→#0E0B08),
+altın gradyanlı katlanmış sayfa, satırlar + son satırın yanında 4 köşeli
+yapay zekâ yıldızı zeminden OYUK. Kaynak `tool/gen_icon.py` → assets/icon/src
+SVG'leri → Chromium headless ile PNG. **TUZAK**: headless Chromium
+`--window-size=1024,1024`'te alt ~90 px'i KESİYOR; pencereyi 1324 yüksek açıp
+üst 1024'ü kırp. Adaptive zemin artık PNG (`adaptive_icon_background:
+assets/icon/icon_background.png` → drawable-*/ic_launcher_background.png);
+`flutter_launcher_icons` sonrası `<monochrome>` bloğu yine elle geri eklendi.
+Web ikonları ve favicon da yenilendi.
+
+### Menü toparlaması (tekrarlar)
+Kural: **aynı işin tek kapısı.** Paylaş levhası (share_sheet) zaten Kopyala,
+Arkadaşa gönder, Dışa aktar, PDF/görsel, ortak notu içeriyor →
+* not ⋮ menüsünden "Kopyala" (hızlı satır), "Arkadaşa gönder", "Dışa aktar";
+* kart ⋮/basılı tut menüsünden "Arkadaşa gönder", "Kopyala", "Dışa aktar"
+  kalktı (switch dalları duruyor, zararsız).
+* Ana ekran ⋮ "Şablondan": yalnız "+" menüsünde Şablondan gizlenmişse.
+* Ayarlar: "Düzenleme modunu başlat" satırı (tepedeki kısayol kartının
+  aynısı) kalktı; "Hızlı not satırı" Görünüm'den Kişiselleştir alanına
+  taşındı (görünürlük tercihi). Kişiselleştir ekranındaki "zengin önizleme"
+  ve "liste maddeleri" anahtarları kalktı (Ayarlar → Görünüm'de tek yer).
+Kılavuz (tr/en) güncellendi.

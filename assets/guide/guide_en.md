@@ -22,7 +22,7 @@ Your notes appear as cards grouped by **TODAY / THIS WEEK / EARLIER**; pinned no
 - **Home screen background:** ⋮ → Home screen background for an image or pattern.
 - **Media on cards:** a pinned or single image/video shows as a cover at the top of the card; videos carry ▶, YouTube the red button. A bubbles note gets its document as the cover at the top of the card: the first page, the **PDF WITH BUBBLES** badge top left, the file name and bubble count at the bottom; voice recordings and other documents sit as rows at the bottom of the card.
 - The ⋮ at the top right opens a sheet: **Reminders, Archive, Bin, From template** on top; below them **Account and people** (account, contacts, incoming notes), **Home screen** (folder order, background, hidden folders) and **App** (settings, this guide).
-- **A card's ⋮ / long-press menu:** pin, star, share, send to a friend, select on top; then **Organize** (folder, background colour, frame), **Copy and export** (copy, duplicate, template, export), **Tools** (read aloud, statistics), **Protection and storage** (archive, lock, sync); Delete at the bottom.
+- **A card's ⋮ / long-press menu:** pin, star, share, select on top; then **Organize** (folder, background colour, frame), **Copy and export** (duplicate, save as template), **Tools** (read aloud, statistics), **Protection and storage** (archive, lock, sync); Delete at the bottom.
 
 ## Creating notes {#create}
 The **+** button at the bottom right opens a short panel, read from your thumb upwards:
@@ -38,7 +38,7 @@ Bottom bar, left to right:
 - **🔍 — Search in note:** matches are highlighted as you type.
 - **Share.**
 - The coloured capsule on the right: **✦ AI** (see the AI section), the **assistant microphone** and the **dictate** microphone.
-Top bar: **undo / redo**, pin, add people (shared note) and the ⋮ menu. The ⋮ menu's top row has star, share, copy, search in note and the **calculator**; below are **Content** (convert to list/text, two columns, sort items, images to attachments, clear), **Copy and export** (send to a friend, duplicate, save as template, copy to archive notebook, export), **Tools** (read aloud, statistics, settings), **Protection and storage** (archive, lock, sync).
+Top bar: **undo / redo**, pin, add people (shared note) and the ⋮ menu. The ⋮ menu's top row has star, share, search in note and the **calculator**; below are **Content** (convert to list/text, two columns, sort items, images to attachments, clear), **Copy and export** (duplicate, save as template, copy to archive notebook), **Tools** (read aloud, statistics, settings), **Protection and storage** (archive, lock, sync). Copying, sending to a friend and exporting live in the **Share** sheet — not repeated in the menus.
 - In lists, long-press an item and drag to reorder; use "Select" to copy/delete several items.
 - The **+** next to the title: **New page**, alarm, location reminder, folder, tag and tag/title suggestions.
 
@@ -161,7 +161,7 @@ The **Share** button on the note screen: a preview of the text at the top with c
 - **More:** PDF/Word export with options (title, image position/size) and **PDF with bubbles** (bubbles and drawings printed into the PDF).
 Working together:
 - **Contacts:** add friends from ⋮ → Contacts.
-- **Send to a friend:** a copy of the note lands in their **Incoming notes**.
+- **Send to a friend** (in the Share sheet): a copy of the note lands in their **Incoming notes**.
 - **Shared note:** the add-people button in the top bar; you both edit the same note at the same time.
 - **Folder sharing:** with read / write permission; a shared folder has its own chat.
 From other apps: choose **Share → Notes** anywhere (text, link, image, PDF, slides, video). You choose whether to make a new note or add to an existing one.
