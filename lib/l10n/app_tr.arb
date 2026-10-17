@@ -2376,5 +2376,17 @@
     }
   },
   "transcriptPickTitle": "Metne dökülecek dosya",
-  "transcriptUnsupportedFile": "Bu dosya türü metne dökülemiyor (ses, video ya da görsel seç)."
+  "transcriptUnsupportedFile": "Bu dosya türü metne dökülemiyor (ses, video ya da görsel seç).",
+  "pickPdfTitle": "PDF seç",
+  "pickSlidesTitle": "Sunum seç",
+  "pickImagesTitle": "Görsel seç",
+  "pickDocumentTitle": "Belge seç",
+  "fileAppPickerTitle": "Dosyaları Dosya Okuyucu ile seç",
+  "fileAppPickerInfo": "Dosya eklerken doğrudan Dosya Okuyucu açılır ve yalnız istenen türün dosyaları (en yenisi üstte) listelenir. Kapalıyken uygulama seçimi sorulur.",
+  "viewModeAttached": "Ek",
+  "viewModeAttachedHint": "Ek olarak — alttaki ek şeridinde durur",
+  "textToBubblesPreparing": "Metin belgeye diziliyor…",
+  "attachmentActions": "Ek işlemleri",
+  "attachmentOpen": "Aç",
+  "attachmentViewTitle": "Nerede dursun?"
 }

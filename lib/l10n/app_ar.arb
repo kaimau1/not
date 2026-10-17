@@ -1018,5 +1018,17 @@
   "transcribeFileSubtitle": "اختر صوتًا أو فيديو أو صورة؛ يُكتب نصها في الملاحظة",
   "cardTranscriptCount": "{count, plural, =1{نص مفرغ} other{{count} نصوص مفرغة}}",
   "transcriptPickTitle": "الملف المراد تفريغه",
-  "transcriptUnsupportedFile": "لا يمكن تفريغ هذا النوع من الملفات (اختر صوتًا أو فيديو أو صورة)."
+  "transcriptUnsupportedFile": "لا يمكن تفريغ هذا النوع من الملفات (اختر صوتًا أو فيديو أو صورة).",
+  "pickPdfTitle": "اختر ملف PDF",
+  "pickSlidesTitle": "اختر عرضًا تقديميًا",
+  "pickImagesTitle": "اختر صورًا",
+  "pickDocumentTitle": "اختر مستندًا",
+  "fileAppPickerTitle": "اختيار الملفات عبر Dosya Okuyucu",
+  "fileAppPickerInfo": "عند إضافة ملف يُفتح Dosya Okuyucu مباشرةً ويعرض ملفات النوع المطلوب فقط (الأحدث أولًا). عند الإيقاف يُسأل عن التطبيق.",
+  "viewModeAttached": "مرفق",
+  "viewModeAttachedHint": "كمرفق — يبقى في الشريط السفلي",
+  "textToBubblesPreparing": "جارٍ تنسيق النص كمستند…",
+  "attachmentActions": "إجراءات المرفق",
+  "attachmentOpen": "فتح",
+  "attachmentViewTitle": "أين يوضع؟"
 }

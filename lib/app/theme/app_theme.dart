@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/utils/note_fonts.dart';
+import 'page_transitions.dart';
 
 /// Premium sade görünüm: tek tohum renk, ince kenarlıklar, gölgesiz yüzeyler,
 /// koyu temada siyaha yakın arka plan.
@@ -194,9 +195,13 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.all(Radius.circular(10)),
         ),
       ),
+      // EKRAN GEÇİŞLERİ iPhone gibi yandan kayar (bkz. page_transitions.dart);
+      // masaüstünde (fare, geniş pencere) solma kalır — Mac'te de pencere
+      // içi geçişler kaymaz.
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+          TargetPlatform.android: SmoothPageTransitionsBuilder(),
+          TargetPlatform.iOS: SmoothPageTransitionsBuilder(),
           TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
           TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
           TargetPlatform.macOS: FadeForwardsPageTransitionsBuilder(),

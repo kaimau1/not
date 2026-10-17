@@ -5139,4 +5139,41 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get transcriptUnsupportedFile =>
       'Jenis file ini tidak bisa ditranskripsikan (pilih audio, video, atau gambar).';
+
+  @override
+  String get pickPdfTitle => 'Pilih PDF';
+
+  @override
+  String get pickSlidesTitle => 'Pilih presentasi';
+
+  @override
+  String get pickImagesTitle => 'Pilih gambar';
+
+  @override
+  String get pickDocumentTitle => 'Pilih dokumen';
+
+  @override
+  String get fileAppPickerTitle => 'Pilih file dengan Dosya Okuyucu';
+
+  @override
+  String get fileAppPickerInfo =>
+      'Saat menambah file, Dosya Okuyucu langsung terbuka dan hanya menampilkan file jenis yang diminta (terbaru di atas). Jika mati, aplikasi akan ditanyakan.';
+
+  @override
+  String get viewModeAttached => 'Lampiran';
+
+  @override
+  String get viewModeAttachedHint => 'Sebagai lampiran — tetap di strip bawah';
+
+  @override
+  String get textToBubblesPreparing => 'Menata teks sebagai dokumen…';
+
+  @override
+  String get attachmentActions => 'Tindakan lampiran';
+
+  @override
+  String get attachmentOpen => 'Buka';
+
+  @override
+  String get attachmentViewTitle => 'Ditaruh di mana?';
 }

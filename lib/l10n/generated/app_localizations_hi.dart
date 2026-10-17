@@ -5121,4 +5121,42 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get transcriptUnsupportedFile =>
       'यह फ़ाइल प्रकार लिखित में नहीं बदला जा सकता (ऑडियो, वीडियो या छवि चुनें)।';
+
+  @override
+  String get pickPdfTitle => 'PDF चुनें';
+
+  @override
+  String get pickSlidesTitle => 'प्रस्तुति चुनें';
+
+  @override
+  String get pickImagesTitle => 'चित्र चुनें';
+
+  @override
+  String get pickDocumentTitle => 'दस्तावेज़ चुनें';
+
+  @override
+  String get fileAppPickerTitle => 'Dosya Okuyucu से फ़ाइलें चुनें';
+
+  @override
+  String get fileAppPickerInfo =>
+      'फ़ाइल जोड़ते समय सीधे Dosya Okuyucu खुलता है और केवल माँगे गए प्रकार की फ़ाइलें (नई पहले) दिखती हैं। बंद होने पर ऐप पूछा जाता है।';
+
+  @override
+  String get viewModeAttached => 'संलग्न';
+
+  @override
+  String get viewModeAttachedHint =>
+      'संलग्नक के रूप में — नीचे की पट्टी में रहता है';
+
+  @override
+  String get textToBubblesPreparing => 'पाठ को दस्तावेज़ में सजाया जा रहा है…';
+
+  @override
+  String get attachmentActions => 'संलग्नक क्रियाएँ';
+
+  @override
+  String get attachmentOpen => 'खोलें';
+
+  @override
+  String get attachmentViewTitle => 'कहाँ रखें?';
 }

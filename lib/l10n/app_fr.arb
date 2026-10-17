@@ -1018,5 +1018,17 @@
   "transcribeFileSubtitle": "Choisis un audio, une vidéo ou une image ; son texte va dans la note",
   "cardTranscriptCount": "{count, plural, =1{Transcription} other{{count} transcriptions}}",
   "transcriptPickTitle": "Fichier à transcrire",
-  "transcriptUnsupportedFile": "Ce type de fichier ne peut pas être transcrit (choisis un audio, une vidéo ou une image)."
+  "transcriptUnsupportedFile": "Ce type de fichier ne peut pas être transcrit (choisis un audio, une vidéo ou une image).",
+  "pickPdfTitle": "Choisir un PDF",
+  "pickSlidesTitle": "Choisir une présentation",
+  "pickImagesTitle": "Choisir des images",
+  "pickDocumentTitle": "Choisir un document",
+  "fileAppPickerTitle": "Choisir les fichiers avec Dosya Okuyucu",
+  "fileAppPickerInfo": "L'ajout d'un fichier ouvre directement Dosya Okuyucu, qui n'affiche que les fichiers du type demandé (les plus récents en premier). Désactivé, l'application à utiliser vous est demandée.",
+  "viewModeAttached": "Pièce jointe",
+  "viewModeAttachedHint": "En pièce jointe — reste dans la bande du bas",
+  "textToBubblesPreparing": "Mise en page du texte en document…",
+  "attachmentActions": "Actions de la pièce jointe",
+  "attachmentOpen": "Ouvrir",
+  "attachmentViewTitle": "Où le placer ?"
 }

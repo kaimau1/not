@@ -2,11 +2,13 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
+import '../../../../core/widgets/pop_in.dart';
 import '../../../settings/settings_providers.dart';
 import '../../data/upload_queue.dart';
 import '../../domain/attachment.dart';
@@ -14,9 +16,11 @@ import '../viewers/image_viewer.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
 import '../viewers/video_viewer.dart';
+import 'view_mode_switch.dart';
 import '../../data/drive_store.dart';
 import '../drive_ui.dart';
 import '../note_card_media.dart' show CardMediaTile, PdfFirstPageThumb;
+import '../../../../core/widgets/smooth_routes.dart';
 
 /// Görsel olmayan ekleri (PDF, sunum, ses, video) gösteren yatay şerit.
 ///
@@ -35,7 +39,8 @@ class AttachmentStrip extends StatelessWidget {
     this.onChanged,
     this.onCopy,
     this.onInsertTag,
-    this.onPlaceOnPage,
+    this.viewOf,
+    this.onSetView,
     this.onVideoToNote,
     this.onTranscribe,
   });
@@ -43,15 +48,26 @@ class AttachmentStrip extends StatelessWidget {
   final List<Attachment> attachments;
   final ValueChanged<Attachment> onRemove;
 
+  /// Ekin şu anki görünümü (şeritte çoğunlukla "Ek"; balonlu notun belgesi
+  /// "Balonlu"). null ise görünüm anahtarı çizilmez (salt okunur).
+  final AttachmentView Function(Attachment)? viewOf;
+
+  /// Görünüm anahtarından gelen geçiş (Sabit / Yüzen / Balonlu / Ek).
+  ///
+  /// TÜM TÜRLERDE AYNI YER (kullanıcı isteği 2026-10-17: "alt kısımdaki ek
+  /// kısmında da tüm türlerde uyum olmalı, geçiş kolay olmalı"): eskiden
+  /// her türün döşemesinde farklı küçük düğmeler vardı (görselde "sayfaya
+  /// koy", videoda ✨, PDF'te hiçbiri) ve sabitleme/balonlu şeritten hiç
+  /// yapılamıyordu. Artık her döşemenin altında AYNI dört kipli anahtar,
+  /// yanında AYNI ⋯ levhası.
+  final void Function(Attachment, AttachmentView)? onSetView;
+
   /// Eki panoya kopyalar (başka nota yapıştırılabilir). null ise düğme yok.
   final ValueChanged<Attachment>? onCopy;
 
   /// Eki METNİN İÇİNE etiket olarak yazar (bkz. attachment_tag.dart).
   /// null ise düğme çizilmez (ör. belge notunda gövde metni yok).
   final ValueChanged<Attachment>? onInsertTag;
-
-  /// "Ek olarak" duran GÖRSELİ (ya da PDF'i) sayfaya geri koyar.
-  final ValueChanged<Attachment>? onPlaceOnPage;
 
   /// Şerit açık mı? Kapalıyken yalnız başlık satırı çizilir (tercih kalıcıdır).
   final bool expanded;
@@ -83,13 +99,14 @@ class AttachmentStrip extends StatelessWidget {
       children: [
         Divider(height: 1, color: scheme.outlineVariant.withValues(alpha: 0.5)),
         SizedBox(
-          height: 110,
+          height: _AttachmentTile.height + 12,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             itemCount: attachments.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
             itemBuilder: (context, index) => _AttachmentTile(
+              key: ValueKey('strip-${attachments[index].id}'),
               attachment: attachments[index],
               // Şeritteki GÖRSELLER bir galeri: tam ekranda yana kaydırarak
               // hepsinde gezilir.
@@ -101,11 +118,13 @@ class AttachmentStrip extends StatelessWidget {
               onChanged: onChanged,
               onCopy: onCopy,
               onInsertTag: onInsertTag,
-              onPlaceOnPage: onPlaceOnPage,
+              view: viewOf?.call(attachments[index]),
+              onSetView: onSetView,
               onVideoToNote: onVideoToNote,
               onTranscribe: onTranscribe,
               // Kaynağın transkripti zaten varsa düğme "aç" olarak işaretlenir.
-              transcribed: attachments[index].kind != AttachmentKind.text &&
+              transcribed:
+                  attachments[index].kind != AttachmentKind.text &&
                   attachments.any(
                     (a) =>
                         a.kind == AttachmentKind.text &&
@@ -253,19 +272,30 @@ class _AudioTileState extends State<_AudioTile> {
 
 class _AttachmentTile extends ConsumerWidget {
   const _AttachmentTile({
+    super.key,
     required this.attachment,
     required this.onRemove,
     this.gallery = const [],
     this.onChanged,
     this.onCopy,
     this.onInsertTag,
-    this.onPlaceOnPage,
+    this.view,
+    this.onSetView,
     this.onVideoToNote,
     this.onTranscribe,
     this.transcribed = false,
   });
 
+  /// Döşemenin toplam yüksekliği: önizleme + anahtar satırı.
+  static const previewHeight = 92.0;
+  static const rowHeight = 28.0;
+  static const height = previewHeight + 6 + rowHeight;
+
   final Attachment attachment;
+
+  /// Şu anki görünüm (anahtarda seçili) — null ise anahtar yok.
+  final AttachmentView? view;
+  final void Function(Attachment, AttachmentView)? onSetView;
 
   /// Tam ekranda kaydırarak geçilecek görseller (bkz. [ImageViewerScreen]).
   final List<Attachment> gallery;
@@ -273,7 +303,6 @@ class _AttachmentTile extends ConsumerWidget {
   final ValueChanged<Attachment>? onChanged;
   final ValueChanged<Attachment>? onCopy;
   final ValueChanged<Attachment>? onInsertTag;
-  final ValueChanged<Attachment>? onPlaceOnPage;
   final Future<void> Function(Attachment)? onVideoToNote;
   final ValueChanged<Attachment>? onTranscribe;
 
@@ -287,14 +316,6 @@ class _AttachmentTile extends ConsumerWidget {
       attachment.kind == AttachmentKind.audio ||
       attachment.kind == AttachmentKind.video ||
       attachment.kind == AttachmentKind.image;
-
-  /// Sayfaya konabilen ekler: GÖRSEL, VİDEO (olduğu yerde oynar) ve PDF
-  /// (kullanıcı isteği 2026-09-06 — sayfada sayfası çevrilen bir kutu olur,
-  /// bkz. `PdfPageBox`).
-  bool get _canPlaceOnPage =>
-      attachment.kind == AttachmentKind.image ||
-      attachment.kind == AttachmentKind.video ||
-      attachment.kind == AttachmentKind.pdf;
 
   void _open(BuildContext context, WidgetRef ref) {
     // Ses eki için satır içi görüntüleyici yok (kompakt oynatıcıdan çalınır).
@@ -318,7 +339,7 @@ class _AttachmentTile extends ConsumerWidget {
       return;
     }
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      MediaRoute<void>(
         builder: (_) => switch (attachment.kind) {
           AttachmentKind.pdf => PdfViewerScreen(
             attachment: attachment,
@@ -394,23 +415,6 @@ class _AttachmentTile extends ConsumerWidget {
         badgeColor: attachment.isWebVideo
             ? const Color(0xFFE53935)
             : scheme.primary,
-        trailing: onVideoToNote != null && !attachment.isWebVideo
-            ? Tooltip(
-                message: context.l10n.videoToNote,
-                child: InkWell(
-                  onTap: () => onVideoToNote!(attachment),
-                  customBorder: const CircleBorder(),
-                  child: const Padding(
-                    padding: EdgeInsets.all(3),
-                    child: Icon(
-                      Icons.auto_awesome,
-                      size: 15,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              )
-            : null,
       );
     } else if (attachment.kind == AttachmentKind.slide) {
       content = _PreviewTile(
@@ -477,15 +481,24 @@ class _AttachmentTile extends ConsumerWidget {
       );
     }
 
-    return Stack(
+    final views = availableViews(attachment);
+    final current = view;
+    final showSwitch =
+        onSetView != null && current != null && views.length >= 2;
+    final preview = Stack(
       children: [
         Material(
           color: scheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () => _open(context, ref),
-            child: SizedBox(height: 98, child: content),
+            // Basılı tutmak da işlem levhasını açar (⋯ ile aynı).
+            onLongPress: () {
+              HapticFeedback.mediumImpact();
+              _showActions(context, ref);
+            },
+            child: SizedBox(height: previewHeight, child: content),
           ),
         ),
         // Yükleme sürüyor göstergesi. Görüntülü not buluta HİÇ yüklenmediği
@@ -500,7 +513,7 @@ class _AttachmentTile extends ConsumerWidget {
                 AttachmentSyncMode.textOnly)
           PositionedDirectional(
             start: 6,
-            bottom: 6,
+            top: 6,
             child: Tooltip(
               message: overSyncLimit
                   ? context.l10n.syncLimitInfo
@@ -561,79 +574,229 @@ class _AttachmentTile extends ConsumerWidget {
             onPressed: onRemove,
           ),
         ),
-        // Kopyala (her ek türünde) ve "sayfaya koy" (yalnız ek olarak duran
-        // görselde). Küçük döşemede yer az: ikisi de sol üstte, kaldırmanın
-        // karşı köşesinde durur ki yanlışlıkla silmeye basılmasın.
-        if (onCopy != null ||
-            onInsertTag != null ||
-            (onTranscribe != null && _canTranscribe) ||
-            (onPlaceOnPage != null && _canPlaceOnPage))
+        // Transkripti kayıtlı ek: köşede dolu altyazı rozeti (dokununca açar).
+        if (transcribed && onTranscribe != null)
           PositionedDirectional(
-            start: 2,
-            top: 2,
-            child: Row(
-              children: [
-                if (onCopy != null)
-                  IconButton(
-                    tooltip: context.l10n.copy,
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.copy_outlined, size: 16),
-                    color: Colors.white,
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.black38,
-                    ),
-                    onPressed: () => onCopy!(attachment),
+            start: 4,
+            bottom: 22,
+            child: Tooltip(
+              message: context.l10n.transcriptAction,
+              child: InkWell(
+                onTap: () => onTranscribe!(attachment),
+                customBorder: const CircleBorder(),
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    shape: BoxShape.circle,
                   ),
-                // METNE EKLE (kullanıcı isteği 2026-08-16): imlecin olduğu
-                // yere "📎 dosya.pdf" etiketi yazılır; etiket editörde
-                // kırmızı ve altı çizili çizilir, dokununca önizleme açar.
-                if (onInsertTag != null)
-                  IconButton(
-                    tooltip: context.l10n.attachmentTagInsert,
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.text_snippet_outlined, size: 16),
-                    color: Colors.white,
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.black38,
-                    ),
-                    onPressed: () => onInsertTag!(attachment),
+                  child: Icon(
+                    Icons.subtitles,
+                    size: 12,
+                    color: scheme.onPrimary,
                   ),
-                // METNE DÖK (kullanıcı isteği 2026-10-17): ses/video/görselin
-                // transkripti — kayıtlıysa açılır (dolu simge), yoksa
-                // dökülür ve nota metin eki olarak kaydedilir.
-                if (onTranscribe != null && _canTranscribe)
-                  IconButton(
-                    tooltip: context.l10n.transcriptAction,
-                    visualDensity: VisualDensity.compact,
-                    icon: Icon(
-                      transcribed ? Icons.subtitles : Icons.subtitles_outlined,
-                      size: 16,
-                    ),
-                    color: Colors.white,
-                    style: IconButton.styleFrom(
-                      backgroundColor: transcribed
-                          ? scheme.primary
-                          : Colors.black38,
-                    ),
-                    onPressed: () => onTranscribe!(attachment),
-                  ),
-                if (onPlaceOnPage != null && _canPlaceOnPage)
-                  IconButton(
-                    tooltip: attachment.kind == AttachmentKind.pdf
-                        ? context.l10n.pdfPlaceOnPage
-                        : context.l10n.moveImageToPage,
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.image_outlined, size: 16),
-                    color: Colors.white,
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.black38,
-                    ),
-                    onPressed: () => onPlaceOnPage!(attachment),
-                  ),
-              ],
+                ),
+              ),
             ),
           ),
       ],
+    );
+
+    // Şeride YENİ giren döşeme yumuşakça büyüyüp belirir — ekin nereye
+    // geldiği gözle izlensin (var olan döşeme yeniden kurulunca oynamaz).
+    final created = attachment.createdAt;
+    return PopIn(
+      // Yalnız YENİ eklenen canlanır: şerit kaydırılınca yeniden kurulan
+      // eski döşemeler her seferinde "nefes almasın".
+      animate:
+          created != null &&
+          DateTime.now().difference(created) < const Duration(seconds: 4),
+      from: 0.86,
+      alignment: Alignment.bottomCenter,
+      duration: const Duration(milliseconds: 300),
+      child: SizedBox(
+        width: 140,
+        height: height,
+        child: Column(
+          children: [
+            preview,
+            const SizedBox(height: 6),
+            SizedBox(
+              height: rowHeight,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: showSwitch
+                        ? Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: AttachmentViewSwitch(
+                                current: current,
+                                available: views,
+                                compact: true,
+                                onChanged: (v) => onSetView!(attachment, v),
+                              ),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  _MoreButton(onTap: () => _showActions(context, ref)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// ⋯ / basılı tut: TÜM TÜRLERDE AYNI işlem levhası — üstte büyük görünüm
+  /// anahtarı ("Nerede dursun?"), altında ekin işleri (aç, metne bağla,
+  /// kopyala, metne dök, videodan not, kaldır).
+  Future<void> _showActions(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final views = availableViews(attachment);
+    final current = view;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      builder: (sheetContext) {
+        final scheme = Theme.of(sheetContext).colorScheme;
+        Widget tile(String id, IconData icon, String label, {Color? color}) =>
+            ListTile(
+              key: ValueKey('strip-action-$id'),
+              leading: Icon(icon, color: color),
+              title: Text(
+                label,
+                style: color == null ? null : TextStyle(color: color),
+              ),
+              onTap: () => Navigator.of(sheetContext).pop(id),
+            );
+        return SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                  child: Text(
+                    attachment.fileName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(sheetContext).textTheme.titleMedium,
+                  ),
+                ),
+                if (onSetView != null && current != null && views.length >= 2)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.attachmentViewTitle,
+                          style: Theme.of(sheetContext).textTheme.labelLarge
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                        const SizedBox(height: 8),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: AttachmentViewSwitch(
+                            current: current,
+                            available: views,
+                            onChanged: (v) => Navigator.of(
+                              sheetContext,
+                            ).pop('view:${v.name}'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const Divider(height: 16),
+                if (attachment.kind != AttachmentKind.audio)
+                  tile('open', Icons.open_in_new_rounded, l10n.attachmentOpen),
+                if (onInsertTag != null)
+                  tile(
+                    'tag',
+                    Icons.text_snippet_outlined,
+                    l10n.attachmentTagInsert,
+                  ),
+                if (onCopy != null)
+                  tile('copy', Icons.copy_outlined, l10n.copy),
+                if (onTranscribe != null && _canTranscribe)
+                  tile(
+                    'transcribe',
+                    transcribed ? Icons.subtitles : Icons.subtitles_outlined,
+                    l10n.transcriptAction,
+                  ),
+                if (onVideoToNote != null &&
+                    attachment.kind == AttachmentKind.video &&
+                    !attachment.isWebVideo)
+                  tile('ai', Icons.auto_awesome, l10n.videoToNote),
+                tile(
+                  'remove',
+                  Icons.delete_outline,
+                  l10n.removeAttachment,
+                  color: scheme.error,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (action == null || !context.mounted) return;
+    if (action.startsWith('view:')) {
+      final name = action.substring(5);
+      final v = AttachmentView.values.firstWhere((x) => x.name == name);
+      onSetView?.call(attachment, v);
+      return;
+    }
+    switch (action) {
+      case 'open':
+        _open(context, ref);
+      case 'tag':
+        onInsertTag?.call(attachment);
+      case 'copy':
+        onCopy?.call(attachment);
+      case 'transcribe':
+        onTranscribe?.call(attachment);
+      case 'ai':
+        await onVideoToNote?.call(attachment);
+      case 'remove':
+        onRemove();
+    }
+  }
+}
+
+/// Döşemenin ⋯ düğmesi.
+class _MoreButton extends StatelessWidget {
+  const _MoreButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: context.l10n.attachmentActions,
+      child: InkResponse(
+        key: const ValueKey('strip-more'),
+        onTap: onTap,
+        radius: 16,
+        child: SizedBox(
+          width: 26,
+          height: 26,
+          child: Icon(
+            Icons.more_horiz_rounded,
+            size: 20,
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -647,14 +810,12 @@ class _PreviewTile extends StatelessWidget {
     required this.name,
     required this.badge,
     required this.badgeColor,
-    this.trailing,
   });
 
   final Widget preview;
   final String name;
   final String badge;
   final Color badgeColor;
-  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -711,7 +872,6 @@ class _PreviewTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                  ?trailing,
                 ],
               ),
             ),

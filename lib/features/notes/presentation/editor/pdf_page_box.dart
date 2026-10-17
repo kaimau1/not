@@ -15,6 +15,7 @@ import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/pdf_page_image.dart';
 import '../viewers/pdf_viewer_screen.dart';
+import '../../../../core/widgets/smooth_routes.dart';
 
 /// **SAYFAYA GÖMÜLÜ PDF** (kullanıcı isteği 2026-09-06: "PDF'yi sayfaya
 /// entegre etme, aynı görsel gibi sayfaya yerleşir ancak sayfa
@@ -328,7 +329,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   Future<void> _openFullScreen() async {
     final page = _page;
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      MediaRoute<void>(
         builder: (_) => PdfViewerScreen(
           attachment: widget.attachment,
           initialPage: page,

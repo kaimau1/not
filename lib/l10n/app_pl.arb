@@ -1018,5 +1018,17 @@
   "transcribeFileSubtitle": "Wybierz audio, wideo lub obraz; tekst trafi do notatki",
   "cardTranscriptCount": "{count, plural, =1{Transkrypcja} few{{count} transkrypcje} many{{count} transkrypcji} other{{count} transkrypcji}}",
   "transcriptPickTitle": "Plik do transkrypcji",
-  "transcriptUnsupportedFile": "Tego typu pliku nie można transkrybować (wybierz audio, wideo lub obraz)."
+  "transcriptUnsupportedFile": "Tego typu pliku nie można transkrybować (wybierz audio, wideo lub obraz).",
+  "pickPdfTitle": "Wybierz plik PDF",
+  "pickSlidesTitle": "Wybierz prezentację",
+  "pickImagesTitle": "Wybierz obrazy",
+  "pickDocumentTitle": "Wybierz dokument",
+  "fileAppPickerTitle": "Wybieraj pliki w Dosya Okuyucu",
+  "fileAppPickerInfo": "Dodawanie pliku otwiera od razu Dosya Okuyucu z plikami tylko żądanego typu (najnowsze na górze). Wyłączone — pytanie o aplikację.",
+  "viewModeAttached": "Załącznik",
+  "viewModeAttachedHint": "Jako załącznik — zostaje na pasku na dole",
+  "textToBubblesPreparing": "Składanie tekstu w dokument…",
+  "attachmentActions": "Działania załącznika",
+  "attachmentOpen": "Otwórz",
+  "attachmentViewTitle": "Gdzie ma być?"
 }

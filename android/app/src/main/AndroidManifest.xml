@@ -318,5 +318,10 @@
         <intent>
             <action android:name="android.speech.RecognitionService"/>
         </intent>
+        <!-- EKOSİSTEM: kardeş uygulama Dosya Okuyucu kuruluysa dosya seçimi
+             doğrudan onun seçicisinde (istenen türe süzülmüş) açılır — bkz.
+             MainActivity.pickDocuments. Android 11+ paket görünürlüğü olmadan
+             kurulu olsa bile görünmez. -->
+        <package android:name="com.dosyaokuyucu.dosya_okuyucu"/>
     </queries>
 </manifest>

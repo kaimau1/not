@@ -5008,4 +5008,41 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get transcriptUnsupportedFile => '此文件类型无法转写（请选择音频、视频或图片）。';
+
+  @override
+  String get pickPdfTitle => '选择 PDF';
+
+  @override
+  String get pickSlidesTitle => '选择演示文稿';
+
+  @override
+  String get pickImagesTitle => '选择图片';
+
+  @override
+  String get pickDocumentTitle => '选择文档';
+
+  @override
+  String get fileAppPickerTitle => '使用 Dosya Okuyucu 选择文件';
+
+  @override
+  String get fileAppPickerInfo =>
+      '添加文件时直接打开 Dosya Okuyucu，只列出所需类型的文件（最新在前）。关闭后会询问使用哪个应用。';
+
+  @override
+  String get viewModeAttached => '附件';
+
+  @override
+  String get viewModeAttachedHint => '作为附件——留在底部栏';
+
+  @override
+  String get textToBubblesPreparing => '正在将文本排版为文档…';
+
+  @override
+  String get attachmentActions => '附件操作';
+
+  @override
+  String get attachmentOpen => '打开';
+
+  @override
+  String get attachmentViewTitle => '放在哪里？';
 }

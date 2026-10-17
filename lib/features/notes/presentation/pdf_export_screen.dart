@@ -18,6 +18,7 @@ import '../../../core/utils/rich_text.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'viewers/pdf_viewer_screen.dart';
+import '../../../core/widgets/smooth_routes.dart';
 
 /// Notu PDF'e ya da Word'e (.docx) aktarmadan önce düzenleme ekranı.
 ///
@@ -361,7 +362,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
     if (!mounted) return;
     await Navigator.of(
       context,
-    ).push(MaterialPageRoute<void>(builder: (_) => PdfViewerScreen(attachment: attachment)));
+    ).push(MediaRoute<void>(builder: (_) => PdfViewerScreen(attachment: attachment)));
   }
 
   Future<void> _share() async {

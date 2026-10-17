@@ -19,6 +19,7 @@ import '../viewers/zoom_box.dart';
 import 'bubbles_overview.dart';
 import 'page_note_pane.dart';
 import 'text_wrap.dart';
+import '../../../../core/widgets/smooth_routes.dart';
 
 /// "Sunum ekle not al" notunun gövdesi: ÜSTTE slayt, ALTTA o slaydın notu.
 ///
@@ -193,7 +194,7 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
   }
 
   Future<void> _openFullScreen() => Navigator.of(context).push(
-    MaterialPageRoute<void>(
+    MediaRoute<void>(
       builder: (_) => SlideViewerScreen(
         attachment: widget.attachment,
         onChanged: widget.onAttachmentChanged,

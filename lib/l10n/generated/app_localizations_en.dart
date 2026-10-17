@@ -5132,4 +5132,42 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get transcriptUnsupportedFile =>
       'This file type can\'t be transcribed (pick audio, video or an image).';
+
+  @override
+  String get pickPdfTitle => 'Choose a PDF';
+
+  @override
+  String get pickSlidesTitle => 'Choose a presentation';
+
+  @override
+  String get pickImagesTitle => 'Choose images';
+
+  @override
+  String get pickDocumentTitle => 'Choose a document';
+
+  @override
+  String get fileAppPickerTitle => 'Pick files with Dosya Okuyucu';
+
+  @override
+  String get fileAppPickerInfo =>
+      'Adding a file opens Dosya Okuyucu directly, listing only files of the requested type (newest first). When off, you\'re asked which app to use.';
+
+  @override
+  String get viewModeAttached => 'Attached';
+
+  @override
+  String get viewModeAttachedHint =>
+      'As attachment — stays in the strip at the bottom';
+
+  @override
+  String get textToBubblesPreparing => 'Laying out the text as a document…';
+
+  @override
+  String get attachmentActions => 'Attachment actions';
+
+  @override
+  String get attachmentOpen => 'Open';
+
+  @override
+  String get attachmentViewTitle => 'Where should it go?';
 }

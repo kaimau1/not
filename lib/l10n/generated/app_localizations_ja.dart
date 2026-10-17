@@ -5035,4 +5035,41 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get transcriptUnsupportedFile =>
       'このファイル形式は文字起こしできません（音声・動画・画像を選んでください）。';
+
+  @override
+  String get pickPdfTitle => 'PDFを選択';
+
+  @override
+  String get pickSlidesTitle => 'プレゼンテーションを選択';
+
+  @override
+  String get pickImagesTitle => '画像を選択';
+
+  @override
+  String get pickDocumentTitle => '文書を選択';
+
+  @override
+  String get fileAppPickerTitle => 'Dosya Okuyucu でファイルを選択';
+
+  @override
+  String get fileAppPickerInfo =>
+      'ファイル追加時に Dosya Okuyucu が直接開き、要求された種類のファイルだけを新しい順に表示します。オフにするとアプリを選択します。';
+
+  @override
+  String get viewModeAttached => '添付';
+
+  @override
+  String get viewModeAttachedHint => '添付として — 下部のバーに置く';
+
+  @override
+  String get textToBubblesPreparing => 'テキストを文書にレイアウト中…';
+
+  @override
+  String get attachmentActions => '添付の操作';
+
+  @override
+  String get attachmentOpen => '開く';
+
+  @override
+  String get attachmentViewTitle => 'どこに置く？';
 }

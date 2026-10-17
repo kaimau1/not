@@ -5147,4 +5147,41 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get transcriptUnsupportedFile =>
       'Этот тип файла нельзя расшифровать (выберите аудио, видео или изображение).';
+
+  @override
+  String get pickPdfTitle => 'Выберите PDF';
+
+  @override
+  String get pickSlidesTitle => 'Выберите презентацию';
+
+  @override
+  String get pickImagesTitle => 'Выберите изображения';
+
+  @override
+  String get pickDocumentTitle => 'Выберите документ';
+
+  @override
+  String get fileAppPickerTitle => 'Выбирать файлы в Dosya Okuyucu';
+
+  @override
+  String get fileAppPickerInfo =>
+      'При добавлении файла сразу открывается Dosya Okuyucu только с файлами нужного типа (новые сверху). Если выключено — спрашивается приложение.';
+
+  @override
+  String get viewModeAttached => 'Вложение';
+
+  @override
+  String get viewModeAttachedHint => 'Как вложение — остаётся в полосе внизу';
+
+  @override
+  String get textToBubblesPreparing => 'Текст верстается в документ…';
+
+  @override
+  String get attachmentActions => 'Действия с вложением';
+
+  @override
+  String get attachmentOpen => 'Открыть';
+
+  @override
+  String get attachmentViewTitle => 'Где разместить?';
 }

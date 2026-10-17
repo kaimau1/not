@@ -9251,6 +9251,78 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu dosya türü metne dökülemiyor (ses, video ya da görsel seç).'**
   String get transcriptUnsupportedFile;
+
+  /// No description provided for @pickPdfTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF seç'**
+  String get pickPdfTitle;
+
+  /// No description provided for @pickSlidesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum seç'**
+  String get pickSlidesTitle;
+
+  /// No description provided for @pickImagesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel seç'**
+  String get pickImagesTitle;
+
+  /// No description provided for @pickDocumentTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belge seç'**
+  String get pickDocumentTitle;
+
+  /// No description provided for @fileAppPickerTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosyaları Dosya Okuyucu ile seç'**
+  String get fileAppPickerTitle;
+
+  /// No description provided for @fileAppPickerInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya eklerken doğrudan Dosya Okuyucu açılır ve yalnız istenen türün dosyaları (en yenisi üstte) listelenir. Kapalıyken uygulama seçimi sorulur.'**
+  String get fileAppPickerInfo;
+
+  /// No description provided for @viewModeAttached.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek'**
+  String get viewModeAttached;
+
+  /// No description provided for @viewModeAttachedHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek olarak — alttaki ek şeridinde durur'**
+  String get viewModeAttachedHint;
+
+  /// No description provided for @textToBubblesPreparing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin belgeye diziliyor…'**
+  String get textToBubblesPreparing;
+
+  /// No description provided for @attachmentActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek işlemleri'**
+  String get attachmentActions;
+
+  /// No description provided for @attachmentOpen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aç'**
+  String get attachmentOpen;
+
+  /// No description provided for @attachmentViewTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nerede dursun?'**
+  String get attachmentViewTitle;
 }
 
 class _AppLocalizationsDelegate

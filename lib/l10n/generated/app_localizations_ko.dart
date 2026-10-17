@@ -5041,4 +5041,41 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get transcriptUnsupportedFile =>
       '이 파일 형식은 변환할 수 없습니다(오디오, 동영상 또는 이미지를 선택하세요).';
+
+  @override
+  String get pickPdfTitle => 'PDF 선택';
+
+  @override
+  String get pickSlidesTitle => '프레젠테이션 선택';
+
+  @override
+  String get pickImagesTitle => '이미지 선택';
+
+  @override
+  String get pickDocumentTitle => '문서 선택';
+
+  @override
+  String get fileAppPickerTitle => 'Dosya Okuyucu로 파일 선택';
+
+  @override
+  String get fileAppPickerInfo =>
+      '파일을 추가하면 Dosya Okuyucu가 바로 열려 요청한 유형의 파일만(최신순) 보여 줍니다. 끄면 앱을 묻습니다.';
+
+  @override
+  String get viewModeAttached => '첨부';
+
+  @override
+  String get viewModeAttachedHint => '첨부로 — 아래 띠에 둡니다';
+
+  @override
+  String get textToBubblesPreparing => '텍스트를 문서로 배치하는 중…';
+
+  @override
+  String get attachmentActions => '첨부 작업';
+
+  @override
+  String get attachmentOpen => '열기';
+
+  @override
+  String get attachmentViewTitle => '어디에 둘까요?';
 }

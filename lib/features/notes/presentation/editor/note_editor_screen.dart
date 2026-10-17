@@ -61,6 +61,7 @@ import '../../data/document_scan.dart';
 import '../../data/note_speech.dart';
 import '../../data/note_share.dart';
 import '../../data/note_shares_repository.dart';
+import '../../data/note_pdf.dart';
 import '../../data/notes_repository.dart';
 import '../../data/pdf_edit.dart';
 import '../../data/scan/scan_ocr.dart';
@@ -128,7 +129,10 @@ import 'tag_chips.dart';
 import 'tag_tap.dart';
 import 'text_wrap.dart';
 import 'video_hub_scope.dart';
+import 'audio_card_box.dart' show kAudioBoxWidth, kAudioBoxHeight;
+import 'text_page_box.dart' show kTextBoxWidth, kTextBoxHeight;
 import 'view_mode_switch.dart';
+import '../../../../core/widgets/smooth_routes.dart';
 
 bool get _isDesktop =>
     !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
@@ -1544,11 +1548,33 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// sürüklemek zorundaydı. İmleç ölçülemediyse (menüden gelmeyen akışlar, boş
   /// not) eski davranışa — mevcut içeriğin altına — düşülür. Boyut küçük (%32)
   /// başlar; tam genişlik metni tümüyle aşağı iterdi.
-  Attachment _placeNewImage(Attachment image, Note note) {
+  Attachment _placeNewImage(Attachment placed, Note note) {
+    // METİN ve SES kutusunun kendi ölçüsü yok: sayfadaki kutunun oranı ekte
+    // saklanır (metin kâğıt sayfası 1:1,3, ses oynatıcı kartı ~3,6:1) ki
+    // tuvalin bütün oran hesapları (sarma, yerleşim, boyutlandırma)
+    // görseldeki gibi çalışsın (bkz. text_page_box.dart, audio_card_box.dart).
+    final image = placed.width != null && placed.height != null
+        ? placed
+        : switch (placed.kind) {
+            AttachmentKind.text => placed.copyWith(
+              width: kTextBoxWidth,
+              height: kTextBoxHeight,
+            ),
+            AttachmentKind.audio => placed.copyWith(
+              width: kAudioBoxWidth,
+              height: kAudioBoxHeight,
+            ),
+            _ => placed,
+          };
     // PDF kutusu GENİŞ başlar: 0,32 genişlikte bir sayfada yazı okunmuyor,
     // kullanıcı her belgeyi elle büyütmek zorunda kalıyordu. Görselde 0,32
-    // kalıyor — satıra üç görsel sığsın (bkz. packSlot).
-    final width = image.kind == AttachmentKind.pdf ? 0.6 : 0.32;
+    // kalıyor — satıra üç görsel sığsın (bkz. packSlot). Metin okunacak,
+    // ses kartı da düğmeleri sığacak kadar geniş başlar.
+    final width = switch (image.kind) {
+      AttachmentKind.pdf => 0.6,
+      AttachmentKind.text || AttachmentKind.audio => 0.8,
+      _ => 0.32,
+    };
     final pageWidth = _pageBox()?.size.width ?? 0;
     // SAYFA HENÜZ ÖLÇÜLMEDİ: dp hesabı yapılamaz, konum YAZILMAZ. Tuval
     // genişliği bildiği ilk karede görseli boş bir yere kendisi oturtur
@@ -1965,7 +1991,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       return;
     }
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      MediaRoute<void>(
         builder: (_) => switch (attachment.kind) {
           AttachmentKind.pdf => PdfViewerScreen(
             attachment: attachment,
@@ -2046,7 +2072,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           extensions: ['pdf'],
           mimeTypes: ['application/pdf'],
         );
-        final files = await DocPicker.pickMany(group);
+        final files = await DocPicker.pickMany(
+          group,
+          chooserTitle: context.l10n.pickPdfTitle,
+        );
         if (files.isEmpty || !mounted) return null;
         return _addPdfFile(files.first, asFile: true);
       case 'image':
@@ -2551,7 +2580,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       extensions: ['pdf'],
       mimeTypes: ['application/pdf'],
     );
-    for (final file in await DocPicker.pickMany(group)) {
+    final files = await DocPicker.pickMany(
+      group,
+      chooserTitle: context.l10n.pickPdfTitle,
+    );
+    for (final file in files) {
       if (!mounted) return;
       await _addPdfFile(file);
     }
@@ -2654,7 +2687,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       ],
     );
-    final file = await DocPicker.pickOne(group);
+    final file = await DocPicker.pickOne(
+      group,
+      chooserTitle: context.l10n.pickSlidesTitle,
+    );
     if (file == null) return;
     final bytes = await file.readAsBytes();
     // Sunum sıkıştırılamaz; PDF gibi büyük dosya doğrudan Storage kotasına
@@ -2908,9 +2944,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // PDF'in sayfada olup olmadığını `asFile` DEĞİL `onPage` söyler: eski
     // PDF eklerinin hepsinde `asFile: false` yazılı, anlamını değiştirmek
     // onları bir anda sayfanın ortasına taşırdı (bkz. Attachment.onPage).
-    final moved = image.kind == AttachmentKind.pdf
-        ? image.copyWith(onPage: !asFile)
-        : image.copyWith(asFile: asFile);
+    final moved = image.placedOnPage(!asFile);
     _updateAttachment(asFile ? moved : _placeNewImage(moved, note));
   }
 
@@ -3845,11 +3879,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         attachments: [
           for (final a in n.attachments)
             if (a.floatsOnPage)
-              // PDF'in yerini `onPage` söylüyor (bkz. [_setImageAsFile]);
-              // ona `asFile` yazmak kutuyu sayfada bırakırdı.
-              a.kind == AttachmentKind.pdf
-                  ? a.copyWith(onPage: false)
-                  : a.copyWith(asFile: true)
+              // PDF/metin/sesin yerini `onPage` söylüyor (bkz.
+              // Attachment.placedOnPage); onlara `asFile` yazmak kutuyu
+              // sayfada bırakırdı.
+              a.placedOnPage(false)
             else
               a,
         ],
@@ -4884,6 +4917,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       }
     }
     if (a.isPinnedTop) return AttachmentView.pinned;
+    // Belge notunda (balonlu) her ek şeritte durur; klasikte şeritteki ek
+    // "Ek" kipindedir.
+    if (note.type.isPageNoteType || a.offPage || a.kind == AttachmentKind.slide) {
+      return AttachmentView.attached;
+    }
     return AttachmentView.floating;
   }
 
@@ -4906,9 +4944,38 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (note == null || widget.readOnly) return;
     if (_viewOf(note, a) == view) return;
     switch (view) {
+      case AttachmentView.attached:
+        // → ALT ŞERİT: balonluysa önce klasik; sabitse bölmeden iner;
+        // sayfadaysa şeride taşınır (yeri/boyu hatırlanır).
+        var target = a;
+        if (note.type.isPageNoteType) {
+          if (a.sourceId.isNotEmpty) {
+            target =
+                note.attachments.where((x) => x.id == a.sourceId).firstOrNull ??
+                a;
+          }
+          _switchToClassic(announce: false);
+        }
+        final latest =
+            _note?.attachments.where((x) => x.id == target.id).firstOrNull ??
+            target;
+        var next = latest.pinHeight > 0
+            ? latest.copyWith(pinHeight: -latest.pinHeight)
+            : latest;
+        if (!next.offPage) next = next.placedOnPage(false);
+        if (!identical(next, latest)) {
+          _updateAttachment(next);
+          HapticFeedback.selectionClick();
+        }
+        // Şerit kapalıysa açılır: ek nereye gitti diye aranmasın.
+        if (!ref.read(attachmentsExpandedProvider)) {
+          ref.read(attachmentsExpandedProvider.notifier).toggle();
+        }
       case AttachmentView.bubbles:
         if (a.kind == AttachmentKind.image) {
           await _imageToBubbles(a);
+        } else if (a.kind == AttachmentKind.text) {
+          await _textToBubbles(a);
         } else if (a.kind == AttachmentKind.pdf ||
             a.kind == AttachmentKind.slide) {
           _switchToBubbles(a);
@@ -4954,11 +5021,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     var next = latest.pinHeight > 0
         ? latest.copyWith(pinHeight: -latest.pinHeight)
         : latest;
-    final offPage = next.kind == AttachmentKind.pdf ? !next.onPage : next.asFile;
-    if (offPage && next.kind != AttachmentKind.slide) {
-      final moved = next.kind == AttachmentKind.pdf
-          ? next.copyWith(onPage: true)
-          : next.copyWith(asFile: false);
+    if (next.offPage && next.kind != AttachmentKind.slide) {
+      final moved = next.placedOnPage(true);
       next = moved.x != null || moved.pageY != null
           ? moved
           : _placeNewImage(moved, note);
@@ -5038,6 +5102,80 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
   }
 
+  /// METİN → BALONLU (kullanıcı isteği 2026-10-17: "txt dosyaları da ...
+  /// balonlu mod geçişi"): metin ekinden A4 sayfalı bir belge üretilir
+  /// (notun PDF dışa aktarımıyla aynı dizgi — Türkçe yazı tipi gömülü) ve
+  /// görseldeki gibi kaynağa bağlanır ([Attachment.sourceId]): klasikte
+  /// gizlenir, yeniden balonluya alınınca AYNI belge balonlarıyla gelir.
+  /// Metin sonradan düzenlendiyse ([Attachment.sourceDigest] tutmuyor) belge
+  /// aynı kimlikle YENİDEN dizilir — balonlar ve sayfa notları korunur.
+  Future<void> _textToBubbles(Attachment textAttachment) async {
+    final note = _note;
+    if (note == null) return;
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) return;
+    final l10n = context.l10n;
+    final existing = note.attachments
+        .where(
+          (a) => a.kind == AttachmentKind.pdf && a.sourceId == textAttachment.id,
+        )
+        .firstOrNull;
+    final digest = Attachment.digestOf(textAttachment.text);
+    if (existing != null && existing.sourceDigest == digest) {
+      _switchToBubbles(existing);
+      return;
+    }
+    _showSnack(l10n.textToBubblesPreparing);
+    try {
+      final dot = textAttachment.fileName.lastIndexOf('.');
+      final base = dot > 0
+          ? textAttachment.fileName.substring(0, dot)
+          : textAttachment.fileName;
+      final pdfBytes = await NotePdf.build(
+        title: base,
+        content: textAttachment.text,
+      );
+      if (!mounted) return;
+      final Attachment derived;
+      if (existing == null) {
+        final pdf = await repo.preparePdf(
+          noteId: widget.noteId,
+          bytes: pdfBytes,
+          fileName: '${base.isEmpty ? 'metin' : base}.pdf',
+        );
+        derived = pdf.copyWith(
+          sourceId: textAttachment.id,
+          sourceDigest: digest,
+        );
+      } else {
+        final replaced = await repo.replaceDocumentBytes(
+          noteId: widget.noteId,
+          attachment: existing,
+          bytes: pdfBytes,
+        );
+        derived = replaced.copyWith(sourceDigest: digest);
+      }
+      if (!mounted) return;
+      _mutate(
+        (n) => n.copyWith(
+          attachments: existing == null
+              ? [...n.attachments, derived]
+              : [
+                  for (final a in n.attachments)
+                    if (a.id == existing.id) derived else a,
+                ],
+        ),
+        immediate: true,
+      );
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      _switchToBubbles(derived);
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
+    } catch (e) {
+      if (mounted) _showSnack(l10n.genericError('$e'));
+    }
+  }
+
   // ── VİDEO ZAMAN DAMGALARI ─────────────────────────────────────────────
   //
   // Kullanıcı isteği 2026-10-16: "videolarda altta dk sn notu YouTube'daki
@@ -5050,8 +5188,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Notta video (dosya ya da YouTube) var mı — damgalar ancak o zaman
   /// bağlantı gibi çizilir.
-  static bool _hasVideo(Note note) =>
-      note.attachments.any((a) => a.kind == AttachmentKind.video);
+  ///
+  /// SES de sayılır (2026-10-17): ders kaydının yanında alınan `12:30`
+  /// damgası sesi oraya sarar (bkz. AudioCardBox).
+  static bool _hasVideo(Note note) => note.attachments.any(
+    (a) => a.kind == AttachmentKind.video || a.kind == AttachmentKind.audio,
+  );
 
   /// Sabit bölmedeki videonun "Bu ana not al" düğmesi.
   Future<void> _noteAtPinned(Attachment video) async {
@@ -5068,29 +5210,50 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _seekVideoTo(int seconds) {
     final note = _note;
     if (note == null) return;
-    final videos = [
+    final media = [
       for (final a in note.attachments)
-        if (a.kind == AttachmentKind.video) a,
+        if (a.kind == AttachmentKind.video || a.kind == AttachmentKind.audio)
+          a,
     ];
-    if (videos.isEmpty) return;
+    if (media.isEmpty) return;
     HapticFeedback.selectionClick();
-    final pinned = videos.where((a) => _inPinnedPane(note, a)).firstOrNull;
+    final pinned = media.where((a) => _inPinnedPane(note, a)).firstOrNull;
     final source = _videoHub.target(preferId: pinned?.id);
     if (source != null) {
       _videoHub.touch(source);
       unawaited(source.seekTo(Duration(seconds: seconds)));
       return;
     }
+    final videos = [
+      for (final a in media)
+        if (a.kind == AttachmentKind.video) a,
+    ];
+    // Yalnız ŞERİTTE duran ses var (oynatıcı kartı çizili değil): ses
+    // tepeye sabitlenir ve kart kurulunca o saniyeye sarılır — damgaya
+    // dokunan dinlemek ister, sesin nerede çalacağını aramasın.
+    if (videos.isEmpty) {
+      final audio = media.first;
+      if (widget.readOnly || note.type.isPageNoteType) return;
+      _pinMediaTop(audio);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final pinnedSource = _videoHub.sourceFor(audio.id);
+        if (pinnedSource == null) return;
+        _videoHub.touch(pinnedSource);
+        unawaited(pinnedSource.seekTo(Duration(seconds: seconds)));
+      });
+      return;
+    }
+    final pinnedVideo = pinned?.kind == AttachmentKind.video ? pinned : null;
     final inPage =
-        pinned ??
+        pinnedVideo ??
         videos.where((a) => a.isWebVideo && a.floatsOnPage).firstOrNull;
     if (inPage != null && inPage.isWebVideo) {
       _videoHub.requestStart(inPage.id, seconds);
       return;
     }
-    final video = pinned ?? videos.first;
+    final video = pinnedVideo ?? videos.first;
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      MediaRoute<void>(
         builder: (_) => VideoViewerScreen(
           attachment: video,
           start: Duration(seconds: seconds),
@@ -5158,12 +5321,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             media: pinned,
             onHeightChanged: (h) =>
                 _updateAttachment(pinned.copyWith(pinHeight: h)),
-            onUnpin: () => _unpinMedia(pinned),
+            // Bölmeden çıkış (ayracı tepeye çekmek, ⋮ → Sayfaya göm) eki
+            // SAYFAYA koyar — şeritten sabitlenmiş belge/metin/ses de dahil.
+            onUnpin: () =>
+                unawaited(_setAttachmentView(pinned, AttachmentView.floating)),
             onOpen: () => _openAttachmentTag(pinned, editing: true),
             onCopyLink: () => _copyAttachment(pinned),
             onChanged: _updateAttachment,
             viewSwitch: _viewSwitchFor(note, pinned, dense: true),
-            onNoteAt: pinned.kind == AttachmentKind.video && !widget.readOnly
+            onNoteAt:
+                (pinned.kind == AttachmentKind.video ||
+                        pinned.kind == AttachmentKind.audio) &&
+                    !widget.readOnly
                 ? () => _noteAtPinned(pinned)
                 : null,
             // Sabit bölmenin ⋮ menüsü (kullanıcı bulgusu 2026-10-16: "video
@@ -7866,17 +8035,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   onInsertTag: note.type.isPageNoteType
                       ? null
                       : _startPendingEmbed,
-                  // **"Sayfaya koy" BELGE NOTUNDA YOK** (kullanıcı bulgusu:
-                  // "video ekinde bağla butonuna basınca video kayboluyor").
-                  // KÖK NEDEN: düğme eki "şeritte değil, sayfada" diye
-                  // işaretliyor; sayfa akışı ise yalnız METİN notunun
-                  // tuvalinde var. PDF/sunum notunda üstteki bölme belgeyi
-                  // çiziyor, yüzen ek için bir yer yok — ek şeritten
-                  // kalkıyor, hiçbir yerde çizilmiyor, yani KAYBOLUYORDU
-                  // (veri duruyordu ama kullanıcı için yok olmuş demekti).
-                  onPlaceOnPage: note.type.isPageNoteType
+                  // GÖRÜNÜM ANAHTARI her döşemede (Sabit / Yüzen / Balonlu
+                  // / Ek). "Yüzen" belge notunda önce klasiğe döner, sonra
+                  // eki sayfaya koyar — eskiden buradaki "sayfaya koy"
+                  // düğmesi belge notunda eki sayfası olmayan bir yere
+                  // taşıyıp KAYBEDİYORDU (bkz. _setAttachmentView).
+                  viewOf: widget.readOnly ? null : (a) => _viewOf(note, a),
+                  onSetView: widget.readOnly
                       ? null
-                      : (a) => _setImageAsFile(a, false),
+                      : (a, view) => unawaited(_setAttachmentView(a, view)),
                   onVideoToNote: _videoToNote,
                   onTranscribe: _openTranscript,
                   expanded: ref.watch(attachmentsExpandedProvider),
