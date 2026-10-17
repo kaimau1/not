@@ -5,6 +5,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../data/note_shares_repository.dart';
 import '../data/notes_repository.dart';
+import '../data/shared_note_activity.dart';
 import '../domain/note.dart';
 import 'note_card.dart';
 import 'note_grid.dart';
@@ -39,13 +40,34 @@ class SharedNotesScreen extends ConsumerWidget {
       if (note == null || note.deletedAt != null) continue;
       entries.add((note: note, share: share));
     }
-    entries.sort(
-      (a, b) => (b.note.updatedAt ?? DateTime(0)).compareTo(
+    // YENİLER ÜSTTE (kullanıcı bulgusu 2026-10-17: "yeni bir şey geldiğinde
+    // anlaşılmıyor"): okunmamış notlar başa, kalanı son değişikliğe göre.
+    final unread = ref.watch(sharedNoteUnreadProvider);
+    entries.sort((a, b) {
+      final ua = unread.contains(a.share.id);
+      final ub = unread.contains(b.share.id);
+      if (ua != ub) return ua ? -1 : 1;
+      return (b.note.updatedAt ?? DateTime(0)).compareTo(
         a.note.updatedAt ?? DateTime(0),
-      ),
-    );
+      );
+    });
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.sharedWithMe)),
+      appBar: AppBar(
+        title: Text(l10n.sharedWithMe),
+        actions: [
+          if (unread.isNotEmpty)
+            IconButton(
+              tooltip: l10n.sharedMarkAllRead,
+              icon: const Icon(Icons.done_all),
+              onPressed: () {
+                final seen = ref.read(sharedNoteSeenProvider.notifier);
+                for (final id in unread) {
+                  seen.markSeen(id);
+                }
+              },
+            ),
+        ],
+      ),
       body: entries.isEmpty
           ? EmptyState(
               icon: Icons.people_alt_outlined,
@@ -63,29 +85,69 @@ class SharedNotesScreen extends ConsumerWidget {
                   columns: columns,
                   itemBuilder: (context, index) {
                     final entry = entries[index];
+                    final isNew = unread.contains(entry.share.id);
+                    final scheme = Theme.of(context).colorScheme;
+                    final caption = sharedNoteCaption(
+                      l10n,
+                      entry.share,
+                      entry.note,
+                    );
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        NoteCard(
-                          note: entry.note,
-                          ownerId: entry.share.ownerId,
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            NoteCard(
+                              note: entry.note,
+                              ownerId: entry.share.ownerId,
+                            ),
+                            if (isNew)
+                              PositionedDirectional(
+                                top: -4,
+                                end: -2,
+                                child: IgnorePointer(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 7,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: scheme.error,
+                                      borderRadius: BorderRadius.circular(9),
+                                    ),
+                                    child: Text(
+                                      l10n.sharedNoteNew,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: scheme.onError,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
-                        if (entry.share.ownerName.isNotEmpty)
+                        if (caption.isNotEmpty)
                           Padding(
                             padding: const EdgeInsetsDirectional.only(
                               start: 6,
                               top: 3,
                             ),
                             child: Text(
-                              l10n.sharedByName(entry.share.ownerName),
+                              caption,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
+                                    color: isNew
+                                        ? scheme.error
+                                        : scheme.onSurfaceVariant,
+                                    fontWeight: isNew
+                                        ? FontWeight.w700
+                                        : null,
                                   ),
                             ),
                           ),
@@ -97,4 +159,19 @@ class SharedNotesScreen extends ConsumerWidget {
             ),
     );
   }
+}
+
+/// Kartın altındaki satır: son değişikliği sahip DIŞINDA biri yaptıysa
+/// "Ayşe güncelledi", değilse "Mehmet paylaştı". Kendi düzenlememde
+/// paylaşanın adı kalır (kendimi görmenin anlamı yok).
+String sharedNoteCaption(AppLocalizations l10n, NoteShare share, Note note) {
+  final editor = note.updatedBy;
+  if (editor.isNotEmpty &&
+      editor != share.ownerId &&
+      share.names.containsKey(editor) &&
+      share.sharedWith.contains(editor)) {
+    final name = share.names[editor]!;
+    if (name.isNotEmpty) return l10n.sharedNoteUpdatedBy(name);
+  }
+  return share.ownerName.isEmpty ? '' : l10n.sharedByName(share.ownerName);
 }

@@ -1030,5 +1030,11 @@
   "textToBubblesPreparing": "テキストを文書にレイアウト中…",
   "attachmentActions": "添付の操作",
   "attachmentOpen": "開く",
-  "attachmentViewTitle": "どこに置く？"
+  "attachmentViewTitle": "どこに置く？",
+  "attachmentUploadQueued": "アップロード待ち",
+  "attachmentWaitingOwner": "追加した人の端末からのアップロード待ち",
+  "attachmentsUploadingCount": "{count} 件の添付ファイルをアップロード中",
+  "sharedNoteNew": "新着",
+  "sharedNoteUpdatedBy": "{name} さんが更新",
+  "sharedMarkAllRead": "すべて既読にする"
 }

@@ -5176,4 +5176,27 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get attachmentViewTitle => 'Ditaruh di mana?';
+
+  @override
+  String get attachmentUploadQueued => 'Menunggu diunggah';
+
+  @override
+  String get attachmentWaitingOwner =>
+      'Menunggu pengunggahan dari perangkat orang yang menambahkannya';
+
+  @override
+  String attachmentsUploadingCount(int count) {
+    return 'Mengunggah $count lampiran';
+  }
+
+  @override
+  String get sharedNoteNew => 'Baru';
+
+  @override
+  String sharedNoteUpdatedBy(String name) {
+    return 'Diperbarui oleh $name';
+  }
+
+  @override
+  String get sharedMarkAllRead => 'Tandai semua sudah dibaca';
 }

@@ -4,6 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../notes/data/note_shares_repository.dart';
+import '../../notes/data/notes_repository.dart';
+import '../../notes/data/reminder_service.dart';
+import '../../notes/data/shared_note_activity.dart';
 import '../../settings/settings_providers.dart';
 import 'folder_activity.dart';
 
@@ -45,6 +49,17 @@ class SharedActivityService {
   ProviderSubscription<dynamic>? _rootSub;
   final _folderSubs = <ProviderSubscription<dynamic>>[];
 
+  /// BENİMLE PAYLAŞILAN NOTLAR (ortak not, kullanıcı bulgusu 2026-10-17:
+  /// "yeni bir şey geldiğinde anlaşılmıyor"): liste aboneliği ilk görüşte
+  /// mevcut paylaşımları "görülmüş" sayar (bkz. [SharedNoteSeenNotifier.adopt]),
+  /// okunmamış kümesi büyüdükçe not başına tek bildirim düşer.
+  ProviderSubscription<dynamic>? _sharesSub;
+  ProviderSubscription<Set<String>>? _noteUnreadSub;
+
+  /// Bildirilmiş paylaşım → o anki notun `updatedAt`'i (ms). Not yeniden
+  /// değişmedikçe ikinci bildirim düşmez.
+  final _notifiedNotes = <String, int>{};
+
   /// Bildirim kimliği klasör kimliğinden türetilir: aynı klasörün ikinci
   /// bildirimi birincinin ÜSTÜNE yazar.
   static int notificationId(String folderId) =>
@@ -58,6 +73,79 @@ class SharedActivityService {
       (_, _) => _resubscribe(),
       fireImmediately: true,
     );
+    _sharesSub = _ref.listen<AsyncValue<List<NoteShare>>>(
+      sharedNotesWithMeProvider,
+      (_, next) {
+        final shares = next.value;
+        if (shares == null) return;
+        final ids = {for (final s in shares) s.id};
+        final seen = _ref.read(sharedNoteSeenProvider.notifier);
+        seen.adopt(ids);
+        seen.retain(ids);
+      },
+      fireImmediately: true,
+    );
+    _noteUnreadSub = _ref.listen<Set<String>>(
+      sharedNoteUnreadProvider,
+      (_, next) => unawaited(_onNoteUnread(next)),
+      fireImmediately: true,
+    );
+  }
+
+  Future<void> _onNoteUnread(Set<String> unread) async {
+    // Okunanların bildirimi kalkar (rozet söndü, bildirim durmasın).
+    for (final id in [..._notifiedNotes.keys]) {
+      if (unread.contains(id)) continue;
+      _notifiedNotes.remove(id);
+      if (_initialized) {
+        try {
+          await _plugin.cancel(id: notificationId('note:$id'));
+        } catch (_) {}
+      }
+    }
+    if (unread.isEmpty) return;
+    final shares = {
+      for (final s
+          in _ref.read(sharedNotesWithMeProvider).value ?? const <NoteShare>[])
+        s.id: s,
+    };
+    for (final id in unread) {
+      final share = shares[id];
+      if (share == null) continue;
+      final note = _ref
+          .read(
+            ownedNoteStreamProvider((
+              ownerId: share.ownerId,
+              noteId: share.noteId,
+            )),
+          )
+          .value;
+      if (note == null) continue;
+      // Not şu an editörde açık: bakıyorum zaten (editör birazdan "görüldü"
+      // damgasını basar), bildirim gürültü olurdu.
+      if (openEditorNoteIds.contains(note.id)) continue;
+      final at = note.updatedAt?.millisecondsSinceEpoch ?? 0;
+      if ((_notifiedNotes[id] ?? -1) >= at) continue;
+      final fresh = !_notifiedNotes.containsKey(id) &&
+          !_ref.read(sharedNoteSeenProvider).containsKey(id);
+      _notifiedNotes[id] = at;
+      if (!_ref.read(sharedNotificationsProvider)) continue;
+      // Kim yaptı: sahip ya da öbür ortak çalışanlardan biri.
+      final who = note.updatedBy == share.ownerId
+          ? share.ownerName
+          : (share.names[note.updatedBy] ?? share.ownerName);
+      final title = note.displayTitle.trim();
+      await _showRaw(
+        id: notificationId('note:$id'),
+        title: title.isEmpty ? 'Ortak not' : title,
+        body: fresh
+            ? (who.isEmpty
+                  ? 'Seninle bir not paylaşıldı'
+                  : '$who seninle bir not paylaştı')
+            : (who.isEmpty ? 'Not güncellendi' : '$who notu güncelledi'),
+        payload: 'shared:${share.ownerId}/${share.noteId}',
+      );
+    }
   }
 
   void _resubscribe() {
@@ -94,13 +182,25 @@ class SharedActivityService {
     await _show(folderId, name, count);
   }
 
-  Future<void> _show(String folderId, String name, int count) async {
+  Future<void> _show(String folderId, String name, int count) => _showRaw(
+    id: notificationId(folderId),
+    title: name.trim().isEmpty ? 'Paylaşılan klasör' : name.trim(),
+    body: count == 1 ? '1 yeni hareket' : '$count yeni hareket',
+    payload: 'folder:$folderId',
+  );
+
+  Future<void> _showRaw({
+    required int id,
+    required String title,
+    required String body,
+    required String payload,
+  }) async {
     try {
       await _ensureInitialized();
       await _plugin.show(
-        id: notificationId(folderId),
-        title: name.trim().isEmpty ? 'Paylaşılan klasör' : name.trim(),
-        body: count == 1 ? '1 yeni hareket' : '$count yeni hareket',
+        id: id,
+        title: title,
+        body: body,
         notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'shared_folders',
@@ -112,7 +212,7 @@ class SharedActivityService {
           ),
           windows: WindowsNotificationDetails(),
         ),
-        payload: 'folder:$folderId',
+        payload: payload,
       );
     } catch (e) {
       // Bildirim altyapısı olmayan ortamlarda (test, masaüstü kurulumu
@@ -137,9 +237,12 @@ class SharedActivityService {
         android: androidInit,
         windows: windowsInit,
       ),
-      // Dokunma AYRI bir ekrana götürmez: klasörün kendi rotası yok
-      // (Navigator ile açılıyor, bkz. `FolderScreen.open`). Bildirime
-      // dokunmak uygulamayı öne getirir, rozet zaten klasörü gösterir.
+      // Klasör bildirimine dokunmak uygulamayı öne getirir (klasörün kendi
+      // rotası yok, rozet onu gösterir); ortak not bildirimi notu açar.
+      // İşleyici TEK ve ortak (bkz. handleNotificationResponse): eklentinin
+      // `initialize`'ı öncekinin işleyicisini değiştirir.
+      onDidReceiveNotificationResponse: (response) =>
+          handleNotificationResponse(_ref, response),
     );
     _initialized = true;
   }
@@ -147,6 +250,8 @@ class SharedActivityService {
   void dispose() {
     _rootSub?.close();
     _rootSub = null;
+    _sharesSub?.close();
+    _noteUnreadSub?.close();
     for (final sub in _folderSubs) {
       sub.close();
     }

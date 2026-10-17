@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
@@ -44,7 +45,13 @@ class AttachmentStrip extends StatelessWidget {
     this.onSetView,
     this.onVideoToNote,
     this.onTranscribe,
+    this.foreign = false,
   });
+
+  /// Not BAŞKASININ (paylaşılan not): dosyası bu cihazda olmayan, buluta da
+  /// çıkmamış ek "ekleyenin cihazından yüklenmesi bekleniyor" der — kendi
+  /// Drive'ımda aramak anlamsız (ekleyenin Drive'ındadır, erişemem).
+  final bool foreign;
 
   final List<Attachment> attachments;
   final ValueChanged<Attachment> onRemove;
@@ -123,6 +130,7 @@ class AttachmentStrip extends StatelessWidget {
               onSetView: onSetView,
               onVideoToNote: onVideoToNote,
               onTranscribe: onTranscribe,
+              foreign: foreign,
               // Kaynağın transkripti zaten varsa düğme "aç" olarak işaretlenir.
               transcribed:
                   attachments[index].kind != AttachmentKind.text &&
@@ -285,7 +293,11 @@ class _AttachmentTile extends ConsumerWidget {
     this.onVideoToNote,
     this.onTranscribe,
     this.transcribed = false,
+    this.foreign = false,
   });
+
+  /// Bkz. [AttachmentStrip.foreign].
+  final bool foreign;
 
   /// Döşemenin toplam yüksekliği: önizleme + anahtar satırı.
   static const previewHeight = 92.0;
@@ -324,6 +336,14 @@ class _AttachmentTile extends ConsumerWidget {
     // Metin eki dosyasız: okuma ekranı içeriği kayıttan alır.
     if (attachment.kind == AttachmentKind.text) {
       onTranscribe?.call(attachment);
+      return;
+    }
+    // Paylaşılan notta henüz buluta çıkmamış ek: ekleyenin cihazı yükleyecek.
+    if (foreign && !_hasLocal && !attachment.isUploaded &&
+        !attachment.isWebVideo) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.attachmentWaitingOwner)),
+      );
       return;
     }
     // Drive'daki ek bu cihaza inmediyse önce indirilir (bkz. drive_ui.dart).
@@ -377,6 +397,10 @@ class _AttachmentTile extends ConsumerWidget {
     final failedAttempts =
         ref.watch(uploadFailuresProvider)[attachment.id] ?? 0;
     final uploadFailed = !overSyncLimit && failedAttempts >= 3;
+    // Süren yükleme: oran (0..1) ya da bilinmiyor (<0). Yoksa ek SIRADA.
+    final uploading = ref.watch(
+      uploadProgressProvider.select((m) => m[attachment.id]),
+    );
 
     // GÖRSEL ÖNİZLEME (kullanıcı isteği 2026-10-16: "ekler altta iken sadece
     // metin olarak görülüyor; görsel, PDF, video önizlemesi görsel olarak
@@ -473,7 +497,9 @@ class _AttachmentTile extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              context.l10n.attachmentNotSynced,
+              foreign
+                  ? context.l10n.attachmentWaitingOwner
+                  : context.l10n.attachmentNotSynced,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.labelSmall,
             ),
@@ -520,6 +546,8 @@ class _AttachmentTile extends ConsumerWidget {
                   ? context.l10n.syncLimitInfo
                   : uploadFailed
                   ? context.l10n.attachmentUploadFailed
+                  : uploading == null
+                  ? context.l10n.attachmentUploadQueued
                   : context.l10n.attachmentUploading,
               child: Material(
                 color: uploadFailed ? scheme.error : Colors.black54,
@@ -550,14 +578,7 @@ class _AttachmentTile extends ConsumerWidget {
                           )
                         : uploadFailed
                         ? Icon(Icons.refresh, size: 12, color: scheme.onError)
-                        : const SizedBox(
-                            width: 10,
-                            height: 10,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 1.5,
-                              color: Colors.white,
-                            ),
-                          ),
+                        : _UploadBadge(fraction: uploading),
                   ),
                 ),
               ),
@@ -911,5 +932,64 @@ class _TextPreview extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Şerit döşemesinin köşesindeki yükleme rozeti: SIRADA (saat), yükleniyor
+/// (dolan halka + yüzde) ya da oranı bilinmeyen yükleme (dönen halka).
+/// Eskiden her durumda aynı belirsiz çark dönüyordu (bkz.
+/// [uploadProgressProvider]).
+class _UploadBadge extends StatelessWidget {
+  const _UploadBadge({required this.fraction});
+
+  /// null = sırada; < 0 = oran bilinmiyor; 0..1 = yüklenen oran.
+  final double? fraction;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = fraction;
+    if (f == null) {
+      return const Icon(Icons.schedule, size: 12, color: Colors.white);
+    }
+    final known = f >= 0;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 10,
+          height: 10,
+          child: CircularProgressIndicator(
+            strokeWidth: 1.5,
+            color: Colors.white,
+            backgroundColor: known ? Colors.white24 : null,
+            value: known ? f.clamp(0.02, 1.0) : null,
+          ),
+        ),
+        if (known) ...[
+          const SizedBox(width: 4),
+          Text(
+            formatUploadPercent(context, f),
+            style: const TextStyle(
+              fontSize: 10,
+              height: 1,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Yüzdeyi dilin kuralıyla yazar (Türkçede "%45", İngilizcede "45%").
+String formatUploadPercent(BuildContext context, double fraction) {
+  final whole = (fraction.clamp(0.0, 1.0) * 100).floor() / 100;
+  try {
+    return NumberFormat.percentPattern(
+      Localizations.localeOf(context).toLanguageTag(),
+    ).format(whole);
+  } catch (_) {
+    return '${(whole * 100).round()}%';
   }
 }

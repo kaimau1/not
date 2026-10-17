@@ -5170,4 +5170,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachmentViewTitle => 'Where should it go?';
+
+  @override
+  String get attachmentUploadQueued => 'Waiting to upload';
+
+  @override
+  String get attachmentWaitingOwner =>
+      'Waiting for the person who added it to upload it';
+
+  @override
+  String attachmentsUploadingCount(int count) {
+    return 'Uploading $count attachments';
+  }
+
+  @override
+  String get sharedNoteNew => 'New';
+
+  @override
+  String sharedNoteUpdatedBy(String name) {
+    return 'Updated by $name';
+  }
+
+  @override
+  String get sharedMarkAllRead => 'Mark all as read';
 }

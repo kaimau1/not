@@ -5045,4 +5045,26 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get attachmentViewTitle => '放在哪里？';
+
+  @override
+  String get attachmentUploadQueued => '等待上传';
+
+  @override
+  String get attachmentWaitingOwner => '等待添加者的设备上传';
+
+  @override
+  String attachmentsUploadingCount(int count) {
+    return '正在上传 $count 个附件';
+  }
+
+  @override
+  String get sharedNoteNew => '新';
+
+  @override
+  String sharedNoteUpdatedBy(String name) {
+    return '$name 更新了';
+  }
+
+  @override
+  String get sharedMarkAllRead => '全部标为已读';
 }

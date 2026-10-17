@@ -53,6 +53,31 @@ Widget fixedTypography(BuildContext context, Widget child, double fontScale) =>
       child: child,
     );
 
+/// **GERİ TUŞU HER ZAMAN ÇERÇEVEYE** (kullanıcı bulgusu 2026-10-17:
+/// "paylaşılanlar sayfasından geri gidince uygulama kapanıyor").
+///
+/// KÖK NEDEN: Android'e "geri tuşunu Flutter mı karşılayacak"
+/// (`setFrameworkHandlesBack`) bilgisi, geçmişi EN SON değişen Navigator'ın
+/// bildiriminden gidiyor. Klasör/Benimle paylaşılanlar sayfası kabuğun İÇ
+/// Navigator'ına sayfasız rota olarak açılıyor; oradan açılan not DIŞ
+/// kabuğa biniyor. Not kapanınca dış Navigator "geri alacak bir şeyim yok"
+/// (false) bildiriyor ve bu, iç Navigator'daki sayfasız rotayı görmeden
+/// platforma ulaşıyor → FlutterFragmentActivity geri geri çağrısını kapatıyor,
+/// sonraki geri tuşu Activity'yi bitiriyor: uygulama kapanıyor
+/// (bkz. test/requests_2026_10_17_d_test.dart).
+///
+/// Çözüm: platforma hep "çerçeve karşılar" denir. Gerçekten geri alacak bir
+/// şey yoksa yönlendirici `popRoute`'ta false döner ve Flutter kendisi
+/// `SystemNavigator.pop()` çağırır — ana ekrandan çıkış eskisi gibi çalışır.
+/// Web'de varsayılan kalır (tarayıcı geçmişi ayrı yönetiliyor).
+bool alwaysHandleBack(NavigationNotification notification) {
+  final state = WidgetsBinding.instance.lifecycleState;
+  // Varsayılanla aynı: motor hazır değilken platforma yazılmaz.
+  if (state == null || state == AppLifecycleState.detached) return true;
+  SystemNavigator.setFrameworkHandlesBack(true);
+  return true;
+}
+
 /// Web'de tarayıcı geçmişini "önce ana sayfa, sonra çıkış" kuralıyla yazan
 /// konum sağlayıcısı (bkz. [HomeFirstRouteInformationProvider]). Yönlendirici
 /// başına TEK örnek: her build'de yenisi kurulsa geçmiş durumu sıfırlanırdı.
@@ -93,6 +118,7 @@ class NotlarApp extends ConsumerWidget {
       backButtonDispatcher: webInfo == null
           ? null
           : router.backButtonDispatcher,
+      onNavigationNotification: kIsWeb ? null : alwaysHandleBack,
       theme: paper ? AppTheme.paper(font: font) : AppTheme.light(font: font),
       darkTheme: AppTheme.dark(font: font),
       themeMode: themeMode,

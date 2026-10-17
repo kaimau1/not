@@ -5184,4 +5184,26 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get attachmentViewTitle => 'Где разместить?';
+
+  @override
+  String get attachmentUploadQueued => 'Ожидает загрузки';
+
+  @override
+  String get attachmentWaitingOwner => 'Ждём, пока добавивший загрузит файл';
+
+  @override
+  String attachmentsUploadingCount(int count) {
+    return 'Загрузка вложений: $count';
+  }
+
+  @override
+  String get sharedNoteNew => 'Новое';
+
+  @override
+  String sharedNoteUpdatedBy(String name) {
+    return 'Обновил(а) $name';
+  }
+
+  @override
+  String get sharedMarkAllRead => 'Отметить всё как прочитанное';
 }

@@ -88,6 +88,54 @@ final reminderServiceProvider = Provider<ReminderService>((ref) {
   return service;
 });
 
+/// Uygulamanın BÜTÜN yerel bildirimlerine dokunuşun tek işleyicisi.
+///
+/// TUZAK: `FlutterLocalNotificationsPlugin` tekil; her `initialize` çağrısı
+/// dokunuş işleyicisini DEĞİŞTİRİR. Paylaşım bildirimi servisi kendi
+/// `initialize`'ını işleyicisiz çağırıyordu → ilk paylaşım bildiriminden
+/// sonra hatırlatıcının "Tamam/1 saat ertele" düğmeleri ve dokunuşu
+/// sessizce ölüyordu. İki servis de bu işlevi verir.
+void handleNotificationResponse(Ref ref, NotificationResponse response) {
+  final payload = response.payload ?? '';
+  // Brifing bildirimine dokununca ilgili ekranı aç.
+  if (payload == 'briefing') {
+    try {
+      ref.read(routerProvider).push('/briefing');
+    } catch (_) {}
+    return;
+  }
+  // Benimle paylaşılan notta hareket: notu SAHİBİNİN altından aç.
+  if (payload.startsWith('shared:')) {
+    final rest = payload.substring('shared:'.length);
+    final slash = rest.indexOf('/');
+    if (slash <= 0) return;
+    final ownerId = rest.substring(0, slash);
+    final noteId = rest.substring(slash + 1);
+    try {
+      ref
+          .read(routerProvider)
+          .pushNote(noteRoutePath(noteId, query: '?owner=$ownerId'));
+    } catch (_) {}
+    return;
+  }
+  // Hatırlatıcı bildirimi: aksiyon düğmeleri uygulamayı açmadan
+  // önce burada işlenir; düz dokunuş ilgili notu açar.
+  if (payload.startsWith('note:')) {
+    final noteId = payload.substring('note:'.length);
+    final repo = ref.read(notesRepositoryProvider);
+    switch (response.actionId) {
+      case 'done':
+        repo?.setReminder(noteId, null);
+      case 'snooze1h':
+        repo?.setReminder(noteId, DateTime.now().add(const Duration(hours: 1)));
+      default:
+        try {
+          ref.read(routerProvider).pushNote(noteRoutePath(noteId));
+        } catch (_) {}
+    }
+  }
+}
+
 class ReminderService {
   ReminderService(this._ref);
 
@@ -123,35 +171,8 @@ class ReminderService {
         android: androidInit,
         windows: windowsInit,
       ),
-      onDidReceiveNotificationResponse: (response) {
-        final payload = response.payload ?? '';
-        // Brifing bildirimine dokununca ilgili ekranı aç.
-        if (payload == 'briefing') {
-          try {
-            _ref.read(routerProvider).push('/briefing');
-          } catch (_) {}
-          return;
-        }
-        // Hatırlatıcı bildirimi: aksiyon düğmeleri uygulamayı açmadan
-        // önce burada işlenir; düz dokunuş ilgili notu açar.
-        if (payload.startsWith('note:')) {
-          final noteId = payload.substring('note:'.length);
-          final repo = _ref.read(notesRepositoryProvider);
-          switch (response.actionId) {
-            case 'done':
-              repo?.setReminder(noteId, null);
-            case 'snooze1h':
-              repo?.setReminder(
-                noteId,
-                DateTime.now().add(const Duration(hours: 1)),
-              );
-            default:
-              try {
-                _ref.read(routerProvider).pushNote(noteRoutePath(noteId));
-              } catch (_) {}
-          }
-        }
-      },
+      onDidReceiveNotificationResponse: (response) =>
+          handleNotificationResponse(_ref, response),
     );
 
     if (!kIsWeb && Platform.isAndroid) {

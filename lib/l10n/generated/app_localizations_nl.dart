@@ -5191,4 +5191,27 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get attachmentViewTitle => 'Waar moet het staan?';
+
+  @override
+  String get attachmentUploadQueued => 'Wacht op uploaden';
+
+  @override
+  String get attachmentWaitingOwner =>
+      'Wacht tot degene die het toevoegde het uploadt';
+
+  @override
+  String attachmentsUploadingCount(int count) {
+    return '$count bijlagen worden geüpload';
+  }
+
+  @override
+  String get sharedNoteNew => 'Nieuw';
+
+  @override
+  String sharedNoteUpdatedBy(String name) {
+    return 'Bijgewerkt door $name';
+  }
+
+  @override
+  String get sharedMarkAllRead => 'Alles als gelezen markeren';
 }

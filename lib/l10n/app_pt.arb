@@ -1030,5 +1030,11 @@
   "textToBubblesPreparing": "Diagramando o texto como documento…",
   "attachmentActions": "Ações do anexo",
   "attachmentOpen": "Abrir",
-  "attachmentViewTitle": "Onde deve ficar?"
+  "attachmentViewTitle": "Onde deve ficar?",
+  "attachmentUploadQueued": "Aguardando envio",
+  "attachmentWaitingOwner": "Aguardando quem adicionou enviar o arquivo",
+  "attachmentsUploadingCount": "Enviando {count} anexos",
+  "sharedNoteNew": "Novo",
+  "sharedNoteUpdatedBy": "Atualizado por {name}",
+  "sharedMarkAllRead": "Marcar tudo como lido"
 }

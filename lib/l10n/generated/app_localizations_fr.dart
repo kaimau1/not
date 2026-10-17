@@ -5193,4 +5193,27 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get attachmentViewTitle => 'Où le placer ?';
+
+  @override
+  String get attachmentUploadQueued => 'En attente d\'envoi';
+
+  @override
+  String get attachmentWaitingOwner =>
+      'En attente de l\'envoi par la personne qui l\'a ajouté';
+
+  @override
+  String attachmentsUploadingCount(int count) {
+    return 'Envoi de $count pièces jointes';
+  }
+
+  @override
+  String get sharedNoteNew => 'Nouveau';
+
+  @override
+  String sharedNoteUpdatedBy(String name) {
+    return 'Mis à jour par $name';
+  }
+
+  @override
+  String get sharedMarkAllRead => 'Tout marquer comme lu';
 }

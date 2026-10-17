@@ -1030,5 +1030,11 @@
   "textToBubblesPreparing": "Menata teks sebagai dokumen…",
   "attachmentActions": "Tindakan lampiran",
   "attachmentOpen": "Buka",
-  "attachmentViewTitle": "Ditaruh di mana?"
+  "attachmentViewTitle": "Ditaruh di mana?",
+  "attachmentUploadQueued": "Menunggu diunggah",
+  "attachmentWaitingOwner": "Menunggu pengunggahan dari perangkat orang yang menambahkannya",
+  "attachmentsUploadingCount": "Mengunggah {count} lampiran",
+  "sharedNoteNew": "Baru",
+  "sharedNoteUpdatedBy": "Diperbarui oleh {name}",
+  "sharedMarkAllRead": "Tandai semua sudah dibaca"
 }
