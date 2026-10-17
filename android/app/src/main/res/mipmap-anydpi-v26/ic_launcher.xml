@@ -1,22 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- DIKKAT: bu dosyayi `dart run flutter_launcher_icons` her calismada bastan
-     yaziyor ve <monochrome> katmanini SILIYOR (arac desteklemiyor). Aracı
-     calistirdiktan sonra asagidaki monochrome blogunu geri ekle.
-     i3 (2026-10-17): zemin artik duz renk degil, koyu murekkep gradyani
-     (assets/icon/src/icon_background.svg → drawable-*/ic_launcher_background.png). -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
   <background android:drawable="@drawable/ic_launcher_background"/>
   <foreground>
       <inset
           android:drawable="@drawable/ic_launcher_foreground"
-          android:inset="16%" />
+          android:inset="0%" />
   </foreground>
-  <!-- Android 13+ temali simge. Sistem bu katmanin rengini yok sayip kendi
-       tonunu basar, yalnizca alfa kanalini kullanir; bu yuzden kaynakta
-       (assets/icon/src/icon_monochrome.svg) satirlar, kat ve yildiz oyulur. -->
   <monochrome>
       <inset
           android:drawable="@drawable/ic_launcher_monochrome"
-          android:inset="16%" />
+          android:inset="0%" />
   </monochrome>
 </adaptive-icon>

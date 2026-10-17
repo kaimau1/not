@@ -109,7 +109,10 @@ class ReminderService {
       // Bilinmeyen dilim: UTC ile devam et.
     }
 
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    // Bildirim küçük simgesi tek renk siluet olmalı (bkz. ic_stat_notlar.xml).
+    const androidInit = AndroidInitializationSettings(
+      '@drawable/ic_stat_notlar',
+    );
     const windowsInit = WindowsInitializationSettings(
       appName: 'Notlar',
       appUserModelId: 'dev.kaimau.notlar',
