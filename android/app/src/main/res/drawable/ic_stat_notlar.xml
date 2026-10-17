@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BİLDİRİM KÜÇÜK SİMGESİ (i4, 2026-10-17). Android 5+ bildirim simgesinin
+     yalnız ALFA kanalını kullanır ve beyaza boyar; eskiden renkli başlatıcı
+     simgesi (@mipmap/ic_launcher) verildiği için durum çubuğunda ve
+     bildirimde GRİ/BEYAZ BİR KARE görünüyordu. Burada uygulama simgesinin
+     silueti: satırları oyuk not + yapay zekâ parıltısı. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M5.2,6.5H13.3A2.2,2.2 0,0 1,15.5 8.7V17.5L11.5,21.5H5.2A2.2,2.2 0,0 1,3 19.3V8.7A2.2,2.2 0,0 1,5.2 6.5Z M5.7,10.2H11.3A0.75,0.75 0,0 1,11.3 11.7H5.7A0.75,0.75 0,0 1,5.7 10.2Z M5.7,13.2H12.8A0.75,0.75 0,0 1,12.8 14.7H5.7A0.75,0.75 0,0 1,5.7 13.2Z M5.7,16.2H9.8A0.75,0.75 0,0 1,9.8 17.7H5.7A0.75,0.75 0,0 1,5.7 16.2Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M19.3,1.3C20.18,4.42 20.18,4.42 23.3,5.3C20.18,6.18 20.18,6.18 19.3,9.3C18.42,6.18 18.42,6.18 15.3,5.3C18.42,4.42 18.42,4.42 19.3,1.3Z" />
+</vector>

@@ -10,6 +10,7 @@ import '../../folders/domain/note_folder.dart';
 import '../../settings/settings_providers.dart';
 import '../../ai/data/attachment_text_index.dart';
 import '../data/notes_repository.dart';
+import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_similarity.dart';
 import '../domain/note_type.dart';
@@ -1078,6 +1079,14 @@ String _searchableBody(Note note) {
     buffer
       ..write('\n')
       ..write(stripRichMarkers(text));
+  }
+  // TRANSKRİPTLER (metin ekleri): ses kaydında geçen bir söz, kaydı içeren
+  // notu bulur — metin kayıtta duruyor, çıkarmak için hiçbir bedel yok.
+  for (final attachment in note.attachments) {
+    if (attachment.kind != AttachmentKind.text) continue;
+    buffer
+      ..write('\n')
+      ..write(attachment.text);
   }
   final text = buffer.toString().toLowerCase();
   _searchBodyCache[note.id] = (note.updatedAt, text);

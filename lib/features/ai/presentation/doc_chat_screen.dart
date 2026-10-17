@@ -60,6 +60,15 @@ class _DocChatScreenState extends ConsumerState<DocChatScreen> {
               a.kind == AttachmentKind.slide) {
             continue;
           }
+          // VİDEO: YouTube'un baytı yok; büyük yerel video satır içi sınırı
+          // aşar. KÖK NEDEN (bellek): bu yol eskiden yüzlerce MB'lık videoyu
+          // TAMAMEN belleğe okuyup base64'e çeviriyor, istek yine de
+          // reddediliyordu — sohbet açılırken yüzlerce MB'lık sıçrama.
+          if (a.kind == AttachmentKind.video &&
+              (a.isWebVideo ||
+                  a.sizeBytes > GeminiService.maxInlineMediaBytes)) {
+            continue;
+          }
           final bytes = repo == null ? null : await repo.readBytes(a);
           if (bytes != null) {
             _noteAttachments.add((

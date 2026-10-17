@@ -4895,4 +4895,117 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get removeTextPart => '移除文本';
+
+  @override
+  String get transcriptTitle => '转写';
+
+  @override
+  String get transcriptAction => '转为文字';
+
+  @override
+  String get transcriptFileSuffix => '转写';
+
+  @override
+  String get transcriptWorkingAudio => '正在转写音频…';
+
+  @override
+  String get transcriptWorkingVideo => '正在转写视频…';
+
+  @override
+  String get transcriptWorkingImage => '正在识别图片中的文字…';
+
+  @override
+  String get transcriptLongHint => '较长的录音可能需要几分钟；请保持此页面打开。';
+
+  @override
+  String get transcriptSaved => '已作为文本附件保存到笔记';
+
+  @override
+  String get transcriptInsertSelection => '将所选内容加入笔记';
+
+  @override
+  String get transcriptInsertAll => '全部加入笔记';
+
+  @override
+  String get transcriptInserted => '已加入笔记';
+
+  @override
+  String get transcriptNewNote => '新笔记';
+
+  @override
+  String get transcriptRetryAi => '用 AI 重新转写';
+
+  @override
+  String get transcriptReadWithAi => '用 AI 识别（手写）';
+
+  @override
+  String get transcriptShowTimes => '时间戳';
+
+  @override
+  String get transcriptDelete => '删除转写';
+
+  @override
+  String get transcriptDeleteConfirm => '删除转写？源文件仍保留在笔记中。';
+
+  @override
+  String get transcriptEmpty => '未找到文字。';
+
+  @override
+  String transcriptTooLarge(int mb) {
+    return '录音大小为 $mb MB；内置 AI 最多接受 15 MB。在设置中填入你自己的 Gemini 密钥即可转写更大的录音。';
+  }
+
+  @override
+  String transcriptUnsupported(String format) {
+    return '此录音格式（$format）无法转写。';
+  }
+
+  @override
+  String get transcriptEdit => '编辑';
+
+  @override
+  String get transcriptSave => '保存';
+
+  @override
+  String transcriptWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 个词',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transcriptNoteTitle(String name) {
+    return '转写：$name';
+  }
+
+  @override
+  String get transcriptOnDevice => '在设备上识别 · 未使用网络和 AI 点数';
+
+  @override
+  String get addAudioFile => '添加音频文件';
+
+  @override
+  String get transcribeFile => '将文件转为文字';
+
+  @override
+  String get transcribeFileSubtitle => '选择音频、视频或图片，其文字会写入笔记';
+
+  @override
+  String cardTranscriptCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 份转写',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transcriptPickTitle => '要转写的文件';
+
+  @override
+  String get transcriptUnsupportedFile => '此文件类型无法转写（请选择音频、视频或图片）。';
 }

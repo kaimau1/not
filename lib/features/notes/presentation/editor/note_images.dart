@@ -14,7 +14,9 @@ import '../../../../core/personalize.dart';
 import '../../../../core/widgets/customizable.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/video_time.dart';
+import '../../data/video_frame.dart';
 import '../../domain/attachment.dart';
+import '../note_card_media.dart' show VideoPoster;
 import '../viewers/image_viewer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/pdf_viewer_screen.dart';
@@ -610,25 +612,49 @@ class _VideoBoxState extends State<_VideoBox> {
   bool _playing = false;
   bool _sizeReported = false;
 
-  /// TARTILDI, TEMBELLEŞTİRİLMEDİ: oynatıcı `initState`te kurulur.
-  ///
-  /// Tembel kurulum (ilk dokunuşta) platform çözücüsünü geciktirirdi — çok
-  /// videolu notta eşzamanlı çözücü sınırını zorlamamak açısından iyi olurdu.
-  /// Ama kutunun İLK KARESİ oynatıcıdan geliyor: tembel kurulumda kullanıcı
-  /// dokunana kadar videonun yerinde genel bir kamera simgesi duruyor. Bir
-  /// videolu (yaygın) durumda görünür bir gerileme, dört videolu (nadir)
-  /// durumda kazanç — takas kabul edilmedi. Küçük resim ayrıca üretilirse
-  /// tembel kurulum yeniden düşünülebilir.
-  bool _initStarted = false;
+  /// **TEMBEL KURULUM** (pil/RAM — 2026-10-17). Eskiden oynatıcı
+  /// `initState`te kuruluyordu: notu açmak, videoyu hiç oynatmasan da her
+  /// video için bir yerel çözücü (Android'de ExoPlayer + donanım kod çözücü
+  /// tamponları, onlarca MB) ayağa kaldırıyordu. O zaman tembel kurulum
+  /// reddedilmişti çünkü kutunun İLK KARESİ oynatıcıdan geliyordu; artık
+  /// kapak karesi ayrıca üretiliyor ve diskte önbellekte ([VideoPoster]).
+  /// Kutu ▶'ye basılana (ya da notta bir zaman damgasına dokunulana) dek
+  /// kapağı gösterir. Kapak çıkarılamayan yerde (masaüstü) ve videonun
+  /// boyu henüz bilinmiyorken ([_VideoBox.onSize] — yerleşim için gerekli)
+  /// eski hemen-kurulum sürer.
+  Future<void>? _initFuture;
+  bool _initializing = false;
+
+  bool get _lazy => VideoFrame.supported && widget.onSize == null;
 
   /// Notun video merkezi ve bu oynatıcının oradaki kaydı (zaman damgaları).
+  /// Tembel kutuda oynatıcı kurulana dek yerinde [_DeferredTimeSource] durur.
   NoteVideoHub? _hub;
-  _PlayerTimeSource? _source;
+  VideoTimeSource? _source;
 
   @override
   void initState() {
     super.initState();
-    _init();
+    if (!_lazy) _init();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_lazy && _controller == null && _source == null) _registerDeferred();
+  }
+
+  /// Oynatıcı kurulmadan zaman damgası dokunuşu da çalışsın: kayıt, ilk
+  /// istekte oynatıcıyı kurup asıl kaynağa devreder.
+  void _registerDeferred() {
+    final hub = VideoHubScope.maybeOf(context);
+    if (hub == null) return;
+    final source = _DeferredTimeSource(widget.video.id, () async {
+      await _init();
+      return _controller;
+    });
+    _hub = hub..register(source);
+    _source = source;
   }
 
   void _register(VideoPlayerController controller) {
@@ -646,16 +672,19 @@ class _VideoBoxState extends State<_VideoBox> {
     _source = null;
   }
 
-  Future<void> _init() async {
-    if (_initStarted) return;
-    _initStarted = true;
+  /// Oynatıcıyı BİR KEZ kurar; eşzamanlı çağrılar aynı işi bekler.
+  Future<void> _init() => _initFuture ??= _doInit();
+
+  Future<void> _doInit() async {
     // Dosya yoksa denemeye gerek yok: yer tutucu kalır.
     if (!localFileExists(widget.video.localPath)) return;
     final controller = VideoPlayerController.file(File(widget.video.localPath));
     _controller = controller;
+    if (mounted && _lazy) setState(() => _initializing = true);
     try {
       await controller.initialize();
       if (!mounted) return;
+      _initializing = false;
       controller.addListener(_onTick);
       _register(controller);
       setState(() {});
@@ -666,7 +695,12 @@ class _VideoBoxState extends State<_VideoBox> {
       }
     } catch (_) {
       // Oynatıcı bu platformda yok (Windows) ya da dosya bozuk.
-      if (mounted) setState(() => _failed = true);
+      if (mounted) {
+        setState(() {
+          _failed = true;
+          _initializing = false;
+        });
+      }
     }
   }
 
@@ -696,8 +730,13 @@ class _VideoBoxState extends State<_VideoBox> {
       _controller?.dispose();
       _controller = null;
       _failed = false;
-      _initStarted = false;
-      _init();
+      _initFuture = null;
+      _initializing = false;
+      if (_lazy) {
+        _registerDeferred();
+      } else {
+        _init();
+      }
     }
   }
 
@@ -710,11 +749,9 @@ class _VideoBoxState extends State<_VideoBox> {
   }
 
   Future<void> _toggle() async {
-    // İlk dokunuşta oynatıcı burada kurulur (bkz. [_initStarted]).
-    if (!_initStarted) {
-      await _init();
-      if (!mounted) return;
-    }
+    // İlk dokunuşta oynatıcı burada kurulur (bkz. [_initFuture]).
+    await _init();
+    if (!mounted) return;
     final controller = _controller;
     if (controller == null || !controller.value.isInitialized) return;
     if (controller.value.isPlaying) {
@@ -735,6 +772,44 @@ class _VideoBoxState extends State<_VideoBox> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final controller = _controller;
+    // Tembel kutu: oynatıcı kurulana dek kapak + ▶ (kurulurken çark).
+    if (_lazy &&
+        !_failed &&
+        (controller == null || !controller.value.isInitialized)) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          VideoPoster(video: widget.video, fit: widget.fit),
+          Center(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _toggle,
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  color: Colors.black45,
+                  shape: BoxShape.circle,
+                ),
+                child: _initializing
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.play_arrow,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
     if (controller == null || _failed || !controller.value.isInitialized) {
       return Container(
         color: scheme.surfaceContainerHigh,
@@ -903,6 +978,49 @@ class _NoteAtChip extends StatelessWidget {
   );
 }
 
+/// Henüz KURULMAMIŞ oynatıcının not tarafındaki yer tutucusu (bkz.
+/// `_VideoBoxState._lazy`): zaman damgasına dokununca ya da çubuktan
+/// oynatılınca oynatıcı kurulur, istek ona iletilir; kurulunca kutu asıl
+/// kaynağı ([_PlayerTimeSource]) kaydeder ve bu kayıt düşer.
+class _DeferredTimeSource extends VideoTimeSource {
+  _DeferredTimeSource(this.attachmentId, this._start);
+
+  @override
+  final String attachmentId;
+  final Future<VideoPlayerController?> Function() _start;
+
+  /// Hiç oynatılmamış video için konum bilinmiyor sayılır: "bu ana not al"
+  /// yanlış bir 0:00 yazmasın (okunamadı uyarısı çıkar).
+  @override
+  Future<Duration?> position() async => null;
+
+  @override
+  Future<void> seekTo(Duration position) async {
+    final controller = await _start();
+    if (controller == null || !controller.value.isInitialized) return;
+    final duration = controller.value.duration;
+    var target = position;
+    if (duration > Duration.zero && target > duration) target = duration;
+    await controller.seekTo(target);
+    await controller.play();
+  }
+
+  @override
+  Future<void> play() async {
+    final controller = await _start();
+    if (controller == null || !controller.value.isInitialized) return;
+    await controller.play();
+  }
+
+  @override
+  Future<void> seekBy(Duration delta) async {
+    final controller = await _start();
+    if (controller == null || !controller.value.isInitialized) return;
+    final v = controller.value;
+    await controller.seekTo(shiftedPosition(v.position, delta, v.duration));
+  }
+}
+
 /// Yerel oynatıcının (video_player) not tarafına açılan yüzü.
 class _PlayerTimeSource extends VideoTimeSource {
   _PlayerTimeSource(this.attachmentId, this.controller);
@@ -983,6 +1101,7 @@ class _ImageTools extends StatelessWidget {
     this.onSelectMany,
     this.onDetach,
     this.onVideoToNote,
+    this.onTranscribe,
     this.viewSwitch,
     this.copyIsLink = false,
     this.onOpenExternal,
@@ -1011,6 +1130,9 @@ class _ImageTools extends StatelessWidget {
 
   /// Videodan (görüntü + ses) AI ile not çıkarır — yalnız video ekinde dolu.
   final VoidCallback? onVideoToNote;
+
+  /// Görselin/videonun TRANSKRİPTİ (metne dök / kayıtlıysa aç).
+  final VoidCallback? onTranscribe;
 
   /// [onCopy] BAĞLANTI kopyalar (YouTube eki — dosyası yok, kopyalanacak şey
   /// adresi). Menüde "Bağlantıyı kopyala" olarak ÜSTTE görünür.
@@ -1056,6 +1178,7 @@ class _ImageTools extends StatelessWidget {
             onSelectMany != null ||
             onDetach != null ||
             onVideoToNote != null ||
+            onTranscribe != null ||
             onOpenExternal != null)
           PopupMenuButton<String>(
             tooltip: l10n.more,
@@ -1072,6 +1195,8 @@ class _ImageTools extends StatelessWidget {
                   onDetach?.call();
                 case 'videoToNote':
                   onVideoToNote?.call();
+                case 'transcribe':
+                  onTranscribe?.call();
                 case 'openExternal':
                   onOpenExternal?.call();
               }
@@ -1105,6 +1230,16 @@ class _ImageTools extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.auto_awesome_outlined),
                     title: Text(l10n.videoToNote),
+                  ),
+                ),
+              if (onTranscribe != null)
+                PopupMenuItem(
+                  value: 'transcribe',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.subtitles_outlined),
+                    title: Text(l10n.transcriptAction),
                   ),
                 ),
               if (onExtractText != null)
@@ -1296,6 +1431,7 @@ class NotePageCanvas extends StatefulWidget {
     this.onChangedMany,
     this.onDetach,
     this.onVideoToNote,
+    this.onTranscribe,
     this.onPinTop,
     this.onPinHover,
     this.onViewChange,
@@ -1381,6 +1517,9 @@ class NotePageCanvas extends StatefulWidget {
 
   /// Videodan AI ile not çıkarır; yalnız video ekinin menüsünde görünür.
   final ValueChanged<Attachment>? onVideoToNote;
+
+  /// Görselin/videonun transkripti (bkz. `TranscriptScreen`); PDF'te yok.
+  final ValueChanged<Attachment>? onTranscribe;
 
   /// **ÜSTE SABİTLE** (kullanıcı isteği 2026-10-11: "üstte video/resim, altta
   /// not — görseli sürükleyerek"): basılı tutup sürüklenen görsel ekranın
@@ -2818,6 +2957,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             widget.onVideoToNote == null || !isVideo || img.isWebVideo
             ? null
             : () => widget.onVideoToNote!(img),
+        onTranscribe: widget.onTranscribe == null || isPdf
+            ? null
+            : () => widget.onTranscribe!(img),
         // GÖRÜNÜM ANAHTARI panelin üst satırında: Sabit / Yüzen / Balonlu
         // (eskiden menüde "Üste sabitle", PDF'te "Balonlu görünüm").
         viewSwitch: widget.onViewChange == null

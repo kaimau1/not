@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 // ScrollCacheExtent (ızgara önbellek payı) yalnız rendering katmanında.
 import 'package:flutter/rendering.dart';
@@ -1692,6 +1693,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           onQrNote: createQrNote,
                           onGalleryVideo: createGalleryVideoNote,
                           onYouTube: createYouTubeNote,
+                          onTranscribe: kIsWeb ? null : createTranscribeNote,
                           anchor: _fabColumnLink,
                           onCreate: createNote,
                           onHandwriting: createHandwritingNote,

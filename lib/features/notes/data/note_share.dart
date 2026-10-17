@@ -106,6 +106,9 @@ class NoteShare {
     return files.length;
   }
 
+  /// Pakete baytlarıyla girebilecek en büyük ek (bkz. [packageBytes]).
+  static const maxPackagedFileBytes = 60 * 1024 * 1024;
+
   /// Notun paket baytları (paylaşmadan; testler ve yedekleme için ayrı).
   static Future<Uint8List> packageBytes(
     Note note,
@@ -114,6 +117,13 @@ class NoteShare {
     final files = <String, Uint8List>{};
     if (attachments != null) {
       for (final attachment in note.attachments) {
+        // Metin eki içeriğini kaydında taşır; ayrı dosya gereksiz.
+        if (attachment.kind == AttachmentKind.text) continue;
+        // Paket BELLEKTE kurulur (ZIP): yüzlerce MB'lık bir video baytları,
+        // arşivi ve sıkıştırılmış kopyasıyla birlikte üç kez bellekte
+        // durur — telefon uygulamayı öldürüyordu. Tavanı aşan ek pakete
+        // yalnız kaydıyla girer (alıcıda atlanır, not açılır).
+        if (attachment.sizeBytes > maxPackagedFileBytes) continue;
         try {
           final bytes = await attachments.readBytes(attachment);
           if (bytes != null) files[attachment.id] = bytes;
@@ -143,8 +153,8 @@ class NoteShare {
     final stored = <Attachment>[];
     if (attachments != null) {
       for (final meta in source.attachments) {
-        // YouTube eki dosyasızdır: bağlantı olduğu gibi taşınır.
-        if (meta.isWebVideo) {
+        // YouTube eki ve metin eki dosyasızdır: kayıt olduğu gibi taşınır.
+        if (meta.isWebVideo || meta.kind == AttachmentKind.text) {
           stored.add(meta);
           continue;
         }

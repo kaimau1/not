@@ -158,9 +158,12 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
     return switch (attachment.kind) {
       AttachmentKind.pdf => true,
       AttachmentKind.image => ScanOcr.supported,
+      // Metin eki aramaya DOĞRUDAN girer (bkz. notes_providers
+      // `_searchableBody`) — çıkarılacak bir şey yok.
       AttachmentKind.audio ||
       AttachmentKind.video ||
-      AttachmentKind.slide => false,
+      AttachmentKind.slide ||
+      AttachmentKind.text => false,
     };
   }
 

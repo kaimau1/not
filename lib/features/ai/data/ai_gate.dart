@@ -86,6 +86,10 @@ class AiCost {
               ? AppConstants.aiPointsPerImage
               : AppConstants.aiPointsPerDocument;
         }
+        // Bağlantıyla verilen dosya (YouTube) da bir belge kadar tutar.
+        if (part['file_data'] is Map || part['fileData'] is Map) {
+          points += AppConstants.aiPointsPerDocument;
+        }
       }
     }
     return points + chars ~/ AppConstants.aiCharsPerPoint;

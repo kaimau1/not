@@ -5023,4 +5023,128 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get removeTextPart => 'Удалить текст';
+
+  @override
+  String get transcriptTitle => 'Расшифровка';
+
+  @override
+  String get transcriptAction => 'Расшифровать';
+
+  @override
+  String get transcriptFileSuffix => 'расшифровка';
+
+  @override
+  String get transcriptWorkingAudio => 'Расшифровка аудио…';
+
+  @override
+  String get transcriptWorkingVideo => 'Расшифровка видео…';
+
+  @override
+  String get transcriptWorkingImage => 'Чтение текста на изображении…';
+
+  @override
+  String get transcriptLongHint =>
+      'Длинные записи могут обрабатываться несколько минут; не закрывайте этот экран.';
+
+  @override
+  String get transcriptSaved => 'Сохранено в заметке как текстовое вложение';
+
+  @override
+  String get transcriptInsertSelection => 'Добавить выделенное в заметку';
+
+  @override
+  String get transcriptInsertAll => 'Добавить всё в заметку';
+
+  @override
+  String get transcriptInserted => 'Добавлено в заметку';
+
+  @override
+  String get transcriptNewNote => 'Новая заметка';
+
+  @override
+  String get transcriptRetryAi => 'Расшифровать заново с ИИ';
+
+  @override
+  String get transcriptReadWithAi => 'Прочитать с ИИ (рукопись)';
+
+  @override
+  String get transcriptShowTimes => 'Метки времени';
+
+  @override
+  String get transcriptDelete => 'Удалить расшифровку';
+
+  @override
+  String get transcriptDeleteConfirm =>
+      'Удалить расшифровку? Исходный файл останется в заметке.';
+
+  @override
+  String get transcriptEmpty => 'Текст не найден.';
+
+  @override
+  String transcriptTooLarge(int mb) {
+    return 'Запись весит $mb МБ; встроенный ИИ принимает не более 15 МБ. Со своим ключом Gemini (Настройки) можно расшифровывать и большие записи.';
+  }
+
+  @override
+  String transcriptUnsupported(String format) {
+    return 'Этот формат записи ($format) нельзя расшифровать.';
+  }
+
+  @override
+  String get transcriptEdit => 'Изменить';
+
+  @override
+  String get transcriptSave => 'Сохранить';
+
+  @override
+  String transcriptWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count слова',
+      many: '$count слов',
+      few: '$count слова',
+      one: '1 слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transcriptNoteTitle(String name) {
+    return 'Расшифровка: $name';
+  }
+
+  @override
+  String get transcriptOnDevice =>
+      'Прочитано на устройстве · без интернета и баллов ИИ';
+
+  @override
+  String get addAudioFile => 'Добавить аудиофайл';
+
+  @override
+  String get transcribeFile => 'Расшифровать файл';
+
+  @override
+  String get transcribeFileSubtitle =>
+      'Выберите аудио, видео или изображение — текст попадёт в заметку';
+
+  @override
+  String cardTranscriptCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count расшифровки',
+      many: '$count расшифровок',
+      few: '$count расшифровки',
+      one: 'Расшифровка',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transcriptPickTitle => 'Файл для расшифровки';
+
+  @override
+  String get transcriptUnsupportedFile =>
+      'Этот тип файла нельзя расшифровать (выберите аудио, видео или изображение).';
 }

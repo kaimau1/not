@@ -2310,5 +2310,71 @@
   "textPartRemoved": "Metin kaldırıldı",
   "notePartsMenu": "Bölümler",
   "removeListPart": "Listeyi kaldır",
-  "removeTextPart": "Metni kaldır"
+  "removeTextPart": "Metni kaldır",
+  "transcriptTitle": "Transkript",
+  "transcriptAction": "Metne dök",
+  "transcriptFileSuffix": "transkript",
+  "transcriptWorkingAudio": "Ses metne dökülüyor…",
+  "transcriptWorkingVideo": "Video metne dökülüyor…",
+  "transcriptWorkingImage": "Görseldeki yazı okunuyor…",
+  "transcriptLongHint": "Uzun kayıtlarda birkaç dakika sürebilir; bu ekranı açık tut.",
+  "transcriptSaved": "Nota metin eki olarak kaydedildi",
+  "transcriptInsertSelection": "Seçimi nota ekle",
+  "transcriptInsertAll": "Tümünü nota ekle",
+  "transcriptInserted": "Nota eklendi",
+  "transcriptNewNote": "Yeni not",
+  "transcriptRetryAi": "AI ile yeniden dök",
+  "transcriptReadWithAi": "AI ile oku (el yazısı)",
+  "transcriptShowTimes": "Zaman damgaları",
+  "transcriptDelete": "Transkripti sil",
+  "transcriptDeleteConfirm": "Transkript silinsin mi? Kaynak dosya notta kalır.",
+  "transcriptEmpty": "Metin bulunamadı.",
+  "transcriptTooLarge": "Kayıt {mb} MB; dahili yapay zekâ en çok 15 MB alabiliyor. Ayarlar'dan kendi Gemini anahtarını girersen büyük kayıtlar da dökülür.",
+  "@transcriptTooLarge": {
+    "placeholders": {
+      "mb": {
+        "type": "int"
+      }
+    }
+  },
+  "transcriptUnsupported": "Bu kayıt biçimi ({format}) metne dökülemiyor.",
+  "@transcriptUnsupported": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "transcriptEdit": "Düzenle",
+  "transcriptSave": "Kaydet",
+  "transcriptWords": "{count, plural, =1{1 sözcük} other{{count} sözcük}}",
+  "@transcriptWords": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "transcriptNoteTitle": "Transkript: {name}",
+  "@transcriptNoteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transcriptOnDevice": "Cihazda okundu · internet ve AI puanı harcanmadı",
+  "addAudioFile": "Ses dosyası ekle",
+  "transcribeFile": "Dosyayı metne dök",
+  "transcribeFileSubtitle": "Ses, video ya da görsel seç; metni nota yazılır",
+  "cardTranscriptCount": "{count, plural, =1{Transkript} other{{count} transkript}}",
+  "@cardTranscriptCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "transcriptPickTitle": "Metne dökülecek dosya",
+  "transcriptUnsupportedFile": "Bu dosya türü metne dökülemiyor (ses, video ya da görsel seç)."
 }

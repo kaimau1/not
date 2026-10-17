@@ -88,6 +88,18 @@ class FirebaseAiClient {
           ),
         );
       }
+      // Bağlantıyla verilen dosya (YouTube videosu — bkz. transcribeMedia).
+      final file = map['file_data'] ?? map['fileData'];
+      if (file is Map) {
+        parts.add(
+          FileData(
+            file['mime_type'] as String? ??
+                file['mimeType'] as String? ??
+                'video/mp4',
+            (file['file_uri'] ?? file['fileUri']) as String,
+          ),
+        );
+      }
     }
     return Content(raw['role'] as String? ?? 'user', parts);
   }
@@ -136,13 +148,14 @@ class FirebaseAiClient {
   Future<T> _withModel<T>(
     Future<T> Function(String model) run, {
     String? prefer,
+    Duration? timeout,
   }) async {
     final models = _candidates(prefer);
     Object? lastSkipped;
     for (var i = 0; i < models.length; i++) {
       for (var attempt = 0; attempt <= _backoff.length; attempt++) {
         try {
-          return await run(models[i]).timeout(_requestTimeout);
+          return await run(models[i]).timeout(timeout ?? _requestTimeout);
         } on Object catch (e) {
           AiDiagnostics.record(models[i], e);
           if (_isTransient(e) && attempt < _backoff.length) {
@@ -228,6 +241,7 @@ class FirebaseAiClient {
     List<Map<String, dynamic>> contents, {
     bool jsonOutput = false,
     String? preferModel,
+    Duration? timeout,
   }) async {
     await _beforeCall(contents);
     final converted = [for (final c in contents) _toContent(c)];
@@ -235,6 +249,7 @@ class FirebaseAiClient {
       (model) =>
           _model(model, jsonOutput: jsonOutput).generateContent(converted),
       prefer: preferModel,
+      timeout: timeout,
     );
     final text = response.text ?? '';
     if (text.isEmpty) throw const GeminiException('Modelden boş yanıt döndü');

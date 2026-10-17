@@ -37,6 +37,7 @@ class AttachmentStrip extends StatelessWidget {
     this.onInsertTag,
     this.onPlaceOnPage,
     this.onVideoToNote,
+    this.onTranscribe,
   });
 
   final List<Attachment> attachments;
@@ -60,6 +61,11 @@ class AttachmentStrip extends StatelessWidget {
 
   /// Görüntülü nottan AI ile detaylı not çıkarır. null ise düğme gizlenir.
   final Future<void> Function(Attachment)? onVideoToNote;
+
+  /// TRANSKRİPT: metin ekinde okuma ekranını açar; ses/video/görselde metne
+  /// döker (kayıtlıysa transkriptini açar). null ise düğme yok, metin eki
+  /// dokunuşta açılmaz.
+  final ValueChanged<Attachment>? onTranscribe;
 
   /// PDF üzerine yapılan çizim kaydedilirken çağrılır; verilmezse PDF salt
   /// görüntülenir.
@@ -97,6 +103,14 @@ class AttachmentStrip extends StatelessWidget {
               onInsertTag: onInsertTag,
               onPlaceOnPage: onPlaceOnPage,
               onVideoToNote: onVideoToNote,
+              onTranscribe: onTranscribe,
+              // Kaynağın transkripti zaten varsa düğme "aç" olarak işaretlenir.
+              transcribed: attachments[index].kind != AttachmentKind.text &&
+                  attachments.any(
+                    (a) =>
+                        a.kind == AttachmentKind.text &&
+                        a.transcriptOf == attachments[index].id,
+                  ),
             ),
           ),
         ),
@@ -247,6 +261,8 @@ class _AttachmentTile extends ConsumerWidget {
     this.onInsertTag,
     this.onPlaceOnPage,
     this.onVideoToNote,
+    this.onTranscribe,
+    this.transcribed = false,
   });
 
   final Attachment attachment;
@@ -259,8 +275,18 @@ class _AttachmentTile extends ConsumerWidget {
   final ValueChanged<Attachment>? onInsertTag;
   final ValueChanged<Attachment>? onPlaceOnPage;
   final Future<void> Function(Attachment)? onVideoToNote;
+  final ValueChanged<Attachment>? onTranscribe;
+
+  /// Bu ekin (ses/video/görsel) kayıtlı transkripti var mı.
+  final bool transcribed;
 
   bool get _hasLocal => localFileExists(attachment.localPath);
+
+  /// Metne dökülebilen ek mi (bkz. `Transcripts.canTranscribe`).
+  bool get _canTranscribe =>
+      attachment.kind == AttachmentKind.audio ||
+      attachment.kind == AttachmentKind.video ||
+      attachment.kind == AttachmentKind.image;
 
   /// Sayfaya konabilen ekler: GÖRSEL, VİDEO (olduğu yerde oynar) ve PDF
   /// (kullanıcı isteği 2026-09-06 — sayfada sayfası çevrilen bir kutu olur,
@@ -273,6 +299,11 @@ class _AttachmentTile extends ConsumerWidget {
   void _open(BuildContext context, WidgetRef ref) {
     // Ses eki için satır içi görüntüleyici yok (kompakt oynatıcıdan çalınır).
     if (attachment.kind == AttachmentKind.audio) return;
+    // Metin eki dosyasız: okuma ekranı içeriği kayıttan alır.
+    if (attachment.kind == AttachmentKind.text) {
+      onTranscribe?.call(attachment);
+      return;
+    }
     // Drive'daki ek bu cihaza inmediyse önce indirilir (bkz. drive_ui.dart).
     if (!_hasLocal && attachment.isInDrive && !attachment.isUploaded) {
       fetchAttachmentNow(context, ref, attachment).then((ok) {
@@ -334,6 +365,13 @@ class _AttachmentTile extends ConsumerWidget {
     Widget content;
     if (attachment.kind == AttachmentKind.audio) {
       content = _AudioTile(attachment: attachment);
+    } else if (attachment.kind == AttachmentKind.text) {
+      content = _PreviewTile(
+        preview: _TextPreview(text: attachment.text),
+        name: attachment.fileName,
+        badge: 'TXT',
+        badgeColor: const Color(0xFF6D4C41),
+      );
     } else if (attachment.kind == AttachmentKind.pdf) {
       content = _PreviewTile(
         preview: ColoredBox(
@@ -528,6 +566,7 @@ class _AttachmentTile extends ConsumerWidget {
         // karşı köşesinde durur ki yanlışlıkla silmeye basılmasın.
         if (onCopy != null ||
             onInsertTag != null ||
+            (onTranscribe != null && _canTranscribe) ||
             (onPlaceOnPage != null && _canPlaceOnPage))
           PositionedDirectional(
             start: 2,
@@ -558,6 +597,25 @@ class _AttachmentTile extends ConsumerWidget {
                       backgroundColor: Colors.black38,
                     ),
                     onPressed: () => onInsertTag!(attachment),
+                  ),
+                // METNE DÖK (kullanıcı isteği 2026-10-17): ses/video/görselin
+                // transkripti — kayıtlıysa açılır (dolu simge), yoksa
+                // dökülür ve nota metin eki olarak kaydedilir.
+                if (onTranscribe != null && _canTranscribe)
+                  IconButton(
+                    tooltip: context.l10n.transcriptAction,
+                    visualDensity: VisualDensity.compact,
+                    icon: Icon(
+                      transcribed ? Icons.subtitles : Icons.subtitles_outlined,
+                      size: 16,
+                    ),
+                    color: Colors.white,
+                    style: IconButton.styleFrom(
+                      backgroundColor: transcribed
+                          ? scheme.primary
+                          : Colors.black38,
+                    ),
+                    onPressed: () => onTranscribe!(attachment),
                   ),
                 if (onPlaceOnPage != null && _canPlaceOnPage)
                   IconButton(
@@ -659,6 +717,37 @@ class _PreviewTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Metin ekinin (transkript) şerit önizlemesi: kâğıt zemin üstünde ilk
+/// satırlar — dosyayı açmadan neyin yazılı olduğu görünsün.
+class _TextPreview extends StatelessWidget {
+  const _TextPreview({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    // Önizleme için ilk ~240 karakter yeter; uzun metnin tamamını yerleşime
+    // sokmak her şerit kurulumunda boşa iş.
+    final head = text.length > 240 ? text.substring(0, 240) : text;
+    return ColoredBox(
+      color: const Color(0xFFFBF6EC),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 24),
+        child: Text(
+          head,
+          maxLines: 6,
+          overflow: TextOverflow.clip,
+          style: const TextStyle(
+            fontSize: 9.5,
+            height: 1.3,
+            color: Color(0xFF3E3A33),
+          ),
+        ),
       ),
     );
   }

@@ -10,7 +10,15 @@ enum AttachmentKind {
 
   /// Görüntülü not. YALNIZCA CİHAZDA kalır — Storage'a hiç yüklenmez
   /// (bkz. UploadQueue), bu yüzden cihazlar arasında senkronlanmaz.
-  video('video');
+  video('video'),
+
+  /// **METİN EKİ** (.txt) — ses/video/görselin TRANSKRİPTİ (kullanıcı isteği
+  /// 2026-10-17: "transkriptini metin dosyası olarak ek olarak nota ekleme
+  /// ve okuyabilme"). İçerik kaydın kendisinde ([Attachment.text]) durur ve
+  /// notla birlikte senkronlanır: dosya yüklenmez, her cihaz anında okur,
+  /// arama ve dışa aktarma metni doğrudan alır. Paylaşırken/dışa aktarırken
+  /// `.txt` dosyası olarak çıkar (bkz. `AttachmentRepository.readBytes`).
+  text('text');
 
   const AttachmentKind(this.id);
 
@@ -641,8 +649,31 @@ class Attachment {
     this.pinHeight = 0,
     this.sourceId = '',
     this.bubblesHidden = false,
+    this.text = '',
+    this.transcriptOf = '',
     this.createdAt,
   });
+
+  /// METİN EKİNİN içeriği (yalnız [AttachmentKind.text]); öbür türlerde boş.
+  /// Firestore belge sınırı (1 MiB) yüzünden [maxTextChars]'ta kesilir.
+  final String text;
+
+  /// Metin eki hangi ekin TRANSKRİPTİ (ses/video/görsel kimliği; boş =
+  /// bağımsız metin eki). `sourceId`den AYRI alan: o, görselden türetilen
+  /// balonlu belgeyi klasik görünümde GİZLER (bkz. `Note.hidesDerivedDocument`)
+  /// — transkript ise her görünümde şeritte durmalı.
+  final String transcriptOf;
+
+  /// Metin ekinin karakter tavanı (~120 bin karakter ≈ 1 saatlik konuşma).
+  /// Not belgesi tek parça yazıldığından daha büyüğü belgeyi 1 MiB sınırına
+  /// yaklaştırır ve her kayıtta gereksiz yere ağdan gider.
+  static const maxTextChars = 120000;
+
+  /// Dosyası buluta YÜKLENMEYEN tür mü? Görüntülü not yalnız cihazda kalır;
+  /// metin eki içeriğini kaydın kendisinde taşır ([text]) — yüklenecek dosya
+  /// yok, kuyruk ikisini de atlar.
+  bool get skipsUpload =>
+      kind == AttachmentKind.video || kind == AttachmentKind.text;
 
   /// Belgenin BALONLARI gizli mi (kullanıcı isteği 2026-10-16: "balonları
   /// göster/gizle olsun; balonludan üste sabitlemeye alınınca da balonlar
@@ -798,7 +829,8 @@ class Attachment {
 
   /// Bulutta (Storage YA DA Drive) bir kopyası var mı — başka cihaz ona
   /// ulaşabilir mi.
-  bool get isSynced => isUploaded || isInDrive;
+  bool get isSynced =>
+      isUploaded || isInDrive || kind == AttachmentKind.text;
 
   /// YouTube (web) videosu mu — dosyası yok, gömülü oynatıcıda açılır.
   bool get isWebVideo => kind == AttachmentKind.video && webUrl.isNotEmpty;
@@ -898,6 +930,8 @@ class Attachment {
     double? pinHeight,
     String? sourceId,
     bool? bubblesHidden,
+    String? text,
+    String? transcriptOf,
   }) => Attachment(
     id: id,
     kind: kind,
@@ -928,6 +962,8 @@ class Attachment {
     pinHeight: pinHeight ?? this.pinHeight,
     sourceId: sourceId ?? this.sourceId,
     bubblesHidden: bubblesHidden ?? this.bubblesHidden,
+    text: text ?? this.text,
+    transcriptOf: transcriptOf ?? this.transcriptOf,
     createdAt: createdAt,
   );
 
@@ -976,6 +1012,8 @@ class Attachment {
         pinHeight: (map['pinHeight'] as num?)?.toDouble() ?? 0,
         sourceId: map['sourceId'] as String? ?? '',
         bubblesHidden: map['bubblesHidden'] as bool? ?? false,
+        text: map['text'] as String? ?? '',
+        transcriptOf: map['transcriptOf'] as String? ?? '',
         createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       );
 
@@ -1041,6 +1079,9 @@ class Attachment {
     // Yalnız gizliyken yazılır (ekler dizi olarak TÜMDEN yazılır — gösterince
     // alanın düşmesi yeterli, merge tuzağı yok).
     if (bubblesHidden) 'bubblesHidden': true,
+    // Metin eki: içerik ve kaynağı yalnız doluyken (öbür türlerde alan yok).
+    if (text.isNotEmpty) 'text': text,
+    if (transcriptOf.isNotEmpty) 'transcriptOf': transcriptOf,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),

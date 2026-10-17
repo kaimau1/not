@@ -4921,4 +4921,118 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get removeTextPart => 'テキストを削除';
+
+  @override
+  String get transcriptTitle => '文字起こし';
+
+  @override
+  String get transcriptAction => '文字起こし';
+
+  @override
+  String get transcriptFileSuffix => '文字起こし';
+
+  @override
+  String get transcriptWorkingAudio => '音声を文字起こししています…';
+
+  @override
+  String get transcriptWorkingVideo => '動画を文字起こししています…';
+
+  @override
+  String get transcriptWorkingImage => '画像の文字を読み取っています…';
+
+  @override
+  String get transcriptLongHint => '長い録音は数分かかることがあります。この画面を開いたままにしてください。';
+
+  @override
+  String get transcriptSaved => 'テキスト添付としてメモに保存しました';
+
+  @override
+  String get transcriptInsertSelection => '選択部分をメモに追加';
+
+  @override
+  String get transcriptInsertAll => 'すべてメモに追加';
+
+  @override
+  String get transcriptInserted => 'メモに追加しました';
+
+  @override
+  String get transcriptNewNote => '新しいメモ';
+
+  @override
+  String get transcriptRetryAi => 'AIでもう一度文字起こし';
+
+  @override
+  String get transcriptReadWithAi => 'AIで読み取る（手書き）';
+
+  @override
+  String get transcriptShowTimes => 'タイムスタンプ';
+
+  @override
+  String get transcriptDelete => '文字起こしを削除';
+
+  @override
+  String get transcriptDeleteConfirm => '文字起こしを削除しますか？元のファイルはメモに残ります。';
+
+  @override
+  String get transcriptEmpty => 'テキストが見つかりませんでした。';
+
+  @override
+  String transcriptTooLarge(int mb) {
+    return '録音は $mb MB です。内蔵AIが受け付けるのは最大15 MBです。設定で自分のGeminiキーを入力すると大きな録音も文字起こしできます。';
+  }
+
+  @override
+  String transcriptUnsupported(String format) {
+    return 'この録音形式（$format）は文字起こしできません。';
+  }
+
+  @override
+  String get transcriptEdit => '編集';
+
+  @override
+  String get transcriptSave => '保存';
+
+  @override
+  String transcriptWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 語',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transcriptNoteTitle(String name) {
+    return '文字起こし: $name';
+  }
+
+  @override
+  String get transcriptOnDevice => '端末で読み取り · ネットとAIポイント不要';
+
+  @override
+  String get addAudioFile => '音声ファイルを追加';
+
+  @override
+  String get transcribeFile => 'ファイルを文字起こし';
+
+  @override
+  String get transcribeFileSubtitle => '音声・動画・画像を選ぶと、その文字がメモに入ります';
+
+  @override
+  String cardTranscriptCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '文字起こし $count 件',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transcriptPickTitle => '文字起こしするファイル';
+
+  @override
+  String get transcriptUnsupportedFile =>
+      'このファイル形式は文字起こしできません（音声・動画・画像を選んでください）。';
 }

@@ -198,30 +198,23 @@ flutter:
     # koyup katalog haritalarına satır eklemekten ibaret olsun.
     - assets/google_fonts/
 
-# Uygulama ikonu: assets/icon/ altındaki görsellerden üretilir.
-# Yenilemek için: dart run flutter_launcher_icons
-#
-# PNG'lerin kaynağı assets/icon/src/*.svg. Yeniden çizmek için SVG'yi düzenle,
-# sonra 1024x1024 PNG'ye dönüştür (Chrome yeter, ek araç gerekmez):
-#   chrome --headless --force-device-scale-factor=1 --window-size=1024,1024 \
-#          --default-background-color=00000000 --screenshot=icon.png dosya.html
-#
-# i3 (2026-10-17, "simge daha elit olsun"): zemin koyu mürekkep GRADYANI
-# (PNG — assets/icon/icon_background.png), işaret altın gradyanlı sayfa,
-# satırlar + yapay zekâ yıldızı zeminden oyuk. Kaynaklar tool/gen_icon.py ile
-# üretilir (eski i2 "beyaz zemin ortak simge dili" bu uygulamada bırakıldı).
-# Ön plan ayrı bir dosya ve ic_launcher.xml onu android:inset="16%" ile
-# sarıyor; SVG'deki ölçek bu küçülmeyi ÖNCEDEN telafi eder.
-#
-# Android 13+ temalı simge (<monochrome>) bu araçta YOK: katmanı
-# mipmap-anydpi-v26/ic_launcher.xml'e elle ekliyoruz ve araç her koşuda
-# siliyor. Bu dosyayı çalıştırdıktan sonra XML'i tekrar kontrol et
-# (kaynağı assets/icon/src/icon_monochrome.svg → drawable-xxxhdpi).
+# Uygulama ikonu (i4, 2026-10-17 — Play'e hazır): kaynaklar
+# `tool/gen_icon.py` ile üretilir (SVG → headless Chromium → PNG), sonra:
+#   python3 tool/gen_icon.py && dart run flutter_launcher_icons
+# Ön plan İNSETSİZ (adaptive_icon_foreground_inset: 0): işaret 108 birimlik
+# tuvalde, ortadaki 66 birimlik GÜVENLİ DAİREDE tasarlandı (betik bunu
+# doğrular). i3'ün %16 inset + büyük ölçeği daireyi aşıyor, yuvarlak maskede
+# sayfa ve yıldız kırpılıyordu. Monokrom (Android 13+ temalı simge) katmanı
+# araçta destekleniyor (0.14) — XML'e elle ekleme tuzağı KALKTI.
+# Play Console simgesi: assets/icon/play_store_512.png (512, opak, tam kare;
+# köşeyi ve gölgeyi Play ekler). Web simgeleri betikte üretilir.
 flutter_launcher_icons:
   android: true
   image_path: "assets/icon/icon.png"
   adaptive_icon_background: "assets/icon/icon_background.png"
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  adaptive_icon_foreground_inset: 0
+  adaptive_icon_monochrome: "assets/icon/icon_monochrome.png"
   windows:
     generate: true
     image_path: "assets/icon/icon.png"

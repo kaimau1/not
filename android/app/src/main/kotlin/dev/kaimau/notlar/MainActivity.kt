@@ -356,6 +356,22 @@ class MainActivity : FlutterFragmentActivity() {
                             }
                         }
                     }
+                    // Videonun SES İZİNİ yeniden kodlamadan .m4a'ya ayırır
+                    // (transkript): 200 MB'lık bir video yerine birkaç MB'lık
+                    // ses gönderilir. AAC dışı izde false döner, Dart tarafı
+                    // videonun kendisini gönderir.
+                    "extractAudio" -> {
+                        val path = call.argument<String>("path")
+                        val out = call.argument<String>("out")
+                        if (path == null || out == null) {
+                            result.error("args", "path/out gerekli", null)
+                        } else {
+                            mediaExecutor.execute {
+                                val ok = extractAudioTrack(path, out)
+                                mainHandler.post { result.success(ok) }
+                            }
+                        }
+                    }
                     // Videonun toplam süresi (ms). Balonlu görüntülü not
                     // kaç kare örnekleyeceğini buna göre seçiyor.
                     "videoDuration" -> {
@@ -696,6 +712,91 @@ class MainActivity : FlutterFragmentActivity() {
             } catch (_: Exception) {
             }
         }
+    }
+
+    /// Videonun ilk AAC ses izini [out] yoluna MPEG-4 (.m4a) olarak kopyalar.
+    /// Örnekler yeniden KODLANMAZ (MediaExtractor -> MediaMuxer), saniyeler
+    /// sürer. İz yoksa, AAC değilse ya da yazım bozulursa false (yarım dosya
+    /// silinir).
+    private fun extractAudioTrack(path: String, out: String): Boolean {
+        val extractor = android.media.MediaExtractor()
+        var muxer: android.media.MediaMuxer? = null
+        var ok = false
+        try {
+            extractor.setDataSource(path)
+            var track = -1
+            var format: android.media.MediaFormat? = null
+            for (i in 0 until extractor.trackCount) {
+                val f = extractor.getTrackFormat(i)
+                val mime = f.getString(android.media.MediaFormat.KEY_MIME) ?: continue
+                if (mime == "audio/mp4a-latm") {
+                    track = i
+                    format = f
+                    break
+                }
+            }
+            if (track < 0 || format == null) return false
+            extractor.selectTrack(track)
+            val m = android.media.MediaMuxer(
+                out,
+                android.media.MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4
+            )
+            muxer = m
+            val outTrack = m.addTrack(format)
+            m.start()
+            val maxInput =
+                if (format.containsKey(android.media.MediaFormat.KEY_MAX_INPUT_SIZE)) {
+                    format.getInteger(android.media.MediaFormat.KEY_MAX_INPUT_SIZE)
+                } else {
+                    0
+                }
+            val buffer = java.nio.ByteBuffer.allocate(maxOf(maxInput, 256 * 1024))
+            val info = android.media.MediaCodec.BufferInfo()
+            var samples = 0
+            while (true) {
+                buffer.clear()
+                val size = extractor.readSampleData(buffer, 0)
+                if (size < 0) break
+                val time = extractor.sampleTime
+                if (time >= 0) {
+                    info.offset = 0
+                    info.size = size
+                    info.presentationTimeUs = time
+                    info.flags =
+                        if ((extractor.sampleFlags and
+                                android.media.MediaExtractor.SAMPLE_FLAG_SYNC) != 0
+                        ) {
+                            android.media.MediaCodec.BUFFER_FLAG_KEY_FRAME
+                        } else {
+                            0
+                        }
+                    m.writeSampleData(outTrack, buffer, info)
+                    samples++
+                }
+                if (!extractor.advance()) break
+            }
+            m.stop()
+            ok = samples > 0
+        } catch (e: Exception) {
+            Log.d(logTag, "ses izi ayrilamadi: $e")
+            ok = false
+        } finally {
+            try {
+                muxer?.release()
+            } catch (_: Exception) {
+            }
+            try {
+                extractor.release()
+            } catch (_: Exception) {
+            }
+            if (!ok) {
+                try {
+                    java.io.File(out).delete()
+                } catch (_: Exception) {
+                }
+            }
+        }
+        return ok
     }
 
     // Videonun süresi (ms); okunamazsa 0.

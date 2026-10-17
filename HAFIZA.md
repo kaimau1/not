@@ -4646,3 +4646,133 @@ Arkadaşa gönder, Dışa aktar, PDF/görsel, ortak notu içeriyor →
   taşındı (görünürlük tercihi). Kişiselleştir ekranındaki "zengin önizleme"
   ve "liste maddeleri" anahtarları kalktı (Ayarlar → Görünüm'de tek yer).
 Kılavuz (tr/en) güncellendi.
+
+## 2026-10-17 (2. tur) — transkript (metin eki), performans, Play'e hazır simge i4, hata taraması
+
+Kullanıcının dört maddesi: (1) sonradan eklenen ya da uygulamada kaydedilen
+ses/video/görselin transkripti, görselde OCR, nota dönüştürme, transkripti
+METİN DOSYASI olarak ek yapma, okuma, içinden seçip nota ekleme; (2) RAM/pil/
+performans araştırması; (3) "simgemiz olmamış" — Play'e gerçekten hazır simge;
+(4) genel hata taraması. Hepsi main'e [apk] ile.
+
+### Transkript — tasarım kararları
+* Yeni ek türü `AttachmentKind.text` (`'text'`). İçerik DOSYADA DEĞİL kaydın
+  kendisinde (`Attachment.text`, tavan `Attachment.maxTextChars` = 120 bin
+  karakter ≈ 1 saatlik konuşma — not belgesi 1 MiB sınırı). Neden: Storage
+  kuralı `text/plain`'i reddediyor, misafir hesapta ekler hiç buluta gitmiyor,
+  ve metin her cihazda anında okunsun/aransın. Dosya gerektiren her yol
+  (`readBytes`) UTF-8 baytı döndürür → paylaşım/dışa aktarma `.txt` alır.
+  Yükleme kuyruğu atlar (`Attachment.skipsUpload` = video + text).
+* Kaynağa bağ `transcriptOf` — `sourceId` KULLANILMADI: o alan
+  `Note.hidesDerivedDocument` ile klasik görünümde eki GİZLİYOR.
+* TUZAK: eski sürümler bilinmeyen türü `image` sayar (`AttachmentKind.fromId`
+  orElse). Güncellenmemiş cihazda (Windows!) transkript bozuk görsel gibi
+  görünür — tüm cihazlar güncellenmeli.
+* Motor `MediaTranscriber` (data/media_transcriber.dart): görsel → cihazda ML
+  Kit (`ScanOcr.recognizeImageText`; bloklar paragraf), ekranda "AI ile oku
+  (el yazısı)" Gemini; ses → `GeminiService.transcribeMedia`; video →
+  Android'de önce SES İZİ (`AudioTrack.extract` → MainActivity
+  `extractAudio`: MediaExtractor→MediaMuxer, yeniden kodlamasız, yalnız AAC),
+  olmazsa videonun kendisi; YouTube `file_data.file_uri` ile (dahili AI'da
+  `FileData` — Firebase AI Logic'in YouTube desteği DOĞRULANMADI).
+* Büyük kayıt (>15 MB, `GeminiService.maxInlineMediaBytes`): kendi Gemini
+  anahtarı varsa DOSYA API'si (resumable; dosya diskten akıtılır, belleğe
+  alınmaz; `PROCESSING` → `ACTIVE` beklenir; döküm bitince silinir). Dahili
+  AI'da `MediaTooLargeException` → "kendi anahtarını gir" mesajı.
+* KÖK NEDEN (sağlayıcı): OpenAI/Anthropic çevirisi `file_data` parçasını BOŞ
+  metne indiriyordu — model kayıt yokken transkript uydururdu. transcribeMedia
+  Gemini dışı sağlayıcıyı baştan reddeder (test var).
+* İstem: kelimesi kelimesine, ÇEVİRMEDEN, paragraf başında `[d:ss]`, konuşmacı
+  ayrımı, `[anlaşılmıyor]`, videoda `[Ekranda: …]`. Zaman aşımı 8 dk
+  (dahili istemcide `generate(timeout:)` yeni).
+* `TranscriptScreen` (viewers/): kayıtlı metni okur ya da dökümü başlatır;
+  bitince `onSave` ile nota METİN EKİ olarak kaydeder (AI puanı bir kez).
+  Seçim menüsünde ve alt düğmede "Seçimi nota ekle" (seçim yoksa "Tümünü"),
+  "Yeni not", Düzenle (kaydeder), AI ile yeniden dök, zaman damgası anahtarı,
+  `.txt` olarak paylaş, sil. Nota giden damga `[1:23]` → `1:23` (video_time
+  tanır, dokununca video sarılır). Seçim `ValueNotifier`'da — koca metin
+  her seçimde yeniden kurulmasın.
+* Girişler (tek ekran, çok kapı): şerit döşemesinde altyazı simgesi (kayıtlı
+  transkript varsa dolu), metin eki döşemesi (kâğıt rengi "TXT") dokununca
+  okur; sayfadaki görsel/video ⋮ → Metne dök; sabit bölme ⋮; AI levhası (ses
+  satırı artık transkript ekranına gider + video satırları); "+" menüsü ve
+  Ekle levhası "Dosyayı metne dök" (`?transcribe=1` — metin gövdeye otomatik
+  yazılır = "nota dönüştürme"); Ekle → "Ses dosyası ekle"
+  (`prepareAudioFile`, ad korunur); paylaş menüsünden ses (manifest
+  `audio/*`, `shareAttachmentKind`).
+* KÖK NEDEN (AMR): Google sesli girişinin kaydı AMR-NB ama `kayit_Ns.m4a /
+  audio/mp4` adıyla bağlanıyordu; oynatıcı içeriği kokladığı için çalıyordu,
+  AI dökümü reddediliyordu. `audioMimeOf` baytlardan bakar; yeni kayıtlar
+  `.amr/audio/amr`; Gemini AMR almadığından `UnsupportedMediaException`.
+* Kamera videosu süre sınırı 60 sn → 10 dk (60 sn yalnız videonun bütünüyle
+  satır içi gitmesi içindi; transkript artık ses izini gönderiyor).
+* Arama: ana ekran `_searchableBody` + not içi arama levhası transkriptleri
+  bedavaya görür. PDF sohbeti metin ekini düz metin olarak verir.
+
+### Performans
+* `NotesRepository.updateNote`: ek listesinin SHA-1 özeti
+  (`attachmentsDigest`) son BAŞARILI yazımdakiyle aynıysa `attachments`
+  merge yazımından ÇIKARILIR. Editör yazarken her kayıtta PDF çizim noktaları,
+  balonlar, transkriptler yüzlerce KB tekrar gidiyordu. TUZAK: `identical()`
+  işe yaramaz — editör her yankı anlık görüntüsünde `mergeAttachmentLayout`
+  ile YENİ liste kurar. Özet yalnız sunucu onayında saklanır (red/çevrimdışı
+  → sonraki kayıt tam yazar).
+* Not sayfasındaki yerel video TEMBEL (`_VideoBox._lazy`: Android + boyu
+  biliniyorsa): kapak `VideoPoster` (720 px, CardThumbs disk önbelleği),
+  ExoPlayer ▶'de ya da damga dokunuşunda kurulur (`_DeferredTimeSource` hub'a
+  önceden kaydolur). Masaüstünde / boy bilinmiyorken eski hemen-kurulum.
+* Büyük video BELLEĞE okunmuyor: `_videoToNote` boyu diskten ölçer;
+  `duplicate` video dosya kopyası (TUZAK: ad diskteki kopyanınki kalmalı —
+  yerel yol `derivedAttachmentPath` ile addan türetiliyor); not paketi 60 MB
+  üstü eki baytsız koyar; PDF sohbeti büyük/YouTube videoyu atlar.
+* `CardThumbs.clearMemory()` arka plana geçişte ve `didHaveMemoryPressure`'da.
+* Taranıp YETERLİ bulunanlar (dokunulmadı): imageCache boyutları
+  (cacheWidth/memCacheWidth her yerde), widget/hatırlatıcı/kuyruk debounce'ları,
+  `updatePeriodMillis=0`, yüksek yenileme hızı tasarruf kipi, R8.
+
+### Simge i4 — Play'e hazır
+* Araştırma (developer.android.com icon-design-specifications): Play simgesi
+  512×512, 32-bit PNG, sRGB, ≤1 MB, TAM KARE, opak; köşe (%30) ve gölgeyi Play
+  ekler; yazı/rozet yok. Uyarlanabilir: 108 dp katman, maske 72 dp'yi
+  gösterir, önemli içerik ortadaki 66 dp DAİREDE; Android 13+ monokrom.
+* i3'ün sorunları: (1) %16 inset + 13× ölçek 66 dp daireyi aşıyordu — yuvarlak
+  maskede sayfa köşeleri ve yıldız kırpılıyordu; (2) tam simgede gömülü
+  yuvarlak köşe, iç çerçeve ve sert gölge (Play kendi ekleyince çift);
+  (3) koyu zeminde altın "dosya" simgesi küçükte okunmuyor, dosya yöneticisi
+  gibi duruyordu.
+* i4: mavi-mor gradyan (#5B5BF7→#3A2FC9→#7A3CF0), beyaz YAPIŞKAN NOT (sağ alt
+  kıvrık), lacivert satırlar, notun köşesine binen altın parıltı (not
+  üstündeki halka notla kırpılır). `tool/gen_icon.py`: SVG → headless
+  Chromium → PNG, geometriyi 66 dp daireye karşı DOĞRULAR; sonra
+  `dart run flutter_launcher_icons` (`adaptive_icon_foreground_inset: 0`,
+  `adaptive_icon_monochrome` — araç 0.14'te monokromu destekliyor, eski "XML'e
+  elle ekle" tuzağı KALKTI). Play Console'a `assets/icon/play_store_512.png`.
+  Web (any + maskable %80 güvenli daire) ve Windows .ico da yenilendi.
+* Bildirim küçük simgesi: renkli `@mipmap/ic_launcher` veriliyordu → Android
+  5+ alfa siluet kullandığından durum çubuğunda GRİ KARE. Artık
+  `drawable/ic_stat_notlar.xml` (vektör siluet) — iki bildirim servisi +
+  PlaceReminders.kt. `raw/keep.xml` (Dart onu ADIYLA istiyor, kaynak
+  küçültme atmasın).
+
+### Hata taraması (bulunup düzeltilenler)
+* storage.rules PPTX'i REDDEDİYORDU: ortak nota ya da web'den eklenen sunum
+  Storage'a hiç yüklenmiyor, kuyruk 6 saate tırmanan aralıklarla boşuna
+  deniyordu → `attachmentTypes()`. Kurallar main'e giren her push'ta CI'ın
+  "Firebase + Cloudflare Deploy" işiyle (`firebase deploy --only
+  firestore,storage`) yayınlanıyor — elle deploy gerekmez, o işin yeşil
+  olduğuna bakılır.
+* Ses dosyası paylaşılamıyordu (manifestte audio/* yoktu).
+* AMR yanlış türü, simge kırpılması, bildirim gri karesi, büyük videoların
+  belleğe okunması (yukarıda).
+* Sızıntı taraması (denetleyici/abonelik dispose) temiz çıktı; orElse'siz
+  firstWhere'ler korunaklı.
+
+### Ortam
+Flutter 3.44.6 `/opt/flutter` (oturumda indirildi). `flutter analyze` temiz,
+1262/1262 test (+25: `requests_2026_10_17_test.dart`,
+`transcribe_media_test.dart`, share_intake). 31 yeni çeviri anahtarı 16 dilde
+elle yazıldı. Android SDK yok (dl.google.com proxy'de kapalı): `extractAudio`
+ayrı bir Gradle/Kotlin 2.3.20 projesinde Robolectric `android-all` (API 34)
+jar'ına karşı DERLENDİ (repo1.maven.org açık; repo.maven.apache.org 429
+verebiliyor — `maven("https://repo1.maven.org/maven2/")` ver, 429'da tekrar
+dene). Tam APK yine CI'da. Cihazda GÖRÜLMEDİ.

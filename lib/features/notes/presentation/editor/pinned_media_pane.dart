@@ -67,7 +67,11 @@ class PinnedMediaPane extends StatefulWidget {
     this.bubbleDoc,
     this.onRemove,
     this.onDetach,
+    this.onTranscribe,
   });
+
+  /// Sabit görselin/videonun TRANSKRİPTİ (metne dök / kayıtlıysa aç).
+  final VoidCallback? onTranscribe;
 
   /// Eki nottan kaldırır (geri al ile döner) — çubuğun ⋮ menüsünde.
   ///
@@ -479,7 +483,10 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   }
 
   /// Çubuğun ⋮ menüsü verilmiş mi (salt okunurda kaldır/ek yok).
-  bool get hasMenu => widget.onRemove != null || widget.onDetach != null;
+  bool get hasMenu =>
+      widget.onRemove != null ||
+      widget.onDetach != null ||
+      widget.onTranscribe != null;
 
   /// YAZILI işlemler: sayfaya göm (yüzen), alta ek olarak, bağlantı, kaldır.
   Widget _menu(BuildContext context) {
@@ -503,6 +510,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             widget.onDetach?.call();
           case 'link':
             widget.onCopyLink?.call();
+          case 'transcribe':
+            widget.onTranscribe?.call();
           case 'remove':
             widget.onRemove?.call();
         }
@@ -521,6 +530,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
           PopupMenuItem(
             value: 'link',
             child: item(Icons.link, l10n.copyVideoLink),
+          ),
+        if (widget.onTranscribe != null)
+          PopupMenuItem(
+            value: 'transcribe',
+            child: item(Icons.subtitles_outlined, l10n.transcriptAction),
           ),
         if (widget.onRemove != null) ...[
           const PopupMenuDivider(),

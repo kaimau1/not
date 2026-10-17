@@ -40,6 +40,7 @@ Future<void> showAiSheet(
   ValueChanged<String>? onAppendText,
   ReplaceTextCallback? onReplaceText,
   ReplaceTextCallback? onCreateNote,
+  ValueChanged<Attachment>? onTranscribe,
 }) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
@@ -49,6 +50,7 @@ Future<void> showAiSheet(
     onAppendText: onAppendText,
     onReplaceText: onReplaceText,
     onCreateNote: onCreateNote,
+    onTranscribe: onTranscribe,
   ),
 );
 
@@ -59,9 +61,15 @@ class AiSheet extends ConsumerStatefulWidget {
     this.onAppendText,
     this.onReplaceText,
     this.onCreateNote,
+    this.onTranscribe,
   });
 
   final Note note;
+
+  /// Ses/videonun TRANSKRİPT ekranını açar (bkz. `TranscriptScreen`) —
+  /// verilmişse ses satırı sonucu levhada göstermek yerine oraya gider:
+  /// döküm nota metin eki olarak kalır, seçilerek eklenir.
+  final ValueChanged<Attachment>? onTranscribe;
 
   /// Sonucu (OCR, ses dökümü vb.) nota ekleyen geri çağırma.
   final ValueChanged<String>? onAppendText;
@@ -532,6 +540,13 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       for (final a in widget.note.attachments)
         if (a.kind == AttachmentKind.audio) a,
     ];
+    // Video dökümü yalnız transkript ekranından (levhada sonucu gösteren
+    // eski yol yok).
+    final videos = [
+      if (widget.onTranscribe != null)
+        for (final a in widget.note.attachments)
+          if (a.kind == AttachmentKind.video) a,
+    ];
     final slides = [
       for (final a in widget.note.attachments)
         if (a.kind == AttachmentKind.slide) a,
@@ -791,7 +806,8 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                   if (pdfs.isNotEmpty ||
                       slides.isNotEmpty ||
                       images.isNotEmpty ||
-                      audios.isNotEmpty)
+                      audios.isNotEmpty ||
+                      videos.isNotEmpty)
                     _sectionLabel(context, l10n.aiSectionAttachments),
                   for (final pdf in pdfs)
                     ExpansionTile(
@@ -928,7 +944,29 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: Text(l10n.transcribe),
-                      onTap: () => _run((s) => _transcribeAudio(s, audio)),
+                      onTap: () {
+                        final open = widget.onTranscribe;
+                        if (open == null) {
+                          _run((s) => _transcribeAudio(s, audio));
+                          return;
+                        }
+                        Navigator.pop(context);
+                        open(audio);
+                      },
+                    ),
+                  for (final video in videos)
+                    ListTile(
+                      leading: const Icon(Icons.subtitles_outlined),
+                      title: Text(
+                        video.fileName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(l10n.transcribe),
+                      onTap: () {
+                        Navigator.pop(context);
+                        widget.onTranscribe!(video);
+                      },
                     ),
                   if (widget.note.aiSummary != null) ...[
                     const Divider(indent: 20, endIndent: 20),

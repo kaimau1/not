@@ -4989,4 +4989,128 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get removeTextPart => 'إزالة النص';
+
+  @override
+  String get transcriptTitle => 'النص المفرَّغ';
+
+  @override
+  String get transcriptAction => 'تفريغ نصي';
+
+  @override
+  String get transcriptFileSuffix => 'نص مفرغ';
+
+  @override
+  String get transcriptWorkingAudio => 'جارٍ تفريغ الصوت…';
+
+  @override
+  String get transcriptWorkingVideo => 'جارٍ تفريغ الفيديو…';
+
+  @override
+  String get transcriptWorkingImage => 'جارٍ قراءة النص في الصورة…';
+
+  @override
+  String get transcriptLongHint =>
+      'قد تستغرق التسجيلات الطويلة بضع دقائق؛ أبقِ هذه الشاشة مفتوحة.';
+
+  @override
+  String get transcriptSaved => 'حُفظ في الملاحظة كمرفق نصي';
+
+  @override
+  String get transcriptInsertSelection => 'أضف التحديد إلى الملاحظة';
+
+  @override
+  String get transcriptInsertAll => 'أضف الكل إلى الملاحظة';
+
+  @override
+  String get transcriptInserted => 'أُضيف إلى الملاحظة';
+
+  @override
+  String get transcriptNewNote => 'ملاحظة جديدة';
+
+  @override
+  String get transcriptRetryAi => 'أعد التفريغ بالذكاء الاصطناعي';
+
+  @override
+  String get transcriptReadWithAi => 'اقرأ بالذكاء الاصطناعي (خط اليد)';
+
+  @override
+  String get transcriptShowTimes => 'الطوابع الزمنية';
+
+  @override
+  String get transcriptDelete => 'احذف النص المفرغ';
+
+  @override
+  String get transcriptDeleteConfirm =>
+      'حذف النص المفرغ؟ يبقى الملف الأصلي في الملاحظة.';
+
+  @override
+  String get transcriptEmpty => 'لم يُعثر على نص.';
+
+  @override
+  String transcriptTooLarge(int mb) {
+    return 'حجم التسجيل $mb م.ب؛ يقبل الذكاء الاصطناعي المدمج 15 م.ب كحد أقصى. أدخل مفتاح Gemini الخاص بك من الإعدادات لتفريغ التسجيلات الكبيرة.';
+  }
+
+  @override
+  String transcriptUnsupported(String format) {
+    return 'لا يمكن تفريغ صيغة التسجيل هذه ($format).';
+  }
+
+  @override
+  String get transcriptEdit => 'تعديل';
+
+  @override
+  String get transcriptSave => 'حفظ';
+
+  @override
+  String transcriptWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count كلمة',
+      many: '$count كلمة',
+      few: '$count كلمات',
+      two: 'كلمتان',
+      one: 'كلمة واحدة',
+      zero: 'لا كلمات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transcriptNoteTitle(String name) {
+    return 'نص مفرغ: $name';
+  }
+
+  @override
+  String get transcriptOnDevice =>
+      'قُرئ على الجهاز · دون إنترنت أو نقاط ذكاء اصطناعي';
+
+  @override
+  String get addAudioFile => 'إضافة ملف صوتي';
+
+  @override
+  String get transcribeFile => 'تفريغ ملف نصيًا';
+
+  @override
+  String get transcribeFileSubtitle =>
+      'اختر صوتًا أو فيديو أو صورة؛ يُكتب نصها في الملاحظة';
+
+  @override
+  String cardTranscriptCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count نصوص مفرغة',
+      one: 'نص مفرغ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transcriptPickTitle => 'الملف المراد تفريغه';
+
+  @override
+  String get transcriptUnsupportedFile =>
+      'لا يمكن تفريغ هذا النوع من الملفات (اختر صوتًا أو فيديو أو صورة).';
 }

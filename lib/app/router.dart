@@ -365,4 +365,6 @@ Widget _noteBuilder(BuildContext context, GoRouterState state) =>
       startGalleryVideo: state.uri.queryParameters['gvideo'] == '1',
       // ?youtube=1: YouTube bağlantısı sorulur, video üste sabitlenir.
       startYouTube: state.uri.queryParameters['youtube'] == '1',
+      // ?transcribe=1: ses/video/görsel seçilir, metni nota yazılır.
+      startTranscribe: state.uri.queryParameters['transcribe'] == '1',
     );

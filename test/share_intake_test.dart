@@ -61,6 +61,21 @@ void main() {
       );
     });
 
+    test('ses dosyası ek olur (sesli mesaj, kayıt) — MIME ya da uzantı', () {
+      expect(
+        shareAttachmentKind(_shared('/c/PTT-2026', mime: 'audio/ogg')),
+        AttachmentKind.audio,
+      );
+      expect(
+        shareAttachmentKind(_shared('/c/kayit.m4a')),
+        AttachmentKind.audio,
+      );
+      expect(
+        shareAttachmentKind(_shared('/c/sesli.opus')),
+        AttachmentKind.audio,
+      );
+    });
+
     test('YouTube bağlantısı METİN olarak gelir (video ekine sonra çevrilir)', () {
       expect(
         shareAttachmentKind(

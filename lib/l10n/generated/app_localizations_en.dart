@@ -5012,4 +5012,124 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removeTextPart => 'Remove text';
+
+  @override
+  String get transcriptTitle => 'Transcript';
+
+  @override
+  String get transcriptAction => 'Transcribe';
+
+  @override
+  String get transcriptFileSuffix => 'transcript';
+
+  @override
+  String get transcriptWorkingAudio => 'Transcribing audio…';
+
+  @override
+  String get transcriptWorkingVideo => 'Transcribing video…';
+
+  @override
+  String get transcriptWorkingImage => 'Reading the text in the image…';
+
+  @override
+  String get transcriptLongHint =>
+      'Long recordings can take a few minutes; keep this screen open.';
+
+  @override
+  String get transcriptSaved => 'Saved to the note as a text attachment';
+
+  @override
+  String get transcriptInsertSelection => 'Add selection to note';
+
+  @override
+  String get transcriptInsertAll => 'Add all to note';
+
+  @override
+  String get transcriptInserted => 'Added to note';
+
+  @override
+  String get transcriptNewNote => 'New note';
+
+  @override
+  String get transcriptRetryAi => 'Re-transcribe with AI';
+
+  @override
+  String get transcriptReadWithAi => 'Read with AI (handwriting)';
+
+  @override
+  String get transcriptShowTimes => 'Timestamps';
+
+  @override
+  String get transcriptDelete => 'Delete transcript';
+
+  @override
+  String get transcriptDeleteConfirm =>
+      'Delete the transcript? The source file stays in the note.';
+
+  @override
+  String get transcriptEmpty => 'No text found.';
+
+  @override
+  String transcriptTooLarge(int mb) {
+    return 'The recording is $mb MB; the built-in AI accepts up to 15 MB. Add your own Gemini key in Settings to transcribe larger recordings.';
+  }
+
+  @override
+  String transcriptUnsupported(String format) {
+    return 'This recording format ($format) can\'t be transcribed.';
+  }
+
+  @override
+  String get transcriptEdit => 'Edit';
+
+  @override
+  String get transcriptSave => 'Save';
+
+  @override
+  String transcriptWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '1 word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transcriptNoteTitle(String name) {
+    return 'Transcript: $name';
+  }
+
+  @override
+  String get transcriptOnDevice =>
+      'Read on device · no internet or AI points used';
+
+  @override
+  String get addAudioFile => 'Add audio file';
+
+  @override
+  String get transcribeFile => 'Transcribe a file';
+
+  @override
+  String get transcribeFileSubtitle =>
+      'Pick audio, video or an image; its text goes into the note';
+
+  @override
+  String cardTranscriptCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transcripts',
+      one: 'Transcript',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transcriptPickTitle => 'File to transcribe';
+
+  @override
+  String get transcriptUnsupportedFile =>
+      'This file type can\'t be transcribed (pick audio, video or an image).';
 }

@@ -2,9 +2,19 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+    // Uygulamanın yüklediği ek türleri: görsel, PDF, ses ve SUNUM (PPTX).
+    // KÖK NEDEN (2026-10-17): sunum türü listede yoktu — ortak nota ya da
+    // web'den eklenen sunum Storage'a HİÇ yüklenemiyor (kural reddi), kuyruk
+    // onu 6 saate kadar tırmanan aralıklarla boşuna yeniden deniyordu.
+    // Görüntülü not ve metin eki (transkript) hiç yüklenmez.
+    function attachmentTypes() {
+      return 'image/.*|application/pdf|audio/.*'
+        + '|application/vnd[.]openxmlformats-officedocument[.]presentationml[.]presentation';
+    }
+
     // Her kullanıcı yalnızca kendi dosyalarına erişebilir.
     // create/update: en fazla 50 MB (premium tavanı) ve yalnızca uygulamanın
-    // yüklediği türler (görsel/PDF/ses) — keyfi dosya barındırma kapalı.
+    // yüklediği türler (attachmentTypes) — keyfi dosya barındırma kapalı.
     // Ücretsiz 10 MB sınırı uygulama tarafında; sunucu tek tavan (50 MB) tutar.
     //
     // TOPLAM kota (kullanıcı başına 50 MB / 2 GB) BURADA ZORLANAMAZ: Storage
@@ -79,7 +89,7 @@ service firebase.storage {
       allow create, update: if request.auth != null
         && request.auth.uid != uid
         && request.resource.size < 50 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*|application/pdf|audio/.*')
+        && request.resource.contentType.matches(attachmentTypes())
         && (noteCollaborator() || folderRoleOk(['write', 'both']));
     }
 
@@ -88,7 +98,7 @@ service firebase.storage {
       allow create, update: if request.auth != null
         && request.auth.uid == uid
         && request.resource.size < 50 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*|application/pdf|audio/.*');
+        && request.resource.contentType.matches(attachmentTypes());
     }
   }
 }

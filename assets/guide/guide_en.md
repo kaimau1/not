@@ -121,6 +121,16 @@ In **Bubbles** mode the document is the note itself: the page on top, that page'
 - **Dictate** (plain microphone): text appears at the cursor as you speak — uses no quota.
 - **Voice note assistant** (sparkle microphone, also on the home screen): say "dentist tomorrow at 9" and it creates the note, list and reminder itself.
 - **Voice recording:** + Add → Voice recording; play it from the attachment strip, transcribe it with AI.
+- **Add audio file:** + Add → Add audio file; an MP3/M4A/WAV recording from your phone goes into the note.
+
+## Transcripts {#transcript}
+- Tap the **subtitles icon** on an audio, video (YouTube too) or image tile in the attachment strip (or ⋮ → **Transcribe** on a picture/video on the page). Speech is written out with timestamps; text in images is read on the device (no internet).
+- The result is saved in the note as a **text attachment (.txt)**: a paper-coloured "TXT" tile in the strip that opens for reading. No AI points are spent again; the icon turns solid.
+- While reading, select text → **Add selection to note** or **New note**. With nothing selected the bottom button becomes **Add all to note**; timestamps enter the note as "1:23" and seek the video there.
+- ⋮ menu: **Edit** (fix a misheard word), **Re-transcribe with AI** / on images **Read with AI (handwriting)**, hide timestamps, delete the transcript. The top buttons copy it or **share it as a .txt file**.
+- **Transcribe a file** (+ menu or + Add): pick audio, video or an image; the file goes into the note and its text is written straight into the note body.
+- Large recordings: the built-in AI accepts up to 15 MB; add your own Gemini key in Settings to transcribe long ones. On Android only the AUDIO track of a video is sent (much smaller).
+- Transcripts are searchable: a word spoken in a recording finds the note that holds it.
 - **Read aloud:** from the note menu, listen to the note (or a PDF/Word document); voice and speed in Settings → Read aloud.
 
 ## AI {#ai}

@@ -44,6 +44,7 @@ import 'editor/note_images.dart';
 import 'editor/text_wrap.dart';
 import 'viewers/pdf_viewer_screen.dart';
 import 'viewers/slide_viewer_screen.dart';
+import 'viewers/transcript_screen.dart';
 import 'viewers/video_viewer.dart';
 
 /// **DEFTER** ekranı — sayfaları çevrilen, üstüne DOĞRUDAN yazılan bir arşiv
@@ -1610,6 +1611,15 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   /// yüklenmediyse boş bir ekran açmak yerine sebebi söylenir.
   void _open(Attachment attachment) {
     if (attachment.kind == AttachmentKind.audio) return;
+    // Metin eki (transkript) dosyasız: içerik kayıtta, okuma ekranında açılır.
+    if (attachment.kind == AttachmentKind.text) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => TranscriptScreen(transcript: attachment),
+        ),
+      );
+      return;
+    }
     if (!localFileExists(attachment.localPath) && !attachment.isUploaded) {
       _snack(context.l10n.attachmentNotSynced);
       return;
@@ -2723,6 +2733,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     AttachmentKind.pdf => Icons.picture_as_pdf_outlined,
     AttachmentKind.slide => Icons.slideshow_outlined,
     AttachmentKind.audio => Icons.audiotrack_outlined,
+    AttachmentKind.text => Icons.subject,
   };
 
   /// Yapay zekâdan gelen metni açık sayfanın YAZISININ sonuna ekler.
@@ -4385,6 +4396,15 @@ Future<int> copyAttachmentsToArchive({
     // atılıyordu. Sonuç aynıydı ama bedeli bellek taşması ve pil.
     if (original.kind == AttachmentKind.audio ||
         original.kind == AttachmentKind.video) {
+      continue;
+    }
+    // Metin eki baytsız kopyalanır (yoksa görsel diye çözülmeye çalışılırdı).
+    if (original.kind == AttachmentKind.text) {
+      final copy = await attachments.duplicate(
+        noteId: archive.id,
+        source: original,
+      );
+      copied.add(copy.copyWith(asFile: true, section: section));
       continue;
     }
     try {

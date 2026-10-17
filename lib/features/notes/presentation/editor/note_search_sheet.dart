@@ -71,7 +71,12 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
   late final _controller = TextEditingController(text: widget.initialQuery);
 
   /// Ek kimliği → o ekten çıkarılan düz metin. Bir kez çıkarılır.
-  final Map<String, String> _attachmentText = {};
+  /// Transkriptler (metin ekleri) baştan dolu: içerikleri kayıtta, çıkarmak
+  /// bedava — ek taraması beklemeden aranırlar.
+  late final Map<String, String> _attachmentText = {
+    for (final a in widget.note.attachments)
+      if (a.kind == AttachmentKind.text) a.id: a.text,
+  };
 
   bool _scanning = false;
   bool _scanned = false;
@@ -133,9 +138,11 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
         _Hit(
           where: attachment.fileName,
           snippet: _snippet(text, index),
-          icon: attachment.kind == AttachmentKind.pdf
-              ? Icons.picture_as_pdf_outlined
-              : Icons.image_outlined,
+          icon: switch (attachment.kind) {
+            AttachmentKind.pdf => Icons.picture_as_pdf_outlined,
+            AttachmentKind.text => Icons.subject,
+            _ => Icons.image_outlined,
+          },
         ),
       );
     }

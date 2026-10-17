@@ -9065,6 +9065,192 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Metni kaldır'**
   String get removeTextPart;
+
+  /// No description provided for @transcriptTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transkript'**
+  String get transcriptTitle;
+
+  /// No description provided for @transcriptAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metne dök'**
+  String get transcriptAction;
+
+  /// No description provided for @transcriptFileSuffix.
+  ///
+  /// In tr, this message translates to:
+  /// **'transkript'**
+  String get transcriptFileSuffix;
+
+  /// No description provided for @transcriptWorkingAudio.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses metne dökülüyor…'**
+  String get transcriptWorkingAudio;
+
+  /// No description provided for @transcriptWorkingVideo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Video metne dökülüyor…'**
+  String get transcriptWorkingVideo;
+
+  /// No description provided for @transcriptWorkingImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görseldeki yazı okunuyor…'**
+  String get transcriptWorkingImage;
+
+  /// No description provided for @transcriptLongHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uzun kayıtlarda birkaç dakika sürebilir; bu ekranı açık tut.'**
+  String get transcriptLongHint;
+
+  /// No description provided for @transcriptSaved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota metin eki olarak kaydedildi'**
+  String get transcriptSaved;
+
+  /// No description provided for @transcriptInsertSelection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçimi nota ekle'**
+  String get transcriptInsertSelection;
+
+  /// No description provided for @transcriptInsertAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü nota ekle'**
+  String get transcriptInsertAll;
+
+  /// No description provided for @transcriptInserted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota eklendi'**
+  String get transcriptInserted;
+
+  /// No description provided for @transcriptNewNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni not'**
+  String get transcriptNewNote;
+
+  /// No description provided for @transcriptRetryAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI ile yeniden dök'**
+  String get transcriptRetryAi;
+
+  /// No description provided for @transcriptReadWithAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI ile oku (el yazısı)'**
+  String get transcriptReadWithAi;
+
+  /// No description provided for @transcriptShowTimes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zaman damgaları'**
+  String get transcriptShowTimes;
+
+  /// No description provided for @transcriptDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transkripti sil'**
+  String get transcriptDelete;
+
+  /// No description provided for @transcriptDeleteConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transkript silinsin mi? Kaynak dosya notta kalır.'**
+  String get transcriptDeleteConfirm;
+
+  /// No description provided for @transcriptEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin bulunamadı.'**
+  String get transcriptEmpty;
+
+  /// No description provided for @transcriptTooLarge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıt {mb} MB; dahili yapay zekâ en çok 15 MB alabiliyor. Ayarlar\'dan kendi Gemini anahtarını girersen büyük kayıtlar da dökülür.'**
+  String transcriptTooLarge(int mb);
+
+  /// No description provided for @transcriptUnsupported.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu kayıt biçimi ({format}) metne dökülemiyor.'**
+  String transcriptUnsupported(String format);
+
+  /// No description provided for @transcriptEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenle'**
+  String get transcriptEdit;
+
+  /// No description provided for @transcriptSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydet'**
+  String get transcriptSave;
+
+  /// No description provided for @transcriptWords.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 sözcük} other{{count} sözcük}}'**
+  String transcriptWords(int count);
+
+  /// No description provided for @transcriptNoteTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transkript: {name}'**
+  String transcriptNoteTitle(String name);
+
+  /// No description provided for @transcriptOnDevice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihazda okundu · internet ve AI puanı harcanmadı'**
+  String get transcriptOnDevice;
+
+  /// No description provided for @addAudioFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses dosyası ekle'**
+  String get addAudioFile;
+
+  /// No description provided for @transcribeFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosyayı metne dök'**
+  String get transcribeFile;
+
+  /// No description provided for @transcribeFileSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses, video ya da görsel seç; metni nota yazılır'**
+  String get transcribeFileSubtitle;
+
+  /// No description provided for @cardTranscriptCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{Transkript} other{{count} transkript}}'**
+  String cardTranscriptCount(int count);
+
+  /// No description provided for @transcriptPickTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metne dökülecek dosya'**
+  String get transcriptPickTitle;
+
+  /// No description provided for @transcriptUnsupportedFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dosya türü metne dökülemiyor (ses, video ya da görsel seç).'**
+  String get transcriptUnsupportedFile;
 }
 
 class _AppLocalizationsDelegate

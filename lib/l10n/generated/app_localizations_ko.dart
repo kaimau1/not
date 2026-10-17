@@ -4927,4 +4927,118 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get removeTextPart => '텍스트 제거';
+
+  @override
+  String get transcriptTitle => '전사본';
+
+  @override
+  String get transcriptAction => '텍스트로 변환';
+
+  @override
+  String get transcriptFileSuffix => '전사본';
+
+  @override
+  String get transcriptWorkingAudio => '오디오를 텍스트로 변환하는 중…';
+
+  @override
+  String get transcriptWorkingVideo => '동영상을 텍스트로 변환하는 중…';
+
+  @override
+  String get transcriptWorkingImage => '이미지의 글자를 읽는 중…';
+
+  @override
+  String get transcriptLongHint => '긴 녹음은 몇 분 걸릴 수 있습니다. 이 화면을 열어 두세요.';
+
+  @override
+  String get transcriptSaved => '메모에 텍스트 첨부파일로 저장했습니다';
+
+  @override
+  String get transcriptInsertSelection => '선택 항목을 메모에 추가';
+
+  @override
+  String get transcriptInsertAll => '모두 메모에 추가';
+
+  @override
+  String get transcriptInserted => '메모에 추가했습니다';
+
+  @override
+  String get transcriptNewNote => '새 메모';
+
+  @override
+  String get transcriptRetryAi => 'AI로 다시 변환';
+
+  @override
+  String get transcriptReadWithAi => 'AI로 읽기(손글씨)';
+
+  @override
+  String get transcriptShowTimes => '타임스탬프';
+
+  @override
+  String get transcriptDelete => '전사본 삭제';
+
+  @override
+  String get transcriptDeleteConfirm => '전사본을 삭제할까요? 원본 파일은 메모에 남습니다.';
+
+  @override
+  String get transcriptEmpty => '텍스트를 찾지 못했습니다.';
+
+  @override
+  String transcriptTooLarge(int mb) {
+    return '녹음 크기가 ${mb}MB입니다. 내장 AI는 최대 15MB까지 받습니다. 설정에서 내 Gemini 키를 입력하면 큰 녹음도 변환됩니다.';
+  }
+
+  @override
+  String transcriptUnsupported(String format) {
+    return '이 녹음 형식($format)은 텍스트로 변환할 수 없습니다.';
+  }
+
+  @override
+  String get transcriptEdit => '편집';
+
+  @override
+  String get transcriptSave => '저장';
+
+  @override
+  String transcriptWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count단어',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transcriptNoteTitle(String name) {
+    return '전사본: $name';
+  }
+
+  @override
+  String get transcriptOnDevice => '기기에서 읽음 · 인터넷과 AI 포인트 사용 안 함';
+
+  @override
+  String get addAudioFile => '오디오 파일 추가';
+
+  @override
+  String get transcribeFile => '파일을 텍스트로 변환';
+
+  @override
+  String get transcribeFileSubtitle => '오디오, 동영상 또는 이미지를 고르면 그 텍스트가 메모에 들어갑니다';
+
+  @override
+  String cardTranscriptCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '전사본 $count개',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transcriptPickTitle => '변환할 파일';
+
+  @override
+  String get transcriptUnsupportedFile =>
+      '이 파일 형식은 변환할 수 없습니다(오디오, 동영상 또는 이미지를 선택하세요).';
 }

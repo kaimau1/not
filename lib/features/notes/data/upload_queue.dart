@@ -153,7 +153,7 @@ final pendingUploadsProvider =
         );
         if (target == null) continue;
         for (final a in note.attachments) {
-          if (a.kind == AttachmentKind.video || syncedTo(a, target)) continue;
+          if (a.skipsUpload || syncedTo(a, target)) continue;
           if (limitBytes != null && a.sizeBytes > limitBytes) continue;
           if (!localFileExists(a.localPath)) continue;
           pending++;
@@ -312,7 +312,7 @@ class UploadQueue {
     if (baseRepo == null || me == null) return;
     for (final (:ownerId, :note) in entries) {
       for (final attachment in note.attachments) {
-        if (attachment.kind == AttachmentKind.video) continue;
+        if (attachment.skipsUpload) continue;
         if (attachment.isUploaded || attachment.localPath.isEmpty) continue;
         final key = '${note.id}/${attachment.id}';
         final lastFailure = _lastFailure[key];
@@ -415,7 +415,7 @@ class UploadQueue {
       if (target == UploadTarget.drive && !driveReady) continue;
       for (final attachment in note.attachments) {
         // Görüntülü not buluta hiç gitmez (yalnızca cihazda saklanır).
-        if (attachment.kind == AttachmentKind.video) continue;
+        if (attachment.skipsUpload) continue;
         if (syncedTo(attachment, target) || attachment.localPath.isEmpty) {
           continue;
         }
@@ -472,7 +472,7 @@ class UploadQueue {
     for (final note in notes) {
       if (note.localOnly) continue;
       for (final a in note.attachments) {
-        if (!a.isInDrive || a.kind == AttachmentKind.video) continue;
+        if (!a.isInDrive || a.skipsUpload) continue;
         if (a.localPath.isEmpty || localFileExists(a.localPath)) continue;
         final key = 'dl:${note.id}/${a.id}';
         final lastFailure = _lastFailure[key];

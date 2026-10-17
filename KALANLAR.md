@@ -2,9 +2,48 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-10-17 (2. tur) — transkript, performans, simge i4, hatalar (CİHAZDA GÖRÜLMEDİ)
+- [ ] storage.rules'a PPTX eklendi — main CI'ındaki "Firebase + Cloudflare
+  Deploy" işi yeşil mi (kuralı o yayınlıyor); ortak nota eklenen sunum
+  yükleniyor mu.
+- [ ] **Play Console**: `assets/icon/play_store_512.png` mağaza simgesi olarak
+  yüklenecek.
+- [ ] **Tüm cihazlar güncellenmeli** (Windows dahil): eski sürüm yeni metin
+  ekini (transkript) bozuk görsel gibi gösterir.
+- [ ] **Transkript (ses)**: ses kaydı → şerit döşemesindeki altyazı simgesi →
+  döküm → "Nota metin eki olarak kaydedildi" → şeritte kâğıt rengi TXT
+  döşemesi; simge doluya dönüyor mu. Metni basılı tutup seç → menüde
+  "Seçimi nota ekle"; alttaki düğme seçimle değişiyor mu. Düzenle → Kaydet.
+  .txt paylaşımı WhatsApp/Drive'da dosya olarak gidiyor mu.
+- [ ] **Transkript (video)**: 3-5 dk'lık kamera videosu → ses izi ayrılıyor mu
+  (Kotlin `extractAudio`, yerelde derlenmedi), döküm geliyor mu; zaman
+  damgası nota "1:23" girip videoyu sarıyor mu. YouTube transkripti DAHİLİ
+  AI ile çalışıyor mu (Firebase AI Logic YouTube desteği belirsiz) — çalışmıyorsa
+  mesaj anlaşılır mı; kendi anahtarla çalışıyor mu.
+- [ ] Kendi Gemini anahtarıyla 15 MB üstü kayıt (Dosya API'si yükleme +
+  işleme bekleme). Dahili AI'da büyük kayıtta "kendi anahtarını gir" mesajı.
+- [ ] **Görsel OCR**: görsel → Metne dök → cihazda okunuyor ("internet
+  harcanmadı" satırı); yazı bulunamazsa "AI ile oku (el yazısı)".
+- [ ] **Dosyayı metne dök** ("+" menüsü): ses/video/görsel seç → not açılır,
+  dosya şeritte, döküm bitince metin gövdeye yazılıyor mu.
+- [ ] Paylaş menüsünden WhatsApp sesli mesajı (.opus) → Notlar → ses eki;
+  metne dökülüyor mu (audio/ogg). Ekle → "Ses dosyası ekle" (MP3).
+- [ ] Google sesli girişinin (Keep tarzı sesli not) kaydı artık `.amr`; şeritte
+  çalıyor mu (Android), metne dökmede "AMR dökülemiyor" mesajı.
+- [ ] **Tembel video**: videolu notta video yerinde KAPAK karesi + ▶; ▶ ile
+  oynuyor mu; notta "1:23" damgasına (video hiç oynatılmadan) dokununca kurulup
+  oraya sarıyor mu; sabit bölmedeki ⏪/▶/⏩ çubuğu ilk dokunuşta çalışıyor mu.
+- [ ] **Ek yazım özeti**: PDF'e çizim yap / balon koy, sonra yazmaya devam et;
+  uygulamayı kapatıp aç ve ikinci cihazda bak — çizim/balon KAYBOLMAMALI
+  (değişmeyen ek listesi artık her kayıtta yazılmıyor).
+- [ ] **Simge i4**: Pixel/MIUI/One UI başlatıcıda (daire/squircle/kare) not ve
+  parıltı kırpılmadan; Android 13+ temalı simge; bildirim küçük simgesi BEYAZ
+  siluet (gri kare değil); Windows görev çubuğu .ico; web favicon.
+- [ ] Kamera videosu artık 10 dk'ya kadar çekiliyor.
+- [ ] 31 yeni çeviri anahtarı (transcript*, addAudioFile, transcribeFile*,
+  cardTranscriptCount) 16 dilde elle yazıldı — anadil kontrolü.
+
 ## 2026-10-17 — simge i3 + menü toparlaması (CİHAZDA GÖRÜLMEDİ)
-- [ ] Yeni simge: MIUI/Pixel başlatıcıda (yuvarlak/kare maske) sayfa ve
-  yıldız kırpılmadan görünüyor mu; Android 13+ temalı simge; Windows .ico.
 - [ ] Not ⋮ ve kart ⋮ menüleri sade mi; Kopyala/Arkadaşa gönder/Dışa aktar
   Paylaş levhasından çalışıyor mu.
 

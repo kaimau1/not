@@ -539,7 +539,8 @@ class NoteCard extends ConsumerWidget {
                 ((media.heroDocument != null && cover == null) ||
                     media.strip.isNotEmpty ||
                     media.docs.isNotEmpty ||
-                    media.audioCount > 0)) ...[
+                    media.audioCount > 0 ||
+                    media.transcriptCount > 0)) ...[
               const SizedBox(height: 8),
               CardMediaBody(plan: media),
             ],
