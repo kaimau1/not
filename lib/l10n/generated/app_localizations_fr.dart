@@ -130,12 +130,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get addSlide => 'Ajouter des diapositives';
 
   @override
-  String get pasteImage => 'Coller l\'image du presse-papiers';
-
-  @override
-  String get clipboardEmpty => 'Aucune image dans le presse-papiers';
-
-  @override
   String get noNoteSelected => 'Choisissez une note à gauche';
 
   @override

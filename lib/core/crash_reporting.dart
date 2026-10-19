@@ -17,7 +17,7 @@ import 'error_log.dart';
 class CrashReporting {
   CrashReporting._();
 
-  /// Crashlytics eklentisi yalnız mobilde var; Windows/web'de çağrı hata
+  /// Crashlytics eklentisi yalnız mobilde var; web'de çağrı hata
   /// verir.
   static bool get supported => !kIsWeb && Platform.isAndroid;
 

@@ -210,7 +210,6 @@ class SharedActivityService {
             importance: Importance.defaultImportance,
             priority: Priority.defaultPriority,
           ),
-          windows: WindowsNotificationDetails(),
         ),
         payload: payload,
       );
@@ -227,15 +226,9 @@ class SharedActivityService {
     const androidInit = AndroidInitializationSettings(
       '@drawable/ic_stat_notlar',
     );
-    const windowsInit = WindowsInitializationSettings(
-      appName: 'Notlar',
-      appUserModelId: 'dev.kaimau.notlar',
-      guid: 'a9c8f3d2-4b1e-4f6a-9d3c-2e8b7a6c5d4e',
-    );
     await _plugin.initialize(
       settings: const InitializationSettings(
         android: androidInit,
-        windows: windowsInit,
       ),
       // Klasör bildirimine dokunmak uygulamayı öne getirir (klasörün kendi
       // rotası yok, rozet onu gösterir); ortak not bildirimi notu açar.

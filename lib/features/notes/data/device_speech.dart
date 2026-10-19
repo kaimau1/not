@@ -20,7 +20,7 @@ class DeviceSpeech {
   static const _method = MethodChannel('dev.kaimau.notlar/system');
   static const _events = EventChannel('dev.kaimau.notlar/speech');
 
-  /// Cihazda konuşma tanıma kullanılabilir mi. Android dışında (Windows)
+  /// Cihazda konuşma tanıma kullanılabilir mi. Android dışında (web)
   /// yerleşik tanıma yoktur; çağıranlar eski ses yoluna düşer.
   static Future<bool> isAvailable() async {
     if (kIsWeb || !Platform.isAndroid) return false;

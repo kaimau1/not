@@ -700,7 +700,7 @@ class _VideoBoxState extends State<_VideoBox> {
         widget.onSize?.call(size);
       }
     } catch (_) {
-      // Oynatıcı bu platformda yok (Windows) ya da dosya bozuk.
+      // Oynatıcı bu platformda yok ya da dosya bozuk.
       if (mounted) {
         setState(() {
           _failed = true;

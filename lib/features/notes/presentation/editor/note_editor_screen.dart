@@ -4,7 +4,6 @@ import 'dart:math' as math;
 // `AppExitResponse` (didRequestAppExit'in dönüş tipi) dart:ui'de yaşıyor;
 // material/services onu yeniden dışa AKTARMIYOR. `show` ile alınır ki
 // dart:ui'nin Color/TextStyle gibi tipleri material'ınkilerle çakışmasın.
-import 'dart:ui' show AppExitResponse;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_selector/file_selector.dart';
@@ -140,9 +139,6 @@ import 'text_page_box.dart' show kTextBoxWidth, kTextBoxHeight;
 import 'view_mode_switch.dart';
 import '../../../../core/widgets/smooth_routes.dart';
 import '../../../../core/widgets/app_sheet.dart';
-
-bool get _isDesktop =>
-    !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
 /// İki madde listesi EKRANDA aynı mı? Yalnız madde METNİ değiştiyse aynı
 /// sayılır: o metni satırın kendi denetleyicisi zaten çiziyor.
@@ -1263,25 +1259,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   @override
-  Future<AppExitResponse> didRequestAppExit() async {
-    // Masaüstü (Windows): pencere kapatma düğmesi. `detached` burada
-    // güvenilir gelmediğinden kapanışa izin vermeden önce kaydedilir.
-    // Yazım kısa bir süre BEKLENİR: `unawaited` bırakılsaydı süreç, Firestore
-    // yerel kalıcılığı diske inmeden ölebilir ve son 3 sn'lik yazım
-    // kaybolabilirdi. Zaman aşımı şart — future SUNUCU onayında tamamlanır,
-    // çevrimdışıyken sonsuza dek bekler; 2 sn yerel commit için yeterli.
-    final write = _saveNow();
-    if (write != null) {
-      // Hata da yutulur: yazım 2 sn içinde reddedilirse (permission-denied)
-      // istisna buradan fırlayıp kapanış yanıtını asla döndürmezdi.
-      await write
-          .timeout(const Duration(seconds: 2), onTimeout: () {})
-          .catchError((_) {});
-    }
-    return super.didRequestAppExit();
-  }
-
-  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     openEditorNoteIds.remove(widget.noteId);
@@ -1740,36 +1717,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// koşsalardı hepsi aynı noktaya biner, üstelik büyük görsellerin
   /// sıkıştırması aynı anda belleğe yığılırdı.
   Future<void> _pickImage({bool asFile = false}) async {
-    if (_isDesktop) {
-      final group = XTypeGroup(
-        label: context.l10n.exportImages,
-        extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+    // Boyut tavanı platform tarafında uygulanır: 48 MP'lik bir fotoğrafın
+    // ~20 MB'ı ana izoleye okunup sıkıştırma izolesine kopyalanıyordu;
+    // ek zaten 1600 px'e küçültülüyor (bkz. _compressImage), kalite kaybı yok.
+    final files = await ImagePicker().pickMultiImage(
+      maxWidth: 2400,
+      maxHeight: 2400,
+    );
+    for (final file in files) {
+      if (!mounted) return;
+      await _addImageBytes(
+        await file.readAsBytes(),
+        file.name,
+        asFile: asFile,
       );
-      final files = await openFiles(acceptedTypeGroups: [group]);
-      for (final file in files) {
-        if (!mounted) return;
-        await _addImageBytes(
-          await file.readAsBytes(),
-          file.name,
-          asFile: asFile,
-        );
-      }
-    } else {
-      // Boyut tavanı platform tarafında uygulanır: 48 MP'lik bir fotoğrafın
-      // ~20 MB'ı ana izoleye okunup sıkıştırma izolesine kopyalanıyordu;
-      // ek zaten 1600 px'e küçültülüyor (bkz. _compressImage), kalite kaybı yok.
-      final files = await ImagePicker().pickMultiImage(
-        maxWidth: 2400,
-        maxHeight: 2400,
-      );
-      for (final file in files) {
-        if (!mounted) return;
-        await _addImageBytes(
-          await file.readAsBytes(),
-          file.name,
-          asFile: asFile,
-        );
-      }
     }
   }
 
@@ -1799,8 +1760,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
   }
 
-  /// "Belge tara": kamerayla (masaüstünde seçilen fotoğraflardan) belge
-  /// tarar. Sayfalar önce İNCELEME ekranından geçer (köşe düzeltme, filtre,
+  /// "Belge tara": kamerayla belge tarar. Sayfalar önce İNCELEME ekranından geçer (köşe düzeltme, filtre,
   /// döndürme — dosya-okuyucu projesinden taşınan boru hattı) ve sonuç ya
   /// **tek aranabilir PDF eki** ya da düzeltilmiş görsel ekleri olur.
   ///
@@ -1811,7 +1771,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   Future<void> _scanDocument() async {
     final l10n = context.l10n;
     List<String>? pages;
-    var autoCrop = false;
     if (DocumentScan.supported) {
       // Manifest'te CAMERA bildirildiği için Android çekim niyetini izin
       // olmadan REDDEDER (bkz. _takePhoto).
@@ -1827,28 +1786,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (mounted) _showSnack(l10n.scanFailed('$e'));
         return;
       }
-    } else if (_isDesktop) {
-      // Masaüstünde ML Kit yok ama tarama artık VAR: seçilen fotoğraflar
-      // kenar bulma + perspektif düzeltme + netleştirme borusundan geçer.
-      final group = XTypeGroup(
-        label: context.l10n.exportImages,
-        extensions: ['jpg', 'jpeg', 'png', 'webp'],
-      );
-      final files = await openFiles(acceptedTypeGroups: [group]);
-      if (files.isEmpty) return;
-      pages = [for (final f in files) f.path];
-      autoCrop = true;
     } else {
       _showSnack(l10n.scanUnsupported);
       return;
     }
     if (pages == null || pages.isEmpty || !mounted) return;
 
-    final result = await ScanReviewScreen.open(
-      context,
-      pages,
-      autoCrop: autoCrop,
-    );
+    final result = await ScanReviewScreen.open(context, pages);
     if (result == null || !mounted) return;
 
     final pdfBytes = result.pdfBytes;
@@ -2129,19 +2073,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (files.isEmpty || !mounted) return null;
         return _addPdfFile(files.first, asFile: true);
       case 'image':
-        if (_isDesktop) {
-          final group = XTypeGroup(
-            label: context.l10n.exportImages,
-            extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-          );
-          final file = await openFile(acceptedTypeGroups: [group]);
-          if (file == null || !mounted) return null;
-          return _addImageBytes(
-            await file.readAsBytes(),
-            file.name,
-            asFile: true,
-          );
-        }
         final file = await ImagePicker().pickImage(
           source: ImageSource.gallery,
           maxWidth: 2400,
@@ -2793,18 +2724,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
   }
 
-  Future<void> _pasteImage() async {
-    // Kısayolla yapıştırırken odak metin alanındadır: görsel imlecin satırına
-    // girsin diye ölçüm baytlar gelmeden önce alınır.
-    _rememberCaret();
-    final bytes = await Pasteboard.image;
-    if (bytes == null) {
-      if (mounted) _showSnack(context.l10n.clipboardEmpty);
-      return;
-    }
-    await _addImageBytes(bytes, 'pano.png');
-  }
-
   /// Klavyeden gelen görsel: Gboard'ın pano çubuğu ve "Yapıştır" düğmesi
   /// görseli düz metin yapıştırmadan AYRI bir yolla (Android `commitContent`)
   /// gönderir ve yalnızca alan desteklediğini bildirirse gönderir. Bu yüzden
@@ -2940,12 +2859,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (attachment.kind == AttachmentKind.image) {
           final bytes = await repo?.readBytes(attachment);
           if (bytes != null) await Pasteboard.writeImage(bytes);
-        } else if (_isDesktop) {
-          final paths = [
-            for (final a in attachments)
-              if (a.localPath.isNotEmpty) a.localPath,
-          ];
-          if (paths.isNotEmpty) await Pasteboard.writeFiles(paths);
         }
       });
     } catch (_) {
@@ -3348,7 +3261,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final copied = ref.read(attachmentClipboardProvider);
     final action = await showAttachSheet(
       context,
-      isDesktop: _isDesktop,
       pageNote: _note?.type.isPageNoteType ?? false,
       // Gömme seçicisi yeni ek de ekleyebildiği için eki olmayan notta da
       // anlamlı (gömme yeniden tasarımı, 2026-10-11).
@@ -3408,8 +3320,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         await _addVideoFromGallery();
       case 'youtube':
         await _addYouTube();
-      case 'paste':
-        await _pasteImage();
       // 'color' BURADAN KALKTI: sayfa görünümü artık biçim şeridinde
       // (bkz. attach_sheet.dart'taki gerekçe ve [_showColorSheet]).
     }
@@ -6034,25 +5944,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   Future<void> _pickBackgroundImage() async {
     final Uint8List bytes;
     final String name;
-    if (_isDesktop) {
-      final group = XTypeGroup(
-        label: context.l10n.exportImages,
-        extensions: ['jpg', 'jpeg', 'png', 'webp'],
-      );
-      final file = await openFile(acceptedTypeGroups: [group]);
-      if (file == null) return;
-      bytes = await file.readAsBytes();
-      name = file.name;
-    } else {
-      final file = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 2400,
-        maxHeight: 2400,
-      );
-      if (file == null) return;
-      bytes = await file.readAsBytes();
-      name = file.name;
-    }
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 2400,
+      maxHeight: 2400,
+    );
+    if (file == null) return;
+    bytes = await file.readAsBytes();
+    name = file.name;
     final repo = _attachments;
     if (repo == null) return;
     try {
@@ -6174,7 +6073,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Sesli yazdırma. Cihazın yerleşik tanıması varsa düğme DOĞRUDAN dikteyi
   /// başlatır (alt sayfa açılmaz): konuşma anında nota akar, düğmeye tekrar
-  /// basınca durur. Yerleşik tanıma yoksa (Windows) eski alt sayfa açılır.
+  /// basınca durur. Yerleşik tanıma yoksa (web) eski alt sayfa açılır.
   /// Alt bardaki üç araç segmentinden biri.
   Widget _toolSegment({
     required IconData icon,
@@ -6735,7 +6634,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       return;
     }
     final l10n = context.l10n;
-    // Yerleşik tanıma yoksa (Windows) canlı yazma mümkün değil: kullanıcı
+    // Yerleşik tanıma yoksa (web) canlı yazma mümkün değil: kullanıcı
     // düğmeye basınca hiçbir şey olmasın diye ses levhasına düşülür —
     // orada konuşma kaydedilip topluca yazıya dökülür.
     if (!await DeviceSpeech.isAvailable()) {
@@ -8522,12 +8421,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       },
       child: CallbackShortcuts(
         bindings: {
-          if (_isDesktop)
-            const SingleActivator(
-              LogicalKeyboardKey.keyV,
-              control: true,
-              shift: true,
-            ): _pasteImage,
           // Ctrl+Z: metin alanı odaktayken Flutter'ın kendi metin geri alması
           // önce davranır (yazılan harfleri geri alır); alan odakta değilken
           // buraya düşer ve NOTUN son değişikliği geri alınır.

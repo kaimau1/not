@@ -173,8 +173,8 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
   kullanıcı başı dakika sınırını düşür. (Sunucuda kota: F4.10.)
 - [ ] Play Console: arka plan konum beyanı (+ açık bilgilendirme videosu),
   gizlilik politikasını herkese açık adrese koy.
-- [ ] F1.5 sonrası **Windows sürümünü yeniden derle** ve tüm cihazları güncelle;
-  sonra konsolda `config/app` belgesine `minClient: 1` yaz (ileride yeni veri
+- [ ] ~~Windows sürümünü yeniden derle~~ (Windows 2026-10-19'da kaldırıldı);
+  telefonları güncelle, sonra konsolda `config/app` belgesine `minClient: 1` yaz (ileride yeni veri
   biçimi gelince `kClientDataVersion` ile birlikte artırılır — bkz. F1.5).
 - [ ] Firebase konsolu → **Crashlytics**'i etkinleştir; ilk `[apk]`
   derlemesinden sonra açılışta çökme yok mu bak (KALANLAR).
@@ -188,7 +188,7 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
   (`:866`), `folderNotesProvider` (`:888`), `filteredNotesProvider` (`:939`),
   `folderNoteCountsProvider` (`folder_order.dart:106`) her not yayınında YENİ
   koleksiyon döndürüyor; `Note`'ta `==` yok. Her otomatik kayıtta (0,5–3 sn)
-  izleyenleri yeniden kuruluyor — geniş ekranda (tablet/Windows/web) yazarken
+  izleyenleri yeniden kuruluyor — geniş ekranda (tablet/web) yazarken
   liste paneli, çip satırı, klasör rafı sürekli kuruluyor.
   Yap: içerik aynıysa ÖNCEKİ örneği döndür (`listEquals` — artımlı önbellek
   değişmeyen `Note` örneklerini koruduğu için kimlik karşılaştırması yeter;
@@ -311,12 +311,12 @@ F1.5'in en düşük sürüm kapısı yerindeyken yapılır.
 - [ ] **F4.3 Misafir hesap hatırlatması** — ilk açılışta sessiz anonim oturum
   (`login_screen.dart:48`); uygulama silinince notlar erişilemez. N nottan
   sonra kalıcı "Google hesabını bağla" kartı.
-- [ ] **F4.4 Drive'daki ekler web'de görünmüyor** — web'de `NoDriveAuth`
+- [ ] **F4.4 Drive'daki ekler web'de görünmüyor** (2026-10-19: Windows kaldırıldı, bilgisayardaki TEK yol artık web — öncelik yükseldi; Drive kipindeki kullanıcı ekleri bilgisayarda göremiyor) — web'de `NoDriveAuth`
   (`drive_store.dart:293`), `readBytes` null dönüyor
   (`attachment_repository.dart:950`). Web'de Drive okuması ya da Storage'a da
   yansıtma. (Kod okumasından; tarayıcıda doğrula.)
 - [ ] **F4.5 Ayar senkronu** — tercihler yalnız cihazda (SharedPreferences);
-  Android/Windows/web ayrı ayrı ayarlanıyor. Seçili tercihler kullanıcı
+  Android ve web ayrı ayrı ayarlanıyor. Seçili tercihler kullanıcı
   belgesine.
 - [ ] **F4.6 FCM push** — paylaşım bildirimleri yalnız uygulama açıkken
   (KALANLAR'da ayrıntı).
@@ -330,8 +330,7 @@ F1.5'in en düşük sürüm kapısı yerindeyken yapılır.
   isteğe bağlı gerçek şifreleme.
 - [ ] **F4.9 Test altyapısı** — Firestore/Storage kuralları için emülatör
   testleri (28 KB kural, hiç testi yok); veri katmanı testleri
-  (`fake_cloud_firestore` ya da emülatör); Windows için haftalık/elle CI
-  derlemesi; KALANLAR'daki 142 "cihazda görülmedi" maddesi için bir
+  (`fake_cloud_firestore` ya da emülatör); KALANLAR'daki 142 "cihazda görülmedi" maddesi için bir
   doğrulama turu.
 - [ ] **F4.10 Play'e çıkış (biliniyor)** — Play Billing; AI kotası ve depolama
   tavanı SUNUCUDA (Cloud Function — G2'nin kod tarafı); App Check zorlaması.

@@ -130,12 +130,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get addSlide => 'स्लाइड जोड़ें';
 
   @override
-  String get pasteImage => 'क्लिपबोर्ड से चित्र चिपकाएँ';
-
-  @override
-  String get clipboardEmpty => 'क्लिपबोर्ड में कोई चित्र नहीं है';
-
-  @override
   String get noNoteSelected => 'बाईं ओर से कोई नोट चुनें';
 
   @override

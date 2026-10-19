@@ -34,7 +34,7 @@
   mu. Düşmezse/açılışta "build ID" hatası görülürse Gradle eklentisi
   (`com.google.firebase.crashlytics`) eklenmeli.
 - [ ] **Hata günlüğü**: Ayarlar → Hakkında → "Hata günlüğünü paylaş" →
-  .txt paylaşım penceresi (Android, Windows, web).
+  .txt paylaşım penceresi (Android, web).
 - [ ] **1 MiB uyarısı**: çok sayfalı PDF'e yoğun çizim/balon → "Not çok
   büyüdü … en büyük kısım: "x.pdf"" bildirimi (5 dk'da bir).
 - [ ] **Sürüm kapısı**: konsolda `config/app` belgesi oluştur, `minClient: 2`
@@ -73,8 +73,8 @@
   yükleniyor mu.
 - [ ] **Play Console**: `assets/icon/play_store_512.png` mağaza simgesi olarak
   yüklenecek.
-- [ ] **Tüm cihazlar güncellenmeli** (Windows dahil): eski sürüm yeni metin
-  ekini (transkript) bozuk görsel gibi gösterir.
+- [ ] **Tüm telefonlar güncellenmeli**: eski sürüm yeni metin ekini
+  (transkript) bozuk görsel gibi gösterir.
 - [ ] **Transkript (ses)**: ses kaydı → şerit döşemesindeki altyazı simgesi →
   döküm → "Nota metin eki olarak kaydedildi" → şeritte kâğıt rengi TXT
   döşemesi; simge doluya dönüyor mu. Metni basılı tutup seç → menüde
@@ -103,7 +103,7 @@
   (değişmeyen ek listesi artık her kayıtta yazılmıyor).
 - [ ] **Simge i4**: Pixel/MIUI/One UI başlatıcıda (daire/squircle/kare) not ve
   parıltı kırpılmadan; Android 13+ temalı simge; bildirim küçük simgesi BEYAZ
-  siluet (gri kare değil); Windows görev çubuğu .ico; web favicon.
+  siluet (gri kare değil); web favicon.
 - [ ] Kamera videosu artık 10 dk'ya kadar çekiliyor.
 - [ ] 31 yeni çeviri anahtarı (transcript*, addAudioFile, transcribeFile*,
   cardTranscriptCount) 16 dilde elle yazıldı — anadil kontrolü.
@@ -215,8 +215,8 @@
   APIs & Services → "Google Drive API" → Enable) ve OAuth onay ekranına
   `drive.appdata` kapsamını ekle. Kapalıyken "Bağla" açıklayıcı hata verir.
 - [ ] **Drive senkronu iki cihazda**: telefonda Bağla → görsel/PDF ekle →
-  Drive'a yüklendi mi (rozet kalkıyor mu); ikinci cihaz (Windows) bağlanınca
-  ek iniyor ve kartta görünüyor mu. Ayarlar'da Drive kullanımı doğru mu.
+  Drive'a yüklendi mi (rozet kalkıyor mu); ikinci telefon bağlanınca
+  ek iniyor ve kartta görünüyor mu. (Web Drive'ı okuyamıyor — F4.4.) Ayarlar'da Drive kullanımı doğru mu.
 - [ ] **Misafir hesap**: ek eklenince "yükleniyor" çarkı/şeridi ÇIKMAMALI.
 - [ ] **Kart kapakları**: YouTube sabitli not, tek görselli not, galeriden
   video (kapak karesi), balonlu PDF (ilk sayfa küçük resmi), ses notu.
@@ -351,8 +351,8 @@ kapandı; aşağıdakiler derleme riski değil, **gözle bakılmadı** riski:
 - [ ] **Etiket yeniden adlandırma/silme** çok notta sıralı yazım yapıyor
   (`updateFieldsAndWait`). Yüzlerce notlu bir etikette ne kadar sürüyor,
   ilerleme göstergesi gerekir mi — ölçülmedi.
-- [ ] **Uygulama sürümü satırı** (`package_info_plus`) Windows'ta denenmedi;
-  Android'de CI'ın `--build-number`ı görünmeli.
+- [ ] **Uygulama sürümü satırı** (`package_info_plus`): Android'de CI'ın
+  `--build-number`ı görünmeli.
 
 ## 2026-08-29 turundan kalan
 
@@ -540,7 +540,7 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
 - [ ] **Sarma sırasında IME oluşturma aralığı (altı çizili tahmin metni)
   gösterilmiyor** — çapalar aralığın konumunu kaydırdığı için atlanıyor.
   Yalnız görselli metin notunda; harf girişi etkilenmiyor (2026-07-24).
-- [ ] **Editör diktesi Windows'ta AI'sız çalışamaz** — dikte METİN döndürmek
+- [ ] **Editör diktesi web'de AI'sız çalışamaz** — dikte METİN döndürmek
   zorunda, sesli asistandaki "eke düş" yedeği burada uygulanamıyor. Android'de
   cihaz tanıması olduğu için etkilenmiyor (2026-07-26).
 - [ ] **Sesli asistan hatırlatıcısı cihazda denenmedi** — yerel zaman

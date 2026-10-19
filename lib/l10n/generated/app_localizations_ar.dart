@@ -130,12 +130,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addSlide => 'إضافة شرائح';
 
   @override
-  String get pasteImage => 'لصق صورة من الحافظة';
-
-  @override
-  String get clipboardEmpty => 'لا توجد صورة في الحافظة';
-
-  @override
   String get noNoteSelected => 'اختر ملاحظة من الجانب';
 
   @override

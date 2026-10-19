@@ -37,8 +37,6 @@
   "addImage": "Adicionar imagem",
   "addPdf": "Adicionar PDF",
   "addSlide": "Adicionar diapositivos",
-  "pasteImage": "Colar imagem da área de transferência",
-  "clipboardEmpty": "Não há imagens na área de transferência",
   "noNoteSelected": "Escolha uma nota à esquerda",
   "attachmentFailed": "Não foi possível adicionar o anexo: {error}",
   "attachmentCopying": "Copiando...",

@@ -187,16 +187,6 @@ abstract final class AppConstants {
   /// ücretsiz katmanı 5 GB; sıkıştırılamayan PDF'ler kotayı sessizce yiyordu.
   static const int largeAttachmentWarnBytes = 5 * 1024 * 1024; // 5 MB
 
-  // Google OAuth (masaüstü) — derleme sırasında --dart-define ile verilir:
-  //   flutter run --dart-define=GOOGLE_DESKTOP_CLIENT_ID=... \
-  //               --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET=...
-  static const String desktopClientId = String.fromEnvironment(
-    'GOOGLE_DESKTOP_CLIENT_ID',
-  );
-  static const String desktopClientSecret = String.fromEnvironment(
-    'GOOGLE_DESKTOP_CLIENT_SECRET',
-  );
-
   // Android'de google_sign_in için sunucu (web) client ID — ZORUNLU.
   //
   // DİKKAT: "boş bırakılırsa eklenti google-services.json içinden okur" DOĞRU

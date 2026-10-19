@@ -130,12 +130,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addSlide => 'Slayt ekle';
 
   @override
-  String get pasteImage => 'Panodan görsel yapıştır';
-
-  @override
-  String get clipboardEmpty => 'Panoda görsel yok';
-
-  @override
   String get noNoteSelected => 'Soldan bir not seç';
 
   @override

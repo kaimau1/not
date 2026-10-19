@@ -59,7 +59,7 @@ final voiceAssistantProvider =
 ///
 /// SADELEŞTİRME (2026-10-19): bu sınıf eskiden mikrofonu KENDİSİ açıyordu
 /// (widget'tan başlayan "bas-başlat" oturumu, kendi tanıma aboneliği,
-/// Windows'ta kendi ses kaydı, kendi süre sınırı). Aynı işi yapan sesli not
+/// web'de kendi ses kaydı, kendi süre sınırı). Aynı işi yapan sesli not
 /// levhasıyla ikiz bir dinleme koduydu; "sessizlikte bitsin" düzeltmesi
 /// buraya hiç ulaşmamıştı. Artık dinleme yalnız levhada
 /// (`VoiceListenSession`), widget da levhayı açıyor; burada kalan tek iş

@@ -37,8 +37,6 @@
   "addImage": "Добавить изображение",
   "addPdf": "Добавить PDF",
   "addSlide": "Добавить слайды",
-  "pasteImage": "Вставить изображение из буфера обмена",
-  "clipboardEmpty": "В буфере обмена нет изображения",
   "noNoteSelected": "Выберите заметку слева",
   "attachmentFailed": "Не удалось добавить вложение: {error}",
   "attachmentCopying": "Копирование...",

@@ -31,7 +31,7 @@ class UnsupportedMediaException implements Exception {
 /// **Eki metne döken motor** — kaynağın türüne göre doğru yolu seçer.
 ///
 /// * GÖRSEL: önce CİHAZ İÇİ OCR (ML Kit — internet ve AI puanı gerekmez);
-///   [preferAi] ya da cihazda OCR yoksa (Windows) Gemini okur. El yazısı ve
+///   [preferAi] ya da cihazda OCR yoksa (web) Gemini okur. El yazısı ve
 ///   bozuk düzende model belirgin daha iyi; kullanıcı ekrandan "AI ile oku"
 ///   diyerek yeniden okutabilir.
 /// * SES: Gemini transkripti (bkz. [GeminiService.transcribeMedia]).

@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:window_manager/window_manager.dart';
 
 import 'package:path_provider/path_provider.dart';
 
@@ -68,22 +67,6 @@ Future<void> main() async {
   // tarayıcınınki üstüne binmesin. Metin alanları Flutter'ın kendi
   // kes/kopyala/yapıştır menüsünü gösterir.
   if (kIsWeb) unawaited(BrowserContextMenu.disableContextMenu());
-
-  if (!kIsWeb && Platform.isWindows) {
-    await windowManager.ensureInitialized();
-    const options = WindowOptions(
-      title: 'Notlar',
-      size: Size(1100, 750),
-      minimumSize: Size(400, 500),
-      center: true,
-    );
-    unawaited(
-      windowManager.waitUntilReadyToShow(options, () async {
-        await windowManager.show();
-        await windowManager.focus();
-      }),
-    );
-  }
 
   // Kenardan kenara çizim her Android sürümünde AÇIK: Android 15+ bunu
   // zaten zorunlu kılıyor; eski sürümlerde de aynı yerleşim olsun ki

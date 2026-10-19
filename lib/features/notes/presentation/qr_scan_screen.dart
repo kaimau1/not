@@ -13,7 +13,7 @@ import '../../../core/widgets/app_sheet.dart';
 enum _QrAction { open, save, cancel }
 
 /// QR okuma yalnızca mobile_scanner'ın eklenti sağladığı platformlarda vardır
-/// (Android/iOS/macOS). Windows'ta eklenti yok: menüde hiç görünmemesi için
+/// (Android/iOS/macOS). Web'de kullanılmıyor: menüde hiç görünmemesi için
 /// çağıran her yer bunu sorar — çalışmayan bir düğme göstermektense.
 bool get qrScanSupported =>
     !kIsWeb && (Platform.isAndroid || Platform.isIOS || Platform.isMacOS);

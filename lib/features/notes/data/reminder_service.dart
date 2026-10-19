@@ -161,15 +161,9 @@ class ReminderService {
     const androidInit = AndroidInitializationSettings(
       '@drawable/ic_stat_notlar',
     );
-    const windowsInit = WindowsInitializationSettings(
-      appName: 'Notlar',
-      appUserModelId: 'dev.kaimau.notlar',
-      guid: 'a9c8f3d2-4b1e-4f6a-9d3c-2e8b7a6c5d4e',
-    );
     await _plugin.initialize(
       settings: const InitializationSettings(
         android: androidInit,
-        windows: windowsInit,
       ),
       onDidReceiveNotificationResponse: (response) =>
           handleNotificationResponse(_ref, response),
@@ -243,7 +237,6 @@ class ReminderService {
             importance: Importance.defaultImportance,
             priority: Priority.defaultPriority,
           ),
-          windows: const WindowsNotificationDetails(),
         ),
         // BİLEREK inexact (hatırlatıcılardan farklı): sabah brifingi birkaç
         // dakika kaysa kimse fark etmez; exact alarm hem her sabah Doze'u
@@ -339,7 +332,6 @@ class ReminderService {
           ),
         ],
       ),
-      windows: WindowsNotificationDetails(),
     );
     final body = trimmed.trim().isEmpty ? prefix : '$prefix · $trimmed';
     final scheduledDate = tz.TZDateTime.from(note.reminderAt!, tz.local);

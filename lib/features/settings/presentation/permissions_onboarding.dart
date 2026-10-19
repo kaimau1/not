@@ -16,7 +16,7 @@ import '../../../core/widgets/app_sheet.dart';
 class PermissionsOnboarding {
   static const _key = 'perms_onboarded';
 
-  /// Daha önce gösterilmediyse alt sayfayı açar. Android dışında (Windows)
+  /// Daha önce gösterilmediyse alt sayfayı açar. Android dışında (web)
   /// izin kavramı olmadığından hiçbir şey yapmaz.
   static Future<void> maybeShow(BuildContext context, WidgetRef ref) async {
     final service = ref.read(permissionsServiceProvider);

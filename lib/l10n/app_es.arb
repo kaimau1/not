@@ -37,8 +37,6 @@
   "addImage": "Añadir imagen",
   "addPdf": "Añadir PDF",
   "addSlide": "Añadir diapositivas",
-  "pasteImage": "Pegar imagen del portapapeles",
-  "clipboardEmpty": "No hay ninguna imagen en el portapapeles",
   "noNoteSelected": "Elige una nota de la izquierda",
   "attachmentFailed": "No se pudo añadir el archivo adjunto: {error}",
   "attachmentCopying": "Copiando...",

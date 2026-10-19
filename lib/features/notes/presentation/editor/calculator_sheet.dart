@@ -1,15 +1,9 @@
-import 'dart:io';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/calc.dart';
 import '../../../../core/widgets/app_sheet.dart';
-
-bool get _isDesktop =>
-    !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
 /// Not yazarken hızlı hesap için dahili hesap makinesi alt sayfası.
 /// "Nota ekle" ile kapatılırsa eklenecek metni ("12,5×3 = 37,5" ya da
@@ -114,11 +108,9 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
           children: [
             TextField(
               controller: _controller,
-              // Mobilde sistem klavyesi tuş takımını örtmesin; masaüstünde
-              // fiziksel klavyeyle yazmak serbest.
-              readOnly: !_isDesktop,
+              // Sistem klavyesi tuş takımını örtmesin: giriş yalnız tuşlardan.
+              readOnly: true,
               showCursor: true,
-              autofocus: _isDesktop,
               onChanged: (_) => setState(() {}),
               style: Theme.of(context).textTheme.titleLarge,
               decoration: InputDecoration(

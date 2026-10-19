@@ -63,7 +63,7 @@ class _SetupRequiredScreen extends StatelessWidget {
                   ),
                   child: const SelectableText(
                     'dart pub global activate flutterfire_cli\n'
-                    'flutterfire configure --platforms=android,windows',
+                    'flutterfire configure --platforms=android,web',
                     style: TextStyle(fontFamily: 'monospace'),
                   ),
                 ),

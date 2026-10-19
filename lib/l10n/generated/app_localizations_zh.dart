@@ -130,12 +130,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addSlide => '添加幻灯片';
 
   @override
-  String get pasteImage => '从剪贴板粘贴图片';
-
-  @override
-  String get clipboardEmpty => '剪贴板里没有图片';
-
-  @override
   String get noNoteSelected => '请从左侧选择一条笔记';
 
   @override

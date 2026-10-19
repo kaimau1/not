@@ -37,8 +37,6 @@
   "addImage": "Bild hinzufügen",
   "addPdf": "PDF hinzufügen",
   "addSlide": "Folien hinzufügen",
-  "pasteImage": "Bild aus der Zwischenablage einfügen",
-  "clipboardEmpty": "Kein Bild in der Zwischenablage",
   "noNoteSelected": "Wähle links eine Notiz aus",
   "attachmentFailed": "Anhang konnte nicht hinzugefügt werden: {error}",
   "attachmentCopying": "Wird kopiert...",

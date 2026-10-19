@@ -130,12 +130,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get addSlide => 'スライドを追加';
 
   @override
-  String get pasteImage => 'クリップボードから画像を貼り付け';
-
-  @override
-  String get clipboardEmpty => 'クリップボードに画像がありません';
-
-  @override
   String get noNoteSelected => '左からメモを選んでください';
 
   @override

@@ -15,7 +15,7 @@ import 'router.dart';
 ///
 /// Kullanıcı isteği 2026-09-22: "tablet gibi geniş ekranlı cihazlarda
 /// kullanımını baştan tasarlamalıyız, onlara özel özellikler getirmeliyiz."
-/// Fareli/klavyeli tablet, web ve Windows'ta kısayollar bu dosyadan gelir.
+/// Fareli/klavyeli tablet ve web'de kısayollar bu dosyadan gelir.
 
 /// Arama kutusuna odak İSTEĞİ. Ana ekran bu sayacı dinler ve kendi
 /// kutusuna odaklanır; sayaç (bool değil) — aynı istek art arda iki kez

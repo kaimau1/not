@@ -130,12 +130,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get addSlide => 'Aggiungi diapositive';
 
   @override
-  String get pasteImage => 'Incolla immagine dagli appunti';
-
-  @override
-  String get clipboardEmpty => 'Nessuna immagine negli appunti';
-
-  @override
   String get noNoteSelected => 'Scegli una nota a sinistra';
 
   @override

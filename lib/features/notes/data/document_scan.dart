@@ -24,10 +24,8 @@ class DocumentScan {
   static bool get supported =>
       !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
-  /// "Belge tara" menüde görünsün mü. Masaüstünde kamera yok ama tarama VAR:
-  /// seçilen fotoğraflar dosya-okuyucu'dan taşınan kenar bulma + perspektif
-  /// düzeltme + netleştirme borusundan geçirilir (bkz. ScanReviewScreen).
-  static bool get available => supported || (!kIsWeb && Platform.isWindows);
+  /// "Belge tara" menüde görünsün mü (web'de ML Kit yok).
+  static bool get available => supported;
 
   /// Tarama arayüzünü açar; kullanıcı vazgeçerse null, aksi hâlde taranan
   /// sayfaların (JPEG) dosya yolları döner. Kamera iznini paket ister.

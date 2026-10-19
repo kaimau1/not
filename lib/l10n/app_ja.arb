@@ -37,8 +37,6 @@
   "addImage": "画像を追加",
   "addPdf": "PDF を追加",
   "addSlide": "スライドを追加",
-  "pasteImage": "クリップボードから画像を貼り付け",
-  "clipboardEmpty": "クリップボードに画像がありません",
   "noNoteSelected": "左からメモを選んでください",
   "attachmentFailed": "添付ファイルを追加できませんでした: {error}",
   "attachmentCopying": "コピー中...",

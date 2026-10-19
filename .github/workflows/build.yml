@@ -270,11 +270,8 @@ jobs:
           body: |
             Aşağıdaki **notlar-v1.0.${{ github.run_number }}.apk** dosyasına telefonundan
             tıkla, indir ve mevcut uygulamanın üzerine kur. Verilerin Firebase'de
-            olduğu için hiçbir şey kaybolmaz.
-
-            Windows sürümü artık CI'da derlenmiyor (gereksiz yavaşlıktı). Gerektiğinde
-            depo kökündeki **build-windows.bat** dosyasını çalıştırarak masaüstünde
-            derleyebilirsin.
+            olduğu için hiçbir şey kaybolmaz. Bilgisayarda web sürümünü kullan
+            (Cloudflare Pages, `notlar-web`).
           files: notlar-v1.0.${{ github.run_number }}.apk
 
       # Artifact yükleme ARTIK ZORUNLU DEĞİL (continue-on-error): depo

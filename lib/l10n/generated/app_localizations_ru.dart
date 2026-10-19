@@ -130,12 +130,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get addSlide => 'Добавить слайды';
 
   @override
-  String get pasteImage => 'Вставить изображение из буфера обмена';
-
-  @override
-  String get clipboardEmpty => 'В буфере обмена нет изображения';
-
-  @override
   String get noNoteSelected => 'Выберите заметку слева';
 
   @override

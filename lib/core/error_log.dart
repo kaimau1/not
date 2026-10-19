@@ -10,7 +10,7 @@ import 'package:flutter/foundation.dart';
 /// tamponda tutulur ve dosyaya yazılır. Hiçbir yere kendiliğinden gitmez:
 /// Ayarlar → Hakkında → "Hata günlüğünü paylaş" ile kullanıcı gönderir.
 ///
-/// Windows ve web'de Crashlytics yok — oradaki tek kayıt budur. Web'de
+/// Web'de Crashlytics yok — oradaki tek kayıt budur. Web'de
 /// dosya yok, kayıtlar oturum boyunca bellekte.
 class ErrorLog {
   ErrorLog._();

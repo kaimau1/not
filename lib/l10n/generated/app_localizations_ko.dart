@@ -130,12 +130,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get addSlide => '슬라이드 추가';
 
   @override
-  String get pasteImage => '클립보드에서 이미지 붙여넣기';
-
-  @override
-  String get clipboardEmpty => '클립보드에 이미지가 없습니다';
-
-  @override
   String get noNoteSelected => '왼쪽에서 메모를 선택하세요';
 
   @override

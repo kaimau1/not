@@ -44,7 +44,7 @@ String saveAsMimeType(Attachment a) {
 /// Ek, kullanıcının SEÇTİĞİ yere ve adla bir dosya olarak yazılır:
 ///  * Android — sistemin "kaydet" penceresi (`ACTION_CREATE_DOCUMENT`):
 ///    İndirilenler, cihaz klasörleri, Drive… (MainActivity → `saveDocument`);
-///  * Windows/masaüstü — kayıt yeri seçici (`file_selector`);
+///  * diğer platformlar — kayıt yeri seçici (`file_selector`);
 ///  * Web — tarayıcının indirmesi.
 ///
 /// Sonuç bildirimle söylenir (kaydedildi / iptal sessiz / hata).

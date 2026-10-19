@@ -37,8 +37,6 @@
   "addImage": "إضافة صورة",
   "addPdf": "إضافة PDF",
   "addSlide": "إضافة شرائح",
-  "pasteImage": "لصق صورة من الحافظة",
-  "clipboardEmpty": "لا توجد صورة في الحافظة",
   "noNoteSelected": "اختر ملاحظة من الجانب",
   "attachmentFailed": "تعذّر إضافة المرفق: {error}",
   "attachmentCopying": "جارٍ النسخ...",

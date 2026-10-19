@@ -23,7 +23,6 @@ class DefaultFirebaseOptions {
     // Platform.isAndroid'e dokunmak orada çalışma anında patlar.
     if (kIsWeb) return web;
     if (Platform.isAndroid) return android;
-    if (Platform.isWindows) return windows;
     throw UnsupportedError(
       'DefaultFirebaseOptions bu platform için yapılandırılmadı.',
     );
@@ -37,7 +36,9 @@ class DefaultFirebaseOptions {
     storageBucket: 'notlar-kaimau.firebasestorage.app',
   );
 
-  static const FirebaseOptions windows = FirebaseOptions(
+  /// Tarayıcı kaydı (konsoldaki eski adı "Notlar Windows" — Windows sürümü
+  /// 2026-10-19'da kaldırıldı, kayıt WEB platformunda: appId `...:web:...`).
+  static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyCIFTCM2A7uXNoRlqS_9dD95C53EwVlAXs',
     appId: '1:625134692714:web:baf58fd4b904b2c8249d13',
     messagingSenderId: '625134692714',
@@ -45,10 +46,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'notlar-kaimau.firebasestorage.app',
     authDomain: 'notlar-kaimau.firebaseapp.com',
   );
-
-  /// Tarayıcı ve Windows AYNI Firebase kaydını kullanır — ayrı kayıt açmaya
-  /// gerek yok. Konsolda "Notlar Windows" adıyla duran uygulama zaten WEB
-  /// platformunda kayıtlı (appId `...:web:...`); Flutter Windows da web SDK
-  /// yapılandırmasıyla çalıştığı için ikisi tek kayıttan beslenir.
-  static const FirebaseOptions web = windows;
 }

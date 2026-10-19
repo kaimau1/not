@@ -37,8 +37,6 @@
   "addImage": "Add image",
   "addPdf": "Add PDF",
   "addSlide": "Add slides",
-  "pasteImage": "Paste image from clipboard",
-  "clipboardEmpty": "No image on the clipboard",
   "noNoteSelected": "Pick a note from the left",
   "attachmentFailed": "Couldn't add the attachment: {error}",
   "attachmentCopying": "Copying...",

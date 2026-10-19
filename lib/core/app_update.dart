@@ -12,9 +12,8 @@ import 'l10n_ext.dart';
 /// belgesinin `minClient` alanı aynı sayıya çekilir — eski istemciler
 /// "Güncelle" şeridini görür, editör salt okunur açılır.
 ///
-/// NEDEN derleme numarası (`package_info` build number) DEĞİL: yalnız CI'ın
-/// Android derlemesi `--build-number` alıyor; elle derlenen Windows ve web
-/// her zaman 1 — asıl risk de elle derlenen Windows sürümüydü.
+/// NEDEN derleme numarası (`package_info` build number) DEĞİL: web derlemesi
+/// `--build-number` almıyor, hep 1. Sabit her platformda aynı anlamı taşır.
 const int kClientDataVersion = 1;
 
 /// İndirme adresi: CI her `[apk]` derlemesini GitHub Releases'a koyar.

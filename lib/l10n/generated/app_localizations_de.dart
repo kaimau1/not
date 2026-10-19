@@ -130,12 +130,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get addSlide => 'Folien hinzufügen';
 
   @override
-  String get pasteImage => 'Bild aus der Zwischenablage einfügen';
-
-  @override
-  String get clipboardEmpty => 'Kein Bild in der Zwischenablage';
-
-  @override
   String get noNoteSelected => 'Wähle links eine Notiz aus';
 
   @override

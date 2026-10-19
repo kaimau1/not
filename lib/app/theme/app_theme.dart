@@ -1,6 +1,4 @@
-import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/utils/note_fonts.dart';
@@ -112,16 +110,12 @@ abstract final class AppTheme {
       font,
     );
 
-    final desktop =
-        !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
-
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       brightness: brightness,
       textTheme: textTheme,
       scaffoldBackgroundColor: scheme.surface,
-      visualDensity: desktop ? VisualDensity.compact : VisualDensity.standard,
       splashFactory: InkSparkle.splashFactory,
       // METİN SEÇİMİ (kullanıcı bulgusu 2026-10-15: "metin seçim kalitesi
       // düzeltilmeli"). M3 varsayılanı seçimi birincil rengin %40'ıyla
@@ -195,9 +189,9 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.all(Radius.circular(10)),
         ),
       ),
-      // EKRAN GEÇİŞLERİ iPhone gibi yandan kayar (bkz. page_transitions.dart);
-      // masaüstünde (fare, geniş pencere) solma kalır — Mac'te de pencere
-      // içi geçişler kaymaz.
+      // EKRAN GEÇİŞLERİ iPhone gibi yandan kayar (bkz. page_transitions.dart).
+      // Web'de tarayıcının bildirdiği platforma göre seçilir: masaüstü
+      // tarayıcıda (Windows/Linux/Mac) solma kalır, pencere içi geçiş kaymaz.
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: SmoothPageTransitionsBuilder(),

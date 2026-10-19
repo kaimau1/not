@@ -72,8 +72,6 @@
   "addImage": "Görsel ekle",
   "addPdf": "PDF ekle",
   "addSlide": "Slayt ekle",
-  "pasteImage": "Panodan görsel yapıştır",
-  "clipboardEmpty": "Panoda görsel yok",
   "noNoteSelected": "Soldan bir not seç",
   "attachmentFailed": "Ek eklenemedi: {error}",
   "@attachmentFailed": {

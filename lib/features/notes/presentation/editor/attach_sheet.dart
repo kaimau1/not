@@ -35,7 +35,6 @@ import '../../../../core/widgets/app_sheet.dart';
 /// BAĞIMSIZ görünür (bkz. build).
 Future<String?> showAttachSheet(
   BuildContext context, {
-  required bool isDesktop,
   bool pageNote = false,
   bool canEmbed = false,
   String? copiedAttachmentName,
@@ -51,7 +50,6 @@ Future<String?> showAttachSheet(
     maxHeight: MediaQuery.sizeOf(context).height * 0.8,
   ),
   builder: (sheetContext) => _AttachSheet(
-    isDesktop: isDesktop,
     pageNote: pageNote,
     canEmbed: canEmbed,
     copiedAttachmentName: copiedAttachmentName,
@@ -63,8 +61,7 @@ typedef _Entry = (String, IconData, String, String?);
 
 /// "Ekle" levhasının KİŞİSELLEŞTİRİLEBİLİR seçenekleri (ayarlardaki seçici
 /// için): kimlik, simge, ad. Kimlikler levhanın döndürdüğü değerlerle aynı.
-/// Yalnız masaüstünde olan "Görsel yapıştır" ve içeriğe göre çıkan "Eki
-/// yapıştır" listede yok.
+/// İçeriğe göre çıkan "Eki yapıştır" listede yok.
 List<({String id, IconData icon, String label})> attachSheetCatalog(
   AppLocalizations l10n,
 ) => [
@@ -120,13 +117,10 @@ List<({String id, IconData icon, String label})> attachSheetCatalog(
 
 class _AttachSheet extends StatelessWidget {
   const _AttachSheet({
-    required this.isDesktop,
     required this.pageNote,
     required this.canEmbed,
     this.copiedAttachmentName,
   });
-
-  final bool isDesktop;
 
   /// Belge (PDF/sunum) notu mu? Öyleyse "not içeriği" bölümü HİÇ gösterilmez:
   /// o ekranda gövde metni de madde listesi de çizilmiyor (içerik sayfa
@@ -190,7 +184,7 @@ class _AttachSheet extends StatelessWidget {
         l10n.addImageAsFile,
         l10n.addImageAsFileSubtitle,
       ),
-      if (!kIsWeb && !isDesktop)
+      if (!kIsWeb)
         ('camera', Icons.photo_camera_outlined, l10n.takePhoto, null),
       if (DocumentScan.available)
         (
@@ -200,7 +194,6 @@ class _AttachSheet extends StatelessWidget {
           l10n.scanDocumentSubtitle,
         ),
       ('drawing', Icons.brush_outlined, l10n.addDrawing, null),
-      if (isDesktop) ('paste', Icons.content_paste, l10n.pasteImage, null),
     ];
 
     final other = <_Entry>[

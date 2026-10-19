@@ -37,8 +37,6 @@
   "addImage": "Afbeelding toevoegen",
   "addPdf": "Pdf toevoegen",
   "addSlide": "Dia's toevoegen",
-  "pasteImage": "Afbeelding uit klembord plakken",
-  "clipboardEmpty": "Geen afbeelding op het klembord",
   "noNoteSelected": "Kies links een notitie",
   "attachmentFailed": "De bijlage kon niet worden toegevoegd: {error}",
   "attachmentCopying": "Kopiëren...",

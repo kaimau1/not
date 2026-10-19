@@ -1,13 +1,13 @@
 # Notlar
 
-Firebase senkronlu, yapay zeka destekli not uygulaması — **Android**, **Windows** ve **web** için tek Flutter kod tabanı.
+Firebase senkronlu, yapay zeka destekli not uygulaması — **Android** ve **web** için tek Flutter kod tabanı. (Windows sürümü 2026-10-19'da kaldırıldı; bilgisayarda web sürümü kullanılır.)
 
 ## Özellikler
 
 - **Kesintisiz otomatik senkron** — Firestore offline-first çalışır: notlar internet yokken de yazılır, bağlantı gelince kendiliğinden tüm cihazlara yayılır. Senkron düğmesi yoktur, her şey anlıktır.
 - **Dashboard** — Google Keep tarzı masonry ızgara; pencere genişliğine göre 2–6 sütun, tek sayfada olabildiğince çok not.
 - **Not tipleri** — metin, alışveriş/kontrol listesi (işaretlenebilir), sıralı liste (sürükle-bırak).
-- **Ekler** — fotoğraf/ekran görüntüsü ve PDF; Firebase Storage'da saklanır. Windows'ta panodan görsel yapıştırma (`Ctrl+Shift+V`).
+- **Ekler** — fotoğraf/ekran görüntüsü ve PDF; Firebase Storage'da (istersen Google Drive'ında) saklanır.
 - **Yapay zeka** — not özeti/analizi, PDF sohbeti, sesli komut, canlı çeviri, semantik arama, günlük brifing. Varsayılan dahili Gemini (Firebase AI Logic, günlük kota); istersen kendi anahtarınla Gemini, OpenAI, Anthropic ya da OpenRouter. Anahtar yalnızca cihazda saklanır.
 - **Kişiler ve paylaşım** — arkadaş ekleme (ad/e-posta araması, Cloud Function), paylaşılan klasörler (okuma/yazma rolleri, sohbet), ortak not, gelen kutusu (not gönderme).
 - **Ekler için Google Drive** (isteğe bağlı) — ekler kendi Drive'ının uygulama klasöründe saklanabilir.
@@ -24,7 +24,7 @@ Firebase senkronlu, yapay zeka destekli not uygulaması — **Android**, **Windo
 
 ## Kurulum
 
-Önkoşullar: [Flutter](https://docs.flutter.dev/get-started/install) (stable ≥ 3.44), Android için Android Studio/SDK, Windows derlemesi için Visual Studio 2022 **"Desktop development with C++"** iş yükü (FlutterFire'ın Windows desteği beta'dır ve C++ SDK kullanır).
+Önkoşullar: [Flutter](https://docs.flutter.dev/get-started/install) (stable ≥ 3.44), Android için Android Studio/SDK.
 
 ### 1. Firebase projesi
 
@@ -40,7 +40,7 @@ Firebase senkronlu, yapay zeka destekli not uygulaması — **Android**, **Windo
 
 ```sh
 dart pub global activate flutterfire_cli
-flutterfire configure --platforms=android,windows
+flutterfire configure --platforms=android,web
 ```
 
 Bu komut `lib/firebase_options.dart` dosyasındaki yer tutucuyu gerçek değerlerle değiştirir. (Bu yapılmadan uygulama açılışta kurulum ekranı gösterir.)
@@ -58,10 +58,9 @@ cd android && ./gradlew signingReport
 ### 4. Google Cloud Console (aynı proje)
 
 1. **OAuth consent screen**: External + **Testing** modu; kendi Google adresini *test user* olarak ekle (Drive eki için `drive.appdata` kapsamı).
-2. **Credentials → Create credentials → OAuth client ID → Desktop app** oluştur (Windows girişi için). Client ID ve secret'ı not al.
-3. Firebase'in otomatik oluşturduğu **Web client ID**'yi not al (Android `serverClientId` olarak kullanılır).
-4. Drive ekleri kullanılacaksa **Google Drive API**'yi etkinleştir (APIs & Services → Library).
-5. Kişi araması için Cloud Functions (`functions/`, Blaze planı) — `main`'e push'ta CI'ın `deploy` işi yayınlar.
+2. Firebase'in otomatik oluşturduğu **Web client ID**'yi not al (Android `serverClientId` olarak kullanılır).
+3. Drive ekleri kullanılacaksa **Google Drive API**'yi etkinleştir (APIs & Services → Library).
+4. Kişi araması için Cloud Functions (`functions/`, Blaze planı) — `main`'e push'ta CI'ın `deploy` işi yayınlar.
 
 ### 5. (İsteğe bağlı) Kendi AI anahtarın
 
@@ -75,17 +74,11 @@ flutter pub get
 # Android
 flutter run --dart-define=GOOGLE_SERVER_CLIENT_ID=<WEB_CLIENT_ID>
 
-# Windows
-flutter run -d windows \
-  --dart-define=GOOGLE_DESKTOP_CLIENT_ID=<DESKTOP_CLIENT_ID> \
-  --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET=<DESKTOP_CLIENT_SECRET>
+# Web
+flutter run -d chrome
 ```
 
-> Google'ın masaüstü ("installed app") istemcilerinde client secret gizli sayılmaz; yine de depoya yazmayıp `--dart-define` ile vermek en temiz yoldur. Değerleri her seferinde yazmamak için `--dart-define-from-file=env.json` kullanabilirsin (`env.json` gitignore'dadır).
-
-### Windows sürümünü derlemek (`build-windows.bat`)
-
-Windows sürümü CI'da derlenmiyor (yavaş ve nadiren gerekiyor). Masaüstü paketi için `env.example.json` dosyasını `env.json` olarak kopyalayıp masaüstü kimlik bilgilerini doldur, ardından depo kökündeki **`build-windows.bat`** dosyasına çift tıkla. Çıktı `build\windows\x64\runner\Release\` altında oluşur (`notlar.exe`). Ön koşul: Visual Studio 2022 **"Desktop development with C++"** iş yükü.
+> Değerleri her seferinde yazmamak için `--dart-define-from-file=env.json` kullanabilirsin (`env.json` gitignore'dadır; şablon `env.example.json`).
 
 ## Mimari
 
@@ -94,7 +87,7 @@ lib/
 ├── app/            # MaterialApp, router (go_router), tema
 ├── core/           # sabitler, ortak widget'lar, yardımcılar, hata günlüğü, sürüm kapısı
 ├── features/
-│   ├── auth/       # Google/misafir girişi (Android: google_sign_in, Windows: PKCE loopback), hesap silme
+│   ├── auth/       # Google/misafir girişi (Android: google_sign_in, web: Firebase popup), hesap silme
 │   ├── notes/      # domain modelleri, Firestore/yerel/Drive depoları, dashboard, editörler, ekler
 │   ├── folders/    # klasörler, paylaşılan klasör + sohbet
 │   ├── friends/    # kişiler: arama, istek/kabul
@@ -120,7 +113,7 @@ flutter test
 
 ## CI: Otomatik derleme (GitHub Actions)
 
-Her push'ta `.github/workflows/build.yml` çalışır: analiz + testler. **Android APK** yalnız `main`'de, başlığında `[apk]` geçen commit'le derlenir ve kalıcı bir **Release** olarak yayınlanır (GitHub → Releases). `main`'e push'ta ayrıca Firestore/Storage kuralları ve Cloud Functions yayınlanır (`deploy` işi) ve web sürümü derlenir. Windows sürümü CI'da derlenmez; yerel `build-windows.bat` ile derlenir (yukarı bak).
+Her push'ta `.github/workflows/build.yml` çalışır: analiz + testler. **Android APK** yalnız `main`'de, başlığında `[apk]` geçen commit'le derlenir ve kalıcı bir **Release** olarak yayınlanır (GitHub → Releases). `main`'e push'ta ayrıca Firestore/Storage kuralları ve Cloud Functions yayınlanır (`deploy` işi) ve web sürümü derlenir.
 
 Google girişinin derlemeye gömülü gelmesi için depoda şu *secret*'ları tanımlayabilirsin (Settings → Secrets and variables → Actions):
 
@@ -130,6 +123,6 @@ Google girişinin derlemeye gömülü gelmesi için depoda şu *secret*'ları ta
 | `ANDROID_KEYSTORE_BASE64` | Kalıcı imza anahtarı (base64) |
 | `ANDROID_KEYSTORE_PASSWORD` | İmza anahtarı parolası |
 
-Secret'lar tanımlı olmasa da derleme başarıyla tamamlanır (APK debug anahtarıyla imzalanır). Windows'un masaüstü OAuth kimlik bilgileri artık yalnızca yerel `env.json` dosyasında tutulur.
+Secret'lar tanımlı olmasa da derleme başarıyla tamamlanır (APK debug anahtarıyla imzalanır).
 
 > Not: `lib/firebase_options.dart` yer tutucu değerlerle derlenirse uygulama açılışta kurulum ekranı gösterir. Gerçek yapılandırmayı (`flutterfire configure` çıktısını) commit'lersen CI'daki APK doğrudan kullanılabilir olur.

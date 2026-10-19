@@ -130,12 +130,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get addSlide => 'Dia\'s toevoegen';
 
   @override
-  String get pasteImage => 'Afbeelding uit klembord plakken';
-
-  @override
-  String get clipboardEmpty => 'Geen afbeelding op het klembord';
-
-  @override
   String get noNoteSelected => 'Kies links een notitie';
 
   @override

@@ -130,12 +130,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get addSlide => 'Dodaj slajdy';
 
   @override
-  String get pasteImage => 'Wklej obraz ze schowka';
-
-  @override
-  String get clipboardEmpty => 'W schowku nie ma obrazu';
-
-  @override
   String get noNoteSelected => 'Wybierz notatkę po lewej';
 
   @override

@@ -37,8 +37,6 @@
   "addImage": "Ajouter une image",
   "addPdf": "Ajouter un PDF",
   "addSlide": "Ajouter des diapositives",
-  "pasteImage": "Coller l'image du presse-papiers",
-  "clipboardEmpty": "Aucune image dans le presse-papiers",
   "noNoteSelected": "Choisissez une note à gauche",
   "attachmentFailed": "Impossible d'ajouter la pièce jointe : {error}",
   "attachmentCopying": "Copie en cours...",

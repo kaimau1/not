@@ -21,7 +21,7 @@ class PermissionsService {
 
   bool get _isAndroid => !kIsWeb && Platform.isAndroid;
 
-  /// İzin sistemi yalnızca Android'de anlamlı (Windows'ta gerekmez).
+  /// İzin sistemi yalnızca Android'de anlamlı (web'de tarayıcı kendisi sorar).
   bool get isSupported => _isAndroid;
 
   /// Mikrofon izni verilmiş mi? (sistem iletişim kutusu AÇMADAN okur)

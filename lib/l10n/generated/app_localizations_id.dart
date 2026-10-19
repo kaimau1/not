@@ -130,12 +130,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get addSlide => 'Tambah slide';
 
   @override
-  String get pasteImage => 'Tempel gambar dari papan klip';
-
-  @override
-  String get clipboardEmpty => 'Tidak ada gambar di papan klip';
-
-  @override
   String get noNoteSelected => 'Pilih catatan di sebelah kiri';
 
   @override

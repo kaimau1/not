@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,25 +47,15 @@ class _DashboardBackgroundSheet extends ConsumerWidget {
   Future<void> _pick(WidgetRef ref, String imagesLabel) async {
     final Uint8List bytes;
     if (kIsWeb) return;
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      final group = XTypeGroup(
-        label: imagesLabel,
-        extensions: ['jpg', 'jpeg', 'png', 'webp'],
-      );
-      final file = await openFile(acceptedTypeGroups: [group]);
-      if (file == null) return;
-      bytes = await file.readAsBytes();
-    } else {
-      // Zemin ekran boyutunda gösterilir; tam çözünürlüklü fotoğraf okumak
-      // boşuna bellek (bkz. editördeki aynı tavan).
-      final file = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 2400,
-        maxHeight: 2400,
-      );
-      if (file == null) return;
-      bytes = await file.readAsBytes();
-    }
+    // Zemin ekran boyutunda gösterilir; tam çözünürlüklü fotoğraf okumak
+    // boşuna bellek (bkz. editördeki aynı tavan).
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 2400,
+      maxHeight: 2400,
+    );
+    if (file == null) return;
+    bytes = await file.readAsBytes();
     final dir = await getApplicationDocumentsDirectory();
     // Dosya adı her seferinde değişir: aynı yol yeniden yazılsa Flutter'ın
     // görsel önbelleği eski kareyi göstermeye devam ederdi.

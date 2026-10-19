@@ -37,8 +37,6 @@
   "addImage": "이미지 추가",
   "addPdf": "PDF 추가",
   "addSlide": "슬라이드 추가",
-  "pasteImage": "클립보드에서 이미지 붙여넣기",
-  "clipboardEmpty": "클립보드에 이미지가 없습니다",
   "noNoteSelected": "왼쪽에서 메모를 선택하세요",
   "attachmentFailed": "첨부파일을 추가하지 못했습니다: {error}",
   "attachmentCopying": "복사 중...",

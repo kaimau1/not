@@ -21,8 +21,7 @@ import 'youtube_web_frame.dart';
 
 /// Uygulama İÇİNDE oynatma: mobilde WebView, WEB'de iframe (2026-10-11,
 /// "web sitemizin yeniliklere uyum sağlaması" — web'de YouTube eki yalnız
-/// "tarayıcıda aç" diyordu). Windows'ta webview_flutter eklentisi yok —
-/// orada bağlantı tarayıcıda açılır.
+/// "tarayıcıda aç" diyordu).
 bool get youTubeInAppSupported => kIsWeb || _webViewSupported;
 
 bool get _webViewSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);

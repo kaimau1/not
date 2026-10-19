@@ -130,12 +130,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get addSlide => 'Añadir diapositivas';
 
   @override
-  String get pasteImage => 'Pegar imagen del portapapeles';
-
-  @override
-  String get clipboardEmpty => 'No hay ninguna imagen en el portapapeles';
-
-  @override
   String get noNoteSelected => 'Elige una nota de la izquierda';
 
   @override

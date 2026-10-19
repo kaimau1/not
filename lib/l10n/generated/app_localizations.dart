@@ -348,18 +348,6 @@ abstract class AppLocalizations {
   /// **'Slayt ekle'**
   String get addSlide;
 
-  /// No description provided for @pasteImage.
-  ///
-  /// In tr, this message translates to:
-  /// **'Panodan görsel yapıştır'**
-  String get pasteImage;
-
-  /// No description provided for @clipboardEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Panoda görsel yok'**
-  String get clipboardEmpty;
-
   /// No description provided for @noNoteSelected.
   ///
   /// In tr, this message translates to:

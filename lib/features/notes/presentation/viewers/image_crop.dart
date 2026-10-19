@@ -7,8 +7,8 @@ import '../../../../core/l10n_ext.dart';
 /// bilir. İptal edilirse null döner.
 ///
 /// ponytail: kırpma için paket EKLENMEDİ — dört köşe tutamacı + gövde
-/// sürüklemesi bu kadar; hazır paketler ayrıca Windows'ta çalışmıyor
-/// (uygulama Android + Windows hedefli).
+/// sürüklemesi bu kadar; hazır paketler ayrıca web'de sorunluydu
+/// (uygulama Android + web hedefli).
 class ImageCropScreen extends StatefulWidget {
   const ImageCropScreen({
     super.key,

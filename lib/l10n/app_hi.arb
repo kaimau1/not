@@ -37,8 +37,6 @@
   "addImage": "चित्र जोड़ें",
   "addPdf": "PDF जोड़ें",
   "addSlide": "स्लाइड जोड़ें",
-  "pasteImage": "क्लिपबोर्ड से चित्र चिपकाएँ",
-  "clipboardEmpty": "क्लिपबोर्ड में कोई चित्र नहीं है",
   "noNoteSelected": "बाईं ओर से कोई नोट चुनें",
   "attachmentFailed": "अनुलग्नक नहीं जोड़ा जा सका: {error}",
   "attachmentCopying": "कॉपी हो रहा है...",

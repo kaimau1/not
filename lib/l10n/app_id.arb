@@ -37,8 +37,6 @@
   "addImage": "Tambah gambar",
   "addPdf": "Tambah PDF",
   "addSlide": "Tambah slide",
-  "pasteImage": "Tempel gambar dari papan klip",
-  "clipboardEmpty": "Tidak ada gambar di papan klip",
   "noNoteSelected": "Pilih catatan di sebelah kiri",
   "attachmentFailed": "Lampiran tidak dapat ditambahkan: {error}",
   "attachmentCopying": "Menyalin...",

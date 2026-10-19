@@ -2,7 +2,7 @@
 
 Son güncelleme: 19 Ekim 2026
 
-Bu politika, "Notlar" uygulamasının (Android, Windows ve web) hangi
+Bu politika, "Notlar" uygulamasının (Android ve web) hangi
 verileri işlediğini, neden işlediğini ve haklarınızı açıklar. Uygulamayı
 kullanarak bu politikayı kabul etmiş olursunuz.
 
@@ -123,7 +123,7 @@ erişmesine izin verir. Notlar sunucuda Google'ın standart disk
 şifrelemesiyle saklanır; uygulamaya özel uçtan uca şifreleme YOKTUR —
 "not kilidi" yalnız cihazda açılışı parmak izi/yüz/ekran kilidiyle
 korur, içeriği şifrelemez. API anahtarınız (girdiyseniz) Android
-Keystore / Windows DPAPI ile korunan güvenli depoda saklanır.
+Keystore ile korunan güvenli depoda (web'de tarayıcının yerel deposunda) saklanır.
 
 ## Üçüncü taraf hizmetler
 

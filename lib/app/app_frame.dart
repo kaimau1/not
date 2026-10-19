@@ -11,7 +11,7 @@ import 'app_commands.dart';
 import 'split_shell.dart';
 
 /// Gezinme rayının belirdiği genişlik (Material 3 "orta" pencere sınıfı):
-/// tablet dikey, katlanabilir açık, web ve Windows penceresi. Altında —
+/// tablet dikey, katlanabilir açık, web penceresi. Altında —
 /// telefonda — hiçbir şey değişmez.
 const double kRailBreakpoint = 600;
 
@@ -51,7 +51,7 @@ class RailExtendedNotifier extends Notifier<bool?> {
 ///   altında liste panelini gizleme, kişiler, kısayollar. Telefonda bu
 ///   bölümler ⋮ menüsünün içinde; geniş ekranda gizlemek yeri boşa harcıyordu.
 /// * Her genişlikte **klavye kısayolları** (bkz. [AppShortcuts]) — fareli/
-///   klavyeli tablet, web ve Windows için.
+///   klavyeli tablet ve web için.
 ///
 /// Dar ekranda [child] olduğu gibi döner; telefonun görünümü birebir aynı.
 class AppFrame extends ConsumerWidget {

@@ -37,8 +37,6 @@
   "addImage": "Aggiungi immagine",
   "addPdf": "Aggiungi PDF",
   "addSlide": "Aggiungi diapositive",
-  "pasteImage": "Incolla immagine dagli appunti",
-  "clipboardEmpty": "Nessuna immagine negli appunti",
   "noNoteSelected": "Scegli una nota a sinistra",
   "attachmentFailed": "Impossibile aggiungere l'allegato: {error}",
   "attachmentCopying": "Copia in corso...",

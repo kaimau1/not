@@ -130,12 +130,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get addSlide => 'Adicionar diapositivos';
 
   @override
-  String get pasteImage => 'Colar imagem da área de transferência';
-
-  @override
-  String get clipboardEmpty => 'Não há imagens na área de transferência';
-
-  @override
   String get noNoteSelected => 'Escolha uma nota à esquerda';
 
   @override

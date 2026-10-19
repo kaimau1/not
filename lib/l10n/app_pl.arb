@@ -37,8 +37,6 @@
   "addImage": "Dodaj obraz",
   "addPdf": "Dodaj PDF",
   "addSlide": "Dodaj slajdy",
-  "pasteImage": "Wklej obraz ze schowka",
-  "clipboardEmpty": "W schowku nie ma obrazu",
   "noNoteSelected": "Wybierz notatkę po lewej",
   "attachmentFailed": "Nie udało się dodać załącznika: {error}",
   "attachmentCopying": "Kopiowanie...",

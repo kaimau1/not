@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n_ext.dart';
-import '../data/scan/doc_edges.dart';
 import '../data/scan/perspective.dart';
 import '../data/scan/scan_enhance.dart';
 import '../data/scan/scan_deskew.dart';
@@ -48,28 +47,17 @@ class ScanReviewResult {
 /// ve isteyen tek dokunuşla "Özgün"e döner. Özgün dosyalar korunur — filtre
 /// yıkıcı değil.
 class ScanReviewScreen extends StatefulWidget {
-  const ScanReviewScreen({
-    super.key,
-    required this.pages,
-    this.autoCrop = false,
-  });
+  const ScanReviewScreen({super.key, required this.pages});
 
+  /// ML Kit tarayıcısının çıktısı (kırpma zaten yapılmış sayfalar).
   final List<String> pages;
-
-  /// true: sayfalar ham fotoğraf (galeriden/masaüstünden geldi) — açılışta
-  /// kenarlar otomatik bulunup perspektif düzeltilir. ML Kit çıktısında
-  /// false: tarayıcı kırpmayı zaten yaptı.
-  final bool autoCrop;
 
   static Future<ScanReviewResult?> open(
     BuildContext context,
-    List<String> pages, {
-    bool autoCrop = false,
-  }) {
+    List<String> pages,
+  ) {
     return Navigator.of(context).push<ScanReviewResult>(
-      MaterialPageRoute(
-        builder: (_) => ScanReviewScreen(pages: pages, autoCrop: autoCrop),
-      ),
+      MaterialPageRoute(builder: (_) => ScanReviewScreen(pages: pages)),
     );
   }
 
@@ -119,58 +107,26 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
   /// Açılışta bütün sayfalar hazırlanır: otomatik kenar bulma + perspektif
   /// düzeltme, ardından varsayılan netleştirme filtresi.
   ///
-  /// Ham fotoğrafta ([ScanReviewScreen.autoCrop]) kenar NE bulunursa
-  /// kırpılır; ML Kit çıktısında ise sayfa çoğunlukla kırpık gelir ama eğik
-  /// kalabilir — o yüzden **temkinli** kendiliğinden düzeltme koşar
+  /// ML Kit çıktısında sayfa çoğunlukla kırpık gelir ama eğik kalabilir — o yüzden **temkinli** kendiliğinden düzeltme koşar
   /// ([ScanDeskew.worthApplying]; dosya-okuyucu 2026-08-06 bulgusu). Emin
   /// değilse sayfaya dokunmaz, elle "Köşeleri ayarla" yolu hep açık.
   Future<void> _prepareAll() async {
     for (var i = 0; i < _pages.length; i++) {
       if (!mounted) return;
       setState(() => _preparing = i);
-      if (widget.autoCrop) {
-        await _autoCrop(i);
-      } else {
-        try {
-          final straightened = await ScanDeskew.autoStraighten(_sources[i]);
-          if (!mounted) return;
-          if (straightened != null) {
-            _sources[i] = straightened;
-            setState(() => _pages[i] = straightened);
-          }
-        } catch (_) {
-          // Düzeltme süs değil sigortadır: başarısızsa sayfa OLDUĞU GİBİ kalır.
+      try {
+        final straightened = await ScanDeskew.autoStraighten(_sources[i]);
+        if (!mounted) return;
+        if (straightened != null) {
+          _sources[i] = straightened;
+          setState(() => _pages[i] = straightened);
         }
+      } catch (_) {
+        // Düzeltme süs değil sigortadır: başarısızsa sayfa OLDUĞU GİBİ kalır.
       }
       await _applyFilter(i, ScanFilter.auto, silent: true);
     }
     if (mounted) setState(() => _preparing = null);
-  }
-
-  /// Ham fotoğrafta kâğıdın kenarlarını bulup sayfayı düzleştirir; kenar
-  /// bulunamazsa fotoğraf olduğu gibi kalır (uydurma dörtgen, dörtgen
-  /// olmamasından kötüdür — kullanıcı köşe ekranından elle düzeltebilir).
-  Future<void> _autoCrop(int index) async {
-    try {
-      final source = _sources[index];
-      final bytes = await File(source).readAsBytes();
-      final corners = await compute(_detectCorners, bytes);
-      if (corners == null || !mounted) return;
-      final image = await decodeImageFile(source);
-      try {
-        final png = await Perspective.warpToPng(image, [
-          for (final c in corners) Offset(c.x, c.y),
-        ]);
-        final path = await writeTempPng(source, 'otokirp', png);
-        if (!mounted) return;
-        _sources[index] = path;
-        setState(() => _pages[index] = path);
-      } finally {
-        image.dispose();
-      }
-    } catch (_) {
-      // Kenar bulma en iyi çabadır; düşerse ham fotoğrafla devam edilir.
-    }
   }
 
   /// Kullanıcının dokunduğu filtreyi uygular. Dokunulur dokunulmaz çip
@@ -547,7 +503,3 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
     );
   }
 }
-
-/// İzole giriş noktası — üst düzey fonksiyon olmalı (`compute` kuralı).
-List<({double x, double y})>? _detectCorners(Uint8List bytes) =>
-    DocEdges.detect(bytes);

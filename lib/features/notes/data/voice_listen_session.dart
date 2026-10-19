@@ -30,7 +30,7 @@ enum VoiceListenEnd {
 /// Çağıranlar yalnız metni ne yapacaklarına (levhada göster / imlece yaz)
 /// karar verir.
 ///
-/// Cihazda yerleşik tanıma yoksa ([useDevice] false — Windows) oturum
+/// Cihazda yerleşik tanıma yoksa ([useDevice] false — web) oturum
 /// mikrofonu kendisi açmaz; çağıran kendi kaydını yapar ve konuşma
 /// kanıtını [reportSpeech]/[reportLevel] ile bildirir. Sessizlik ve üst sınır
 /// yine buradan yönetilir.

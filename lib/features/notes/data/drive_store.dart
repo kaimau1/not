@@ -5,13 +5,10 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:http/http.dart' as http;
 
-import '../../../core/constants.dart';
 import '../../auth/data/android_google_auth.dart';
-import '../../auth/data/desktop_oauth_flow.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
 
@@ -36,7 +33,7 @@ const kDriveScope = 'https://www.googleapis.com/auth/drive.appdata';
 
 /// Ek senkronunun kipi — hesaba ve platforma göre.
 enum AttachmentSyncMode {
-  /// Google hesabı (Android/Windows): ekler kullanıcının Google Drive'ına.
+  /// Google hesabı (Android): ekler kullanıcının Google Drive'ına.
   drive,
 
   /// Google'sız (misafir) hesap: yalnız METİN senkronlanır, ekler cihazda.
@@ -184,94 +181,6 @@ class AndroidDriveAuth implements DriveAuth {
   Future<void> disconnect() async {}
 }
 
-/// Windows: tarayıcıda yetki (loopback + PKCE) ve güvenli depoda saklanan
-/// YENİLEME anahtarı.
-///
-/// Giriş akışı yenileme anahtarı İSTEMİYOR (kimse okumuyordu — bkz.
-/// DesktopOAuthFlow). Drive senkronu arka planda saatlerce çalıştığı için
-/// burada gerekiyor: yalnız `drive.appdata` kapsamlı, ayrı bir anahtar;
-/// çıkışta silinir (bkz. TokenStore.clear).
-class DesktopDriveAuth implements DriveAuth {
-  DesktopDriveAuth({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
-
-  final FlutterSecureStorage _storage;
-  static const refreshKey = 'google_drive_refresh_token';
-
-  String? _token;
-  DateTime? _expires;
-
-  @override
-  Future<String?> accessToken() async {
-    final token = _token;
-    final expires = _expires;
-    if (token != null &&
-        expires != null &&
-        DateTime.now().isBefore(expires.subtract(const Duration(minutes: 2)))) {
-      return token;
-    }
-    final refresh = await _storage.read(key: refreshKey);
-    if (refresh == null || refresh.isEmpty) return null;
-    try {
-      final response = await http.post(
-        Uri.parse('https://oauth2.googleapis.com/token'),
-        body: {
-          'client_id': AppConstants.desktopClientId,
-          'client_secret': AppConstants.desktopClientSecret,
-          'refresh_token': refresh,
-          'grant_type': 'refresh_token',
-        },
-      );
-      if (response.statusCode != 200) {
-        // Anahtar iptal edilmiş (kullanıcı Google hesabından erişimi
-        // kaldırdı): yeniden bağlanması gerekir.
-        if (response.statusCode == 400 || response.statusCode == 401) {
-          await _storage.delete(key: refreshKey);
-        }
-        return null;
-      }
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-      _token = json['access_token'] as String?;
-      _expires = DateTime.now().add(
-        Duration(seconds: (json['expires_in'] as num?)?.toInt() ?? 3600),
-      );
-      return _token;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  @override
-  Future<bool> connect() async {
-    final tokens = await DesktopOAuthFlow(
-      scopes: const [kDriveScope],
-      offline: true,
-    ).run();
-    _token = tokens.accessToken;
-    _expires = DateTime.now().add(Duration(seconds: tokens.expiresIn));
-    final refresh = tokens.refreshToken;
-    if (refresh != null && refresh.isNotEmpty) {
-      await _storage.write(key: refreshKey, value: refresh);
-    }
-    return true;
-  }
-
-  @override
-  Future<void> invalidate(String token) async {
-    if (_token == token) {
-      _token = null;
-      _expires = null;
-    }
-  }
-
-  @override
-  Future<void> disconnect() async {
-    _token = null;
-    _expires = null;
-    await _storage.delete(key: refreshKey);
-  }
-}
-
 /// Drive'ın olmadığı yer (web, testler).
 class NoDriveAuth implements DriveAuth {
   const NoDriveAuth();
@@ -292,7 +201,6 @@ class NoDriveAuth implements DriveAuth {
 final driveAuthProvider = Provider<DriveAuth>((ref) {
   if (kIsWeb) return const NoDriveAuth();
   if (Platform.isAndroid) return AndroidDriveAuth();
-  if (Platform.isWindows) return DesktopDriveAuth();
   return const NoDriveAuth();
 });
 

@@ -130,12 +130,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addSlide => 'Add slides';
 
   @override
-  String get pasteImage => 'Paste image from clipboard';
-
-  @override
-  String get clipboardEmpty => 'No image on the clipboard';
-
-  @override
   String get noNoteSelected => 'Pick a note from the left';
 
   @override

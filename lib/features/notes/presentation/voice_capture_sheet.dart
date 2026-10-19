@@ -24,7 +24,7 @@ import '../../../core/widgets/app_sheet.dart';
 ///
 /// Cihazın YERLEŞİK konuşma tanıması varsa (Android) onu kullanır: metin
 /// konuşuldukça anlık akar, ücretsizdir ve Gemini kotası harcamaz. Yerleşik
-/// tanıma yoksa (Windows) ses kaydedilir ve bitişte tek seferde yazıya
+/// tanıma yoksa (web) ses kaydedilir ve bitişte tek seferde yazıya
 /// dökülür. Bu iki yol eski `editor/dictation_sheet.dart`ten olduğu gibi
 /// taşındı; değişen kabuk ve bitiş akışı.
 ///

@@ -1,6 +1,6 @@
 # CLAUDE.md — Not (Flutter not uygulaması)
 
-Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + Windows hedefli. AI özellikleri Gemini tabanlı: asistan, sesli komut, canlı konuşma çevirisi, semantik arama, OCR, PDF sohbet, günlük brifing. Dil: Türkçe.
+Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web hedefli (Windows sürümü 2026-10-19'da kaldırıldı — bilgisayarda web kullanılır). AI özellikleri Gemini tabanlı: asistan, sesli komut, canlı konuşma çevirisi, semantik arama, OCR, PDF sohbet, günlük brifing. Dil: Türkçe.
 
 > 🔐 **İmza anahtarı**: `android/app/notlar-release.jks` (gitignore'lu, commit'lenmiyor) + parolalar `android/key.properties`. **`Desktop\notlar-keystore\` klasörü ARTIK YOK** — 2026-08-04'te kontrol edildi, tek kopya repo klasöründe. Asla commit'leme, grafa/zip'e katma; **kaybolursa aynı imzayla güncelleme yayınlanamaz — makine dışında bir yedeği olmalı.** CI imzası GitHub Secrets üzerinden.
 

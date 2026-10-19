@@ -5,7 +5,7 @@ import '../../settings/settings_providers.dart';
 import 'ai_provider.dart';
 
 /// API anahtarları yalnızca cihazdaki güvenli depoda tutulur
-/// (Android Keystore / Windows DPAPI). Firestore'a asla yazılmaz.
+/// (Android Keystore; web'de tarayıcı deposu). Firestore'a asla yazılmaz.
 ///
 /// Her sağlayıcının anahtarı AYRI saklanır: kullanıcı Gemini ile OpenAI
 /// arasında geçiş yaptığında anahtarını yeniden girmek zorunda kalmasın.
