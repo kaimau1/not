@@ -67,7 +67,7 @@ Widget fixedTypography(BuildContext context, Widget child, double fontScale) =>
 /// (false) bildiriyor ve bu, iç Navigator'daki sayfasız rotayı görmeden
 /// platforma ulaşıyor → FlutterFragmentActivity geri geri çağrısını kapatıyor,
 /// sonraki geri tuşu Activity'yi bitiriyor: uygulama kapanıyor
-/// (bkz. test/requests_2026_10_17_d_test.dart).
+/// (bkz. test/shared_notes_back_test.dart).
 ///
 /// Çözüm: platforma hep "çerçeve karşılar" denir. Gerçekten geri alacak bir
 /// şey yoksa yönlendirici `popRoute`'ta false döner ve Flutter kendisi
