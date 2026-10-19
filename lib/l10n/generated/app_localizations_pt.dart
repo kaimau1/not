@@ -5350,4 +5350,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get noteTooLargeShort => 'a nota excede o limite de 1 MiB';
+
+  @override
+  String get crashTestTitle => 'Enviar uma falha de teste?';
+
+  @override
+  String get crashTestBody =>
+      'Para verificar o Crashlytics o app fecha na hora. Ao reabrir, o relatório vai para o console do Firebase (pode levar alguns minutos).';
+
+  @override
+  String get crashTestAction => 'Forçar falha';
 }

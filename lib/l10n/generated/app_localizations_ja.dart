@@ -5232,4 +5232,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get noteTooLargeShort => 'メモが 1 MiB の上限を超えています';
+
+  @override
+  String get crashTestTitle => 'テストクラッシュを送信しますか？';
+
+  @override
+  String get crashTestBody =>
+      'Crashlytics の設定確認のためアプリはすぐに終了します。再起動するとレポートが Firebase コンソールに送られます（数分かかる場合があります）。';
+
+  @override
+  String get crashTestAction => 'クラッシュ';
 }

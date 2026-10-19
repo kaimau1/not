@@ -1078,5 +1078,8 @@
   "errorLogEmpty": "Tidak ada kesalahan tercatat.",
   "crashReports": "Kirim laporan kerusakan",
   "crashReportsInfo": "Saat aplikasi mogok, laporan teknis tanpa isi catatan dikirim ke Firebase Crashlytics (hanya Android).",
-  "noteTooLargeShort": "catatan melebihi batas 1 MiB"
+  "noteTooLargeShort": "catatan melebihi batas 1 MiB",
+  "crashTestTitle": "Kirim crash uji?",
+  "crashTestBody": "Untuk memeriksa Crashlytics, aplikasi langsung tertutup. Saat dibuka lagi, laporan dikirim ke konsol Firebase (bisa beberapa menit).",
+  "crashTestAction": "Mogokkan"
 }

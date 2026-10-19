@@ -1078,5 +1078,8 @@
   "errorLogEmpty": "Nessun errore registrato.",
   "crashReports": "Invia rapporti sugli arresti anomali",
   "crashReportsInfo": "Quando l'app si arresta, un rapporto tecnico senza il contenuto delle note viene inviato a Firebase Crashlytics (solo Android).",
-  "noteTooLargeShort": "la nota supera il limite di 1 MiB"
+  "noteTooLargeShort": "la nota supera il limite di 1 MiB",
+  "crashTestTitle": "Inviare un arresto anomalo di prova?",
+  "crashTestBody": "Per verificare Crashlytics l'app si chiude subito. Riaprendola, il rapporto arriva alla console Firebase (può richiedere qualche minuto).",
+  "crashTestAction": "Arresta"
 }

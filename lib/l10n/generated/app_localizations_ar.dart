@@ -5314,4 +5314,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noteTooLargeShort => 'الملاحظة تتجاوز حد 1 ميبيبايت';
+
+  @override
+  String get crashTestTitle => 'إرسال عطل تجريبي؟';
+
+  @override
+  String get crashTestBody =>
+      'للتحقق من Crashlytics سيُغلق التطبيق فورًا. عند فتحه مجددًا يُرسل التقرير إلى وحدة تحكم Firebase (قد يستغرق دقائق).';
+
+  @override
+  String get crashTestAction => 'تعطيل';
 }

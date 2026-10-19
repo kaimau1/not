@@ -1969,5 +1969,8 @@
   "errorLogEmpty": "No errors recorded.",
   "crashReports": "Send crash reports",
   "crashReportsInfo": "When the app crashes, a technical report without your note content is sent to Firebase Crashlytics (Android only).",
-  "noteTooLargeShort": "the note exceeds the 1 MiB limit"
+  "noteTooLargeShort": "the note exceeds the 1 MiB limit",
+  "crashTestTitle": "Send a test crash?",
+  "crashTestBody": "To verify the Crashlytics setup the app closes immediately. When you reopen it, the report is sent to the Firebase console (may take a few minutes).",
+  "crashTestAction": "Crash"
 }

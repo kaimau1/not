@@ -5322,4 +5322,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get noteTooLargeShort => 'not 1 MiB sınırını aştı';
+
+  @override
+  String get crashTestTitle => 'Test çökmesi gönderilsin mi?';
+
+  @override
+  String get crashTestBody =>
+      'Crashlytics kurulumunu doğrulamak için uygulama hemen kapanır. Yeniden açtığında rapor Firebase konsoluna gider (birkaç dakika sürebilir).';
+
+  @override
+  String get crashTestAction => 'Çökert';
 }

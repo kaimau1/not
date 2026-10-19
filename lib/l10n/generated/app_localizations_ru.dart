@@ -5349,4 +5349,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get noteTooLargeShort => 'заметка превышает лимит 1 МиБ';
+
+  @override
+  String get crashTestTitle => 'Отправить тестовый сбой?';
+
+  @override
+  String get crashTestBody =>
+      'Для проверки Crashlytics приложение сразу закроется. При повторном запуске отчёт уйдёт в консоль Firebase (может занять несколько минут).';
+
+  @override
+  String get crashTestAction => 'Вызвать сбой';
 }

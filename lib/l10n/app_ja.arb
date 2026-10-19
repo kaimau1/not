@@ -1078,5 +1078,8 @@
   "errorLogEmpty": "記録されたエラーはありません。",
   "crashReports": "クラッシュレポートを送信",
   "crashReportsInfo": "アプリがクラッシュすると、メモの内容を含まない技術レポートが Firebase Crashlytics に送信されます（Android のみ）。",
-  "noteTooLargeShort": "メモが 1 MiB の上限を超えています"
+  "noteTooLargeShort": "メモが 1 MiB の上限を超えています",
+  "crashTestTitle": "テストクラッシュを送信しますか？",
+  "crashTestBody": "Crashlytics の設定確認のためアプリはすぐに終了します。再起動するとレポートが Firebase コンソールに送られます（数分かかる場合があります）。",
+  "crashTestAction": "クラッシュ"
 }

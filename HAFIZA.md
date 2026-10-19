@@ -5268,3 +5268,44 @@ Crashlytics ŞİMDİ eklensin.
 * **TUZAK (bu oturumda yaşandı)**: `dart format lib test` depo genelinde
   ~100 ilgisiz dosyayı yeniden biçimlendirdi (depo tek biçimde değil). Geri
   alındı; yalnız yeni dosyalar biçimlendirildi. CLAUDE.md'ye not düşüldü.
+
+## 2026-10-19 (7. tur) — Windows sürümü KALDIRILDI + Crashlytics Gradle kurulumu
+Kullanıcı: "Artık Windows uygulaması olmasın, web sürümü yeterli değil mi —
+düzenle, kodu temizle"; ardından Firebase Crashlytics belgesini (BoM +
+google-services + Crashlytics Gradle eklentisi + test çökmesi) yapıştırdı.
+* **KARAR: hedef Android + web.** Silinen: `windows/`, `build-windows.bat`,
+  masaüstü Google girişi (`desktop_google_auth`, `desktop_oauth_flow`,
+  `token_store`), `DesktopDriveAuth`, `window_manager`, `just_audio_windows`,
+  `GOOGLE_DESKTOP_CLIENT_ID/SECRET`, Windows bildirim ayarları, editörde
+  masaüstü dosya seçici dalları, Ctrl+Shift+V görsel yapıştırma
+  (`pasteImage`/`clipboardEmpty` anahtarları), masaüstü "fotoğraftan tara"
+  (ScanReviewScreen `autoCrop` + `_autoCrop`; `doc_edges`/`perspective` elle
+  köşe ekranında KALDI), `didRequestAppExit` (pencere kapatma kaydı).
+  Firebase seçeneklerinde eski `windows` = `web` kaydıydı (aynı appId) —
+  `web` olarak kaldı. `TargetPlatform.windows` geçiş teması KALDI: web
+  Windows tarayıcısında o platformu bildirir.
+* **Web'in Windows'a göre eksikleri (bilinçli kabul)**: Drive'daki ekleri
+  okuyamıyor (F4.4 — öncelik yükseldi), "yalnız bu cihazda" notlar ve
+  cihazdaki videolar yok, ses kaydı ve yerleşik dikte yok (AI yedeği var),
+  belge tarama yok.
+* **Crashlytics Gradle**: `com.google.gms.google-services` 4.5.0 +
+  `com.google.firebase.crashlytics` 3.0.8 (settings `apply false` + app).
+  `android/app/google-services.json` firebase_options.dart'taki Android
+  değerlerinden kuruldu (gizli değil, `oauth_client` boş → Google girişi
+  için `GOOGLE_SERVER_CLIENT_ID` define'ı HÂLÂ ZORUNLU). `RequireBuildId`
+  kaynağı silindi (artık gereksiz).
+  **KARAR — ayrı Firebase BoM EKLENMEDİ** (kullanıcının yapıştırdığı
+  `firebase-bom:35.0.2`): FlutterFire zaten tek BoM kullanıyor —
+  `firebase_core` 4.12.1 `FirebaseSDKVersion=34.15.0`'ı bütün Firebase
+  eklentilerine veriyor (eklentilerin `android/build.gradle`ında
+  `platform("...firebase-bom:${FirebaseSDKVersion}")`). Uygulamaya 35.x
+  eklemek Gradle'a en yükseği seçtirip eklentileri derlendikleri sürümden
+  ayırırdı. Sürüm yükseltmesi = FlutterFire paketlerini birlikte yükseltmek.
+  Gerekirse tek düğme: kök `ext.FlutterFire = [FirebaseSDKVersion: "..."]`.
+  **Analytics EKLENMEDİ**: gizlilik politikası "analitik yok" diyor;
+  breadcrumb için gerekirse ayrı karar.
+* **Test çökmesi**: Ayarlar → Hakkında → sürüm satırına uzun bas (yalnız
+  raporlama açık + Android release) → `FirebaseCrashlytics.instance.crash()`.
+* Doğrulama: Android SDK bu ortamda yok — Gradle değişikliği dalda elle
+  tetiklenen CI koşusuyla (workflow_dispatch: APK derler, Release YAYINLAMAZ)
+  sınandı.

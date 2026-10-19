@@ -4,6 +4,13 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Firebase: `google-services.json` (bu klasörde) + Crashlytics. Firebase
+    // KÜTÜPHANE sürümleri burada BİLEREK yazılmıyor (BoM yok): FlutterFire
+    // eklentileri hepsini `firebase_core`un sabitlediği tek BoM'dan
+    // (`FirebaseSDKVersion`, 4.12.1 → 34.15.0) alıyor — ayrı bir BoM en
+    // yükseği seçtirip eklentilerin derlendiği sürümden ayırırdı.
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 // Kalıcı imza: CI, keystore'u GitHub Secrets'tan android/app/ altına,

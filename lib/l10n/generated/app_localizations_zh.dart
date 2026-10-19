@@ -5202,4 +5202,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noteTooLargeShort => '笔记超过 1 MiB 上限';
+
+  @override
+  String get crashTestTitle => '发送测试崩溃？';
+
+  @override
+  String get crashTestBody =>
+      '为验证 Crashlytics 设置，应用会立即关闭。重新打开后报告将发送到 Firebase 控制台（可能需要几分钟）。';
+
+  @override
+  String get crashTestAction => '崩溃';
 }

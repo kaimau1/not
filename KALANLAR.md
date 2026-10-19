@@ -27,12 +27,11 @@
   kurulumda "Alarmlar ve hatırlatıcılar" izni kapalı olabilir → hatırlatıcı
   yine çalıyor mu (inexact'e düşer, birkaç dk kayabilir); izin verilince tam
   dakikasında mı.
-- [ ] **Crashlytics** (ilk [apk] derlemesinde): uygulama açılışta çökmeden
-  açılıyor mu (Crashlytics Gradle eklentisi YOK, `RequireBuildId=false`
-  kaynağıyla). Firebase konsolu → Crashlytics'i etkinleştir; Ayarlar →
-  Hakkında → "Çökme raporlarını gönder" açıkken test çökmesi konsola düşüyor
-  mu. Düşmezse/açılışta "build ID" hatası görülürse Gradle eklentisi
-  (`com.google.firebase.crashlytics`) eklenmeli.
+- [ ] **Crashlytics** (ilk [apk] derlemesinden sonra): Firebase konsolu →
+  Crashlytics'i etkinleştir → telefonda Ayarlar → Hakkında → sürüm satırına
+  UZUN BAS → "Çökert" → uygulamayı yeniden aç → birkaç dakika içinde konsolda
+  ilk rapor. Açılışta çökme olmamalı (google-services yerli Firebase'i de
+  başlatıyor; Dart `initializeApp` aynı seçeneklerle onu devralmalı).
 - [ ] **Hata günlüğü**: Ayarlar → Hakkında → "Hata günlüğünü paylaş" →
   .txt paylaşım penceresi (Android, web).
 - [ ] **1 MiB uyarısı**: çok sayfalı PDF'e yoğun çizim/balon → "Not çok

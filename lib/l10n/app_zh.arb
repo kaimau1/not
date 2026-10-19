@@ -1078,5 +1078,8 @@
   "errorLogEmpty": "没有记录的错误。",
   "crashReports": "发送崩溃报告",
   "crashReportsInfo": "应用崩溃时，会向 Firebase Crashlytics 发送不含笔记内容的技术报告（仅限 Android）。",
-  "noteTooLargeShort": "笔记超过 1 MiB 上限"
+  "noteTooLargeShort": "笔记超过 1 MiB 上限",
+  "crashTestTitle": "发送测试崩溃？",
+  "crashTestBody": "为验证 Crashlytics 设置，应用会立即关闭。重新打开后报告将发送到 Firebase 控制台（可能需要几分钟）。",
+  "crashTestAction": "崩溃"
 }

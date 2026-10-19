@@ -1078,5 +1078,8 @@
   "errorLogEmpty": "Brak zarejestrowanych błędów.",
   "crashReports": "Wysyłaj raporty o awariach",
   "crashReportsInfo": "Gdy aplikacja się zawiesi, raport techniczny bez treści notatek trafia do Firebase Crashlytics (tylko Android).",
-  "noteTooLargeShort": "notatka przekracza limit 1 MiB"
+  "noteTooLargeShort": "notatka przekracza limit 1 MiB",
+  "crashTestTitle": "Wysłać testową awarię?",
+  "crashTestBody": "Aby sprawdzić Crashlytics, aplikacja natychmiast się zamknie. Po ponownym otwarciu raport trafi do konsoli Firebase (może potrwać kilka minut).",
+  "crashTestAction": "Wywołaj awarię"
 }

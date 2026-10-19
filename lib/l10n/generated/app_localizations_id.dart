@@ -5342,4 +5342,14 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get noteTooLargeShort => 'catatan melebihi batas 1 MiB';
+
+  @override
+  String get crashTestTitle => 'Kirim crash uji?';
+
+  @override
+  String get crashTestBody =>
+      'Untuk memeriksa Crashlytics, aplikasi langsung tertutup. Saat dibuka lagi, laporan dikirim ke konsol Firebase (bisa beberapa menit).';
+
+  @override
+  String get crashTestAction => 'Mogokkan';
 }

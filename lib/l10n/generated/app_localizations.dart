@@ -9611,6 +9611,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'not 1 MiB sınırını aştı'**
   String get noteTooLargeShort;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Test çökmesi gönderilsin mi?'**
+  String get crashTestTitle;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Crashlytics kurulumunu doğrulamak için uygulama hemen kapanır. Yeniden açtığında rapor Firebase konsoluna gider (birkaç dakika sürebilir).'**
+  String get crashTestBody;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Çökert'**
+  String get crashTestAction;
 }
 
 class _AppLocalizationsDelegate

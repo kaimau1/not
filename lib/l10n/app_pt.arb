@@ -1078,5 +1078,8 @@
   "errorLogEmpty": "Nenhum erro registrado.",
   "crashReports": "Enviar relatórios de falhas",
   "crashReportsInfo": "Quando o app falha, um relatório técnico sem o conteúdo das notas é enviado ao Firebase Crashlytics (só Android).",
-  "noteTooLargeShort": "a nota excede o limite de 1 MiB"
+  "noteTooLargeShort": "a nota excede o limite de 1 MiB",
+  "crashTestTitle": "Enviar uma falha de teste?",
+  "crashTestBody": "Para verificar o Crashlytics o app fecha na hora. Ao reabrir, o relatório vai para o console do Firebase (pode levar alguns minutos).",
+  "crashTestAction": "Forçar falha"
 }

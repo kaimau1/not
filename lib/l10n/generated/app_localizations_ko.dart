@@ -5238,4 +5238,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get noteTooLargeShort => '메모가 1MiB 한도를 초과합니다';
+
+  @override
+  String get crashTestTitle => '테스트 충돌을 보낼까요?';
+
+  @override
+  String get crashTestBody =>
+      'Crashlytics 설정 확인을 위해 앱이 즉시 종료됩니다. 다시 열면 보고서가 Firebase 콘솔로 전송됩니다(몇 분 걸릴 수 있음).';
+
+  @override
+  String get crashTestAction => '충돌시키기';
 }

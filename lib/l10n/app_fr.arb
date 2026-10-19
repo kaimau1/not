@@ -1078,5 +1078,8 @@
   "errorLogEmpty": "Aucune erreur enregistrée.",
   "crashReports": "Envoyer les rapports de plantage",
   "crashReportsInfo": "En cas de plantage, un rapport technique sans le contenu de vos notes est envoyé à Firebase Crashlytics (Android uniquement).",
-  "noteTooLargeShort": "la note dépasse la limite de 1 Mio"
+  "noteTooLargeShort": "la note dépasse la limite de 1 Mio",
+  "crashTestTitle": "Envoyer un plantage de test ?",
+  "crashTestBody": "Pour vérifier Crashlytics, l'application se ferme aussitôt. À la réouverture, le rapport part vers la console Firebase (quelques minutes possibles).",
+  "crashTestAction": "Planter"
 }

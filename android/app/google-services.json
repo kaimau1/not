@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "625134692714",
+    "project_id": "notlar-kaimau",
+    "storage_bucket": "notlar-kaimau.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:625134692714:android:bb67b809ec89f732249d13",
+        "android_client_info": {
+          "package_name": "dev.kaimau.notlar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPO34mCxYxBjnqV2W_WZqvIcUhwhsaEgQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

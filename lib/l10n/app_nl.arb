@@ -1078,5 +1078,8 @@
   "errorLogEmpty": "Geen fouten vastgelegd.",
   "crashReports": "Crashrapporten verzenden",
   "crashReportsInfo": "Bij een crash wordt een technisch rapport zonder notitie-inhoud naar Firebase Crashlytics gestuurd (alleen Android).",
-  "noteTooLargeShort": "de notitie overschrijdt de limiet van 1 MiB"
+  "noteTooLargeShort": "de notitie overschrijdt de limiet van 1 MiB",
+  "crashTestTitle": "Testcrash versturen?",
+  "crashTestBody": "Om Crashlytics te controleren sluit de app direct. Bij opnieuw openen gaat het rapport naar de Firebase-console (kan enkele minuten duren).",
+  "crashTestAction": "Crashen"
 }

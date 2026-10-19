@@ -152,7 +152,7 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
   hataları → cihazda halka tampon (son ~200 kayıt, dosyada);
   Ayarlar → Hakkında → "Hata günlüğünü paylaş". **KARAR GEREKİR**: ileride
   Crashlytics (gizlilik politikası "analitik yok" diyor).
-  **Yapıldı:** `core/error_log.dart` + `core/crash_reporting.dart`; Ayarlar → Hakkında "Hata günlüğünü paylaş" + "Çökme raporlarını gönder". **KARAR (kullanıcı): Crashlytics ŞİMDİ** — `firebase_crashlytics` 5.2.6, yalnız Android, Gradle eklentisiz (`RequireBuildId=false`, HAFIZA tuzak). Gizlilik politikası buna göre.
+  **Yapıldı:** `core/error_log.dart` + `core/crash_reporting.dart`; Ayarlar → Hakkında "Hata günlüğünü paylaş" + "Çökme raporlarını gönder". **KARAR (kullanıcı): Crashlytics ŞİMDİ** — `firebase_crashlytics` 5.2.6, yalnız Android; sonra (kullanıcı isteği) Crashlytics Gradle eklentisi 3.0.8 + google-services 4.5.0 + `android/app/google-services.json`; ayrı BoM eklenmedi (HAFIZA). Gizlilik politikası buna göre.
 
 - [x] **F1.10 Eskimiş dokümanlar.**
   README: Gmail özelliği ve `gmail/` klasörü (`:12,60-63,99-100`), mimari

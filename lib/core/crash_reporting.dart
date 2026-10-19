@@ -61,6 +61,13 @@ class CrashReporting {
     }
   }
 
+  /// Raporlama açık ve bu platformda var mı (test çökmesi buna bakar).
+  static bool get active => _enabled;
+
+  /// Kurulumu doğrulamak için BİLEREK çöker (Firebase belgesindeki "test
+  /// crash" adımı). Rapor uygulama yeniden açılınca gönderilir.
+  static void testCrash() => FirebaseCrashlytics.instance.crash();
+
   /// Yakalanıp YUTULAN ama bilinmesi gereken hata (ör. sunucunun yazımı
   /// reddetmesi): günlüğe yazılır, Crashlytics'e ölümcül olmayan olarak.
   static void recordNonFatal(String source, Object error, [StackTrace? stack]) {

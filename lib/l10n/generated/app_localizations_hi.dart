@@ -5325,4 +5325,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get noteTooLargeShort => 'नोट 1 MiB सीमा से अधिक है';
+
+  @override
+  String get crashTestTitle => 'टेस्ट क्रैश भेजें?';
+
+  @override
+  String get crashTestBody =>
+      'Crashlytics सेटअप जाँचने के लिए ऐप तुरंत बंद होगा। दोबारा खोलने पर रिपोर्ट Firebase कंसोल में जाएगी (कुछ मिनट लग सकते हैं)।';
+
+  @override
+  String get crashTestAction => 'क्रैश करें';
 }

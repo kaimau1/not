@@ -4459,6 +4459,11 @@ class _AppVersionRowState extends State<_AppVersionRow> {
       ),
       icon: const Icon(Icons.info_outline),
       label: Text('${l10n.appVersion}: $version'),
+      // Uzun bas → Crashlytics test çökmesi (yalnız raporlama açıkken,
+      // Android release derlemesinde). Kurulum doğrulaması için gizli kapı.
+      onLongPress: CrashReporting.active
+          ? () => _confirmTestCrash(context)
+          : null,
       onPressed: () async {
         final messenger = ScaffoldMessenger.of(context);
         await Clipboard.setData(
@@ -4470,6 +4475,28 @@ class _AppVersionRowState extends State<_AppVersionRow> {
       },
     );
   }
+}
+
+Future<void> _confirmTestCrash(BuildContext context) async {
+  final l10n = context.l10n;
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(l10n.crashTestTitle),
+      content: Text(l10n.crashTestBody),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(l10n.crashTestAction),
+        ),
+      ],
+    ),
+  );
+  if (ok ?? false) CrashReporting.testCrash();
 }
 
 /// Arama suzgecinin test kancalari.

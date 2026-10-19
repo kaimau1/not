@@ -2587,5 +2587,17 @@
   "noteTooLargeShort": "not 1 MiB sınırını aştı",
   "@noteTooLargeShort": {
     "description": "Faz 1 (2026-10-19)"
+  },
+  "crashTestTitle": "Test çökmesi gönderilsin mi?",
+  "@crashTestTitle": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "crashTestBody": "Crashlytics kurulumunu doğrulamak için uygulama hemen kapanır. Yeniden açtığında rapor Firebase konsoluna gider (birkaç dakika sürebilir).",
+  "@crashTestBody": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "crashTestAction": "Çökert",
+  "@crashTestAction": {
+    "description": "Faz 1 (2026-10-19)"
   }
 }
