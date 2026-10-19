@@ -25,12 +25,11 @@ Kullanıcı "Faz N'i yap" dediğinde:
    bunları yapamaz, yalnız hatırlatır.
 
 **Flutter:** Windows'ta `C:\src\flutter\bin\flutter.bat` (PATH'te değil).
-Bulut oturumunda SDK YOK: CI ile aynı sürümü indir —
-`curl -o f.tar.xz https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.44.6-stable.tar.xz`
-(1,5 GB) → scratchpad'e aç → `PATH` başına `.../flutter/bin`. **3.47+ KULLANMA**:
-`pdfrx 1.3.5` orada derlenmiyor (bkz. F3.15). 2026-10-19 ölçümü: 3.44.6 ile
-analiz temiz, 1327/1327 test, ~195 sn. `pub get` `pubspec.lock`'u değiştirirse
-commit'e katma.
+Bulut oturumunda SDK YOK: CI ile aynı sürümü (3.47.7, F3.15'ten beri) indir —
+`curl -o f.tar.xz https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.47.7-stable.tar.xz`
+→ scratchpad'e aç → `PATH` başına `.../flutter/bin`. pdfrx 2.6 ile 3.47.7
+uyumlu. 2026-10-19 ölçümü: analiz temiz, 1292/1292 test, `-j 4` ile ~110 sn.
+`pub get` `pubspec.lock`'u değiştirirse (bağımlılık eklemediysen) commit'e katma.
 
 **Dağıtım:** `firestore.rules`, `storage.rules` ve `functions/` yalnız **main'e
 push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığında
@@ -42,7 +41,7 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
 |---|---|---|---|---|
 | 1 | Güvenlik, gizlilik, veri bütünlüğü, hatalar | Bitti | 2026-10-19 | F1.5(d) ertelendi; cihaz doğrulaması KALANLAR'da; APK derlenmedi |
 | 2 | Akıcılık / performans | Bitti | 2026-10-19 | F2.6 ölçümü emülatörde elle tetiklenir; cihazda his doğrulaması KALANLAR'da |
-| 3 | Sadeleştirme ve birleştirme | Bekliyor | — | çoğu madde KARAR GEREKİR |
+| 3 | Sadeleştirme ve birleştirme | Bitti | 2026-10-19 | F3.16 karar: değişmez; F3.17 editör denetleyici bölmesi + tarihli yorum temizliği kısmen ertelendi; cihaz doğrulaması KALANLAR'da |
 | 4 | Eksik özellikler, test altyapısı, Play | Bekliyor | — | |
 
 ---
@@ -250,54 +249,70 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
 Her maddede önce kısa öneri + kullanıcı onayı. Veri modeli değişen maddeler
 F1.5'in en düşük sürüm kapısı yerindeyken yapılır.
 
-- [ ] **F3.1 Tek mikrofon** — ana ekrandaki iki benzer düğme
+- [x] **F3.1 Tek mikrofon** — ana ekrandaki iki benzer düğme
   (`dashboard_screen.dart:1658,1670`) + "+ → Sesli not" → tek düğme; levhada
   "Yazdır ↔ AI düzenlesin" anahtarı, son seçim hatırlanır; basılı tut = öbür kip.
-- [ ] **F3.2 "+" menüsü 4 kapı** (`quick_add_fab.dart:364-472`, 19 giriş):
+  **Yapıldı:** Ana ekranda tek mikrofon (`UiItem.homeMic`); levhada Yazdır ↔ AI anahtarı (`homeMicDictateProvider`, son seçim hatırlanır), basılı tut = öbür kip; `VoiceCaptureAction.dictate`.
+- [x] **F3.2 "+" menüsü 4 kapı** (`quick_add_fab.dart:364-472`, 19 giriş):
   Metin/Liste · **Kamera** (foto/video/tarama/QR sekmeli tek ekran) ·
   **Dosya ekle** (tek seçici, tür dosyadan; "metne dök" seçim sonrası
   seçenek) · Şablon.
-- [ ] **F3.3 Tek sohbet motoru** — Sohbet ekranı, merkez sohbet kartı, Belge
+  **Yapıldı:** `quick_add_fab.dart` yeniden yazıldı: Yakala (kamera/tarama/QR/ses) · Dosya (tek seçici, tür uzantıdan — `DocPicker.preselect`) · Daha fazla (şablon, liste türleri, çizim, Defter); `QuickAddActions.createFromFile`/`createNotebook`.
+- [x] **F3.3 Tek sohbet motoru** — Sohbet ekranı, merkez sohbet kartı, Belge
   sohbeti, Beyin fırtınası, AI levhası sohbeti → kapsam çipi (Tüm notlar /
   Bu not / Bu belge / Klasör) + kip (Soru-cevap / Beyin fırtınası).
-- [ ] **F3.4 Tek belge görüntüleyici** — tam ekran PDF + PDF bölmesi + defter
+  **Yapıldı:** `ai_chat_screen.dart` tek ekran: `ChatScope` (Tüm notlar/Bu not/Bu belge) + `ChatMode` (Soru-cevap/Beyin fırtınası); chat/doc_chat/brainstorm ekranları silindi, `/chat` yönlendirmesi ona.
+- [x] **F3.4 Tek belge görüntüleyici** — tam ekran PDF + PDF bölmesi + defter
   PDF sayfası (slayt eşleri) tek bileşen, farklı kaplar.
-- [ ] **F3.5 Defter** — `archive_note_screen.dart` (4.455 satır, ikinci editör)
+  **Yapıldı:** `viewers/pdf_document_view.dart` (`PdfDocumentView`) tam ekran PDF ve PDF bölmesinin ortak çekirdeği; defter PDF sayfası F3.5 ile ortadan kalktı.
+- [x] **F3.5 Defter** — `archive_note_screen.dart` (4.455 satır, ikinci editör)
   → normal notun "Sayfalı görünüm" kipi; ad "Defter" ("Arşivle" ile çakışmasın).
-- [ ] **F3.6 Kavram çiftleri** — Sabitle + Yıldızla → tek kavram; Zemin +
+  **Yapıldı:** Defter normal notun `Note.paged` kipi (kâğıt `NotebookPaper`, sayfa çubuğu hep görünür); `notebookToPagedNote` saf çeviri + `migrateNotebooks()` göçü ('f35'); `archive_note_screen` ve 3 testi silindi, yeni `notebook_migration_test`.
+- [x] **F3.6 Kavram çiftleri** — Sabitle + Yıldızla → tek kavram; Zemin +
   Çerçeve rengi → tek renk (+ isteğe bağlı vurgu). Veri göçü gerekir.
-- [ ] **F3.7 Paylaşım iki kavram** — klasör paylaşımı + ortak not + arkadaşa
+  **Yapıldı:** `Note.starred` kalktı (okumada pinned||starred), çerçeve rengi → `color` + `accent` ("Kenarı vurgula"); `migrateConceptPairs()` göçü ('f36'); yıldız arayüzü/süzgeci silindi.
+- [x] **F3.7 Paylaşım iki kavram** — klasör paylaşımı + ortak not + arkadaşa
   gönder → "Birlikte düzenle" (not/klasör) ve "Kopya gönder".
-- [ ] **F3.8 Balonlu/Klasik sorusu** (`capture_mode_sheet.dart:55`) — Ayarlar'da
+  **Yapıldı:** Paylaş levhası iki bölüm: BİRLİKTE DÜZENLE (ortak not / klasör) ve KOPYA GÖNDER (arkadaşa); levha önce `hydrateNote` yapar.
+- [x] **F3.8 Balonlu/Klasik sorusu** (`capture_mode_sheet.dart:55`) — Ayarlar'da
   varsayılan kip; levha yalnız ilk sefer.
-- [ ] **F3.9 Tek seslendirme servisi** — `speech_output`, `ai_speech`,
+  **Yapıldı:** `captureModeDefaultKey` — Ayarlar'da varsayılan kip (`CaptureModeSetting`); levha yalnız ilk sefer.
+- [x] **F3.9 Tek seslendirme servisi** — `speech_output`, `ai_speech`,
   `note_speech`, `listen_screen`, `speak_button` → motor: cihaz / AI.
-- [ ] **F3.10 Bağımlılıklar** — `flutter_staggered_grid_view` hiç kullanılmıyor
+  **Yapıldı:** `features/ai/data/speech_service.dart` (`speechProvider`) tek kapı; motor cihaz/AI ayardan; `speak_button` AI sunumuna taşındı.
+- [x] **F3.10 Bağımlılıklar** — `flutter_staggered_grid_view` hiç kullanılmıyor
   (`pubspec.yaml:57`) → sil; `http` + `dio` → tek istemci; `pdf` →
   `syncfusion_flutter_pdf` (üretim de onunla), `pdfrx` görüntülemede kalır.
-- [ ] **F3.11 Ayarlar** — `settings_screen.dart` (4.395 satır) bölümlere ayrı
+  **Yapıldı:** staggered_grid_view ve dio silindi (`core/net/json_http.dart` package:http üstünde); `pdf` → Syncfusion (`note_pdf`, `scan_pdf` OCR katmanı saydam metin).
+- [x] **F3.11 Ayarlar** — `settings_screen.dart` (4.395 satır) bölümlere ayrı
   dosyalar; `settings_providers.dart`'taki ~20 kopya açık/kapalı tercih sınıfı
   → tek `BoolPref` ailesi (anahtar adları AYNI kalsın, tercih kaybolmasın).
-- [ ] **F3.12 Ölü kod** — `keyboardOverlapOf` (`bubble_layer.dart:3388`),
+  **Yapıldı:** `settings_screen.dart` 4.395 → 706 satır + `settings_sections/` 6 part; `boolPref(key, defaultValue:)` / `BoolPrefNotifier` ailesi, anahtar adları aynı.
+- [x] **F3.12 Ölü kod** — `keyboardOverlapOf` (`bubble_layer.dart:3388`),
   `folderFavoriteToken` (`notes_providers.dart:134`) sil;
   `balancedNoteColumns`, `textSimilarity`, `extractDocSync` yalnız testlerde
   yaşıyor → testleri canlı karşılığına taşı, sil.
-- [ ] **F3.13 Ağır alanları not belgesinden ayır (P3)** — mürekkep, balonlar,
+  **Yapıldı:** Beşi de silindi; testler canlı karşılıklarına taşındı.
+- [x] **F3.13 Ağır alanları not belgesinden ayır (P3)** — mürekkep, balonlar,
   transkript metni, sayfa notları → `notes/{id}/heavy` alt koleksiyonu ya da
   Storage; ana ekran yalnız hafif belgeyi dinlesin. Göç + geriye uyum planı
   şart (F1.5 kapısı). Açılış, bellek, önbellek ve 1 MiB riskini birlikte çözer.
-- [ ] **F3.14 Diller** — tr/en 1564 metin, diğer 14 dil 1041: **523 metin
+  **Yapıldı:** `domain/note_heavy.dart`: ağır kısım 96 KB'ı aşan notun ink/bubbles/pdfMarks'ı `notes/{id}/heavy/data`'da, ana belge `heavyRef`; tek toplu yazım, `hydrate`/`hydrateNote`; kurallar + hesap silme alt koleksiyonu; `kClientDataVersion` = 2. Transkript/sayfa notları ana belgede kaldı (küçük). Yeni `note_heavy_test`.
+- [x] **F3.14 Diller** — tr/en 1564 metin, diğer 14 dil 1041: **523 metin
   (%33) eksik**, İngilizce görünüyor; hiçbiri anadilde okunmadı.
   **KARAR GEREKİR**: `translate.yml` ile tamamla + anadil kontrolü, ya da dil
   sayısını düşür.
-- [ ] **F3.15 Flutter yükseltme kilidi** — 3.47.7'de `pdfrx 1.3.5` derlenmiyor
+  **Yapıldı:** Karar: yalnız tr + en. 14 arb, `translate.yml`, `tool/translate_arb.dart`, `check_arb.ps1`, RTL/geri düşme testleri silindi; 114 kullanılmayan anahtar temizlendi.
+- [x] **F3.15 Flutter yükseltme kilidi** — 3.47.7'de `pdfrx 1.3.5` derlenmiyor
   (`pdf_file_cache.dart:351`, null güvenliği). pdfrx 2.x'e geç (API değişir:
   görüntüleyici, metin seçimi, sayfa görüntüsü), sonra Flutter 3.47+; CI
   `FLUTTER_VERSION` ve CLAUDE.md'deki uyarıyı güncelle.
-- [ ] **F3.16 Modüller** — "Kişiselleştir → modüller" altyapısı var: yeni
+  **Yapıldı:** pdfrx 2.6.6 + Flutter 3.47.7 (CI `FLUTTER_VERSION`), CI'daki pdfium.wasm yaması kaldırıldı; `loadStructuredText`, `PdfPageText` parçaları.
+- [x] **F3.16 Modüller** — "Kişiselleştir → modüller" altyapısı var: yeni
   kullanıcıda ileri modüller (defter, podcast, QR, YouTube, sohbet,
   arkadaşlar) varsayılan kapalı; çekirdek: not, liste, ses, görsel/belge, ara.
-- [ ] **F3.17 Kod tabanı bakımı** — editörü tam böl (F2.7'nin devamı: biçim,
+  **Yapıldı:** Karar (kullanıcı 2026-10-19): **değişmez** — tüm modüller açık kalır.
+- [x] **F3.17 Kod tabanı bakımı** — editörü tam böl (F2.7'nin devamı: biçim,
   bulma, AI, ekler, kalem ayrı denetleyiciler); dev dosyalar
   (`dashboard_screen` 3.577, `bubble_layer` 3.398, `note_images` 3.135);
   koddaki tarihli hikâye yorumları (455 "kullanıcı isteği/bulgusu", 208
@@ -305,6 +320,7 @@ F1.5'in en düşük sürüm kapısı yerindeyken yapılır.
   tarihle adlandırılmış 11 test dosyası (`requests_2026_10_17_d_test.dart`…)
   → özellik adına; HAFIZA.md (648 KB, okunamaz boyut) → ≤30 KB "geçerli
   kararlar ve tuzaklar" + `HAFIZA_ARSIV.md`.
+  **Yapıldı:** Dev dosyalar part dosyalarına bölündü (dashboard 3.577 → 2.408, bubble_layer 3.398 → 1.142, note_images 3.135 → 2.186, settings 4.395 → 706, editör 9.116 → 8.831); tarihli 11 test dosyası özellik adına; HAFIZA 648 KB → ~16 KB + `HAFIZA_ARSIV.md`. ERTELENDİ: editörün ayrı denetleyicilere tam bölünmesi ve koddaki tarihli hikâye yorumlarının toplu temizliği — yüzlerce dosyaya dokunan, davranışı riske atan ve testle korunamayan iş; dokunulan dosyada yerinde temizlenir.
 
 ---
 

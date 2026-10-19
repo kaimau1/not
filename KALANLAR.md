@@ -6,6 +6,28 @@
 - [ ] Faz 1–4 ayrı oturumlarda, sırayla → bkz. `YOL_HARITASI.md` (madde
   listesi, sıra ve durum orada tutulur; burada tekrarlanmaz).
 
+## 2026-10-19 — Faz 3 (sadeleştirme) — CİHAZDA GÖRÜLMEDİ
+- [ ] **Senin yapacakların**: tüm telefonlar bu sürüme geçince konsolda
+  `config/app` → `minClient: 2` (ağır belge bölmesi F3.13 eski sürümde
+  çizim/balonu göremez). Kurallar main push'ta CI deploy'uyla yayınlanır.
+- [ ] **Tek mikrofon**: ana ekranda tek mikrofon; levhada Yazdır ↔ AI anahtarı,
+  kapatıp açınca son seçim hatırlanıyor; basılı tut = öbür kip.
+- [ ] **"+" dört kapı**: Yakala (kamera/tarama/QR/ses), Dosya (PDF/görsel/ses
+  seçince doğru türde not), Daha fazla (şablon, listeler, çizim, Defter).
+- [ ] **Sohbet**: Tüm notlar / Bu not / Bu belge kapsam çipleri ve Beyin
+  fırtınası kipi; not ve PDF ekranından açılınca doğru kapsamla geliyor.
+- [ ] **Defter göçü**: eski defterler açılınca normal not + Defter görünümü;
+  sayfa adları alt başlık, ekler doğru sayfada, kâğıt deseni korunmuş.
+- [ ] **Sabitle/renk göçü**: eskiden yıldızlı notlar sabitli; çerçeve renkli
+  notlar renk + "Kenarı vurgula" açık görünüyor.
+- [ ] **Ağır belge**: çok sayfalı PDF'e yoğun çizim → kaydet, başka cihazda
+  aç → çizim/balonlar geliyor; ana ekran akıcı.
+- [ ] **PDF dışa aktarma (Syncfusion)**: biçimli metin, görseller, Türkçe
+  karakterler doğru; tarama PDF'inde metin aranabilir/seçilebilir.
+- [ ] **Paylaş levhası**: Birlikte düzenle (not/klasör) + Kopya gönder.
+- [ ] **İlk açılış kip sorusu**: Balonlu/Klasik yalnız ilk sefer; sonra
+  Ayarlar'daki varsayılan.
+
 ## 2026-10-19 — Faz 1 (güvenlik/veri) — CİHAZDA GÖRÜLMEDİ, APK DERLENMEDİ
 - [ ] **Kişi araması**: misafir hesapla "Kişi ara" → "Google hesabıyla giriş
   yap" uyarısı; Google hesabıyla 2 harf → sonuç yok, 3 harf ad → bulur;
