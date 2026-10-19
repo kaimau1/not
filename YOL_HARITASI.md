@@ -165,8 +165,9 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
   **Yapıldı:** README, YAPILACAKLAR, CLAUDE.md (test sayısı, bulut Flutter, graphify iddiası: kanca yok, grafik bayat — `graphify` bulut ortamında yok, güncellenemedi).
 
 **Faz 1 — senin yapacakların (konsol/cihaz):**
-- [ ] F1.1/F1.4 kural ve fonksiyon değişiklikleri main'e girince CI deploy
-  işinin yeşil olduğuna bak.
+- [x] F1.1/F1.4 kural ve fonksiyon değişiklikleri main'e girince CI deploy
+  işinin yeşil olduğuna bak. (2026-10-19, koşu #467: kurallar + searchUsers
+  yayınlandı.)
 - [ ] **AI faturası (G2):** App Check zorlamasını aç (Play yayınından sonra);
   o zamana kadar Google Cloud konsolunda Firebase AI Logic API kotalarında
   kullanıcı başı dakika sınırını düşür. (Sunucuda kota: F4.10.)
