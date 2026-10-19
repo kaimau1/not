@@ -3051,7 +3051,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get friendsSearchAdd => 'Ekle';
 
   @override
-  String get folderShare => 'Paylaş';
+  String get folderShare => 'Birlikte düzenle';
 
   @override
   String folderShareCount(num count) {
@@ -4750,7 +4750,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get shareToFriendShort => 'Arkadaşa';
+  String get shareToFriendShort => 'Kopya gönder';
 
   @override
   String get shareCollaborateShort => 'Birlikte düzenle';
@@ -5397,4 +5397,21 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get aiChatRowInfo =>
       'Bu notla, belgesiyle ya da tüm notlarla; soru-cevap ya da beyin fırtınası';
+
+  @override
+  String get shareFolderTogether => 'Klasörü birlikte düzenle';
+
+  @override
+  String get shareTogetherSection => 'BİRLİKTE DÜZENLE';
+
+  @override
+  String get shareTogetherInfo =>
+      'Aynı notu/klasörü siz ikiniz görür ve değiştirirsiniz';
+
+  @override
+  String get shareCopySection => 'KOPYA GÖNDER';
+
+  @override
+  String get shareCopyInfo =>
+      'Arkadaşının gelen kutusuna bağımsız bir kopya gider';
 }

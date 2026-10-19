@@ -3053,7 +3053,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get friendsSearchAdd => 'Add';
 
   @override
-  String get folderShare => 'Share';
+  String get folderShare => 'Edit together';
 
   @override
   String folderShareCount(num count) {
@@ -4763,10 +4763,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get shareToFriendShort => 'To a friend';
+  String get shareToFriendShort => 'Send a copy';
 
   @override
-  String get shareCollaborateShort => 'Collaborate';
+  String get shareCollaborateShort => 'Edit together';
 
   @override
   String get shareAsNoteShort => 'Note package';
@@ -5411,4 +5411,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiChatRowInfo =>
       'With this note, its document or all notes; Q&A or brainstorm';
+
+  @override
+  String get shareFolderTogether => 'Edit folder together';
+
+  @override
+  String get shareTogetherSection => 'EDIT TOGETHER';
+
+  @override
+  String get shareTogetherInfo =>
+      'You both see and change the same note or folder';
+
+  @override
+  String get shareCopySection => 'SEND A COPY';
+
+  @override
+  String get shareCopyInfo =>
+      'An independent copy goes to your friend\'s inbox';
 }

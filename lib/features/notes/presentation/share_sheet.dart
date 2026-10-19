@@ -7,6 +7,8 @@ import 'package:share_plus/share_plus.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../folders/data/folders_repository.dart';
+import '../../folders/presentation/folder_sheets.dart' show showFolderShareSheet;
 import '../../inbox/presentation/send_note_sheet.dart';
 import '../../settings/settings_providers.dart' show sharedPreferencesProvider;
 import '../data/attachment_repository.dart';
@@ -39,7 +41,8 @@ import '../../../core/widgets/app_sheet.dart';
 /// * **İçerik çipleri** — başlık, tamamlanan maddeler, etiketler.
 /// * **Metin** — Paylaş ve Kopyala yan yana, aynı metin.
 /// * **Dosya olarak** — PDF / Word, not paketi (`.notpaket`), balonlu PDF.
-/// * **Uygulama içinde** — arkadaşa gönder, birlikte düzenle (ortak not).
+/// * **Uygulama içinde** — iki kavram (F3.7): Birlikte düzenle (ortak not /
+///   klasör) ve Kopya gönder (arkadaşın gelen kutusu).
 ///
 ///
 /// 2026-10-16 YENİDEN DÜZEN (kullanıcı: "paylaşım seçenekleri düzenlenmeli
@@ -92,6 +95,11 @@ Future<void> showNoteShareSheet(
       await showSendNoteToFriendSheet(context, ref, note);
     case 'collab':
       await showCollaboratorsSheet(context, ref, noteId: note.id);
+    case 'folder':
+      final folder = (ref.read(foldersStreamProvider).value ?? const [])
+          .where((f) => f.id == note.folderId)
+          .firstOrNull;
+      if (folder != null) await showFolderShareSheet(context, ref, folder);
     default:
       await runNoteShare(context, ref, note, choice, options: options);
   }
@@ -214,7 +222,36 @@ class _ShareSheetState extends State<_ShareSheet> {
                 ],
               ),
             ),
-          // TEK DOKUNUŞLUK IZGARA: en sık işler önizlemenin hemen altında.
+          // **İKİ KAVRAM** (F3.7): uygulama içi paylaşım ya BİRLİKTE DÜZENLE
+          // (aynı not/klasör, iki taraf da değiştirir) ya da KOPYA GÖNDER
+          // (arkadaşın gelen kutusuna bağımsız kopya; dışarıya metin/dosya).
+          if (widget.canCollaborate) ...[
+            section(l10n.shareTogetherSection),
+            _tile(
+              context,
+              onTap: () => _pop('collab'),
+              icon: Icons.group_add_outlined,
+              title: l10n.shareCollaborateShort,
+              subtitle: l10n.shareTogetherInfo,
+            ),
+            if (widget.note.folderId != null)
+              _tile(
+                context,
+                onTap: () => _pop('folder'),
+                icon: Icons.folder_shared_outlined,
+                title: l10n.shareFolderTogether,
+                subtitle: l10n.folderShareInfo,
+              ),
+          ],
+          section(l10n.shareCopySection),
+          _tile(
+            context,
+            onTap: () => _pop('friend'),
+            icon: Icons.send_outlined,
+            title: l10n.shareToFriendShort,
+            subtitle: l10n.shareCopyInfo,
+          ),
+          // TEK DOKUNUŞLUK IZGARA: dışarıya kopya (metin, PDF, görsel…).
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 14, 8, 0),
             child: LayoutBuilder(
@@ -267,23 +304,6 @@ class _ShareSheetState extends State<_ShareSheet> {
                           icon: Icons.attach_file,
                           label: l10n.shareAttachmentFiles(files),
                           onTap: () => _pop('files'),
-                        ),
-                      ),
-                    cell(
-                      _QuickShareButton(
-                        key: const ValueKey('share-quick-friend'),
-                        icon: Icons.send_outlined,
-                        label: l10n.shareToFriendShort,
-                        onTap: () => _pop('friend'),
-                      ),
-                    ),
-                    if (widget.canCollaborate)
-                      cell(
-                        _QuickShareButton(
-                          key: const ValueKey('share-quick-collab'),
-                          icon: Icons.group_add_outlined,
-                          label: l10n.shareCollaborateShort,
-                          onTap: () => _pop('collab'),
                         ),
                       ),
                     cell(

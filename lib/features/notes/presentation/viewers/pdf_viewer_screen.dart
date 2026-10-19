@@ -16,6 +16,7 @@ import 'area_actions.dart';
 import 'area_select.dart';
 import 'bubble_layer.dart';
 import 'ink_layer.dart';
+import 'pdf_document_view.dart';
 import 'pdf_select_layer.dart';
 import 'pdf_selection_bar.dart';
 
@@ -248,33 +249,15 @@ class _PdfViewerScreenState extends State<PdfViewerScreen>
             }
           },
         );
-        if (hasLocal) {
-          return PdfViewer.file(
-            attachment.localPath,
-            controller: _pdf,
-            params: params,
-          );
-        }
-        if (attachment.isUploaded) {
-          return PdfViewer.uri(
-            Uri.parse(attachment.downloadUrl),
-            controller: _pdf,
-            params: params,
-          );
-        }
-        return const Center(
-          child: Icon(Icons.picture_as_pdf_outlined, size: 64),
+        return PdfDocumentView(
+          attachment: attachment,
+          hasLocal: hasLocal,
+          controller: _pdf,
+          params: params,
+          ink: _ink,
+          penMode: _editing,
         );
       },
-    );
-    viewer = InkNavLayer(
-      enabled: _editing,
-      controller: _ink,
-      getMatrix: () => _pdf.isReady ? _pdf.value : null,
-      setMatrix: (m) => _pdf.value = m,
-      minScale: 0.1,
-      maxScale: 8,
-      child: viewer,
     );
 
     return PopScope(

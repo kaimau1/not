@@ -1150,7 +1150,7 @@
   "friendsSearchEmpty": "No results",
   "friendsSearchTooShort": "Type at least 2 characters to search",
   "friendsSearchAdd": "Add",
-  "folderShare": "Share",
+  "folderShare": "Edit together",
   "folderShareCount": "{count, plural, one{Shared with 1 person} other{Shared with {count} people}}",
   "folderShareTitle": "Share \"{name}\"",
   "folderShareInfo": "An invite goes to the friend you pick; they see the folder once they accept. You choose their permission (read / write / both).",
@@ -1801,8 +1801,8 @@
       }
     }
   },
-  "shareToFriendShort": "To a friend",
-  "shareCollaborateShort": "Collaborate",
+  "shareToFriendShort": "Send a copy",
+  "shareCollaborateShort": "Edit together",
   "shareAsNoteShort": "Note package",
   "shareMoreSection": "MORE",
   "shareQuickPreparing": "Preparing…",
@@ -1992,5 +1992,10 @@
   "chatModeQa": "Q&A",
   "chatModeBrainstorm": "Brainstorm",
   "aiChatRowTitle": "Chat",
-  "aiChatRowInfo": "With this note, its document or all notes; Q&A or brainstorm"
+  "aiChatRowInfo": "With this note, its document or all notes; Q&A or brainstorm",
+  "shareFolderTogether": "Edit folder together",
+  "shareTogetherSection": "EDIT TOGETHER",
+  "shareTogetherInfo": "You both see and change the same note or folder",
+  "shareCopySection": "SEND A COPY",
+  "shareCopyInfo": "An independent copy goes to your friend's inbox"
 }

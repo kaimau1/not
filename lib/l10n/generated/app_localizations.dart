@@ -5675,7 +5675,7 @@ abstract class AppLocalizations {
   /// No description provided for @folderShare.
   ///
   /// In tr, this message translates to:
-  /// **'Paylaş'**
+  /// **'Birlikte düzenle'**
   String get folderShare;
 
   /// No description provided for @folderShareCount.
@@ -8573,7 +8573,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareToFriendShort.
   ///
   /// In tr, this message translates to:
-  /// **'Arkadaşa'**
+  /// **'Kopya gönder'**
   String get shareToFriendShort;
 
   /// No description provided for @shareCollaborateShort.
@@ -9721,6 +9721,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu notla, belgesiyle ya da tüm notlarla; soru-cevap ya da beyin fırtınası'**
   String get aiChatRowInfo;
+
+  /// No description provided for @shareFolderTogether.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörü birlikte düzenle'**
+  String get shareFolderTogether;
+
+  /// No description provided for @shareTogetherSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'BİRLİKTE DÜZENLE'**
+  String get shareTogetherSection;
+
+  /// No description provided for @shareTogetherInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aynı notu/klasörü siz ikiniz görür ve değiştirirsiniz'**
+  String get shareTogetherInfo;
+
+  /// No description provided for @shareCopySection.
+  ///
+  /// In tr, this message translates to:
+  /// **'KOPYA GÖNDER'**
+  String get shareCopySection;
+
+  /// No description provided for @shareCopyInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arkadaşının gelen kutusuna bağımsız bir kopya gider'**
+  String get shareCopyInfo;
 }
 
 class _AppLocalizationsDelegate

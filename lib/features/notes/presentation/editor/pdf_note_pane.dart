@@ -10,6 +10,7 @@ import '../../domain/attachment.dart';
 import '../../domain/note.dart';
 import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
+import '../viewers/pdf_document_view.dart';
 import '../viewers/pdf_selection_bar.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import 'bubbles_overview.dart';
@@ -337,28 +338,13 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
             }
           },
         );
-        final viewer = hasLocal
-            ? PdfViewer.file(
-                attachment.localPath,
-                controller: _pdf,
-                params: params,
-              )
-            : PdfViewer.uri(
-                Uri.parse(attachment.downloadUrl),
-                controller: _pdf,
-                params: params,
-              );
-        // Kalem açıkken İKİ PARMAK gezinir: çizim katmanı tek parmağı aldığı
-        // için yakınlaştırma/kaydırma bu katmandan yapılır (tam ekran
-        // görüntüleyicideki kurulumun aynısı).
-        return InkNavLayer(
-          enabled: widget.penMode,
-          controller: widget.ink,
-          getMatrix: () => _pdf.isReady ? _pdf.value : null,
-          setMatrix: (m) => _pdf.value = m,
-          minScale: 0.1,
-          maxScale: 8,
-          child: viewer,
+        return PdfDocumentView(
+          attachment: attachment,
+          hasLocal: hasLocal,
+          controller: _pdf,
+          params: params,
+          ink: widget.ink,
+          penMode: widget.penMode,
         );
       },
     );

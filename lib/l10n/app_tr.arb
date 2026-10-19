@@ -1436,7 +1436,7 @@
   "friendsSearchEmpty": "Sonuç yok",
   "friendsSearchTooShort": "Aramak için en az 2 karakter yaz",
   "friendsSearchAdd": "Ekle",
-  "folderShare": "Paylaş",
+  "folderShare": "Birlikte düzenle",
   "folderShareCount": "{count, plural, one{1 kişiyle paylaşıldı} other{{count} kişiyle paylaşıldı}}",
   "folderShareTitle": "\"{name}\" klasörünü paylaş",
   "folderShareInfo": "Seçtiğin arkadaşa davet gider; kabul edince klasörü görür. Yetkiyi (okuma / yazma / her ikisi) sen belirlersin.",
@@ -2198,7 +2198,7 @@
       }
     }
   },
-  "shareToFriendShort": "Arkadaşa",
+  "shareToFriendShort": "Kopya gönder",
   "shareCollaborateShort": "Birlikte düzenle",
   "shareAsNoteShort": "Not paketi",
   "shareMoreSection": "DAHA FAZLA",
@@ -2619,5 +2619,10 @@
   "chatModeQa": "Soru-cevap",
   "chatModeBrainstorm": "Beyin fırtınası",
   "aiChatRowTitle": "Sohbet",
-  "aiChatRowInfo": "Bu notla, belgesiyle ya da tüm notlarla; soru-cevap ya da beyin fırtınası"
+  "aiChatRowInfo": "Bu notla, belgesiyle ya da tüm notlarla; soru-cevap ya da beyin fırtınası",
+  "shareFolderTogether": "Klasörü birlikte düzenle",
+  "shareTogetherSection": "BİRLİKTE DÜZENLE",
+  "shareTogetherInfo": "Aynı notu/klasörü siz ikiniz görür ve değiştirirsiniz",
+  "shareCopySection": "KOPYA GÖNDER",
+  "shareCopyInfo": "Arkadaşının gelen kutusuna bağımsız bir kopya gider"
 }
