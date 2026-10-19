@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/markdown.dart';
-import '../../../core/widgets/speak_button.dart';
+import 'speak_button.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/data/doc_text.dart';
 import '../../notes/data/notes_repository.dart';

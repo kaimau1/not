@@ -5,12 +5,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/utils/speech_output.dart';
 import '../../../core/utils/spoken_datetime.dart';
 import '../../ai/data/ai_history.dart';
 import '../../ai/data/assistant_service.dart';
 import '../../settings/settings_providers.dart';
 import '../../ai/data/gemini_service.dart';
+import '../../ai/data/speech_service.dart';
 import '../data/notes_repository.dart';
 import '../domain/note_type.dart';
 import 'notes_providers.dart';
@@ -237,9 +237,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
     if (!ref.read(assistantVoiceProvider)) return;
     final language = Intl.getCurrentLocale().split(RegExp('[-_]')).first;
     unawaited(
-      ref
-          .read(speechOutputProvider.notifier)
-          .speak(text, languageCode: language),
+      ref.read(speechProvider.notifier).speak(text, languageCode: language),
     );
   }
 

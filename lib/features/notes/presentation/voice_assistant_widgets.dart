@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
-import '../../../core/utils/speech_output.dart';
+import '../../ai/data/speech_service.dart';
 import '../../../core/widgets/countdown_bar.dart';
 import '../../settings/settings_providers.dart';
 import 'voice_assistant.dart';
@@ -34,7 +34,7 @@ class _AssistantMuteButton extends ConsumerWidget {
       icon: Icon(on ? Icons.volume_up_outlined : Icons.volume_off, size: 20),
       onPressed: () {
         ref.read(assistantVoiceProvider.notifier).toggle();
-        if (on) ref.read(speechOutputProvider.notifier).stop();
+        if (on) ref.read(speechProvider.notifier).stop();
       },
     );
   }

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../l10n_ext.dart';
-import '../utils/speech_output.dart';
+import '../../../core/l10n_ext.dart';
+import '../../../core/utils/speech_output.dart';
+import '../data/speech_service.dart';
 
 /// Bir metni sesli okutan düğme. Okurken duraklat/durdur olur ve ilerlemeyi
 /// gösterir. Uygulamadaki her "sesli oku" noktası bunu kullanır — sesli
 /// özet, belge okuma, çeviri — böylece davranış tek yerde tanımlı kalır.
+/// Motor (cihaz / yapay zekâ) ayardan gelir (bkz. [SpeechService]).
 class SpeakButton extends ConsumerWidget {
   const SpeakButton({super.key, required this.text, this.label});
 
@@ -18,8 +20,8 @@ class SpeakButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final speech = ref.watch(speechOutputProvider);
-    final controller = ref.read(speechOutputProvider.notifier);
+    final speech = ref.watch(speechProvider);
+    final controller = ref.read(speechProvider.notifier);
     final scheme = Theme.of(context).colorScheme;
 
     // Bu metin okunuyor mu ayırt edilemez (denetleyici tek metin okur), bu

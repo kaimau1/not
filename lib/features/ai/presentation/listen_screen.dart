@@ -10,6 +10,7 @@ import '../../notes/domain/note_type.dart';
 import '../../settings/settings_providers.dart';
 import '../data/ai_cache.dart';
 import '../data/ai_speech.dart';
+import '../data/speech_service.dart';
 import '../data/gemini_service.dart';
 
 /// Bir belgeyi sesli dinleme ekranı. Üç mod var:
@@ -64,25 +65,9 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
   bool _fromCache = false;
   bool _lastSummarize = false;
 
-  /// Bu okumada YAPAY ZEKÂ sesi kullanılsın mı?
-  ///
-  /// Karar TEK yerden gelir: Ayarlar → Ses → Seslendirme (kullanıcı isteği
-  /// 2026-08-08: "1 özellik 1 ayara bağlanmalı, çok ayar karışıklık
-  /// yapıyor"). Bu ekranda ayrıca bir anahtar VARDI; ayarda yapay zekâ
-  /// seçiliyken bile burada kapalı kalabiliyor ve okuma sessizce cihaz
-  /// sesiyle yapılıyordu ("AI seçince çalışmıyor, hâlâ android sesiyle
-  /// okuyor"). Anahtar kaldırıldı.
-  ///
-  /// Yapay zekâ sesi kullanıcının KENDİ Gemini anahtarını ister; yoksa
-  /// okuma cihaz sesiyle yapılır ve sebebi ekranda YAZAR.
-  bool? _aiVoice;
-
-  bool get _aiAvailable => ref.read(aiSpeechProvider.notifier).isAvailable;
-
-  bool get _useAiVoice =>
-      _aiAvailable &&
-      (_aiVoice ?? (ref.read(ttsEngineProvider) == TtsEngine.gemini));
-
+  /// Motor TEK yerden gelir: Ayarlar → Ses → Seslendirme (bkz.
+  /// [SpeechService]). Yapay zekâ sesi başarısız olursa okuma cihaz sesiyle
+  /// sürer ve sebebi ekranda yazar.
   @override
   void initState() {
     super.initState();
@@ -90,48 +75,36 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
   }
 
   /// dispose'da `ref` kullanılamaz (Riverpod "widget unmounted" hatası atar ve
-  /// okuma DURMAZ); denetleyiciler build'de alana alınır.
-  SpeechOutputController? _speech;
-  AiSpeechController? _aiSpeech;
+  /// okuma DURMAZ); servis build'de alana alınır.
+  SpeechService? _speechService;
 
   @override
   void dispose() {
-    // Ekrandan çıkınca okuma sürmesin (hangisi konuşuyorsa o dursun).
-    _speech?.stop();
-    _aiSpeech?.stop();
+    // Ekrandan çıkınca okuma sürmesin.
+    _speechService?.stop();
     super.dispose();
   }
 
-  /// Oynat/duraklat/devam düğmesi. Yapay zekâ sesinde model çağrısı
-  /// başarısız olursa (kota, anahtar, ağ) hata gösterilir ve okuma CİHAZ
-  /// sesiyle sürer — sessizce hiçbir şey olmaması en kötü sonuç olurdu.
   Future<void> _togglePlay(SpeechOutputState speech, String text) async {
-    final aiVoice = _useAiVoice;
-    final device = ref.read(speechOutputProvider.notifier);
-    final ai = ref.read(aiSpeechProvider.notifier);
+    final service = ref.read(speechProvider.notifier);
     if (speech.state == SpeechState.speaking) {
-      await (aiVoice ? ai.pause() : device.pause());
+      await service.pause();
       return;
     }
     if (speech.state == SpeechState.paused) {
-      await (aiVoice ? ai.resume() : device.resume());
+      await service.resume();
       return;
     }
-    if (!aiVoice) {
-      await device.speak(text);
-      return;
-    }
-    try {
-      await ai.speak(text);
-    } catch (e) {
-      if (!mounted) return;
-      final message = e is GeminiException ? e.message : '$e';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.listenAiVoiceFailed(message))),
-      );
-      setState(() => _aiVoice = false);
-      await device.speak(text);
-    }
+    await service.speak(
+      text,
+      onAiFailed: (message) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.listenAiVoiceFailed(message))),
+        );
+        setState(() {});
+      },
+    );
   }
 
   Future<void> _loadDocument() async {
@@ -173,8 +146,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
   }) async {
     final source = _original;
     if (source == null) return;
-    await ref.read(speechOutputProvider.notifier).stop();
-    await ref.read(aiSpeechProvider.notifier).stop();
+    await ref.read(speechProvider.notifier).stop();
 
     // Aynı belgeyi ikinci kez açmak binlerce token'a mal olmasın: üretilen
     // metin içerik özetine göre saklanıyor, belge değişirse anahtar da değişir.
@@ -240,7 +212,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     final text = _text;
     if (text == null || text.trim().isEmpty) return;
     final l10n = context.l10n;
-    if (!ref.read(aiSpeechProvider.notifier).isAvailable) {
+    if (!ref.read(speechProvider.notifier).aiAvailable) {
       _snack(l10n.ttsEngineAiUnavailable);
       return;
     }
@@ -263,8 +235,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     );
     if (approved != true || !mounted) return;
 
-    await ref.read(speechOutputProvider.notifier).stop();
-    await ref.read(aiSpeechProvider.notifier).stop();
+    await ref.read(speechProvider.notifier).stop();
     setState(() {
       _rendering = true;
       _renderDone = 0;
@@ -335,8 +306,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
   }
 
   Future<void> _showOriginal() async {
-    await ref.read(speechOutputProvider.notifier).stop();
-    await ref.read(aiSpeechProvider.notifier).stop();
+    await ref.read(speechProvider.notifier).stop();
     if (!mounted) return;
     setState(() {
       _text = _original;
@@ -349,15 +319,10 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    // Hangi ses konuşuyorsa ONUN durumu izlenir: oynat/duraklat düğmesi ve
-    // ilerleme çubuğu iki motorda da aynı `SpeechOutputState`i okur.
-    final aiVoice = _useAiVoice;
-    final speech = aiVoice
-        ? ref.watch(aiSpeechProvider)
-        : ref.watch(speechOutputProvider);
-    final controller = ref.read(speechOutputProvider.notifier);
-    _speech = controller;
-    _aiSpeech = ref.read(aiSpeechProvider.notifier);
+    final speech = ref.watch(speechProvider);
+    final service = ref.read(speechProvider.notifier);
+    _speechService = service;
+    final aiVoice = speech.isActive ? service.usingAi : service.prefersAi;
     final text = _text;
 
     return Scaffold(
@@ -545,16 +510,14 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
                               const SizedBox(width: 8),
                               IconButton.filledTonal(
                                 tooltip: l10n.speechStop,
-                                onPressed: aiVoice
-                                    ? ref.read(aiSpeechProvider.notifier).stop
-                                    : controller.stop,
+                                onPressed: service.stop,
                                 icon: const Icon(Icons.stop),
                               ),
                             ],
                           ],
                         ),
                         // Hangi sesin okuduğu TEK satırda; seçim Ayarlar'da
-                        // (bkz. _useAiVoice). Ayarda yapay zekâ seçili ama
+                        // (bkz. SpeechService). Ayarda yapay zekâ seçili ama
                         // anahtar yoksa sebebi burada yazar.
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
