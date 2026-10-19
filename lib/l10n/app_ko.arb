@@ -1041,5 +1041,16 @@
   "attachmentSavedAs": "{name} 저장됨",
   "attachmentSaveAsFailed": "파일을 저장할 수 없습니다",
   "sharedHubTitle": "받은 노트 및 공유",
-  "sharedHubInbox": "받은 노트"
+  "sharedHubInbox": "받은 노트",
+  "voiceAutoStop": "침묵 시 중지",
+  "voiceAutoStopInfo": "말을 마치면 몇 초간 조용할 때 자동으로 듣기를 멈춥니다.",
+  "voiceSmartCommands": "스마트 명령",
+  "voiceSmartCommandsInfo": "말하는 동안 “delete last word”, “delete last sentence”, “replace X with Y”, “new line”, “undo”, “clear all”, “stop listening”이라고 말할 수 있습니다(터키어: “son kelimeyi sil” 등). 이후 끝에서부터 이어서 씁니다.",
+  "voiceAutoStopSoon": "조용함 — 곧 종료",
+  "voiceCmdDeleted": "삭제됨",
+  "voiceCmdReplaced": "바뀜",
+  "voiceCmdNewLine": "새 줄",
+  "voiceCmdUndone": "실행 취소됨",
+  "voiceCmdCleared": "지움",
+  "fullscreenExit": "전체 화면 종료"
 }

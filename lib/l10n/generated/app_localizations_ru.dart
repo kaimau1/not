@@ -5223,4 +5223,39 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sharedHubInbox => 'Полученные';
+
+  @override
+  String get voiceAutoStop => 'Стоп при тишине';
+
+  @override
+  String get voiceAutoStopInfo =>
+      'Когда вы закончите говорить, запись остановится сама после нескольких секунд тишины.';
+
+  @override
+  String get voiceSmartCommands => 'Умные команды';
+
+  @override
+  String get voiceSmartCommandsInfo =>
+      'Во время диктовки можно сказать: «delete last word», «delete last sentence», «replace X with Y», «new line», «undo», «clear all», «stop listening» (по-турецки: «son kelimeyi sil»…). Затем текст продолжается с конца.';
+
+  @override
+  String get voiceAutoStopSoon => 'Тишина — скоро остановится';
+
+  @override
+  String get voiceCmdDeleted => 'Удалено';
+
+  @override
+  String get voiceCmdReplaced => 'Заменено';
+
+  @override
+  String get voiceCmdNewLine => 'Новая строка';
+
+  @override
+  String get voiceCmdUndone => 'Отменено';
+
+  @override
+  String get voiceCmdCleared => 'Очищено';
+
+  @override
+  String get fullscreenExit => 'Выйти из полноэкранного режима';
 }

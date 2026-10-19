@@ -5199,4 +5199,39 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get sharedHubInbox => 'प्राप्त';
+
+  @override
+  String get voiceAutoStop => 'चुप होने पर रोकें';
+
+  @override
+  String get voiceAutoStopInfo =>
+      'बोलना ख़त्म होने पर कुछ सेकंड की चुप्पी के बाद सुनना अपने आप रुक जाता है।';
+
+  @override
+  String get voiceSmartCommands => 'स्मार्ट कमांड';
+
+  @override
+  String get voiceSmartCommandsInfo =>
+      'बोलते समय आप कह सकते हैं: “delete last word”, “delete last sentence”, “replace X with Y”, “new line”, “undo”, “clear all”, “stop listening” (तुर्की में: “son kelimeyi sil”…)। फिर लिखना अंत से जारी रहता है।';
+
+  @override
+  String get voiceAutoStopSoon => 'चुप्पी — जल्द रुकेगा';
+
+  @override
+  String get voiceCmdDeleted => 'हटाया गया';
+
+  @override
+  String get voiceCmdReplaced => 'बदला गया';
+
+  @override
+  String get voiceCmdNewLine => 'नई पंक्ति';
+
+  @override
+  String get voiceCmdUndone => 'पूर्ववत किया';
+
+  @override
+  String get voiceCmdCleared => 'साफ़ किया';
+
+  @override
+  String get fullscreenExit => 'फ़ुल स्क्रीन से बाहर';
 }

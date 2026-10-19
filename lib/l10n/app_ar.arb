@@ -1041,5 +1041,16 @@
   "attachmentSavedAs": "تم حفظ {name}",
   "attachmentSaveAsFailed": "تعذّر حفظ الملف",
   "sharedHubTitle": "المستلمة والمشتركة",
-  "sharedHubInbox": "المستلمة"
+  "sharedHubInbox": "المستلمة",
+  "voiceAutoStop": "إيقاف عند الصمت",
+  "voiceAutoStopInfo": "عند انتهائك من الكلام، يتوقف الاستماع تلقائيًا بعد بضع ثوانٍ من الصمت.",
+  "voiceSmartCommands": "أوامر ذكية",
+  "voiceSmartCommandsInfo": "أثناء الكلام يمكنك قول: “delete last word” و“delete last sentence” و“replace X with Y” و“new line” و“undo” و“clear all” و“stop listening” (بالتركية: “son kelimeyi sil”…). ثم تتابع الكتابة من النهاية.",
+  "voiceAutoStopSoon": "صمت — سيتوقف قريبًا",
+  "voiceCmdDeleted": "تم الحذف",
+  "voiceCmdReplaced": "تم الاستبدال",
+  "voiceCmdNewLine": "سطر جديد",
+  "voiceCmdUndone": "تم التراجع",
+  "voiceCmdCleared": "تم المسح",
+  "fullscreenExit": "الخروج من ملء الشاشة"
 }

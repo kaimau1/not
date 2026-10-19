@@ -5228,4 +5228,39 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sharedHubInbox => 'Ricevute';
+
+  @override
+  String get voiceAutoStop => 'Ferma con il silenzio';
+
+  @override
+  String get voiceAutoStopInfo =>
+      'Quando smetti di parlare, l’ascolto si ferma da solo dopo qualche secondo di silenzio.';
+
+  @override
+  String get voiceSmartCommands => 'Comandi intelligenti';
+
+  @override
+  String get voiceSmartCommandsInfo =>
+      'Mentre parli puoi dire: «delete last word», «delete last sentence», «replace X with Y», «new line», «undo», «clear all», «stop listening» (in turco: «son kelimeyi sil»…). Poi si continua dalla fine.';
+
+  @override
+  String get voiceAutoStopSoon => 'Silenzio — a breve si ferma';
+
+  @override
+  String get voiceCmdDeleted => 'Eliminato';
+
+  @override
+  String get voiceCmdReplaced => 'Sostituito';
+
+  @override
+  String get voiceCmdNewLine => 'Nuova riga';
+
+  @override
+  String get voiceCmdUndone => 'Annullato';
+
+  @override
+  String get voiceCmdCleared => 'Cancellato';
+
+  @override
+  String get fullscreenExit => 'Esci da schermo intero';
 }

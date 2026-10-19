@@ -9389,6 +9389,72 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gelen'**
   String get sharedHubInbox;
+
+  /// Akıllı sesli not / video tam ekran (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Sessizlikte bitir'**
+  String get voiceAutoStop;
+
+  /// Akıllı sesli not / video tam ekran (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuşman bitince birkaç saniyelik sessizlikten sonra dinleme kendiliğinden biter.'**
+  String get voiceAutoStopInfo;
+
+  /// Akıllı sesli not / video tam ekran (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Akıllı komutlar'**
+  String get voiceSmartCommands;
+
+  /// Akıllı sesli not / video tam ekran (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuşurken şunları diyebilirsin: “son kelimeyi sil”, “son iki kelimeyi sil”, “son cümleyi sil”, “X yerine Y yaz”, “son kelime Y olacak”, “yeni satır”, “geri al”, “hepsini sil”, “dinlemeyi bitir”. Yazmaya kaldığın yerden, en sondan devam eder.'**
+  String get voiceSmartCommandsInfo;
+
+  /// Akıllı sesli not / video tam ekran (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Sessizlik — birazdan biter'**
+  String get voiceAutoStopSoon;
+
+  /// Akıllı sesli not / video tam ekran (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Silindi'**
+  String get voiceCmdDeleted;
+
+  /// Akıllı sesli not / video tam ekran (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Değiştirildi'**
+  String get voiceCmdReplaced;
+
+  /// Akıllı sesli not / video tam ekran (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni satır'**
+  String get voiceCmdNewLine;
+
+  /// Akıllı sesli not / video tam ekran (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri alındı'**
+  String get voiceCmdUndone;
+
+  /// Akıllı sesli not / video tam ekran (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Temizlendi'**
+  String get voiceCmdCleared;
+
+  /// Akıllı sesli not / video tam ekran (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekrandan çık'**
+  String get fullscreenExit;
 }
 
 class _AppLocalizationsDelegate

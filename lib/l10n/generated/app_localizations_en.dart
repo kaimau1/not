@@ -5210,4 +5210,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sharedHubInbox => 'Received';
+
+  @override
+  String get voiceAutoStop => 'Stop on silence';
+
+  @override
+  String get voiceAutoStopInfo =>
+      'When you finish speaking, listening stops by itself after a few seconds of silence.';
+
+  @override
+  String get voiceSmartCommands => 'Smart commands';
+
+  @override
+  String get voiceSmartCommandsInfo =>
+      'While speaking you can say: “delete last word”, “delete last two words”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “undo”, “clear all”, “stop listening”. Writing then continues from the end.';
+
+  @override
+  String get voiceAutoStopSoon => 'Silence — stopping soon';
+
+  @override
+  String get voiceCmdDeleted => 'Deleted';
+
+  @override
+  String get voiceCmdReplaced => 'Replaced';
+
+  @override
+  String get voiceCmdNewLine => 'New line';
+
+  @override
+  String get voiceCmdUndone => 'Undone';
+
+  @override
+  String get voiceCmdCleared => 'Cleared';
+
+  @override
+  String get fullscreenExit => 'Exit full screen';
 }

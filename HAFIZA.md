@@ -5048,3 +5048,55 @@ depoyu yeniden biçimliyor (depo biçimsiz dosyalar içeriyor) — yalnız
 değişen dosyaları biçimle. `requests_2026_10_17_e_test.dart` (+8),
 `view_mode_switch_test` sunumun yeni kiplerine güncellendi. Cihazda
 GÖRÜLMEDİ.
+
+## 2026-10-19 — akıllı sesli not (sessizlikte bitiş + düzeltme komutları), sabit videoda klavye ve gerçek tam ekran
+Kullanıcı: "sesli not akışı hem düz hem AI'lı oto sonlanmıyor, sürekli
+dinliyor; akıllı dinleme olmalı · 'son kelimeyi sil', 'şu kelime yanlış
+değiştir' desem yapsın, sonra en sondan yazmaya devam etsin · video sabitken
+klavye açılınca video biraz yukarı itiliyor; tam ekran seçeneği yok · main'e
+merge, APK".
+
+### KÖK NEDEN — sesli not kendiliğinden bitmiyordu
+Levha (`voice_capture_sheet`, "Düz not"/"AI not") ve editörün sade mikrofonu
+(canlı dikte) yalnız "Bitir"/ikinci dokunuşla ya da 10 dk / yerli 2 dk boşta
+sınırıyla duruyordu; MainActivity her sessizlikte tanıyıcıyı yeniden
+başlattığı için konuşma bitse de mikrofon açık kalıyordu. Çözüm Dart'ta:
+`SilenceGate` (core/utils/voice_commands.dart) — yeni metin saati sıfırlar,
+konuşmadan sonra 4 sn ilerleme yoksa biter, hiç konuşulmadıysa 12 sn. Seviye
+(RMS) saati yalnız son metinden sonraki 8 sn içinde uzatır (gürültü sonsuza
+dek tutmasın). Basılı-tut modunda parmak düğmedeyken bitmez. Kayıt yolunda
+(Windows) seviye -30 dBFS üstü = konuşma; orada HİÇ konuşma algılanmadıysa
+kendiliğinden bitmez (mikrofona göre eşik yanlışsa konuşulan çöpe gitmesin).
+Ayar: `voiceAutoStopProvider` (varsayılan açık).
+
+### Akıllı komutlar
+`applyVoiceCommands(raw)` saf işlev, HAM metni her olayda BAŞTAN işler
+(tanıyıcı kuyruğu düzelttiği için yerinde düzenleme çelişirdi; yarım komut
+düz metin görünür, tamamlanınca uygulanır). Komutlar: son (N) kelimeyi sil,
+son cümleyi sil, hepsini sil, X yerine Y yaz, X kelimesini Y ile değiştir,
+X yanlış oldu Y olacak, X'i Y ile değiştir, son kelime Y olacak, yeni satır,
+geri al (yalnız TEK BAŞINA segment — "parayı geri al" komut değil),
+dinlemeyi bitir; İngilizce karşılıkları. Eski kelime metinde YOKSA komut
+sayılmaz ("çay yerine kahve olsun" dokunulmaz). **TUZAK:** Dart regex `\b`
+ASCII'dir — Unicode bakışlarla sınır kuruldu; `'İ'.toLowerCase()` 2 karakter
+üretir, `_lower` uzunluğu korur. Editör diktesinde `dictationMerge` HAM
+metne uygulanır (geriye gitmeme kuralı silmeyi yutmasın), komutlar sonra.
+Ayar: `voiceSmartCommandsProvider` (varsayılan açık). Levhada dinlerken iki
+FilterChip + ⓘ komut listesi, geri sayım şeridi, "✓ Silindi" geri bildirimi.
+
+### Sabit video
+* Klavye: `pinnedMaxHeight` — oran klavyesiz (en büyük görülen) yükseklikten,
+  not satırına en az 72 dp kalacak kadar. Eskiden %70 o anki yükseklikten
+  alındığı için klavye oturunca bölme büzülüyordu.
+* Tam ekran: ⤢ artık `_openPinnedVideoFullscreen` — küçük oynatıcının
+  konumu okunur, durdurulur, `VideoViewerScreen(fullscreen: true)` o andan
+  açılır (`ImmersiveVideo`: immersiveSticky + yatay video yan döner);
+  kapanınca `onClose` konumuyla küçük oynatıcı sarılır, oynuyorsa sürer.
+  Oynatıcı ekranlarının üst çubuğunda da ⤢ var. YouTube'da WebView yığının
+  HEP ilk çocuğu (yer değişirse yeniden kurulur, video baştan başlar).
+
+### Ortam / test
+Flutter 3.44.6 yine `/opt/flutter`. `voice_commands_test` (+22),
+`pinned_keyboard_test` (+3). 11 yeni anahtar 16 dilde. **TUZAK:**
+`flutter gen-l10n` üretilenleri biçimsiz yazıyor — ardından
+`dart format lib/l10n/generated`. Cihazda GÖRÜLMEDİ.
