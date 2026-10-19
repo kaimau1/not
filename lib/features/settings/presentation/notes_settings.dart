@@ -6,7 +6,9 @@ import '../../../core/utils/device_storage.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../folders/data/folder_order.dart';
 import '../../folders/presentation/folder_sheets.dart';
+import '../../notes/presentation/capture_mode_sheet.dart';
 import '../../notes/presentation/filter_sheet.dart' show sortLabel;
+import '../settings_providers.dart';
 import '../../notes/presentation/notes_providers.dart';
 
 /// **AYARLAR → NOTLAR VE KLASÖRLER** (kullanıcı isteği 2026-09-26: "eksik
@@ -195,6 +197,38 @@ class NoteLayoutSetting extends ConsumerWidget {
               ref.read(folderShelfExpandedProvider.notifier).set(v),
         ),
       ],
+    );
+  }
+}
+
+/// İçerikten (fotoğraf, tarama, PDF…) not alırken varsayılan kip (F3.8).
+class CaptureModeSetting extends ConsumerStatefulWidget {
+  const CaptureModeSetting({super.key});
+
+  @override
+  ConsumerState<CaptureModeSetting> createState() => _CaptureModeSettingState();
+}
+
+class _CaptureModeSettingState extends ConsumerState<CaptureModeSetting> {
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final stored = prefs.getString(captureModeDefaultKey);
+    return _ChoiceRow<String>(
+      title: l10n.captureModeSetting,
+      subtitle: l10n.captureModeSettingInfo,
+      values: [CaptureMode.bubbles.name, CaptureMode.classic.name, 'ask'],
+      selected: stored ?? 'ask',
+      label: (v) => v == CaptureMode.bubbles.name
+          ? l10n.captureModeBubbles
+          : v == CaptureMode.classic.name
+          ? l10n.captureModeClassic
+          : l10n.captureModeAsk,
+      onSelected: (v) {
+        prefs.setString(captureModeDefaultKey, v);
+        setState(() {});
+      },
     );
   }
 }

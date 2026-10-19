@@ -43,9 +43,6 @@ abstract final class DocText {
   }
 }
 
-@visibleForTesting
-String extractDocSync(String ext, Uint8List bytes) => _extract((ext, bytes));
-
 String _extract((String, Uint8List) input) {
   final (ext, bytes) = input;
   try {

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dio/dio.dart';
+import 'package:notlar/core/net/json_http.dart';
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -118,27 +118,19 @@ class SpeechTranslation {
 class GeminiService {
   GeminiService(
     this._keyStore, {
-    Dio? dio,
+    JsonHttp? http,
     AiProvider provider = AiProvider.gemini,
     String? Function(AiTask)? taskModel,
     this._builtIn,
   }) : _provider = provider,
        _taskModel = taskModel ?? _noModel,
-       _dio =
-           dio ??
-           Dio(
-             BaseOptions(
-               baseUrl: provider.baseUrl,
-               connectTimeout: const Duration(seconds: 20),
-               receiveTimeout: const Duration(minutes: 3),
-             ),
-           );
+       _http = http ?? JsonHttp(baseUrl: provider.baseUrl);
 
   static String? _noModel(AiTask task) => null;
 
   final ApiKeyStore _keyStore;
   final AiProvider _provider;
-  final Dio _dio;
+  final JsonHttp _http;
 
   /// Seçili sağlayıcı — arayüz mesajlarında ("... ile gönderilemiyor") ve
   /// yetenek kontrollerinde kullanılır.
@@ -171,12 +163,12 @@ class GeminiService {
   /// Anahtarın çalıştığını model listesini çekerek doğrular.
   Future<bool> validateKey(String key) async {
     try {
-      final response = await _dio.get<dynamic>(
+      final response = await _http.get<dynamic>(
         '/models',
-        options: Options(headers: _provider.authHeaders(key)),
+        headers: _provider.authHeaders(key),
       );
       return response.statusCode == 200;
-    } on DioException {
+    } on JsonHttpException {
       return false;
     }
   }
@@ -189,7 +181,7 @@ class GeminiService {
     return key;
   }
 
-  static GeminiException _mapDioError(DioException e) =>
+  static GeminiException _mapDioError(JsonHttpException e) =>
       switch (e.response?.statusCode) {
         400 || 401 || 403 => const GeminiException(
           'API anahtarı geçersiz',
@@ -222,12 +214,12 @@ class GeminiService {
       String? pageToken;
       var page = 0;
       do {
-        final response = await _dio.get<Map<String, dynamic>>(
+        final response = await _http.get<Map<String, dynamic>>(
           '/models',
           queryParameters: _provider == AiProvider.gemini
               ? {'pageSize': 1000, 'pageToken': ?pageToken}
               : null,
-          options: Options(headers: _provider.authHeaders(key)),
+          headers: _provider.authHeaders(key),
         );
         raw.addAll(parseModelList(_provider, response.data));
         // PARANTEZ ŞART: `x as String?` hemen ardından `:` gelince çözümleyici
@@ -243,7 +235,7 @@ class GeminiService {
       } while (pageToken != null && page < _maxModelPages);
       final list = rankModels(_provider, raw);
       if (list.isNotEmpty) return list;
-    } on DioException {
+    } on JsonHttpException {
       // Liste çekilemedi; aşağıdaki yedeğe düşülür.
     }
     if (_provider != AiProvider.gemini) return const [];
@@ -288,13 +280,13 @@ class GeminiService {
         ? prefer
         : _activeModel;
     final ordered = [?first, ...candidates.where((m) => m != first)];
-    DioException? lastSkipped;
+    JsonHttpException? lastSkipped;
     for (final model in ordered) {
       try {
         final result = await run(model);
         if (prefer == null) _activeModel = model;
         return result;
-      } on DioException catch (e) {
+      } on JsonHttpException catch (e) {
         final status = e.response?.statusCode;
         if (status == 404 || status == 429) {
           lastSkipped = e;
@@ -359,16 +351,14 @@ class GeminiService {
     final key = stored;
     // İstek gövdesi sağlayıcının tel biçimine BURADA çevrilir; çağrı yerleri
     // (özet, OCR, sohbet...) Gemini şeklini üretmeye devam eder.
-    final Response<Map<String, dynamic>> response;
+    final JsonResponse<Map<String, dynamic>> response;
     try {
       response = await _withModel(
         key,
-        (model) => _dio.post<Map<String, dynamic>>(
+        (model) => _http.post<Map<String, dynamic>>(
           chatPath(_provider, model),
-          options: Options(
-            headers: _provider.authHeaders(key),
-            receiveTimeout: timeout,
-          ),
+          headers: _provider.authHeaders(key),
+          timeout: timeout,
           data: buildChatBody(
             provider: _provider,
             model: model,
@@ -716,38 +706,32 @@ class GeminiService {
   ) async {
     const root = 'https://generativelanguage.googleapis.com';
     try {
-      final start = await _dio.post<Object?>(
+      final start = await _http.post<Object?>(
         '$root/upload/v1beta/files',
-        options: Options(
-          headers: {
-            ..._provider.authHeaders(key),
-            'X-Goog-Upload-Protocol': 'resumable',
-            'X-Goog-Upload-Command': 'start',
-            'X-Goog-Upload-Header-Content-Length': '$length',
-            'X-Goog-Upload-Header-Content-Type': mimeType,
-          },
-          contentType: 'application/json',
-        ),
+        headers: {
+          ..._provider.authHeaders(key),
+          'X-Goog-Upload-Protocol': 'resumable',
+          'X-Goog-Upload-Command': 'start',
+          'X-Goog-Upload-Header-Content-Length': '$length',
+          'X-Goog-Upload-Header-Content-Type': mimeType,
+        },
         data: {
           'file': {'display_name': p.basename(path)},
         },
       );
-      final uploadUrl = start.headers.value('x-goog-upload-url');
+      final uploadUrl = start.headers['x-goog-upload-url'];
       if (uploadUrl == null || uploadUrl.isEmpty) {
         throw const GeminiException('Dosya yükleme oturumu açılamadı.');
       }
-      final done = await _dio.post<Map<String, dynamic>>(
+      final done = await _http.post<Map<String, dynamic>>(
         uploadUrl,
         data: File(path).openRead(),
-        options: Options(
-          headers: {
-            Headers.contentLengthHeader: '$length',
-            'X-Goog-Upload-Offset': '0',
-            'X-Goog-Upload-Command': 'upload, finalize',
-          },
-          sendTimeout: const Duration(minutes: 15),
-          receiveTimeout: const Duration(minutes: 2),
-        ),
+        headers: {
+          'content-length': '$length',
+          'X-Goog-Upload-Offset': '0',
+          'X-Goog-Upload-Command': 'upload, finalize',
+        },
+        timeout: const Duration(minutes: 17),
       );
       var file = (done.data?['file'] as Map?)?.cast<String, dynamic>();
       if (file == null) {
@@ -758,9 +742,9 @@ class GeminiService {
       // "FAILED_PRECONDITION" alır. 3 sn arayla en çok ~5 dk.
       for (var i = 0; i < 100 && file?['state'] == 'PROCESSING'; i++) {
         await Future<void>.delayed(const Duration(seconds: 3));
-        final polled = await _dio.get<Map<String, dynamic>>(
+        final polled = await _http.get<Map<String, dynamic>>(
           '$root/v1beta/$name',
-          options: Options(headers: _provider.authHeaders(key)),
+          headers: _provider.authHeaders(key),
         );
         file = polled.data;
       }
@@ -772,16 +756,16 @@ class GeminiService {
         uri: file['uri'] as String? ?? '',
         mime: file['mimeType'] as String? ?? mimeType,
       );
-    } on DioException catch (e) {
+    } on JsonHttpException catch (e) {
       throw _mapDioError(e);
     }
   }
 
   Future<void> _deleteGeminiFile(String key, String name) async {
     try {
-      await _dio.delete<Object?>(
+      await _http.delete<Object?>(
         'https://generativelanguage.googleapis.com/v1beta/$name',
-        options: Options(headers: _provider.authHeaders(key)),
+        headers: _provider.authHeaders(key),
       );
     } catch (_) {
       // Silinemezse Google 48 saat sonra kendisi siler.
@@ -878,11 +862,11 @@ class GeminiService {
 
     GeminiException? lastMissing;
     for (final ttsModel in candidates) {
-      final Response<Map<String, dynamic>> response;
+      final JsonResponse<Map<String, dynamic>> response;
       try {
-        response = await _dio.post<Map<String, dynamic>>(
+        response = await _http.post<Map<String, dynamic>>(
           '/models/$ttsModel:generateContent',
-          options: Options(headers: _provider.authHeaders(key)),
+          headers: _provider.authHeaders(key),
           data: {
             'contents': [
               {
@@ -901,7 +885,7 @@ class GeminiService {
             },
           },
         );
-      } on DioException catch (e) {
+      } on JsonHttpException catch (e) {
         // 404 = model bu hesapta yok, 400 = model bu isteği desteklemiyor.
         // İkisi de "sonraki adayı dene" demek; başka her hata (kota, ağ,
         // yetki) zinciri KESER — hepsini denemek kullanıcıyı bekletirdi.
@@ -1331,9 +1315,9 @@ class GeminiService {
     final key = await _apiKey();
     const embedModel = 'models/gemini-embedding-001';
     try {
-      final response = await _dio.post<Map<String, dynamic>>(
+      final response = await _http.post<Map<String, dynamic>>(
         '/$embedModel:batchEmbedContents',
-        options: Options(headers: {'x-goog-api-key': key}),
+        headers: {'x-goog-api-key': key},
         data: {
           'requests': [
             for (final text in texts)
@@ -1366,7 +1350,7 @@ class GeminiService {
               (v as num).toDouble(),
           ],
       ];
-    } on DioException catch (e) {
+    } on JsonHttpException catch (e) {
       throw _mapDioError(e);
     }
   }
@@ -1605,9 +1589,9 @@ class GeminiService {
     for (var round = 0; round < 6; round++) {
       final response = await _withModel(
         key,
-        (model) => _dio.post<Map<String, dynamic>>(
+        (model) => _http.post<Map<String, dynamic>>(
           '/models/$model:generateContent',
-          options: Options(headers: {'x-goog-api-key': key}),
+          headers: {'x-goog-api-key': key},
           data: {
             'contents': contents,
             'tools': [
@@ -1695,9 +1679,9 @@ class GeminiService {
     for (var round = 0; round < 6; round++) {
       final response = await _withModel(
         key,
-        (model) => _dio.post<Map<String, dynamic>>(
+        (model) => _http.post<Map<String, dynamic>>(
           chatPath(_provider, model),
-          options: Options(headers: _provider.authHeaders(key)),
+          headers: _provider.authHeaders(key),
           data: buildToolBody(
             provider: _provider,
             model: model,

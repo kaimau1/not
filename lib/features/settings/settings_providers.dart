@@ -15,6 +15,33 @@ final sharedPreferencesProvider = Provider<SharedPreferences>(
   (ref) => throw UnimplementedError('main() içinde override edilmeli'),
 );
 
+/// Açık/kapalı cihaz tercihi: SharedPreferences'ta [key] anahtarıyla
+/// saklanır (anahtar adları eski sınıflarla AYNI — tercih kaybolmaz).
+class BoolPrefNotifier extends Notifier<bool> {
+  BoolPrefNotifier(this.key, this.defaultValue);
+
+  final String key;
+  final bool defaultValue;
+
+  @override
+  bool build() =>
+      ref.watch(sharedPreferencesProvider).getBool(key) ?? defaultValue;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(key, value);
+  }
+
+  void toggle() => set(!state);
+}
+
+NotifierProvider<BoolPrefNotifier, bool> boolPref(
+  String key, {
+  required bool defaultValue,
+}) => NotifierProvider<BoolPrefNotifier, bool>(
+  () => BoolPrefNotifier(key, defaultValue),
+);
+
 /// Tema seçimi: sistem/açık/koyu artı "kağıt" (hafif saman kağıdı renkli
 /// açık tema). ThemeMode'da karşılığı olmadığından kendi enum'ımız var;
 /// aynı prefs anahtarını kullandığı için eski kayıtlar geriye uyumludur.
@@ -381,21 +408,7 @@ class AiTaskModelsNotifier extends Notifier<Map<AiTask, String?>> {
 /// Editör kapanırken başlıksız kalan nota AI otomatik başlık yazsın mı?
 /// Eski 'auto_title' anahtarı korunur — önceki sürümde açık bırakan
 /// kullanıcının tercihi geri gelir.
-final autoTitleProvider = NotifierProvider<AutoTitleNotifier, bool>(
-  AutoTitleNotifier.new,
-);
-
-class AutoTitleNotifier extends Notifier<bool> {
-  static const _key = 'auto_title';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
+final autoTitleProvider = boolPref('auto_title', defaultValue: true);
 
 /// Notlar kaydedilirken AI otomatik etiket atasın mı?
 /// **PAYLAŞILAN KLASÖR BİLDİRİMLERİ** (kullanıcı isteği 2026-09-04:
@@ -408,43 +421,14 @@ class AutoTitleNotifier extends Notifier<bool> {
 ///
 /// Varsayılan AÇIK: paylaşılan klasör zaten "haberim olsun" diye kurulan
 /// bir şey.
-final sharedNotificationsProvider =
-    NotifierProvider<SharedNotificationsNotifier, bool>(
-      SharedNotificationsNotifier.new,
-    );
-
-class SharedNotificationsNotifier extends Notifier<bool> {
-  static const _key = 'shared_notifications';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
+final sharedNotificationsProvider = boolPref('shared_notifications', defaultValue: true);
 
 /// **ADIMLA/E-POSTAMLA BULUNABİLİRİM** (F1.1, 2026-10-19). Açıkken
 /// `userSearch/{uid}` yazılır ve başkaları beni ad önekiyle ya da tam
 /// e-postayla "Kişi ara"da bulur. Kapalıyken belge silinir; yalnız tam
 /// e-postamı bilen kişi "E-postayla ekle" yoluyla istek gönderebilir.
 /// Varsayılan AÇIK (kullanıcı kararı).
-final discoverableProvider = NotifierProvider<DiscoverableNotifier, bool>(
-  DiscoverableNotifier.new,
-);
-
-class DiscoverableNotifier extends Notifier<bool> {
-  static const _key = 'discoverable';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
+final discoverableProvider = boolPref('discoverable', defaultValue: true);
 
 /// **ÇÖKME RAPORLARI** (F1.9, 2026-10-19): Android'de yakalanmayan hatalar
 /// Firebase Crashlytics'e gitsin mi. Varsayılan AÇIK (kullanıcı kararı);
@@ -469,79 +453,23 @@ class CrashReportsNotifier extends Notifier<bool> {
   }
 }
 
-final autoTagProvider = NotifierProvider<AutoTagNotifier, bool>(
-  AutoTagNotifier.new,
-);
-
-class AutoTagNotifier extends Notifier<bool> {
-  static const _key = 'auto_tag';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
+final autoTagProvider = boolPref('auto_tag', defaultValue: false);
 
 /// Checklist notu AI ile düzeltilirken/çevrilirken işaretli (tamamlanmış)
 /// maddeler düzenleme dışında mı tutulsun? Varsayılan AÇIK: tamamlanan
 /// maddeler AI'a hiç gönderilmez, olduğu gibi korunur — hem işaretleri
 /// kaybolmaz hem de kapsamı yalnız yapılacaklar (işaretsizler) olur.
-final aiSkipCheckedProvider = NotifierProvider<AiSkipCheckedNotifier, bool>(
-  AiSkipCheckedNotifier.new,
-);
-
-class AiSkipCheckedNotifier extends Notifier<bool> {
-  static const _key = 'ai_skip_checked';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
+final aiSkipCheckedProvider = boolPref('ai_skip_checked', defaultValue: true);
 
 /// Liste/checklist öğelerindeki uzun satırlar tam mı gösterilsin?
 /// true (varsayılan): satır kaç satıra gerekirse sarılır, hepsi görünür.
 /// false: satır tek satırda kalır, dokununca (odaklanınca) açılır.
-final expandListItemsProvider = NotifierProvider<ExpandListItemsNotifier, bool>(
-  ExpandListItemsNotifier.new,
-);
-
-class ExpandListItemsNotifier extends Notifier<bool> {
-  static const _key = 'expand_list_items';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
+final expandListItemsProvider = boolPref('expand_list_items', defaultValue: true);
 
 /// Ana ekranın üstündeki tek satırlık "Yeni not..." hızlı yakalama alanı
 /// görünsün mü? Varsayılan GİZLİ (kullanıcı isteği 2026-08-06): satır dikey
 /// yer kaplıyor ve "+" menüsü aynı işi görüyor; isteyen Ayarlar'dan açar.
-final quickCaptureRowProvider = NotifierProvider<QuickCaptureRowNotifier, bool>(
-  QuickCaptureRowNotifier.new,
-);
-
-class QuickCaptureRowNotifier extends Notifier<bool> {
-  static const _key = 'quick_capture_row';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
+final quickCaptureRowProvider = boolPref('quick_capture_row', defaultValue: false);
 
 /// Ana ekrandaki kartlarda satır içi biçimlendirme (renk, vurgu, kalın,
 /// altı çizili, boyut) ÇİZİLSİN Mİ?
@@ -554,21 +482,7 @@ class QuickCaptureRowNotifier extends Notifier<bool> {
 ///
 /// Ayar yalnız GÖSTERİMİ etkiler: metin her iki durumda da aynı, işaretli
 /// hâliyle saklanır.
-final cardRichPreviewProvider = NotifierProvider<CardRichPreviewNotifier, bool>(
-  CardRichPreviewNotifier.new,
-);
-
-class CardRichPreviewNotifier extends Notifier<bool> {
-  static const _key = 'card_rich_preview';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
+final cardRichPreviewProvider = boolPref('card_rich_preview', defaultValue: true);
 
 /// Eklerin buluta otomatik senkronu (Storage'a yükleme) için boyut sınırı, MB.
 /// 0 = sınırsız. Sınırı aşan ek cihazda kalır; not metni yine senkronlanır,
@@ -626,21 +540,7 @@ class VoiceButtonModeNotifier extends Notifier<VoiceButtonMode> {
 /// AKILLI DİNLEME: sesli not sessizlikte kendiliğinden bitsin mi
 /// (bkz. `SilenceGate`). Varsayılan AÇIK — kullanıcı bulgusu 2026-10-19:
 /// "sesli not oto sonlanmıyor, sürekli dinlemeye devam ediyor".
-final voiceAutoStopProvider = NotifierProvider<VoiceAutoStopNotifier, bool>(
-  VoiceAutoStopNotifier.new,
-);
-
-class VoiceAutoStopNotifier extends Notifier<bool> {
-  static const _key = 'voice_auto_stop';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
+final voiceAutoStopProvider = boolPref('voice_auto_stop', defaultValue: true);
 
 /// Sessizlikte bitişin ne kadar bekleyeceği. Kullanıcı isteği 2026-10-19:
 /// düşünerek konuşan için sabit 4 sn kısa kalabilir, hızlı not alan için
@@ -681,41 +581,12 @@ class VoiceSilenceNotifier extends Notifier<VoiceSilence> {
 /// gitmeden tanınır (gizlilik, uçak modu, zayıf bağlantı). Varsayılan
 /// KAPALI: paket yoksa yerli taraf çevrimiçine düşse de ilk denemede kısa bir
 /// gecikme olur; bilerek açan kullanıcı içindir.
-final voiceOfflineProvider = NotifierProvider<VoiceOfflineNotifier, bool>(
-  VoiceOfflineNotifier.new,
-);
-
-class VoiceOfflineNotifier extends Notifier<bool> {
-  static const _key = 'voice_offline';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
+final voiceOfflineProvider = boolPref('voice_offline', defaultValue: false);
 
 /// AKILLI KOMUTLAR: dikte sırasında "son kelimeyi sil", "X yerine Y yaz"
 /// gibi düzeltmeler uygulansın mı (bkz. `applyVoiceCommands`). Varsayılan
 /// AÇIK; bu sözleri gerçekten not olarak yazdırmak isteyen kapatabilir.
-final voiceSmartCommandsProvider =
-    NotifierProvider<VoiceSmartCommandsNotifier, bool>(
-      VoiceSmartCommandsNotifier.new,
-    );
-
-class VoiceSmartCommandsNotifier extends Notifier<bool> {
-  static const _key = 'voice_smart_commands';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
+final voiceSmartCommandsProvider = boolPref('voice_smart_commands', defaultValue: true);
 
 /// Günlük brifing bildirimi ayarları.
 class BriefingSettings {
@@ -827,23 +698,7 @@ final effectiveThemeModeProvider = Provider.autoDispose<ThemeMode>((ref) {
 /// Varsayılan AÇIK: asistanın bütün anlamı eller meşgulken cevabı duymak.
 /// Ayar hem Ayarlar ekranından hem asistan panelindeki "sustur" düğmesinden
 /// değişir — ikisi AYNI değeri okur, biri açıkken diğeri kapalı görünmez.
-final assistantVoiceProvider = NotifierProvider<AssistantVoiceNotifier, bool>(
-  AssistantVoiceNotifier.new,
-);
-
-class AssistantVoiceNotifier extends Notifier<bool> {
-  static const _key = 'assistant_voice';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-
-  void toggle() => set(!state);
-}
+final assistantVoiceProvider = boolPref('assistant_voice', defaultValue: true);
 
 /// Ana ekranın (dashboard) ZEMİNİ: **renk + desen + görsel**.
 ///

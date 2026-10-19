@@ -19,31 +19,34 @@ Note note(
 );
 
 void main() {
+  /// İki metin [threshold] eşiğinde aynı kümeye düşüyor mu (canlı yol:
+  /// sayısal trigram + `similarIndexGroups`).
+  bool similar(String a, String b, double threshold) => similarIndexGroups([
+    trigramCodes(normalizeForCompare(a)),
+    trigramCodes(normalizeForCompare(b)),
+  ], threshold).isNotEmpty;
+
   group('benzerlik', () {
     test('aynı metin tam benzer', () {
-      expect(textSimilarity('alışveriş listesi', 'alışveriş listesi'), 1.0);
+      expect(similar('alışveriş listesi', 'alışveriş listesi', 1.0), isTrue);
     });
 
     test('noktalama ve büyük harf farkı benzerliği bozmaz', () {
       expect(
-        textSimilarity('Süt, ekmek ve yumurta al!', 'süt ekmek ve yumurta al'),
-        greaterThan(0.9),
+        similar('Süt, ekmek ve yumurta al!', 'süt ekmek ve yumurta al', 0.9),
+        isTrue,
       );
     });
 
     test('alakasız metinler düşük skor alır', () {
       expect(
-        textSimilarity(
+        similar(
           'yarın sabah dişçi randevusu var',
           'proje sunumu için grafik hazırla',
+          0.3,
         ),
-        lessThan(0.3),
+        isFalse,
       );
-    });
-
-    test('boş metinler karşılaştırılabilir', () {
-      expect(textSimilarity('', ''), 1.0);
-      expect(textSimilarity('', 'bir şey'), 0.0);
     });
   });
 

@@ -27,7 +27,7 @@ String _slide(String body) =>
 
 void main() {
   group('docx', () {
-    test('aynı paragraftaki metin parçaları tek satırda birleşir', () {
+    test('aynı paragraftaki metin parçaları tek satırda birleşir', () async {
       // Word bir cümleyi biçim değiştikçe birden çok <w:r> parçasına böler;
       // her parça ayrı satır olsaydı metin didik didik okunurdu.
       final bytes = _zip({
@@ -37,12 +37,12 @@ void main() {
         ),
       });
       expect(
-        extractDocSync('docx', bytes).trim().split('\n'),
+        (await DocText.extractFromBytes('docx', bytes)).trim().split('\n'),
         ['Merhaba dünya', 'İkinci satır'],
       );
     });
 
-    test('metin kutusundaki iç paragraf iki kez okunmaz', () {
+    test('metin kutusundaki iç paragraf iki kez okunmaz', () async {
       final bytes = _zip({
         'word/document.xml': _docx(
           '<w:p><w:r><w:t>Dış</w:t></w:r>'
@@ -50,19 +50,25 @@ void main() {
           '</w:p>',
         ),
       });
-      expect(extractDocSync('docx', bytes).trim().split('\n'), ['Dışİç']);
+      expect(
+        (await DocText.extractFromBytes('docx', bytes)).trim().split('\n'),
+        ['Dışİç'],
+      );
     });
 
-    test('document.xml yoksa hata verir', () {
-      expect(
-        () => extractDocSync('docx', _zip({'docProps/app.xml': '<a/>'})),
+    test('document.xml yoksa hata verir', () async {
+      await expectLater(
+        () => DocText.extractFromBytes(
+          'docx',
+          _zip({'docProps/app.xml': '<a/>'}),
+        ),
         throwsA(isA<DocTextException>()),
       );
     });
   });
 
   group('pptx', () {
-    test('slaytlar sayısal sırayla okunur', () {
+    test('slaytlar sayısal sırayla okunur', () async {
       // Asıl tuzak bu: dizgi sıralamasında slide10 < slide2 olduğu için
       // sunum karışık okunurdu.
       final bytes = _zip({
@@ -77,14 +83,17 @@ void main() {
         ),
       });
       expect(
-        extractDocSync('pptx', bytes).trim().split('\n'),
+        (await DocText.extractFromBytes('pptx', bytes)).trim().split('\n'),
         ['birinci', 'ikinci', 'onuncu'],
       );
     });
 
-    test('slayt yoksa hata verir', () {
-      expect(
-        () => extractDocSync('pptx', _zip({'ppt/presentation.xml': '<a/>'})),
+    test('slayt yoksa hata verir', () async {
+      await expectLater(
+        () => DocText.extractFromBytes(
+          'pptx',
+          _zip({'ppt/presentation.xml': '<a/>'}),
+        ),
         throwsA(isA<DocTextException>()),
       );
     });
@@ -109,13 +118,13 @@ void main() {
     });
   });
 
-  test('desteklenmeyen uzantı reddedilir', () {
+  test('desteklenmeyen uzantı reddedilir', () async {
     expect(DocText.supports('a.docx'), isTrue);
     expect(DocText.supports('a.pptx'), isTrue);
     expect(DocText.supports('a.TXT'), isTrue);
     expect(DocText.supports('a.xlsx'), isFalse);
-    expect(
-      () => extractDocSync('xlsx', Uint8List(0)),
+    await expectLater(
+      () => DocText.extractFromBytes('xlsx', Uint8List(0)),
       throwsA(isA<DocTextException>()),
     );
   });

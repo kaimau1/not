@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/utils/stable_value.dart';
@@ -123,27 +122,7 @@ void main() {
     });
   });
 
-  group('F2.5 sayısal trigram yolu eski küme ölçüsüyle aynı', () {
-    const pairs = [
-      ('alışveriş listesi süt ekmek yumurta', 'alisveris listesi sut ekmek'),
-      ('Toplantı notları: bütçe ve plan', 'toplantı notları — bütçe ve plan!'),
-      ('Bugün yapılacaklar listesi uzun', 'Yarın gidilecek yerler kısa'),
-      ('aynı metin burada duruyor', 'aynı metin burada duruyor'),
-    ];
-    for (final (a, b) in pairs) {
-      test('"$a" ~ "$b"', () {
-        final expected = textSimilarity(a, b);
-        final ca = trigramCodes(normalizeForCompare(a));
-        final cb = trigramCodes(normalizeForCompare(b));
-        final above = similarIndexGroups([ca, cb], expected - 1e-9);
-        final below = similarIndexGroups([ca, cb], expected + 1e-9);
-        expect(above, [
-          [0, 1],
-        ], reason: 'benzerlik $expected eşikte kümelenmeli');
-        expect(below, isEmpty, reason: 'eşiğin üstünde kümelenmemeli');
-      });
-    }
-
+  group('F2.5 sayısal trigram', () {
     test('kodlar sıralı ve tekil', () {
       final codes = trigramCodes('ababab');
       expect(codes, [...codes]..sort());

@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/net/json_http.dart';
 import 'package:notlar/features/ai/data/ai_provider.dart';
 import 'package:notlar/features/ai/data/api_key_store.dart';
 import 'package:notlar/features/ai/data/gemini_service.dart';
@@ -21,31 +23,19 @@ class _KeyStore extends ApiKeyStore {
 }
 
 /// İstekleri kaydeden, yola göre yanıt veren sahte ağ.
-class _Router implements HttpClientAdapter {
-  final requests = <RequestOptions>[];
+class _Router {
+  final requests = <http.BaseRequest>[];
   final bodies = <String>[];
 
-  @override
-  void close({bool force = false}) {}
-
-  @override
-  Future<ResponseBody> fetch(
-    RequestOptions options,
-    Stream<Uint8List>? requestStream,
-    Future<void>? cancelFuture,
-  ) async {
-    requests.add(options);
-    var sent = '';
-    if (requestStream != null) {
-      final chunks = await requestStream.toList();
-      sent = utf8.decode([for (final c in chunks) ...c], allowMalformed: true);
-    }
-    bodies.add(sent);
-    final path = options.uri.path;
+  late final client = MockClient.streaming((request, bodyStream) async {
+    requests.add(request);
+    final chunks = await bodyStream.toList();
+    bodies.add(
+      utf8.decode([for (final c in chunks) ...c], allowMalformed: true),
+    );
+    final path = request.url.path;
     Map<String, dynamic> body = const {};
-    Map<String, List<String>> headers = {
-      Headers.contentTypeHeader: [Headers.jsonContentType],
-    };
+    var headers = {'content-type': 'application/json'};
     if (path.endsWith('/models')) {
       body = {'models': <Object>[]};
     } else if (path.contains(':generateContent')) {
@@ -63,9 +53,9 @@ class _Router implements HttpClientAdapter {
     } else if (path.endsWith('/upload/v1beta/files')) {
       headers = {
         ...headers,
-        'x-goog-upload-url': ['https://upload.example/session-1'],
+        'x-goog-upload-url': 'https://upload.example/session-1',
       };
-    } else if (options.uri.host == 'upload.example') {
+    } else if (request.url.host == 'upload.example') {
       body = {
         'file': {
           'name': 'files/abc',
@@ -75,8 +65,12 @@ class _Router implements HttpClientAdapter {
         },
       };
     }
-    return ResponseBody.fromString(jsonEncode(body), 200, headers: headers);
-  }
+    return http.StreamedResponse(
+      Stream.value(utf8.encode(jsonEncode(body))),
+      200,
+      headers: headers,
+    );
+  });
 }
 
 ({GeminiService service, _Router router}) _make({
@@ -84,12 +78,10 @@ class _Router implements HttpClientAdapter {
   AiProvider provider = AiProvider.gemini,
 }) {
   final router = _Router();
-  final dio = Dio(BaseOptions(baseUrl: provider.baseUrl))
-    ..httpClientAdapter = router;
   return (
     service: GeminiService(
       _KeyStore(key),
-      dio: dio,
+      http: JsonHttp(baseUrl: provider.baseUrl, client: router.client),
       provider: provider,
       taskModel: (_) => 'gemini-test',
     ),
@@ -99,7 +91,7 @@ class _Router implements HttpClientAdapter {
 
 Map<String, dynamic> _generateBody(_Router router) {
   final i = router.requests.indexWhere(
-    (r) => r.uri.path.contains(':generateContent'),
+    (r) => r.url.path.contains(':generateContent'),
   );
   return jsonDecode(router.bodies[i]) as Map<String, dynamic>;
 }
@@ -146,7 +138,7 @@ void main() {
     );
     expect(text, '[0:00] Merhaba dünya');
     final start = router.requests.firstWhere(
-      (r) => r.uri.path.endsWith('/upload/v1beta/files'),
+      (r) => r.url.path.endsWith('/upload/v1beta/files'),
     );
     expect(start.headers['X-Goog-Upload-Command'], 'start');
     expect(
@@ -161,7 +153,7 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
     expect(
       router.requests.any(
-        (r) => r.method == 'DELETE' && r.uri.path.endsWith('/files/abc'),
+        (r) => r.method == 'DELETE' && r.url.path.endsWith('/files/abc'),
       ),
       isTrue,
     );

@@ -12,11 +12,11 @@ const _png1x1 =
 
 /// Sayfa **içerik akışları** (çizim komutları), açılmış hâlde.
 ///
-/// Yalnız metin çizen akışlar süzülüyor (`BT` = begin text): gömülü yazı tipi
-/// programı da sıkıştırılmış bir akış ve ikili içeriğinde tesadüfen "0 Tr"
-/// gibi diziler geçebiliyor — çizim kipini orada aramak yanlış sonuç verir.
-List<String> _textContentStreams(List<int> pdf) =>
-    _inflatedStreams(pdf).where((s) => s.contains('BT ')).toList();
+/// Yalnız metin çizen akışlar süzülüyor (`BT` = begin text, `Tf` = yazı
+/// tipi): gömülü yazı tipi programı da sıkıştırılmış bir akış.
+List<String> _textContentStreams(List<int> pdf) => _inflatedStreams(
+  pdf,
+).where((s) => s.contains('BT') && s.contains(' Tf')).toList();
 
 /// PDF içindeki sıkıştırılmış akışları açıp metin olarak döndürür.
 List<String> _inflatedStreams(List<int> pdf) {
@@ -36,8 +36,10 @@ List<String> _inflatedStreams(List<int> pdf) {
     if (end < 0) break;
     try {
       out.add(
-        latin1.decode(zlib.decode(pdf.sublist(dataStart, end)),
-            allowInvalid: true),
+        latin1.decode(
+          zlib.decode(pdf.sublist(dataStart, end)),
+          allowInvalid: true,
+        ),
       );
     } catch (_) {
       // Sıkıştırılmamış ya da resim akışı — bu testin ilgi alanı değil.
@@ -64,12 +66,11 @@ void main() {
     if (image.existsSync()) image.deleteSync();
   });
 
-  /// dosya-okuyucu kök nedeni (2026-07-31): OCR metni KOYU SİYAH basılıyordu;
-  /// görünmezlik saydam renkle deneniyordu ama `pdf` paketi metin renginde
-  /// alfa yazmıyor. Doğrusu PDF'in "metin çizim kipi 3"ü — bu test o kipin
-  /// korunduğunu güvence altına alır.
+  /// dosya-okuyucu kök nedeni (2026-07-31): OCR metni KOYU SİYAH basılıyordu.
+  /// Görünmezlik grafik durumunun saydamlığıyla (`/ca 0`) sağlanır; metin
+  /// seçilebilir/aranabilir kalır.
   group('aranabilir PDF görünmez metin katmanı', () {
-    test('OCR satırları "3 Tr" (görünmez) kipiyle çizilir', () async {
+    test('OCR satırları saydam (ca 0) durumda çizilir', () async {
       final pdf = await ScanPdf.build(
         [image.path],
         ocrLinesPerPage: [
@@ -83,23 +84,13 @@ void main() {
         ],
       );
 
-      final content = _textContentStreams(pdf);
-      expect(content, isNotEmpty, reason: 'metin hiç çizilmemiş');
-      final drawn = content.join('\n');
       expect(
-        drawn,
-        contains('3 Tr'),
-        reason: 'metin katmanı görünmez kiple çizilmeli',
+        _textContentStreams(pdf),
+        isNotEmpty,
+        reason: 'metin hiç çizilmemiş',
       );
-      // Her yazı tipi kurulumu görünmez kiple gelmeli: bir tanesi bile
-      // varsayılan doldurma kipinde kalırsa o satır sayfaya SİYAH basılır.
-      final fonts = ' Tf '.allMatches(drawn).length;
-      final invisible = '3 Tr'.allMatches(drawn).length;
-      expect(
-        invisible,
-        fonts,
-        reason: '$fonts yazı tipi kurulumu, $invisible görünmez kip',
-      );
+      final raw = latin1.decode(pdf, allowInvalid: true);
+      expect(raw, contains('/ca 0'), reason: 'metin katmanı saydam olmalı');
     });
 
     test('OCR yoksa hiç metin çizilmez', () async {

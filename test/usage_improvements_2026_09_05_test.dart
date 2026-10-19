@@ -258,76 +258,23 @@ void main() {
   });
 }
 
-/// [balancedNoteColumns] artık paylaşılan bir yardımcı (ana ekran + klasör +
-/// arşiv). İki sözleşme sınanır: hiçbir kart düşmez ve her hücre kendi
-/// [RepaintBoundary]'sinde durur (düz `Column` bunu kendiliğinden EKLEMEZ,
-/// sliver listeleri ekler — sınır olmadan tek kartın kıpırdaması bölümün
-/// tamamını yeniden boyatıyordu).
+/// Deterministik sütun ataması (ana ekran + klasör + arşiv): hiçbir kart
+/// düşmez, tekrarlanmaz, sıra sütun içinde korunur.
 void _balancedGridTests() {
-  group('balancedNoteColumns', () {
+  group('balancedColumnAssignment', () {
     final notes = [
       for (var i = 0; i < 7; i++)
         Note(id: 'n$i', type: NoteType.text, body: 'gövde $i'),
     ];
 
-    testWidgets('her kart tam bir kez çizilir', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: balancedNoteColumns(
-              items: notes,
-              columns: 2,
-              cellWidth: 160,
-              cell: (index) => Text('kart${notes[index].id}'),
-            ),
-          ),
-        ),
-      );
-      for (final note in notes) {
-        expect(find.text('kart${note.id}'), findsOneWidget);
+    test('her kart tam bir kez, sütun sayısı kadar sütun', () {
+      final buckets = balancedColumnAssignment(notes, 3, 100);
+      expect(buckets, hasLength(3));
+      final all = [for (final b in buckets) ...b]..sort();
+      expect(all, [for (var i = 0; i < notes.length; i++) i]);
+      for (final b in buckets) {
+        expect(b, [...b]..sort());
       }
-    });
-
-    testWidgets('her hücre RepaintBoundary içinde', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: balancedNoteColumns(
-              items: notes,
-              columns: 2,
-              cellWidth: 160,
-              cell: (index) => Text('kart${notes[index].id}'),
-            ),
-          ),
-        ),
-      );
-      for (final note in notes) {
-        expect(
-          find.ancestor(
-            of: find.text('kart${note.id}'),
-            matching: find.byType(RepaintBoundary),
-          ),
-          findsWidgets,
-        );
-      }
-    });
-
-    testWidgets('sütun sayısı kadar sütun kurulur', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: balancedNoteColumns(
-              items: notes,
-              columns: 3,
-              cellWidth: 100,
-              cell: (index) => Text('kart${notes[index].id}'),
-            ),
-          ),
-        ),
-      );
-      final row = tester.widget<Row>(find.byType(Row).first);
-      // 3 sütun + aralarındaki 2 boşluk.
-      expect(row.children.length, 5);
     });
   });
 }

@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'dart:math' as math;
+
+import 'dart:ui' show Rect, Size;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
+import 'package:image/image.dart' as img;
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 import '../../domain/attachment.dart' show PageBubbleRect;
 import '../note_pdf.dart' show NotePdf;
@@ -16,16 +19,15 @@ import 'scan_ocr.dart';
 ///
 /// [ocrLinesPerPage] verilirse i. listedeki satırlar i. sayfaya **görünmez
 /// metin** olarak yazılır → PDF içinde arama/kopyalama çalışır ("aranabilir
-/// PDF"). Görünmezlik PDF'in kendi "metin çizim kipi 3"üyle
-/// ([PdfTextRenderingMode.invisible]) sağlanır — saydam RENK İŞE YARAMAZ:
-/// `pdf` paketi doldurma renginde alfa kanalını yazmıyor, metin simsiyah
-/// basılıyordu (dosya-okuyucu, 2026-07-31 kök nedeni). Her satır kendi
-/// kutusuna sıkıştırılır (FittedBox) ve katman resim dikdörtgeniyle kırpılır
-/// — taşma fiziksel olarak imkânsız.
+/// PDF"). Görünmezlik grafik durumunun SAYDAMLIĞIYLA (`ca 0`) sağlanır:
+/// metin seçilebilir/aranabilir ama çizilmez. Her satır kendi kutusuna
+/// yatay ölçekle sıkıştırılır ve katman resim dikdörtgeniyle kırpılır.
 ///
 /// Üretim compute() izolesinde koşar (sayfa başına MB'larca görsel kodlama);
 /// font baytları ANA izolede yüklenir (rootBundle izolede yok — bkz. NotePdf).
 abstract final class ScanPdf {
+  static const _a4 = Size(595.28, 841.89);
+
   /// [imgWidth]×[imgHeight] görselin [build] sayfasında KAPLADIĞI alan,
   /// sayfanın oranı (0–1) olarak — yerleşim [_buildInIsolate]'teki ile
   /// birebir (A4, yatay görselde yatay kâğıt, ortalanmış "contain").
@@ -36,12 +38,8 @@ abstract final class ScanPdf {
       return const PageBubbleRect(0, 0, 1, 1);
     }
     final landscape = imgWidth > imgHeight;
-    final pageWidth = landscape
-        ? PdfPageFormat.a4.height
-        : PdfPageFormat.a4.width;
-    final pageHeight = landscape
-        ? PdfPageFormat.a4.width
-        : PdfPageFormat.a4.height;
+    final pageWidth = landscape ? _a4.height : _a4.width;
+    final pageHeight = landscape ? _a4.width : _a4.height;
     final sx = pageWidth / imgWidth;
     final sy = pageHeight / imgHeight;
     final scale = sx < sy ? sx : sy;
@@ -86,14 +84,33 @@ abstract final class ScanPdf {
   }
 
   static Future<Uint8List> _buildInIsolate(_ScanPdfRequest r) async {
-    final font = r.fontBytes == null ? null : pw.Font.ttf(r.fontBytes!);
-    final doc = pw.Document();
+    final fontData = r.fontBytes?.buffer.asUint8List(
+      r.fontBytes!.offsetInBytes,
+      r.fontBytes!.lengthInBytes,
+    );
+    // Satır kutusuna göre punto; aynı punto tek yazı tipi örneğini paylaşır
+    // (her örnek belgeye ayrı gömülürdü).
+    final fonts = <double, PdfFont>{};
+    PdfFont fontOf(double size) =>
+        fonts[size] ??= PdfTrueTypeFont(fontData!, size);
+    final doc = PdfDocument();
+    doc.pageSettings.margins.all = 0;
     for (var i = 0; i < r.imagePaths.length; i++) {
       final bytes = await File(r.imagePaths[i]).readAsBytes();
-      final image = pw.MemoryImage(bytes);
-      final imgWidth = image.width;
-      final imgHeight = image.height;
-      if (imgWidth == null || imgHeight == null || imgWidth == 0) {
+      PdfBitmap bitmap;
+      try {
+        bitmap = PdfBitmap(bytes);
+      } catch (_) {
+        // PdfBitmap yalnız JPEG/PNG okur; diğerleri PNG'ye çevrilir.
+        final decoded = img.decodeImage(bytes);
+        if (decoded == null) {
+          throw const FormatException('Bu görsel biçimi çözülemedi.');
+        }
+        bitmap = PdfBitmap(img.encodePng(decoded));
+      }
+      final imgWidth = bitmap.width;
+      final imgHeight = bitmap.height;
+      if (imgWidth == 0 || imgHeight == 0) {
         throw const FormatException('Bu görsel biçimi çözülemedi.');
       }
 
@@ -101,8 +118,8 @@ abstract final class ScanPdf {
       // olduğu için sayfa oranı görselden alınsaydı PDF'te sayfa boyu sayfa
       // sayfa oynardı. Yatay görselde kâğıt yatay çevrilir.
       final landscape = imgWidth > imgHeight;
-      final pageWidth = landscape ? PdfPageFormat.a4.height : PdfPageFormat.a4.width;
-      final pageHeight = landscape ? PdfPageFormat.a4.width : PdfPageFormat.a4.height;
+      final pageWidth = landscape ? _a4.height : _a4.width;
+      final pageHeight = landscape ? _a4.width : _a4.height;
       final sx = pageWidth / imgWidth;
       final sy = pageHeight / imgHeight;
       final scale = sx < sy ? sx : sy; // contain: kırpma yok, esnetme yok
@@ -114,72 +131,43 @@ abstract final class ScanPdf {
           ? r.ocrLinesPerPage[i]
           : const <_OcrLineData>[];
 
-      doc.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat(pageWidth, pageHeight),
-          margin: pw.EdgeInsets.zero,
-          build: (context) => pw.Stack(
-            fit: pw.StackFit.expand,
-            children: [
-              pw.Positioned(
-                left: offsetX,
-                top: offsetY,
-                child: pw.SizedBox(
-                  width: drawWidth,
-                  height: drawHeight,
-                  child: pw.Image(image, fit: pw.BoxFit.fill),
-                ),
-              ),
-              if (ocrLines.isNotEmpty)
-                pw.Positioned(
-                  left: offsetX,
-                  top: offsetY,
-                  child: pw.SizedBox(
-                    width: drawWidth,
-                    height: drawHeight,
-                    child: pw.ClipRect(
-                      child: pw.Stack(
-                        children: [
-                          for (final line in ocrLines)
-                            pw.Positioned(
-                              left: line.left * scale,
-                              top: line.top * scale,
-                              child: pw.SizedBox(
-                                width: (line.width * scale).clamp(
-                                  1.0,
-                                  drawWidth,
-                                ),
-                                height: (line.height * scale).clamp(
-                                  1.0,
-                                  drawHeight,
-                                ),
-                                child: pw.FittedBox(
-                                  fit: pw.BoxFit.fill,
-                                  child: pw.Text(
-                                    line.text,
-                                    maxLines: 1,
-                                    softWrap: false,
-                                    style: pw.TextStyle(
-                                      font: font,
-                                      fontSize: 12,
-                                      renderingMode:
-                                          PdfTextRenderingMode.invisible,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      );
+      final section = doc.sections!.add();
+      section.pageSettings.size = Size(pageWidth, pageHeight);
+      section.pageSettings.margins.all = 0;
+      final g = section.pages.add().graphics;
+      final frame = Rect.fromLTWH(offsetX, offsetY, drawWidth, drawHeight);
+      g.drawImage(bitmap, frame);
+      if (fontData != null && ocrLines.isNotEmpty) {
+        g.save();
+        g.setClip(bounds: frame);
+        g.setTransparency(0);
+        final probe = fontOf(12);
+        for (final line in ocrLines) {
+          final w = (line.width * scale).clamp(1.0, drawWidth);
+          final h = (line.height * scale).clamp(1.0, drawHeight);
+          final natural = probe.measureString(line.text);
+          if (natural.width <= 0 || natural.height <= 0) continue;
+          final fit = 12 * math.min(w / natural.width, h / natural.height);
+          final size = math.max(1.0, (fit * 2).floorToDouble() / 2);
+          g.drawString(
+            line.text,
+            fontOf(size),
+            brush: PdfSolidBrush(PdfColor(0, 0, 0)),
+            bounds: Rect.fromLTWH(
+              offsetX + line.left * scale,
+              offsetY + line.top * scale,
+              w + 1,
+              h + 1,
+            ),
+            format: PdfStringFormat(wordWrap: PdfWordWrapType.none),
+          );
+        }
+        g.restore();
+      }
     }
-    return doc.save();
+    final out = Uint8List.fromList(doc.saveSync());
+    doc.dispose();
+    return out;
   }
 }
 

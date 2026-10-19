@@ -1,55 +1,49 @@
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'dart:ui' show Color;
+import 'dart:ui' show Color, Offset, Rect;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 import '../../../core/utils/rich_text.dart';
 import '../../../core/utils/web_blob.dart';
 
-/// Notu paylaşılabilir bir PDF'e çevirir.
+/// Notu paylaşılabilir bir PDF'e çevirir (Syncfusion — uygulamadaki TEK PDF
+/// yazma kütüphanesi; görüntüleme pdfrx'te).
 ///
-/// `printing` paketi bilerek eklenmedi: dosya üretilip `share_plus` ile
-/// paylaşılıyor, önizleme de zaten kurulu olan `pdfrx` ile yapılıyor. Böylece
-/// native kod taşıyan bir bağımlılık daha girmiyor.
+/// Yerleşim elle yapılır: satır içi biçim (kalın/italik/renk/boyut) bir
+/// satırda karışık yazı tipi ister, Syncfusion'ın hazır metin öğesi tek yazı
+/// tipiyle çizer. Kelimeler ölçülüp satırlara dizilir, sayfa dolunca yeni
+/// sayfaya geçilir.
 ///
-/// Font gömmek zorunlu: `pdf` paketinin hazır Helvetica'sı WinAnsi kodlamalı,
-/// içinde ı ğ ş İ YOK — Türkçe not olduğu gibi bozuk çıkardı.
+/// Font gömmek zorunlu: hazır Helvetica WinAnsi kodlamalı, içinde ı ğ ş İ YOK.
 abstract final class NotePdf {
   static const fontAsset = 'assets/fonts/PTSans-Regular.ttf';
 
-  /// Kalın ve italik kesimler. `pdf` paketi bu kesimleri SENTEZLEMEZ: dosyası
-  /// verilmezse `fontWeight: bold` yazan metin düz çıkar (kullanıcı bulgusu
-  /// 2026-08-08: "yazı biçimi de aktarılmıyor").
+  /// Kalın ve italik kesimler — sentezlenmez, dosyası verilmezse düz çıkar.
   static const boldFontAsset = 'assets/fonts/PTSans-Bold.ttf';
   static const italicFontAsset = 'assets/fonts/PTSans-Italic.ttf';
 
-  /// PDF üretimi (yerleşim + font alt kümeleme + görsel kodlama) compute()
-  /// izolesinde koşar: 20 görselli bir not ana izolede saniyelerce kare
-  /// düşürüyor, ilerleme çubuğu bile oynayamıyordu. Font baytları ve tarih
-  /// etiketi ANA izolede hazırlanır — rootBundle ve yerel ayarlı DateFormat
-  /// (sembolleri flutter_localizations ana izolede yükler) izolede yok.
+  /// PDF üretimi compute() izolesinde koşar (20 görselli not ana izolede
+  /// saniyelerce kare düşürüyordu). Font baytları ve tarih etiketi ANA
+  /// izolede hazırlanır — rootBundle ve yerel ayarlı DateFormat izolede yok.
   static Future<Uint8List> build({
     required String title,
     required String content,
     DateTime? date,
     List<ExportImage> images = const [],
     List<Color> palette = const [],
-    PdfPageFormat format = PdfPageFormat.a4,
   }) async {
     final fontBytes = await rootBundle.load(fontAsset);
     final boldBytes = await rootBundle.load(boldFontAsset);
     final italicBytes = await rootBundle.load(italicFontAsset);
-    final dateLabel = date == null
-        ? null
-        : DateFormat('d MMMM y').format(date);
+    final dateLabel = date == null ? null : DateFormat('d MMMM y').format(date);
     return compute(
       _buildInIsolate,
       _PdfRequest(
@@ -60,175 +54,21 @@ abstract final class NotePdf {
         fontBytes: fontBytes,
         boldBytes: boldBytes,
         italicBytes: italicBytes,
-        // Renk paleti ANA izolede okunur: `Color` Flutter türü, izolede tema
-        // yok. ARGB tamsayısına çevrilip taşınır.
+        // `Color` izolede tema olmadan anlamsız: ARGB tamsayısı taşınır.
         palette: [for (final c in palette) c.toARGB32()],
-        format: format,
       ),
     );
   }
 
   static Future<Uint8List> _buildInIsolate(_PdfRequest r) async {
-    final font = pw.Font.ttf(r.fontBytes);
-    final bold = pw.Font.ttf(r.boldBytes);
-    final italic = pw.Font.ttf(r.italicBytes);
-    final title = r.title;
-    final format = r.format;
-    final doc = pw.Document(title: title.isEmpty ? 'Not' : title);
-    final lines = parseLines(r.content);
-
-    doc.addPage(
-      pw.MultiPage(
-        pageFormat: format,
-        theme: pw.ThemeData.withFont(
-          base: font,
-          bold: bold,
-          italic: italic,
-          boldItalic: bold,
-        ),
-        margin: const pw.EdgeInsets.fromLTRB(52, 56, 52, 44),
-        footer: (context) => pw.Container(
-          alignment: pw.Alignment.centerRight,
-          child: pw.Text(
-            '${context.pageNumber} / ${context.pagesCount}',
-            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
-          ),
-        ),
-        build: (context) => [
-          if (title.trim().isNotEmpty)
-            _rich(
-              title.trim(),
-              const pw.TextStyle(fontSize: 21, lineSpacing: 2),
-              r.palette,
-            ),
-          if (r.dateLabel != null)
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(top: 4),
-              child: pw.Text(
-                r.dateLabel!,
-                style: const pw.TextStyle(
-                  fontSize: 9.5,
-                  color: PdfColors.grey600,
-                ),
-              ),
-            ),
-          if (title.trim().isNotEmpty || r.dateLabel != null)
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(top: 12, bottom: 6),
-              child: pw.Divider(height: 1, color: PdfColors.grey400),
-            ),
-          // Görseller (el yazısı çizimleri dahil) NOTTAKİ YERLERİNE girer:
-          // hangi satırdan önce durduğu, genişliği ve hizası nottan gelir.
-          // Düzen bilgisi olmayan görsel (ör. paylaş menüsünden dışa aktarma)
-          // eskisi gibi metnin sonuna eklenir.
-          ..._withImages(lines, r.images, format, r.palette),
-        ],
-      ),
-    );
-    return doc.save();
+    final w = _PdfWriter(r);
+    w.render();
+    return w.save();
   }
 
   /// Satır yüksekliği (punto + satır aralığı) — bir görselin YANINA kaç satır
   /// sığdığı bununla hesaplanır.
   static const _lineHeight = 16.0;
-
-  /// Satırları ve görselleri nottaki sıraya göre birleştirir: her görsel,
-  /// [ExportImage.line] ile verilen satırdan ÖNCE gelir.
-  ///
-  /// **METİN GÖRSELİN YANINDAN AKAR** (kullanıcı isteği 2026-08-09: "dışa
-  /// aktarırken not içinde sarılan görseller aynı bulunduğu yerde olmalı,
-  /// yanında metin olanın ayrı bir sayfa olarak değil").
-  ///
-  /// KÖK NEDEN: görsel HER ZAMAN tam genişlik bir blok olarak iki satırın
-  /// arasına konuyordu. Notta görselin yanından akan metin, dışa aktarmada
-  /// görselin ALTINA düşüyor; yarım sayfa boş kalıyor, uzun görselde de
-  /// metin bir sonraki sayfaya kayıyordu — belge nottaki düzene hiç
-  /// benzemiyordu.
-  ///
-  /// Çözüm sayfanın kendi düzenini taklit eder: sayfa genişliğinin en çok
-  /// %70'ini kaplayan ve bir kenara yaslı bir görsel FLOAT sayılır; yüksekliği
-  /// kadar satır (bkz. [_lineHeight]) onun yanına, bir `Row`un öbür gözüne
-  /// dizilir. Ortalanmış ya da geniş görsel eskisi gibi tam genişlik blok
-  /// kalır — yanına anlamlı bir metin sütunu sığmaz.
-  ///
-  /// SAYFA TAŞMASI: `MultiPage` tek bir `Row`u ikiye bölemez. Görsel sayfanın
-  /// yarısından uzunsa float'tan vazgeçilir (blok olarak konur), yanına
-  /// konacak satır sayısı da sayfaya sığacak kadarla sınırlanır.
-  static List<pw.Widget> _withImages(
-    List<PdfLine> lines,
-    List<ExportImage> images,
-    PdfPageFormat format,
-    List<int> palette,
-  ) {
-    final placed = [
-      for (final i in images)
-        if (i.line != null) i,
-    ]..sort((a, b) => a.line!.compareTo(b.line!));
-    final trailing = [
-      for (final i in images)
-        if (i.line == null) i,
-    ];
-    final contentWidth = format.width - 52 - 52;
-    final maxHeight = format.height - 56 - 44 - 24;
-    final out = <pw.Widget>[];
-    var next = 0;
-    var index = 0;
-    while (index < lines.length) {
-      if (next < placed.length && placed[next].line! <= index) {
-        final image = placed[next++];
-        final size = _imageSize(image, contentWidth, maxHeight);
-        final float = _floatSide(image);
-        // Yanına kaç satır sığar: görselin yüksekliği kadar, ama sayfanın
-        // yarısını aşmayacak biçimde.
-        final capacity = math.min(
-          (size.h / _lineHeight).floor(),
-          (maxHeight * 0.5 / _lineHeight).floor(),
-        );
-        final beside = <PdfLine>[];
-        if (float != null && capacity > 0) {
-          while (beside.length < capacity && index < lines.length) {
-            // Araya başka bir görsel giriyorsa sarma orada biter.
-            if (next < placed.length && placed[next].line! <= index) break;
-            beside.add(lines[index++]);
-          }
-        }
-        if (beside.isEmpty) {
-          out.add(_imageWidget(image, format));
-          continue;
-        }
-        final column = pw.Expanded(
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [for (final l in beside) _lineWidget(l, palette)],
-          ),
-        );
-        final picture = pw.SizedBox(
-          width: size.w,
-          height: size.h,
-          child: pw.Image(pw.MemoryImage(image.bytes), fit: pw.BoxFit.contain),
-        );
-        out.add(
-          pw.Padding(
-            padding: const pw.EdgeInsets.symmetric(vertical: 6),
-            child: pw.Row(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: float == ExportAlign.left
-                  ? [picture, pw.SizedBox(width: 12), column]
-                  : [column, pw.SizedBox(width: 12), picture],
-            ),
-          ),
-        );
-        continue;
-      }
-      out.add(_lineWidget(lines[index], palette));
-      index++;
-    }
-    for (; next < placed.length; next++) {
-      out.add(_imageWidget(placed[next], format));
-    }
-    out.addAll([for (final i in trailing) _imageWidget(i, format)]);
-    return out;
-  }
 
   /// Görsel metnin YANINA konabilir mi, konacaksa hangi kenara?
   /// Ortalanmış ya da genişliğin %70'inden büyük görsel float OLMAZ.
@@ -257,32 +97,6 @@ abstract final class NotePdf {
       w = h * iw / ih;
     }
     return (w: w, h: h);
-  }
-
-  /// Görseli nottaki oranıyla ölçekler; sayfadan taşmasın diye yükseklik de
-  /// sınırlanır (MultiPage taşan tek parçayı bölemez, hata verirdi).
-  static pw.Widget _imageWidget(ExportImage image, PdfPageFormat format) {
-    final contentWidth = format.width - 52 - 52;
-    final maxHeight = format.height - 56 - 44 - 24;
-    final size = _imageSize(image, contentWidth, maxHeight);
-    final w = size.w;
-    final h = size.h;
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 6),
-      child: pw.Align(
-        alignment: switch (image.align) {
-          ExportAlign.left => pw.Alignment.centerLeft,
-          ExportAlign.right => pw.Alignment.centerRight,
-          ExportAlign.center => pw.Alignment.center,
-        },
-        child: pw.Image(
-          pw.MemoryImage(image.bytes),
-          width: w,
-          height: h,
-          fit: pw.BoxFit.contain,
-        ),
-      ),
-    );
   }
 
   /// PDF'i geçici dosyaya yazar; hem önizleme hem paylaşma bunu kullanır.
@@ -368,159 +182,470 @@ abstract final class NotePdf {
     return out;
   }
 
-  static pw.Widget _lineWidget(PdfLine line, List<int> palette) =>
-      switch (line.kind) {
-        PdfLineKind.blank => pw.SizedBox(height: 8),
-        PdfLineKind.paragraph => pw.Padding(
-          padding: const pw.EdgeInsets.only(bottom: 4),
-          child: _rich(line.text, _bodyStyle, palette),
-        ),
-        PdfLineKind.checked || PdfLineKind.unchecked => _row(
-          _checkbox(line.kind == PdfLineKind.checked),
-          line.text,
-          palette,
-          strike: line.kind == PdfLineKind.checked,
-        ),
-        PdfLineKind.numbered => _row(
-          pw.SizedBox(
-            width: 20,
-            child: pw.Text(
-              line.marker,
-              style: const pw.TextStyle(
-                fontSize: 11.5,
-                color: PdfColors.grey700,
-              ),
-            ),
-          ),
-          line.text,
-          palette,
-        ),
-        PdfLineKind.bullet => _row(
-          pw.SizedBox(
-            width: 14,
-            child: pw.Text('•', style: const pw.TextStyle(fontSize: 11.5)),
-          ),
-          line.text,
-          palette,
-        ),
-      };
+  static final _checkboxPattern = RegExp(r'^\s*\[([ xX])\]\s*(.*)$');
+  static final _numberedPattern = RegExp(r'^\s*(\d{1,3})[.)]\s+(.*)$');
+  static final _bulletPattern = RegExp(r'^\s*[-•*]\s+(.*)$');
+}
 
-  static const _bodyStyle = pw.TextStyle(fontSize: 11.5, lineSpacing: 2.5);
-
-  /// Satır içi biçimi (kalın/italik/altı çizili/renk/boyut/opaklık) taşıyan
-  /// metin parçası.
-  ///
-  /// İşaretler artık SÖKÜLMÜYOR, çözümlenip PDF'e uygulanıyor (kullanıcı
-  /// bulgusu 2026-08-08: "yazı biçimi de aktarılmıyor"). Çözümleme
-  /// uygulamayla TEK kopya: `richSegments` — ekranda da aynı ayrıştırıcı
-  /// çalışıyor, iki yerde ayrı yazılsaydı çıktı nottakine benzemezdi.
-  static pw.Widget _rich(String text, pw.TextStyle base, List<int> palette) {
-    final segments = richSegments(text);
-    if (segments.length == 1 && segments.first.mark.isEmpty) {
-      return pw.Text(text, style: base);
-    }
-    return pw.RichText(
-      text: pw.TextSpan(
-        style: base,
-        children: [
-          for (final seg in segments)
-            pw.TextSpan(text: seg.text, style: _styleOf(base, seg.mark, palette)),
-        ],
+/// Sayfa sayfa yerleşim yapan yazıcı (bkz. [NotePdf]).
+class _PdfWriter {
+  _PdfWriter(this.r)
+    : _regular = r.fontBytes.buffer.asUint8List(
+        r.fontBytes.offsetInBytes,
+        r.fontBytes.lengthInBytes,
       ),
+      _bold = r.boldBytes.buffer.asUint8List(
+        r.boldBytes.offsetInBytes,
+        r.boldBytes.lengthInBytes,
+      ),
+      _italic = r.italicBytes.buffer.asUint8List(
+        r.italicBytes.offsetInBytes,
+        r.italicBytes.lengthInBytes,
+      );
+
+  final _PdfRequest r;
+  final Uint8List _regular;
+  final Uint8List _bold;
+  final Uint8List _italic;
+
+  static const _left = 52.0;
+  static const _right = 52.0;
+  static const _top = 56.0;
+  static const _bottom = 44.0;
+  static const _bodySize = 11.5;
+  static const _bodySpacing = 2.5;
+
+  final doc = PdfDocument();
+  late PdfPage _page;
+  double _y = _top;
+  final _fonts = <String, PdfFont>{};
+
+  double get _pageWidth => _page.getClientSize().width;
+  double get _pageHeight => _page.getClientSize().height;
+  double get _contentWidth => _pageWidth - _left - _right;
+
+  /// Sayfa altındaki numara şeridi için ayrılan pay.
+  double get _limit => _pageHeight - _bottom - 18;
+
+  PdfFont _font(
+    bool bold,
+    bool italic,
+    double size, {
+    bool under = false,
+    bool strike = false,
+  }) {
+    final key = '$bold$italic$size$under$strike';
+    return _fonts[key] ??= PdfTrueTypeFont(
+      bold ? _bold : (italic ? _italic : _regular),
+      size,
+      multiStyle: [
+        if (under) PdfFontStyle.underline,
+        if (strike) PdfFontStyle.strikethrough,
+      ],
     );
   }
 
-  static pw.TextStyle _styleOf(
-    pw.TextStyle base,
+  void _newPage() {
+    _page = doc.pages.add();
+    _y = _top;
+  }
+
+  void _ensure(double h) {
+    if (_y + h > _limit && _y > _top) _newPage();
+  }
+
+  void render() {
+    doc.pageSettings.size = PdfPageSize.a4;
+    doc.pageSettings.margins.all = 0;
+    if (r.title.isNotEmpty) doc.documentInformation.title = r.title;
+    _newPage();
+    final title = r.title.trim();
+    if (title.isNotEmpty) {
+      _rich(title, 21, 2, _left, _contentWidth);
+    }
+    if (r.dateLabel != null) {
+      _y += 4;
+      _plain(r.dateLabel!, 9.5, PdfColor(117, 117, 117));
+    }
+    if (title.isNotEmpty || r.dateLabel != null) {
+      _y += 12;
+      _page.graphics.drawLine(
+        PdfPen(PdfColor(189, 189, 189), width: 1),
+        Offset(_left, _y),
+        Offset(_pageWidth - _right, _y),
+      );
+      _y += 7;
+    }
+    _withImages(NotePdf.parseLines(r.content));
+    _footers();
+  }
+
+  Uint8List save() {
+    final bytes = Uint8List.fromList(doc.saveSync());
+    doc.dispose();
+    return bytes;
+  }
+
+  void _footers() {
+    final count = doc.pages.count;
+    final font = _font(false, false, 9);
+    for (var i = 0; i < count; i++) {
+      final page = doc.pages[i];
+      final size = page.getClientSize();
+      page.graphics.drawString(
+        '${i + 1} / $count',
+        font,
+        brush: PdfSolidBrush(PdfColor(117, 117, 117)),
+        bounds: Rect.fromLTWH(
+          _left,
+          size.height - _bottom - 12,
+          size.width - _left - _right,
+          12,
+        ),
+        format: PdfStringFormat(alignment: PdfTextAlignment.right),
+      );
+    }
+  }
+
+  void _plain(String text, double size, PdfColor color) {
+    final font = _font(false, false, size);
+    final h = size * 1.3;
+    _ensure(h);
+    _page.graphics.drawString(
+      text,
+      font,
+      brush: PdfSolidBrush(color),
+      bounds: Rect.fromLTWH(_left, _y, _contentWidth, h),
+    );
+    _y += h;
+  }
+
+  /// Satırları ve görselleri nottaki sıraya göre birleştirir: her görsel,
+  /// [ExportImage.line] ile verilen satırdan ÖNCE gelir.
+  ///
+  /// METİN GÖRSELİN YANINDAN AKAR: sayfa genişliğinin en çok %70'ini kaplayan
+  /// ve bir kenara yaslı görsel FLOAT sayılır; yüksekliği kadar satır onun
+  /// yanındaki sütuna dizilir. Ortalanmış ya da geniş görsel tam genişlik
+  /// blok kalır. Görsel sayfanın yarısından uzunsa yanına konacak satır
+  /// sayısı sayfaya sığacak kadarla sınırlanır.
+  void _withImages(List<PdfLine> lines) {
+    final placed = [
+      for (final i in r.images)
+        if (i.line != null) i,
+    ]..sort((a, b) => a.line!.compareTo(b.line!));
+    final trailing = [
+      for (final i in r.images)
+        if (i.line == null) i,
+    ];
+    final maxHeight = _limit - _top - 6;
+    var next = 0;
+    var index = 0;
+    while (index < lines.length) {
+      if (next < placed.length && placed[next].line! <= index) {
+        final image = placed[next++];
+        final size = NotePdf._imageSize(image, _contentWidth, maxHeight);
+        final float = NotePdf._floatSide(image);
+        final capacity = math.min(
+          (size.h / NotePdf._lineHeight).floor(),
+          (maxHeight * 0.5 / NotePdf._lineHeight).floor(),
+        );
+        final beside = <PdfLine>[];
+        if (float != null && capacity > 0) {
+          while (beside.length < capacity && index < lines.length) {
+            if (next < placed.length && placed[next].line! <= index) break;
+            beside.add(lines[index++]);
+          }
+        }
+        if (beside.isEmpty) {
+          _imageBlock(image, size);
+          continue;
+        }
+        _ensure(size.h + 12);
+        _y += 6;
+        final top = _y;
+        final imageLeft = float == ExportAlign.left
+            ? _left
+            : _pageWidth - _right - size.w;
+        _drawImage(image, Rect.fromLTWH(imageLeft, top, size.w, size.h));
+        final columnLeft = float == ExportAlign.left
+            ? _left + size.w + 12
+            : _left;
+        final columnWidth = _contentWidth - size.w - 12;
+        for (final l in beside) {
+          _line(l, columnLeft, columnWidth);
+        }
+        _y = math.max(_y, top + size.h) + 6;
+        continue;
+      }
+      _line(lines[index], _left, _contentWidth);
+      index++;
+    }
+    for (; next < placed.length; next++) {
+      final image = placed[next];
+      _imageBlock(image, NotePdf._imageSize(image, _contentWidth, maxHeight));
+    }
+    for (final image in trailing) {
+      _imageBlock(image, NotePdf._imageSize(image, _contentWidth, maxHeight));
+    }
+  }
+
+  void _imageBlock(ExportImage image, ({double w, double h}) size) {
+    _ensure(size.h + 12);
+    _y += 6;
+    final left = switch (image.align) {
+      ExportAlign.left => _left,
+      ExportAlign.right => _pageWidth - _right - size.w,
+      ExportAlign.center => _left + (_contentWidth - size.w) / 2,
+    };
+    _drawImage(image, Rect.fromLTWH(left, _y, size.w, size.h));
+    _y += size.h + 6;
+  }
+
+  /// PdfBitmap yalnız JPEG/PNG okur; başka biçim (WebP, GIF…) PNG'ye çevrilir.
+  void _drawImage(ExportImage image, Rect bounds) {
+    PdfBitmap? bitmap;
+    try {
+      bitmap = PdfBitmap(image.bytes);
+    } catch (_) {
+      final decoded = img.decodeImage(image.bytes);
+      if (decoded == null) return;
+      bitmap = PdfBitmap(img.encodePng(decoded));
+    }
+    _page.graphics.drawImage(bitmap, bounds);
+  }
+
+  void _line(PdfLine line, double x, double width) {
+    switch (line.kind) {
+      case PdfLineKind.blank:
+        _y += 8;
+      case PdfLineKind.paragraph:
+        _rich(line.text, _bodySize, _bodySpacing, x, width);
+        _y += 4;
+      case PdfLineKind.checked || PdfLineKind.unchecked:
+        final checked = line.kind == PdfLineKind.checked;
+        _leading(
+          x,
+          width,
+          18,
+          line.text,
+          strike: checked,
+          draw: (y) {
+            _checkbox(x, y + 2, checked);
+          },
+        );
+      case PdfLineKind.numbered:
+        _leading(
+          x,
+          width,
+          20,
+          line.text,
+          draw: (y) {
+            _page.graphics.drawString(
+              line.marker,
+              _font(false, false, _bodySize),
+              brush: PdfSolidBrush(PdfColor(97, 97, 97)),
+              bounds: Rect.fromLTWH(x, y, 20, _bodySize * 1.3),
+            );
+          },
+        );
+      case PdfLineKind.bullet:
+        _leading(
+          x,
+          width,
+          14,
+          line.text,
+          draw: (y) {
+            _page.graphics.drawString(
+              '•',
+              _font(false, false, _bodySize),
+              brush: PdfSolidBrush(PdfColor(0, 0, 0)),
+              bounds: Rect.fromLTWH(x, y, 14, _bodySize * 1.3),
+            );
+          },
+        );
+    }
+  }
+
+  void _leading(
+    double x,
+    double width,
+    double indent,
+    String text, {
+    bool strike = false,
+    required void Function(double y) draw,
+  }) {
+    _ensure(_bodySize * 1.3 + _bodySpacing);
+    final top = _y;
+    final page = _page;
+    _rich(
+      text,
+      _bodySize,
+      _bodySpacing,
+      x + indent,
+      width - indent,
+      strike: strike,
+    );
+    // Satır başı işareti metnin İLK satırıyla aynı sayfada.
+    final saved = _page;
+    _page = page;
+    draw(top);
+    _page = saved;
+    _y += 5;
+  }
+
+  /// Onay kutusu glif değil çizim: PT Sans'ta ✓ ve ☐ YOK.
+  void _checkbox(double x, double y, bool checked) {
+    final g = _page.graphics;
+    final box = Rect.fromLTWH(x, y, 11, 11);
+    g.drawRectangle(
+      pen: PdfPen(PdfColor(120, 144, 156), width: .8),
+      brush: checked ? PdfSolidBrush(PdfColor(69, 90, 100)) : null,
+      bounds: box,
+    );
+    if (checked) {
+      final pen = PdfPen(PdfColor(255, 255, 255), width: 1.4);
+      g
+        ..drawLine(
+          pen,
+          Offset(x + 2.4, y + 11 - 5.6),
+          Offset(x + 4.5, y + 11 - 3.2),
+        )
+        ..drawLine(
+          pen,
+          Offset(x + 4.5, y + 11 - 3.2),
+          Offset(x + 8.6, y + 11 - 7.7),
+        );
+    }
+  }
+
+  /// Satır içi biçimi (kalın/italik/altı çizili/renk/boyut/opaklık) taşıyan
+  /// metni [x]..[x]+[width] aralığına sarar. Çözümleme uygulamayla TEK kopya:
+  /// `richSegments` — ekranda da aynı ayrıştırıcı çalışıyor.
+  void _rich(
+    String text,
+    double baseSize,
+    double spacing,
+    double x,
+    double width, {
+    bool strike = false,
+  }) {
+    final runs = <_Run>[];
+    for (final seg in richSegments(text)) {
+      final run = _runStyle(seg.mark, baseSize, strike);
+      for (final m in RegExp(r'\S+\s*|\s+').allMatches(seg.text)) {
+        runs.add(_Run(m.group(0)!, run.font, run.brush, run.size, run.opacity));
+      }
+    }
+    if (runs.isEmpty) {
+      _y += baseSize * 1.3 + spacing;
+      return;
+    }
+    var line = <(double, _Run)>[];
+    var lineWidth = 0.0;
+    var lineSize = baseSize;
+    void flush() {
+      final h = lineSize * 1.3 + spacing;
+      _ensure(h);
+      for (final (dx, run) in line) {
+        _drawRun(run, x + dx, _y + (lineSize - run.size), h);
+      }
+      _y += h;
+      line = [];
+      lineWidth = 0;
+      lineSize = baseSize;
+    }
+
+    for (var run in runs) {
+      var w = run.font.measureString(run.text).width;
+      final trimmed = run.font.measureString(run.text.trimRight()).width;
+      if (lineWidth + trimmed > width && line.isNotEmpty) flush();
+      // Tek kelime bile sığmıyorsa harf harf bölünür.
+      while (trimmed > width && run.text.length > 1 && w > width) {
+        var cut = run.text.length - 1;
+        while (cut > 1 &&
+            run.font.measureString(run.text.substring(0, cut)).width > width) {
+          cut--;
+        }
+        line.add((0, run.copy(run.text.substring(0, cut))));
+        lineSize = math.max(lineSize, run.size);
+        flush();
+        run = run.copy(run.text.substring(cut));
+        w = run.font.measureString(run.text).width;
+      }
+      line.add((lineWidth, run));
+      lineWidth += w;
+      lineSize = math.max(lineSize, run.size);
+    }
+    if (line.isNotEmpty) flush();
+  }
+
+  void _drawRun(_Run run, double x, double y, double h) {
+    final g = _page.graphics;
+    if (run.opacity < 1) {
+      g.save();
+      g.setTransparency(run.opacity);
+    }
+    g.drawString(
+      run.text,
+      run.font,
+      brush: run.brush,
+      bounds: Rect.fromLTWH(
+        x,
+        y,
+        run.font.measureString(run.text).width + 2,
+        h,
+      ),
+    );
+    if (run.opacity < 1) g.restore();
+  }
+
+  ({PdfFont font, PdfBrush brush, double size, double opacity}) _runStyle(
     RichMark mark,
-    List<int> palette,
+    double base,
+    bool strike,
   ) {
     // TUZAK: `richStepValue` indeks null iken son kademeyi döner — boyutta bu
     // 2.0'dır, yani biçimsiz metin iki katına çıkardı. Kademe yoksa çarpan 1.
     final size =
-        (base.fontSize ?? 11.5) *
+        base *
         (mark.size == null ? 1.0 : richStepValue(kRichSizeSteps, mark.size));
     final opacity = mark.opacity == null
         ? 1.0
         : richStepValue(kRichOpacitySteps, mark.opacity);
+    final palette = r.palette;
     final argb = mark.color == null || palette.isEmpty
         ? null
         : palette[(mark.color! - 1).clamp(0, palette.length - 1)];
-    return base.copyWith(
-      fontSize: size,
-      fontWeight: mark.bold ? pw.FontWeight.bold : null,
-      fontStyle: mark.italic ? pw.FontStyle.italic : null,
-      decoration: mark.underline ? pw.TextDecoration.underline : null,
-      color: argb == null
-          ? (opacity < 1 ? PdfColor(0, 0, 0, opacity) : null)
-          : PdfColor(
-              ((argb >> 16) & 0xFF) / 255,
-              ((argb >> 8) & 0xFF) / 255,
-              (argb & 0xFF) / 255,
-              opacity,
-            ),
+    final color = argb != null
+        ? PdfColor((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF)
+        : strike
+        ? PdfColor(117, 117, 117)
+        : PdfColor(0, 0, 0);
+    return (
+      font: _font(
+        mark.bold,
+        mark.italic,
+        size,
+        under: mark.underline,
+        strike: strike,
+      ),
+      brush: PdfSolidBrush(color),
+      size: size,
+      opacity: opacity,
     );
   }
+}
 
-  static pw.Widget _row(
-    pw.Widget leading,
-    String text,
-    List<int> palette, {
-    bool strike = false,
-  }) =>
-      pw.Padding(
-        padding: const pw.EdgeInsets.only(bottom: 5),
-        child: pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            leading,
-            pw.Expanded(
-              child: _rich(
-                text,
-                pw.TextStyle(
-                  fontSize: 11.5,
-                  lineSpacing: 2.5,
-                  color: strike ? PdfColors.grey600 : null,
-                  decoration: strike ? pw.TextDecoration.lineThrough : null,
-                ),
-                palette,
-              ),
-            ),
-          ],
-        ),
-      );
+class _Run {
+  const _Run(this.text, this.font, this.brush, this.size, this.opacity);
 
-  /// Onay kutusu glif değil çizim: PT Sans'ta ✓ (U+2713) ve ☐ (U+2610) YOK,
-  /// karakterle yazılsa .notdef kutucuğu basardı.
-  static pw.Widget _checkbox(bool checked) => pw.Container(
-    width: 11,
-    height: 11,
-    margin: const pw.EdgeInsets.only(top: 2, right: 7),
-    decoration: pw.BoxDecoration(
-      border: pw.Border.all(color: PdfColors.blueGrey400, width: .8),
-      borderRadius: pw.BorderRadius.circular(2),
-      color: checked ? PdfColors.blueGrey700 : null,
-    ),
-    child: checked
-        ? pw.CustomPaint(
-            size: const PdfPoint(11, 11),
-            painter: (canvas, size) {
-              // PDF'te başlangıç noktası SOL ALT, y yukarı büyür.
-              canvas
-                ..setStrokeColor(PdfColors.white)
-                ..setLineWidth(1.4)
-                ..moveTo(2.4, 5.6)
-                ..lineTo(4.5, 3.2)
-                ..lineTo(8.6, 7.7)
-                ..strokePath();
-            },
-          )
-        : null,
-  );
+  final String text;
+  final PdfFont font;
+  final PdfBrush brush;
+  final double size;
+  final double opacity;
 
-  static final _checkboxPattern = RegExp(r'^\s*\[([ xX])\]\s*(.*)$');
-  static final _numberedPattern = RegExp(r'^\s*(\d{1,3})[.)]\s+(.*)$');
-  static final _bulletPattern = RegExp(r'^\s*[-•*]\s+(.*)$');
+  _Run copy(String text) => _Run(text, font, brush, size, opacity);
 }
 
 /// [NotePdf._buildInIsolate]'a taşınan istek — tüm alanlar izoleler arası
@@ -535,7 +660,6 @@ class _PdfRequest {
     required this.boldBytes,
     required this.italicBytes,
     required this.palette,
-    required this.format,
   });
 
   final String title;
@@ -548,7 +672,6 @@ class _PdfRequest {
 
   /// Satır içi renklerin ARGB karşılıkları (palet indeksleri notta saklanıyor).
   final List<int> palette;
-  final PdfPageFormat format;
 }
 
 /// Dışa aktarmaya (PDF/Word) girecek bir görsel: baytlar + piksel boyutları

@@ -4576,9 +4576,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bırak: balonlu görünüm (üstte belge, altta not)';
 
   @override
-  String get captureModeLast => 'Son seçimin';
-
-  @override
   String get captureModeChangeLater =>
       'Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.';
 
@@ -5332,4 +5329,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get crashTestAction => 'Çökert';
+
+  @override
+  String get captureModeSetting => 'İçerikten not açılışı';
+
+  @override
+  String get captureModeSettingInfo =>
+      'Fotoğraf, tarama, PDF, sunum ve görselden not alırken. İlk seçimin varsayılan olur.';
+
+  @override
+  String get captureModeAsk => 'Her seferinde sor';
 }

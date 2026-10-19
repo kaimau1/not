@@ -48,22 +48,7 @@ class ListPaneWidthNotifier extends Notifier<double> {
 /// geniş ekran tasarımı). Uzun bir notu yazarken ya da PDF'in yanında not
 /// alırken listenin kapladığı üçte bir ekran geri kazanılır. Ray'daki
 /// düğme ve Ctrl+\ ile açılıp kapanır; tercih kalıcıdır.
-final listPaneCollapsedProvider =
-    NotifierProvider<ListPaneCollapsedNotifier, bool>(
-      ListPaneCollapsedNotifier.new,
-    );
-
-class ListPaneCollapsedNotifier extends Notifier<bool> {
-  static const _key = 'list_pane_collapsed';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
-
-  void toggle() {
-    state = !state;
-    ref.read(sharedPreferencesProvider).setBool(_key, state);
-  }
-}
+final listPaneCollapsedProvider = boolPref('list_pane_collapsed', defaultValue: false);
 
 /// Geniş ekranda solda not listesi, sağda açık not gösterir.
 ///

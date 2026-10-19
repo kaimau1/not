@@ -134,7 +134,6 @@ class FavoriteFiltersNotifier extends Notifier<Set<String>> {
 
 String filterFavoriteToken(NoteFilter filter) => 'filter:${filter.name}';
 String tagFavoriteToken(String tag) => 'tag:$tag';
-String folderFavoriteToken(String folderId) => 'folder:$folderId';
 String sortFavoriteToken(NoteSort sort) => 'sort:${sort.name}';
 
 /// Seçili sıralama ölçütü (kalıcı). Sabitlenmiş notlar dashboard'da yine ayrı
@@ -230,69 +229,19 @@ List<(NoteBucket, List<Note>)> dateBuckets(List<Note> notes, DateTime now) {
 /// için 92 px'lik bir satır açıyor ve notlar ekranın altına düşüyordu.
 /// Açıkken eski karo rafı geri gelir — klasörleri bir arada görmek isteyen
 /// kullanıcı tek dokunuşla ona geçer ve tercihi hatırlanır.
-final folderShelfExpandedProvider =
-    NotifierProvider<FolderShelfExpandedNotifier, bool>(
-      FolderShelfExpandedNotifier.new,
-    );
-
-class FolderShelfExpandedNotifier extends Notifier<bool> {
-  static const _key = 'folder_shelf_expanded';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
-
-  void toggle() => set(!state);
-
-  /// Ayarlar → Notlar ve klasörler'den doğrudan seçim.
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
+final folderShelfExpandedProvider = boolPref('folder_shelf_expanded', defaultValue: false);
 
 /// Ana ekran ızgara mı liste mi (kullanıcı tercihi, kalıcı).
 ///
 /// Izgara masonry kartlar, liste tek sütun kompakt satırlar. Sütun SAYISI
 /// ayrı bir tercih ([gridColumnsProvider], iki parmak zoom) — liste görünümü
 /// "1 sütunluk ızgara" DEĞİL, satır yerleşimi bambaşka.
-final noteListViewProvider = NotifierProvider<NoteListViewNotifier, bool>(
-  NoteListViewNotifier.new,
-);
-
-class NoteListViewNotifier extends Notifier<bool> {
-  static const _key = 'note_list_view';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
-
-  void toggle() => set(!state);
-
-  /// Ayarlar → Notlar ve klasörler'den doğrudan seçim.
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
+final noteListViewProvider = boolPref('note_list_view', defaultValue: false);
 
 /// Editörün dibindeki ek şeridi açık mı (kullanıcı tercihi, kalıcı)? Şerit
 /// artık sayfanın altında durur ve kapatılabilir; tercih notlar arasında
 /// korunur — her notta yeniden kapatmak gerekmesin.
-final attachmentsExpandedProvider =
-    NotifierProvider<AttachmentsExpandedNotifier, bool>(
-      AttachmentsExpandedNotifier.new,
-    );
-
-class AttachmentsExpandedNotifier extends Notifier<bool> {
-  static const _key = 'attachments_expanded';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
-
-  void toggle() {
-    state = !state;
-    ref.read(sharedPreferencesProvider).setBool(_key, state);
-  }
-}
+final attachmentsExpandedProvider = boolPref('attachments_expanded', defaultValue: true);
 
 /// [duplicateNotesProvider]'ın trigram önbelleği: not içeriği değişmedikçe
 /// kodlar yeniden hesaplanmaz. Ayrı bir autoDispose sağlayıcıda ki harita

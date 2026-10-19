@@ -31,22 +31,7 @@ import '../../settings/settings_providers.dart';
 ///  * OCR yalnız Android/iOS'ta (ML Kit — bkz. [ScanOcr.supported]).
 ///  * Her turda en çok [_batch] ek işlenir: uzun bir defterde arama kutusu
 ///    donmasın, indeks tur tur dolsun.
-final attachmentSearchProvider =
-    NotifierProvider<AttachmentSearchNotifier, bool>(
-      AttachmentSearchNotifier.new,
-    );
-
-class AttachmentSearchNotifier extends Notifier<bool> {
-  static const _key = 'attachment_search';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
+final attachmentSearchProvider = boolPref('attachment_search', defaultValue: false);
 
 /// noteId → o notun eklerinden çıkarılmış metin. Seçenek kapalıyken BOŞ:
 /// kapalı bir seçeneğin bellekte indeks tutması yanlış olurdu.

@@ -1,8 +1,9 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/net/json_http.dart';
 import 'package:notlar/features/ai/data/ai_provider.dart';
 import 'package:notlar/features/ai/data/api_key_store.dart';
 import 'package:notlar/features/ai/data/gemini_service.dart';
@@ -21,34 +22,19 @@ class _FakeKeyStore extends ApiKeyStore {
   Future<String?> read(AiProvider provider) async => 'test-anahtari';
 }
 
-/// Ağa çıkmadan sabit bir JSON gövdesi döndüren dio adaptörü.
-class _StubAdapter implements HttpClientAdapter {
-  _StubAdapter(this.body);
-
-  final Map<String, dynamic> body;
-
-  @override
-  void close({bool force = false}) {}
-
-  @override
-  Future<ResponseBody> fetch(
-    RequestOptions options,
-    Stream<Uint8List>? requestStream,
-    Future<void>? cancelFuture,
-  ) async => ResponseBody.fromString(
-    jsonEncode(body),
-    200,
-    headers: {
-      Headers.contentTypeHeader: [Headers.jsonContentType],
-    },
-  );
-}
-
-GeminiService _service(Map<String, dynamic> response) {
-  final dio = Dio(BaseOptions(baseUrl: AiProvider.gemini.baseUrl))
-    ..httpClientAdapter = _StubAdapter(response);
-  return GeminiService(const _FakeKeyStore(), dio: dio);
-}
+GeminiService _service(Map<String, dynamic> response) => GeminiService(
+  const _FakeKeyStore(),
+  http: JsonHttp(
+    baseUrl: AiProvider.gemini.baseUrl,
+    client: MockClient(
+      (_) async => http.Response(
+        jsonEncode(response),
+        200,
+        headers: {'content-type': 'application/json; charset=utf-8'},
+      ),
+    ),
+  ),
+);
 
 void main() {
   test('vektörler okunur', () async {
@@ -69,18 +55,12 @@ void main() {
 
   test('boş yanıt GeminiException olur — arama düz metne düşebilsin', () {
     final service = _service(const {'embeddings': []});
-    expect(
-      () => service.embedTexts(['bir']),
-      throwsA(isA<GeminiException>()),
-    );
+    expect(() => service.embedTexts(['bir']), throwsA(isA<GeminiException>()));
   });
 
   test('alan hiç yoksa da GeminiException', () {
     final service = _service(const {});
-    expect(
-      () => service.embedTexts(['bir']),
-      throwsA(isA<GeminiException>()),
-    );
+    expect(() => service.embedTexts(['bir']), throwsA(isA<GeminiException>()));
   });
 
   test('boş metin listesi ağa hiç çıkmaz', () async {

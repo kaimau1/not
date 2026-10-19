@@ -2117,7 +2117,6 @@
   "docViewSwitchedClassic": "Klasik görünüm: belge sayfada bir ek. Balonlar ve sayfa notları saklandı.",
   "docViewTextKept": "Notun yazısı klasik görünümde duruyor.",
   "docViewDropBubbles": "Bırak: balonlu görünüm (üstte belge, altta not)",
-  "captureModeLast": "Son seçimin",
   "captureModeChangeLater": "Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.",
   "attachmentSyncTitle": "Ek senkronu",
   "driveSectionTitle": "Ekler Google Drive'ında",
@@ -2599,5 +2598,8 @@
   "crashTestAction": "Çökert",
   "@crashTestAction": {
     "description": "Faz 1 (2026-10-19)"
-  }
+  },
+  "captureModeSetting": "İçerikten not açılışı",
+  "captureModeSettingInfo": "Fotoğraf, tarama, PDF, sunum ve görselden not alırken. İlk seçimin varsayılan olur.",
+  "captureModeAsk": "Her seferinde sor"
 }

@@ -20,37 +20,6 @@ String normalizeForCompare(String text) => text
     .replaceAll(RegExp(r'\s+'), ' ')
     .trim();
 
-/// Metnin üçlü harf kümeleri. Sınırlarda boşluk eklenmez: kelime sırası
-/// değişse de örtüşme korunsun ("süt ekmek" ≈ "ekmek süt" değil ama
-/// "alışveriş listesi" ile "alisveris listesi" yakın kalsın).
-Set<String> textTrigrams(String normalized) {
-  if (normalized.length < 3) {
-    return normalized.isEmpty ? const {} : {normalized};
-  }
-  return {
-    for (var i = 0; i + 3 <= normalized.length; i++)
-      normalized.substring(i, i + 3),
-  };
-}
-
-/// 0–1 arası benzerlik (Jaccard). Aynı metin 1.0, hiç örtüşmeyen 0.
-double textSimilarity(String a, String b) {
-  final x = textTrigrams(normalizeForCompare(a));
-  final y = textTrigrams(normalizeForCompare(b));
-  return _jaccard(x, y);
-}
-
-double _jaccard(Set<String> a, Set<String> b) {
-  if (a.isEmpty || b.isEmpty) return a.isEmpty && b.isEmpty ? 1 : 0;
-  var shared = 0;
-  // Küçük kümeyi gez: kesişim aynı, iş yarıya iner.
-  final (small, large) = a.length <= b.length ? (a, b) : (b, a);
-  for (final gram in small) {
-    if (large.contains(gram)) shared++;
-  }
-  return shared / (a.length + b.length - shared);
-}
-
 /// Karşılaştırmaya değmeyecek kadar kısa not: "ok", "ara" gibi metinlerde
 /// trigram örtüşmesi rastlantısal olur ve alakasız notlar kopya görünür.
 const int kMinCompareLength = 12;

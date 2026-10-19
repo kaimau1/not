@@ -4,7 +4,8 @@ import '../domain/note.dart';
 import 'note_card.dart';
 
 /// Kartların sütunlara DETERMİNİSTİK dağılımı: her sütunun kart sırası
-/// (bkz. [balancedNoteColumns] — kart en kısa TAHMİNİ sütuna düşer).
+/// (kart en kısa TAHMİNİ sütuna düşer; hangi sütuna düşeceği yalnız
+/// notun içeriğine bağlı, yerleşime değil — kartlar kaymaz).
 List<List<int>> balancedColumnAssignment(
   List<Note> items,
   int columns,
@@ -24,7 +25,7 @@ List<List<int>> balancedColumnAssignment(
   return buckets;
 }
 
-/// [balancedNoteColumns]'ın TEMBEL sliver hâli — ana ekran, klasör ve arşiv.
+/// Deterministik sütunlu ızgaranın TEMBEL sliver hâli — ana ekran, klasör ve arşiv.
 ///
 /// KÖK NEDEN (kullanıcı bulgusu 2026-10-16: "performans hâlâ istediğim gibi
 /// değil, FPS düşük, her alanda süper akıcı olsun"): deterministik ızgara
@@ -76,62 +77,10 @@ Widget sliverBalancedNoteColumns({
   );
 }
 
-/// Kartları TAHMİNİ yüksekliklerine göre sütunlara dağıtıp her sütunu kendi
-/// `Column`'unda çizer — masonry ızgaranın deterministik karşılığı.
-///
-/// KÖK NEDEN (kullanıcı bulgusu 2026-08-10: "notların sıralaması düzgün
-/// olmuyor, kaymalar oluyor; özellikle 2 kolonluda sağ kolonda sürekli
-/// boşluklar kalıyor"): `SliverMasonryGrid` her kartı YERLEŞİM ANINDA en kısa
-/// sütuna atar. Yani sütun ataması kart yüksekliklerinin o anki değerine
-/// bağlıydı; yükseklik kıpırdadığında (seçim çerçevesi, küçük resmin gelmesi,
-/// notun güncellenmesi, tembel yerleşimin sırası) aynı not başka bir sütuna
-/// geçiyor, üstündeki kartlar kayıyor ve bir sütunda kapanmayan boşluklar
-/// kalıyordu.
-///
-/// Burada dağıtım ÇİZİMDEN ÖNCE, [estimateNoteCardHeight] ile yapılır: hangi
-/// kartın hangi sütuna düşeceği yalnız notun içeriğine bağlıdır, yerleşime
-/// değil. Tahmin şaşarsa bedeli yalnız sütunların DİBİNDEKİ boşluk farkıdır;
-/// kartların arasında boşluk oluşamaz (her sütun sıkı bir `Column`).
-///
-/// **Her hücre bir [RepaintBoundary]** içinde: sliver listeleri bunu
-/// kendiliğinden ekler (`addRepaintBoundaries`), düz `Column` EKLEMEZ. O sınır
-/// olmadan tek bir kartın kıpırdaması (seçim çerçevesi, küçük resmin gelmesi,
-/// odak halkasının nabzı) bölümün TAMAMINI yeniden boyatıyordu.
-Widget balancedNoteColumns({
-  required List<Note> items,
-  required int columns,
-  required double cellWidth,
-  required Widget Function(int index) cell,
-}) {
-  final buckets = [
-    for (final column in balancedColumnAssignment(items, columns, cellWidth))
-      [for (final index in column) RepaintBoundary(child: cell(index))],
-  ];
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      for (var c = 0; c < columns; c++) ...[
-        if (c > 0) const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var i = 0; i < buckets[c].length; i++) ...[
-                if (i > 0) const SizedBox(height: 8),
-                buckets[c][i],
-              ],
-            ],
-          ),
-        ),
-      ],
-    ],
-  );
-}
-
 /// Ana ekranın ızgarasının KAYDIRILABİLİR hâli — klasör ve arşiv sayfaları
 /// bunu kullanır.
 ///
-/// KÖK NEDEN: ana ekran 2026-08-10'da masonry'den [balancedNoteColumns]'a
+/// KÖK NEDEN: ana ekran 2026-08-10'da masonry'den deterministik sütunlara
 /// geçti ("kaymalar / sağ sütunda kapanmayan boşluklar"), ama klasör sayfası
 /// ve arşiv eski `MasonryGridView`'da kaldı — yani aynı hata klasörün İÇİNDE
 /// aynen sürüyordu. Artık üç yüzey de tek koddan geçiyor.

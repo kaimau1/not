@@ -4585,9 +4585,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Release: bubbles view (document on top, notes below)';
 
   @override
-  String get captureModeLast => 'Your last choice';
-
-  @override
   String get captureModeChangeLater =>
       'You can switch later with the Bubbles / Classic chip in the note.';
 
@@ -5346,4 +5343,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get crashTestAction => 'Crash';
+
+  @override
+  String get captureModeSetting => 'Notes from content';
+
+  @override
+  String get captureModeSettingInfo =>
+      'When taking a note from a photo, scan, PDF, slides or image. Your first choice becomes the default.';
+
+  @override
+  String get captureModeAsk => 'Ask every time';
 }

@@ -3392,18 +3392,3 @@ class _StableViewportState extends State<StableViewport> {
     );
   }
 }
-
-/// Bölmenin alt kenarının klavyenin ARKASINDA kalan kısmı (dp). Görüntüleyici
-/// açık balonu ortalarken klavyenin altında kalan yeri "görünür" saymasın
-/// (bkz. [BubbleReveal]) — editör gövdesi klavye durana dek kısalmaz.
-double keyboardOverlapOf(BuildContext context) {
-  final box = context.findRenderObject();
-  if (box is! RenderBox || !box.attached || !box.hasSize) return 0;
-  final view = View.maybeOf(context);
-  if (view == null) return 0;
-  final height = view.physicalSize.height / view.devicePixelRatio;
-  final keyboard = view.viewInsets.bottom / view.devicePixelRatio;
-  if (keyboard <= 0) return 0;
-  final bottom = box.localToGlobal(Offset(0, box.size.height)).dy;
-  return math.max(0.0, bottom - (height - keyboard));
-}

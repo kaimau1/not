@@ -1744,7 +1744,6 @@
   "docViewSwitchedClassic": "Classic view: the document is an attachment on the page. Bubbles and page notes are kept.",
   "docViewTextKept": "The note's text stays in classic view.",
   "docViewDropBubbles": "Release: bubbles view (document on top, notes below)",
-  "captureModeLast": "Your last choice",
   "captureModeChangeLater": "You can switch later with the Bubbles / Classic chip in the note.",
   "attachmentSyncTitle": "Attachment sync",
   "driveSectionTitle": "Attachments in your Google Drive",
@@ -1972,5 +1971,8 @@
   "noteTooLargeShort": "the note exceeds the 1 MiB limit",
   "crashTestTitle": "Send a test crash?",
   "crashTestBody": "To verify the Crashlytics setup the app closes immediately. When you reopen it, the report is sent to the Firebase console (may take a few minutes).",
-  "crashTestAction": "Crash"
+  "crashTestAction": "Crash",
+  "captureModeSetting": "Notes from content",
+  "captureModeSettingInfo": "When taking a note from a photo, scan, PDF, slides or image. Your first choice becomes the default.",
+  "captureModeAsk": "Ask every time"
 }
