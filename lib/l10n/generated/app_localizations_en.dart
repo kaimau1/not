@@ -2667,7 +2667,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get archiveNotebook => 'Archive notebook';
+  String get archiveNotebook => 'Notebook';
 
   @override
   String get archiveNotebookInfo =>
@@ -5432,4 +5432,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noteColorAccent => 'Highlight the border';
+
+  @override
+  String get notebookViewOn => 'Notebook view';
+
+  @override
+  String get notebookViewOff => 'Turn off notebook view';
 }

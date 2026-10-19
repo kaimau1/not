@@ -17,6 +17,7 @@ import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
+import '../domain/notebook_migration.dart';
 import '../domain/note_item.dart';
 import '../domain/note_type.dart';
 import 'attachment_repository.dart';
@@ -747,6 +748,36 @@ class NotesRepository {
       'frameColor': (accent ? color : NoteColor.none).id,
     },
   };
+
+  /// **F3.5 GÖÇÜ**: eski defterler (`type: archive`) sayfalı not olur
+  /// (bkz. `notebookToPagedNote`). Editör de açılışta çevirir; bu, hiç
+  /// açılmayan defterleri de çevirir ki liste/arama/dışa aktarma tek modeli
+  /// görsün. Döner: çevrilen defter sayısı.
+  Future<int> migrateNotebooks() async {
+    var count = 0;
+    final snapshot = await _notes
+        .where('type', isEqualTo: NoteType.archive.id)
+        .get();
+    for (final doc in snapshot.docs) {
+      final note = Note.fromMap(doc.id, doc.data());
+      await updateNote(
+        notebookToPagedNote(note, pageId: (_) => _uuid.v4()),
+      );
+      count++;
+    }
+    final store = local;
+    if (store != null) {
+      for (final e in store.rawEntries().entries) {
+        final note = Note.fromMap(e.key, e.value, localOnly: true);
+        if (note.type != NoteType.archive) continue;
+        await updateNote(
+          notebookToPagedNote(note, pageId: (_) => _uuid.v4()),
+        );
+        count++;
+      }
+    }
+    return count;
+  }
 
   /// **F3.6 GÖÇÜ** (bir kez, hesap başına): eski yıldızlı notlar sabitli
   /// olur; yalnız çerçeve rengi olan notların rengi zemine taşınır (kenar

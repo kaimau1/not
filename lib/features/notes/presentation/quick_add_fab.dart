@@ -142,7 +142,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
       'draw': a.createHandwritingNote,
       'shopping': () => a.createFromTemplate(NoteTemplate.shopping),
       'template': a.createFromTemplate,
-      'archive': () => a.createNote(NoteType.archive),
+      'archive': a.createNotebook,
     };
     return [
       for (final m in quickAddCatalog(context.l10n))

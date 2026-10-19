@@ -160,11 +160,7 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
     NoteType? type,
   }) async {
     if (!mounted) return;
-    await context.pushNote(
-      type == NoteType.archive
-          ? archiveNoteRoutePath(id)
-          : noteRoutePath(id, query: query),
-    );
+    await context.pushNote(noteRoutePath(id, query: query));
   }
 
   @override

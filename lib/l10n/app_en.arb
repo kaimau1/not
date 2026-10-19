@@ -972,7 +972,7 @@
       }
     }
   },
-  "archiveNotebook": "Archive notebook",
+  "archiveNotebook": "Notebook",
   "archiveNotebookInfo": "A notebook with its own pages that keeps copies of important documents and images.",
   "archivePageImages": "Images",
   "archivePageVideos": "Videos",
@@ -1998,5 +1998,7 @@
   "shareTogetherInfo": "You both see and change the same note or folder",
   "shareCopySection": "SEND A COPY",
   "shareCopyInfo": "An independent copy goes to your friend's inbox",
-  "noteColorAccent": "Highlight the border"
+  "noteColorAccent": "Highlight the border",
+  "notebookViewOn": "Notebook view",
+  "notebookViewOff": "Turn off notebook view"
 }

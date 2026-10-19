@@ -1258,7 +1258,7 @@
       }
     }
   },
-  "archiveNotebook": "Arşiv defteri",
+  "archiveNotebook": "Defter",
   "archiveNotebookInfo": "Önemli belgeleri ve görselleri kopyasıyla toplayan, kendi sayfaları olan defter.",
   "archivePageImages": "Görseller",
   "archivePageVideos": "Videolar",
@@ -2625,5 +2625,7 @@
   "shareTogetherInfo": "Aynı notu/klasörü siz ikiniz görür ve değiştirirsiniz",
   "shareCopySection": "KOPYA GÖNDER",
   "shareCopyInfo": "Arkadaşının gelen kutusuna bağımsız bir kopya gider",
-  "noteColorAccent": "Kenarı vurgula"
+  "noteColorAccent": "Kenarı vurgula",
+  "notebookViewOn": "Defter görünümü",
+  "notebookViewOff": "Defter görünümünü kapat"
 }

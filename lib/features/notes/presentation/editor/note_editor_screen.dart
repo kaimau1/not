@@ -111,7 +111,10 @@ import 'note_images.dart';
 import 'pinned_media_pane.dart';
 import 'embed_sheet.dart';
 import '../../domain/note_pages.dart';
-import '../archive_note_screen.dart';
+import '../../data/notebook_copy.dart';
+import '../../domain/archive_paper.dart';
+import '../../domain/notebook_migration.dart';
+import 'notebook_paper.dart';
 import 'note_menu_sheet.dart';
 import 'in_note_find.dart';
 import 'note_search_sheet.dart';
@@ -1091,11 +1094,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             .markSeen(sharedNoteKey(owner, widget.noteId));
       }
       if (_note == null) {
+        // ESKİ DEFTER (F3.5): açılışta sayfalı nota çevrilir ve yazılır.
+        final loaded = incoming.type == NoteType.archive
+            ? notebookToPagedNote(incoming, pageId: (_) => const Uuid().v4())
+            : incoming;
         setState(() {
-          _note = incoming;
-          _titleController.text = incoming.title;
-          _bodyController.text = incoming.body;
+          _note = loaded;
+          _titleController.text = loaded.title;
+          _bodyController.text = loaded.body;
         });
+        if (!identical(loaded, incoming) && !_readOnly) {
+          unawaited(_notesRepo?.updateNote(loaded));
+        }
         // Not eline geçti: bekleyen sesli not/çizim niyeti şimdi çalışır.
         _runPendingIntents();
       } else {
@@ -1179,6 +1189,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             backgroundImageId: incoming.backgroundImageId,
             clearBackgroundImage: incoming.backgroundImageId == null,
             backgroundOpacity: incoming.backgroundOpacity,
+            paged: incoming.paged,
+            archivePaper: incoming.archivePaper,
           );
           if (pristine) {
             merged = merged.copyWith(
@@ -3661,6 +3673,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final action = await showNoteEditorMenu(
       context,
       pinned: note.pinned,
+      paged: note.paged,
       locked: note.locked,
       archived: note.archivedAt != null,
       isList: note.type == NoteType.checklist || note.type == NoteType.ordered,
@@ -3684,6 +3697,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         _toggleDocumentView();
       case 'pin':
         _mutate((n) => n.copyWith(pinned: !n.pinned), immediate: true);
+      case 'paged':
+        _mutate((n) => n.copyWith(paged: !n.paged), immediate: true);
+      case 'paper':
+        await _pickPaper();
       case 'search':
         await _openNoteSearch();
       case 'stats':
@@ -3796,7 +3813,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
     final notebooks = [
       for (final n in ref.read(notesStreamProvider).value ?? const <Note>[])
-        if (n.type == NoteType.archive && n.deletedAt == null) n,
+        if ((n.paged || n.type == NoteType.archive) &&
+            n.deletedAt == null &&
+            n.id != note.id)
+          n,
     ];
     if (notebooks.isEmpty) {
       _showSnack(context.l10n.archiveNoNotebook);
@@ -5774,6 +5794,56 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
+  /// DEFTER GÖRÜNÜMÜ (F3.5): kâğıt deseni gövdenin arkasında, satır
+  /// aralığı gövde metninin satır yüksekliği.
+  Widget _withPaper(Note note, TextStyle bodyStyle, Widget child) {
+    if (!note.paged) return child;
+    final size = bodyStyle.fontSize ?? 16;
+    return NotebookPaper(
+      style: note.archivePaper,
+      gap: size * (bodyStyle.height ?? 1.4),
+      scroll: _pageScroll,
+      child: child,
+    );
+  }
+
+  /// Defter görünümünün kâğıt deseni.
+  Future<void> _pickPaper() async {
+    final note = _note;
+    if (note == null) return;
+    final l10n = context.l10n;
+    final picked = await showAppSheet<ArchivePaper>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: RadioGroup<ArchivePaper>(
+          groupValue: note.archivePaper,
+          onChanged: (v) => Navigator.pop(sheetContext, v),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final paper in ArchivePaper.values)
+                RadioListTile<ArchivePaper>(
+                  value: paper,
+                  title: Text(
+                    archivePaperLabel(
+                      paper,
+                      lined: l10n.archivePaperLined,
+                      grid: l10n.archivePaperGrid,
+                      dots: l10n.archivePaperDots,
+                      plain: l10n.archivePaperPlain,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    _mutate((n) => n.copyWith(archivePaper: picked), immediate: true);
+  }
+
   /// Notun ZEMİN görselini içeriğin ARKASINA serer.
   ///
   /// Görsel görünüm alanına sabitlenir (sayfa kaydırılırken kaymaz): duvar
@@ -7688,7 +7758,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       children: [
         titleRow,
         metaChips,
-        if (note.textPages.isNotEmpty && !note.type.isPageNoteType)
+        if ((note.textPages.isNotEmpty || note.paged) &&
+            !note.type.isPageNoteType)
           _pageBar(note),
       ],
     );
@@ -8701,7 +8772,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         note,
                         bgImage,
                         note.frameColor == NoteColor.none
-                            ? body
+                            ? _withPaper(note, noteBodyStyle, body)
                             : Container(
                                 margin: const EdgeInsets.fromLTRB(6, 0, 6, 6),
                                 decoration: BoxDecoration(
@@ -8713,7 +8784,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: body,
+                                  child: _withPaper(note, noteBodyStyle, body),
                                 ),
                               ),
                       ),

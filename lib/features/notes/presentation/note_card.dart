@@ -168,16 +168,13 @@ Future<void> openNoteRoute(
         if (ownerId != null) 'owner=$ownerId',
         if (readOnly) 'ro=1',
       ];
-      // Arşiv defteri kendi ekranında açılır (bkz. archiveNoteRoutePath).
       // Arşiv/çöp gibi kabuk dışı ekranlardan da doğru yol (bkz.
       // notePushPath — "arşivdeki not siyah ekran" kök nedeni).
       final push = context.pushNote(
-        note.type == NoteType.archive
-            ? archiveNoteRoutePath(note.id)
-            : noteRoutePath(
-                note.id,
-                query: params.isEmpty ? '' : '?${params.join('&')}',
-              ),
+        noteRoutePath(
+          note.id,
+          query: params.isEmpty ? '' : '?${params.join('&')}',
+        ),
       );
       // Rota yığına girdikten hemen sonra kilit açılır (push editör
       // KAPANANA dek tamamlanmaz; onu bekleseydik editör açıkken karttan

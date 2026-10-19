@@ -14,7 +14,6 @@ import '../features/folders/presentation/folders_screen.dart';
 import '../features/inbox/presentation/shared_hub_screen.dart';
 import '../features/notes/data/notes_repository.dart';
 import '../features/notes/domain/note_type.dart';
-import '../features/notes/presentation/archive_note_screen.dart';
 import '../features/notes/presentation/archive_screen.dart';
 import '../features/notes/presentation/dashboard_screen.dart';
 import '../features/notes/presentation/notes_providers.dart';
@@ -43,11 +42,9 @@ String noteRoutePath(String id, {String query = ''}) => '/note/$id$query';
 bool isExternalLocation(Uri uri) =>
     uri.hasScheme && uri.scheme != 'http' && uri.scheme != 'https';
 
-/// ARŞİV DEFTERİ rotası. Ayrı bir yol, çünkü defter not editöründe değil
-/// kendi ekranında açılıyor (bkz. [ArchiveNoteScreen] — gerekçe orada).
-/// Kart/liste yollarının hangisini kullanacağı `openNoteRoute`'ta notun
-/// tipine bakılarak seçilir.
-String archiveNoteRoutePath(String id) => '/notebook/$id';
+/// ESKİ defter rotası (`/notebook/:id`): defter artık normal notun Defter
+/// görünümü (F3.5) — yol yalnız eski bağlantılar (widget, bildirim) için
+/// durur ve not editörünü açar.
 
 /// Not/defter rotalarının SPLIT KABUĞUN DIŞINDAKİ eşi (bkz. [notePushPath]).
 const String kOutsideShellNotePrefix = '/open';
@@ -329,8 +326,8 @@ class _RefreshNotifier extends ChangeNotifier {
 }
 
 Widget _notebookBuilder(BuildContext context, GoRouterState state) =>
-    ArchiveNoteScreen(
-      key: ValueKey('notebook-${state.pathParameters['id']}'),
+    NoteEditorScreen(
+      key: ValueKey('note-${state.pathParameters['id']}'),
       noteId: state.pathParameters['id']!,
     );
 

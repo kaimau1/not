@@ -19,14 +19,21 @@ final dataMigrationsProvider = Provider<void>((ref) {
   final repo = ref.watch(notesRepositoryProvider);
   if (uid == null || repo == null) return;
   final prefs = ref.read(sharedPreferencesProvider);
-  final key = 'migration_f36_$uid';
-  if (prefs.getBool(key) ?? false) return;
-  unawaited(() async {
+  Future<void> run(String name, Future<void> Function() migrate) async {
+    final key = 'migration_${name}_$uid';
+    if (prefs.getBool(key) ?? false) return;
     try {
-      await repo.migrateConceptPairs();
+      await migrate();
       await prefs.setBool(key, true);
     } catch (e, st) {
-      ErrorLog.record('migration.f36', e, st);
+      ErrorLog.record('migration.$name', e, st);
     }
+  }
+
+  unawaited(() async {
+    // Sıra önemli: defter göçü tam belge yazar; kavram göçü ondan sonra
+    // eski alanları (yıldız, yalnız çerçeve) da temizler.
+    await run('f35', repo.migrateNotebooks);
+    await run('f36', repo.migrateConceptPairs);
   }());
 });

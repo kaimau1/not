@@ -655,12 +655,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// notlarda bu zaten vardı, aynı yol elle oluşturulanlara da açıldı).
   Future<void> _openNew(String id, {String query = '', NoteType? type}) async {
     if (!mounted) return;
-    // Arşiv defteri kendi ekranında açılır (bkz. archiveNoteRoutePath).
-    await context.pushNote(
-      type == NoteType.archive
-          ? archiveNoteRoutePath(id)
-          : noteRoutePath(id, query: query),
-    );
+    await context.pushNote(noteRoutePath(id, query: query));
     if (!mounted) return;
     ref.read(focusedNoteProvider.notifier).focus(id);
   }

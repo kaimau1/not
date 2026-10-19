@@ -20,6 +20,7 @@ import '../../../../core/widgets/app_sheet.dart';
 Future<String?> showNoteEditorMenu(
   BuildContext context, {
   required bool pinned,
+  bool paged = false,
   required bool locked,
   required bool archived,
   required bool isList,
@@ -42,6 +43,7 @@ Future<String?> showNoteEditorMenu(
         child: _MenuGrid(
           l10n: l10n,
           pinned: pinned,
+          paged: paged,
           locked: locked,
           archived: archived,
           isList: isList,
@@ -62,6 +64,7 @@ class _MenuGrid extends StatelessWidget {
   const _MenuGrid({
     required this.l10n,
     required this.pinned,
+    this.paged = false,
     required this.locked,
     required this.archived,
     required this.isList,
@@ -91,6 +94,9 @@ class _MenuGrid extends StatelessWidget {
 
   final AppLocalizations l10n;
   final bool pinned;
+
+  /// Defter görünümü açık mı (F3.5).
+  final bool paged;
   final bool locked;
   final bool archived;
 
@@ -134,6 +140,15 @@ class _MenuGrid extends StatelessWidget {
       ],
       sections: [
         MenuSection(l10n.menuSectionContent, [
+          // DEFTER GÖRÜNÜMÜ (F3.5): kâğıt deseni + hep görünen sayfa çubuğu.
+          MenuAction(
+            'paged',
+            paged ? l10n.notebookViewOff : l10n.notebookViewOn,
+            Icons.menu_book_outlined,
+            selected: paged,
+          ),
+          if (paged)
+            MenuAction('paper', l10n.archivePaper, Icons.texture),
           // BALONLU ⇄ KLASİK görünüm (kullanıcı isteği 2026-10-15).
           if (bubbleView != null)
             MenuAction(

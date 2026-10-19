@@ -531,11 +531,7 @@ Future<void> _addToExistingNote(
   try {
     ref
         .read(routerProvider)
-        .pushNote(
-          target.type == NoteType.archive
-              ? archiveNoteRoutePath(noteId)
-              : noteRoutePath(noteId),
-        );
+        .pushNote(noteRoutePath(noteId));
   } catch (_) {}
 }
 

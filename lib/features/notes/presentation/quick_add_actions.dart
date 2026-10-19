@@ -125,6 +125,16 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   }
 
 
+  /// **DEFTER** (F3.5): Defter görünümünde (kâğıt desenli, sayfalı) metin
+  /// notu.
+  Future<void> createNotebook() async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final id = await repo.createNote(NoteType.text, folderId: quickAddFolderId);
+    await repo.updateFieldsAndWait(id, {'paged': true});
+    await openNewNote(id, type: NoteType.text);
+  }
+
   /// El yazısı modu: not oluşturulur ve editör doğrudan çizim tuvalini
   /// açarak başlar; çizim nota görsel eki olarak kaydedilir.
   Future<void> createHandwritingNote() async {

@@ -184,6 +184,7 @@ class Note {
     this.archivePages = const [],
     this.archivePaper = ArchivePaper.lined,
     this.archiveGeneralName = '',
+    this.paged = false,
     this.tagLinks = const [],
     this.textPages = const [],
     this.activePage = '',
@@ -218,7 +219,7 @@ class Note {
     'fontFamily', 'fontScale', 'textOpacity', 'titleFontFamily',
     'titleFontScale', 'titleTextOpacity', 'backgroundImageId',
     'backgroundOpacity', 'listColumns', 'classicDocument', 'archivePages',
-    'archivePaper', 'archiveGeneralName', 'tagLinks', 'textPages',
+    'archivePaper', 'archiveGeneralName', 'paged', 'tagLinks', 'textPages',
     'activePage', 'orderIndex', 'createdAt', 'updatedAt', 'deletedAt',
     'archivedAt', 'reminderAt', 'aiSummary', 'schema',
     // Depo katmanının her yazımda kendisi koyduğu alan — notla taşınmaz.
@@ -383,6 +384,11 @@ class Note {
   /// yeniden etiketlenmesi gerekirdi; ad yalnız GÖRÜNENDİR, girdilerin
   /// bağlanma kuralı değişmez.
   final String archiveGeneralName;
+
+  /// **DEFTER GÖRÜNÜMÜ** (F3.5): not kâğıt desenli ([archivePaper]) ve
+  /// sayfa çubuğu hep görünür açılır. Eski ayrı defter editörünün yerine
+  /// geçti (bkz. `notebook_migration.dart`).
+  final bool paged;
 
   /// Metnin İÇİNE gömülmüş ek bağları: hangi ETİKET METNİ hangi eke gider.
   ///
@@ -667,6 +673,7 @@ class Note {
     List<String>? archivePages,
     ArchivePaper? archivePaper,
     String? archiveGeneralName,
+    bool? paged,
     List<NoteTagLink>? tagLinks,
     List<NoteTextPage>? textPages,
     String? activePage,
@@ -710,6 +717,7 @@ class Note {
     archivePages: archivePages ?? this.archivePages,
     archivePaper: archivePaper ?? this.archivePaper,
     archiveGeneralName: archiveGeneralName ?? this.archiveGeneralName,
+    paged: paged ?? this.paged,
     tagLinks: tagLinks ?? this.tagLinks,
     textPages: textPages ?? this.textPages,
     activePage: activePage ?? this.activePage,
@@ -837,6 +845,7 @@ class Note {
       ],
       archivePaper: ArchivePaper.fromId(map['archivePaper'] as String?),
       archiveGeneralName: map['archiveGeneralName'] as String? ?? '',
+      paged: map['paged'] as bool? ?? false,
       tagLinks: [
         for (final raw in (map['tagLinks'] as List<dynamic>? ?? const []))
           NoteTagLink.fromMap(Map<String, dynamic>.from(raw as Map)),
@@ -922,6 +931,7 @@ class Note {
     // HER ZAMAN yazılır (merge tuzağı): ad SİLİNEBİLMELİ — boş dize
     // "Genel"e dönmek demek.
     'archiveGeneralName': archiveGeneralName,
+    'paged': paged,
     // HER ZAMAN yazılır (`archivePages` ile aynı gerekçe: merge yazımda
     // atlanan anahtar silinmez, son bağı kaldırmak kayda yansımazdı).
     'tagLinks': [for (final l in tagLinks) l.toMap()],

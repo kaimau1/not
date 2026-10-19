@@ -4961,7 +4961,7 @@ abstract class AppLocalizations {
   /// No description provided for @archiveNotebook.
   ///
   /// In tr, this message translates to:
-  /// **'Arşiv defteri'**
+  /// **'Defter'**
   String get archiveNotebook;
 
   /// No description provided for @archiveNotebookInfo.
@@ -9757,6 +9757,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kenarı vurgula'**
   String get noteColorAccent;
+
+  /// No description provided for @notebookViewOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Defter görünümü'**
+  String get notebookViewOn;
+
+  /// No description provided for @notebookViewOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Defter görünümünü kapat'**
+  String get notebookViewOff;
 }
 
 class _AppLocalizationsDelegate

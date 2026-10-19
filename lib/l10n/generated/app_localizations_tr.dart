@@ -2663,7 +2663,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get archiveNotebook => 'Arşiv defteri';
+  String get archiveNotebook => 'Defter';
 
   @override
   String get archiveNotebookInfo =>
@@ -5417,4 +5417,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get noteColorAccent => 'Kenarı vurgula';
+
+  @override
+  String get notebookViewOn => 'Defter görünümü';
+
+  @override
+  String get notebookViewOff => 'Defter görünümünü kapat';
 }
