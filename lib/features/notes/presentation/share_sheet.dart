@@ -15,6 +15,7 @@ import '../data/attachment_repository.dart';
 import '../data/note_pdf.dart';
 import '../data/note_quick_export.dart';
 import '../data/note_share.dart';
+import '../data/notes_repository.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_share_text.dart';
@@ -63,6 +64,9 @@ Future<void> showNoteShareSheet(
   String? ownerId,
   VoidCallback? onExport,
 }) async {
+  // Bölünmüş notun çizim/balon kısmı da paylaşıma girsin (F3.13).
+  note = await hydrateNote(ref, note, ownerId: ownerId);
+  if (!context.mounted) return;
   final prefs = ref.read(sharedPreferencesProvider);
   final initial = ShareTextOptions.decode(prefs.getString(_optionsKey));
   final result = await showAppSheet<(String, ShareTextOptions)>(

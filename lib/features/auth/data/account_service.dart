@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants.dart';
 import '../../notes/data/drive_store.dart';
 import '../../notes/data/local_notes_store.dart';
+import '../../notes/domain/note_heavy.dart';
 import '../presentation/auth_providers.dart';
 import 'auth_repository.dart';
 
@@ -43,6 +44,9 @@ class AccountService {
     AppConstants.inboxNotesCollection,
     'aiReports',
   ];
+
+  /// Her notun altında boşaltılan alt koleksiyonlar (F3.13 ağır belge).
+  static const deletedNoteSubcollections = <String>[kHeavyCollection];
 
   /// Kök koleksiyonlarda silinen KENDİ kayıtlarım (sırası
   /// [deleteAccountAndData]da): sahip olduğum `folderShares` (+ `messages`
@@ -92,7 +96,19 @@ class AccountService {
     await _drive?.call()?.deleteAllAppData();
 
     for (final name in deletedUserSubcollections) {
-      await _deleteDocs(firestore, (await userDoc.collection(name).get()).docs);
+      final docs = (await userDoc.collection(name).get()).docs;
+      // Notun alt koleksiyonları (ağır belge — F3.13) notla silinmez.
+      if (name == AppConstants.notesCollection) {
+        for (final note in docs) {
+          for (final sub in deletedNoteSubcollections) {
+            await _deleteDocs(
+              firestore,
+              (await note.reference.collection(sub).get()).docs,
+            );
+          }
+        }
+      }
+      await _deleteDocs(firestore, docs);
     }
 
     // 2b) KÖK koleksiyonlardaki kendi kayıtları: `folderShares` (sahip

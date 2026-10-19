@@ -256,6 +256,31 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // **AĞIR BELGE** (F3.13, 2026-10-19): bölünmüş notun çizim/balon/PDF
+    // işaretleri `notes/{id}/heavy/data`da. Sahip genel kuralla erişir;
+    // paylaşılan klasör ve ortak not kullanıcısı için erişim ANA NOTUN
+    // kuralıyla aynı (ana belge okunup aynı sorular sorulur). Silme yalnız
+    // sahipte (ana notla aynı gerekçe).
+    match /users/{noteOwnerUid}/notes/{noteId}/heavy/{docId} {
+      function parentNote() {
+        return get(/databases/$(database)/documents/users/$(noteOwnerUid)/notes/$(noteId)).data;
+      }
+      function sharedFolderOk(write) {
+        return parentNote().get('folderId', null) != null
+          && folderShare(parentNote().folderId).ownerId == noteOwnerUid
+          && (write
+              ? canWriteFolder(folderShare(parentNote().folderId), request.auth.uid)
+                && (folderRole(folderShare(parentNote().folderId), request.auth.uid)
+                      == 'both'
+                    || parentNote().get('createdBy', '') == request.auth.uid)
+              : canReadFolder(folderShare(parentNote().folderId), request.auth.uid));
+      }
+      allow read: if request.auth != null
+        && (sharedFolderOk(false) || isNoteCollaborator(noteOwnerUid, noteId));
+      allow create, update: if request.auth != null
+        && (sharedFolderOk(true) || isNoteCollaborator(noteOwnerUid, noteId));
+    }
+
     // **KLASÖR PAYLAŞIM AYNASI** — `folderShares/{folderId}`, kimliği
     // `users/{ownerId}/folders/{folderId}` ile AYNI. Paylaşılan kullanıcının
     // "bana hangi klasörler açıldı" sorusunu TEK sorguda yanıtlar

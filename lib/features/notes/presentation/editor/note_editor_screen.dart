@@ -1155,13 +1155,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // kurulur, çizimi etkileyen bir fark yoksa `setState` ATLANIR
         // (denetleyiciler ve `_note` yine güncel kalır).
         final previous = _note!;
+        // AĞIR BELGE İLK KEZ GELDİ (F3.13): ekler olduğu gibi benimsenir —
+        // yereldeki hafif kopyanın düzen alanları (PDF işaretleri dahil)
+        // boş; birleştirme onları ağır veriye tercih ederdi.
+        final hydrating = incoming.heavyLoaded && !previous.heavyLoaded;
         Note merged;
         {
           merged = previous.copyWith(
-            attachments: mergeAttachmentLayout(
-              local: _note!.attachments,
-              incoming: incoming.attachments,
-            ),
+            heavyRef: incoming.heavyRef,
+            heavyLoaded: previous.heavyLoaded || incoming.heavyLoaded,
+            attachments: hydrating
+                ? incoming.attachments
+                : mergeAttachmentLayout(
+                    local: _note!.attachments,
+                    incoming: incoming.attachments,
+                  ),
             aiSummary: incoming.aiSummary,
             pinned: incoming.pinned,
             locked: incoming.locked,

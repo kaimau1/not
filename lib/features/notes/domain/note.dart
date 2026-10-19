@@ -185,6 +185,8 @@ class Note {
     this.archivePaper = ArchivePaper.lined,
     this.archiveGeneralName = '',
     this.paged = false,
+    this.heavyRef = false,
+    this.heavyLoaded = false,
     this.tagLinks = const [],
     this.textPages = const [],
     this.activePage = '',
@@ -219,7 +221,8 @@ class Note {
     'fontFamily', 'fontScale', 'textOpacity', 'titleFontFamily',
     'titleFontScale', 'titleTextOpacity', 'backgroundImageId',
     'backgroundOpacity', 'listColumns', 'classicDocument', 'archivePages',
-    'archivePaper', 'archiveGeneralName', 'paged', 'tagLinks', 'textPages',
+    'archivePaper', 'archiveGeneralName', 'paged', 'heavyRef', 'tagLinks',
+    'textPages',
     'activePage', 'orderIndex', 'createdAt', 'updatedAt', 'deletedAt',
     'archivedAt', 'reminderAt', 'aiSummary', 'schema',
     // Depo katmanının her yazımda kendisi koyduğu alan — notla taşınmaz.
@@ -389,6 +392,19 @@ class Note {
   /// sayfa çubuğu hep görünür açılır. Eski ayrı defter editörünün yerine
   /// geçti (bkz. `notebook_migration.dart`).
   final bool paged;
+
+  /// Ağır alanlar (çizim, balon, PDF işaretleri) AYRI belgede mi
+  /// (`notes/{id}/heavy/data` — F3.13, bkz. `note_heavy.dart`).
+  final bool heavyRef;
+
+  /// Ağır belge bu örneğe İŞLENDİ mi (kalıcı değil). Liste akışındaki
+  /// bölünmüş notlar hafiftir (false); editör/görüntüleyici akışı ve
+  /// `NotesRepository.hydrate` doldurur. Hafif not yazılırken ağır belgeye
+  /// DOKUNULMAZ — eksik veriyle üstüne yazılmasın.
+  final bool heavyLoaded;
+
+  /// Bölünmüş ama ağır kısmı yüklenmemiş (hafif) not.
+  bool get heavyMissing => heavyRef && !heavyLoaded;
 
   /// Metnin İÇİNE gömülmüş ek bağları: hangi ETİKET METNİ hangi eke gider.
   ///
@@ -674,6 +690,8 @@ class Note {
     ArchivePaper? archivePaper,
     String? archiveGeneralName,
     bool? paged,
+    bool? heavyRef,
+    bool? heavyLoaded,
     List<NoteTagLink>? tagLinks,
     List<NoteTextPage>? textPages,
     String? activePage,
@@ -718,6 +736,8 @@ class Note {
     archivePaper: archivePaper ?? this.archivePaper,
     archiveGeneralName: archiveGeneralName ?? this.archiveGeneralName,
     paged: paged ?? this.paged,
+    heavyRef: heavyRef ?? this.heavyRef,
+    heavyLoaded: heavyLoaded ?? this.heavyLoaded,
     tagLinks: tagLinks ?? this.tagLinks,
     textPages: textPages ?? this.textPages,
     activePage: activePage ?? this.activePage,
@@ -750,6 +770,7 @@ class Note {
     Map<String, dynamic> map, {
     bool pending = false,
     bool localOnly = false,
+    bool heavyLoaded = false,
   }) {
     // Sunucuya ULAŞMAMIŞ yazımlarda `serverTimestamp()` yerel kopyada NULL
     // okunur. Tarihsiz not, "Son düzenlenen" sıralamasında en eskiye ("DAHA
@@ -846,6 +867,8 @@ class Note {
       archivePaper: ArchivePaper.fromId(map['archivePaper'] as String?),
       archiveGeneralName: map['archiveGeneralName'] as String? ?? '',
       paged: map['paged'] as bool? ?? false,
+      heavyRef: map['heavyRef'] as bool? ?? false,
+      heavyLoaded: heavyLoaded,
       tagLinks: [
         for (final raw in (map['tagLinks'] as List<dynamic>? ?? const []))
           NoteTagLink.fromMap(Map<String, dynamic>.from(raw as Map)),
@@ -932,6 +955,7 @@ class Note {
     // "Genel"e dönmek demek.
     'archiveGeneralName': archiveGeneralName,
     'paged': paged,
+    'heavyRef': heavyRef,
     // HER ZAMAN yazılır (`archivePages` ile aynı gerekçe: merge yazımda
     // atlanan anahtar silinmez, son bağı kaldırmak kayda yansımazdı).
     'tagLinks': [for (final l in tagLinks) l.toMap()],

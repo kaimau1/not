@@ -17,6 +17,7 @@ import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
+import '../domain/note_heavy.dart';
 import '../domain/notebook_migration.dart';
 import '../domain/note_item.dart';
 import '../domain/note_type.dart';
@@ -152,6 +153,16 @@ final noteStreamProvider = StreamProvider.family<Note?, String>((ref, noteId) {
   if (repo == null) return const Stream.empty();
   return repo.watchNote(noteId);
 });
+
+/// Listeden gelen (bölünmüşse HAFİF) notu tam hâline getirir (F3.13);
+/// [ownerId] doluysa not onun koleksiyonundandır (paylaşılan klasör).
+Future<Note> hydrateNote(WidgetRef ref, Note note, {String? ownerId}) {
+  if (!note.heavyMissing) return Future.value(note);
+  final repo = ownerId == null
+      ? ref.read(notesRepositoryProvider)
+      : NotesRepository(FirebaseFirestore.instance, ownerId);
+  return repo?.hydrate(note) ?? Future.value(note);
+}
 
 /// **BAŞKASININ notunun** canlı akışı — paylaşılan klasördeki not, sahibinin
 /// koleksiyonunda yaşıyor (bkz. `NoteFolder.ownerId`). [noteStreamProvider]
@@ -352,10 +363,79 @@ class NotesRepository {
   });
 
   Stream<Note?> watchNote(String noteId) => _withLocal(
-    _notes.doc(noteId).snapshots(),
-    (DocumentSnapshot<Map<String, dynamic>> doc) =>
-        local?.note(noteId) ?? (doc.exists ? Note.fromDoc(doc) : null),
+    _hydratedDoc(noteId),
+    (({DocumentSnapshot<Map<String, dynamic>> doc, Map<String, dynamic>? heavy})
+            e) =>
+        local?.note(noteId) ??
+        (e.doc.exists
+            ? Note.fromMap(
+                noteId,
+                mergeHeavy(e.doc.data()!, e.heavy),
+                pending: e.doc.metadata.hasPendingWrites,
+                heavyLoaded: e.heavy != null,
+              )
+            : null),
   );
+
+  DocumentReference<Map<String, dynamic>> _heavyDoc(String noteId) =>
+      _notes.doc(noteId).collection(kHeavyCollection).doc(kHeavyDocId);
+
+  /// Not belgesi + (bölünmüşse) ağır belgesi, birlikte (F3.13). Ağır belge
+  /// yalnız ana belgede `heavyRef` varken dinlenir; ilk anlık görüntüsü
+  /// gelene dek not HAFİF yayınlanır (`heavy: null` — yazım ağır belgeye
+  /// dokunmaz, bkz. [updateNote]).
+  Stream<({DocumentSnapshot<Map<String, dynamic>> doc, Map<String, dynamic>? heavy})>
+  _hydratedDoc(String noteId) {
+    late StreamController<
+      ({DocumentSnapshot<Map<String, dynamic>> doc, Map<String, dynamic>? heavy})
+    >
+    controller;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? mainSub;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? heavySub;
+    DocumentSnapshot<Map<String, dynamic>>? last;
+    Map<String, dynamic>? heavy;
+    void emit() {
+      final doc = last;
+      if (doc != null) controller.add((doc: doc, heavy: heavy));
+    }
+
+    controller = StreamController(
+      onListen: () {
+        mainSub = _notes.doc(noteId).snapshots().listen((doc) {
+          last = doc;
+          final split = doc.data()?['heavyRef'] == true;
+          if (split && heavySub == null) {
+            heavySub = _heavyDoc(noteId).snapshots().listen((h) {
+              heavy = h.data() ?? const <String, dynamic>{};
+              emit();
+            }, onError: controller.addError);
+          }
+          emit();
+        }, onError: controller.addError);
+      },
+      onCancel: () async {
+        await mainSub?.cancel();
+        await heavySub?.cancel();
+      },
+    );
+    return controller.stream;
+  }
+
+  /// Listedeki HAFİF (bölünmüş) notun tamamı: ağır belge okunup işlenir.
+  /// Bölünmemiş, zaten yüklü ya da yerel not olduğu gibi döner. Paylaşım,
+  /// dışa aktarma, çoğaltma, yedek ve "yalnız bu cihaz" bunu çağırır.
+  Future<Note> hydrate(Note note) async {
+    if (!note.heavyMissing || isLocal(note.id)) return note;
+    final main = await _notes.doc(note.id).get();
+    final data = main.data();
+    if (data == null) return note;
+    final heavy = await _heavyDoc(note.id).get();
+    return Note.fromMap(
+      note.id,
+      mergeHeavy(data, heavy.data() ?? const <String, dynamic>{}),
+      heavyLoaded: true,
+    );
+  }
 
   /// Belgedeki yerel değişiklikler sunucuya ulaştı mı? (editördeki
   /// bulut/senkron göstergesi için)
@@ -505,10 +585,43 @@ class NotesRepository {
       return Future.value();
     }
     final fields = {...note.toMap(), 'updatedBy': editorUid};
+    // AĞIR ALANLAR (F3.13): bölünmüş ya da ağır kısmı eşiği aşan not iki
+    // belgeye yazılır. HAFİF not (ağır belge işlenmemiş) yalnız ana belgeye
+    // yazılır — eksik veriyle ağır belgenin üstüne yazılmasın.
+    final maps = [
+      for (final a in fields['attachments'] as List) a as Map<String, dynamic>,
+    ];
+    Map<String, dynamic>? heavyPayload;
+    if (note.heavyMissing) {
+      fields['attachments'] = splitAttachmentMaps(maps).light;
+    } else if (note.heavyRef || heavyBytesOf(maps) > kHeavySplitBytes) {
+      final split = splitAttachmentMaps(maps);
+      fields['attachments'] = split.light;
+      fields['heavyRef'] = true;
+      heavyPayload = {'attachments': split.heavy};
+    }
     final digest = attachmentsDigest(fields['attachments']);
     _checkSize(note, fields, digest);
     if (_writtenAttachments[note.id] == digest) fields.remove('attachments');
-    final write = _notes.doc(note.id).set(fields, SetOptions(merge: true));
+    final Future<void> write;
+    final heavyDigest = heavyPayload == null
+        ? null
+        : attachmentsDigest([heavyPayload]);
+    if (heavyPayload != null && _writtenHeavy[note.id] != heavyDigest) {
+      // Tek batch: ana belge ağır belgeyi gösterirken ağır belge eksik kalmasın.
+      final batch = _firestore.batch()
+        ..set(_heavyDoc(note.id), heavyPayload)
+        ..set(_notes.doc(note.id), fields, SetOptions(merge: true));
+      write = batch.commit();
+      write.then<void>(
+        (_) => _writtenHeavy[note.id] = heavyDigest!,
+        onError: (Object _) {
+          _writtenHeavy.remove(note.id);
+        },
+      );
+    } else {
+      write = _notes.doc(note.id).set(fields, SetOptions(merge: true));
+    }
     write.then(
       (_) => _writtenAttachments[note.id] = digest,
       // Blok gövde ŞART: `=> map.remove(...)` String? döndürüyordu ve
@@ -526,6 +639,9 @@ class NotesRepository {
   /// Not kimliği → sunucuya son BAŞARIYLA yazılan ek listesinin özeti (bkz.
   /// [updateNote]).
   final Map<String, String> _writtenAttachments = {};
+
+  /// Not kimliği → sunucuya son BAŞARIYLA yazılan ağır belgenin özeti.
+  final Map<String, String> _writtenHeavy = {};
 
   /// **1 MiB BELGE SINIRI** (F1.6). Firestore tek belgeyi 1 MiB'te keser;
   /// çizim/balon/transkript/sayfa notu aynı belgede büyüyen not bu eşiği
@@ -895,6 +1011,8 @@ class NotesRepository {
       return;
     }
     unawaited(_notes.doc(noteId).delete());
+    // Alt koleksiyon belgeyle silinmez (Firestore) — ağır belge de gider.
+    unawaited(_heavyDoc(noteId).delete().catchError((Object _) {}));
   }
 
   /// Notu Storage'daki ekleriyle birlikte kalıcı siler (çöp ekranındaki
@@ -1107,6 +1225,8 @@ class NotesRepository {
     if (store == null) return;
     if (localOnly) {
       if (store.contains(note.id)) return;
+      // Bölünmüş notun ağır kısmı da cihaza (F3.13); yerel not bölünmez.
+      note = (await hydrate(note)).copyWith(heavyRef: false);
       final kept = <Attachment>[];
       for (final a in note.attachments) {
         final hasFile = a.localPath.isNotEmpty && await File(a.localPath).exists();
@@ -1137,6 +1257,7 @@ class NotesRepository {
         );
       }
       unawaited(_notes.doc(note.id).delete());
+      unawaited(_heavyDoc(note.id).delete().catchError((Object _) {}));
       return;
     }
     if (!store.contains(note.id)) return;

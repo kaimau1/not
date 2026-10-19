@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../notes/data/notes_repository.dart';
+
 import '../../../core/l10n_ext.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../friends/data/friends_repository.dart';
@@ -29,6 +31,9 @@ Future<void> showSendNoteToFriendSheet(
     ).showSnackBar(SnackBar(content: Text(context.l10n.friendsNeedsAccount)));
     return;
   }
+  // Bölünmüş notun çizim/balon kısmı da kopyaya girsin (F3.13).
+  note = await hydrateNote(ref, note);
+  if (!context.mounted) return;
   await showAppSheet<void>(
     context: context,
     showDragHandle: true,

@@ -14,7 +14,11 @@ import 'l10n_ext.dart';
 ///
 /// NEDEN derleme numarası (`package_info` build number) DEĞİL: web derlemesi
 /// `--build-number` almıyor, hep 1. Sabit her platformda aynı anlamı taşır.
-const int kClientDataVersion = 1;
+///
+/// 2 (Faz 3): defter → sayfalı not (F3.5), büyük notların çizim/balon/PDF
+/// işaretleri ayrı belgede (F3.13). Eski istemci bölünmüş notun çizimlerini
+/// görmez; telefonlar güncellenince `minClient: 2` yazılmalı.
+const int kClientDataVersion = 2;
 
 /// İndirme adresi: CI her `[apk]` derlemesini GitHub Releases'a koyar.
 const String kReleasesUrl = 'https://github.com/kaimau1/not/releases/latest';
