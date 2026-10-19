@@ -3043,7 +3043,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => 'Ad (en az 3 harf) ya da tam e-posta';
 
   @override
   String get friendsSearchTab => 'Ara';
@@ -5262,4 +5262,73 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get voiceOfflineInfo =>
       'अगर फ़ोन में भाषा पैक डाउनलोड है तो आवाज़ बिना इंटरनेट के लिखी जाती है। नहीं तो अपने आप ऑनलाइन पहचान इस्तेमाल होती है।';
+
+  @override
+  String get discoverable => 'नाम से मुझे खोजा जा सके';
+
+  @override
+  String get discoverableInfo =>
+      'चालू होने पर लोग \"लोग खोजें\" में आपके नाम के पहले 3 अक्षरों या पूरे ईमेल से आपको ढूँढ सकते हैं। बंद होने पर केवल आपका ईमेल जानने वाला ही अनुरोध भेज सकता है।';
+
+  @override
+  String get friendsSearchNeedsGoogle =>
+      'लोगों को खोजने के लिए Google खाते से साइन इन करें।';
+
+  @override
+  String get friendsSearchRateLimited =>
+      'बहुत अधिक खोजें। एक मिनट बाद फिर कोशिश करें।';
+
+  @override
+  String get updateRequiredBody =>
+      'यह संस्करण पुराना है: नोट केवल पढ़ने के लिए खुलते हैं। डेटा सुरक्षित रखने के लिए ऐप अपडेट करें।';
+
+  @override
+  String get updateAction => 'अपडेट करें';
+
+  @override
+  String get attachmentUnsupportedTitle =>
+      'इस अटैचमेंट को खोलने के लिए ऐप अपडेट करें';
+
+  @override
+  String get attachmentUnsupportedBody =>
+      'यह अटैचमेंट ऐप के नए संस्करण में जोड़ा गया था। यह संस्करण इसे नहीं दिखा सकता; यह जैसा है वैसा रखा जाता है।';
+
+  @override
+  String noteTooLarge(String size, String part) {
+    return 'यह नोट बहुत बड़ा हो रहा है ($size / 1024 KB) — सबसे बड़ा भाग: $part। कुछ हिस्सा अलग नोट में ले जाएँ, नहीं तो सहेजना विफल हो सकता है।';
+  }
+
+  @override
+  String get noteSizeBody => 'पाठ';
+
+  @override
+  String get noteSizeItems => 'सूची आइटम';
+
+  @override
+  String get noteSizePageNotes => 'पेज नोट्स';
+
+  @override
+  String noteSaveRejected(String reason) {
+    return 'नोट सर्वर पर सहेजा नहीं जा सका: $reason';
+  }
+
+  @override
+  String get errorLogShare => 'त्रुटि लॉग साझा करें';
+
+  @override
+  String get errorLogInfo =>
+      'हाल की त्रुटियाँ केवल इस डिवाइस पर रहती हैं; जब तक आप साझा न करें, कहीं नहीं जातीं।';
+
+  @override
+  String get errorLogEmpty => 'कोई त्रुटि दर्ज नहीं।';
+
+  @override
+  String get crashReports => 'क्रैश रिपोर्ट भेजें';
+
+  @override
+  String get crashReportsInfo =>
+      'ऐप क्रैश होने पर आपके नोट की सामग्री के बिना एक तकनीकी रिपोर्ट Firebase Crashlytics को भेजी जाती है (केवल Android)।';
+
+  @override
+  String get noteTooLargeShort => 'नोट 1 MiB सीमा से अधिक है';
 }

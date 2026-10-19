@@ -2,12 +2,13 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    <!-- Hatırlatıcılar dakikası dakikasına çalmalı. Bu izinler olmadan
+    <!-- Hatırlatıcılar dakikası dakikasına çalmalı. Bu izin olmadan
          AlarmManager "inexact" moda düşer ve Android alarmı toplu iş olarak
          dakikalarca geciktirir (9:00 hatırlatıcısı 9:02'de geliyordu).
-         USE_EXACT_ALARM Android 13+ için otomatik verilir (kullanıcıdan
-         onay istemez), SCHEDULE_EXACT_ALARM Android 12'yi kapsar. -->
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+         USE_EXACT_ALARM BİLEREK YOK (F1.3, 2026-10-19): Play onu yalnız
+         alarm/takvim uygulamalarına izin veriyor. SCHEDULE_EXACT_ALARM
+         Android 14+'ta varsayılan kapalı olabilir; izin yoksa
+         ReminderService inexact'e düşer (exact_alarms_not_permitted). -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <!-- Görüntülü not: kamerayla video/fotoğraf çekimi. Kamera zorunlu değil

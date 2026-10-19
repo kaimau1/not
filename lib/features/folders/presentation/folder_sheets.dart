@@ -163,7 +163,12 @@ Future<String?> showFolderEditorDialog(
     final repo = ref.read(foldersRepositoryProvider);
     if (repo == null) return null;
     if (existing == null) {
-      return repo.createFolder(name, icon: icon, hidden: hidden, color: color);
+      return await repo.createFolder(
+        name,
+        icon: icon,
+        hidden: hidden,
+        color: color,
+      );
     }
     repo.updateFolder(
       existing.id,

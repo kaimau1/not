@@ -3057,7 +3057,7 @@ class AppLocalizationsPl extends AppLocalizations {
       'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => 'Ad (en az 3 harf) ya da tam e-posta';
 
   @override
   String get friendsSearchTab => 'Ara';
@@ -5294,4 +5294,73 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get voiceOfflineInfo =>
       'Jeśli pakiet językowy jest pobrany na telefon, mowa jest zapisywana bez internetu. W przeciwnym razie automatycznie używane jest rozpoznawanie online.';
+
+  @override
+  String get discoverable => 'Można mnie znaleźć po imieniu';
+
+  @override
+  String get discoverableInfo =>
+      'Gdy włączone, inni znajdą cię w „Szukaj osób” po pierwszych 3 literach imienia lub pełnym e-mailu. Gdy wyłączone, prośbę wyśle tylko ktoś, kto zna twój e-mail.';
+
+  @override
+  String get friendsSearchNeedsGoogle =>
+      'Zaloguj się kontem Google, aby wyszukiwać osoby.';
+
+  @override
+  String get friendsSearchRateLimited =>
+      'Zbyt wiele wyszukiwań. Spróbuj ponownie za minutę.';
+
+  @override
+  String get updateRequiredBody =>
+      'Ta wersja jest nieaktualna: notatki otwierają się tylko do odczytu. Zaktualizuj aplikację, aby nie uszkodzić danych.';
+
+  @override
+  String get updateAction => 'Aktualizuj';
+
+  @override
+  String get attachmentUnsupportedTitle =>
+      'Zaktualizuj aplikację, aby otworzyć ten załącznik';
+
+  @override
+  String get attachmentUnsupportedBody =>
+      'Ten załącznik dodano w nowszej wersji aplikacji. Ta wersja nie może go wyświetlić; pozostaje bez zmian.';
+
+  @override
+  String noteTooLarge(String size, String part) {
+    return 'Notatka robi się za duża ($size / 1024 KB) — największa część: $part. Przenieś część do osobnej notatki, inaczej może się nie zapisać.';
+  }
+
+  @override
+  String get noteSizeBody => 'tekst';
+
+  @override
+  String get noteSizeItems => 'elementy listy';
+
+  @override
+  String get noteSizePageNotes => 'notatki stron';
+
+  @override
+  String noteSaveRejected(String reason) {
+    return 'Nie udało się zapisać notatki na serwerze: $reason';
+  }
+
+  @override
+  String get errorLogShare => 'Udostępnij dziennik błędów';
+
+  @override
+  String get errorLogInfo =>
+      'Ostatnie błędy są przechowywane tylko na tym urządzeniu; nigdzie nie trafiają, dopóki ich nie udostępnisz.';
+
+  @override
+  String get errorLogEmpty => 'Brak zarejestrowanych błędów.';
+
+  @override
+  String get crashReports => 'Wysyłaj raporty o awariach';
+
+  @override
+  String get crashReportsInfo =>
+      'Gdy aplikacja się zawiesi, raport techniczny bez treści notatek trafia do Firebase Crashlytics (tylko Android).';
+
+  @override
+  String get noteTooLargeShort => 'notatka przekracza limit 1 MiB';
 }

@@ -48,6 +48,8 @@ enum AttachmentView {
 /// ister). YouTube şeride inmez (dosyası yok; bağlantı sayfada ya da tepede
 /// oynar).
 Set<AttachmentView> availableViews(Attachment a) => switch (a.kind) {
+  // Bu sürümün tanımadığı tür (F1.5): görünümü DEĞİŞTİRİLMEZ.
+  AttachmentKind.unknown => const {},
   AttachmentKind.image || AttachmentKind.text when kIsWeb => const {
     AttachmentView.pinned,
     AttachmentView.floating,

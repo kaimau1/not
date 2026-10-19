@@ -1432,7 +1432,7 @@
   "friendsRemoveConfirmTitle": "Arkadaşlıktan çıkar",
   "friendsRemoveConfirmBody": "{name} arkadaş listenden kaldırılsın mı? Onunla paylaştığın klasörler artık görünmez.",
   "friendsNeedsAccount": "Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.",
-  "friendsSearchHint": "İsim veya e-posta ile ara",
+  "friendsSearchHint": "Ad (en az 3 harf) ya da tam e-posta",
   "friendsSearchTab": "Ara",
   "friendsSearchEmailTab": "E-posta ile",
   "friendsSearchEmpty": "Sonuç yok",
@@ -2500,5 +2500,94 @@
   "voiceOfflineInfo": "Telefonda dil paketi indirilmişse sesin internete gitmeden yazıya döker. Paket yoksa kendiliğinden çevrimiçi tanımaya döner.",
   "@voiceOfflineInfo": {
     "description": "İnternetsiz sesli tanıma ayarı (2026-10-19)"
+  },
+  "discoverable": "Adımla bulunabilirim",
+  "@discoverable": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "discoverableInfo": "Açıkken başkaları seni adının ilk 3 harfiyle ya da tam e-postanla \"Kişi ara\"da bulabilir. Kapalıyken yalnız e-postanı bilen biri istek gönderebilir.",
+  "@discoverableInfo": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "friendsSearchNeedsGoogle": "Kişi aramak için Google hesabıyla giriş yap.",
+  "@friendsSearchNeedsGoogle": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "friendsSearchRateLimited": "Çok fazla arama yaptın, bir dakika sonra tekrar dene.",
+  "@friendsSearchRateLimited": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "updateRequiredBody": "Bu sürüm eski: notlar salt okunur açılıyor. Verilerin bozulmasın diye uygulamayı güncelle.",
+  "@updateRequiredBody": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "updateAction": "Güncelle",
+  "@updateAction": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "attachmentUnsupportedTitle": "Bu ek için uygulamayı güncelle",
+  "@attachmentUnsupportedTitle": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "attachmentUnsupportedBody": "Bu ek uygulamanın daha yeni bir sürümünde eklendi. Bu sürüm onu gösteremiyor; ek korunuyor, silinmiyor.",
+  "@attachmentUnsupportedBody": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "noteTooLarge": "Not çok büyüdü ({size} / 1024 KB) — en büyük kısım: {part}. Bir kısmını ayrı bir nota taşı, yoksa kaydedilemeyebilir.",
+  "@noteTooLarge": {
+    "description": "Faz 1 (2026-10-19)",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "part": {
+        "type": "String"
+      }
+    }
+  },
+  "noteSizeBody": "metin",
+  "@noteSizeBody": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "noteSizeItems": "maddeler",
+  "@noteSizeItems": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "noteSizePageNotes": "sayfa notları",
+  "@noteSizePageNotes": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "noteSaveRejected": "Not sunucuya kaydedilemedi: {reason}",
+  "@noteSaveRejected": {
+    "description": "Faz 1 (2026-10-19)",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLogShare": "Hata günlüğünü paylaş",
+  "@errorLogShare": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "errorLogInfo": "Son hatalar yalnız bu cihazda tutulur; sen paylaşmadıkça hiçbir yere gitmez.",
+  "@errorLogInfo": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "errorLogEmpty": "Kayıtlı hata yok.",
+  "@errorLogEmpty": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "crashReports": "Çökme raporlarını gönder",
+  "@crashReports": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "crashReportsInfo": "Uygulama çökünce not içeriği olmadan teknik bir rapor Firebase Crashlytics'e gider (yalnız Android).",
+  "@crashReportsInfo": {
+    "description": "Faz 1 (2026-10-19)"
+  },
+  "noteTooLargeShort": "not 1 MiB sınırını aştı",
+  "@noteTooLargeShort": {
+    "description": "Faz 1 (2026-10-19)"
   }
 }

@@ -132,6 +132,11 @@ dependencies:
   # seriye çekerse çözümleme sessizce ayrışır.
   syncfusion_flutter_pdf: ^33.2.13
   syncfusion_flutter_core: ^33.2.13
+  # Çökme raporları (F1.9, 2026-10-19) — yalnız Android; Windows/web için
+  # eklenti yok, orada yalnız cihazdaki hata günlüğü (core/error_log.dart).
+  # Sürüm firebase_core 4.12.1 ile EŞ ZAMANLI yayın: daha yenisi core'u (ve
+  # Android Firebase BoM'unu) öbür Firebase eklentilerinden ayırırdı.
+  firebase_crashlytics: ^5.2.6
 
 dev_dependencies:
   flutter_test:

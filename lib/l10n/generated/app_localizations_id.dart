@@ -3056,7 +3056,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => 'Ad (en az 3 harf) ya da tam e-posta';
 
   @override
   String get friendsSearchTab => 'Ara';
@@ -5279,4 +5279,73 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get voiceOfflineInfo =>
       'Jika paket bahasa sudah diunduh di ponsel, suara ditranskripsi tanpa internet. Jika tidak, pengenalan online dipakai otomatis.';
+
+  @override
+  String get discoverable => 'Dapat ditemukan lewat nama';
+
+  @override
+  String get discoverableInfo =>
+      'Jika aktif, orang lain dapat menemukanmu di \"Cari orang\" dengan 3 huruf pertama namamu atau email lengkap. Jika nonaktif, hanya yang tahu emailmu yang bisa mengirim permintaan.';
+
+  @override
+  String get friendsSearchNeedsGoogle =>
+      'Masuk dengan akun Google untuk mencari orang.';
+
+  @override
+  String get friendsSearchRateLimited =>
+      'Terlalu banyak pencarian. Coba lagi dalam satu menit.';
+
+  @override
+  String get updateRequiredBody =>
+      'Versi ini usang: catatan dibuka hanya-baca. Perbarui aplikasi agar datamu tidak rusak.';
+
+  @override
+  String get updateAction => 'Perbarui';
+
+  @override
+  String get attachmentUnsupportedTitle =>
+      'Perbarui aplikasi untuk membuka lampiran ini';
+
+  @override
+  String get attachmentUnsupportedBody =>
+      'Lampiran ini ditambahkan di versi aplikasi yang lebih baru. Versi ini tidak dapat menampilkannya; lampiran tetap disimpan apa adanya.';
+
+  @override
+  String noteTooLarge(String size, String part) {
+    return 'Catatan ini terlalu besar ($size / 1024 KB) — bagian terbesar: $part. Pindahkan sebagian ke catatan lain atau mungkin gagal disimpan.';
+  }
+
+  @override
+  String get noteSizeBody => 'teks';
+
+  @override
+  String get noteSizeItems => 'item daftar';
+
+  @override
+  String get noteSizePageNotes => 'catatan halaman';
+
+  @override
+  String noteSaveRejected(String reason) {
+    return 'Catatan tidak dapat disimpan ke server: $reason';
+  }
+
+  @override
+  String get errorLogShare => 'Bagikan log kesalahan';
+
+  @override
+  String get errorLogInfo =>
+      'Kesalahan terbaru hanya disimpan di perangkat ini; tidak dikirim ke mana pun kecuali kamu membagikannya.';
+
+  @override
+  String get errorLogEmpty => 'Tidak ada kesalahan tercatat.';
+
+  @override
+  String get crashReports => 'Kirim laporan kerusakan';
+
+  @override
+  String get crashReportsInfo =>
+      'Saat aplikasi mogok, laporan teknis tanpa isi catatan dikirim ke Firebase Crashlytics (hanya Android).';
+
+  @override
+  String get noteTooLargeShort => 'catatan melebihi batas 1 MiB';
 }

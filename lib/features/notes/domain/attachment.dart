@@ -21,16 +21,29 @@ enum AttachmentKind {
   /// notla birlikte senkronlanır: dosya yüklenmez, her cihaz anında okur,
   /// arama ve dışa aktarma metni doğrudan alır. Paylaşırken/dışa aktarırken
   /// `.txt` dosyası olarak çıkar (bkz. `AttachmentRepository.readBytes`).
-  text('text');
+  text('text'),
+
+  /// **BU SÜRÜMÜN TANIMADIĞI TÜR** (F1.5, 2026-10-19). Daha yeni bir
+  /// sürümün eklediği tür eskiden sessizce `image`e düşüyordu; eski istemci
+  /// notu kaydedince ek `kind: image` + metinsiz geri yazılıp BOZULUYORDU.
+  /// Artık asıl kimlik [Attachment.rawKind]'da saklanır ve [Attachment.toMap]
+  /// onu AYNEN geri yazar; arayüz "uygulamayı güncelle" kutusu gösterir,
+  /// ek açılmaz/düzenlenmez/yüklenmez. Kayda hiç bu kimlikle yazılmaz.
+  unknown('');
 
   const AttachmentKind(this.id);
 
   final String id;
 
-  static AttachmentKind fromId(String? id) => AttachmentKind.values.firstWhere(
-    (k) => k.id == id,
-    orElse: () => AttachmentKind.image,
-  );
+  /// Eksik/boş kimlik eski kayıtlarda görsel demekti (tür alanı sonradan
+  /// geldi) — `image` kalır. Dolu ama tanınmayan kimlik [unknown] olur.
+  static AttachmentKind fromId(String? id) {
+    if (id == null || id.isEmpty) return AttachmentKind.image;
+    for (final k in AttachmentKind.values) {
+      if (k != AttachmentKind.unknown && k.id == id) return k;
+    }
+    return AttachmentKind.unknown;
+  }
 }
 
 /// PDF sayfasının üzerine elle çizilen tek bir çizgi. Koordinatlar sayfa
@@ -656,7 +669,60 @@ class Attachment {
     this.transcriptOf = '',
     this.sourceDigest = '',
     this.createdAt,
+    this.rawKind = '',
+    this.extras = const {},
   });
+
+  /// Kayıttaki `kind` kimliği AYNEN — yalnız [AttachmentKind.unknown] iken
+  /// anlamlı; [toMap] tanınmayan türü bununla geri yazar (F1.5).
+  final String rawKind;
+
+  /// Bu sürümün TANIMADIĞI anahtarlar (daha yeni sürümün eklediği alanlar).
+  /// [fromMap] saklar, [toMap] AYNEN geri yazar: eski istemci yeni alanı
+  /// silemez (F1.5). Bilinen anahtarlar [knownKeys]'de.
+  final Map<String, dynamic> extras;
+
+  /// [toMap]'in yazabildiği bütün anahtarlar (+ eski kayıtlardaki
+  /// `localPath`). Yeni alan eklenince BURAYA da eklenmeli; test
+  /// (`forward_compat_test`) toMap çıktısının bu kümede kaldığını doğrular.
+  static const knownKeys = <String>{
+    'id',
+    'kind',
+    'fileName',
+    'mimeType',
+    'storagePath',
+    'downloadUrl',
+    'driveId',
+    'localPath',
+    'sizeBytes',
+    'width',
+    'height',
+    'displayWidth',
+    'align',
+    'x',
+    'y',
+    'pageY',
+    'asFile',
+    'onPage',
+    'pdfPage',
+    'pdfTurns',
+    'pdfMarks',
+    'section',
+    'ink',
+    'bubbles',
+    'pageIds',
+    'webUrl',
+    'pinHeight',
+    'sourceId',
+    'bubblesHidden',
+    'text',
+    'transcriptOf',
+    'sourceDigest',
+    'createdAt',
+  };
+
+  /// Bu sürümün işleyemediği (daha yeni sürümde eklenmiş) ek mi?
+  bool get isUnsupported => kind == AttachmentKind.unknown;
 
   /// TÜRETİLMİŞ belgenin üretildiği kaynak içeriğin özeti (yalnız metin →
   /// balonlu belgede; bkz. [digestOf]). Metin sonradan düzenlenince özet
@@ -686,7 +752,9 @@ class Attachment {
   /// metin eki içeriğini kaydın kendisinde taşır ([text]) — yüklenecek dosya
   /// yok, kuyruk ikisini de atlar.
   bool get skipsUpload =>
-      kind == AttachmentKind.video || kind == AttachmentKind.text;
+      kind == AttachmentKind.video ||
+      kind == AttachmentKind.text ||
+      kind == AttachmentKind.unknown;
 
   /// Belgenin BALONLARI gizli mi (kullanıcı isteği 2026-10-16: "balonları
   /// göster/gizle olsun; balonludan üste sabitlemeye alınınca da balonlar
@@ -1007,6 +1075,8 @@ class Attachment {
     transcriptOf: transcriptOf ?? this.transcriptOf,
     sourceDigest: sourceDigest ?? this.sourceDigest,
     createdAt: createdAt,
+    rawKind: rawKind,
+    extras: extras,
   );
 
   /// [noteId] verilirse yerel yol cihazda TÜRETİLİR (bkz.
@@ -1058,6 +1128,11 @@ class Attachment {
         transcriptOf: map['transcriptOf'] as String? ?? '',
         sourceDigest: map['sourceDigest'] as String? ?? '',
         createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
+        rawKind: map['kind'] as String? ?? '',
+        extras: {
+          for (final e in map.entries)
+            if (!knownKeys.contains(e.key)) e.key: e.value,
+        },
       );
 
   /// Cihazdaki dosyanın var olup olmadığına bakılmaksızın beklenen yerel yol;
@@ -1077,8 +1152,10 @@ class Attachment {
   }
 
   Map<String, dynamic> toMap() => {
+    // ÖNCE tanınmayan alanlar: bilinen anahtarlar her zaman üstüne yazar.
+    ...extras,
     'id': id,
-    'kind': kind.id,
+    'kind': kind == AttachmentKind.unknown ? rawKind : kind.id,
     'fileName': fileName,
     'mimeType': mimeType,
     'storagePath': storagePath,

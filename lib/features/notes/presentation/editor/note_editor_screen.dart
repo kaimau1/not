@@ -23,6 +23,7 @@ import 'package:pasteboard/pasteboard.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/app_update.dart';
 import '../../../../app/router.dart';
 import '../../../auth/presentation/auth_providers.dart';
 import '../../../../app/theme/note_colors.dart';
@@ -437,6 +438,11 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
 
 class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+  /// Salt okunur: yalnız okuma yetkili paylaşım (`?ro=1`) YA DA bu sürüm
+  /// eski kalmış (F1.5 — `config/app.minClient`): eski istemci notu
+  /// kaydedip yeni sürümün verisini bozmasın.
+  bool get _readOnly => widget.readOnly || ref.read(updateRequiredProvider);
+
   Note? _note;
 
   /// Ataç rozetinin "yeni ek geldi" yanıp sönmesi (bkz.
@@ -637,7 +643,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Paylaşılan not SAHİBİNİN koleksiyonuna yazılır (bkz.
     // [NoteEditorScreen.ownerId]); kendi notlarımda eski yol aynen sürer.
     final owner = widget.ownerId;
-    _notesRepo = widget.readOnly
+    _notesRepo = _readOnly
         ? null
         : owner == null
         ? ref.read(notesRepositoryProvider)
@@ -1992,6 +1998,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// düzenleme geri çağrılarıyla açılır. Kullanıcının istediği ayrım tam
   /// olarak bu — "tıklayınca önizlemesi açılır, bir butonla da düzenleme".
   void _openAttachmentTag(Attachment attachment, {required bool editing}) {
+    if (attachment.isUnsupported) {
+      showUnsupportedAttachmentDialog(context);
+      return;
+    }
     // Metin eki (transkript) dosyasız: okuma ekranında açılır.
     if (attachment.kind == AttachmentKind.text) {
       unawaited(_openTranscript(attachment));
@@ -2044,7 +2054,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // Ses ekinin görüntüleyicisi yok; şeritteki oynatıcıdan çalınır.
           // Metin eki yukarıda kendi ekranına gider; dal yalnız bütünlük için.
           AttachmentKind.audio ||
-          AttachmentKind.text => ImageViewerScreen(attachment: attachment),
+          AttachmentKind.text ||
+          AttachmentKind.unknown => ImageViewerScreen(attachment: attachment),
           AttachmentKind.image => ImageViewerScreen(attachment: attachment),
         },
       ),
@@ -2560,7 +2571,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           ),
         ),
       // SEÇİLİ YAZIYA EK GÖM: seçim varsa ve o seçim zaten bir etiket değilse.
-      if (hasSelection && tagged == null && !widget.readOnly)
+      if (hasSelection && tagged == null && !_readOnly)
         ContextMenuButtonItem(
           label: l10n.attachmentTagEmbed,
           onPressed: () => run(
@@ -3274,7 +3285,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onSaveAs: (a) => unawaited(AttachmentSaveAs.run(context, ref, a)),
       onPinTop: _pinMediaTop,
       onPinHover: _setPinHover,
-      onViewChange: widget.readOnly
+      onViewChange: _readOnly
           ? null
           : (a, view) => unawaited(_setAttachmentView(a, view)),
       topLimit: _bodyTop,
@@ -3738,11 +3749,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       twoColumns: note.listColumns == 2,
       hasFloatingImages: note.attachments.any((a) => a.floatsOnPage),
       hasAttachments: note.attachments.isNotEmpty,
-      bubbleView: widget.readOnly || _switchableDocument(note) == null
+      bubbleView: _readOnly || _switchableDocument(note) == null
           ? null
           : note.type.isPageNoteType,
       canTemplate: canSaveAsTemplate(note),
-      canRemoveParts: !widget.readOnly && _hasBothParts(note),
+      canRemoveParts: !_readOnly && _hasBothParts(note),
       // Yalnız KENDİ notum (başkasının notu yerel yapılamaz) ve özellik
       // destekleniyorsa (web'de yok).
       localOnly: widget.ownerId == null && localOnlySupported(ref)
@@ -4037,7 +4048,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// "+ Yeni öğe" satırının sağındaki BÖLÜMLER menüsü (yalnız iki bölüm
   /// birden varken).
   Widget? _partsMenu(Note note) {
-    if (widget.readOnly || !_hasBothParts(note)) return null;
+    if (_readOnly || !_hasBothParts(note)) return null;
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return PopupMenuButton<String>(
@@ -4816,7 +4827,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// notu; üzerine balon/vurgu/kalem). [document] verilmezse ilk belge.
   void _switchToBubbles([Attachment? document]) {
     final note = _note;
-    if (note == null || note.type.isPageNoteType || widget.readOnly) return;
+    if (note == null || note.type.isPageNoteType || _readOnly) return;
     final doc = document ?? _switchableDocument(note);
     if (doc == null) return;
     if (_pinHover) setState(() => _pinHover = false);
@@ -4860,7 +4871,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// önceden durduğu şeritte) bir ek olarak görünür.
   void _switchToClassic({bool announce = true}) {
     final note = _note;
-    if (note == null || !note.type.isPageNoteType || widget.readOnly) return;
+    if (note == null || !note.type.isPageNoteType || _readOnly) return;
     final kind = note.type == NoteType.slides
         ? AttachmentKind.slide
         : AttachmentKind.pdf;
@@ -4974,7 +4985,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// [a]'nın görünüm anahtarı; salt okunurda ya da tek seçenekte null.
   Widget? _viewSwitchFor(Note note, Attachment a, {bool dense = false}) {
-    if (widget.readOnly) return null;
+    if (_readOnly) return null;
     final available = availableViews(a);
     if (available.length < 2) return null;
     return AttachmentViewSwitch(
@@ -4988,7 +4999,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Anahtardan gelen geçiş.
   Future<void> _setAttachmentView(Attachment a, AttachmentView view) async {
     final note = _note;
-    if (note == null || widget.readOnly) return;
+    if (note == null || _readOnly) return;
     if (_viewOf(note, a) == view) return;
     switch (view) {
       case AttachmentView.attached:
@@ -5317,7 +5328,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // dokunan dinlemek ister, sesin nerede çalacağını aramasın.
     if (videos.isEmpty) {
       final audio = media.first;
-      if (widget.readOnly || note.type.isPageNoteType) return;
+      if (_readOnly || note.type.isPageNoteType) return;
       _pinMediaTop(audio);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final pinnedSource = _videoHub.sourceFor(audio.id);
@@ -5341,7 +5352,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         builder: (_) => VideoViewerScreen(
           attachment: video,
           start: Duration(seconds: seconds),
-          onNoteAt: widget.readOnly
+          onNoteAt: _readOnly
               ? null
               : (position) => _noteAtVideoTime(video.id, position),
         ),
@@ -5354,7 +5365,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// satıra damga yazılır. Her iki durumda odak oraya gider, klavye açılır.
   void _noteAtVideoTime(String attachmentId, Duration position) {
     final note = _note;
-    if (note == null || widget.readOnly) return;
+    if (note == null || _readOnly) return;
     final stamp = formatVideoTimestamp(position);
     HapticFeedback.selectionClick();
     final target = _formatTarget?.controller;
@@ -5418,12 +5429,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             onNoteAt:
                 (pinned.kind == AttachmentKind.video ||
                         pinned.kind == AttachmentKind.audio) &&
-                    !widget.readOnly
+                    !_readOnly
                 ? () => _noteAtPinned(pinned)
                 : null,
             // Sabit bölmenin ⋮ menüsü (kullanıcı bulgusu 2026-10-16: "video
             // sabitken kaldırmak yok, gömülü hale getirmek gerekiyor").
-            onRemove: widget.readOnly
+            onRemove: _readOnly
                 ? null
                 : () {
                     _removeAttachment(pinned);
@@ -5447,7 +5458,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             onSaveAs: pinned.isWebVideo
                 ? null
                 : () => unawaited(AttachmentSaveAs.run(context, ref, pinned)),
-            onDetach: widget.readOnly || pinned.isWebVideo
+            onDetach: _readOnly || pinned.isWebVideo
                 ? null
                 : () {
                     _unpinMedia(pinned);
@@ -5545,7 +5556,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       existing = Transcripts.of(note.attachments, target);
     }
     final suffix = context.l10n.transcriptFileSuffix;
-    final readOnly = widget.readOnly;
+    final readOnly = _readOnly;
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => TranscriptScreen(
@@ -7389,7 +7400,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       child: TextField(
         controller: _titleController,
         focusNode: _titleFocus,
-        readOnly: widget.readOnly,
+        readOnly: _readOnly,
         onChanged: (_) =>
             _mutate((n) => n.copyWith(title: _titleController.logicalText)),
         style: applyNoteOpacity(
@@ -7780,7 +7791,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         TextField(
           controller: _bodyController,
           focusNode: _bodyFocus,
-          readOnly: widget.readOnly,
+          readOnly: _readOnly,
           // Sarma planı bu stille hesaplanır; TextField'ın örtük varsayılanına
           // bırakılırsa ölçüm ile çizim ayrışır ve satırlar yanlış kırılır.
           style: noteBodyStyle,
@@ -8083,8 +8094,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   // eki sayfaya koyar — eskiden buradaki "sayfaya koy"
                   // düğmesi belge notunda eki sayfası olmayan bir yere
                   // taşıyıp KAYBEDİYORDU (bkz. _setAttachmentView).
-                  viewOf: widget.readOnly ? null : (a) => _viewOf(note, a),
-                  onSetView: widget.readOnly
+                  viewOf: _readOnly ? null : (a) => _viewOf(note, a),
+                  onSetView: _readOnly
                       ? null
                       : (a, view) => unawaited(_setAttachmentView(a, view)),
                   onVideoToNote: _videoToNote,

@@ -8,7 +8,22 @@ class NoteItem {
     this.section = '',
     this.title = '',
     this.attachmentId = '',
+    this.extras = const {},
   });
+
+  /// Bu sürümün TANIMADIĞI anahtarlar — [toMap] AYNEN geri yazar, eski
+  /// istemci yeni sürümün madde alanlarını silemez (F1.5).
+  final Map<String, dynamic> extras;
+
+  static const knownKeys = <String>{
+    'id',
+    'text',
+    'checked',
+    'starred',
+    'section',
+    'title',
+    'attachmentId',
+  };
 
   final String id;
   final String text;
@@ -59,6 +74,7 @@ class NoteItem {
     section: section ?? this.section,
     title: title ?? this.title,
     attachmentId: attachmentId ?? this.attachmentId,
+    extras: extras,
   );
 
   factory NoteItem.fromMap(Map<String, dynamic> map) => NoteItem(
@@ -69,9 +85,14 @@ class NoteItem {
     section: map['section'] as String? ?? '',
     title: map['title'] as String? ?? '',
     attachmentId: map['attachmentId'] as String? ?? '',
+    extras: {
+      for (final e in map.entries)
+        if (!knownKeys.contains(e.key)) e.key: e.value,
+    },
   );
 
   Map<String, dynamic> toMap() => {
+    ...extras,
     'id': id,
     'text': text,
     'checked': checked,

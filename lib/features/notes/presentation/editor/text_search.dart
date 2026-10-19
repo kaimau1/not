@@ -1,29 +1,10 @@
 import '../../../../core/utils/rich_text.dart';
-import 'text_wrap.dart';
+import '../../../../core/utils/search_fold.dart';
 
-/// Aramada büyük/küçük harf ve Türkçe I/İ/ı/i farkını yok sayan katlama.
-///
-/// UZUNLUĞU KORUR (karakter başına tek karakter): eşleşme konumu katlanmış
-/// metinden doğrudan asıl metne taşınabilsin. Dart'ın `'İ'.toLowerCase()`
-/// sonucu İKİ karakterdir (i + birleşik nokta) — bu yüzden karakter karakter
-/// ve özel durumlarla katlanır. "istanbul" araması "İSTANBUL"u, "ılık"
-/// araması "Ilık"ı bulur.
-String foldForSearch(String text) {
-  final out = StringBuffer();
-  for (final unit in text.codeUnits) {
-    switch (unit) {
-      case 0x0130: // İ
-      case 0x0049: // I
-      case 0x0131: // ı
-        out.writeCharCode(0x69); // i
-      default:
-        final ch = String.fromCharCode(unit);
-        final lower = ch.toLowerCase();
-        out.write(lower.length == 1 ? lower : ch);
-    }
-  }
-  return out.toString();
-}
+// Katlama artık ortak (F1.8): ana ekran araması, not içi bul ve diğer
+// aramalar AYNI kuralı kullanır.
+export '../../../../core/utils/search_fold.dart' show foldForSearch;
+import 'text_wrap.dart';
 
 /// Bir eşleşme: [start, end) DÜZENLEME TAMPONUNDA (denetleyicinin `text`i —
 /// görünmez biçim işaretleri ve sarma çapaları dahil), [visibleStart] ise

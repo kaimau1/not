@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -142,7 +143,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet>
   Future<void> _runSearch() async {
     final q = _query.trim();
     final repo = ref.read(friendsRepositoryProvider);
-    if (repo == null || q.length < 2) {
+    if (repo == null || !FriendsRepository.isSearchableQuery(q)) {
       setState(() => _results = q.isEmpty ? null : const []);
       return;
     }
@@ -150,6 +151,22 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet>
     try {
       final results = await repo.searchUsers(q);
       if (mounted) setState(() => _results = results);
+    } on FirebaseFunctionsException catch (e) {
+      // Sunucu reddi (F1.1): misafir oturum `permission-denied`, hız sınırı
+      // `resource-exhausted` — sessiz "sonuç yok" yerine nedenini söyle.
+      if (mounted) {
+        setState(() => _results = const []);
+        final msg = switch (e.code) {
+          'permission-denied' => context.l10n.friendsSearchNeedsGoogle,
+          'resource-exhausted' => context.l10n.friendsSearchRateLimited,
+          _ => null,
+        };
+        if (msg != null) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(msg)));
+        }
+      }
     } catch (_) {
       if (mounted) setState(() => _results = const []);
     } finally {

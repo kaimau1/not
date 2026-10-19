@@ -2,6 +2,7 @@
 <!-- Kaynak küçültme (isShrinkResources) bildirim simgesini atmasın: Dart
      tarafı onu ADIYLA ister ('@drawable/ic_stat_notlar' — flutter_local_
      notifications çalışma anında getIdentifier ile bulur), kodda R
-     referansı olmadığından küçültücü kullanılmıyor sanabilir. -->
+     referansı olmadığından küçültücü kullanılmıyor sanabilir. Crashlytics'in
+     RequireBuildId bayrağı da aynı yolla (getIdentifier) okunur. -->
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@drawable/ic_stat_notlar" />
+    tools:keep="@drawable/ic_stat_notlar,@bool/com.crashlytics.RequireBuildId" />

@@ -34,6 +34,7 @@ String saveAsMimeType(Attachment a) {
     AttachmentKind.image => 'image/*',
     AttachmentKind.video => 'video/*',
     AttachmentKind.audio => 'audio/*',
+    AttachmentKind.unknown => 'application/octet-stream',
   };
 }
 

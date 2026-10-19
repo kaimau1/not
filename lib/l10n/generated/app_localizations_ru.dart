@@ -3050,7 +3050,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => 'Ad (en az 3 harf) ya da tam e-posta';
 
   @override
   String get friendsSearchTab => 'Ara';
@@ -5286,4 +5286,73 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get voiceOfflineInfo =>
       'Если языковой пакет загружен на телефон, речь распознаётся без интернета. Иначе автоматически используется онлайн-распознавание.';
+
+  @override
+  String get discoverable => 'Меня можно найти по имени';
+
+  @override
+  String get discoverableInfo =>
+      'Если включено, вас можно найти в «Поиске людей» по первым 3 буквам имени или полному email. Если выключено, запрос может отправить только тот, кто знает ваш email.';
+
+  @override
+  String get friendsSearchNeedsGoogle =>
+      'Войдите через аккаунт Google, чтобы искать людей.';
+
+  @override
+  String get friendsSearchRateLimited =>
+      'Слишком много запросов. Повторите через минуту.';
+
+  @override
+  String get updateRequiredBody =>
+      'Эта версия устарела: заметки открываются только для чтения. Обновите приложение, чтобы не повредить данные.';
+
+  @override
+  String get updateAction => 'Обновить';
+
+  @override
+  String get attachmentUnsupportedTitle =>
+      'Обновите приложение, чтобы открыть это вложение';
+
+  @override
+  String get attachmentUnsupportedBody =>
+      'Это вложение добавлено в более новой версии приложения. Эта версия не может его показать; оно сохраняется без изменений.';
+
+  @override
+  String noteTooLarge(String size, String part) {
+    return 'Заметка слишком большая ($size / 1024 КБ) — самая большая часть: $part. Перенесите часть в отдельную заметку, иначе она может не сохраниться.';
+  }
+
+  @override
+  String get noteSizeBody => 'текст';
+
+  @override
+  String get noteSizeItems => 'пункты списка';
+
+  @override
+  String get noteSizePageNotes => 'заметки страниц';
+
+  @override
+  String noteSaveRejected(String reason) {
+    return 'Не удалось сохранить заметку на сервере: $reason';
+  }
+
+  @override
+  String get errorLogShare => 'Поделиться журналом ошибок';
+
+  @override
+  String get errorLogInfo =>
+      'Последние ошибки хранятся только на этом устройстве и никуда не отправляются, пока вы ими не поделитесь.';
+
+  @override
+  String get errorLogEmpty => 'Ошибок не зафиксировано.';
+
+  @override
+  String get crashReports => 'Отправлять отчёты о сбоях';
+
+  @override
+  String get crashReportsInfo =>
+      'При сбое технический отчёт без содержимого заметок отправляется в Firebase Crashlytics (только Android).';
+
+  @override
+  String get noteTooLargeShort => 'заметка превышает лимит 1 МиБ';
 }

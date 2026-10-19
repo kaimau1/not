@@ -3001,7 +3001,7 @@ class AppLocalizationsKo extends AppLocalizations {
       'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => 'Ad (en az 3 harf) ya da tam e-posta';
 
   @override
   String get friendsSearchTab => 'Ara';
@@ -5179,4 +5179,69 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get voiceOfflineInfo =>
       '휴대폰에 언어 팩이 있으면 인터넷 없이 받아씁니다. 없으면 자동으로 온라인 인식을 사용합니다.';
+
+  @override
+  String get discoverable => '이름으로 나를 찾을 수 있음';
+
+  @override
+  String get discoverableInfo =>
+      '켜면 다른 사람이 \"사람 찾기\"에서 이름 앞 3글자나 전체 이메일로 나를 찾을 수 있습니다. 끄면 내 이메일을 아는 사람만 요청을 보낼 수 있습니다.';
+
+  @override
+  String get friendsSearchNeedsGoogle => '사람을 검색하려면 Google 계정으로 로그인하세요.';
+
+  @override
+  String get friendsSearchRateLimited => '검색이 너무 많습니다. 1분 후 다시 시도하세요.';
+
+  @override
+  String get updateRequiredBody =>
+      '이 버전은 오래되어 메모가 읽기 전용으로 열립니다. 데이터가 손상되지 않도록 앱을 업데이트하세요.';
+
+  @override
+  String get updateAction => '업데이트';
+
+  @override
+  String get attachmentUnsupportedTitle => '이 첨부 파일을 열려면 앱을 업데이트하세요';
+
+  @override
+  String get attachmentUnsupportedBody =>
+      '이 첨부 파일은 더 새로운 버전의 앱에서 추가되었습니다. 이 버전에서는 표시할 수 없지만 그대로 보존됩니다.';
+
+  @override
+  String noteTooLarge(String size, String part) {
+    return '메모가 너무 커지고 있습니다($size / 1024 KB) — 가장 큰 부분: $part. 일부를 다른 메모로 옮기지 않으면 저장되지 않을 수 있습니다.';
+  }
+
+  @override
+  String get noteSizeBody => '본문';
+
+  @override
+  String get noteSizeItems => '목록 항목';
+
+  @override
+  String get noteSizePageNotes => '페이지 메모';
+
+  @override
+  String noteSaveRejected(String reason) {
+    return '메모를 서버에 저장하지 못했습니다: $reason';
+  }
+
+  @override
+  String get errorLogShare => '오류 로그 공유';
+
+  @override
+  String get errorLogInfo => '최근 오류는 이 기기에만 저장되며 직접 공유하지 않는 한 어디에도 전송되지 않습니다.';
+
+  @override
+  String get errorLogEmpty => '기록된 오류가 없습니다.';
+
+  @override
+  String get crashReports => '충돌 보고서 보내기';
+
+  @override
+  String get crashReportsInfo =>
+      '앱이 충돌하면 메모 내용 없이 기술 보고서가 Firebase Crashlytics로 전송됩니다(Android 전용).';
+
+  @override
+  String get noteTooLargeShort => '메모가 1MiB 한도를 초과합니다';
 }

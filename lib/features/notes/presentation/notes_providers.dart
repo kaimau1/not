@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/search_fold.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
@@ -940,7 +941,7 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final notes = ref.watch(notesStreamProvider);
   // Geciktirilmiş sorgu: her tuş vuruşunda tüm notları taramamak için
   // (bkz. debouncedSearchQueryProvider).
-  final query = ref.watch(debouncedSearchQueryProvider).trim().toLowerCase();
+  final query = foldForSearch(ref.watch(debouncedSearchQueryProvider).trim());
   final filter = ref.watch(noteFilterProvider);
   final tag = ref.watch(selectedTagProvider);
   final folderId = ref.watch(selectedFolderProvider);
@@ -1004,7 +1005,7 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
       result = [
         for (final n in result)
           if (_matches(n, query) ||
-              (extra[n.id]?.toLowerCase().contains(query) ?? false))
+              (foldForSearch(extra[n.id] ?? '').contains(query)))
             n,
       ];
     }
@@ -1121,7 +1122,7 @@ String _searchableBody(Note note) {
       ..write('\n')
       ..write(attachment.text);
   }
-  final text = buffer.toString().toLowerCase();
+  final text = foldForSearch(buffer.toString());
   _searchBodyCache[note.id] = (note.updatedAt, text);
   return text;
 }
@@ -1131,22 +1132,22 @@ String _searchableBody(Note note) {
 /// Klasörün kendi sayfası da bunu kullanır (kullanıcı bulgusu 2026-09-01:
 /// "klasör içerisinde … arama yok"): iki yerde iki farklı eşleşme kuralı
 /// olsaydı aynı sorgu ana ekranda bulup klasörde bulamayabilirdi. [query]
-/// KÜÇÜK HARFE ÇEVRİLMİŞ ve kırpılmış gelmelidir (çağıran bir kez yapar,
-/// her not için değil).
+/// [foldForSearch] ile KATLANMIŞ ve kırpılmış gelmelidir (çağıran bir kez
+/// yapar, her not için değil) — Türkçe ı/I ve aksan farkı yok sayılır (F1.8).
 bool noteMatchesQuery(Note note, String query) => _matches(note, query);
 
 bool _matches(Note note, String query) {
-  if (note.title.toLowerCase().contains(query)) return true;
+  if (foldForSearch(note.title).contains(query)) return true;
   // Kilitli notun içeriği aramaya sızmasın; yalnızca başlıktan bulunur.
   if (note.locked) return false;
   // Arama biçim İŞARETLERİNİ görmez: "558" araması `**558**` yazan notu da
   // bulmalı (işaret metnin içinde taşınıyor, bkz. rich_text.dart).
   if (_searchableBody(note).contains(query)) return true;
   for (final attachment in note.attachments) {
-    if (attachment.fileName.toLowerCase().contains(query)) return true;
+    if (foldForSearch(attachment.fileName).contains(query)) return true;
   }
   for (final tag in note.tags) {
-    if (tag.toLowerCase().contains(query)) return true;
+    if (foldForSearch(tag).contains(query)) return true;
   }
   return false;
 }

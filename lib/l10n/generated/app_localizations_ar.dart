@@ -3033,7 +3033,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => 'Ad (en az 3 harf) ya da tam e-posta';
 
   @override
   String get friendsSearchTab => 'Ara';
@@ -5252,4 +5252,72 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get voiceOfflineInfo =>
       'إذا كانت حزمة اللغة منزّلة على الهاتف، يُحوَّل الكلام إلى نص دون اتصال. وإلا يُستخدم التعرّف عبر الإنترنت تلقائيًا.';
+
+  @override
+  String get discoverable => 'اسمح بالعثور عليّ بالاسم';
+
+  @override
+  String get discoverableInfo =>
+      'عند التفعيل، يمكن للآخرين العثور عليك في «البحث عن أشخاص» بأول 3 أحرف من اسمك أو ببريدك الكامل. عند الإيقاف، لا يرسل طلبًا إلا من يعرف بريدك.';
+
+  @override
+  String get friendsSearchNeedsGoogle =>
+      'سجّل الدخول بحساب Google للبحث عن أشخاص.';
+
+  @override
+  String get friendsSearchRateLimited =>
+      'عمليات بحث كثيرة. حاول مرة أخرى بعد دقيقة.';
+
+  @override
+  String get updateRequiredBody =>
+      'هذا الإصدار قديم: تُفتح الملاحظات للقراءة فقط. حدّث التطبيق حتى لا تتلف بياناتك.';
+
+  @override
+  String get updateAction => 'تحديث';
+
+  @override
+  String get attachmentUnsupportedTitle => 'حدّث التطبيق لفتح هذا المرفق';
+
+  @override
+  String get attachmentUnsupportedBody =>
+      'أُضيف هذا المرفق في إصدار أحدث من التطبيق. لا يستطيع هذا الإصدار عرضه؛ ويبقى كما هو.';
+
+  @override
+  String noteTooLarge(String size, String part) {
+    return 'الملاحظة أصبحت كبيرة جدًا ($size / 1024 ك.ب) — أكبر جزء: $part. انقل جزءًا منها إلى ملاحظة منفصلة وإلا فقد يفشل الحفظ.';
+  }
+
+  @override
+  String get noteSizeBody => 'النص';
+
+  @override
+  String get noteSizeItems => 'عناصر القائمة';
+
+  @override
+  String get noteSizePageNotes => 'ملاحظات الصفحات';
+
+  @override
+  String noteSaveRejected(String reason) {
+    return 'تعذّر حفظ الملاحظة على الخادم: $reason';
+  }
+
+  @override
+  String get errorLogShare => 'مشاركة سجل الأخطاء';
+
+  @override
+  String get errorLogInfo =>
+      'تُحفظ الأخطاء الأخيرة على هذا الجهاز فقط ولا تُرسل إلى أي مكان ما لم تشاركها.';
+
+  @override
+  String get errorLogEmpty => 'لا توجد أخطاء مسجلة.';
+
+  @override
+  String get crashReports => 'إرسال تقارير الأعطال';
+
+  @override
+  String get crashReportsInfo =>
+      'عند تعطل التطبيق يُرسل تقرير تقني دون محتوى ملاحظاتك إلى Firebase Crashlytics (أندرويد فقط).';
+
+  @override
+  String get noteTooLargeShort => 'الملاحظة تتجاوز حد 1 ميبيبايت';
 }

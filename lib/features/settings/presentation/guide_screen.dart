@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/utils/search_fold.dart';
 import '../../../core/l10n_ext.dart';
 
 /// KULLANIM KILAVUZU (kullanıcı isteği 2026-10-11: "tüm özellikleri anlatan,
@@ -40,7 +41,7 @@ class GuideSection {
 
   /// Aramada eşleşme için bölümün bütün metni (küçük harf).
   String get searchText =>
-      '$title\n${blocks.map((b) => b.text).join('\n')}'.toLowerCase();
+      foldForSearch('$title\n${blocks.map((b) => b.text).join('\n')}');
 }
 
 enum GuideBlockKind { paragraph, subheading, bullet, step }
@@ -240,7 +241,7 @@ class _GuideScreenState extends State<GuideScreen> {
           if (guide == null) {
             return const Center(child: CircularProgressIndicator());
           }
-          final query = _query.trim().toLowerCase();
+          final query = foldForSearch(_query.trim());
           final visible = [
             for (final s in guide.sections)
               if (query.isEmpty || s.searchText.contains(query)) s,

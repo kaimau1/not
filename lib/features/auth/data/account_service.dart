@@ -4,22 +4,68 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
+import '../../notes/data/drive_store.dart';
 import '../../notes/data/local_notes_store.dart';
 import '../presentation/auth_providers.dart';
 import 'auth_repository.dart';
 
 final accountServiceProvider = Provider<AccountService>(
-  (ref) => AccountService(ref.watch(authRepositoryProvider)),
+  (ref) => AccountService(
+    ref.watch(authRepositoryProvider),
+    drive: () => ref.read(driveStoreProvider),
+  ),
 );
 
 /// Hesabın ve tüm kullanıcı verilerinin kalıcı silinmesi. Google Play,
 /// hesap oluşturan uygulamaların uygulama içinden hesap silme sunmasını
-/// zorunlu kılar; bu servis Storage ekleri + Firestore notları + Auth
-/// hesabını sırayla ve geri dönüşsüz siler.
+/// zorunlu kılar; bu servis Storage ekleri + Drive ekleri + Firestore
+/// notları + paylaşım aynaları + arama kaydı + Auth hesabını sırayla ve geri
+/// dönüşsüz siler.
 class AccountService {
-  AccountService(this._auth);
+  AccountService(this._auth, {DriveStore? Function()? drive})
+    // ignore: prefer_initializing_formals
+    : _drive = drive;
 
   final AuthRepository _auth;
+  final DriveStore? Function()? _drive;
+
+  /// `users/{uid}` altında boşaltılan alt koleksiyonlar. TEK KAYNAK (F1.2):
+  /// `account_service_test` kod tabanındaki her `collection(...)` adının ya
+  /// burada, ya [deletedRootCollections]da, ya da [keptCollections]da
+  /// olduğunu doğrular — yeni bir koleksiyon eklenip silmeye unutulursa test
+  /// kırılır.
+  static const deletedUserSubcollections = <String>[
+    AppConstants.notesCollection,
+    AppConstants.foldersCollection,
+    AppConstants.friendsCollection,
+    AppConstants.friendRequestsCollection,
+    // Bana gönderilmiş, henüz kabul edilmemiş notlar da benim verimdir.
+    AppConstants.inboxNotesCollection,
+    'aiReports',
+  ];
+
+  /// Kök koleksiyonlarda silinen KENDİ kayıtlarım (sırası
+  /// [deleteAccountAndData]da): sahip olduğum `folderShares` (+ `messages`
+  /// alt koleksiyonu + Storage `folderChats/{id}/`), `ownerId == uid` olan
+  /// `noteShares`, `userDirectory/{eposta}`, `userSearch/{uid}`, `users/{uid}`.
+  static const deletedRootCollections = <String>[
+    AppConstants.folderSharesCollection,
+    AppConstants.folderMessagesCollection,
+    AppConstants.noteSharesCollection,
+    AppConstants.userDirectoryCollection,
+    'userSearch',
+    AppConstants.usersCollection,
+  ];
+
+  /// BİLEREK silinmeyenler: `aiQuota/{uid}` ve `rateLimits/{uid}` kurallarda
+  /// istemciye silmeye kapalı (silip sayacı sıfırlamak kotayı/hız sınırını
+  /// delerdi) ve kişisel içerik taşımaz — yalnız sayaç + zaman damgası.
+  static const keptCollections = <String>[
+    AppConstants.aiQuotaCollection,
+    'rateLimits',
+    // Uygulama yapılandırması — kullanıcı verisi değil (bkz. app_update.dart).
+    'config',
+  ];
 
   Future<void> deleteAccountAndData() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -39,24 +85,14 @@ class AccountService {
         .doc(uid);
     // Yalnız bu cihazda tutulan notlar da hesabın verisidir.
     await LocalNotesStore.forUid(uid)?.clearAll();
-    for (final name in const [
-      AppConstants.notesCollection,
-      AppConstants.foldersCollection,
-      AppConstants.friendsCollection,
-      AppConstants.friendRequestsCollection,
-      // Bana gönderilmiş, henüz kabul edilmemiş notlar da benim verimdir.
-      AppConstants.inboxNotesCollection,
-      'aiReports',
-    ]) {
-      final snapshot = await userDoc.collection(name).get();
-      // Batch sınırı 500; 400'erlik güvenli gruplar.
-      for (var i = 0; i < snapshot.docs.length; i += 400) {
-        final batch = firestore.batch();
-        for (final doc in snapshot.docs.skip(i).take(400)) {
-          batch.delete(doc.reference);
-        }
-        await batch.commit();
-      }
+    // Drive'daki ekler (bağlıysa): appDataFolder yalnız bu uygulamaya ait,
+    // içindeki her şey bu hesabın ekleri. Bağlı değilse/ulaşılamazsa
+    // atlanır — dosyalar kullanıcının KENDİ Drive'ında, uygulama silinince
+    // Google hesabından "Uygulama verileri" ile silinebilir.
+    await _drive?.call()?.deleteAllAppData();
+
+    for (final name in deletedUserSubcollections) {
+      await _deleteDocs(firestore, (await userDoc.collection(name).get()).docs);
     }
 
     // 2b) KÖK koleksiyonlardaki kendi kayıtları: `folderShares` (sahip
@@ -75,13 +111,31 @@ class AccountService {
         .collection(AppConstants.folderSharesCollection)
         .where('ownerId', isEqualTo: uid)
         .get();
-    for (var i = 0; i < shares.docs.length; i += 400) {
-      final batch = firestore.batch();
-      for (final doc in shares.docs.skip(i).take(400)) {
-        batch.delete(doc.reference);
-      }
-      await batch.commit();
+    for (final share in shares.docs) {
+      // Sıra ÖNEMLİ: sohbet görsellerinin Storage kuralı üyeliği aynadan
+      // okuyor — ayna silinince dosyalara artık kimse (ben de) dokunamaz.
+      await _deleteStorageFolder(
+        FirebaseStorage.instance.ref(
+          '${AppConstants.folderChatStoragePrefix}/${share.id}',
+        ),
+      );
+      final messages = await share.reference
+          .collection(AppConstants.folderMessagesCollection)
+          .get();
+      await _deleteDocs(firestore, messages.docs);
     }
+    await _deleteDocs(firestore, shares.docs);
+    final noteShares = await firestore
+        .collection(AppConstants.noteSharesCollection)
+        .where('ownerId', isEqualTo: uid)
+        .get();
+    await _deleteDocs(firestore, noteShares.docs);
+    // Silinen kullanıcı aramada çıkmaya devam etmesin.
+    await firestore
+        .collection('userSearch')
+        .doc(uid)
+        .delete()
+        .catchError((_) {});
     final email = user.email;
     if (email != null && email.trim().isNotEmpty) {
       await firestore
@@ -120,6 +174,20 @@ class AccountService {
     try {
       await _auth.signOut();
     } catch (_) {}
+  }
+
+  /// Batch sınırı 500; 400'erlik güvenli gruplar.
+  static Future<void> _deleteDocs(
+    FirebaseFirestore firestore,
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+  ) async {
+    for (var i = 0; i < docs.length; i += 400) {
+      final batch = firestore.batch();
+      for (final doc in docs.skip(i).take(400)) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    }
   }
 
   Future<void> _deleteStorageFolder(Reference ref) async {

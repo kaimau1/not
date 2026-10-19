@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/search_fold.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -207,7 +208,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
         data: (raw) => ValueListenableBuilder<TextEditingValue>(
           valueListenable: _searchController,
           builder: (context, value, _) {
-            final needle = value.text.trim().toLowerCase();
+            final needle = foldForSearch(value.text.trim());
             final all = visible(raw);
             final notes = needle.isEmpty
                 ? all

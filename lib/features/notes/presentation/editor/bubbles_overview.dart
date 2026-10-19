@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/search_fold.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../viewers/bubble_layer.dart';
@@ -47,11 +48,11 @@ class _BubblesOverviewScreenState extends State<_BubblesOverviewScreen> {
   /// numarası, sonra sayfa içindeki dikey konum — yani belgeyi okurken
   /// karşılaşacağın sıra.
   List<PageBubble> _visible() {
-    final query = _search.text.trim().toLowerCase();
+    final query = foldForSearch(_search.text.trim());
     final out = [
       for (final b in widget.controller.bubbles)
         if (!_onlyStarred || b.starred)
-          if (query.isEmpty || b.text.toLowerCase().contains(query)) b,
+          if (query.isEmpty || foldForSearch(b.text).contains(query)) b,
     ];
     out.sort((a, b) {
       if (a.starred != b.starred) return a.starred ? -1 : 1;

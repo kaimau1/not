@@ -3038,7 +3038,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => 'Ad (en az 3 harf) ya da tam e-posta';
 
   @override
   String get friendsSearchTab => 'Ara';
@@ -5260,4 +5260,72 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get voiceOfflineInfo =>
       'Telefonda dil paketi indirilmişse sesin internete gitmeden yazıya döker. Paket yoksa kendiliğinden çevrimiçi tanımaya döner.';
+
+  @override
+  String get discoverable => 'Adımla bulunabilirim';
+
+  @override
+  String get discoverableInfo =>
+      'Açıkken başkaları seni adının ilk 3 harfiyle ya da tam e-postanla \"Kişi ara\"da bulabilir. Kapalıyken yalnız e-postanı bilen biri istek gönderebilir.';
+
+  @override
+  String get friendsSearchNeedsGoogle =>
+      'Kişi aramak için Google hesabıyla giriş yap.';
+
+  @override
+  String get friendsSearchRateLimited =>
+      'Çok fazla arama yaptın, bir dakika sonra tekrar dene.';
+
+  @override
+  String get updateRequiredBody =>
+      'Bu sürüm eski: notlar salt okunur açılıyor. Verilerin bozulmasın diye uygulamayı güncelle.';
+
+  @override
+  String get updateAction => 'Güncelle';
+
+  @override
+  String get attachmentUnsupportedTitle => 'Bu ek için uygulamayı güncelle';
+
+  @override
+  String get attachmentUnsupportedBody =>
+      'Bu ek uygulamanın daha yeni bir sürümünde eklendi. Bu sürüm onu gösteremiyor; ek korunuyor, silinmiyor.';
+
+  @override
+  String noteTooLarge(String size, String part) {
+    return 'Not çok büyüdü ($size / 1024 KB) — en büyük kısım: $part. Bir kısmını ayrı bir nota taşı, yoksa kaydedilemeyebilir.';
+  }
+
+  @override
+  String get noteSizeBody => 'metin';
+
+  @override
+  String get noteSizeItems => 'maddeler';
+
+  @override
+  String get noteSizePageNotes => 'sayfa notları';
+
+  @override
+  String noteSaveRejected(String reason) {
+    return 'Not sunucuya kaydedilemedi: $reason';
+  }
+
+  @override
+  String get errorLogShare => 'Hata günlüğünü paylaş';
+
+  @override
+  String get errorLogInfo =>
+      'Son hatalar yalnız bu cihazda tutulur; sen paylaşmadıkça hiçbir yere gitmez.';
+
+  @override
+  String get errorLogEmpty => 'Kayıtlı hata yok.';
+
+  @override
+  String get crashReports => 'Çökme raporlarını gönder';
+
+  @override
+  String get crashReportsInfo =>
+      'Uygulama çökünce not içeriği olmadan teknik bir rapor Firebase Crashlytics\'e gider (yalnız Android).';
+
+  @override
+  String get noteTooLargeShort => 'not 1 MiB sınırını aştı';
 }

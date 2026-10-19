@@ -10,6 +10,8 @@ import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/crash_reporting.dart';
+import '../../../core/utils/firestore_size.dart';
 import '../../../core/utils/local_file.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
@@ -242,6 +244,12 @@ class NotesRepository {
   /// Her yazımda `updatedBy` olarak kayda geçer; paylaşılan klasör rozeti ve
   /// bildirimi "bu değişikliği ben mi yaptım" sorusunu buradan yanıtlar —
   /// yoksa kendi düzenlemem kendi telefonuma bildirim düşerdi.
+  ///
+  /// **KURAL ZORUNLU KILIYOR (F1.4, 2026-10-19):** paylaşılan yollarda
+  /// (klasör + ortak not) `firestore.rules` `updatedBy == request.auth.uid`
+  /// istiyor — bu sınıftaki HER bulut yazımı `updatedBy` taşımalı, yoksa
+  /// paylaşılan notta reddedilir. Oluşturmada ayrıca `createdBy` yazılır
+  /// ('write' rolü yalnız kendi oluşturduğu notu güncelleyebilir).
   final String editorUid;
 
   final FirebaseFirestore _firestore;
@@ -406,7 +414,13 @@ class NotesRepository {
           orderIndex ?? -DateTime.now().millisecondsSinceEpoch.toDouble(),
     );
     // Bekletmeden yaz: çevrimdışıyken de anında açılabilsin.
-    unawaited(doc.set({...note.toMap(), 'updatedBy': editorUid}));
+    unawaited(
+      doc.set({
+        ...note.toMap(),
+        'updatedBy': editorUid,
+        'createdBy': editorUid,
+      }),
+    );
     return doc.id;
   }
 
@@ -460,7 +474,13 @@ class NotesRepository {
       listColumns: note.listColumns,
       orderIndex: -DateTime.now().millisecondsSinceEpoch.toDouble(),
     );
-    unawaited(doc.set({...copy.toMap(), 'updatedBy': editorUid}));
+    unawaited(
+      doc.set({
+        ...copy.toMap(),
+        'updatedBy': editorUid,
+        'createdBy': editorUid,
+      }),
+    );
     return doc.id;
   }
 
@@ -486,11 +506,18 @@ class NotesRepository {
     }
     final fields = {...note.toMap(), 'updatedBy': editorUid};
     final digest = attachmentsDigest(fields['attachments']);
+    _checkSize(note, fields, digest);
     if (_writtenAttachments[note.id] == digest) fields.remove('attachments');
     final write = _notes.doc(note.id).set(fields, SetOptions(merge: true));
     write.then(
       (_) => _writtenAttachments[note.id] = digest,
-      onError: (Object _) => _writtenAttachments.remove(note.id),
+      // Blok gövde ŞART: `=> map.remove(...)` String? döndürüyordu ve
+      // `onError`ın dönüş türüyle uyuşmayınca reddin üstüne ikinci,
+      // yakalanmamış bir hata doğuyordu (F1.7). Red artık YUTULMUYOR (F1.6).
+      onError: (Object e, StackTrace st) {
+        _writtenAttachments.remove(note.id);
+        _reportRejected(note.id, e, st);
+      },
     );
     unawaited(write);
     return write;
@@ -499,6 +526,81 @@ class NotesRepository {
   /// Not kimliği → sunucuya son BAŞARIYLA yazılan ek listesinin özeti (bkz.
   /// [updateNote]).
   final Map<String, String> _writtenAttachments = {};
+
+  /// **1 MiB BELGE SINIRI** (F1.6). Firestore tek belgeyi 1 MiB'te keser;
+  /// çizim/balon/transkript/sayfa notu aynı belgede büyüyen not bu eşiği
+  /// geçince kullanıcı uyarılır (en büyük kalem söylenerek). Kalıcı çözüm
+  /// büyük kalemleri ayrı belgelere bölmek (YOL_HARITASI F3.13).
+  static const docWarnBytes = 900 * 1024;
+
+  /// Uyarı/red olayları — arayüz tek yerden dinler (bkz.
+  /// `NoteWriteIssueListener`). Statik: depo örnekleri kısa ömürlü ve
+  /// birden çok (sahip başına) kurulabiliyor.
+  static final _issues = StreamController<NoteWriteIssue>.broadcast();
+  static Stream<NoteWriteIssue> get writeIssues => _issues.stream;
+
+  /// Ek listesinin bayt tahmini, özete göre önbellekte: ek listesi büyük ve
+  /// çoğu kayıtta değişmiyor, her tuşta yeniden yürümeye değmez.
+  final Map<String, (String, int)> _attachmentBytes = {};
+
+  void _checkSize(Note note, Map<String, dynamic> fields, String digest) {
+    final cached = _attachmentBytes[note.id];
+    final attachmentBytes = cached != null && cached.$1 == digest
+        ? cached.$2
+        : estimateValueBytes(fields['attachments']);
+    _attachmentBytes[note.id] = (digest, attachmentBytes);
+    final rest = Map<String, dynamic>.of(fields)..remove('attachments');
+    final total = estimateFirestoreBytes(rest) + attachmentBytes;
+    if (total < docWarnBytes) return;
+    _issues.add(
+      NoteWriteIssue.tooLarge(
+        noteId: note.id,
+        bytes: total,
+        largest: largestPart(note),
+      ),
+    );
+  }
+
+  void _reportRejected(String noteId, Object error, StackTrace stack) {
+    CrashReporting.recordNonFatal('firestore-write', error, stack);
+    final reason = error is FirebaseException
+        ? (error.code == 'invalid-argument' &&
+                  (error.message ?? '').contains('exceeds the maximum')
+              ? 'too-large'
+              : error.code)
+        : '$error';
+    _issues.add(NoteWriteIssue.rejected(noteId: noteId, reason: reason));
+  }
+
+  /// Notun en büyük kalemi: gövde, maddeler, sayfa notları ya da tek bir ek
+  /// (dosya adıyla).
+  static NotePart largestPart(Note note) {
+    var best = NotePart(NotePartKind.body, '', estimateValueBytes(note.body));
+    void consider(NotePart p) {
+      if (p.bytes > best.bytes) best = p;
+    }
+
+    consider(
+      NotePart(
+        NotePartKind.items,
+        '',
+        estimateValueBytes([for (final i in note.items) i.toMap()]),
+      ),
+    );
+    consider(
+      NotePart(NotePartKind.pageNotes, '', estimateValueBytes(note.pageNotes)),
+    );
+    for (final a in note.attachments) {
+      consider(
+        NotePart(
+          NotePartKind.attachment,
+          a.fileName,
+          estimateValueBytes(a.toMap()),
+        ),
+      );
+    }
+    return best;
+  }
 
   void updateFields(String noteId, Map<String, dynamic> fields) {
     unawaited(updateFieldsAndWait(noteId, fields));
@@ -527,7 +629,12 @@ class NotesRepository {
       'updatedAt': FieldValue.serverTimestamp(),
       'updatedBy': editorUid,
     }, SetOptions(merge: true));
-    unawaited(write);
+    // Red yutulmasın (F1.6): kullanıcıya ve hata günlüğüne. Çağıranın kendi
+    // beklemesi/yakalaması etkilenmez — bu ayrı bir dinleyici.
+    write.then<void>(
+      (_) {},
+      onError: (Object e, StackTrace st) => _reportRejected(noteId, e, st),
+    );
     return write;
   }
 
@@ -548,8 +655,10 @@ class NotesRepository {
       if (ordered[i].orderIndex != want && isLocal(ordered[i].id)) {
         local!.merge(ordered[i].id, {'orderIndex': want});
       } else if (ordered[i].orderIndex != want) {
+        // `updatedBy` paylaşılan yolda kural gereği ZORUNLU (F1.4).
         batch.set(_notes.doc(ordered[i].id), {
           'orderIndex': want,
+          'updatedBy': editorUid,
         }, SetOptions(merge: true));
         // Firestore batch tavanı 500 işlem; taşarsa parça parça gönder.
         if (++ops == 450) {
@@ -796,6 +905,7 @@ class NotesRepository {
         ];
         tx.update(ref, {
           'attachments': [for (final a in attachments) a.toMap()],
+        'updatedBy': editorUid,
         });
       });
   }
@@ -899,4 +1009,41 @@ class NotesRepository {
 /// buluttaki dosya yok). Not OLDUĞU GİBİ bırakıldı.
 class LocalOnlyException implements Exception {
   const LocalOnlyException();
+}
+
+enum NotePartKind { body, items, pageNotes, attachment }
+
+/// Notun boyut kalemi (bkz. [NotesRepository.largestPart]).
+class NotePart {
+  const NotePart(this.kind, this.name, this.bytes);
+
+  final NotePartKind kind;
+
+  /// Ek ise dosya adı; öbür kalemlerde boş.
+  final String name;
+  final int bytes;
+}
+
+/// Not yazımıyla ilgili kullanıcıya söylenmesi gereken durum (F1.6).
+class NoteWriteIssue {
+  const NoteWriteIssue.tooLarge({
+    required this.noteId,
+    required int this.bytes,
+    required NotePart this.largest,
+  }) : reason = null;
+
+  const NoteWriteIssue.rejected({
+    required this.noteId,
+    required String this.reason,
+  }) : bytes = null,
+       largest = null;
+
+  final String noteId;
+  final int? bytes;
+  final NotePart? largest;
+
+  /// Red nedeni (Firestore hata kodu; boyut reddinde `too-large`).
+  final String? reason;
+
+  bool get isRejected => reason != null;
 }

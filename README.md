@@ -1,6 +1,6 @@
 # Notlar
 
-Firebase senkronlu, yapay zeka destekli not uygulaması — **Android** ve **Windows** için tek Flutter kod tabanı.
+Firebase senkronlu, yapay zeka destekli not uygulaması — **Android**, **Windows** ve **web** için tek Flutter kod tabanı.
 
 ## Özellikler
 
@@ -8,8 +8,9 @@ Firebase senkronlu, yapay zeka destekli not uygulaması — **Android** ve **Win
 - **Dashboard** — Google Keep tarzı masonry ızgara; pencere genişliğine göre 2–6 sütun, tek sayfada olabildiğince çok not.
 - **Not tipleri** — metin, alışveriş/kontrol listesi (işaretlenebilir), sıralı liste (sürükle-bırak).
 - **Ekler** — fotoğraf/ekran görüntüsü ve PDF; Firebase Storage'da saklanır. Windows'ta panodan görsel yapıştırma (`Ctrl+Shift+V`).
-- **Yapay zeka (Gemini)** — not özeti/analizi, PDF özeti, notlardan öneriler. Kendi API anahtarınla çalışır; anahtar yalnızca cihazda saklanır.
-- **Gmail** — gelen kutundaki son e-postaları yapay zeka tarar, önemli olanları kısa Türkçe özetle listeler (salt-okunur erişim; e-posta içeriği hiçbir yere kaydedilmez).
+- **Yapay zeka** — not özeti/analizi, PDF sohbeti, sesli komut, canlı çeviri, semantik arama, günlük brifing. Varsayılan dahili Gemini (Firebase AI Logic, günlük kota); istersen kendi anahtarınla Gemini, OpenAI, Anthropic ya da OpenRouter. Anahtar yalnızca cihazda saklanır.
+- **Kişiler ve paylaşım** — arkadaş ekleme (ad/e-posta araması, Cloud Function), paylaşılan klasörler (okuma/yazma rolleri, sohbet), ortak not, gelen kutusu (not gönderme).
+- **Ekler için Google Drive** (isteğe bağlı) — ekler kendi Drive'ının uygulama klasöründe saklanabilir.
 - **Premium sade tasarım** — Material 3, açık/koyu tema (isteğe bağlı saat aralıklı otomatik koyu tema), ayarlanabilir yazı boyutu, yüksek yenileme hızı (120/144/165 Hz) desteği.
 - Hızlı ekleme çubuğu, `Ctrl+N` kısayolu, otomatik kayıt, kaydırarak/sağ tıkla silme + geri alma.
 - **Hatırlatıcılar** — nota tarih/saat ekle, zamanı gelince bildirim al (cihazlar arası senkronlanır).
@@ -19,7 +20,6 @@ Firebase senkronlu, yapay zeka destekli not uygulaması — **Android** ve **Win
 - **Fotoğraftan metin (OCR)** — görseldeki metni yapay zeka ile çıkarıp nota ekle.
 - **Notlarla sohbet** — "geçen hafta yazdığım tarif neydi?" gibi soruları AI'a sor.
 - **Haftalık özet** — son 7 günün notlarından otomatik özet ve yapılacaklar.
-- **E-postadan not** — önemli e-postayı tek dokunuşla (son tarih yakalandıysa hatırlatıcılı) nota çevir.
 - **Android ana ekran widget'ı** — son notların bir bakışta.
 
 ## Kurulum
@@ -57,14 +57,15 @@ cd android && ./gradlew signingReport
 
 ### 4. Google Cloud Console (aynı proje)
 
-1. **OAuth consent screen**: External + **Testing** modu; kendi Gmail adresini *test user* olarak ekle; kapsamlara `gmail.readonly` ekle.
+1. **OAuth consent screen**: External + **Testing** modu; kendi Google adresini *test user* olarak ekle (Drive eki için `drive.appdata` kapsamı).
 2. **Credentials → Create credentials → OAuth client ID → Desktop app** oluştur (Windows girişi için). Client ID ve secret'ı not al.
 3. Firebase'in otomatik oluşturduğu **Web client ID**'yi not al (Android `serverClientId` olarak kullanılır).
-4. **Gmail API**'yi etkinleştir (APIs & Services → Library).
+4. Drive ekleri kullanılacaksa **Google Drive API**'yi etkinleştir (APIs & Services → Library).
+5. Kişi araması için Cloud Functions (`functions/`, Blaze planı) — `main`'e push'ta CI'ın `deploy` işi yayınlar.
 
-### 5. Gemini API anahtarı
+### 5. (İsteğe bağlı) Kendi AI anahtarın
 
-[Google AI Studio](https://aistudio.google.com)'dan ücretsiz anahtar al → uygulamada **Ayarlar → Gemini API Anahtarı** alanına yapıştır.
+Dahili AI kotalıdır. Kendi anahtarınla sınırsız kullanmak için [Google AI Studio](https://aistudio.google.com)'dan (ya da OpenAI/Anthropic/OpenRouter'dan) anahtar al → uygulamada **Ayarlar → Yapay zeka** bölümüne yapıştır.
 
 ## Çalıştırma
 
@@ -91,14 +92,18 @@ Windows sürümü CI'da derlenmiyor (yavaş ve nadiren gerekiyor). Masaüstü pa
 ```
 lib/
 ├── app/            # MaterialApp, router (go_router), tema
-├── core/           # sabitler, ortak widget'lar, yardımcılar
+├── core/           # sabitler, ortak widget'lar, yardımcılar, hata günlüğü, sürüm kapısı
 ├── features/
-│   ├── auth/       # Google girişi (Android: google_sign_in, Windows: PKCE loopback)
-│   ├── notes/      # domain modelleri, Firestore repository, dashboard, editörler, ekler
-│   ├── ai/         # Gemini REST servisi, AI sayfaları
-│   ├── gmail/      # Gmail API + e-posta triyajı
-│   └── settings/   # tema, API anahtarı, Gmail bağlantısı, hesap
-└── l10n/           # Türkçe arayüz metinleri (ARB)
+│   ├── auth/       # Google/misafir girişi (Android: google_sign_in, Windows: PKCE loopback), hesap silme
+│   ├── notes/      # domain modelleri, Firestore/yerel/Drive depoları, dashboard, editörler, ekler
+│   ├── folders/    # klasörler, paylaşılan klasör + sohbet
+│   ├── friends/    # kişiler: arama, istek/kabul
+│   ├── inbox/      # gelen notlar (arkadaştan gönderilen)
+│   ├── ai/         # çok sağlayıcılı AI istemcisi, AI sayfaları
+│   └── settings/   # ayarlar, kılavuz, gizlilik
+├── l10n/           # arayüz metinleri (ARB, 16 dil; şablon Türkçe)
+web/                # web derlemesi kabuğu
+functions/          # Cloud Functions (searchUsers)
 ```
 
 - **State management**: Riverpod. Firestore `snapshots()` akışları doğrudan provider'lara bağlanır.
@@ -115,7 +120,7 @@ flutter test
 
 ## CI: Otomatik derleme (GitHub Actions)
 
-Her push'ta `.github/workflows/build.yml` çalışır: önce analiz + testler, ardından **Android APK** derlenip Actions sekmesinde *artifact* olarak yüklenir (`notlar-android-apk`). İndirmek için: GitHub → **Actions** → ilgili çalıştırma → **Artifacts**. `main`'e push'ta APK ayrıca kalıcı bir **Release** olarak yayınlanır. Windows sürümü CI'da derlenmez; yerel `build-windows.bat` ile derlenir (yukarı bak).
+Her push'ta `.github/workflows/build.yml` çalışır: analiz + testler. **Android APK** yalnız `main`'de, başlığında `[apk]` geçen commit'le derlenir ve kalıcı bir **Release** olarak yayınlanır (GitHub → Releases). `main`'e push'ta ayrıca Firestore/Storage kuralları ve Cloud Functions yayınlanır (`deploy` işi) ve web sürümü derlenir. Windows sürümü CI'da derlenmez; yerel `build-windows.bat` ile derlenir (yukarı bak).
 
 Google girişinin derlemeye gömülü gelmesi için depoda şu *secret*'ları tanımlayabilirsin (Settings → Secrets and variables → Actions):
 

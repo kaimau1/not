@@ -4,9 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../core/app_update.dart';
 import '../core/l10n_ext.dart';
 import '../core/widgets/customizable.dart';
 import '../core/widgets/undo_snackbar.dart';
+import '../features/notes/presentation/note_write_issues.dart';
 import '../features/settings/settings_providers.dart';
 import 'router.dart';
 import 'web_history.dart';
@@ -159,7 +161,16 @@ class NotlarApp extends ConsumerWidget {
             context,
             // DÜZENLEME MODU şeridi bütün ekranların üstünde (bkz.
             // customizable.dart) — mod kapalıyken ağaca hiçbir şey eklemez.
-            CustomizeModeHost(child: child ?? const SizedBox.shrink()),
+            CustomizeModeHost(
+              // Eski istemci kapısı (F1.5): `config/app.minClient` bu
+              // sürümün veri sürümünü aştıysa tepede "güncelle" şeridi.
+              child: UpdateRequiredBanner(
+                // Not yazım sorunları (F1.6: 1 MiB sınırı / sunucu reddi).
+                child: NoteWriteIssueListener(
+                  child: child ?? const SizedBox.shrink(),
+                ),
+              ),
+            ),
             fontScale,
           ),
         );

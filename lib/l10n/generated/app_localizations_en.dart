@@ -3040,7 +3040,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Contacts and folder sharing require a linked Google account.';
 
   @override
-  String get friendsSearchHint => 'Search by name or email';
+  String get friendsSearchHint => 'Name (3+ letters) or full email';
 
   @override
   String get friendsSearchTab => 'Search';
@@ -5273,4 +5273,73 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get voiceOfflineInfo =>
       'If the language pack is downloaded on your phone, speech is transcribed without going online. Without it, online recognition is used automatically.';
+
+  @override
+  String get discoverable => 'Let people find me by name';
+
+  @override
+  String get discoverableInfo =>
+      'When on, others can find you in \"Find people\" by the first 3 letters of your name or your full email. When off, only someone who knows your email can send a request.';
+
+  @override
+  String get friendsSearchNeedsGoogle =>
+      'Sign in with a Google account to search for people.';
+
+  @override
+  String get friendsSearchRateLimited =>
+      'Too many searches. Try again in a minute.';
+
+  @override
+  String get updateRequiredBody =>
+      'This version is outdated: notes open read-only. Update the app so your data stays intact.';
+
+  @override
+  String get updateAction => 'Update';
+
+  @override
+  String get attachmentUnsupportedTitle =>
+      'Update the app to open this attachment';
+
+  @override
+  String get attachmentUnsupportedBody =>
+      'This attachment was added in a newer version of the app. This version can\'t show it; it is kept as is.';
+
+  @override
+  String noteTooLarge(String size, String part) {
+    return 'This note is getting too large ($size / 1024 KB) — largest part: $part. Move some of it to a separate note or it may fail to save.';
+  }
+
+  @override
+  String get noteSizeBody => 'text';
+
+  @override
+  String get noteSizeItems => 'list items';
+
+  @override
+  String get noteSizePageNotes => 'page notes';
+
+  @override
+  String noteSaveRejected(String reason) {
+    return 'The note could not be saved to the server: $reason';
+  }
+
+  @override
+  String get errorLogShare => 'Share error log';
+
+  @override
+  String get errorLogInfo =>
+      'Recent errors are kept only on this device; they go nowhere unless you share them.';
+
+  @override
+  String get errorLogEmpty => 'No errors recorded.';
+
+  @override
+  String get crashReports => 'Send crash reports';
+
+  @override
+  String get crashReportsInfo =>
+      'When the app crashes, a technical report without your note content is sent to Firebase Crashlytics (Android only).';
+
+  @override
+  String get noteTooLargeShort => 'the note exceeds the 1 MiB limit';
 }

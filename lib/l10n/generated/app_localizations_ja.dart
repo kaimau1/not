@@ -2998,7 +2998,7 @@ class AppLocalizationsJa extends AppLocalizations {
       'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => 'Ad (en az 3 harf) ya da tam e-posta';
 
   @override
   String get friendsSearchTab => 'Ara';
@@ -5173,4 +5173,69 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get voiceOfflineInfo =>
       '端末に言語パックがあれば、インターネットを使わずに文字起こしします。ない場合は自動でオンライン認識を使います。';
+
+  @override
+  String get discoverable => '名前で検索できるようにする';
+
+  @override
+  String get discoverableInfo =>
+      'オンにすると、名前の最初の3文字または完全なメールアドレスで「人を探す」から見つけてもらえます。オフにすると、メールアドレスを知っている人だけがリクエストを送れます。';
+
+  @override
+  String get friendsSearchNeedsGoogle => '人を検索するには Google アカウントでログインしてください。';
+
+  @override
+  String get friendsSearchRateLimited => '検索が多すぎます。1分後にもう一度お試しください。';
+
+  @override
+  String get updateRequiredBody =>
+      'このバージョンは古いため、メモは読み取り専用で開きます。データを守るためにアプリを更新してください。';
+
+  @override
+  String get updateAction => '更新';
+
+  @override
+  String get attachmentUnsupportedTitle => 'この添付ファイルを開くにはアプリを更新してください';
+
+  @override
+  String get attachmentUnsupportedBody =>
+      'この添付ファイルは新しいバージョンのアプリで追加されました。このバージョンでは表示できませんが、そのまま保持されます。';
+
+  @override
+  String noteTooLarge(String size, String part) {
+    return 'メモが大きくなりすぎています（$size / 1024 KB）— 最大の部分: $part。一部を別のメモに移さないと保存できない場合があります。';
+  }
+
+  @override
+  String get noteSizeBody => '本文';
+
+  @override
+  String get noteSizeItems => 'リスト項目';
+
+  @override
+  String get noteSizePageNotes => 'ページメモ';
+
+  @override
+  String noteSaveRejected(String reason) {
+    return 'メモをサーバーに保存できませんでした: $reason';
+  }
+
+  @override
+  String get errorLogShare => 'エラーログを共有';
+
+  @override
+  String get errorLogInfo => '最近のエラーはこの端末にのみ保存され、共有しない限りどこにも送られません。';
+
+  @override
+  String get errorLogEmpty => '記録されたエラーはありません。';
+
+  @override
+  String get crashReports => 'クラッシュレポートを送信';
+
+  @override
+  String get crashReportsInfo =>
+      'アプリがクラッシュすると、メモの内容を含まない技術レポートが Firebase Crashlytics に送信されます（Android のみ）。';
+
+  @override
+  String get noteTooLargeShort => 'メモが 1 MiB の上限を超えています';
 }
