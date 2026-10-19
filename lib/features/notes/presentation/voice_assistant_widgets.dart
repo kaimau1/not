@@ -12,8 +12,9 @@ import 'voice_assistant.dart';
 // ana ekranda yerini 48×48 mikrofon aldı ve o düğme ortak dinleme levhasını
 // açıyor (bkz. dashboard_screen.dart / _captureVoiceNote). Kayıt durumu artık
 // levhada göründüğü için düğmenin ses seviyesiyle nefes almasına gerek kalmadı.
-// Aşağıdaki panel DURUYOR: ana ekran widget'ından (notlar://voice) başlayan
-// asistan oturumunun durumunu hâlâ o gösteriyor.
+// Aşağıdaki panel DURUYOR: levhadaki "AI not"un sonucunu (işleniyor, "Notu
+// aç", hata) o gösteriyor. Kendi kayıt evresi 2026-10-19'da kalktı — widget
+// da artık levhayı açıyor.
 
 /// Asistan panelindeki sustur düğmesi.
 ///
@@ -40,7 +41,7 @@ class _AssistantMuteButton extends ConsumerWidget {
 }
 
 /// Ana sayfanın altında asistanın ne yaptığını gösteren durum paneli:
-/// kayıt (süre + canlı döküm), işleme, sonuç ("Notu aç") ve hata.
+/// işleme, sonuç ("Notu aç") ve hata.
 /// Boşta hiç görünmez.
 class VoiceAssistantPanel extends ConsumerWidget {
   const VoiceAssistantPanel({super.key});
@@ -57,68 +58,6 @@ class VoiceAssistantPanel extends ConsumerWidget {
     final notifier = ref.read(voiceAssistantProvider.notifier);
 
     final Widget content = switch (assistant.phase) {
-      VoiceAssistantPhase.recording => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.graphic_eq, size: 18, color: scheme.error),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  l10n.voiceListening,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ),
-              // Bas-başlat akışı: kaydı bu "Bitir" ile durdur (widget'tan
-              // başlamış olsa da mikrofon düğmesine gitmeye gerek yok).
-              TextButton(onPressed: notifier.cancel, child: Text(l10n.cancel)),
-              const SizedBox(width: 4),
-              FilledButton.tonalIcon(
-                onPressed: () => notifier.finish(
-                  nothingHeardText: l10n.voiceNothingHeard,
-                  savedText: l10n.voiceNoteSaved,
-                  noApiKeyText: l10n.aiNoApiKey,
-                  genericErrorText: l10n.assistantGenericError,
-                  historyLabel: l10n.aiHistoryVoiceNote,
-                ),
-                icon: const Icon(Icons.check, size: 18),
-                label: Text(l10n.voiceFinish),
-              ),
-            ],
-          ),
-          Text(
-            l10n.voiceCaptureHint,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-          ),
-          if (assistant.liveTranscript.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              l10n.voiceHeardLive,
-              style: Theme.of(
-                context,
-              ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 4),
-            // Canlı döküm: son satırlar görünür kalsın diye ters kaydırma.
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 96),
-              child: SingleChildScrollView(
-                reverse: true,
-                child: Text(
-                  assistant.liveTranscript,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
       VoiceAssistantPhase.processing => Row(
         children: [
           const SizedBox(
@@ -166,7 +105,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
           ),
           // Asistan "bu bir not değil" deyip hiçbir şey oluşturmadıysa
           // konuşulan yine de kaydedilebilsin: karar kullanıcının olsun.
-          if (assistant.noteId == null && assistant.liveTranscript.isNotEmpty)
+          if (assistant.noteId == null && assistant.transcript.isNotEmpty)
             Padding(
               padding: const EdgeInsetsDirectional.only(start: 30, top: 4),
               child: FilledButton.tonalIcon(
@@ -207,8 +146,8 @@ class VoiceAssistantPanel extends ConsumerWidget {
     };
 
     // done/error panelleri kendiliğinden kapansın: kalan süre geri sayım
-    // çubuğuyla görünür (kullanıcı "çok uzun kalıyor" dedi). Kayıt/işleme
-    // sürerken çubuk yok — o durumlar kullanıcı eylemiyle biter.
+    // çubuğuyla görünür (kullanıcı "çok uzun kalıyor" dedi). İşleme
+    // sürerken çubuk yok.
     final autoDismiss = switch (assistant.phase) {
       VoiceAssistantPhase.done => const Duration(seconds: 6),
       VoiceAssistantPhase.error => const Duration(seconds: 8),
@@ -221,9 +160,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: assistant.phase == VoiceAssistantPhase.recording
-            ? scheme.errorContainer.withValues(alpha: 0.95)
-            : scheme.surfaceContainerHighest,
+        color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(14),
         elevation: 3,
         child: Container(
@@ -232,9 +169,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: assistant.phase == VoiceAssistantPhase.recording
-                  ? scheme.error.withValues(alpha: 0.4)
-                  : scheme.outlineVariant.withValues(alpha: 0.5),
+              color: scheme.outlineVariant.withValues(alpha: 0.5),
             ),
           ),
           child: Column(

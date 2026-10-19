@@ -243,17 +243,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (state == AppLifecycleState.resumed) _syncOwnDirectoryEntry();
   }
 
-  /// Ana ekran mikrofon widget'ının bas-başlat isteği varsa Sesli Not
-  /// Asistanı'nı başlatır (tek seferlik — bayrak take ile tüketilir).
+  /// Ana ekran mikrofon widget'ının isteği varsa sesli not levhasını açar
+  /// (tek seferlik — bayrak take ile tüketilir).
   void _maybeAutostartVoice() {
     if (!mounted) return;
+    // Widget/kısayol da ana ekran mikrofonuyla AYNI levhayı açar (eskiden
+    // ayrı bir asistan kaydı başlatıyordu — sadeleştirme 2026-10-19).
     if (ref.read(voiceAutostartProvider.notifier).take()) {
-      ref
-          .read(voiceAssistantProvider.notifier)
-          .start(
-            micPermissionDeniedText: context.l10n.micPermissionDenied,
-            genericErrorText: context.l10n.assistantGenericError,
-          );
+      unawaited(_captureVoiceNote());
     }
   }
 
@@ -1675,7 +1672,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         ),
                         // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
                         QuickAddFab(
-                          onVoiceCapture: createVoiceCaptureNote,
+                          // Hızlı ekle → Sesli not: ana ekranın mikrofonuyla
+                          // aynı levha; boş not önceden açılmaz.
+                          onVoiceCapture: _captureVoiceNote,
                           onVideoNote: createVideoNote,
                           onPhotoNote: createPhotoNote,
                           onScanNote: createScanNote,
