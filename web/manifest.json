@@ -4,7 +4,7 @@
     "start_url": ".",
     "display": "standalone",
     "background_color": "#F3EFE3",
-    "theme_color": "#7D5703",
+    "theme_color": "#13254A",
     "description": "Her cihazda aynı notlar: yapay zekâ asistanı, el yazısı, PDF üstüne not, notta YouTube videosu ve canlı ortak notlar.",
     "orientation": "any",
     "prefer_related_applications": false,
