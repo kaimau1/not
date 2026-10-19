@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/search_fold.dart';
+import '../../../core/utils/stable_value.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
@@ -293,21 +295,27 @@ class AttachmentsExpandedNotifier extends Notifier<bool> {
 }
 
 /// [duplicateNotesProvider]'ın trigram önbelleği: not içeriği değişmedikçe
-/// kümeler yeniden hesaplanmaz. Ayrı bir autoDispose sağlayıcıda ki harita
+/// kodlar yeniden hesaplanmaz. Ayrı bir autoDispose sağlayıcıda ki harita
 /// örneği, duplicates sağlayıcısı her yeniden çalıştığında (her snapshot)
 /// sıfırlanmasın; ikisi birlikte yaşayıp birlikte ölür.
 final _trigramCacheProvider =
-    Provider.autoDispose<Map<String, (DateTime?, Set<String>)>>((ref) => {});
+    Provider.autoDispose<Map<String, (DateTime?, List<int>)>>((ref) => {});
 
 /// Birbirinin kopyası olan not kümeleri (bkz. [duplicateNoteGroups]).
 ///
-/// Sağlayıcıda: hesap O(n²) ve her çizimde yeniden yapılamaz. Riverpod
-/// sonucu önbelleğe alır, yalnız not listesi değişince yeniden hesaplanır.
+/// **ANA İŞ PARÇACIĞINDA DEĞİL (F2.5):** O(n²) eşleştirme `compute` ile arka
+/// plan isolate'inde koşar (web'de isolate yok, orada aynı iş parçacığında);
+/// öncesinde 500 ms beklenir — editörde yazarken not akışı 0,5–3 sn'de bir
+/// yayınlıyor, her yayında yeniden hesap kare düşürüyordu. Ana iş
+/// parçacığında kalan tek iş önbellekli trigram kodlaması (yalnız değişen
+/// not).
 ///
 /// autoDispose ŞART: kalıcı sürümde AI Hub bir kez açılınca sağlayıcı oturum
 /// boyu abone kalıyor ve kullanıcı BAŞKA bir notta yazarken bile her
-/// snapshot'ta O(n²) kopya taraması dönüyordu. Ekran kapanınca durur.
-final duplicateNotesProvider = Provider.autoDispose<List<List<Note>>>((ref) {
+/// snapshot'ta kopya taraması dönüyordu. Ekran kapanınca durur.
+final duplicateNotesProvider = FutureProvider.autoDispose<List<List<Note>>>((
+  ref,
+) async {
   // Gizli klasör bastırması burada da geçerli: kopya kümeleri gizli notun
   // başlığını/içeriğini doğrulamasız gösteriyordu ("Tümünü sil" onları çöpe
   // de atabiliyordu).
@@ -316,21 +324,34 @@ final duplicateNotesProvider = Provider.autoDispose<List<List<Note>>>((ref) {
     for (final n in ref.watch(notesStreamProvider).value ?? const <Note>[])
       if (n.folderId == null || !suppressed.contains(n.folderId)) n,
   ];
-  return duplicateNoteGroups(
-    notes,
-    trigramCache: ref.watch(_trigramCacheProvider),
-  );
+  final cache = ref.watch(_trigramCacheProvider);
+  var cancelled = false;
+  ref.onDispose(() => cancelled = true);
+  await Future<void>.delayed(const Duration(milliseconds: 500));
+  if (cancelled) return const [];
+  final c = duplicateCandidates(notes, trigramCache: cache);
+  final groups = c.codes.length < 2
+      ? const <List<int>>[]
+      : await compute(similarIndexGroupsEntry, (c.codes, kDuplicateThreshold));
+  return notesOfGroups(c.notes, groups);
 });
 
 /// Gizli klasörlerin kimlikleri (bkz. [NoteFolder.hidden]).
 final hiddenFolderIdsProvider = Provider<Set<String>>((ref) {
   final folders =
       ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[];
-  return {
+  // Kümenin içeriği değişmedikçe AYNI örnek (F2.1): bu küme süzgeç
+  // sağlayıcılarının hepsine akıyor, klasör akışının her yayınında yeni küme
+  // hepsini yeniden hesaplatıyordu.
+  return ref.watch(_hiddenFolderIdsBox).keep({
     for (final f in folders)
       if (f.hidden) f.id,
-  };
+  }, sameSet);
 });
+
+final _hiddenFolderIdsBox = Provider<StableBox<Set<String>>>(
+  (ref) => StableBox(),
+);
 
 /// Gizli klasörler bu oturumda gösteriliyor mu? Kalıcı DEĞİL: uygulama
 /// yeniden açıldığında gizli klasörler yine saklıdır — "gizli" olmanın anlamı
@@ -657,8 +678,12 @@ final allTagsProvider = Provider.autoDispose<List<String>>((ref) {
         ...note.tags,
   };
   final sorted = tags.toList()..sort();
-  return sorted;
+  return ref.watch(_allTagsBox).keep(sorted, sameValues);
 });
+
+final _allTagsBox = Provider.autoDispose<StableBox<List<String>>>(
+  (ref) => StableBox(),
+);
 
 // Etiket → kullanım sayısı sağlayıcısı (tagCountsProvider) kaldırıldı: tek
 // tüketicisi çip satırıydı ("+N" arkasına gizlenen etiketleri sıralamak için).
@@ -866,15 +891,20 @@ HomeSwipeStop? nextHomeSwipeStop({
 final archivedNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final notes = ref.watch(notesStreamProvider);
   final suppressed = ref.watch(suppressedFolderIdsProvider);
+  final box = ref.watch(_archivedNotesBox);
   return notes.whenData(
-    (list) => [
+    (list) => box.keep([
       for (final n in list)
         if (n.archivedAt != null &&
             (n.folderId == null || !suppressed.contains(n.folderId)))
           n,
-    ],
+    ], sameInstances),
   );
 });
+
+final _archivedNotesBox = Provider<StableBox<List<Note>>>(
+  (ref) => StableBox(),
+);
 
 /// **BİR KLASÖRÜN İÇİ** (klasörün kendi sayfası — bkz. `FolderScreen`).
 ///
@@ -891,17 +921,26 @@ final folderNotesProvider = Provider.family<AsyncValue<List<Note>>, String>((
   final activity = sort == NoteSort.active
       ? ref.watch(noteActivityProvider)
       : const <String, int>{};
+  final box = ref.watch(_folderNotesBox(folderId));
   return notes.whenData(
-    (list) => _sortedNotes(
-      [
-        for (final n in list)
-          if (n.folderId == folderId && n.archivedAt == null && !n.isEmpty) n,
-      ],
-      sort,
-      activity,
+    (list) => box.keep(
+      _sortedNotes(
+        [
+          for (final n in list)
+            if (n.folderId == folderId && n.archivedAt == null && !n.isEmpty)
+              n,
+        ],
+        sort,
+        activity,
+      ),
+      sameInstances,
     ),
   );
 });
+
+final _folderNotesBox = Provider.family<StableBox<List<Note>>, String>(
+  (ref, _) => StableBox(),
+);
 
 /// **PAYLAŞILAN bir klasörün içi.** [folderNotesProvider]'ın ikizi — tek
 /// fark, notların BENİM koleksiyonumdan değil klasörün SAHİBİNİN
@@ -953,6 +992,7 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final activity = sort == NoteSort.active
       ? ref.watch(noteActivityProvider)
       : const <String, int>{};
+  final box = ref.watch(_filteredNotesBox);
 
   return notes.whenData((list) {
     // Boş notlar (yeni oluşturulup hiç doldurulmamış) listede gösterilmez;
@@ -1009,9 +1049,16 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
             n,
       ];
     }
-    return _sortedNotes(result, sort, activity);
+    // İçerik (not örnekleri ve sıraları) aynıysa ÖNCEKİ liste (F2.1):
+    // ilgisiz bir yayın (ör. arşivdeki/klasördeki notun yazımı) ana ekranı
+    // yeniden kurmaz.
+    return box.keep(_sortedNotes(result, sort, activity), sameInstances);
   });
 });
+
+final _filteredNotesBox = Provider<StableBox<List<Note>>>(
+  (ref) => StableBox(),
+);
 
 /// Seçili ölçüte göre notları sıralar. [NoteSort.manual] akıştan gelen sırayı
 /// (orderIndex → updatedAt) korur; başlığa göre sıralamada başlıksız notlar

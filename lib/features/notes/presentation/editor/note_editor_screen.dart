@@ -452,6 +452,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   int? _lastAttachmentCount;
 
   /// Ek sayısı arttıysa rozeti iki kez yakar.
+  /// Denetleyicilerin en son beslendiği not ve tema parlaklığı (bkz.
+  /// build'deki besleme bloğu).
+  Note? _fedNote;
+  bool? _fedDark;
+
   void _pulseAttachBadge(int count) {
     final previous = _lastAttachmentCount;
     _lastAttachmentCount = count;
@@ -512,7 +517,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// çalışmadığını anlamıyor, dakikalar sonra gelen hatayı da bağlayamıyordu.
   /// Bu alan, editörün altındaki şeritte iş bitene kadar duran canlı bir
   /// gösterge sürer ve aynı işin ikinci kez başlatılmasını engeller.
-  String? _aiTask;
+  ///
+  /// `ValueNotifier` (F2.7): gösterge açılıp kapanınca yalnız şerit yeniden
+  /// kurulur, 1.500 satırlık editör build'i değil.
+  final _aiTaskN = ValueNotifier<String?>(null);
+  String? get _aiTask => _aiTaskN.value;
 
   /// Süren DOSYA işinin adı (kopyalama, yapıştırma, ek hazırlama). AI'dan
   /// ayrı bir alan: ikisi aynı anda koşabilir ve biri ötekini susturmamalı.
@@ -523,17 +532,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// baytlarını okumak (bulut kopyasında: indirmek) saniyeler sürebiliyor ve o
   /// süre boyunca ekranda hiçbir iz yoktu — kullanıcı düğmeye basmadığını
   /// sanıp tekrar basıyordu.
-  String? _busyTask;
+  final _busyTaskN = ValueNotifier<String?>(null);
 
   /// Uzun süren DOSYA işlerinin ortak sarmalayıcısı: şeritteki göstergeyi
   /// açar/kapatır. AI'nın [_runAi]'ı ile aynı desen; hata yönetimi çağırana
   /// bırakılır (her işin kendi anlamlı mesajı var).
   Future<T> _runBusy<T>(String label, Future<T> Function() body) async {
-    setState(() => _busyTask = label);
+    _busyTaskN.value = label;
     try {
       return await body();
     } finally {
-      if (mounted) setState(() => _busyTask = null);
+      if (mounted) _busyTaskN.value = null;
     }
   }
 
@@ -542,7 +551,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// göstergeyi ayrıca düşünmek gerekmesin diye burada toplandı.
   Future<void> _runAi(String label, Future<void> Function() body) async {
     if (_aiTask != null) return;
-    setState(() => _aiTask = label);
+    _aiTaskN.value = label;
     try {
       await body();
     } on GeminiException catch (e) {
@@ -556,7 +565,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     } catch (e) {
       if (mounted) _showSnack(context.l10n.aiError('$e'));
     } finally {
-      if (mounted) setState(() => _aiTask = null);
+      if (mounted) _aiTaskN.value = null;
     }
   }
 
@@ -1307,6 +1316,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _findFocus.dispose();
     _attachPulse.dispose();
     _videoHub.dispose();
+    _aiTaskN.dispose();
+    _busyTaskN.dispose();
+    _titleGeneratingN.dispose();
     super.dispose();
   }
 
@@ -1678,7 +1690,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (repo == null) return null;
     try {
       // Sıkıştırma + diske yazma büyük fotoğrafta saniyeler sürüyor ve o süre
-      // boyunca ekranda hiçbir iz yoktu (bkz. [_busyTask]).
+      // boyunca ekranda hiçbir iz yoktu (bkz. [_busyTaskN]).
       final attachment = await _runBusy(
         context.l10n.attachmentUploading,
         () => repo.prepareImage(
@@ -2854,7 +2866,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final attachment = attachments.first;
     try {
       // Baytları okumak (bulut kopyasında: indirmek) uzun sürebilir; şeritte
-      // canlı gösterge dursun (bkz. [_busyTask]).
+      // canlı gösterge dursun (bkz. [_busyTaskN]).
       await _runBusy(l10n.attachmentCopying, () async {
         if (attachment.kind == AttachmentKind.image) {
           final bytes = await repo?.readBytes(attachment);
@@ -2876,7 +2888,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (sources.isEmpty || repo == null) return;
     try {
       // Baytların yeniden yazılması saniyeler sürebilir: gösterge şeritte
-      // dursun, kullanıcı düğmenin çalıştığını görsün (bkz. [_busyTask]).
+      // dursun, kullanıcı düğmenin çalıştığını görsün (bkz. [_busyTaskN]).
       await _runBusy(context.l10n.attachmentUploading, () async {
         // SIRAYLA: her kopya sayfadaki yerini bir öncekine göre hesaplıyor
         // (bkz. [_placeNewImage]); aynı anda koşsalardı üst üste binerlerdi.
@@ -3399,17 +3411,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     });
   }
 
-  bool _titleGenerating = false;
+  final _titleGeneratingN = ValueNotifier<bool>(false);
 
   /// "Başlık öner" çipi: nota AI ile kısa bir başlık üretir ve doğrudan
   /// başlık alanına yazar (etiket önerisi gibi bağımsız, isteğe bağlı buton;
   /// eski "kapanırken otomatik başlık" genel ayarının yerini aldı).
   Future<void> _suggestTitle() async {
     final note = _note;
-    if (note == null || note.isEmpty || _titleGenerating) return;
+    if (note == null || note.isEmpty || _titleGeneratingN.value) return;
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    setState(() => _titleGenerating = true);
+    _titleGeneratingN.value = true;
     try {
       final title = await ref.read(geminiServiceProvider).generateTitle(note);
       if (!mounted || title.isEmpty) return;
@@ -3424,7 +3436,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ),
       );
     } finally {
-      if (mounted) setState(() => _titleGenerating = false);
+      if (mounted) _titleGeneratingN.value = false;
     }
   }
 
@@ -6808,7 +6820,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
 
     final l10n = context.l10n;
-    setState(() => _aiTask = l10n.aiThinking);
+    _aiTaskN.value = l10n.aiThinking;
     try {
       final text = await ref
           .read(geminiServiceProvider)
@@ -6820,7 +6832,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     } catch (e) {
       if (mounted) _showSnack(l10n.aiError(e.toString()));
     } finally {
-      if (mounted) setState(() => _aiTask = null);
+      if (mounted) _aiTaskN.value = null;
     }
   }
 
@@ -7196,7 +7208,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Ataç rozeti: sayı ARTTIYSA yanıp söner (bkz. [_pulseAttachBadge]).
     // Build sırasında animasyon başlatmak güvenli değil — bir kareye
     // ertelenir.
-    if (note != null) {
+    // Yalnız sayı DEĞİŞİNCE (F2.7): eskiden her build bir kare-sonrası
+    // geri çağrısı planlıyordu.
+    if (note != null && fileAttachments.length != _lastAttachmentCount) {
       final count = fileAttachments.length;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _pulseAttachBadge(count);
@@ -7254,24 +7268,30 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Etiket adları: hem SEÇİLİ METİNDEN kurulan bağlar (kullanıcı isteği
     // 2026-08-16 — "o yazıya PDF gömülür") hem de dosya adıyla eklenen
     // etiketler. İkisi de aynı çizim yolundan geçer.
-    _bodyController.attachmentNames = [
-      for (final link in note.tagLinks)
-        if (link.label.isNotEmpty) link.label,
-      for (final a in note.attachments) a.fileName,
-    ];
-    // Gömülü yazının ÇİP görünümü: ekin türüne göre renk ve rozet (bkz.
-    // AttachmentTagChips). Denetleyici renkleri yalnız değişince alır.
-    final tagLooks = embedTagLooks(
-      note,
-      dark: Theme.of(context).brightness == Brightness.dark,
-    );
-    _tagLooks = tagLooks;
-    _bodyController.tagChipColors = {
-      for (final e in tagLooks.entries) e.key: e.value.color,
-    };
-    // Notta video varken "1:23" gibi damgalar bağlantı gibi çizilir ve
-    // dokununca video oraya gider (bkz. video_time.dart).
-    _bodyController.videoTimestamps = _hasVideo(note);
+    // Denetleyici beslemeleri YALNIZ not ya da tema parlaklığı değişince
+    // (F2.7): build başka nedenlerle de koşuyor (odak, klavye, biçim
+    // çubuğu) ve her seferinde ad listesi + çip görünümleri baştan
+    // kuruluyordu.
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    if (!identical(note, _fedNote) || dark != _fedDark) {
+      _fedNote = note;
+      _fedDark = dark;
+      _bodyController.attachmentNames = [
+        for (final link in note.tagLinks)
+          if (link.label.isNotEmpty) link.label,
+        for (final a in note.attachments) a.fileName,
+      ];
+      // Gömülü yazının ÇİP görünümü: ekin türüne göre renk ve rozet (bkz.
+      // AttachmentTagChips). Denetleyici renkleri yalnız değişince alır.
+      final tagLooks = embedTagLooks(note, dark: dark);
+      _tagLooks = tagLooks;
+      _bodyController.tagChipColors = {
+        for (final e in tagLooks.entries) e.key: e.value.color,
+      };
+      // Notta video varken "1:23" gibi damgalar bağlantı gibi çizilir ve
+      // dokununca video oraya gider (bkz. video_time.dart).
+      _bodyController.videoTimestamps = _hasVideo(note);
+    }
     // Notun kendi yazı tipi/boyutu: gövde ve maddeler `fontFamily`/`fontScale`
     // çiftinden, BAŞLIK ise kendi `titleFontFamily`/`titleFontScale`
     // değerlerinden beslenir — biçim çubuğu odaktaki alana yazar.
@@ -7468,13 +7488,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       },
       itemBuilder: (context) => actionEntries,
       child: Chip(
-        avatar: _titleGenerating
-            ? const SizedBox(
-                width: 12,
-                height: 12,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.add, size: 16),
+        avatar: ValueListenableBuilder<bool>(
+          valueListenable: _titleGeneratingN,
+          builder: (context, generating, _) => generating
+              ? const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.add, size: 16),
+        ),
         // Etiketsiz, dar bir düğme: satırda yer kaplamasın.
         label: const SizedBox.shrink(),
         labelPadding: EdgeInsets.zero,
@@ -8028,7 +8051,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
                 // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
                 // açık kalabiliyordu.
-                if (_aiTask != null) _AiBanner(label: _aiTask!),
+                ValueListenableBuilder<String?>(
+                  valueListenable: _aiTaskN,
+                  builder: (context, task, _) => task == null
+                      ? const SizedBox.shrink()
+                      : _AiBanner(label: task),
+                ),
                 // CANLI DİKTE şeridi: mikrofon açıkken kaçırılamayacak bir
                 // gösterge (aynı gerekçe — açık kalmış mikrofon fark
                 // edilmiyordu). Dokunmak dikteyi bitirir.
@@ -8039,24 +8067,28 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     onTap: () => unawaited(_stopDictation()),
                   ),
                 // Dosya işleri (kopyalama/yapıştırma) için aynı şerit,
-                // ayrı simge: sessiz bekleme bitti (bkz. [_busyTask]).
-                if (_busyTask != null)
-                  // Web'de ek DOĞRUDAN yükleniyor: oran şeride yüzde olarak.
-                  ValueListenableBuilder<double?>(
-                    valueListenable: AttachmentRepository.directUploadProgress,
-                    builder: (context, fraction, _) => _AiBanner(
-                      label: fraction == null
-                          ? _busyTask!
-                          : '$_busyTask ${formatUploadPercent(context, fraction)}',
-                      icon: Icons.sync,
-                      progress: fraction,
-                    ),
-                  )
-                else
-                  // Arka planda buluta çıkan ekler (kullanıcı bulgusu
-                  // 2026-10-17: "ek yüklerken sessizlik var"): şerit kapalı
-                  // ya da ek sayfaya gömülüyken de görünür bir iz.
-                  _NoteUploadsBanner(attachments: note.attachments),
+                // ayrı simge: sessiz bekleme bitti (bkz. [_busyTaskN]).
+                ValueListenableBuilder<String?>(
+                  valueListenable: _busyTaskN,
+                  builder: (context, busy, _) => busy != null
+                      // Web'de ek DOĞRUDAN yükleniyor: oran şeride yüzde
+                      // olarak.
+                      ? ValueListenableBuilder<double?>(
+                          valueListenable:
+                              AttachmentRepository.directUploadProgress,
+                          builder: (context, fraction, _) => _AiBanner(
+                            label: fraction == null
+                                ? busy
+                                : '$busy ${formatUploadPercent(context, fraction)}',
+                            icon: Icons.sync,
+                            progress: fraction,
+                          ),
+                        )
+                      // Arka planda buluta çıkan ekler (kullanıcı bulgusu
+                      // 2026-10-17: "ek yüklerken sessizlik var"): şerit
+                      // kapalı ya da ek sayfaya gömülüyken de görünür bir iz.
+                      : _NoteUploadsBanner(attachments: note.attachments),
+                ),
                 // Yatay ekranda klavye + çubuk ekranı aşabilir; çubuk taşmak
                 // yerine kendi içinde kaydırılır (Flexible + kaydırma).
                 //

@@ -5309,3 +5309,41 @@ google-services + Crashlytics Gradle eklentisi + test çökmesi) yapıştırdı.
 * Doğrulama: Android SDK bu ortamda yok — Gradle değişikliği dalda elle
   tetiklenen CI koşusuyla (workflow_dispatch: APK derler, Release YAYINLAMAZ)
   sınandı.
+
+## 2026-10-19 — Faz 2 (akıcılık): F2.1–F2.7
+Kullanıcı: "ana ekran ve editörde süper akıcılık, asla kasma; genel FPS
+düşüklüğü var; main'e merge, APK". Ayrıntı YOL_HARITASI.md Faz 2 notlarında.
+
+### KÖK NEDEN — Riverpod 3 görünmeyen ekranın aboneliklerini DURAKLATIR
+`flutter_riverpod` 3.x `ConsumerStatefulElement` `TickerMode`'a bakıyor:
+editör ana ekranı örtünce ana ekranın `ref.watch`/`listen` abonelikleri
+duraklıyor. Ana ekran 9 arka plan servisini (yükleme kuyruğu, premium,
+hatırlatıcı, paylaşım alımı…) `ref.watch` ile tutuyordu → editör açıkken
+bunlar da duraklayabiliyordu; üstelik `premiumProvider` her yayınında bütün
+ana ekranı kuruyordu. Artık `lib/app/app_services.dart` (`AppServices`,
+MaterialApp builder'ında, `ref.listen`, uid yokken hiçbiri). **TUZAK:**
+oturum boyu canlı kalması gereken bir servisi bir EKRANIN build'ine bağlama.
+
+### KARAR — değer kararlılığı (F2.1)
+Riverpod 3 sağlayıcıları `!=` ile filtreler; liste/küme/harita kimlikle
+karşılaştırılır. Türetilmiş sağlayıcılar içerik aynıysa ÖNCEKİ örneği verir
+(`StableBox`, ayrı "kutu" sağlayıcısında — sağlayıcı gövdesi her çalışmada
+sıfırdan başlar, Riverpod 3 işlevsel sağlayıcıda önceki duruma erişim yok).
+Not listelerinde karşılaştırma ÖRNEK KİMLİĞİYLE (`sameInstances`): bulut
+akışı artımlı önbellekle değişmeyen `Note`'u korur; yerel depo da artık
+korur (`LocalNotesStore._parsed`, kayıt haritasının kimliğiyle — **TUZAK:**
+yerel depodaki haritayı YERİNDE değiştirme, yenisini koy, yoksa önbellek
+bayat not döndürür). Ana ekran `_cachedCard` aynı `NoteCard` örneğini verir.
+
+### Diğerleri
+* F2.2 `FrameLoop` (core/widgets): Ticker; `scale` = geçen süre / 16,7 ms —
+  60 Hz için yazılmış piksel/adım değerleri 120 Hz'de aynı hızı verir.
+  Durum nesnesinde döngü TEMBEL kurulur ve dispose'ta yalnız kurulduysa
+  atılır (dispose sırasında `createTicker` bağlam araması yapar → hata).
+* F2.3 toplu işlemler tek `WriteBatch` (`batchUpdateEach`).
+* F2.5 kopya taraması `FutureProvider` + `compute`; trigramlar 48 bitlik
+  tamsayı (web'de `<<` 32 bit — çarpma kullanıldı).
+* F2.6 ölçüm: `integration_test/perf_test.dart` + `test_driver/perf_driver.dart`,
+  CI `perf` işi yalnız elle ("Kare ölçümü" kutusu). Bulutta cihaz yok —
+  henüz hiç koşmadı, taban değer yok.
+* F2.7 editörde AI/dosya göstergesi ve başlık üretimi `ValueNotifier`.

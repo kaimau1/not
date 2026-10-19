@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/frame_loop.dart';
 import '../../domain/arrow.dart';
 import '../../domain/attachment.dart';
 
@@ -3171,11 +3172,18 @@ class BubbleReveal {
   BubbleReveal(this.controller);
 
   final BubbleController controller;
-  Timer? _timer;
+
+  /// Ölçüm döngüsü KAREYE bağlı (F2.2): eskiden 30 ms'lik zamanlayıcıydı —
+  /// ölçüm kare ortasına, yerleşim bitmeden düşebiliyordu.
+  FrameLoop? _loop;
+
+  /// Yerleşimin "oturdu" sayılması için imzanın değişmeden kalacağı süre
+  /// (eski döngüde 4 × 30 ms).
+  static const _settle = Duration(milliseconds: 120);
 
   void cancel() {
-    _timer?.cancel();
-    _timer = null;
+    _loop?.dispose();
+    _loop = null;
   }
 
   /// [viewport]: görüntüleyicinin (ve üstündeki yazma kartının) kutusu.
@@ -3193,8 +3201,8 @@ class BubbleReveal {
     final watch = Stopwatch()..start();
     final expectKeyboard = controller.editMode;
     Object? last;
-    var stable = 0;
-    _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
+    var stableSince = 0;
+    void step(double _) {
       if (!viewport.mounted) {
         cancel();
         return;
@@ -3206,14 +3214,15 @@ class BubbleReveal {
         controller.dockHeight.value,
         controller.globalPointOf(live),
       );
-      stable = signature == last ? stable + 1 : 0;
-      last = signature;
       final ms = watch.elapsedMilliseconds;
+      if (signature != last) stableSince = ms;
+      last = signature;
       // Yazma kartı açıldıysa klavye gelecek: o gelmeden oturmuş sayılmaz
       // (klavye isteği platformdan bir-iki kare geç döner).
       final keyboardReady =
           !expectKeyboard || _keyboardOf(viewport) > 0 || ms > 900;
-      if (ms < 1600 && (stable < 4 || !keyboardReady)) return;
+      final settled = ms - stableSince >= _settle.inMilliseconds;
+      if (ms < 1600 && (!settled || !keyboardReady)) return;
       cancel();
       if (region == null) return;
       // Kapanmış ya da başka balona geçilmişse iş yok.
@@ -3229,7 +3238,9 @@ class BubbleReveal {
       }
       final dy = revealDelta(point.dy, region, editing: controller.editMode);
       if (dy != 0) scrollBy(dy);
-    });
+    }
+
+    _loop = FrameLoop(step)..start();
   }
 
   /// Balonun noktası [region] içinde rahatça görünüyorsa 0; değilse noktayı

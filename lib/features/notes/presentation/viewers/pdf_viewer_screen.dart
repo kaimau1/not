@@ -7,6 +7,7 @@ import '../../../../core/utils/local_file.dart';
 import 'package:pdfrx/pdfrx.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/frame_loop.dart';
 import '../../../../core/utils/pdf_copy_text.dart';
 import '../../data/pdf/edge_auto_scroll.dart';
 import '../../domain/attachment.dart';
@@ -61,7 +62,8 @@ class PdfViewerScreen extends StatefulWidget {
   State<PdfViewerScreen> createState() => _PdfViewerScreenState();
 }
 
-class _PdfViewerScreenState extends State<PdfViewerScreen> {
+class _PdfViewerScreenState extends State<PdfViewerScreen>
+    with SingleTickerProviderStateMixin {
   /// Ekin GÜNCEL hâli. KÖK NEDEN: değişiklikler eskiden hep AÇILIŞTAKİ
   /// `widget.attachment` üstüne kuruluyordu (rota yeniden kurulmaz) — önce
   /// çizip sonra balon bırakınca balon yazımı çizimi açılıştaki hâline
@@ -106,9 +108,9 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   final _areaBoundary = GlobalKey();
 
   /// Kenar oto-kaydırması: seçim sürüklenirken işaretçinin son EKRAN konumu
-  /// (katman bildirir; null = sürükleme yok) ve 60 Hz itme zamanlayıcısı.
+  /// (katman bildirir; null = sürükleme yok) ve kareye bağlı itme döngüsü.
   Offset? _dragPos;
-  Timer? _edgeTimer;
+  FrameLoop? _edgeLoop;
 
   @override
   void initState() {
@@ -134,7 +136,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   @override
   void dispose() {
     _reveal.cancel();
-    _edgeTimer?.cancel();
+    _edgeLoop?.dispose();
     _ink.dispose();
     _bubbles.dispose();
     _selection.dispose();
@@ -186,28 +188,30 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   }
 
   /// Seçim sürüklemesinin ekran konumu değişti (null = bitti). Kenara
-  /// yaklaşınca 60 Hz'lik zamanlayıcı görüntüyü o yöne iter.
+  /// yaklaşınca kare döngüsü görüntüyü o yöne iter.
   void _onSelectDragAt(Offset? global) {
     _dragPos = global;
     if (global == null) {
-      _edgeTimer?.cancel();
-      _edgeTimer = null;
+      _edgeLoop?.stop();
       return;
     }
-    _edgeTimer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
-      final pos = _dragPos;
-      if (pos == null || !mounted) return;
-      final box = context.findRenderObject() as RenderBox?;
-      if (box == null) return;
-      final delta = edgeAutoScrollDelta(box.globalToLocal(pos), box.size);
-      if (delta == Offset.zero) return;
-      try {
-        _pdf.value = _pdf.value.clone()
-          ..leftTranslateByDouble(-delta.dx, -delta.dy, 0, 1);
-      } catch (_) {
-        // Görüntüleyici henüz hazır değilse (yarış) itme sessizce atlanır.
-      }
-    });
+    (_edgeLoop ??= FrameLoop(_edgeStep, vsync: this)).start();
+  }
+
+  /// Kenar itmesinin bir karesi (F2.2: vsync'e bağlı, 120 Hz'de de aynı hız).
+  void _edgeStep(double scale) {
+    final pos = _dragPos;
+    if (pos == null || !mounted) return;
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final delta = edgeAutoScrollDelta(box.globalToLocal(pos), box.size) * scale;
+    if (delta == Offset.zero) return;
+    try {
+      _pdf.value = _pdf.value.clone()
+        ..leftTranslateByDouble(-delta.dx, -delta.dy, 0, 1);
+    } catch (_) {
+      // Görüntüleyici henüz hazır değilse (yarış) itme sessizce atlanır.
+    }
   }
 
   @override

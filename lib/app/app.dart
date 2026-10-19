@@ -10,6 +10,7 @@ import '../core/widgets/customizable.dart';
 import '../core/widgets/undo_snackbar.dart';
 import '../features/notes/presentation/note_write_issues.dart';
 import '../features/settings/settings_providers.dart';
+import 'app_services.dart';
 import 'router.dart';
 import 'web_history.dart';
 import 'theme/app_theme.dart';
@@ -167,7 +168,8 @@ class NotlarApp extends ConsumerWidget {
               child: UpdateRequiredBanner(
                 // Not yazım sorunları (F1.6: 1 MiB sınırı / sunucu reddi).
                 child: NoteWriteIssueListener(
-                  child: child ?? const SizedBox.shrink(),
+                  // Oturum servisleri (F2.4) — ana ekranın build'inden çıktı.
+                  child: AppServices(child: child ?? const SizedBox.shrink()),
                 ),
               ),
             ),

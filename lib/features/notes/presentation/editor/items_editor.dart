@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/frame_loop.dart';
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/sentence_select.dart';
 import '../../domain/note_item.dart';
@@ -266,7 +267,8 @@ class ItemsEditor extends StatefulWidget {
   State<ItemsEditor> createState() => ItemsEditorState();
 }
 
-class ItemsEditorState extends State<ItemsEditor> {
+class ItemsEditorState extends State<ItemsEditor>
+    with SingleTickerProviderStateMixin {
   static const _uuid = Uuid();
 
   late List<NoteItem> _items;
@@ -460,7 +462,9 @@ class ItemsEditorState extends State<ItemsEditor> {
   /// Sürükleme sürüyor mu ve o an kare başına kaç piksel kaydırılacak.
   bool _reordering = false;
   double _autoScrollStep = 0;
-  Timer? _autoScrollTimer;
+  /// Kenar kaydırma döngüsü — ilk sürüklemede kurulur (dispose'ta tembel
+  /// kurulum bağlam araması yapardı).
+  FrameLoop? _autoScroll;
 
   @override
   void didChangeDependencies() {
@@ -486,19 +490,18 @@ class ItemsEditorState extends State<ItemsEditor> {
       _stopAutoScroll();
       return;
     }
-    _autoScrollTimer ??= Timer.periodic(
-      const Duration(milliseconds: 16),
-      (_) => _autoScrollTick(),
-    );
+    (_autoScroll ??= FrameLoop(_autoScrollTick, vsync: this)).start();
   }
 
-  void _autoScrollTick() {
+  /// Kenar kaydırmasının bir karesi (F2.2: vsync'e bağlı; adım 60 Hz
+  /// karesine göre ölçeklenir, 120 Hz'de de aynı hız).
+  void _autoScrollTick(double scale) {
     final position = _outerScroll?.position;
     if (position == null || !position.hasContentDimensions) {
       _stopAutoScroll();
       return;
     }
-    final target = (position.pixels + _autoScrollStep).clamp(
+    final target = (position.pixels + _autoScrollStep * scale).clamp(
       position.minScrollExtent,
       position.maxScrollExtent,
     );
@@ -511,8 +514,7 @@ class ItemsEditorState extends State<ItemsEditor> {
   }
 
   void _stopAutoScroll() {
-    _autoScrollTimer?.cancel();
-    _autoScrollTimer = null;
+    _autoScroll?.stop();
     _autoScrollStep = 0;
   }
 
@@ -588,7 +590,7 @@ class ItemsEditorState extends State<ItemsEditor> {
 
   @override
   void dispose() {
-    _stopAutoScroll();
+    _autoScroll?.dispose();
     for (final c in _controllers.values) {
       c.dispose();
     }

@@ -41,7 +41,7 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
 | 1 | Güvenlik, gizlilik, veri bütünlüğü, hatalar | Bitti | 2026-10-19 | F1.5(d) ertelendi; cihaz doğrulaması KALANLAR'da; APK derlenmedi |
-| 2 | Akıcılık / performans | Bekliyor | — | |
+| 2 | Akıcılık / performans | Bitti | 2026-10-19 | F2.6 ölçümü emülatörde elle tetiklenir; cihazda his doğrulaması KALANLAR'da |
 | 3 | Sadeleştirme ve birleştirme | Bekliyor | — | çoğu madde KARAR GEREKİR |
 | 4 | Eksik özellikler, test altyapısı, Play | Bekliyor | — | |
 
@@ -183,7 +183,7 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
 
 ## FAZ 2 — Akıcılık / performans
 
-- [ ] **F2.1 Türetilmiş sağlayıcılar değer eşitliği bilmiyor.**
+- [x] **F2.1 Türetilmiş sağlayıcılar değer eşitliği bilmiyor.**
   `allTagsProvider` (`notes_providers.dart:650`), `archivedNotesProvider`
   (`:866`), `folderNotesProvider` (`:888`), `filteredNotesProvider` (`:939`),
   `folderNoteCountsProvider` (`folder_order.dart:106`) her not yayınında YENİ
@@ -196,37 +196,43 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
   değişmediyse widget örneğini yeniden kullan.
   Bitti ölçütü: testte, ilgisiz bir notun yazımı çip satırını/klasör rafını
   yeniden kurmuyor (yeniden kurulum sayacı).
+  **Yapıldı:** `core/utils/stable_value.dart` (`StableBox` + `sameInstances/sameValues/sameMap/sameSet`); filtered/archived/folderNotes/allTags/hiddenFolderIds/folderNoteCounts içerik aynıysa ÖNCEKİ örneği döner. Yerel notlar da örneğini korur (`LocalNotesStore._parsed`, harita kimliğiyle). Ana ekranda `_cachedCard`: not örneği + sorgu aynıysa aynı `NoteCard` örneği. Test: `smoothness_phase2_test.dart`.
 
-- [ ] **F2.2 `Timer` ile animasyon → `Ticker`.**
+- [x] **F2.2 `Timer` ile animasyon → `Ticker`.**
   `pdf_viewer_screen.dart:197` ve `items_editor.dart:489` (16 ms kenar
   kaydırma), `bubble_layer.dart:3197` (30 ms yerleşim bekleme döngüsü).
   Vsync'e bağlı değil; 120 Hz'de en fazla 60 adım + titreme.
   `AnimationController`/`Ticker` ya da kare-sonrası geri çağrı zinciri.
+  **Yapıldı:** `core/widgets/frame_loop.dart` (`FrameLoop`: Ticker, adım 60 Hz karesine göre ölçekli); pdf_viewer kenar itmesi, items_editor kenar kaydırması, `BubbleReveal` (oturma artık 120 ms süreyle ölçülür).
 
-- [ ] **F2.3 Toplu işlemler tek `WriteBatch`.**
+- [x] **F2.3 Toplu işlemler tek `WriteBatch`.**
   `dashboard_screen.dart:310-460` (sil, klasöre taşı, arşivle, sabitle,
   yıldızla, renk) not başına ayrı yazım → N akış yayını, N yeniden kurulum,
   atomik olmayan geri alma. `NotesRepository.batchUpdate(ids, fields)`;
   yerel (senkronu kapalı) notlar ayrı yoldan.
+  **Yapıldı:** `NotesRepository.batchUpdateEach/batchUpdate` (+ `softDeleteAll/restoreAll/setArchivedAll`), 450'lik parçalar; yerel notlar `LocalNotesStore.mergeAll` (tek bildirim). Ana ekranın 7 toplu işlemi + geri almaları.
 
-- [ ] **F2.4 Arka plan servisleri ana ekranın `build`'inden çıkar.**
+- [x] **F2.4 Arka plan servisleri ana ekranın `build`'inden çıkar.**
   `dashboard_screen.dart:900-912` dokuz servisi `ref.watch` ile ayakta
   tutuyor; `premiumProvider` her yayınında BÜTÜN ana ekran kuruluyor.
   Oturum açıkken kökte duran bir `AppServices` bileşenine (ya da `ref.listen`
   ile) taşı; giriş ekranında (uid yokken) başlamasınlar.
+  **Yapıldı:** `lib/app/app_services.dart` (`AppServices`, MaterialApp builder'ında, uid yokken dinlemez, `ref.listen` → yeniden kurulum yok). EK KÖK NEDEN: Riverpod 3 görünmeyen ekranın aboneliklerini DURAKLATIYOR — editör açıkken ana ekranın tuttuğu yükleme kuyruğu/premium akışı da duraklıyordu.
 
-- [ ] **F2.5 Kopya not tespiti ana iş parçacığında O(n²).**
+- [x] **F2.5 Kopya not tespiti ana iş parçacığında O(n²).**
   `duplicateNotesProvider` (`notes_providers.dart:309`) AI merkezi açıkken her
   not yayınında yeniden hesaplanıyor. `Isolate.run` + geciktirme, ya da sayı
   yalnız ekran açılışında/kutuya dokununca.
+  **Yapıldı:** `duplicateNotesProvider` artık `FutureProvider`: 500 ms bekleme + O(n²) eşleştirme `compute` ile isolate'te; trigramlar sayısal/sıralı (`trigramCodes`, `similarIndexGroups`), eşzamanlı `duplicateNoteGroups` korunuyor.
 
-- [ ] **F2.6 Ölçüm altyapısı.**
+- [x] **F2.6 Ölçüm altyapısı.**
   "Kasma" bulgusu 10+ turda geldi, ölçüm yok. `integration_test` +
   `traceAction`: (a) 300 notlu ana ekranda fırlatma kaydırma, (b) editörde
   200 karakter yazma; kare build/raster p90 raporu; bütçe ör. p90 < 8 ms.
   CI'da Android emülatörlü AYRI iş, yalnız `workflow_dispatch` (dakika kotası).
+  **Yapıldı:** `integration_test/perf_test.dart` + `test_driver/perf_driver.dart` (özet `build/perf/perf_summary.json`, p90 build > 8 ms → kırmızı); `build.yml` → `perf` işi (Run workflow → "Kare ölçümü" kutusu; o koşuda APK işi atlanır). Senaryolar sahte sağlayıcılarla (Firebase yok). Bulutta cihaz olmadığından henüz koşmadı.
 
-- [ ] **F2.7 Editörün ilk bölünmesi (P1 başlangıcı).**
+- [x] **F2.7 Editörün ilk bölünmesi (P1 başlangıcı).**
   `_NoteEditorScreenState` (`note_editor_screen.dart:438`, ~8.400 satır,
   `build` ~1.580 satır 7262–8840, 41 `setState`): küçük durumlar (meşgul,
   AI görevi, bulma indeksi, kalem kipi, sabitleme vurgusu, başlık üretimi)
@@ -235,6 +241,7 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
   video damgaları — ~7333-7375) not değişince çalışan tek bir yere; her
   build'de planlanan `_pulseAttachBadge` kare-sonrası çağrısı yalnız sayı
   değişince. Tam bölme F3.17.
+  **Yapıldı (başlangıç):** `_aiTask`/`_busyTask`/`_titleGenerating` → `ValueNotifier` + dar builder; denetleyici beslemeleri (ek adları, çip renkleri, video damgası) yalnız not örneği/parlaklık değişince; `_pulseAttachBadge` kare-sonrası çağrısı yalnız sayı değişince. Bulma indeksi/kalem kipi/sabitleme vurgusu setState'te kaldı (seyrek, dokunuşla). Tam bölme F3.17.
 
 ---
 

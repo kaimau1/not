@@ -638,6 +638,61 @@ class NotesRepository {
     return write;
   }
 
+  /// **TOPLU YAZIM** (F2.3): her nota kendi alan haritası, TEK `WriteBatch`
+  /// ile (450'şer parça). Not başına ayrı `updateFields` N akış yayını →
+  /// N ana ekran yeniden kurulumu demekti ve geri alma atomik değildi.
+  /// Yerel (senkronu kapalı) notlar tek değişiklik bildirimiyle yerel depoya.
+  Future<void> batchUpdateEach(Map<String, Map<String, dynamic>> fieldsById) {
+    if (fieldsById.isEmpty) return Future.value();
+    final localFields = <String, Map<String, dynamic>>{};
+    final commits = <Future<void>>[];
+    var batch = _firestore.batch();
+    var ops = 0;
+    for (final e in fieldsById.entries) {
+      if (isLocal(e.key)) {
+        localFields[e.key] = {
+          ...e.value,
+          'updatedAt': FieldValue.serverTimestamp(),
+        };
+        continue;
+      }
+      batch.set(_notes.doc(e.key), {
+        ...e.value,
+        'updatedAt': FieldValue.serverTimestamp(),
+        'updatedBy': editorUid,
+      }, SetOptions(merge: true));
+      if (++ops == 450) {
+        commits.add(batch.commit());
+        batch = _firestore.batch();
+        ops = 0;
+      }
+    }
+    if (ops > 0) commits.add(batch.commit());
+    if (localFields.isNotEmpty) local!.mergeAll(localFields);
+    final all = Future.wait(commits);
+    all.then<void>(
+      (_) {},
+      onError: (Object e, StackTrace st) =>
+          _reportRejected(fieldsById.keys.first, e, st),
+    );
+    return all;
+  }
+
+  /// [batchUpdateEach]'in aynı alanları bütün notlara yazan hâli.
+  Future<void> batchUpdate(
+    Iterable<String> noteIds,
+    Map<String, dynamic> fields,
+  ) => batchUpdateEach({for (final id in noteIds) id: fields});
+
+  Future<void> softDeleteAll(Iterable<String> noteIds) =>
+      batchUpdate(noteIds, {'deletedAt': Timestamp.now()});
+
+  Future<void> restoreAll(Iterable<String> noteIds) =>
+      batchUpdate(noteIds, {'deletedAt': null});
+
+  Future<void> setArchivedAll(Iterable<String> noteIds, bool archived) =>
+      batchUpdate(noteIds, {'archivedAt': archived ? Timestamp.now() : null});
+
   /// Notların elle sıralamasını (madde 1: basılı tutup sürükle) kalıcılaştırır.
   /// Verilen liste yeni görünüm sırasıdır; her nota eşit aralıklı bir
   /// [Note.orderIndex] atanır. Yalnız değeri değişen notlar yazılır — sürükleme

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utils/stable_value.dart';
 
 import '../../notes/data/notes_repository.dart';
 import '../../notes/presentation/notes_providers.dart';
@@ -112,8 +113,14 @@ final folderNoteCountsProvider = Provider<Map<String, int>>((ref) {
     if (id == null || n.archivedAt != null || n.isEmpty) continue;
     counts[id] = (counts[id] ?? 0) + 1;
   }
-  return counts;
+  // Sayılar değişmedikçe AYNI harita (F2.1): yoksa her not yazımında klasör
+  // rafı ve sayıya göre sıralı klasör listesi yeniden kuruluyordu.
+  return ref.watch(_folderNoteCountsBox).keep(counts, sameMap);
 });
+
+final _folderNoteCountsBox = Provider<StableBox<Map<String, int>>>(
+  (ref) => StableBox(),
+);
 
 /// Kullanıcının KENDİ klasörleri, seçili [FolderSort] ile sıralı. Gizli
 /// klasörler DAHİL — süzmek tüketicinin işi (bazı yerler gizlileri kimlik

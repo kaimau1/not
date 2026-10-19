@@ -24,13 +24,11 @@ import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/undo_snackbar.dart';
-import '../../ai/data/ai_gate.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../ai/data/semantic_search.dart';
 import '../../folders/data/folder_order.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/data/folder_activity.dart';
-import '../../folders/data/shared_activity_service.dart';
 import '../../folders/domain/note_folder.dart';
 import '../../folders/presentation/folder_sheets.dart';
 import '../../folders/presentation/folder_tile.dart';
@@ -44,11 +42,7 @@ import '../../settings/settings_providers.dart';
 import '../../settings/presentation/permissions_onboarding.dart';
 import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
-import '../data/reminder_service.dart';
-import '../data/share_intake.dart';
-import '../data/place_reminders.dart';
 import '../data/upload_queue.dart';
-import '../data/widget_service.dart';
 import '../domain/note.dart';
 import '../domain/note_share_text.dart';
 import '../domain/note_templates.dart';
@@ -118,6 +112,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// segment tepeden başlar; aynı segment içinde konum zaten korunur (widget
   /// aynı kalır, konum nesnesi yeniden kurulmaz).
   final _gridScroll = ScrollController(keepScrollOffset: false);
+
+  /// Kart widget'ı önbelleği (F2.1): not ÖRNEĞİ ve arama sorgusu aynıysa
+  /// AYNI `NoteCard` örneği döner — Flutter aynı örneği görünce o kartın alt
+  /// ağacını hiç kurmaz. Bir notun yazımı (editörde otomatik kayıt) ana ekranı
+  /// yeniden kurduğunda görünen BÜTÜN kartlar (medya planı, zengin önizleme
+  /// ayrıştırması, kapak) baştan kuruluyordu; artık yalnız değişen kart.
+  final Map<String, (Note, String, Widget)> _cardCache = {};
+
+  Widget _cachedCard(Note note, String query) {
+    final hit = _cardCache[note.id];
+    if (hit != null && identical(hit.$1, note) && hit.$2 == query) {
+      return hit.$3;
+    }
+    final card = NoteCard(note: note, highlightQuery: query);
+    _cardCache[note.id] = (note, query, card);
+    return card;
+  }
+
+  /// Silinmiş/ekrandan çıkmış notların kartlarını önbellekten düşürür.
+  void _pruneCardCache(List<Note> visible) {
+    if (_cardCache.length <= visible.length + 32) return;
+    final ids = {for (final n in visible) n.id};
+    _cardCache.removeWhere((id, _) => !ids.contains(id));
+  }
 
   /// Kullanıcı bu kadar aşağıdaysa "başa dön" düğmesi görünür. Bir ekran
   /// yüksekliğinden fazlası: kısa bir kaydırmada düğme çıkıp kaybolmasın.
@@ -323,20 +341,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // Seçili kartlar birlikte küçülüp solar, sonra silinir (bkz.
     // leavingNotesProvider).
     await ref.read(leavingNotesProvider.notifier).leave(ids, () {
-      for (final id in ids) {
-        repo.softDelete(id);
-      }
+      repo.softDeleteAll(ids);
     });
     if (!mounted) return;
     showUndoSnackBar(
       context,
       message: l10n.notesDeletedCount(ids.length),
       undoLabel: l10n.undo,
-      onUndo: () {
-        for (final id in ids) {
-          repo.restore(id);
-        }
-      },
+      onUndo: () => repo.restoreAll(ids),
     );
   }
 
@@ -354,19 +366,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final previous = {for (final n in _selectedNotes(ids)) n.id: n.folderId};
     final picked = await showFolderPickSheet(context, ref);
     if (picked == null || !mounted) return;
-    for (final id in ids) {
-      repo.updateFields(id, {'folderId': picked.isEmpty ? null : picked});
-    }
+    repo.batchUpdate(ids, {'folderId': picked.isEmpty ? null : picked});
     ref.read(selectedNoteIdsProvider.notifier).clear();
     showUndoSnackBar(
       context,
       message: l10n.notesMovedCount(ids.length),
       undoLabel: l10n.undo,
-      onUndo: () {
-        for (final entry in previous.entries) {
-          repo.updateFields(entry.key, {'folderId': entry.value});
-        }
-      },
+      onUndo: () => repo.batchUpdateEach({
+        for (final entry in previous.entries)
+          entry.key: {'folderId': entry.value},
+      }),
     );
   }
 
@@ -416,19 +425,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null || ids.isEmpty) return;
     final l10n = context.l10n;
-    for (final id in ids) {
-      repo.setArchived(id, true);
-    }
+    repo.setArchivedAll(ids, true);
     ref.read(selectedNoteIdsProvider.notifier).clear();
     showUndoSnackBar(
       context,
       message: l10n.notesArchivedCount(ids.length),
       undoLabel: l10n.undo,
-      onUndo: () {
-        for (final id in ids) {
-          repo.setArchived(id, false);
-        }
-      },
+      onUndo: () => repo.setArchivedAll(ids, false),
     );
   }
 
@@ -455,18 +458,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   void _setPinnedSelected(Set<String> ids, bool pinned) {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    for (final id in ids) {
-      repo.setPinned(id, pinned);
-    }
+    repo.batchUpdate(ids, {'pinned': pinned});
     ref.read(selectedNoteIdsProvider.notifier).clear();
   }
 
   void _setStarredSelected(Set<String> ids, bool starred) {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    for (final id in ids) {
-      repo.setStarred(id, starred);
-    }
+    repo.batchUpdate(ids, {'starred': starred});
     ref.read(selectedNoteIdsProvider.notifier).clear();
   }
 
@@ -517,13 +516,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (picked == null) return;
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    for (final id in ids) {
-      if (frame) {
-        repo.setFrameColor(id, picked);
-      } else {
-        repo.setColor(id, picked);
-      }
-    }
+    repo.batchUpdate(ids, {frame ? 'frameColor' : 'color': picked.id});
     ref.read(selectedNoteIdsProvider.notifier).clear();
   }
 
@@ -896,21 +889,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Arka plan servislerini ayakta tut: ek yükleme kuyruğu, hatırlatıcı
-    // bildirimleri, ana ekran widget'ı ve derin bağlantı dinleyicisi.
-    ref.watch(uploadQueueProvider);
-    ref.watch(reminderServiceProvider);
-    // Silinen/arşivlenen notların konum hatırlatıcılarını kaldırır.
-    ref.watch(placeReminderCleanupProvider);
-    // Paylaşılan klasörlerdeki hareketi izler: rozet + telefon bildirimi
-    // (kullanıcı isteği 2026-09-04).
-    ref.watch(sharedActivityServiceProvider);
-    ref.watch(widgetServiceProvider);
-    ref.watch(deepLinkHandlerProvider);
-    // Premium akışını canlı tut: AI kapısı (AiGate.consume) senkron okur.
-    ref.watch(premiumProvider);
-    // Paylaş menüsünden gelen içerikleri dinle (Android).
-    ref.watch(shareIntakeProvider);
+    // Arka plan servisleri artık kökte (bkz. `AppServices`, F2.4).
 
     // Ana ekran mikrofon widget'ından (notlar://voice) gelen bas-başlat
     // isteği: uygulama zaten ana sayfadayken gelirse burada yakalanır.
@@ -2137,6 +2116,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         ),
     ];
 
+    _pruneCardCache(notes);
     final pinned = [
       for (final n in notes)
         if (n.pinned) n,
@@ -2287,7 +2267,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             return _FocusHalo(
               focused: focused,
               noteId: note.id,
-              child: NoteCard(note: note, highlightQuery: query),
+              child: _cachedCard(note, query),
             );
           },
         );
