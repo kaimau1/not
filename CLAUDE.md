@@ -21,3 +21,6 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + Window
 - Proje ne/niye     → HAFIZA.md         (oku: iş başı · yaz: iş sonu karar/bug-kök/tuzak, tarihli append-only)
 - Kullanıcı tercihi → .claude memory/   (otomatik, projeler-arası — proje bilgisi buraya YAZILMAZ)
 Yaz kuralı: usta rule 12 / YAZ — tetikleyici (kalıcı karar, bug kök nedeni, yanlış yol) oluştuysa iş bitmeden yaz. Sır/anahtar/kişisel veri hafızaya YAZILMAZ.
+
+## Yol haritası (fazlı plan)
+- `YOL_HARITASI.md` — 2026-10-19 dış göz incelemesinden çıkan 4 fazlı plan (güvenlik/veri → akıcılık → sadeleştirme → eksikler). Kullanıcı **"Faz N'i yap"** dediğinde dosyanın başındaki protokolü izle: yalnız o faz, KARAR GEREKİR maddelerinde önce sor, bitince maddeleri `[x]` + Durum tablosu + HAFIZA + commit/push. Kendiliğinden sonraki faza geçme.

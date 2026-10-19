@@ -5165,3 +5165,26 @@ Kullanıcı: "APK derle ve kalanları yap".
   ile kayıt mikrofonu paylaşamıyor. Basılı tut ayarı duruyor.
 1327/1327; Kotlin yerelde derlenemedi (Android SDK yok) — CI [apk] derlemesi
 doğrulayıcı.
+
+## 2026-10-19 (5. tur) — dış göz incelemesi + 4 fazlı yol haritası (KOD DEĞİŞMEDİ)
+Kullanıcı: "neler fazla/eksik/yanlış, neler birleştirilebilir, performans —
+detaylı araştır"; ardından "kaydet, fazları ayrı oturumlarda yaptıracağım".
+Plan ve rapor özeti: `YOL_HARITASI.md` (protokol dosyanın başında).
+* **TUZAK — Flutter 3.47.7 (Dart 3.13) ile `pdfrx 1.3.5` DERLENMİYOR**
+  (`pdf_file_cache.dart:351`, null güvenliği) → pdfrx'e dokunan test
+  dosyaları hiç yüklenmiyor. Aynı sürümde `flutter analyze` 6 YENİ uyarı
+  verir (`unawaited_return_in_try_block` ×5, `invalid_return_type_for_then`
+  ×1 — F1.7). Yükseltme pdfrx 2.x'e bağlı (F3.15); o zamana dek CI 3.44.6.
+* **TUZAK (bulut oturumu)**: Flutter yok. 3.44.6 linux arşivi
+  storage.googleapis.com'dan indirilip scratchpad'e açılabiliyor (~1,5 GB).
+  3.47 ile `pub get` `pubspec.lock`'u değiştiriyor (intl/matcher SDK
+  pinleri) — commit'lenmez.
+* **BULGULAR (düzeltilmedi, plana girdi)**: (1) bilinmeyen `AttachmentKind` →
+  `image`'e düşüş + `fromMap`'in bilinmeyen alanları atması + dizilerin bütün
+  yazılması = ESKİ istemci (özellikle elle derlenen Windows) yeni ekleri
+  bozar (F1.5). (2) `searchUsers` anonim hesaba açık + web'de ilk açılışta
+  otomatik anonim oturum = ad/e-posta toplanabilir (F1.1). (3) Dart
+  `toLowerCase` 'I'yı 'i' yapar ('ı' değil): 'ılık' araması 'ILIK'ı bulmuyor
+  (F1.8, denendi). (4) Hesap silme `userSearch/{uid}`'i bırakıyor (F1.2).
+* Ölçüm: 3.44.6 ile analiz temiz, 1327/1327 test, ~195 sn (CLAUDE.md'deki
+  1191 eski — F1.10).

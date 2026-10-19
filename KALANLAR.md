@@ -2,6 +2,10 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-10-19 — dış göz incelemesi: fazlı plan
+- [ ] Faz 1–4 ayrı oturumlarda, sırayla → bkz. `YOL_HARITASI.md` (madde
+  listesi, sıra ve durum orada tutulur; burada tekrarlanmaz).
+
 ## 2026-10-17 (5. tur) — paylaşılan notlar (CİHAZDA GÖRÜLMEDİ)
 - [ ] **Geri tuşu**: ana ekran → Benimle paylaşılanlar → not aç → geri →
   liste → geri → ANA EKRAN (uygulama kapanmamalı). Aynısı klasör sayfası
