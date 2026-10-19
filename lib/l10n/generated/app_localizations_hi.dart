@@ -5255,4 +5255,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get voiceSilenceLong => 'ज़्यादा';
+
+  @override
+  String get voiceOffline => 'ऑफ़लाइन पहचान';
+
+  @override
+  String get voiceOfflineInfo =>
+      'अगर फ़ोन में भाषा पैक डाउनलोड है तो आवाज़ बिना इंटरनेट के लिखी जाती है। नहीं तो अपने आप ऑनलाइन पहचान इस्तेमाल होती है।';
 }

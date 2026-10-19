@@ -1950,5 +1950,7 @@
   "voiceSilenceLabel": "Wait time",
   "voiceSilenceShort": "Short",
   "voiceSilenceNormal": "Normal",
-  "voiceSilenceLong": "Long"
+  "voiceSilenceLong": "Long",
+  "voiceOffline": "Offline recognition",
+  "voiceOfflineInfo": "If the language pack is downloaded on your phone, speech is transcribed without going online. Without it, online recognition is used automatically."
 }

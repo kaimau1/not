@@ -5149,3 +5149,19 @@ Kullanıcı: "diğer önerilerine geç".
   APK'sız derlenemez) ve sesi metinle birlikte saklama (Android'de tanıyıcı
   ile kayıt mikrofonu paylaşamıyor). Basılı tut ayarı duruyor.
 `voice_commands_test` +6 grup testi; 1327/1327. Cihazda GÖRÜLMEDİ.
+
+## 2026-10-19 (4. tur) — internetsiz tanıma + Google ekranı köprüsü söküldü, APK
+Kullanıcı: "APK derle ve kalanları yap".
+* **İnternetsiz tanıma**: `voiceOfflineProvider` (varsayılan KAPALI, Ayarlar
+  yalnız Android). Kanal argümanı geriye uyumlu tek dize: `"tr-TR|offline"`
+  (`DeviceSpeech.listen(preferOffline:)` → `VoiceListenSession`). Kotlin
+  `EXTRA_PREFER_OFFLINE`; dil paketi yoksa tanıyıcı 12/13 ile düşer →
+  `preferOffline = false` + `restartRecognizer` (oturum çevrimiçi sürer).
+  12/13 sayı olarak yazıldı (API 31 sabitleri).
+* **Kotlin `voiceInputWithAudio` söküldü** (2. turun açık işi): yöntem dalı,
+  `voiceInputResult`, istek kodu 4712 (yer izni koduyla ÇAKIŞIYORDU) ve
+  `onActivityResult`'taki ses kopyalama.
+* Yapılmadı (bilinçli): sesi metinle birlikte saklama — Android'de tanıyıcı
+  ile kayıt mikrofonu paylaşamıyor. Basılı tut ayarı duruyor.
+1327/1327; Kotlin yerelde derlenemedi (Android SDK yok) — CI [apk] derlemesi
+doğrulayıcı.

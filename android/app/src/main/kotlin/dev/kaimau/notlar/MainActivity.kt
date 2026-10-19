@@ -108,6 +108,11 @@ class MainActivity : FlutterFragmentActivity() {
     // devamı değil YENİ bir parça olduğunu söyler.
     private var segmentEnded = false
 
+    // İnternetsiz tanıma tercihi (Ayarlar). Dil paketi yoksa tanıyıcı 12/13
+    // (dil desteklenmiyor / kullanılamıyor) ile düşer; o zaman tercih bu
+    // oturum için bırakılır ve çevrimiçi tanımayla sürülür.
+    private var preferOffline = false
+
     // Tanı için: yalnızca uzunluk ve olay tipi yazılır, konuşma METNİ asla
     // loglanmaz (döküm kişisel veridir, logcat'e sızmamalı).
     private val logTag = "NotlarSpeech"
@@ -255,39 +260,6 @@ class MainActivity : FlutterFragmentActivity() {
                                 arrayOf(Manifest.permission.CAMERA),
                                 cameraRequestCode
                             )
-                        }
-                    }
-                    // Keep tarzı sesli not: Google'ın sesli giriş EKRANI açılır;
-                    // kullanıcı konuşur, dönüşte hem metin hem Google'ın KENDİ
-                    // kaydettiği ses dosyası gelir (belgesiz GET_AUDIO ekstrası —
-                    // Keep de bunu kullanır). Tek mikrofon istemcisi Google
-                    // olduğundan kendi kaydımızla mikrofon kavgası (Android'de
-                    // son açan kazanır; ölçümle doğrulandı) hiç doğmaz.
-                    "voiceInputWithAudio" -> {
-                        if (voiceInputResult != null) {
-                            result.error("busy", "Sesli giriş zaten açık", null)
-                        } else {
-                            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                                putExtra(
-                                    RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                                    RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-                                )
-                                putExtra(
-                                    RecognizerIntent.EXTRA_LANGUAGE,
-                                    call.argument<String>("locale") ?: "tr-TR"
-                                )
-                                putExtra("android.speech.extra.GET_AUDIO_FORMAT", "audio/AMR")
-                                putExtra("android.speech.extra.GET_AUDIO", true)
-                            }
-                            try {
-                                voiceInputResult = result
-                                startActivityForResult(intent, voiceInputRequestCode)
-                            } catch (e: Exception) {
-                                // Sesli giriş ekranı yok (Google uygulaması kapalı
-                                // ya da kaldırılmış): çağıran eski yoluna düşer.
-                                voiceInputResult = null
-                                result.error("unavailable", "$e", null)
-                            }
                         }
                     }
                     // Belge seçimi UYGULAMA SEÇİCİ ile (kullanıcı isteği
@@ -547,10 +519,6 @@ class MainActivity : FlutterFragmentActivity() {
     }
     private val cameraRequestCode = 4711
 
-    // Sesli giriş ekranının bekleyen yanıtı (aynı anda tek istek olur).
-    private var voiceInputResult: MethodChannel.Result? = null
-    private val voiceInputRequestCode = 4712
-
     // Belge seçicinin bekleyen yanıtı (aynı anda tek istek olur).
     private var pickResult: MethodChannel.Result? = null
     private val pickRequestCode = 4713
@@ -584,34 +552,6 @@ class MainActivity : FlutterFragmentActivity() {
             onSaveResult(resultCode, data)
             return
         }
-        if (requestCode != voiceInputRequestCode) return
-        val pending = voiceInputResult ?: return
-        voiceInputResult = null
-        if (resultCode != RESULT_OK || data == null) {
-            // İptal (geri tuşu / konuşma yok): hata değil, boş dönüş.
-            pending.success(null)
-            return
-        }
-        val text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-            ?.firstOrNull() ?: ""
-        // Google'ın kaydettiği ses content URI ile gelir; URI kalıcı olmadığı
-        // için hemen önbelleğe kopyalanır. GET_AUDIO belgesiz: Google ileride
-        // vermeyi keserse audioPath null gider, çağıran yalnız metinle sürer.
-        var audioPath: String? = null
-        val uri = data.data
-        if (uri != null) {
-            try {
-                val f = java.io.File(cacheDir, "sesligiris_${System.currentTimeMillis()}.amr")
-                contentResolver.openInputStream(uri)?.use { inp ->
-                    f.outputStream().use { out -> inp.copyTo(out) }
-                }
-                if (f.length() > 0) audioPath = f.absolutePath else f.delete()
-            } catch (e: Exception) {
-                Log.d(logTag, "sesli giris ses kopyalanamadi: $e")
-            }
-        }
-        Log.d(logTag, "sesli giris text=${text.length} audio=${audioPath != null}")
-        pending.success(mapOf("text" to text, "audioPath" to audioPath))
     }
 
     override fun onRequestPermissionsResult(
@@ -1024,7 +964,11 @@ class MainActivity : FlutterFragmentActivity() {
                     listening = true
                     rapidRestarts = 0
                     lastProgressAt = SystemClock.elapsedRealtime()
-                    startRecognizer(arguments as? String ?: "tr-TR")
+                    // Argüman "tr-TR" ya da "tr-TR|offline" (internetsiz tanıma
+                    // tercihi — bkz. DeviceSpeech.listen).
+                    val parts = (arguments as? String ?: "tr-TR").split('|')
+                    preferOffline = parts.contains("offline")
+                    startRecognizer(parts.first().ifBlank { "tr-TR" })
                 }
 
                 override fun onCancel(arguments: Any?) {
@@ -1105,8 +1049,7 @@ class MainActivity : FlutterFragmentActivity() {
     // Uygulama arka plana düşünce mikrofon bırakılır: FGS'siz bir uygulamanın
     // arka planda dinlemeye devam etmesi hem pil hem gizlilik sorunu; Android
     // 11+ zaten mikrofonu bir süre sonra keser ama restart döngüsü CPU
-    // yakmayı sürdürüyordu. (voiceInputWithAudio yolunda listening=false
-    // olduğundan Google'ın sesli giriş ekranı açılırken buraya takılmaz.)
+    // yakmayı sürdürüyordu.
     override fun onStop() {
         if (listening) {
             Log.d(logTag, "onStop: arka plan, dinleme kapatildi")
@@ -1124,6 +1067,8 @@ class MainActivity : FlutterFragmentActivity() {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale)
             // Konuştukça metin aksın (yalnız bitişte değil).
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            // İnternetsiz tanıma: cihazda dil paketi varsa ağa gidilmez.
+            if (preferOffline) putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
             // Düşünmek için duraksayan kullanıcıda tanıyıcı erken kapanmasın.
             putExtra(
                 RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS,
@@ -1208,6 +1153,16 @@ class MainActivity : FlutterFragmentActivity() {
                 Log.d(logTag, "error=11 yeniden kurulum gurultusu, yok sayildi")
                 return
             }
+            // İnternetsiz tanıma istendi ama dil paketi yok (12 =
+            // ERROR_LANGUAGE_NOT_SUPPORTED, 13 = ERROR_LANGUAGE_UNAVAILABLE —
+            // API 31 sabitleri, eski SDK'larda da derlensin diye sayı):
+            // kullanıcı sessiz kalmasın, çevrimiçi tanımaya düşülür.
+            if (preferOffline && (error == 12 || error == 13) && listening) {
+                Log.d(logTag, "error=$error cevrimdisi paket yok, cevrimici devam")
+                preferOffline = false
+                restartRecognizer(locale)
+                return
+            }
             // Sessizlik/eşleşmeme hata değildir: dinlemeye devam et.
             val benign = error == SpeechRecognizer.ERROR_NO_MATCH ||
                 error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT
@@ -1235,8 +1190,7 @@ class MainActivity : FlutterFragmentActivity() {
         override fun onReadyForSpeech(params: Bundle?) {}
         override fun onBeginningOfSpeech() {}
         // Google'ın servisi bu geri çağrıyı beslemiyor (2026-07-25'te cihazda
-        // ölçüldü — hiç düşmedi); ses dosyası isteyen akış voiceInputWithAudio
-        // köprüsünü kullanır.
+        // ölçüldü — hiç düşmedi).
         override fun onBufferReceived(buffer: ByteArray?) {}
 
         // Tanıyıcı konuşmanın bittiğini algıladı. Oturum kapanmadan yeni bir

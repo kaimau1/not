@@ -5287,4 +5287,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get voiceSilenceLong => 'Lang';
+
+  @override
+  String get voiceOffline => 'Offline herkenning';
+
+  @override
+  String get voiceOfflineInfo =>
+      'Als het taalpakket op je telefoon staat, wordt spraak zonder internet uitgeschreven. Anders wordt automatisch online herkenning gebruikt.';
 }

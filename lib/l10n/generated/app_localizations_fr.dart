@@ -5289,4 +5289,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get voiceSilenceLong => 'Long';
+
+  @override
+  String get voiceOffline => 'Reconnaissance hors ligne';
+
+  @override
+  String get voiceOfflineInfo =>
+      'Si le pack de langue est téléchargé sur le téléphone, la voix est transcrite sans connexion. Sinon, la reconnaissance en ligne est utilisée automatiquement.';
 }

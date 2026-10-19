@@ -1059,5 +1059,7 @@
   "voiceSilenceLabel": "Wachttijd",
   "voiceSilenceShort": "Kort",
   "voiceSilenceNormal": "Normaal",
-  "voiceSilenceLong": "Lang"
+  "voiceSilenceLong": "Lang",
+  "voiceOffline": "Offline herkenning",
+  "voiceOfflineInfo": "Als het taalpakket op je telefoon staat, wordt spraak zonder internet uitgeschreven. Anders wordt automatisch online herkenning gebruikt."
 }

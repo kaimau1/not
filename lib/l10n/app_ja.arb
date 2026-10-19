@@ -1059,5 +1059,7 @@
   "voiceSilenceLabel": "待ち時間",
   "voiceSilenceShort": "短い",
   "voiceSilenceNormal": "普通",
-  "voiceSilenceLong": "長い"
+  "voiceSilenceLong": "長い",
+  "voiceOffline": "オフライン認識",
+  "voiceOfflineInfo": "端末に言語パックがあれば、インターネットを使わずに文字起こしします。ない場合は自動でオンライン認識を使います。"
 }

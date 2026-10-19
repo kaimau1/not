@@ -5288,4 +5288,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get voiceSilenceLong => 'Lang';
+
+  @override
+  String get voiceOffline => 'Offline-Erkennung';
+
+  @override
+  String get voiceOfflineInfo =>
+      'Wenn das Sprachpaket auf dem Telefon geladen ist, wird ohne Internet transkribiert. Sonst wird automatisch die Online-Erkennung genutzt.';
 }

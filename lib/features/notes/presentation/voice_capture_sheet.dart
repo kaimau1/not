@@ -261,6 +261,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         // kadarki metin/kayıt gözden geçirme evresine taşınır.
         maxDuration: _maxCaptureDuration,
         autoStop: () => ref.read(voiceAutoStopProvider),
+        preferOffline: ref.read(voiceOfflineProvider),
         gate: SilenceGate(afterSpeech: ref.read(voiceSilenceProvider).duration),
         // Basılı-tut modunda parmak düğmedeyken kullanıcı "dinlemeye devam"
         // diyor demektir.

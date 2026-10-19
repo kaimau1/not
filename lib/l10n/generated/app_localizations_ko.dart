@@ -5172,4 +5172,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get voiceSilenceLong => '길게';
+
+  @override
+  String get voiceOffline => '오프라인 인식';
+
+  @override
+  String get voiceOfflineInfo =>
+      '휴대폰에 언어 팩이 있으면 인터넷 없이 받아씁니다. 없으면 자동으로 온라인 인식을 사용합니다.';
 }

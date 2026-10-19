@@ -5280,4 +5280,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get voiceSilenceLong => 'Largo';
+
+  @override
+  String get voiceOffline => 'Reconocimiento sin conexión';
+
+  @override
+  String get voiceOfflineInfo =>
+      'Si el paquete de idioma está descargado en el teléfono, la voz se transcribe sin conexión. Si no, se usa automáticamente el reconocimiento en línea.';
 }

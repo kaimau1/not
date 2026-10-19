@@ -5139,4 +5139,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get voiceSilenceLong => '长';
+
+  @override
+  String get voiceOffline => '离线识别';
+
+  @override
+  String get voiceOfflineInfo => '如果手机已下载语言包，语音会在不联网的情况下转写；否则会自动使用在线识别。';
 }

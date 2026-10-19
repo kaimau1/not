@@ -1059,5 +1059,7 @@
   "voiceSilenceLabel": "प्रतीक्षा समय",
   "voiceSilenceShort": "कम",
   "voiceSilenceNormal": "सामान्य",
-  "voiceSilenceLong": "ज़्यादा"
+  "voiceSilenceLong": "ज़्यादा",
+  "voiceOffline": "ऑफ़लाइन पहचान",
+  "voiceOfflineInfo": "अगर फ़ोन में भाषा पैक डाउनलोड है तो आवाज़ बिना इंटरनेट के लिखी जाती है। नहीं तो अपने आप ऑनलाइन पहचान इस्तेमाल होती है।"
 }

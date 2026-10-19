@@ -9497,6 +9497,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Uzun'**
   String get voiceSilenceLong;
+
+  /// İnternetsiz sesli tanıma ayarı (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'İnternetsiz tanıma'**
+  String get voiceOffline;
+
+  /// İnternetsiz sesli tanıma ayarı (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefonda dil paketi indirilmişse sesin internete gitmeden yazıya döker. Paket yoksa kendiliğinden çevrimiçi tanımaya döner.'**
+  String get voiceOfflineInfo;
 }
 
 class _AppLocalizationsDelegate

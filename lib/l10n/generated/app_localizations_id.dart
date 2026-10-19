@@ -5272,4 +5272,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get voiceSilenceLong => 'Panjang';
+
+  @override
+  String get voiceOffline => 'Pengenalan offline';
+
+  @override
+  String get voiceOfflineInfo =>
+      'Jika paket bahasa sudah diunduh di ponsel, suara ditranskripsi tanpa internet. Jika tidak, pengenalan online dipakai otomatis.';
 }
