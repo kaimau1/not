@@ -223,13 +223,23 @@ class AssistantService {
     // yapabildiği tek şey metin yazmaktı; "kırmızı çerçeve yap" denince elinde
     // uygun araç olmadığından isteği NOTUN İÇİNE bir madde olarak yazıyordu
     // ("kırmızı çerçeve koy"). Artık notun kendi alanlarını değiştirebiliyor.
+    // TEK renk + kenar vurgusu (F3.6): "kırmızı çerçeve" = kırmızı +
+    // vurgu; eski "yıldızla" = sabitle.
     final color = parseColor(args['color']);
-    if (color != null) fields['color'] = color.id;
     final frameColor = parseColor(args['frameColor']);
-    if (frameColor != null) fields['frameColor'] = frameColor.id;
-    if (args['starred'] is bool) fields['starred'] = args['starred'];
+    if (color != null || frameColor != null) {
+      fields.addAll(
+        NotesRepository.colorPinFields(
+          color: frameColor ?? color,
+          accent: frameColor != null && frameColor != NoteColor.none,
+        ),
+      );
+    }
     if (args['locked'] is bool) fields['locked'] = args['locked'];
-    if (args['pinned'] is bool) fields['pinned'] = args['pinned'];
+    final pinned = args['pinned'] ?? args['starred'];
+    if (pinned is bool) {
+      fields.addAll(NotesRepository.colorPinFields(pinned: pinned));
+    }
     if (args['archived'] is bool) {
       fields['archivedAt'] = (args['archived'] as bool)
           ? Timestamp.now()

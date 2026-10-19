@@ -464,7 +464,6 @@ class NotesRepository {
       color: note.color,
       frameColor: note.frameColor,
       pinned: note.pinned,
-      starred: note.starred,
       fontFamily: note.fontFamily,
       fontScale: note.fontScale,
       textOpacity: note.textOpacity,
@@ -726,17 +725,83 @@ class NotesRepository {
     if (ops > 0) unawaited(batch.commit());
   }
 
+  /// `starred: false` HER yazımda: eski "Yıldızlı" bayrağı sabitliyle
+  /// birleşti (F3.6) ve okunurken `pinned || starred` sayılıyor — bırakılsa
+  /// sabitlemesi kaldırılan eski yıldızlı not yeniden sabitli okunurdu.
   void setPinned(String noteId, bool pinned) =>
-      updateFields(noteId, {'pinned': pinned});
+      updateFields(noteId, colorPinFields(pinned: pinned));
 
-  void setStarred(String noteId, bool starred) =>
-      updateFields(noteId, {'starred': starred});
+  /// TEK renk + isteğe bağlı kenar vurgusu (F3.6).
+  void setColor(String noteId, NoteColor color, {required bool accent}) =>
+      updateFields(noteId, colorPinFields(color: color, accent: accent));
 
-  void setColor(String noteId, NoteColor color) =>
-      updateFields(noteId, {'color': color.id});
+  /// Sabitleme/renk yazımlarının alan haritası (toplu işlemler de kullanır).
+  static Map<String, dynamic> colorPinFields({
+    bool? pinned,
+    NoteColor? color,
+    bool accent = false,
+  }) => {
+    if (pinned != null) ...{'pinned': pinned, 'starred': false},
+    if (color != null) ...{
+      'color': color.id,
+      'frameColor': (accent ? color : NoteColor.none).id,
+    },
+  };
 
-  void setFrameColor(String noteId, NoteColor color) =>
-      updateFields(noteId, {'frameColor': color.id});
+  /// **F3.6 GÖÇÜ** (bir kez, hesap başına): eski yıldızlı notlar sabitli
+  /// olur; yalnız çerçeve rengi olan notların rengi zemine taşınır (kenar
+  /// vurgusu korunur). Okuma zaten ikisini de çeviriyor; göç, kayıttaki
+  /// eski alanları temizleyip eski/yeni istemcilerin aynı şeyi görmesini
+  /// sağlar. Hata olursa sonraki açılışta yeniden denenir.
+  Future<int> migrateConceptPairs() async {
+    final fixes = <String, Map<String, dynamic>>{};
+    void check(String id, Map<String, dynamic> data) {
+      final fields = <String, dynamic>{};
+      if (data['starred'] == true) {
+        fields.addAll({'pinned': true, 'starred': false});
+      }
+      final color = NoteColor.fromId(data['color'] as String?);
+      final frame = NoteColor.fromId(data['frameColor'] as String?);
+      if (color == NoteColor.none && frame != NoteColor.none) {
+        fields['color'] = frame.id;
+      }
+      if (fields.isNotEmpty) fixes[id] = fields;
+    }
+
+    final snapshot = await _notes.get();
+    for (final doc in snapshot.docs) {
+      check(doc.id, doc.data());
+    }
+    final localFixes = <String, Map<String, dynamic>>{};
+    final store = local;
+    if (store != null) {
+      for (final e in store.rawEntries().entries) {
+        check(e.key, e.value);
+        final fix = fixes.remove(e.key);
+        if (fix != null) localFixes[e.key] = fix;
+      }
+      if (localFixes.isNotEmpty) store.mergeAll(localFixes);
+    }
+    // `updatedAt`e DOKUNULMAZ: göç bir düzenleme değil — "son güncellenen"
+    // sıralaması bozulmasın.
+    var batch = _firestore.batch();
+    var ops = 0;
+    final commits = <Future<void>>[];
+    for (final e in fixes.entries) {
+      batch.set(_notes.doc(e.key), {
+        ...e.value,
+        'updatedBy': editorUid,
+      }, SetOptions(merge: true));
+      if (++ops == 450) {
+        commits.add(batch.commit());
+        batch = _firestore.batch();
+        ops = 0;
+      }
+    }
+    if (ops > 0) commits.add(batch.commit());
+    await Future.wait(commits);
+    return fixes.length + localFixes.length;
+  }
 
   void setAiSummary(String noteId, AiSummary summary) =>
       updateFields(noteId, {'aiSummary': summary.toMap()});

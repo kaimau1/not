@@ -144,6 +144,9 @@ class LocalNotesStore {
     if (any) _changed();
   }
 
+  /// Ham kayıtlar (göçler okur — bkz. `NotesRepository.migrateConceptPairs`).
+  Map<String, Map<String, dynamic>> rawEntries() => Map.unmodifiable(_docs);
+
   void remove(String id) {
     _parsedCache.remove(id);
     if (_docs.remove(id) != null) _changed(immediate: true);

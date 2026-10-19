@@ -572,8 +572,8 @@
       }
     }
   },
-  "backgroundColor": "Zemin rengi",
-  "backgroundColorInfo": "Notun arka plan rengi",
+  "backgroundColor": "Renk",
+  "backgroundColorInfo": "Notun rengi; istersen kenarına da vurgu",
   "frameColor": "Çerçeve",
   "frameColorInfo": "Notun çevresine seçtiğin renkte bir çerçeve çizilir",
   "sortBy": "Sıralama",
@@ -2624,5 +2624,6 @@
   "shareTogetherSection": "BİRLİKTE DÜZENLE",
   "shareTogetherInfo": "Aynı notu/klasörü siz ikiniz görür ve değiştirirsiniz",
   "shareCopySection": "KOPYA GÖNDER",
-  "shareCopyInfo": "Arkadaşının gelen kutusuna bağımsız bir kopya gider"
+  "shareCopyInfo": "Arkadaşının gelen kutusuna bağımsız bir kopya gider",
+  "noteColorAccent": "Kenarı vurgula"
 }

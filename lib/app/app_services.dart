@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/ai/data/ai_gate.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/folders/data/shared_activity_service.dart';
+import '../features/notes/data/data_migrations.dart';
 import '../features/notes/data/place_reminders.dart';
 import '../features/notes/data/reminder_service.dart';
 import '../features/notes/data/share_intake.dart';
@@ -43,6 +44,8 @@ class AppServices extends ConsumerWidget {
       ref.listen(premiumProvider, _ignore);
       // Paylaş menüsünden gelen içerikler (Android).
       ref.listen<void>(shareIntakeProvider, _ignore);
+      // Bir defalık veri göçleri (F3.6 sabit/yıldız, zemin/çerçeve).
+      ref.listen<void>(dataMigrationsProvider, _ignore);
     }
     return child;
   }

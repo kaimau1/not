@@ -30,7 +30,6 @@ enum NoteFilter {
   checklist,
   ordered,
   pinned,
-  starred,
   reminded,
   locked,
   others,
@@ -106,7 +105,7 @@ class NoteActivityNotifier extends Notifier<Map<String, int>> {
 /// seçenekler. Ana ekranda "Süz" düğmesinin sağında tek dokunuşluk çip olarak
 /// dururlar — sık kullanılan bir süzgeç için levhayı açmak gerekmesin.
 ///
-/// Jeton biçimi tür + değer: `filter:starred`, `tag:iş`, `folder:<id>`,
+/// Jeton biçimi tür + değer: `filter:pinned`, `tag:iş`, `folder:<id>`,
 /// `sort:title`. Tek düz metin kümesi olarak saklanır; klasör/etiket silinirse
 /// jeton çözülemez ve ÇİZİLMEZ (temizlemeye gerek yok).
 final favoriteFiltersProvider =
@@ -647,7 +646,6 @@ bool noteMatchesFilter(Note n, NoteFilter filter) => switch (filter) {
   NoteFilter.checklist => n.type == NoteType.checklist,
   NoteFilter.ordered => n.type == NoteType.ordered,
   NoteFilter.pinned => n.pinned,
-  NoteFilter.starred => n.starred,
   NoteFilter.reminded => n.reminderAt != null,
   NoteFilter.locked => n.locked,
   // Düzene girmemiş notlar: ne klasörü ne etiketi var.

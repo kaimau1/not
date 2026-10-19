@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
@@ -107,14 +108,36 @@ void main() {
       expect(note.copyWith().reminderAt, isNotNull);
     });
 
-    test('yıldız copyWith ile değişir ve toMap/fromMap yazılır', () {
-      const note = Note(id: '1', type: NoteType.text);
-      expect(note.starred, isFalse);
-      final starred = note.copyWith(starred: true);
-      expect(starred.starred, isTrue);
-      expect(starred.toMap()['starred'], isTrue);
-      // copyWith başka alan değişince yıldız korunur.
-      expect(starred.copyWith(title: 'x').starred, isTrue);
+    test('eski yıldızlı not sabitli okunur, yazımda starred temizlenir (F3.6)', () {
+      final note = Note.fromMap('1', {'type': 'text', 'starred': true});
+      expect(note.pinned, isTrue);
+      expect(note.toMap()['starred'], isFalse);
+      expect(note.toMap()['pinned'], isTrue);
+    });
+
+    test('sabitleme starred: false da yazar; renk vurguyla kenara (F3.6)', () {
+      expect(NotesRepository.colorPinFields(pinned: false), {
+        'pinned': false,
+        'starred': false,
+      });
+      expect(
+        NotesRepository.colorPinFields(color: NoteColor.red, accent: true),
+        {'color': 'red', 'frameColor': 'red'},
+      );
+      expect(
+        NotesRepository.colorPinFields(color: NoteColor.red),
+        {'color': 'red', 'frameColor': 'default'},
+      );
+    });
+
+    test('yalnız çerçeveli eski notun rengi zemine geçer (F3.6)', () {
+      final note = Note.fromMap('1', {
+        'type': 'text',
+        'color': 'default',
+        'frameColor': 'red',
+      });
+      expect(note.color, NoteColor.red);
+      expect(note.frameColor, NoteColor.red);
     });
 
     test('etiketler toMap çıktısına yazılır', () {

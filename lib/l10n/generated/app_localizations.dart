@@ -2279,13 +2279,13 @@ abstract class AppLocalizations {
   /// No description provided for @backgroundColor.
   ///
   /// In tr, this message translates to:
-  /// **'Zemin rengi'**
+  /// **'Renk'**
   String get backgroundColor;
 
   /// No description provided for @backgroundColorInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Notun arka plan rengi'**
+  /// **'Notun rengi; istersen kenarına da vurgu'**
   String get backgroundColorInfo;
 
   /// No description provided for @frameColor.
@@ -9751,6 +9751,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Arkadaşının gelen kutusuna bağımsız bir kopya gider'**
   String get shareCopyInfo;
+
+  /// No description provided for @noteColorAccent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kenarı vurgula'**
+  String get noteColorAccent;
 }
 
 class _AppLocalizationsDelegate

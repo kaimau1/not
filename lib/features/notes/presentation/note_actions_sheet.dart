@@ -83,12 +83,6 @@ class _ActionsGrid extends StatelessWidget {
           note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
           selected: note.pinned,
         ),
-        MenuAction(
-          'star',
-          note.starred ? l10n.unstar : l10n.star,
-          note.starred ? Icons.star : Icons.star_outline,
-          selected: note.starred,
-        ),
         // Tek "Paylaş": düz metin, kopyala, PDF/görsel, ARKADAŞA GÖNDER, ortak
         // not ve DIŞA AKTAR hepsi levhada (bkz. showNoteShareSheet).
         // TOPARLAMA (kullanıcı isteği 2026-10-17: "tekrarlar düzelsin"):
@@ -101,7 +95,6 @@ class _ActionsGrid extends StatelessWidget {
         MenuSection(l10n.menuSectionOrganize, [
           MenuAction('folder', l10n.moveToFolder, Icons.folder_outlined),
           MenuAction('color', l10n.backgroundColor, Icons.palette_outlined),
-          MenuAction('frame', l10n.frameColor, Icons.border_color_outlined),
         ]),
         MenuSection(l10n.menuSectionCopy, [
           // **NOTU ÇOĞALT** (bkz. NotesRepository.duplicateNote).
@@ -172,8 +165,6 @@ Future<void> _runNoteAction(
   switch (action) {
     case 'pin':
       repo.setPinned(note.id, !note.pinned);
-    case 'star':
-      repo.setStarred(note.id, !note.starred);
     // Üç yol tek levhada: düz metin, `.notpaket` (başka bir Not kullanıcısına,
     // balonlar düzenlenebilir gelir) ve balonlu PDF (herkes açabilir).
     case 'share':
@@ -297,17 +288,12 @@ Future<void> _runNoteAction(
     case 'color':
       final picked = await showNoteColorPicker(
         context,
-        frame: false,
         current: note.color,
+        accent: note.frameColor != NoteColor.none,
       );
-      if (picked != null) repo.setColor(note.id, picked);
-    case 'frame':
-      final picked = await showNoteColorPicker(
-        context,
-        frame: true,
-        current: note.frameColor,
-      );
-      if (picked != null) repo.setFrameColor(note.id, picked);
+      if (picked != null) {
+        repo.setColor(note.id, picked.color, accent: picked.accent);
+      }
     case 'select':
       ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
     case 'delete':

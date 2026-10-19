@@ -20,7 +20,6 @@ import '../../../../core/widgets/app_sheet.dart';
 Future<String?> showNoteEditorMenu(
   BuildContext context, {
   required bool pinned,
-  required bool starred,
   required bool locked,
   required bool archived,
   required bool isList,
@@ -43,7 +42,6 @@ Future<String?> showNoteEditorMenu(
         child: _MenuGrid(
           l10n: l10n,
           pinned: pinned,
-          starred: starred,
           locked: locked,
           archived: archived,
           isList: isList,
@@ -64,7 +62,6 @@ class _MenuGrid extends StatelessWidget {
   const _MenuGrid({
     required this.l10n,
     required this.pinned,
-    required this.starred,
     required this.locked,
     required this.archived,
     required this.isList,
@@ -94,7 +91,6 @@ class _MenuGrid extends StatelessWidget {
 
   final AppLocalizations l10n;
   final bool pinned;
-  final bool starred;
   final bool locked;
   final bool archived;
 
@@ -124,12 +120,6 @@ class _MenuGrid extends StatelessWidget {
     // DURUMUNA (geri al, sabitle, ortak çalışan) ayrıldı.
     return ActionMenu(
       quick: [
-        MenuAction(
-          'star',
-          starred ? l10n.unstar : l10n.star,
-          starred ? Icons.star : Icons.star_outline,
-          selected: starred,
-        ),
         // TOPARLAMA (kullanıcı isteği 2026-10-17: "tekrarlar düzelsin"):
         // "Kopyala", "Arkadaşa gönder" ve "Dışa aktar" bu menüden kalktı —
         // üçü de Paylaş levhasında (Kopyala · Arkadaşa · Dışa aktar) tek

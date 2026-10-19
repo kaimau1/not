@@ -150,7 +150,6 @@ void main() {
                   picked = await showNoteEditorMenu(
                     context,
                     pinned: false,
-                    starred: false,
                     locked: false,
                     archived: false,
                     isList: false,
@@ -169,10 +168,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Hızlı satır: aynı yükseklikte yan yana.
-      final star = tester.getRect(find.text('Yıldızla'));
+      final share = tester.getRect(find.text('Paylaş'));
       final calc = tester.getRect(find.text('Hesap Makinesi'));
-      expect(star.top, closeTo(calc.top, 1));
-      expect(star.center.dx, lessThan(calc.center.dx));
+      expect(share.top, closeTo(calc.top, 1));
+      expect(share.center.dx, lessThan(calc.center.dx));
 
       // Grup başlıkları.
       for (final title in [

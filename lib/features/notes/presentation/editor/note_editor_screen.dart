@@ -214,7 +214,6 @@ bool sameRenderedNote(Note a, Note b) {
       a.color != b.color ||
       a.frameColor != b.frameColor ||
       a.pinned != b.pinned ||
-      a.starred != b.starred ||
       a.locked != b.locked ||
       a.folderId != b.folderId ||
       a.fontFamily != b.fontFamily ||
@@ -1155,7 +1154,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             ),
             aiSummary: incoming.aiSummary,
             pinned: incoming.pinned,
-            starred: incoming.starred,
             locked: incoming.locked,
             tags: incoming.tags,
             color: incoming.color,
@@ -1390,7 +1388,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       a.color == b.color &&
       a.frameColor == b.frameColor &&
       a.pinned == b.pinned &&
-      a.starred == b.starred &&
       a.locked == b.locked &&
       a.folderId == b.folderId &&
       a.fontFamily == b.fontFamily &&
@@ -3664,7 +3661,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final action = await showNoteEditorMenu(
       context,
       pinned: note.pinned,
-      starred: note.starred,
       locked: note.locked,
       archived: note.archivedAt != null,
       isList: note.type == NoteType.checklist || note.type == NoteType.ordered,
@@ -3688,8 +3684,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         _toggleDocumentView();
       case 'pin':
         _mutate((n) => n.copyWith(pinned: !n.pinned), immediate: true);
-      case 'star':
-        _mutate((n) => n.copyWith(starred: !n.starred), immediate: true);
       case 'search':
         await _openNoteSearch();
       case 'stats':
@@ -5746,11 +5740,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               title: Text(l10n.backgroundColor),
               onTap: () => Navigator.pop(sheetContext, 'bg'),
             ),
-            ListTile(
-              leading: _colorLeading(note.frameColor, frame: true),
-              title: Text(l10n.frameColor),
-              onTap: () => Navigator.pop(sheetContext, 'frame'),
-            ),
             // Zemin görseli renk seçiminin yanında: ikisi de "notun zemini".
             ListTile(
               leading: const Icon(Icons.wallpaper),
@@ -5766,21 +5755,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       await _showBackgroundSheet();
       return;
     }
-    final frame = target == 'frame';
     // Editörde şerit CANLI çalışır: dokunulan renk anında sayfaya uygulanır
-    // ve şerit açık kalır (Keep davranışı). Kart menüsü/toplu işlem eski
-    // "seç ve kapan" yolunu kullanmaya devam ediyor — orada önizlenecek bir
-    // sayfa yok.
+    // ve şerit açık kalır (Keep davranışı).
     await showNoteColorPicker(
       context,
-      frame: frame,
-      current: frame ? note.frameColor : note.color,
-      onChanged: (picked) {
+      current: note.color,
+      accent: note.frameColor != NoteColor.none,
+      onChanged: (c) {
         if (!mounted) return;
         _mutate(
-          (n) => frame
-              ? n.copyWith(frameColor: picked)
-              : n.copyWith(color: picked),
+          (n) => n.copyWith(
+            color: c.color,
+            frameColor: c.accent ? c.color : NoteColor.none,
+          ),
           immediate: true,
         );
       },
@@ -8512,14 +8499,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           ),
                         ),
                       ),
-                      if (note.starred) ...[
-                        const SizedBox(width: 6),
-                        Icon(
-                          Icons.star,
-                          size: 14,
-                          color: Colors.amber.shade600,
-                        ),
-                      ],
                     ],
                   ),
                   ),

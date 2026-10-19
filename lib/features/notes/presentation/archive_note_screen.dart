@@ -881,10 +881,16 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
       // ortak renk şeridi kullanılır, seçim canlı uygulanır.
       await showNoteColorPicker(
         context,
-        frame: false,
         current: note.color,
-        onChanged: (color) =>
-            unawaited(_mutate((n) => n.copyWith(color: color))),
+        accent: note.frameColor != NoteColor.none,
+        onChanged: (c) => unawaited(
+          _mutate(
+            (n) => n.copyWith(
+              color: c.color,
+              frameColor: c.accent ? c.color : NoteColor.none,
+            ),
+          ),
+        ),
       );
       return;
     }

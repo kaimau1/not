@@ -5,36 +5,42 @@ import '../../../core/l10n_ext.dart';
 import '../domain/note.dart';
 import '../../../core/widgets/app_sheet.dart';
 
-/// Not zemini ya da çerçevesi için renk seçen ortak alt şerit. Hem editör,
-/// hem kart üç-nokta menüsü, hem de çoklu seçim toplu işlemi kullanır —
-/// böylece renk/çerçeve seçimi tek yerde tanımlı kalır.
-///
-/// [frame] true ise renkler halka (çerçeve) olarak önizlenir; false ise dolu
-/// zemin olarak.
-///
-/// [onChanged] verilirse şerit **Keep gibi** davranır (kullanıcı isteği:
-/// "seçici alt şeride insin"): dokunulan renk ANINDA uygulanır ve şerit AÇIK
-/// kalır, kullanıcı tonlar arasında gezinip sayfayı canlı görebilir. Şerit
-/// kapanınca son seçilen renk yine döner. [onChanged] yoksa eski davranış
-/// sürer: seçilen renk döndürülür ve şerit kapanır (kart menüsü ve toplu
-/// işlem böyle kullanıyor — orada canlı önizlenecek bir sayfa yok).
-Future<NoteColor?> showNoteColorPicker(
+/// Notun TEK rengi + isteğe bağlı KENAR VURGUSU (F3.6; eskiden ayrı "zemin"
+/// ve "çerçeve" seçicileri vardı). Hem editör, hem kart menüsü, hem de çoklu
+/// seçim toplu işlemi kullanır.
+typedef NoteColorChoice = ({NoteColor color, bool accent});
+
+/// [onChanged] verilirse şerit **Keep gibi** davranır: dokunulan renk ANINDA
+/// uygulanır ve şerit AÇIK kalır. [onChanged] yoksa seçim döndürülür ve
+/// şerit kapanır (kart menüsü ve toplu işlem — önizlenecek sayfa yok).
+Future<NoteColorChoice?> showNoteColorPicker(
   BuildContext context, {
-  required bool frame,
   NoteColor? current,
-  ValueChanged<NoteColor>? onChanged,
+  bool accent = false,
+  ValueChanged<NoteColorChoice>? onChanged,
 }) {
-  return showAppSheet<NoteColor>(
+  return showAppSheet<NoteColorChoice>(
     context: context,
     showDragHandle: true,
-    // Canlı seçimde karartı YOK ve levha dar: kullanıcı rengi seçerken
-    // sayfanın gerçek hâlini görmeli, karartılmış hâlini değil.
+    // Canlı seçimde karartı YOK: kullanıcı rengi seçerken sayfanın gerçek
+    // hâlini görmeli.
     barrierColor: onChanged == null ? null : Colors.transparent,
     builder: (sheetContext) {
       var picked = current;
+      var withAccent = accent;
       return StatefulBuilder(
         builder: (sheetContext, setSheetState) {
           final scheme = Theme.of(sheetContext).colorScheme;
+          void apply(NoteColor color, {bool close = true}) {
+            final choice = (color: color, accent: withAccent);
+            if (onChanged == null) {
+              if (close) Navigator.pop(sheetContext, choice);
+              return;
+            }
+            setSheetState(() => picked = color);
+            onChanged(choice);
+          }
+
           return SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
@@ -45,9 +51,7 @@ Future<NoteColor?> showNoteColorPicker(
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
                     child: Text(
-                      frame
-                          ? sheetContext.l10n.frameColor
-                          : sheetContext.l10n.backgroundColor,
+                      sheetContext.l10n.backgroundColor,
                       style: Theme.of(sheetContext).textTheme.titleSmall,
                     ),
                   ),
@@ -63,30 +67,31 @@ Future<NoteColor?> showNoteColorPicker(
                             padding: const EdgeInsets.symmetric(horizontal: 5),
                             child: _ColorDot(
                               color: color,
-                              frame: frame,
+                              frame: withAccent,
                               selected: picked == color,
-                              onTap: () {
-                                if (onChanged == null) {
-                                  Navigator.pop(sheetContext, color);
-                                  return;
-                                }
-                                setSheetState(() => picked = color);
-                                onChanged(color);
-                              },
+                              onTap: () => apply(color),
                             ),
                           ),
                       ],
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                    child: Text(
-                      frame
-                          ? sheetContext.l10n.frameColorInfo
-                          : sheetContext.l10n.backgroundColorInfo,
+                  SwitchListTile(
+                    key: const ValueKey('note-color-accent'),
+                    contentPadding: const EdgeInsets.fromLTRB(20, 4, 12, 0),
+                    title: Text(sheetContext.l10n.noteColorAccent),
+                    subtitle: Text(
+                      sheetContext.l10n.backgroundColorInfo,
                       style: Theme.of(sheetContext).textTheme.bodySmall
                           ?.copyWith(color: scheme.onSurfaceVariant),
                     ),
+                    value: withAccent,
+                    onChanged: (v) {
+                      setSheetState(() => withAccent = v);
+                      // Canlı şeritte vurgu anında uygulanır; seç-kapan
+                      // şeritte bir renk seçilince birlikte döner.
+                      final color = picked;
+                      if (color != null) apply(color, close: false);
+                    },
                   ),
                 ],
               ),

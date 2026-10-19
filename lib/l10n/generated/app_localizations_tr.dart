@@ -1201,10 +1201,10 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get backgroundColor => 'Zemin rengi';
+  String get backgroundColor => 'Renk';
 
   @override
-  String get backgroundColorInfo => 'Notun arka plan rengi';
+  String get backgroundColorInfo => 'Notun rengi; istersen kenarına da vurgu';
 
   @override
   String get frameColor => 'Çerçeve';
@@ -5414,4 +5414,7 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get shareCopyInfo =>
       'Arkadaşının gelen kutusuna bağımsız bir kopya gider';
+
+  @override
+  String get noteColorAccent => 'Kenarı vurgula';
 }

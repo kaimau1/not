@@ -170,7 +170,6 @@ class Note {
     this.color = NoteColor.none,
     this.frameColor = NoteColor.none,
     this.pinned = false,
-    this.starred = false,
     this.locked = false,
     this.fontFamily,
     this.fontScale = 1,
@@ -280,15 +279,18 @@ class Note {
   final String? folderId;
   final NoteColor color;
 
-  /// Kartın/edit ekranının çevresine çizilen renkli çerçeve. [NoteColor.none]
-  /// = çerçeve yok (yalnız ince varsayılan kenarlık). Zemin renginden
-  /// ([color]) bağımsızdır: renkli zemin + farklı renkli çerçeve olabilir.
+  /// KENAR VURGUSU (F3.6): notun rengi ([color]) kartın kenarına da
+  /// çizilsin mi. [NoteColor.none] = vurgu yok. Seçici artık TEK renk +
+  /// "kenarı vurgula" anahtarıdır; vurgu açıkken burada [color]ın aynısı
+  /// durur. Eski "çerçeve rengi" notlarında farklı bir renk kalmış olabilir
+  /// (bkz. [Note.fromMap] — yalnız çerçeveli eski not o rengi zemin alır).
   final NoteColor frameColor;
-  final bool pinned;
 
-  /// Yıldızlı (favori) not: filtre çubuğundaki "Yıldızlı" süzgeciyle
-  /// kolayca bulunur.
-  final bool starred;
+  /// SABİTLİ: ana ekranın başında durur. Eski "Yıldızlı" kavramı bununla
+  /// birleşti (F3.6): kayıtta `starred: true` kalmış not sabitli okunur;
+  /// sabitleme her yazımda `starred: false` da yazar (bkz.
+  /// `NotesRepository.setPinned`).
+  final bool pinned;
 
   /// Kilitli not: kart içeriği gizlenir, açmak biyometrik doğrulama ister;
   /// arama yalnızca başlıkta yapılır ve AI bağlamlarına dahil edilmez.
@@ -648,7 +650,6 @@ class Note {
     NoteColor? color,
     NoteColor? frameColor,
     bool? pinned,
-    bool? starred,
     bool? locked,
     String? fontFamily,
     bool clearFontFamily = false,
@@ -691,7 +692,6 @@ class Note {
     color: color ?? this.color,
     frameColor: frameColor ?? this.frameColor,
     pinned: pinned ?? this.pinned,
-    starred: starred ?? this.starred,
     locked: locked ?? this.locked,
     fontFamily: clearFontFamily ? null : (fontFamily ?? this.fontFamily),
     fontScale: fontScale ?? this.fontScale,
@@ -797,10 +797,13 @@ class Note {
           tag.toString(),
       ],
       folderId: map['folderId'] as String?,
-      color: NoteColor.fromId(map['color'] as String?),
+      // Yalnız çerçeveli eski not (F3.6 öncesi): çerçeve rengi zemin olur.
+      color: switch (NoteColor.fromId(map['color'] as String?)) {
+        NoteColor.none => NoteColor.fromId(map['frameColor'] as String?),
+        final c => c,
+      },
       frameColor: NoteColor.fromId(map['frameColor'] as String?),
-      pinned: map['pinned'] as bool? ?? false,
-      starred: map['starred'] as bool? ?? false,
+      pinned: map['pinned'] == true || map['starred'] == true,
       locked: map['locked'] as bool? ?? false,
       fontFamily: map['fontFamily'] as String?,
       fontScale: (map['fontScale'] as num?)?.toDouble() ?? 1,
@@ -880,7 +883,7 @@ class Note {
     'color': color.id,
     'frameColor': frameColor.id,
     'pinned': pinned,
-    'starred': starred,
+    'starred': false,
     'locked': locked,
     // Varsayılandan farklıysa yazılır: eski notların şeması büyümez.
     if (fontFamily != null) 'fontFamily': fontFamily,

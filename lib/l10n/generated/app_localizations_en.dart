@@ -1202,10 +1202,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get backgroundColor => 'Background colour';
+  String get backgroundColor => 'Color';
 
   @override
-  String get backgroundColorInfo => 'The note\'s background colour';
+  String get backgroundColorInfo =>
+      'The note color; optionally on its border too';
 
   @override
   String get frameColor => 'Frame';
@@ -5428,4 +5429,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get shareCopyInfo =>
       'An independent copy goes to your friend\'s inbox';
+
+  @override
+  String get noteColorAccent => 'Highlight the border';
 }

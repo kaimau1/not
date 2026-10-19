@@ -1795,16 +1795,15 @@ class GeminiService {
           'color': {
             'type': 'STRING',
             'description':
-                'Notun ZEMİN rengi: red, peach, amber, green, sage, blue, '
+                'Notun rengi: red, peach, amber, green, sage, blue, '
                 'storm, purple, blossom, clay, chalk ya da none (renksiz).',
           },
           'frameColor': {
             'type': 'STRING',
             'description':
-                'Notun ÇERÇEVE rengi (kartın kenarlığı); değerler color ile '
-                'aynı. "kırmızı çerçeve" isteği bu alandır.',
+                'Renk + KENAR VURGUSU; değerler color ile aynı. "kırmızı '
+                'çerçeve" isteği bu alandır.',
           },
-          'starred': {'type': 'BOOLEAN'},
           'locked': {'type': 'BOOLEAN'},
           'reminderAt': {'type': 'STRING', 'description': 'ISO 8601'},
           'clearReminder': {'type': 'BOOLEAN'},

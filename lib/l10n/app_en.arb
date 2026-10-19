@@ -391,8 +391,8 @@
   "largeAttachmentBody": "This file is {size} MB. PDFs can't be compressed; it will be uploaded as-is and count against your storage. Continue?",
   "speechRateForeign": "Foreign-language speed",
   "notesArchivedCount": "{count} notes archived",
-  "backgroundColor": "Background colour",
-  "backgroundColorInfo": "The note's background colour",
+  "backgroundColor": "Color",
+  "backgroundColorInfo": "The note color; optionally on its border too",
   "frameColor": "Frame",
   "frameColorInfo": "Draws a frame around the note in the colour you pick",
   "sortBy": "Sort",
@@ -1997,5 +1997,6 @@
   "shareTogetherSection": "EDIT TOGETHER",
   "shareTogetherInfo": "You both see and change the same note or folder",
   "shareCopySection": "SEND A COPY",
-  "shareCopyInfo": "An independent copy goes to your friend's inbox"
+  "shareCopyInfo": "An independent copy goes to your friend's inbox",
+  "noteColorAccent": "Highlight the border"
 }

@@ -51,11 +51,11 @@ void main() {
     );
   });
 
-  test('birleşik süzgeç (yıldızlı + etiket) etiketin durağından sürer', () {
+  test('birleşik süzgeç (sabitli + etiket) etiketin durağından sürer', () {
     // Eskiden bu hâl hiçbir durağa uymuyor ve çekiş listenin başına
     // fırlatıyordu.
     expect(
-      next(NoteFilter.starred, tag: 'ev'),
+      next(NoteFilter.pinned, tag: 'ev'),
       (filter: NoteFilter.all, tag: 'iş'),
     );
   });

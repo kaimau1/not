@@ -356,15 +356,6 @@ class NoteCard extends ConsumerWidget {
           ),
         ),
         PopupMenuItem(
-          value: 'star',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(note.starred ? Icons.star : Icons.star_outline),
-            title: Text(note.starred ? l10n.unstar : l10n.star),
-          ),
-        ),
-        PopupMenuItem(
           value: 'delete',
           child: ListTile(
             dense: true,
@@ -379,8 +370,6 @@ class NoteCard extends ConsumerWidget {
     switch (action) {
       case 'pin':
         ref.read(notesRepositoryProvider)?.setPinned(note.id, !note.pinned);
-      case 'star':
-        ref.read(notesRepositoryProvider)?.setStarred(note.id, !note.starred);
       case 'delete':
         _delete(context, ref);
     }
@@ -460,8 +449,6 @@ class NoteCard extends ConsumerWidget {
     final statusIcons = <Widget>[
       if (note.pinned)
         Icon(Icons.push_pin, size: 13, color: scheme.onSurfaceVariant),
-      if (note.starred)
-        Icon(Icons.star, size: 13, color: Colors.amber.shade600),
       if (!note.locked && note.aiSummary != null)
         Icon(Icons.auto_awesome, size: 13, color: scheme.primary),
       if (note.reminderAt != null)
@@ -690,7 +677,6 @@ class NoteCard extends ConsumerWidget {
           ),
       ],
       if (note.pinned) context.l10n.pin,
-      if (note.starred) context.l10n.star,
       if (note.reminderAt != null) context.l10n.remindersTitle,
     ].where((s) => s.isNotEmpty).join('. ');
 
@@ -1289,12 +1275,6 @@ class NoteListRow extends ConsumerWidget {
                           Icons.push_pin,
                           size: 13,
                           color: scheme.onSurfaceVariant,
-                        ),
-                      if (note.starred)
-                        Icon(
-                          Icons.star,
-                          size: 13,
-                          color: Colors.amber.shade600,
                         ),
                       if (note.reminderAt != null)
                         Icon(

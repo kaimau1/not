@@ -48,11 +48,13 @@ void main() {
       expect(find.text(label), findsOneWidget, reason: '$label görünmeli');
     }
 
-    // İki sütun: "Sabitle" ile "Yıldızla" AYNI satırda, yan yana.
+    // Hızlı satır: "Sabitle" ile "Paylaş" AYNI satırda, yan yana.
+    // ("Yıldızla" sabitle ile birleşti — F3.6.)
     final pin = tester.getRect(find.text('Sabitle'));
-    final star = tester.getRect(find.text('Yıldızla'));
-    expect(pin.center.dy, closeTo(star.center.dy, 1));
-    expect(pin.center.dx, lessThan(star.center.dx));
+    final share = tester.getRect(find.text('Paylaş'));
+    expect(find.text('Yıldızla'), findsNothing);
+    expect(pin.center.dy, closeTo(share.center.dy, 1));
+    expect(pin.center.dx, lessThan(share.center.dx));
 
     // "Sil" tek başına, alt satırda ve tam genişlikte.
     expect(tester.getRect(find.text('Sil')).center.dy, greaterThan(pin.top));
