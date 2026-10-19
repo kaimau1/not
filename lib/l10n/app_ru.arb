@@ -1059,5 +1059,7 @@
   "voiceSilenceLabel": "Ожидание",
   "voiceSilenceShort": "Коротко",
   "voiceSilenceNormal": "Обычно",
-  "voiceSilenceLong": "Долго"
+  "voiceSilenceLong": "Долго",
+  "voiceOffline": "Распознавание офлайн",
+  "voiceOfflineInfo": "Если языковой пакет загружен на телефон, речь распознаётся без интернета. Иначе автоматически используется онлайн-распознавание."
 }

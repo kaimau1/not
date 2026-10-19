@@ -632,6 +632,26 @@ class VoiceSilenceNotifier extends Notifier<VoiceSilence> {
   }
 }
 
+/// İNTERNETSİZ TANIMA: telefonda dil paketi indirilmişse sesli not ağa
+/// gitmeden tanınır (gizlilik, uçak modu, zayıf bağlantı). Varsayılan
+/// KAPALI: paket yoksa yerli taraf çevrimiçine düşse de ilk denemede kısa bir
+/// gecikme olur; bilerek açan kullanıcı içindir.
+final voiceOfflineProvider = NotifierProvider<VoiceOfflineNotifier, bool>(
+  VoiceOfflineNotifier.new,
+);
+
+class VoiceOfflineNotifier extends Notifier<bool> {
+  static const _key = 'voice_offline';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
 /// AKILLI KOMUTLAR: dikte sırasında "son kelimeyi sil", "X yerine Y yaz"
 /// gibi düzeltmeler uygulansın mı (bkz. `applyVoiceCommands`). Varsayılan
 /// AÇIK; bu sözleri gerçekten not olarak yazdırmak isteyen kapatabilir.

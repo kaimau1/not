@@ -1059,5 +1059,7 @@
   "voiceSilenceLabel": "Délai",
   "voiceSilenceShort": "Court",
   "voiceSilenceNormal": "Normal",
-  "voiceSilenceLong": "Long"
+  "voiceSilenceLong": "Long",
+  "voiceOffline": "Reconnaissance hors ligne",
+  "voiceOfflineInfo": "Si le pack de langue est téléchargé sur le téléphone, la voix est transcrite sans connexion. Sinon, la reconnaissance en ligne est utilisée automatiquement."
 }

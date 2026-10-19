@@ -1059,5 +1059,7 @@
   "voiceSilenceLabel": "مدة الانتظار",
   "voiceSilenceShort": "قصير",
   "voiceSilenceNormal": "عادي",
-  "voiceSilenceLong": "طويل"
+  "voiceSilenceLong": "طويل",
+  "voiceOffline": "التعرّف دون اتصال",
+  "voiceOfflineInfo": "إذا كانت حزمة اللغة منزّلة على الهاتف، يُحوَّل الكلام إلى نص دون اتصال. وإلا يُستخدم التعرّف عبر الإنترنت تلقائيًا."
 }

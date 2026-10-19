@@ -1059,5 +1059,7 @@
   "voiceSilenceLabel": "Czas oczekiwania",
   "voiceSilenceShort": "Krótki",
   "voiceSilenceNormal": "Normalny",
-  "voiceSilenceLong": "Długi"
+  "voiceSilenceLong": "Długi",
+  "voiceOffline": "Rozpoznawanie offline",
+  "voiceOfflineInfo": "Jeśli pakiet językowy jest pobrany na telefon, mowa jest zapisywana bez internetu. W przeciwnym razie automatycznie używane jest rozpoznawanie online."
 }

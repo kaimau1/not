@@ -1059,5 +1059,7 @@
   "voiceSilenceLabel": "等待时间",
   "voiceSilenceShort": "短",
   "voiceSilenceNormal": "正常",
-  "voiceSilenceLong": "长"
+  "voiceSilenceLong": "长",
+  "voiceOffline": "离线识别",
+  "voiceOfflineInfo": "如果手机已下载语言包，语音会在不联网的情况下转写；否则会自动使用在线识别。"
 }

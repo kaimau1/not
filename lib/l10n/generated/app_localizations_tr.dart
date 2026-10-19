@@ -5253,4 +5253,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceSilenceLong => 'Uzun';
+
+  @override
+  String get voiceOffline => 'İnternetsiz tanıma';
+
+  @override
+  String get voiceOfflineInfo =>
+      'Telefonda dil paketi indirilmişse sesin internete gitmeden yazıya döker. Paket yoksa kendiliğinden çevrimiçi tanımaya döner.';
 }

@@ -5287,4 +5287,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get voiceSilenceLong => 'Długi';
+
+  @override
+  String get voiceOffline => 'Rozpoznawanie offline';
+
+  @override
+  String get voiceOfflineInfo =>
+      'Jeśli pakiet językowy jest pobrany na telefon, mowa jest zapisywana bez internetu. W przeciwnym razie automatycznie używane jest rozpoznawanie online.';
 }

@@ -2492,5 +2492,13 @@
   "voiceSilenceLong": "Uzun",
   "@voiceSilenceLong": {
     "description": "Akıllı sesli not 3. tur (2026-10-19)"
+  },
+  "voiceOffline": "İnternetsiz tanıma",
+  "@voiceOffline": {
+    "description": "İnternetsiz sesli tanıma ayarı (2026-10-19)"
+  },
+  "voiceOfflineInfo": "Telefonda dil paketi indirilmişse sesin internete gitmeden yazıya döker. Paket yoksa kendiliğinden çevrimiçi tanımaya döner.",
+  "@voiceOfflineInfo": {
+    "description": "İnternetsiz sesli tanıma ayarı (2026-10-19)"
   }
 }

@@ -71,21 +71,28 @@ class DeviceSpeech {
   /// bilerek iki kez yazıyor (konuşulanı kaybetmemek için — bkz.
   /// MainActivity.isContinuation). Temizlik tek yerde yapılır ki dikte, sesli
   /// asistan ve dikte alt sayfası ayrı ayrı uğraşmasın.
+  ///
+  /// [preferOffline]: cihazda dil paketi varsa ağa gidilmez (Ayarlar →
+  /// İnternetsiz tanıma). Paket yoksa yerli taraf kendiliğinden çevrimiçi
+  /// tanımaya döner. Argüman geriye uyumlu tek dize: "tr-TR|offline".
   static Stream<({String? text, double? level})> listen({
     String locale = 'tr-TR',
-  }) => _events.receiveBroadcastStream(locale).map((event) {
-    final map = event as Map<Object?, Object?>;
-    final raw = map['text'] as String?;
-    final text = raw == null ? null : dedupeSpeechSegments(raw);
-    return (
-      // Boş metin olayı YOK SAYILIR: tanıyıcı bazı turlarda boş sonuç
-      // gönderiyor ve bu, o ana kadar yazılmış metnin üzerine yazıp
-      // siliyordu (ölçümle doğrulandı). Boşsa null döner, çağıran da
-      // mevcut metni korur.
-      text: (text == null || text.isEmpty) ? null : text,
-      level: (map['level'] as num?)?.toDouble(),
-    );
-  });
+    bool preferOffline = false,
+  }) => _events
+      .receiveBroadcastStream(preferOffline ? '$locale|offline' : locale)
+      .map((event) {
+        final map = event as Map<Object?, Object?>;
+        final raw = map['text'] as String?;
+        final text = raw == null ? null : dedupeSpeechSegments(raw);
+        return (
+          // Boş metin olayı YOK SAYILIR: tanıyıcı bazı turlarda boş sonuç
+          // gönderiyor ve bu, o ana kadar yazılmış metnin üzerine yazıp
+          // siliyordu (ölçümle doğrulandı). Boşsa null döner, çağıran da
+          // mevcut metni korur.
+          text: (text == null || text.isEmpty) ? null : text,
+          level: (map['level'] as num?)?.toDouble(),
+        );
+      });
 
   /// Dinlemeyi bitirir; son (tamamlanmış) metin akıştan gelir.
   static Future<void> stop() async {

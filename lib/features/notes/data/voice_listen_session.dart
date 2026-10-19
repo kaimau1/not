@@ -45,6 +45,7 @@ class VoiceListenSession {
     this.useDevice = true,
     this.maxDuration = const Duration(minutes: 10),
     this.locale = 'tr-TR',
+    this.preferOffline = false,
     SilenceGate? gate,
   }) : _gate = gate ?? SilenceGate();
 
@@ -72,6 +73,9 @@ class VoiceListenSession {
   final Duration maxDuration;
   final String locale;
 
+  /// İnternetsiz tanıma tercihi (bkz. [DeviceSpeech.listen]).
+  final bool preferOffline;
+
   final SilenceGate _gate;
   StreamSubscription<({String? text, double? level})>? _sub;
   Timer? _timer;
@@ -95,27 +99,28 @@ class VoiceListenSession {
     _startedAt = now;
     _gate.start(now);
     if (useDevice) {
-      _sub = DeviceSpeech.listen(locale: locale).listen(
-        (event) {
-          final level = event.level;
-          if (level != null) _gate.onLevel(level, DateTime.now());
-          final text = event.text;
-          if (text == null || text == _last) return;
-          _last = text;
-          _gate.onSpeech(DateTime.now());
-          onText(text);
-        },
-        onError: (Object e) {
-          if (e is PlatformException &&
-              (e.code == 'speech_background' || e.code == 'speech_idle')) {
-            _end(VoiceListenEnd.closed);
-            return;
-          }
-          onError?.call(
-            e is PlatformException ? (e.message ?? e.code) : e.toString(),
+      _sub = DeviceSpeech.listen(locale: locale, preferOffline: preferOffline)
+          .listen(
+            (event) {
+              final level = event.level;
+              if (level != null) _gate.onLevel(level, DateTime.now());
+              final text = event.text;
+              if (text == null || text == _last) return;
+              _last = text;
+              _gate.onSpeech(DateTime.now());
+              onText(text);
+            },
+            onError: (Object e) {
+              if (e is PlatformException &&
+                  (e.code == 'speech_background' || e.code == 'speech_idle')) {
+                _end(VoiceListenEnd.closed);
+                return;
+              }
+              onError?.call(
+                e is PlatformException ? (e.message ?? e.code) : e.toString(),
+              );
+            },
           );
-        },
-      );
     }
     _timer = Timer.periodic(const Duration(milliseconds: 250), (_) => _tick());
   }

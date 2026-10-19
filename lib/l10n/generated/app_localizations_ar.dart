@@ -5245,4 +5245,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get voiceSilenceLong => 'طويل';
+
+  @override
+  String get voiceOffline => 'التعرّف دون اتصال';
+
+  @override
+  String get voiceOfflineInfo =>
+      'إذا كانت حزمة اللغة منزّلة على الهاتف، يُحوَّل الكلام إلى نص دون اتصال. وإلا يُستخدم التعرّف عبر الإنترنت تلقائيًا.';
 }

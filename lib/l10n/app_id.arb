@@ -1059,5 +1059,7 @@
   "voiceSilenceLabel": "Waktu tunggu",
   "voiceSilenceShort": "Pendek",
   "voiceSilenceNormal": "Normal",
-  "voiceSilenceLong": "Panjang"
+  "voiceSilenceLong": "Panjang",
+  "voiceOffline": "Pengenalan offline",
+  "voiceOfflineInfo": "Jika paket bahasa sudah diunduh di ponsel, suara ditranskripsi tanpa internet. Jika tidak, pengenalan online dipakai otomatis."
 }

@@ -6759,6 +6759,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     late final VoiceListenSession session;
     session = VoiceListenSession(
       autoStop: () => ref.read(voiceAutoStopProvider),
+        preferOffline: ref.read(voiceOfflineProvider),
         gate: SilenceGate(afterSpeech: ref.read(voiceSilenceProvider).duration),
       onText: (text) {
         if (mounted && identical(_dictation, session)) {

@@ -5279,4 +5279,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get voiceSilenceLong => 'Долго';
+
+  @override
+  String get voiceOffline => 'Распознавание офлайн';
+
+  @override
+  String get voiceOfflineInfo =>
+      'Если языковой пакет загружен на телефон, речь распознаётся без интернета. Иначе автоматически используется онлайн-распознавание.';
 }

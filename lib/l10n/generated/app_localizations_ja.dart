@@ -5166,4 +5166,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get voiceSilenceLong => '長い';
+
+  @override
+  String get voiceOffline => 'オフライン認識';
+
+  @override
+  String get voiceOfflineInfo =>
+      '端末に言語パックがあれば、インターネットを使わずに文字起こしします。ない場合は自動でオンライン認識を使います。';
 }

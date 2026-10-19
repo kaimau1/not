@@ -1891,6 +1891,16 @@ class _VoiceModeSelector extends ConsumerWidget {
               ],
             ),
           ),
+        // İnternetsiz tanıma yalnız cihaz tanıması olan yerde (Android).
+        if (!kIsWeb && Platform.isAndroid)
+          SwitchListTile(
+            key: const ValueKey('settings-voice-offline'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.voiceOffline),
+            subtitle: Text(l10n.voiceOfflineInfo),
+            value: ref.watch(voiceOfflineProvider),
+            onChanged: (v) => ref.read(voiceOfflineProvider.notifier).set(v),
+          ),
         SwitchListTile(
           key: const ValueKey('settings-voice-smart'),
           contentPadding: EdgeInsets.zero,
