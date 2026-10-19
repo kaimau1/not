@@ -20,7 +20,7 @@ class PdfText {
       final buffer = StringBuffer();
       for (var i = 0; i < document.pages.length; i++) {
         final page = await document.pages[i].loadText();
-        final text = page.fullText.trim();
+        final text = page?.fullText.trim() ?? '';
         if (text.isEmpty) continue;
         buffer.writeln(text);
       }
@@ -43,7 +43,7 @@ class PdfText {
     try {
       if (pageNumber < 1 || pageNumber > document.pages.length) return '';
       final page = await document.pages[pageNumber - 1].loadText();
-      return page.fullText.trim();
+      return page?.fullText.trim() ?? '';
     } finally {
       await document.dispose();
     }
@@ -71,7 +71,7 @@ class PdfText {
           : _textProbePages;
       for (var i = 0; i < limit; i++) {
         final page = await document.pages[i].loadText();
-        seen += page.fullText.trim().length;
+        seen += page?.fullText.trim().length ?? 0;
         if (seen > 40) return true;
       }
       return false;

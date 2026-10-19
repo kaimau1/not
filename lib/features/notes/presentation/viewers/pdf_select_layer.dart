@@ -208,7 +208,7 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
   void initState() {
     super.initState();
     widget.page
-        .loadText()
+        .loadStructuredText()
         .then((t) {
           if (!mounted) return;
           setState(() {

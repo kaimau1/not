@@ -39,8 +39,10 @@ void main() {
       expect(merged, hasLength(2));
     });
 
-    test('bozuk kutu (top <= bottom) atilir', () {
-      expect(mergeSameLineRects([PdfRect(10, 90, 40, 100)]), isEmpty);
+    test('yuksekliksiz kutu (top == bottom) atilir', () {
+      // pdfrx 2 ters kutuyu (top < bottom) kurucuda reddeder; geriye
+      // sıfır yükseklik kalır.
+      expect(mergeSameLineRects([PdfRect(10, 90, 40, 90)]), isEmpty);
     });
   });
 

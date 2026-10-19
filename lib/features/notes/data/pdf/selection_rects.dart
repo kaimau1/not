@@ -24,13 +24,16 @@ List<PdfRect> selectionPdfRects(PdfPageText text, int start, int end) {
     final s = a < 0 ? 0 : a;
     final e = b > f.length ? f.length : b;
     if (s >= e) continue;
-    PdfRect? bounds;
+    PdfRect bounds;
     try {
-      bounds = f.getBoundsForRange(start: s, end: e);
+      bounds = text.charRects.boundingRect(
+        start: f.index + s,
+        end: f.index + e,
+      );
     } catch (_) {
       bounds = f.bounds;
     }
-    if (bounds != null) out.add(bounds);
+    out.add(bounds);
   }
   return mergeSameLineRects(out);
 }

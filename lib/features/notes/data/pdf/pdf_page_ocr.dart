@@ -244,7 +244,7 @@ class PdfPageOcr {
     final img = await page.render(
       fullWidth: page.width * scale,
       fullHeight: page.height * scale,
-      backgroundColor: const ui.Color(0xFFFFFFFF),
+      backgroundColor: 0xFFFFFFFF,
     );
     if (img == null) return null;
     try {
@@ -253,7 +253,7 @@ class PdfPageOcr {
         img.pixels,
         img.width,
         img.height,
-        img.format,
+        ui.PixelFormat.bgra8888,
         completer.complete,
       );
       final uiImage = await completer.future;

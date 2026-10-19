@@ -124,7 +124,7 @@ class NoteQuickExport {
         final image = await page.render(
           fullWidth: page.width * scale,
           fullHeight: page.height * scale,
-          backgroundColor: const ui.Color(0xFFFFFFFF),
+          backgroundColor: 0xFFFFFFFF,
         );
         if (image == null) continue;
         try {
@@ -133,7 +133,7 @@ class NoteQuickExport {
             image.pixels,
             image.width,
             image.height,
-            image.format,
+            ui.PixelFormat.bgra8888,
             completer.complete,
           );
           final decoded = await completer.future;

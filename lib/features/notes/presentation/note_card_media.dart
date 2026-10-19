@@ -1005,7 +1005,7 @@ abstract final class CardThumbs {
       final rendered = await page.render(
         fullWidth: targetWidth,
         fullHeight: page.height * scale,
-        backgroundColor: Colors.white,
+        backgroundColor: 0xFFFFFFFF,
       );
       if (rendered == null) return null;
       try {

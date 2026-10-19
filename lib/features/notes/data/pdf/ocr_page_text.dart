@@ -14,26 +14,10 @@ class OcrWordBox {
   final Rect box;
 }
 
-/// Taranmış sayfanın OCR sonucu, pdfrx'in metin katmanıyla AYNI biçimde.
-///
-/// Niye `PdfPageText`in alt sınıfı: seçim katmanı (`PdfSelectLayer`) pdfium
-/// metnini `fullText` + `fragments[].charRects` üzerinden işler. OCR sonucu da
-/// aynı arayüzü giyince katman "yazılmış mı taranmış mı" hiç bilmeden çalışır —
-/// iki ayrı seçim yolu (ve iki kat hata yüzeyi) yerine tek yol.
-class OcrPageText extends PdfPageText {
-  OcrPageText({
-    required this.pageNumber,
-    required this.fullText,
-    required this.fragments,
-  });
-
-  @override
-  final int pageNumber;
-  @override
-  final String fullText;
-  @override
-  final List<PdfPageTextFragment> fragments;
-}
+/// Taranmış sayfanın OCR sonucu, pdfrx'in metin katmanıyla AYNI tipte
+/// ([PdfPageText]): seçim katmanı (`PdfSelectLayer`) metnin yazılmış mı
+/// taranmış mı olduğunu hiç bilmeden çalışır — tek seçim yolu.
+typedef OcrPageText = PdfPageText;
 
 /// ML Kit sözcük satırlarından seçilebilir sayfa metni kurar; sözcük yoksa
 /// null döner.
@@ -73,7 +57,11 @@ OcrPageText? buildOcrPageText({
   );
 
   final buffer = StringBuffer();
+  // Parçalar sahip sayfa metnini gösterir (pdfrx 2): sayfa nesnesi önce
+  // kurulur, listeler sonra doldurulur.
   final fragments = <PdfPageTextFragment>[];
+  final allRects = <PdfRect>[];
+  final lineParts = <({int start, int length, List<PdfRect> rects})>[];
 
   for (final line in lines) {
     final words = [
@@ -131,21 +119,28 @@ OcrPageText? buildOcrPageText({
 
     final text = lineText.toString();
     buffer.write(text);
+    allRects.addAll(charRects);
+    lineParts.add((start: lineStart, length: text.length, rects: charRects));
+  }
+
+  if (lineParts.isEmpty) return null;
+  final page = PdfPageText(
+    pageNumber: pageNumber,
+    fullText: buffer.toString(),
+    charRects: allRects,
+    fragments: fragments,
+  );
+  for (final part in lineParts) {
     fragments.add(
-      PdfPageTextFragment.fromParams(
-        lineStart,
-        text.length,
-        charRects.boundingRect(),
-        text,
-        charRects,
+      PdfPageTextFragment(
+        pageText: page,
+        index: part.start,
+        length: part.length,
+        bounds: part.rects.boundingRect(),
+        charRects: part.rects,
+        direction: PdfTextDirection.ltr,
       ),
     );
   }
-
-  if (fragments.isEmpty) return null;
-  return OcrPageText(
-    pageNumber: pageNumber,
-    fullText: buffer.toString(),
-    fragments: fragments,
-  );
+  return page;
 }

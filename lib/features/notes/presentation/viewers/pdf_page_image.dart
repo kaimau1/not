@@ -146,7 +146,7 @@ class _PdfPageImageState extends State<PdfPageImage> {
       rendered = await page.render(
         fullWidth: target.width,
         fullHeight: target.height,
-        backgroundColor: widget.background,
+        backgroundColor: widget.background.toARGB32(),
         cancellationToken: token,
       );
     } catch (_) {
