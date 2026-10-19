@@ -15,6 +15,8 @@ import 'package:path_provider/path_provider.dart';
 
 import 'app/app.dart';
 import 'core/constants.dart';
+import 'core/crash_reporting.dart';
+import 'core/error_log.dart';
 import 'core/utils/device_storage.dart';
 import 'core/utils/display_rate.dart';
 import 'core/utils/local_file.dart';
@@ -111,6 +113,9 @@ Future<void> main() async {
   );
 
   final prefs = await SharedPreferences.getInstance();
+  // Hata işleyicileri + cihazdaki hata günlüğü + (Android) Crashlytics
+  // (F1.9). Olabildiğince erken: aşağıdaki kurulumların hatası da yakalansın.
+  CrashReporting.install(enabled: CrashReportsNotifier.read(prefs));
   // Balon tutamaçlarının genel boyu (cihaz tercihi — bkz. BubbleLook).
   BubbleLook.attach(prefs);
   // Kişiselleştirme: gizlenen alanlar, sarma süreleri (bkz. Personalize).
@@ -122,6 +127,7 @@ Future<void> main() async {
   if (!kIsWeb) {
     try {
       appSupportPath = (await getApplicationSupportDirectory()).path;
+      unawaited(ErrorLog.attach(appSupportPath!));
     } catch (_) {
       // Taban çözülemedi: ekler yalnız buluttan gösterilir, uygulama çalışır.
     }
@@ -164,6 +170,7 @@ Future<void> main() async {
       // Yalnız bu cihazdaki notların bekleyen yazımı diske insin: arka
       // plandaki uygulama her an öldürülebilir (bkz. LocalNotesStore).
       unawaited(LocalNotesStore.flushAll());
+      unawaited(ErrorLog.flush());
     },
   );
 }

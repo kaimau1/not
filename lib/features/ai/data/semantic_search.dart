@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/search_fold.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/presentation/notes_providers.dart';
@@ -38,10 +39,10 @@ final semanticSearchProvider = FutureProvider.autoDispose
       } on GeminiException {
         // Embedding dahili (anahtarsız) modda desteklenmiyor; arama hata ekranına
         // düşmesin, düz metin aramasıyla devam edilsin.
-        final q = query.trim().toLowerCase();
+        final q = foldForSearch(query.trim());
         return [
           for (final n in active)
-            if (n.toPlainText().toLowerCase().contains(q)) n,
+            if (foldForSearch(n.toPlainText()).contains(q)) n,
         ];
       }
     });

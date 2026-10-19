@@ -3058,7 +3058,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => 'Ad (en az 3 harf) ya da tam e-posta';
 
   @override
   String get friendsSearchTab => 'Ara';
@@ -5287,4 +5287,73 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get voiceOfflineInfo =>
       'Se o pacote de idioma estiver baixado no telefone, a fala é transcrita sem internet. Sem ele, o reconhecimento online é usado automaticamente.';
+
+  @override
+  String get discoverable => 'Ser encontrado pelo meu nome';
+
+  @override
+  String get discoverableInfo =>
+      'Ativado, outras pessoas podem encontrar você em \"Buscar pessoas\" pelas 3 primeiras letras do nome ou pelo e-mail completo. Desativado, só quem souber seu e-mail pode enviar um pedido.';
+
+  @override
+  String get friendsSearchNeedsGoogle =>
+      'Entre com uma conta Google para buscar pessoas.';
+
+  @override
+  String get friendsSearchRateLimited =>
+      'Muitas buscas. Tente novamente em um minuto.';
+
+  @override
+  String get updateRequiredBody =>
+      'Esta versão está desatualizada: as notas abrem somente leitura. Atualize o app para não danificar seus dados.';
+
+  @override
+  String get updateAction => 'Atualizar';
+
+  @override
+  String get attachmentUnsupportedTitle =>
+      'Atualize o app para abrir este anexo';
+
+  @override
+  String get attachmentUnsupportedBody =>
+      'Este anexo foi adicionado em uma versão mais recente do app. Esta versão não consegue exibi-lo; ele é mantido como está.';
+
+  @override
+  String noteTooLarge(String size, String part) {
+    return 'A nota está ficando grande demais ($size / 1024 KB) — maior parte: $part. Mova parte dela para outra nota ou ela pode não ser salva.';
+  }
+
+  @override
+  String get noteSizeBody => 'texto';
+
+  @override
+  String get noteSizeItems => 'itens da lista';
+
+  @override
+  String get noteSizePageNotes => 'notas de página';
+
+  @override
+  String noteSaveRejected(String reason) {
+    return 'Não foi possível salvar a nota no servidor: $reason';
+  }
+
+  @override
+  String get errorLogShare => 'Compartilhar registro de erros';
+
+  @override
+  String get errorLogInfo =>
+      'Os erros recentes ficam só neste dispositivo; não vão a lugar nenhum a menos que você os compartilhe.';
+
+  @override
+  String get errorLogEmpty => 'Nenhum erro registrado.';
+
+  @override
+  String get crashReports => 'Enviar relatórios de falhas';
+
+  @override
+  String get crashReportsInfo =>
+      'Quando o app falha, um relatório técnico sem o conteúdo das notas é enviado ao Firebase Crashlytics (só Android).';
+
+  @override
+  String get noteTooLargeShort => 'a nota excede o limite de 1 MiB';
 }

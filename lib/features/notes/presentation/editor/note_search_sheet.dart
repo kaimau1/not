@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/search_fold.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/rich_text.dart';
@@ -102,7 +103,7 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
     final hits = <_Hit>[];
     void probe(String where, String raw, IconData icon) {
       final text = stripRichMarkers(raw);
-      final index = text.toLowerCase().indexOf(query.toLowerCase());
+      final index = foldForSearch(text).indexOf(foldForSearch(query));
       if (index < 0) return;
       hits.add(_Hit(where: where, snippet: _snippet(text, index), icon: icon));
     }
@@ -133,7 +134,7 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
     for (final attachment in widget.note.attachments) {
       final text = _attachmentText[attachment.id];
       if (text == null || text.isEmpty) continue;
-      final index = text.toLowerCase().indexOf(query.toLowerCase());
+      final index = foldForSearch(text).indexOf(foldForSearch(query));
       if (index < 0) continue;
       hits.add(
         _Hit(

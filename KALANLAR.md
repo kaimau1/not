@@ -6,6 +6,49 @@
 - [ ] Faz 1–4 ayrı oturumlarda, sırayla → bkz. `YOL_HARITASI.md` (madde
   listesi, sıra ve durum orada tutulur; burada tekrarlanmaz).
 
+## 2026-10-19 — Faz 1 (güvenlik/veri) — CİHAZDA GÖRÜLMEDİ, APK DERLENMEDİ
+- [ ] **Kişi araması**: misafir hesapla "Kişi ara" → "Google hesabıyla giriş
+  yap" uyarısı; Google hesabıyla 2 harf → sonuç yok, 3 harf ad → bulur;
+  e-postanın bir parçası → bulmaz, TAM e-posta → bulur; dakikada 11. arama →
+  "Çok fazla arama" uyarısı. Ayarlar → Kişiler → "Adımla bulunabilirim"
+  kapat → ikinci hesap seni adla bulamıyor, tam e-postayla "E-postayla ekle"
+  yine çalışıyor. (Fonksiyon main'e girince CI deploy'u yayınlar.)
+- [ ] **Klasör 'yalnız yazma' rolü**: ikinci hesaba 'write' ver → kendi
+  eklediği notu düzenleyebiliyor, sahibin/başkasının notunu güncelleyemiyor
+  (permission-denied + "Not sunucuya kaydedilemedi" uyarısı). 'both' rolü
+  eskisi gibi. ESKİ notlarda `createdBy` yok → 'write' rolü onlara dokunamaz
+  (bilinçli). Ortak notta iki taraf da düzenleyebiliyor (updatedBy kuralı).
+- [ ] **Hesap silme**: test hesabıyla paylaşılan klasör (sohbette görsel) +
+  ortak not + Drive bağlı ek → hesabı sil → Firestore'da `folderShares/{id}`
+  (+ messages), `noteShares/{uid}_…`, `userSearch/{uid}` YOK; Storage
+  `folderChats/{id}/` boş; Drive → Ayarlar → Uygulamaları yönet'te uygulama
+  verisi 0.
+- [ ] **Kesin alarm**: `USE_EXACT_ALARM` kaldırıldı. Android 14+ temiz
+  kurulumda "Alarmlar ve hatırlatıcılar" izni kapalı olabilir → hatırlatıcı
+  yine çalıyor mu (inexact'e düşer, birkaç dk kayabilir); izin verilince tam
+  dakikasında mı.
+- [ ] **Crashlytics** (ilk [apk] derlemesinde): uygulama açılışta çökmeden
+  açılıyor mu (Crashlytics Gradle eklentisi YOK, `RequireBuildId=false`
+  kaynağıyla). Firebase konsolu → Crashlytics'i etkinleştir; Ayarlar →
+  Hakkında → "Çökme raporlarını gönder" açıkken test çökmesi konsola düşüyor
+  mu. Düşmezse/açılışta "build ID" hatası görülürse Gradle eklentisi
+  (`com.google.firebase.crashlytics`) eklenmeli.
+- [ ] **Hata günlüğü**: Ayarlar → Hakkında → "Hata günlüğünü paylaş" →
+  .txt paylaşım penceresi (Android, Windows, web).
+- [ ] **1 MiB uyarısı**: çok sayfalı PDF'e yoğun çizim/balon → "Not çok
+  büyüdü … en büyük kısım: "x.pdf"" bildirimi (5 dk'da bir).
+- [ ] **Sürüm kapısı**: konsolda `config/app` belgesi oluştur, `minClient: 2`
+  → şerit "Bu sürüm eski…" + editör salt okunur; `minClient: 1` (ya da
+  belgeyi sil) → normal. Kural main'e girince yayınlanır.
+- [ ] **Bilinmeyen ek türü**: (yeni bir tür eklendiğinde) eski sürümde ek
+  "güncelle" simgesiyle görünüyor, dokununca açıklama penceresi; notu
+  kaydedince ek bozulmuyor.
+- [ ] **Türkçe arama**: "ılık" → "ILIK SU" notunu, "alisveris" →
+  "Alışveriş" notunu buluyor; vurgu doğru harflerde; not içi bul,
+  klasör/arşiv/çöp araması, ayar ve kılavuz araması aynı.
+- [ ] Faz 1'in 15 yeni çeviri anahtarı × 15 dil makine üretimi — anadil
+  kontrolü.
+
 ## 2026-10-17 (5. tur) — paylaşılan notlar (CİHAZDA GÖRÜLMEDİ)
 - [ ] **Geri tuşu**: ana ekran → Benimle paylaşılanlar → not aç → geri →
   liste → geri → ANA EKRAN (uygulama kapanmamalı). Aynısı klasör sayfası

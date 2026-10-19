@@ -98,18 +98,22 @@ class FriendsRepository {
   /// içinden her açılışta çağrılır (ucuz — tek doküman, `merge`); e-postası
   /// olmayan (anonim/yerel) hesapta hiçbir şey yapmaz.
   ///
-  /// Aynı çağrıda `userSearch/{uid}` de yazılır: bu koleksiyon istemciden
-  /// OKUNAMAZ (bkz. firestore.rules), yalnız `functions/searchUsers`
-  /// callable'ı Admin SDK ile üstünden geçip isim/e-posta önekiyle sınırlı
-  /// sonuç döner. Amaç: kullanıcı listesi TAMAMEN taranabilir olmasın (aksi
-  /// hâlde `userDirectory` gibi herkese `list` açardık), arama yalnız
-  /// sunucu tarafında, sonuç sayısı sınırlı çalışsın.
-  Future<void> syncOwnDirectoryEntry() async {
+  /// [discoverable] açıksa `userSearch/{uid}` de yazılır: bu koleksiyon
+  /// istemciden OKUNAMAZ (bkz. firestore.rules), yalnız `functions/searchUsers`
+  /// callable'ı Admin SDK ile okuyup sınırlı sonuç döner. Kapalıysa
+  /// (Ayarlar → "Adımla bulunabilirim", F1.1) belge SİLİNİR; tam e-postayla
+  /// `userDirectory` araması yine çalışır.
+  Future<void> syncOwnDirectoryEntry({required bool discoverable}) async {
     if (email.isEmpty) return;
     await _directory.doc(_normalizeEmail(email)).set({
       'uid': uid,
     }, SetOptions(merge: true));
-    await _firestore.collection('userSearch').doc(uid).set({
+    final search = _firestore.collection('userSearch').doc(uid);
+    if (!discoverable) {
+      await search.delete();
+      return;
+    }
+    await search.set({
       'uid': uid,
       'name': name,
       'email': email,
@@ -118,12 +122,18 @@ class FriendsRepository {
     }, SetOptions(merge: true));
   }
 
-  /// Ad/e-posta önekiyle KULLANICI ARAR (Cloud Function üzerinden — istemci
-  /// `userSearch`i doğrudan okuyamaz). Boş/çok kısa sorguda boş liste döner,
-  /// sunucu tarafında da en fazla 15 sonuç dönüyor.
+  /// Sunucuya gidecek kadar anlamlı bir sorgu mu? `functions/search_match.js`
+  /// ile AYNI kural (F1.1): '@' içeren sorgu tam e-posta, diğerleri en az 3
+  /// harfli ad öneki.
+  static bool isSearchableQuery(String query) => query.trim().length >= 3;
+
+  /// Ad önekiyle ya da TAM e-postayla KULLANICI ARAR (Cloud Function
+  /// üzerinden — istemci `userSearch`i doğrudan okuyamaz). Sunucu anonim
+  /// oturumu reddeder ve uid başına dakikada 10 aramayla sınırlar; en fazla
+  /// 15 sonuç döner.
   Future<List<UserSearchResult>> searchUsers(String query) async {
     final q = query.trim();
-    if (q.length < 2) return const [];
+    if (!isSearchableQuery(q)) return const [];
     final callable = FirebaseFunctions.instance.httpsCallable('searchUsers');
     final result = await callable.call<Map<String, dynamic>>({'query': q});
     final raw = (result.data['results'] as List?) ?? const [];

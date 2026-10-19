@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/utils/search_fold.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
@@ -238,7 +239,9 @@ Widget highlightedText(
   TextStyle? style,
   int? maxLines,
 }) {
-  if (query.isEmpty || !text.toLowerCase().contains(query.toLowerCase())) {
+  // Katlama uzunluğu korur (F1.8): katlanmış metindeki indeks özgün metinde
+  // de doğru — vurgu aynı konumlara düşer.
+  if (query.isEmpty || !foldForSearch(text).contains(foldForSearch(query))) {
     return Text(
       text,
       style: style,
@@ -247,8 +250,8 @@ Widget highlightedText(
     );
   }
   final scheme = Theme.of(context).colorScheme;
-  final lower = text.toLowerCase();
-  final lowerQuery = query.toLowerCase();
+  final lower = foldForSearch(text);
+  final lowerQuery = foldForSearch(query);
   final spans = <TextSpan>[];
   var start = 0;
   while (true) {

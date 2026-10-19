@@ -17,8 +17,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/utils/search_fold.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../ai/data/attachment_text_index.dart';
+import '../../../core/crash_reporting.dart';
+import '../../../core/error_log.dart';
 import '../../../core/constants.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/l10n_ext.dart';
@@ -150,6 +153,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _InboxRow(),
             title: l10n.inboxTitle,
             keywords: 'gelen not paylasilan arkadas',
+          ),
+          _SettingRow(
+            const _DiscoverableSwitch(),
+            title: l10n.discoverable,
+            keywords: '${l10n.discoverableInfo} arama gizlilik kisi bulun',
           ),
           // Paylaşım bildirimleri PAYLAŞIMIN yanında (2026-09-26): eskiden
           // Görünüm alanındaydı — bildirimi arayan kullanıcı orada bakmıyordu.
@@ -491,7 +499,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     ];
 
-    final query = _query.trim().toLowerCase();
+    final query = foldForSearch(_query.trim());
     final visible = [
       for (final a in areas)
         if (a.visible(query)) a,
@@ -703,9 +711,13 @@ class _SettingRow {
   /// Baslikta gecmeyen ama kullanicinin arayabilecegi kelimeler.
   final String keywords;
 
-  bool matches(String query) =>
-      title.toLowerCase().contains(query) ||
-      keywords.toLowerCase().contains(query);
+  // Sorgu burada da katlanır (idempotent): çağıran ham metin verse de
+  // Türkçe ı/I/aksan farkı yok sayılsın (F1.8).
+  bool matches(String query) {
+    final q = foldForSearch(query);
+    return foldForSearch(title).contains(q) ||
+        foldForSearch(keywords).contains(q);
+  }
 }
 
 class _Area {
@@ -725,10 +737,12 @@ class _Area {
   final String keywords;
   final List<_SettingRow> rows;
 
-  bool matches(String query) =>
-      title.toLowerCase().contains(query) ||
-      summary.toLowerCase().contains(query) ||
-      keywords.toLowerCase().contains(query);
+  bool matches(String query) {
+    final q = foldForSearch(query);
+    return foldForSearch(title).contains(q) ||
+        foldForSearch(summary).contains(q) ||
+        foldForSearch(keywords).contains(q);
+  }
 
   /// Sorguda gorunecek satirlar.
   ///
@@ -1476,14 +1490,13 @@ class _LanguageSheetState extends State<_LanguageSheet> {
   }
 
   /// Arama hem dilin KENDİ adında hem de kodunda yapılır: kullanıcı
-  /// "日本語" yazamıyorsa "ja" yazabilmeli. Büyük/küçük harf yok sayılır;
-  /// `toLowerCase` Türkçe'nin I/ı çiftinde bile burada güvenli, çünkü
-  /// karşılaştırma iki tarafta da aynı dönüşümden geçiyor.
+  /// "日本語" yazamıyorsa "ja" yazabilmeli. Büyük/küçük harf ve Türkçe
+  /// ı/I/aksan farkı yok sayılır (F1.8: "turkce" → "Türkçe").
   bool _matches(MapEntry<String, String> entry) {
     if (_query.isEmpty) return true;
-    final q = _query.toLowerCase();
-    return entry.value.toLowerCase().contains(q) ||
-        entry.key.toLowerCase().contains(q);
+    final q = foldForSearch(_query);
+    return foldForSearch(entry.value).contains(q) ||
+        foldForSearch(entry.key).contains(q);
   }
 
   @override
@@ -2253,6 +2266,31 @@ class _SharedNotificationsSwitch extends ConsumerWidget {
       value: ref.watch(sharedNotificationsProvider),
       onChanged: (value) =>
           ref.read(sharedNotificationsProvider.notifier).set(value),
+    );
+  }
+}
+
+/// **ADIMLA BULUNABİLİRİM** (F1.1). Değişince dizin kaydı hemen tazelenir:
+/// kapatınca `userSearch` belgesi o an silinir (bir sonraki açılışı
+/// beklemez).
+class _DiscoverableSwitch extends ConsumerWidget {
+  const _DiscoverableSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.discoverable),
+      subtitle: Text(l10n.discoverableInfo),
+      value: ref.watch(discoverableProvider),
+      onChanged: (value) {
+        ref.read(discoverableProvider.notifier).set(value);
+        ref
+            .read(friendsRepositoryProvider)
+            ?.syncOwnDirectoryEntry(discoverable: value)
+            .catchError((Object _) {});
+      },
     );
   }
 }
@@ -4298,8 +4336,78 @@ class _AccountSection extends ConsumerWidget {
           onPressed: () =>
               showLicensePage(context: context, applicationName: l10n.appName),
         ),
+        // Hata günlüğü + çökme raporları (F1.9).
+        const _ErrorLogButton(),
+        if (CrashReporting.supported) const _CrashReportsSwitch(),
         const _AppVersionRow(),
       ],
+    );
+  }
+}
+
+/// **HATA GÜNLÜĞÜNÜ PAYLAŞ** (F1.9): cihazdaki son hatalar düz metin dosyası
+/// olarak paylaşım penceresine verilir (e-posta, mesaj…). Başına sürüm ve
+/// platform yazılır — hata bildiriminin ilk sorusu.
+class _ErrorLogButton extends StatelessWidget {
+  const _ErrorLogButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Tooltip(
+      message: l10n.errorLogInfo,
+      child: TextButton.icon(
+        icon: const Icon(Icons.bug_report_outlined),
+        label: Text(l10n.errorLogShare),
+        onPressed: () async {
+          final messenger = ScaffoldMessenger.of(context);
+          if (ErrorLog.entries.isEmpty) {
+            messenger.showSnackBar(SnackBar(content: Text(l10n.errorLogEmpty)));
+            return;
+          }
+          var header = '';
+          try {
+            final info = await PackageInfo.fromPlatform();
+            header =
+                '${l10n.appName} ${info.version} (${info.buildNumber}) · '
+                '${kIsWeb ? 'web' : Platform.operatingSystem}';
+          } catch (_) {}
+          final text = ErrorLog.exportText(header: header);
+          try {
+            await SharePlus.instance.share(
+              ShareParams(
+                files: [
+                  XFile.fromData(
+                    utf8.encode(text),
+                    name: 'notlar-hata-gunlugu.txt',
+                    mimeType: 'text/plain',
+                  ),
+                ],
+                subject: l10n.errorLogShare,
+              ),
+            );
+          } catch (e) {
+            messenger.showSnackBar(
+              SnackBar(content: Text(l10n.genericError('$e'))),
+            );
+          }
+        },
+      ),
+    );
+  }
+}
+
+class _CrashReportsSwitch extends ConsumerWidget {
+  const _CrashReportsSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      title: Text(l10n.crashReports),
+      subtitle: Text(l10n.crashReportsInfo),
+      value: ref.watch(crashReportsProvider),
+      onChanged: (v) => ref.read(crashReportsProvider.notifier).set(v),
     );
   }
 }

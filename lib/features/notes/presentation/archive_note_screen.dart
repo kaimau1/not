@@ -14,6 +14,8 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
+import '../../../core/utils/search_fold.dart';
+import '../../../core/app_update.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../core/constants.dart';
 import '../../../core/l10n_ext.dart';
@@ -397,7 +399,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   }
 
   static bool _matches(String text, String query) =>
-      text.toLowerCase().contains(query);
+      foldForSearch(text).contains(foldForSearch(query));
 
   /// Aramanın sonucu: eşleşen girdiler ve her birinin SAYFA numarası.
   ///
@@ -1619,6 +1621,10 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   /// Eki kendi görüntüleyicisinde açar. Dosya cihazda yoksa ve buluta da
   /// yüklenmediyse boş bir ekran açmak yerine sebebi söylenir.
   void _open(Attachment attachment) {
+    if (attachment.isUnsupported) {
+      showUnsupportedAttachmentDialog(context);
+      return;
+    }
     if (attachment.kind == AttachmentKind.audio) return;
     // Metin eki (transkript) dosyasız: içerik kayıtta, okuma ekranında açılır.
     if (attachment.kind == AttachmentKind.text) {
@@ -2743,6 +2749,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     AttachmentKind.slide => Icons.slideshow_outlined,
     AttachmentKind.audio => Icons.audiotrack_outlined,
     AttachmentKind.text => Icons.subject,
+    AttachmentKind.unknown => Icons.system_update,
   };
 
   /// Yapay zekâdan gelen metni açık sayfanın YAZISININ sonuna ekler.

@@ -3059,7 +3059,7 @@ class AppLocalizationsNl extends AppLocalizations {
       'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => 'Ad (en az 3 harf) ya da tam e-posta';
 
   @override
   String get friendsSearchTab => 'Ara';
@@ -5294,4 +5294,73 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get voiceOfflineInfo =>
       'Als het taalpakket op je telefoon staat, wordt spraak zonder internet uitgeschreven. Anders wordt automatisch online herkenning gebruikt.';
+
+  @override
+  String get discoverable => 'Vindbaar op mijn naam';
+
+  @override
+  String get discoverableInfo =>
+      'Aan: anderen kunnen je vinden in \"Personen zoeken\" met de eerste 3 letters van je naam of je volledige e-mail. Uit: alleen wie je e-mail kent, kan een verzoek sturen.';
+
+  @override
+  String get friendsSearchNeedsGoogle =>
+      'Log in met een Google-account om personen te zoeken.';
+
+  @override
+  String get friendsSearchRateLimited =>
+      'Te veel zoekopdrachten. Probeer het over een minuut opnieuw.';
+
+  @override
+  String get updateRequiredBody =>
+      'Deze versie is verouderd: notities openen alleen-lezen. Werk de app bij zodat je gegevens intact blijven.';
+
+  @override
+  String get updateAction => 'Bijwerken';
+
+  @override
+  String get attachmentUnsupportedTitle =>
+      'Werk de app bij om deze bijlage te openen';
+
+  @override
+  String get attachmentUnsupportedBody =>
+      'Deze bijlage is toegevoegd in een nieuwere versie van de app. Deze versie kan haar niet tonen; ze blijft ongewijzigd bewaard.';
+
+  @override
+  String noteTooLarge(String size, String part) {
+    return 'Deze notitie wordt te groot ($size / 1024 KB) — grootste deel: $part. Verplaats een deel naar een aparte notitie, anders kan opslaan mislukken.';
+  }
+
+  @override
+  String get noteSizeBody => 'tekst';
+
+  @override
+  String get noteSizeItems => 'lijstitems';
+
+  @override
+  String get noteSizePageNotes => 'paginanotities';
+
+  @override
+  String noteSaveRejected(String reason) {
+    return 'De notitie kon niet op de server worden opgeslagen: $reason';
+  }
+
+  @override
+  String get errorLogShare => 'Foutenlogboek delen';
+
+  @override
+  String get errorLogInfo =>
+      'Recente fouten blijven alleen op dit apparaat; ze gaan nergens heen tenzij je ze deelt.';
+
+  @override
+  String get errorLogEmpty => 'Geen fouten vastgelegd.';
+
+  @override
+  String get crashReports => 'Crashrapporten verzenden';
+
+  @override
+  String get crashReportsInfo =>
+      'Bij een crash wordt een technisch rapport zonder notitie-inhoud naar Firebase Crashlytics gestuurd (alleen Android).';
+
+  @override
+  String get noteTooLargeShort => 'de notitie overschrijdt de limiet van 1 MiB';
 }

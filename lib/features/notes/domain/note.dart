@@ -196,7 +196,40 @@ class Note {
     this.reminderAt,
     this.aiSummary,
     this.localOnly = false,
+    this.extras = const {},
   });
+
+  /// Kayıt şeması sürümü (F1.5). [toMap] her yazımda [currentSchema]
+  /// yazar; okurken bilinmez, yalnız ileride "bu kayıt hangi sürümün
+  /// biçiminde" sorusu için. Şema değişikliği (alanın anlamı değişirse)
+  /// bu sayıyı artırır.
+  static const currentSchema = 1;
+
+  /// Bu sürümün TANIMADIĞI üst alanlar (daha yeni sürümün eklediği) —
+  /// [toMap] AYNEN geri yazar (F1.5). Merge yazımında zaten korunurlar;
+  /// bu, belge baştan yazıldığında (kopya, senkron aç/kapa, yerel depo)
+  /// da kaybolmasınlar diye.
+  final Map<String, dynamic> extras;
+
+  /// [fromMap]'in okuduğu / depo katmanının yazdığı bütün üst alanlar.
+  /// Yeni alan eklenince BURAYA da eklenmeli (`forward_compat_test`).
+  static const knownKeys = <String>{
+    'type', 'title', 'body', 'items', 'pageNotes', 'attachments', 'tags',
+    'folderId', 'color', 'frameColor', 'pinned', 'starred', 'locked',
+    'fontFamily', 'fontScale', 'textOpacity', 'titleFontFamily',
+    'titleFontScale', 'titleTextOpacity', 'backgroundImageId',
+    'backgroundOpacity', 'listColumns', 'classicDocument', 'archivePages',
+    'archivePaper', 'archiveGeneralName', 'tagLinks', 'textPages',
+    'activePage', 'orderIndex', 'createdAt', 'updatedAt', 'deletedAt',
+    'archivedAt', 'reminderAt', 'aiSummary', 'schema',
+    // Depo katmanının her yazımda kendisi koyduğu alan — notla taşınmaz.
+    // (`createdBy` BİLEREK burada değil: [extras] olarak AYNEN geri yazılır;
+    // kurallar paylaşılan yolda değişmemesini istiyor — F1.4.)
+    'updatedBy',
+  };
+
+  /// Notta bu sürümün işleyemediği bir ek var mı (daha yeni sürümün türü)?
+  bool get hasUnsupportedAttachments => attachments.any((a) => a.isUnsupported);
 
   final String id;
   final NoteType type;
@@ -691,6 +724,7 @@ class Note {
     // Parametresi YOK: "kim yazdı" kaydın bir olgusu, çağıranın seçimi
     // değil — kopyada da olduğu gibi taşınır (bkz. [updatedBy]).
     updatedBy: updatedBy,
+    extras: extras,
   );
 
   factory Note.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) =>
@@ -821,10 +855,17 @@ class Note {
               Map<String, dynamic>.from(map['aiSummary'] as Map),
             )
           : null,
+      extras: {
+        for (final e in map.entries)
+          if (!knownKeys.contains(e.key)) e.key: e.value,
+      },
     );
   }
 
   Map<String, dynamic> toMap() => {
+    // ÖNCE tanınmayan alanlar: bilinen anahtarlar her zaman üstüne yazar.
+    ...extras,
+    'schema': currentSchema,
     'type': type.id,
     'title': title,
     'body': body,

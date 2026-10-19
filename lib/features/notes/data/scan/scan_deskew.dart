@@ -78,7 +78,7 @@ abstract final class ScanDeskew {
         return null;
       }
       final png = await Perspective.warpToPng(image, corners);
-      return writeTempPng(imagePath, 'duzeltildi', png);
+      return await writeTempPng(imagePath, 'duzeltildi', png);
     } finally {
       image.dispose();
     }

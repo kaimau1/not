@@ -5188,3 +5188,83 @@ Plan ve rapor özeti: `YOL_HARITASI.md` (protokol dosyanın başında).
   (F1.8, denendi). (4) Hesap silme `userSearch/{uid}`'i bırakıyor (F1.2).
 * Ölçüm: 3.44.6 ile analiz temiz, 1327/1327 test, ~195 sn (CLAUDE.md'deki
   1191 eski — F1.10).
+
+## 2026-10-19 (6. tur) — FAZ 1: güvenlik, gizlilik, veri bütünlüğü (APK derlenmedi)
+Kullanıcı: "Faz 1'e başla ve bitir, main'e merge et, APK derletme".
+KARARLAR (kullanıcı, oturum başında): kişi aramasında e-posta yalnız TAM,
+ad en az 3 harfli kelime öneki; "Adımla bulunabilirim" varsayılan AÇIK;
+Crashlytics ŞİMDİ eklensin.
+* **F1.1** `functions/searchUsers`: anonim token `permission-denied`;
+  uid başına dakikada 10 (`rateLimits/{uid}`, Admin SDK, kural: istemciye
+  kapalı); eşleşme `functions/search_match.js` (`node --test`). İstemci
+  `isSearchableQuery` (≥3) + red kodlarını söyler. `discoverableProvider` →
+  kapalıyken `userSearch/{uid}` silinir (`syncOwnDirectoryEntry`).
+* **F1.2** `AccountService`: koleksiyon listeleri TEK SABİTTE
+  (`deletedUserSubcollections` / `deletedRootCollections` /
+  `keptCollections`); `account_deletion_test` koddaki her `collection(...)`
+  adının ve kural dosyasındaki her kök koleksiyonun listede olduğunu
+  doğrular. Yeni koleksiyon → listeye ekle, yoksa test kırılır. Sıra:
+  Storage → Drive appDataFolder (`DriveStore.deleteAllAppData`) → alt
+  koleksiyonlar → sahip olunan folderShares (önce `folderChats/{id}/`
+  Storage, sonra messages, sonra ayna — Storage kuralı üyeliği aynadan
+  okuyor) → noteShares (`ownerId==uid`) → userSearch → userDirectory → kök.
+  `aiQuota`, `rateLimits` BİLEREK kalır (silinemez kural, kişisel içerik yok).
+* **F1.3** Gizlilik politikası baştan yazıldı (Gmail yok; konum, kişiler/
+  paylaşım, BYOK sağlayıcılar, Crashlytics, misafir hesap, şifreleme yok).
+  `USE_EXACT_ALARM` kaldırıldı; `exact_alarms_not_permitted` → inexact
+  yedeği zaten vardı (flutter_local_notifications 22.1.0 kaynağında kod
+  doğrulandı).
+* **F1.4** Notlara `createdBy` (createNote/duplicate). Kural: paylaşılan
+  klasörde 'write' rolü yalnız `createdBy == uid` notu günceller; klasör +
+  ortak not yollarında `updatedBy == auth.uid` ZORUNLU ve `createdBy`
+  değişmez. **TUZAK**: `NotesRepository`'nin HER bulut yazımı `updatedBy`
+  taşımalı — eksik olan iki yol eklendi (`reorderNotes` batch,
+  `patchAttachment` tx.update). Yeni yazım yolu eklerken unutma.
+  ESKİ notlarda `createdBy` yok → 'write' rolü onlara dokunamaz (kabul).
+* **F1.5** `Attachment`/`NoteItem`/`Note`: `extras` (tanınmayan anahtarlar)
+  `fromMap`'te saklanır, `toMap`'in BAŞINA yayılır (bilinen alan üstüne
+  yazar). `knownKeys` kümeleri — yeni alan eklerken oraya da ekle
+  (`forward_compat_test` toMap'in kümede kaldığını doğrular). Bilinmeyen tür
+  → `AttachmentKind.unknown` + `rawKind` (aynen geri yazılır), yüklenmez,
+  açılmaz ("güncelle" penceresi). `Note.createdBy` bilerek knownKeys DIŞINDA
+  (extras olarak korunur). `schema: 1` her yazımda.
+  **Sürüm kapısı KARARI (plandan sapma)**: `config/app.minBuild` (derleme
+  numarası) yerine `config/app.minClient` ↔ `kClientDataVersion`
+  (core/app_update.dart). NEDEN: yalnız CI Android derlemesi
+  `--build-number` alıyor; elle Windows ve web hep 1 — asıl risk Windows'tu.
+  Yeni bir veri biçimi gelince sabit artırılır, konsolda `minClient`
+  aynı sayıya çekilir. Kapı: tepede şerit + editör salt okunur (arşiv
+  defteri ve ana ekran alan yazımları KAPSAM DIŞI — onlar merge ile bilinen
+  alanları yazıyor). (d) "Yeni sürüm var" kartı yapılmadı (isteğe bağlıydı).
+* **F1.6** `core/utils/firestore_size.dart` tahmini; `updateNote` her
+  kayıtta ölçer (ek listesi özete göre önbellekte), ≥900 KB →
+  `NotesRepository.writeIssues` → `NoteWriteIssueListener` (app.dart, kök
+  ScaffoldMessenger, not başına 5 dk'da bir). Yazım reddi artık yutulmuyor:
+  hata günlüğü + Crashlytics (ölümcül değil) + bildirim.
+* **F1.7** try içinde await'siz dönen 4 Future'a `await`;
+  `onError: (_) => map.remove(...)` (String? dönüyordu) blok gövde.
+* **F1.8** `core/utils/search_fold.dart` `foldForSearch` (1:1 kod birimi):
+  ı/I/İ→i, ş→s, ğ→g, ü→u, ö→o, ç→c, â/î/û. Editördeki eski
+  `foldForSearch` (yalnız I/İ/ı) kaldırıldı, `text_search.dart` ortak olanı
+  yeniden dışa açıyor. Uygulandı: ana ekran/klasör/arşiv/çöp süzgeci, kart
+  vurgusu, not arama levhası, not içi bul, balon listesi, arşiv defteri,
+  semantik arama yedeği, kılavuz, ayar araması, dil listesi.
+* **F1.9** `core/error_log.dart` (halka tampon 200, `error_log.jsonl`
+  app support dizininde, web'de bellek), `core/crash_reporting.dart`
+  (`FlutterError.onError` + `PlatformDispatcher.onError`; Crashlytics yalnız
+  Android ve yalnız ayar açık + release). Ayarlar → Hakkında: "Hata
+  günlüğünü paylaş", "Çökme raporlarını gönder" (varsayılan AÇIK).
+  **TUZAK — Crashlytics Gradle eklentisi YOK**: proje google-services
+  eklentisi kullanmıyor (seçenekler Dart'tan); eklenti AGP 9 ile yerelde
+  sınanamazdı. Yerine `res/values/crashlytics.xml`
+  `com.crashlytics.RequireBuildId=false` (+ keep.xml). İlk [apk]
+  derlemesinde açılışta "build ID" hatası görülürse eklenti eklenmeli.
+  `firebase_crashlytics` 5.2.6'ya SABİTLENDİ: 5.4 `firebase_core`'u 4.15'e
+  çekiyor, öbür Firebase eklentileri 4.12.1 çağında kalıyordu.
+* **F1.10** README (Gmail çıktı; web/kişiler/paylaşım/Drive/functions;
+  CI'da APK yalnız main+[apk]), YAPILACAKLAR (keystore yeri, Windows
+  artefaktı yok, Releases), CLAUDE.md (test sayısı, bulut Flutter kurulumu,
+  graphify iddiası düzeltildi — `graphify` bu ortamda yok, grafik bayat).
+* **TUZAK (bu oturumda yaşandı)**: `dart format lib test` depo genelinde
+  ~100 ilgisiz dosyayı yeniden biçimlendirdi (depo tek biçimde değil). Geri
+  alındı; yalnız yeni dosyalar biçimlendirildi. CLAUDE.md'ye not düşüldü.

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants.dart';
+import '../../core/crash_reporting.dart';
 import '../../core/utils/language_names.dart';
 import '../../core/utils/note_fonts.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -421,6 +422,50 @@ class SharedNotificationsNotifier extends Notifier<bool> {
   void set(bool value) {
     state = value;
     ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
+/// **ADIMLA/E-POSTAMLA BULUNABİLİRİM** (F1.1, 2026-10-19). Açıkken
+/// `userSearch/{uid}` yazılır ve başkaları beni ad önekiyle ya da tam
+/// e-postayla "Kişi ara"da bulur. Kapalıyken belge silinir; yalnız tam
+/// e-postamı bilen kişi "E-postayla ekle" yoluyla istek gönderebilir.
+/// Varsayılan AÇIK (kullanıcı kararı).
+final discoverableProvider = NotifierProvider<DiscoverableNotifier, bool>(
+  DiscoverableNotifier.new,
+);
+
+class DiscoverableNotifier extends Notifier<bool> {
+  static const _key = 'discoverable';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
+/// **ÇÖKME RAPORLARI** (F1.9, 2026-10-19): Android'de yakalanmayan hatalar
+/// Firebase Crashlytics'e gitsin mi. Varsayılan AÇIK (kullanıcı kararı);
+/// cihazdaki hata günlüğü bundan bağımsız hep tutulur.
+final crashReportsProvider = NotifierProvider<CrashReportsNotifier, bool>(
+  CrashReportsNotifier.new,
+);
+
+class CrashReportsNotifier extends Notifier<bool> {
+  static const _key = 'crash_reports';
+
+  /// `main` sağlayıcılar kurulmadan önce okur.
+  static bool read(SharedPreferences prefs) => prefs.getBool(_key) ?? true;
+
+  @override
+  bool build() => read(ref.watch(sharedPreferencesProvider));
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+    unawaited(CrashReporting.setEnabled(value));
   }
 }
 

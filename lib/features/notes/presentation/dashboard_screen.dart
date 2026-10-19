@@ -222,8 +222,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     _syncOwnDirectoryEntry();
   }
 
-  void _syncOwnDirectoryEntry() =>
-      ref.read(friendsRepositoryProvider)?.syncOwnDirectoryEntry();
+  void _syncOwnDirectoryEntry() => ref
+      .read(friendsRepositoryProvider)
+      ?.syncOwnDirectoryEntry(discoverable: ref.read(discoverableProvider));
 
   /// **KÖK NEDEN (kullanıcı bulgusu 2026-08-18: "böyle bir hesap var ama
   /// bulamıyor").** Dizin kaydı yalnız `initState`te, yani State ilk

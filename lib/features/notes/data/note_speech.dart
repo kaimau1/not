@@ -52,11 +52,13 @@ Future<String> _documentText(
           ? doc.localPath
           : await _tempCopy(doc, attachments);
       if (path == null) return '';
-      return PdfText.cleanForSpeech(await PdfText.extract(path));
+      return await PdfText.cleanForSpeech(await PdfText.extract(path));
     }
     final bytes = await attachments?.readBytes(doc);
     if (bytes == null) return '';
-    return DocText.extractFromBytes('pptx', bytes);
+    // `await` ŞART: try içinde await'siz dönen Future'ın hatası catch'e
+    // düşmüyordu (bozuk PPTX okumayı düşürüyordu — F1.7).
+    return await DocText.extractFromBytes('pptx', bytes);
   } catch (_) {
     // Bozuk/şifreli belge okumayı düşürmesin: notun kendi metni yine okunur.
     return '';

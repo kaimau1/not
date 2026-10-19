@@ -3063,7 +3063,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => 'Ad (en az 3 harf) ya da tam e-posta';
 
   @override
   String get friendsSearchTab => 'Ara';
@@ -5295,4 +5295,73 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get voiceOfflineInfo =>
       'Wenn das Sprachpaket auf dem Telefon geladen ist, wird ohne Internet transkribiert. Sonst wird automatisch die Online-Erkennung genutzt.';
+
+  @override
+  String get discoverable => 'Über meinen Namen auffindbar';
+
+  @override
+  String get discoverableInfo =>
+      'Wenn aktiv, können andere dich in „Personen suchen“ über die ersten 3 Buchstaben deines Namens oder deine vollständige E-Mail finden. Wenn aus, kann nur jemand mit deiner E-Mail eine Anfrage senden.';
+
+  @override
+  String get friendsSearchNeedsGoogle =>
+      'Melde dich mit einem Google-Konto an, um Personen zu suchen.';
+
+  @override
+  String get friendsSearchRateLimited =>
+      'Zu viele Suchen. Versuche es in einer Minute erneut.';
+
+  @override
+  String get updateRequiredBody =>
+      'Diese Version ist veraltet: Notizen öffnen schreibgeschützt. Aktualisiere die App, damit deine Daten intakt bleiben.';
+
+  @override
+  String get updateAction => 'Aktualisieren';
+
+  @override
+  String get attachmentUnsupportedTitle =>
+      'Aktualisiere die App, um diesen Anhang zu öffnen';
+
+  @override
+  String get attachmentUnsupportedBody =>
+      'Dieser Anhang wurde in einer neueren App-Version hinzugefügt. Diese Version kann ihn nicht anzeigen; er bleibt unverändert erhalten.';
+
+  @override
+  String noteTooLarge(String size, String part) {
+    return 'Diese Notiz wird zu groß ($size / 1024 KB) – größter Teil: $part. Verschiebe einen Teil in eine eigene Notiz, sonst kann sie nicht gespeichert werden.';
+  }
+
+  @override
+  String get noteSizeBody => 'Text';
+
+  @override
+  String get noteSizeItems => 'Listeneinträge';
+
+  @override
+  String get noteSizePageNotes => 'Seitennotizen';
+
+  @override
+  String noteSaveRejected(String reason) {
+    return 'Die Notiz konnte nicht auf dem Server gespeichert werden: $reason';
+  }
+
+  @override
+  String get errorLogShare => 'Fehlerprotokoll teilen';
+
+  @override
+  String get errorLogInfo =>
+      'Letzte Fehler werden nur auf diesem Gerät gespeichert und nur geteilt, wenn du es tust.';
+
+  @override
+  String get errorLogEmpty => 'Keine Fehler aufgezeichnet.';
+
+  @override
+  String get crashReports => 'Absturzberichte senden';
+
+  @override
+  String get crashReportsInfo =>
+      'Bei einem Absturz wird ein technischer Bericht ohne Notizinhalte an Firebase Crashlytics gesendet (nur Android).';
+
+  @override
+  String get noteTooLargeShort => 'die Notiz überschreitet das 1-MiB-Limit';
 }

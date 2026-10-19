@@ -5679,7 +5679,7 @@ abstract class AppLocalizations {
   /// No description provided for @friendsSearchHint.
   ///
   /// In tr, this message translates to:
-  /// **'İsim veya e-posta ile ara'**
+  /// **'Ad (en az 3 harf) ya da tam e-posta'**
   String get friendsSearchHint;
 
   /// No description provided for @friendsSearchTab.
@@ -9509,6 +9509,120 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Telefonda dil paketi indirilmişse sesin internete gitmeden yazıya döker. Paket yoksa kendiliğinden çevrimiçi tanımaya döner.'**
   String get voiceOfflineInfo;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Adımla bulunabilirim'**
+  String get discoverable;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıkken başkaları seni adının ilk 3 harfiyle ya da tam e-postanla \"Kişi ara\"da bulabilir. Kapalıyken yalnız e-postanı bilen biri istek gönderebilir.'**
+  String get discoverableInfo;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişi aramak için Google hesabıyla giriş yap.'**
+  String get friendsSearchNeedsGoogle;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Çok fazla arama yaptın, bir dakika sonra tekrar dene.'**
+  String get friendsSearchRateLimited;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu sürüm eski: notlar salt okunur açılıyor. Verilerin bozulmasın diye uygulamayı güncelle.'**
+  String get updateRequiredBody;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncelle'**
+  String get updateAction;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ek için uygulamayı güncelle'**
+  String get attachmentUnsupportedTitle;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ek uygulamanın daha yeni bir sürümünde eklendi. Bu sürüm onu gösteremiyor; ek korunuyor, silinmiyor.'**
+  String get attachmentUnsupportedBody;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Not çok büyüdü ({size} / 1024 KB) — en büyük kısım: {part}. Bir kısmını ayrı bir nota taşı, yoksa kaydedilemeyebilir.'**
+  String noteTooLarge(String size, String part);
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'metin'**
+  String get noteSizeBody;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'maddeler'**
+  String get noteSizeItems;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'sayfa notları'**
+  String get noteSizePageNotes;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Not sunucuya kaydedilemedi: {reason}'**
+  String noteSaveRejected(String reason);
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Hata günlüğünü paylaş'**
+  String get errorLogShare;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Son hatalar yalnız bu cihazda tutulur; sen paylaşmadıkça hiçbir yere gitmez.'**
+  String get errorLogInfo;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtlı hata yok.'**
+  String get errorLogEmpty;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Çökme raporlarını gönder'**
+  String get crashReports;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama çökünce not içeriği olmadan teknik bir rapor Firebase Crashlytics\'e gider (yalnız Android).'**
+  String get crashReportsInfo;
+
+  /// Faz 1 (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'not 1 MiB sınırını aştı'**
+  String get noteTooLargeShort;
 }
 
 class _AppLocalizationsDelegate

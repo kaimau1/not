@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/search_fold.dart';
 import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -392,7 +393,7 @@ class _NotesGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final needle = query.trim().toLowerCase();
+    final needle = foldForSearch(query.trim());
     // Sütun sayısı ANA EKRANLA ortak: kullanıcı orada iki parmakla seçtiği
     // yoğunluğu klasörde de görsün (sıralamayla aynı gerekçe). 0 = otomatik.
     final fixedColumns = ref.watch(gridColumnsProvider);

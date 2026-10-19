@@ -1,6 +1,7 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { initializeApp } = require("firebase-admin/app");
-const { getFirestore } = require("firebase-admin/firestore");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { matchKind, MIN_NAME_QUERY } = require("./search_match");
 
 initializeApp();
 const db = getFirestore();
@@ -20,6 +21,53 @@ const MAX_QUERY_LEN = 60;
  */
 const SCAN_LIMIT = 1000;
 
+/** uid başına dakikada en fazla arama (F1.1 hız sınırı). */
+const RATE_LIMIT_PER_MINUTE = 10;
+const RATE_WINDOW_MS = 60 * 1000;
+
+/**
+ * uid başına sabit pencereli hız sınırı. Sayaç `rateLimits/{uid}` belgesinde,
+ * yalnız Admin SDK yazar (kural: istemciye tamamen kapalı). Sınır aşıldıysa
+ * `resource-exhausted` fırlatır.
+ */
+async function enforceRateLimit(uid) {
+  const ref = db.collection("rateLimits").doc(uid);
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const now = Date.now();
+    const data = snap.exists ? snap.data() : null;
+    const windowStart =
+      data && typeof data.searchWindowStart === "number"
+        ? data.searchWindowStart
+        : 0;
+    const count =
+      data && typeof data.searchCount === "number" ? data.searchCount : 0;
+    if (now - windowStart >= RATE_WINDOW_MS) {
+      tx.set(
+        ref,
+        {
+          searchWindowStart: now,
+          searchCount: 1,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+      return;
+    }
+    if (count >= RATE_LIMIT_PER_MINUTE) {
+      throw new HttpsError(
+        "resource-exhausted",
+        "Çok fazla arama yaptınız, bir dakika sonra tekrar deneyin.",
+      );
+    }
+    tx.set(
+      ref,
+      { searchCount: count + 1, updatedAt: FieldValue.serverTimestamp() },
+      { merge: true },
+    );
+  });
+}
+
 /**
  * searchUsers — arkadaş eklemede "tüm kullanıcılar içinde arama".
  *
@@ -32,21 +80,32 @@ const SCAN_LIMIT = 1000;
  * giriş yapmış kullanıcı) — yani dizinin tamamı değil, tek bir arama
  * sorgusunun cevabı dışarı çıkar.
  *
- * EŞLEŞME "İÇİNDE GEÇEN" (kullanıcı isteği 2026-08-29: "kişi arama doğru
- * çalışmıyor, içinde geçen şeklinde aranmalı kolayca"). Eskiden yalnız ÖNEK
- * eşleşiyordu: "mehmet" araması "Ali Mehmet"i hiç bulmuyordu. Önek eşleşmeleri
- * yine ÖNCE gelir — "ali" yazan çoğu zaman "Ali ..."yi arıyordur.
+ * GÜVENLİK (F1.1): anonim (misafir) oturum aramaz — web'de herkes ilk
+ * açılışta otomatik anonim hesap aldığı için yalnız `request.auth` bakmak
+ * dizini dünyaya açıyordu. uid başına dakikada 10 arama. Eşleşme
+ * [matchKind]: e-posta yalnız TAM, ad en az 3 harfli kelime öneki. Ad
+ * eşleşmesinde kelimenin başı yeterli ("mehmet" → "Ali Mehmet"); adın
+ * başından eşleşenler ÖNCE gelir.
  */
 exports.searchUsers = onCall(async (request) => {
   const auth = request.auth;
   if (!auth) {
     throw new HttpsError("unauthenticated", "Giriş yapmış olmalısınız.");
   }
+  const provider =
+    auth.token && auth.token.firebase && auth.token.firebase.sign_in_provider;
+  if (provider === "anonymous") {
+    throw new HttpsError(
+      "permission-denied",
+      "Kişi aramak için Google hesabıyla giriş yapın.",
+    );
+  }
   const rawQuery = (request.data && request.data.query) || "";
   const query = String(rawQuery).trim().toLowerCase().slice(0, MAX_QUERY_LEN);
-  if (query.length < 2) {
+  if (!query.includes("@") && query.length < MIN_NAME_QUERY) {
     return { results: [] };
   }
+  await enforceRateLimit(auth.uid);
 
   const snap = await db
     .collection("userSearch")
@@ -63,13 +122,9 @@ exports.searchUsers = onCall(async (request) => {
     if (prefix.has(data.uid) || inside.has(data.uid)) continue;
     const name = (data.nameLower || "").toLowerCase();
     const email = (data.emailLower || "").toLowerCase();
-    const hit =
-      name.startsWith(query) || email.startsWith(query)
-        ? prefix
-        : name.includes(query) || email.includes(query)
-          ? inside
-          : null;
-    if (hit === null) continue;
+    const kind = matchKind(query, name, email);
+    if (kind === null) continue;
+    const hit = kind === "prefix" ? prefix : inside;
     hit.set(data.uid, {
       uid: data.uid,
       name: data.name || "",
@@ -85,3 +140,4 @@ exports.searchUsers = onCall(async (request) => {
 
   return { results: results };
 });
+

@@ -203,10 +203,26 @@ service cloud.firestore {
         && resource.data.folderId != null
         && folderShare(resource.data.folderId).ownerId == noteOwnerUid
         && canReadFolder(folderShare(resource.data.folderId), request.auth.uid);
+      //
+      // **'write' ROLÜ YALNIZ KENDİ NOTUNU** (F1.4, 2026-10-19): eskiden
+      // 'write' rolündeki kişi notları okuyamıyor ama klasördeki HERKESİN
+      // notunu güncelleyebiliyordu (üstüne yazma, `deletedAt` ile çöpe atma).
+      // Artık yalnız `createdBy`ı kendisi olan notu güncelleyebilir; 'both'
+      // değişmedi. `createdBy` alanı olmayan ESKİ notlara 'write' rolü
+      // dokunamaz (bilinçli kabul — HAFIZA 2026-10-19).
+      // **`updatedBy` SAHTE OLAMAZ**: paylaşılan yollardaki her yazım
+      // `updatedBy == request.auth.uid` taşımalı (bildirim/rozet "kim
+      // değiştirdi" sorusunu buradan yanıtlıyor) ve `createdBy` değişemez.
       allow update: if request.auth != null
         && resource.data.folderId != null
         && folderShare(resource.data.folderId).ownerId == noteOwnerUid
         && canWriteFolder(folderShare(resource.data.folderId), request.auth.uid)
+        && (folderRole(folderShare(resource.data.folderId), request.auth.uid)
+              == 'both'
+            || resource.data.get('createdBy', '') == request.auth.uid)
+        && request.resource.data.get('updatedBy', '') == request.auth.uid
+        && request.resource.data.get('createdBy', null)
+            == resource.data.get('createdBy', null)
         // Not paylaşılan klasörden ÇIKARILAMAZ: `folderId` değişseydi
         // (ya da null olsaydı) yazma yetkisi olan kişi, klasörü kaynak alıp
         // sahibinin başka bir notunu bu kuralın kapsamına sokabilir ya da
@@ -216,7 +232,9 @@ service cloud.firestore {
         && request.resource.data.folderId != null
         && folderShare(request.resource.data.folderId).ownerId == noteOwnerUid
         && canWriteFolder(
-            folderShare(request.resource.data.folderId), request.auth.uid);
+            folderShare(request.resource.data.folderId), request.auth.uid)
+        && request.resource.data.get('createdBy', '') == request.auth.uid
+        && request.resource.data.get('updatedBy', '') == request.auth.uid;
       // **ORTAK NOT** (kullanıcı isteği 2026-09-22: "ortak not butonu
       // keepteki gibi"). Klasörden BAĞIMSIZ, tek nota verilen canlı erişim:
       // sahip notu `noteShares` aynasında kimlerle paylaştığını yazar,
@@ -227,7 +245,10 @@ service cloud.firestore {
       allow read: if isNoteCollaborator(noteOwnerUid, noteId);
       allow update: if isNoteCollaborator(noteOwnerUid, noteId)
         && request.resource.data.get('folderId', null)
-            == resource.data.get('folderId', null);
+            == resource.data.get('folderId', null)
+        && request.resource.data.get('updatedBy', '') == request.auth.uid
+        && request.resource.data.get('createdBy', null)
+            == resource.data.get('createdBy', null);
       // Kalıcı silme (`hardDelete`) paylaşılan kullanıcıya AÇIK DEĞİL —
       // yalnız güncelleme (biçim, düzenleme, çöpe taşıma). Başkasının notunu
       // GERİ DÖNÜŞSÜZ silme yetkisi sahipte kalır; bu bilinçli bir
@@ -444,6 +465,19 @@ service cloud.firestore {
           ['uid', 'name', 'email', 'nameLower', 'emailLower']
         );
       allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Uygulama yapılandırması (F1.5): `config/app.minClient` — eski istemci
+    // kapısı. Herkes okur (giriş öncesi de), istemci YAZAMAZ; yalnız konsol.
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Arama hız sınırı sayacı (F1.1) — yalnız `functions/searchUsers` Admin
+    // SDK'yla yazar/okur; istemciye tamamen kapalı (silip sıfırlayamasın).
+    match /rateLimits/{uid} {
+      allow read, write: if false;
     }
 
     // Dahili AI kota sayacı. AYRI KÖK KOLEKSİYONDA, bilerek:

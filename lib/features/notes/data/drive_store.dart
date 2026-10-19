@@ -489,6 +489,43 @@ class DriveStore {
     }
   }
 
+  /// appDataFolder'daki BÜTÜN dosyaları siler (hesap silme, F1.2). Sayfa
+  /// sayfa listeler; listeleme başarısızsa sessizce durur — dosyalar
+  /// kullanıcının kendi Drive'ında kalır, veri sızıntısı değil.
+  Future<void> deleteAllAppData() async {
+    String? pageToken;
+    try {
+      do {
+        final query = StringBuffer(
+          '$_api?spaces=appDataFolder&pageSize=1000'
+          '&fields=nextPageToken,files(id)',
+        );
+        if (pageToken != null) {
+          query.write('&pageToken=${Uri.encodeQueryComponent(pageToken)}');
+        }
+        final response = await _send(
+          (token) async =>
+              http.Request('GET', Uri.parse(query.toString()))
+                ..headers['Authorization'] = 'Bearer $token',
+        );
+        if (response.statusCode != 200) {
+          debugPrint(await _failure(response));
+          return;
+        }
+        final body =
+            jsonDecode(await response.stream.bytesToString())
+                as Map<String, dynamic>;
+        for (final f in (body['files'] as List? ?? const [])) {
+          final id = (f as Map)['id'] as String?;
+          if (id != null) await delete(id);
+        }
+        pageToken = body['nextPageToken'] as String?;
+      } while (pageToken != null);
+    } catch (e) {
+      debugPrint('Drive uygulama verisi silinemedi: $e');
+    }
+  }
+
   /// Drive'a ULAŞILABİLİYOR mu? null = evet; değilse sunucunun yanıtı
   /// (ör. Cloud projesinde Drive API kapalıysa `accessNotConfigured`).
   Future<String?> probe() async {
@@ -503,7 +540,7 @@ class DriveStore {
         await response.stream.drain<void>();
         return null;
       }
-      return _failure(response);
+      return await _failure(response);
     } catch (e) {
       return '$e';
     }

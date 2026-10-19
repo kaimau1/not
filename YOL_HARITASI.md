@@ -40,7 +40,7 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
 
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
-| 1 | Güvenlik, gizlilik, veri bütünlüğü, hatalar | Bekliyor | — | |
+| 1 | Güvenlik, gizlilik, veri bütünlüğü, hatalar | Bitti | 2026-10-19 | F1.5(d) ertelendi; cihaz doğrulaması KALANLAR'da; APK derlenmedi |
 | 2 | Akıcılık / performans | Bekliyor | — | |
 | 3 | Sadeleştirme ve birleştirme | Bekliyor | — | çoğu madde KARAR GEREKİR |
 | 4 | Eksik özellikler, test altyapısı, Play | Bekliyor | — | |
@@ -49,7 +49,7 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
 
 ## FAZ 1 — Güvenlik, gizlilik, veri bütünlüğü, hatalar
 
-- [ ] **F1.1 Kullanıcı dizini taranabiliyor (YÜKSEK).**
+- [x] **F1.1 Kullanıcı dizini taranabiliyor (YÜKSEK).**
   Web'e giren herkes ilk açılışta otomatik anonim hesap alıyor
   (`login_screen.dart:48`), `searchUsers` yalnız `request.auth` var mı diye
   bakıyor (`functions/index.js:40-44`) ve her Google kullanıcısı onayı
@@ -65,8 +65,9 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
   belgesi silinir, tam e-postayla `userDirectory` araması yine çalışır).
   Bitti ölçütü: anonim çağrı `permission-denied`/`unauthenticated` döner,
   anahtar kapalıyken belge yok.
+  **Yapıldı (2026-10-19):** `functions/index.js` anonim red + `rateLimits/{uid}` (dk/10) + `search_match.js` (e-posta TAM, ad ≥3 harf kelime öneki — kullanıcı kararı); Ayarlar → Kişiler "Adımla bulunabilirim" (`discoverableProvider`, varsayılan AÇIK — kullanıcı kararı), kapalıyken `userSearch/{uid}` silinir.
 
-- [ ] **F1.2 Hesap silme eksik siliyor (Play + KVKK).**
+- [x] **F1.2 Hesap silme eksik siliyor (Play + KVKK).**
   `account_service.dart:43-49` listesi şunları atlıyor: `userSearch/{uid}`
   (silinen kullanıcı aranabilir kalıyor!), `noteShares` (`ownerId == uid`),
   sahip olunan `folderShares/{id}/messages` alt koleksiyonu ve Storage
@@ -74,8 +75,9 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
   `appDataFolder` dosyaları (bağlıysa), `aiQuota/{uid}` (kural silmeye kapalı —
   kişisel içerik yok; bırakılabilir, HAFIZA'ya not düş).
   Bitti ölçütü: silinen koleksiyon listesi tek sabitte, testte doğrulanıyor.
+  **Yapıldı:** `account_service.dart` tek sabit listeler + `test/account_deletion_test.dart` (koddaki/kurallardaki her koleksiyon listede); folderShares+messages+`folderChats/` Storage, noteShares, userSearch, Drive appDataFolder (`DriveStore.deleteAllAppData`). `aiQuota`/`rateLimits` bilerek kalır (HAFIZA).
 
-- [ ] **F1.3 Gizlilik politikası ve Play izinleri.**
+- [x] **F1.3 Gizlilik politikası ve Play izinleri.**
   `PRIVACY_POLICY.md`: kaldırılmış Gmail anlatılıyor (`:35`), "konum
   toplanmaz" deniyor (`:46`) ama konum hatırlatıcısı + arka plan konum izni
   var; "başka kullanıcılarla paylaşılmaz" deniyor ama ad/e-posta aranabilir,
@@ -85,8 +87,9 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
   Manifest: `USE_EXACT_ALARM` kaldır (Play yalnız alarm/takvim uygulamasına
   izin veriyor; `SCHEDULE_EXACT_ALARM` kalsın — izin yoksa hatırlatıcının
   inexact'e düştüğünü doğrula), `AndroidManifest.xml:10`.
+  **Yapıldı:** `PRIVACY_POLICY.md` yeniden yazıldı (19 Ekim 2026); `USE_EXACT_ALARM` kaldırıldı, inexact yedeği `reminder_service.dart`ta doğrulandı.
 
-- [ ] **F1.4 Klasör "yalnız yazma" rolü fazla yetkili + `updatedBy` sahte olabilir.**
+- [x] **F1.4 Klasör "yalnız yazma" rolü fazla yetkili + `updatedBy` sahte olabilir.**
   `firestore.rules:206-213`: 'write' rolündeki kişi notları OKUYAMAZ ama
   klasördeki HERKESİN notunu güncelleyebilir (üstüne yazma, `deletedAt` ile
   çöpe atma). Yap: notlara `createdBy` (oluşturmada `== request.auth.uid`
@@ -97,8 +100,9 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
   (`notes_repository.dart:409,463,487,528,866,884` + başka yazan var mı) —
   yoksa meşru yazımlar reddedilir. Eski notlarda `createdBy` yok → 'write'
   rolü onları güncelleyemez (kabul edilebilir, HAFIZA'ya yaz).
+  **Yapıldı:** `createdBy` (createNote/duplicate), kural: 'write' yalnız kendi notunu; klasör + ortak notta `updatedBy == auth.uid`, `createdBy` değişmez. Eksik `updatedBy` iki yola eklendi (`reorderNotes`, `patchAttachment`).
 
-- [ ] **F1.5 Eski istemci yeni veriyi bozuyor (YÜKSEK).**
+- [x] **F1.5 Eski istemci yeni veriyi bozuyor (YÜKSEK).**
   Bilinmeyen ek türü sessizce `image` oluyor (`attachment.dart:30-33`),
   `fromMap` tanımadığı alanları atıyor (`:1015`), diziler bütün yazıldığı için
   eski sürüm (özellikle elle derlenen Windows) bir notu kaydedince transkript
@@ -112,24 +116,27 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
   notlar salt okunur; (d) isteğe bağlı: "Yeni sürüm var" kartı (GitHub Releases
   `latest`). Test: bilinmeyen alan/tür içeren harita → `fromMap` → `toMap`
   birebir aynı.
+  **Yapıldı:** (a) `extras` + `knownKeys` (`Attachment`, `NoteItem`, `Note`), `AttachmentKind.unknown` + `rawKind`, "uygulamayı güncelle" penceresi; (b) `schema: 1`; (c) **plandan sapma**: `config/app.minClient` ↔ `kClientDataVersion` (`core/app_update.dart`) — derleme numarası Windows/web'de hep 1; şerit + editör salt okunur; kural `config/` herkes okur, kimse yazamaz. (d) ERTELENDİ: isteğe bağlıydı. Test: `forward_compat_test.dart`.
 
-- [ ] **F1.6 1 MiB belge sınırına karşı koruma yok.**
+- [x] **F1.6 1 MiB belge sınırına karşı koruma yok.**
   Çizim noktaları, balonlar, transkriptler (`Attachment.maxTextChars` tek ek
   için 120 bin, toplam için sınır yok — `attachment.dart:683`) ve sayfa
   notları tek belgede; sunucu reddi yutuluyor (`notes_repository.dart:493`).
   Yap: yazımdan önce `toMap` boyut tahmini; ~900 KB üstünde kullanıcıya
   uyarı (en büyük kalemi söyleyerek); yazım reddi yutulmasın, kullanıcıya ve
   F1.9 günlüğüne düşsün. (Kalıcı çözüm F3.13.)
+  **Yapıldı:** `core/utils/firestore_size.dart` + `NotesRepository._checkSize` (≥900 KB, en büyük kalem adıyla) + `writeIssues` → `NoteWriteIssueListener`; ret yutulmuyor (günlük + Crashlytics + bildirim). Test: `note_size_test.dart`.
 
-- [ ] **F1.7 Doğrudan hatalar (Flutter 3.47 analizinin yakaladıkları).**
+- [x] **F1.7 Doğrudan hatalar (Flutter 3.47 analizinin yakaladıkları).**
   `try` içinde `await`siz dönen Future → hata `catch`'e düşmüyor:
   `note_speech.dart:55-59` (bozuk PPTX okumayı düşürüyor — niyetin tersi),
   `drive_store.dart:506`, `scan/scan_deskew.dart:81`, `folder_sheets.dart:166`.
   `notes_repository.dart:493`: `onError` `String?` döndürüyor → yazım
   reddinde ikinci, yakalanmamış hata. Bitti ölçütü: 3.47.7 ile
   `flutter analyze` bu 6 uyarıyı vermez (yalnız analiz; 3.47'de test koşmaz).
+  **Yapıldı:** 4 dosyada `return await`; `notes_repository` `onError` blok gövde. 3.47.7 ile `flutter analyze` temiz (bir beşinci yer daha çıktı: `note_speech.dart` PDF dalı — düzeltildi).
 
-- [ ] **F1.8 Türkçe aramada ı/I ve aksan.**
+- [x] **F1.8 Türkçe aramada ı/I ve aksan.**
   `notes_providers.dart:1138` `_matches` (ve sorgu `:943`) `toLowerCase`
   kullanıyor: `'ILIK SU'` içinde `'ılık'` BULUNMUYOR (denendi). Ortak
   `foldForSearch()` (core/utils): ı/I/İ→i, ş→s, ğ→g, ü→u, ö→o, ç→c, â/î/û;
@@ -137,15 +144,17 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
   bozulmasın). Diğer aramalar: `grep -rn "toLowerCase().contains"` (not içi
   bul, not arama levhası, klasör/etiket, kılavuz, ayar araması). Test:
   ılık/ILIK, alışveriş/alisveris, İstanbul/istanbul.
+  **Yapıldı:** `core/utils/search_fold.dart` `foldForSearch` (editördeki eski kopyanın yerine), 12 arama noktası. Test: `search_fold_test.dart` (+ `in_note_find_test` beklentisi güncellendi).
 
-- [ ] **F1.9 Hata günlüğü (harici SDK yok).**
+- [x] **F1.9 Hata günlüğü (harici SDK yok).**
   Hiç hata raporlama yok (`FlutterError.onError`/`PlatformDispatcher.onError`
   yok), yazım hataları yutuluyor. Yap: iki işleyici + yutulan yazım
   hataları → cihazda halka tampon (son ~200 kayıt, dosyada);
   Ayarlar → Hakkında → "Hata günlüğünü paylaş". **KARAR GEREKİR**: ileride
   Crashlytics (gizlilik politikası "analitik yok" diyor).
+  **Yapıldı:** `core/error_log.dart` + `core/crash_reporting.dart`; Ayarlar → Hakkında "Hata günlüğünü paylaş" + "Çökme raporlarını gönder". **KARAR (kullanıcı): Crashlytics ŞİMDİ** — `firebase_crashlytics` 5.2.6, yalnız Android, Gradle eklentisiz (`RequireBuildId=false`, HAFIZA tuzak). Gizlilik politikası buna göre.
 
-- [ ] **F1.10 Eskimiş dokümanlar.**
+- [x] **F1.10 Eskimiş dokümanlar.**
   README: Gmail özelliği ve `gmail/` klasörü (`:12,60-63,99-100`), mimari
   ağacında folders/friends/inbox/web/Drive yok. CLAUDE.md: test sayısı 1191 →
   güncel sayı; bulut oturumunda Flutter kurulumu notu; graphify "commit'te
@@ -153,6 +162,7 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
   `ebba874e`) beri bayat → ya `graphify update .` ya da iddiayı düzelt.
   YAPILACAKLAR.md: artık olmayan `Desktop\notlar-keystore\` ve CI'dan
   kaldırılmış Windows artefaktını anlatıyor → güncelle ya da sil.
+  **Yapıldı:** README, YAPILACAKLAR, CLAUDE.md (test sayısı, bulut Flutter, graphify iddiası: kanca yok, grafik bayat — `graphify` bulut ortamında yok, güncellenemedi).
 
 **Faz 1 — senin yapacakların (konsol/cihaz):**
 - [ ] F1.1/F1.4 kural ve fonksiyon değişiklikleri main'e girince CI deploy
@@ -163,7 +173,10 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
 - [ ] Play Console: arka plan konum beyanı (+ açık bilgilendirme videosu),
   gizlilik politikasını herkese açık adrese koy.
 - [ ] F1.5 sonrası **Windows sürümünü yeniden derle** ve tüm cihazları güncelle;
-  sonra `config/app.minBuild`'i konsoldan güncel sürüme çek.
+  sonra konsolda `config/app` belgesine `minClient: 1` yaz (ileride yeni veri
+  biçimi gelince `kClientDataVersion` ile birlikte artırılır — bkz. F1.5).
+- [ ] Firebase konsolu → **Crashlytics**'i etkinleştir; ilk `[apk]`
+  derlemesinden sonra açılışta çökme yok mu bak (KALANLAR).
 
 ---
 

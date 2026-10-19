@@ -2978,7 +2978,7 @@ class AppLocalizationsZh extends AppLocalizations {
       'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => 'Ad (en az 3 harf) ya da tam e-posta';
 
   @override
   String get friendsSearchTab => 'Ara';
@@ -5145,4 +5145,67 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get voiceOfflineInfo => '如果手机已下载语言包，语音会在不联网的情况下转写；否则会自动使用在线识别。';
+
+  @override
+  String get discoverable => '允许通过姓名找到我';
+
+  @override
+  String get discoverableInfo =>
+      '开启后，他人可在“查找联系人”中通过你姓名的前 3 个字母或完整邮箱找到你。关闭后，只有知道你邮箱的人才能发送请求。';
+
+  @override
+  String get friendsSearchNeedsGoogle => '请使用 Google 账号登录以搜索联系人。';
+
+  @override
+  String get friendsSearchRateLimited => '搜索过于频繁，请一分钟后重试。';
+
+  @override
+  String get updateRequiredBody => '此版本已过旧：笔记以只读方式打开。请更新应用以免数据受损。';
+
+  @override
+  String get updateAction => '更新';
+
+  @override
+  String get attachmentUnsupportedTitle => '请更新应用以打开此附件';
+
+  @override
+  String get attachmentUnsupportedBody => '此附件是在较新版本的应用中添加的。当前版本无法显示，但会原样保留。';
+
+  @override
+  String noteTooLarge(String size, String part) {
+    return '笔记过大（$size / 1024 KB）— 最大部分：$part。请将部分内容移到单独的笔记，否则可能无法保存。';
+  }
+
+  @override
+  String get noteSizeBody => '正文';
+
+  @override
+  String get noteSizeItems => '列表项';
+
+  @override
+  String get noteSizePageNotes => '页面笔记';
+
+  @override
+  String noteSaveRejected(String reason) {
+    return '笔记无法保存到服务器：$reason';
+  }
+
+  @override
+  String get errorLogShare => '分享错误日志';
+
+  @override
+  String get errorLogInfo => '最近的错误仅保存在此设备上，除非你分享，否则不会发送到任何地方。';
+
+  @override
+  String get errorLogEmpty => '没有记录的错误。';
+
+  @override
+  String get crashReports => '发送崩溃报告';
+
+  @override
+  String get crashReportsInfo =>
+      '应用崩溃时，会向 Firebase Crashlytics 发送不含笔记内容的技术报告（仅限 Android）。';
+
+  @override
+  String get noteTooLargeShort => '笔记超过 1 MiB 上限';
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/search_fold.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import 'note_card.dart';
@@ -98,7 +99,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
         data: (all) => ValueListenableBuilder<TextEditingValue>(
           valueListenable: _searchController,
           builder: (context, value, _) {
-            final needle = value.text.trim().toLowerCase();
+            final needle = foldForSearch(value.text.trim());
             // Eşleşme kuralı ana ekranınkiyle AYNI işlevden gelir.
             final notes = needle.isEmpty
                 ? all

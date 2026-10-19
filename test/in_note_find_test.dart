@@ -6,11 +6,12 @@ import 'package:notlar/features/notes/presentation/editor/text_wrap.dart';
 /// Not içi CANLI arama (kullanıcı isteği 2026-09-26: "not içi aramada
 /// sayfada canlı aranmalı … aranınca orayı odaklasın").
 void main() {
-  test('katlama uzunluğu korur, Türkçe I/İ/ı/i eşit sayılır', () {
+  test('katlama uzunluğu korur, Türkçe I/İ/ı/i ve aksanlar eşit sayılır', () {
     const text = 'İSTANBUL Ilık ıŞIK';
     final folded = foldForSearch(text);
     expect(folded.length, text.length);
-    expect(folded, 'istanbul ilik işik');
+    // F1.8 (2026-10-19): ş/ğ/ü/ö/ç da katlanır — "isik" "ışık"ı bulur.
+    expect(folded, 'istanbul ilik isik');
   });
 
   test('düz metinde bütün eşleşmeler, tampon konumlarıyla', () {

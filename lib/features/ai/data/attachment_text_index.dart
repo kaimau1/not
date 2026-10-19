@@ -163,7 +163,8 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
       AttachmentKind.audio ||
       AttachmentKind.video ||
       AttachmentKind.slide ||
-      AttachmentKind.text => false,
+      AttachmentKind.text ||
+      AttachmentKind.unknown => false,
     };
   }
 
