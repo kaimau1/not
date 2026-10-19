@@ -2420,5 +2420,49 @@
         "type": "String"
       }
     }
+  },
+  "voiceAutoStop": "Sessizlikte bitir",
+  "@voiceAutoStop": {
+    "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
+  },
+  "voiceAutoStopInfo": "Konuşman bitince birkaç saniyelik sessizlikten sonra dinleme kendiliğinden biter.",
+  "@voiceAutoStopInfo": {
+    "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
+  },
+  "voiceSmartCommands": "Akıllı komutlar",
+  "@voiceSmartCommands": {
+    "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
+  },
+  "voiceSmartCommandsInfo": "Konuşurken şunları diyebilirsin: “son kelimeyi sil”, “son iki kelimeyi sil”, “son cümleyi sil”, “X yerine Y yaz”, “son kelime Y olacak”, “yeni satır”, “geri al”, “hepsini sil”, “dinlemeyi bitir”. Yazmaya kaldığın yerden, en sondan devam eder.",
+  "@voiceSmartCommandsInfo": {
+    "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
+  },
+  "voiceAutoStopSoon": "Sessizlik — birazdan biter",
+  "@voiceAutoStopSoon": {
+    "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
+  },
+  "voiceCmdDeleted": "Silindi",
+  "@voiceCmdDeleted": {
+    "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
+  },
+  "voiceCmdReplaced": "Değiştirildi",
+  "@voiceCmdReplaced": {
+    "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
+  },
+  "voiceCmdNewLine": "Yeni satır",
+  "@voiceCmdNewLine": {
+    "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
+  },
+  "voiceCmdUndone": "Geri alındı",
+  "@voiceCmdUndone": {
+    "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
+  },
+  "voiceCmdCleared": "Temizlendi",
+  "@voiceCmdCleared": {
+    "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
+  },
+  "fullscreenExit": "Tam ekrandan çık",
+  "@fullscreenExit": {
+    "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
   }
 }

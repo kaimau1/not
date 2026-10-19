@@ -1041,5 +1041,16 @@
   "attachmentSavedAs": "Zapisano {name}",
   "attachmentSaveAsFailed": "Nie udało się zapisać pliku",
   "sharedHubTitle": "Odebrane i udostępnione",
-  "sharedHubInbox": "Odebrane"
+  "sharedHubInbox": "Odebrane",
+  "voiceAutoStop": "Zatrzymaj po ciszy",
+  "voiceAutoStopInfo": "Gdy skończysz mówić, słuchanie zatrzyma się samo po kilku sekundach ciszy.",
+  "voiceSmartCommands": "Inteligentne polecenia",
+  "voiceSmartCommandsInfo": "Podczas mówienia możesz powiedzieć: „delete last word”, „delete last sentence”, „replace X with Y”, „new line”, „undo”, „clear all”, „stop listening” (po turecku: „son kelimeyi sil”…). Potem pisanie trwa od końca.",
+  "voiceAutoStopSoon": "Cisza — zaraz koniec",
+  "voiceCmdDeleted": "Usunięto",
+  "voiceCmdReplaced": "Zastąpiono",
+  "voiceCmdNewLine": "Nowa linia",
+  "voiceCmdUndone": "Cofnięto",
+  "voiceCmdCleared": "Wyczyszczono",
+  "fullscreenExit": "Zamknij pełny ekran"
 }

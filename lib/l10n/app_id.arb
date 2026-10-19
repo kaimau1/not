@@ -1041,5 +1041,16 @@
   "attachmentSavedAs": "{name} disimpan",
   "attachmentSaveAsFailed": "Tidak dapat menyimpan file",
   "sharedHubTitle": "Diterima & dibagikan",
-  "sharedHubInbox": "Diterima"
+  "sharedHubInbox": "Diterima",
+  "voiceAutoStop": "Berhenti saat hening",
+  "voiceAutoStopInfo": "Setelah Anda selesai bicara, mendengarkan berhenti sendiri setelah beberapa detik hening.",
+  "voiceSmartCommands": "Perintah pintar",
+  "voiceSmartCommandsInfo": "Saat bicara Anda bisa mengucapkan: “delete last word”, “delete last sentence”, “replace X with Y”, “new line”, “undo”, “clear all”, “stop listening” (bahasa Turki: “son kelimeyi sil”…). Lalu penulisan berlanjut dari akhir.",
+  "voiceAutoStopSoon": "Hening — segera berhenti",
+  "voiceCmdDeleted": "Dihapus",
+  "voiceCmdReplaced": "Diganti",
+  "voiceCmdNewLine": "Baris baru",
+  "voiceCmdUndone": "Dibatalkan",
+  "voiceCmdCleared": "Dibersihkan",
+  "fullscreenExit": "Keluar layar penuh"
 }

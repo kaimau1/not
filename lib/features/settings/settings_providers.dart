@@ -578,6 +578,45 @@ class VoiceButtonModeNotifier extends Notifier<VoiceButtonMode> {
   }
 }
 
+/// AKILLI DİNLEME: sesli not sessizlikte kendiliğinden bitsin mi
+/// (bkz. `SilenceGate`). Varsayılan AÇIK — kullanıcı bulgusu 2026-10-19:
+/// "sesli not oto sonlanmıyor, sürekli dinlemeye devam ediyor".
+final voiceAutoStopProvider = NotifierProvider<VoiceAutoStopNotifier, bool>(
+  VoiceAutoStopNotifier.new,
+);
+
+class VoiceAutoStopNotifier extends Notifier<bool> {
+  static const _key = 'voice_auto_stop';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
+/// AKILLI KOMUTLAR: dikte sırasında "son kelimeyi sil", "X yerine Y yaz"
+/// gibi düzeltmeler uygulansın mı (bkz. `applyVoiceCommands`). Varsayılan
+/// AÇIK; bu sözleri gerçekten not olarak yazdırmak isteyen kapatabilir.
+final voiceSmartCommandsProvider =
+    NotifierProvider<VoiceSmartCommandsNotifier, bool>(
+      VoiceSmartCommandsNotifier.new,
+    );
+
+class VoiceSmartCommandsNotifier extends Notifier<bool> {
+  static const _key = 'voice_smart_commands';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
 /// Günlük brifing bildirimi ayarları.
 class BriefingSettings {
   const BriefingSettings({required this.enabled, required this.minutes});

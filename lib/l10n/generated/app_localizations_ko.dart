@@ -5117,4 +5117,38 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get sharedHubInbox => '받은 노트';
+
+  @override
+  String get voiceAutoStop => '침묵 시 중지';
+
+  @override
+  String get voiceAutoStopInfo => '말을 마치면 몇 초간 조용할 때 자동으로 듣기를 멈춥니다.';
+
+  @override
+  String get voiceSmartCommands => '스마트 명령';
+
+  @override
+  String get voiceSmartCommandsInfo =>
+      '말하는 동안 “delete last word”, “delete last sentence”, “replace X with Y”, “new line”, “undo”, “clear all”, “stop listening”이라고 말할 수 있습니다(터키어: “son kelimeyi sil” 등). 이후 끝에서부터 이어서 씁니다.';
+
+  @override
+  String get voiceAutoStopSoon => '조용함 — 곧 종료';
+
+  @override
+  String get voiceCmdDeleted => '삭제됨';
+
+  @override
+  String get voiceCmdReplaced => '바뀜';
+
+  @override
+  String get voiceCmdNewLine => '새 줄';
+
+  @override
+  String get voiceCmdUndone => '실행 취소됨';
+
+  @override
+  String get voiceCmdCleared => '지움';
+
+  @override
+  String get fullscreenExit => '전체 화면 종료';
 }

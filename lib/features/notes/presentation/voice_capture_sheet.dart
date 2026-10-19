@@ -13,6 +13,7 @@ import 'package:record/record.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/language_names.dart';
+import '../../../core/utils/voice_commands.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../settings/settings_providers.dart';
 import '../data/device_speech.dart';
@@ -185,6 +186,27 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   /// SES EKİYLE oluşur (bkz. [_toAudioFallback]).
   String? _readyAudioPath;
 
+  /// Tanıyıcının gönderdiği HAM metin; ekrandaki [_text] bunun sesli
+  /// komutları uygulanmış hâli (bkz. [applyVoiceCommands]). Ham metin
+  /// saklanır ki "Akıllı komutlar" dinlerken kapatılıp açılabilsin.
+  String _rawText = '';
+
+  /// AKILLI DİNLEME: sessizlikte kendiliğinden bitiş (bkz. [SilenceGate]).
+  SilenceGate? _gate;
+  Timer? _silenceTimer;
+
+  /// Sessizlik geri sayımının oranı (0–1); arayüzde ince şerit.
+  double _silence = 0;
+
+  /// Kayıt yolunda (yerleşik tanıma yok) ses seviyesi — konuşma kanıtı.
+  StreamSubscription<Amplitude>? _ampSub;
+
+  /// Uygulanan komut sayısı: artışı yeni bir komut demektir (kısa geri
+  /// bildirim + titreşim).
+  int _commandCount = 0;
+  String _feedback = '';
+  Timer? _feedbackTimer;
+
   @override
   void initState() {
     super.initState();
@@ -224,12 +246,16 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         }
         _speechSub = DeviceSpeech.listen().listen(
           (event) {
-            // Levhada ses seviyesi kullanılmaz; dalga çubukları zamana bağlı
-            // (seviyeye bağlasaydık kayıt yolunda dalga hiç oynamazdı).
+            // Dalga çubukları zamana bağlı (seviyeye bağlasaydık kayıt
+            // yolunda dalga hiç oynamazdı); seviye yalnız sessizlik kapısını
+            // besler.
+            final level = event.level;
+            if (level != null) _gate?.onLevel(level, DateTime.now());
             final text = event.text;
-            if (text == null) return;
-            _text = text;
-            if (mounted) setState(() {});
+            if (text == null || text == _rawText) return;
+            _rawText = text;
+            _gate?.onSpeech(DateTime.now());
+            _applyRaw();
           },
           onError: (Object e) {
             // Yerli taraf oturumu kendisi kapattıysa (uygulama arka plana
@@ -254,6 +280,11 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       } else {
         await _startRecording();
       }
+      _gate = SilenceGate()..start(DateTime.now());
+      _silenceTimer = Timer.periodic(
+        const Duration(milliseconds: 250),
+        (_) => _checkSilence(),
+      );
       _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
         if (!mounted) return;
         setState(() => _elapsed += const Duration(seconds: 1));
@@ -284,13 +315,102 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 64000),
       path: _recordPath!,
     );
+    // Döküm bitişte yapıldığından konuşmanın kanıtı ses seviyesidir: -30
+    // dBFS üstü konuşma sayılır (sessiz oda ~-50, konuşma -25…-10).
+    _ampSub = recorder
+        .onAmplitudeChanged(const Duration(milliseconds: 200))
+        .listen((a) {
+          final now = DateTime.now();
+          _gate?.onLevel(((a.current + 50) / 50).clamp(0.0, 1.0), now);
+          if (a.current > -30) _gate?.onSpeech(now);
+        });
+  }
+
+  /// Ham metne (ayar açıksa) sesli komutları uygular ve ekranı tazeler.
+  void _applyRaw() {
+    if (!ref.read(voiceSmartCommandsProvider)) {
+      _text = _rawText;
+      if (mounted) setState(() {});
+      return;
+    }
+    final outcome = applyVoiceCommands(_rawText);
+    _text = outcome.text;
+    if (outcome.commands > _commandCount) {
+      _commandCount = outcome.commands;
+      _showCommandFeedback(outcome.last);
+    } else if (outcome.commands < _commandCount) {
+      // Tanıyıcı kuyruğu düzeltti ve komut metinden çıktı: sayaç geri iner
+      // ki aynı komut yeniden söylenince yine geri bildirim versin.
+      _commandCount = outcome.commands;
+    }
+    if (mounted) setState(() {});
+    if (outcome.stop && _phase == _Phase.listening) _finish();
+  }
+
+  void _showCommandFeedback(VoiceCommand? command) {
+    if (command == null || command == VoiceCommand.stop || !mounted) return;
+    final l10n = context.l10n;
+    HapticFeedback.selectionClick();
+    _feedbackTimer?.cancel();
+    _feedback = switch (command) {
+      VoiceCommand.deleteWords ||
+      VoiceCommand.deleteSentence => l10n.voiceCmdDeleted,
+      VoiceCommand.clearAll => l10n.voiceCmdCleared,
+      VoiceCommand.replace => l10n.voiceCmdReplaced,
+      VoiceCommand.newLine => l10n.voiceCmdNewLine,
+      VoiceCommand.undo => l10n.voiceCmdUndone,
+      VoiceCommand.stop => '',
+    };
+    _feedbackTimer = Timer(const Duration(milliseconds: 1400), () {
+      if (mounted) setState(() => _feedback = '');
+    });
+  }
+
+  /// Sessizlik kapısını yoklar: süre dolduysa dinlemeyi bitirir.
+  ///
+  /// Basılı-tut modunda parmak düğmedeyken hiç bitirmez — kullanıcı
+  /// "dinlemeye devam" diyor demektir. Kayıt yolunda (Windows) hiç konuşma
+  /// algılanmadıysa da bitirmez: seviye eşiği mikrofona göre değişir, yanlış
+  /// bir "duyulmadı" konuşulanı çöpe atardı; o yolda bitiş yalnız konuşmadan
+  /// SONRAKİ sessizlikle olur.
+  void _checkSilence() {
+    final gate = _gate;
+    if (gate == null || _phase != _Phase.listening || !mounted) return;
+    final enabled =
+        ref.read(voiceAutoStopProvider) &&
+        !_pressed &&
+        (_useSpeech || gate.heard);
+    final now = DateTime.now();
+    final progress = enabled ? gate.progress(now) : 0.0;
+    // Geri sayım şeridi yalnız konuşmadan SONRAKİ sessizlikte görünür;
+    // levha açılır açılmaz dolmaya başlayan bir şerit telaş yaratırdı.
+    final shown = gate.heard && progress > 0.3 ? progress : 0.0;
+    if ((shown - _silence).abs() >= 0.05 || (shown == 0) != (_silence == 0)) {
+      setState(() => _silence = shown);
+    }
+    if (enabled && gate.shouldStop(now)) _finish();
   }
 
   /// Dinlemeyi bitirir ve gözden geçirme evresine geçer (artık POP ETMEZ).
   Future<void> _finish() async {
-    if (_phase != _Phase.listening) return;
+    // Bitiş birden çok yoldan gelebilir (düğme, sessizlik, "dinlemeyi
+    // bitir" komutu, yerli kapanış); aşağıdaki beklemeler sürerken evre hâlâ
+    // listening olduğundan ikinci çağrı ayrıca kesilir.
+    if (_phase != _Phase.listening || _finishing) return;
+    _finishing = true;
+    try {
+      await _finishListening();
+    } finally {
+      _finishing = false;
+    }
+  }
+
+  bool _finishing = false;
+
+  Future<void> _finishListening() async {
     final l10n = context.l10n;
     _ticker?.cancel();
+    _stopSilenceWatch();
 
     if (_useSpeech) {
       // Son sonucu al, akışı kapat.
@@ -321,7 +441,11 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       }
       // Döküm elde: ses dosyasına artık gerek yok.
       File(path).delete().ignore();
-      _toReview(text.trim(), l10n.voiceNothingHeard);
+      // Kayıt yolunda komutlar dökümden SONRA uygulanır (canlı metin yok).
+      final clean = ref.read(voiceSmartCommandsProvider)
+          ? applyVoiceCommands(text).text
+          : text;
+      _toReview(clean.trim(), l10n.voiceNothingHeard);
     } on GeminiException catch (e) {
       _toAudioFallback(path, e.isAuthError ? l10n.aiNoApiKey : e.message);
     } catch (e) {
@@ -371,6 +495,9 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     if (!mounted) return;
     setState(() {
       _text = '';
+      _rawText = '';
+      _commandCount = 0;
+      _feedback = '';
       _editController.clear();
       _elapsed = Duration.zero;
       _phase = _Phase.idle;
@@ -482,9 +609,20 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     if (mounted) Navigator.pop(context);
   }
 
+  /// Sessizlik izlemesini ve kayıt yolunun seviye aboneliğini bırakır.
+  void _stopSilenceWatch() {
+    _silenceTimer?.cancel();
+    _silenceTimer = null;
+    _ampSub?.cancel();
+    _ampSub = null;
+    _gate = null;
+    _silence = 0;
+  }
+
   Future<void> _teardown() async {
     _ticker?.cancel();
     _ticker = null;
+    _stopSilenceWatch();
     await _speechSub?.cancel();
     _speechSub = null;
     try {
@@ -501,6 +639,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
 
   void _fail(String message) {
     _ticker?.cancel();
+    _stopSilenceWatch();
     if (!mounted) return;
     setState(() {
       _phase = _Phase.error;
@@ -511,6 +650,9 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   @override
   void dispose() {
     _ticker?.cancel();
+    _silenceTimer?.cancel();
+    _ampSub?.cancel();
+    _feedbackTimer?.cancel();
     _speechSub?.cancel();
     _recorder?.dispose();
     _editController.dispose();
@@ -617,8 +759,26 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
           _header(l10n, scheme, listening),
           const SizedBox(height: 4),
           Flexible(child: _transcript(scheme, listening)),
-          const SizedBox(height: 10),
+          // Sessizlik geri sayımı: dolunca dinleme kendiliğinden biter.
+          SizedBox(
+            height: 3,
+            child: AnimatedOpacity(
+              opacity: listening && _silence > 0 ? 1 : 0,
+              duration: const Duration(milliseconds: 200),
+              child: LinearProgressIndicator(
+                key: const ValueKey('voice-silence-bar'),
+                value: _silence,
+                minHeight: 3,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 7),
           _Waveform(active: listening, scheme: scheme),
+          if (_phase != _Phase.ready) ...[
+            const SizedBox(height: 6),
+            _smartRow(l10n, scheme),
+          ],
           if (_errorMessage.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
@@ -684,6 +844,10 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                 Text(
                   ready
                       ? l10n.voiceCaptureEditHint
+                      : _feedback.isNotEmpty
+                      ? '✓ $_feedback'
+                      : listening && _silence > 0
+                      ? l10n.voiceAutoStopSoon
                       : l10n.voiceCapturePunctuation(language),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -809,6 +973,83 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Dinlerken iki küçük anahtar: akıllı komutlar ve sessizlikte bitir.
+  /// Ayarlar'daki anahtarlarla AYNI tercihtir; levhada durmalarının sebebi
+  /// keşfedilebilirlik — komut listesi ⓘ'de.
+  Widget _smartRow(AppLocalizations l10n, ColorScheme scheme) {
+    final smart = ref.watch(voiceSmartCommandsProvider);
+    final autoStop = ref.watch(voiceAutoStopProvider);
+    Widget chip({
+      required Key key,
+      required String label,
+      required IconData icon,
+      required bool selected,
+      required ValueChanged<bool> onSelected,
+    }) => FilterChip(
+      key: key,
+      avatar: Icon(icon, size: 16),
+      showCheckmark: false,
+      label: Text(
+        label,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+      ),
+      labelPadding: const EdgeInsetsDirectional.only(end: 2),
+      visualDensity: VisualDensity.compact,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      selected: selected,
+      onSelected: onSelected,
+    );
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 6,
+      runSpacing: 4,
+      children: [
+        chip(
+          key: const ValueKey('voice-smart-toggle'),
+          label: l10n.voiceSmartCommands,
+          icon: Icons.auto_fix_high,
+          selected: smart,
+          onSelected: (v) {
+            ref.read(voiceSmartCommandsProvider.notifier).set(v);
+            // Ekrandaki metin yeni tercihle baştan hesaplanır.
+            _commandCount = 0;
+            _applyRaw();
+          },
+        ),
+        chip(
+          key: const ValueKey('voice-autostop-toggle'),
+          label: l10n.voiceAutoStop,
+          icon: Icons.hourglass_bottom,
+          selected: autoStop,
+          onSelected: (v) => ref.read(voiceAutoStopProvider.notifier).set(v),
+        ),
+        IconButton(
+          key: const ValueKey('voice-commands-help'),
+          tooltip: l10n.voiceSmartCommands,
+          visualDensity: VisualDensity.compact,
+          iconSize: 18,
+          icon: Icon(Icons.info_outline, color: scheme.onSurfaceVariant),
+          onPressed: () => showDialog<void>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: Text(l10n.voiceSmartCommands),
+              content: Text(
+                '${l10n.voiceSmartCommandsInfo}\n\n${l10n.voiceAutoStopInfo}',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: Text(l10n.close),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

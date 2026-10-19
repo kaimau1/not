@@ -9,6 +9,7 @@ import 'package:video_player/video_player.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
 import '../../../../core/widgets/customizable.dart';
+import '../../../../core/utils/immersive.dart';
 import '../../../../core/utils/pip.dart';
 import '../../../../core/utils/video_time.dart';
 import '../../domain/attachment.dart';
@@ -36,12 +37,22 @@ class VideoViewerScreen extends StatelessWidget {
     required this.attachment,
     this.start,
     this.onNoteAt,
+    this.fullscreen = false,
+    this.onClose,
   });
 
   final Attachment attachment;
 
   /// Açılış konumu (nottaki zaman damgasına dokunulduysa).
   final Duration? start;
+
+  /// Doğrudan GERÇEK tam ekranda aç (bkz. [ImmersiveVideo]) — sabit
+  /// bölmenin ⤢ düğmesi.
+  final bool fullscreen;
+
+  /// Ekran kapanırken son oynatma konumu (bilinmiyorsa null): çağıran,
+  /// küçük oynatıcıyı kaldığı yerden sürdürür.
+  final ValueChanged<Duration?>? onClose;
 
   /// "Bu ana not al": verilirse üst çubukta düğme çıkar; basınca ekran
   /// kapanır ve not o anın damgasıyla açılır (bkz. editör `_noteAtVideoTime`).
@@ -53,11 +64,15 @@ class VideoViewerScreen extends StatelessWidget {
           attachment: attachment,
           start: start,
           onNoteAt: onNoteAt,
+          fullscreen: fullscreen,
+          onClose: onClose,
         )
       : _LocalVideoViewer(
           attachment: attachment,
           start: start,
           onNoteAt: onNoteAt,
+          fullscreen: fullscreen,
+          onClose: onClose,
         );
 }
 
@@ -89,11 +104,19 @@ class NoteAtTimeButton extends StatelessWidget {
 }
 
 class _LocalVideoViewer extends StatefulWidget {
-  const _LocalVideoViewer({required this.attachment, this.start, this.onNoteAt});
+  const _LocalVideoViewer({
+    required this.attachment,
+    this.start,
+    this.onNoteAt,
+    this.fullscreen = false,
+    this.onClose,
+  });
 
   final Attachment attachment;
   final Duration? start;
   final ValueChanged<Duration>? onNoteAt;
+  final bool fullscreen;
+  final ValueChanged<Duration?>? onClose;
 
   @override
   State<_LocalVideoViewer> createState() => _LocalVideoViewerState();
@@ -116,10 +139,30 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
   /// yazıyordu. Parmak kalkınca [_seekTo] ile bir kez uygulanır.
   double? _dragMs;
 
+  /// Gerçek tam ekran (sistem çubukları gizli, yatay videoda yan dönük).
+  bool _immersive = false;
+
+  /// Tam ekranda denetimler görünür mü — videoya dokunmak açıp kapar.
+  bool _controlsVisible = true;
+
   @override
   void initState() {
     super.initState();
     _open();
+  }
+
+  Future<void> _setImmersive(bool value) async {
+    if (_immersive == value) return;
+    setState(() {
+      _immersive = value;
+      _controlsVisible = true;
+    });
+    if (value) {
+      // Dikey video yan çevrilmez: tam ekranda dik kalması doğrusu.
+      await ImmersiveVideo.enter(landscape: _aspect.width >= _aspect.height);
+    } else {
+      await ImmersiveVideo.exit();
+    }
   }
 
   Future<void> _open() async {
@@ -140,6 +183,7 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
         await controller.seekTo(start);
       }
       setState(() => _controller = controller);
+      if (widget.fullscreen) unawaited(_setImmersive(true));
       // Oynarken ana ekrana çıkmak küçük pencereye alır (bkz. youtube_viewer).
       unawaited(PictureInPicture.setAuto(true, aspect: _aspect));
       final pip = await PictureInPicture.supported();
@@ -153,11 +197,16 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
   @override
   void dispose() {
     PictureInPicture.setAuto(false);
+    if (_immersive) unawaited(ImmersiveVideo.exit());
+    widget.onClose?.call(_controller?.value.position);
     _controller?.dispose();
     super.dispose();
   }
 
-  Future<void> _seekTo(VideoPlayerController controller, Duration target) async {
+  Future<void> _seekTo(
+    VideoPlayerController controller,
+    Duration target,
+  ) async {
     final duration = controller.value.duration;
     var clamped = target;
     if (clamped < Duration.zero) clamped = Duration.zero;
@@ -168,8 +217,10 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
   /// Geri/ileri atlama düğmeleri (süreler kişiselleştirmeden — bkz.
   /// Personalize): kaydırıcıyla hassas nokta bulmak zor, kısa atlamalar en
   /// sık istenen hareket.
-  Future<void> _skip(VideoPlayerController controller, int seconds) =>
-      _seekTo(controller, controller.value.position + Duration(seconds: seconds));
+  Future<void> _skip(VideoPlayerController controller, int seconds) => _seekTo(
+    controller,
+    controller.value.position + Duration(seconds: seconds),
+  );
 
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<bool>(
@@ -193,6 +244,9 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
         ),
       );
     }
+    if (_immersive && controller != null) {
+      return _immersiveView(context, controller);
+    }
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -203,6 +257,13 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
           style: const TextStyle(fontSize: 14),
         ),
         actions: [
+          if (controller != null)
+            IconButton(
+              key: const ValueKey('viewer-video-fullscreen'),
+              tooltip: context.l10n.fullscreen,
+              icon: const Icon(Icons.fullscreen),
+              onPressed: () => _setImmersive(true),
+            ),
           if (widget.onNoteAt != null && controller != null)
             NoteAtTimeButton(
               onPressed: () {
@@ -265,6 +326,86 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
                   ),
                 ],
               ),
+      ),
+    );
+  }
+
+  /// GERÇEK TAM EKRAN: video ekranı kaplar; dokunuş denetimleri açıp kapar,
+  /// sol üstteki ⤡ ya da geri tuşu tam ekrandan çıkar (ekrandan değil).
+  Widget _immersiveView(
+    BuildContext context,
+    VideoPlayerController controller,
+  ) {
+    final aspect = controller.value.aspectRatio == 0
+        ? 16 / 9
+        : controller.value.aspectRatio;
+    return PopScope(
+      canPop: widget.fullscreen,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _setImmersive(false);
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => setState(() => _controlsVisible = !_controlsVisible),
+              child: Center(
+                child: AspectRatio(
+                  aspectRatio: aspect,
+                  child: VideoPlayer(controller),
+                ),
+              ),
+            ),
+            if (_controlsVisible) ...[
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [Colors.black54, Colors.transparent],
+                    ),
+                  ),
+                  child: _Controls(
+                    controller: controller,
+                    dragMs: _dragMs,
+                    onDragChanged: (ms) => setState(() => _dragMs = ms),
+                    onDragEnd: (ms) async {
+                      await _seekTo(
+                        controller,
+                        Duration(milliseconds: ms.round()),
+                      );
+                      if (mounted) setState(() => _dragMs = null);
+                    },
+                    onSkip: (seconds) => _skip(controller, seconds),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 8,
+                left: 8,
+                child: SafeArea(
+                  child: IconButton.filledTonal(
+                    key: const ValueKey('viewer-video-fullscreen-exit'),
+                    tooltip: context.l10n.fullscreenExit,
+                    icon: const Icon(Icons.fullscreen_exit),
+                    // Doğrudan tam ekranda açıldıysa (sabit bölmeden) çıkış
+                    // notun kendisine döner; yoksa oynatıcı ekranına.
+                    onPressed: () => widget.fullscreen
+                        ? Navigator.of(context).maybePop()
+                        : _setImmersive(false),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -380,9 +521,12 @@ class _Controls extends StatelessWidget {
                         ? context.l10n.mediaPause
                         : context.l10n.mediaPlay,
                     iconSize: 34,
-                    icon: Icon(value.isPlaying ? Icons.pause : Icons.play_arrow),
-                    onPressed: () =>
-                        value.isPlaying ? controller.pause() : controller.play(),
+                    icon: Icon(
+                      value.isPlaying ? Icons.pause : Icons.play_arrow,
+                    ),
+                    onPressed: () => value.isPlaying
+                        ? controller.pause()
+                        : controller.play(),
                   ),
                   const SizedBox(width: 8),
                   IconButton(

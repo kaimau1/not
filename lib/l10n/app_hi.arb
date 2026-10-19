@@ -1041,5 +1041,16 @@
   "attachmentSavedAs": "{name} सहेजा गया",
   "attachmentSaveAsFailed": "फ़ाइल सहेजी नहीं जा सकी",
   "sharedHubTitle": "प्राप्त और साझा",
-  "sharedHubInbox": "प्राप्त"
+  "sharedHubInbox": "प्राप्त",
+  "voiceAutoStop": "चुप होने पर रोकें",
+  "voiceAutoStopInfo": "बोलना ख़त्म होने पर कुछ सेकंड की चुप्पी के बाद सुनना अपने आप रुक जाता है।",
+  "voiceSmartCommands": "स्मार्ट कमांड",
+  "voiceSmartCommandsInfo": "बोलते समय आप कह सकते हैं: “delete last word”, “delete last sentence”, “replace X with Y”, “new line”, “undo”, “clear all”, “stop listening” (तुर्की में: “son kelimeyi sil”…)। फिर लिखना अंत से जारी रहता है।",
+  "voiceAutoStopSoon": "चुप्पी — जल्द रुकेगा",
+  "voiceCmdDeleted": "हटाया गया",
+  "voiceCmdReplaced": "बदला गया",
+  "voiceCmdNewLine": "नई पंक्ति",
+  "voiceCmdUndone": "पूर्ववत किया",
+  "voiceCmdCleared": "साफ़ किया",
+  "fullscreenExit": "फ़ुल स्क्रीन से बाहर"
 }

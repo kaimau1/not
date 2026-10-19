@@ -5197,4 +5197,39 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get sharedHubInbox => 'Gelen';
+
+  @override
+  String get voiceAutoStop => 'Sessizlikte bitir';
+
+  @override
+  String get voiceAutoStopInfo =>
+      'Konuşman bitince birkaç saniyelik sessizlikten sonra dinleme kendiliğinden biter.';
+
+  @override
+  String get voiceSmartCommands => 'Akıllı komutlar';
+
+  @override
+  String get voiceSmartCommandsInfo =>
+      'Konuşurken şunları diyebilirsin: “son kelimeyi sil”, “son iki kelimeyi sil”, “son cümleyi sil”, “X yerine Y yaz”, “son kelime Y olacak”, “yeni satır”, “geri al”, “hepsini sil”, “dinlemeyi bitir”. Yazmaya kaldığın yerden, en sondan devam eder.';
+
+  @override
+  String get voiceAutoStopSoon => 'Sessizlik — birazdan biter';
+
+  @override
+  String get voiceCmdDeleted => 'Silindi';
+
+  @override
+  String get voiceCmdReplaced => 'Değiştirildi';
+
+  @override
+  String get voiceCmdNewLine => 'Yeni satır';
+
+  @override
+  String get voiceCmdUndone => 'Geri alındı';
+
+  @override
+  String get voiceCmdCleared => 'Temizlendi';
+
+  @override
+  String get fullscreenExit => 'Tam ekrandan çık';
 }

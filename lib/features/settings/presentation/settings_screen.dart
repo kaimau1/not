@@ -1846,6 +1846,25 @@ class _VoiceModeSelector extends ConsumerWidget {
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
+        // AKILLI DİNLEME (2026-10-19): sesli yakalama levhasındaki iki
+        // anahtarın kalıcı karşılığı.
+        SwitchListTile(
+          key: const ValueKey('settings-voice-autostop'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.voiceAutoStop),
+          subtitle: Text(l10n.voiceAutoStopInfo),
+          value: ref.watch(voiceAutoStopProvider),
+          onChanged: (v) => ref.read(voiceAutoStopProvider.notifier).set(v),
+        ),
+        SwitchListTile(
+          key: const ValueKey('settings-voice-smart'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.voiceSmartCommands),
+          subtitle: Text(l10n.voiceSmartCommandsInfo),
+          value: ref.watch(voiceSmartCommandsProvider),
+          onChanged: (v) =>
+              ref.read(voiceSmartCommandsProvider.notifier).set(v),
+        ),
       ],
     );
   }

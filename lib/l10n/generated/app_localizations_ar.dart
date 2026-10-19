@@ -5189,4 +5189,39 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sharedHubInbox => 'المستلمة';
+
+  @override
+  String get voiceAutoStop => 'إيقاف عند الصمت';
+
+  @override
+  String get voiceAutoStopInfo =>
+      'عند انتهائك من الكلام، يتوقف الاستماع تلقائيًا بعد بضع ثوانٍ من الصمت.';
+
+  @override
+  String get voiceSmartCommands => 'أوامر ذكية';
+
+  @override
+  String get voiceSmartCommandsInfo =>
+      'أثناء الكلام يمكنك قول: “delete last word” و“delete last sentence” و“replace X with Y” و“new line” و“undo” و“clear all” و“stop listening” (بالتركية: “son kelimeyi sil”…). ثم تتابع الكتابة من النهاية.';
+
+  @override
+  String get voiceAutoStopSoon => 'صمت — سيتوقف قريبًا';
+
+  @override
+  String get voiceCmdDeleted => 'تم الحذف';
+
+  @override
+  String get voiceCmdReplaced => 'تم الاستبدال';
+
+  @override
+  String get voiceCmdNewLine => 'سطر جديد';
+
+  @override
+  String get voiceCmdUndone => 'تم التراجع';
+
+  @override
+  String get voiceCmdCleared => 'تم المسح';
+
+  @override
+  String get fullscreenExit => 'الخروج من ملء الشاشة';
 }

@@ -32,6 +32,7 @@ import '../../../../core/personalize.dart';
 import '../../../../core/utils/debouncer.dart';
 import '../../../../core/utils/doc_picker.dart';
 import '../../../../core/utils/format_bytes.dart';
+import '../../../../core/utils/voice_commands.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/attachment_tag.dart';
 import '../../../../core/utils/link_text.dart';
@@ -1278,6 +1279,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     openEditorNoteIds.remove(widget.noteId);
     // Dikte açıkken editörden çıkılabiliyor: mikrofon ekranla birlikte
     // kapanmazsa arka planda dinlemeye devam ederdi.
+    _dictationSilenceTimer?.cancel();
     if (_dictationSub != null) {
       _dictationSub!.cancel();
       _dictationSub = null;
@@ -5240,6 +5242,43 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   );
 
   /// Sabit bölmedeki videonun "Bu ana not al" düğmesi.
+  /// Sabit videonun ⤢ düğmesi: GERÇEK tam ekran, KALDIĞI YERDEN.
+  ///
+  /// Kullanıcı bulgusu 2026-10-19: "video sabitken tam ekran yapma seçeneği
+  /// yok". Düğme oynatıcı ekranını açıyordu ama video baştan başlıyor, ekran
+  /// dikey ve çubuklu kalıyordu. Artık küçük oynatıcının konumu okunur, o
+  /// durdurulur, tam ekran o andan açılır; kapanınca küçük oynatıcı tam
+  /// ekranda kalınan yere sarılır ve oynuyorsa oynamayı sürdürür.
+  Future<void> _openPinnedVideoFullscreen(Attachment video) async {
+    // Dosyası henüz bu cihazda olmayan video için eski yol (indirme/uyarı).
+    if (!video.isWebVideo && !localFileExists(video.localPath)) {
+      _openAttachmentTag(video, editing: true);
+      return;
+    }
+    final source = _videoHub.sourceFor(video.id);
+    final wasPlaying = source?.isPlaying ?? false;
+    final at = await source?.position();
+    await source?.pause();
+    if (!mounted) return;
+    Duration? end;
+    await Navigator.of(context).push(
+      MediaRoute<void>(
+        builder: (_) => VideoViewerScreen(
+          attachment: video,
+          start: at,
+          fullscreen: true,
+          onClose: (position) => end = position,
+        ),
+      ),
+    );
+    final back = end;
+    // Küçük oynatıcı tam ekran açıkken yeniden kurulmuş olabilir: güncelini al.
+    final latest = _videoHub.sourceFor(video.id);
+    if (!mounted || latest == null) return;
+    if (back != null) await latest.seekTo(back);
+    if (wasPlaying) await latest.play();
+  }
+
   Future<void> _noteAtPinned(Attachment video) async {
     final source = _videoHub.sourceFor(video.id);
     if (source == null || !await _videoHub.noteAt(source)) {
@@ -5369,7 +5408,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             // SAYFAYA koyar — şeritten sabitlenmiş belge/metin/ses de dahil.
             onUnpin: () =>
                 unawaited(_setAttachmentView(pinned, AttachmentView.floating)),
-            onOpen: () => _openAttachmentTag(pinned, editing: true),
+            onOpen: pinned.kind == AttachmentKind.video
+                ? () => unawaited(_openPinnedVideoFullscreen(pinned))
+                : () => _openAttachmentTag(pinned, editing: true),
             onCopyLink: () => _copyAttachment(pinned),
             onChanged: _updateAttachment,
             viewSwitch: _viewSwitchFor(note, pinned, dense: true),
@@ -6673,6 +6714,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// gitmesin, satırı bölünmesin.
   String _dictationShown = '';
 
+  /// AKILLI DİNLEME (2026-10-19): sade mikrofon da sessizlikte kendiliğinden
+  /// biter (bkz. [SilenceGate]) — eskiden yalnız ikinci dokunuşla ya da
+  /// yerli tarafın 2 dakikalık boşta kapanışıyla duruyordu.
+  SilenceGate? _dictationGate;
+  Timer? _dictationSilenceTimer;
+
   bool get _dictating => _dictationSub != null;
 
   /// Sade mikrofon: dikteyi başlatır, açıksa bitirir.
@@ -6712,10 +6759,29 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _dictationLength = 0;
     _dictationShown = '';
 
+    final gate = SilenceGate()..start(DateTime.now());
+    _dictationGate = gate;
+    _dictationSilenceTimer = Timer.periodic(
+      const Duration(milliseconds: 250),
+      (timer) {
+        if (!mounted || !identical(_dictationGate, gate)) {
+          timer.cancel();
+          return;
+        }
+        if (!_dictating) return;
+        if (ref.read(voiceAutoStopProvider) &&
+            gate.shouldStop(DateTime.now())) {
+          unawaited(_stopDictation());
+        }
+      },
+    );
     final sub = DeviceSpeech.listen().listen(
       (event) {
+        final level = event.level;
+        if (level != null) gate.onLevel(level, DateTime.now());
         final text = event.text;
         if (text == null || !mounted) return;
+        gate.onSpeech(DateTime.now());
         _writeDictationAtCaret(text);
       },
       onError: (Object e) {
@@ -6745,6 +6811,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final sub = _dictationSub;
     if (sub == null) return;
     _dictationSub = null;
+    _dictationSilenceTimer?.cancel();
+    _dictationSilenceTimer = null;
+    _dictationGate = null;
     _dictationTarget = null;
     _dictationLength = 0;
     _dictationShown = '';
@@ -6773,13 +6842,34 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final merged = dictationMerge(_dictationShown, spoken);
     if (merged == _dictationShown) return;
     _dictationShown = merged;
-    // Yazma kuralının kendisi saf bir işlevde (sınanabilsin diye).
-    final result = dictationReplace(
-      logical,
-      _dictationAt,
-      _dictationLength,
-      merged,
-    );
+    // AKILLI KOMUTLAR: birleştirme HAM metin üstünde yapılır (geriye gitmeme
+    // kuralı silme komutunu yutmasın), komutlar sonra uygulanır — "son
+    // kelimeyi sil" söylenince aralık kısalır, yazma yine en sondan sürer.
+    var written = merged;
+    if (ref.read(voiceSmartCommandsProvider)) {
+      final outcome = applyVoiceCommands(merged);
+      written = outcome.text;
+      if (outcome.stop) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => unawaited(_stopDictation()),
+        );
+      }
+    }
+    // Yazma kuralının kendisi saf bir işlevde (sınanabilsin diye). Komutlar
+    // her şeyi sildiyse ("hepsini sil") aralık boşaltılır — dictationReplace
+    // boş parçada metne dokunmaz.
+    final start = _dictationAt.clamp(0, logical.length);
+    final result = written.trim().isEmpty
+        ? (
+            text: logical.replaceRange(
+              start,
+              (start + _dictationLength).clamp(start, logical.length),
+              '',
+            ),
+            caret: start,
+            length: 0,
+          )
+        : dictationReplace(logical, _dictationAt, _dictationLength, written);
     final text = result.text;
     if (text == logical) return;
     _dictationLength = result.length;

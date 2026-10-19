@@ -1041,5 +1041,16 @@
   "attachmentSavedAs": "{name} opgeslagen",
   "attachmentSaveAsFailed": "Bestand kon niet worden opgeslagen",
   "sharedHubTitle": "Ontvangen en gedeeld",
-  "sharedHubInbox": "Ontvangen"
+  "sharedHubInbox": "Ontvangen",
+  "voiceAutoStop": "Stoppen bij stilte",
+  "voiceAutoStopInfo": "Als je klaar bent met praten, stopt het luisteren vanzelf na een paar seconden stilte.",
+  "voiceSmartCommands": "Slimme opdrachten",
+  "voiceSmartCommandsInfo": "Tijdens het spreken kun je zeggen: “delete last word”, “delete last sentence”, “replace X with Y”, “new line”, “undo”, “clear all”, “stop listening” (in het Turks: “son kelimeyi sil” …). Daarna gaat het verder aan het einde.",
+  "voiceAutoStopSoon": "Stilte — stopt zo",
+  "voiceCmdDeleted": "Verwijderd",
+  "voiceCmdReplaced": "Vervangen",
+  "voiceCmdNewLine": "Nieuwe regel",
+  "voiceCmdUndone": "Ongedaan gemaakt",
+  "voiceCmdCleared": "Gewist",
+  "fullscreenExit": "Volledig scherm sluiten"
 }

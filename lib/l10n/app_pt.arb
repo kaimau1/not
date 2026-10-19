@@ -1041,5 +1041,16 @@
   "attachmentSavedAs": "{name} salvo",
   "attachmentSaveAsFailed": "Não foi possível salvar o arquivo",
   "sharedHubTitle": "Recebidas e compartilhadas",
-  "sharedHubInbox": "Recebidas"
+  "sharedHubInbox": "Recebidas",
+  "voiceAutoStop": "Parar no silêncio",
+  "voiceAutoStopInfo": "Quando você termina de falar, a escuta para sozinha após alguns segundos de silêncio.",
+  "voiceSmartCommands": "Comandos inteligentes",
+  "voiceSmartCommandsInfo": "Enquanto fala, você pode dizer: “delete last word”, “delete last sentence”, “replace X with Y”, “new line”, “undo”, “clear all”, “stop listening” (em turco: “son kelimeyi sil”…). Depois continua do fim.",
+  "voiceAutoStopSoon": "Silêncio — vai parar em breve",
+  "voiceCmdDeleted": "Excluído",
+  "voiceCmdReplaced": "Substituído",
+  "voiceCmdNewLine": "Nova linha",
+  "voiceCmdUndone": "Desfeito",
+  "voiceCmdCleared": "Limpo",
+  "fullscreenExit": "Sair da tela cheia"
 }

@@ -5216,4 +5216,39 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get sharedHubInbox => 'Diterima';
+
+  @override
+  String get voiceAutoStop => 'Berhenti saat hening';
+
+  @override
+  String get voiceAutoStopInfo =>
+      'Setelah Anda selesai bicara, mendengarkan berhenti sendiri setelah beberapa detik hening.';
+
+  @override
+  String get voiceSmartCommands => 'Perintah pintar';
+
+  @override
+  String get voiceSmartCommandsInfo =>
+      'Saat bicara Anda bisa mengucapkan: “delete last word”, “delete last sentence”, “replace X with Y”, “new line”, “undo”, “clear all”, “stop listening” (bahasa Turki: “son kelimeyi sil”…). Lalu penulisan berlanjut dari akhir.';
+
+  @override
+  String get voiceAutoStopSoon => 'Hening — segera berhenti';
+
+  @override
+  String get voiceCmdDeleted => 'Dihapus';
+
+  @override
+  String get voiceCmdReplaced => 'Diganti';
+
+  @override
+  String get voiceCmdNewLine => 'Baris baru';
+
+  @override
+  String get voiceCmdUndone => 'Dibatalkan';
+
+  @override
+  String get voiceCmdCleared => 'Dibersihkan';
+
+  @override
+  String get fullscreenExit => 'Keluar layar penuh';
 }

@@ -1041,5 +1041,16 @@
   "attachmentSavedAs": "{name} сохранён",
   "attachmentSaveAsFailed": "Не удалось сохранить файл",
   "sharedHubTitle": "Полученные и общие",
-  "sharedHubInbox": "Полученные"
+  "sharedHubInbox": "Полученные",
+  "voiceAutoStop": "Стоп при тишине",
+  "voiceAutoStopInfo": "Когда вы закончите говорить, запись остановится сама после нескольких секунд тишины.",
+  "voiceSmartCommands": "Умные команды",
+  "voiceSmartCommandsInfo": "Во время диктовки можно сказать: «delete last word», «delete last sentence», «replace X with Y», «new line», «undo», «clear all», «stop listening» (по-турецки: «son kelimeyi sil»…). Затем текст продолжается с конца.",
+  "voiceAutoStopSoon": "Тишина — скоро остановится",
+  "voiceCmdDeleted": "Удалено",
+  "voiceCmdReplaced": "Заменено",
+  "voiceCmdNewLine": "Новая строка",
+  "voiceCmdUndone": "Отменено",
+  "voiceCmdCleared": "Очищено",
+  "fullscreenExit": "Выйти из полноэкранного режима"
 }

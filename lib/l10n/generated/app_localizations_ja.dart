@@ -5111,4 +5111,38 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sharedHubInbox => '受信';
+
+  @override
+  String get voiceAutoStop => '無音で停止';
+
+  @override
+  String get voiceAutoStopInfo => '話し終えると、数秒の無音のあと自動で聞き取りを終了します。';
+
+  @override
+  String get voiceSmartCommands => 'スマートコマンド';
+
+  @override
+  String get voiceSmartCommandsInfo =>
+      '話しながら「delete last word」「delete last sentence」「replace X with Y」「new line」「undo」「clear all」「stop listening」と言えます（トルコ語：「son kelimeyi sil」など）。その後は末尾から続けて書かれます。';
+
+  @override
+  String get voiceAutoStopSoon => '無音 — まもなく終了';
+
+  @override
+  String get voiceCmdDeleted => '削除しました';
+
+  @override
+  String get voiceCmdReplaced => '置き換えました';
+
+  @override
+  String get voiceCmdNewLine => '改行';
+
+  @override
+  String get voiceCmdUndone => '元に戻しました';
+
+  @override
+  String get voiceCmdCleared => '消去しました';
+
+  @override
+  String get fullscreenExit => '全画面を終了';
 }

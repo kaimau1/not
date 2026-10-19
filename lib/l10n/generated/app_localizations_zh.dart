@@ -5084,4 +5084,38 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sharedHubInbox => '收到';
+
+  @override
+  String get voiceAutoStop => '静音时停止';
+
+  @override
+  String get voiceAutoStopInfo => '说完后，静音几秒钟会自动停止聆听。';
+
+  @override
+  String get voiceSmartCommands => '智能指令';
+
+  @override
+  String get voiceSmartCommandsInfo =>
+      '说话时可以说：“delete last word”、“delete last sentence”、“replace X with Y”、“new line”、“undo”、“clear all”、“stop listening”（土耳其语：“son kelimeyi sil”等）。之后从末尾继续书写。';
+
+  @override
+  String get voiceAutoStopSoon => '静音 — 即将停止';
+
+  @override
+  String get voiceCmdDeleted => '已删除';
+
+  @override
+  String get voiceCmdReplaced => '已替换';
+
+  @override
+  String get voiceCmdNewLine => '换行';
+
+  @override
+  String get voiceCmdUndone => '已撤销';
+
+  @override
+  String get voiceCmdCleared => '已清空';
+
+  @override
+  String get fullscreenExit => '退出全屏';
 }

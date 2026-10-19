@@ -24,6 +24,25 @@ const double kPinnedUnpinHeight = 72;
 /// Medya ile not arasındaki çubuğun (tutamaç + düğmeler) yüksekliği.
 const double kPinnedBarHeight = 44;
 
+/// Klavye açıkken bölmenin altında notun yazılan satırına kalan en az yer.
+const double kPinnedNoteMinHeight = 72;
+
+/// Bölmenin en büyük yüksekliği.
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-10-19: "video sabitken klavye
+/// açıldığında video yukarı itiliyor biraz"): sınır, O ANKİ yüksekliğin
+/// %70'iydi. Klavye oturunca gövde klavye kadar kısalıyor, sınır da onunla
+/// birlikte düşüyordu — bölme büzülüyor, video küçülüp yukarı kayıyor, çubuk
+/// zıplıyordu. Artık oran klavyesiz (en büyük görülen) yükseklikten alınır;
+/// klavye açıkken bölme YERİNDE kalır, yalnız not satırına
+/// [kPinnedNoteMinHeight] kalmayacaksa küçülür.
+double pinnedMaxHeight({required double available, required double stable}) {
+  final byFraction = stable * kPinnedMaxFraction;
+  final byRoom = available - kPinnedBarHeight - kPinnedNoteMinHeight;
+  final max = byFraction < byRoom ? byFraction : byRoom;
+  return max < kPinnedMinHeight ? kPinnedMinHeight : max;
+}
+
 /// Yeni sabitlenen medyanın ilk yüksekliği: ekran genişliğinde medyanın kendi
 /// oranı, ekranın %45'ini geçmeden. Oranı bilinmeyen video 16:9 sayılır.
 double defaultPinnedHeight(Attachment media, Size screen) {
@@ -196,6 +215,22 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     max < kPinnedMinHeight ? kPinnedMinHeight : max,
   );
 
+  /// Klavyesiz (en büyük görülen) yükseklik — genişlik değişince sıfırlanır
+  /// (yönelim, pencere). Bkz. [pinnedMaxHeight].
+  double _stableWidth = -1;
+  double _stableHeight = 0;
+
+  double _stable(BoxConstraints c) {
+    if (c.maxWidth != _stableWidth) {
+      _stableWidth = c.maxWidth;
+      _stableHeight = 0;
+    }
+    if (c.maxHeight.isFinite && c.maxHeight > _stableHeight) {
+      _stableHeight = c.maxHeight;
+    }
+    return _stableHeight;
+  }
+
   bool get _unpinArmed =>
       (_live != null && _live! < kPinnedUnpinHeight) ||
       (_pulling && _pullDown > 96);
@@ -213,7 +248,10 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     final timed = isVideo || isAudio;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final max = constraints.maxHeight * kPinnedMaxFraction;
+        final max = pinnedMaxHeight(
+          available: constraints.maxHeight,
+          stable: _stable(constraints),
+        );
         final live = _live;
         // Sürüklerken bölme sınırın altına da iner (geri bırakma hissi);
         // bırakınca sınıra oturur ya da sayfaya döner.

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,6 +10,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/immersive.dart';
 import '../../../../core/utils/pip.dart';
 import '../../../../core/utils/video_time.dart';
 import '../../../../core/utils/youtube.dart';
@@ -279,6 +281,8 @@ class YouTubeViewerScreen extends StatefulWidget {
     required this.attachment,
     this.start,
     this.onNoteAt,
+    this.fullscreen = false,
+    this.onClose,
   });
 
   final Attachment attachment;
@@ -289,6 +293,12 @@ class YouTubeViewerScreen extends StatefulWidget {
   /// "Bu ana not al" (bkz. [VideoViewerScreen.onNoteAt]).
   final ValueChanged<Duration>? onNoteAt;
 
+  /// Doğrudan gerçek tam ekranda aç (bkz. [VideoViewerScreen.fullscreen]).
+  final bool fullscreen;
+
+  /// Kapanırken son bilinen konum (bkz. [VideoViewerScreen.onClose]).
+  final ValueChanged<Duration?>? onClose;
+
   @override
   State<YouTubeViewerScreen> createState() => _YouTubeViewerScreenState();
 }
@@ -296,6 +306,24 @@ class YouTubeViewerScreen extends StatefulWidget {
 class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
   WebViewController? _controller;
   bool _pipSupported = false;
+
+  /// Gerçek tam ekran (bkz. [ImmersiveVideo]).
+  bool _immersive = false;
+
+  /// Konum saniyede bir okunur: kapanışta (dispose, eşzamanlı) WebView'a
+  /// soru sorulamaz, çağırana son bilinen konum verilir.
+  Timer? _positionPoll;
+  Duration? _lastPosition;
+
+  Future<void> _setImmersive(bool value) async {
+    if (_immersive == value) return;
+    setState(() => _immersive = value);
+    if (value) {
+      await ImmersiveVideo.enter(landscape: true);
+    } else {
+      await ImmersiveVideo.exit();
+    }
+  }
 
   String get _url => widget.attachment.webUrl;
 
@@ -308,6 +336,19 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
     );
     if (controller == null) return;
     _controller = controller;
+    _lastPosition = widget.start;
+    if (widget.onClose != null) {
+      final source = _WebViewTimeSource(widget.attachment.id, controller);
+      _positionPoll = Timer.periodic(const Duration(seconds: 1), (_) async {
+        final position = await source.position();
+        if (position != null) _lastPosition = position;
+      });
+    }
+    if (widget.fullscreen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _setImmersive(true);
+      });
+    }
     PictureInPicture.setAuto(true);
     PictureInPicture.supported().then((value) {
       if (mounted) setState(() => _pipSupported = value);
@@ -319,6 +360,9 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
     // Oynatıcı kapanınca otomatik geçiş KAPANMALI: yoksa not listesinde ana
     // ekrana çıkmak da uygulamayı küçük pencereye alırdı.
     PictureInPicture.setAuto(false);
+    _positionPoll?.cancel();
+    if (_immersive) unawaited(ImmersiveVideo.exit());
+    widget.onClose?.call(_lastPosition);
     super.dispose();
   }
 
@@ -424,49 +468,87 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
       // — WebView yeniden kurulsaydı video baştan başlardı.
       child: player,
       builder: (context, inPip, player) {
-        return Scaffold(
-          backgroundColor: Colors.black,
-          appBar: inPip
-              ? null
-              : AppBar(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  title: Text(
-                    widget.attachment.fileName,
-                    style: const TextStyle(fontSize: 14),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  actions: [
-                    if (widget.onNoteAt != null)
-                      NoteAtTimeButton(onPressed: _noteAt),
-                    if (_pipSupported)
+        final bare = inPip || _immersive;
+        return PopScope(
+          // Tam ekranda geri tuşu önce TAM EKRANDAN çıkar (sabit bölmeden
+          // doğrudan tam ekran açıldıysa nota döner).
+          canPop: !_immersive || widget.fullscreen,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && _immersive) _setImmersive(false);
+          },
+          child: Scaffold(
+            backgroundColor: Colors.black,
+            appBar: bare
+                ? null
+                : AppBar(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    title: Text(
+                      widget.attachment.fileName,
+                      style: const TextStyle(fontSize: 14),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    actions: [
+                      if (widget.onNoteAt != null)
+                        NoteAtTimeButton(onPressed: _noteAt),
                       IconButton(
-                        tooltip: l10n.pictureInPicture,
-                        icon: const Icon(Icons.picture_in_picture_alt),
-                        onPressed: () => PictureInPicture.enter(),
+                        key: const ValueKey('youtube-fullscreen'),
+                        tooltip: l10n.fullscreen,
+                        icon: const Icon(Icons.fullscreen),
+                        onPressed: () => _setImmersive(true),
                       ),
-                    IconButton(
-                      tooltip: l10n.copyVideoLink,
-                      icon: const Icon(Icons.link),
-                      onPressed: _copyLink,
-                    ),
-                    IconButton(
-                      tooltip: l10n.youTubeOpenExternal,
-                      icon: const Icon(Icons.open_in_new),
-                      onPressed: _openExternal,
-                    ),
-                  ],
+                      if (_pipSupported)
+                        IconButton(
+                          tooltip: l10n.pictureInPicture,
+                          icon: const Icon(Icons.picture_in_picture_alt),
+                          onPressed: () => PictureInPicture.enter(),
+                        ),
+                      IconButton(
+                        tooltip: l10n.copyVideoLink,
+                        icon: const Icon(Icons.link),
+                        onPressed: _copyLink,
+                      ),
+                      IconButton(
+                        tooltip: l10n.youTubeOpenExternal,
+                        icon: const Icon(Icons.open_in_new),
+                        onPressed: _openExternal,
+                      ),
+                    ],
+                  ),
+            // Gövdenin YAPISI PiP'te de aynı (yalnız güvenli alan kalkar):
+            // pencere zaten 16:9, oran kutusu onu tümüyle doldurur.
+            // Yığın HER ZAMAN var, WebView hep İLK çocuk: tam ekrana girip
+            // çıkarken ağaçtaki yeri değişseydi WebView yeniden kurulur ve
+            // video baştan başlardı (PiP'teki kuralın aynısı).
+            body: Stack(
+              fit: StackFit.expand,
+              children: [
+                SafeArea(
+                  top: !bare,
+                  bottom: !bare,
+                  left: !bare,
+                  right: !bare,
+                  child: Center(
+                    child: AspectRatio(aspectRatio: 16 / 9, child: player),
+                  ),
                 ),
-          // Gövdenin YAPISI PiP'te de aynı (yalnız güvenli alan kalkar):
-          // pencere zaten 16:9, oran kutusu onu tümüyle doldurur.
-          body: SafeArea(
-            top: !inPip,
-            bottom: !inPip,
-            left: !inPip,
-            right: !inPip,
-            child: Center(
-              child: AspectRatio(aspectRatio: 16 / 9, child: player),
+                if (_immersive && !inPip)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: SafeArea(
+                      child: IconButton.filledTonal(
+                        key: const ValueKey('youtube-fullscreen-exit'),
+                        tooltip: l10n.fullscreenExit,
+                        icon: const Icon(Icons.fullscreen_exit),
+                        onPressed: () => widget.fullscreen
+                            ? Navigator.of(context).maybePop()
+                            : _setImmersive(false),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         );
