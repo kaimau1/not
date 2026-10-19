@@ -9679,6 +9679,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu dosya türü desteklenmiyor'**
   String get quickAddFileUnsupported;
+
+  /// No description provided for @chatScopeAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm notlar'**
+  String get chatScopeAll;
+
+  /// No description provided for @chatScopeNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu not'**
+  String get chatScopeNote;
+
+  /// No description provided for @chatScopeDoc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu belge'**
+  String get chatScopeDoc;
+
+  /// No description provided for @chatModeQa.
+  ///
+  /// In tr, this message translates to:
+  /// **'Soru-cevap'**
+  String get chatModeQa;
+
+  /// No description provided for @chatModeBrainstorm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Beyin fırtınası'**
+  String get chatModeBrainstorm;
+
+  /// No description provided for @aiChatRowTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sohbet'**
+  String get aiChatRowTitle;
+
+  /// No description provided for @aiChatRowInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notla, belgesiyle ya da tüm notlarla; soru-cevap ya da beyin fırtınası'**
+  String get aiChatRowInfo;
 }
 
 class _AppLocalizationsDelegate

@@ -22,8 +22,7 @@ import '../data/ai_report.dart';
 import 'ai_hub_screen.dart' show AiPointsBar;
 import 'listen_screen.dart';
 import '../data/gemini_service.dart';
-import 'brainstorm_screen.dart';
-import 'doc_chat_screen.dart';
+import 'ai_chat_screen.dart';
 import '../../../core/widgets/app_sheet.dart';
 
 /// "Notu değiştir" geri çağırması: AI çıktısı notun içeriğiyle değiştirilir;
@@ -697,50 +696,24 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         limit: ref.watch(aiDailyLimitProvider),
                       ),
                     ),
-                  // Notun tamamıyla (gövde + PDF/görsel ekleri) sohbet.
+                  // TEK SOHBET (F3.3): not, belgesi ya da tüm notlar;
+                  // soru-cevap ya da beyin fırtınası — kapsam/kip ekranda.
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: _AiRow(
                       icon: Icons.forum_outlined,
-                      title: l10n.noteChatTitle,
-                      subtitle: l10n.noteChatIntro,
-                      onTap:
-                          widget.note.isEmpty &&
-                              widget.note.attachments.isEmpty
-                          ? null
-                          : () {
-                              Navigator.pop(context);
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) =>
-                                      DocChatScreen(note: widget.note),
-                                ),
-                              );
-                            },
+                      title: l10n.aiChatRowTitle,
+                      subtitle: l10n.aiChatRowInfo,
+                      onTap: () {
+                        Navigator.pop(context);
+                        AiChatScreen.open(
+                          context,
+                          note: widget.note,
+                          onAddToNote: widget.onAppendText,
+                        );
+                      },
                     ),
                   ),
-                  // **AI İLE BERABER DÜŞÜN** (kullanıcı isteği 2026-08-18):
-                  // sohbetten bilerek AYRI bir satır — o soru-cevap, bu
-                  // GENERATİF bir beyin fırtınası (bkz. brainstorm_screen.dart).
-                  // Boş notta da anlamlı: AI başlıktan yola çıkıp ana hat
-                  // önerir, o yüzden `note.isEmpty` burada engel değil.
-                  if (widget.onAppendText != null)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: _AiRow(
-                        icon: Icons.lightbulb_outline,
-                        title: l10n.brainstormTitle,
-                        subtitle: l10n.brainstormRowInfo,
-                        onTap: () {
-                          Navigator.pop(context);
-                          BrainstormScreen.open(
-                            context,
-                            widget.note,
-                            onAddToNote: widget.onAppendText,
-                          );
-                        },
-                      ),
-                    ),
                   _sectionLabel(context, l10n.aiSectionNote),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -859,10 +832,11 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                           title: Text(l10n.ask),
                           onTap: () {
                             Navigator.pop(context);
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => DocChatScreen(attachment: pdf),
-                              ),
+                            AiChatScreen.open(
+                              context,
+                              note: widget.note,
+                              document: pdf,
+                              scope: ChatScope.document,
                             );
                           },
                         ),

@@ -5374,4 +5374,26 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quickAddFileUnsupported => 'Bu dosya türü desteklenmiyor';
+
+  @override
+  String get chatScopeAll => 'Tüm notlar';
+
+  @override
+  String get chatScopeNote => 'Bu not';
+
+  @override
+  String get chatScopeDoc => 'Bu belge';
+
+  @override
+  String get chatModeQa => 'Soru-cevap';
+
+  @override
+  String get chatModeBrainstorm => 'Beyin fırtınası';
+
+  @override
+  String get aiChatRowTitle => 'Sohbet';
+
+  @override
+  String get aiChatRowInfo =>
+      'Bu notla, belgesiyle ya da tüm notlarla; soru-cevap ya da beyin fırtınası';
 }

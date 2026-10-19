@@ -1985,5 +1985,12 @@
   "quickAddTemplates": "Templates",
   "quickAddFileWhat": "What should we do with this file?",
   "quickAddFileAsNote": "Add to a note",
-  "quickAddFileUnsupported": "This file type is not supported"
+  "quickAddFileUnsupported": "This file type is not supported",
+  "chatScopeAll": "All notes",
+  "chatScopeNote": "This note",
+  "chatScopeDoc": "This document",
+  "chatModeQa": "Q&A",
+  "chatModeBrainstorm": "Brainstorm",
+  "aiChatRowTitle": "Chat",
+  "aiChatRowInfo": "With this note, its document or all notes; Q&A or brainstorm"
 }

@@ -2612,5 +2612,12 @@
   "quickAddTemplates": "Şablon",
   "quickAddFileWhat": "Bu dosyayla ne yapalım?",
   "quickAddFileAsNote": "Notuna ekle",
-  "quickAddFileUnsupported": "Bu dosya türü desteklenmiyor"
+  "quickAddFileUnsupported": "Bu dosya türü desteklenmiyor",
+  "chatScopeAll": "Tüm notlar",
+  "chatScopeNote": "Bu not",
+  "chatScopeDoc": "Bu belge",
+  "chatModeQa": "Soru-cevap",
+  "chatModeBrainstorm": "Beyin fırtınası",
+  "aiChatRowTitle": "Sohbet",
+  "aiChatRowInfo": "Bu notla, belgesiyle ya da tüm notlarla; soru-cevap ya da beyin fırtınası"
 }

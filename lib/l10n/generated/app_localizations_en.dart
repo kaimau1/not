@@ -5388,4 +5388,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickAddFileUnsupported => 'This file type is not supported';
+
+  @override
+  String get chatScopeAll => 'All notes';
+
+  @override
+  String get chatScopeNote => 'This note';
+
+  @override
+  String get chatScopeDoc => 'This document';
+
+  @override
+  String get chatModeQa => 'Q&A';
+
+  @override
+  String get chatModeBrainstorm => 'Brainstorm';
+
+  @override
+  String get aiChatRowTitle => 'Chat';
+
+  @override
+  String get aiChatRowInfo =>
+      'With this note, its document or all notes; Q&A or brainstorm';
 }
