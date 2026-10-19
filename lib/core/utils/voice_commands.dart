@@ -25,18 +25,26 @@ enum VoiceCommand {
   newLine,
   undo,
   stop,
+
+  /// "virgül koy", "soru işareti" …
+  punctuation,
+
+  /// "başlık X olsun": notun başlığı (metne girmez).
+  title,
 }
 
 /// [applyVoiceCommands] sonucu.
 ///
 /// [commands] uygulanan komut SAYISI: arayüz yeni komutu bu sayının artışından
 /// anlar (her olayda baştan hesaplandığı için "yeni mi" bilgisi başka yoldan
-/// gelmez). [stop] "dinlemeyi bitir" söylendi demektir.
+/// gelmez). [stop] "dinlemeyi bitir" söylendi demektir. [title] "başlık X
+/// olsun" ile söylenen başlık (yoksa null; birden çok kez söylendiyse sonuncu).
 typedef VoiceCommandOutcome = ({
   String text,
   int commands,
   VoiceCommand? last,
   bool stop,
+  String? title,
 });
 
 /// Ham dökümdeki sesli komutları uygular, metnin temiz hâlini döndürür.
@@ -44,8 +52,14 @@ typedef VoiceCommandOutcome = ({
 /// Segmentler (tanıyıcının duraklamada kestiği parçalar) `\n` ile gelir ve
 /// korunur. Komut segmentin herhangi bir yerinde olabilir; öncesi metne
 /// eklenir, komut uygulanır, sonrası devam eder.
-VoiceCommandOutcome applyVoiceCommands(String raw) {
-  var out = '';
+///
+/// [base] "Devam et" ile sürdürülen dinlemede ÖNCEKİ metin: yeni konuşma
+/// onun sonuna (boşlukla) eklenir ve komutlar onu da düzenleyebilir ("son
+/// kelimeyi sil" önceki metnin son kelimesini siler).
+VoiceCommandOutcome applyVoiceCommands(String raw, {String base = ''}) {
+  var out = base.trim();
+  String? title;
+  var first = true;
   final history = <String>[];
   var count = 0;
   var stop = false;
@@ -61,12 +75,14 @@ VoiceCommandOutcome applyVoiceCommands(String raw) {
         ? '$out\n'
         : out;
     pendingBreak = false;
-    return _append(base, piece);
+    return _append(base, _capitalizeAfterSentence(base, piece));
   }
 
   for (final segment in raw.split('\n')) {
     if (segment.trim().isEmpty) continue;
-    pendingBreak = out.isNotEmpty;
+    // Önceki metnin (base) devamı ilk segmentte satır değil BOŞLUKLA eklenir.
+    pendingBreak = out.isNotEmpty && !first;
+    first = false;
     // "Geri al" gündelik dilde de geçer ("parayı geri al"); yalnız TEK BAŞINA
     // söylendiğinde (kendi segmenti) komuttur.
     if (_undoWhole.hasMatch(_lower(segment.trim()))) {
@@ -92,10 +108,11 @@ VoiceCommandOutcome applyVoiceCommands(String raw) {
       count++;
       last = match.kind;
       if (match.kind == VoiceCommand.stop) stop = true;
+      if (match.title != null) title = match.title;
       rest = rest.substring(match.end);
     }
   }
-  return (text: out, commands: count, last: last, stop: stop);
+  return (text: out, commands: count, last: last, stop: stop, title: title);
 }
 
 // ——— Eşleştirme ————————————————————————————————————————————————
@@ -145,7 +162,39 @@ final _undoInline = [
 final _newLine = [
   _re('$_b(?:yeni|alt)\\s+satır(?:a\\s+geç)?$_e'),
   _re('${_b}yeni\\s+paragraf$_e'),
-  _re('${_b}new\\s+(?:line|paragraph)$_e'),
+  // Liste notunda her satır bir madde olur (bkz. dashboard asList).
+  _re('$_b(?:yeni|sonraki)\\s+madde$_e'),
+  _re('${_b}new\\s+(?:line|paragraph|item)$_e'),
+  _re('${_b}next\\s+item$_e'),
+];
+
+/// NOKTALAMA: Android'in Türkçe tanıması noktalamada zayıf. Tek başına
+/// "nokta"/"virgül" gündelik dilde geçer ("bu nokta önemli", "üç virgül
+/// beş") — bu yüzden "… koy" ya da yalnız noktalamayı anlatan adlar.
+final _punctuation = <(RegExp, String)>[
+  (_re('${_b}noktalı\\s+virgül(?:\\s+koy)?$_e'), ';'),
+  (_re('${_b}iki\\s+nokta\\s+üst\\s+üste(?:\\s+koy)?$_e'), ':'),
+  (_re('${_b}nokta\\s+koy$_e'), '.'),
+  (_re('${_b}virgül\\s+koy$_e'), ','),
+  (_re('${_b}soru\\s+işareti(?:\\s+koy)?$_e'), '?'),
+  (_re('$_bünlem\\s+işareti(?:\\s+koy)?$_e'), '!'),
+  (_re('${_b}full\\s+stop$_e'), '.'),
+  (_re('${_b}insert\\s+(?:a\\s+)?comma$_e'), ','),
+  (_re('${_b}insert\\s+(?:a\\s+)?period$_e'), '.'),
+  (_re('${_b}question\\s+mark$_e'), '?'),
+  (_re('${_b}exclamation\\s+(?:mark|point)$_e'), '!'),
+];
+
+/// BAŞLIK: "başlık X olsun", "başlığı X yap", "set the title to X". Grup 1
+/// başlık (en çok 8 kelime).
+const _titleWords = r"([\p{L}\p{N}'’]+(?:\s+[\p{L}\p{N}'’]+){0,7}?)";
+final _title = [
+  _re('${_b}başlık\\s+$_titleWords\\s+olsun$_e'),
+  _re('${_b}başlığı\\s+$_titleWords\\s+(?:yap|olarak\\s+ayarla)$_e'),
+  _re(
+    '${_b}set\\s+(?:the\\s+)?title\\s+to\\s+'
+    "([\\p{L}\\p{N}'’]+(?:\\s+[\\p{L}\\p{N}'’]+){0,7})",
+  ),
 ];
 
 final _stop = [
@@ -193,12 +242,15 @@ final _replaceEnglish = _re(
 );
 
 class _Match {
-  _Match(this.start, this.end, this.kind, this.apply);
+  _Match(this.start, this.end, this.kind, this.apply, {this.title});
 
   final int start;
   final int end;
   final VoiceCommand kind;
   final String Function(String out) apply;
+
+  /// Yalnız [VoiceCommand.title]: söylenen başlık.
+  final String? title;
 }
 
 /// [rest] içindeki EN SOLDAKİ komut. [out] o ana kadarki metin — eski kelimeyi
@@ -258,6 +310,28 @@ _Match? _firstCommand(String rest, String out) {
         }),
       );
     }
+  }
+  for (final (re, mark) in _punctuation) {
+    final m = re.firstMatch(lower);
+    if (m != null) {
+      consider(
+        _Match(m.start, m.end, VoiceCommand.punctuation, (o) {
+          // Sondaki noktalama yenisiyle DEĞİŞİR ("." söylenip "?" denirse).
+          final t = o.trimRight().replaceFirst(RegExp(r'[.,;:!?…]+$'), '');
+          return t.isEmpty ? '' : '$t$mark';
+        }),
+      );
+    }
+  }
+  for (var i = 0; i < _title.length; i++) {
+    final m = _title[i].firstMatch(lower);
+    if (m == null) continue;
+    final title = _capitalizeFirst(
+      _original(rest, m, 1, atEnd: i == _title.length - 1),
+    );
+    consider(
+      _Match(m.start, endOf(m), VoiceCommand.title, (o) => o, title: title),
+    );
   }
   for (final re in _stop) {
     final m = re.firstMatch(lower);
@@ -395,6 +469,26 @@ int _lastIndexOfWord(String haystack, String needle) {
 }
 
 // ——— Yardımcılar ————————————————————————————————————————————————
+
+/// Cümle sonundan (. ! ?) sonra gelen parçanın ilk harfi büyür.
+String _capitalizeAfterSentence(String out, String piece) {
+  final t = out.trimRight();
+  if (t.isEmpty || !'.!?'.contains(t[t.length - 1])) return piece;
+  return _capitalizeFirst(piece);
+}
+
+/// İlk harfi Türkçe kurala göre büyütür (i → İ, ı → I).
+String _capitalizeFirst(String s) {
+  final i = s.indexOf(RegExp(r'\S'));
+  if (i < 0) return s;
+  final c = s[i];
+  final upper = switch (c) {
+    'i' => 'İ',
+    'ı' => 'I',
+    _ => c.toUpperCase(),
+  };
+  return '${s.substring(0, i)}$upper${s.substring(i + 1)}';
+}
 
 /// Parçayı metne ekler: gerekiyorsa araya tek boşluk.
 String _append(String out, String piece) {

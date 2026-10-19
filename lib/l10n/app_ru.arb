@@ -1045,12 +1045,19 @@
   "voiceAutoStop": "Стоп при тишине",
   "voiceAutoStopInfo": "Когда вы закончите говорить, запись остановится сама после нескольких секунд тишины.",
   "voiceSmartCommands": "Умные команды",
-  "voiceSmartCommandsInfo": "Во время диктовки можно сказать: «delete last word», «delete last sentence», «replace X with Y», «new line», «undo», «clear all», «stop listening» (по-турецки: «son kelimeyi sil»…). Затем текст продолжается с конца.",
+  "voiceSmartCommandsInfo": "Во время диктовки можно сказать: “delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening” (по-турецки: «son kelimeyi sil»…). Затем текст продолжается с конца.",
   "voiceAutoStopSoon": "Тишина — скоро остановится",
   "voiceCmdDeleted": "Удалено",
   "voiceCmdReplaced": "Заменено",
   "voiceCmdNewLine": "Новая строка",
   "voiceCmdUndone": "Отменено",
   "voiceCmdCleared": "Очищено",
-  "fullscreenExit": "Выйти из полноэкранного режима"
+  "fullscreenExit": "Выйти из полноэкранного режима",
+  "voiceCaptureContinue": "Продолжить",
+  "voiceCmdPunctuation": "Знак добавлен",
+  "voiceCmdTitle": "Заголовок задан",
+  "voiceSilenceLabel": "Ожидание",
+  "voiceSilenceShort": "Коротко",
+  "voiceSilenceNormal": "Обычно",
+  "voiceSilenceLong": "Долго"
 }

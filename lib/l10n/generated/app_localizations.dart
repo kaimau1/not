@@ -9411,7 +9411,7 @@ abstract class AppLocalizations {
   /// Akıllı sesli not / video tam ekran (2026-10-19)
   ///
   /// In tr, this message translates to:
-  /// **'Konuşurken şunları diyebilirsin: “son kelimeyi sil”, “son iki kelimeyi sil”, “son cümleyi sil”, “X yerine Y yaz”, “son kelime Y olacak”, “yeni satır”, “geri al”, “hepsini sil”, “dinlemeyi bitir”. Yazmaya kaldığın yerden, en sondan devam eder.'**
+  /// **'Konuşurken şunları diyebilirsin: “son kelimeyi sil”, “son iki kelimeyi sil”, “son cümleyi sil”, “X yerine Y yaz”, “son kelime Y olacak”, “yeni satır”, “yeni madde”, “nokta koy”, “virgül koy”, “soru işareti”, “başlık X olsun”, “geri al”, “hepsini sil”, “dinlemeyi bitir”. Yazmaya kaldığın yerden, en sondan devam eder.'**
   String get voiceSmartCommandsInfo;
 
   /// Akıllı sesli not / video tam ekran (2026-10-19)
@@ -9455,6 +9455,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tam ekrandan çık'**
   String get fullscreenExit;
+
+  /// Akıllı sesli not 3. tur (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Devam et'**
+  String get voiceCaptureContinue;
+
+  /// Akıllı sesli not 3. tur (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Noktalama eklendi'**
+  String get voiceCmdPunctuation;
+
+  /// Akıllı sesli not 3. tur (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık ayarlandı'**
+  String get voiceCmdTitle;
+
+  /// Akıllı sesli not 3. tur (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Bekleme süresi'**
+  String get voiceSilenceLabel;
+
+  /// Akıllı sesli not 3. tur (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Kısa'**
+  String get voiceSilenceShort;
+
+  /// Akıllı sesli not 3. tur (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Normal'**
+  String get voiceSilenceNormal;
+
+  /// Akıllı sesli not 3. tur (2026-10-19)
+  ///
+  /// In tr, this message translates to:
+  /// **'Uzun'**
+  String get voiceSilenceLong;
 }
 
 class _AppLocalizationsDelegate

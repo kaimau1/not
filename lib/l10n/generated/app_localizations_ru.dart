@@ -5236,7 +5236,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get voiceSmartCommandsInfo =>
-      'Во время диктовки можно сказать: «delete last word», «delete last sentence», «replace X with Y», «new line», «undo», «clear all», «stop listening» (по-турецки: «son kelimeyi sil»…). Затем текст продолжается с конца.';
+      'Во время диктовки можно сказать: “delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening” (по-турецки: «son kelimeyi sil»…). Затем текст продолжается с конца.';
 
   @override
   String get voiceAutoStopSoon => 'Тишина — скоро остановится';
@@ -5258,4 +5258,25 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get fullscreenExit => 'Выйти из полноэкранного режима';
+
+  @override
+  String get voiceCaptureContinue => 'Продолжить';
+
+  @override
+  String get voiceCmdPunctuation => 'Знак добавлен';
+
+  @override
+  String get voiceCmdTitle => 'Заголовок задан';
+
+  @override
+  String get voiceSilenceLabel => 'Ожидание';
+
+  @override
+  String get voiceSilenceShort => 'Коротко';
+
+  @override
+  String get voiceSilenceNormal => 'Обычно';
+
+  @override
+  String get voiceSilenceLong => 'Долго';
 }

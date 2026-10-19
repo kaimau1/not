@@ -1045,12 +1045,19 @@
   "voiceAutoStop": "إيقاف عند الصمت",
   "voiceAutoStopInfo": "عند انتهائك من الكلام، يتوقف الاستماع تلقائيًا بعد بضع ثوانٍ من الصمت.",
   "voiceSmartCommands": "أوامر ذكية",
-  "voiceSmartCommandsInfo": "أثناء الكلام يمكنك قول: “delete last word” و“delete last sentence” و“replace X with Y” و“new line” و“undo” و“clear all” و“stop listening” (بالتركية: “son kelimeyi sil”…). ثم تتابع الكتابة من النهاية.",
+  "voiceSmartCommandsInfo": "أثناء الكلام يمكنك قول: “delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening” (بالتركية: “son kelimeyi sil”…). ثم تتابع الكتابة من النهاية.",
   "voiceAutoStopSoon": "صمت — سيتوقف قريبًا",
   "voiceCmdDeleted": "تم الحذف",
   "voiceCmdReplaced": "تم الاستبدال",
   "voiceCmdNewLine": "سطر جديد",
   "voiceCmdUndone": "تم التراجع",
   "voiceCmdCleared": "تم المسح",
-  "fullscreenExit": "الخروج من ملء الشاشة"
+  "fullscreenExit": "الخروج من ملء الشاشة",
+  "voiceCaptureContinue": "متابعة الكلام",
+  "voiceCmdPunctuation": "أُضيفت علامة ترقيم",
+  "voiceCmdTitle": "تم تعيين العنوان",
+  "voiceSilenceLabel": "مدة الانتظار",
+  "voiceSilenceShort": "قصير",
+  "voiceSilenceNormal": "عادي",
+  "voiceSilenceLong": "طويل"
 }

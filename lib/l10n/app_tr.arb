@@ -2433,7 +2433,7 @@
   "@voiceSmartCommands": {
     "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
   },
-  "voiceSmartCommandsInfo": "Konuşurken şunları diyebilirsin: “son kelimeyi sil”, “son iki kelimeyi sil”, “son cümleyi sil”, “X yerine Y yaz”, “son kelime Y olacak”, “yeni satır”, “geri al”, “hepsini sil”, “dinlemeyi bitir”. Yazmaya kaldığın yerden, en sondan devam eder.",
+  "voiceSmartCommandsInfo": "Konuşurken şunları diyebilirsin: “son kelimeyi sil”, “son iki kelimeyi sil”, “son cümleyi sil”, “X yerine Y yaz”, “son kelime Y olacak”, “yeni satır”, “yeni madde”, “nokta koy”, “virgül koy”, “soru işareti”, “başlık X olsun”, “geri al”, “hepsini sil”, “dinlemeyi bitir”. Yazmaya kaldığın yerden, en sondan devam eder.",
   "@voiceSmartCommandsInfo": {
     "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
   },
@@ -2464,5 +2464,33 @@
   "fullscreenExit": "Tam ekrandan çık",
   "@fullscreenExit": {
     "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
+  },
+  "voiceCaptureContinue": "Devam et",
+  "@voiceCaptureContinue": {
+    "description": "Akıllı sesli not 3. tur (2026-10-19)"
+  },
+  "voiceCmdPunctuation": "Noktalama eklendi",
+  "@voiceCmdPunctuation": {
+    "description": "Akıllı sesli not 3. tur (2026-10-19)"
+  },
+  "voiceCmdTitle": "Başlık ayarlandı",
+  "@voiceCmdTitle": {
+    "description": "Akıllı sesli not 3. tur (2026-10-19)"
+  },
+  "voiceSilenceLabel": "Bekleme süresi",
+  "@voiceSilenceLabel": {
+    "description": "Akıllı sesli not 3. tur (2026-10-19)"
+  },
+  "voiceSilenceShort": "Kısa",
+  "@voiceSilenceShort": {
+    "description": "Akıllı sesli not 3. tur (2026-10-19)"
+  },
+  "voiceSilenceNormal": "Normal",
+  "@voiceSilenceNormal": {
+    "description": "Akıllı sesli not 3. tur (2026-10-19)"
+  },
+  "voiceSilenceLong": "Uzun",
+  "@voiceSilenceLong": {
+    "description": "Akıllı sesli not 3. tur (2026-10-19)"
   }
 }

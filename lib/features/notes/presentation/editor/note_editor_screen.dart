@@ -6759,6 +6759,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     late final VoiceListenSession session;
     session = VoiceListenSession(
       autoStop: () => ref.read(voiceAutoStopProvider),
+        gate: SilenceGate(afterSpeech: ref.read(voiceSilenceProvider).duration),
       onText: (text) {
         if (mounted && identical(_dictation, session)) {
           _writeDictationAtCaret(text);
@@ -6870,6 +6871,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       target: VoiceCaptureTarget.editor,
     );
     if (result == null || !mounted) return;
+
+    // "başlık X olsun" söylendiyse notun başlığı olur (açıkça istendiği için
+    // var olan başlığın yerine geçer).
+    final spokenTitle = result.title;
+    if (spokenTitle != null) {
+      _titleController.text = spokenTitle;
+      _mutate((n) => n.copyWith(title: spokenTitle), immediate: true);
+    }
 
     // Dökümü yapılamamış konuşma (anahtar yok / kota / ağ): kayıt nota SES EKİ
     // olarak girer — yapay zekâ çalışmasa da konuşma kaybolmaz.

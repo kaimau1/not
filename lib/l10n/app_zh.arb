@@ -1045,12 +1045,19 @@
   "voiceAutoStop": "静音时停止",
   "voiceAutoStopInfo": "说完后，静音几秒钟会自动停止聆听。",
   "voiceSmartCommands": "智能指令",
-  "voiceSmartCommandsInfo": "说话时可以说：“delete last word”、“delete last sentence”、“replace X with Y”、“new line”、“undo”、“clear all”、“stop listening”（土耳其语：“son kelimeyi sil”等）。之后从末尾继续书写。",
+  "voiceSmartCommandsInfo": "说话时可以说：“delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening”（土耳其语：“son kelimeyi sil”等）。之后从末尾继续书写。",
   "voiceAutoStopSoon": "静音 — 即将停止",
   "voiceCmdDeleted": "已删除",
   "voiceCmdReplaced": "已替换",
   "voiceCmdNewLine": "换行",
   "voiceCmdUndone": "已撤销",
   "voiceCmdCleared": "已清空",
-  "fullscreenExit": "退出全屏"
+  "fullscreenExit": "退出全屏",
+  "voiceCaptureContinue": "继续说",
+  "voiceCmdPunctuation": "已添加标点",
+  "voiceCmdTitle": "已设置标题",
+  "voiceSilenceLabel": "等待时间",
+  "voiceSilenceShort": "短",
+  "voiceSilenceNormal": "正常",
+  "voiceSilenceLong": "长"
 }

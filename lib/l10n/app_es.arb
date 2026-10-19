@@ -1045,12 +1045,19 @@
   "voiceAutoStop": "Detener al callar",
   "voiceAutoStopInfo": "Cuando terminas de hablar, la escucha se detiene sola tras unos segundos de silencio.",
   "voiceSmartCommands": "Comandos inteligentes",
-  "voiceSmartCommandsInfo": "Mientras hablas puedes decir: «delete last word», «delete last sentence», «replace X with Y», «new line», «undo», «clear all», «stop listening» (en turco: «son kelimeyi sil»…). Luego se sigue escribiendo al final.",
+  "voiceSmartCommandsInfo": "Mientras hablas puedes decir: “delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening” (en turco: «son kelimeyi sil»…). Luego se sigue escribiendo al final.",
   "voiceAutoStopSoon": "Silencio: se detendrá pronto",
   "voiceCmdDeleted": "Eliminado",
   "voiceCmdReplaced": "Reemplazado",
   "voiceCmdNewLine": "Nueva línea",
   "voiceCmdUndone": "Deshecho",
   "voiceCmdCleared": "Borrado",
-  "fullscreenExit": "Salir de pantalla completa"
+  "fullscreenExit": "Salir de pantalla completa",
+  "voiceCaptureContinue": "Seguir hablando",
+  "voiceCmdPunctuation": "Puntuación añadida",
+  "voiceCmdTitle": "Título establecido",
+  "voiceSilenceLabel": "Tiempo de espera",
+  "voiceSilenceShort": "Corto",
+  "voiceSilenceNormal": "Normal",
+  "voiceSilenceLong": "Largo"
 }

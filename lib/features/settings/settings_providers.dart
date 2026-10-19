@@ -597,6 +597,41 @@ class VoiceAutoStopNotifier extends Notifier<bool> {
   }
 }
 
+/// Sessizlikte bitişin ne kadar bekleyeceği. Kullanıcı isteği 2026-10-19:
+/// düşünerek konuşan için sabit 4 sn kısa kalabilir, hızlı not alan için
+/// uzun. Normal, ilk sürümün değeridir.
+enum VoiceSilence {
+  short(Duration(milliseconds: 2500)),
+  normal(Duration(seconds: 4)),
+  long(Duration(seconds: 7));
+
+  const VoiceSilence(this.duration);
+
+  final Duration duration;
+}
+
+final voiceSilenceProvider = NotifierProvider<VoiceSilenceNotifier, VoiceSilence>(
+  VoiceSilenceNotifier.new,
+);
+
+class VoiceSilenceNotifier extends Notifier<VoiceSilence> {
+  static const _key = 'voice_silence';
+
+  @override
+  VoiceSilence build() {
+    final stored = ref.watch(sharedPreferencesProvider).getString(_key);
+    return VoiceSilence.values.firstWhere(
+      (v) => v.name == stored,
+      orElse: () => VoiceSilence.normal,
+    );
+  }
+
+  void set(VoiceSilence value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setString(_key, value.name);
+  }
+}
+
 /// AKILLI KOMUTLAR: dikte sırasında "son kelimeyi sil", "X yerine Y yaz"
 /// gibi düzeltmeler uygulansın mı (bkz. `applyVoiceCommands`). Varsayılan
 /// AÇIK; bu sözleri gerçekten not olarak yazdırmak isteyen kapatabilir.

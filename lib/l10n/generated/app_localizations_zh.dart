@@ -5096,7 +5096,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get voiceSmartCommandsInfo =>
-      '说话时可以说：“delete last word”、“delete last sentence”、“replace X with Y”、“new line”、“undo”、“clear all”、“stop listening”（土耳其语：“son kelimeyi sil”等）。之后从末尾继续书写。';
+      '说话时可以说：“delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening”（土耳其语：“son kelimeyi sil”等）。之后从末尾继续书写。';
 
   @override
   String get voiceAutoStopSoon => '静音 — 即将停止';
@@ -5118,4 +5118,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get fullscreenExit => '退出全屏';
+
+  @override
+  String get voiceCaptureContinue => '继续说';
+
+  @override
+  String get voiceCmdPunctuation => '已添加标点';
+
+  @override
+  String get voiceCmdTitle => '已设置标题';
+
+  @override
+  String get voiceSilenceLabel => '等待时间';
+
+  @override
+  String get voiceSilenceShort => '短';
+
+  @override
+  String get voiceSilenceNormal => '正常';
+
+  @override
+  String get voiceSilenceLong => '长';
 }

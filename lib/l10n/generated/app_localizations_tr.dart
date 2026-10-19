@@ -5210,7 +5210,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceSmartCommandsInfo =>
-      'Konuşurken şunları diyebilirsin: “son kelimeyi sil”, “son iki kelimeyi sil”, “son cümleyi sil”, “X yerine Y yaz”, “son kelime Y olacak”, “yeni satır”, “geri al”, “hepsini sil”, “dinlemeyi bitir”. Yazmaya kaldığın yerden, en sondan devam eder.';
+      'Konuşurken şunları diyebilirsin: “son kelimeyi sil”, “son iki kelimeyi sil”, “son cümleyi sil”, “X yerine Y yaz”, “son kelime Y olacak”, “yeni satır”, “yeni madde”, “nokta koy”, “virgül koy”, “soru işareti”, “başlık X olsun”, “geri al”, “hepsini sil”, “dinlemeyi bitir”. Yazmaya kaldığın yerden, en sondan devam eder.';
 
   @override
   String get voiceAutoStopSoon => 'Sessizlik — birazdan biter';
@@ -5232,4 +5232,25 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get fullscreenExit => 'Tam ekrandan çık';
+
+  @override
+  String get voiceCaptureContinue => 'Devam et';
+
+  @override
+  String get voiceCmdPunctuation => 'Noktalama eklendi';
+
+  @override
+  String get voiceCmdTitle => 'Başlık ayarlandı';
+
+  @override
+  String get voiceSilenceLabel => 'Bekleme süresi';
+
+  @override
+  String get voiceSilenceShort => 'Kısa';
+
+  @override
+  String get voiceSilenceNormal => 'Normal';
+
+  @override
+  String get voiceSilenceLong => 'Uzun';
 }
