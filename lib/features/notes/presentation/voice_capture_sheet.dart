@@ -55,6 +55,11 @@ enum VoiceCaptureAction {
   /// madde ve HATIRLATICI çıkaran akışı (`voiceAssistantProvider`) yalnız bu
   /// yolla erişilebilir kaldığı için eklendi — bkz. test/spoken_datetime_test.dart.
   compose,
+
+  /// "Doğrudan yazdır"a geç (yalnız ana ekran, F3.1): levha kapanır, çağıran
+  /// boş bir not açıp konuşmayı doğrudan nota yazar. Ana ekranın TEK
+  /// mikrofonu son kullanılan kipi hatırlar.
+  dictate,
 }
 
 /// Levhanın hangi ekrandan açıldığı: yalnız etiketleri ve çipleri değiştirir.
@@ -91,7 +96,8 @@ String? voiceCaptureInstruction(VoiceCaptureAction action) => switch (action) {
   // buradaki genel "yeniden yaz" yönergesiyle karıştırılmamalı.
   VoiceCaptureAction.insert ||
   VoiceCaptureAction.asList ||
-  VoiceCaptureAction.compose => null,
+  VoiceCaptureAction.compose ||
+  VoiceCaptureAction.dictate => null,
   VoiceCaptureAction.summarize =>
     'Bu konuşma dökümünü kısa bir özete indir: ayrıntıları at, ana noktaları '
         'koru, yorum ekleme',
@@ -628,6 +634,19 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     if (mounted) Navigator.pop(context);
   }
 
+  /// Ana ekranda "Doğrudan yazdır" kipine geçer (bkz. [VoiceCaptureAction.dictate]).
+  Future<void> _switchToDictation() async {
+    await _teardown();
+    if (!mounted) return;
+    Navigator.pop<VoiceCaptureResult>(context, (
+      text: '',
+      action: VoiceCaptureAction.dictate,
+      audioPath: null,
+      audioDuration: Duration.zero,
+      title: null,
+    ));
+  }
+
   /// Sessizlik izlemesini ve kayıt yolunun seviye aboneliğini bırakır.
   void _stopSilenceWatch() {
     // Kayıt yolunda oturum mikrofona dokunmaz; yalnız zamanlayıcısı durur
@@ -880,6 +899,13 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
               ],
             ),
           ),
+          if (!ready && widget.target == VoiceCaptureTarget.dashboard)
+            IconButton(
+              key: const ValueKey('voice-to-dictation'),
+              tooltip: l10n.voiceMicDictate,
+              icon: const Icon(Icons.edit_note),
+              onPressed: _switchToDictation,
+            ),
           if (!ready) _commandsHelp(l10n, scheme),
           Text(
             _format(_elapsed),

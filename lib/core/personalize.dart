@@ -142,8 +142,9 @@ abstract final class UiItem {
   static const homeAi = 'home.ai';
   static const homeFilter = 'home.filter';
   static const homeViewToggle = 'home.viewToggle';
-  static const homeVoiceAi = 'home.voiceAi';
-  static const homeDictation = 'home.dictation';
+  /// Ana ekranın TEK mikrofonu (F3.1). Kimlik eski "AI ile sesli not"
+  /// düğmesininki — gizleme tercihi korunur.
+  static const homeMic = 'home.voiceAi';
 
   // ── Video denetimi ──
   static const videoSpeed = 'video.speed';
@@ -152,9 +153,6 @@ abstract final class UiItem {
 
   /// Ana ekrandaki "+" menüsünün seçeneği ([key] = `QuickAddOption.key`).
   static String quickAdd(String key) => 'quickadd.$key';
-
-  /// "+" menüsündeki "Sık kullandıkların" satırı.
-  static const quickAddFrequent = 'quickadd.frequent';
 
   /// Not ekranındaki "Ekle" levhasının seçeneği ([key] = levhanın kimliği).
   static String attach(String key) => 'attach.$key';
@@ -177,19 +175,17 @@ class UiModule {
     UiItem.barAi,
     UiItem.barVoiceAi,
     UiItem.homeAi,
-    UiItem.homeVoiceAi,
   ]);
 
   static const voice = UiModule('voice', [
     UiItem.barDictation,
-    UiItem.homeDictation,
+    UiItem.homeMic,
     'quickadd.voice',
     'attach.audio',
   ]);
 
   static const video = UiModule('video', [
     'quickadd.video',
-    'quickadd.gvideo',
     'quickadd.youtube',
     'attach.video',
     'attach.video-gallery',
@@ -197,8 +193,6 @@ class UiModule {
   ]);
 
   static const documents = UiModule('documents', [
-    'quickadd.pdf',
-    'quickadd.slides',
     'attach.pdf',
     'attach.slide',
   ]);

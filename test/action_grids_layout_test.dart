@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/note_actions_sheet.dart';
+import 'package:notlar/features/notes/presentation/quick_add_actions.dart';
 import 'package:notlar/features/notes/presentation/quick_add_fab.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
@@ -57,42 +58,11 @@ void main() {
     expect(tester.getRect(find.text('Sil')).center.dy, greaterThan(pin.top));
   });
 
-  testWidgets('"+" paneli: Metin/Liste FAB\'ın hemen üstünde, panel kısa', (
+  testWidgets('"+" paneli dört kapı: Metin/Liste altta, kapılar levha açar', (
     tester,
   ) async {
-    // Kullanıcı bulgusu 2026-10-15: "not ekle menüsü neredeyse tüm ekranı
-    // kaplıyor; en çok kullanılan metin notu, liste notu çok yukarıda
-    // kalıyor, bulması ve başlatması çok zor".
-    final link = LayerLink();
-    var youTube = 0;
-    final created = <NoteType>[];
-    await tester.pumpWidget(
-      host(
-        Scaffold(
-          body: Align(
-            alignment: Alignment.bottomRight,
-            child: CompositedTransformTarget(
-              link: link,
-              child: QuickAddFab(
-                anchor: link,
-                onCreate: created.add,
-                onHandwriting: () {},
-                onVoiceCapture: () {},
-                onVideoNote: () {},
-                onPhotoNote: () {},
-                onScanNote: () {},
-                onPdfNote: () {},
-                onImageNote: () {},
-                onSlidesNote: () {},
-                onQrNote: () {},
-                onGalleryVideo: () {},
-                onYouTube: () => youTube++,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+    final calls = <String>[];
+    await tester.pumpWidget(host(_FabHost(calls)));
 
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
@@ -100,86 +70,72 @@ void main() {
     final fab = tester.getRect(find.byType(FloatingActionButton).last);
     final text = tester.getRect(find.text('Metin notu'));
     final list = tester.getRect(find.text('Liste'));
-    final ordered = tester.getRect(find.text('Sıralı liste'));
-    // Birincil üçlü yan yana ve PANELİN EN ALTINDA (FAB'a en yakın).
+    // Birincil ikili yan yana ve PANELİN EN ALTINDA (FAB'a en yakın).
     expect(text.center.dy, closeTo(list.center.dy, 1));
-    expect(list.center.dy, closeTo(ordered.center.dy, 1));
     expect(text.center.dx, lessThan(list.center.dx));
     expect(fab.top - text.bottom, lessThan(60));
-
-    // Kapalı hâlde panel KISA: ekranın yarısından az (eskiden ~%70).
-    final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
-    final frequent = tester.getRect(find.text('SIK KULLANDIKLARIN'));
-    expect(fab.top - frequent.top, lessThan(screen.height / 2));
-    // Sık kullanılanlar birincil satırın ÜSTÜNDE; ilk gün sesli not başta.
-    expect(
-      tester.getRect(find.text('Sesli not')).center.dy,
-      lessThan(text.center.dy),
-    );
-    // Geri kalanı "Tümü" ardında.
+    // Ana ekranda sesli not menüde yok (tek mikrofon, F3.1).
+    expect(find.text('Sesli not'), findsNothing);
+    // Üç kapı birincil satırın üstünde; içerikleri levhada.
+    final camera = tester.getRect(find.text('Kamera'));
+    expect(camera.center.dy, lessThan(text.center.dy));
+    expect(find.text('Dosya ekle'), findsOneWidget);
+    expect(find.text('Şablon'), findsOneWidget);
     expect(find.text('YouTube videosu'), findsNothing);
-    expect(find.text('Foto çek not al'), findsNothing);
 
-    await tester.tap(find.text('Tümü'));
+    await tester.tap(find.text('Dosya ekle'));
     await tester.pumpAndSettle();
-    expect(find.text('Galeriden video'), findsOneWidget);
-    // Kullanıcı bulgusu 2026-10-16: "tümü kısmı ekranın çok yukarısına
-    // doğru uzuyor". Açık panel de ekranın yarısını geçmez; sık
-    // kullanılanlar satırı (ızgarada zaten var) yerini "Daha az"a bırakır.
-    final panelTop = tester.getRect(find.text('Sesli not')).top;
-    expect(fab.top - panelTop, lessThan(screen.height / 2));
-    expect(find.text('SIK KULLANDIKLARIN'), findsNothing);
-    expect(find.text('Daha az'), findsOneWidget);
-    // Açılınca da birincil düğmeler yerinde (FAB'ın yanında) kalır.
-    expect(
-      tester.getRect(find.text('Metin notu')).center.dy,
-      closeTo(text.center.dy, 1),
-    );
-
-    await tester.ensureVisible(find.text('YouTube videosu'));
-    await tester.pumpAndSettle();
+    expect(find.text('Metin notu'), findsNothing, reason: 'panel kapanır');
     await tester.tap(find.text('YouTube videosu'));
     await tester.pumpAndSettle();
-    expect(youTube, 1);
-    expect(
-      find.text('Metin notu'),
-      findsNothing,
-      reason: 'seçince panel kapanır',
-    );
+    expect(calls, ['youtube']);
 
     // Metin notu tek dokunuş.
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Metin notu'));
     await tester.pumpAndSettle();
-    expect(created, [NoteType.text]);
+    expect(calls, ['youtube', 'text']);
   });
+}
 
-  test('sık kullanılanlar sayaca göre, eşitlikte menü sırasıyla', () {
-    QuickAddOption o(String key, QuickAddGroup g) =>
-        QuickAddOption(key, g, Icons.add, key, () {}, Colors.black);
-    final options = [
-      o('text', QuickAddGroup.primary),
-      o('voice', QuickAddGroup.capture),
-      o('photo', QuickAddGroup.capture),
-      o('pdf', QuickAddGroup.files),
-      o('youtube', QuickAddGroup.files),
-    ];
-    expect(
-      [for (final x in frequentQuickAdd(options, const {}, count: 3)) x.key],
-      ['voice', 'photo', 'pdf'],
-    );
-    expect(
-      [
-        for (final x in frequentQuickAdd(options, const {
-          'youtube': 5,
-          'pdf': 2,
-          'text': 99,
-        }, count: 3))
-          x.key,
-      ],
-      ['youtube', 'pdf', 'voice'],
-      reason: 'birincil (metin) zaten altta — sık kullanılanlara girmez',
-    );
-  });
+class _FabHost extends ConsumerStatefulWidget {
+  const _FabHost(this.calls);
+
+  final List<String> calls;
+
+  @override
+  ConsumerState<_FabHost> createState() => _FabHostState();
+}
+
+class _FabHostState extends ConsumerState<_FabHost>
+    with QuickAddActions<_FabHost> {
+  final _link = LayerLink();
+
+  @override
+  String? get quickAddFolderId => null;
+
+  @override
+  Future<void> openNewNote(
+    String id, {
+    String query = '',
+    NoteType? type,
+  }) async {}
+
+  @override
+  Future<void> createNote(NoteType type) async => widget.calls.add(type.name);
+
+  @override
+  Future<void> createYouTubeNote() async => widget.calls.add('youtube');
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: Align(
+      alignment: Alignment.bottomRight,
+      child: CompositedTransformTarget(
+        link: _link,
+        child: QuickAddFab(anchor: _link, actions: this),
+      ),
+    ),
+  );
 }

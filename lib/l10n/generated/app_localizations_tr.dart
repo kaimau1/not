@@ -5339,4 +5339,39 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get captureModeAsk => 'Her seferinde sor';
+
+  @override
+  String get voiceMicDictate => 'Doğrudan yazdır';
+
+  @override
+  String get voiceMicTooltipAi =>
+      'Sesli not (AI düzenlesin) — basılı tut: doğrudan yazdır';
+
+  @override
+  String get voiceMicTooltipDictate =>
+      'Sesle yazdır — basılı tut: AI düzenlesin';
+
+  @override
+  String get quickAddCamera => 'Kamera';
+
+  @override
+  String get quickAddFile => 'Dosya ekle';
+
+  @override
+  String get quickAddFromDevice => 'Cihazdan dosya seç';
+
+  @override
+  String get quickAddFromDeviceInfo => 'Görsel, PDF, sunum, video ya da ses';
+
+  @override
+  String get quickAddTemplates => 'Şablon';
+
+  @override
+  String get quickAddFileWhat => 'Bu dosyayla ne yapalım?';
+
+  @override
+  String get quickAddFileAsNote => 'Notuna ekle';
+
+  @override
+  String get quickAddFileUnsupported => 'Bu dosya türü desteklenmiyor';
 }

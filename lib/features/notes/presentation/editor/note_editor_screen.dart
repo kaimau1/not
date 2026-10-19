@@ -4511,12 +4511,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// koyma"). Kamera yolu gibi cihazda kalır ve sayfaya yerleşir; süre
   /// sınırı YOK (o sınır yalnız AI'a gönderim içindi — uzun videoda
   /// "videodan not çıkar" boyut uyarısını kendisi verir).
+  static const _videoExtensions = ['mp4', 'mov', 'mkv', '3gp', 'webm'];
+
   Future<Attachment?> _addVideoFromGallery({bool asFile = false}) async {
     final repo = _attachments;
     if (repo == null) return null;
     final l10n = context.l10n;
     try {
-      final picked = await ImagePicker().pickVideo(source: ImageSource.gallery);
+      // "+ → Dosya ekle"de seçilmiş video varsa galeri sorulmaz (F3.2).
+      final picked =
+          DocPicker.takePreselected(_videoExtensions)?.first ??
+          await ImagePicker().pickVideo(source: ImageSource.gallery);
       if (picked == null || !mounted) return null;
       final attachment = await repo.prepareVideo(
         noteId: widget.noteId,

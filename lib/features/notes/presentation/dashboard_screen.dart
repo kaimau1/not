@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 // ScrollCacheExtent (ızgara önbellek payı) yalnız rendering katmanında.
 import 'package:flutter/rendering.dart';
@@ -45,7 +44,6 @@ import '../data/notes_repository.dart';
 import '../data/upload_queue.dart';
 import '../domain/note.dart';
 import '../domain/note_share_text.dart';
-import '../domain/note_templates.dart';
 import '../domain/note_type.dart';
 import 'color_picker_sheet.dart';
 import 'dashboard_background_sheet.dart';
@@ -726,6 +724,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       target: VoiceCaptureTarget.dashboard,
     );
     if (result == null || !mounted) return;
+    if (result.action == VoiceCaptureAction.dictate) {
+      await _dictateNote();
+      return;
+    }
+    ref.read(homeMicDictateProvider.notifier).set(false);
 
     // "Asistan oluştursun": notu döküme bakarak asistan kurar — başlık,
     // maddeler ve HATIRLATICI çıkarır (bkz. voice_assistant.dart).
@@ -809,6 +812,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     }
     if (!mounted) return;
     _afterQuickCapture(id);
+  }
+
+  /// Mikrofonun "doğrudan yazdır" kipi; kip hatırlanır (bkz.
+  /// [homeMicDictateProvider]).
+  Future<void> _dictateNote() async {
+    ref.read(homeMicDictateProvider.notifier).set(true);
+    await createDictationNote();
   }
 
   /// Sesli yakalamadan dönen ses kaydını yeni nota ek olarak bağlar.
@@ -1620,62 +1630,42 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             ),
                           ),
                         ),
-                        // İKİ MİKROFON — editörün alt çubuğundakiyle AYNI
-                        // ayrım (kullanıcı isteği 2026-09-01: "ana ekrandaki
-                        // ses butonunu da güncelle"):
-                        //  * sade mikrofon → SESLE YAZ: boş bir not açılır ve
-                        //    konuşulan söz doğrudan nota yazılır, levha yok.
-                        //  * parıltılı mikrofon → asistan/ses yakalama
-                        //    levhası (eski davranış): metin gözden geçirilir,
-                        //    özetlenebilir, hatırlatıcıya çevrilebilir.
-                        // İkisi de kişiselleştirmede gizlenebilir (bkz.
-                        // UiItem.homeVoiceAi / homeDictation); aralık
-                        // düğmeyle birlikte gider.
+                        // TEK MİKROFON (F3.1): dokunuş son kullanılan
+                        // kipi açar — sesli not levhası (AI düzenlesin) ya da
+                        // doğrudan yazdır (boş not, söz nota). Basılı tutmak
+                        // öbür kipi açar; levhadaki "Doğrudan yazdır" da
+                        // kipi değiştirir.
                         Customizable(
-                          id: UiItem.homeVoiceAi,
+                          id: UiItem.homeMic,
                           child: Padding(
                             padding: const EdgeInsets.only(bottom: 10),
-                            child: _DashVoiceButton(
-                              tooltip: l10n.voiceAssistantTitle,
-                              icon: Icons.mic_none,
-                              badge: Icons.auto_awesome,
-                              onTap: _captureVoiceNote,
-                            ),
-                          ),
-                        ),
-                        Customizable(
-                          id: UiItem.homeDictation,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: _DashVoiceButton(
-                              tooltip: l10n.liveDictation,
-                              icon: Icons.mic,
-                              onTap: createDictationNote,
+                            child: Consumer(
+                              builder: (context, ref, _) {
+                                final dictate = ref.watch(
+                                  homeMicDictateProvider,
+                                );
+                                return _DashVoiceButton(
+                                  key: const ValueKey('home-mic'),
+                                  tooltip: dictate
+                                      ? l10n.voiceMicTooltipDictate
+                                      : l10n.voiceMicTooltipAi,
+                                  icon: dictate ? Icons.mic : Icons.mic_none,
+                                  badge: dictate ? null : Icons.auto_awesome,
+                                  onTap: dictate
+                                      ? _dictateNote
+                                      : _captureVoiceNote,
+                                  onLongPress: dictate
+                                      ? _captureVoiceNote
+                                      : _dictateNote,
+                                );
+                              },
                             ),
                           ),
                         ),
                         // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
-                        QuickAddFab(
-                          // Hızlı ekle → Sesli not: ana ekranın mikrofonuyla
-                          // aynı levha; boş not önceden açılmaz.
-                          onVoiceCapture: _captureVoiceNote,
-                          onVideoNote: createVideoNote,
-                          onPhotoNote: createPhotoNote,
-                          onScanNote: createScanNote,
-                          onPdfNote: createPdfNote,
-                          onImageNote: createImageNote,
-                          onSlidesNote: createSlidesNote,
-                          onQrNote: createQrNote,
-                          onGalleryVideo: createGalleryVideoNote,
-                          onYouTube: createYouTubeNote,
-                          onTranscribe: kIsWeb ? null : createTranscribeNote,
-                          anchor: _fabColumnLink,
-                          onCreate: createNote,
-                          onHandwriting: createHandwritingNote,
-                          onTemplate: createFromTemplate,
-                          onShopping: () =>
-                              createFromTemplate(NoteTemplate.shopping),
-                        ),
+                        // Dört kapılı "+" (F3.2). Sesli not menüde YOK:
+                        // ana ekranın kendi tek mikrofonu var (F3.1).
+                        QuickAddFab(anchor: _fabColumnLink, actions: this),
                       ],
                     ),
                   ),
@@ -3267,15 +3257,15 @@ class _PinchColumnsState extends State<_PinchColumns> {
 
 /// Ana ekranın sağ alt sütunundaki mikrofon düğmesi.
 ///
-/// İki örneği var ve tek fark [badge]: parıltılı olan yapay zekâ yolunu
-/// (asistan levhası), sade olan doğrudan dikteyi açar. Editörün alt
-/// çubuğundaki ikili ile bilerek aynı görünür — aynı iş, aynı simge.
+/// Parıltı rozeti ([badge]) yapay zekâ yolunu (sesli not levhası), sade
+/// simge doğrudan dikteyi gösterir — editörün alt çubuğuyla aynı simgeler.
 class _DashVoiceButton extends StatelessWidget {
   const _DashVoiceButton({
     super.key,
     required this.tooltip,
     required this.icon,
     required this.onTap,
+    this.onLongPress,
     this.badge,
   });
 
@@ -3283,6 +3273,7 @@ class _DashVoiceButton extends StatelessWidget {
   final IconData icon;
   final IconData? badge;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -3298,6 +3289,7 @@ class _DashVoiceButton extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(14),
             onTap: onTap,
+            onLongPress: onLongPress,
             child: Stack(
               alignment: Alignment.center,
               children: [

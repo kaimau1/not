@@ -5353,4 +5353,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get captureModeAsk => 'Ask every time';
+
+  @override
+  String get voiceMicDictate => 'Type as I speak';
+
+  @override
+  String get voiceMicTooltipAi =>
+      'Voice note (AI tidies) — long-press: type as I speak';
+
+  @override
+  String get voiceMicTooltipDictate =>
+      'Type as I speak — long-press: AI tidies';
+
+  @override
+  String get quickAddCamera => 'Camera';
+
+  @override
+  String get quickAddFile => 'Add file';
+
+  @override
+  String get quickAddFromDevice => 'Choose a file';
+
+  @override
+  String get quickAddFromDeviceInfo => 'Image, PDF, slides, video or audio';
+
+  @override
+  String get quickAddTemplates => 'Templates';
+
+  @override
+  String get quickAddFileWhat => 'What should we do with this file?';
+
+  @override
+  String get quickAddFileAsNote => 'Add to a note';
+
+  @override
+  String get quickAddFileUnsupported => 'This file type is not supported';
 }

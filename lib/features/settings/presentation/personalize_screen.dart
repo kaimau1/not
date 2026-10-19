@@ -556,11 +556,6 @@ class _QuickAddSection extends StatelessWidget {
         items: [
           for (final m in quickAddCatalog(l10n))
             (id: UiItem.quickAdd(m.key), icon: m.icon, label: m.label),
-          (
-            id: UiItem.quickAddFrequent,
-            icon: Icons.history_rounded,
-            label: l10n.uiItemFrequent,
-          ),
         ],
       ),
     );
@@ -732,14 +727,9 @@ class _HomeSection extends ConsumerWidget {
                 label: l10n.viewToggle,
               ),
               (
-                id: UiItem.homeVoiceAi,
+                id: UiItem.homeMic,
                 icon: Icons.mic_none,
                 label: l10n.voiceAssistantTitle,
-              ),
-              (
-                id: UiItem.homeDictation,
-                icon: Icons.mic,
-                label: l10n.liveDictation,
               ),
             ],
           ),

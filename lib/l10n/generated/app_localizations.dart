@@ -9613,6 +9613,72 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Her seferinde sor'**
   String get captureModeAsk;
+
+  /// No description provided for @voiceMicDictate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrudan yazdır'**
+  String get voiceMicDictate;
+
+  /// No description provided for @voiceMicTooltipAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli not (AI düzenlesin) — basılı tut: doğrudan yazdır'**
+  String get voiceMicTooltipAi;
+
+  /// No description provided for @voiceMicTooltipDictate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesle yazdır — basılı tut: AI düzenlesin'**
+  String get voiceMicTooltipDictate;
+
+  /// No description provided for @quickAddCamera.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kamera'**
+  String get quickAddCamera;
+
+  /// No description provided for @quickAddFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya ekle'**
+  String get quickAddFile;
+
+  /// No description provided for @quickAddFromDevice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihazdan dosya seç'**
+  String get quickAddFromDevice;
+
+  /// No description provided for @quickAddFromDeviceInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel, PDF, sunum, video ya da ses'**
+  String get quickAddFromDeviceInfo;
+
+  /// No description provided for @quickAddTemplates.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablon'**
+  String get quickAddTemplates;
+
+  /// No description provided for @quickAddFileWhat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dosyayla ne yapalım?'**
+  String get quickAddFileWhat;
+
+  /// No description provided for @quickAddFileAsNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notuna ekle'**
+  String get quickAddFileAsNote;
+
+  /// No description provided for @quickAddFileUnsupported.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dosya türü desteklenmiyor'**
+  String get quickAddFileUnsupported;
 }
 
 class _AppLocalizationsDelegate

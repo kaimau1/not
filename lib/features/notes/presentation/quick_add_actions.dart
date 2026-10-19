@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart' show FieldValue;
 import 'package:file_selector/file_selector.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/doc_picker.dart';
+import '../../../core/widgets/app_sheet.dart';
 import '../../settings/data/permissions_service.dart';
 import '../data/attachment_repository.dart';
 import '../data/document_scan.dart';
@@ -405,6 +407,108 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// `startTranscribe`). Seçim iptal edilirse boş not kendiliğinden silinir.
   Future<void> createTranscribeNote() =>
       _openBlankNote(NoteType.text, query: '?transcribe=1');
+
+  /// **"+ → DOSYA EKLE"** (F3.2): TEK seçici, akış dosyanın türünden.
+  /// Görsel → görsel notu, PDF → PDF notu, sunum → sunum notu, video →
+  /// videoyla not; görsel/videoda "Metne dök" seçim SONRASI sorulur, ses
+  /// doğrudan metne dökülür. Seçilen dosya akışın kendi seçicisine
+  /// [DocPicker.preselect] ile verilir (akış seçiciyi sormadan alır).
+  Future<void> createFromFile() async {
+    final l10n = context.l10n;
+    const images = ['jpg', 'jpeg', 'png', 'webp', 'heic'];
+    const videos = ['mp4', 'mov', 'mkv', '3gp', 'webm'];
+    const audios = ['mp3', 'm4a', 'aac', 'wav', 'ogg', 'opus', 'flac', 'amr'];
+    final files = await DocPicker.pickMany(
+      XTypeGroup(
+        label: l10n.quickAddFile,
+        extensions: [...images, 'pdf', 'pptx', ...videos, ...audios],
+        mimeTypes: [
+          'image/*',
+          'video/*',
+          'audio/*',
+          'application/pdf',
+          DocPicker.byExtension['pptx']!,
+        ],
+      ),
+      chooserTitle: l10n.quickAddFromDevice,
+    );
+    if (files.isEmpty || !mounted) return;
+    final first = files.first;
+    final ext = DocPicker.extensionOf(
+      first.name.isEmpty ? first.path : first.name,
+    );
+    Future<void> run(List<XFile> pick, Future<void> Function() flow) async {
+      DocPicker.preselect(pick);
+      try {
+        await flow();
+      } finally {
+        DocPicker.takePreselected(); // akış seçiciye ulaşmadıysa sızmasın
+      }
+    }
+
+    if (images.contains(ext)) {
+      final same = [
+        for (final f in files)
+          if (images.contains(
+            DocPicker.extensionOf(f.name.isEmpty ? f.path : f.name),
+          ))
+            f,
+      ];
+      final transcribe = await _askFileUse(first.name, transcribable: true);
+      if (transcribe == null || !mounted) return;
+      await run(
+        transcribe ? [first] : same,
+        transcribe ? createTranscribeNote : createImageNote,
+      );
+    } else if (ext == 'pdf') {
+      await run(files, createPdfNote);
+    } else if (ext == 'pptx') {
+      await run([first], createSlidesNote);
+    } else if (videos.contains(ext)) {
+      final transcribe = await _askFileUse(first.name, transcribable: true);
+      if (transcribe == null || !mounted) return;
+      await run(
+        [first],
+        transcribe ? createTranscribeNote : createGalleryVideoNote,
+      );
+    } else if (audios.contains(ext)) {
+      await run([first], createTranscribeNote);
+    } else {
+      showQuickAddSnack(l10n.quickAddFileUnsupported);
+    }
+  }
+
+  /// Görsel/videoda "notuna ekle" mi "metne dök" mü (true = metne dök);
+  /// iptalde null. Web'de metne dökme yok — doğrudan not.
+  Future<bool?> _askFileUse(String name, {required bool transcribable}) async {
+    if (kIsWeb || !transcribable) return false;
+    final l10n = context.l10n;
+    return showAppSheet<bool>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: Text(l10n.quickAddFileWhat),
+              subtitle: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+            ListTile(
+              leading: const Icon(Icons.note_add_outlined),
+              title: Text(l10n.quickAddFileAsNote),
+              onTap: () => Navigator.pop(sheetContext, false),
+            ),
+            ListTile(
+              leading: const Icon(Icons.subtitles_outlined),
+              title: Text(l10n.transcribeFile),
+              onTap: () => Navigator.pop(sheetContext, true),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   /// İçerikten not alan seçeneklerin ortak ilk adımı: **balonlu mu klasik mi**
   /// (önizlemeli levha — bkz. `capture_mode_sheet.dart`).

@@ -1974,5 +1974,16 @@
   "crashTestAction": "Crash",
   "captureModeSetting": "Notes from content",
   "captureModeSettingInfo": "When taking a note from a photo, scan, PDF, slides or image. Your first choice becomes the default.",
-  "captureModeAsk": "Ask every time"
+  "captureModeAsk": "Ask every time",
+  "voiceMicDictate": "Type as I speak",
+  "voiceMicTooltipAi": "Voice note (AI tidies) — long-press: type as I speak",
+  "voiceMicTooltipDictate": "Type as I speak — long-press: AI tidies",
+  "quickAddCamera": "Camera",
+  "quickAddFile": "Add file",
+  "quickAddFromDevice": "Choose a file",
+  "quickAddFromDeviceInfo": "Image, PDF, slides, video or audio",
+  "quickAddTemplates": "Templates",
+  "quickAddFileWhat": "What should we do with this file?",
+  "quickAddFileAsNote": "Add to a note",
+  "quickAddFileUnsupported": "This file type is not supported"
 }

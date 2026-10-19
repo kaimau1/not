@@ -2601,5 +2601,16 @@
   },
   "captureModeSetting": "İçerikten not açılışı",
   "captureModeSettingInfo": "Fotoğraf, tarama, PDF, sunum ve görselden not alırken. İlk seçimin varsayılan olur.",
-  "captureModeAsk": "Her seferinde sor"
+  "captureModeAsk": "Her seferinde sor",
+  "voiceMicDictate": "Doğrudan yazdır",
+  "voiceMicTooltipAi": "Sesli not (AI düzenlesin) — basılı tut: doğrudan yazdır",
+  "voiceMicTooltipDictate": "Sesle yazdır — basılı tut: AI düzenlesin",
+  "quickAddCamera": "Kamera",
+  "quickAddFile": "Dosya ekle",
+  "quickAddFromDevice": "Cihazdan dosya seç",
+  "quickAddFromDeviceInfo": "Görsel, PDF, sunum, video ya da ses",
+  "quickAddTemplates": "Şablon",
+  "quickAddFileWhat": "Bu dosyayla ne yapalım?",
+  "quickAddFileAsNote": "Notuna ekle",
+  "quickAddFileUnsupported": "Bu dosya türü desteklenmiyor"
 }

@@ -71,6 +71,35 @@ abstract final class DocPicker {
     }
   }
 
+  /// "+ → Dosya ekle"nin (F3.2) TEK seçicide seçtiği dosyalar. Dosya türüne
+  /// göre açılan akış (PDF notu, sunum, video, metne dök…) kendi seçicisini
+  /// açtığında seçici bunları SORMADAN verir — akışların her biri seçiciden
+  /// bağımsız yazılmak zorunda kalmaz. Tek kullanımlıktır.
+  static List<XFile>? _preselected;
+
+  static void preselect(List<XFile> files) => _preselected = files;
+
+  /// Bekleyen seçimi alır (ve temizler). [extensions] verilirse yalnız
+  /// uzantısı uyan dosyalar döner; uymayan seçim atılır.
+  static List<XFile>? takePreselected([List<String>? extensions]) {
+    final files = _preselected;
+    _preselected = null;
+    if (files == null || files.isEmpty) return null;
+    if (extensions == null || extensions.isEmpty) return files;
+    final allowed = {for (final e in extensions) e.toLowerCase()};
+    final matching = [
+      for (final f in files)
+        if (allowed.contains(extensionOf(f.name.isEmpty ? f.path : f.name))) f,
+    ];
+    return matching.isEmpty ? null : matching;
+  }
+
+  /// Küçük harfli uzantı, noktasız ('' = yok).
+  static String extensionOf(String name) {
+    final dot = name.lastIndexOf('.');
+    return dot < 0 ? '' : name.substring(dot + 1).toLowerCase();
+  }
+
   /// Tek belge seçtirir; iptalde null.
   static Future<XFile?> pickOne(
     XTypeGroup group, {
@@ -91,6 +120,8 @@ abstract final class DocPicker {
     required bool multiple,
     String? title,
   }) async {
+    final pre = takePreselected(group.extensions);
+    if (pre != null) return multiple ? pre : [pre.first];
     if (_useChooser) {
       try {
         final raw = await _channel.invokeListMethod<Object?>('pickDocuments', {
@@ -128,7 +159,7 @@ abstract final class DocPicker {
   static List<String> mimeTypesOf(XTypeGroup group) {
     final mimes = {...?group.mimeTypes};
     for (final ext in group.extensions ?? const <String>[]) {
-      final mime = _byExtension[ext.toLowerCase()];
+      final mime = byExtension[ext.toLowerCase()];
       if (mime != null) mimes.add(mime);
     }
     // Aile joker karakteri varsa (`audio/*`) o ailenin tek tek türleri
@@ -143,7 +174,8 @@ abstract final class DocPicker {
     return mimes.isEmpty ? const ['*/*'] : mimes.toList();
   }
 
-  static const _byExtension = <String, String>{
+  /// Uzantı → MIME (seçici süzgeci ve tür tanıma).
+  static const byExtension = <String, String>{
     'pdf': 'application/pdf',
     'txt': 'text/plain',
     'md': 'text/plain',

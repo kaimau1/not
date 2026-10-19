@@ -282,8 +282,7 @@ void main() {
         UiItem.editorTags,
         UiItem.topCollab,
         UiItem.homeAi,
-        UiItem.homeVoiceAi,
-        UiItem.homeDictation,
+        UiItem.homeMic,
       };
       for (final module in UiModule.all) {
         for (final id in module.items) {

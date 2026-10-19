@@ -150,7 +150,7 @@ void main() {
         home: Scaffold(
           body: Center(
             child: Customizable(
-              id: UiItem.homeDictation,
+              id: UiItem.homeMic,
               child: IconButton(
                 key: const ValueKey('dictation'),
                 onPressed: () => tapped++,
@@ -172,7 +172,7 @@ void main() {
     expect(tapped, 0);
     await tester.tap(find.byKey(const ValueKey('customize-save')));
     await tester.pumpAndSettle();
-    expect(Personalize.prefs.value.shows(UiItem.homeDictation), isFalse);
+    expect(Personalize.prefs.value.shows(UiItem.homeMic), isFalse);
     expect(find.byKey(const ValueKey('dictation')), findsNothing);
   });
 

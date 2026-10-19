@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +10,6 @@ import '../../../core/widgets/empty_state.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
-import '../../notes/domain/note_templates.dart';
 import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/note_card.dart';
 import '../../notes/presentation/note_grid.dart';
@@ -235,30 +233,14 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
             ),
         ],
       ),
-      // Ana ekrandakinin AYNISI: metin/madde, el yazısı, sesli, görüntülü,
-      // foto, belge tarama, PDF, görsel, sunum ve QR. Eskiden burada düz bir
-      // FAB vardı ve yalnız boş bir METİN notu açıyordu (kullanıcı bulgusu
-      // 2026-08-29: "klasör içlerindeki ekle butonu sadece metin notu
-      // açıyor"). Davranış [QuickAddActions] ile ORTAK, kopya değil.
+      // Ana ekrandakinin AYNISI (+ sesli not: klasörde ayrı mikrofon yok).
+      // Davranış [QuickAddActions] ile ORTAK, kopya değil.
       floatingActionButton: CompositedTransformTarget(
         link: _fabLink,
         child: QuickAddFab(
           anchor: _fabLink,
-          onCreate: createNote,
-          onHandwriting: createHandwritingNote,
+          actions: this,
           onVoiceCapture: createVoiceCaptureNote,
-          onVideoNote: createVideoNote,
-          onPhotoNote: createPhotoNote,
-          onScanNote: createScanNote,
-          onPdfNote: createPdfNote,
-          onImageNote: createImageNote,
-          onSlidesNote: createSlidesNote,
-          onQrNote: createQrNote,
-          onGalleryVideo: createGalleryVideoNote,
-          onYouTube: createYouTubeNote,
-          onTranscribe: kIsWeb ? null : createTranscribeNote,
-          onTemplate: createFromTemplate,
-          onShopping: () => createFromTemplate(NoteTemplate.shopping),
         ),
       ),
       // Kutu değişince ızgara yeniden süzülsün: sorgu denetleyicide durur,
