@@ -87,34 +87,6 @@ class DeviceSpeech {
     );
   });
 
-  /// Keep tarzı sesli giriş: Google'ın tanıma EKRANINI açar; kullanıcı
-  /// konuşur, ekran kapanınca hem metin hem Google'ın kendi kaydettiği ses
-  /// dosyası (AMR, telefon kalitesi) döner. Tek mikrofon istemcisi Google
-  /// olduğundan [listen] + AudioRecorder ikilisinin yaşadığı mikrofon
-  /// çakışması (Android'de son açan kazanır) burada hiç yoktur.
-  ///
-  /// Dönüş: kullanıcı iptal ettiyse ya da ekran açılamadıysa null; yoksa
-  /// metin + varsa ses yolu (GET_AUDIO belgesiz olduğundan ses gelmeyebilir;
-  /// o durumda çağıran yalnız metinle devam eder).
-  static Future<({String text, String? audioPath})?> voiceInputWithAudio({
-    String locale = 'tr-TR',
-  }) async {
-    if (kIsWeb || !Platform.isAndroid) return null;
-    try {
-      final map = await _method.invokeMethod<Map<Object?, Object?>>(
-        'voiceInputWithAudio',
-        {'locale': locale},
-      );
-      if (map == null) return null;
-      return (
-        text: (map['text'] as String?) ?? '',
-        audioPath: map['audioPath'] as String?,
-      );
-    } on PlatformException {
-      return null;
-    }
-  }
-
   /// Dinlemeyi bitirir; son (tamamlanmış) metin akıştan gelir.
   static Future<void> stop() async {
     try {

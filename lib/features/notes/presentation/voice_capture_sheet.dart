@@ -17,6 +17,7 @@ import '../../../core/utils/voice_commands.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../settings/settings_providers.dart';
 import '../data/device_speech.dart';
+import '../data/voice_listen_session.dart';
 import '../../../core/widgets/app_sheet.dart';
 
 /// Sesli yakalama levhası — ana ekran ve not editörünün ORTAK bileşeni.
@@ -157,7 +158,10 @@ class _VoiceCaptureSheet extends ConsumerStatefulWidget {
 
 class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   AudioRecorder? _recorder;
-  StreamSubscription<({String? text, double? level})>? _speechSub;
+
+  /// Dinlemenin yaşam döngüsü (abonelik, sessizlik, üst sınır, yerli
+  /// kapanış) ortak oturumda — editörün sade mikrofonu da aynısını kullanır.
+  VoiceListenSession? _session;
   Timer? _ticker;
   Duration _elapsed = Duration.zero;
   String _text = '';
@@ -190,10 +194,6 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   /// komutları uygulanmış hâli (bkz. [applyVoiceCommands]). Ham metin
   /// saklanır ki "Akıllı komutlar" dinlerken kapatılıp açılabilsin.
   String _rawText = '';
-
-  /// AKILLI DİNLEME: sessizlikte kendiliğinden bitiş (bkz. [SilenceGate]).
-  SilenceGate? _gate;
-  Timer? _silenceTimer;
 
   /// Sessizlik geri sayımının oranı (0–1); arayüzde ince şerit.
   double _silence = 0;
@@ -238,59 +238,46 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     });
     final micDenied = context.l10n.micPermissionDenied;
     try {
-      if (_useSpeech) {
-        // İzin yokken SpeechRecognizer sormadan hata verir; önce iste.
-        if (!await DeviceSpeech.ensureMicPermission()) {
-          _fail(micDenied);
-          return;
-        }
-        _speechSub = DeviceSpeech.listen().listen(
-          (event) {
-            // Dalga çubukları zamana bağlı (seviyeye bağlasaydık kayıt
-            // yolunda dalga hiç oynamazdı); seviye yalnız sessizlik kapısını
-            // besler.
-            final level = event.level;
-            if (level != null) _gate?.onLevel(level, DateTime.now());
-            final text = event.text;
-            if (text == null || text == _rawText) return;
-            _rawText = text;
-            _gate?.onSpeech(DateTime.now());
-            _applyRaw();
-          },
-          onError: (Object e) {
-            // Yerli taraf oturumu kendisi kapattıysa (uygulama arka plana
-            // düştü ya da uzun süre konuşma yok — bkz. MainActivity) hata
-            // göstermek yerine gözden geçirmeye geç: biriken metin kullanılır.
-            if (e is PlatformException &&
-                (e.code == 'speech_background' || e.code == 'speech_idle')) {
-              if (mounted) _finish();
-              return;
-            }
-            // Biriken metin korunur; kullanıcı "Bitir" ile kullanabilsin diye
-            // hata yalnızca gösterilir.
-            if (mounted) {
-              setState(
-                () => _errorMessage = e is PlatformException
-                    ? (e.message ?? e.code)
-                    : e.toString(),
-              );
-            }
-          },
-        );
-      } else {
-        await _startRecording();
+      // İzin yokken SpeechRecognizer sormadan hata verir; önce iste.
+      if (_useSpeech && !await DeviceSpeech.ensureMicPermission()) {
+        _fail(micDenied);
+        return;
       }
-      _gate = SilenceGate()..start(DateTime.now());
-      _silenceTimer = Timer.periodic(
-        const Duration(milliseconds: 250),
-        (_) => _checkSilence(),
+      if (!mounted) return;
+      final session = VoiceListenSession(
+        useDevice: _useSpeech,
+        // Üst sınır: levha açık unutulursa mikrofon süresiz kalmasın; o ana
+        // kadarki metin/kayıt gözden geçirme evresine taşınır.
+        maxDuration: _maxCaptureDuration,
+        autoStop: () => ref.read(voiceAutoStopProvider),
+        // Basılı-tut modunda parmak düğmedeyken kullanıcı "dinlemeye devam"
+        // diyor demektir.
+        holdOpen: () => _pressed,
+        onText: (text) {
+          _rawText = text;
+          _applyRaw();
+        },
+        // Her bitiş (sessizlik, yerli kapanış, üst sınır) gözden geçirmeye
+        // taşır: biriken metin kullanılır, hata gösterilmez.
+        onEnd: (_) {
+          if (mounted) _finish();
+        },
+        // Biriken metin korunur; kullanıcı "Bitir" ile kullanabilsin diye
+        // hata yalnızca gösterilir.
+        onError: (message) {
+          if (mounted) setState(() => _errorMessage = message);
+        },
+        onSilence: (progress) {
+          if (mounted) setState(() => _silence = progress);
+        },
       );
+      _session = session;
+      if (!_useSpeech) await _startRecording(session);
+      if (_phase != _Phase.listening) return;
+      session.start();
       _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
         if (!mounted) return;
         setState(() => _elapsed += const Duration(seconds: 1));
-        // Üst sınır: levha açık unutulursa mikrofon süresiz kalmasın; o ana
-        // kadarki metin/kayıt gözden geçirme evresine taşınır.
-        if (_elapsed >= _maxCaptureDuration) _finish();
       });
     } catch (e) {
       _fail(e.toString());
@@ -298,7 +285,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   }
 
   /// Yerleşik tanıma yoksa: dosyaya kaydet, bitince toplu döküm.
-  Future<void> _startRecording() async {
+  Future<void> _startRecording(VoiceListenSession session) async {
     final micDenied = context.l10n.micPermissionDenied;
     final recorder = AudioRecorder();
     _recorder = recorder;
@@ -320,9 +307,8 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     _ampSub = recorder
         .onAmplitudeChanged(const Duration(milliseconds: 200))
         .listen((a) {
-          final now = DateTime.now();
-          _gate?.onLevel(((a.current + 50) / 50).clamp(0.0, 1.0), now);
-          if (a.current > -30) _gate?.onSpeech(now);
+          session.reportLevel(((a.current + 50) / 50).clamp(0.0, 1.0));
+          if (a.current > -30) session.reportSpeech();
         });
   }
 
@@ -366,31 +352,6 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     });
   }
 
-  /// Sessizlik kapısını yoklar: süre dolduysa dinlemeyi bitirir.
-  ///
-  /// Basılı-tut modunda parmak düğmedeyken hiç bitirmez — kullanıcı
-  /// "dinlemeye devam" diyor demektir. Kayıt yolunda (Windows) hiç konuşma
-  /// algılanmadıysa da bitirmez: seviye eşiği mikrofona göre değişir, yanlış
-  /// bir "duyulmadı" konuşulanı çöpe atardı; o yolda bitiş yalnız konuşmadan
-  /// SONRAKİ sessizlikle olur.
-  void _checkSilence() {
-    final gate = _gate;
-    if (gate == null || _phase != _Phase.listening || !mounted) return;
-    final enabled =
-        ref.read(voiceAutoStopProvider) &&
-        !_pressed &&
-        (_useSpeech || gate.heard);
-    final now = DateTime.now();
-    final progress = enabled ? gate.progress(now) : 0.0;
-    // Geri sayım şeridi yalnız konuşmadan SONRAKİ sessizlikte görünür;
-    // levha açılır açılmaz dolmaya başlayan bir şerit telaş yaratırdı.
-    final shown = gate.heard && progress > 0.3 ? progress : 0.0;
-    if ((shown - _silence).abs() >= 0.05 || (shown == 0) != (_silence == 0)) {
-      setState(() => _silence = shown);
-    }
-    if (enabled && gate.shouldStop(now)) _finish();
-  }
-
   /// Dinlemeyi bitirir ve gözden geçirme evresine geçer (artık POP ETMEZ).
   Future<void> _finish() async {
     // Bitiş birden çok yoldan gelebilir (düğme, sessizlik, "dinlemeyi
@@ -414,10 +375,8 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
 
     if (_useSpeech) {
       // Son sonucu al, akışı kapat.
-      await DeviceSpeech.stop();
-      await Future<void>.delayed(const Duration(milliseconds: 300));
-      await _speechSub?.cancel();
-      _speechSub = null;
+      await _session?.stop();
+      _session = null;
       if (!mounted) return;
       _toReview(_text.trim(), l10n.voiceNothingHeard);
       return;
@@ -611,11 +570,14 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
 
   /// Sessizlik izlemesini ve kayıt yolunun seviye aboneliğini bırakır.
   void _stopSilenceWatch() {
-    _silenceTimer?.cancel();
-    _silenceTimer = null;
+    // Kayıt yolunda oturum mikrofona dokunmaz; yalnız zamanlayıcısı durur
+    // (konuşma yolunda bitiş [_finishListening]'de son sonucu bekler).
+    if (!_useSpeech) {
+      _session?.cancel();
+      _session = null;
+    }
     _ampSub?.cancel();
     _ampSub = null;
-    _gate = null;
     _silence = 0;
   }
 
@@ -623,8 +585,8 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     _ticker?.cancel();
     _ticker = null;
     _stopSilenceWatch();
-    await _speechSub?.cancel();
-    _speechSub = null;
+    await _session?.cancel();
+    _session = null;
     try {
       final path = await _recorder?.stop();
       if (path != null) File(path).delete().ignore();
@@ -640,6 +602,8 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   void _fail(String message) {
     _ticker?.cancel();
     _stopSilenceWatch();
+    _session?.cancel();
+    _session = null;
     if (!mounted) return;
     setState(() {
       _phase = _Phase.error;
@@ -650,10 +614,9 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   @override
   void dispose() {
     _ticker?.cancel();
-    _silenceTimer?.cancel();
     _ampSub?.cancel();
     _feedbackTimer?.cancel();
-    _speechSub?.cancel();
+    _session?.cancel();
     _recorder?.dispose();
     _editController.dispose();
     // Gönderilmeden kapatıldıysa kayıt geçici klasörde kalmasın (gönderildiyse
@@ -775,10 +738,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
           ),
           const SizedBox(height: 7),
           _Waveform(active: listening, scheme: scheme),
-          if (_phase != _Phase.ready) ...[
-            const SizedBox(height: 6),
-            _smartRow(l10n, scheme),
-          ],
+
           if (_errorMessage.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
@@ -859,6 +819,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
               ],
             ),
           ),
+          if (!ready) _commandsHelp(l10n, scheme),
           Text(
             _format(_elapsed),
             style: TextStyle(
@@ -976,82 +937,32 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     );
   }
 
-  /// Dinlerken iki küçük anahtar: akıllı komutlar ve sessizlikte bitir.
-  /// Ayarlar'daki anahtarlarla AYNI tercihtir; levhada durmalarının sebebi
-  /// keşfedilebilirlik — komut listesi ⓘ'de.
-  Widget _smartRow(AppLocalizations l10n, ColorScheme scheme) {
-    final smart = ref.watch(voiceSmartCommandsProvider);
-    final autoStop = ref.watch(voiceAutoStopProvider);
-    Widget chip({
-      required Key key,
-      required String label,
-      required IconData icon,
-      required bool selected,
-      required ValueChanged<bool> onSelected,
-    }) => FilterChip(
-      key: key,
-      avatar: Icon(icon, size: 16),
-      showCheckmark: false,
-      label: Text(
-        label,
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-      ),
-      labelPadding: const EdgeInsetsDirectional.only(end: 2),
-      visualDensity: VisualDensity.compact,
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      selected: selected,
-      onSelected: onSelected,
-    );
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 6,
-      runSpacing: 4,
-      children: [
-        chip(
-          key: const ValueKey('voice-smart-toggle'),
-          label: l10n.voiceSmartCommands,
-          icon: Icons.auto_fix_high,
-          selected: smart,
-          onSelected: (v) {
-            ref.read(voiceSmartCommandsProvider.notifier).set(v);
-            // Ekrandaki metin yeni tercihle baştan hesaplanır.
-            _commandCount = 0;
-            _applyRaw();
-          },
+  /// Akıllı komutların listesi. Anahtarların kendisi (Sessizlikte bitir,
+  /// Akıllı komutlar) yalnız Ayarlar'da: levha zaten iki büyük düğme, üç
+  /// işlem çipi ve "baştan dinle" taşıyor — dinlerken iki anahtar daha
+  /// kalabalıktı (sadeleştirme 2026-10-19).
+  Widget _commandsHelp(AppLocalizations l10n, ColorScheme scheme) => IconButton(
+    key: const ValueKey('voice-commands-help'),
+    tooltip: l10n.voiceSmartCommands,
+    visualDensity: VisualDensity.compact,
+    iconSize: 18,
+    icon: Icon(Icons.info_outline, color: scheme.onSurfaceVariant),
+    onPressed: () => showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.voiceSmartCommands),
+        content: Text(
+          '${l10n.voiceSmartCommandsInfo}\n\n${l10n.voiceAutoStopInfo}',
         ),
-        chip(
-          key: const ValueKey('voice-autostop-toggle'),
-          label: l10n.voiceAutoStop,
-          icon: Icons.hourglass_bottom,
-          selected: autoStop,
-          onSelected: (v) => ref.read(voiceAutoStopProvider.notifier).set(v),
-        ),
-        IconButton(
-          key: const ValueKey('voice-commands-help'),
-          tooltip: l10n.voiceSmartCommands,
-          visualDensity: VisualDensity.compact,
-          iconSize: 18,
-          icon: Icon(Icons.info_outline, color: scheme.onSurfaceVariant),
-          onPressed: () => showDialog<void>(
-            context: context,
-            builder: (dialogContext) => AlertDialog(
-              title: Text(l10n.voiceSmartCommands),
-              content: Text(
-                '${l10n.voiceSmartCommandsInfo}\n\n${l10n.voiceAutoStopInfo}',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: Text(l10n.close),
-                ),
-              ],
-            ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.close),
           ),
-        ),
-      ],
-    );
-  }
+        ],
+      ),
+    ),
+  );
 
   /// Gözden geçirme evresinin bitiş düğmesi. İki düğme yan yana durduğunda
   /// etiketler dar ekranda sığmayabilir: metin tek satırda kalır ve gerekirse

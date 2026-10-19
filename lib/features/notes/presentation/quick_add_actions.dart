@@ -134,9 +134,9 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     await openNewNote(id, query: '?draw=1');
   }
 
-  /// Sesli not modu (Keep'teki gibi): not oluşturulur, editör açılır açılmaz
-  /// ses kaydı başlar ve konuşma dökümü nota canlı yazılır; bitişte ses
-  /// m4a eki olarak nota bağlanır.
+  /// Sesli not (klasör ekranı): not oluşturulur, editör açılır açılmaz
+  /// ortak sesli yakalama levhası gelir. Ana ekran aynı levhayı not açmadan
+  /// kendisi gösterir (dashboard `_captureVoiceNote`).
   Future<void> createVoiceCaptureNote() async {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;

@@ -260,9 +260,9 @@ final deepLinkHandlerProvider = Provider<void>((ref) {
 
   void handle(Uri uri) {
     if (uri.host == 'voice' || uri.path.contains('voice')) {
-      // Ayrı /voice ekranını açmak yerine ana sayfadaki YENİ Sesli Not
-      // Asistanı'nı (canlı dökümlü panel) bas-başlat modunda tetikle — tek,
-      // tutarlı sistem. Dashboard voiceAutostartProvider'ı dinleyip başlatır.
+      // Ana sayfadaki ORTAK sesli not levhası açılır — mikrofon düğmesi,
+      // hızlı ekle ve widget aynı yolu kullanır. Dashboard
+      // voiceAutostartProvider'ı dinleyip levhayı açar.
       router.go('/');
       ref.read(voiceAutostartProvider.notifier).request();
       return;
@@ -346,7 +346,7 @@ Widget _noteBuilder(BuildContext context, GoRouterState state) =>
       readOnly: state.uri.queryParameters['ro'] == '1',
       // ?draw=1: el yazısı modu — editör çizim tuvaliyle açılır.
       startDrawing: state.uri.queryParameters['draw'] == '1',
-      // ?voice=1: sesli not modu — kayıt + canlı döküm başlar.
+      // ?voice=1: sesli not — ortak sesli yakalama levhası açılır.
       startVoiceCapture: state.uri.queryParameters['voice'] == '1',
       // ?dictate=1: SESLE YAZ — mikrofon açılır, konuşulan söz
       // imlecin olduğu yere anında yazılır (yapay zekâ yok).

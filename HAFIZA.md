@@ -5100,3 +5100,28 @@ Flutter 3.44.6 yine `/opt/flutter`. `voice_commands_test` (+22),
 `pinned_keyboard_test` (+3). 11 yeni anahtar 16 dilde. **TUZAK:**
 `flutter gen-l10n` üretilenleri biçimsiz yazıyor — ardından
 `dart format lib/l10n/generated`. Cihazda GÖRÜLMEDİ.
+
+## 2026-10-19 (2. tur) — sesli giriş SADELEŞTİRMESİ (APK derlenmedi)
+Kullanıcı: "sadeleşmeyi yap, main'e merge et ama APK derletme". Önceki
+değerlendirmede 6 ayrı sesli giriş yolu ve 3 ayrı dinleme kodu çıkmıştı.
+
+* **Tek dinleme altyapısı**: `VoiceListenSession` (notes/data/
+  voice_listen_session.dart) — cihaz tanımasına abonelik, `SilenceGate`,
+  üst sınır (10 dk), yerli kapanış (`speech_background`/`speech_idle`).
+  Levha ve editörün sade mikrofonu bunu kullanır; Windows kayıt yolunda
+  oturum mikrofonu açmaz, levha `reportSpeech/reportLevel` ile besler.
+* **Sesli Not Asistanı mikrofonu söküldü**: `VoiceAssistantController`
+  artık yalnız `composeFromTranscript` (levhadaki "AI not"); evreler
+  idle/processing/done/error. Widget (`notlar://voice`) ve hızlı ekle →
+  "Sesli not" ana ekranda levhayı açar (`_captureVoiceNote`); klasör
+  ekranındaki `createVoiceCaptureNote` editörde `?voice=1` ile AYNI
+  levhayı açar.
+* **Google tanıma ekranı yolu söküldü** (`_startVoiceCapture`,
+  `_writeDictated`, Dart `DeviceSpeech.voiceInputWithAudio`). **AÇIK İŞ:**
+  Kotlin'deki `voiceInputWithAudio` köprüsü ölü kod — APK derlenmediği için
+  dokunulmadı; bir sonraki [apk] turunda sökülüp derlenmeli.
+* Levhadaki iki anahtar (Sessizlikte bitir / Akıllı komutlar) kalktı, yalnız
+  Ayarlar'da; levhada başlıktaki ⓘ komut listesini gösterir.
+* Basılı tut / bas-başlat ayarı DURUYOR (kullanıcıya sorulmadan kaldırılmadı).
+
+Analiz temiz, 1321/1321 test. Cihazda GÖRÜLMEDİ.

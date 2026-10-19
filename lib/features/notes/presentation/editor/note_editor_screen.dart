@@ -59,6 +59,7 @@ import '../../../settings/data/permissions_service.dart';
 import '../../../settings/settings_providers.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/device_speech.dart';
+import '../../data/voice_listen_session.dart';
 import '../../data/document_scan.dart';
 import '../../data/note_speech.dart';
 import '../../data/note_share.dart';
@@ -579,7 +580,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
     if (_pendingVoice) {
       _pendingVoice = false;
-      _startVoiceCapture();
+      // Sesli not, uygulamanın her yerinde AYNI levhayla (bkz. _captureVoice).
+      unawaited(_captureVoice());
     }
     if (_pendingDictation) {
       _pendingDictation = false;
@@ -1279,10 +1281,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     openEditorNoteIds.remove(widget.noteId);
     // Dikte açıkken editörden çıkılabiliyor: mikrofon ekranla birlikte
     // kapanmazsa arka planda dinlemeye devam ederdi.
-    _dictationSilenceTimer?.cancel();
-    if (_dictationSub != null) {
-      _dictationSub!.cancel();
-      _dictationSub = null;
+    if (_dictation != null) {
+      _dictation!.cancel();
+      _dictation = null;
       unawaited(DeviceSpeech.stop());
     }
     // Yalnız `_debouncer.flush()` DEĞİL: denetleyici metni nottan sapmış ama
@@ -6700,7 +6701,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   // [_dictationLength]) hatırlanır ve her olayda o aralık yenisiyle
   // DEĞİŞTİRİLİR. Kullanıcının dikte sırasında elle yazdığı harfler aralığın
   // dışında kaldığı için korunur.
-  StreamSubscription<({String? text, double? level})>? _dictationSub;
+  VoiceListenSession? _dictation;
 
   /// Diktenin yazdığı alan (gövde, başlık ya da bir madde satırı) ve o
   /// alandaki yazma aralığı. Hedef, dikte BAŞLARKEN en son odaklanmış olan
@@ -6714,13 +6715,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// gitmesin, satırı bölünmesin.
   String _dictationShown = '';
 
-  /// AKILLI DİNLEME (2026-10-19): sade mikrofon da sessizlikte kendiliğinden
-  /// biter (bkz. [SilenceGate]) — eskiden yalnız ikinci dokunuşla ya da
-  /// yerli tarafın 2 dakikalık boşta kapanışıyla duruyordu.
-  SilenceGate? _dictationGate;
-  Timer? _dictationSilenceTimer;
-
-  bool get _dictating => _dictationSub != null;
+  bool get _dictating => _dictation != null;
 
   /// Sade mikrofon: dikteyi başlatır, açıksa bitirir.
   Future<void> _toggleDictation() async {
@@ -6759,61 +6754,33 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _dictationLength = 0;
     _dictationShown = '';
 
-    final gate = SilenceGate()..start(DateTime.now());
-    _dictationGate = gate;
-    _dictationSilenceTimer = Timer.periodic(
-      const Duration(milliseconds: 250),
-      (timer) {
-        if (!mounted || !identical(_dictationGate, gate)) {
-          timer.cancel();
-          return;
-        }
-        if (!_dictating) return;
-        if (ref.read(voiceAutoStopProvider) &&
-            gate.shouldStop(DateTime.now())) {
-          unawaited(_stopDictation());
+    // Dinlemenin yaşam döngüsü (sessizlikte bitiş, yerli kapanış, üst
+    // sınır) levhayla ORTAK oturumda (bkz. VoiceListenSession).
+    late final VoiceListenSession session;
+    session = VoiceListenSession(
+      autoStop: () => ref.read(voiceAutoStopProvider),
+      onText: (text) {
+        if (mounted && identical(_dictation, session)) {
+          _writeDictationAtCaret(text);
         }
       },
-    );
-    final sub = DeviceSpeech.listen().listen(
-      (event) {
-        final level = event.level;
-        if (level != null) gate.onLevel(level, DateTime.now());
-        final text = event.text;
-        if (text == null || !mounted) return;
-        gate.onSpeech(DateTime.now());
-        _writeDictationAtCaret(text);
-      },
-      onError: (Object e) {
-        // Yerli taraf oturumu kendi kapattıysa (arka plana düşme, uzun
-        // sessizlik) bu bir hata değil, bitiştir: yazılan metin zaten notta.
-        if (e is PlatformException &&
-            (e.code == 'speech_background' || e.code == 'speech_idle')) {
-          unawaited(_stopDictation());
-          return;
-        }
+      // Sessizlik ya da yerli kapanış bir hata değil, bitiştir: yazılan
+      // metin zaten notta.
+      onEnd: (_) => unawaited(_stopDictation()),
+      onError: (message) {
         unawaited(_stopDictation());
-        if (mounted) {
-          _showSnack(e is PlatformException ? (e.message ?? e.code) : '$e');
-        }
+        if (mounted) _showSnack(message);
       },
-      onDone: () => unawaited(_stopDictation()),
     );
-    if (!mounted) {
-      await sub.cancel();
-      return;
-    }
-    setState(() => _dictationSub = sub);
+    setState(() => _dictation = session);
+    session.start();
   }
 
   /// Dikteyi bitirir: akış kapatılır, şerit iner, metin olduğu gibi kalır.
   Future<void> _stopDictation() async {
-    final sub = _dictationSub;
+    final sub = _dictation;
     if (sub == null) return;
-    _dictationSub = null;
-    _dictationSilenceTimer?.cancel();
-    _dictationSilenceTimer = null;
-    _dictationGate = null;
+    _dictation = null;
     _dictationTarget = null;
     _dictationLength = 0;
     _dictationShown = '';
@@ -6964,86 +6931,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
   }
 
-  /// Dikte metnini gövdeye yazar: taban (mevcut gövde + ayraç) sabit kalır,
-  /// üstüne o ana kadarki tam döküm gelir.
-  void _writeDictated(String base, String full) {
-    // Dikte parçaları artık satır sonuyla ayrılıyor (liste notunda her
-    // duraklama ayrı madde olsun diye). Metin notunda paragraf bölünmesin:
-    // ayraçlar boşluğa çevrilir. Taban metnin kendi satırları korunur.
-    final combined = base + full.replaceAll('\n', ' ');
-    _bodyController.value = TextEditingValue(
-      text: combined,
-      selection: TextSelection.collapsed(offset: combined.length),
-    );
-    _mutate((n) => n.copyWith(body: combined), immediate: true);
-  }
-
-  // Satır satır CANLI dikte (gövdeye anında yazan `_startInlineDictation` ve
-  // liste notunda her duraklamayı madde yapan `_syncDictatedItems`) kaldırıldı:
-  // yerini sesli yakalama levhası aldı (bkz. `_captureVoice`). Yanlış tanınan
-  // cümle artık nota girmeden levhada düzeltiliyor. `_writeDictated` duruyor —
-  // Keep tarzı sesli notu (`_startVoiceCapture`) o kullanıyor.
-
-  /// Keep tarzı sesli not: Google'ın sesli giriş ekranı açılır; dönüşte
-  /// metin nota yazılır, Google'ın KENDİ kaydettiği ses de ek olur.
-  /// (+) menüsündeki "Sesli not"tan `?voice=1` ile gelir.
-  ///
-  /// KÖK NEDEN (eski tasarım niye söküldü): canlı dikte + kendi m4a kaydımız
-  /// aynı anda çalışamıyor — Android'de tek mikrofonu SON açan istemci alır
-  /// ve tanıyıcı mikrofonu asenkron açtığından hep o kazanır; kayıt dosyası
-  /// sessiz çıkıyordu (9.4 sn kayıtta 0.14 sn ses — logcat ile ölçüldü).
-  /// Keep'in kendisi de bu yüzden Google ekranını kullanır: tek mikrofon
-  /// istemcisi Google'dır, metni de kaydettiği sesi de o döndürür.
-  Future<void> _startVoiceCapture() async {
-    final note = _note;
-    if (note == null) return;
-    final res = await DeviceSpeech.voiceInputWithAudio();
-    if (res == null) return; // İptal ya da sesli giriş ekranı yok.
-    final text = res.text.trim();
-    if (text.isNotEmpty) {
-      // Dikteyle aynı yazım kuralı: metin notunda gövdenin sonuna eklenir,
-      // liste notunda yeni madde olur.
-      if (note.type == NoteType.text) {
-        final base = _bodyController.logicalText;
-        final sep = base.trim().isEmpty ? '' : '${base.trimRight()}\n';
-        _writeDictated(sep, text);
-      } else {
-        _mutate(
-          (n) => n.copyWith(
-            items: [
-              ...n.items,
-              NoteItem(id: const Uuid().v4(), text: text),
-            ],
-          ),
-          immediate: true,
-        );
-      }
-    }
-    final audioPath = res.audioPath;
-    if (audioPath == null) return; // GET_AUDIO vermezse yalnız metin kalır.
-    try {
-      final repo = _attachments;
-      if (repo == null) return;
-      final attachment = await repo.prepareAudio(
-        noteId: widget.noteId,
-        sourcePath: audioPath,
-        // Google süreyi bildirmez; AMR-NB ~12.2 kbps ≈ 1.6 KB/sn olduğundan
-        // dosya boyutundan kestirilir. ponytail: kaba tahmin — oynatıcı
-        // gerçek süreyi dosyadan zaten okur, bu yalnız etikette görünür.
-        duration: Duration(
-          seconds: (File(audioPath).lengthSync() / 1600).round(),
-        ),
-      );
-      _mutate(
-        (n) => n.copyWith(attachments: [...n.attachments, attachment]),
-        immediate: true,
-      );
-    } on FileTooLargeException catch (e) {
-      if (mounted) _showSnack(_tooLargeMessage(e));
-    } catch (e) {
-      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
-    }
-  }
+  // Keep tarzı sesli not (`_startVoiceCapture`: Google'ın tanıma EKRANI,
+  // metin + Google'ın kaydettiği AMR ses) 2026-10-19 sadeleştirmesinde
+  // kaldırıldı. Dördüncü bir arayüzdü ve tek getirisi düşük kaliteli ses
+  // dosyasıydı; `?voice=1` artık ortak levhayı açar. (Kotlin'deki
+  // `voiceInputWithAudio` köprüsü kullanılmıyor; bir sonraki APK turunda
+  // derlenerek sökülecek.)
 
   /// Dahili hesap makinesi: sonucu metin notunda imlecin bulunduğu yere,
   /// listelerde yeni öğe olarak ekler.
