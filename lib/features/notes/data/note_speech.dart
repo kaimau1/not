@@ -52,7 +52,7 @@ Future<String> _documentText(
           ? doc.localPath
           : await _tempCopy(doc, attachments);
       if (path == null) return '';
-      return PdfText.cleanForSpeech(await PdfText.extract(path));
+      return await PdfText.cleanForSpeech(await PdfText.extract(path));
     }
     final bytes = await attachments?.readBytes(doc);
     if (bytes == null) return '';

@@ -711,9 +711,13 @@ class _SettingRow {
   /// Baslikta gecmeyen ama kullanicinin arayabilecegi kelimeler.
   final String keywords;
 
-  bool matches(String query) =>
-      foldForSearch(title).contains(query) ||
-      foldForSearch(keywords).contains(query);
+  // Sorgu burada da katlanır (idempotent): çağıran ham metin verse de
+  // Türkçe ı/I/aksan farkı yok sayılsın (F1.8).
+  bool matches(String query) {
+    final q = foldForSearch(query);
+    return foldForSearch(title).contains(q) ||
+        foldForSearch(keywords).contains(q);
+  }
 }
 
 class _Area {
@@ -733,10 +737,12 @@ class _Area {
   final String keywords;
   final List<_SettingRow> rows;
 
-  bool matches(String query) =>
-      foldForSearch(title).contains(query) ||
-      foldForSearch(summary).contains(query) ||
-      foldForSearch(keywords).contains(query);
+  bool matches(String query) {
+    final q = foldForSearch(query);
+    return foldForSearch(title).contains(q) ||
+        foldForSearch(summary).contains(q) ||
+        foldForSearch(keywords).contains(q);
+  }
 
   /// Sorguda gorunecek satirlar.
   ///

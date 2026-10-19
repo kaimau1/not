@@ -134,7 +134,7 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
   `notes_repository.dart:493`: `onError` `String?` döndürüyor → yazım
   reddinde ikinci, yakalanmamış hata. Bitti ölçütü: 3.47.7 ile
   `flutter analyze` bu 6 uyarıyı vermez (yalnız analiz; 3.47'de test koşmaz).
-  **Yapıldı:** 4 dosyada `return await`; `notes_repository` `onError` blok gövde. (3.47.7 ile analiz bu oturumda koşulmadı — SDK 3.44.6; desen kodda giderildi.)
+  **Yapıldı:** 4 dosyada `return await`; `notes_repository` `onError` blok gövde. 3.47.7 ile `flutter analyze` temiz (bir beşinci yer daha çıktı: `note_speech.dart` PDF dalı — düzeltildi).
 
 - [x] **F1.8 Türkçe aramada ı/I ve aksan.**
   `notes_providers.dart:1138` `_matches` (ve sorgu `:943`) `toLowerCase`
