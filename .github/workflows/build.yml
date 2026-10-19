@@ -20,19 +20,18 @@ env:
   FLUTTER_VERSION: '3.44.6'
 
 jobs:
-  test:
-    name: Analiz + Test
+  # Derleme işareti ayrı, saniyelik bir işte okunur: APK işi testi BEKLEMEDEN
+  # onunla paralel başlasın (eskiden test bitene dek ~7 dk sırada bekliyordu).
+  marker:
+    name: Derleme işareti
     runs-on: ubuntu-latest
     outputs:
       apk: ${{ steps.marker.outputs.apk }}
     steps:
       - uses: actions/checkout@v4
 
-      # KÖK NEDEN: işaret eskiden `contains(head_commit.message, '[apk]')` ile
-      # aranıyordu ve o ifade commit mesajının TAMAMINA (gövde dahil) bakar.
-      # Gövdede işaretten SÖZ EDEN bir cümle ("[apk] yok" gibi) derlemeyi
-      # istemeden tetikliyordu. Artık yalnız ilk satıra (commit BAŞLIĞI)
-      # bakılıyor; gövdede işaretten serbestçe söz edilebilir.
+      # İşaret yalnız ilk satırda (commit BAŞLIĞI) aranır: gövdede işaretten
+      # söz eden bir cümle derlemeyi istemeden tetikliyordu.
       - name: Derleme işaretini oku
         id: marker
         run: |
@@ -44,6 +43,12 @@ jobs:
             echo "apk=false" >> "$GITHUB_OUTPUT"
             echo "Başlıkta [apk] yok → APK derlenmeyecek."
           fi
+
+  test:
+    name: Analiz + Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - uses: subosito/flutter-action@v2
         with:
@@ -57,27 +62,27 @@ jobs:
       - name: Analiz
         run: flutter analyze
 
+      # -j 4: package:test varsayılanı çekirdeklerin YARISI (4 vCPU'da 2).
+      # Ölçüm (2026-10-19, 4 çekirdek): varsayılan ~200 sn, -j 4 ~90 sn.
       - name: Testler
-        run: flutter test
+        run: flutter test -j 4
 
-  # Her push'ta APK derlemek CI dakikalarını boşa yakıyordu (~15 dk/derleme).
-  # Artık yalnızca elle tetiklenince (Actions → Run workflow) ya da MAIN'e
-  # giren commit'in mesajında [apk] geçince derlenir. Analiz+Test her push'ta
-  # çalışmaya devam eder.
+  # APK yalnız elle tetiklenince (Actions → Run workflow) ya da MAIN'e giren
+  # commit'in BAŞLIĞINDA [apk] geçince derlenir; dalda derlenmez (dal ile
+  # main'in ağır işleri yan yana koşunca main'inki "runner has received a
+  # shutdown signal" ile ölüyordu — 2026-08-01, üç koşu).
   #
-  # DALDA DERLENMEZ. Gözlem (2026-08-01, üç koşu): dal ile main'in APK işleri
-  # yan yana koştuğunda main'inki "runner has received a shutdown signal" ile
-  # ölüyor, dalınki bitiyor — main'de yalnız tek başına koşan derleme (#153)
-  # tamamlandı. Nedeni kesin bilinmiyor (runner tarafı), ama dalda üretilen APK
-  # zaten hiçbir yere gitmiyordu: sürüm main'den yayınlanıyor. İkinci ağır işi
-  # kaldırmak hem bu çakışmayı hem de boşa giden ~12 dk'yı ortadan kaldırır.
+  # TESTLE PARALEL: iş testi beklemez. Main'de Release TASLAK olarak
+  # oluşturulur; `release` işi testler yeşilse onu yayınlar (bildirim maili
+  # o anda gider), testler kırmızıysa taslağı siler. Test kırmızıyken
+  # indirilebilir APK çıkmaz — eski sıralı düzenle aynı güvence.
   android:
     name: Android APK
     runs-on: ubuntu-latest
-    needs: test
+    needs: marker
     if: >
       (github.event_name == 'workflow_dispatch' && !inputs.perf) ||
-      (github.ref == 'refs/heads/main' && needs.test.outputs.apk == 'true')
+      (github.ref == 'refs/heads/main' && needs.marker.outputs.apk == 'true')
     permissions:
       contents: write
     steps:
@@ -111,6 +116,18 @@ jobs:
           key: gradle-${{ runner.os }}-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties', 'android/**/*.gradle*') }}
           restore-keys: |
             gradle-${{ runner.os }}-
+
+      # Gradle YAPI önbelleği (görev çıktıları: Kotlin/Java derlemesi,
+      # eklenti modülleri) ayrı tutulur ve HER başarılı derlemeden sonra
+      # tazelenir — yukarıdaki bağımlılık önbelleği yalnız ilk ısıtmada
+      # yazıldığı için derleme çıktılarını hiç taşımıyordu.
+      - name: Gradle yapı önbelleğini geri yükle
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.gradle/caches/build-cache-1
+          key: gradle-bc-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            gradle-bc-${{ runner.os }}-
 
       - uses: subosito/flutter-action@v2
         with:
@@ -220,6 +237,13 @@ jobs:
         if: always()
         run: python3 /tmp/pdfrx_wasm.py revert || true
 
+      - name: Gradle yapı önbelleğini kaydet
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.gradle/caches/build-cache-1
+          key: gradle-bc-${{ runner.os }}-${{ github.run_id }}
+
       # BOYUT RAPORU: APK'nın içinde hangi mimarilerin ve hangi büyük
       # dosyaların olduğunu yazar. 2026-08-16'da APK 60 MB'tan 100 MB'a
       # çıkınca (arm64'e indirilmiş olmasına RAĞMEN) nedeni loglardan
@@ -266,10 +290,12 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: mv build/app/outputs/flutter-apk/app-release.apk notlar-v1.0.${{ github.run_number }}.apk
 
-      - name: Release yayınla
+      - name: Release taslağı oluştur
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
+          draft: true
+          target_commitish: ${{ github.sha }}
           tag_name: v1.0.${{ github.run_number }}
           name: Notlar v1.0.${{ github.run_number }}
           body: |
@@ -279,19 +305,40 @@ jobs:
             (Cloudflare Pages, `notlar-web`).
           files: notlar-v1.0.${{ github.run_number }}.apk
 
-      # Artifact yükleme ARTIK ZORUNLU DEĞİL (continue-on-error): depo
-      # kotası dolduğunda tek başına bütün işi düşürüyordu. Asıl teslimat
-      # yolu yukarıdaki Release; bu adım yalnız elle tetiklenen (main dışı)
-      # koşularda işe yarıyor, çünkü orada Release yayınlanmıyor.
-      - name: APK'yı yükle (kotaya bağlı, zorunlu değil)
+      # Artifact YALNIZ elle tetiklenen (main dışı) koşuda: main'de teslimat
+      # Release'tir. Depo artifact kotası dolu olabilir (2026-08-16'dan beri
+      # sık sık "quota has been hit") — zorunlu değil, saklama 3 gün.
+      - name: APK'yı yükle (elle tetiklenen koşu)
+        if: github.ref != 'refs/heads/main'
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: notlar-android-apk
-          path: |
-            notlar-v1.0.${{ github.run_number }}.apk
-            build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 3
           if-no-files-found: warn
+
+  # Testler yeşilse taslak Release yayınlanır, kırmızıysa silinir.
+  release:
+    name: Release yayınla
+    runs-on: ubuntu-latest
+    needs: [test, android]
+    if: always() && github.ref == 'refs/heads/main' && needs.android.result == 'success'
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: v1.0.${{ github.run_number }}
+    steps:
+      - name: Yayınla ya da sil
+        run: |
+          if [ "${{ needs.test.result }}" = "success" ]; then
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+          else
+            echo "::error::Testler kırmızı — $TAG taslağı siliniyor."
+            gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+            exit 1
+          fi
 
   # main'e her push'ta Firestore/Storage kurallarını ve web sürümünü otomatik
   # yayınlar. Elle `firebase deploy` / `wrangler pages deploy` çalıştırmaya

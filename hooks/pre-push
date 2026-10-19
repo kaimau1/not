@@ -8,7 +8,7 @@ if [ ! -x "$FLUTTER" ] && [ ! -f "$FLUTTER" ]; then
   exit 1
 fi
 echo "pre-push: flutter test calisiyor..."
-if ! "$FLUTTER" test; then
+if ! "$FLUTTER" test -j 4; then
   echo ""
   echo "PUSH ENGELLENDI: testler kirmizi (usta refs/kit.md)."
   exit 1
