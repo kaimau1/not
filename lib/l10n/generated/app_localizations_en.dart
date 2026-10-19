@@ -42,21 +42,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterPinned => 'Pinned';
 
   @override
-  String get filterStarred => 'Starred';
-
-  @override
   String get star => 'Star';
 
   @override
   String get unstar => 'Remove star';
-
-  @override
-  String editedAt(String date) {
-    return 'Edited: $date';
-  }
-
-  @override
-  String get sectionPinned => 'Pinned';
 
   @override
   String get sectionOthers => 'Others';
@@ -117,9 +106,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addAttachment => 'Add';
-
-  @override
-  String get addAttachmentMore => 'More attachment types…';
 
   @override
   String get addImage => 'Add image';
@@ -279,12 +265,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAi => 'AI';
-
-  @override
-  String get geminiApiKey => 'Gemini API key';
-
-  @override
-  String get geminiApiKeyHint => 'Paste the key starting with AIza...';
 
   @override
   String get geminiApiKeyInfo =>
@@ -518,14 +498,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String placeActive(String place, String trigger) {
-    return '$place · $trigger';
-  }
-
-  @override
-  String get placeSection => 'Location';
-
-  @override
   String get share => 'Share';
 
   @override
@@ -576,10 +548,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get micPermissionDenied => 'Microphone permission was denied';
-
-  @override
-  String get speechRecognitionFailed =>
-      'Speech recognition didn\'t work. Check that microphone permission is granted and the Google app is up to date.';
 
   @override
   String get addDrawing => 'Add drawing';
@@ -717,10 +685,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pdfChatInputHint => 'Type a question about the PDF...';
 
   @override
-  String get voiceCaptureHint =>
-      'Speak: \"buy milk and bread\" or \"meeting tomorrow at 9, remind me\" — AI builds your note when you\'re done.';
-
-  @override
   String get voiceFinish => 'Finish';
 
   @override
@@ -815,10 +779,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dictationListening => 'Listening... text appears as you speak';
 
   @override
-  String get dictationNoKeyInfo =>
-      'Live dictation isn\'t available on this device; the recording will be transcribed in one go when you stop.';
-
-  @override
   String get dictationHoldHint =>
       'Hold the microphone and speak; text is written when you let go';
 
@@ -826,9 +786,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String itemsSelected(int count) {
     return '$count items selected';
   }
-
-  @override
-  String get noteChatTitle => 'Chat with this note';
 
   @override
   String get noteChatHint => 'Ask something about this note';
@@ -858,14 +815,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceListening => 'Listening...';
 
   @override
-  String get voiceHoldHint =>
-      'Hold and speak; your note is created when you let go';
-
-  @override
   String get voiceTapHint => 'Tap and speak; tap again to finish';
-
-  @override
-  String get voiceTooShort => 'That recording was too short, try again';
 
   @override
   String get voiceModeSetting => 'How it works';
@@ -879,9 +829,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get voiceModeInfo =>
       'Hold to talk: it listens while you hold the button and creates the note when you let go. Tap to start: one tap begins recording, a second tap ends it.';
-
-  @override
-  String get voiceHeardLive => 'Speech detected';
 
   @override
   String get voiceCaptureReady => 'Speech ready';
@@ -931,9 +878,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceChipFix => 'Clean up';
 
   @override
-  String get voiceChipCompose => 'Let the assistant write it';
-
-  @override
   String get editorToolList => 'List';
 
   @override
@@ -958,12 +902,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get permBatteryInfo =>
       'Exempt the app from battery restrictions so reminders arrive on time';
-
-  @override
-  String get showTagChips => 'Show tag chips';
-
-  @override
-  String get showFolderChips => 'Show folder chips';
 
   @override
   String videoTooBigForAi(int mb) {
@@ -1050,13 +988,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get folderIcon => 'Icon';
 
   @override
-  String get editFilters => 'Edit filters';
-
-  @override
-  String get editFiltersInfo =>
-      'Choose which filters appear on the home screen. Hiding filters keeps the page tidy.';
-
-  @override
   String get select => 'Select';
 
   @override
@@ -1106,15 +1037,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get speechRate => 'Reading speed';
 
   @override
-  String get speechSystemDefault => 'System default';
-
-  @override
   String get speechNoVoices => 'No voices are installed on this device';
-
-  @override
-  String speechVoiceLanguage(String language) {
-    return '$language voice';
-  }
 
   @override
   String get speechVoiceAutoInfo =>
@@ -1212,10 +1135,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get frameColor => 'Frame';
 
   @override
-  String get frameColorInfo =>
-      'Draws a frame around the note in the colour you pick';
-
-  @override
   String get sortBy => 'Sort';
 
   @override
@@ -1238,18 +1157,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sortTitle => 'By title (A–Z)';
-
-  @override
-  String get foldersSection => 'Folders';
-
-  @override
-  String get tagsSection => 'Tags';
-
-  @override
-  String get expandFilters => 'Expand filters';
-
-  @override
-  String get collapseFilters => 'Collapse filters';
 
   @override
   String get settingsLanguage => 'Language';
@@ -1284,9 +1191,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncLimitUnlimited => 'No limit';
 
   @override
-  String get backupTitle => 'Backup';
-
-  @override
   String get importBackup => 'Restore from backup (JSON)';
 
   @override
@@ -1319,9 +1223,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moveToFolder => 'Move to folder';
 
   @override
-  String get voiceAssistantBadge => 'Assistant';
-
-  @override
   String get assistantGenericError =>
       'Something went wrong — could you try again?';
 
@@ -1334,9 +1235,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get autoTitleSettingInfo =>
       'When you leave the editor, a note left without a title gets a short one written from its contents.';
-
-  @override
-  String get hubChatInfo => 'Questions answered from your notes';
 
   @override
   String get hubBriefingInfo =>
@@ -1562,34 +1460,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qrTorch => 'Torch';
 
   @override
-  String attachmentsCount(int count) {
-    return 'Attachments ($count)';
-  }
-
-  @override
   String get hideAttachments => 'Hide';
 
   @override
   String get showAttachments => 'Show';
 
   @override
-  String get videoBack10 => 'Back 10s';
-
-  @override
-  String get videoForward10 => 'Forward 10s';
-
-  @override
   String get selectAllItems => 'Select all';
-
-  @override
-  String get showAllChips => 'Show all';
-
-  @override
-  String get hideAllChips => 'Hide all';
-
-  @override
-  String get chipPickInfo =>
-      'Which folder and tag chips should appear on the home screen?';
 
   @override
   String get hiddenFolder => 'Hidden folder';
@@ -1634,9 +1511,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moveImageToAttachments => 'Move to attachments';
-
-  @override
-  String get moveImageToPage => 'Place on page';
 
   @override
   String get attachmentCopied => 'Attachment copied';
@@ -1733,9 +1607,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiHistoryVoiceNote => 'Voice note';
 
   @override
-  String get aiRecentOps => 'RECENT';
-
-  @override
   String get aiTaskWeekSummary => 'Summarise the week';
 
   @override
@@ -1784,16 +1655,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickCaptureSave => 'Save';
 
   @override
-  String get quickAddWrite => 'WRITE';
-
-  @override
-  String get quickAddCapture => 'CAPTURE';
-
-  @override
   String get viewToggle => 'View';
-
-  @override
-  String get searchModeText => 'Text';
 
   @override
   String get searchModeMeaning => 'Meaning';
@@ -2231,10 +2093,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listenAiVoice => 'Listen with AI voice';
 
   @override
-  String get listenAiVoiceInfo =>
-      'Gemini narrates instead of the device voice: more natural, but each paragraph costs a model call.';
-
-  @override
   String listenAiVoiceFailed(String error) {
     return 'AI narration failed ($error). Reading with the device voice.';
   }
@@ -2267,21 +2125,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ttsVoice => 'AI voice';
 
   @override
-  String get shareAsNote => 'Share as note';
-
-  @override
-  String get shareAsNoteInfo =>
-      'Sends the note with its attachments, page notes, drawings and bubbles; the other side opens it exactly the same in the Not app.';
-
-  @override
   String get shareAsNotePreparing => 'Preparing note package…';
-
-  @override
-  String get shareAsText => 'As plain text';
-
-  @override
-  String get shareAsTextInfo =>
-      'Sends the note\'s text and page notes to any app.';
 
   @override
   String get shareAsTextEmpty => 'This note has no text to share.';
@@ -2421,16 +2265,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get imageOcrNone => 'No text found in this image.';
-
-  @override
-  String imageOcrHint(int count) {
-    return '$count lines found · tap to select';
-  }
-
-  @override
-  String imageOcrSelected(int count) {
-    return '$count lines selected';
-  }
 
   @override
   String get imageOcrShort => 'Recognize text';
@@ -2615,9 +2449,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bubblePlainMode => 'Open text box';
 
   @override
-  String get bubblePlainModeOn => 'Open text box is on';
-
-  @override
   String get bubblePlainTapToPlace => 'Tap where the text should go';
 
   @override
@@ -2670,29 +2501,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archiveNotebook => 'Notebook';
 
   @override
-  String get archiveNotebookInfo =>
-      'A notebook with its own pages that keeps copies of important documents and images.';
-
-  @override
-  String get archivePageImages => 'Images';
-
-  @override
-  String get archivePageVideos => 'Videos';
-
-  @override
-  String get archivePageDocuments => 'Documents';
-
-  @override
-  String get archivePageTexts => 'Texts';
-
-  @override
   String get archiveNewPage => 'New page';
-
-  @override
-  String get archiveTemplateTitle => 'Page template';
-
-  @override
-  String get archiveTemplateBlank => 'Blank page';
 
   @override
   String get archiveTemplateJournal => 'Journal';
@@ -2749,50 +2558,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tplReadingThoughts => 'My thoughts';
 
   @override
-  String get archiveGeneralPage => 'General';
-
-  @override
-  String get archiveRenamePage => 'Rename page';
-
-  @override
   String get archiveDeletePage => 'Delete page';
-
-  @override
-  String archiveDeletePageInfo(String name) {
-    return 'Delete the page \"$name\"? Its entries are not deleted; they move to the General page.';
-  }
 
   @override
   String get archivePrevPage => 'Previous page';
 
   @override
   String get archiveNextPage => 'Next page';
-
-  @override
-  String get archiveAddEntry => 'Add to page';
-
-  @override
-  String get archiveMoveEntry => 'Move to another page';
-
-  @override
-  String archiveEntryCount(int count) {
-    return '$count entries';
-  }
-
-  @override
-  String get archivePageName => 'Page name (e.g. Invoices)';
-
-  @override
-  String get archivePageEmpty => 'Empty page';
-
-  @override
-  String get archiveSearchHint => 'Search the notebook…';
-
-  @override
-  String get archiveAddText => 'Add text';
-
-  @override
-  String get archiveAddFile => 'Add file';
 
   @override
   String get archiveCopyHere => 'Copy to an archive notebook';
@@ -2804,27 +2576,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archiveNothingToCopy => 'This note has no attachments to copy.';
 
   @override
-  String archiveDeleteEntry(String name) {
-    return 'Delete \"$name\" from the notebook? This copy is gone for good.';
-  }
-
-  @override
   String archiveCopied(int count) {
     return '$count files copied to the archive notebook.';
   }
-
-  @override
-  String get archiveCaptureTitle => 'Capture from image';
-
-  @override
-  String get archiveCapturePage => 'Page';
-
-  @override
-  String get archiveCapturePageInfo =>
-      'The page the AI suggested. Left empty, it goes to the General page.';
-
-  @override
-  String get archiveCaptureText => 'Recognised text';
 
   @override
   String get attachmentTagInsert => 'Insert into the text';
@@ -2844,9 +2598,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get archivePlaceOnPage => 'Place on page';
-
-  @override
   String get archivePaper => 'Paper';
 
   @override
@@ -2862,47 +2613,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archivePaperPlain => 'Plain';
 
   @override
-  String get archiveWriteHint => 'Write on this page…';
-
-  @override
-  String get archivePageTitleHint => 'Page name';
-
-  @override
-  String archiveAutoPageName(int number) {
-    return 'Page $number';
-  }
-
-  @override
-  String get archiveNewPageHint =>
-      'Start writing or add something — the page opens by itself.';
-
-  @override
-  String get archiveNewPageLabel => 'New page';
-
-  @override
-  String get archiveAttachmentsHeading => 'Files on this page';
-
-  @override
-  String get archiveNotesHeading => 'Notes';
-
-  @override
-  String get archiveOpenPage => 'Go to page';
-
-  @override
-  String get archiveEntryTitle => 'Title';
-
-  @override
-  String get archiveLinkedFile => 'Linked file';
-
-  @override
-  String get archiveNoLink => 'No linked file';
-
-  @override
   String get attachmentTagEmbed => 'Embed';
-
-  @override
-  String get attachmentTagNoAttachment =>
-      'Add a file to the note first, then you can embed it in the text.';
 
   @override
   String get bubbleModeBubble => 'Bubble';
@@ -2952,13 +2663,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get folderEmptyHint =>
       'Add a note with + below, or move a note here while editing it.';
-
-  @override
-  String get brainstormTitle => 'Brainstorm with AI';
-
-  @override
-  String get brainstormRowInfo =>
-      'AI drafts an outline first, then you build on it together';
 
   @override
   String get brainstormIntro =>
@@ -3148,9 +2852,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get friendRequestAccepted => 'Friend added';
 
   @override
-  String get sendNoteAction => 'Send to a friend';
-
-  @override
   String get sendNoteTitle => 'Send the note to a friend';
 
   @override
@@ -3234,9 +2935,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get areaTooSmall => 'The selected area is too small.';
 
   @override
-  String get areaAddToNote => 'Add to note';
-
-  @override
   String get bubbleTextFill => 'Text background';
 
   @override
@@ -3280,16 +2978,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get patternGraph => 'Graph paper';
-
-  @override
-  String get archivePagesOverview => 'Pages';
-
-  @override
-  String get archiveSemanticHint => 'Search the notebook by meaning…';
-
-  @override
-  String get semanticUnavailable =>
-      'Semantic search is unavailable right now; showing text search.';
 
   @override
   String get sharedNotifications => 'Shared folder notifications';
@@ -3430,9 +3118,6 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get emptyingTrash => 'Emptying trash…';
 
   @override
   String get reminderRemoved => 'Reminder removed';
@@ -3655,9 +3340,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pdfLastPage => 'Last page';
 
   @override
-  String get pdfPlaceOnPage => 'Place PDF on the page';
-
-  @override
   String get collaborators => 'Collaborators';
 
   @override
@@ -3855,20 +3537,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareTextAction => 'Share text';
-
-  @override
-  String get shareAsFileSection => 'As a file';
-
-  @override
-  String get shareInAppSection => 'Inside the app';
-
-  @override
-  String get shareSendFriendInfo =>
-      'Drops a copy of the note into a friend\'s inbox.';
-
-  @override
-  String get shareCollaborateInfo =>
-      'Edit the same note together with friends; changes appear instantly.';
 
   @override
   String get findPrevious => 'Previous match';
@@ -4379,9 +4047,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pictureInPicture => 'Picture-in-picture';
 
   @override
-  String get pinMediaTop => 'Pin to top';
-
-  @override
   String get pinMediaRelease => 'Release: pin to top (note below)';
 
   @override
@@ -4392,9 +4057,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinnedMediaResize => 'Pane height — drag to change';
-
-  @override
-  String get addPageSubtitle => 'Adds a new blank page to the note';
 
   @override
   String pageOf(int current, int total) {
@@ -4542,28 +4204,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get quickAddImport => 'FROM FILES';
-
-  @override
-  String get quickAddImage => 'Image';
-
-  @override
-  String get quickAddPdf => 'PDF';
-
-  @override
-  String get quickAddSlides => 'Slides';
-
-  @override
-  String get quickAddGalleryVideo => 'Video from gallery';
-
-  @override
   String get quickAddYouTube => 'YouTube video';
-
-  @override
-  String get docViewBubbles => 'Bubbles';
-
-  @override
-  String get docViewClassic => 'Classic';
 
   @override
   String get docViewToBubbles => 'Switch to bubbles view';
@@ -4581,10 +4222,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get docViewTextKept => 'The note\'s text stays in classic view.';
-
-  @override
-  String get docViewDropBubbles =>
-      'Release: bubbles view (document on top, notes below)';
 
   @override
   String get captureModeChangeLater =>
@@ -4664,18 +4301,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get driveNeededForFile =>
       'This attachment is in your Google Drive. Connect Drive in Settings → Sync to see it.';
-
-  @override
-  String get quickAddMore => 'TEMPLATES AND NOTEBOOK';
-
-  @override
-  String get quickAddFrequent => 'YOUR FREQUENT';
-
-  @override
-  String get quickAddAll => 'All';
-
-  @override
-  String get quickAddLess => 'Less';
 
   @override
   String get bubbleDone => 'Done';
@@ -4959,9 +4584,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uiItemSync => 'Sync icon';
-
-  @override
-  String get uiItemFrequent => 'Frequently used';
 
   @override
   String get uiItemVideoTime => 'Time label';
@@ -5375,9 +4997,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickAddFromDevice => 'Choose a file';
-
-  @override
-  String get quickAddFromDeviceInfo => 'Image, PDF, slides, video or audio';
 
   @override
   String get quickAddTemplates => 'Templates';

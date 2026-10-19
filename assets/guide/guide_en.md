@@ -16,29 +16,29 @@ Your notes appear as cards grouped by **TODAY / THIS WEEK / EARLIER**; pinned no
 - **Swipe right:** pin the note. **Swipe left:** archive it.
 - **Long-press a card:** multi-select — move, archive, duplicate or delete several notes at once.
 - **Search:** type in the box at the top. The **Text** tab finds words; the **Meaning** tab understands what you mean ("car expenses" also finds the "tyre change" note).
-- **Filter:** by tag, type (list, numbered), status (pinned, starred, locked, with alarm); change the sort order (last edited, title, most worked on, manual).
+- **Filter:** by tag, type (list, numbered), status (pinned, locked, with alarm); change the sort order (last edited, title, most worked on, manual).
 - **Folder strip:** switch folders by tapping or by **swiping sideways**. Reorder them from ⋮ → **Folder order**.
 - **Quick note row:** type into "New note…" at the top of the list and save — without opening a note.
 - **Home screen background:** ⋮ → Home screen background for an image or pattern.
 - **Media on cards:** a pinned or single image/video shows as a cover at the top of the card; videos carry ▶, YouTube the red button. A bubbles note gets its document as the cover at the top of the card: the first page, the **PDF WITH BUBBLES** badge top left, the file name and bubble count at the bottom; voice recordings and other documents sit as rows at the bottom of the card.
 - The ⋮ at the top right opens a sheet: **Reminders, Archive, Bin, From template** on top; below them **Account and people** (account, contacts, incoming notes), **Home screen** (folder order, background, hidden folders) and **App** (settings, this guide).
-- **A card's ⋮ / long-press menu:** pin, star, share, select on top; then **Organize** (folder, background colour, frame), **Copy and export** (duplicate, save as template), **Tools** (read aloud, statistics), **Protection and storage** (archive, lock, sync); Delete at the bottom.
+- **A card's ⋮ / long-press menu:** pin, share, select on top; then **Organize** (folder, colour — optionally with a border highlight), **Copy and export** (duplicate, save as template), **Tools** (read aloud, statistics), **Protection and storage** (archive, lock, sync); Delete at the bottom.
 
 ## Creating notes {#create}
 The **+** button at the bottom right opens a short panel, read from your thumb upwards:
-- **At the bottom, right above the button:** large **Text note · List · Numbered list** buttons.
-- **Your frequent:** the three actions you pick most (the app learns) and **All**.
-- **All** opens **Capture** (voice note, photo, video, scan, handwriting, QR), **From files** (image, PDF, slides, **video from gallery**, **YouTube video**) and **Templates and notebook** (shopping list, from template, archive notebook). A note started from a video opens with the video pinned on top and the note below.
-For PDFs, images and slides you choose a mode: **Bubbles** (the document becomes the note itself, with bubbles and pen on top) or **Classic** (the document is an ordinary attachment). You can switch later too: see **Bubbles ↔ classic**.
+- **At the bottom, right above the button:** large **Text note · List** buttons.
+- Above them three doors: **Camera** (photo, video, scan, QR), **Add file** (one picker: choose an image, PDF, slides, video or audio — the note opens according to the file type; images and videos also offer "Transcribe"; plus **YouTube video**) and **Templates** (from template, shopping list, numbered list, handwriting, **notebook**). A note started from a video opens with the video pinned on top and the note below.
+- **The home screen has one microphone:** a tap opens the mode you used last — **voice note** (AI tidies it) or **type as I speak**; a long-press opens the other one.
+For PDFs, images and slides you choose a mode the first time: **Bubbles** (the document becomes the note itself, with bubbles and pen on top) or **Classic** (the document is an ordinary attachment). Your choice becomes the default; change it in Settings → Notes and folders → **Notes from content**. You can switch inside a note too: see **Bubbles ↔ classic**.
 
 ## Editing a note {#editor}
 Bottom bar, left to right:
-- **Aa — Format:** bold, italic, underline, text colour, highlight, heading / subheading; the note's font, size and transparency; page colour, frame and background image. Applies to the selection, or to the word you type next.
+- **Aa — Format:** bold, italic, underline, text colour, highlight, heading / subheading; the note's font, size and transparency; page colour (optionally a border highlight) and background image. Applies to the selection, or to the word you type next.
 - **+ — Add:** an icon grid — **Note content** (text block, list, embed attachment in selection), **Images and drawing** (image, upload image as attachment, camera, scan, drawing) and **Attachments** (PDF, slides, voice recording, video, YouTube, QR). Long-press an icon to see what it does.
 - **🔍 — Search in note:** matches are highlighted as you type.
 - **Share.**
 - The coloured capsule on the right: **✦ AI** (see the AI section), the **assistant microphone** and the **dictate** microphone.
-Top bar: **undo / redo**, pin, add people (shared note) and the ⋮ menu. The ⋮ menu's top row has star, share, search in note and the **calculator**; below are **Content** (convert to list/text, two columns, sort items, images to attachments, clear), **Copy and export** (duplicate, save as template, copy to archive notebook), **Tools** (read aloud, statistics, settings), **Protection and storage** (archive, lock, sync). Copying, sending to a friend and exporting live in the **Share** sheet — not repeated in the menus.
+Top bar: **undo / redo**, pin, add people (shared note) and the ⋮ menu. The ⋮ menu's top row has share, search in note and the **calculator**; below are **Content** (**Notebook view** and paper, convert to list/text, two columns, sort items, images to attachments, clear), **Copy and export** (duplicate, save as template, copy to notebook), **Tools** (read aloud, statistics, settings), **Protection and storage** (archive, lock, sync). Copying, sending to a friend and exporting live in the **Share** sheet — not repeated in the menus.
 - In lists, long-press an item and drag to reorder; use "Select" to copy/delete several items.
 - The **+** next to the title: **New page**, alarm, location reminder, folder, tag and tag/title suggestions.
 
@@ -106,7 +106,7 @@ In **Bubbles** mode the document is the note itself: the page on top, that page'
 - **Pen:** write on the page with the pen in the bottom bar; one finger draws, two fingers scroll.
 - **Edit pages:** delete, rotate, reorder — page notes move with their pages.
 - **Bookmarks** and page jumps; double-tap to zoom.
-- **Chat with the PDF:** ask "is there a penalty clause?" or "what's the deadline?".
+- **Chat with the PDF:** ask "is there a penalty clause?" or "what's the deadline?" (**This document** in the chat screen).
 - In a classic note the PDF sits on the page as a small box; pages turn inside the box.
 - **Switching views (Pinned / Floating / Bubbles):** every attachment has the same switch next to it — on the top row of the panel when you tap the PDF on the page, on the bar when it's pinned, and right of the title in bubbles view. ⋮ → *Switch to bubbles/classic view* works too. Switching deletes nothing: bubbles, highlights, drawings and page notes, as well as the PDF's position and size on the page, are kept and come back as they were.
 - When a new note asks for the mode, **your last choice** is marked.
@@ -136,7 +136,7 @@ In **Bubbles** mode the document is the note itself: the page on top, that page'
 ## AI {#ai}
 The **✦** button on the note screen:
 - **Summarise note** (short / detailed), **Analyse** (main points and to-dos), **Fix up the note** (simple / balanced / detailed), **Improve the note** (formal, shorter, bullet or numbered list), **Translate**.
-- **Chat with this note:** reads the note's text and attachments (PDF/image) and answers your question.
+- **Chat:** one screen; the chips on top choose what you talk to — **All notes**, **This note** (its text and attachments) or **This document** — and, for a note, **Q&A** or **Brainstorm** (the AI drafts an outline, add an idea to the note with one tap).
 - For attachments: summarise/ask a PDF, text from an image, transcribe audio.
 The **AI** screen on the home screen:
 - **Note Assistant:** ask about all your notes ("what's missing from my shopping list?").
@@ -149,11 +149,11 @@ The **AI** screen on the home screen:
 ## Organising: folders, tags, archive {#organize}
 - **Folders:** create, colour and reorder them; move a note with ⋮ → Move to folder. A **hidden** folder's notes don't appear on the home screen; reveal them with ⋮ → Hidden folders and your fingerprint/face.
 - **Tags:** add with the + next to the title; long-press a tag in the filter sheet to rename or delete it.
-- **Pin / Star:** keep important notes on top or in the starred filter.
+- **Pin:** keep important notes on top and in the Pinned filter (old starred notes are pinned too).
 - **Lock:** lock a note with fingerprint/face; its content never leaks into search, widgets or AI.
 - **Archive** and **Bin:** from the ⋮ menu; restore from the bin.
 - **Templates:** + → From template; preview ready-made templates and pick items; turn your own note into one with ⋮ → **Save as template**, and change it in the template editor.
-- **Archive notebook:** a notebook that keeps copies of important documents and images, with its own pages (Images, Videos, Documents, Texts and the ones you create).
+- **Notebook:** + → Templates → Notebook, or ⋮ → **Notebook view** in any note: lined/grid/dotted paper and pages. Collect another note's attachments as copies with ⋮ → **Copy to notebook**.
 
 ## Reminders {#reminders}
 - Use **+ → Alarm** next to the title to pick a date and time; you get a notification when it's due.
@@ -167,11 +167,11 @@ The **Share** button on the note screen: a preview of the text at the top with c
 - **PDF:** send the note as a PDF in one tap (images at the end).
 - **Image:** send the note as pictures (PNG pages) — previews nicely in chats.
 - **Files:** send the note's photos, PDFs and videos as files.
-- **To a friend**, **Collaborate** and **Note package** (with attachments, pages, drawings and bubbles; the other person opens it exactly the same in Notes).
+- **Edit together** (shared note or the note's folder), **Send a copy** (to a friend's inbox) and **Note package** (with attachments, pages, drawings and bubbles; the other person opens it exactly the same in Notes).
 - **More:** PDF/Word export with options (title, image position/size) and **PDF with bubbles** (bubbles and drawings printed into the PDF).
 Working together:
 - **Contacts:** add friends from ⋮ → Contacts.
-- **Send to a friend** (in the Share sheet): a copy of the note lands in their **Incoming notes**.
+- **Send a copy** (in the Share sheet): an independent copy of the note lands in your friend's **Incoming notes**.
 - **Shared note:** the add-people button in the top bar; you both edit the same note at the same time.
 - **Folder sharing:** with read / write permission; a shared folder has its own chat.
 From other apps: choose **Share → Notes** anywhere (text, link, image, PDF, slides, video). You choose whether to make a new note or add to an existing one.

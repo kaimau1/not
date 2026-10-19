@@ -42,21 +42,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get filterPinned => 'Sabitlenmiş';
 
   @override
-  String get filterStarred => 'Yıldızlı';
-
-  @override
   String get star => 'Yıldızla';
 
   @override
   String get unstar => 'Yıldızı kaldır';
-
-  @override
-  String editedAt(String date) {
-    return 'Düzenlendi: $date';
-  }
-
-  @override
-  String get sectionPinned => 'Sabitlenmiş';
 
   @override
   String get sectionOthers => 'Diğerleri';
@@ -117,9 +106,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get addAttachment => 'Ekle';
-
-  @override
-  String get addAttachmentMore => 'Diğer ek türleri…';
 
   @override
   String get addImage => 'Görsel ekle';
@@ -278,12 +264,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsAi => 'Yapay Zeka';
-
-  @override
-  String get geminiApiKey => 'Gemini API Anahtarı';
-
-  @override
-  String get geminiApiKeyHint => 'AIza... ile başlayan anahtarı yapıştır';
 
   @override
   String get geminiApiKeyInfo =>
@@ -517,14 +497,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String placeActive(String place, String trigger) {
-    return '$place · $trigger';
-  }
-
-  @override
-  String get placeSection => 'Konum';
-
-  @override
   String get share => 'Paylaş';
 
   @override
@@ -575,10 +547,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get micPermissionDenied => 'Mikrofon izni verilmedi';
-
-  @override
-  String get speechRecognitionFailed =>
-      'Konuşma tanıma çalışmadı. Mikrofon izninin verildiğinden ve Google uygulamasının güncel olduğundan emin ol.';
 
   @override
   String get addDrawing => 'Çizim ekle';
@@ -716,10 +684,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pdfChatInputHint => 'PDF hakkında bir soru yaz...';
 
   @override
-  String get voiceCaptureHint =>
-      'Konuş: \"süt ve ekmek al\" ya da \"yarın 9\'da toplantı, hatırlat\" — bitince notunu yapay zeka oluşturur.';
-
-  @override
   String get voiceFinish => 'Bitir';
 
   @override
@@ -814,10 +778,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get dictationListening => 'Dinleniyor... konuştukça metin yazılır';
 
   @override
-  String get dictationNoKeyInfo =>
-      'Bu cihazda anlık yazdırma yok; kayıt bitince tek seferde yazıya dökülecek.';
-
-  @override
   String get dictationHoldHint =>
       'Mikrofonu basılı tutup konuşun, bırakınca yazılır';
 
@@ -825,9 +785,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String itemsSelected(int count) {
     return '$count madde seçildi';
   }
-
-  @override
-  String get noteChatTitle => 'Bu notla sohbet et';
 
   @override
   String get noteChatHint => 'Bu not hakkında bir şey sor';
@@ -857,14 +814,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceListening => 'Dinliyorum...';
 
   @override
-  String get voiceHoldHint =>
-      'Basılı tutarak konuş; bırakınca notun oluşturulur';
-
-  @override
   String get voiceTapHint => 'Dokun ve konuş; bitirmek için tekrar dokun';
-
-  @override
-  String get voiceTooShort => 'Kayıt çok kısaydı, tekrar dene';
 
   @override
   String get voiceModeSetting => 'Kullanım şekli';
@@ -878,9 +828,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get voiceModeInfo =>
       'Basılı tut: düğmeye bastığın sürece dinler, bırakınca notu oluşturur. Bas-başlat: bir dokunuşla kayıt başlar, ikinci dokunuşla biter.';
-
-  @override
-  String get voiceHeardLive => 'Algılanan konuşma';
 
   @override
   String get voiceCaptureReady => 'Konuşma hazır';
@@ -930,9 +877,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceChipFix => 'Düzelt';
 
   @override
-  String get voiceChipCompose => 'Asistan oluştursun';
-
-  @override
   String get editorToolList => 'Liste';
 
   @override
@@ -957,12 +901,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get permBatteryInfo =>
       'Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut';
-
-  @override
-  String get showTagChips => 'Etiket çiplerini göster';
-
-  @override
-  String get showFolderChips => 'Klasör çiplerini göster';
 
   @override
   String videoTooBigForAi(int mb) {
@@ -1049,13 +987,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get folderIcon => 'Simge';
 
   @override
-  String get editFilters => 'Filtreleri düzenle';
-
-  @override
-  String get editFiltersInfo =>
-      'Ana ekranda görünmesini istediğin filtreleri seç. Kapalı filtreler sayfayı sade tutar.';
-
-  @override
   String get select => 'Seç';
 
   @override
@@ -1105,15 +1036,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get speechRate => 'Okuma hizi';
 
   @override
-  String get speechSystemDefault => 'Sistem varsayilani';
-
-  @override
   String get speechNoVoices => 'Bu cihazda yuklu ses bulunamadi';
-
-  @override
-  String speechVoiceLanguage(String language) {
-    return '$language sesi';
-  }
 
   @override
   String get speechVoiceAutoInfo =>
@@ -1210,10 +1133,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get frameColor => 'Çerçeve';
 
   @override
-  String get frameColorInfo =>
-      'Notun çevresine seçtiğin renkte bir çerçeve çizilir';
-
-  @override
   String get sortBy => 'Sıralama';
 
   @override
@@ -1236,18 +1155,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get sortTitle => 'Başlığa göre (A-Z)';
-
-  @override
-  String get foldersSection => 'Klasörler';
-
-  @override
-  String get tagsSection => 'Etiketler';
-
-  @override
-  String get expandFilters => 'Filtreleri genişlet';
-
-  @override
-  String get collapseFilters => 'Filtreleri daralt';
 
   @override
   String get settingsLanguage => 'Dil';
@@ -1282,9 +1189,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get syncLimitUnlimited => 'Sınırsız';
 
   @override
-  String get backupTitle => 'Yedek';
-
-  @override
   String get importBackup => 'Yedekten geri yükle (JSON)';
 
   @override
@@ -1317,9 +1221,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get moveToFolder => 'Klasöre taşı';
 
   @override
-  String get voiceAssistantBadge => 'Asistan';
-
-  @override
   String get assistantGenericError => 'Bir sorun oluştu, tekrar dener misin?';
 
   @override
@@ -1331,9 +1232,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get autoTitleSettingInfo =>
       'Editörden çıkarken başlıksız kalan nota içeriğinden otomatik kısa bir başlık yazılır.';
-
-  @override
-  String get hubChatInfo => 'Notlarına dayanarak soru-cevap';
 
   @override
   String get hubBriefingInfo => 'Güne bakış: hatırlatıcılar ve son notlar';
@@ -1558,34 +1456,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get qrTorch => 'Işık';
 
   @override
-  String attachmentsCount(int count) {
-    return 'Ekler ($count)';
-  }
-
-  @override
   String get hideAttachments => 'Gizle';
 
   @override
   String get showAttachments => 'Göster';
 
   @override
-  String get videoBack10 => '10 sn geri';
-
-  @override
-  String get videoForward10 => '10 sn ileri';
-
-  @override
   String get selectAllItems => 'Tümünü seç';
-
-  @override
-  String get showAllChips => 'Tümünü göster';
-
-  @override
-  String get hideAllChips => 'Tümünü gizle';
-
-  @override
-  String get chipPickInfo =>
-      'Hangi klasör ve etiketlerin çipi ana ekranda görünsün?';
 
   @override
   String get hiddenFolder => 'Gizli klasör';
@@ -1630,9 +1507,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get moveImageToAttachments => 'Ek olarak taşı';
-
-  @override
-  String get moveImageToPage => 'Sayfaya koy';
 
   @override
   String get attachmentCopied => 'Ek kopyalandı';
@@ -1729,9 +1603,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiHistoryVoiceNote => 'Sesli not';
 
   @override
-  String get aiRecentOps => 'SON İŞLEMLER';
-
-  @override
   String get aiTaskWeekSummary => 'Haftayı özetle';
 
   @override
@@ -1780,16 +1651,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get quickCaptureSave => 'Kaydet';
 
   @override
-  String get quickAddWrite => 'YAZ';
-
-  @override
-  String get quickAddCapture => 'ÇEK VE KAYDET';
-
-  @override
   String get viewToggle => 'Görünüm';
-
-  @override
-  String get searchModeText => 'Metin';
 
   @override
   String get searchModeMeaning => 'Anlam';
@@ -2227,10 +2089,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get listenAiVoice => 'Yapay zekâ sesiyle dinle';
 
   @override
-  String get listenAiVoiceInfo =>
-      'Cihaz sesi yerine Gemini seslendirir: daha doğal, her paragraf bir model çağrısı harcar.';
-
-  @override
   String listenAiVoiceFailed(String error) {
     return 'Yapay zekâ seslendirmesi başarısız oldu ($error). Cihaz sesiyle okunuyor.';
   }
@@ -2263,21 +2121,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get ttsVoice => 'Yapay zekâ sesi';
 
   @override
-  String get shareAsNote => 'Not olarak paylaş';
-
-  @override
-  String get shareAsNoteInfo =>
-      'Notu ekleri, sayfa notları, çizimleri ve balonlarıyla gönderir; karşı taraf Not uygulamasında aynı şekilde açar.';
-
-  @override
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
-
-  @override
-  String get shareAsText => 'Düz metin olarak';
-
-  @override
-  String get shareAsTextInfo =>
-      'Notun yazısını ve sayfa notlarını herhangi bir uygulamaya gönderir.';
 
   @override
   String get shareAsTextEmpty => 'Bu notta paylaşılacak yazı yok.';
@@ -2417,16 +2261,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get imageOcrNone => 'Bu görselde metin bulunamadı.';
-
-  @override
-  String imageOcrHint(int count) {
-    return '$count satır tanındı · dokunarak seç';
-  }
-
-  @override
-  String imageOcrSelected(int count) {
-    return '$count satır seçildi';
-  }
 
   @override
   String get imageOcrShort => 'Metni tanı';
@@ -2611,9 +2445,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bubblePlainMode => 'Açık metin alanı';
 
   @override
-  String get bubblePlainModeOn => 'Açık metin alanı açık';
-
-  @override
   String get bubblePlainTapToPlace => 'Metnin geleceği yere dokun';
 
   @override
@@ -2666,29 +2497,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get archiveNotebook => 'Defter';
 
   @override
-  String get archiveNotebookInfo =>
-      'Önemli belgeleri ve görselleri kopyasıyla toplayan, kendi sayfaları olan defter.';
-
-  @override
-  String get archivePageImages => 'Görseller';
-
-  @override
-  String get archivePageVideos => 'Videolar';
-
-  @override
-  String get archivePageDocuments => 'Belgeler';
-
-  @override
-  String get archivePageTexts => 'Metinler';
-
-  @override
   String get archiveNewPage => 'Yeni sayfa';
-
-  @override
-  String get archiveTemplateTitle => 'Sayfa şablonu';
-
-  @override
-  String get archiveTemplateBlank => 'Boş sayfa';
 
   @override
   String get archiveTemplateJournal => 'Günlük';
@@ -2745,50 +2554,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get tplReadingThoughts => 'Düşüncelerim';
 
   @override
-  String get archiveGeneralPage => 'Genel';
-
-  @override
-  String get archiveRenamePage => 'Sayfayı yeniden adlandır';
-
-  @override
   String get archiveDeletePage => 'Sayfayı sil';
-
-  @override
-  String archiveDeletePageInfo(String name) {
-    return '\"$name\" sayfası silinsin mi? İçindeki girdiler silinmez, Genel sayfasına taşınır.';
-  }
 
   @override
   String get archivePrevPage => 'Önceki sayfa';
 
   @override
   String get archiveNextPage => 'Sonraki sayfa';
-
-  @override
-  String get archiveAddEntry => 'Sayfaya ekle';
-
-  @override
-  String get archiveMoveEntry => 'Başka sayfaya taşı';
-
-  @override
-  String archiveEntryCount(int count) {
-    return '$count girdi';
-  }
-
-  @override
-  String get archivePageName => 'Sayfa adı (ör. Faturalar)';
-
-  @override
-  String get archivePageEmpty => 'Boş sayfa';
-
-  @override
-  String get archiveSearchHint => 'Defterde ara…';
-
-  @override
-  String get archiveAddText => 'Metin ekle';
-
-  @override
-  String get archiveAddFile => 'Dosya ekle';
 
   @override
   String get archiveCopyHere => 'Arşiv defterine kopyala';
@@ -2801,27 +2573,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get archiveNothingToCopy => 'Bu notta kopyalanacak ek yok.';
 
   @override
-  String archiveDeleteEntry(String name) {
-    return '\"$name\" defterden silinsin mi? Bu kopya kalıcı olarak gider.';
-  }
-
-  @override
   String archiveCopied(int count) {
     return '$count dosya arşiv defterine kopyalandı.';
   }
-
-  @override
-  String get archiveCaptureTitle => 'Görselden yakala';
-
-  @override
-  String get archiveCapturePage => 'Sayfa';
-
-  @override
-  String get archiveCapturePageInfo =>
-      'Yapay zekânın önerdiği sayfa. Boş bırakılırsa Genel sayfasına düşer.';
-
-  @override
-  String get archiveCaptureText => 'Tanınan metin';
 
   @override
   String get attachmentTagInsert => 'Metne ekle';
@@ -2841,9 +2595,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get archivePlaceOnPage => 'Sayfaya yerleştir';
-
-  @override
   String get archivePaper => 'Kâğıt';
 
   @override
@@ -2859,47 +2610,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get archivePaperPlain => 'Düz';
 
   @override
-  String get archiveWriteHint => 'Bu sayfaya yaz…';
-
-  @override
-  String get archivePageTitleHint => 'Sayfa adı';
-
-  @override
-  String archiveAutoPageName(int number) {
-    return 'Sayfa $number';
-  }
-
-  @override
-  String get archiveNewPageHint =>
-      'Yazmaya başla ya da bir şey ekle — sayfa kendiliğinden açılır.';
-
-  @override
-  String get archiveNewPageLabel => 'Yeni sayfa';
-
-  @override
-  String get archiveAttachmentsHeading => 'Bu sayfadaki dosyalar';
-
-  @override
-  String get archiveNotesHeading => 'Notlar';
-
-  @override
-  String get archiveOpenPage => 'Sayfaya git';
-
-  @override
-  String get archiveEntryTitle => 'Başlık';
-
-  @override
-  String get archiveLinkedFile => 'Bağlı dosya';
-
-  @override
-  String get archiveNoLink => 'Bağlı dosya yok';
-
-  @override
   String get attachmentTagEmbed => 'Ek göm';
-
-  @override
-  String get attachmentTagNoAttachment =>
-      'Önce nota bir dosya ekle; sonra yazıya gömebilirsin.';
 
   @override
   String get bubbleModeBubble => 'Balon';
@@ -2949,13 +2660,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get folderEmptyHint =>
       'Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.';
-
-  @override
-  String get brainstormTitle => 'AI ile beraber düşün';
-
-  @override
-  String get brainstormRowInfo =>
-      'AI önce bir ana hat çıkarır, sonra birlikte geliştirirsiniz';
 
   @override
   String get brainstormIntro =>
@@ -3146,9 +2850,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get friendRequestAccepted => 'Arkadaş eklendi';
 
   @override
-  String get sendNoteAction => 'Arkadaşa gönder';
-
-  @override
   String get sendNoteTitle => 'Notu arkadaşına gönder';
 
   @override
@@ -3233,9 +2934,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get areaTooSmall => 'Seçilen alan çok küçük.';
 
   @override
-  String get areaAddToNote => 'Nota ekle';
-
-  @override
   String get bubbleTextFill => 'Yazı zemini';
 
   @override
@@ -3279,16 +2977,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get patternGraph => 'Milimetrik';
-
-  @override
-  String get archivePagesOverview => 'Sayfalar';
-
-  @override
-  String get archiveSemanticHint => 'Defterde anlamıyla ara…';
-
-  @override
-  String get semanticUnavailable =>
-      'Anlamsal arama şu an kullanılamıyor; metin araması gösteriliyor.';
 
   @override
   String get sharedNotifications => 'Paylaşılan klasör bildirimleri';
@@ -3429,9 +3117,6 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get emptyingTrash => 'Çöp boşaltılıyor…';
 
   @override
   String get reminderRemoved => 'Hatırlatıcı kaldırıldı';
@@ -3655,9 +3340,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pdfLastPage => 'Son sayfa';
 
   @override
-  String get pdfPlaceOnPage => 'PDF\'i sayfaya yerleştir';
-
-  @override
   String get collaborators => 'Ortak çalışanlar';
 
   @override
@@ -3855,20 +3537,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get shareTextAction => 'Metni paylaş';
-
-  @override
-  String get shareAsFileSection => 'Dosya olarak';
-
-  @override
-  String get shareInAppSection => 'Uygulama içinde';
-
-  @override
-  String get shareSendFriendInfo =>
-      'Notun bir kopyasını arkadaşının gelen kutusuna bırakır.';
-
-  @override
-  String get shareCollaborateInfo =>
-      'Arkadaşlarınla aynı notu birlikte düzenle; değişiklikler anında görünür.';
 
   @override
   String get findPrevious => 'Önceki eşleşme';
@@ -4376,9 +4044,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pictureInPicture => 'Resim içinde resim';
 
   @override
-  String get pinMediaTop => 'Üste sabitle';
-
-  @override
   String get pinMediaRelease => 'Bırak: üste sabitle (altta not)';
 
   @override
@@ -4389,9 +4054,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinnedMediaResize => 'Bölme yüksekliği — sürükleyerek değiştir';
-
-  @override
-  String get addPageSubtitle => 'Nota yeni, boş bir sayfa ekler';
 
   @override
   String pageOf(int current, int total) {
@@ -4532,28 +4194,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get quickAddImport => 'DOSYADAN';
-
-  @override
-  String get quickAddImage => 'Görsel';
-
-  @override
-  String get quickAddPdf => 'PDF';
-
-  @override
-  String get quickAddSlides => 'Sunum';
-
-  @override
-  String get quickAddGalleryVideo => 'Galeriden video';
-
-  @override
   String get quickAddYouTube => 'YouTube videosu';
-
-  @override
-  String get docViewBubbles => 'Balonlu';
-
-  @override
-  String get docViewClassic => 'Klasik';
 
   @override
   String get docViewToBubbles => 'Balonlu görünüme geç';
@@ -4571,10 +4212,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get docViewTextKept => 'Notun yazısı klasik görünümde duruyor.';
-
-  @override
-  String get docViewDropBubbles =>
-      'Bırak: balonlu görünüm (üstte belge, altta not)';
 
   @override
   String get captureModeChangeLater =>
@@ -4651,18 +4288,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get driveNeededForFile =>
       'Bu ek Google Drive\'ında. Görmek için Ayarlar → Senkron\'dan Drive\'ı bağla.';
-
-  @override
-  String get quickAddMore => 'ŞABLON VE DEFTER';
-
-  @override
-  String get quickAddFrequent => 'SIK KULLANDIKLARIN';
-
-  @override
-  String get quickAddAll => 'Tümü';
-
-  @override
-  String get quickAddLess => 'Daha az';
 
   @override
   String get bubbleDone => 'Bitti';
@@ -4946,9 +4571,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get uiItemSync => 'Senkron simgesi';
-
-  @override
-  String get uiItemFrequent => 'Sık kullandıkların';
 
   @override
   String get uiItemVideoTime => 'Süre yazısı';
@@ -5360,9 +4982,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quickAddFromDevice => 'Cihazdan dosya seç';
-
-  @override
-  String get quickAddFromDeviceInfo => 'Görsel, PDF, sunum, video ya da ses';
 
   @override
   String get quickAddTemplates => 'Şablon';

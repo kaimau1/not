@@ -17,18 +17,8 @@
   "filterChecklist": "Liste",
   "filterOrdered": "Sıralı",
   "filterPinned": "Sabitlenmiş",
-  "filterStarred": "Yıldızlı",
   "star": "Yıldızla",
   "unstar": "Yıldızı kaldır",
-  "editedAt": "Düzenlendi: {date}",
-  "@editedAt": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "sectionPinned": "Sabitlenmiş",
   "sectionOthers": "Diğerleri",
   "emptyNotes": "Henüz not yok",
   "emptyNotesHint": "İlk notunu eklemek için + düğmesine dokun",
@@ -68,7 +58,6 @@
     }
   },
   "addAttachment": "Ekle",
-  "addAttachmentMore": "Diğer ek türleri…",
   "addImage": "Görsel ekle",
   "addPdf": "PDF ekle",
   "addSlide": "Slayt ekle",
@@ -162,8 +151,6 @@
   "themeLight": "Açık",
   "themeDark": "Koyu",
   "settingsAi": "Yapay Zeka",
-  "geminiApiKey": "Gemini API Anahtarı",
-  "geminiApiKeyHint": "AIza... ile başlayan anahtarı yapıştır",
   "geminiApiKeyInfo": "Anahtar girmek isteğe bağlıdır: girmezsen AI istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile daha yüksek günlük hak). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.",
   "aiBuiltInPremium": "Dahili AI: Premium — bugün kalan puan {count}",
   "@aiBuiltInPremium": {
@@ -282,18 +269,6 @@
       }
     }
   },
-  "placeActive": "{place} · {trigger}",
-  "@placeActive": {
-    "placeholders": {
-      "place": {
-        "type": "String"
-      },
-      "trigger": {
-        "type": "String"
-      }
-    }
-  },
-  "placeSection": "Konum",
   "share": "Paylaş",
   "archive": "Arşivle",
   "unarchive": "Arşivden çıkar",
@@ -317,7 +292,6 @@
   "recording": "Kaydediliyor...",
   "stopAndSave": "Bitir ve ekle",
   "micPermissionDenied": "Mikrofon izni verilmedi",
-  "speechRecognitionFailed": "Konuşma tanıma çalışmadı. Mikrofon izninin verildiğinden ve Google uygulamasının güncel olduğundan emin ol.",
   "addDrawing": "Çizim ekle",
   "drawingTitle": "Çizim",
   "addToNote": "Nota ekle",
@@ -361,7 +335,6 @@
   "openAsNewNote": "Yeni not olarak",
   "pdfChatHint": "Bu PDF hakkında soru sor: \"özetle\", \"cezai şart var mı?\", \"son teslim tarihi ne?\"",
   "pdfChatInputHint": "PDF hakkında bir soru yaz...",
-  "voiceCaptureHint": "Konuş: \"süt ve ekmek al\" ya da \"yarın 9'da toplantı, hatırlat\" — bitince notunu yapay zeka oluşturur.",
   "voiceFinish": "Bitir",
   "voiceProcessing": "Söyledikleriniz uygulanıyor...",
   "voiceNothingHeard": "Kayıtta konuşma algılanamadı",
@@ -392,7 +365,6 @@
   "liveDictation": "Sesli yazdır",
   "voiceCaptureAi": "Sesli yakala (yapay zekâ)",
   "dictationListening": "Dinleniyor... konuştukça metin yazılır",
-  "dictationNoKeyInfo": "Bu cihazda anlık yazdırma yok; kayıt bitince tek seferde yazıya dökülecek.",
   "dictationHoldHint": "Mikrofonu basılı tutup konuşun, bırakınca yazılır",
   "itemsSelected": "{count} madde seçildi",
   "@itemsSelected": {
@@ -402,7 +374,6 @@
       }
     }
   },
-  "noteChatTitle": "Bu notla sohbet et",
   "noteChatHint": "Bu not hakkında bir şey sor",
   "noteChatIntro": "Notun içeriği ve ekleri (PDF/görsel) okunur, sorunu ona göre yanıtlar.",
   "dictationProcessing": "Yazıya dökülüyor...",
@@ -411,14 +382,11 @@
   "aiGeneratedTodayInfo": "Bu içerik bugün oluşturuldu. Ücretsiz planda günde bir kez yenilenir; yarın tekrar oluşturabilirsin.",
   "voiceAssistantTitle": "Sesli Not Asistanı",
   "voiceListening": "Dinliyorum...",
-  "voiceHoldHint": "Basılı tutarak konuş; bırakınca notun oluşturulur",
   "voiceTapHint": "Dokun ve konuş; bitirmek için tekrar dokun",
-  "voiceTooShort": "Kayıt çok kısaydı, tekrar dene",
   "voiceModeSetting": "Kullanım şekli",
   "voiceModeHold": "Basılı tut",
   "voiceModeTap": "Bas-başlat / bas-bitir",
   "voiceModeInfo": "Basılı tut: düğmeye bastığın sürece dinler, bırakınca notu oluşturur. Bas-başlat: bir dokunuşla kayıt başlar, ikinci dokunuşla biter.",
-  "voiceHeardLive": "Algılanan konuşma",
   "voiceCaptureReady": "Konuşma hazır",
   "voiceCaptureEditHint": "Düzeltmek için metne dokun",
   "voiceCapturePunctuation": "{language} · noktalama otomatik",
@@ -441,7 +409,6 @@
   "voiceChipToItems": "Maddelere böl",
   "voiceChipAsList": "Liste notu yap",
   "voiceChipFix": "Düzelt",
-  "voiceChipCompose": "Asistan oluştursun",
   "editorToolList": "Liste",
   "permissionsTitle": "İzinler",
   "permMic": "Mikrofon",
@@ -450,8 +417,6 @@
   "permNotificationsInfo": "Hatırlatıcılar ve günlük brifing için gerekli",
   "permBattery": "Pil optimizasyonu",
   "permBatteryInfo": "Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut",
-  "showTagChips": "Etiket çiplerini göster",
-  "showFolderChips": "Klasör çiplerini göster",
   "videoTooBigForAi": "Video AI'ya göndermek için çok büyük ({mb} MB). Daha kısa çek.",
   "@videoTooBigForAi": {
     "placeholders": {
@@ -492,8 +457,6 @@
   },
   "folderNameHint": "Klasör adı",
   "folderIcon": "Simge",
-  "editFilters": "Filtreleri düzenle",
-  "editFiltersInfo": "Ana ekranda görünmesini istediğin filtreleri seç. Kapalı filtreler sayfayı sade tutar.",
   "select": "Seç",
   "noteArchived": "Not arşivlendi",
   "pendingUploads": "{count} ek buluta yükleniyor",
@@ -529,16 +492,7 @@
   "speechResume": "Devam et",
   "speechStop": "Durdur",
   "speechRate": "Okuma hizi",
-  "speechSystemDefault": "Sistem varsayilani",
   "speechNoVoices": "Bu cihazda yuklu ses bulunamadi",
-  "speechVoiceLanguage": "{language} sesi",
-  "@speechVoiceLanguage": {
-    "placeholders": {
-      "language": {
-        "type": "String"
-      }
-    }
-  },
   "speechVoiceAutoInfo": "Diğer diller otomatik olarak erkek sesiyle okunur",
   "listening": "Dinleniyor...",
   "listenPlay": "Sesli dinle",
@@ -575,7 +529,6 @@
   "backgroundColor": "Renk",
   "backgroundColorInfo": "Notun rengi; istersen kenarına da vurgu",
   "frameColor": "Çerçeve",
-  "frameColorInfo": "Notun çevresine seçtiğin renkte bir çerçeve çizilir",
   "sortBy": "Sıralama",
   "reorderNotes": "Notları sırala",
   "reorderModeActive": "Kartları sürükleyerek sırala",
@@ -584,10 +537,6 @@
   "sortUpdated": "Son güncellenen",
   "sortCreated": "Oluşturulma tarihi",
   "sortTitle": "Başlığa göre (A-Z)",
-  "foldersSection": "Klasörler",
-  "tagsSection": "Etiketler",
-  "expandFilters": "Filtreleri genişlet",
-  "collapseFilters": "Filtreleri daralt",
   "@largeAttachmentBody": {
     "placeholders": {
       "size": {
@@ -605,7 +554,6 @@
   "syncLimitTitle": "Otomatik yükleme sınırı",
   "syncLimitInfo": "Bu boyuttan büyük ekler cihazda kalır, buluta yüklenmez. Not metni her zaman senkronlanır.",
   "syncLimitUnlimited": "Sınırsız",
-  "backupTitle": "Yedek",
   "importBackup": "Yedekten geri yükle (JSON)",
   "importBackupDone": "{count} not geri yüklendi",
   "@importBackupDone": {
@@ -623,12 +571,10 @@
   "aiTranslateInfo": "Notu seçtiğin dile çevirir",
   "aiFixNoteInfo": "Yazım ve noktalamayı düzeltir",
   "moveToFolder": "Klasöre taşı",
-  "voiceAssistantBadge": "Asistan",
   "assistantGenericError": "Bir sorun oluştu, tekrar dener misin?",
   "quickAddTooltip": "Yeni not — tip seç",
   "autoTitleSetting": "Kapatırken başlık öner",
   "autoTitleSettingInfo": "Editörden çıkarken başlıksız kalan nota içeriğinden otomatik kısa bir başlık yazılır.",
-  "hubChatInfo": "Notlarına dayanarak soru-cevap",
   "hubBriefingInfo": "Güne bakış: hatırlatıcılar ve son notlar",
   "hubReadInfo": "PDF/Word belgesini sesli dinle",
   "annotate": "Üzerine yaz",
@@ -742,22 +688,9 @@
     }
   },
   "qrTorch": "Işık",
-  "attachmentsCount": "Ekler ({count})",
-  "@attachmentsCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "hideAttachments": "Gizle",
   "showAttachments": "Göster",
-  "videoBack10": "10 sn geri",
-  "videoForward10": "10 sn ileri",
   "selectAllItems": "Tümünü seç",
-  "showAllChips": "Tümünü göster",
-  "hideAllChips": "Tümünü gizle",
-  "chipPickInfo": "Hangi klasör ve etiketlerin çipi ana ekranda görünsün?",
   "hiddenFolder": "Gizli klasör",
   "hiddenFolderInfo": "Gizli klasör ve içindeki notlar ana ekranda görünmez. Göstermek için ⋮ menüsünden \"Gizli klasörler\" seçilir ve kimlik doğrulanır.",
   "hiddenFoldersMenu": "Gizli klasörler",
@@ -778,7 +711,6 @@
   "addImageAsFile": "Görseli ek olarak yükle",
   "addImageAsFileSubtitle": "Sayfaya girmez, alttaki ek şeridinde durur",
   "moveImageToAttachments": "Ek olarak taşı",
-  "moveImageToPage": "Sayfaya koy",
   "attachmentCopied": "Ek kopyalandı",
   "pasteAttachment": "Kopyalanan eki yapıştır",
   "fullscreen": "Tam ekran",
@@ -832,7 +764,6 @@
   "aiHistoryQuestion": "Soru",
   "aiHistoryNoteAction": "Not işlemi",
   "aiHistoryVoiceNote": "Sesli not",
-  "aiRecentOps": "SON İŞLEMLER",
   "aiTaskWeekSummary": "Haftayı özetle",
   "aiTaskWeekSummaryInfo": "Son 7 günün notlarından tek özet",
   "aiTaskTagUntagged": "Etiketsizleri etiketle",
@@ -868,10 +799,7 @@
   "emptySearchSemanticHint": "Anlam sekmesini dene",
   "quickCaptureHint": "Yeni not…",
   "quickCaptureSave": "Kaydet",
-  "quickAddWrite": "YAZ",
-  "quickAddCapture": "ÇEK VE KAYDET",
   "viewToggle": "Görünüm",
-  "searchModeText": "Metin",
   "searchModeMeaning": "Anlam",
   "filterReminded": "Alarmlı",
   "filterLocked": "Kilitli",
@@ -1040,7 +968,6 @@
   "bubbleTapToPlace": "Sayfada balonu bırakmak istediğin yere dokun",
   "aiModelPodcast": "Podcast anlatısı",
   "listenAiVoice": "Yapay zekâ sesiyle dinle",
-  "listenAiVoiceInfo": "Cihaz sesi yerine Gemini seslendirir: daha doğal, her paragraf bir model çağrısı harcar.",
   "listenAiVoiceFailed": "Yapay zekâ seslendirmesi başarısız oldu ({error}). Cihaz sesiyle okunuyor.",
   "@listenAiVoiceFailed": {
     "placeholders": {
@@ -1057,11 +984,7 @@
   "ttsEngineAiUnavailable": "Yapay zekâ sesi kendi Gemini anahtarını ister. Anahtar eklenene kadar okuma cihaz sesiyle yapılır.",
   "ttsModel": "Seslendirme modeli",
   "ttsVoice": "Yapay zekâ sesi",
-  "shareAsNote": "Not olarak paylaş",
-  "shareAsNoteInfo": "Notu ekleri, sayfa notları, çizimleri ve balonlarıyla gönderir; karşı taraf Not uygulamasında aynı şekilde açar.",
   "shareAsNotePreparing": "Not paketi hazırlanıyor…",
-  "shareAsText": "Düz metin olarak",
-  "shareAsTextInfo": "Notun yazısını ve sayfa notlarını herhangi bir uygulamaya gönderir.",
   "shareAsTextEmpty": "Bu notta paylaşılacak yazı yok.",
   "sharePdfWithBubbles": "Balonlu PDF olarak",
   "sharePdfWithBubblesInfo": "Balonlar, vurgular ve çizimler PDF'in içine basılır; herkes açabilir, Notlar'da ise düzenlenebilir açılır.",
@@ -1106,22 +1029,6 @@
   "captureNoteTitleHint": "Oluşacak belgeye de bu ad verilir",
   "imageOcrTitle": "Görseldeki metni tanı",
   "imageOcrNone": "Bu görselde metin bulunamadı.",
-  "imageOcrHint": "{count} satır tanındı · dokunarak seç",
-  "@imageOcrHint": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "imageOcrSelected": "{count} satır seçildi",
-  "@imageOcrSelected": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "imageOcrShort": "Metni tanı",
   "imageOcrWorking": "Metin tanınıyor…",
   "imageOcrSelectHint": "Dokun: kelime · Basılı tut ve sürükle: harf harf",
@@ -1222,7 +1129,6 @@
   "imageOcrShowRecognized": "Tanınan metni vurgula",
   "imageOcrHideRecognized": "Vurguyu kaldır",
   "bubblePlainMode": "Açık metin alanı",
-  "bubblePlainModeOn": "Açık metin alanı açık",
   "bubblePlainTapToPlace": "Metnin geleceği yere dokun",
   "bubblePlainHint": "Yazmak için dokun",
   "noteSearchTitle": "Notta ara",
@@ -1259,14 +1165,7 @@
     }
   },
   "archiveNotebook": "Defter",
-  "archiveNotebookInfo": "Önemli belgeleri ve görselleri kopyasıyla toplayan, kendi sayfaları olan defter.",
-  "archivePageImages": "Görseller",
-  "archivePageVideos": "Videolar",
-  "archivePageDocuments": "Belgeler",
-  "archivePageTexts": "Metinler",
   "archiveNewPage": "Yeni sayfa",
-  "archiveTemplateTitle": "Sayfa şablonu",
-  "archiveTemplateBlank": "Boş sayfa",
   "archiveTemplateJournal": "Günlük",
   "archiveTemplateMeeting": "Toplantı",
   "archiveTemplateExpense": "Harcamalar",
@@ -1285,45 +1184,12 @@
   "tplReadingSummary": "Özet",
   "tplReadingQuotes": "Alıntılar",
   "tplReadingThoughts": "Düşüncelerim",
-  "archiveGeneralPage": "Genel",
-  "archiveRenamePage": "Sayfayı yeniden adlandır",
   "archiveDeletePage": "Sayfayı sil",
-  "archiveDeletePageInfo": "\"{name}\" sayfası silinsin mi? İçindeki girdiler silinmez, Genel sayfasına taşınır.",
-  "@archiveDeletePageInfo": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "archivePrevPage": "Önceki sayfa",
   "archiveNextPage": "Sonraki sayfa",
-  "archiveAddEntry": "Sayfaya ekle",
-  "archiveMoveEntry": "Başka sayfaya taşı",
-  "archiveEntryCount": "{count} girdi",
-  "@archiveEntryCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "archivePageName": "Sayfa adı (ör. Faturalar)",
-  "archivePageEmpty": "Boş sayfa",
-  "archiveSearchHint": "Defterde ara…",
-  "archiveAddText": "Metin ekle",
-  "archiveAddFile": "Dosya ekle",
   "archiveCopyHere": "Arşiv defterine kopyala",
   "archiveNoNotebook": "Henüz arşiv defteri yok. Önce bir tane oluştur.",
   "archiveNothingToCopy": "Bu notta kopyalanacak ek yok.",
-  "archiveDeleteEntry": "\"{name}\" defterden silinsin mi? Bu kopya kalıcı olarak gider.",
-  "@archiveDeleteEntry": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "archiveCopied": "{count} dosya arşiv defterine kopyalandı.",
   "@archiveCopied": {
     "placeholders": {
@@ -1332,10 +1198,6 @@
       }
     }
   },
-  "archiveCaptureTitle": "Görselden yakala",
-  "archiveCapturePage": "Sayfa",
-  "archiveCapturePageInfo": "Yapay zekânın önerdiği sayfa. Boş bırakılırsa Genel sayfasına düşer.",
-  "archiveCaptureText": "Tanınan metin",
   "attachmentTagInsert": "Metne ekle",
   "attachmentTagInserted": "Ek etiketi metne eklendi.",
   "attachmentTagPreview": "Eki önizle",
@@ -1351,32 +1213,12 @@
       }
     }
   },
-  "archivePlaceOnPage": "Sayfaya yerleştir",
   "archivePaper": "Kâğıt",
   "archivePaperLined": "Çizgili",
   "archivePaperGrid": "Kareli",
   "archivePaperDots": "Noktalı",
   "archivePaperPlain": "Düz",
-  "archiveWriteHint": "Bu sayfaya yaz…",
-  "archivePageTitleHint": "Sayfa adı",
-  "archiveAutoPageName": "Sayfa {number}",
-  "@archiveAutoPageName": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "archiveNewPageHint": "Yazmaya başla ya da bir şey ekle — sayfa kendiliğinden açılır.",
-  "archiveNewPageLabel": "Yeni sayfa",
-  "archiveAttachmentsHeading": "Bu sayfadaki dosyalar",
-  "archiveNotesHeading": "Notlar",
-  "archiveOpenPage": "Sayfaya git",
-  "archiveEntryTitle": "Başlık",
-  "archiveLinkedFile": "Bağlı dosya",
-  "archiveNoLink": "Bağlı dosya yok",
   "attachmentTagEmbed": "Ek göm",
-  "attachmentTagNoAttachment": "Önce nota bir dosya ekle; sonra yazıya gömebilirsin.",
   "bubbleModeBubble": "Balon",
   "attachmentTagEmbedInfo": "Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır",
   "attachmentTagPickText": "Şimdi bağlanacak yazıyı seç, sonra \"Buraya bağla\"ya dokun.",
@@ -1405,8 +1247,6 @@
     }
   },
   "folderEmptyHint": "Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.",
-  "brainstormTitle": "AI ile beraber düşün",
-  "brainstormRowInfo": "AI önce bir ana hat çıkarır, sonra birlikte geliştirirsiniz",
   "brainstormIntro": "Yukarıdaki başlıklardan birine dokun ya da doğrudan yaz — birlikte düşünmeye başlayalım.",
   "brainstormOutlineTitle": "ANA HAT",
   "brainstormInputHint": "Bir fikir yaz ya da soru sor…",
@@ -1461,7 +1301,6 @@
   "folderInviteDeclined": "Davet reddedildi",
   "friendRequestBanner": "{name} sana arkadaşlık isteği gönderdi",
   "friendRequestAccepted": "Arkadaş eklendi",
-  "sendNoteAction": "Arkadaşa gönder",
   "sendNoteTitle": "Notu arkadaşına gönder",
   "sendNoteInfo": "Notun bir kopyası seçtiğin kişinin \"Gelen notlar\" kutusuna düşer. Ekler (görsel, belge, ses) gönderilmez.",
   "sendNoteSent": "Not {name} kişisine gönderildi",
@@ -1487,7 +1326,6 @@
   "areaAskRun": "Sor",
   "areaCaptureFailed": "Seçilen alanın görüntüsü alınamadı.",
   "areaTooSmall": "Seçilen alan çok küçük.",
-  "areaAddToNote": "Nota ekle",
   "bubbleTextFill": "Yazı zemini",
   "bubbleTextFillNone": "Zeminsiz",
   "bubbleTextAlignLeft": "Sola hizala",
@@ -1503,9 +1341,6 @@
   "patternLines": "Çizgili",
   "patternDiagonal": "Çapraz",
   "patternGraph": "Milimetrik",
-  "archivePagesOverview": "Sayfalar",
-  "archiveSemanticHint": "Defterde anlamıyla ara…",
-  "semanticUnavailable": "Anlamsal arama şu an kullanılamıyor; metin araması gösteriliyor.",
   "sharedNotifications": "Paylaşılan klasör bildirimleri",
   "sharedNotificationsInfo": "Karşı taraf not eklediğinde/değiştirdiğinde ya da sohbete yazdığında telefona bildirim gelsin. Kapalıyken ana ekrandaki sayaç yine çalışır.",
   "copyAsText": "Metni kopyala",
@@ -1593,7 +1428,6 @@
       }
     }
   },
-  "emptyingTrash": "Çöp boşaltılıyor…",
   "reminderRemoved": "Hatırlatıcı kaldırıldı",
   "reminderOverdue": "Gecikti",
   "reminderQuickTonight": "Bu akşam 18:00",
@@ -1730,7 +1564,6 @@
   "pdfSlideshowStop": "Otomatik geçişi durdur",
   "pdfFirstPage": "İlk sayfa",
   "pdfLastPage": "Son sayfa",
-  "pdfPlaceOnPage": "PDF'i sayfaya yerleştir",
   "collaborators": "Ortak çalışanlar",
   "collaboratorsInfo": "Eklediğin kişiler bu notu kendi ana ekranlarında görür ve seninle aynı anda düzenler.",
   "collaboratorsOwner": "Sahibi",
@@ -1806,10 +1639,6 @@
   "shareIncludeChecked": "Tamamlananlar",
   "shareIncludeTags": "Etiketler",
   "shareTextAction": "Metni paylaş",
-  "shareAsFileSection": "Dosya olarak",
-  "shareInAppSection": "Uygulama içinde",
-  "shareSendFriendInfo": "Notun bir kopyasını arkadaşının gelen kutusuna bırakır.",
-  "shareCollaborateInfo": "Arkadaşlarınla aynı notu birlikte düzenle; değişiklikler anında görünür.",
   "findPrevious": "Önceki eşleşme",
   "findNext": "Sonraki eşleşme",
   "findShowAll": "Tüm eşleşmeler",
@@ -2006,12 +1835,10 @@
   "youTubeOpenInBrowserInfo": "Bu cihazda video uygulama içinde oynatılamıyor; tarayıcıda açılabilir.",
   "youTubeOpenExternal": "YouTube'da aç",
   "pictureInPicture": "Resim içinde resim",
-  "pinMediaTop": "Üste sabitle",
   "pinMediaRelease": "Bırak: üste sabitle (altta not)",
   "unpinMedia": "Sayfaya geri koy",
   "unpinMediaRelease": "Bırak: sayfaya geri koy",
   "pinnedMediaResize": "Bölme yüksekliği — sürükleyerek değiştir",
-  "addPageSubtitle": "Nota yeni, boş bir sayfa ekler",
   "pageOf": "Sayfa {current} / {total}",
   "@pageOf": {
     "placeholders": {
@@ -2103,20 +1930,12 @@
       }
     }
   },
-  "quickAddImport": "DOSYADAN",
-  "quickAddImage": "Görsel",
-  "quickAddPdf": "PDF",
-  "quickAddSlides": "Sunum",
-  "quickAddGalleryVideo": "Galeriden video",
   "quickAddYouTube": "YouTube videosu",
-  "docViewBubbles": "Balonlu",
-  "docViewClassic": "Klasik",
   "docViewToBubbles": "Balonlu görünüme geç",
   "docViewToClassic": "Klasik görünüme geç",
   "docViewSwitchedBubbles": "Balonlu görünüm: belge üstte, sayfa notu altta. Klasik yerleşim saklandı.",
   "docViewSwitchedClassic": "Klasik görünüm: belge sayfada bir ek. Balonlar ve sayfa notları saklandı.",
   "docViewTextKept": "Notun yazısı klasik görünümde duruyor.",
-  "docViewDropBubbles": "Bırak: balonlu görünüm (üstte belge, altta not)",
   "captureModeChangeLater": "Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.",
   "attachmentSyncTitle": "Ek senkronu",
   "driveSectionTitle": "Ekler Google Drive'ında",
@@ -2160,10 +1979,6 @@
   },
   "driveDownloading": "Ek Google Drive'dan indiriliyor…",
   "driveNeededForFile": "Bu ek Google Drive'ında. Görmek için Ayarlar → Senkron'dan Drive'ı bağla.",
-  "quickAddMore": "ŞABLON VE DEFTER",
-  "quickAddFrequent": "SIK KULLANDIKLARIN",
-  "quickAddAll": "Tümü",
-  "quickAddLess": "Daha az",
   "bubbleDone": "Bitti",
   "bubbleEditShort": "Düzenle",
   "bubblePlainModeShort": "Metin",
@@ -2280,7 +2095,6 @@
   "uiItemAttachments": "Ekler",
   "uiItemDate": "Düzenleme tarihi",
   "uiItemSync": "Senkron simgesi",
-  "uiItemFrequent": "Sık kullandıkların",
   "uiItemVideoTime": "Süre yazısı",
   "videoSeekBack": "Geri sarma",
   "videoSeekForward": "İleri sarma",
@@ -2608,7 +2422,6 @@
   "quickAddCamera": "Kamera",
   "quickAddFile": "Dosya ekle",
   "quickAddFromDevice": "Cihazdan dosya seç",
-  "quickAddFromDeviceInfo": "Görsel, PDF, sunum, video ya da ses",
   "quickAddTemplates": "Şablon",
   "quickAddFileWhat": "Bu dosyayla ne yapalım?",
   "quickAddFileAsNote": "Notuna ekle",
