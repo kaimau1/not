@@ -4,6 +4,11 @@ on:
   push:
     branches: ['**']
   workflow_dispatch:
+    inputs:
+      perf:
+        description: 'Kare ölçümü (emülatör, ~20 dk) — F2.6'
+        type: boolean
+        default: false
 
 # Aynı dala arka arkaya push edilirse eskisi iptal edilir: iki ağır derleme
 # yan yana koştuğunda runner'lardan biri geri alınıyor (aşağıya bak).
@@ -71,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: >
-      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_dispatch' && !inputs.perf) ||
       (github.ref == 'refs/heads/main' && needs.test.outputs.apk == 'true')
     permissions:
       contents: write
@@ -360,3 +365,55 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: build
           command: pages deploy web --project-name=notlar-web --branch=main
+
+  # KARE ÖLÇÜMÜ (F2.6): "kasma" bulgusu sayıyla izlensin. Emülatörde profil
+  # kipinde integration_test/perf_test.dart (300 notlu ızgarada fırlatma +
+  # editörde 200 karakter); özet `perf-summary` artefaktında, p90 build
+  # > 8 ms ise iş kırmızı. Dakika kotası yüzünden YALNIZ elle:
+  # Actions → Derleme → Run workflow → "Kare ölçümü" kutusu.
+  # Not: emülatör yazılım GPU'su kullanır — raster süreleri gerçek cihazdan
+  # kötüdür; karşılaştırma koşudan koşuya yapılmalı, mutlak değerle değil.
+  perf:
+    name: Kare ölçümü
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'workflow_dispatch' && inputs.perf
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: KVM'i aç (emülatör hızlandırma)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Bağımlılıkları indir
+        run: flutter pub get
+
+      - name: Emülatörde ölç
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: flutter drive --profile --driver=test_driver/perf_driver.dart --target=integration_test/perf_test.dart -d emulator-5554
+
+      - name: Özeti yükle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-summary
+          path: build/perf/

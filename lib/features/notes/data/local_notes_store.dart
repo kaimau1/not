@@ -92,9 +92,23 @@ class LocalNotesStore {
   /// Silinmemiş (ya da [deleted] ise silinmiş) notlar.
   List<Note> notes({bool deleted = false}) => [
     for (final e in _docs.entries)
-      if ((e.value['deletedAt'] != null) == deleted)
-        Note.fromMap(e.key, e.value, localOnly: true),
+      if ((e.value['deletedAt'] != null) == deleted) _parsed(e.key, e.value),
   ];
+
+  /// Ayrıştırılmış not önbelleği — anahtar kayıt haritasının KİMLİĞİ: her
+  /// yazım haritayı yenisiyle değiştirdiği için ([_resolve]) değişmeyen
+  /// notlar AYNI `Note` örneği kalır. Ana ekranın türetilmiş sağlayıcıları
+  /// (F2.1) değişmeyen listeyi örnek kimliğiyle tanır; her yayında bütün
+  /// yerel notlar yeniden ayrıştırılırsa her kart yeniden kurulurdu.
+  final Map<String, (Map<String, dynamic>, Note)> _parsedCache = {};
+
+  Note _parsed(String id, Map<String, dynamic> map) {
+    final hit = _parsedCache[id];
+    if (hit != null && identical(hit.$1, map)) return hit.$2;
+    final note = Note.fromMap(id, map, localOnly: true);
+    _parsedCache[id] = (map, note);
+    return note;
+  }
 
   Note? note(String id) {
     final map = _docs[id];
@@ -117,7 +131,21 @@ class LocalNotesStore {
     _changed();
   }
 
+  /// Birden çok notu TEK değişiklik bildirimiyle birleştirir (toplu
+  /// işlemler — bkz. `NotesRepository.batchUpdateEach`).
+  void mergeAll(Map<String, Map<String, dynamic>> fieldsById) {
+    var any = false;
+    for (final e in fieldsById.entries) {
+      final current = _docs[e.key];
+      if (current == null) continue;
+      _docs[e.key] = _resolve(e.value, current);
+      any = true;
+    }
+    if (any) _changed();
+  }
+
   void remove(String id) {
+    _parsedCache.remove(id);
     if (_docs.remove(id) != null) _changed(immediate: true);
   }
 
@@ -125,9 +153,11 @@ class LocalNotesStore {
   /// `folderId: null` yazımının yerel karşılığı).
   void clearFolder(String folderId) {
     var any = false;
-    for (final map in _docs.values) {
-      if (map['folderId'] == folderId) {
-        map['folderId'] = null;
+    for (final e in _docs.entries.toList()) {
+      if (e.value['folderId'] == folderId) {
+        // Yerinde değiştirme YOK: ayrıştırma önbelleği haritanın kimliğine
+        // bakıyor (bkz. [_parsed]).
+        _docs[e.key] = {...e.value, 'folderId': null};
         any = true;
       }
     }
@@ -137,6 +167,7 @@ class LocalNotesStore {
   /// Hepsini siler (hesap silinirken).
   Future<void> clearAll() async {
     _docs.clear();
+    _parsedCache.clear();
     _changed(immediate: true);
     await flush();
   }

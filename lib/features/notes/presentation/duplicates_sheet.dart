@@ -34,7 +34,14 @@ class _DuplicatesSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final groups = ref.watch(duplicateNotesProvider);
+    // Arka planda hesaplanır (F2.5): ilk sonuç gelene dek bekleme göstergesi.
+    final groups = ref.watch(duplicateNotesProvider).value;
+    if (groups == null) {
+      return const Padding(
+        padding: EdgeInsets.fromLTRB(24, 24, 24, 48),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     if (groups.isEmpty) {
       return Padding(

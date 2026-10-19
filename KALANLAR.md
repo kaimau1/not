@@ -627,3 +627,21 @@ silme) tamamlandı, kalanlar sırayla:
 - [ ] **Farklılaşma özellikleri** (kullanıcı 2026-07-24'te sordu, ayrı oturum):
   1) notlardan otomatik aralıklı tekrar/kart üretimi, 2) tüm defterle sohbet
   (RAG), 3) otomatik not bağlama. Sırayla 1 → 2 → 3 önerildi.
+
+## Faz 2 (akıcılık) — cihazda doğrula (2026-10-19)
+- [ ] Ana ekran: 100+ notla hızlı kaydırma; editörde yazarken geri dönünce
+  ana ekran anında, takılmadan görünüyor mu.
+- [ ] Toplu seçim → sil/arşivle/taşı/renk + "Geri al" tek seferde (tek
+  `WriteBatch`) doğru çalışıyor mu; yerel (senkronu kapalı) notlarda da.
+- [ ] Editör açıkken ek yükleme ilerliyor mu (servisler artık kökte;
+  eskiden ana ekran örtülünce duraklıyordu).
+- [ ] Hatırlatıcı, paylaş menüsünden gelen içerik, widget/derin bağlantı,
+  premium/AI kapısı oturum açıkken eskisi gibi çalışıyor mu (F2.4 taşıması).
+- [ ] PDF'te seçim sürüklerken kenar itmesi ve liste notunda sürükle-sırala
+  kenar kaydırması 120 Hz ekranda akıcı ve hızı eskisiyle aynı mı.
+- [ ] Balona dokununca "balonu göster" kaydırması yerinde mi (BubbleReveal
+  artık kareye bağlı).
+- [ ] AI merkezi → "Kopyaları temizle" sayısı geliyor mu (artık arka planda,
+  ~0,5 sn gecikmeli).
+- [ ] Actions → Derleme → Run workflow → "Kare ölçümü" bir kez koşturulsun;
+  `perf-summary` artefaktındaki p90 değerleri HAFIZA'ya taban olarak yazılsın.

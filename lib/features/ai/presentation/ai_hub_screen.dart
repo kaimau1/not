@@ -78,7 +78,10 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
     final untitled = active.where((n) => n.title.trim().isEmpty).length;
     // Kopya sayısı metin benzerliğinden ölçülüyor (yerel, AI'sız — bkz.
     // note_similarity.dart).
-    final duplicates = duplicateCount(ref.watch(duplicateNotesProvider));
+    // Arka planda hesaplanır (F2.5); hesap sürerken önceki sayı görünür.
+    final duplicates = duplicateCount(
+      ref.watch(duplicateNotesProvider).value ?? const [],
+    );
     final history = ref.watch(aiHistoryProvider);
 
     // **YENİDEN TASARIM** (kullanıcı isteği 2026-09-23: "yapay zeka ekranı

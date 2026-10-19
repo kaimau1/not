@@ -6,7 +6,7 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web he
 
 ## Komutlar
 > ⚠️ **`flutter` PATH'te DEĞİL** (2026-08-30'da doğrulandı): tam yol `C:\src\flutter\bin\flutter.bat`. Bash aracından `"C:/src/flutter/bin/flutter.bat" test`. "flutter: command not found" görünce SDK yok sanma — 2026-08-30'un ilk turu bu yüzden testleri hiç koşmadan 3 KIRMIZI test commit'ledi ve aynı bug iki tur kaçtı.
-- Kurulum: `flutter pub get` · Çalıştır: `flutter run` · Test: `flutter test` (tam takım ~3,5 dk, 1347 test — 2026-10-19)
+- Kurulum: `flutter pub get` · Çalıştır: `flutter run` · Test: `flutter test` (tam takım ~3 dk, 1357 test — 2026-10-19, Faz 2 sonrası)
 - **Bulut oturumunda Flutter YOK**: CI ile aynı sürümü (3.44.6) indir — `curl -o f.tar.xz https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.44.6-stable.tar.xz` → scratchpad'e aç → `PATH` başına `.../flutter/bin`. 3.47+ KULLANMA (pdfrx 1.3.5 derlenmiyor). `pub get` `pubspec.lock`'u değiştirirse (bağımlılık eklemediysen) commit'e katma.
 - **`dart format lib` ÇALIŞTIRMA**: depo tek biçimde değil; toplu biçimlendirme yüzlerce ilgisiz dosyaya dokunur. Yalnız kendi eklediğin dosyayı biçimlendir (üretilen `lib/l10n/generated` hariç — o hep `dart format`).
 - **Yerel release APK**: `flutter build apk --release --target-platform android-arm64 --build-number=<N> --dart-define-from-file=env.json`
