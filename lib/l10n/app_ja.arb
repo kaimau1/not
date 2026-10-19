@@ -1045,12 +1045,19 @@
   "voiceAutoStop": "無音で停止",
   "voiceAutoStopInfo": "話し終えると、数秒の無音のあと自動で聞き取りを終了します。",
   "voiceSmartCommands": "スマートコマンド",
-  "voiceSmartCommandsInfo": "話しながら「delete last word」「delete last sentence」「replace X with Y」「new line」「undo」「clear all」「stop listening」と言えます（トルコ語：「son kelimeyi sil」など）。その後は末尾から続けて書かれます。",
+  "voiceSmartCommandsInfo": "話しながら次のように言えます：“delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening”（トルコ語：「son kelimeyi sil」など）。その後は末尾から続けて書かれます。",
   "voiceAutoStopSoon": "無音 — まもなく終了",
   "voiceCmdDeleted": "削除しました",
   "voiceCmdReplaced": "置き換えました",
   "voiceCmdNewLine": "改行",
   "voiceCmdUndone": "元に戻しました",
   "voiceCmdCleared": "消去しました",
-  "fullscreenExit": "全画面を終了"
+  "fullscreenExit": "全画面を終了",
+  "voiceCaptureContinue": "続けて話す",
+  "voiceCmdPunctuation": "句読点を追加しました",
+  "voiceCmdTitle": "タイトルを設定しました",
+  "voiceSilenceLabel": "待ち時間",
+  "voiceSilenceShort": "短い",
+  "voiceSilenceNormal": "普通",
+  "voiceSilenceLong": "長い"
 }

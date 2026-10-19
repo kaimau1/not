@@ -1856,6 +1856,41 @@ class _VoiceModeSelector extends ConsumerWidget {
           value: ref.watch(voiceAutoStopProvider),
           onChanged: (v) => ref.read(voiceAutoStopProvider.notifier).set(v),
         ),
+        // Bekleme süresi: yalnız "Sessizlikte bitir" açıkken anlamlı.
+        if (ref.watch(voiceAutoStopProvider))
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Expanded(child: Text(l10n.voiceSilenceLabel)),
+                SegmentedButton<VoiceSilence>(
+                  key: const ValueKey('settings-voice-silence'),
+                  showSelectedIcon: false,
+                  style: const ButtonStyle(
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  segments: [
+                    ButtonSegment(
+                      value: VoiceSilence.short,
+                      label: Text(l10n.voiceSilenceShort),
+                    ),
+                    ButtonSegment(
+                      value: VoiceSilence.normal,
+                      label: Text(l10n.voiceSilenceNormal),
+                    ),
+                    ButtonSegment(
+                      value: VoiceSilence.long,
+                      label: Text(l10n.voiceSilenceLong),
+                    ),
+                  ],
+                  selected: {ref.watch(voiceSilenceProvider)},
+                  onSelectionChanged: (selection) => ref
+                      .read(voiceSilenceProvider.notifier)
+                      .set(selection.first),
+                ),
+              ],
+            ),
+          ),
         SwitchListTile(
           key: const ValueKey('settings-voice-smart'),
           contentPadding: EdgeInsets.zero,

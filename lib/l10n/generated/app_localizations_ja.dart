@@ -5123,7 +5123,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get voiceSmartCommandsInfo =>
-      '話しながら「delete last word」「delete last sentence」「replace X with Y」「new line」「undo」「clear all」「stop listening」と言えます（トルコ語：「son kelimeyi sil」など）。その後は末尾から続けて書かれます。';
+      '話しながら次のように言えます：“delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening”（トルコ語：「son kelimeyi sil」など）。その後は末尾から続けて書かれます。';
 
   @override
   String get voiceAutoStopSoon => '無音 — まもなく終了';
@@ -5145,4 +5145,25 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get fullscreenExit => '全画面を終了';
+
+  @override
+  String get voiceCaptureContinue => '続けて話す';
+
+  @override
+  String get voiceCmdPunctuation => '句読点を追加しました';
+
+  @override
+  String get voiceCmdTitle => 'タイトルを設定しました';
+
+  @override
+  String get voiceSilenceLabel => '待ち時間';
+
+  @override
+  String get voiceSilenceShort => '短い';
+
+  @override
+  String get voiceSilenceNormal => '普通';
+
+  @override
+  String get voiceSilenceLong => '長い';
 }

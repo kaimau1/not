@@ -742,7 +742,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       await ref
           .read(voiceAssistantProvider.notifier)
           .composeFromTranscript(
-            result.text,
+            // Söylenen başlık asistana metnin başında verilir; notu o kurar.
+            result.title == null
+                ? result.text
+                : '${l10n.noteTitleLabel}: ${result.title}\n${result.text}',
             nothingHeardText: l10n.voiceNothingHeard,
             savedText: l10n.voiceNoteSaved,
             noApiKeyText: l10n.aiNoApiKey,
@@ -789,6 +792,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final folderId = ref.read(selectedFolderProvider);
     final id = await repo.createNote(
       asList ? NoteType.checklist : NoteType.text,
+      title: result.title ?? '',
       body: asList ? '' : (text.trim().isNotEmpty ? text : ''),
       folderId: folderId,
     );

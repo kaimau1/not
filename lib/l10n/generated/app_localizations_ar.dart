@@ -5202,7 +5202,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get voiceSmartCommandsInfo =>
-      'أثناء الكلام يمكنك قول: “delete last word” و“delete last sentence” و“replace X with Y” و“new line” و“undo” و“clear all” و“stop listening” (بالتركية: “son kelimeyi sil”…). ثم تتابع الكتابة من النهاية.';
+      'أثناء الكلام يمكنك قول: “delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening” (بالتركية: “son kelimeyi sil”…). ثم تتابع الكتابة من النهاية.';
 
   @override
   String get voiceAutoStopSoon => 'صمت — سيتوقف قريبًا';
@@ -5224,4 +5224,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fullscreenExit => 'الخروج من ملء الشاشة';
+
+  @override
+  String get voiceCaptureContinue => 'متابعة الكلام';
+
+  @override
+  String get voiceCmdPunctuation => 'أُضيفت علامة ترقيم';
+
+  @override
+  String get voiceCmdTitle => 'تم تعيين العنوان';
+
+  @override
+  String get voiceSilenceLabel => 'مدة الانتظار';
+
+  @override
+  String get voiceSilenceShort => 'قصير';
+
+  @override
+  String get voiceSilenceNormal => 'عادي';
+
+  @override
+  String get voiceSilenceLong => 'طويل';
 }

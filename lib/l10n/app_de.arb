@@ -1045,12 +1045,19 @@
   "voiceAutoStop": "Bei Stille beenden",
   "voiceAutoStopInfo": "Wenn du fertig gesprochen hast, endet das Zuhören nach ein paar Sekunden Stille von selbst.",
   "voiceSmartCommands": "Sprachbefehle",
-  "voiceSmartCommandsInfo": "Beim Sprechen kannst du sagen: „delete last word“, „delete last sentence“, „replace X with Y“, „new line“, „undo“, „clear all“, „stop listening“ (auf Türkisch: „son kelimeyi sil“ …). Danach geht es am Ende weiter.",
+  "voiceSmartCommandsInfo": "Beim Sprechen kannst du sagen: “delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening” (auf Türkisch: „son kelimeyi sil“ …). Danach geht es am Ende weiter.",
   "voiceAutoStopSoon": "Stille – endet gleich",
   "voiceCmdDeleted": "Gelöscht",
   "voiceCmdReplaced": "Ersetzt",
   "voiceCmdNewLine": "Neue Zeile",
   "voiceCmdUndone": "Rückgängig gemacht",
   "voiceCmdCleared": "Geleert",
-  "fullscreenExit": "Vollbild beenden"
+  "fullscreenExit": "Vollbild beenden",
+  "voiceCaptureContinue": "Weitersprechen",
+  "voiceCmdPunctuation": "Satzzeichen eingefügt",
+  "voiceCmdTitle": "Titel gesetzt",
+  "voiceSilenceLabel": "Wartezeit",
+  "voiceSilenceShort": "Kurz",
+  "voiceSilenceNormal": "Normal",
+  "voiceSilenceLong": "Lang"
 }

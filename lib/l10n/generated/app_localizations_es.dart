@@ -5237,7 +5237,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get voiceSmartCommandsInfo =>
-      'Mientras hablas puedes decir: «delete last word», «delete last sentence», «replace X with Y», «new line», «undo», «clear all», «stop listening» (en turco: «son kelimeyi sil»…). Luego se sigue escribiendo al final.';
+      'Mientras hablas puedes decir: “delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening” (en turco: «son kelimeyi sil»…). Luego se sigue escribiendo al final.';
 
   @override
   String get voiceAutoStopSoon => 'Silencio: se detendrá pronto';
@@ -5259,4 +5259,25 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get fullscreenExit => 'Salir de pantalla completa';
+
+  @override
+  String get voiceCaptureContinue => 'Seguir hablando';
+
+  @override
+  String get voiceCmdPunctuation => 'Puntuación añadida';
+
+  @override
+  String get voiceCmdTitle => 'Título establecido';
+
+  @override
+  String get voiceSilenceLabel => 'Tiempo de espera';
+
+  @override
+  String get voiceSilenceShort => 'Corto';
+
+  @override
+  String get voiceSilenceNormal => 'Normal';
+
+  @override
+  String get voiceSilenceLong => 'Largo';
 }

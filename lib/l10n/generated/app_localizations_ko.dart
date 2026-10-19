@@ -5129,7 +5129,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get voiceSmartCommandsInfo =>
-      '말하는 동안 “delete last word”, “delete last sentence”, “replace X with Y”, “new line”, “undo”, “clear all”, “stop listening”이라고 말할 수 있습니다(터키어: “son kelimeyi sil” 등). 이후 끝에서부터 이어서 씁니다.';
+      '말하는 동안 다음과 같이 말할 수 있습니다: “delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening” (터키어: “son kelimeyi sil” 등). 이후 끝에서부터 이어서 씁니다.';
 
   @override
   String get voiceAutoStopSoon => '조용함 — 곧 종료';
@@ -5151,4 +5151,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get fullscreenExit => '전체 화면 종료';
+
+  @override
+  String get voiceCaptureContinue => '이어서 말하기';
+
+  @override
+  String get voiceCmdPunctuation => '문장 부호 추가됨';
+
+  @override
+  String get voiceCmdTitle => '제목 설정됨';
+
+  @override
+  String get voiceSilenceLabel => '대기 시간';
+
+  @override
+  String get voiceSilenceShort => '짧게';
+
+  @override
+  String get voiceSilenceNormal => '보통';
+
+  @override
+  String get voiceSilenceLong => '길게';
 }

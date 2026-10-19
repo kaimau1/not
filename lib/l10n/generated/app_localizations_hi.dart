@@ -5212,7 +5212,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get voiceSmartCommandsInfo =>
-      'बोलते समय आप कह सकते हैं: “delete last word”, “delete last sentence”, “replace X with Y”, “new line”, “undo”, “clear all”, “stop listening” (तुर्की में: “son kelimeyi sil”…)। फिर लिखना अंत से जारी रहता है।';
+      'बोलते समय आप कह सकते हैं: “delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening” (तुर्की में: “son kelimeyi sil”…)। फिर लिखना अंत से जारी रहता है।';
 
   @override
   String get voiceAutoStopSoon => 'चुप्पी — जल्द रुकेगा';
@@ -5234,4 +5234,25 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get fullscreenExit => 'फ़ुल स्क्रीन से बाहर';
+
+  @override
+  String get voiceCaptureContinue => 'बोलना जारी रखें';
+
+  @override
+  String get voiceCmdPunctuation => 'विराम चिह्न जोड़ा';
+
+  @override
+  String get voiceCmdTitle => 'शीर्षक सेट किया';
+
+  @override
+  String get voiceSilenceLabel => 'प्रतीक्षा समय';
+
+  @override
+  String get voiceSilenceShort => 'कम';
+
+  @override
+  String get voiceSilenceNormal => 'सामान्य';
+
+  @override
+  String get voiceSilenceLong => 'ज़्यादा';
 }

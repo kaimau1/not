@@ -1045,12 +1045,19 @@
   "voiceAutoStop": "Stoppen bij stilte",
   "voiceAutoStopInfo": "Als je klaar bent met praten, stopt het luisteren vanzelf na een paar seconden stilte.",
   "voiceSmartCommands": "Slimme opdrachten",
-  "voiceSmartCommandsInfo": "Tijdens het spreken kun je zeggen: “delete last word”, “delete last sentence”, “replace X with Y”, “new line”, “undo”, “clear all”, “stop listening” (in het Turks: “son kelimeyi sil” …). Daarna gaat het verder aan het einde.",
+  "voiceSmartCommandsInfo": "Tijdens het spreken kun je zeggen: “delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening” (in het Turks: “son kelimeyi sil” …). Daarna gaat het verder aan het einde.",
   "voiceAutoStopSoon": "Stilte — stopt zo",
   "voiceCmdDeleted": "Verwijderd",
   "voiceCmdReplaced": "Vervangen",
   "voiceCmdNewLine": "Nieuwe regel",
   "voiceCmdUndone": "Ongedaan gemaakt",
   "voiceCmdCleared": "Gewist",
-  "fullscreenExit": "Volledig scherm sluiten"
+  "fullscreenExit": "Volledig scherm sluiten",
+  "voiceCaptureContinue": "Verder praten",
+  "voiceCmdPunctuation": "Leesteken toegevoegd",
+  "voiceCmdTitle": "Titel ingesteld",
+  "voiceSilenceLabel": "Wachttijd",
+  "voiceSilenceShort": "Kort",
+  "voiceSilenceNormal": "Normaal",
+  "voiceSilenceLong": "Lang"
 }

@@ -5229,7 +5229,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get voiceSmartCommandsInfo =>
-      'Saat bicara Anda bisa mengucapkan: “delete last word”, “delete last sentence”, “replace X with Y”, “new line”, “undo”, “clear all”, “stop listening” (bahasa Turki: “son kelimeyi sil”…). Lalu penulisan berlanjut dari akhir.';
+      'Saat bicara Anda bisa mengucapkan: “delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening” (bahasa Turki: “son kelimeyi sil”…). Lalu penulisan berlanjut dari akhir.';
 
   @override
   String get voiceAutoStopSoon => 'Hening — segera berhenti';
@@ -5251,4 +5251,25 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get fullscreenExit => 'Keluar layar penuh';
+
+  @override
+  String get voiceCaptureContinue => 'Lanjut bicara';
+
+  @override
+  String get voiceCmdPunctuation => 'Tanda baca ditambahkan';
+
+  @override
+  String get voiceCmdTitle => 'Judul diatur';
+
+  @override
+  String get voiceSilenceLabel => 'Waktu tunggu';
+
+  @override
+  String get voiceSilenceShort => 'Pendek';
+
+  @override
+  String get voiceSilenceNormal => 'Normal';
+
+  @override
+  String get voiceSilenceLong => 'Panjang';
 }

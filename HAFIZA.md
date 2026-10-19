@@ -5125,3 +5125,27 @@ değerlendirmede 6 ayrı sesli giriş yolu ve 3 ayrı dinleme kodu çıkmıştı
 * Basılı tut / bas-başlat ayarı DURUYOR (kullanıcıya sorulmadan kaldırılmadı).
 
 Analiz temiz, 1321/1321 test. Cihazda GÖRÜLMEDİ.
+
+## 2026-10-19 (3. tur) — sesli not: Devam et, bekleme süresi, liste/başlık/noktalama komutları (APK derlenmedi)
+Kullanıcı: "diğer önerilerine geç".
+* **Devam et** (levha, gözden geçirmede 🎤 kare düğme): düzenlenmiş metin
+  `_prefix` olur, dinleme yeniden açılır; yeni konuşma
+  `applyVoiceCommands(raw, base: _prefix)` ile sonuna BOŞLUKLA eklenir,
+  komutlar öncekini de düzenler. Ses eki yolunda yok. Sayaç sürer.
+* **Bekleme süresi**: `voiceSilenceProvider` (Kısa 2,5 / Normal 4 / Uzun 7
+  sn), Ayarlar'da "Sessizlikte bitir" açıkken; oturuma
+  `SilenceGate(afterSpeech:)` olarak verilir (levha + editör diktesi).
+* **Komutlar**: "yeni/sonraki madde", "new/next item" → satır (liste notunda
+  madde). Noktalama yalnız "nokta koy", "virgül koy", "soru işareti",
+  "ünlem işareti", "iki nokta üst üste", "noktalı virgül" (+ "full stop",
+  "question mark"…) — tek başına "nokta/virgül" gündelik kelime ("üç virgül
+  beş"). Cümle sonundan sonra ilk harf büyür (Türkçe i→İ). Sondaki
+  noktalama yenisiyle değişir.
+* **Başlık**: "başlık X olsun", "başlığı X yap", "set the title to X" →
+  `VoiceCommandOutcome.title`, metne girmez; levhada ayrı düzenlenebilir
+  alan; `VoiceCaptureResult.title` → ana ekran `createNote(title:)`, AI not
+  dökümün başına "Başlık: X", editör başlığı DEĞİŞTİRİR.
+* YAPILMADI: internetsiz tanıma (Kotlin intent + kanal argümanı değişir;
+  APK'sız derlenemez) ve sesi metinle birlikte saklama (Android'de tanıyıcı
+  ile kayıt mikrofonu paylaşamıyor). Basılı tut ayarı duruyor.
+`voice_commands_test` +6 grup testi; 1327/1327. Cihazda GÖRÜLMEDİ.

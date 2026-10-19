@@ -70,11 +70,14 @@ enum VoiceCaptureTarget { editor, dashboard }
 /// şey yok oluyordu. Artık kayıt korunur ve nota SES EKİ olarak girer:
 /// yapay zekâ olmasa da not oluşur. Çağıran ekran dolu geldiğinde eki nota
 /// bağlamakla yükümlüdür; [audioDuration] ek etiketinde görünen süredir.
+/// [title] "başlık X olsun" komutuyla söylenen (ya da gözden geçirmede
+/// düzeltilen) başlık; söylenmediyse null.
 typedef VoiceCaptureResult = ({
   String text,
   VoiceCaptureAction action,
   String? audioPath,
   Duration audioDuration,
+  String? title,
 });
 
 /// Seçilen eylemin modele verilecek yönergesi.
@@ -195,6 +198,14 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   /// saklanır ki "Akıllı komutlar" dinlerken kapatılıp açılabilsin.
   String _rawText = '';
 
+  /// "Devam et" ile sürdürülen dinlemede ÖNCEKİ metin: yeni konuşma onun
+  /// sonuna eklenir (bkz. [_continue]).
+  String _prefix = '';
+
+  /// "başlık X olsun" ile söylenen başlık; gözden geçirmede düzenlenebilir.
+  String? _title;
+  final _titleController = TextEditingController();
+
   /// Sessizlik geri sayımının oranı (0–1); arayüzde ince şerit.
   double _silence = 0;
 
@@ -250,6 +261,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         // kadarki metin/kayıt gözden geçirme evresine taşınır.
         maxDuration: _maxCaptureDuration,
         autoStop: () => ref.read(voiceAutoStopProvider),
+        gate: SilenceGate(afterSpeech: ref.read(voiceSilenceProvider).duration),
         // Basılı-tut modunda parmak düğmedeyken kullanıcı "dinlemeye devam"
         // diyor demektir.
         holdOpen: () => _pressed,
@@ -315,12 +327,13 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   /// Ham metne (ayar açıksa) sesli komutları uygular ve ekranı tazeler.
   void _applyRaw() {
     if (!ref.read(voiceSmartCommandsProvider)) {
-      _text = _rawText;
+      _text = _joinPrefix(_rawText);
       if (mounted) setState(() {});
       return;
     }
-    final outcome = applyVoiceCommands(_rawText);
+    final outcome = applyVoiceCommands(_rawText, base: _prefix);
     _text = outcome.text;
+    if (outcome.title != null) _title = outcome.title;
     if (outcome.commands > _commandCount) {
       _commandCount = outcome.commands;
       _showCommandFeedback(outcome.last);
@@ -331,6 +344,13 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     }
     if (mounted) setState(() {});
     if (outcome.stop && _phase == _Phase.listening) _finish();
+  }
+
+  /// Komutlar kapalıyken önceki metinle yeni konuşmayı boşlukla birleştirir.
+  String _joinPrefix(String spoken) {
+    final next = spoken.trim();
+    if (_prefix.isEmpty) return next;
+    return next.isEmpty ? _prefix : '$_prefix $next';
   }
 
   void _showCommandFeedback(VoiceCommand? command) {
@@ -345,6 +365,8 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       VoiceCommand.replace => l10n.voiceCmdReplaced,
       VoiceCommand.newLine => l10n.voiceCmdNewLine,
       VoiceCommand.undo => l10n.voiceCmdUndone,
+      VoiceCommand.punctuation => l10n.voiceCmdPunctuation,
+      VoiceCommand.title => l10n.voiceCmdTitle,
       VoiceCommand.stop => '',
     };
     _feedbackTimer = Timer(const Duration(milliseconds: 1400), () {
@@ -401,9 +423,12 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       // Döküm elde: ses dosyasına artık gerek yok.
       File(path).delete().ignore();
       // Kayıt yolunda komutlar dökümden SONRA uygulanır (canlı metin yok).
-      final clean = ref.read(voiceSmartCommandsProvider)
-          ? applyVoiceCommands(text).text
-          : text;
+      var clean = _joinPrefix(text);
+      if (ref.read(voiceSmartCommandsProvider)) {
+        final outcome = applyVoiceCommands(text, base: _prefix);
+        clean = outcome.text;
+        if (outcome.title != null) _title = outcome.title;
+      }
       _toReview(clean.trim(), l10n.voiceNothingHeard);
     } on GeminiException catch (e) {
       _toAudioFallback(path, e.isAuthError ? l10n.aiNoApiKey : e.message);
@@ -420,6 +445,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     setState(() {
       _text = text;
       _editController.text = text;
+      _titleController.text = _title ?? '';
       _phase = _Phase.ready;
     });
   }
@@ -455,10 +481,40 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     setState(() {
       _text = '';
       _rawText = '';
+      _prefix = '';
+      _title = null;
+      _titleController.clear();
       _commandCount = 0;
       _feedback = '';
       _editController.clear();
       _elapsed = Duration.zero;
+      _phase = _Phase.idle;
+      _pressed = false;
+      _pressedAt = null;
+      _latched = false;
+      _errorMessage = '';
+    });
+    if (ref.read(voiceButtonModeProvider) == VoiceButtonMode.tap) {
+      await _startListening();
+    }
+  }
+
+  /// "Devam et": gözden geçirilen (ve belki elle düzeltilen) metin KORUNUR,
+  /// dinleme yeniden açılır, yeni konuşma onun SONUNA eklenir. Eskiden tek
+  /// seçenek "Baştan dinle"ydi — bir cümle eklemek isteyen her şeyi baştan
+  /// söylemek zorundaydı. Süre sayacı da kaldığı yerden sürer.
+  Future<void> _continue() async {
+    final prefix = _editController.text.trim();
+    final title = _titleController.text.trim();
+    await _teardown();
+    if (!mounted) return;
+    setState(() {
+      _prefix = prefix;
+      _title = title.isEmpty ? null : title;
+      _text = prefix;
+      _rawText = '';
+      _commandCount = 0;
+      _feedback = '';
       _phase = _Phase.idle;
       _pressed = false;
       _pressedAt = null;
@@ -483,6 +539,9 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       action: action,
       audioPath: audio,
       audioDuration: _elapsed,
+      title: _titleController.text.trim().isEmpty
+          ? null
+          : _titleController.text.trim(),
     ));
   }
 
@@ -617,6 +676,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     _ampSub?.cancel();
     _feedbackTimer?.cancel();
     _session?.cancel();
+    _titleController.dispose();
     _recorder?.dispose();
     _editController.dispose();
     // Gönderilmeden kapatıldıysa kayıt geçici klasörde kalmasın (gönderildiyse
@@ -871,6 +931,19 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                     ],
                   ),
                 ),
+              // Söylenen başlık ("başlık X olsun"): gövdeden AYRI, düzeltilebilir.
+              if (_title != null || _titleController.text.isNotEmpty)
+                TextField(
+                  key: const ValueKey('voice-title'),
+                  controller: _titleController,
+                  style: style.copyWith(fontWeight: FontWeight.w700),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.only(bottom: 6),
+                    hintText: context.l10n.noteTitleLabel,
+                  ),
+                ),
               TextField(
                 controller: _editController,
                 maxLines: null,
@@ -902,35 +975,54 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         reverse: true,
         child: SizedBox(
           width: double.infinity,
-          child: Text.rich(
-            TextSpan(
-              children: [
-                if (settled.isNotEmpty)
-                  TextSpan(
-                    text: settledCount == words.length ? settled : '$settled ',
-                    style: style.copyWith(color: scheme.onSurface),
-                  ),
-                if (pending.isNotEmpty)
-                  TextSpan(
-                    text: pending,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_title case final title?)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    '${context.l10n.noteTitleLabel}: $title',
                     style: style.copyWith(
-                      color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
-                    ),
-                  ),
-                if (listening)
-                  WidgetSpan(
-                    alignment: PlaceholderAlignment.middle,
-                    child: Container(
-                      width: 2,
-                      height: 20,
-                      // Yönlü: RTL'de imleç metnin SOLUNDA değil, okuma
-                      // yönünün sonunda (fiziksel solda) durmalı.
-                      margin: const EdgeInsetsDirectional.only(start: 2),
+                      fontWeight: FontWeight.w700,
                       color: scheme.primary,
                     ),
                   ),
-              ],
-            ),
+                ),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    if (settled.isNotEmpty)
+                      TextSpan(
+                        text: settledCount == words.length
+                            ? settled
+                            : '$settled ',
+                        style: style.copyWith(color: scheme.onSurface),
+                      ),
+                    if (pending.isNotEmpty)
+                      TextSpan(
+                        text: pending,
+                        style: style.copyWith(
+                          color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    if (listening)
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: Container(
+                          width: 2,
+                          height: 20,
+                          // Yönlü: RTL'de imleç metnin SOLUNDA değil, okuma
+                          // yönünün sonunda (fiziksel solda) durmalı.
+                          margin: const EdgeInsetsDirectional.only(start: 2),
+                          color: scheme.primary,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1038,6 +1130,29 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
             ),
           ),
           const SizedBox(width: 8),
+          // Ses eki yolunda (döküm yapılamadı) sürdürülecek metin yok.
+          if (_readyAudioPath == null) ...[
+            SizedBox(
+              width: 54,
+              height: 54,
+              child: OutlinedButton(
+                key: const ValueKey('voice-continue'),
+                onPressed: _continue,
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  side: BorderSide(color: scheme.outlineVariant),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Tooltip(
+                  message: l10n.voiceCaptureContinue,
+                  child: const Icon(Icons.mic_none),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
           if (assistant) ...[
             Expanded(
               child: _readyButton(

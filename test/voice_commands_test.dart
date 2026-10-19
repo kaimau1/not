@@ -148,6 +148,57 @@ void main() {
     });
   });
 
+  group('applyVoiceCommands — 2. tur', () {
+    String apply(String raw, {String base = ''}) =>
+        applyVoiceCommands(raw, base: base).text;
+
+    test('yeni madde liste satırı açar', () {
+      expect(
+        apply('süt yeni madde ekmek sonraki madde yumurta'),
+        'süt\nekmek\nyumurta',
+      );
+      expect(apply('milk new item bread'), 'milk\nbread');
+    });
+
+    test('noktalama komutları ve ardından büyük harf', () {
+      expect(
+        apply('yarın geliyorum nokta koy iyi akşamlar'),
+        'yarın geliyorum. İyi akşamlar',
+      );
+      expect(apply('geliyor musun soru işareti'), 'geliyor musun?');
+      expect(apply('elma virgül koy armut'), 'elma, armut');
+      expect(apply('liste iki nokta üst üste süt'), 'liste: süt');
+    });
+
+    test('tek başına nokta/virgül gündelik kelimedir', () {
+      expect(
+        apply('bu nokta önemli üç virgül beş'),
+        'bu nokta önemli üç virgül beş',
+      );
+    });
+
+    test('sondaki noktalama yenisiyle değişir', () {
+      expect(apply('tamam nokta koy\nsoru işareti'), 'tamam?');
+    });
+
+    test('başlık komutu metne girmez, başlığı verir', () {
+      final r = applyVoiceCommands('başlık market listesi olsun\nsüt ekmek');
+      expect(r.text, 'süt ekmek');
+      expect(r.title, 'Market listesi');
+      expect(r.last, VoiceCommand.title);
+      final en = applyVoiceCommands('buy milk\nset the title to groceries');
+      expect(en.text, 'buy milk');
+      expect(en.title, 'Groceries');
+      expect(applyVoiceCommands('süt al').title, isNull);
+    });
+
+    test('Devam et: yeni konuşma öncekinin sonuna boşlukla eklenir', () {
+      expect(apply('ve ekmek', base: 'süt aldım'), 'süt aldım ve ekmek');
+      expect(apply('son kelimeyi sil', base: 'süt aldım'), 'süt');
+      expect(apply('', base: 'süt aldım'), 'süt aldım');
+    });
+  });
+
   group('SilenceGate', () {
     final t0 = DateTime(2026, 10, 19, 12);
 
