@@ -5210,4 +5210,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get versionReasonAuto => 'Automatic';
+
+  @override
+  String get mergeConflictKept =>
+      'Someone else edited the same spot — both versions were kept, delete the extra one.';
+
+  @override
+  String presenceEditing(String name) {
+    return '$name is editing now';
+  }
+
+  @override
+  String get presenceSomeone => 'Someone';
 }

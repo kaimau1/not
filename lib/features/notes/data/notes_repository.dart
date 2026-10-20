@@ -586,6 +586,7 @@ class NotesRepository {
       return Future.value();
     }
     _maybeVersion(note);
+    _rememberWrite(note);
     final fields = {...note.toMap(), 'updatedBy': editorUid};
     // AĞIR ALANLAR (F3.13): bölünmüş ya da ağır kısmı eşiği aşan not iki
     // belgeye yazılır. HAFİF not (ağır belge işlenmemiş) yalnız ana belgeye
@@ -637,6 +638,27 @@ class NotesRepository {
     unawaited(write);
     return write;
   }
+
+  // ── Kendi yazımının yankısı (F4.1) ─────────────────────────────────────
+
+  /// Not kimliği → bu oturumda yazılan son içeriklerin anahtarları. Editör
+  /// gelen anlık görüntünün BAŞKASINDAN mı (birleştir) yoksa kendi
+  /// yazımının yankısı mı (taban ilerler) olduğunu buradan anlar.
+  final Map<String, List<String>> _recentWrites = {};
+
+  static String _contentKey(Note note) =>
+      '${note.title}\u0001${note.body}\u0001'
+      '${[for (final i in note.items) '${i.id}:${i.checked}:${i.text}'].join('\u0002')}';
+
+  void _rememberWrite(Note note) {
+    final list = _recentWrites.putIfAbsent(note.id, () => []);
+    list.add(_contentKey(note));
+    if (list.length > 12) list.removeAt(0);
+  }
+
+  /// [incoming] bu oturumda bu depodan yazılmış bir içerik mi?
+  bool isOwnEcho(Note incoming) =>
+      _recentWrites[incoming.id]?.contains(_contentKey(incoming)) ?? false;
 
   // ── Sürüm geçmişi (F4.2, bkz. note_version.dart) ───────────────────────
 

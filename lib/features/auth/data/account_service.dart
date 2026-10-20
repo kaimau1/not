@@ -52,6 +52,7 @@ class AccountService {
   static const deletedNoteSubcollections = <String>[
     kHeavyCollection,
     kVersionsCollection,
+    'presence',
   ];
 
   /// Kök koleksiyonlarda silinen KENDİ kayıtlarım (sırası

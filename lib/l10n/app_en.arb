@@ -1896,5 +1896,8 @@
   "versionReasonAi": "Before AI change",
   "versionReasonRestore": "Before restoring",
   "versionReasonOpen": "As opened",
-  "versionReasonAuto": "Automatic"
+  "versionReasonAuto": "Automatic",
+  "mergeConflictKept": "Someone else edited the same spot — both versions were kept, delete the extra one.",
+  "presenceEditing": "{name} is editing now",
+  "presenceSomeone": "Someone"
 }

@@ -9355,6 +9355,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Otomatik'**
   String get versionReasonAuto;
+
+  /// No description provided for @mergeConflictKept.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aynı yerde başka biri de yazdı — iki hâli de tutuldu, fazlasını silebilirsin.'**
+  String get mergeConflictKept;
+
+  /// No description provided for @presenceEditing.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} şu an düzenliyor'**
+  String presenceEditing(String name);
+
+  /// No description provided for @presenceSomeone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Biri'**
+  String get presenceSomeone;
 }
 
 class _AppLocalizationsDelegate

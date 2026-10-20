@@ -75,6 +75,7 @@ import '../../data/scan/scan_title.dart';
 import '../../data/user_templates.dart';
 import '../../data/video_frame.dart';
 import '../../data/web_video.dart';
+import '../../domain/text_merge.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
 import '../../domain/list_convert.dart';
@@ -116,6 +117,7 @@ import '../../domain/archive_paper.dart';
 import '../../domain/notebook_migration.dart';
 import 'notebook_paper.dart';
 import 'note_history_sheet.dart';
+import 'note_presence.dart';
 import 'note_menu_sheet.dart';
 import 'in_note_find.dart';
 import 'note_search_sheet.dart';
@@ -951,6 +953,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   final _debouncer = Debouncer();
+
+  /// ÜÇ YÖNLÜ BİRLEŞTİRMENİN TABANI (F4.1): bu editörün sunucuyla en son
+  /// ORTAK gördüğü içerik. Başkasından gelen değişiklik yerelde henüz
+  /// kaydedilmemiş yazıyla bu tabana göre birleştirilir (bkz. text_merge).
+  String _baseTitle = '';
+  String _baseBody = '';
+  List<NoteItem> _baseItems = const [];
+
+  void _setBase(Note note) {
+    _baseTitle = note.title;
+    _baseBody = note.body;
+    _baseItems = note.items;
+  }
   ProviderSubscription<AsyncValue<Note?>>? _sub;
   bool _deleted = false;
 
@@ -1108,6 +1123,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         });
         // Açıldığı hâl ilk değişiklikte sürüm olur (F4.2).
         if (!_readOnly) _notesRepo?.rememberVersionBase(loaded);
+        _setBase(incoming);
         if (!identical(loaded, incoming) && !_readOnly) {
           unawaited(_notesRepo?.updateNote(loaded));
         }
@@ -1222,12 +1238,58 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             if (incoming.body != localBody) {
               _bodyController.text = incoming.body;
             }
+            _setBase(incoming);
+          } else {
+            merged = _mergeConcurrent(merged, incoming, localTitle, localBody);
           }
         }
         _note = merged;
         if (!sameRenderedNote(previous, merged)) setState(() {});
       }
     }, fireImmediately: true);
+  }
+
+  /// **EŞZAMANLI DÜZENLEME** (F4.1): kullanıcı yazarken başka biri (ya da
+  /// ikinci cihaz) aynı notu değiştirdi. Eskiden uzaktaki içerik yok
+  /// sayılıyor, editörün sonraki tam-doküman kaydı onu SİLİYORDU. Artık
+  /// tabana göre üç yönlü birleştirilir ve sonuç kaydedilir; aynı paragraf
+  /// iki tarafta farklı değiştiyse ikisi de tutulur ve kullanıcıya söylenir.
+  /// Kendi yazımımızın yankısı birleştirilmez, yalnız tabanı ilerletir.
+  Note _mergeConcurrent(
+    Note merged,
+    Note incoming,
+    String localTitle,
+    String localBody,
+  ) {
+    final remoteChanged =
+        incoming.title != _baseTitle ||
+        incoming.body != _baseBody ||
+        !sameItems(incoming.items, _baseItems);
+    if (!remoteChanged) return merged;
+    final repo = _notesRepo;
+    if (repo == null || repo.isOwnEcho(incoming)) {
+      _setBase(incoming);
+      return merged;
+    }
+    final body = mergeText3(_baseBody, localBody, incoming.body);
+    final title = localTitle != _baseTitle ? localTitle : incoming.title;
+    final items = mergeItems3(_baseItems, _note!.items, incoming.items);
+    _setBase(incoming);
+    if (title != localTitle) _titleController.text = title;
+    if (body.text != localBody) {
+      final caret = _bodyController.selection;
+      _bodyController.text = body.text;
+      if (caret.isValid) {
+        final at = caret.baseOffset.clamp(0, body.text.length);
+        _bodyController.selection = TextSelection.collapsed(offset: at);
+      }
+    }
+    final result = merged.copyWith(title: title, body: body.text, items: items);
+    // Birleşik hâl hemen yazılır: öbür taraf da görsün, taban ilerlesin.
+    _debouncer.cancel();
+    _notesRepo?.updateNote(result);
+    if (body.conflict) _showSnack(context.l10n.mergeConflictKept);
+    return result;
   }
 
   /// Bekleyen kaydı ERTELEMEDEN yazar; metin alanlarındaki en güncel içerik
@@ -8620,6 +8682,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   ),
                   ),
             actions: [
+              // Ortak notta başka biri düzenliyorsa (F4.1).
+              NotePresenceIndicator(
+                noteId: widget.noteId,
+                ownerId: widget.ownerId,
+              ),
               // KÖK NEDEN (kasma): bu akış `build`'in en başında izleniyordu.
               // `pendingWrites` her kayıtta false→true→false gidiyor, yani
               // yazarken (debounce 0,5 sn / en geç 3 sn) düzenli aralıklarla

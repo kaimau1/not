@@ -2520,5 +2520,15 @@
   "versionReasonAi": "AI değiştirmeden önce",
   "versionReasonRestore": "Geri dönmeden önce",
   "versionReasonOpen": "Açıldığı hâli",
-  "versionReasonAuto": "Otomatik"
+  "versionReasonAuto": "Otomatik",
+  "mergeConflictKept": "Aynı yerde başka biri de yazdı — iki hâli de tutuldu, fazlasını silebilirsin.",
+  "presenceEditing": "{name} şu an düzenliyor",
+  "@presenceEditing": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "presenceSomeone": "Biri"
 }

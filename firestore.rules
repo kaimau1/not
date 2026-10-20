@@ -284,6 +284,13 @@ service cloud.firestore {
         && (sharedFolderOk(true) || isNoteCollaborator(noteOwnerUid, noteId));
       allow update: if sub == 'heavy' && request.auth != null
         && (sharedFolderOk(true) || isNoteCollaborator(noteOwnerUid, noteId));
+      // **"DÜZENLİYOR" NABZI** (F4.1): herkes yalnız KENDİ belgesini
+      // yazar/siler; okuma ana notla aynı.
+      allow read: if sub == 'presence' && request.auth != null
+        && (sharedFolderOk(false) || isNoteCollaborator(noteOwnerUid, noteId));
+      allow write: if sub == 'presence' && request.auth != null
+        && docId == request.auth.uid
+        && (sharedFolderOk(false) || isNoteCollaborator(noteOwnerUid, noteId));
     }
 
     // **KLASÖR PAYLAŞIM AYNASI** — `folderShares/{folderId}`, kimliği

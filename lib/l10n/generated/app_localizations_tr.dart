@@ -5195,4 +5195,16 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get versionReasonAuto => 'Otomatik';
+
+  @override
+  String get mergeConflictKept =>
+      'Aynı yerde başka biri de yazdı — iki hâli de tutuldu, fazlasını silebilirsin.';
+
+  @override
+  String presenceEditing(String name) {
+    return '$name şu an düzenliyor';
+  }
+
+  @override
+  String get presenceSomeone => 'Biri';
 }
