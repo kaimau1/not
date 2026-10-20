@@ -2683,5 +2683,25 @@
     }
   },
   "trashReasonSubstantial": "Uzun, emek verilmiş metin",
-  "trashReasonAi": "AI önerisi"
+  "trashReasonAi": "AI önerisi",
+  "cardElementsHeader": "Kartta görünenler",
+  "cardShowProgress": "İlerleme sayacı (ör. 3/10)",
+  "cardShowProgressInfo": "Yapılacaklar listesinde kaç maddenin işaretlendiğini çubuk ve sayıyla gösterir.",
+  "cardShowMoreCount": "“+N öğe daha” satırı",
+  "cardShowStatusIcons": "Durum simgeleri",
+  "cardShowStatusIconsInfo": "Sabit, yıldız, hatırlatıcı, ortak not, yalnız bu cihaz…",
+  "cardShowTag": "Etiket",
+  "cardShowDate": "Tarih ve saat",
+  "cardShowMedia": "Ekler ve kapak görseli",
+  "cardShowFolder": "Klasör adı",
+  "cardShowFolderInfo": "Arama sonucunda ve Tümü görünümünde notun klasörü.",
+  "cardShowPaper": "Defter kâğıdı deseni",
+  "settingsAiSearch": "Yapay zekâyla ara",
+  "settingsAiSearchHint": "Ne istediğini yaz — “yazılar çok küçük”",
+  "settingsAiSearchGo": "Bul",
+  "settingsAiSearchEmpty": "Uygun bir ayar bulunamadı. Başka sözcüklerle dene.",
+  "settingsAiSearchFound": "Yapay zekânın bulduğu ayarlar",
+  "formatFontPanel": "Yazı tipi ve boyut",
+  "formatColorsPanel": "Renkler",
+  "formatPageColor": "Sayfa rengi"
 }

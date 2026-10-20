@@ -29,6 +29,9 @@ extension _DashMenu on _DashboardScreenState {
     final action = await showActionMenuSheet(
       context,
       ActionMenu(
+        // Gruplar iki sütunlu geniş satır: ikişer maddelik gruplar üç
+        // sütunlu ızgarada sola yaslanıyordu (kullanıcı bulgusu 2026-10-20).
+        wideSections: true,
         quick: [
           // YAPAY ZEKÂ ilk sırada (B2): ana ekrandaki ✨ yüzen düğmesi kalktı.
           if (Personalize.current.shows(UiItem.homeAi))

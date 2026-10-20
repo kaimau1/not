@@ -2049,5 +2049,25 @@
     }
   },
   "trashReasonSubstantial": "Long, substantial text",
-  "trashReasonAi": "AI suggestion"
+  "trashReasonAi": "AI suggestion",
+  "cardElementsHeader": "Shown on cards",
+  "cardShowProgress": "Progress counter (e.g. 3/10)",
+  "cardShowProgressInfo": "Shows how many to-do items are checked, with a bar and a count.",
+  "cardShowMoreCount": "“+N more items” line",
+  "cardShowStatusIcons": "Status icons",
+  "cardShowStatusIconsInfo": "Pinned, starred, reminder, shared, this device only…",
+  "cardShowTag": "Tag",
+  "cardShowDate": "Date and time",
+  "cardShowMedia": "Attachments and cover image",
+  "cardShowFolder": "Folder name",
+  "cardShowFolderInfo": "The note's folder in search results and in the All view.",
+  "cardShowPaper": "Notebook paper pattern",
+  "settingsAiSearch": "Search with AI",
+  "settingsAiSearchHint": "Describe what you want — “text is too small”",
+  "settingsAiSearchGo": "Find",
+  "settingsAiSearchEmpty": "No matching setting found. Try other words.",
+  "settingsAiSearchFound": "Settings found by AI",
+  "formatFontPanel": "Font and size",
+  "formatColorsPanel": "Colors",
+  "formatPageColor": "Page color"
 }

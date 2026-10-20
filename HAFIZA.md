@@ -228,8 +228,11 @@ eskisini arşive taşıma.
   bağlantı/etiket için seçim menüsü ve üst katman.
 - Geri alma NOTUN TAMAMINI saklar (`note_undo.dart`); parmak izine öğe sırası
   konmaz. Eki silince baytlar editör kapanırken silinir (geri al için).
-- Biçim paneli açıkken alt çubuk GİZLİ (kapatma panelin ⌄'sinde); boyut
-  satırı varsayılan kapalı; kaydırıcı önizlemesi 70 ms'de bir. Panel
+- Biçim paneli (2026-10-20 SIFIRDAN): kaymayan eşit bölünmüş ana satır
+  (Başlık·B·I·U·Renk·Aa·Temizle·Sayfa·⌄) + üstünde satır içi TEPSİ
+  (başlık / renk iki satır / yazı tipi + ayrı boyut-şeffaflık). Açılır
+  MENÜ YOK — dar menü kutusunda palet düğmesi taşıp basılamıyordu.
+  Panel açıkken alt çubuk GİZLİ; kaydırıcı önizlemesi 70 ms'de bir. Panel
   kapalıyken etkin biçim rozetleri `ActiveFormatBadges` (`_formatTargetN`
   ile — editör setState'i değil). Kalın, tabanı ≥ w500 olan metinde w800
   (başlık w500).
@@ -375,14 +378,22 @@ eskisini arşive taşıma.
   Görünüm (ızgara/liste, Tümü'de klasöre göre grupla) Süz levhasında.
   Favori süzgeç kısayolları KALKTI (2026-10-20, kullanıcı kararı).
 - Menü ızgaraları: `ActionMenu` 3 sütun; editörün Ekle levhası 4 sütun.
+  Ana ekran ⋮ `wideSections` (iki sütun geniş satır — ikişerli gruplar 3
+  sütunda sola yığılıyordu).
+- Kartta görünenler tek tek ayar (`card_show_*`, `cardDisplayProvider`
+  kaydı; ilerleme sayacı varsayılan KAPALI). Yeni kart öğesi → oraya ekle.
+- Uzun listeli not açılışı: `ItemsEditor` shrinkWrap'te HEPSİNİ kurar →
+  `_rowBudget` ilk karede 18 madde, 380 ms sonra kare başına 14.
 - Dinleme alanları TEK KART `ListeningCard` (`listening_visuals.dart`):
   editör diktesi ve sesli yakalama levhası aynı kart (~120 px). Başlık
   satırına düğme: `ListeningHeaderButton` (34 dp; M3 IconButton 48 dp yiyip
   başlığı kesiyordu).
 - Ayar alanları `ExpandReveal` (animasyon içerik kurulduktan SONRAKİ
   karede; `FadeTransition` yok → `RepaintBoundary`; satırlar
-  `_StaggeredRows` ile kare başına 1). Açılan alan bitince ekranın tepesine
-  kaydırılır (`Scrollable.ensureVisible`, 2026-10-20).
+  `_StaggeredRows` ile kare başına 1). Açılan alanın başlığı dokunuşun
+  ilk karesinden itibaren KARE KARE tepeye izlenir (`_followIntoView`;
+  animasyon bitince kaydırmak geç kalıyordu). Alanlar varsayılan KAPALI;
+  arama AppBar'da sabit + ✨ AI kipi (`matchSettings`, yalnız ayar adları).
 - Paylaşım iki kavram (F3.7): Birlikte düzenle (ortak not / klasör) ve Kopya
   gönder (gelen kutusu).
 - Arayüz dilleri yalnız **tr + en** (F3.14); diğer 14 dil silindi. Kılavuz

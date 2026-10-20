@@ -112,23 +112,16 @@ class _SettingsArea extends StatelessWidget {
               // basılan menüye odaklanmalı, ekran sabit kalıyor"): üstteki
               // açık alan kapanınca dokunulan başlık ekranın tepesine
               // kaçıyor ya da açılan içerik ekranın altında kalıyordu.
-              // Açılış/kapanış animasyonu bitince başlık görünür alanın
-              // tepesine kaydırılır.
+              //
+              // GECİKME (kullanıcı bulgusu 2026-10-20, ikinci tur: "odak biraz
+              // geç yapılıyor"): kaydırma eskiden açılış/kapanış animasyonu
+              // BİTİNCE (340 ms) başlıyordu. Artık dokunuşun ardından gelen
+              // ilk karede başlar ve animasyon sürerken başlığı kare kare
+              // izler (bkz. [_followIntoView]).
               onTap: () {
                 final opening = !open;
                 onTap();
-                if (!opening) return;
-                Future<void>.delayed(const Duration(milliseconds: 340), () {
-                  if (!context.mounted) return;
-                  unawaited(
-                    Scrollable.ensureVisible(
-                      context,
-                      alignment: 0.02,
-                      duration: const Duration(milliseconds: 280),
-                      curve: Curves.easeOutCubic,
-                    ),
-                  );
-                });
+                if (opening) _followIntoView(context);
               },
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -472,3 +465,40 @@ class _ShortcutTile extends StatelessWidget {
 
 // _SettingsGroup (basliksiz kart grubu) kaldirildi: yerini akordeon
 // _SettingsArea aldi, dokuz grup alti alana indi.
+
+/// Açılan alanın başlığını görünür alanın tepesine KARE KARE taşır.
+///
+/// Neden tek bir `Scrollable.ensureVisible` değil: üstteki açık alan aynı
+/// anda kapanıyor, alttaki içerik açılıyor — hedef konum animasyon boyunca
+/// kayar. Başta hesaplanan hedef sonunda yanlış olur; animasyon bitene dek
+/// beklemek de gecikme demekti. Burada her karede hedef yeniden ölçülür ve
+/// kalan yolun bir kısmı alınır; süre dolunca tam hedefe oturur. Kullanıcı
+/// bu arada kaydırırsa izleme bırakılır.
+void _followIntoView(BuildContext context) {
+  const total = Duration(milliseconds: 360);
+  final clock = Stopwatch()..start();
+  void step(Duration _) {
+    if (!context.mounted) return;
+    final box = context.findRenderObject();
+    final scrollable = Scrollable.maybeOf(context);
+    if (box == null || !box.attached || scrollable == null) return;
+    final position = scrollable.position;
+    // Parmak listeyi tuttuysa kullanıcıya bırak.
+    if (position.isScrollingNotifier.value) return;
+    final viewport = RenderAbstractViewport.maybeOf(box);
+    if (viewport == null || !position.hasContentDimensions) return;
+    final target = viewport
+        .getOffsetToReveal(box, 0.02)
+        .offset
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
+    final t = clock.elapsedMilliseconds / total.inMilliseconds;
+    final done = t >= 1;
+    final share = done ? 1.0 : 0.18 + 0.5 * Curves.easeOut.transform(t);
+    final next = position.pixels + (target - position.pixels) * share;
+    if ((next - position.pixels).abs() > 0.5) position.jumpTo(next);
+    if (!done) SchedulerBinding.instance.scheduleFrameCallback(step);
+  }
+
+  SchedulerBinding.instance.scheduleFrameCallback(step);
+  SchedulerBinding.instance.ensureVisualUpdate();
+}

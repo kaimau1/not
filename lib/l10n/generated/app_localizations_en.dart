@@ -5530,4 +5530,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trashReasonAi => 'AI suggestion';
+
+  @override
+  String get cardElementsHeader => 'Shown on cards';
+
+  @override
+  String get cardShowProgress => 'Progress counter (e.g. 3/10)';
+
+  @override
+  String get cardShowProgressInfo =>
+      'Shows how many to-do items are checked, with a bar and a count.';
+
+  @override
+  String get cardShowMoreCount => '“+N more items” line';
+
+  @override
+  String get cardShowStatusIcons => 'Status icons';
+
+  @override
+  String get cardShowStatusIconsInfo =>
+      'Pinned, starred, reminder, shared, this device only…';
+
+  @override
+  String get cardShowTag => 'Tag';
+
+  @override
+  String get cardShowDate => 'Date and time';
+
+  @override
+  String get cardShowMedia => 'Attachments and cover image';
+
+  @override
+  String get cardShowFolder => 'Folder name';
+
+  @override
+  String get cardShowFolderInfo =>
+      'The note\'s folder in search results and in the All view.';
+
+  @override
+  String get cardShowPaper => 'Notebook paper pattern';
+
+  @override
+  String get settingsAiSearch => 'Search with AI';
+
+  @override
+  String get settingsAiSearchHint =>
+      'Describe what you want — “text is too small”';
+
+  @override
+  String get settingsAiSearchGo => 'Find';
+
+  @override
+  String get settingsAiSearchEmpty =>
+      'No matching setting found. Try other words.';
+
+  @override
+  String get settingsAiSearchFound => 'Settings found by AI';
+
+  @override
+  String get formatFontPanel => 'Font and size';
+
+  @override
+  String get formatColorsPanel => 'Colors';
+
+  @override
+  String get formatPageColor => 'Page color';
 }

@@ -102,7 +102,15 @@ class ActionMenu extends StatelessWidget {
     required this.quick,
     required this.sections,
     this.danger,
+    this.wideSections = false,
   });
+
+  /// Gruplar yuvarlak simge ızgarası yerine İKİ SÜTUNLU geniş satırlarla
+  /// (simge + yanında ad) çizilsin mi. Ana ekranın ⋮ menüsü (kullanıcı
+  /// bulgusu 2026-10-20: "üstte 5 buton, altta 2'şerli sola yaslanmış, iyi
+  /// değil"): ikişer maddelik gruplar üç sütunlu ızgarada sola yığılıp
+  /// sağda boşluk bırakıyordu. Geniş satır ekranı tam doldurur.
+  final bool wideSections;
 
   final String? title;
   final List<MenuAction> quick;
@@ -156,7 +164,10 @@ class ActionMenu extends StatelessWidget {
                   ),
                 ),
               ),
-              _TileGrid(actions: section.actions, scheme: scheme),
+              if (wideSections)
+                _TileColumns(actions: section.actions, scheme: scheme)
+              else
+                _TileGrid(actions: section.actions, scheme: scheme),
             ],
           if (danger != null) ...[
             const SizedBox(height: 10),
@@ -271,6 +282,48 @@ class _TileGrid extends StatelessWidget {
   }
 }
 
+/// Geniş grup düzeni: iki sütun [_Tile]; tek kalan son madde tam genişlik.
+class _TileColumns extends StatelessWidget {
+  const _TileColumns({required this.actions, required this.scheme});
+
+  final List<MenuAction> actions;
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    const gap = 8.0;
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Column(
+        children: [
+          for (var i = 0; i < actions.length; i += 2)
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: i + 2 < actions.length ? gap : 0,
+              ),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _Tile(action: actions[i], scheme: scheme),
+                    ),
+                    if (i + 1 < actions.length) ...[
+                      const SizedBox(width: gap),
+                      Expanded(
+                        child: _Tile(action: actions[i + 1], scheme: scheme),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Grup ızgarasının hücresi: hızlı satırın düğmesinden küçük ve NÖTR renkli
 /// (sık kullanılan dört işlem renkleriyle öne çıksın).
 class _GridTile extends StatelessWidget {
@@ -357,21 +410,41 @@ class _Tile extends StatelessWidget {
       key: ValueKey('menu-tile-${action.id}'),
       color: danger
           ? scheme.errorContainer.withValues(alpha: 0.4)
-          : scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          : scheme.surfaceContainerHighest.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(12),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => Navigator.pop(context, action.id),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 40),
+          constraints: const BoxConstraints(minHeight: 48),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: danger ? 12 : 8,
+              vertical: 8,
+            ),
             child: Row(
               mainAxisAlignment: danger
                   ? MainAxisAlignment.center
                   : MainAxisAlignment.start,
               children: [
-                Icon(action.icon, size: 20, color: color),
+                if (danger)
+                  Icon(action.icon, size: 20, color: color)
+                else
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: action.selected
+                          ? scheme.primary
+                          : scheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      action.icon,
+                      size: 18,
+                      color: action.selected ? scheme.onPrimary : color,
+                    ),
+                  ),
                 const SizedBox(width: 10),
                 Flexible(
                   child: Text(

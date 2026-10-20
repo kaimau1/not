@@ -464,6 +464,40 @@ class ItemsEditorState extends State<ItemsEditor>
     super.initState();
     _adoptedFrom = widget.items;
     _items = _adopt(widget.items);
+    if (_items.length > _kFirstRows) {
+      _rowBudget = _kFirstRows;
+      _budgetTimer = Timer(const Duration(milliseconds: 380), _growBudget);
+    }
+  }
+
+  /// **UZUN LİSTEDE KADEMELİ İLK KURULUM** (kullanıcı bulgusu 2026-10-20:
+  /// "not ilk açılırken kasma oluyor"). Editörde liste `shrinkWrap` — dış
+  /// sayfa kaydırıcısının içinde olduğu için tembel değil, BÜTÜN maddeleri
+  /// ilk karede kurar. 97 maddelik notta bu, rota geçişinin ilk karesinde
+  /// 97 zengin metin alanı (RenderEditable + sarma ölçümü) demekti; sayfa
+  /// kayarken takılıyordu. Artık ilk karede yalnız ekranı dolduran ilk
+  /// [_kFirstRows] madde kurulur; geçiş bitince (≈380 ms) kalanlar kare
+  /// başına [_kRowsPerFrame] madde eklenerek tamamlanır. Kurulmamış
+  /// maddeler zaten ekranın altında — kullanıcı farkı görmez.
+  static const _kFirstRows = 18;
+  static const _kRowsPerFrame = 14;
+
+  /// Kurulacak en çok madde sayısı (işaretsizler önce, sonra işaretliler);
+  /// null = hepsi.
+  int? _rowBudget;
+  Timer? _budgetTimer;
+
+  void _growBudget() {
+    _budgetTimer = null;
+    final budget = _rowBudget;
+    if (!mounted || budget == null) return;
+    setState(() {
+      final next = budget + _kRowsPerFrame;
+      _rowBudget = next >= _items.length ? null : next;
+    });
+    if (_rowBudget != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _growBudget());
+    }
   }
 
   /// Dışarıdan gelen listeyi yerel duruma alır: checklist'te "işaretsizler
@@ -614,6 +648,7 @@ class ItemsEditorState extends State<ItemsEditor>
 
   @override
   void dispose() {
+    _budgetTimer?.cancel();
     _autoScroll?.dispose();
     for (final c in _controllers.values) {
       c.dispose();
@@ -1330,14 +1365,25 @@ class ItemsEditorState extends State<ItemsEditor>
     // işaretlilerin üstüne — doğal olarak düşer.
     // Blok seçimi _placedAsChecked ile yapılır: işareti yeni değişen öğe,
     // solma animasyonu bitene kadar eski bloğunda kalır (bkz. _settling).
-    final checkedItems = showChecks
+    var checkedItems = showChecks
         ? [
             for (final i in _items)
               if (_placedAsChecked(i)) i,
           ]
         : const <NoteItem>[];
     // Sürüklenebilir liste ile [_reorder]'ın eşlemesi AYNI süzgeçten geçmeli.
-    final listItems = _visibleItems();
+    var listItems = _visibleItems();
+    // Kademeli ilk kurulum (bkz. [_rowBudget]): yalnız ÖNEK kurulur, yani
+    // sürükleme dizinleri [_reorder]'ın eşlemesiyle yine örtüşür.
+    final checkedCount = checkedItems.length;
+    final budget = _rowBudget;
+    if (budget != null) {
+      if (listItems.length > budget) listItems = listItems.sublist(0, budget);
+      final left = budget - listItems.length;
+      if (checkedItems.length > left) {
+        checkedItems = checkedItems.sublist(0, left);
+      }
+    }
 
     // "Yeni öğe" LİSTENİN İÇİNDE, işaretsizlerin hemen altında (eski yeri).
     // Bir tur ekranın dibinde yüzen bir düğmeye alınmıştı; oradaki alt paneli
@@ -1390,7 +1436,7 @@ class ItemsEditorState extends State<ItemsEditor>
               child: TextButton.icon(
                 onPressed: _deleteChecked,
                 icon: const Icon(Icons.delete_sweep_outlined, size: 20),
-                label: Text(l10n.deleteChecked(checkedItems.length)),
+                label: Text(l10n.deleteChecked(checkedCount)),
                 style: TextButton.styleFrom(foregroundColor: scheme.error),
               ),
             ),

@@ -1158,6 +1158,36 @@ class GeminiService {
     ];
   }
 
+  /// **AYAR ARAMA — AI KİPİ** (kullanıcı isteği 2026-10-20: "ayar arada ai
+  /// modu olabilir"). Kullanıcının serbest cümlesine ("yazılar çok küçük")
+  /// uyan ayar satırlarının [catalog] içindeki sıralarını döner (en uygunu
+  /// başta, en çok 6). Katalog yalnız ayar adları ve anahtar kelimeleri —
+  /// not içeriği gitmez.
+  Future<List<int>> matchSettings(String query, List<String> catalog) async {
+    final lines = [
+      for (var i = 0; i < catalog.length; i++) '$i: ${catalog[i]}',
+    ].join('\n');
+    final raw = await _generate([
+      {
+        'text':
+            'Bir not uygulamasının ayar listesi aşağıda (sıra: ad — '
+            'anahtar kelimeler). Kullanıcının isteğini karşılayan ayarları '
+            'seç; en uygunu başta, en çok 6 tane. Uygun ayar yoksa boş dizi '
+            'ver. Yanıtı YALNIZCA JSON sayı dizisi olarak ver: [3, 12]'
+            '\n\nKullanıcının isteği: "$query"\n\n---\n$lines',
+      },
+    ],
+      jsonOutput: true,
+      preferModel: _taskModel(AiTask.general) ?? AppConstants.fastGeminiModel,
+    );
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) return const [];
+    return [
+      for (final v in decoded.take(6))
+        if (v is num && v >= 0 && v < catalog.length) v.toInt(),
+    ];
+  }
+
   /// Metni verilen yönergeye göre yeniden yazar (düzelt/resmîleştir/kısalt...).
   Future<String> rewriteText(String text, String instruction) => _generate([
     {

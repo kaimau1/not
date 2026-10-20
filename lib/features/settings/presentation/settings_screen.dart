@@ -8,6 +8,8 @@ import 'package:firebase_auth/firebase_auth.dart'
     show AuthCredential, FirebaseAuth, FirebaseAuthException;
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderAbstractViewport;
+import 'package:flutter/scheduler.dart' show SchedulerBinding;
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -98,10 +100,24 @@ List<String> _voiceLanguages(BuildContext context) {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// Acik olan alan. Tek seferde biri acik: dokuz kart alt alta dururken
   /// aranan ayara ulasmak icin ekranlarca kaydirmak gerekiyordu.
-  /// Kalici DEGIL - her acilista "Gorunum" acik gelir (en sik dokunulan).
-  late String _open = widget.initialArea ?? 'appearance';
+  /// Kalici DEGIL. Hepsi KAPALI gelir (kullanıcı isteği 2026-10-20:
+  /// "görünüm menüsü varsayılan açık gelmesin") — yalnız rotadan
+  /// `?area=` verildiyse o alan açık.
+  late String _open = widget.initialArea ?? '';
   String _query = '';
   final _searchController = TextEditingController();
+
+  /// **AI KİPİ** (kullanıcı isteği 2026-10-20): arama kutusundaki ✨ açıkken
+  /// yazılan cümle anahtar kelimeyle değil yapay zekâyla eşlenir ("yazılar
+  /// çok küçük" → Yazı boyutu). Sonuç `alan:satır` anahtarları; null =
+  /// henüz sorulmadı.
+  bool _aiMode = false;
+  bool _aiBusy = false;
+  Set<String>? _aiKeys;
+
+  /// Son build'deki ayar kataloğu (AI'a giden satır adları ve anahtarları).
+  List<String> _catalog = const [];
+  List<String> _catalogKeys = const [];
 
   @override
   void initState() {
@@ -292,6 +308,89 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _CardHideSensitiveSwitch(),
             title: l10n.cardHideSensitive,
             keywords: '${l10n.cardHideSensitiveInfo} sifre parola iban gizli',
+          ),
+          // KARTTA GÖRÜNENLER (kullanıcı isteği 2026-10-20: "97/97 sayacı
+          // ayarlardan açılıp kapatılsın, varsayılan kapalı; bu tip
+          // şeylerin hepsi tek tek açılıp kapatılabilsin"). Her öğe ayrı
+          // satır: aramada tek tek bulunur.
+          _SettingRow(_SubHeader(l10n.cardElementsHeader)),
+          _SettingRow(
+            _PrefSwitch(
+              key: const ValueKey('settings-card-progress'),
+              provider: cardShowProgressProvider,
+              icon: Icons.linear_scale,
+              title: l10n.cardShowProgress,
+              subtitle: l10n.cardShowProgressInfo,
+            ),
+            title: l10n.cardShowProgress,
+            keywords:
+                '${l10n.cardShowProgressInfo} kart sayac ilerleme yuzde '
+                'tamamlanan',
+          ),
+          _SettingRow(
+            _PrefSwitch(
+              provider: cardShowMoreCountProvider,
+              icon: Icons.more_horiz,
+              title: l10n.cardShowMoreCount,
+            ),
+            title: l10n.cardShowMoreCount,
+            keywords: 'kart oge daha madde sayi',
+          ),
+          _SettingRow(
+            _PrefSwitch(
+              provider: cardShowStatusIconsProvider,
+              icon: Icons.push_pin_outlined,
+              title: l10n.cardShowStatusIcons,
+              subtitle: l10n.cardShowStatusIconsInfo,
+            ),
+            title: l10n.cardShowStatusIcons,
+            keywords: '${l10n.cardShowStatusIconsInfo} kart simge rozet',
+          ),
+          _SettingRow(
+            _PrefSwitch(
+              provider: cardShowTagProvider,
+              icon: Icons.tag,
+              title: l10n.cardShowTag,
+            ),
+            title: l10n.cardShowTag,
+            keywords: 'kart etiket hashtag',
+          ),
+          _SettingRow(
+            _PrefSwitch(
+              provider: cardShowDateProvider,
+              icon: Icons.schedule,
+              title: l10n.cardShowDate,
+            ),
+            title: l10n.cardShowDate,
+            keywords: 'kart tarih saat zaman',
+          ),
+          _SettingRow(
+            _PrefSwitch(
+              provider: cardShowMediaProvider,
+              icon: Icons.image_outlined,
+              title: l10n.cardShowMedia,
+            ),
+            title: l10n.cardShowMedia,
+            keywords: 'kart ek gorsel resim kapak kucuk resim video pdf',
+          ),
+          _SettingRow(
+            _PrefSwitch(
+              provider: cardShowFolderProvider,
+              icon: Icons.folder_outlined,
+              title: l10n.cardShowFolder,
+              subtitle: l10n.cardShowFolderInfo,
+            ),
+            title: l10n.cardShowFolder,
+            keywords: '${l10n.cardShowFolderInfo} kart klasor',
+          ),
+          _SettingRow(
+            _PrefSwitch(
+              provider: cardShowPaperProvider,
+              icon: Icons.menu_book_outlined,
+              title: l10n.cardShowPaper,
+            ),
+            title: l10n.cardShowPaper,
+            keywords: 'kart defter kagit cizgili kareli desen',
           ),
           // ANA EKRAN ZEMİNİ BURADAN KALKTI (kullanıcı isteği 2026-08-16):
           // artık ana ekranın kendi 3 nokta menüsünde (bkz.
@@ -527,14 +626,58 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     ];
 
-    final query = foldForSearch(_query.trim());
-    final visible = [
+    // AI'a gidecek katalog: başlıklı her satır "Alan › Satır — anahtarlar".
+    _catalog = [];
+    _catalogKeys = [];
+    for (final a in areas) {
+      for (var i = 0; i < a.rows.length; i++) {
+        final r = a.rows[i];
+        if (r.title.isEmpty) continue;
+        final words = r.keywords.length > 140
+            ? r.keywords.substring(0, 140)
+            : r.keywords;
+        _catalog.add('${a.title} › ${r.title} — $words');
+        _catalogKeys.add('${a.id}:$i');
+      }
+    }
+
+    final aiKeys = _aiMode ? _aiKeys : null;
+    // AI kipinde metin süzgeci yok: kutudaki cümle anahtar kelime değil.
+    final query = _aiMode ? '' : foldForSearch(_query.trim());
+    final visible = <({_Area area, List<Widget> rows})>[
       for (final a in areas)
-        if (a.visible(query)) a,
-    ];
+        if (aiKeys != null)
+          (
+            area: a,
+            rows: [
+              for (var i = 0; i < a.rows.length; i++)
+                if (aiKeys.contains('${a.id}:$i')) a.rows[i].child,
+            ],
+          )
+        else if (a.visible(query))
+          (area: a, rows: a.visibleRows(query)),
+    ]..removeWhere((e) => e.rows.isEmpty);
+    final searching = query.isNotEmpty || aiKeys != null;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settings)),
+      appBar: AppBar(
+        title: Text(l10n.settings),
+        // AYAR ARA EN ÜSTTE, SABİT (kullanıcı isteği 2026-10-20: "ayar ara
+        // üstte olmalı"): profil ve kısayol kartlarının altında kalıyordu;
+        // aşağı kaydırınca da kayboluyordu.
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(_aiBusy ? 58 : 54),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 612),
+                child: _searchBar(context),
+              ),
+            ),
+          ),
+        ),
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),
@@ -592,55 +735,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              // Ayar arama: alan basliklarinda ve anahtar kelimelerde arar.
-              Container(
-                height: 42,
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsetsDirectional.only(start: 12, end: 6),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.search,
-                      size: 19,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: (v) => setState(() => _query = v),
-                        style: const TextStyle(fontSize: 13.5),
-                        decoration: InputDecoration(
-                          hintText: l10n.settingsSearchHint,
-                          hintStyle: TextStyle(
-                            fontSize: 13.5,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                        ),
+              if (aiKeys != null && visible.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.auto_awesome, size: 16, color: scheme.primary),
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.settingsAiSearchFound,
+                        style: Theme.of(context).textTheme.labelLarge
+                            ?.copyWith(color: scheme.primary),
                       ),
-                    ),
-                    if (query.isNotEmpty)
-                      IconButton(
-                        // Etiketsiz simge düğmesi ekran okuyucuda "düğme"
-                        // diye okunuyordu; ipucu hem imleç üstünde hem
-                        // TalkBack'te ne yaptığını söyler.
-                        tooltip: l10n.clearSearch,
-                        icon: const Icon(Icons.close, size: 18),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _query = '');
-                        },
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
               if (visible.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 40),
@@ -652,29 +761,174 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         color: scheme.onSurfaceVariant,
                       ),
                       const SizedBox(height: 12),
-                      Text(l10n.settingsSearchEmpty(_query.trim())),
+                      Text(
+                        aiKeys != null
+                            ? l10n.settingsAiSearchEmpty
+                            : l10n.settingsSearchEmpty(_query.trim()),
+                        textAlign: TextAlign.center,
+                      ),
                     ],
                   ),
                 )
               else
-                for (final area in visible)
+                for (final entry in visible)
                   _SettingsArea(
-                    area: area,
+                    area: entry.area,
                     // Arama sirasinda yalnizca ESLESEN satirlar cizilir;
                     // "hiz" arayan kullanici Ses alaninin tamamini degil iki
                     // hiz kaydiricisini gorur.
-                    rows: area.visibleRows(query),
+                    rows: entry.rows,
                     // Arama sirasinda eslesen alanlar acik gelir: kullanici
                     // buldugu seyi bir de elle acmak zorunda kalmasin.
-                    open: query.isNotEmpty || _open == area.id,
-                    onTap: () =>
-                        setState(() => _open = _open == area.id ? '' : area.id),
+                    open: searching || _open == entry.area.id,
+                    onTap: () => setState(
+                      () => _open = _open == entry.area.id ? '' : entry.area.id,
+                    ),
                   ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  /// Tepedeki sabit arama kutusu: metin araması ya da (✨ açıkken) AI kipi.
+  Widget _searchBar(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final hasText = _query.trim().isNotEmpty;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          height: 44,
+          decoration: BoxDecoration(
+            color: _aiMode
+                ? scheme.primaryContainer.withValues(alpha: 0.45)
+                : scheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: _aiMode
+                  ? scheme.primary.withValues(alpha: 0.5)
+                  : Colors.transparent,
+            ),
+          ),
+          padding: const EdgeInsetsDirectional.only(start: 12, end: 4),
+          child: Row(
+            children: [
+              Icon(
+                _aiMode ? Icons.auto_awesome : Icons.search,
+                size: 19,
+                color: _aiMode ? scheme.primary : scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  key: const ValueKey('settings-search'),
+                  controller: _searchController,
+                  textInputAction: _aiMode
+                      ? TextInputAction.search
+                      : TextInputAction.done,
+                  onChanged: (v) => setState(() {
+                    _query = v;
+                    // Cümle değişince eski AI sonucu geçersiz.
+                    if (_aiMode) _aiKeys = null;
+                  }),
+                  onSubmitted: (_) {
+                    if (_aiMode) unawaited(_runAiSearch());
+                  },
+                  style: const TextStyle(fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: _aiMode
+                        ? l10n.settingsAiSearchHint
+                        : l10n.settingsSearchHint,
+                    hintStyle: TextStyle(
+                      fontSize: 13.5,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ),
+              if (hasText)
+                IconButton(
+                  // Etiketsiz simge düğmesi ekran okuyucuda "düğme"
+                  // diye okunuyordu; ipucu hem imleç üstünde hem
+                  // TalkBack'te ne yaptığını söyler.
+                  tooltip: l10n.clearSearch,
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _query = '';
+                      _aiKeys = null;
+                    });
+                  },
+                ),
+              if (_aiMode && hasText)
+                TextButton(
+                  key: const ValueKey('settings-ai-search-go'),
+                  onPressed: _aiBusy ? null : _runAiSearch,
+                  child: Text(l10n.settingsAiSearchGo),
+                ),
+              IconButton(
+                key: const ValueKey('settings-ai-search'),
+                tooltip: l10n.settingsAiSearch,
+                isSelected: _aiMode,
+                visualDensity: VisualDensity.compact,
+                style: IconButton.styleFrom(
+                  backgroundColor: _aiMode ? scheme.primary : null,
+                  foregroundColor: _aiMode
+                      ? scheme.onPrimary
+                      : scheme.onSurfaceVariant,
+                ),
+                icon: const Icon(Icons.auto_awesome, size: 18),
+                onPressed: () => setState(() {
+                  _aiMode = !_aiMode;
+                  _aiKeys = null;
+                }),
+              ),
+            ],
+          ),
+        ),
+        if (_aiBusy)
+          const Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: LinearProgressIndicator(minHeight: 2),
+          ),
+      ],
+    );
+  }
+
+  /// AI kipinde cümleyi ayar kataloğuyla eşler.
+  Future<void> _runAiSearch() async {
+    final text = _query.trim();
+    if (text.isEmpty || _aiBusy) return;
+    FocusScope.of(context).unfocus();
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final catalog = _catalog;
+    final keys = _catalogKeys;
+    setState(() => _aiBusy = true);
+    try {
+      final hits = await ref
+          .read(geminiServiceProvider)
+          .matchSettings(text, catalog);
+      if (!mounted) return;
+      setState(() => _aiKeys = {for (final i in hits) keys[i]});
+    } on GeminiException catch (e) {
+      messenger.showMessage(
+        e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
+      );
+    } catch (e) {
+      messenger.showMessage(l10n.aiError('$e'));
+    } finally {
+      if (mounted) setState(() => _aiBusy = false);
+    }
   }
 
   /// Kaç öğe gizli + sarma süreleri ("3 gizli · ⏪10 ⏩10 sn").

@@ -9853,6 +9853,126 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'AI önerisi'**
   String get trashReasonAi;
+
+  /// No description provided for @cardElementsHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartta görünenler'**
+  String get cardElementsHeader;
+
+  /// No description provided for @cardShowProgress.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlerleme sayacı (ör. 3/10)'**
+  String get cardShowProgress;
+
+  /// No description provided for @cardShowProgressInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapılacaklar listesinde kaç maddenin işaretlendiğini çubuk ve sayıyla gösterir.'**
+  String get cardShowProgressInfo;
+
+  /// No description provided for @cardShowMoreCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'“+N öğe daha” satırı'**
+  String get cardShowMoreCount;
+
+  /// No description provided for @cardShowStatusIcons.
+  ///
+  /// In tr, this message translates to:
+  /// **'Durum simgeleri'**
+  String get cardShowStatusIcons;
+
+  /// No description provided for @cardShowStatusIconsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sabit, yıldız, hatırlatıcı, ortak not, yalnız bu cihaz…'**
+  String get cardShowStatusIconsInfo;
+
+  /// No description provided for @cardShowTag.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etiket'**
+  String get cardShowTag;
+
+  /// No description provided for @cardShowDate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih ve saat'**
+  String get cardShowDate;
+
+  /// No description provided for @cardShowMedia.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekler ve kapak görseli'**
+  String get cardShowMedia;
+
+  /// No description provided for @cardShowFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasör adı'**
+  String get cardShowFolder;
+
+  /// No description provided for @cardShowFolderInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arama sonucunda ve Tümü görünümünde notun klasörü.'**
+  String get cardShowFolderInfo;
+
+  /// No description provided for @cardShowPaper.
+  ///
+  /// In tr, this message translates to:
+  /// **'Defter kâğıdı deseni'**
+  String get cardShowPaper;
+
+  /// No description provided for @settingsAiSearch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâyla ara'**
+  String get settingsAiSearch;
+
+  /// No description provided for @settingsAiSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ne istediğini yaz — “yazılar çok küçük”'**
+  String get settingsAiSearchHint;
+
+  /// No description provided for @settingsAiSearchGo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bul'**
+  String get settingsAiSearchGo;
+
+  /// No description provided for @settingsAiSearchEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygun bir ayar bulunamadı. Başka sözcüklerle dene.'**
+  String get settingsAiSearchEmpty;
+
+  /// No description provided for @settingsAiSearchFound.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekânın bulduğu ayarlar'**
+  String get settingsAiSearchFound;
+
+  /// No description provided for @formatFontPanel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazı tipi ve boyut'**
+  String get formatFontPanel;
+
+  /// No description provided for @formatColorsPanel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Renkler'**
+  String get formatColorsPanel;
+
+  /// No description provided for @formatPageColor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa rengi'**
+  String get formatPageColor;
 }
 
 class _AppLocalizationsDelegate

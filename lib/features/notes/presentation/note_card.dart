@@ -487,6 +487,8 @@ class NoteCard extends ConsumerWidget {
     // notlarda IBAN/kart numarası örtülür. Yalnız gösterim (bkz.
     // sensitive_text.dart); ayar Ayarlar → Görünüm.
     final hideSensitive = ref.watch(cardHideSensitiveProvider);
+    // Kartta hangi öğeler görünsün (Ayarlar → Görünüm → Kartlar).
+    final display = ref.watch(cardDisplayProvider);
     final credential = hideSensitive && !note.locked && isCredentialNote(note);
     // KARTTAN İŞARETLEME (D6): kendi notumda, seçim kipi dışında maddenin
     // kutucuğuna dokunmak editörü açmadan işaretler (Keep'teki gibi).
@@ -511,26 +513,33 @@ class NoteCard extends ConsumerWidget {
     // akıyorlardı ve başlığı sola sıkıştırıyorlardı: üç rozetli bir notta
     // başlık iki kelimede kesiliyordu. Altta, tarihle aynı bantta duruyorlar.
     final statusIcons = <Widget>[
-      if (note.pinned)
-        Icon(Icons.push_pin, size: 13, color: scheme.onSurfaceVariant),
-      if (note.starred)
-        Icon(Icons.star, size: 13, color: Colors.amber.shade600),
-      if (!note.locked && note.aiSummary != null)
-        Icon(Icons.auto_awesome, size: 13, color: scheme.primary),
-      if (note.reminderAt != null)
-        Icon(Icons.alarm, size: 13, color: scheme.onSurfaceVariant),
-      // ORTAK NOT: başkalarıyla paylaşılan (ya da bana paylaşılmış) not
-      // kartında da belli olsun — Keep'teki ortak çalışan simgesi gibi.
-      if (shared) Icon(Icons.people_alt, size: 13, color: scheme.primary),
-      // YALNIZ BU CİHAZDA (senkron kapalı) — kart bakışta söylesin.
-      if (note.localOnly)
-        Icon(Icons.cloud_off_outlined, size: 13, color: scheme.tertiary),
+      if (display.statusIcons) ...[
+        if (note.pinned)
+          Icon(Icons.push_pin, size: 13, color: scheme.onSurfaceVariant),
+        if (note.starred)
+          Icon(Icons.star, size: 13, color: Colors.amber.shade600),
+        if (!note.locked && note.aiSummary != null)
+          Icon(Icons.auto_awesome, size: 13, color: scheme.primary),
+        if (note.reminderAt != null)
+          Icon(Icons.alarm, size: 13, color: scheme.onSurfaceVariant),
+        // ORTAK NOT: başkalarıyla paylaşılan (ya da bana paylaşılmış) not
+        // kartında da belli olsun — Keep'teki ortak çalışan simgesi gibi.
+        if (shared) Icon(Icons.people_alt, size: 13, color: scheme.primary),
+        // YALNIZ BU CİHAZDA (senkron kapalı) — kart bakışta söylesin.
+        if (note.localOnly)
+          Icon(Icons.cloud_off_outlined, size: 13, color: scheme.tertiary),
+      ],
     ];
+    final showTag = display.tag && note.tags.isNotEmpty;
+    final showDate = display.date && note.updatedAt != null;
     // Üst satır yalnızca başlık varsa çizilir. Başlıksız notta (madde 5) boş
     // bir üst bant bırakılmaz; içerik doğrudan tepeden başlar.
     final showTopRow = hasTitle;
-    // Kilitli notta içerik (ekler dahil) kartta gösterilmez.
-    final media = note.locked ? null : CardMediaPlan.of(note);
+    // Kilitli notta içerik (ekler dahil) kartta gösterilmez; ekler ayardan
+    // da kapatılabilir.
+    final media = note.locked || !display.media
+        ? null
+        : CardMediaPlan.of(note);
     final hero = media?.hero;
     // Balonlu notun belge kapağı (video/görsel kapağıyla aynı yerde).
     final cover = media?.cover;
@@ -544,6 +553,7 @@ class NoteCard extends ConsumerWidget {
     final folderId = note.folderId;
     final folderName =
         !showFolder ||
+            !display.folder ||
             folderId == null ||
             (highlightQuery.trim().isEmpty &&
                 !(ref.watch(showAllNotesProvider) &&
@@ -625,6 +635,8 @@ class NoteCard extends ConsumerWidget {
               note: note,
               highlightQuery: highlightQuery,
               rich: richPreview,
+              showProgress: display.progress,
+              showMoreCount: display.moreCount,
               mask: hideSensitive ? maskSensitiveNumbers : _identity,
               onToggle: canToggle
                   ? (item) => toggleCardItem(ref, note, item)
@@ -649,9 +661,7 @@ class NoteCard extends ConsumerWidget {
           // ALT META SATIRI: durum simgeleri · ilk etiket · sağda tarih.
           // Üçü tek bantta olduğu için kartın yüksekliği rozet sayısına göre
           // değişmiyor; eskiden etiketler Wrap ile ikinci satıra taşıyordu.
-          if (statusIcons.isNotEmpty ||
-              note.tags.isNotEmpty ||
-              note.updatedAt != null) ...[
+          if (statusIcons.isNotEmpty || showTag || showDate) ...[
             const SizedBox(height: 8),
             Row(
               children: [
@@ -660,7 +670,7 @@ class NoteCard extends ConsumerWidget {
                     padding: const EdgeInsetsDirectional.only(end: 4),
                     child: icon,
                   ),
-                if (note.tags.isNotEmpty)
+                if (showTag)
                   Flexible(
                     child: Text(
                       '#${note.tags.first}',
@@ -674,7 +684,7 @@ class NoteCard extends ConsumerWidget {
                     ),
                   ),
                 const Spacer(),
-                if (note.updatedAt != null)
+                if (showDate)
                   Text(
                     formatNoteDate(note.updatedAt!),
                     style: TextStyle(
@@ -698,7 +708,7 @@ class NoteCard extends ConsumerWidget {
     // açık olanlar dashboard'da da öyle görünmeli — çizgili sayfa kartta da
     // çizgili"). Desen editördekiyle aynı; çizgili desenlerde çizgiler
     // kartın yazı satırlarının altına oturur (bkz. RuledLines).
-    final paperBody = note.paged && !note.locked
+    final paperBody = note.paged && !note.locked && display.paper
         ? _withCardPaper(
             context,
             note,
@@ -1234,9 +1244,16 @@ class _NotePreview extends StatelessWidget {
     this.highlightQuery = '',
     this.mask = _identity,
     this.onToggle,
+    this.showProgress = false,
+    this.showMoreCount = true,
   });
 
   final Note note;
+
+  /// Yapılacaklar ilerlemesi ("3/10") ve "+N öğe daha" satırı çizilsin mi
+  /// (Ayarlar → Görünüm → Kartlar).
+  final bool showProgress;
+  final bool showMoreCount;
   final String highlightQuery;
 
   /// Gösterilen her metne uygulanır (hassas numaraları örtme, B1).
@@ -1371,7 +1388,7 @@ class _NotePreview extends StatelessWidget {
                   checkbox: true,
                   onToggle: onToggle,
                 ),
-              if (items.length > maxItems)
+              if (showMoreCount && items.length > maxItems)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
@@ -1381,7 +1398,7 @@ class _NotePreview extends StatelessWidget {
                     ),
                   ),
                 ),
-              _ChecklistProgress(items: items),
+              if (showProgress) _ChecklistProgress(items: items),
             ],
           ],
         );
@@ -1419,7 +1436,7 @@ class _NotePreview extends StatelessWidget {
                 number: note.type == NoteType.ordered ? i + 1 : null,
                 onToggle: onToggle,
               ),
-            if (remaining > 0)
+            if (showMoreCount && remaining > 0)
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
@@ -1429,7 +1446,7 @@ class _NotePreview extends StatelessWidget {
                   ),
                 ),
               ),
-            if (note.type == NoteType.checklist)
+            if (showProgress && note.type == NoteType.checklist)
               _ChecklistProgress(items: visible),
           ],
         );
@@ -1477,7 +1494,7 @@ class _NotePreview extends StatelessWidget {
                   ],
                 ),
               ),
-            if (morePages > 0)
+            if (showMoreCount && morePages > 0)
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
@@ -1527,8 +1544,8 @@ class NoteListRow extends ConsumerWidget {
 
   /// Satırın solu: notun görseli/videosu varsa küçük resmi (video oynat
   /// işaretiyle), yoksa tür simgesi. Kilitli notta hep simge.
-  Widget _rowLeading(ColorScheme scheme) {
-    final media = note.locked ? null : CardMediaPlan.of(note);
+  Widget _rowLeading(ColorScheme scheme, {required bool showMedia}) {
+    final media = note.locked || !showMedia ? null : CardMediaPlan.of(note);
     final visual = media?.hero ?? media?.strip.firstOrNull;
     if (visual == null) {
       return Icon(_icon, size: 20, color: scheme.onSurfaceVariant);
@@ -1570,6 +1587,7 @@ class NoteListRow extends ConsumerWidget {
       context,
       hideSensitive: ref.watch(cardHideSensitiveProvider),
     );
+    final display = ref.watch(cardDisplayProvider);
     return Material(
       color: selected ? scheme.secondaryContainer : scheme.surfaceContainerLow,
       borderRadius: BorderRadius.circular(12),
@@ -1584,7 +1602,7 @@ class NoteListRow extends ConsumerWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _rowLeading(scheme),
+              _rowLeading(scheme, showMedia: display.media),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -1619,7 +1637,7 @@ class NoteListRow extends ConsumerWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  if (note.updatedAt != null)
+                  if (display.date && note.updatedAt != null)
                     Text(
                       formatNoteDate(note.updatedAt!),
                       style: TextStyle(
@@ -1629,29 +1647,30 @@ class NoteListRow extends ConsumerWidget {
                       ),
                     ),
                   const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (note.pinned)
-                        Icon(
-                          Icons.push_pin,
-                          size: 13,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      if (note.starred)
-                        Icon(
-                          Icons.star,
-                          size: 13,
-                          color: Colors.amber.shade600,
-                        ),
-                      if (note.reminderAt != null)
-                        Icon(
-                          Icons.alarm,
-                          size: 13,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                    ],
-                  ),
+                  if (display.statusIcons)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (note.pinned)
+                          Icon(
+                            Icons.push_pin,
+                            size: 13,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        if (note.starred)
+                          Icon(
+                            Icons.star,
+                            size: 13,
+                            color: Colors.amber.shade600,
+                          ),
+                        if (note.reminderAt != null)
+                          Icon(
+                            Icons.alarm,
+                            size: 13,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                      ],
+                    ),
                 ],
               ),
             ],

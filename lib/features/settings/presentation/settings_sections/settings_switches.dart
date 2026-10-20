@@ -266,3 +266,32 @@ class _SyncLimitSelector extends ConsumerWidget {
     );
   }
 }
+
+/// Tek tercihli aç/kapa satırı (kartta görünen öğeler gibi aynı biçimli
+/// anahtarlar için ortak).
+class _PrefSwitch extends ConsumerWidget {
+  const _PrefSwitch({
+    super.key,
+    required this.provider,
+    required this.title,
+    this.subtitle,
+    this.icon,
+  });
+
+  final NotifierProvider<BoolPrefNotifier, bool> provider;
+  final String title;
+  final String? subtitle;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      secondary: icon == null ? null : Icon(icon, size: 20),
+      title: Text(title),
+      subtitle: subtitle == null ? null : Text(subtitle!),
+      value: ref.watch(provider),
+      onChanged: (value) => ref.read(provider.notifier).set(value),
+    );
+  }
+}

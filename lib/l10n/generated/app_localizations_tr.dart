@@ -5513,4 +5513,68 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get trashReasonAi => 'AI önerisi';
+
+  @override
+  String get cardElementsHeader => 'Kartta görünenler';
+
+  @override
+  String get cardShowProgress => 'İlerleme sayacı (ör. 3/10)';
+
+  @override
+  String get cardShowProgressInfo =>
+      'Yapılacaklar listesinde kaç maddenin işaretlendiğini çubuk ve sayıyla gösterir.';
+
+  @override
+  String get cardShowMoreCount => '“+N öğe daha” satırı';
+
+  @override
+  String get cardShowStatusIcons => 'Durum simgeleri';
+
+  @override
+  String get cardShowStatusIconsInfo =>
+      'Sabit, yıldız, hatırlatıcı, ortak not, yalnız bu cihaz…';
+
+  @override
+  String get cardShowTag => 'Etiket';
+
+  @override
+  String get cardShowDate => 'Tarih ve saat';
+
+  @override
+  String get cardShowMedia => 'Ekler ve kapak görseli';
+
+  @override
+  String get cardShowFolder => 'Klasör adı';
+
+  @override
+  String get cardShowFolderInfo =>
+      'Arama sonucunda ve Tümü görünümünde notun klasörü.';
+
+  @override
+  String get cardShowPaper => 'Defter kâğıdı deseni';
+
+  @override
+  String get settingsAiSearch => 'Yapay zekâyla ara';
+
+  @override
+  String get settingsAiSearchHint => 'Ne istediğini yaz — “yazılar çok küçük”';
+
+  @override
+  String get settingsAiSearchGo => 'Bul';
+
+  @override
+  String get settingsAiSearchEmpty =>
+      'Uygun bir ayar bulunamadı. Başka sözcüklerle dene.';
+
+  @override
+  String get settingsAiSearchFound => 'Yapay zekânın bulduğu ayarlar';
+
+  @override
+  String get formatFontPanel => 'Yazı tipi ve boyut';
+
+  @override
+  String get formatColorsPanel => 'Renkler';
+
+  @override
+  String get formatPageColor => 'Sayfa rengi';
 }

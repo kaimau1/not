@@ -526,6 +526,76 @@ final cardHideSensitiveProvider = boolPref(
   defaultValue: true,
 );
 
+/// **KARTTA NE GÖRÜNSÜN** (kullanıcı isteği 2026-10-20: "97/97 yazan sayaç
+/// ayarlardan açılıp kapatılabilir olsun, varsayılan kapalı; bu tip
+/// şeylerin hepsi tek tek açılıp kapatılabilsin"). Her öğe ayrı tercih,
+/// Ayarlar → Görünüm → Kartlar. Yalnız GÖSTERİM — not verisi değişmez.
+///
+/// Yapılacaklar ilerlemesi (çubuk + "3/10") varsayılan KAPALI.
+final cardShowProgressProvider = boolPref(
+  'card_show_progress',
+  defaultValue: false,
+);
+
+/// "+N öğe daha" satırı.
+final cardShowMoreCountProvider = boolPref(
+  'card_show_more_count',
+  defaultValue: true,
+);
+
+/// Alt meta satırındaki durum simgeleri (sabit, yıldız, AI, alarm, ortak,
+/// yalnız bu cihaz).
+final cardShowStatusIconsProvider = boolPref(
+  'card_show_status_icons',
+  defaultValue: true,
+);
+
+/// Alt meta satırındaki ilk etiket (#etiket).
+final cardShowTagProvider = boolPref('card_show_tag', defaultValue: true);
+
+/// Alt meta satırındaki tarih/saat.
+final cardShowDateProvider = boolPref('card_show_date', defaultValue: true);
+
+/// Kartta ekler: kapak görseli/videosu, küçük resimler, dosya ve ses
+/// satırları.
+final cardShowMediaProvider = boolPref('card_show_media', defaultValue: true);
+
+/// Arama sonucunda ve "Tümü" görünümünde notun klasör rozeti.
+final cardShowFolderProvider = boolPref(
+  'card_show_folder',
+  defaultValue: true,
+);
+
+/// Defter kâğıdı deseni (çizgili, kareli…) kartta da çizilsin mi.
+final cardShowPaperProvider = boolPref('card_show_paper', defaultValue: true);
+
+/// Kartın gösterim tercihlerinin TEK okuması: kart altı ayrı sağlayıcı
+/// yerine bunu izler (kayıt `==` ile karşılaştırılır — değişmeyen tercih
+/// kartları yeniden kurmaz).
+typedef CardDisplay = ({
+  bool progress,
+  bool moreCount,
+  bool statusIcons,
+  bool tag,
+  bool date,
+  bool media,
+  bool folder,
+  bool paper,
+});
+
+final cardDisplayProvider = Provider<CardDisplay>(
+  (ref) => (
+    progress: ref.watch(cardShowProgressProvider),
+    moreCount: ref.watch(cardShowMoreCountProvider),
+    statusIcons: ref.watch(cardShowStatusIconsProvider),
+    tag: ref.watch(cardShowTagProvider),
+    date: ref.watch(cardShowDateProvider),
+    media: ref.watch(cardShowMediaProvider),
+    folder: ref.watch(cardShowFolderProvider),
+    paper: ref.watch(cardShowPaperProvider),
+  ),
+);
+
 /// Eklerin buluta otomatik senkronu (Storage'a yükleme) için boyut sınırı, MB.
 /// 0 = sınırsız. Sınırı aşan ek cihazda kalır; not metni yine senkronlanır,
 /// yalnız dosyanın kendisi yüklenmez (kota/veri tasarrufu).

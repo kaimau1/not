@@ -84,8 +84,15 @@ void main() {
     ], const []);
     expect(tester.takeException(), isNull);
     expect(find.text('Oge 0'), findsOneWidget);
-    // Kendi kaydiricisi yok: dis SingleChildScrollView tum listeyi uzatir,
-    // yani listenin sonu da agacta kurulmus olur.
+    // KADEMELI ILK KURULUM (2026-10-20, "not ilk acilirken kasma"): ilk
+    // karede yalniz ekrani dolduran ilk maddeler kurulur...
+    expect(find.text('Oge 29'), findsNothing);
+    // ...gecis bitince kalanlar kare kare eklenir. Kendi kaydiricisi yok:
+    // dis SingleChildScrollView tum listeyi uzatir, yani listenin sonu da
+    // agacta kurulmus olur.
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
     expect(find.text('Oge 29'), findsOneWidget);
   });
 

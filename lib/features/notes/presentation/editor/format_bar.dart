@@ -13,22 +13,38 @@ import 'text_wrap.dart';
 
 /// Klavyenin hemen üstünde duran biçim çubuğu.
 ///
-/// Neden alt sayfa değil de SABİT çubuk: biçim, yazarken kullanılan bir şey.
-/// Seçim menüsünden açılan bir sayfa her seferinde (seç → menü → sayfa →
-/// düğme) dört adım demekti ve yazı tipi/boyut palet sayfasının içine gömülü
-/// olduğundan bulunamıyordu. Çubuk açıkken düğmeler tek dokunuş.
+/// **SIFIRDAN YENİDEN YAZILDI** (kullanıcı bulgusu 2026-10-20: "biçim
+/// menüsü akışı tamamen sıfırdan yazılmalı, hiçbir şekilde pratik değil,
+/// yazımı düzenlemek için çok zorlanıyorum"; "renk paletine basılamıyor,
+/// çok kenarda kaldığı için"). Eski çubuğun sorunları:
+///  - Düğmelerin yarısı yatay kayan şeridin solan ucunda saklıydı (yazı
+///    tipi, sayfa rengi) — var oldukları görülmüyordu.
+///  - Renk, başlık ve yazı tipi AÇILIR MENÜYDÜ: her biri ekranın ortasında
+///    bir katman açıp metni örtüyordu; renk menüsü dar menü kutusuna
+///    sığmadığı için sondaki "tam palet" düğmesi kenardan taşıp
+///    BASILAMIYORDU.
+///  - Boyut/şeffaflık tek kaydırıcıyı paylaşıyordu (hangisini sürüklediğin
+///    baştaki küçük düğmeye bağlıydı).
+///
+/// Yeni akış İKİ KATMAN:
+///  1. **Ana satır** — sabit, kaymayan, ekran genişliğine eşit bölünmüş:
+///     Başlık · B · I · U · Renk · Aa · Temizle · Sayfa rengi · Kapat. Hiçbir
+///     düğme gizli değil.
+///  2. **Tepsi** — Başlık, Renk ya da Aa'ya dokununca ana satırın ÜSTÜNDE
+///     (metne yakın, klavyeden uzak) satır içi açılır; menü katmanı yok,
+///     metin örtülmez. Aynı düğmeye yeniden dokunmak tepsiyi kapatır.
+///     - Başlık: Normal · Büyük başlık · Alt başlık (her biri kendi
+///       boyutunda yazılı).
+///     - Renk: yazı rengi ve vurgu İKİ satır; her satır [Kaldır] + 5 ton +
+///       tam palet, satıra eşit yayılmış — hiçbiri kenara taşmaz.
+///     - Aa: yazı tipleri (her biri kendi yazı tipiyle), altında AYRI boyut
+///       ve şeffaflık kaydırıcıları.
 ///
 /// KRİTİK — ODAK: çubuktaki hiçbir öğe odak istemez
 /// (`Focus(canRequestFocus: false, descendantsAreFocusable: false)` +
 /// [TextFieldTapRegion]). Aksi hâlde düğmeye dokunmak metin alanının odağını
 /// düşürür, odakla birlikte SEÇİM de gider ve biçim uygulanacak metin
-/// kalmazdı.
-///
-/// YÜKSEKLİK (v1.0.175): çubuk dört satırdı (biçimler + yazı tipi çipleri +
-/// boyut + şeffaflık); klavye de açıkken nota kala kala ekranın beşte biri
-/// kalıyordu. Artık İKİ satır: yazı tipleri açılır menüye girdi, boyut ve
-/// şeffaflık ise TEK kaydırıcıyı paylaşıyor (baştaki düğme hangisini
-/// sürüklediğini değiştirir).
+/// kalmazdı. Tepsiler de menü rotası açmadığından seçim hiç bozulmaz.
 class FormatBar extends StatefulWidget {
   const FormatBar({
     super.key,
@@ -51,17 +67,12 @@ class FormatBar extends StatefulWidget {
   });
 
   /// Satırı başlık / alt başlık / düz metin yapar (bkz. [setLineHeading]).
-  /// null ise menü çizilmez.
+  /// null ise başlık düğmesi çizilmez (notun başlık alanı zaten başlık).
   final ValueChanged<RichHeading>? onHeading;
 
-  /// SAYFA görünümü (zemin rengi, çerçeve rengi, zemin görseli) levhasını açar.
-  ///
-  /// Buraya taşındı (kullanıcı isteği 2026-08-10: "sayfa rengi ve yanındaki
-  /// kısımları biçim menüsüne al"): renk "Ekle" levhasının en altında, PDF/ses
-  /// /QR gibi EK ekleyen maddelerin arasında duruyordu — orada aranan bir şey
-  /// değil, sayfanın görünümüne ait bir ayar. Biçim çubuğu zaten "bu not nasıl
-  /// görünsün" düğmelerinin toplandığı yer; renk de oraya ait. null ise düğme
-  /// hiç çizilmez.
+  /// SAYFA görünümü (zemin rengi, çerçeve rengi, zemin görseli) levhasını
+  /// açar (kullanıcı isteği 2026-08-10: "sayfa rengi ve yanındaki kısımları
+  /// biçim menüsüne al"). null ise düğme hiç çizilmez.
   final VoidCallback? onPageStyle;
 
   /// Çubuğun yazdığı alan. Yalnız AKTİF BİÇİM vurgusu için gerekli: imleç ya
@@ -75,7 +86,8 @@ class FormatBar extends StatefulWidget {
   /// Seçimdeki tüm biçimleri siler.
   final VoidCallback onClearFormat;
 
-  /// Paletteki "Kaldır": YALNIZ o biçmi (yazı rengi ya da vurgu) düşürür.
+  /// Renk satırındaki "Kaldır": YALNIZ o biçmi (yazı rengi ya da vurgu)
+  /// düşürür.
   final ValueChanged<RichFormat> onRemoveFormat;
 
   final String? fontFamily;
@@ -103,16 +115,14 @@ class FormatBar extends StatefulWidget {
   State<FormatBar> createState() => _FormatBarState();
 }
 
-/// Tek kaydırıcının o an neyi sürüklediği.
-enum _SliderMode { size, opacity }
+/// Ana satırın üstünde açık duran tepsi.
+enum _Tray { none, heading, colors, font }
+
+/// Kaydırıcının sürüklediği değer.
+enum _Slide { size, opacity }
 
 class _FormatBarState extends State<FormatBar> {
-  _SliderMode _mode = _SliderMode.size;
-
-  /// Boyut/şeffaflık satırı açık mı (kullanıcı isteği 2026-10-20: "yazı
-  /// boyutu satırı da açılır kapanır olsun"). Varsayılan KAPALI — panel tek
-  /// satır kalır, yazıya yer kalır. Oturum boyunca hatırlanır.
-  static bool _sizeRowOpen = false;
+  _Tray _tray = _Tray.none;
 
   /// Sürüklerken canlı önizlemenin seyreltilmesi (kullanıcı bulgusu
   /// 2026-10-20: "biçim panelindeki değişiklikler kasıyor"): her kaydırıcı
@@ -121,11 +131,17 @@ class _FormatBarState extends State<FormatBar> {
   /// son değer kesin yazılır.
   Timer? _liveTimer;
   double? _liveValue;
+  _Slide? _liveSlide;
+
+  /// Sürükleme sürerken (ya da seçime uygulandıktan sonra) parmağın değeri.
+  /// Seçim varken sayfa değişmediği için kaydırıcı yalnız buradan beslenir
+  /// — yoksa topuz parmağın altında donardı.
+  final Map<_Slide, double> _drag = {};
 
   /// İmleçte/seçimde etkin olan biçimler; düğme vurgusu bundan çizilir.
   RichMark _active = RichMark.none;
 
-  /// İmlecin satırının başlık düzeyi (menü düğmesinin vurgusu).
+  /// İmlecin satırının başlık düzeyi.
   RichHeading _heading = RichHeading.normal;
 
   @override
@@ -139,6 +155,9 @@ class _FormatBarState extends State<FormatBar> {
     super.didUpdateWidget(old);
     if (old.target?.controller != widget.target?.controller) {
       _watchTarget(old.target);
+      // Başka alana geçildi: seçime uygulanmış kaydırıcı değeri artık o
+      // alanın değil.
+      _drag.clear();
     }
   }
 
@@ -185,58 +204,77 @@ class _FormatBarState extends State<FormatBar> {
     }
   }
 
-  /// Sürükleme sürerken parmağın değeri. Seçim varken sayfa değişmediği için
-  /// kaydırıcı yalnız buradan beslenir — yoksa topuz parmağın altında donardı.
-  double? _drag;
+  void _toggleTray(_Tray tray) =>
+      setState(() => _tray = _tray == tray ? _Tray.none : tray);
 
-  double get _value =>
-      _drag ??
-      (_mode == _SliderMode.size ? widget.fontScale : widget.textOpacity);
+  double _value(_Slide slide) =>
+      _drag[slide] ??
+      (slide == _Slide.size ? widget.fontScale : widget.textOpacity);
 
-  double get _min => _mode == _SliderMode.size ? 0.7 : 0.3;
-  double get _max => _mode == _SliderMode.size ? 2.0 : 1.0;
-
-  void _onChanged(double value) {
-    setState(() => _drag = value);
+  void _onSlide(_Slide slide, double value) {
+    setState(() => _drag[slide] = value);
     // Canlı önizleme yalnız NOT GENELİNDE: seçim varken değişiklik bırakınca
     // ve yalnız seçime uygulanır.
     if (widget.hasSelection()) return;
+    if (_liveSlide != null && _liveSlide != slide) _flushLive();
+    _liveSlide = slide;
     _liveValue = value;
     _liveTimer ??= Timer(const Duration(milliseconds: 70), _flushLive);
   }
 
   void _flushLive() {
+    _liveTimer?.cancel();
     _liveTimer = null;
     final value = _liveValue;
+    final slide = _liveSlide;
     _liveValue = null;
-    if (value == null || !mounted) return;
-    if (_mode == _SliderMode.size) {
+    _liveSlide = null;
+    if (value == null || slide == null || !mounted) return;
+    if (slide == _Slide.size) {
       widget.onScaleChanged(value);
     } else {
       widget.onOpacityChanged(value);
     }
   }
 
-  void _onChangeEnd(double value) {
+  void _onSlideEnd(_Slide slide, double value) {
     _liveTimer?.cancel();
     _liveTimer = null;
     _liveValue = null;
+    _liveSlide = null;
     // Seçime uygulandıysa topuz BIRAKILDIĞI yerde kalır: not geneli
     // değişmediği için sıfırlansa kaydırıcı %100'e geri zıplar ve kullanıcı
     // az önce ne uyguladığını göremezdi.
-    setState(() => _drag = widget.hasSelection() ? value : null);
-    if (_mode == _SliderMode.size) {
+    setState(() {
+      if (widget.hasSelection()) {
+        _drag[slide] = value;
+      } else {
+        _drag.remove(slide);
+      }
+    });
+    if (slide == _Slide.size) {
       widget.onScaleEnd(value);
     } else {
       widget.onOpacityEnd(value);
     }
   }
 
+  /// Etkin yazı rengi / vurgu indeksinin ekrandaki rengi (yoksa null).
+  static Color? _resolve(int? index) {
+    final palette = NoteColors.richPalette;
+    if (index == null) return null;
+    if (isCustomRichColor(index)) return Color(index);
+    if (index < 1 || index > palette.length) return null;
+    return palette[index - 1];
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
-    final sizeMode = _mode == _SliderMode.size;
+    final textColor = _resolve(_active.color);
+    final highlight = _resolve(_active.highlight);
+    final colorActive = _active.color != null || _active.highlight != null;
     return TextFieldTapRegion(
       child: Focus(
         canRequestFocus: false,
@@ -250,210 +288,123 @@ class _FormatBarState extends State<FormatBar> {
                 height: 1,
                 color: scheme.outlineVariant.withValues(alpha: 0.5),
               ),
-              // 1. satır: karakter biçimleri + yazı tipi menüsü.
-              //
-              // KÖK NEDEN (kullanıcı bulgusu 2026-09-23: "biçim menüsüne el
-              // at"): satırın TAMAMI yatay kayıyordu ve "kapat" oku en
-              // sondaydı. Renk ve yazı tipi düğmeleri de IconButton'ın 48 dp
-              // kutusunu kullandığından satır ~480 dp tutuyor, 411 dp'lik
-              // telefonda kapat düğmesi EKRAN DIŞINDA kalıyordu — çubuğu
-              // kapatmak için önce sağa kaydırmak gerektiği hiçbir yerde
-              // belli değildi. Artık kapat sağda SABİT, bütün düğmeler aynı
-              // 42×40 kutuda ve kayan kısım sağ kenarda solarak "devamı var"
-              // der.
-              SizedBox(
-                height: 40,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ShaderMask(
-                        blendMode: BlendMode.dstIn,
-                        shaderCallback: (rect) => LinearGradient(
-                          colors: const [
-                            Colors.white,
-                            Colors.white,
-                            Colors.transparent,
-                          ],
-                          stops: [
-                            0,
-                            ((rect.width - 18) / rect.width).clamp(0.0, 1.0),
-                            1,
-                          ],
-                        ).createShader(rect),
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              const SizedBox(width: 8),
-                              if (widget.onHeading != null)
-                                _HeadingMenu(
-                                  current: _heading,
-                                  onPick: widget.onHeading!,
-                                ),
-                              _Btn(
-                                icon: Icons.format_bold,
-                                tooltip: l10n.formatBold,
-                                active: _active.bold,
-                                onTap: () => widget.onFormat(RichFormat.bold),
-                              ),
-                              _Btn(
-                                icon: Icons.format_italic,
-                                tooltip: l10n.formatItalic,
-                                active: _active.italic,
-                                onTap: () => widget.onFormat(RichFormat.italic),
-                              ),
-                              _Btn(
-                                icon: Icons.format_underlined,
-                                tooltip: l10n.formatUnderline,
-                                active: _active.underline,
-                                onTap: () =>
-                                    widget.onFormat(RichFormat.underline),
-                              ),
-                              const SizedBox(width: 8),
-                              _ColorPicker(
-                                icon: Icons.format_color_text,
-                                tooltip: l10n.formatTextColor,
-                                removeLabel: l10n.formatRemove,
-                                activeIndex: _active.color,
-                                onPick: (i) => widget.onFormat(
-                                  RichFormat.color,
-                                  colorIndex: i,
-                                ),
-                                onRemove: () =>
-                                    widget.onRemoveFormat(RichFormat.color),
-                              ),
-                              _ColorPicker(
-                                icon: Icons.format_color_fill,
-                                tooltip: l10n.formatHighlight,
-                                removeLabel: l10n.formatRemove,
-                                filled: true,
-                                activeIndex: _active.highlight,
-                                onPick: (i) => widget.onFormat(
-                                  RichFormat.highlight,
-                                  colorIndex: i,
-                                ),
-                                onRemove: () =>
-                                    widget.onRemoveFormat(RichFormat.highlight),
-                              ),
-                              const SizedBox(width: 8),
-                              // Biçimi temizle: seçimdeki (ya da imlecin bulunduğu
-                              // parçadaki) her biçim tek dokunuşta gider — düğmeleri
-                              // tek tek geri basmak gerekmez. Biçimsiz metinde SOLUK
-                              // ve tıklanamaz: eskiden her zaman etkin görünüyor ama
-                              // çoğu zaman hiçbir şey yapmıyordu, kullanıcı da
-                              // düğmenin çalışıp çalışmadığını anlayamıyordu.
-                              _Btn(
-                                icon: Icons.format_clear,
-                                tooltip: l10n.formatClear,
-                                onTap: _active.isEmpty
-                                    ? null
-                                    : widget.onClearFormat,
-                              ),
-                              const SizedBox(width: 4),
-                              // Boyut/şeffaflık satırının aç/kapası.
-                              _Btn(
-                                key: const ValueKey('format-size-row'),
-                                icon: Icons.format_size,
-                                tooltip: l10n.noteTextSize,
-                                active: _sizeRowOpen,
-                                onTap: () => setState(
-                                  () => _sizeRowOpen = !_sizeRowOpen,
-                                ),
-                              ),
-                              _FontMenu(
-                                family: widget.fontFamily,
-                                onChanged: widget.onFontChanged,
-                              ),
-                              // Sayfa görünümü (zemin/çerçeve rengi, zemin görseli):
-                              // metin biçimlerinden ince bir çizgiyle ayrılır — biri
-                              // SEÇİME, öteki SAYFANIN tamamına uygulanır.
-                              if (widget.onPageStyle != null) ...[
-                                const SizedBox(width: 4),
-                                SizedBox(
-                                  height: 24,
-                                  child: VerticalDivider(
-                                    width: 9,
-                                    thickness: 1,
-                                    color: scheme.outlineVariant,
-                                  ),
-                                ),
-                                _Btn(
-                                  icon: Icons.palette_outlined,
-                                  tooltip: l10n.color,
-                                  onTap: widget.onPageStyle,
-                                ),
-                              ],
-                              const SizedBox(width: 18),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    _Btn(
-                      icon: Icons.keyboard_arrow_down,
-                      tooltip: l10n.close,
-                      onTap: widget.onClose,
-                    ),
-                    const SizedBox(width: 4),
-                  ],
-                ),
+              // TEPSİ ana satırın ÜSTÜNDE: göz yazıdan çok uzaklaşmaz,
+              // ana satır da parmağın altında yerinden oynamaz.
+              AnimatedSize(
+                duration: const Duration(milliseconds: 160),
+                curve: Curves.easeOut,
+                alignment: Alignment.bottomCenter,
+                child: switch (_tray) {
+                  _Tray.none => const SizedBox(width: double.infinity),
+                  _Tray.heading => _HeadingTray(
+                    current: _heading,
+                    onPick: (h) => widget.onHeading?.call(h),
+                  ),
+                  _Tray.colors => _ColorsTray(
+                    textIndex: _active.color,
+                    highlightIndex: _active.highlight,
+                    onPick: (format, index) =>
+                        widget.onFormat(format, colorIndex: index),
+                    onRemove: widget.onRemoveFormat,
+                  ),
+                  _Tray.font => _FontTray(
+                    family: widget.fontFamily,
+                    onFont: widget.onFontChanged,
+                    size: _value(_Slide.size),
+                    opacity: _value(_Slide.opacity),
+                    onSlide: _onSlide,
+                    onSlideEnd: _onSlideEnd,
+                  ),
+                },
               ),
-              // 2. satır: TEK kaydırıcı — baştaki düğme boyut ile şeffaflık
-              // arasında geçiş yapar. Sürüklerken metin anında değişir
-              // (kaydırıcı sayfanın altında sabit durduğu için parmağın
-              // altından kaçmaz); seçim varsa değişiklik bırakınca seçime iner.
-              if (_sizeRowOpen)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(4, 0, 12, 2),
-                child: Row(
-                  children: [
-                    // ADI YAZILI düğme: yalnız damla ikonu koyunca şeffaflık
-                    // ayarını "bilmeyen asla bulamıyordu". Düğme hem o an
-                    // neyin sürüklendiğini söyler hem de dokununca ötekine
-                    // geçer.
-                    Tooltip(
-                      message: sizeMode
-                          ? l10n.noteTextOpacity
-                          : l10n.noteTextSize,
-                      child: TextButton.icon(
-                        style: TextButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+              // ANA SATIR: kaymaz, eşit bölünür — her düğme hep görünür.
+              SizedBox(
+                height: 46,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    children: [
+                      if (widget.onHeading != null)
+                        _Btn(
+                          key: const ValueKey('format-heading'),
+                          icon: Icons.title,
+                          tooltip: l10n.formatHeading,
+                          active: _heading != RichHeading.normal,
+                          open: _tray == _Tray.heading,
+                          onTap: () => _toggleTray(_Tray.heading),
                         ),
-                        icon: Icon(
-                          sizeMode ? Icons.text_fields : Icons.opacity,
-                          size: 18,
+                      _Btn(
+                        key: const ValueKey('format-bold'),
+                        icon: Icons.format_bold,
+                        tooltip: l10n.formatBold,
+                        active: _active.bold,
+                        onTap: () => widget.onFormat(RichFormat.bold),
+                      ),
+                      _Btn(
+                        key: const ValueKey('format-italic'),
+                        icon: Icons.format_italic,
+                        tooltip: l10n.formatItalic,
+                        active: _active.italic,
+                        onTap: () => widget.onFormat(RichFormat.italic),
+                      ),
+                      _Btn(
+                        key: const ValueKey('format-underline'),
+                        icon: Icons.format_underlined,
+                        tooltip: l10n.formatUnderline,
+                        active: _active.underline,
+                        onTap: () => widget.onFormat(RichFormat.underline),
+                      ),
+                      // Renk: ikonun altındaki şerit etkin yazı rengini,
+                      // zemini etkin vurguyu gösterir — tepsiyi açmadan
+                      // hangi rengin uygulandığı okunur.
+                      _Btn(
+                        key: const ValueKey('format-colors'),
+                        icon: Icons.format_color_text,
+                        tooltip: l10n.formatColorsPanel,
+                        active: colorActive,
+                        open: _tray == _Tray.colors,
+                        stripe: textColor ?? highlight,
+                        onTap: () => _toggleTray(_Tray.colors),
+                      ),
+                      _Btn(
+                        key: const ValueKey('format-font'),
+                        icon: Icons.text_fields,
+                        tooltip: l10n.formatFontPanel,
+                        open: _tray == _Tray.font,
+                        onTap: () => _toggleTray(_Tray.font),
+                      ),
+                      // Biçimi temizle: biçimsiz metinde SOLUK ve
+                      // tıklanamaz — düğmenin işe yarayıp yaramadığı
+                      // görünür.
+                      _Btn(
+                        key: const ValueKey('format-clear'),
+                        icon: Icons.format_clear,
+                        tooltip: l10n.formatClear,
+                        onTap: _active.isEmpty ? null : widget.onClearFormat,
+                      ),
+                      if (widget.onPageStyle != null)
+                        _Btn(
+                          key: const ValueKey('format-page'),
+                          icon: Icons.palette_outlined,
+                          tooltip: l10n.formatPageColor,
+                          onTap: widget.onPageStyle,
                         ),
-                        label: Text(
-                          sizeMode ? l10n.noteTextSize : l10n.noteTextOpacity,
-                          style: const TextStyle(fontSize: 12),
+                      SizedBox(
+                        height: 26,
+                        child: VerticalDivider(
+                          width: 7,
+                          thickness: 1,
+                          color: scheme.outlineVariant,
                         ),
-                        onPressed: () => setState(() {
-                          _drag = null;
-                          _mode = sizeMode
-                              ? _SliderMode.opacity
-                              : _SliderMode.size;
-                        }),
                       ),
-                    ),
-                    Expanded(
-                      child: Slider(
-                        value: _value.clamp(_min, _max),
-                        min: _min,
-                        max: _max,
-                        onChanged: _onChanged,
-                        onChangeEnd: _onChangeEnd,
+                      _Btn(
+                        key: const ValueKey('format-close'),
+                        icon: Icons.keyboard_arrow_down,
+                        tooltip: l10n.close,
+                        onTap: widget.onClose,
                       ),
-                    ),
-                    SizedBox(
-                      width: 44,
-                      child: Text(
-                        '%${(_value * 100).round()}',
-                        textAlign: TextAlign.end,
-                        style: Theme.of(context).textTheme.labelMedium,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -464,38 +415,441 @@ class _FormatBarState extends State<FormatBar> {
   }
 }
 
-/// Yazı tipi seçimi: çipler satır kaplıyordu, artık açılır menü. Her satır
-/// KENDİ yazı tipiyle yazılır — seçmeden önce nasıl duracağı görünür.
-class _FontMenu extends StatelessWidget {
-  const _FontMenu({required this.family, required this.onChanged});
+/// Ana satır düğmesi: satıra EŞİT payla yayılır (Expanded), en fazla 52 dp.
+/// [open]: tepsisi açık (alt kenarda çizgi); [active]: biçim imleçte etkin
+/// (dolu zemin); [stripe]: ikonun altında renk şeridi.
+class _Btn extends StatelessWidget {
+  const _Btn({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.active = false,
+    this.open = false,
+    this.stripe,
+  });
 
-  final String? family;
-  final ValueChanged<String?> onChanged;
+  final IconData icon;
+  final String tooltip;
+
+  /// null ise düğme SOLUK ve tıklanamaz (yapacak işi yok).
+  final VoidCallback? onTap;
+  final bool active;
+  final bool open;
+  final Color? stripe;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final enabled = onTap != null;
+    final fg = active
+        ? scheme.onPrimaryContainer
+        : enabled
+        ? scheme.onSurface
+        : scheme.onSurface.withValues(alpha: 0.35);
+    return Expanded(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 52),
+          child: Tooltip(
+            message: tooltip,
+            child: Semantics(
+              button: true,
+              selected: active || open,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: onTap,
+                child: Ink(
+                  width: double.infinity,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: active
+                        ? scheme.primaryContainer
+                        : open
+                        ? scheme.surfaceContainerHighest
+                        : null,
+                    borderRadius: BorderRadius.circular(12),
+                    border: open
+                        ? Border.all(color: scheme.primary, width: 1.5)
+                        : null,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, size: stripe == null ? 22 : 20, color: fg),
+                      if (stripe != null)
+                        Container(
+                          margin: const EdgeInsets.only(top: 2),
+                          width: 18,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: stripe,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Tepsilerin ortak kabı: aynı iç pay, ana satırdan ince çizgiyle ayrık.
+class _TrayBox extends StatelessWidget {
+  const _TrayBox({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainer,
+        border: Border(
+          bottom: BorderSide(
+            color: scheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// BAŞLIK tepsisi (kullanıcı isteği 2026-09-23: "başlık ve alt başlık"):
+/// imlecin satırı normal / büyük başlık / alt başlık. Her seçenek kendi
+/// boyutunda yazılı; etkin olan dolu.
+class _HeadingTray extends StatelessWidget {
+  const _HeadingTray({required this.current, required this.onPick});
+
+  final RichHeading current;
+  final ValueChanged<RichHeading> onPick;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return PopupMenuButton<String>(
-      tooltip: l10n.noteFont,
-      // null bir menü değeri "iptal" ile karışıyor; varsayılan için boş dize.
-      onSelected: (value) => onChanged(value.isEmpty ? null : value),
-      icon: const Icon(Icons.font_download_outlined, size: 22),
-      // Öbür düğmelerle AYNI kutu (42×40): IconButton'ın 48 dp'si satırı
-      // taşırıyordu.
-      style: _compactStyle(),
-      itemBuilder: (context) => [
-        for (final font in kNoteFonts)
-          PopupMenuItem<String>(
-            value: font.id ?? '',
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 24,
-                  child: (font.id ?? '') == (family ?? '')
-                      ? const Icon(Icons.check, size: 18)
-                      : null,
+    final options = [
+      (RichHeading.normal, l10n.formatNormalText, 14.0, FontWeight.w400),
+      (RichHeading.h1, l10n.formatHeading1, 18.0, FontWeight.w700),
+      (RichHeading.h2, l10n.formatHeading2, 15.5, FontWeight.w700),
+    ];
+    return _TrayBox(
+      child: Row(
+        children: [
+          for (final (h, label, size, weight) in options)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                child: _Choice(
+                  key: ValueKey('format-heading-${h.name}'),
+                  selected: h == current,
+                  onTap: () => onPick(h),
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: size, fontWeight: weight),
+                  ),
                 ),
-                Expanded(
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Seçilebilir hap (başlık düzeyi, yazı tipi). Odak istemez.
+class _Choice extends StatelessWidget {
+  const _Choice({
+    super.key,
+    required this.selected,
+    required this.onTap,
+    required this.child,
+  });
+
+  final bool selected;
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: selected ? scheme.primaryContainer : scheme.surfaceContainerHigh,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: selected ? scheme.primary : scheme.outlineVariant,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          alignment: Alignment.center,
+          child: DefaultTextStyle.merge(
+            style: TextStyle(
+              color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// RENK tepsisi: yazı rengi ve vurgu, her biri TEK satırda
+/// [Kaldır] + hazır tonlar + tam palet. Satır eşit bölünür — dar ekranda da
+/// son düğme (tam palet) kenara taşmaz (eski açılır menüde taşıyıp
+/// basılamıyordu).
+class _ColorsTray extends StatelessWidget {
+  const _ColorsTray({
+    required this.textIndex,
+    required this.highlightIndex,
+    required this.onPick,
+    required this.onRemove,
+  });
+
+  final int? textIndex;
+  final int? highlightIndex;
+  final void Function(RichFormat format, int index) onPick;
+  final ValueChanged<RichFormat> onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return _TrayBox(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _ColorRow(
+            keyPrefix: 'format-color',
+            icon: Icons.format_color_text,
+            label: l10n.formatTextColor,
+            activeIndex: textIndex,
+            filled: false,
+            onPick: (i) => onPick(RichFormat.color, i),
+            onRemove: () => onRemove(RichFormat.color),
+          ),
+          const SizedBox(height: 6),
+          _ColorRow(
+            keyPrefix: 'format-highlight',
+            icon: Icons.format_color_fill,
+            label: l10n.formatHighlight,
+            activeIndex: highlightIndex,
+            filled: true,
+            onPick: (i) => onPick(RichFormat.highlight, i),
+            onRemove: () => onRemove(RichFormat.highlight),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ColorRow extends StatelessWidget {
+  const _ColorRow({
+    required this.keyPrefix,
+    required this.icon,
+    required this.label,
+    required this.activeIndex,
+    required this.filled,
+    required this.onPick,
+    required this.onRemove,
+  });
+
+  final String keyPrefix;
+  final IconData icon;
+  final String label;
+  final int? activeIndex;
+  final bool filled;
+  final ValueChanged<int> onPick;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final palette = NoteColors.richPalette;
+    final index = activeIndex;
+    final custom = isCustomRichColor(index) ? Color(index!) : null;
+
+    Widget slot(Widget child) => Expanded(child: Center(child: child));
+
+    Widget circle({
+      required Key key,
+      required String tooltip,
+      required VoidCallback onTap,
+      Color? fill,
+      Gradient? gradient,
+      Color? border,
+      double borderWidth = 2,
+      Widget? child,
+    }) => Tooltip(
+      message: tooltip,
+      child: InkWell(
+        key: key,
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        // Dokunma alanı 40 dp; görünen daire 32.
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Center(
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: fill,
+                gradient: gradient,
+                border: border == null
+                    ? null
+                    : Border.all(color: border, width: borderWidth),
+              ),
+              child: child,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    return Row(
+      children: [
+        Tooltip(
+          message: label,
+          child: SizedBox(
+            width: 28,
+            child: Icon(icon, size: 20, color: scheme.onSurfaceVariant),
+          ),
+        ),
+        // KALDIR — hep aynı yerde (biçim yokken de): "renk verdim, nasıl
+        // geri alırım" sorusunun cevabı her açılışta aynı yerde.
+        slot(
+          circle(
+            key: ValueKey('$keyPrefix-remove'),
+            tooltip: l10n.formatRemove,
+            onTap: onRemove,
+            border: scheme.outline,
+            child: Icon(
+              Icons.format_color_reset,
+              size: 16,
+              color: index == null
+                  ? scheme.onSurfaceVariant.withValues(alpha: 0.5)
+                  : scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        for (var i = 0; i < palette.length; i++)
+          slot(
+            circle(
+              key: ValueKey('$keyPrefix-${i + 1}'),
+              tooltip: label,
+              onTap: () => onPick(i + 1),
+              fill: filled
+                  ? palette[i].withValues(alpha: 0.45)
+                  : Colors.transparent,
+              border: palette[i],
+              borderWidth: index == i + 1 ? 4 : 3,
+              child: index == i + 1
+                  ? Icon(Icons.check, size: 16, color: palette[i])
+                  : null,
+            ),
+          ),
+        // TAM PALET: hazır tonlar + özel renk (bkz. color_palette.dart).
+        // Özel renk etkinse düğme o renkle dolu ve tikli.
+        slot(
+          circle(
+            key: ValueKey('$keyPrefix-palette'),
+            tooltip: l10n.paletteMore,
+            onTap: () async {
+              final picked = await showColorPaletteSheet(
+                context,
+                title: label,
+                current: custom ?? _FormatBarState._resolve(index),
+              );
+              if (picked != null) onPick(picked.toARGB32() | 0xFF000000);
+            },
+            fill: custom,
+            gradient: custom != null
+                ? null
+                : const SweepGradient(
+                    colors: [
+                      Color(0xFFE57373),
+                      Color(0xFFFFD54F),
+                      Color(0xFF81C784),
+                      Color(0xFF64B5F6),
+                      Color(0xFF9575CD),
+                      Color(0xFFE57373),
+                    ],
+                  ),
+            child: Icon(
+              custom != null ? Icons.check : Icons.palette_outlined,
+              size: 16,
+              color: custom != null && custom.computeLuminance() > 0.5
+                  ? Colors.black87
+                  : Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// YAZI tepsisi: yazı tipleri (her biri kendi yazı tipiyle yazılı, yatay
+/// kayar) + AYRI boyut ve şeffaflık kaydırıcıları. Eskiden ikisi tek
+/// kaydırıcıyı paylaşıyordu; hangisini sürüklediğin baştaki küçük düğmeye
+/// bağlıydı.
+class _FontTray extends StatelessWidget {
+  const _FontTray({
+    required this.family,
+    required this.onFont,
+    required this.size,
+    required this.opacity,
+    required this.onSlide,
+    required this.onSlideEnd,
+  });
+
+  final String? family;
+  final ValueChanged<String?> onFont;
+  final double size;
+  final double opacity;
+  final void Function(_Slide slide, double value) onSlide;
+  final void Function(_Slide slide, double value) onSlideEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final current = family ?? '';
+    return _TrayBox(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 40,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: kNoteFonts.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 6),
+              itemBuilder: (context, i) {
+                final font = kNoteFonts[i];
+                return _Choice(
+                  key: ValueKey('format-font-${font.id ?? 'default'}'),
+                  selected: (font.id ?? '') == current,
+                  onTap: () => onFont(font.id),
                   child: Text(
                     noteFontLabel(
                       font.id,
@@ -504,258 +858,103 @@ class _FontMenu extends StatelessWidget {
                       monoLabel: l10n.noteFontMono,
                     ),
                     style: applyNoteFont(
-                      const TextStyle(fontSize: 15),
+                      const TextStyle(fontSize: 14.5),
                       font.id,
                     ),
                   ),
-                ),
-              ],
+                );
+              },
             ),
           ),
-      ],
+          const SizedBox(height: 4),
+          _SliderRow(
+            key: const ValueKey('format-size-slider'),
+            icon: Icons.format_size,
+            label: l10n.noteTextSize,
+            value: size,
+            min: 0.7,
+            max: 2.0,
+            onChanged: (v) => onSlide(_Slide.size, v),
+            onChangeEnd: (v) => onSlideEnd(_Slide.size, v),
+          ),
+          _SliderRow(
+            key: const ValueKey('format-opacity-slider'),
+            icon: Icons.opacity,
+            label: l10n.noteTextOpacity,
+            value: opacity,
+            min: 0.3,
+            max: 1.0,
+            onChanged: (v) => onSlide(_Slide.opacity, v),
+            onChangeEnd: (v) => onSlideEnd(_Slide.opacity, v),
+          ),
+        ],
+      ),
     );
   }
 }
 
-/// Biçim şeridi düğmesi: 42×40 kutu, r12.
-///
-/// IconButton'ın kendi 48×48 kutusu şeritte yan yana yedi düğmeyi dar ekranda
-/// taşırıyordu; sabit ölçü hem sığdırır hem alt bardaki araç segmentleriyle
-/// aynı yuvarlaklığı verir.
-class _Btn extends StatelessWidget {
-  const _Btn({
+class _SliderRow extends StatelessWidget {
+  const _SliderRow({
     super.key,
     required this.icon,
-    required this.tooltip,
-    required this.onTap,
-    this.active = false,
+    required this.label,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+    required this.onChangeEnd,
   });
 
   final IconData icon;
-  final String tooltip;
-
-  /// null ise düğme SOLUK ve tıklanamaz (yapacak işi yok).
-  final VoidCallback? onTap;
-
-  /// İmleçteki/seçimdeki biçim bu düğmeninki mi — basılı görünür.
-  final bool active;
+  final String label;
+  final double value;
+  final double min;
+  final double max;
+  final ValueChanged<double> onChanged;
+  final ValueChanged<double> onChangeEnd;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final enabled = onTap != null;
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Ink(
-          decoration: BoxDecoration(
-            color: active ? scheme.primaryContainer : null,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          width: 42,
-          height: 40,
-          child: Icon(
-            icon,
-            size: 22,
-            color: active
-                ? scheme.onPrimaryContainer
-                : enabled
-                ? null
-                : scheme.onSurface.withValues(alpha: 0.35),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Renk düğmesi: dokununca paletten seçtirir (menü, odak istemez).
-///
-/// **Palet yeniden yazıldı** (kullanıcı bulgusu 2026-08-09: "biçim alanında
-/// işaretlediğim şeyler tam olarak doğru değil; seçiyorum geri bırakamıyorum,
-/// çalıştığını anlayamıyorum, iptal etmek ve yapmak zor"). Üç eksik vardı:
-/// 1. **Geri dönüş yoktu.** Rengi kaldırmanın tek yolu paletten AYNI rengi
-///    ikinci kez seçmekti; hiçbir yerde yazmıyordu. Artık paletin başında
-///    kendi "Kaldır" düğmesi var (bkz. [removeRichFormat]).
-/// 2. **Hangi renk seçili görünmüyordu.** Palet dizisi hepsini eşit
-///    gösteriyordu; şimdi etkin renk TİKLİ ve kalın halkalı.
-/// 3. **Uygulandı mı belli değildi.** Şeritteki düğme zaten renk şeridi
-///    çiziyordu ama menü kapanınca göz oraya gitmiyordu; tik menünün
-///    içindeyken de aynı bilgiyi verir.
-class _ColorPicker extends StatelessWidget {
-  const _ColorPicker({
-    required this.icon,
-    required this.tooltip,
-    required this.removeLabel,
-    required this.onPick,
-    required this.onRemove,
-    this.filled = false,
-    this.activeIndex,
-  });
-
-  final IconData icon;
-  final String tooltip;
-
-  /// "Kaldır" düğmesinin etiketi (ipucu + erişilebilirlik).
-  final String removeLabel;
-  final ValueChanged<int> onPick;
-
-  /// Biçmi tümüyle düşürür.
-  final VoidCallback onRemove;
-  final bool filled;
-
-  /// İmleçteki/seçimdeki renk indeksi (1..n), yoksa null. Dolu olduğunda
-  /// düğme basılı çizilir ve ikonun altına o rengin şeridi konur — hangi
-  /// rengin uygulandığı menüyü açmadan görünsün.
-  final int? activeIndex;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = NoteColors.richPalette;
-    final scheme = Theme.of(context).colorScheme;
-    final index = activeIndex;
-    // Palet dışında kalan indeks (eski nottan gelen) rengi çizdirmez ama
-    // düğme yine basılı görünür — biçim gerçekten orada.
-    final color = isCustomRichColor(index)
-        ? Color(index!)
-        : index != null && index >= 1 && index <= palette.length
-        ? palette[index - 1]
-        : null;
-    return PopupMenuButton<int>(
-      tooltip: tooltip,
-      icon: index == null
-          ? Icon(icon, size: 22)
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 20, color: scheme.onPrimaryContainer),
-                const SizedBox(height: 2),
-                Container(
-                  width: 18,
-                  height: 3,
-                  decoration: BoxDecoration(
-                    color: color ?? scheme.onPrimaryContainer,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ],
+    return SizedBox(
+      height: 38,
+      child: Row(
+        children: [
+          Tooltip(
+            message: label,
+            child: SizedBox(
+              width: 28,
+              child: Icon(icon, size: 19, color: scheme.onSurfaceVariant),
             ),
-      style: _compactStyle(
-        background: index == null ? null : scheme.primaryContainer,
-      ),
-      // 0 = "Kaldır" (palet indeksleri 1'den başlar, çakışma yok);
-      // -1 = tam palet levhası (özel renk ARGB olarak döner).
-      onSelected: (value) async {
-        if (value == 0) {
-          onRemove();
-        } else if (value == -1) {
-          final picked = await showColorPaletteSheet(
-            context,
-            title: tooltip,
-            current: color,
-          );
-          if (picked != null) onPick(picked.toARGB32() | 0xFF000000);
-        } else {
-          onPick(value);
-        }
-      },
-      itemBuilder: (menuContext) => [
-        PopupMenuItem<int>(
-          enabled: false,
-          height: 44,
-          child: Row(
-            children: [
-              // "Kaldır" HER ZAMAN görünür (biçim yokken de): düğmenin
-              // yerinin sabit olması, "bir renk verdim, nasıl geri alırım"
-              // sorusunun cevabını her açılışta aynı yerde tutar.
-              Padding(
-                padding: const EdgeInsetsDirectional.only(end: 12),
-                child: Tooltip(
-                  message: removeLabel,
-                  child: InkWell(
-                    onTap: () => Navigator.pop(menuContext, 0),
-                    customBorder: const CircleBorder(),
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: scheme.outline, width: 2),
-                      ),
-                      child: Icon(
-                        Icons.format_color_reset,
-                        size: 16,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              for (var i = 0; i < palette.length; i++)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 10),
-                  child: InkWell(
-                    onTap: () => Navigator.pop(menuContext, i + 1),
-                    customBorder: const CircleBorder(),
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: filled
-                            ? palette[i].withValues(alpha: 0.45)
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: palette[i],
-                          width: index == i + 1 ? 4 : 3,
-                        ),
-                      ),
-                      // Seçili renk TİKLİ: hangisinin uygulandığı menüde de
-                      // görünsün.
-                      child: index == i + 1
-                          ? Icon(Icons.check, size: 15, color: palette[i])
-                          : null,
-                    ),
-                  ),
-                ),
-              // TAM PALET: hazır tonlar + özel renk (bkz. color_palette.dart).
-              Tooltip(
-                message: menuContext.l10n.paletteMore,
-                child: InkWell(
-                  key: const ValueKey('format-palette-more'),
-                  onTap: () => Navigator.pop(menuContext, -1),
-                  customBorder: const CircleBorder(),
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: SweepGradient(
-                        colors: [
-                          Color(0xFFE57373),
-                          Color(0xFFFFD54F),
-                          Color(0xFF81C784),
-                          Color(0xFF64B5F6),
-                          Color(0xFF9575CD),
-                          Color(0xFFE57373),
-                        ],
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.palette_outlined,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
-        ),
-      ],
+          SizedBox(
+            width: 78,
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+          ),
+          Expanded(
+            child: Slider(
+              value: value.clamp(min, max),
+              min: min,
+              max: max,
+              onChanged: onChanged,
+              onChangeEnd: onChangeEnd,
+            ),
+          ),
+          SizedBox(
+            width: 42,
+            child: Text(
+              '%${(value * 100).round()}',
+              textAlign: TextAlign.end,
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -781,80 +980,6 @@ class FormatTarget {
   /// Metin değişince notu kaydeden geri çağrı (programlı değişiklikte
   /// TextField'ın `onChanged`'i çalışmaz).
   final VoidCallback commit;
-}
-
-/// Açılır menü düğmelerini (renk, yazı tipi) şeridin [_Btn] ölçüsüne indirir.
-ButtonStyle _compactStyle({Color? background}) => IconButton.styleFrom(
-  backgroundColor: background,
-  fixedSize: const Size(42, 40),
-  minimumSize: const Size(42, 40),
-  padding: EdgeInsets.zero,
-  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-);
-
-/// **BAŞLIK menüsü** (kullanıcı isteği 2026-09-23: "başlık ve alt başlık").
-/// İmlecin satırı büyük başlık / alt başlık / düz metin olur. Satır zaten
-/// başlıksa düğme basılı görünür ve o düzey menüde tiklidir.
-class _HeadingMenu extends StatelessWidget {
-  const _HeadingMenu({required this.current, required this.onPick});
-
-  final RichHeading current;
-  final ValueChanged<RichHeading> onPick;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final active = current != RichHeading.normal;
-    String label(RichHeading h) => switch (h) {
-      RichHeading.h1 => l10n.formatHeading1,
-      RichHeading.h2 => l10n.formatHeading2,
-      RichHeading.normal => l10n.formatNormalText,
-    };
-    double size(RichHeading h) => switch (h) {
-      RichHeading.h1 => 20,
-      RichHeading.h2 => 17,
-      RichHeading.normal => 14,
-    };
-    return PopupMenuButton<RichHeading>(
-      tooltip: l10n.formatHeading,
-      style: _compactStyle(
-        background: active ? scheme.primaryContainer : null,
-      ),
-      icon: Icon(
-        Icons.title,
-        size: 22,
-        color: active ? scheme.onPrimaryContainer : null,
-      ),
-      onSelected: onPick,
-      itemBuilder: (context) => [
-        for (final h in RichHeading.values)
-          PopupMenuItem<RichHeading>(
-            value: h,
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 24,
-                  child: h == current
-                      ? const Icon(Icons.check, size: 18)
-                      : null,
-                ),
-                Text(
-                  label(h),
-                  style: TextStyle(
-                    fontSize: size(h),
-                    fontWeight: h == RichHeading.normal
-                        ? FontWeight.w400
-                        : FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
 }
 
 /// **ETKİN BİÇİMLER — PANEL KAPALIYKEN** (kullanıcı isteği 2026-10-20: "bold
