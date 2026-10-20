@@ -3531,7 +3531,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get folderOrderHint =>
-      'Tutamaktan sürükleyerek sıralayın. Bu sıra klasör şeridinde ve yana kaydırırken de kullanılır.';
+      'Tutamaktan sürükleyerek sıralayın (sürüklemek sırayı \"Elle\"ye çevirir). Bu sıra klasör şeridinde ve yana kaydırırken de kullanılır.';
 
   @override
   String get swipeModeTitle => 'Ana ekranda yana kaydırınca';
@@ -5272,7 +5272,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get attachAnyFileInfo =>
-      'Her türden dosya: görsel sayfaya, PDF ve sunum belge olarak, ses ve video ek olarak girer';
+      'Her tür dosya: görsel, PDF, sunum, ses, video — tür kendiliğinden tanınır, gerekirse ne yapılacağı sorulur';
 
   @override
   String get listeningModeAi => 'Yapay zekâ';
@@ -5296,4 +5296,159 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get aiVoiceRowInfoHub =>
       'Konuş; yapay zekâ başlığı, maddeleri ve hatırlatıcıyı çıkarıp notu kursun';
+
+  @override
+  String get archivePaperDashed => 'Kesikli çizgili';
+
+  @override
+  String get itemDividerSolid => 'Alta çizgi çek';
+
+  @override
+  String get itemDividerDashed => 'Alta kesikli çizgi';
+
+  @override
+  String get itemDividerDotted => 'Alta noktalı çizgi';
+
+  @override
+  String get itemDividerRemove => 'Çizgiyi kaldır';
+
+  @override
+  String get attachSectionFiles => 'Dosya ve bağlantı';
+
+  @override
+  String get attachSectionCapture => 'Kamera ve kayıt';
+
+  @override
+  String get fileUseAttachInfo => 'Nota ek olarak girer; oynatılabilir';
+
+  @override
+  String get allNotesChip => 'Tümü';
+
+  @override
+  String get archiveAiSearch => 'AI ile ara (anlamca)';
+
+  @override
+  String get archiveAiSearchHint => 'Arşivde anlamca ara…';
+
+  @override
+  String get untitledNote => 'Başlıksız not';
+
+  @override
+  String get trashAnalysis => 'Çöp analizi';
+
+  @override
+  String get trashAnalyze => 'Akıllı analiz';
+
+  @override
+  String get trashAiRun => 'AI ile derin analiz';
+
+  @override
+  String get trashAiRunning => 'Analiz ediliyor…';
+
+  @override
+  String get trashAiInfo =>
+      'Cihazdaki kurallar hazır. AI analizi notların kısa dökümünü modele gönderir; kilitli notlar gönderilmez.';
+
+  @override
+  String get trashAiNothing =>
+      'Analize gönderilecek not yok (kilitli notlar gönderilmez)';
+
+  @override
+  String get trashSuggestRestore => 'Geri yüklemeyi düşün';
+
+  @override
+  String get trashSuggestDelete => 'Güvenle silinebilir';
+
+  @override
+  String get trashSuggestNone => 'Öneri yok';
+
+  @override
+  String trashRestoreAllSuggested(int count) {
+    return 'Tümünü geri yükle ($count)';
+  }
+
+  @override
+  String trashDeleteAllSuggested(int count) {
+    return 'Tümünü sil ($count)';
+  }
+
+  @override
+  String trashStatNotes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count not',
+      one: '1 not',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String trashStatAttachments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ek',
+      one: '1 ek',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String trashStatSoon(int count) {
+    return '$count not 3 gün içinde gidiyor';
+  }
+
+  @override
+  String trashStatLocked(int count) {
+    return '$count kilitli (incelenmedi)';
+  }
+
+  @override
+  String get trashReasonEmpty => 'Boş not — kaybedilecek bir şey yok';
+
+  @override
+  String get trashReasonDuplicate => 'Aynısı notlarında zaten var';
+
+  @override
+  String trashReasonDuplicateOf(String title) {
+    return 'Aynısı notlarında var: $title';
+  }
+
+  @override
+  String get trashReasonDuplicateInTrash => 'Çöpte daha yeni bir kopyası var';
+
+  @override
+  String trashReasonOpenTasks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count yapılmamış madde var',
+      one: '1 yapılmamış madde var',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trashReasonReminder => 'İleri tarihli hatırlatıcısı var';
+
+  @override
+  String get trashReasonSensitive => 'Şifre, IBAN, telefon gibi bilgi içeriyor';
+
+  @override
+  String trashReasonAttachments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ek taşıyor',
+      one: '1 ek taşıyor',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trashReasonSubstantial => 'Uzun, emek verilmiş metin';
+
+  @override
+  String get trashReasonAi => 'AI önerisi';
 }

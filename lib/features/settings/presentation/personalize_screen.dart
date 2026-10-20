@@ -372,12 +372,6 @@ class PersonalizeModuleSwitches extends StatelessWidget {
         l10n.moduleVideoInfo,
       ),
       (
-        UiModule.documents,
-        Icons.picture_as_pdf_outlined,
-        l10n.moduleDocuments,
-        l10n.moduleDocumentsInfo,
-      ),
-      (
         UiModule.scan,
         Icons.document_scanner_outlined,
         l10n.moduleScan,

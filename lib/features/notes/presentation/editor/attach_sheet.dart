@@ -69,11 +69,6 @@ List<({String id, IconData icon, String label})> attachSheetCatalog(
   (id: 'list-item', icon: Icons.checklist, label: l10n.editorToolList),
   (id: 'embed-attachment', icon: Icons.link, label: l10n.attachmentTagEmbed),
   (id: 'image', icon: Icons.image_outlined, label: l10n.addImage),
-  (
-    id: 'image-file',
-    icon: Icons.attachment_outlined,
-    label: l10n.addImageAsFile,
-  ),
   if (!kIsWeb)
     (id: 'camera', icon: Icons.photo_camera_outlined, label: l10n.takePhoto),
   if (DocumentScan.available)
@@ -84,29 +79,9 @@ List<({String id, IconData icon, String label})> attachSheetCatalog(
     ),
   (id: 'drawing', icon: Icons.brush_outlined, label: l10n.addDrawing),
   (id: 'any-file', icon: Icons.upload_file_outlined, label: l10n.quickAddFile),
-  (id: 'pdf', icon: Icons.picture_as_pdf_outlined, label: l10n.addPdf),
-  (id: 'slide', icon: Icons.slideshow_outlined, label: l10n.addSlide),
   if (!kIsWeb) (id: 'audio', icon: Icons.mic_none, label: l10n.recordAudio),
   if (!kIsWeb)
-    (
-      id: 'audio-file',
-      icon: Icons.library_music_outlined,
-      label: l10n.addAudioFile,
-    ),
-  if (!kIsWeb)
-    (
-      id: 'transcribe',
-      icon: Icons.subtitles_outlined,
-      label: l10n.transcribeFile,
-    ),
-  if (!kIsWeb)
     (id: 'video', icon: Icons.videocam_outlined, label: l10n.newVideoNote),
-  if (!kIsWeb)
-    (
-      id: 'video-gallery',
-      icon: Icons.video_library_outlined,
-      label: l10n.addVideoFromGallery,
-    ),
   (
     id: 'youtube',
     icon: Icons.smart_display_outlined,
@@ -170,9 +145,25 @@ class _AttachSheet extends StatelessWidget {
       ],
     ];
 
-    // GÖRSEL bölümü ile BELGE/DİĞER bölümü ayrı başlıklar altında: on üç
-    // seçenek tek yığın hâlinde okunmuyordu.
+    // ÜÇ BÖLÜM (2026-10-20, "ek menüsünü de düzenle"): Not içeriği · Dosya
+    // ve bağlantı (var olan bir şeyi getir) · Kamera ve kayıt (şimdi yakala).
+    // Eskiden "Görsel ve çizim" ile "Ekler" ayrımı türe göreydi ve aynı iş
+    // (dosya seçmek) altı ayrı düğmeye bölünmüştü.
     final visual = <_Entry>[
+      // TEK "DOSYA EKLE" (kullanıcı isteği 2026-10-20: "dosya ekle yeterli;
+      // PDF, slayt vs. ayrı olmasına gerek yok"): tür uzantıdan tanınır —
+      // görsel sayfaya ya da ek olarak, PDF/sunum belge olarak, ses ve video
+      // ek olarak ya da metne dökülerek (dosya seçildikten sonra sorulur).
+      // Eskiden yanında PDF, Slayt, Ses dosyası, Galeriden video, Görseli ek
+      // olarak yükle ve Dosyayı metne dök ayrı düğmelerdi.
+      (
+        'any-file',
+        Icons.upload_file_outlined,
+        l10n.quickAddFile,
+        l10n.attachAnyFileInfo,
+      ),
+      // Galeri ayrı kalır: telefonda en sık yol ve sistem fotoğraf
+      // seçicisini açar (dosya yöneticisini değil).
       (
         'image',
         Icons.image_outlined,
@@ -180,11 +171,22 @@ class _AttachSheet extends StatelessWidget {
         l10n.addImageOnPageSubtitle,
       ),
       (
-        'image-file',
-        Icons.attachment_outlined,
-        l10n.addImageAsFile,
-        l10n.addImageAsFileSubtitle,
+        'youtube',
+        Icons.smart_display_outlined,
+        l10n.addYouTubeVideo,
+        l10n.addYouTubeVideoSubtitle,
       ),
+      ('drawing', Icons.brush_outlined, l10n.addDrawing, null),
+      if (copied != null)
+        (
+          'paste-attachment',
+          Icons.content_paste_go,
+          l10n.pasteAttachment,
+          copied,
+        ),
+    ];
+
+    final other = <_Entry>[
       if (!kIsWeb)
         ('camera', Icons.photo_camera_outlined, l10n.takePhoto, null),
       if (DocumentScan.available)
@@ -194,30 +196,6 @@ class _AttachSheet extends StatelessWidget {
           l10n.scanDocument,
           l10n.scanDocumentSubtitle,
         ),
-      ('drawing', Icons.brush_outlined, l10n.addDrawing, null),
-    ];
-
-    final other = <_Entry>[
-      // TEK "DOSYA EKLE" (kullanıcı bulgusu 2026-10-20: "dosya ekle aşaması
-      // çok sıkıntılı"): hangi düğmenin hangi türü aldığını bilmeden her
-      // dosya buradan seçilir; görsel sayfaya, PDF/sunum belge olarak, ses
-      // ve video ek olarak girer. Türe özgü düğmeler yanında kalır.
-      (
-        'any-file',
-        Icons.upload_file_outlined,
-        l10n.quickAddFile,
-        l10n.attachAnyFileInfo,
-      ),
-      ('pdf', Icons.picture_as_pdf_outlined, l10n.addPdf, null),
-      ('slide', Icons.slideshow_outlined, l10n.addSlide, null),
-      // YouTube İKİNCİ satırın başında: "Dosya ekle" girince üçüncü satıra
-      // kayıyor, levha kaydırılmadan görünmüyordu (bkz. menus testi).
-      (
-        'youtube',
-        Icons.smart_display_outlined,
-        l10n.addYouTubeVideo,
-        l10n.addYouTubeVideoSubtitle,
-      ),
       if (!kIsWeb) ('audio', Icons.mic_none, l10n.recordAudio, null),
       if (!kIsWeb)
         (
@@ -226,41 +204,10 @@ class _AttachSheet extends StatelessWidget {
           l10n.newVideoNote,
           l10n.videoLocalOnly,
         ),
-      // Galeriden video (kamera yolu yukarıda): masaüstünde image_picker
-      // dosya seçiciye düşer, orada da çalışır.
-      if (!kIsWeb)
-        (
-          'video-gallery',
-          Icons.video_library_outlined,
-          l10n.addVideoFromGallery,
-          l10n.videoLocalOnly,
-        ),
       if (qrScanSupported)
         ('qr', Icons.qr_code_scanner, l10n.qrScanTitle, l10n.qrScanSubtitle),
-      // Sonradan eklenen SES DOSYASI (kayıttan ayrı) ve "dosyayı metne dök"
-      // (kullanıcı isteği 2026-10-17): ses/video/görsel seçilir, nota girer
-      // ve transkripti metin olarak nota yazılır. SONDA: YouTube satırı
-      // kaydırmadan görünür kalsın (bkz. menus_redesign testi).
-      if (!kIsWeb)
-        ('audio-file', Icons.library_music_outlined, l10n.addAudioFile, null),
-      if (!kIsWeb)
-        (
-          'transcribe',
-          Icons.subtitles_outlined,
-          l10n.transcribeFile,
-          l10n.transcribeFileSubtitle,
-        ),
-      // "Renk" BURADAN KALKTI (kullanıcı isteği 2026-08-10: "sayfa rengi ve
-      // yanındaki kısımları biçim menüsüne al"): sayfa görünümü artık alt
-      // çubuktaki "Biçim" şeridinin palet düğmesinde (bkz. format_bar.dart).
-      // Bu levha yalnız NOTA GİREN şeyleri listeler; renk buraya ait değildi.
-      if (copied != null)
-        (
-          'paste-attachment',
-          Icons.content_paste_go,
-          l10n.pasteAttachment,
-          copied,
-        ),
+      // "Renk" BURADAN KALKTI (kullanıcı isteği 2026-08-10): sayfa görünümü
+      // alt çubuktaki "Biçim" şeridinin palet düğmesinde.
     ];
 
     // KİŞİSELLEŞTİRME (kullanıcı isteği 2026-10-16): gizlenen seçenekler
@@ -317,11 +264,11 @@ class _AttachSheet extends StatelessWidget {
             _Grid(entries: contentShown, scheme: scheme),
           ],
           if (visualShown.isNotEmpty) ...[
-            _SectionLabel(l10n.attachSectionVisual),
+            _SectionLabel(l10n.attachSectionFiles),
             _Grid(entries: visualShown, scheme: scheme),
           ],
           if (otherShown.isNotEmpty) ...[
-            _SectionLabel(l10n.aiSectionAttachments),
+            _SectionLabel(l10n.attachSectionCapture),
             _Grid(entries: otherShown, scheme: scheme),
           ],
         ],

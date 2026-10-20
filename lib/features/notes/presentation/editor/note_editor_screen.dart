@@ -78,6 +78,7 @@ import '../../data/web_video.dart';
 import '../../domain/text_merge.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
+import '../../domain/archive_paper.dart';
 import '../../domain/list_convert.dart';
 import '../../domain/note_item.dart';
 import '../../domain/note_type.dart';
@@ -183,6 +184,8 @@ bool sameItemsVisually(List<NoteItem> a, List<NoteItem> b) {
         // yalnız `ItemsEditor`ın kendi setState'i onu gösterir, kart
         // önizlemesi ve dışa aktarma bayat kalırdı.
         x.starred != y.starred ||
+        // Madde altı ayırıcı çizgi de satırda çiziliyor.
+        x.divider != y.divider ||
         isBlankText(x.text) != isBlankText(y.text)) {
       return false;
     }
@@ -1941,10 +1944,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     required bool hasBodyField,
     required Widget pageContent,
     required AppLocalizations l10n,
+    required Note note,
+    required TextStyle bodyStyle,
   }) => SingleChildScrollView(
     controller: _pageScroll,
     padding: const EdgeInsets.only(bottom: 96),
-    child: NotePageCanvas(
+    child: _withRuledLines(note, bodyStyle, NotePageCanvas(
       // KLAVYEDEN BAĞIMSIZ taban — bkz. [_stableCanvasHeight].
       minHeight: minHeight,
       images: imageAttachments,
@@ -1994,7 +1999,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             }
           : null,
       child: KeyedSubtree(key: _pageKey, child: pageContent),
-    ),
+    )),
   );
 
   /// Belge notunda bir BALONA yazılıyor: editörün alt çubuğu gizlenir.
@@ -2966,6 +2971,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         videoTimestamps: _bodyController.videoTimestamps,
         onVideoTimestamp: _seekVideoTo,
         addRowTrailing: _partsMenu(note),
+        paperLines: note.paged && note.archivePaper.ruled,
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
         wholeNoteText: () => _note == null
             ? ''
@@ -3009,6 +3015,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         videoTimestamps: _bodyController.videoTimestamps,
         onVideoTimestamp: _seekVideoTo,
         addRowTrailing: _partsMenu(note),
+        paperLines: note.paged && note.archivePaper.ruled,
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
         wholeNoteText: () => _note == null
             ? ''
@@ -3068,6 +3075,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 hasBodyField: hasBodyField,
                 pageContent: pageContent,
                 l10n: l10n,
+                note: note,
+                bodyStyle: noteBodyStyle,
               );
               _canvasCache = built;
               _canvasCacheHeight = minHeight;

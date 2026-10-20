@@ -102,6 +102,14 @@ void main() {
     );
   });
 
+  test('madde altı ayırıcı çizgi yazılır, okunur; yoksa alan yazılmaz', () {
+    const item = NoteItem(id: 'i1', text: 'a', divider: NoteItem.dividerDashed);
+    expect(item.toMap()['divider'], 'dashed');
+    expect(NoteItem.fromMap(item.toMap()).divider, NoteItem.dividerDashed);
+    expect(item.copyWith(divider: '').toMap().containsKey('divider'), isFalse);
+    expect(NoteItem.knownKeys, contains('divider'));
+  });
+
   test('not: bilinmeyen üst alanlar korunur, şema yazılır', () {
     final note = Note.fromMap('n1', {
       'type': 'text',

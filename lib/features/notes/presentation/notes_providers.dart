@@ -197,6 +197,30 @@ List<(NoteBucket, List<Note>)> dateBuckets(List<Note> notes, DateTime now) {
 /// kullanıcı tek dokunuşla ona geçer ve tercihi hatırlanır.
 final folderShelfExpandedProvider = boolPref('folder_shelf_expanded', defaultValue: false);
 
+/// **"TÜMÜ"** (kalıcı) — kullanıcı isteği 2026-10-20: "klasör seçeneklerinin
+/// başına Tümü seçeneği koy; tüm notları göstersin, klasörde olan olmayan
+/// hepsi, arşiv hariç". Kapalıyken (varsayılan) ana ekran yalnız klasörsüz
+/// notları gösterir (klasör bir YER — bkz. [filteredNotesProvider]); açıkken
+/// klasördeki notlar da ana ekranda durur. Gizli klasörlerin notları yine
+/// görünmez.
+final showAllNotesProvider = boolPref('home_show_all_notes', defaultValue: false);
+
+/// "Tümü" çipindeki sayı: arşiv dışı, boş olmayan, gizli klasörde olmayan
+/// notlar.
+final allNotesCountProvider = Provider<int>((ref) {
+  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+  final suppressed = ref.watch(suppressedFolderIdsProvider);
+  var count = 0;
+  for (final n in notes) {
+    if (n.archivedAt == null &&
+        !n.isEmpty &&
+        !suppressed.contains(n.folderId)) {
+      count++;
+    }
+  }
+  return count;
+});
+
 /// Ana ekran ızgara mı liste mi (kullanıcı tercihi, kalıcı).
 ///
 /// Izgara masonry kartlar, liste tek sütun kompakt satırlar. Sütun SAYISI
@@ -898,6 +922,7 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final filter = ref.watch(noteFilterProvider);
   final tag = ref.watch(selectedTagProvider);
   final folderId = ref.watch(selectedFolderProvider);
+  final showAll = ref.watch(showAllNotesProvider);
   final sort = ref.watch(noteSortProvider);
   final suppressed = ref.watch(suppressedFolderIdsProvider);
   // Sayaçlar YALNIZ o sıralamada izlenir: her not açılışında sayaç değişiyor,
@@ -928,7 +953,10 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
         for (final n in result)
           if (n.folderId == folderId) n,
       ];
-    } else if (query.isEmpty && tag == null && filter == NoteFilter.all) {
+    } else if (!showAll &&
+        query.isEmpty &&
+        tag == null &&
+        filter == NoteFilter.all) {
       // **KLASÖRDEKİ NOT ANA EKRANDA DURMAZ** (kullanıcı isteği 2026-08-18:
       // "klasör dashboard'ta bir not gibi yer kaplar, basılınca kendi
       // içerisindeki notlar görülür ayrı bir sayfada"). Klasör artık bir
@@ -937,7 +965,8 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
       // anlamsızlaşırdı.
       //
       // ARAMA VE SÜZGEÇ BUNUN DIŞINDA: bir şey ARAYAN kullanıcı klasörün
-      // içindekini de bulmalı — "notum kayboldu" en pahalı hata.
+      // içindekini de bulmalı — "notum kayboldu" en pahalı hata. "Tümü"
+      // çipi ([showAllNotesProvider]) açıkken de klasördekiler görünür.
       result = [
         for (final n in result)
           if (n.folderId == null) n,

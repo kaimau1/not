@@ -8,6 +8,7 @@ class NoteItem {
     this.section = '',
     this.title = '',
     this.attachmentId = '',
+    this.divider = '',
     this.extras = const {},
   });
 
@@ -23,7 +24,13 @@ class NoteItem {
     'section',
     'title',
     'attachmentId',
+    'divider',
   };
+
+  /// Madde ALTI ayırıcı çizgi türleri (bkz. [divider]).
+  static const dividerSolid = 'solid';
+  static const dividerDashed = 'dashed';
+  static const dividerDotted = 'dotted';
 
   final String id;
   final String text;
@@ -59,6 +66,12 @@ class NoteItem {
   /// gerekmesin diye.
   final String attachmentId;
 
+  /// Maddenin ALTINA çizilen ayırıcı çizgi (kullanıcı isteği 2026-10-20:
+  /// "satır aralarına çizgi çekme, kesikli çizgi çekme"): '' yok,
+  /// [dividerSolid] / [dividerDashed] / [dividerDotted]. Tanınmayan değer
+  /// düz çizgi gibi çizilir. Yalnız doluyken kayda yazılır.
+  final String divider;
+
   NoteItem copyWith({
     String? text,
     bool? checked,
@@ -66,6 +79,7 @@ class NoteItem {
     String? section,
     String? title,
     String? attachmentId,
+    String? divider,
   }) => NoteItem(
     id: id,
     text: text ?? this.text,
@@ -74,6 +88,7 @@ class NoteItem {
     section: section ?? this.section,
     title: title ?? this.title,
     attachmentId: attachmentId ?? this.attachmentId,
+    divider: divider ?? this.divider,
     extras: extras,
   );
 
@@ -85,6 +100,7 @@ class NoteItem {
     section: map['section'] as String? ?? '',
     title: map['title'] as String? ?? '',
     attachmentId: map['attachmentId'] as String? ?? '',
+    divider: map['divider'] as String? ?? '',
     extras: {
       for (final e in map.entries)
         if (!knownKeys.contains(e.key)) e.key: e.value,
@@ -100,5 +116,6 @@ class NoteItem {
     if (section.isNotEmpty) 'section': section,
     if (title.isNotEmpty) 'title': title,
     if (attachmentId.isNotEmpty) 'attachmentId': attachmentId,
+    if (divider.isNotEmpty) 'divider': divider,
   };
 }

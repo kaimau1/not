@@ -1374,7 +1374,7 @@
   "folderOrderName": "By name",
   "folderOrderNewest": "Newest first",
   "folderOrderNoteCount": "By note count",
-  "folderOrderHint": "Drag the handles to reorder. The same order is used in the folder strip and when swiping.",
+  "folderOrderHint": "Drag the handles to reorder (dragging switches to \"Manual\"). This order is also used in the folder strip and when swiping.",
   "swipeModeTitle": "Swiping left/right on the home screen",
   "swipeModeFolders": "Switch between folders",
   "swipeModeFilters": "Switch between filters and tags",
@@ -1925,12 +1925,112 @@
     }
   },
   "quickAddSectionMore": "More",
-  "attachAnyFileInfo": "Any file: images go on the page, PDFs and slides as documents, audio and video as attachments",
+  "attachAnyFileInfo": "Any file: image, PDF, slides, audio, video — the type is detected, you're asked what to do when it matters",
   "listeningModeAi": "AI",
   "listeningModeDictation": "Live typing",
   "dictationPanelHint": "Text appears at the cursor as you speak",
   "voiceStartShort": "Start",
   "aiVoiceRowTitle": "Voice note",
   "aiVoiceRowInfoEditor": "Speak; AI tidies it up and adds it to this note",
-  "aiVoiceRowInfoHub": "Speak; AI builds the note — title, items and reminders"
+  "aiVoiceRowInfoHub": "Speak; AI builds the note — title, items and reminders",
+  "archivePaperDashed": "Dashed lines",
+  "itemDividerSolid": "Line below",
+  "itemDividerDashed": "Dashed line below",
+  "itemDividerDotted": "Dotted line below",
+  "itemDividerRemove": "Remove line",
+  "attachSectionFiles": "Files and links",
+  "attachSectionCapture": "Camera and recording",
+  "fileUseAttachInfo": "Added to the note as a playable attachment",
+  "allNotesChip": "All",
+  "archiveAiSearch": "AI search (by meaning)",
+  "archiveAiSearchHint": "Search the archive by meaning…",
+  "untitledNote": "Untitled note",
+  "trashAnalysis": "Trash analysis",
+  "trashAnalyze": "Smart analysis",
+  "trashAiRun": "Deep analysis with AI",
+  "trashAiRunning": "Analyzing…",
+  "trashAiInfo": "On-device rules are ready. AI analysis sends a short digest of the notes to the model; locked notes are never sent.",
+  "trashAiNothing": "Nothing to analyze (locked notes are never sent)",
+  "trashSuggestRestore": "Consider restoring",
+  "trashSuggestDelete": "Safe to delete",
+  "trashSuggestNone": "No suggestions",
+  "trashRestoreAllSuggested": "Restore all ({count})",
+  "@trashRestoreAllSuggested": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashDeleteAllSuggested": "Delete all ({count})",
+  "@trashDeleteAllSuggested": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashStatNotes": "{count, plural, one{1 note} other{{count} notes}}",
+  "@trashStatNotes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashStatAttachments": "{count, plural, one{1 attachment} other{{count} attachments}}",
+  "@trashStatAttachments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashStatSoon": "{count} going within 3 days",
+  "@trashStatSoon": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashStatLocked": "{count} locked (not inspected)",
+  "@trashStatLocked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashReasonEmpty": "Empty — nothing to lose",
+  "trashReasonDuplicate": "An identical note already exists",
+  "trashReasonDuplicateOf": "Identical to: {title}",
+  "@trashReasonDuplicateOf": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "trashReasonDuplicateInTrash": "A newer copy is also in the trash",
+  "trashReasonOpenTasks": "{count, plural, one{1 open task} other{{count} open tasks}}",
+  "@trashReasonOpenTasks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashReasonReminder": "Has an upcoming reminder",
+  "trashReasonSensitive": "Contains info like passwords, IBAN, phone numbers",
+  "trashReasonAttachments": "{count, plural, one{Has 1 attachment} other{Has {count} attachments}}",
+  "@trashReasonAttachments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashReasonSubstantial": "Long, substantial text",
+  "trashReasonAi": "AI suggestion"
 }

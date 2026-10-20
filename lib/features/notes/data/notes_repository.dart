@@ -545,6 +545,7 @@ class NotesRepository {
             starred: item.starred,
             section: item.section,
             title: item.title,
+            divider: item.divider,
           ),
       ],
       tags: List<String>.from(note.tags),

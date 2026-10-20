@@ -42,6 +42,13 @@ numarasıyla bildir.
   PDF/PNG/ek çıktıları okunur, çip seçimi hatırlanıyor.
 - [ ] Ana ekran widget'ları (açık/koyu tema, 4 satır kart).
 
+**Defter + menü turu (2026-10-20, bkz. `GELISTIRME_RAPORU.md` E)**
+- [ ] Defter (çizgili/kesikli/bloknot): yazı çizgide; büyük yazı ölçeği,
+  başlık + etiket + sayfa çubuğu; kartta da aynı kâğıt.
+- [ ] Madde uzun bas → alta düz/kesikli/noktalı çizgi; kartta görünüyor.
+- [ ] Ekle → tek "Dosya ekle" (görsel/ses/video soru levhası); "Tümü"
+  çipi; aramada klasör rozeti; arşivde ✨; çöpte 📊 Akıllı analiz.
+
 **Editör ve klavye**
 - [ ] Görselli/PDF'li not açılışı takılmasız; sabit medya geçiş bitince yerine.
 - [ ] Klavye açılınca sabit görsel/video/PDF zıplamıyor, alt kısmı örtülüyor;

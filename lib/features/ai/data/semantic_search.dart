@@ -52,6 +52,37 @@ final semanticSearchProvider = FutureProvider.autoDispose
       }
     });
 
+/// ARŞİVDE anlamsal arama (kullanıcı isteği 2026-10-20: "arşivde ara
+/// kısmına da AI seçeneği koy"). [semanticSearchProvider] ile aynı indeks ve
+/// aynı eşik; yalnız aday kümesi arşivlenmiş notlar.
+final archivedSemanticSearchProvider = FutureProvider.autoDispose
+    .family<List<Note>, String>((ref, query) async {
+      final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+      final hiddenFolders = ref.watch(hiddenFoldersRevealedProvider)
+          ? const <String>{}
+          : ref.watch(hiddenFolderIdsProvider);
+      final archived = [
+        for (final n in notes)
+          if (n.archivedAt != null &&
+              !n.locked &&
+              !hiddenFolders.contains(n.folderId))
+            n,
+      ];
+      if (archived.isEmpty || query.trim().isEmpty) return const [];
+      try {
+        return await ref.read(semanticIndexProvider).search(
+          query.trim(),
+          archived,
+        );
+      } on GeminiException {
+        final q = foldForSearch(query.trim());
+        return [
+          for (final n in archived)
+            if (foldForSearch(n.toPlainText()).contains(q)) n,
+        ];
+      }
+    });
+
 /// Bellek içi embedding indeksi: her notun vektörü not değiştikçe yenilenir,
 /// arama kosinüs benzerliğiyle yapılır. Vektörler yalnızca bellekte tutulur.
 ///

@@ -75,11 +75,37 @@ extension _EditorAppearance on _NoteEditorScreenState {
   /// aralığı gövde metninin satır yüksekliği.
   Widget _withPaper(Note note, TextStyle bodyStyle, Widget child) {
     if (!note.paged) return child;
-    final size = bodyStyle.fontSize ?? 16;
     return NotebookPaper(
       style: note.archivePaper,
-      gap: size * (bodyStyle.height ?? 1.4),
+      gap: _paperGap(bodyStyle),
       scroll: _pageScroll,
+      // Çizgili desenlerde satırları içerik çizer (bkz. [_withRuledLines]);
+      // belge notunun tuvali yok, orada ızgara kalır.
+      contentRuled: !note.type.isPageNoteType,
+      child: child,
+    );
+  }
+
+  /// Defter satır aralığı = gövdenin GERÇEK satır yüksekliği. Sistem yazı
+  /// ölçeği de hesaba girer (eskiden girmiyordu: büyük yazı ayarında
+  /// çizgiler yazıdan sık kalıyordu).
+  double _paperGap(TextStyle bodyStyle) =>
+      MediaQuery.textScalerOf(context).scale(bodyStyle.fontSize ?? 16) *
+      (bodyStyle.height ?? 1.45);
+
+  /// Çizgili defterde satır çizgileri sayfa içeriğinin İÇİNDE, her metin
+  /// satırının altına çizilir (bkz. [RuledLines]).
+  Widget _withRuledLines(Note note, TextStyle bodyStyle, Widget child) {
+    if (!note.paged || !note.archivePaper.ruled) return child;
+    final dashed = note.archivePaper == ArchivePaper.dashed;
+    return RuledLines(
+      gap: _paperGap(bodyStyle),
+      color: Theme.of(context).colorScheme.outlineVariant.withValues(
+        alpha: dashed ? 0.7 : 0.55,
+      ),
+      dashed: dashed,
+      // Kaydırma alanının alt dolgusu (bkz. [_buildCanvas]).
+      extraBottom: 96,
       child: child,
     );
   }

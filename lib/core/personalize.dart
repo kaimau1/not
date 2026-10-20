@@ -190,14 +190,12 @@ class UiModule {
     'quickadd.video',
     'quickadd.youtube',
     'attach.video',
-    'attach.video-gallery',
     'attach.youtube',
   ]);
 
-  static const documents = UiModule('documents', [
-    'attach.pdf',
-    'attach.slide',
-  ]);
+  // "Belgeler" eklentisi KALKTI (2026-10-20): Ekle levhasındaki PDF/Slayt
+  // düğmeleri tek "Dosya ekle"de birleşti; eklentinin gizleyeceği bir şey
+  // kalmadı. Kayıtlı 'documents' tercihi zararsızca yok sayılır.
 
   static const scan = UiModule('scan', [
     'quickadd.scan',
@@ -225,7 +223,6 @@ class UiModule {
     ai,
     voice,
     video,
-    documents,
     scan,
     drawing,
     templates,

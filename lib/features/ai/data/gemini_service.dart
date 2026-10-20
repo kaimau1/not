@@ -411,6 +411,36 @@ class GeminiService {
     },
   ]);
 
+  /// **ÇÖP KUTUSU ANALİZİ** (kullanıcı isteği 2026-10-20): çöpteki notların
+  /// kısa dökümüne ([digest], satır başı `[nK] metin | ek | açık madde`)
+  /// bakıp neyin geri yüklenmesi, neyin güvenle silinmesi gerektiğini söyler.
+  /// Dönen JSON: `{"ozet": "...", "geri": [{"id": "n3", "neden": "..."}],
+  /// "sil": [{"id": "n1", "neden": "..."}]}`. Kararı kullanıcı verir.
+  Future<Map<String, dynamic>> analyzeTrash(String digest) async {
+    final raw = await _generate([
+      {
+        'text':
+            'Aşağıda bir not uygulamasının ÇÖP KUTUSUNDAKİ notlar var (her '
+            'satır bir not; köşeli parantezde kimliği). Kullanıcıya yardım '
+            'et: (1) "ozet": çöpte ne tür şeyler olduğunu 1-2 kısa Türkçe '
+            'cümleyle anlat; (2) "geri": yanlışlıkla silinmiş olabilecek ya '
+            'da içinde hâlâ gerekli bilgi/iş bulunan notlar (şifre, adres, '
+            'tarih, yapılmamış iş, emek verilmiş metin…); (3) "sil": '
+            'güvenle kalıcı silinebilecek notlar (boş, deneme, anlamsız, '
+            'eskimiş, başka notun tekrarı). Emin olmadığın notu hiçbir '
+            'listeye koyma. "neden" en fazla 8 kelime. Yanıtı YALNIZCA şu '
+            'JSON ile ver: {"ozet": "...", "geri": [{"id": "n1", "neden": '
+            '"..."}], "sil": [{"id": "n2", "neden": "..."}]}'
+            '\n\n---\n$digest',
+      },
+    ], jsonOutput: true);
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map<String, dynamic>) {
+      throw const GeminiException('Beklenmeyen yanıt');
+    }
+    return decoded;
+  }
+
   /// Kısa özet istemi: birkaç cümlelik genel bakış + önemli maddeler.
   static const _shortSummaryPrompt =
       'Türkçe olarak KISA ve öz biçimde özetle: önce 2-3 cümlelik genel '

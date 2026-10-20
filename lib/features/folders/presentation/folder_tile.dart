@@ -421,6 +421,32 @@ class SharedNotesChip extends ConsumerWidget {
   }
 }
 
+/// **"TÜMÜ" ÇİPİ** — şeridin BAŞINDA (kullanıcı isteği 2026-10-20). Seçiliyken
+/// ana ekran klasördekiler dahil bütün (arşiv dışı) notları gösterir;
+/// yeniden dokunmak klasörsüz notlara döner (bkz. [showAllNotesProvider]).
+class AllNotesChip extends ConsumerWidget {
+  const AllNotesChip({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(showAllNotesProvider);
+    final count = ref.watch(allNotesCountProvider);
+    final scheme = Theme.of(context).colorScheme;
+    return _ChipShell(
+      accent: scheme.primary,
+      icon: Icons.select_all,
+      label: context.l10n.allNotesChip,
+      count: count,
+      selected: selected,
+      onTap: () {
+        // Yana çekişle bir klasöre geçilmişse "Tümü" oradan da çıkarır.
+        ref.read(selectedFolderProvider.notifier).set(null);
+        ref.read(showAllNotesProvider.notifier).set(!selected);
+      },
+    );
+  }
+}
+
 /// "Yeni klasör" çipi — şeridin sonunda.
 class NewFolderChip extends ConsumerWidget {
   const NewFolderChip({super.key});

@@ -975,6 +975,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         !searchActive &&
         ref.watch(noteFilterProvider) == NoteFilter.all &&
         ref.watch(selectedFolderProvider) == null &&
+        !ref.watch(showAllNotesProvider) &&
         ref.watch(selectedTagProvider) == null;
     // Dar ekranda arama odaklıyken sağdaki butonlar gizlenir; arama alanı
     // tüm genişliği kullanır. Klavye kapatılınca (sistem geri tuşu dahil)
@@ -1913,6 +1914,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             children: [
               // Ortak notlar artık üst çubuktaki "Gelen ve paylaşılanlar"
               // düğmesinde (bkz. SharedHubButton).
+              const Padding(
+                padding: EdgeInsetsDirectional.only(start: 12),
+                child: AllNotesChip(),
+              ),
               const Spacer(),
               TextButton.icon(
                 onPressed: () =>
@@ -1999,6 +2004,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
                 children: [
+                  // "Tümü" en başta (kullanıcı isteği 2026-10-20).
+                  const AllNotesChip(),
+                  const SizedBox(width: 6),
                   for (final share in hotShared) ...[
                     SharedFolderChip(
                       key: ValueKey('shared-chip-${share.folderId}'),
@@ -2121,6 +2129,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         !searchActive &&
         ref.read(noteFilterProvider) == NoteFilter.all &&
         ref.read(selectedFolderProvider) == null &&
+        !ref.read(showAllNotesProvider) &&
         ref.read(selectedTagProvider) == null;
 
     /// Liste görünümü: tek sütun, kompakt satır. Sürükle-sırala BURADA yok —

@@ -1636,7 +1636,7 @@
   "folderOrderName": "Ada göre",
   "folderOrderNewest": "En yeni önce",
   "folderOrderNoteCount": "Not sayısına göre",
-  "folderOrderHint": "Tutamaktan sürükleyerek sıralayın. Bu sıra klasör şeridinde ve yana kaydırırken de kullanılır.",
+  "folderOrderHint": "Tutamaktan sürükleyerek sıralayın (sürüklemek sırayı \"Elle\"ye çevirir). Bu sıra klasör şeridinde ve yana kaydırırken de kullanılır.",
   "swipeModeTitle": "Ana ekranda yana kaydırınca",
   "swipeModeFolders": "Klasörler arasında geç",
   "swipeModeFilters": "Süzgeçler ve etiketler arasında geç",
@@ -2556,12 +2556,112 @@
     }
   },
   "quickAddSectionMore": "Diğer",
-  "attachAnyFileInfo": "Her türden dosya: görsel sayfaya, PDF ve sunum belge olarak, ses ve video ek olarak girer",
+  "attachAnyFileInfo": "Her tür dosya: görsel, PDF, sunum, ses, video — tür kendiliğinden tanınır, gerekirse ne yapılacağı sorulur",
   "listeningModeAi": "Yapay zekâ",
   "listeningModeDictation": "Doğrudan yazım",
   "dictationPanelHint": "Konuştukça imlecin olduğu yere yazılır",
   "voiceStartShort": "Başla",
   "aiVoiceRowTitle": "Sesli not",
   "aiVoiceRowInfoEditor": "Konuş; yapay zekâ düzenleyip bu nota eklesin",
-  "aiVoiceRowInfoHub": "Konuş; yapay zekâ başlığı, maddeleri ve hatırlatıcıyı çıkarıp notu kursun"
+  "aiVoiceRowInfoHub": "Konuş; yapay zekâ başlığı, maddeleri ve hatırlatıcıyı çıkarıp notu kursun",
+  "archivePaperDashed": "Kesikli çizgili",
+  "itemDividerSolid": "Alta çizgi çek",
+  "itemDividerDashed": "Alta kesikli çizgi",
+  "itemDividerDotted": "Alta noktalı çizgi",
+  "itemDividerRemove": "Çizgiyi kaldır",
+  "attachSectionFiles": "Dosya ve bağlantı",
+  "attachSectionCapture": "Kamera ve kayıt",
+  "fileUseAttachInfo": "Nota ek olarak girer; oynatılabilir",
+  "allNotesChip": "Tümü",
+  "archiveAiSearch": "AI ile ara (anlamca)",
+  "archiveAiSearchHint": "Arşivde anlamca ara…",
+  "untitledNote": "Başlıksız not",
+  "trashAnalysis": "Çöp analizi",
+  "trashAnalyze": "Akıllı analiz",
+  "trashAiRun": "AI ile derin analiz",
+  "trashAiRunning": "Analiz ediliyor…",
+  "trashAiInfo": "Cihazdaki kurallar hazır. AI analizi notların kısa dökümünü modele gönderir; kilitli notlar gönderilmez.",
+  "trashAiNothing": "Analize gönderilecek not yok (kilitli notlar gönderilmez)",
+  "trashSuggestRestore": "Geri yüklemeyi düşün",
+  "trashSuggestDelete": "Güvenle silinebilir",
+  "trashSuggestNone": "Öneri yok",
+  "trashRestoreAllSuggested": "Tümünü geri yükle ({count})",
+  "@trashRestoreAllSuggested": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashDeleteAllSuggested": "Tümünü sil ({count})",
+  "@trashDeleteAllSuggested": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashStatNotes": "{count, plural, one{1 not} other{{count} not}}",
+  "@trashStatNotes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashStatAttachments": "{count, plural, one{1 ek} other{{count} ek}}",
+  "@trashStatAttachments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashStatSoon": "{count} not 3 gün içinde gidiyor",
+  "@trashStatSoon": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashStatLocked": "{count} kilitli (incelenmedi)",
+  "@trashStatLocked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashReasonEmpty": "Boş not — kaybedilecek bir şey yok",
+  "trashReasonDuplicate": "Aynısı notlarında zaten var",
+  "trashReasonDuplicateOf": "Aynısı notlarında var: {title}",
+  "@trashReasonDuplicateOf": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "trashReasonDuplicateInTrash": "Çöpte daha yeni bir kopyası var",
+  "trashReasonOpenTasks": "{count, plural, one{1 yapılmamış madde var} other{{count} yapılmamış madde var}}",
+  "@trashReasonOpenTasks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashReasonReminder": "İleri tarihli hatırlatıcısı var",
+  "trashReasonSensitive": "Şifre, IBAN, telefon gibi bilgi içeriyor",
+  "trashReasonAttachments": "{count, plural, one{1 ek taşıyor} other{{count} ek taşıyor}}",
+  "@trashReasonAttachments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashReasonSubstantial": "Uzun, emek verilmiş metin",
+  "trashReasonAi": "AI önerisi"
 }

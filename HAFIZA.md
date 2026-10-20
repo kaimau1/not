@@ -109,9 +109,18 @@ eskisini arşive taşıma.
 - **Bir defalık göçler** `lib/features/notes/data/data_migrations.dart`:
   bayrak cihazda (`migration_<ad>_<uid>`), hata olursa yazılmaz (yeniden
   denenir); göç `updatedAt`e dokunmaz.
-- Defter kâğıdı (`ArchivePaper`): çizgili, kareli, noktalı, düz + bloknot,
-  milimetrik, izometrik (2026-10-20). Bilinmeyen kimlik çizgiliye düşer.
-  Seçici önizlemeli döşeme, dokunuş anında uygular, levha açık kalır.
+- Defter kâğıdı (`ArchivePaper`): çizgili, kesikli, kareli, noktalı, düz +
+  bloknot, milimetrik, izometrik. Bilinmeyen kimlik çizgiliye düşer.
+  **Çizgili desenler (`ruled`) satırı İÇERİK çizer (2026-10-20, "yazılar
+  çizgilerle üst üste")**: `RuledLines` yerleşimden sonra her
+  `RenderEditable` satırının altına çizgi koyar, arayı eşit adımla doldurur,
+  düz yazıdan (düğme etiketi) geçmez; kartta `anchorParagraphs`. Arka plan
+  (`contentRuled`) yalnız kenar/cilt. Defterde `ItemsEditor.paperLines`:
+  dolgu 0, kutu 24 dp → madde = satır × aralık. Aralık textScaler'lı
+  (`_paperGap`). Kareli/noktalı serbest ızgara kalır.
+- Madde altı ayırıcı `NoteItem.divider` ('' / solid / dashed / dotted;
+  yalnız doluyken yazılır); `sameItemsVisually`, `_sameItems`, `_sameItem`
+  (birleştirme) ona da bakar.
 - Notun sayfaları (`textPages`): ETKİN sayfanın içeriği `body`/`items`'ta,
   listedeki girdisi boş; geçiş içerikleri yer değiştirir. İlk sayfa kimliği
   hep ''.
@@ -337,7 +346,15 @@ eskisini arşive taşıma.
   Ses artık sorulmadan metne dökülmez (ek / metne dök; editör `?afile=1`).
   HEIC `normalizeHeicImages` ile PNG (akış seçicisi HEIC'i tanımıyor, seçici
   ikinci kez açılıyordu). Editörün Ekle levhasında türü kendi tanıyan
-  "Dosya ekle". Seçilen dosya akışa `DocPicker.preselect` ile verilir.
+  "Dosya ekle" — 2026-10-20'den beri TEK dosya kapısı: PDF/Slayt/Ses
+  dosyası/Galeriden video/Görseli ek olarak/Metne dök düğmeleri kalktı,
+  görsel ve ses-video için `_askFileUse` sorar ("Belgeler" eklentisi de
+  kalktı). Seçilen dosya akışa `DocPicker.preselect` ile verilir.
+- "Tümü" çipi (`showAllNotesProvider`, kalıcı): "klasördeki not ana
+  ekranda durmaz" kuralının istisnası; açıkken elle sıralama kapalı.
+  Çöp analizi `domain/trash_analysis.dart` (cihaz kuralları) + AI
+  `analyzeTrash` (kilitli not gitmez); arşivde AI araması
+  `archivedSemanticSearchProvider`.
 - Süz düğmesi arama kutusunun İÇİNDE (AI anahtarının sağı): süzgeç yokken
   simge, varken adı ("Görevler +1") + ×. Görünüm (ızgara/liste) Süz
   levhasında. **Favori (yıldızlı) süzgeç kısayolları KALKTI** (2026-10-20,

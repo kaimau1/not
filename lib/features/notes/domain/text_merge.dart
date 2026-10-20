@@ -145,4 +145,7 @@ bool sameItems(List<NoteItem> a, List<NoteItem> b) {
 }
 
 bool _sameItem(NoteItem a, NoteItem b) =>
-    a.text == b.text && a.checked == b.checked && a.title == b.title;
+    a.text == b.text &&
+    a.checked == b.checked &&
+    a.title == b.title &&
+    a.divider == b.divider;

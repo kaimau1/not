@@ -146,7 +146,13 @@ class ItemsEditor extends StatefulWidget {
     this.videoTimestamps = false,
     this.onVideoTimestamp,
     this.addRowTrailing,
+    this.paperLines = false,
   });
+
+  /// DEFTER (çizgili kâğıt) görünümü: satırlar defter çizgilerine oturacak
+  /// şekilde dizilir — dikey dolgu yok (madde satırı = satır sayısı × satır
+  /// aralığı) ve kutucuk tek satırın bandına sığar (bkz. `RuledLines`).
+  final bool paperLines;
 
   /// "+ Yeni öğe" satırının SAĞ ucundaki ek düğme (editörde: notta hem metin
   /// hem liste varken "bölümler" menüsü — listeyi ya da metni kaldır).
@@ -586,7 +592,8 @@ class ItemsEditorState extends State<ItemsEditor>
     for (var i = 0; i < a.length; i++) {
       if (a[i].id != b[i].id ||
           a[i].text != b[i].text ||
-          a[i].checked != b[i].checked) {
+          a[i].checked != b[i].checked ||
+          a[i].divider != b[i].divider) {
         return false;
       }
     }
@@ -1052,6 +1059,29 @@ class ItemsEditorState extends State<ItemsEditor>
           item.starred ? l10n.unstar : l10n.star,
         ),
         entry(_ItemAction.select, Icons.checklist, l10n.select),
+        // Madde ALTINA ayırıcı çizgi (kullanıcı isteği 2026-10-20: "satır
+        // aralarına çizgi çekme, kesikli çizgi çekme").
+        entry(
+          _ItemAction.dividerSolid,
+          Icons.horizontal_rule,
+          l10n.itemDividerSolid,
+        ),
+        entry(
+          _ItemAction.dividerDashed,
+          Icons.more_horiz,
+          l10n.itemDividerDashed,
+        ),
+        entry(
+          _ItemAction.dividerDotted,
+          Icons.linear_scale,
+          l10n.itemDividerDotted,
+        ),
+        if (item.divider.isNotEmpty)
+          entry(
+            _ItemAction.dividerNone,
+            Icons.format_strikethrough,
+            l10n.itemDividerRemove,
+          ),
         entry(_ItemAction.delete, Icons.delete_outline, l10n.removeItem),
       ],
     );
@@ -1063,7 +1093,25 @@ class ItemsEditorState extends State<ItemsEditor>
         _toggleSelection(item);
       case _ItemAction.delete:
         _removeItem(item);
+      case _ItemAction.dividerSolid:
+        _setDivider(item, NoteItem.dividerSolid);
+      case _ItemAction.dividerDashed:
+        _setDivider(item, NoteItem.dividerDashed);
+      case _ItemAction.dividerDotted:
+        _setDivider(item, NoteItem.dividerDotted);
+      case _ItemAction.dividerNone:
+        _setDivider(item, '');
     }
+  }
+
+  /// Maddenin altındaki ayırıcı çizgiyi değiştirir; aynı tür yeniden
+  /// seçilirse kaldırır.
+  void _setDivider(NoteItem target, String divider) {
+    final index = _items.indexWhere((i) => i.id == target.id);
+    if (index < 0) return;
+    final next = _items[index].divider == divider ? '' : divider;
+    setState(() => _items[index] = _items[index].copyWith(divider: next));
+    _commit();
   }
 
   /// Maddenin yıldızını çevirir (kullanıcı isteği 2026-08-16).
@@ -1616,6 +1664,11 @@ class ItemsEditorState extends State<ItemsEditor>
               // yazıdan biraz altta" kök nedeni). 40 dp hem hizalanabiliyor
               // hem de dokunulabilir bir hedef olarak kalıyor.
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              // Defterde kutu tek satırın bandına sığar (24 dp), çizgilerin
+              // arasında durur.
+              visualDensity: widget.paperLines
+                  ? const VisualDensity(horizontal: -4, vertical: -4)
+                  : null,
               // Boş satırın kutusu PASİF: dokunulunca hiçbir şey olmadığını
               // görmek, işaretlenip alta düşen boş bir maddeyi geri almaktan
               // iyidir (bkz. _toggleItem). Zaten işaretliyse etkin kalır ki
@@ -1660,11 +1713,15 @@ class ItemsEditorState extends State<ItemsEditor>
     // `height` verilmemişse yazı tipinin kendi satır yüksekliği geçerli;
     // Roboto ve benzerlerinde bu ~1.2 katıdır.
     final lineHeight = fontSize * (baseStyle.height ?? 1.2);
-    // TextField `contentPadding: vertical 10` ile kuruluyor (aşağıya bak).
-    final firstLineCenter = 10 + lineHeight / 2;
+    // TextField `contentPadding: vertical` [fieldPad] ile kuruluyor (aşağıya
+    // bak). Defter görünümünde dolgu YOK: madde satırı tam satır sayısı ×
+    // çizgi aralığı, maddeler defterdeki gibi ARDIŞIK çizgilere yazılır
+    // (yarım satır dolguda her maddenin arasında boş bir bant kalıyordu).
+    final fieldPad = widget.paperLines ? 0.0 : 10.0;
+    final firstLineCenter = fieldPad + lineHeight / 2;
     final leadingHeight = _selectionMode
         ? 22.0
-        : (widget.showCheckboxes ? 40.0 : lineHeight);
+        : (widget.showCheckboxes ? (widget.paperLines ? 24.0 : 40.0) : lineHeight);
     final leadingTop = math.max(0.0, firstLineCenter - leadingHeight / 2);
     // **TUTAMAÇ HİZASI** (kullanıcı bulgusu 2026-09-01, ekran görüntüsüyle:
     // "6 nokta ile seçim işareti hâlâ hizasız").
@@ -1692,7 +1749,14 @@ class ItemsEditorState extends State<ItemsEditor>
           ? HitTestBehavior.opaque
           : HitTestBehavior.deferToChild,
       onTap: _selectionMode ? () => _toggleSelection(item) : null,
-      child: Container(
+      child: CustomPaint(
+        foregroundPainter: item.divider.isEmpty
+            ? null
+            : _ItemDividerPainter(
+                item.divider,
+                scheme.primary.withValues(alpha: 0.75),
+              ),
+        child: Container(
         color: selected ? scheme.primaryContainer.withValues(alpha: 0.4) : null,
         // Sağ pay dar: silme "x"i kenara yaklaşsın (bkz. [_kTrailingWidth]).
         padding: const EdgeInsetsDirectional.only(start: 12, end: 2),
@@ -1821,8 +1885,8 @@ class ItemsEditorState extends State<ItemsEditor>
                                 filled: false,
                                 border: InputBorder.none,
                                 isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 10,
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: fieldPad,
                                 ),
                               ),
                             ),
@@ -1942,6 +2006,7 @@ class ItemsEditorState extends State<ItemsEditor>
             ],
           ),
         ),
+      ),
       ),
     );
 
@@ -2441,7 +2506,56 @@ class _FloatRowState extends State<_FloatRow> {
 }
 
 /// Satır menüsünün ([ItemsEditorState._showItemMenu]) seçenekleri.
-enum _ItemAction { star, select, delete }
+enum _ItemAction {
+  star,
+  select,
+  delete,
+  dividerSolid,
+  dividerDashed,
+  dividerDotted,
+  dividerNone,
+}
+
+/// Madde altı ayırıcı çizgi (bkz. [NoteItem.divider]).
+class _ItemDividerPainter extends CustomPainter {
+  const _ItemDividerPainter(this.kind, this.color);
+
+  final String kind;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final y = size.height - 1;
+    const left = 8.0;
+    final right = size.width - 8;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = kind == NoteItem.dividerDotted ? 2.4 : 1.6
+      ..strokeCap = kind == NoteItem.dividerDotted
+          ? StrokeCap.round
+          : StrokeCap.butt;
+    switch (kind) {
+      case NoteItem.dividerDashed:
+        for (var x = left; x < right; x += 12) {
+          canvas.drawLine(
+            Offset(x, y),
+            Offset(math.min(x + 7, right), y),
+            paint,
+          );
+        }
+      case NoteItem.dividerDotted:
+        for (var x = left; x < right; x += 7) {
+          canvas.drawLine(Offset(x, y), Offset(x, y), paint);
+        }
+      default:
+        canvas.drawLine(Offset(left, y), Offset(right, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ItemDividerPainter old) =>
+      old.kind != kind || old.color != color;
+}
 
 /// Üstü çizili geçişin süresi (bkz. `_itemRow`).
 const _kStrikeDuration = Duration(milliseconds: 260);

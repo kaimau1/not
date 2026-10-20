@@ -9,6 +9,10 @@ enum ArchivePaper {
   /// Klasik çizgili defter (varsayılan): yatay satır çizgileri + kenar payı.
   lined('lined'),
 
+  /// Kesikli çizgili defter (2026-10-20, "kesikli çizgi çekme gibi"):
+  /// çizgili ile aynı satırlar, kesik kesik ve biraz daha silik.
+  dashed('dashed'),
+
   /// Kareli (matematik) defter.
   grid('grid'),
 
@@ -44,4 +48,13 @@ enum ArchivePaper {
     }
     return ArchivePaper.lined;
   }
+
+  /// Satır çizgileri YAZIYA OTURAN desenler (2026-10-20, "defter modunda
+  /// çizgilerle yazılar üst üste geliyor"): bunlarda çizgiler sabit bir
+  /// ızgaradan değil, sayfadaki her metin satırının altından çizilir
+  /// (bkz. `RuledLines`). Kareli/noktalı desenler serbest ızgara kalır.
+  bool get ruled =>
+      this == ArchivePaper.lined ||
+      this == ArchivePaper.legal ||
+      this == ArchivePaper.dashed;
 }

@@ -3530,7 +3530,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get folderOrderHint =>
-      'Drag the handles to reorder. The same order is used in the folder strip and when swiping.';
+      'Drag the handles to reorder (dragging switches to \"Manual\"). This order is also used in the folder strip and when swiping.';
 
   @override
   String get swipeModeTitle => 'Swiping left/right on the home screen';
@@ -5287,7 +5287,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachAnyFileInfo =>
-      'Any file: images go on the page, PDFs and slides as documents, audio and video as attachments';
+      'Any file: image, PDF, slides, audio, video — the type is detected, you\'re asked what to do when it matters';
 
   @override
   String get listeningModeAi => 'AI';
@@ -5311,4 +5311,160 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiVoiceRowInfoHub =>
       'Speak; AI builds the note — title, items and reminders';
+
+  @override
+  String get archivePaperDashed => 'Dashed lines';
+
+  @override
+  String get itemDividerSolid => 'Line below';
+
+  @override
+  String get itemDividerDashed => 'Dashed line below';
+
+  @override
+  String get itemDividerDotted => 'Dotted line below';
+
+  @override
+  String get itemDividerRemove => 'Remove line';
+
+  @override
+  String get attachSectionFiles => 'Files and links';
+
+  @override
+  String get attachSectionCapture => 'Camera and recording';
+
+  @override
+  String get fileUseAttachInfo => 'Added to the note as a playable attachment';
+
+  @override
+  String get allNotesChip => 'All';
+
+  @override
+  String get archiveAiSearch => 'AI search (by meaning)';
+
+  @override
+  String get archiveAiSearchHint => 'Search the archive by meaning…';
+
+  @override
+  String get untitledNote => 'Untitled note';
+
+  @override
+  String get trashAnalysis => 'Trash analysis';
+
+  @override
+  String get trashAnalyze => 'Smart analysis';
+
+  @override
+  String get trashAiRun => 'Deep analysis with AI';
+
+  @override
+  String get trashAiRunning => 'Analyzing…';
+
+  @override
+  String get trashAiInfo =>
+      'On-device rules are ready. AI analysis sends a short digest of the notes to the model; locked notes are never sent.';
+
+  @override
+  String get trashAiNothing =>
+      'Nothing to analyze (locked notes are never sent)';
+
+  @override
+  String get trashSuggestRestore => 'Consider restoring';
+
+  @override
+  String get trashSuggestDelete => 'Safe to delete';
+
+  @override
+  String get trashSuggestNone => 'No suggestions';
+
+  @override
+  String trashRestoreAllSuggested(int count) {
+    return 'Restore all ($count)';
+  }
+
+  @override
+  String trashDeleteAllSuggested(int count) {
+    return 'Delete all ($count)';
+  }
+
+  @override
+  String trashStatNotes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count notes',
+      one: '1 note',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String trashStatAttachments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attachments',
+      one: '1 attachment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String trashStatSoon(int count) {
+    return '$count going within 3 days';
+  }
+
+  @override
+  String trashStatLocked(int count) {
+    return '$count locked (not inspected)';
+  }
+
+  @override
+  String get trashReasonEmpty => 'Empty — nothing to lose';
+
+  @override
+  String get trashReasonDuplicate => 'An identical note already exists';
+
+  @override
+  String trashReasonDuplicateOf(String title) {
+    return 'Identical to: $title';
+  }
+
+  @override
+  String get trashReasonDuplicateInTrash => 'A newer copy is also in the trash';
+
+  @override
+  String trashReasonOpenTasks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count open tasks',
+      one: '1 open task',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trashReasonReminder => 'Has an upcoming reminder';
+
+  @override
+  String get trashReasonSensitive =>
+      'Contains info like passwords, IBAN, phone numbers';
+
+  @override
+  String trashReasonAttachments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Has $count attachments',
+      one: 'Has 1 attachment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trashReasonSubstantial => 'Long, substantial text';
+
+  @override
+  String get trashReasonAi => 'AI suggestion';
 }

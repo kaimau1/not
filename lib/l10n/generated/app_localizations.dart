@@ -6389,7 +6389,7 @@ abstract class AppLocalizations {
   /// No description provided for @folderOrderHint.
   ///
   /// In tr, this message translates to:
-  /// **'Tutamaktan sürükleyerek sıralayın. Bu sıra klasör şeridinde ve yana kaydırırken de kullanılır.'**
+  /// **'Tutamaktan sürükleyerek sıralayın (sürüklemek sırayı \"Elle\"ye çevirir). Bu sıra klasör şeridinde ve yana kaydırırken de kullanılır.'**
   String get folderOrderHint;
 
   /// No description provided for @swipeModeTitle.
@@ -9485,7 +9485,7 @@ abstract class AppLocalizations {
   /// No description provided for @attachAnyFileInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Her türden dosya: görsel sayfaya, PDF ve sunum belge olarak, ses ve video ek olarak girer'**
+  /// **'Her tür dosya: görsel, PDF, sunum, ses, video — tür kendiliğinden tanınır, gerekirse ne yapılacağı sorulur'**
   String get attachAnyFileInfo;
 
   /// No description provided for @listeningModeAi.
@@ -9529,6 +9529,228 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Konuş; yapay zekâ başlığı, maddeleri ve hatırlatıcıyı çıkarıp notu kursun'**
   String get aiVoiceRowInfoHub;
+
+  /// No description provided for @archivePaperDashed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kesikli çizgili'**
+  String get archivePaperDashed;
+
+  /// No description provided for @itemDividerSolid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alta çizgi çek'**
+  String get itemDividerSolid;
+
+  /// No description provided for @itemDividerDashed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alta kesikli çizgi'**
+  String get itemDividerDashed;
+
+  /// No description provided for @itemDividerDotted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alta noktalı çizgi'**
+  String get itemDividerDotted;
+
+  /// No description provided for @itemDividerRemove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizgiyi kaldır'**
+  String get itemDividerRemove;
+
+  /// No description provided for @attachSectionFiles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya ve bağlantı'**
+  String get attachSectionFiles;
+
+  /// No description provided for @attachSectionCapture.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kamera ve kayıt'**
+  String get attachSectionCapture;
+
+  /// No description provided for @fileUseAttachInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota ek olarak girer; oynatılabilir'**
+  String get fileUseAttachInfo;
+
+  /// No description provided for @allNotesChip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get allNotesChip;
+
+  /// No description provided for @archiveAiSearch.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI ile ara (anlamca)'**
+  String get archiveAiSearch;
+
+  /// No description provided for @archiveAiSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arşivde anlamca ara…'**
+  String get archiveAiSearchHint;
+
+  /// No description provided for @untitledNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlıksız not'**
+  String get untitledNote;
+
+  /// No description provided for @trashAnalysis.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çöp analizi'**
+  String get trashAnalysis;
+
+  /// No description provided for @trashAnalyze.
+  ///
+  /// In tr, this message translates to:
+  /// **'Akıllı analiz'**
+  String get trashAnalyze;
+
+  /// No description provided for @trashAiRun.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI ile derin analiz'**
+  String get trashAiRun;
+
+  /// No description provided for @trashAiRunning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Analiz ediliyor…'**
+  String get trashAiRunning;
+
+  /// No description provided for @trashAiInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihazdaki kurallar hazır. AI analizi notların kısa dökümünü modele gönderir; kilitli notlar gönderilmez.'**
+  String get trashAiInfo;
+
+  /// No description provided for @trashAiNothing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Analize gönderilecek not yok (kilitli notlar gönderilmez)'**
+  String get trashAiNothing;
+
+  /// No description provided for @trashSuggestRestore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri yüklemeyi düşün'**
+  String get trashSuggestRestore;
+
+  /// No description provided for @trashSuggestDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güvenle silinebilir'**
+  String get trashSuggestDelete;
+
+  /// No description provided for @trashSuggestNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öneri yok'**
+  String get trashSuggestNone;
+
+  /// No description provided for @trashRestoreAllSuggested.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü geri yükle ({count})'**
+  String trashRestoreAllSuggested(int count);
+
+  /// No description provided for @trashDeleteAllSuggested.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü sil ({count})'**
+  String trashDeleteAllSuggested(int count);
+
+  /// No description provided for @trashStatNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 not} other{{count} not}}'**
+  String trashStatNotes(int count);
+
+  /// No description provided for @trashStatAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 ek} other{{count} ek}}'**
+  String trashStatAttachments(int count);
+
+  /// No description provided for @trashStatSoon.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not 3 gün içinde gidiyor'**
+  String trashStatSoon(int count);
+
+  /// No description provided for @trashStatLocked.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kilitli (incelenmedi)'**
+  String trashStatLocked(int count);
+
+  /// No description provided for @trashReasonEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boş not — kaybedilecek bir şey yok'**
+  String get trashReasonEmpty;
+
+  /// No description provided for @trashReasonDuplicate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aynısı notlarında zaten var'**
+  String get trashReasonDuplicate;
+
+  /// No description provided for @trashReasonDuplicateOf.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aynısı notlarında var: {title}'**
+  String trashReasonDuplicateOf(String title);
+
+  /// No description provided for @trashReasonDuplicateInTrash.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çöpte daha yeni bir kopyası var'**
+  String get trashReasonDuplicateInTrash;
+
+  /// No description provided for @trashReasonOpenTasks.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 yapılmamış madde var} other{{count} yapılmamış madde var}}'**
+  String trashReasonOpenTasks(int count);
+
+  /// No description provided for @trashReasonReminder.
+  ///
+  /// In tr, this message translates to:
+  /// **'İleri tarihli hatırlatıcısı var'**
+  String get trashReasonReminder;
+
+  /// No description provided for @trashReasonSensitive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifre, IBAN, telefon gibi bilgi içeriyor'**
+  String get trashReasonSensitive;
+
+  /// No description provided for @trashReasonAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 ek taşıyor} other{{count} ek taşıyor}}'**
+  String trashReasonAttachments(int count);
+
+  /// No description provided for @trashReasonSubstantial.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uzun, emek verilmiş metin'**
+  String get trashReasonSubstantial;
+
+  /// No description provided for @trashReasonAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI önerisi'**
+  String get trashReasonAi;
 }
 
 class _AppLocalizationsDelegate

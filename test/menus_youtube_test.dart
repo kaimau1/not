@@ -121,12 +121,26 @@ void main() {
 
       expect(find.text('Yeni sayfa'), findsNothing);
       expect(find.text('YAKALA — İÇERİKTEN NOT OLUŞTURUR'), findsNothing);
-      expect(find.text('Görsel ve çizim'), findsOneWidget);
+      // 2026-10-20: üç bölüm (Not içeriği · Dosya ve bağlantı · Kamera ve
+      // kayıt); PDF/Slayt/Ses dosyası/Galeriden video/Görseli ek olarak/
+      // Dosyayı metne dök tek "Dosya ekle"de.
+      expect(find.text('Dosya ve bağlantı'), findsOneWidget);
+      expect(find.text('Kamera ve kayıt'), findsOneWidget);
+      for (final gone in [
+        'PDF ekle',
+        'Slayt ekle',
+        'Görseli ek olarak yükle',
+        'Ses dosyası ekle',
+        'Galeriden video',
+        'Dosyayı metne dök',
+      ]) {
+        expect(find.text(gone), findsNothing, reason: gone);
+      }
 
-      // Üç sütun: ilk üç görsel seçeneği aynı satırda.
-      final a = tester.getRect(find.text('Görsel ekle'));
-      final b = tester.getRect(find.text('Görseli ek olarak yükle'));
-      final c = tester.getRect(find.text('Fotoğraf çek'));
+      // Izgara: "Dosya ekle", "Görsel ekle", "YouTube videosu" aynı satırda.
+      final a = tester.getRect(find.text('Dosya ekle'));
+      final b = tester.getRect(find.text('Görsel ekle'));
+      final c = tester.getRect(find.text('YouTube videosu'));
       expect(a.top, closeTo(b.top, 20));
       expect(b.top, closeTo(c.top, 20));
       expect(a.center.dx, lessThan(b.center.dx));

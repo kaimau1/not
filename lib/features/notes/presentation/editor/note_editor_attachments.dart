@@ -228,11 +228,16 @@ extension _EditorAttachments on _NoteEditorScreenState {
           if (mounted) _showSnack(l10n.quickAddFileUnsupported);
           return;
         }
+        // Ek levhası sadeleşti (2026-10-20): "Görseli ek olarak yükle" ayrı
+        // giriş değil, burada sorulur.
+        final use = await _askFileUse(kind);
+        if (use == null || !mounted) return;
         for (final f in same) {
           if (!mounted) return;
           await _addImageBytes(
             await f.readAsBytes(),
             nameOf(f).split(RegExp(r'[\\/]')).last,
+            asFile: use == _FileUse.attach,
           );
         }
       case PickedFileKind.pdf:
@@ -240,10 +245,78 @@ extension _EditorAttachments on _NoteEditorScreenState {
       case PickedFileKind.slides:
         await handOff([same.first], _pickSlide);
       case PickedFileKind.video:
-        await handOff([same.first], _addVideoFromGallery);
       case PickedFileKind.audio:
-        await handOff([same.first], _pickAudioFile);
+        // "Ses dosyası ekle", "Galeriden video" ve "Dosyayı metne dök" ayrı
+        // girişler değil: tür tanınır, ne yapılacağı sorulur.
+        final use = await _askFileUse(kind);
+        if (use == null || !mounted) return;
+        await handOff(
+          [same.first],
+          use == _FileUse.transcribe
+              ? _transcribeFile
+              : kind == PickedFileKind.video
+              ? _addVideoFromGallery
+              : _pickAudioFile,
+        );
     }
+  }
+
+  /// "Dosya ekle"de seçilen dosyayla ne yapılacağı (görsel: sayfaya / ek
+  /// olarak; ses-video: ek olarak / metne dök). İptalde null.
+  Future<_FileUse?> _askFileUse(PickedFileKind kind) {
+    final l10n = context.l10n;
+    final image = kind == PickedFileKind.image;
+    final options = <(_FileUse, IconData, String, String)>[
+      if (image) ...[
+        (
+          _FileUse.page,
+          Icons.image_outlined,
+          l10n.addImage,
+          l10n.addImageOnPageSubtitle,
+        ),
+        (
+          _FileUse.attach,
+          Icons.attachment_outlined,
+          l10n.addImageAsFile,
+          l10n.addImageAsFileSubtitle,
+        ),
+      ] else ...[
+        (
+          _FileUse.attach,
+          kind == PickedFileKind.video
+              ? Icons.video_library_outlined
+              : Icons.library_music_outlined,
+          kind == PickedFileKind.video
+              ? l10n.addVideoFromGallery
+              : l10n.addAudioFile,
+          l10n.fileUseAttachInfo,
+        ),
+        (
+          _FileUse.transcribe,
+          Icons.subtitles_outlined,
+          l10n.transcribeFile,
+          l10n.transcribeFileSubtitle,
+        ),
+      ],
+    ];
+    return showAppSheet<_FileUse>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final (use, icon, title, info) in options)
+              ListTile(
+                leading: Icon(icon),
+                title: Text(title),
+                subtitle: Text(info),
+                onTap: () => Navigator.pop(sheetContext, use),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// "Foto çek not al": kamerayla fotoğraf çekip nota gömer. Çekilen fotoğraf
@@ -1502,8 +1575,6 @@ extension _EditorAttachments on _NoteEditorScreenState {
         );
       case 'image':
         await _pickImage();
-      case 'image-file':
-        await _pickImage(asFile: true);
       case 'paste-attachment':
         await _pasteAttachment();
       case 'camera':
@@ -1512,24 +1583,16 @@ extension _EditorAttachments on _NoteEditorScreenState {
         await _scanDocument();
       case 'qr':
         await _scanQr();
+      // PDF, sunum, ses dosyası, galeriden video, görseli ek olarak ve
+      // dosyayı metne dök TEK girişte (2026-10-20, bkz. attach_sheet.dart).
       case 'any-file':
         await _attachAnyFile();
-      case 'pdf':
-        await _pickPdf();
-      case 'slide':
-        await _pickSlide();
       case 'drawing':
         await _addDrawing();
       case 'audio':
         await _recordAudio();
-      case 'audio-file':
-        await _pickAudioFile();
-      case 'transcribe':
-        await _transcribeFile();
       case 'video':
         await _addVideo();
-      case 'video-gallery':
-        await _addVideoFromGallery();
       case 'youtube':
         await _addYouTube();
       // 'color' BURADAN KALKTI: sayfa görünümü artık biçim şeridinde
@@ -2115,3 +2178,6 @@ extension _EditorAttachments on _NoteEditorScreenState {
     }
   }
 }
+
+/// "Dosya ekle"de seçilen dosyanın kullanımı (bkz. `_askFileUse`).
+enum _FileUse { page, attach, transcribe }

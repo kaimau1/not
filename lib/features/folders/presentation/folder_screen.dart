@@ -437,6 +437,7 @@ class _NotesGrid extends ConsumerWidget {
                           ownerId: ownerId,
                           readOnly: readOnly,
                           highlightQuery: needle,
+                          showFolder: false,
                         ),
                       );
                     },

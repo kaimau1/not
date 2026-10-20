@@ -8,6 +8,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../data/notes_repository.dart';
 import 'notes_providers.dart';
+import 'trash_analysis_sheet.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../core/utils/rich_text.dart';
 import '../domain/attachment.dart';
@@ -183,6 +184,15 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
               return Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // AKILLI ANALİZ (2026-10-20): neyi geri yükleyip neyi
+                  // güvenle silebileceğini söyler (cihaz kuralları + AI).
+                  IconButton(
+                    tooltip: l10n.trashAnalyze,
+                    icon: const Icon(Icons.insights_outlined),
+                    onPressed: _emptying
+                        ? null
+                        : () => showTrashAnalysisSheet(context, notes),
+                  ),
                   IconButton(
                     tooltip: l10n.restoreAll,
                     icon: const Icon(Icons.restore_outlined),

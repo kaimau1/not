@@ -17,13 +17,17 @@ import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/widgets/press_scale.dart';
 import '../../../core/widgets/undo_snackbar.dart';
+import '../../folders/data/folders_repository.dart';
 import '../../settings/settings_providers.dart';
 import '../data/note_shares_repository.dart';
 import '../data/notes_repository.dart';
+import '../domain/archive_paper.dart';
 import '../domain/note.dart';
+import '../domain/note_item.dart';
 import '../domain/note_type.dart';
 import '../domain/page_notes.dart';
 import '../data/drive_store.dart' show localFilesRevisionProvider;
+import 'editor/notebook_paper.dart';
 import 'note_actions_sheet.dart';
 import 'note_card_media.dart';
 import 'notes_providers.dart';
@@ -285,9 +289,14 @@ class NoteCard extends ConsumerWidget {
     this.highlightQuery = '',
     this.ownerId,
     this.readOnly = false,
+    this.showFolder = true,
   });
 
   final Note note;
+
+  /// Arama sürerken notun klasör adı kartta yazsın mı? Klasörün kendi
+  /// ekranında (zaten o klasördeyiz) false.
+  final bool showFolder;
 
   /// PAYLAŞILAN klasörde çizilen kartta notun SAHİBİ; kendi notlarımda null.
   /// Kart bunu editöre taşır, yoksa editör notu kendi koleksiyonumda arar ve
@@ -422,6 +431,44 @@ class NoteCard extends ConsumerWidget {
     );
   }
 
+  /// Kartın gövdesini notun defter kâğıdıyla çizer (bkz. [Note.paged]).
+  static Widget _withCardPaper(
+    BuildContext context,
+    Note note,
+    Widget child,
+    BorderRadius radius,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    final paper = note.archivePaper;
+    final line = scheme.outlineVariant.withValues(alpha: 0.6);
+    // Kartın küçük yazısına göre satır aralığı (bodyMedium ~14 × 1.43).
+    const gap = 20.0;
+    Widget body = child;
+    if (paper.ruled) {
+      body = RuledLines(
+        gap: gap,
+        color: line,
+        dashed: paper == ArchivePaper.dashed,
+        anchorParagraphs: true,
+        child: body,
+      );
+    }
+    return ClipRRect(
+      borderRadius: radius,
+      child: CustomPaint(
+        painter: NotebookPaperPainter(
+          style: paper,
+          line: line,
+          margin: scheme.error.withValues(alpha: 0.35),
+          spine: scheme.shadow.withValues(alpha: 0.08),
+          gap: 14,
+          contentRuled: true,
+        ),
+        child: body,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
@@ -480,6 +527,27 @@ class NoteCard extends ConsumerWidget {
     final cover = media?.cover;
     final hasCover = hero != null || cover != null;
     final borderWidth = note.frameColor != NoteColor.none ? 2.5 : 1.0;
+    // ARAMA SONUCUNDA KLASÖR (kullanıcı isteği 2026-10-20: "not ararken
+    // bulunan notun hangi klasörde olduğu da yazmalı"). Yalnız arama
+    // sürerken: normal ızgarada kart zaten klasörün içinde ya da klasör
+    // şeridinin altında. Kart yalnız KENDİ klasörünün adını izler.
+    // "Tümü" görünümünde de (klasördekiler ana ekrana karıştığı için).
+    final folderId = note.folderId;
+    final folderName =
+        !showFolder ||
+            folderId == null ||
+            (highlightQuery.trim().isEmpty &&
+                !(ref.watch(showAllNotesProvider) &&
+                    ref.watch(selectedFolderProvider) == null))
+        ? null
+        : ref.watch(
+            foldersStreamProvider.select(
+              (async) => async.value
+                  ?.where((f) => f.id == folderId)
+                  .firstOrNull
+                  ?.name,
+            ),
+          );
 
     final padded = Padding(
       // Başlıksız kartta sağdan biraz içerik payı bırakılır ki ilk satır
@@ -553,6 +621,10 @@ class NoteCard extends ConsumerWidget {
               CardMediaBody(plan: media),
             ],
           ],
+          if (folderName != null && folderName.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _FolderBadge(name: folderName),
+          ],
           // ALT META SATIRI: durum simgeleri · ilk etiket · sağda tarih.
           // Üçü tek bantta olduğu için kartın yüksekliği rozet sayısına göre
           // değişmiyor; eskiden etiketler Wrap ile ikinci satıra taşıyordu.
@@ -601,8 +673,25 @@ class NoteCard extends ConsumerWidget {
     // sabitli video/görsel ya da notun tek görseli/videosu. Kenarlık `Ink`
     // tarafından çocuğa dolgu olarak eklendiği için kapak çerçevenin İÇİNDE
     // kalır; köşe yarıçapı kenarlık kadar küçültülür.
+    // DEFTER KÂĞIDI KARTTA DA (kullanıcı isteği 2026-10-20: "defter modu
+    // açık olanlar dashboard'da da öyle görünmeli — çizgili sayfa kartta da
+    // çizgili"). Desen editördekiyle aynı; çizgili desenlerde çizgiler
+    // kartın yazı satırlarının altına oturur (bkz. RuledLines).
+    final paperBody = note.paged && !note.locked
+        ? _withCardPaper(
+            context,
+            note,
+            padded,
+            // Cilt gölgesi köşelerden taşmasın; kapak varsa üst köşeler düz.
+            hasCover
+                ? BorderRadius.vertical(
+                    bottom: Radius.circular(12 - borderWidth),
+                  )
+                : BorderRadius.circular(12 - borderWidth),
+          )
+        : padded;
     final content = !hasCover
-        ? padded
+        ? paperBody
         : Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -618,7 +707,7 @@ class NoteCard extends ConsumerWidget {
                         bubbleCount: media!.bubbleCount,
                       ),
               ),
-              padded,
+              paperBody,
             ],
           );
 
@@ -816,6 +905,145 @@ class NoteCard extends ConsumerWidget {
   }
 }
 
+/// Arama sonucundaki kartta notun klasörü (bkz. NoteCard.build).
+class _FolderBadge extends StatelessWidget {
+  const _FolderBadge({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: scheme.secondaryContainer.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.folder_outlined,
+            size: 13,
+            color: scheme.onSecondaryContainer,
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: scheme.onSecondaryContainer,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Kart önizlemesindeki madde satırı; maddenin altında ayırıcı çizgi varsa
+/// kartta da çizilir (bkz. [NoteItem.divider]).
+Widget _withItemDivider(BuildContext context, NoteItem item, Widget row) {
+  if (item.divider.isEmpty) {
+    return Padding(padding: const EdgeInsets.only(bottom: 2), child: row);
+  }
+  final color = Theme.of(context).colorScheme.primary.withValues(alpha: 0.6);
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 4),
+    child: CustomPaint(
+      foregroundPainter: _CardDividerPainter(item.divider, color),
+      child: Padding(padding: const EdgeInsets.only(bottom: 3), child: row),
+    ),
+  );
+}
+
+class _CardDividerPainter extends CustomPainter {
+  const _CardDividerPainter(this.kind, this.color);
+
+  final String kind;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final y = size.height - 0.5;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = kind == NoteItem.dividerDotted ? 2 : 1.2
+      ..strokeCap = StrokeCap.round;
+    final step = switch (kind) {
+      NoteItem.dividerDashed => 8.0,
+      NoteItem.dividerDotted => 5.0,
+      _ => 0.0,
+    };
+    if (step == 0) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+      return;
+    }
+    final dash = kind == NoteItem.dividerDotted ? 0.0 : 4.5;
+    for (var x = 0.0; x < size.width; x += step) {
+      canvas.drawLine(
+        Offset(x, y),
+        Offset(math.min(x + dash, size.width), y),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CardDividerPainter old) =>
+      old.kind != kind || old.color != color;
+}
+
+/// Uzun yapılacaklar listesinin kartta İLERLEMESİ (2026-10-20 iyileştirme
+/// turu): "+40 öğe daha" kaç tanesinin bittiğini söylemiyordu. Yalnız en az
+/// 4 maddeli ve en az biri işaretli listede çizilir.
+class _ChecklistProgress extends StatelessWidget {
+  const _ChecklistProgress({required this.items});
+
+  final List<NoteItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = items.length;
+    final done = items.where((i) => i.checked).length;
+    if (total < 4 || done == 0) return const SizedBox.shrink();
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                value: done / total,
+                minHeight: 3,
+                backgroundColor: scheme.outlineVariant.withValues(alpha: 0.4),
+                color: scheme.primary.withValues(alpha: 0.75),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '$done/$total',
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // _MiniBadge (etiket/alarm için küçük hap rozeti) kaldırıldı: kart meta
 // satırı artık düz simge + metin, ayrı bir zemin kutusu taşımıyor.
 
@@ -946,9 +1174,10 @@ class _NotePreview extends StatelessWidget {
             if (items.isNotEmpty) ...[
               if (hasBody) const SizedBox(height: 6),
               for (final item in items.take(maxItems))
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
-                  child: Row(
+                _withItemDivider(
+                  context,
+                  item,
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
@@ -997,6 +1226,7 @@ class _NotePreview extends StatelessWidget {
                     ),
                   ),
                 ),
+              _ChecklistProgress(items: items),
             ],
           ],
         );
@@ -1024,9 +1254,10 @@ class _NotePreview extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             for (var i = 0; i < shown.length; i++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 2),
-                child: Row(
+              _withItemDivider(
+                context,
+                shown[i],
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (note.type == NoteType.checklist)
@@ -1087,6 +1318,8 @@ class _NotePreview extends StatelessWidget {
                   ),
                 ),
               ),
+            if (note.type == NoteType.checklist)
+              _ChecklistProgress(items: visible),
           ],
         );
       case NoteType.pdf:

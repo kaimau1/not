@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/search_fold.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../ai/data/semantic_search.dart';
 import 'note_card.dart';
 import 'note_grid.dart';
 import 'note_sort_menu.dart';
@@ -28,6 +29,11 @@ class ArchiveScreen extends ConsumerStatefulWidget {
 class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
   final _searchController = TextEditingController();
   bool _searching = false;
+
+  /// AI (anlamsal) arama açık mı — ana ekrandaki parıltı anahtarının
+  /// arşivdeki karşılığı (kullanıcı isteği 2026-10-20). Ekran kapanınca
+  /// unutulur; ana ekranın tercihini değiştirmez.
+  bool _semantic = false;
 
   @override
   void dispose() {
@@ -57,7 +63,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  hintText: l10n.searchHint,
+                  hintText: _semantic ? l10n.archiveAiSearchHint : l10n.searchHint,
                 ),
               )
             : Column(
@@ -77,6 +83,14 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
                 ],
               ),
         actions: [
+          if (_searching)
+            IconButton(
+              tooltip: l10n.archiveAiSearch,
+              isSelected: _semantic,
+              icon: const Icon(Icons.auto_awesome_outlined),
+              selectedIcon: const Icon(Icons.auto_awesome),
+              onPressed: () => setState(() => _semantic = !_semantic),
+            ),
           IconButton(
             tooltip: _searching ? l10n.close : l10n.searchHint,
             icon: Icon(_searching ? Icons.close : Icons.search),
@@ -100,14 +114,24 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
           valueListenable: _searchController,
           builder: (context, value, _) {
             final needle = foldForSearch(value.text.trim());
+            // AI açıkken anlamca yakın notlar (en az 3 harf — ana ekranla
+            // aynı eşik); sonuç gelene kadar düz arama sonuçları durur.
+            final semanticQuery = value.text.trim();
+            final semantic = _semantic && semanticQuery.length > 2
+                ? ref.watch(archivedSemanticSearchProvider(semanticQuery))
+                : null;
             // Eşleşme kuralı ana ekranınkiyle AYNI işlevden gelir.
             final notes = needle.isEmpty
                 ? all
-                : [
-                    for (final n in all)
-                      if (noteMatchesQuery(n, needle)) n,
-                  ];
+                : semantic?.value ??
+                      [
+                        for (final n in all)
+                          if (noteMatchesQuery(n, needle)) n,
+                      ];
             if (notes.isEmpty) {
+              if (semantic?.isLoading ?? false) {
+                return const Center(child: CircularProgressIndicator());
+              }
               return needle.isEmpty
                   ? EmptyState(
                       icon: Icons.archive_outlined,
@@ -120,6 +144,8 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
             }
             return Column(
               children: [
+                if (semantic?.isLoading ?? false)
+                  const LinearProgressIndicator(minHeight: 2),
                 if (needle.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
