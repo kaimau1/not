@@ -6,6 +6,7 @@ import '../features/auth/presentation/auth_providers.dart';
 import '../features/folders/data/shared_activity_service.dart';
 import '../features/notes/data/data_migrations.dart';
 import '../features/notes/data/place_reminders.dart';
+import '../features/notes/data/push_service.dart';
 import '../features/notes/data/reminder_service.dart';
 import '../features/notes/data/share_intake.dart';
 import '../features/notes/data/upload_queue.dart';
@@ -52,6 +53,8 @@ class AppServices extends ConsumerWidget {
       ref.listen<void>(prefsSyncProvider, _ignore);
       // Not kilidi kapısı: yöntem + şifre/desen sorusu (F4.8).
       ref.listen<void>(noteLockBinderProvider, _ignore);
+      // Uygulama kapalıyken paylaşım bildirimleri (FCM, F4.6).
+      ref.listen<void>(pushServiceProvider, _ignore);
     }
     return child;
   }

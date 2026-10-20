@@ -104,6 +104,20 @@ void handleNotificationResponse(Ref ref, NotificationResponse response) {
     } catch (_) {}
     return;
   }
+  // Arkadaştan gelen not (itme bildirimi, F4.6): gelen kutusu.
+  if (payload == 'inbox') {
+    try {
+      ref.read(routerProvider).push('/inbox');
+    } catch (_) {}
+    return;
+  }
+  // Paylaşılan klasör (sohbet / davet): klasörler ekranı.
+  if (payload.startsWith('folder:')) {
+    try {
+      ref.read(routerProvider).push('/folders');
+    } catch (_) {}
+    return;
+  }
   // Benimle paylaşılan notta hareket: notu SAHİBİNİN altından aç.
   if (payload.startsWith('shared:')) {
     final rest = payload.substring('shared:'.length);

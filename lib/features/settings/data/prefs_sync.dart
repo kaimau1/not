@@ -51,6 +51,8 @@ const kSyncedPrefKeys = <String>[
   'briefing_enabled',
   'briefing_minutes',
   'assistant_voice',
+  // Sunucu da okur: kapalıysa itme bildirimi gönderilmez (F4.6).
+  'shared_notifications',
   captureModeDefaultKey,
   'user_templates_v1',
   // Not kilidi yöntemi + şifre/desen ÖZETİ (F4.8; düz sır değil).

@@ -1,6 +1,6 @@
 {
   "name": "not-functions",
-  "description": "Not uygulaması Cloud Functions — yalnız kullanıcı arama (searchUsers)",
+  "description": "Not uygulaması Cloud Functions — kullanıcı arama (searchUsers) ve paylaşım itme bildirimleri (push.js)",
   "engines": {
     "node": "20"
   },

@@ -46,6 +46,8 @@ class AccountService {
     'aiReports',
     // Ayar senkronu, kilit sırrı (F4.5, F4.8).
     'meta',
+    // İtme bildirimi jetonları (F4.6).
+    'fcmTokens',
   ];
 
   /// Her notun altında boşaltılan alt koleksiyonlar (F3.13 ağır belge).

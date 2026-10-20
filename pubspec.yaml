@@ -130,6 +130,7 @@ dependencies:
   # Sürüm firebase_core 4.12.1 ile EŞ ZAMANLI yayın: daha yenisi core'u (ve
   # Android Firebase BoM'unu) öbür Firebase eklentilerinden ayırırdı.
   firebase_crashlytics: ^5.2.6
+  firebase_messaging: ^16.7.0
 
 dev_dependencies:
   flutter_test:

@@ -141,3 +141,9 @@ exports.searchUsers = onCall(async (request) => {
   return { results: results };
 });
 
+// Arka plan itme bildirimleri (F4.6) — bkz. push.js.
+const push = require("./push");
+exports.pushFolderMessage = push.pushFolderMessage;
+exports.pushFolderInvite = push.pushFolderInvite;
+exports.pushNoteShared = push.pushNoteShared;
+exports.pushInboxNote = push.pushInboxNote;

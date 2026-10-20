@@ -31,6 +31,15 @@
         android:name="${applicationName}"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher">
+        <!-- İTME BİLDİRİMİ (FCM, F4.6): uygulama kapalıyken sistemin
+             gösterdiği bildirimin küçük simgesi (beyaz siluet) ve kanalı —
+             yerel paylaşım bildirimleriyle aynı kanal. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_notlar" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="shared_folders" />
         <!-- QR/barkod ve metin tanıma (OCR) modelleri Play Hizmetleri'nden
              gelir (gradle.properties → mobile_scanner.useUnbundled ve
              app/build.gradle.kts → play-services-mlkit-text-recognition;
