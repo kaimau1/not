@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/painting.dart' show Color;
@@ -15,6 +14,7 @@ import '../domain/note_share_text.dart';
 import '../domain/note_type.dart';
 import 'attachment_repository.dart';
 import 'note_pdf.dart';
+import 'pdf/pdf_page_render.dart';
 
 /// Paylaşım levhasının TEK DOKUNUŞLUK dosya çıktıları (kullanıcı isteği
 /// 2026-10-16: "paylaşım seçenekleri düzenlenmeli ve geliştirilmeli").
@@ -119,34 +119,12 @@ class NoteQuickExport {
       final dir = await Directory.systemTemp.createTemp('note_png_');
       final count = doc.pages.length < maxPages ? doc.pages.length : maxPages;
       for (var i = 0; i < count; i++) {
-        final page = doc.pages[i];
-        final scale = width / page.width;
-        final image = await page.render(
-          fullWidth: page.width * scale,
-          fullHeight: page.height * scale,
-          backgroundColor: 0xFFFFFFFF,
-        );
-        if (image == null) continue;
-        try {
-          final completer = Completer<ui.Image>();
-          ui.decodeImageFromPixels(
-            image.pixels,
-            image.width,
-            image.height,
-            ui.PixelFormat.bgra8888,
-            completer.complete,
-          );
-          final decoded = await completer.future;
-          final png = await decoded.toByteData(format: ui.ImageByteFormat.png);
-          decoded.dispose();
-          if (png == null) continue;
-          final suffix = count > 1 ? '_${i + 1}' : '';
-          final file = File('${dir.path}/$name$suffix.png');
-          await file.writeAsBytes(png.buffer.asUint8List());
-          out.add(file.path);
-        } finally {
-          image.dispose();
-        }
+        final png = await renderPdfPagePng(doc.pages[i], width: width);
+        if (png == null) continue;
+        final suffix = count > 1 ? '_${i + 1}' : '';
+        final file = File('${dir.path}/$name$suffix.png');
+        await file.writeAsBytes(png);
+        out.add(file.path);
       }
     } finally {
       await doc.dispose();

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Firestore belge boyutu TAHMİNİ (F1.6). Belge sınırı 1 MiB; çizim
@@ -86,8 +88,10 @@ bool sameFirestoreValue(Object? a, Object? b) {
 /// karşılaştırılacak "son yazılan" kayıt kopya olmalı: çizim sürerken
 /// etkin çizginin nokta listesi YERİNDE büyüyor (`InkController`) — aynı
 /// liste örneği saklansaydı büyümüş liste "değişmedi" görünür, yazım
-/// atlanırdı.
+/// atlanırdı. Çizim noktası gibi `List<double>` kutusuz `Float64List`e
+/// kopyalanır (değer birebir; kopya yalnız karşılaştırmada kullanılır).
 Object? copyFirestoreValue(Object? v) => switch (v) {
+  List<double> l => Float64List.fromList(l),
   List l => [for (final e in l) copyFirestoreValue(e)],
   Map m => <String, dynamic>{
     for (final e in m.entries) e.key.toString(): copyFirestoreValue(e.value),

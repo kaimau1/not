@@ -1,4 +1,6 @@
+import 'dart:collection';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
@@ -69,6 +71,9 @@ class InkStroke {
   final double width;
 
   /// Düzleştirilmiş nokta listesi: [x1, y1, x2, y2, ...], her biri 0–1.
+  /// Kayıttan okunan çizgide `Float32List` (F7.2: kutulu double'ın ~1/5'i;
+  /// float32 yuvarlaması 0–1 aralığında ~1e-8, ekranda görünmez). Çizim
+  /// SÜRERKEN büyüyen çizgi büyüyebilir liste kalır ([InkController]).
   final List<double> points;
 
   /// **OK** mu? true ise çizgi serbest bir el yazısı değil, iki uçlu bir
@@ -87,17 +92,27 @@ class InkStroke {
     page: (map['p'] as num?)?.toInt() ?? 1,
     color: (map['c'] as num?)?.toInt() ?? 0xFF000000,
     width: (map['w'] as num?)?.toDouble() ?? 0.004,
-    points: [
-      for (final v in (map['d'] as List?) ?? const []) (v as num).toDouble(),
-    ],
+    points: _points(map['d'] as List?),
     arrow: map['a'] as bool? ?? false,
   );
+
+  static List<double> _points(List? raw) {
+    if (raw == null || raw.isEmpty) return Float32List(0);
+    if (raw is Float32List) return raw;
+    final out = Float32List(raw.length);
+    for (var i = 0; i < raw.length; i++) {
+      out[i] = (raw[i] as num).toDouble();
+    }
+    return out;
+  }
 
   Map<String, dynamic> toMap() => {
     'p': page,
     'c': color,
     'w': width,
-    'd': points,
+    // Kopyasız düz liste görünümü: Firestore kodlayıcısı `Float32List`i
+    // tipli dizi (float[]) olarak yollar, sunucu kabul etmez.
+    'd': points is Float32List ? UnmodifiableListView(points) : points,
     if (arrow) 'a': true,
   };
 }

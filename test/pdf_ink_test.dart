@@ -27,7 +27,10 @@ void main() {
     expect(back.ink.first.page, 2);
     expect(back.ink.first.color, 0xFFE53935);
     expect(back.ink.first.width, closeTo(0.005, 1e-9));
-    expect(back.ink.first.points, [0.1, 0.2, 0.3, 0.4]);
+    // Float32 (F7.2): değer ~1e-8 yuvarlanır.
+    expect(back.ink.first.points, [
+      for (final v in [0.1, 0.2, 0.3, 0.4]) closeTo(v, 1e-7),
+    ]);
   });
 
   test('clearing ink writes an empty layer', () {

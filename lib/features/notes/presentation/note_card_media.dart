@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:crypto/crypto.dart';
@@ -14,6 +13,7 @@ import 'package:pdfrx/pdfrx.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/local_file.dart';
 import '../../../core/utils/youtube.dart';
+import '../data/pdf/pdf_page_render.dart';
 import '../data/video_frame.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
@@ -913,6 +913,16 @@ abstract final class CardThumbs {
   static final _cache = <String, Future<Uint8List?>>{};
   static const _cap = 64;
 
+  /// Bellekteki baytların tavanı (F7.1): 64 PDF kapağı PNG'yken yüzlerce
+  /// KB'tan onlarca MB'a çıkabiliyordu. Aşınca en eski kullanılan düşer
+  /// (disk kopyası kalır).
+  static const _byteBudget = 6 * 1024 * 1024;
+  static final _sizes = <String, int>{};
+  static int _bytes = 0;
+
+  /// Bellekte tutulan küçük resim baytları (teşhis — F9.2).
+  static int get memoryBytes => _bytes;
+
   /// Üretim kuyruğu: bir önceki iş bitmeden yenisi başlamaz.
   static Future<void> _queue = Future.value();
 
@@ -930,10 +940,15 @@ abstract final class CardThumbs {
   /// Bellekteki küçük resim baytlarını bırakır (disk önbelleği kalır).
   /// Uygulama arka plana geçince ve sistem bellek sıkışıklığı bildirince
   /// çağrılır — geri dönüşte diskten anında okunur.
-  static void clearMemory() => _cache.clear();
+  static void clearMemory() {
+    _cache.clear();
+    _sizes.clear();
+    _bytes = 0;
+  }
 
   static Future<Uint8List?> pdfPage(Attachment pdf, int page) => _get(
-    'p|${pdf.localPath}|${pdf.sizeBytes}|$page',
+    // 'pj': kapak JPEG (eski 'p' anahtarlı PNG'ler diskte yeniden kullanılmaz).
+    'pj|${pdf.localPath}|${pdf.sizeBytes}|$page',
     () => _renderPdf(pdf.localPath, page),
   );
 
@@ -948,8 +963,33 @@ abstract final class CardThumbs {
     }
     final future = _load(key, make).catchError((Object _) => null);
     _cache[key] = future;
-    if (_cache.length > _cap) _cache.remove(_cache.keys.first);
+    if (_cache.length > _cap) _forget(_cache.keys.first);
+    future.then((bytes) {
+      // Bu arada düşürüldüyse sayılmaz.
+      if (bytes == null || !identical(_cache[key], future)) return;
+      _bytes += bytes.length - (_sizes[key] ?? 0);
+      _sizes[key] = bytes.length;
+      _trim(key);
+    });
     return future;
+  }
+
+  static void _forget(String key) {
+    _cache.remove(key);
+    _bytes -= _sizes.remove(key) ?? 0;
+  }
+
+  /// Bütçe aşılınca en eski kullanılanları düşürür; [keep] (az önce gelen)
+  /// tek başına bütçeyi aşsa da kalır.
+  static void _trim(String keep) {
+    while (_bytes > _byteBudget) {
+      final oldest = _cache.keys.firstWhere(
+        (k) => k != keep,
+        orElse: () => keep,
+      );
+      if (oldest == keep) break;
+      _forget(oldest);
+    }
   }
 
   static Future<Uint8List?> _load(
@@ -998,32 +1038,20 @@ abstract final class CardThumbs {
       final pages = document.pages;
       if (pages.isEmpty) return null;
       final page = pages[(pageNumber - 1).clamp(0, pages.length - 1)];
-      if (page.width <= 0 || page.height <= 0) return null;
       // Kart kapağı ~200 dp genişlikte: 3x ekranda ~600 px; 480 px yeter.
-      const targetWidth = 480.0;
-      final scale = targetWidth / page.width;
-      final rendered = await page.render(
-        fullWidth: targetWidth,
-        fullHeight: page.height * scale,
-        backgroundColor: 0xFFFFFFFF,
-      );
-      if (rendered == null) return null;
-      try {
-        final image = await rendered.createImage();
-        try {
-          final png = await image.toByteData(format: ui.ImageByteFormat.png);
-          return png?.buffer.asUint8List();
-        } finally {
-          image.dispose();
-        }
-      } finally {
-        rendered.dispose();
-      }
+      return await renderPdfPageJpeg(page, width: 480);
     } finally {
       await document.dispose();
     }
   }
 
   @visibleForTesting
-  static void clear() => _cache.clear();
+  static void clear() => clearMemory();
+
+  /// Testte üretimi taklit etmek için (disk ve pdfium olmadan).
+  @visibleForTesting
+  static Future<Uint8List?> debugGet(
+    String key,
+    Future<Uint8List?> Function() make,
+  ) => _get(key, make);
 }

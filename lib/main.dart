@@ -18,7 +18,9 @@ import 'core/crash_reporting.dart';
 import 'core/error_log.dart';
 import 'core/utils/device_storage.dart';
 import 'core/utils/display_rate.dart';
+import 'core/utils/image_cache_budget.dart';
 import 'core/utils/local_file.dart';
+import 'core/utils/prefs_footprint.dart';
 import 'core/widgets/setup_required_screen.dart';
 import 'features/notes/data/local_notes_store.dart';
 import 'features/notes/presentation/note_card_media.dart' show CardThumbs;
@@ -96,6 +98,13 @@ Future<void> main() async {
   );
 
   final prefs = await SharedPreferences.getInstance();
+  if (kDebugMode) {
+    final footprint = prefsFootprint(prefs);
+    debugPrint(
+      'prefs: ${footprint.totalChars} karakter; en büyükler: '
+      '${footprint.largest.map((e) => '${e.key}=${e.value}').join(', ')}',
+    );
+  }
   // Hata işleyicileri + cihazdaki hata günlüğü + (Android) Crashlytics
   // (F1.9). Olabildiğince erken: aşağıdaki kurulumların hatası da yakalansın.
   CrashReporting.install(enabled: CrashReportsNotifier.read(prefs));
@@ -131,6 +140,7 @@ Future<void> main() async {
   //   60 Hz'e sabitlediği için istek yine de gerekli.
   unawaited(_activateAppCheck());
   unawaited(DisplayRate.apply());
+  unawaited(ImageCacheBudget.apply());
   // Eski geçici dosyalar (paylaşım/dışa aktarma/tarama/ses artıkları): açılışı
   // yavaşlatmasın diye birkaç saniye sonra, arka planda (bkz. DeviceStorage).
   unawaited(

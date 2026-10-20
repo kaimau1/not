@@ -16,8 +16,12 @@ import '../../../core/utils/firestore_size.dart';
 /// yazdığı) satır içi değerini korur — hiçbir yolda veri düşmez.
 const kHeavyAttachmentKeys = ['ink', 'bubbles', 'pdfMarks'];
 
-/// Ağır kısım bu eşiği aşınca not bölünür.
-const kHeavySplitBytes = 96 * 1024;
+/// Ağır kısım bu eşiği aşınca not bölünür. 2026-10-20 (F7.3, kullanıcı
+/// kararı) 96 KB → 16 KB: altındaki notların çizim/balon/işaretleri ana
+/// ekran akışında ayrıştırılıp oturum boyu bellekte duruyordu. Bölünmüş
+/// biçimi v2+ istemciler okur; veri sürümü artmaz. Bölünmüş not bir daha
+/// birleşmez (`heavyRef` kalır).
+const kHeavySplitBytes = 16 * 1024;
 
 /// Ağır belgenin alt koleksiyonu ve belge kimliği.
 const kHeavyCollection = 'heavy';

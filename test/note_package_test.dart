@@ -89,7 +89,10 @@ void main() {
       buildNotePackage(buildNote(), const {}),
     ).note.attachments.single;
     expect(attachment.ink.single.color, 0xFF112233);
-    expect(attachment.ink.single.points, [0.1, 0.2]);
+    expect(attachment.ink.single.points, [
+      closeTo(0.1, 1e-7),
+      closeTo(0.2, 1e-7),
+    ]);
     // Sayfa notlarinin anahtari ek KIMLIGINE bagli: kimlik korunmazsa
     // paketten gelen notun sayfa notlari kaybolur.
     expect(attachment.id, 'ek1');

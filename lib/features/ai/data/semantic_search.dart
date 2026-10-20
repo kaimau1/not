@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/search_fold.dart';
@@ -37,8 +38,8 @@ final semanticSearchProvider = FutureProvider.autoDispose
       ];
       if (active.isEmpty || query.trim().isEmpty) return const [];
       try {
-        return await ref
-            .read(semanticIndexProvider)
+        return await (ref.read(semanticIndexProvider)
+              ..pruneTo({for (final n in notes) n.id}))
             .search(query.trim(), active);
       } on GeminiException {
         // Embedding dahili (anahtarsız) modda desteklenmiyor; arama hata ekranına
@@ -70,6 +71,17 @@ class SemanticIndex {
   /// atılır — LinkedHashMap sırası eklenme sırasıdır).
   final _queryCache = <String, Float32List>{};
   static const _maxQueryCache = 32;
+
+  /// Silinen notların vektörlerini bırakır (F7.5). Arşivli/gizli notlar
+  /// canlı sayılır: yeniden gösterilince baştan vektörlenmesin.
+  void pruneTo(Set<String> liveIds) =>
+      _cache.removeWhere((id, _) => !liveIds.contains(id));
+
+  @visibleForTesting
+  int get cachedVectorCount => _cache.length;
+
+  @visibleForTesting
+  void debugPut(String id) => _cache[id] = (null, Float32List(0), 0);
 
   Future<List<Note>> search(String query, List<Note> notes) async {
     final service = _ref.read(geminiServiceProvider);

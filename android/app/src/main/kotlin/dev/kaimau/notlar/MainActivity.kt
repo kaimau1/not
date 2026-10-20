@@ -2,6 +2,7 @@ package dev.kaimau.notlar
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.app.PictureInPictureParams
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -468,6 +469,20 @@ class MainActivity : FlutterFragmentActivity() {
                     "powerSaveMode" -> {
                         val power = getSystemService(POWER_SERVICE) as? PowerManager
                         result.success(power?.isPowerSaveMode ?: false)
+                    }
+                    // Düşük RAM'li cihaz: sistem bayrağı ya da toplam RAM <= 4 GB
+                    // (F7.6 — görsel önbellek bütçesi küçülür).
+                    "lowMemoryDevice" -> {
+                        val am = getSystemService(ACTIVITY_SERVICE) as? ActivityManager
+                        if (am == null) {
+                            result.success(false)
+                        } else {
+                            val info = ActivityManager.MemoryInfo()
+                            am.getMemoryInfo(info)
+                            result.success(
+                                am.isLowRamDevice || info.totalMem <= 4L * 1024 * 1024 * 1024
+                            )
+                        }
                     }
                     "openBatterySettings" -> {
                         try {

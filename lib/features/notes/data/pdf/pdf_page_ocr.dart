@@ -10,6 +10,7 @@ import 'package:pdfrx/pdfrx.dart';
 
 import '../scan/scan_ocr.dart';
 import 'ocr_page_text.dart';
+import 'pdf_page_render.dart';
 
 /// Taranmış (metin katmanı olmayan) PDF sayfası için OCR'dan **seçilebilir**
 /// metin üretir: sayfa bitmap'e çizilir → ML Kit sözcük kutuları →
@@ -241,33 +242,13 @@ class PdfPageOcr {
     PdfPage page,
   ) async {
     final scale = (1600 / page.width).clamp(1.0, 4.0);
-    final img = await page.render(
-      fullWidth: page.width * scale,
-      fullHeight: page.height * scale,
-      backgroundColor: 0xFFFFFFFF,
+    final png = await renderPdfPagePng(page, width: page.width * scale);
+    if (png == null) return null;
+    final file = File(
+      '${Directory.systemTemp.path}/pdf_sel_ocr_${page.pageNumber}.png',
     );
-    if (img == null) return null;
-    try {
-      final completer = Completer<ui.Image>();
-      ui.decodeImageFromPixels(
-        img.pixels,
-        img.width,
-        img.height,
-        ui.PixelFormat.bgra8888,
-        completer.complete,
-      );
-      final uiImage = await completer.future;
-      final png = await uiImage.toByteData(format: ui.ImageByteFormat.png);
-      uiImage.dispose();
-      if (png == null) return null;
-      final file = File(
-        '${Directory.systemTemp.path}/pdf_sel_ocr_${page.pageNumber}.png',
-      );
-      await file.writeAsBytes(png.buffer.asUint8List());
-      return (path: file.path, scale: scale.toDouble());
-    } finally {
-      img.dispose();
-    }
+    await file.writeAsBytes(png);
+    return (path: file.path, scale: scale.toDouble());
   }
 
   /// Testler arası sızıntı olmasın diye.

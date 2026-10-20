@@ -5,6 +5,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 
+import '../../data/pdf/pdf_page_render.dart';
+
 /// Tek bir PDF sayfasının görüntüsü — pdfrx'in `PdfPageView`'ının YERİNE.
 ///
 /// KÖK NEDEN (kullanıcı bulgusu 2026-09-29: "PDF sayfaya eklediğimde 2.
@@ -141,23 +143,24 @@ class _PdfPageImageState extends State<PdfPageImage> {
     _token?.cancel();
     final token = page.createCancellationToken();
     _token = token;
-    PdfImage? rendered;
+    ui.Image? image;
     try {
-      rendered = await page.render(
-        fullWidth: target.width,
-        fullHeight: target.height,
-        backgroundColor: widget.background.toARGB32(),
+      image = await renderPdfPageImage(
+        page,
+        width: target.width,
+        height: target.height,
+        background: widget.background.toARGB32(),
         cancellationToken: token,
       );
     } catch (_) {
-      rendered = null;
+      image = null;
     }
     // Bu arada başka bir sayfa istendiyse sonuç atılır.
     if (!mounted || _pendingKey != key) {
-      rendered?.dispose();
+      image?.dispose();
       return;
     }
-    if (rendered == null) {
+    if (image == null) {
       // Başarısız çizim: ÖNCEKİ sayfanın görüntüsü yanlış sayfada kalmasın.
       _pendingKey = null;
       _shownKey = key;
@@ -166,24 +169,13 @@ class _PdfPageImageState extends State<PdfPageImage> {
       old?.dispose();
       return;
     }
-    try {
-      final image = await rendered.createImage();
-      if (!mounted || _pendingKey != key) {
-        image.dispose();
-        return;
-      }
-      final old = _image;
-      setState(() {
-        _image = image;
-        _shownKey = key;
-        _pendingKey = null;
-      });
-      old?.dispose();
-    } catch (_) {
-      if (mounted && _pendingKey == key) _pendingKey = null;
-    } finally {
-      rendered.dispose();
-    }
+    final old = _image;
+    setState(() {
+      _image = image;
+      _shownKey = key;
+      _pendingKey = null;
+    });
+    old?.dispose();
   }
 }
 
