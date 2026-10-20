@@ -147,12 +147,17 @@ class ItemsEditor extends StatefulWidget {
     this.onVideoTimestamp,
     this.addRowTrailing,
     this.paperLines = false,
+    this.onMoveToPage,
   });
 
   /// DEFTER (çizgili kâğıt) görünümü: satırlar defter çizgilerine oturacak
   /// şekilde dizilir — dikey dolgu yok (madde satırı = satır sayısı × satır
   /// aralığı) ve kutucuk tek satırın bandına sığar (bkz. `RuledLines`).
   final bool paperLines;
+
+  /// Madde menüsündeki "Başka sayfaya taşı" (notun birden çok sayfası
+  /// varken). null = seçenek yok.
+  final ValueChanged<NoteItem>? onMoveToPage;
 
   /// "+ Yeni öğe" satırının SAĞ ucundaki ek düğme (editörde: notta hem metin
   /// hem liste varken "bölümler" menüsü — listeyi ya da metni kaldır).
@@ -1083,6 +1088,12 @@ class ItemsEditorState extends State<ItemsEditor>
             Icons.format_strikethrough,
             l10n.itemDividerRemove,
           ),
+        if (widget.onMoveToPage != null)
+          entry(
+            _ItemAction.moveToPage,
+            Icons.drive_file_move_outline,
+            l10n.itemMoveToPage,
+          ),
         entry(_ItemAction.delete, Icons.delete_outline, l10n.removeItem),
       ],
     );
@@ -1102,6 +1113,12 @@ class ItemsEditorState extends State<ItemsEditor>
         _setDivider(item, NoteItem.dividerDotted);
       case _ItemAction.dividerNone:
         _setDivider(item, '');
+      case _ItemAction.moveToPage:
+        // Önce satırdaki yazı nota işlensin: taşınan madde son hâliyle gitsin.
+        _commit();
+        widget.onMoveToPage?.call(
+          _items.where((i) => i.id == item.id).firstOrNull ?? item,
+        );
     }
   }
 
@@ -2522,6 +2539,7 @@ enum _ItemAction {
   dividerDashed,
   dividerDotted,
   dividerNone,
+  moveToPage,
 }
 
 /// Madde altı ayırıcı çizgi (bkz. [NoteItem.divider]).

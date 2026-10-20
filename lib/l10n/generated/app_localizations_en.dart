@@ -2067,6 +2067,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paletteLightness => 'Lightness';
 
   @override
+  String get itemMoveToPage => 'Move to another page';
+
+  @override
+  String itemMovedToPage(int page) {
+    return 'Item moved to page $page';
+  }
+
+  @override
   String get fontSizeSmall => 'Small';
 
   @override

@@ -45,6 +45,75 @@ extension _EditorMediaView on _NoteEditorScreenState {
     _goToPage(pages[i].id);
   }
 
+  /// Yana çekiş (bkz. [PageSwipeDetector]): komşu sayfaya geçer; uçta
+  /// hafif titreşimle "son sayfa" der.
+  void _swipePage(int delta) {
+    final note = _note;
+    if (note == null) return;
+    final pos = textPagePosition(note);
+    final next = pos.index + delta;
+    if (next < 0 || next >= pos.count) {
+      unawaited(HapticFeedback.lightImpact());
+      return;
+    }
+    unawaited(HapticFeedback.selectionClick());
+    _stepPage(delta);
+  }
+
+  /// Maddeyi başka sayfaya taşır (madde menüsü → "Başka sayfaya taşı").
+  Future<void> _moveItemToPage(NoteItem item) async {
+    final note = _note;
+    if (note == null) return;
+    final l10n = context.l10n;
+    final pages = resolvedTextPages(note);
+    final target = await showAppSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(
+                l10n.itemMoveToPage,
+                style: Theme.of(sheetContext).textTheme.titleSmall,
+              ),
+            ),
+            for (final (i, page) in pages.indexed)
+              if (page.id != note.activePage)
+                ListTile(
+                  key: ValueKey('move-to-page-${page.id}'),
+                  leading: const Icon(Icons.description_outlined),
+                  title: Text(l10n.pageOf(i + 1, pages.length)),
+                  subtitle: Text(
+                    _pagePreview(page),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onTap: () => Navigator.pop(sheetContext, page.id),
+                ),
+          ],
+        ),
+      ),
+    );
+    if (target == null || !mounted) return;
+    final current = _note;
+    if (current == null) return;
+    _mutate((n) => moveItemToPage(n, item.id, target), immediate: true);
+    final index = pages.indexWhere((p) => p.id == target);
+    _showSnack(l10n.itemMovedToPage(index + 1));
+  }
+
+  /// Sayfa seçicide sayfanın ilk satırı (boşsa ilk madde).
+  String _pagePreview(ResolvedTextPage page) {
+    final body = stripRichMarkers(page.body).trim();
+    if (body.isNotEmpty) return body.split('\n').first;
+    final item = page.items.where((i) => i.text.trim().isNotEmpty).firstOrNull;
+    return item == null ? '' : stripRichMarkers(item.text).trim();
+  }
+
   /// Etkin sayfayı siler (onaylı). Görselleri komşu sayfaya taşınır; yazı
   /// "Geri al" ile döner.
   Future<void> _deleteActivePage() async {

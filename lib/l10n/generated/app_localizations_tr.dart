@@ -2064,6 +2064,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get paletteLightness => 'Açıklık';
 
   @override
+  String get itemMoveToPage => 'Başka sayfaya taşı';
+
+  @override
+  String itemMovedToPage(int page) {
+    return 'Madde $page. sayfaya taşındı';
+  }
+
+  @override
   String get fontSizeSmall => 'Küçük';
 
   @override

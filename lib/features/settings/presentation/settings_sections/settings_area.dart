@@ -108,7 +108,28 @@ class _SettingsArea extends StatelessWidget {
           children: [
             InkWell(
               borderRadius: BorderRadius.circular(16),
-              onTap: onTap,
+              // AÇILAN ALANA ODAK (kullanıcı bulgusu 2026-10-20: "ayarlarda
+              // basılan menüye odaklanmalı, ekran sabit kalıyor"): üstteki
+              // açık alan kapanınca dokunulan başlık ekranın tepesine
+              // kaçıyor ya da açılan içerik ekranın altında kalıyordu.
+              // Açılış/kapanış animasyonu bitince başlık görünür alanın
+              // tepesine kaydırılır.
+              onTap: () {
+                final opening = !open;
+                onTap();
+                if (!opening) return;
+                Future<void>.delayed(const Duration(milliseconds: 340), () {
+                  if (!context.mounted) return;
+                  unawaited(
+                    Scrollable.ensureVisible(
+                      context,
+                      alignment: 0.02,
+                      duration: const Duration(milliseconds: 280),
+                      curve: Curves.easeOutCubic,
+                    ),
+                  );
+                });
+              },
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,

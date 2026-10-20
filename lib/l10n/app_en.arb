@@ -733,6 +733,8 @@
   "paletteHue": "Hue",
   "paletteSaturation": "Saturation",
   "paletteLightness": "Lightness",
+  "itemMoveToPage": "Move to another page",
+  "itemMovedToPage": "Item moved to page {page}",
   "fontSizeSmall": "Small",
   "fontSizeMedium": "Medium",
   "fontSizeLarge": "Large",

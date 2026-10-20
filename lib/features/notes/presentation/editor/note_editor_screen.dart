@@ -145,6 +145,7 @@ import 'video_hub_scope.dart';
 import 'audio_card_box.dart' show kAudioBoxWidth, kAudioBoxHeight;
 import 'text_page_box.dart' show kTextBoxWidth, kTextBoxHeight;
 import 'view_mode_switch.dart';
+import 'page_swipe.dart';
 import '../../../../core/widgets/smooth_routes.dart';
 import '../../../../core/widgets/app_sheet.dart';
 
@@ -800,6 +801,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// basıldığında hâlâ geçerlidir (bkz. FormatBar).
   FormatTarget? _formatTarget;
 
+  /// [_formatTarget]in dinlenebilir eşi: alt çubuktaki etkin biçim rozetleri
+  /// ([ActiveFormatBadges]) odak değişimini editörü yeniden kurmadan izler.
+  final _formatTargetN = ValueNotifier<FormatTarget?>(null);
+
   /// Çubuğun hedefi BAŞLIK mı? Başlığın kendi yazı tipi/boyutu/opaklığı var
   /// (bkz. Note.titleFontScale): çubuk hangi alan odaktaysa ONA yazar, yoksa
   /// başlığı büyütmek gövdeyi de büyütüyordu.
@@ -839,6 +844,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
     if (_formatTarget?.controller != controller) return;
     _formatTarget = null;
+    // Bildirim build'den sonra (bu kapanış build sırasında da gelebilir).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _formatTargetN.value = _formatTarget;
+    });
     if (!_formatBarOpen) return;
     // KÖK NEDEN (çökme): bu kapanış alanın `dispose`undan geliyor ve bir
     // widget BUILD FAZINDA da unmount edilebiliyor (belge/tip değişince
@@ -871,6 +880,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       focusNode: focusNode,
       commit: commit,
     );
+    if (changed) _formatTargetN.value = _formatTarget;
     // Alan yeni odaklandı: imleci klavyenin üstüne al. Bu kapanış gövde,
     // başlık ve madde satırlarının HEPSİNDEN geçtiği için tek yer yeter.
     _revealCaretSoon();
@@ -1442,6 +1452,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _debouncer.dispose();
     _sub?.close();
     _titleController.dispose();
+    _formatTargetN.dispose();
     _titleFocus.dispose();
     _bodyController.dispose();
     _bodyFocus.dispose();
@@ -2470,7 +2481,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           applyNoteFont(
             (Theme.of(context).textTheme.headlineSmall ?? const TextStyle())
                 .copyWith(
-                  fontWeight: FontWeight.w600,
+                  // w500: kalın (w800) başlıkta açıkça ayırt edilsin (bkz.
+                  // rich_text `markStyle`).
+                  fontWeight: FontWeight.w500,
                   fontSize:
                       (Theme.of(context).textTheme.headlineSmall?.fontSize ??
                           24) *
@@ -2980,6 +2993,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         onVideoTimestamp: _seekVideoTo,
         addRowTrailing: _partsMenu(note),
         paperLines: note.paged && note.archivePaper.ruled,
+        onMoveToPage: textPagePosition(note).count > 1
+            ? _moveItemToPage
+            : null,
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
         wholeNoteText: () => _note == null
             ? ''
@@ -3024,6 +3040,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         onVideoTimestamp: _seekVideoTo,
         addRowTrailing: _partsMenu(note),
         paperLines: note.paged && note.archivePaper.ruled,
+        onMoveToPage: textPagePosition(note).count > 1
+            ? _moveItemToPage
+            : null,
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
         wholeNoteText: () => _note == null
             ? ''
@@ -3348,7 +3367,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       onClose: _closeFind,
                     ),
                   )
-                else ...[
+                // BİÇİM PANELİ AÇIKKEN alt çubuk GİZLİ (kullanıcı isteği
+                // 2026-10-20: "biçim paneli açılınca alttaki ses, ek vb.
+                // kısımlar gizlensin, yazmaya yer kalmıyor"). Panel kendi
+                // kapat (⌄) düğmesiyle kapanır.
+                else if (!_formatBarOpen) ...[
                 // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen
                 // üstünde YARIM kesiliyordu ve çubuk sayfanın parçası gibi
                 // görünüyordu (kullanıcının 2026-10-11'de işaretlediği alt
@@ -3434,6 +3457,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                               ),
                             ),
                           ),
+                        // Panel kapalıyken imlecin biçimleri (B/I/U, renk).
+                        if (showFormat)
+                          ActiveFormatBadges(target: _formatTargetN),
                         if (showAdd)
                           Customizable(
                             id: UiItem.barAdd,
@@ -3875,7 +3901,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       child: _withBackground(
                         note,
                         bgImage,
-                        _withPaper(note, noteBodyStyle, body),
+                        _withPaper(
+                          note,
+                          noteBodyStyle,
+                          // Sayfalı notta yana çekiş sayfa çevirir.
+                          PageSwipeDetector(
+                            enabled:
+                                !note.type.isPageNoteType &&
+                                textPagePosition(note).count > 1,
+                            onSwipe: _swipePage,
+                            child: body,
+                          ),
+                        ),
                       ),
                     ),
                   ),

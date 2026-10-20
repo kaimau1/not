@@ -988,7 +988,16 @@ InlineSpan restyleRange(
 /// birikimi).
 TextStyle markStyle(TextStyle base, RichMark mark, List<Color> palette) {
   var style = base;
-  if (mark.bold) style = style.copyWith(fontWeight: FontWeight.w700);
+  // Taban zaten kalınsa (başlık w500-w600) kalın bir kademe DAHA koyu:
+  // w700 tabanla neredeyse aynı göründüğü için başlıkta kalın "çalışmıyor"
+  // sanılıyordu (kullanıcı bulgusu 2026-10-20: "başlıkta bold yazamıyorum
+  // ya da kaldıramıyorum").
+  if (mark.bold) {
+    final base = style.fontWeight?.value ?? 400;
+    style = style.copyWith(
+      fontWeight: base >= 500 ? FontWeight.w800 : FontWeight.w700,
+    );
+  }
   if (mark.italic) style = style.copyWith(fontStyle: FontStyle.italic);
   if (mark.size != null) {
     style = style.copyWith(

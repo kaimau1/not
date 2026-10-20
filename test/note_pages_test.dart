@@ -8,6 +8,29 @@ import 'package:notlar/features/notes/domain/note_type.dart';
 /// "Bir nota yeni sayfa ekleme" (2026-10-11): etkin sayfanın içeriği notun
 /// gövdesinde yaşar, geçiş içerikleri yer değiştirir (bkz. note_pages.dart).
 void main() {
+  test('moveItemToPage: etkin sayfadan hedef sayfanın sonuna', () {
+    var note = const Note(
+      id: 'n',
+      type: NoteType.checklist,
+      items: [
+        NoteItem(id: 'a', text: 'bir'),
+        NoteItem(id: 'b', text: 'iki'),
+      ],
+    );
+    note = addTextPage(note, 'p2'); // p2 etkin, boş
+    note = note.copyWith(
+      items: const [NoteItem(id: 'c', text: 'üç')],
+    );
+    note = switchTextPage(note, ''); // ilk sayfaya dön
+    final moved = moveItemToPage(note, 'b', 'p2');
+    expect([for (final i in moved.items) i.id], ['a']);
+    final p2 = resolvedTextPages(moved).firstWhere((p) => p.id == 'p2');
+    expect([for (final i in p2.items) i.id], ['c', 'b']);
+    // Etkin sayfaya ya da olmayan sayfaya taşıma bir şey yapmaz.
+    expect(identical(moveItemToPage(note, 'b', ''), note), isTrue);
+    expect(identical(moveItemToPage(note, 'b', 'yok'), note), isTrue);
+  });
+
   Attachment img(String id, {String section = ''}) => Attachment(
     id: id,
     kind: AttachmentKind.image,

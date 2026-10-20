@@ -3878,6 +3878,18 @@ abstract class AppLocalizations {
   /// **'Açıklık'**
   String get paletteLightness;
 
+  /// No description provided for @itemMoveToPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başka sayfaya taşı'**
+  String get itemMoveToPage;
+
+  /// No description provided for @itemMovedToPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Madde {page}. sayfaya taşındı'**
+  String itemMovedToPage(int page);
+
   /// No description provided for @fontSizeSmall.
   ///
   /// In tr, this message translates to:
