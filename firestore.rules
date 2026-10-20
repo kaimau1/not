@@ -261,7 +261,10 @@ service cloud.firestore {
     // paylaşılan klasör ve ortak not kullanıcısı için erişim ANA NOTUN
     // kuralıyla aynı (ana belge okunup aynı sorular sorulur). Silme yalnız
     // sahipte (ana notla aynı gerekçe).
-    match /users/{noteOwnerUid}/notes/{noteId}/heavy/{docId} {
+    //
+    // **SÜRÜMLER** (F4.2): `notes/{id}/versions/*` aynı erişimle — ortak not
+    // kullanıcısının düzenlemesi de sürüm bırakır. Budama (silme) sahipte.
+    match /users/{noteOwnerUid}/notes/{noteId}/{sub}/{docId} {
       function parentNote() {
         return get(/databases/$(database)/documents/users/$(noteOwnerUid)/notes/$(noteId)).data;
       }
@@ -275,9 +278,11 @@ service cloud.firestore {
                     || parentNote().get('createdBy', '') == request.auth.uid)
               : canReadFolder(folderShare(parentNote().folderId), request.auth.uid));
       }
-      allow read: if request.auth != null
+      allow read: if sub in ['heavy', 'versions'] && request.auth != null
         && (sharedFolderOk(false) || isNoteCollaborator(noteOwnerUid, noteId));
-      allow create, update: if request.auth != null
+      allow create: if sub in ['heavy', 'versions'] && request.auth != null
+        && (sharedFolderOk(true) || isNoteCollaborator(noteOwnerUid, noteId));
+      allow update: if sub == 'heavy' && request.auth != null
         && (sharedFolderOk(true) || isNoteCollaborator(noteOwnerUid, noteId));
     }
 

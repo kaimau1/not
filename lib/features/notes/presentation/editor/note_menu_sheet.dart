@@ -219,6 +219,8 @@ class _MenuGrid extends StatelessWidget {
         MenuSection(l10n.menuSectionTools, [
           MenuAction('listen', l10n.listenToNote, Icons.headphones_outlined),
           MenuAction('stats', l10n.noteStatsTitle, Icons.insights_outlined),
+          // SÜRÜM GEÇMİŞİ (F4.2): "dünkü hâline dön".
+          MenuAction('history', l10n.versionHistory, Icons.history),
           // EKRANI DÜZENLE (kullanıcı isteği 2026-10-16): düzenleme modunu
           // doğrudan buradan açar — çubuktaki düğmelere dokunarak gizle/göster.
           MenuAction('customize', l10n.noteMenuCustomize, Icons.tune_rounded),

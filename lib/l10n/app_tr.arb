@@ -2511,5 +2511,14 @@
   "lockChangePassword": "Şifreyi değiştir",
   "lockChangePattern": "Deseni değiştir",
   "lockWebDeviceInfo": "Tarayıcıda parmak izi yok: kilitli notları web’de de korumak için şifre ya da desen seç.",
-  "lockNotEncryption": "Kilit şifreleme değildir: notun içeriği sunucuda ve cihaz önbelleğinde düz metin olarak durur. Kilit yalnız bu uygulamanın notu göstermesini engeller."
+  "lockNotEncryption": "Kilit şifreleme değildir: notun içeriği sunucuda ve cihaz önbelleğinde düz metin olarak durur. Kilit yalnız bu uygulamanın notu göstermesini engeller.",
+  "versionHistory": "Sürüm geçmişi",
+  "versionHistoryInfo": "Notun metni açıldığında, uzun düzenlemede yarım saatte bir ve AI değiştirmeden önce saklanır. Ekler sürümlenmez.",
+  "versionHistoryEmpty": "Henüz sürüm yok. Notu düzenledikçe burada birikir.",
+  "versionRestore": "Bu sürüme dön",
+  "versionRestored": "Not eski sürümüne döndü",
+  "versionReasonAi": "AI değiştirmeden önce",
+  "versionReasonRestore": "Geri dönmeden önce",
+  "versionReasonOpen": "Açıldığı hâli",
+  "versionReasonAuto": "Otomatik"
 }

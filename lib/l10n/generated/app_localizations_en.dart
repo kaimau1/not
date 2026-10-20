@@ -5181,4 +5181,33 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get lockNotEncryption =>
       'The lock is not encryption: the note content is stored as plain text on the server and in the device cache. The lock only stops this app from showing the note.';
+
+  @override
+  String get versionHistory => 'Version history';
+
+  @override
+  String get versionHistoryInfo =>
+      'The note text is saved when opened, every half hour during long edits and before AI changes it. Attachments are not versioned.';
+
+  @override
+  String get versionHistoryEmpty =>
+      'No versions yet. They collect here as you edit the note.';
+
+  @override
+  String get versionRestore => 'Restore this version';
+
+  @override
+  String get versionRestored => 'Note restored to the earlier version';
+
+  @override
+  String get versionReasonAi => 'Before AI change';
+
+  @override
+  String get versionReasonRestore => 'Before restoring';
+
+  @override
+  String get versionReasonOpen => 'As opened';
+
+  @override
+  String get versionReasonAuto => 'Automatic';
 }

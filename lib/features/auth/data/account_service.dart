@@ -7,6 +7,7 @@ import '../../../core/constants.dart';
 import '../../notes/data/drive_store.dart';
 import '../../notes/data/local_notes_store.dart';
 import '../../notes/domain/note_heavy.dart';
+import '../../notes/domain/note_version.dart';
 import '../presentation/auth_providers.dart';
 import 'auth_repository.dart';
 
@@ -48,7 +49,10 @@ class AccountService {
   ];
 
   /// Her notun altında boşaltılan alt koleksiyonlar (F3.13 ağır belge).
-  static const deletedNoteSubcollections = <String>[kHeavyCollection];
+  static const deletedNoteSubcollections = <String>[
+    kHeavyCollection,
+    kVersionsCollection,
+  ];
 
   /// Kök koleksiyonlarda silinen KENDİ kayıtlarım (sırası
   /// [deleteAccountAndData]da): sahip olduğum `folderShares` (+ `messages`

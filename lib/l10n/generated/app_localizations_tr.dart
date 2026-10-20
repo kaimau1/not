@@ -5166,4 +5166,33 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get lockNotEncryption =>
       'Kilit şifreleme değildir: notun içeriği sunucuda ve cihaz önbelleğinde düz metin olarak durur. Kilit yalnız bu uygulamanın notu göstermesini engeller.';
+
+  @override
+  String get versionHistory => 'Sürüm geçmişi';
+
+  @override
+  String get versionHistoryInfo =>
+      'Notun metni açıldığında, uzun düzenlemede yarım saatte bir ve AI değiştirmeden önce saklanır. Ekler sürümlenmez.';
+
+  @override
+  String get versionHistoryEmpty =>
+      'Henüz sürüm yok. Notu düzenledikçe burada birikir.';
+
+  @override
+  String get versionRestore => 'Bu sürüme dön';
+
+  @override
+  String get versionRestored => 'Not eski sürümüne döndü';
+
+  @override
+  String get versionReasonAi => 'AI değiştirmeden önce';
+
+  @override
+  String get versionReasonRestore => 'Geri dönmeden önce';
+
+  @override
+  String get versionReasonOpen => 'Açıldığı hâli';
+
+  @override
+  String get versionReasonAuto => 'Otomatik';
 }

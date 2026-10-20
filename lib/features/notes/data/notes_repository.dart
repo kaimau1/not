@@ -20,6 +20,7 @@ import '../domain/note.dart';
 import '../domain/note_heavy.dart';
 import '../domain/notebook_migration.dart';
 import '../domain/note_item.dart';
+import '../domain/note_version.dart';
 import '../domain/note_type.dart';
 import 'attachment_repository.dart';
 import 'drive_store.dart' show driveFileDeleter;
@@ -584,6 +585,7 @@ class NotesRepository {
       local!.merge(note.id, note.toMap());
       return Future.value();
     }
+    _maybeVersion(note);
     final fields = {...note.toMap(), 'updatedBy': editorUid};
     // AĞIR ALANLAR (F3.13): bölünmüş ya da ağır kısmı eşiği aşan not iki
     // belgeye yazılır. HAFİF not (ağır belge işlenmemiş) yalnız ana belgeye
@@ -634,6 +636,71 @@ class NotesRepository {
     );
     unawaited(write);
     return write;
+  }
+
+  // ── Sürüm geçmişi (F4.2, bkz. note_version.dart) ───────────────────────
+
+  /// Not kimliği → bir sonraki sürüme yazılacak hâl (editör açılışta verir).
+  final Map<String, Note> _versionBase = {};
+
+  /// Not kimliği → bu oturumda son sürümün alındığı an.
+  final Map<String, DateTime> _versionAt = {};
+
+  /// Editör notu açınca çağırır: notun AÇILDIĞI hâli, ilk değişiklikte
+  /// sürüm olarak saklanır ("dünkü hâline dön").
+  void rememberVersionBase(Note note) =>
+      _versionBase.putIfAbsent(note.id, () => note);
+
+  void _maybeVersion(Note note) {
+    final base = _versionBase[note.id];
+    if (base == null || !versionContentDiffers(base, note)) return;
+    final now = DateTime.now();
+    final last = _versionAt[note.id];
+    if (last != null && now.difference(last) < kVersionInterval) return;
+    _versionAt[note.id] = now;
+    _versionBase[note.id] = note;
+    unawaited(saveVersion(base, reason: last == null ? 'open' : 'auto'));
+  }
+
+  CollectionReference<Map<String, dynamic>> _versions(String noteId) =>
+      _notes.doc(noteId).collection(kVersionsCollection);
+
+  /// [note]un metnini sürüm olarak saklar (yalnız-bu-cihaz notunda yok).
+  /// Sahip yazınca eski sürümler [kMaxVersions]'a budanır.
+  Future<void> saveVersion(Note note, {required String reason}) async {
+    if (isLocal(note.id)) return;
+    try {
+      await _versions(note.id).add({
+        ...versionPayload(note, reason: reason),
+        'by': editorUid,
+        'at': FieldValue.serverTimestamp(),
+      });
+      if (editorUid != uid) return;
+      final old = await _versions(
+        note.id,
+      ).orderBy('at', descending: true).limit(kMaxVersions + 10).get();
+      for (final doc in old.docs.skip(kMaxVersions)) {
+        unawaited(doc.reference.delete());
+      }
+    } catch (e) {
+      // Sürüm bir güvencedir; yazılamaması notun kaydını engellemez.
+      CrashReporting.recordNonFatal('note-version', e, StackTrace.current);
+    }
+  }
+
+  /// Notun sürümleri, yeniden eskiye.
+  Future<List<NoteVersion>> listVersions(String noteId) async {
+    final snap = await _versions(
+      noteId,
+    ).orderBy('at', descending: true).limit(kMaxVersions).get();
+    return [
+      for (final doc in snap.docs)
+        NoteVersion.fromMap(
+          doc.id,
+          doc.data(),
+          (doc.data()['at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        ),
+    ];
   }
 
   /// Not kimliği → sunucuya son BAŞARIYLA yazılan ek listesinin özeti (bkz.
@@ -1013,6 +1080,14 @@ class NotesRepository {
     unawaited(_notes.doc(noteId).delete());
     // Alt koleksiyon belgeyle silinmez (Firestore) — ağır belge de gider.
     unawaited(_heavyDoc(noteId).delete().catchError((Object _) {}));
+    // Sürümler de (F4.2).
+    unawaited(
+      _versions(noteId).get().then((snap) {
+        for (final doc in snap.docs) {
+          unawaited(doc.reference.delete());
+        }
+      }, onError: (Object _) {}),
+    );
   }
 
   /// Notu Storage'daki ekleriyle birlikte kalıcı siler (çöp ekranındaki

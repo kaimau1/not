@@ -115,6 +115,7 @@ import '../../data/notebook_copy.dart';
 import '../../domain/archive_paper.dart';
 import '../../domain/notebook_migration.dart';
 import 'notebook_paper.dart';
+import 'note_history_sheet.dart';
 import 'note_menu_sheet.dart';
 import 'in_note_find.dart';
 import 'note_search_sheet.dart';
@@ -1105,6 +1106,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           _titleController.text = loaded.title;
           _bodyController.text = loaded.body;
         });
+        // Açıldığı hâl ilk değişiklikte sürüm olur (F4.2).
+        if (!_readOnly) _notesRepo?.rememberVersionBase(loaded);
         if (!identical(loaded, incoming) && !_readOnly) {
           unawaited(_notesRepo?.updateNote(loaded));
         }
@@ -3722,6 +3725,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         await _pickPaper();
       case 'search':
         await _openNoteSearch();
+      case 'history':
+        await _openHistory();
       case 'stats':
         // Bekleyen yazım önce diske insin: sayaç yazılan son cümleyi de
         // saysın (aramada da aynı sıra).
@@ -4308,9 +4313,32 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _offerReplaceUndo(before);
   }
 
+  /// Sürüm geçmişi (F4.2): seçilen sürüme dönmeden önce bugünkü hâl de
+  /// sürüm olarak saklanır — dönüş de geri alınabilir.
+  Future<void> _openHistory() async {
+    final repo = _notesRepo;
+    final note = _note;
+    if (repo == null || note == null) return;
+    _flushPending(_titleController);
+    _flushPending(_bodyController);
+    final version = await showNoteHistorySheet(context, repo, note.id);
+    if (version == null || !mounted) return;
+    final current = _note ?? note;
+    await repo.saveVersion(current, reason: 'restore');
+    if (!mounted) return;
+    final restored = version.applyTo(current);
+    _titleController.text = restored.title;
+    _bodyController.text = restored.body;
+    _mutate((_) => restored, immediate: true);
+    _showSnack(context.l10n.versionRestored);
+  }
+
   /// "Notu değiştir" sonrası geri alma: eski not anlık görüntüsüne (metin,
   /// öğeler, tip, başlık) tek dokunuşla döner.
   void _offerReplaceUndo(Note before) {
+    // AI değiştirmeden önceki hâl sürüm geçmişinde de kalır (F4.2): geri
+    // alma 4 sn sonra kaybolur, sürüm kalır.
+    unawaited(_notesRepo?.saveVersion(before, reason: 'ai'));
     if (!mounted) return;
     // Snackbar KÖK messenger'da yaşar ve editör kapandıktan sonra da 4 sn
     // ekranda kalır: depo şimdiden yakalanır ki geri alma editörsüz de

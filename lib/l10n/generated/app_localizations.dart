@@ -9301,6 +9301,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kilit şifreleme değildir: notun içeriği sunucuda ve cihaz önbelleğinde düz metin olarak durur. Kilit yalnız bu uygulamanın notu göstermesini engeller.'**
   String get lockNotEncryption;
+
+  /// No description provided for @versionHistory.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sürüm geçmişi'**
+  String get versionHistory;
+
+  /// No description provided for @versionHistoryInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun metni açıldığında, uzun düzenlemede yarım saatte bir ve AI değiştirmeden önce saklanır. Ekler sürümlenmez.'**
+  String get versionHistoryInfo;
+
+  /// No description provided for @versionHistoryEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz sürüm yok. Notu düzenledikçe burada birikir.'**
+  String get versionHistoryEmpty;
+
+  /// No description provided for @versionRestore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu sürüme dön'**
+  String get versionRestore;
+
+  /// No description provided for @versionRestored.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not eski sürümüne döndü'**
+  String get versionRestored;
+
+  /// No description provided for @versionReasonAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI değiştirmeden önce'**
+  String get versionReasonAi;
+
+  /// No description provided for @versionReasonRestore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri dönmeden önce'**
+  String get versionReasonRestore;
+
+  /// No description provided for @versionReasonOpen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıldığı hâli'**
+  String get versionReasonOpen;
+
+  /// No description provided for @versionReasonAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik'**
+  String get versionReasonAuto;
 }
 
 class _AppLocalizationsDelegate
