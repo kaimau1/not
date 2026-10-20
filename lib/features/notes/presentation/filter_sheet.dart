@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
-import '../../../core/personalize.dart';
-import '../../../core/widgets/customizable.dart';
 import '../../ai/data/attachment_text_index.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
@@ -55,178 +53,211 @@ void resetFilters(WidgetRef ref) {
   ref.read(selectedTagProvider.notifier).set(null);
 }
 
-/// Ana ekrandaki süzgeç satırı: "Süz" düğmesi + YALNIZ uygulanmış süzgeçler.
+/// Uygulanmış süzgeçlerin ekranda okunacak adları (tür, klasör, #etiket).
+List<String> appliedFilterLabels(BuildContext context, WidgetRef ref) {
+  final l10n = context.l10n;
+  final filter = ref.watch(noteFilterProvider);
+  final folderId = ref.watch(selectedFolderProvider);
+  final tag = ref.watch(selectedTagProvider);
+  final folderName = folderId == null
+      ? null
+      : (ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[])
+            .where((f) => f.id == folderId)
+            .map((f) => f.name)
+            .firstOrNull;
+  return [
+    if (filter != NoteFilter.all) filterLabel(l10n, filter),
+    ?folderName,
+    if (tag != null) '#$tag',
+  ];
+}
+
+/// **SÜZ DÜĞMESİ ARAMA KUTUSUNUN SAĞINDA** (kullanıcı isteği 2026-10-20:
+/// "süz yazısı tek satır kaplıyor, kaplamasın; süzgeç seçildiğinde süz
+/// yazısının yerine gelsin ve bir renk veya çerçeveyle belli olsun; üstteki
+/// arama yerinin sağına gelebilir").
 ///
-/// Eski çip barı tüm seçenekleri sürekli gösteriyordu; burada ekranda yer
-/// kaplayan tek şey kullanıcının gerçekten açtığı süzgeç.
-class DashboardFilterRow extends ConsumerWidget {
-  const DashboardFilterRow({super.key});
+/// ESKİDEN: arama çubuğunun altında ayrı bir satır — solda "Süz", yanında
+/// uygulanmış süzgeç çipleri, sağda görünüm anahtarı. Süzgeç yokken satır
+/// yalnız bir düğme için ekranın bir şeridini yiyordu.
+///
+/// ŞİMDİ: arama kutusunun İÇİNDE, AI anahtarının sağında. Süzgeç yokken
+/// yalnız simge; uygulanınca simgenin yerini süzgecin ADI alır (birden çoksa
+/// "Görevler +1"), dolu zemin + vurgu çerçevesiyle. Sondaki × hepsini
+/// kaldırır, ada dokunmak levhayı açar.
+class HomeFilterButton extends ConsumerWidget {
+  const HomeFilterButton({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final count = appliedFilterCount(ref);
-    final filter = ref.watch(noteFilterProvider);
-    final folderId = ref.watch(selectedFolderProvider);
-    final tag = ref.watch(selectedTagProvider);
-    final folderName = folderId == null
-        ? null
-        : (ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[])
-              .where((f) => f.id == folderId)
-              .map((f) => f.name)
-              .firstOrNull;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-      child: Row(
-        children: [
-          // Süz düğmesi ve görünüm anahtarı kişiselleştirmede gizlenebilir
-          // (bkz. UiItem.homeFilter / homeViewToggle). Süz gizliyken bile
-          // UYGULANMIŞ süzgeç çipleri görünür ve kaldırılabilir kalır.
-          Customizable(
-            id: UiItem.homeFilter,
-            hidden: const SizedBox.shrink(),
-            child: Padding(
-              padding: const EdgeInsetsDirectional.only(end: 7),
+    final labels = appliedFilterLabels(context, ref);
+    final active = labels.isNotEmpty;
+    final label = !active
+        ? l10n.filterSheetTitle
+        : labels.length == 1
+        ? labels.first
+        : '${labels.first} +${labels.length - 1}';
+    return Tooltip(
+      message: active
+          ? '${l10n.filterSheetTitle}: ${labels.join(', ')}'
+          : l10n.filterSheetTitle,
+      child: Semantics(
+        button: true,
+        selected: active,
+        label: active
+            ? '${l10n.filterSheetTitle}: ${labels.join(', ')}'
+            : l10n.filterSheetTitle,
+        excludeSemantics: true,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            alignment: AlignmentDirectional.centerEnd,
+            // Boyut geçişi AnimatedSize'ta (kırparak); kutunun kendi
+            // kısıtı ANİMASYONSUZ — kısıtı canlandırmak geçiş boyunca
+            // içeriği dar kutuya sıkıştırıp taşırıyordu.
+            child: Container(
+              key: const ValueKey('home-filter-button'),
+              height: 34,
+              constraints: BoxConstraints(
+                minWidth: 34,
+                maxWidth: active ? 118 : 34,
+              ),
+              decoration: BoxDecoration(
+                color: active ? scheme.secondaryContainer : scheme.surface,
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(
+                  color: active ? scheme.primary : scheme.outlineVariant,
+                  width: active ? 1.5 : 1,
+                ),
+              ),
               child: Material(
-                color: count > 0
-                    ? scheme.secondaryContainer
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(10),
+                type: MaterialType.transparency,
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(9),
                   onTap: () => showFilterSheet(context),
-                  child: Container(
-                    height: 36,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: count > 0
-                            ? Colors.transparent
-                            : scheme.outlineVariant,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.tune, size: 18),
-                        const SizedBox(width: 6),
-                        Text(
-                          l10n.filterSheetTitle,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (count > 0) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 5,
-                              vertical: 1,
-                            ),
-                            decoration: BoxDecoration(
-                              color: scheme.primary,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '$count',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: scheme.onPrimary,
+                  child: !active
+                      ? Icon(
+                          Icons.tune,
+                          size: 18,
+                          color: scheme.onSurfaceVariant,
+                        )
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: scheme.onSecondaryContainer,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+                            // × hepsini kaldırır; ada dokunmak levhayı açar.
+                            InkResponse(
+                              key: const ValueKey('home-filter-clear'),
+                              radius: 16,
+                              onTap: () => resetFilters(ref),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 8,
+                                ),
+                                child: Icon(
+                                  Icons.close,
+                                  size: 15,
+                                  color: scheme.onSecondaryContainer,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ),
           ),
-          Expanded(
-            child: SizedBox(
-              height: 36,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  // ÖNCE uygulanmış süzgeçler (kaldırılabilir), SONRA favori
-                  // kısayolları. Sıra bilinçli: ekranda ne olduğunu anlatan
-                  // çip, henüz basılmamış kısayoldan önce gelir.
-                  if (filter != NoteFilter.all)
-                    _AppliedChip(
-                      label: filterLabel(l10n, filter),
-                      onRemove: () => ref
-                          .read(noteFilterProvider.notifier)
-                          .set(NoteFilter.all),
-                    ),
-                  if (folderName != null)
-                    _AppliedChip(
-                      label: folderName,
-                      onRemove: () =>
-                          ref.read(selectedFolderProvider.notifier).set(null),
-                    ),
-                  if (tag != null)
-                    _AppliedChip(
-                      label: tag,
-                      onRemove: () =>
-                          ref.read(selectedTagProvider.notifier).set(null),
-                    ),
-                  // **EK İÇERİĞİNDE DE ARA** (kullanıcı isteği 2026-09-04:
-                  // "anlamsal arama görsel ve pdf'leri de arayabilir,
-                  // seçenek olarak sunmalıyız"). Yalnız ARAMA YAZILIYKEN
-                  // görünür: aramanın kapsamını değiştiren bir seçenek,
-                  // arama yokken anlamsız bir çip olurdu. Arama çubuğuna
-                  // konmadı — orada "Metin/Anlam" ikilisiyle birlikte en dar
-                  // telefonda alanı bitiriyordu.
-                  if (ref.watch(searchQueryProvider).trim().isNotEmpty)
-                    _AttachmentScopeChip(
-                      selected: ref.watch(attachmentSearchProvider),
-                      onTap: () => ref
-                          .read(attachmentSearchProvider.notifier)
-                          .set(!ref.read(attachmentSearchProvider)),
-                    ),
-                  ...favoriteFilterChips(context, ref),
-                ],
-              ),
-            ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Arama çubuğunun altındaki KISAYOL şeridi: Süz levhasında yıldızlanan
+/// süzgeçler ve (arama yazılıyken) "ek içeriğinde de ara" çipi.
+///
+/// Süz düğmesi ve uygulanmış süzgeç arama kutusuna taşındı (bkz.
+/// [HomeFilterButton]); görünüm anahtarı Süz levhasına. Şeritte çizilecek bir
+/// şey yoksa SIFIR yer kaplar.
+class DashboardFilterRow extends ConsumerWidget {
+  const DashboardFilterRow({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final searching = ref.watch(searchQueryProvider).trim().isNotEmpty;
+    final chips = [
+      // **EK İÇERİĞİNDE DE ARA** (kullanıcı isteği 2026-09-04:
+      // "anlamsal arama görsel ve pdf'leri de arayabilir, seçenek olarak
+      // sunmalıyız"). Yalnız ARAMA YAZILIYKEN görünür: aramanın kapsamını
+      // değiştiren bir seçenek, arama yokken anlamsız bir çip olurdu.
+      if (searching)
+        _AttachmentScopeChip(
+          selected: ref.watch(attachmentSearchProvider),
+          onTap: () => ref
+              .read(attachmentSearchProvider.notifier)
+              .set(!ref.read(attachmentSearchProvider)),
+        ),
+      ...favoriteFilterChips(context, ref),
+    ];
+    if (chips.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: SizedBox(
+        height: 36,
+        child: ListView(scrollDirection: Axis.horizontal, children: chips),
+      ),
+    );
+  }
+}
+
+/// Izgara ⇄ liste seçimi (Süz levhasında; eskiden ana ekrandaki süzgeç
+/// satırının sağındaki düğmeydi).
+class _ViewModeSection extends ConsumerWidget {
+  const _ViewModeSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final list = ref.watch(noteListViewProvider);
+    void set(bool wantList) {
+      if (wantList != ref.read(noteListViewProvider)) {
+        ref.read(noteListViewProvider.notifier).toggle();
+      }
+    }
+
+    return _Section(
+      icon: Icons.grid_view,
+      title: l10n.viewToggle,
+      child: _OptionWrap(
+        children: [
+          _Option(
+            label: l10n.viewGrid,
+            icon: Icons.grid_view,
+            selected: !list,
+            onTap: () => set(false),
           ),
-          // Izgara ⇄ liste. İkon HEDEFİ gösterir (ızgaradayken "liste"
-          // simgesi): düğmeler bulunulan hâli değil basınca olacağı anlatır.
-          Customizable(
-            id: UiItem.homeViewToggle,
-            child: Tooltip(
-              message: l10n.viewToggle,
-              child: SizedBox(
-                width: 36,
-                height: 36,
-                child: Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(10),
-                    onTap: () =>
-                        ref.read(noteListViewProvider.notifier).toggle(),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: scheme.outlineVariant),
-                      ),
-                      child: Icon(
-                        ref.watch(noteListViewProvider)
-                            ? Icons.grid_view
-                            : Icons.view_agenda_outlined,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          _Option(
+            label: l10n.viewList,
+            icon: Icons.view_agenda_outlined,
+            selected: list,
+            onTap: () => set(true),
           ),
         ],
       ),
@@ -346,48 +377,6 @@ class _FavoriteChip extends StatelessWidget {
   }
 }
 
-class _AppliedChip extends StatelessWidget {
-  const _AppliedChip({required this.label, required this.onRemove});
-
-  final String label;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(end: 6),
-      child: Material(
-        color: scheme.primaryContainer,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(10),
-          onTap: onRemove,
-          child: Container(
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: scheme.onPrimaryContainer,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(Icons.close, size: 16, color: scheme.onPrimaryContainer),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _FilterSheet extends ConsumerWidget {
   const _FilterSheet();
 
@@ -399,6 +388,7 @@ class _FilterSheet extends ConsumerWidget {
     NoteFilter.checklist => Icons.check_box_outlined,
     NoteFilter.ordered => Icons.format_list_numbered_rounded,
     NoteFilter.pinned => Icons.push_pin_outlined,
+    NoteFilter.starred => Icons.star_outline,
     NoteFilter.reminded => Icons.alarm,
     NoteFilter.locked => Icons.lock_outline,
     NoteFilter.others => Icons.category_outlined,
@@ -488,6 +478,8 @@ class _FilterSheet extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
+
+          const _ViewModeSection(),
 
           _Section(
             icon: Icons.style_outlined,
@@ -739,6 +731,7 @@ String filterLabel(AppLocalizations l10n, NoteFilter filter) =>
       NoteFilter.checklist => l10n.filterChecklist,
       NoteFilter.ordered => l10n.filterOrdered,
       NoteFilter.pinned => l10n.filterPinned,
+      NoteFilter.starred => l10n.filterStarred,
       NoteFilter.reminded => l10n.filterReminded,
       NoteFilter.locked => l10n.filterLocked,
       NoteFilter.others => l10n.filterOthers,

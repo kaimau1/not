@@ -31,9 +31,10 @@ final dataMigrationsProvider = Provider<void>((ref) {
   }
 
   unawaited(() async {
-    // Sıra önemli: defter göçü tam belge yazar; kavram göçü ondan sonra
-    // eski alanları (yıldız, yalnız çerçeve) da temizler.
     await run('f35', repo.migrateNotebooks);
-    await run('f36', repo.migrateConceptPairs);
+    // 'f36' (yıldız → sabit, yalnız çerçeve → zemin) KALDIRILDI
+    // (2026-10-20): yıldız ve çerçeve yeniden ayrı kavramlar. Göç koşmaya
+    // devam etseydi yeni yıldızları sabitliye, yeni çerçeveleri zemine
+    // çevirirdi (bayrak cihaz başına — yeni kurulumda yeniden koşardı).
   }());
 });

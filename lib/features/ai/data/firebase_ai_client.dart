@@ -363,13 +363,16 @@ class FirebaseAiClient {
           'setTags': Schema.array(items: Schema.string()),
           'color': Schema.string(
             description:
-                'Notun rengi: red, peach, amber, green, sage, blue, '
+                'Notun ZEMİN rengi: red, peach, amber, green, sage, blue, '
                 'storm, purple, blossom, clay, chalk ya da none.',
           ),
           'frameColor': Schema.string(
             description:
-                'Renk + KENAR VURGUSU; değerler color ile aynı. "kırmızı '
-                'çerçeve" isteği bu alandır.',
+                'Notun ÇERÇEVE rengi (yalnız ana ekrandaki kartın kenarı); '
+                'değerler color ile aynı. "kırmızı çerçeve" isteği bu alandır.',
+          ),
+          'starred': Schema.boolean(
+            description: 'Yıldızla (favori); sabitlemeden ayrı.',
           ),
           'locked': Schema.boolean(),
           'reminderAt': Schema.string(description: 'ISO 8601'),
@@ -387,6 +390,7 @@ class FirebaseAiClient {
           'setTags',
           'color',
           'frameColor',
+          'starred',
           'locked',
           'reminderAt',
           'clearReminder',

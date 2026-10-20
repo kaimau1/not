@@ -16,7 +16,19 @@ enum ArchivePaper {
   dots('dots'),
 
   /// Düz kâğıt: desen yok, yalnız cilt gölgesi.
-  plain('plain');
+  plain('plain'),
+
+  /// Sarı bloknot (legal pad): sıcak sarı zemin, çizgiler ve çift kenar
+  /// çizgisi (2026-10-20, "kâğıt tipine yenilikler lazım").
+  legal('legal'),
+
+  /// Milimetrik kâğıt: her satır aralığı dört ince kareye bölünür, satır
+  /// çizgileri belirgin — çizim ve tablo için.
+  engineering('engineering'),
+
+  /// İzometrik nokta kâğıdı: noktalar üçgen örgüde (her satır yarım adım
+  /// kayık) — kroki ve üç boyutlu çizim için.
+  isometric('isometric');
 
   const ArchivePaper(this.id);
 

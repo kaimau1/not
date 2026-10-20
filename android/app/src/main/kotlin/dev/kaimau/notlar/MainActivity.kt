@@ -6,6 +6,7 @@ import android.app.PictureInPictureParams
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.media.AudioManager
 import android.location.Geocoder
 import android.location.Location
 import android.net.Uri
@@ -117,6 +118,25 @@ class MainActivity : FlutterFragmentActivity() {
     // loglanmaz (döküm kişisel veridir, logcat'e sızmamalı).
     private val logTag = "NotlarSpeech"
 
+    // BİP SUSTURMA (kullanıcı bulgusu 2026-10-20: "sesle yazma akışında
+    // sürekli dinleme durup tekrar başlıyormuş gibi onay/kapanma sesleri
+    // geliyor, dıt dıdıt, kafa karıştırıyor"). KÖK NEDEN: tanıyıcı her
+    // sessizlikte kendini kapatıyor, biz de kaldığı yerden sürsün diye
+    // yeniden kuruyoruz (bkz. restartRecognizer) — Google tanıyıcısı HER
+    // açılış ve kapanışta bip çalıyor. Oturumun İLK bip'i kalır ("dinliyorum"
+    // geri bildirimi), ardından bip akışları oturum boyunca susturulur ve
+    // oturum bitince YALNIZ BİZİM susturduklarımız geri açılır. Süreç
+    // susturulmuş hâlde ölürse bir sonraki açılışta kayıttan geri açılır
+    // ([restoreBeepsFromPrefs]).
+    private val beepStreams = intArrayOf(
+        AudioManager.STREAM_MUSIC,
+        AudioManager.STREAM_SYSTEM,
+        AudioManager.STREAM_NOTIFICATION,
+    )
+    private val mutedByUs = mutableListOf<Int>()
+    private var beepMuteTask: Runnable? = null
+    private val beepPrefs get() = getSharedPreferences("notlar_speech", MODE_PRIVATE)
+
     // RESİM İÇİNDE RESİM (video oynatıcı ekranları): Dart tarafı oynatıcı
     // açıkken "otomatik PiP"i açar; kullanıcı ana ekrana çıkınca etkinlik
     // küçük pencereye geçer. Pencere değişimi Dart'a "pipChanged" ile
@@ -180,6 +200,7 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        restoreBeepsFromPrefs()
         configureSpeechChannel(flutterEngine)
         val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
         systemChannel = channel
@@ -226,6 +247,9 @@ class MainActivity : FlutterFragmentActivity() {
                         pendingRestart?.let { mainHandler.removeCallbacks(it) }
                         pendingRestart = null
                         recognizer?.stopListening()
+                        // Bitiş bip'i duyulsun: oturum kullanıcının isteğiyle
+                        // bitti, geri bildirim yerinde.
+                        restoreBeeps()
                         result.success(true)
                     }
                     // Mikrofon iznini yalnızca OKUR (sistem iletişim kutusu
@@ -1031,6 +1055,77 @@ class MainActivity : FlutterFragmentActivity() {
         recognizer?.cancel()
         recognizer?.destroy()
         recognizer = null
+        restoreBeeps()
+    }
+
+    // Oturumun ilk "dinliyorum" bip'i çalıp bittikten sonra bip akışlarını
+    // susturur (bkz. beepStreams notu). Oturum başına bir kez.
+    private fun scheduleBeepMute() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+        if (mutedByUs.isNotEmpty() || beepMuteTask != null) return
+        val task = Runnable {
+            beepMuteTask = null
+            if (listening) muteBeeps()
+        }
+        beepMuteTask = task
+        mainHandler.postDelayed(task, 700)
+    }
+
+    private fun muteBeeps() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+        val audio = getSystemService(AUDIO_SERVICE) as? AudioManager ?: return
+        // Rahatsız Etmeyin / sessiz kipte zil akışına dokunulmaz: susturma
+        // zil kipini değiştirmeye kalkar ve izin ister.
+        val ringerNormal = audio.ringerMode == AudioManager.RINGER_MODE_NORMAL
+        for (stream in beepStreams) {
+            if (stream != AudioManager.STREAM_MUSIC && !ringerNormal) continue
+            try {
+                // Zaten sessizse (kullanıcının ya da eş akışın) dokunulmaz —
+                // geri açarken kullanıcının kendi susturmasını bozmayalım.
+                if (audio.isStreamMute(stream)) continue
+                audio.adjustStreamVolume(stream, AudioManager.ADJUST_MUTE, 0)
+                mutedByUs.add(stream)
+            } catch (e: Exception) {
+                Log.d(logTag, "akis susturulamadi: $stream ${e.javaClass.simpleName}")
+            }
+        }
+        beepPrefs.edit().putString("muted", mutedByUs.joinToString(",")).apply()
+        Log.d(logTag, "bip akislari susturuldu: ${mutedByUs.size}")
+    }
+
+    private fun restoreBeeps() {
+        beepMuteTask?.let { mainHandler.removeCallbacks(it) }
+        beepMuteTask = null
+        if (mutedByUs.isEmpty()) return
+        unmuteStreams(mutedByUs.toList())
+        mutedByUs.clear()
+        beepPrefs.edit().remove("muted").apply()
+    }
+
+    private fun unmuteStreams(streams: List<Int>) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+        val audio = getSystemService(AUDIO_SERVICE) as? AudioManager ?: return
+        for (stream in streams) {
+            try {
+                audio.adjustStreamVolume(stream, AudioManager.ADJUST_UNMUTE, 0)
+            } catch (e: Exception) {
+                Log.d(logTag, "akis acilamadi: $stream ${e.javaClass.simpleName}")
+            }
+        }
+    }
+
+    // Süreç susturulmuş hâlde öldüyse (çökme, sistem kapattı) kayıtta kalan
+    // akışlar bir sonraki açılışta geri açılır.
+    private fun restoreBeepsFromPrefs() {
+        val saved = beepPrefs.getString("muted", null) ?: return
+        val streams = saved.split(',').mapNotNull { it.trim().toIntOrNull() }
+        unmuteStreams(streams)
+        beepPrefs.edit().remove("muted").apply()
+    }
+
+    override fun onDestroy() {
+        restoreBeeps()
+        super.onDestroy()
     }
 
     // Oturumu uygulama adına bitirir: birikmiş metin son kez gönderilir ki
@@ -1187,7 +1282,10 @@ class MainActivity : FlutterFragmentActivity() {
             }
         }
 
-        override fun onReadyForSpeech(params: Bundle?) {}
+        // İlk segment hazır: açılış bip'i çaldı, sonrakiler susturulur.
+        override fun onReadyForSpeech(params: Bundle?) {
+            if (listening) scheduleBeepMute()
+        }
         override fun onBeginningOfSpeech() {}
         // Google'ın servisi bu geri çağrıyı beslemiyor (2026-07-25'te cihazda
         // ölçüldü — hiç düşmedi).

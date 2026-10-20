@@ -18,7 +18,12 @@ import 'l10n_ext.dart';
 /// 2 (Faz 3): defter → sayfalı not (F3.5), büyük notların çizim/balon/PDF
 /// işaretleri ayrı belgede (F3.13). Eski istemci bölünmüş notun çizimlerini
 /// görmez; telefonlar güncellenince `minClient: 2` yazılmalı.
-const int kClientDataVersion = 2;
+///
+/// 3 (2026-10-20): yıldız ve çerçeve yeniden AYRI alanlar. 2'deki istemci
+/// `starred`ı sabit sayar ve her yazımda `starred: false` yazar (yıldızları
+/// siler), yalnız çerçeveli notu renkli zemin gösterir. Telefonlar bu
+/// sürüme geçince `minClient: 3` yazılmalı.
+const int kClientDataVersion = 3;
 
 /// İndirme adresi: CI her `[apk]` derlemesini GitHub Releases'a koyar.
 const String kReleasesUrl = 'https://github.com/kaimau1/not/releases/latest';

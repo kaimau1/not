@@ -365,4 +365,6 @@ Widget _noteBuilder(BuildContext context, GoRouterState state) =>
       startYouTube: state.uri.queryParameters['youtube'] == '1',
       // ?transcribe=1: ses/video/görsel seçilir, metni nota yazılır.
       startTranscribe: state.uri.queryParameters['transcribe'] == '1',
+      // ?afile=1: ses dosyası seçilir, nota çalınabilir ek olarak girer.
+      startAudioFile: state.uri.queryParameters['afile'] == '1',
     );

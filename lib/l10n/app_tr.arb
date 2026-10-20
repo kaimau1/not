@@ -526,8 +526,8 @@
       }
     }
   },
-  "backgroundColor": "Renk",
-  "backgroundColorInfo": "Notun rengi; istersen kenarına da vurgu",
+  "backgroundColor": "Zemin rengi",
+  "backgroundColorInfo": "Notun arka plan rengi — notun içinde ve ana ekranda görünür",
   "frameColor": "Çerçeve",
   "sortBy": "Sıralama",
   "reorderNotes": "Notları sırala",
@@ -691,6 +691,8 @@
   "hideAttachments": "Gizle",
   "showAttachments": "Göster",
   "selectAllItems": "Tümünü seç",
+  "checkSelectedItems": "Seçilenleri işaretle",
+  "uncheckSelectedItems": "Seçilenlerin işaretini kaldır",
   "hiddenFolder": "Gizli klasör",
   "hiddenFolderInfo": "Gizli klasör ve içindeki notlar ana ekranda görünmez. Göstermek için ⋮ menüsünden \"Gizli klasörler\" seçilir ve kimlik doğrulanır.",
   "hiddenFoldersMenu": "Gizli klasörler",
@@ -800,6 +802,8 @@
   "quickCaptureHint": "Yeni not…",
   "quickCaptureSave": "Kaydet",
   "viewToggle": "Görünüm",
+  "viewGrid": "Izgara",
+  "viewList": "Liste",
   "searchModeMeaning": "Anlam",
   "filterReminded": "Alarmlı",
   "filterLocked": "Kilitli",
@@ -1218,6 +1222,9 @@
   "archivePaperGrid": "Kareli",
   "archivePaperDots": "Noktalı",
   "archivePaperPlain": "Düz",
+  "archivePaperLegal": "Bloknot",
+  "archivePaperEngineering": "Milimetrik",
+  "archivePaperIsometric": "İzometrik",
   "attachmentTagEmbed": "Ek göm",
   "bubbleModeBubble": "Balon",
   "attachmentTagEmbedInfo": "Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır",
@@ -2422,9 +2429,7 @@
   "quickAddCamera": "Kamera",
   "quickAddFile": "Dosya ekle",
   "quickAddFromDevice": "Cihazdan dosya seç",
-  "quickAddTemplates": "Şablon",
   "quickAddFileWhat": "Bu dosyayla ne yapalım?",
-  "quickAddFileAsNote": "Notuna ekle",
   "quickAddFileUnsupported": "Bu dosya türü desteklenmiyor",
   "chatScopeAll": "Tüm notlar",
   "chatScopeNote": "Bu not",
@@ -2438,7 +2443,6 @@
   "shareTogetherInfo": "Aynı notu/klasörü siz ikiniz görür ve değiştirirsiniz",
   "shareCopySection": "KOPYA GÖNDER",
   "shareCopyInfo": "Arkadaşının gelen kutusuna bağımsız bir kopya gider",
-  "noteColorAccent": "Kenarı vurgula",
   "notebookViewOn": "Defter görünümü",
   "notebookViewOff": "Defter görünümünü kapat",
   "inkSemantics": "Elle çizim, {count} çizgi",
@@ -2530,5 +2534,27 @@
       }
     }
   },
-  "presenceSomeone": "Biri"
+  "presenceSomeone": "Biri",
+  "frameColorInfo": "Yalnız ana ekrandaki kartın çevresine çizilir; notun içinde görünmez",
+  "filterStarred": "Yıldızlı",
+  "fileUseBubbles": "Belge gibi not al",
+  "fileUseClassic": "Nota ek olarak ekle",
+  "fileUseClassicImageInfo": "Düz not açılır; görseller sayfaya yerleşir, yazı etrafından akar.",
+  "fileUseVideo": "Videoyla not al",
+  "fileUseVideoInfo": "Video üstte oynar, notunu altına yazarsın.",
+  "fileUseAudio": "Ses eki olarak ekle",
+  "fileUseAudioInfo": "Kayıt notta çalınabilir ek olarak durur; istersen sonra metne dökersin.",
+  "fileUseTranscribeInfo": "Konuşma yazıya dökülür ve metin notun gövdesine yazılır.",
+  "fileUseTranscribeImageInfo": "Görseldeki yazı okunur ve notun gövdesine yazılır.",
+  "fileUseDefault": "Varsayılan",
+  "fileUseMore": "+{count} dosya daha",
+  "@fileUseMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quickAddSectionMore": "Diğer",
+  "attachAnyFileInfo": "Her türden dosya: görsel sayfaya, PDF ve sunum belge olarak, ses ve video ek olarak girer"
 }

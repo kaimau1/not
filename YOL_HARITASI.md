@@ -258,6 +258,7 @@ F1.5'in en düşük sürüm kapısı yerindeyken yapılır.
   **Dosya ekle** (tek seçici, tür dosyadan; "metne dök" seçim sonrası
   seçenek) · Şablon.
   **Yapıldı:** `quick_add_fab.dart` yeniden yazıldı: Yakala (kamera/tarama/QR/ses) · Dosya (tek seçici, tür uzantıdan — `DocPicker.preselect`) · Daha fazla (şablon, liste türleri, çizim, Defter); `QuickAddActions.createFromFile`/`createNotebook`.
+  **2026-10-20 (kullanıcı isteği):** kapı levhaları kalktı — tek panel, gruplu ve tek dokunuş; dosya seçiminden sonra tek "ne yapalım" levhası.
 - [x] **F3.3 Tek sohbet motoru** — Sohbet ekranı, merkez sohbet kartı, Belge
   sohbeti, Beyin fırtınası, AI levhası sohbeti → kapsam çipi (Tüm notlar /
   Bu not / Bu belge / Klasör) + kip (Soru-cevap / Beyin fırtınası).
@@ -271,6 +272,7 @@ F1.5'in en düşük sürüm kapısı yerindeyken yapılır.
 - [x] **F3.6 Kavram çiftleri** — Sabitle + Yıldızla → tek kavram; Zemin +
   Çerçeve rengi → tek renk (+ isteğe bağlı vurgu). Veri göçü gerekir.
   **Yapıldı:** `Note.starred` kalktı (okumada pinned||starred), çerçeve rengi → `color` + `accent` ("Kenarı vurgula"); `migrateConceptPairs()` göçü ('f36'); yıldız arayüzü/süzgeci silindi.
+  **2026-10-20 GERİ ALINDI (kullanıcı kararı):** yıldız ayrı bayrak olarak döndü, çerçeve zeminden bağımsız ve yalnız ana ekran kartında; 'f36' göçü kaldırıldı (bkz. HAFIZA).
 - [x] **F3.7 Paylaşım iki kavram** — klasör paylaşımı + ortak not + arkadaşa
   gönder → "Birlikte düzenle" (not/klasör) ve "Kopya gönder".
   **Yapıldı:** Paylaş levhası iki bölüm: BİRLİKTE DÜZENLE (ortak not / klasör) ve KOPYA GÖNDER (arkadaşa); levha önce `hydrateNote` yapar.

@@ -722,11 +722,6 @@ class _HomeSection extends ConsumerWidget {
                 label: l10n.filterSheetTitle,
               ),
               (
-                id: UiItem.homeViewToggle,
-                icon: Icons.grid_view,
-                label: l10n.viewToggle,
-              ),
-              (
                 id: UiItem.homeMic,
                 icon: Icons.mic_none,
                 label: l10n.voiceAssistantTitle,

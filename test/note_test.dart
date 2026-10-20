@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
@@ -108,36 +107,26 @@ void main() {
       expect(note.copyWith().reminderAt, isNotNull);
     });
 
-    test('eski yıldızlı not sabitli okunur, yazımda starred temizlenir (F3.6)', () {
+    test('yıldız sabitlemeden ayrı okunur ve yazılır (2026-10-20)', () {
       final note = Note.fromMap('1', {'type': 'text', 'starred': true});
-      expect(note.pinned, isTrue);
-      expect(note.toMap()['starred'], isFalse);
-      expect(note.toMap()['pinned'], isTrue);
+      expect(note.starred, isTrue);
+      expect(note.pinned, isFalse);
+      expect(note.toMap()['starred'], isTrue);
+      expect(note.toMap()['pinned'], isFalse);
+      // copyWith başka alan değişince yıldız korunur.
+      expect(note.copyWith(title: 'x').starred, isTrue);
+      expect(note.copyWith(starred: false).toMap()['starred'], isFalse);
     });
 
-    test('sabitleme starred: false da yazar; renk vurguyla kenara (F3.6)', () {
-      expect(NotesRepository.colorPinFields(pinned: false), {
-        'pinned': false,
-        'starred': false,
-      });
-      expect(
-        NotesRepository.colorPinFields(color: NoteColor.red, accent: true),
-        {'color': 'red', 'frameColor': 'red'},
-      );
-      expect(
-        NotesRepository.colorPinFields(color: NoteColor.red),
-        {'color': 'red', 'frameColor': 'default'},
-      );
-    });
-
-    test('yalnız çerçeveli eski notun rengi zemine geçer (F3.6)', () {
+    test('zemin ve çerçeve bağımsız okunur (2026-10-20)', () {
       final note = Note.fromMap('1', {
         'type': 'text',
         'color': 'default',
         'frameColor': 'red',
       });
-      expect(note.color, NoteColor.red);
+      expect(note.color, NoteColor.none);
       expect(note.frameColor, NoteColor.red);
+      expect(note.toMap()['frameColor'], 'red');
     });
 
     test('etiketler toMap çıktısına yazılır', () {

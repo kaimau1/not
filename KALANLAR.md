@@ -6,6 +6,45 @@
 - [ ] Faz 1–4 ayrı oturumlarda, sırayla → bkz. `YOL_HARITASI.md` (madde
   listesi, sıra ve durum orada tutulur; burada tekrarlanmaz).
 
+## 2026-10-20 (2. tur) — kullanıcı listesi (13 madde) — CİHAZDA GÖRÜLMEDİ
+- [ ] **Senin yapacakların**: telefonlar bu sürüme (v1.1.N) geçince konsolda
+  `config/app` → `minClient: 3` (eski sürüm yıldızları siler, yalnız
+  çerçeveli notu renkli gösterir).
+- [ ] **Sürüm**: Ayarlar → Hakkında "1.1.N (N)" ve Release adı "v1.1.N" aynı.
+- [ ] **"+" paneli**: kapı levhası yok; Diğer · Kamera (foto/video/tara/QR) ·
+  Dosya ekle/YouTube (geniş) · Metin/Liste/Sıralı — hepsi tek dokunuş;
+  büyük yazı ölçeğinde panel kayıyor, taşmıyor.
+- [ ] **Dosya ekle**: PDF/görsel/sunum/video/ses seç → TEK levha (dosya adı,
+  başlık, seçenekler, varsayılan işaretli). Ses → "Ses eki olarak ekle" notta
+  çalınabilir ek; "Metne dök" metni yazıyor. iPhone/HEIC fotoğraf seçici
+  ikinci kez açılmadan ekleniyor. Editör → Ekle → "Dosya ekle" türü kendi
+  tanıyor (görsel sayfaya, PDF belge, ses/video ek).
+- [ ] **Defter kâğıdı**: ⋮ → Defter görünümü → Kâğıt → döşemeler; dokununca
+  arkadaki sayfa ANINDA değişiyor (ikinci, üçüncü seçimde de). Bloknot sarı,
+  milimetrik, izometrik yazı satırına oturuyor; web'de de.
+- [ ] **Çerçeve**: ⋮/uzun bas → Çerçeve rengi → ana ekran kartında renkli
+  kenar; notun İÇİNDE çerçeve YOK. Zemin rengi ayrı. Toplu seçimde de.
+- [ ] **Yıldız**: kart menüsü/editör ⋮ → Yıldızla; kartta sarı yıldız, editör
+  tarih yanında yıldız (dokununca kalkar); Süz → Yıldızlı. Sabitlemeden ayrı.
+- [ ] **Madde seçimi**: alt çubuk → Seç → yuvarlağın KENARINA, satırın sağ
+  boşluğuna dokununca da seçiliyor; seçince klavye kapanıyor; seçim
+  çubuğunda "Seçilenleri işaretle / işaretini kaldır".
+- [ ] **Ayarlar**: Görünüm, Yapay zekâ, Hesap, Ses… her alan aynı aşağı
+  kayan animasyonla açılıyor; AI → Gelişmiş ve tanılama da aynı.
+- [ ] **Süz**: ana ekranda ayrı "Süz" satırı yok; arama kutusunun sağında
+  simge; süzgeç seçince adı renkli çerçeveyle orada, × kaldırıyor. Görünüm
+  (ızgara/liste) Süz levhasının en üstünde.
+- [ ] **Sesle yazma bipleri**: uzun dikte boyunca yalnız İLK bip; ara
+  "dıt-dıdıt"lar yok; bitince müzik/bildirim sesi geri geliyor (Spotify
+  açıkken de, Rahatsız Etmeyin'deyken de). Uygulamayı dikte sırasında
+  kapat-aç → ses yine açık.
+- [ ] **Not açılışı**: ana ekrandan not açarken (özellikle görselli/PDF'li)
+  takılma azaldı; sabit PDF/video geçiş bitince yerine oturuyor.
+- [ ] **Klavye + medya**: sabit görsel/video/PDF varken nota yaz → medya
+  küçülmüyor, zıplamıyor; yalnız alt kısmı yumuşakça örtülüyor, klavye
+  kapanınca geri açılıyor. Balonlu PDF notunda sayfa notuna/balona yazarken
+  belge yeniden ölçeklenmiyor. Yüzen görselli notta imleç bir kez kayıyor.
+
 ## 2026-10-20 — Faz 4 + simge i6 — CİHAZDA GÖRÜLMEDİ
 - [ ] **Senin yapacakların**: (1) Cloud Functions Blaze planda yayınlanıyor
   mu — Actions → deploy → "Cloud Functions'ı yayınla" adımı yeşil olmalı

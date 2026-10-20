@@ -9,7 +9,7 @@ Geriye sadece **uygulamayı kurmak** ve **Gemini anahtarını girmek** kaldı.
 
 ## 1. Uygulamayı indir ve kur
 
-1. **Android:** https://github.com/kaimau1/not/releases → en son sürümün `notlar-v1.0.N.apk`
+1. **Android:** https://github.com/kaimau1/not/releases → en son sürümün `notlar-v1.1.N.apk`
    dosyasını telefona indirip kur (telefon "bilinmeyen kaynaklara izin ver" derse onayla).
    APK yalnız `main`'e başlığında `[apk]` geçen commit'le derlenir.
 2. **Bilgisayar:** web sürümü (Cloudflare Pages, `notlar-web`; `main`'e her push'ta

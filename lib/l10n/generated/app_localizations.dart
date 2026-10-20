@@ -2147,13 +2147,13 @@ abstract class AppLocalizations {
   /// No description provided for @backgroundColor.
   ///
   /// In tr, this message translates to:
-  /// **'Renk'**
+  /// **'Zemin rengi'**
   String get backgroundColor;
 
   /// No description provided for @backgroundColorInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Notun rengi; istersen kenarına da vurgu'**
+  /// **'Notun arka plan rengi — notun içinde ve ana ekranda görünür'**
   String get backgroundColorInfo;
 
   /// No description provided for @frameColor.
@@ -2780,6 +2780,18 @@ abstract class AppLocalizations {
   /// **'Tümünü seç'**
   String get selectAllItems;
 
+  /// No description provided for @checkSelectedItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilenleri işaretle'**
+  String get checkSelectedItems;
+
+  /// No description provided for @uncheckSelectedItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilenlerin işaretini kaldır'**
+  String get uncheckSelectedItems;
+
   /// No description provided for @hiddenFolder.
   ///
   /// In tr, this message translates to:
@@ -3121,6 +3133,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Görünüm'**
   String get viewToggle;
+
+  /// No description provided for @viewGrid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Izgara'**
+  String get viewGrid;
+
+  /// No description provided for @viewList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste'**
+  String get viewList;
 
   /// No description provided for @searchModeMeaning.
   ///
@@ -4885,6 +4909,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Düz'**
   String get archivePaperPlain;
+
+  /// No description provided for @archivePaperLegal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bloknot'**
+  String get archivePaperLegal;
+
+  /// No description provided for @archivePaperEngineering.
+  ///
+  /// In tr, this message translates to:
+  /// **'Milimetrik'**
+  String get archivePaperEngineering;
+
+  /// No description provided for @archivePaperIsometric.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzometrik'**
+  String get archivePaperIsometric;
 
   /// No description provided for @attachmentTagEmbed.
   ///
@@ -8972,23 +9014,11 @@ abstract class AppLocalizations {
   /// **'Cihazdan dosya seç'**
   String get quickAddFromDevice;
 
-  /// No description provided for @quickAddTemplates.
-  ///
-  /// In tr, this message translates to:
-  /// **'Şablon'**
-  String get quickAddTemplates;
-
   /// No description provided for @quickAddFileWhat.
   ///
   /// In tr, this message translates to:
   /// **'Bu dosyayla ne yapalım?'**
   String get quickAddFileWhat;
-
-  /// No description provided for @quickAddFileAsNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notuna ekle'**
-  String get quickAddFileAsNote;
 
   /// No description provided for @quickAddFileUnsupported.
   ///
@@ -9067,12 +9097,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Arkadaşının gelen kutusuna bağımsız bir kopya gider'**
   String get shareCopyInfo;
-
-  /// No description provided for @noteColorAccent.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kenarı vurgula'**
-  String get noteColorAccent;
 
   /// No description provided for @notebookViewOn.
   ///
@@ -9373,6 +9397,96 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Biri'**
   String get presenceSomeone;
+
+  /// No description provided for @frameColorInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız ana ekrandaki kartın çevresine çizilir; notun içinde görünmez'**
+  String get frameColorInfo;
+
+  /// No description provided for @filterStarred.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıldızlı'**
+  String get filterStarred;
+
+  /// No description provided for @fileUseBubbles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belge gibi not al'**
+  String get fileUseBubbles;
+
+  /// No description provided for @fileUseClassic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota ek olarak ekle'**
+  String get fileUseClassic;
+
+  /// No description provided for @fileUseClassicImageInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düz not açılır; görseller sayfaya yerleşir, yazı etrafından akar.'**
+  String get fileUseClassicImageInfo;
+
+  /// No description provided for @fileUseVideo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Videoyla not al'**
+  String get fileUseVideo;
+
+  /// No description provided for @fileUseVideoInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Video üstte oynar, notunu altına yazarsın.'**
+  String get fileUseVideoInfo;
+
+  /// No description provided for @fileUseAudio.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses eki olarak ekle'**
+  String get fileUseAudio;
+
+  /// No description provided for @fileUseAudioInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıt notta çalınabilir ek olarak durur; istersen sonra metne dökersin.'**
+  String get fileUseAudioInfo;
+
+  /// No description provided for @fileUseTranscribeInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuşma yazıya dökülür ve metin notun gövdesine yazılır.'**
+  String get fileUseTranscribeInfo;
+
+  /// No description provided for @fileUseTranscribeImageInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görseldeki yazı okunur ve notun gövdesine yazılır.'**
+  String get fileUseTranscribeImageInfo;
+
+  /// No description provided for @fileUseDefault.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varsayılan'**
+  String get fileUseDefault;
+
+  /// No description provided for @fileUseMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'+{count} dosya daha'**
+  String fileUseMore(int count);
+
+  /// No description provided for @quickAddSectionMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer'**
+  String get quickAddSectionMore;
+
+  /// No description provided for @attachAnyFileInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her türden dosya: görsel sayfaya, PDF ve sunum belge olarak, ses ve video ek olarak girer'**
+  String get attachAnyFileInfo;
 }
 
 class _AppLocalizationsDelegate

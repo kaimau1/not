@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart' show FieldValue;
 import 'package:file_selector/file_selector.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,8 +11,8 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/doc_picker.dart';
-import '../../../core/widgets/app_sheet.dart';
 import '../../settings/data/permissions_service.dart';
+import '../../settings/settings_providers.dart';
 import '../data/attachment_repository.dart';
 import '../data/document_scan.dart';
 import '../data/note_share.dart';
@@ -26,6 +25,7 @@ import '../domain/note_templates.dart';
 import 'note_template_sheet.dart';
 import '../domain/note_type.dart';
 import 'capture_mode_sheet.dart';
+import 'file_use_sheet.dart';
 import 'image_prepare_screen.dart';
 import 'notes_providers.dart';
 import 'qr_scan_screen.dart';
@@ -339,8 +339,11 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// Balonlu kipte ekran ÜSTTE sayfa ALTTA o sayfanın notu olacak şekilde
   /// ikiye bölünür; klasik kipte PDF sıradan bir ek olur ve not düz metin
   /// notudur. Seçim iptal edilirse boş not çıkışta kendiliğinden silinir.
-  Future<void> createPdfNote() async {
-    final choice = await _askCaptureMode(context.l10n.newPdfNote, 'pdf');
+  ///
+  /// [preset] verilirse (bkz. [createFromFile]) kip levhası sorulmaz.
+  Future<void> createPdfNote({CaptureChoice? preset}) async {
+    final choice =
+        preset ?? await _askCaptureMode(context.l10n.newPdfNote, 'pdf');
     if (choice == null || !mounted) return;
     await _openBlankNote(
       choice.mode == CaptureMode.bubbles ? NoteType.pdf : NoteType.text,
@@ -359,8 +362,9 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// hâlinde çalışıyor. Görseller belgeye çevrilince bunların hepsi bedava
   /// gelir; ayrı bir tip açmak aynı ekranların ikinci bir kopyasını
   /// (ve ikinci bir hata kaynağını) doğururdu.
-  Future<void> createImageNote() async {
-    final choice = await _askCaptureMode(context.l10n.newImageNote, 'image');
+  Future<void> createImageNote({CaptureChoice? preset}) async {
+    final choice =
+        preset ?? await _askCaptureMode(context.l10n.newImageNote, 'image');
     if (choice == null || !mounted) return;
     final l10n = context.l10n;
     final group = XTypeGroup(
@@ -391,8 +395,10 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   }
 
   /// "Sunum ekle not al": PDF yolunun slayt eşi.
-  Future<void> createSlidesNote() async {
-    final choice = await _askCaptureMode(context.l10n.newSlidesNote, 'slides');
+  Future<void> createSlidesNote({CaptureChoice? preset}) async {
+    final choice =
+        preset ??
+        await _askCaptureMode(context.l10n.newSlidesNote, 'slides');
     if (choice == null || !mounted) return;
     await _openBlankNote(
       choice.mode == CaptureMode.bubbles ? NoteType.slides : NoteType.text,
@@ -404,8 +410,8 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// "Galeriden video": var olan bir videodan not. Video notun üstüne
   /// sabitlenir, not altında yazılır (bkz. editördeki `startGalleryVideo`).
   /// Seçim iptal edilirse boş not çıkışta kendiliğinden silinir.
-  Future<void> createGalleryVideoNote() =>
-      _openBlankNote(NoteType.text, query: '?gvideo=1');
+  Future<void> createGalleryVideoNote({String title = ''}) =>
+      _openBlankNote(NoteType.text, query: '?gvideo=1', title: title);
 
   /// "YouTube videosu": bağlantı sorulur (panoda varsa hazır gelir), video
   /// notun üstüne sabitlenir ve izlerken altına not alınır.
@@ -415,23 +421,34 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// "Dosyayı metne dök": ses kaydı, video ya da görsel seçilir; nota ek
   /// olarak girer ve transkripti notun gövdesine yazılır (bkz. editördeki
   /// `startTranscribe`). Seçim iptal edilirse boş not kendiliğinden silinir.
-  Future<void> createTranscribeNote() =>
-      _openBlankNote(NoteType.text, query: '?transcribe=1');
+  Future<void> createTranscribeNote({String title = ''}) =>
+      _openBlankNote(NoteType.text, query: '?transcribe=1', title: title);
 
-  /// **"+ → DOSYA EKLE"** (F3.2): TEK seçici, akış dosyanın türünden.
-  /// Görsel → görsel notu, PDF → PDF notu, sunum → sunum notu, video →
-  /// videoyla not; görsel/videoda "Metne dök" seçim SONRASI sorulur, ses
-  /// doğrudan metne dökülür. Seçilen dosya akışın kendi seçicisine
-  /// [DocPicker.preselect] ile verilir (akış seçiciyi sormadan alır).
+  /// Ses dosyası nota ÇALINABİLİR EK olarak girer (metne dökmeden; bkz.
+  /// editördeki `startAudioFile`).
+  Future<void> createAudioFileNote({String title = ''}) =>
+      _openBlankNote(NoteType.text, query: '?afile=1', title: title);
+
+  /// **"+ → DOSYA"**: TEK seçici, akış dosyanın türünden.
+  ///
+  /// YENİDEN (kullanıcı bulgusu 2026-10-20: "dosya ekle aşaması çok
+  /// sıkıntılı, güzel değil"). ESKİDEN: kapı levhası (Cihazdan / YouTube) →
+  /// seçici → "ne yapalım?" → ilk seferde balonlu/klasik kip levhası →
+  /// kırpma; ses dosyası SORULMADAN metne dökülüyordu ve HEIC görsel
+  /// seçilince akışın kendi seçicisi dosyayı tanımadığı için seçici İKİNCİ
+  /// KEZ açılıyordu.
+  ///
+  /// ŞİMDİ: seçici doğrudan açılır (panelin "Dosya" hücresinden), ardından
+  /// TEK levha ([showFileUseSheet]): dosyanın özeti, isteğe bağlı başlık ve
+  /// türe göre seçenekler (varsayılan kip başta). Seçilen kip akışa verilir,
+  /// kip levhası bir daha sorulmaz. HEIC görsel PNG'ye çevrilir. Seçilen
+  /// dosya akışın kendi seçicisine [DocPicker.preselect] ile verilir.
   Future<void> createFromFile() async {
     final l10n = context.l10n;
-    const images = ['jpg', 'jpeg', 'png', 'webp', 'heic'];
-    const videos = ['mp4', 'mov', 'mkv', '3gp', 'webm'];
-    const audios = ['mp3', 'm4a', 'aac', 'wav', 'ogg', 'opus', 'flac', 'amr'];
     final files = await DocPicker.pickMany(
       XTypeGroup(
         label: l10n.quickAddFile,
-        extensions: [...images, 'pdf', 'pptx', ...videos, ...audios],
+        extensions: PickedFileKind.allExtensions,
         mimeTypes: [
           'image/*',
           'video/*',
@@ -443,10 +460,48 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       chooserTitle: l10n.quickAddFromDevice,
     );
     if (files.isEmpty || !mounted) return;
-    final first = files.first;
-    final ext = DocPicker.extensionOf(
-      first.name.isEmpty ? first.path : first.name,
+    String nameOf(XFile f) => f.name.isEmpty ? f.path : f.name;
+    final kind = PickedFileKind.of(nameOf(files.first));
+    if (kind == null) {
+      showQuickAddSnack(l10n.quickAddFileUnsupported);
+      return;
+    }
+    // Karışık seçimde ilk dosyanın türü geçerli; aynı türden olanlar alınır.
+    var same = [
+      for (final f in files)
+        if (PickedFileKind.of(nameOf(f)) == kind) f,
+    ];
+    if (kind == PickedFileKind.image) {
+      same = await normalizeHeicImages(same);
+      if (!mounted) return;
+      if (same.isEmpty) {
+        showQuickAddSnack(l10n.quickAddFileUnsupported);
+        return;
+      }
+    }
+    final stored = ref.read(sharedPreferencesProvider).getString(
+      captureModeDefaultKey,
     );
+    final preferred = CaptureMode.values
+        .where((m) => m.name == stored)
+        .firstOrNull;
+    final choice = await showFileUseSheet(
+      context,
+      kind: kind,
+      names: [for (final f in same) p.basename(nameOf(f))],
+      preferred: preferred,
+    );
+    if (choice == null || !mounted) return;
+    final preset = captureChoiceOf(choice);
+    // Kip levhasının kuralı: İLK seçim varsayılan olur ("Her seferinde sor"
+    // seçiliyse dokunulmaz).
+    if (preset != null && stored == null) {
+      await ref
+          .read(sharedPreferencesProvider)
+          .setString(captureModeDefaultKey, preset.mode.name);
+    }
+    if (!mounted) return;
+
     Future<void> run(List<XFile> pick, Future<void> Function() flow) async {
       DocPicker.preselect(pick);
       try {
@@ -456,68 +511,26 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       }
     }
 
-    if (images.contains(ext)) {
-      final same = [
-        for (final f in files)
-          if (images.contains(
-            DocPicker.extensionOf(f.name.isEmpty ? f.path : f.name),
-          ))
-            f,
-      ];
-      final transcribe = await _askFileUse(first.name, transcribable: true);
-      if (transcribe == null || !mounted) return;
-      await run(
-        transcribe ? [first] : same,
-        transcribe ? createTranscribeNote : createImageNote,
-      );
-    } else if (ext == 'pdf') {
-      await run(files, createPdfNote);
-    } else if (ext == 'pptx') {
-      await run([first], createSlidesNote);
-    } else if (videos.contains(ext)) {
-      final transcribe = await _askFileUse(first.name, transcribable: true);
-      if (transcribe == null || !mounted) return;
-      await run(
-        [first],
-        transcribe ? createTranscribeNote : createGalleryVideoNote,
-      );
-    } else if (audios.contains(ext)) {
-      await run([first], createTranscribeNote);
-    } else {
-      showQuickAddSnack(l10n.quickAddFileUnsupported);
+    final first = [same.first];
+    switch (choice.use) {
+      case FileUse.transcribe:
+        await run(first, () => createTranscribeNote(title: choice.title));
+      case FileUse.video:
+        await run(first, () => createGalleryVideoNote(title: choice.title));
+      case FileUse.audio:
+        await run(first, () => createAudioFileNote(title: choice.title));
+      case FileUse.bubbles || FileUse.classic:
+        switch (kind) {
+          case PickedFileKind.image:
+            await run(same, () => createImageNote(preset: preset));
+          case PickedFileKind.pdf:
+            await run(same, () => createPdfNote(preset: preset));
+          case PickedFileKind.slides:
+            await run(first, () => createSlidesNote(preset: preset));
+          case PickedFileKind.video || PickedFileKind.audio:
+            break;
+        }
     }
-  }
-
-  /// Görsel/videoda "notuna ekle" mi "metne dök" mü (true = metne dök);
-  /// iptalde null. Web'de metne dökme yok — doğrudan not.
-  Future<bool?> _askFileUse(String name, {required bool transcribable}) async {
-    if (kIsWeb || !transcribable) return false;
-    final l10n = context.l10n;
-    return showAppSheet<bool>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: Text(l10n.quickAddFileWhat),
-              subtitle: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
-            ),
-            ListTile(
-              leading: const Icon(Icons.note_add_outlined),
-              title: Text(l10n.quickAddFileAsNote),
-              onTap: () => Navigator.pop(sheetContext, false),
-            ),
-            ListTile(
-              leading: const Icon(Icons.subtitles_outlined),
-              title: Text(l10n.transcribeFile),
-              onTap: () => Navigator.pop(sheetContext, true),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   /// İçerikten not alan seçeneklerin ortak ilk adımı: **balonlu mu klasik mi**

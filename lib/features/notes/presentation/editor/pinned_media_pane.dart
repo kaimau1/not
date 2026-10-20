@@ -1,8 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
+import '../../../../core/widgets/after_route_transition.dart';
+import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/widgets/customizable.dart';
 import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
@@ -26,6 +30,9 @@ const double kPinnedBarHeight = 44;
 
 /// Klavye açıkken bölmenin altında notun yazılan satırına kalan en az yer.
 const double kPinnedNoteMinHeight = 72;
+
+/// Klavye açıkken medyanın görünür penceresinin en az yüksekliği.
+const double kPinnedVisibleFloor = 56;
 
 /// Bölmenin en büyük yüksekliği.
 ///
@@ -215,8 +222,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     max < kPinnedMinHeight ? kPinnedMinHeight : max,
   );
 
-  /// Klavyesiz (en büyük görülen) yükseklik — genişlik değişince sıfırlanır
-  /// (yönelim, pencere). Bkz. [pinnedMaxHeight].
+  /// Klavyesiz yükseklik — klavye kapalıyken ölçülen yükseklik; genişlik
+  /// değişince sıfırlanır (yönelim, pencere). Bkz. [pinnedMaxHeight].
   double _stableWidth = -1;
   double _stableHeight = 0;
 
@@ -225,10 +232,41 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
       _stableWidth = c.maxWidth;
       _stableHeight = 0;
     }
-    if (c.maxHeight.isFinite && c.maxHeight > _stableHeight) {
+    if (!c.maxHeight.isFinite) return _stableHeight;
+    // Klavye yokken gerçek değişimleri (ek şeridi açıldı, pencere) izler;
+    // klavye açıkken en büyük görülen kalır.
+    if (!_keyboard.open || c.maxHeight > _stableHeight) {
       _stableHeight = c.maxHeight;
     }
     return _stableHeight;
+  }
+
+  /// Klavyenin evresi (bkz. [KeyboardPhaseListener]).
+  KeyboardPhase _keyboard = (open: false, estimate: 0);
+
+  /// **KLAVYE AÇILINCA MEDYA KÜÇÜLMEZ** (kullanıcı bulgusu 2026-10-20:
+  /// "görsel/video/PDF sabitken klavye açılınca odak kayması, görselin boyut
+  /// değiştirmesi; zıplatmadan düzgün akış").
+  ///
+  /// KÖK NEDEN: gövde klavye OTURDUKTAN sonra tek seferde kısalıyor (bkz.
+  /// KeyboardSnap), bölmenin sınırı da onunla birlikte düşüyordu: görsel
+  /// bir karede küçülüp yukarı zıplıyor, not alanı sıçrıyor, imleç yeniden
+  /// kaydırılıyordu. Artık medya klavyesiz boyunda yerleşir ve hiç yeniden
+  /// ölçülmez; yer gerekiyorsa yalnız GÖRÜNÜR PENCERESİ, klavyeyle aynı anda
+  /// ve yumuşakça daralır — alttaki çubuk ve not üstüne kayar gibi örter.
+  /// Klavye kapanırken pencere aynı yoldan geri açılır.
+  double _visibleHeight({
+    required double layout,
+    required double available,
+    required double stable,
+  }) {
+    if (!_keyboard.open) return layout;
+    // Gövde henüz kısalmadıysa (klavye açılıyor) kalacak yer tahminle
+    // hesaplanır; kısaldıysa gerçek ölçü zaten elde.
+    final settled = stable - available > 40;
+    final room = settled ? available : available - _keyboard.estimate;
+    final fit = room - kPinnedBarHeight - kPinnedNoteMinHeight;
+    return math.min(layout, math.max(kPinnedVisibleFloor, fit));
   }
 
   bool get _unpinArmed =>
@@ -246,150 +284,172 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     final isSlide = widget.media.kind == AttachmentKind.slide;
     // Zamanlı medya: denetim çubuğu ve ilerleme çizgisi (video + ses).
     final timed = isVideo || isAudio;
-    return LayoutBuilder(
+    final layout = LayoutBuilder(
       builder: (context, constraints) {
+        final stable = _stable(constraints);
+        // Sürükleme sınırı O ANKİ yerden (klavye açıksa notun satırı kalsın);
+        // medyanın YERLEŞİM boyu ise klavyesiz yükseklikten — klavye açılınca
+        // medya yeniden ölçülmez (bkz. [_visibleHeight]).
         final max = pinnedMaxHeight(
           available: constraints.maxHeight,
-          stable: _stable(constraints),
+          stable: stable,
         );
+        final layoutMax = pinnedMaxHeight(available: stable, stable: stable);
         final live = _live;
         // Sürüklerken bölme sınırın altına da iner (geri bırakma hissi);
         // bırakınca sınıra oturur ya da sayfaya döner.
         final height = live != null
             ? live.clamp(0.0, max < kPinnedMinHeight ? kPinnedMinHeight : max)
-            : _clamp(widget.media.pinHeight, max);
+            : _clamp(widget.media.pinHeight, layoutMax);
+        final visible = live != null
+            ? height
+            : _visibleHeight(
+                layout: height,
+                available: constraints.maxHeight,
+                stable: stable,
+              );
         return Column(
           children: [
-            SizedBox(
-              height: height,
-              child: isText
-                  // METİN (2026-10-17): kaydırılan, seçilebilen kâğıt. Basılı
-                  // tutmak metni SEÇER (görseldeki "aşağı çekip bırak"
-                  // jesti yok) — bölmeden çıkış anahtardan/menüden.
-                  ? TextReaderView(
-                      key: ValueKey('pinned-text-${widget.media.id}'),
-                      attachment: widget.media,
-                    )
-                  : isAudio
-                  // SES: oynatıcı kartı; ±sn, hız ve "Not al" çubukta.
-                  ? AudioCardBox(
-                      key: ValueKey('pinned-audio-${widget.media.id}'),
-                      attachment: widget.media,
-                      noteAtButton: false,
-                    )
-                  : isSlide
-                  // SUNUM (2026-10-17): slayt çevrilebilen kutu; bölmeden
-                  // çıkış görünüm anahtarından.
-                  ? SlidePageBox(
-                      key: ValueKey('pinned-slide-${widget.media.id}'),
-                      attachment: widget.media,
-                      onChanged: widget.onChanged ?? (_) {},
-                    )
-                  : isPdf
-                  // Belge kutusu kendi jestlerini kullanır (yatay kaydırma
-                  // sayfa çevirir, çubuğu sayfa atlar); bölmeden çıkış
-                  // görünüm anahtarından.
-                  ? ColoredBox(
-                      color: scheme.surfaceContainerHigh,
-                      child: Center(
-                        child: AspectRatio(
-                          aspectRatio: pdfBoxAspect(
-                            (widget.media.width ?? 0).toDouble(),
-                            (widget.media.height ?? 0).toDouble(),
-                            widget.media.pdfTurns,
-                          ),
-                          child: PdfPageBox(
-                            key: ValueKey('pinned-pdf-${widget.media.id}'),
-                            attachment: widget.media,
-                            onChanged: widget.onChanged ?? (_) {},
-                            // Balonludan sabite alınan belge balonlarıyla
-                            // görünür; çubukta göster/gizle.
-                            showBubbles: true,
+            KeyboardClipWindow(
+              full: height,
+              visible: visible,
+              animate: live == null,
+              // NOT AÇILIŞI HAFİF (kullanıcı bulgusu 2026-10-20: "notu
+              // açarken ufak donma"): oynatıcı/belge görüntüleyicisi rota
+              // geçişi bitince kurulur (bkz. AfterRouteTransition).
+              child: AfterRouteTransition(
+                placeholder: ColoredBox(
+                  color: isVideo ? Colors.black : scheme.surfaceContainerHigh,
+                ),
+                child: isText
+                    // METİN (2026-10-17): kaydırılan, seçilebilen kâğıt. Basılı
+                    // tutmak metni SEÇER (görseldeki "aşağı çekip bırak"
+                    // jesti yok) — bölmeden çıkış anahtardan/menüden.
+                    ? TextReaderView(
+                        key: ValueKey('pinned-text-${widget.media.id}'),
+                        attachment: widget.media,
+                      )
+                    : isAudio
+                    // SES: oynatıcı kartı; ±sn, hız ve "Not al" çubukta.
+                    ? AudioCardBox(
+                        key: ValueKey('pinned-audio-${widget.media.id}'),
+                        attachment: widget.media,
+                        noteAtButton: false,
+                      )
+                    : isSlide
+                    // SUNUM (2026-10-17): slayt çevrilebilen kutu; bölmeden
+                    // çıkış görünüm anahtarından.
+                    ? SlidePageBox(
+                        key: ValueKey('pinned-slide-${widget.media.id}'),
+                        attachment: widget.media,
+                        onChanged: widget.onChanged ?? (_) {},
+                      )
+                    : isPdf
+                    // Belge kutusu kendi jestlerini kullanır (yatay kaydırma
+                    // sayfa çevirir, çubuğu sayfa atlar); bölmeden çıkış
+                    // görünüm anahtarından.
+                    ? ColoredBox(
+                        color: scheme.surfaceContainerHigh,
+                        child: Center(
+                          child: AspectRatio(
+                            aspectRatio: pdfBoxAspect(
+                              (widget.media.width ?? 0).toDouble(),
+                              (widget.media.height ?? 0).toDouble(),
+                              widget.media.pdfTurns,
+                            ),
+                            child: PdfPageBox(
+                              key: ValueKey('pinned-pdf-${widget.media.id}'),
+                              attachment: widget.media,
+                              onChanged: widget.onChanged ?? (_) {},
+                              // Balonludan sabite alınan belge balonlarıyla
+                              // görünür; çubukta göster/gizle.
+                              showBubbles: true,
+                            ),
                           ),
                         ),
-                      ),
-                    )
-                  : GestureDetector(
-                      onTap: isVideo ? null : widget.onOpen,
-                      onLongPressStart: (_) {
-                        HapticFeedback.selectionClick();
-                        setState(() {
-                          _pulling = true;
-                          _pullDown = 0;
-                        });
-                      },
-                      onLongPressMoveUpdate: (d) =>
-                          setState(() => _pullDown = d.offsetFromOrigin.dy),
-                      onLongPressEnd: (_) {
-                        final unpin = _unpinArmed;
-                        setState(() {
+                      )
+                    : GestureDetector(
+                        onTap: isVideo ? null : widget.onOpen,
+                        onLongPressStart: (_) {
+                          HapticFeedback.selectionClick();
+                          setState(() {
+                            _pulling = true;
+                            _pullDown = 0;
+                          });
+                        },
+                        onLongPressMoveUpdate: (d) =>
+                            setState(() => _pullDown = d.offsetFromOrigin.dy),
+                        onLongPressEnd: (_) {
+                          final unpin = _unpinArmed;
+                          setState(() {
+                            _pulling = false;
+                            _pullDown = 0;
+                          });
+                          if (unpin) widget.onUnpin();
+                        },
+                        onLongPressCancel: () => setState(() {
                           _pulling = false;
                           _pullDown = 0;
-                        });
-                        if (unpin) widget.onUnpin();
-                      },
-                      onLongPressCancel: () => setState(() {
-                        _pulling = false;
-                        _pullDown = 0;
-                      }),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          ColoredBox(
-                            color: isVideo
-                                ? Colors.black
-                                : scheme.surfaceContainerHigh,
-                            child: Transform.translate(
-                              offset: Offset(
-                                0,
-                                _pulling ? _pullDown.clamp(0, 140) : 0,
-                              ),
-                              child: Opacity(
-                                opacity: _pulling ? 0.6 : 1,
-                                child: NoteMediaBox(
-                                  // Ek değişince (başka medya sabitlenince)
-                                  // oynatıcı da yenilensin.
-                                  key: ValueKey(widget.media.id),
-                                  attachment: widget.media,
-                                  fit: BoxFit.contain,
-                                  inlineWebVideo: true,
-                                  showWebTitle: true,
-                                  // Denetim bölmenin çubuğunda.
-                                  videoControls: false,
+                        }),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            ColoredBox(
+                              color: isVideo
+                                  ? Colors.black
+                                  : scheme.surfaceContainerHigh,
+                              child: Transform.translate(
+                                offset: Offset(
+                                  0,
+                                  _pulling ? _pullDown.clamp(0, 140) : 0,
+                                ),
+                                child: Opacity(
+                                  opacity: _pulling ? 0.6 : 1,
+                                  child: NoteMediaBox(
+                                    // Ek değişince (başka medya sabitlenince)
+                                    // oynatıcı da yenilensin.
+                                    key: ValueKey(widget.media.id),
+                                    attachment: widget.media,
+                                    fit: BoxFit.contain,
+                                    inlineWebVideo: true,
+                                    showWebTitle: true,
+                                    // Denetim bölmenin çubuğunda.
+                                    videoControls: false,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          if (!isVideo && !_pulling)
-                            if (_bubblesFor(widget.bubbleDoc)
-                                case final bubbles?)
-                              LayoutBuilder(
-                                builder: (context, box) {
-                                  final rect = _imageRect(box.biggest);
-                                  if (rect == null) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  return Stack(
-                                    clipBehavior: Clip.none,
-                                    children: [
-                                      Positioned.fromRect(
-                                        rect: rect,
-                                        child: BubblePageLayer(
-                                          controller: bubbles,
-                                          page: 1,
-                                          readOnly: true,
-                                          longPressAdd: false,
+                            if (!isVideo && !_pulling)
+                              if (_bubblesFor(widget.bubbleDoc)
+                                  case final bubbles?)
+                                LayoutBuilder(
+                                  builder: (context, box) {
+                                    final rect = _imageRect(box.biggest);
+                                    if (rect == null) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        Positioned.fromRect(
+                                          rect: rect,
+                                          child: BubblePageLayer(
+                                            controller: bubbles,
+                                            page: 1,
+                                            readOnly: true,
+                                            longPressAdd: false,
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
-                          if (_unpinArmed)
-                            _UnpinHint(label: l10n.unpinMediaRelease),
-                        ],
+                                      ],
+                                    );
+                                  },
+                                ),
+                            if (_unpinArmed)
+                              _UnpinHint(label: l10n.unpinMediaRelease),
+                          ],
+                        ),
                       ),
-                    ),
+              ),
             ),
             // AYRAÇ ÇUBUĞU: dikey sürükleme bölmeyi boyutlar; düğmeler de
             // BURADA (kullanıcı bulgusu 2026-10-11: medyanın üstüne konan
@@ -445,6 +505,12 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
           ],
         );
       },
+    );
+    return KeyboardPhaseListener(
+      onChanged: (phase) {
+        if (mounted) setState(() => _keyboard = phase);
+      },
+      child: layout,
     );
   }
 

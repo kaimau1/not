@@ -1124,10 +1124,11 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get backgroundColor => 'Renk';
+  String get backgroundColor => 'Zemin rengi';
 
   @override
-  String get backgroundColorInfo => 'Notun rengi; istersen kenarına da vurgu';
+  String get backgroundColorInfo =>
+      'Notun arka plan rengi — notun içinde ve ana ekranda görünür';
 
   @override
   String get frameColor => 'Çerçeve';
@@ -1465,6 +1466,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get selectAllItems => 'Tümünü seç';
 
   @override
+  String get checkSelectedItems => 'Seçilenleri işaretle';
+
+  @override
+  String get uncheckSelectedItems => 'Seçilenlerin işaretini kaldır';
+
+  @override
   String get hiddenFolder => 'Gizli klasör';
 
   @override
@@ -1652,6 +1659,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get viewToggle => 'Görünüm';
+
+  @override
+  String get viewGrid => 'Izgara';
+
+  @override
+  String get viewList => 'Liste';
 
   @override
   String get searchModeMeaning => 'Anlam';
@@ -2608,6 +2621,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get archivePaperPlain => 'Düz';
+
+  @override
+  String get archivePaperLegal => 'Bloknot';
+
+  @override
+  String get archivePaperEngineering => 'Milimetrik';
+
+  @override
+  String get archivePaperIsometric => 'İzometrik';
 
   @override
   String get attachmentTagEmbed => 'Ek göm';
@@ -4984,13 +5006,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get quickAddFromDevice => 'Cihazdan dosya seç';
 
   @override
-  String get quickAddTemplates => 'Şablon';
-
-  @override
   String get quickAddFileWhat => 'Bu dosyayla ne yapalım?';
-
-  @override
-  String get quickAddFileAsNote => 'Notuna ekle';
 
   @override
   String get quickAddFileUnsupported => 'Bu dosya türü desteklenmiyor';
@@ -5033,9 +5049,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get shareCopyInfo =>
       'Arkadaşının gelen kutusuna bağımsız bir kopya gider';
-
-  @override
-  String get noteColorAccent => 'Kenarı vurgula';
 
   @override
   String get notebookViewOn => 'Defter görünümü';
@@ -5207,4 +5220,57 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get presenceSomeone => 'Biri';
+
+  @override
+  String get frameColorInfo =>
+      'Yalnız ana ekrandaki kartın çevresine çizilir; notun içinde görünmez';
+
+  @override
+  String get filterStarred => 'Yıldızlı';
+
+  @override
+  String get fileUseBubbles => 'Belge gibi not al';
+
+  @override
+  String get fileUseClassic => 'Nota ek olarak ekle';
+
+  @override
+  String get fileUseClassicImageInfo =>
+      'Düz not açılır; görseller sayfaya yerleşir, yazı etrafından akar.';
+
+  @override
+  String get fileUseVideo => 'Videoyla not al';
+
+  @override
+  String get fileUseVideoInfo => 'Video üstte oynar, notunu altına yazarsın.';
+
+  @override
+  String get fileUseAudio => 'Ses eki olarak ekle';
+
+  @override
+  String get fileUseAudioInfo =>
+      'Kayıt notta çalınabilir ek olarak durur; istersen sonra metne dökersin.';
+
+  @override
+  String get fileUseTranscribeInfo =>
+      'Konuşma yazıya dökülür ve metin notun gövdesine yazılır.';
+
+  @override
+  String get fileUseTranscribeImageInfo =>
+      'Görseldeki yazı okunur ve notun gövdesine yazılır.';
+
+  @override
+  String get fileUseDefault => 'Varsayılan';
+
+  @override
+  String fileUseMore(int count) {
+    return '+$count dosya daha';
+  }
+
+  @override
+  String get quickAddSectionMore => 'Diğer';
+
+  @override
+  String get attachAnyFileInfo =>
+      'Her türden dosya: görsel sayfaya, PDF ve sunum belge olarak, ses ve video ek olarak girer';
 }

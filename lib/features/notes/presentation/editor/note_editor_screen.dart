@@ -113,9 +113,9 @@ import 'pinned_media_pane.dart';
 import 'embed_sheet.dart';
 import '../../domain/note_pages.dart';
 import '../../data/notebook_copy.dart';
-import '../../domain/archive_paper.dart';
 import '../../domain/notebook_migration.dart';
 import 'notebook_paper.dart';
+import '../file_use_sheet.dart';
 import 'note_history_sheet.dart';
 import 'note_presence.dart';
 import 'note_menu_sheet.dart';
@@ -222,6 +222,7 @@ bool sameRenderedNote(Note a, Note b) {
       a.color != b.color ||
       a.frameColor != b.frameColor ||
       a.pinned != b.pinned ||
+      a.starred != b.starred ||
       a.locked != b.locked ||
       a.folderId != b.folderId ||
       a.fontFamily != b.fontFamily ||
@@ -232,6 +233,9 @@ bool sameRenderedNote(Note a, Note b) {
       a.titleTextOpacity != b.titleTextOpacity ||
       a.backgroundImageId != b.backgroundImageId ||
       a.backgroundOpacity != b.backgroundOpacity ||
+      // Defter görünümü ve kâğıt deseni (bkz. `_sameVisual` kök neden notu).
+      a.paged != b.paged ||
+      a.archivePaper != b.archivePaper ||
       a.orderIndex != b.orderIndex ||
       a.deletedAt != b.deletedAt ||
       a.archivedAt != b.archivedAt ||
@@ -361,6 +365,7 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     this.startGalleryVideo = false,
     this.startYouTube = false,
     this.startTranscribe = false,
+    this.startAudioFile = false,
   });
 
   final String noteId;
@@ -434,6 +439,11 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   /// (+) menüsündeki "Dosyayı metne dök": açılışta ses/video/görsel seçilir,
   /// nota eklenir ve metne dökülür; metin notun gövdesine yazılır.
   final bool startTranscribe;
+
+  /// (+) → Dosya → ses → "Ses eki olarak ekle": açılışta ses dosyası
+  /// seçilir (önceden seçildiyse sormadan) ve nota çalınabilir ek olarak
+  /// girer.
+  final bool startAudioFile;
 
   @override
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
@@ -589,6 +599,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _pendingGalleryVideo = false;
   bool _pendingYouTube = false;
   bool _pendingTranscribe = false;
+  bool _pendingAudioFile = false;
 
   void _runPendingIntents() {
     if (!mounted || _note == null) return;
@@ -648,6 +659,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (_pendingTranscribe) {
       _pendingTranscribe = false;
       unawaited(_transcribeFile());
+    }
+    if (_pendingAudioFile) {
+      _pendingAudioFile = false;
+      unawaited(_pickAudioFile());
     }
   }
 
@@ -1004,10 +1019,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Arka plandaki boş not temizliği bu notu ATLASIN (bkz. cleanupEmptyNotes):
     // kullanıcı yazmaya yeni başladığında doküman kısa bir süre boş görünür.
     openEditorNoteIds.add(widget.noteId);
-    // Notu AÇMAK da bir çalışma izidir ("en çok çalışılan" sıralaması). İlk
-    // kareden sonra: initState içinde sağlayıcı yazmak build'in ortasına
-    // düşer ve Riverpod bunu hata sayar.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Notu AÇMAK da bir çalışma izidir ("en çok çalışılan" sıralaması).
+    // GEÇİŞ BİTİNCE (kullanıcı bulgusu 2026-10-20: "notu açarken ufak
+    // donma"): ilk kareden hemen sonra yazılınca "en çok çalışılan"
+    // sıralamasındaki ana ekran, editör kayarak gelirken bütün ızgarasını
+    // yeniden kuruyordu. Sayaç beklesin; kimse bunu o anda görmüyor.
+    Timer(const Duration(milliseconds: 650), () {
       if (mounted) ref.read(noteActivityProvider.notifier).touch(widget.noteId);
     });
     // dispose'da `ref` kullanılamadığından (bkz. yukarıdaki KÖK NEDEN notu)
@@ -1093,6 +1110,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _pendingGalleryVideo = widget.startGalleryVideo;
     _pendingYouTube = widget.startYouTube;
     _pendingTranscribe = widget.startTranscribe;
+    _pendingAudioFile = widget.startAudioFile;
     WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
     final owner = widget.ownerId;
     _sub = ref.listenManual(owner == null
@@ -1193,6 +1211,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   ),
             aiSummary: incoming.aiSummary,
             pinned: incoming.pinned,
+            starred: incoming.starred,
             locked: incoming.locked,
             tags: incoming.tags,
             color: incoming.color,
@@ -1244,10 +1263,46 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           }
         }
         _note = merged;
-        if (!sameRenderedNote(previous, merged)) setState(() {});
+        if (!sameRenderedNote(previous, merged)) _setStateAfterOpening();
       }
     }, fireImmediately: true);
   }
+
+  /// Akıştan gelen değişikliğin yeniden çizimi — rota AÇILIRKEN geçişin
+  /// sonuna ertelenir.
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-10-20: "ana ekranda notu açmaya
+  /// bastığımda ufak bir donma oluyor"): editör önbellekteki HAFİF notla
+  /// açılıyor (bkz. [_cachedNote]); notun kendi belgesi (ağır alanlar, son
+  /// sürüm) çoğu zaman sayfa kayarken geliyor ve 4000 satırlık build geçişin
+  /// ORTASINDA bir kez daha koşuyordu — kayan sayfa bir an takılıyordu. Veri
+  /// (`_note`) hemen güncel; yalnız çizim geçiş bitince yapılır.
+  ///
+  /// Rotanın animasyonuna `ModalRoute.of` ile BAKILMAZ: o, editörü rotanın
+  /// her durum değişimine (üstüne görüntüleyici açılınca) bağlar ve 4000
+  /// satırlık build'i o geçişin ortasında koşturur. Açılıştan geçen süre
+  /// yeter: geçiş ~420 ms (bkz. SmoothPageTransitionsBuilder); geniş ekranda
+  /// geçiş yoksa en kötü ihtimalle ilk yarım saniyedeki bir çizim bekler.
+  void _setStateAfterOpening() {
+    const opening = Duration(milliseconds: 450);
+    final left = opening - _openedFor.elapsed;
+    if (left <= Duration.zero) {
+      setState(() {});
+      return;
+    }
+    if (_redrawAfterOpening) return;
+    _redrawAfterOpening = true;
+    Timer(left, () {
+      _redrawAfterOpening = false;
+      if (mounted) setState(() {});
+    });
+  }
+
+  /// Editör ne zamandır açık (bkz. [_setStateAfterOpening]).
+  final _openedFor = Stopwatch()..start();
+
+  /// Geçiş sonuna ertelenmiş bir yeniden çizim bekliyor mu.
+  bool _redrawAfterOpening = false;
 
   /// **EŞZAMANLI DÜZENLEME** (F4.1): kullanıcı yazarken başka biri (ya da
   /// ikinci cihaz) aynı notu değiştirdi. Eskiden uzaktaki içerik yok
@@ -1475,6 +1530,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       a.color == b.color &&
       a.frameColor == b.frameColor &&
       a.pinned == b.pinned &&
+      a.starred == b.starred &&
       a.locked == b.locked &&
       a.folderId == b.folderId &&
       a.fontFamily == b.fontFamily &&
@@ -1492,6 +1548,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // yeniden çizimde (ör. editörden çıkıp girmek) görünüyordu.
       a.listColumns == b.listColumns &&
       a.archivePages.length == b.archivePages.length &&
+      // KÖK NEDEN (kullanıcı bulgusu 2026-10-20: "defter görünümünde kâğıt
+      // tipi seçimi çalışmıyor"): Defter görünümü ve kâğıt deseni burada
+      // KARŞILAŞTIRILMIYORDU. İlk değişiklikten sonra (geri al düğmesi zaten
+      // etkin) seçim "saf yazım" sayılıyor, `setState` atlanıyor ve yeni
+      // desen ancak başka bir yeniden çizimde görünüyordu.
+      a.paged == b.paged &&
+      a.archivePaper == b.archivePaper &&
       a.orderIndex == b.orderIndex &&
       a.deletedAt == b.deletedAt &&
       a.archivedAt == b.archivedAt &&
@@ -1827,6 +1890,74 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         file.name,
         asFile: asFile,
       );
+    }
+  }
+
+  /// **TEK "DOSYA EKLE"** (2026-10-20): her desteklenen dosya tek seçiciden;
+  /// tür uzantıdan. Görsel sayfaya yerleşir; PDF, sunum, ses ve video kendi
+  /// yollarına seçici SORULMADAN verilir ([DocPicker.preselect]). HEIC
+  /// görsel PNG'ye çevrilir.
+  Future<void> _attachAnyFile() async {
+    final l10n = context.l10n;
+    final files = await DocPicker.pickMany(
+      XTypeGroup(
+        label: l10n.quickAddFile,
+        extensions: PickedFileKind.allExtensions,
+        mimeTypes: [
+          'image/*',
+          'video/*',
+          'audio/*',
+          'application/pdf',
+          DocPicker.byExtension['pptx']!,
+        ],
+      ),
+      chooserTitle: l10n.quickAddFile,
+    );
+    if (files.isEmpty || !mounted) return;
+    String nameOf(XFile f) => f.name.isEmpty ? f.path : f.name;
+    final kind = PickedFileKind.of(nameOf(files.first));
+    if (kind == null) {
+      _showSnack(l10n.quickAddFileUnsupported);
+      return;
+    }
+    var same = [
+      for (final f in files)
+        if (PickedFileKind.of(nameOf(f)) == kind) f,
+    ];
+    Future<void> handOff(
+      List<XFile> pick,
+      Future<Object?> Function() flow,
+    ) async {
+      DocPicker.preselect(pick);
+      try {
+        await flow();
+      } finally {
+        DocPicker.takePreselected();
+      }
+    }
+
+    switch (kind) {
+      case PickedFileKind.image:
+        same = await normalizeHeicImages(same);
+        if (same.isEmpty) {
+          if (mounted) _showSnack(l10n.quickAddFileUnsupported);
+          return;
+        }
+        for (final f in same) {
+          if (!mounted) return;
+          await _addImageBytes(
+            await f.readAsBytes(),
+            nameOf(f).split(RegExp(r'[\\/]')).last,
+          );
+        }
+      case PickedFileKind.pdf:
+        await handOff(same, _pickPdf);
+      case PickedFileKind.slides:
+        await handOff([same.first], _pickSlide);
+      case PickedFileKind.video:
+        await handOff([same.first], _addVideoFromGallery);
+      case PickedFileKind.audio:
+        await handOff([same.first], _pickAudioFile);
     }
   }
 
@@ -3407,6 +3538,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         await _scanDocument();
       case 'qr':
         await _scanQr();
+      case 'any-file':
+        await _attachAnyFile();
       case 'pdf':
         await _pickPdf();
       case 'slide':
@@ -3757,6 +3890,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final action = await showNoteEditorMenu(
       context,
       pinned: note.pinned,
+      starred: note.starred,
       paged: note.paged,
       locked: note.locked,
       archived: note.archivedAt != null,
@@ -3781,6 +3915,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         _toggleDocumentView();
       case 'pin':
         _mutate((n) => n.copyWith(pinned: !n.pinned), immediate: true);
+      case 'star':
+        _mutate((n) => n.copyWith(starred: !n.starred), immediate: true);
       case 'paged':
         _mutate((n) => n.copyWith(paged: !n.paged), immediate: true);
       case 'paper':
@@ -5868,6 +6004,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               title: Text(l10n.backgroundColor),
               onTap: () => Navigator.pop(sheetContext, 'bg'),
             ),
+            // ÇERÇEVE GERİ GELDİ (kullanıcı isteği 2026-10-20) — yalnız ana
+            // ekran kartında çizilir; alt satır bunu söyler.
+            ListTile(
+              leading: _colorLeading(note.frameColor, frame: true),
+              title: Text(l10n.frameColor),
+              subtitle: Text(l10n.frameColorInfo),
+              onTap: () => Navigator.pop(sheetContext, 'frame'),
+            ),
             // Zemin görseli renk seçiminin yanında: ikisi de "notun zemini".
             ListTile(
               leading: const Icon(Icons.wallpaper),
@@ -5883,19 +6027,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       await _showBackgroundSheet();
       return;
     }
-    // Editörde şerit CANLI çalışır: dokunulan renk anında sayfaya uygulanır
-    // ve şerit açık kalır (Keep davranışı).
+    final frame = target == 'frame';
+    // Editörde şerit CANLI çalışır: dokunulan renk anında uygulanır ve şerit
+    // açık kalır (Keep davranışı). Çerçeve editörde çizilmediği için onun
+    // sonucu ana ekrana dönünce kartta görünür.
     await showNoteColorPicker(
       context,
-      current: note.color,
-      accent: note.frameColor != NoteColor.none,
-      onChanged: (c) {
+      frame: frame,
+      current: frame ? note.frameColor : note.color,
+      onChanged: (picked) {
         if (!mounted) return;
         _mutate(
-          (n) => n.copyWith(
-            color: c.color,
-            frameColor: c.accent ? c.color : NoteColor.none,
-          ),
+          (n) => frame
+              ? n.copyWith(frameColor: picked)
+              : n.copyWith(color: picked),
           immediate: true,
         );
       },
@@ -5915,41 +6060,30 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
-  /// Defter görünümünün kâğıt deseni.
+  /// Defter görünümünün kâğıt deseni: önizlemeli döşemeler, dokunuş ANINDA
+  /// uygulanır ve levha açık kalır (bkz. [NotebookPaperPicker]).
   Future<void> _pickPaper() async {
     final note = _note;
     if (note == null) return;
-    final l10n = context.l10n;
-    final picked = await showAppSheet<ArchivePaper>(
+    await showAppSheet<void>(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: RadioGroup<ArchivePaper>(
-          groupValue: note.archivePaper,
-          onChanged: (v) => Navigator.pop(sheetContext, v),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final paper in ArchivePaper.values)
-                RadioListTile<ArchivePaper>(
-                  value: paper,
-                  title: Text(
-                    archivePaperLabel(
-                      paper,
-                      lined: l10n.archivePaperLined,
-                      grid: l10n.archivePaperGrid,
-                      dots: l10n.archivePaperDots,
-                      plain: l10n.archivePaperPlain,
-                    ),
-                  ),
-                ),
-            ],
+        child: SingleChildScrollView(
+          child: NotebookPaperPicker(
+            initial: note.archivePaper,
+            onChanged: (picked) {
+              if (!mounted) return;
+              _mutate(
+                (n) => n.copyWith(archivePaper: picked),
+                immediate: true,
+              );
+            },
           ),
         ),
       ),
     );
-    if (picked == null || !mounted) return;
-    _mutate((n) => n.copyWith(archivePaper: picked), immediate: true);
   }
 
   /// Notun ZEMİN görselini içeriğin ARKASINA serer.
@@ -8678,6 +8812,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           ),
                         ),
                       ),
+                      // Yıldızlı göstergesi tarihin yanında; dokununca
+                      // yıldız kalkar (menüye gitmeden geri alınabilsin).
+                      if (note.starred)
+                        IconButton(
+                          tooltip: l10n.unstar,
+                          visualDensity: VisualDensity.compact,
+                          icon: Icon(
+                            Icons.star,
+                            size: 16,
+                            color: Colors.amber.shade600,
+                          ),
+                          onPressed: () => _mutate(
+                            (n) => n.copyWith(starred: false),
+                            immediate: true,
+                          ),
+                        ),
                     ],
                   ),
                   ),
@@ -8881,25 +9031,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   Expanded(
                     child: SafeArea(
                       bottom: false,
+                      // ÇERÇEVE EDİTÖRDE ÇİZİLMEZ (kullanıcı isteği
+                      // 2026-10-20: "çerçeve sadece dashboarda görünsün"):
+                      // notun içi sade kalır, renk kartta görünür.
                       child: _withBackground(
                         note,
                         bgImage,
-                        note.frameColor == NoteColor.none
-                            ? _withPaper(note, noteBodyStyle, body)
-                            : Container(
-                                margin: const EdgeInsets.fromLTRB(6, 0, 6, 6),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: NoteColors.swatch(note.frameColor),
-                                    width: 2.5,
-                                  ),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: _withPaper(note, noteBodyStyle, body),
-                                ),
-                              ),
+                        _withPaper(note, noteBodyStyle, body),
                       ),
                     ),
                   ),

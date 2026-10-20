@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/keyboard_snap.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
 import '../../domain/page_notes.dart';
@@ -157,6 +158,64 @@ class _PageNotePaneState extends State<PageNotePane> {
   double _split = 0.55;
   static const _minSplit = 0.2;
   static const _maxSplit = 0.85;
+
+  /// **KLAVYE AÇILINCA BELGE KÜÇÜLMEZ** (kullanıcı bulgusu 2026-10-20:
+  /// "balonlu kipte klavye açılınca görsel boyut değiştiriyor, odak
+  /// kayıyor"). KÖK NEDEN: iki bölme esnek paylarla (flex) dizilmişti; gövde
+  /// klavye oturunca tek seferde kısalıyor, belge de payıyla birlikte
+  /// küçülüp yeniden ölçekleniyordu — sayfa bir karede zıplıyordu. Artık
+  /// belge klavyesiz boyunda yerleşir ve yeniden ölçülmez; yer gerekiyorsa
+  /// yalnız görünür penceresi klavyeyle birlikte yumuşakça daralır (bkz.
+  /// [KeyboardClipWindow]).
+  KeyboardPhase _keyboard = (open: false, estimate: 0);
+
+  /// Klavye evresi değişti: pencere bu süre boyunca kayarak daralır/açılır.
+  /// Not alanını açıp kapamak ya da ayracı sürüklemek ANINDA uygulanır.
+  bool _windowAnimating = false;
+
+  /// Klavyesiz yükseklik (bkz. pinned_media_pane `_stable`).
+  double _stableWidth = -1;
+  double _stableHeight = 0;
+
+  /// Sayfa çubuğunun ölçülen yüksekliği (düğme yoğunluğu, yazı ölçeği).
+  final _barKey = GlobalKey();
+  double _barHeight = 56;
+  static const _handleHeight = 12.0;
+
+  /// Klavye açıkken sayfa notuna kalan en az yer.
+  static const _noteMinHeight = 96.0;
+
+  double _stable(BoxConstraints c) {
+    if (c.maxWidth != _stableWidth) {
+      _stableWidth = c.maxWidth;
+      _stableHeight = 0;
+    }
+    if (!_keyboard.open || c.maxHeight > _stableHeight) {
+      _stableHeight = c.maxHeight;
+    }
+    return _stableHeight;
+  }
+
+  void _measureBar() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final h = _barKey.currentContext?.size?.height;
+      if (h != null && (h - _barHeight).abs() > 0.5) {
+        setState(() => _barHeight = h);
+      }
+    });
+  }
+
+  void _onKeyboard(KeyboardPhase phase) {
+    if (!mounted) return;
+    setState(() {
+      _keyboard = phase;
+      _windowAnimating = true;
+    });
+    Future<void>.delayed(const Duration(milliseconds: 320), () {
+      if (mounted) _windowAnimating = false;
+    });
+  }
 
   @override
   void initState() {
@@ -329,74 +388,107 @@ class _PageNotePaneState extends State<PageNotePane> {
     );
     // Balon yazılırken not alanı zorla kapanır; kullanıcının açtığı alan
     // kaybolmasın diye kip bitince eski hâline döner (bkz. suppressNotes).
-    return ValueListenableBuilder<bool>(
-      valueListenable: widget.suppressNotes ?? _neverSuppressed,
-      builder: (context, suppressed, _) {
-        final notesOpen = _notesOpen && !suppressed;
-        return LayoutBuilder(
-      builder: (context, constraints) {
-        final height = constraints.maxHeight;
-        return Column(
-          children: [
-            Expanded(
-              flex: notesOpen ? (_split * 1000).round() : 1000,
-              child: widget.viewerBuilder(context, host),
-            ),
-            if (notesOpen)
-              _SplitHandle(
-                onDrag: (dy) {
-                  if (height <= 0) return;
-                  setState(
-                    () => _split = (_split + dy / height).clamp(
-                      _minSplit,
-                      _maxSplit,
-                    ),
-                  );
-                },
-              ),
-            // Balona yazılırken sayfa çubuğu da gizlenir: klavye ekranın
-            // yarısını alıyor, "Sayfa 1 / 4" satırı o anda hiçbir işe
-            // yaramıyor (kullanıcı isteği 2026-08-08).
-            if (!suppressed) _pageBar(context, l10n, notesOpen),
-            if (notesOpen)
-            Expanded(
-              flex: ((1 - _split) * 1000).round(),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                child: TextField(
-                  controller: _controller,
-                  focusNode: _focus,
-                  style: widget.textStyle,
-                  onChanged: (_) => _commit(),
-                  // Bölmenin tamamını kaplar: alt bölme SABİT bir yazı alanı,
-                  // içeriğe göre büyüyüp küçülen bir satır değil.
-                  expands: true,
-                  maxLines: null,
-                  minLines: null,
-                  textAlignVertical: TextAlignVertical.top,
-                  keyboardType: TextInputType.multiline,
-                  // Kes/Kopyala TEMİZ metin verir: gövde, başlık ve madde
-                  // alanlarıyla aynı kural. Bu alanda eksikti — panoya
-                  // `**kalın**` işaretleri ham gidiyordu.
-                  contextMenuBuilder: (menuContext, state) =>
-                      AdaptiveTextSelectionToolbar.buttonItems(
-                        anchors: state.contextMenuAnchors,
-                        buttonItems: cleanClipboardMenuItems(state),
-                      ),
-                  decoration: InputDecoration(
-                    hintText: l10n.pdfPageNoteHint,
-                    filled: false,
-                    border: InputBorder.none,
-                    isDense: true,
+    return KeyboardPhaseListener(
+      onChanged: _onKeyboard,
+      child: ValueListenableBuilder<bool>(
+        valueListenable: widget.suppressNotes ?? _neverSuppressed,
+        builder: (context, suppressed, _) {
+          final notesOpen = _notesOpen && !suppressed;
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final height = constraints.maxHeight;
+              final stable = _stable(constraints);
+              if (!suppressed) _measureBar();
+              final fixed =
+                  (notesOpen ? _handleHeight : 0.0) +
+                  (suppressed ? 0.0 : _barHeight);
+              // Belgenin YERLEŞİM boyu klavyesiz yükseklikten; görünen
+              // penceresi klavye açıkken notun satırına yer bırakacak kadar.
+              final share = notesOpen ? _split : 1.0;
+              final full = math.max(0.0, (stable - fixed) * share);
+              var visible = full;
+              if (_keyboard.open) {
+                final settled = stable - height > 40;
+                final room = settled ? height : height - _keyboard.estimate;
+                final fit = notesOpen
+                    ? room - fixed - _noteMinHeight
+                    : room - fixed;
+                visible = math.min(full, math.max(56.0, fit));
+              }
+              // Gerçek yere sığmayan pencere olmasın (ölçüm kayması).
+              visible = math.min(visible, math.max(0.0, height - fixed));
+              return Column(
+                children: [
+                  KeyboardClipWindow(
+                    full: full,
+                    visible: visible,
+                    animate: _windowAnimating,
+                    child: widget.viewerBuilder(context, host),
                   ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-        );
-      },
+                  if (notesOpen)
+                    _SplitHandle(
+                      onDrag: (dy) {
+                        final base = stable - fixed;
+                        if (base <= 0) return;
+                        setState(
+                          () => _split = (_split + dy / base).clamp(
+                            _minSplit,
+                            _maxSplit,
+                          ),
+                        );
+                      },
+                    ),
+                  // Balona yazılırken sayfa çubuğu da gizlenir: klavye
+                  // ekranın yarısını alıyor, "Sayfa 1 / 4" satırı o anda
+                  // hiçbir işe yaramıyor (kullanıcı isteği 2026-08-08).
+                  if (!suppressed)
+                    KeyedSubtree(
+                      key: _barKey,
+                      child: _pageBar(context, l10n, notesOpen),
+                    ),
+                  if (notesOpen)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                        child: TextField(
+                          controller: _controller,
+                          focusNode: _focus,
+                          style: widget.textStyle,
+                          onChanged: (_) => _commit(),
+                          // Bölmenin tamamını kaplar: alt bölme SABİT bir
+                          // yazı alanı, içeriğe göre büyüyüp küçülen bir
+                          // satır değil.
+                          expands: true,
+                          maxLines: null,
+                          minLines: null,
+                          textAlignVertical: TextAlignVertical.top,
+                          keyboardType: TextInputType.multiline,
+                          // Kes/Kopyala TEMİZ metin verir: gövde, başlık ve
+                          // madde alanlarıyla aynı kural. Bu alanda eksikti
+                          // — panoya `**kalın**` işaretleri ham gidiyordu.
+                          contextMenuBuilder: (menuContext, state) =>
+                              AdaptiveTextSelectionToolbar.buttonItems(
+                                anchors: state.contextMenuAnchors,
+                                buttonItems: cleanClipboardMenuItems(state),
+                              ),
+                          decoration: InputDecoration(
+                            hintText: l10n.pdfPageNoteHint,
+                            filled: false,
+                            border: InputBorder.none,
+                            isDense: true,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    // Ölçüm yuvarlamasını yutar: belge dibe kadar uzansın.
+                    const Expanded(child: SizedBox.shrink()),
+                ],
+              );
+            },
+          );
+        },
+      ),
     );
   }
 

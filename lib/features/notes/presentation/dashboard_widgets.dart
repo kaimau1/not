@@ -313,6 +313,16 @@ class _SearchField extends ConsumerWidget {
             onTap: () =>
                 ref.read(semanticSearchEnabledProvider.notifier).toggle(),
           ),
+          // SÜZ arama kutusunun sağında (bkz. [HomeFilterButton]);
+          // kişiselleştirmede gizlenebilir.
+          const Customizable(
+            id: UiItem.homeFilter,
+            hidden: SizedBox.shrink(),
+            child: Padding(
+              padding: EdgeInsetsDirectional.only(start: 2),
+              child: HomeFilterButton(),
+            ),
+          ),
           const SizedBox(width: 4),
         ],
       ),

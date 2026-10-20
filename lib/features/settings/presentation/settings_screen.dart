@@ -28,7 +28,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
 import 'personalize_screen.dart' show PersonalizeModuleSwitches;
 import '../../../core/utils/doc_picker.dart';
-import '../../../core/widgets/pop_in.dart';
+import '../../../core/widgets/expand_reveal.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/language_names.dart';
 import '../../../core/utils/note_fonts.dart';

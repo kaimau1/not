@@ -27,6 +27,9 @@ eskisini arşive taşıma.
   yetmiyor (403) — Android doğrulaması main'deki `[apk]` koşusunda.
 
 ## CI (`.github/workflows/build.yml`)
+- Sürüm adı (2026-10-20): pubspec ANA.ARA (1.1) + koşu numarası → `1.1.N`
+  (`--build-name`), Release etiketi `v1.1.N`, web de aynı. Büyük adımda
+  pubspec'teki ara sayı elle artar. versionCode yine koşu numarası.
 - APK yalnız main'de, commit **BAŞLIĞINDA** `[apk]` varken (gövdedeki söz
   tetiklemez — eskiden `contains(message)` tetikliyordu). Dalda derlenmez
   (dal + main ağır işleri yan yana koşunca runner kapanıyordu).
@@ -51,8 +54,9 @@ eskisini arşive taşıma.
 - **İleri uyum (F1.5):** `Attachment`/`NoteItem`/`Note` tanımadığı anahtarları
   `extras`ta saklayıp `toMap`'te aynen yazar; yeni alan eklerken `knownKeys`e
   de ekle (`forward_compat_test`). Bilinmeyen ek türü `unknown` + `rawKind`.
-- **`kClientDataVersion` = 2** (Faz 3). `config/app.minClient` konsoldan elle;
-  telefonlar güncellenince 2 yazılmalı.
+- **`kClientDataVersion` = 3** (2026-10-20: yıldız/çerçeve ayrı alanlar).
+  `config/app.minClient` konsoldan elle; telefonlar güncellenince 3
+  yazılmalı (2'deki istemci `starred`ı sabit sayıp her yazımda siler).
 - `merge: true` yazımında kaldırılabilir/varsayılana dönebilen alanlar
   KOŞULSUZ yazılır (`fontScale`, `textOpacity`, `backgroundImageId` null…) —
   yoksa eski değer Firestore'da kalır.
@@ -73,10 +77,14 @@ eskisini arşive taşıma.
   (paylaşım, arkadaşa gönder, yalnız bu cihaz) önce `hydrateNote`. Belge
   silmek alt koleksiyonu silmez → kalıcı silme ve hesap silme ağır belgeyi
   ayrıca siler. Metin (`text`, `pageNotes`) ana belgede kalır (arama).
-- **Kavram göçleri (F3.6):** `starred` → sabitli (okumada `pinned||starred`;
-  sabitleme her yazımda `starred: false`). Zemin + çerçeve → TEK renk +
-  "kenarı vurgula" (`frameColor` = vurguda `color`ın aynısı); yalnız
-  çerçeveli eski not okunurken çerçeve rengini zemin alır.
+- **Yıldız ve çerçeve GERİ (2026-10-20, F3.6 geri alındı — kullanıcı
+  kararı):** `starred` sabitlemeden AYRI bayrak (Süz → Yıldızlı, kartta
+  yıldız, menülerde Yıldızla); `frameColor` zeminden BAĞIMSIZ ve YALNIZ ana
+  ekran kartında çizilir (editörde çerçeve yok). 'f36' göçü kaldırıldı —
+  bayrak cihaz başına, yeni kurulumda yeniden koşup yeni yıldızları
+  sabitliye çevirirdi. Okumada çeviri yok (`pinned`/`starred`/`color`
+  olduğu gibi). F3.6 döneminde yıldızlılar sabitliye dönmüştü — geri
+  kazanılamaz.
 - **Defter (F3.5):** ayrı defter editörü (`NoteType.archive`) kalktı; defter
   = `Note.paged` (kâğıt deseni `archivePaper` + hep görünen sayfa çubuğu).
   Eski defter `notebookToPagedNote` ile çevrilir (adlı sayfa → `textPages`,
@@ -86,6 +94,9 @@ eskisini arşive taşıma.
 - **Bir defalık göçler** `lib/features/notes/data/data_migrations.dart`:
   bayrak cihazda (`migration_<ad>_<uid>`), hata olursa yazılmaz (yeniden
   denenir); göç `updatedAt`e dokunmaz.
+- Defter kâğıdı (`ArchivePaper`): çizgili, kareli, noktalı, düz + bloknot,
+  milimetrik, izometrik (2026-10-20). Bilinmeyen kimlik çizgiliye düşer.
+  Seçici önizlemeli döşeme, dokunuş anında uygular, levha açık kalır.
 - Notun sayfaları (`textPages`): ETKİN sayfanın içeriği `body`/`items`'ta,
   listedeki girdisi boş; geçiş içerikleri yer değiştirir. İlk sayfa kimliği
   hep ''.
@@ -156,11 +167,30 @@ eskisini arşive taşıma.
   bağlantı/etiket için seçim menüsü ve üst katman.
 - Geri alma NOTUN TAMAMINI saklar (`note_undo.dart`); parmak izine öğe sırası
   konmaz. Eki silince baytlar editör kapanırken silinir (geri al için).
-- Editör yeniden çizimi `sameRenderedNote`'a bakar: yeni GÖRÜNÜR ek alanı
-  eklenince oraya da ekle.
+- Editör yeniden çizimi `sameRenderedNote`'a ve `_mutate`'in "saf yazım"
+  kararı `_sameVisual`'a bakar: yeni GÖRÜNÜR not alanı eklenince İKİSİNE de
+  ekle. TUZAK (2026-10-20): `paged`/`archivePaper` ikisinde de yoktu →
+  "kâğıt seçimi çalışmıyor" (ilk değişiklikten sonra setState atlanıyordu).
+- Klavye açılınca üst parçalar (sabit medya, balonlu belge bölmesi) yeniden
+  ÖLÇÜLMEZ: klavyesiz boyda yerleşir, yalnız görünür penceresi
+  `KeyboardClipWindow` ile daralır; evre `KeyboardPhaseListener`dan (kare
+  kare değil, açılış/kapanışta). Gövde KeyboardSnap ile oturunca tek seferde
+  kısalır — boyu ona bağlanan parça zıplar.
+- Not açılışı: editör önbellekteki hafif notla açılır; akıştan gelen ilk
+  değişiklik çizimi açılıştan ~450 ms sonraya ertelenir
+  (`_setStateAfterOpening`; `ModalRoute.of` KULLANMA — editörü rota
+  durumuna bağlar). Ağır medya `AfterRouteTransition` ile geçiş sonunda.
+  TUZAK: itilen rotanın İLK karesinde Hero sayfayı `offstage` kurar,
+  animasyon "tamamlandı" görünür — durum tek başına yetmez.
 - Uzun basış CÜMLE seçer (`sentence_select.dart`).
 - Canlı dikte: tanıyıcı her olayda TAM metni yollar ve düzeltir → "ekle" değil
   "değiştir". Akıllı komutlar ham metni her olayda baştan işler.
+- Dikte bipleri (2026-10-20): tanıyıcı her sessizlikte yeniden kuruluyor ve
+  Google HER açılış/kapanışta bip çalıyor. MainActivity ilk
+  `onReadyForSpeech`ten 700 ms sonra MUSIC/SYSTEM/NOTIFICATION akışlarını
+  susturur (zil kipi normal değilse yalnız MUSIC), oturum bitince yalnız
+  kendi susturduklarını açar; süreç ölürse `notlar_speech.muted` kaydından
+  sonraki açılışta açılır.
 - Android'de tek mikrofonu SON açan istemci alır: dikte ile kayıt aynı anda
   açılmaz.
 
@@ -204,9 +234,21 @@ eskisini arşive taşıma.
 - Ana ekranda TEK mikrofon (F3.1): dokunuş son kipi (sesli not / doğrudan
   yazdır) açar, basılı tutmak öbürünü (`homeMicDictateProvider`); klasörde
   sesli not "+" menüsünde.
-- "+" menüsü dört kapı (F3.2): Metin · Liste · Kamera · Dosya ekle · Şablon.
-  Dosya ekle tek seçici; seçilen dosya akışın kendi seçicisine
-  `DocPicker.preselect` ile verilir (akış sonunda temizlenir).
+- "+" menüsü TEK PANEL (2026-10-20; F3.2'nin kapı levhaları kalktı):
+  Diğer (şablon, alışveriş, el yazısı, defter) · Kamera · Dosya (geniş) ·
+  birincil Metin/Liste/Sıralı. ≤2 seçenekli bölüm geniş düğme.
+- Dosya akışı (2026-10-20): seçici → TEK levha `showFileUseSheet` (özet,
+  başlık, türe göre seçenek; varsayılan kip başta) → akışa `preset` kip.
+  Ses artık sorulmadan metne dökülmez (ek / metne dök; editör `?afile=1`).
+  HEIC `normalizeHeicImages` ile PNG (akış seçicisi HEIC'i tanımıyor, seçici
+  ikinci kez açılıyordu). Editörün Ekle levhasında türü kendi tanıyan
+  "Dosya ekle". Seçilen dosya akışa `DocPicker.preselect` ile verilir.
+- Süz düğmesi arama kutusunun İÇİNDE (AI anahtarının sağı): süzgeç yokken
+  simge, varken adı ("Görevler +1") + ×. Görünüm (ızgara/liste) Süz
+  levhasında; altındaki satır yalnız yıldızlı kısayollar varsa çizilir.
+- Ayar alanları ve iç bölümler `ExpandReveal` ile açılır (animasyon içerik
+  kurulduktan SONRAKİ karede başlar — ağır alanın ilk karesi
+  `AnimatedSize`/`ExpansionTile` animasyonunu yutuyordu).
 - Balonlu/Klasik levhası yalnız ilk sefer; seçim varsayılan
   (`capture_mode_default`), Ayarlar → Notlar ve klasörler.
 - Paylaşım iki kavram (F3.7): Birlikte düzenle (ortak not / klasör) ve Kopya

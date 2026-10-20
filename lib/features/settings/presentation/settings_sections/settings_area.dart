@@ -170,51 +170,108 @@ class _SettingsArea extends StatelessWidget {
                 ),
               ),
             ),
-            // AÇILIŞ/KAPANIŞ YUMUŞAK (2026-10-17 akıcılık turu): alan bir
-            // karede "pat" diye açılıyordu; artık yüksekliği kayarak açılır,
-            // içerik süzülerek belirir. Kapalıyken içerik ağaçta YOK (ayar
-            // satırlarının hepsini boşuna kurmasın).
-            AnimatedSize(
-              duration: const Duration(milliseconds: 280),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: !open
-                  ? const SizedBox(width: double.infinity)
-                  : PopIn(
-                      from: 0.98,
-                      rise: 4,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-                        // DERLİ TOPLU SATIRLAR (kullanıcı isteği 2026-09-26: ekran
-                        // görüntüsündeki alanlar "görsel ve işlevsel olarak
-                        // geliştirilsin"). Anahtar satırlarının başlığı gövde
-                        // metninden BÜYÜK, açıklaması başlık kadar iriydi; uzun
-                        // açıklamalı beş satır ekranı dolduruyordu. Başlık 14/w600,
-                        // açıklama küçük ve soluk — göz önce başlığı tarar.
-                        child: ListTileTheme.merge(
-                          dense: true,
-                          titleTextStyle: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                          subtitleTextStyle: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                                height: 1.3,
-                              ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: rows,
-                          ),
-                        ),
+            // AÇILIŞ/KAPANIŞ YUMUŞAK ve HER ALANDA AYNI (kullanıcı bulgusu
+            // 2026-10-20: "bazı menüler aşağı doğru animasyonla açılırken
+            // bazılarında yok gibi"): ağır alanın ilk karesi animasyonu
+            // yutuyordu — bkz. [ExpandReveal] kök neden notu. Kapalıyken
+            // içerik ağaçta YOK (ayar satırlarının hepsini boşuna kurmasın).
+            ExpandReveal(
+              open: open,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                // DERLİ TOPLU SATIRLAR (kullanıcı isteği 2026-09-26: ekran
+                // görüntüsündeki alanlar "görsel ve işlevsel olarak
+                // geliştirilsin"). Anahtar satırlarının başlığı gövde
+                // metninden BÜYÜK, açıklaması başlık kadar iriydi; uzun
+                // açıklamalı beş satır ekranı dolduruyordu. Başlık 14/w600,
+                // açıklama küçük ve soluk — göz önce başlığı tarar.
+                child: ListTileTheme.merge(
+                  dense: true,
+                  titleTextStyle: Theme.of(context).textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                  subtitleTextStyle: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant,
+                        height: 1.3,
                       ),
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: rows,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Alanın İÇİNDEKİ katlanır bölüm ("Gelişmiş", "AI tanılama"): başlık
+/// satırı + [ExpandReveal]. Eskiden `ExpansionTile`dı; açılışı alanlarınkinden
+/// farklıydı ve ağır içerikte (model seçicileri) o da ilk karede yutuluyordu
+/// (bkz. [ExpandReveal]). Artık alanlarla AYNI aşağı kayan açılış.
+class _ExpandTile extends StatefulWidget {
+  const _ExpandTile({
+    required this.title,
+    required this.children,
+    this.subtitle,
+    this.leading,
+    this.childrenPadding = EdgeInsets.zero,
+    this.onExpansionChanged,
+  });
+
+  final Widget title;
+  final Widget? subtitle;
+  final Widget? leading;
+  final List<Widget> children;
+  final EdgeInsetsGeometry childrenPadding;
+  final ValueChanged<bool>? onExpansionChanged;
+
+  @override
+  State<_ExpandTile> createState() => _ExpandTileState();
+}
+
+class _ExpandTileState extends State<_ExpandTile> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: widget.leading,
+          title: widget.title,
+          subtitle: widget.subtitle,
+          trailing: AnimatedRotation(
+            turns: _open ? 0.5 : 0,
+            duration: const Duration(milliseconds: 200),
+            child: Icon(Icons.expand_more, color: scheme.onSurfaceVariant),
+          ),
+          onTap: () {
+            setState(() => _open = !_open);
+            widget.onExpansionChanged?.call(_open);
+          },
+        ),
+        ExpandReveal(
+          open: _open,
+          child: Padding(
+            padding: widget.childrenPadding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: widget.children,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

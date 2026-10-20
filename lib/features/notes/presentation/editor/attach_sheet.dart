@@ -83,6 +83,7 @@ List<({String id, IconData icon, String label})> attachSheetCatalog(
       label: l10n.scanDocument,
     ),
   (id: 'drawing', icon: Icons.brush_outlined, label: l10n.addDrawing),
+  (id: 'any-file', icon: Icons.upload_file_outlined, label: l10n.quickAddFile),
   (id: 'pdf', icon: Icons.picture_as_pdf_outlined, label: l10n.addPdf),
   (id: 'slide', icon: Icons.slideshow_outlined, label: l10n.addSlide),
   if (!kIsWeb) (id: 'audio', icon: Icons.mic_none, label: l10n.recordAudio),
@@ -197,8 +198,26 @@ class _AttachSheet extends StatelessWidget {
     ];
 
     final other = <_Entry>[
+      // TEK "DOSYA EKLE" (kullanıcı bulgusu 2026-10-20: "dosya ekle aşaması
+      // çok sıkıntılı"): hangi düğmenin hangi türü aldığını bilmeden her
+      // dosya buradan seçilir; görsel sayfaya, PDF/sunum belge olarak, ses
+      // ve video ek olarak girer. Türe özgü düğmeler yanında kalır.
+      (
+        'any-file',
+        Icons.upload_file_outlined,
+        l10n.quickAddFile,
+        l10n.attachAnyFileInfo,
+      ),
       ('pdf', Icons.picture_as_pdf_outlined, l10n.addPdf, null),
       ('slide', Icons.slideshow_outlined, l10n.addSlide, null),
+      // YouTube İKİNCİ satırın başında: "Dosya ekle" girince üçüncü satıra
+      // kayıyor, levha kaydırılmadan görünmüyordu (bkz. menus testi).
+      (
+        'youtube',
+        Icons.smart_display_outlined,
+        l10n.addYouTubeVideo,
+        l10n.addYouTubeVideoSubtitle,
+      ),
       if (!kIsWeb) ('audio', Icons.mic_none, l10n.recordAudio, null),
       if (!kIsWeb)
         (
@@ -216,12 +235,6 @@ class _AttachSheet extends StatelessWidget {
           l10n.addVideoFromGallery,
           l10n.videoLocalOnly,
         ),
-      (
-        'youtube',
-        Icons.smart_display_outlined,
-        l10n.addYouTubeVideo,
-        l10n.addYouTubeVideoSubtitle,
-      ),
       if (qrScanSupported)
         ('qr', Icons.qr_code_scanner, l10n.qrScanTitle, l10n.qrScanSubtitle),
       // Sonradan eklenen SES DOSYASI (kayıttan ayrı) ve "dosyayı metne dök"

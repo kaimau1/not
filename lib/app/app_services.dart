@@ -47,7 +47,7 @@ class AppServices extends ConsumerWidget {
       ref.listen(premiumProvider, _ignore);
       // Paylaş menüsünden gelen içerikler (Android).
       ref.listen<void>(shareIntakeProvider, _ignore);
-      // Bir defalık veri göçleri (F3.6 sabit/yıldız, zemin/çerçeve).
+      // Bir defalık veri göçleri (F3.5 defter).
       ref.listen<void>(dataMigrationsProvider, _ignore);
       // Kişiye ait tercihler kullanıcı belgesine (F4.5).
       ref.listen<void>(prefsSyncProvider, _ignore);

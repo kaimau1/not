@@ -260,8 +260,7 @@ class _AiDiagnosticsTileState extends State<_AiDiagnosticsTile> {
   Widget build(BuildContext context) {
     final entries = AiDiagnostics.entries;
     final scheme = Theme.of(context).colorScheme;
-    return ExpansionTile(
-      tilePadding: EdgeInsets.zero,
+    return _ExpandTile(
       title: Text(context.l10n.aiDiagnostics),
       subtitle: Text(
         entries.isEmpty
@@ -867,32 +866,25 @@ class _AdvancedAiSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return Theme(
-      // ExpansionTile'ın kendi üst/alt ayraç çizgileri grup kartında kirli
-      // duruyor; kaldır.
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        tilePadding: EdgeInsets.zero,
-        // Üstteki boşluk ŞART: içeriğin ilk çocuğu, etiketi kutunun ÜSTÜNE
-        // taşan bir form alanı (sağlayıcı açılır listesi). Boşluksuzken o
-        // etiket başlığın alt satırının üstüne biniyor ve bölüm "bozuk ve
-        // karışık" görünüyordu.
-        childrenPadding: const EdgeInsets.only(top: 14, bottom: 8),
-        expandedCrossAxisAlignment: CrossAxisAlignment.start,
-        leading: const Icon(Icons.tune),
-        title: Text(l10n.aiAdvanced),
-        subtitle: Text(
-          l10n.aiAdvancedInfo,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+    return _ExpandTile(
+      // Üstteki boşluk ŞART: içeriğin ilk çocuğu, etiketi kutunun ÜSTÜNE
+      // taşan bir form alanı (sağlayıcı açılır listesi). Boşluksuzken o
+      // etiket başlığın alt satırının üstüne biniyor ve bölüm "bozuk ve
+      // karışık" görünüyordu.
+      childrenPadding: const EdgeInsets.only(top: 14, bottom: 8),
+      leading: const Icon(Icons.tune),
+      title: Text(l10n.aiAdvanced),
+      subtitle: Text(
+        l10n.aiAdvancedInfo,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
-        children: const [
-          _GeminiKeyEditor(),
-          SizedBox(height: 14),
-          _ModelSelectors(),
-        ],
       ),
+      children: const [
+        _GeminiKeyEditor(),
+        SizedBox(height: 14),
+        _ModelSelectors(),
+      ],
     );
   }
 }

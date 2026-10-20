@@ -141,6 +141,8 @@ abstract final class UiItem {
   static const homeAccount = 'home.account';
   static const homeAi = 'home.ai';
   static const homeFilter = 'home.filter';
+  /// ESKİ ana ekran görünüm düğmesi — 2026-10-20'de Süz levhasına taşındı;
+  /// kimlik eski gizleme tercihleri için duruyor, ekranda kullanılmıyor.
   static const homeViewToggle = 'home.viewToggle';
   /// Ana ekranın TEK mikrofonu (F3.1). Kimlik eski "AI ile sesli not"
   /// düğmesininki — gizleme tercihi korunur.

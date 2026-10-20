@@ -376,6 +376,7 @@ class _BackupButton extends ConsumerWidget {
     'frameColor': n.frameColor.id,
     'folderId': n.folderId,
     'pinned': n.pinned,
+    'starred': n.starred,
     'locked': n.locked,
     'createdAt': n.createdAt?.toIso8601String(),
     'updatedAt': n.updatedAt?.toIso8601String(),
@@ -518,9 +519,8 @@ class _RestoreButton extends ConsumerWidget {
             for (final t in (map['tags'] as List<dynamic>? ?? const []))
               t.toString(),
           ],
-          // Eski yedekteki "yıldızlı" sabitli olur (F3.6).
-          'pinned': map['pinned'] == true || map['starred'] == true,
-          'starred': false,
+          'pinned': map['pinned'] as bool? ?? false,
+          'starred': map['starred'] as bool? ?? false,
           'locked': map['locked'] as bool? ?? false,
           if (map['color'] is String) 'color': map['color'],
           if (map['frameColor'] is String) 'frameColor': map['frameColor'],

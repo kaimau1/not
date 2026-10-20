@@ -167,10 +167,14 @@ void main() {
       await tester.tap(find.text('aç'));
       await tester.pumpAndSettle();
 
-      // Hızlı satır: aynı yükseklikte yan yana.
+      // Hızlı satır: aynı yükseklikte yan yana; "Yıldızla" başta
+      // (2026-10-20'de geri geldi).
+      final star = tester.getRect(find.text('Yıldızla'));
       final share = tester.getRect(find.text('Paylaş'));
       final calc = tester.getRect(find.text('Hesap Makinesi'));
+      expect(star.top, closeTo(share.top, 1));
       expect(share.top, closeTo(calc.top, 1));
+      expect(star.center.dx, lessThan(share.center.dx));
       expect(share.center.dx, lessThan(calc.center.dx));
 
       // Grup başlıkları.

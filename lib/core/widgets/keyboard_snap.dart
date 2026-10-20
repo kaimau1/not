@@ -209,3 +209,119 @@ class KeyboardSlide extends StatelessWidget {
     );
   }
 }
+
+/// Klavyenin EVRESİ: açık mı, açılırken tahmini yüksekliği ne.
+typedef KeyboardPhase = ({bool open, double estimate});
+
+/// Klavyenin AÇILIŞ/KAPANIŞ EVRESİNİ bildiren dinleyici — kare kare DEĞİL,
+/// yalnız evre değişince ([onChanged]).
+///
+/// Neden: klavye açılırken sabit medya, belge bölmesi gibi ÜST parçaların
+/// boyu değişmemeli (kullanıcı bulgusu 2026-10-20: "görsel, video, PDF
+/// sabitken ya da balonlu kipte klavye açılınca görsel boyut değiştiriyor,
+/// odak kayıyor"). [KeyboardSnap] gövdeyi klavye OTURDUKTAN sonra tek seferde
+/// kısaltıyor; o anda üst parça da küçülüp zıplıyordu. Bu dinleyiciyle parça
+/// klavyenin açıldığını İLK karede öğrenir, kendi görünür penceresini
+/// ([KeyboardClipWindow]) klavyeyle birlikte yumuşakça daraltır — gövde
+/// oturduğunda hedefte durduğu için hiçbir şey zıplamaz.
+///
+/// [child] çağıranın kurduğu AYNI örnek olmalı: klavyenin her karesinde
+/// yalnız bu küçük widget kurulur, alt ağaç ellenmez.
+class KeyboardPhaseListener extends StatefulWidget {
+  const KeyboardPhaseListener({
+    super.key,
+    required this.onChanged,
+    required this.child,
+  });
+
+  final ValueChanged<KeyboardPhase> onChanged;
+  final Widget child;
+
+  @override
+  State<KeyboardPhaseListener> createState() => _KeyboardPhaseListenerState();
+}
+
+class _KeyboardPhaseListenerState extends State<KeyboardPhaseListener> {
+  /// Son açılışın TAM klavye yüksekliği (süreç ömrü): bir sonraki açılışın
+  /// hedefi ilk karede bilinsin.
+  static double _memory = 0;
+
+  double _last = 0;
+  double _cycleMax = 0;
+  KeyboardPhase _reported = (open: false, estimate: 0);
+
+  @override
+  Widget build(BuildContext context) {
+    final live = MediaQuery.viewInsetsOf(context).bottom;
+    final screen = MediaQuery.sizeOf(context).height;
+    KeyboardPhase next;
+    if (live <= 0) {
+      if (_cycleMax > 0) _memory = _cycleMax;
+      _cycleMax = 0;
+      next = (open: false, estimate: 0);
+    } else if (live < _last && live < _cycleMax * 0.85) {
+      // KAPANIYOR: pencere klavyeyle birlikte geri açılsın (sonunu
+      // beklemesin).
+      next = (open: false, estimate: 0);
+    } else {
+      _cycleMax = math.max(_cycleMax, live);
+      final guess = _memory > 0 ? _memory : screen * 0.38;
+      next = (open: true, estimate: math.max(_cycleMax, guess));
+    }
+    _last = live;
+    if (next != _reported) {
+      _reported = next;
+      // Kurulum sırasında üst widget'a setState yaptırılmaz: bir kare sonra.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _reported == next) widget.onChanged(next);
+      });
+    }
+    return widget.child;
+  }
+}
+
+/// Çocuğunu TAM boyunda ([full]) yerleştirip yalnız üstten [visible] kadarını
+/// gösteren pencere; [visible] değişince pencere yumuşakça daralır/genişler.
+///
+/// Çocuk hiçbir karede yeniden ÖLÇÜLMEZ (kısıtı sabit): görsel/video/belge
+/// küçülmez, zıplamaz — altındaki parça üstüne kayar gibi örter. Kırpılan
+/// kısım dokunuş da almaz.
+class KeyboardClipWindow extends StatelessWidget {
+  const KeyboardClipWindow({
+    super.key,
+    required this.full,
+    required this.visible,
+    required this.child,
+    this.animate = true,
+  });
+
+  final double full;
+  final double visible;
+
+  /// false iken (ör. kullanıcı ayracı sürüklerken) pencere parmağı anında
+  /// izler.
+  final bool animate;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final target = visible.clamp(0.0, full);
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(end: target),
+      duration: animate ? const Duration(milliseconds: 260) : Duration.zero,
+      curve: Curves.easeOutCubic,
+      child: child,
+      builder: (context, shown, child) => SizedBox(
+        height: shown,
+        child: ClipRect(
+          child: OverflowBox(
+            alignment: Alignment.topCenter,
+            minHeight: full,
+            maxHeight: full,
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}

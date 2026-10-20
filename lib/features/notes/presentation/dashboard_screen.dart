@@ -459,7 +459,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   void _setPinnedSelected(Set<String> ids, bool pinned) {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    repo.batchUpdate(ids, NotesRepository.colorPinFields(pinned: pinned));
+    repo.batchUpdate(ids, {'pinned': pinned});
+    ref.read(selectedNoteIdsProvider.notifier).clear();
+  }
+
+  void _setStarredSelected(Set<String> ids, bool starred) {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    repo.batchUpdate(ids, {'starred': starred});
     ref.read(selectedNoteIdsProvider.notifier).clear();
   }
 
@@ -505,18 +512,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     await SharePlus.instance.share(ShareParams(text: text));
   }
 
-  Future<void> _colorSelected(Set<String> ids) async {
-    final picked = await showNoteColorPicker(context);
+  Future<void> _colorSelected(Set<String> ids, {required bool frame}) async {
+    final picked = await showNoteColorPicker(context, frame: frame);
     if (picked == null) return;
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    repo.batchUpdate(
-      ids,
-      NotesRepository.colorPinFields(
-        color: picked.color,
-        accent: picked.accent,
-      ),
-    );
+    repo.batchUpdate(ids, {frame ? 'frameColor' : 'color': picked.id});
     ref.read(selectedNoteIdsProvider.notifier).clear();
   }
 
@@ -1158,6 +1159,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                             selectedIds,
                                             false,
                                           );
+                                        case 'star':
+                                          _setStarredSelected(
+                                            selectedIds,
+                                            true,
+                                          );
+                                        case 'unstar':
+                                          _setStarredSelected(
+                                            selectedIds,
+                                            false,
+                                          );
                                         case 'share':
                                           _shareSelected(selectedIds);
                                         case 'folder':
@@ -1165,7 +1176,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         case 'duplicate':
                                           _duplicateSelected(selectedIds);
                                         case 'color':
-                                          _colorSelected(selectedIds);
+                                          _colorSelected(
+                                            selectedIds,
+                                            frame: false,
+                                          );
+                                        case 'frame':
+                                          _colorSelected(
+                                            selectedIds,
+                                            frame: true,
+                                          );
                                       }
                                     },
                                     itemBuilder: (context) => [
@@ -1178,6 +1197,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         'unpin',
                                         Icons.push_pin,
                                         l10n.unpin,
+                                      ),
+                                      _menuItem(
+                                        'star',
+                                        Icons.star_outline,
+                                        l10n.star,
+                                      ),
+                                      _menuItem(
+                                        'unstar',
+                                        Icons.star,
+                                        l10n.unstar,
                                       ),
                                       const PopupMenuDivider(),
                                       _menuItem(
@@ -1194,6 +1223,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         'color',
                                         Icons.palette_outlined,
                                         l10n.backgroundColor,
+                                      ),
+                                      _menuItem(
+                                        'frame',
+                                        Icons.border_color_outlined,
+                                        l10n.frameColor,
                                       ),
                                       _menuItem(
                                         'share',

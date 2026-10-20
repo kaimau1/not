@@ -114,8 +114,25 @@ jobs:
       (github.ref == 'refs/heads/main' && needs.marker.outputs.apk == 'true')
     permissions:
       contents: write
+    outputs:
+      version: ${{ steps.version.outputs.name }}
     steps:
       - uses: actions/checkout@v4
+
+      # SÜRÜM ADI İLERLER (kullanıcı isteği 2026-10-20: "sürüm ilerlemesi
+      # lazım"). Uygulama içinde hep "1.0.0" yazıyordu: pubspec sabitti,
+      # yalnız versionCode (koşu numarası) artıyordu; Release adı "v1.0.N"
+      # ile Ayarlar → Hakkında'daki sürüm birbirini tutmuyordu. Artık ad
+      # pubspec'in ANA.ARA'sı + koşu numarası (ör. 1.1.412): her derlemede
+      # ilerler, Release etiketiyle aynıdır. Büyük adımda pubspec'teki ara
+      # sayı elle artırılır (1.2.0+1).
+      - name: Sürüm adını hesapla
+        id: version
+        run: |
+          base=$(sed -nE 's/^version: *([0-9]+\.[0-9]+)\..*/\1/p' pubspec.yaml)
+          name="${base:-1.0}.${{ github.run_number }}"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "Sürüm: $name (${{ github.run_number }})"
 
       - uses: actions/setup-java@v4
         with:
@@ -233,6 +250,7 @@ jobs:
           flutter build apk --release
           --target-platform android-arm64
           --split-debug-info=build/app/outputs/symbols
+          --build-name=${{ steps.version.outputs.name }}
           --build-number=${{ github.run_number }}
           --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
 
@@ -287,7 +305,7 @@ jobs:
       # indirilebilir olan da o. Artifact artık yalnızca bir kolaylık.
       - name: APK'yı sürüm numarasıyla adlandır
         if: github.ref == 'refs/heads/main'
-        run: mv build/app/outputs/flutter-apk/app-release.apk notlar-v1.0.${{ github.run_number }}.apk
+        run: mv build/app/outputs/flutter-apk/app-release.apk notlar-v${{ steps.version.outputs.name }}.apk
 
       - name: Release taslağı oluştur
         if: github.ref == 'refs/heads/main'
@@ -295,14 +313,14 @@ jobs:
         with:
           draft: true
           target_commitish: ${{ github.sha }}
-          tag_name: v1.0.${{ github.run_number }}
-          name: Notlar v1.0.${{ github.run_number }}
+          tag_name: v${{ steps.version.outputs.name }}
+          name: Notlar v${{ steps.version.outputs.name }}
           body: |
-            Aşağıdaki **notlar-v1.0.${{ github.run_number }}.apk** dosyasına telefonundan
+            Aşağıdaki **notlar-v${{ steps.version.outputs.name }}.apk** dosyasına telefonundan
             tıkla, indir ve mevcut uygulamanın üzerine kur. Verilerin Firebase'de
             olduğu için hiçbir şey kaybolmaz. Bilgisayarda web sürümünü kullan
             (Cloudflare Pages, `notlar-web`).
-          files: notlar-v1.0.${{ github.run_number }}.apk
+          files: notlar-v${{ steps.version.outputs.name }}.apk
 
       # Artifact YALNIZ elle tetiklenen (main dışı) koşuda: main'de teslimat
       # Release'tir. Depo artifact kotası dolu olabilir (2026-08-16'dan beri
@@ -327,7 +345,7 @@ jobs:
       contents: write
     env:
       GH_TOKEN: ${{ github.token }}
-      TAG: v1.0.${{ github.run_number }}
+      TAG: v${{ needs.android.outputs.version }}
     steps:
       - name: Yayınla ya da sil
         run: |
@@ -359,10 +377,14 @@ jobs:
       - name: Bağımlılıkları indir
         run: flutter pub get
 
+      # Web de aynı sürüm adını taşır (Ayarlar → Hakkında; bkz. android işi).
       - name: Web derle
-        run: >
-          flutter build web --release
-          --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+        run: |
+          base=$(sed -nE 's/^version: *([0-9]+\.[0-9]+)\..*/\1/p' pubspec.yaml)
+          flutter build web --release \
+            --build-name="${base:-1.0}.${{ github.run_number }}" \
+            --build-number=${{ github.run_number }} \
+            --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
 
       - name: Firebase kurallarını yayınla
         env:

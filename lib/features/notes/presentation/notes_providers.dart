@@ -30,6 +30,7 @@ enum NoteFilter {
   checklist,
   ordered,
   pinned,
+  starred,
   reminded,
   locked,
   others,
@@ -646,6 +647,7 @@ bool noteMatchesFilter(Note n, NoteFilter filter) => switch (filter) {
   NoteFilter.checklist => n.type == NoteType.checklist,
   NoteFilter.ordered => n.type == NoteType.ordered,
   NoteFilter.pinned => n.pinned,
+  NoteFilter.starred => n.starred,
   NoteFilter.reminded => n.reminderAt != null,
   NoteFilter.locked => n.locked,
   // Düzene girmemiş notlar: ne klasörü ne etiketi var.

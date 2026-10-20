@@ -48,19 +48,21 @@ void main() {
       expect(find.text(label), findsOneWidget, reason: '$label görünmeli');
     }
 
-    // Hızlı satır: "Sabitle" ile "Paylaş" AYNI satırda, yan yana.
-    // ("Yıldızla" sabitle ile birleşti — F3.6.)
+    // Hızlı satır: "Sabitle", "Yıldızla" (2026-10-20'de geri geldi) ve
+    // "Paylaş" AYNI satırda, bu sırayla yan yana.
     final pin = tester.getRect(find.text('Sabitle'));
+    final star = tester.getRect(find.text('Yıldızla'));
     final share = tester.getRect(find.text('Paylaş'));
-    expect(find.text('Yıldızla'), findsNothing);
+    expect(pin.center.dy, closeTo(star.center.dy, 1));
     expect(pin.center.dy, closeTo(share.center.dy, 1));
-    expect(pin.center.dx, lessThan(share.center.dx));
+    expect(pin.center.dx, lessThan(star.center.dx));
+    expect(star.center.dx, lessThan(share.center.dx));
 
     // "Sil" tek başına, alt satırda ve tam genişlikte.
     expect(tester.getRect(find.text('Sil')).center.dy, greaterThan(pin.top));
   });
 
-  testWidgets('"+" paneli dört kapı: Metin/Liste altta, kapılar levha açar', (
+  testWidgets('"+" paneli tek panel: Metin/Liste altta, seçenekler tek dokunuş', (
     tester,
   ) async {
     final calls = <String>[];
@@ -78,18 +80,31 @@ void main() {
     expect(fab.top - text.bottom, lessThan(60));
     // Ana ekranda sesli not menüde yok (tek mikrofon, F3.1).
     expect(find.text('Sesli not'), findsNothing);
-    // Üç kapı birincil satırın üstünde; içerikleri levhada.
-    final camera = tester.getRect(find.text('Kamera'));
-    expect(camera.center.dy, lessThan(text.center.dy));
+    // Gruplar başlıklı; dosya birincilin hemen üstünde, sonra kamera,
+    // "Diğer" en üstte. Sıralı liste birincil satırda.
+    final camera = tester.getRect(
+      find.byKey(const ValueKey('quick-section-capture')),
+    );
+    final files = tester.getRect(
+      find.byKey(const ValueKey('quick-section-files')),
+    );
+    final more = tester.getRect(
+      find.byKey(const ValueKey('quick-section-more')),
+    );
+    expect(files.center.dy, lessThan(text.center.dy));
+    expect(camera.center.dy, lessThan(files.center.dy));
+    expect(more.center.dy, lessThan(camera.center.dy));
+    expect(
+      tester.getRect(find.text('Sıralı liste')).center.dy,
+      closeTo(text.center.dy, 1),
+    );
+    // Seçenekler PANELDE — kapı levhası yok, tek dokunuşla çalışır.
     expect(find.text('Dosya ekle'), findsOneWidget);
-    expect(find.text('Şablon'), findsOneWidget);
-    expect(find.text('YouTube videosu'), findsNothing);
+    expect(find.text('YouTube videosu'), findsOneWidget);
 
-    await tester.tap(find.text('Dosya ekle'));
-    await tester.pumpAndSettle();
-    expect(find.text('Metin notu'), findsNothing, reason: 'panel kapanır');
     await tester.tap(find.text('YouTube videosu'));
     await tester.pumpAndSettle();
+    expect(find.text('Metin notu'), findsNothing, reason: 'panel kapanır');
     expect(calls, ['youtube']);
 
     // Metin notu tek dokunuş.

@@ -1125,11 +1125,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get backgroundColor => 'Color';
+  String get backgroundColor => 'Background colour';
 
   @override
   String get backgroundColorInfo =>
-      'The note color; optionally on its border too';
+      'The note background — shown inside the note and on the home screen';
 
   @override
   String get frameColor => 'Frame';
@@ -1469,6 +1469,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectAllItems => 'Select all';
 
   @override
+  String get checkSelectedItems => 'Check selected';
+
+  @override
+  String get uncheckSelectedItems => 'Uncheck selected';
+
+  @override
   String get hiddenFolder => 'Hidden folder';
 
   @override
@@ -1656,6 +1662,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get viewToggle => 'View';
+
+  @override
+  String get viewGrid => 'Grid';
+
+  @override
+  String get viewList => 'List';
 
   @override
   String get searchModeMeaning => 'Meaning';
@@ -2611,6 +2623,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get archivePaperPlain => 'Plain';
+
+  @override
+  String get archivePaperLegal => 'Legal pad';
+
+  @override
+  String get archivePaperEngineering => 'Engineering';
+
+  @override
+  String get archivePaperIsometric => 'Isometric';
 
   @override
   String get attachmentTagEmbed => 'Embed';
@@ -4999,13 +5020,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickAddFromDevice => 'Choose a file';
 
   @override
-  String get quickAddTemplates => 'Templates';
-
-  @override
   String get quickAddFileWhat => 'What should we do with this file?';
-
-  @override
-  String get quickAddFileAsNote => 'Add to a note';
 
   @override
   String get quickAddFileUnsupported => 'This file type is not supported';
@@ -5048,9 +5063,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get shareCopyInfo =>
       'An independent copy goes to your friend\'s inbox';
-
-  @override
-  String get noteColorAccent => 'Highlight the border';
 
   @override
   String get notebookViewOn => 'Notebook view';
@@ -5222,4 +5234,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get presenceSomeone => 'Someone';
+
+  @override
+  String get frameColorInfo =>
+      'Drawn only around the card on the home screen, not inside the note';
+
+  @override
+  String get filterStarred => 'Starred';
+
+  @override
+  String get fileUseBubbles => 'Annotate as a document';
+
+  @override
+  String get fileUseClassic => 'Add to a note';
+
+  @override
+  String get fileUseClassicImageInfo =>
+      'A plain note opens; images sit on the page and text flows around them.';
+
+  @override
+  String get fileUseVideo => 'Take notes on the video';
+
+  @override
+  String get fileUseVideoInfo =>
+      'The video plays on top, you write your notes below.';
+
+  @override
+  String get fileUseAudio => 'Add as an audio attachment';
+
+  @override
+  String get fileUseAudioInfo =>
+      'The recording stays playable in the note; transcribe it later if you like.';
+
+  @override
+  String get fileUseTranscribeInfo =>
+      'Speech is transcribed and written into the note body.';
+
+  @override
+  String get fileUseTranscribeImageInfo =>
+      'Text in the image is read and written into the note body.';
+
+  @override
+  String get fileUseDefault => 'Default';
+
+  @override
+  String fileUseMore(int count) {
+    return '+$count more files';
+  }
+
+  @override
+  String get quickAddSectionMore => 'More';
+
+  @override
+  String get attachAnyFileInfo =>
+      'Any file: images go on the page, PDFs and slides as documents, audio and video as attachments';
 }
