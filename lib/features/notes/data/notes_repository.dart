@@ -11,6 +11,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/crash_reporting.dart';
+import '../../../core/utils/diagnostics.dart';
 import '../../../core/utils/firestore_size.dart';
 import '../../../core/utils/local_file.dart';
 import '../../auth/presentation/auth_providers.dart';
@@ -136,6 +137,10 @@ final noteStreamProvider = StreamProvider.autoDispose.family<Note?, String>((
   ref,
   noteId,
 ) {
+  if (Diagnostics.enabled) {
+    Diagnostics.openNoteStreams++;
+    ref.onDispose(() => Diagnostics.openNoteStreams--);
+  }
   final repo = ref.watch(notesRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.watchNote(noteId);

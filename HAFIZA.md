@@ -74,10 +74,16 @@ eskisini arşive taşıma.
   işe yaramaz: editör her yankıda ekleri yeniden kuruyor. Editör kapanınca
   `releaseNote` bu kopyaları bırakır. `localPath` Firestore'a yazılmaz,
   cihazda türetilir.
+- Çizim noktaları (F7.2): kayıttan okunan `InkStroke.points` `Float32List`
+  (~1e-8 yuvarlama; testte `closeTo`). **TUZAK:** `toMap` tipli diziyi
+  DOĞRUDAN vermez (Firestore kodlayıcısı `float[]` yollar, sunucu reddeder)
+  → `UnmodifiableListView`. Kayıttan okunan çizgiyi YERİNDE değiştirme
+  (sabit uzunluk); yalnız çizim sürerken kurulan çizgi büyür.
 - 1 MiB sınırı: ≥ 900 KB'ta kullanıcı uyarılır (en büyük kalem adıyla);
   yazım reddi yutulmaz (günlük + Crashlytics + bildirim).
 - **Ağır alanlar ayrı belgede (F3.13):** ağır kısmı (ek `ink`/`bubbles`/
-  `pdfMarks`) 96 KB'ı aşan not bölünür: ana belgede hafif ekler + `heavyRef`,
+  `pdfMarks`) 16 KB'ı aşan not bölünür (2026-10-20 F7.3: 96 → 16 KB,
+  kullanıcı kararı; bölünen not birleşmez): ana belgede hafif ekler + `heavyRef`,
   `notes/{id}/heavy/data`da ek kimliğine göre ağır alanlar. Liste akışı HAFİF
   not verir (`heavyMissing`); editör akışı (`watchNote`) birleştirir.
   **TUZAK:** hafif not yazılırken ağır belgeye DOKUNULMAZ (eksik veriyle
@@ -164,6 +170,11 @@ eskisini arşive taşıma.
 - Hesap değişince (F5.5) `AppServices` arama gövdesi önbelleğini temizler ve
   öbür hesapların `LocalNotesStore`larını bırakır; hesaba bağlı bellek
   önbelleği eklersen ya `currentUidProvider`ı izlesin ya oraya ekle.
+- Kart küçük resimleri (F7.1) 64 adet + 6 MB bayt bütçesi; PDF kapağı
+  JPEG (izolede). PDF sayfası çizen her yol `data/pdf/pdf_page_render.dart`
+  (F8.4) — `PdfImage.dispose` sırası orada. Düşük RAM'li Android'de görsel
+  önbelleği 50 MB (F7.6, `ImageCacheBudget`). Teşhis sayaçları yalnız
+  debug/profil: `Diagnostics` (Ayarlar → Hakkında, F9.2).
 - Görsel çözme (F5.2): tam boy `Image.file/memory`/`FileImage` KULLANMA —
   `boundedImage(...)` ya da `cacheWidth: decodeWidthBucket(...)`
   (`note_images.dart`). 12 MP ≈ 48 MB bitmap.
@@ -200,6 +211,14 @@ eskisini arşive taşıma.
   bağlantı/etiket için seçim menüsü ve üst katman.
 - Geri alma NOTUN TAMAMINI saklar (`note_undo.dart`); parmak izine öğe sırası
   konmaz. Eki silince baytlar editör kapanırken silinir (geri al için).
+- **Editör konu dosyalarına bölündü (F9.3, 2026-10-20):** `note_editor_screen.dart`
+  yalnız durum (alanlar), yaşam döngüsü, biçim, `_mutate`, kanvas ve
+  `build`; yöntemler `part` dosyalarında `extension _EditorX on
+  _NoteEditorScreenState` (`ai`, `attachments`, `actions`, `media_view`,
+  `appearance`, `toolbar`, `find`, `voice`). Uzantıda: `setState` yerine
+  `_update` (korumalı üye), sınıf statiği `_NoteEditorScreenState._x` diye
+  nitelenir, YENİ ALAN sınıfa eklenir (uzantı alan tutamaz). Not içi arama
+  durumu `NoteFindController` + `ListenableBuilder`.
 - Editör yeniden çizimi `sameRenderedNote`'a ve `_mutate`'in "saf yazım"
   kararı `_sameVisual`'a bakar: yeni GÖRÜNÜR not alanı eklenince İKİSİNE de
   ekle. TUZAK (2026-10-20): `paged`/`archivePaper` ikisinde de yoktu →
@@ -353,6 +372,10 @@ eskisini arşive taşıma.
   anahtarıdır — değiştirme (`homeMic` = eski `home.voiceAi`).
 
 ## Web
+- Web derlemesi `--wasm` (F9.4, 2026-10-20): WasmGC'li tarayıcıda skwasm,
+  diğerinde aynı çıktının JS yedeği. COOP/COEP başlığı KONMAZ (Firebase
+  giriş penceresi, dış görseller) → skwasm tek iş parçacığı. Wasm'da `int`
+  64 bit, JS yedeğinde 53 bit — bit işlemlerinde ikisini de düşün.
 - Geri tuşu: `HomeFirstRouteInformationProvider` (go_router görünmez
   geçmiş kayıtları yazıyordu).
 - Web'de Drive ekleri (F4.4): `WebDriveAuth` Google penceresiyle Drive
@@ -376,8 +399,22 @@ eskisini arşive taşıma.
 - Kesin geri tuşu davranışı `alwaysHandleBack` (iç kabuk Navigator'ı sayfasız
   rota açınca bildirim yanlış Navigator'dan gidiyordu).
 - `SnackBar(action:)` varsayılanı `persist: true` → `timedSnackBar`.
+- Bildirim (F8.3): düz metin için `messenger.showMessage(metin)` /
+  `showAppMessage(context, metin)`; eylemliyse `action:` (geri sayımlı).
+  Elle `SnackBar(content: Text(...))` kurma.
+
+## Kod hijyeni (Faz 8, 2026-10-20)
+- Lint: `unawaited_futures`, `cancel_subscriptions`, `unnecessary_lambdas`,
+  `unnecessary_breaks`, `avoid_redundant_argument_values` açık; kasıtlı
+  ateşle-unut `unawaited(...)`. **TUZAK:** `dart fix --apply` gereksiz
+  argümanı silerken üstündeki AÇIKLAMA YORUMUNU da siler — diff'te silinen
+  yorumlara bak; bilinçli açık değer `// ignore: avoid_redundant_argument_values`.
+- Boş `catch (_) {}` yok: veri katmanı `ErrorLog.record`, arayüz gerekçeli
+  yorum.
+- `KALANLAR.md` tek cihaz doğrulama listesi; eski turlar `KALANLAR_ARSIV.md`.
 
 ## Test tuzakları
+- Test dosyasına TARİH adı verilmez (F3.17, F8.1) — özellik adı.
 - Veri katmanı testi: `fake_cloud_firestore` (`notes_repository_data_test`).
 - Widget testinde `Picture.toImage` / `rootBundle` / PNG kodlama sahte zamanda
   ilerlemez → `tester.runAsync`.

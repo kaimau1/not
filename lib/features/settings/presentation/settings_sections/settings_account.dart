@@ -927,6 +927,32 @@ class _AppVersionRowState extends State<_AppVersionRow> {
     final version = _version;
     if (version == null) return const SizedBox.shrink();
     final l10n = context.l10n;
+    final row = _versionButton(context, l10n, version);
+    if (!Diagnostics.enabled) return row;
+    // Teşhis sayaçları (F9.2): yalnız hata ayıklama/profil derlemesinde;
+    // dokununca tazelenir.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        row,
+        GestureDetector(
+          onTap: () => setState(() {}),
+          child: Text(
+            Diagnostics.summary(thumbBytes: CardThumbs.memoryBytes),
+            key: const ValueKey('diagnostics-row'),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _versionButton(
+    BuildContext context,
+    AppLocalizations l10n,
+    String version,
+  ) {
     return TextButton.icon(
       style: TextButton.styleFrom(
         foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,

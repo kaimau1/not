@@ -392,10 +392,14 @@ jobs:
         run: flutter pub get
 
       # Web de aynı sürüm adını taşır (Ayarlar → Hakkında; bkz. android işi).
+      # `--wasm` (F9.4, 2026-10-20): WasmGC destekleyen tarayıcıda skwasm,
+      # desteklemeyende aynı çıktıdaki JS yedeği (flutter_bootstrap.js seçer).
+      # COOP/COEP başlığı KONMADI: Firebase giriş penceresini ve dış
+      # görselleri (YouTube kapağı, Drive) bozar; skwasm tek iş parçacığında koşar.
       - name: Web derle
         run: |
           base=$(sed -nE 's/^version: *([0-9]+\.[0-9]+)\..*/\1/p' pubspec.yaml)
-          flutter build web --release \
+          flutter build web --release --wasm \
             --build-name="${base:-1.0}.${{ github.run_number }}" \
             --build-number=${{ github.run_number }} \
             --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}

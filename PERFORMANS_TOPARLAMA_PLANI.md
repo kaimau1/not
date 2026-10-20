@@ -42,9 +42,9 @@ kullanıcıyla `git` "dubious ownership" verirse ortam değişkeniyle geç:
 |---|---|---|---|---|
 | 5 | Doğrulanmış hatalar + bellek sızıntıları | Bitti | 2026-10-20 | Hepsi yapıldı; cihaz doğrulaması KALANLAR'da |
 | 6 | CPU: kayıt yolu, arka plan işleri, sorgular | Bitti | 2026-10-20 | F6.8 karar: olduğu gibi; F6.1 Expando yerine kopya+karşılaştırma; 1358/1358 test, kural 12/12 |
-| 7 | RAM ayak izi | Bekliyor | | F7.3 KARAR GEREKİR; önce ölç |
-| 8 | Toparlama: kod hijyeni, tekrarlar, dokümanlar | Bekliyor | | Her an yapılabilir, davranış değiştirmez |
-| 9 | Ölçüm, editör bölmesi, web (isteğe bağlı) | Bekliyor | | F9.3/F9.4 KARAR GEREKİR |
+| 7 | RAM ayak izi | Bitti | 2026-10-20 | F7.3 karar: eşik 16 KB; cihaz ölçümü yapılamadı (F9.1 senin) |
+| 8 | Toparlama: kod hijyeni, tekrarlar, dokümanlar | Bitti | 2026-10-20 | FlutterFire yükseltmesi ERTELENDİ (ayrı oturum) |
+| 9 | Ölçüm, editör bölmesi, web (isteğe bağlı) | Bitti | 2026-10-20 | F9.3 karar: yap; F9.4 karar: derlenirse CI'a ekle (eklendi); F9.1 cihaz ölçümü senin |
 
 ## Özet — en önemli bulgular
 
@@ -306,15 +306,16 @@ gelmemeli.
 Bu fazda önce **ölç** (F9.1 senaryoları, DevTools Memory → "Dart heap" ve
 "Raster/Image"), sonra düzelt; sonucu Yapıldı notuna yaz.
 
-- [ ] **F7.1 Kart küçük resimleri bellekte bayt olarak.**
+- [x] **F7.1 Kart küçük resimleri bellekte bayt olarak.**
   `CardThumbs` (`note_card_media.dart:912`) en çok 64 küçük resmi
   `Uint8List` olarak Dart yığınında tutuyor; PDF kapakları PNG (`:1014`) —
   sayfa içeriğine göre yüzlerce KB. Yap: bayt bütçesiyle sınırla (ör. 6 MB)
   ya da baytı tutma — diskteki dosyayı `ResizeImage(FileImage)` ile göster
   (çözülmüş görsel Flutter `ImageCache`'inde, o zaten arka planda
   boşaltılıyor). PDF kapağını JPEG kodla (izolede, `image` paketi).
+  **Yapıldı (2026-10-20):** `CardThumbs` 64 adet tavanına ek 6 MB BAYT bütçesi (en eski kullanılan düşer, disk kopyası kalır; tek başına bütçeyi aşan son resim tutulur); PDF kapağı JPEG (`renderPdfPageJpeg`, kodlama `compute`'ta), anahtar öneki `pj|` (eski PNG kapaklar bir kez yeniden üretilir). Test: `perf_phase7_test`.
 
-- [ ] **F7.2 Çizim noktaları kutulu `List<double>`.**
+- [x] **F7.2 Çizim noktaları kutulu `List<double>`.**
   `InkStroke.points` (`domain/attachment.dart:71`, `fromMap` `:86`): her
   koordinat ayrı nesne (~16-24 B) — `Float32List` 4 B. Çizimli notlarda 4-6 kat
   RAM ve çizimde daha yavaş gezinme. Yap: `fromMap`'te `Float32List`,
@@ -322,8 +323,9 @@ Bu fazda önce **ölç** (F9.1 senaryoları, DevTools Memory → "Dart heap" ve
   kalmalı (sabit uzunluk). Yan etki: float32 yuvarlaması kayıtlı değeri ilk
   kayıtta bir kez değiştirir (özet değişir → ağır kısım bir kez yeniden
   yazılır) — kabul edilebilir, HAFIZA'ya yaz. Eşitlik/`listEquals` testleri.
+  **Yapıldı (2026-10-20):** `InkStroke.fromMap` → `Float32List`; `toMap` kopyasız `UnmodifiableListView` (Firestore kodlayıcısı tipli diziyi `float[]` yollar — sunucu reddeder). `copyFirestoreValue` `List<double>`ı `Float64List`e kopyalar (son yazım kopyası da kutusuz). Çizim sürerken oluşan çizgi büyüyebilir liste. İki eski test 1e-7 toleransa çekildi. HAFIZA'ya yazıldı.
 
-- [ ] **F7.3 Liste akışında satır içi ağır alanlar — KARAR GEREKİR.**
+- [x] **F7.3 Liste akışında satır içi ağır alanlar — KARAR GEREKİR.**
   F3.13 yalnız ağır kısmı 96 KB'ı (`kHeavySplitBytes`) aşan notu bölüyor;
   altındaki her notun çizim/balon/PDF işaretleri ana ekran akışında
   ayrıştırılıp oturum boyu bellekte. Seçenekler: (a) eşiği düşür (ör. 16 KB) —
@@ -332,24 +334,28 @@ Bu fazda önce **ölç** (F9.1 senaryoları, DevTools Memory → "Dart heap" ve
   RİSKLİ: bölünmemiş notta ağır alanlar ANA belgede, listeden gelen notla
   `updateNote` yapan bir yol çizimi silebilir (HAFIZA "hafif not" tuzağı).
   Öneri: önce ölç, gerekiyorsa (a).
+  **Karar (2026-10-20, kullanıcı):** (a) eşik 16 KB. **Yapıldı:** `kHeavySplitBytes = 16 * 1024`; 16–96 KB arası notlar bir sonraki kayıtta bölünür, bölünmüş not birleşmez. Test var.
 
-- [ ] **F7.4 SharedPreferences diyeti.**
+- [x] **F7.4 SharedPreferences diyeti.**
   Açılışta `SharedPreferences.getInstance()` (`main.dart`, `runApp`'ten önce)
   bütün anahtarları belleğe alır. Büyük değerleri dosyaya taşı
   (`attachment_text_v1` F6.3'te; `user_templates_v1`, arama geçmişi, etkinlik
   haritalarının boyuna bak). Hata ayıklama derlemesinde açılışta toplam
   tercih boyunu günlüğe yaz.
+  **Yapıldı (2026-10-20):** gözden geçirildi — büyük değer yalnız `attachment_text_v1` idi (F6.3'te taşındı); şablon 60, arama geçmişi 8, AI geçmişi 10 kayıtla sınırlı; "görüldü" haritaları kimlik başına ~50 B. Hata ayıklama derlemesinde açılışta `prefsFootprint` toplam + en büyük 5 anahtarı yazar. Test var.
 
-- [ ] **F7.5 Oturum boyu önbelleklerin budanması.**
+- [x] **F7.5 Oturum boyu önbelleklerin budanması.**
   F5.5'in uid dışı kısmı: `_searchBodyCache` silinen notları tutuyor;
   `SemanticIndex._cache` (`semantic_search.dart:63`) silinen notların
   vektörlerini tutuyor; `_folderNotesBox`/`_filteredNotesBox` (F5.1 sonrası
   kontrol). Not yayınında canlı kimliklerle buda.
+  **Yapıldı (2026-10-20):** `SemanticIndex.pruneTo` her aramada canlı (arşivli/gizli dahil) kimliklerle budar; `_searchBodyCache` F5.5'ten beri budanıyor; `_folderNotesBox` F5.1'den beri autoDispose, `_filteredNotesBox` tek kutu. Test var.
 
-- [ ] **F7.6 Görsel önbellek bütçesi (isteğe bağlı).**
+- [x] **F7.6 Görsel önbellek bütçesi (isteğe bağlı).**
   `PaintingBinding.instance.imageCache` varsayılanı 100 MB / 1000 görsel.
   Düşük RAM'li cihazda (ör. `ActivityManager.isLowRamDevice` ya da toplam RAM
   ≤ 4 GB — platform kanalı) 50 MB'a çek. Önce ölç.
+  **Yapıldı (2026-10-20, ölçmeden — risk düşük):** `MainActivity` `lowMemoryDevice` (`isLowRamDevice` ya da `totalMem` ≤ 4 GB); `ImageCacheBudget.apply` açılışta 50 MB / 500 görsel. Kotlin yerelde derlenmedi — APK işi doğrular. Test var.
 
 **Faz 7 — senin yapacakların:** F9.1 ölçümünü Faz 7'den önce ve sonra yap.
 
@@ -360,82 +366,94 @@ Bu fazda önce **ölç** (F9.1 senaryoları, DevTools Memory → "Dart heap" ve
 Davranış değiştirmez; her an, her fazın arasında yapılabilir. Toplu
 biçimlendirme YOK (`dart format` yalnız dokunulan dosyaya).
 
-- [ ] **F8.1 Tarihli test dosyaları geri geldi.** `test/fixes_2026_10_20_test.dart`,
+- [x] **F8.1 Tarihli test dosyaları geri geldi.** `test/fixes_2026_10_20_test.dart`,
   `test/ui_compact_2026_10_20_test.dart`, `test/voice_bubble_2026_10_20_test.dart`
   → özellik adına (F3.17'de 11 dosya böyle düzeltilmişti). HAFIZA "Test
   tuzakları"na kural: test dosyasına tarih adı verilmez.
+  **Yapıldı (2026-10-20):** → `home_editor_guards_test`, `compact_menus_listening_test`, `listening_card_bubble_theme_test`; HAFIZA'ya kural.
 
-- [ ] **F8.2 Lint setini genişlet.** `analysis_options.yaml`'a:
+- [x] **F8.2 Lint setini genişlet.** `analysis_options.yaml`'a:
   `unawaited_futures` (38 yer — kasıtlıları `unawaited(...)` ile işaretle),
   `cancel_subscriptions`, `unnecessary_lambdas` (8), `unnecessary_breaks` (5),
   `avoid_redundant_argument_values` (46). `discarded_futures` (276) ve
   `avoid_slow_async_io` (17) gürültülü — EKLEME. Ölçüm komutu: kopyada
   `flutter analyze` (bkz. Ek A).
+  **Yapıldı (2026-10-20):** beş kural eklendi; `dart fix` (103 düzeltme) + 42 `unawaited(...)`. TUZAK: `dart fix` gereksiz argümanı silerken ÜSTÜNDEKİ açıklama yorumunu da sildi (4 yer) — yorum + `// ignore: avoid_redundant_argument_values` ile geri kondu. `cancel_subscriptions` bulgu vermedi.
 
-- [ ] **F8.3 Tek bildirim yardımcısı.** 265 `SnackBar(` + 137 `showSnackBar(`
+- [x] **F8.3 Tek bildirim yardımcısı.** 265 `SnackBar(` + 137 `showSnackBar(`
   elle kuruluyor; ortak `timedSnackBar` yalnız 7 yerde
   (`core/widgets/undo_snackbar.dart`). `showAppMessage(context, metin,
   {eylem, geriAl})` → en yoğun dosyalardan başla (`settings_account` 20,
   `quick_add_actions` 17, editör 16, dashboard 15, `drive_ui` 14).
+  **Yapıldı (2026-10-20):** `ScaffoldMessengerState.showMessage(metin, {action, duration})` + `showAppMessage(context, …)` (`undo_snackbar.dart`; eylemliyse `timedSnackBar`). Yalnız `content: Text(x)` (+ `duration`) taşıyan 131 bildirim betikle çevrildi (54 dosya); özel biçimli ~19 tanesi elle kurulu kaldı. Test: `app_messages_test`.
 
-- [ ] **F8.4 PDF sayfa çiziminin 4 kopyası.** `note_card_media.dart:995`
+- [x] **F8.4 PDF sayfa çiziminin 4 kopyası.** `note_card_media.dart:995`
   (`_renderPdf`), `viewers/pdf_page_image.dart:146`,
   `data/note_quick_export.dart:124`, `data/pdf/pdf_page_ocr.dart:244` →
   tek yardımcı (sayfa, hedef genişlik, zemin → `ui.Image`/bayt; `dispose`
   sırası tek yerde).
+  **Yapıldı (2026-10-20):** `data/pdf/pdf_page_render.dart`: `renderPdfPageImage` / `renderPdfPagePng` / `renderPdfPageJpeg`; dört yer bunları kullanıyor.
 
-- [ ] **F8.5 Boş `catch` blokları.** 33 `catch (_) {}` (en çok
+- [x] **F8.5 Boş `catch` blokları.** 33 `catch (_) {}` (en çok
   `reminder_service.dart` 5, `youtube_viewer` 3, `share_intake` 3,
   `pdf_page_ocr` 3, `device_storage` 3). Veri katmanındakiler en azından
   `ErrorLog.record` yazsın; arayüzdekiler gerekçeli tek satır yorumla kalsın.
+  **Yapıldı (2026-10-20):** 37 boş `catch`: 15'i `ErrorLog.record` (bildirim dokunuşu yönlendirmesi, paylaşımdan açma, ek metni önbelleği, OCR önbellek yazımı, sohbet dosyası silme, ayar penceresi açma, kişiselleştirme yazımı), kalanı gerekçeli yorum. `grep "catch (_) {}" lib` → 0.
 
-- [ ] **F8.6 pubspec temizliği.** Bayat yorumlar: `package_info_plus`
+- [x] **F8.6 pubspec temizliği.** Bayat yorumlar: `package_info_plus`
   ("`1.0.0+1`" — artık `1.1.0+1` ve CI `1.1.N`), Windows sürümleme
   şablon yorumu, varlık yorumlarında kalkmış `pdf` paketi anlatımı (F3.10).
   `syncfusion_flutter_core` kodda hiç içe aktarılmıyor — sürüm kilidi
   olarak tutuluyorsa yorumu bunu söylesin. `flutter pub outdated`: 144 paket
   kısıt dışında yeni sürümde — FlutterFire'ı BİRLİKTE yükselt (HAFIZA), ayrı
   oturum, APK işiyle doğrula.
+  **Yapıldı (2026-10-20):** sürüm şablon yorumu (Windows dahil) kısa nota indi; `package_info_plus` ve font yorumları güncel; `syncfusion_flutter_core` "yalnız sürüm kilidi" diye işaretlendi. **ERTELENDİ:** FlutterFire toplu yükseltmesi (ayrı oturum + APK doğrulaması) — KALANLAR'da.
 
-- [ ] **F8.7 Dokümanları sadeleştir.** `KALANLAR.md` 52 KB, 20+ tur "CİHAZDA
+- [x] **F8.7 Dokümanları sadeleştir.** `KALANLAR.md` 52 KB, 20+ tur "CİHAZDA
   GÖRÜLMEDİ" — tek "cihaz doğrulama turu" listesine indir (yinelenenleri
   birleştir, sonradan geri alınan maddeleri — ör. F3.6 yıldız/çerçeve — at).
   `YOL_HARITASI.md` başına "tamamlandı, devamı PERFORMANS_TOPARLAMA_PLANI.md"
   notu. README mimari ağacını koddan doğrula.
+  **Yapıldı (2026-10-20):** `KALANLAR.md` 53 KB → ~10 KB (konsol işleri · tek cihaz doğrulama turu · açık kararlar · sonra); eski hâli `KALANLAR_ARSIV.md` (dondurulmuş). Geri alınan/eskiyen maddeler atıldı (çeviri borcu — F3.14, F3.6 göçü, eski "+" kapıları, FCM öncesi notlar…). YOL_HARITASI başına "tamamlandı" notu; README ağacı düzeltildi.
 
-- [ ] **F8.8 Yorum hijyeni (politika, toplu düzenleme DEĞİL).** `lib/`
+- [x] **F8.8 Yorum hijyeni (politika, toplu düzenleme DEĞİL).** `lib/`
   117.616 satırın 20.207'si yorum (%17); 775 tarihli yorum, 565 "kullanıcı
   isteği/bulgusu", 204 "KÖK NEDEN". F3.17 kararı geçerli: toplu temizlik yok;
   Faz 5–7'de DOKUNULAN her dosyada hikâye yorumları "neden böyle olmak
   zorunda" özüne (≤3 satır) indirilir, tarihçe git/HAFIZA'da kalır.
+  **Yapıldı (2026-10-20):** politika sürüyor; bu turda dokunulan `CardThumbs` belgesi özüne indi. Toplu temizlik yapılmadı (karar).
 
 ---
 
 ## FAZ 9 — Ölçüm, büyük yapısal işler, web (isteğe bağlı)
 
-- [ ] **F9.1 Cihaz ölçüm protokolü (senin yapacakların + oturum hazırlığı).**
+- [x] **F9.1 Cihaz ölçüm protokolü (senin yapacakların + oturum hazırlığı).**
   Faz 5 ve 7 öncesi/sonrası aynı senaryolar, DevTools (profil derlemesi)
   Memory sekmesi: (1) soğuk açılış → ana ekran ilk kare süresi; (2) 30 not
   aç-kapat → Dart heap; (3) yerel notta 2 dk yazı → heap eğimi;
   (4) galeriden 10 fotoğraf → tepe RSS; (5) 30 slaytlık fotoğraflı PPTX.
   F2.6 kare ölçümü: Actions → Run workflow → "Kare ölçümü".
+  **Durum (2026-10-20):** oturum hazırlığı F9.2 sayaçları; ölçümün kendisi senin (bulutta cihaz yok) — KALANLAR §1.
 
-- [ ] **F9.2 Hata ayıklama teşhis sayaçları.** Yalnız debug/profil: açık not
+- [x] **F9.2 Hata ayıklama teşhis sayaçları.** Yalnız debug/profil: açık not
   akışı sayısı (F5.1 doğrulaması), `CardThumbs` bayt toplamı, `ImageCache`
   doluluğu — Ayarlar → Hakkında'da gizli satır. Üretimde derlenmez.
+  **Yapıldı (2026-10-20):** `core/utils/diagnostics.dart` (`enabled = kDebugMode || kProfileMode` — release'te ağaçtan atılır): açık `noteStreamProvider` sayısı, `CardThumbs.memoryBytes`, `ImageCache` doluluğu/tavanı; Ayarlar → Hakkında sürüm satırının altında (dokununca tazelenir). Test: `perf_phase9_test`.
 
-- [ ] **F9.3 Editörün bölünmesi (F3.17'nin ertelenen kısmı) — KARAR GEREKİR.**
+- [x] **F9.3 Editörün bölünmesi (F3.17'nin ertelenen kısmı) — KARAR GEREKİR.**
   `note_editor_screen.dart` 9.072 satır (+ `note_editor_parts.dart` 323),
   33 `setState`, `build` `:7495`'ten başlayıp ~1.580 satır. Bulma, AI, ekler,
   kalem, dikte ayrı denetleyicilere (`ChangeNotifier` + dar builder).
   Yüksek risk; her alt parça ayrı commit, editör testleri yeşil kalmalı.
   Öneri: ancak Faz 5–7 bittikten ve cihaz ölçümleri editörü hâlâ darboğaz
   gösterirse.
+  **Karar (2026-10-20, kullanıcı):** yap. **Yapıldı:** (1) not içi arama durumu `NoteFindController` (`ChangeNotifier`); çubuk `ListenableBuilder` ile — aramadaki her harf artık 9.000 satırlık editörün tamamını kurmuyor (test: `note_find_controller_test`). (2) `note_editor_screen.dart` 9.070 → ~3.900 satır; yöntemler konu başına `part` dosyalarında `extension … on _NoteEditorScreenState`: `ai`, `attachments`, `actions`, `media_view`, `appearance`, `toolbar`, `find`, `voice`. Alanlar (durum) sınıfta kaldı; uzantıdan `setState` korumalı olduğu için `_update`; sınıf statikleri nitelendi. Taşıma betikle yapıldı ve satır kümesi önce/sonra birebir karşılaştırıldı (yalnız `_update` eklendi). Kalan (isteğe bağlı): AI/ek/dikte durumunu da ayrı denetleyicilere alıp dar builder'la çizmek — editörün widget testi yok, cihaz ölçümü darboğaz gösterirse.
 
-- [ ] **F9.4 Web'de WebAssembly — KARAR GEREKİR.** `flutter build web --wasm`
+- [x] **F9.4 Web'de WebAssembly — KARAR GEREKİR.** `flutter build web --wasm`
   (skwasm: çok iş parçacıklı çizim, daha iyi CPU). Eklenti uyumluluğu
   (pdfrx, webview, Firebase, `web` paketi) ayrı dalda denenmeli; CI web
   işinde bayrak. Getiri tarayıcıda belirgin olabilir, risk derleme kırılması.
+  **Karar (2026-10-20, kullanıcı):** derlenirse CI'a ekle. **Yapıldı:** bulutta `flutter build web --release --wasm` 248 sn'de derlendi (main.dart.wasm 8,1 MB + JS yedeği); başsız Chromium'da skwasm + wasm yüklendi, `main()` Firebase başlatmasına kadar koştu (sandbox Firebase'e erişemiyor). CI web işine `--wasm` eklendi. COOP/COEP başlığı KONMADI (Firebase giriş penceresi ve dış görseller bozulur) → skwasm tek iş parçacığında. Tarayıcıda gözle bakılacaklar KALANLAR'da.
 
 ---
 

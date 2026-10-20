@@ -101,6 +101,10 @@ numarasıyla bildir.
 - [ ] Simge (başlatıcı maskeleri, Android 13+ temalı, bildirim beyaz "N").
 - [ ] Tablet: gezinme rayı ve ana-detay; yatay telefonda ray yok.
 - [ ] Web: geri tuşu gerçek sitede, Drive eki.
+- [ ] **Web WASM (F9.4)**: Chrome/Edge'de site açılıyor, giriş penceresi,
+  not yazma, PDF görüntüleme, YouTube kapağı, yazı tipleri çalışıyor;
+  Safari/Firefox (eski) JS yedeğiyle açılıyor. Sorun olursa CI'daki
+  `--wasm` bayrağını kaldırmak yeterli.
 
 **Performans (Faz 5–7)**
 - [ ] 20-30 not aç-kapat, sonra yerel notta 2 dk yaz — ısınma/yavaşlama yok.
@@ -114,6 +118,9 @@ numarasıyla bildir.
   çizimler yerinde (F7.2 float32; F7.3 16 KB'ı aşan ağır kısım ayrı belgeye
   taşınır).
 - [ ] Düşük RAM'li (≤4 GB) telefonda görselli notlar arasında gezinme (F7.6).
+- [ ] Editör (F9.3 bölündü): ekler, ⋮ menüsü, sayfalar/görünüm kipleri,
+  renk/kâğıt/zemin, not içi arama, dikte — her biri bir kez denensin
+  (kod satır satır taşındı, davranış değişmemeli).
 
 ## 3. Açık kararlar / bilinen sınırlar
 - Play Billing (lifetime + AI aboneliği): RevenueCat mı `in_app_purchase` +
