@@ -68,6 +68,27 @@ Note switchTextPage(Note note, String targetId) {
   );
 }
 
+/// ETKİN sayfadaki [itemId] maddesini [targetId] sayfasının SONUNA taşır
+/// (kullanıcı isteği 2026-10-20: "bir maddeyi başka sayfaya taşıma
+/// seçeneği olmalı"). Hedef etkin sayfaysa ya da yoksa not aynen döner.
+Note moveItemToPage(Note note, String itemId, String targetId) {
+  if (targetId == note.activePage) return note;
+  final pages = _normalized(note);
+  if (!pages.any((p) => p.id == targetId)) return note;
+  final item = note.items.where((i) => i.id == itemId).firstOrNull;
+  if (item == null) return note;
+  return note.copyWith(
+    items: [
+      for (final i in note.items)
+        if (i.id != itemId) i,
+    ],
+    textPages: [
+      for (final p in pages)
+        p.id == targetId ? p.copyWith(items: [...p.items, item]) : p,
+    ],
+  );
+}
+
 /// [id] sayfasını siler. Yazısı gider (geri al ile döner); görselleri
 /// KAYBOLMAZ, komşu sayfaya (öncekine, ilk sayfaysa sonrakine) taşınır.
 /// Tek sayfa kalırsa not yeniden tek sayfalı olur.

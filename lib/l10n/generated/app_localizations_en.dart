@@ -111,12 +111,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addImage => 'Add image';
 
   @override
-  String get addPdf => 'Add PDF';
-
-  @override
-  String get addSlide => 'Add slides';
-
-  @override
   String get noNoteSelected => 'Pick a note from the left';
 
   @override
@@ -771,12 +765,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveDictation => 'Dictate';
-
-  @override
-  String get voiceCaptureAi => 'Voice capture (AI)';
-
-  @override
-  String get dictationListening => 'Listening... text appears as you speak';
 
   @override
   String get dictationHoldHint =>
@@ -1714,10 +1702,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterSectionSort => 'SORT';
 
   @override
-  String get filterFavoriteHint =>
-      'Tap a star to keep that option on the home screen';
-
-  @override
   String get filterSheetSortHint =>
       'Date groups (TODAY, THIS WEEK…) are only shown when sorting by last edited.';
 
@@ -2037,6 +2021,98 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'Colors, highlights, bold and underline from your notes also show on the home screen cards. When off, cards show plain text.';
+
+  @override
+  String get cardHideSensitive => 'Hide sensitive content on cards';
+
+  @override
+  String get cardHideSensitiveInfo =>
+      'Notes that mention a password don\'t show their content on the card; IBAN and card numbers show only their last four digits. Inside the note everything stays as is.';
+
+  @override
+  String get sensitiveHiddenOnCard => 'Sensitive content — hidden on card';
+
+  @override
+  String get paletteMore => 'More colors';
+
+  @override
+  String get paletteCustom => 'Custom color';
+
+  @override
+  String get paletteUse => 'Use';
+
+  @override
+  String get paletteHue => 'Hue';
+
+  @override
+  String get paletteSaturation => 'Saturation';
+
+  @override
+  String get paletteLightness => 'Lightness';
+
+  @override
+  String get itemMoveToPage => 'Move to another page';
+
+  @override
+  String itemMovedToPage(int page) {
+    return 'Item moved to page $page';
+  }
+
+  @override
+  String get screenAiSearchHint => 'Search by meaning…';
+
+  @override
+  String get archiveInsights => 'What\'s in my archive?';
+
+  @override
+  String archiveInsightsStats(int count, int files, int stale) {
+    return '$count notes · $files attachments · $stale untouched for a year';
+  }
+
+  @override
+  String get archiveByFolder => 'By folder';
+
+  @override
+  String get archiveNoFolder => 'No folder';
+
+  @override
+  String get archiveStale => 'Untouched for a year';
+
+  @override
+  String get archiveInsightsAi => 'Summarize with AI';
+
+  @override
+  String get archiveAiStale => 'AI: looks outdated';
+
+  @override
+  String get lineSpacing => 'Line spacing';
+
+  @override
+  String get lineSpacingNormal => 'Normal';
+
+  @override
+  String get lineSpacingWide => 'Wide';
+
+  @override
+  String get lineSpacingWider => 'Wider';
+
+  @override
+  String get trashReminderTitle =>
+      'Something in the trash may be worth keeping';
+
+  @override
+  String trashReminderBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count notes will be deleted for good tomorrow',
+      one: 'A note will be deleted for good tomorrow',
+    );
+    return '$_temp0 — it looks like it still holds a task or important info. Take a look.';
+  }
+
+  @override
+  String get groupByFolder => 'Group by folder';
 
   @override
   String get fontSizeSmall => 'Small';
@@ -4159,9 +4235,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoLinkCopied => 'Link copied';
 
   @override
-  String get attachSectionVisual => 'Images and drawing';
-
-  @override
   String get menuSectionOrganize => 'Organize';
 
   @override
@@ -4519,9 +4592,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moduleDocuments => 'Documents';
-
-  @override
-  String get moduleDocumentsInfo => 'Adding PDFs and slides';
 
   @override
   String get moduleScan => 'Scanning';
@@ -4998,13 +5068,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get captureModeAsk => 'Ask every time';
-
-  @override
-  String get voiceMicDictate => 'Type as I speak';
-
-  @override
-  String get voiceMicTooltipAi =>
-      'Voice note (AI tidies) — long-press: type as I speak';
 
   @override
   String get voiceMicTooltipDictate =>

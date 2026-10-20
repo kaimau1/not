@@ -24,14 +24,22 @@ extension _EditorAppearance on _NoteEditorScreenState {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: _colorLeading(note.color, frame: false),
+              leading: _colorLeading(
+                note.color,
+                frame: false,
+                custom: note.customColor,
+              ),
               title: Text(l10n.backgroundColor),
               onTap: () => Navigator.pop(sheetContext, 'bg'),
             ),
             // ÇERÇEVE GERİ GELDİ (kullanıcı isteği 2026-10-20) — yalnız ana
             // ekran kartında çizilir; alt satır bunu söyler.
             ListTile(
-              leading: _colorLeading(note.frameColor, frame: true),
+              leading: _colorLeading(
+                note.frameColor,
+                frame: true,
+                custom: note.customFrameColor,
+              ),
               title: Text(l10n.frameColor),
               subtitle: Text(l10n.frameColorInfo),
               onTap: () => Navigator.pop(sheetContext, 'frame'),
@@ -59,12 +67,21 @@ extension _EditorAppearance on _NoteEditorScreenState {
       context,
       frame: frame,
       current: frame ? note.frameColor : note.color,
+      currentCustom: frame ? note.customFrameColor : note.customColor,
       onChanged: (picked) {
         if (!mounted) return;
         _mutate(
           (n) => frame
-              ? n.copyWith(frameColor: picked)
-              : n.copyWith(color: picked),
+              ? n.copyWith(
+                  frameColor: picked.color,
+                  customFrameColor: picked.custom,
+                  clearCustomFrameColor: picked.custom == null,
+                )
+              : n.copyWith(
+                  color: picked.color,
+                  customColor: picked.custom,
+                  clearCustomColor: picked.custom == null,
+                ),
           immediate: true,
         );
       },
@@ -121,12 +138,69 @@ extension _EditorAppearance on _NoteEditorScreenState {
       isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
         child: SingleChildScrollView(
-          child: NotebookPaperPicker(
-            initial: note.archivePaper,
-            onChanged: (picked) {
-              if (!mounted) return;
-              _mutate((n) => n.copyWith(archivePaper: picked), immediate: true);
-            },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              NotebookPaperPicker(
+                initial: note.archivePaper,
+                onChanged: (picked) {
+                  if (!mounted) return;
+                  _mutate(
+                    (n) => n.copyWith(archivePaper: picked),
+                    immediate: true,
+                  );
+                },
+              ),
+              // SATIR ARALIĞI (geliştirme raporu D1): dokunuş anında
+              // uygulanır, levha açık kalır.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                child: StatefulBuilder(
+                  builder: (context, setSheetState) {
+                    final l10n = context.l10n;
+                    final current = _note?.lineSpacing ?? 1;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.lineSpacing,
+                          style: Theme.of(context).textTheme.labelLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        SegmentedButton<double>(
+                          key: const ValueKey('line-spacing'),
+                          showSelectedIcon: false,
+                          segments: [
+                            ButtonSegment(
+                              value: 1,
+                              label: Text(l10n.lineSpacingNormal),
+                            ),
+                            ButtonSegment(
+                              value: Note.lineSpacingWide,
+                              label: Text(l10n.lineSpacingWide),
+                            ),
+                            ButtonSegment(
+                              value: Note.lineSpacingWider,
+                              label: Text(l10n.lineSpacingWider),
+                            ),
+                          ],
+                          selected: {current},
+                          onSelectionChanged: (v) {
+                            if (!mounted) return;
+                            _mutate(
+                              (n) => n.copyWith(lineSpacing: v.first),
+                              immediate: true,
+                            );
+                            setSheetState(() {});
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -377,18 +451,19 @@ extension _EditorAppearance on _NoteEditorScreenState {
     _pendingAttachmentDeletes.add(image);
   }
 
-  Widget _colorLeading(NoteColor color, {required bool frame}) {
-    final swatch = NoteColors.swatch(color);
+  Widget _colorLeading(NoteColor color, {required bool frame, int? custom}) {
+    final swatch = custom != null ? Color(custom) : NoteColors.swatch(color);
+    final none = custom == null && color == NoteColor.none;
     return Container(
       width: 28,
       height: 28,
-      decoration: frame && color != NoteColor.none
+      decoration: frame && !none
           ? BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: swatch, width: 4),
             )
           : BoxDecoration(color: swatch, shape: BoxShape.circle),
-      child: color == NoteColor.none
+      child: none
           ? const Icon(Icons.format_color_reset_outlined, size: 16)
           : null,
     );

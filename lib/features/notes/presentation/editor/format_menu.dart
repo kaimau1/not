@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/color_palette.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/rich_text.dart';
@@ -303,6 +304,7 @@ Future<void> showFormatSheet(
                 ),
                 const SizedBox(height: 8),
                 _ColorRow(
+                  title: l10n.formatTextColor,
                   onPick: (index) => apply(RichFormat.color, colorIndex: index),
                 ),
                 const SizedBox(height: 16),
@@ -312,6 +314,7 @@ Future<void> showFormatSheet(
                 ),
                 const SizedBox(height: 8),
                 _ColorRow(
+                  title: l10n.formatHighlight,
                   filled: true,
                   onPick: (index) =>
                       apply(RichFormat.highlight, colorIndex: index),
@@ -351,10 +354,16 @@ class _FormatButton extends StatelessWidget {
   );
 }
 
-/// Palet satırı: 1..5 indeksleri (bkz. NoteColors.richPalette).
+/// Palet satırı: 1..5 indeksleri (bkz. NoteColors.richPalette) + tam palet
+/// düğmesi (özel renk ARGB değer olarak döner, bkz. [isCustomRichColor]).
 class _ColorRow extends StatelessWidget {
-  const _ColorRow({required this.onPick, this.filled = false});
+  const _ColorRow({
+    required this.title,
+    required this.onPick,
+    this.filled = false,
+  });
 
+  final String title;
   final ValueChanged<int> onPick;
 
   /// true: vurgu (dolu daire), false: yazı rengi (halka).
@@ -395,6 +404,14 @@ class _ColorRow extends StatelessWidget {
               ),
             ),
           ),
+        IconButton.filledTonal(
+          tooltip: context.l10n.paletteMore,
+          icon: const Icon(Icons.palette_outlined),
+          onPressed: () async {
+            final picked = await showColorPaletteSheet(context, title: title);
+            if (picked != null) onPick(picked.toARGB32() | 0xFF000000);
+          },
+        ),
       ],
     );
   }

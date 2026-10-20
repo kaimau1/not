@@ -45,6 +45,28 @@ abstract final class NoteColors {
     return map[color] ?? scheme.surfaceContainerLow;
   }
 
+  /// Notun GERÇEK zemini: paletten özel renk seçildiyse o (okunur kalsın
+  /// diye tema yüzeyine karıştırılmış — açıkta %55, koyuda %35), yoksa
+  /// hazır ton ([surface]).
+  static Color noteSurface(BuildContext context, Note note) {
+    final custom = note.customColor;
+    if (custom == null) return surface(context, note.color);
+    final scheme = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Color.alphaBlend(
+      Color(custom).withValues(alpha: dark ? 0.35 : 0.55),
+      scheme.surfaceContainerLow,
+    );
+  }
+
+  /// Kart çerçevesinin rengi (özel renk önce); çerçeve yoksa null.
+  static Color? noteFrame(Note note) {
+    final custom = note.customFrameColor;
+    if (custom != null) return Color(custom);
+    if (note.frameColor == NoteColor.none) return null;
+    return swatch(note.frameColor);
+  }
+
   /// Satır içi biçimlendirmenin renk paleti: metindeki `==2:...==` /
   /// `%%2:...%%` işaretlerindeki 1..5 indeksinin karşılığı. Not renkleriyle
   /// AYNI palet kullanılır — kullanıcı iki ayrı renk kümesi öğrenmesin.

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/utils/search_fold.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -9,6 +8,8 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../data/notes_repository.dart';
 import 'notes_providers.dart';
 import 'trash_analysis_sheet.dart';
+import 'screen_search.dart';
+import '../../ai/data/semantic_search.dart' show SemanticScope;
 import '../../../app/theme/note_colors.dart';
 import '../../../core/utils/rich_text.dart';
 import '../domain/attachment.dart';
@@ -34,8 +35,8 @@ class TrashScreen extends ConsumerStatefulWidget {
 }
 
 class _TrashScreenState extends ConsumerState<TrashScreen> {
-  final _searchController = TextEditingController();
-  bool _searching = false;
+  /// Arama kutusu + AI anahtarı (ortak yüzey — bkz. screen_search.dart).
+  final _search = ScreenSearch();
 
   /// Boşaltma sürüyor: düğme kilitli, üstte ilerleme çubuğu var. İkinci
   /// dokunuş aynı notları ikinci kez silmeye kalkardı.
@@ -44,16 +45,17 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
   int _emptyTotal = 0;
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _search.addListener(_onSearchChanged);
   }
 
-  void _toggleSearch() {
-    setState(() {
-      _searching = !_searching;
-      if (!_searching) _searchController.clear();
-    });
+  void _onSearchChanged() => setState(() {});
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
   }
 
   Future<void> _emptyTrash(List<Note> notes) async {
@@ -149,16 +151,8 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: _searching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: l10n.searchHint,
-                ),
-              )
+        title: _search.open
+            ? ScreenSearchField(search: _search)
             : Text(l10n.trashTitle),
         bottom: _emptying
             ? PreferredSize(
@@ -170,11 +164,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
               )
             : null,
         actions: [
-          IconButton(
-            tooltip: _searching ? l10n.close : l10n.searchHint,
-            icon: Icon(_searching ? Icons.close : Icons.search),
-            onPressed: _emptying ? null : _toggleSearch,
-          ),
+          ...screenSearchActions(context, _search, enabled: !_emptying),
           Consumer(
             builder: (context, ref, _) {
               final notes = visible(
@@ -216,17 +206,21 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
           title: l10n.genericError(e.toString()),
         ),
         data: (raw) => ValueListenableBuilder<TextEditingValue>(
-          valueListenable: _searchController,
+          valueListenable: _search.controller,
           builder: (context, value, _) {
-            final needle = foldForSearch(value.text.trim());
-            final all = visible(raw);
-            final notes = needle.isEmpty
-                ? all
-                : [
-                    for (final n in all)
-                      if (noteMatchesQuery(n, needle)) n,
-                  ];
+            final result = runScreenSearch(
+              ref,
+              visible(raw),
+              value.text,
+              semantic: _search.semantic,
+              scope: SemanticScope.trash,
+            );
+            final notes = result.notes;
+            final needle = result.needle;
             if (notes.isEmpty) {
+              if (result.loading) {
+                return const Center(child: CircularProgressIndicator());
+              }
               return EmptyState(
                 icon: needle.isEmpty ? Icons.delete_outline : Icons.search_off,
                 title: needle.isEmpty ? l10n.trashEmpty : l10n.noteSearchNoHit,
@@ -266,16 +260,24 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
             return CustomScrollView(
               slivers: [
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                  padding: needle.isEmpty
+                      ? const EdgeInsets.fromLTRB(16, 8, 16, 4)
+                      : const EdgeInsets.only(bottom: 4),
                   sliver: SliverToBoxAdapter(
-                    child: Text(
-                      needle.isEmpty
-                          ? l10n.trashInfo
-                          : l10n.searchResultCount(notes.length),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
+                    child: needle.isEmpty
+                        ? Text(
+                            l10n.trashInfo,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          )
+                        : SearchResultHeader(
+                            count: notes.length,
+                            loading: result.loading,
+                          ),
                   ),
                 ),
                 if (soon.isNotEmpty) ...[
@@ -574,7 +576,7 @@ class _TrashCard extends ConsumerWidget {
         : (note.displayTitle.trim().isNotEmpty
               ? stripRichMarkers(note.displayTitle).trim()
               : note.toPlainText().trim().split('\n').first);
-    final surface = NoteColors.surface(context, note.color);
+    final surface = NoteColors.noteSurface(context, note);
     return Material(
       color: surface,
       shape: RoundedRectangleBorder(

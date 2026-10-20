@@ -168,6 +168,25 @@ class _CardRichPreviewSwitch extends ConsumerWidget {
   }
 }
 
+/// Kartlarda hassas içeriği gizle (B1): parola notu kartta içeriksiz,
+/// IBAN/kart numarası örtülü.
+class _CardHideSensitiveSwitch extends ConsumerWidget {
+  const _CardHideSensitiveSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.cardHideSensitive),
+      subtitle: Text(l10n.cardHideSensitiveInfo),
+      value: ref.watch(cardHideSensitiveProvider),
+      onChanged: (value) =>
+          ref.read(cardHideSensitiveProvider.notifier).set(value),
+    );
+  }
+}
+
 /// Kullanılan bulut depolama alanı: "12,4 MB / 50 MB kullanıldı" + çubuk.
 ///
 /// Tavan olmadan lifetime paketinin maliyeti öngörülemiyordu; tavan konunca

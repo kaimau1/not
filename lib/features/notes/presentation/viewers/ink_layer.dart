@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/color_palette.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/arrow.dart';
 import '../../domain/attachment.dart';
@@ -527,6 +528,18 @@ class InkToolbar extends StatelessWidget {
                         ),
                       ),
                     ),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 8),
+                    child: PaletteButton(
+                      title: l10n.paletteMore,
+                      current:
+                          controller.eraser ||
+                              kInkPalette.contains(controller.color)
+                          ? null
+                          : controller.color,
+                      onPicked: controller.setColor,
+                    ),
+                  ),
                   Expanded(
                     child: Slider(
                       // Aralık kalem türüne göre: fosforlu 12 px'te kalsaydı

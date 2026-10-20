@@ -441,6 +441,32 @@ class GeminiService {
     return decoded;
   }
 
+  /// ARŞİV ÖZETİ (geliştirme raporu D5, 2026-10-20): "Arşivimde neler var?"
+  /// — çöp analizinin arşiv karşılığı. [digest]: [trashDigest] biçiminde
+  /// (aynı satır düzeni, kilitli notlar yok).
+  Future<Map<String, dynamic>> summarizeArchive(String digest) async {
+    final raw = await _generate([
+      {
+        'text':
+            'Aşağıda bir not uygulamasının ARŞİVİNDEKİ notlar var (her satır '
+            'bir not; köşeli parantezde kimliği). (1) "ozet": arşivde ne tür '
+            'şeyler olduğunu 1-2 kısa Türkçe cümleyle anlat; (2) "kategori": '
+            'en fazla 6 konu başlığı ve kaç not içerdiği; (3) "eski": artık '
+            'gereksiz/eskimiş görünen ve silinebilecek notlar (geçmiş tarihli '
+            'iş, tamamlanmış liste, deneme). Emin olmadığın notu "eski"ye '
+            'koyma. "neden" en fazla 8 kelime. Yanıtı YALNIZCA şu JSON ile '
+            'ver: {"ozet": "...", "kategori": [{"ad": "...", "sayi": 3}], '
+            '"eski": [{"id": "n1", "neden": "..."}]}'
+            '\n\n---\n$digest',
+      },
+    ], jsonOutput: true);
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map<String, dynamic>) {
+      throw const GeminiException('Beklenmeyen yanıt');
+    }
+    return decoded;
+  }
+
   /// Kısa özet istemi: birkaç cümlelik genel bakış + önemli maddeler.
   static const _shortSummaryPrompt =
       'Türkçe olarak KISA ve öz biçimde özetle: önce 2-3 cümlelik genel '

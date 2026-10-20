@@ -145,6 +145,7 @@ import 'video_hub_scope.dart';
 import 'audio_card_box.dart' show kAudioBoxWidth, kAudioBoxHeight;
 import 'text_page_box.dart' show kTextBoxWidth, kTextBoxHeight;
 import 'view_mode_switch.dart';
+import 'page_swipe.dart';
 import '../../../../core/widgets/smooth_routes.dart';
 import '../../../../core/widgets/app_sheet.dart';
 
@@ -231,8 +232,11 @@ bool sameRenderedNote(Note a, Note b) {
       // Sayfa geçişi/ekleme çubuğu ve tuvali değiştirir (Note.textPages).
       a.activePage != b.activePage ||
       a.textPages.length != b.textPages.length ||
+      a.lineSpacing != b.lineSpacing ||
       a.color != b.color ||
       a.frameColor != b.frameColor ||
+      a.customColor != b.customColor ||
+      a.customFrameColor != b.customFrameColor ||
       a.pinned != b.pinned ||
       a.starred != b.starred ||
       a.locked != b.locked ||
@@ -798,6 +802,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// basıldığında hâlâ geçerlidir (bkz. FormatBar).
   FormatTarget? _formatTarget;
 
+  /// [_formatTarget]in dinlenebilir eşi: alt çubuktaki etkin biçim rozetleri
+  /// ([ActiveFormatBadges]) odak değişimini editörü yeniden kurmadan izler.
+  final _formatTargetN = ValueNotifier<FormatTarget?>(null);
+
   /// Çubuğun hedefi BAŞLIK mı? Başlığın kendi yazı tipi/boyutu/opaklığı var
   /// (bkz. Note.titleFontScale): çubuk hangi alan odaktaysa ONA yazar, yoksa
   /// başlığı büyütmek gövdeyi de büyütüyordu.
@@ -837,6 +845,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
     if (_formatTarget?.controller != controller) return;
     _formatTarget = null;
+    // Bildirim build'den sonra (bu kapanış build sırasında da gelebilir).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _formatTargetN.value = _formatTarget;
+    });
     if (!_formatBarOpen) return;
     // KÖK NEDEN (çökme): bu kapanış alanın `dispose`undan geliyor ve bir
     // widget BUILD FAZINDA da unmount edilebiliyor (belge/tip değişince
@@ -869,6 +881,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       focusNode: focusNode,
       commit: commit,
     );
+    if (changed) _formatTargetN.value = _formatTarget;
     // Alan yeni odaklandı: imleci klavyenin üstüne al. Bu kapanış gövde,
     // başlık ve madde satırlarının HEPSİNDEN geçtiği için tek yer yeter.
     _revealCaretSoon();
@@ -1202,6 +1215,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             tags: incoming.tags,
             color: incoming.color,
             frameColor: incoming.frameColor,
+            customColor: incoming.customColor,
+            clearCustomColor: incoming.customColor == null,
+            customFrameColor: incoming.customFrameColor,
+            clearCustomFrameColor: incoming.customFrameColor == null,
             folderId: incoming.folderId,
             clearFolderId: incoming.folderId == null,
             archivedAt: incoming.archivedAt,
@@ -1225,6 +1242,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             backgroundOpacity: incoming.backgroundOpacity,
             paged: incoming.paged,
             archivePaper: incoming.archivePaper,
+            lineSpacing: incoming.lineSpacing,
           );
           if (pristine) {
             merged = merged.copyWith(
@@ -1436,6 +1454,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _debouncer.dispose();
     _sub?.close();
     _titleController.dispose();
+    _formatTargetN.dispose();
     _titleFocus.dispose();
     _bodyController.dispose();
     _bodyFocus.dispose();
@@ -1515,7 +1534,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       identical(a.aiSummary, b.aiSummary) &&
       a.type == b.type &&
       a.color == b.color &&
+      a.lineSpacing == b.lineSpacing &&
       a.frameColor == b.frameColor &&
+      a.customColor == b.customColor &&
+      a.customFrameColor == b.customFrameColor &&
       a.pinned == b.pinned &&
       a.starred == b.starred &&
       a.locked == b.locked &&
@@ -2387,7 +2409,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       );
     }
 
-    final background = NoteColors.surface(context, note.color);
+    final background = NoteColors.noteSurface(context, note);
     // Satır içi biçimlendirmenin çizim ayarları: gövde ve maddeler AYNI
     // paleti kullanır (metindeki 1..5 indeksi her ikisinde aynı rengi verir).
     final richTheme = RichTextTheme(
@@ -2441,6 +2463,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         bodyBase.copyWith(
           fontSize: (bodyBase.fontSize ?? 16) * note.fontScale,
           color: bodyBase.color ?? theme.colorScheme.onSurface,
+          // DEFTER SATIR ARALIĞI (D1): satır yüksekliğine biner; çizgiler
+          // yazıya bağlı olduğundan onlar da açılır (bkz. [_paperGap]).
+          height: note.paged && note.lineSpacing != 1
+              ? (bodyBase.height ?? 1.45) * note.lineSpacing
+              : null,
         ),
         note.fontFamily,
       ),
@@ -2462,7 +2489,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           applyNoteFont(
             (Theme.of(context).textTheme.headlineSmall ?? const TextStyle())
                 .copyWith(
-                  fontWeight: FontWeight.w600,
+                  // w500: kalın (w800) başlıkta açıkça ayırt edilsin (bkz.
+                  // rich_text `markStyle`).
+                  fontWeight: FontWeight.w500,
                   fontSize:
                       (Theme.of(context).textTheme.headlineSmall?.fontSize ??
                           24) *
@@ -2972,6 +3001,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         onVideoTimestamp: _seekVideoTo,
         addRowTrailing: _partsMenu(note),
         paperLines: note.paged && note.archivePaper.ruled,
+        onMoveToPage: textPagePosition(note).count > 1
+            ? _moveItemToPage
+            : null,
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
         wholeNoteText: () => _note == null
             ? ''
@@ -3016,6 +3048,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         onVideoTimestamp: _seekVideoTo,
         addRowTrailing: _partsMenu(note),
         paperLines: note.paged && note.archivePaper.ruled,
+        onMoveToPage: textPagePosition(note).count > 1
+            ? _moveItemToPage
+            : null,
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
         wholeNoteText: () => _note == null
             ? ''
@@ -3340,7 +3375,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       onClose: _closeFind,
                     ),
                   )
-                else ...[
+                // BİÇİM PANELİ AÇIKKEN alt çubuk GİZLİ (kullanıcı isteği
+                // 2026-10-20: "biçim paneli açılınca alttaki ses, ek vb.
+                // kısımlar gizlensin, yazmaya yer kalmıyor"). Panel kendi
+                // kapat (⌄) düğmesiyle kapanır.
+                else if (!_formatBarOpen) ...[
                 // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen
                 // üstünde YARIM kesiliyordu ve çubuk sayfanın parçası gibi
                 // görünüyordu (kullanıcının 2026-10-11'de işaretlediği alt
@@ -3426,6 +3465,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                               ),
                             ),
                           ),
+                        // Panel kapalıyken imlecin biçimleri (B/I/U, renk).
+                        if (showFormat)
+                          ActiveFormatBadges(target: _formatTargetN),
                         if (showAdd)
                           Customizable(
                             id: UiItem.barAdd,
@@ -3867,7 +3909,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       child: _withBackground(
                         note,
                         bgImage,
-                        _withPaper(note, noteBodyStyle, body),
+                        _withPaper(
+                          note,
+                          noteBodyStyle,
+                          // Sayfalı notta yana çekiş sayfa çevirir.
+                          PageSwipeDetector(
+                            enabled:
+                                !note.type.isPageNoteType &&
+                                textPagePosition(note).count > 1,
+                            onSwipe: _swipePage,
+                            child: body,
+                          ),
+                        ),
                       ),
                     ),
                   ),

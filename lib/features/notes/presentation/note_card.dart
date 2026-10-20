@@ -26,6 +26,7 @@ import '../domain/note.dart';
 import '../domain/note_item.dart';
 import '../domain/note_type.dart';
 import '../domain/page_notes.dart';
+import '../domain/sensitive_text.dart';
 import '../data/drive_store.dart' show localFilesRevisionProvider;
 import 'editor/notebook_paper.dart';
 import 'note_actions_sheet.dart';
@@ -482,6 +483,14 @@ class NoteCard extends ConsumerWidget {
       selectedNoteIdsProvider.select((s) => s.contains(note.id)),
     );
     final richPreview = ref.watch(cardRichPreviewProvider);
+    // HASSAS İÇERİK (B1): parola notunun içeriği kartta çizilmez, öbür
+    // notlarda IBAN/kart numarası örtülür. Yalnız gösterim (bkz.
+    // sensitive_text.dart); ayar Ayarlar → Görünüm.
+    final hideSensitive = ref.watch(cardHideSensitiveProvider);
+    final credential = hideSensitive && !note.locked && isCredentialNote(note);
+    // KARTTAN İŞARETLEME (D6): kendi notumda, seçim kipi dışında maddenin
+    // kutucuğuna dokunmak editörü açmadan işaretler (Keep'teki gibi).
+    final canToggle = !selectionActive && ownerId == null && !readOnly;
     // Drive'dan bir ek inince kart küçük resmini yerel kopyadan çizsin.
     ref.watch(localFilesRevisionProvider);
 
@@ -526,7 +535,7 @@ class NoteCard extends ConsumerWidget {
     // Balonlu notun belge kapağı (video/görsel kapağıyla aynı yerde).
     final cover = media?.cover;
     final hasCover = hero != null || cover != null;
-    final borderWidth = note.frameColor != NoteColor.none ? 2.5 : 1.0;
+    final borderWidth = note.hasFrame ? 2.5 : 1.0;
     // ARAMA SONUCUNDA KLASÖR (kullanıcı isteği 2026-10-20: "not ararken
     // bulunan notun hangi klasörde olduğu da yazmalı"). Yalnız arama
     // sürerken: normal ızgarada kart zaten klasörün içinde ya da klasör
@@ -603,11 +612,23 @@ class NoteCard extends ConsumerWidget {
                 ),
               ],
             )
+          else if (credential)
+            _SensitiveHidden(
+              onLock: ownerId != null || readOnly
+                  ? null
+                  : () => ref
+                        .read(notesRepositoryProvider)
+                        ?.updateFields(note.id, {'locked': true}),
+            )
           else ...[
             _NotePreview(
               note: note,
               highlightQuery: highlightQuery,
               rich: richPreview,
+              mask: hideSensitive ? maskSensitiveNumbers : _identity,
+              onToggle: canToggle
+                  ? (item) => toggleCardItem(ref, note, item)
+                  : null,
             ),
             // Ekler: belge kartı, küçük karolar, dosya/ses satırları (kapak
             // ayrıca kartın tepesinde). Zemin görseli ek sayılmaz.
@@ -712,7 +733,7 @@ class NoteCard extends ConsumerWidget {
           );
 
     final card = Material(
-      color: NoteColors.surface(context, note.color),
+      color: NoteColors.noteSurface(context, note),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -736,9 +757,9 @@ class NoteCard extends ConsumerWidget {
             // liste gözle görülür biçimde zıplıyordu. Kenarlık artık sabit
             // kalınlıkta; seçim yalnız BOYA katmanı, yerleşimi hiç etkilemez.
             border: Border.all(
-              color: note.frameColor != NoteColor.none
-                  ? NoteColors.swatch(note.frameColor)
-                  : scheme.outlineVariant.withValues(alpha: 0.5),
+              color:
+                  NoteColors.noteFrame(note) ??
+                  scheme.outlineVariant.withValues(alpha: 0.5),
               width: borderWidth,
             ),
           ),
@@ -767,9 +788,15 @@ class NoteCard extends ConsumerWidget {
     final semanticLabel = [
       if (note.locked)
         context.l10n.lockedNote
-      else ...[
+      else if (credential) ...[
         if (hasTitle) note.displayTitle.trim(),
-        stripRichMarkers(rawBody).trim(),
+        context.l10n.sensitiveHiddenOnCard,
+      ] else ...[
+        if (hasTitle) note.displayTitle.trim(),
+        (hideSensitive
+                ? maskSensitiveNumbers(stripRichMarkers(rawBody))
+                : stripRichMarkers(rawBody))
+            .trim(),
         if (note.items.isNotEmpty)
           context.l10n.noteStatsItems(
             note.items.where((i) => i.text.trim().isNotEmpty).length,
@@ -947,20 +974,173 @@ class _FolderBadge extends StatelessWidget {
   }
 }
 
-/// Kart önizlemesindeki madde satırı; maddenin altında ayırıcı çizgi varsa
-/// kartta da çizilir (bkz. [NoteItem.divider]).
-Widget _withItemDivider(BuildContext context, NoteItem item, Widget row) {
-  if (item.divider.isEmpty) {
-    return Padding(padding: const EdgeInsets.only(bottom: 2), child: row);
+String _identity(String text) => text;
+
+/// Kartta maddenin kutucuğuna dokunuş (D6): notun maddesini editörü açmadan
+/// işaretler / işareti kaldırır. Metni boş madde işaretlenmez (editördeki
+/// kuralla aynı, bkz. `ItemsEditor._toggleItem`). Editör açıksa (geniş
+/// ekranda sağ bölme) değişiklik ona dış yazım olarak gelir ve üç yönlü
+/// birleştirilir (F4.1).
+void toggleCardItem(WidgetRef ref, Note note, NoteItem target) {
+  final repo = ref.read(notesRepositoryProvider);
+  if (repo == null || target.text.trim().isEmpty) return;
+  repo.updateFields(note.id, {
+    'items': [
+      for (final i in note.items)
+        (i.id == target.id ? i.copyWith(checked: !i.checked) : i).toMap(),
+    ],
+  });
+}
+
+/// Parola notunun kartında içerik yerine duran satır (B1). [onLock] null
+/// değilse yanında "Kilitle" önerisi.
+class _SensitiveHidden extends StatelessWidget {
+  const _SensitiveHidden({this.onLock});
+
+  final VoidCallback? onLock;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    return Row(
+      children: [
+        Icon(Icons.shield_outlined, size: 14, color: scheme.onSurfaceVariant),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            l10n.sensitiveHiddenOnCard,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ),
+        if (onLock != null)
+          TextButton.icon(
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              textStyle: const TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            onPressed: onLock,
+            icon: const Icon(Icons.lock_outline, size: 14),
+            label: Text(l10n.lockNote),
+          ),
+      ],
+    );
   }
-  final color = Theme.of(context).colorScheme.primary.withValues(alpha: 0.6);
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 4),
-    child: CustomPaint(
-      foregroundPainter: _CardDividerPainter(item.divider, color),
-      child: Padding(padding: const EdgeInsets.only(bottom: 3), child: row),
-    ),
-  );
+}
+
+/// Kartın madde satırı — metin notunun maddeleri, yapılacaklar ve sıralı
+/// liste TEK yoldan çizilir (C3; eskiden üç kopyaydı ve biri biçim
+/// işaretlerini sökmeyi unutmuştu). Satırın solunda kutucuk ([checkbox])
+/// ya da sıra numarası ([number]); işaretli kutucuklu madde üstü çizili ve
+/// soluk. Maddenin altında ayırıcı varsa ([NoteItem.divider]) o da burada.
+class _CardItemRow extends StatelessWidget {
+  const _CardItemRow({
+    required this.item,
+    required this.style,
+    required this.query,
+    required this.rich,
+    required this.mask,
+    this.checkbox = false,
+    this.number,
+    this.onToggle,
+  });
+
+  final NoteItem item;
+  final TextStyle style;
+  final String query;
+  final bool rich;
+  final String Function(String) mask;
+  final bool checkbox;
+  final int? number;
+
+  /// Kutucuğa dokunuş (D6); null = kutucuk yalnız gösterim.
+  final ValueChanged<NoteItem>? onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final struck = checkbox && item.checked;
+    Widget? leading;
+    if (checkbox) {
+      final icon = Icon(
+        item.checked ? Icons.check_box : Icons.check_box_outline_blank,
+        size: 14,
+        color: scheme.onSurfaceVariant,
+      );
+      leading = onToggle == null
+          ? Padding(
+              padding: const EdgeInsetsDirectional.only(end: 6, top: 1),
+              child: icon,
+            )
+          // Dokunma alanı simgeden geniş (14 dp parmakla vurulmuyor); kartın
+          // InkWell'i iç tanıyıcıya yenilir, not açılmaz.
+          : GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => onToggle!(item),
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(
+                  end: 6,
+                  top: 1,
+                  bottom: 2,
+                ),
+                child: icon,
+              ),
+            );
+    } else if (number != null) {
+      leading = Padding(
+        padding: const EdgeInsetsDirectional.only(end: 6),
+        child: Text('$number.', style: style),
+      );
+    }
+    final row = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ?leading,
+        Expanded(
+          child: noteBodyText(
+            context,
+            // Ham biçim işaretleri (**kalın**, %%2:renk%%) HİÇBİR durumda
+            // görünmez: ayar kapalıyken sökülür, açıkken görünmez çizilip
+            // yerine biçim uygulanır.
+            mask(item.text),
+            query,
+            // Üstü çizili stil satır içi biçimin üstünde kalmalı: biçimli
+            // çizim yalnız işaretsiz maddede.
+            rich: rich && !struck,
+            maxLines: 1,
+            style: struck
+                ? style.copyWith(
+                    decoration: TextDecoration.lineThrough,
+                    color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                  )
+                : style,
+          ),
+        ),
+      ],
+    );
+    if (item.divider.isEmpty) {
+      return Padding(padding: const EdgeInsets.only(bottom: 2), child: row);
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: CustomPaint(
+        foregroundPainter: _CardDividerPainter(
+          item.divider,
+          scheme.primary.withValues(alpha: 0.6),
+        ),
+        child: Padding(padding: const EdgeInsets.only(bottom: 3), child: row),
+      ),
+    );
+  }
 }
 
 class _CardDividerPainter extends CustomPainter {
@@ -1052,10 +1232,18 @@ class _NotePreview extends StatelessWidget {
     required this.note,
     required this.rich,
     this.highlightQuery = '',
+    this.mask = _identity,
+    this.onToggle,
   });
 
   final Note note;
   final String highlightQuery;
+
+  /// Gösterilen her metne uygulanır (hassas numaraları örtme, B1).
+  final String Function(String) mask;
+
+  /// Madde kutucuğuna dokunuş (D6); null = salt gösterim.
+  final ValueChanged<NoteItem>? onToggle;
 
   /// Satır içi biçim çizilsin mi (Ayarlar → Görünüm).
   final bool rich;
@@ -1165,7 +1353,7 @@ class _NotePreview extends StatelessWidget {
             if (hasBody)
               noteBodyText(
                 context,
-                note.body,
+                mask(note.body),
                 highlightQuery,
                 rich: rich,
                 maxLines: items.isEmpty ? 4 : 2,
@@ -1174,47 +1362,14 @@ class _NotePreview extends StatelessWidget {
             if (items.isNotEmpty) ...[
               if (hasBody) const SizedBox(height: 6),
               for (final item in items.take(maxItems))
-                _withItemDivider(
-                  context,
-                  item,
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(
-                          end: 6,
-                          top: 1,
-                        ),
-                        child: Icon(
-                          item.checked
-                              ? Icons.check_box
-                              : Icons.check_box_outline_blank,
-                          size: 14,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                      Expanded(
-                        child: noteBodyText(
-                          context,
-                          item.text,
-                          highlightQuery,
-                          // İşaretli madde ÜSTÜ ÇİZİLİ ve soluk çizilir; o
-                          // stil satır içi biçimin üstünde kalmalı, bu yüzden
-                          // biçimli çizim yalnız işaretsiz maddede.
-                          rich: rich && !item.checked,
-                          maxLines: 1,
-                          style: item.checked
-                              ? bodyStyle.copyWith(
-                                  decoration: TextDecoration.lineThrough,
-                                  color: scheme.onSurfaceVariant.withValues(
-                                    alpha: 0.6,
-                                  ),
-                                )
-                              : bodyStyle,
-                        ),
-                      ),
-                    ],
-                  ),
+                _CardItemRow(
+                  item: item,
+                  style: bodyStyle,
+                  query: highlightQuery,
+                  rich: rich,
+                  mask: mask,
+                  checkbox: true,
+                  onToggle: onToggle,
                 ),
               if (items.length > maxItems)
                 Padding(
@@ -1254,59 +1409,15 @@ class _NotePreview extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             for (var i = 0; i < shown.length; i++)
-              _withItemDivider(
-                context,
-                shown[i],
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (note.type == NoteType.checklist)
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(
-                          end: 6,
-                          top: 1,
-                        ),
-                        child: Icon(
-                          shown[i].checked
-                              ? Icons.check_box
-                              : Icons.check_box_outline_blank,
-                          size: 14,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      )
-                    else
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 6),
-                        child: Text('${i + 1}.', style: bodyStyle),
-                      ),
-                    Expanded(
-                      child: noteBodyText(
-                        context,
-                        // Ham biçim işaretleri (**kalın**, %%2:renk%%) HİÇBİR
-                        // durumda görünmez: ayar kapalıyken sökülür, açıkken
-                        // görünmez çizilip yerine biçim uygulanır. KÖK NEDEN:
-                        // bu dal bir dönem atlanmıştı, liste notlarının
-                        // önizlemesinde ham işaretler görünüyordu.
-                        shown[i].text,
-                        highlightQuery,
-                        rich:
-                            rich &&
-                            !(shown[i].checked &&
-                                note.type == NoteType.checklist),
-                        maxLines: 1,
-                        style:
-                            shown[i].checked && note.type == NoteType.checklist
-                            ? bodyStyle.copyWith(
-                                decoration: TextDecoration.lineThrough,
-                                color: scheme.onSurfaceVariant.withValues(
-                                  alpha: 0.6,
-                                ),
-                              )
-                            : bodyStyle,
-                      ),
-                    ),
-                  ],
-                ),
+              _CardItemRow(
+                item: shown[i],
+                style: bodyStyle,
+                query: highlightQuery,
+                rich: rich,
+                mask: mask,
+                checkbox: note.type == NoteType.checklist,
+                number: note.type == NoteType.ordered ? i + 1 : null,
+                onToggle: onToggle,
               ),
             if (remaining > 0)
               Padding(
@@ -1356,7 +1467,7 @@ class _NotePreview extends StatelessWidget {
                     Expanded(
                       child: noteBodyText(
                         context,
-                        entry.text,
+                        mask(entry.text),
                         highlightQuery,
                         rich: rich,
                         maxLines: 1,
@@ -1433,8 +1544,11 @@ class NoteListRow extends ConsumerWidget {
   }
 
   /// Tek satırlık önizleme. Kilitli notta içerik SIZDIRILMAZ.
-  String _preview(BuildContext context) {
+  String _preview(BuildContext context, {required bool hideSensitive}) {
     if (note.locked) return context.l10n.lockedNote;
+    if (hideSensitive && isCredentialNote(note)) {
+      return context.l10n.sensitiveHiddenOnCard;
+    }
     // Biçim işaretleri BURADA da sökülür: satır önizlemesi tek satırda 46
     // karakterde kesiliyor, işaretli metin hem ham `**` gösteriyor hem de
     // kesme işaretin ortasına düşebiliyordu (kart önizlemesi bunu çoktan
@@ -1442,7 +1556,8 @@ class NoteListRow extends ConsumerWidget {
     final source = note.body.trim().isNotEmpty
         ? stripRichMarkers(note.body)
         : [for (final i in note.items) stripRichMarkers(i.text)].join(' · ');
-    final flat = source.replaceAll('\n', ' ').trim();
+    var flat = source.replaceAll('\n', ' ').trim();
+    if (hideSensitive) flat = maskSensitiveNumbers(flat);
     // 46 karakter: iki satırlık bir cümlenin başı. Daha uzunu zaten
     // ellipsize edilirdi, kısaltmak ölçümü ucuzlatıyor.
     return flat.length > 46 ? '${flat.substring(0, 46)}…' : flat;
@@ -1451,7 +1566,10 @@ class NoteListRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    final preview = _preview(context);
+    final preview = _preview(
+      context,
+      hideSensitive: ref.watch(cardHideSensitiveProvider),
+    );
     return Material(
       color: selected ? scheme.secondaryContainer : scheme.surfaceContainerLow,
       borderRadius: BorderRadius.circular(12),

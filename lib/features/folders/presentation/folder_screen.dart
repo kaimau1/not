@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/utils/search_fold.dart';
+import '../../ai/data/semantic_search.dart' show SemanticScope;
 import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -17,6 +17,7 @@ import '../../notes/presentation/note_sort_menu.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../../notes/presentation/quick_add_actions.dart';
 import '../../notes/presentation/quick_add_fab.dart';
+import '../../notes/presentation/screen_search.dart';
 import '../data/folder_activity.dart';
 import '../data/folder_order.dart';
 import '../data/folders_repository.dart';
@@ -118,12 +119,19 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
   /// kutusu buraya erişmiyordu: kullanıcı klasöre girip yüz notun arasında
   /// aradığını gözle bulmak zorundaydı. Kutu üst barda, dokunmadan
   /// görünmez — açılınca aramaya odaklanır, kapanınca sorgu düşer.
-  final _searchController = TextEditingController();
-  bool _searching = false;
+  final _search = ScreenSearch();
+
+  @override
+  void initState() {
+    super.initState();
+    _search.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() => setState(() {});
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _search.dispose();
     super.dispose();
   }
 
@@ -140,13 +148,6 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
     if (next < 0) next += ids.length;
     HapticFeedback.selectionClick();
     FolderScreen.replaceWith(context, ids[next], forward: direction > 0);
-  }
-
-  void _toggleSearch() {
-    setState(() {
-      _searching = !_searching;
-      if (!_searching) _searchController.clear();
-    });
   }
 
   /// Bu sayfada oluşturulan her not, doğrudan BU klasöre doğar.
@@ -188,19 +189,16 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: _searching
-            ? _FolderSearchField(controller: _searchController)
+        title: _search.open
+            ? ScreenSearchField(search: _search)
             : _FolderTitle(
                 icon: folder?.iconData,
                 name: folder?.name,
                 count: notesAsync.value?.length,
               ),
         actions: [
-          IconButton(
-            tooltip: _searching ? l10n.close : l10n.searchHint,
-            icon: Icon(_searching ? Icons.close : Icons.search),
-            onPressed: _toggleSearch,
-          ),
+          // ✨ AI araması klasörde de (B4).
+          ...screenSearchActions(context, _search),
           // SIRALAMA klasörün içinde de değiştirilebilsin: ölçüt ana ekranla
           // ORTAK (bkz. folderNotesProvider) — kullanıcının seçtiği düzen her
           // yerde aynı olsun, iki ayrı ayar iki ayrı sürpriz demek.
@@ -245,7 +243,7 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
         // Dikey kaydırma ızgarada kalır; eksenler farklı, çakışmaz. Arama
         // açıkken kapalı: kullanıcı sonuçlar arasındayken klasör değişmesin.
         onHorizontalDragEnd:
-            _searching || ref.watch(swipeModeProvider) == SwipeMode.off
+            _search.open || ref.watch(swipeModeProvider) == SwipeMode.off
             ? null
             : (details) {
                 final velocity = details.primaryVelocity ?? 0;
@@ -256,48 +254,18 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
                 _swipeTo(forward ? 1 : -1);
               },
         child: ValueListenableBuilder<TextEditingValue>(
-          valueListenable: _searchController,
+          valueListenable: _search.controller,
           builder: (context, value, _) => _NotesGrid(
             async: notesAsync,
             query: value.text,
+            semantic: _search.semantic,
+            folderId: folderId,
             onCreateNote: () => createNote(NoteType.text),
           ),
         ),
       ),
     );
   }
-}
-
-/// Üst bardaki arama kutusu (klasör içi). Ayrı widget: `autofocus` yalnız
-/// kutu AĞACA GİRDİĞİNDE bir kez çalışsın — üst bar her sayımda yeniden
-/// çizildiğinde odak yeniden istenirse klavye kapanıp açılırdı.
-class _FolderSearchField extends StatelessWidget {
-  const _FolderSearchField({required this.controller});
-
-  final TextEditingController controller;
-
-  @override
-  Widget build(BuildContext context) => TextField(
-    controller: controller,
-    autofocus: true,
-    textInputAction: TextInputAction.search,
-    decoration: InputDecoration(
-      border: InputBorder.none,
-      hintText: context.l10n.searchHint,
-      // Kutuyu tek dokunuşta boşalt: eskiden ya harf harf silmek ya da
-      // aramayı tümden kapatıp yeniden açmak gerekiyordu.
-      suffixIcon: ValueListenableBuilder<TextEditingValue>(
-        valueListenable: controller,
-        builder: (context, value, _) => value.text.isEmpty
-            ? const SizedBox.shrink()
-            : IconButton(
-                tooltip: context.l10n.clearSearch,
-                icon: const Icon(Icons.close, size: 18),
-                onPressed: controller.clear,
-              ),
-      ),
-    ),
-  );
 }
 
 class _FolderTitle extends StatelessWidget {
@@ -348,8 +316,15 @@ class _NotesGrid extends ConsumerWidget {
     this.ownerId,
     this.readOnly = false,
     this.query = '',
+    this.semantic = false,
+    this.folderId,
     this.onCreateNote,
   });
+
+  /// AI (anlamsal) arama açık mı; [folderId] kendi klasörümde verilir
+  /// (paylaşılan klasörde AI yok — notlar başkasının).
+  final bool semantic;
+  final String? folderId;
 
   /// Boş klasörde gösterilen "Metin notu" düğmesi. null = düğme çizilmez
   /// (yalnız-okuma yetkisiyle açılmış paylaşılan klasör).
@@ -371,7 +346,6 @@ class _NotesGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final needle = foldForSearch(query.trim());
     // Sütun sayısı ANA EKRANLA ortak: kullanıcı orada iki parmakla seçtiği
     // yoğunluğu klasörde de görsün (sıralamayla aynı gerekçe). 0 = otomatik.
     final fixedColumns = ref.watch(gridColumnsProvider);
@@ -380,12 +354,19 @@ class _NotesGrid extends ConsumerWidget {
       error: (e, _) =>
           EmptyState(icon: Icons.error_outline, title: l10n.genericError('$e')),
       data: (all) {
-        final notes = needle.isEmpty
-            ? all
-            : [
-                for (final n in all)
-                  if (noteMatchesQuery(n, needle)) n,
-              ];
+        final result = runScreenSearch(
+          ref,
+          all,
+          query,
+          semantic: semantic,
+          scope: folderId == null ? null : SemanticScope.folder,
+          folderId: folderId,
+        );
+        final notes = result.notes;
+        final needle = result.needle;
+        if (notes.isEmpty && result.loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
         return notes.isEmpty
           ? (needle.isEmpty
               ? EmptyState(
@@ -408,17 +389,9 @@ class _NotesGrid extends ConsumerWidget {
                 // ızgaranın üstünde tek satır. Eşleşme yoksa zaten boş
                 // durum çiziliyor.
                 if (needle.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(
-                        l10n.searchResultCount(notes.length),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
+                  SearchResultHeader(
+                    count: notes.length,
+                    loading: result.loading,
                   ),
                 Expanded(
                   child: LayoutBuilder(
@@ -479,12 +452,19 @@ class _SharedFolderViewState extends ConsumerState<_SharedFolderView> {
 
   /// Paylaşılan klasörde de arama var: kendi klasörümdekiyle aynı kutu,
   /// aynı eşleşme kuralı (bkz. [_FolderScreenState._searchController]).
-  final _searchController = TextEditingController();
-  bool _searching = false;
+  final _search = ScreenSearch();
+
+  @override
+  void initState() {
+    super.initState();
+    _search.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() => setState(() {});
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _search.dispose();
     super.dispose();
   }
 
@@ -521,22 +501,15 @@ class _SharedFolderViewState extends ConsumerState<_SharedFolderView> {
         final name = folder?.name ?? share?.name;
         return Scaffold(
           appBar: AppBar(
-            title: _searching
-                ? _FolderSearchField(controller: _searchController)
+            title: _search.open
+                ? ScreenSearchField(search: _search)
                 : _FolderTitle(
                     icon: folder?.iconData ?? share?.iconData,
                     name: name,
                   ),
             actions: [
               if (role.canRead)
-                IconButton(
-                  tooltip: _searching ? l10n.close : l10n.searchHint,
-                  icon: Icon(_searching ? Icons.close : Icons.search),
-                  onPressed: () => setState(() {
-                    _searching = !_searching;
-                    if (!_searching) _searchController.clear();
-                  }),
-                ),
+                ...screenSearchActions(context, _search, ai: false),
               IconButton(
                 tooltip: l10n.folderChatTitle,
                 icon: const Icon(Icons.forum_outlined),
@@ -575,7 +548,7 @@ class _SharedFolderViewState extends ConsumerState<_SharedFolderView> {
               : null,
           body: role.canRead
               ? ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: _searchController,
+                  valueListenable: _search.controller,
                   builder: (context, value, _) => _NotesGrid(
                     ownerId: ownerId,
                     readOnly: !role.canWrite,

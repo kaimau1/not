@@ -169,6 +169,8 @@ class Note {
     this.folderId,
     this.color = NoteColor.none,
     this.frameColor = NoteColor.none,
+    this.customColor,
+    this.customFrameColor,
     this.pinned = false,
     this.starred = false,
     this.locked = false,
@@ -184,6 +186,7 @@ class Note {
     this.classicDocument = false,
     this.archivePages = const [],
     this.archivePaper = ArchivePaper.lined,
+    this.lineSpacing = 1,
     this.archiveGeneralName = '',
     this.paged = false,
     this.heavyRef = false,
@@ -218,11 +221,13 @@ class Note {
   /// Yeni alan eklenince BURAYA da eklenmeli (`forward_compat_test`).
   static const knownKeys = <String>{
     'type', 'title', 'body', 'items', 'pageNotes', 'attachments', 'tags',
-    'folderId', 'color', 'frameColor', 'pinned', 'starred', 'locked',
+    'folderId', 'color', 'frameColor', 'customColor', 'customFrameColor',
+    'pinned', 'starred', 'locked',
     'fontFamily', 'fontScale', 'textOpacity', 'titleFontFamily',
     'titleFontScale', 'titleTextOpacity', 'backgroundImageId',
     'backgroundOpacity', 'listColumns', 'classicDocument', 'archivePages',
-    'archivePaper', 'archiveGeneralName', 'paged', 'heavyRef', 'tagLinks',
+    'archivePaper', 'lineSpacing', 'archiveGeneralName', 'paged', 'heavyRef',
+    'tagLinks',
     'textPages',
     'activePage', 'orderIndex', 'createdAt', 'updatedAt', 'deletedAt',
     'archivedAt', 'reminderAt', 'aiSummary', 'schema',
@@ -293,6 +298,18 @@ class Note {
   /// [color]ın aynısı duruyor, yani o notlar aynı renkte çerçeveyle açılır.
   /// Çerçeve editörde ÇİZİLMEZ — notun içi sade kalır.
   final NoteColor frameColor;
+
+  /// PALETTEN seçilmiş ÖZEL zemin rengi (ARGB, opak; 2026-10-20 kullanıcı
+  /// isteği "renk paleti zemin ve çerçeveye de gelsin"). Doluyken [color]ın
+  /// önüne geçer; hazır renk seçilince temizlenir. Eski istemci alanı
+  /// tanımaz ve [color]ı çizer (hazır ton kaybolmaz).
+  final int? customColor;
+
+  /// PALETTEN seçilmiş ÖZEL çerçeve rengi; [frameColor]ın önüne geçer.
+  final int? customFrameColor;
+
+  /// Kartta çerçeve çizilsin mi (hazır ya da özel).
+  bool get hasFrame => customFrameColor != null || frameColor != NoteColor.none;
 
   /// SABİTLİ: ana ekranın başında durur.
   final bool pinned;
@@ -386,6 +403,17 @@ class Note {
   /// Arşiv defterinin KÂĞIT DESENİ (çizgili / kareli / noktalı / düz).
   /// Defter başına saklanır — bkz. [ArchivePaper].
   final ArchivePaper archivePaper;
+
+  /// DEFTER SATIR ARALIĞI çarpanı (geliştirme raporu D1, 2026-10-20):
+  /// 1 normal, [lineSpacingWide] geniş, [lineSpacingWider] çok geniş. Yalnız
+  /// defter görünümünde ([paged]) gövde satır yüksekliğine biner; satır
+  /// çizgisi yazıya bağlı olduğu için çizgiler kendiliğinden açılır. Dar
+  /// seçenek bilerek yok: madde kutucuğu (24 dp) tek satırın bandına
+  /// sığmazdı.
+  final double lineSpacing;
+
+  static const double lineSpacingWide = 1.25;
+  static const double lineSpacingWider = 1.5;
 
   /// Defterin İLK sayfasının (bölümsüz girdilerin toplandığı sayfa) ADI.
   /// Boş = uygulamanın dilinden gelen "Genel".
@@ -680,6 +708,10 @@ class Note {
     bool clearFolderId = false,
     NoteColor? color,
     NoteColor? frameColor,
+    int? customColor,
+    bool clearCustomColor = false,
+    int? customFrameColor,
+    bool clearCustomFrameColor = false,
     bool? pinned,
     bool? starred,
     bool? locked,
@@ -698,6 +730,7 @@ class Note {
     bool? classicDocument,
     List<String>? archivePages,
     ArchivePaper? archivePaper,
+    double? lineSpacing,
     String? archiveGeneralName,
     bool? paged,
     bool? heavyRef,
@@ -726,6 +759,10 @@ class Note {
     folderId: clearFolderId ? null : (folderId ?? this.folderId),
     color: color ?? this.color,
     frameColor: frameColor ?? this.frameColor,
+    customColor: clearCustomColor ? null : (customColor ?? this.customColor),
+    customFrameColor: clearCustomFrameColor
+        ? null
+        : (customFrameColor ?? this.customFrameColor),
     pinned: pinned ?? this.pinned,
     starred: starred ?? this.starred,
     locked: locked ?? this.locked,
@@ -745,6 +782,7 @@ class Note {
     classicDocument: classicDocument ?? this.classicDocument,
     archivePages: archivePages ?? this.archivePages,
     archivePaper: archivePaper ?? this.archivePaper,
+    lineSpacing: lineSpacing ?? this.lineSpacing,
     archiveGeneralName: archiveGeneralName ?? this.archiveGeneralName,
     paged: paged ?? this.paged,
     heavyRef: heavyRef ?? this.heavyRef,
@@ -841,6 +879,8 @@ class Note {
       // not çerçeve rengini zemin alır" çevirisi kalktı.
       color: NoteColor.fromId(map['color'] as String?),
       frameColor: NoteColor.fromId(map['frameColor'] as String?),
+      customColor: (map['customColor'] as num?)?.toInt(),
+      customFrameColor: (map['customFrameColor'] as num?)?.toInt(),
       pinned: map['pinned'] == true,
       starred: map['starred'] == true,
       locked: map['locked'] as bool? ?? false,
@@ -875,6 +915,10 @@ class Note {
           p.toString(),
       ],
       archivePaper: ArchivePaper.fromId(map['archivePaper'] as String?),
+      lineSpacing: ((map['lineSpacing'] as num?)?.toDouble() ?? 1).clamp(
+        1.0,
+        2.0,
+      ),
       archiveGeneralName: map['archiveGeneralName'] as String? ?? '',
       paged: map['paged'] as bool? ?? false,
       heavyRef: map['heavyRef'] as bool? ?? false,
@@ -924,6 +968,10 @@ class Note {
     'folderId': folderId,
     'color': color.id,
     'frameColor': frameColor.id,
+    // KOŞULSUZ (merge yazımı): hazır renge dönülünce null eski özel rengi
+    // silmeli.
+    'customColor': customColor,
+    'customFrameColor': customFrameColor,
     'pinned': pinned,
     'starred': starred,
     'locked': locked,
@@ -961,6 +1009,8 @@ class Note {
     // (çizgili) DÖNDÜRÜLEBİLMELİ; koşullu yazılsaydı kayıtta eski desen
     // kalır ve defter her açılışta yine kareli gelirdi.
     'archivePaper': archivePaper.id,
+    // KOŞULSUZ (merge yazımı): normale dönünce eski değer kalmasın.
+    'lineSpacing': lineSpacing,
     // HER ZAMAN yazılır (merge tuzağı): ad SİLİNEBİLMELİ — boş dize
     // "Genel"e dönmek demek.
     'archiveGeneralName': archiveGeneralName,

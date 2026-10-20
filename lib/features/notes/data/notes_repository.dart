@@ -552,6 +552,8 @@ class NotesRepository {
       folderId: note.folderId,
       color: note.color,
       frameColor: note.frameColor,
+      customColor: note.customColor,
+      customFrameColor: note.customFrameColor,
       pinned: note.pinned,
       starred: note.starred,
       fontFamily: note.fontFamily,
@@ -1001,13 +1003,14 @@ class NotesRepository {
   void setStarred(String noteId, bool starred) =>
       updateFields(noteId, {'starred': starred});
 
-  /// Zemin rengi; çerçeveden bağımsız.
-  void setColor(String noteId, NoteColor color) =>
-      updateFields(noteId, {'color': color.id});
+  /// Zemin rengi; çerçeveden bağımsız. [custom]: paletten özel renk (ARGB)
+  /// — null yazılır ki hazır renge dönünce eski özel renk silinsin.
+  void setColor(String noteId, NoteColor color, {int? custom}) =>
+      updateFields(noteId, {'color': color.id, 'customColor': custom});
 
   /// Ana ekran kartının çerçeve rengi (editörde çizilmez).
-  void setFrameColor(String noteId, NoteColor color) =>
-      updateFields(noteId, {'frameColor': color.id});
+  void setFrameColor(String noteId, NoteColor color, {int? custom}) =>
+      updateFields(noteId, {'frameColor': color.id, 'customFrameColor': custom});
 
   /// **F3.5 GÖÇÜ**: eski defterler (`type: archive`) sayfalı not olur
   /// (bkz. `notebookToPagedNote`). Editör de açılışta çevirir; bu, hiç

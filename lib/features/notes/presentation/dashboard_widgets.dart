@@ -57,20 +57,18 @@ class _ReorderTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final framed = note.frameColor != NoteColor.none;
+    final frame = NoteColors.noteFrame(note);
     final title = note.title.trim();
     final preview = stripRichMarkers(note.toPlainText()).trim();
     return Material(
-      color: NoteColors.surface(context, note.color),
+      color: NoteColors.noteSurface(context, note),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: framed
-                ? NoteColors.swatch(note.frameColor)
-                : scheme.outlineVariant.withValues(alpha: 0.5),
-            width: framed ? 2.5 : 1,
+            color: frame ?? scheme.outlineVariant.withValues(alpha: 0.5),
+            width: frame != null ? 2.5 : 1,
           ),
         ),
         padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),

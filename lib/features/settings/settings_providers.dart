@@ -518,6 +518,14 @@ final quickCaptureRowProvider = boolPref('quick_capture_row', defaultValue: fals
 /// hâliyle saklanır.
 final cardRichPreviewProvider = boolPref('card_rich_preview', defaultValue: true);
 
+/// Kartta hassas içerik gizlensin mi (B1, 2026-10-20)? Açıkken parola
+/// notunun içeriği kartta çizilmez, IBAN/kart numarası son dört hane
+/// dışında örtülür (bkz. `sensitive_text.dart`). Yalnız gösterim.
+final cardHideSensitiveProvider = boolPref(
+  'card_hide_sensitive',
+  defaultValue: true,
+);
+
 /// Eklerin buluta otomatik senkronu (Storage'a yükleme) için boyut sınırı, MB.
 /// 0 = sınırsız. Sınırı aşan ek cihazda kalır; not metni yine senkronlanır,
 /// yalnız dosyanın kendisi yüklenmez (kota/veri tasarrufu).

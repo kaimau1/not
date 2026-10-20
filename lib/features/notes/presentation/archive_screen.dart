@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/utils/search_fold.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../ai/data/semantic_search.dart';
@@ -9,6 +8,8 @@ import 'note_card.dart';
 import 'note_grid.dart';
 import 'note_sort_menu.dart';
 import 'notes_providers.dart';
+import 'archive_insights_sheet.dart';
+import 'screen_search.dart';
 
 /// Arşivlenen notlar. Karta dokununca editör açılır; menüden arşivden
 /// çıkarılabilir veya silinebilir.
@@ -27,25 +28,21 @@ class ArchiveScreen extends ConsumerStatefulWidget {
 }
 
 class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
-  final _searchController = TextEditingController();
-  bool _searching = false;
+  /// Arama kutusu + AI anahtarı (ortak yüzey — bkz. screen_search.dart).
+  final _search = ScreenSearch();
 
-  /// AI (anlamsal) arama açık mı — ana ekrandaki parıltı anahtarının
-  /// arşivdeki karşılığı (kullanıcı isteği 2026-10-20). Ekran kapanınca
-  /// unutulur; ana ekranın tercihini değiştirmez.
-  bool _semantic = false;
+  @override
+  void initState() {
+    super.initState();
+    _search.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() => setState(() {});
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _search.dispose();
     super.dispose();
-  }
-
-  void _toggleSearch() {
-    setState(() {
-      _searching = !_searching;
-      if (!_searching) _searchController.clear();
-    });
   }
 
   @override
@@ -56,16 +53,8 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: _searching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: _semantic ? l10n.archiveAiSearchHint : l10n.searchHint,
-                ),
-              )
+        title: _search.open
+            ? ScreenSearchField(search: _search, aiHint: l10n.archiveAiSearchHint)
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -83,19 +72,16 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
                 ],
               ),
         actions: [
-          if (_searching)
+          // ARŞİV ÖZETİ (D5): "Arşivimde neler var?" — çöp analizinin
+          // arşiv karşılığı.
+          if (!_search.open && (count ?? 0) > 0)
             IconButton(
-              tooltip: l10n.archiveAiSearch,
-              isSelected: _semantic,
-              icon: const Icon(Icons.auto_awesome_outlined),
-              selectedIcon: const Icon(Icons.auto_awesome),
-              onPressed: () => setState(() => _semantic = !_semantic),
+              tooltip: l10n.archiveInsights,
+              icon: const Icon(Icons.insights_outlined),
+              onPressed: () =>
+                  showArchiveInsightsSheet(context, archived.value ?? const []),
             ),
-          IconButton(
-            tooltip: _searching ? l10n.close : l10n.searchHint,
-            icon: Icon(_searching ? Icons.close : Icons.search),
-            onPressed: _toggleSearch,
-          ),
+          ...screenSearchActions(context, _search),
           // Ölçüt ana ekranla ORTAK (klasör sayfasındaki kuralla aynı):
           // kullanıcının seçtiği düzen her yerde aynı olsun.
           NoteSortMenu(
@@ -111,25 +97,19 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
           title: l10n.genericError(e.toString()),
         ),
         data: (all) => ValueListenableBuilder<TextEditingValue>(
-          valueListenable: _searchController,
+          valueListenable: _search.controller,
           builder: (context, value, _) {
-            final needle = foldForSearch(value.text.trim());
-            // AI açıkken anlamca yakın notlar (en az 3 harf — ana ekranla
-            // aynı eşik); sonuç gelene kadar düz arama sonuçları durur.
-            final semanticQuery = value.text.trim();
-            final semantic = _semantic && semanticQuery.length > 2
-                ? ref.watch(archivedSemanticSearchProvider(semanticQuery))
-                : null;
-            // Eşleşme kuralı ana ekranınkiyle AYNI işlevden gelir.
-            final notes = needle.isEmpty
-                ? all
-                : semantic?.value ??
-                      [
-                        for (final n in all)
-                          if (noteMatchesQuery(n, needle)) n,
-                      ];
+            final result = runScreenSearch(
+              ref,
+              all,
+              value.text,
+              semantic: _search.semantic,
+              scope: SemanticScope.archive,
+            );
+            final notes = result.notes;
+            final needle = result.needle;
             if (notes.isEmpty) {
-              if (semantic?.isLoading ?? false) {
+              if (result.loading) {
                 return const Center(child: CircularProgressIndicator());
               }
               return needle.isEmpty
@@ -144,20 +124,10 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
             }
             return Column(
               children: [
-                if (semantic?.isLoading ?? false)
-                  const LinearProgressIndicator(minHeight: 2),
                 if (needle.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(
-                        l10n.searchResultCount(notes.length),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
+                  SearchResultHeader(
+                    count: notes.length,
+                    loading: result.loading,
                   ),
                 Expanded(
                   child: LayoutBuilder(

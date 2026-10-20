@@ -47,6 +47,8 @@ class NoteUndoStack {
       n.type.id,
       n.color.id,
       n.frameColor.id,
+      '${n.customColor}',
+      '${n.customFrameColor}',
       n.tags.join(','),
       n.folderId ?? '',
       ...items,

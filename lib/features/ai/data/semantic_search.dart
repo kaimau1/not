@@ -52,32 +52,47 @@ final semanticSearchProvider = FutureProvider.autoDispose
       }
     });
 
-/// ARŞİVDE anlamsal arama (kullanıcı isteği 2026-10-20: "arşivde ara
-/// kısmına da AI seçeneği koy"). [semanticSearchProvider] ile aynı indeks ve
-/// aynı eşik; yalnız aday kümesi arşivlenmiş notlar.
-final archivedSemanticSearchProvider = FutureProvider.autoDispose
-    .family<List<Note>, String>((ref, query) async {
-      final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+/// Ana ekran DIŞINDAKİ arama yüzeyleri (arşiv, çöp, klasör) için anlamsal
+/// aramanın aday kümesi (geliştirme raporu B4, 2026-10-20: AI anahtarı
+/// arşivden çöpe ve klasöre de geldi).
+enum SemanticScope { archive, trash, folder }
+
+/// Kapsamlı anlamsal arama: [semanticSearchProvider] ile aynı indeks ve aynı
+/// eşik; yalnız aday kümesi kapsamın notları. [folderId] yalnız
+/// [SemanticScope.folder]da. Kilitli ve gizli klasördeki notlar girmez.
+final scopedSemanticSearchProvider = FutureProvider.autoDispose
+    .family<
+      List<Note>,
+      ({SemanticScope scope, String? folderId, String query})
+    >((ref, key) async {
+      final query = key.query.trim();
       final hiddenFolders = ref.watch(hiddenFoldersRevealedProvider)
           ? const <String>{}
           : ref.watch(hiddenFolderIdsProvider);
-      final archived = [
-        for (final n in notes)
-          if (n.archivedAt != null &&
-              !n.locked &&
-              !hiddenFolders.contains(n.folderId))
+      final source = switch (key.scope) {
+        SemanticScope.trash =>
+          ref.watch(trashStreamProvider).value ?? const <Note>[],
+        _ => ref.watch(notesStreamProvider).value ?? const <Note>[],
+      };
+      final candidates = [
+        for (final n in source)
+          if (!n.locked &&
+              !hiddenFolders.contains(n.folderId) &&
+              switch (key.scope) {
+                SemanticScope.archive => n.archivedAt != null,
+                SemanticScope.trash => n.deletedAt != null,
+                SemanticScope.folder =>
+                  n.folderId == key.folderId && n.archivedAt == null,
+              })
             n,
       ];
-      if (archived.isEmpty || query.trim().isEmpty) return const [];
+      if (candidates.isEmpty || query.isEmpty) return const [];
       try {
-        return await ref.read(semanticIndexProvider).search(
-          query.trim(),
-          archived,
-        );
+        return await ref.read(semanticIndexProvider).search(query, candidates);
       } on GeminiException {
-        final q = foldForSearch(query.trim());
+        final q = foldForSearch(query);
         return [
-          for (final n in archived)
+          for (final n in candidates)
             if (foldForSearch(n.toPlainText()).contains(q)) n,
         ];
       }

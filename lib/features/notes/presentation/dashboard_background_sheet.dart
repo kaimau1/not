@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/widgets/color_palette.dart';
 import '../../../core/l10n_ext.dart';
 import '../../settings/settings_providers.dart';
 import 'dashboard_pattern.dart';
@@ -118,6 +119,18 @@ class _DashboardBackgroundSheet extends ConsumerWidget {
                         .read(dashboardBackgroundProvider.notifier)
                         .setColor(argb),
                   ),
+                PaletteButton(
+                  title: l10n.dashboardBackgroundColor,
+                  size: 36,
+                  current:
+                      background.color == null ||
+                          _kBackgroundColors.contains(background.color)
+                      ? null
+                      : Color(background.color!),
+                  onPicked: (c) => ref
+                      .read(dashboardBackgroundProvider.notifier)
+                      .setColor(c.toARGB32()),
+                ),
               ],
             ),
             const SizedBox(height: 16),

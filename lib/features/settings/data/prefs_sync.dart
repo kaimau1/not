@@ -44,6 +44,7 @@ const kSyncedPrefKeys = <String>[
   'expand_list_items',
   'quick_capture_row',
   'card_rich_preview',
+  'card_hide_sensitive',
   'voice_button_mode',
   'voice_auto_stop',
   'voice_silence',

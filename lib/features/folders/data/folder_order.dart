@@ -103,6 +103,25 @@ List<NoteFolder> sortFolders(
   return list;
 }
 
+/// BOŞ KLASÖRLER SONA (geliştirme raporu B3, 2026-10-20): ana ekran şeridi
+/// ve yana çekiş gezisi aynı sırayı kullanır. Elle sıralamada ([sort] ==
+/// [FolderSort.manual]) kullanıcının dizdiği sıra olduğu gibi kalır. Saf —
+/// testli.
+List<NoteFolder> emptyFoldersLast(
+  List<NoteFolder> folders,
+  FolderSort sort,
+  Map<String, int> counts,
+) {
+  if (sort == FolderSort.manual) return folders;
+  bool empty(NoteFolder f) => (counts[f.id] ?? 0) == 0;
+  return [
+    for (final f in folders)
+      if (!empty(f)) f,
+    for (final f in folders)
+      if (empty(f)) f,
+  ];
+}
+
 /// Klasör kimliği → içindeki (arşivlenmemiş, boş olmayan) not sayısı.
 final folderNoteCountsProvider = Provider<Map<String, int>>((ref) {
   final notes = ref.watch(notesStreamProvider).value;

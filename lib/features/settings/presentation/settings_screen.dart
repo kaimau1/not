@@ -288,6 +288,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: l10n.cardRichPreview,
             keywords: '${l10n.cardRichPreviewInfo} renk alti cizili kalin',
           ),
+          _SettingRow(
+            const _CardHideSensitiveSwitch(),
+            title: l10n.cardHideSensitive,
+            keywords: '${l10n.cardHideSensitiveInfo} sifre parola iban gizli',
+          ),
           // ANA EKRAN ZEMİNİ BURADAN KALKTI (kullanıcı isteği 2026-08-16):
           // artık ana ekranın kendi 3 nokta menüsünde (bkz.
           // dashboard_background_sheet.dart). Zeminin sonucu yalnız ana

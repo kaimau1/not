@@ -840,6 +840,25 @@ class BubbleToolbar extends StatelessWidget {
                                       ),
                                     ),
                                   ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 3,
+                                    vertical: 5,
+                                  ),
+                                  child: PaletteButton(
+                                    title: l10n.paletteMore,
+                                    current:
+                                        (plain
+                                                ? BubbleController.plainPalette
+                                                : BubbleController.palette)
+                                            .contains(selected)
+                                        ? null
+                                        : Color(selected),
+                                    onPicked: (c) => plain
+                                        ? controller.setPlainColor(c.toARGB32())
+                                        : controller.setColor(c.toARGB32()),
+                                  ),
+                                ),
                               ],
                             ),
                           ),

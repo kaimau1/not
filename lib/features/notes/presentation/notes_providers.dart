@@ -205,6 +205,13 @@ final folderShelfExpandedProvider = boolPref('folder_shelf_expanded', defaultVal
 /// görünmez.
 final showAllNotesProvider = boolPref('home_show_all_notes', defaultValue: false);
 
+/// "Tümü" görünümünde kartlar KLASÖR BAŞLIKLARI altında mı (geliştirme
+/// raporu D4, 2026-10-20)? Varsayılan açık; Süz levhasından kapatılır.
+final allNotesGroupByFolderProvider = boolPref(
+  'home_all_group_folders',
+  defaultValue: true,
+);
+
 /// "Tümü" çipindeki sayı: arşiv dışı, boş olmayan, gizli klasörde olmayan
 /// notlar.
 final allNotesCountProvider = Provider<int>((ref) {

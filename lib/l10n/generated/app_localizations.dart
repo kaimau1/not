@@ -284,18 +284,6 @@ abstract class AppLocalizations {
   /// **'Görsel ekle'**
   String get addImage;
 
-  /// No description provided for @addPdf.
-  ///
-  /// In tr, this message translates to:
-  /// **'PDF ekle'**
-  String get addPdf;
-
-  /// No description provided for @addSlide.
-  ///
-  /// In tr, this message translates to:
-  /// **'Slayt ekle'**
-  String get addSlide;
-
   /// No description provided for @noNoteSelected.
   ///
   /// In tr, this message translates to:
@@ -1501,18 +1489,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sesli yazdır'**
   String get liveDictation;
-
-  /// No description provided for @voiceCaptureAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sesli yakala (yapay zekâ)'**
-  String get voiceCaptureAi;
-
-  /// No description provided for @dictationListening.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dinleniyor... konuştukça metin yazılır'**
-  String get dictationListening;
 
   /// No description provided for @dictationHoldHint.
   ///
@@ -3230,12 +3206,6 @@ abstract class AppLocalizations {
   /// **'SIRALAMA'**
   String get filterSectionSort;
 
-  /// No description provided for @filterFavoriteHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ana ekranda kısayol olarak görünmesi için bir seçeneğin yıldızına dokun'**
-  String get filterFavoriteHint;
-
   /// No description provided for @filterSheetSortHint.
   ///
   /// In tr, this message translates to:
@@ -3823,6 +3793,162 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Notların rengi, vurgusu, kalın ve altı çizili yazıları ana ekrandaki kartlarda da görünür. Kapalıyken kartlar düz metin gösterir.'**
   String get cardRichPreviewInfo;
+
+  /// No description provided for @cardHideSensitive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartlarda hassas içeriği gizle'**
+  String get cardHideSensitive;
+
+  /// No description provided for @cardHideSensitiveInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parola geçen notların içeriği kartta görünmez; IBAN ve kart numaralarının yalnız son dört hanesi görünür. Not içinde her şey olduğu gibi kalır.'**
+  String get cardHideSensitiveInfo;
+
+  /// No description provided for @sensitiveHiddenOnCard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hassas içerik — kartta gizlendi'**
+  String get sensitiveHiddenOnCard;
+
+  /// No description provided for @paletteMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha fazla renk'**
+  String get paletteMore;
+
+  /// No description provided for @paletteCustom.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel renk'**
+  String get paletteCustom;
+
+  /// No description provided for @paletteUse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullan'**
+  String get paletteUse;
+
+  /// No description provided for @paletteHue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ton'**
+  String get paletteHue;
+
+  /// No description provided for @paletteSaturation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doygunluk'**
+  String get paletteSaturation;
+
+  /// No description provided for @paletteLightness.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıklık'**
+  String get paletteLightness;
+
+  /// No description provided for @itemMoveToPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başka sayfaya taşı'**
+  String get itemMoveToPage;
+
+  /// No description provided for @itemMovedToPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Madde {page}. sayfaya taşındı'**
+  String itemMovedToPage(int page);
+
+  /// No description provided for @screenAiSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anlamca ara…'**
+  String get screenAiSearchHint;
+
+  /// No description provided for @archiveInsights.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arşivimde neler var?'**
+  String get archiveInsights;
+
+  /// No description provided for @archiveInsightsStats.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not · {files} ek · {stale} not bir yıldır açılmadı'**
+  String archiveInsightsStats(int count, int files, int stale);
+
+  /// No description provided for @archiveByFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörlere göre'**
+  String get archiveByFolder;
+
+  /// No description provided for @archiveNoFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörsüz'**
+  String get archiveNoFolder;
+
+  /// No description provided for @archiveStale.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir yıldır dokunulmamış'**
+  String get archiveStale;
+
+  /// No description provided for @archiveInsightsAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI ile özetle'**
+  String get archiveInsightsAi;
+
+  /// No description provided for @archiveAiStale.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI: eskimiş görünenler'**
+  String get archiveAiStale;
+
+  /// No description provided for @lineSpacing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satır aralığı'**
+  String get lineSpacing;
+
+  /// No description provided for @lineSpacingNormal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Normal'**
+  String get lineSpacingNormal;
+
+  /// No description provided for @lineSpacingWide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geniş'**
+  String get lineSpacingWide;
+
+  /// No description provided for @lineSpacingWider.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çok geniş'**
+  String get lineSpacingWider;
+
+  /// No description provided for @trashReminderTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çöpte geri yüklemen gereken not olabilir'**
+  String get trashReminderTitle;
+
+  /// No description provided for @trashReminderBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{Bir not yarın kalıcı silinecek} other{{count} not yarın kalıcı silinecek}} — içinde iş ya da önemli bilgi var gibi. Göz at.'**
+  String trashReminderBody(int count);
+
+  /// No description provided for @groupByFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasöre göre grupla'**
+  String get groupByFolder;
 
   /// No description provided for @fontSizeSmall.
   ///
@@ -7532,12 +7658,6 @@ abstract class AppLocalizations {
   /// **'Bağlantı kopyalandı'**
   String get videoLinkCopied;
 
-  /// No description provided for @attachSectionVisual.
-  ///
-  /// In tr, this message translates to:
-  /// **'Görsel ve çizim'**
-  String get attachSectionVisual;
-
   /// No description provided for @menuSectionOrganize.
   ///
   /// In tr, this message translates to:
@@ -8143,12 +8263,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Belgeler'**
   String get moduleDocuments;
-
-  /// No description provided for @moduleDocumentsInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'PDF ve sunum ekleme'**
-  String get moduleDocumentsInfo;
 
   /// No description provided for @moduleScan.
   ///
@@ -8977,18 +9091,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Her seferinde sor'**
   String get captureModeAsk;
-
-  /// No description provided for @voiceMicDictate.
-  ///
-  /// In tr, this message translates to:
-  /// **'Doğrudan yazdır'**
-  String get voiceMicDictate;
-
-  /// No description provided for @voiceMicTooltipAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sesli not (AI düzenlesin) — basılı tut: doğrudan yazdır'**
-  String get voiceMicTooltipAi;
 
   /// No description provided for @voiceMicTooltipDictate.
   ///

@@ -111,12 +111,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addImage => 'Görsel ekle';
 
   @override
-  String get addPdf => 'PDF ekle';
-
-  @override
-  String get addSlide => 'Slayt ekle';
-
-  @override
   String get noNoteSelected => 'Soldan bir not seç';
 
   @override
@@ -770,12 +764,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get liveDictation => 'Sesli yazdır';
-
-  @override
-  String get voiceCaptureAi => 'Sesli yakala (yapay zekâ)';
-
-  @override
-  String get dictationListening => 'Dinleniyor... konuştukça metin yazılır';
 
   @override
   String get dictationHoldHint =>
@@ -1710,10 +1698,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get filterSectionSort => 'SIRALAMA';
 
   @override
-  String get filterFavoriteHint =>
-      'Ana ekranda kısayol olarak görünmesi için bir seçeneğin yıldızına dokun';
-
-  @override
   String get filterSheetSortHint =>
       'Tarih grupları (BUGÜN, BU HAFTA…) yalnız “Son düzenlenen” sıralamasında gösterilir.';
 
@@ -2034,6 +2018,97 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'Notların rengi, vurgusu, kalın ve altı çizili yazıları ana ekrandaki kartlarda da görünür. Kapalıyken kartlar düz metin gösterir.';
+
+  @override
+  String get cardHideSensitive => 'Kartlarda hassas içeriği gizle';
+
+  @override
+  String get cardHideSensitiveInfo =>
+      'Parola geçen notların içeriği kartta görünmez; IBAN ve kart numaralarının yalnız son dört hanesi görünür. Not içinde her şey olduğu gibi kalır.';
+
+  @override
+  String get sensitiveHiddenOnCard => 'Hassas içerik — kartta gizlendi';
+
+  @override
+  String get paletteMore => 'Daha fazla renk';
+
+  @override
+  String get paletteCustom => 'Özel renk';
+
+  @override
+  String get paletteUse => 'Kullan';
+
+  @override
+  String get paletteHue => 'Ton';
+
+  @override
+  String get paletteSaturation => 'Doygunluk';
+
+  @override
+  String get paletteLightness => 'Açıklık';
+
+  @override
+  String get itemMoveToPage => 'Başka sayfaya taşı';
+
+  @override
+  String itemMovedToPage(int page) {
+    return 'Madde $page. sayfaya taşındı';
+  }
+
+  @override
+  String get screenAiSearchHint => 'Anlamca ara…';
+
+  @override
+  String get archiveInsights => 'Arşivimde neler var?';
+
+  @override
+  String archiveInsightsStats(int count, int files, int stale) {
+    return '$count not · $files ek · $stale not bir yıldır açılmadı';
+  }
+
+  @override
+  String get archiveByFolder => 'Klasörlere göre';
+
+  @override
+  String get archiveNoFolder => 'Klasörsüz';
+
+  @override
+  String get archiveStale => 'Bir yıldır dokunulmamış';
+
+  @override
+  String get archiveInsightsAi => 'AI ile özetle';
+
+  @override
+  String get archiveAiStale => 'AI: eskimiş görünenler';
+
+  @override
+  String get lineSpacing => 'Satır aralığı';
+
+  @override
+  String get lineSpacingNormal => 'Normal';
+
+  @override
+  String get lineSpacingWide => 'Geniş';
+
+  @override
+  String get lineSpacingWider => 'Çok geniş';
+
+  @override
+  String get trashReminderTitle => 'Çöpte geri yüklemen gereken not olabilir';
+
+  @override
+  String trashReminderBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count not yarın kalıcı silinecek',
+      one: 'Bir not yarın kalıcı silinecek',
+    );
+    return '$_temp0 — içinde iş ya da önemli bilgi var gibi. Göz at.';
+  }
+
+  @override
+  String get groupByFolder => 'Klasöre göre grupla';
 
   @override
   String get fontSizeSmall => 'Küçük';
@@ -4156,9 +4231,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get videoLinkCopied => 'Bağlantı kopyalandı';
 
   @override
-  String get attachSectionVisual => 'Görsel ve çizim';
-
-  @override
   String get menuSectionOrganize => 'Düzenle';
 
   @override
@@ -4507,9 +4579,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get moduleDocuments => 'Belgeler';
-
-  @override
-  String get moduleDocumentsInfo => 'PDF ve sunum ekleme';
 
   @override
   String get moduleScan => 'Tarama';
@@ -4984,13 +5053,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get captureModeAsk => 'Her seferinde sor';
-
-  @override
-  String get voiceMicDictate => 'Doğrudan yazdır';
-
-  @override
-  String get voiceMicTooltipAi =>
-      'Sesli not (AI düzenlesin) — basılı tut: doğrudan yazdır';
 
   @override
   String get voiceMicTooltipDictate =>

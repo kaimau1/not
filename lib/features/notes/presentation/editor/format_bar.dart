@@ -1,9 +1,13 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/note_fonts.dart';
 import '../../../../core/utils/rich_text.dart';
+import '../../../../core/widgets/color_palette.dart';
 import 'format_menu.dart';
 import 'text_wrap.dart';
 
@@ -105,6 +109,19 @@ enum _SliderMode { size, opacity }
 class _FormatBarState extends State<FormatBar> {
   _SliderMode _mode = _SliderMode.size;
 
+  /// Boyut/şeffaflık satırı açık mı (kullanıcı isteği 2026-10-20: "yazı
+  /// boyutu satırı da açılır kapanır olsun"). Varsayılan KAPALI — panel tek
+  /// satır kalır, yazıya yer kalır. Oturum boyunca hatırlanır.
+  static bool _sizeRowOpen = false;
+
+  /// Sürüklerken canlı önizlemenin seyreltilmesi (kullanıcı bulgusu
+  /// 2026-10-20: "biçim panelindeki değişiklikler kasıyor"): her kaydırıcı
+  /// olayı bütün notu yeni boyla yeniden dizdiriyordu (uzun notta kare
+  /// başına onlarca ms). Önizleme en çok 70 ms'de bir uygulanır; bırakınca
+  /// son değer kesin yazılır.
+  Timer? _liveTimer;
+  double? _liveValue;
+
   /// İmleçte/seçimde etkin olan biçimler; düğme vurgusu bundan çizilir.
   RichMark _active = RichMark.none;
 
@@ -127,6 +144,7 @@ class _FormatBarState extends State<FormatBar> {
 
   @override
   void dispose() {
+    _liveTimer?.cancel();
     widget.target?.controller.removeListener(_refreshActive);
     super.dispose();
   }
@@ -183,6 +201,15 @@ class _FormatBarState extends State<FormatBar> {
     // Canlı önizleme yalnız NOT GENELİNDE: seçim varken değişiklik bırakınca
     // ve yalnız seçime uygulanır.
     if (widget.hasSelection()) return;
+    _liveValue = value;
+    _liveTimer ??= Timer(const Duration(milliseconds: 70), _flushLive);
+  }
+
+  void _flushLive() {
+    _liveTimer = null;
+    final value = _liveValue;
+    _liveValue = null;
+    if (value == null || !mounted) return;
     if (_mode == _SliderMode.size) {
       widget.onScaleChanged(value);
     } else {
@@ -191,6 +218,9 @@ class _FormatBarState extends State<FormatBar> {
   }
 
   void _onChangeEnd(double value) {
+    _liveTimer?.cancel();
+    _liveTimer = null;
+    _liveValue = null;
     // Seçime uygulandıysa topuz BIRAKILDIĞI yerde kalır: not geneli
     // değişmediği için sıfırlansa kaydırıcı %100'e geri zıplar ve kullanıcı
     // az önce ne uyguladığını göremezdi.
@@ -320,6 +350,16 @@ class _FormatBarState extends State<FormatBar> {
                                     : widget.onClearFormat,
                               ),
                               const SizedBox(width: 4),
+                              // Boyut/şeffaflık satırının aç/kapası.
+                              _Btn(
+                                key: const ValueKey('format-size-row'),
+                                icon: Icons.format_size,
+                                tooltip: l10n.noteTextSize,
+                                active: _sizeRowOpen,
+                                onTap: () => setState(
+                                  () => _sizeRowOpen = !_sizeRowOpen,
+                                ),
+                              ),
                               _FontMenu(
                                 family: widget.fontFamily,
                                 onChanged: widget.onFontChanged,
@@ -362,6 +402,7 @@ class _FormatBarState extends State<FormatBar> {
               // arasında geçiş yapar. Sürüklerken metin anında değişir
               // (kaydırıcı sayfanın altında sabit durduğu için parmağın
               // altından kaçmaz); seçim varsa değişiklik bırakınca seçime iner.
+              if (_sizeRowOpen)
               Padding(
                 padding: const EdgeInsets.fromLTRB(4, 0, 12, 2),
                 child: Row(
@@ -483,6 +524,7 @@ class _FontMenu extends StatelessWidget {
 /// aynı yuvarlaklığı verir.
 class _Btn extends StatelessWidget {
   const _Btn({
+    super.key,
     required this.icon,
     required this.tooltip,
     required this.onTap,
@@ -576,7 +618,9 @@ class _ColorPicker extends StatelessWidget {
     final index = activeIndex;
     // Palet dışında kalan indeks (eski nottan gelen) rengi çizdirmez ama
     // düğme yine basılı görünür — biçim gerçekten orada.
-    final color = index != null && index >= 1 && index <= palette.length
+    final color = isCustomRichColor(index)
+        ? Color(index!)
+        : index != null && index >= 1 && index <= palette.length
         ? palette[index - 1]
         : null;
     return PopupMenuButton<int>(
@@ -602,10 +646,18 @@ class _ColorPicker extends StatelessWidget {
       style: _compactStyle(
         background: index == null ? null : scheme.primaryContainer,
       ),
-      // 0 = "Kaldır" (palet indeksleri 1'den başlar, çakışma yok).
-      onSelected: (value) {
+      // 0 = "Kaldır" (palet indeksleri 1'den başlar, çakışma yok);
+      // -1 = tam palet levhası (özel renk ARGB olarak döner).
+      onSelected: (value) async {
         if (value == 0) {
           onRemove();
+        } else if (value == -1) {
+          final picked = await showColorPaletteSheet(
+            context,
+            title: tooltip,
+            current: color,
+          );
+          if (picked != null) onPick(picked.toARGB32() | 0xFF000000);
         } else {
           onPick(value);
         }
@@ -669,6 +721,37 @@ class _ColorPicker extends StatelessWidget {
                     ),
                   ),
                 ),
+              // TAM PALET: hazır tonlar + özel renk (bkz. color_palette.dart).
+              Tooltip(
+                message: menuContext.l10n.paletteMore,
+                child: InkWell(
+                  key: const ValueKey('format-palette-more'),
+                  onTap: () => Navigator.pop(menuContext, -1),
+                  customBorder: const CircleBorder(),
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: SweepGradient(
+                        colors: [
+                          Color(0xFFE57373),
+                          Color(0xFFFFD54F),
+                          Color(0xFF81C784),
+                          Color(0xFF64B5F6),
+                          Color(0xFF9575CD),
+                          Color(0xFFE57373),
+                        ],
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.palette_outlined,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -770,6 +853,135 @@ class _HeadingMenu extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// **ETKİN BİÇİMLER — PANEL KAPALIYKEN** (kullanıcı isteği 2026-10-20: "bold
+/// italik vb. altta nelerin aktif olduğu görülsün, biçim paneli haricinde").
+/// Alt çubuktaki Biçim düğmesinin yanında, imlecin/seçimin üzerindeki
+/// biçimleri küçük rozetlerle gösterir; hiçbiri yoksa yer kaplamaz.
+///
+/// Hedef alan [target] üzerinden izlenir (odak her satırda değiştiği için
+/// editörün tamamını yeniden kurmadan), denetleyici yalnız rozetler
+/// GERÇEKTEN değişince çizdirir.
+class ActiveFormatBadges extends StatefulWidget {
+  const ActiveFormatBadges({super.key, required this.target});
+
+  final ValueListenable<FormatTarget?> target;
+
+  @override
+  State<ActiveFormatBadges> createState() => _ActiveFormatBadgesState();
+}
+
+class _ActiveFormatBadgesState extends State<ActiveFormatBadges> {
+  WrapTextController? _controller;
+  RichMark _mark = RichMark.none;
+  RichHeading _heading = RichHeading.normal;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.target.addListener(_retarget);
+    _retarget();
+  }
+
+  @override
+  void dispose() {
+    widget.target.removeListener(_retarget);
+    _controller?.removeListener(_refresh);
+    super.dispose();
+  }
+
+  void _retarget() {
+    final next = widget.target.value?.controller;
+    if (next == _controller) return;
+    _controller?.removeListener(_refresh);
+    _controller = next?..addListener(_refresh);
+    _refresh();
+  }
+
+  void _refresh() {
+    if (!mounted) return;
+    final c = _controller;
+    final mark = c == null ? RichMark.none : activeRichFormats(c);
+    final heading = c == null ? RichHeading.normal : activeRichHeading(c);
+    if (mark != _mark || heading != _heading) {
+      setState(() {
+        _mark = mark;
+        _heading = heading;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final palette = NoteColors.richPalette;
+    Color? resolve(int? index) {
+      if (index == null) return null;
+      if (isCustomRichColor(index)) return Color(index);
+      if (index < 1 || index > palette.length) return scheme.primary;
+      return palette[index - 1];
+    }
+
+    Widget letter(String text, {TextStyle? style}) => Padding(
+      padding: const EdgeInsetsDirectional.only(end: 2),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+        decoration: BoxDecoration(
+          color: scheme.primaryContainer,
+          borderRadius: BorderRadius.circular(5),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 11,
+            height: 1.2,
+            color: scheme.onPrimaryContainer,
+          ).merge(style),
+        ),
+      ),
+    );
+
+    Widget dot(Color color, {bool filled = true}) => Padding(
+      padding: const EdgeInsetsDirectional.only(end: 2),
+      child: Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: filled ? color.withValues(alpha: 0.6) : null,
+          border: Border.all(color: color, width: 2),
+        ),
+      ),
+    );
+
+    final badges = <Widget>[
+      if (_heading != RichHeading.normal)
+        letter(
+          _heading == RichHeading.h1 ? 'H1' : 'H2',
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      if (_mark.bold)
+        letter('B', style: const TextStyle(fontWeight: FontWeight.w800)),
+      if (_mark.italic)
+        letter('I', style: const TextStyle(fontStyle: FontStyle.italic)),
+      if (_mark.underline)
+        letter(
+          'U',
+          style: const TextStyle(decoration: TextDecoration.underline),
+        ),
+      if (_mark.color != null) dot(resolve(_mark.color)!, filled: false),
+      if (_mark.highlight != null) dot(resolve(_mark.highlight)!),
+    ];
+    if (badges.isEmpty) return const SizedBox.shrink();
+    return Semantics(
+      container: true,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.only(start: 2, end: 4),
+        child: Row(mainAxisSize: MainAxisSize.min, children: badges),
+      ),
     );
   }
 }
