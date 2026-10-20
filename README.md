@@ -24,7 +24,7 @@ Firebase senkronlu, yapay zeka destekli not uygulaması — **Android** ve **web
 
 ## Kurulum
 
-Önkoşullar: [Flutter](https://docs.flutter.dev/get-started/install) (stable ≥ 3.44), Android için Android Studio/SDK.
+Önkoşullar: [Flutter](https://docs.flutter.dev/get-started/install) (stable 3.47.7 — CI ile aynı), Android için Android Studio/SDK.
 
 ### 1. Firebase projesi
 
@@ -84,8 +84,8 @@ flutter run -d chrome
 
 ```
 lib/
-├── app/            # MaterialApp, router (go_router), tema
-├── core/           # sabitler, ortak widget'lar, yardımcılar, hata günlüğü, sürüm kapısı
+├── app/            # MaterialApp, router (go_router), tema, oturum boyu servisler (app_services)
+├── core/           # sabitler, ağ (net/), ortak widget'lar, yardımcılar, hata günlüğü, sürüm kapısı
 ├── features/
 │   ├── auth/       # Google/misafir girişi (Android: google_sign_in, web: Firebase popup), hesap silme
 │   ├── notes/      # domain modelleri, Firestore/yerel/Drive depoları, dashboard, editörler, ekler
@@ -94,14 +94,15 @@ lib/
 │   ├── inbox/      # gelen notlar (arkadaştan gönderilen)
 │   ├── ai/         # çok sağlayıcılı AI istemcisi, AI sayfaları
 │   └── settings/   # ayarlar, kılavuz, gizlilik
-├── l10n/           # arayüz metinleri (ARB, 16 dil; şablon Türkçe)
+├── l10n/           # arayüz metinleri (ARB: tr + en; şablon Türkçe)
 web/                # web derlemesi kabuğu
-functions/          # Cloud Functions (searchUsers)
+functions/          # Cloud Functions (searchUsers + FCM itmeleri, push.js)
+rules-test/         # Firestore/Storage kural testleri (emülatör)
 ```
 
 - **State management**: Riverpod. Firestore `snapshots()` akışları doğrudan provider'lara bağlanır.
-- **Veri modeli**: her not `users/{uid}/notes/{noteId}` altında tek doküman; ekler Storage'da `users/{uid}/notes/{noteId}/...` yolunda.
-- **Çakışma çözümü**: last-write-wins (`serverTimestamp`), alan bazlı merge yazımlar.
+- **Veri modeli**: her not `users/{uid}/notes/{noteId}` altında bir doküman; ağır kısmı (çizim/balon/PDF işareti) 16 KB'ı aşınca `heavy/data` alt belgesinde, sürüm geçmişi `versions/`'ta. Ekler Storage'da `users/{uid}/notes/{noteId}/...` yolunda.
+- **Çakışma çözümü**: alan bazlı merge yazımlar; açık editör eşzamanlı düzenlemede metni üç yönlü birleştirir.
 - **Ek yükleme kuyruğu**: dosya önce cihaza kopyalanır, bağlantı gelince arka planda Storage'a yüklenir.
 
 ## Testler

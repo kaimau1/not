@@ -36,7 +36,7 @@ void main() {
       id: 'c',
       type: NoteType.text,
       title: 'Arşivde',
-      archivedAt: DateTime(2026, 10, 1),
+      archivedAt: DateTime(2026, 10),
     );
 
     setUp(() async {

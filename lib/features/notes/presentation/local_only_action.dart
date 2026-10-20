@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../folders/data/folders_repository.dart';
 import '../data/attachment_repository.dart';
 import '../data/note_shares_repository.dart';
@@ -32,7 +33,7 @@ Future<bool?> toggleNoteLocalOnly(
   final messenger = ScaffoldMessenger.of(context);
   void snack(String text) => messenger
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(text)));
+    ..showMessage(text);
   final repo = ref.read(notesRepositoryProvider);
   if (repo == null || repo.local == null) return null;
   final nowLocal = repo.isLocal(note.id);

@@ -183,7 +183,9 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
             }
           }
         }
-      } catch (_) {}
+      } catch (_) {
+        // Güvenlik ağı; not yine durur.
+      }
 
       state = VoiceAssistantState(
         phase: VoiceAssistantPhase.done,

@@ -91,7 +91,9 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
     for (final file in _temp) {
       try {
         if (file.existsSync()) file.deleteSync();
-      } catch (_) {}
+      } catch (_) {
+        // Geçici ses dosyası silinemezse açılıştaki temizlik toplar.
+      }
     }
     _temp.clear();
   }

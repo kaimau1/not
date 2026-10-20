@@ -18,7 +18,7 @@ void main() {
       title: 'Toplantı',
       reminderAt: DateTime(2026, 8, 10, 9),
       color: NoteColor.blue,
-      updatedAt: DateTime(2026, 8, 1),
+      updatedAt: DateTime(2026, 8),
     ),
     const Note(
       id: 'kilitli',

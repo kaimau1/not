@@ -26,7 +26,7 @@ void main() {
   test('kalınlık daralan çerçeveyle aynı oranda büyür', () {
     final out = cropInk(
       [
-        stroke([0.5, 0.5], width: 0.01),
+        stroke([0.5, 0.5]),
       ],
       left: 0.5,
       top: 0.0,

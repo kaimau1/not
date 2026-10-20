@@ -133,7 +133,7 @@ abstract final class ScanEnhance {
 
     if (filter == ScanFilter.blackWhite) {
       final bw = adaptiveThreshold(corrected, w, h,
-          radius: math.max(6, (math.min(w, h) * 0.02).round()), bias: 10);
+          radius: math.max(6, (math.min(w, h) * 0.02).round()));
       return _grayToImage(bw, w, h);
     }
     if (filter == ScanFilter.gray) return _grayToImage(corrected, w, h);

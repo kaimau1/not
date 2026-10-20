@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/media_transcriber.dart';
@@ -201,7 +202,7 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showMessage(message);
   }
 
   /// Seçili parça (yoksa tümü) nota eklenir; ekran açık kalır ki birden çok
@@ -470,7 +471,7 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
                 children: [
                   if (widget.source != null)
                     OutlinedButton.icon(
-                      onPressed: () => _run(),
+                      onPressed: _run,
                       icon: const Icon(Icons.refresh),
                       label: Text(l10n.retry),
                     ),

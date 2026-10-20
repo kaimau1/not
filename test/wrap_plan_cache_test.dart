@@ -25,7 +25,6 @@ void main() {
       style: style,
       columnWidth: 200,
       floats: floats,
-      textScaleFactor: 1,
     );
     return c;
   }
@@ -38,7 +37,6 @@ void main() {
       style: style,
       columnWidth: 200,
       floats: floats,
-      textScaleFactor: 1,
     );
     expect(c.text, display);
   });
@@ -69,7 +67,6 @@ void main() {
       columnWidth: 200,
       // Görsel büyüdü: kesilen satırlar ve dolgu genişlikleri değişmeli.
       floats: const [FloatBox(top: 0, left: 0, right: 150, height: 140)],
-      textScaleFactor: 1,
     );
     expect(c.text, isNot(before));
   });
@@ -83,7 +80,6 @@ void main() {
       style: style,
       columnWidth: 400,
       floats: floats,
-      textScaleFactor: 1,
     );
     expect(c.text, isNot(before));
   });

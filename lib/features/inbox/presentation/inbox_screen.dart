@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/note_card.dart';
@@ -126,7 +127,7 @@ class _InboxCard extends ConsumerWidget {
     await ref.read(inboxRepositoryProvider)?.decline(note.id);
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(l10n.inboxDeclined)));
+      ..showMessage(l10n.inboxDeclined);
   }
 
   Future<void> _accept(BuildContext context, WidgetRef ref) async {
@@ -139,7 +140,7 @@ class _InboxCard extends ConsumerWidget {
       if (!context.mounted) return;
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l10n.inboxAccepted)));
+        ..showMessage(l10n.inboxAccepted);
       // Kabul edilen not DOĞRUDAN açılır: kullanıcı "nereye gitti" diye ana
       // ekranda aramasın.
       await openNoteRoute(
@@ -147,7 +148,7 @@ class _InboxCard extends ConsumerWidget {
         Note(id: id, type: note.type, title: note.title),
       );
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
+      messenger.showMessage(l10n.genericError('$e'));
     }
   }
 

@@ -396,7 +396,6 @@ class PptxRender {
             editable,
           );
           if (shape != null) out.add(shape);
-          break;
         case 'p:grpSp':
           final grpXf = _groupXf(el);
           _walk(
@@ -411,10 +410,8 @@ class PptxRender {
             placeholderSource: placeholderSource,
             editable: editable,
           );
-          break;
         case 'p:graphicFrame':
           _table(el, xf, out, theme, clrMap, defaults, editable);
-          break;
         default:
           break; // connector, ole nesnesi vb. atlanır
       }

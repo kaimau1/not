@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart' as sf;
 
+import '../../../core/error_log.dart';
 import '../../../core/utils/local_file.dart';
 import '../../../core/utils/search_fold.dart';
 import '../../auth/presentation/auth_providers.dart';
@@ -112,7 +113,9 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
     String? raw;
     try {
       if (file != null && await file.exists()) raw = await file.readAsString();
-    } catch (_) {}
+    } catch (e) {
+      ErrorLog.record('attachment-text-cache', e);
+    }
     final legacy = prefs.getString(legacyCacheKey);
     raw ??= legacy;
     if (raw != null && raw.isNotEmpty) {

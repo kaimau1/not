@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import 'editor/note_images.dart';
 import 'viewers/image_crop.dart';
 
@@ -71,9 +72,7 @@ class _ImagePrepareScreenState extends State<ImagePrepareScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(content: Text(context.l10n.genericError('$e'))),
-          );
+          ..showMessage(context.l10n.genericError('$e'));
       }
     } finally {
       if (mounted) setState(() => _busy = false);

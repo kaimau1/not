@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -115,7 +117,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
                   );
                   if (id == null || !context.mounted) return;
                   notifier.dismiss();
-                  context.pushNote(noteRoutePath(id));
+                  unawaited(context.pushNote(noteRoutePath(id)));
                 },
                 icon: const Icon(Icons.note_add_outlined, size: 18),
                 label: Text(l10n.assistantMakeNote),

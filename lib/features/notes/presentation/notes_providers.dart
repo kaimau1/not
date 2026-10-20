@@ -885,7 +885,6 @@ final sharedFolderNotesProvider =
                   if (n.archivedAt == null && !n.isEmpty) n,
               ],
               NoteSort.updated,
-              const {},
             ),
           );
     });

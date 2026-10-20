@@ -10,6 +10,7 @@ import '../../../../app/router.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/note_guard.dart';
 import '../../../../core/utils/note_lock.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../auth/data/android_google_auth.dart';
 import '../../../settings/settings_providers.dart';
 import 'pattern_pad.dart';
@@ -250,7 +251,7 @@ class _UnlockDialogState extends State<_UnlockDialog> {
               if (await widget.onForgot!()) {
                 navigator.pop(true);
               } else {
-                messenger.showSnackBar(SnackBar(content: Text(text)));
+                messenger.showMessage(text);
               }
             },
             child: Text(l10n.lockForgot),

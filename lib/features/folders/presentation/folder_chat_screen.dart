@@ -12,6 +12,7 @@ import 'package:pasteboard/pasteboard.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../notes/presentation/editor/drawing_screen.dart';
 import '../../notes/presentation/editor/note_images.dart';
@@ -81,7 +82,7 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
       _controller.text = text;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.genericError('$e'))));
+      ).showMessage(context.l10n.genericError('$e'));
     }
   }
 
@@ -210,7 +211,7 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
   void _snack(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showMessage(message);
   }
 
   /// Yeni mesaj gelince/gönderilince listenin dibine iner. Kare sonuna

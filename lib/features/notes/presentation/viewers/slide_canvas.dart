@@ -41,7 +41,6 @@ class SlideCanvas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FittedBox(
-      fit: BoxFit.contain,
       child: SizedBox(
         width: slide.widthPt,
         height: slide.heightPt,
@@ -220,10 +219,8 @@ class _ShapeBody extends StatelessWidget {
     switch (s.vAnchor) {
       case 'ctr':
         alignment = Alignment.center;
-        break;
       case 'b':
         alignment = Alignment.bottomCenter;
-        break;
       default:
         alignment = Alignment.topCenter;
     }

@@ -58,7 +58,7 @@ void main() {
 
   group('mergeAttachmentLayout', () {
     test('gelen listeye YEREL duzen giydirilir', () {
-      final local = [_image('a', displayWidth: 0.75, pageY: 300, asFile: false)];
+      final local = [_image('a', displayWidth: 0.75, pageY: 300)];
       final incoming = [
         _image(
           'a',

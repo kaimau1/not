@@ -119,3 +119,34 @@ SnackBar timedSnackBar({
     ),
   );
 }
+
+/// Düz bilgi bildirimi — elle `SnackBar(content: Text(...))` kurmak yerine
+/// (F8.3). Eylemliyse [timedSnackBar] (geri sayımla kapanır).
+extension AppMessages on ScaffoldMessengerState {
+  void showMessage(
+    String message, {
+    SnackBarAction? action,
+    Duration duration = const Duration(seconds: 4),
+  }) {
+    showSnackBar(
+      action == null
+          ? SnackBar(content: Text(message), duration: duration)
+          : timedSnackBar(
+              content: Text(message),
+              action: action,
+              duration: duration,
+            ),
+    );
+  }
+}
+
+/// [AppMessages.showMessage] en yakın messenger'da. `await` sonrası
+/// çağrılacaksa messenger'ı ÖNCE alıp onun üzerinde çağır.
+void showAppMessage(
+  BuildContext context,
+  String message, {
+  SnackBarAction? action,
+  Duration duration = const Duration(seconds: 4),
+}) =>
+    ScaffoldMessenger.of(context)
+        .showMessage(message, action: action, duration: duration);

@@ -460,7 +460,6 @@ class _PageNotePaneState extends State<PageNotePane> {
                           // satır değil.
                           expands: true,
                           maxLines: null,
-                          minLines: null,
                           textAlignVertical: TextAlignVertical.top,
                           keyboardType: TextInputType.multiline,
                           // Kes/Kopyala TEMİZ metin verir: gövde, başlık ve

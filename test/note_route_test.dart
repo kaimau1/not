@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -75,11 +77,11 @@ void main() {
     final router = buildRouter();
     addTearDown(router.dispose);
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-    router.push('/archive');
+    unawaited(router.push('/archive'));
     await tester.pumpAndSettle();
     expect(find.text('ARCHIVE'), findsOneWidget);
 
-    router.pushNote(noteRoutePath('x'));
+    unawaited(router.pushNote(noteRoutePath('x')));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.text('NOTE x').hitTestable(), findsOneWidget);
@@ -93,7 +95,7 @@ void main() {
     final router = buildRouter();
     addTearDown(router.dispose);
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-    router.pushNote(noteRoutePath('y'));
+    unawaited(router.pushNote(noteRoutePath('y')));
     await tester.pumpAndSettle();
     expect(router.state.uri.path, '/note/y');
     expect(find.text('NOTE y').hitTestable(), findsOneWidget);
@@ -116,7 +118,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    folderContext.pushNote(noteRoutePath('z'));
+    unawaited(folderContext.pushNote(noteRoutePath('z')));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.text('NOTE z').hitTestable(), findsOneWidget);

@@ -210,11 +210,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // sorusunu bırakmaz.
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.gridColumnsCount(clamped)),
-          duration: const Duration(milliseconds: 900),
-        ),
+      ..showMessage(
+        context.l10n.gridColumnsCount(clamped),
+        duration: const Duration(milliseconds: 900),
       );
     return true;
   }
@@ -367,7 +365,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final previous = {for (final n in _selectedNotes(ids)) n.id: n.folderId};
     final picked = await showFolderPickSheet(context, ref);
     if (picked == null || !mounted) return;
-    repo.batchUpdate(ids, {'folderId': picked.isEmpty ? null : picked});
+    unawaited(
+      repo.batchUpdate(ids, {'folderId': picked.isEmpty ? null : picked}),
+    );
     ref.read(selectedNoteIdsProvider.notifier).clear();
     showUndoSnackBar(
       context,
@@ -493,7 +493,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(l10n.copied)));
+      ..showMessage(l10n.copied);
   }
 
   Future<void> _shareSelected(Set<String> ids) async {
@@ -506,7 +506,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (text.trim().isEmpty) {
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l10n.shareAsTextEmpty)));
+        ..showMessage(l10n.shareAsTextEmpty);
       return;
     }
     await SharePlus.instance.share(ShareParams(text: text));
@@ -517,7 +517,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (picked == null) return;
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    repo.batchUpdate(ids, {frame ? 'frameColor' : 'color': picked.id});
+    unawaited(
+      repo.batchUpdate(ids, {frame ? 'frameColor' : 'color': picked.id}),
+    );
     ref.read(selectedNoteIdsProvider.notifier).clear();
   }
 
@@ -1599,6 +1601,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       // Merkezden hizalı: mikrofon 84 px'lik sabit kutuda,
                       // "+" ise 56 px'lik FAB. Sağa dayalıyken merkezleri
                       // 14 px kayıyor ve göz bunu hizasızlık olarak görüyordu.
+                      // ignore: avoid_redundant_argument_values
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         // **BAŞA DÖN** — yüz notluk bir kitaplıkta en alta
@@ -1794,31 +1797,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (action == null || !mounted) return;
     switch (action) {
       case 'account':
-        showAccountSheet(context);
+        unawaited(showAccountSheet(context));
       case 'inbox':
-        InboxScreen.open(context);
+        unawaited(InboxScreen.open(context));
       case 'friends':
         openFriendsScreenOrExplain(context, ref);
       case 'hidden':
-        _toggleHiddenFolders();
+        unawaited(_toggleHiddenFolders());
       case 'reminders':
-        context.push('/reminders');
+        unawaited(context.push('/reminders'));
       case 'archive':
-        context.push('/archive');
+        unawaited(context.push('/archive'));
       case 'background':
-        showDashboardBackgroundSheet(context);
+        unawaited(showDashboardBackgroundSheet(context));
       case 'trash':
-        context.push('/trash');
+        unawaited(context.push('/trash'));
       case 'template':
-        createFromTemplate();
+        unawaited(createFromTemplate());
       case 'folderOrder':
-        showFolderOrderSheet(context);
+        unawaited(showFolderOrderSheet(context));
       case 'settings':
-        context.push('/settings');
+        unawaited(context.push('/settings'));
       case 'personalize':
-        context.push('/personalize');
+        unawaited(context.push('/personalize'));
       case 'guide':
-        context.push('/guide');
+        unawaited(context.push('/guide'));
     }
   }
 

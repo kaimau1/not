@@ -12,6 +12,7 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../app/router.dart';
+import '../../../core/error_log.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/youtube.dart';
 import '../../folders/data/folders_repository.dart';
@@ -117,10 +118,12 @@ final shareIntakeProvider = Provider<void>((ref) {
           notes: repo,
           attachments: ref.read(attachmentRepositoryProvider),
         );
-        ReceiveSharingIntent.instance.reset();
+        unawaited(ReceiveSharingIntent.instance.reset());
         try {
-          ref.read(routerProvider).pushNote(noteRoutePath(noteId));
-        } catch (_) {}
+          unawaited(ref.read(routerProvider).pushNote(noteRoutePath(noteId)));
+        } catch (e) {
+          ErrorLog.record('share-intake-open', e);
+        }
         return;
       } catch (_) {
         // Bozuk ya da bize ait olmayan bir .notpaket: aşağıdaki normal
@@ -171,7 +174,7 @@ final shareIntakeProvider = Provider<void>((ref) {
     if (bodyParts.isEmpty && docs.isEmpty) {
       // İşlenmeyen içerik eklentide asılı kalmasın: reset edilmezse uygulama
       // tekrar öne gelince aynı çöp girdi yeniden değerlendiriliyordu.
-      ReceiveSharingIntent.instance.reset();
+      unawaited(ReceiveSharingIntent.instance.reset());
       return;
     }
 
@@ -245,7 +248,7 @@ final shareIntakeProvider = Provider<void>((ref) {
       );
       // Levha kapatıldı: paylaşımdan not oluşturulmaz (boş not bırakmayalım).
       if (destination == null) {
-        ReceiveSharingIntent.instance.reset();
+        unawaited(ReceiveSharingIntent.instance.reset());
         return;
       }
     }
@@ -261,7 +264,7 @@ final shareIntakeProvider = Provider<void>((ref) {
         safeToRead,
         youTubeUrl: youTubeUrl,
       );
-      ReceiveSharingIntent.instance.reset();
+      unawaited(ReceiveSharingIntent.instance.reset());
       return;
     }
 
@@ -317,10 +320,12 @@ final shareIntakeProvider = Provider<void>((ref) {
     }
 
     // Aynı içerik uygulama tekrar öne gelince yeniden işlenmesin.
-    ReceiveSharingIntent.instance.reset();
+    unawaited(ReceiveSharingIntent.instance.reset());
     try {
-      router.pushNote(noteRoutePath(id));
-    } catch (_) {}
+      unawaited(router.pushNote(noteRoutePath(id)));
+    } catch (e) {
+      ErrorLog.record('share-intake-open', e);
+    }
   }
 
   // Uygulama paylaşımla soğuk başlatıldıysa ilk içerik; açıkken gelenler
@@ -529,10 +534,10 @@ Future<void> _addToExistingNote(
   }
 
   try {
-    ref
-        .read(routerProvider)
-        .pushNote(noteRoutePath(noteId));
-  } catch (_) {}
+    unawaited(ref.read(routerProvider).pushNote(noteRoutePath(noteId)));
+  } catch (e) {
+    ErrorLog.record('share-intake-open', e);
+  }
 }
 
 const _uuid = Uuid();

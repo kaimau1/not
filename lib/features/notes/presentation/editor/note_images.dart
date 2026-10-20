@@ -15,6 +15,7 @@ import '../../../../core/widgets/customizable.dart';
 import '../../../../core/widgets/pop_in.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/video_time.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/video_frame.dart';
 import '../../domain/attachment.dart';
 import '../note_card_media.dart' show VideoPoster;
@@ -54,7 +55,7 @@ void openImageViewer(
   if (!hasLocal && !img.isUploaded) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(context.l10n.attachmentNotSynced)));
+    ).showMessage(context.l10n.attachmentNotSynced);
     return;
   }
   Navigator.of(context).push(
@@ -843,7 +844,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     if (chosen.length < 2 || _cw <= 0) return;
     final target = equalWidthFrac([
       for (final a in chosen) a.displayWidth ?? _defaultWFrac(_cw),
-    ], minFrac: _minWidthFrac);
+    ]);
     _applyMany([for (final a in chosen) a.copyWith(displayWidth: target)]);
     _endMulti();
   }
@@ -874,7 +875,6 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       aspects: [for (final a in chosen) _aspectOf(a)],
       columnWidth: cw,
       top: math.max(top, widget.topLimit),
-      minWidthFrac: _minWidthFrac,
       // Satır başına en çok 6: 1/7 genişlik [_minWidthFrac]'ın altına düşer
       // ve tuval genişliği yukarı kırparken görseller birbirine binerdi.
       maxPerRow: perRow.clamp(1, chosen.length).clamp(1, 6),

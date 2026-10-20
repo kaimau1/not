@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -8,6 +9,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/link_text.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 
 /// Okunan kod bir adresse kullanıcının seçtiği eylem.
 enum _QrAction { open, save, cancel }
@@ -101,7 +103,7 @@ class _QrScanScreenState extends State<QrScanScreen>
       if (!opened) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.linkOpenFailed)));
+        ).showMessage(context.l10n.linkOpenFailed);
         return;
       }
       // Link açıldı: not oluşturulmaz, tarayıcı kapanır.
@@ -196,15 +198,15 @@ class _QrScanScreenState extends State<QrScanScreen>
       if (code == null) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(context.l10n.qrNotFound)));
+          ..showMessage(context.l10n.qrNotFound);
       } else {
-        _finish(code);
+        unawaited(_finish(code));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.qrScanFailed('$e'))));
+        ).showMessage(context.l10n.qrScanFailed('$e'));
       }
     } finally {
       if (mounted) setState(() => _analyzing = false);

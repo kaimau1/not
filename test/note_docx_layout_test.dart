@@ -73,7 +73,7 @@ void main() {
       title: '',
       content: 'bir\niki',
       images: [
-        image(mimeType: 'image/png'),
+        image(),
         image(line: 0, mimeType: 'image/jpeg'),
       ],
     );

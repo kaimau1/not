@@ -81,9 +81,9 @@ void main() {
     // noktaya biniyordu. Yatık (geniş) görsellerde ikinci görselin yığındaki
     // yeri de topLimit'in üstünde kalıyordu.
     await pumpCanvas(tester, [
-      image('a', w: 200, h: 100),
-      image('b', w: 200, h: 100),
-      image('c', w: 200, h: 100),
+      image('a', w: 200),
+      image('b', w: 200),
+      image('c', w: 200),
     ], topLimit: 160);
     final boxes = [
       boxOf(tester, 'a'),

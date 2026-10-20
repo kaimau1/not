@@ -10,6 +10,7 @@ import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/attachment_tag.dart';
 import '../../../core/utils/local_file.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../data/attachment_repository.dart';
 import '../data/note_docx.dart';
 import '../data/note_pdf.dart';
@@ -269,9 +270,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
   void _showError(Object e) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(context.l10n.aiError(e.toString()))),
-      );
+      ..showMessage(context.l10n.aiError(e.toString()));
   }
 
   /// PDF byte'larını üretir. Diske/blob'a yazmayı çağıran taraf yapar —
@@ -476,7 +475,6 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
                     child: Slider(
                       value: option.widthFraction,
                       min: 0.15,
-                      max: 1,
                       onChanged: (v) =>
                           setState(() => option.widthFraction = v),
                     ),

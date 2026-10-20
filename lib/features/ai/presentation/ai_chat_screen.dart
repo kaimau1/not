@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/domain/attachment.dart';
 import '../../notes/domain/note.dart';
@@ -317,7 +318,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           : l10n.aiError('$e');
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ).showMessage(message);
     }
   }
 
@@ -340,7 +341,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     await ref
         .read(aiReportServiceProvider)
         .report(content: turn.text, source: 'chat:${_scope.name}');
-    messenger.showSnackBar(SnackBar(content: Text(thanks)));
+    messenger.showMessage(thanks);
   }
 
   void _addIdea(String text) {
@@ -348,7 +349,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     setState(() => _added.add(text));
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(context.l10n.brainstormAdded)));
+    ).showMessage(context.l10n.brainstormAdded);
   }
 
   String _hint(AppLocalizations l10n) => switch ((_scope, _mode)) {

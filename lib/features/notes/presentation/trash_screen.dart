@@ -101,7 +101,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
     } finally {
       if (mounted) setState(() => _emptying = false);
     }
-    messenger.showSnackBar(SnackBar(content: Text(l10n.trashEmptied)));
+    messenger.showMessage(l10n.trashEmptied);
   }
 
   /// Görünen notların TAMAMINI geri yükler. Çöpe toplu düşen bir seçimi

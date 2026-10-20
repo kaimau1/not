@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/debouncer.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../settings/data/permissions_service.dart';
 import '../data/place_reminders.dart';
 import '../domain/note.dart';
@@ -50,7 +51,7 @@ class _PlaceSheet extends ConsumerStatefulWidget {
 
 class _PlaceSheetState extends ConsumerState<_PlaceSheet> {
   final _query = TextEditingController();
-  final _debounce = Debouncer(delay: const Duration(milliseconds: 500));
+  final _debounce = Debouncer();
   List<({String name, double lat, double lng})> _results = const [];
   bool _searching = false;
   bool _busy = false;
@@ -71,7 +72,7 @@ class _PlaceSheetState extends ConsumerState<_PlaceSheet> {
   void _snack(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showMessage(message);
   }
 
   /// Ön plan konum izni (konum okumak ve adres araması için yeter).

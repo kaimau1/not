@@ -179,7 +179,9 @@ class AndroidDriveAuth implements DriveAuth {
       await GoogleSignInPlatform.instance.clearAuthorizationToken(
         ClearAuthorizationTokenParams(accessToken: token),
       );
-    } catch (_) {}
+    } catch (_) {
+      // Jeton zaten geçersiz olabilir; yeniden alınır.
+    }
   }
 
   @override
@@ -424,7 +426,9 @@ class DriveStore {
     } catch (_) {
       try {
         await temp.delete();
-      } catch (_) {}
+      } catch (_) {
+        // Yarım geçici dosya; açılıştaki temizlik toplar.
+      }
       rethrow;
     }
     await temp.rename(target.path);

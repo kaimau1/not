@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/note_shares_repository.dart';
 import '../../domain/note_heavy.dart' show kPresenceCollection;
 
@@ -87,9 +88,8 @@ class _NotePresenceIndicatorState extends ConsumerState<NotePresenceIndicator> {
       setState(() => _others = others);
       if (others.isNotEmpty && _announced != others.first) {
         _announced = others.first;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(_label(context, others.first))));
+        ScaffoldMessenger.of(context)
+            .showMessage(_label(context, others.first));
       }
     }, onError: (Object _) {});
   }

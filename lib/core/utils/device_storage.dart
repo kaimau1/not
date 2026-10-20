@@ -98,10 +98,14 @@ Future<int> directorySize(Directory dir) async {
       if (entity is File) {
         try {
           total += await entity.length();
-        } catch (_) {}
+        } catch (_) {
+          // Okunamayan dosya sayılmaz.
+        }
       }
     }
-  } catch (_) {}
+  } catch (_) {
+    // Klasör okunamazsa o ana kadarki toplam.
+  }
   return total;
 }
 
@@ -153,7 +157,9 @@ Future<int> clearDeviceCaches() async {
     freed += await _emptyDirectory(temp);
     final support = await getApplicationSupportDirectory();
     freed += await _emptyDirectory(Directory(p.join(support.path, 'ai_cache')));
-  } catch (_) {}
+  } catch (_) {
+    // Klasör yoksa boşaltılacak bir şey yok.
+  }
   return freed;
 }
 

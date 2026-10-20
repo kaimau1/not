@@ -71,7 +71,6 @@ class _ImageTools extends StatelessWidget {
           child: Slider(
             value: wFrac,
             min: minWidthFrac,
-            max: 1,
             onChanged: onWidthChanged,
             onChangeEnd: onWidthEnd,
           ),

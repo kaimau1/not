@@ -44,7 +44,7 @@ void main() {
     final c = buildNoteTemplate(
       NoteTemplate.weekly,
       l10n,
-      now: DateTime(2026, 10, 1), // çarşamba → hafta 28 Eylül'de başlar
+      now: DateTime(2026, 10), // çarşamba → hafta 28 Eylül'de başlar
     );
     expect(c.type, NoteType.text);
     final plain = stripRichMarkers(c.body);

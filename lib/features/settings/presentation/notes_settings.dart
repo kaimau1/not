@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/device_storage.dart';
 import '../../../core/utils/format_bytes.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../folders/data/folder_order.dart';
 import '../../folders/presentation/folder_sheets.dart';
 import '../../notes/presentation/capture_mode_sheet.dart';
@@ -259,9 +260,7 @@ class _DeviceStorageSectionState extends State<DeviceStorageSection> {
     });
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(l10n.deviceStorageCleared(formatBytes(freed)))),
-      );
+      ..showMessage(l10n.deviceStorageCleared(formatBytes(freed)));
   }
 
   @override

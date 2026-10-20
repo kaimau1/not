@@ -92,7 +92,7 @@ class NoteFindBar extends StatelessWidget {
                             ),
                           )
                         : null,
-                    suffixIconConstraints: const BoxConstraints(minHeight: 0),
+                    suffixIconConstraints: const BoxConstraints(),
                   ),
                 ),
               ),
@@ -157,7 +157,6 @@ Future<int?> showFindHitsSheet(
     showDragHandle: true,
     builder: (sheetContext) => DraggableScrollableSheet(
       expand: false,
-      initialChildSize: 0.5,
       minChildSize: 0.3,
       maxChildSize: 0.92,
       builder: (context, scroll) {

@@ -3662,12 +3662,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _titleController.text = title;
       _mutate((n) => n.copyWith(title: title), immediate: true);
     } on GeminiException catch (e) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
-          ),
-        ),
+      messenger.showMessage(
+        e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
       );
     } finally {
       if (mounted) _titleGeneratingN.value = false;
@@ -3689,12 +3685,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         suggestions = await ref.read(geminiServiceProvider).suggestTags(note);
       } on GeminiException catch (e) {
         failed = true;
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
-            ),
-          ),
+        messenger.showMessage(
+          e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
         );
       }
     });
@@ -3984,14 +3976,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           immediate: true,
         );
       case 'settings':
-        if (mounted) context.push('/settings');
+        if (mounted) unawaited(context.push('/settings'));
       case 'customize':
         // Düzenleme modu: alt/üst çubuktaki öğelere dokunarak gizle/göster,
         // üstteki şeritten Kaydet (bkz. Personalize).
         FocusManager.instance.primaryFocus?.unfocus();
         Personalize.startEditing();
       case 'calculator':
-        _openCalculator();
+        unawaited(_openCalculator());
       case 'sendToFriend':
         _flushPending(_titleController);
         _flushPending(_bodyController);
@@ -4625,7 +4617,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       fields['body'] = '';
     }
     repo.updateFields(id, fields);
-    if (mounted) context.pushNote(noteRoutePath(id));
+    if (mounted) unawaited(context.pushNote(noteRoutePath(id)));
   }
 
   /// AI çıktısını (OCR/döküm) notun gövdesine ya da liste öğelerine ekler.
@@ -4821,7 +4813,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     try {
       final clip = await Clipboard.getData(Clipboard.kTextPlain);
       initial = firstYouTubeUrl(clip?.text ?? '') ?? '';
-    } catch (_) {}
+    } catch (_) {
+      // Pano okunamazsa alan boş açılır.
+    }
     if (!mounted) return null;
     final url = await showDialog<String>(
       context: context,
@@ -5217,7 +5211,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (!next.offPage) next = next.placedOnPage(false);
         if (!identical(next, latest)) {
           _updateAttachment(next);
-          HapticFeedback.selectionClick();
+          unawaited(HapticFeedback.selectionClick());
         }
         // Şerit kapalıysa açılır: ek nereye gitti diye aranmasın.
         if (!ref.read(attachmentsExpandedProvider)) {
@@ -5818,7 +5812,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       body: text.trim(),
       folderId: _note?.folderId,
     );
-    if (mounted) context.pushNote(noteRoutePath(id));
+    if (mounted) unawaited(context.pushNote(noteRoutePath(id)));
   }
 
   /// **SES DOSYASI EKLE** — cihazdaki MP3/M4A/WAV... nota ses eki olur
@@ -5982,8 +5976,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         title: l10n.videoToNote,
         text: text,
         onInsert: _appendText,
-        onCreateNote: (t, {NoteType? asType}) =>
-            _createNoteFromText(t, asType: asType),
+        onCreateNote: _createNoteFromText,
       );
     });
   }
@@ -6199,7 +6192,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           child: Slider(
                             value: current.backgroundOpacity.clamp(0.05, 1),
                             min: 0.05,
-                            max: 1,
                             onChanged: (value) {
                               _mutate(
                                 (n) => n.copyWith(backgroundOpacity: value),
@@ -7031,7 +7023,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Son sözler beklemede kalmasın: yazım sırasında kayıt gecikmeliydi
     // (yukarıya bak), dikte biterken bir kez kesinleştirilir. `_saveNow`
     // denetleyici ile not arasındaki farkı yazan hazır yol.
-    _saveNow();
+    unawaited(_saveNow());
     if (mounted) setState(() {});
   }
 
@@ -7248,7 +7240,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showMessage(message);
   }
 
   // ---- Arayüz ---------------------------------------------------------
@@ -7661,6 +7653,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // TEK SATIR (kullanıcı isteği 2026-08-08: "başlık tek satırdan
         // taşmasın"): uzun başlık alanın içinde yatay kayar, sayfa düzenini
         // aşağı itmez.
+        // ignore: avoid_redundant_argument_values
         maxLines: 1,
         textInputAction: TextInputAction.next,
         // Varsayılan `next` odak sırasındaki bir SONRAKİ öğeye gider — metin
@@ -7919,7 +7912,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 itemCount: metaChildren.length,
                 separatorBuilder: (_, _) => const SizedBox(width: 6),
                 itemBuilder: (context, i) =>
-                    Align(alignment: Alignment.center, child: metaChildren[i]),
+                    Align(child: metaChildren[i]),
               ),
             ),
           );
@@ -7944,7 +7937,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ? null
         : _viewSwitchFor(note, bubbleDocument, dense: true);
     final titleRow = Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(child: titleField),
         if (bubbleSwitch != null)
@@ -8074,8 +8066,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // Bağlantıya uzun basınca seçim menüsüne "Bağlantıyı aç" eklenir.
           // Düzenlenebilir bir alanda span'e tıklama Flutter'da çalışmaz (dokunuş
           // imleci taşımak için EditableText'e gider), bu yüzden yol seçim menüsü.
-          contextMenuBuilder: (menuContext, editableState) =>
-              _bodyContextMenu(menuContext, editableState),
+          contextMenuBuilder: _bodyContextMenu,
           contentInsertionConfiguration: _keyboardImagePaste,
           decoration: InputDecoration(
             // Görsel ipucunun üstüne gelebiliyorsa ipucu tuvale devredilir.

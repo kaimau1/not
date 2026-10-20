@@ -40,7 +40,7 @@ InkStroke _stroke(
 
 /// Beyaz olmayan piksel sayısı. Sıfırsa çizim "boş kutu" demektir.
 Future<int> _nonWhitePixels(ui.Image image) async {
-  final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+  final data = await image.toByteData();
   final bytes = data!.buffer.asUint8List(
     data.offsetInBytes,
     data.lengthInBytes,
@@ -86,7 +86,7 @@ void main() {
     );
 
     final image = await _render([highlighted], size);
-    final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    final data = await image.toByteData();
     final bytes = data!.buffer.asUint8List(
       data.offsetInBytes,
       data.lengthInBytes,

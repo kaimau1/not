@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/presentation/editor/attach_sheet.dart'
     show attachSheetCatalog;
 import '../../notes/presentation/editor/video_transport.dart' show SeekIcon;
@@ -103,7 +104,7 @@ class PersonalizeScreen extends StatelessWidget {
     Personalize.reset();
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(l10n.personalizeResetDone)));
+      ..showMessage(l10n.personalizeResetDone);
   }
 }
 

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../l10n_ext.dart';
 import '../personalize.dart';
+import 'undo_snackbar.dart';
 
 /// Kişiselleştirilebilir bir alan/düğme (bkz. `Personalize`).
 ///
@@ -236,7 +237,7 @@ class _CustomizeStrip extends StatelessWidget {
                 Personalize.save();
                 ScaffoldMessenger.maybeOf(context)
                   ?..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text(l10n.customizeSaved)));
+                  ..showMessage(l10n.customizeSaved);
               },
               child: Text(l10n.customizeSave),
             ),

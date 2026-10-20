@@ -270,7 +270,7 @@ void main() {
     });
 
     test('en küçük genişliğin altına inmez', () {
-      expect(equalWidthFrac(const [0.01, 0.01], minFrac: 0.15), 0.15);
+      expect(equalWidthFrac(const [0.01, 0.01]), 0.15);
     });
 
     test('boş listede varsayılana döner', () {
@@ -285,7 +285,6 @@ void main() {
         columnWidth: 300,
         top: 0,
         maxPerRow: 6,
-        minWidthFrac: 0.15,
       );
       for (final f in fits) {
         expect(f.widthFrac, greaterThanOrEqualTo(0.15));

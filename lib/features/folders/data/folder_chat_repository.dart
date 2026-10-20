@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/error_log.dart';
 import '../../auth/presentation/auth_providers.dart';
 
 /// **PAYLAŞILAN KLASÖRÜN SOHBETİ** — kullanıcı isteği 2026-08-18: "birde
@@ -195,7 +196,9 @@ class FolderChatRepository {
     if (path.isEmpty) return;
     try {
       await _storage.ref(path).delete();
-    } catch (_) {}
+    } catch (e) {
+      ErrorLog.record('folder-chat-file-delete', e);
+    }
   }
 }
 

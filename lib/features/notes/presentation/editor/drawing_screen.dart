@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../viewers/ink_layer.dart';
 import 'note_images.dart';
 
@@ -154,9 +155,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(content: Text(context.l10n.attachmentFailed('$e'))),
-        );
+        ..showMessage(context.l10n.attachmentFailed('$e'));
     }
   }
 

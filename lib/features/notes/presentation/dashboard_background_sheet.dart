@@ -188,7 +188,6 @@ class _DashboardBackgroundSheet extends ConsumerWidget {
                     child: Slider(
                       value: background.opacity.clamp(0.05, 1),
                       min: 0.05,
-                      max: 1,
                       onChanged: (value) => ref
                           .read(dashboardBackgroundProvider.notifier)
                           .setOpacity(value),

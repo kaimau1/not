@@ -317,7 +317,6 @@ class _SearchField extends ConsumerWidget {
           // kişiselleştirmede gizlenebilir.
           const Customizable(
             id: UiItem.homeFilter,
-            hidden: SizedBox.shrink(),
             child: Padding(
               padding: EdgeInsetsDirectional.only(start: 2),
               child: HomeFilterButton(),
@@ -994,9 +993,7 @@ class _PendingUploadsBar extends ConsumerWidget {
                       ? () => connectDrive(context, ref)
                       : () => ScaffoldMessenger.of(context)
                           ..hideCurrentSnackBar()
-                          ..showSnackBar(
-                            SnackBar(content: Text(l10n.pendingUploadsInfo)),
-                          ),
+                          ..showMessage(l10n.pendingUploadsInfo),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,

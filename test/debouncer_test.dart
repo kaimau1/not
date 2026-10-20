@@ -10,8 +10,7 @@ import 'package:notlar/core/utils/debouncer.dart';
 void main() {
   testWidgets('aralıksız yazımda maxWait dolunca kayıt yapılır', (tester) async {
     final debouncer = Debouncer(
-      delay: const Duration(milliseconds: 500),
-      maxWait: const Duration(seconds: 3),
+      
     );
     var saves = 0;
     // 5 saniye boyunca her 100 ms'de bir "tuş vuruşu": delay hiç dolmaz.
@@ -27,8 +26,7 @@ void main() {
     tester,
   ) async {
     final debouncer = Debouncer(
-      delay: const Duration(milliseconds: 500),
-      maxWait: const Duration(seconds: 3),
+      
     );
     var saves = 0;
     for (var i = 0; i < 40; i++) {

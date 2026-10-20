@@ -151,7 +151,7 @@ class _FolderTileBody extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
                   children: [
-                    FolderIconBox(accent: accent, icon: icon, size: 40),
+                    FolderIconBox(accent: accent, icon: icon),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(

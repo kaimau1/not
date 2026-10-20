@@ -7,6 +7,7 @@ import 'package:pdfrx/pdfrx.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/pdf/pdf_page_ocr.dart';
 import '../../data/pdf_text.dart';
 import '../../domain/attachment.dart';
@@ -357,9 +358,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     final messenger = ScaffoldMessenger.of(context);
     final path = widget.attachment.localPath;
     if (path.isEmpty || !localFileExists(path)) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.attachmentNotSynced)),
-      );
+      messenger.showMessage(l10n.attachmentNotSynced);
       return;
     }
     setState(() => _busy = true);
@@ -367,16 +366,12 @@ class _PdfPageBoxState extends State<PdfPageBox> {
       final text = await PdfText.pageText(path, _page);
       if (!mounted) return;
       if (text.isEmpty) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l10n.pdfSelectOcrNone)),
-        );
+        messenger.showMessage(l10n.pdfSelectOcrNone);
         return;
       }
       await Clipboard.setData(ClipboardData(text: text));
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.pdfSelectCopied(text.length))),
-      );
+      messenger.showMessage(l10n.pdfSelectCopied(text.length));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -409,7 +404,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     if (png == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.areaCaptureFailed)));
+      ).showMessage(context.l10n.areaCaptureFailed);
       return;
     }
     await showAreaActions(context, png);

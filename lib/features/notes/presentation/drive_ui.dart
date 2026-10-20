@@ -6,6 +6,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/local_file.dart';
 import '../../../core/utils/web_blob.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../data/attachment_repository.dart';
 import '../data/drive_store.dart';
 import '../domain/attachment.dart';
@@ -18,7 +19,7 @@ Future<bool> connectDrive(BuildContext context, WidgetRef ref) async {
   final messenger = ScaffoldMessenger.of(context);
   void say(String text) => messenger
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(text)));
+    ..showMessage(text);
   final auth = ref.read(driveAuthProvider);
   try {
     if (!await auth.connect()) {
@@ -59,7 +60,7 @@ Future<void> disconnectDrive(BuildContext context, WidgetRef ref) async {
   ref.read(driveConnectedProvider.notifier).set(false);
   messenger
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(l10n.driveDisconnected)));
+    ..showMessage(l10n.driveDisconnected);
 }
 
 /// Ek Drive'da ama BU cihazda yerel kopyası yoksa ŞİMDİ indirir (kullanıcı
@@ -78,18 +79,18 @@ Future<bool> fetchAttachmentNow(
   if (repo?.drive == null) {
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(l10n.driveNeededForFile)));
+      ..showMessage(l10n.driveNeededForFile);
     return false;
   }
   messenger
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(l10n.driveDownloading)));
+    ..showMessage(l10n.driveDownloading);
   try {
     await repo!.fetchFromDrive(attachment);
   } catch (e) {
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(l10n.attachmentFailed('$e'))));
+      ..showMessage(l10n.attachmentFailed('$e'));
     return false;
   }
   messenger.hideCurrentSnackBar();
@@ -116,7 +117,7 @@ Future<Attachment?> resolveWebDriveAttachment(
   final messenger = ScaffoldMessenger.of(context);
   void say(String text) => messenger
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(text)));
+    ..showMessage(text);
   final store = ref.read(driveStoreProvider);
   if (store == null) {
     say(l10n.driveNeededForFile);

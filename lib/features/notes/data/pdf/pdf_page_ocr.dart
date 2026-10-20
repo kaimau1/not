@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfrx/pdfrx.dart';
 
+import '../../../../core/error_log.dart';
 import '../scan/scan_ocr.dart';
 import 'ocr_page_text.dart';
 import 'pdf_page_render.dart';
@@ -49,7 +50,7 @@ class PdfPageOcr {
   /// [page] için OCR metni. Aynı sayfa için eşzamanlı ikinci çağrı ilk işi
   /// bekler; sonuç (boş olsa da) önbelleğe girer.
   static Future<OcrPageText?> forPage(PdfPage page) {
-    if (!isSupported) return Future.value(null);
+    if (!isSupported) return Future.value();
     final key = _key(page);
     if (_cache.containsKey(key)) {
       // LRU tazele: sonda duran en taze olandır.
@@ -95,7 +96,9 @@ class PdfPageOcr {
             } finally {
               try {
                 File(rendered.path).deleteSync();
-              } catch (_) {}
+              } catch (_) {
+                // Geçici PNG; açılıştaki temizlik toplar.
+              }
             }
           }
         }
@@ -162,7 +165,9 @@ class PdfPageOcr {
         final stat = file.statSync();
         stamp = '${stat.size}_${stat.modified.millisecondsSinceEpoch}';
       }
-    } catch (_) {}
+    } catch (_) {
+      // Damgasız önbellek anahtarı yine çalışır.
+    }
     return File(
       '${dir.path}/${diskName(source: source, stamp: stamp, pageNumber: page.pageNumber, width: page.width, height: page.height)}',
     );
@@ -200,7 +205,9 @@ class PdfPageOcr {
       await file.writeAsString(
         jsonEncode({'scale': scale, 'lines': encodeWordLines(lines)}),
       );
-    } catch (_) {}
+    } catch (e) {
+      ErrorLog.record('pdf-ocr-cache-write', e);
+    }
   }
 
   /// Sözcük satırlarının JSON'u: `[[["metin", sol, üst, sağ, alt], …], …]`.

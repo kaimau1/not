@@ -205,7 +205,7 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
   void _announce(String message) {
     ScaffoldMessenger.maybeOf(context)
       ?..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showMessage(message);
   }
 
   // ── 1. adım: galeri ───────────────────────────────────────────────────
@@ -582,7 +582,7 @@ Future<void> saveNoteAsTemplate(
       );
   messenger
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(l10n.templateSaved(name))));
+    ..showMessage(l10n.templateSaved(name));
 }
 
 /// Şablon adı sorusu (kaydetme ve yeniden adlandırma). İptalde null.

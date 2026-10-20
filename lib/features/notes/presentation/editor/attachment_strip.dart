@@ -11,6 +11,7 @@ import 'package:just_audio/just_audio.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/widgets/pop_in.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../settings/settings_providers.dart';
 import '../../data/attachment_save.dart';
 import '../../data/upload_queue.dart';
@@ -317,9 +318,7 @@ class _AudioTileState extends State<_AudioTile> {
           await player.setUrl(a.downloadUrl);
         } else {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(context.l10n.attachmentNotSynced)),
-            );
+            showAppMessage(context, context.l10n.attachmentNotSynced);
           }
           return;
         }
@@ -337,9 +336,7 @@ class _AudioTileState extends State<_AudioTile> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.genericError(e.toString()))),
-        );
+        showAppMessage(context, context.l10n.genericError(e.toString()));
       }
     }
   }
@@ -462,9 +459,7 @@ class _AttachmentTile extends ConsumerWidget {
     // Paylaşılan notta henüz buluta çıkmamış ek: ekleyenin cihazı yükleyecek.
     if (foreign && !_hasLocal && !attachment.isUploaded &&
         !attachment.isWebVideo) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.attachmentWaitingOwner)),
-      );
+      showAppMessage(context, context.l10n.attachmentWaitingOwner);
       return;
     }
     // Drive'daki ek bu cihaza inmediyse önce indirilir (bkz. drive_ui.dart).
@@ -483,7 +478,7 @@ class _AttachmentTile extends ConsumerWidget {
     if (!_hasLocal && !attachment.isUploaded && !attachment.isWebVideo) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.attachmentNotSynced)));
+      ).showMessage(context.l10n.attachmentNotSynced);
       return;
     }
     Navigator.of(context).push(
@@ -688,11 +683,7 @@ class _AttachmentTile extends ConsumerWidget {
                           ref.read(uploadQueueProvider).retryNow(attachment.id);
                           ScaffoldMessenger.of(context)
                             ..hideCurrentSnackBar()
-                            ..showSnackBar(
-                              SnackBar(
-                                content: Text(context.l10n.attachmentUploading),
-                              ),
-                            );
+                            ..showMessage(context.l10n.attachmentUploading);
                         }
                       : null,
                   child: Padding(

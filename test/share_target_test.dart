@@ -59,8 +59,8 @@ void main() {
   });
 
   group('hedef not listesi', () {
-    final old = note('a', title: 'Eski', updatedAt: DateTime(2026, 1, 1));
-    final fresh = note('b', title: 'Kasko', updatedAt: DateTime(2026, 9, 1));
+    final old = note('a', title: 'Eski', updatedAt: DateTime(2026));
+    final fresh = note('b', title: 'Kasko', updatedAt: DateTime(2026, 9));
     final pdf = note('c', type: NoteType.pdf, title: 'Poliçe');
     final locked = note('d', title: 'Gizli', locked: true);
     final archived = note('e', title: 'Arşiv', archivedAt: DateTime(2026));

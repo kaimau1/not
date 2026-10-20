@@ -286,7 +286,7 @@ final deepLinkHandlerProvider = Provider<void>((ref) {
         final id = await repo.createNote(
           NoteType.fromId(uri.queryParameters['type']),
         );
-        router.pushNote(noteRoutePath(id));
+        unawaited(router.pushNote(noteRoutePath(id)));
       });
     }
   }

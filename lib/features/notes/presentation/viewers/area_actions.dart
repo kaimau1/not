@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pasteboard/pasteboard.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../../../core/widgets/app_sheet.dart';
 
@@ -40,9 +41,7 @@ class _AreaActionsSheet extends StatelessWidget {
     navigator.pop();
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(ok ? l10n.areaCopied : l10n.areaCaptureFailed)),
-      );
+      ..showMessage(ok ? l10n.areaCopied : l10n.areaCaptureFailed);
   }
 
   @override
@@ -210,6 +209,6 @@ class _AreaAskScreenState extends ConsumerState<AreaAskScreen> {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(context.l10n.copied)));
+      ..showMessage(context.l10n.copied);
   }
 }

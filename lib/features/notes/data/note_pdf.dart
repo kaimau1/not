@@ -270,7 +270,7 @@ class _PdfWriter {
     if (title.isNotEmpty || r.dateLabel != null) {
       _y += 12;
       _page.graphics.drawLine(
-        PdfPen(PdfColor(189, 189, 189), width: 1),
+        PdfPen(PdfColor(189, 189, 189)),
         Offset(_left, _y),
         Offset(_pageWidth - _right, _y),
       );

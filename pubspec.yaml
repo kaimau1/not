@@ -4,18 +4,9 @@ description: "Firebase senkronlu, yapay zeka destekli not uygulaması (Android +
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-# The following defines the version and build number for your application.
-# A version number is three numbers separated by dots, like 1.2.43
-# followed by an optional build number separated by a +.
-# Both the version and the builder number may be overridden in flutter
-# build by specifying --build-name and --build-number, respectively.
-# In Android, build-name is used as versionName while build-number used as versionCode.
-# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
-# Read more about iOS versioning at
-# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-# In Windows, build-name is used as the major, minor, and patch parts
-# of the product and file versions while build-number is used as the build suffix.
+# Sürüm: ANA.ARA burada (1.1); CI `--build-name=1.1.<koşu>` ve
+# `--build-number=<koşu>` geçer (Android versionName/versionCode). Yerel
+# APK'da `--build-number` ZORUNLU (bkz. CLAUDE.md).
 version: 1.1.0+1
 
 environment:
@@ -85,11 +76,9 @@ dependencies:
   uuid: ^4.6.0
   intl: ^0.20.2
   shared_preferences: ^2.5.5
-  # Uygulamanın kendi sürümünü OKUR (Ayarlar → Hakkında). Sürüm numarası
-  # `pubspec.yaml`da sabit `1.0.0+1`; gerçek numarayı CI `--build-number` ile
-  # geçiyor, yani derleme dışından bilinemiyor. Kullanıcı "hangi sürümdeyim"
-  # sorusuna hiçbir yerde cevap bulamıyordu — güncelleme akışı "yeni APK'yı
-  # üstüne kur" olduğu için bu bilgi hata bildirmenin de ön koşulu.
+  # Uygulamanın kendi sürümünü OKUR (Ayarlar → Hakkında). pubspec sabit
+  # `1.1.0+1`; gerçek sürümü (`1.1.N`) CI derlemede verir, kod başka yoldan
+  # bilemez — hata bildirmenin de ön koşulu.
   package_info_plus: ^10.2.1
   path_provider: ^2.1.6
   web: ^1.1.0
@@ -108,11 +97,8 @@ dependencies:
   flutter_tts: ^4.2.5
   archive: ^4.0.9
   xml: ^7.0.1
-  # PDF'e YAZMA (sayfa sil/döndür/sırala, çizimi belgeye gömme). Görüntüleme
-  # pdfrx/pdfium'da KALIR — pdfrx salt-render, `pdf` paketi ise VAR OLAN bir
-  # belgeyi açamıyor (yalnız sıfırdan üretiyor). Var olan PDF'i düzenlemenin
-  # tek yolu bu; "dosya okuyucu" uygulamasında da 2026-07-23'ten beri aynı
-  # ayrım var ve port oradan geldi.
+  # PDF YAZMANIN TEK yolu (düzenleme, nottan PDF, tarama PDF'i — `pdf`
+  # paketi 2026-10-19'da kalktı, F3.10). Görüntüleme pdfrx/pdfium'da.
   #
   # LİSANS: Syncfusion Community (birey/küçük ekip ücretsiz). PDF
   # kütüphanesi çalışma anında banner GÖSTERMEZ (o, SfPdfViewer gibi UI
@@ -124,6 +110,8 @@ dependencies:
   # taşınamaz. İkisi BİRLİKTE yükseltilir: `pdf`in kısıtı core'u ayrı bir
   # seriye çekerse çözümleme sessizce ayrışır.
   syncfusion_flutter_pdf: ^33.2.13
+  # Kodda içe aktarılmıyor: yalnız SÜRÜM KİLİDİ (core'u pdf ile aynı seride
+  # tutar, yukarıdaki tuzak).
   syncfusion_flutter_core: ^33.2.13
   # Çökme raporları (F1.9, 2026-10-19) — yalnız Android; web için
   # eklenti yok, orada yalnız cihazdaki hata günlüğü (core/error_log.dart).
@@ -167,13 +155,13 @@ flutter:
     - PRIVACY_POLICY.md
     # Uygulama içi KULLANIM KILAVUZU (dil başına; bkz. guide_screen.dart).
     - assets/guide/
-    # Notu PDF'e aktarırken gömülen font. `pdf` paketinin hazır Helvetica'sı
-    # WinAnsi kodlamalı, ı ğ ş İ harflerini İÇERMİYOR — Türkçe not bozuk
-    # çıkıyordu. PT Sans (OFL) Türkçe'nin tamamını taşıyor.
+    # Notu PDF'e aktarırken gömülen font. PDF'in hazır Helvetica'sı WinAnsi
+    # kodlamalı, ı ğ ş İ harflerini İÇERMİYOR — Türkçe not bozuk çıkıyordu.
+    # PT Sans (OFL) Türkçe'nin tamamını taşıyor.
     - assets/fonts/PTSans-Regular.ttf
     # KALIN ve İTALİK kesimler (aynı aile, OFL). Dışa aktarmada notun satır içi
     # biçimi de taşınsın diye eklendi (kullanıcı bulgusu 2026-08-08: "yazı
-    # biçimi de aktarılmıyor"): `pdf` paketi kalın/italik'i SENTEZLEMEZ, o
+    # biçimi de aktarılmıyor"): PDF yazıcısı kalın/italik'i SENTEZLEMEZ, o
     # kesimin kendi dosyası verilmezse metin düz çıkar.
     - assets/fonts/PTSans-Bold.ttf
     - assets/fonts/PTSans-Italic.ttf

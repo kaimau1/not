@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/markdown.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import 'speak_button.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/data/doc_text.dart';
@@ -490,7 +491,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     if (path == null) {
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(notSynced)));
+        ..showMessage(notSynced);
       return;
     }
     navigator.pop();
@@ -611,7 +612,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       if (context.mounted) {
                         ScaffoldMessenger.of(
                           context,
-                        ).showSnackBar(SnackBar(content: Text(l10n.copied)));
+                        ).showMessage(l10n.copied);
                       }
                     },
                     onReport: () async {
@@ -619,9 +620,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       await ref
                           .read(aiReportServiceProvider)
                           .report(content: _result!, source: 'ai_sheet');
-                      messenger.showSnackBar(
-                        SnackBar(content: Text(l10n.aiReportThanks)),
-                      );
+                      messenger.showMessage(l10n.aiReportThanks);
                     },
                     // Önce alt sayfayı kapat, SONRA uygula: değerler önceden
                     // yakalanır. Eskiden callback önce, pop sonra çağrılıyordu;

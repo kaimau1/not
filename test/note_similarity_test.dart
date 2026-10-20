@@ -15,7 +15,7 @@ Note note(
   body: body,
   locked: locked,
   archivedAt: archivedAt,
-  createdAt: createdAt ?? DateTime(2026, 1, 1),
+  createdAt: createdAt ?? DateTime(2026),
 );
 
 void main() {
@@ -98,7 +98,7 @@ void main() {
       final groups = duplicateNoteGroups([
         note('a', text),
         note('b', text, locked: true),
-        note('c', text, archivedAt: DateTime(2026, 2, 1)),
+        note('c', text, archivedAt: DateTime(2026, 2)),
       ]);
       expect(groups, isEmpty);
     });
@@ -106,8 +106,8 @@ void main() {
     test('kümenin başında EN ESKİ not durur (korunacak olan)', () {
       const text = 'Ocak ayı bütçe toplantısı notları ve kararlar listesi';
       final groups = duplicateNoteGroups([
-        note('yeni', text, createdAt: DateTime(2026, 5, 1)),
-        note('eski', text, createdAt: DateTime(2026, 1, 1)),
+        note('yeni', text, createdAt: DateTime(2026, 5)),
+        note('eski', text, createdAt: DateTime(2026)),
       ]);
       expect(groups.first.first.id, 'eski');
     });

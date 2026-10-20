@@ -100,7 +100,9 @@ class SharedActivityService {
       if (_initialized) {
         try {
           await _plugin.cancel(id: notificationId('note:$id'));
-        } catch (_) {}
+        } catch (_) {
+          // Bildirim zaten kalkmış olabilir.
+        }
       }
     }
     if (unread.isEmpty) return;
@@ -172,7 +174,9 @@ class SharedActivityService {
       if (_initialized) {
         try {
           await _plugin.cancel(id: notificationId(folderId));
-        } catch (_) {}
+        } catch (_) {
+          // Bildirim zaten kalkmış olabilir.
+        }
       }
       return;
     }
@@ -209,8 +213,6 @@ class SharedActivityService {
             'Paylaşılan klasörler',
             channelDescription:
                 'Paylaşılan klasörlerdeki not ve mesaj hareketleri',
-            importance: Importance.defaultImportance,
-            priority: Priority.defaultPriority,
           ),
         ),
         payload: payload,

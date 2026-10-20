@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:image/image.dart' as img;
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 
 /// **ALAN SEÇİMİ** — sayfanın üzerinde bir dikdörtgen çizip o parçayı görüntü
 /// olarak almak (kullanıcı isteği: "PDF içerisinden formül yazı seç — alan
@@ -98,7 +99,7 @@ class _AreaSelectLayerState extends State<AreaSelectLayer> {
 
   void _snack(String message) => ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message)));
+    ..showMessage(message);
 
   @override
   Widget build(BuildContext context) {

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../data/scan/doc_edges.dart';
 import '../data/scan/perspective.dart';
 
@@ -162,7 +163,7 @@ class _ScanEditScreenState extends State<ScanEditScreen> {
       setState(() => _busy = false);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.genericError('$e'))));
+      ).showMessage(context.l10n.genericError('$e'));
     }
   }
 

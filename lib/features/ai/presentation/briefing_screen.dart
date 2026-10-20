@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/data/notes_repository.dart';
 import '../data/ai_gate.dart';
 import '../data/daily_cache.dart';
@@ -91,7 +92,7 @@ class BriefingScreen extends ConsumerWidget {
       if (!unlimited && generatedToday) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(l10n.aiGeneratedTodayInfo)));
+          ..showMessage(l10n.aiGeneratedTodayInfo);
         return;
       }
       notifier.refresh();

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/calc.dart';
 import '../../../../core/widgets/app_sheet.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 
 /// Not yazarken hızlı hesap için dahili hesap makinesi alt sayfası.
 /// "Nota ekle" ile kapatılırsa eklenecek metni ("12,5×3 = 37,5" ya da
@@ -133,8 +134,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
                       )
                     : null,
                 suffixIconConstraints: const BoxConstraints(
-                  minWidth: 0,
-                  minHeight: 0,
+                  
                 ),
               ),
             ),
@@ -171,9 +171,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context)
                               ..hideCurrentSnackBar()
-                              ..showSnackBar(
-                                SnackBar(content: Text(l10n.copied)),
-                              );
+                              ..showMessage(l10n.copied);
                           }
                         },
                 ),

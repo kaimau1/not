@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/attachment_text_index.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
@@ -546,7 +547,7 @@ Future<void> _manageTag(BuildContext context, WidgetRef ref, String tag) async {
     await repo.renameTag(notes, tag, next.trim());
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(l10n.tagRenamed)));
+      ..showMessage(l10n.tagRenamed);
     return;
   }
 
@@ -578,7 +579,7 @@ Future<void> _manageTag(BuildContext context, WidgetRef ref, String tag) async {
   await repo.deleteTag(notes, tag);
   messenger
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(l10n.tagDeleted)));
+    ..showMessage(l10n.tagDeleted);
 }
 
 /// Süzgeç türünün yerelleştirilmiş etiketi (eski çip barından taşındı).

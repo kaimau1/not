@@ -9,7 +9,7 @@ import '../../notes/domain/note_item.dart';
 import '../../notes/domain/note_type.dart';
 
 final assistantServiceProvider = Provider<AssistantService>(
-  (ref) => AssistantService(ref),
+  AssistantService.new,
 );
 
 /// Asistanın araç çağrılarını (not oluştur/güncelle/sil) gerçek Firestore

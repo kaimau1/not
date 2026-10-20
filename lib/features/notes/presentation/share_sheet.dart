@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/presentation/folder_sheets.dart' show showFolderShareSheet;
@@ -621,7 +622,7 @@ Future<void> runNoteShare(
       : note.displayTitle.trim();
   void snack(String message) => messenger
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message)));
+    ..showMessage(message);
 
   switch (choice) {
     case 'text':

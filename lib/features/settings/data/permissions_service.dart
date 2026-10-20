@@ -6,6 +6,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
 
+import '../../../core/error_log.dart';
+
 final permissionsServiceProvider = Provider<PermissionsService>(
   (ref) => const PermissionsService(),
 );
@@ -102,7 +104,9 @@ class PermissionsService {
     if (!_isAndroid) return;
     try {
       await _channel.invokeMethod<void>('openAppSettings');
-    } catch (_) {}
+    } catch (e) {
+      ErrorLog.record('open-app-settings', e);
+    }
   }
 
   /// Pil optimizasyonu ayarını açar (hatırlatıcılar gecikmesin diye).
@@ -110,6 +114,8 @@ class PermissionsService {
     if (!_isAndroid) return;
     try {
       await _channel.invokeMethod<void>('openBatterySettings');
-    } catch (_) {}
+    } catch (e) {
+      ErrorLog.record('open-battery-settings', e);
+    }
   }
 }

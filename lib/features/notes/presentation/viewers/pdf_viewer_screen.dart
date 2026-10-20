@@ -10,6 +10,7 @@ import 'package:pdfrx/pdfrx.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/frame_loop.dart';
 import '../../../../core/utils/pdf_copy_text.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/pdf/edge_auto_scroll.dart';
 import '../../domain/attachment.dart';
 import '../editor/bubbles_overview.dart';
@@ -177,7 +178,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ).showMessage(message);
   }
 
   /// Toplu balon listesini açar; "balona git" seçilirse o sayfaya gidip balonu
@@ -185,7 +186,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen>
   Future<void> _openBubbles() async {
     final target = await showBubblesOverview(context, _bubbles);
     if (target == null || !mounted) return;
-    if (_pdf.isReady) _pdf.goToPage(pageNumber: target.page);
+    if (_pdf.isReady) unawaited(_pdf.goToPage(pageNumber: target.page));
     _bubbles.openOnly(target.id);
   }
 

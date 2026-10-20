@@ -276,7 +276,6 @@ final RegExp _formatPattern = RegExp(
   // _wordChar (aşağıda) zaten bilinçli olarak unicode — ikisi artık tutarlı.
   r'|(?<![\p{L}\p{N}_])_(?:(\d):)?(.+?)_(?![\p{L}\p{N}_])'
   r'|(?<![\p{L}\p{N}_])~(?:(\d):)?(.+?)~(?![\p{L}\p{N}_])',
-  dotAll: false,
   unicode: true,
 );
 

@@ -1,5 +1,8 @@
 # YOL HARİTASI — dış göz incelemesinden çıkan fazlı iş planı
 
+> **TAMAMLANDI** (Faz 1–4, 2026-10-20). Devamı: `PERFORMANS_TOPARLAMA_PLANI.md`
+> (Faz 5–9). Bu dosya karar kaydı olarak kalır.
+
 Kaynak: 2026-10-19 kapsamlı inceleme (kod değiştirilmeden yapıldı; rapor
 özeti en altta, **Ek A**). Fazlar **ayrı oturumlarda, sırayla** yapılır.
 

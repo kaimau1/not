@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../data/scan/perspective.dart';
 import '../data/scan/scan_enhance.dart';
 import '../data/scan/scan_deskew.dart';
@@ -183,7 +184,7 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
       if (!mounted || silent) return false;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.genericError('$e'))));
+      ).showMessage(context.l10n.genericError('$e'));
       return false;
     }
   }
@@ -224,9 +225,7 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.genericError('$e'))),
-        );
+        showAppMessage(context, context.l10n.genericError('$e'));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -237,7 +236,7 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
     if (_pages.length <= 1) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.scanLastPage)));
+      ).showMessage(context.l10n.scanLastPage);
       return;
     }
     setState(() {
@@ -299,7 +298,7 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
       setState(() => _exporting = null);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
+      ).showMessage(l10n.genericError('$e'));
     }
   }
 

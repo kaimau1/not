@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../friends/data/friends_repository.dart';
 import '../../friends/domain/friend.dart';
@@ -29,9 +30,7 @@ Future<void> showCollaboratorsSheet(
   // Yerel (anonim) hesapta arkadaş kavramı yok — klasör paylaşımıyla aynı
   // açıklama (bkz. openFriendsScreenOrExplain).
   if (ownerId == null && ref.read(isAnonymousProvider)) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(context.l10n.friendsNeedsAccount)));
+    ScaffoldMessenger.of(context).showMessage(context.l10n.friendsNeedsAccount);
     return;
   }
   final result = await showAppSheet<_SheetResult>(
@@ -88,10 +87,10 @@ class _OwnerViewState extends ConsumerState<_OwnerView> {
       if (mounted) Navigator.pop(context);
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l10n.collaboratorsSaved)));
+        ..showMessage(l10n.collaboratorsSaved);
     } catch (e) {
       if (mounted) setState(() => _saving = false);
-      messenger.showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
+      messenger.showMessage(l10n.genericError('$e'));
     }
   }
 
@@ -365,9 +364,7 @@ class _CollaboratorView extends ConsumerWidget {
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.genericError('$e'))),
-                      );
+                      showAppMessage(context, l10n.genericError('$e'));
                     }
                   }
                 },

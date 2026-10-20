@@ -100,7 +100,9 @@ class LocalNotesStore {
       // Bozuk dosya: yedeği bırak, boş başla (sessizce üstüne yazılmasın).
       try {
         _file.copySync('${_file.path}.bozuk');
-      } catch (_) {}
+      } catch (_) {
+        // Yedek alınamazsa da boş başlanır.
+      }
     }
   }
 

@@ -113,7 +113,7 @@ void main() {
     test('gölgeli sayfada yazıyı DOĞRU ayırır', () {
       final page = _shadowedPage();
       final bw = ScanEnhance.adaptiveThreshold(page.gray, page.w, page.h,
-          radius: 6, bias: 10);
+          radius: 6);
       var inkBlack = 0;
       for (final i in page.ink) {
         if (bw[i] == 0) inkBlack++;
@@ -131,7 +131,7 @@ void main() {
     test('düz beyaz alanı lekelemez', () {
       final white = Uint8List.fromList(List.filled(400, 240));
       final bw =
-          ScanEnhance.adaptiveThreshold(white, 20, 20, radius: 3, bias: 10);
+          ScanEnhance.adaptiveThreshold(white, 20, 20, radius: 3);
       expect(bw.every((v) => v == 255), isTrue);
     });
   });

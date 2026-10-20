@@ -64,9 +64,7 @@ class _NoteWriteIssueListenerState extends State<NoteWriteIssueListener> {
       };
       text = l10n.noteTooLarge('${issue.bytes! ~/ 1024} KB', name);
     }
-    messenger.showSnackBar(
-      SnackBar(content: Text(text), duration: const Duration(seconds: 8)),
-    );
+    messenger.showMessage(text, duration: const Duration(seconds: 8));
   }
 
   @override

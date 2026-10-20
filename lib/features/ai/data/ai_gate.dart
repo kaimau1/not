@@ -96,7 +96,7 @@ class AiCost {
   }
 }
 
-final aiGateProvider = Provider<AiGate>((ref) => AiGate(ref));
+final aiGateProvider = Provider<AiGate>(AiGate.new);
 
 /// Dahili AI kapısı: kendi anahtarını girenler bu kapıdan hiç geçmez
 /// (GeminiService anahtar varken REST yolunu kullanır). Anahtarsız

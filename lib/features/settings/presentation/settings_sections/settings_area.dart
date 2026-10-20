@@ -389,7 +389,6 @@ class _ShortcutTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     // Basınca hafifçe çöker (bkz. PressScale).
     return PressScale(
-      scale: 0.97,
       child: Material(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),

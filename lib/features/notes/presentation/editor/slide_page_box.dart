@@ -101,7 +101,7 @@ class _SlidePageBoxState extends ConsumerState<SlidePageBox> {
       });
       _fitAspect(slides);
     } catch (_) {
-      _deckCache.remove(_key);
+      unawaited(_deckCache.remove(_key));
       if (mounted) setState(() => _failed = true);
     }
   }

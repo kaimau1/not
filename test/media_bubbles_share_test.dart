@@ -433,7 +433,6 @@ void main() {
     test('seçenekler saklanır ve geri okunur', () {
       const options = ShareTextOptions(
         title: false,
-        checked: true,
         tags: true,
         links: false,
       );

@@ -7,6 +7,7 @@ import 'package:just_audio/just_audio.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/video_time.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../domain/attachment.dart';
 import 'video_hub_scope.dart';
 
@@ -88,9 +89,7 @@ class _AudioCardBoxState extends State<AudioCardBox> {
         await player.dispose();
         _loading = null;
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.attachmentNotSynced)),
-          );
+          showAppMessage(context, context.l10n.attachmentNotSynced);
         }
         return null;
       }
@@ -109,7 +108,7 @@ class _AudioCardBoxState extends State<AudioCardBox> {
   }
 
   Future<void> _toggle() async {
-    HapticFeedback.selectionClick();
+    unawaited(HapticFeedback.selectionClick());
     final player = await _ensure();
     if (player == null) return;
     final source = _source;
@@ -131,7 +130,7 @@ class _AudioCardBoxState extends State<AudioCardBox> {
     if (!await hub.noteAt(source) && mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.videoTimeUnknown)));
+      ).showMessage(context.l10n.videoTimeUnknown);
     }
   }
 
@@ -371,7 +370,6 @@ class _Progress extends StatelessWidget {
     // Yalnız bu satır konumla tazelenir (kartın geri kalanı değil).
     return StreamBuilder<Duration>(
       stream: p.createPositionStream(
-        minPeriod: const Duration(milliseconds: 200),
         maxPeriod: const Duration(milliseconds: 400),
       ),
       initialData: p.position,

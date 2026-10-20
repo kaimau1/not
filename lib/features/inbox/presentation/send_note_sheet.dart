@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/data/notes_repository.dart';
 
 import '../../../core/l10n_ext.dart';
@@ -26,9 +27,7 @@ Future<void> showSendNoteToFriendSheet(
   // Yerel (anonim) hesapta arkadaş kavramı yok: e-posta olmadan kimse
   // bulunamaz, kural da arkadaşlık kanıtı arar.
   if (ref.read(isAnonymousProvider)) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(context.l10n.friendsNeedsAccount)));
+    ScaffoldMessenger.of(context).showMessage(context.l10n.friendsNeedsAccount);
     return;
   }
   // Bölünmüş notun çizim/balon kısmı da kopyaya girsin (F3.13).
@@ -137,8 +136,8 @@ Future<void> _send(
     await repo.sendNote(note, friend.uid);
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(l10n.sendNoteSent(label))));
+      ..showMessage(l10n.sendNoteSent(label));
   } catch (e) {
-    messenger.showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
+    messenger.showMessage(l10n.genericError('$e'));
   }
 }

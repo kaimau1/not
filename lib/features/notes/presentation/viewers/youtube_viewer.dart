@@ -14,6 +14,7 @@ import '../../../../core/utils/immersive.dart';
 import '../../../../core/utils/pip.dart';
 import '../../../../core/utils/video_time.dart';
 import '../../../../core/utils/youtube.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../domain/attachment.dart';
 import '../editor/video_hub_scope.dart';
 import 'video_viewer.dart' show NoteAtTimeButton;
@@ -119,7 +120,9 @@ class _WebViewTimeSource extends VideoTimeSource {
       if (t is num) _current = t.toDouble();
       if (d is num) _duration = d.toDouble();
       _changes.value++;
-    } catch (_) {}
+    } catch (_) {
+      // Bozuk köprü iletisi: önceki durum kalır.
+    }
   }
 
   void dispose() => _changes.dispose();
@@ -142,7 +145,9 @@ class _WebViewTimeSource extends VideoTimeSource {
   Future<void> _run(String js) async {
     try {
       await controller.runJavaScript(js);
-    } catch (_) {}
+    } catch (_) {
+      // Sayfa henüz yüklenmedi ya da kapandı.
+    }
   }
 
   @override
@@ -187,7 +192,9 @@ class _WebViewTimeSource extends VideoTimeSource {
       await controller.runJavaScript(
         'window.notlarSeek && notlarSeek(${position.inSeconds})',
       );
-    } catch (_) {}
+    } catch (_) {
+      // Sayfa henüz yüklenmedi ya da kapandı.
+    }
   }
 }
 
@@ -369,7 +376,7 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     await Clipboard.setData(ClipboardData(text: _url));
-    messenger.showSnackBar(SnackBar(content: Text(l10n.videoLinkCopied)));
+    messenger.showMessage(l10n.videoLinkCopied);
   }
 
   Future<void> _openExternal() =>
@@ -388,7 +395,7 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
     if (position == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.videoTimeUnknown)));
+      ).showMessage(context.l10n.videoTimeUnknown);
       return;
     }
     Navigator.of(context).pop();
@@ -501,7 +508,7 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
                         IconButton(
                           tooltip: l10n.pictureInPicture,
                           icon: const Icon(Icons.picture_in_picture_alt),
-                          onPressed: () => PictureInPicture.enter(),
+                          onPressed: PictureInPicture.enter,
                         ),
                       IconButton(
                         tooltip: l10n.copyVideoLink,

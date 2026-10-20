@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/scan/recognized_text.dart';
 import '../../data/scan/scan_ocr.dart';
@@ -136,7 +137,7 @@ class _TextRecognizeScreenState extends State<TextRecognizeScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(context.l10n.copied)));
+      ..showMessage(context.l10n.copied);
   }
 
   void _insert() {

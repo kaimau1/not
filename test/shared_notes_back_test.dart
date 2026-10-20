@@ -275,7 +275,7 @@ void main() {
         names: {'ben': 'Ben', 'ayse': 'Ayşe'},
       );
       expect(
-        sharedNoteCaption(l10n, share, note(by: 'ayse')),
+        sharedNoteCaption(l10n, share, note()),
         'Ayşe güncelledi',
       );
       expect(
@@ -360,7 +360,7 @@ void main() {
                 // Eski not DAHA YENİ değişmiş — yine de okunmamış başa gelir.
                 updatedAt: key.noteId == 'eski'
                     ? DateTime(2026, 10, 17)
-                    : DateTime(2026, 10, 1),
+                    : DateTime(2026, 10),
               ),
             ),
           ),

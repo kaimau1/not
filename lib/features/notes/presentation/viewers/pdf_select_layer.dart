@@ -558,7 +558,9 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
     OcrPageText? recognized;
     try {
       recognized = await PdfPageOcr.forPage(widget.page);
-    } catch (_) {}
+    } catch (_) {
+      // Tanınamadı: aşağıda "metin yok" gösterilir.
+    }
     if (!mounted) return;
     final at = _ocrPendingSelect;
     final pointer = _ocrPendingPointer;

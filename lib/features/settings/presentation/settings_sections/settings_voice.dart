@@ -49,7 +49,6 @@ class _SpeechRateSliderState extends ConsumerState<_SpeechRateSlider> {
             child: Slider(
               value: rate,
               min: 0.2,
-              max: 1,
               divisions: 8,
               label: '${(rate * 2).toStringAsFixed(1)}x',
               onChanged: (value) => setState(() => _rate = value),
@@ -102,7 +101,6 @@ class _ForeignSpeechRateSliderState
             child: Slider(
               value: rate,
               min: 0.2,
-              max: 1,
               divisions: 8,
               label: '${(rate * 2).toStringAsFixed(1)}x',
               onChanged: (value) => setState(() => _rate = value),
@@ -336,7 +334,7 @@ class _AiVoicePreviewButtonState extends ConsumerState<_AiVoicePreviewButton> {
     try {
       await ref.read(aiSpeechProvider.notifier).previewVoice(sample);
     } catch (error) {
-      messenger.showSnackBar(SnackBar(content: Text(error.toString())));
+      messenger.showMessage(error.toString());
     } finally {
       if (mounted) setState(() => _busy = false);
     }

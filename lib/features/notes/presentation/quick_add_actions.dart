@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/doc_picker.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../settings/data/permissions_service.dart';
 import '../../settings/settings_providers.dart';
 import '../data/attachment_repository.dart';
@@ -65,7 +66,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showMessage(message);
   }
 
   /// **ŞABLONDAN NOT** (kullanıcı isteği 2026-09-26: "modlar, alışveriş
@@ -212,7 +213,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     if (picked == null || !mounted) return;
     // Kare çıkarmak (uzun videoda birkaç saniye) sessiz beklemesin.
     final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(content: Text(l10n.videoFramesExtracting)));
+    messenger.showMessage(l10n.videoFramesExtracting);
     final frames = await VideoFrame.sample(picked.path);
     if (!mounted) return;
     messenger.hideCurrentSnackBar();
@@ -571,7 +572,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     if (paths.isEmpty) return;
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(content: Text(l10n.imageNotePreparing)));
+    messenger.showMessage(l10n.imageNotePreparing);
     try {
       final bytes = await ScanPdf.build(paths);
       if (!mounted) return;
@@ -584,7 +585,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     } catch (e) {
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
+        ..showMessage(l10n.genericError('$e'));
     }
   }
 
@@ -597,7 +598,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   }) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(content: Text(l10n.imageNotePreparing)));
+    messenger.showMessage(l10n.imageNotePreparing);
     try {
       // ScanPdf yol bekliyor: baytlar geçici dosyaya yazılır ve iş bitince
       // silinir (önbellekte kalıcı kopya bırakma).
@@ -628,7 +629,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     } catch (e) {
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
+        ..showMessage(l10n.genericError('$e'));
     }
   }
 
@@ -698,7 +699,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     if (repo == null || attachments == null) return;
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(content: Text(l10n.imageNotePreparing)));
+    messenger.showMessage(l10n.imageNotePreparing);
     try {
       final id = await repo.createNote(
         NoteType.text,
@@ -742,7 +743,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     } catch (e) {
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
+        ..showMessage(l10n.genericError('$e'));
     }
   }
 
@@ -755,7 +756,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.permCameraInfo)));
+        ).showMessage(l10n.permCameraInfo);
       }
       return;
     }

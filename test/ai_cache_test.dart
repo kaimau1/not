@@ -49,7 +49,7 @@ void main() {
     // olanları atmalı, yeniyi değil.
     for (var i = 0; i < AiCache.maxEntries + 5; i++) {
       final file = File('${dir.path}/entry_$i.txt')..writeAsStringSync('$i');
-      file.setLastModifiedSync(DateTime(2026, 1, 1).add(Duration(days: i)));
+      file.setLastModifiedSync(DateTime(2026).add(Duration(days: i)));
     }
     await AiCache.prune(dir);
 

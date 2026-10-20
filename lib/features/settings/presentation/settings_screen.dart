@@ -19,6 +19,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/utils/search_fold.dart';
 import '../../../app/theme/note_colors.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/attachment_text_index.dart';
 import '../../../core/crash_reporting.dart';
 import '../../../core/error_log.dart';

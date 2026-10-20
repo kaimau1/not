@@ -57,7 +57,6 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
         // ~6 katı küçültür — Firebase Storage kotası ve mobil veri buna
         // gidiyordu (ölçüt: [AppConstants.audioBitRate]).
         const RecordConfig(
-          encoder: AudioEncoder.aacLc,
           bitRate: AppConstants.audioBitRate,
           sampleRate: AppConstants.audioSampleRate,
           numChannels: 1,

@@ -9,6 +9,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/frame_loop.dart';
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/sentence_select.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../domain/note_item.dart';
 import '../../domain/note_share_text.dart';
 import 'format_menu.dart';
@@ -1294,7 +1295,7 @@ class ItemsEditorState extends State<ItemsEditor>
     _exitSelection();
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(context.l10n.copied)));
+      ..showMessage(context.l10n.copied);
   }
 
   void _deleteSelected() {
@@ -1372,7 +1373,7 @@ class ItemsEditorState extends State<ItemsEditor>
     if (mounted) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(context.l10n.allCopied)));
+        ..showMessage(context.l10n.allCopied);
     }
   }
 

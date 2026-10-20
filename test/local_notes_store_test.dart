@@ -20,7 +20,6 @@ void main() {
     type: NoteType.checklist,
     title: 'Market',
     items: [NoteItem(id: 'a', text: 'Süt')],
-    reminderAt: null,
   );
 
   test('konulan not okunur, localOnly işaretli', () {

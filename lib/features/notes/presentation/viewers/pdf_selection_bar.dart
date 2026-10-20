@@ -4,6 +4,7 @@ import 'package:pdfrx/pdfrx.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/pdf_copy_text.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/pdf/selection_rects.dart';
 import '../../domain/attachment.dart';
 import 'bubble_layer.dart';
@@ -90,7 +91,7 @@ class PdfSelectionBar extends StatelessWidget {
     selection.clear();
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ).showMessage(message);
   }
 
   void _highlight({required bool open}) {

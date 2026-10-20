@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/pdf_edit.dart';
 import '../../domain/attachment.dart';
 import '../viewers/pdf_page_image.dart';
@@ -68,9 +69,7 @@ class _PdfPagesScreenState extends State<PdfPagesScreen> {
     // TÜM sayfaları silmeye izin yok: sayfasız PDF geçersiz bir belgedir
     // (motor da reddeder, kullanıcıya burada söylemek daha erken ve nettir).
     if (_selected.length >= _order.length) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.pdfCannotDeleteAllPages)),
-      );
+      showAppMessage(context, context.l10n.pdfCannotDeleteAllPages);
       return;
     }
     setState(() {

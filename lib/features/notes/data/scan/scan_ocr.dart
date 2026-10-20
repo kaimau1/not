@@ -32,7 +32,7 @@ class ScanOcr {
   /// resmi önce normalize edip (döndürmeyi baytlara işleyip) OCR'la.
   static Future<List<OcrLine>> recognizeImageLines(String path) async {
     if (!supported) return const [];
-    final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    final recognizer = TextRecognizer();
     try {
       final result = await recognizer.processImage(
         InputImage.fromFilePath(path),
@@ -59,7 +59,7 @@ class ScanOcr {
     String path,
   ) async {
     if (!supported) return const [];
-    final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    final recognizer = TextRecognizer();
     try {
       final result = await recognizer.processImage(
         InputImage.fromFilePath(path),
@@ -83,7 +83,7 @@ class ScanOcr {
   /// (bkz. `MediaTranscriber`) bunu kullanır — kutular gerekmiyor.
   static Future<String> recognizeImageText(String path) async {
     if (!supported) return '';
-    final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    final recognizer = TextRecognizer();
     try {
       final result = await recognizer.processImage(
         InputImage.fromFilePath(path),

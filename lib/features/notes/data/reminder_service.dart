@@ -15,6 +15,7 @@ import 'package:timezone/data/latest_10y.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../../app/router.dart';
+import '../../../core/error_log.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/note.dart';
@@ -101,21 +102,27 @@ void handleNotificationResponse(Ref ref, NotificationResponse response) {
   if (payload == 'briefing') {
     try {
       ref.read(routerProvider).push('/briefing');
-    } catch (_) {}
+    } catch (e) {
+      ErrorLog.record('notification-tap', e);
+    }
     return;
   }
   // Arkadaştan gelen not (itme bildirimi, F4.6): gelen kutusu.
   if (payload == 'inbox') {
     try {
       ref.read(routerProvider).push('/inbox');
-    } catch (_) {}
+    } catch (e) {
+      ErrorLog.record('notification-tap', e);
+    }
     return;
   }
   // Paylaşılan klasör (sohbet / davet): klasörler ekranı.
   if (payload.startsWith('folder:')) {
     try {
       ref.read(routerProvider).push('/folders');
-    } catch (_) {}
+    } catch (e) {
+      ErrorLog.record('notification-tap', e);
+    }
     return;
   }
   // Benimle paylaşılan notta hareket: notu SAHİBİNİN altından aç.
@@ -129,7 +136,9 @@ void handleNotificationResponse(Ref ref, NotificationResponse response) {
       ref
           .read(routerProvider)
           .pushNote(noteRoutePath(noteId, query: '?owner=$ownerId'));
-    } catch (_) {}
+    } catch (e) {
+      ErrorLog.record('notification-tap', e);
+    }
     return;
   }
   // Hatırlatıcı bildirimi: aksiyon düğmeleri uygulamayı açmadan
@@ -145,7 +154,9 @@ void handleNotificationResponse(Ref ref, NotificationResponse response) {
       default:
         try {
           ref.read(routerProvider).pushNote(noteRoutePath(noteId));
-        } catch (_) {}
+        } catch (e) {
+          ErrorLog.record('notification-tap', e);
+        }
     }
   }
 }
@@ -275,8 +286,6 @@ class ReminderService {
             'briefing',
             l10n.briefingTitle,
             channelDescription: l10n.briefingSettingInfo,
-            importance: Importance.defaultImportance,
-            priority: Priority.defaultPriority,
           ),
         ),
         // BİLEREK inexact (hatırlatıcılardan farklı): sabah brifingi birkaç

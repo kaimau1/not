@@ -171,7 +171,6 @@ class _TextPageBoxState extends State<TextPageBox> {
     return ColoredBox(
       color: const Color(0xFFFFFDF8),
       child: FittedBox(
-        fit: BoxFit.contain,
         child: SizedBox(
           width: ref.width,
           height: ref.height,

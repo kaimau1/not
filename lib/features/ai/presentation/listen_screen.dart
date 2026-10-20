@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
@@ -5,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/speech_output.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note_type.dart';
 import '../../settings/settings_providers.dart';
@@ -99,9 +102,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
       text,
       onAiFailed: (message) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.listenAiVoiceFailed(message))),
-        );
+        showAppMessage(context, context.l10n.listenAiVoiceFailed(message));
         setState(() {});
       },
     );
@@ -291,7 +292,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
       repo.updateFields(id, {'title': widget.title});
       if (!mounted) return;
       _snack(context.l10n.podcastSavedAsNote);
-      context.pushNote(noteRoutePath(id));
+      unawaited(context.pushNote(noteRoutePath(id)));
     } catch (e) {
       if (!mounted) return;
       _snack(context.l10n.aiError('$e'));
@@ -302,7 +303,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showMessage(message);
   }
 
   Future<void> _showOriginal() async {

@@ -241,7 +241,7 @@ Future<void> _runNoteAction(
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(l10n.copied)));
+          ..showMessage(l10n.copied);
       }
     case 'duplicate':
       if (!await unlockIfNeeded()) return;

@@ -5,7 +5,7 @@ import 'package:notlar/features/notes/domain/note_type.dart';
 
 /// "Bugün" widget'ının verisi (bkz. [todayWidgetPayload]).
 void main() {
-  final now = DateTime(2026, 9, 23, 21, 0);
+  final now = DateTime(2026, 9, 23, 21);
 
   test('7 günlük pencere, saat sırasıyla; arşiv ve geçmiş gün dışarıda', () {
     final notes = [
@@ -38,7 +38,7 @@ void main() {
         type: NoteType.text,
         title: 'Arşiv',
         reminderAt: DateTime(2026, 9, 24),
-        archivedAt: DateTime(2026, 9, 1),
+        archivedAt: DateTime(2026, 9),
       ),
     ];
     final lines = todayWidgetPayload(notes, now).split('\n');

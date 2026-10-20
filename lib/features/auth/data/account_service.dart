@@ -198,7 +198,9 @@ class AccountService {
     // hesap zaten silindiği için hatası önemsizdir.
     try {
       await _auth.signOut();
-    } catch (_) {}
+    } catch (_) {
+      // Hesap zaten silindi; çıkış hatası önemsiz.
+    }
   }
 
   /// Batch sınırı 500; 400'erlik güvenli gruplar.

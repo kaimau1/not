@@ -321,7 +321,7 @@ class FolderCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      FolderIconBox(accent: accent, icon: icon, size: 40),
+                      FolderIconBox(accent: accent, icon: icon),
                       const Spacer(),
                       if (shared)
                         Padding(

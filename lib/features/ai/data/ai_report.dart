@@ -5,7 +5,7 @@ import '../../../core/constants.dart';
 import '../../auth/presentation/auth_providers.dart';
 
 final aiReportServiceProvider = Provider<AiReportService>(
-  (ref) => AiReportService(ref),
+  AiReportService.new,
 );
 
 /// Sorunlu AI çıktısı bildirimi (Google Play üretken AI politikası gereği).

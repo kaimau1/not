@@ -441,9 +441,7 @@ class _BackupButton extends ConsumerWidget {
         );
       }
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.genericError(e.toString()))),
-      );
+      messenger.showMessage(l10n.genericError(e.toString()));
     }
   }
 
@@ -534,15 +532,11 @@ class _RestoreButton extends ConsumerWidget {
         });
         count++;
       }
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.importBackupDone(count))),
-      );
+      messenger.showMessage(l10n.importBackupDone(count));
     } on FormatException {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.importBackupInvalid)));
+      messenger.showMessage(l10n.importBackupInvalid);
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.genericError(e.toString()))),
-      );
+      messenger.showMessage(l10n.genericError(e.toString()));
     }
   }
 
@@ -592,10 +586,12 @@ class _AccountSection extends ConsumerWidget {
     if (!(confirmed ?? false) || !context.mounted) return;
 
     // Silme sürerken kapatılamayan bir bekleme göstergesi.
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      ),
     );
     final navigator = Navigator.of(context, rootNavigator: true);
     try {
@@ -606,9 +602,7 @@ class _AccountSection extends ConsumerWidget {
       navigator.pop();
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(content: Text(l10n.genericError(e.toString()))),
-        );
+        ..showMessage(l10n.genericError(e.toString()));
     }
   }
 
@@ -623,7 +617,7 @@ class _AccountSection extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     try {
       await ref.read(authRepositoryProvider).linkWithGoogle();
-      messenger.showSnackBar(SnackBar(content: Text(l10n.accountLinked)));
+      messenger.showMessage(l10n.accountLinked);
     } on FirebaseAuthException catch (e) {
       // Hesap seçiciyi kapatmak hata değil: sessizce geçilir.
       if (isSignInCancel(e)) return;
@@ -647,10 +641,10 @@ class _AccountSection extends ConsumerWidget {
         }
         return;
       }
-      messenger.showSnackBar(SnackBar(content: Text(authErrorText(l10n, e))));
+      messenger.showMessage(authErrorText(l10n, e));
     } catch (e) {
       if (isSignInCancel(e)) return;
-      messenger.showSnackBar(SnackBar(content: Text(authErrorText(l10n, e))));
+      messenger.showMessage(authErrorText(l10n, e));
     }
   }
 
@@ -693,11 +687,11 @@ class _AccountSection extends ConsumerWidget {
       // Başarıda auth durumu değişir; kullanıcı gerçek hesabına döner,
       // notları olduğu gibi orada bekliyor olur.
       if (context.mounted) {
-        messenger.showSnackBar(SnackBar(content: Text(l10n.accountLinked)));
+        messenger.showMessage(l10n.accountLinked);
       }
     } catch (e) {
       if (context.mounted) {
-        messenger.showSnackBar(SnackBar(content: Text(authErrorText(l10n, e))));
+        messenger.showMessage(authErrorText(l10n, e));
       }
     }
   }
@@ -842,7 +836,7 @@ class _ErrorLogButton extends StatelessWidget {
         onPressed: () async {
           final messenger = ScaffoldMessenger.of(context);
           if (ErrorLog.entries.isEmpty) {
-            messenger.showSnackBar(SnackBar(content: Text(l10n.errorLogEmpty)));
+            messenger.showMessage(l10n.errorLogEmpty);
             return;
           }
           var header = '';
@@ -851,7 +845,9 @@ class _ErrorLogButton extends StatelessWidget {
             header =
                 '${l10n.appName} ${info.version} (${info.buildNumber}) · '
                 '${kIsWeb ? 'web' : Platform.operatingSystem}';
-          } catch (_) {}
+          } catch (_) {
+            // Sürüm okunamazsa başlıksız paylaşılır.
+          }
           final text = ErrorLog.exportText(header: header);
           try {
             await SharePlus.instance.share(
@@ -867,9 +863,7 @@ class _ErrorLogButton extends StatelessWidget {
               ),
             );
           } catch (e) {
-            messenger.showSnackBar(
-              SnackBar(content: Text(l10n.genericError('$e'))),
-            );
+            messenger.showMessage(l10n.genericError('$e'));
           }
         },
       ),
@@ -951,7 +945,7 @@ class _AppVersionRowState extends State<_AppVersionRow> {
         );
         messenger
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(l10n.appVersionCopied)));
+          ..showMessage(l10n.appVersionCopied);
       },
     );
   }

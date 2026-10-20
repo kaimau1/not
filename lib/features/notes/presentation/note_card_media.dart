@@ -895,20 +895,10 @@ class _AsyncThumb extends StatelessWidget {
 
 /// Kart küçük resimlerinin (video kapağı, PDF ilk sayfası) önbelleği.
 ///
-/// KÖK NEDEN (kullanıcı bulgusu 2026-10-15: "güncellemeden sonra kasma"):
-/// ilk sürümde (a) anahtar için kart HER çizildiğinde `statSync` (senkron
-/// dosya sistemi çağrısı) yapılıyor, (b) video kapağı Android'in ANA iş
-/// parçacığında tam boy kare + JPEG olarak çıkarılıyor, (c) görünürdeki
-/// bütün PDF'ler AYNI ANDA açılıp çiziliyordu; hiçbiri diske yazılmadığı
-/// için her açılışta hepsi baştan. Şimdi:
-/// * anahtar çizimde HİÇ G/Ç yapmadan ekin kendi alanlarından kurulur
-///   (yol + boyut + sayfa) — PDF düzenlenince boyut değişir, eski resim
-///   kalmaz;
-/// * üretilen küçük resim DİSKE yazılır (`<önbellek>/card_thumbs/`) — bir
-///   kez üretilir, sonraki açılışlarda yalnız okunur;
-/// * üretim TEK SIRADA (aynı anda bir iş) — kaydırma sırasında onlarca
-///   çözücü yarışmaz;
-/// * video karesi arka plan iş parçacığında, doğrudan KÜÇÜK üretilir.
+/// Anahtar çizimde G/Ç YAPMADAN ekin alanlarından kurulur (yol + boyut +
+/// sayfa); üretilen resim diske yazılır (`<önbellek>/card_thumbs/`), üretim
+/// TEK SIRADA (kaydırmada çözücüler yarışmaz), video karesi arka planda ve
+/// doğrudan küçük. Bellekteki baytlar bütçeli (F7.1).
 abstract final class CardThumbs {
   static final _cache = <String, Future<Uint8List?>>{};
   static const _cap = 64;
@@ -1008,7 +998,7 @@ abstract final class CardThumbs {
       if (bytes != null && file != null) {
         try {
           await file.parent.create(recursive: true);
-          await file.writeAsBytes(bytes, flush: false);
+          await file.writeAsBytes(bytes);
         } catch (_) {
           // Disk dolu/erişilemez: küçük resim yalnız bellekte kalır.
         }

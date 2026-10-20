@@ -324,8 +324,6 @@ void main() {
       );
       final classic = Note(
         id: 'n',
-        title: '',
-        body: '',
         type: NoteType.text,
         attachments: const [image, derived],
       );

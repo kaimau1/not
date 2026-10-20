@@ -98,7 +98,7 @@ void main() {
         id: '1',
         type: NoteType.text,
         reminderAt: DateTime(2026, 5, 1, 9),
-        archivedAt: DateTime(2026, 4, 1),
+        archivedAt: DateTime(2026, 4),
       );
       final cleared =
           note.copyWith(clearReminderAt: true, clearArchivedAt: true);

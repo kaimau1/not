@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../data/friends_repository.dart';
 import '../domain/friend.dart';
@@ -164,7 +165,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet>
         if (msg != null) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text(msg)));
+          ).showMessage(msg);
         }
       }
     } catch (_) {
@@ -183,25 +184,25 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet>
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.friendsRequestSent)));
+        ).showMessage(l10n.friendsRequestSent);
       }
     } on SelfFriendException {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.friendsSelf)));
+        ).showMessage(l10n.friendsSelf);
       }
     } on AlreadyFriendException {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.friendsAlready)));
+        ).showMessage(l10n.friendsAlready);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
+        ).showMessage(l10n.genericError('$e'));
       }
     }
   }
@@ -217,31 +218,31 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet>
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.friendsRequestSent)));
+        ).showMessage(l10n.friendsRequestSent);
       }
     } on FriendNotFoundException {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.friendsNotFound)));
+        ).showMessage(l10n.friendsNotFound);
       }
     } on SelfFriendException {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.friendsSelf)));
+        ).showMessage(l10n.friendsSelf);
       }
     } on AlreadyFriendException {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.friendsAlready)));
+        ).showMessage(l10n.friendsAlready);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
+        ).showMessage(l10n.genericError('$e'));
       }
     }
   }
@@ -434,7 +435,9 @@ class _FriendTile extends ConsumerWidget {
             ),
           );
           if (ok == true) {
-            ref.read(friendsRepositoryProvider)?.removeFriend(friend.uid);
+            unawaited(
+              ref.read(friendsRepositoryProvider)?.removeFriend(friend.uid),
+            );
           }
         },
       ),
@@ -448,7 +451,7 @@ void openFriendsScreenOrExplain(BuildContext context, WidgetRef ref) {
   if (ref.read(isAnonymousProvider)) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(context.l10n.friendsNeedsAccount)));
+    ).showMessage(context.l10n.friendsNeedsAccount);
     return;
   }
   FriendsScreen.open(context);

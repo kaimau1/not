@@ -150,7 +150,6 @@ class _AiResultSheetState extends State<_AiResultSheet> {
                   child: TextField(
                     controller: _controller,
                     maxLines: null,
-                    expands: false,
                     keyboardType: TextInputType.multiline,
                     style: theme.textTheme.bodyMedium,
                     decoration: const InputDecoration(

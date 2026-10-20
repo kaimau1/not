@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../folders/data/folders_repository.dart';
 import '../data/friends_repository.dart';
 import '../domain/friend.dart';
@@ -131,13 +132,9 @@ class _FriendRequestCard extends ConsumerWidget {
         if (repo == null) return;
         try {
           await repo.acceptRequest(request);
-          messenger.showSnackBar(
-            SnackBar(content: Text(l10n.friendRequestAccepted)),
-          );
+          messenger.showMessage(l10n.friendRequestAccepted);
         } catch (e) {
-          messenger.showSnackBar(
-            SnackBar(content: Text(l10n.genericError('$e'))),
-          );
+          messenger.showMessage(l10n.genericError('$e'));
         }
       },
     );
@@ -169,13 +166,9 @@ class _FolderInviteCard extends ConsumerWidget {
         if (repo == null) return;
         try {
           await repo.declineInvite(invite);
-          messenger.showSnackBar(
-            SnackBar(content: Text(l10n.folderInviteDeclined)),
-          );
+          messenger.showMessage(l10n.folderInviteDeclined);
         } catch (e) {
-          messenger.showSnackBar(
-            SnackBar(content: Text(l10n.genericError('$e'))),
-          );
+          messenger.showMessage(l10n.genericError('$e'));
         }
       },
       onAccept: () async {
@@ -183,13 +176,9 @@ class _FolderInviteCard extends ConsumerWidget {
         if (repo == null) return;
         try {
           await repo.acceptInvite(invite);
-          messenger.showSnackBar(
-            SnackBar(content: Text(l10n.folderInviteAccepted)),
-          );
+          messenger.showMessage(l10n.folderInviteAccepted);
         } catch (e) {
-          messenger.showSnackBar(
-            SnackBar(content: Text(l10n.genericError('$e'))),
-          );
+          messenger.showMessage(l10n.genericError('$e'));
         }
       },
     );

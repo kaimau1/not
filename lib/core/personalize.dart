@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'error_log.dart';
+
 /// **KİŞİSELLEŞTİRME** — hangi alan/düğme görünür, sayısal küçük tercihler.
 ///
 /// Kullanıcı isteği 2026-10-16: "bütün alanlar bir eklenti gibi açılıp
@@ -281,7 +283,9 @@ abstract final class Personalize {
     prefs.value = next;
     try {
       _store?.setString(_key, jsonEncode(next.toJson()));
-    } catch (_) {}
+    } catch (e) {
+      ErrorLog.record('personalize-write', e);
+    }
   }
 
   static void startEditing() => draft.value ??= prefs.value;

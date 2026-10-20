@@ -108,13 +108,13 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
     try {
       final valid = await ref.read(geminiServiceProvider).validateKey(key);
       if (!valid) {
-        messenger.showSnackBar(SnackBar(content: Text(l10n.apiKeyInvalid)));
+        messenger.showMessage(l10n.apiKeyInvalid);
         return;
       }
       await ref.read(apiKeyStoreProvider).save(provider, key);
       _invalidateKeys(provider);
       _controller.clear();
-      messenger.showSnackBar(SnackBar(content: Text(l10n.apiKeyValid)));
+      messenger.showMessage(l10n.apiKeyValid);
     } finally {
       if (mounted) setState(() => _busy = false);
     }

@@ -142,9 +142,7 @@ class RemindersScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(content: Text(context.l10n.reminderInPast)),
-          );
+          ..showMessage(context.l10n.reminderInPast);
       }
       return null;
     }

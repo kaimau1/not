@@ -275,7 +275,6 @@ class _BubbleDockState extends State<BubbleDock> {
                                 key: const ValueKey('bubble-dock-title'),
                                 controller: _title,
                                 focusNode: _titleFocus,
-                                maxLines: 1,
                                 maxLength: PageBubble.maxTitle,
                                 textCapitalization:
                                     TextCapitalization.sentences,

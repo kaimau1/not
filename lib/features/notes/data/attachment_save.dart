@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/local_file.dart';
 import '../../../core/utils/web_blob.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../domain/attachment.dart';
 import 'attachment_repository.dart';
 
@@ -90,12 +91,12 @@ abstract final class AttachmentSaveAs {
       if (saved ?? false) {
         messenger
           ?..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(l10n.attachmentSavedAs(name))));
+          ..showMessage(l10n.attachmentSavedAs(name));
       }
     } catch (e) {
       messenger
         ?..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l10n.attachmentSaveAsFailed)));
+        ..showMessage(l10n.attachmentSaveAsFailed);
     }
   }
 
@@ -103,7 +104,7 @@ abstract final class AttachmentSaveAs {
     if (!kIsWeb && localFileExists(a.localPath)) {
       return File(a.localPath).readAsBytes();
     }
-    return repo?.readBytes(a) ?? Future.value(null);
+    return repo?.readBytes(a) ?? Future.value();
   }
 
   /// Dosyanın bu cihazdaki yolu; yoksa (buluttaki ek, metin eki) geçici bir

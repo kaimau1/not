@@ -123,7 +123,9 @@ Future<VoiceCaptureResult?> showVoiceCaptureSheet(
   // üstteki çarpı olduğu sürece kapatmak zahmetliydi. İçerik kaybı riski
   // kapıları kilitleyerek değil, çıkarken SORARAK karşılanıyor — dört
   // kapanış yolu da `_askBeforeClosing`'e düşüyor (bkz. PopScope).
+  // ignore: avoid_redundant_argument_values
   isDismissible: true,
+  // ignore: avoid_redundant_argument_values
   enableDrag: true,
   // Levhanın KENDİSİ görünmez: içerik editörün doğrudan yazdırma şeridiyle
   // AYNI yüzen kart (bkz. [ListeningCard]); karartı hafif — arkadaki not
@@ -265,7 +267,9 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       final session = VoiceListenSession(
         useDevice: _useSpeech,
         // Üst sınır: levha açık unutulursa mikrofon süresiz kalmasın; o ana
-        // kadarki metin/kayıt gözden geçirme evresine taşınır.
+        // kadarki metin/kayıt gözden geçirme evresine taşınır (varsayılanla
+        // aynı, burada bilinçli olarak açık).
+        // ignore: avoid_redundant_argument_values
         maxDuration: _maxCaptureDuration,
         autoStop: () => ref.read(voiceAutoStopProvider),
         preferOffline: ref.read(voiceOfflineProvider),
@@ -319,7 +323,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       'dikte_${DateTime.now().millisecondsSinceEpoch}.m4a',
     );
     await recorder.start(
-      const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 64000),
+      const RecordConfig(bitRate: 64000),
       path: _recordPath!,
     );
     // Döküm bitişte yapıldığından konuşmanın kanıtı ses seviyesidir: -30
@@ -657,8 +661,10 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     try {
       final path = await _recorder?.stop();
       if (path != null) File(path).delete().ignore();
-    } catch (_) {}
-    _recorder?.dispose();
+    } catch (_) {
+      // Kayıt zaten durmuş olabilir.
+    }
+    unawaited(_recorder?.dispose());
     _recorder = null;
     // Kullanılmayan (gönderilmemiş) kayıt geçici klasörde kalmasın.
     final leftover = _readyAudioPath;

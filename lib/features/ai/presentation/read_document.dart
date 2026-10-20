@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/doc_picker.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/data/doc_text.dart';
 import '../../notes/data/pdf_text.dart';
 import 'listen_screen.dart';
@@ -36,7 +37,7 @@ Future<void> pickAndReadDocument(BuildContext context) async {
   if (!isPdf && !DocText.supports(path)) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(context.l10n.readDocUnsupported)));
+      ..showMessage(context.l10n.readDocUnsupported);
     return;
   }
 
