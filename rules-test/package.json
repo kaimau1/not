@@ -1,0 +1,13 @@
+{
+  "name": "not-rules-test",
+  "description": "Firestore güvenlik kuralları testleri (emülatör) — F4.9",
+  "private": true,
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project demo-not \"node --test\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.0.0",
+    "firebase-tools": "^14.0.0"
+  }
+}

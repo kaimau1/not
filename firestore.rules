@@ -89,7 +89,15 @@ service cloud.firestore {
     // kuralın YANINA eklenir — Firestore kuralları OR'lanır: eşleşen
     // herhangi bir blok izin verirse istek geçer. Bu blok sahibin KENDİ
     // erişimini asla daraltmaz.
-    match /users/{uid}/{document=**} {
+    //
+    // KÖK NEDEN (F4.9 kural testi yakaladı, 2026-10-19): bu blok eskiden
+    // `/users/{uid}/{document=**}` idi. rules_version 2'de `=**` SIFIR
+    // parçayı da eşler, yani blok `users/{uid}` belgesinin KENDİSİNİ de
+    // kapsıyordu — Firestore kuralları OR'landığı için yukarıdaki
+    // "premiumUntil yazılamaz" şartı hiçbir şey korumuyordu (kullanıcı
+    // kendine premium yazabiliyordu). Artık en az bir alt koleksiyon parçası
+    // şart; kullanıcı belgesi yalnız yukarıdaki blokla yönetilir.
+    match /users/{uid}/{collection}/{document=**} {
       allow read, write: if signedInAs(uid);
     }
 
