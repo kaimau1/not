@@ -62,6 +62,8 @@ numarasıyla bildir.
 **PDF, balon, görsel**
 - [ ] Uzun bas → balon; ekran grileşmiyor, klavye açık kalıyor, yazma kartı
   gezinme düğmelerinin üstünde; uzun PDF'te fırlatma liste gibi akıyor.
+- [ ] Açık balon: sayfanın boş yerine dokununca ANINDA kapanıyor; kaydırma,
+  iki parmak yakınlaştırma ve basılı tutma onu kapatmıyor.
 - [ ] Balona dokununca belge kaymıyor; Düzenle/Bitti'de sayfa başına sıçrama
   yok (bölme, slayt, tam ekran).
 - [ ] Çok sayfalı PDF'e yoğun çizim/balon → başka cihazda geliyor (ağır belge);

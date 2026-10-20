@@ -2,7 +2,11 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart'
-    show LongPressGestureRecognizer, PointerDeviceKind, TapGestureRecognizer;
+    show
+        LongPressGestureRecognizer,
+        PointerDeviceKind,
+        TapGestureRecognizer,
+        kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
@@ -927,15 +931,12 @@ class _BubblePageLayerState extends State<BubblePageLayer> {
               ),
             // Açık balon varken sayfanın boşluğuna dokunmak onu KAPATIR
             // (kullanıcı isteği: "balonu kapatmak için sayfanın bir yerine
-            // tıklamak yeterli olmalı"). Yalnız TAP dinlenir — kaydırma ve
-            // yakınlaştırma jestleri alta geçmeye devam eder.
+            // tıklamak yeterli olmalı"). Ham işaretçi dinlenir, jest
+            // yarışına girilmez: kaydırma/yakınlaştırma alta geçer ve
+            // kapanış görüntüleyicinin çift dokunuş süresini BEKLEMEZ.
             if (view.anyOpen && !view.adding)
               Positioned.fill(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: controller.collapseAll,
-                  child: const SizedBox.expand(),
-                ),
+                child: TapToCollapse(onTap: controller.collapseAll),
               ),
             // Sayfada YALNIZ tutamaç/etiket durur; açık balonun içeriği
             // görüntüleyicinin üstündeki sabit kartta ([BubbleDock]).
@@ -1164,4 +1165,80 @@ class _LeaderPainter extends CustomPainter {
     }
     return false;
   }
+}
+
+/// Kısa, yerinde bir dokunuşta [onTap]'i PARMAK KALKAR KALKMAZ çağırır.
+///
+/// `GestureDetector(onTap:)` alttaki görüntüleyicinin çift dokunuş
+/// (yakınlaştırma) tanıyıcısıyla aynı jest yarışına girer; tek dokunuş ancak
+/// çift dokunuş süresi (~300 ms) dolunca kabul edilir — açık balon "başka
+/// yere tıklayınca gecikmeli kapanıyordu" (2026-10-20). [Listener] yarışa
+/// girmez: kaydırma, yakınlaştırma ve basılı tutma alta aynen geçer.
+@visibleForTesting
+class TapToCollapse extends StatefulWidget {
+  const TapToCollapse({super.key, required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  State<TapToCollapse> createState() => _TapToCollapseState();
+}
+
+class _TapToCollapseState extends State<TapToCollapse> {
+  /// Basılı tutma (balon bırakma, ~450 ms) dokunuş sayılmaz.
+  static const _maxPress = Duration(milliseconds: 400);
+
+  int? _pointer;
+  Offset _down = Offset.zero;
+  Timer? _press;
+  int _pointers = 0;
+  bool _multi = false;
+
+  void _onDown(PointerDownEvent e) {
+    _pointers++;
+    if (_pointers > 1) {
+      _multi = true; // iki parmak = yakınlaştırma
+      return;
+    }
+    _multi = false;
+    _pointer = e.pointer;
+    _down = e.position;
+    _press?.cancel();
+    _press = Timer(_maxPress, () => _pointer = null);
+  }
+
+  void _onMove(PointerMoveEvent e) {
+    if (e.pointer != _pointer) return;
+    if ((e.position - _down).distance > kTouchSlop) _pointer = null;
+  }
+
+  void _onUp(PointerUpEvent e) {
+    _pointers = math.max(0, _pointers - 1);
+    if (e.pointer != _pointer || _multi) return;
+    _pointer = null;
+    _press?.cancel();
+    if ((e.position - _down).distance > kTouchSlop) return;
+    widget.onTap();
+  }
+
+  void _onCancel(PointerCancelEvent e) {
+    _pointers = math.max(0, _pointers - 1);
+    if (e.pointer == _pointer) _pointer = null;
+  }
+
+  @override
+  void dispose() {
+    _press?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Listener(
+    behavior: HitTestBehavior.translucent,
+    onPointerDown: _onDown,
+    onPointerMove: _onMove,
+    onPointerUp: _onUp,
+    onPointerCancel: _onCancel,
+    child: const SizedBox.expand(),
+  );
 }

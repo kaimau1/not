@@ -278,6 +278,10 @@ eskisini arşive taşıma.
   çakışma) ve görüntüleyici ODAK istiyordu (yeni balonun yazı alanı odağı
   düşüyor, klavye gelmiyordu). Seçim yalnız `PdfSelectLayer`. Dokunmatikte
   `keyHandlerParams.canRequestFocus: false`, `buildContextMenu` null döner.
+- **Dışarı dokununca kapatma `GestureDetector(onTap)` İLE YAPILMAZ**
+  (2026-10-20, "balon gecikmeli kapanıyor"): alttaki görüntüleyicinin çift
+  dokunuş tanıyıcısıyla yarışır, tap ~300 ms bekler. Ham `Listener`
+  (`TapToCollapse`, bubble_layer.dart) — yarışa girmez, parmak kalkınca.
 - **pdfrx'e `scrollPhysics` VER** (`_pdfScrollPhysics`: Android Clamping,
   iOS Bouncing; 2026-10-20 "PDF'yi zorla kaydırıyorum"). Verilmezse
   InteractiveViewer sürtünmesi fırlatmayı birkaç santimde durduruyor.
