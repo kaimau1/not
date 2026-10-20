@@ -121,8 +121,8 @@ import 'note_history_sheet.dart';
 import 'note_presence.dart';
 import 'note_menu_sheet.dart';
 import 'in_note_find.dart';
+import 'note_find_controller.dart';
 import 'note_search_sheet.dart';
-import 'text_search.dart';
 import '../../domain/note_share_text.dart';
 import '../local_only_action.dart';
 import 'note_undo.dart';
@@ -1460,8 +1460,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _bodyController.dispose();
     _bodyFocus.dispose();
     _pageScroll.dispose();
-    _findController.dispose();
-    _findFocus.dispose();
+    _find.dispose();
     _attachPulse.dispose();
     _videoHub.dispose();
     _aiTaskN.dispose();
@@ -1669,17 +1668,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Arama çubuğu alt çubuğun yerinde açık mı.
   bool _findOpen = false;
-  final _findController = TextEditingController();
-  final _findFocus = FocusNode();
 
-  /// Bulunan eşleşmeler, sayfadaki sırayla (başlık, gövde, maddeler).
-  List<_FindHit> _findHits = const [];
-
-  /// Odaktaki eşleşme (-1 = yok).
-  int _findIndex = -1;
-
-  /// Vurgusu olan denetleyiciler — kapanışta/yeni aramada temizlenir.
-  final Set<WrapTextController> _findPainted = {};
+  /// Eşleşmeler ve odak (F9.3): çubuk bunu dar builder'la dinler.
+  final _find = NoteFindController();
   bool _findRefreshQueued = false;
 
   /// Odaktaki metin alanındaki imlecin SAYFA (tuval) uzayındaki üst kenarı.
@@ -6601,23 +6592,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_findOpen) return;
-      _findFocus.requestFocus();
-      if (_findController.text.trim().isNotEmpty) _runFind();
+      _find.focus.requestFocus();
+      if (_find.text.isNotEmpty) _runFind();
     });
   }
 
   void _closeFind() {
-    for (final c in _findPainted) {
-      c.clearSearchHighlights();
-    }
-    _findPainted.clear();
-    _findController.clear();
-    if (_findFocus.hasFocus) _findFocus.unfocus();
-    setState(() {
-      _findOpen = false;
-      _findHits = const [];
-      _findIndex = -1;
-    });
+    _find.reset();
+    setState(() => _findOpen = false);
   }
 
   void _queueFindRefresh() {
@@ -6629,110 +6611,45 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     });
   }
 
-  /// Sayfadaki alanlarda arar, vurgular ve (istenirse) odaktaki eşleşmeye
-  /// kaydırır. Alanların TAMPONU taranır (bkz. TextSearchIndex): vurgu ve
-  /// kaydırma aynı konumlarla çalışır.
+  /// Sayfadaki alanlarda arar (sırayla başlık, gövde, maddeler), vurgular ve
+  /// (istenirse) odaktaki eşleşmeye kaydırır. Alanların TAMPONU taranır
+  /// (bkz. TextSearchIndex): vurgu ve kaydırma aynı konumlarla çalışır.
   void _runFind({bool keepIndex = false, bool reveal = true}) {
     final l10n = context.l10n;
-    final query = _findController.text.trim();
-    final previous = keepIndex && _findIndex >= 0 && _findIndex < _findHits.length
-        ? _findHits[_findIndex]
-        : null;
-    final hits = <_FindHit>[];
-    void scan(
-      WrapTextController controller,
-      FocusNode focus,
-      String where,
-      IconData icon,
-    ) {
-      if (query.isEmpty) return;
-      final index = TextSearchIndex(controller.text);
-      for (final match in index.find(query)) {
-        hits.add(
-          _FindHit(
-            controller: controller,
-            focus: focus,
-            where: where,
-            icon: icon,
-            match: match,
-            index: index,
-          ),
-        );
-      }
-    }
-
-    scan(_titleController, _titleFocus, l10n.noteTitleLabel, Icons.title);
     final note = _note;
-    if (note != null && !note.type.isPageNoteType) {
-      scan(_bodyController, _bodyFocus, l10n.noteBodyLabel, Icons.notes_outlined);
-    }
     final items = _itemsEditorKey.currentState?.searchFields() ?? const [];
-    for (var i = 0; i < items.length; i++) {
-      scan(
-        items[i].controller,
-        items[i].focus,
-        '${l10n.itemLabel} ${i + 1}',
-        Icons.check_box_outlined,
-      );
-    }
-    var index = hits.isEmpty ? -1 : 0;
-    if (previous != null) {
-      // Düzenleme sonrası tazeleme: odak AYNI alanda, aynı ya da ilk
-      // sonraki eşleşmede kalsın — imleç yazarken başa fırlamasın.
-      final same = hits.indexWhere(
-        (h) =>
-            h.controller == previous.controller &&
-            h.match.start >= previous.match.start,
-      );
-      if (same >= 0) index = same;
-    }
-    setState(() {
-      _findHits = hits;
-      _findIndex = index;
-    });
+    _find.search([
+      (
+        controller: _titleController,
+        focus: _titleFocus,
+        where: l10n.noteTitleLabel,
+        icon: Icons.title,
+      ),
+      if (note != null && !note.type.isPageNoteType)
+        (
+          controller: _bodyController,
+          focus: _bodyFocus,
+          where: l10n.noteBodyLabel,
+          icon: Icons.notes_outlined,
+        ),
+      for (var i = 0; i < items.length; i++)
+        (
+          controller: items[i].controller,
+          focus: items[i].focus,
+          where: '${l10n.itemLabel} ${i + 1}',
+          icon: Icons.check_box_outlined,
+        ),
+    ], keepIndex: keepIndex);
     _paintFind();
     if (reveal) _revealFindHit();
   }
 
-  /// Vurguları denetleyicilere dağıtır (odaktaki eşleşme koyu).
-  void _paintFind() {
-    final byController = <WrapTextController, List<(int, int)>>{};
-    final currentIn = <WrapTextController, int>{};
-    for (var i = 0; i < _findHits.length; i++) {
-      final hit = _findHits[i];
-      final list = byController.putIfAbsent(hit.controller, () => []);
-      if (i == _findIndex) currentIn[hit.controller] = list.length;
-      list.add((hit.match.start, hit.match.end));
-    }
-    for (final c in _findPainted.difference(byController.keys.toSet())) {
-      c.clearSearchHighlights();
-    }
-    _findPainted
-      ..clear()
-      ..addAll(byController.keys);
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final hitColor = dark
-        ? const Color(0x80C28B00)
-        : const Color(0x66FFD54F);
-    final currentColor = dark
-        ? const Color(0xFFE65100)
-        : const Color(0xFFFFA726);
-    for (final entry in byController.entries) {
-      entry.key.setSearchHighlights(
-        entry.value,
-        current: currentIn[entry.key] ?? -1,
-        hitColor: hitColor,
-        currentColor: currentColor,
-      );
-    }
-  }
+  void _paintFind() =>
+      _find.paint(dark: Theme.of(context).brightness == Brightness.dark);
 
   void _stepFind(int delta) {
-    final count = _findHits.length;
-    if (count == 0) return;
-    var next = (_findIndex + delta) % count;
-    if (next < 0) next += count;
-    setState(() => _findIndex = next);
+    if (_find.hits.isEmpty) return;
+    _find.step(delta);
     _paintFind();
     _revealFindHit();
   }
@@ -6740,8 +6657,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Odaktaki eşleşmeyi sayfanın üst üçte birine kaydırır; zaten rahat
   /// görünüyorsa kıpırdatmaz.
   void _revealFindHit() {
-    if (_findIndex < 0 || _findIndex >= _findHits.length) return;
-    final hit = _findHits[_findIndex];
+    final hit = _find.current;
+    if (hit == null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final fieldContext = hit.focus.context;
@@ -6804,9 +6721,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   Future<void> _openFindList() async {
     final note = _note;
     if (note == null) return;
-    final query = _findController.text.trim();
+    final query = _find.text;
     final views = <FindHitView>[
-      for (final h in _findHits)
+      for (final h in _find.hits)
         () {
           final s = h.index.snippet(h.match, query.length);
           return (
@@ -6822,7 +6739,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final picked = await showFindHitsSheet(
       context,
       hits: views,
-      current: _findIndex,
+      current: _find.index,
       canDeepSearch: true,
     );
     if (picked == null || !mounted) return;
@@ -6835,8 +6752,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       );
       return;
     }
-    if (picked < 0 || picked >= _findHits.length) return;
-    setState(() => _findIndex = picked);
+    if (picked < 0 || picked >= _find.hits.length) return;
+    _find.select(picked);
     _paintFind();
     _revealFindHit();
   }
@@ -8495,17 +8412,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 // kapsülde; hesap makinesi üst bara, ek/renk seçenekleri
                 // "Ekle" açılırına taşındı.
                 if (_findOpen)
-                  NoteFindBar(
-                    controller: _findController,
-                    focusNode: _findFocus,
-                    count: _findHits.length,
-                    index: _findIndex,
-                    background: background,
-                    onChanged: (_) => _runFind(),
-                    onNext: () => _stepFind(1),
-                    onPrevious: () => _stepFind(-1),
-                    onList: () => unawaited(_openFindList()),
-                    onClose: _closeFind,
+                  ListenableBuilder(
+                    listenable: _find,
+                    builder: (context, _) => NoteFindBar(
+                      controller: _find.query,
+                      focusNode: _find.focus,
+                      count: _find.hits.length,
+                      index: _find.index,
+                      background: background,
+                      onChanged: (_) => _runFind(),
+                      onNext: () => _stepFind(1),
+                      onPrevious: () => _stepFind(-1),
+                      onList: () => unawaited(_openFindList()),
+                      onClose: _closeFind,
+                    ),
                   )
                 else ...[
                 // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen

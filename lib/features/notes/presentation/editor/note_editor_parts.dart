@@ -300,24 +300,3 @@ class _AiBanner extends StatelessWidget {
     );
   }
 }
-
-/// Canlı aramanın tek eşleşmesi: hangi alanda, tamponun neresinde.
-class _FindHit {
-  const _FindHit({
-    required this.controller,
-    required this.focus,
-    required this.where,
-    required this.icon,
-    required this.match,
-    required this.index,
-  });
-
-  final WrapTextController controller;
-  final FocusNode focus;
-  final String where;
-  final IconData icon;
-  final TextSearchMatch match;
-
-  /// Parça (snippet) üretmek için alanın arama dizini.
-  final TextSearchIndex index;
-}
