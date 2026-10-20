@@ -142,6 +142,13 @@ eskisini arşive taşıma.
 - **Riverpod 3 görünmeyen ekranın aboneliklerini DURAKLATIR** (`TickerMode`):
   oturum boyu canlı servisler bir EKRANIN build'ine bağlanmaz →
   `lib/app/app_services.dart` (`ref.listen`, uid yokken hiçbiri).
+- **TUZAK (2026-10-20, deneyle doğrulandı — Faz 5 F5.1):** Riverpod 3.3'te
+  `.family` (ve düz) sağlayıcılar varsayılan KALICI; son dinleyici gidince
+  yok edilmez, DURAKLATILIR (`subscription.pause()`). `onPause` vermeyen
+  `StreamController`'lı akışlarımızda (`_withLocal`, `_hydratedDoc`) kaynak
+  dinleyici açık kalır, `merge` her olayda koşar, olaylar birikir ve yeniden
+  açılışta topluca oynatılır. Tek nota/klasöre bağlı akış → `.autoDispose.family`;
+  autoDispose sağlayıcıyı `ref.read` ile okuma (dinleyen yoksa "yükleniyor").
 - `ConsumerState.dispose` içinde `ref` kullanılamaz (istisna) — denetleyiciyi
   build'de alana al.
 - Türetilmiş sağlayıcılar içerik aynıysa ÖNCEKİ örneği döner (`StableBox`,

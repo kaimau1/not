@@ -25,4 +25,5 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web he
 Yaz kuralı: usta rule 12 / YAZ — tetikleyici (kalıcı karar, bug kök nedeni, yanlış yol) oluştuysa iş bitmeden yaz. Sır/anahtar/kişisel veri hafızaya YAZILMAZ.
 
 ## Yol haritası (fazlı plan)
-- `YOL_HARITASI.md` — 2026-10-19 dış göz incelemesinden çıkan 4 fazlı plan (güvenlik/veri → akıcılık → sadeleştirme → eksikler). Kullanıcı **"Faz N'i yap"** dediğinde dosyanın başındaki protokolü izle: yalnız o faz, KARAR GEREKİR maddelerinde önce sor, bitince maddeleri `[x]` + Durum tablosu + HAFIZA + commit/push. Kendiliğinden sonraki faza geçme.
+- `YOL_HARITASI.md` — 2026-10-19 dış göz incelemesinden çıkan 4 fazlı plan (güvenlik/veri → akıcılık → sadeleştirme → eksikler). Kullanıcı **"Faz N'i yap"** dediğinde dosyanın başındaki protokolü izle: yalnız o faz, KARAR GEREKİR maddelerinde önce sor, bitince maddeleri `[x]` + Durum tablosu + HAFIZA + commit/push. Kendiliğinden sonraki faza geçme. (Faz 1–4 bitti.)
+- `PERFORMANS_TOPARLAMA_PLANI.md` — 2026-10-20 inceleme: **Faz 5–9** (doğrulanmış hatalar + bellek sızıntıları → CPU → RAM → toparlama → ölçüm/isteğe bağlı). "Faz 5'i yap" vb. bu dosyanın başındaki protokolle yürür.
