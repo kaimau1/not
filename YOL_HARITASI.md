@@ -42,7 +42,7 @@ push**ta CI'ın `deploy` işiyle yayınlanır. APK yalnız main'de, başlığın
 | 1 | Güvenlik, gizlilik, veri bütünlüğü, hatalar | Bitti | 2026-10-19 | F1.5(d) ertelendi; cihaz doğrulaması KALANLAR'da; APK derlenmedi |
 | 2 | Akıcılık / performans | Bitti | 2026-10-19 | F2.6 ölçümü emülatörde elle tetiklenir; cihazda his doğrulaması KALANLAR'da |
 | 3 | Sadeleştirme ve birleştirme | Bitti | 2026-10-19 | F3.16 karar: değişmez; F3.17 editör denetleyici bölmesi + tarihli yorum temizliği kısmen ertelendi; cihaz doğrulaması KALANLAR'da |
-| 4 | Eksik özellikler, test altyapısı, Play | Bekliyor | — | |
+| 4 | Eksik özellikler, test altyapısı, Play | Bitti | 2026-10-20 | F4.10 ertelendi (Play'e çıkılmıyor); F4.9 cihaz turu kullanıcıda; kural testi bir premium açığı yakaladı; cihaz doğrulaması KALANLAR'da |
 
 ---
 
@@ -326,37 +326,47 @@ F1.5'in en düşük sürüm kapısı yerindeyken yapılır.
 
 ## FAZ 4 — Eksik özellikler, test altyapısı, Play
 
-- [ ] **F4.1 Ortak notta eşzamanlı düzenleme** — editör tüm gövdeyi yazıyor,
+- [x] **F4.1 Ortak notta eşzamanlı düzenleme** — editör tüm gövdeyi yazıyor,
   son yazan kazanıyor (iki kişi aynı anda yazınca paragraf kaybı). En az
   "başka biri düzenliyor" göstergesi; sonra alan/paragraf bazlı birleştirme.
-- [ ] **F4.2 Not sürüm geçmişi** — AI "notu değiştir", ortak not, otomatik
+  **Yapıldı:** Karar: gösterge + paragraf birleştirme. `domain/text_merge.dart` (`mergeText3` satır diff3, `mergeItems3` kimlikle); editör `_mergeConcurrent` tabana göre birleştirir, çakışmada iki hâl de tutulur + uyarı; depo `isOwnEcho`. `editor/note_presence.dart`: `presence/{uid}` nabzı, üst çubukta "X düzenliyor". Testler `text_merge_test`.
+- [x] **F4.2 Not sürüm geçmişi** — AI "notu değiştir", ortak not, otomatik
   kayıt varken "dünkü hâline dön" güvencesi (seyrek anlık görüntü).
-- [ ] **F4.3 Misafir hesap hatırlatması** — ilk açılışta sessiz anonim oturum
+  **Yapıldı:** `domain/note_version.dart` + depo `saveVersion`/`listVersions`/`rememberVersionBase`; açılış hâli, 30 dk aralık, AI öncesi, geri dönüş öncesi; yalnız metin, 30 tavan. ⋮ → Sürüm geçmişi (`note_history_sheet.dart`). Kurallar + hesap/kalıcı silme.
+- [x] **F4.3 Misafir hesap hatırlatması** — ilk açılışta sessiz anonim oturum
   (`login_screen.dart:48`); uygulama silinince notlar erişilemez. N nottan
   sonra kalıcı "Google hesabını bağla" kartı.
-- [ ] **F4.4 Drive'daki ekler web'de görünmüyor** (2026-10-19: Windows kaldırıldı, bilgisayardaki TEK yol artık web — öncelik yükseldi; Drive kipindeki kullanıcı ekleri bilgisayarda göremiyor) — web'de `NoDriveAuth`
+  **Yapıldı:** `auth/presentation/guest_backup_card.dart`: 3 nottan sonra ana ekranda "Notların yedeklenmiyor" kartı, Google bağla (uid korunur), "Sonra" 7 gün.
+- [x] **F4.4 Drive'daki ekler web'de görünmüyor** (2026-10-19: Windows kaldırıldı, bilgisayardaki TEK yol artık web — öncelik yükseldi; Drive kipindeki kullanıcı ekleri bilgisayarda göremiyor) — web'de `NoDriveAuth`
   (`drive_store.dart:293`), `readBytes` null dönüyor
   (`attachment_repository.dart:950`). Web'de Drive okuması ya da Storage'a da
   yansıtma. (Kod okumasından; tarayıcıda doğrula.)
-- [ ] **F4.5 Ayar senkronu** — tercihler yalnız cihazda (SharedPreferences);
+  **Yapıldı:** `WebDriveAuth` (Firebase Google penceresi + `drive.appdata` jetonu, bellekte); web'de Drive deposu salt okuma; ek açılınca `resolveWebDriveAttachment` belleğe indirip `blob:` adresiyle açar; `blob:` buluta yazılmaz.
+- [x] **F4.5 Ayar senkronu** — tercihler yalnız cihazda (SharedPreferences);
   Android ve web ayrı ayrı ayarlanıyor. Seçili tercihler kullanıcı
   belgesine.
-- [ ] **F4.6 FCM push** — paylaşım bildirimleri yalnız uygulama açıkken
+  **Yapıldı:** `settings/data/prefs_sync.dart`: 27+ kişiye ait tercih `users/{uid}/meta/prefs`te; anlık görüntü planı (`planPrefsSync`, test), ilk eşitlemede bulut kazanır; sağlayıcılar `watchPrefs`.
+- [x] **F4.6 FCM push** — paylaşım bildirimleri yalnız uygulama açıkken
   (KALANLAR'da ayrıntı).
-- [ ] **F4.7 Erişilebilirlik** — tüm kodda 9 `Semantics`; tuval/balon/mürekkep
+  **Yapıldı:** `functions/push.js` (klasör sohbeti, klasör daveti, ortak not, gelen not) + `notes/data/push_service.dart` (Android jetonu `fcmTokens`, dokunuş yönlendirmesi); "Paylaşım bildirimleri" kapalıysa sunucu göndermez. Not düzenlemesi için itme bilerek yok.
+- [x] **F4.7 Erişilebilirlik** — tüm kodda 9 `Semantics`; tuval/balon/mürekkep
   ekran okuyucuya kapalı. Sistem yazı ölçeği YOK SAYILIYOR (`fixedTypography`,
   varsayılan 1.0) — ilk açılışta sistem ölçeğinden başla, sonra uygulama
   ayarı geçerli olsun.
-- [ ] **F4.8 Kilit şifreleme değil** — içerik Firestore'da ve önbellekte düz
+  **Yapıldı:** İlk açılışta sistem yazı ölçeğinin en yakın kademesi (`initialFontScale`), sonra uygulama ayarı; çizim tuvali ve balonlar ekran okuyucuda (`Semantics`).
+- [x] **F4.8 Kilit şifreleme değil** — içerik Firestore'da ve önbellekte düz
   metin; ekran kilidi olmayan cihazda doğrulamasız açılıyor
   (`note_guard.dart:12`). Kullanıcıya açıkça söyle; **KARAR GEREKİR**:
   isteğe bağlı gerçek şifreleme.
-- [ ] **F4.9 Test altyapısı** — Firestore/Storage kuralları için emülatör
+  **Yapıldı:** Karar (kullanıcı): şifre + desen + parmak izi seçenekleri. `core/utils/note_lock.dart` (PBKDF2), `notes/presentation/lock/` (desen ızgarası, kilit açma, Ayarlar → Hesap → Not kilidi); web'de de şifre/desen çalışır; "kilit şifreleme değildir" ayarda açık yazılı. Gerçek uçtan uca şifreleme yapılmadı (kullanıcı seçmedi).
+- [x] **F4.9 Test altyapısı** — Firestore/Storage kuralları için emülatör
   testleri (28 KB kural, hiç testi yok); veri katmanı testleri
   (`fake_cloud_firestore` ya da emülatör); KALANLAR'daki 142 "cihazda görülmedi" maddesi için bir
   doğrulama turu.
+  **Yapıldı:** `rules-test/` Firestore + Storage emülatör testleri (11), CI `rules` işi, deploy onu bekler — ilk koşuda `premiumUntil` açığı yakalandı ve düzeltildi. Veri katmanı: `fake_cloud_firestore` ile `notes_repository_data_test`. ERTELENDİ: KALANLAR'daki cihaz doğrulama turu — telefon gerektirir, kullanıcının işi.
 - [ ] **F4.10 Play'e çıkış (biliniyor)** — Play Billing; AI kotası ve depolama
   tavanı SUNUCUDA (Cloud Function — G2'nin kod tarafı); App Check zorlaması.
+  ERTELENDİ: kullanıcı kararı 2026-10-19/20 — "Play'e çıkmıyoruz hâlâ".
 
 ---
 

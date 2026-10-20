@@ -16,7 +16,7 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web he
   - `--target-platform android-arm64`: CI de böyle derliyor; bayrak olmadan APK ~110 MB (tüm mimariler), onunla ~60 MB.
   - CI ayrıca `--split-debug-info=build/app/outputs/symbols` verir. pdfrx 2.x `pdfium.wasm`'ı yalnız web'e paketler; eski pub önbelleği yaması (1.3.5) kaldırıldı.
 - APK: CI push'ta imzalı üretir (`.github/workflows/`)
-- Firestore/Storage kural değişince: `firebase deploy` (yapılandırma `firebase.json`)
+- Firestore/Storage kural değişince: önce `cd rules-test && npm ci && npm test` (emülatör, Java 11+ — CI `rules` işi de koşar), yayın main push'ta CI'da (elle: `firebase deploy`)
 
 ## Hafıza (usta koordineli — 3 katman)
 - Kod yapısı        → graphify-out/     (oku: GRAPH_REPORT.md · güncelle: elle `graphify update .` — depoda otomatik kanca YOK; grafik 2026-07-30'dan (`ebba874e`) beri BAYAT, satır/dosya bilgisini koddan doğrula)

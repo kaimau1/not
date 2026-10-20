@@ -43,6 +43,9 @@ eskisini arşive taşıma.
 - Deploy (main): web (Cloudflare Pages `build/` dizininden — kökte
   `functions/` Firebase'in, wrangler onu Pages Functions sanıyordu), Firestore/
   Storage kuralları, Cloud Functions (`continue-on-error`, Blaze ister).
+- `rules` işi (F4.9): `rules-test/` Firestore+Storage emülatörü (Java 21) +
+  functions saf testleri; deploy `[test, rules]` bekler. Yerelde:
+  `cd rules-test && npm ci && npm test`.
 
 ## Veri modeli ve Firestore
 - **İleri uyum (F1.5):** `Attachment`/`NoteItem`/`Note` tanımadığı anahtarları
@@ -96,6 +99,29 @@ eskisini arşive taşıma.
   eklenince `account_deletion_test` kırılır (bilinçli). `aiQuota`/
   `rateLimits` bilerek kalır.
 - `premiumUntil` istemciden yazılamaz (kural) — premium konsoldan.
+  TUZAK (F4.9 testi yakaladı): rules_version 2'de `{document=**}` SIFIR
+  parçayı da eşler; genel blok `users/{uid}/{collection}/{document=**}`
+  olmalı, yoksa `users/{uid}` belgesinin kendisine her şey yazılır.
+- Not alt koleksiyonları (`heavy`, `versions`, `presence`) tek kural
+  bloğunda (`{sub}` + izin listesi); bilinmeyen alt koleksiyon kapalı.
+- Sürümler (F4.2): `notes/{id}/versions`, yalnız METİN; açıldığı hâl ilk
+  değişiklikte, sonra 30 dk'da bir, AI öncesi, geri dönüş öncesi; 30 tavan
+  (sahip budar). Depo `rememberVersionBase` (editör açılışta verir).
+- Eşzamanlı düzenleme (F4.1): editör üç yönlü birleştirir (taban = son
+  ortak görülen içerik, `text_merge.dart`); kendi yankısını depo
+  `isOwnEcho` ile ayırır. Kalan risk: yazım uçuştayken gelen başka yazım
+  sunucuda ezilebilir (pencere ~yüzlerce ms). "Düzenliyor" nabzı
+  `presence/{uid}` 25 sn'de bir.
+- Ayar senkronu (F4.5): `users/{uid}/meta/prefs.values`; anlık görüntü
+  yöntemi, cihazın İLK eşitlemesinde bulut kazanır. Tercih sağlayıcıları
+  `watchPrefs(ref)` ile okur (dışarıdan değişince yeniden kurulur).
+  Cihaza özgü anahtar listeye EKLENMEZ.
+- Not kilidi (F4.8): cihaz / şifre / desen (`note_lock`, PBKDF2 özeti, ayar
+  senkronuyla). ŞİFRELEME DEĞİL — arayüzde açıkça yazar. "Unuttum" Google
+  yeniden doğrulaması ister (misafirde yok).
+- FCM (F4.6): jeton `users/{uid}/fcmTokens/{jeton}`; `functions/push.js`
+  klasör sohbeti/davet, ortak not, gelen not. Not DÜZENLEMESİ için itme
+  bilerek YOK (yazım sıklığı). Hesap değişince `deleteToken`.
 - Kişi araması (F1.1): anonim red, dakikada 10, e-posta TAM / ad ≥ 3 harf
   kelime öneki; "Adımla bulunabilirim" kapalıyken `userSearch/{uid}` silinir.
 
@@ -198,7 +224,10 @@ eskisini arşive taşıma.
 ## Web
 - Geri tuşu: `HomeFirstRouteInformationProvider` (go_router görünmez
   geçmiş kayıtları yazıyordu).
-- Web'de Drive ekleri okunamıyor (F4.4), yerel notlar/video yok.
+- Web'de Drive ekleri (F4.4): `WebDriveAuth` Google penceresiyle Drive
+  kapsamlı jeton (bellekte, ~1 sa); ek `blob:` adresiyle açılır, `blob:`
+  `toMap`'te buluta yazılmaz. Web Drive'a yazmaz (ekleri Storage'a).
+  Yerel notlar/video yok.
 - Yerel sunucu: `python -m http.server --directory <mutlak>` (silinip yeniden
   kurulan klasörü eski hâliyle sunar).
 
@@ -213,6 +242,7 @@ eskisini arşive taşıma.
 - `SnackBar(action:)` varsayılanı `persist: true` → `timedSnackBar`.
 
 ## Test tuzakları
+- Veri katmanı testi: `fake_cloud_firestore` (`notes_repository_data_test`).
 - Widget testinde `Picture.toImage` / `rootBundle` / PNG kodlama sahte zamanda
   ilerlemez → `tester.runAsync`.
 - Test binding'i en_US koşar; Türkçe metin bekleyen testte `locale: tr`.

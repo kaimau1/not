@@ -6,6 +6,37 @@
 - [ ] Faz 1–4 ayrı oturumlarda, sırayla → bkz. `YOL_HARITASI.md` (madde
   listesi, sıra ve durum orada tutulur; burada tekrarlanmaz).
 
+## 2026-10-20 — Faz 4 + simge i6 — CİHAZDA GÖRÜLMEDİ
+- [ ] **Senin yapacakların**: (1) Cloud Functions Blaze planda yayınlanıyor
+  mu — Actions → deploy → "Cloud Functions'ı yayınla" adımı yeşil olmalı
+  (itme bildirimleri buna bağlı). (2) Play Console simgesi değişecekse
+  `assets/icon/play_store_512.png` (Play'e çıkılınca).
+- [ ] **Yeni simge**: başlatıcıda lacivert zemin + gümüş "N ote"; yuvarlak
+  maskede kırpılmıyor; Android 13+ temalı simge beyaz "N ote"; bildirim
+  küçük simgesi beyaz "N"; web sekmesi/ana ekran simgesi.
+- [ ] **Ortak not birlikte yazma** (iki hesap): A ve B aynı notu açar → üst
+  çubukta karşı tarafın baş harfi + "X şu an düzenliyor"; ikisi farklı
+  paragraflara yazar → ikisinin yazdığı da kalır; aynı satırı ikisi farklı
+  değiştirir → iki hâl alt alta + "iki hâli de tutuldu" uyarısı.
+- [ ] **Sürüm geçmişi**: dünden kalan notu aç, değiştir → ⋮ → Sürüm geçmişi
+  → "Açıldığı hâli" → önizle → "Bu sürüme dön"; AI "notu değiştir" sonrası
+  "AI değiştirmeden önce" sürümü var.
+- [ ] **Misafir kartı**: hesapsız 3 not → ana ekranda "Notların
+  yedeklenmiyor" kartı; "Sonra" gizler; "Google hesabı bağla" notları korur.
+- [ ] **Web'de Drive eki**: telefonda Drive'a giden PDF/görseli web'de aç →
+  "Drive'a bağlan" → Google penceresi → ek açılıyor.
+- [ ] **Ayar senkronu**: telefonda yazı tipi/tema/yazı boyutu değiştir →
+  web'i yenile → aynı ayar (en geç ~20 sn).
+- [ ] **İtme bildirimi**: uygulama KAPALIYKEN B'ye klasör sohbet mesajı /
+  ortak not / arkadaştan not → bildirim düşüyor, dokununca ilgili ekran.
+- [ ] **Yazı ölçeği**: telefonda sistem yazısı büyük, uygulama TEMİZ
+  kurulumda "Çok büyük"/"Büyük" kademesinde açılıyor.
+- [ ] **Not kilidi**: Ayarlar → Hesap → Not kilidi → Şifre / Desen →
+  kilitli notu açarken soruluyor; 5 yanlışta 30 sn bekleme; "Parmak
+  iziyle de açılabilsin"; web'de de soruyor; "Unuttum" Google ile sıfırlar.
+- [ ] **TalkBack**: PDF üstündeki çizim "Elle çizim, N çizgi", balon
+  "Not balonu: …" okunuyor.
+
 ## 2026-10-19 — Faz 3 (sadeleştirme) — CİHAZDA GÖRÜLMEDİ
 - [ ] **Senin yapacakların**: tüm telefonlar bu sürüme geçince konsolda
   `config/app` → `minClient: 2` (ağır belge bölmesi F3.13 eski sürümde
