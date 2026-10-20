@@ -119,6 +119,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # DİSK AÇ (2026-10-20, koşu #490 "No space left on device"): APK işi
+      # Gradle önbelleği + yapı önbelleği + NDK r28c indirmesiyle runner'ın
+      # diskini bitirdi; derleme yarıda kesildi. Runner'da hazır gelen ve bu
+      # işin hiç kullanmadığı araç zincirleri (dotnet, GHC, Boost, CodeQL,
+      # Swift — ~15 GB) silinir. Android SDK/NDK'ya dokunulmaz.
+      - name: Disk alanını boşalt
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
+            /usr/local/share/boost /opt/hostedtoolcache/CodeQL \
+            /usr/share/swift /usr/local/share/powershell || true
+          sudo docker image prune --all --force >/dev/null 2>&1 || true
+          df -h /
+
       # SÜRÜM ADI İLERLER (kullanıcı isteği 2026-10-20: "sürüm ilerlemesi
       # lazım"). Uygulama içinde hep "1.0.0" yazıyordu: pubspec sabitti,
       # yalnız versionCode (koşu numarası) artıyordu; Release adı "v1.0.N"

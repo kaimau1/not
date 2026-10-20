@@ -27,6 +27,8 @@ eskisini arşive taşıma.
   yetmiyor (403) — Android doğrulaması main'deki `[apk]` koşusunda.
 
 ## CI (`.github/workflows/build.yml`)
+- APK işi ilk adımda kullanılmayan araç zincirlerini siler (2026-10-20,
+  koşu #490 "No space left on device" — Gradle önbellekleri + NDK r28c).
 - Sürüm adı (2026-10-20): pubspec ANA.ARA (1.1) + koşu numarası → `1.1.N`
   (`--build-name`), Release etiketi `v1.1.N`, web de aynı. Büyük adımda
   pubspec'teki ara sayı elle artar. versionCode yine koşu numarası.
