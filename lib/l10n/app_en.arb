@@ -744,6 +744,7 @@
   "lineSpacingWider": "Wider",
   "trashReminderTitle": "Something in the trash may be worth keeping",
   "trashReminderBody": "{count, plural, =1{A note will be deleted for good tomorrow} other{{count} notes will be deleted for good tomorrow}} — it looks like it still holds a task or important info. Take a look.",
+  "groupByFolder": "Group by folder",
   "fontSizeSmall": "Small",
   "fontSizeMedium": "Medium",
   "fontSizeLarge": "Large",

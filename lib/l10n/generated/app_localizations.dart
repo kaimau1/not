@@ -3944,6 +3944,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Bir not yarın kalıcı silinecek} other{{count} not yarın kalıcı silinecek}} — içinde iş ya da önemli bilgi var gibi. Göz at.'**
   String trashReminderBody(int count);
 
+  /// No description provided for @groupByFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasöre göre grupla'**
+  String get groupByFolder;
+
   /// No description provided for @fontSizeSmall.
   ///
   /// In tr, this message translates to:

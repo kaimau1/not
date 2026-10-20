@@ -265,6 +265,15 @@ class _ViewModeSection extends ConsumerWidget {
             selected: list,
             onTap: () => set(true),
           ),
+          // "Tümü" açıkken: klasör başlıkları altında grupla (D4).
+          if (ref.watch(showAllNotesProvider))
+            _Option(
+              label: l10n.groupByFolder,
+              icon: Icons.folder_copy_outlined,
+              selected: ref.watch(allNotesGroupByFolderProvider),
+              onTap: () =>
+                  ref.read(allNotesGroupByFolderProvider.notifier).toggle(),
+            ),
         ],
       ),
     );

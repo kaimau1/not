@@ -967,6 +967,7 @@
   "trashReminderTitle": "Çöpte geri yüklemen gereken not olabilir",
   "trashReminderBody": "{count, plural, =1{Bir not yarın kalıcı silinecek} other{{count} not yarın kalıcı silinecek}} — içinde iş ya da önemli bilgi var gibi. Göz at.",
   "@trashReminderBody": {"placeholders": {"count": {"type": "int"}}},
+  "groupByFolder": "Klasöre göre grupla",
   "fontSizeSmall": "Küçük",
   "fontSizeMedium": "Orta",
   "fontSizeLarge": "Büyük",

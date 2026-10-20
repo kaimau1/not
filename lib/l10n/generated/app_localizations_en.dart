@@ -2112,6 +2112,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get groupByFolder => 'Group by folder';
+
+  @override
   String get fontSizeSmall => 'Small';
 
   @override

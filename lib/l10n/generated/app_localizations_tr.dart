@@ -2108,6 +2108,9 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get groupByFolder => 'Klasöre göre grupla';
+
+  @override
   String get fontSizeSmall => 'Küçük';
 
   @override

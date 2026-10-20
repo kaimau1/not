@@ -340,6 +340,45 @@ extension _DashSlivers on _DashboardScreenState {
     final bucketsActive =
         !reorderEnabled && ref.read(noteSortProvider) == NoteSort.updated;
 
+    // **"TÜMÜ" KLASÖRE GÖRE** (geliştirme raporu D4): klasördeki notlar ana
+    // ekrana karıştığı için kartlar klasör başlıkları altında; sıra
+    // kullanıcının klasör sırası, klasörsüzler en sonda. Arama sürerken
+    // yok (sonuçlar tek akış, kartta klasör rozeti var).
+    if (!searchActive &&
+        ref.read(showAllNotesProvider) &&
+        ref.read(selectedFolderProvider) == null &&
+        ref.watch(allNotesGroupByFolderProvider)) {
+      final folders = ref.read(visibleOrderedFoldersProvider);
+      final byFolder = <String?, List<Note>>{};
+      for (final n in others) {
+        (byFolder[n.folderId] ??= []).add(n);
+      }
+      final groups = <(String, List<Note>)>[
+        (l10n.sectionPinnedShort, pinned),
+        for (final f in folders)
+          if (byFolder[f.id] case final list?) (f.name, list),
+        // Klasörsüzler + klasörü listede olmayanlar (silinmiş klasör):
+        // hiçbir not gruplamada kaybolmasın.
+        (
+          l10n.archiveNoFolder,
+          [
+            for (final e in byFolder.entries)
+              if (!folders.any((f) => f.id == e.key)) ...e.value,
+          ],
+        ),
+      ];
+      return [
+        for (final (label, list) in groups)
+          if (list.isNotEmpty) ...[
+            header(label, list.length),
+            SliverPadding(
+              padding: gridPadding,
+              sliver: listView ? rows(list) : grid(list),
+            ),
+          ],
+      ];
+    }
+
     if (!bucketsActive) {
       if (pinned.isEmpty || others.isEmpty) {
         return [
