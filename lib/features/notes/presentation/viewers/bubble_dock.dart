@@ -190,7 +190,9 @@ class _BubbleDockState extends State<BubbleDock> {
         return const SizedBox.shrink();
       }
       _reportHeight();
-      final color = Color(bubble.color);
+      final color = bubble.plain
+          ? Color(bubble.color)
+          : BubbleController.displayColor(bubble);
       final scheme = Theme.of(context).colorScheme;
       final l10n = context.l10n;
       final hintStyle = TextStyle(
@@ -209,109 +211,119 @@ class _BubbleDockState extends State<BubbleDock> {
           ThemeData.estimateBrightnessForColor(color) == Brightness.dark
           ? Colors.white
           : Colors.black87;
+      // **PREMİUM GÖRÜNÜM** (kullanıcı isteği 2026-10-20: "sarı balon teması
+      // hiç güzel değil, göz yoruyor"): başlık şeridi artık balonun rengine
+      // BOYANMIYOR — sarı balonda kartın tepesi sarı bir bant oluyordu. Kart
+      // nötr yüzey + ince kenar; balonun rengi yalnız soldaki küçük rozette.
       return _KeyboardFollow(
         child: Padding(
-          padding: EdgeInsets.fromLTRB(6, 6, 6, 6 + widget.bottomPadding),
+          padding: EdgeInsets.fromLTRB(8, 6, 8, 8 + widget.bottomPadding),
           child: Material(
             key: _cardKey,
             color: scheme.surface,
-            elevation: 10,
-            shadowColor: Colors.black45,
-            borderRadius: BorderRadius.circular(22),
+            elevation: 8,
+            shadowColor: Colors.black38,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+              side: BorderSide(
+                color: scheme.outlineVariant.withValues(alpha: 0.7),
+              ),
+            ),
             clipBehavior: Clip.antiAlias,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                ColoredBox(
-                  color: Color.alphaBlend(
-                    color.withValues(alpha: 0.16),
-                    scheme.surface,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 6, 6, 6),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 8, 2),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color.lerp(color, Colors.white, 0.18)!,
+                              color,
+                            ],
                           ),
-                          child: Icon(
-                            bubble.plain
-                                ? Icons.text_fields_rounded
-                                : bubble.isHighlight
-                                ? Icons.border_color_rounded
-                                : Icons.chat_bubble_rounded,
-                            size: 15,
-                            color: onColor,
-                          ),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: widget.readOnly
-                              ? Text(
-                                  bubble.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: _titleStyle,
-                                )
-                              : TextField(
-                                  key: const ValueKey('bubble-dock-title'),
-                                  controller: _title,
-                                  focusNode: _titleFocus,
-                                  maxLines: 1,
-                                  maxLength: PageBubble.maxTitle,
-                                  textCapitalization:
-                                      TextCapitalization.sentences,
-                                  textInputAction: TextInputAction.next,
-                                  // Başlıkta Enter metne geçer — klavye
-                                  // kapanıp açılmaz.
-                                  onSubmitted: (_) => _textFocus.requestFocus(),
-                                  style: _titleStyle,
-                                  cursorColor: scheme.onSurface,
-                                  decoration: InputDecoration(
-                                    isDense: true,
-                                    filled: false,
-                                    counterText: '',
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 6,
-                                    ),
-                                    border: InputBorder.none,
-                                    hintText: l10n.bubbleTitleHint,
-                                    hintStyle: hintStyle,
+                        child: Icon(
+                          bubble.plain
+                              ? Icons.text_fields_rounded
+                              : bubble.isHighlight
+                              ? Icons.border_color_rounded
+                              : Icons.chat_bubble_rounded,
+                          size: 15,
+                          color: onColor,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: widget.readOnly
+                            ? Text(
+                                bubble.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: _titleStyle,
+                              )
+                            : TextField(
+                                key: const ValueKey('bubble-dock-title'),
+                                controller: _title,
+                                focusNode: _titleFocus,
+                                maxLines: 1,
+                                maxLength: PageBubble.maxTitle,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                textInputAction: TextInputAction.next,
+                                // Başlıkta Enter metne geçer — klavye
+                                // kapanıp açılmaz.
+                                onSubmitted: (_) => _textFocus.requestFocus(),
+                                style: _titleStyle,
+                                cursorColor: scheme.onSurface,
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  filled: false,
+                                  counterText: '',
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 6,
                                   ),
-                                  onChanged: (value) => widget.controller
-                                      .updateTitle(bubble.id, value),
+                                  border: InputBorder.none,
+                                  hintText: l10n.bubbleTitleHint,
+                                  hintStyle: hintStyle,
                                 ),
-                        ),
-                        // "Bitti" YAZILI ve hep görünür: eski kapat simgesi
-                        // (⤡) neyin kapandığını anlatmıyordu.
-                        TextFieldTapRegion(
-                          child: ExcludeFocus(
-                            child: FilledButton.icon(
-                              key: const ValueKey('bubble-dock-done'),
-                              onPressed: _close,
-                              style: FilledButton.styleFrom(
-                                visualDensity: VisualDensity.compact,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                minimumSize: const Size(0, 34),
+                                onChanged: (value) => widget.controller
+                                    .updateTitle(bubble.id, value),
                               ),
-                              icon: const Icon(Icons.check_rounded, size: 18),
-                              label: Text(l10n.bubbleDone),
+                      ),
+                      // "Bitti" YAZILI ve hep görünür: eski kapat simgesi
+                      // (⤡) neyin kapandığını anlatmıyordu.
+                      TextFieldTapRegion(
+                        child: ExcludeFocus(
+                          child: FilledButton.icon(
+                            key: const ValueKey('bubble-dock-done'),
+                            onPressed: _close,
+                            style: FilledButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              minimumSize: const Size(0, 34),
                             ),
+                            icon: const Icon(Icons.check_rounded, size: 18),
+                            label: Text(l10n.bubbleDone),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 2),
+                  padding: const EdgeInsets.fromLTRB(10, 6, 10, 2),
                   child: widget.readOnly
                       ? Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -1037,9 +1049,13 @@ class _KeyboardFollow extends StatelessWidget {
     final inset = MediaQuery.viewInsetsOf(context).bottom;
     final view = View.of(context);
     final height = view.physicalSize.height / view.devicePixelRatio;
+    // Sistem GEZİNME ÇUBUĞU da bir engel sayılır (kullanıcı ekran görüntüsü
+    // 2026-10-20: yazma kipinde editörün alt çubuğu gizlenince bölme ekranın
+    // dibine iniyor, kartın araç satırı telefonun geri/ana sayfa
+    // düğmelerinin ALTINDA kalıyordu). Kart en az çubuğun üstünde durur.
     final keyboard = math.max(
-      inset,
-      view.viewInsets.bottom / view.devicePixelRatio,
+      math.max(inset, view.viewInsets.bottom / view.devicePixelRatio),
+      view.viewPadding.bottom / view.devicePixelRatio,
     );
     return _KeyboardFollowBox(keyboardTop: height - keyboard, child: child);
   }

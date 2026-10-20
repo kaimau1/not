@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/l10n_ext.dart';
 import '../../settings/settings_providers.dart';
 import '../../../core/widgets/app_sheet.dart';
+import 'viewers/bubble_layer.dart' show BubbleController;
 
 /// Bir İÇERİKTEN (fotoğraf, tarama, video, görsel, PDF, sunum) not alırken
 /// notun hangi biçimde açılacağı.
@@ -323,7 +324,7 @@ class _BubblePreview extends StatelessWidget {
         bubbles: true,
         ink: scheme.onSurfaceVariant,
         page: scheme.surfaceContainerHighest,
-        accent: const Color(0xFFFFC107),
+        accent: const Color(BubbleController.defaultColor),
         highlight: const Color(0xFFEF5350),
       ),
       size: Size.infinite,

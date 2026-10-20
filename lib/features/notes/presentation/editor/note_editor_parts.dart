@@ -205,10 +205,11 @@ class _NoteUploadsBanner extends ConsumerWidget {
 /// CANLI DİKTE alanı: mikrofon açıkken kaçırılamayacak gösterge (açık kalmış
 /// mikrofon fark edilmiyordu) ve durdurma düğmesi.
 ///
-/// Sesli yakalama levhasıyla AYNI görünüm (kullanıcı isteği 2026-10-20 —
-/// bkz. listening_visuals.dart): rozet, başlık + kip etiketi, dalga, süre.
-/// Levha yapay zekâ kipinde (yıldızlı, iki renkli); burası düz mikrofon ve
-/// "Doğrudan yazım" etiketi. Eskiden düz bir bilgi şeridiydi.
+/// Sesli yakalama levhasıyla AYNI KART (kullanıcı isteği 2026-10-20 —
+/// bkz. [ListeningCard]): eskiden tek satırlık bir şeritti, dalga 40 px'e
+/// sıkışmış, durdurma küçük bir simgeydi; yapay zekâ levhası ise ekranın
+/// yarısını kaplıyordu. Artık ikisi aynı orta boy kart; fark kip rengi,
+/// rozet ve etiket — burada döküm alanı yok, yazı notun içine akıyor.
 class _DictationPanel extends StatelessWidget {
   const _DictationPanel({required this.start, required this.onStop});
 
@@ -219,95 +220,28 @@ class _DictationPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
-    final accent = listeningAccent(scheme, ListeningMode.dictation);
     return Padding(
       key: const ValueKey('dictation-panel'),
       padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
-      child: Material(
-        color: scheme.surfaceContainerHigh,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: accent.withValues(alpha: 0.35)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 8, 6, 8),
-          child: Row(
-            children: [
-              const ListeningBadge(
-                mode: ListeningMode.dictation,
-                active: true,
-                size: 36,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            l10n.voiceListening,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        const ListeningModeTag(mode: ListeningMode.dictation),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.dictationPanelHint,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 6),
-              SizedBox(
-                width: 40,
-                child: ListeningWaveform(
-                  active: true,
-                  color: accent,
-                  height: 22,
-                  bars: 6,
-                ),
-              ),
-              const SizedBox(width: 8),
-              ListeningClock(
-                start: start,
-                active: true,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: scheme.error,
-                ),
-              ),
-              const SizedBox(width: 2),
-              IconButton(
-                key: const ValueKey('dictation-stop'),
-                tooltip: l10n.voiceFinish,
-                visualDensity: VisualDensity.compact,
-                style: IconButton.styleFrom(
-                  backgroundColor: scheme.error,
-                  foregroundColor: scheme.onError,
-                ),
-                icon: const Icon(Icons.stop_rounded, size: 20),
-                onPressed: onStop,
-              ),
-            ],
+      child: ListeningCard(
+        mode: ListeningMode.dictation,
+        active: true,
+        title: l10n.voiceListening,
+        subtitle: l10n.dictationPanelHint,
+        clock: ListeningClock(
+          start: start,
+          active: true,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: scheme.error,
           ),
+        ),
+        action: ListeningActionButton(
+          key: const ValueKey('dictation-stop'),
+          listening: true,
+          label: l10n.voiceFinish,
+          onPressed: onStop,
         ),
       ),
     );

@@ -41,6 +41,7 @@ Future<void> showAiSheet(
   ReplaceTextCallback? onReplaceText,
   ReplaceTextCallback? onCreateNote,
   ValueChanged<Attachment>? onTranscribe,
+  VoidCallback? onVoiceNote,
 }) => showAppSheet<void>(
   context: context,
   isScrollControlled: true,
@@ -51,6 +52,7 @@ Future<void> showAiSheet(
     onReplaceText: onReplaceText,
     onCreateNote: onCreateNote,
     onTranscribe: onTranscribe,
+    onVoiceNote: onVoiceNote,
   ),
 );
 
@@ -62,9 +64,16 @@ class AiSheet extends ConsumerStatefulWidget {
     this.onReplaceText,
     this.onCreateNote,
     this.onTranscribe,
+    this.onVoiceNote,
   });
 
   final Note note;
+
+  /// "AI ile sesli not": yapay zekâ dinleme levhasını açar (sonuç nota
+  /// eklenir). Levhanın EN ÜST satırı — kullanıcı isteği 2026-10-20: "AI
+  /// sesli notu AI menüsünün üzerine alalım"; editörün alt çubuğunda artık
+  /// yalnız doğrudan yazdırma mikrofonu var.
+  final VoidCallback? onVoiceNote;
 
   /// Ses/videonun TRANSKRİPT ekranını açar (bkz. `TranscriptScreen`) —
   /// verilmişse ses satırı sonucu levhada göstermek yerine oraya gider:
@@ -696,6 +705,21 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         limit: ref.watch(aiDailyLimitProvider),
                       ),
                     ),
+                  if (widget.onVoiceNote != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: _AiRow(
+                        key: const ValueKey('ai-sheet-voice-note'),
+                        icon: Icons.mic_none_rounded,
+                        title: l10n.aiVoiceRowTitle,
+                        subtitle: l10n.aiVoiceRowInfoEditor,
+                        onTap: () {
+                          final open = widget.onVoiceNote!;
+                          Navigator.pop(context);
+                          open();
+                        },
+                      ),
+                    ),
                   // TEK SOHBET (F3.3): not, belgesi ya da tüm notlar;
                   // soru-cevap ya da beyin fırtınası — kapsam/kip ekranda.
                   Padding(
@@ -984,6 +1008,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
 /// `_HubRow` ile aynı görünüm — iki yüzey aynı dili konuşsun.
 class _AiRow extends StatelessWidget {
   const _AiRow({
+    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,

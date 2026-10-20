@@ -2559,5 +2559,9 @@
   "attachAnyFileInfo": "Her türden dosya: görsel sayfaya, PDF ve sunum belge olarak, ses ve video ek olarak girer",
   "listeningModeAi": "Yapay zekâ",
   "listeningModeDictation": "Doğrudan yazım",
-  "dictationPanelHint": "Konuştukça imlecin olduğu yere yazılır"
+  "dictationPanelHint": "Konuştukça imlecin olduğu yere yazılır",
+  "voiceStartShort": "Başla",
+  "aiVoiceRowTitle": "Sesli not",
+  "aiVoiceRowInfoEditor": "Konuş; yapay zekâ düzenleyip bu nota eklesin",
+  "aiVoiceRowInfoHub": "Konuş; yapay zekâ başlığı, maddeleri ve hatırlatıcıyı çıkarıp notu kursun"
 }

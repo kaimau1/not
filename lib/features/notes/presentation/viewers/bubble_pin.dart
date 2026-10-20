@@ -118,54 +118,84 @@ class _BubbleReadCard extends StatelessWidget {
     );
   }
 
+  /// **Görünüm yenilendi (2026-10-20, "daha premium").** Kart nötr bir
+  /// yüzey: balonun rengi yalnız başlığın yanındaki küçük bir noktada —
+  /// eskiden üstteki renkli şerit sarı balonda sayfanın üstünde fosforlu bir
+  /// bant gibi duruyordu. İnce kenar çizgisi + yumuşak gölge, rahat iç boşluk;
+  /// eylemler ince bir ayırıcının altında.
   Widget _card(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final color = Color(bubble.color);
+    final color = BubbleController.displayColor(bubble);
     final title = bubble.title.trim();
     final text = bubble.text.trim();
     final muted = scheme.onSurfaceVariant;
     return Material(
       color: scheme.surface,
-      elevation: 5,
-      shadowColor: Colors.black54,
-      borderRadius: BorderRadius.circular(14),
+      elevation: 6,
+      shadowColor: Colors.black38,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.7)),
+      ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(height: 4, color: color),
-          if (title.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          if (text.isNotEmpty)
-            Padding(
-              padding: EdgeInsets.fromLTRB(12, title.isEmpty ? 8 : 3, 12, 0),
-              child: Text(
-                text,
-                maxLines: 10,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13.5, height: 1.35),
-              ),
-            ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 2, 2, 2),
+            padding: const EdgeInsets.fromLTRB(14, 12, 12, 0),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, right: 8),
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (title.isNotEmpty)
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                            height: 1.2,
+                          ),
+                        ),
+                      if (text.isNotEmpty)
+                        Padding(
+                          padding: EdgeInsets.only(top: title.isEmpty ? 0 : 4),
+                          child: Text(
+                            text,
+                            maxLines: 10,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              height: 1.4,
+                              color: title.isEmpty
+                                  ? scheme.onSurface
+                                  : scheme.onSurface.withValues(alpha: 0.82),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
                 if (bubble.urgent)
                   Padding(
-                    padding: const EdgeInsets.only(right: 4),
+                    padding: const EdgeInsets.only(left: 4),
                     child: Icon(
                       Icons.priority_high_rounded,
                       size: 16,
@@ -173,8 +203,28 @@ class _BubbleReadCard extends StatelessWidget {
                     ),
                   ),
                 if (bubble.starred)
-                  Icon(Icons.star_rounded, size: 17, color: Colors.amber[700]),
-                const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 2),
+                    child: Icon(
+                      Icons.star_rounded,
+                      size: 17,
+                      color: Colors.amber[700],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+            child: Divider(
+              height: 1,
+              color: scheme.outlineVariant.withValues(alpha: 0.6),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(6, 2, 4, 2),
+            child: Row(
+              children: [
                 // Ok yalnız VURGULU balonda var: serbest balonun bağlanacağı
                 // bir metin yok, düğme de anlamsız olurdu.
                 if (!readOnly && bubble.isHighlight)
@@ -186,14 +236,19 @@ class _BubbleReadCard extends StatelessWidget {
                     color: muted,
                     onPressed: () => controller.toggleArrow(bubble.id),
                   ),
+                const Spacer(),
                 if (!readOnly)
                   TextButton.icon(
                     key: const ValueKey('bubble-read-edit'),
                     onPressed: controller.beginEdit,
                     style: TextButton.styleFrom(
                       visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
                       minimumSize: const Size(0, 32),
+                      textStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     icon: const Icon(Icons.edit_outlined, size: 16),
                     label: Text(l10n.bubbleEditShort),
@@ -662,12 +717,12 @@ class _BubblePinState extends State<_BubblePin>
   /// sayfalarda kaydırmanın takılmasının paylarından biriydi. Bulanık gölge
   /// yalnız TAŞINAN tek balonda var — "kaldırdım" hissi için.
   Widget _marker(PageBubble bubble, _PinPlace place, bool opaque) {
-    final base = Color(bubble.color);
+    final base = BubbleController.displayColor(bubble);
     final ink = _inkOn(base);
     final title = bubble.title.trim();
     final open = !bubble.collapsed;
-    const round = Radius.circular(12);
-    const tip = Radius.circular(2.5);
+    const round = Radius.circular(13);
+    const tip = Radius.circular(3);
     final radius = BorderRadius.only(
       topLeft: place.below && !place.left ? tip : round,
       topRight: place.below && place.left ? tip : round,
@@ -677,16 +732,31 @@ class _BubblePinState extends State<_BubblePin>
     final empty = bubble.text.trim().isEmpty;
     // Yazısız VURGU: işaret metnin kendisinde, tutamaç küçük ve sessiz.
     final quiet = bubble.isHighlight && empty && title.isEmpty;
+    // **PREMİUM GÖRÜNÜM** (2026-10-20): düz, doygun dolgu yerine üstten
+    // hafif aydınlanan iki tonlu bir yüzey ve beyaz ince çerçeve — kâğıdın
+    // üstünde basılı bir etiket gibi. Açık balon siyah kalın çerçeve yerine
+    // kendi renginde YUMUŞAK bir halka taşır (bulanıksız yayılma: ucuz).
+    final top = Color.lerp(base, Colors.white, 0.16)!;
+    final alpha = opaque ? 1.0 : 0.85;
     final decoration = BoxDecoration(
-      color: base.withValues(alpha: opaque ? 1 : 0.82),
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          top.withValues(alpha: alpha),
+          base.withValues(alpha: alpha),
+        ],
+      ),
       borderRadius: radius,
       border: Border.all(
-        color: open ? Colors.black87 : Colors.white,
-        width: open ? 2.2 : 1.5,
+        color: Colors.white.withValues(alpha: open ? 1 : 0.92),
+        width: open ? 2 : 1.5,
       ),
       boxShadow: [
+        if (open)
+          BoxShadow(color: base.withValues(alpha: 0.32), spreadRadius: 3.5),
         BoxShadow(
-          color: Colors.black.withValues(alpha: _lifted ? 0.35 : 0.22),
+          color: Colors.black.withValues(alpha: _lifted ? 0.32 : 0.18),
           offset: Offset(0, _lifted ? 3 : 1.5),
           blurRadius: _lifted ? 6 : 0,
         ),
@@ -714,7 +784,7 @@ class _BubblePinState extends State<_BubblePin>
         maxWidth: _pinChipMaxWidth,
         minHeight: 26,
       ),
-      padding: const EdgeInsets.fromLTRB(8, 4, 9, 4),
+      padding: const EdgeInsets.fromLTRB(9, 4, 10, 4),
       decoration: decoration,
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -738,7 +808,8 @@ class _BubblePinState extends State<_BubblePin>
               style: TextStyle(
                 fontSize: 12,
                 height: 1.15,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
                 color: ink,
               ),
             ),

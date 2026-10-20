@@ -104,6 +104,25 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
       onSuggestion: _send,
       onFullScreen: () => context.push('/chat'),
     );
+    // **AI İLE SESLİ NOT EN ÜSTTE** (kullanıcı isteği 2026-10-20: "AI sesli
+    // notu bu AI menüsünün üzerine alalım, ana ekranda doğrudan yazma
+    // olsun"). Ana ekranın mikrofonu artık hep doğrudan yazdırır; konuşup
+    // notu yapay zekâya kurdurmak buradan. Dokunuş ana ekrana döner ve
+    // ORTAK sesli not levhasını açar (widget/kısayolla aynı yol — bkz.
+    // voiceAutostartProvider): not ana ekranın akışında, seçili klasörde
+    // kurulur.
+    final voiceCard = _ToolCard(
+      key: const ValueKey('ai-hub-voice-note'),
+      icon: Icons.mic_none_rounded,
+      accent: _AiAccent.indigo,
+      title: l10n.aiVoiceRowTitle,
+      subtitle: l10n.aiVoiceRowInfoHub,
+      showChevron: true,
+      onTap: () {
+        ref.read(voiceAutostartProvider.notifier).request();
+        context.go('/');
+      },
+    );
     final tools = [
       _ToolCard(
         icon: Icons.wb_sunny_outlined,
@@ -216,6 +235,8 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
               children: [
                 hero,
                 const SizedBox(height: 16),
+                voiceCard,
+                const SizedBox(height: 12),
                 chatCard,
                 const SizedBox(height: 22),
                 _SectionLabel(l10n.aiToolsSection),
@@ -247,7 +268,12 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
                           flex: 3,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [chatCard, ...historySection],
+                            children: [
+                              voiceCard,
+                              const SizedBox(height: 12),
+                              chatCard,
+                              ...historySection,
+                            ],
                           ),
                         ),
                         const SizedBox(width: 20),
@@ -283,6 +309,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
 /// Ekranın vurgu renkleri: her araç kendi rengiyle tanınsın (klasörlerin
 /// renkli simge kutusuyla aynı dil).
 abstract final class _AiAccent {
+  static const indigo = Color(0xFF4F5BD5);
   static const amber = Color(0xFFD9982B);
   static const blue = Color(0xFF4F8FD6);
   static const violet = Color(0xFF8E74D0);
@@ -891,6 +918,7 @@ class _SectionLabel extends StatelessWidget {
 /// dokunulamaz durur.
 class _ToolCard extends StatelessWidget {
   const _ToolCard({
+    super.key,
     required this.icon,
     required this.accent,
     required this.title,

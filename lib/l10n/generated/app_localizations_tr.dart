@@ -5282,4 +5282,18 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get dictationPanelHint => 'Konuştukça imlecin olduğu yere yazılır';
+
+  @override
+  String get voiceStartShort => 'Başla';
+
+  @override
+  String get aiVoiceRowTitle => 'Sesli not';
+
+  @override
+  String get aiVoiceRowInfoEditor =>
+      'Konuş; yapay zekâ düzenleyip bu nota eklesin';
+
+  @override
+  String get aiVoiceRowInfoHub =>
+      'Konuş; yapay zekâ başlığı, maddeleri ve hatırlatıcıyı çıkarıp notu kursun';
 }

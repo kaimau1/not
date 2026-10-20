@@ -125,11 +125,13 @@ Future<VoiceCaptureResult?> showVoiceCaptureSheet(
   // kapanış yolu da `_askBeforeClosing`'e düşüyor (bkz. PopScope).
   isDismissible: true,
   enableDrag: true,
-  backgroundColor: Theme.of(context).colorScheme.surface,
-  barrierColor: Colors.black.withValues(alpha: 0.32),
-  shape: const RoundedRectangleBorder(
-    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-  ),
+  // Levhanın KENDİSİ görünmez: içerik editörün doğrudan yazdırma şeridiyle
+  // AYNI yüzen kart (bkz. [ListeningCard]); karartı hafif — arkadaki not
+  // okunur kalsın.
+  backgroundColor: Colors.transparent,
+  elevation: 0,
+  barrierColor: Colors.black.withValues(alpha: 0.18),
+  shape: const RoundedRectangleBorder(),
   constraints: BoxConstraints(
     maxHeight: MediaQuery.sizeOf(context).height * 0.74,
   ),
@@ -633,19 +635,6 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     if (mounted) Navigator.pop(context);
   }
 
-  /// Ana ekranda "Doğrudan yazdır" kipine geçer (bkz. [VoiceCaptureAction.dictate]).
-  Future<void> _switchToDictation() async {
-    await _teardown();
-    if (!mounted) return;
-    Navigator.pop<VoiceCaptureResult>(context, (
-      text: '',
-      action: VoiceCaptureAction.dictate,
-      audioPath: null,
-      audioDuration: Duration.zero,
-      title: null,
-    ));
-  }
-
   /// Sessizlik izlemesini ve kayıt yolunun seviye aboneliğini bırakır.
   void _stopSilenceWatch() {
     // Kayıt yolunda oturum mikrofona dokunmaz; yalnız zamanlayıcısı durur
@@ -748,177 +737,123 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       MediaQuery.viewPaddingOf(context).bottom,
     );
 
+    // Bütün evreler AYNI yüzen kartın içinde (editörün dikte şeridiyle aynı
+    // kenar boşluğu ve köşe — bkz. [ListeningCard]).
+    Widget framed(Widget child) => Padding(
+      padding: EdgeInsets.fromLTRB(10, 6, 10, 10 + bottomGap),
+      child: child,
+    );
+    Widget plainCard(Widget child) => framed(
+      Material(
+        color: scheme.surfaceContainerLow,
+        elevation: 6,
+        shadowColor: Colors.black45,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: BorderSide(
+            color: listeningAccent(
+              scheme,
+              ListeningMode.ai,
+            ).withValues(alpha: 0.3),
+          ),
+        ),
+        child: child,
+      ),
+    );
+
     if (!_ready || _phase == _Phase.processing) {
-      return Padding(
-        padding: EdgeInsets.fromLTRB(32, 32, 32, 32 + bottomGap),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            if (_phase == _Phase.processing) ...[
-              const SizedBox(height: 16),
-              Text(l10n.dictationProcessing),
+      return plainCard(
+        Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              if (_phase == _Phase.processing) ...[
+                const SizedBox(height: 16),
+                Text(l10n.dictationProcessing),
+              ],
             ],
-          ],
+          ),
         ),
       );
     }
 
     if (_phase == _Phase.error) {
-      return Padding(
-        padding: EdgeInsets.fromLTRB(20, 24, 20, 24 + bottomGap),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline, size: 40, color: scheme.error),
-            const SizedBox(height: 12),
-            Text(_errorMessage, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            FilledButton.tonal(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l10n.close),
-            ),
-          ],
+      return plainCard(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, size: 40, color: scheme.error),
+              const SizedBox(height: 12),
+              Text(_errorMessage, textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              FilledButton.tonal(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.close),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(14, 8, 14, 14 + bottomGap),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Tutamak
-          Container(
-            width: 34,
-            height: 4,
-            decoration: BoxDecoration(
-              color: scheme.outline.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 8),
-          _header(l10n, scheme, listening),
-          const SizedBox(height: 4),
-          Flexible(child: _transcript(scheme, listening)),
-          // Sessizlik geri sayımı: dolunca dinleme kendiliğinden biter.
-          SizedBox(
-            height: 3,
-            child: AnimatedOpacity(
-              opacity: listening && _silence > 0 ? 1 : 0,
-              duration: const Duration(milliseconds: 200),
-              child: LinearProgressIndicator(
-                key: const ValueKey('voice-silence-bar'),
-                value: _silence,
-                minHeight: 3,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 7),
-          ListeningWaveform(
-            active: listening,
-            color: listeningAccent(scheme, ListeningMode.ai),
-            height: 40,
-          ),
-
-          if (_errorMessage.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
+    // Sessizlik geri sayımı: dolunca dinleme kendiliğinden biter.
+    final silenceBar = SizedBox(
+      height: 3,
+      child: AnimatedOpacity(
+        opacity: listening && _silence > 0 ? 1 : 0,
+        duration: const Duration(milliseconds: 200),
+        child: LinearProgressIndicator(
+          key: const ValueKey('voice-silence-bar'),
+          value: _silence,
+          minHeight: 3,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    );
+    final error = _errorMessage.isEmpty
+        ? null
+        : Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
               _errorMessage,
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: scheme.error),
             ),
-          ],
-          const SizedBox(height: 12),
-          _actions(l10n, scheme, holdMode, listening),
-          // Çipler yapay zekâ ister; döküm zaten yapılamadıysa (ses eki yolu)
-          // hepsi aynı hatayla düşerdi — gösterilmezler.
-          if (_phase == _Phase.ready && _readyAudioPath == null) ...[
-            const SizedBox(height: 10),
-            _chips(l10n, scheme),
-          ],
-        ],
-      ),
-    );
-  }
+          );
 
-  Widget _header(AppLocalizations l10n, ColorScheme scheme, bool listening) {
-    final ready = _phase == _Phase.ready;
-    final language = languageLabel(
-      Localizations.localeOf(context).languageCode,
-    );
-    return SizedBox(
-      height: 52,
-      child: Row(
-        children: [
-          // Editördeki doğrudan yazdırma şeridiyle AYNI parçalar (bkz.
-          // listening_visuals.dart); kip rozetle ve etiketle ayrışır.
-          ListeningBadge(mode: ListeningMode.ai, active: listening),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        // Başlık DURUMU söyler: basılı-tut modunda levha
-                        // açılır açılmaz "Dinliyorum..." yazması yanlıştı —
-                        // mikrofon o an kapalıydı, kullanıcı konuşup boş
-                        // dönüyordu.
-                        ready
-                            ? l10n.voiceCaptureReady
-                            : listening
-                            ? l10n.voiceListening
-                            : l10n.voiceModeHold,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    const ListeningModeTag(mode: ListeningMode.ai),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  ready
-                      ? l10n.voiceCaptureEditHint
-                      : _feedback.isNotEmpty
-                      ? '✓ $_feedback'
-                      : listening && _silence > 0
-                      ? l10n.voiceAutoStopSoon
-                      : l10n.voiceCapturePunctuation(language),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (!ready && widget.target == VoiceCaptureTarget.dashboard)
-            IconButton(
-              key: const ValueKey('voice-to-dictation'),
-              tooltip: l10n.voiceMicDictate,
-              icon: const Icon(Icons.edit_note),
-              onPressed: _switchToDictation,
-            ),
-          if (!ready) _commandsHelp(l10n, scheme),
-          Text(
+    if (_phase != _Phase.ready) {
+      final language = languageLabel(
+        Localizations.localeOf(context).languageCode,
+      );
+      final holdActive = holdMode && !_latched;
+      return framed(
+        ListeningCard(
+          mode: ListeningMode.ai,
+          active: listening,
+          elevation: 6,
+          // Başlık DURUMU söyler: basılı-tut modunda levha açılır açılmaz
+          // "Dinliyorum..." yazması yanlıştı — mikrofon o an kapalıydı,
+          // kullanıcı konuşup boş dönüyordu.
+          title: listening ? l10n.voiceListening : l10n.voiceModeHold,
+          // Kullanım ipucu düğmenin altında ayrı satır değil, alt başlıkta
+          // (kart orta boyda kalsın).
+          subtitle: _feedback.isNotEmpty
+              ? '✓ $_feedback'
+              : listening && _silence > 0
+              ? l10n.voiceAutoStopSoon
+              : !listening
+              ? (holdActive ? l10n.dictationHoldHint : l10n.voiceTapHint)
+              : l10n.voiceCapturePunctuation(language),
+          clock: Text(
             _format(_elapsed),
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
               // Süre sayacı: tabular rakam olmazsa saniye her tikte genişlik
               // değiştirip başlığı oynatır.
@@ -926,25 +861,133 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
               color: listening ? scheme.error : scheme.onSurfaceVariant,
             ),
           ),
-          IconButton(
-            tooltip: l10n.cancel,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.close),
-            onPressed: _cancel,
+          trailing: _headerButtons(l10n, scheme, ready: false),
+          body: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _transcript(scheme, listening),
+              silenceBar,
+              ?error,
+            ],
           ),
-        ],
+          action: _listenAction(l10n, holdMode, listening),
+        ),
+      );
+    }
+
+    // GÖZDEN GEÇİRME: aynı kart, dalga yerine düzenlenebilir döküm ve bitiş
+    // düğmeleri.
+    return plainCard(
+      Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 10, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _header(l10n, scheme, listening),
+            const SizedBox(height: 6),
+            Flexible(child: _transcript(scheme, listening)),
+            ?error,
+            const SizedBox(height: 12),
+            _actions(l10n, scheme, holdMode, listening),
+            // Çipler yapay zekâ ister; döküm zaten yapılamadıysa (ses eki
+            // yolu) hepsi aynı hatayla düşerdi — gösterilmezler.
+            if (_readyAudioPath == null) ...[
+              const SizedBox(height: 10),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: _chips(l10n, scheme),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 
+  /// Gözden geçirme evresinin başlığı — dinleme kartının ([ListeningCard])
+  /// üst satırıyla AYNI düzen: rozet, durum + kip etiketi, süre, kapat.
+  Widget _header(AppLocalizations l10n, ColorScheme scheme, bool listening) {
+    return Row(
+      children: [
+        ListeningBadge(mode: ListeningMode.ai, active: listening),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.voiceCaptureReady,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Row(
+                children: [
+                  const Flexible(
+                    child: ListeningModeTag(mode: ListeningMode.ai),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      l10n.voiceCaptureEditHint,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Text(
+          _format(_elapsed),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            fontFeatures: const [FontFeature.tabularFigures()],
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(width: 2),
+        ..._headerButtons(l10n, scheme, ready: true),
+      ],
+    );
+  }
+
+  /// Kartın başlık satırındaki küçük düğmeler: akıllı komutlar, kapat.
+  /// ("Doğrudan yazdırmaya geç" 2026-10-20'de kalktı: ana ekranın mikrofonu
+  /// artık hep doğrudan yazdırıyor; bu levha bilinçli seçilen AI yolu.)
+  List<Widget> _headerButtons(
+    AppLocalizations l10n,
+    ColorScheme scheme, {
+    required bool ready,
+  }) => [
+    if (!ready) _commandsHelp(l10n, scheme),
+    ListeningHeaderButton(
+      tooltip: l10n.cancel,
+      icon: Icons.close,
+      onPressed: _cancel,
+    ),
+  ];
+
   /// Dinlerken salt okunur zengin metin (son iki kelime soluk = henüz
   /// kesinleşmemiş tanıma), bittiğinde düzenlenebilir alan.
   Widget _transcript(ColorScheme scheme, bool listening) {
-    const style = TextStyle(fontSize: 17, height: 1.55);
+    const style = TextStyle(fontSize: 16, height: 1.45);
     if (_phase == _Phase.ready) {
       final audio = _readyAudioPath != null;
       return ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 74, maxHeight: 210),
+        constraints: const BoxConstraints(minHeight: 60, maxHeight: 180),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1010,8 +1053,10 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     final settled = words.take(settledCount).join(' ');
     final pending = words.skip(settledCount).join(' ');
 
+    // Orta boy (kullanıcı isteği 2026-10-20): üç satır döküm görünür, fazlası
+    // kayar — eski 74-210 px'lik alan levhayı ekranın yarısına çıkarıyordu.
     return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 74, maxHeight: 210),
+      constraints: const BoxConstraints(minHeight: 40, maxHeight: 120),
       child: SingleChildScrollView(
         reverse: true,
         child: SizedBox(
@@ -1074,12 +1119,14 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   /// Akıllı komutlar) yalnız Ayarlar'da: levha zaten iki büyük düğme, üç
   /// işlem çipi ve "baştan dinle" taşıyor — dinlerken iki anahtar daha
   /// kalabalıktı (sadeleştirme 2026-10-19).
-  Widget _commandsHelp(AppLocalizations l10n, ColorScheme scheme) => IconButton(
+  Widget _commandsHelp(
+    AppLocalizations l10n,
+    ColorScheme scheme,
+  ) => ListeningHeaderButton(
     key: const ValueKey('voice-commands-help'),
     tooltip: l10n.voiceSmartCommands,
-    visualDensity: VisualDensity.compact,
     iconSize: 18,
-    icon: Icon(Icons.info_outline, color: scheme.onSurfaceVariant),
+    icon: Icons.info_outline,
     onPressed: () => showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -1223,6 +1270,13 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       );
     }
 
+    // Dinleme evrelerinin düğmesi kartın içinde (bkz. [_listenAction]).
+    return const SizedBox.shrink();
+  }
+
+  /// Dinleme kartının ana düğmesi (dalganın yanında): dinlerken "Bitir",
+  /// beklerken "Başla" ya da "Basılı tut".
+  Widget _listenAction(AppLocalizations l10n, bool holdMode, bool listening) {
     // Düğme "basılı tut" ile mi çalışıyor: kilitlendiyse artık dokunmalı
     // düğmedir (bas → bitir).
     final holdActive = holdMode && !_latched;
@@ -1231,85 +1285,30 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     // kalmalı — aksi hâlde parmak basılıyken düğme ağaçtan kalkar ve bırakma
     // olayı hiç gelmez. (Eski dikte sayfasında bulunmuş bir tuzak; yerleşim
     // değişse de kural aynı.)
-    final button = SizedBox(
-      height: 54,
-      width: double.infinity,
-      child: FilledButton.icon(
-        // Basılı-tut modunda dokunma geri bildirimi Listener'dan gelir; düğme
-        // yine de ETKİN kalır (eskiden disabled'dı ve soluk görünüyordu).
-        onPressed: holdActive
-            ? null
-            : listening
-            ? _finish
-            : _startListening,
-        style: FilledButton.styleFrom(
-          backgroundColor: listening ? scheme.error : scheme.primaryContainer,
-          foregroundColor: listening
-              ? scheme.onError
-              : scheme.onPrimaryContainer,
-          // Basılı-tutta düğme "devre dışı" görünmemeli: parmak orada duracak.
-          disabledBackgroundColor: listening
-              ? scheme.error
-              : scheme.primaryContainer,
-          disabledForegroundColor: listening
-              ? scheme.onError
-              : scheme.onPrimaryContainer,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        icon: Icon(listening ? Icons.stop_circle : Icons.mic),
-        label: Text(
-          listening
-              ? (holdActive && _pressed
-                    ? l10n.voiceListening
-                    : l10n.voiceFinish)
-              : (holdActive ? l10n.voiceModeHold : l10n.voiceModeTap),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
+    final button = ListeningActionButton(
+      key: const ValueKey('voice-listen-action'),
+      listening: listening,
+      // Basılı-tut modunda dokunma geri bildirimi Listener'dan gelir; düğme
+      // yine de ETKİN görünür (eskiden disabled'dı ve soluk görünüyordu).
+      onPressed: holdActive
+          ? null
+          : listening
+          ? _finish
+          : _startListening,
+      label: listening
+          ? (holdActive && _pressed ? l10n.voiceListening : l10n.voiceFinish)
+          : (holdActive ? l10n.voiceModeHold : l10n.voiceStartShort),
     );
-
-    // Düğmenin altındaki tek satırlık kullanım ipucu: hangi modda ne
-    // yapılacağı düğmenin kendisinde değil burada yazar (etiket kısa kalsın).
-    // Dinlerken dokunmalı modda ipucu YOK: düğme zaten "Bitir" diyor.
-    final hintText = holdActive
-        ? l10n.dictationHoldHint
-        : listening
-        ? ''
-        : l10n.voiceTapHint;
-    final hint = hintText.isEmpty
-        ? const SizedBox(height: 6)
-        : Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              hintText,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 11.5, color: scheme.onSurfaceVariant),
-            ),
-          );
-
-    if (!holdActive) {
-      return Column(mainAxisSize: MainAxisSize.min, children: [button, hint]);
-    }
+    if (!holdActive) return button;
 
     // Listener (GestureDetector.onLongPress DEĞİL): uzun basış tanıyıcısı
     // ~500 ms bekler, o süre boyunca konuşulanlar kaybolurdu. Parmak değer
     // değmez dinleme başlar.
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Listener(
-          onPointerDown: (_) => _pressStart(),
-          onPointerUp: (_) => _pressEnd(),
-          onPointerCancel: (_) => _pressEnd(),
-          child: button,
-        ),
-        hint,
-      ],
+    return Listener(
+      onPointerDown: (_) => _pressStart(),
+      onPointerUp: (_) => _pressEnd(),
+      onPointerCancel: (_) => _pressEnd(),
+      child: button,
     );
   }
 

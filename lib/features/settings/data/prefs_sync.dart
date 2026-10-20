@@ -47,7 +47,6 @@ const kSyncedPrefKeys = <String>[
   'voice_auto_stop',
   'voice_silence',
   'voice_smart_commands',
-  'home_mic_dictate',
   'briefing_enabled',
   'briefing_minutes',
   'assistant_voice',

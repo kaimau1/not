@@ -123,6 +123,8 @@ abstract final class UiItem {
   static const barShare = 'editor.bar.share';
   static const barAttachments = 'editor.bar.attachments';
   static const barAi = 'editor.bar.ai';
+  /// ESKİ "AI ile sesli not" çubuk düğmesi — 2026-10-20'de yapay zekâ
+  /// levhasının en üst satırına taşındı; kimlik eski tercihler için duruyor.
   static const barVoiceAi = 'editor.bar.voiceAi';
   static const barDictation = 'editor.bar.dictation';
 
@@ -173,11 +175,7 @@ class UiModule {
   // eskiden hem Yapay zekâ'da hem Ses'te vardı; Ses'i kapatmak Yapay zekâ'yı
   // da "kısmen açık"a düşürüyor, kullanıcı "başka şeyler de kapanmış"
   // görüyordu (kullanıcı bulgusu 2026-10-16).
-  static const ai = UiModule('ai', [
-    UiItem.barAi,
-    UiItem.barVoiceAi,
-    UiItem.homeAi,
-  ]);
+  static const ai = UiModule('ai', [UiItem.barAi, UiItem.homeAi]);
 
   static const voice = UiModule('voice', [
     UiItem.barDictation,

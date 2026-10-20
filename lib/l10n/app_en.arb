@@ -1928,5 +1928,9 @@
   "attachAnyFileInfo": "Any file: images go on the page, PDFs and slides as documents, audio and video as attachments",
   "listeningModeAi": "AI",
   "listeningModeDictation": "Live typing",
-  "dictationPanelHint": "Text appears at the cursor as you speak"
+  "dictationPanelHint": "Text appears at the cursor as you speak",
+  "voiceStartShort": "Start",
+  "aiVoiceRowTitle": "Voice note",
+  "aiVoiceRowInfoEditor": "Speak; AI tidies it up and adds it to this note",
+  "aiVoiceRowInfoHub": "Speak; AI builds the note — title, items and reminders"
 }

@@ -9505,6 +9505,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Konuştukça imlecin olduğu yere yazılır'**
   String get dictationPanelHint;
+
+  /// No description provided for @voiceStartShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başla'**
+  String get voiceStartShort;
+
+  /// No description provided for @aiVoiceRowTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli not'**
+  String get aiVoiceRowTitle;
+
+  /// No description provided for @aiVoiceRowInfoEditor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuş; yapay zekâ düzenleyip bu nota eklesin'**
+  String get aiVoiceRowInfoEditor;
+
+  /// No description provided for @aiVoiceRowInfoHub.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuş; yapay zekâ başlığı, maddeleri ve hatırlatıcıyı çıkarıp notu kursun'**
+  String get aiVoiceRowInfoHub;
 }
 
 class _AppLocalizationsDelegate

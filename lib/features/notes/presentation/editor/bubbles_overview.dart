@@ -170,7 +170,7 @@ class _BubblesOverviewScreenState extends State<_BubblesOverviewScreen> {
                           width: 30,
                           height: 30,
                           decoration: BoxDecoration(
-                            color: Color(bubble.color),
+                            color: BubbleController.displayColor(bubble),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -178,7 +178,15 @@ class _BubblesOverviewScreenState extends State<_BubblesOverviewScreen> {
                                 ? Icons.format_color_text
                                 : Icons.chat_bubble_outline,
                             size: 16,
-                            color: Colors.black87,
+                            // Koyu (premium) palette beyaz, fosforlu vurguda
+                            // koyu simge.
+                            color:
+                                BubbleController.displayColor(
+                                      bubble,
+                                    ).computeLuminance() >
+                                    0.36
+                                ? Colors.black87
+                                : Colors.white,
                           ),
                         ),
                         title: Text(

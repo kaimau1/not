@@ -6,6 +6,23 @@
 - [ ] Faz 1–4 ayrı oturumlarda, sırayla → bkz. `YOL_HARITASI.md` (madde
   listesi, sıra ve durum orada tutulur; burada tekrarlanmaz).
 
+## 2026-10-20 (3. tur) — ses, ayarlar, balon/PDF — CİHAZDA GÖRÜLMEDİ
+- [ ] **Ana ekran mikrofonu**: dokununca hep doğrudan yazdırıyor; basılı
+  tutunca AI sesli not kartı. Yapay Zekâ ekranında en üstte "Sesli not" →
+  ana ekrana dönüp AI kartını açıyor.
+- [ ] **Editör**: alt çubukta parıltılı mikrofon yok; ✨ → en üst satır "Sesli
+  not" AI kartını açıyor, sonuç nota ekleniyor.
+- [ ] **Ortak kart**: doğrudan yazım şeridi ile AI sesli not aynı orta boy kart
+  (rozet, başlık, kip etiketi, süre, tam genişlik dalga, "Bitir"); AI'da arada
+  döküm. Başlık 360 dp telefonda kesilmiyor; basılı-tut kipi çalışıyor.
+- [ ] **Ayarlar**: alanlar arası açıp kapamada takılma yok (özellikle Yapay
+  zekâ, Ses, Hesap).
+- [ ] **Balon/PDF**: uzun bas → balon; ekran grileşmiyor, klavye açılıyor ve
+  açık kalıyor; yazma kartı gezinme düğmelerinin üstünde. Uzun PDF'te kaydırma
+  akıcı. Eski sarı balonlar yeni lacivert tonda; renk paletinde sarı yok.
+  (Grileşmenin kesin kaynağı cihazsız doğrulanamadı — en olası neden pdfrx'in
+  kendi seçim/odak davranışıydı, kapatıldı; sürerse ekran kaydı iste.)
+
 ## 2026-10-20 (2. tur) — kullanıcı listesi (13 madde) — CİHAZDA GÖRÜLMEDİ
 - [ ] **Senin yapacakların**: telefonlar bu sürüme (v1.1.N) geçince konsolda
   `config/app` → `minClient: 3` (eski sürüm yıldızları siler, yalnız

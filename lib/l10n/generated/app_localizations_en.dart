@@ -5297,4 +5297,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dictationPanelHint => 'Text appears at the cursor as you speak';
+
+  @override
+  String get voiceStartShort => 'Start';
+
+  @override
+  String get aiVoiceRowTitle => 'Voice note';
+
+  @override
+  String get aiVoiceRowInfoEditor =>
+      'Speak; AI tidies it up and adds it to this note';
+
+  @override
+  String get aiVoiceRowInfoHub =>
+      'Speak; AI builds the note — title, items and reminders';
 }

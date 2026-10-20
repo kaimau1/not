@@ -8546,13 +8546,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           fileAttachments.isNotEmpty &&
                           on(UiItem.barAttachments);
                       final showAi = on(UiItem.barAi);
-                      final showVoiceAi = on(UiItem.barVoiceAi);
+                      // "AI ile sesli not" ÇUBUKTAN KALKTI (kullanıcı isteği
+                      // 2026-10-20: "AI sesli notu AI menüsünün üzerine
+                      // alalım, ana çubukta doğrudan yazma olsun"): yapay
+                      // zekâ levhasının en üst satırında. Çubukta iki
+                      // mikrofon (parıltılı + düz) yan yana neyin ne
+                      // olduğunu karıştırıyordu.
                       // Dikte SÜRERKEN düğme gizlenmez — durdurma yolu kalsın.
                       final showDictation =
                           _dictating || on(UiItem.barDictation);
                       final aiCount = [
                         showAi,
-                        showVoiceAi,
                         showDictation,
                       ].where((v) => v).length;
                       // Genişliğe göre plan: taşma/kesik kapsül yerine önce
@@ -8690,10 +8694,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           // kapsülüyle iki farklı dil konuşuyordu. Şimdi
                           // çubuk İKİ GRUP: solda düzenleme araçları (yüzey
                           // renginde), sağda yapay zekâ ve ses (vurgu
-                          // renginde). Simgeler ve ipuçları aynı: parıltı =
-                          // AI levhası, parıltılı mikrofon = AI ile sesli
-                          // not, sade mikrofon = düz dikte (bkz.
-                          // [_toggleDictation]).
+                          // renginde). Parıltı = AI levhası (en üst satırı
+                          // "AI ile sesli not", 2026-10-20), sade mikrofon =
+                          // doğrudan yazdırma (bkz. [_toggleDictation]).
                           if (aiCount > 0)
                             _aiCapsule(
                               segment: plan.button,
@@ -8713,18 +8716,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                         onReplaceText: _replaceText,
                                         onCreateNote: _createNoteFromText,
                                         onTranscribe: _openTranscript,
+                                        onVoiceNote: _captureVoice,
                                       ),
-                                    ),
-                                  ),
-                                if (showVoiceAi)
-                                  Customizable(
-                                    id: UiItem.barVoiceAi,
-                                    child: _voiceButton(
-                                      size: plan.button,
-                                      tooltip: l10n.voiceCaptureAi,
-                                      icon: Icons.mic_none,
-                                      badge: Icons.auto_awesome,
-                                      onTap: _captureVoice,
                                     ),
                                   ),
                                 if (showDictation)

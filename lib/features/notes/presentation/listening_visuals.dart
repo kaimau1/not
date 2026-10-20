@@ -148,7 +148,7 @@ class _ListeningBadgeState extends State<ListeningBadge>
   }
 }
 
-/// Başlığın yanındaki küçük kip etiketi ("Yapay zekâ" / "Doğrudan yazım").
+/// Küçük kip etiketi ("Yapay zekâ" / "Doğrudan yazım").
 class ListeningModeTag extends StatelessWidget {
   const ListeningModeTag({super.key, required this.mode});
 
@@ -176,12 +176,16 @@ class ListeningModeTag extends StatelessWidget {
             color: accent,
           ),
           const SizedBox(width: 3),
-          Text(
-            ai ? l10n.listeningModeAi : l10n.listeningModeDictation,
-            style: TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
-              color: accent,
+          Flexible(
+            child: Text(
+              ai ? l10n.listeningModeAi : l10n.listeningModeDictation,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: accent,
+              ),
             ),
           ),
         ],
@@ -382,4 +386,223 @@ class _WaveformPainter extends CustomPainter {
       old.color != color ||
       old.bars != bars ||
       old.elapsed != elapsed;
+}
+
+/// Dinleme alanının ORTAK KARTI — editörün doğrudan yazdırma şeridi ve
+/// yapay zekâ ile sesli not levhası AYNI kartı kullanır.
+///
+/// KÖK NEDEN (kullanıcı isteği 2026-10-20: "AI sesli not ile doğrudan yazım
+/// ekranları hâlâ farklı, ortak bir ekranda olmalılar; AI ses ekranı çok
+/// büyük, doğrudan not ekranı çok küçük, ikisinin arasında bir şey olsun").
+/// Parçalar ortaktı ama YERLEŞİMLER ayrıydı: levha başlık + 74-210 px döküm
+/// + 40 px dalga + 54 px tam genişlik düğme + ipucu (~330 px), şerit ise tek
+/// satırdı (~56 px; dalga 40 px'e sıkışmış). Artık tek yerleşim: üstte
+/// rozet + başlık/kip + süre, altta TAM GENİŞLİK dalga ve yanında eylem
+/// düğmesi (~120 px). Yapay zekâ kipinde arada döküm durur ([body]) —
+/// doğrudan yazımda yazı zaten notun içine akıyor.
+class ListeningCard extends StatelessWidget {
+  const ListeningCard({
+    super.key,
+    required this.mode,
+    required this.active,
+    required this.title,
+    required this.subtitle,
+    required this.clock,
+    required this.action,
+    this.trailing = const [],
+    this.body,
+    this.elevation = 0,
+  });
+
+  final ListeningMode mode;
+
+  /// Levhada (not/listenin üstünde yüzerken) gölge verilir; editörün
+  /// içindeki şeritte düz.
+  final double elevation;
+
+  /// Mikrofon şu an açık mı (rozet nabzı, dalga).
+  final bool active;
+  final String title;
+  final String subtitle;
+
+  /// Sağ üstteki süre.
+  final Widget clock;
+
+  /// Dalganın yanındaki ana düğme (Bitir / Başla / Basılı tut).
+  final Widget action;
+
+  /// Başlık satırının sağındaki küçük düğmeler (komutlar, kip değiştir…).
+  final List<Widget> trailing;
+
+  /// Başlık ile dalga arasındaki içerik (yapay zekâ kipinde canlı döküm).
+  final Widget? body;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final accent = listeningAccent(scheme, mode);
+    return Material(
+      key: ValueKey('listening-card-${mode.name}'),
+      color: scheme.surfaceContainerLow,
+      elevation: elevation,
+      shadowColor: Colors.black45,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(color: accent.withValues(alpha: 0.3)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 10, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                ListeningBadge(mode: mode, active: active),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      // Kip etiketi ALT satırda, açıklamanın başında: başlık
+                      // satırında durunca dar telefonda başlık "D..."ye
+                      // iniyordu (sağda süre ve düğmeler de var).
+                      Row(
+                        children: [
+                          Flexible(child: ListeningModeTag(mode: mode)),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              subtitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                clock,
+                if (trailing.isNotEmpty) ...[
+                  const SizedBox(width: 2),
+                  ...trailing,
+                ],
+              ],
+            ),
+            if (body != null) ...[const SizedBox(height: 8), body!],
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: ListeningWaveform(
+                    active: active,
+                    color: accent,
+                    height: 30,
+                    bars: 28,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                action,
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Kartın ana düğmesi: hap biçimli, simge + kısa etiket. Dinlerken kırmızı
+/// "Bitir"; beklerken kipin renginde "Başla" / "Basılı tut".
+class ListeningActionButton extends StatelessWidget {
+  const ListeningActionButton({
+    super.key,
+    required this.listening,
+    required this.label,
+    required this.onPressed,
+    this.icon,
+  });
+
+  final bool listening;
+  final String label;
+  final IconData? icon;
+
+  /// null: düğme dokunuşu kendi işlemez (basılı-tut kipinde dokunuşu
+  /// çevreleyen `Listener` alır) ama ETKİN görünür.
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final background = listening ? scheme.error : scheme.primaryContainer;
+    final foreground = listening ? scheme.onError : scheme.onPrimaryContainer;
+    return SizedBox(
+      height: 44,
+      child: FilledButton.icon(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: background,
+          foregroundColor: foreground,
+          disabledBackgroundColor: background,
+          disabledForegroundColor: foreground,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          shape: const StadiumBorder(),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        icon: Icon(
+          icon ?? (listening ? Icons.stop_rounded : Icons.mic),
+          size: 20,
+        ),
+        label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ),
+    );
+  }
+}
+
+/// Kartın başlık satırındaki küçük simge düğmesi (34 dp): üç düğme + süre
+/// dar telefonda başlığı ezmesin.
+class ListeningHeaderButton extends StatelessWidget {
+  const ListeningHeaderButton({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    this.iconSize = 20,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: tooltip,
+    padding: EdgeInsets.zero,
+    constraints: const BoxConstraints.tightFor(width: 34, height: 34),
+    // M3 simge düğmesi 48 dp'lik dokunma kutusuna büyür; sıkı satırda
+    // üç düğme 144 dp yiyip başlığı eziyordu.
+    style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+    iconSize: iconSize,
+    color: Theme.of(context).colorScheme.onSurfaceVariant,
+    icon: Icon(icon),
+    onPressed: onPressed,
+  );
 }

@@ -726,7 +726,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       await _dictateNote();
       return;
     }
-    ref.read(homeMicDictateProvider.notifier).set(false);
 
     // "Asistan oluştursun": notu döküme bakarak asistan kurar — başlık,
     // maddeler ve HATIRLATICI çıkarır (bkz. voice_assistant.dart).
@@ -812,12 +811,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     _afterQuickCapture(id);
   }
 
-  /// Mikrofonun "doğrudan yazdır" kipi; kip hatırlanır (bkz.
-  /// [homeMicDictateProvider]).
-  Future<void> _dictateNote() async {
-    ref.read(homeMicDictateProvider.notifier).set(true);
-    await createDictationNote();
-  }
+  /// Ana ekran mikrofonunun dokunuşu: doğrudan yazdır (boş not, söz nota).
+  Future<void> _dictateNote() => createDictationNote();
 
   /// Sesli yakalamadan dönen ses kaydını yeni nota ek olarak bağlar.
   Future<void> _attachVoiceAudio(
@@ -1633,35 +1628,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             ),
                           ),
                         ),
-                        // TEK MİKROFON (F3.1): dokunuş son kullanılan
-                        // kipi açar — sesli not levhası (AI düzenlesin) ya da
-                        // doğrudan yazdır (boş not, söz nota). Basılı tutmak
-                        // öbür kipi açar; levhadaki "Doğrudan yazdır" da
-                        // kipi değiştirir.
+                        // TEK MİKROFON (F3.1) = DOĞRUDAN YAZDIR (kullanıcı
+                        // isteği 2026-10-20: "AI sesli notu AI menüsüne
+                        // alalım, ana ekrandaki doğrudan yazma olsun").
+                        // Eskiden dokunuş SON kullanılan kipi açıyordu; aynı
+                        // düğmenin bir gün AI levhası, bir gün dikte açması
+                        // tahmin edilemezdi. AI ile sesli not Yapay Zekâ
+                        // ekranının en üstünde; basılı tutmak kısayol olarak
+                        // onu açar.
                         Customizable(
                           id: UiItem.homeMic,
                           child: Padding(
                             padding: const EdgeInsets.only(bottom: 10),
-                            child: Consumer(
-                              builder: (context, ref, _) {
-                                final dictate = ref.watch(
-                                  homeMicDictateProvider,
-                                );
-                                return _DashVoiceButton(
-                                  key: const ValueKey('home-mic'),
-                                  tooltip: dictate
-                                      ? l10n.voiceMicTooltipDictate
-                                      : l10n.voiceMicTooltipAi,
-                                  icon: dictate ? Icons.mic : Icons.mic_none,
-                                  badge: dictate ? null : Icons.auto_awesome,
-                                  onTap: dictate
-                                      ? _dictateNote
-                                      : _captureVoiceNote,
-                                  onLongPress: dictate
-                                      ? _captureVoiceNote
-                                      : _dictateNote,
-                                );
-                              },
+                            child: _DashVoiceButton(
+                              key: const ValueKey('home-mic'),
+                              tooltip: l10n.voiceMicTooltipDictate,
+                              icon: Icons.mic,
+                              onTap: _dictateNote,
+                              onLongPress: _captureVoiceNote,
                             ),
                           ),
                         ),

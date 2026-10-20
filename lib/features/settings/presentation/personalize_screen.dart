@@ -491,11 +491,6 @@ class _EditorSection extends StatelessWidget {
               ),
               (id: UiItem.barAi, icon: Icons.auto_awesome, label: l10n.aiTitle),
               (
-                id: UiItem.barVoiceAi,
-                icon: Icons.mic_none,
-                label: l10n.voiceCaptureAi,
-              ),
-              (
                 id: UiItem.barDictation,
                 icon: Icons.mic,
                 label: l10n.liveDictation,

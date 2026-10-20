@@ -622,11 +622,6 @@ final voiceOfflineProvider = boolPref('voice_offline', defaultValue: false);
 /// AÇIK; bu sözleri gerçekten not olarak yazdırmak isteyen kapatabilir.
 final voiceSmartCommandsProvider = boolPref('voice_smart_commands', defaultValue: true);
 
-/// Ana ekranın TEK mikrofonu (F3.1) dokununca hangi kipte açılsın: true =
-/// doğrudan yazdır (boş not, söz nota), false = sesli not levhası (AI
-/// düzenlesin). Son kullanılan kip hatırlanır; basılı tutmak öbürünü açar.
-final homeMicDictateProvider = boolPref('home_mic_dictate', defaultValue: false);
-
 /// Günlük brifing bildirimi ayarları.
 class BriefingSettings {
   const BriefingSettings({required this.enabled, required this.minutes});

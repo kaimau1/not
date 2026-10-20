@@ -91,10 +91,17 @@ class _ExpandRevealState extends State<ExpandReveal>
           ? widget.child
           : const SizedBox(width: double.infinity);
     }
+    // SAYDAMLIK YOK, BOYAMA SINIRI VAR (kullanıcı bulgusu 2026-10-20:
+    // "ayarlar ekranı kasıyor menüler arası gezerken"). Eskiden içerik bir
+    // `FadeTransition` altındaydı: açılış/kapanışın HER karesinde bütün alan
+    // (onlarca satır, anahtar, kaydırıcı) ekran dışı bir katmana yeniden
+    // çiziliyordu — Impeller'da saydamlık katmanı ayrı bir çizim geçişi
+    // demek. Şimdi yalnız kırpma büyür; içerik `RepaintBoundary` ile bir kez
+    // çizilip her karede aynen kullanılır.
     return SizeTransition(
       sizeFactor: _curve,
       alignment: AlignmentDirectional.topStart,
-      child: FadeTransition(opacity: _curve, child: widget.child),
+      child: RepaintBoundary(child: widget.child),
     );
   }
 }

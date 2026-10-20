@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/services.dart';
 
 import '../../../../core/utils/local_file.dart';
@@ -466,17 +467,28 @@ PdfViewerParams pdfLayerParams({
   void Function(PdfDocument document, PdfViewerController controller)?
   onViewerReady,
   ValueChanged<int?>? onPageChanged,
-}) => PdfViewerParams(
-  // Sürükleyerek seçim ya da balon taşıma sürerken pan kapalı: parmak seçimi
-  // büyütür / balonu taşır, sayfa kaymaz. Bu bayrak jest BAŞINDA ve SONUNDA
-  // (saniyede iki kez değil, hareket başına iki kez) değişir; params o anda
-  // yeniden kurulur ama belge YÜKLENMEZ — pdfrx yalnız documentRef
-  // değişiminde yükler.
-  panEnabled: !inkEditing && !dragging,
-  scaleEnabled: !inkEditing,
-  onViewerReady: onViewerReady,
-  onPageChanged: onPageChanged,
-  pageOverlaysBuilder: (context, pageRect, page) => [
+}) {
+  // **SAYFA KATMANI ÖNBELLEĞİ** (kullanıcı bulgusu 2026-10-20: "PDF kasıyor,
+  // balonlu modda kasma var"). KÖK NEDEN: pdfrx görüntüleyiciyi dönüşüm
+  // matrisinin HER değişiminde (kaydırmanın her karesi) yeniden kurar ve
+  // `pageOverlaysBuilder`ı önbellek payındaki her sayfa için yeniden çağırır.
+  // Her çağrı yeni widget örnekleri verdiği için görünen bütün sayfaların
+  // seçim, kalem ve balon katmanları (her tutamaç dahil) kaydırma boyunca
+  // KARE BAŞINA baştan kuruluyordu. Aynı sayfa aynı boydayken AYNI örnek
+  // döner: Flutter alt ağaca hiç girmez. Boy değişince (yakınlaştırma)
+  // yeniden kurulur — yerleşim zaten değişiyor. Boy yarım piksele
+  // yuvarlanır: kaydırırken dönüşümün kayan nokta artığı her karede
+  // "yeni boy" saydırmasın.
+  final cache = <int, ({PdfPage page, Size size, Widget layers})>{};
+  Widget layersFor(PdfPage page, Size pageSize) {
+    final size = Size(
+      (pageSize.width * 2).roundToDouble() / 2,
+      (pageSize.height * 2).roundToDouble() / 2,
+    );
+    final hit = cache[page.pageNumber];
+    if (hit != null && identical(hit.page, page) && hit.size == size) {
+      return hit.layers;
+    }
     // Katmanların TAMAMI tek bir dinleyicinin altında: seçim/balon durumu
     // değişince yalnız burası tazelenir, görüntüleyici kurulmaz.
     //
@@ -484,7 +496,7 @@ PdfViewerParams pdfLayerParams({
     // sayfanın katmanı kendi vurgusunu bıraksın (tek etkin seçim).
     // `RepaintBoundary`: sayfa kaydırılırken katmanların çizimi belgenin
     // kendi katmanına karışmasın — kaydırmadaki takılmanın paylarından biri.
-    Positioned.fill(
+    final layers = Positioned.fill(
       child: RepaintBoundary(
         child: ValueListenableBuilder<int>(
           valueListenable: selection.page,
@@ -499,7 +511,7 @@ PdfViewerParams pdfLayerParams({
                 if (!inkEditing && !adding)
                   PdfSelectLayer(
                     page: page,
-                    pageSize: pageRect.size,
+                    pageSize: pageSize,
                     activeSelectionPage: activePage,
                     // Düzenlenebilir görünümde basılı tutmak balon bırakır;
                     // seçim çift dokunuşla (bkz. longPressSelects).
@@ -529,6 +541,49 @@ PdfViewerParams pdfLayerParams({
           ),
         ),
       ),
-    ),
-  ],
+    );
+    cache[page.pageNumber] = (page: page, size: size, layers: layers);
+    return layers;
+  }
+
+  return PdfViewerParams(
+    // Sürükleyerek seçim ya da balon taşıma sürerken pan kapalı: parmak
+    // seçimi büyütür / balonu taşır, sayfa kaymaz. Bu bayrak jest BAŞINDA ve
+    // SONUNDA (saniyede iki kez değil, hareket başına iki kez) değişir; params
+    // o anda yeniden kurulur ama belge YÜKLENMEZ — pdfrx yalnız documentRef
+    // değişiminde yükler.
+    panEnabled: !inkEditing && !dragging,
+    scaleEnabled: !inkEditing,
+    onViewerReady: onViewerReady,
+    onPageChanged: onPageChanged,
+    // **pdfrx'İN KENDİ METİN SEÇİMİ KAPALI** (2026-10-20). Seçim bizim
+    // katmanımızda ([PdfSelectLayer]); pdfrx'inki varsayılan olarak AÇIKTI
+    // ve üç zarar veriyordu: (1) çizim her karede önbellek payındaki HER
+    // sayfanın metnini, sayfa görüntüsünü üreten AYNI işçide ayrıştırıyordu
+    // — sayfalar geç çiziliyor, kaydırma takılıyordu; (2) basılı tutmak
+    // ~500 ms'de pdfrx'in kelime seçimini/bağlam menüsünü de tetikliyordu —
+    // "basılı tut → balon" (450 ms) ile aynı parmakta iki iş; (3) o dokunuş
+    // görüntüleyiciye ODAK istiyordu: yeni balonun yazı alanı odağını
+    // kaybediyor, klavye gelmiyor ya da kapanıyordu.
+    textSelectionParams: const PdfTextSelectionParams(enabled: false),
+    buildContextMenu: _noPdfContextMenu,
+    // Dokunmatik cihazda görüntüleyici odak istemez (bkz. (3)); masaüstünde
+    // ok tuşlarıyla gezinme için ister.
+    keyHandlerParams: _pdfKeyHandlerParams,
+    pageOverlaysBuilder: (context, pageRect, page) => [
+      layersFor(page, pageRect.size),
+    ],
+  );
+}
+
+Widget? _noPdfContextMenu(
+  BuildContext context,
+  PdfViewerContextMenuBuilderParams params,
+) => null;
+
+final _pdfKeyHandlerParams = PdfViewerKeyHandlerParams(
+  canRequestFocus: !const {
+    TargetPlatform.android,
+    TargetPlatform.iOS,
+  }.contains(defaultTargetPlatform),
 );

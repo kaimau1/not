@@ -221,6 +221,25 @@ eskisini arşive taşıma.
   `positions` dolaş (kâğıt deseni boyacısı).
 - İki parmak kaydırma çizim kipinde: `InkNavLayer` (InteractiveViewer
   `panEnabled:false`'ta jesti yutuyordu).
+- **pdfrx'in KENDİ metin seçimi KAPALI** (`pdfLayerParams`, 2026-10-20):
+  varsayılan açıktı → çizim her karede önbellekteki her sayfanın metnini
+  render işçisinde ayrıştırıyordu (PDF kasması), ~500 ms basılı tutuş pdfrx
+  kelime seçimi/menüsü tetikliyordu ("basılı tut → balon" 450 ms ile
+  çakışma) ve görüntüleyici ODAK istiyordu (yeni balonun yazı alanı odağı
+  düşüyor, klavye gelmiyordu). Seçim yalnız `PdfSelectLayer`. Dokunmatikte
+  `keyHandlerParams.canRequestFocus: false`, `buildContextMenu` null döner.
+- **TUZAK: pdfrx `pageOverlaysBuilder`ı HER matris değişiminde (kaydırma
+  karesi) çağırır.** Yeni widget dönersek görünen sayfaların seçim/kalem/
+  balon katmanları kare başına yeniden kurulur. `pdfLayerParams` sayfa
+  başına (sayfa nesnesi + yarım piksele yuvarlanmış boy) AYNI örneği döner.
+- Balon paleti PREMİUM (2026-10-20, "sarı göz yoruyor"): koyu/kırık tonlar,
+  varsayılan `BubbleController.defaultColor` (lacivert-mor). Eski amber
+  varsayılan (`legacyDefault`, alanı olmayan kayıt da) EKRANDA yeni
+  varsayılanla çizilir (`displayColor`; vurgu/açık metin hariç), veri
+  değişmez. Tutamaç iki tonlu + beyaz çerçeve, açık balon kendi renginde
+  bulanıksız hale; okuma ve yazma kartları nötr yüzey (renk yalnız nokta/
+  rozette). Yazma kartı (`_KeyboardFollow`) sistem gezinme çubuğunun da
+  üstünde durur (yazma kipinde bölme ekranın dibine iniyordu).
 
 ## Ses ve yapay zekâ
 - Seslendirme TEK kapı `SpeechService` (F3.9): motor ayardan (cihaz / AI);
@@ -240,9 +259,13 @@ eskisini arşive taşıma.
 - AI çıktıları cihazda önbellekli (`AiCache`), Firestore'a yazılmaz.
 
 ## Arayüz kararları (Faz 3, 2026-10-19)
-- Ana ekranda TEK mikrofon (F3.1): dokunuş son kipi (sesli not / doğrudan
-  yazdır) açar, basılı tutmak öbürünü (`homeMicDictateProvider`); klasörde
-  sesli not "+" menüsünde.
+- Ana ekranda TEK mikrofon (F3.1) = DOĞRUDAN YAZDIR (2026-10-20, kullanıcı
+  kararı; "son kip" hatırlama ve `homeMicDictateProvider` kalktı). Basılı
+  tutmak AI ile sesli notu açar. AI ile sesli not: Yapay Zekâ ekranının EN
+  ÜSTÜNDE (dokunuş `/`'a döner + `voiceAutostartProvider`) ve editörde AI
+  levhasının EN ÜST satırında (`onVoiceNote`); editör alt çubuğunda parıltılı
+  mikrofon YOK (`UiItem.barVoiceAi` kimliği yalnız eski tercihler için).
+  Klasörde sesli not "+" menüsünde.
 - "+" menüsü TEK PANEL (2026-10-20; F3.2'nin kapı levhaları kalktı):
   Diğer (şablon, alışveriş, el yazısı, defter) · Kamera · Dosya (geniş) ·
   birincil Metin/Liste/Sıralı. ≤2 seçenekli bölüm geniş düğme.
@@ -261,13 +284,20 @@ eskisini arşive taşıma.
 - Menü ızgaraları (2026-10-20): `ActionMenu` grupları 3 sütun yuvarlak
   simge + ad (hızlı satır renkli, gruplar nötr); editörün Ekle levhası
   telefonda 4 sütun, zeminsiz hücre, kaydırmasız sığacak boyda.
-- Dinleme alanları ORTAK görünüm (`listening_visuals.dart`, 2026-10-20):
-  rozet + başlık + kip etiketi + dalga + süre. Sesli yakalama levhası
-  `ListeningMode.ai` (yıldızlı, primary→tertiary geçiş), editörün canlı
-  diktesi `_DictationPanel` / `ListeningMode.dictation` (düz mikrofon).
+- Dinleme alanları TEK KART `ListeningCard` (`listening_visuals.dart`,
+  2026-10-20 ikinci tur — "AI ekranı çok büyük, dikte çok küçük, arası
+  olsun"): üstte rozet + başlık + (alt satırda) kip etiketi/açıklama + süre
+  + küçük düğmeler, altta TAM GENİŞLİK dalga + hap "Bitir" (~120 px).
+  Editör diktesi (`_DictationPanel`, döküm yok) ve sesli yakalama levhası
+  (saydam levha, aynı yüzen kart, arada 40-120 px döküm) aynı kartı kullanır.
+  Başlık satırına düğme eklerken `ListeningHeaderButton` (34 dp, dokunma
+  kutusu shrinkWrap) — M3 IconButton 48 dp yiyip başlığı "D..."ye indiriyordu.
 - Ayar alanları ve iç bölümler `ExpandReveal` ile açılır (animasyon içerik
   kurulduktan SONRAKİ karede başlar — ağır alanın ilk karesi
-  `AnimatedSize`/`ExpansionTile` animasyonunu yutuyordu).
+  `AnimatedSize`/`ExpansionTile` animasyonunu yutuyordu). 2026-10-20
+  ("ayarlar kasıyor"): `FadeTransition` KALKTI (her karede bütün alan
+  saydamlık katmanına yeniden çiziliyordu) → `RepaintBoundary`; alan
+  satırları `_StaggeredRows` ile ilk karede 2, sonra kare başına 1 kurulur.
 - Balonlu/Klasik levhası yalnız ilk sefer; seçim varsayılan
   (`capture_mode_default`), Ayarlar → Notlar ve klasörler.
 - Paylaşım iki kavram (F3.7): Birlikte düzenle (ortak not / klasör) ve Kopya

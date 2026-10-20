@@ -103,20 +103,46 @@ class BubbleController extends ChangeNotifier {
 
   /// Seçilebilecek renkler. Konu ayırmak için: kullanıcı isteğiyle genişletildi
   /// (2026-08-08) — beş renk "konu başına bir renk" için yetmiyordu.
+  ///
+  /// **PREMİUM PALET** (kullanıcı isteği 2026-10-20: "sarı balon teması hiç
+  /// güzel değil, sarı göz yoruyor, daha premium olabilir"). Eski palet
+  /// doygun Material tonlarıydı ve başı parlak AMBER'di: beyaz sayfada her
+  /// tutamaç fosforlu bir leke gibi duruyor, yazma kartının şeridi de sarıya
+  /// boyanıyordu. Yeni tonlar koyu ve kırık (mürekkep/kumaş renkleri): beyaz
+  /// kâğıtta seçilir ama bağırmaz, üstlerinde beyaz yazı okunur. Varsayılan
+  /// lacivert-mor; sarının yerinde göz yormayan bal tonu var.
   static const palette = <int>[
-    0xFFFFC107, // amber
-    0xFFEF5350, // kırmızı
-    0xFF66BB6A, // yeşil
-    0xFF42A5F5, // mavi
-    0xFFAB47BC, // mor
-    0xFFFF7043, // turuncu
-    0xFF26C6DA, // turkuaz
-    0xFFEC407A, // pembe
-    0xFF8D6E63, // kahve
-    0xFF9CCC65, // fıstık
-    0xFF5C6BC0, // indigo
-    0xFF78909C, // gri-mavi
+    defaultColor, // mürekkep (lacivert-mor, varsayılan)
+    0xFF2F7D6D, // çam
+    0xFFC2573A, // kiremit
+    0xFFB7791F, // bal
+    0xFF7E57C2, // lavanta
+    0xFFC2185B, // vişne
+    0xFF1F7A99, // petrol
+    0xFF5B6B7F, // arduvaz
+    0xFF2E7D32, // orman
+    0xFFD14343, // mercan
+    0xFF3A6EA5, // okyanus
+    0xFF7A5C4F, // kakao
   ];
+
+  /// Yeni balonun varsayılan rengi.
+  static const defaultColor = 0xFF4F5BD5;
+
+  /// ESKİ varsayılan (amber). Kayıtlı balonların çoğu bu renkte ve rengi
+  /// kullanıcı seçmedi — varsayılan oydu; ayrıca alanı olmayan eski kayıt
+  /// da bu değerle okunur ([PageBubble.color]). Ekranda YENİ varsayılanla
+  /// çizilir (bkz. [displayColor]); veri değişmez.
+  static const legacyDefault = 0xFFFFC107;
+
+  /// Balonun EKRANDAKİ rengi: eski amber varsayılanı yeni varsayılana
+  /// çevrilir. Vurgu (fosforlu palet) ve açık metin (yazı rengi) kendi
+  /// renkleriyle çizilir — onlarda amber bilinçli bir seçimdir.
+  static Color displayColor(PageBubble bubble) => Color(
+    bubble.color == legacyDefault && !bubble.plain && !bubble.isHighlight
+        ? defaultColor
+        : bubble.color,
+  );
 
   List<PageBubble> _bubbles;
   List<PageBubble> get bubbles => _bubbles;

@@ -198,10 +198,7 @@ class _SettingsArea extends StatelessWidget {
                         ).colorScheme.onSurfaceVariant,
                         height: 1.3,
                       ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: rows,
-                  ),
+                  child: _StaggeredRows(rows: rows),
                 ),
               ),
             ),
@@ -210,6 +207,64 @@ class _SettingsArea extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Alanın satırlarını KARELERE YAYARAK kurar.
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-10-20: "ayarlar ekranı kasıyor menüler
+/// arası gezerken"): bir alan açılınca bütün satırları (sağlayıcı okumaları,
+/// ses listeleri, model seçicileri, örnek metin) TEK karede kuruluyordu;
+/// ağır alanlarda o kare yüzlerce milisaniye sürüyor, açılış animasyonu
+/// donup "pat" diye bitiyordu (bkz. [ExpandReveal]). Şimdi ilk karede
+/// yalnız ilk iki satır, sonraki her karede bir satır daha eklenir: iş
+/// kareler arasına dağılır, animasyon akarken alan aşağı doğru dolar.
+/// Arama süzmesi gibi sonraki değişimlerde yayma yok — satırlar hemen gelir.
+class _StaggeredRows extends StatefulWidget {
+  const _StaggeredRows({required this.rows});
+
+  final List<Widget> rows;
+
+  @override
+  State<_StaggeredRows> createState() => _StaggeredRowsState();
+}
+
+class _StaggeredRowsState extends State<_StaggeredRows> {
+  static const _first = 2;
+
+  late int _count = widget.rows.length <= _first ? widget.rows.length : _first;
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleNext();
+  }
+
+  void _scheduleNext() {
+    if (_count >= widget.rows.length) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _count >= widget.rows.length) return;
+      setState(() => _count++);
+      _scheduleNext();
+    });
+  }
+
+  @override
+  void didUpdateWidget(_StaggeredRows old) {
+    super.didUpdateWidget(old);
+    // Yayma yalnız İLK açılışta; sonrasında (arama, özet değişimi) satır
+    // sayısı neyse o.
+    if (_count >= old.rows.length) _count = widget.rows.length;
+    if (_count > widget.rows.length) _count = widget.rows.length;
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      for (var i = 0; i < _count && i < widget.rows.length; i++)
+        widget.rows[i],
+    ],
+  );
 }
 
 /// Alanın İÇİNDEKİ katlanır bölüm ("Gelişmiş", "AI tanılama"): başlık

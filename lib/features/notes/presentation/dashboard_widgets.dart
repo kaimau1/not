@@ -821,10 +821,9 @@ class _PinchColumnsState extends State<_PinchColumns> {
   );
 }
 
-/// Ana ekranın sağ alt sütunundaki mikrofon düğmesi.
-///
-/// Parıltı rozeti ([badge]) yapay zekâ yolunu (sesli not levhası), sade
-/// simge doğrudan dikteyi gösterir — editörün alt çubuğuyla aynı simgeler.
+/// Ana ekranın sağ alt sütunundaki mikrofon düğmesi: dokunuş doğrudan
+/// yazdırır (editörün alt çubuğundaki sade mikrofonla aynı simge), basılı
+/// tutmak yapay zekâ ile sesli notu açar.
 class _DashVoiceButton extends StatelessWidget {
   const _DashVoiceButton({
     super.key,
@@ -832,12 +831,10 @@ class _DashVoiceButton extends StatelessWidget {
     required this.icon,
     required this.onTap,
     this.onLongPress,
-    this.badge,
   });
 
   final String tooltip;
   final IconData icon;
-  final IconData? badge;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
 
@@ -856,22 +853,7 @@ class _DashVoiceButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             onTap: onTap,
             onLongPress: onLongPress,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(icon, size: 24, color: scheme.onPrimaryContainer),
-                if (badge != null)
-                  Positioned(
-                    top: 7,
-                    right: 7,
-                    child: Icon(
-                      badge,
-                      size: 11,
-                      color: scheme.onPrimaryContainer,
-                    ),
-                  ),
-              ],
-            ),
+            child: Icon(icon, size: 24, color: scheme.onPrimaryContainer),
           ),
         ),
       ),
