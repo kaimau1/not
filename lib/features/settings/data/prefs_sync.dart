@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/utils/note_lock.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../notes/presentation/capture_mode_sheet.dart';
 import '../settings_providers.dart';
@@ -52,6 +53,8 @@ const kSyncedPrefKeys = <String>[
   'assistant_voice',
   captureModeDefaultKey,
   'user_templates_v1',
+  // Not kilidi yöntemi + şifre/desen ÖZETİ (F4.8; düz sır değil).
+  NoteLockConfig.prefsKey,
 ];
 
 /// AI görev modeli anahtarları da eşitlenir (bkz. [AiTask]).

@@ -9139,6 +9139,168 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Drive’a bağlan'**
   String get driveWebConnectButton;
+
+  /// No description provided for @lockPatternSemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilit deseni: noktaları parmakla birleştir'**
+  String get lockPatternSemantics;
+
+  /// No description provided for @lockDrawPattern.
+  ///
+  /// In tr, this message translates to:
+  /// **'Deseni çiz'**
+  String get lockDrawPattern;
+
+  /// No description provided for @lockDrawAgain.
+  ///
+  /// In tr, this message translates to:
+  /// **'Onaylamak için deseni yeniden çiz'**
+  String get lockDrawAgain;
+
+  /// No description provided for @lockEnterPassword.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifreni gir'**
+  String get lockEnterPassword;
+
+  /// No description provided for @lockPassword.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifre'**
+  String get lockPassword;
+
+  /// No description provided for @lockPasswordAgain.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifre (tekrar)'**
+  String get lockPasswordAgain;
+
+  /// No description provided for @lockWrong.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yanlış, yeniden dene'**
+  String get lockWrong;
+
+  /// No description provided for @lockTooManyAttempts.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çok fazla yanlış deneme. {count} sn bekle.'**
+  String lockTooManyAttempts(int count);
+
+  /// No description provided for @lockUseFingerprint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parmak iziyle aç'**
+  String get lockUseFingerprint;
+
+  /// No description provided for @lockForgot.
+  ///
+  /// In tr, this message translates to:
+  /// **'Unuttum'**
+  String get lockForgot;
+
+  /// No description provided for @lockForgotFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google hesabınla doğrulanamadı. Misafir hesapta şifre sıfırlanamaz.'**
+  String get lockForgotFailed;
+
+  /// No description provided for @lockNewPassword.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni kilit şifresi'**
+  String get lockNewPassword;
+
+  /// No description provided for @lockNewPattern.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni kilit deseni'**
+  String get lockNewPattern;
+
+  /// No description provided for @lockPasswordTooShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifre en az {count} karakter olmalı'**
+  String lockPasswordTooShort(int count);
+
+  /// No description provided for @lockPatternTooShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Desen en az {count} noktayı birleştirmeli'**
+  String lockPatternTooShort(int count);
+
+  /// No description provided for @lockMismatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eşleşmedi, baştan dene'**
+  String get lockMismatch;
+
+  /// No description provided for @lockChangeAuthReason.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilit ayarını değiştirmek için doğrula'**
+  String get lockChangeAuthReason;
+
+  /// No description provided for @lockMethodTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not kilidi'**
+  String get lockMethodTitle;
+
+  /// No description provided for @lockMethodInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilitli notlar nasıl açılsın?'**
+  String get lockMethodInfo;
+
+  /// No description provided for @lockMethodDevice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parmak izi'**
+  String get lockMethodDevice;
+
+  /// No description provided for @lockMethodPassword.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifre'**
+  String get lockMethodPassword;
+
+  /// No description provided for @lockMethodPattern.
+  ///
+  /// In tr, this message translates to:
+  /// **'Desen'**
+  String get lockMethodPattern;
+
+  /// No description provided for @lockAlsoFingerprint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parmak iziyle de açılabilsin'**
+  String get lockAlsoFingerprint;
+
+  /// No description provided for @lockChangePassword.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifreyi değiştir'**
+  String get lockChangePassword;
+
+  /// No description provided for @lockChangePattern.
+  ///
+  /// In tr, this message translates to:
+  /// **'Deseni değiştir'**
+  String get lockChangePattern;
+
+  /// No description provided for @lockWebDeviceInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarayıcıda parmak izi yok: kilitli notları web’de de korumak için şifre ya da desen seç.'**
+  String get lockWebDeviceInfo;
+
+  /// No description provided for @lockNotEncryption.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilit şifreleme değildir: notun içeriği sunucuda ve cihaz önbelleğinde düz metin olarak durur. Kilit yalnız bu uygulamanın notu göstermesini engeller.'**
+  String get lockNotEncryption;
 }
 
 class _AppLocalizationsDelegate

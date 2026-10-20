@@ -49,6 +49,7 @@ import '../../friends/data/friends_repository.dart';
 import '../../inbox/data/inbox_repository.dart';
 import '../../inbox/presentation/inbox_screen.dart';
 import '../../friends/presentation/friends_screen.dart';
+import '../../notes/presentation/lock/note_lock_ui.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
@@ -138,6 +139,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _AccountSection(),
             title: l10n.account,
             keywords: 'cikis hesap sil e-posta ${l10n.deleteAccount}',
+          ),
+          _SettingRow(
+            const NoteLockSettingsTile(),
+            title: l10n.lockMethodTitle,
+            keywords: 'kilit sifre desen parmak izi gizlilik',
           ),
         ],
       ),

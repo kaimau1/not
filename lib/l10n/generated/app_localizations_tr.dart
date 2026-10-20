@@ -5075,4 +5075,95 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get driveWebConnectButton => 'Drive’a bağlan';
+
+  @override
+  String get lockPatternSemantics =>
+      'Kilit deseni: noktaları parmakla birleştir';
+
+  @override
+  String get lockDrawPattern => 'Deseni çiz';
+
+  @override
+  String get lockDrawAgain => 'Onaylamak için deseni yeniden çiz';
+
+  @override
+  String get lockEnterPassword => 'Şifreni gir';
+
+  @override
+  String get lockPassword => 'Şifre';
+
+  @override
+  String get lockPasswordAgain => 'Şifre (tekrar)';
+
+  @override
+  String get lockWrong => 'Yanlış, yeniden dene';
+
+  @override
+  String lockTooManyAttempts(int count) {
+    return 'Çok fazla yanlış deneme. $count sn bekle.';
+  }
+
+  @override
+  String get lockUseFingerprint => 'Parmak iziyle aç';
+
+  @override
+  String get lockForgot => 'Unuttum';
+
+  @override
+  String get lockForgotFailed =>
+      'Google hesabınla doğrulanamadı. Misafir hesapta şifre sıfırlanamaz.';
+
+  @override
+  String get lockNewPassword => 'Yeni kilit şifresi';
+
+  @override
+  String get lockNewPattern => 'Yeni kilit deseni';
+
+  @override
+  String lockPasswordTooShort(int count) {
+    return 'Şifre en az $count karakter olmalı';
+  }
+
+  @override
+  String lockPatternTooShort(int count) {
+    return 'Desen en az $count noktayı birleştirmeli';
+  }
+
+  @override
+  String get lockMismatch => 'Eşleşmedi, baştan dene';
+
+  @override
+  String get lockChangeAuthReason => 'Kilit ayarını değiştirmek için doğrula';
+
+  @override
+  String get lockMethodTitle => 'Not kilidi';
+
+  @override
+  String get lockMethodInfo => 'Kilitli notlar nasıl açılsın?';
+
+  @override
+  String get lockMethodDevice => 'Parmak izi';
+
+  @override
+  String get lockMethodPassword => 'Şifre';
+
+  @override
+  String get lockMethodPattern => 'Desen';
+
+  @override
+  String get lockAlsoFingerprint => 'Parmak iziyle de açılabilsin';
+
+  @override
+  String get lockChangePassword => 'Şifreyi değiştir';
+
+  @override
+  String get lockChangePattern => 'Deseni değiştir';
+
+  @override
+  String get lockWebDeviceInfo =>
+      'Tarayıcıda parmak izi yok: kilitli notları web’de de korumak için şifre ya da desen seç.';
+
+  @override
+  String get lockNotEncryption =>
+      'Kilit şifreleme değildir: notun içeriği sunucuda ve cihaz önbelleğinde düz metin olarak durur. Kilit yalnız bu uygulamanın notu göstermesini engeller.';
 }

@@ -5090,4 +5090,95 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driveWebConnectButton => 'Connect Drive';
+
+  @override
+  String get lockPatternSemantics =>
+      'Lock pattern: connect the dots with your finger';
+
+  @override
+  String get lockDrawPattern => 'Draw your pattern';
+
+  @override
+  String get lockDrawAgain => 'Draw the pattern again to confirm';
+
+  @override
+  String get lockEnterPassword => 'Enter your password';
+
+  @override
+  String get lockPassword => 'Password';
+
+  @override
+  String get lockPasswordAgain => 'Password (again)';
+
+  @override
+  String get lockWrong => 'Wrong, try again';
+
+  @override
+  String lockTooManyAttempts(int count) {
+    return 'Too many wrong attempts. Wait $count s.';
+  }
+
+  @override
+  String get lockUseFingerprint => 'Unlock with fingerprint';
+
+  @override
+  String get lockForgot => 'Forgot';
+
+  @override
+  String get lockForgotFailed =>
+      'Could not verify with your Google account. Guest accounts cannot reset the password.';
+
+  @override
+  String get lockNewPassword => 'New lock password';
+
+  @override
+  String get lockNewPattern => 'New lock pattern';
+
+  @override
+  String lockPasswordTooShort(int count) {
+    return 'Password must be at least $count characters';
+  }
+
+  @override
+  String lockPatternTooShort(int count) {
+    return 'Pattern must connect at least $count dots';
+  }
+
+  @override
+  String get lockMismatch => 'Did not match, try again';
+
+  @override
+  String get lockChangeAuthReason => 'Verify to change the lock setting';
+
+  @override
+  String get lockMethodTitle => 'Note lock';
+
+  @override
+  String get lockMethodInfo => 'How should locked notes open?';
+
+  @override
+  String get lockMethodDevice => 'Fingerprint';
+
+  @override
+  String get lockMethodPassword => 'Password';
+
+  @override
+  String get lockMethodPattern => 'Pattern';
+
+  @override
+  String get lockAlsoFingerprint => 'Also allow fingerprint';
+
+  @override
+  String get lockChangePassword => 'Change password';
+
+  @override
+  String get lockChangePattern => 'Change pattern';
+
+  @override
+  String get lockWebDeviceInfo =>
+      'Browsers have no fingerprint: choose a password or pattern to protect locked notes on the web too.';
+
+  @override
+  String get lockNotEncryption =>
+      'The lock is not encryption: the note content is stored as plain text on the server and in the device cache. The lock only stops this app from showing the note.';
 }

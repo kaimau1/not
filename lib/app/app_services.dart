@@ -10,6 +10,7 @@ import '../features/notes/data/reminder_service.dart';
 import '../features/notes/data/share_intake.dart';
 import '../features/notes/data/upload_queue.dart';
 import '../features/notes/data/widget_service.dart';
+import '../features/notes/presentation/lock/note_lock_ui.dart';
 import '../features/settings/data/prefs_sync.dart';
 import 'router.dart';
 
@@ -49,6 +50,8 @@ class AppServices extends ConsumerWidget {
       ref.listen<void>(dataMigrationsProvider, _ignore);
       // Kişiye ait tercihler kullanıcı belgesine (F4.5).
       ref.listen<void>(prefsSyncProvider, _ignore);
+      // Not kilidi kapısı: yöntem + şifre/desen sorusu (F4.8).
+      ref.listen<void>(noteLockBinderProvider, _ignore);
     }
     return child;
   }

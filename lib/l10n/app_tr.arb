@@ -2463,5 +2463,53 @@
   "guestReminderLater": "Sonra",
   "driveWebConnectTitle": "Bu ek Google Drive’ında",
   "driveWebConnectBody": "Telefonundan eklenen dosyalar Drive’da saklanıyor. Tarayıcıda görmek için Google hesabınla Drive’a erişim izni ver (bu oturum boyunca geçerli).",
-  "driveWebConnectButton": "Drive’a bağlan"
+  "driveWebConnectButton": "Drive’a bağlan",
+  "lockPatternSemantics": "Kilit deseni: noktaları parmakla birleştir",
+  "lockDrawPattern": "Deseni çiz",
+  "lockDrawAgain": "Onaylamak için deseni yeniden çiz",
+  "lockEnterPassword": "Şifreni gir",
+  "lockPassword": "Şifre",
+  "lockPasswordAgain": "Şifre (tekrar)",
+  "lockWrong": "Yanlış, yeniden dene",
+  "lockTooManyAttempts": "Çok fazla yanlış deneme. {count} sn bekle.",
+  "@lockTooManyAttempts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lockUseFingerprint": "Parmak iziyle aç",
+  "lockForgot": "Unuttum",
+  "lockForgotFailed": "Google hesabınla doğrulanamadı. Misafir hesapta şifre sıfırlanamaz.",
+  "lockNewPassword": "Yeni kilit şifresi",
+  "lockNewPattern": "Yeni kilit deseni",
+  "lockPasswordTooShort": "Şifre en az {count} karakter olmalı",
+  "@lockPasswordTooShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lockPatternTooShort": "Desen en az {count} noktayı birleştirmeli",
+  "@lockPatternTooShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lockMismatch": "Eşleşmedi, baştan dene",
+  "lockChangeAuthReason": "Kilit ayarını değiştirmek için doğrula",
+  "lockMethodTitle": "Not kilidi",
+  "lockMethodInfo": "Kilitli notlar nasıl açılsın?",
+  "lockMethodDevice": "Parmak izi",
+  "lockMethodPassword": "Şifre",
+  "lockMethodPattern": "Desen",
+  "lockAlsoFingerprint": "Parmak iziyle de açılabilsin",
+  "lockChangePassword": "Şifreyi değiştir",
+  "lockChangePattern": "Deseni değiştir",
+  "lockWebDeviceInfo": "Tarayıcıda parmak izi yok: kilitli notları web’de de korumak için şifre ya da desen seç.",
+  "lockNotEncryption": "Kilit şifreleme değildir: notun içeriği sunucuda ve cihaz önbelleğinde düz metin olarak durur. Kilit yalnız bu uygulamanın notu göstermesini engeller."
 }
