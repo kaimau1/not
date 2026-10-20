@@ -2072,6 +2072,32 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get screenAiSearchHint => 'Anlamca ara…';
+
+  @override
+  String get archiveInsights => 'Arşivimde neler var?';
+
+  @override
+  String archiveInsightsStats(int count, int files, int stale) {
+    return '$count not · $files ek · $stale not bir yıldır açılmadı';
+  }
+
+  @override
+  String get archiveByFolder => 'Klasörlere göre';
+
+  @override
+  String get archiveNoFolder => 'Klasörsüz';
+
+  @override
+  String get archiveStale => 'Bir yıldır dokunulmamış';
+
+  @override
+  String get archiveInsightsAi => 'AI ile özetle';
+
+  @override
+  String get archiveAiStale => 'AI: eskimiş görünenler';
+
+  @override
   String get fontSizeSmall => 'Küçük';
 
   @override

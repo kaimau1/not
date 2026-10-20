@@ -2075,6 +2075,32 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get screenAiSearchHint => 'Search by meaning…';
+
+  @override
+  String get archiveInsights => 'What\'s in my archive?';
+
+  @override
+  String archiveInsightsStats(int count, int files, int stale) {
+    return '$count notes · $files attachments · $stale untouched for a year';
+  }
+
+  @override
+  String get archiveByFolder => 'By folder';
+
+  @override
+  String get archiveNoFolder => 'No folder';
+
+  @override
+  String get archiveStale => 'Untouched for a year';
+
+  @override
+  String get archiveInsightsAi => 'Summarize with AI';
+
+  @override
+  String get archiveAiStale => 'AI: looks outdated';
+
+  @override
   String get fontSizeSmall => 'Small';
 
   @override

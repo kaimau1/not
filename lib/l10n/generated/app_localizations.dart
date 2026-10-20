@@ -3890,6 +3890,54 @@ abstract class AppLocalizations {
   /// **'Madde {page}. sayfaya taşındı'**
   String itemMovedToPage(int page);
 
+  /// No description provided for @screenAiSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anlamca ara…'**
+  String get screenAiSearchHint;
+
+  /// No description provided for @archiveInsights.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arşivimde neler var?'**
+  String get archiveInsights;
+
+  /// No description provided for @archiveInsightsStats.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not · {files} ek · {stale} not bir yıldır açılmadı'**
+  String archiveInsightsStats(int count, int files, int stale);
+
+  /// No description provided for @archiveByFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörlere göre'**
+  String get archiveByFolder;
+
+  /// No description provided for @archiveNoFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörsüz'**
+  String get archiveNoFolder;
+
+  /// No description provided for @archiveStale.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir yıldır dokunulmamış'**
+  String get archiveStale;
+
+  /// No description provided for @archiveInsightsAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI ile özetle'**
+  String get archiveInsightsAi;
+
+  /// No description provided for @archiveAiStale.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI: eskimiş görünenler'**
+  String get archiveAiStale;
+
   /// No description provided for @fontSizeSmall.
   ///
   /// In tr, this message translates to:
