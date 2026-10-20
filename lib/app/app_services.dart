@@ -10,6 +10,7 @@ import '../features/notes/data/reminder_service.dart';
 import '../features/notes/data/share_intake.dart';
 import '../features/notes/data/upload_queue.dart';
 import '../features/notes/data/widget_service.dart';
+import '../features/settings/data/prefs_sync.dart';
 import 'router.dart';
 
 /// Oturum açıkken ayakta durması gereken arka plan servisleri (F2.4).
@@ -46,6 +47,8 @@ class AppServices extends ConsumerWidget {
       ref.listen<void>(shareIntakeProvider, _ignore);
       // Bir defalık veri göçleri (F3.6 sabit/yıldız, zemin/çerçeve).
       ref.listen<void>(dataMigrationsProvider, _ignore);
+      // Kişiye ait tercihler kullanıcı belgesine (F4.5).
+      ref.listen<void>(prefsSyncProvider, _ignore);
     }
     return child;
   }

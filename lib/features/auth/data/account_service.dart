@@ -43,6 +43,8 @@ class AccountService {
     // Bana gönderilmiş, henüz kabul edilmemiş notlar da benim verimdir.
     AppConstants.inboxNotesCollection,
     'aiReports',
+    // Ayar senkronu, kilit sırrı (F4.5, F4.8).
+    'meta',
   ];
 
   /// Her notun altında boşaltılan alt koleksiyonlar (F3.13 ağır belge).

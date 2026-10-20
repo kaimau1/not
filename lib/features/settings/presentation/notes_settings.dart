@@ -213,6 +213,7 @@ class _CaptureModeSettingState extends ConsumerState<CaptureModeSetting> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    ref.watch(prefsRevisionProvider);
     final prefs = ref.watch(sharedPreferencesProvider);
     final stored = prefs.getString(captureModeDefaultKey);
     return _ChoiceRow<String>(

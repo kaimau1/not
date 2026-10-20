@@ -118,7 +118,7 @@ class UserTemplatesNotifier extends Notifier<List<UserTemplate>> {
 
   @override
   List<UserTemplate> build() {
-    final raw = ref.watch(sharedPreferencesProvider).getString(_key);
+    final raw = watchPrefs(ref).getString(_key);
     return decodeUserTemplates(raw);
   }
 

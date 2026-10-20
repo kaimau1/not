@@ -15,6 +15,26 @@ final sharedPreferencesProvider = Provider<SharedPreferences>(
   (ref) => throw UnimplementedError('main() içinde override edilmeli'),
 );
 
+/// Tercihlerin dışarıdan (ayar senkronu, F4.5) değiştiğini bildiren sayaç:
+/// tercih sağlayıcıları [watchPrefs] ile buna da abonedir, artınca
+/// SharedPreferences'tan yeniden okunur.
+final prefsRevisionProvider = NotifierProvider<PrefsRevision, int>(
+  PrefsRevision.new,
+);
+
+class PrefsRevision extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() => state++;
+}
+
+/// Tercih sağlayıcılarının `build`'inde kullanılır (bkz. [prefsRevisionProvider]).
+SharedPreferences watchPrefs(Ref ref) {
+  ref.watch(prefsRevisionProvider);
+  return ref.watch(sharedPreferencesProvider);
+}
+
 /// Açık/kapalı cihaz tercihi: SharedPreferences'ta [key] anahtarıyla
 /// saklanır (anahtar adları eski sınıflarla AYNI — tercih kaybolmaz).
 class BoolPrefNotifier extends Notifier<bool> {
@@ -25,7 +45,7 @@ class BoolPrefNotifier extends Notifier<bool> {
 
   @override
   bool build() =>
-      ref.watch(sharedPreferencesProvider).getBool(key) ?? defaultValue;
+      watchPrefs(ref).getBool(key) ?? defaultValue;
 
   void set(bool value) {
     state = value;
@@ -62,7 +82,7 @@ class ThemeChoiceNotifier extends Notifier<AppThemeChoice> {
 
   @override
   AppThemeChoice build() {
-    final stored = ref.watch(sharedPreferencesProvider).getString(_key);
+    final stored = watchPrefs(ref).getString(_key);
     return AppThemeChoice.values.firstWhere(
       (m) => m.name == stored,
       orElse: () => AppThemeChoice.paper,
@@ -103,7 +123,7 @@ class LocaleNotifier extends Notifier<Locale?> {
 
   @override
   Locale? build() {
-    final code = ref.watch(sharedPreferencesProvider).getString(_key);
+    final code = watchPrefs(ref).getString(_key);
     // Çevirisi ARTIK üretilmeyen bir dil kayıtlıysa (dil listeden çıkarıldı)
     // sistem diline düşülür; aksi hâlde uygulama yüklenemeyen bir yerel
     // ayarla açılmaya çalışırdı.
@@ -177,7 +197,7 @@ class FontScaleNotifier extends Notifier<double> {
 
   @override
   double build() {
-    final prefs = ref.watch(sharedPreferencesProvider);
+    final prefs = watchPrefs(ref);
     final stored = prefs.getDouble(_key);
     if (stored != null) return stored;
     // İLK AÇILIŞ (F4.7): sistemin yazı ölçeğinden başlanır (en yakın
@@ -212,7 +232,7 @@ class AppFontNotifier extends Notifier<String> {
 
   @override
   String build() {
-    final stored = ref.watch(sharedPreferencesProvider).getString(_key);
+    final stored = watchPrefs(ref).getString(_key);
     // Kayıtta katalogdan çıkmış bir ad varsa varsayılana dönülür.
     return stored != null && appFontIds.contains(stored)
         ? stored
@@ -260,7 +280,7 @@ class DarkScheduleNotifier extends Notifier<DarkSchedule> {
 
   @override
   DarkSchedule build() {
-    final prefs = ref.watch(sharedPreferencesProvider);
+    final prefs = watchPrefs(ref);
     return DarkSchedule(
       enabled: prefs.getBool(_enabledKey) ?? false,
       startMinutes: prefs.getInt(_startKey) ?? 21 * 60,
@@ -341,7 +361,7 @@ class TtsEngineNotifier extends Notifier<TtsEngine> {
 
   @override
   TtsEngine build() =>
-      TtsEngine.fromId(ref.watch(sharedPreferencesProvider).getString(_key));
+      TtsEngine.fromId(watchPrefs(ref).getString(_key));
 
   void set(TtsEngine value) {
     state = value;
@@ -359,7 +379,7 @@ class TtsModelNotifier extends Notifier<String?> {
   static const _key = 'model_tts';
 
   @override
-  String? build() => ref.watch(sharedPreferencesProvider).getString(_key);
+  String? build() => watchPrefs(ref).getString(_key);
 
   void set(String? value) {
     state = value;
@@ -383,7 +403,7 @@ class TtsVoiceNotifier extends Notifier<String> {
 
   @override
   String build() =>
-      ref.watch(sharedPreferencesProvider).getString(_key) ??
+      watchPrefs(ref).getString(_key) ??
       AppConstants.geminiTtsVoices.first;
 
   void set(String value) {
@@ -402,7 +422,7 @@ final aiTaskModelsProvider =
 class AiTaskModelsNotifier extends Notifier<Map<AiTask, String?>> {
   @override
   Map<AiTask, String?> build() {
-    final prefs = ref.watch(sharedPreferencesProvider);
+    final prefs = watchPrefs(ref);
     return {
       for (final task in AiTask.values) task: prefs.getString(task.prefsKey),
     };
@@ -458,7 +478,7 @@ class CrashReportsNotifier extends Notifier<bool> {
   static bool read(SharedPreferences prefs) => prefs.getBool(_key) ?? true;
 
   @override
-  bool build() => read(ref.watch(sharedPreferencesProvider));
+  bool build() => read(watchPrefs(ref));
 
   void set(bool value) {
     state = value;
@@ -512,7 +532,7 @@ class SyncLimitMbNotifier extends Notifier<int> {
   static const options = [5, 10, 25, 50, 0];
 
   @override
-  int build() => ref.watch(sharedPreferencesProvider).getInt(_key) ?? 25;
+  int build() => watchPrefs(ref).getInt(_key) ?? 25;
 
   void set(int value) {
     state = value;
@@ -538,7 +558,7 @@ class VoiceButtonModeNotifier extends Notifier<VoiceButtonMode> {
 
   @override
   VoiceButtonMode build() {
-    final stored = ref.watch(sharedPreferencesProvider).getString(_key);
+    final stored = watchPrefs(ref).getString(_key);
     return VoiceButtonMode.values.firstWhere(
       (m) => m.name == stored,
       orElse: () => VoiceButtonMode.tap,
@@ -578,7 +598,7 @@ class VoiceSilenceNotifier extends Notifier<VoiceSilence> {
 
   @override
   VoiceSilence build() {
-    final stored = ref.watch(sharedPreferencesProvider).getString(_key);
+    final stored = watchPrefs(ref).getString(_key);
     return VoiceSilence.values.firstWhere(
       (v) => v.name == stored,
       orElse: () => VoiceSilence.normal,
@@ -628,7 +648,7 @@ class BriefingSettingsNotifier extends Notifier<BriefingSettings> {
 
   @override
   BriefingSettings build() {
-    final prefs = ref.watch(sharedPreferencesProvider);
+    final prefs = watchPrefs(ref);
     return BriefingSettings(
       enabled: prefs.getBool(_enabledKey) ?? false,
       minutes: prefs.getInt(_minutesKey) ?? 8 * 60 + 30,
@@ -800,7 +820,7 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
 
   @override
   DashboardBackground build() {
-    final prefs = ref.watch(sharedPreferencesProvider);
+    final prefs = watchPrefs(ref);
     return DashboardBackground(
       path: prefs.getString(_pathKey),
       opacity: prefs.getDouble(_opacityKey) ?? 0.25,
