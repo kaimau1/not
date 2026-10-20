@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -56,6 +57,20 @@ class LocalNotesStore {
     }
   }
 
+  /// Hesap değişince [uid] DIŞINDAKİ depolar bellekten bırakılır (F5.5):
+  /// önceki hesabın yerel notları (çizimler dahil) oturum boyu RAM'de
+  /// kalıyordu — paylaşılan cihazda gizlilik de. Bekleyen yazım önce diske.
+  static Future<void> releaseExcept(String? uid) async {
+    for (final key in [..._instances.keys]) {
+      if (key == uid) continue;
+      final store = _instances.remove(key)!;
+      if (store._saveTimer != null) await store.flush();
+    }
+  }
+
+  @visibleForTesting
+  static bool isOpen(String uid) => _instances.containsKey(uid);
+
   final File _file;
   final Map<String, Map<String, dynamic>> _docs = {};
   final _changes = StreamController<void>.broadcast();
@@ -110,9 +125,11 @@ class LocalNotesStore {
     return note;
   }
 
+  /// Ayrıştırma önbelleğinden (F6.5): editör akışı her yerel değişiklikte
+  /// çağırıyor, her seferinde notu (çizimler dahil) yeniden ayrıştırıyordu.
   Note? note(String id) {
     final map = _docs[id];
-    return map == null ? null : Note.fromMap(id, map, localOnly: true);
+    return map == null ? null : _parsed(id, map);
   }
 
   /// Notun kaydını BÜTÜNÜYLE koyar (senkronu kapatırken).
@@ -222,15 +239,26 @@ class LocalNotesStore {
     }
   }
 
+  /// Yazımlar SIRAYLA: kodlama artık beklenen bir iş, iki flush üst üste
+  /// binip aynı geçici dosyaya yazmasın.
+  Future<void> _writes = Future.value();
+
   /// Bekleyen değişiklikleri diske yazar. Önce geçici dosyaya, sonra
   /// yeniden adlandırma: yazım yarıda kesilirse eski dosya sağlam kalır.
-  Future<void> flush() async {
+  Future<void> flush() {
     _saveTimer?.cancel();
     _saveTimer = null;
+    return _writes = _writes.then((_) => _write());
+  }
+
+  Future<void> _write() async {
     try {
-      final json = jsonEncode({
-        for (final e in _docs.entries) e.key: _encode(e.value),
-      });
+      // JSON AYRI İZOLEDE (F6.5): yerel notta yazarken 600 ms'de bir BÜTÜN
+      // yerel notlar (çizimler dahil) arayüz izolesinde kodlanıyordu. Sığ
+      // kopya yeter — kayıt haritaları yerinde değişmez, yenisi konur.
+      final json = await _encodeAll(
+        Map<String, Map<String, dynamic>>.of(_docs),
+      );
       final tmp = File('${_file.path}.tmp');
       await tmp.parent.create(recursive: true);
       await tmp.writeAsString(json, flush: true);
@@ -239,6 +267,15 @@ class LocalNotesStore {
       // Disk dolu vb.: bir sonraki değişiklikte yeniden denenir.
     }
   }
+
+  /// Statik: izoleye giden kapanış örneği (akış denetleyicisi vb.)
+  /// yakalamasın.
+  static Future<String> _encodeAll(Map<String, Map<String, dynamic>> docs) =>
+      Isolate.run(
+        () => jsonEncode({
+          for (final e in docs.entries) e.key: _encode(e.value),
+        }),
+      );
 
   static dynamic _encode(dynamic v) {
     if (v is Timestamp) return {'__ts': v.millisecondsSinceEpoch};

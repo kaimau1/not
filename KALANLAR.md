@@ -754,3 +754,22 @@ silme) tamamlandı, kalanlar sırayla:
   ~0,5 sn gecikmeli).
 - [ ] Actions → Derleme → Run workflow → "Kare ölçümü" bir kez koşturulsun;
   `perf-summary` artefaktındaki p90 değerleri HAFIZA'ya taban olarak yazılsın.
+
+## Faz 5–6 (performans planı) — cihazda doğrula (2026-10-20)
+- [ ] 20-30 not aç-kapat, sonra yerel (yalnız bu cihaz) bir notta 2 dk yaz —
+  uygulama ısınıyor/yavaşlıyor mu (F5.1).
+- [ ] Galeriden 10 büyük fotoğraf seç (hazırlama ekranı, küçük resim
+  şeridi) — çökme yok; kırp/döndür çalışıyor (F5.2). Büyük fotoğraflı bir
+  PPTX aç, slaytlar net mi.
+- [ ] Web'de bir hatırlatıcıyı kaldır; telefonda uygulama KAPALIYKEN zamanı
+  geçsin — bildirim GELMEMELİ. Sonra uygulamayı aç: başka hatırlatıcılar
+  yine çalıyor mu (F5.3).
+- [ ] Drive kipinde bir notu "yalnız bu cihaz"a al: ekler açılıyor, Drive'daki
+  kopya silindi, sürüm geçmişi bulutta yok (F5.4).
+- [ ] Çizimli bir PDF notunda 1 dk yazı yaz — takılma azaldı mı; çizimler
+  kaydediliyor ve başka cihazda görünüyor mu (F6.1 — yazım atlama YOK mu).
+- [ ] "Ek içeriğinde ara" açıkken büyük PDF ekle — donma yok; aramada PDF
+  metni bulunuyor; uygulamayı kapat-aç, indeks korunuyor (F6.3 dosyaya taşıma).
+- [ ] Çöp kutusu açılıyor, silinenler listeleniyor, geri yükle/kalıcı sil
+  çalışıyor (F6.7 yeni sorgu). Yeni cihazda (ekler inmemiş) görseller indikten
+  sonra kendiliğinden görünüyor (F6.9).

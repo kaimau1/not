@@ -75,7 +75,7 @@ const int kFolderBadgeMax = 9;
 /// [ownerId] klasörün sahibi: kendi klasörümde de rozet çıkar (birileriyle
 /// paylaştığım klasöre karşı taraf not eklemiş olabilir).
 final folderUnreadProvider =
-    Provider.family<int, ({String ownerId, String folderId})>((ref, key) {
+    Provider.autoDispose.family<int, ({String ownerId, String folderId})>((ref, key) {
       final me = ref.watch(currentUidProvider);
       if (me == null) return 0;
       final seen = ref.watch(folderSeenProvider);
@@ -86,7 +86,11 @@ final folderUnreadProvider =
       // Aksi hâlde uygulamayı ilk kuran kullanıcı, klasörün bütün geçmişi
       // kadar okunmamış görürdü.
       if (since.millisecondsSinceEpoch == 0) return 0;
-      final notes = ref.watch(sharedFolderNotesProvider(key)).value;
+      // KENDİ klasörümün notları ana akışta zaten var: ikinci bir Firestore
+      // dinleyicisi açılmaz (F6.7).
+      final notes = key.ownerId == me
+          ? ref.watch(folderNotesProvider(key.folderId)).value
+          : ref.watch(sharedFolderNotesProvider(key)).value;
       final messages = ref.watch(folderMessagesProvider(key.folderId)).value;
       return countFolderUnread(
         notes: notes ?? const [],

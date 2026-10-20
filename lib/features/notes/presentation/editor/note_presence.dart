@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../data/note_shares_repository.dart';
+import '../../domain/note_heavy.dart' show kPresenceCollection;
 
 /// **"BAŞKA BİRİ DÜZENLİYOR" GÖSTERGESİ** (F4.1).
 ///
@@ -19,7 +20,6 @@ import '../../data/note_shares_repository.dart';
 /// kendiliğinden söner). Paylaşılmayan notta hiçbir şey yazılmaz.
 const _beat = Duration(seconds: 25);
 const _fresh = Duration(seconds: 70);
-const kPresenceCollection = 'presence';
 
 class NotePresenceIndicator extends ConsumerStatefulWidget {
   const NotePresenceIndicator({super.key, required this.noteId, this.ownerId});

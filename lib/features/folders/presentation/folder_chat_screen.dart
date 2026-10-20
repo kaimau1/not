@@ -14,6 +14,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../notes/presentation/editor/drawing_screen.dart';
+import '../../notes/presentation/editor/note_images.dart';
 import '../data/folder_chat_repository.dart';
 import '../../../core/widgets/app_sheet.dart';
 
@@ -142,7 +143,14 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Image.memory(bytes, fit: BoxFit.contain),
+                child: Image.memory(
+                  bytes,
+                  fit: BoxFit.contain,
+                  cacheWidth: decodeWidthBucket(
+                    MediaQuery.sizeOf(sheetContext).width,
+                    MediaQuery.devicePixelRatioOf(sheetContext),
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 8),

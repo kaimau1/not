@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/utils/firestore_size.dart';
 import '../../../core/utils/note_lock.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../notes/presentation/capture_mode_sheet.dart';
@@ -148,6 +149,13 @@ Future<void> writeLocalPref(
   }
 }
 
+/// Kayıtlı anlık görüntü [before] ile yeni plan [after] aynı mı (anahtar
+/// sırasından bağımsız). Saf — testle ölçülüyor (F6.4).
+bool prefsSnapshotUnchanged(
+  Map<String, Object?>? before,
+  Map<String, Object?> after,
+) => before != null && sameFirestoreValue(before, after);
+
 /// Oturum açıkken ayakta durur (bkz. AppServices).
 final prefsSyncProvider = Provider<void>((ref) {
   final uid = ref.watch(currentUidProvider);
@@ -171,9 +179,7 @@ class _PrefsSync with WidgetsBindingObserver {
       _remote = values is Map ? Map<String, Object?>.from(values) : {};
       unawaited(_run());
     }, onError: (Object e) => debugPrint('Ayar senkronu dinlenemedi: $e'));
-    // Ayar değişikliği bir dokunuştur; kısa aralıkla yoklamak yeter (prefs
-    // yazımları kodun her yerinde, tek kancası yok).
-    _timer = Timer.periodic(const Duration(seconds: 20), (_) => _run());
+    _startTimer();
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -185,9 +191,30 @@ class _PrefsSync with WidgetsBindingObserver {
   Map<String, Object?>? _remote;
   bool _running = false;
 
+  /// Ayar değişikliği bir dokunuştur; kısa aralıkla yoklamak yeter (prefs
+  /// yazımları kodun her yerinde, tek kancası yok). Yalnız ÖN PLANDA (F6.4):
+  /// Dart zamanlayıcıları süreç yaşadıkça işler — arkadayken de 20 sn'de bir
+  /// uyanıp yazıyordu.
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 20), (_) => _run());
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) unawaited(_run());
+    switch (state) {
+      case AppLifecycleState.paused:
+        _timer?.cancel();
+        _timer = null;
+        unawaited(_run());
+      case AppLifecycleState.resumed:
+        if (_timer == null) {
+          unawaited(_run());
+          _startTimer();
+        }
+      default:
+        break;
+    }
   }
 
   Future<void> _run() async {
@@ -197,11 +224,12 @@ class _PrefsSync with WidgetsBindingObserver {
     _running = true;
     try {
       final raw = _prefs.getString(_snapshotKey);
+      final snapshot = raw == null
+          ? null
+          : Map<String, Object?>.from(jsonDecode(raw) as Map);
       final plan = planPrefsSync(
         local: readLocalPrefs(_prefs),
-        snapshot: raw == null
-            ? null
-            : Map<String, Object?>.from(jsonDecode(raw) as Map),
+        snapshot: snapshot,
         remote: remote,
       );
       for (final e in plan.apply.entries) {
@@ -216,7 +244,11 @@ class _PrefsSync with WidgetsBindingObserver {
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       }
-      await _prefs.setString(_snapshotKey, jsonEncode(plan.snapshot));
+      // Anlık görüntü yalnız DEĞİŞİNCE yazılır (F6.4): her turda platform
+      // kanalına aynı JSON gidiyordu.
+      if (!prefsSnapshotUnchanged(snapshot, plan.snapshot)) {
+        await _prefs.setString(_snapshotKey, jsonEncode(plan.snapshot));
+      }
       if (plan.apply.isNotEmpty) onApplied();
     } catch (e) {
       debugPrint('Ayar senkronu başarısız: $e');

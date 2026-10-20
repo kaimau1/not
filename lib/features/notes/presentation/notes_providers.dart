@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart' show compute;
+import 'package:flutter/foundation.dart' show compute, visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/search_fold.dart';
@@ -827,7 +827,7 @@ final _archivedNotesBox = Provider<StableBox<List<Note>>>(
 /// kullanıcı orada duran her şeyi görmek ister; dışarıda bırakılmış bir
 /// süzgecin klasörün içini de budaması "notum kayboldu" demekti. Yalnız
 /// sıralama ortak — kullanıcının seçtiği düzen her yerde aynı olsun.
-final folderNotesProvider = Provider.family<AsyncValue<List<Note>>, String>((
+final folderNotesProvider = Provider.autoDispose.family<AsyncValue<List<Note>>, String>((
   ref,
   folderId,
 ) {
@@ -853,7 +853,7 @@ final folderNotesProvider = Provider.family<AsyncValue<List<Note>>, String>((
   );
 });
 
-final _folderNotesBox = Provider.family<StableBox<List<Note>>, String>(
+final _folderNotesBox = Provider.autoDispose.family<StableBox<List<Note>>, String>(
   (ref, _) => StableBox(),
 );
 
@@ -867,7 +867,7 @@ final _folderNotesBox = Provider.family<StableBox<List<Note>>, String>(
 /// açıklaması) — paylaşılan kullanıcı buraya not eklerse o not de SAHİBİNİN
 /// koleksiyonuna yazılır, kopya oluşmaz.
 final sharedFolderNotesProvider =
-    StreamProvider.family<List<Note>, ({String ownerId, String folderId})>((
+    StreamProvider.autoDispose.family<List<Note>, ({String ownerId, String folderId})>((
       ref,
       key,
     ) {
@@ -910,6 +910,7 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final box = ref.watch(_filteredNotesBox);
 
   return notes.whenData((list) {
+    _pruneSearchBodyCache(list);
     // Boş notlar (yeni oluşturulup hiç doldurulmamış) listede gösterilmez;
     // editörden çıkışta zaten silinirler, arka plan temizliği de kalıntıyı
     // toplar. Böylece boş kart dashboard'da hiç belirmez.
@@ -956,11 +957,10 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
     if (query.isNotEmpty) {
       // **EK İÇERİĞİ** (seçenek, varsayılan kapalı): açıkken PDF metni ve
       // görsel OCR'ı da aranır — bkz. [attachmentTextProvider].
-      final extra = ref.watch(attachmentTextProvider);
+      final extra = ref.watch(attachmentFoldedTextProvider);
       result = [
         for (final n in result)
-          if (_matches(n, query) ||
-              (foldForSearch(extra[n.id] ?? '').contains(query)))
+          if (_matches(n, query) || (extra[n.id]?.contains(query) ?? false))
             n,
       ];
     }
@@ -1042,6 +1042,24 @@ List<Note> _sortedNotes(
 /// Anahtar `updatedAt`: not değişmedikçe yeniden ayrıştırma yok, bayatlama da
 /// yok. Küresel ve sınırsız DEĞİL — girdi sayısı not sayısıyla sınırlı.
 final Map<String, (DateTime?, String)> _searchBodyCache = {};
+
+/// Hesap değişince (F5.5): önbellek her notun katlanmış TAM metnini
+/// (transkriptler dahil) tutuyor — öbür hesabınki bellekte kalmasın.
+void clearSearchBodyCache() => _searchBodyCache.clear();
+
+/// Silinen notların girdileri kalmasın (F5.5). Ucuz denetim önce: önbellek
+/// canlı listeden büyük değilse dokunulmaz.
+void _pruneSearchBodyCache(List<Note> live) {
+  if (_searchBodyCache.length <= live.length) return;
+  final ids = {for (final n in live) n.id};
+  _searchBodyCache.removeWhere((id, _) => !ids.contains(id));
+}
+
+@visibleForTesting
+int get searchBodyCacheSize => _searchBodyCache.length;
+
+@visibleForTesting
+String searchableBodyForTest(Note note) => _searchableBody(note);
 
 String _searchableBody(Note note) {
   final cached = _searchBodyCache[note.id];

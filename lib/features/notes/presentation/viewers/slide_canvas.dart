@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../../data/pptx_render.dart';
 
+import '../editor/note_images.dart';
+
 /// Bir slaytı orijinal tasarımıyla (arka plan, şekiller, görseller, biçimli
 /// metin) çizer. Ölçü birimi punto; [FittedBox] ile kullanılabilir genişliğe
 /// orantılı olarak ölçeklenir — yani her ekranda PowerPoint'teki yerleşimin
@@ -56,8 +58,14 @@ class SlideCanvas extends StatelessWidget {
                   ),
                   child: slide.backgroundImage == null
                       ? null
-                      : Image.memory(
-                          slide.backgroundImage!,
+                      : Image(
+                          // Slayt en çok ekran genişliğinde görünür; PPTX'teki
+                          // fotoğrafı tam boy çözmek gereksiz bellek (F5.2).
+                          image: boundedImage(
+                            MemoryImage(slide.backgroundImage!),
+                            MediaQuery.sizeOf(context).width,
+                            MediaQuery.devicePixelRatioOf(context),
+                          ),
                           fit: BoxFit.cover,
                           errorBuilder: (_, _, _) => const SizedBox(),
                         ),
@@ -181,8 +189,14 @@ class _ShapeBody extends StatelessWidget {
       return ClipRect(
         child: Container(
           decoration: decoration,
-          child: Image.memory(
-            shape.image!,
+          // Şekil slayttan, slayt ekrandan geniş olamaz: ekran boyu üst
+          // sınırdır (F5.2).
+          child: Image(
+            image: boundedImage(
+              MemoryImage(shape.image!),
+              MediaQuery.sizeOf(context).width,
+              MediaQuery.devicePixelRatioOf(context),
+            ),
             fit: BoxFit.fill,
             errorBuilder: (_, _, _) => const SizedBox(),
           ),

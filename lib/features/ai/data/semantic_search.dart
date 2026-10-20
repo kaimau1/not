@@ -4,15 +4,19 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/search_fold.dart';
+import '../../auth/presentation/auth_providers.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/presentation/notes_providers.dart';
 import 'attachment_text_index.dart';
 import 'gemini_service.dart';
 
-final semanticIndexProvider = Provider<SemanticIndex>(
-  (ref) => SemanticIndex(ref),
-);
+/// Hesaba bağlı (F5.5): vektör önbelleği notların içeriğinden türer; hesap
+/// değişince öbür hesabınki bellekte kalmasın.
+final semanticIndexProvider = Provider<SemanticIndex>((ref) {
+  ref.watch(currentUidProvider);
+  return SemanticIndex(ref);
+});
 
 /// Sorguyla anlamca en alakalı notlar (skor eşiği uygulanmış, sıralı).
 final semanticSearchProvider = FutureProvider.autoDispose

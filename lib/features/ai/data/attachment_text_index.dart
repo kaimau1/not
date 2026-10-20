@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart' as sf;
 
 import '../../../core/utils/local_file.dart';
+import '../../../core/utils/search_fold.dart';
+import '../../auth/presentation/auth_providers.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/data/scan/scan_ocr.dart';
 import '../../notes/domain/attachment.dart';
@@ -22,8 +24,8 @@ import '../../settings/settings_providers.dart';
 /// **Neden SEÇENEK ve neden varsayılan KAPALI:** metni çıkarmak ucuz değil —
 /// PDF ayrıştırılıyor, görsel cihaz-içi OCR'dan geçiyor. Her açılışta bütün
 /// ekleri taramak pili ve zamanı yakar. Açan kullanıcı bir kerelik bir
-/// tarama bedeli ödüyor, sonrası önbellekten (ek kimliği → metin,
-/// SharedPreferences'ta kalıcı).
+/// tarama bedeli ödüyor, sonrası önbellekten (ek kimliği → metin, hesaba
+/// özgü dosyada kalıcı — bkz. [AttachmentTextIndex._cacheFile]).
 ///
 /// **Sınırlar (bilinçli):**
 ///  * Yalnız CİHAZDA DURAN dosyalar okunur. Bulut kopyasını indirmek arama
@@ -40,6 +42,15 @@ final attachmentTextProvider =
       AttachmentTextIndex.new,
     );
 
+/// [attachmentTextProvider]'ın aramaya hazır, KATLANMIŞ ([foldForSearch])
+/// hâli (F6.3): süzgeç her hesapta her notun ek metnini yeniden
+/// katlıyordu; bu yalnız indeks değişince kurulur.
+final attachmentFoldedTextProvider = Provider<Map<String, String>>((ref) {
+  final texts = ref.watch(attachmentTextProvider);
+  if (texts.isEmpty) return const {};
+  return {for (final e in texts.entries) e.key: foldForSearch(e.value)};
+});
+
 class AttachmentTextIndex extends Notifier<Map<String, String>> {
   /// Bir turda işlenecek en çok ek sayısı.
   static const int _batch = 8;
@@ -47,37 +58,91 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
   /// Tek ekten alınacak en çok karakter: vektör de arama da sulanmasın.
   static const int maxCharsPerFile = 4000;
 
-  static const _cacheKey = 'attachment_text_v1';
+  /// ESKİ önbellek: SharedPreferences'ta tek JSON (F6.3'e dek). Her 8 ekte
+  /// bir bütün harita yeniden yazılıyordu ve SharedPreferences açılışta
+  /// TAMAMEN belleğe yüklendiği için her açılışta MB'larca metin okunuyordu.
+  /// Bir kez dosyaya taşınıp silinir.
+  static const legacyCacheKey = 'attachment_text_v1';
+
+  /// Testler gerçek uygulama klasörüne yazmasın diye.
+  @visibleForTesting
+  static String? overrideDir;
 
   /// ek kimliği → metin (kalıcı önbellek; dosya değişmediği sürece geçerli).
   final _texts = <String, String>{};
 
   bool _running = false;
 
+  /// Önbelleğin yüklendiği hesap; değişince bellekteki metin bırakılır.
+  String? _uid;
+  Future<void>? _loading;
+
   @override
   Map<String, String> build() {
     if (!ref.watch(attachmentSearchProvider)) return const {};
+    final uid = ref.watch(currentUidProvider);
     final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
-    _loadCache();
-    scheduleMicrotask(() => unawaited(_index(notes)));
-    return _byNote(notes);
+    if (uid != _uid) {
+      _uid = uid;
+      _texts.clear();
+      _loading = uid == null ? null : _loadCache(uid);
+    }
+    final loading = _loading;
+    if (loading != null) {
+      unawaited(loading.then((_) => _index(notes)));
+    }
+    final next = _byNote(notes);
+    // İçerik aynıysa ÖNCEKİ harita: her not yayınında yeni harita, süzgeci
+    // ve katlanmış kopyayı boşuna yeniden kurdururdu (F6.3).
+    final previous = stateOrNull;
+    if (previous != null && mapEquals(previous, next)) return previous;
+    return next;
   }
 
-  bool _cacheLoaded = false;
+  /// Hesaba özgü önbellek dosyası; web'de (dosya sistemi yok) null.
+  File? _cacheFile(String uid) {
+    final base = overrideDir ?? appSupportPath;
+    if (kIsWeb || base == null) return null;
+    return File('$base/attachment_text_$uid.json');
+  }
 
-  void _loadCache() {
-    if (_cacheLoaded) return;
-    _cacheLoaded = true;
-    final raw = ref.read(sharedPreferencesProvider).getString(_cacheKey);
-    if (raw == null || raw.isEmpty) return;
+  Future<void> _loadCache(String uid) async {
+    final file = _cacheFile(uid);
+    final prefs = ref.read(sharedPreferencesProvider);
+    String? raw;
     try {
-      final decoded = jsonDecode(raw);
-      if (decoded is! Map) return;
-      for (final entry in decoded.entries) {
-        _texts[entry.key.toString()] = entry.value.toString();
+      if (file != null && await file.exists()) raw = await file.readAsString();
+    } catch (_) {}
+    final legacy = prefs.getString(legacyCacheKey);
+    raw ??= legacy;
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map && uid == _uid) {
+          for (final entry in decoded.entries) {
+            _texts[entry.key.toString()] = entry.value.toString();
+          }
+        }
+      } catch (_) {
+        // Bozuk önbellek aramayı kilitlemesin: sıfırdan taranır.
       }
+    }
+    if (legacy != null) {
+      if (file != null) await _saveCache(uid);
+      await prefs.remove(legacyCacheKey);
+    }
+  }
+
+  Future<void> _saveCache(String uid) async {
+    final file = _cacheFile(uid);
+    if (file == null || uid != _uid) return;
+    try {
+      final tmp = File('${file.path}.tmp');
+      await tmp.parent.create(recursive: true);
+      await tmp.writeAsString(jsonEncode(_texts), flush: true);
+      await tmp.rename(file.path);
     } catch (_) {
-      // Bozuk önbellek aramayı kilitlemesin: sıfırdan taranır.
+      // Disk dolu vb.: sonraki turda yeniden denenir.
     }
   }
 
@@ -101,34 +166,44 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
   /// arama sonuçları indeks doldukça zenginleşsin.
   Future<void> _index(List<Note> notes) async {
     if (_running) return;
+    final uid = _uid;
+    if (uid == null) return;
     _running = true;
     try {
       final pending = <({String noteId, Attachment file})>[];
+      final live = <String>{};
       for (final note in notes) {
         for (final attachment in note.attachments) {
+          live.add(attachment.id);
           if (_texts.containsKey(attachment.id)) continue;
           if (!_readable(attachment)) continue;
           pending.add((noteId: note.id, file: attachment));
         }
       }
-      if (pending.isEmpty) return;
+      // Silinen eklerin metni önbellekte kalmasın (F6.3). Liste boşken
+      // (akış henüz gelmedi) budanmaz.
+      final before = _texts.length;
+      if (notes.isNotEmpty) _texts.removeWhere((id, _) => !live.contains(id));
+      if (pending.isEmpty) {
+        if (_texts.length != before) await _saveCache(uid);
+        return;
+      }
       // Tur tur ilerler: her turdan sonra durum yenilenir ki arama sonuçları
       // indeks doldukça zenginleşsin, kullanıcı bütün defterin taranmasını
       // beklemesin.
       for (var i = 0; i < pending.length; i += _batch) {
         final slice = pending.skip(i).take(_batch);
         for (final entry in slice) {
+          if (uid != _uid) return;
           // Sonuç BOŞ da olsa yazılır: "bu ekte metin yok" da bir yanıt,
           // yoksa aynı dosya her turda yeniden taranırdı.
           _texts[entry.file.id] = await _extract(entry.file);
         }
-        unawaited(
-          ref
-              .read(sharedPreferencesProvider)
-              .setString(_cacheKey, jsonEncode(_texts)),
-        );
+        if (uid != _uid) return;
         state = _byNote(notes);
       }
+      // Tur sonunda BİR kez (eskiden her 8 ekte bir — ilk taramada karesel).
+      await _saveCache(uid);
     } catch (e) {
       debugPrint('Ek metni çıkarılamadı: $e');
     } finally {
@@ -155,9 +230,14 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
 
   static Future<String> _extract(Attachment attachment) async {
     try {
-      final bytes = await File(attachment.localPath).readAsBytes();
       final text = switch (attachment.kind) {
-        AttachmentKind.pdf => extractPdfText(bytes),
+        // AYRI İZOLEDE (F6.3): Syncfusion ayrıştırması büyük PDF'te saniyeler
+        // sürüyor, ana izolede arayüz donuyordu. Dosya da orada okunur —
+        // baytlar izoleler arasında kopyalanmasın.
+        AttachmentKind.pdf => await compute(
+          _extractPdfFile,
+          attachment.localPath,
+        ),
         AttachmentKind.image => await _ocr(attachment.localPath),
         _ => '',
       };
@@ -180,6 +260,9 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
   /// yüzden masaüstünde ve testte de çalışır. Taranmış (metin katmanı
   /// olmayan) PDF boş döner; onun metni tarama sırasında zaten görünmez
   /// katman olarak gömülüyor (bkz. scan_ocr.dart).
+  static String _extractPdfFile(String path) =>
+      extractPdfText(File(path).readAsBytesSync());
+
   @visibleForTesting
   static String extractPdfText(Uint8List bytes) {
     sf.PdfDocument? document;

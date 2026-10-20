@@ -87,22 +87,12 @@ class NoteVersion {
   );
 }
 
-/// Bir notun sürümlenen alanları (Firestore biçimi).
-Map<String, dynamic> versionPayload(Note note, {required String reason}) {
-  final map = note.toMap();
-  return {
-    'reason': reason,
-    'title': map['title'] ?? '',
-    'body': map['body'] ?? '',
-    'items': map['items'] ?? const [],
-    'textPages': map['textPages'] ?? const [],
-  };
-}
-
-/// Sürümlenen içerik farklı mı (renk/sabitleme gibi değişiklikler sürüm
-/// üretmez).
-bool versionContentDiffers(Note a, Note b) {
-  final x = versionPayload(a, reason: '');
-  final y = versionPayload(b, reason: '');
-  return x.toString() != y.toString();
-}
+/// Bir notun sürümlenen alanları (Firestore biçimi). Notun TAMAMI
+/// (`toMap`, ekler dahil) kurulmaz — her kayıtta çağrılıyor (F6.2).
+Map<String, dynamic> versionPayload(Note note, {required String reason}) => {
+  'reason': reason,
+  'title': note.title,
+  'body': note.body,
+  'items': [for (final i in note.items) i.toMap()],
+  'textPages': [for (final p in note.textPages) p.toMap()],
+};

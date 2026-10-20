@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../core/utils/local_file.dart';
 import '../../auth/data/android_google_auth.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
@@ -96,7 +97,11 @@ class LocalFilesRevision extends Notifier<int> {
   @override
   int build() => 0;
 
-  void bump() => state++;
+  void bump() {
+    // Yeni inen dosyalar kısa süreli "yok" önbelleğinde kalmasın (F6.9).
+    forgetMissingLocalFiles();
+    state++;
+  }
 }
 
 /// Kalıcı silmede (çöp boşaltma) Drive dosyasını da silen kanca. Not deposu

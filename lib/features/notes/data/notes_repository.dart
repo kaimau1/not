@@ -89,23 +89,6 @@ final notesStreamProvider = StreamProvider<List<Note>>((ref) {
   });
 });
 
-/// Ek listesinin (Firestore haritası biçiminde) İÇERİK özeti — SHA-1.
-///
-/// [NotesRepository.updateNote] değişmemiş listeyi yeniden yazmamak için
-/// kullanır. Zaman damgası/sunucu değeri gibi JSON'a çevrilemeyen alanlar
-/// kararlı metne çevrilir. Özet çakışması pratikte imkânsız (160 bit); yine
-/// de çakışırsa yalnız EK alanı bir kayıt gecikir, bir sonraki ek
-/// değişikliği tam yazar.
-String attachmentsDigest(Object? attachments) {
-  final text = jsonEncode(
-    attachments,
-    toEncodable: (o) => o is Timestamp
-        ? 'ts:${o.seconds}.${o.nanoseconds}'
-        : o.toString(),
-  );
-  return sha1.convert(utf8.encode(text)).toString();
-}
-
 /// Notların eklerinin BULUTTA kapladığı toplam alan (bayt).
 ///
 /// Görüntülü notlar sayılmaz: Storage'a hiç yüklenmiyorlar (bkz.
@@ -149,7 +132,10 @@ final trashStreamProvider = StreamProvider.autoDispose<List<Note>>((ref) {
 });
 
 /// Tek bir notun canlı akışı (editör bunu izler).
-final noteStreamProvider = StreamProvider.family<Note?, String>((ref, noteId) {
+final noteStreamProvider = StreamProvider.autoDispose.family<Note?, String>((
+  ref,
+  noteId,
+) {
   final repo = ref.watch(notesRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.watchNote(noteId);
@@ -170,8 +156,8 @@ Future<Note> hydrateNote(WidgetRef ref, Note note, {String? ownerId}) {
 /// her zaman GİRİŞ YAPMIŞ kullanıcının koleksiyonuna bakar; paylaşılan bir
 /// notu onunla açmak "not bulunamadı" demekti ve editördeki her yazım kendi
 /// koleksiyonumda HAYALET bir kopya yaratıyordu.
-final ownedNoteStreamProvider =
-    StreamProvider.family<Note?, ({String ownerId, String noteId})>(
+final ownedNoteStreamProvider = StreamProvider.autoDispose
+    .family<Note?, ({String ownerId, String noteId})>(
       (ref, key) => NotesRepository(
         FirebaseFirestore.instance,
         key.ownerId,
@@ -179,8 +165,8 @@ final ownedNoteStreamProvider =
     );
 
 /// [pendingWritesProvider]'ın başka bir sahibin notu için karşılığı.
-final ownedPendingWritesProvider =
-    StreamProvider.family<bool, ({String ownerId, String noteId})>(
+final ownedPendingWritesProvider = StreamProvider.autoDispose
+    .family<bool, ({String ownerId, String noteId})>(
       (ref, key) => NotesRepository(
         FirebaseFirestore.instance,
         key.ownerId,
@@ -189,7 +175,7 @@ final ownedPendingWritesProvider =
 
 /// Editördeki senkron göstergesi: true = yerel değişiklik sunucuya yazılmayı
 /// bekliyor.
-final pendingWritesProvider = StreamProvider.family<bool, String>((
+final pendingWritesProvider = StreamProvider.autoDispose.family<bool, String>((
   ref,
   noteId,
 ) {
@@ -330,38 +316,53 @@ class NotesRepository {
   /// bileşik indeks sorusunu açardı (bu depoda `firestore.indexes.json`
   /// bilerek boş). Klasör başına not sayısı küçük olduğundan ayıklama
   /// istemcide ucuz.
-  Stream<List<Note>> watchFolderNotes(String folderId) => _notes
-      .where('folderId', isEqualTo: folderId)
-      .snapshots()
-      .map((snapshot) {
-        final notes = [
-          for (final doc in snapshot.docs)
-            if (doc.data()['deletedAt'] == null) Note.fromDoc(doc),
-        ];
-        notes.sort(_compare);
-        return notes;
-      });
+  ///
+  /// Ayrıştırma [watchNotes] gibi ARTIMLI (F6.7): her anlık görüntüde
+  /// klasörün bütün notları yeniden ayrıştırılıyordu.
+  Stream<List<Note>> watchFolderNotes(String folderId) {
+    final cache = _IncrementalNotes();
+    return _notes
+        .where('folderId', isEqualTo: folderId)
+        .snapshots()
+        .map((snapshot) {
+          final notes = [
+            for (final n in cache.apply(snapshot))
+              if (n.deletedAt == null) n,
+          ];
+          notes.sort(_compare);
+          return notes;
+        });
+  }
 
-  /// Çöp kutusu: Firestore null-olmayan filtreyi desteklemediği için tüm
-  /// koleksiyon izlenip istemcide ayıklanır (kişisel not sayısı küçüktür).
-  Stream<List<Note>> watchTrash() => _withLocal(_notes.snapshots(), (
-    QuerySnapshot<Map<String, dynamic>> snapshot,
-  ) {
-    final localTrash = local?.notes(deleted: true) ?? const <Note>[];
-    final ids = {for (final n in localTrash) n.id};
-    final notes = [
-      ...localTrash,
-      for (final doc in snapshot.docs)
-        if (doc.data()['deletedAt'] != null && !ids.contains(doc.id))
-          Note.fromDoc(doc),
-    ];
-    notes.sort((a, b) {
-      final aTime = a.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-      final bTime = b.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-      return bTime.compareTo(aTime);
-    });
-    return notes;
-  });
+  /// Çöp kutusu: yalnız silinmiş belgeler sorgulanır (F6.7 — eskiden
+  /// KOLEKSİYONUN TAMAMI dinlenip istemcide ayıklanıyordu; eşitsizlik
+  /// süzgecini [purgeOldTrash] de kullanıyor, tek alan indeksi otomatik).
+  /// `deletedAt` hep istemci saatiyle yazılır (sunucu damgası değil), yerel
+  /// önbellekte de hemen eşleşir.
+  Stream<List<Note>> watchTrash() {
+    final cache = _IncrementalNotes();
+    return _withLocal(
+      _notes
+          .where('deletedAt', isGreaterThan: Timestamp(0, 0))
+          .snapshots()
+          .map(cache.apply),
+      (List<Note> cloudTrash) {
+        final localTrash = local?.notes(deleted: true) ?? const <Note>[];
+        final ids = {for (final n in localTrash) n.id};
+        final notes = [
+          ...localTrash,
+          for (final n in cloudTrash)
+            if (n.deletedAt != null && !ids.contains(n.id)) n,
+        ];
+        notes.sort((a, b) {
+          final aTime = a.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bTime = b.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return bTime.compareTo(aTime);
+        });
+        return notes;
+      },
+    );
+  }
 
   Stream<Note?> watchNote(String noteId) => _withLocal(
     _hydratedDoc(noteId),
@@ -604,21 +605,37 @@ class NotesRepository {
       fields['heavyRef'] = true;
       heavyPayload = {'attachments': split.heavy};
     }
-    final digest = attachmentsDigest(fields['attachments']);
-    _checkSize(note, fields, digest);
-    if (_writtenAttachments[note.id] == digest) fields.remove('attachments');
-    final Future<void> write;
-    final heavyDigest = heavyPayload == null
+    // F6.1: özet (jsonEncode + SHA-1, büyük notta ~50 ms) yerine son yazılan
+    // kopyayla ayırmasız karşılaştırma (~1 ms); bayt tahmini de liste
+    // değişmedikçe yeniden yürünmez.
+    final attachmentsField = fields['attachments'];
+    final written = _writtenAttachments[note.id];
+    final unchanged =
+        written != null && sameFirestoreValue(written.value, attachmentsField);
+    final attachmentBytes = unchanged
+        ? written.bytes
+        : estimateValueBytes(attachmentsField);
+    _checkSize(note, fields, attachmentBytes);
+    final writtenCopy = unchanged
         ? null
-        : attachmentsDigest([heavyPayload]);
-    if (heavyPayload != null && _writtenHeavy[note.id] != heavyDigest) {
+        : copyFirestoreValue(attachmentsField);
+    if (unchanged) fields.remove('attachments');
+    final Future<void> write;
+    final heavyWritten = _writtenHeavy[note.id];
+    if (heavyPayload != null &&
+        !(heavyWritten != null &&
+            sameFirestoreValue(heavyWritten, heavyPayload))) {
+      final heavyCopy = copyFirestoreValue(heavyPayload);
       // Tek batch: ana belge ağır belgeyi gösterirken ağır belge eksik kalmasın.
       final batch = _firestore.batch()
         ..set(_heavyDoc(note.id), heavyPayload)
         ..set(_notes.doc(note.id), fields, SetOptions(merge: true));
       write = batch.commit();
+      final session = _session[note.id];
       write.then<void>(
-        (_) => _writtenHeavy[note.id] = heavyDigest!,
+        (_) {
+          if (_session[note.id] == session) _writtenHeavy[note.id] = heavyCopy;
+        },
         onError: (Object _) {
           _writtenHeavy.remove(note.id);
         },
@@ -626,8 +643,17 @@ class NotesRepository {
     } else {
       write = _notes.doc(note.id).set(fields, SetOptions(merge: true));
     }
+    final session = _session[note.id];
     write.then(
-      (_) => _writtenAttachments[note.id] = digest,
+      (_) {
+        // Editör bu arada kapandıysa ([releaseNote]) kopya saklanmaz.
+        if (writtenCopy != null && _session[note.id] == session) {
+          _writtenAttachments[note.id] = (
+            value: writtenCopy,
+            bytes: attachmentBytes,
+          );
+        }
+      },
       // Blok gövde ŞART: `=> map.remove(...)` String? döndürüyordu ve
       // `onError`ın dönüş türüyle uyuşmayınca reddin üstüne ikinci,
       // yakalanmamış bir hata doğuyordu (F1.7). Red artık YUTULMUYOR (F1.6).
@@ -645,11 +671,36 @@ class NotesRepository {
   /// Not kimliği → bu oturumda yazılan son içeriklerin anahtarları. Editör
   /// gelen anlık görüntünün BAŞKASINDAN mı (birleştir) yoksa kendi
   /// yazımının yankısı mı (taban ilerler) olduğunu buradan anlar.
+  /// İçeriğin kendisi değil SHA-1 özeti (F6.2): not başına 12 TAM metin
+  /// oturum boyu bellekte duruyordu.
   final Map<String, List<String>> _recentWrites = {};
 
-  static String _contentKey(Note note) =>
-      '${note.title}\u0001${note.body}\u0001'
-      '${[for (final i in note.items) '${i.id}:${i.checked}:${i.text}'].join('\u0002')}';
+  static String _contentKey(Note note) => sha1
+      .convert(
+        utf8.encode(
+          '${note.title}\u0001${note.body}\u0001'
+          '${[for (final i in note.items) '${i.id}:${i.checked}:${i.text}'].join('\u0002')}',
+        ),
+      )
+      .toString();
+
+  /// Not kimliği → editör oturumu sayacı; [releaseNote] artırır. Kapanıştan
+  /// SONRA dönen yazım onayı (kapanıştaki son kayıt) kopya bırakmasın.
+  final Map<String, int> _session = {};
+
+  /// Editör kapanınca (F6.2): o notun oturum kayıtları bırakılır — son
+  /// yazımların özetleri, sürüm tabanı ve ek listesinin/ağır belgenin son
+  /// yazılan kopyaları (büyük çizimli notta MB'larca). Yeniden açılışta
+  /// taban yine "açıldığı hâl" olur (F4.2); bir sonraki kayıt ek listesini
+  /// bir kez tam yazar. Son sürüm zamanı ([_versionAt]) KALIR: aç-kapa
+  /// 30 dk aralığını delmesin.
+  void releaseNote(String noteId) {
+    _session[noteId] = (_session[noteId] ?? 0) + 1;
+    _recentWrites.remove(noteId);
+    _versionBase.remove(noteId);
+    _writtenAttachments.remove(noteId);
+    _writtenHeavy.remove(noteId);
+  }
 
   void _rememberWrite(Note note) {
     final list = _recentWrites.putIfAbsent(note.id, () => []);
@@ -663,8 +714,10 @@ class NotesRepository {
 
   // ── Sürüm geçmişi (F4.2, bkz. note_version.dart) ───────────────────────
 
-  /// Not kimliği → bir sonraki sürüme yazılacak hâl (editör açılışta verir).
-  final Map<String, Note> _versionBase = {};
+  /// Not kimliği → bir sonraki sürüme yazılacak hâlin YÜKÜ (editör
+  /// açılışta verir). `Note` değil (F6.2): ağır alanlar dahil tam not
+  /// oturum boyu tutuluyordu; sürüm yalnız metni yazar.
+  final Map<String, Map<String, dynamic>> _versionBase = {};
 
   /// Not kimliği → bu oturumda son sürümün alındığı an.
   final Map<String, DateTime> _versionAt = {};
@@ -672,17 +725,24 @@ class NotesRepository {
   /// Editör notu açınca çağırır: notun AÇILDIĞI hâli, ilk değişiklikte
   /// sürüm olarak saklanır ("dünkü hâline dön").
   void rememberVersionBase(Note note) =>
-      _versionBase.putIfAbsent(note.id, () => note);
+      _versionBase.putIfAbsent(note.id, () => versionPayload(note, reason: ''));
 
   void _maybeVersion(Note note) {
     final base = _versionBase[note.id];
-    if (base == null || !versionContentDiffers(base, note)) return;
+    if (base == null) return;
+    final current = versionPayload(note, reason: '');
+    if (sameFirestoreValue(base, current)) return;
     final now = DateTime.now();
     final last = _versionAt[note.id];
     if (last != null && now.difference(last) < kVersionInterval) return;
     _versionAt[note.id] = now;
-    _versionBase[note.id] = note;
-    unawaited(saveVersion(base, reason: last == null ? 'open' : 'auto'));
+    _versionBase[note.id] = current;
+    unawaited(
+      _addVersion(note.id, {
+        ...base,
+        'reason': last == null ? 'open' : 'auto',
+      }),
+    );
   }
 
   CollectionReference<Map<String, dynamic>> _versions(String noteId) =>
@@ -690,17 +750,20 @@ class NotesRepository {
 
   /// [note]un metnini sürüm olarak saklar (yalnız-bu-cihaz notunda yok).
   /// Sahip yazınca eski sürümler [kMaxVersions]'a budanır.
-  Future<void> saveVersion(Note note, {required String reason}) async {
-    if (isLocal(note.id)) return;
+  Future<void> saveVersion(Note note, {required String reason}) =>
+      _addVersion(note.id, versionPayload(note, reason: reason));
+
+  Future<void> _addVersion(String noteId, Map<String, dynamic> payload) async {
+    if (isLocal(noteId)) return;
     try {
-      await _versions(note.id).add({
-        ...versionPayload(note, reason: reason),
+      await _versions(noteId).add({
+        ...payload,
         'by': editorUid,
         'at': FieldValue.serverTimestamp(),
       });
       if (editorUid != uid) return;
       final old = await _versions(
-        note.id,
+        noteId,
       ).orderBy('at', descending: true).limit(kMaxVersions + 10).get();
       for (final doc in old.docs.skip(kMaxVersions)) {
         unawaited(doc.reference.delete());
@@ -726,12 +789,12 @@ class NotesRepository {
     ];
   }
 
-  /// Not kimliği → sunucuya son BAŞARIYLA yazılan ek listesinin özeti (bkz.
-  /// [updateNote]).
-  final Map<String, String> _writtenAttachments = {};
+  /// Not kimliği → sunucuya son BAŞARIYLA yazılan ek listesinin DERİN
+  /// kopyası ve bayt tahmini (bkz. [updateNote], [copyFirestoreValue]).
+  final Map<String, ({Object? value, int bytes})> _writtenAttachments = {};
 
-  /// Not kimliği → sunucuya son BAŞARIYLA yazılan ağır belgenin özeti.
-  final Map<String, String> _writtenHeavy = {};
+  /// Not kimliği → sunucuya son BAŞARIYLA yazılan ağır belgenin kopyası.
+  final Map<String, Object?> _writtenHeavy = {};
 
   /// **1 MiB BELGE SINIRI** (F1.6). Firestore tek belgeyi 1 MiB'te keser;
   /// çizim/balon/transkript/sayfa notu aynı belgede büyüyen not bu eşiği
@@ -745,16 +808,9 @@ class NotesRepository {
   static final _issues = StreamController<NoteWriteIssue>.broadcast();
   static Stream<NoteWriteIssue> get writeIssues => _issues.stream;
 
-  /// Ek listesinin bayt tahmini, özete göre önbellekte: ek listesi büyük ve
-  /// çoğu kayıtta değişmiyor, her tuşta yeniden yürümeye değmez.
-  final Map<String, (String, int)> _attachmentBytes = {};
-
-  void _checkSize(Note note, Map<String, dynamic> fields, String digest) {
-    final cached = _attachmentBytes[note.id];
-    final attachmentBytes = cached != null && cached.$1 == digest
-        ? cached.$2
-        : estimateValueBytes(fields['attachments']);
-    _attachmentBytes[note.id] = (digest, attachmentBytes);
+  /// [attachmentBytes]: ek listesinin bayt tahmini — liste son yazımdan beri
+  /// değişmediyse önbellekten (ek listesi büyük ve çoğu kayıtta değişmiyor).
+  void _checkSize(Note note, Map<String, dynamic> fields, int attachmentBytes) {
     final rest = Map<String, dynamic>.of(fields)..remove('attachments');
     final total = estimateFirestoreBytes(rest) + attachmentBytes;
     if (total < docWarnBytes) return;
@@ -1037,17 +1093,29 @@ class NotesRepository {
       local!.remove(noteId);
       return;
     }
+    _deleteCloudCopy(noteId);
+  }
+
+  /// Notun buluttaki HER şeyi: belge + alt koleksiyonlar. Alt koleksiyon
+  /// belgeyle silinmez (Firestore) — ağır belge, sürümler (F4.2, notun
+  /// METNİNİ taşır) ve "düzenliyor" nabızları ayrıca gider. Kalıcı silme ve
+  /// "yalnız bu cihaz"a alma ORTAK yolu (F5.4: ikincisi sürümleri bulutta
+  /// bırakıyordu).
+  void _deleteCloudCopy(String noteId) {
     unawaited(_notes.doc(noteId).delete());
-    // Alt koleksiyon belgeyle silinmez (Firestore) — ağır belge de gider.
     unawaited(_heavyDoc(noteId).delete().catchError((Object _) {}));
-    // Sürümler de (F4.2).
-    unawaited(
-      _versions(noteId).get().then((snap) {
-        for (final doc in snap.docs) {
-          unawaited(doc.reference.delete());
-        }
-      }, onError: (Object _) {}),
-    );
+    for (final sub in [
+      _versions(noteId),
+      _notes.doc(noteId).collection(kPresenceCollection),
+    ]) {
+      unawaited(
+        sub.get().then((snap) {
+          for (final doc in snap.docs) {
+            unawaited(doc.reference.delete().catchError((Object _) {}));
+          }
+        }, onError: (Object _) {}),
+      );
+    }
   }
 
   /// Notu Storage'daki ekleriyle birlikte kalıcı siler (çöp ekranındaki
@@ -1265,7 +1333,10 @@ class NotesRepository {
       final kept = <Attachment>[];
       for (final a in note.attachments) {
         final hasFile = a.localPath.isNotEmpty && await File(a.localPath).exists();
-        if (!hasFile && a.storagePath.isNotEmpty) {
+        // Yalnız Drive'da duran ek de (storagePath boş, driveId dolu) İNER:
+        // yoksa bu cihazda dosyası olmayan, hiç inmeyecek bir ek kalıyordu
+        // (yerel notlar indirme kuyruğunda atlanır) (F5.4).
+        if (!hasFile && (a.storagePath.isNotEmpty || a.isInDrive)) {
           final bytes = await attachments?.readBytes(a);
           if (bytes == null || a.localPath.isEmpty) {
             throw const LocalOnlyException();
@@ -1275,24 +1346,29 @@ class NotesRepository {
           await file.writeAsBytes(bytes, flush: true);
           forgetLocalFile(a.localPath);
         }
-        kept.add(a.copyWith(storagePath: '', downloadUrl: ''));
+        kept.add(a.copyWith(storagePath: '', downloadUrl: '', driveId: ''));
       }
       store.put(note.id, {
         ...note.copyWith(attachments: kept).toMap(),
         'updatedBy': editorUid,
       });
       await store.flush();
+      final deleteDrive = driveFileDeleter;
       for (final a in note.attachments) {
-        if (a.storagePath.isEmpty) continue;
-        unawaited(
-          FirebaseStorage.instance
-              .ref(a.storagePath)
-              .delete()
-              .catchError((Object _) {}),
-        );
+        if (a.storagePath.isNotEmpty) {
+          unawaited(
+            FirebaseStorage.instance
+                .ref(a.storagePath)
+                .delete()
+                .catchError((Object _) {}),
+          );
+        }
+        // Drive kopyası da (bulutta kalmasın). Drive bağlı değilse kalır.
+        if (a.isInDrive && deleteDrive != null) {
+          unawaited(deleteDrive(a.driveId).catchError((Object _) {}));
+        }
       }
-      unawaited(_notes.doc(note.id).delete());
-      unawaited(_heavyDoc(note.id).delete().catchError((Object _) {}));
+      _deleteCloudCopy(note.id);
       return;
     }
     if (!store.contains(note.id)) return;
@@ -1309,6 +1385,24 @@ class NotesRepository {
       // yazıldı, akış ilk fırsatta getirir.
     }
     store.remove(note.id);
+  }
+}
+
+/// Sorgu anlık görüntülerini ARTIMLI ayrıştırır: yalnız değişen belgeler
+/// `Note.fromDoc`tan geçer (bkz. [NotesRepository.watchNotes]). Akış başına
+/// bir örnek.
+class _IncrementalNotes {
+  final _cache = <String, Note>{};
+
+  List<Note> apply(QuerySnapshot<Map<String, dynamic>> snapshot) {
+    for (final change in snapshot.docChanges) {
+      if (change.type == DocumentChangeType.removed) {
+        _cache.remove(change.doc.id);
+      } else {
+        _cache[change.doc.id] = Note.fromDoc(change.doc);
+      }
+    }
+    return _cache.values.toList();
   }
 }
 

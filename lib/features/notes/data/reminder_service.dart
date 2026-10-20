@@ -150,6 +150,33 @@ void handleNotificationResponse(Ref ref, NotificationResponse response) {
   }
 }
 
+/// Planlı bildirimlerden İPTAL edilmesi gereken not hatırlatıcıları (F5.3).
+///
+/// KÖK NEDEN: [ReminderService] planladıklarını yalnız bellekte tutuyor;
+/// uygulama kapalıyken hatırlatıcı başka cihazdan kaldırılır ya da not
+/// silinir/arşivlenirse AlarmManager'daki eski bildirim (yeniden başlatmada
+/// da korunur) iptal edilmiyor ve ÇALIYORDU. Hesap değişince öbür hesabın
+/// hatırlatıcıları da kalıyordu.
+///
+/// [pending]: cihazdaki planlı bildirimler; yalnız `note:` önekli olanlara
+/// bakılır (brifing `briefing`). [wanted]: hâlâ istenen not → beklenen
+/// bildirim kimliği. Kimliği beklenenden farklı olan da yetimdir
+/// (`String.hashCode` Dart sürümleri arasında kararlı değil) — yenisi
+/// zaten planlanır.
+List<int> orphanReminderIds(
+  Iterable<({int id, String? payload})> pending,
+  Map<String, int> wanted,
+) {
+  const prefix = 'note:';
+  return [
+    for (final r in pending)
+      if (r.payload != null &&
+          r.payload!.startsWith(prefix) &&
+          wanted[r.payload!.substring(prefix.length)] != r.id)
+        r.id,
+  ];
+}
+
 class ReminderService {
   ReminderService(this._ref);
 
@@ -268,6 +295,27 @@ class ReminderService {
 
   static int _notificationId(String noteId) => noteId.hashCode & 0x7fffffff;
 
+  /// Bu süreçte AlarmManager'daki planlı bildirimlerle mutabakat yapıldı mı
+  /// (F5.3, bkz. [orphanReminderIds]).
+  bool _reconciled = false;
+
+  Future<void> _reconcilePending(Set<String> wanted) async {
+    if (_reconciled) return;
+    _reconciled = true;
+    try {
+      final pending = await _plugin.pendingNotificationRequests();
+      final orphans = orphanReminderIds(
+        [for (final r in pending) (id: r.id, payload: r.payload)],
+        {for (final id in wanted) id: _notificationId(id)},
+      );
+      for (final id in orphans) {
+        await _plugin.cancel(id: id);
+      }
+    } catch (e) {
+      debugPrint('Planlı hatırlatıcılar okunamadı: $e');
+    }
+  }
+
   Future<void> _syncReminders(List<Note> notes) async {
     try {
       await _ensureInitialized();
@@ -277,6 +325,10 @@ class ReminderService {
           if (note.reminderAt != null && note.reminderAt!.isAfter(now))
             note.id: note,
       };
+
+      // Uygulama kapalıyken (başka cihazda) kaldırılan/silinen notların
+      // eski bildirimleri: `_scheduled` yalnız bellekte, onları bilmez.
+      await _reconcilePending(wanted.keys.toSet());
 
       // Kaldırılan veya geçmişte kalanları iptal et.
       for (final id in _scheduled.keys.toList()) {

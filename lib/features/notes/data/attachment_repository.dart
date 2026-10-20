@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/utils/local_file.dart';
 import '../../ai/data/ai_gate.dart' show premiumProvider;
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/attachment.dart';
@@ -295,6 +296,7 @@ class AttachmentRepository {
       final dir = await _attachmentsDir(noteId);
       final file = File(p.join(dir.path, objectName));
       await file.writeAsBytes(bytes, flush: true);
+      forgetLocalFile(file.path);
       return meta.copyWith(localPath: file.path);
     }
     final storagePath = 'users/$uid/notes/$noteId/$objectName';

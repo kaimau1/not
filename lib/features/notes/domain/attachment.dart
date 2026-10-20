@@ -631,6 +631,30 @@ List<Attachment> mergeAttachmentLayout({
   ];
 }
 
+/// Ağır belge İLK kez geldiğinde (F3.13) editörün ek listesi (F5.6).
+///
+/// Normalde [incoming] olduğu gibi benimsenir: yereldeki hafif kopyanın ağır
+/// alanları boş, birleştirme onları ağır veriye tercih ederdi. Ama açılıştan
+/// sonraki ilk yüzlerce ms'de eklenen/taşınan ve henüz KAYDEDİLMEMİŞ
+/// ([localPending]) ek değişikliği o zaman siliniyordu. Bekleyen yerel
+/// değişiklik varsa liste YERELDİR; ağır alanlar (çizim, balon, PDF
+/// işaretleri) ek kimliğiyle gelen kopyadan işlenir.
+List<Attachment> hydrateAttachments({
+  required List<Attachment> local,
+  required List<Attachment> incoming,
+  required bool localPending,
+}) {
+  if (!localPending) return incoming;
+  final heavy = {for (final a in incoming) a.id: a};
+  return [
+    for (final a in local)
+      if (heavy[a.id] case final h?)
+        a.copyWith(ink: h.ink, bubbles: h.bubbles, pdfMarks: h.pdfMarks)
+      else
+        a,
+  ];
+}
+
 /// Bir nota bağlı dosyanın (görsel/PDF) metadata'sı.
 /// Dosyanın kendisi Firebase Storage'da tutulur; yükleme tamamlanana kadar
 /// [downloadUrl] boş kalır ve [localPath] üzerinden gösterilir.

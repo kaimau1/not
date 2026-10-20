@@ -23,6 +23,10 @@ const kHeavySplitBytes = 96 * 1024;
 const kHeavyCollection = 'heavy';
 const kHeavyDocId = 'data';
 
+/// "Düzenliyor" nabızlarının alt koleksiyonu (F4.1, `note_presence.dart`).
+/// Not silinirken ağır belge ve sürümlerle birlikte gider (F5.4).
+const kPresenceCollection = 'presence';
+
 /// Ek haritalarının ağır kısmının bayt tahmini.
 int heavyBytesOf(List<Map<String, dynamic>> attachments) {
   var total = 0;

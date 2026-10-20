@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 /// AI sağlayıcıları için ince JSON istemcisi (`package:http` üstünde).
@@ -91,7 +92,14 @@ class JsonHttp {
       final plain = http.Request(method, uri);
       if (data != null) {
         plain.headers['content-type'] = 'application/json';
-        plain.body = jsonEncode(data);
+        // BÜYÜK gövde (PDF/ses base64'ü) AYRI İZOLEDE kodlanır (F6.6): 15 MB'lık
+        // bir PDF'in ~20 MB'lık dizesi ana izolede JSON'a ve UTF-8'e
+        // çevriliyor, yüzlerce ms donma + 3-4 kat bellek sıçraması oluyordu.
+        if (roughJsonSize(data) > kIsolateBodyBytes) {
+          plain.bodyBytes = await compute(encodeJsonBytes, data);
+        } else {
+          plain.body = jsonEncode(data);
+        }
       }
       request = plain;
     }
@@ -114,7 +122,10 @@ class JsonHttp {
     Object? body;
     if (response.bodyBytes.isNotEmpty) {
       try {
-        body = jsonDecode(utf8.decode(response.bodyBytes));
+        final bytes = response.bodyBytes;
+        body = bytes.length > kIsolateResponseBytes
+            ? await compute(decodeJsonBytes, bytes)
+            : decodeJsonBytes(bytes);
       } on FormatException {
         body = response.body;
       }
@@ -130,6 +141,29 @@ class JsonHttp {
     return result;
   }
 }
+
+/// Bu boyu aşan istek gövdesi izolede kodlanır (bkz. [JsonHttp]).
+const kIsolateBodyBytes = 256 * 1024;
+
+/// Bu boyu aşan yanıt izolede çözülür.
+const kIsolateResponseBytes = 1024 * 1024;
+
+/// JSON'a çevrilecek değerin KABA boyu (dize kod birimleri + sayılar) —
+/// ayırmasız, yalnız eşik kararı için.
+int roughJsonSize(Object? v) => switch (v) {
+  String s => s.length,
+  List l => l.fold(0, (total, e) => total + roughJsonSize(e)),
+  Map m => m.entries.fold(
+    0,
+    (total, e) => total + e.key.toString().length + roughJsonSize(e.value),
+  ),
+  _ => 8,
+};
+
+/// Üst düzey: `compute` ile izolede koşar.
+Uint8List encodeJsonBytes(Object? data) => utf8.encode(jsonEncode(data));
+
+Object? decodeJsonBytes(Uint8List bytes) => jsonDecode(utf8.decode(bytes));
 
 class JsonResponse<T> {
   const JsonResponse({

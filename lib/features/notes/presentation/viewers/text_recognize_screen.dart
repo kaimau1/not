@@ -14,6 +14,7 @@ import '../../data/attachment_repository.dart';
 import '../../data/scan/recognized_text.dart';
 import '../../data/scan/scan_ocr.dart';
 import '../../domain/attachment.dart';
+import '../editor/note_images.dart';
 
 /// **Metni Tanı** — görseldeki yazıyı seçilebilir hâle getiren TEK ekran.
 ///
@@ -244,6 +245,13 @@ class _TextRecognizeScreenState extends State<TextRecognizeScreen> {
                             child: Image.file(
                               File(widget.imagePath),
                               fit: BoxFit.fill,
+                              // Kutunun boyunda çöz (F5.2). Seçim katmanı
+                              // görselin ÖLÇÜSÜNE (imageSize) göre oranlı
+                              // çalışır, çözülen piksel boyuna bağlı değil.
+                              cacheWidth: decodeWidthBucket(
+                                width,
+                                MediaQuery.devicePixelRatioOf(context),
+                              ),
                             ),
                           ),
                           Positioned.fill(

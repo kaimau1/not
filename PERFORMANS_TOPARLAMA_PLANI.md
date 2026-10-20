@@ -40,8 +40,8 @@ kullanıcıyla `git` "dubious ownership" verirse ortam değişkeniyle geç:
 
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
-| 5 | Doğrulanmış hatalar + bellek sızıntıları | Bekliyor | | En yüksek getiri, düşük risk — önce bu |
-| 6 | CPU: kayıt yolu, arka plan işleri, sorgular | Bekliyor | | F6.8 KARAR GEREKİR |
+| 5 | Doğrulanmış hatalar + bellek sızıntıları | Bitti | 2026-10-20 | Hepsi yapıldı; cihaz doğrulaması KALANLAR'da |
+| 6 | CPU: kayıt yolu, arka plan işleri, sorgular | Bitti | 2026-10-20 | F6.8 karar: olduğu gibi; F6.1 Expando yerine kopya+karşılaştırma; 1358/1358 test, kural 12/12 |
 | 7 | RAM ayak izi | Bekliyor | | F7.3 KARAR GEREKİR; önce ölç |
 | 8 | Toparlama: kod hijyeni, tekrarlar, dokümanlar | Bekliyor | | Her an yapılabilir, davranış değiştirmez |
 | 9 | Ölçüm, editör bölmesi, web (isteğe bağlı) | Bekliyor | | F9.3/F9.4 KARAR GEREKİR |
@@ -65,7 +65,7 @@ kullanıcıyla `git` "dubious ownership" verirse ortam değişkeniyle geç:
 
 ## FAZ 5 — Doğrulanmış hatalar ve bellek sızıntıları
 
-- [ ] **F5.1 Tek nota/klasöre bağlı akış sağlayıcıları kalıcı (YÜKSEK).**
+- [x] **F5.1 Tek nota/klasöre bağlı akış sağlayıcıları kalıcı (YÜKSEK).**
   Riverpod 3.3.2'de `StreamProvider.family`/`Provider.family` varsayılan
   olarak KALICIDIR (`isAutoDispose = false`). Son dinleyici gidince sağlayıcı
   yok edilmez, **duraklatılır**: akış aboneliğine `pause()` çağrılır. Bizim
@@ -101,8 +101,9 @@ kullanıcıyla `git` "dubious ownership" verirse ortam değişkeniyle geç:
   `grep -rn "Provider.family" lib | grep -v autoDispose` yalnız bilinçli
   olanları gösterir (`providerApiKeyProvider`). HAFIZA'ya tuzak yazıldı
   (Riverpod / performans).
+  **Yapıldı (2026-10-20):** listelenen 9 sağlayıcı `.autoDispose.family` (notes_repository, note_shares_repository, notes_providers ×3, folder_activity); `grep "Provider.family" lib | grep -v autoDispose` yalnız `providerApiKeyProvider`. `shared_activity_service`teki `read` güvenli (aynı akışı `sharedNoteUnreadProvider` izliyor — yorum eklendi). Test: `perf_phase5_test` (kapanınca dispose).
 
-- [ ] **F5.2 Sınırsız görsel çözme (YÜKSEK, çökme riski).**
+- [x] **F5.2 Sınırsız görsel çözme (YÜKSEK, çökme riski).**
   `cacheWidth`/`ResizeImage` olmadan çözülen görseller (12 MP fotoğraf ≈
   4000×3000×4 B ≈ 48 MB bitmap):
   - `image_prepare_screen.dart:197-198`: çoklu seçimde 52 px genişliğindeki
@@ -121,8 +122,9 @@ kullanıcıyla `git` "dubious ownership" verirse ortam değişkeniyle geç:
   ÖLÇÜDEN değil orandan hesapla (doğrula).
   Bitti ölçütü: widget testleri — küçük resim şeridi ve slayt görseli
   `ResizeImage` (ya da `cacheWidth`) ile kuruluyor.
+  **Yapıldı (2026-10-20):** ortak `boundedImage` (note_images.dart, `decodeWidthBucket` kovası, büyütmez); küçük resim şeridi, önizleme, kırpma, slayt zemini/şekli, tarama sayfası (2×), metin tanıma (kutu genişliği — seçim katmanı `imageSize` oranıyla, çözülen piksele bağlı değil), çizim zemini, sohbet görsel levhası. Test: şerit + slayt `ResizeImage`.
 
-- [ ] **F5.3 Yetim hatırlatıcılar (hata).**
+- [x] **F5.3 Yetim hatırlatıcılar (hata).**
   `ReminderService._scheduled` (`reminder_service.dart:162`) yalnız bellekte;
   açılışta boş başlar ve `_syncReminders` (`:271`) yalnız BU süreçte
   planladıklarını iptal eder. Uygulama kapalıyken hatırlatıcı başka cihazdan
@@ -135,8 +137,9 @@ kullanıcıyla `git` "dubious ownership" verirse ortam değişkeniyle geç:
   Saf işlev `orphanReminderIds(pending, wanted)` + test.
   Not: kimlik `noteId.hashCode` (`:269`) — Dart sürümleri arasında kararlılığı
   garanti değil; mutabakat bu riski de kapatır.
+  **Yapıldı (2026-10-20):** saf `orphanReminderIds` + `ReminderService._reconcilePending` (süreçte ilk eşitlemede `pendingNotificationRequests`; `note:` önekli olup istenmeyen ya da kimliği kaymış olanlar iptal; brifing `briefing` yüklü, dokunulmaz). Test var.
 
-- [ ] **F5.4 "Yalnız bu cihaz"a alma eksik taşıyor (hata, gizlilik).**
+- [x] **F5.4 "Yalnız bu cihaz"a alma eksik taşıyor (hata, gizlilik).**
   `NotesRepository.setLocalOnly` (`notes_repository.dart:1254`):
   (a) Ana ve ağır belgeyi siliyor (`:1294-1295`) ama `versions` alt
   koleksiyonunu SİLMİYOR — sürüm geçmişi notun METNİNİ taşır (F4.2); kullanıcı
@@ -151,8 +154,9 @@ kullanıcıyla `git` "dubious ownership" verirse ortam değişkeniyle geç:
   taşıma sonrası Drive kopyasını sil (`driveFileDeleter`) ve `driveId`'yi temizle.
   Bitti ölçütü: `fake_cloud_firestore` testi — yerele alınan notun
   `versions` belgeleri yok; Drive eki için sahte okuyucuyla bayt yazıldı.
+  **Yapıldı (2026-10-20):** ortak `_deleteCloudCopy` (belge + heavy + versions + presence; `hardDelete` de kullanıyor); Drive'daki ek de iner, Drive kopyası `driveFileDeleter` ile silinir, `driveId` temizlenir. `kPresenceCollection` `note_heavy.dart`a taşındı (hesap silme testi düz adı yakaladı). Test: fake_cloud_firestore + sahte ek okuyucu; kural testi: sahip başkasının nabzını ve sürümleri silebilir.
 
-- [ ] **F5.5 Hesap değişince bellekte kalan önceki hesap verisi.**
+- [x] **F5.5 Hesap değişince bellekte kalan önceki hesap verisi.**
   `semanticIndexProvider` (`semantic_search.dart:13`, uid'e bağlı değil),
   `_searchBodyCache` (`notes_providers.dart:1044`, her notun katlanmış TAM
   metni — transkriptler dahil), `LocalNotesStore._instances`
@@ -161,8 +165,9 @@ kullanıcıyla `git` "dubious ownership" verirse ortam değişkeniyle geç:
   `currentUidProvider`'a bağla; global haritalar için çıkış kancası).
   `_searchBodyCache`'i not yayınında canlı kimliklerle buda (silinen notlar
   kalıyor).
+  **Yapıldı (2026-10-20):** `semanticIndexProvider` `currentUidProvider`ı izler; `AppServices` uid değişince `clearSearchBodyCache()` + `LocalNotesStore.releaseExcept(uid)`; `_searchBodyCache` süzgeçte canlı kimliklerle budanır. Test var.
 
-- [ ] **F5.6 Ağır belge gelirken yerel ek değişikliği kaybolabilir (düşük olasılık).**
+- [x] **F5.6 Ağır belge gelirken yerel ek değişikliği kaybolabilir (düşük olasılık).**
   `note_editor_screen.dart:1201`: ağır belge İLK geldiğinde (`hydrating`)
   ekler `incoming.attachments` ile OLDUĞU GİBİ değiştirilir. Açılıştan sonraki
   ilk ~yüzlerce ms içinde eklenen/taşınan ve henüz kaydedilmemiş (debounce)
@@ -170,6 +175,7 @@ kullanıcıyla `git` "dubious ownership" verirse ortam değişkeniyle geç:
   varsa (`_debouncer.hasPending` ya da ek listesi `previous`'tan farklıysa)
   ağır alanları ek kimliğiyle yerel listeye işle. Test: hafif not → ek ekle →
   ağır belge gelir → ek duruyor.
+  **Yapıldı (2026-10-20):** saf `hydrateAttachments` (attachment.dart): bekleyen yerel değişiklik (`_debouncer.hasPending`) varsa liste yerel kalır, ağır alanlar (ink/bubbles/pdfMarks) ek kimliğiyle işlenir; yoksa eskisi gibi gelen liste. Test var.
 
 **Faz 5 — senin yapacakların:** APK'dan sonra (a) 20-30 not aç-kapat, sonra
 yerel bir notta 2 dk yaz — uygulama ısınıyor/yavaşlıyor mu; (b) galeriden 10
@@ -181,7 +187,7 @@ gelmemeli.
 
 ## FAZ 6 — CPU: kayıt yolu, arka plan işleri, sorgular
 
-- [ ] **F6.1 Her kayıtta bütün eklerin JSON + SHA-1'i.**
+- [x] **F6.1 Her kayıtta bütün eklerin JSON + SHA-1'i.**
   `updateNote` (`notes_repository.dart:584`) editör kaydında (0,5 sn
   debounce, en geç 3 sn) her seferinde: `note.toMap()` → `heavyBytesOf`
   (bölünmemiş notta bütün çizim noktalarını gezer) → `attachmentsDigest`
@@ -198,16 +204,18 @@ gelmemeli.
   kalmalı: `notes_repository_data_test`, `note_heavy_test`,
   `note_size_test` yeşil. Ölçüm: 300 çizgi × 200 nokta notla `updateNote`
   süresi Stopwatch ile önce/sonra (test çıktısına yaz, eşik koyma).
+  **Yapıldı (2026-10-20):** Expando yerine (ek örnekleri her yankıda yeniden kuruluyor — önbellek hiç tutmazdı) son BAŞARILI yazımın DERİN kopyasıyla ayırmasız karşılaştırma: `sameFirestoreValue` / `copyFirestoreValue` (firestore_size.dart). Kopya ŞART: etkin çizginin noktaları yerinde büyüyor. Bayt tahmini kopyayla birlikte saklanır; `utf8Length` ayırmasız. `attachmentsDigest` kalktı. Ölçüm (bulut, 300 çizgi × 400 sayı): özet tek başına ~46 ms → kayıt başına toplam ~3,9 ms (`perf_phase6_test` çıktısı).
 
-- [ ] **F6.2 Depoda oturum boyu büyüyen haritalar.**
+- [x] **F6.2 Depoda oturum boyu büyüyen haritalar.**
   `_recentWrites` (`:648`) not başına son 12 kaydın TAM içerik dizesini,
   `_versionBase` (`:667`) açılan her notun TAM `Note` nesnesini (ağır alanlar
   dahil) uid değişene dek tutuyor. Yap: `_recentWrites`'ta içerik yerine
   SHA-1 özet; `_versionBase`'te yalnız sürümün yazacağı metin yükü
   (`versionPayload`); editör kapanınca o notun girdileri bırakılsın (F4.2
   "açıldığı hâl ilk değişiklikte" anlamı korunarak — testle).
+  **Yapıldı (2026-10-20):** `_recentWrites` SHA-1 özet; `_versionBase` yalnız `versionPayload` (artık `toMap` kurmadan); editör kapanınca `releaseNote` (özetler, sürüm tabanı, ek/ağır kopyaları; oturum sayacı kapanış sonrası onayın kopya bırakmasını önler). `_versionAt` kalır — aç-kapa 30 dk aralığını delmez (testle).
 
-- [ ] **F6.3 Ek metni indeksi (`attachment_text_index.dart`).**
+- [x] **F6.3 Ek metni indeksi (`attachment_text_index.dart`).**
   (a) `extractPdfText` (`:184`) Syncfusion ayrıştırmasını ANA izolede yapıyor —
   büyük PDF'te saniyeler süren donma; `Isolate.run`'a taşı (`pdf_edit.dart:725`
   kalıbı). (b) Önbellek SharedPreferences'ta tek JSON (`:128`): her 8 ekte bir
@@ -220,8 +228,9 @@ gelmemeli.
   için senkron `existsSync` yapıyor; `filteredNotesProvider` ek metnini her
   hesapta yeniden `foldForSearch`'ten geçiriyor (`notes_providers.dart:963`).
   Not→metin haritasını yalnız indeks değişince kur ve KATLANMIŞ sakla.
+  **Yapıldı (2026-10-20):** (a) PDF ayrıştırma `compute` ile izolede (dosya orada okunur); (b) önbellek `attachment_text_<uid>.json` (destek klasörü), tur sonunda bir kez yazılır, silinen ek kimlikleri budanır, eski `attachment_text_v1` bir kez taşınıp silinir; (c) içerik aynıysa önceki harita döner, katlanmış kopya `attachmentFoldedTextProvider` (süzgeç artık katlamıyor). `existsSync` F6.9 ile. Test: göç + budama + katlama.
 
-- [ ] **F6.4 Ayar senkronunun 20 sn döngüsü.**
+- [x] **F6.4 Ayar senkronunun 20 sn döngüsü.**
   `prefs_sync.dart:176` `Timer.periodic(20 sn)` uygulama arkadayken de çalışır
   (Dart zamanlayıcıları süreç yaşadıkça işler); her turda eşitlenen bütün
   tercihleri okur, anlık görüntüyü `jsonDecode` eder ve DEĞİŞMESE BİLE
@@ -229,23 +238,26 @@ gelmemeli.
   yalnız değişince yazılsın; zamanlayıcı `paused`'da dursun, `resumed`'da
   bir tur + yeniden başlasın (mevcut `didChangeAppLifecycleState`).
   Test: `planPrefsSync` aynı girdide boş plan → yazım yok.
+  **Yapıldı (2026-10-20):** anlık görüntü yalnız değişince yazılır (`prefsSnapshotUnchanged`, sıra bağımsız); zamanlayıcı `paused`'da durur, `resumed`'da bir tur + yeniden başlar. Test var.
 
-- [ ] **F6.5 Yalnız-bu-cihaz deposu.**
+- [x] **F6.5 Yalnız-bu-cihaz deposu.**
   `LocalNotesStore.flush` (`local_notes_store.dart:227`) yerel bir notta
   yazarken 600 ms'de bir BÜTÜN yerel notları (çizimler dahil) UI izolesinde
   `jsonEncode` ediyor. `Isolate.run` ile kodla (ya da not başına dosya).
   `note(id)` (`:113`) her çağrıda yeniden ayrıştırıyor — `_parsed`
   önbelleğini kullan (editör akışı her yerel değişiklikte çağırıyor).
+  **Yapıldı (2026-10-20):** `flush` JSON'u `Isolate.run`'da kodlar (statik yardımcı — kapanış denetleyiciyi yakalamasın), yazımlar sıralı zincir; `note(id)` `_parsed` önbelleğinden. Test var.
 
-- [ ] **F6.6 Büyük AI isteğinin gövdesi ana izolede.**
+- [x] **F6.6 Büyük AI isteğinin gövdesi ana izolede.**
   `json_http.dart:94` `plain.body = jsonEncode(data)`: base64 `compute`'a
   taşınmıştı (`gemini_service.dart:326`) ama 15 MB'lık bir PDF'in ~20 MB base64
   dizesi yine ANA izolede JSON'a ve ardından UTF-8 baytlarına çevriliyor —
   yüzlerce ms donma, ham + base64 + JSON + bayt ≈ 3-4 kat bellek. Yap: gövde
   büyükse (`>256 KB`) `Isolate.run(() => utf8.encode(jsonEncode(data)))` →
   `bodyBytes`; yanıt `bodyBytes` > 1 MB ise çözme de izolede.
+  **Yapıldı (2026-10-20):** `roughJsonSize` > 256 KB ise gövde `compute(encodeJsonBytes)` → `bodyBytes`; yanıt > 1 MB ise çözme de izolede. Test: eşik + gidiş-dönüş.
 
-- [ ] **F6.7 Gereksiz geniş/tekrarlı Firestore dinleyicileri.**
+- [x] **F6.7 Gereksiz geniş/tekrarlı Firestore dinleyicileri.**
   (a) `watchTrash` (`notes_repository.dart:347`) KOLEKSİYONUN TAMAMINI dinleyip
   her anlık görüntüde bütün silinmiş belgeleri yeniden ayrıştırıyor; yorumdaki
   "null-olmayan filtre yok" (`:345`) bayat — `purgeOldTrash` zaten eşitsizlik
@@ -258,8 +270,9 @@ gelmemeli.
   `watchedSharedFoldersProvider` `:126`) `sharedFolderNotesProvider(ownerId: ben)`
   ile İKİNCİ bir dinleyici açıyor; bu notlar `notesStreamProvider`'da zaten
   var → sahibi bensem `folderNotesProvider`'dan türet.
+  **Yapıldı (2026-10-20):** (a) çöp `where('deletedAt', isGreaterThan: Timestamp(0,0))` + artımlı (`_IncrementalNotes`; `deletedAt` hep istemci saati); kural emülatör testi eklendi (12/12). (b) `watchFolderNotes` artımlı. (c) kendi klasörümün rozeti `folderNotesProvider`'dan.
 
-- [ ] **F6.8 Paylaşılan notlarda not başına dinleyici — KARAR GEREKİR.**
+- [x] **F6.8 Paylaşılan notlarda not başına dinleyici — KARAR GEREKİR.**
   `sharedNoteUnreadProvider` (`shared_note_activity.dart:112`, paylaşım
   bildirim servisi dinliyor) ve `foreignEditableNotesProvider`
   (`upload_queue.dart:256`, yükleme kuyruğu dinliyor) bana paylaşılan HER not
@@ -271,8 +284,9 @@ gelmemeli.
   yazsın, rozet yalnız `sharedNotesWithMeProvider`'dan; kuyruk yalnız yerel
   bekleyen eki olan notları dinlesin. Öneri: (b), paylaşılan not sayısı ~20'yi
   geçiyorsa. Kural + emülatör testi gerekir.
+  **Karar (2026-10-20, kullanıcı):** (a) olduğu gibi kalsın. Kod değişmedi; F5.1'in autoDispose'u sahipsiz kalan dinleyicileri zaten kapatıyor.
 
-- [ ] **F6.9 Olmayan dosya için tekrarlanan senkron `existsSync`.**
+- [x] **F6.9 Olmayan dosya için tekrarlanan senkron `existsSync`.**
   `localFileExists` (`core/utils/local_file.dart:24`) yalnız VAR olanı
   önbellekliyor; buluttan inmemiş ekler (yeni cihaz, "yalnız metin" senkron
   kipi) için kart/editör her çizimde ve `pendingUploadsProvider` her not
@@ -280,6 +294,7 @@ gelmemeli.
   (ör. 2 sn) ya da `localFilesRevisionProvider` artışına kadar önbelleklensin;
   dosya yazan yollar (indirme, kopyalama) kaydı düşürsün. Bayat negatif
   önbellek "görsel görünmüyor" demektir — testle.
+  **Yapıldı (2026-10-20):** negatif sonuç 2 sn önbellekte (`local_file.dart`); `forgetLocalFile` iki kaydı da düşürür, `LocalFilesRevision.bump` bütün negatifleri (`forgetMissingLocalFiles`), ek yazan `AttachmentRepository` yolu kendi kaydını düşürür. Test var.
 
 **Faz 6 — senin yapacakların:** çizimli bir PDF notunda 1 dk yazı yaz
 (takılma azaldı mı); "Ek içeriğinde ara" açıkken büyük PDF ekle (donma yok mu).

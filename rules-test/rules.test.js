@@ -15,7 +15,18 @@ const {
   assertFails,
   assertSucceeds,
 } = require("@firebase/rules-unit-testing");
-const { doc, getDoc, setDoc, updateDoc, deleteDoc } = require("firebase/firestore");
+const {
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  collection,
+  query,
+  where,
+  Timestamp,
+} = require("firebase/firestore");
 const { ref, uploadString, getBytes } = require("firebase/storage");
 
 let env;
@@ -51,6 +62,25 @@ test("kullanıcı yalnız kendi notunu okur/yazar", async () => {
   await assertFails(getDoc(doc(as("b"), "users/a/notes/n1")));
   await assertFails(setDoc(doc(as("b"), "users/a/notes/n2"), { title: "y" }));
   await assertFails(getDoc(doc(anon(), "users/a/notes/n1")));
+});
+
+test("sahip: çöp sorgusu ve notun alt koleksiyonlarını temizleme (F5.4, F6.7)", async () => {
+  await seed(async (db) => {
+    await setDoc(doc(db, "users/a/notes/n1"), { title: "x", deletedAt: Timestamp.now() });
+    await setDoc(doc(db, "users/a/notes/n1/versions/v1"), { body: "eski" });
+    await setDoc(doc(db, "users/a/notes/n1/presence/b"), { at: 1 });
+  });
+  const trash = query(
+    collection(as("a"), "users/a/notes"),
+    where("deletedAt", ">", new Timestamp(0, 0)),
+  );
+  await assertSucceeds(getDocs(trash));
+  await assertFails(
+    getDocs(query(collection(as("b"), "users/a/notes"), where("deletedAt", ">", new Timestamp(0, 0)))),
+  );
+  // "Yalnız bu cihaz"a alma sürümleri ve BAŞKASININ nabzını da siler.
+  await assertSucceeds(deleteDoc(doc(as("a"), "users/a/notes/n1/versions/v1")));
+  await assertSucceeds(deleteDoc(doc(as("a"), "users/a/notes/n1/presence/b")));
 });
 
 test("premiumUntil istemciden yazılamaz", async () => {

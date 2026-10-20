@@ -112,6 +112,8 @@ class SharedActivityService {
     for (final id in unread) {
       final share = shares[id];
       if (share == null) continue;
+      // `read` güvenli: sağlayıcı autoDispose (F5.1) ama [unread]daki her
+      // paylaşımı `sharedNoteUnreadProvider` İZLİYOR — dinleyeni var, canlı.
       final note = _ref
           .read(
             ownedNoteStreamProvider((

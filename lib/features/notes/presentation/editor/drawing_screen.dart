@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../viewers/ink_layer.dart';
+import 'note_images.dart';
 
 /// El yazısı notu: beyaz bir tuvale çizilir, kaydedilirse PNG baytları döner
 /// ve nota görsel eki olarak girer.
@@ -202,7 +203,14 @@ class _DrawingScreenState extends State<DrawingScreen> {
                 fit: StackFit.expand,
                 children: [
                   if (widget.background != null)
-                    Image.memory(widget.background!, fit: BoxFit.contain),
+                    Image.memory(
+                      widget.background!,
+                      fit: BoxFit.contain,
+                      cacheWidth: decodeWidthBucket(
+                        MediaQuery.sizeOf(context).width,
+                        MediaQuery.devicePixelRatioOf(context),
+                      ),
+                    ),
                   InkPageLayer(controller: _ink, page: _page),
                 ],
               ),

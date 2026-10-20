@@ -178,6 +178,21 @@ int? decodeWidthBucket(double boxWidth, double devicePixelRatio) {
   return math.max(1, buckets) * kDecodeWidthStep;
 }
 
+/// [provider]'ı [logicalWidth] mantıksal pikselde gösterilecek kadar çözdürür
+/// (F5.2): genişlik [decodeWidthBucket] kovasına yuvarlanır, görsel ondan
+/// küçükse büyütülmez. KÖK NEDEN: 12 MP'lik bir fotoğraf tam çözünürlükte
+/// ~48 MB bitmap demek — çoklu seçimin 52 px'lik küçük resim şeridi ya da
+/// birkaç PPTX slaytı düşük RAM'li telefonda yüzlerce MB tutuyordu.
+ImageProvider boundedImage(
+  ImageProvider provider,
+  double logicalWidth,
+  double devicePixelRatio,
+) => ResizeImage.resizeIfNeeded(
+  decodeWidthBucket(logicalWidth, devicePixelRatio),
+  null,
+  provider,
+);
+
 /// Görsel ekin içeriği: yerel dosya → indirme adresi → yer tutucu sırasıyla.
 /// Tam ekranda görselin üzerine yazılan çizim (ekin `ink` alanı) burada da
 /// çizilir — yoksa çizim "kaybolmuş" görünürdü. Kutunun en-boy oranı görselin

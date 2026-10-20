@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/l10n_ext.dart';
+import 'editor/note_images.dart';
 import 'viewers/image_crop.dart';
 
 /// Seçilen görselleri NOT KURULMADAN ÖNCE düzeltme ekranı: kırp, döndür,
@@ -98,7 +99,12 @@ class _ImagePrepareScreenState extends State<ImagePrepareScreen> {
     final rect = await Navigator.of(context).push<Rect>(
       MaterialPageRoute(
         builder: (_) => ImageCropScreen(
-          image: MemoryImage(bytes),
+          // Kırpma oranlı (0-1) çalışır; ekran boyunda çözmek yeter (F5.2).
+          image: boundedImage(
+            MemoryImage(bytes),
+            MediaQuery.sizeOf(context).width,
+            MediaQuery.devicePixelRatioOf(context),
+          ),
           aspect: size.width / size.height,
         ),
       ),
@@ -168,6 +174,10 @@ class _ImagePrepareScreenState extends State<ImagePrepareScreen> {
                     // görsel önbelleği eskisini göstermeye devam ediyordu.
                     key: ValueKey(_current),
                     fit: BoxFit.contain,
+                    cacheWidth: decodeWidthBucket(
+                      MediaQuery.sizeOf(context).width,
+                      MediaQuery.devicePixelRatioOf(context),
+                    ),
                   ),
                 ),
               ),
@@ -195,7 +205,13 @@ class _ImagePrepareScreenState extends State<ImagePrepareScreen> {
                           width: i == _index ? 2.5 : 1,
                         ),
                         image: DecorationImage(
-                          image: FileImage(File(_paths[i])),
+                          // 52 px'lik küçük resim: tam boy çözmek görsel
+                          // başına ~48 MB'tı (F5.2).
+                          image: boundedImage(
+                            FileImage(File(_paths[i])),
+                            52,
+                            MediaQuery.devicePixelRatioOf(context),
+                          ),
                           fit: BoxFit.cover,
                         ),
                       ),

@@ -1197,7 +1197,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         final previous = _note!;
         // AĞIR BELGE İLK KEZ GELDİ (F3.13): ekler olduğu gibi benimsenir —
         // yereldeki hafif kopyanın düzen alanları (PDF işaretleri dahil)
-        // boş; birleştirme onları ağır veriye tercih ederdi.
+        // boş; birleştirme onları ağır veriye tercih ederdi. Kaydedilmemiş yerel
+        // ek değişikliği varsa liste yerel kalır (F5.6, `hydrateAttachments`).
         final hydrating = incoming.heavyLoaded && !previous.heavyLoaded;
         Note merged;
         {
@@ -1205,7 +1206,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             heavyRef: incoming.heavyRef,
             heavyLoaded: previous.heavyLoaded || incoming.heavyLoaded,
             attachments: hydrating
-                ? incoming.attachments
+                ? hydrateAttachments(
+                    local: previous.attachments,
+                    incoming: incoming.attachments,
+                    localPending: _debouncer.hasPending,
+                  )
                 : mergeAttachmentLayout(
                     local: _note!.attachments,
                     incoming: incoming.attachments,
@@ -1445,6 +1450,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (note.title.trim().isEmpty) _autoTitleInBackground(note);
       }
     }
+    // Kapanıştaki son kayıttan SONRA: depodaki oturum kayıtları (F6.2).
+    _notesRepo?.releaseNote(widget.noteId);
     _loadGuard?.cancel();
     _debouncer.dispose();
     _sub?.close();

@@ -11,6 +11,7 @@ import '../data/scan/scan_deskew.dart';
 import '../data/scan/scan_ocr.dart';
 import '../data/scan/scan_pdf.dart';
 import '../data/scan/scan_title.dart';
+import 'editor/note_images.dart';
 import 'scan_edit_screen.dart';
 
 /// İnceleme ekranının sonucu: sayfalar ya tek (aranabilir) PDF'e dönüştü
@@ -362,6 +363,12 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
                     child: Image.file(
                       File(_pages[i]),
                       key: ValueKey(_pages[i]),
+                      // Yakınlaştırma payıyla ekranın 2 katı (F5.2; tam ekran
+                      // görüntüleyiciyle aynı kural).
+                      cacheWidth: decodeWidthBucket(
+                        MediaQuery.sizeOf(context).width * 2,
+                        MediaQuery.devicePixelRatioOf(context),
+                      ),
                       errorBuilder: (_, _, _) => Text(
                         l10n.scanPageFailed,
                         style: const TextStyle(color: Colors.white),

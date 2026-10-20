@@ -11,9 +11,18 @@ import 'package:path/path.dart' as p;
 /// YALNIZ VAR OLAN dosyalar önbelleğe alınır:
 /// - Var olan bir ek dosyası uygulama ömründe ancak ek silinirken kaybolur;
 ///   silen yol [forgetLocalFile] çağırır.
-/// - VAR OLMAYAN dosya önbelleğe alınmaz ki indirme/kopyalama bitince ilk
-///   yeniden çizimde görünsün (negatif önbellek bayat kalırdı).
+/// - VAR OLMAYAN dosya yalnız KISA süre ([_missingTtlMs]) önbellekte (F6.9):
+///   buluttan inmemiş ekler (yeni cihaz, "yalnız metin" senkron kipi) için
+///   kart/editör her çizimde ve bekleyen yüklemeler her not yayınında
+///   senkron sistem çağrısı yapıyordu. Bayat negatif kayıt "görsel
+///   görünmüyor" demek: dosyayı yazan yol [forgetLocalFile] çağırır, toplu
+///   indirme `localFilesRevisionProvider`ı artırınca hepsi düşer
+///   ([forgetMissingLocalFiles]).
 final _existsCache = <String>{};
+
+/// Yol → "yok" görüldüğü an (ms).
+final _missingCache = <String, int>{};
+const _missingTtlMs = 2000;
 
 /// Önbelleğin üst sınırı: yalnız POZİTİF sonuçlar saklanıyor ve girdi sayısı
 /// pratikte ek sayısıyla sınırlı, ama uzun oturumda (çok not açıp kapatan
@@ -32,16 +41,29 @@ bool localFileExists(String path) {
   // yüzden erken `false` hem doğru hem güvenli.
   if (kIsWeb) return false;
   if (_existsCache.contains(path)) return true;
+  final now = DateTime.now().millisecondsSinceEpoch;
+  final missingAt = _missingCache[path];
+  if (missingAt != null && now - missingAt < _missingTtlMs) return false;
   if (File(path).existsSync()) {
+    _missingCache.remove(path);
     if (_existsCache.length >= _maxExistsCache) _existsCache.clear();
     _existsCache.add(path);
     return true;
   }
+  if (_missingCache.length >= _maxExistsCache) _missingCache.clear();
+  _missingCache[path] = now;
   return false;
 }
 
-/// Dosyayı silen yol, önbellekteki "var" kaydını da düşürmeli.
-void forgetLocalFile(String path) => _existsCache.remove(path);
+/// Dosyayı silen YA DA yazan yol, önbellekteki kaydı düşürmeli.
+void forgetLocalFile(String path) {
+  _existsCache.remove(path);
+  _missingCache.remove(path);
+}
+
+/// Bütün "yok" kayıtları düşer (toplu indirme bitti — bkz.
+/// `LocalFilesRevision.bump`).
+void forgetMissingLocalFiles() => _missingCache.clear();
 
 /// Uygulama destek klasörü — main() açılışta doldurur (web'de null kalır).
 ///

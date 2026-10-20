@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +7,7 @@ import '../features/ai/data/ai_gate.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/folders/data/shared_activity_service.dart';
 import '../features/notes/data/data_migrations.dart';
+import '../features/notes/data/local_notes_store.dart';
 import '../features/notes/data/place_reminders.dart';
 import '../features/notes/data/push_service.dart';
 import '../features/notes/data/reminder_service.dart';
@@ -12,6 +15,7 @@ import '../features/notes/data/share_intake.dart';
 import '../features/notes/data/upload_queue.dart';
 import '../features/notes/data/widget_service.dart';
 import '../features/notes/presentation/lock/note_lock_ui.dart';
+import '../features/notes/presentation/notes_providers.dart';
 import '../features/settings/data/prefs_sync.dart';
 import 'router.dart';
 
@@ -34,6 +38,12 @@ class AppServices extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Hesap değişince (çıkış dahil) önceki hesabın bellekteki verisi (F5.5).
+    ref.listen<String?>(currentUidProvider, (previous, next) {
+      if (previous == next) return;
+      clearSearchBodyCache();
+      unawaited(LocalNotesStore.releaseExcept(next));
+    });
     if (ref.watch(currentUidProvider) != null) {
       ref.listen(uploadQueueProvider, _ignore);
       ref.listen(reminderServiceProvider, _ignore);

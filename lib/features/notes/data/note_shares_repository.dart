@@ -104,7 +104,7 @@ final sharedNotesWithMeProvider = StreamProvider<List<NoteShare>>((ref) {
 /// Tek bir notun aynası (sahip + not kimliğiyle). Ortak çalışan kendi
 /// açtığı notun kimlerle paylaşıldığını buradan görür.
 final noteShareProvider =
-    StreamProvider.family<NoteShare?, ({String ownerId, String noteId})>((
+    StreamProvider.autoDispose.family<NoteShare?, ({String ownerId, String noteId})>((
       ref,
       key,
     ) {

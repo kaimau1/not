@@ -65,9 +65,15 @@ eskisini arşive taşıma.
 - Her paylaşılan-yol bulut yazımı `updatedBy == auth.uid` taşır; 'write'
   rolü yalnız `createdBy == uid` notu günceller (F1.4). Yeni yazım yolu
   eklerken `updatedBy`'ı unutma.
-- `updateNote`: ek listesinin özeti son başarılı yazımla aynıysa
-  `attachments` yazılmaz (`identical` değil özet — editör her yankıda yeni
-  liste kuruyor). `localPath` Firestore'a yazılmaz, cihazda türetilir.
+- `updateNote`: ek listesi son BAŞARILI yazımın DERİN KOPYASIYLA
+  (`copyFirestoreValue`) içerikçe aynıysa (`sameFirestoreValue`)
+  `attachments` yazılmaz (2026-10-20 F6.1; eskiden JSON+SHA-1 özet, büyük
+  notta ~50 ms). **TUZAK:** kopya ŞART — etkin çizginin nokta listesi
+  YERİNDE büyüyor (`InkController`), aynı liste örneği saklanırsa büyümüş
+  çizgi "değişmedi" görünür ve yazım atlanır. Ek örneğine `Expando` önbelleği
+  işe yaramaz: editör her yankıda ekleri yeniden kuruyor. Editör kapanınca
+  `releaseNote` bu kopyaları bırakır. `localPath` Firestore'a yazılmaz,
+  cihazda türetilir.
 - 1 MiB sınırı: ≥ 900 KB'ta kullanıcı uyarılır (en büyük kalem adıyla);
   yazım reddi yutulmaz (günlük + Crashlytics + bildirim).
 - **Ağır alanlar ayrı belgede (F3.13):** ağır kısmı (ek `ink`/`bubbles`/
@@ -77,8 +83,9 @@ eskisini arşive taşıma.
   **TUZAK:** hafif not yazılırken ağır belgeye DOKUNULMAZ (eksik veriyle
   üstüne yazma yolu kapalı). Listedeki notla çizim/balon gereken iş
   (paylaşım, arkadaşa gönder, yalnız bu cihaz) önce `hydrateNote`. Belge
-  silmek alt koleksiyonu silmez → kalıcı silme ve hesap silme ağır belgeyi
-  ayrıca siler. Metin (`text`, `pageNotes`) ana belgede kalır (arama).
+  silmek alt koleksiyonu silmez → kalıcı silme, "yalnız bu cihaz"a alma
+  (F5.4) ve hesap silme ağır belgeyi, sürümleri, `presence`i ayrıca siler
+  (ortak `_deleteCloudCopy`; yeni alt koleksiyonu oraya da ekle). Metin (`text`, `pageNotes`) ana belgede kalır (arama).
 - **Yıldız ve çerçeve GERİ (2026-10-20, F3.6 geri alındı — kullanıcı
   kararı):** `starred` sabitlemeden AYRI bayrak (Süz → Yıldızlı, kartta
   yıldız, menülerde Yıldızla); `frameColor` zeminden BAĞIMSIZ ve YALNIZ ana
@@ -126,7 +133,8 @@ eskisini arşive taşıma.
   sunucuda ezilebilir (pencere ~yüzlerce ms). "Düzenliyor" nabzı
   `presence/{uid}` 25 sn'de bir.
 - Ayar senkronu (F4.5): `users/{uid}/meta/prefs.values`; anlık görüntü
-  yöntemi, cihazın İLK eşitlemesinde bulut kazanır. Tercih sağlayıcıları
+  yöntemi, cihazın İLK eşitlemesinde bulut kazanır. 20 sn yoklama yalnız ön
+  planda; anlık görüntü yalnız değişince yazılır (F6.4). Tercih sağlayıcıları
   `watchPrefs(ref)` ile okur (dışarıdan değişince yeniden kurulur).
   Cihaza özgü anahtar listeye EKLENMEZ.
 - Not kilidi (F4.8): cihaz / şifre / desen (`note_lock`, PBKDF2 özeti, ayar
@@ -142,13 +150,29 @@ eskisini arşive taşıma.
 - **Riverpod 3 görünmeyen ekranın aboneliklerini DURAKLATIR** (`TickerMode`):
   oturum boyu canlı servisler bir EKRANIN build'ine bağlanmaz →
   `lib/app/app_services.dart` (`ref.listen`, uid yokken hiçbiri).
-- **TUZAK (2026-10-20, deneyle doğrulandı — Faz 5 F5.1):** Riverpod 3.3'te
+- **TUZAK (2026-10-20, deneyle doğrulandı — F5.1 YAPILDI):** Riverpod 3.3'te
   `.family` (ve düz) sağlayıcılar varsayılan KALICI; son dinleyici gidince
   yok edilmez, DURAKLATILIR (`subscription.pause()`). `onPause` vermeyen
   `StreamController`'lı akışlarımızda (`_withLocal`, `_hydratedDoc`) kaynak
   dinleyici açık kalır, `merge` her olayda koşar, olaylar birikir ve yeniden
-  açılışta topluca oynatılır. Tek nota/klasöre bağlı akış → `.autoDispose.family`;
-  autoDispose sağlayıcıyı `ref.read` ile okuma (dinleyen yoksa "yükleniyor").
+  açılışta topluca oynatılır. Tek nota/klasöre bağlı akışların hepsi artık
+  `.autoDispose.family`; YENİ eklerken de öyle. autoDispose sağlayıcıyı
+  `ref.read` ile okuma (dinleyen yoksa "yükleniyor") — istisna: başka bir
+  canlı sağlayıcı onu izliyorsa (`shared_activity_service`).
+- Notifier örneği yeniden kurulumda KORUNUR (Riverpod 3.3:
+  `classListenable.result ??=`) — alanlardaki önbellek build'ler arası kalır.
+- Hesap değişince (F5.5) `AppServices` arama gövdesi önbelleğini temizler ve
+  öbür hesapların `LocalNotesStore`larını bırakır; hesaba bağlı bellek
+  önbelleği eklersen ya `currentUidProvider`ı izlesin ya oraya ekle.
+- Görsel çözme (F5.2): tam boy `Image.file/memory`/`FileImage` KULLANMA —
+  `boundedImage(...)` ya da `cacheWidth: decodeWidthBucket(...)`
+  (`note_images.dart`). 12 MP ≈ 48 MB bitmap.
+- Ana izoleyi tutan iş (F6.3/F6.5/F6.6): büyük JSON kodlama/çözme ve PDF
+  metni `compute`/`Isolate.run`'da. `Isolate.run` kapanışını STATİK
+  yardımcıda kur (örnek alanı yakalarsa gönderilemez — akış denetleyicisi).
+- `localFileExists` "yok" sonucunu 2 sn önbellekler (F6.9): dosya YAZAN yol
+  `forgetLocalFile` çağırmalı (ya da toplu indirmede
+  `localFilesRevisionProvider` bump) — yoksa yeni dosya 2 sn görünmez.
 - `ConsumerState.dispose` içinde `ref` kullanılamaz (istisna) — denetleyiciyi
   build'de alana al.
 - Türetilmiş sağlayıcılar içerik aynıysa ÖNCEKİ örneği döner (`StableBox`,
@@ -267,6 +291,12 @@ eskisini arşive taşıma.
   cümlesinden yerelde de çıkarılır (model atlarsa). Silme aracı onaylı.
 - AI kota sayacı sunucu saatli `aiQuota/{uid}` (istemci silemez).
 - AI çıktıları cihazda önbellekli (`AiCache`), Firestore'a yazılmaz.
+- Ek metni indeksi (F6.3): önbellek `<destek>/attachment_text_<uid>.json`
+  (eski SharedPreferences anahtarı `attachment_text_v1` bir kez taşınıp
+  silinir); süzgeç katlanmış kopyayı `attachmentFoldedTextProvider`dan okur.
+- Hatırlatıcılar (F5.3): ilk eşitlemede planlı bildirimlerle mutabakat —
+  `note:` yüklü olup istenmeyen/kimliği kaymış olan iptal. Yeni planlı
+  bildirim türü eklersen yükü `note:` ile BAŞLATMA.
 
 ## Arayüz kararları (Faz 3, 2026-10-19)
 - Ana ekranda TEK mikrofon (F3.1) = DOĞRUDAN YAZDIR (2026-10-20, kullanıcı

@@ -2,9 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/utils/firestore_size.dart';
 import 'package:notlar/features/notes/data/media_transcriber.dart';
-import 'package:notlar/features/notes/data/notes_repository.dart'
-    show attachmentsDigest;
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
@@ -266,7 +265,7 @@ void main() {
     });
   });
 
-  group('attachmentsDigest (değişmeyen ek listesi yazılmaz)', () {
+  group('sameFirestoreValue (değişmeyen ek listesi yazılmaz)', () {
     List<Map<String, dynamic>> maps(String text) => [
       {
         ...Transcripts.create(audio, text, fileSuffix: 't').toMap(),
@@ -274,30 +273,41 @@ void main() {
       },
     ];
 
-    test('aynı içerik aynı özet, yeni liste örneği olsa da', () {
+    test('aynı içerik aynı sayılır, yeni liste örneği olsa da', () {
       final a = maps('bir');
       final b = [
         for (final m in a) {...m},
       ];
       expect(identical(a, b), isFalse);
-      expect(attachmentsDigest(a), attachmentsDigest(b));
+      expect(sameFirestoreValue(a, b), isTrue);
+      expect(sameFirestoreValue(a, copyFirestoreValue(a)), isTrue);
     });
 
-    test('içerik değişince özet değişir', () {
+    test('içerik değişince farklı', () {
       final a = maps('bir');
       final b = [
         {...a.first, 'text': 'iki'},
       ];
-      expect(attachmentsDigest(a), isNot(attachmentsDigest(b)));
+      expect(sameFirestoreValue(a, b), isFalse);
       final c = [
         {...a.first, 'createdAt': Timestamp(100, 6)},
       ];
-      expect(attachmentsDigest(a), isNot(attachmentsDigest(c)));
+      expect(sameFirestoreValue(a, c), isFalse);
     });
 
-    test('boş ve eksik liste de özetlenir', () {
-      expect(attachmentsDigest(null), isNotEmpty);
-      expect(attachmentsDigest(const []), isNot(attachmentsDigest(null)));
+    test('boş ve eksik liste ayrı; eksik anahtar null değerden ayrı', () {
+      expect(sameFirestoreValue(const [], null), isFalse);
+      expect(sameFirestoreValue({'a': null}, {'b': null}), isFalse);
+    });
+
+    test('kopya, yerinde büyüyen listeyi eskisinden ayırır', () {
+      final points = [0.1, 0.2];
+      final live = [
+        {'d': points},
+      ];
+      final written = copyFirestoreValue(live);
+      points.addAll([0.3, 0.4]);
+      expect(sameFirestoreValue(written, live), isFalse);
     });
   });
 }
