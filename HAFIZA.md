@@ -120,7 +120,9 @@ eskisini arşive taşıma.
   (`_paperGap`). Kareli/noktalı serbest ızgara kalır.
 - Madde altı ayırıcı `NoteItem.divider` ('' / solid / dashed / dotted;
   yalnız doluyken yazılır); `sameItemsVisually`, `_sameItems`, `_sameItem`
-  (birleştirme) ona da bakar.
+  (birleştirme) ve `ItemsEditor` satır önbelleğinin anahtarı ona da
+  bakar (anahtarda yokken çizgi hiç görünmüyordu). Satırı çizen YENİ alan
+  → `_cachedItemRow` anahtarına ekle.
 - Notun sayfaları (`textPages`): ETKİN sayfanın içeriği `body`/`items`'ta,
   listedeki girdisi boş; geçiş içerikleri yer değiştirir. İlk sayfa kimliği
   hep ''.

@@ -1044,7 +1044,8 @@ class ItemsEditorState extends State<ItemsEditor>
         children: [
           Icon(icon, size: 20),
           const SizedBox(width: 12),
-          Text(label),
+          // Uzun etiket ("Alta noktalı çizgi") dar menüde taşmasın.
+          Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
         ],
       ),
     );
@@ -1519,6 +1520,11 @@ class ItemsEditorState extends State<ItemsEditor>
       item.text,
       item.checked,
       item.starred,
+      // KÖK NEDEN (kullanıcı bulgusu 2026-10-20: "alta çizgi çek çalışmıyor,
+      // defterde kararsız"): ayırıcı anahtarda yoktu — satır önbellekten
+      // ESKİ hâliyle dönüyordu, çizgi ancak başka bir şey satırı yeniden
+      // kurunca beliriyordu.
+      item.divider,
       reorderIndex,
       orderNumber,
       _selected.contains(item.id),
@@ -1544,6 +1550,8 @@ class ItemsEditorState extends State<ItemsEditor>
       widget.richTheme,
       widget.showCheckboxes,
       widget.expandItems,
+      // Defter görünümü dolguyu ve kutu boyunu değiştiriyor.
+      widget.paperLines,
       _selectionMode,
       l10n.localeName,
       widget.contentInsertion,
@@ -2530,7 +2538,9 @@ class _ItemDividerPainter extends CustomPainter {
     final right = size.width - 8;
     final paint = Paint()
       ..color = color
-      ..strokeWidth = kind == NoteItem.dividerDotted ? 2.4 : 1.6
+      // Defterde satır çizgisiyle AYNI yere düşer: ince kalırsa kesik/nokta
+      // altındaki düz çizgide kaybolup "düz çizgi" gibi görünüyordu.
+      ..strokeWidth = kind == NoteItem.dividerDotted ? 3.2 : 2.2
       ..strokeCap = kind == NoteItem.dividerDotted
           ? StrokeCap.round
           : StrokeCap.butt;
