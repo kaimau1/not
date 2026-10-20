@@ -2036,6 +2036,16 @@ class AppLocalizationsTr extends AppLocalizations {
       'Notların rengi, vurgusu, kalın ve altı çizili yazıları ana ekrandaki kartlarda da görünür. Kapalıyken kartlar düz metin gösterir.';
 
   @override
+  String get cardHideSensitive => 'Kartlarda hassas içeriği gizle';
+
+  @override
+  String get cardHideSensitiveInfo =>
+      'Parola geçen notların içeriği kartta görünmez; IBAN ve kart numaralarının yalnız son dört hanesi görünür. Not içinde her şey olduğu gibi kalır.';
+
+  @override
+  String get sensitiveHiddenOnCard => 'Hassas içerik — kartta gizlendi';
+
+  @override
   String get fontSizeSmall => 'Küçük';
 
   @override

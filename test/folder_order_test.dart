@@ -26,6 +26,24 @@ void main() {
 
   List<String> ids(List<NoteFolder> list) => [for (final f in list) f.id];
 
+  group('emptyFoldersLast (B3)', () {
+    test('boş klasörler sona, kendi sıraları korunur', () {
+      final sorted = sortFolders(folders, FolderSort.name); // b c a
+      expect(
+        ids(emptyFoldersLast(sorted, FolderSort.name, {'a': 2})),
+        ['a', 'b', 'c'],
+      );
+    });
+
+    test('elle sıralamada dokunulmaz', () {
+      final sorted = sortFolders(folders, FolderSort.manual); // b a c
+      expect(
+        ids(emptyFoldersLast(sorted, FolderSort.manual, {'c': 1})),
+        ['b', 'a', 'c'],
+      );
+    });
+  });
+
   group('sortFolders', () {
     test('ada göre büyük/küçük harf duyarsız', () {
       expect(ids(sortFolders(folders, FolderSort.name)), ['b', 'c', 'a']);

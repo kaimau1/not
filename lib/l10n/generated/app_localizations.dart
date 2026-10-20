@@ -3824,6 +3824,24 @@ abstract class AppLocalizations {
   /// **'Notların rengi, vurgusu, kalın ve altı çizili yazıları ana ekrandaki kartlarda da görünür. Kapalıyken kartlar düz metin gösterir.'**
   String get cardRichPreviewInfo;
 
+  /// No description provided for @cardHideSensitive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartlarda hassas içeriği gizle'**
+  String get cardHideSensitive;
+
+  /// No description provided for @cardHideSensitiveInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parola geçen notların içeriği kartta görünmez; IBAN ve kart numaralarının yalnız son dört hanesi görünür. Not içinde her şey olduğu gibi kalır.'**
+  String get cardHideSensitiveInfo;
+
+  /// No description provided for @sensitiveHiddenOnCard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hassas içerik — kartta gizlendi'**
+  String get sensitiveHiddenOnCard;
+
   /// No description provided for @fontSizeSmall.
   ///
   /// In tr, this message translates to:

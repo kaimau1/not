@@ -78,15 +78,16 @@ part 'dashboard_widgets.dart';
 /// geri çekmez. Pay yalnız hızlı kaydırmada boş kart görülmesin diye var.
 const double _kGridCacheExtent = 1600;
 
-/// Izgaranın altında bırakılan boşluk: sağ alttaki düğme sütunu (iki
-/// mikrofon 48 + "+" 56 + aralıklar 20 + alt pay 16 = 188, + 12 nefes payı)
-/// ızgaranın ÜSTÜNDE yüzüyor.
+/// Izgaranın altında bırakılan boşluk: sağ alttaki düğme satırı
+/// (mikrofon + "+" yan yana, 56 + alt pay 16 = 72, + 24 nefes payı)
+/// ızgaranın ÜSTÜNDE yüzüyor. 2026-10-20 (B2): üç düğmeli sütun tek satıra
+/// indi, pay 200 → 96.
 ///
 /// KÖK NEDEN (ana sayfa düzeni, 2026-09-23): boşluk 88 px idi — sütun tek bir
 /// FAB'ken yazılmış bir değer. Sütun üç düğmeye çıkınca sağ sütunun son
 /// kartının alt yarısı listenin en sonuna kaydırıldığında bile düğmelerin
 /// ARKASINDA kalıyordu; kartın altındaki metne/tarihe hiç ulaşılamıyordu.
-const double _kFabClearance = 200;
+const double _kFabClearance = 96;
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -167,7 +168,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   );
   final _searchFocus = FocusNode();
 
-  /// "+" menüsünün demirlendiği nokta: mikrofon + "+" sütununun tamamı.
+  /// "+" menüsünün demirlendiği nokta: "+" düğmesi (mikrofon solunda).
   final _fabColumnLink = LayerLink();
 
   /// Filtreler arası geçiş yönü (madde 2): sola çekiş → sonraki (sağdan girer),
@@ -573,8 +574,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final stop = nextHomeSwipeStop(
       mode: ref.read(swipeModeProvider),
       notes: notes,
+      // Şeritle AYNI sıra: boş klasörler sonda (B3).
       folderIds: [
-        for (final f in ref.read(visibleOrderedFoldersProvider)) f.id,
+        for (final f in emptyFoldersLast(
+          ref.read(visibleOrderedFoldersProvider),
+          ref.read(folderSortProvider),
+          ref.read(folderNoteCountsProvider),
+        ))
+          f.id,
       ],
       folderId: ref.read(selectedFolderProvider),
       filter: ref.read(noteFilterProvider),
@@ -1564,23 +1571,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   bottom: 16,
                   child: VoiceAssistantPanel(),
                 ),
-                // YAPAY ZEKÂ "+"nın SOLUNDA (kullanıcı isteği 2026-10-17:
-                // "üstteki AI butonunu alttaki artı butonunun soluna al").
-                // "+" 56 dp; AI 48 dp — dikey ortaları hizalı.
-                if (!selectionActive)
-                  PositionedDirectional(
-                    end: 16 + 56 + 12,
-                    bottom: 16 + 4,
-                    child: Customizable(
-                      id: UiItem.homeAi,
-                      child: _DashVoiceButton(
-                        key: const ValueKey('home-ai'),
-                        tooltip: l10n.aiHubTitle,
-                        icon: Icons.auto_awesome,
-                        onTap: () => context.push('/ai'),
-                      ),
-                    ),
-                  ),
+                // ✨ YAPAY ZEKÂ DÜĞMESİ KALKTI (geliştirme raporu B2,
+                // 2026-10-20): mikrofon + ✨ + "+" üç ayrı yüzen düğme sağ
+                // alttaki kartın yarısını örtüyordu. Yapay Zekâ ⋮ menüsünün
+                // hızlı satırında ilk sırada; AI ile sesli not mikrofona basılı
+                // tutunca açılır (değişmedi).
                 // Düğmeler Scaffold.floatingActionButton yerine BURADA durur:
                 // Scaffold bir FAB tanıdığında yüzen bildirimleri ("not
                 // silindi") onun ÜSTÜne iter. Düğmeler Stack'te olunca
@@ -1591,74 +1586,84 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 PositionedDirectional(
                   end: 16,
                   bottom: 16,
-                  // Bağlantı noktası TÜM sütunu sarar: "+" menüsü kendi
-                  // düğmesine değil sütunun tepesine demirlenir, böylece
-                  // açılınca mikrofonun üstünü örtmez. Mikrofon yüksekliğini
-                  // sabit sayı olarak yazmaya gerek kalmaz.
-                  child: CompositedTransformTarget(
-                    link: _fabColumnLink,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      // Merkezden hizalı: mikrofon 84 px'lik sabit kutuda,
-                      // "+" ise 56 px'lik FAB. Sağa dayalıyken merkezleri
-                      // 14 px kayıyor ve göz bunu hizasızlık olarak görüyordu.
-                      // ignore: avoid_redundant_argument_values
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // **BAŞA DÖN** — yüz notluk bir kitaplıkta en alta
-                        // inen kullanıcının tepeye (ve arama kutusuna)
-                        // dönmesinin tek yolu aynı yolu geri kaydırmaktı.
-                        // Yalnız gerçekten aşağıdayken çıkar; seçim/sıralama
-                        // kipinde çıkmaz (o çubuklar zaten sayfayı yönetir).
-                        AnimatedSlide(
-                          offset: _showBackToTop && !selectionActive
-                              ? Offset.zero
-                              : const Offset(0, 0.6),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    // "Başa dön" "+"nın tam üstünde: sağa dayalı, küçük
+                    // düğme (40) "+"nın (56) ortasına 8 dp payla oturur.
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // **BAŞA DÖN** — yüz notluk bir kitaplıkta en alta
+                      // inen kullanıcının tepeye (ve arama kutusuna)
+                      // dönmesinin tek yolu aynı yolu geri kaydırmaktı.
+                      // Yalnız gerçekten aşağıdayken çıkar; seçim/sıralama
+                      // kipinde çıkmaz (o çubuklar zaten sayfayı yönetir).
+                      AnimatedSlide(
+                        offset: _showBackToTop && !selectionActive
+                            ? Offset.zero
+                            : const Offset(0, 0.6),
+                        duration: const Duration(milliseconds: 180),
+                        child: AnimatedOpacity(
+                          opacity: _showBackToTop && !selectionActive ? 1 : 0,
                           duration: const Duration(milliseconds: 180),
-                          child: AnimatedOpacity(
-                            opacity: _showBackToTop && !selectionActive ? 1 : 0,
-                            duration: const Duration(milliseconds: 180),
-                            child: IgnorePointer(
-                              ignoring: !_showBackToTop || selectionActive,
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: FloatingActionButton.small(
-                                  heroTag: 'backToTop',
-                                  tooltip: l10n.scrollToTop,
-                                  onPressed: _backToTop,
-                                  child: const Icon(Icons.arrow_upward),
-                                ),
+                          child: IgnorePointer(
+                            ignoring: !_showBackToTop || selectionActive,
+                            child: Padding(
+                              padding: const EdgeInsetsDirectional.only(
+                                bottom: 10,
+                                end: 8,
+                              ),
+                              child: FloatingActionButton.small(
+                                heroTag: 'backToTop',
+                                tooltip: l10n.scrollToTop,
+                                onPressed: _backToTop,
+                                child: const Icon(Icons.arrow_upward),
                               ),
                             ),
                           ),
                         ),
-                        // TEK MİKROFON (F3.1) = DOĞRUDAN YAZDIR (kullanıcı
-                        // isteği 2026-10-20: "AI sesli notu AI menüsüne
-                        // alalım, ana ekrandaki doğrudan yazma olsun").
-                        // Eskiden dokunuş SON kullanılan kipi açıyordu; aynı
-                        // düğmenin bir gün AI levhası, bir gün dikte açması
-                        // tahmin edilemezdi. AI ile sesli not Yapay Zekâ
-                        // ekranının en üstünde; basılı tutmak kısayol olarak
-                        // onu açar.
-                        Customizable(
-                          id: UiItem.homeMic,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: _DashVoiceButton(
-                              key: const ValueKey('home-mic'),
-                              tooltip: l10n.voiceMicTooltipDictate,
-                              icon: Icons.mic,
-                              onTap: _dictateNote,
-                              onLongPress: _captureVoiceNote,
+                      ),
+                      // MİKROFON "+"nın SOLUNDA, aynı satırda (B2): sütun
+                      // eskiden iki düğme boyu yükseliyor ve sağ sütunun
+                      // son kartını örtüyordu; tek satır 56 dp.
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // TEK MİKROFON (F3.1) = DOĞRUDAN YAZDIR (kullanıcı
+                          // isteği 2026-10-20: "AI sesli notu AI menüsüne
+                          // alalım, ana ekrandaki doğrudan yazma olsun").
+                          // Eskiden dokunuş SON kullanılan kipi açıyordu; aynı
+                          // düğmenin bir gün AI levhası, bir gün dikte açması
+                          // tahmin edilemezdi. AI ile sesli not Yapay Zekâ
+                          // ekranının en üstünde; basılı tutmak kısayol olarak
+                          // onu açar.
+                          Customizable(
+                            id: UiItem.homeMic,
+                            child: Padding(
+                              padding: const EdgeInsetsDirectional.only(end: 12),
+                              child: _DashVoiceButton(
+                                key: const ValueKey('home-mic'),
+                                tooltip: l10n.voiceMicTooltipDictate,
+                                icon: Icons.mic,
+                                onTap: _dictateNote,
+                                onLongPress: _captureVoiceNote,
+                              ),
                             ),
                           ),
-                        ),
-                        // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
-                        // Dört kapılı "+" (F3.2). Sesli not menüde YOK:
-                        // ana ekranın kendi tek mikrofonu var (F3.1).
-                        QuickAddFab(anchor: _fabColumnLink, actions: this),
-                      ],
-                    ),
+                          // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
+                          // Dört kapılı "+" (F3.2). Sesli not menüde YOK:
+                          // ana ekranın kendi tek mikrofonu var (F3.1).
+                          // "+" menüsü YALNIZ "+"ya demirlenir: mikrofon
+                          // yanında, menü onun üstüne inmez.
+                          CompositedTransformTarget(
+                            link: _fabColumnLink,
+                            child: QuickAddFab(
+                              anchor: _fabColumnLink,
+                              actions: this,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -1720,6 +1725,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       context,
       ActionMenu(
         quick: [
+          // YAPAY ZEKÂ ilk sırada (B2): ana ekrandaki ✨ yüzen düğmesi kalktı.
+          if (Personalize.current.shows(UiItem.homeAi))
+            MenuAction('ai', l10n.aiHubTitle, Icons.auto_awesome),
           MenuAction(
             'reminders',
             l10n.remindersTitle,
@@ -1797,6 +1805,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     );
     if (action == null || !mounted) return;
     switch (action) {
+      case 'ai':
+        unawaited(context.push('/ai'));
       case 'account':
         unawaited(showAccountSheet(context));
       case 'inbox':
@@ -1994,6 +2004,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       for (final share in shared)
         if (!hotShared.contains(share)) share,
     ];
+    // BOŞ KLASÖRLER SONA (geliştirme raporu B3: "Genel 0", "Borç 0" şeridin
+    // başında yer kaplıyordu); çip ayrıca soluk (bkz. FolderChip). Sayılar
+    // yalnız BOŞ KÜMEYİ izleyen seçimle okunur (virgüllü kimlikler) — her
+    // not yazımında şerit yeniden dizilmesin.
+    final emptyKey = ref.watch(
+      folderNoteCountsProvider.select(
+        (m) => [
+          for (final f in folders)
+            if ((m[f.id] ?? 0) == 0) f.id,
+        ].join(','),
+      ),
+    );
+    final empty = emptyKey.split(',').toSet();
+    final ordered = emptyFoldersLast(folders, ref.watch(folderSortProvider), {
+      for (final f in folders) f.id: empty.contains(f.id) ? 0 : 1,
+    });
     return SliverToBoxAdapter(
       child: SizedBox(
         height: FolderChip.stripHeight,
@@ -2014,7 +2040,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     ),
                     const SizedBox(width: 6),
                   ],
-                  for (final folder in folders) ...[
+                  for (final folder in ordered) ...[
                     _EnsureVisible(
                       key: ValueKey('folder-chip-${folder.id}'),
                       active: folder.id == selectedFolderId,

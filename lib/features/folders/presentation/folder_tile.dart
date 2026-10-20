@@ -336,7 +336,7 @@ class FolderChip extends ConsumerWidget {
             )),
           )
         : 0;
-    return _ChipShell(
+    final chip = _ChipShell(
       accent: folder.accent,
       unread: unread,
       icon: folder.iconData,
@@ -347,6 +347,12 @@ class FolderChip extends ConsumerWidget {
       onTap: () => FolderScreen.open(context, folder.id),
       onLongPress: () => showFolderActionsSheet(context, ref, folder),
     );
+    // BOŞ klasör soluk (B3): şeritte dolu klasörler öne çıksın. Seçiliyken
+    // ya da okunmamışı varken tam renk.
+    if (count == 0 && unread == 0 && !selected) {
+      return Opacity(opacity: 0.55, child: chip);
+    }
+    return chip;
   }
 }
 

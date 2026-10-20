@@ -2039,6 +2039,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Colors, highlights, bold and underline from your notes also show on the home screen cards. When off, cards show plain text.';
 
   @override
+  String get cardHideSensitive => 'Hide sensitive content on cards';
+
+  @override
+  String get cardHideSensitiveInfo =>
+      'Notes that mention a password don\'t show their content on the card; IBAN and card numbers show only their last four digits. Inside the note everything stays as is.';
+
+  @override
+  String get sensitiveHiddenOnCard => 'Sensitive content — hidden on card';
+
+  @override
   String get fontSizeSmall => 'Small';
 
   @override
