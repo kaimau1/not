@@ -19,6 +19,34 @@ yeterli.
 | 8 | Çöp kutusuna AI analiz | Çöp → 📊 **Akıllı analiz**: cihazda anında kurallar (boş not, aktif notta kopyası var, çöpte daha yeni kopyası var → *güvenle silinebilir*; ileri tarihli hatırlatıcı, şifre/IBAN/telefon, yapılmamış madde, ek, uzun metin → *geri yüklemeyi düşün*) + isteğe bağlı **AI ile derin analiz** (kısa döküm gider, kilitli notlar gitmez). Satır satır ya da toplu geri yükle / kalıcı sil (onaylı). |
 | + | Benim eklediklerim | Uzun yapılacaklar kartında **ilerleme çubuğu** (`12/46`); klasör sırası levhasında "sürüklemek sırayı Elle'ye çevirir" açıklaması. |
 
+## Uygulama durumu (2026-10-20, ikinci tur)
+
+Hepsi uygulandı, yalnız **C4** bekliyor (kullanım ölçümü gerekiyor —
+hangi desenin az kullanıldığı veri olmadan bilinmez).
+
+| Madde | Ne yapıldı |
+|---|---|
+| B1 | `sensitive_text.dart`: başlıkta/içerikte parola sözcüğü geçen not kartta içeriksiz ("Hassas içerik — kartta gizlendi" + Kilitle); öbür notlarda IBAN/kart no son 4 hane dışında `•`. Ayarlar → Kartlar → "Kartlarda hassas içeriği gizle" (varsayılan açık, senkronlu). |
+| B2 | ✨ yüzen düğme kalktı → ⋮ hızlı satırında ilk sıra; mikrofon "+"nın solunda tek satır; ızgara alt payı 200 → 96. |
+| B3 | Boş klasörler şeridin ve yana çekiş gezisinin sonunda (elle sıralamada değil), çip soluk (`emptyFoldersLast`). |
+| B4 | `screen_search.dart`: arşiv, çöp, klasör tek arama yüzeyi; AI araması çöpe ve klasöre de geldi (`scopedSemanticSearchProvider`). |
+| B5 | Belge (PDF/slayt) notunda "Defter görünümü" menüde yok (açıksa kapatmak için görünür). |
+| C1 | `dashboard_screen.dart` 2,4 bin → 1,5 bin (`dashboard_selection/menu/shelf/slivers`); `items_editor.dart` 2,7 bin → 1,9 bin (`items_editor_row/actions`). |
+| C2 | Kullanılmayan 9 metin arb'den silindi. |
+| C3 | Kart madde satırı tek `_CardItemRow`. |
+| D1 | Defter satır aralığı Normal / Geniş (×1,25) / Çok geniş (×1,5) — `Note.lineSpacing`; dar seçenek yok (kutucuk tek satıra sığmaz). |
+| D2 | Düz metinde tek başına `---` satırı çizgi olarak çizilir (metin aynen kalır). |
+| D3 | "Geri yüklemeyi düşün" önerisi alan not kalıcı silinmeden bir gün önce tek bildirim (`trashReminderPlan`). |
+| D4 | Tümü görünümünde klasör başlıkları (Süz → Klasöre göre grupla). |
+| D5 | Arşiv → 📊 "Arşivimde neler var?": sayılar, klasör dağılımı, bir yıldır dokunulmamışlar + AI özeti/eskimiş notlar. |
+| D6 | Kartta kutucuğa dokununca madde işaretlenir (kendi notunda). |
+
+Aynı turda kullanıcı isteğiyle: renk paleti (yazı rengi, vurgu, zemin,
+çerçeve, balon, kalem, ana ekran zemini), biçim paneli açıkken alt çubuk
+gizli + boyut satırı aç/kapa + kaydırıcı seyreltme, panel dışında etkin
+biçim rozetleri, başlıkta kalın görünür, sayfalı notta yana çekişle sayfa,
+maddeyi başka sayfaya taşı, ayarlarda açılan alana kaydırma.
+
 ## B. Önerilen düzeltmeler (öncelikli)
 
 1. **Şifreler kartta açıkça görünüyor (gizlilik).** Ana ekran görüntüsünde

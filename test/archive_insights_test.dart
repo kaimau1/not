@@ -16,7 +16,7 @@ void main() {
     );
     final stats = archiveStats([
       n('a', folder: 'f1', updated: DateTime(2026, 9)),
-      n('b', folder: 'f1', updated: DateTime(2024, 1)),
+      n('b', folder: 'f1', updated: DateTime(2024)),
       n('c', updated: DateTime(2025, 3)),
       n('d', folder: 'f2', updated: DateTime(2026, 10)),
     ], now: now);

@@ -27,6 +27,24 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
 numarasıyla bildir.
 
+**2026-10-20 geliştirme raporu + kullanıcı turu 2**
+- [ ] Madde uzun bas → Alta çizgi çek: çizgi ANINDA görünüyor (çıkıp girmeden).
+- [ ] Biçim paneli açıkken alt çubuk gizli; "Tt" düğmesi boyut satırını
+  açıp kapatıyor; boyut sürüklerken kasma yok. Panel kapalıyken Biçim
+  düğmesinin yanında B/I/U/renk rozetleri.
+- [ ] Başlıkta Kalın açılıp kapanınca fark görünüyor.
+- [ ] Renk paleti (🎨): yazı rengi, vurgu, not zemini, çerçeve, balon,
+  kalem, ana ekran zemini — hazır ton + Özel (ton/doygunluk/açıklık).
+- [ ] Sayfalı notta sola/sağa hızlı çekiş sayfa çeviriyor; yazarken/seçerken
+  yanlışlıkla çevirmiyor. Madde menüsü → Başka sayfaya taşı.
+- [ ] Ayarlar: bir alanı açınca o alan ekranın tepesine geliyor.
+- [ ] Ana ekran: ✨ yüzen düğme yok (⋮ → Yapay Zekâ), mikrofon "+"nın solunda;
+  boş klasörler şeridin sonunda ve soluk. "Şifreler" notu kartta gizli +
+  Kilitle; IBAN/kart no örtülü. Kartta kutucuğa dokununca madde işaretleniyor.
+- [ ] Arşiv/çöp/klasör aramasında ✨; Arşiv → 📊 "Arşivimde neler var?".
+- [ ] Defter → Kâğıt levhası → Satır aralığı (Normal/Geniş/Çok geniş);
+  düz metinde tek başına `---` satırı çizgi. Tümü → klasör başlıkları.
+
 **Ana ekran ve menüler**
 - [ ] 100+ notla açılış ve hızlı kaydırma akıcı; boş kart / sıçrama yok;
   klasör ve arşiv ızgarası aynı. Editörden dönüşte kart güncel, takılma yok.

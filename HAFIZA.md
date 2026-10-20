@@ -125,7 +125,14 @@ eskisini arşive taşıma.
   → `_cachedItemRow` anahtarına ekle.
 - Notun sayfaları (`textPages`): ETKİN sayfanın içeriği `body`/`items`'ta,
   listedeki girdisi boş; geçiş içerikleri yer değiştirir. İlk sayfa kimliği
-  hep ''.
+  hep ''. Yana çekiş `PageSwipeDetector` (ham `Listener`, jest yarışına
+  girmez); madde taşıma `moveItemToPage` (2026-10-20).
+- **Özel renk (2026-10-20, "renk paleti"):** satır içi `%%#RRGGBB:..%%` /
+  `==#RRGGBB:..==` — `RichMark.color` ARGB tutar, `isCustomRichColor`
+  (> 0xFFFFFF) ayırır; palet indeksi tek hane kalır. Not zemini/çerçevesi
+  `customColor`/`customFrameColor` (+ defter `lineSpacing`) KOŞULSUZ yazılır;
+  çizim `NoteColors.noteSurface/noteFrame`. Palet tek levha
+  (`core/widgets/color_palette.dart`, `PaletteButton`).
 - Satır içi biçim metnin İÇİNDE işaretle (`**kalın**`, `_italik_`, `~altı~`,
   `==k:vurgu==`, `%%k:renk%%`, `##k:boy##`, `&&k:opaklık&&`); başlık =
   boy kademesi + kalın (`setLineHeading`). Önekli işaretler önek olmadan
@@ -199,7 +206,7 @@ eskisini arşive taşıma.
   build'de alana al.
 - Türetilmiş sağlayıcılar içerik aynıysa ÖNCEKİ örneği döner (`StableBox`,
   not listelerinde örnek kimliği — `sameInstances`).
-- Toplu işlemler tek `WriteBatch` (`batchUpdateEach`, 450'lik parçalar).
+- Toplu işlemler tek `WriteBatch` (450'lik parçalar).
 - Ana ekran ızgarası: deterministik sütun ataması (`balancedColumnAssignment`,
   tahmini yükseklik) + sütun başına tembel `SliverList`. Masonry kartı
   yerleşim anında atıyordu → kaymalar/boşluklar.
@@ -208,9 +215,8 @@ eskisini arşive taşıma.
   ayrı yerde" bildirimi gelirse önce iki hesabın aynı kaynaktan beslendiğine
   bak.
 - Animasyonda `Timer` değil `FrameLoop` (Ticker; adım 60 Hz'e göre ölçekli).
-- `DateFormat` kart başına kurulmaz (desen+dil anahtarlı önbellek; `static
-  final` olamaz — dili dondurur).
-- Kopya taraması `compute` ile; web'de `<<` 32 bit → trigram kodu çarpmayla.
+- `DateFormat` kart başına kurulmaz (desen+dil anahtarlı önbellek).
+- Kopya taraması `compute` ile; web'de `<<` 32 bit → trigram çarpmayla.
 
 ## Editör, klavye, metin
 - Scaffold `bottomNavigationBar` klavyenin ALTINDA kalır; alt çubuk
@@ -222,6 +228,14 @@ eskisini arşive taşıma.
   bağlantı/etiket için seçim menüsü ve üst katman.
 - Geri alma NOTUN TAMAMINI saklar (`note_undo.dart`); parmak izine öğe sırası
   konmaz. Eki silince baytlar editör kapanırken silinir (geri al için).
+- Biçim paneli açıkken alt çubuk GİZLİ (kapatma panelin ⌄'sinde); boyut
+  satırı varsayılan kapalı; kaydırıcı önizlemesi 70 ms'de bir. Panel
+  kapalıyken etkin biçim rozetleri `ActiveFormatBadges` (`_formatTargetN`
+  ile — editör setState'i değil). Kalın, tabanı ≥ w500 olan metinde w800
+  (başlık w500).
+- Dashboard (`dashboard_selection/menu/shelf/slivers`) ve ItemsEditor
+  (`items_editor_row/actions`) de part + uzantı (C1, 2026-10-20); uzantıda
+  statik `ItemsEditorState._kX` diye nitelenir, `setState` → `_update`.
 - **Editör konu dosyalarına bölündü (F9.3, 2026-10-20):** `note_editor_screen.dart`
   yalnız durum (alanlar), yaşam döngüsü, biçim, `_mutate`, kanvas ve
   `build`; yöntemler `part` dosyalarında `extension _EditorX on
@@ -300,14 +314,10 @@ eskisini arşive taşıma.
   karesi) çağırır.** Yeni widget dönersek görünen sayfaların seçim/kalem/
   balon katmanları kare başına yeniden kurulur. `pdfLayerParams` sayfa
   başına (sayfa nesnesi + yarım piksele yuvarlanmış boy) AYNI örneği döner.
-- Balon paleti PREMİUM (2026-10-20, "sarı göz yoruyor"): koyu/kırık tonlar,
-  varsayılan `BubbleController.defaultColor` (lacivert-mor). Eski amber
-  varsayılan (`legacyDefault`, alanı olmayan kayıt da) EKRANDA yeni
-  varsayılanla çizilir (`displayColor`; vurgu/açık metin hariç), veri
-  değişmez. Tutamaç iki tonlu + beyaz çerçeve, açık balon kendi renginde
-  bulanıksız hale; okuma ve yazma kartları nötr yüzey (renk yalnız nokta/
-  rozette). Yazma kartı (`_KeyboardFollow`) sistem gezinme çubuğunun da
-  üstünde durur (yazma kipinde bölme ekranın dibine iniyordu).
+- Balon paleti koyu/kırık tonlar, varsayılan `BubbleController.defaultColor`;
+  eski amber (`legacyDefault`) EKRANDA yeni varsayılanla çizilir
+  (`displayColor`), veri değişmez. Yazma kartı (`_KeyboardFollow`) gezinme
+  çubuğunun da üstünde.
 
 ## Ses ve yapay zekâ
 - Seslendirme TEK kapı `SpeechService` (F3.9): motor ayardan (cihaz / AI);
@@ -334,8 +344,9 @@ eskisini arşive taşıma.
 
 ## Arayüz kararları (Faz 3, 2026-10-19)
 - Ana ekranda TEK mikrofon (F3.1) = DOĞRUDAN YAZDIR (2026-10-20, kullanıcı
-  kararı; "son kip" hatırlama ve `homeMicDictateProvider` kalktı). Basılı
-  tutmak AI ile sesli notu açar. AI ile sesli not: Yapay Zekâ ekranının EN
+  kararı). Basılı tutmak AI ile sesli notu açar. ✨ yüzen düğme KALKTI
+  (B2, 2026-10-20): Yapay Zekâ ⋮ hızlı satırında ilk (`UiItem.homeAi` onu
+  gizler); mikrofon "+"nın solunda tek satır, ızgara alt payı 96. AI ile sesli not: Yapay Zekâ ekranının EN
   ÜSTÜNDE (dokunuş `/`'a döner + `voiceAutostartProvider`) ve editörde AI
   levhasının EN ÜST satırında (`onVoiceNote`); editör alt çubuğunda parıltılı
   mikrofon YOK (`UiItem.barVoiceAi` kimliği yalnız eski tercihler için).
@@ -355,33 +366,23 @@ eskisini arşive taşıma.
 - "Tümü" çipi (`showAllNotesProvider`, kalıcı): "klasördeki not ana
   ekranda durmaz" kuralının istisnası; açıkken elle sıralama kapalı.
   Çöp analizi `domain/trash_analysis.dart` (cihaz kuralları) + AI
-  `analyzeTrash` (kilitli not gitmez); arşivde AI araması
-  `archivedSemanticSearchProvider`.
-- Süz düğmesi arama kutusunun İÇİNDE (AI anahtarının sağı): süzgeç yokken
-  simge, varken adı ("Görevler +1") + ×. Görünüm (ızgara/liste) Süz
-  levhasında. **Favori (yıldızlı) süzgeç kısayolları KALKTI** (2026-10-20,
-  kullanıcı: "Yıldızlı satır kaplıyor, Süz'ün içine koy"): ana ekranda ayrı
-  satır yok, Süz'de yıldız düğmesi yok; altındaki şerit yalnız arama
-  yazılıyken "ek içeriğinde de ara" çipi.
-- Menü ızgaraları (2026-10-20): `ActionMenu` grupları 3 sütun yuvarlak
-  simge + ad (hızlı satır renkli, gruplar nötr); editörün Ekle levhası
-  telefonda 4 sütun, zeminsiz hücre, kaydırmasız sığacak boyda.
-- Dinleme alanları TEK KART `ListeningCard` (`listening_visuals.dart`,
-  2026-10-20 ikinci tur — "AI ekranı çok büyük, dikte çok küçük, arası
-  olsun"): üstte rozet + başlık + (alt satırda) kip etiketi/açıklama + süre
-  + küçük düğmeler, altta TAM GENİŞLİK dalga + hap "Bitir" (~120 px).
-  Editör diktesi (`_DictationPanel`, döküm yok) ve sesli yakalama levhası
-  (saydam levha, aynı yüzen kart, arada 40-120 px döküm) aynı kartı kullanır.
-  Başlık satırına düğme eklerken `ListeningHeaderButton` (34 dp, dokunma
-  kutusu shrinkWrap) — M3 IconButton 48 dp yiyip başlığı "D..."ye indiriyordu.
-- Ayar alanları ve iç bölümler `ExpandReveal` ile açılır (animasyon içerik
-  kurulduktan SONRAKİ karede başlar — ağır alanın ilk karesi
-  `AnimatedSize`/`ExpansionTile` animasyonunu yutuyordu). 2026-10-20
-  ("ayarlar kasıyor"): `FadeTransition` KALKTI (her karede bütün alan
-  saydamlık katmanına yeniden çiziliyordu) → `RepaintBoundary`; alan
-  satırları `_StaggeredRows` ile ilk karede 2, sonra kare başına 1 kurulur.
-- Balonlu/Klasik levhası yalnız ilk sefer; seçim varsayılan
-  (`capture_mode_default`), Ayarlar → Notlar ve klasörler.
+  `analyzeTrash` (kilitli not gitmez). Arşiv/çöp/klasör araması TEK yüzey
+  `screen_search.dart` + `scopedSemanticSearchProvider` (B4). Çöp
+  hatırlatması `trashReminderPlan` (bildirim 999002, yük `trash`). Kartta
+  hassas içerik `sensitive_text.dart` (yalnız gösterim, ayar
+  `card_hide_sensitive`); kart kutucuğu `toggleCardItem` ile işaretler.
+- Süz düğmesi arama kutusunun İÇİNDE: süzgeç yokken simge, varken adı + ×.
+  Görünüm (ızgara/liste, Tümü'de klasöre göre grupla) Süz levhasında.
+  Favori süzgeç kısayolları KALKTI (2026-10-20, kullanıcı kararı).
+- Menü ızgaraları: `ActionMenu` 3 sütun; editörün Ekle levhası 4 sütun.
+- Dinleme alanları TEK KART `ListeningCard` (`listening_visuals.dart`):
+  editör diktesi ve sesli yakalama levhası aynı kart (~120 px). Başlık
+  satırına düğme: `ListeningHeaderButton` (34 dp; M3 IconButton 48 dp yiyip
+  başlığı kesiyordu).
+- Ayar alanları `ExpandReveal` (animasyon içerik kurulduktan SONRAKİ
+  karede; `FadeTransition` yok → `RepaintBoundary`; satırlar
+  `_StaggeredRows` ile kare başına 1). Açılan alan bitince ekranın tepesine
+  kaydırılır (`Scrollable.ensureVisible`, 2026-10-20).
 - Paylaşım iki kavram (F3.7): Birlikte düzenle (ortak not / klasör) ve Kopya
   gönder (gelen kutusu).
 - Arayüz dilleri yalnız **tr + en** (F3.14); diğer 14 dil silindi. Kılavuz
@@ -405,8 +406,6 @@ eskisini arşive taşıma.
   kapsamlı jeton (bellekte, ~1 sa); ek `blob:` adresiyle açılır, `blob:`
   `toMap`'te buluta yazılmaz. Web Drive'a yazmaz (ekleri Storage'a).
   Yerel notlar/video yok.
-- Yerel sunucu: `python -m http.server --directory <mutlak>` (silinip yeniden
-  kurulan klasörü eski hâliyle sunar).
 
 ## Android
 - `USE_EXACT_ALARM` yok (Play); izin yoksa hatırlatıcı inexact'e düşer.
