@@ -284,18 +284,6 @@ abstract class AppLocalizations {
   /// **'Görsel ekle'**
   String get addImage;
 
-  /// No description provided for @addPdf.
-  ///
-  /// In tr, this message translates to:
-  /// **'PDF ekle'**
-  String get addPdf;
-
-  /// No description provided for @addSlide.
-  ///
-  /// In tr, this message translates to:
-  /// **'Slayt ekle'**
-  String get addSlide;
-
   /// No description provided for @noNoteSelected.
   ///
   /// In tr, this message translates to:
@@ -1501,18 +1489,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sesli yazdır'**
   String get liveDictation;
-
-  /// No description provided for @voiceCaptureAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sesli yakala (yapay zekâ)'**
-  String get voiceCaptureAi;
-
-  /// No description provided for @dictationListening.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dinleniyor... konuştukça metin yazılır'**
-  String get dictationListening;
 
   /// No description provided for @dictationHoldHint.
   ///
@@ -3229,12 +3205,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'SIRALAMA'**
   String get filterSectionSort;
-
-  /// No description provided for @filterFavoriteHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ana ekranda kısayol olarak görünmesi için bir seçeneğin yıldızına dokun'**
-  String get filterFavoriteHint;
 
   /// No description provided for @filterSheetSortHint.
   ///
@@ -7646,12 +7616,6 @@ abstract class AppLocalizations {
   /// **'Bağlantı kopyalandı'**
   String get videoLinkCopied;
 
-  /// No description provided for @attachSectionVisual.
-  ///
-  /// In tr, this message translates to:
-  /// **'Görsel ve çizim'**
-  String get attachSectionVisual;
-
   /// No description provided for @menuSectionOrganize.
   ///
   /// In tr, this message translates to:
@@ -8257,12 +8221,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Belgeler'**
   String get moduleDocuments;
-
-  /// No description provided for @moduleDocumentsInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'PDF ve sunum ekleme'**
-  String get moduleDocumentsInfo;
 
   /// No description provided for @moduleScan.
   ///
@@ -9091,18 +9049,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Her seferinde sor'**
   String get captureModeAsk;
-
-  /// No description provided for @voiceMicDictate.
-  ///
-  /// In tr, this message translates to:
-  /// **'Doğrudan yazdır'**
-  String get voiceMicDictate;
-
-  /// No description provided for @voiceMicTooltipAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sesli not (AI düzenlesin) — basılı tut: doğrudan yazdır'**
-  String get voiceMicTooltipAi;
 
   /// No description provided for @voiceMicTooltipDictate.
   ///

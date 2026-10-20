@@ -111,12 +111,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addImage => 'Add image';
 
   @override
-  String get addPdf => 'Add PDF';
-
-  @override
-  String get addSlide => 'Add slides';
-
-  @override
   String get noNoteSelected => 'Pick a note from the left';
 
   @override
@@ -771,12 +765,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveDictation => 'Dictate';
-
-  @override
-  String get voiceCaptureAi => 'Voice capture (AI)';
-
-  @override
-  String get dictationListening => 'Listening... text appears as you speak';
 
   @override
   String get dictationHoldHint =>
@@ -1712,10 +1700,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filterSectionSort => 'SORT';
-
-  @override
-  String get filterFavoriteHint =>
-      'Tap a star to keep that option on the home screen';
 
   @override
   String get filterSheetSortHint =>
@@ -4221,9 +4205,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoLinkCopied => 'Link copied';
 
   @override
-  String get attachSectionVisual => 'Images and drawing';
-
-  @override
   String get menuSectionOrganize => 'Organize';
 
   @override
@@ -4581,9 +4562,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moduleDocuments => 'Documents';
-
-  @override
-  String get moduleDocumentsInfo => 'Adding PDFs and slides';
 
   @override
   String get moduleScan => 'Scanning';
@@ -5060,13 +5038,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get captureModeAsk => 'Ask every time';
-
-  @override
-  String get voiceMicDictate => 'Type as I speak';
-
-  @override
-  String get voiceMicTooltipAi =>
-      'Voice note (AI tidies) — long-press: type as I speak';
 
   @override
   String get voiceMicTooltipDictate =>

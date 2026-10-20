@@ -200,6 +200,7 @@ extension _EditorActions on _NoteEditorScreenState {
       pinned: note.pinned,
       starred: note.starred,
       paged: note.paged,
+      notebookAvailable: !note.type.isPageNoteType || note.paged,
       locked: note.locked,
       archived: note.archivedAt != null,
       isList: note.type == NoteType.checklist || note.type == NoteType.ordered,

@@ -111,12 +111,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addImage => 'Görsel ekle';
 
   @override
-  String get addPdf => 'PDF ekle';
-
-  @override
-  String get addSlide => 'Slayt ekle';
-
-  @override
   String get noNoteSelected => 'Soldan bir not seç';
 
   @override
@@ -770,12 +764,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get liveDictation => 'Sesli yazdır';
-
-  @override
-  String get voiceCaptureAi => 'Sesli yakala (yapay zekâ)';
-
-  @override
-  String get dictationListening => 'Dinleniyor... konuştukça metin yazılır';
 
   @override
   String get dictationHoldHint =>
@@ -1708,10 +1696,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get filterSectionSort => 'SIRALAMA';
-
-  @override
-  String get filterFavoriteHint =>
-      'Ana ekranda kısayol olarak görünmesi için bir seçeneğin yıldızına dokun';
 
   @override
   String get filterSheetSortHint =>
@@ -4218,9 +4202,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get videoLinkCopied => 'Bağlantı kopyalandı';
 
   @override
-  String get attachSectionVisual => 'Görsel ve çizim';
-
-  @override
   String get menuSectionOrganize => 'Düzenle';
 
   @override
@@ -4569,9 +4550,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get moduleDocuments => 'Belgeler';
-
-  @override
-  String get moduleDocumentsInfo => 'PDF ve sunum ekleme';
 
   @override
   String get moduleScan => 'Tarama';
@@ -5046,13 +5024,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get captureModeAsk => 'Her seferinde sor';
-
-  @override
-  String get voiceMicDictate => 'Doğrudan yazdır';
-
-  @override
-  String get voiceMicTooltipAi =>
-      'Sesli not (AI düzenlesin) — basılı tut: doğrudan yazdır';
 
   @override
   String get voiceMicTooltipDictate =>

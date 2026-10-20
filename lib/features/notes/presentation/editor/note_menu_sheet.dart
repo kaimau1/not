@@ -22,6 +22,7 @@ Future<String?> showNoteEditorMenu(
   required bool pinned,
   bool starred = false,
   bool paged = false,
+  bool notebookAvailable = true,
   required bool locked,
   required bool archived,
   required bool isList,
@@ -46,6 +47,7 @@ Future<String?> showNoteEditorMenu(
           pinned: pinned,
           starred: starred,
           paged: paged,
+          notebookAvailable: notebookAvailable,
           locked: locked,
           archived: archived,
           isList: isList,
@@ -68,6 +70,7 @@ class _MenuGrid extends StatelessWidget {
     required this.pinned,
     this.starred = false,
     this.paged = false,
+    this.notebookAvailable = true,
     required this.locked,
     required this.archived,
     required this.isList,
@@ -103,6 +106,11 @@ class _MenuGrid extends StatelessWidget {
 
   /// Defter görünümü açık mı (F3.5).
   final bool paged;
+
+  /// Defter görünümü sunulsun mu (geliştirme raporu B5): belge (PDF/slayt)
+  /// notunun sayfa tuvali yok, kâğıt çizgileri yazıya oturamıyordu — orada
+  /// seçenek yalnız zaten açıksa (kapatmak için) görünür.
+  final bool notebookAvailable;
   final bool locked;
   final bool archived;
 
@@ -155,12 +163,13 @@ class _MenuGrid extends StatelessWidget {
       sections: [
         MenuSection(l10n.menuSectionContent, [
           // DEFTER GÖRÜNÜMÜ (F3.5): kâğıt deseni + hep görünen sayfa çubuğu.
-          MenuAction(
-            'paged',
-            paged ? l10n.notebookViewOff : l10n.notebookViewOn,
-            Icons.menu_book_outlined,
-            selected: paged,
-          ),
+          if (notebookAvailable)
+            MenuAction(
+              'paged',
+              paged ? l10n.notebookViewOff : l10n.notebookViewOn,
+              Icons.menu_book_outlined,
+              selected: paged,
+            ),
           if (paged)
             MenuAction('paper', l10n.archivePaper, Icons.texture),
           // BALONLU ⇄ KLASİK görünüm (kullanıcı isteği 2026-10-15).
