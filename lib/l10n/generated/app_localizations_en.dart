@@ -5070,4 +5070,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bubbleSemanticsEmpty => 'Empty note bubble';
+
+  @override
+  String get guestReminderTitle => 'Your notes are not backed up';
+
+  @override
+  String get guestReminderBody =>
+      'You are using the app without an account: your notes live only on this device. If the app is removed or you change phones they cannot be recovered. Link your Google account — your notes stay as they are.';
+
+  @override
+  String get guestReminderLater => 'Later';
 }

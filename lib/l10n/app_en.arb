@@ -1854,5 +1854,8 @@
   "notebookViewOff": "Turn off notebook view",
   "inkSemantics": "Handwriting, {count} strokes",
   "bubbleSemantics": "Note bubble: {text}",
-  "bubbleSemanticsEmpty": "Empty note bubble"
+  "bubbleSemanticsEmpty": "Empty note bubble",
+  "guestReminderTitle": "Your notes are not backed up",
+  "guestReminderBody": "You are using the app without an account: your notes live only on this device. If the app is removed or you change phones they cannot be recovered. Link your Google account — your notes stay as they are.",
+  "guestReminderLater": "Later"
 }

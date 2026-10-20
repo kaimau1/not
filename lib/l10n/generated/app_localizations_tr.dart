@@ -5055,4 +5055,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bubbleSemanticsEmpty => 'Boş not balonu';
+
+  @override
+  String get guestReminderTitle => 'Notların yedeklenmiyor';
+
+  @override
+  String get guestReminderBody =>
+      'Hesapsız kullanıyorsun: notların yalnız bu cihazda. Uygulama silinir ya da telefon değişirse geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.';
+
+  @override
+  String get guestReminderLater => 'Sonra';
 }

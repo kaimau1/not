@@ -32,6 +32,7 @@ import '../../folders/domain/note_folder.dart';
 import '../../folders/presentation/folder_sheets.dart';
 import '../../folders/presentation/folder_tile.dart';
 import '../../auth/presentation/account_sheet.dart';
+import '../../auth/presentation/guest_backup_card.dart';
 import '../../friends/data/friends_repository.dart';
 import '../../friends/presentation/friends_screen.dart';
 import '../../friends/presentation/home_invites.dart';
@@ -1440,6 +1441,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           _kGridCacheExtent,
                                         ),
                                     slivers: [
+                                      // Misafir hesap hatırlatması (F4.3).
+                                      if (!searchActive && !reorderActive)
+                                        const SliverToBoxAdapter(
+                                          child: GuestBackupCard(),
+                                        ),
                                       // **KLASÖR RAFI**: ana ekranın tepesinde,
                                       // notlarla aynı ızgarada. Yalnız kök
                                       // görünümde çizilir — arama/süzgeç/etiket

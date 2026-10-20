@@ -556,6 +556,12 @@ class _RestoreButton extends ConsumerWidget {
   }
 }
 
+/// Misafir hesabı Google hesabına bağlar (uid korunur, notlar yerinde
+/// kalır). Ayarlar'daki satır ve ana ekrandaki hatırlatma kartı (F4.3)
+/// aynı akışı kullanır.
+Future<void> linkGuestAccount(BuildContext context, WidgetRef ref) =>
+    _AccountSection._linkAccount(context, ref);
+
 class _AccountSection extends ConsumerWidget {
   const _AccountSection();
 
@@ -612,7 +618,7 @@ class _AccountSection extends ConsumerWidget {
   /// biriken bütün notlar erişilemez hâle gelirdi. `linkWithGoogle` uid'i
   /// koruyarak hesabı yükseltir; notlar taşınmaya gerek kalmadan yerinde
   /// kalır ve o andan itibaren yedeklenir.
-  Future<void> _linkAccount(BuildContext context, WidgetRef ref) async {
+  static Future<void> _linkAccount(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     try {
@@ -652,7 +658,7 @@ class _AccountSection extends ConsumerWidget {
   /// doğrudan giriş yapar. Şu anki (yeni/anonim) oturumun notları varsa
   /// (nadir ama imkânsız değil — kullanıcı hesaptan çıkmadan önce bu cihazda
   /// birkaç not almış olabilir) önce onay ister; kaybolacakları açıkça söyler.
-  Future<void> _recoverExistingAccount(
+  static Future<void> _recoverExistingAccount(
     BuildContext context,
     WidgetRef ref,
     AuthCredential credential,

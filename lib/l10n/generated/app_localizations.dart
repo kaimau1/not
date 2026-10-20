@@ -9103,6 +9103,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Boş not balonu'**
   String get bubbleSemanticsEmpty;
+
+  /// No description provided for @guestReminderTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notların yedeklenmiyor'**
+  String get guestReminderTitle;
+
+  /// No description provided for @guestReminderBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesapsız kullanıyorsun: notların yalnız bu cihazda. Uygulama silinir ya da telefon değişirse geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.'**
+  String get guestReminderBody;
+
+  /// No description provided for @guestReminderLater.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonra'**
+  String get guestReminderLater;
 }
 
 class _AppLocalizationsDelegate
