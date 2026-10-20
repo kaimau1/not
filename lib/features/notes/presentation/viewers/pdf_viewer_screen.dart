@@ -554,6 +554,14 @@ PdfViewerParams pdfLayerParams({
     // değişiminde yükler.
     panEnabled: !inkEditing && !dragging,
     scaleEnabled: !inkEditing,
+    // **KAYDIRMA FİZİĞİ** (kullanıcı bulgusu 2026-10-20: "PDF'yi kaydırmak
+    // işkence gibi, sanki zorla kaydırıyorum"). KÖK NEDEN: `scrollPhysics`
+    // verilmeyince pdfrx InteractiveViewer'ın kendi sürtünmesini kullanır;
+    // pdfrx'in belgesinin dediği gibi fırlatma listelere göre ÇOK ÇABUK
+    // durur — parmak kalkınca belge birkaç santimde frenleniyor, her sayfa
+    // için yeniden itmek gerekiyordu. Artık uygulamanın listeleriyle AYNI
+    // fizik: fırlatınca akar, kenarda durur (iOS'ta yaylanır).
+    scrollPhysics: _pdfScrollPhysics,
     onViewerReady: onViewerReady,
     onPageChanged: onPageChanged,
     // **pdfrx'İN KENDİ METİN SEÇİMİ KAPALI** (2026-10-20). Seçim bizim
@@ -575,6 +583,14 @@ PdfViewerParams pdfLayerParams({
     ],
   );
 }
+
+final ScrollPhysics _pdfScrollPhysics =
+    const {
+      TargetPlatform.iOS,
+      TargetPlatform.macOS,
+    }.contains(defaultTargetPlatform)
+    ? const BouncingScrollPhysics()
+    : const ClampingScrollPhysics();
 
 Widget? _noPdfContextMenu(
   BuildContext context,

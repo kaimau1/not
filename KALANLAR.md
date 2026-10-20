@@ -19,7 +19,7 @@
   zekâ, Ses, Hesap).
 - [ ] **Balon/PDF**: uzun bas → balon; ekran grileşmiyor, klavye açılıyor ve
   açık kalıyor; yazma kartı gezinme düğmelerinin üstünde. Uzun PDF'te kaydırma
-  akıcı. Eski sarı balonlar yeni lacivert tonda; renk paletinde sarı yok.
+  akıcı; fırlatınca liste gibi akıyor (zorla itmek gerekmiyor). Eski sarı balonlar yeni lacivert tonda; renk paletinde sarı yok.
   (Grileşmenin kesin kaynağı cihazsız doğrulanamadı — en olası neden pdfrx'in
   kendi seçim/odak davranışıydı, kapatıldı; sürerse ekran kaydı iste.)
 

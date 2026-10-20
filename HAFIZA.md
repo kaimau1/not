@@ -228,6 +228,9 @@ eskisini arşive taşıma.
   çakışma) ve görüntüleyici ODAK istiyordu (yeni balonun yazı alanı odağı
   düşüyor, klavye gelmiyordu). Seçim yalnız `PdfSelectLayer`. Dokunmatikte
   `keyHandlerParams.canRequestFocus: false`, `buildContextMenu` null döner.
+- **pdfrx'e `scrollPhysics` VER** (`_pdfScrollPhysics`: Android Clamping,
+  iOS Bouncing; 2026-10-20 "PDF'yi zorla kaydırıyorum"). Verilmezse
+  InteractiveViewer sürtünmesi fırlatmayı birkaç santimde durduruyor.
 - **TUZAK: pdfrx `pageOverlaysBuilder`ı HER matris değişiminde (kaydırma
   karesi) çağırır.** Yeni widget dönersek görünen sayfaların seçim/kalem/
   balon katmanları kare başına yeniden kurulur. `pdfLayerParams` sayfa

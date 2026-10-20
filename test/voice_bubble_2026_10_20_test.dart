@@ -146,6 +146,9 @@ void main() {
       // Test ortamı Android: görüntüleyici odak çalmaz (balonun yazı alanı
       // odağını kaybetmesin).
       expect(params.keyHandlerParams.canRequestFocus, isFalse);
+      // Liste gibi akan fırlatma ("zorla kaydırıyorum" bulgusu): fizik
+      // verilmezse pdfrx'in sürtünmesi belgeyi hemen durduruyordu.
+      expect(params.scrollPhysics, isA<ClampingScrollPhysics>());
 
       final page = _FakePage(1);
       final builder = params.pageOverlaysBuilder!;
