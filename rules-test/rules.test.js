@@ -16,6 +16,7 @@ const {
   assertSucceeds,
 } = require("@firebase/rules-unit-testing");
 const { doc, getDoc, setDoc, updateDoc, deleteDoc } = require("firebase/firestore");
+const { ref, uploadString, getBytes } = require("firebase/storage");
 
 let env;
 
@@ -25,11 +26,17 @@ before(async () => {
     firestore: {
       rules: readFileSync(path.join(__dirname, "..", "firestore.rules"), "utf8"),
     },
+    storage: {
+      rules: readFileSync(path.join(__dirname, "..", "storage.rules"), "utf8"),
+    },
   });
 });
 
 after(() => env.cleanup());
-beforeEach(() => env.clearFirestore());
+beforeEach(async () => {
+  await env.clearFirestore();
+  await env.clearStorage();
+});
 
 const as = (uid) => env.authenticatedContext(uid).firestore();
 const anon = () => env.unauthenticatedContext().firestore();
@@ -145,4 +152,31 @@ test("ortak not aynası yalnız sahibince, gerçek nota yaratılır", async () =
       ownerId: "a", noteId: "n9", ownerName: "A", sharedWith: ["b"], names: {},
     }),
   );
+});
+
+// ── Storage ────────────────────────────────────────────────────────────
+
+const store = (uid) => env.authenticatedContext(uid).storage();
+const png = { contentType: "image/png" };
+
+test("Storage: sahip kendi ekini yükler/okur, yabancı okuyamaz", async () => {
+  await assertSucceeds(uploadString(ref(store("a"), "users/a/notes/n1/x.png"), "x", "raw", png));
+  await assertSucceeds(getBytes(ref(store("a"), "users/a/notes/n1/x.png")));
+  await assertFails(getBytes(ref(store("b"), "users/a/notes/n1/x.png")));
+  await assertFails(uploadString(ref(store("b"), "users/a/notes/n1/y.png"), "y", "raw", png));
+});
+
+test("Storage: izinsiz dosya türü reddedilir", async () => {
+  await assertFails(
+    uploadString(ref(store("a"), "users/a/notes/n1/x.exe"), "x", "raw", {
+      contentType: "application/x-msdownload",
+    }),
+  );
+});
+
+test("Storage: ortak çalışan sahibin notuna ek yükler ve okur", async () => {
+  await seedSharedNote();
+  await assertSucceeds(uploadString(ref(store("b"), "users/a/notes/n1/b.png"), "b", "raw", png));
+  await assertSucceeds(getBytes(ref(store("b"), "users/a/notes/n1/b.png")));
+  await assertFails(getBytes(ref(store("c"), "users/a/notes/n1/b.png")));
 });
