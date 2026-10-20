@@ -102,40 +102,6 @@ class NoteActivityNotifier extends Notifier<Map<String, int>> {
   }
 }
 
-/// FAVORİ SÜZGEÇLER (kalıcı): kullanıcının Süz levhasında yıldızladığı
-/// seçenekler. Ana ekranda "Süz" düğmesinin sağında tek dokunuşluk çip olarak
-/// dururlar — sık kullanılan bir süzgeç için levhayı açmak gerekmesin.
-///
-/// Jeton biçimi tür + değer: `filter:pinned`, `tag:iş`, `folder:<id>`,
-/// `sort:title`. Tek düz metin kümesi olarak saklanır; klasör/etiket silinirse
-/// jeton çözülemez ve ÇİZİLMEZ (temizlemeye gerek yok).
-final favoriteFiltersProvider =
-    NotifierProvider<FavoriteFiltersNotifier, Set<String>>(
-      FavoriteFiltersNotifier.new,
-    );
-
-class FavoriteFiltersNotifier extends Notifier<Set<String>> {
-  static const _key = 'favorite_filters';
-
-  @override
-  Set<String> build() =>
-      (ref.watch(sharedPreferencesProvider).getStringList(_key) ?? const [])
-          .toSet();
-
-  void toggle(String token) {
-    final next = {...state};
-    if (!next.remove(token)) next.add(token);
-    state = next;
-    ref.read(sharedPreferencesProvider).setStringList(_key, next.toList());
-  }
-
-  bool contains(String token) => state.contains(token);
-}
-
-String filterFavoriteToken(NoteFilter filter) => 'filter:${filter.name}';
-String tagFavoriteToken(String tag) => 'tag:$tag';
-String sortFavoriteToken(NoteSort sort) => 'sort:${sort.name}';
-
 /// Seçili sıralama ölçütü (kalıcı). Sabitlenmiş notlar dashboard'da yine ayrı
 /// bir bölümde toplanır; sıralama her bölümün kendi içinde uygulanır.
 final noteSortProvider = NotifierProvider<NoteSortNotifier, NoteSort>(

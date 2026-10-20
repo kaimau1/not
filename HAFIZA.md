@@ -178,6 +178,13 @@ eskisini arşive taşıma.
   `KeyboardClipWindow` ile daralır; evre `KeyboardPhaseListener`dan (kare
   kare değil, açılış/kapanışta). Gövde KeyboardSnap ile oturunca tek seferde
   kısalır — boyu ona bağlanan parça zıplar.
+  Sabit görsel/video/sunum pencerede KIRPILMAZ, ölçeklenir (`shrink:` —
+  Transform, yeniden ölçüm yok; metin/PDF/ses kırpılır). TUZAK
+  (2026-10-20 "çubuk önce yukarı gidip sonra iniyor"): klavye kapalıyken
+  alt çubuğun altında gezinme payı var, oturunca yok → gövde klavye eksi
+  gezinme payı kadar kısalır; açılış tahmini de payı düşmeli.
+  Sabit video bölmesi genişlikteki doğal boyu (16:9 ya da ölçüsü) AŞMAZ;
+  YouTube kapağı (`hqdefault` 4:3 şeritli) `contain`de 16:9 `cover` kırpılır.
 - Not açılışı: editör önbellekteki hafif notla açılır; akıştan gelen ilk
   değişiklik çizimi açılıştan ~450 ms sonraya ertelenir
   (`_setStateAfterOpening`; `ModalRoute.of` KULLANMA — editörü rota
@@ -247,7 +254,17 @@ eskisini arşive taşıma.
   "Dosya ekle". Seçilen dosya akışa `DocPicker.preselect` ile verilir.
 - Süz düğmesi arama kutusunun İÇİNDE (AI anahtarının sağı): süzgeç yokken
   simge, varken adı ("Görevler +1") + ×. Görünüm (ızgara/liste) Süz
-  levhasında; altındaki satır yalnız yıldızlı kısayollar varsa çizilir.
+  levhasında. **Favori (yıldızlı) süzgeç kısayolları KALKTI** (2026-10-20,
+  kullanıcı: "Yıldızlı satır kaplıyor, Süz'ün içine koy"): ana ekranda ayrı
+  satır yok, Süz'de yıldız düğmesi yok; altındaki şerit yalnız arama
+  yazılıyken "ek içeriğinde de ara" çipi.
+- Menü ızgaraları (2026-10-20): `ActionMenu` grupları 3 sütun yuvarlak
+  simge + ad (hızlı satır renkli, gruplar nötr); editörün Ekle levhası
+  telefonda 4 sütun, zeminsiz hücre, kaydırmasız sığacak boyda.
+- Dinleme alanları ORTAK görünüm (`listening_visuals.dart`, 2026-10-20):
+  rozet + başlık + kip etiketi + dalga + süre. Sesli yakalama levhası
+  `ListeningMode.ai` (yıldızlı, primary→tertiary geçiş), editörün canlı
+  diktesi `_DictationPanel` / `ListeningMode.dictation` (düz mikrofon).
 - Ayar alanları ve iç bölümler `ExpandReveal` ile açılır (animasyon içerik
   kurulduktan SONRAKİ karede başlar — ağır alanın ilk karesi
   `AnimatedSize`/`ExpansionTile` animasyonunu yutuyordu).

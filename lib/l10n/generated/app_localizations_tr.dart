@@ -5273,4 +5273,13 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get attachAnyFileInfo =>
       'Her türden dosya: görsel sayfaya, PDF ve sunum belge olarak, ses ve video ek olarak girer';
+
+  @override
+  String get listeningModeAi => 'Yapay zekâ';
+
+  @override
+  String get listeningModeDictation => 'Doğrudan yazım';
+
+  @override
+  String get dictationPanelHint => 'Konuştukça imlecin olduğu yere yazılır';
 }

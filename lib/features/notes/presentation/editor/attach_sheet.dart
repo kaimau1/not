@@ -47,7 +47,7 @@ Future<String?> showAttachSheet(
     borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
   ),
   constraints: BoxConstraints(
-    maxHeight: MediaQuery.sizeOf(context).height * 0.8,
+    maxHeight: MediaQuery.sizeOf(context).height * 0.92,
   ),
   builder: (sheetContext) => _AttachSheet(
     pageNote: pageNote,
@@ -281,29 +281,34 @@ class _AttachSheet extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
-        14,
+        12,
         0,
-        14,
-        16 + MediaQuery.viewPaddingOf(context).bottom,
+        12,
+        10 + MediaQuery.viewPaddingOf(context).bottom,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Başlık satırı ALÇAK (kompakt levha, 2026-10-20): kapatma yazılı
+          // düğme değil simge — levha kaydırmadan sığsın.
           Row(
             children: [
+              const SizedBox(width: 2),
               Expanded(
                 child: Text(
                   l10n.addAttachment,
                   style: const TextStyle(
-                    fontSize: 17,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              TextButton(
+              IconButton(
+                tooltip: l10n.close,
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.close, size: 20),
                 onPressed: () => Navigator.pop(context),
-                child: Text(l10n.close),
               ),
             ],
           ),
@@ -332,7 +337,7 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(2, 12, 2, 8),
+    padding: const EdgeInsets.fromLTRB(2, 6, 2, 4),
     child: Text(
       text,
       maxLines: 1,
@@ -347,7 +352,7 @@ class _SectionLabel extends StatelessWidget {
   );
 }
 
-/// Simge ızgarası: sütun sayısı genişlikten (telefonda 3, genişte 4–6).
+/// Simge ızgarası: sütun sayısı genişlikten (telefonda 4, genişte 5–8).
 /// Hücre: yuvarlak simge + en çok iki satırlık ad. Açıklama ([_Entry]'nin
 /// dördüncü alanı) ipucuna gider; yalnız "Kopyalanan eki yapıştır"ın dosya
 /// adı hücrede de yazılır — neyin yapıştırılacağı görünmeden basılmaz.
@@ -361,8 +366,11 @@ class _Grid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const spacing = 6.0;
-        final columns = (constraints.maxWidth / 112).floor().clamp(3, 6);
+        const spacing = 4.0;
+        // KOMPAKT (kullanıcı isteği 2026-10-20: "ekle menüsü kompaktlaşsın,
+        // kaydırmaya gerek olmasın"): telefonda DÖRT sütun (eskiden üç,
+        // levha on sekiz seçenekle ekranı aşıyordu).
+        final columns = (constraints.maxWidth / 80).floor().clamp(4, 8);
         final cellWidth =
             (constraints.maxWidth - spacing * (columns - 1)) / columns;
         return Wrap(
@@ -409,41 +417,38 @@ class _Cell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showInfo = id == 'paste-attachment' && info != null;
+    // Zeminsiz hücre: satırdaki adlar bir ya da iki satır olabildiğinden
+    // hücre boyları farklı; kutu çizilseydi aynı satırda eşitsiz dururdu.
     final cell = Material(
-      color: scheme.surfaceContainerLow,
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(14),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => Navigator.pop(context, id),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(6, 10, 6, 8),
+          padding: const EdgeInsets.fromLTRB(3, 7, 3, 6),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 34,
+                height: 34,
                 decoration: BoxDecoration(
                   color: scheme.primaryContainer.withValues(alpha: 0.7),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 21, color: scheme.onPrimaryContainer),
+                child: Icon(icon, size: 19, color: scheme.onPrimaryContainer),
               ),
-              const SizedBox(height: 6),
-              SizedBox(
-                height: 30,
-                child: Center(
-                  child: Text(
-                    label,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      height: 1.2,
-                    ),
-                  ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  height: 1.15,
                 ),
               ),
               if (showInfo)

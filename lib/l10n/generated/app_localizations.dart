@@ -9487,6 +9487,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Her türden dosya: görsel sayfaya, PDF ve sunum belge olarak, ses ve video ek olarak girer'**
   String get attachAnyFileInfo;
+
+  /// No description provided for @listeningModeAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ'**
+  String get listeningModeAi;
+
+  /// No description provided for @listeningModeDictation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrudan yazım'**
+  String get listeningModeDictation;
+
+  /// No description provided for @dictationPanelHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuştukça imlecin olduğu yere yazılır'**
+  String get dictationPanelHint;
 }
 
 class _AppLocalizationsDelegate

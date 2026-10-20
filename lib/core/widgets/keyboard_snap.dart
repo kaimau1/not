@@ -286,6 +286,12 @@ class _KeyboardPhaseListenerState extends State<KeyboardPhaseListener> {
 /// Çocuk hiçbir karede yeniden ÖLÇÜLMEZ (kısıtı sabit): görsel/video/belge
 /// küçülmez, zıplamaz — altındaki parça üstüne kayar gibi örter. Kırpılan
 /// kısım dokunuş da almaz.
+///
+/// [shrink] açıkken kırpmak yerine çocuk pencereye SIĞACAK kadar ölçeklenir
+/// (kullanıcı isteği 2026-10-20: "video klavye açılınca yumuşakça küçülsün,
+/// kapanınca eski hâline dönsün"). Ölçek yalnız boyama katmanında
+/// (`Transform`) — çocuk yine yeniden ölçülmez; yanlarda kalan pay
+/// [background] ile boyanır.
 class KeyboardClipWindow extends StatelessWidget {
   const KeyboardClipWindow({
     super.key,
@@ -293,10 +299,14 @@ class KeyboardClipWindow extends StatelessWidget {
     required this.visible,
     required this.child,
     this.animate = true,
+    this.shrink = false,
+    this.background,
   });
 
   final double full;
   final double visible;
+  final bool shrink;
+  final Color? background;
 
   /// false iken (ör. kullanıcı ayracı sürüklerken) pencere parmağı anında
   /// izler.
@@ -311,17 +321,32 @@ class KeyboardClipWindow extends StatelessWidget {
       duration: animate ? const Duration(milliseconds: 260) : Duration.zero,
       curve: Curves.easeOutCubic,
       child: child,
-      builder: (context, shown, child) => SizedBox(
-        height: shown,
-        child: ClipRect(
-          child: OverflowBox(
-            alignment: Alignment.topCenter,
-            minHeight: full,
-            maxHeight: full,
-            child: child,
+      builder: (context, shown, child) {
+        final scale = full > 0 ? (shown / full).clamp(0.0, 1.0) : 1.0;
+        Widget window = SizedBox(
+          height: shown,
+          child: ClipRect(
+            child: OverflowBox(
+              alignment: Alignment.topCenter,
+              minHeight: full,
+              maxHeight: full,
+              // Ağaç yapısı ölçekten bağımsız (oynatıcının durumu korunsun):
+              // shrink açıkken Transform her karede var, 1'de etkisiz.
+              child: shrink
+                  ? Transform.scale(
+                      scale: scale,
+                      alignment: Alignment.topCenter,
+                      child: child,
+                    )
+                  : child,
+            ),
           ),
-        ),
-      ),
+        );
+        if (background case final color?) {
+          window = ColoredBox(color: color, child: window);
+        }
+        return window;
+      },
     );
   }
 }

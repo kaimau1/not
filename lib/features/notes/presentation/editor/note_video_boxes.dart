@@ -105,6 +105,26 @@ class _WebVideoBoxState extends State<_WebVideoBox> {
       children: [
         if (id == null)
           placeholder
+        else if (widget.fit == BoxFit.contain)
+          // KAPAK 16:9 KIRPILIR (kullanıcı bulgusu 2026-10-20: "video sağda
+          // solda boşluk bırakıyor"): `hqdefault` 4:3 ve üstte/altta kara
+          // şerit taşıyor; `contain` ile 16:9 kutuda şeritler kalıyor,
+          // görüntü daralıp yanlarda boşluk açılıyordu. 16:9 pencerede
+          // `cover` şeritleri tam keser.
+          ColoredBox(
+            color: Colors.black,
+            child: Center(
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: CachedNetworkImage(
+                  imageUrl: youTubeThumbnailUrl(id),
+                  fit: BoxFit.cover,
+                  placeholder: (_, _) => placeholder,
+                  errorWidget: (_, _, _) => placeholder,
+                ),
+              ),
+            ),
+          )
         else
           CachedNetworkImage(
             imageUrl: youTubeThumbnailUrl(id),

@@ -91,6 +91,7 @@ import '../pdf_export_screen.dart';
 import '../qr_scan_screen.dart';
 import '../scan_review_screen.dart';
 import '../share_sheet.dart';
+import '../listening_visuals.dart';
 import '../voice_capture_sheet.dart';
 import 'ai_result_sheet.dart';
 import 'attach_sheet.dart';
@@ -6943,6 +6944,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   bool get _dictating => _dictation != null;
 
+  /// Diktenin başladığı an (şeritteki süre sayacı).
+  DateTime _dictationStart = DateTime.now();
+
   /// Sade mikrofon: dikteyi başlatır, açıksa bitirir.
   Future<void> _toggleDictation() async {
     if (_dictating) {
@@ -7000,7 +7004,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (mounted) _showSnack(message);
       },
     );
-    setState(() => _dictation = session);
+    setState(() {
+      _dictation = session;
+      _dictationStart = DateTime.now();
+    });
     session.start();
   }
 
@@ -8366,10 +8373,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 // gösterge (aynı gerekçe — açık kalmış mikrofon fark
                 // edilmiyordu). Dokunmak dikteyi bitirir.
                 if (_dictating)
-                  _AiBanner(
-                    label: l10n.dictationListening,
-                    icon: Icons.mic,
-                    onTap: () => unawaited(_stopDictation()),
+                  _DictationPanel(
+                    start: _dictationStart,
+                    onStop: () => unawaited(_stopDictation()),
                   ),
                 // Dosya işleri (kopyalama/yapıştırma) için aynı şerit,
                 // ayrı simge: sessiz bekleme bitti (bkz. [_busyTaskN]).

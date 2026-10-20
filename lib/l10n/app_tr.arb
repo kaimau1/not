@@ -2556,5 +2556,8 @@
     }
   },
   "quickAddSectionMore": "Diğer",
-  "attachAnyFileInfo": "Her türden dosya: görsel sayfaya, PDF ve sunum belge olarak, ses ve video ek olarak girer"
+  "attachAnyFileInfo": "Her türden dosya: görsel sayfaya, PDF ve sunum belge olarak, ses ve video ek olarak girer",
+  "listeningModeAi": "Yapay zekâ",
+  "listeningModeDictation": "Doğrudan yazım",
+  "dictationPanelHint": "Konuştukça imlecin olduğu yere yazılır"
 }

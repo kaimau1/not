@@ -255,7 +255,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   /// ölçülmez; yer gerekiyorsa yalnız GÖRÜNÜR PENCERESİ, klavyeyle aynı anda
   /// ve yumuşakça daralır — alttaki çubuk ve not üstüne kayar gibi örter.
   /// Klavye kapanırken pencere aynı yoldan geri açılır.
-  double _visibleHeight({
+  double _visibleHeight(
+    BuildContext context, {
     required double layout,
     required double available,
     required double stable,
@@ -263,10 +264,28 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     if (!_keyboard.open) return layout;
     // Gövde henüz kısalmadıysa (klavye açılıyor) kalacak yer tahminle
     // hesaplanır; kısaldıysa gerçek ölçü zaten elde.
+    //
+    // ZIPLAMA (kullanıcı bulgusu 2026-10-20: "klavye açılınca çubuk önce
+    // yukarı gidiyor, sonra hafif alta iniyor"): klavye kapalıyken alt
+    // çubuğun altında gezinme çubuğu payı var, oturunca yok (bkz.
+    // KeyboardSlide) — gövde klavyenin TAMAMI kadar değil, gezinme payı
+    // EKSİK kısalıyor. Tahmin de o kadar eksik düşülmeli; yoksa pencere önce
+    // pay kadar fazla daralıp oturunca geri açılıyordu.
     final settled = stable - available > 40;
-    final room = settled ? available : available - _keyboard.estimate;
+    final nav = MediaQueryData.fromView(View.of(context)).viewPadding.bottom;
+    final room = settled
+        ? available
+        : available - math.max(0.0, _keyboard.estimate - nav);
     final fit = room - kPinnedBarHeight - kPinnedNoteMinHeight;
     return math.min(layout, math.max(kPinnedVisibleFloor, fit));
+  }
+
+  /// Videonun yükseklik/genişlik oranı; bilinmiyorsa (YouTube, ölçüsü
+  /// henüz gelmemiş dosya) 16:9.
+  static double _videoRatio(Attachment media) {
+    final w = (media.width ?? 0).toDouble();
+    final h = (media.height ?? 0).toDouble();
+    return w > 0 && h > 0 ? h / w : 9 / 16;
   }
 
   bool get _unpinArmed =>
@@ -296,14 +315,22 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         );
         final layoutMax = pinnedMaxHeight(available: stable, stable: stable);
         final live = _live;
+        // VİDEO EKRANA TAM OTURUR (kullanıcı isteği 2026-10-20: "16:9
+        // alanında sağda solda boşluk kalmayacak şekilde"): bölme videonun
+        // genişlikteki doğal boyunu AŞMAZ — saklı yükseklik ondan büyükse
+        // (eski sabitleme, başka ekran) yanlarda kara pay kalıyordu.
+        final natural = isVideo
+            ? constraints.maxWidth * _videoRatio(widget.media)
+            : double.infinity;
         // Sürüklerken bölme sınırın altına da iner (geri bırakma hissi);
         // bırakınca sınıra oturur ya da sayfaya döner.
         final height = live != null
             ? live.clamp(0.0, max < kPinnedMinHeight ? kPinnedMinHeight : max)
-            : _clamp(widget.media.pinHeight, layoutMax);
+            : _clamp(math.min(widget.media.pinHeight, natural), layoutMax);
         final visible = live != null
             ? height
             : _visibleHeight(
+                context,
                 layout: height,
                 available: constraints.maxHeight,
                 stable: stable,
@@ -314,6 +341,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
               full: height,
               visible: visible,
               animate: live == null,
+              // Görsel/video/sunum klavye açılınca KIRPILMAZ, küçülür
+              // (kullanıcı isteği 2026-10-20); metin, belge ve ses kartı
+              // okunur kalsın diye kırpılır.
+              shrink: !isText && !isPdf && !isAudio,
+              background: isVideo ? Colors.black : scheme.surfaceContainerHigh,
               // NOT AÇILIŞI HAFİF (kullanıcı bulgusu 2026-10-20: "notu
               // açarken ufak donma"): oynatıcı/belge görüntüleyicisi rota
               // geçişi bitince kurulur (bkz. AfterRouteTransition).
@@ -467,7 +499,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                 if (raw < kPinnedUnpinHeight) {
                   widget.onUnpin();
                 } else {
-                  widget.onHeightChanged(_clamp(raw, max));
+                  widget.onHeightChanged(_clamp(math.min(raw, natural), max));
                 }
               },
               onVerticalDragCancel: () => setState(() => _live = null),

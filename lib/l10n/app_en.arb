@@ -1925,5 +1925,8 @@
     }
   },
   "quickAddSectionMore": "More",
-  "attachAnyFileInfo": "Any file: images go on the page, PDFs and slides as documents, audio and video as attachments"
+  "attachAnyFileInfo": "Any file: images go on the page, PDFs and slides as documents, audio and video as attachments",
+  "listeningModeAi": "AI",
+  "listeningModeDictation": "Live typing",
+  "dictationPanelHint": "Text appears at the cursor as you speak"
 }

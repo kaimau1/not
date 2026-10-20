@@ -93,7 +93,7 @@ Future<String?> showActionMenuSheet(BuildContext context, ActionMenu menu) =>
 /// aynı simgeyi taşıyordu. Şimdi üç katman:
 ///  1. **Hızlı satır** — en sık 4–5 işlem, yuvarlak simge + kısa ad;
 ///  2. **Başlıklı gruplar** — kalanlar anlamına göre (düzenle, kopyala,
-///     araçlar, koruma), iki sütunlu ALÇAK satırlarda;
+///     araçlar, koruma), üç sütunlu küçük simge ızgarasında (2026-10-20);
 ///  3. **Sil** — ayrı, uyarı renginde, tam genişlikte.
 class ActionMenu extends StatelessWidget {
   const ActionMenu({
@@ -143,7 +143,7 @@ class ActionMenu extends StatelessWidget {
           for (final section in sections)
             if (section.actions.isNotEmpty) ...[
               Padding(
-                padding: const EdgeInsets.fromLTRB(4, 14, 4, 6),
+                padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
                 child: Text(
                   section.title,
                   maxLines: 1,
@@ -159,7 +159,7 @@ class ActionMenu extends StatelessWidget {
               _TileGrid(actions: section.actions, scheme: scheme),
             ],
           if (danger != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             _Tile(action: danger!, scheme: scheme, danger: true),
           ],
         ],
@@ -237,6 +237,10 @@ class _QuickButton extends StatelessWidget {
   }
 }
 
+/// Grup ızgarası: ÜÇ SÜTUN, hızlı satırdaki gibi yuvarlak simge + altında
+/// kısa ad (kullanıcı isteği 2026-10-20: "not menüsü üstteki 4'lü gibi
+/// simge olsun, 3 sütun olsun, daha düzgün sığsın"). Eskiden iki sütunlu,
+/// yazısı yanda alçak satırlardı; levha yine ekranı dolduruyordu.
 class _TileGrid extends StatelessWidget {
   const _TileGrid({required this.actions, required this.scheme});
 
@@ -247,8 +251,10 @@ class _TileGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const spacing = 6.0;
-        final cell = (constraints.maxWidth - spacing) / 2;
+        const spacing = 4.0;
+        // Telefonda 3, geniş ekranda (tablet, web) 4–6 sütun.
+        final columns = (constraints.maxWidth / 120).floor().clamp(3, 6);
+        final cell = (constraints.maxWidth - spacing * (columns - 1)) / columns;
         return Wrap(
           spacing: spacing,
           runSpacing: spacing,
@@ -256,11 +262,79 @@ class _TileGrid extends StatelessWidget {
             for (final a in actions)
               SizedBox(
                 width: cell,
-                child: _Tile(action: a, scheme: scheme),
+                child: _GridTile(action: a, scheme: scheme),
               ),
           ],
         );
       },
+    );
+  }
+}
+
+/// Grup ızgarasının hücresi: hızlı satırın düğmesinden küçük ve NÖTR renkli
+/// (sık kullanılan dört işlem renkleriyle öne çıksın).
+class _GridTile extends StatelessWidget {
+  const _GridTile({required this.action, required this.scheme});
+
+  final MenuAction action;
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    final on = action.selected;
+    return InkWell(
+      key: ValueKey('menu-tile-${action.id}'),
+      borderRadius: BorderRadius.circular(14),
+      onTap: () => Navigator.pop(context, action.id),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(2, 6, 2, 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: on
+                        ? scheme.primary
+                        : scheme.surfaceContainerHighest,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    action.icon,
+                    size: 20,
+                    color: on ? scheme.onPrimary : scheme.onSurface,
+                  ),
+                ),
+                if (action.count > 0)
+                  Positioned(
+                    right: -10,
+                    top: -4,
+                    child: _CountPill(
+                      count: action.count,
+                      highlight: action.highlight,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              action.label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11.5,
+                height: 1.2,
+                color: scheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -289,7 +363,7 @@ class _Tile extends StatelessWidget {
       child: InkWell(
         onTap: () => Navigator.pop(context, action.id),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 44),
+          constraints: const BoxConstraints(minHeight: 40),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(

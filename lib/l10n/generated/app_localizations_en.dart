@@ -5288,4 +5288,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get attachAnyFileInfo =>
       'Any file: images go on the page, PDFs and slides as documents, audio and video as attachments';
+
+  @override
+  String get listeningModeAi => 'AI';
+
+  @override
+  String get listeningModeDictation => 'Live typing';
+
+  @override
+  String get dictationPanelHint => 'Text appears at the cursor as you speak';
 }
