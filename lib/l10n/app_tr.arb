@@ -2460,5 +2460,8 @@
   "bubbleSemanticsEmpty": "Boş not balonu",
   "guestReminderTitle": "Notların yedeklenmiyor",
   "guestReminderBody": "Hesapsız kullanıyorsun: notların yalnız bu cihazda. Uygulama silinir ya da telefon değişirse geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.",
-  "guestReminderLater": "Sonra"
+  "guestReminderLater": "Sonra",
+  "driveWebConnectTitle": "Bu ek Google Drive’ında",
+  "driveWebConnectBody": "Telefonundan eklenen dosyalar Drive’da saklanıyor. Tarayıcıda görmek için Google hesabınla Drive’a erişim izni ver (bu oturum boyunca geçerli).",
+  "driveWebConnectButton": "Drive’a bağlan"
 }

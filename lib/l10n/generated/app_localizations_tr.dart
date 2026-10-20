@@ -5065,4 +5065,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get guestReminderLater => 'Sonra';
+
+  @override
+  String get driveWebConnectTitle => 'Bu ek Google Drive’ında';
+
+  @override
+  String get driveWebConnectBody =>
+      'Telefonundan eklenen dosyalar Drive’da saklanıyor. Tarayıcıda görmek için Google hesabınla Drive’a erişim izni ver (bu oturum boyunca geçerli).';
+
+  @override
+  String get driveWebConnectButton => 'Drive’a bağlan';
 }

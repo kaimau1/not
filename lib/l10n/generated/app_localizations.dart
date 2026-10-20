@@ -9121,6 +9121,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sonra'**
   String get guestReminderLater;
+
+  /// No description provided for @driveWebConnectTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ek Google Drive’ında'**
+  String get driveWebConnectTitle;
+
+  /// No description provided for @driveWebConnectBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefonundan eklenen dosyalar Drive’da saklanıyor. Tarayıcıda görmek için Google hesabınla Drive’a erişim izni ver (bu oturum boyunca geçerli).'**
+  String get driveWebConnectBody;
+
+  /// No description provided for @driveWebConnectButton.
+  ///
+  /// In tr, this message translates to:
+  /// **'Drive’a bağlan'**
+  String get driveWebConnectButton;
 }
 
 class _AppLocalizationsDelegate

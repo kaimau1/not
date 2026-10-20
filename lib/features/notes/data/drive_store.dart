@@ -181,7 +181,59 @@ class AndroidDriveAuth implements DriveAuth {
   Future<void> disconnect() async {}
 }
 
-/// Drive'ın olmadığı yer (web, testler).
+/// **WEB: DRIVE'DAKİ EKLERİ OKUMA** (F4.4, 2026-10-19). Windows kalkınca
+/// bilgisayardaki tek yol web oldu; Android'in Drive'a yüklediği ekler
+/// tarayıcıda hiç açılmıyordu (`NoDriveAuth`). Firebase'in Google açılır
+/// penceresi Drive kapsamıyla YENİDEN doğrulanır ve OAuth erişim jetonu
+/// alınır — aynı Cloud projesinin istemcisi olduğu için `appDataFolder`
+/// Android'inkiyle aynı klasördür.
+///
+/// Jeton yalnız BELLEKTE (~1 saat geçerli, yenileme anahtarı yok): sayfa
+/// yenilenince ya da süre dolunca ek açılırken yeniden "Bağla" istenir.
+/// Web Drive'a YAZMAZ — web'in kendi ekleri Storage'a gider (bkz.
+/// [attachmentSyncModeFor]); burası yalnız okuma kapısı.
+class WebDriveAuth implements DriveAuth {
+  WebDriveAuth({FirebaseAuth? auth}) : _auth = auth ?? FirebaseAuth.instance;
+
+  final FirebaseAuth _auth;
+  String? _token;
+  DateTime? _expiry;
+
+  @override
+  Future<String?> accessToken() async {
+    final expiry = _expiry;
+    if (_token == null || expiry == null || DateTime.now().isAfter(expiry)) {
+      return null;
+    }
+    return _token;
+  }
+
+  @override
+  Future<bool> connect() async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+    final provider = GoogleAuthProvider()..addScope(kDriveScope);
+    final email = user.email;
+    if (email != null) provider.setCustomParameters({'login_hint': email});
+    final result = await user.reauthenticateWithPopup(provider);
+    final credential = result.credential;
+    final token = credential is OAuthCredential ? credential.accessToken : null;
+    if (token == null) return false;
+    _token = token;
+    _expiry = DateTime.now().add(const Duration(minutes: 55));
+    return true;
+  }
+
+  @override
+  Future<void> invalidate(String token) async {
+    if (token == _token) _token = null;
+  }
+
+  @override
+  Future<void> disconnect() async => _token = null;
+}
+
+/// Drive'ın olmadığı yer (misafir, testler).
 class NoDriveAuth implements DriveAuth {
   const NoDriveAuth();
 
@@ -199,7 +251,7 @@ class NoDriveAuth implements DriveAuth {
 }
 
 final driveAuthProvider = Provider<DriveAuth>((ref) {
-  if (kIsWeb) return const NoDriveAuth();
+  if (kIsWeb) return WebDriveAuth();
   if (Platform.isAndroid) return AndroidDriveAuth();
   return const NoDriveAuth();
 });
@@ -207,11 +259,18 @@ final driveAuthProvider = Provider<DriveAuth>((ref) {
 /// Drive deposu — yalnız Google hesabında VE Drive bağlıyken; aksi hâlde
 /// null (kuyruk ekleri cihazda tutar).
 final driveStoreProvider = Provider<DriveStore?>((ref) {
-  if (ref.watch(attachmentSyncModeProvider) != AttachmentSyncMode.drive) {
+  // Web'de Google hesabı Drive'daki ekleri OKUYABİLİR (bkz. [WebDriveAuth]);
+  // yükleme yine Storage'a (kip `storage` kalır).
+  final webReader =
+      kIsWeb && isGoogleUser(ref.watch(authStateProvider).value);
+  if (!webReader &&
+      ref.watch(attachmentSyncModeProvider) != AttachmentSyncMode.drive) {
     driveFileDeleter = null;
     return null;
   }
-  if (!ref.watch(driveConnectedProvider)) {
+  // Web'de bağlantı kalıcı değil (jeton bellekte): depo hep kurulur,
+  // jetonsuzken okuma "Bağla" ister (bkz. drive_ui.dart).
+  if (!webReader && !ref.watch(driveConnectedProvider)) {
     driveFileDeleter = null;
     return null;
   }

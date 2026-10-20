@@ -1987,6 +1987,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (!localFileExists(attachment.localPath) &&
         attachment.isInDrive &&
         !attachment.isUploaded) {
+      if (kIsWeb) {
+        // Web: Drive'dan belleğe (F4.4) — `blob:` adresiyle yeniden açılır.
+        resolveWebDriveAttachment(context, ref, attachment).then((resolved) {
+          if (resolved != null && mounted) {
+            _openAttachmentTag(resolved, editing: editing);
+          }
+        });
+        return;
+      }
       fetchAttachmentNow(context, ref, attachment).then((ok) {
         if (ok && mounted) _openAttachmentTag(attachment, editing: editing);
       });

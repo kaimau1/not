@@ -5080,4 +5080,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guestReminderLater => 'Later';
+
+  @override
+  String get driveWebConnectTitle => 'This attachment is in your Google Drive';
+
+  @override
+  String get driveWebConnectBody =>
+      'Files added on your phone are stored in Drive. To view them in the browser, allow access to Drive with your Google account (valid for this session).';
+
+  @override
+  String get driveWebConnectButton => 'Connect Drive';
 }

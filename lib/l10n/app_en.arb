@@ -1857,5 +1857,8 @@
   "bubbleSemanticsEmpty": "Empty note bubble",
   "guestReminderTitle": "Your notes are not backed up",
   "guestReminderBody": "You are using the app without an account: your notes live only on this device. If the app is removed or you change phones they cannot be recovered. Link your Google account — your notes stay as they are.",
-  "guestReminderLater": "Later"
+  "guestReminderLater": "Later",
+  "driveWebConnectTitle": "This attachment is in your Google Drive",
+  "driveWebConnectBody": "Files added on your phone are stored in Drive. To view them in the browser, allow access to Drive with your Google account (valid for this session).",
+  "driveWebConnectButton": "Connect Drive"
 }

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
@@ -448,7 +449,9 @@ class _AttachmentTile extends ConsumerWidget {
       attachment.kind == AttachmentKind.video ||
       attachment.kind == AttachmentKind.image;
 
-  void _open(BuildContext context, WidgetRef ref) {
+  void _open(BuildContext context, WidgetRef ref, [Attachment? resolved]) {
+    // Web'de Drive'dan indirilmiş kopya (bkz. resolveWebDriveAttachment).
+    final attachment = resolved ?? this.attachment;
     // Ses eki için satır içi görüntüleyici yok (kompakt oynatıcıdan çalınır).
     if (attachment.kind == AttachmentKind.audio) return;
     // Metin eki dosyasız: okuma ekranı içeriği kayıttan alır.
@@ -466,6 +469,12 @@ class _AttachmentTile extends ConsumerWidget {
     }
     // Drive'daki ek bu cihaza inmediyse önce indirilir (bkz. drive_ui.dart).
     if (!_hasLocal && attachment.isInDrive && !attachment.isUploaded) {
+      if (kIsWeb) {
+        resolveWebDriveAttachment(context, ref, attachment).then((a) {
+          if (a != null && context.mounted) _open(context, ref, a);
+        });
+        return;
+      }
       fetchAttachmentNow(context, ref, attachment).then((ok) {
         if (ok && context.mounted) _open(context, ref);
       });

@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/local_file.dart';
+import '../../../core/utils/web_blob.dart';
 import '../data/attachment_repository.dart';
 import '../data/drive_store.dart';
 import '../domain/attachment.dart';
@@ -94,6 +95,77 @@ Future<bool> fetchAttachmentNow(
   messenger.hideCurrentSnackBar();
   ref.read(localFilesRevisionProvider.notifier).bump();
   return localFileExists(attachment.localPath);
+}
+
+/// Web'de Drive'dan indirilmiş eklerin `blob:` adresleri (sekme boyunca).
+final _webDriveUrls = <String, String>{};
+
+/// **WEB: DRIVE'DAKİ EKİ AÇ** (F4.4). Tarayıcıda yerel dosya yok: ek Drive'dan
+/// belleğe indirilir ve `blob:` adresiyle (Storage'daki bir ekmiş gibi
+/// `downloadUrl`'de) döner; görüntüleyiciler değişmeden açar. Jeton yoksa
+/// (sayfa yeni açıldı / süre doldu) önce "Drive'a bağlan" sorulur — Google
+/// penceresi bir DOKUNUŞLA açılmalı, o yüzden iletişim kutusunun düğmesinden.
+Future<Attachment?> resolveWebDriveAttachment(
+  BuildContext context,
+  WidgetRef ref,
+  Attachment attachment,
+) async {
+  final cached = _webDriveUrls[attachment.driveId];
+  if (cached != null) return attachment.copyWith(downloadUrl: cached);
+  final l10n = context.l10n;
+  final messenger = ScaffoldMessenger.of(context);
+  void say(String text) => messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(text)));
+  final store = ref.read(driveStoreProvider);
+  if (store == null) {
+    say(l10n.driveNeededForFile);
+    return null;
+  }
+  final auth = ref.read(driveAuthProvider);
+  if (await auth.accessToken() == null) {
+    if (!context.mounted) return null;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.add_to_drive_outlined),
+        title: Text(l10n.driveWebConnectTitle),
+        content: Text(l10n.driveWebConnectBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () async {
+              var connected = false;
+              try {
+                connected = await auth.connect();
+              } catch (e) {
+                debugPrint('Drive (web) bağlanamadı: $e');
+              }
+              if (dialogContext.mounted) {
+                Navigator.pop(dialogContext, connected);
+              }
+            },
+            child: Text(l10n.driveWebConnectButton),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return null;
+  }
+  say(l10n.driveDownloading);
+  try {
+    final bytes = await store.downloadBytes(attachment.driveId);
+    final url = createBlobUrl(bytes, attachment.mimeType);
+    _webDriveUrls[attachment.driveId] = url;
+    messenger.hideCurrentSnackBar();
+    return attachment.copyWith(downloadUrl: url);
+  } catch (e) {
+    say(l10n.attachmentFailed('$e'));
+    return null;
+  }
 }
 
 /// Ayarlar → Senkron'un başındaki EK SENKRONU satırı: kip, bağlantı durumu,

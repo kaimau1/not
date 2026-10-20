@@ -1159,7 +1159,9 @@ class Attachment {
     'fileName': fileName,
     'mimeType': mimeType,
     'storagePath': storagePath,
-    'downloadUrl': downloadUrl,
+    // `blob:` adresi yalnız bu tarayıcı sekmesinde geçerli (web'de Drive'dan
+    // indirilen ek — bkz. resolveWebDriveAttachment): buluta yazılmaz.
+    'downloadUrl': downloadUrl.startsWith('blob:') ? '' : downloadUrl,
     // Yalnız doluysa: Drive'sız eklerin şeması büyümez.
     if (driveId.isNotEmpty) 'driveId': driveId,
     // localPath BİLEREK YAZILMIYOR: mutlak cihaz yolu (Windows'ta kullanıcı
