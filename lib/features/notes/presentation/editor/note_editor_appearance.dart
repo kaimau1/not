@@ -138,12 +138,69 @@ extension _EditorAppearance on _NoteEditorScreenState {
       isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
         child: SingleChildScrollView(
-          child: NotebookPaperPicker(
-            initial: note.archivePaper,
-            onChanged: (picked) {
-              if (!mounted) return;
-              _mutate((n) => n.copyWith(archivePaper: picked), immediate: true);
-            },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              NotebookPaperPicker(
+                initial: note.archivePaper,
+                onChanged: (picked) {
+                  if (!mounted) return;
+                  _mutate(
+                    (n) => n.copyWith(archivePaper: picked),
+                    immediate: true,
+                  );
+                },
+              ),
+              // SATIR ARALIĞI (geliştirme raporu D1): dokunuş anında
+              // uygulanır, levha açık kalır.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                child: StatefulBuilder(
+                  builder: (context, setSheetState) {
+                    final l10n = context.l10n;
+                    final current = _note?.lineSpacing ?? 1;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.lineSpacing,
+                          style: Theme.of(context).textTheme.labelLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        SegmentedButton<double>(
+                          key: const ValueKey('line-spacing'),
+                          showSelectedIcon: false,
+                          segments: [
+                            ButtonSegment(
+                              value: 1,
+                              label: Text(l10n.lineSpacingNormal),
+                            ),
+                            ButtonSegment(
+                              value: Note.lineSpacingWide,
+                              label: Text(l10n.lineSpacingWide),
+                            ),
+                            ButtonSegment(
+                              value: Note.lineSpacingWider,
+                              label: Text(l10n.lineSpacingWider),
+                            ),
+                          ],
+                          selected: {current},
+                          onSelectionChanged: (v) {
+                            if (!mounted) return;
+                            _mutate(
+                              (n) => n.copyWith(lineSpacing: v.first),
+                              immediate: true,
+                            );
+                            setSheetState(() {});
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),

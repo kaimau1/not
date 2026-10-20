@@ -19,6 +19,7 @@ import '../../../core/error_log.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/note.dart';
+import '../domain/trash_analysis.dart' show trashReminderPlan;
 import 'notes_repository.dart';
 
 const _monthsTr = [
@@ -102,6 +103,15 @@ void handleNotificationResponse(Ref ref, NotificationResponse response) {
   if (payload == 'briefing') {
     try {
       ref.read(routerProvider).push('/briefing');
+    } catch (e) {
+      ErrorLog.record('notification-tap', e);
+    }
+    return;
+  }
+  // Çöp hatırlatması (D3): çöp kutusu.
+  if (payload == 'trash') {
+    try {
+      ref.read(routerProvider).push('/trash');
     } catch (e) {
       ErrorLog.record('notification-tap', e);
     }
@@ -233,6 +243,51 @@ class ReminderService {
 
   static const _briefingNotificationId = 999001;
 
+  /// Çöp hatırlatması (D3) — yükü `note:` ile BAŞLAMAZ (mutabakat onu
+  /// yetim sanıp iptal ederdi, bkz. [orphanReminderIds]).
+  static const _trashNotificationId = 999002;
+  ProviderSubscription<AsyncValue<List<Note>>>? _trashSub;
+  Timer? _trashDebounce;
+  DateTime? _trashPlanned;
+
+  Future<void> _syncTrash(List<Note> trash) async {
+    try {
+      await _ensureInitialized();
+      final active = [
+        for (final n in _ref.read(notesStreamProvider).value ?? const <Note>[])
+          if (n.deletedAt == null) n,
+      ];
+      final plan = trashReminderPlan(
+        trash,
+        active: active,
+        retention: NotesRepository.trashRetention,
+      );
+      if (plan?.at == _trashPlanned) return;
+      await _plugin.cancel(id: _trashNotificationId);
+      _trashPlanned = plan?.at;
+      if (plan == null) return;
+      final l10n = await loadNotificationL10n(_ref.read(localeProvider));
+      await _plugin.zonedSchedule(
+        id: _trashNotificationId,
+        title: l10n.trashReminderTitle,
+        body: l10n.trashReminderBody(plan.count),
+        scheduledDate: tz.TZDateTime.from(plan.at, tz.local),
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            'trash',
+            l10n.trashTitle,
+            channelDescription: l10n.trashReminderTitle,
+          ),
+        ),
+        // Bir gün önceden haber: dakikası önemli değil (brifing gibi).
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: 'trash',
+      );
+    } catch (e) {
+      debugPrint('Çöp hatırlatması planlanamadı: $e');
+    }
+  }
+
   /// Hatırlatıcı eşitlemesi de geciktirilir (yükleme kuyruğuyla aynı gerekçe):
   /// not akışı her tuş vuruşunda yayın yapıyor ve `_syncReminders` her
   /// seferinde tüm notları gezip platform kanalına iptal/planlama çağrıları
@@ -247,6 +302,17 @@ class ReminderService {
       _syncDebounce = Timer(
         const Duration(seconds: 3),
         () => _syncReminders(notes),
+      );
+    }, fireImmediately: true);
+
+    // Çöpte "geri yüklemeyi düşün" notu kalıcı silinmeden bir gün önce (D3).
+    _trashSub = _ref.listen(trashStreamProvider, (previous, next) {
+      final trash = next.value;
+      if (trash == null) return;
+      _trashDebounce?.cancel();
+      _trashDebounce = Timer(
+        const Duration(seconds: 5),
+        () => _syncTrash(trash),
       );
     }, fireImmediately: true);
 
@@ -438,7 +504,9 @@ class ReminderService {
 
   void dispose() {
     _syncDebounce?.cancel();
+    _trashDebounce?.cancel();
     _sub?.close();
+    _trashSub?.close();
     _briefingSub?.close();
   }
 }

@@ -186,6 +186,7 @@ class Note {
     this.classicDocument = false,
     this.archivePages = const [],
     this.archivePaper = ArchivePaper.lined,
+    this.lineSpacing = 1,
     this.archiveGeneralName = '',
     this.paged = false,
     this.heavyRef = false,
@@ -225,7 +226,8 @@ class Note {
     'fontFamily', 'fontScale', 'textOpacity', 'titleFontFamily',
     'titleFontScale', 'titleTextOpacity', 'backgroundImageId',
     'backgroundOpacity', 'listColumns', 'classicDocument', 'archivePages',
-    'archivePaper', 'archiveGeneralName', 'paged', 'heavyRef', 'tagLinks',
+    'archivePaper', 'lineSpacing', 'archiveGeneralName', 'paged', 'heavyRef',
+    'tagLinks',
     'textPages',
     'activePage', 'orderIndex', 'createdAt', 'updatedAt', 'deletedAt',
     'archivedAt', 'reminderAt', 'aiSummary', 'schema',
@@ -401,6 +403,17 @@ class Note {
   /// Arşiv defterinin KÂĞIT DESENİ (çizgili / kareli / noktalı / düz).
   /// Defter başına saklanır — bkz. [ArchivePaper].
   final ArchivePaper archivePaper;
+
+  /// DEFTER SATIR ARALIĞI çarpanı (geliştirme raporu D1, 2026-10-20):
+  /// 1 normal, [lineSpacingWide] geniş, [lineSpacingWider] çok geniş. Yalnız
+  /// defter görünümünde ([paged]) gövde satır yüksekliğine biner; satır
+  /// çizgisi yazıya bağlı olduğu için çizgiler kendiliğinden açılır. Dar
+  /// seçenek bilerek yok: madde kutucuğu (24 dp) tek satırın bandına
+  /// sığmazdı.
+  final double lineSpacing;
+
+  static const double lineSpacingWide = 1.25;
+  static const double lineSpacingWider = 1.5;
 
   /// Defterin İLK sayfasının (bölümsüz girdilerin toplandığı sayfa) ADI.
   /// Boş = uygulamanın dilinden gelen "Genel".
@@ -717,6 +730,7 @@ class Note {
     bool? classicDocument,
     List<String>? archivePages,
     ArchivePaper? archivePaper,
+    double? lineSpacing,
     String? archiveGeneralName,
     bool? paged,
     bool? heavyRef,
@@ -768,6 +782,7 @@ class Note {
     classicDocument: classicDocument ?? this.classicDocument,
     archivePages: archivePages ?? this.archivePages,
     archivePaper: archivePaper ?? this.archivePaper,
+    lineSpacing: lineSpacing ?? this.lineSpacing,
     archiveGeneralName: archiveGeneralName ?? this.archiveGeneralName,
     paged: paged ?? this.paged,
     heavyRef: heavyRef ?? this.heavyRef,
@@ -900,6 +915,10 @@ class Note {
           p.toString(),
       ],
       archivePaper: ArchivePaper.fromId(map['archivePaper'] as String?),
+      lineSpacing: ((map['lineSpacing'] as num?)?.toDouble() ?? 1).clamp(
+        1.0,
+        2.0,
+      ),
       archiveGeneralName: map['archiveGeneralName'] as String? ?? '',
       paged: map['paged'] as bool? ?? false,
       heavyRef: map['heavyRef'] as bool? ?? false,
@@ -990,6 +1009,8 @@ class Note {
     // (çizgili) DÖNDÜRÜLEBİLMELİ; koşullu yazılsaydı kayıtta eski desen
     // kalır ve defter her açılışta yine kareli gelirdi.
     'archivePaper': archivePaper.id,
+    // KOŞULSUZ (merge yazımı): normale dönünce eski değer kalmasın.
+    'lineSpacing': lineSpacing,
     // HER ZAMAN yazılır (merge tuzağı): ad SİLİNEBİLMELİ — boş dize
     // "Genel"e dönmek demek.
     'archiveGeneralName': archiveGeneralName,

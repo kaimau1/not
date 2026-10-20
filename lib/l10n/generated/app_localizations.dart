@@ -3908,6 +3908,42 @@ abstract class AppLocalizations {
   /// **'AI: eskimiş görünenler'**
   String get archiveAiStale;
 
+  /// No description provided for @lineSpacing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satır aralığı'**
+  String get lineSpacing;
+
+  /// No description provided for @lineSpacingNormal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Normal'**
+  String get lineSpacingNormal;
+
+  /// No description provided for @lineSpacingWide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geniş'**
+  String get lineSpacingWide;
+
+  /// No description provided for @lineSpacingWider.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çok geniş'**
+  String get lineSpacingWider;
+
+  /// No description provided for @trashReminderTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çöpte geri yüklemen gereken not olabilir'**
+  String get trashReminderTitle;
+
+  /// No description provided for @trashReminderBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{Bir not yarın kalıcı silinecek} other{{count} not yarın kalıcı silinecek}} — içinde iş ya da önemli bilgi var gibi. Göz at.'**
+  String trashReminderBody(int count);
+
   /// No description provided for @fontSizeSmall.
   ///
   /// In tr, this message translates to:

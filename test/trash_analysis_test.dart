@@ -96,4 +96,43 @@ void main() {
     expect(digest, contains('[n2] (boş)'));
     expect(digest, isNot(contains('gizli')));
   });
+
+  test('çöp hatırlatması: önerili not silinmeden bir gün önce (D3)', () {
+    const retention = Duration(days: 30);
+    final plan = trashReminderPlan(
+      [
+        // Açık maddeli → "geri yüklemeyi düşün"; 10-01'de silindi →
+        // 10-31'de gider, bildirim 10-30.
+        trashed(
+          'is',
+          items: const [NoteItem(id: 'i', text: 'faturayı öde')],
+          deletedAt: DateTime(2026, 10, 1, 12),
+        ),
+        // Boş not öneri almaz (silinebilir) — hatırlatılmaz.
+        trashed('bos', deletedAt: DateTime(2026, 9, 25)),
+      ],
+      active: const [],
+      retention: retention,
+      now: now,
+    );
+    expect(plan, isNotNull);
+    expect(plan!.at, DateTime(2026, 10, 30, 12));
+    expect(plan.count, 1);
+    // Hatırlatma anı geçmişteyse planlanmaz.
+    expect(
+      trashReminderPlan(
+        [
+          trashed(
+            'is',
+            items: const [NoteItem(id: 'i', text: 'faturayı öde')],
+            deletedAt: DateTime(2026, 9, 21, 11),
+          ),
+        ],
+        active: const [],
+        retention: retention,
+        now: now,
+      ),
+      isNull,
+    );
+  });
 }

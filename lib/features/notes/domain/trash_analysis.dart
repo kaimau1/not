@@ -233,3 +233,38 @@ TrashAnalysis analyzeTrash(
   }
   return (digest: buffer.toString(), ids: ids);
 }
+
+/// **ÇÖP HATIRLATMASI** (geliştirme raporu D3, 2026-10-20): "geri yüklemeyi
+/// düşün" önerisi alan (bkz. [analyzeTrash]) bir not kalıcı silinmeden BİR
+/// GÜN önce tek bildirim. Dönen değer en yakın böyle notun bildirim anı ve
+/// o anda 24 saat içinde silinecek önerili not sayısı; yoksa null. Geçmişe
+/// düşen an planlanmaz. [retention]: çöpte kalma süresi.
+({DateTime at, int count})? trashReminderPlan(
+  List<Note> trash, {
+  required List<Note> active,
+  required Duration retention,
+  DateTime? now,
+}) {
+  final at = now ?? DateTime.now();
+  DateTime? due(Note n) => n.deletedAt?.add(retention);
+  final analysis = analyzeTrash(
+    trash,
+    active: active,
+    daysLeft: (n) => due(n)?.difference(at).inDays,
+    now: at,
+  );
+  final byId = {for (final n in trash) n.id: n};
+  final dues = <DateTime>[
+    for (final s in analysis.of(TrashVerdict.restore))
+      if (due(byId[s.noteId]!) case final d? when d.isAfter(at)) d,
+  ]..sort();
+  for (final d in dues) {
+    final fire = d.subtract(const Duration(days: 1));
+    if (!fire.isAfter(at)) continue;
+    final count = dues
+        .where((x) => !x.isBefore(d) && x.difference(d).inHours < 24)
+        .length;
+    return (at: fire, count: count);
+  }
+  return null;
+}

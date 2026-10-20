@@ -750,6 +750,30 @@ final Map<
 >
 _spanCache = {};
 
+/// Tek başına `---` (ya da daha uzun) satırı; çevresinde boşluk olabilir.
+final RegExp _ruleLine = RegExp(r'^[ \t]*-{3,}[ \t]*$', multiLine: true);
+
+/// `---` satırının görünümü: tireler saydam, üstlerinden geniş harf
+/// aralığıyla yatay çizgi geçer (düzenlenebilir alanda span metni
+/// değiştirilemez — uzunluk aynı kalmalı).
+TextSpan _ruleSpan(String line, TextStyle? style) {
+  final dashes = line.trim().length;
+  final base = style ?? const TextStyle();
+  final color = (base.color ?? const Color(0xFF757575)).withValues(
+    alpha: 0.45,
+  );
+  return TextSpan(
+    text: line,
+    style: base.copyWith(
+      color: const Color(0x00000000),
+      decoration: TextDecoration.lineThrough,
+      decorationColor: color,
+      decorationThickness: 2,
+      letterSpacing: (210 / dashes).clamp(2.0, 70.0),
+    ),
+  );
+}
+
 /// [attachmentNames] notun ek dosya adları — metne gömülü ek etiketleri
 /// (bkz. attachment_tag.dart) bunlara göre bulunup kırmızı çizilir. Boşsa
 /// hiçbir etiket işaretlenmez.
@@ -764,6 +788,35 @@ List<InlineSpan> richSpans(
   bool videoTimestamps = false,
 }) {
   if (text.isEmpty) return [TextSpan(text: text, style: style)];
+  // AYIRICI ÇİZGİ (geliştirme raporu D2, 2026-10-20): tek başına `---`
+  // satırı çizgi olarak çizilir — madde altındaki ayırıcının düz metin
+  // karşılığı. Metin aynen kalır (dışa aktarmada `---`), yalnız görünüm.
+  if (text.contains('---')) {
+    final rules = _ruleLine.allMatches(text).toList();
+    if (rules.isNotEmpty) {
+      List<InlineSpan> rest(String part) => part.isEmpty
+          ? const []
+          : richSpans(
+              part,
+              style,
+              linkColor: linkColor,
+              palette: palette,
+              markerColor: markerColor,
+              attachmentNames: attachmentNames,
+              tagChipColors: tagChipColors,
+              videoTimestamps: videoTimestamps,
+            );
+      final out = <InlineSpan>[];
+      var cursor = 0;
+      for (final m in rules) {
+        out
+          ..addAll(rest(text.substring(cursor, m.start)))
+          ..add(_ruleSpan(m[0]!, style));
+        cursor = m.end;
+      }
+      return out..addAll(rest(text.substring(cursor)));
+    }
+  }
   if (!_hasMarker(text)) {
     return linkSpans(
       text,

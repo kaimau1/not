@@ -2082,6 +2082,32 @@ class AppLocalizationsTr extends AppLocalizations {
   String get archiveAiStale => 'AI: eskimiş görünenler';
 
   @override
+  String get lineSpacing => 'Satır aralığı';
+
+  @override
+  String get lineSpacingNormal => 'Normal';
+
+  @override
+  String get lineSpacingWide => 'Geniş';
+
+  @override
+  String get lineSpacingWider => 'Çok geniş';
+
+  @override
+  String get trashReminderTitle => 'Çöpte geri yüklemen gereken not olabilir';
+
+  @override
+  String trashReminderBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count not yarın kalıcı silinecek',
+      one: 'Bir not yarın kalıcı silinecek',
+    );
+    return '$_temp0 — içinde iş ya da önemli bilgi var gibi. Göz at.';
+  }
+
+  @override
   String get fontSizeSmall => 'Küçük';
 
   @override

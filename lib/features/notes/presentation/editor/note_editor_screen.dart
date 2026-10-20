@@ -232,6 +232,7 @@ bool sameRenderedNote(Note a, Note b) {
       // Sayfa geçişi/ekleme çubuğu ve tuvali değiştirir (Note.textPages).
       a.activePage != b.activePage ||
       a.textPages.length != b.textPages.length ||
+      a.lineSpacing != b.lineSpacing ||
       a.color != b.color ||
       a.frameColor != b.frameColor ||
       a.customColor != b.customColor ||
@@ -1241,6 +1242,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             backgroundOpacity: incoming.backgroundOpacity,
             paged: incoming.paged,
             archivePaper: incoming.archivePaper,
+            lineSpacing: incoming.lineSpacing,
           );
           if (pristine) {
             merged = merged.copyWith(
@@ -1532,6 +1534,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       identical(a.aiSummary, b.aiSummary) &&
       a.type == b.type &&
       a.color == b.color &&
+      a.lineSpacing == b.lineSpacing &&
       a.frameColor == b.frameColor &&
       a.customColor == b.customColor &&
       a.customFrameColor == b.customFrameColor &&
@@ -2460,6 +2463,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         bodyBase.copyWith(
           fontSize: (bodyBase.fontSize ?? 16) * note.fontScale,
           color: bodyBase.color ?? theme.colorScheme.onSurface,
+          // DEFTER SATIR ARALIĞI (D1): satır yüksekliğine biner; çizgiler
+          // yazıya bağlı olduğundan onlar da açılır (bkz. [_paperGap]).
+          height: note.paged && note.lineSpacing != 1
+              ? (bodyBase.height ?? 1.45) * note.lineSpacing
+              : null,
         ),
         note.fontFamily,
       ),

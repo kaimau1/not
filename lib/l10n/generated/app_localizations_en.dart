@@ -2085,6 +2085,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archiveAiStale => 'AI: looks outdated';
 
   @override
+  String get lineSpacing => 'Line spacing';
+
+  @override
+  String get lineSpacingNormal => 'Normal';
+
+  @override
+  String get lineSpacingWide => 'Wide';
+
+  @override
+  String get lineSpacingWider => 'Wider';
+
+  @override
+  String get trashReminderTitle =>
+      'Something in the trash may be worth keeping';
+
+  @override
+  String trashReminderBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count notes will be deleted for good tomorrow',
+      one: 'A note will be deleted for good tomorrow',
+    );
+    return '$_temp0 — it looks like it still holds a task or important info. Take a look.';
+  }
+
+  @override
   String get fontSizeSmall => 'Small';
 
   @override
