@@ -613,7 +613,9 @@ class _PdfWriter {
         ? 1.0
         : richStepValue(kRichOpacitySteps, mark.opacity);
     final palette = r.palette;
-    final argb = mark.color == null || palette.isEmpty
+    final argb = isCustomRichColor(mark.color)
+        ? mark.color!
+        : mark.color == null || palette.isEmpty
         ? null
         : palette[(mark.color! - 1).clamp(0, palette.length - 1)];
     final color = argb != null

@@ -302,15 +302,21 @@ Future<void> _runNoteAction(
         context,
         frame: false,
         current: note.color,
+        currentCustom: note.customColor,
       );
-      if (picked != null) repo.setColor(note.id, picked);
+      if (picked != null) {
+        repo.setColor(note.id, picked.color, custom: picked.custom);
+      }
     case 'frame':
       final picked = await showNoteColorPicker(
         context,
         frame: true,
         current: note.frameColor,
+        currentCustom: note.customFrameColor,
       );
-      if (picked != null) repo.setFrameColor(note.id, picked);
+      if (picked != null) {
+        repo.setFrameColor(note.id, picked.color, custom: picked.custom);
+      }
     case 'select':
       ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
     case 'delete':

@@ -193,6 +193,8 @@ class NoteShare {
         tags: source.tags,
         color: source.color,
         frameColor: source.frameColor,
+        customColor: source.customColor,
+        customFrameColor: source.customFrameColor,
         fontFamily: source.fontFamily,
         fontScale: source.fontScale,
         textOpacity: source.textOpacity,

@@ -233,6 +233,8 @@ bool sameRenderedNote(Note a, Note b) {
       a.textPages.length != b.textPages.length ||
       a.color != b.color ||
       a.frameColor != b.frameColor ||
+      a.customColor != b.customColor ||
+      a.customFrameColor != b.customFrameColor ||
       a.pinned != b.pinned ||
       a.starred != b.starred ||
       a.locked != b.locked ||
@@ -1202,6 +1204,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             tags: incoming.tags,
             color: incoming.color,
             frameColor: incoming.frameColor,
+            customColor: incoming.customColor,
+            clearCustomColor: incoming.customColor == null,
+            customFrameColor: incoming.customFrameColor,
+            clearCustomFrameColor: incoming.customFrameColor == null,
             folderId: incoming.folderId,
             clearFolderId: incoming.folderId == null,
             archivedAt: incoming.archivedAt,
@@ -1516,6 +1522,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       a.type == b.type &&
       a.color == b.color &&
       a.frameColor == b.frameColor &&
+      a.customColor == b.customColor &&
+      a.customFrameColor == b.customFrameColor &&
       a.pinned == b.pinned &&
       a.starred == b.starred &&
       a.locked == b.locked &&
@@ -2387,7 +2395,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       );
     }
 
-    final background = NoteColors.surface(context, note.color);
+    final background = NoteColors.noteSurface(context, note);
     // Satır içi biçimlendirmenin çizim ayarları: gövde ve maddeler AYNI
     // paleti kullanır (metindeki 1..5 indeksi her ikisinde aynı rengi verir).
     final richTheme = RichTextTheme(

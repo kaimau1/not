@@ -3842,6 +3842,42 @@ abstract class AppLocalizations {
   /// **'Hassas içerik — kartta gizlendi'**
   String get sensitiveHiddenOnCard;
 
+  /// No description provided for @paletteMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha fazla renk'**
+  String get paletteMore;
+
+  /// No description provided for @paletteCustom.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel renk'**
+  String get paletteCustom;
+
+  /// No description provided for @paletteUse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullan'**
+  String get paletteUse;
+
+  /// No description provided for @paletteHue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ton'**
+  String get paletteHue;
+
+  /// No description provided for @paletteSaturation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doygunluk'**
+  String get paletteSaturation;
+
+  /// No description provided for @paletteLightness.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıklık'**
+  String get paletteLightness;
+
   /// No description provided for @fontSizeSmall.
   ///
   /// In tr, this message translates to:

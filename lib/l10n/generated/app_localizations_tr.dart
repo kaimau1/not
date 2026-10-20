@@ -2046,6 +2046,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sensitiveHiddenOnCard => 'Hassas içerik — kartta gizlendi';
 
   @override
+  String get paletteMore => 'Daha fazla renk';
+
+  @override
+  String get paletteCustom => 'Özel renk';
+
+  @override
+  String get paletteUse => 'Kullan';
+
+  @override
+  String get paletteHue => 'Ton';
+
+  @override
+  String get paletteSaturation => 'Doygunluk';
+
+  @override
+  String get paletteLightness => 'Açıklık';
+
+  @override
   String get fontSizeSmall => 'Küçük';
 
   @override

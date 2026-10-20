@@ -261,8 +261,10 @@ final RegExp _formatPattern = RegExp(
   // kullanıcı yazdığını ekranda bulamıyordu. Uygulama vurguyu her zaman
   // önekle yazar (paleti indeksli), yani bu şart hiçbir gerçek vurguyu
   // kırmaz; kırdığı tek şey kullanıcının KENDİ yazdığı `==` idi.
-  r'|==(\d):(.+?)=='
-  r'|%%(?:(\d):)?(.+?)%%'
+  // Renk ve vurgu öneki palet indeksi (`2`) YA DA PALETTEN seçilmiş özel
+  // renk (`#E57373`, 2026-10-20 — kullanıcı isteği "renk için palet olsun").
+  r'|==(\d|#[0-9A-Fa-f]{6}):(.+?)=='
+  r'|%%(?:(\d|#[0-9A-Fa-f]{6}):)?(.+?)%%'
   // Boyut ve opaklık işaretleri KADEME ÖNEKİ ZORUNLU tutar (`##3:` gibi):
   // işaretler artık görünmez çizildiğinden, düz metindeki bir "## başlık ##"
   // ya da "a && b && c" yanlışlıkla biçim sanılsa karakterler gözden
@@ -283,7 +285,8 @@ final RegExp _formatPattern = RegExp(
 /// düğmesine basılıp hiç yazılmadığında geriye bunlar kalır. Gösterimde
 /// zararsız ama dışa aktarılan metinde görünmemeli.
 final RegExp _emptyBoxPattern = RegExp(
-  r'\*\*\*\*|==\d:==|%%(?:\d:)?%%|##\d:##|&&\d:&&'
+  r'\*\*\*\*|==(?:\d|#[0-9A-Fa-f]{6}):==|%%(?:(?:\d|#[0-9A-Fa-f]{6}):)?%%'
+  r'|##\d:##|&&\d:&&'
   // İtalik ve altı çizili boş kutuları da: bunlar kelime sınırı şartı
   // yüzünden `_formatPattern`e hiç düşmez, dolayısıyla EKRANDA HAM görünürdü.
   r'|(?<![\p{L}\p{N}_])__(?![\p{L}\p{N}_])'
@@ -374,18 +377,38 @@ RichFormat _formatOf(RegExpMatch m) {
   return RichFormat.underline;
 }
 
-/// Eşleşmenin renk indeksi (yoksa null).
+/// Eşleşmenin renk indeksi (yoksa null). `#RRGGBB` öneki ARGB değer olarak
+/// döner (bkz. [isCustomRichColor]).
 int? _colorOf(RegExpMatch m) {
   for (var g = 1; g < m.groupCount; g += 2) {
     final value = m[g];
-    if (value != null) return int.tryParse(value);
+    if (value != null) return _parseColorIndex(value);
   }
   return null;
 }
 
-/// Açılış işaretinin uzunluğu (renk öneki dahil): `%%2:` → 4.
+int? _parseColorIndex(String value) {
+  if (value.startsWith('#')) {
+    final rgb = int.tryParse(value.substring(1), radix: 16);
+    return rgb == null ? null : 0xFF000000 | rgb;
+  }
+  return int.tryParse(value);
+}
+
+/// Biçim değeri palet indeksi değil, paletten seçilmiş ÖZEL renk mi
+/// (ARGB, opak)? Palet indeksleri tek hane (1..9).
+bool isCustomRichColor(int? index) => index != null && index > 0xFFFFFF;
+
+/// İşaretteki önek: palet indeksi `2`, özel renk `#E57373`.
+String _indexToken(int index) => isCustomRichColor(index)
+    ? '#${(index & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}'
+    : '$index';
+
+/// Açılış işaretinin uzunluğu (renk öneki dahil): `%%2:` → 4,
+/// `%%#E57373:` → 10.
 int _openLength(RichFormat format, int? index) =>
-    format.marker.length + (index == null ? 0 : 2);
+    format.marker.length +
+    (index == null ? 0 : _indexToken(index).length + 1);
 
 // ---------------------------------------------------------------------------
 // Çözümleme (işaretli metin → parçalar) ve geri yazma
@@ -488,8 +511,10 @@ List<RichSegment> _merge(List<RichSegment> segments) {
 /// vurgu → renk → kalın → italik → altı çizili); kapanış tam tersidir.
 String _openMarkers(RichMark mark) {
   final buffer = StringBuffer();
-  if (mark.highlight != null) buffer.write('==${mark.highlight}:');
-  if (mark.color != null) buffer.write('%%${mark.color}:');
+  if (mark.highlight != null) {
+    buffer.write('==${_indexToken(mark.highlight!)}:');
+  }
+  if (mark.color != null) buffer.write('%%${_indexToken(mark.color!)}:');
   if (mark.size != null) buffer.write('##${mark.size}:');
   if (mark.opacity != null) buffer.write('&&${mark.opacity}:');
   if (mark.bold) buffer.write('**');
@@ -1001,6 +1026,7 @@ TextStyle markStyle(TextStyle base, RichMark mark, List<Color> palette) {
 }
 
 Color _paletteColor(List<Color> palette, int? index) {
+  if (isCustomRichColor(index)) return Color(index!);
   if (palette.isEmpty) return const Color(0xFFFFC94D);
   if (index == null || index < 1 || index > palette.length) {
     return palette.first;

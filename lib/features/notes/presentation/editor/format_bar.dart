@@ -4,6 +4,7 @@ import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/note_fonts.dart';
 import '../../../../core/utils/rich_text.dart';
+import '../../../../core/widgets/color_palette.dart';
 import 'format_menu.dart';
 import 'text_wrap.dart';
 
@@ -576,7 +577,9 @@ class _ColorPicker extends StatelessWidget {
     final index = activeIndex;
     // Palet dışında kalan indeks (eski nottan gelen) rengi çizdirmez ama
     // düğme yine basılı görünür — biçim gerçekten orada.
-    final color = index != null && index >= 1 && index <= palette.length
+    final color = isCustomRichColor(index)
+        ? Color(index!)
+        : index != null && index >= 1 && index <= palette.length
         ? palette[index - 1]
         : null;
     return PopupMenuButton<int>(
@@ -602,10 +605,18 @@ class _ColorPicker extends StatelessWidget {
       style: _compactStyle(
         background: index == null ? null : scheme.primaryContainer,
       ),
-      // 0 = "Kaldır" (palet indeksleri 1'den başlar, çakışma yok).
-      onSelected: (value) {
+      // 0 = "Kaldır" (palet indeksleri 1'den başlar, çakışma yok);
+      // -1 = tam palet levhası (özel renk ARGB olarak döner).
+      onSelected: (value) async {
         if (value == 0) {
           onRemove();
+        } else if (value == -1) {
+          final picked = await showColorPaletteSheet(
+            context,
+            title: tooltip,
+            current: color,
+          );
+          if (picked != null) onPick(picked.toARGB32() | 0xFF000000);
         } else {
           onPick(value);
         }
@@ -669,6 +680,37 @@ class _ColorPicker extends StatelessWidget {
                     ),
                   ),
                 ),
+              // TAM PALET: hazır tonlar + özel renk (bkz. color_palette.dart).
+              Tooltip(
+                message: menuContext.l10n.paletteMore,
+                child: InkWell(
+                  key: const ValueKey('format-palette-more'),
+                  onTap: () => Navigator.pop(menuContext, -1),
+                  customBorder: const CircleBorder(),
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: SweepGradient(
+                        colors: [
+                          Color(0xFFE57373),
+                          Color(0xFFFFD54F),
+                          Color(0xFF81C784),
+                          Color(0xFF64B5F6),
+                          Color(0xFF9575CD),
+                          Color(0xFFE57373),
+                        ],
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.palette_outlined,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),

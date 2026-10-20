@@ -519,7 +519,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
     unawaited(
-      repo.batchUpdate(ids, {frame ? 'frameColor' : 'color': picked.id}),
+      repo.batchUpdate(ids, {
+        frame ? 'frameColor' : 'color': picked.color.id,
+        frame ? 'customFrameColor' : 'customColor': picked.custom,
+      }),
     );
     ref.read(selectedNoteIdsProvider.notifier).clear();
   }

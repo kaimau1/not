@@ -535,7 +535,7 @@ class NoteCard extends ConsumerWidget {
     // Balonlu notun belge kapağı (video/görsel kapağıyla aynı yerde).
     final cover = media?.cover;
     final hasCover = hero != null || cover != null;
-    final borderWidth = note.frameColor != NoteColor.none ? 2.5 : 1.0;
+    final borderWidth = note.hasFrame ? 2.5 : 1.0;
     // ARAMA SONUCUNDA KLASÖR (kullanıcı isteği 2026-10-20: "not ararken
     // bulunan notun hangi klasörde olduğu da yazmalı"). Yalnız arama
     // sürerken: normal ızgarada kart zaten klasörün içinde ya da klasör
@@ -733,7 +733,7 @@ class NoteCard extends ConsumerWidget {
           );
 
     final card = Material(
-      color: NoteColors.surface(context, note.color),
+      color: NoteColors.noteSurface(context, note),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -757,9 +757,9 @@ class NoteCard extends ConsumerWidget {
             // liste gözle görülür biçimde zıplıyordu. Kenarlık artık sabit
             // kalınlıkta; seçim yalnız BOYA katmanı, yerleşimi hiç etkilemez.
             border: Border.all(
-              color: note.frameColor != NoteColor.none
-                  ? NoteColors.swatch(note.frameColor)
-                  : scheme.outlineVariant.withValues(alpha: 0.5),
+              color:
+                  NoteColors.noteFrame(note) ??
+                  scheme.outlineVariant.withValues(alpha: 0.5),
               width: borderWidth,
             ),
           ),

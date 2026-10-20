@@ -574,7 +574,7 @@ class _TrashCard extends ConsumerWidget {
         : (note.displayTitle.trim().isNotEmpty
               ? stripRichMarkers(note.displayTitle).trim()
               : note.toPlainText().trim().split('\n').first);
-    final surface = NoteColors.surface(context, note.color);
+    final surface = NoteColors.noteSurface(context, note);
     return Material(
       color: surface,
       shape: RoundedRectangleBorder(

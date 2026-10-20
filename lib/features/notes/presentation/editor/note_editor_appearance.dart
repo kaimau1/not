@@ -24,14 +24,22 @@ extension _EditorAppearance on _NoteEditorScreenState {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: _colorLeading(note.color, frame: false),
+              leading: _colorLeading(
+                note.color,
+                frame: false,
+                custom: note.customColor,
+              ),
               title: Text(l10n.backgroundColor),
               onTap: () => Navigator.pop(sheetContext, 'bg'),
             ),
             // ÇERÇEVE GERİ GELDİ (kullanıcı isteği 2026-10-20) — yalnız ana
             // ekran kartında çizilir; alt satır bunu söyler.
             ListTile(
-              leading: _colorLeading(note.frameColor, frame: true),
+              leading: _colorLeading(
+                note.frameColor,
+                frame: true,
+                custom: note.customFrameColor,
+              ),
               title: Text(l10n.frameColor),
               subtitle: Text(l10n.frameColorInfo),
               onTap: () => Navigator.pop(sheetContext, 'frame'),
@@ -59,12 +67,21 @@ extension _EditorAppearance on _NoteEditorScreenState {
       context,
       frame: frame,
       current: frame ? note.frameColor : note.color,
+      currentCustom: frame ? note.customFrameColor : note.customColor,
       onChanged: (picked) {
         if (!mounted) return;
         _mutate(
           (n) => frame
-              ? n.copyWith(frameColor: picked)
-              : n.copyWith(color: picked),
+              ? n.copyWith(
+                  frameColor: picked.color,
+                  customFrameColor: picked.custom,
+                  clearCustomFrameColor: picked.custom == null,
+                )
+              : n.copyWith(
+                  color: picked.color,
+                  customColor: picked.custom,
+                  clearCustomColor: picked.custom == null,
+                ),
           immediate: true,
         );
       },
@@ -377,18 +394,19 @@ extension _EditorAppearance on _NoteEditorScreenState {
     _pendingAttachmentDeletes.add(image);
   }
 
-  Widget _colorLeading(NoteColor color, {required bool frame}) {
-    final swatch = NoteColors.swatch(color);
+  Widget _colorLeading(NoteColor color, {required bool frame, int? custom}) {
+    final swatch = custom != null ? Color(custom) : NoteColors.swatch(color);
+    final none = custom == null && color == NoteColor.none;
     return Container(
       width: 28,
       height: 28,
-      decoration: frame && color != NoteColor.none
+      decoration: frame && !none
           ? BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: swatch, width: 4),
             )
           : BoxDecoration(color: swatch, shape: BoxShape.circle),
-      child: color == NoteColor.none
+      child: none
           ? const Icon(Icons.format_color_reset_outlined, size: 16)
           : null,
     );

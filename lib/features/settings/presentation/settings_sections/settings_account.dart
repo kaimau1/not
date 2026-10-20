@@ -374,6 +374,8 @@ class _BackupButton extends ConsumerWidget {
     'tags': n.tags,
     'color': n.color.id,
     'frameColor': n.frameColor.id,
+    if (n.customColor != null) 'customColor': n.customColor,
+    if (n.customFrameColor != null) 'customFrameColor': n.customFrameColor,
     'folderId': n.folderId,
     'pinned': n.pinned,
     'starred': n.starred,
@@ -522,6 +524,9 @@ class _RestoreButton extends ConsumerWidget {
           'locked': map['locked'] as bool? ?? false,
           if (map['color'] is String) 'color': map['color'],
           if (map['frameColor'] is String) 'frameColor': map['frameColor'],
+          if (map['customColor'] is num) 'customColor': map['customColor'],
+          if (map['customFrameColor'] is num)
+            'customFrameColor': map['customFrameColor'],
           if (ts('createdAt') != null) 'createdAt': ts('createdAt'),
           if (ts('archivedAt') != null) 'archivedAt': ts('archivedAt'),
           // Geçmişte kalmış hatırlatıcı geri kurulmaz (bildirim zaten

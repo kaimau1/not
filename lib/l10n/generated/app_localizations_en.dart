@@ -2049,6 +2049,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sensitiveHiddenOnCard => 'Sensitive content — hidden on card';
 
   @override
+  String get paletteMore => 'More colors';
+
+  @override
+  String get paletteCustom => 'Custom color';
+
+  @override
+  String get paletteUse => 'Use';
+
+  @override
+  String get paletteHue => 'Hue';
+
+  @override
+  String get paletteSaturation => 'Saturation';
+
+  @override
+  String get paletteLightness => 'Lightness';
+
+  @override
   String get fontSizeSmall => 'Small';
 
   @override

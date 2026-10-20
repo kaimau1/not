@@ -169,6 +169,8 @@ class Note {
     this.folderId,
     this.color = NoteColor.none,
     this.frameColor = NoteColor.none,
+    this.customColor,
+    this.customFrameColor,
     this.pinned = false,
     this.starred = false,
     this.locked = false,
@@ -218,7 +220,8 @@ class Note {
   /// Yeni alan eklenince BURAYA da eklenmeli (`forward_compat_test`).
   static const knownKeys = <String>{
     'type', 'title', 'body', 'items', 'pageNotes', 'attachments', 'tags',
-    'folderId', 'color', 'frameColor', 'pinned', 'starred', 'locked',
+    'folderId', 'color', 'frameColor', 'customColor', 'customFrameColor',
+    'pinned', 'starred', 'locked',
     'fontFamily', 'fontScale', 'textOpacity', 'titleFontFamily',
     'titleFontScale', 'titleTextOpacity', 'backgroundImageId',
     'backgroundOpacity', 'listColumns', 'classicDocument', 'archivePages',
@@ -293,6 +296,18 @@ class Note {
   /// [color]ın aynısı duruyor, yani o notlar aynı renkte çerçeveyle açılır.
   /// Çerçeve editörde ÇİZİLMEZ — notun içi sade kalır.
   final NoteColor frameColor;
+
+  /// PALETTEN seçilmiş ÖZEL zemin rengi (ARGB, opak; 2026-10-20 kullanıcı
+  /// isteği "renk paleti zemin ve çerçeveye de gelsin"). Doluyken [color]ın
+  /// önüne geçer; hazır renk seçilince temizlenir. Eski istemci alanı
+  /// tanımaz ve [color]ı çizer (hazır ton kaybolmaz).
+  final int? customColor;
+
+  /// PALETTEN seçilmiş ÖZEL çerçeve rengi; [frameColor]ın önüne geçer.
+  final int? customFrameColor;
+
+  /// Kartta çerçeve çizilsin mi (hazır ya da özel).
+  bool get hasFrame => customFrameColor != null || frameColor != NoteColor.none;
 
   /// SABİTLİ: ana ekranın başında durur.
   final bool pinned;
@@ -680,6 +695,10 @@ class Note {
     bool clearFolderId = false,
     NoteColor? color,
     NoteColor? frameColor,
+    int? customColor,
+    bool clearCustomColor = false,
+    int? customFrameColor,
+    bool clearCustomFrameColor = false,
     bool? pinned,
     bool? starred,
     bool? locked,
@@ -726,6 +745,10 @@ class Note {
     folderId: clearFolderId ? null : (folderId ?? this.folderId),
     color: color ?? this.color,
     frameColor: frameColor ?? this.frameColor,
+    customColor: clearCustomColor ? null : (customColor ?? this.customColor),
+    customFrameColor: clearCustomFrameColor
+        ? null
+        : (customFrameColor ?? this.customFrameColor),
     pinned: pinned ?? this.pinned,
     starred: starred ?? this.starred,
     locked: locked ?? this.locked,
@@ -841,6 +864,8 @@ class Note {
       // not çerçeve rengini zemin alır" çevirisi kalktı.
       color: NoteColor.fromId(map['color'] as String?),
       frameColor: NoteColor.fromId(map['frameColor'] as String?),
+      customColor: (map['customColor'] as num?)?.toInt(),
+      customFrameColor: (map['customFrameColor'] as num?)?.toInt(),
       pinned: map['pinned'] == true,
       starred: map['starred'] == true,
       locked: map['locked'] as bool? ?? false,
@@ -924,6 +949,10 @@ class Note {
     'folderId': folderId,
     'color': color.id,
     'frameColor': frameColor.id,
+    // KOŞULSUZ (merge yazımı): hazır renge dönülünce null eski özel rengi
+    // silmeli.
+    'customColor': customColor,
+    'customFrameColor': customFrameColor,
     'pinned': pinned,
     'starred': starred,
     'locked': locked,
