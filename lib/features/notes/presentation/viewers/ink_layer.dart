@@ -351,14 +351,22 @@ class InkPageLayer extends StatelessWidget {
             child: RepaintBoundary(
               child: ListenableBuilder(
                 listenable: controller,
-                builder: (context, _) => CustomPaint(
-                  painter: InkPainter(
+                builder: (context, _) {
+                  final painter = InkPainter(
                     controller.ink,
                     page,
                     revision: controller.revision,
-                  ),
-                  size: Size.infinite,
-                ),
+                  );
+                  // Ekran okuyucu (F4.7): tuval kendisi okunamaz; en azından
+                  // sayfada çizim olduğu ve kaç çizgi olduğu söylenir.
+                  return Semantics(
+                    image: true,
+                    label: painter.strokes.isEmpty
+                        ? null
+                        : context.l10n.inkSemantics(painter.strokes.length),
+                    child: CustomPaint(painter: painter, size: Size.infinite),
+                  );
+                },
               ),
             ),
           );

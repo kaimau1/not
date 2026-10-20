@@ -164,6 +164,9 @@ FontScaleStep nearestFontScaleStep(double value) {
   return best;
 }
 
+/// Sistem yazı ölçeğine en yakın kademe (ilk açılışın başlangıç değeri).
+double initialFontScale(double system) => nearestFontScaleStep(system).scale;
+
 /// Yazı boyutu çarpanı. Sistem ayarının YERİNE geçer (bkz. `fixedTypography`).
 final fontScaleProvider = NotifierProvider<FontScaleNotifier, double>(
   FontScaleNotifier.new,
@@ -173,7 +176,18 @@ class FontScaleNotifier extends Notifier<double> {
   static const _key = 'font_scale';
 
   @override
-  double build() => ref.watch(sharedPreferencesProvider).getDouble(_key) ?? 1.0;
+  double build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final stored = prefs.getDouble(_key);
+    if (stored != null) return stored;
+    // İLK AÇILIŞ (F4.7): sistemin yazı ölçeğinden başlanır (en yakın
+    // kademe) ve kaydedilir; bundan sonra uygulama ayarı tek söz sahibi.
+    final initial = initialFontScale(
+      WidgetsBinding.instance.platformDispatcher.textScaleFactor,
+    );
+    prefs.setDouble(_key, initial);
+    return initial;
+  }
 
   void set(double value) {
     state = value;

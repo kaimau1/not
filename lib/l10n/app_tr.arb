@@ -2440,5 +2440,22 @@
   "shareCopyInfo": "Arkadaşının gelen kutusuna bağımsız bir kopya gider",
   "noteColorAccent": "Kenarı vurgula",
   "notebookViewOn": "Defter görünümü",
-  "notebookViewOff": "Defter görünümünü kapat"
+  "notebookViewOff": "Defter görünümünü kapat",
+  "inkSemantics": "Elle çizim, {count} çizgi",
+  "@inkSemantics": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bubbleSemantics": "Not balonu: {text}",
+  "@bubbleSemantics": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "bubbleSemanticsEmpty": "Boş not balonu"
 }

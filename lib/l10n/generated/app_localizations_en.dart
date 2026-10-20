@@ -5057,4 +5057,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notebookViewOff => 'Turn off notebook view';
+
+  @override
+  String inkSemantics(int count) {
+    return 'Handwriting, $count strokes';
+  }
+
+  @override
+  String bubbleSemantics(String text) {
+    return 'Note bubble: $text';
+  }
+
+  @override
+  String get bubbleSemanticsEmpty => 'Empty note bubble';
 }

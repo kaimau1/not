@@ -5042,4 +5042,17 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notebookViewOff => 'Defter görünümünü kapat';
+
+  @override
+  String inkSemantics(int count) {
+    return 'Elle çizim, $count çizgi';
+  }
+
+  @override
+  String bubbleSemantics(String text) {
+    return 'Not balonu: $text';
+  }
+
+  @override
+  String get bubbleSemanticsEmpty => 'Boş not balonu';
 }

@@ -82,4 +82,11 @@ void main() {
       expect(scales.last, lessThanOrEqualTo(1.5));
     },
   );
+
+  test('ilk açılış sistem yazı ölçeğinin en yakın kademesinden başlar', () {
+    expect(initialFontScale(1.0), FontScaleStep.medium.scale);
+    expect(initialFontScale(1.3), FontScaleStep.xlarge.scale);
+    expect(initialFontScale(2.0), FontScaleStep.xlarge.scale);
+    expect(initialFontScale(0.8), FontScaleStep.small.scale);
+  });
 }

@@ -38,7 +38,9 @@ Locale resolveLocale(List<Locale>? locales, Iterable<Locale> supported) {
 ///
 /// 1. **Yazı boyutu**: `TextScaler.linear(fontScale)` sistem ölçeğiyle
 ///    ÇARPMAZ, onun YERİNE geçer — Ayarlar → Görünüm → Yazı boyutu tek söz
-///    sahibi. (Bu zaten böyleydi; kural artık yazılı ve testli.)
+///    sahibi. İLK AÇILIŞTA başlangıç değeri sistem ölçeğinin en yakın
+///    kademesidir (F4.7 — büyük yazı kullanan kişi küçük yazıyla
+///    karşılanmasın); sonrası uygulama ayarı.
 /// 2. **Kalın metin** (erişilebilirlik → "Bold text"): açık bırakılsa
 ///    telefonun her yerinde yazılar kalınlaşır ve ince/kalın ayrımına dayanan
 ///    başlık-gövde hiyerarşisi düzleşirdi.

@@ -9085,6 +9085,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Defter görünümünü kapat'**
   String get notebookViewOff;
+
+  /// No description provided for @inkSemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elle çizim, {count} çizgi'**
+  String inkSemantics(int count);
+
+  /// No description provided for @bubbleSemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not balonu: {text}'**
+  String bubbleSemantics(String text);
+
+  /// No description provided for @bubbleSemanticsEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boş not balonu'**
+  String get bubbleSemanticsEmpty;
 }
 
 class _AppLocalizationsDelegate

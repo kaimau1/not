@@ -1851,5 +1851,8 @@
   "shareCopyInfo": "An independent copy goes to your friend's inbox",
   "noteColorAccent": "Highlight the border",
   "notebookViewOn": "Notebook view",
-  "notebookViewOff": "Turn off notebook view"
+  "notebookViewOff": "Turn off notebook view",
+  "inkSemantics": "Handwriting, {count} strokes",
+  "bubbleSemantics": "Note bubble: {text}",
+  "bubbleSemanticsEmpty": "Empty note bubble"
 }

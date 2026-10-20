@@ -614,25 +614,45 @@ class _BubblePinState extends State<_BubblePin>
           scale: (_lifted ? 1.2 : 1) * pinScale,
           alignment: origin,
           duration: const Duration(milliseconds: 120),
-          child: BubbleDragArea(
-            enabled: !widget.readOnly,
+          // Ekran okuyucu (F4.7): balonun yazısı okunur, çift dokunuş açar.
+          child: Semantics(
+            button: true,
+            label: _semanticLabel(context, bubble),
             onTap: () => widget.controller.openOnly(bubble.id),
-            onDragStart: _dragStart,
-            onDragDelta: _dragMove,
-            onDragEnd: _dragEnd,
-            // `Tooltip` YOK: kendi uzun basış tanıyıcısını arenaya sokup
-            // taşımayla yarışıyordu ("çok zor sürükleniyor"). Notun tamamı
-            // zaten dokununca açılan okuma balonunda görünüyor.
-            child: blink == null
-                ? child
-                : FadeTransition(
-                    opacity: Tween<double>(begin: 1, end: 0.35).animate(blink),
-                    child: child,
-                  ),
+            excludeSemantics: true,
+            child: BubbleDragArea(
+              enabled: !widget.readOnly,
+              onTap: () => widget.controller.openOnly(bubble.id),
+              onDragStart: _dragStart,
+              onDragDelta: _dragMove,
+              onDragEnd: _dragEnd,
+              // `Tooltip` YOK: kendi uzun basış tanıyıcısını arenaya sokup
+              // taşımayla yarışıyordu ("çok zor sürükleniyor"). Notun tamamı
+              // zaten dokununca açılan okuma balonunda görünüyor.
+              child: blink == null
+                  ? child
+                  : FadeTransition(
+                      opacity: Tween<double>(
+                        begin: 1,
+                        end: 0.35,
+                      ).animate(blink),
+                      child: child,
+                    ),
+            ),
           ),
         ),
       ),
     );
+  }
+
+  static String _semanticLabel(BuildContext context, PageBubble bubble) {
+    final text = [
+      bubble.title.trim(),
+      bubble.text.trim(),
+    ].where((t) => t.isNotEmpty).join('. ');
+    return text.isEmpty
+        ? context.l10n.bubbleSemanticsEmpty
+        : context.l10n.bubbleSemantics(text);
   }
 
   /// Konuşma balonu biçimli tutamaç (bkz. [_pinPlacement]).
