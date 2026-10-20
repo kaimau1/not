@@ -235,6 +235,11 @@ eskisini arşive taşıma.
 - `USE_EXACT_ALARM` yok (Play); izin yoksa hatırlatıcı inexact'e düşer.
 - QR ve OCR modelleri Play Hizmetleri'nden (APK küçük; Play Hizmetleri yoksa
   çalışmaz).
+- FlutterFire paketleri BİRLİKTE yükseltilir (`flutter pub upgrade
+  firebase_core firebase_auth …` hepsi): 2026-10-20'de yalnız
+  firebase_messaging eklenince firebase_core 4.15'e çıktı, eski
+  firebase_auth/app_check Android'de DERLENMEDİ (testler/web yeşildi —
+  yalnız APK işi yakalar).
 - Crashlytics: google-services + crashlytics Gradle eklentileri; ayrı Firebase
   BoM EKLENMEZ (FlutterFire `firebase_core`un BoM'unu kullanıyor).
 - Kesin geri tuşu davranışı `alwaysHandleBack` (iç kabuk Navigator'ı sayfasız
