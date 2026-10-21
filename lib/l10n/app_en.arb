@@ -789,6 +789,30 @@
   "ttsEngineAiUnavailable": "The AI voice needs your own Gemini key. Until you add one, reading uses the device voice.",
   "ttsModel": "Speech model",
   "ttsVoice": "AI voice",
+  "ttsEngineLocal": "Turkish voice",
+  "ttsEngineLocalInfo": "Antalia: a Turkish speech model that runs on the phone. Free, offline and quota-free; the model is downloaded once (~50 MB). It reads Turkish only — text in other languages is read with the device voice. The voice is synthetic and does not belong to a real person.",
+  "ttsLocalUnsupported": "The Turkish voice only works in the Android app. Here the device voice reads.",
+  "ttsLocalMissing": "Until the model is downloaded, the device voice reads.",
+  "ttsLocalDownload": "Download model (~50 MB)",
+  "ttsLocalDownloading": "Downloading… {done}",
+  "@ttsLocalDownloading": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      }
+    }
+  },
+  "ttsLocalReady": "Model installed — works offline",
+  "ttsLocalDelete": "Delete model",
+  "ttsLocalFailed": "Download failed: {error}",
+  "@ttsLocalFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "listenLocalVoice": "Listen with Turkish voice (Antalia)",
   "shareAsNotePreparing": "Preparing note package…",
   "shareAsTextEmpty": "This note has no text to share.",
   "sharePdfWithBubbles": "As PDF with bubbles",

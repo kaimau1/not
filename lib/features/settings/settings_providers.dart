@@ -341,7 +341,12 @@ enum TtsEngine {
   /// Gemini'nin seslendirme modeli: belirgin daha doğal ama her paragraf bir
   /// model çağrısıdır (kota harcar) ve kullanıcının KENDİ Gemini anahtarını
   /// ister — dahili (Firebase) yol ses döndürmüyor.
-  gemini('gemini');
+  gemini('gemini'),
+
+  /// Antalia-2 Mini: cihazda çalışan Türkçe seslendirme modeli. Bedava,
+  /// çevrimdışı, kota yok; model (~50 MB) bir kez indirilir. Yalnız Türkçe
+  /// ve yalnız Android (bkz. `features/ai/data/antalia/`).
+  antalia('antalia');
 
   const TtsEngine(this.id);
 
@@ -351,7 +356,7 @@ enum TtsEngine {
       TtsEngine.values.firstWhere((e) => e.id == id, orElse: () => device);
 }
 
-/// Seslendirmeyi cihaz mı Gemini mi yapsın (varsayılan: cihaz — bedava).
+/// Seslendirmeyi cihaz mı, Gemini mi, Antalia mı yapsın (varsayılan: cihaz).
 final ttsEngineProvider = NotifierProvider<TtsEngineNotifier, TtsEngine>(
   TtsEngineNotifier.new,
 );

@@ -1012,6 +1012,30 @@
   "ttsEngineAiUnavailable": "Yapay zekâ sesi kendi Gemini anahtarını ister. Anahtar eklenene kadar okuma cihaz sesiyle yapılır.",
   "ttsModel": "Seslendirme modeli",
   "ttsVoice": "Yapay zekâ sesi",
+  "ttsEngineLocal": "Türkçe ses",
+  "ttsEngineLocalInfo": "Antalia: telefonda çalışan Türkçe ses modeli. Bedava, çevrimdışı ve kotasız; model bir kez indirilir (~50 MB). Yalnız Türkçe okur — başka dildeki metinler cihaz sesiyle okunur. Ses yapaydır, gerçek bir kişiye ait değildir.",
+  "ttsLocalUnsupported": "Türkçe ses yalnız Android uygulamasında çalışır. Burada okuma cihaz sesiyle yapılır.",
+  "ttsLocalMissing": "Model indirilene kadar okuma cihaz sesiyle yapılır.",
+  "ttsLocalDownload": "Modeli indir (~50 MB)",
+  "ttsLocalDownloading": "İndiriliyor… {done}",
+  "@ttsLocalDownloading": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      }
+    }
+  },
+  "ttsLocalReady": "Model kurulu — internetsiz çalışır",
+  "ttsLocalDelete": "Modeli sil",
+  "ttsLocalFailed": "İndirme başarısız: {error}",
+  "@ttsLocalFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "listenLocalVoice": "Türkçe sesle (Antalia) dinle",
   "shareAsNotePreparing": "Not paketi hazırlanıyor…",
   "shareAsTextEmpty": "Bu notta paylaşılacak yazı yok.",
   "sharePdfWithBubbles": "Balonlu PDF olarak",

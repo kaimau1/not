@@ -4130,6 +4130,66 @@ abstract class AppLocalizations {
   /// **'Yapay zekâ sesi'**
   String get ttsVoice;
 
+  /// No description provided for @ttsEngineLocal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Türkçe ses'**
+  String get ttsEngineLocal;
+
+  /// No description provided for @ttsEngineLocalInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Antalia: telefonda çalışan Türkçe ses modeli. Bedava, çevrimdışı ve kotasız; model bir kez indirilir (~50 MB). Yalnız Türkçe okur — başka dildeki metinler cihaz sesiyle okunur. Ses yapaydır, gerçek bir kişiye ait değildir.'**
+  String get ttsEngineLocalInfo;
+
+  /// No description provided for @ttsLocalUnsupported.
+  ///
+  /// In tr, this message translates to:
+  /// **'Türkçe ses yalnız Android uygulamasında çalışır. Burada okuma cihaz sesiyle yapılır.'**
+  String get ttsLocalUnsupported;
+
+  /// No description provided for @ttsLocalMissing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Model indirilene kadar okuma cihaz sesiyle yapılır.'**
+  String get ttsLocalMissing;
+
+  /// No description provided for @ttsLocalDownload.
+  ///
+  /// In tr, this message translates to:
+  /// **'Modeli indir (~50 MB)'**
+  String get ttsLocalDownload;
+
+  /// No description provided for @ttsLocalDownloading.
+  ///
+  /// In tr, this message translates to:
+  /// **'İndiriliyor… {done}'**
+  String ttsLocalDownloading(String done);
+
+  /// No description provided for @ttsLocalReady.
+  ///
+  /// In tr, this message translates to:
+  /// **'Model kurulu — internetsiz çalışır'**
+  String get ttsLocalReady;
+
+  /// No description provided for @ttsLocalDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Modeli sil'**
+  String get ttsLocalDelete;
+
+  /// No description provided for @ttsLocalFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'İndirme başarısız: {error}'**
+  String ttsLocalFailed(String error);
+
+  /// No description provided for @listenLocalVoice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Türkçe sesle (Antalia) dinle'**
+  String get listenLocalVoice;
+
   /// No description provided for @shareAsNotePreparing.
   ///
   /// In tr, this message translates to:

@@ -223,6 +223,11 @@ class _VoiceSection extends ConsumerWidget {
               icon: const Icon(Icons.auto_awesome, size: 18),
               label: Text(l10n.ttsEngineAi),
             ),
+            ButtonSegment(
+              value: TtsEngine.antalia,
+              icon: const Icon(Icons.record_voice_over, size: 18),
+              label: Text(l10n.ttsEngineLocal),
+            ),
           ],
           selected: {engine},
           onSelectionChanged: (value) =>
@@ -230,9 +235,11 @@ class _VoiceSection extends ConsumerWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          engine == TtsEngine.gemini
-              ? l10n.ttsEngineAiInfo
-              : l10n.ttsEngineDeviceInfo,
+          switch (engine) {
+            TtsEngine.gemini => l10n.ttsEngineAiInfo,
+            TtsEngine.antalia => l10n.ttsEngineLocalInfo,
+            TtsEngine.device => l10n.ttsEngineDeviceInfo,
+          },
           style: Theme.of(
             context,
           ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
@@ -253,6 +260,12 @@ class _VoiceSection extends ConsumerWidget {
               ).textTheme.bodySmall?.copyWith(color: scheme.error),
             ),
           ),
+        // Antalia: model indirme/silme satırı ve deneme. Model kurulu değilken
+        // okuma cihaz sesiyle sürer (sebebi satırda yazar).
+        if (engine == TtsEngine.antalia) ...[
+          const SizedBox(height: 10),
+          const _AntaliaModelTile(),
+        ],
         // Model ve ses YALNIZ yapay zekâ sesi seçiliyken anlamlı: cihaz
         // sesinin modeli yok, sesi de sistemden gelir (aşağıdaki menü).
         if (engine == TtsEngine.gemini) ...[
@@ -285,7 +298,7 @@ class _VoiceSection extends ConsumerWidget {
           // kez üretilir, sonra kayıttan çalar — deneme kota yakmaz.
           const SizedBox(height: 6),
           const _AiVoicePreviewButton(),
-        ] else ...[
+        ] else if (engine == TtsEngine.device) ...[
           const SizedBox(height: 6),
           // CİHAZ SESLERİ TEK MENÜDE: dil başına ayrı satırlar yerine tek bir
           // satır, dokununca dil + ses listesi açılır.
@@ -367,6 +380,147 @@ class _AiVoicePreviewButtonState extends ConsumerState<_AiVoicePreviewButton> {
         ),
       ],
     );
+  }
+}
+
+/// Antalia Türkçe ses modelinin kurulum satırı: indir (ilerlemeyle) / iptal /
+/// dene / sil. Model ~50 MB ve APK'ya gömülmüyor (bkz. [AntaliaModelFiles]);
+/// kullanıcı motoru seçince indirmeyi buradan kendisi başlatır — mobil
+/// veride sessizce 50 MB çekmek kabul edilemezdi.
+class _AntaliaModelTile extends ConsumerStatefulWidget {
+  const _AntaliaModelTile();
+
+  @override
+  ConsumerState<_AntaliaModelTile> createState() => _AntaliaModelTileState();
+}
+
+class _AntaliaModelTileState extends ConsumerState<_AntaliaModelTile> {
+  bool _previewing = false;
+
+  Future<void> _preview() async {
+    if (_previewing) return;
+    setState(() => _previewing = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref
+          .read(antaliaSpeechProvider.notifier)
+          .preview(SpeechOutputController.voiceSample('tr'));
+    } catch (error) {
+      messenger.showMessage(error.toString());
+    } finally {
+      if (mounted) setState(() => _previewing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final model = ref.watch(antaliaModelProvider);
+    final controller = ref.read(antaliaModelProvider.notifier);
+    final small = theme.textTheme.bodySmall;
+
+    switch (model.status) {
+      case AntaliaInstall.unsupported:
+        return Text(
+          l10n.ttsLocalUnsupported,
+          style: small?.copyWith(color: scheme.error),
+        );
+      case AntaliaInstall.checking:
+        return const LinearProgressIndicator();
+      case AntaliaInstall.missing:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              model.error != null
+                  ? l10n.ttsLocalFailed(model.error!)
+                  : l10n.ttsLocalMissing,
+              style: small?.copyWith(
+                color: model.error != null
+                    ? scheme.error
+                    : scheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            FilledButton.tonalIcon(
+              onPressed: controller.download,
+              icon: const Icon(Icons.download, size: 18),
+              label: Text(l10n.ttsLocalDownload),
+            ),
+          ],
+        );
+      case AntaliaInstall.downloading:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            LinearProgressIndicator(value: model.progress),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.ttsLocalDownloading(
+                      model.total > 0
+                          ? '${formatBytes(model.received)} / ${formatBytes(model.total)}'
+                          : formatBytes(model.received),
+                    ),
+                    style: small?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                ),
+                TextButton(
+                  onPressed: controller.cancel,
+                  child: Text(l10n.cancel),
+                ),
+              ],
+            ),
+          ],
+        );
+      case AntaliaInstall.ready:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.check_circle, size: 16, color: scheme.primary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    l10n.ttsLocalReady,
+                    style: small?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _previewing ? null : _preview,
+                  icon: _previewing
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.play_arrow, size: 18),
+                  label: Text(l10n.voicePreview),
+                ),
+                TextButton.icon(
+                  onPressed: () async {
+                    await ref.read(antaliaSpeechProvider.notifier).stop();
+                    await controller.delete();
+                  },
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  label: Text(l10n.ttsLocalDelete),
+                ),
+              ],
+            ),
+          ],
+        );
+    }
   }
 }
 

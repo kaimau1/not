@@ -41,6 +41,8 @@ import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/ai_speech.dart';
+import '../../ai/data/antalia/antalia_engine.dart';
+import '../../ai/data/antalia/antalia_speech.dart';
 import '../../ai/data/ai_provider.dart';
 import '../../ai/data/api_key_store.dart';
 import '../../ai/data/model_catalog.dart';

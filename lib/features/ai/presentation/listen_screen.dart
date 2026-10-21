@@ -13,6 +13,8 @@ import '../../notes/domain/note_type.dart';
 import '../../settings/settings_providers.dart';
 import '../data/ai_cache.dart';
 import '../data/ai_speech.dart';
+import '../data/antalia/antalia_engine.dart';
+import '../data/antalia/antalia_speech.dart';
 import '../data/speech_service.dart';
 import '../data/gemini_service.dart';
 
@@ -209,53 +211,73 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
   /// Ses üretimi kotadan düşüyor ve dinlerken üretilen parçalar okuma bitince
   /// siliniyor — bu yüzden dışa aktarma metni BAŞTAN seslendirir ve maliyeti
   /// önce kullanıcıya sorar.
+  ///
+  /// Ayar Antalia Türkçe sesindeyse (ve uygulama Türkçe) dosyayı o üretir:
+  /// cihazda, kotasız — maliyet sorusu yok.
   Future<void> _exportAudio() async {
     final text = _text;
     if (text == null || text.trim().isEmpty) return;
     final l10n = context.l10n;
-    if (!ref.read(speechProvider.notifier).aiAvailable) {
+    final service = ref.read(speechProvider.notifier);
+    final local =
+        !service.prefersAi &&
+        service.prefersLocal &&
+        Localizations.localeOf(context).languageCode == 'tr';
+    if (!local && !service.aiAvailable) {
       _snack(l10n.ttsEngineAiUnavailable);
       return;
     }
-    final approved = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.podcastExportAudio),
-        content: Text(l10n.podcastExportAudioCost),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.podcastExportAudio),
-          ),
-        ],
-      ),
-    );
-    if (approved != true || !mounted) return;
+    if (!local) {
+      final approved = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.podcastExportAudio),
+          content: Text(l10n.podcastExportAudioCost),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(l10n.podcastExportAudio),
+            ),
+          ],
+        ),
+      );
+      if (approved != true || !mounted) return;
+    }
 
-    await ref.read(speechProvider.notifier).stop();
+    await service.stop();
     setState(() {
       _rendering = true;
       _renderDone = 0;
       _renderTotal = 0;
     });
+    void onProgress(int done, int total) {
+      if (!mounted) return;
+      setState(() {
+        _renderDone = done;
+        _renderTotal = total;
+      });
+    }
+
     try {
-      final path = await ref
-          .read(aiSpeechProvider.notifier)
-          .renderToFile(
-            text,
-            fileName: widget.title,
-            onProgress: (done, total) {
-              if (!mounted) return;
-              setState(() {
-                _renderDone = done;
-                _renderTotal = total;
-              });
-            },
-          );
+      final path = local
+          ? await ref
+                .read(antaliaSpeechProvider.notifier)
+                .renderToFile(
+                  text,
+                  fileName: widget.title,
+                  onProgress: onProgress,
+                )
+          : await ref
+                .read(aiSpeechProvider.notifier)
+                .renderToFile(
+                  text,
+                  fileName: widget.title,
+                  onProgress: onProgress,
+                );
       if (!mounted) return;
       setState(() => _rendering = false);
       await SharePlus.instance.share(
@@ -323,7 +345,12 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     final speech = ref.watch(speechProvider);
     final service = ref.read(speechProvider.notifier);
     _speechService = service;
+    // Model denetimi/indirmesi bitince "hangi ses" satırı güncellensin.
+    ref.watch(antaliaModelProvider.select((m) => m.status));
     final aiVoice = speech.isActive ? service.usingAi : service.prefersAi;
+    final localVoice = speech.isActive
+        ? service.usingLocal
+        : !aiVoice && service.prefersLocal;
     final text = _text;
 
     return Scaffold(
@@ -525,7 +552,11 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
                           child: Row(
                             children: [
                               Icon(
-                                aiVoice ? Icons.auto_awesome : Icons.smartphone,
+                                aiVoice
+                                    ? Icons.auto_awesome
+                                    : localVoice
+                                    ? Icons.record_voice_over
+                                    : Icons.smartphone,
                                 size: 15,
                                 color: scheme.onSurfaceVariant,
                               ),
@@ -534,10 +565,18 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
                                 child: Text(
                                   aiVoice
                                       ? l10n.listenAiVoice
-                                      : (ref.read(ttsEngineProvider) ==
-                                                TtsEngine.gemini
-                                            ? l10n.ttsEngineAiUnavailable
-                                            : l10n.ttsEngineDevice),
+                                      : localVoice
+                                      ? l10n.listenLocalVoice
+                                      : switch (ref.read(ttsEngineProvider)) {
+                                          TtsEngine.gemini =>
+                                            l10n.ttsEngineAiUnavailable,
+                                          TtsEngine.antalia =>
+                                            AntaliaModelFiles.supported
+                                                ? l10n.ttsLocalMissing
+                                                : l10n.ttsLocalUnsupported,
+                                          TtsEngine.device =>
+                                            l10n.ttsEngineDevice,
+                                        },
                                   style: Theme.of(context)
                                       .textTheme
                                       .labelSmall

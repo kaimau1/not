@@ -2209,6 +2209,43 @@ class AppLocalizationsTr extends AppLocalizations {
   String get ttsVoice => 'Yapay zekâ sesi';
 
   @override
+  String get ttsEngineLocal => 'Türkçe ses';
+
+  @override
+  String get ttsEngineLocalInfo =>
+      'Antalia: telefonda çalışan Türkçe ses modeli. Bedava, çevrimdışı ve kotasız; model bir kez indirilir (~50 MB). Yalnız Türkçe okur — başka dildeki metinler cihaz sesiyle okunur. Ses yapaydır, gerçek bir kişiye ait değildir.';
+
+  @override
+  String get ttsLocalUnsupported =>
+      'Türkçe ses yalnız Android uygulamasında çalışır. Burada okuma cihaz sesiyle yapılır.';
+
+  @override
+  String get ttsLocalMissing =>
+      'Model indirilene kadar okuma cihaz sesiyle yapılır.';
+
+  @override
+  String get ttsLocalDownload => 'Modeli indir (~50 MB)';
+
+  @override
+  String ttsLocalDownloading(String done) {
+    return 'İndiriliyor… $done';
+  }
+
+  @override
+  String get ttsLocalReady => 'Model kurulu — internetsiz çalışır';
+
+  @override
+  String get ttsLocalDelete => 'Modeli sil';
+
+  @override
+  String ttsLocalFailed(String error) {
+    return 'İndirme başarısız: $error';
+  }
+
+  @override
+  String get listenLocalVoice => 'Türkçe sesle (Antalia) dinle';
+
+  @override
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override

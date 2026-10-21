@@ -2213,6 +2213,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ttsVoice => 'AI voice';
 
   @override
+  String get ttsEngineLocal => 'Turkish voice';
+
+  @override
+  String get ttsEngineLocalInfo =>
+      'Antalia: a Turkish speech model that runs on the phone. Free, offline and quota-free; the model is downloaded once (~50 MB). It reads Turkish only — text in other languages is read with the device voice. The voice is synthetic and does not belong to a real person.';
+
+  @override
+  String get ttsLocalUnsupported =>
+      'The Turkish voice only works in the Android app. Here the device voice reads.';
+
+  @override
+  String get ttsLocalMissing =>
+      'Until the model is downloaded, the device voice reads.';
+
+  @override
+  String get ttsLocalDownload => 'Download model (~50 MB)';
+
+  @override
+  String ttsLocalDownloading(String done) {
+    return 'Downloading… $done';
+  }
+
+  @override
+  String get ttsLocalReady => 'Model installed — works offline';
+
+  @override
+  String get ttsLocalDelete => 'Delete model';
+
+  @override
+  String ttsLocalFailed(String error) {
+    return 'Download failed: $error';
+  }
+
+  @override
+  String get listenLocalVoice => 'Listen with Turkish voice (Antalia)';
+
+  @override
   String get shareAsNotePreparing => 'Preparing note package…';
 
   @override

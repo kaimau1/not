@@ -323,8 +323,14 @@ eskisini arşive taşıma.
   çubuğunun da üstünde.
 
 ## Ses ve yapay zekâ
-- Seslendirme TEK kapı `SpeechService` (F3.9): motor ayardan (cihaz / AI);
-  AI düşerse cihaza geçer ve sebebi söyler.
+- Seslendirme TEK kapı `SpeechService` (F3.9): motor ayardan (cihaz / AI /
+  Antalia); seçilen düşerse cihaza geçer ve sebebi söyler.
+- Antalia Türkçe ses (2026-10-21, `ai/data/antalia/`): cloud0day3/antalia-mini
+  ONNX'i (fr0stb1rd/antalia-mini-web-onnx, ~50 MB) Ayarlar'dan İSTEĞE BAĞLI
+  indirilir, `flutter_onnxruntime` ile cihazda; yalnız Android (web eklentisi
+  int64 almıyor) ve yalnız `tr` (başka dil → cihaz sesi). Normalleştirici
+  normalize.js'in Dart portu — Python örnekleriyle birebir test edilir
+  (`test/fixtures/antalia_*`); deseni sadeleştirme. R8: `ai.onnxruntime` keep.
 - Sohbet TEK ekran `AiChatScreen` (F3.3): kapsam (Tüm notlar / Bu not / Bu
   belge) + kip (Soru-cevap / Beyin fırtınası). "Tüm notlar" konuşması
   `chatProvider`'da (merkez kartla ortak).

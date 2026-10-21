@@ -65,3 +65,11 @@
 -dontwarn javax.lang.model.**
 -dontwarn org.checkerframework.**
 -dontwarn com.google.errorprone.annotations.**
+
+# --- ONNX Runtime (Antalia Türkçe ses, flutter_onnxruntime) --------------
+# ORT'nin yerel kitaplığı Java sınıflarını (OnnxTensor, OrtSession.Result,
+# OrtException…) JNI'dan ADIYLA bulup oluşturuyor; R8 bunları yeniden
+# adlandırır ya da atarsa ilk seslendirmede `NoSuchMethodError`/
+# `ClassNotFoundException` ile çöker — derleme temiz geçer.
+-keep class ai.onnxruntime.** { *; }
+-dontwarn ai.onnxruntime.**

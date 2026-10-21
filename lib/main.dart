@@ -24,6 +24,7 @@ import 'core/utils/prefs_footprint.dart';
 import 'core/widgets/setup_required_screen.dart';
 import 'features/notes/data/local_notes_store.dart';
 import 'features/notes/presentation/note_card_media.dart' show CardThumbs;
+import 'features/ai/data/antalia/antalia_engine.dart' show registerAntaliaLicense;
 import 'features/settings/settings_providers.dart';
 import 'core/personalize.dart';
 import 'features/notes/presentation/viewers/bubble_layer.dart' show BubbleLook;
@@ -64,6 +65,7 @@ Future<void> _activateAppCheck() async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  registerAntaliaLicense();
   // Web'de tarayıcının kendi sağ tık menüsü kapatılır: not kartlarına sağ
   // tıklayınca uygulamanın bağlam menüsü açılsın (masaüstündeki gibi),
   // tarayıcınınki üstüne binmesin. Metin alanları Flutter'ın kendi
