@@ -42,6 +42,9 @@ eskisini arşive taşıma.
   kapanınca çalışmaz); yapı önbelleği (`build-cache-1`) her başarılı
   derlemeden sonra kaydedilir.
 - `secrets` bağlamı step `if:` içinde kullanılamaz → bash adımında kontrol.
+- APK'da `.so`'lar SIKIŞTIRILIR (`useLegacyPackaging = true`, 2026-10-23):
+  ORT eklenince APK 73 MB oldu (`libonnxruntime.so` 28,6 MB, AGP
+  varsayılanı sıkıştırmasız). Bedeli kurulu boyut.
 - Mimari: yalnız arm64 (`--target-platform android-arm64` + `packaging.jniLibs.excludes`;
   `abiFilters` tek başına eklenti .so'larını elemiyor). Rapor adımı 32 bit
   sızarsa düşer.
@@ -79,6 +82,11 @@ eskisini arşive taşıma.
   DOĞRUDAN vermez (Firestore kodlayıcısı `float[]` yollar, sunucu reddeder)
   → `UnmodifiableListView`. Kayıttan okunan çizgiyi YERİNDE değiştirme
   (sabit uzunluk); yalnız çizim sürerken kurulan çizgi büyür.
+- Kalem basıncı (2026-10-23): `InkStroke.pressures` (`q`, nokta başına
+  0–1, yalnız kalemle çizilende); kırp/yerleştir/döndür `copyWith` ile
+  taşır. Şekiller (çizgi/dikdörtgen/elips) kayda SIRADAN çizgi yazılır.
+  `inkPaint` fosforluyu tam 0x66 alfadan tanır (tükenmez/keçeli artık
+  şeffaf olabiliyor).
 - 1 MiB sınırı: ≥ 900 KB'ta kullanıcı uyarılır (en büyük kalem adıyla);
   yazım reddi yutulmaz (günlük + Crashlytics + bildirim).
 - **Ağır alanlar ayrı belgede (F3.13):** ağır kısmı (ek `ink`/`bubbles`/
@@ -118,8 +126,10 @@ eskisini arşive taşıma.
   (`contentRuled`) yalnız kenar/cilt. Defterde `ItemsEditor.paperLines`:
   dolgu 0, kutu 24 dp → madde = satır × aralık. Aralık textScaler'lı
   (`_paperGap`). Kareli/noktalı serbest ızgara kalır.
-- Madde altı ayırıcı `NoteItem.divider` ('' / solid / dashed / dotted;
-  yalnız doluyken yazılır); `sameItemsVisually`, `_sameItems`, `_sameItem`
+- Madde altı ayırıcı `NoteItem.divider` ('' / solid / dashed / dotted /
+  double / wavy; yalnız doluyken yazılır). Renk/kalınlık AYNI dizede
+  (2026-10-23): `tür|c:AARRGGBB|w:1.50` (`ItemDivider.parse/encode`; eski
+  sürüm tanımadığını düz çizer). Çizim tek yerden `paintItemDivider`; `sameItemsVisually`, `_sameItems`, `_sameItem`
   (birleştirme) ve `ItemsEditor` satır önbelleğinin anahtarı ona da
   bakar (anahtarda yokken çizgi hiç görünmüyordu). Satırı çizen YENİ alan
   → `_cachedItemRow` anahtarına ekle.
@@ -324,7 +334,9 @@ eskisini arşive taşıma.
 
 ## Ses ve yapay zekâ
 - Seslendirme TEK kapı `SpeechService` (F3.9): motor ayardan (cihaz / AI /
-  Antalia); seçilen düşerse cihaza geçer ve sebebi söyler.
+  Antalia); seçilen düşerse cihaza geçer ve sebebi söyler. Ayarlardaki
+  DENEMELER de `SpeechService.preview` ile (2026-10-23: motorları doğrudan
+  çağırınca Antalia + AI sesi üst üste çalıyordu); motor değişince `stop`.
 - Antalia Türkçe ses (2026-10-21, `ai/data/antalia/`): cloud0day3/antalia-mini
   ONNX'i (fr0stb1rd/antalia-mini-web-onnx, ~50 MB) Ayarlar'dan İSTEĞE BAĞLI
   indirilir, `flutter_onnxruntime` ile cihazda; yalnız Android (web eklentisi
@@ -388,6 +400,19 @@ eskisini arşive taşıma.
   sütunda sola yığılıyordu).
 - Kartta görünenler tek tek ayar (`card_show_*`, `cardDisplayProvider`
   kaydı; ilerleme sayacı varsayılan KAPALI). Yeni kart öğesi → oraya ekle.
+  `card_show_media` = görseller, `card_show_files` = dosya ekleri (2026-10-23
+  ayrıldı; Süz levhasında da kısayol).
+- Paylaşılanlar ana ekranda (`home_show_shared`, varsayılan kapalı):
+  AYRI bölüm `SharedNotesHomeSection` — kendi notlarımın ızgarasına
+  karıştırılmaz (seçim/sıralama/toplu iş yalnız kendi koleksiyonumu bilir).
+- Kalem (2026-10-23): ayarlar cihazda `InkToolMemory` (main'de attach;
+  senkron YOK). "Yalnız kalemle yaz": parmak çizmez, `InkNavLayer` tek
+  parmakla kaydırır; ilk kalem dokunuşunda kendiliğinden açılır (elle
+  seçilmediyse). Kalem değerken parmaklar (avuç) gezinmede yok sayılır.
+  Yan düğme / ters uç = geçici silgi. Geri al/yinele jest başına anlık
+  liste (silinen de geri gelir). El yazısı tuvali iki parmakla yakınlaşır.
+- Görüntüleyicilerde "Eki kopyala" (`CopyAttachmentButton`): uygulama içi
+  pano + görselde sistem panosu.
 - Uzun listeli not açılışı: `ItemsEditor` shrinkWrap'te HEPSİNİ kurar →
   `_rowBudget` ilk karede 18 madde, 380 ms sonra kare başına 14.
 - Dinleme alanları TEK KART `ListeningCard` (`listening_visuals.dart`):

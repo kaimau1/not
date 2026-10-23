@@ -108,11 +108,20 @@ class CardMediaPlan {
   static bool _document(Attachment a) =>
       a.kind == AttachmentKind.pdf || a.kind == AttachmentKind.slide;
 
-  factory CardMediaPlan.of(Note note) {
+  /// [showVisuals] false: görsel/video yok; [showFiles] false: belge, ses ve
+  /// metin ekleri yok (Ayarlar → Kartta görünenler; `cardDisplayProvider`).
+  factory CardMediaPlan.of(
+    Note note, {
+    bool showVisuals = true,
+    bool showFiles = true,
+  }) {
     // Zemin görseli ek DEĞİL: notun arkasında duvar kâğıdı olarak duruyor.
     final all = [
       for (final a in note.attachments)
-        if (a.id != note.backgroundImageId && !note.hidesDerivedDocument(a)) a,
+        if (a.id != note.backgroundImageId &&
+            !note.hidesDerivedDocument(a) &&
+            (_visual(a) ? showVisuals : showFiles))
+          a,
     ];
     // Sabitli medya önce: kartın kapağı odur.
     final visuals = [

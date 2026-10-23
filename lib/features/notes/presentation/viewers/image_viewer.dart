@@ -16,6 +16,7 @@ import 'image_crop.dart';
 import 'ink_layer.dart';
 import 'text_recognize_screen.dart';
 import 'zoom_math.dart';
+import '../editor/attachment_clipboard.dart';
 
 /// Tam ekran görsel görüntüleyici (yakınlaştırma/kaydırma destekli).
 ///
@@ -543,6 +544,8 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
             ],
           ),
           actions: [
+            // Eki kopyala (çizim kipinde gizli — araç çubuğu kalem için).
+            if (!_editing) CopyAttachmentButton(attachment: _attachment),
             // Kırpma çizim MODUNDA gizlenir: o an araç çubuğu kalem/silgi
             // için kullanılıyor, iki kip aynı anda anlamlı değil.
             if (widget.onCrop != null && !_editing)

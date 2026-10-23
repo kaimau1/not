@@ -89,6 +89,14 @@ android {
     // yolları o adı bilmiyor — sessizce "APK yok" hatasına düşerdi.
     packaging {
         jniLibs {
+            // BOYUT (kullanıcı bildirimi 2026-10-23: "Türkçe ses eklenince APK
+            // ~30 MB büyüdü"): koşu #516 raporu — libonnxruntime.so 28,6 MB,
+            // AGP varsayılanı (minSdk ≥ 23) .so'ları APK'da SIKIŞTIRMADAN
+            // saklıyor. Sıkıştırınca ORT ~%60, libapp/libflutter/libpdfium
+            // da ~%50 küçülür (indirilen APK ~73 → ~45 MB). Bedeli: kurulumda
+            // .so'lar diske açılır (kurulu boyut biraz artar) — indirme ve
+            // paylaşım boyutu öncelikli.
+            useLegacyPackaging = true
             excludes += setOf(
                 "**/x86_64/**",
                 "**/x86/**",

@@ -10,8 +10,9 @@ void _previewDeviceVoice(BuildContext context, WidgetRef ref) {
   final language = Localizations.localeOf(context).languageCode;
   unawaited(
     ref
-        .read(speechOutputProvider.notifier)
-        .speak(
+        .read(speechProvider.notifier)
+        .preview(
+          TtsEngine.device,
           SpeechOutputController.voiceSample(language),
           languageCode: language,
         ),
@@ -113,8 +114,9 @@ class _ForeignSpeechRateSliderState
                 if (!context.mounted) return;
                 unawaited(
                   ref
-                      .read(speechOutputProvider.notifier)
-                      .speak(
+                      .read(speechProvider.notifier)
+                      .preview(
+                        TtsEngine.device,
                         SpeechOutputController.voiceSample('en'),
                         languageCode: 'en',
                       ),
@@ -230,8 +232,12 @@ class _VoiceSection extends ConsumerWidget {
             ),
           ],
           selected: {engine},
-          onSelectionChanged: (value) =>
-              ref.read(ttsEngineProvider.notifier).set(value.first),
+          // Motor değişince süren deneme/okuma susar: eski motorun örneği
+          // yenisininkiyle üst üste çalmasın.
+          onSelectionChanged: (value) {
+            unawaited(ref.read(speechProvider.notifier).stop());
+            ref.read(ttsEngineProvider.notifier).set(value.first);
+          },
         ),
         const SizedBox(height: 6),
         Text(
@@ -345,7 +351,9 @@ class _AiVoicePreviewButtonState extends ConsumerState<_AiVoicePreviewButton> {
     final language = Localizations.localeOf(context).languageCode;
     final sample = SpeechOutputController.voiceSample(language);
     try {
-      await ref.read(aiSpeechProvider.notifier).previewVoice(sample);
+      await ref
+          .read(speechProvider.notifier)
+          .preview(TtsEngine.gemini, sample);
     } catch (error) {
       messenger.showMessage(error.toString());
     } finally {
@@ -403,8 +411,11 @@ class _AntaliaModelTileState extends ConsumerState<_AntaliaModelTile> {
     final messenger = ScaffoldMessenger.of(context);
     try {
       await ref
-          .read(antaliaSpeechProvider.notifier)
-          .preview(SpeechOutputController.voiceSample('tr'));
+          .read(speechProvider.notifier)
+          .preview(
+            TtsEngine.antalia,
+            SpeechOutputController.voiceSample('tr'),
+          );
     } catch (error) {
       messenger.showMessage(error.toString());
     } finally {
@@ -570,10 +581,13 @@ class _VoicePickerSheetState extends ConsumerState<_VoicePickerSheet> {
     setState(() => _selected = voice);
     // Örnek cümle SEÇİLEN DİLDEDİR: yabancı sese Türkçe cümle okutmak ne
     // telaffuzu ne tınıyı gösteriyordu.
-    await controller.speak(
-      SpeechOutputController.voiceSample(language),
-      languageCode: language,
-    );
+    await ref
+        .read(speechProvider.notifier)
+        .preview(
+          TtsEngine.device,
+          SpeechOutputController.voiceSample(language),
+          languageCode: language,
+        );
   }
 
   @override

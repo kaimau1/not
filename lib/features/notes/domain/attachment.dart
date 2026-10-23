@@ -59,6 +59,7 @@ class InkStroke {
     required this.width,
     required this.points,
     this.arrow = false,
+    this.pressures,
   });
 
   /// 1 tabanlı sayfa numarası.
@@ -88,13 +89,40 @@ class InkStroke {
   /// şeması büyümez.
   final bool arrow;
 
+  /// **KALEM BASINCI** (kullanıcı isteği 2026-10-23: "Samsung Notes'tan geri
+  /// kalmamalıyız"): basınç algılayan kalemle çizilen çizgide nokta başına
+  /// bir değer (0–1); kalınlık noktada `width × basınç eğrisi` olur
+  /// ([inkPressureFactor]). Parmakla/fareyle çizgide null — şema büyümez.
+  /// Uzunluk [points]in YARISI değilse (eski istemci noktaları kırptı)
+  /// yok sayılır ([hasPressure]).
+  final List<double>? pressures;
+
+  /// Basınç listesi noktalarla eşleşiyor mu (çizim buna göre değişken kalın).
+  bool get hasPressure {
+    final p = pressures;
+    return p != null && p.isNotEmpty && p.length * 2 == points.length;
+  }
+
   factory InkStroke.fromMap(Map<String, dynamic> map) => InkStroke(
     page: (map['p'] as num?)?.toInt() ?? 1,
     color: (map['c'] as num?)?.toInt() ?? 0xFF000000,
     width: (map['w'] as num?)?.toDouble() ?? 0.004,
     points: _points(map['d'] as List?),
     arrow: map['a'] as bool? ?? false,
+    pressures: map['q'] is List ? _points(map['q'] as List?) : null,
   );
+
+  /// Aynı çizginin yeni nokta listesiyle kopyası (kırp/yerleştir/döndür):
+  /// basınç nokta başına olduğundan dönüşümlerden aynen geçer.
+  InkStroke copyWith({int? page, double? width, List<double>? points}) =>
+      InkStroke(
+        page: page ?? this.page,
+        color: color,
+        width: width ?? this.width,
+        points: points ?? this.points,
+        arrow: arrow,
+        pressures: pressures,
+      );
 
   static List<double> _points(List? raw) {
     if (raw == null || raw.isEmpty) return Float32List(0);
@@ -114,8 +142,17 @@ class InkStroke {
     // tipli dizi (float[]) olarak yollar, sunucu kabul etmez.
     'd': points is Float32List ? UnmodifiableListView(points) : points,
     if (arrow) 'a': true,
+    if (hasPressure)
+      'q': pressures is Float32List
+          ? UnmodifiableListView(pressures!)
+          : pressures,
   };
 }
+
+/// Basınçtan kalınlık çarpanı: hafif dokunuş ince (×0,35), sert basış kalın
+/// (×1,4); orta basınç (~0,5) seçilen kalınlığa yakın düşer.
+double inkPressureFactor(double pressure) =>
+    0.35 + 1.05 * pressure.clamp(0.0, 1.0);
 
 /// PDF/slayt sayfasının üzerine bırakılan tek bir **not balonu**.
 ///
@@ -482,16 +519,8 @@ List<InkStroke> cropInk(
     // korunur (çizim katmanı zaten kırpar) — yoksa kenardaki bir imza
     // tek nokta yüzünden tümüyle silinirdi.
     if (!anyInside) continue;
-    out.add(
-      InkStroke(
-        page: s.page,
-        color: s.color,
-        // Kalınlık görsel GENİŞLİĞİNİN oranı; çerçeve daraldıkça oran büyür.
-        width: s.width / w,
-        points: points,
-        arrow: s.arrow,
-      ),
-    );
+    // Kalınlık görsel GENİŞLİĞİNİN oranı; çerçeve daraldıkça oran büyür.
+    out.add(s.copyWith(width: s.width / w, points: points));
   }
   return out;
 }
@@ -512,9 +541,8 @@ List<InkStroke> placeInk(
   final h = frame.bottom - frame.top;
   return [
     for (final s in strokes)
-      InkStroke(
+      s.copyWith(
         page: page,
-        color: s.color,
         width: s.width * w,
         points: [
           for (var i = 0; i + 1 < s.points.length; i += 2) ...[
@@ -522,7 +550,6 @@ List<InkStroke> placeInk(
             frame.top + s.points[i + 1] * h,
           ],
         ],
-        arrow: s.arrow,
       ),
   ];
 }
@@ -607,17 +634,13 @@ List<InkStroke> rotateInk(List<InkStroke> strokes, int quarterTurns) {
   for (var turn = 0; turn < turns; turn++) {
     current = [
       for (final s in current)
-        InkStroke(
-          page: s.page,
-          color: s.color,
-          width: s.width,
+        s.copyWith(
           points: [
             for (var i = 0; i + 1 < s.points.length; i += 2) ...[
               1 - s.points[i + 1],
               s.points[i],
             ],
           ],
-          arrow: s.arrow,
         ),
     ];
   }

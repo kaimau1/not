@@ -47,6 +47,12 @@ class _DrawingScreenState extends State<DrawingScreen> {
   )..setEditing(true);
 
   final _canvasKey = GlobalKey();
+
+  /// Tuvalin yakınlaştırması (kullanıcı isteği 2026-10-23: "not içi zoom"):
+  /// iki parmak yakınlaştırır/kaydırır, "yalnız kalem" açıkken tek parmak da
+  /// kaydırır ([InkNavLayer]). Çizgiler tuvalin oranında saklandığından
+  /// yakınlaştırma kaydı etkilemez; ince ayrıntı büyütülüp yazılır.
+  final _zoom = ValueNotifier<Matrix4>(Matrix4.identity());
   bool _saving = false;
 
   /// Çözülmüş zemin görseli — yeniden çizimde ([_save]) gerekiyor: ekrandaki
@@ -83,6 +89,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
   void dispose() {
     _background?.dispose();
     _ink.dispose();
+    _zoom.dispose();
     super.dispose();
   }
 
@@ -114,10 +121,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
       // gerekçe) ve `Image` widget'ının yerleşimi bu tuvale taşınmıyor.
       final image = _background;
       if (image != null) {
-        final source = Size(
-          image.width.toDouble(),
-          image.height.toDouble(),
-        );
+        final source = Size(image.width.toDouble(), image.height.toDouble());
         final fitted = applyBoxFit(BoxFit.contain, source, size);
         final destination = Alignment.center.inscribe(
           fitted.destination,
@@ -178,48 +182,80 @@ class _DrawingScreenState extends State<DrawingScreen> {
         _save();
       },
       child: Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.drawingTitle),
-        actions: [
-          Padding(
-            padding: const EdgeInsetsDirectional.only(end: 8),
-            child: FilledButton.tonalIcon(
-              onPressed: _saving ? null : _save,
-              icon: const Icon(Icons.check, size: 18),
-              label: Text(widget.saveLabel ?? l10n.addToNote),
+        appBar: AppBar(
+          title: Text(l10n.drawingTitle),
+          actions: [
+            // Yakınlaştırılmışken tek dokunuşla tam görünüme dön.
+            ValueListenableBuilder<Matrix4>(
+              valueListenable: _zoom,
+              builder: (context, m, _) => m.getMaxScaleOnAxis() > 1.01
+                  ? IconButton(
+                      tooltip: l10n.inkZoomReset,
+                      icon: const Icon(Icons.zoom_out_map),
+                      onPressed: () => _zoom.value = Matrix4.identity(),
+                    )
+                  : const SizedBox.shrink(),
             ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Container(
-              key: _canvasKey,
-              color: Colors.white,
-              width: double.infinity,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (widget.background != null)
-                    Image.memory(
-                      widget.background!,
-                      fit: BoxFit.contain,
-                      cacheWidth: decodeWidthBucket(
-                        MediaQuery.sizeOf(context).width,
-                        MediaQuery.devicePixelRatioOf(context),
-                      ),
-                    ),
-                  InkPageLayer(controller: _ink, page: _page),
-                ],
+            Padding(
+              padding: const EdgeInsetsDirectional.only(end: 8),
+              child: FilledButton.tonalIcon(
+                onPressed: _saving ? null : _save,
+                icon: const Icon(Icons.check, size: 18),
+                label: Text(widget.saveLabel ?? l10n.addToNote),
               ),
             ),
-          ),
-          // Geri al / temizle araç çubuğunun içinde; başlıkta ayrıca durmasına
-          // gerek yok (PDF üstü çizimle aynı düzen).
-          InkToolbar(controller: _ink),
-        ],
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: ClipRect(
+                child: InkNavLayer(
+                  enabled: true,
+                  controller: _ink,
+                  getMatrix: () => _zoom.value,
+                  setMatrix: (m) => _zoom.value = m,
+                  minScale: 1,
+                  maxScale: 6,
+                  clampToBounds: true,
+                  child: ValueListenableBuilder<Matrix4>(
+                    valueListenable: _zoom,
+                    builder: (context, m, child) =>
+                        Transform(transform: m, child: child),
+                    child: _canvas(context),
+                  ),
+                ),
+              ),
+            ),
+            // Geri al / temizle araç çubuğunun içinde; başlıkta ayrıca durmasına
+            // gerek yok (PDF üstü çizimle aynı düzen).
+            InkToolbar(controller: _ink, hint: l10n.inkZoomHint),
+          ],
+        ),
       ),
+    );
+  }
+
+  /// Beyaz tuval (+ varsa zemin görseli) ve çizim katmanı.
+  Widget _canvas(BuildContext context) {
+    return Container(
+      key: _canvasKey,
+      color: Colors.white,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (widget.background != null)
+            Image.memory(
+              widget.background!,
+              fit: BoxFit.contain,
+              cacheWidth: decodeWidthBucket(
+                MediaQuery.sizeOf(context).width,
+                MediaQuery.devicePixelRatioOf(context),
+              ),
+            ),
+          InkPageLayer(controller: _ink, page: _page),
+        ],
       ),
     );
   }

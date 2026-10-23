@@ -43,6 +43,7 @@ import '../../ai/data/ai_gate.dart';
 import '../../ai/data/ai_speech.dart';
 import '../../ai/data/antalia/antalia_engine.dart';
 import '../../ai/data/antalia/antalia_speech.dart';
+import '../../ai/data/speech_service.dart';
 import '../../ai/data/ai_provider.dart';
 import '../../ai/data/api_key_store.dart';
 import '../../ai/data/model_catalog.dart';
@@ -373,7 +374,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               title: l10n.cardShowMedia,
             ),
             title: l10n.cardShowMedia,
-            keywords: 'kart ek gorsel resim kapak kucuk resim video pdf',
+            keywords: 'kart gorsel resim kapak kucuk resim video fotograf',
+          ),
+          _SettingRow(
+            _PrefSwitch(
+              provider: cardShowFilesProvider,
+              icon: Icons.attach_file,
+              title: l10n.cardShowFiles,
+              subtitle: l10n.cardShowFilesInfo,
+            ),
+            title: l10n.cardShowFiles,
+            keywords: '${l10n.cardShowFilesInfo} kart ek dosya pdf ses belge',
+          ),
+          _SettingRow(
+            _PrefSwitch(
+              provider: homeShowSharedProvider,
+              icon: Icons.people_alt_outlined,
+              title: l10n.homeShowShared,
+              subtitle: l10n.homeShowSharedInfo,
+            ),
+            title: l10n.homeShowShared,
+            keywords:
+                '${l10n.homeShowSharedInfo} paylasilan ortak not ana ekran',
           ),
           _SettingRow(
             _PrefSwitch(

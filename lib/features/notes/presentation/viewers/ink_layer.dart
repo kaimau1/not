@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/color_palette.dart';
@@ -7,6 +8,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../domain/arrow.dart';
 import '../../domain/attachment.dart';
 import 'ink_pen.dart';
+import 'ink_tools.dart';
 
 /// PDF ve slayt görüntüleyicilerinin ortak elle-yazma katmanı. Çizim dosyaya
 /// gömülmez; sayfa/slayt oranlı (0–1) vektör olarak [InkStroke] listesinde
@@ -19,7 +21,23 @@ import 'ink_pen.dart';
 /// başlamış çizgi iptal edilir ki iki parmak jesti çizime dönüşmesin.
 class InkController extends ChangeNotifier {
   InkController({required List<InkStroke> initial, required this.onChanged})
-    : _ink = [...initial];
+    : _ink = [...initial] {
+    // Son kullanılan kalem ([InkToolMemory]): her çizim ekranı yeni
+    // denetleyici kurduğundan seçim her açılışta siyah tükenmeze dönüyordu.
+    final penIndex = InkToolMemory.pen;
+    if (penIndex != null && penIndex >= 0 && penIndex < InkPen.values.length) {
+      pen = InkPen.values[penIndex];
+    }
+    final rememberedColor = InkToolMemory.color;
+    if (rememberedColor != null) color = Color(rememberedColor);
+    final rememberedWidth = InkToolMemory.width;
+    widthPx = rememberedWidth == null
+        ? pen.defaultWidth
+        : pen.clampWidth(rememberedWidth);
+    opacity = InkToolMemory.opacity;
+    penOnly = InkToolMemory.penOnly;
+    pressure = InkToolMemory.pressure;
+  }
 
   /// Çizim değişince güncel çizgi listesiyle çağrılır (kaydetme).
   final ValueChanged<List<InkStroke>> onChanged;
@@ -35,6 +53,11 @@ class InkController extends ChangeNotifier {
   /// işareti çekme istiyorum"). Elle çizilen ok hiçbir zaman düz çıkmıyor.
   bool arrow = false;
 
+  /// Seçili ŞEKİL (düz çizgi / dikdörtgen / elips); null = serbest çizim.
+  /// Ok gibi bastığın yerden kaldırdığın yere çizilir, kayda sıradan çizgi
+  /// olarak yazılır ([inkShapePoints]).
+  InkShape? shape;
+
   /// Kullanıcının seçtiği renk — SAYDAMLIKSIZ hâli. Çizgiye yazılırken
   /// kalemin saydamlığı uygulanır ([penColor]).
   Color color = kInkPalette.first;
@@ -46,8 +69,24 @@ class InkController extends ChangeNotifier {
   /// sayfa genişliğinin oranına çevrilir.
   double widthPx = InkPen.pen.defaultWidth;
 
-  /// Çizgiye yazılan renk: seçilen renk + kalemin saydamlığı.
-  Color get penColor => pen.apply(color);
+  /// Tükenmez/keçeli ŞEFFAFLIĞI (0,1–1). Fosforlunun saydamlığı sabit:
+  /// türü saydamlıktan okunuyor (bkz. ink_pen.dart).
+  double opacity = 1;
+
+  /// **YALNIZ KALEMLE YAZ** (kullanıcı isteği 2026-10-23: "parmakla basınca
+  /// yazmayıp kalemle yazması, parmakla yakınlaştırma ve kaydırma"): açıkken
+  /// parmak ÇİZMEZ — tek parmak kaydırır, iki parmak yakınlaştırır
+  /// ([InkNavLayer]); kalem (ve fare) çizer. Avuç içi de böylece çizmez.
+  /// İlk kalem dokunuşunda kendiliğinden açılır (kullanıcı elle seçmediyse).
+  bool penOnly = false;
+
+  /// Basınç algısı: kalemle çizilen çizginin kalınlığı bastırmaya göre değişir.
+  bool pressure = true;
+
+  /// Çizgiye yazılan renk: seçilen renk + kalemin saydamlığı (+ şeffaflık).
+  Color get penColor => pen == InkPen.highlighter
+      ? pen.apply(color)
+      : color.withAlpha((pen.alpha * opacity).round().clamp(26, 255));
 
   /// Çizgiler her değiştiğinde artan sayaç — [InkPainter.shouldRepaint]
   /// bunun üzerinden karar verir (liste kimliğine bakmak yetmiyor: aynı liste
@@ -68,10 +107,42 @@ class InkController extends ChangeNotifier {
   InkStroke? _active;
   bool _dirty = false;
 
+  /// Çizime kabul edilen parmak/kalem kimlikleri: "yalnız kalem"de parmak
+  /// sayılmaz, kalkışı da sayacı düşürmez.
+  final Set<int> _accepted = {};
+
+  /// Kalemin yan düğmesi basılıyken ya da kalem TERS çevrilmişken (silgi
+  /// ucu) bu çizgi boyunca silgi — araç değiştirmeden sil.
+  bool _tempEraser = false;
+  bool get _erasing => eraser || _tempEraser;
+
+  /// Şekil/ok çiziminin başlangıç noktası (oranlı).
+  double _startX = 0, _startY = 0;
+
+  /// Geri al / yinele: her jestten ÖNCEKİ çizgi listesi (listeler
+  /// paylaşımlı, kopya değil — çizgiler değişmez). Silgiyle silinen de geri
+  /// gelir (eskiden geri al yalnız son çizgiyi kaldırıyordu).
+  final List<List<InkStroke>> _history = [];
+  final List<List<InkStroke>> _future = [];
+  static const _historyMax = 100;
+  List<InkStroke>? _gestureBase;
+
+  bool get canUndo => _history.isNotEmpty || _ink.isNotEmpty;
+  bool get canRedo => _future.isNotEmpty;
+
+  /// Bu oturumda bir kalem (stylus) görüldü mü — araç çubuğu "yalnız kalem"
+  /// düğmesini öne çıkarır.
+  static bool stylusSeen = false;
+
   /// [InkNavLayer] iki parmak jestini sürerken true: sayfa katmanı çizim
   /// girdisini tamamen yok sayar (parmaklardan biri sayfa dışına — kenar
   /// boşluğuna — düşse bile çizgi başlamaz/uzamaz).
   bool _nav = false;
+
+  /// Kalem (stylus) şu an ekrana değiyor mu — [InkNavLayer] bu sırada
+  /// parmakları (avuç içi) yok sayar.
+  bool get stylusDown => _stylusDown > 0;
+  int _stylusDown = 0;
 
   /// Silginin çizgiye "değmiş" sayıldığı yarıçap (sayfa oranı).
   static const _eraseRadius = 0.02;
@@ -85,7 +156,10 @@ class InkController extends ChangeNotifier {
 
   void setEraser(bool value) {
     eraser = value;
-    if (value) arrow = false;
+    if (value) {
+      arrow = false;
+      shape = null;
+    }
     notifyListeners();
   }
 
@@ -94,32 +168,79 @@ class InkController extends ChangeNotifier {
   void setArrow(bool value) {
     if (arrow == value) return;
     arrow = value;
-    if (value) eraser = false;
+    if (value) {
+      eraser = false;
+      shape = null;
+    }
+    notifyListeners();
+  }
+
+  /// Şekil aracını seçer (null = serbest çizim). Kalem türü/renk geçerli.
+  void setShape(InkShape? value) {
+    shape = value;
+    if (value != null) {
+      eraser = false;
+      arrow = false;
+    }
     notifyListeners();
   }
 
   void setColor(Color value) {
     color = value;
     eraser = false;
+    if (!kInkPalette.contains(value)) {
+      InkToolMemory.rememberColor(value.toARGB32());
+    }
+    _remember();
     notifyListeners();
   }
 
   /// Kalem türünü değiştirir. Kalınlık türün kendi aralığına taşınır:
   /// fosforluya geçip 3 px'te kalmak "fosforlu çalışmıyor" izlenimi veriyordu.
   void setPen(InkPen value) {
-    if (pen == value && !eraser && !arrow) return;
+    if (pen == value && !eraser && !arrow && shape == null) return;
     final wasDefault = widthPx == pen.defaultWidth;
     pen = value;
     eraser = false;
     arrow = false;
+    shape = null;
     widthPx = wasDefault ? value.defaultWidth : value.clampWidth(widthPx);
+    _remember();
     notifyListeners();
   }
 
   void setWidth(double value) {
     widthPx = pen.clampWidth(value);
+    _remember();
     notifyListeners();
   }
+
+  void setOpacity(double value) {
+    opacity = value.clamp(0.1, 1.0).toDouble();
+    _remember();
+    notifyListeners();
+  }
+
+  /// "Yalnız kalemle yaz"ı açar/kapatır. [chosen]: kullanıcının kendi
+  /// seçimi (bir daha kendiliğinden açılmaz).
+  void setPenOnly(bool value, {bool chosen = true}) {
+    penOnly = value;
+    InkToolMemory.savePenOnly(value, chosen: chosen);
+    notifyListeners();
+  }
+
+  void setPressure(bool value) {
+    pressure = value;
+    InkToolMemory.savePressure(value);
+    notifyListeners();
+  }
+
+  void _remember() => InkToolMemory.saveTool(
+    color: color.toARGB32(),
+    pen: pen.index,
+    width: widthPx,
+    opacity: opacity,
+  );
 
   void save() {
     if (!_dirty) return;
@@ -127,16 +248,40 @@ class InkController extends ChangeNotifier {
     onChanged(_ink);
   }
 
+  void _pushHistory(List<InkStroke> before) {
+    _history.add(before);
+    if (_history.length > _historyMax) _history.removeAt(0);
+    _future.clear();
+  }
+
   void undo() {
-    if (_ink.isEmpty) return;
+    if (_history.isNotEmpty) {
+      _future.add(_ink);
+      _ink = _history.removeLast();
+    } else if (_ink.isNotEmpty) {
+      // Önceki oturumdan gelen çizim: eskisi gibi son çizgi kalkar.
+      _future.add(_ink);
+      _ink = _ink.sublist(0, _ink.length - 1);
+    } else {
+      return;
+    }
     _dirty = true;
-    _ink = _ink.sublist(0, _ink.length - 1);
+    save();
+    notifyListeners();
+  }
+
+  void redo() {
+    if (_future.isEmpty) return;
+    _history.add(_ink);
+    _ink = _future.removeLast();
+    _dirty = true;
     save();
     notifyListeners();
   }
 
   void clear() {
     if (_ink.isEmpty) return;
+    _pushHistory(_ink);
     _dirty = true;
     _ink = [];
     save();
@@ -158,6 +303,10 @@ class InkController extends ChangeNotifier {
     if (_sameStrokes(_ink, strokes)) return;
     _dirty = false;
     _ink = [...strokes];
+    // Dışarıdan gelen liste geçmişi geçersiz kılar (geri al eski listeye
+    // dönüp başka cihazın çizimini silmesin).
+    _history.clear();
+    _future.clear();
     notifyListeners();
   }
 
@@ -178,6 +327,15 @@ class InkController extends ChangeNotifier {
     return true;
   }
 
+  static bool _sameInstances(List<InkStroke> a, List<InkStroke> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (!identical(a[i], b[i])) return false;
+    }
+    return true;
+  }
+
   /// İki parmak gezinme başladı: başlamış çizgiyi geri al, çizimi askıya al.
   void beginNav() {
     if (_nav) return;
@@ -194,7 +352,38 @@ class InkController extends ChangeNotifier {
     _nav = false;
   }
 
-  void pointerDown(int page, Offset local, Size size) {
+  /// Bu tür girdi çizer mi: "yalnız kalem" açıkken parmak çizmez (kalem,
+  /// ters kalem ve fare çizer).
+  bool accepts(PointerDeviceKind kind) =>
+      !penOnly || kind != PointerDeviceKind.touch;
+
+  /// [pointer] verilirse dokunuş türüne göre süzülür (bkz. [accepts]);
+  /// [pressure] 0–1 (kalemde), [stylusEraser] yan düğme / ters uç.
+  void pointerDown(
+    int page,
+    Offset local,
+    Size size, {
+    int? pointer,
+    PointerDeviceKind kind = PointerDeviceKind.touch,
+    double? pressure,
+    bool stylusEraser = false,
+  }) {
+    final stylus =
+        kind == PointerDeviceKind.stylus ||
+        kind == PointerDeviceKind.invertedStylus;
+    if (stylus) {
+      _stylusDown++;
+      stylusSeen = true;
+      // İlk kalem dokunuşu: kullanıcı seçmediyse "yalnız kalem" açılır —
+      // kalemle yazarken avuç içi/parmak çizgi bırakmasın.
+      if (!penOnly && !InkToolMemory.penOnlyChosen) {
+        setPenOnly(true, chosen: false);
+      }
+    }
+    if (pointer != null) {
+      if (!accepts(kind)) return;
+      _accepted.add(pointer);
+    }
     _pointers++;
     if (_nav) return;
     if (_pointers > 1) {
@@ -205,20 +394,32 @@ class InkController extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    if (eraser) {
+    _gestureBase = _ink;
+    _tempEraser = stylusEraser;
+    if (_erasing) {
       _eraseAt(page, local, size);
       notifyListeners();
       return;
     }
     final x = local.dx / size.width;
     final y = local.dy / size.height;
+    _startX = x;
+    _startY = y;
+    final shape = this.shape;
+    final usePressure =
+        this.pressure && stylus && pressure != null && !arrow && shape == null;
     final stroke = InkStroke(
       page: page,
       color: penColor.toARGB32(),
       width: widthPx / size.width,
       // Ok İKİ noktayla doğar (kuyruk + uç); uç parmakla birlikte taşınır.
-      points: arrow ? [x, y, x, y] : [x, y],
+      points: arrow
+          ? [x, y, x, y]
+          : shape != null
+          ? inkShapePoints(shape, x, y, x, y)
+          : [x, y],
       arrow: arrow,
+      pressures: usePressure ? [pressure] : null,
     );
     _dirty = true;
     _active = stroke;
@@ -226,9 +427,16 @@ class InkController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void pointerMove(int page, Offset local, Size size) {
+  void pointerMove(
+    int page,
+    Offset local,
+    Size size, {
+    int? pointer,
+    double? pressure,
+  }) {
+    if (pointer != null && !_accepted.contains(pointer)) return;
     if (_nav || _pointers != 1) return;
-    if (eraser) {
+    if (_erasing) {
       _eraseAt(page, local, size);
       notifyListeners();
       return;
@@ -244,6 +452,14 @@ class InkController extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    final shape = this.shape;
+    if (shape != null) {
+      active.points
+        ..clear()
+        ..addAll(inkShapePoints(shape, _startX, _startY, x, y));
+      notifyListeners();
+      return;
+    }
     // Çok yakın noktalar atlanır: çizim yumuşar, Firestore'a giden liste şişmez.
     final n = active.points.length;
     if (math.max(
@@ -254,26 +470,48 @@ class InkController extends ChangeNotifier {
       return;
     }
     active.points.addAll([x, y]);
+    final pressures = active.pressures;
+    if (pressures != null) {
+      pressures.add(pressure ?? (pressures.isEmpty ? 0.5 : pressures.last));
+    }
     notifyListeners();
   }
 
-  void pointerUp() {
+  void pointerUp({
+    int? pointer,
+    PointerDeviceKind kind = PointerDeviceKind.touch,
+  }) {
+    if (kind == PointerDeviceKind.stylus ||
+        kind == PointerDeviceKind.invertedStylus) {
+      _stylusDown = math.max(0, _stylusDown - 1);
+    }
+    if (pointer != null && !_accepted.remove(pointer)) return;
     _pointers = math.max(0, _pointers - 1);
     if (_pointers > 0) {
       notifyListeners();
       return;
     }
-    // Ok aracıyla yalnız DOKUNULDUYSA (sürüklenmediyse) ortada yönü olmayan
-    // bir kırıntı kalır: atılır.
+    _tempEraser = false;
+    // Ok ya da şekille yalnız DOKUNULDUYSA (sürüklenmediyse) ortada yönü
+    // olmayan bir kırıntı kalır: atılır.
     final active = _active;
-    if (active != null && active.arrow) {
-      final dx = active.points[2] - active.points[0];
-      final dy = active.points[3] - active.points[1];
-      if (dx.abs() < 0.01 && dy.abs() < 0.01) {
+    if (active != null && (active.arrow || shape != null)) {
+      final xs = [
+        for (var i = 0; i < active.points.length; i += 2) active.points[i],
+      ];
+      final ys = [
+        for (var i = 1; i < active.points.length; i += 2) active.points[i],
+      ];
+      final dx = xs.reduce(math.max) - xs.reduce(math.min);
+      final dy = ys.reduce(math.max) - ys.reduce(math.min);
+      if (dx < 0.01 && dy < 0.01) {
         _ink = [..._ink]..remove(active);
       }
     }
     _active = null;
+    final base = _gestureBase;
+    _gestureBase = null;
+    if (base != null && !_sameInstances(base, _ink)) _pushHistory(base);
     save();
     notifyListeners();
   }
@@ -286,10 +524,9 @@ class InkController extends ChangeNotifier {
       var hit = false;
       if (s.page == page) {
         // OK yalnız İKİ nokta taşır; gövdesine dokunmak da silmeli, yoksa
-        // yalnız uçlarından yakalanan bir çizgi olurdu.
-        final samples = s.arrow && s.points.length >= 4
-            ? _arrowSamples(s)
-            : s.points;
+        // yalnız uçlarından yakalanan bir çizgi olurdu. Düz çizgi ve
+        // dikdörtgenin kenarları da seyrek noktalı — aynı örnekleme.
+        final samples = _sampled(s);
         for (var i = 0; i < samples.length; i += 2) {
           if ((samples[i] - x).abs() < _eraseRadius &&
               (samples[i + 1] - y).abs() < _eraseRadius) {
@@ -305,15 +542,34 @@ class InkController extends ChangeNotifier {
     _ink = kept;
   }
 
-  /// Okun gövdesi boyunca örnek noktalar (silgi için).
-  static List<double> _arrowSamples(InkStroke s) {
-    const steps = 24;
-    final out = <double>[];
-    for (var i = 0; i <= steps; i++) {
-      final t = i / steps;
-      out
-        ..add(s.points[0] + (s.points[2] - s.points[0]) * t)
-        ..add(s.points[1] + (s.points[3] - s.points[1]) * t);
+  /// Silgi için çizginin örnek noktaları: ardışık iki nokta arası silgi
+  /// yarıçapından uzaksa ara noktalar eklenir (ok, düz çizgi, dikdörtgen).
+  static List<double> _sampled(InkStroke s) {
+    final p = s.points;
+    if (p.length < 4) return p;
+    var sparse = false;
+    for (var i = 2; i + 1 < p.length; i += 2) {
+      if ((p[i] - p[i - 2]).abs() > _eraseRadius ||
+          (p[i + 1] - p[i - 1]).abs() > _eraseRadius) {
+        sparse = true;
+        break;
+      }
+    }
+    if (!sparse) return p;
+    final out = <double>[p[0], p[1]];
+    for (var i = 2; i + 1 < p.length; i += 2) {
+      final dx = p[i] - p[i - 2];
+      final dy = p[i + 1] - p[i - 1];
+      final steps = math.max(
+        1,
+        (math.max(dx.abs(), dy.abs()) / _eraseRadius).ceil(),
+      );
+      for (var k = 1; k <= steps; k++) {
+        final t = k / steps;
+        out
+          ..add(p[i - 2] + dx * t)
+          ..add(p[i - 1] + dy * t);
+      }
     }
     return out;
   }
@@ -329,6 +585,17 @@ class InkPageLayer extends StatelessWidget {
   /// 1 tabanlı sayfa/slayt numarası.
   final int page;
 
+  /// Kalemin basıncı 0–1 aralığında; basınç bildirmeyen girdide null.
+  static double? _pressure(PointerEvent e) {
+    if (e.kind != PointerDeviceKind.stylus &&
+        e.kind != PointerDeviceKind.invertedStylus) {
+      return null;
+    }
+    final range = e.pressureMax - e.pressureMin;
+    if (range <= 0) return null;
+    return ((e.pressure - e.pressureMin) / range).clamp(0.0, 1.0);
+  }
+
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
@@ -339,12 +606,28 @@ class InkPageLayer extends StatelessWidget {
           final size = Size(constraints.maxWidth, constraints.maxHeight);
           return Listener(
             behavior: HitTestBehavior.translucent,
-            onPointerDown: (e) =>
-                controller.pointerDown(page, e.localPosition, size),
-            onPointerMove: (e) =>
-                controller.pointerMove(page, e.localPosition, size),
-            onPointerUp: (_) => controller.pointerUp(),
-            onPointerCancel: (_) => controller.pointerUp(),
+            onPointerDown: (e) => controller.pointerDown(
+              page,
+              e.localPosition,
+              size,
+              pointer: e.pointer,
+              kind: e.kind,
+              pressure: _pressure(e),
+              stylusEraser:
+                  e.kind == PointerDeviceKind.invertedStylus ||
+                  e.buttons & kSecondaryStylusButton != 0,
+            ),
+            onPointerMove: (e) => controller.pointerMove(
+              page,
+              e.localPosition,
+              size,
+              pointer: e.pointer,
+              pressure: _pressure(e),
+            ),
+            onPointerUp: (e) =>
+                controller.pointerUp(pointer: e.pointer, kind: e.kind),
+            onPointerCancel: (e) =>
+                controller.pointerUp(pointer: e.pointer, kind: e.kind),
             // Yalnız çizgiler değişince yeniden boyanır; görüntüleyici (PDF/slayt)
             // yeniden kurulmaz — bu yüzden çizim sırasında jest bozulmaz.
             // RepaintBoundary: tek bir çizgi uzarken üstteki PDF/slayt
@@ -409,7 +692,10 @@ class InkToolbar extends StatelessWidget {
   ) {
     final scheme = Theme.of(context).colorScheme;
     final selected =
-        !controller.eraser && !controller.arrow && controller.pen == pen;
+        !controller.eraser &&
+        !controller.arrow &&
+        controller.shape == null &&
+        controller.pen == pen;
     return IconButton(
       tooltip: label,
       isSelected: selected,
@@ -426,11 +712,113 @@ class InkToolbar extends StatelessWidget {
     );
   }
 
+  static IconData _shapeIcon(InkShape shape) => switch (shape) {
+    InkShape.line => Icons.horizontal_rule,
+    InkShape.rectangle => Icons.crop_square,
+    InkShape.ellipse => Icons.circle_outlined,
+  };
+
+  /// Şekil düğmesi: seçili şeklin (ya da okun) simgesi; dokununca şekil
+  /// listesi (ok, düz çizgi, dikdörtgen, elips) açılır.
+  Widget _shapeButton(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final shape = controller.shape;
+    final selected = controller.arrow || shape != null;
+    final icon = controller.arrow
+        ? Icons.north_east
+        : shape != null
+        ? _shapeIcon(shape)
+        : Icons.category_outlined;
+    String label(InkShape s) => switch (s) {
+      InkShape.line => l10n.inkShapeLine,
+      InkShape.rectangle => l10n.inkShapeRectangle,
+      InkShape.ellipse => l10n.inkShapeEllipse,
+    };
+    return PopupMenuButton<Object>(
+      tooltip: l10n.inkShapes,
+      icon: Icon(
+        icon,
+        color: selected ? controller.penColor : scheme.onSurfaceVariant,
+      ),
+      style: IconButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        backgroundColor: selected ? scheme.secondaryContainer : null,
+      ),
+      onSelected: (value) {
+        if (value == 'arrow') {
+          controller.setArrow(true);
+        } else if (value is InkShape) {
+          controller.setShape(value);
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'arrow',
+          child: ListTile(
+            dense: true,
+            leading: const Icon(Icons.north_east),
+            title: Text(l10n.inkArrow),
+            selected: controller.arrow,
+          ),
+        ),
+        for (final s in InkShape.values)
+          PopupMenuItem(
+            value: s,
+            child: ListTile(
+              dense: true,
+              leading: Icon(_shapeIcon(s)),
+              title: Text(label(s)),
+              selected: controller.shape == s,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _colorDot(BuildContext context, Color color) {
+    final scheme = Theme.of(context).colorScheme;
+    final selected =
+        !controller.eraser && controller.color.toARGB32() == color.toARGB32();
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: 8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => controller.setColor(color),
+        child: Container(
+          width: 26,
+          height: 26,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            // Seçili renk vurgulu; diğerleri (özellikle beyaz açık
+            // zeminde) ince çerçeveyle görünür kalır.
+            border: Border.all(
+              color: selected ? scheme.primary : scheme.outlineVariant,
+              width: selected ? 3 : 1,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final pen = controller.pen;
-    final hintText = hint;
+    // "Yalnız kalem"de parmak çizmiyor: "tek parmak çizer" ipucu yanlış olur.
+    final hintText = hint == null
+        ? null
+        : controller.penOnly
+        ? l10n.inkPenOnlyHint
+        : hint;
+    // Paletin dışından son seçilen renkler, paletin hemen ardında (en çok 3
+    // — dar ekranda kaydırıcı sıkışmasın; tamamı ayar levhasında).
+    final recent = [
+      for (final c in InkToolMemory.recentColors.take(3))
+        if (!kInkPalette.any((p) => p.toARGB32() == c)) Color(c),
+    ];
     return SafeArea(
       top: false,
       child: Material(
@@ -442,111 +830,121 @@ class InkToolbar extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  _penButton(
-                    context,
-                    InkPen.pen,
-                    Icons.edit,
-                    l10n.penBallpoint,
-                  ),
-                  _penButton(
-                    context,
-                    InkPen.marker,
-                    Icons.brush,
-                    l10n.penMarker,
-                  ),
-                  _penButton(
-                    context,
-                    InkPen.highlighter,
-                    Icons.format_color_fill,
-                    l10n.penHighlighter,
-                  ),
-                  // OK: kalem türünden bağımsız bir AÇMA/KAPAMA. Seçili
-                  // kalemle ve seçili renkle çizilir; ucuna dolu başlık gelir.
-                  IconButton(
-                    tooltip: l10n.inkArrow,
-                    isSelected: controller.arrow,
-                    visualDensity: VisualDensity.compact,
-                    icon: Icon(
-                      Icons.north_east,
-                      color: controller.arrow
-                          ? controller.penColor
-                          : scheme.onSurfaceVariant,
+                  // Araçlar dar ekranda yana kayar; geri al/yinele/ayarlar
+                  // sağda sabit kalır.
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _penButton(
+                            context,
+                            InkPen.pen,
+                            Icons.edit,
+                            l10n.penBallpoint,
+                          ),
+                          _penButton(
+                            context,
+                            InkPen.marker,
+                            Icons.brush,
+                            l10n.penMarker,
+                          ),
+                          _penButton(
+                            context,
+                            InkPen.highlighter,
+                            Icons.format_color_fill,
+                            l10n.penHighlighter,
+                          ),
+                          // ŞEKİLLER (ok dahil): kalem türünden bağımsız;
+                          // seçili kalemle ve renkle çizilir.
+                          _shapeButton(context),
+                          IconButton(
+                            tooltip: l10n.eraser,
+                            isSelected: controller.eraser,
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.cleaning_services_outlined),
+                            onPressed: () => controller.setEraser(true),
+                          ),
+                          // YALNIZ KALEM: açıkken parmak kaydırır/yakınlaştırır.
+                          IconButton(
+                            tooltip: controller.penOnly
+                                ? l10n.inkPenOnlyOn
+                                : l10n.inkPenOnlyOff,
+                            isSelected: controller.penOnly,
+                            visualDensity: VisualDensity.compact,
+                            icon: Icon(
+                              controller.penOnly
+                                  ? Icons.draw
+                                  : Icons.touch_app_outlined,
+                            ),
+                            onPressed: () =>
+                                controller.setPenOnly(!controller.penOnly),
+                          ),
+                        ],
+                      ),
                     ),
-                    onPressed: () => controller.setArrow(!controller.arrow),
                   ),
-                  IconButton(
-                    tooltip: l10n.eraser,
-                    isSelected: controller.eraser,
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.cleaning_services_outlined),
-                    onPressed: () => controller.setEraser(true),
-                  ),
-                  const Spacer(),
                   IconButton(
                     tooltip: l10n.undo,
                     visualDensity: VisualDensity.compact,
                     icon: const Icon(Icons.undo),
-                    onPressed: controller.ink.isEmpty ? null : controller.undo,
+                    onPressed: controller.canUndo ? controller.undo : null,
                   ),
                   IconButton(
-                    tooltip: l10n.clearInk,
+                    tooltip: l10n.redo,
                     visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: controller.ink.isEmpty ? null : controller.clear,
+                    icon: const Icon(Icons.redo),
+                    onPressed: controller.canRedo ? controller.redo : null,
+                  ),
+                  IconButton(
+                    tooltip: l10n.inkSettings,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.tune),
+                    onPressed: () => showModalBottomSheet<void>(
+                      context: context,
+                      showDragHandle: true,
+                      isScrollControlled: true,
+                      builder: (_) => InkSettingsSheet(controller: controller),
+                    ),
                   ),
                 ],
               ),
               Row(
                 children: [
-                  for (final color in kInkPalette)
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(end: 8),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: () => controller.setColor(color),
-                        child: Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                            // Seçili renk vurgulu; diğerleri (özellikle beyaz açık
-                            // zeminde) ince çerçeveyle görünür kalır.
-                            border: Border.all(
-                              color:
-                                  !controller.eraser &&
-                                      controller.color == color
-                                  ? scheme.primary
-                                  : scheme.outlineVariant,
-                              width:
-                                  !controller.eraser &&
-                                      controller.color == color
-                                  ? 3
-                                  : 1,
+                  Flexible(
+                    flex: 3,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (final color in kInkPalette)
+                            _colorDot(context, color),
+                          for (final color in recent) _colorDot(context, color),
+                          Padding(
+                            padding: const EdgeInsetsDirectional.only(end: 8),
+                            child: PaletteButton(
+                              title: l10n.paletteMore,
+                              current:
+                                  controller.eraser ||
+                                      kInkPalette.contains(controller.color)
+                                  ? null
+                                  : controller.color,
+                              onPicked: controller.setColor,
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ),
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(end: 8),
-                    child: PaletteButton(
-                      title: l10n.paletteMore,
-                      current:
-                          controller.eraser ||
-                              kInkPalette.contains(controller.color)
-                          ? null
-                          : controller.color,
-                      onPicked: controller.setColor,
                     ),
                   ),
                   Expanded(
+                    flex: 2,
                     child: Slider(
                       // Aralık kalem türüne göre: fosforlu 12 px'te kalsaydı
                       // vurgulama işe yaramazdı.
                       value: pen.clampWidth(controller.widthPx),
                       min: pen.minWidth,
                       max: pen.maxWidth,
+                      label: controller.widthPx.toStringAsFixed(0),
                       onChanged: controller.setWidth,
                     ),
                   ),
@@ -555,9 +953,8 @@ class InkToolbar extends StatelessWidget {
               if (hintText != null)
                 Text(
                   hintText,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
                 ),
             ],
           ),
@@ -565,6 +962,197 @@ class InkToolbar extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Kalem ayarları levhası: kalınlık önizlemesi, ŞEFFAFLIK, basınç algısı,
+/// "yalnız kalemle yaz", son kullanılan renkler ve tümünü temizle.
+class InkSettingsSheet extends StatelessWidget {
+  const InkSettingsSheet({super.key, required this.controller});
+
+  final InkController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) => _build(context),
+    );
+  }
+
+  Widget _build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final pen = controller.pen;
+    final highlighter = pen == InkPen.highlighter;
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.inkSettings,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // ÖNİZLEME: seçili kalem, renk, kalınlık ve şeffaflıkla örnek
+            // bir dalga — ayar değişince anında görünür.
+            Container(
+              height: 64,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: scheme.outlineVariant),
+              ),
+              child: CustomPaint(
+                painter: _PenPreviewPainter(
+                  color: controller.penColor,
+                  width: controller.widthPx,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                SizedBox(width: 96, child: Text(l10n.inkWidth)),
+                Expanded(
+                  child: Slider(
+                    value: pen.clampWidth(controller.widthPx),
+                    min: pen.minWidth,
+                    max: pen.maxWidth,
+                    label: controller.widthPx.toStringAsFixed(0),
+                    onChanged: controller.setWidth,
+                  ),
+                ),
+                SizedBox(
+                  width: 36,
+                  child: Text(controller.widthPx.toStringAsFixed(0)),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                SizedBox(width: 96, child: Text(l10n.inkOpacity)),
+                Expanded(
+                  child: Slider(
+                    // Fosforlunun saydamlığı sabit (türü ondan okunuyor).
+                    value: highlighter ? 0.4 : controller.opacity,
+                    min: 0.1,
+                    divisions: 9,
+                    label:
+                        '%${((highlighter ? 0.4 : controller.opacity) * 100).round()}',
+                    onChanged: highlighter ? null : controller.setOpacity,
+                  ),
+                ),
+                SizedBox(
+                  width: 36,
+                  child: Text(
+                    '%${((highlighter ? 0.4 : controller.opacity) * 100).round()}',
+                  ),
+                ),
+              ],
+            ),
+            if (InkToolMemory.recentColors.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(l10n.inkRecentColors, style: theme.textTheme.labelLarge),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final c in InkToolMemory.recentColors)
+                    InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () => controller.setColor(Color(c)),
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: Color(c),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: controller.color.toARGB32() == c
+                                ? scheme.primary
+                                : scheme.outlineVariant,
+                            width: controller.color.toARGB32() == c ? 3 : 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 8),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              secondary: const Icon(Icons.draw),
+              title: Text(l10n.inkPenOnlyTitle),
+              subtitle: Text(l10n.inkPenOnlyInfo),
+              value: controller.penOnly,
+              onChanged: controller.setPenOnly,
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              secondary: const Icon(Icons.line_weight),
+              title: Text(l10n.inkPressureTitle),
+              subtitle: Text(l10n.inkPressureInfo),
+              value: controller.pressure,
+              onChanged: controller.setPressure,
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.edit_note),
+              title: Text(l10n.inkStylusTipsTitle),
+              subtitle: Text(l10n.inkStylusTips),
+            ),
+            const SizedBox(height: 4),
+            OutlinedButton.icon(
+              onPressed: controller.ink.isEmpty
+                  ? null
+                  : () {
+                      controller.clear();
+                      Navigator.pop(context);
+                    },
+              icon: const Icon(Icons.delete_outline),
+              label: Text(l10n.clearInk),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Kalem ayarı önizlemesi: bir S dalgası.
+class _PenPreviewPainter extends CustomPainter {
+  _PenPreviewPainter({required this.color, required this.width});
+
+  final Color color;
+  final double width;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()..moveTo(16, size.height / 2);
+    final span = size.width - 32;
+    for (var i = 1; i <= 40; i++) {
+      final t = i / 40;
+      path.lineTo(
+        16 + span * t,
+        size.height / 2 + math.sin(t * math.pi * 2) * size.height * 0.22,
+      );
+    }
+    canvas.drawPath(path, inkPaint(color, width));
+  }
+
+  @override
+  bool shouldRepaint(covariant _PenPreviewPainter old) =>
+      old.color != color || old.width != width;
 }
 
 /// Çizim modunda İKİ PARMAK yakınlaştırma + kaydırmayı görüntüleyicinin
@@ -635,11 +1223,25 @@ class _InkNavLayerState extends State<InkNavLayer> {
     return (focal, (pts[0] - pts[1]).distance);
   }
 
+  /// Kalem (stylus) gezinmeye karışmaz; kalem yazarken ekrana değen parmak
+  /// (avuç içi) da gezinme sayılmaz.
+  bool _ignored(PointerEvent e) =>
+      e.kind == PointerDeviceKind.stylus ||
+      e.kind == PointerDeviceKind.invertedStylus ||
+      e.kind == PointerDeviceKind.mouse ||
+      widget.controller.stylusDown;
+
   void _down(PointerDownEvent e) {
-    if (!widget.enabled) return;
+    if (!widget.enabled || _ignored(e)) return;
     _pts[e.pointer] = e.localPosition;
-    if (_pts.length == 2) {
-      widget.controller.beginNav();
+    if (_pts.length == 1 && widget.controller.penOnly) {
+      // "Yalnız kalem": tek parmak KAYDIRIR (çizmez).
+      _lastFocal = e.localPosition;
+      _lastDist = null;
+    } else if (_pts.length == 2) {
+      // "Yalnız kalem"de parmak zaten çizmiyor; iptal edilecek çizgi kalemin
+      // olabilir — dokunma.
+      if (!widget.controller.penOnly) widget.controller.beginNav();
       final (focal, dist) = _focalAndDist();
       _lastFocal = focal;
       _lastDist = dist;
@@ -651,6 +1253,17 @@ class _InkNavLayerState extends State<InkNavLayer> {
   void _move(PointerMoveEvent e) {
     if (!widget.enabled || !_pts.containsKey(e.pointer)) return;
     _pts[e.pointer] = e.localPosition;
+    if (_pts.length == 1 && widget.controller.penOnly) {
+      final matrix = widget.getMatrix();
+      final last = _lastFocal;
+      _lastFocal = e.localPosition;
+      if (matrix == null || last == null) return;
+      final pan = e.localPosition - last;
+      var m = Matrix4.translationValues(pan.dx, pan.dy, 0).multiplied(matrix);
+      if (widget.clampToBounds) m = _clamp(m);
+      widget.setMatrix(m);
+      return;
+    }
     if (_pts.length != 2) return;
     final matrix = widget.getMatrix();
     if (matrix == null) return;
@@ -680,7 +1293,12 @@ class _InkNavLayerState extends State<InkNavLayer> {
 
   void _up(int pointer) {
     if (_pts.remove(pointer) == null) return;
-    if (_pts.length < 2) {
+    if (_pts.length == 1 && widget.controller.penOnly) {
+      // İki parmaktan biri kalktı: kalan parmakla kaydırma sürer.
+      widget.controller.endNav();
+      _lastFocal = _pts.values.first;
+      _lastDist = null;
+    } else if (_pts.length < 2) {
       widget.controller.endNav();
       _reset();
     } else {
@@ -740,6 +1358,10 @@ class InkPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final s in strokes) {
+      if (s.hasPressure && !s.arrow) {
+        _paintPressure(canvas, size, s);
+        continue;
+      }
       final paint = inkPaint(Color(s.color), s.width * size.width);
       if (s.arrow && s.points.length >= 4) {
         final tail = Offset(
@@ -782,6 +1404,43 @@ class InkPainter extends CustomPainter {
     }
   }
 
+  /// Basınçlı çizgi: her parça kendi kalınlığıyla. Saydam renkte parçalar
+  /// birleşim yerlerinde üst üste binip koyu boncuklar bırakmasın diye
+  /// çizgi OPAK çizilip katman saydamlıkla birleştirilir.
+  static void _paintPressure(Canvas canvas, Size size, InkStroke s) {
+    final color = Color(s.color);
+    final translucent = color.a < 1;
+    final base = s.width * size.width;
+    final p = s.points;
+    final q = s.pressures!;
+    final paint = inkPaint(translucent ? color.withAlpha(255) : color, base)
+      ..strokeCap = StrokeCap.round;
+    if (translucent) {
+      canvas.saveLayer(
+        null,
+        Paint()..color = Color.fromARGB((color.a * 255).round(), 0, 0, 0),
+      );
+    }
+    if (p.length == 2) {
+      canvas.drawCircle(
+        Offset(p[0] * size.width, p[1] * size.height),
+        base * inkPressureFactor(q[0]) / 2,
+        paint..style = PaintingStyle.fill,
+      );
+    } else {
+      for (var i = 2; i + 1 < p.length; i += 2) {
+        final j = i ~/ 2;
+        paint.strokeWidth = base * inkPressureFactor((q[j - 1] + q[j]) / 2);
+        canvas.drawLine(
+          Offset(p[i - 2] * size.width, p[i - 1] * size.height),
+          Offset(p[i] * size.width, p[i + 1] * size.height),
+          paint,
+        );
+      }
+    }
+    if (translucent) canvas.restore();
+  }
+
   /// KÖK NEDEN: burası KOŞULSUZ `true` döndürüyordu — çizgiler hiç
   /// değişmemişken bile (görüntüleyicinin her yeniden çiziminde) tüm katman
   /// yeniden rasterize ediliyordu.
@@ -789,4 +1448,3 @@ class InkPainter extends CustomPainter {
   bool shouldRepaint(covariant InkPainter oldDelegate) =>
       oldDelegate.revision != revision || oldDelegate.page != page;
 }
-

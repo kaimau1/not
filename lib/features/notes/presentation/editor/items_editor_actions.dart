@@ -63,6 +63,10 @@ extension _ItemsActions on ItemsEditorState {
           Icons.linear_scale,
           l10n.itemDividerDotted,
         ),
+        // ÇİZGİ AYARLARI (kullanıcı isteği 2026-10-23: "çizgi rengi ve
+        // özelliklerini ayarlama"): tür, renk, kalınlık; çizgi yoksa düz
+        // çizgiyle açılır.
+        entry(_ItemAction.dividerStyle, Icons.tune, l10n.dividerSettings),
         if (item.divider.isNotEmpty)
           entry(
             _ItemAction.dividerNone,
@@ -92,6 +96,8 @@ extension _ItemsActions on ItemsEditorState {
         _setDivider(item, NoteItem.dividerDashed);
       case _ItemAction.dividerDotted:
         _setDivider(item, NoteItem.dividerDotted);
+      case _ItemAction.dividerStyle:
+        await _editDividerStyle(item);
       case _ItemAction.dividerNone:
         _setDivider(item, '');
       case _ItemAction.moveToPage:
@@ -105,11 +111,49 @@ extension _ItemsActions on ItemsEditorState {
 
   /// Maddenin altındaki ayırıcı çizgiyi değiştirir; aynı tür yeniden
   /// seçilirse kaldırır.
+  ///
+  /// Tür değişince çizginin RENGİ ve KALINLIĞI korunur; yeni çizgi son
+  /// kullanılan renk/kalınlıkla gelir ([ItemDividerMemory]).
   void _setDivider(NoteItem target, String divider) {
     final index = _items.indexWhere((i) => i.id == target.id);
     if (index < 0) return;
-    final next = _items[index].divider == divider ? '' : divider;
+    final current = ItemDivider.parse(_items[index].divider);
+    final String next;
+    if (divider.isEmpty || current?.kind == divider) {
+      next = '';
+    } else {
+      next =
+          (current?.copyWith(kind: divider) ?? ItemDividerMemory.fresh(divider))
+              .encode();
+    }
     _update(() => _items[index] = _items[index].copyWith(divider: next));
+    _commit();
+  }
+
+  /// Çizgi ayarları levhası: tür/renk/kalınlık; "tüm çizgilere uygula"
+  /// listedeki bütün ayırıcıları aynı biçime çeker.
+  Future<void> _editDividerStyle(NoteItem target) async {
+    final current =
+        ItemDivider.parse(target.divider) ??
+        ItemDividerMemory.fresh(NoteItem.dividerSolid);
+    final choice = await showItemDividerSheet(context, initial: current);
+    if (!mounted || choice == null) return;
+    final style = choice.style;
+    final encoded = style?.encode() ?? '';
+    _update(() {
+      for (var i = 0; i < _items.length; i++) {
+        final item = _items[i];
+        if (item.id == target.id) {
+          _items[i] = item.copyWith(divider: encoded);
+        } else if (choice.applyAll &&
+            style != null &&
+            item.divider.isNotEmpty) {
+          // Diğer çizgilerin TÜRÜ değil biçimi (renk, kalınlık) ve tür de
+          // eşitlenir: "hepsi aynı görünsün" isteği.
+          _items[i] = item.copyWith(divider: encoded);
+        }
+      }
+    });
     _commit();
   }
 

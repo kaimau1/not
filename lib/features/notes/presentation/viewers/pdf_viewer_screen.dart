@@ -21,6 +21,7 @@ import 'ink_layer.dart';
 import 'pdf_document_view.dart';
 import 'pdf_select_layer.dart';
 import 'pdf_selection_bar.dart';
+import '../editor/attachment_clipboard.dart';
 
 /// Uygulama içi PDF görüntüleyici. Yerel kopya varsa onu, yoksa Storage
 /// indirme adresini kullanır.
@@ -276,6 +277,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen>
             style: const TextStyle(fontSize: 14),
           ),
           actions: [
+            CopyAttachmentButton(attachment: _current),
             IconButton(
               tooltip: _areaMode ? l10n.areaSelectOff : l10n.areaSelect,
               isSelected: _areaMode,

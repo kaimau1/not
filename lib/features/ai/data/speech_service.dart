@@ -119,6 +119,33 @@ class SpeechService extends Notifier<SpeechOutputState> {
     TtsEngine.device => ref.read(speechOutputProvider.notifier).resume(),
   };
 
+  /// Ayarlardaki DENEME okuması: önce BÜTÜN motorları susturur, sonra
+  /// yalnız [engine] örneği okur.
+  ///
+  /// KÖK NEDEN (kullanıcı bildirimi 2026-10-23: "model seçilip denenirken
+  /// hem Türkçe ses hem yapay zekâ aynı anda çalışıyor"): deneme düğmeleri
+  /// motorları DOĞRUDAN çağırıyordu; her motor yalnız kendini durduruyordu.
+  /// Antalia örneği (model yüklemesiyle birkaç sn) sürerken yapay zekâ
+  /// denemesine geçilince ikisi üst üste çalıyordu.
+  Future<void> preview(
+    TtsEngine engine,
+    String sample, {
+    String? languageCode,
+  }) async {
+    await stop();
+    _active = engine;
+    switch (engine) {
+      case TtsEngine.device:
+        await ref
+            .read(speechOutputProvider.notifier)
+            .speak(sample, languageCode: languageCode);
+      case TtsEngine.gemini:
+        await ref.read(aiSpeechProvider.notifier).previewVoice(sample);
+      case TtsEngine.antalia:
+        await ref.read(antaliaSpeechProvider.notifier).preview(sample);
+    }
+  }
+
   /// Bütün motorları durdurur.
   Future<void> stop() async {
     await ref.read(speechOutputProvider.notifier).stop();

@@ -561,9 +561,25 @@ final cardShowTagProvider = boolPref('card_show_tag', defaultValue: true);
 /// Alt meta satırındaki tarih/saat.
 final cardShowDateProvider = boolPref('card_show_date', defaultValue: true);
 
-/// Kartta ekler: kapak görseli/videosu, küçük resimler, dosya ve ses
-/// satırları.
+/// Kartta GÖRSELLER: kapak görseli/videosu, küçük resimler. (Anahtar adı
+/// eskiden bütün ekleri kapsıyordu; 2026-10-23'ten beri dosya ekleri ayrı —
+/// [cardShowFilesProvider].)
 final cardShowMediaProvider = boolPref('card_show_media', defaultValue: true);
+
+/// Kartta DOSYA EKLERİ: PDF/sunum kartı ve satırları, ses, metin ekleri
+/// (kullanıcı isteği 2026-10-23: "ana ekranda not önizlemesinde görsel veya
+/// eklerin görünüp görünmeyeceği seçilebilmeli" — ikisi ayrı ayrı).
+final cardShowFilesProvider = boolPref('card_show_files', defaultValue: true);
+
+/// **PAYLAŞILAN NOTLAR ANA EKRANDA** (kullanıcı isteği 2026-10-23, "seçenek
+/// olarak"): açıkken benimle paylaşılan ortak notlar ana ekranın tepesinde
+/// ayrı bir bölümde de görünür. Varsayılan kapalı — notlar "Gelen ve
+/// paylaşılanlar"da durmaya devam eder. Kendi notlarımın sıralamasına/
+/// seçimine karışmaz (ayrı bölüm; kartlar sahibinin notunu açar).
+final homeShowSharedProvider = boolPref(
+  'home_show_shared',
+  defaultValue: false,
+);
 
 /// Arama sonucunda ve "Tümü" görünümünde notun klasör rozeti.
 final cardShowFolderProvider = boolPref(
@@ -584,6 +600,7 @@ typedef CardDisplay = ({
   bool tag,
   bool date,
   bool media,
+  bool files,
   bool folder,
   bool paper,
 });
@@ -596,6 +613,7 @@ final cardDisplayProvider = Provider<CardDisplay>(
     tag: ref.watch(cardShowTagProvider),
     date: ref.watch(cardShowDateProvider),
     media: ref.watch(cardShowMediaProvider),
+    files: ref.watch(cardShowFilesProvider),
     folder: ref.watch(cardShowFolderProvider),
     paper: ref.watch(cardShowPaperProvider),
   ),

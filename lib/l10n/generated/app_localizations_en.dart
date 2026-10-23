@@ -5595,7 +5595,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cardShowDate => 'Date and time';
 
   @override
-  String get cardShowMedia => 'Attachments and cover image';
+  String get cardShowMedia => 'Images and videos';
 
   @override
   String get cardShowFolder => 'Folder name';
@@ -5632,4 +5632,131 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get formatPageColor => 'Page color';
+
+  @override
+  String get inkShapes => 'Shapes';
+
+  @override
+  String get inkShapeLine => 'Straight line';
+
+  @override
+  String get inkShapeRectangle => 'Rectangle';
+
+  @override
+  String get inkShapeEllipse => 'Circle / ellipse';
+
+  @override
+  String get inkPenOnlyOn => 'Pen only (finger scrolls) — turn off';
+
+  @override
+  String get inkPenOnlyOff => 'Finger also draws — switch to pen only';
+
+  @override
+  String get inkPenOnlyHint =>
+      'Write with the pen · drag with a finger, pinch to zoom';
+
+  @override
+  String get inkSettings => 'Pen settings';
+
+  @override
+  String get inkWidth => 'Thickness';
+
+  @override
+  String get inkOpacity => 'Opacity';
+
+  @override
+  String get inkRecentColors => 'Recent colors';
+
+  @override
+  String get inkPenOnlyTitle => 'Draw with pen only';
+
+  @override
+  String get inkPenOnlyInfo =>
+      'Fingers don\'t draw; one finger scrolls, two fingers zoom. Your palm leaves no marks. Turns on automatically the first time a pen touches the screen.';
+
+  @override
+  String get inkPressureTitle => 'Pressure sensitivity';
+
+  @override
+  String get inkPressureInfo =>
+      'Light pressure writes thin, firm pressure writes thick.';
+
+  @override
+  String get inkStylusTipsTitle => 'Pen shortcuts';
+
+  @override
+  String get inkStylusTips =>
+      'Hold the pen\'s side button or touch with the eraser end to erase. Undo / redo are in the top row.';
+
+  @override
+  String get inkZoomReset => 'Fit to screen';
+
+  @override
+  String get inkZoomHint => 'Pinch with two fingers to zoom and pan';
+
+  @override
+  String get cardShowFiles => 'File attachments';
+
+  @override
+  String get cardShowFilesInfo =>
+      'Show PDF, slide, audio and text attachments on cards';
+
+  @override
+  String get cardShowMediaShort => 'Images on cards';
+
+  @override
+  String get cardShowFilesShort => 'Attachments on cards';
+
+  @override
+  String get homeShowShared => 'Shared notes on home screen';
+
+  @override
+  String get homeShowSharedInfo =>
+      'Also show notes shared with me in a separate section at the top of the home screen';
+
+  @override
+  String get homeShowSharedShort => 'Shared';
+
+  @override
+  String get homeSharedSection => 'SHARED WITH ME';
+
+  @override
+  String get copyAttachment => 'Copy attachment';
+
+  @override
+  String get attachmentCopiedPasteHint =>
+      'Attachment copied — paste it into another note from the + menu';
+
+  @override
+  String get dividerSettings => 'Line settings';
+
+  @override
+  String get dividerPreviewText => 'Sample item';
+
+  @override
+  String get dividerKind => 'Style';
+
+  @override
+  String get dividerColor => 'Color';
+
+  @override
+  String get dividerWeight => 'Thickness';
+
+  @override
+  String get dividerApplyAll => 'Apply to all';
+
+  @override
+  String get dividerKindSolid => 'Solid';
+
+  @override
+  String get dividerKindDashed => 'Dashed';
+
+  @override
+  String get dividerKindDotted => 'Dotted';
+
+  @override
+  String get dividerKindDouble => 'Double';
+
+  @override
+  String get dividerKindWavy => 'Wavy';
 }
