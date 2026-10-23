@@ -28,6 +28,7 @@ import 'features/ai/data/antalia/antalia_engine.dart' show registerAntaliaLicens
 import 'features/settings/settings_providers.dart';
 import 'core/personalize.dart';
 import 'features/notes/presentation/viewers/bubble_layer.dart' show BubbleLook;
+import 'features/notes/presentation/viewers/ink_tools.dart' show InkToolMemory;
 import 'firebase_options.dart';
 
 /// App Check: isteklerin gerçekten BU uygulamadan geldiğini kanıtlar.
@@ -114,6 +115,8 @@ Future<void> main() async {
   BubbleLook.attach(prefs);
   // Kişiselleştirme: gizlenen alanlar, sarma süreleri (bkz. Personalize).
   Personalize.attach(prefs);
+  // Son kullanılan kalem, "yalnız kalemle yaz" (bkz. InkToolMemory).
+  InkToolMemory.attach(prefs);
 
   // Ek dosyalarının kök klasörü: yerel yol artık Firestore'dan okunmuyor,
   // (noteId, ekId, dosyaAdı)ndan türetiliyor — taban BURADA bir kez çözülür

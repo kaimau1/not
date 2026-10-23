@@ -9965,7 +9965,7 @@ abstract class AppLocalizations {
   /// No description provided for @cardShowMedia.
   ///
   /// In tr, this message translates to:
-  /// **'Ekler ve kapak görseli'**
+  /// **'Görseller ve videolar'**
   String get cardShowMedia;
 
   /// No description provided for @cardShowFolder.
@@ -10033,6 +10033,246 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sayfa rengi'**
   String get formatPageColor;
+
+  /// No description provided for @inkShapes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şekiller'**
+  String get inkShapes;
+
+  /// No description provided for @inkShapeLine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düz çizgi'**
+  String get inkShapeLine;
+
+  /// No description provided for @inkShapeRectangle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dikdörtgen'**
+  String get inkShapeRectangle;
+
+  /// No description provided for @inkShapeEllipse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daire / elips'**
+  String get inkShapeEllipse;
+
+  /// No description provided for @inkPenOnlyOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız kalem yazıyor (parmak kaydırır) — kapat'**
+  String get inkPenOnlyOn;
+
+  /// No description provided for @inkPenOnlyOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parmakla da yazılıyor — yalnız kaleme geç'**
+  String get inkPenOnlyOff;
+
+  /// No description provided for @inkPenOnlyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalemle yaz · parmakla kaydır, iki parmakla yakınlaştır'**
+  String get inkPenOnlyHint;
+
+  /// No description provided for @inkSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem ayarları'**
+  String get inkSettings;
+
+  /// No description provided for @inkWidth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalınlık'**
+  String get inkWidth;
+
+  /// No description provided for @inkOpacity.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şeffaflık'**
+  String get inkOpacity;
+
+  /// No description provided for @inkRecentColors.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son kullanılan renkler'**
+  String get inkRecentColors;
+
+  /// No description provided for @inkPenOnlyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız kalemle yaz'**
+  String get inkPenOnlyTitle;
+
+  /// No description provided for @inkPenOnlyInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parmak çizmez; tek parmakla kaydırır, iki parmakla yakınlaştırır. Avuç içi de iz bırakmaz. Kalem ilk kez değince kendiliğinden açılır.'**
+  String get inkPenOnlyInfo;
+
+  /// No description provided for @inkPressureTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Basınç algısı'**
+  String get inkPressureTitle;
+
+  /// No description provided for @inkPressureInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalemle hafif bastırınca ince, sert bastırınca kalın yazar.'**
+  String get inkPressureInfo;
+
+  /// No description provided for @inkStylusTipsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem kısayolları'**
+  String get inkStylusTipsTitle;
+
+  /// No description provided for @inkStylusTips.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalemin yan düğmesini basılı tutarak ya da silgi ucuyla dokunarak sil. Geri al / yinele üst satırda.'**
+  String get inkStylusTips;
+
+  /// No description provided for @inkZoomReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam görünüme dön'**
+  String get inkZoomReset;
+
+  /// No description provided for @inkZoomHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'İki parmakla yakınlaştır ve kaydır'**
+  String get inkZoomHint;
+
+  /// No description provided for @cardShowFiles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya ekleri'**
+  String get cardShowFiles;
+
+  /// No description provided for @cardShowFilesInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF, sunum, ses ve metin ekleri kartta görünsün'**
+  String get cardShowFilesInfo;
+
+  /// No description provided for @cardShowMediaShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartta görseller'**
+  String get cardShowMediaShort;
+
+  /// No description provided for @cardShowFilesShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartta ekler'**
+  String get cardShowFilesShort;
+
+  /// No description provided for @homeShowShared.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşılan notlar ana ekranda'**
+  String get homeShowShared;
+
+  /// No description provided for @homeShowSharedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Benimle paylaşılan ortak notlar ana ekranın üstünde ayrı bir bölümde de görünsün'**
+  String get homeShowSharedInfo;
+
+  /// No description provided for @homeShowSharedShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşılanlar'**
+  String get homeShowSharedShort;
+
+  /// No description provided for @homeSharedSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'BENİMLE PAYLAŞILANLAR'**
+  String get homeSharedSection;
+
+  /// No description provided for @copyAttachment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eki kopyala'**
+  String get copyAttachment;
+
+  /// No description provided for @attachmentCopiedPasteHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek kopyalandı — başka bir notta + menüsünden yapıştır'**
+  String get attachmentCopiedPasteHint;
+
+  /// No description provided for @dividerSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizgi ayarları'**
+  String get dividerSettings;
+
+  /// No description provided for @dividerPreviewText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Örnek madde'**
+  String get dividerPreviewText;
+
+  /// No description provided for @dividerKind.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tür'**
+  String get dividerKind;
+
+  /// No description provided for @dividerColor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Renk'**
+  String get dividerColor;
+
+  /// No description provided for @dividerWeight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalınlık'**
+  String get dividerWeight;
+
+  /// No description provided for @dividerApplyAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm çizgilere'**
+  String get dividerApplyAll;
+
+  /// No description provided for @dividerKindSolid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düz'**
+  String get dividerKindSolid;
+
+  /// No description provided for @dividerKindDashed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kesikli'**
+  String get dividerKindDashed;
+
+  /// No description provided for @dividerKindDotted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Noktalı'**
+  String get dividerKindDotted;
+
+  /// No description provided for @dividerKindDouble.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çift'**
+  String get dividerKindDouble;
+
+  /// No description provided for @dividerKindWavy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dalgalı'**
+  String get dividerKindWavy;
 }
 
 class _AppLocalizationsDelegate

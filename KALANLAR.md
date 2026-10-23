@@ -27,6 +27,25 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
 numarasıyla bildir.
 
+**2026-10-23 kalem + ses + kart turu**
+- [ ] Ayarlar → Ses: Türkçe sesi denerken yapay zekâ denemesine geç (ya da
+  tersi) — iki ses ÜST ÜSTE çalmıyor; motor değişince süren deneme susuyor.
+- [ ] APK boyutu ~45 MB civarı (eski 73 MB); Türkçe ses hâlâ çalışıyor.
+- [ ] Tablette kalem: ilk kalem dokunuşunda "yalnız kalem" açılıyor; parmak
+  çizmiyor, kaydırıyor; iki parmak yakınlaştırıyor; avuç içi iz bırakmıyor.
+- [ ] Kalem basıncı: hafif/sert bastırınca kalınlık değişiyor. Yan düğme
+  ya da ters uç siliyor. Şekiller (düz çizgi, dikdörtgen, daire, ok).
+- [ ] Kalem ayarları (⚙): şeffaflık, son renkler, basınç aç/kapa; uygulama
+  kapanıp açılınca kalem/renk/kalınlık hatırlanıyor. Geri al + yinele.
+- [ ] El yazısı ekranında iki parmakla yakınlaştır/kaydır; "tam görünüm".
+- [ ] Ayarlar → Kartlar → "Paylaşılan notlar ana ekranda" açınca ortak
+  notlar ana ekranın üstünde ayrı bölümde; karta dokununca not açılıyor.
+- [ ] Madde uzun bas → Çizgi ayarları: tür (çift/dalgalı dahil), renk,
+  kalınlık, "Tüm çizgilere"; kartta da aynı görünüyor.
+- [ ] Görsel/PDF/sunum/video görüntüleyicide "Eki kopyala" → başka notta
+  + → yapıştır.
+- [ ] Süz levhası: "Kartta görseller" / "Kartta ekler" ayrı ayrı kapanıyor.
+
 **2026-10-20 geliştirme raporu + kullanıcı turu 2**
 - [ ] Madde uzun bas → Alta çizgi çek: çizgi ANINDA görünüyor (çıkıp girmeden).
 - [ ] Biçim paneli açıkken alt çubuk gizli; "Tt" düğmesi boyut satırını

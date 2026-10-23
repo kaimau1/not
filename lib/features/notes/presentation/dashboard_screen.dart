@@ -52,6 +52,7 @@ import 'dashboard_pattern.dart';
 import 'filter_sheet.dart';
 import 'note_card.dart';
 import 'note_grid.dart';
+import 'shared_notes_screen.dart';
 import 'notes_providers.dart';
 import 'quick_add_actions.dart';
 import 'quick_add_fab.dart';
@@ -1313,6 +1314,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           selectedFolderId: ref.watch(
                                             selectedFolderProvider,
                                           ),
+                                        ),
+                                      // BENİMLE PAYLAŞILANLAR (seçenek,
+                                      // varsayılan kapalı — bkz.
+                                      // homeShowSharedProvider): kök
+                                      // görünümde, kendi notlarımın üstünde.
+                                      if (!searchActive &&
+                                          !reorderActive &&
+                                          !selectionActive &&
+                                          ref.watch(homeShowSharedProvider) &&
+                                          ref.watch(noteFilterProvider) ==
+                                              NoteFilter.all &&
+                                          ref.watch(selectedTagProvider) ==
+                                              null &&
+                                          ref.watch(selectedFolderProvider) ==
+                                              null)
+                                        SharedNotesHomeSection(
+                                          columns: columns,
+                                          cellWidth: cellWidth,
                                         ),
                                       ...notesAsync.when(
                                         data: (notes) => _buildNoteSlivers(

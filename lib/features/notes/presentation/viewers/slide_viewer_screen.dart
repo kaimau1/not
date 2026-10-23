@@ -17,6 +17,7 @@ import 'ink_layer.dart';
 import 'slide_canvas.dart';
 import 'slide_scroll.dart';
 import 'zoom_box.dart';
+import '../editor/attachment_clipboard.dart';
 
 /// Sunum (.pptx) ekini gerçek tasarımıyla slayt slayt gösterir. PDF'teki gibi
 /// üzerine elle yazılabilir: çizim slayt oranlı vektör olarak ekin `ink`
@@ -245,6 +246,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
             style: const TextStyle(fontSize: 14),
           ),
           actions: [
+            CopyAttachmentButton(attachment: _current),
             IconButton(
               tooltip: _areaMode ? l10n.areaSelectOff : l10n.areaSelect,
               isSelected: _areaMode,

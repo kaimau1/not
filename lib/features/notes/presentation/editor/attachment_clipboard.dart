@@ -1,5 +1,15 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import 'package:pasteboard/pasteboard.dart';
+
+import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/local_file.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../domain/attachment.dart';
 
 /// Uygulama içi EK panosu: "Kopyala" ile alınan ek burada bekler, başka bir
@@ -34,4 +44,80 @@ class AttachmentClipboard extends Notifier<List<Attachment>> {
       state = List.unmodifiable(attachments);
 
   void clear() => state = const [];
+}
+
+/// **EKİ KOPYALA** düğmesi — tam ekran görüntüleyicilerin (görsel, PDF,
+/// sunum, video) üst çubuğunda (kullanıcı isteği 2026-10-23: "ek
+/// görüntülendiğinde seçeneklerinde eki kopyala seçeneği olmalı"). Eskiden
+/// kopyalama yalnız not ekranındaki ek menüsündeydi; eki açan kullanıcı
+/// kopyalamak için geri çıkmak zorundaydı.
+///
+/// Not ekranındaki kopyalamayla aynı sonuç: ek uygulama içi panoya girer
+/// (başka notun "+" menüsünden yapıştırılır); YouTube ekinin bağlantısı,
+/// görselin baytları (cihazdaysa ya da indirilebiliyorsa) sistem panosuna da
+/// yazılır.
+class CopyAttachmentButton extends ConsumerStatefulWidget {
+  const CopyAttachmentButton({super.key, required this.attachment});
+
+  final Attachment attachment;
+
+  @override
+  ConsumerState<CopyAttachmentButton> createState() =>
+      _CopyAttachmentButtonState();
+}
+
+class _CopyAttachmentButtonState extends ConsumerState<CopyAttachmentButton> {
+  bool _busy = false;
+
+  Future<Uint8List?> _imageBytes(Attachment a) async {
+    if (!kIsWeb && localFileExists(a.localPath)) {
+      return File(a.localPath).readAsBytes();
+    }
+    if (a.isUploaded) {
+      final response = await http.get(Uri.parse(a.downloadUrl));
+      if (response.statusCode == 200) return response.bodyBytes;
+    }
+    return null;
+  }
+
+  Future<void> _copy() async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final a = widget.attachment;
+    ref.read(attachmentClipboardProvider.notifier).copy(a);
+    if (a.isWebVideo) {
+      await Clipboard.setData(ClipboardData(text: a.webUrl));
+      messenger.showMessage(l10n.videoLinkCopied);
+      return;
+    }
+    if (a.kind == AttachmentKind.image) {
+      setState(() => _busy = true);
+      try {
+        final bytes = await _imageBytes(a);
+        if (bytes != null) await Pasteboard.writeImage(bytes);
+      } catch (_) {
+        // Sistem panosuna yazmak her platformda mümkün değil; uygulama içi
+        // kopya yine de alındı (not ekranındaki kopyalamayla aynı karar).
+      } finally {
+        if (mounted) setState(() => _busy = false);
+      }
+    }
+    messenger.showMessage(l10n.attachmentCopiedPasteHint);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      key: const ValueKey('viewer-copy-attachment'),
+      tooltip: context.l10n.copyAttachment,
+      icon: _busy
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.copy_all_outlined),
+      onPressed: _busy ? null : _copy,
+    );
+  }
 }

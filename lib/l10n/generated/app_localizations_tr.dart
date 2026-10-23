@@ -5578,7 +5578,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cardShowDate => 'Tarih ve saat';
 
   @override
-  String get cardShowMedia => 'Ekler ve kapak görseli';
+  String get cardShowMedia => 'Görseller ve videolar';
 
   @override
   String get cardShowFolder => 'Klasör adı';
@@ -5614,4 +5614,131 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get formatPageColor => 'Sayfa rengi';
+
+  @override
+  String get inkShapes => 'Şekiller';
+
+  @override
+  String get inkShapeLine => 'Düz çizgi';
+
+  @override
+  String get inkShapeRectangle => 'Dikdörtgen';
+
+  @override
+  String get inkShapeEllipse => 'Daire / elips';
+
+  @override
+  String get inkPenOnlyOn => 'Yalnız kalem yazıyor (parmak kaydırır) — kapat';
+
+  @override
+  String get inkPenOnlyOff => 'Parmakla da yazılıyor — yalnız kaleme geç';
+
+  @override
+  String get inkPenOnlyHint =>
+      'Kalemle yaz · parmakla kaydır, iki parmakla yakınlaştır';
+
+  @override
+  String get inkSettings => 'Kalem ayarları';
+
+  @override
+  String get inkWidth => 'Kalınlık';
+
+  @override
+  String get inkOpacity => 'Şeffaflık';
+
+  @override
+  String get inkRecentColors => 'Son kullanılan renkler';
+
+  @override
+  String get inkPenOnlyTitle => 'Yalnız kalemle yaz';
+
+  @override
+  String get inkPenOnlyInfo =>
+      'Parmak çizmez; tek parmakla kaydırır, iki parmakla yakınlaştırır. Avuç içi de iz bırakmaz. Kalem ilk kez değince kendiliğinden açılır.';
+
+  @override
+  String get inkPressureTitle => 'Basınç algısı';
+
+  @override
+  String get inkPressureInfo =>
+      'Kalemle hafif bastırınca ince, sert bastırınca kalın yazar.';
+
+  @override
+  String get inkStylusTipsTitle => 'Kalem kısayolları';
+
+  @override
+  String get inkStylusTips =>
+      'Kalemin yan düğmesini basılı tutarak ya da silgi ucuyla dokunarak sil. Geri al / yinele üst satırda.';
+
+  @override
+  String get inkZoomReset => 'Tam görünüme dön';
+
+  @override
+  String get inkZoomHint => 'İki parmakla yakınlaştır ve kaydır';
+
+  @override
+  String get cardShowFiles => 'Dosya ekleri';
+
+  @override
+  String get cardShowFilesInfo =>
+      'PDF, sunum, ses ve metin ekleri kartta görünsün';
+
+  @override
+  String get cardShowMediaShort => 'Kartta görseller';
+
+  @override
+  String get cardShowFilesShort => 'Kartta ekler';
+
+  @override
+  String get homeShowShared => 'Paylaşılan notlar ana ekranda';
+
+  @override
+  String get homeShowSharedInfo =>
+      'Benimle paylaşılan ortak notlar ana ekranın üstünde ayrı bir bölümde de görünsün';
+
+  @override
+  String get homeShowSharedShort => 'Paylaşılanlar';
+
+  @override
+  String get homeSharedSection => 'BENİMLE PAYLAŞILANLAR';
+
+  @override
+  String get copyAttachment => 'Eki kopyala';
+
+  @override
+  String get attachmentCopiedPasteHint =>
+      'Ek kopyalandı — başka bir notta + menüsünden yapıştır';
+
+  @override
+  String get dividerSettings => 'Çizgi ayarları';
+
+  @override
+  String get dividerPreviewText => 'Örnek madde';
+
+  @override
+  String get dividerKind => 'Tür';
+
+  @override
+  String get dividerColor => 'Renk';
+
+  @override
+  String get dividerWeight => 'Kalınlık';
+
+  @override
+  String get dividerApplyAll => 'Tüm çizgilere';
+
+  @override
+  String get dividerKindSolid => 'Düz';
+
+  @override
+  String get dividerKindDashed => 'Kesikli';
+
+  @override
+  String get dividerKindDotted => 'Noktalı';
+
+  @override
+  String get dividerKindDouble => 'Çift';
+
+  @override
+  String get dividerKindWavy => 'Dalgalı';
 }

@@ -51,6 +51,8 @@ const kSyncedPrefKeys = <String>[
   'card_show_tag',
   'card_show_date',
   'card_show_media',
+  'card_show_files',
+  'home_show_shared',
   'card_show_folder',
   'card_show_paper',
   'voice_button_mode',

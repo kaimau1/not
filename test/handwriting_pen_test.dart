@@ -6,11 +6,16 @@ import 'package:notlar/features/notes/presentation/editor/drawing_screen.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_layer.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_pen.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
+import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
 
 /// El yazısı ekranı kendi çizim motorunu bırakıp PDF/görsel üstü çizimle AYNI
 /// parçaları kullanıyor. Bu testler o birleşmeyi korur: kalem seçenekleri iki
 /// yerde birden görünmeli ve çizim hâlâ PNG olarak dönmeli.
 void main() {
+  // Kalem seçimi artık hatırlanıyor (InkToolMemory): her test varsayılan
+  // tükenmezle başlasın.
+  setUp(InkToolMemory.reset);
+
   Future<Uint8List?> pumpAndDraw(
     WidgetTester tester, {
     bool draw = true,

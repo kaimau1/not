@@ -15,6 +15,7 @@ import '../../../../core/utils/video_time.dart';
 import '../../domain/attachment.dart';
 import '../editor/video_transport.dart' show SeekIcon;
 import 'youtube_viewer.dart';
+import '../editor/attachment_clipboard.dart';
 
 /// Süreyi `s:sn` (bir saatten uzunsa `s:dd:sn`) olarak yazar.
 String formatVideoPosition(Duration d) {
@@ -257,6 +258,7 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
           style: const TextStyle(fontSize: 14),
         ),
         actions: [
+          CopyAttachmentButton(attachment: widget.attachment),
           if (controller != null)
             IconButton(
               key: const ValueKey('viewer-video-fullscreen'),

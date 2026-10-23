@@ -32,6 +32,11 @@ class NoteItem {
   static const dividerDashed = 'dashed';
   static const dividerDotted = 'dotted';
 
+  /// Çift çizgi ve dalgalı çizgi (2026-10-23). Bu türleri tanımayan eski
+  /// sürüm düz çizgi çizer.
+  static const dividerDouble = 'double';
+  static const dividerWavy = 'wavy';
+
   final String id;
   final String text;
 
@@ -118,4 +123,77 @@ class NoteItem {
     if (attachmentId.isNotEmpty) 'attachmentId': attachmentId,
     if (divider.isNotEmpty) 'divider': divider,
   };
+}
+
+/// Madde altı ayırıcının BİÇİMİ: tür + isteğe bağlı renk ve kalınlık
+/// (kullanıcı isteği 2026-10-23: "çizgi rengi ve özelliklerini ayarlama").
+///
+/// [NoteItem.divider] dizesinin içinde saklanır — ayrı alan açılmadı:
+/// karşılaştırma, satır önbelleği anahtarı, birleştirme ve kopyalama zaten
+/// bu dizeye bakıyor, yeni alan hepsine tek tek eklenmek zorunda kalırdı.
+/// Biçim: `tür` (varsayılan renk/kalınlık) ya da `tür|c:AARRGGBB|w:1.5`.
+/// Eski sürüm tanımadığı dizeyi düz çizgi olarak çizer (veri kaybolmaz).
+class ItemDivider {
+  const ItemDivider(this.kind, {this.color, this.weight = 1});
+
+  /// [NoteItem.dividerSolid] / dashed / dotted / double / wavy.
+  final String kind;
+
+  /// ARGB; null = temanın vurgu rengi.
+  final int? color;
+
+  /// Kalınlık çarpanı (0,5–3; 1 = varsayılan).
+  final double weight;
+
+  static const minWeight = 0.5;
+  static const maxWeight = 3.0;
+
+  static const kinds = [
+    NoteItem.dividerSolid,
+    NoteItem.dividerDashed,
+    NoteItem.dividerDotted,
+    NoteItem.dividerDouble,
+    NoteItem.dividerWavy,
+  ];
+
+  /// Boş dizede null.
+  static ItemDivider? parse(String raw) {
+    if (raw.isEmpty) return null;
+    final parts = raw.split('|');
+    int? color;
+    var weight = 1.0;
+    for (final part in parts.skip(1)) {
+      if (part.startsWith('c:')) {
+        color = int.tryParse(part.substring(2), radix: 16);
+      } else if (part.startsWith('w:')) {
+        weight = (double.tryParse(part.substring(2)) ?? 1)
+            .clamp(minWeight, maxWeight)
+            .toDouble();
+      }
+    }
+    return ItemDivider(parts.first, color: color, weight: weight);
+  }
+
+  String encode() {
+    final buffer = StringBuffer(kind);
+    final c = color;
+    if (c != null) {
+      buffer.write('|c:${c.toRadixString(16).padLeft(8, '0').toUpperCase()}');
+    }
+    if ((weight - 1).abs() > 0.01) {
+      buffer.write('|w:${weight.toStringAsFixed(2)}');
+    }
+    return buffer.toString();
+  }
+
+  ItemDivider copyWith({
+    String? kind,
+    int? color,
+    bool clearColor = false,
+    double? weight,
+  }) => ItemDivider(
+    kind ?? this.kind,
+    color: clearColor ? null : (color ?? this.color),
+    weight: weight ?? this.weight,
+  );
 }

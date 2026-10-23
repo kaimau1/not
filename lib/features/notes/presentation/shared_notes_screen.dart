@@ -66,33 +66,8 @@ class SharedNotesBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final shares = ref.watch(sharedNotesWithMeProvider).value ?? const [];
-    final entries = <({Note note, NoteShare share})>[];
-    for (final share in shares) {
-      final note = ref
-          .watch(
-            ownedNoteStreamProvider((
-              ownerId: share.ownerId,
-              noteId: share.noteId,
-            )),
-          )
-          .value;
-      // Sahip notu çöpe attıysa ya da ayna yetim kaldıysa (not kalıcı
-      // silindi) kart çizilmez — boş bir kart "not kayboldu" gibi okunurdu.
-      if (note == null || note.deletedAt != null) continue;
-      entries.add((note: note, share: share));
-    }
-    // YENİLER ÜSTTE (kullanıcı bulgusu 2026-10-17: "yeni bir şey geldiğinde
-    // anlaşılmıyor"): okunmamış notlar başa, kalanı son değişikliğe göre.
+    final entries = sharedNoteEntries(ref);
     final unread = ref.watch(sharedNoteUnreadProvider);
-    entries.sort((a, b) {
-      final ua = unread.contains(a.share.id);
-      final ub = unread.contains(b.share.id);
-      if (ua != ub) return ua ? -1 : 1;
-      return (b.note.updatedAt ?? DateTime(0)).compareTo(
-        a.note.updatedAt ?? DateTime(0),
-      );
-    });
     return entries.isEmpty
         ? EmptyState(
             icon: Icons.people_alt_outlined,
@@ -177,6 +152,140 @@ class SharedNotesBody extends ConsumerWidget {
               );
             },
           );
+  }
+}
+
+/// Benimle paylaşılan notlar (sahibinden canlı), okunmamışlar üstte, kalanı
+/// son değişikliğe göre. Ayrı ekran, birleşik ekranın sekmesi ve ana ekran
+/// bölümü ([SharedNotesHomeSection]) aynı listeyi okur.
+List<({Note note, NoteShare share})> sharedNoteEntries(WidgetRef ref) {
+  final shares = ref.watch(sharedNotesWithMeProvider).value ?? const [];
+  final entries = <({Note note, NoteShare share})>[];
+  for (final share in shares) {
+    final note = ref
+        .watch(
+          ownedNoteStreamProvider((
+            ownerId: share.ownerId,
+            noteId: share.noteId,
+          )),
+        )
+        .value;
+    // Sahip notu çöpe attıysa ya da ayna yetim kaldıysa (not kalıcı
+    // silindi) kart çizilmez — boş bir kart "not kayboldu" gibi okunurdu.
+    if (note == null || note.deletedAt != null) continue;
+    entries.add((note: note, share: share));
+  }
+  // YENİLER ÜSTTE (kullanıcı bulgusu 2026-10-17: "yeni bir şey geldiğinde
+  // anlaşılmıyor"): okunmamış notlar başa, kalanı son değişikliğe göre.
+  final unread = ref.watch(sharedNoteUnreadProvider);
+  entries.sort((a, b) {
+    final ua = unread.contains(a.share.id);
+    final ub = unread.contains(b.share.id);
+    if (ua != ub) return ua ? -1 : 1;
+    return (b.note.updatedAt ?? DateTime(0)).compareTo(
+      a.note.updatedAt ?? DateTime(0),
+    );
+  });
+  return entries;
+}
+
+/// **ANA EKRANDA PAYLAŞILANLAR** (kullanıcı isteği 2026-10-23: "paylaşılan
+/// notların paylaşılan kişinin ana ekranında da görülmesi, seçenek olarak"):
+/// Ayarlar'da/Süz levhasında açılınca ana ekranın tepesinde ayrı bölüm.
+/// Kendi notlarımın ızgarasına KARIŞTIRILMAZ: sıralama, seçim, sürükle-
+/// sırala ve toplu işlemler yalnız kendi notlarımı bilir; ortak not sahibinin
+/// koleksiyonunda durur. Bir SLIVER döner.
+class SharedNotesHomeSection extends ConsumerWidget {
+  const SharedNotesHomeSection({
+    super.key,
+    required this.columns,
+    required this.cellWidth,
+  });
+
+  final int columns;
+  final double cellWidth;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final entries = sharedNoteEntries(ref);
+    if (entries.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+    final unread = ref.watch(sharedNoteUnreadProvider);
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 4, 4),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.people_alt_outlined,
+                  size: 15,
+                  color: scheme.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  l10n.homeSharedSection,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                    color: scheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Divider(height: 1, color: scheme.outlineVariant),
+                ),
+                TextButton(
+                  onPressed: () => SharedNotesScreen.open(context),
+                  child: Text(l10n.sectionNoteCount(entries.length)),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          sliver: sliverBalancedNoteColumns(
+            items: [for (final e in entries) e.note],
+            columns: columns,
+            cellWidth: cellWidth,
+            cell: (context, index) {
+              final entry = entries[index];
+              final isNew = unread.contains(entry.share.id);
+              final caption = sharedNoteCaption(l10n, entry.share, entry.note);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  NoteCard(note: entry.note, ownerId: entry.share.ownerId),
+                  if (caption.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        start: 6,
+                        top: 3,
+                      ),
+                      child: Text(
+                        caption,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: isNew ? scheme.error : scheme.onSurfaceVariant,
+                          fontWeight: isNew ? FontWeight.w700 : null,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 }
 

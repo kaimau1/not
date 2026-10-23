@@ -30,6 +30,7 @@ import '../domain/sensitive_text.dart';
 import '../data/drive_store.dart' show localFilesRevisionProvider;
 import 'editor/notebook_paper.dart';
 import 'note_actions_sheet.dart';
+import 'item_divider_style.dart';
 import 'note_card_media.dart';
 import 'notes_providers.dart';
 
@@ -537,9 +538,13 @@ class NoteCard extends ConsumerWidget {
     final showTopRow = hasTitle;
     // Kilitli notta içerik (ekler dahil) kartta gösterilmez; ekler ayardan
     // da kapatılabilir.
-    final media = note.locked || !display.media
+    final media = note.locked || (!display.media && !display.files)
         ? null
-        : CardMediaPlan.of(note);
+        : CardMediaPlan.of(
+            note,
+            showVisuals: display.media,
+            showFiles: display.files,
+          );
     final hero = media?.hero;
     // Balonlu notun belge kapağı (video/görsel kapağıyla aynı yerde).
     final cover = media?.cover;
@@ -1154,40 +1159,27 @@ class _CardItemRow extends StatelessWidget {
 }
 
 class _CardDividerPainter extends CustomPainter {
-  const _CardDividerPainter(this.kind, this.color);
+  _CardDividerPainter(this.raw, this.color)
+    : style = ItemDivider.parse(raw) ?? const ItemDivider('');
 
-  final String kind;
+  final String raw;
+  final ItemDivider style;
   final Color color;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final y = size.height - 0.5;
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = kind == NoteItem.dividerDotted ? 2 : 1.2
-      ..strokeCap = StrokeCap.round;
-    final step = switch (kind) {
-      NoteItem.dividerDashed => 8.0,
-      NoteItem.dividerDotted => 5.0,
-      _ => 0.0,
-    };
-    if (step == 0) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-      return;
-    }
-    final dash = kind == NoteItem.dividerDotted ? 0.0 : 4.5;
-    for (var x = 0.0; x < size.width; x += step) {
-      canvas.drawLine(
-        Offset(x, y),
-        Offset(math.min(x + dash, size.width), y),
-        paint,
-      );
-    }
-  }
+  void paint(Canvas canvas, Size size) => paintItemDivider(
+    canvas,
+    style: style,
+    fallbackColor: color,
+    left: 0,
+    right: size.width,
+    y: size.height - 0.5,
+    baseWidth: 1.2,
+  );
 
   @override
   bool shouldRepaint(_CardDividerPainter old) =>
-      old.kind != kind || old.color != color;
+      old.raw != raw || old.color != color;
 }
 
 /// Uzun yapılacaklar listesinin kartta İLERLEMESİ (2026-10-20 iyileştirme
@@ -1545,7 +1537,9 @@ class NoteListRow extends ConsumerWidget {
   /// Satırın solu: notun görseli/videosu varsa küçük resmi (video oynat
   /// işaretiyle), yoksa tür simgesi. Kilitli notta hep simge.
   Widget _rowLeading(ColorScheme scheme, {required bool showMedia}) {
-    final media = note.locked || !showMedia ? null : CardMediaPlan.of(note);
+    final media = note.locked || !showMedia
+        ? null
+        : CardMediaPlan.of(note, showFiles: false);
     final visual = media?.hero ?? media?.strip.firstOrNull;
     if (visual == null) {
       return Icon(_icon, size: 20, color: scheme.onSurfaceVariant);

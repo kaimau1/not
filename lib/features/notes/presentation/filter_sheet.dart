@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/attachment_text_index.dart';
+import '../../settings/settings_providers.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
 import '../data/notes_repository.dart';
@@ -274,6 +275,27 @@ class _ViewModeSection extends ConsumerWidget {
               onTap: () =>
                   ref.read(allNotesGroupByFolderProvider.notifier).toggle(),
             ),
+          // KARTTA GÖRSEL / EK (kullanıcı isteği 2026-10-23): Ayarlar'daki
+          // "Kartta görünenler"in kısayolu — önizlemeyi ana ekrandan
+          // değiştirmek için ayarlara gitmek gerekmesin.
+          _Option(
+            label: l10n.cardShowMediaShort,
+            icon: Icons.image_outlined,
+            selected: ref.watch(cardShowMediaProvider),
+            onTap: () => ref.read(cardShowMediaProvider.notifier).toggle(),
+          ),
+          _Option(
+            label: l10n.cardShowFilesShort,
+            icon: Icons.attach_file,
+            selected: ref.watch(cardShowFilesProvider),
+            onTap: () => ref.read(cardShowFilesProvider.notifier).toggle(),
+          ),
+          _Option(
+            label: l10n.homeShowSharedShort,
+            icon: Icons.people_alt_outlined,
+            selected: ref.watch(homeShowSharedProvider),
+            onTap: () => ref.read(homeShowSharedProvider.notifier).toggle(),
+          ),
         ],
       ),
     );

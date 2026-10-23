@@ -60,8 +60,11 @@ enum InkPen {
 
 /// Bir çizgiyi (renk + kalınlık) çizen boya. Fosforlu düz uçla çizilir:
 /// yuvarlak uç saydam çizgide uç uca binince koyu lekeler bırakıyordu.
+///
+/// Fosforlu SAYDAMLIĞIYLA tanınır (tam 0x66): 2026-10-23'ten beri tükenmez ve
+/// keçeli de şeffaf olabiliyor (kalem ayarları), onlar yuvarlak uçlu kalır.
 Paint inkPaint(Color color, double strokeWidth) {
-  final highlighter = color.a < 1;
+  final highlighter = (color.a * 255).round() == InkPen.highlighter.alpha;
   return Paint()
     ..color = color
     ..strokeWidth = strokeWidth

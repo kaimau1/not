@@ -12,6 +12,7 @@ import '../../../../core/utils/sentence_select.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../domain/note_item.dart';
 import '../../domain/note_share_text.dart';
+import '../item_divider_style.dart';
 import 'format_menu.dart';
 import 'tag_chips.dart';
 import 'tag_tap.dart';
@@ -1732,51 +1733,36 @@ enum _ItemAction {
   dividerSolid,
   dividerDashed,
   dividerDotted,
+  dividerStyle,
   dividerNone,
   moveToPage,
 }
 
-/// Madde altı ayırıcı çizgi (bkz. [NoteItem.divider]).
+/// Madde altı ayırıcı çizgi (bkz. [NoteItem.divider], [ItemDivider]).
 class _ItemDividerPainter extends CustomPainter {
-  const _ItemDividerPainter(this.kind, this.color);
+  _ItemDividerPainter(this.raw, this.color)
+    : style = ItemDivider.parse(raw) ?? const ItemDivider('');
 
-  final String kind;
+  final String raw;
+  final ItemDivider style;
   final Color color;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final y = size.height - 1;
-    const left = 8.0;
-    final right = size.width - 8;
-    final paint = Paint()
-      ..color = color
-      // Defterde satır çizgisiyle AYNI yere düşer: ince kalırsa kesik/nokta
-      // altındaki düz çizgide kaybolup "düz çizgi" gibi görünüyordu.
-      ..strokeWidth = kind == NoteItem.dividerDotted ? 3.2 : 2.2
-      ..strokeCap = kind == NoteItem.dividerDotted
-          ? StrokeCap.round
-          : StrokeCap.butt;
-    switch (kind) {
-      case NoteItem.dividerDashed:
-        for (var x = left; x < right; x += 12) {
-          canvas.drawLine(
-            Offset(x, y),
-            Offset(math.min(x + 7, right), y),
-            paint,
-          );
-        }
-      case NoteItem.dividerDotted:
-        for (var x = left; x < right; x += 7) {
-          canvas.drawLine(Offset(x, y), Offset(x, y), paint);
-        }
-      default:
-        canvas.drawLine(Offset(left, y), Offset(right, y), paint);
-    }
-  }
+  void paint(Canvas canvas, Size size) => paintItemDivider(
+    canvas,
+    style: style,
+    fallbackColor: color,
+    left: 8,
+    right: size.width - 8,
+    // Defterde satır çizgisiyle AYNI yere düşer: ince kalırsa kesik/nokta
+    // altındaki düz çizgide kaybolup "düz çizgi" gibi görünüyordu.
+    y: size.height - 1,
+    baseWidth: 2.2,
+  );
 
   @override
   bool shouldRepaint(_ItemDividerPainter old) =>
-      old.kind != kind || old.color != color;
+      old.raw != raw || old.color != color;
 }
 
 /// Üstü çizili geçişin süresi (bkz. `_itemRow`).

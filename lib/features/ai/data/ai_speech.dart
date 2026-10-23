@@ -118,6 +118,10 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
   /// Döndürdüğü değer: örnek YENİ mi üretildi (true) yoksa kayıttan mı çalındı
   /// (false) — ekran kullanıcıya bunu söyleyebilsin.
   Future<bool> previewVoice(String sample) async {
+    // Önceki okuma/deneme susar; üretim sürerken durdurulursa (motor
+    // değişti, başka deneme başladı) örnek kaydedilir ama ÇALINMAZ.
+    await stop();
+    final generation = _generation;
     final voice = ref.read(ttsVoiceProvider);
     final model = ref.read(ttsModelProvider) ?? 'auto';
     final file = await _sampleFile(model: model, voice: voice, text: sample);
@@ -130,6 +134,7 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
     }
     // Deneme, okuma durumunu (SpeechOutputState) DEĞİŞTİRMEZ: ayarlar ekranı
     // bir notu okumuyor; ilerleme çubuğu açılsaydı yanlış olurdu.
+    if (generation != _generation) return generated;
     final player = _player ??= AudioPlayer();
     await player.stop();
     await player.setFilePath(file.path);
