@@ -4,14 +4,16 @@ import 'package:notlar/core/utils/rich_text.dart';
 import 'package:notlar/features/notes/presentation/editor/format_bar.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
-/// Biçim çubuğu (2026-10-20 sıfırdan): kaymayan ana satır + satır içi
-/// tepsiler. Kullanıcı bulgusu: "renk paletine basılamıyor, çok kenarda
-/// kaldığı için" — dar ekranda her düğme görünür ve basılabilir olmalı.
+/// Biçim paneli (2026-10-28 ikinci kez sıfırdan): üç sabit sıra — stil,
+/// renk, yazı — sık işler tek dokunuş; yalnız yazı tipi ince ayarı tepside.
+/// Kullanıcı bulgusu: "renk paletine basılamıyor, çok kenarda kaldığı için"
+/// — dar ekranda her düğme görünür ve basılabilir olmalı.
 void main() {
   final formats = <(RichFormat, int?)>[];
   final removed = <RichFormat>[];
   final headings = <RichHeading>[];
   final fonts = <String?>[];
+  final scales = <double>[];
   var pageStyle = 0;
   var closed = 0;
 
@@ -32,7 +34,7 @@ void main() {
           hasSelection: () => false,
           onFontChanged: fonts.add,
           onScaleChanged: (_) {},
-          onScaleEnd: (_) {},
+          onScaleEnd: scales.add,
           onOpacityChanged: (_) {},
           onOpacityEnd: (_) {},
           onClose: () => closed++,
@@ -48,6 +50,7 @@ void main() {
     removed.clear();
     headings.clear();
     fonts.clear();
+    scales.clear();
     pageStyle = 0;
     closed = 0;
   });
@@ -68,18 +71,27 @@ void main() {
     tester.hitTestOnBinding(center);
   }
 
-  testWidgets('dar ekranda ana satırın her düğmesi görünür ve çalışır', (
+  testWidgets('dar ekranda üç sıranın her düğmesi görünür ve çalışır', (
     tester,
   ) async {
     await pumpNarrow(tester);
     expect(tester.takeException(), isNull);
     for (final key in [
-      'format-heading',
+      'format-heading-normal',
+      'format-heading-h1',
+      'format-heading-h2',
       'format-bold',
       'format-italic',
       'format-underline',
-      'format-colors',
+      'format-mode-text',
+      'format-mode-highlight',
+      'format-color-1',
+      'format-color-5',
+      'format-color-palette',
+      'format-color-remove',
       'format-font',
+      'format-size-down',
+      'format-size-up',
       'format-clear',
       'format-page',
       'format-close',
@@ -94,39 +106,39 @@ void main() {
     expect(closed, 1);
   });
 
-  testWidgets('renk tepsisi: tonlar, kaldır ve TAM PALET basılabilir', (
-    tester,
-  ) async {
+  testWidgets('renk tek dokunuş; anahtar vurguya geçirir; TAM PALET '
+      'basılabilir', (tester) async {
     await pumpNarrow(tester);
-    await tester.tap(find.byKey(const ValueKey('format-colors')));
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-
     await tester.tap(find.byKey(const ValueKey('format-color-2')));
+    await tester.tap(find.byKey(const ValueKey('format-mode-highlight')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('format-color-2')), findsNothing);
     await tester.tap(find.byKey(const ValueKey('format-highlight-5')));
     await tester.tap(find.byKey(const ValueKey('format-highlight-remove')));
     expect(formats, [(RichFormat.color, 2), (RichFormat.highlight, 5)]);
     expect(removed, [RichFormat.highlight]);
+    expect(tester.takeException(), isNull);
 
     // Kenardaki palet düğmesi ekranın içinde: dokununca palet levhası açılır.
-    final palette = find.byKey(const ValueKey('format-color-palette'));
+    final palette = find.byKey(const ValueKey('format-highlight-palette'));
     expect(tester.getRect(palette).right, lessThanOrEqualTo(360));
     await tester.tap(palette);
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('palette-custom-use')), findsOneWidget);
   });
 
-  testWidgets('başlık ve yazı tepsileri satır içi açılır, ikinci dokunuş '
-      'kapatır', (tester) async {
+  testWidgets('başlık hapı tek dokunuş; boyut − / + adım uygular; yazı '
+      'tipi tepsisi ikinci dokunuşla kapanır', (tester) async {
     await pumpNarrow(tester);
-    await tester.tap(find.byKey(const ValueKey('format-heading')));
-    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('format-heading-h1')));
     expect(headings, [RichHeading.h1]);
 
+    await tester.tap(find.byKey(const ValueKey('format-size-up')));
+    await tester.pump();
+    expect(scales.single, closeTo(1.1, 1e-9));
+
     await tester.tap(find.byKey(const ValueKey('format-font')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('format-heading-h1')), findsNothing);
     expect(find.byKey(const ValueKey('format-size-slider')), findsOneWidget);
     expect(find.byKey(const ValueKey('format-opacity-slider')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('format-font-serif')));

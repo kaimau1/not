@@ -12,10 +12,12 @@ import 'auth_providers.dart';
 /// İlk açılışta sessizce anonim oturum açılır (bkz. `login_screen.dart`);
 /// notlar yalnız o uid'de durur — uygulama silinince ya da cihaz değişince
 /// geri getirilemez. Kullanıcı bunu fark etmeden onlarca not biriktirebilir.
-/// [kGuestReminderNotes] nottan sonra ana ekranın tepesinde "Google hesabını
-/// bağla" kartı çıkar; "Sonra" kartı [kGuestReminderSnooze] boyunca gizler,
+/// Ana ekranın tepesinde "Google ile giriş yap" kartı çıkar — 2026-10-28'den
+/// beri İLK AÇILIŞTAN itibaren (kullanıcı isteği: "ilk girişte google
+/// girişini bulmak çok zor, girince ana ekranda üstte görülsün"; eskiden 3.
+/// nottan sonra geliyordu); "Sonra" kartı [kGuestReminderSnooze] boyunca gizler,
 /// süre bitince kart geri gelir (bağlanana dek kalıcı).
-const kGuestReminderNotes = 3;
+const kGuestReminderNotes = 0;
 const kGuestReminderSnooze = Duration(days: 7);
 const _snoozeKey = 'guest_reminder_snoozed_until';
 
@@ -103,9 +105,10 @@ class _GuestBackupCardState extends ConsumerState<GuestBackupCard> {
                       },
                       child: Text(l10n.guestReminderLater),
                     ),
-                    FilledButton.tonal(
+                    FilledButton.icon(
                       onPressed: () => linkGuestAccount(context, ref),
-                      child: Text(l10n.linkGoogleAccount),
+                      icon: const Icon(Icons.login_rounded, size: 18),
+                      label: Text(l10n.signInWithGoogle),
                     ),
                   ],
                 ),

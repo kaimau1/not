@@ -25,6 +25,9 @@ class _NoAuth implements AuthRepository {
   Stream<Never> authStateChanges() => const Stream.empty();
 
   @override
+  Stream<Never> userChanges() => const Stream.empty();
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => null;
 }
 

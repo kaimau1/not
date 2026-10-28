@@ -18,6 +18,7 @@ import '../../../core/utils/youtube.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
 import '../presentation/capture_mode_sheet.dart';
+import '../presentation/note_card.dart';
 import '../presentation/notes_providers.dart';
 import '../presentation/share_target_sheet.dart';
 import '../domain/attachment.dart';
@@ -239,6 +240,7 @@ final shareIntakeProvider = Provider<void>((ref) {
         ),
         notes: notes,
         folderNames: {for (final f in folders) f.id: f.name},
+        cardBuilder: (n) => NoteCard(note: n),
         askMode: asksMode,
         newNoteLabel: !asksMode
             ? null

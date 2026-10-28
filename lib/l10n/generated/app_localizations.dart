@@ -10273,6 +10273,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Dalgalı'**
   String get dividerKindWavy;
+
+  /// No description provided for @itemMenuUnstar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıldızı al'**
+  String get itemMenuUnstar;
+
+  /// No description provided for @itemMenuMove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taşı'**
+  String get itemMenuMove;
+
+  /// No description provided for @itemMenuDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sil'**
+  String get itemMenuDelete;
+
+  /// No description provided for @itemMenuLine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt çizgi'**
+  String get itemMenuLine;
+
+  /// No description provided for @formatStyleText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin'**
+  String get formatStyleText;
+
+  /// No description provided for @formatStyleH1.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık'**
+  String get formatStyleH1;
+
+  /// No description provided for @formatStyleH2.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt başlık'**
+  String get formatStyleH2;
+
+  /// No description provided for @formatSizeDown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Küçült'**
+  String get formatSizeDown;
+
+  /// No description provided for @formatSizeUp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Büyüt'**
+  String get formatSizeUp;
 }
 
 class _AppLocalizationsDelegate

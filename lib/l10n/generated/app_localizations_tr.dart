@@ -5741,4 +5741,31 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get dividerKindWavy => 'Dalgalı';
+
+  @override
+  String get itemMenuUnstar => 'Yıldızı al';
+
+  @override
+  String get itemMenuMove => 'Taşı';
+
+  @override
+  String get itemMenuDelete => 'Sil';
+
+  @override
+  String get itemMenuLine => 'Alt çizgi';
+
+  @override
+  String get formatStyleText => 'Metin';
+
+  @override
+  String get formatStyleH1 => 'Başlık';
+
+  @override
+  String get formatStyleH2 => 'Alt başlık';
+
+  @override
+  String get formatSizeDown => 'Küçült';
+
+  @override
+  String get formatSizeUp => 'Büyüt';
 }

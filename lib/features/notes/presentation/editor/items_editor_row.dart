@@ -358,7 +358,7 @@ extension _ItemsRow on ItemsEditorState {
                                   // öğeye taşıyıp klavyeyi kapatıp açıyordu;
                                   // onEditingComplete onu bastırır, odak doğrudan
                                   // yeni öğeye geçer.
-                                  onEditingComplete: () => _insertAfter(item),
+                                  onEditingComplete: () => _enterAt(item),
                                   textInputAction: TextInputAction.next,
                                   // EK ETİKETİNE DOKUNUNCA ÖNİZLEME — gövdedekiyle
                                   // aynı kural (bkz. note_editor_screen `bodyField`):

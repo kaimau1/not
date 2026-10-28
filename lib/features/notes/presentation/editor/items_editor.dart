@@ -941,7 +941,15 @@ class ItemsEditorState extends State<ItemsEditor>
         : (checkedRest.isNotEmpty ? checkedRest.last : null);
     if (focusTarget != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _focusFor(focusTarget).requestFocus();
+        if (!mounted) return;
+        _focusFor(focusTarget).requestFocus();
+        // Tek Enter (donanım klavyesi) maddeyi ortadan böldü: imleç yeni
+        // maddenin BAŞINA (bkz. [_enterAt]).
+        if (lines.length == 2 && !wasEmpty) {
+          _controllerFor(focusTarget).selection = const TextSelection.collapsed(
+            offset: 0,
+          );
+        }
       });
     }
   }
@@ -1061,6 +1069,67 @@ class ItemsEditorState extends State<ItemsEditor>
         if (!mounted || !_arriving.remove(target.id)) return;
         setState(() {});
       });
+    });
+  }
+
+  /// Klavyenin Enter/"İleri" tuşu: imleç maddenin SONUNDAYSA altına boş
+  /// madde açar; ORTASINDAYSA maddeyi imleçten böler — sağdaki kısım yeni
+  /// maddeye geçer ve imleç onun başına konur (kullanıcı isteği 2026-10-28:
+  /// "cümlenin arasında enter yapılınca oradan itibaren bölüp yeni madde
+  /// yapmalı"). İmleç başta ve madde doluysa üstüne boş madde açılır.
+  void _enterAt(NoteItem target) {
+    final index = _items.indexWhere((i) => i.id == target.id);
+    final controller = _controllers[target.id];
+    if (index < 0 || controller == null || !controller.selection.isValid) {
+      _insertAfter(target);
+      return;
+    }
+    final logical = controller.logicalText;
+    final start = wrapToLogicalOffset(
+      controller.text,
+      controller.selection.start,
+    ).clamp(0, logical.length);
+    final end = wrapToLogicalOffset(
+      controller.text,
+      controller.selection.end,
+    ).clamp(start, logical.length);
+    final before = logical.substring(0, start);
+    final after = logical.substring(end);
+    if (after.isEmpty) {
+      if (end != start) {
+        // Sona kadar seçili metin Enter'la silinir (yazılan Enter gibi).
+        controller.setLogical(before, before.length);
+        _updateText(target, before);
+      }
+      _insertAfter(target);
+      return;
+    }
+    if (before.trim().isEmpty) {
+      // Baştan Enter: madde aşağı kayar, üstüne boş madde açılır; imleç
+      // yerinde kalır (Keep ve kelime işlemcilerdeki gibi).
+      final blank = NoteItem(id: _uuid.v4(), text: '');
+      setState(() => _items.insert(index, blank));
+      _commit();
+      return;
+    }
+    final current = _items[index];
+    final next = NoteItem(id: _uuid.v4(), text: after.trimLeft());
+    setState(() {
+      _items[index] = current.copyWith(text: before.trimRight());
+      // İşaretli maddeden bölünen parça işaretsizlerin sonuna girer
+      // ("işaretsizler başta" değişmezi, bkz. [_insertAfter]).
+      final at = (widget.showCheckboxes && current.checked)
+          ? _uncheckedInsertIndex(_uncheckedCount)
+          : index + 1;
+      _items.insert(at, next);
+    });
+    controller.setLogical(before.trimRight(), before.trimRight().length);
+    _commit();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final nextController = _controllerFor(next);
+      _focusFor(next).requestFocus();
+      nextController.selection = const TextSelection.collapsed(offset: 0);
     });
   }
 
@@ -1427,7 +1496,12 @@ class ItemsEditorState extends State<ItemsEditor>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         addButton,
-        for (final item in checkedItems) _itemRow(item),
+        // ÖNBELLEKTEN (kullanıcı bulgusu 2026-10-28: "maddeleri okundu
+        // işaretleyince donma kasma"): işaretli blok `_itemRow` ile her
+        // kurulumda BAŞTAN kuruluyordu — çok işaretli maddeli notta her tuş,
+        // her işaret ve görsel eklenince bütün üstü çizili satırlar (metin
+        // alanı, taşma ölçümü, sarma ölçümü) yeniden kuruluyordu.
+        for (final item in checkedItems) _cachedItemRow(item),
         if (checkedItems.isNotEmpty)
           _floatRow(
             reserved: _kButtonRowWidth,
@@ -1734,8 +1808,188 @@ enum _ItemAction {
   dividerDashed,
   dividerDotted,
   dividerStyle,
-  dividerNone,
   moveToPage,
+}
+
+/// Madde menüsünün tek parçalık gövdesi: üstte iş düğmeleri, altta çizgi
+/// türleri (bkz. [ItemsEditorState._showItemMenu]).
+class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
+  const _ItemMenuPanel({
+    required this.starred,
+    required this.divider,
+    required this.canMove,
+  });
+
+  final bool starred;
+
+  /// Maddenin şimdiki çizgi türü ('' = yok).
+  final String divider;
+  final bool canMove;
+
+  @override
+  double get height => 148;
+
+  @override
+  bool represents(_ItemAction? value) => false;
+
+  @override
+  State<_ItemMenuPanel> createState() => _ItemMenuPanelState();
+}
+
+class _ItemMenuPanelState extends State<_ItemMenuPanel> {
+  void _pick(_ItemAction action) => Navigator.pop(context, action);
+
+  Widget _action(_ItemAction action, IconData icon, String label) {
+    final scheme = Theme.of(context).colorScheme;
+    final danger = action == _ItemAction.delete;
+    final color = danger ? scheme.error : scheme.onSurface;
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _pick(action),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 22, color: color),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall
+                    ?.copyWith(color: color),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _line(_ItemAction action, String kind, String tooltip) {
+    final scheme = Theme.of(context).colorScheme;
+    final selected = widget.divider == kind;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () => _pick(action),
+        child: Container(
+          width: 40,
+          height: 32,
+          decoration: BoxDecoration(
+            color: selected ? scheme.secondaryContainer : null,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: CustomPaint(
+            painter: _LineSwatchPainter(
+              kind,
+              selected ? scheme.onSecondaryContainer : scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 248, maxWidth: 300),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                _action(
+                  _ItemAction.star,
+                  widget.starred ? Icons.star : Icons.star_outline,
+                  widget.starred ? l10n.itemMenuUnstar : l10n.star,
+                ),
+                _action(_ItemAction.select, Icons.checklist, l10n.select),
+                if (widget.canMove)
+                  _action(
+                    _ItemAction.moveToPage,
+                    Icons.drive_file_move_outline,
+                    l10n.itemMenuMove,
+                  ),
+                _action(
+                  _ItemAction.delete,
+                  Icons.delete_outline,
+                  l10n.itemMenuDelete,
+                ),
+              ],
+            ),
+            Divider(height: 12, color: scheme.outlineVariant),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 2, 0, 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.itemMenuLine,
+                      style: Theme.of(context).textTheme.labelMedium,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  _line(
+                    _ItemAction.dividerSolid,
+                    NoteItem.dividerSolid,
+                    l10n.itemDividerSolid,
+                  ),
+                  _line(
+                    _ItemAction.dividerDashed,
+                    NoteItem.dividerDashed,
+                    l10n.itemDividerDashed,
+                  ),
+                  _line(
+                    _ItemAction.dividerDotted,
+                    NoteItem.dividerDotted,
+                    l10n.itemDividerDotted,
+                  ),
+                  IconButton(
+                    tooltip: l10n.dividerSettings,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.tune, size: 20),
+                    onPressed: () => _pick(_ItemAction.dividerStyle),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Menüdeki çizgi türü örneği (ortadan, ince).
+class _LineSwatchPainter extends CustomPainter {
+  _LineSwatchPainter(this.kind, this.color);
+
+  final String kind;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) => paintItemDivider(
+    canvas,
+    style: ItemDivider(kind),
+    fallbackColor: color,
+    left: 8,
+    right: size.width - 8,
+    y: size.height / 2,
+    baseWidth: 1.8,
+  );
+
+  @override
+  bool shouldRepaint(_LineSwatchPainter old) =>
+      old.kind != kind || old.color != color;
 }
 
 /// Madde altı ayırıcı çizgi (bkz. [NoteItem.divider], [ItemDivider]).

@@ -50,7 +50,7 @@ void main() {
       Future<void> pick(String label) async {
         await tester.longPress(find.byType(Checkbox).first);
         await tester.pumpAndSettle();
-        await tester.tap(find.text(label));
+        await tester.tap(find.byTooltip(label));
         await tester.pumpAndSettle();
       }
 
@@ -67,7 +67,9 @@ void main() {
             .foregroundPainter!;
         expect(painter.toString(), isNotEmpty);
       }
-      await pick('Çizgiyi kaldır');
+      // Ayrı "Çizgiyi kaldır" yok (2026-10-28 sade menü): etkin türe
+      // yeniden basmak çizgiyi kaldırır.
+      await pick('Alta çizgi çek');
       expect(items.first.divider, '');
       expect(dividerPaint(), findsNothing);
     });

@@ -27,6 +27,23 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
 numarasıyla bildir.
 
+**2026-10-28 madde + biçim + giriş turu**
+- [ ] Çok işaretli maddeli notta işaretlemek / yazmak / görsel eklemek
+  akıcı (eskiden donma-kasma).
+- [ ] Madde ortasında Enter → madde imleçten bölünüyor, imleç yeni maddenin
+  başında. Maddeye uzun bas → iki sıralı sade menü (yıldız·seç·taşı·sil /
+  çizgi türleri + ⚙).
+- [ ] Biçim paneli: üç sıra; başlık hapı, renk tonu tek dokunuş; yazı/vurgu
+  anahtarı; boyut −/+; Aa tepsisinde yazı tipi + kaydırıcılar.
+- [ ] Paylaş → Notlar'a ekle → Var olan nota: ana ekran kartlarıyla ızgara,
+  karta dokununca o nota ekliyor (not açılmıyor).
+- [ ] Web: videolu notta başka sekmeye geç / uygulamada başka sayfa aç →
+  video duruyor.
+- [ ] Misafir hesapta ana ekranın tepesinde "Google ile giriş yap" kartı;
+  Ayarlar'ın en üstünde düğme; giriş sonrası kart sayfa yenilemeden kalkıyor.
+- [ ] Klasör: Süz düğmesi (durum, etiket, görünüm, sıralama), liste
+  görünümü, uzun basışla seçim + çubuk (taşı/arşivle/sil).
+
 **2026-10-23 kalem + ses + kart turu**
 - [ ] Ayarlar → Ses: Türkçe sesi denerken yapay zekâ denemesine geç (ya da
   tersi) — iki ses ÜST ÜSTE çalmıyor; motor değişince süren deneme susuyor.

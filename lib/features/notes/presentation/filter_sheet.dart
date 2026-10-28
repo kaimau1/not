@@ -22,7 +22,13 @@ import '../../../core/widgets/app_sheet.dart';
 ///
 /// ŞİMDİ: tek "Süz" düğmesi, tek levha, dört bölüm. Ana ekranda yalnız
 /// UYGULANMIŞ süzgeçler kaldırılabilir çip olarak görünür.
-Future<void> showFilterSheet(BuildContext context) =>
+///
+/// [folderId] verilirse levha o KLASÖRÜN içini süzer (kullanıcı isteği
+/// 2026-10-28: "klasörler içinde filtreleme yok, dashboard'da ne varsa orası
+/// da aynı olmalı"): durum ve etiket klasöre özgü ([folderFilterProvider]),
+/// görünüm ve sıralama ana ekranla ortak. Klasörde anlamsız olanlar
+/// (klasöre göre grupla, paylaşılanlar, elle sıralama, "Diğer") çizilmez.
+Future<void> showFilterSheet(BuildContext context, {String? folderId}) =>
     showAppSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -34,7 +40,7 @@ Future<void> showFilterSheet(BuildContext context) =>
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.76,
       ),
-      builder: (_) => const _FilterSheet(),
+      builder: (_) => _FilterSheet(folderId: folderId),
     );
 
 /// Ana ekranda bir süzgeç uygulanmış mı? "Süz" düğmesinin vurgusu ve
@@ -237,7 +243,9 @@ class DashboardFilterRow extends ConsumerWidget {
 /// Izgara ⇄ liste seçimi (Süz levhasında; eskiden ana ekrandaki süzgeç
 /// satırının sağındaki düğmeydi).
 class _ViewModeSection extends ConsumerWidget {
-  const _ViewModeSection();
+  const _ViewModeSection({this.inFolder = false});
+
+  final bool inFolder;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -267,7 +275,7 @@ class _ViewModeSection extends ConsumerWidget {
             onTap: () => set(true),
           ),
           // "Tümü" açıkken: klasör başlıkları altında grupla (D4).
-          if (ref.watch(showAllNotesProvider))
+          if (!inFolder && ref.watch(showAllNotesProvider))
             _Option(
               label: l10n.groupByFolder,
               icon: Icons.folder_copy_outlined,
@@ -290,12 +298,13 @@ class _ViewModeSection extends ConsumerWidget {
             selected: ref.watch(cardShowFilesProvider),
             onTap: () => ref.read(cardShowFilesProvider.notifier).toggle(),
           ),
-          _Option(
-            label: l10n.homeShowSharedShort,
-            icon: Icons.people_alt_outlined,
-            selected: ref.watch(homeShowSharedProvider),
-            onTap: () => ref.read(homeShowSharedProvider.notifier).toggle(),
-          ),
+          if (!inFolder)
+            _Option(
+              label: l10n.homeShowSharedShort,
+              icon: Icons.people_alt_outlined,
+              selected: ref.watch(homeShowSharedProvider),
+              onTap: () => ref.read(homeShowSharedProvider.notifier).toggle(),
+            ),
         ],
       ),
     );
@@ -303,7 +312,10 @@ class _ViewModeSection extends ConsumerWidget {
 }
 
 class _FilterSheet extends ConsumerWidget {
-  const _FilterSheet();
+  const _FilterSheet({this.folderId});
+
+  /// Doluysa levha bu klasörün içini süzer (bkz. [showFilterSheet]).
+  final String? folderId;
 
   /// Süzgeç türlerinin simgeleri: salt metin çipleri birbirine karışıyordu,
   /// simge göz gezdirirken tutamak veriyor ("0'dan tasarım" isteği).
@@ -332,11 +344,43 @@ class _FilterSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final filter = ref.watch(noteFilterProvider);
-    final tag = ref.watch(selectedTagProvider);
+    final folderId = this.folderId;
+    final inFolder = folderId != null;
+    final folderFilter = inFolder
+        ? ref.watch(folderFilterProvider.select((m) => m[folderId])) ??
+              kNoFolderFilter
+        : kNoFolderFilter;
+    final filter = inFolder
+        ? folderFilter.filter
+        : ref.watch(noteFilterProvider);
+    final tag = inFolder ? folderFilter.tag : ref.watch(selectedTagProvider);
     final sort = ref.watch(noteSortProvider);
-    final tags = ref.watch(allTagsProvider);
-    final appliedCount = appliedFilterCount(ref);
+    final tags = inFolder
+        ? ({
+            for (final n
+                in ref.watch(folderNotesProvider(folderId)).value ??
+                    const <Note>[])
+              ...n.tags,
+          }.toList()..sort())
+        : ref.watch(allTagsProvider);
+    final appliedCount = inFolder
+        ? (filter != NoteFilter.all ? 1 : 0) + (tag != null ? 1 : 0)
+        : appliedFilterCount(ref);
+    void setFilter(NoteFilter f) => inFolder
+        ? ref.read(folderFilterProvider.notifier).set(folderId, (
+            filter: f,
+            tag: tag,
+          ))
+        : ref.read(noteFilterProvider.notifier).set(f);
+    void setTag(String? t) => inFolder
+        ? ref.read(folderFilterProvider.notifier).set(folderId, (
+            filter: filter,
+            tag: t,
+          ))
+        : ref.read(selectedTagProvider.notifier).set(t);
+    void reset() => inFolder
+        ? ref.read(folderFilterProvider.notifier).set(folderId, kNoFolderFilter)
+        : resetFilters(ref);
 
     return SingleChildScrollView(
       // Alt boşluk sistem gezinme çubuğunu (geri/ana sayfa) hesaba katar:
@@ -355,9 +399,8 @@ class _FilterSheet extends ConsumerWidget {
             children: [
               Text(
                 l10n.filterSheetTitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
               ),
               if (appliedCount > 0) ...[
                 const SizedBox(width: 8),
@@ -383,7 +426,7 @@ class _FilterSheet extends ConsumerWidget {
               const Spacer(),
               if (appliedCount > 0)
                 TextButton.icon(
-                  onPressed: () => resetFilters(ref),
+                  onPressed: reset,
                   icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
                   label: Text(l10n.filterReset),
                 ),
@@ -402,7 +445,7 @@ class _FilterSheet extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
 
-          const _ViewModeSection(),
+          _ViewModeSection(inFolder: inFolder),
 
           _Section(
             icon: Icons.style_outlined,
@@ -410,12 +453,14 @@ class _FilterSheet extends ConsumerWidget {
             child: _OptionWrap(
               children: [
                 for (final f in NoteFilter.values)
-                  _Option(
-                    label: filterLabel(l10n, f),
-                    icon: _filterIcon(f),
-                    selected: filter == f,
-                    onTap: () => ref.read(noteFilterProvider.notifier).set(f),
-                  ),
+                  // "Diğer" = klasörsüz ve etiketsiz: klasörün içinde boş.
+                  if (!inFolder || f != NoteFilter.others)
+                    _Option(
+                      label: filterLabel(l10n, f),
+                      icon: _filterIcon(f),
+                      selected: filter == f,
+                      onTap: () => setFilter(f),
+                    ),
               ],
             ),
           ),
@@ -437,9 +482,7 @@ class _FilterSheet extends ConsumerWidget {
                       label: t,
                       icon: Icons.tag,
                       selected: tag == t,
-                      onTap: () => ref
-                          .read(selectedTagProvider.notifier)
-                          .set(tag == t ? null : t),
+                      onTap: () => setTag(tag == t ? null : t),
                       // **ETİKET YÖNETİMİ**: etiketler yalnız notlardan
                       // türetiliyordu; yazım hatasıyla açılmış bir etiketi
                       // düzeltmenin tek yolu onu taşıyan HER notu açmaktı.
@@ -455,7 +498,7 @@ class _FilterSheet extends ConsumerWidget {
             // Elle sıralama kipi sıralama bölümünün İÇİNDE: sıralamayı arayan
             // kullanıcı zaten burada. Yalnız süzgeçsiz görünümde anlamlı
             // (alt kümede sıra bozulur), o yüzden koşullu.
-            trailing: appliedCount == 0
+            trailing: appliedCount == 0 && !inFolder
                 ? IconButton(
                     tooltip: l10n.reorderNotes,
                     visualDensity: VisualDensity.compact,

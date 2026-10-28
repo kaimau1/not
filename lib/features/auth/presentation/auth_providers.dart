@@ -11,9 +11,30 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AndroidGoogleAuth();
 });
 
-final authStateProvider = StreamProvider<User?>(
-  (ref) => ref.watch(authRepositoryProvider).authStateChanges(),
-);
+/// Oturumdaki kullanıcı. `userChanges` üzerinden: Google hesabı BAĞLANINCA
+/// (uid aynı, yalnız anonimlik/ad/e-posta değişir) da yeni değer gelir —
+/// misafir kartları ve "yerel hesap" kısıtları yeniden başlatmadan kalkar.
+/// Belirteç tazelemeleri (saatlik) aynı özetle geldiği için süzülür: her
+/// saat bütün dinleyicileri yeniden kurmasın.
+final authStateProvider = StreamProvider<User?>((ref) {
+  Object? last;
+  var first = true;
+  return ref.watch(authRepositoryProvider).userChanges().where((user) {
+    // Özet olay ANINDA ilkel değerlerden kurulur: web'de User nesnesi
+    // yerinde güncellenebiliyor, nesneyi saklamak hep "aynı" derdi.
+    final key = (
+      user?.uid,
+      user?.isAnonymous,
+      user?.email,
+      user?.displayName,
+      user?.photoURL,
+    );
+    if (!first && key == last) return false;
+    first = false;
+    last = key;
+    return true;
+  });
+});
 
 /// Oturum açmış kullanıcının uid'si; oturum yoksa null.
 final currentUidProvider = Provider<String?>(

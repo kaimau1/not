@@ -492,6 +492,48 @@ class NoteFilterNotifier extends Notifier<NoteFilter> {
   void set(NoteFilter value) => state = value;
 }
 
+/// Klasör İÇİ süzgeç (durum + etiket) — klasör kimliğine göre ayrı tutulur.
+///
+/// Kullanıcı isteği 2026-10-28: "klasörler içinde filtreleme vb. özellikler
+/// yok, dashboard'da ne varsa orası da aynı olmalı". Ana ekranın süzgeci
+/// ([noteFilterProvider], [selectedTagProvider]) klasöre BAĞLANMAZ: klasöre
+/// girip "Görevler"i seçmek ana ekranı da daraltır, dönünce "notlarım
+/// kayboldu" sanılırdı. Oturum boyu kalır (klasöre dönünce aynı süzgeç).
+typedef FolderFilter = ({NoteFilter filter, String? tag});
+
+const kNoFolderFilter = (filter: NoteFilter.all, tag: null);
+
+final folderFilterProvider =
+    NotifierProvider<FolderFilterNotifier, Map<String, FolderFilter>>(
+      FolderFilterNotifier.new,
+    );
+
+class FolderFilterNotifier extends Notifier<Map<String, FolderFilter>> {
+  @override
+  Map<String, FolderFilter> build() => const {};
+
+  void set(String folderId, FolderFilter value) {
+    final next = {...state};
+    if (value == kNoFolderFilter) {
+      next.remove(folderId);
+    } else {
+      next[folderId] = value;
+    }
+    state = next;
+  }
+}
+
+/// Klasörün süzgeci uygulanmış not listesi.
+List<Note> applyFolderFilter(List<Note> notes, FolderFilter? f) {
+  if (f == null || f == kNoFolderFilter) return notes;
+  return [
+    for (final n in notes)
+      if (noteMatchesFilter(n, f.filter) &&
+          (f.tag == null || n.tags.contains(f.tag)))
+        n,
+  ];
+}
+
 /// Anlamsal (AI) arama modu açık mı?
 final semanticSearchEnabledProvider =
     NotifierProvider<SemanticSearchEnabledNotifier, bool>(

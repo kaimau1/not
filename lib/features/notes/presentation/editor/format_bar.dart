@@ -11,34 +11,21 @@ import '../../../../core/widgets/color_palette.dart';
 import 'format_menu.dart';
 import 'text_wrap.dart';
 
-/// Klavyenin hemen üstünde duran biçim çubuğu.
+/// Klavyenin hemen üstünde duran biçim paneli.
 ///
-/// **SIFIRDAN YENİDEN YAZILDI** (kullanıcı bulgusu 2026-10-20: "biçim
-/// menüsü akışı tamamen sıfırdan yazılmalı, hiçbir şekilde pratik değil,
-/// yazımı düzenlemek için çok zorlanıyorum"; "renk paletine basılamıyor,
-/// çok kenarda kaldığı için"). Eski çubuğun sorunları:
-///  - Düğmelerin yarısı yatay kayan şeridin solan ucunda saklıydı (yazı
-///    tipi, sayfa rengi) — var oldukları görülmüyordu.
-///  - Renk, başlık ve yazı tipi AÇILIR MENÜYDÜ: her biri ekranın ortasında
-///    bir katman açıp metni örtüyordu; renk menüsü dar menü kutusuna
-///    sığmadığı için sondaki "tam palet" düğmesi kenardan taşıp
-///    BASILAMIYORDU.
-///  - Boyut/şeffaflık tek kaydırıcıyı paylaşıyordu (hangisini sürüklediğin
-///    baştaki küçük düğmeye bağlıydı).
-///
-/// Yeni akış İKİ KATMAN:
-///  1. **Ana satır** — sabit, kaymayan, ekran genişliğine eşit bölünmüş:
-///     Başlık · B · I · U · Renk · Aa · Temizle · Sayfa rengi · Kapat. Hiçbir
-///     düğme gizli değil.
-///  2. **Tepsi** — Başlık, Renk ya da Aa'ya dokununca ana satırın ÜSTÜNDE
-///     (metne yakın, klavyeden uzak) satır içi açılır; menü katmanı yok,
-///     metin örtülmez. Aynı düğmeye yeniden dokunmak tepsiyi kapatır.
-///     - Başlık: Normal · Büyük başlık · Alt başlık (her biri kendi
-///       boyutunda yazılı).
-///     - Renk: yazı rengi ve vurgu İKİ satır; her satır [Kaldır] + 5 ton +
-///       tam palet, satıra eşit yayılmış — hiçbiri kenara taşmaz.
-///     - Aa: yazı tipleri (her biri kendi yazı tipiyle), altında AYRI boyut
-///       ve şeffaflık kaydırıcıları.
+/// **İKİNCİ KEZ SIFIRDAN** (kullanıcı isteği 2026-10-28: "biçim menüsü
+/// üzerine sıfırdan çalış, baştan tasarla, her yönü yerleşim kullanım
+/// değiştirebilirsin"). 2026-10-20 sürümü tek satırdı ama en sık işlerin
+/// (başlık, renk) hepsi bir TEPSİ arkasındaydı: başlık için iki, renk için
+/// iki dokunuş, renk tepsisi de iki satır yer kaplıyordu. Yeni panel ÜÇ SABİT
+/// SIRA; sık işlerin hepsi TEK dokunuş:
+///  1. **Stil** — Metin · Başlık · Alt başlık hapları + B · I · U.
+///  2. **Renk** — solda yazı rengi / vurgu anahtarı (her birinin altında
+///     etkin renk şeridi), yanında 5 ton + tam palet + kaldır.
+///  3. **Yazı** — yazı tipi tepsisi (Aa), boyut − %100 +, temizle, sayfa
+///     görünümü, kapat.
+/// Yalnız yazı tipi listesi ve ince ayar kaydırıcıları (boyut, şeffaflık)
+/// panelin ÜSTÜNDE açılan tepside; menü katmanı yok, metin örtülmez.
 ///
 /// KRİTİK — ODAK: çubuktaki hiçbir öğe odak istemez
 /// (`Focus(canRequestFocus: false, descendantsAreFocusable: false)` +
@@ -115,14 +102,23 @@ class FormatBar extends StatefulWidget {
   State<FormatBar> createState() => _FormatBarState();
 }
 
-/// Ana satırın üstünde açık duran tepsi.
-enum _Tray { none, heading, colors, font }
+/// Açık duran ince ayar tepsisi (yalnız yazı tipi + kaydırıcılar).
+enum _Tray { none, font }
+
+/// Renk satırının yazdığı biçim: yazı rengi mi, vurgu mu.
+enum _ColorMode { text, highlight }
 
 /// Kaydırıcının sürüklediği değer.
 enum _Slide { size, opacity }
 
+/// Boyut adımı (− / + düğmeleri) ve sınırlar — kaydırıcıyla aynı aralık.
+const _kScaleStep = 0.1;
+const _kScaleMin = 0.7;
+const _kScaleMax = 2.0;
+
 class _FormatBarState extends State<FormatBar> {
   _Tray _tray = _Tray.none;
+  _ColorMode _colorMode = _ColorMode.text;
 
   /// Sürüklerken canlı önizlemenin seyreltilmesi (kullanıcı bulgusu
   /// 2026-10-20: "biçim panelindeki değişiklikler kasıyor"): her kaydırıcı
@@ -259,6 +255,17 @@ class _FormatBarState extends State<FormatBar> {
     }
   }
 
+  /// − / + düğmesi: boyutu bir adım değiştirip HEMEN uygular (seçim varsa
+  /// seçime, yoksa nota — kaydırıcıyı bırakmakla aynı yol).
+  void _stepScale(int direction) {
+    final current = _value(_Slide.size);
+    final next = ((current / _kScaleStep).round() + direction) * _kScaleStep;
+    _onSlideEnd(
+      _Slide.size,
+      double.parse(next.clamp(_kScaleMin, _kScaleMax).toStringAsFixed(2)),
+    );
+  }
+
   /// Etkin yazı rengi / vurgu indeksinin ekrandaki rengi (yoksa null).
   static Color? _resolve(int? index) {
     final palette = NoteColors.richPalette;
@@ -272,9 +279,12 @@ class _FormatBarState extends State<FormatBar> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
-    final textColor = _resolve(_active.color);
-    final highlight = _resolve(_active.highlight);
-    final colorActive = _active.color != null || _active.highlight != null;
+    final highlightMode = _colorMode == _ColorMode.highlight;
+    final size = _value(_Slide.size);
+    final divider = Divider(
+      height: 1,
+      color: scheme.outlineVariant.withValues(alpha: 0.4),
+    );
     return TextFieldTapRegion(
       child: Focus(
         canRequestFocus: false,
@@ -288,124 +298,185 @@ class _FormatBarState extends State<FormatBar> {
                 height: 1,
                 color: scheme.outlineVariant.withValues(alpha: 0.5),
               ),
-              // TEPSİ ana satırın ÜSTÜNDE: göz yazıdan çok uzaklaşmaz,
-              // ana satır da parmağın altında yerinden oynamaz.
+              // İNCE AYAR TEPSİSİ panelin ÜSTÜNDE: göz yazıdan çok
+              // uzaklaşmaz, alttaki sıralar parmağın altında oynamaz.
               AnimatedSize(
                 duration: const Duration(milliseconds: 160),
                 curve: Curves.easeOut,
                 alignment: Alignment.bottomCenter,
                 child: switch (_tray) {
                   _Tray.none => const SizedBox(width: double.infinity),
-                  _Tray.heading => _HeadingTray(
-                    current: _heading,
-                    onPick: (h) => widget.onHeading?.call(h),
-                  ),
-                  _Tray.colors => _ColorsTray(
-                    textIndex: _active.color,
-                    highlightIndex: _active.highlight,
-                    onPick: (format, index) =>
-                        widget.onFormat(format, colorIndex: index),
-                    onRemove: widget.onRemoveFormat,
-                  ),
                   _Tray.font => _FontTray(
                     family: widget.fontFamily,
                     onFont: widget.onFontChanged,
-                    size: _value(_Slide.size),
+                    size: size,
                     opacity: _value(_Slide.opacity),
                     onSlide: _onSlide,
                     onSlideEnd: _onSlideEnd,
                   ),
                 },
               ),
-              // ANA SATIR: kaymaz, eşit bölünür — her düğme hep görünür.
-              SizedBox(
-                height: 46,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Row(
-                    children: [
-                      if (widget.onHeading != null)
-                        _Btn(
-                          key: const ValueKey('format-heading'),
-                          icon: Icons.title,
-                          tooltip: l10n.formatHeading,
-                          active: _heading != RichHeading.normal,
-                          open: _tray == _Tray.heading,
-                          onTap: () => _toggleTray(_Tray.heading),
-                        ),
-                      _Btn(
-                        key: const ValueKey('format-bold'),
-                        icon: Icons.format_bold,
-                        tooltip: l10n.formatBold,
-                        active: _active.bold,
-                        onTap: () => widget.onFormat(RichFormat.bold),
+              // 1. SIRA — PARAGRAF + YAZI STİLİ: Metin · Başlık · Alt başlık
+              // hapları doğrudan (eskiden "Başlık" tepsisinin içindeydi, iki
+              // dokunuş) ve B · I · U.
+              _PanelRow(
+                children: [
+                  if (widget.onHeading != null) ...[
+                    for (final (h, label, weight) in [
+                      (
+                        RichHeading.normal,
+                        l10n.formatStyleText,
+                        FontWeight.w400,
                       ),
-                      _Btn(
-                        key: const ValueKey('format-italic'),
-                        icon: Icons.format_italic,
-                        tooltip: l10n.formatItalic,
-                        active: _active.italic,
-                        onTap: () => widget.onFormat(RichFormat.italic),
-                      ),
-                      _Btn(
-                        key: const ValueKey('format-underline'),
-                        icon: Icons.format_underlined,
-                        tooltip: l10n.formatUnderline,
-                        active: _active.underline,
-                        onTap: () => widget.onFormat(RichFormat.underline),
-                      ),
-                      // Renk: ikonun altındaki şerit etkin yazı rengini,
-                      // zemini etkin vurguyu gösterir — tepsiyi açmadan
-                      // hangi rengin uygulandığı okunur.
-                      _Btn(
-                        key: const ValueKey('format-colors'),
-                        icon: Icons.format_color_text,
-                        tooltip: l10n.formatColorsPanel,
-                        active: colorActive,
-                        open: _tray == _Tray.colors,
-                        stripe: textColor ?? highlight,
-                        onTap: () => _toggleTray(_Tray.colors),
-                      ),
-                      _Btn(
-                        key: const ValueKey('format-font'),
-                        icon: Icons.text_fields,
-                        tooltip: l10n.formatFontPanel,
-                        open: _tray == _Tray.font,
-                        onTap: () => _toggleTray(_Tray.font),
-                      ),
-                      // Biçimi temizle: biçimsiz metinde SOLUK ve
-                      // tıklanamaz — düğmenin işe yarayıp yaramadığı
-                      // görünür.
-                      _Btn(
-                        key: const ValueKey('format-clear'),
-                        icon: Icons.format_clear,
-                        tooltip: l10n.formatClear,
-                        onTap: _active.isEmpty ? null : widget.onClearFormat,
-                      ),
-                      if (widget.onPageStyle != null)
-                        _Btn(
-                          key: const ValueKey('format-page'),
-                          icon: Icons.palette_outlined,
-                          tooltip: l10n.formatPageColor,
-                          onTap: widget.onPageStyle,
-                        ),
-                      SizedBox(
-                        height: 26,
-                        child: VerticalDivider(
-                          width: 7,
-                          thickness: 1,
-                          color: scheme.outlineVariant,
+                      (RichHeading.h1, l10n.formatStyleH1, FontWeight.w800),
+                      (RichHeading.h2, l10n.formatStyleH2, FontWeight.w700),
+                    ])
+                      Expanded(
+                        flex: h == RichHeading.h2 ? 6 : 5,
+                        child: _Chip(
+                          key: ValueKey('format-heading-${h.name}'),
+                          selected: _heading == h,
+                          onTap: () => widget.onHeading?.call(h),
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 13, fontWeight: weight),
+                          ),
                         ),
                       ),
-                      _Btn(
-                        key: const ValueKey('format-close'),
-                        icon: Icons.keyboard_arrow_down,
-                        tooltip: l10n.close,
-                        onTap: widget.onClose,
-                      ),
-                    ],
+                    const _Gap(),
+                  ],
+                  _Btn(
+                    key: const ValueKey('format-bold'),
+                    flex: widget.onHeading == null ? 1 : 3,
+                    icon: Icons.format_bold,
+                    tooltip: l10n.formatBold,
+                    active: _active.bold,
+                    onTap: () => widget.onFormat(RichFormat.bold),
                   ),
-                ),
+                  _Btn(
+                    key: const ValueKey('format-italic'),
+                    flex: widget.onHeading == null ? 1 : 3,
+                    icon: Icons.format_italic,
+                    tooltip: l10n.formatItalic,
+                    active: _active.italic,
+                    onTap: () => widget.onFormat(RichFormat.italic),
+                  ),
+                  _Btn(
+                    key: const ValueKey('format-underline'),
+                    flex: widget.onHeading == null ? 1 : 3,
+                    icon: Icons.format_underlined,
+                    tooltip: l10n.formatUnderline,
+                    active: _active.underline,
+                    onTap: () => widget.onFormat(RichFormat.underline),
+                  ),
+                ],
+              ),
+              divider,
+              // 2. SIRA — RENK, TEK DOKUNUŞ: soldaki anahtar satırın neyi
+              // boyadığını seçer (yazı / vurgu, her biri etkin rengini
+              // şeritte gösterir); tonlar, palet ve kaldır hep görünür.
+              _PanelRow(
+                children: [
+                  _ModeSwitch(
+                    mode: _colorMode,
+                    textColor: _resolve(_active.color),
+                    highlightColor: _resolve(_active.highlight),
+                    onChanged: (mode) => setState(() => _colorMode = mode),
+                  ),
+                  const _Gap(),
+                  Expanded(
+                    child: _ColorRow(
+                      key: ValueKey('format-colors-$_colorMode'),
+                      keyPrefix: highlightMode
+                          ? 'format-highlight'
+                          : 'format-color',
+                      label: highlightMode
+                          ? l10n.formatHighlight
+                          : l10n.formatTextColor,
+                      activeIndex: highlightMode
+                          ? _active.highlight
+                          : _active.color,
+                      filled: highlightMode,
+                      onPick: (i) => widget.onFormat(
+                        highlightMode ? RichFormat.highlight : RichFormat.color,
+                        colorIndex: i,
+                      ),
+                      onRemove: () => widget.onRemoveFormat(
+                        highlightMode ? RichFormat.highlight : RichFormat.color,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              divider,
+              // 3. SIRA — YAZI: yazı tipi tepsisi, boyut − / + (tek dokunuş,
+              // ayrıntısı tepside kaydırıcıyla), temizle, sayfa, kapat.
+              _PanelRow(
+                children: [
+                  _Btn(
+                    key: const ValueKey('format-font'),
+                    icon: Icons.text_fields,
+                    tooltip: l10n.formatFontPanel,
+                    open: _tray == _Tray.font,
+                    onTap: () => _toggleTray(_Tray.font),
+                  ),
+                  _Btn(
+                    key: const ValueKey('format-size-down'),
+                    icon: Icons.text_decrease,
+                    tooltip: l10n.formatSizeDown,
+                    onTap: size <= _kScaleMin + 0.001
+                        ? null
+                        : () => _stepScale(-1),
+                  ),
+                  SizedBox(
+                    width: 44,
+                    child: Text(
+                      '%${(size * 100).round()}',
+                      key: const ValueKey('format-size-value'),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
+                  ),
+                  _Btn(
+                    key: const ValueKey('format-size-up'),
+                    icon: Icons.text_increase,
+                    tooltip: l10n.formatSizeUp,
+                    onTap: size >= _kScaleMax - 0.001
+                        ? null
+                        : () => _stepScale(1),
+                  ),
+                  // Biçimi temizle: biçimsiz metinde SOLUK ve tıklanamaz —
+                  // düğmenin işe yarayıp yaramadığı görünür.
+                  _Btn(
+                    key: const ValueKey('format-clear'),
+                    icon: Icons.format_clear,
+                    tooltip: l10n.formatClear,
+                    onTap: _active.isEmpty ? null : widget.onClearFormat,
+                  ),
+                  if (widget.onPageStyle != null)
+                    _Btn(
+                      key: const ValueKey('format-page'),
+                      icon: Icons.palette_outlined,
+                      tooltip: l10n.formatPageColor,
+                      onTap: widget.onPageStyle,
+                    ),
+                  SizedBox(
+                    height: 26,
+                    child: VerticalDivider(
+                      width: 7,
+                      thickness: 1,
+                      color: scheme.outlineVariant,
+                    ),
+                  ),
+                  _Btn(
+                    key: const ValueKey('format-close'),
+                    icon: Icons.keyboard_arrow_down,
+                    tooltip: l10n.close,
+                    onTap: widget.onClose,
+                  ),
+                ],
               ),
             ],
           ),
@@ -415,9 +486,32 @@ class _FormatBarState extends State<FormatBar> {
   }
 }
 
-/// Ana satır düğmesi: satıra EŞİT payla yayılır (Expanded), en fazla 52 dp.
-/// [open]: tepsisi açık (alt kenarda çizgi); [active]: biçim imleçte etkin
-/// (dolu zemin); [stripe]: ikonun altında renk şeridi.
+/// Panelin bir sırası: sabit yükseklik, yan pay.
+class _PanelRow extends StatelessWidget {
+  const _PanelRow({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 46,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Row(children: children),
+    ),
+  );
+}
+
+class _Gap extends StatelessWidget {
+  const _Gap();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox(width: 6);
+}
+
+/// Sıra düğmesi: satıra EŞİT payla yayılır (Expanded), en fazla 52 dp.
+/// [open]: tepsisi açık (kenarlık); [active]: biçim imleçte etkin (dolu
+/// zemin).
 class _Btn extends StatelessWidget {
   const _Btn({
     super.key,
@@ -426,7 +520,7 @@ class _Btn extends StatelessWidget {
     required this.onTap,
     this.active = false,
     this.open = false,
-    this.stripe,
+    this.flex = 1,
   });
 
   final IconData icon;
@@ -436,7 +530,9 @@ class _Btn extends StatelessWidget {
   final VoidCallback? onTap;
   final bool active;
   final bool open;
-  final Color? stripe;
+
+  /// Sıradaki pay (stil hapları ile aynı sırada daha büyük verilir).
+  final int flex;
 
   @override
   Widget build(BuildContext context) {
@@ -448,6 +544,7 @@ class _Btn extends StatelessWidget {
         ? scheme.onSurface
         : scheme.onSurface.withValues(alpha: 0.35);
     return Expanded(
+      flex: flex,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 52),
@@ -461,7 +558,7 @@ class _Btn extends StatelessWidget {
                 onTap: onTap,
                 child: Ink(
                   width: double.infinity,
-                  height: 40,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: active
                         ? scheme.primaryContainer
@@ -473,22 +570,7 @@ class _Btn extends StatelessWidget {
                         ? Border.all(color: scheme.primary, width: 1.5)
                         : null,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(icon, size: stripe == null ? 22 : 20, color: fg),
-                      if (stripe != null)
-                        Container(
-                          margin: const EdgeInsets.only(top: 2),
-                          width: 18,
-                          height: 3,
-                          decoration: BoxDecoration(
-                            color: stripe,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                    ],
-                  ),
+                  child: Icon(icon, size: 22, color: fg),
                 ),
               ),
             ),
@@ -499,7 +581,145 @@ class _Btn extends StatelessWidget {
   }
 }
 
-/// Tepsilerin ortak kabı: aynı iç pay, ana satırdan ince çizgiyle ayrık.
+/// Seçilebilir hap (paragraf stili, yazı tipi). Odak istemez.
+class _Chip extends StatelessWidget {
+  const _Chip({
+    super.key,
+    required this.selected,
+    required this.onTap,
+    required this.child,
+  });
+
+  final bool selected;
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Material(
+        color: selected ? scheme.primaryContainer : scheme.surfaceContainer,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: selected ? scheme.primary : scheme.outlineVariant,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            alignment: Alignment.center,
+            child: DefaultTextStyle.merge(
+              style: TextStyle(
+                color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+              ),
+              child: child,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Renk sırasının hedef anahtarı: "A" (yazı rengi) ve vurgu kalemi. Her
+/// birinin altındaki şerit o an etkin rengini gösterir.
+class _ModeSwitch extends StatelessWidget {
+  const _ModeSwitch({
+    required this.mode,
+    required this.textColor,
+    required this.highlightColor,
+    required this.onChanged,
+  });
+
+  final _ColorMode mode;
+  final Color? textColor;
+  final Color? highlightColor;
+  final ValueChanged<_ColorMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    Widget segment(
+      _ColorMode value,
+      IconData icon,
+      String tooltip,
+      Color? stripe,
+    ) {
+      final selected = mode == value;
+      return Tooltip(
+        message: tooltip,
+        child: InkWell(
+          key: ValueKey('format-mode-${value.name}'),
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => onChanged(value),
+          child: Ink(
+            width: 40,
+            height: 36,
+            decoration: BoxDecoration(
+              color: selected ? scheme.primaryContainer : null,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 19,
+                  color: selected
+                      ? scheme.onPrimaryContainer
+                      : scheme.onSurfaceVariant,
+                ),
+                Container(
+                  margin: const EdgeInsets.only(top: 2),
+                  width: 18,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: stripe ?? scheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          segment(
+            _ColorMode.text,
+            Icons.format_color_text,
+            l10n.formatTextColor,
+            textColor,
+          ),
+          segment(
+            _ColorMode.highlight,
+            Icons.border_color_outlined,
+            l10n.formatHighlight,
+            highlightColor,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tepsinin kabı: aynı iç pay, panelden ince çizgiyle ayrık.
 class _TrayBox extends StatelessWidget {
   const _TrayBox({required this.child});
 
@@ -524,145 +744,12 @@ class _TrayBox extends StatelessWidget {
   }
 }
 
-/// BAŞLIK tepsisi (kullanıcı isteği 2026-09-23: "başlık ve alt başlık"):
-/// imlecin satırı normal / büyük başlık / alt başlık. Her seçenek kendi
-/// boyutunda yazılı; etkin olan dolu.
-class _HeadingTray extends StatelessWidget {
-  const _HeadingTray({required this.current, required this.onPick});
-
-  final RichHeading current;
-  final ValueChanged<RichHeading> onPick;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final options = [
-      (RichHeading.normal, l10n.formatNormalText, 14.0, FontWeight.w400),
-      (RichHeading.h1, l10n.formatHeading1, 18.0, FontWeight.w700),
-      (RichHeading.h2, l10n.formatHeading2, 15.5, FontWeight.w700),
-    ];
-    return _TrayBox(
-      child: Row(
-        children: [
-          for (final (h, label, size, weight) in options)
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3),
-                child: _Choice(
-                  key: ValueKey('format-heading-${h.name}'),
-                  selected: h == current,
-                  onTap: () => onPick(h),
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: size, fontWeight: weight),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Seçilebilir hap (başlık düzeyi, yazı tipi). Odak istemez.
-class _Choice extends StatelessWidget {
-  const _Choice({
-    super.key,
-    required this.selected,
-    required this.onTap,
-    required this.child,
-  });
-
-  final bool selected;
-  final VoidCallback onTap;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: selected ? scheme.primaryContainer : scheme.surfaceContainerHigh,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: selected ? scheme.primary : scheme.outlineVariant,
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          height: 40,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          alignment: Alignment.center,
-          child: DefaultTextStyle.merge(
-            style: TextStyle(
-              color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
-            ),
-            child: child,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// RENK tepsisi: yazı rengi ve vurgu, her biri TEK satırda
-/// [Kaldır] + hazır tonlar + tam palet. Satır eşit bölünür — dar ekranda da
-/// son düğme (tam palet) kenara taşmaz (eski açılır menüde taşıyıp
-/// basılamıyordu).
-class _ColorsTray extends StatelessWidget {
-  const _ColorsTray({
-    required this.textIndex,
-    required this.highlightIndex,
-    required this.onPick,
-    required this.onRemove,
-  });
-
-  final int? textIndex;
-  final int? highlightIndex;
-  final void Function(RichFormat format, int index) onPick;
-  final ValueChanged<RichFormat> onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return _TrayBox(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _ColorRow(
-            keyPrefix: 'format-color',
-            icon: Icons.format_color_text,
-            label: l10n.formatTextColor,
-            activeIndex: textIndex,
-            filled: false,
-            onPick: (i) => onPick(RichFormat.color, i),
-            onRemove: () => onRemove(RichFormat.color),
-          ),
-          const SizedBox(height: 6),
-          _ColorRow(
-            keyPrefix: 'format-highlight',
-            icon: Icons.format_color_fill,
-            label: l10n.formatHighlight,
-            activeIndex: highlightIndex,
-            filled: true,
-            onPick: (i) => onPick(RichFormat.highlight, i),
-            onRemove: () => onRemove(RichFormat.highlight),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
+/// Renk sırası: [Kaldır] + hazır tonlar + tam palet, eşit bölünmüş — dar
+/// ekranda da son düğme (tam palet) kenara taşmaz.
 class _ColorRow extends StatelessWidget {
   const _ColorRow({
+    super.key,
     required this.keyPrefix,
-    required this.icon,
     required this.label,
     required this.activeIndex,
     required this.filled,
@@ -671,7 +758,6 @@ class _ColorRow extends StatelessWidget {
   });
 
   final String keyPrefix;
-  final IconData icon;
   final String label;
   final int? activeIndex;
   final bool filled;
@@ -703,14 +789,14 @@ class _ColorRow extends StatelessWidget {
         key: key,
         customBorder: const CircleBorder(),
         onTap: onTap,
-        // Dokunma alanı 40 dp; görünen daire 32.
+        // Dokunma alanı 36 dp; görünen daire 28.
         child: SizedBox(
-          width: 40,
-          height: 40,
+          width: 36,
+          height: 36,
           child: Center(
             child: Container(
-              width: 32,
-              height: 32,
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: fill,
@@ -728,43 +814,21 @@ class _ColorRow extends StatelessWidget {
 
     return Row(
       children: [
-        Tooltip(
-          message: label,
-          child: SizedBox(
-            width: 28,
-            child: Icon(icon, size: 20, color: scheme.onSurfaceVariant),
-          ),
-        ),
-        // KALDIR — hep aynı yerde (biçim yokken de): "renk verdim, nasıl
-        // geri alırım" sorusunun cevabı her açılışta aynı yerde.
-        slot(
-          circle(
-            key: ValueKey('$keyPrefix-remove'),
-            tooltip: l10n.formatRemove,
-            onTap: onRemove,
-            border: scheme.outline,
-            child: Icon(
-              Icons.format_color_reset,
-              size: 16,
-              color: index == null
-                  ? scheme.onSurfaceVariant.withValues(alpha: 0.5)
-                  : scheme.onSurfaceVariant,
-            ),
-          ),
-        ),
         for (var i = 0; i < palette.length; i++)
           slot(
             circle(
               key: ValueKey('$keyPrefix-${i + 1}'),
               tooltip: label,
               onTap: () => onPick(i + 1),
-              fill: filled
-                  ? palette[i].withValues(alpha: 0.45)
-                  : Colors.transparent,
-              border: palette[i],
-              borderWidth: index == i + 1 ? 4 : 3,
+              fill: filled ? palette[i].withValues(alpha: 0.45) : palette[i],
+              border: filled ? palette[i] : null,
+              borderWidth: index == i + 1 ? 3.5 : 2,
               child: index == i + 1
-                  ? Icon(Icons.check, size: 16, color: palette[i])
+                  ? Icon(
+                      Icons.check,
+                      size: 16,
+                      color: filled ? palette[i] : Colors.white,
+                    )
                   : null,
             ),
           ),
@@ -797,10 +861,28 @@ class _ColorRow extends StatelessWidget {
                   ),
             child: Icon(
               custom != null ? Icons.check : Icons.palette_outlined,
-              size: 16,
+              size: 15,
               color: custom != null && custom.computeLuminance() > 0.5
                   ? Colors.black87
                   : Colors.white,
+            ),
+          ),
+        ),
+        // KALDIR — hep aynı yerde (biçim yokken soluk): "renk verdim, nasıl
+        // geri alırım" sorusunun cevabı her açılışta aynı yerde.
+        slot(
+          circle(
+            key: ValueKey('$keyPrefix-remove'),
+            tooltip: l10n.formatRemove,
+            onTap: onRemove,
+            border: scheme.outline,
+            borderWidth: 1.5,
+            child: Icon(
+              Icons.format_color_reset,
+              size: 15,
+              color: index == null
+                  ? scheme.onSurfaceVariant.withValues(alpha: 0.5)
+                  : scheme.onSurfaceVariant,
             ),
           ),
         ),
@@ -809,10 +891,8 @@ class _ColorRow extends StatelessWidget {
   }
 }
 
-/// YAZI tepsisi: yazı tipleri (her biri kendi yazı tipiyle yazılı, yatay
-/// kayar) + AYRI boyut ve şeffaflık kaydırıcıları. Eskiden ikisi tek
-/// kaydırıcıyı paylaşıyordu; hangisini sürüklediğin baştaki küçük düğmeye
-/// bağlıydı.
+/// YAZI TİPİ tepsisi: yazı tipleri (her biri kendi yazı tipiyle yazılı,
+/// yatay kayar) + boyut ve şeffaflık için ince ayar kaydırıcıları.
 class _FontTray extends StatelessWidget {
   const _FontTray({
     required this.family,
@@ -843,10 +923,10 @@ class _FontTray extends StatelessWidget {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: kNoteFonts.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 6),
+              separatorBuilder: (_, _) => const SizedBox(width: 2),
               itemBuilder: (context, i) {
                 final font = kNoteFonts[i];
-                return _Choice(
+                return _Chip(
                   key: ValueKey('format-font-${font.id ?? 'default'}'),
                   selected: (font.id ?? '') == current,
                   onTap: () => onFont(font.id),
@@ -872,8 +952,8 @@ class _FontTray extends StatelessWidget {
             icon: Icons.format_size,
             label: l10n.noteTextSize,
             value: size,
-            min: 0.7,
-            max: 2.0,
+            min: _kScaleMin,
+            max: _kScaleMax,
             onChanged: (v) => onSlide(_Slide.size, v),
             onChangeEnd: (v) => onSlideEnd(_Slide.size, v),
           ),

@@ -2767,5 +2767,14 @@
   "dividerKindDashed": "Kesikli",
   "dividerKindDotted": "Noktalı",
   "dividerKindDouble": "Çift",
-  "dividerKindWavy": "Dalgalı"
+  "dividerKindWavy": "Dalgalı",
+  "itemMenuUnstar": "Yıldızı al",
+  "itemMenuMove": "Taşı",
+  "itemMenuDelete": "Sil",
+  "itemMenuLine": "Alt çizgi",
+  "formatStyleText": "Metin",
+  "formatStyleH1": "Başlık",
+  "formatStyleH2": "Alt başlık",
+  "formatSizeDown": "Küçült",
+  "formatSizeUp": "Büyüt"
 }

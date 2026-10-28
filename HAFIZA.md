@@ -149,6 +149,12 @@ eskisini arşive taşıma.
   eşleşmez (düz metindeki `## x ##` kaybolmasın).
 - Yerel (yalnız bu cihaz) notlar `LocalNotesStore`; **TUZAK:** haritayı
   YERİNDE değiştirme, yenisini koy (ayrıştırma önbelleği harita kimliğiyle).
+- **`authStateProvider` `userChanges` üzerinden** (2026-10-28): anonim
+  hesap Google'a BAĞLANINCA uid aynı kalır ve `authStateChanges` HİÇ
+  tetiklenmez → arayüz misafir kalıyordu ("giriş yapınca sayfa yenilenmeden
+  gelmiyor"). Belirteç tazelemesi (uid/anonim/e-posta/ad/foto özeti aynı)
+  süzülür. Yönlendirici yine `authStateChanges` dinler. Misafir giriş kartı
+  ana ekranda İLK AÇILIŞTAN itibaren + Ayarlar profil kartında düğme.
 - Hesap silme listeleri `AccountService` sabitlerinde; yeni koleksiyon
   eklenince `account_deletion_test` kırılır (bilinçli). `aiQuota`/
   `rateLimits` bilerek kalır.
@@ -238,11 +244,12 @@ eskisini arşive taşıma.
   bağlantı/etiket için seçim menüsü ve üst katman.
 - Geri alma NOTUN TAMAMINI saklar (`note_undo.dart`); parmak izine öğe sırası
   konmaz. Eki silince baytlar editör kapanırken silinir (geri al için).
-- Biçim paneli (2026-10-20 SIFIRDAN): kaymayan eşit bölünmüş ana satır
-  (Başlık·B·I·U·Renk·Aa·Temizle·Sayfa·⌄) + üstünde satır içi TEPSİ
-  (başlık / renk iki satır / yazı tipi + ayrı boyut-şeffaflık). Açılır
-  MENÜ YOK — dar menü kutusunda palet düğmesi taşıp basılamıyordu.
-  Panel açıkken alt çubuk GİZLİ; kaydırıcı önizlemesi 70 ms'de bir. Panel
+- Biçim paneli (2026-10-28 İKİNCİ KEZ SIFIRDAN): ÜÇ SABİT SIRA, sık iş tek
+  dokunuş — Stil (Metin·Başlık·Alt başlık hapları + B·I·U) · Renk (yazı/
+  vurgu anahtarı + 5 ton + palet + kaldır) · Yazı (Aa tepsisi, boyut −/+,
+  temizle, sayfa, ⌄). Tepside yalnız yazı tipi + boyut/şeffaflık
+  kaydırıcıları. Açılır MENÜ YOK — dar menü kutusunda palet düğmesi taşıp
+  basılamıyordu. Panel açıkken alt çubuk GİZLİ; kaydırıcı önizlemesi 70 ms'de bir. Panel
   kapalıyken etkin biçim rozetleri `ActiveFormatBadges` (`_formatTargetN`
   ile — editör setState'i değil). Kalın, tabanı ≥ w500 olan metinde w800
   (başlık w500).
@@ -280,6 +287,14 @@ eskisini arşive taşıma.
   TUZAK: itilen rotanın İLK karesinde Hero sayfayı `offstage` kurar,
   animasyon "tamamlandı" görünür — durum tek başına yetmez.
 - Uzun basış CÜMLE seçer (`sentence_select.dart`).
+- Madde Enter'ı (2026-10-28) `_enterAt`: imleç ortadaysa madde BÖLÜNÜR
+  (sağ kısım yeni maddeye, imleç başına), sondaysa altına boş, baştaysa
+  üstüne boş madde. Uzun basış menüsü iki sıra (`_ItemMenuPanel`: yıldız ·
+  seç · taşı · sil / çizgi türleri + ayar); aynı türe basmak kaldırır.
+- **TUZAK (2026-10-28, "işaretleyince donma kasma"):** ItemsEditor'ın
+  İŞARETLİ bloğu `_itemRow` ile önbelleksiz kuruluyordu → her tuşta/
+  işarette/görsel eklemede bütün üstü çizili satırlar baştan. Footer'daki
+  satırlar da `_cachedItemRow`'dan geçmeli.
 - Canlı dikte: tanıyıcı her olayda TAM metni yollar ve düzeltir → "ekle" değil
   "değiştir". Akıllı komutlar ham metni her olayda baştan işler.
 - Dikte bipleri (2026-10-20): tanıyıcı her sessizlikte yeniden kuruluyor ve
@@ -402,6 +417,14 @@ eskisini arşive taşıma.
   kaydı; ilerleme sayacı varsayılan KAPALI). Yeni kart öğesi → oraya ekle.
   `card_show_media` = görseller, `card_show_files` = dosya ekleri (2026-10-23
   ayrıldı; Süz levhasında da kısayol).
+- Klasör ekranı ana ekranla eş (2026-10-28): Süz levhası
+  `showFilterSheet(folderId:)` — durum/etiket KLASÖRE özgü
+  (`folderFilterProvider`, klasör kimliğine göre harita, oturum boyu),
+  görünüm/sıralama ortak; liste görünümü, uzun basışla seçim + seçim
+  çubuğu (taşı/arşivle/sil/sabitle/yıldız). Seçim kümesi ortak sağlayıcı:
+  klasör kapanınca boşaltılır.
+- Paylaşım "Var olan nota": `cardBuilder` verilince ana ekran kartlarıyla
+  ızgara (`_PickableCard`: kart dokunuşu kapalı, seçer); testte satır liste.
 - Paylaşılanlar ana ekranda (`home_show_shared`, varsayılan kapalı):
   AYRI bölüm `SharedNotesHomeSection` — kendi notlarımın ızgarasına
   karıştırılmaz (seçim/sıralama/toplu iş yalnız kendi koleksiyonumu bilir).
@@ -448,6 +471,9 @@ eskisini arşive taşıma.
   kapsamlı jeton (bellekte, ~1 sa); ek `blob:` adresiyle açılır, `blob:`
   `toMap`'te buluta yazılmaz. Web Drive'a yazmaz (ekleri Storage'a).
   Yerel notlar/video yok.
+- Web YouTube iframe'i (2026-10-28) `enablejsapi=1` ile kurulur; sekme
+  gizlenince (`visibilitychange`) hepsi, rota örtülünce (`TickerMode`
+  kapanır) o oynatıcı `postMessage pauseVideo` ile DURUR.
 
 ## Android
 - `USE_EXACT_ALARM` yok (Play); izin yoksa hatırlatıcı inexact'e düşer.

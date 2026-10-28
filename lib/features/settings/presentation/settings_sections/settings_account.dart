@@ -91,6 +91,7 @@ class _ProfileCard extends ConsumerWidget {
         : (user?.email?.trim().isNotEmpty ?? false)
         ? user!.email!
         : (ref.watch(isAnonymousProvider) ? l10n.localAccountBadge : '');
+    final anonymous = ref.watch(isAnonymousProvider);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -98,73 +99,88 @@ class _ProfileCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          CircleAvatar(
-            radius: 26,
-            backgroundColor: scheme.primary,
-            foregroundColor: scheme.onPrimary,
-            backgroundImage: user?.photoURL != null
-                ? NetworkImage(user!.photoURL!)
-                : null,
-            child: user?.photoURL == null
-                ? const Icon(Icons.person_outline)
-                : null,
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (name.isNotEmpty)
-                  Text(
-                    name,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                if ((user?.email ?? '').isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    user!.email!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                const SizedBox(height: 6),
-                // Anonim hesapta "Senkronize edildi" YANILTICIYDI: veri başka
-                // cihazdan açılamaz ve hesap kaybolursa geri gelmez. Rozet
-                // gerçeği söyler; ayrıntısı alttaki yerel hesap kartında.
-                Row(
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 26,
+                backgroundColor: scheme.primary,
+                foregroundColor: scheme.onPrimary,
+                backgroundImage: user?.photoURL != null
+                    ? NetworkImage(user!.photoURL!)
+                    : null,
+                child: user?.photoURL == null
+                    ? const Icon(Icons.person_outline)
+                    : null,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      ref.watch(isAnonymousProvider)
-                          ? Icons.smartphone
-                          : Icons.cloud_done_outlined,
-                      size: 14,
-                      color: ref.watch(isAnonymousProvider)
-                          ? scheme.onSurfaceVariant
-                          : scheme.primary,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      ref.watch(isAnonymousProvider)
-                          ? l10n.localAccountBadge
-                          : l10n.synced,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                    if (name.isNotEmpty)
+                      Text(
+                        name,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                    if ((user?.email ?? '').isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        user!.email!,
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: scheme.onSurfaceVariant),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    const SizedBox(height: 6),
+                    // Anonim hesapta "Senkronize edildi" YANILTICIYDI: veri başka
+                    // cihazdan açılamaz ve hesap kaybolursa geri gelmez. Rozet
+                    // gerçeği söyler; ayrıntısı alttaki yerel hesap kartında.
+                    Row(
+                      children: [
+                        Icon(
+                          ref.watch(isAnonymousProvider)
+                              ? Icons.smartphone
+                              : Icons.cloud_done_outlined,
+                          size: 14,
+                          color: ref.watch(isAnonymousProvider)
+                              ? scheme.onSurfaceVariant
+                              : scheme.primary,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          ref.watch(isAnonymousProvider)
+                              ? l10n.localAccountBadge
+                              : l10n.synced,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+          // GİRİŞ EN ÜSTTE (kullanıcı isteği 2026-10-28: "google girişini
+          // bulmak çok zor, şu an sadece arayan bulur"): bağlama düğmesi
+          // kapalı gelen Hesap alanının içindeydi. Misafirken profil
+          // kartının kendisinde, ayarların en tepesinde durur.
+          if (anonymous) ...[
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              key: const ValueKey('profile-google-sign-in'),
+              icon: const Icon(Icons.login_rounded),
+              label: Text(l10n.signInWithGoogle),
+              onPressed: () => linkGuestAccount(context, ref),
+            ),
+          ],
         ],
       ),
     );

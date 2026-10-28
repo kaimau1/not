@@ -2,7 +2,7 @@ part of 'items_editor.dart';
 
 /// Madde işleri: uzun basış menüsü, ayırıcı, yıldız, çoklu seçim, kopyala/sil, sırala (C1).
 extension _ItemsActions on ItemsEditorState {
-  /// Satıra UZUN BASINCA açılan menü: yıldızla, seç, sil.
+  /// Satıra UZUN BASINCA açılan menü: yıldızla, seç, taşı, sil + alt çizgi.
   ///
   /// KULLANICI İSTEĞİ 2026-08-30 ("yıldızla tuşu maddeler için yerleşimi kötü,
   /// basılı tutunca gelsin"): yıldız düğmesi her odaklanan satırda beliriyor,
@@ -13,73 +13,26 @@ extension _ItemsActions on ItemsEditorState {
   /// Menü parmağın bastığı yerde açılır — uzun basışın nereden geldiği
   /// böylece görünür olur.
   Future<void> _showItemMenu(NoteItem item, Offset globalPosition) async {
-    final l10n = context.l10n;
     final overlay = Overlay.of(context).context.findRenderObject();
     if (overlay is! RenderBox || !overlay.hasSize) return;
     final position = RelativeRect.fromRect(
       globalPosition & const Size(1, 1),
       Offset.zero & overlay.size,
     );
-    PopupMenuItem<_ItemAction> entry(
-      _ItemAction value,
-      IconData icon,
-      String label,
-    ) => PopupMenuItem(
-      value: value,
-      child: Row(
-        children: [
-          Icon(icon, size: 20),
-          const SizedBox(width: 12),
-          // Uzun etiket ("Alta noktalı çizgi") dar menüde taşmasın.
-          Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
-        ],
-      ),
-    );
-
+    // SADE MENÜ (kullanıcı isteği 2026-10-28: "seç menüsü çok kalabalıklaştı"):
+    // eskiden alt alta 7-8 satırdı (yıldız, seç, üç çizgi türü, çizgi
+    // ayarları, çizgiyi kaldır, taşı, sil). Artık iki sıra: üstte madde işleri
+    // simge düğmeleri, altta çizgi türleri — aynı türe yeniden basmak çizgiyi
+    // kaldırır, ayar düğmesi renk/kalınlık levhasını açar.
     final choice = await showMenu<_ItemAction>(
       context: context,
       position: position,
       items: [
-        entry(
-          _ItemAction.star,
-          item.starred ? Icons.star : Icons.star_outline,
-          item.starred ? l10n.unstar : l10n.star,
+        _ItemMenuPanel(
+          starred: item.starred,
+          divider: ItemDivider.parse(item.divider)?.kind ?? '',
+          canMove: widget.onMoveToPage != null,
         ),
-        entry(_ItemAction.select, Icons.checklist, l10n.select),
-        // Madde ALTINA ayırıcı çizgi (kullanıcı isteği 2026-10-20: "satır
-        // aralarına çizgi çekme, kesikli çizgi çekme").
-        entry(
-          _ItemAction.dividerSolid,
-          Icons.horizontal_rule,
-          l10n.itemDividerSolid,
-        ),
-        entry(
-          _ItemAction.dividerDashed,
-          Icons.more_horiz,
-          l10n.itemDividerDashed,
-        ),
-        entry(
-          _ItemAction.dividerDotted,
-          Icons.linear_scale,
-          l10n.itemDividerDotted,
-        ),
-        // ÇİZGİ AYARLARI (kullanıcı isteği 2026-10-23: "çizgi rengi ve
-        // özelliklerini ayarlama"): tür, renk, kalınlık; çizgi yoksa düz
-        // çizgiyle açılır.
-        entry(_ItemAction.dividerStyle, Icons.tune, l10n.dividerSettings),
-        if (item.divider.isNotEmpty)
-          entry(
-            _ItemAction.dividerNone,
-            Icons.format_strikethrough,
-            l10n.itemDividerRemove,
-          ),
-        if (widget.onMoveToPage != null)
-          entry(
-            _ItemAction.moveToPage,
-            Icons.drive_file_move_outline,
-            l10n.itemMoveToPage,
-          ),
-        entry(_ItemAction.delete, Icons.delete_outline, l10n.removeItem),
       ],
     );
     if (!mounted || choice == null) return;
@@ -98,8 +51,6 @@ extension _ItemsActions on ItemsEditorState {
         _setDivider(item, NoteItem.dividerDotted);
       case _ItemAction.dividerStyle:
         await _editDividerStyle(item);
-      case _ItemAction.dividerNone:
-        _setDivider(item, '');
       case _ItemAction.moveToPage:
         // Önce satırdaki yazı nota işlensin: taşınan madde son hâliyle gitsin.
         _commit();

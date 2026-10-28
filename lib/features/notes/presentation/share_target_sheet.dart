@@ -7,6 +7,7 @@ import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'capture_mode_sheet.dart';
+import 'note_grid.dart';
 import '../../../core/widgets/app_sheet.dart';
 
 /// Paylaşımla / "Birlikte aç" ile gelen içeriğin levhada görünen özeti.
@@ -99,6 +100,7 @@ Future<ShareDestination?> showShareTargetSheet(
   Map<String, String> folderNames = const {},
   bool askMode = false,
   String? newNoteLabel,
+  Widget Function(Note note)? cardBuilder,
 }) => showAppSheet<ShareDestination>(
   context: context,
   isScrollControlled: true,
@@ -116,6 +118,7 @@ Future<ShareDestination?> showShareTargetSheet(
       folderNames: folderNames,
       askMode: askMode,
       newNoteLabel: newNoteLabel,
+      cardBuilder: cardBuilder,
     ),
   ),
 );
@@ -129,6 +132,7 @@ class ShareTargetSheet extends StatefulWidget {
     this.folderNames = const {},
     this.askMode = false,
     this.newNoteLabel,
+    this.cardBuilder,
   });
 
   final ShareIncoming incoming;
@@ -136,6 +140,13 @@ class ShareTargetSheet extends StatefulWidget {
   final Map<String, String> folderNames;
   final bool askMode;
   final String? newNoteLabel;
+
+  /// Verilirse "Var olan nota" notları ANA EKRAN KARTLARIYLA iki sütunlu
+  /// ızgarada gösterir (kullanıcı isteği 2026-10-28: "var olan nota ekle
+  /// sayfasında direk tümü sayfası görülsün, aynı dashboard görünümünde").
+  /// Kart sağlayıcılara bağlı olduğundan dışarıdan verilir; verilmezse
+  /// (test) sade satır listesi.
+  final Widget Function(Note note)? cardBuilder;
 
   @override
   State<ShareTargetSheet> createState() => _ShareTargetSheetState();
@@ -273,7 +284,10 @@ class _ShareTargetSheetState extends State<ShareTargetSheet> {
       hasFiles: widget.incoming.hasFiles,
       query: _query,
     );
-    final listHeight = (screenHeight * 0.45).clamp(200.0, 460.0);
+    final cardBuilder = widget.cardBuilder;
+    final listHeight = cardBuilder == null
+        ? (screenHeight * 0.45).clamp(200.0, 460.0)
+        : (screenHeight * 0.62).clamp(260.0, 720.0);
     return Column(
       key: const ValueKey('share-existing'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -311,6 +325,19 @@ class _ShareTargetSheetState extends State<ShareTargetSheet> {
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
+                  ),
+                )
+              : cardBuilder != null
+              ? NoteBalancedGrid(
+                  notes: candidates,
+                  columns: MediaQuery.sizeOf(context).width >= 600 ? 3 : 2,
+                  padding: const EdgeInsets.only(bottom: 16),
+                  itemBuilder: (context, i) => _PickableCard(
+                    onTap: () => Navigator.pop(
+                      context,
+                      ShareDestination.existing(candidates[i].id),
+                    ),
+                    child: cardBuilder(candidates[i]),
                   ),
                 )
               : ListView.separated(
@@ -400,6 +427,43 @@ class _IncomingSummary extends StatelessWidget {
               style: theme.textTheme.bodyMedium?.copyWith(height: 1.3),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Ana ekran kartı, ama dokununca NOTU AÇMAZ, seçer: kartın kendi
+/// dokunuş/uzun basış işleri devre dışı, üstte "ekle" rozeti.
+class _PickableCard extends StatelessWidget {
+  const _PickableCard({required this.child, required this.onTap});
+
+  final Widget child;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Stack(
+        children: [
+          IgnorePointer(child: child),
+          Positioned(
+            right: 6,
+            bottom: 6,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Icon(Icons.add, size: 18, color: scheme.onPrimary),
+              ),
+            ),
+          ),
         ],
       ),
     );

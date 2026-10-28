@@ -2133,5 +2133,14 @@
   "dividerKindDashed": "Dashed",
   "dividerKindDotted": "Dotted",
   "dividerKindDouble": "Double",
-  "dividerKindWavy": "Wavy"
+  "dividerKindWavy": "Wavy",
+  "itemMenuUnstar": "Unstar",
+  "itemMenuMove": "Move",
+  "itemMenuDelete": "Delete",
+  "itemMenuLine": "Line below",
+  "formatStyleText": "Text",
+  "formatStyleH1": "Title",
+  "formatStyleH2": "Subtitle",
+  "formatSizeDown": "Smaller",
+  "formatSizeUp": "Larger"
 }

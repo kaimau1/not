@@ -19,6 +19,9 @@ class WebGoogleAuth implements AuthRepository {
   Stream<User?> authStateChanges() => _auth.authStateChanges();
 
   @override
+  Stream<User?> userChanges() => _auth.userChanges();
+
+  @override
   User? get currentUser => _auth.currentUser;
 
   @override

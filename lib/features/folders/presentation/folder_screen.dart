@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,14 +8,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../ai/data/semantic_search.dart' show SemanticScope;
 import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/note_card.dart';
+import '../../notes/presentation/filter_sheet.dart';
 import '../../notes/presentation/note_grid.dart';
-import '../../notes/presentation/note_sort_menu.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../../notes/presentation/quick_add_actions.dart';
 import '../../notes/presentation/quick_add_fab.dart';
@@ -121,6 +125,11 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
   /// görünmez — açılınca aramaya odaklanır, kapanınca sorgu düşer.
   final _search = ScreenSearch();
 
+  /// Seçim kümesi ana ekranla ORTAK sağlayıcıda; klasörden çıkınca
+  /// boşaltılır (ana ekrana seçili kartlarla dönülmesin). `dispose`ta `ref`
+  /// kullanılamaz — denetleyici build'de alınır.
+  SelectedNoteIdsNotifier? _selection;
+
   @override
   void initState() {
     super.initState();
@@ -132,7 +141,128 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
   @override
   void dispose() {
     _search.dispose();
+    final selection = _selection;
+    // Ağaç sökülürken sağlayıcı yazılmaz: bir sonraki mikro göreve.
+    if (selection != null) Future.microtask(selection.clear);
     super.dispose();
+  }
+
+  // ── Seçim kipi toplu işleri (ana ekranla aynı işler; kullanıcı isteği
+  // 2026-10-28: "dashboard'da ne varsa klasörde de aynı olmalı"). Eskiden
+  // kartın ⋮ → "Seç"i klasörde seçimi açıyor ama hiçbir işlem çubuğu
+  // çıkmıyordu.
+
+  void _clearSelection() => ref.read(selectedNoteIdsProvider.notifier).clear();
+
+  Future<void> _deleteSelected(Set<String> ids, List<Note> notes) async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null || ids.isEmpty) return;
+    final l10n = context.l10n;
+    if (notes.any((n) => ids.contains(n.id) && n.locked) &&
+        !await authenticateForNote(l10n.unlockAuthReason)) {
+      return;
+    }
+    if (!mounted) return;
+    _clearSelection();
+    unawaited(repo.softDeleteAll(ids));
+    showUndoSnackBar(
+      context,
+      message: l10n.notesDeletedCount(ids.length),
+      undoLabel: l10n.undo,
+      onUndo: () => repo.restoreAll(ids),
+    );
+  }
+
+  void _archiveSelected(Set<String> ids) {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null || ids.isEmpty) return;
+    final l10n = context.l10n;
+    unawaited(repo.setArchivedAll(ids, true));
+    _clearSelection();
+    showUndoSnackBar(
+      context,
+      message: l10n.notesArchivedCount(ids.length),
+      undoLabel: l10n.undo,
+      onUndo: () => repo.setArchivedAll(ids, false),
+    );
+  }
+
+  Future<void> _moveSelected(Set<String> ids) async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null || ids.isEmpty) return;
+    final l10n = context.l10n;
+    final picked = await showFolderPickSheet(context, ref);
+    if (picked == null || !mounted) return;
+    unawaited(
+      repo.batchUpdate(ids, {'folderId': picked.isEmpty ? null : picked}),
+    );
+    _clearSelection();
+    showUndoSnackBar(
+      context,
+      message: l10n.notesMovedCount(ids.length),
+      undoLabel: l10n.undo,
+      onUndo: () => repo.batchUpdate(ids, {'folderId': widget.folderId}),
+    );
+  }
+
+  void _updateSelected(Set<String> ids, Map<String, Object?> fields) {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null || ids.isEmpty) return;
+    unawaited(repo.batchUpdate(ids, fields));
+    _clearSelection();
+  }
+
+  PreferredSizeWidget _selectionBar(List<Note> visible) {
+    final l10n = context.l10n;
+    final ids = ref.watch(selectedNoteIdsProvider);
+    final visibleIds = [for (final n in visible) n.id];
+    final allSelected = visibleIds.isNotEmpty && visibleIds.every(ids.contains);
+    return AppBar(
+      leading: IconButton(
+        tooltip: l10n.cancel,
+        icon: const Icon(Icons.close),
+        onPressed: _clearSelection,
+      ),
+      title: Text(l10n.selectedCount(ids.length)),
+      actions: [
+        IconButton(
+          tooltip: allSelected ? l10n.selectNone : l10n.selectAll,
+          icon: Icon(allSelected ? Icons.deselect : Icons.select_all),
+          onPressed: () =>
+              ref.read(selectedNoteIdsProvider.notifier).selectAll(visibleIds),
+        ),
+        IconButton(
+          tooltip: l10n.moveToFolder,
+          icon: const Icon(Icons.drive_file_move_outline),
+          onPressed: () => _moveSelected(ids),
+        ),
+        IconButton(
+          tooltip: l10n.archive,
+          icon: const Icon(Icons.archive_outlined),
+          onPressed: () => _archiveSelected(ids),
+        ),
+        IconButton(
+          tooltip: l10n.deleteSelected,
+          icon: const Icon(Icons.delete_outline),
+          onPressed: () => _deleteSelected(ids, visible),
+        ),
+        PopupMenuButton<String>(
+          tooltip: l10n.noteMetaMenu,
+          onSelected: (action) => switch (action) {
+            'pin' => _updateSelected(ids, {'pinned': true}),
+            'unpin' => _updateSelected(ids, {'pinned': false}),
+            'star' => _updateSelected(ids, {'starred': true}),
+            _ => _updateSelected(ids, {'starred': false}),
+          },
+          itemBuilder: (_) => [
+            PopupMenuItem(value: 'pin', child: Text(l10n.pin)),
+            PopupMenuItem(value: 'unpin', child: Text(l10n.unpin)),
+            PopupMenuItem(value: 'star', child: Text(l10n.star)),
+            PopupMenuItem(value: 'unstar', child: Text(l10n.unstar)),
+          ],
+        ),
+      ],
+    );
   }
 
   /// Yana çekiş: kullanıcının klasör sırasında sonraki/önceki klasör
@@ -177,7 +307,22 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
     _markSeenSoon(folderId);
     final folders = ref.watch(foldersStreamProvider).value;
     final folder = folders?.where((f) => f.id == folderId).firstOrNull;
-    final notesAsync = ref.watch(folderNotesProvider(folderId));
+    final rawAsync = ref.watch(folderNotesProvider(folderId));
+    final folderFilter = ref.watch(
+      folderFilterProvider.select((m) => m[folderId]),
+    );
+    final notesAsync = rawAsync.whenData(
+      (list) => applyFolderFilter(list, folderFilter),
+    );
+    _selection = ref.read(selectedNoteIdsProvider.notifier);
+    final selecting = ref.watch(
+      selectedNoteIdsProvider.select((s) => s.isNotEmpty),
+    );
+    final filterLabels = [
+      if (folderFilter != null && folderFilter.filter != NoteFilter.all)
+        filterLabel(l10n, folderFilter.filter),
+      if (folderFilter?.tag != null) '#${folderFilter!.tag}',
+    ];
 
     // Klasör silinmiş olabilir (başka cihazdan): sayfa boş bir kabuk olarak
     // kalmaz, kendiliğinden kapanır.
@@ -187,80 +332,123 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
       });
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: _search.open
-            ? ScreenSearchField(search: _search)
-            : _FolderTitle(
-                icon: folder?.iconData,
-                name: folder?.name,
-                count: notesAsync.value?.length,
+    return PopScope(
+      // Geri tuşu önce seçimi bırakır (ana ekranla aynı kural).
+      canPop: !selecting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _clearSelection();
+      },
+      child: Scaffold(
+        appBar: selecting
+            ? _selectionBar(notesAsync.value ?? const [])
+            : AppBar(
+                title: _search.open
+                    ? ScreenSearchField(search: _search)
+                    : _FolderTitle(
+                        icon: folder?.iconData,
+                        name: folder?.name,
+                        count: rawAsync.value?.length,
+                      ),
+                actions: [
+                  // ✨ AI araması klasörde de (B4).
+                  ...screenSearchActions(context, _search),
+                  // SÜZ (ana ekrandakiyle aynı levha): durum ve etiket KLASÖRE
+                  // özgü, görünüm ve SIRALAMA ana ekranla ORTAK (bkz.
+                  // folderNotesProvider) — kullanıcının seçtiği düzen her yerde
+                  // aynı olsun. Eskiden burada yalnız sıralama menüsü vardı.
+                  IconButton(
+                    key: const ValueKey('folder-filter'),
+                    tooltip: l10n.filterSheetTitle,
+                    isSelected: filterLabels.isNotEmpty,
+                    icon: Badge(
+                      isLabelVisible: filterLabels.isNotEmpty,
+                      smallSize: 8,
+                      child: const Icon(Icons.tune),
+                    ),
+                    onPressed: () =>
+                        showFilterSheet(context, folderId: folderId),
+                  ),
+                  // Sohbet, PAYLAŞILMIŞ klasörde tek dokunuş uzakta olsun: sahip de
+                  // katılımcılar da aynı odayı kullanıyor (bkz. FolderChatScreen).
+                  if (folder != null && folder.sharedWith.isNotEmpty)
+                    IconButton(
+                      tooltip: l10n.folderChatTitle,
+                      icon: const Icon(Icons.forum_outlined),
+                      onPressed: () => FolderChatScreen.open(
+                        context,
+                        folderId: folder.id,
+                        folderName: folder.name,
+                      ),
+                    ),
+                  if (folder != null)
+                    IconButton(
+                      tooltip: l10n.folderManage,
+                      icon: const Icon(Icons.more_vert),
+                      onPressed: () =>
+                          showFolderActionsSheet(context, ref, folder),
+                    ),
+                ],
               ),
-        actions: [
-          // ✨ AI araması klasörde de (B4).
-          ...screenSearchActions(context, _search),
-          // SIRALAMA klasörün içinde de değiştirilebilsin: ölçüt ana ekranla
-          // ORTAK (bkz. folderNotesProvider) — kullanıcının seçtiği düzen her
-          // yerde aynı olsun, iki ayrı ayar iki ayrı sürpriz demek.
-          NoteSortMenu(
-            current: ref.watch(noteSortProvider),
-            onPick: (sort) =>
-                ref.read(noteSortProvider.notifier).set(sort),
+        // Ana ekrandakinin AYNISI (+ sesli not: klasörde ayrı mikrofon yok).
+        // Davranış [QuickAddActions] ile ORTAK, kopya değil.
+        floatingActionButton: CompositedTransformTarget(
+          link: _fabLink,
+          child: QuickAddFab(
+            anchor: _fabLink,
+            actions: this,
+            onVoiceCapture: createVoiceCaptureNote,
           ),
-          // Sohbet, PAYLAŞILMIŞ klasörde tek dokunuş uzakta olsun: sahip de
-          // katılımcılar da aynı odayı kullanıyor (bkz. FolderChatScreen).
-          if (folder != null && folder.sharedWith.isNotEmpty)
-            IconButton(
-              tooltip: l10n.folderChatTitle,
-              icon: const Icon(Icons.forum_outlined),
-              onPressed: () => FolderChatScreen.open(
-                context,
-                folderId: folder.id,
-                folderName: folder.name,
-              ),
-            ),
-          if (folder != null)
-            IconButton(
-              tooltip: l10n.folderManage,
-              icon: const Icon(Icons.more_vert),
-              onPressed: () => showFolderActionsSheet(context, ref, folder),
-            ),
-        ],
-      ),
-      // Ana ekrandakinin AYNISI (+ sesli not: klasörde ayrı mikrofon yok).
-      // Davranış [QuickAddActions] ile ORTAK, kopya değil.
-      floatingActionButton: CompositedTransformTarget(
-        link: _fabLink,
-        child: QuickAddFab(
-          anchor: _fabLink,
-          actions: this,
-          onVoiceCapture: createVoiceCaptureNote,
         ),
-      ),
-      // Kutu değişince ızgara yeniden süzülsün: sorgu denetleyicide durur,
-      // dinleyici yalnız gövdeyi çizer (üst bar aynı kalır).
-      body: GestureDetector(
-        // Dikey kaydırma ızgarada kalır; eksenler farklı, çakışmaz. Arama
-        // açıkken kapalı: kullanıcı sonuçlar arasındayken klasör değişmesin.
-        onHorizontalDragEnd:
-            _search.open || ref.watch(swipeModeProvider) == SwipeMode.off
-            ? null
-            : (details) {
-                final velocity = details.primaryVelocity ?? 0;
-                if (velocity.abs() < 300) return;
-                final rtl =
-                    Directionality.of(context) == TextDirection.rtl;
-                final forward = rtl ? velocity > 0 : velocity < 0;
-                _swipeTo(forward ? 1 : -1);
-              },
-        child: ValueListenableBuilder<TextEditingValue>(
-          valueListenable: _search.controller,
-          builder: (context, value, _) => _NotesGrid(
-            async: notesAsync,
-            query: value.text,
-            semantic: _search.semantic,
-            folderId: folderId,
-            onCreateNote: () => createNote(NoteType.text),
+        // Kutu değişince ızgara yeniden süzülsün: sorgu denetleyicide durur,
+        // dinleyici yalnız gövdeyi çizer (üst bar aynı kalır).
+        body: GestureDetector(
+          // Dikey kaydırma ızgarada kalır; eksenler farklı, çakışmaz. Arama
+          // açıkken kapalı: kullanıcı sonuçlar arasındayken klasör değişmesin.
+          onHorizontalDragEnd:
+              _search.open || ref.watch(swipeModeProvider) == SwipeMode.off
+              ? null
+              : (details) {
+                  final velocity = details.primaryVelocity ?? 0;
+                  if (velocity.abs() < 300) return;
+                  final rtl = Directionality.of(context) == TextDirection.rtl;
+                  final forward = rtl ? velocity > 0 : velocity < 0;
+                  _swipeTo(forward ? 1 : -1);
+                },
+          child: Column(
+            children: [
+              // UYGULANAN SÜZGEÇ: adı + × (ana ekrandaki Süz düğmesinin
+              // karşılığı) — boş klasör sanılmasın.
+              if (filterLabels.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: InputChip(
+                      key: const ValueKey('folder-filter-chip'),
+                      avatar: const Icon(Icons.tune, size: 16),
+                      label: Text(filterLabels.join(' · ')),
+                      onPressed: () =>
+                          showFilterSheet(context, folderId: folderId),
+                      onDeleted: () => ref
+                          .read(folderFilterProvider.notifier)
+                          .set(folderId, kNoFolderFilter),
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _search.controller,
+                  builder: (context, value, _) => _NotesGrid(
+                    async: notesAsync,
+                    query: value.text,
+                    semantic: _search.semantic,
+                    folderId: folderId,
+                    filtered: filterLabels.isNotEmpty,
+                    onCreateNote: () => createNote(NoteType.text),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -319,7 +507,11 @@ class _NotesGrid extends ConsumerWidget {
     this.semantic = false,
     this.folderId,
     this.onCreateNote,
+    this.filtered = false,
   });
+
+  /// Klasör süzgeci uygulanmış mı (boş sonuçta "boş klasör" denmesin).
+  final bool filtered;
 
   /// AI (anlamsal) arama açık mı; [folderId] kendi klasörümde verilir
   /// (paylaşılan klasörde AI yok — notlar başkasının).
@@ -349,6 +541,10 @@ class _NotesGrid extends ConsumerWidget {
     // Sütun sayısı ANA EKRANLA ortak: kullanıcı orada iki parmakla seçtiği
     // yoğunluğu klasörde de görsün (sıralamayla aynı gerekçe). 0 = otomatik.
     final fixedColumns = ref.watch(gridColumnsProvider);
+    final listView = ref.watch(noteListViewProvider);
+    final selectionActive = ref.watch(
+      selectedNoteIdsProvider.select((s) => s.isNotEmpty),
+    );
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) =>
@@ -368,7 +564,7 @@ class _NotesGrid extends ConsumerWidget {
           return const Center(child: CircularProgressIndicator());
         }
         return notes.isEmpty
-          ? (needle.isEmpty
+          ? (needle.isEmpty && !filtered
               ? EmptyState(
                   icon: Icons.folder_open_outlined,
                   title: l10n.folderEmpty,
@@ -396,6 +592,42 @@ class _NotesGrid extends ConsumerWidget {
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
+                      // LİSTE GÖRÜNÜMÜ ana ekranla ortak (Süz → Görünüm).
+                      if (listView) {
+                        return ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(8, 8, 8, 88),
+                          itemCount: notes.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 2),
+                          itemBuilder: (context, index) {
+                            final note = notes[index];
+                            return Consumer(
+                              key: ValueKey(note.id),
+                              builder: (context, cellRef, _) {
+                                final selected = cellRef.watch(
+                                  selectedNoteIdsProvider.select(
+                                    (s) => s.contains(note.id),
+                                  ),
+                                );
+                                return GestureDetector(
+                                  onLongPress: ownerId == null
+                                      ? () => cellRef
+                                            .read(
+                                              selectedNoteIdsProvider.notifier,
+                                            )
+                                            .toggle(note.id)
+                                      : null,
+                                  child: NoteListRow(
+                                    note: note,
+                                    selected: selected,
+                                    selectionActive: selectionActive,
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        );
+                      }
                       final columns = fixedColumns > 0
                           ? fixedColumns
                           : (constraints.maxWidth / 220).floor().clamp(2, 6);
@@ -405,12 +637,21 @@ class _NotesGrid extends ConsumerWidget {
                       return NoteBalancedGrid(
                         notes: notes,
                         columns: columns,
-                        itemBuilder: (context, index) => NoteCard(
-                          note: notes[index],
-                          ownerId: ownerId,
-                          readOnly: readOnly,
-                          highlightQuery: needle,
-                          showFolder: false,
+                        // Uzun basış SEÇER (ana ekranla aynı); paylaşılan
+                        // klasörde toplu işler yok.
+                        itemBuilder: (context, index) => GestureDetector(
+                          onLongPress: ownerId == null
+                              ? () => ref
+                                    .read(selectedNoteIdsProvider.notifier)
+                                    .toggle(notes[index].id)
+                              : null,
+                          child: NoteCard(
+                            note: notes[index],
+                            ownerId: ownerId,
+                            readOnly: readOnly,
+                            highlightQuery: needle,
+                            showFolder: false,
+                          ),
                         ),
                       );
                     },

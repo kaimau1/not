@@ -5,6 +5,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 abstract interface class AuthRepository {
   Stream<User?> authStateChanges();
 
+  /// [authStateChanges] + hesap BAĞLAMA / profil değişiklikleri. Anonim
+  /// hesap Google'a bağlanınca uid değişmez ve [authStateChanges] HİÇ
+  /// tetiklenmez — arayüz "misafir" kalıyordu (kullanıcı bulgusu
+  /// 2026-10-28: "giriş yapınca sayfa yenilenmeden gelmiyor").
+  Stream<User?> userChanges();
+
   User? get currentUser;
 
   Future<UserCredential> signInWithGoogle();

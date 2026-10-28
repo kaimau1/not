@@ -5759,4 +5759,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dividerKindWavy => 'Wavy';
+
+  @override
+  String get itemMenuUnstar => 'Unstar';
+
+  @override
+  String get itemMenuMove => 'Move';
+
+  @override
+  String get itemMenuDelete => 'Delete';
+
+  @override
+  String get itemMenuLine => 'Line below';
+
+  @override
+  String get formatStyleText => 'Text';
+
+  @override
+  String get formatStyleH1 => 'Title';
+
+  @override
+  String get formatStyleH2 => 'Subtitle';
+
+  @override
+  String get formatSizeDown => 'Smaller';
+
+  @override
+  String get formatSizeUp => 'Larger';
 }
