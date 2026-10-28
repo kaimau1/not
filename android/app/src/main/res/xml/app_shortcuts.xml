@@ -12,4 +12,28 @@
             android:targetPackage="dev.kaimau.notlar"
             android:targetClass="dev.kaimau.notlar.MainActivity" />
     </shortcut>
+    <!-- router.dart › notlar://new?type=… (Hızlı Eylemler widget'ıyla aynı yol) -->
+    <shortcut
+        android:shortcutId="new_note"
+        android:enabled="true"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:shortcutShortLabel="@string/widget_qa_new_note">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="notlar://new?type=text"
+            android:targetPackage="dev.kaimau.notlar"
+            android:targetClass="dev.kaimau.notlar.MainActivity" />
+    </shortcut>
+    <!-- router.dart › notlar://new?type=… (Hızlı Eylemler widget'ıyla aynı yol) -->
+    <shortcut
+        android:shortcutId="new_checklist"
+        android:enabled="true"
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:shortcutShortLabel="@string/widget_qa_checklist">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="notlar://new?type=checklist"
+            android:targetPackage="dev.kaimau.notlar"
+            android:targetClass="dev.kaimau.notlar.MainActivity" />
+    </shortcut>
 </shortcuts>

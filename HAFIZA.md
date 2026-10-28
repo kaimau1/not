@@ -498,9 +498,17 @@ eskisini arşive taşıma.
   manifestteki `HaritaNotAlici` + build.gradle.kts "Harita köprüsü"
   bağımlılıkları/`firebaseSdkVersion()` + MainActivity'deki `flushPending`
   satırı (başka dokunduğu yer yok; dışa açık alıcı herkesin not yazmasına izin
-  veriyor). **TUZAK:** alıcı Firestore'u Dart'tan önce başlatabilir; ayarı
+  veriyor). Not yazma ortak `YerelNot.kt`'de; yerel Firestore/Auth Gemini
+  işlevleri için de gerekli, köprü silinince ikisi KALIR. **TUZAK:** alıcı Firestore'u Dart'tan önce başlatabilir; ayarı
   main.dart'takinin AYNISI (persistence + `firestoreCacheBytes`) olmalı —
   farklıysa FlutterFire `setFirestoreSettings`te istisna atar.
+- **Gemini işlevleri — AppFunctions (2026-10-28):** `Ajan.kt` (Android 16+):
+  not ekle / ara / son notlar / notu aç. Flutter açılmaz; yerel Firestore
+  (`YerelNot`). **Kilitli notlar ve gizli klasördekiler ajana HİÇ dönmez.**
+  Sorgu yalnız `deletedAt == null`, sıralama cihazda (eşitlik + başka alanda
+  orderBy bileşik dizin isterdi). `openNote` `notlar://note/<id>` PendingIntent
+  döndürür (ajan arka plandan Activity açamaz). 1.0.0-beta01 AGP 9.1+ istedi:
+  AGP 9.0.1 → 9.1.0, KSP 2.3.12 eklendi. Kısayollar: "Yeni not", "Yeni liste".
 - Kesin geri tuşu davranışı `alwaysHandleBack` (iç kabuk Navigator'ı sayfasız
   rota açınca bildirim yanlış Navigator'dan gidiyordu).
 - `SnackBar(action:)` varsayılanı `persist: true` → `timedSnackBar`.
