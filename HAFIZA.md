@@ -485,7 +485,22 @@ eskisini arşive taşıma.
   firebase_auth/app_check Android'de DERLENMEDİ (testler/web yeşildi —
   yalnız APK işi yakalar).
 - Crashlytics: google-services + crashlytics Gradle eklentileri; ayrı Firebase
-  BoM EKLENMEZ (FlutterFire `firebase_core`un BoM'unu kullanıyor).
+  BoM EKLENMEZ (FlutterFire `firebase_core`un BoM'unu kullanıyor). Harita
+  köprüsünün yerel Firestore/Auth'u da sürümü `firebase_core`un
+  `gradle.properties`indeki `FirebaseSDKVersion`dan OKUR (`firebaseSdkVersion()`).
+- **Harita köprüsü — KİŞİSEL, ŞİMDİLİK RELEASE'DE (2026-10-28, kullanıcı
+  kararı):** Harita uygulamasında "Hey Harita, not al …" → sıralı yayın →
+  `HaritaNotlari.kt`/`HaritaNotAlici` notu Flutter açılmadan, Notlar öne
+  gelmeden yerel Firestore ile `users/{uid}/notes`a yazar; klasör "Haritalar"
+  (adıyla önbellekte yoksa sabit kimlik `haritalar`). Oturum yoksa cihazda
+  sıraya alınır, `configureFlutterEngine`de yazılır. Cevap kodu 1 yazıldı /
+  2 sıraya alındı. **GENEL (public) SÜRÜMDE KALDIR:** `HaritaNotlari.kt` +
+  manifestteki `HaritaNotAlici` + build.gradle.kts "Harita köprüsü"
+  bağımlılıkları/`firebaseSdkVersion()` + MainActivity'deki `flushPending`
+  satırı (başka dokunduğu yer yok; dışa açık alıcı herkesin not yazmasına izin
+  veriyor). **TUZAK:** alıcı Firestore'u Dart'tan önce başlatabilir; ayarı
+  main.dart'takinin AYNISI (persistence + `firestoreCacheBytes`) olmalı —
+  farklıysa FlutterFire `setFirestoreSettings`te istisna atar.
 - Kesin geri tuşu davranışı `alwaysHandleBack` (iç kabuk Navigator'ı sayfasız
   rota açınca bildirim yanlış Navigator'dan gidiyordu).
 - `SnackBar(action:)` varsayılanı `persist: true` → `timedSnackBar`.

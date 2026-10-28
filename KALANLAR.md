@@ -27,6 +27,12 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
 numarasıyla bildir.
 
+**2026-10-28 Harita köprüsü (kişisel)**
+- [ ] Harita'da navigasyondayken "Hey Harita, not al …" → Notlar öne
+  gelmeden "Haritalar" klasöründe not (uygulama kapalıyken de); çevrimdışı
+  söylenen not ağ gelince buluta gidiyor mu; Harita "Not alındı" diyor mu.
+- [ ] Genel sürüm çıkarken köprüyü kaldır (HAFIZA › Android › Harita köprüsü).
+
 **2026-10-28 madde + biçim + giriş turu**
 - [ ] Çok işaretli maddeli notta işaretlemek / yazmak / görsel eklemek
   akıcı (eskiden donma-kasma).

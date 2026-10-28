@@ -201,6 +201,8 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        // Harita köprüsü (kişisel, HaritaNotlari.kt): oturumsuzken sıraya alınan notlar
+        HaritaNotAlici.flushPending(this)
         restoreBeepsFromPrefs()
         configureSpeechChannel(flutterEngine)
         val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)

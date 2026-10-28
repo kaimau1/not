@@ -149,6 +149,8 @@ abstract final class AppConstants {
   /// Firestore yerel önbelleğinin tavanı (main.dart). 100 MB, binlerce
   /// notu fazlasıyla taşır; canlı dinlenen belgeler tavandan bağımsız
   /// yerelde kalır. Eskiden `CACHE_SIZE_UNLIMITED` idi (bkz. DeviceStorage).
+  /// DEĞİŞİRSE `HaritaNotlari.kt`teki `CACHE_BYTES` de değişmeli (Harita
+  /// köprüsü Firestore'u Dart'tan önce aynı ayarla başlatabiliyor).
   static const int firestoreCacheBytes = 100 * 1024 * 1024; // 100 MB
 
   static const int maxFreeStorageBytes = 50 * 1024 * 1024; // 50 MB

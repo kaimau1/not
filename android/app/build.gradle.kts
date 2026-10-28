@@ -169,4 +169,15 @@ dependencies {
     // Konum hatırlatıcısı: sistem geofence'i + tek seferlik konum okuması
     // (bkz. PlaceReminders.kt).
     implementation("com.google.android.gms:play-services-location:21.3.0")
+    // Harita köprüsü (kişisel, HaritaNotlari.kt): alıcı notu Flutter açılmadan
+    // yerel Firestore/Auth ile yazar. Sürüm ayrı bir BoM SEÇİLMEZ: FlutterFire'ın
+    // kendi kullandığı BoM (firebase_core'un gradle.properties'indeki
+    // FirebaseSDKVersion) okunur, eklentilerle hep aynı sürüm kalır.
+    implementation(platform("com.google.firebase:firebase-bom:${firebaseSdkVersion()}"))
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-auth")
 }
+
+fun firebaseSdkVersion(): String = Properties().apply {
+    rootProject.project(":firebase_core").projectDir.resolve("gradle.properties").inputStream().use { load(it) }
+}.getProperty("FirebaseSDKVersion")
