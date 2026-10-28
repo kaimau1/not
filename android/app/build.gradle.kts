@@ -4,6 +4,8 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // AppFunctions derleyicisi (Ajan.kt → AjanServisi + notlar_ajan.xml)
+    id("com.google.devtools.ksp")
     // Firebase: `google-services.json` (bu klasörde) + Crashlytics. Firebase
     // KÜTÜPHANE sürümleri burada BİLEREK yazılmıyor (BoM yok): FlutterFire
     // eklentileri hepsini `firebase_core`un sabitlediği tek BoM'dan
@@ -169,13 +171,17 @@ dependencies {
     // Konum hatırlatıcısı: sistem geofence'i + tek seferlik konum okuması
     // (bkz. PlaceReminders.kt).
     implementation("com.google.android.gms:play-services-location:21.3.0")
-    // Harita köprüsü (kişisel, HaritaNotlari.kt): alıcı notu Flutter açılmadan
-    // yerel Firestore/Auth ile yazar. Sürüm ayrı bir BoM SEÇİLMEZ: FlutterFire'ın
+    // Yerel Firestore/Auth: Harita köprüsü (kişisel, HaritaNotlari.kt) ve Gemini
+    // işlevleri (Ajan.kt) notu Flutter açılmadan yazar/okur (ortak yol YerelNot.kt). Sürüm ayrı bir BoM SEÇİLMEZ: FlutterFire'ın
     // kendi kullandığı BoM (firebase_core'un gradle.properties'indeki
     // FirebaseSDKVersion) okunur, eklentilerle hep aynı sürüm kalır.
     implementation(platform("com.google.firebase:firebase-bom:${firebaseSdkVersion()}"))
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-auth")
+    // Gemini gibi ajanlar notları uygulamayı açmadan kullanabilsin (Ajan.kt, Android 16+).
+    // beta01 AGP 9.1+ ve compileSdk 37 istiyor (AAR metadata'sı).
+    implementation("androidx.appfunctions:appfunctions:1.0.0-beta01")
+    ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-beta01")
 }
 
 fun firebaseSdkVersion(): String = Properties().apply {

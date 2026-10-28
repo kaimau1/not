@@ -6,9 +6,6 @@ import android.content.Intent
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreSettings
-import com.google.firebase.firestore.PersistentCacheSettings
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
 import org.json.JSONArray
@@ -27,7 +24,8 @@ import java.util.concurrent.TimeUnit
  * Oturum yoksa not cihazda sıraya alınır, uygulama açılınca ([flushPending],
  * MainActivity.onCreate) yazılır.
  *
- * **GENEL SÜRÜMDE KALDIRILIR**: bu dosya + AndroidManifest'teki
+ * **GENEL SÜRÜMDE KALDIRILIR**: bu dosya (not yazma ortak [YerelNot]'ta, o
+ * Gemini işlevleri için kalır) + AndroidManifest'teki
  * `HaritaNotAlici` girdisi + build.gradle.kts'teki "Harita köprüsü"
  * bağımlılıkları + MainActivity'deki tek `flushPending` satırı. Başka hiçbir
  * yere dokunmaz (HAFIZA.md › Harita köprüsü).
@@ -57,57 +55,16 @@ class HaritaNotAlici : BroadcastReceiver() {
         const val QUEUED = 2
         private const val PREFS = "harita_notlari"
 
-        /**
-         * Flutter'ın main.dart'ta verdiği ayarın AYNISI (persistence + 100 MB,
-         * AppConstants.firestoreCacheBytes). Örnek bu süreçte ilk burada
-         * başlarsa FlutterFire aynı ayarı yeniden verir; Firestore AYNI ayara
-         * izin verir, FARKLI ayarda istisna atar — değer değişirse burası da.
-         */
-        private const val CACHE_BYTES = 100L * 1024 * 1024
-
-        private fun firestore(): FirebaseFirestore {
-            val db = FirebaseFirestore.getInstance()
-            runCatching {
-                db.firestoreSettings = FirebaseFirestoreSettings.Builder()
-                    .setLocalCacheSettings(PersistentCacheSettings.newBuilder().setSizeBytes(CACHE_BYTES).build())
-                    .build()
-            }
-            return db
-        }
-
         /** Notu yazar; oturum yoksa 0. Yazım yerelde hemen geçerli, sunucu onayı beklenmez. */
         private fun save(ctx: Context, text: String, place: String?, atMs: Long): Int {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return 0
-            val db = firestore()
+            val db = YerelNot.firestore()
             val user = db.collection("users").document(uid)
             val folderId = folderFor(user.collection("folders"), uid)
             val doc = user.collection("notes").document()
             // başlıksız, söylenen metin gövdede (kartta olduğu gibi görünür); navigasyondaysa hedef altta
             val body = listOfNotNull(text, place?.let { "($it)" }).joinToString("\n")
-            val note = hashMapOf<String, Any?>(
-                "schema" to 1,
-                "type" to "text",
-                "title" to "",
-                "body" to body,
-                "items" to emptyList<Any>(),
-                "attachments" to emptyList<Any>(),
-                "tags" to emptyList<Any>(),
-                "folderId" to folderId,
-                "color" to "default",
-                "frameColor" to "default",
-                "pinned" to false,
-                "starred" to false,
-                "locked" to false,
-                "orderIndex" to -atMs.toDouble(),
-                "createdAt" to FieldValue.serverTimestamp(),
-                "updatedAt" to FieldValue.serverTimestamp(),
-                "deletedAt" to null,
-                "archivedAt" to null,
-                "reminderAt" to null,
-                "createdBy" to uid,
-                "updatedBy" to uid,
-            )
-            doc.set(note)
+            doc.set(YerelNot.belge(uid, "", body, folderId, atMs))
             return SAVED
         }
 
