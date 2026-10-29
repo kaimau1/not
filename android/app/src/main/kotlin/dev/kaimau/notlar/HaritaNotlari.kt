@@ -21,6 +21,9 @@ import java.util.concurrent.TimeUnit
  * gönderir; bu alıcı notu ARKA PLANDA, Flutter motoru açılmadan, yerel Firestore
  * SDK'sıyla `users/{uid}/notes`a yazar (klasör: "Haritalar", yoksa açılır).
  * Notlar öne gelmez. Firestore çevrimdışıyken yazım diskteki kuyrukta bekler.
+ * Kanallarım da (com.kanallarim.app, Not.kt) aynı yolu kullanır: oynatıcıdaki "Not al" ve Harita'nın
+ * medya panelindeki not düğmesi "YouTube" klasörüne başlıklı ve sabitlenmiş not yazar (isteğe bağlı
+ * `folder`, `title`, `pinned` ekleri; yoksa eski Harita davranışı).
  * Oturum yoksa not cihazda sıraya alınır, uygulama açılınca ([flushPending],
  * MainActivity.onCreate) yazılır.
  *
@@ -35,65 +38,75 @@ class HaritaNotAlici : BroadcastReceiver() {
         if (intent.action != ACTION) return
         val text = intent.getStringExtra("text")?.trim().orEmpty()
         if (text.isEmpty()) return
-        val place = intent.getStringExtra("place")
+        val note = Gelen(
+            text, intent.getStringExtra("place"), intent.getStringExtra("title")?.trim().orEmpty(),
+            intent.getStringExtra("folder")?.trim()?.ifEmpty { null } ?: FOLDER_NAME, intent.getBooleanExtra("pinned", false),
+        )
         val ctx = context.applicationContext
         val result = goAsync()
         Thread {
-            val code = try { save(ctx, text, place, System.currentTimeMillis()) } catch (_: Exception) { 0 }
-            if (code == 0) queue(ctx, text, place)
+            val code = try { save(note, System.currentTimeMillis()) } catch (_: Exception) { 0 }
+            if (code == 0) queue(ctx, note)
             result.resultCode = if (code == 0) QUEUED else code
             result.finish()
         }.start()
     }
 
+    /** Gelen not: Harita'nınki başlıksız ve "Haritalar"da, Kanallarım'ınki başlıklı, sabitli ve "YouTube"da. */
+    class Gelen(val text: String, val place: String?, val title: String, val folder: String, val pinned: Boolean)
+
     companion object {
         const val ACTION = "dev.kaimau.notlar.HARITA_NOT"
         const val FOLDER_NAME = "Haritalar"
-        /** Klasörün sabit kimliği: önbellek boşken (çevrimdışı) ikinci bir "Haritalar" açılmasın. */
-        private const val FOLDER_ID = "haritalar"
         const val SAVED = 1
         const val QUEUED = 2
         private const val PREFS = "harita_notlari"
 
         /** Notu yazar; oturum yoksa 0. Yazım yerelde hemen geçerli, sunucu onayı beklenmez. */
-        private fun save(ctx: Context, text: String, place: String?, atMs: Long): Int {
+        private fun save(n: Gelen, atMs: Long): Int {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return 0
             val db = YerelNot.firestore()
             val user = db.collection("users").document(uid)
-            val folderId = folderFor(user.collection("folders"), uid)
+            val folderId = folderFor(user.collection("folders"), uid, n.folder)
             val doc = user.collection("notes").document()
-            // başlıksız, söylenen metin gövdede (kartta olduğu gibi görünür); navigasyondaysa hedef altta
-            val body = listOfNotNull(text, place?.let { "($it)" }).joinToString("\n")
-            doc.set(YerelNot.belge(uid, "", body, folderId, atMs))
+            // Harita'dan gelen başlıksız: söylenen metin gövdede (kartta olduğu gibi görünür); navigasyondaysa hedef altta
+            val body = listOfNotNull(n.text, n.place?.let { "($it)" }).joinToString("\n")
+            doc.set(YerelNot.belge(uid, n.title, body, folderId, atMs).apply { put("pinned", n.pinned) })
             return SAVED
         }
 
-        /** "Haritalar" adlı klasör (önbellekte varsa o), yoksa sabit kimlikli klasör açılır. */
-        private fun folderFor(folders: com.google.firebase.firestore.CollectionReference, uid: String): String {
+        /**
+         * Adı verilen klasör (önbellekte varsa o), yoksa sabit kimlikli klasör açılır. Sabit kimlik
+         * ("haritalar", "youtube"): önbellek boşken (çevrimdışı) aynı adla ikinci bir klasör açılmasın.
+         */
+        private fun folderFor(folders: com.google.firebase.firestore.CollectionReference, uid: String, name: String): String {
             val cached = runCatching {
-                Tasks.await(folders.whereEqualTo("name", FOLDER_NAME).limit(1).get(Source.CACHE), 3, TimeUnit.SECONDS)
+                Tasks.await(folders.whereEqualTo("name", name).limit(1).get(Source.CACHE), 3, TimeUnit.SECONDS)
             }.getOrNull()
             cached?.documents?.firstOrNull()?.let { return it.id }
-            val own = folders.document(FOLDER_ID)
+            val own = folders.document(name.lowercase(java.util.Locale.ROOT).filter { it.isLetterOrDigit() }.ifEmpty { "harici" })
             val exists = runCatching { Tasks.await(own.get(Source.CACHE), 3, TimeUnit.SECONDS).exists() }.getOrDefault(false)
             if (!exists) {
                 own.set(
                     hashMapOf(
-                        "name" to FOLDER_NAME, "icon" to "folder", "hidden" to false, "ownerId" to uid,
+                        "name" to name, "icon" to "folder", "hidden" to false, "ownerId" to uid,
                         "sharedWith" to emptyList<String>(), "pending" to emptyList<String>(), "roles" to emptyMap<String, String>(),
                         "createdAt" to FieldValue.serverTimestamp(),
                     ),
                     SetOptions.merge(),
                 )
             }
-            return FOLDER_ID
+            return own.id
         }
 
-        private fun queue(ctx: Context, text: String, place: String?) {
+        private fun queue(ctx: Context, n: Gelen) {
             val sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             synchronized(this) {
                 val arr = runCatching { JSONArray(sp.getString("q", "[]")) }.getOrDefault(JSONArray())
-                arr.put(JSONObject().put("t", text).put("p", place ?: "").put("at", System.currentTimeMillis()))
+                arr.put(
+                    JSONObject().put("t", n.text).put("p", n.place ?: "").put("at", System.currentTimeMillis())
+                        .put("b", n.title).put("k", n.folder).put("s", n.pinned),
+                )
                 sp.edit().putString("q", arr.toString()).apply()
             }
         }
@@ -109,7 +122,11 @@ class HaritaNotAlici : BroadcastReceiver() {
                     val left = JSONArray()
                     for (i in 0 until arr.length()) {
                         val o = arr.optJSONObject(i) ?: continue
-                        val ok = runCatching { save(app, o.optString("t"), o.optString("p").ifEmpty { null }, o.optLong("at")) }.getOrDefault(0)
+                        val n = Gelen(
+                            o.optString("t"), o.optString("p").ifEmpty { null }, o.optString("b"),
+                            o.optString("k").ifEmpty { FOLDER_NAME }, o.optBoolean("s"),
+                        )
+                        val ok = runCatching { save(n, o.optLong("at")) }.getOrDefault(0)
                         if (ok == 0) left.put(o)
                     }
                     sp.edit().putString("q", if (left.length() == 0) null else left.toString()).apply()

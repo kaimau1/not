@@ -576,7 +576,11 @@ eskisini arşive taşıma.
   gelmeden yerel Firestore ile `users/{uid}/notes`a yazar; klasör "Haritalar"
   (adıyla önbellekte yoksa sabit kimlik `haritalar`). Oturum yoksa cihazda
   sıraya alınır, `configureFlutterEngine`de yazılır. Cevap kodu 1 yazıldı /
-  2 sıraya alındı. **GENEL (public) SÜRÜMDE KALDIR:** `HaritaNotlari.kt` +
+  2 sıraya alındı. **Kanallarım da aynı alıcıyı kullanır (2026-10-29):**
+  isteğe bağlı ekler `folder` (klasör adı, sabit kimlik = adın küçük harf
+  harf/rakamları, ör. `youtube`), `title`, `pinned`; Kanallarım'daki "Not al"
+  ve Harita'nın medya panelindeki not düğmesi "YouTube" klasörüne başlığı
+  "video · dk:sn · kanal" olan sabitli not yazar. Ekler yoksa eski davranış. **GENEL (public) SÜRÜMDE KALDIR:** `HaritaNotlari.kt` +
   manifestteki `HaritaNotAlici` + build.gradle.kts "Harita köprüsü"
   bağımlılıkları/`firebaseSdkVersion()` + MainActivity'deki `flushPending`
   satırı (başka dokunduğu yer yok; dışa açık alıcı herkesin not yazmasına izin
