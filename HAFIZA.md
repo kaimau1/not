@@ -605,7 +605,13 @@ eskisini arşive taşıma.
   damgalı döker, tam transkripti videonun transkript eki yapar, her satırın
   altına ±10 sn'lik “…” parçasını yazar (AI cümleleri ≤6 sn taşarak
   tamamlar; AI yoksa `TimedTranscript.excerpt`). Yazım işlemde (iki cihaz
-  çift yazmaz); döküm 3 kez olmazsa bırakılır. YouTube iç API'si (altyazı)
+  çift yazmaz); döküm 3 kez olmazsa bırakılır. **Kanallarım kendi ±10 sn
+  altyazısını** metnin sonunda "Altyazı (1:24 – 1:44):\n<ham>" bloğu olarak
+  gönderir (uçları cümle ortasından kesik): köprü bloğu ayırır, satırın
+  altına "“…ham…”" yazar ve `cap/from/to` ile işaretler; Dart onu ham
+  altyazı + tam transkriptin çevresiyle AI'a verip düzgün cümlelerle
+  DEĞİŞTİRİR (`applyVideoExcerpt`; v1.1.535'in satır içi bloğunu da tanır).
+  Hatalar `ErrorLog`a ("video dökümü", "video parçası AI"). YouTube iç API'si (altyazı)
   KAZINMAZ — bot korumasına takılıyor (bulut IP'sinde LOGIN_REQUIRED). **GENEL (public) SÜRÜMDE KALDIR:** `HaritaNotlari.kt` +
   manifestteki `HaritaNotAlici` + build.gradle.kts "Harita köprüsü"
   bağımlılıkları/`firebaseSdkVersion()` + MainActivity'deki `flushPending`

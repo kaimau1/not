@@ -96,11 +96,16 @@ class HaritaNotAlici : BroadcastReceiver() {
             val line = v.line()
             // Uygulama açılınca Dart (video_note_transcripts.dart) satırın altına ±10 sn'lik transkripti
             // ve nota tam transkripti arka planda ekler
-            val todo = FieldValue.arrayUnion(hashMapOf("s" to v.start, "line" to line, "note" to v.rest, "at" to atMs))
+            val todo = FieldValue.arrayUnion(
+                hashMapOf<String, Any>("s" to v.start, "line" to line, "note" to v.rest, "at" to atMs).apply {
+                    v.caption?.let { put("cap", it.text); put("from", it.from); put("to", it.to) }
+                },
+            )
+            val entry = v.entry()
             if (snap != null && snap.exists() && snap.get("deletedAt") == null) {
                 val old = snap.getString("body").orEmpty().trimEnd()
                 val update = hashMapOf<String, Any>(
-                    "body" to if (old.isEmpty()) line else "$old\n\n$line",
+                    "body" to if (old.isEmpty()) entry else "$old\n\n$entry",
                     "updatedAt" to FieldValue.serverTimestamp(),
                     "updatedBy" to uid,
                     "ytTodo" to true,
@@ -130,7 +135,7 @@ class HaritaNotAlici : BroadcastReceiver() {
                 "createdAt" to com.google.firebase.Timestamp.now(),
             )
             doc.set(
-                YerelNot.belge(uid, title, line, folderId, atMs).apply {
+                YerelNot.belge(uid, title, entry, folderId, atMs).apply {
                     put("pinned", n.pinned)
                     put("attachments", listOf(video))
                     put("ytTodo", true)
@@ -205,9 +210,18 @@ class HaritaNotAlici : BroadcastReceiver() {
  * Notun metnindeki YouTube video bağlantısı ([id], başlangıç saniyesi [start]) ve bağlantısız metin
  * ([rest]). Dart'taki `youTubeVideoId`/`youTubeStartSeconds` (lib/core/utils/youtube.dart) ile aynı biçimler.
  */
-class YouTubeNotu(val id: String, val start: Int, val rest: String) {
+class YouTubeNotu(val id: String, val start: Int, val rest: String, val caption: Altyazi? = null) {
+    /** Kanallarım'ın "Altyazı (1:24 – 1:44):" bloğu: tek satıra indirilmiş ham altyazı ve aralığı (sn). */
+    class Altyazi(val text: String, val from: Int, val to: Int)
+
     /** Videonun notundaki satır: "0:51 metin" (damga uygulamada dokunulabilir — video_time.dart). */
     fun line(): String = if (rest.isEmpty()) stamp(start) else "${stamp(start)} $rest"
+
+    /**
+     * Gövdeye yazılan: satır + (altyazı varsa) altında ham altyazı "“…metin…”". Uygulama açılınca Dart
+     * (video_note_transcripts.dart, `videoRawCaptionLine`) onu AI ile cümleleri tamamlanmışıyla değiştirir.
+     */
+    fun entry(): String = caption?.let { "${line()}\n“…${it.text}…”" } ?: line()
 
     companion object {
         private val URL = Regex(
@@ -215,14 +229,31 @@ class YouTubeNotu(val id: String, val start: Int, val rest: String) {
             RegexOption.IGNORE_CASE,
         )
         private val ID = Regex("""^[A-Za-z0-9_-]{11}$""")
+        private val CAPTION = Regex(
+            """\s*Altyazı\s*\((\d{1,2}(?::\d{2}){1,2})\s*[–—-]\s*(\d{1,2}(?::\d{2}){1,2})\)\s*:\s*([\s\S]*)$""",
+        )
+
+        private fun seconds(stamp: String): Int = stamp.split(':').fold(0) { acc, p -> acc * 60 + (p.toIntOrNull() ?: 0) }
 
         fun parse(text: String): YouTubeNotu? {
             for (m in URL.findAll(text)) {
                 val url = m.value.trimEnd(')', '.', ',', ';', '!', '?')
                 val id = videoId(url) ?: continue
-                val rest = text.removeRange(m.range).replace(Regex("""[ \t]+\n"""), "\n")
+                var rest = text.removeRange(m.range).replace(Regex("""[ \t]+\n"""), "\n")
                     .replace(Regex("""\n{3,}"""), "\n\n").trim()
-                return YouTubeNotu(id, startSeconds(url), rest)
+                // Kanallarım'ın altyazı bloğu satırdan ayrılır (Dart TimedTranscript.parseCaptionBlock ile aynı)
+                val cap = CAPTION.find(rest)
+                var caption: Altyazi? = null
+                if (cap != null) {
+                    val t = cap.groupValues[3].replace(Regex("""\s+"""), " ").trim()
+                    if (t.isNotEmpty()) {
+                        caption = Altyazi(t, seconds(cap.groupValues[1]), seconds(cap.groupValues[2]))
+                        rest = rest.substring(0, cap.range.first).trim()
+                    }
+                }
+                // Satır tek satır: Dart onu satır satır arar
+                rest = rest.replace(Regex("""\s*\n\s*"""), " ")
+                return YouTubeNotu(id, startSeconds(url), rest, caption)
             }
             return null
         }

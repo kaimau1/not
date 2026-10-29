@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/error_log.dart';
 import '../../../core/utils/youtube.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../auth/presentation/auth_providers.dart';
@@ -70,6 +71,33 @@ String insertVideoExcerpt(String body, String line, String excerpt) {
   return trimmed.isEmpty ? quote : '$trimmed\n$quote';
 }
 
+/// Köprünün satırın altına koyduğu ham altyazı (AI düzeltene dek görünür).
+String videoRawCaptionLine(String caption) => '“…$caption…”';
+
+/// Satırın parçasını gövdeye işler: eski biçimde satır + "Altyazı (…):"
+/// bloğu [line] olarak gövdede durur, satır + parça ile değişir; yeni
+/// biçimde ham altyazı satırı ([videoRawCaptionLine]) düzeltilmişiyle
+/// değişir; ikisi de yoksa parça satırın altına girer.
+String applyVideoExcerpt(
+  String body,
+  String line,
+  String caption,
+  String excerpt,
+) {
+  final block = TimedTranscript.parseCaptionBlock(line);
+  if (block != null && body.contains(line)) {
+    final head = block.head.isEmpty ? '' : '${block.head}\n';
+    return body.replaceFirst(line, '$head${videoExcerptLine(excerpt)}');
+  }
+  if (caption.isNotEmpty) {
+    final raw = videoRawCaptionLine(caption);
+    if (body.contains(raw)) {
+      return body.replaceFirst(raw, videoExcerptLine(excerpt));
+    }
+  }
+  return insertVideoExcerpt(body, block?.head ?? line, excerpt);
+}
+
 class _Worker {
   _Worker(this.notes, this.uid, this.ai);
 
@@ -101,8 +129,8 @@ class _Worker {
         _queue.remove(id);
         try {
           await _process(id);
-        } catch (e) {
-          debugPrint('video notu transkripti ($id): $e');
+        } catch (e, st) {
+          ErrorLog.record('video notu transkripti', e, st);
         }
         _done.remove(id);
       }
@@ -132,27 +160,19 @@ class _Worker {
       await ref.update({'ytTodo': FieldValue.delete()});
       return;
     }
+    // Tam transkript (Gemini, uzun videoda dakikalar sürebilir). Olmasa da
+    // Kanallarım'ın gönderdiği ±10 sn altyazı AI ile düzeltilir.
     final segments = await _segmentsFor(videoId, video.webUrl, saved?.text);
-    if (segments == null || segments.isEmpty) {
-      // AI dökümü yok (kota/ağ): üç denemeden sonra bırak.
-      final tries = (data['ytTries'] as num? ?? 0).toInt() + 1;
-      await ref.update(
-        tries >= 3
-            ? {
-                'ytTodo': FieldValue.delete(),
-                'ytTries': FieldValue.delete(),
-                'ytPending': FieldValue.delete(),
-              }
-            : {'ytTries': tries},
-      );
-      return;
-    }
-    final excerpts = <int, String>{};
+    final failed = segments == null || segments.isEmpty;
+    final excerpts = <Object, String>{};
+    final ready = <Object>{};
     for (final p in pending) {
-      final text = await _excerpt(segments, p);
-      if (text.isNotEmpty) excerpts[p.at] = text;
+      if (failed && p.caption.isEmpty) continue;
+      final text = await _excerpt(failed ? null : segments, p);
+      if (text.isNotEmpty) excerpts[p.key] = text;
+      ready.add(p.key);
     }
-    final full = needFull
+    final full = needFull && !failed
         ? Transcripts.create(
             video,
             TimedTranscript.fullText(segments),
@@ -160,6 +180,9 @@ class _Worker {
           )
         : null;
     if (disposed) return;
+    final tries = (data['ytTries'] as num? ?? 0).toInt() + (failed ? 1 : 0);
+    // Döküm üç kez olmadıysa bırakılır (kota/ağ); altyazısız satırlar kalır.
+    final giveUp = failed && tries >= 3;
     await notes.firestore.runTransaction((tx) async {
       final fresh = await tx.get(ref);
       final d = fresh.data();
@@ -169,14 +192,19 @@ class _Worker {
       var body = d['body'] as String? ?? '';
       final handled = <Map<String, Object?>>[];
       for (final p in stillPending) {
-        if (!pending.any((q) => q.at == p.at)) continue;
-        final text = excerpts[p.at];
-        if (text != null) body = insertVideoExcerpt(body, p.line, text);
+        if (!ready.contains(p.key) && !giveUp) continue;
+        final text = excerpts[p.key];
+        if (text != null) {
+          body = applyVideoExcerpt(body, p.line, p.caption, text);
+        }
         handled.add(p.raw);
       }
+      final hasFull =
+          Transcripts.of(current.attachments, video) != null || full != null;
       final addFull =
           full != null && Transcripts.of(current.attachments, video) == null;
       final left = stillPending.length - handled.length;
+      final done = giveUp || (left == 0 && hasFull);
       tx.update(ref, {
         'body': body,
         if (addFull)
@@ -185,8 +213,11 @@ class _Worker {
             full.toMap(),
           ],
         if (handled.isNotEmpty) 'ytPending': FieldValue.arrayRemove(handled),
-        if (left == 0) 'ytTodo': FieldValue.delete(),
-        'ytTries': FieldValue.delete(),
+        if (done) 'ytTodo': FieldValue.delete(),
+        if (done || !failed)
+          'ytTries': FieldValue.delete()
+        else
+          'ytTries': tries,
         'updatedAt': FieldValue.serverTimestamp(),
         'updatedBy': uid,
       });
@@ -216,29 +247,48 @@ class _Worker {
       final parsed = TimedTranscript.parseStamped(text);
       if (parsed.isNotEmpty) return _segments[id] = parsed;
     } catch (e) {
-      debugPrint('video dökümü ($id): $e');
+      ErrorLog.record('video dökümü', e);
     }
     return null;
   }
 
-  Future<String> _excerpt(List<CaptionSegment> segments, _Pending p) async {
-    final fallback = TimedTranscript.excerpt(segments, p.at);
-    final window = TimedTranscript.window(segments, p.at);
-    if (window.isEmpty) return fallback;
+  /// Satırın parçası. Kaynaklar: Kanallarım'ın ±10 sn altyazısı (kelimeler
+  /// doğru ama cümle ortasından kesik) ve varsa tam transkriptin o çevresi
+  /// (cümleyi tamamlamak için birkaç sn öte). AI ikisini birleştirir; AI
+  /// yoksa transkriptten cümle sınırına göre kesilir, o da yoksa ham altyazı.
+  Future<String> _excerpt(List<CaptionSegment>? segments, _Pending p) async {
+    final from = p.from ?? p.at - 10;
+    final to = p.to ?? p.at + 10;
+    final center = (from + to) / 2;
+    final radius = (to - from) / 2;
+    final window = segments == null
+        ? const <CaptionSegment>[]
+        : TimedTranscript.window(segments, center, radius: radius);
+    final fallback = window.isNotEmpty
+        ? TimedTranscript.excerpt(segments!, center, radius: radius)
+        : p.caption;
+    if (window.isEmpty && p.caption.isEmpty) return fallback;
     try {
-      final timed = [
-        for (final s in window) '[${TimedTranscript.stamp(s.start)}] ${s.text}',
-      ].join('\n');
+      final timed = window.isEmpty
+          ? null
+          : [
+              for (final s in window)
+                '[${TimedTranscript.stamp(s.start)}] ${s.text}',
+            ].join('\n');
       final text = await ai.videoNoteExcerpt(
         timed: timed,
-        atSeconds: p.at,
+        caption: p.caption,
+        fromSeconds: from,
+        toSeconds: to,
         note: p.note,
       );
-      // Model penceredeki metinden çok daha uzun bir şey yazdıysa uydurmuştur.
-      final cap = window.fold<int>(0, (n, s) => n + s.text.length + 1) * 1.3;
-      if (text.isNotEmpty && text.length <= cap) return text;
-    } catch (e) {
-      debugPrint('video parçası AI: $e');
+      // Model kaynaklardan çok daha uzun bir şey yazdıysa uydurmuştur.
+      final source =
+          window.fold<int>(0, (n, s) => n + s.text.length + 1) +
+          p.caption.length;
+      if (text.isNotEmpty && text.length <= source * 1.3 + 40) return text;
+    } catch (e, st) {
+      ErrorLog.record('video parçası AI', e, st);
     }
     return fallback;
   }
@@ -246,23 +296,51 @@ class _Worker {
   static List<_Pending> _pendingOf(Object? raw) => [
     if (raw is List)
       for (final e in raw)
-        if (e is Map && e['s'] is num)
-          _Pending(
-            (e['s'] as num).toInt(),
-            e['line'] as String? ?? '',
-            e['note'] as String? ?? '',
-            Map<String, Object?>.from(e),
-          ),
+        if (e is Map && e['s'] is num) _Pending.from(e),
   ];
 }
 
 class _Pending {
-  const _Pending(this.at, this.line, this.note, this.raw);
+  _Pending._(
+    this.at,
+    this.line,
+    this.note,
+    this.caption,
+    this.from,
+    this.to,
+    this.raw,
+  );
+
+  /// Köprünün kaydı. Eski köprü (v1.1.535) Kanallarım'ın "Altyazı (a – b):"
+  /// bloğunu satırın İÇİNDE bırakıyordu; blok burada da ayrılır.
+  factory _Pending.from(Map<dynamic, dynamic> e) {
+    final line = e['line'] as String? ?? '';
+    final block = TimedTranscript.parseCaptionBlock(line);
+    final note = e['note'] as String? ?? '';
+    int? sec(Object? v) => v is num ? v.toInt() : null;
+    return _Pending._(
+      (e['s'] as num).toInt(),
+      line,
+      TimedTranscript.parseCaptionBlock(note)?.head ?? note,
+      (e['cap'] as String?) ?? block?.text ?? '',
+      sec(e['from']) ?? block?.from,
+      sec(e['to']) ?? block?.to,
+      Map<String, Object?>.from(e),
+    );
+  }
 
   final int at;
   final String line;
   final String note;
+
+  /// Kanallarım'ın gönderdiği ham ±10 sn altyazı ve aralığı (yoksa boş/null).
+  final String caption;
+  final int? from;
+  final int? to;
   final Map<String, Object?> raw;
+
+  /// Kayıt kimliği: köprünün yazdığı an (aynı saniyede iki not da ayrılır).
+  Object get key => raw['at'] ?? at;
 }
 
 extension<T> on List<T> {

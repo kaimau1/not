@@ -47,4 +47,36 @@ void main() {
     expect(body, '0:18 türev\n“A”\n\n0:18 türev\n“B”');
     expect(insertVideoExcerpt('x', 'yok', 'C'), 'x\n“C”');
   });
+
+  test('Kanallarım altyazı bloğu ayrılır', () {
+    final b = TimedTranscript.parseCaptionBlock(
+      '1:34 Deneme\n\nAltyazı (1:24 – 1:44):\nhalde niye\nsinirleniyoruz?',
+    )!;
+    expect(b.head, '1:34 Deneme');
+    expect(b.text, 'halde niye sinirleniyoruz?');
+    expect(b.from, 84);
+    expect(b.to, 104);
+    expect(TimedTranscript.parseCaptionBlock('1:34 Deneme'), isNull);
+  });
+
+  test('eski biçim: satır + blok, satır + düzgün parçayla değişir', () {
+    const line = '1:34 Deneme\n\nAltyazı (1:24 – 1:44):\nhalde niye';
+    final body = applyVideoExcerpt(
+      'önceki\n\n$line',
+      line,
+      '',
+      'Bu hâlde niye sinirleniyoruz?',
+    );
+    expect(body, 'önceki\n\n1:34 Deneme\n“Bu hâlde niye sinirleniyoruz?”');
+  });
+
+  test('yeni biçim: ham altyazı satırı düzeltilmişiyle değişir', () {
+    final body = applyVideoExcerpt(
+      '1:34 Deneme\n${videoRawCaptionLine('halde niye')}',
+      '1:34 Deneme',
+      'halde niye',
+      'Bu hâlde niye?',
+    );
+    expect(body, '1:34 Deneme\n“Bu hâlde niye?”');
+  });
 }

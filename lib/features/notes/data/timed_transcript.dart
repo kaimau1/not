@@ -10,6 +10,16 @@ class CaptionSegment {
   String toString() => 'CaptionSegment($start-$end: $text)';
 }
 
+/// Kanallarım'ın altyazı bloğu (bkz. [TimedTranscript.parseCaptionBlock]).
+class CaptionBlock {
+  const CaptionBlock(this.head, this.text, this.from, this.to);
+
+  final String head;
+  final String text;
+  final int from;
+  final int to;
+}
+
 /// **ZAMANLI TRANSKRİPT** (kullanıcı isteği 2026-10-29: "Kanallarım'dan full
 /// transkript de gelsin; notlarda ±10 sn'lik transkript"). Gemini YouTube
 /// videosunu bağlantıdan cümle başına "[d:ss]" damgalı döker
@@ -17,6 +27,27 @@ class CaptionSegment {
 /// zamanlı parçalara çevirir, tam metni paragraflar ve not anının çevresini
 /// keser. YouTube'un iç API'si kazınmaz (bot korumasına takılır, ToS dışı).
 abstract final class TimedTranscript {
+  static final _captionBlock = RegExp(
+    r'\s*Altyazı\s*\((\d{1,2}(?::\d{2}){1,2})\s*[–—-]\s*'
+    r'(\d{1,2}(?::\d{2}){1,2})\)\s*:\s*([\s\S]*)$',
+  );
+
+  /// Kanallarım notun sonuna "Altyazı (1:24 – 1:44):\n`<ham altyazı>`" ekler:
+  /// bloktan önceki metin ([CaptionBlock.head]), tek satıra indirilmiş altyazı
+  /// ve aralık. Blok yoksa null.
+  static CaptionBlock? parseCaptionBlock(String text) {
+    final m = _captionBlock.firstMatch(text);
+    if (m == null) return null;
+    final caption = m.group(3)!.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (caption.isEmpty) return null;
+    return CaptionBlock(
+      text.substring(0, m.start).trim(),
+      caption,
+      _seconds(m.group(1)!),
+      _seconds(m.group(2)!),
+    );
+  }
+
   /// Gemini dökümü ("[1:23] paragraf …") → parçalar. Her paragraf bir
   /// sonrakinin başına dek sürer; damgasız metin tek parça (0 sn).
   static List<CaptionSegment> parseStamped(String text) {

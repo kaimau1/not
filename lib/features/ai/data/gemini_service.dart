@@ -736,29 +736,39 @@ class GeminiService {
   }
 
   /// **Video notunun transkript parçası** (kullanıcı isteği 2026-10-29): not
-  /// alınan [atSeconds]'in ±10 sn'sinden, cümle bütünlüğü bozulmasın diye iki
-  /// yana birkaç saniye taşan parça. [timed]: "[d:ss] metin" satırları (ham
-  /// pencere, ±16 sn). Yalnız parçanın metni döner; noktalama düzeltilir,
-  /// içerik değiştirilmez.
+  /// alınan anın ±10 sn'si ([fromSeconds]–[toSeconds]), cümle yarıda
+  /// kalmasın diye iki yana birkaç saniye taşan. Kaynaklar: [caption]
+  /// (Kanallarım'ın ham altyazısı — kelimeler doğru, uçları kesik) ve/veya
+  /// [timed] (tam transkriptin o çevresi, "[d:ss] cümle" satırları, ±6 sn
+  /// geniş). Yalnız parçanın metni döner; içerik değiştirilmez.
   Future<String> videoNoteExcerpt({
-    required String timed,
-    required int atSeconds,
+    String? timed,
+    String caption = '',
+    required int fromSeconds,
+    required int toSeconds,
     String note = '',
   }) async {
+    final hasTimed = timed != null && timed.trim().isNotEmpty;
     final text = await _generate([
       {
         'text':
-            'Aşağıda bir YouTube videosunun zamanlı altyazısından bir pencere '
-            'var. Kullanıcı videonun ${_stampOf(atSeconds)} anında not aldı'
-            '${note.trim().isEmpty ? '' : ' (notu: "${note.trim()}")'}.\n'
-            'Görev: yaklaşık ${_stampOf(atSeconds - 10)} ile '
-            '${_stampOf(atSeconds + 10)} arasındaki konuşmayı ver. Cümle '
-            'yarıda kalıyorsa baştan ve sondan EN ÇOK birkaç saniye (≤6 sn) '
-            'daha alarak cümleleri tamamla; pencere dışına çıkma.\n'
-            'Kurallar: konuşulan dilde, kelimesi kelimesine; ÇEVİRME, '
-            'ÖZETLEME, YORUM EKLEME. Yalnız noktalama ve büyük harfi düzelt. '
-            'Zaman damgası, tırnak, markdown koyma; yalnız metni yaz.\n\n'
-            '$timed',
+            'Bir YouTube videosunun ${_stampOf(fromSeconds)}–'
+            '${_stampOf(toSeconds)} aralığındaki konuşmayı düzgün cümleler '
+            'hâlinde ver'
+            '${note.trim().isEmpty ? '' : ' (kullanıcının o andaki notu: "${note.trim()}")'}.\n'
+            '${caption.trim().isEmpty ? '' : 'Bu aralığın HAM ALTYAZISI (noktalaması eksik, baştan ve sondan '
+                      'cümle ortasından kesik olabilir):\n"${caption.trim()}"\n\n'}'
+            '${hasTimed ? 'Videonun TAM TRANSKRİPTİNDEN bu aralığın çevresi (birkaç saniye '
+                      'öncesi ve sonrası dahil):\n$timed\n\n' : ''}'
+            'Görev:\n'
+            '- Aralıktaki konuşmayı kelimesi kelimesine yaz; noktalama ve büyük '
+            'harfi düzelt.\n'
+            '${hasTimed ? '- Baştaki ya da sondaki cümle yarımsa, transkriptten EN ÇOK '
+                      'birkaç saniyelik (≤6 sn) kısmı ekleyerek cümleyi tamamla; '
+                      'daha fazlasını alma.\n' : '- Baştaki ya da sondaki yarım cümleyi tamamlayacak metin elinde '
+                      'yoksa onu atma; başına/sonuna … koy.\n'}'
+            '- ÇEVİRME, ÖZETLEME, YORUM EKLEME, uydurma kelime ekleme.\n'
+            '- Zaman damgası, tırnak, başlık, markdown koyma; yalnız metni yaz.',
       },
     ], preferModel: _taskModel(AiTask.document));
     return stripMarkdown(text).trim();
