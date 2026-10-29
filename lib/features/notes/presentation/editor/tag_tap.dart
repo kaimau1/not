@@ -9,6 +9,7 @@ import '../../../../core/utils/attachment_tag.dart';
 import '../../../../core/utils/link_text.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../../core/utils/video_time.dart';
+import '../../../../core/utils/youtube.dart';
 import 'text_wrap.dart';
 
 /// Bir metin alanına yapılan SON dokunuşun ekran konumu.
@@ -158,13 +159,26 @@ String? _linkHit(
 /// Dokunulan bağlantıyı açar. OKURKEN (alan dokunuştan önce odakta değildi)
 /// doğrudan açılır; YAZARKEN dokunuş imleci koymak da olabilir — o zaman
 /// adres kısa bir bildirimde "Aç" düğmesiyle önerilir.
-void handleLinkTap(BuildContext context, String url, {required bool editing}) {
+///
+/// [onEmbedVideo] verilir ve adres bir YouTube videosuysa (kullanıcı isteği
+/// 2026-10-29) kısa bir seçim çıkar: "Nota göm" (video notun üstüne sabit
+/// gömülür) ya da "Bağlantıya git".
+void handleLinkTap(
+  BuildContext context,
+  String url, {
+  required bool editing,
+  ValueChanged<String>? onEmbedVideo,
+}) {
   final messenger = ScaffoldMessenger.maybeOf(context);
   final l10n = context.l10n;
   Future<void> open() async {
     if (!await openLink(url)) messenger?.showMessage(l10n.linkOpenFailed);
   }
 
+  if (onEmbedVideo != null && youTubeVideoId(url) != null) {
+    unawaited(_youTubeLinkChoice(context, url, open, onEmbedVideo));
+    return;
+  }
   if (!editing) {
     unawaited(open());
     return;
@@ -175,6 +189,54 @@ void handleLinkTap(BuildContext context, String url, {required bool editing}) {
       url,
       action: SnackBarAction(label: l10n.openLink, onPressed: open),
     );
+}
+
+Future<void> _youTubeLinkChoice(
+  BuildContext context,
+  String url,
+  Future<void> Function() open,
+  ValueChanged<String> embed,
+) async {
+  FocusManager.instance.primaryFocus?.unfocus();
+  final l10n = context.l10n;
+  final choice = await showModalBottomSheet<bool>(
+    context: context,
+    showDragHandle: true,
+    builder: (sheetContext) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Text(
+              url,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(sheetContext).textTheme.bodySmall,
+            ),
+          ),
+          ListTile(
+            key: const ValueKey('link-embed-video'),
+            leading: const Icon(Icons.smart_display_outlined),
+            title: Text(l10n.youTubeEmbedInNote),
+            onTap: () => Navigator.pop(sheetContext, true),
+          ),
+          ListTile(
+            key: const ValueKey('link-open'),
+            leading: const Icon(Icons.open_in_new),
+            title: Text(l10n.goToLink),
+            onTap: () => Navigator.pop(sheetContext, false),
+          ),
+        ],
+      ),
+    ),
+  );
+  if (choice == null) return;
+  if (choice) {
+    embed(url);
+  } else {
+    await open();
+  }
 }
 
 /// **BAĞLANTIYA DOKUNUŞ** (kullanıcı isteği 2026-10-28: "linklerin üzerine

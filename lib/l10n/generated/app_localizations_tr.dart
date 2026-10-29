@@ -5843,5 +5843,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cardMediaShow => 'Görsel önizlemesini göster';
 
   @override
+  String get youTubeEmbedInNote => 'Nota göm';
+
+  @override
+  String get goToLink => 'Bağlantıya git';
+
+  @override
+  String get noteFlatColors => 'Düz renkler';
+
+  @override
   String get youTubeEmbedded => 'Video nota gömüldü';
 }

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../app/theme/note_colors.dart';
 import '../../../app/theme/note_themes.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/color_palette.dart';
+import '../domain/note.dart';
+import 'color_picker_sheet.dart';
 
 /// Görünüm levhasının alt satırındaki seçenekler.
 enum NoteAppearanceAction { color, frame, image, paper }
@@ -17,18 +21,35 @@ enum NoteAppearanceAction { color, frame, image, paper }
 /// rengi çerçeveyle hafifçe büyür. Alt satır renk, çerçeve, zemin görseli
 /// (ve defterde kâğıt) gibi ayrıntılı seçeneklere götürür — seçilen eylem
 /// döner, çağıran açar.
+///
+/// **DÜZ RENKLER** (kullanıcı isteği 2026-10-29: "daha sade düz seçenekler,
+/// renk paleti ile renk de seçilebilmeli"): temaların altında desensiz düz
+/// zemin kartları ve en sonda tam palet; seçilen renk ANINDA [onColor] ile
+/// uygulanır (çizilmiş tema kalkar). "Sade" hem temayı hem rengi kaldırır.
 Future<NoteAppearanceAction?> showNoteThemeSheet(
   BuildContext context, {
   required String current,
   required ValueChanged<String> onTheme,
+  NoteColor color = NoteColor.none,
+  int? customColor,
+  ValueChanged<NoteColorPick>? onColor,
   bool paper = false,
 }) {
   return showAppSheet<NoteAppearanceAction>(
     context: context,
     showDragHandle: true,
     barrierColor: Colors.transparent,
-    builder: (sheetContext) =>
-        _ThemeSheet(current: current, onTheme: onTheme, paper: paper),
+    // Düz renk satırıyla levha varsayılan 9/16 sınırını aşabiliyor:
+    // içeriği kadar uzar, kısa ekranda kayar.
+    isScrollControlled: true,
+    builder: (sheetContext) => _ThemeSheet(
+      current: current,
+      onTheme: onTheme,
+      color: color,
+      customColor: customColor,
+      onColor: onColor,
+      paper: paper,
+    ),
   );
 }
 
@@ -36,11 +57,17 @@ class _ThemeSheet extends StatefulWidget {
   const _ThemeSheet({
     required this.current,
     required this.onTheme,
+    required this.color,
+    required this.customColor,
+    required this.onColor,
     required this.paper,
   });
 
   final String current;
   final ValueChanged<String> onTheme;
+  final NoteColor color;
+  final int? customColor;
+  final ValueChanged<NoteColorPick>? onColor;
   final bool paper;
 
   @override
@@ -52,11 +79,53 @@ class _ThemeSheetState extends State<_ThemeSheet> {
       ? ''
       : widget.current;
 
+  late NoteColor _color = widget.customColor == null
+      ? widget.color
+      : NoteColor.none;
+  late int? _custom = widget.customColor;
+
+  bool get _plain =>
+      _selected.isEmpty && _color == NoteColor.none && _custom == null;
+
   void _pick(String id) {
+    final onColor = widget.onColor;
+    // "Sade" rengi de kaldırır (düz renkler artık aynı levhada).
+    if (id.isEmpty && onColor != null && !_plain) {
+      HapticFeedback.selectionClick();
+      setState(() {
+        _selected = '';
+        _color = NoteColor.none;
+        _custom = null;
+      });
+      widget.onTheme('');
+      onColor((color: NoteColor.none, custom: null));
+      return;
+    }
     if (id == _selected) return;
     HapticFeedback.selectionClick();
     setState(() => _selected = id);
     widget.onTheme(id);
+  }
+
+  void _pickColor(NoteColorPick pick) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _selected = '';
+      _color = pick.color;
+      _custom = pick.custom;
+    });
+    widget.onColor?.call(pick);
+  }
+
+  Future<void> _pickPalette() async {
+    final l10n = context.l10n;
+    final c = await showColorPaletteSheet(
+      context,
+      title: l10n.backgroundColor,
+      current: _custom == null ? null : Color(_custom!),
+    );
+    if (c == null || !mounted) return;
+    _pickColor((color: NoteColor.none, custom: c.toARGB32() | 0xFF000000));
   }
 
   @override
@@ -76,7 +145,7 @@ class _ThemeSheetState extends State<_ThemeSheet> {
     };
     final ids = ['', for (final t in NoteThemes.all) t.id];
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.only(bottom: 12),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -100,11 +169,51 @@ class _ThemeSheetState extends State<_ThemeSheet> {
                   key: ValueKey('theme-tile-${ids[i]}'),
                   id: ids[i],
                   label: names[ids[i]] ?? ids[i],
-                  selected: _selected == ids[i],
+                  selected: ids[i].isEmpty && widget.onColor != null
+                      ? _plain
+                      : _selected == ids[i],
                   onTap: () => _pick(ids[i]),
                 ),
               ),
             ),
+            if (widget.onColor != null) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 8),
+                child: Text(
+                  l10n.noteFlatColors,
+                  style: Theme.of(context).textTheme.labelMedium
+                      ?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ),
+              SizedBox(
+                height: 64,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    for (final c in NoteColor.values)
+                      if (c != NoteColor.none)
+                        _FlatTile(
+                          key: ValueKey('flat-color-${c.id}'),
+                          fill: NoteColors.surface(context, c),
+                          selected:
+                              _selected.isEmpty &&
+                              _custom == null &&
+                              _color == c,
+                          onTap: () => _pickColor((color: c, custom: null)),
+                        ),
+                    _FlatTile(
+                      key: const ValueKey('flat-color-palette'),
+                      fill: _custom == null ? null : Color(_custom!),
+                      selected: _selected.isEmpty && _custom != null,
+                      palette: true,
+                      tooltip: l10n.paletteMore,
+                      onTap: _pickPalette,
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -241,6 +350,80 @@ class _ThemeTile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Düz zemin kartı (desensiz küçük sayfa); [palette] ise tam paleti açan
+/// gökkuşağı kart (özel renk seçiliyse o renkte).
+class _FlatTile extends StatelessWidget {
+  const _FlatTile({
+    super.key,
+    required this.fill,
+    required this.selected,
+    required this.onTap,
+    this.palette = false,
+    this.tooltip,
+  });
+
+  final Color? fill;
+  final bool selected;
+  final VoidCallback onTap;
+  final bool palette;
+  final String? tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final fill = this.fill;
+    Widget tile = GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        width: 46,
+        height: 60,
+        margin: const EdgeInsetsDirectional.only(end: 8),
+        padding: const EdgeInsets.all(2.5),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? scheme.primary : Colors.transparent,
+            width: 2.5,
+          ),
+        ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: fill,
+            border: Border.all(color: scheme.outlineVariant, width: 0.6),
+            gradient: palette && fill == null
+                ? const SweepGradient(
+                    colors: [
+                      Color(0xFFE57373),
+                      Color(0xFFFFD54F),
+                      Color(0xFF81C784),
+                      Color(0xFF64B5F6),
+                      Color(0xFF9575CD),
+                      Color(0xFFE57373),
+                    ],
+                  )
+                : null,
+          ),
+          child: palette
+              ? Icon(
+                  Icons.palette_outlined,
+                  size: 20,
+                  color: fill == null ? Colors.white : scheme.onSurface,
+                )
+              : (selected
+                    ? Icon(Icons.check, size: 18, color: scheme.onSurface)
+                    : null),
+        ),
+      ),
+    );
+    final tip = tooltip;
+    if (tip != null) tile = Tooltip(message: tip, child: tile);
+    return Semantics(button: true, selected: selected, child: tile);
   }
 }
 

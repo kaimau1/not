@@ -2167,5 +2167,8 @@
   "formatApplyItem": "Apply to item",
   "cardMediaHide": "Hide image preview",
   "cardMediaShow": "Show image preview",
+  "youTubeEmbedInNote": "Embed in note",
+  "goToLink": "Go to link",
+  "noteFlatColors": "Plain colors",
   "youTubeEmbedded": "Video embedded in the note"
 }

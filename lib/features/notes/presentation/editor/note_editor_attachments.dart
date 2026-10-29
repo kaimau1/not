@@ -1833,6 +1833,24 @@ extension _EditorAttachments on _NoteEditorScreenState {
     return added;
   }
 
+  /// **BAĞLANTIDAN "NOTA GÖM"** (kullanıcı isteği 2026-10-29): yazıdaki
+  /// YouTube bağlantısına dokunup "Nota göm" denince video notun ÜSTÜNE
+  /// sabitlenir (zaman damgaları onu sarar). Aynı video notta zaten varsa
+  /// ikincisi eklenmez, var olan sabitlenir.
+  void _embedLinkedVideo(String url) {
+    final note = _note;
+    if (note == null || _readOnly || note.type.isPageNoteType) return;
+    final id = youTubeVideoId(url);
+    if (id == null) return;
+    final media =
+        note.attachments
+            .where((a) => a.isWebVideo && youTubeVideoId(a.webUrl) == id)
+            .firstOrNull ??
+        _embedWebVideo(url);
+    if (media == null || !mounted) return;
+    if (media.pinHeight <= 0) _pinMediaTop(media);
+  }
+
   /// **YAPIŞTIRILAN YOUTUBE BAĞLANTISI GÖMÜLÜR** (kullanıcı isteği
   /// 2026-10-28: "direkt YouTube linkini yazıya yapıştırarak videoyu
   /// gömme"). Gövdeye TEK SEFERDE giren parça (yapıştırma — yazarken harf

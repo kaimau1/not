@@ -149,6 +149,7 @@ class ItemsEditor extends StatefulWidget {
     this.selectionMenu,
     this.videoTimestamps = false,
     this.onVideoTimestamp,
+    this.onEmbedVideo,
     this.addRowTrailing,
     this.paperLines = false,
     this.onMoveToPage,
@@ -171,6 +172,10 @@ class ItemsEditor extends StatefulWidget {
   /// gibi çizilir ve dokununca [onVideoTimestamp] çağrılır.
   final bool videoTimestamps;
   final ValueChanged<int>? onVideoTimestamp;
+
+  /// Madde metnindeki YouTube bağlantısına dokunulunca "Nota göm" seçeneği
+  /// (bkz. `handleLinkTap`); null = yalnız açılır.
+  final ValueChanged<String>? onEmbedVideo;
 
   final List<NoteItem> items;
   final ValueChanged<List<NoteItem>> onChanged;
@@ -437,7 +442,12 @@ class ItemsEditorState extends State<ItemsEditor>
     );
     if (link != null) {
       editableTextBelow(fieldContext)?.hideToolbar();
-      handleLinkTap(context, link, editing: _tapPoint.wasFocused);
+      handleLinkTap(
+        context,
+        link,
+        editing: _tapPoint.wasFocused,
+        onEmbedVideo: widget.onEmbedVideo,
+      );
       return;
     }
     final onTag = widget.onAttachmentTag;

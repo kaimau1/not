@@ -2801,5 +2801,8 @@
   "formatApplyItem": "Maddeye uygula",
   "cardMediaHide": "Görsel önizlemesini gizle",
   "cardMediaShow": "Görsel önizlemesini göster",
+  "youTubeEmbedInNote": "Nota göm",
+  "goToLink": "Bağlantıya git",
+  "noteFlatColors": "Düz renkler",
   "youTubeEmbedded": "Video nota gömüldü"
 }

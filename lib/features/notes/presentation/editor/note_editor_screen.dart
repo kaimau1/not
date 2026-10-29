@@ -3080,6 +3080,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 context,
                 link,
                 editing: _bodyTapPoint.wasFocused,
+                onEmbedVideo: _readOnly || note.type.isPageNoteType
+                    ? null
+                    : _embedLinkedVideo,
               );
             }
           },
@@ -3165,6 +3168,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         selectionMenu: _itemSelectionMenu,
         videoTimestamps: _bodyController.videoTimestamps,
         onVideoTimestamp: _seekVideoTo,
+        onEmbedVideo: _readOnly ? null : _embedLinkedVideo,
         addRowTrailing: _partsMenu(note),
         paperLines: note.paged && note.archivePaper.ruled,
         onMoveToPage: textPagePosition(note).count > 1
@@ -3212,6 +3216,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         selectionMenu: _itemSelectionMenu,
         videoTimestamps: _bodyController.videoTimestamps,
         onVideoTimestamp: _seekVideoTo,
+        onEmbedVideo: _readOnly ? null : _embedLinkedVideo,
         addRowTrailing: _partsMenu(note),
         paperLines: note.paged && note.archivePaper.ruled,
         onMoveToPage: textPagePosition(note).count > 1

@@ -339,7 +339,13 @@ eskisini arşive taşıma.
   wasFocused`) açar, yazarken bildirimde "Aç" önerir; bağlantı aranırken
   MANTIKSAL metin (sarma çapası adresin ortasına düşebilir). Gövdeye TEK
   SEFERDE giren YouTube adresi (`pastedYouTubeUrl`) videoyu imlecin satırına
-  gömer (bağlantı yazıda kalır, "Geri al" kaldırır).
+  gömer (bağlantı yazıda kalır, "Geri al" kaldırır). YouTube bağlantısına
+  DOKUNUŞ (2026-10-29) "Nota göm / Bağlantıya git" sorar (`handleLinkTap`
+  `onEmbedVideo`); "Nota göm" = `_embedLinkedVideo`: video yoksa gömülür,
+  üste sabitlenir.
+- Görünüm levhası (2026-10-29): temaların altında "Düz renkler" (NoteColor
+  kartları + palet, `onColor` canlı; tema kalkar); "Sade" tema VE rengi
+  kaldırır. Levha `isScrollControlled` (9/16 sınırına sığmıyordu).
 - Madde Enter'ı (2026-10-28) `_enterAt`: imleç ortadaysa madde BÖLÜNÜR
   (sağ kısım yeni maddeye, imleç başına), sondaysa altına boş, baştaysa
   üstüne boş madde. Uzun basış menüsü iki sıra (`_ItemMenuPanel`: yıldız ·
@@ -580,7 +586,13 @@ eskisini arşive taşıma.
   isteğe bağlı ekler `folder` (klasör adı, sabit kimlik = adın küçük harf
   harf/rakamları, ör. `youtube`), `title`, `pinned`; Kanallarım'daki "Not al"
   ve Harita'nın medya panelindeki not düğmesi "YouTube" klasörüne başlığı
-  "video · dk:sn · kanal" olan sabitli not yazar. Ekler yoksa eski davranış. **GENEL (public) SÜRÜMDE KALDIR:** `HaritaNotlari.kt` +
+  "video · dk:sn · kanal" olan sabitli not yazar. Ekler yoksa eski davranış.
+  **Video notu (2026-10-29):** metinde YouTube bağlantısı varsa (`YouTubeNotu`)
+  not `yt_<videoId>` kimlikli belgeye gider: yoksa video üste SABİT
+  (`pinHeight` = 16:9, ekranın ≤%45'i) ve başlık = videonun adı (" · dk:sn ·
+  kanal" kırpılır) ile açılır; varsa (çöpte değilse) "dk:sn metin" satırı
+  gövdenin SONUNA eklenir (bağlantı satırdan atılır). Çöpteki aynı kimlikli
+  not yenisiyle DEĞİŞİR. Eski (rastgele kimlikli) Kanallarım notları taşınmadı. **GENEL (public) SÜRÜMDE KALDIR:** `HaritaNotlari.kt` +
   manifestteki `HaritaNotAlici` + build.gradle.kts "Harita köprüsü"
   bağımlılıkları/`firebaseSdkVersion()` + MainActivity'deki `flushPending`
   satırı (başka dokunduğu yer yok; dışa açık alıcı herkesin not yazmasına izin

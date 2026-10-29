@@ -5862,5 +5862,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cardMediaShow => 'Show image preview';
 
   @override
+  String get youTubeEmbedInNote => 'Embed in note';
+
+  @override
+  String get goToLink => 'Go to link';
+
+  @override
+  String get noteFlatColors => 'Plain colors';
+
+  @override
   String get youTubeEmbedded => 'Video embedded in the note';
 }

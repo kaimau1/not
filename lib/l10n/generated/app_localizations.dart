@@ -10472,6 +10472,24 @@ abstract class AppLocalizations {
   /// **'Görsel önizlemesini göster'**
   String get cardMediaShow;
 
+  /// No description provided for @youTubeEmbedInNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota göm'**
+  String get youTubeEmbedInNote;
+
+  /// No description provided for @goToLink.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantıya git'**
+  String get goToLink;
+
+  /// No description provided for @noteFlatColors.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düz renkler'**
+  String get noteFlatColors;
+
   /// No description provided for @youTubeEmbedded.
   ///
   /// In tr, this message translates to:

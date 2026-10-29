@@ -27,6 +27,20 @@ extension _EditorAppearance on _NoteEditorScreenState {
         if (!mounted) return;
         _mutate((n) => n.copyWith(theme: id), immediate: true);
       },
+      color: note.color,
+      customColor: note.customColor,
+      onColor: (picked) {
+        if (!mounted) return;
+        _mutate(
+          (n) => n.copyWith(
+            color: picked.color,
+            customColor: picked.custom,
+            clearCustomColor: picked.custom == null,
+            theme: '',
+          ),
+          immediate: true,
+        );
+      },
     );
     if (action == null || !mounted) return;
     final target = switch (action) {
