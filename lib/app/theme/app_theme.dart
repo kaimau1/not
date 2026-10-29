@@ -12,6 +12,10 @@ abstract final class AppTheme {
   /// Kağıt temasının tohum rengi: sıcak sepya; saman kağıdı yüzeylerle uyumlu.
   static const Color paperSeed = Color(0xFF8A6C3C);
 
+  /// Kırık beyaz temanın tohumu: soğuk-gri arduvaz; vurgu sakin kalır, zemin
+  /// ılık beyaz.
+  static const Color offWhiteSeed = Color(0xFF55627A);
+
   /// Kurulmuş temalar (anahtar: parlaklık + kağıt + yazı tipi).
   ///
   /// KÖK NEDEN (kasma — "font değişince kasıyor"): `NotlarApp.build` her
@@ -49,25 +53,49 @@ abstract final class AppTheme {
   static ThemeData paper({String? font}) =>
       _cached(Brightness.light, font, paper: true);
 
+  /// "Kırık beyaz" (kullanıcı isteği 2026-10-29: "kırık beyaz genel teması
+  /// yapalım"): saf beyaz yerine hafif ılık, kâğıt kadar sarı olmayan
+  /// beyaz yüzeyler. Varsayılan tema budur.
+  static ThemeData offWhite({String? font}) =>
+      _cached(Brightness.light, font, offWhite: true);
+
   static ThemeData _cached(
     Brightness brightness,
     String? font, {
     bool paper = false,
+    bool offWhite = false,
   }) => _cache.putIfAbsent(
-    '${brightness.name}|$paper|${font ?? ''}',
-    () => _base(brightness, paper: paper, font: font),
+    '${brightness.name}|$paper|$offWhite|${font ?? ''}',
+    () => _base(brightness, paper: paper, offWhite: offWhite, font: font),
   );
 
   static ThemeData _base(
     Brightness brightness, {
     bool paper = false,
+    bool offWhite = false,
     String? font,
   }) {
     final isDark = brightness == Brightness.dark;
     var scheme = ColorScheme.fromSeed(
-      seedColor: paper ? paperSeed : seed,
+      seedColor: paper
+          ? paperSeed
+          : offWhite
+          ? offWhiteSeed
+          : seed,
       brightness: brightness,
     );
+    if (offWhite) {
+      // Kanallar arası fark ~6-8 birim: göz "beyaz" görür, ekran parlamaz;
+      // kartlar (container) zeminden bir-iki ton koyu, ince ayrışır.
+      scheme = scheme.copyWith(
+        surface: const Color(0xFFF8F6F1),
+        surfaceContainerLowest: const Color(0xFFFDFCF9),
+        surfaceContainerLow: const Color(0xFFF2EFE9),
+        surfaceContainer: const Color(0xFFEDEAE3),
+        surfaceContainerHigh: const Color(0xFFE7E4DC),
+        surfaceContainerHighest: const Color(0xFFE0DCD3),
+      );
+    }
     if (paper) {
       // Kağıt tonu: SARI-GRİ arası, ılık ama doygun olmayan yüzeyler.
       //

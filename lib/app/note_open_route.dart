@@ -194,8 +194,46 @@ class _ContainerTransformState extends State<_ContainerTransform> {
   /// solmaya döner — bkz. [_build]).
   late Rect? _lastCard = widget.origin.currentRect();
 
+  /// KASMA (kullanıcı bulgusu 2026-10-29: "not açılış kapanış genişleyip
+  /// daralma animasyonu kasıyor"): ölçeklenen editör her karede baştan
+  /// rasterleşiyordu (metin, görseller, kırpma — tam ekran). Geçiş boyunca
+  /// sayfa BİR KEZ görüntüye alınır ve kareler o görüntüyü ölçekler; sayfa
+  /// yeniden çizilirse (not yüklendi) görüntü tazelenir. Platform görünümü
+  /// (oynayan video) varsa `permissive` olağan çizime döner. Geçiş bitince
+  /// kapanır — editör canlı çizilir.
+  final SnapshotController _snapshot = SnapshotController();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.animation.addStatusListener(_onStatus);
+    _onStatus(widget.animation.status);
+  }
+
+  void _onStatus(AnimationStatus status) {
+    _snapshot.allowSnapshotting = status.isAnimating;
+    _snapAt = null;
+  }
+
+  /// Görüntü geçiş boyunca donar; not içeriği geçiş sürerken gelirse
+  /// (ilk kare yükleniyor) eski kare kalmasın diye ilerleyişin her ~%30'unda
+  /// bir tazelenir — geçiş başına 2-3 rasterleştirme, kare başına değil.
+  double? _snapAt;
+
+  void _refreshSnapshot(double t) {
+    final at = _snapAt;
+    if (at == null) {
+      _snapAt = t;
+    } else if ((t - at).abs() >= 0.3) {
+      _snapAt = t;
+      _snapshot.clear();
+    }
+  }
+
   @override
   void dispose() {
+    widget.animation.removeStatusListener(_onStatus);
+    _snapshot.dispose();
     _curve.dispose();
     super.dispose();
   }
@@ -207,7 +245,11 @@ class _ContainerTransformState extends State<_ContainerTransform> {
       builder: _build,
       // Sayfa kendi katmanında: her karede yalnız dönüşüm/kırpma değişir,
       // editör yeniden çizilmez.
-      child: RepaintBoundary(child: widget.child),
+      child: SnapshotWidget(
+        controller: _snapshot,
+        mode: SnapshotMode.permissive,
+        child: RepaintBoundary(child: widget.child),
+      ),
     );
   }
 
@@ -215,6 +257,7 @@ class _ContainerTransformState extends State<_ContainerTransform> {
     final size = MediaQuery.sizeOf(context);
     final full = Offset.zero & size;
     final t = _curve.value;
+    if (_snapshot.allowSnapshotting) _refreshSnapshot(t);
     final card = widget.origin.currentRect();
     if (card != null) _lastCard = card;
     // Kart ağaçtan düştüyse kapanışta yerine ölçeklenerek solar.
@@ -240,6 +283,9 @@ class _ContainerTransformState extends State<_ContainerTransform> {
     final content = const Interval(0.08, 0.42).transform(t);
     final fill = lostCard ? content : const Interval(0, 0.12).transform(t);
     final settled = t >= 1;
+    // Büyüyen kutunun bulanık gölgesi YOK: tam ekrana varan bir dikdörtgenin
+    // 28 px bulanıklığı her karede GPU'da yeniden hesaplanıyordu (kasmanın
+    // ikinci kaynağı); derinliği alttaki kararma veriyor.
     return Stack(
       children: [
         // Alttaki liste hafifçe kararır: derinlik hissi, açılan not öne çıkar.
@@ -256,17 +302,6 @@ class _ContainerTransformState extends State<_ContainerTransform> {
                 alpha: widget.origin.color.a * fill,
               ),
               borderRadius: BorderRadius.circular(radius),
-              boxShadow: settled
-                  ? null
-                  : [
-                      BoxShadow(
-                        color: Colors.black.withValues(
-                          alpha: 0.16 * fill * (1 - t),
-                        ),
-                        blurRadius: 28,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(radius),

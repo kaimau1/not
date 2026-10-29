@@ -252,76 +252,90 @@ class _SearchField extends ConsumerWidget {
     // Anlamsal arama ESKİDEN alanın içindeki ✨ düğmesiydi: açık mı kapalı mı
     // olduğu yalnız ikon renginden anlaşılıyor, "akıllı arama" diye bir şeyin
     // varlığı hiç fark edilmiyordu. İki sekmeli segment modu okunur kılıyor.
-    return Container(
-      height: 44,
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: 10),
-          Icon(Icons.search, size: 19, color: scheme.onSurfaceVariant),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              focusNode: focusNode,
-              onChanged: (value) =>
-                  ref.read(searchQueryProvider.notifier).set(value),
-              // Alan dışına dokununca odak bırakılır; bar daralır. Sorgu da
-              // o anda "son aramalar"a düşer — kullanıcı arama yapıp bir
-              // nota geçtiğinde geçmişe yazılmasının doğal anı burası.
-              onTapOutside: (_) {
-                ref.read(searchHistoryProvider.notifier).remember(query);
-                focusNode?.unfocus();
-              },
-              onSubmitted: (value) =>
-                  ref.read(searchHistoryProvider.notifier).remember(value),
-              textInputAction: TextInputAction.search,
-              style: const TextStyle(fontSize: 13.5),
-              decoration: InputDecoration(
-                hintText: semantic ? l10n.semanticSearchHint : l10n.searchHint,
-                hintStyle: TextStyle(
-                  fontSize: 13.5,
-                  color: scheme.onSurfaceVariant,
+    //
+    // DOKUNMA ALANI (kullanıcı bulgusu 2026-10-29: "arama alanının tıklama
+    // hitbox'ı çok dar, tam ortasına basmak gerekiyor"): yoğun TextField
+    // yalnız yazı satırı kadar (~18 px) yüksekti; 44 px'lik kutunun üstü,
+    // altı ve büyüteç ölü alandı. Artık alan kutuyu dikeyde doldurur ve
+    // kutunun kalanına (büyüteç, kenarlar) dokunmak da odağı verir.
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => focusNode?.requestFocus(),
+      child: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 10),
+            Icon(Icons.search, size: 19, color: scheme.onSurfaceVariant),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                textAlignVertical: TextAlignVertical.center,
+                controller: controller,
+                focusNode: focusNode,
+                onChanged: (value) =>
+                    ref.read(searchQueryProvider.notifier).set(value),
+                // Alan dışına dokununca odak bırakılır; bar daralır. Sorgu da
+                // o anda "son aramalar"a düşer — kullanıcı arama yapıp bir
+                // nota geçtiğinde geçmişe yazılmasının doğal anı burası.
+                onTapOutside: (_) {
+                  ref.read(searchHistoryProvider.notifier).remember(query);
+                  focusNode?.unfocus();
+                },
+                onSubmitted: (value) =>
+                    ref.read(searchHistoryProvider.notifier).remember(value),
+                textInputAction: TextInputAction.search,
+                style: const TextStyle(fontSize: 13.5),
+                decoration: InputDecoration(
+                  hintText: semantic
+                      ? l10n.semanticSearchHint
+                      : l10n.searchHint,
+                  hintStyle: TextStyle(
+                    fontSize: 13.5,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  border: InputBorder.none,
+                  isDense: true,
+                  // Dikey dolgu alanı 44 px'lik kutu boyunca dokunulur kılar.
+                  contentPadding: const EdgeInsets.symmetric(vertical: 13),
                 ),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
               ),
             ),
-          ),
-          if (query.isNotEmpty)
-            IconButton(
-              tooltip: l10n.close,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.close, size: 18),
-              onPressed: () {
-                controller.clear();
-                ref.read(searchQueryProvider.notifier).set('');
-              },
+            if (query.isNotEmpty)
+              IconButton(
+                tooltip: l10n.close,
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.close, size: 18),
+                onPressed: () {
+                  controller.clear();
+                  ref.read(searchQueryProvider.notifier).set('');
+                },
+              ),
+            // TEK AI ANAHTARI (kullanıcı isteği 2026-10-17: "metin/anlam
+            // yazıları çok yer kaplıyor, sadece bir AI işareti olsun, basınca
+            // açılıp kapansın — metin ve anlam arasında geçiş"): açıkken dolu
+            // vurgu rengi (anlamla arama), kapalıyken soluk çerçeve (metin).
+            _SemanticToggle(
+              on: semantic,
+              onTap: () =>
+                  ref.read(semanticSearchEnabledProvider.notifier).toggle(),
             ),
-          // TEK AI ANAHTARI (kullanıcı isteği 2026-10-17: "metin/anlam
-          // yazıları çok yer kaplıyor, sadece bir AI işareti olsun, basınca
-          // açılıp kapansın — metin ve anlam arasında geçiş"): açıkken dolu
-          // vurgu rengi (anlamla arama), kapalıyken soluk çerçeve (metin).
-          _SemanticToggle(
-            on: semantic,
-            onTap: () =>
-                ref.read(semanticSearchEnabledProvider.notifier).toggle(),
-          ),
-          // SÜZ arama kutusunun sağında (bkz. [HomeFilterButton]);
-          // kişiselleştirmede gizlenebilir.
-          const Customizable(
-            id: UiItem.homeFilter,
-            child: Padding(
-              padding: EdgeInsetsDirectional.only(start: 2),
-              child: HomeFilterButton(),
+            // SÜZ arama kutusunun sağında (bkz. [HomeFilterButton]);
+            // kişiselleştirmede gizlenebilir.
+            const Customizable(
+              id: UiItem.homeFilter,
+              child: Padding(
+                padding: EdgeInsetsDirectional.only(start: 2),
+                child: HomeFilterButton(),
+              ),
             ),
-          ),
-          const SizedBox(width: 4),
-        ],
+            const SizedBox(width: 4),
+          ],
+        ),
       ),
     );
   }

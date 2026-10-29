@@ -242,6 +242,7 @@
   "clearNote": "Clear",
   "clearNoteConfirm": "The note's contents (text and list items) will be deleted. Are you sure?",
   "themePaper": "Paper",
+  "themeOffWhite": "Off-white",
   "calculatorTitle": "Calculator",
   "calcExpressionHint": "e.g. 12.5×3+40",
   "calcInvalid": "Invalid expression",

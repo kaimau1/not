@@ -70,7 +70,10 @@ NotifierProvider<BoolPrefNotifier, bool> boolPref(
 /// (simge, uygulama ve ana ekran widget'ları aynı palet). Ayarı hiç
 /// ellememiş kullanıcı güncellemede kağıda geçer; kayıtlı seçimi olan
 /// kendi temasında kalır — bunu bozmamak için orElse dışına dokunulmadı.
-enum AppThemeChoice { system, light, dark, paper }
+///
+/// VARSAYILAN kırık beyaz (kullanıcı isteği 2026-10-29: "kırık beyaz genel
+/// teması yapalım"): ayarı hiç ellememiş kullanıcı kırık beyaza geçer.
+enum AppThemeChoice { system, light, dark, paper, offWhite }
 
 final themeChoiceProvider =
     NotifierProvider<ThemeChoiceNotifier, AppThemeChoice>(
@@ -85,7 +88,7 @@ class ThemeChoiceNotifier extends Notifier<AppThemeChoice> {
     final stored = watchPrefs(ref).getString(_key);
     return AppThemeChoice.values.firstWhere(
       (m) => m.name == stored,
-      orElse: () => AppThemeChoice.paper,
+      orElse: () => AppThemeChoice.offWhite,
     );
   }
 
@@ -823,7 +826,9 @@ final effectiveThemeModeProvider = Provider.autoDispose<ThemeMode>((ref) {
   }
   return switch (ref.watch(themeChoiceProvider)) {
     AppThemeChoice.system => ThemeMode.system,
-    AppThemeChoice.light || AppThemeChoice.paper => ThemeMode.light,
+    AppThemeChoice.light ||
+    AppThemeChoice.paper ||
+    AppThemeChoice.offWhite => ThemeMode.light,
     AppThemeChoice.dark => ThemeMode.dark,
   };
 });

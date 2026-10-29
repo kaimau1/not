@@ -106,7 +106,7 @@ class NotlarApp extends ConsumerWidget {
     final themeMode = ref.watch(effectiveThemeModeProvider);
     final fontScale = ref.watch(fontScaleProvider);
     final font = ref.watch(appFontProvider);
-    final paper = ref.watch(themeChoiceProvider) == AppThemeChoice.paper;
+    final choice = ref.watch(themeChoiceProvider);
 
     return MaterialApp.router(
       title: 'Notlar',
@@ -124,7 +124,11 @@ class NotlarApp extends ConsumerWidget {
           ? null
           : router.backButtonDispatcher,
       onNavigationNotification: kIsWeb ? null : alwaysHandleBack,
-      theme: paper ? AppTheme.paper(font: font) : AppTheme.light(font: font),
+      theme: switch (choice) {
+        AppThemeChoice.paper => AppTheme.paper(font: font),
+        AppThemeChoice.offWhite => AppTheme.offWhite(font: font),
+        _ => AppTheme.light(font: font),
+      },
       darkTheme: AppTheme.dark(font: font),
       themeMode: themeMode,
       // null = sistem dilini kullan. Ayarlar'dan elle seçilirse o dil sabitlenir.

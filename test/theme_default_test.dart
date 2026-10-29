@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Varsayılan tema kağıt (i1 simge çalışmasıyla marka kağıt paletine geçti).
+/// Varsayılan tema kırık beyaz (2026-10-29; önce kağıttı).
 /// Asıl risk varsayılanın kendisi değil, GERİYE UYUM: kayıtlı seçimi olan
 /// kullanıcının teması varsayılan değişince kaymamalı.
 void main() {
@@ -18,10 +18,10 @@ void main() {
     );
   }
 
-  test('kayıt yoksa varsayılan kağıt', () async {
+  test('kayıt yoksa varsayılan kırık beyaz', () async {
     final c = await container();
     addTearDown(c.dispose);
-    expect(c.read(themeChoiceProvider), AppThemeChoice.paper);
+    expect(c.read(themeChoiceProvider), AppThemeChoice.offWhite);
   });
 
   test('kayıtlı seçim varsayılanı ezer', () async {

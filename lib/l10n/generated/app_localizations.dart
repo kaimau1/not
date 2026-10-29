@@ -1466,6 +1466,12 @@ abstract class AppLocalizations {
   /// **'Kağıt'**
   String get themePaper;
 
+  /// No description provided for @themeOffWhite.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kırık beyaz'**
+  String get themeOffWhite;
+
   /// No description provided for @calculatorTitle.
   ///
   /// In tr, this message translates to:

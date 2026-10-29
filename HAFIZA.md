@@ -525,7 +525,13 @@ eskisini arşive taşıma.
   (`canTransitionFrom` false). Geçiş ağacı her karede AYNI yapıda (yalnız
   dönüşüm/kırpma değerleri değişir) — yapı değişirse editörün durumu
   sıfırlanır. Temanın geçişi yine sarılır (üstüne binen ekran, kenardan geri
-  çekme jesti).
+  çekme jesti). **Kasma (2026-10-29):** geçiş boyunca sayfa `SnapshotWidget`
+  (permissive) ile görüntüye alınır, ilerleyişin ~%30'unda bir tazelenir;
+  büyüyen kutuda bulanık gölge YOK (tam ekran blur her kare pahalıydı).
+- **Genel tema varsayılanı KIRIK BEYAZ (2026-10-29):** `AppThemeChoice.offWhite`
+  (`AppTheme.offWhite`, arduvaz tohum, ılık beyaz yüzeyler); kayıtlı seçim
+  korunur. Arama kutusunun tamamı dokunulur (alan dikey dolgulu + kutuya
+  dokunmak odak verir).
 - **Not teması (2026-10-28):** palet (üst çubuk `UiItem.topTheme`, biçim
   paneli, Ekle) önce TEMA ŞERİDİ açar (`showNoteThemeSheet`, karartısız,
   dokunulan anında). Temalar dosya değil çizim (`note_themes.dart`): açık/
@@ -592,7 +598,15 @@ eskisini arşive taşıma.
   (`pinHeight` = 16:9, ekranın ≤%45'i) ve başlık = videonun adı (" · dk:sn ·
   kanal" kırpılır) ile açılır; varsa (çöpte değilse) "dk:sn metin" satırı
   gövdenin SONUNA eklenir (bağlantı satırdan atılır). Çöpteki aynı kimlikli
-  not yenisiyle DEĞİŞİR. Eski (rastgele kimlikli) Kanallarım notları taşınmadı. **GENEL (public) SÜRÜMDE KALDIR:** `HaritaNotlari.kt` +
+  not yenisiyle DEĞİŞİR. Eski (rastgele kimlikli) Kanallarım notları taşınmadı.
+  **Transkript (2026-10-29):** köprü her satırı `ytTodo`/`ytPending`
+  (`{s, line, note, at}`) olarak işaretler; uygulama AÇIKKEN (yalnız Android)
+  `video_note_transcripts.dart` Gemini ile videoyu bağlantıdan CÜMLE başına
+  damgalı döker, tam transkripti videonun transkript eki yapar, her satırın
+  altına ±10 sn'lik “…” parçasını yazar (AI cümleleri ≤6 sn taşarak
+  tamamlar; AI yoksa `TimedTranscript.excerpt`). Yazım işlemde (iki cihaz
+  çift yazmaz); döküm 3 kez olmazsa bırakılır. YouTube iç API'si (altyazı)
+  KAZINMAZ — bot korumasına takılıyor (bulut IP'sinde LOGIN_REQUIRED). **GENEL (public) SÜRÜMDE KALDIR:** `HaritaNotlari.kt` +
   manifestteki `HaritaNotAlici` + build.gradle.kts "Harita köprüsü"
   bağımlılıkları/`firebaseSdkVersion()` + MainActivity'deki `flushPending`
   satırı (başka dokunduğu yer yok; dışa açık alıcı herkesin not yazmasına izin

@@ -754,6 +754,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get themePaper => 'Kağıt';
 
   @override
+  String get themeOffWhite => 'Kırık beyaz';
+
+  @override
   String get calculatorTitle => 'Hesap Makinesi';
 
   @override

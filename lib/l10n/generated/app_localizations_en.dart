@@ -755,6 +755,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themePaper => 'Paper';
 
   @override
+  String get themeOffWhite => 'Off-white';
+
+  @override
   String get calculatorTitle => 'Calculator';
 
   @override

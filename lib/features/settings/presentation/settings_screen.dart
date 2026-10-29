@@ -975,6 +975,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       AppThemeChoice.light => l10n.themeLight,
       AppThemeChoice.dark => l10n.themeDark,
       AppThemeChoice.paper => l10n.themePaper,
+      AppThemeChoice.offWhite => l10n.themeOffWhite,
     };
     // Yüzde yerine KADEME ADI: ayar artık dört adlı seçenekten ibaret,
     // özet satırında "%107" görmek kullanıcıya hiçbir şey anlatmıyordu.

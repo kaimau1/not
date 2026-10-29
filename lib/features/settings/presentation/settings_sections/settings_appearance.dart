@@ -273,10 +273,12 @@ class _ThemeSelector extends ConsumerWidget {
     final light = AppTheme.light(font: font).colorScheme;
     final dark = AppTheme.dark(font: font).colorScheme;
     final paper = AppTheme.paper(font: font).colorScheme;
+    final offWhite = AppTheme.offWhite(font: font).colorScheme;
     final options = <(AppThemeChoice, String, List<ColorScheme>)>[
       (AppThemeChoice.system, l10n.themeSystem, [light, dark]),
       (AppThemeChoice.light, l10n.themeLight, [light]),
       (AppThemeChoice.dark, l10n.themeDark, [dark]),
+      (AppThemeChoice.offWhite, l10n.themeOffWhite, [offWhite]),
       (AppThemeChoice.paper, l10n.themePaper, [paper]),
     ];
     return Row(
