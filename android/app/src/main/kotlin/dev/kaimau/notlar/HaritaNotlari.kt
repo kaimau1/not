@@ -27,7 +27,8 @@ import java.util.concurrent.TimeUnit
  * **VİDEO NOTU** (kullanıcı isteği 2026-10-29): metinde YouTube bağlantısı varsa ([YouTubeNotu]) not
  * videonun KENDİ notuna (`yt_<videoId>`) yazılır: video üste sabit gömülü, başlık videonun başlığı,
  * her not "dk:sn metin" satırı (dokununca video oraya sarar). Aynı videodan gelen sonraki notlar aynı
- * notun sonuna eklenir.
+ * notun sonuna eklenir. Her satır `ytPending`e de yazılır: uygulama açılınca satırın altına ±10 sn'lik
+ * transkript parçası ve nota videonun tam transkripti eklenir (Dart: video_note_transcripts.dart).
  * Oturum yoksa not cihazda sıraya alınır, uygulama açılınca ([flushPending],
  * MainActivity.onCreate) yazılır.
  *
@@ -93,12 +94,17 @@ class HaritaNotAlici : BroadcastReceiver() {
             val snap = runCatching { Tasks.await(doc.get(), 4, TimeUnit.SECONDS) }.getOrNull()
                 ?: runCatching { Tasks.await(doc.get(Source.CACHE), 2, TimeUnit.SECONDS) }.getOrNull()
             val line = v.line()
+            // Uygulama açılınca Dart (video_note_transcripts.dart) satırın altına ±10 sn'lik transkripti
+            // ve nota tam transkripti arka planda ekler
+            val todo = FieldValue.arrayUnion(hashMapOf("s" to v.start, "line" to line, "note" to v.rest, "at" to atMs))
             if (snap != null && snap.exists() && snap.get("deletedAt") == null) {
                 val old = snap.getString("body").orEmpty().trimEnd()
                 val update = hashMapOf<String, Any>(
                     "body" to if (old.isEmpty()) line else "$old\n\n$line",
                     "updatedAt" to FieldValue.serverTimestamp(),
                     "updatedBy" to uid,
+                    "ytTodo" to true,
+                    "ytPending" to todo,
                 )
                 if (n.pinned) update["pinned"] = true
                 doc.update(update)
@@ -127,6 +133,8 @@ class HaritaNotAlici : BroadcastReceiver() {
                 YerelNot.belge(uid, title, line, folderId, atMs).apply {
                     put("pinned", n.pinned)
                     put("attachments", listOf(video))
+                    put("ytTodo", true)
+                    put("ytPending", todo)
                 },
             )
             return SAVED

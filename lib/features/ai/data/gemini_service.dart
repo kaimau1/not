@@ -662,6 +662,7 @@ class GeminiService {
     String? filePath,
     String? webUrl,
     bool video = false,
+    bool sentenceStamps = false,
   }) async {
     final stored = await _keyStore.read(_provider);
     final hasKey = stored != null && stored.isNotEmpty;
@@ -713,7 +714,12 @@ class GeminiService {
             'role': 'user',
             'parts': [
               media,
-              {'text': _transcriptPrompt(video: video)},
+              {
+                'text': _transcriptPrompt(
+                  video: video,
+                  sentenceStamps: sentenceStamps,
+                ),
+              },
             ],
           },
         ],
@@ -729,13 +735,56 @@ class GeminiService {
     }
   }
 
-  static String _transcriptPrompt({required bool video}) =>
+  /// **Video notunun transkript parçası** (kullanıcı isteği 2026-10-29): not
+  /// alınan [atSeconds]'in ±10 sn'sinden, cümle bütünlüğü bozulmasın diye iki
+  /// yana birkaç saniye taşan parça. [timed]: "[d:ss] metin" satırları (ham
+  /// pencere, ±16 sn). Yalnız parçanın metni döner; noktalama düzeltilir,
+  /// içerik değiştirilmez.
+  Future<String> videoNoteExcerpt({
+    required String timed,
+    required int atSeconds,
+    String note = '',
+  }) async {
+    final text = await _generate([
+      {
+        'text':
+            'Aşağıda bir YouTube videosunun zamanlı altyazısından bir pencere '
+            'var. Kullanıcı videonun ${_stampOf(atSeconds)} anında not aldı'
+            '${note.trim().isEmpty ? '' : ' (notu: "${note.trim()}")'}.\n'
+            'Görev: yaklaşık ${_stampOf(atSeconds - 10)} ile '
+            '${_stampOf(atSeconds + 10)} arasındaki konuşmayı ver. Cümle '
+            'yarıda kalıyorsa baştan ve sondan EN ÇOK birkaç saniye (≤6 sn) '
+            'daha alarak cümleleri tamamla; pencere dışına çıkma.\n'
+            'Kurallar: konuşulan dilde, kelimesi kelimesine; ÇEVİRME, '
+            'ÖZETLEME, YORUM EKLEME. Yalnız noktalama ve büyük harfi düzelt. '
+            'Zaman damgası, tırnak, markdown koyma; yalnız metni yaz.\n\n'
+            '$timed',
+      },
+    ], preferModel: _taskModel(AiTask.document));
+    return stripMarkdown(text).trim();
+  }
+
+  static String _stampOf(int seconds) {
+    final s = seconds < 0 ? 0 : seconds;
+    final m = s ~/ 60;
+    return '$m:${(s % 60).toString().padLeft(2, '0')}';
+  }
+
+  /// [sentenceStamps]: damga paragraf yerine HER CÜMLENİN başına (video
+  /// notunun ±10 sn'lik parçası bunlardan kesilir — video_note_transcripts).
+  static String _transcriptPrompt({
+    required bool video,
+    bool sentenceStamps = false,
+  }) =>
       'Bu ${video ? 'videodaki konuşmayı' : 'ses kaydını'} KELİMESİ '
       'KELİMESİNE yazıya dök (transkript). Kurallar:\n'
       '- Konuşulan dilde yaz; ÇEVİRME, ÖZETLEME, kısaltma.\n'
-      '- Konuşmayı anlam bütünlüğüne göre paragraflara böl; her paragrafın '
-      'başına kayıttaki başlangıç anını [d:ss] biçiminde yaz '
-      '(bir saatten uzunsa [s:dd:ss]). Örnek: [0:00] Merhaba...\n'
+      '${sentenceStamps ? '- Her CÜMLEYİ ayrı satıra yaz ve başına kayıttaki '
+                'başlangıç anını [d:ss] biçiminde koy (bir saatten uzunsa '
+                '[s:dd:ss]); damgalar saniyesi saniyesine doğru olsun. '
+                'Örnek: [0:00] Merhaba.\n' : '- Konuşmayı anlam bütünlüğüne göre paragraflara böl; her '
+                'paragrafın başına kayıttaki başlangıç anını [d:ss] biçiminde '
+                'yaz (bir saatten uzunsa [s:dd:ss]). Örnek: [0:00] Merhaba...\n'}'
       '- Birden çok konuşmacı varsa konuşmacı değiştiğinde yeni paragraf '
       'aç ve başına "Konuşmacı 1:", "Konuşmacı 2:" yaz; ad söyleniyorsa adı '
       'kullan.\n'

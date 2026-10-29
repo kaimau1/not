@@ -13,6 +13,7 @@ import '../features/notes/data/push_service.dart';
 import '../features/notes/data/reminder_service.dart';
 import '../features/notes/data/share_intake.dart';
 import '../features/notes/data/upload_queue.dart';
+import '../features/notes/data/video_note_transcripts.dart';
 import '../features/notes/data/widget_service.dart';
 import '../features/notes/presentation/lock/note_lock_ui.dart';
 import '../features/notes/presentation/notes_providers.dart';
@@ -65,6 +66,8 @@ class AppServices extends ConsumerWidget {
       ref.listen<void>(noteLockBinderProvider, _ignore);
       // Uygulama kapalıyken paylaşım bildirimleri (FCM, F4.6).
       ref.listen<void>(pushServiceProvider, _ignore);
+      // Kanallarım/Harita video notlarının transkripti (arka planda).
+      ref.listen<void>(videoNoteTranscriptsProvider, _ignore);
     }
     return child;
   }
