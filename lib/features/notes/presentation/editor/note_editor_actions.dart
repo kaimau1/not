@@ -188,6 +188,35 @@ extension _EditorActions on _NoteEditorScreenState {
     if (mounted) _showSnack(context.l10n.copied);
   }
 
+  /// Notu başlatıcıya kısayol olarak koyar (bkz. [NoteShortcut]). Simge
+  /// notun AÇIK temadaki rengini taşır (başlatıcı her zaman açık zeminli
+  /// simge bekler); başlık yoksa gövdenin ilk satırı ad olur.
+  Future<void> _pinToHome(Note note) async {
+    final l10n = context.l10n;
+    final theme = NoteThemes.byId(note.theme);
+    final color =
+        theme?.light.top.toARGB32() ??
+        note.customColor ??
+        (note.color == NoteColor.none
+            ? 0xFFFFE08A
+            : NoteColors.swatch(note.color).toARGB32());
+    var title = note.title.trim();
+    if (title.isEmpty) {
+      title = stripRichMarkers(note.body)
+          .split('\n')
+          .map((l) => l.trim())
+          .firstWhere((l) => l.isNotEmpty, orElse: () => l10n.untitledNote);
+    }
+    final ok = await NoteShortcut.pin(
+      id: note.id,
+      title: title,
+      body: note.body,
+      color: color,
+    );
+    if (!mounted) return;
+    _showSnack(ok ? l10n.pinToHomeSent : l10n.pinToHomeUnsupported);
+  }
+
   /// Üst bardaki ⋮ — iki sütunlu levha (bkz. note_menu_sheet.dart).
   Future<void> _openNoteMenu() async {
     final note = _note;
@@ -213,6 +242,7 @@ extension _EditorActions on _NoteEditorScreenState {
           : note.type.isPageNoteType,
       canTemplate: canSaveAsTemplate(note),
       canRemoveParts: !_readOnly && _hasBothParts(note),
+      canPinHome: NoteShortcut.supported && widget.ownerId == null,
       // Yalnız KENDİ notum (başkasının notu yerel yapılamaz) ve özellik
       // destekleniyorsa (web'de yok).
       localOnly: widget.ownerId == null && localOnlySupported(ref)
@@ -221,6 +251,8 @@ extension _EditorActions on _NoteEditorScreenState {
     );
     if (action == null || !mounted) return;
     switch (action) {
+      case 'pinHome':
+        await _pinToHome(note);
       case 'docView':
         _toggleDocumentView();
       case 'pin':

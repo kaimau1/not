@@ -27,6 +27,44 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
 numarasıyla bildir.
 
+**2026-10-28 görünüm + medya turu (APK'da HİÇ derlenmedi — Actions kotası
+doluydu; ilk `[apk]` koşusunda önce derlemenin yeşil olduğuna bak:
+`NotKisayolu.kt` yeni Kotlin)**
+- [ ] Ana ekrandan bir nota dokun → not KARTIN YERİNDEN genişleyerek açılıyor,
+  geri → karta küçülerek dönüyor (not ızgarada yer değiştirdiyse yeni yerine).
+  Klasör listesinden ve liste görünümünden de; geniş ekranda eskisi gibi.
+- [ ] Editörde ⋮ → "Ana ekrana yerleştir" → başlatıcı onayı → simge notun
+  renginde, baş harfli; dokununca not açılıyor (kilitli not kilitli).
+- [ ] Alt çubuktaki dalga düğmesi (ya da Ekle → Ses kaydı) → alt şeritte
+  kırmızı hap, canlı dalga; kayıt sürerken yazılabiliyor; ⏸/✕/■ çalışıyor;
+  bitince ses YAZILAN SATIRA dalgalı hap olarak giriyor, dokununca çalıyor,
+  dalgaya dokununca/sürükleyince sarıyor. Kayıtta geri tuşu kaydı ekleyip
+  çıkıyor.
+- [ ] Üst çubukta palet → altta tema şeridi (Palmiye, Lagün, Gece…) dokunulan
+  anında uygulanıyor; kartta da aynı tema; Zemin rengi seçince tema kalkıyor;
+  koyu temada okunur.
+- [ ] Görsele dokun → araç panelinde "Açıklama ekle" → görselin altına yazılıyor,
+  metin görselle açıklamanın etrafından akıyor; açıklamaya dokunup düzenleme.
+- [ ] Çizim ekranı (Ekle → El yazısı): kalem tepsisi; seçili kalem kalkıyor,
+  ikinci dokunuşta renk/kalınlık paneli; ✓ ve geri çizimi nota ekliyor.
+- [ ] Metin notunda ☑: imlecin satırı kutulu madde oluyor, maddede ☑ kutuyu
+  kaldırıp metne döndürüyor. Biçim paneli açılıp kapanırken alt çubukla
+  zıplamadan yer değiştiriyor; yazı boyutu −/+ yumuşak.
+
+**2026-10-28 ikinci tur**
+- [ ] Biçim paneli açıkken geri → yalnız panel kapanıyor. Panelde "Tümüne
+  uygula" (maddede "Maddeye uygula"): imleçte kalın+kırmızı varken basınca
+  bütün metin kalın+kırmızı, metin seçili kalıyor.
+- [ ] Ana ekranda bir klasöre dokun → ayrı sayfa değil, ana ekran klasöre
+  süzülüyor (Süz düğmesinde klasör adı ×); "+" klasöre not açıyor; geri →
+  süzgeç kalkıyor. Paylaşılan klasör eski sayfada.
+- [ ] Notu okurken bağlantıya dokun → tarayıcıda açılıyor; yazarken dokununca
+  altta "Aç" önerisi. YouTube adresini gövdeye yapıştır → video imlecin
+  satırına gömülüyor ("Geri al" kaldırıyor).
+- [ ] Madde ortasında Enter ile bölünen maddenin başında Backspace → üst
+  maddeyle birleşiyor (Gboard'da ve Samsung klavyede).
+- [ ] Kart ⋮ → "Görsel önizlemesini gizle" → kartta görsel yok, editörde var.
+
 **2026-10-28 Harita köprüsü (kişisel)**
 - [ ] Harita'da navigasyondayken "Hey Harita, not al …" → Notlar öne
   gelmeden "Haritalar" klasöründe not (uygulama kapalıyken de); çevrimdışı

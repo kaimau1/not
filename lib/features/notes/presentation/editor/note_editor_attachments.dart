@@ -38,9 +38,9 @@ extension _EditorAttachments on _NoteEditorScreenState {
     // ses kartı da düğmeleri sığacak kadar geniş başlar.
     final width = switch (image.kind) {
       AttachmentKind.pdf => 0.6,
-      AttachmentKind.text ||
-      AttachmentKind.audio ||
-      AttachmentKind.slide => 0.8,
+      AttachmentKind.text || AttachmentKind.slide => 0.8,
+      // Ses HAPI satırı boydan boya kaplar (örnek uygulamadaki sesli not).
+      AttachmentKind.audio => 1.0,
       _ => 0.32,
     };
     final pageWidth = _pageBox()?.size.width ?? 0;
@@ -1268,9 +1268,47 @@ extension _EditorAttachments on _NoteEditorScreenState {
     }
   }
 
+  /// **SESLİ NOT NOTUN İÇİNDE** (2026-10-28): kayıt örten levhada değil,
+  /// alt şeritteki hapta sürer ([VoiceRecordPanel]) — kullanıcı kayıt
+  /// sürerken yazmaya devam eder. Bitince ses YAZILAN SATIRA dalgasıyla
+  /// birlikte hap olarak girer ([_placeNewImage]).
   Future<void> _recordAudio() async {
-    final result = await showAudioRecorderSheet(context);
-    if (result == null) return;
+    if (_voiceRecorder != null) return;
+    // Tek mikrofon: dikte açıksa önce kapanır (son açan alır — bkz. HAFIZA).
+    if (_dictating) await _stopDictation();
+    if (!mounted) return;
+    final recorder = VoiceNoteRecorder()
+      ..onLimit = () => unawaited(_finishVoiceRecording());
+    _update(() => _voiceRecorder = recorder);
+    final error = await recorder.start(context);
+    if (error == null) return;
+    if (identical(_voiceRecorder, recorder)) {
+      _update(() => _voiceRecorder = null);
+    }
+    recorder.dispose();
+    _showSnack(error);
+  }
+
+  /// Kaydı bitirir ([keep] false ise atar) ve sesi nota ekler.
+  Future<void> _finishVoiceRecording({bool keep = true}) async {
+    final recorder = _voiceRecorder;
+    if (recorder == null) return;
+    if (!keep) {
+      await recorder.cancel();
+      if (mounted) _update(() => _voiceRecorder = null);
+      recorder.dispose();
+      return;
+    }
+    final result = await recorder.stop();
+    if (mounted) _update(() => _voiceRecorder = null);
+    recorder.dispose();
+    if (result == null || !mounted) return;
+    // Yanlışlıkla açılıp hemen kapanan kayıt (yarım saniyeden kısa) nota
+    // boş bir hap bırakmasın.
+    if (result.duration < const Duration(milliseconds: 600)) {
+      File(result.path).delete().ignore();
+      return;
+    }
     final repo = _attachments;
     if (repo == null) return;
     try {
@@ -1279,8 +1317,23 @@ extension _EditorAttachments on _NoteEditorScreenState {
         sourcePath: result.path,
         duration: result.duration,
       );
+      if (!mounted) return;
+      final recorded = attachment.copyWith(
+        wave: result.wave,
+        width: kAudioBoxWidth,
+        height: kAudioBoxHeight,
+      );
       _mutate(
-        (n) => n.copyWith(attachments: [...n.attachments, attachment]),
+        (n) => n.copyWith(
+          attachments: [
+            ...n.attachments,
+            // Belge notunun sayfa tuvali yok: orada ses ek şeridinde durur.
+            if (n.type.isPageNoteType)
+              recorded
+            else
+              _placeNewImage(recorded.copyWith(onPage: true), n),
+          ],
+        ),
         immediate: true,
       );
     } on FileTooLargeException catch (e) {
@@ -1748,11 +1801,17 @@ extension _EditorAttachments on _NoteEditorScreenState {
       builder: (context) => _YouTubeLinkDialog(initial: initial),
     );
     if (url == null || !mounted) return null;
+    final added = _embedWebVideo(url, asFile: asFile);
+    if (added == null) _showSnack(l10n.youTubeInvalidLink);
+    return added;
+  }
+
+  /// YouTube bağlantısını dosyasız video eki olarak nota koyar (imlecin
+  /// satırına; [asFile] ise ek şeridine) ve başlığını arka planda alır.
+  /// Bağlantı YouTube videosu değilse null.
+  Attachment? _embedWebVideo(String url, {bool asFile = false}) {
     final attachment = webVideoAttachment(url);
-    if (attachment == null) {
-      _showSnack(l10n.youTubeInvalidLink);
-      return null;
-    }
+    if (attachment == null) return null;
     Attachment? added;
     _mutate((n) {
       // Görsel gibi imlecin satırına (16:9 kutu); büyütmek köşe
@@ -1772,6 +1831,36 @@ extension _EditorAttachments on _NoteEditorScreenState {
       _updateAttachment(current.first.copyWith(fileName: title));
     }());
     return added;
+  }
+
+  /// **YAPIŞTIRILAN YOUTUBE BAĞLANTISI GÖMÜLÜR** (kullanıcı isteği
+  /// 2026-10-28: "direkt YouTube linkini yazıya yapıştırarak videoyu
+  /// gömme"). Gövdeye TEK SEFERDE giren parça (yapıştırma — yazarken harf
+  /// harf gelir) yalnız bir YouTube adresiyse video imlecin satırına gömülür;
+  /// bağlantı yazıda kalır. Aynı video notta zaten varsa ikinci kez gömülmez.
+  /// Bildirimdeki "Geri al" gömmeyi kaldırır.
+  void _maybeEmbedPastedVideo(String before, String after) {
+    final note = _note;
+    if (note == null || _readOnly || note.type.isPageNoteType) return;
+    final inserted = pastedYouTubeUrl(before, after);
+    if (inserted == null) return;
+    final id = youTubeVideoId(inserted);
+    final exists = note.attachments.any(
+      (a) => a.isWebVideo && youTubeVideoId(a.webUrl) == id,
+    );
+    if (exists) return;
+    final added = _embedWebVideo(inserted);
+    if (added == null || !mounted) return;
+    final l10n = context.l10n;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showMessage(
+        l10n.youTubeEmbedded,
+        action: SnackBarAction(
+          label: l10n.undo,
+          onPressed: () => _removeAttachment(added),
+        ),
+      );
   }
 
   /// **TRANSKRİPT** — ekin metne dökümünü açar (kullanıcı isteği

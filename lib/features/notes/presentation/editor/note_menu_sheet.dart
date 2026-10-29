@@ -33,6 +33,7 @@ Future<String?> showNoteEditorMenu(
   bool? bubbleView,
   bool canTemplate = false,
   bool canRemoveParts = false,
+  bool canPinHome = false,
 }) {
   final l10n = context.l10n;
   return showAppSheet<String>(
@@ -58,6 +59,7 @@ Future<String?> showNoteEditorMenu(
           bubbleView: bubbleView,
           canTemplate: canTemplate,
           canRemoveParts: canRemoveParts,
+          canPinHome: canPinHome,
         ),
       ),
     ),
@@ -81,7 +83,11 @@ class _MenuGrid extends StatelessWidget {
     this.bubbleView,
     this.canTemplate = false,
     this.canRemoveParts = false,
+    this.canPinHome = false,
   });
+
+  /// "Ana ekrana yerleştir" gösterilsin mi (Android, kendi notum).
+  final bool canPinHome;
 
   /// Notta HEM serbest metin HEM madde listesi var: "Listeyi kaldır" /
   /// "Metni kaldır" gösterilir (kullanıcı isteği 2026-10-16).
@@ -240,6 +246,14 @@ class _MenuGrid extends StatelessWidget {
             ),
         ]),
         MenuSection(l10n.menuSectionTools, [
+          // ANA EKRANA YERLEŞTİR (kullanıcı isteği 2026-10-28): not
+          // başlatıcıda kendi simgesiyle durur, dokununca doğrudan açılır.
+          if (canPinHome)
+            MenuAction(
+              'pinHome',
+              l10n.pinToHomeScreen,
+              Icons.add_to_home_screen_rounded,
+            ),
           MenuAction('listen', l10n.listenToNote, Icons.headphones_outlined),
           MenuAction('stats', l10n.noteStatsTitle, Icons.insights_outlined),
           // SÜRÜM GEÇMİŞİ (F4.2): "dünkü hâline dön".

@@ -15,46 +15,30 @@ extension _EditorAppearance on _NoteEditorScreenState {
     final note = _note;
     if (note == null) return;
     _dismissKeyboard();
-    final l10n = context.l10n;
-    final target = await showAppSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: _colorLeading(
-                note.color,
-                frame: false,
-                custom: note.customColor,
-              ),
-              title: Text(l10n.backgroundColor),
-              onTap: () => Navigator.pop(sheetContext, 'bg'),
-            ),
-            // ÇERÇEVE GERİ GELDİ (kullanıcı isteği 2026-10-20) — yalnız ana
-            // ekran kartında çizilir; alt satır bunu söyler.
-            ListTile(
-              leading: _colorLeading(
-                note.frameColor,
-                frame: true,
-                custom: note.customFrameColor,
-              ),
-              title: Text(l10n.frameColor),
-              subtitle: Text(l10n.frameColorInfo),
-              onTap: () => Navigator.pop(sheetContext, 'frame'),
-            ),
-            // Zemin görseli renk seçiminin yanında: ikisi de "notun zemini".
-            ListTile(
-              leading: const Icon(Icons.wallpaper),
-              title: Text(l10n.noteBackgroundImage),
-              onTap: () => Navigator.pop(sheetContext, 'image'),
-            ),
-          ],
-        ),
-      ),
+    // ÖNCE TEMA ŞERİDİ (2026-10-28): palete basınca altta küçük sayfa
+    // önizlemeleri kayar, dokunulan tema ANINDA sayfaya uygulanır (örnek
+    // uygulamadaki gibi). Renk/çerçeve/zemin görseli şeridin altındaki
+    // satırdan açılır.
+    final action = await showNoteThemeSheet(
+      context,
+      current: note.theme,
+      paper: note.paged,
+      onTheme: (id) {
+        if (!mounted) return;
+        _mutate((n) => n.copyWith(theme: id), immediate: true);
+      },
     );
-    if (target == null || !mounted) return;
+    if (action == null || !mounted) return;
+    final target = switch (action) {
+      NoteAppearanceAction.color => 'bg',
+      NoteAppearanceAction.frame => 'frame',
+      NoteAppearanceAction.image => 'image',
+      NoteAppearanceAction.paper => 'paper',
+    };
+    if (target == 'paper') {
+      await _pickPaper();
+      return;
+    }
     if (target == 'image') {
       await _showBackgroundSheet();
       return;
@@ -81,6 +65,9 @@ extension _EditorAppearance on _NoteEditorScreenState {
                   color: picked.color,
                   customColor: picked.custom,
                   clearCustomColor: picked.custom == null,
+                  // Renk seçilince çizilmiş tema kalkar (yoksa renk
+                  // temanın altında görünmezdi).
+                  theme: '',
                 ),
           immediate: true,
         );
@@ -449,24 +436,6 @@ extension _EditorAppearance on _NoteEditorScreenState {
     // _pendingAttachmentDeletes). Anında silinince "Geri al" bozuk
     // (senkronsuz) bir kayda dönüyordu.
     _pendingAttachmentDeletes.add(image);
-  }
-
-  Widget _colorLeading(NoteColor color, {required bool frame, int? custom}) {
-    final swatch = custom != null ? Color(custom) : NoteColors.swatch(color);
-    final none = custom == null && color == NoteColor.none;
-    return Container(
-      width: 28,
-      height: 28,
-      decoration: frame && !none
-          ? BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: swatch, width: 4),
-            )
-          : BoxDecoration(color: swatch, shape: BoxShape.circle),
-      child: none
-          ? const Icon(Icons.format_color_reset_outlined, size: 16)
-          : null,
-    );
   }
 
   void _delete() {

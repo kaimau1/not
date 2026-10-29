@@ -199,6 +199,8 @@ extension _DashSelection on _DashboardScreenState {
       repo.batchUpdate(ids, {
         frame ? 'frameColor' : 'color': picked.color.id,
         frame ? 'customFrameColor' : 'customColor': picked.custom,
+        // Zemin rengi çizilmiş temanın yerine geçer (bkz. Note.theme).
+        if (!frame) 'theme': '',
       }),
     );
     ref.read(selectedNoteIdsProvider.notifier).clear();

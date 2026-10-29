@@ -1173,7 +1173,13 @@ String _searchableBody(Note note) {
   }
   // TRANSKRİPTLER (metin ekleri): ses kaydında geçen bir söz, kaydı içeren
   // notu bulur — metin kayıtta duruyor, çıkarmak için hiçbir bedel yok.
+  // Görsel AÇIKLAMALARI da (kullanıcının görsele yazdığı söz).
   for (final attachment in note.attachments) {
+    if (attachment.caption.isNotEmpty) {
+      buffer
+        ..write('\n')
+        ..write(attachment.caption);
+    }
     if (attachment.kind != AttachmentKind.text) continue;
     buffer
       ..write('\n')

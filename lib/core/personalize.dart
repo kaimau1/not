@@ -129,12 +129,18 @@ abstract final class UiItem {
   /// levhasının en üst satırına taşındı; kimlik eski tercihler için duruyor.
   static const barVoiceAi = 'editor.bar.voiceAi';
   static const barDictation = 'editor.bar.dictation';
+  /// Notun içinde SESLİ NOT kaydı (2026-10-28, dalgalı hap).
+  static const barVoiceRecord = 'editor.bar.voiceRecord';
+  /// ☑ satırı onay kutulu maddeye çevir / kutuyu kaldır (2026-10-28).
+  static const barCheckbox = 'editor.bar.checkbox';
 
   // ── Not ekranının üst çubuğu ──
   static const topSync = 'editor.top.sync';
   static const topUndo = 'editor.top.undo';
   static const topCollab = 'editor.top.collab';
   static const topPin = 'editor.top.pin';
+  /// Görünüm (tema şeridi) düğmesi (2026-10-28).
+  static const topTheme = 'editor.top.theme';
 
   // ── Not ekranının alanları ──
   static const editorTags = 'editor.tags';
@@ -181,6 +187,7 @@ class UiModule {
 
   static const voice = UiModule('voice', [
     UiItem.barDictation,
+    UiItem.barVoiceRecord,
     UiItem.homeMic,
     'quickadd.voice',
     'attach.audio',

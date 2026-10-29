@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/presentation/editor/drawing_screen.dart';
+import 'package:notlar/features/notes/presentation/editor/pen_tray.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_layer.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_pen.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
@@ -19,7 +20,7 @@ void main() {
   Future<Uint8List?> pumpAndDraw(
     WidgetTester tester, {
     bool draw = true,
-    IconData? pen,
+    String? pen,
   }) async {
     Uint8List? result;
     await tester.pumpWidget(
@@ -47,7 +48,7 @@ void main() {
     await tester.pumpAndSettle();
 
     if (pen != null) {
-      await tester.tap(find.byIcon(pen));
+      await tester.tap(find.byKey(ValueKey('pen-tray-$pen')));
       await tester.pumpAndSettle();
     }
     if (draw) {
@@ -59,7 +60,7 @@ void main() {
     // "Nota ekle": çizim PNG'ye çevrilip geri döner. PNG kodlaması motora
     // gider (`Picture.toImage`), sahte zamanlı test zone'unda ilerlemez —
     // `runAsync` olmadan ekran hiç kapanmaz ve sonuç sonsuza kadar null kalır.
-    await tester.tap(find.byIcon(Icons.check));
+    await tester.tap(find.byIcon(Icons.check_rounded));
     await tester.runAsync(() async {
       await Future<void>.delayed(const Duration(milliseconds: 300));
     });
@@ -80,14 +81,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Aynı çubuk PDF/slayt/görsel üstünde de kullanılıyor.
-    expect(find.byType(InkToolbar), findsOneWidget);
-    // Tükenmez / keçeli / fosforlu + silgi.
-    expect(find.byIcon(Icons.edit), findsOneWidget);
-    expect(find.byIcon(Icons.brush), findsOneWidget);
-    expect(find.byIcon(Icons.format_color_fill), findsOneWidget);
-    expect(find.byIcon(Icons.cleaning_services_outlined), findsOneWidget);
-    // Renk seçenekleri ve kalınlık.
+    // KALEM TEPSİSİ (2026-10-28): şekiller, silgi, tükenmez, keçeli,
+    // fosforlu + renk düğmesi; aynı InkController PDF/görsel üstünde de.
+    for (final tool in PenTrayTool.values) {
+      expect(find.byKey(ValueKey('pen-tray-${tool.name}')), findsOneWidget);
+    }
+    // Renk ve kalınlık paneli renk düğmesiyle açılır.
+    expect(find.byType(Slider), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('pen-tray-color')));
+    await tester.pumpAndSettle();
     expect(find.byType(Slider), findsOneWidget);
   });
 
@@ -105,7 +107,7 @@ void main() {
   });
 
   testWidgets('fosforlu ile çizilen iz de PNG\'ye girer', (tester) async {
-    final bytes = await pumpAndDraw(tester, pen: Icons.format_color_fill);
+    final bytes = await pumpAndDraw(tester, pen: 'highlighter');
     expect(bytes, isNotNull);
     expect(bytes!.sublist(0, 4), [0x89, 0x50, 0x4E, 0x47]);
   });
@@ -123,11 +125,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    // Seçili araca (tükenmez) ikinci dokunuş ayar panelini açar.
+    await tester.tap(find.byKey(const ValueKey('pen-tray-pen')));
+    await tester.pumpAndSettle();
     expect(
       tester.widget<Slider>(find.byType(Slider)).value,
       InkPen.pen.defaultWidth,
     );
-    await tester.tap(find.byIcon(Icons.format_color_fill));
+    await tester.tap(find.byKey(const ValueKey('pen-tray-highlighter')));
     await tester.pumpAndSettle();
     // Fosforlu 3 px'te kalsaydı vurgulama işe yaramazdı.
     expect(

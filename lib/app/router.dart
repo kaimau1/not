@@ -26,6 +26,7 @@ import '../features/settings/presentation/guide_screen.dart';
 import '../features/settings/presentation/personalize_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import 'app_frame.dart';
+import 'note_open_route.dart';
 import 'split_shell.dart';
 
 /// Editör rotasının yolu.
@@ -168,7 +169,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                 // ValueKey(noteId): editör State'i tüm kurulumunu initState'te
                 // noteId ile yapıyor; go/pushReplacement aynı GoRoute'un Element'ini
                 // geri dönüştürürse key olmadan ekranda ÖNCEKİ notun içeriği kalırdı.
-                builder: _noteBuilder,
+                // Karttan açılınca kartın yerinden genişler (NoteOpenPage).
+                pageBuilder: _notePage,
               ),
             ],
           ),
@@ -181,7 +183,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '$kOutsideShellNotePrefix/note/:id',
-            builder: _noteBuilder,
+            pageBuilder: _notePage,
           ),
           GoRoute(
             path: '/settings',
@@ -329,6 +331,21 @@ Widget _notebookBuilder(BuildContext context, GoRouterState state) =>
     NoteEditorScreen(
       key: ValueKey('note-${state.pathParameters['id']}'),
       noteId: state.pathParameters['id']!,
+    );
+
+/// `/note/:id` sayfası: karttan açılışta genişleyen geçiş (bkz.
+/// [NoteOpenPage]); ad/argüman/kimlik go_router'ın varsayılan sayfasıyla aynı.
+Page<void> _notePage(BuildContext context, GoRouterState state) =>
+    NoteOpenPage<void>(
+      key: state.pageKey,
+      name: state.name ?? state.path,
+      arguments: <String, String>{
+        ...state.pathParameters,
+        ...state.uri.queryParameters,
+      },
+      restorationId: state.pageKey.value,
+      noteId: state.pathParameters['id']!,
+      child: _noteBuilder(context, state),
     );
 
 Widget _noteBuilder(BuildContext context, GoRouterState state) =>

@@ -105,6 +105,18 @@ class _ActionsGrid extends StatelessWidget {
           MenuAction('color', l10n.backgroundColor, Icons.palette_outlined),
           // ÇERÇEVE GERİ GELDİ — yalnız ana ekran kartında çizilir.
           MenuAction('frame', l10n.frameColor, Icons.border_color_outlined),
+          // GÖRSEL ÖNİZLEMESİNİ GİZLE (kullanıcı isteği 2026-10-28): yalnız
+          // görseli/dosyası olan notta.
+          if (note.attachments.isNotEmpty || note.cardMediaHidden)
+            MenuAction(
+              'cardMedia',
+              note.cardMediaHidden
+                  ? l10n.cardMediaShow
+                  : l10n.cardMediaHide,
+              note.cardMediaHidden
+                  ? Icons.image_outlined
+                  : Icons.hide_image_outlined,
+            ),
         ]),
         MenuSection(l10n.menuSectionCopy, [
           // **NOTU ÇOĞALT** (bkz. NotesRepository.duplicateNote).
@@ -177,6 +189,8 @@ Future<void> _runNoteAction(
       repo.setPinned(note.id, !note.pinned);
     case 'star':
       repo.setStarred(note.id, !note.starred);
+    case 'cardMedia':
+      repo.setCardMediaHidden(note.id, !note.cardMediaHidden);
     // Üç yol tek levhada: düz metin, `.notpaket` (başka bir Not kullanıcısına,
     // balonlar düzenlenebilir gelir) ve balonlu PDF (herkes açabilir).
     case 'share':

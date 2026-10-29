@@ -21,7 +21,13 @@ class _ImageTools extends StatelessWidget {
     this.copyIsLink = false,
     this.onOpenExternal,
     this.onSaveAs,
+    this.onCaption,
+    this.hasCaption = false,
   });
+
+  /// Görselin altına açıklama yazar (yerinde düzenleme açılır).
+  final VoidCallback? onCaption;
+  final bool hasCaption;
 
   /// EKİ FARKLI KAYDET (2026-10-17): dosya kullanıcının seçtiği yere.
   final VoidCallback? onSaveAs;
@@ -75,6 +81,13 @@ class _ImageTools extends StatelessWidget {
             onChangeEnd: onWidthEnd,
           ),
         ),
+        if (onCaption != null)
+          IconButton(
+            tooltip: hasCaption ? l10n.imageCaptionEdit : l10n.imageCaptionAdd,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.short_text_rounded, size: 20),
+            onPressed: onCaption,
+          ),
         if (onFullscreen != null)
           IconButton(
             tooltip: l10n.fullscreen,

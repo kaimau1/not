@@ -10,11 +10,13 @@ import '../../../../core/utils/video_time.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../domain/attachment.dart';
 import 'video_hub_scope.dart';
+import 'voice_note_recorder.dart';
 
 /// Sayfaya gömülen SES kartının ekte saklanan oranı (bkz. `kTextBoxWidth`):
-/// geniş, alçak bir oynatıcı şeridi.
+/// geniş, alçak bir oynatıcı HAPI (2026-10-28: 280 → 190; sayfada boy ayrıca
+/// 52–76 dp aralığında tutulur, bkz. `_NotePageCanvasState._sizeOf`).
 const int kAudioBoxWidth = 1000;
-const int kAudioBoxHeight = 280;
+const int kAudioBoxHeight = 190;
 
 /// **SES EKİ SAYFADA ve TEPEDE** (kullanıcı isteği 2026-10-17: "sabit,
 /// gömme ve balonlu geçiş olabilecek TÜM türler için çalışmalı").
@@ -128,10 +130,16 @@ class _AudioCardBoxState extends State<AudioCardBox> {
     final hub = _hub;
     if (source == null || hub == null) return;
     if (!await hub.noteAt(source) && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showMessage(context.l10n.videoTimeUnknown);
+      ScaffoldMessenger.of(context).showMessage(context.l10n.videoTimeUnknown);
     }
+  }
+
+  /// Dalgaya dokunma/sürükleme: oran olarak sarar.
+  Future<void> _seekTo(double fraction) async {
+    final p = await _ensure();
+    final total = p?.duration ?? recordedDuration(widget.attachment);
+    if (p == null || total == null) return;
+    await p.seek(total * fraction.clamp(0.0, 1.0));
   }
 
   @override
@@ -139,74 +147,93 @@ class _AudioCardBoxState extends State<AudioCardBox> {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final player = _player;
+    final a = widget.attachment;
     return LayoutBuilder(
       builder: (context, box) {
-        // Kart, sayfadaki kutunun ölçüsüne göre sıkışır: dar kutuda süre ve
-        // ⏱ düşer, oynat düğmesi ve ilerleme hep kalır.
+        // HAP (kullanıcı isteği 2026-10-28, örnek uygulamadaki sesli not):
+        // oynat halkası · süre · dalga. Dar kutuda süre ve ⏱ düşer, oynat
+        // düğmesi ve dalga hep kalır.
         final w = box.maxWidth.isFinite ? box.maxWidth : 320.0;
-        final h = box.maxHeight.isFinite ? box.maxHeight : 88.0;
-        final button = (h * 0.62).clamp(28.0, 52.0);
-        final roomy = w >= 200;
+        final h = box.maxHeight.isFinite ? box.maxHeight : 64.0;
+        final button = (h * 0.64).clamp(28.0, 46.0);
+        final showTime = w >= 170;
         final showNoteAt =
-            widget.noteAtButton && w >= 240 && _hub?.onNoteAt != null;
+            widget.noteAtButton && w >= 300 && _hub?.onNoteAt != null;
+        // Kayıt dışı ses dosyasının ADI (ders.mp3) yer varsa dalganın üstünde.
+        final showTitle = !isVoiceRecording(a) && h >= 60 && w >= 200;
+        final accent = scheme.primary;
+        final wave = Expanded(
+          child: _WaveSeek(
+            player: player,
+            wave: a.displayWave,
+            drag: _drag,
+            active: accent,
+            inactive: accent.withValues(alpha: 0.28),
+            onDrag: (v) => setState(() => _drag = v),
+            onDragEnd: (v) async {
+              setState(() => _drag = null);
+              await _seekTo(v);
+            },
+          ),
+        );
         return DecoratedBox(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                scheme.primaryContainer,
-                Color.alphaBlend(
-                  scheme.tertiary.withValues(alpha: 0.18),
-                  scheme.primaryContainer,
-                ),
-              ],
+            // Notun zemini ne olursa olsun hafif koyulaşan yarı saydam hap:
+            // kâğıt rengi altından geçer (örnekteki gibi).
+            color: Color.alphaBlend(
+              accent.withValues(alpha: 0.07),
+              scheme.onSurface.withValues(alpha: 0.05),
             ),
+            borderRadius: BorderRadius.circular(h / 2),
           ),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: h * 0.14),
+            padding: EdgeInsetsDirectional.only(
+              start: (h - button) / 2,
+              end: h * 0.28,
+            ),
             child: Row(
               children: [
                 _PlayButton(
                   player: player,
                   size: button,
-                  color: scheme.primary,
-                  onColor: scheme.onPrimary,
+                  color: accent,
                   tooltip: l10n.mediaPlay,
                   onTap: _toggle,
                 ),
-                SizedBox(width: h * 0.14),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.attachment.fileName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: (h * 0.16).clamp(10.0, 14.0),
-                          fontWeight: FontWeight.w700,
-                          color: scheme.onPrimaryContainer,
-                        ),
-                      ),
-                      _Progress(
-                        player: player,
-                        drag: _drag,
-                        showTime: roomy,
-                        onDrag: (v) => setState(() => _drag = v),
-                        onDragEnd: (v) async {
-                          setState(() => _drag = null);
-                          final p = await _ensure();
-                          final total = p?.duration;
-                          if (p == null || total == null) return;
-                          await p.seek(total * v);
-                        },
-                      ),
-                    ],
+                SizedBox(width: (h * 0.18).clamp(8.0, 14.0)),
+                if (showTime) ...[
+                  _TimeLabel(
+                    player: player,
+                    total: recordedDuration(a),
+                    color: scheme.onSurface.withValues(alpha: 0.78),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                ],
+                if (showTitle)
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          a.fileName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                        SizedBox(
+                          height: (h * 0.42).clamp(18.0, 40.0),
+                          child: Row(children: [wave]),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  wave,
                 if (showNoteAt)
                   IconButton(
                     key: const ValueKey('audio-note-at'),
@@ -215,7 +242,7 @@ class _AudioCardBoxState extends State<AudioCardBox> {
                     onPressed: _noteAt,
                     icon: Icon(
                       Icons.more_time_rounded,
-                      color: scheme.onPrimaryContainer,
+                      color: scheme.onSurfaceVariant,
                       size: 20,
                     ),
                   ),
@@ -228,12 +255,24 @@ class _AudioCardBoxState extends State<AudioCardBox> {
   }
 }
 
+/// Kaydın SÜRESİ — oynatıcı kurulmadan önce de bilinsin diye dosya adından
+/// (`kayit_12s.m4a`, bkz. `AttachmentRepository.prepareAudio`).
+Duration? recordedDuration(Attachment a) {
+  final m = RegExp(r'^kayit_(\d+)s\.').firstMatch(a.fileName);
+  if (m == null) return null;
+  return Duration(seconds: int.parse(m.group(1)!));
+}
+
+/// Uygulamanın kendi ses kaydı mı (adı anlamsız: başlık gösterilmez).
+bool isVoiceRecording(Attachment a) => a.fileName.startsWith('kayit_');
+
+/// OYNAT halkası: çalmıyorken ince halka + üçgen, çalarken dolu daire +
+/// duraklat (örnek uygulamadaki gibi sakin, hapın içinde kaybolmayan).
 class _PlayButton extends StatelessWidget {
   const _PlayButton({
     required this.player,
     required this.size,
     required this.color,
-    required this.onColor,
     required this.tooltip,
     required this.onTap,
   });
@@ -241,44 +280,46 @@ class _PlayButton extends StatelessWidget {
   final AudioPlayer? player;
   final double size;
   final Color color;
-  final Color onColor;
   final String tooltip;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    Widget face(bool playing, bool busy) => Material(
-      color: color,
-      shape: const CircleBorder(),
-      elevation: 1.5,
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          width: size,
-          height: size,
-          child: busy
-              ? Padding(
-                  padding: EdgeInsets.all(size * 0.3),
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: onColor,
-                  ),
-                )
-              // Oynat ⇄ duraklat simgesi yumuşakça döner (ani değişim
-              // yerine — küçük ama "premium" hissin büyük kısmı bu).
-              : AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  transitionBuilder: (child, anim) =>
-                      ScaleTransition(scale: anim, child: child),
-                  child: Icon(
-                    playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    key: ValueKey(playing),
-                    color: onColor,
-                    size: size * 0.58,
-                  ),
-                ),
+    final onColor = Theme.of(context).colorScheme.onPrimary;
+    Widget face(bool playing, bool busy) => InkResponse(
+      onTap: onTap,
+      radius: size * 0.62,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: playing ? color : color.withValues(alpha: 0),
+          border: Border.all(color: color, width: size >= 36 ? 2.2 : 1.8),
         ),
+        child: busy
+            ? Padding(
+                padding: EdgeInsets.all(size * 0.28),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: playing ? onColor : color,
+                ),
+              )
+            // Oynat ⇄ duraklat simgesi yumuşakça döner (ani değişim
+            // yerine — küçük ama "premium" hissin büyük kısmı bu).
+            : AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                transitionBuilder: (child, anim) =>
+                    ScaleTransition(scale: anim, child: child),
+                child: Icon(
+                  playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  key: ValueKey(playing),
+                  color: playing ? onColor : color,
+                  size: size * 0.58,
+                ),
+              ),
       ),
     );
     final p = player;
@@ -302,78 +343,111 @@ class _PlayButton extends StatelessWidget {
   }
 }
 
-class _Progress extends StatelessWidget {
-  const _Progress({
+/// Süre yazısı: dururken toplam süre, çalarken geçen süre (`00:04`).
+class _TimeLabel extends StatelessWidget {
+  const _TimeLabel({
     required this.player,
-    required this.drag,
-    required this.showTime,
-    required this.onDrag,
-    required this.onDragEnd,
+    required this.total,
+    required this.color,
   });
 
   final AudioPlayer? player;
-  final double? drag;
-  final bool showTime;
-  final ValueChanged<double> onDrag;
-  final ValueChanged<double> onDragEnd;
+  final Duration? total;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    Widget row(Duration position, Duration? total) {
-      final t = total ?? Duration.zero;
-      final value =
-          drag ??
-          (t > Duration.zero
-              ? (position.inMilliseconds / t.inMilliseconds).clamp(0.0, 1.0)
-              : 0.0);
-      return Row(
-        children: [
-          Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                trackHeight: 3,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-                activeTrackColor: scheme.primary,
-                inactiveTrackColor: scheme.primary.withValues(alpha: 0.22),
-                thumbColor: scheme.primary,
-              ),
-              child: SizedBox(
-                height: 22,
-                child: Slider(
-                  value: value.toDouble(),
-                  onChanged: onDrag,
-                  onChangeEnd: onDragEnd,
-                ),
-              ),
-            ),
-          ),
-          if (showTime)
-            Text(
-              total == null
-                  ? formatVideoTimestamp(position)
-                  : '${formatVideoTimestamp(position)} / '
-                        '${formatVideoTimestamp(t)}',
-              style: TextStyle(
-                fontSize: 10.5,
-                color: scheme.onPrimaryContainer.withValues(alpha: 0.8),
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-        ],
-      );
-    }
-
+    Widget label(Duration d) => Text(
+      formatClock(d),
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: color,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    );
     final p = player;
-    if (p == null) return row(Duration.zero, null);
-    // Yalnız bu satır konumla tazelenir (kartın geri kalanı değil).
+    if (p == null) return label(total ?? Duration.zero);
     return StreamBuilder<Duration>(
       stream: p.createPositionStream(
         maxPeriod: const Duration(milliseconds: 400),
       ),
       initialData: p.position,
-      builder: (context, snap) => row(snap.data ?? Duration.zero, p.duration),
+      builder: (context, snap) {
+        final position = snap.data ?? Duration.zero;
+        final whole = p.duration ?? total ?? Duration.zero;
+        final idle =
+            !p.playing &&
+            (position == Duration.zero ||
+                p.processingState == ProcessingState.completed);
+        return label(idle ? whole : position);
+      },
+    );
+  }
+}
+
+/// Dalga + sarma: dokununca o noktaya, sürükleyince parmakla sarar. Yalnız
+/// bu parça konumla tazelenir (kartın geri kalanı değil).
+class _WaveSeek extends StatelessWidget {
+  const _WaveSeek({
+    required this.player,
+    required this.wave,
+    required this.drag,
+    required this.active,
+    required this.inactive,
+    required this.onDrag,
+    required this.onDragEnd,
+  });
+
+  final AudioPlayer? player;
+  final List<int> wave;
+  final double? drag;
+  final Color active;
+  final Color inactive;
+  final ValueChanged<double> onDrag;
+  final ValueChanged<double> onDragEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget bars(double progress) => LayoutBuilder(
+      builder: (context, box) {
+        double at(Offset local) =>
+            (local.dx / box.maxWidth).clamp(0.0, 1.0).toDouble();
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (d) => onDragEnd(at(d.localPosition)),
+          onHorizontalDragUpdate: (d) => onDrag(at(d.localPosition)),
+          onHorizontalDragEnd: (_) => onDragEnd(drag ?? progress),
+          child: RepaintBoundary(
+            child: CustomPaint(
+              size: Size(box.maxWidth, box.maxHeight),
+              painter: WaveformBarsPainter(
+                wave: wave,
+                progress: drag ?? progress,
+                active: active,
+                inactive: inactive,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    final p = player;
+    if (p == null) return bars(0);
+    return StreamBuilder<Duration>(
+      stream: p.createPositionStream(
+        maxPeriod: const Duration(milliseconds: 120),
+      ),
+      initialData: p.position,
+      builder: (context, snap) {
+        final total = p.duration;
+        final position = snap.data ?? Duration.zero;
+        final done = p.processingState == ProcessingState.completed;
+        final progress = total == null || total <= Duration.zero || done
+            ? 0.0
+            : (position.inMilliseconds / total.inMilliseconds).clamp(0.0, 1.0);
+        return bars(progress.toDouble());
+      },
     );
   }
 }

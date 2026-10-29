@@ -428,6 +428,18 @@ class ItemsEditorState extends State<ItemsEditor>
         return;
       }
     }
+    // BAĞLANTIYA DOKUNUŞ (2026-10-28): gövdeyle aynı kural — okurken açar,
+    // yazarken önerir.
+    final link = tappedLink(
+      displayText: controller.text,
+      editable: editableTextBelow(fieldContext),
+      tapGlobal: _tapPoint.last,
+    );
+    if (link != null) {
+      editableTextBelow(fieldContext)?.hideToolbar();
+      handleLinkTap(context, link, editing: _tapPoint.wasFocused);
+      return;
+    }
     final onTag = widget.onAttachmentTag;
     if (onTag == null || widget.attachmentNames.isEmpty) return;
     // Etiketin İÇİNE dokunuş; sınırdaysa dokunuşun KONUMU etiketin
@@ -682,6 +694,22 @@ class ItemsEditorState extends State<ItemsEditor>
 
   FocusNode _focusFor(NoteItem item) => _focusNodes.putIfAbsent(item.id, () {
     final node = FocusNode();
+    // MADDE BAŞINDA GERİ SİL = ÜSTTEKİYLE BİRLEŞ (kullanıcı isteği
+    // 2026-10-28: "Enter madde ekliyorsa diğer maddenin en başından geri
+    // silme üst maddeyle birleştirsin"). Silinecek harf yokken klavye
+    // (Gboard, donanım klavyesi) Backspace'i TUŞ olayı olarak yollar.
+    final id = item.id;
+    node.onKeyEvent = (_, event) {
+      if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+        return KeyEventResult.ignored;
+      }
+      if (event.logicalKey != LogicalKeyboardKey.backspace) {
+        return KeyEventResult.ignored;
+      }
+      return mergeIntoPrevious(id)
+          ? KeyEventResult.handled
+          : KeyEventResult.ignored;
+    };
     // Odak değişince (a) "dokununca aç" modunda satır yüksekliği, (b)
     // silme "x" düğmesinin görünürlüğü değişir; ikisi de YALNIZ o satırı
     // ilgilendirir — bu yüzden listenin tamamı değil, satırın kendi bayrağı
@@ -1209,6 +1237,37 @@ class ItemsEditorState extends State<ItemsEditor>
     });
   }
 
+  /// Odaktaki maddenin kimliği (madde odakta değilse null).
+  String? get focusedItemId {
+    for (final entry in _focusNodes.entries) {
+      if (entry.value.hasFocus) return entry.key;
+    }
+    return null;
+  }
+
+  /// Maddeye odaklanır ve imleci sonuna koyar (dışarıdan eklenen madde —
+  /// ör. alt çubuğun ☑ düğmesi gövde satırını maddeye çevirdiğinde).
+  void focusItem(String id) {
+    final item = _items.where((i) => i.id == id).firstOrNull;
+    if (item == null) return;
+    final controller = _controllerFor(item);
+    _focusFor(item).requestFocus();
+    controller.selection = TextSelection.collapsed(
+      offset: controller.text.length,
+    );
+  }
+
+  /// **ONAY KUTUSUNU KALDIR**: maddeyi listeden çıkarır ve metnini döner
+  /// (çağıran gövdeye yazar). Madde yoksa null.
+  String? takeItem(String id) {
+    final index = _items.indexWhere((i) => i.id == id);
+    if (index < 0) return null;
+    final text = _items[index].text;
+    _focusNodes[id]?.unfocus();
+    _removeItem(_items[index]);
+    return text;
+  }
+
   /// Başlıktaki klavye "İleri" tuşu buraya düşer (liste notunda gövde alanı
   /// yok): ilk işaretsiz maddeye odaklanır, hiç madde yoksa yeni açar.
   void focusFirstItem() {
@@ -1251,6 +1310,46 @@ class ItemsEditorState extends State<ItemsEditor>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusFor(item).requestFocus();
     });
+  }
+
+  /// İmleç maddenin EN BAŞINDAYKEN (seçim yok) maddeyi üstteki maddeye
+  /// ekler: metin üstün sonuna yapışır, imleç birleşme noktasında kalır —
+  /// Enter'ın [_enterAt] ile böldüğü maddeyi geri birleştirmenin yolu.
+  /// İlk maddede ya da işaretli/işaretsiz sınırında hiçbir şey yapmaz
+  /// (false döner; tuş klavyenin kendisine kalır).
+  @visibleForTesting
+  bool mergeIntoPrevious(String id) {
+    final index = _items.indexWhere((i) => i.id == id);
+    if (index <= 0) return false;
+    final controller = _controllers[id];
+    if (controller == null) return false;
+    final selection = controller.selection;
+    if (!selection.isValid || !selection.isCollapsed) return false;
+    if (wrapToLogicalOffset(controller.text, selection.baseOffset) != 0) {
+      return false;
+    }
+    final current = _items[index];
+    final previous = _items[index - 1];
+    if (widget.showCheckboxes && previous.checked != current.checked) {
+      return false;
+    }
+    final caret = previous.text.length;
+    final joined = previous.text + current.text;
+    unawaited(HapticFeedback.selectionClick());
+    // Odak ÖNCE üst maddeye geçer: silinen satırla birlikte odak (ve
+    // klavye) bir kare için kaybolmasın.
+    _focusFor(previous).requestFocus();
+    _items[index - 1] = previous.copyWith(text: joined);
+    _controllerFor(_items[index - 1]).setLogical(joined, caret);
+    _removeItem(current);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final merged = _items.where((i) => i.id == previous.id).firstOrNull;
+      if (merged == null) return;
+      final c = _controllerFor(merged);
+      if (c.logicalText == joined) c.setLogical(joined, caret);
+    });
+    return true;
   }
 
   void _removeItem(NoteItem target) {

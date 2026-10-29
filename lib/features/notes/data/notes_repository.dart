@@ -1003,10 +1003,18 @@ class NotesRepository {
   void setStarred(String noteId, bool starred) =>
       updateFields(noteId, {'starred': starred});
 
+  /// Kartta bu notun görsel önizlemesi gizli mi (bkz. `Note.cardMediaHidden`).
+  void setCardMediaHidden(String noteId, bool hidden) =>
+      updateFields(noteId, {'cardMediaHidden': hidden});
+
   /// Zemin rengi; çerçeveden bağımsız. [custom]: paletten özel renk (ARGB)
   /// — null yazılır ki hazır renge dönünce eski özel renk silinsin.
-  void setColor(String noteId, NoteColor color, {int? custom}) =>
-      updateFields(noteId, {'color': color.id, 'customColor': custom});
+  /// Zemin rengi seçilince çizilmiş TEMA kalkar (tema rengin önünde
+  /// çizildiğinden yeni renk görünmezdi — bkz. `Note.theme`).
+  void setColor(String noteId, NoteColor color, {int? custom}) => updateFields(
+    noteId,
+    {'color': color.id, 'customColor': custom, 'theme': ''},
+  );
 
   /// Ana ekran kartının çerçeve rengi (editörde çizilmez).
   void setFrameColor(String noteId, NoteColor color, {int? custom}) =>

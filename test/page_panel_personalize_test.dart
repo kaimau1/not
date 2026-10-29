@@ -279,6 +279,7 @@ void main() {
         UiItem.barAi,
         UiItem.barVoiceAi,
         UiItem.barDictation,
+        UiItem.barVoiceRecord,
         UiItem.editorTags,
         UiItem.topCollab,
         UiItem.homeAi,

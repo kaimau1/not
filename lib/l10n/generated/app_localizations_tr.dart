@@ -5768,4 +5768,80 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get formatSizeUp => 'Büyüt';
+
+  @override
+  String get imageCaptionHint => 'Görüntü açıklaması';
+
+  @override
+  String get imageCaptionAdd => 'Açıklama ekle';
+
+  @override
+  String get imageCaptionEdit => 'Açıklamayı düzenle';
+
+  @override
+  String get voiceRecordResume => 'Kayda devam et';
+
+  @override
+  String get voiceRecordDiscard => 'Kaydı at';
+
+  @override
+  String get checkboxToggle => 'Onay kutusu';
+
+  @override
+  String get noteAppearance => 'Görünüm';
+
+  @override
+  String get noteThemeNone => 'Sade';
+
+  @override
+  String get noteThemePalm => 'Palmiye';
+
+  @override
+  String get noteThemeLagoon => 'Lagün';
+
+  @override
+  String get noteThemeNight => 'Gece';
+
+  @override
+  String get noteThemeSunset => 'Gün batımı';
+
+  @override
+  String get noteThemeSakura => 'Sakura';
+
+  @override
+  String get noteThemeWaves => 'Deniz';
+
+  @override
+  String get noteThemeMeadow => 'Çayır';
+
+  @override
+  String get noteThemePaper => 'Kâğıt';
+
+  @override
+  String get pinToHomeScreen => 'Ana ekrana yerleştir';
+
+  @override
+  String get pinToHomeSent =>
+      'Ana ekranın onayı bekleniyor — kısayol eklenince notu oradan açabilirsin';
+
+  @override
+  String get pinToHomeUnsupported => 'Ana ekran bu kısayolu desteklemiyor';
+
+  @override
+  String get inkColor => 'Kalem rengi';
+
+  @override
+  String get formatApplyAll => 'Tümüne uygula';
+
+  @override
+  String get formatApplyItem => 'Maddeye uygula';
+
+  @override
+  String get cardMediaHide => 'Görsel önizlemesini gizle';
+
+  @override
+  String get cardMediaShow => 'Görsel önizlemesini göster';
+
+  @override
+  String get youTubeEmbedded => 'Video nota gömüldü';
 }

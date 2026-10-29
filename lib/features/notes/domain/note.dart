@@ -173,6 +173,7 @@ class Note {
     this.customFrameColor,
     this.pinned = false,
     this.starred = false,
+    this.cardMediaHidden = false,
     this.locked = false,
     this.fontFamily,
     this.fontScale = 1,
@@ -182,6 +183,7 @@ class Note {
     this.titleTextOpacity = 1,
     this.backgroundImageId,
     this.backgroundOpacity = 0.35,
+    this.theme = '',
     this.listColumns = 1,
     this.classicDocument = false,
     this.archivePages = const [],
@@ -222,10 +224,10 @@ class Note {
   static const knownKeys = <String>{
     'type', 'title', 'body', 'items', 'pageNotes', 'attachments', 'tags',
     'folderId', 'color', 'frameColor', 'customColor', 'customFrameColor',
-    'pinned', 'starred', 'locked',
+    'pinned', 'starred', 'cardMediaHidden', 'locked',
     'fontFamily', 'fontScale', 'textOpacity', 'titleFontFamily',
     'titleFontScale', 'titleTextOpacity', 'backgroundImageId',
-    'backgroundOpacity', 'listColumns', 'classicDocument', 'archivePages',
+    'backgroundOpacity', 'theme', 'listColumns', 'classicDocument', 'archivePages',
     'archivePaper', 'lineSpacing', 'archiveGeneralName', 'paged', 'heavyRef',
     'tagLinks',
     'textPages',
@@ -322,6 +324,13 @@ class Note {
   /// çevirip `starred`ı temizlediği için o notlar sabitli kalır.
   final bool starred;
 
+  /// **KARTTA GÖRSEL ÖNİZLEMESİ GİZLİ** (kullanıcı isteği 2026-10-28: "ana
+  /// ekran not 3 noktalarında görsel önizlemesini gizle seçeneği"): not
+  /// başına; ana ekran/klasör kartı bu notun görsellerini, videolarını ve
+  /// dosya karolarını çizmez (editörde her şey yerinde). Kart ayarındaki
+  /// genel "görseller" anahtarından bağımsız.
+  final bool cardMediaHidden;
+
   /// Kilitli not: kart içeriği gizlenir, açmak biyometrik doğrulama ister;
   /// arama yalnızca başlıkta yapılır ve AI bağlamlarına dahil edilmez.
   final bool locked;
@@ -366,6 +375,14 @@ class Note {
   /// Zemin görselinin görünürlüğü (0.05–1). Varsayılan bilerek düşük: tam
   /// opak bir fotoğrafın üstünde not okunmuyor.
   final double backgroundOpacity;
+
+  /// **NOT TEMASI** (kullanıcı isteği 2026-10-28: "notun görselini/rengini
+  /// değiştirme ekranı güzel"): çizilmiş dekoratif zemin — palmiye gölgesi,
+  /// lagün yaprakları, yıldızlı gece… (kimlikler `NoteThemes`te; '' = yok).
+  /// Renk gibi notla senkronlanır; bu sürümün tanımadığı kimlik zeminsiz
+  /// çizilir (veri korunur). Dosya değil çizim: her ölçekte keskin, açık ve
+  /// koyu temada kendi tonları var.
+  final String theme;
 
   /// Liste notunun KAÇ SÜTUNDA gösterileceği: 1 (varsayılan) ya da 2.
   ///
@@ -714,6 +731,7 @@ class Note {
     bool clearCustomFrameColor = false,
     bool? pinned,
     bool? starred,
+    bool? cardMediaHidden,
     bool? locked,
     String? fontFamily,
     bool clearFontFamily = false,
@@ -726,6 +744,7 @@ class Note {
     String? backgroundImageId,
     bool clearBackgroundImage = false,
     double? backgroundOpacity,
+    String? theme,
     int? listColumns,
     bool? classicDocument,
     List<String>? archivePages,
@@ -765,6 +784,7 @@ class Note {
         : (customFrameColor ?? this.customFrameColor),
     pinned: pinned ?? this.pinned,
     starred: starred ?? this.starred,
+    cardMediaHidden: cardMediaHidden ?? this.cardMediaHidden,
     locked: locked ?? this.locked,
     fontFamily: clearFontFamily ? null : (fontFamily ?? this.fontFamily),
     fontScale: fontScale ?? this.fontScale,
@@ -778,6 +798,7 @@ class Note {
         ? null
         : (backgroundImageId ?? this.backgroundImageId),
     backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
+    theme: theme ?? this.theme,
     listColumns: listColumns ?? this.listColumns,
     classicDocument: classicDocument ?? this.classicDocument,
     archivePages: archivePages ?? this.archivePages,
@@ -883,6 +904,7 @@ class Note {
       customFrameColor: (map['customFrameColor'] as num?)?.toInt(),
       pinned: map['pinned'] == true,
       starred: map['starred'] == true,
+      cardMediaHidden: map['cardMediaHidden'] == true,
       locked: map['locked'] as bool? ?? false,
       fontFamily: map['fontFamily'] as String?,
       fontScale: (map['fontScale'] as num?)?.toDouble() ?? 1,
@@ -905,6 +927,7 @@ class Note {
           1,
       backgroundImageId: map['backgroundImageId'] as String?,
       backgroundOpacity: (map['backgroundOpacity'] as num?)?.toDouble() ?? 0.35,
+      theme: map['theme'] as String? ?? '',
       // 1 ve 2 dışındaki bir değer (ileride eklenecek bir sütun sayısını
       // bilmeyen bu sürüm) tek sütuna düşer — çizim yolu ikiden fazlasını
       // yerleştiremez.
@@ -974,6 +997,8 @@ class Note {
     'customFrameColor': customFrameColor,
     'pinned': pinned,
     'starred': starred,
+    // KOŞULSUZ (merge tuzağı): gizleme geri alınabilmeli.
+    'cardMediaHidden': cardMediaHidden,
     'locked': locked,
     // Varsayılandan farklıysa yazılır: eski notların şeması büyümez.
     if (fontFamily != null) 'fontFamily': fontFamily,
@@ -994,6 +1019,8 @@ class Note {
     // yoksa eski değer kalır, bu yüzden null da açıkça yazılır.
     'backgroundImageId': backgroundImageId,
     'backgroundOpacity': backgroundOpacity,
+    // KOŞULSUZ (merge tuzağı): temayı kaldırmak '' yazarak kayda geçer.
+    'theme': theme,
     // HER ZAMAN yazılır (koşullu değil): notlar `set(merge: true)` ile
     // kaydediliyor, yani atlanmış bir anahtar SİLİNMEZ — koşullu yazılsaydı
     // iki sütundan tek sütuna dönmek kayda hiç yansımaz ve not her açılışta

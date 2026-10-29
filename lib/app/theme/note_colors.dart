@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../features/notes/domain/note.dart';
+import 'note_themes.dart';
 
 /// Not renk belirteçlerini temaya (açık/koyu) uygun gerçek renklere çözer.
 abstract final class NoteColors {
@@ -49,6 +50,13 @@ abstract final class NoteColors {
   /// diye tema yüzeyine karıştırılmış — açıkta %55, koyuda %35), yoksa
   /// hazır ton ([surface]).
   static Color noteSurface(BuildContext context, Note note) {
+    // Çizilmiş tema rengin önünde: notun düz zemini temanın alt tonu.
+    final theme = NoteThemes.byId(note.theme);
+    if (theme != null) {
+      return theme
+          .palette(Theme.of(context).brightness == Brightness.dark)
+          .base;
+    }
     final custom = note.customColor;
     if (custom == null) return surface(context, note.color);
     final scheme = Theme.of(context).colorScheme;

@@ -10327,6 +10327,156 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Büyüt'**
   String get formatSizeUp;
+
+  /// No description provided for @imageCaptionHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görüntü açıklaması'**
+  String get imageCaptionHint;
+
+  /// No description provided for @imageCaptionAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıklama ekle'**
+  String get imageCaptionAdd;
+
+  /// No description provided for @imageCaptionEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıklamayı düzenle'**
+  String get imageCaptionEdit;
+
+  /// No description provided for @voiceRecordResume.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayda devam et'**
+  String get voiceRecordResume;
+
+  /// No description provided for @voiceRecordDiscard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydı at'**
+  String get voiceRecordDiscard;
+
+  /// No description provided for @checkboxToggle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Onay kutusu'**
+  String get checkboxToggle;
+
+  /// No description provided for @noteAppearance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünüm'**
+  String get noteAppearance;
+
+  /// No description provided for @noteThemeNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sade'**
+  String get noteThemeNone;
+
+  /// No description provided for @noteThemePalm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Palmiye'**
+  String get noteThemePalm;
+
+  /// No description provided for @noteThemeLagoon.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lagün'**
+  String get noteThemeLagoon;
+
+  /// No description provided for @noteThemeNight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gece'**
+  String get noteThemeNight;
+
+  /// No description provided for @noteThemeSunset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gün batımı'**
+  String get noteThemeSunset;
+
+  /// No description provided for @noteThemeSakura.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sakura'**
+  String get noteThemeSakura;
+
+  /// No description provided for @noteThemeWaves.
+  ///
+  /// In tr, this message translates to:
+  /// **'Deniz'**
+  String get noteThemeWaves;
+
+  /// No description provided for @noteThemeMeadow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çayır'**
+  String get noteThemeMeadow;
+
+  /// No description provided for @noteThemePaper.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kâğıt'**
+  String get noteThemePaper;
+
+  /// No description provided for @pinToHomeScreen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekrana yerleştir'**
+  String get pinToHomeScreen;
+
+  /// No description provided for @pinToHomeSent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekranın onayı bekleniyor — kısayol eklenince notu oradan açabilirsin'**
+  String get pinToHomeSent;
+
+  /// No description provided for @pinToHomeUnsupported.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekran bu kısayolu desteklemiyor'**
+  String get pinToHomeUnsupported;
+
+  /// No description provided for @inkColor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem rengi'**
+  String get inkColor;
+
+  /// No description provided for @formatApplyAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümüne uygula'**
+  String get formatApplyAll;
+
+  /// No description provided for @formatApplyItem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maddeye uygula'**
+  String get formatApplyItem;
+
+  /// No description provided for @cardMediaHide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel önizlemesini gizle'**
+  String get cardMediaHide;
+
+  /// No description provided for @cardMediaShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel önizlemesini göster'**
+  String get cardMediaShow;
+
+  /// No description provided for @youTubeEmbedded.
+  ///
+  /// In tr, this message translates to:
+  /// **'Video nota gömüldü'**
+  String get youTubeEmbedded;
 }
 
 class _AppLocalizationsDelegate

@@ -1502,8 +1502,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // modu kapatır. Ana ekran yığının kökü olduğu için sistem geri tuşu
     // doğrudan uygulamayı kapatıyordu; kullanıcı yanlışlıkla bir notu seçince
     // (uzun basış) seçimi kapatmanın tek yolu ekrandaki "×" idi.
+    // KLASÖR SÜZGECİ (2026-10-28): klasör artık ana ekranın süzgeci; geri
+    // tuşu önce klasörden çıkar (eski klasör sayfasındaki gibi).
+    final inFolder = ref.watch(selectedFolderProvider) != null;
     return PopScope(
-      canPop: !selectionActive && !reorderActive,
+      canPop: !selectionActive && !reorderActive && !inFolder,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
         // "+" paneli açıksa geri tuşu ONUN: Flutter aynı rotadaki tüm
@@ -1514,6 +1517,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           ref.read(selectedNoteIdsProvider.notifier).clear();
         } else if (reorderActive) {
           ref.read(reorderModeProvider.notifier).set(false);
+        } else if (inFolder) {
+          _swipeForward = false;
+          ref.read(selectedFolderProvider.notifier).set(null);
         }
       },
       // Editör (ya da bir bölüm) ana ekranı TAMAMEN örtünce ızgara yeniden

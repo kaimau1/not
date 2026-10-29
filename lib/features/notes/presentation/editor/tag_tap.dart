@@ -1,9 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderEditable;
 
+import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/attachment_tag.dart';
+import '../../../../core/utils/link_text.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../../core/utils/video_time.dart';
 import 'text_wrap.dart';
 
@@ -14,6 +18,11 @@ import 'text_wrap.dart';
 /// Alan bir [Listener] ile sarılır, basışın konumu burada tutulur.
 class TapPointTracker {
   Offset? last;
+
+  /// Alan bu dokunuş BAŞLARKEN odakta mıydı (yazarken mi, okurken mi?).
+  /// Bağlantıya okurken dokunmak onu doğrudan açar; yazarken imleç konur ve
+  /// açmak için kısa bir öneri çıkar (bkz. `tappedLink`).
+  bool wasFocused = false;
 
   /// Bu dokunuş süresince odak alması engellenen alan (bkz. [wrap]).
   FocusNode? _blocked;
@@ -42,6 +51,7 @@ class TapPointTracker {
     behavior: HitTestBehavior.translucent,
     onPointerDown: (event) {
       last = event.position;
+      wasFocused = focusNode?.hasFocus ?? false;
       if (focusNode == null ||
           keepsKeyboardClosed == null ||
           event.kind == PointerDeviceKind.mouse ||
@@ -85,6 +95,7 @@ bool linkAtPoint({
   required Offset global,
   bool timestamps = false,
   Iterable<String> tagNames = const [],
+  bool links = true,
 }) {
   if (editable == null) return false;
   final render = editable.renderEditable;
@@ -111,7 +122,74 @@ bool linkAtPoint({
       if (hits(tag.start, tag.end, 2)) return true;
     }
   }
+  // BAĞLANTI (2026-10-28): okurken bağlantıya dokunmak onu açar, klavye
+  // açılmasın.
+  if (links && _linkHit(render, displayText, global, local) != null) {
+    return true;
+  }
   return false;
+}
+
+/// [global] noktası bir bağlantının ÇİZİLMİŞ kutusunda mı; öyleyse adres.
+/// Bağlantılar mantıksal metinde aranır (sarma çapası adresin ortasına
+/// düşebilir) ve görüntü uzayına çevrilir.
+String? _linkHit(
+  RenderEditable render,
+  String displayText,
+  Offset global,
+  Offset local,
+) {
+  final logical = stripWrapAnchors(displayText);
+  final offset = render.getPositionForPoint(global).offset;
+  for (final link in findLinks(logical)) {
+    final start = wrapToDisplayOffset(displayText, link.start);
+    final end = wrapToDisplayOffset(displayText, link.end);
+    if (offset < start || offset > end) continue;
+    final boxes = render.getBoxesForSelection(
+      TextSelection(baseOffset: start, extentOffset: end),
+    );
+    for (final box in boxes) {
+      if (box.toRect().inflate(2).contains(local)) return link.url;
+    }
+  }
+  return null;
+}
+
+/// Dokunulan bağlantıyı açar. OKURKEN (alan dokunuştan önce odakta değildi)
+/// doğrudan açılır; YAZARKEN dokunuş imleci koymak da olabilir — o zaman
+/// adres kısa bir bildirimde "Aç" düğmesiyle önerilir.
+void handleLinkTap(BuildContext context, String url, {required bool editing}) {
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  final l10n = context.l10n;
+  Future<void> open() async {
+    if (!await openLink(url)) messenger?.showMessage(l10n.linkOpenFailed);
+  }
+
+  if (!editing) {
+    unawaited(open());
+    return;
+  }
+  messenger
+    ?..hideCurrentSnackBar()
+    ..showMessage(
+      url,
+      action: SnackBarAction(label: l10n.openLink, onPressed: open),
+    );
+}
+
+/// **BAĞLANTIYA DOKUNUŞ** (kullanıcı isteği 2026-10-28: "linklerin üzerine
+/// tıklayarak linke gitme"): dokunuşun KONUMU bir bağlantının kutusundaysa
+/// adresi (yoksa null). Düzenlenebilir alanda span tanıyıcısı çalışmadığı
+/// için karar dokunuştan sonra konumdan verilir (zaman damgasıyla aynı yol).
+String? tappedLink({
+  required String displayText,
+  EditableTextState? editable,
+  Offset? tapGlobal,
+}) {
+  if (editable == null || tapGlobal == null) return null;
+  final render = editable.renderEditable;
+  if (!render.attached || !render.hasSize) return null;
+  return _linkHit(render, displayText, tapGlobal, render.globalToLocal(tapGlobal));
 }
 
 /// [context]in altındaki İLK düzenlenebilir alanın durumu (yoksa null).

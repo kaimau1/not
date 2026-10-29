@@ -730,6 +730,8 @@ class Attachment {
     this.text = '',
     this.transcriptOf = '',
     this.sourceDigest = '',
+    this.caption = '',
+    this.wave = const [],
     this.createdAt,
     this.rawKind = '',
     this.extras = const {},
@@ -780,8 +782,69 @@ class Attachment {
     'text',
     'transcriptOf',
     'sourceDigest',
+    'caption',
+    'wave',
     'createdAt',
   };
+
+  /// **GÖRSEL AÇIKLAMASI** (kullanıcı isteği 2026-10-28: "görüntü açıklaması
+  /// kısmı da güzel"): görselin hemen altında duran kısa yazı. Notun metni
+  /// değil, görselin parçası — görsel taşınınca/silinince onunla gider.
+  /// Aramada ve dışa aktarmada görselin yerine geçer. Yalnız doluyken yazılır.
+  final String caption;
+
+  /// Açıklamanın karakter tavanı (iki-üç satırlık altyazı; uzun yazı notun
+  /// gövdesine aittir).
+  static const maxCaptionChars = 280;
+
+  /// **SES DALGASI** (kullanıcı isteği 2026-10-28: sesli not dalga formuyla):
+  /// kayıt sırasında ölçülen genliklerin [waveBars] çubuğa indirgenmiş hâli,
+  /// her biri 0–100. Oynatıcı bunu çizer — dosyayı çözmeden, her cihazda
+  /// aynı. Boşsa (eski kayıt, dışarıdan eklenen dosya) ekin kimliğinden
+  /// türetilen kararlı bir desen çizilir ([displayWave]).
+  final List<int> wave;
+
+  /// Saklanan dalganın çubuk sayısı (kayda ~100 bayt).
+  static const waveBars = 48;
+
+  /// Çizilecek dalga: kayıtlıysa o, değilse kimlikten türeyen yumuşak desen
+  /// (her açılışta aynı — rastgele değil).
+  List<int> get displayWave {
+    if (wave.isNotEmpty) return wave;
+    var seed = 0;
+    for (final c in id.codeUnits) {
+      seed = (seed * 31 + c) & 0x7fffffff;
+    }
+    return [
+      for (var i = 0; i < waveBars; i++)
+        () {
+          seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+          // Konuşma gibi: ortası dolgun, uçları alçak, arada dalgalanma.
+          final envelope = 0.45 + 0.55 * (1 - ((i / waveBars) * 2 - 1).abs());
+          return (20 + (seed % 70) * envelope).round().clamp(8, 100);
+        }(),
+    ];
+  }
+
+  /// Ölçülen genlik dizisini (her biri 0–1) [waveBars] çubuğa indirger:
+  /// her çubuk kendi dilimindeki EN YÜKSEK değer (kısa heceler kaybolmasın).
+  static List<int> compactWave(List<double> levels) {
+    if (levels.isEmpty) return const [];
+    final out = <int>[];
+    for (var i = 0; i < waveBars; i++) {
+      final from = (i * levels.length / waveBars).floor();
+      final to = (((i + 1) * levels.length) / waveBars).ceil().clamp(
+        from + 1,
+        levels.length,
+      );
+      var peak = 0.0;
+      for (var j = from; j < to && j < levels.length; j++) {
+        if (levels[j] > peak) peak = levels[j];
+      }
+      out.add((peak.clamp(0.0, 1.0) * 100).round());
+    }
+    return out;
+  }
 
   /// Bu sürümün işleyemediği (daha yeni sürümde eklenmiş) ek mi?
   bool get isUnsupported => kind == AttachmentKind.unknown;
@@ -1067,6 +1130,8 @@ class Attachment {
     pdfMarks: local.pdfMarks,
     pinHeight: local.pinHeight,
     bubblesHidden: local.bubblesHidden,
+    // Açıklama yazılırken gelen eski yankı harfleri geri almasın.
+    caption: local.caption,
   );
 
   /// [fileName]/[mimeType]/[width]/[height]/[sizeBytes] yalnız KIRPMA yolunda
@@ -1103,6 +1168,8 @@ class Attachment {
     String? text,
     String? transcriptOf,
     String? sourceDigest,
+    String? caption,
+    List<int>? wave,
   }) => Attachment(
     id: id,
     kind: kind,
@@ -1136,6 +1203,8 @@ class Attachment {
     text: text ?? this.text,
     transcriptOf: transcriptOf ?? this.transcriptOf,
     sourceDigest: sourceDigest ?? this.sourceDigest,
+    caption: caption ?? this.caption,
+    wave: wave ?? this.wave,
     createdAt: createdAt,
     rawKind: rawKind,
     extras: extras,
@@ -1189,6 +1258,11 @@ class Attachment {
         text: map['text'] as String? ?? '',
         transcriptOf: map['transcriptOf'] as String? ?? '',
         sourceDigest: map['sourceDigest'] as String? ?? '',
+        caption: map['caption'] as String? ?? '',
+        wave: [
+          for (final e in (map['wave'] as List?) ?? const [])
+            if (e is num) e.toInt().clamp(0, 100),
+        ],
         createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
         rawKind: map['kind'] as String? ?? '',
         extras: {
@@ -1267,6 +1341,10 @@ class Attachment {
     if (text.isNotEmpty) 'text': text,
     if (transcriptOf.isNotEmpty) 'transcriptOf': transcriptOf,
     if (sourceDigest.isNotEmpty) 'sourceDigest': sourceDigest,
+    // Açıklama ve dalga yalnız doluyken (ekler dizi olarak TÜMDEN yazılır —
+    // silinen açıklamanın alanı düşer, merge tuzağı yok).
+    if (caption.isNotEmpty) 'caption': caption,
+    if (wave.isNotEmpty) 'wave': wave,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),

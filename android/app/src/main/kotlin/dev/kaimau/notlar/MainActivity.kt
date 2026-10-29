@@ -243,6 +243,20 @@ class MainActivity : FlutterFragmentActivity() {
                     // düşer.
                     "speechAvailable" ->
                         result.success(SpeechRecognizer.isRecognitionAvailable(this))
+                    // "Ana ekrana yerleştir" — notu başlatıcıya sabit kısayol
+                    // olarak koyar (NotKisayolu.kt). Başlatıcı desteklemiyorsa
+                    // false döner, Dart tarafı bunu söyler.
+                    "pinShortcutSupported" ->
+                        result.success(NotKisayolu.destekleniyor(this))
+                    "pinNoteShortcut" -> result.success(
+                        NotKisayolu.sabitle(
+                            this,
+                            call.argument<String>("id") ?: "",
+                            call.argument<String>("label") ?: "",
+                            call.argument<Number>("color")?.toInt() ?: 0xFFFFE08A.toInt(),
+                            call.argument<String>("glyph") ?: ""
+                        )
+                    )
                     // Dinlemeyi bitir: son sonuç onResults ile gelir, ardından
                     // akış kapanır.
                     "stopSpeech" -> {

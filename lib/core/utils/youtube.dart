@@ -53,6 +53,30 @@ String? firstYouTubeUrl(String text) {
   return null;
 }
 
+/// Metin [before] → [after] olurken TEK SEFERDE giren parça (yapıştırma)
+/// yalnız bir YouTube VİDEO adresiyse o adres; değilse null. Yazarken harf
+/// harf gelen değişiklik, adres + başka metin ya da en az 12 karakter
+/// büyümeyen değişiklik sayılmaz.
+String? pastedYouTubeUrl(String before, String after) {
+  if (after.length - before.length < 12) return null;
+  var p = 0;
+  while (p < before.length &&
+      p < after.length &&
+      before.codeUnitAt(p) == after.codeUnitAt(p)) {
+    p++;
+  }
+  var s = 0;
+  while (s < before.length - p &&
+      s < after.length - p &&
+      before.codeUnitAt(before.length - 1 - s) ==
+          after.codeUnitAt(after.length - 1 - s)) {
+    s++;
+  }
+  final inserted = after.substring(p, after.length - s).trim();
+  if (inserted.isEmpty || inserted.contains(RegExp(r'\s'))) return null;
+  return youTubeVideoId(inserted) == null ? null : inserted;
+}
+
 /// Videonun başlangıç saniyesi (`t=90`, `t=1m30s`, `start=90`); yoksa 0.
 int youTubeStartSeconds(String url) {
   var text = url.trim();

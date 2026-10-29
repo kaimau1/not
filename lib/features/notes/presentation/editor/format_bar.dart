@@ -51,7 +51,17 @@ class FormatBar extends StatefulWidget {
     this.target,
     this.onPageStyle,
     this.onHeading,
+    this.onApplyToAll,
+    this.applyToAllLabel,
   });
+
+  /// **TÜMÜNE / MADDEYE UYGULA** (kullanıcı isteği 2026-10-28): imleçteki
+  /// (ya da seçimdeki) etkin biçimler alanın TAMAMINA uygulanır ve alanın
+  /// tamamı seçili kalır — sonraki dokunuşlar da hepsine işler. null ise
+  /// düğme çizilmez. [applyToAllLabel] düğmenin adı (gövdede "Tümüne
+  /// uygula", maddede "Maddeye uygula").
+  final ValueChanged<RichMark>? onApplyToAll;
+  final String? applyToAllLabel;
 
   /// Satırı başlık / alt başlık / düz metin yapar (bkz. [setLineHeading]).
   /// null ise başlık düğmesi çizilmez (notun başlık alanı zaten başlık).
@@ -301,8 +311,8 @@ class _FormatBarState extends State<FormatBar> {
               // İNCE AYAR TEPSİSİ panelin ÜSTÜNDE: göz yazıdan çok
               // uzaklaşmaz, alttaki sıralar parmağın altında oynamaz.
               AnimatedSize(
-                duration: const Duration(milliseconds: 160),
-                curve: Curves.easeOut,
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeOutCubic,
                 alignment: Alignment.bottomCenter,
                 child: switch (_tray) {
                   _Tray.none => const SizedBox(width: double.infinity),
@@ -447,6 +457,13 @@ class _FormatBarState extends State<FormatBar> {
                         ? null
                         : () => _stepScale(1),
                   ),
+                  if (widget.onApplyToAll != null)
+                    _Btn(
+                      key: const ValueKey('format-apply-all'),
+                      icon: Icons.select_all_rounded,
+                      tooltip: widget.applyToAllLabel ?? l10n.formatApplyAll,
+                      onTap: () => widget.onApplyToAll!(_active),
+                    ),
                   // Biçimi temizle: biçimsiz metinde SOLUK ve tıklanamaz —
                   // düğmenin işe yarayıp yaramadığı görünür.
                   _Btn(
@@ -553,24 +570,33 @@ class _Btn extends StatelessWidget {
             child: Semantics(
               button: true,
               selected: active || open,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: onTap,
-                child: Ink(
-                  width: double.infinity,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: active
-                        ? scheme.primaryContainer
-                        : open
-                        ? scheme.surfaceContainerHighest
-                        : null,
-                    borderRadius: BorderRadius.circular(12),
-                    border: open
-                        ? Border.all(color: scheme.primary, width: 1.5)
-                        : null,
+              // Etkin/açık durum YUMUŞAK geçer (2026-10-28, "biçim menüsü
+              // daha yumuşak"): zemin ve simge rengi ~200 ms'de karışır.
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(end: active ? 1 : (open ? 0.5 : 0)),
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                builder: (context, t, _) => InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: onTap,
+                  child: Ink(
+                    width: double.infinity,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: t <= 0
+                          ? null
+                          : open && !active
+                          ? scheme.surfaceContainerHighest.withValues(
+                              alpha: t * 2,
+                            )
+                          : scheme.primaryContainer.withValues(alpha: t),
+                      borderRadius: BorderRadius.circular(12),
+                      border: open
+                          ? Border.all(color: scheme.primary, width: 1.5)
+                          : null,
+                    ),
+                    child: Icon(icon, size: 22, color: fg),
                   ),
-                  child: Icon(icon, size: 22, color: fg),
                 ),
               ),
             ),
@@ -597,31 +623,46 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    // Seçim yumuşak geçer: zemin, kenar ve yazı rengi birlikte karışır.
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: Material(
-        color: selected ? scheme.primaryContainer : scheme.surfaceContainer,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: selected ? scheme.primary : scheme.outlineVariant,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(end: selected ? 1 : 0),
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        builder: (context, t, child) => Material(
+          color: Color.lerp(
+            scheme.surfaceContainer,
+            scheme.primaryContainer,
+            t,
           ),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Container(
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            alignment: Alignment.center,
-            child: DefaultTextStyle.merge(
-              style: TextStyle(
-                color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: Color.lerp(scheme.outlineVariant, scheme.primary, t)!,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              height: 36,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              alignment: Alignment.center,
+              child: DefaultTextStyle.merge(
+                style: TextStyle(
+                  color: Color.lerp(
+                    scheme.onSurface,
+                    scheme.onPrimaryContainer,
+                    t,
+                  ),
+                ),
+                child: child!,
               ),
-              child: child,
             ),
           ),
         ),
+        child: child,
       ),
     );
   }

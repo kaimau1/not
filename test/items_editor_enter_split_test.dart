@@ -2,6 +2,7 @@
 // (kullanıcı isteği 2026-10-28: "cümlenin arasında enter yapılınca oradan
 // itibaren cümleyi bölüp yeni madde yapmalı").
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/presentation/editor/items_editor.dart';
@@ -63,5 +64,30 @@ void main() {
   ) async {
     final latest = await _enterAt(tester, text: 'ekmek', caret: 0);
     expect(latest!.map((i) => i.text).toList(), ['', 'ekmek']);
+  });
+
+  // Enter'ın tersi (kullanıcı isteği 2026-10-28): maddenin EN BAŞINDA geri
+  // silme maddeyi üstündekiyle birleştirir, imleç birleşme noktasında kalır.
+  testWidgets('madde başında geri sil: üst maddeyle birleşir', (tester) async {
+    final latest = await _enterAt(tester, text: 'ekmek süt al', caret: 6);
+    expect(latest!.map((i) => i.text).toList(), ['ekmek', 'süt al']);
+    // İmleç ikinci maddenin başında (Enter onu oraya koydu).
+    await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsOneWidget);
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.controller!.text, 'ekmeksüt al');
+    expect(field.focusNode!.hasFocus, isTrue);
+    expect(field.controller!.selection.baseOffset, 'ekmek'.length);
+  });
+
+  testWidgets('ilk maddede ya da imleç ortadayken birleşmez', (tester) async {
+    await _enterAt(tester, text: 'ekmek süt', caret: 6);
+    final editor = tester.state<ItemsEditorState>(find.byType(ItemsEditor));
+    final second = tester.widget<TextField>(find.byType(TextField).at(1));
+    second.controller!.selection = const TextSelection.collapsed(offset: 2);
+    await tester.pump();
+    expect(editor.mergeIntoPrevious(editor.widget.items.last.id), isFalse);
+    expect(editor.mergeIntoPrevious('yok'), isFalse);
   });
 }

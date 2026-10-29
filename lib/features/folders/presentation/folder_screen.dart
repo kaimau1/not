@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../ai/data/semantic_search.dart' show SemanticScope;
 import '../../../app/router.dart';
@@ -58,15 +59,46 @@ class FolderScreen extends ConsumerStatefulWidget {
   /// null = kendi klasörüm. Dolu ve benden farklıysa paylaşılan bir klasör.
   final String? ownerId;
 
+  /// **KENDİ KLASÖRÜM = SÜZGEÇLİ ANA EKRAN** (kullanıcı isteği 2026-10-28:
+  /// "klasörün kendi sayfası ve dashboard aynı olsun, klasör sanki filtre
+  /// uygulanmış gibi olsun"). Kendi klasörüm ayrı sayfa açmaz: ana ekran o
+  /// klasöre SÜZÜLÜR (`selectedFolderProvider`) — aynı ızgara, aynı kartlar,
+  /// aynı arama/süz/seçim/sıralama, "+" yeni notu klasöre koyar. Süz
+  /// düğmesinde klasörün adı ve × görünür; geri tuşu süzgeci kaldırır.
+  ///
+  /// PAYLAŞILAN klasör ([ownerId] dolu) başka kullanıcının koleksiyonundan
+  /// okunur — ana ekranın akışında yok; o hâlâ bu sayfada açılır.
   static Future<void> open(
     BuildContext context,
     String folderId, {
     String? ownerId,
-  }) => Navigator.of(context).push(
-    MaterialPageRoute<void>(
-      builder: (_) => FolderScreen(folderId: folderId, ownerId: ownerId),
-    ),
-  );
+  }) {
+    if (ownerId == null) {
+      showFolderOnHome(context, folderId);
+      return Future.value();
+    }
+    return Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => FolderScreen(folderId: folderId, ownerId: ownerId),
+      ),
+    );
+  }
+
+  /// Ana ekranı [folderId] klasörüne süzer; ana ekran dışındaysa (Klasörler
+  /// sayfası, arşiv…) ana ekrana döner. Klasörü açmak oradaki her şeyi
+  /// okunmuş sayar (rozet söner — eski klasör sayfasıyla aynı).
+  static void showFolderOnHome(BuildContext context, String folderId) {
+    final container = ProviderScope.containerOf(context, listen: false);
+    container.read(noteFilterProvider.notifier).set(NoteFilter.all);
+    container.read(selectedTagProvider.notifier).set(null);
+    container.read(selectedFolderProvider.notifier).set(folderId);
+    container.read(folderSeenProvider.notifier).markSeen(folderId);
+    final router = GoRouter.maybeOf(context);
+    if (router == null) return;
+    // Sayfasız rota (ör. klasör levhası) üstteyse ana ekrana kadar kapanır.
+    Navigator.of(context).popUntil((route) => route.settings is Page);
+    if (!isSplitShellLocation(router.state.uri.path)) router.go('/');
+  }
 
   /// Yana çekişle KOMŞU klasöre geçer (kullanıcı isteği 2026-09-26:
   /// "sağ sol kaydırmada klasörler arası geçiş"). Yığın BÜYÜMEZ: sayfa

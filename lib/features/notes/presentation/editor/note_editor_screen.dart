@@ -26,6 +26,7 @@ import '../../../../core/app_update.dart';
 import '../../../../app/router.dart';
 import '../../../auth/presentation/auth_providers.dart';
 import '../../../../app/theme/note_colors.dart';
+import '../../../../app/theme/note_themes.dart';
 import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
@@ -45,8 +46,10 @@ import '../../../../core/utils/video_time.dart';
 import '../../../../core/utils/youtube.dart';
 import '../../../../core/widgets/customizable.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
+import '../../../../core/widgets/scale_settle.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/attachment_save.dart';
+import '../../data/note_shortcut.dart';
 import '../../../inbox/presentation/send_note_sheet.dart';
 import '../../../ai/data/ai_gate.dart';
 import '../../../ai/data/gemini_service.dart';
@@ -85,6 +88,7 @@ import '../../domain/note_type.dart';
 import '../../domain/page_notes.dart';
 import '../collaborators_sheet.dart';
 import '../color_picker_sheet.dart';
+import '../note_theme_sheet.dart';
 import '../note_stats_sheet.dart';
 import '../note_template_sheet.dart';
 import '../notes_providers.dart';
@@ -98,7 +102,7 @@ import 'ai_result_sheet.dart';
 import 'attach_sheet.dart';
 import 'attachment_clipboard.dart';
 import 'attachment_strip.dart';
-import 'audio_recorder_sheet.dart';
+import 'voice_note_recorder.dart';
 import 'calculator_sheet.dart';
 import '../../data/place_reminders.dart';
 import '../../data/drive_store.dart' show localFilesRevisionProvider;
@@ -249,6 +253,7 @@ bool sameRenderedNote(Note a, Note b) {
       a.titleTextOpacity != b.titleTextOpacity ||
       a.backgroundImageId != b.backgroundImageId ||
       a.backgroundOpacity != b.backgroundOpacity ||
+      a.theme != b.theme ||
       // Defter görünümü ve kâğıt deseni (bkz. `_sameVisual` kök neden notu).
       a.paged != b.paged ||
       a.archivePaper != b.archivePaper ||
@@ -302,6 +307,9 @@ bool sameRenderedNote(Note a, Note b) {
         x.section != y.section ||
         // Sabit/sayfadaki belge kutusu balonları da çizer (bkz. PdfPageBox).
         x.bubblesHidden != y.bubblesHidden ||
+        // Görselin altındaki açıklama ve sesin dalgası da kutuda çizilir.
+        x.caption != y.caption ||
+        !_sameInts(x.wave, y.wave) ||
         !_sameBubbles(x.bubbles, y.bubbles) ||
         !identical(x.ink, y.ink)) {
       return false;
@@ -720,6 +728,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// ve ölçüm kodu da gereksiz kaldı.
   static const double _kToolSegment = kEditorBarSegment;
 
+  /// Biçim paneli ⇄ alt çubuk geçişinin süresi (ikisi aynı eğriyle).
+  static const _kBarSwap = Duration(milliseconds: 260);
+
   /// Başlık üstündeki meta çiplerinin (klasör/etiket/hatırlatıcı/"+") ortak
   /// sıkıştırma ayarları: satır üst bar ile başlık arasındaki dar banda
   /// sığmalı. `shrinkWrap` dokunma hedefini 48 dp'ye YUVARLAMAZ — o yuvarlama
@@ -897,6 +908,54 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Seçimdeki tüm biçimleri siler.
   void _clearFormat() => _runOnTarget(clearRichFormat);
+
+  /// **TÜMÜNE / MADDEYE UYGULA** (biçim paneli, kullanıcı isteği
+  /// 2026-10-28): imleçte etkin olan biçimler ([carried] — bekleyenler dahil)
+  /// alanın TAMAMINA yazılır, alanın tamamı seçili kalır: sonraki her biçim
+  /// dokunuşu da bütün metne (maddede bütün maddeye) işler. Başlık düzeyi
+  /// taşınmaz — satır başına anlamlı, tüm metni başlık yapmak istenmez.
+  void _applyToAll(RichMark carried) {
+    final target = _formatTarget;
+    if (target == null) return;
+    final c = target.controller;
+    if (c.text.isEmpty) return;
+    unawaited(HapticFeedback.selectionClick());
+    // Bekleyen biçim zaten [carried]da; imleçte boş işaret bırakmasın.
+    c.clearPendingFormat();
+    c.selection = TextSelection(baseOffset: 0, extentOffset: c.text.length);
+    final whole = activeRichFormats(c);
+    var changed = false;
+    void all() =>
+        c.selection = TextSelection(baseOffset: 0, extentOffset: c.text.length);
+    for (final (on, already, format) in [
+      (carried.bold, whole.bold, RichFormat.bold),
+      (carried.italic, whole.italic, RichFormat.italic),
+      (carried.underline, whole.underline, RichFormat.underline),
+    ]) {
+      if (!on || already) continue;
+      all();
+      changed |= applyRichFormat(c, format);
+    }
+    for (final (index, current, format) in [
+      (carried.color, whole.color, RichFormat.color),
+      (carried.highlight, whole.highlight, RichFormat.highlight),
+    ]) {
+      if (index == null || index == current) continue;
+      all();
+      changed |= applyRichFormat(c, format, colorIndex: index);
+    }
+    for (final (index, current, format) in [
+      (carried.size, whole.size, RichFormat.size),
+      (carried.opacity, whole.opacity, RichFormat.opacity),
+    ]) {
+      if (index == null || index == current) continue;
+      all();
+      changed |= applyRichStep(c, format, index);
+    }
+    all();
+    if (changed) target.commit();
+    if (!target.focusNode.hasFocus) target.focusNode.requestFocus();
+  }
 
   /// Renk/vurgu paletindeki "Kaldır": yalnız o biçmi düşürür (bkz.
   /// [removeRichFormat] — geri dönüşün keşfedilebilir tek yolu).
@@ -1422,6 +1481,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _dictation = null;
       unawaited(DeviceSpeech.stop());
     }
+    // Kayıt sürerken ekran beklenmedik biçimde kapandıysa (geri tuşu kaydı
+    // önce bitirir — bkz. PopScope) mikrofon açık kalmasın.
+    final recorder = _voiceRecorder;
+    if (recorder != null) {
+      _voiceRecorder = null;
+      unawaited(recorder.cancel().whenComplete(recorder.dispose));
+    }
     // Yalnız `_debouncer.flush()` DEĞİL: denetleyici metni nottan sapmış ama
     // bekleyen debounce yoksa (IME'nin odak düşerken onChanged üretmeden
     // commit ettiği otomatik düzeltme, alan içi Ctrl+Z) flush hiçbir şey
@@ -1550,6 +1616,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       a.titleTextOpacity == b.titleTextOpacity &&
       a.backgroundImageId == b.backgroundImageId &&
       a.backgroundOpacity == b.backgroundOpacity &&
+      a.theme == b.theme &&
       // KÖK NEDEN (kullanıcı 2026-08-16: "tek sütun 2 sütun çalışıyor ancak
       // anlık canlı bazen görülmüyor, bir çıkış yapınca oluyor"): sütun
       // sayısı burada KARŞILAŞTIRILMIYORDU. Değişim "saf yazım" sayılıp
@@ -2139,6 +2206,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   // dışında kaldığı için korunur.
   VoiceListenSession? _dictation;
 
+  /// Notun içinde süren SESLİ NOT kaydı (alt şeritteki hap; bkz.
+  /// [VoiceRecordPanel], `_recordAudio`).
+  VoiceNoteRecorder? _voiceRecorder;
+
   /// Diktenin yazdığı alan (gövde, başlık ya da bir madde satırı) ve o
   /// alandaki yazma aralığı. Hedef, dikte BAŞLARKEN en son odaklanmış olan
   /// alandır ([_formatTarget]) — imleç oradadır.
@@ -2199,6 +2270,67 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         immediate: true,
       );
     }
+  }
+
+  /// **☑ ONAY KUTUSU — KOLAY EKLE / KALDIR** (kullanıcı isteği 2026-10-28,
+  /// örnek uygulamadaki alt çubuk): imleç GÖVDEDEYSE bulunduğu satır kutulu
+  /// madde olur (listenin başına — gövde maddelerin hemen üstünde durduğu
+  /// için son satır yerinden kımıldamaz); imleç bir MADDEDEYSE kutusu kalkar
+  /// ve metni gövdenin sonuna döner (ilk maddede bu tam tersi işlemdir).
+  /// Hiçbir yer odakta değilse boş bir kutulu madde açılır.
+  void _toggleChecklistLine() {
+    final note = _note;
+    if (note == null || note.type != NoteType.text) return;
+    unawaited(HapticFeedback.selectionClick());
+    final items = _itemsEditorKey.currentState;
+    final focused = items?.focusedItemId;
+    if (items != null && focused != null) {
+      final text = items.takeItem(focused);
+      if (text == null) return;
+      final body = _bodyController.logicalText;
+      final next = body.trim().isEmpty
+          ? text
+          : (body.endsWith('\n') ? '$body$text' : '$body\n$text');
+      _bodyController.setLogical(next, next.length);
+      _mutate((n) => n.copyWith(body: next), immediate: true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _bodyFocus.requestFocus();
+        _bodyController.selection = TextSelection.collapsed(
+          offset: _bodyController.text.length,
+        );
+      });
+      return;
+    }
+    final body = _bodyController.logicalText;
+    var line = '';
+    var rest = body;
+    if (_bodyFocus.hasFocus && body.isNotEmpty) {
+      final selection = _bodyController.selection;
+      final caret = selection.isValid
+          ? wrapToLogicalOffset(
+              _bodyController.text,
+              selection.baseOffset,
+            ).clamp(0, body.length)
+          : body.length;
+      final start = caret == 0 ? 0 : body.lastIndexOf('\n', caret - 1) + 1;
+      var end = body.indexOf('\n', caret);
+      if (end < 0) end = body.length;
+      line = body.substring(start, end);
+      rest = end < body.length
+          ? body.substring(0, start) + body.substring(end + 1)
+          : (start > 0 ? body.substring(0, start - 1) : '');
+    }
+    const uuid = Uuid();
+    final item = NoteItem(id: uuid.v4(), text: line.trim());
+    if (rest != body) _bodyController.setLogical(rest, rest.length);
+    _mutate(
+      (n) => n.copyWith(body: rest, items: [item, ...n.items]),
+      immediate: true,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _itemsEditorKey.currentState?.focusItem(item.id);
+    });
   }
 
   /// Metin notuna boş bir checklist maddesi ekler (karışık içerik). İlk madde
@@ -2410,6 +2542,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
 
     final background = NoteColors.noteSurface(context, note);
+    // Çizilmiş tema varsa sayfa ve üst çubuk saydam: süsleme arkadan görünür
+    // (bkz. NoteThemeBackdrop); alt çubuk temanın alt tonunda düz kalır.
+    final themed = NoteThemes.byId(note.theme) != null;
     // Satır içi biçimlendirmenin çizim ayarları: gövde ve maddeler AYNI
     // paleti kullanır (metindeki 1..5 indeksi her ikisinde aynı rengi verir).
     final richTheme = RichTextTheme(
@@ -2479,6 +2614,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // üst barla başlığı ayırmak içindi; artık o işi çip satırı görüyor.
     final titleField = Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(16, 2, 4, 0),
+      // Başlığın yazı ölçeği değişince yumuşak oturur (bkz. ScaleSettle).
+      child: ScaleSettle(
+      value: note.titleFontScale,
       child: TextField(
         controller: _titleController,
         focusNode: _titleFocus,
@@ -2527,6 +2665,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           filled: false,
           border: InputBorder.none,
         ),
+      ),
       ),
     );
 
@@ -2871,7 +3010,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // aynı controller/focus'u paylaşır. Madde varken kısalır (2 satır tabanı).
     // `Builder`: dokunuşta alanın KENDİ EditableText'i bulunur (başlığınki
     // değil); sarmalayıcı dokunuşun konumunu tutar (bkz. [_tappedEmbed]).
-    final bodyField = Builder(
+    // Notun yazı ölçeği değişince gövde eski boyundan yenisine yumuşakça
+    // oturur (yalnız boyama; yüzen görsel varken kapalı — sarma ölçümü
+    // dönüşümden etkilenmesin).
+    final bodyField = ScaleSettle(
+      value: note.fontScale,
+      enabled: _floats.isEmpty,
+      child: Builder(
       builder: (fieldContext) => AttachmentTagChips(
         controller: _bodyController,
         looks: _tagLooks,
@@ -2888,8 +3033,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // [wrapStrutStyle]). Açıkça vermek eşleşmeyi `EditableText`in
           // varsayılanına bırakmaz — kaymanın kök nedeni buydu.
           strutStyle: wrapStrutStyle(noteBodyStyle),
-          onChanged: (value) =>
-              _mutate((n) => n.copyWith(body: _bodyController.logicalText)),
+          onChanged: (value) {
+            final before = _note?.body ?? '';
+            final after = _bodyController.logicalText;
+            _mutate((n) => n.copyWith(body: after));
+            // Yapıştırılan YouTube bağlantısı videoyu gömer.
+            _maybeEmbedPastedVideo(before, after);
+          },
           maxLines: null,
           minLines: note.items.isEmpty ? 8 : 2,
           keyboardType: TextInputType.multiline,
@@ -2916,6 +3066,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               // Dokunuşun açtığı Yapıştır menüsü önizlemenin altında kalmasın.
               editable?.hideToolbar();
               _showEmbedPreviewFor(tapped.attachment, tapped.label);
+              return;
+            }
+            // BAĞLANTIYA DOKUNUŞ (2026-10-28): okurken açar, yazarken önerir.
+            final link = tappedLink(
+              displayText: _bodyController.text,
+              editable: editable,
+              tapGlobal: _bodyTapPoint.last,
+            );
+            if (link != null) {
+              editable?.hideToolbar();
+              handleLinkTap(
+                context,
+                link,
+                editing: _bodyTapPoint.wasFocused,
+              );
             }
           },
           // Bağlantıya uzun basınca seçim menüsüne "Bağlantıyı aç" eklenir.
@@ -2946,6 +3111,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ),
         ),
       ),
+    ),
     );
 
     // Başlık + çipler: yüksekliği görsellerin üst sınırıdır.
@@ -3235,6 +3401,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 // CANLI DİKTE şeridi: mikrofon açıkken kaçırılamayacak bir
                 // gösterge (aynı gerekçe — açık kalmış mikrofon fark
                 // edilmiyordu). Dokunmak dikteyi bitirir.
+                // SESLİ NOT hapı: kayıt notun içinde sürer, yazmaya devam
+                // edilebilir. Belirişi yumuşak (alttan süzülür).
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 240),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.bottomCenter,
+                  child: _voiceRecorder == null
+                      ? const SizedBox(width: double.infinity)
+                      : VoiceRecordPanel(
+                          recorder: _voiceRecorder!,
+                          onStop: () => unawaited(_finishVoiceRecording()),
+                          onCancel: () => unawaited(
+                            _finishVoiceRecording(keep: false),
+                          ),
+                        ),
+                ),
                 if (_dictating)
                   _DictationPanel(
                     start: _dictationStart,
@@ -3273,14 +3455,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 // her zaman ağaçta, `AnimatedSize` yüksekliğini yumuşak
                 // kapatıyor/açıyor; kapalıyken `SizedBox.shrink()` yer
                 // kaplamıyor.
+                // 2026-10-28 ("biçim menüsü daha yumuşak"): panel ile alt
+                // çubuk AYNI süre ve eğriyle yer değiştirir (biri büyürken öbürü
+                // küçülür — toplam boy sıçramaz), panelin içeriği hafifçe
+                // yukarı süzülerek belirir.
                 Flexible(
                   child: AnimatedSize(
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeOut,
+                    duration: _kBarSwap,
+                    curve: Curves.easeOutCubic,
                     alignment: Alignment.bottomCenter,
                     child: !_formatBarOpen || _findOpen
                         ? const SizedBox.shrink()
-                        : SingleChildScrollView(
+                        : RevealUp(
+                          child: SingleChildScrollView(
                             child: FormatBar(
                               target: _formatTarget,
                               onFormat: _applyFormat,
@@ -3350,8 +3537,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                     ),
                               onClose: () =>
                                   setState(() => _formatBarOpen = false),
+                              onApplyToAll: _formatTarget == null
+                                  ? null
+                                  : _applyToAll,
+                              applyToAllLabel:
+                                  _formatTarget?.controller == _bodyController ||
+                                      _titleIsTarget
+                                  ? l10n.formatApplyAll
+                                  : l10n.formatApplyItem,
                             ),
                           ),
+                        ),
                   ),
                 ),
                 // Alt bar: eskiden yedi ETİKETSİZ ikon yan yanaydı (palet, ataş,
@@ -3379,7 +3575,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 // 2026-10-20: "biçim paneli açılınca alttaki ses, ek vb.
                 // kısımlar gizlensin, yazmaya yer kalmıyor"). Panel kendi
                 // kapat (⌄) düğmesiyle kapanır.
-                else if (!_formatBarOpen) ...[
+                else
+                AnimatedSize(
+                  duration: _kBarSwap,
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: _formatBarOpen
+                      ? const SizedBox(width: double.infinity)
+                      : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                 // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen
                 // üstünde YARIM kesiliyordu ve çubuk sayfanın parçası gibi
                 // görünüyordu (kullanıcının 2026-10-11'de işaretlediği alt
@@ -3425,9 +3630,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       // Dikte SÜRERKEN düğme gizlenmez — durdurma yolu kalsın.
                       final showDictation =
                           _dictating || on(UiItem.barDictation);
+                      // SESLİ NOT (kayıt, 2026-10-28): kayıt SÜRERKEN düğme
+                      // gizlenmez — bitirme yolu kalsın. Web'de kayıt eki yok.
+                      final showVoiceRecord =
+                          !kIsWeb &&
+                          (_voiceRecorder != null ||
+                              on(UiItem.barVoiceRecord));
+                      // ☑ yalnız metin notunda (liste notunda her satır
+                      // zaten madde).
+                      final showCheckbox =
+                          note.type == NoteType.text &&
+                          on(UiItem.barCheckbox);
                       final aiCount = [
                         showAi,
                         showDictation,
+                        showVoiceRecord,
                       ].where((v) => v).length;
                       // Genişliğe göre plan: taşma/kesik kapsül yerine önce
                       // düğmeler küçülür, sonra ⋮ menüsünde de bulunan
@@ -3437,6 +3654,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         fixedSegments:
                             (showFormat ? 1 : 0) +
                             (showAdd ? 1 : 0) +
+                            (showCheckbox ? 1 : 0) +
                             (showSelect ? 1 : 0),
                         attachments: showAttachments,
                         pen: isDocumentNote,
@@ -3472,6 +3690,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           Customizable(
                             id: UiItem.barAdd,
                             child: _addToolButton(l10n),
+                          ),
+                        if (showCheckbox)
+                          Customizable(
+                            id: UiItem.barCheckbox,
+                            child: _toolSegment(
+                              icon: Icons.check_box_outlined,
+                              label: l10n.checkboxToggle,
+                              onTap: _toggleChecklistLine,
+                            ),
                           ),
                         // EKLER Ekle'nin hemen YANINDA (kullanıcı bulgusu
                         // 2026-10-17: "alttaki ek alanı göster gizle
@@ -3593,6 +3820,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                       ),
                                     ),
                                   ),
+                                if (showVoiceRecord)
+                                  Customizable(
+                                    id: UiItem.barVoiceRecord,
+                                    child: _voiceButton(
+                                      size: plan.button,
+                                      tooltip: _voiceRecorder == null
+                                          ? l10n.recordAudio
+                                          : l10n.stopAndSave,
+                                      icon: Icons.graphic_eq_rounded,
+                                      active: _voiceRecorder != null,
+                                      onTap: () => unawaited(
+                                        _voiceRecorder == null
+                                            ? _recordAudio()
+                                            : _finishVoiceRecording(),
+                                      ),
+                                    ),
+                                  ),
                                 if (showDictation)
                                   Customizable(
                                     id: UiItem.barDictation,
@@ -3616,6 +3860,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   ),
                 ),
                 ],
+                ),
+                ),
               ],
             ),
           );
@@ -3643,12 +3889,35 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         },
         // Geri tuşu önce CANLI ARAMAYI kapatır, notu değil.
         child: PopScope(
-          canPop: !_findOpen,
+          // Geri tuşu sırayla: kayıt → biçim paneli → canlı arama → not.
+          canPop: !_findOpen && !_formatBarOpen && _voiceRecorder == null,
           onPopInvokedWithResult: (didPop, _) {
-            if (!didPop && _findOpen) _closeFind();
+            if (didPop) return;
+            // Kayıt sürerken geri = kaydı BİTİR ve ekle, sonra çık (eski
+            // kayıt levhasının "geri kaydeder" kuralı — kayıt kaybolmasın).
+            if (_voiceRecorder != null) {
+              final navigator = Navigator.of(context);
+              unawaited(
+                _finishVoiceRecording().whenComplete(() {
+                  if (mounted) navigator.maybePop();
+                }),
+              );
+              return;
+            }
+            // Biçim paneli açıkken geri PANELİ kapatır (kullanıcı isteği
+            // 2026-10-28), notu değil.
+            if (_formatBarOpen) {
+              setState(() => _formatBarOpen = false);
+              return;
+            }
+            if (_findOpen) _closeFind();
           },
+          // NOT TEMASI (2026-10-28): çizilmiş zemin üst çubuğun da
+          // arkasında; sayfa ve üst çubuk saydamlaşır.
+          child: NoteThemeBackdrop(
+          themeId: note.theme,
           child: Scaffold(
-          backgroundColor: background,
+          backgroundColor: themed ? Colors.transparent : background,
           // **KASMA — klavye boşluğu artık KARARLI** (bkz. [KeyboardSnap]).
           // Scaffold gövdeyi klavye animasyonunun HER karesinde kısaltıyordu;
           // görselli/uzun notlarda ve PDF bölmesinde yalnızca bu yeniden
@@ -3658,7 +3927,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // [KeyboardSlide] ile yalnız boyama katmanında yapılıyor.
           resizeToAvoidBottomInset: false,
           appBar: AppBar(
-            backgroundColor: background,
+            backgroundColor: themed ? Colors.transparent : background,
+            scrolledUnderElevation: themed ? 0 : null,
             // Başlık yerinde düzenleme tarihi: notun kendi başlığı zaten gövdenin
             // en üstünde duruyor, üst barda ikinci kez göstermek yer harcıyordu.
             // Sabitlenmiş/yıldızlı göstergesi tarihin yanında — düğmeler ⋯
@@ -3844,6 +4114,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 },
               ),
               ),
+              // GÖRÜNÜM (tema şeridi) üst çubukta — örnek uygulamadaki palet
+              // düğmesi; biçim panelinden ve Ekle levhasından da açılır.
+              if (!_readOnly)
+                Customizable(
+                  id: UiItem.topTheme,
+                  child: IconButton(
+                    tooltip: l10n.noteAppearance,
+                    icon: const Icon(Icons.palette_outlined),
+                    onPressed: () => unawaited(_showColorSheet()),
+                  ),
+                ),
               Customizable(
                 id: UiItem.topPin,
                 child: IconButton(
@@ -3948,6 +4229,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               ),
             ),
           ),
+        ),
         ),
         ),
       ),

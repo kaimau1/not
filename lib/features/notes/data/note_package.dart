@@ -77,6 +77,7 @@ Map<String, dynamic> encodeNoteJson(Note note) => {
   'titleTextOpacity': note.titleTextOpacity,
   'backgroundImageId': note.backgroundImageId,
   'backgroundOpacity': note.backgroundOpacity,
+  if (note.theme.isNotEmpty) 'theme': note.theme,
   if (note.textPages.isNotEmpty)
     'textPages': [for (final p in note.textPages) p.toMap()],
   if (note.activePage.isNotEmpty) 'activePage': note.activePage,
@@ -158,6 +159,7 @@ Note decodeNoteJson(Map<String, dynamic> map) {
     titleTextOpacity: (map['titleTextOpacity'] as num?)?.toDouble() ?? 1,
     backgroundImageId: map['backgroundImageId'] as String?,
     backgroundOpacity: (map['backgroundOpacity'] as num?)?.toDouble() ?? 0.35,
+    theme: map['theme'] as String? ?? '',
     textPages: [
       for (final raw in (map['textPages'] as List? ?? const []))
         NoteTextPage.fromMap(Map<String, dynamic>.from(raw as Map)),

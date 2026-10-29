@@ -465,6 +465,11 @@ class _EditorSection extends StatelessWidget {
               ),
               (id: UiItem.barAdd, icon: Icons.add, label: l10n.addAttachment),
               (
+                id: UiItem.barCheckbox,
+                icon: Icons.check_box_outlined,
+                label: l10n.checkboxToggle,
+              ),
+              (
                 id: UiItem.barSelect,
                 icon: Icons.select_all,
                 label: l10n.select,
@@ -490,6 +495,11 @@ class _EditorSection extends StatelessWidget {
                 icon: Icons.mic,
                 label: l10n.liveDictation,
               ),
+              (
+                id: UiItem.barVoiceRecord,
+                icon: Icons.graphic_eq_rounded,
+                label: l10n.recordAudio,
+              ),
             ],
           ),
         ),
@@ -513,6 +523,11 @@ class _EditorSection extends StatelessWidget {
                 id: UiItem.topCollab,
                 icon: Icons.person_add_alt_1_outlined,
                 label: l10n.collaborators,
+              ),
+              (
+                id: UiItem.topTheme,
+                icon: Icons.palette_outlined,
+                label: l10n.noteAppearance,
               ),
               (
                 id: UiItem.topPin,

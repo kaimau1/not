@@ -5786,4 +5786,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get formatSizeUp => 'Larger';
+
+  @override
+  String get imageCaptionHint => 'Image caption';
+
+  @override
+  String get imageCaptionAdd => 'Add caption';
+
+  @override
+  String get imageCaptionEdit => 'Edit caption';
+
+  @override
+  String get voiceRecordResume => 'Resume recording';
+
+  @override
+  String get voiceRecordDiscard => 'Discard recording';
+
+  @override
+  String get checkboxToggle => 'Checkbox';
+
+  @override
+  String get noteAppearance => 'Appearance';
+
+  @override
+  String get noteThemeNone => 'Plain';
+
+  @override
+  String get noteThemePalm => 'Palm';
+
+  @override
+  String get noteThemeLagoon => 'Lagoon';
+
+  @override
+  String get noteThemeNight => 'Night';
+
+  @override
+  String get noteThemeSunset => 'Sunset';
+
+  @override
+  String get noteThemeSakura => 'Sakura';
+
+  @override
+  String get noteThemeWaves => 'Sea';
+
+  @override
+  String get noteThemeMeadow => 'Meadow';
+
+  @override
+  String get noteThemePaper => 'Paper';
+
+  @override
+  String get pinToHomeScreen => 'Add to home screen';
+
+  @override
+  String get pinToHomeSent =>
+      'Confirm on your home screen — the note will open from its shortcut';
+
+  @override
+  String get pinToHomeUnsupported =>
+      'Your home screen doesn\'t support this shortcut';
+
+  @override
+  String get inkColor => 'Pen color';
+
+  @override
+  String get formatApplyAll => 'Apply to all';
+
+  @override
+  String get formatApplyItem => 'Apply to item';
+
+  @override
+  String get cardMediaHide => 'Hide image preview';
+
+  @override
+  String get cardMediaShow => 'Show image preview';
+
+  @override
+  String get youTubeEmbedded => 'Video embedded in the note';
 }

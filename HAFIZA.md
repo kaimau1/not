@@ -22,9 +22,21 @@ eskisini arşive taşıma.
   ve `--dart-define-from-file=env.json` ZORUNLU (yoksa Google girişi çöker).
 - graphify grafiği 2026-07-30'dan beri bayat; satır/dosya bilgisini koddan
   doğrula.
-- Bulut ortamında dl.google.com engelli: Android SDK kurulamıyor, APK yalnız
-  CI'da derlenir. Oturumun GitHub izinleri `workflow_dispatch` tetiklemeye
-  yetmiyor (403) — Android doğrulaması main'deki `[apk]` koşusunda.
+- **Bulutta APK DERLENEBİLİR (2026-10-29):** dl.google.com artık açık.
+  Scratchpad'e cmdline-tools → `sdkmanager "platform-tools"
+  "platforms;android-37.0" "build-tools;36.0.0" "ndk;28.2.13676358"`
+  (`android-37` adı YOK, `37.0`), `flutter config --android-sdk`.
+  Maven Central paylaşılan IP'de 429 veriyor → `$GRADLE_USER_HOME/init.d`
+  betiği Google'ın aynasını (`maven-central.storage-download.googleapis.com`)
+  pluginManagement'ta ÖNE koyar ve URL'leri yeniden yazar; depo EKLEMEZ
+  (Flutter'ın gradle yapısı PREFER_SETTINGS — projeye depo eklemek hata) ve
+  `gradlePluginPortal()`ı geri ekler. `env.json` (gitignore) yoksa
+  `GOOGLE_SERVER_CLIENT_ID` son Release APK'sının `libapp.so`sundan okunur
+  (REST: `api.github.com/repos/<o>/<r>/releases/assets/<id>` +
+  `Accept: application/octet-stream`). Anahtar deposu yok → DEBUG imzalı:
+  telefondaki CI sürümünün ÜSTÜNE kurulmaz (önce kaldır) ve Google girişi
+  için debug SHA-1 Firebase'e eklenmeli. Oturumun GitHub izinleri
+  `workflow_dispatch` tetiklemeye yetmiyor (403).
 
 ## CI (`.github/workflows/build.yml`)
 - APK işi ilk adımda kullanılmayan araç zincirlerini siler (2026-10-20,
@@ -77,6 +89,16 @@ eskisini arşive taşıma.
   işe yaramaz: editör her yankıda ekleri yeniden kuruyor. Editör kapanınca
   `releaseNote` bu kopyaları bırakır. `localPath` Firestore'a yazılmaz,
   cihazda türetilir.
+- **Görünüm/medya alanları (2026-10-28):** `Attachment.caption` (görsel
+  açıklaması; yalnız doluyken yazılır, `withLayoutOf` YEREL açıklamayı
+  korur — yazarken yankı harf yemesin; aramaya girer), `Attachment.wave`
+  (ses dalgası, 48 çubuk 0–100; boşsa `displayWave` kimlikten kararlı
+  desen), `Note.theme` (çizilmiş tema kimliği `NoteThemes`, KOŞULSUZ yazılır;
+  tanınmayan kimlik zeminsiz çizilir). `NoteColors.noteSurface` tema varsa
+  TEMANIN alt tonunu döner (kart, editör alt çubuğu, açılış geçişi aynı
+  rengi görür). Zemin RENGİ seçen her yol (editör, kart menüsü `setColor`,
+  toplu seçim) `theme: ''` yazar — yoksa renk temanın altında görünmez.
+  Üçü de `sameRenderedNote`/`_sameVisual`te.
 - Çizim noktaları (F7.2): kayıttan okunan `InkStroke.points` `Float32List`
   (~1e-8 yuvarlama; testte `closeTo`). **TUZAK:** `toMap` tipli diziyi
   DOĞRUDAN vermez (Firestore kodlayıcısı `float[]` yollar, sunucu reddeder)
@@ -287,6 +309,37 @@ eskisini arşive taşıma.
   TUZAK: itilen rotanın İLK karesinde Hero sayfayı `offstage` kurar,
   animasyon "tamamlandı" görünür — durum tek başına yetmez.
 - Uzun basış CÜMLE seçer (`sentence_select.dart`).
+- **Sesli not kaydı notun içinde (2026-10-28):** levha değil, alt şeritte
+  hap (`VoiceNoteRecorder` + `VoiceRecordPanel`, `voice_note_recorder.dart`);
+  kayıt sürerken yazılır. Bitince ses `_placeNewImage` ile YAZILAN SATIRA,
+  `onPage` + tam genişlik HAP olarak girer (belge notunda şeride). Sayfada
+  ses kutusunun boyu genişlikten bağımsız 52–76 dp (`_sizeOf`), köşe h/2,
+  çerçevesiz. Kayıtta geri tuşu = bitir + ekle + çık (PopScope). Kaydedici
+  eklentiyi TEMBEL kurar (kurucusu platform kanalına gider — testte patlar).
+  Eski `showAudioRecorderSheet` yalnız AI sohbetinde.
+- **☑ (alt çubuk, metin notu):** `_toggleChecklistLine` — gövdedeki satır
+  maddelerin BAŞINA taşınır (gövde maddelerin üstünde: son satır yerinde
+  kalır); maddede basınca madde gövdenin SONUNA döner. Model ara karışık
+  sıralamayı taşımaz (gövde hep maddelerin üstünde).
+- Biçim paneli ⇄ alt çubuk aynı `AnimatedSize` süre/eğrisiyle (`_kBarSwap`)
+  yer değiştirir; panel içeriği `RevealUp`. Notun yazı ölçeği değişince
+  gövde/başlık `ScaleSettle` ile (yalnız boyama) oturur — sayfada yüzen
+  görsel varken KAPALI (sarma ölçümü dönüşümden etkilenmesin); ağaçtan
+  çıkarılmaz, alanın durumu kaybolmasın.
+- Görsel açıklaması sayfa düzeninin parçası: `_captionBand` sarma bandına,
+  sayfa boyuna, çarpışmaya ve araç paneli konumuna eklenir.
+- **İkinci tur (2026-10-28):** biçim paneli açıkken geri PANELİ kapatır
+  (sıra: kayıt → panel → arama → not). Panelde "Tümüne/Maddeye uygula"
+  (`_applyToAll`): imleçteki etkin biçimler (bekleyenler dahil; başlık
+  hariç) alanın TAMAMINA yazılır, alan tümüyle seçili kalır. Madde
+  BAŞINDA Backspace (tuş olayı — Gboard silinecek harf yokken DEL yollar)
+  `mergeIntoPrevious` ile üst maddeye birleşir (işaretli/işaretsiz sınırında
+  ve ilk maddede yok). Bağlantıya DOKUNUŞ (`tappedLink`/`handleLinkTap`,
+  gövde + madde): okurken (alan dokunuştan önce odaksız — `TapPointTracker.
+  wasFocused`) açar, yazarken bildirimde "Aç" önerir; bağlantı aranırken
+  MANTIKSAL metin (sarma çapası adresin ortasına düşebilir). Gövdeye TEK
+  SEFERDE giren YouTube adresi (`pastedYouTubeUrl`) videoyu imlecin satırına
+  gömer (bağlantı yazıda kalır, "Geri al" kaldırır).
 - Madde Enter'ı (2026-10-28) `_enterAt`: imleç ortadaysa madde BÖLÜNÜR
   (sağ kısım yeni maddeye, imleç başına), sondaysa altına boş, baştaysa
   üstüne boş madde. Uzun basış menüsü iki sıra (`_ItemMenuPanel`: yıldız ·
@@ -457,6 +510,35 @@ eskisini arşive taşıma.
 - Açık/kapalı cihaz tercihleri `boolPref(anahtar, defaultValue:)` (anahtar
   adları eski sınıflarla aynı).
 - Menüler ortak `ActionMenu`; üst/alt çubukta duran iş menüde tekrar edilmez.
+- **Not karttan GENİŞLEYEREK açılır (2026-10-28):** `/note/:id` iki yolda da
+  `NoteOpenPage` (`lib/app/note_open_route.dart`); `openNoteRoute` kartın
+  yerini `NoteOpenOrigin.register` ile bırakır (yalnız PageRoute bağlamı,
+  ekranın %60'ından küçük kutu; 2 sn içinde, not kimliği eşleşirse bir kez
+  alınır). Dar ekranda kart yerinden büyür, kapanırken kartın O ANKİ yerine
+  küçülür (kart yoksa solar); alttaki liste yana çekilmez
+  (`canTransitionFrom` false). Geçiş ağacı her karede AYNI yapıda (yalnız
+  dönüşüm/kırpma değerleri değişir) — yapı değişirse editörün durumu
+  sıfırlanır. Temanın geçişi yine sarılır (üstüne binen ekran, kenardan geri
+  çekme jesti).
+- **Not teması (2026-10-28):** palet (üst çubuk `UiItem.topTheme`, biçim
+  paneli, Ekle) önce TEMA ŞERİDİ açar (`showNoteThemeSheet`, karartısız,
+  dokunulan anında). Temalar dosya değil çizim (`note_themes.dart`): açık/
+  koyu tonları ayrı; editörde Scaffold ve üst çubuk saydam, süsleme
+  `NoteThemeBackdrop` ile arkada; kartta da çizilir.
+- **KENDİ KLASÖRÜM = SÜZGEÇLİ ANA EKRAN (2026-10-28, kullanıcı kararı):**
+  `FolderScreen.open` sahibi ben olan klasörde sayfa AÇMAZ,
+  `showFolderOnHome` ana ekranı `selectedFolderProvider` ile süzer (durum/
+  etiket süzgeçleri bırakılır, okundu damgası atılır, kabuk dışındaysa
+  `go('/')`). Geri tuşu süzgeci kaldırır. Paylaşılan klasör (başkasının
+  koleksiyonu) hâlâ `FolderScreen`.
+- Kart ⋮ "Görsel önizlemesini gizle": `Note.cardMediaHidden` (KOŞULSUZ
+  yazılır); kart, liste satırı ve `estimateNoteCardHeight` uyar.
+- **Ana ekrana yerleştir:** ⋮ → `NoteShortcut.pin` → kanal
+  `pinNoteShortcut` → `NotKisayolu.kt` (`ShortcutManagerCompat`, simge notun
+  açık renginde + baş harf) → `notlar://note/<id>`.
+- Çizim ekranı (`DrawingScreen`) kalem TEPSİSİ `PenTray`: cetvel(şekiller) ·
+  silgi · tükenmez · keçeli · fosforlu; seçili kalem kalkar, ikinci dokunuş
+  renk/kalınlık panelini açar. PDF/görsel üstü çizim eski `InkToolbar`da.
 - Kişiselleştirme (`Customizable`, `UiItem`): kimlikler kalıcı tercih
   anahtarıdır — değiştirme (`homeMic` = eski `home.voiceAi`).
 

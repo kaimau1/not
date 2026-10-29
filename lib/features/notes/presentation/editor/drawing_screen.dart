@@ -8,6 +8,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../viewers/ink_layer.dart';
 import 'note_images.dart';
+import 'pen_tray.dart';
 
 /// El yazısı notu: beyaz bir tuvale çizilir, kaydedilirse PNG baytları döner
 /// ve nota görsel eki olarak girer.
@@ -166,11 +167,17 @@ class _DrawingScreenState extends State<DrawingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
     // Geri tuşu/jesti dakikalarca süren çizimi ONAYSIZ siliyordu (kaydetme
     // yalnız "Nota ekle" düğmesindeydi; görüntü/PDF üstü çizim ise poplarken
     // kaydediyor). Tuval boş değilse geri = kaydet-ve-çık: çizim nota ek
     // olarak girer, istemeyen tek dokunuşla siler — kaybolan çizim geri
     // gelmez.
+    //
+    // YENİ GÖRÜNÜM (kullanıcı isteği 2026-10-28: "çizim ekranı görsel olarak
+    // bütün, menüsü güzel olsun"): üstte yalnız geri · geri al · yinele · ⋮ ·
+    // ✓, altta KALEM TEPSİSİ ([PenTray]) — araçlar simge değil tepside
+    // duran kalemler; tuval ekranın tamamı.
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -182,26 +189,110 @@ class _DrawingScreenState extends State<DrawingScreen> {
         _save();
       },
       child: Scaffold(
+        backgroundColor: scheme.surfaceContainerLow,
         appBar: AppBar(
-          title: Text(l10n.drawingTitle),
+          backgroundColor: scheme.surfaceContainerLow,
+          scrolledUnderElevation: 0,
+          leading: IconButton(
+            tooltip: widget.saveLabel ?? l10n.addToNote,
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: _saving ? null : _save,
+          ),
           actions: [
+            ListenableBuilder(
+              listenable: _ink,
+              builder: (context, _) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: l10n.undo,
+                    icon: const Icon(Icons.undo_rounded),
+                    onPressed: _ink.canUndo ? _ink.undo : null,
+                  ),
+                  IconButton(
+                    tooltip: l10n.redo,
+                    icon: const Icon(Icons.redo_rounded),
+                    onPressed: _ink.canRedo ? _ink.redo : null,
+                  ),
+                ],
+              ),
+            ),
             // Yakınlaştırılmışken tek dokunuşla tam görünüme dön.
             ValueListenableBuilder<Matrix4>(
               valueListenable: _zoom,
               builder: (context, m, _) => m.getMaxScaleOnAxis() > 1.01
                   ? IconButton(
                       tooltip: l10n.inkZoomReset,
-                      icon: const Icon(Icons.zoom_out_map),
+                      icon: const Icon(Icons.zoom_out_map_rounded),
                       onPressed: () => _zoom.value = Matrix4.identity(),
                     )
                   : const SizedBox.shrink(),
             ),
+            ListenableBuilder(
+              listenable: _ink,
+              builder: (context, _) => PopupMenuButton<String>(
+                tooltip: l10n.more,
+                icon: const Icon(Icons.more_vert_rounded),
+                onSelected: (value) {
+                  switch (value) {
+                    case 'penOnly':
+                      _ink.setPenOnly(!_ink.penOnly);
+                    case 'settings':
+                      showModalBottomSheet<void>(
+                        context: context,
+                        showDragHandle: true,
+                        isScrollControlled: true,
+                        builder: (_) => InkSettingsSheet(controller: _ink),
+                      );
+                    case 'clear':
+                      _ink.clear();
+                  }
+                },
+                itemBuilder: (context) => [
+                  CheckedPopupMenuItem(
+                    value: 'penOnly',
+                    checked: _ink.penOnly,
+                    child: Text(l10n.inkPenOnlyOn),
+                  ),
+                  PopupMenuItem(
+                    value: 'settings',
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.tune_rounded),
+                      title: Text(l10n.inkSettings),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'clear',
+                    enabled: _ink.ink.isNotEmpty,
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.delete_sweep_outlined),
+                      title: Text(l10n.clearInk),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Padding(
-              padding: const EdgeInsetsDirectional.only(end: 8),
-              child: FilledButton.tonalIcon(
+              padding: const EdgeInsetsDirectional.only(start: 4, end: 10),
+              child: IconButton.filled(
+                tooltip: widget.saveLabel ?? l10n.addToNote,
+                // Üst çubuğun simge teması dolgulu düğmenin rengini ezmesin.
+                style: IconButton.styleFrom(
+                  backgroundColor: scheme.primary,
+                  foregroundColor: scheme.onPrimary,
+                ),
                 onPressed: _saving ? null : _save,
-                icon: const Icon(Icons.check, size: 18),
-                label: Text(widget.saveLabel ?? l10n.addToNote),
+                icon: _saving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.check_rounded),
               ),
             ),
           ],
@@ -209,27 +300,43 @@ class _DrawingScreenState extends State<DrawingScreen> {
         body: Column(
           children: [
             Expanded(
-              child: ClipRect(
-                child: InkNavLayer(
-                  enabled: true,
-                  controller: _ink,
-                  getMatrix: () => _zoom.value,
-                  setMatrix: (m) => _zoom.value = m,
-                  minScale: 1,
-                  maxScale: 6,
-                  clampToBounds: true,
-                  child: ValueListenableBuilder<Matrix4>(
-                    valueListenable: _zoom,
-                    builder: (context, m, child) =>
-                        Transform(transform: m, child: child),
-                    child: _canvas(context),
+              // Tuval kâğıt gibi: kenarlarda ince pay, yuvarlak köşe, hafif
+              // gölge — çevresindeki sakin zeminden ayrışır.
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 2, 10, 10),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: InkNavLayer(
+                      enabled: true,
+                      controller: _ink,
+                      getMatrix: () => _zoom.value,
+                      setMatrix: (m) => _zoom.value = m,
+                      minScale: 1,
+                      maxScale: 6,
+                      clampToBounds: true,
+                      child: ValueListenableBuilder<Matrix4>(
+                        valueListenable: _zoom,
+                        builder: (context, m, child) =>
+                            Transform(transform: m, child: child),
+                        child: _canvas(context),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-            // Geri al / temizle araç çubuğunun içinde; başlıkta ayrıca durmasına
-            // gerek yok (PDF üstü çizimle aynı düzen).
-            InkToolbar(controller: _ink, hint: l10n.inkZoomHint),
+            PenTray(controller: _ink),
           ],
         ),
       ),

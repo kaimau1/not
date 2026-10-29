@@ -8,8 +8,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/utils/search_fold.dart';
+import '../../../app/note_open_route.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/note_colors.dart';
+import '../../../app/theme/note_themes.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/local_file.dart';
 import '../../../core/utils/note_fonts.dart';
@@ -101,8 +103,11 @@ double estimateNoteCardHeight(Note note, double width) {
 
   // Ek önizlemesi (kapak, belge kartı, karolar, dosya satırları): çizimle
   // AYNI plandan ölçülür (bkz. CardMediaPlan).
-  final media = CardMediaPlan.of(note);
-  if (!media.isEmpty) height += media.estimateHeight(width) + 8;
+  // Not başına gizlenen önizleme (`cardMediaHidden`) yer de kaplamaz.
+  if (!note.cardMediaHidden) {
+    final media = CardMediaPlan.of(note);
+    if (!media.isEmpty) height += media.estimateHeight(width) + 8;
+  }
 
   // Alt meta satırı (rozet · etiket · tarih) neredeyse her kartta var.
   height += 24;
@@ -174,6 +179,12 @@ Future<void> openNoteRoute(
         if (ownerId != null) 'owner=$ownerId',
         if (readOnly) 'ro=1',
       ];
+      // Not KARTIN YERİNDEN genişleyerek açılır (bkz. NoteOpenOrigin).
+      NoteOpenOrigin.register(
+        context,
+        note.id,
+        color: NoteColors.noteSurface(context, note),
+      );
       // Arşiv/çöp gibi kabuk dışı ekranlardan da doğru yol (bkz.
       // notePushPath — "arşivdeki not siyah ekran" kök nedeni).
       final push = context.pushNote(
@@ -394,8 +405,18 @@ class NoteCard extends ConsumerWidget {
     }
   }
 
-  /// Kart içeriğini notun zemin görselinin üstüne serer.
+  /// Kart içeriğini notun TEMASININ (çizilmiş zemin) ve zemin görselinin
+  /// üstüne serer — editörde ne görünüyorsa kartta da o (küçülmüş hâli).
   Widget _withNoteBackground(Note note, Widget child) {
+    final withImage = _withNoteImage(note, child);
+    if (NoteThemes.byId(note.theme) == null) return withImage;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: NoteThemeBackdrop(themeId: note.theme, child: withImage),
+    );
+  }
+
+  Widget _withNoteImage(Note note, Widget child) {
     final id = note.backgroundImageId;
     if (id == null) return child;
     final image = note.attachments.where((a) => a.id == id).firstOrNull;
@@ -538,7 +559,10 @@ class NoteCard extends ConsumerWidget {
     final showTopRow = hasTitle;
     // Kilitli notta içerik (ekler dahil) kartta gösterilmez; ekler ayardan
     // da kapatılabilir.
-    final media = note.locked || (!display.media && !display.files)
+    final media =
+        note.locked ||
+            note.cardMediaHidden ||
+            (!display.media && !display.files)
         ? null
         : CardMediaPlan.of(
             note,
@@ -1537,7 +1561,7 @@ class NoteListRow extends ConsumerWidget {
   /// Satırın solu: notun görseli/videosu varsa küçük resmi (video oynat
   /// işaretiyle), yoksa tür simgesi. Kilitli notta hep simge.
   Widget _rowLeading(ColorScheme scheme, {required bool showMedia}) {
-    final media = note.locked || !showMedia
+    final media = note.locked || note.cardMediaHidden || !showMedia
         ? null
         : CardMediaPlan.of(note, showFiles: false);
     final visual = media?.hero ?? media?.strip.firstOrNull;

@@ -39,6 +39,7 @@ import '../../../../core/widgets/smooth_routes.dart';
 
 part 'note_video_boxes.dart';
 part 'note_image_tools.dart';
+part 'note_image_caption.dart';
 
 /// Görseli tam ekran açar (yoksa "henüz senkronlanmadı" der). Tam ekranda
 /// görselin üzerine elle yazılabilir; çizim [onChanged] ile ekin `ink`
@@ -774,6 +775,79 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   void _select(String id) =>
       setState(() => _selectedId = _selectedId == id ? null : id);
 
+  // ── AÇIKLAMA ────────────────────────────────────────────────────────────
+  /// Açıklaması yerinde düzenlenen görsel (null = yok) ve yazılan taslak:
+  /// taslak satır atladıkça bant uzar, metin aşağı akar.
+  String? _captionEditId;
+  String _captionDraft = '';
+  final _captionMeasures = <String, _CaptionMeasure>{};
+
+  /// Görselin ALTINDAKİ açıklama bandının yüksekliği (0 = açıklama yok).
+  /// Sarma, sayfa boyu, çarpışma ve araç paneli bunu görselin boyuna ekler.
+  double _captionBand(Attachment img, double w) {
+    if (img.kind != AttachmentKind.image) return 0;
+    final editing = _captionEditId == img.id;
+    final text = editing ? _captionDraft : img.caption.trim();
+    if (!editing && text.isEmpty) return 0;
+    final measure = _captionMeasures.putIfAbsent(img.id, _CaptionMeasure.new);
+    return kCaptionGap +
+        measure.heightOf(text, w - 4, MediaQuery.textScalerOf(context)) +
+        2;
+  }
+
+  void _startCaption(Attachment img) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _selectedId = null;
+      _captionEditId = img.id;
+      _captionDraft = img.caption;
+    });
+  }
+
+  void _draftCaption(String text) {
+    final id = _captionEditId;
+    if (id == null) return;
+    final img = widget.images.where((a) => a.id == id).firstOrNull;
+    if (img == null) return;
+    final w = _sizeOf(img, _cw).w;
+    final before = _captionBand(img, w);
+    _captionDraft = text;
+    // Yalnız satır sayısı değişince yeniden yerleşim (her harfte değil).
+    if (_captionBand(img, w) != before) setState(() {});
+  }
+
+  void _commitCaption(Attachment img, String text) {
+    final next = text.trim();
+    setState(() {
+      if (_captionEditId == img.id) _captionEditId = null;
+    });
+    final current = widget.images.where((a) => a.id == img.id).firstOrNull;
+    if (current != null && current.caption != next) {
+      widget.onChanged(current.copyWith(caption: next));
+    }
+  }
+
+  Widget _caption(BuildContext context, Attachment img, double cw) {
+    final r = _resolve(img, cw);
+    final editing = _captionEditId == img.id;
+    return Positioned(
+      key: ValueKey('image-caption-${img.id}'),
+      left: r.left + 2,
+      top: r.top + r.h + kCaptionGap,
+      width: (r.w - 4).clamp(1.0, cw),
+      child: Opacity(
+        opacity: _moveId == img.id ? 0.55 : 1,
+        child: _ImageCaption(
+          caption: img.caption,
+          editing: editing,
+          onStartEdit: () => _startCaption(img),
+          onDraft: _draftCaption,
+          onCommit: (text) => _commitCaption(img, text),
+        ),
+      ),
+    );
+  }
+
   void _deselect() {
     if (_selectedId != null) setState(() => _selectedId = null);
   }
@@ -989,6 +1063,12 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             .clamp(_minWidthFrac, 1.0)
             .toDouble();
     final w = cw * wFrac;
+    // SES bir HAPTIR (2026-10-28): genişlik ne olursa olsun boyu sabit
+    // aralıkta — geniş ekranda tam genişlik ses kartı 150 dp'lik bir blok
+    // olmasın, dar kutuda da düğmeler sığsın.
+    if (img.kind == AttachmentKind.audio) {
+      return (w: w, h: (w / _aspectOf(img)).clamp(52.0, 76.0).toDouble());
+    }
     return (w: w, h: w / _aspectOf(img));
   }
 
@@ -1016,21 +1096,24 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     for (final img in widget.images) {
       if (_isAuto(img)) continue;
       final r = _resolve(img, cw);
-      occupied.add(Rect.fromLTWH(r.left, r.top, r.w, r.h));
+      occupied.add(
+        Rect.fromLTWH(r.left, r.top, r.w, r.h + _captionBand(img, r.w)),
+      );
     }
     for (final img in widget.images) {
       if (!_isAuto(img)) continue;
       final size = _sizeOf(img, cw);
+      final h = size.h + _captionBand(img, size.w);
       final slot = packSlot(
         occupied: occupied,
         columnWidth: cw,
         width: size.w,
-        height: size.h,
+        height: h,
         anchorTop: widget.topLimit + kImageGap,
         topLimit: widget.topLimit,
       );
       _autoSlots[img.id] = slot;
-      occupied.add(Rect.fromLTWH(slot.left, slot.top, size.w, size.h));
+      occupied.add(Rect.fromLTWH(slot.left, slot.top, size.w, h));
     }
   }
 
@@ -1069,7 +1152,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     for (final other in widget.images) {
       if (other.id == img.id) continue;
       final r = _resolve(other, cw);
-      out.add(Rect.fromLTWH(r.left, r.top, r.w, r.h));
+      out.add(
+        Rect.fromLTWH(r.left, r.top, r.w, r.h + _captionBand(other, r.w)),
+      );
     }
     return out;
   }
@@ -1087,7 +1172,8 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
           top: r.top,
           left: r.left - 12,
           right: r.left + r.w + 12,
-          height: r.h + 8,
+          // Açıklama görselin parçası: metin onun da etrafından akar.
+          height: r.h + _captionBand(img, r.w) + 8,
         ),
       );
     }
@@ -1328,7 +1414,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
               // da kapsamalı (yoksa dipteki görselin paneli sayfadan taşar ve
               // taşan kısmı dokunuş almaz).
               final pad = img.id == _selectedId ? _toolbarEstimate + 12 : 72;
-              final bottom = r.top + r.h + pad;
+              final bottom = r.top + r.h + _captionBand(img, r.w) + pad;
               if (bottom > maxBottom) maxBottom = bottom;
             }
             final selected = _selectedId;
@@ -1383,6 +1469,10 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                     },
                   ),
                 for (final img in widget.images) _positioned(context, img, cw),
+                // Açıklamalar görselin hemen altında (sayfa düzeninin parçası).
+                for (final img in widget.images)
+                  if (_captionBand(img, _resolve(img, cw).w) > 0)
+                    _caption(context, img, cw),
                 // YERİNDE OYNAYAN YouTube'un "durdur" düğmesi kutunun SOL ÜST
                 // köşesinin DIŞINDA (oynatıcının kendi düğmelerini örtmesin);
                 // tuvalin kendi katmanında ki dokunuş kutunun sınırına takılmasın.
@@ -1519,7 +1609,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
               // Yedek: panel henüz çizilmediyse (ilk kare) tahmini bant.
               toolbarRect = Rect.fromLTWH(
                 0,
-                r.top + r.h + 6,
+                r.top + r.h + _captionBand(imgForDismiss, r.w) + 6,
                 cw,
                 _toolbarEstimate,
               );
@@ -1820,6 +1910,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     final checked = _multiMode && _multi.contains(img.id);
     final moving = _moveId == img.id;
     final r = _resolve(img, cw);
+    // Ses hapı yuvarlak uçlu ve çerçevesiz (seçiliyken çerçeve gelir).
+    final pill = img.kind == AttachmentKind.audio;
+    final radius = BorderRadius.circular(pill ? r.h / 2 : 12);
     return Positioned(
       // Anahtar ölçüm içindir: yerleşim testleri kutunun ekrandaki dikdörtgenini
       // bu anahtarla okur (bkz. test/note_canvas_layout_test.dart).
@@ -1911,9 +2004,11 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: radius,
                   border: editing || checked
                       ? Border.all(color: scheme.primary, width: 2)
+                      : pill
+                      ? null
                       : Border.all(
                           color: scheme.outlineVariant.withValues(alpha: 0.5),
                         ),
@@ -1936,7 +2031,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                   opacity: moving ? 0.55 : 1,
                   child: RepaintBoundary(
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: radius,
                       child: _boxFor(img),
                     ),
                   ),
@@ -2064,7 +2159,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     return Positioned(
       left: 8,
       right: 8,
-      top: r.top + r.h + 6,
+      top: r.top + r.h + _captionBand(img, r.w) + 6,
       // Panel seçilen ekin altından süzülerek belirir (her yeni seçimde).
       child: PopIn(
         key: ValueKey('tools-${img.id}'),
@@ -2150,6 +2245,11 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       onFullscreen: img.kind == AttachmentKind.audio
           ? null
           : () => _openViewer(img),
+      // Görsele açıklama (altyazı) — yalnız görselde.
+      onCaption: img.kind == AttachmentKind.image
+          ? () => _startCaption(img)
+          : null,
+      hasCaption: img.caption.isNotEmpty,
       onRemove: () => widget.onRemove(img),
     );
   }
