@@ -28,7 +28,8 @@ import java.util.concurrent.TimeUnit
  * videonun KENDİ notuna (`yt_<videoId>`) yazılır: video üste sabit gömülü, başlık videonun başlığı,
  * her not "dk:sn metin" satırı (dokununca video oraya sarar). Aynı videodan gelen sonraki notlar aynı
  * notun sonuna eklenir. Her satır `ytPending`e de yazılır: uygulama açılınca satırın altına ±10 sn'lik
- * transkript parçası ve nota videonun tam transkripti eklenir (Dart: video_note_transcripts.dart).
+ * transkript parçası ve nota videonun tam transkripti eklenir (Dart: video_note_transcripts.dart). Kanallarım
+ * `transcript` ekiyle videonun tam zamanlı altyazısını da yollar; `ytTranscript` alanına yazılır.
  * Oturum yoksa not cihazda sıraya alınır, uygulama açılınca ([flushPending],
  * MainActivity.onCreate) yazılır.
  *
@@ -46,6 +47,7 @@ class HaritaNotAlici : BroadcastReceiver() {
         val note = Gelen(
             text, intent.getStringExtra("place"), intent.getStringExtra("title")?.trim().orEmpty(),
             intent.getStringExtra("folder")?.trim()?.ifEmpty { null } ?: FOLDER_NAME, intent.getBooleanExtra("pinned", false),
+            intent.getStringExtra("transcript")?.trim()?.ifEmpty { null },
         )
         val ctx = context.applicationContext
         val result = goAsync()
@@ -57,8 +59,14 @@ class HaritaNotAlici : BroadcastReceiver() {
         }.start()
     }
 
-    /** Gelen not: Harita'nınki başlıksız ve "Haritalar"da, Kanallarım'ınki başlıklı, sabitli ve "YouTube"da. */
-    class Gelen(val text: String, val place: String?, val title: String, val folder: String, val pinned: Boolean)
+    /**
+     * Gelen not: Harita'nınki başlıksız ve "Haritalar"da, Kanallarım'ınki başlıklı, sabitli ve "YouTube"da.
+     * [transcript]: Kanallarım'ın gönderdiği videonun TAM zamanlı altyazısı ("[d:ss] metin" satırları).
+     */
+    class Gelen(
+        val text: String, val place: String?, val title: String, val folder: String, val pinned: Boolean,
+        val transcript: String? = null,
+    )
 
     companion object {
         const val ACTION = "dev.kaimau.notlar.HARITA_NOT"
@@ -111,6 +119,8 @@ class HaritaNotAlici : BroadcastReceiver() {
                     "ytTodo" to true,
                     "ytPending" to todo,
                 )
+                // Dart onu tam transkript ekine çevirip alanı siler (belge 1 MiB sınırı: Kanallarım ≤150 bin karakter yollar)
+                n.transcript?.let { update["ytTranscript"] = it }
                 if (n.pinned) update["pinned"] = true
                 doc.update(update)
                 return SAVED
@@ -140,6 +150,7 @@ class HaritaNotAlici : BroadcastReceiver() {
                     put("attachments", listOf(video))
                     put("ytTodo", true)
                     put("ytPending", todo)
+                    n.transcript?.let { put("ytTranscript", it) }
                 },
             )
             return SAVED
@@ -175,7 +186,7 @@ class HaritaNotAlici : BroadcastReceiver() {
                 val arr = runCatching { JSONArray(sp.getString("q", "[]")) }.getOrDefault(JSONArray())
                 arr.put(
                     JSONObject().put("t", n.text).put("p", n.place ?: "").put("at", System.currentTimeMillis())
-                        .put("b", n.title).put("k", n.folder).put("s", n.pinned),
+                        .put("b", n.title).put("k", n.folder).put("s", n.pinned).put("tr", n.transcript ?: ""),
                 )
                 sp.edit().putString("q", arr.toString()).apply()
             }
@@ -195,6 +206,7 @@ class HaritaNotAlici : BroadcastReceiver() {
                         val n = Gelen(
                             o.optString("t"), o.optString("p").ifEmpty { null }, o.optString("b"),
                             o.optString("k").ifEmpty { FOLDER_NAME }, o.optBoolean("s"),
+                            o.optString("tr").ifEmpty { null },
                         )
                         val ok = runCatching { save(app, n, o.optLong("at")) }.getOrDefault(0)
                         if (ok == 0) left.put(o)

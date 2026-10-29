@@ -35,8 +35,9 @@ void main() {
   test('tam metin damgalı paragraflar', () {
     final full = TimedTranscript.fullText(segs);
     expect(full, startsWith('[0:00] Merhaba arkadaşlar.'));
-    expect(full.split('\n'), hasLength(segs.length));
-    expect(TimedTranscript.parseStamped(full), hasLength(segs.length));
+    // 'Merhaba arkadaşlar.' 4 sn: paragraf ≥8 sn olunca cümle sonunda kapanır
+    expect(full, contains('\n\n[0:14] Önce limit'));
+    expect(TimedTranscript.parseStamped(full).length, lessThan(segs.length));
   });
 
   test('parça doğru satırın altına, sonra bir sonrakine', () {
@@ -46,6 +47,16 @@ void main() {
     body = insertVideoExcerpt(body, '0:18 türev', 'B');
     expect(body, '0:18 türev\n“A”\n\n0:18 türev\n“B”');
     expect(insertVideoExcerpt('x', 'yok', 'C'), 'x\n“C”');
+  });
+
+  test('Kanallarım zamanlı altyazısı: kısa parçalar, saniyeler doğru', () {
+    final segs = TimedTranscript.parseStamped(
+      '[1:20] bu halde niye\n[1:23] sinirleniyoruz huzurum yok\n[1:26] diye',
+    );
+    expect(segs.map((s) => s.start), [80, 83, 86]);
+    expect(segs[0].end, 83);
+    final text = TimedTranscript.excerpt(segs, 84, radius: 3, slack: 0);
+    expect(text, 'bu halde niye sinirleniyoruz huzurum yok diye');
   });
 
   test('Kanallarım altyazı bloğu ayrılır', () {

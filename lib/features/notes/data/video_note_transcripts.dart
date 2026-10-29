@@ -21,8 +21,9 @@ import 'timed_transcript.dart';
 /// Köprü (`HaritaNotlari.kt`) video notuna her satırda `ytTodo: true` ve
 /// `ytPending` (`{s: saniye, line: satır, note: metin}`) yazar; uygulama
 /// açıkken bu servis onları sessizce işler:
-///  1. Gemini videoyu bağlantıdan cümle başına damgalı döker (notta tam
-///     transkript zaten varsa o kullanılır — [TimedTranscript]),
+///  1. zamanlı transkript: Kanallarım'ın `transcript` ekiyle yolladığı tam
+///     altyazı (köprü `ytTranscript` alanına yazar), yoksa notta kayıtlı
+///     transkript, o da yoksa Gemini videoyu bağlantıdan cümle cümle döker,
 ///  2. notta yoksa TAM transkript, videonun transkript eki olarak eklenir,
 ///  3. her bekleyen satırın altına ±10 sn'lik parça (AI cümleleri tamamlar;
 ///     AI yoksa cümle sınırına göre kural tabanlı) yazılır.
@@ -156,13 +157,23 @@ class _Worker {
     }
     final saved = Transcripts.of(note.attachments, video);
     final needFull = saved == null;
+    final bridged = data['ytTranscript'] as String?;
     if (!needFull && pending.isEmpty) {
-      await ref.update({'ytTodo': FieldValue.delete()});
+      await ref.update({
+        'ytTodo': FieldValue.delete(),
+        'ytTranscript': FieldValue.delete(),
+      });
       return;
     }
-    // Tam transkript (Gemini, uzun videoda dakikalar sürebilir). Olmasa da
-    // Kanallarım'ın gönderdiği ±10 sn altyazı AI ile düzeltilir.
-    final segments = await _segmentsFor(videoId, video.webUrl, saved?.text);
+    // Zamanlı transkript: Kanallarım'ın yolladığı tam altyazı > notta kayıtlı
+    // transkript > Gemini dökümü (uzun videoda dakikalar sürebilir). Hiçbiri
+    // olmasa da Kanallarım'ın ±10 sn altyazısı AI ile düzeltilir.
+    final segments = await _segmentsFor(
+      videoId,
+      video.webUrl,
+      saved?.text,
+      bridged: bridged,
+    );
     final failed = segments == null || segments.isEmpty;
     final excerpts = <Object, String>{};
     final ready = <Object>{};
@@ -213,6 +224,8 @@ class _Worker {
             full.toMap(),
           ],
         if (handled.isNotEmpty) 'ytPending': FieldValue.arrayRemove(handled),
+        if (d.containsKey('ytTranscript') && (done || !failed))
+          'ytTranscript': FieldValue.delete(),
         if (done) 'ytTodo': FieldValue.delete(),
         if (done || !failed)
           'ytTries': FieldValue.delete()
@@ -229,8 +242,13 @@ class _Worker {
   Future<List<CaptionSegment>?> _segmentsFor(
     String id,
     String url,
-    String? saved,
-  ) async {
+    String? saved, {
+    String? bridged,
+  }) async {
+    if (bridged != null) {
+      final parsed = TimedTranscript.parseStamped(bridged);
+      if (parsed.length > 1) return _segments[id] = parsed;
+    }
     final cached = _segments[id];
     if (cached != null) return cached;
     if (saved != null) {

@@ -611,7 +611,12 @@ eskisini arşive taşıma.
   altına "“…ham…”" yazar ve `cap/from/to` ile işaretler; Dart onu ham
   altyazı + tam transkriptin çevresiyle AI'a verip düzgün cümlelerle
   DEĞİŞTİRİR (`applyVideoExcerpt`; v1.1.535'in satır içi bloğunu da tanır).
-  Hatalar `ErrorLog`a ("video dökümü", "video parçası AI"). YouTube iç API'si (altyazı)
+  Hatalar `ErrorLog`a ("video dökümü", "video parçası AI").
+  **Kanallarım tam altyazıyı da yollar (2026-10-29):** `transcript` eki
+  ("[d:ss] metin", ≤150 bin karakter, Kanallarım `Streams.timedTranscript`)
+  → köprü `ytTranscript` alanına → Dart onu öncelikli kaynak yapar, tam
+  transkript ekini paragraflı (`fullText`) üretir, alanı siler. Gemini
+  dökümü yalnız bu yoksa (Harita'nın sesli notu, eski Kanallarım). YouTube iç API'si (altyazı)
   KAZINMAZ — bot korumasına takılıyor (bulut IP'sinde LOGIN_REQUIRED). **GENEL (public) SÜRÜMDE KALDIR:** `HaritaNotlari.kt` +
   manifestteki `HaritaNotAlici` + build.gradle.kts "Harita köprüsü"
   bağımlılıkları/`firebaseSdkVersion()` + MainActivity'deki `flushPending`

@@ -87,10 +87,33 @@ abstract final class TimedTranscript {
     return h > 0 ? '$h:${m.toString().padLeft(2, '0')}:$ss' : '$m:$ss';
   }
 
-  /// Tam transkript metni: her cümle kendi satırında, başında "[d:ss]" —
-  /// sonraki notların parçası da bu kayıttan cümle cümle kesilir.
-  static String fullText(List<CaptionSegment> segments) =>
-      [for (final s in segments) '[${stamp(s.start)}] ${s.text}'].join('\n');
+  /// Tam transkript metni: parçalar paragraflara toplanır (cümle sonunda ve
+  /// en az ~8 sn'de, noktalamasız otomatik altyazıda en geç ~25 sn'de bir),
+  /// her paragrafın başında "[d:ss]". Damgalar okunur kalır, metin satır
+  /// satır kırılmaz.
+  static String fullText(List<CaptionSegment> segments) {
+    final out = StringBuffer();
+    final para = <String>[];
+    double? paraStart;
+    void flush() {
+      if (para.isEmpty) return;
+      if (out.isNotEmpty) out.write('\n\n');
+      out.write('[${stamp(paraStart!)}] ${para.join(' ')}');
+      para.clear();
+      paraStart = null;
+    }
+
+    for (var i = 0; i < segments.length; i++) {
+      final s = segments[i];
+      paraStart ??= s.start;
+      para.add(s.text);
+      final next = i + 1 < segments.length ? segments[i + 1].start : s.end;
+      final span = next - paraStart!;
+      if ((span >= 8 && _endsSentence(s.text)) || span >= 25) flush();
+    }
+    flush();
+    return out.toString();
+  }
 
   static bool _endsSentence(String t) => RegExp(r'[.!?…]["”’)]*$').hasMatch(t);
 
