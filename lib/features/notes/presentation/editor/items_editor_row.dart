@@ -503,37 +503,29 @@ extension _ItemsRow on ItemsEditorState {
                         : scheme.tertiary,
                     onPressed: () => _toggleStar(item),
                   ),
-                // SİL "x" ARTIK SATIRDA YER TUTMAZ (kullanıcı bulgusu
-                // 2026-10-30: "sağdaki sil işareti madde aktif yazılırken
-                // notu sağa itip satır genişliğini daraltıyor"). 40 dp'lik
-                // kalıcı yer tutucu kalktı; "x" yalnız odaklı BOŞ maddede,
-                // satırın sağ ucunda yüzer (yazının üstüne binmez). Dolu
-                // maddeyi silmek: uzun basış menüsü ya da karalama jesti.
+                // SİL "x" (2026-10-30 ikinci tur: "madde silme butonu
+                // kaybolmuş"): odaklı maddede HEP görünür, ama SABİT ve dar
+                // bir sütunda (40 → 28 dp) — odak değişince satırın genişliği
+                // değişmez, yazı itilmez. Düğme sütunun içinde yüzer.
                 const SizedBox(width: ItemsEditorState._kTrailingWidth),
               ],
             ),
             if (focused && !_selectionMode)
               PositionedDirectional(
                 end: 0,
-                top: 0,
-                child: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: controller,
-                  builder: (context, value, _) => value.text.isNotEmpty
-                      ? const SizedBox.shrink()
-                      : IconButton(
-                          key: ValueKey('item-remove-${item.id}'),
-                          tooltip: l10n.removeItem,
-                          icon: const Icon(Icons.close, size: 20),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints.tightFor(
-                            width: 36,
-                            height: 36,
-                          ),
-                          color: scheme.onSurfaceVariant.withValues(
-                            alpha: 0.8,
-                          ),
-                          onPressed: () => _removeItem(item),
-                        ),
+                // İlk satırın ortasına hizalı (kutucukla aynı çizgide).
+                top: math.max(0.0, firstLineCenter - 18),
+                child: IconButton(
+                  key: ValueKey('item-remove-${item.id}'),
+                  tooltip: l10n.removeItem,
+                  icon: const Icon(Icons.close, size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints.tightFor(
+                    width: ItemsEditorState._kTrailingWidth + 2,
+                    height: 36,
+                  ),
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+                  onPressed: () => _removeItem(item),
                 ),
               ),
           ],

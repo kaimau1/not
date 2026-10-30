@@ -5943,17 +5943,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'No text inside the circle — draw around the text';
 
   @override
-  String get gestureModeHint =>
-      'Draw on an item: strike or ✓ → check · scribble → delete · circle → fix spelling · scroll with two fingers';
-
-  @override
-  String get gestureUnknown =>
-      'Gesture not recognized — strike, ✓, scribble or circle';
-
-  @override
-  String get gestureNoItem => 'Draw the gesture over an item';
-
-  @override
   String get gestureItemDeleted => 'Item deleted (Undo brings it back)';
 
   @override
@@ -5966,11 +5955,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gestureFixed => 'Spelling fixed';
 
   @override
-  String get itemMenuGestures => 'Gestures';
-
-  @override
   String get embedImportToNote => 'Move into note';
 
   @override
   String get embedImported => 'Attachment moved into the note';
+
+  @override
+  String get itemGesturesSetting => 'Item gestures';
+
+  @override
+  String get itemGesturesSettingInfo =>
+      'Draw over an item with a finger or pen: strike / ✓ checks, scribble deletes, circle fixes spelling';
 }

@@ -33,7 +33,6 @@ extension _ItemsActions on ItemsEditorState {
         _ItemMenuPanel(
           starred: item.starred,
           canMove: widget.onMoveToPage != null,
-          canGesture: widget.onGestureMode != null,
         ),
       ],
     );
@@ -45,8 +44,6 @@ extension _ItemsActions on ItemsEditorState {
         _toggleSelection(item);
       case _ItemAction.delete:
         _removeItem(item);
-      case _ItemAction.gestures:
-        widget.onGestureMode?.call();
       case _ItemAction.moveToPage:
         // Önce satırdaki yazı nota işlensin: taşınan madde son hâliyle gitsin.
         _commit();

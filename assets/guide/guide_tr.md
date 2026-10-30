@@ -42,15 +42,16 @@ Alt çubuk soldan sağa:
 - Sağdaki renkli kapsül: **✦ Yapay zekâ** (bkz. Yapay zekâ bölümü), **asistan mikrofonu** ve **sesli yazdır** mikrofonu.
 Üst çubuk: **geri al / geri getir** (ikisi hep yan yana), sabitle, kişi ekle (ortak not) ve ⋮ menüsü. ⋮ menüsünün üst satırında paylaş, notta ara ve **hesap makinesi**; altında **İçerik** (**Defter görünümü** ve kâğıt deseni, listeye/metne dönüştür, 2 sütun, maddeleri sırala, görselleri eke dönüştür, temizle), **Kopyala ve dışa aktar** (çoğalt, şablon olarak kaydet, deftere kopyala), **Araçlar** (sesli oku, istatistikler, ayarlar), **Koruma ve depolama** (arşivle, kilitle, senkron). Kopyalamak, arkadaşa göndermek ve dışa aktarmak **Paylaş** levhasında — menülerde ayrıca yok.
 - Liste notlarında maddeyi basılı tutup sürükleyerek sırala; "Seç" ile birden çok maddeyi kopyala/sil. Seçim çubuğundaki **Kopyala ve işaretle** seçilenleri panoya alır ve tek dokunuşta işaretler.
-- Boş maddenin sağında küçük **×** belirir; dolu maddeyi silmek için madde menüsü (sol bölgeye basılı tut) ya da karalama jesti.
+- Yazdığın maddenin sağında küçük **×** silme düğmesi durur (satırın genişliği değişmez); madde menüsü (sol bölgeye basılı tut) ve karalama jesti de siler.
 
 ## Madde jestleri {#gestures}
 Maddenin üstüne **parmakla ya da kalemle** çiz:
 - **Üstünü çiz** (yatay çizgi) ya da **✓** at → madde işaretlenir (işaretliyse işaret kalkar).
 - **Karala** (zikzak) → madde silinir; **Geri al** ile geri gelir.
 - **Daire içine al** → maddenin yazımı düzeltilir (yapay zekâ; yalnız imla ve noktalama).
-- Parmakla: maddenin sol bölgesine basılı tut → **Jestler**; altta şerit çıkar, çizerken iki parmakla kaydırırsın, şeritteki × ile çıkarsın.
-- Kalemle (S Pen vb.): jest kipine gerek yok — kalemle maddenin üstüne çizmek doğrudan jesttir; maddenin dışına dokununca el yazısı açılır.
+- Ayrıca açman gerekmez: maddenin üstünde başlayan çizgi doğrudan jesttir. Kaydırma, uzun basış ve metin seçimi jest sayılmaz.
+- Kalemle (S Pen vb.) de aynı; kalem maddenin dışına değince el yazısı açılır.
+- İstemezsen **Ayarlar → Madde jestleri** ile kapat.
 - Başlığın sağındaki **+**: **Yeni sayfa**, alarm, konum hatırlatıcısı, klasör, etiket ve etiket/başlık önerisi.
 
 ## Not sayfaları {#pages}

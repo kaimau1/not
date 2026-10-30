@@ -5924,17 +5924,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Dairenin içinde yazı bulunamadı — yazının çevresine çiz';
 
   @override
-  String get gestureModeHint =>
-      'Maddeye çiz: üstünü çiz ya da ✓ → işaretle · karala → sil · daire → yazımı düzelt · iki parmakla kaydır';
-
-  @override
-  String get gestureUnknown =>
-      'Jest tanınmadı — üstünü çiz, ✓, karala ya da daire';
-
-  @override
-  String get gestureNoItem => 'Jest bir maddenin üstünde olmalı';
-
-  @override
   String get gestureItemDeleted => 'Madde silindi (Geri al ile geri getir)';
 
   @override
@@ -5947,11 +5936,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gestureFixed => 'Yazım düzeltildi';
 
   @override
-  String get itemMenuGestures => 'Jestler';
-
-  @override
   String get embedImportToNote => 'Nota aktar';
 
   @override
   String get embedImported => 'Ek notun içine alındı';
+
+  @override
+  String get itemGesturesSetting => 'Madde jestleri';
+
+  @override
+  String get itemGesturesSettingInfo =>
+      'Maddenin üstüne parmakla ya da kalemle çiz: üstünü çiz / ✓ işaretler, karalamak siler, daire yazımı düzeltir';
 }

@@ -42,15 +42,16 @@ Bottom bar, left to right:
 - The coloured capsule on the right: **✦ AI** (see the AI section), the **assistant microphone** and the **dictate** microphone.
 Top bar: **undo / redo** (always side by side), pin, add people (shared note) and the ⋮ menu. The ⋮ menu's top row has share, search in note and the **calculator**; below are **Content** (**Notebook view** and paper, convert to list/text, two columns, sort items, images to attachments, clear), **Copy and export** (duplicate, save as template, copy to notebook), **Tools** (read aloud, statistics, settings), **Protection and storage** (archive, lock, sync). Copying, sending to a friend and exporting live in the **Share** sheet — not repeated in the menus.
 - In lists, long-press an item and drag to reorder; use "Select" to copy/delete several items. **Copy and check** in the selection bar copies the selected items and checks them in one tap.
-- An empty item shows a small **×** on the right; to delete a filled item use the item menu (long-press its left area) or the scribble gesture.
+- The item you're editing shows a small **×** delete button on the right (the line width doesn't change); the item menu (long-press its left area) and the scribble gesture delete too.
 
 ## Item gestures {#gestures}
 Draw over an item **with your finger or a pen**:
 - **Strike through** (horizontal line) or a **✓** → the item is checked (or unchecked).
 - **Scribble** (zigzag) → the item is deleted; **Undo** brings it back.
 - **Circle** → the item's spelling is fixed (AI; spelling and punctuation only).
-- With a finger: long-press the item's left area → **Gestures**; a strip appears, scroll with two fingers while drawing, leave with × on the strip.
-- With a pen (S Pen etc.): no gesture mode needed — drawing over an item with the pen is a gesture; touching outside items opens handwriting.
+- Nothing to turn on: a stroke that starts over an item is a gesture. Scrolling, long-presses and text selection don't count.
+- Same with a pen (S Pen etc.); touching outside items with the pen opens handwriting.
+- Turn it off in **Settings → Item gestures**.
 - The **+** next to the title: **New page**, alarm, location reminder, folder, tag and tag/title suggestions.
 
 ## Note pages {#pages}

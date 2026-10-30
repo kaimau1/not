@@ -508,6 +508,11 @@ final aiSkipCheckedProvider = boolPref('ai_skip_checked', defaultValue: true);
 /// false: satır tek satırda kalır, dokununca (odaklanınca) açılır.
 final expandListItemsProvider = boolPref('expand_list_items', defaultValue: true);
 
+/// MADDE JESTLERİ (kullanıcı isteği 2026-10-30: "jestler direkt çalışmalı,
+/// aktif edilmeden; ayarlardan opsiyonel"): maddenin üstüne parmakla/kalemle
+/// çizmek — üstünü çiz/✓ işaretle, karala sil, daire yazım düzelt.
+final itemGesturesProvider = boolPref('item_gestures', defaultValue: true);
+
 /// Ana ekranın üstündeki tek satırlık "Yeni not..." hızlı yakalama alanı
 /// görünsün mü? Varsayılan GİZLİ (kullanıcı isteği 2026-08-06): satır dikey
 /// yer kaplıyor ve "+" menüsü aynı işi görüyor; isteyen Ayarlar'dan açar.

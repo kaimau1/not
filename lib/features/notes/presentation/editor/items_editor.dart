@@ -146,7 +146,6 @@ class ItemsEditor extends StatefulWidget {
     this.attachmentNames = const [],
     this.tagLooks = const {},
     this.onAttachmentTag,
-    this.onGestureMode,
     this.selectionMenu,
     this.videoTimestamps = false,
     this.onVideoTimestamp,
@@ -271,10 +270,6 @@ class ItemsEditor extends StatefulWidget {
   /// taşıdığı ad (bağ etiketi ya da dosya adı). Eki açmak editörün işi —
   /// görüntüleyiciler ve düzenleme geri çağrıları orada.
   final void Function(String fileName)? onAttachmentTag;
-
-  /// Uzun basış menüsündeki "Jestler": editör jest kipini açar (maddeye
-  /// çizerek işaretle / sil / düzelt). null ise seçenek yok.
-  final VoidCallback? onGestureMode;
 
   /// Madde satırının seçim menüsünü EDİTÖR kurar — gövdeyle AYNI seçenekler
   /// ve AYNI sıra (ek göm, etiket önizle/düzenle/kaldır, bağlantıyı aç,
@@ -821,7 +816,7 @@ class ItemsEditorState extends State<ItemsEditor>
   static const double _kLeadingWidth = 48;
 
   /// Sil düğmesinin (odaksızken boş kutunun) genişliği.
-  static const double _kTrailingWidth = 8;
+  static const double _kTrailingWidth = 28;
 
   /// Satırın iki yanındaki yatay dolgunun TOPLAMI (sol 12 + sağ 2).
   static const double _kRowPadding = 14;
@@ -1259,6 +1254,9 @@ class ItemsEditorState extends State<ItemsEditor>
     }
     return null;
   }
+
+  /// Çoklu seçim kipinde mi (jestler kapalı — satırlar seçer/sürüklenir).
+  bool get isSelecting => _selectionMode;
 
   /// [controller] hangi maddenin alanı (biçim paneli hedefi → madde).
   String? itemIdForController(TextEditingController controller) {
@@ -1995,21 +1993,15 @@ enum _ItemAction {
   select,
   delete,
   moveToPage,
-  gestures,
 }
 
 /// Madde menüsünün tek parçalık gövdesi: iş düğmeleri (alt çizgi
 /// 2026-10-30'dan beri biçim panelinde — bkz. [ItemsEditorState._showItemMenu]).
 class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
-  const _ItemMenuPanel({
-    required this.starred,
-    required this.canMove,
-    required this.canGesture,
-  });
+  const _ItemMenuPanel({required this.starred, required this.canMove});
 
   final bool starred;
   final bool canMove;
-  final bool canGesture;
 
   @override
   double get height => 84;
@@ -2076,12 +2068,6 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
                     _ItemAction.moveToPage,
                     Icons.drive_file_move_outline,
                     l10n.itemMenuMove,
-                  ),
-                if (widget.canGesture)
-                  _action(
-                    _ItemAction.gestures,
-                    Icons.gesture,
-                    l10n.itemMenuGestures,
                   ),
                 _action(
                   _ItemAction.delete,

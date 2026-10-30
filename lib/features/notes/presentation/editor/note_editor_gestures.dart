@@ -1,9 +1,11 @@
 part of 'note_editor_screen.dart';
 
-/// Jest kipi (kullanıcı isteği 2026-10-30): maddelerin üstüne çizilen
-/// jestler ve "Buraya bağla"da daire içine alarak seçim. Tanıma ve örtü
+/// Jestler (kullanıcı isteği 2026-10-30): maddelerin üstüne çizilen jestler
+/// KİPSİZ çalışır (ikinci tur: "jestler direkt çalışmalı, aktif edilmeden;
+/// ayarlardan opsiyonel" — [itemGesturesProvider]); yalnız "Buraya bağla"da
+/// daire içine alarak seçim bir örtü kipidir. Tanıma ve örtü
 /// `ink_gestures.dart`ta; burada jestin NOTA etkisi.
-enum _GestureMode { off, items, embedLasso }
+enum _GestureMode { off, embedLasso }
 
 extension _EditorGestures on _NoteEditorScreenState {
   void _setGestureMode(_GestureMode mode) {
@@ -24,11 +26,7 @@ extension _EditorGestures on _NoteEditorScreenState {
 
   /// Örtüden gelen çizgi.
   void _onGestureStroke(List<Offset> points) {
-    if (_gestureMode == _GestureMode.embedLasso) {
-      _lassoEmbed(points);
-    } else {
-      _applyItemGesture(points, fromStylus: false);
-    }
+    if (_gestureMode == _GestureMode.embedLasso) _lassoEmbed(points);
   }
 
   /// BURAYA BAĞLA — DAİRE İÇİNE AL: halkanın kutusunun düştüğü alanda
@@ -76,22 +74,14 @@ extension _EditorGestures on _NoteEditorScreenState {
   }
 
   /// MADDE JESTİ: üstünü çiz / ✓ → işaretle (ya da işareti kaldır),
-  /// karala → sil, daire → yazımı düzelt. Kalemle maddeye çizilen çizgi de
-  /// buradan geçer ([fromStylus]: tanınmayan çizgi sessiz kalır — kalem
-  /// imleç koymak için de değer).
-  void _applyItemGesture(List<Offset> points, {required bool fromStylus}) {
+  /// karala → sil, daire → yazımı düzelt. Tanınmayan çizgi SESSİZ kalır:
+  /// her dokunuş/kaydırma buradan geçiyor.
+  void _applyItemGesture(List<Offset> points, InkGesture gesture) {
     final l10n = context.l10n;
-    final gesture = classifyInkGesture(points);
     final items = _itemsEditorKey.currentState;
-    if (gesture == InkGesture.none || items == null) {
-      if (!fromStylus) _showSnack(l10n.gestureUnknown);
-      return;
-    }
+    if (gesture == InkGesture.none || items == null) return;
     final id = items.itemIdAt(inkBounds(points).center);
-    if (id == null) {
-      if (!fromStylus) _showSnack(l10n.gestureNoItem);
-      return;
-    }
+    if (id == null) return;
     switch (gesture) {
       case InkGesture.strike:
       case InkGesture.check:
@@ -145,39 +135,92 @@ extension _EditorGestures on _NoteEditorScreenState {
     }
   }
 
-  /// KALEMLE MADDEYE çizgi (jest kipi kapalıyken de): içerik alanının
-  /// dinleyicisi kalemin maddeye değdiğini görünce noktaları toplar.
-  bool _startStylusGesture(PointerDownEvent event) {
+  /// İÇERİK ALANINA değen her işaretçi (parmak, kalem): maddenin üstünde
+  /// başlayan TEK işaretçinin yolu toplanır, kalkınca jest mi diye bakılır.
+  /// Dinleyici jest yarışına GİRMEZ (ham `Listener`): kaydırma, seçim,
+  /// dokunuş olduğu gibi çalışır; bunlardan biri olduysa jest sayılmaz.
+  /// true: çizgi maddede başladı (kalem el yazısı tuvalini açmasın).
+  bool _trackGestureDown(PointerDownEvent event) {
+    _contentPointers++;
+    if (_contentPointers > 1) {
+      // İkinci parmak: yakınlaştırma/kaydırma — jest değil.
+      _gesturePointer = null;
+      return false;
+    }
+    if (_readOnly || _gestureMode != _GestureMode.off) return false;
+    if (!ref.read(itemGesturesProvider)) return false;
     final items = _itemsEditorKey.currentState;
-    if (items == null || items.itemIdAt(event.position) == null) return false;
-    _stylusPointer = event.pointer;
-    _stylusPoints = [event.position];
+    if (items == null || items.isSelecting) return false;
+    if (items.itemIdAt(event.position) == null) return false;
+    _gesturePointer = event.pointer;
+    _gesturePoints = [event.position];
+    _gestureStartedAt = event.timeStamp;
+    _gestureMovedAt = null;
+    _gestureScrollStart = _gestureScrollPosition()?.pixels;
+    _gestureSelectionStart = _formatTarget?.controller.selection;
     return true;
   }
 
   void _onContentPointerMove(PointerMoveEvent event) {
-    if (event.pointer != _stylusPointer) return;
-    _stylusPoints.add(event.position);
+    if (event.pointer != _gesturePointer) return;
+    _gesturePoints.add(event.position);
+    if (_gestureMovedAt == null &&
+        (event.position - _gesturePoints.first).distance > 6) {
+      _gestureMovedAt = event.timeStamp;
+    }
+  }
+
+  void _onContentPointerCancel(PointerCancelEvent event) {
+    _contentPointers = math.max(0, _contentPointers - 1);
+    if (event.pointer == _gesturePointer) _gesturePointer = null;
   }
 
   void _onContentPointerUp(PointerUpEvent event) {
-    if (event.pointer != _stylusPointer) return;
-    final points = _stylusPoints;
-    _stylusPointer = null;
-    _stylusPoints = [];
-    if (classifyInkGesture(points) == InkGesture.none) return;
-    // Kalemin sürüklemesi alanda seçim açmış olabilir: jestten sonra bırak.
-    FocusManager.instance.primaryFocus?.unfocus();
-    _applyItemGesture(points, fromStylus: true);
+    _contentPointers = math.max(0, _contentPointers - 1);
+    if (event.pointer != _gesturePointer) return;
+    _gesturePointer = null;
+    final points = _gesturePoints;
+    _gesturePoints = [];
+    final gesture = classifyInkGesture(points);
+    if (gesture == InkGesture.none) return;
+    final started = _gestureStartedAt ?? event.timeStamp;
+    final moved = _gestureMovedAt ?? event.timeStamp;
+    // Uzun basış (madde menüsü, sürükle-sırala, metin seçimi) sonrası
+    // sürükleme jest değil.
+    if (moved - started > const Duration(milliseconds: 400)) return;
+    // Hızlı fiske (sayfa çevirme, kaydırma) jest değil.
+    final touch = event.kind == PointerDeviceKind.touch;
+    if (touch &&
+        event.timeStamp - started < const Duration(milliseconds: 120)) {
+      return;
+    }
+    // Sayfa kaydıysa kullanıcı kaydırıyordu.
+    final scroll = _gestureScrollPosition()?.pixels;
+    final scrollStart = _gestureScrollStart;
+    if (scroll != null &&
+        scrollStart != null &&
+        (scroll - scrollStart).abs() > 6) {
+      return;
+    }
+    // Alanda seçim/imleç sürüklendiyse (tutamaç, uzun basış seçimi) jest
+    // değil.
+    final selection = _formatTarget?.controller.selection;
+    if (selection != null &&
+        selection.isValid &&
+        !selection.isCollapsed &&
+        selection != _gestureSelectionStart) {
+      return;
+    }
+    // Kalemin sürüklemesi alanda imleç açmış olabilir: jestten sonra bırak.
+    if (!touch) FocusManager.instance.primaryFocus?.unfocus();
+    _applyItemGesture(points, gesture);
   }
 }
 
-/// Jest kipindeyken alt şerit: ne çizileceğini söyler, kapatır.
+/// "Daire çizerek bağla" kipindeyken alt şerit: ne çizileceğini söyler.
 class _GestureModeBanner extends StatelessWidget {
-  const _GestureModeBanner({required this.lasso, required this.onClose});
+  const _GestureModeBanner({required this.onClose});
 
-  /// "Buraya bağla" kipi (daire çiz) mi, madde jestleri mi.
-  final bool lasso;
   final VoidCallback onClose;
 
   @override
@@ -194,7 +237,7 @@ class _GestureModeBanner extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                lasso ? l10n.embedLassoHint : l10n.gestureModeHint,
+                l10n.embedLassoHint,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall

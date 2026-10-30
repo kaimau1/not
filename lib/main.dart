@@ -20,6 +20,7 @@ import 'core/utils/device_storage.dart';
 import 'core/utils/display_rate.dart';
 import 'core/utils/image_cache_budget.dart';
 import 'core/utils/local_file.dart';
+import 'core/utils/note_fonts.dart';
 import 'core/utils/prefs_footprint.dart';
 import 'core/widgets/setup_required_screen.dart';
 import 'features/notes/data/local_notes_store.dart';
@@ -85,6 +86,10 @@ Future<void> main() async {
     return;
   }
 
+  // Yazı tipleri Firebase kurulumuyla PARALEL yüklenir; ilk kareden önce
+  // en çok 400 ms beklenir (bkz. preloadNoteFonts — kasma kök nedeni). Web'de
+  // 5 MB'lık indirme olurdu: yalnız kullanılanlar yüklenir.
+  final fonts = kIsWeb ? Future<void>.value() : preloadNoteFonts();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Offline-first: yerel önbellek her platformda açık.
@@ -130,6 +135,7 @@ Future<void> main() async {
     }
   }
 
+  await fonts.timeout(const Duration(milliseconds: 400), onTimeout: () {});
   runApp(
     ProviderScope(
       overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],

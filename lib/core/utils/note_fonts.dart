@@ -150,6 +150,26 @@ TextStyle applyNoteFont(TextStyle base, String? family) {
   return applied;
 }
 
+/// Katalog yazı tiplerini (normal + orta kalınlık) ÖNDEN yükler.
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-10-30: "yazı tipi değiştiğinde kasma
+/// oluyor"): gömülü yazı tipi ilk KULLANILDIĞI an yükleniyor ve her yükleme
+/// motora "yazı tipleri değişti" dedirtiyor — çerçeve o anda ekrandaki
+/// BÜTÜN metni yeniden yerleştiriyor (uzun notta yüzlerce paragraf). Seçici
+/// tepsisi kaydırılırken her yeni önizleme, seçimde de kalın dosyası ayrıca
+/// bir kez daha. Yükleme ilk kareden ÖNCE biterse yerleştirilecek metin
+/// henüz yoktur, bedel sıfırdır. Hata sessiz (yazı tipi kullanımda yine
+/// yüklenmeye çalışılır).
+Future<void> preloadNoteFonts() async {
+  try {
+    for (final builder in _googleBuilders.values) {
+      builder(const TextStyle());
+      builder(const TextStyle(fontWeight: FontWeight.w500));
+    }
+    await GoogleFonts.pendingFonts();
+  } catch (_) {}
+}
+
 /// Notun şeffaflık ayarını [base] stiline uygular.
 ///
 /// Rengi olmayan stiller temadan besleniyor; opaklık verilebilmesi için renk

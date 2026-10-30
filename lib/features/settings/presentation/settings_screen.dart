@@ -303,6 +303,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords: l10n.expandListItemsInfo,
           ),
           _SettingRow(
+            const _ItemGesturesSwitch(),
+            title: l10n.itemGesturesSetting,
+            keywords: '${l10n.itemGesturesSettingInfo} jest cizim karala',
+          ),
+          _SettingRow(
             const _CardRichPreviewSwitch(),
             title: l10n.cardRichPreview,
             keywords: '${l10n.cardRichPreviewInfo} renk alti cizili kalin',

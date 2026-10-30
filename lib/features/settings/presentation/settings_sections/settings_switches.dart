@@ -17,6 +17,24 @@ class _ExpandListItemsSwitch extends ConsumerWidget {
   }
 }
 
+/// Madde jestleri (bkz. [itemGesturesProvider]).
+class _ItemGesturesSwitch extends ConsumerWidget {
+  const _ItemGesturesSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      key: const ValueKey('item-gestures-switch'),
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.itemGesturesSetting),
+      subtitle: Text(l10n.itemGesturesSettingInfo),
+      value: ref.watch(itemGesturesProvider),
+      onChanged: (value) => ref.read(itemGesturesProvider.notifier).set(value),
+    );
+  }
+}
+
 /// **EK İÇERİĞİNDE ARAMA** (kullanıcı isteği 2026-09-04: "anlamsal arama
 /// görsel ve pdf'leri de arayabilir, seçenek olarak sunmalıyız").
 ///

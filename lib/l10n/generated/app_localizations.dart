@@ -10622,24 +10622,6 @@ abstract class AppLocalizations {
   /// **'Dairenin içinde yazı bulunamadı — yazının çevresine çiz'**
   String get embedLassoMissed;
 
-  /// No description provided for @gestureModeHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Maddeye çiz: üstünü çiz ya da ✓ → işaretle · karala → sil · daire → yazımı düzelt · iki parmakla kaydır'**
-  String get gestureModeHint;
-
-  /// No description provided for @gestureUnknown.
-  ///
-  /// In tr, this message translates to:
-  /// **'Jest tanınmadı — üstünü çiz, ✓, karala ya da daire'**
-  String get gestureUnknown;
-
-  /// No description provided for @gestureNoItem.
-  ///
-  /// In tr, this message translates to:
-  /// **'Jest bir maddenin üstünde olmalı'**
-  String get gestureNoItem;
-
   /// No description provided for @gestureItemDeleted.
   ///
   /// In tr, this message translates to:
@@ -10664,12 +10646,6 @@ abstract class AppLocalizations {
   /// **'Yazım düzeltildi'**
   String get gestureFixed;
 
-  /// No description provided for @itemMenuGestures.
-  ///
-  /// In tr, this message translates to:
-  /// **'Jestler'**
-  String get itemMenuGestures;
-
   /// No description provided for @embedImportToNote.
   ///
   /// In tr, this message translates to:
@@ -10681,6 +10657,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Ek notun içine alındı'**
   String get embedImported;
+
+  /// No description provided for @itemGesturesSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Madde jestleri'**
+  String get itemGesturesSetting;
+
+  /// No description provided for @itemGesturesSettingInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maddenin üstüne parmakla ya da kalemle çiz: üstünü çiz / ✓ işaretler, karalamak siler, daire yazımı düzeltir'**
+  String get itemGesturesSettingInfo;
 }
 
 class _AppLocalizationsDelegate

@@ -1852,9 +1852,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// "Buraya bağla"da daire çizme.
   _GestureMode _gestureMode = _GestureMode.off;
 
-  /// Kalemle maddeye çizilen jestin işaretçisi ve noktaları.
-  int? _stylusPointer;
-  List<Offset> _stylusPoints = [];
+  /// Maddeye çizilen jestin izi (bkz. `_trackGestureDown`).
+  int _contentPointers = 0;
+  int? _gesturePointer;
+  List<Offset> _gesturePoints = [];
+  Duration? _gestureStartedAt;
+  Duration? _gestureMovedAt;
+  double? _gestureScrollStart;
+  TextSelection? _gestureSelectionStart;
 
   /// Etkin metin alanında en son yapılmış DOLU (boş olmayan) seçim ve o
   /// seçimin ait olduğu alan.
@@ -2529,6 +2534,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// notta, kalem kipi zaten açıkken ve yazma kartı açıkken çalışmaz. Kalemle
   /// araç çubuklarına dokunmak etkilenmez: dinleyici yalnız içerik alanında.
   void _onContentPointerDown(PointerDownEvent event) {
+    // MADDE JESTLERİ her işaretçide izlenir; kalem maddede başladıysa el
+    // yazısı tuvali açılmaz (bkz. note_editor_gestures.dart).
+    if (_trackGestureDown(event)) return;
     if (event.kind != PointerDeviceKind.stylus &&
         event.kind != PointerDeviceKind.invertedStylus) {
       return;
@@ -2547,9 +2555,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _showSnack(context.l10n.inkStylusDetected);
       return;
     }
-    // KALEM MADDEYE değdi: el yazısı tuvali değil, MADDE JESTİ (üstünü çiz,
-    // ✓, karala, daire — bkz. note_editor_gestures.dart).
-    if (_gestureMode == _GestureMode.off && _startStylusGesture(event)) return;
     // Metin/liste notu: imleç koymak için kalemle alana dokunan da olabilir
     // — klavye açıkken (yazıyor) el yazısına geçilmez.
     if (MediaQuery.viewInsetsOf(context).bottom > 0) return;
@@ -3256,9 +3261,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         attachmentNames: _bodyController.attachmentNames,
         tagLooks: _tagLooks,
         onAttachmentTag: _openTagByName,
-        onGestureMode: _readOnly
-            ? null
-            : () => _setGestureMode(_GestureMode.items),
         selectionMenu: _itemSelectionMenu,
         videoTimestamps: _bodyController.videoTimestamps,
         onVideoTimestamp: _seekVideoTo,
@@ -3307,9 +3309,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         attachmentNames: _bodyController.attachmentNames,
         tagLooks: _tagLooks,
         onAttachmentTag: _openTagByName,
-        onGestureMode: _readOnly
-            ? null
-            : () => _setGestureMode(_GestureMode.items),
         selectionMenu: _itemSelectionMenu,
         videoTimestamps: _bodyController.videoTimestamps,
         onVideoTimestamp: _seekVideoTo,
@@ -3484,7 +3483,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 // değişmiyor).
                 if (_gestureMode != _GestureMode.off)
                   _GestureModeBanner(
-                    lasso: _gestureMode == _GestureMode.embedLasso,
                     onClose: () => _setGestureMode(_GestureMode.off),
                   )
                 else if (_pendingEmbed != null)
@@ -4317,6 +4315,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       onPointerDown: _onContentPointerDown,
                       onPointerMove: _onContentPointerMove,
                       onPointerUp: _onContentPointerUp,
+                      onPointerCancel: _onContentPointerCancel,
                       // JEST KİPİ örtüsü içeriğin ÜSTÜNDE; ağacın şekli kiple
                       // değişmesin diye yığın koşulsuz (ilk çocuk sabit).
                       child: Stack(

@@ -2826,14 +2826,12 @@
   "embedLasso": "Daire çizerek seç",
   "embedLassoHint": "Bağlanacak yazıyı parmağınla daire içine al · iki parmakla kaydır",
   "embedLassoMissed": "Dairenin içinde yazı bulunamadı — yazının çevresine çiz",
-  "gestureModeHint": "Maddeye çiz: üstünü çiz ya da ✓ → işaretle · karala → sil · daire → yazımı düzelt · iki parmakla kaydır",
-  "gestureUnknown": "Jest tanınmadı — üstünü çiz, ✓, karala ya da daire",
-  "gestureNoItem": "Jest bir maddenin üstünde olmalı",
   "gestureItemDeleted": "Madde silindi (Geri al ile geri getir)",
   "gestureFixing": "Yazım düzeltiliyor…",
   "gestureNothingToFix": "Düzeltilecek yazım hatası yok",
   "gestureFixed": "Yazım düzeltildi",
-  "itemMenuGestures": "Jestler",
   "embedImportToNote": "Nota aktar",
-  "embedImported": "Ek notun içine alındı"
+  "embedImported": "Ek notun içine alındı",
+  "itemGesturesSetting": "Madde jestleri",
+  "itemGesturesSettingInfo": "Maddenin üstüne parmakla ya da kalemle çiz: üstünü çiz / ✓ işaretler, karalamak siler, daire yazımı düzeltir"
 }

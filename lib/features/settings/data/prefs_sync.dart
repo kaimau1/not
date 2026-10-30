@@ -42,6 +42,7 @@ const kSyncedPrefKeys = <String>[
   'auto_tag',
   'ai_skip_checked',
   'expand_list_items',
+  'item_gestures',
   'quick_capture_row',
   'card_rich_preview',
   'card_hide_sensitive',

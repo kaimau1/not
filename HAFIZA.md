@@ -368,12 +368,21 @@ eskisini arşive taşıma.
   menüsünden panele taşındı (`dividerKind/onDivider`, hedef madde
   `itemIdForController`). Madde sil "x"i yer TUTMAZ (`_kTrailingWidth` 8),
   yalnız odaklı BOŞ maddede yüzer. Geri getir (yinele) hep görünür.
-  **Jestler** (`ink_gestures.dart` saf `classifyInkGesture` + örtü
-  `InkGestureLayer`, editör `note_editor_gestures.dart`): üstünü çiz/✓ →
-  işaretle, karala → sil, daire → AI yazım düzeltme; parmakla madde
-  menüsü → Jestler (örtü opak, iki parmak elle kaydırır), KALEMLE maddeye
-  çizmek kipsiz jesttir (içerik `Listener`ı noktaları toplar; maddenin
-  dışı el yazısı). "Buraya bağla" şeridinde ✍ → daire içine al
+  **Jestler KİPSİZ** (ikinci tur, kullanıcı kararı; ayar `item_gestures`,
+  varsayılan açık, senkronlu): `ink_gestures.dart` saf `classifyInkGesture`;
+  içerik alanının ham `Listener`ı maddede başlayan TEK işaretçinin yolunu
+  toplar (jest yarışına girmez). Jest SAYILMAZ: 400 ms'den geç kıpırdama
+  (uzun basış/sürükle), dokunmatikte < 120 ms (fiske), sayfa > 6 px kaydıysa,
+  alanda yeni dolu seçim açıldıysa, çoklu seçim kipinde. Kalem maddede
+  başlarsa el yazısı tuvali açılmaz. Üstünü çiz/✓ → işaretle, karala → sil,
+  daire → AI yazım. Örtü (`InkGestureLayer`) yalnız "daire çizerek bağla"da.
+  Kapsam: ilk kapsamın açtığı seçim DOLU kaldığı için sonrakiler takılıyordu
+  → `_scopedSelection/_scopeCaret` (kapsamın kendi seçimiyse imleçten yeniden
+  hesap; biçim işaretleri kaydırınca `_rebaseScope`). Madde "x"i odaklı
+  maddede HEP görünür, sabit 28 dp sütunda. Yazı tipi kasması: gömülü
+  yazı tipinin İLK kullanımı motora "fontlar değişti" dedirtip BÜTÜN metni
+  yeniden yerleştiriyor → `preloadNoteFonts` main'de Firebase'le paralel,
+  runApp öncesi ≤ 400 ms beklenir (web'de yok). "Buraya bağla" şeridinde ✍ → daire içine al
   (`editableTextAt` öğe ağacını dolaşır, `selectionInside`). Önizlemede
   "Nota aktar" = bağı çöz + görünüm Yüzen. Madde seçim çubuğunda
   "Kopyala ve işaretle".

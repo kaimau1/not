@@ -221,6 +221,8 @@ class _FormatBarState extends State<FormatBar> {
       // Başka alana geçildi: seçime uygulanmış kaydırıcı değeri artık o
       // alanın değil.
       _drag.clear();
+      _scopedSelection = null;
+      _scopeCaret = null;
     }
   }
 
@@ -267,18 +269,68 @@ class _FormatBarState extends State<FormatBar> {
     }
   }
 
+  /// Kapsamın KENDİ açtığı seçim ve o anki imleç. KÖK NEDEN (kullanıcı
+  /// bulgusu 2026-10-30 ikinci tur: "imleç kelime satır tümü hepsi aynı şeyi
+  /// yapıyor, tüm maddeyi seçiyor"): ilk kapsam seçimi açınca seçim DOLU
+  /// kalıyor, [scopeSelection] dolu seçimi ellemediği için sonraki her
+  /// kapsam (İmleç dahil) aynı seçimde takılıyordu. Seçim hâlâ kapsamın
+  /// açtığıysa yeni kapsam imleçten yeniden hesaplanır; kullanıcı elle
+  /// seçtiyse dokunulmaz.
+  TextSelection? _scopedSelection;
+  int? _scopeCaret;
+
   /// İmleç boşsa seçimi kapsama genişletir (bkz. [FormatScope]).
   void _applyScope() {
     final controller = widget.target?.controller;
     if (controller == null) return;
-    final next = scopeSelection(controller.text, controller.selection, _scope);
-    if (next != null) controller.selection = next;
+    var selection = controller.selection;
+    final caret = _scopeCaret;
+    if (caret != null &&
+        selection == _scopedSelection &&
+        caret <= controller.text.length) {
+      selection = TextSelection.collapsed(offset: caret);
+    } else if (selection.isValid && selection.isCollapsed) {
+      _scopeCaret = selection.baseOffset;
+    } else {
+      // Elle yapılmış seçim: olduğu gibi.
+      _scopedSelection = null;
+      _scopeCaret = null;
+      return;
+    }
+    final next =
+        scopeSelection(controller.text, selection, _scope) ?? selection;
+    _scopedSelection = next.isCollapsed ? null : next;
+    if (next.isCollapsed) _scopeCaret = null;
+    if (controller.selection != next) controller.selection = next;
   }
 
-  /// Kapsamlı biçim işi: önce seçim genişler, sonra iş koşar.
+  /// Kapsamlı biçim işi: önce seçim genişler, sonra iş koşar; işaretler
+  /// metne girince kayan seçim kapsamın seçimi olarak kalır.
   void _scoped(VoidCallback action) {
-    _applyScope();
+    final before = _applyScopeTracked();
     action();
+    _rebaseScope(before);
+  }
+
+  /// [_applyScope] + kapsamın açtığı seçim (yoksa null).
+  TextSelection? _applyScopeTracked() {
+    _applyScope();
+    final selection = widget.target?.controller.selection;
+    return selection != null && selection == _scopedSelection
+        ? selection
+        : null;
+  }
+
+  /// Biçim uygulandı: işaretler seçimi kaydırdı. Yeni seçim hâlâ kapsamın
+  /// seçimi sayılır, imleç de onun içinde aynı göreli yere taşınır.
+  void _rebaseScope(TextSelection? before) {
+    final caret = _scopeCaret;
+    final after = widget.target?.controller.selection;
+    if (before == null || caret == null || after == null) return;
+    if (!after.isValid || after.isCollapsed) return;
+    final relative = (caret - before.start).clamp(0, before.end - before.start);
+    _scopeCaret = (after.start + relative).clamp(after.start, after.end);
+    _scopedSelection = after;
   }
 
   void _setScope(FormatScope scope) {
@@ -323,7 +375,7 @@ class _FormatBarState extends State<FormatBar> {
   }
 
   void _onSlideEnd(_Slide slide, double value) {
-    _applyScope();
+    final scoped = _applyScopeTracked();
     _liveTimer?.cancel();
     _liveTimer = null;
     _liveValue = null;
@@ -343,12 +395,13 @@ class _FormatBarState extends State<FormatBar> {
     } else {
       widget.onOpacityEnd(value);
     }
+    _rebaseScope(scoped);
   }
 
   /// − / + düğmesi: boyutu bir adım değiştirip HEMEN uygular (seçim varsa
   /// seçime, yoksa nota — kaydırıcıyı bırakmakla aynı yol).
   void _stepScale(int direction) {
-    _applyScope();
+    final scoped = _applyScopeTracked();
     // SEÇİME (kapsamla seçilmiş satıra) boyut: satır içi kademelerde bir
     // adım — not genelindeki %10'luk adım kademeye yuvarlanınca ilk basış
     // hiçbir şey yapmıyordu.
@@ -361,6 +414,7 @@ class _FormatBarState extends State<FormatBar> {
       final value = kRichSizeSteps[next - 1];
       setState(() => _drag[_Slide.size] = value);
       widget.onScaleEnd(value);
+      _rebaseScope(scoped);
       return;
     }
     final current = _value(_Slide.size);
