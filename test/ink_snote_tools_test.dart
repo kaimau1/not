@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_layer.dart';
@@ -61,33 +60,35 @@ void main() {
       expect(recognizeInkShape(pts), isNull);
     });
 
-    test('kalem çizginin sonunda durunca çizgi şekle oturur', () {
-      fakeAsync((async) {
+    testWidgets('kalem çizginin sonunda durunca çizgi şekle oturur', (
+      tester,
+    ) async {
+      {
         final c = controller();
         final pts = circle(const Offset(200, 200), 80);
         c.pointerDown(1, pts.first, size);
         for (final p in pts.skip(1)) {
           c.pointerMove(1, p, size);
         }
-        async.elapse(const Duration(milliseconds: 700));
+        await tester.pump(const Duration(milliseconds: 700));
         c.pointerUp();
         // Elips 49 noktayla kurulur (bkz. inkShapePoints).
         expect(c.ink.single.points, hasLength(98));
-      });
+      }
     });
 
-    test('kapalıyken şekle oturmaz', () {
-      fakeAsync((async) {
+    testWidgets('kapalıyken şekle oturmaz', (tester) async {
+      {
         final c = controller()..setShapeSnap(false);
         final pts = circle(const Offset(200, 200), 80);
         c.pointerDown(1, pts.first, size);
         for (final p in pts.skip(1)) {
           c.pointerMove(1, p, size);
         }
-        async.elapse(const Duration(milliseconds: 700));
+        await tester.pump(const Duration(milliseconds: 700));
         c.pointerUp();
         expect(c.ink.single.points.length, isNot(98));
-      });
+      }
     });
   });
 
