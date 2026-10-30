@@ -88,7 +88,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get undo => 'Geri Al';
 
   @override
-  String get redo => 'Yinele';
+  String get redo => 'Geri getir';
 
   @override
   String get titleHint => 'Başlık';
@@ -5893,4 +5893,65 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get inkStylusDetected => 'Kalem algılandı — yazma kipi açıldı';
+
+  @override
+  String get copyAndCheckSelectedItems => 'Kopyala ve işaretle';
+
+  @override
+  String get copiedAndChecked => 'Kopyalandı ve işaretlendi';
+
+  @override
+  String get formatScopeCaret => 'İmleç';
+
+  @override
+  String get formatScopeWord => 'Kelime';
+
+  @override
+  String get formatScopeLine => 'Satır';
+
+  @override
+  String get formatScopeAll => 'Tümü';
+
+  @override
+  String get embedLasso => 'Daire çizerek seç';
+
+  @override
+  String get embedLassoHint =>
+      'Bağlanacak yazıyı parmağınla daire içine al · iki parmakla kaydır';
+
+  @override
+  String get embedLassoMissed =>
+      'Dairenin içinde yazı bulunamadı — yazının çevresine çiz';
+
+  @override
+  String get gestureModeHint =>
+      'Maddeye çiz: üstünü çiz ya da ✓ → işaretle · karala → sil · daire → yazımı düzelt · iki parmakla kaydır';
+
+  @override
+  String get gestureUnknown =>
+      'Jest tanınmadı — üstünü çiz, ✓, karala ya da daire';
+
+  @override
+  String get gestureNoItem => 'Jest bir maddenin üstünde olmalı';
+
+  @override
+  String get gestureItemDeleted => 'Madde silindi (Geri al ile geri getir)';
+
+  @override
+  String get gestureFixing => 'Yazım düzeltiliyor…';
+
+  @override
+  String get gestureNothingToFix => 'Düzeltilecek yazım hatası yok';
+
+  @override
+  String get gestureFixed => 'Yazım düzeltildi';
+
+  @override
+  String get itemMenuGestures => 'Jestler';
+
+  @override
+  String get embedImportToNote => 'Nota aktar';
+
+  @override
+  String get embedImported => 'Ek notun içine alındı';
 }

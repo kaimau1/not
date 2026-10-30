@@ -113,6 +113,7 @@ import 'drawing_screen.dart';
 import 'editor_bar_layout.dart';
 import 'format_bar.dart';
 import 'format_menu.dart';
+import 'ink_gestures.dart';
 import 'image_layout.dart';
 import 'items_editor.dart';
 import 'note_images.dart';
@@ -160,6 +161,7 @@ part 'note_editor_ai.dart';
 part 'note_editor_appearance.dart';
 part 'note_editor_attachments.dart';
 part 'note_editor_find.dart';
+part 'note_editor_gestures.dart';
 part 'note_editor_media_view.dart';
 part 'note_editor_parts.dart';
 part 'note_editor_toolbar.dart';
@@ -964,6 +966,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _removeFormat(RichFormat format) =>
       _runOnTarget((c) => removeRichFormat(c, format));
 
+  /// Biçim panelinin hedefi bir MADDE alanıysa o maddenin kimliği.
+  String? get _formatItemId {
+    final controller = _formatTarget?.controller;
+    if (controller == null ||
+        identical(controller, _bodyController) ||
+        _titleIsTarget) {
+      return null;
+    }
+    return _itemsEditorKey.currentState?.itemIdForController(controller);
+  }
+
   /// Biçim çubuğunun hedefinde SEÇİLİ metin var mı?
   bool _hasSelection() {
     final selection = _formatTarget?.controller.selection;
@@ -1137,7 +1150,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     });
     final cached = _cachedNote();
     if (cached != null) {
-      _note = cached;
+      _note = _repairOrphanDocumentMode(cached);
       _titleController.text = cached.title;
       _bodyController.text = cached.body;
     }
@@ -1188,7 +1201,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // ESKİ DEFTER (F3.5): açılışta sayfalı nota çevrilir ve yazılır.
         final loaded = incoming.type == NoteType.archive
             ? notebookToPagedNote(incoming, pageId: (_) => const Uuid().v4())
-            : incoming;
+            : _repairOrphanDocumentMode(incoming);
         setState(() {
           _note = loaded;
           _titleController.text = loaded.title;
@@ -1641,6 +1654,25 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // değişiyorsa çizim de değişmeli.
       isBlankText(a.body) == isBlankText(b.body);
 
+  /// Belge (balonlu) notunun belgesi kalmadıysa not METİN notuna döner.
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-10-30): PDF balonlu kipe alınıp ek
+  /// olarak silinince not `NoteType.pdf` kalıyordu; belge bölmesi boş,
+  /// gövde/maddeler çizilmiyordu ("PDF eklenmeden yazılar görülmüyor").
+  /// Kipler birleştiği için belgesiz belge notu diye bir hâl YOK: tek
+  /// boğaz noktası burası (+ açılış, bkz. [_repairOrphanDocumentMode]).
+  static Note _withoutOrphanDocumentMode(Note n) {
+    if (!n.type.isPageNoteType || n.hasModeDocument) return n;
+    return n.copyWith(type: NoteType.text, classicDocument: true);
+  }
+
+  /// Açılışta belgesiz belge notu onarılır — "PDF/sunum ekle" niyetiyle
+  /// açılan boş not HARİÇ (belge seçiciden birazdan gelecek).
+  Note _repairOrphanDocumentMode(Note n) {
+    if (widget.startPdf || widget.startSlides) return n;
+    return _withoutOrphanDocumentMode(n);
+  }
+
   void _mutate(Note Function(Note) transform, {bool immediate = false}) {
     final note = _note;
     if (note == null) return;
@@ -1649,7 +1681,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Tek boğaz noktası: sarma çapaları düzenleme tamponunda yaşar, nota
     // asla yazılmaz. Gövde hangi yoldan gelirse gelsin burada temizlenir —
     // her çağrı yerine ayrı koruma koymak yerine tek yerde.
-    final transformed = transform(note);
+    // Belgeyi SİLEN değişiklik belge kipini de kaldırır (boş "PDF ekle"
+    // notunda belge henüz gelmedi — o yüzden yalnız kaybolunca).
+    final raw = transform(note);
+    final transformed = note.hasModeDocument
+        ? _withoutOrphanDocumentMode(raw)
+        : raw;
     final clean = stripWrapAnchors(transformed.body);
     final next = clean == transformed.body
         ? transformed
@@ -1810,6 +1847,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Kip açıkken alt çubukta bir şerit durur ("… bağlanacak yazıyı seç") ve
   /// hem o şeritteki düğme hem de metin seçim menüsü bağlamayı bitirir.
   Attachment? _pendingEmbed;
+
+  /// Jest kipi (bkz. note_editor_gestures.dart): maddelere jest ya da
+  /// "Buraya bağla"da daire çizme.
+  _GestureMode _gestureMode = _GestureMode.off;
+
+  /// Kalemle maddeye çizilen jestin işaretçisi ve noktaları.
+  int? _stylusPointer;
+  List<Offset> _stylusPoints = [];
 
   /// Etkin metin alanında en son yapılmış DOLU (boş olmayan) seçim ve o
   /// seçimin ait olduğu alan.
@@ -2502,6 +2547,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _showSnack(context.l10n.inkStylusDetected);
       return;
     }
+    // KALEM MADDEYE değdi: el yazısı tuvali değil, MADDE JESTİ (üstünü çiz,
+    // ✓, karala, daire — bkz. note_editor_gestures.dart).
+    if (_gestureMode == _GestureMode.off && _startStylusGesture(event)) return;
     // Metin/liste notu: imleç koymak için kalemle alana dokunan da olabilir
     // — klavye açıkken (yazıyor) el yazısına geçilmez.
     if (MediaQuery.viewInsetsOf(context).bottom > 0) return;
@@ -2610,8 +2658,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _fedNote = note;
       _fedDark = dark;
       _bodyController.attachmentNames = [
+        // Eki silinmiş bağ etiket sayılmaz (çip görünümü kalmasın).
         for (final link in note.tagLinks)
-          if (link.label.isNotEmpty) link.label,
+          if (link.label.isNotEmpty &&
+              note.attachments.any((a) => a.id == link.attachmentId))
+            link.label,
         for (final a in note.attachments) a.fileName,
       ];
       // Gömülü yazının ÇİP görünümü: ekin türüne göre renk ve rozet (bkz.
@@ -3205,6 +3256,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         attachmentNames: _bodyController.attachmentNames,
         tagLooks: _tagLooks,
         onAttachmentTag: _openTagByName,
+        onGestureMode: _readOnly
+            ? null
+            : () => _setGestureMode(_GestureMode.items),
         selectionMenu: _itemSelectionMenu,
         videoTimestamps: _bodyController.videoTimestamps,
         onVideoTimestamp: _seekVideoTo,
@@ -3253,6 +3307,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         attachmentNames: _bodyController.attachmentNames,
         tagLooks: _tagLooks,
         onAttachmentTag: _openTagByName,
+        onGestureMode: _readOnly
+            ? null
+            : () => _setGestureMode(_GestureMode.items),
         selectionMenu: _itemSelectionMenu,
         videoTimestamps: _bodyController.videoTimestamps,
         onVideoTimestamp: _seekVideoTo,
@@ -3425,13 +3482,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 // Kip görünmez olsaydı kullanıcı ne beklendiğini
                 // bilemezdi (ek seçildi ama ekranda hiçbir şey
                 // değişmiyor).
-                if (_pendingEmbed != null)
+                if (_gestureMode != _GestureMode.off)
+                  _GestureModeBanner(
+                    lasso: _gestureMode == _GestureMode.embedLasso,
+                    onClose: () => _setGestureMode(_GestureMode.off),
+                  )
+                else if (_pendingEmbed != null)
                   _PendingEmbedBanner(
                     fileName: _pendingEmbed!.fileName,
                     // Parmak şeride DEĞDİĞİ an seçim yedeklenir: sonraki
                     // karede odak düşse bile bağlanacak yazı elde kalır.
                     onPointerDown: _rememberTargetSelection,
                     onLink: _finishPendingEmbed,
+                    // DAİRE İÇİNE AL (kullanıcı isteği 2026-10-30): yazıyı
+                    // elle seçmek yerine parmakla halka çizilir.
+                    onLasso: () => _setGestureMode(_GestureMode.embedLasso),
                     onCancel: () => setState(() => _pendingEmbed = null),
                   ),
                 // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
@@ -3590,6 +3655,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                       _titleIsTarget
                                   ? l10n.formatApplyAll
                                   : l10n.formatApplyItem,
+                              // Hedef MADDEYSE alt çizgi sırası (2026-10-30:
+                              // uzun basış menüsünden buraya taşındı).
+                              dividerKind: _formatItemId == null
+                                  ? null
+                                  : _itemsEditorKey.currentState
+                                        ?.dividerKindOf(_formatItemId!),
+                              onDivider: (kind) => _itemsEditorKey
+                                  .currentState
+                                  ?.setDividerOf(_formatItemId ?? '', kind),
+                              onDividerStyle: () => unawaited(
+                                _itemsEditorKey.currentState
+                                    ?.editDividerStyleOf(_formatItemId ?? ''),
+                              ),
                             ),
                           ),
                         ),
@@ -4099,22 +4177,29 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               // yinele, yan yana), sonra notun durumu (sabitle, ortak
               // çalışan), en sağda ⋮. Eskiden geri al, raptiye ile hesap
               // makinesinin arasına sıkışmıştı.
+              // GERİ GETİR (yinele) HEP GÖRÜNÜR (kullanıcı isteği 2026-10-30:
+              // "geri al gibi geri getir de olsun"): eskiden yalnız
+              // kullanılabilirken beliriyordu, kullanıcı varlığını bilmiyordu.
+              // İkisi tek kişiselleştirme öğesi; boşken ikisi de soluk.
               Customizable(
                 id: UiItem.topUndo,
-                child: IconButton(
-                  tooltip: l10n.undo,
-                  icon: const Icon(Icons.undo),
-                  onPressed: _canUndo ? _undo : null,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: l10n.undo,
+                      icon: const Icon(Icons.undo),
+                      onPressed: _canUndo ? _undo : null,
+                    ),
+                    IconButton(
+                      key: const ValueKey('editor-redo'),
+                      tooltip: l10n.redo,
+                      icon: const Icon(Icons.redo),
+                      onPressed: _canRedo ? _redo : null,
+                    ),
+                  ],
                 ),
               ),
-              // Yinele yalnız kullanılabilirken görünür: yanlış "Geri al"dan
-              // dönüş yolu. Sürekli görünse araç çubuğunda ölü yer kaplardı.
-              if (_canRedo)
-                IconButton(
-                  tooltip: l10n.redo,
-                  icon: const Icon(Icons.redo),
-                  onPressed: _redo,
-                ),
               Customizable(
                 id: UiItem.topCollab,
                 child: Consumer(
@@ -4230,7 +4315,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     // KALEMİ OTOMATİK ALGILA (bkz. [_onContentPointerDown]).
                     child: Listener(
                       onPointerDown: _onContentPointerDown,
-                      child: SafeArea(
+                      onPointerMove: _onContentPointerMove,
+                      onPointerUp: _onContentPointerUp,
+                      // JEST KİPİ örtüsü içeriğin ÜSTÜNDE; ağacın şekli kiple
+                      // değişmesin diye yığın koşulsuz (ilk çocuk sabit).
+                      child: Stack(
+                        children: [
+                          SafeArea(
                       bottom: false,
                       // ÇERÇEVE EDİTÖRDE ÇİZİLMEZ (kullanıcı isteği
                       // 2026-10-20: "çerçeve sadece dashboarda görünsün"):
@@ -4252,6 +4343,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         ),
                       ),
                     ),
+                          if (_gestureMode != _GestureMode.off)
+                            Positioned.fill(
+                              child: InkGestureLayer(
+                                key: const ValueKey('ink-gesture-layer'),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.7),
+                                scrollPosition: _gestureScrollPosition,
+                                onStroke: _onGestureStroke,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                   // KLAVYE: Scaffold yalnız GÖVDEYİ klavyeye göre kısaltır, alt

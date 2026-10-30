@@ -15,7 +15,7 @@ void main() {
   );
 
   for (final paper in [false, true]) {
-    testWidgets('menüden seçilen çizgi hemen çizilir (defter: $paper)', (
+    testWidgets('panelden seçilen çizgi hemen çizilir (defter: $paper)', (
       tester,
     ) async {
       var items = const [
@@ -23,6 +23,7 @@ void main() {
         NoteItem(id: 'b', text: 'ekmek'),
       ];
       late StateSetter rebuild;
+      final key = GlobalKey<ItemsEditorState>();
       await tester.pumpWidget(
         MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -33,6 +34,7 @@ void main() {
               builder: (context, setState) {
                 rebuild = setState;
                 return ItemsEditor(
+                  key: key,
                   items: items,
                   // Editör gibi: değişen listeyi geri verir.
                   onChanged: (next) => rebuild(() => items = next),
@@ -47,19 +49,21 @@ void main() {
       await tester.pumpAndSettle();
       expect(dividerPaint(), findsNothing);
 
-      Future<void> pick(String label) async {
-        await tester.longPress(find.byType(Checkbox).first);
-        await tester.pumpAndSettle();
-        await tester.tap(find.byTooltip(label));
+      // 2026-10-30: alt çizgi uzun basış menüsünden BİÇİM PANELİNE taşındı;
+      // panel `setDividerOf` ile yazar.
+      Future<void> pick(String kind) async {
+        key.currentState!.setDividerOf('a', kind);
         await tester.pumpAndSettle();
       }
 
       for (final (label, kind) in [
-        ('Alta kesikli çizgi', NoteItem.dividerDashed),
-        ('Alta noktalı çizgi', NoteItem.dividerDotted),
-        ('Alta çizgi çek', NoteItem.dividerSolid),
+        ('kesikli', NoteItem.dividerDashed),
+        ('noktalı', NoteItem.dividerDotted),
+        ('düz', NoteItem.dividerSolid),
       ]) {
-        await pick(label);
+        expect(key.currentState!.dividerKindOf('a'), isNot(kind));
+        await pick(kind);
+        expect(key.currentState!.dividerKindOf('a'), kind);
         expect(items.first.divider, kind, reason: label);
         expect(dividerPaint(), findsOneWidget, reason: label);
         final painter = tester
@@ -69,7 +73,7 @@ void main() {
       }
       // Ayrı "Çizgiyi kaldır" yok (2026-10-28 sade menü): etkin türe
       // yeniden basmak çizgiyi kaldırır.
-      await pick('Alta çizgi çek');
+      await pick(NoteItem.dividerSolid);
       expect(items.first.divider, '');
       expect(dividerPaint(), findsNothing);
     });

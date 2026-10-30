@@ -245,7 +245,7 @@ abstract class AppLocalizations {
   /// No description provided for @redo.
   ///
   /// In tr, this message translates to:
-  /// **'Yinele'**
+  /// **'Geri getir'**
   String get redo;
 
   /// No description provided for @titleHint.
@@ -10567,6 +10567,120 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kalem algılandı — yazma kipi açıldı'**
   String get inkStylusDetected;
+
+  /// No description provided for @copyAndCheckSelectedItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyala ve işaretle'**
+  String get copyAndCheckSelectedItems;
+
+  /// No description provided for @copiedAndChecked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyalandı ve işaretlendi'**
+  String get copiedAndChecked;
+
+  /// No description provided for @formatScopeCaret.
+  ///
+  /// In tr, this message translates to:
+  /// **'İmleç'**
+  String get formatScopeCaret;
+
+  /// No description provided for @formatScopeWord.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kelime'**
+  String get formatScopeWord;
+
+  /// No description provided for @formatScopeLine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satır'**
+  String get formatScopeLine;
+
+  /// No description provided for @formatScopeAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get formatScopeAll;
+
+  /// No description provided for @embedLasso.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daire çizerek seç'**
+  String get embedLasso;
+
+  /// No description provided for @embedLassoHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlanacak yazıyı parmağınla daire içine al · iki parmakla kaydır'**
+  String get embedLassoHint;
+
+  /// No description provided for @embedLassoMissed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dairenin içinde yazı bulunamadı — yazının çevresine çiz'**
+  String get embedLassoMissed;
+
+  /// No description provided for @gestureModeHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maddeye çiz: üstünü çiz ya da ✓ → işaretle · karala → sil · daire → yazımı düzelt · iki parmakla kaydır'**
+  String get gestureModeHint;
+
+  /// No description provided for @gestureUnknown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Jest tanınmadı — üstünü çiz, ✓, karala ya da daire'**
+  String get gestureUnknown;
+
+  /// No description provided for @gestureNoItem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Jest bir maddenin üstünde olmalı'**
+  String get gestureNoItem;
+
+  /// No description provided for @gestureItemDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Madde silindi (Geri al ile geri getir)'**
+  String get gestureItemDeleted;
+
+  /// No description provided for @gestureFixing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazım düzeltiliyor…'**
+  String get gestureFixing;
+
+  /// No description provided for @gestureNothingToFix.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzeltilecek yazım hatası yok'**
+  String get gestureNothingToFix;
+
+  /// No description provided for @gestureFixed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazım düzeltildi'**
+  String get gestureFixed;
+
+  /// No description provided for @itemMenuGestures.
+  ///
+  /// In tr, this message translates to:
+  /// **'Jestler'**
+  String get itemMenuGestures;
+
+  /// No description provided for @embedImportToNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota aktar'**
+  String get embedImportToNote;
+
+  /// No description provided for @embedImported.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek notun içine alındı'**
+  String get embedImported;
 }
 
 class _AppLocalizationsDelegate

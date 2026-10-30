@@ -714,7 +714,27 @@ extension _EditorAttachments on _NoteEditorScreenState {
       onChanged: _updateAttachment,
       onReplace: () => unawaited(_replaceEmbed(label)),
       onUnlink: () => _unlinkEmbed(label),
+      onImport: _canImportEmbed(attachment)
+          ? () => unawaited(_importEmbed(attachment, label))
+          : null,
     );
+  }
+
+  /// Ek sayfaya (yüzen) alınabilir mi ve henüz orada değil mi?
+  bool _canImportEmbed(Attachment attachment) {
+    final note = _note;
+    if (note == null || _readOnly) return false;
+    return availableViews(attachment).contains(AttachmentView.floating) &&
+        _viewOf(note, attachment) != AttachmentView.floating;
+  }
+
+  /// GÖMÜLÜ EKİ NOTA AKTAR: bağ çözülür (yazı kalır), ek sayfaya yüzen
+  /// olarak girer — balonlu/sabit/şeritten fark etmez (görünüm anahtarının
+  /// "Yüzen" yolu).
+  Future<void> _importEmbed(Attachment attachment, String label) async {
+    _unlinkEmbed(label, announce: false);
+    await _setAttachmentView(attachment, AttachmentView.floating);
+    if (mounted) _showSnack(context.l10n.embedImported);
   }
 
   /// Gömülü yazının bağladığı eki DEĞİŞTİRİR (yazı aynı kalır).
@@ -735,7 +755,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
   }
 
   /// GÖMMEYİ KALDIRIR: yazı kalır, ataç ve bağ gider (gövde + maddeler).
-  void _unlinkEmbed(String label) {
+  void _unlinkEmbed(String label, {bool announce = true}) {
     final body = removeAttachmentTags(_bodyController.logicalText, label);
     if (body != _bodyController.logicalText) {
       _bodyController.setLogical(body, body.length);
@@ -756,7 +776,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
       ),
       immediate: true,
     );
-    _showSnack(context.l10n.embedRemoved);
+    if (announce) _showSnack(context.l10n.embedRemoved);
   }
 
   /// Seçili aralığı etikete çevirir ve bağı nota yazar.
@@ -842,11 +862,17 @@ extension _EditorAttachments on _NoteEditorScreenState {
   ///
   /// Her üç yolda da kip KAPANIR: şeritte asılı kalan bir "bağla" yazısı,
   /// kullanıcının gördüğü asıl hataydı.
-  void _finishPendingEmbed() {
+  ///
+  /// [forcedTarget]/[forcedSelection]: daire içine alma (jest) seçimi —
+  /// canlı seçimden önce gelir.
+  void _finishPendingEmbed({
+    FormatTarget? forcedTarget,
+    TextSelection? forcedSelection,
+  }) {
     final attachment = _pendingEmbed;
     if (attachment == null) return;
-    var target = _formatTarget;
-    var selection = target?.controller.selection;
+    var target = forcedTarget ?? _formatTarget;
+    var selection = forcedSelection ?? target?.controller.selection;
     final liveIsUsable =
         selection != null && selection.isValid && !selection.isCollapsed;
     if (!liveIsUsable) {
@@ -1352,8 +1378,44 @@ extension _EditorAttachments on _NoteEditorScreenState {
   }
 
   void _removeAttachment(Attachment attachment) {
+    // Eke gömülü yazılar da çözülür (kullanıcı bulgusu 2026-10-30: "gömülü
+    // ek altan silinse dahi gömülü kelimede hâlâ ek varmış gibi görüntü
+    // kalıyor"): ataç ve bağ gider, yazı kalır. Geri al hepsini getirir
+    // (notun tamamı saklanır).
+    final note = _note;
+    final labels = <String>{
+      if (note != null) ...[
+        for (final l in note.tagLinks)
+          if (l.attachmentId == attachment.id && l.label.isNotEmpty) l.label,
+        if (!note.attachments.any(
+          (a) => a.id != attachment.id && a.fileName == attachment.fileName,
+        ))
+          attachment.fileName,
+      ],
+    };
+    String untag(String text) {
+      var out = text;
+      for (final label in labels) {
+        out = removeAttachmentTags(out, label);
+      }
+      return out;
+    }
+
+    final body = untag(_bodyController.logicalText);
+    if (body != _bodyController.logicalText) {
+      _bodyController.setLogical(body, body.length);
+    }
     _mutate(
       (n) => n.copyWith(
+        body: body,
+        items: [
+          for (final i in n.items)
+            untag(i.text) == i.text ? i : i.copyWith(text: untag(i.text)),
+        ],
+        tagLinks: [
+          for (final l in n.tagLinks)
+            if (l.attachmentId != attachment.id) l,
+        ],
         attachments: [
           for (final a in n.attachments)
             if (a.id != attachment.id) a,

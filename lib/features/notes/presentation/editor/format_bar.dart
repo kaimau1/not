@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -53,7 +54,17 @@ class FormatBar extends StatefulWidget {
     this.onHeading,
     this.onApplyToAll,
     this.applyToAllLabel,
+    this.dividerKind,
+    this.onDivider,
+    this.onDividerStyle,
   });
+
+  /// **ALT ÇİZGİ** (kullanıcı isteği 2026-10-30: "alta çizgi ekle'yi biçim
+  /// menüsüne taşıyalım"): hedef bir MADDEYSE onun ayırıcı türü ('' = yok);
+  /// null ise sıra çizilmez (gövde/başlık). Aynı türe basmak kaldırır.
+  final String? dividerKind;
+  final ValueChanged<String>? onDivider;
+  final VoidCallback? onDividerStyle;
 
   /// **TÜMÜNE / MADDEYE UYGULA** (kullanıcı isteği 2026-10-28): imleçteki
   /// (ya da seçimdeki) etkin biçimler alanın TAMAMINA uygulanır ve alanın
@@ -126,7 +137,53 @@ const _kScaleStep = 0.1;
 const _kScaleMin = 0.7;
 const _kScaleMax = 2.0;
 
+/// Biçimin İMLEÇ boşken neye uygulanacağı (kullanıcı bulgusu 2026-10-30:
+/// "bir yazıyı değiştirmek işkence, tek tek seçmek gerekiyor, tek satıra
+/// boyut vermek zor, maddelerde seçim zor"). Panelin üst sırasında seçilir
+/// ve oturum boyu hatırlanır: "Satır" seçiliyken imleci bir satıra koyup
+/// B / renk / boyut +'ya basmak o satırın TAMAMINA işler — elle seçim yok.
+enum FormatScope { caret, word, line, all }
+
+/// [scope]'a göre imleçten genişletilmiş seçim; değişiklik yoksa null
+/// (imleç kipi, zaten seçili metin, boş kapsam). [text] denetleyicinin
+/// görüntü metni (sarma çapaları satır sonu değil — `\n`e güvenilir).
+TextSelection? scopeSelection(
+  String text,
+  TextSelection selection,
+  FormatScope scope,
+) {
+  if (scope == FormatScope.caret || !selection.isValid) return null;
+  if (!selection.isCollapsed || text.isEmpty) return null;
+  final caret = selection.baseOffset.clamp(0, text.length);
+  var start = caret;
+  var end = caret;
+  switch (scope) {
+    case FormatScope.caret:
+      return null;
+    case FormatScope.word:
+      while (start > 0 && isRichWordChar(text[start - 1])) {
+        start--;
+      }
+      while (end < text.length && isRichWordChar(text[end])) {
+        end++;
+      }
+    case FormatScope.line:
+      start = caret == 0 ? 0 : text.lastIndexOf('\n', caret - 1) + 1;
+      final next = text.indexOf('\n', caret);
+      end = next < 0 ? text.length : next;
+    case FormatScope.all:
+      start = 0;
+      end = text.length;
+  }
+  if (end <= start) return null;
+  return TextSelection(baseOffset: start, extentOffset: end);
+}
+
 class _FormatBarState extends State<FormatBar> {
+  /// Oturum boyu hatırlanan kapsam (panel her açılışta sıfırlanmasın).
+  static FormatScope _lastScope = FormatScope.caret;
+  FormatScope _scope = _lastScope;
+
   _Tray _tray = _Tray.none;
   _ColorMode _colorMode = _ColorMode.text;
 
@@ -210,6 +267,27 @@ class _FormatBarState extends State<FormatBar> {
     }
   }
 
+  /// İmleç boşsa seçimi kapsama genişletir (bkz. [FormatScope]).
+  void _applyScope() {
+    final controller = widget.target?.controller;
+    if (controller == null) return;
+    final next = scopeSelection(controller.text, controller.selection, _scope);
+    if (next != null) controller.selection = next;
+  }
+
+  /// Kapsamlı biçim işi: önce seçim genişler, sonra iş koşar.
+  void _scoped(VoidCallback action) {
+    _applyScope();
+    action();
+  }
+
+  void _setScope(FormatScope scope) {
+    setState(() => _scope = _lastScope = scope);
+    // Seçim yoksa kapsam HEMEN görünür olsun: kullanıcı neyin boyanacağını
+    // basmadan görür.
+    _applyScope();
+  }
+
   void _toggleTray(_Tray tray) =>
       setState(() => _tray = _tray == tray ? _Tray.none : tray);
 
@@ -218,6 +296,7 @@ class _FormatBarState extends State<FormatBar> {
       (slide == _Slide.size ? widget.fontScale : widget.textOpacity);
 
   void _onSlide(_Slide slide, double value) {
+    if (!_drag.containsKey(slide)) _applyScope();
     setState(() => _drag[slide] = value);
     // Canlı önizleme yalnız NOT GENELİNDE: seçim varken değişiklik bırakınca
     // ve yalnız seçime uygulanır.
@@ -244,6 +323,7 @@ class _FormatBarState extends State<FormatBar> {
   }
 
   void _onSlideEnd(_Slide slide, double value) {
+    _applyScope();
     _liveTimer?.cancel();
     _liveTimer = null;
     _liveValue = null;
@@ -268,6 +348,21 @@ class _FormatBarState extends State<FormatBar> {
   /// − / + düğmesi: boyutu bir adım değiştirip HEMEN uygular (seçim varsa
   /// seçime, yoksa nota — kaydırıcıyı bırakmakla aynı yol).
   void _stepScale(int direction) {
+    _applyScope();
+    // SEÇİME (kapsamla seçilmiş satıra) boyut: satır içi kademelerde bir
+    // adım — not genelindeki %10'luk adım kademeye yuvarlanınca ilk basış
+    // hiçbir şey yapmıyordu.
+    if (widget.hasSelection()) {
+      final controller = widget.target?.controller;
+      final index =
+          (controller == null ? null : activeRichFormats(controller).size) ??
+          kRichSizeDefault;
+      final next = (index + direction).clamp(1, kRichSizeSteps.length);
+      final value = kRichSizeSteps[next - 1];
+      setState(() => _drag[_Slide.size] = value);
+      widget.onScaleEnd(value);
+      return;
+    }
     final current = _value(_Slide.size);
     final next = ((current / _kScaleStep).round() + direction) * _kScaleStep;
     _onSlideEnd(
@@ -326,6 +421,17 @@ class _FormatBarState extends State<FormatBar> {
                   ),
                 },
               ),
+              // 0. SIRA — KAPSAM: imleç boşken biçim neye işler.
+              _ScopeRow(scope: _scope, onChanged: _setScope),
+              if (widget.dividerKind != null) ...[
+                divider,
+                _DividerRow(
+                  kind: widget.dividerKind!,
+                  onPick: (k) => widget.onDivider?.call(k),
+                  onStyle: widget.onDividerStyle,
+                ),
+              ],
+              divider,
               // 1. SIRA — PARAGRAF + YAZI STİLİ: Metin · Başlık · Alt başlık
               // hapları doğrudan (eskiden "Başlık" tepsisinin içindeydi, iki
               // dokunuş) ve B · I · U.
@@ -363,7 +469,7 @@ class _FormatBarState extends State<FormatBar> {
                     icon: Icons.format_bold,
                     tooltip: l10n.formatBold,
                     active: _active.bold,
-                    onTap: () => widget.onFormat(RichFormat.bold),
+                    onTap: () => _scoped(() => widget.onFormat(RichFormat.bold)),
                   ),
                   _Btn(
                     key: const ValueKey('format-italic'),
@@ -371,7 +477,7 @@ class _FormatBarState extends State<FormatBar> {
                     icon: Icons.format_italic,
                     tooltip: l10n.formatItalic,
                     active: _active.italic,
-                    onTap: () => widget.onFormat(RichFormat.italic),
+                    onTap: () => _scoped(() => widget.onFormat(RichFormat.italic)),
                   ),
                   _Btn(
                     key: const ValueKey('format-underline'),
@@ -379,7 +485,8 @@ class _FormatBarState extends State<FormatBar> {
                     icon: Icons.format_underlined,
                     tooltip: l10n.formatUnderline,
                     active: _active.underline,
-                    onTap: () => widget.onFormat(RichFormat.underline),
+                    onTap: () =>
+                        _scoped(() => widget.onFormat(RichFormat.underline)),
                   ),
                 ],
               ),
@@ -409,12 +516,20 @@ class _FormatBarState extends State<FormatBar> {
                           ? _active.highlight
                           : _active.color,
                       filled: highlightMode,
-                      onPick: (i) => widget.onFormat(
-                        highlightMode ? RichFormat.highlight : RichFormat.color,
-                        colorIndex: i,
+                      onPick: (i) => _scoped(
+                        () => widget.onFormat(
+                          highlightMode
+                              ? RichFormat.highlight
+                              : RichFormat.color,
+                          colorIndex: i,
+                        ),
                       ),
-                      onRemove: () => widget.onRemoveFormat(
-                        highlightMode ? RichFormat.highlight : RichFormat.color,
+                      onRemove: () => _scoped(
+                        () => widget.onRemoveFormat(
+                          highlightMode
+                              ? RichFormat.highlight
+                              : RichFormat.color,
+                        ),
                       ),
                     ),
                   ),
@@ -470,7 +585,9 @@ class _FormatBarState extends State<FormatBar> {
                     key: const ValueKey('format-clear'),
                     icon: Icons.format_clear,
                     tooltip: l10n.formatClear,
-                    onTap: _active.isEmpty ? null : widget.onClearFormat,
+                    onTap: _active.isEmpty && _scope == FormatScope.caret
+                        ? null
+                        : () => _scoped(widget.onClearFormat),
                   ),
                   if (widget.onPageStyle != null)
                     _Btn(
@@ -501,6 +618,163 @@ class _FormatBarState extends State<FormatBar> {
       ),
     );
   }
+}
+
+/// Kapsam sırası: İmleç · Kelime · Satır · Tümü (bkz. [FormatScope]).
+class _ScopeRow extends StatelessWidget {
+  const _ScopeRow({required this.scope, required this.onChanged});
+
+  final FormatScope scope;
+  final ValueChanged<FormatScope> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: 40,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 4, end: 6),
+              child: Icon(
+                Icons.ads_click,
+                size: 18,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            for (final (value, label) in [
+              (FormatScope.caret, l10n.formatScopeCaret),
+              (FormatScope.word, l10n.formatScopeWord),
+              (FormatScope.line, l10n.formatScopeLine),
+              (FormatScope.all, l10n.formatScopeAll),
+            ])
+              Expanded(
+                child: _Chip(
+                  key: ValueKey('format-scope-${value.name}'),
+                  selected: scope == value,
+                  onTap: () => onChanged(value),
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12.5),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Maddenin alt çizgisi: düz · kesikli · noktalı + ayar (bkz.
+/// [FormatBar.dividerKind]).
+class _DividerRow extends StatelessWidget {
+  const _DividerRow({
+    required this.kind,
+    required this.onPick,
+    required this.onStyle,
+  });
+
+  final String kind;
+  final ValueChanged<String> onPick;
+  final VoidCallback? onStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    Widget swatch(String value, String tooltip) {
+      final selected = kind == value;
+      return Expanded(
+        child: Tooltip(
+          message: tooltip,
+          child: InkWell(
+            key: ValueKey('format-divider-$value'),
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => onPick(value),
+            child: Ink(
+              height: 32,
+              decoration: BoxDecoration(
+                color: selected ? scheme.secondaryContainer : null,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: CustomPaint(
+                painter: _DividerSwatchPainter(
+                  value,
+                  selected
+                      ? scheme.onSecondaryContainer
+                      : scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 42,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Row(
+          children: [
+            Text(
+              l10n.itemMenuLine,
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+            const SizedBox(width: 8),
+            swatch('solid', l10n.itemDividerSolid),
+            swatch('dashed', l10n.itemDividerDashed),
+            swatch('dotted', l10n.itemDividerDotted),
+            if (onStyle != null)
+              IconButton(
+                key: const ValueKey('format-divider-style'),
+                tooltip: l10n.dividerSettings,
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.tune, size: 20),
+                onPressed: onStyle,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Çizgi türü örneği: ortadan geçen ince çizgi.
+class _DividerSwatchPainter extends CustomPainter {
+  _DividerSwatchPainter(this.kind, this.color);
+
+  final String kind;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.6
+      ..strokeCap = StrokeCap.round;
+    final y = size.height / 2;
+    const inset = 10.0;
+    final (dash, gap) = switch (kind) {
+      'dashed' => (6.0, 4.0),
+      'dotted' => (0.5, 4.0),
+      _ => (size.width, 0.0),
+    };
+    for (var x = inset; x < size.width - inset; x += dash + gap) {
+      final end = math.min(x + dash, size.width - inset);
+      canvas.drawLine(Offset(x, y), Offset(end, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DividerSwatchPainter old) =>
+      old.kind != kind || old.color != color;
 }
 
 /// Panelin bir sırası: sabit yükseklik, yan pay.

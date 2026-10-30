@@ -203,20 +203,42 @@ extension _EditorToolbar on _NoteEditorScreenState {
     );
   }
 
+  /// Ekle düğmesi (kullanıcı bulgusu 2026-10-30: "ek eklemek için olan artı
+  /// işareti güzel değil"): çıplak ince "+" yerine segmentin içinde TONLU
+  /// yuvarlak rozet ve kalın, yuvarlak uçlu artı — kapsüldeki diğer
+  /// simgelerden ayrışır, "buradan ekle" diye okunur.
   Widget _addToolButton(AppLocalizations l10n) {
     final scheme = Theme.of(context).colorScheme;
+    const segment = _NoteEditorScreenState._kToolSegment;
     return Tooltip(
       message: l10n.addAttachment,
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(10),
         child: InkWell(
+          key: const ValueKey('editor-add-button'),
           borderRadius: BorderRadius.circular(10),
           onTap: _showAttachMenu,
           child: SizedBox(
-            height: _NoteEditorScreenState._kToolSegment,
-            width: _NoteEditorScreenState._kToolSegment,
-            child: Icon(Icons.add, size: 21, color: scheme.onSurface),
+            height: segment,
+            width: segment,
+            child: Center(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: scheme.secondaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: SizedBox.square(
+                  dimension: segment * 0.72,
+                  child: Icon(
+                    Icons.add_rounded,
+                    size: 20,
+                    weight: 700,
+                    color: scheme.onSecondaryContainer,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),

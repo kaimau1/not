@@ -263,8 +263,10 @@ final RegExp _formatPattern = RegExp(
   // kırmaz; kırdığı tek şey kullanıcının KENDİ yazdığı `==` idi.
   // Renk ve vurgu öneki palet indeksi (`2`) YA DA PALETTEN seçilmiş özel
   // renk (`#E57373`, 2026-10-20 — kullanıcı isteği "renk için palet olsun").
-  r'|==(\d|#[0-9A-Fa-f]{6}):(.+?)=='
-  r'|%%(?:(\d|#[0-9A-Fa-f]{6}):)?(.+?)%%'
+  // 2026-10-30: bekleyen biçim bir süre özel rengi ARGB ONDALIĞI yazdı
+  // (`%%4290190364:..%%`); o notlar da okunur, geri yazımda `#` olur.
+  r'|==(\d{8,10}|\d|#[0-9A-Fa-f]{6}):(.+?)=='
+  r'|%%(?:(\d{8,10}|\d|#[0-9A-Fa-f]{6}):)?(.+?)%%'
   // Boyut ve opaklık işaretleri KADEME ÖNEKİ ZORUNLU tutar (`##3:` gibi):
   // işaretler artık görünmez çizildiğinden, düz metindeki bir "## başlık ##"
   // ya da "a && b && c" yanlışlıkla biçim sanılsa karakterler gözden
@@ -398,6 +400,11 @@ int? _parseColorIndex(String value) {
 /// Biçim değeri palet indeksi değil, paletten seçilmiş ÖZEL renk mi
 /// (ARGB, opak)? Palet indeksleri tek hane (1..9).
 bool isCustomRichColor(int? index) => index != null && index > 0xFFFFFF;
+
+/// [_indexToken]'ın dışa açık hâli — bekleyen biçimi metne yazan denetleyici
+/// özel rengi `#RRGGBB` olarak yazmalı (ARGB ondalığı `%%4290190364:..%%`
+/// kalıpla eşleşmez, metinde HAM görünüyordu; 2026-10-30).
+String richIndexToken(int index) => _indexToken(index);
 
 /// İşaretteki önek: palet indeksi `2`, özel renk `#E57373`.
 String _indexToken(int index) => isCustomRichColor(index)

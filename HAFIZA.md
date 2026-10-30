@@ -354,6 +354,29 @@ eskisini arşive taşıma.
   İŞARETLİ bloğu `_itemRow` ile önbelleksiz kuruluyordu → her tuşta/
   işarette/görsel eklemede bütün üstü çizili satırlar baştan. Footer'daki
   satırlar da `_cachedItemRow`'dan geçmeli.
+- **2026-10-30 tur (10 madde):** bekleyen biçim özel rengi `#RRGGBB`
+  yazar (`richIndexToken`; eskiden ARGB ondalığı `%%4290190364:..%%` → ham
+  görünüyordu; kalıp eski ondalığı da okur). Belge (balonlu) notunun
+  belgesi kalmayınca not METİN notuna döner (`_withoutOrphanDocumentMode`:
+  `_mutate`te yalnız belge KAYBOLUNCA — boş "PDF ekle" notu belgeyi henüz
+  beklerken dönüştürülmez — ve açılışta `startPdf/startSlides` değilse).
+  Ek silinince ona bağlı etiketler çözülür (`_removeAttachment`); eki yok
+  olan bağ `attachmentNames`e girmez. Biçim panelinde KAPSAM sırası
+  (`FormatScope` İmleç/Kelime/Satır/Tümü, `scopeSelection`; oturum boyu
+  statik) — imleç boşken biçim/boyut seçimi kapsama genişletir; seçime
+  boyut ± satır içi kademede adım atar. Madde ALT ÇİZGİSİ uzun basış
+  menüsünden panele taşındı (`dividerKind/onDivider`, hedef madde
+  `itemIdForController`). Madde sil "x"i yer TUTMAZ (`_kTrailingWidth` 8),
+  yalnız odaklı BOŞ maddede yüzer. Geri getir (yinele) hep görünür.
+  **Jestler** (`ink_gestures.dart` saf `classifyInkGesture` + örtü
+  `InkGestureLayer`, editör `note_editor_gestures.dart`): üstünü çiz/✓ →
+  işaretle, karala → sil, daire → AI yazım düzeltme; parmakla madde
+  menüsü → Jestler (örtü opak, iki parmak elle kaydırır), KALEMLE maddeye
+  çizmek kipsiz jesttir (içerik `Listener`ı noktaları toplar; maddenin
+  dışı el yazısı). "Buraya bağla" şeridinde ✍ → daire içine al
+  (`editableTextAt` öğe ağacını dolaşır, `selectionInside`). Önizlemede
+  "Nota aktar" = bağı çöz + görünüm Yüzen. Madde seçim çubuğunda
+  "Kopyala ve işaretle".
 - Canlı dikte: tanıyıcı her olayda TAM metni yollar ve düzeltir → "ekle" değil
   "değiştir". Akıllı komutlar ham metni her olayda baştan işler.
 - Dikte bipleri (2026-10-20): tanıyıcı her sessizlikte yeniden kuruluyor ve

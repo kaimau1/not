@@ -34,12 +34,23 @@ For PDFs, images and slides you choose a mode the first time: **Bubbles** (the d
 ## Editing a note {#editor}
 Bottom bar, left to right:
 - **Aa — Format:** bold, italic, underline, text colour, highlight, heading / subheading; the note's font, size and transparency; page colour (optionally a border highlight) and background image. Applies to the selection, or to the word you type next.
+  - The panel's top row is the **scope**: **Cursor · Word · Line · All**. Pick "Line", put the cursor on a line, then B / colour / size **+ −** — the whole line changes, no manual selection. The choice is remembered for the session.
+  - On an item the panel has a **Line below** row: solid, dashed, dotted (tap the same one to remove) and a settings button.
 - **+ — Add:** an icon grid — **Note content** (text block, list, embed attachment in selection), **Images and drawing** (image, upload image as attachment, camera, scan, drawing) and **Attachments** (PDF, slides, voice recording, video, YouTube, QR). Long-press an icon to see what it does.
 - **🔍 — Search in note:** matches are highlighted as you type.
 - **Share.**
 - The coloured capsule on the right: **✦ AI** (see the AI section), the **assistant microphone** and the **dictate** microphone.
-Top bar: **undo / redo**, pin, add people (shared note) and the ⋮ menu. The ⋮ menu's top row has share, search in note and the **calculator**; below are **Content** (**Notebook view** and paper, convert to list/text, two columns, sort items, images to attachments, clear), **Copy and export** (duplicate, save as template, copy to notebook), **Tools** (read aloud, statistics, settings), **Protection and storage** (archive, lock, sync). Copying, sending to a friend and exporting live in the **Share** sheet — not repeated in the menus.
-- In lists, long-press an item and drag to reorder; use "Select" to copy/delete several items.
+Top bar: **undo / redo** (always side by side), pin, add people (shared note) and the ⋮ menu. The ⋮ menu's top row has share, search in note and the **calculator**; below are **Content** (**Notebook view** and paper, convert to list/text, two columns, sort items, images to attachments, clear), **Copy and export** (duplicate, save as template, copy to notebook), **Tools** (read aloud, statistics, settings), **Protection and storage** (archive, lock, sync). Copying, sending to a friend and exporting live in the **Share** sheet — not repeated in the menus.
+- In lists, long-press an item and drag to reorder; use "Select" to copy/delete several items. **Copy and check** in the selection bar copies the selected items and checks them in one tap.
+- An empty item shows a small **×** on the right; to delete a filled item use the item menu (long-press its left area) or the scribble gesture.
+
+## Item gestures {#gestures}
+Draw over an item **with your finger or a pen**:
+- **Strike through** (horizontal line) or a **✓** → the item is checked (or unchecked).
+- **Scribble** (zigzag) → the item is deleted; **Undo** brings it back.
+- **Circle** → the item's spelling is fixed (AI; spelling and punctuation only).
+- With a finger: long-press the item's left area → **Gestures**; a strip appears, scroll with two fingers while drawing, leave with × on the strip.
+- With a pen (S Pen etc.): no gesture mode needed — drawing over an item with the pen is a gesture; touching outside items opens handwriting.
 - The **+** next to the title: **New page**, alarm, location reminder, folder, tag and tag/title suggestions.
 
 ## Note pages {#pages}
@@ -93,7 +104,9 @@ You can link a **PDF, image, video, YouTube video** or any attachment of the not
 - List items work the same: **Embed** in the selection menu, and **Preview / Edit / Remove embed** when the cursor is on a tag.
 - **Tap the chip** (its last letter too) to open a preview card: videos and YouTube play in the card, PDF pages turn in the card. The card has **Full screen** and **Edit**, with **Replace** and **Remove embed** below.
 - Removing an embed keeps the text and only unlinks it.
-- It also works the other way round: pick the attachment first (link button on the attachment strip), then select the text and tap **Link here**.
+- It also works the other way round: pick the attachment first (link button on the attachment strip), then select the text and tap **Link here**. Or tap **✍ (circle)** on the strip and **circle** the text with your finger.
+- **Move into note** on the preview card puts the attachment onto the note's page and unlinks the word.
+- When an attachment is deleted, the chips of words linked to it go away too (the text stays).
 
 ## PDFs and slides {#documents}
 In **Bubbles** mode the document is the note itself: the page on top, that page's note below.

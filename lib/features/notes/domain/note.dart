@@ -545,6 +545,15 @@ class Note {
       !type.isPageNoteType &&
       attachments.any((x) => x.id == a.sourceId);
 
+  /// Belge notunun (balonlu kip) türüne uyan belgesi duruyor mu? Belge
+  /// silinince not metin notuna döner (bkz. editör `_withoutOrphanDocumentMode`).
+  bool get hasModeDocument {
+    final kind = type == NoteType.slides
+        ? AttachmentKind.slide
+        : AttachmentKind.pdf;
+    return attachments.any((a) => a.kind == kind);
+  }
+
   /// MEVCUT eklerin sayfa notu var mı? (Boş dizgiler sayılmaz; belgesi
   /// silinmiş eskiden kalma anahtarlar sayılmaz.)
   bool get hasPageNotes {

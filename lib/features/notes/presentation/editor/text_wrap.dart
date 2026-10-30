@@ -1447,7 +1447,7 @@ class WrapTextController extends TextEditingController {
         final marker = entry.key.marker;
         final index = entry.value;
         final prefix = richFormatTakesIndex(entry.key) && index != null
-            ? '$marker$index:'
+            ? '$marker${richIndexToken(index)}:'
             : marker;
         body = '$prefix$body$marker';
         suffixOfLine += marker.length;

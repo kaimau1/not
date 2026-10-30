@@ -34,12 +34,23 @@ PDF, görsel ve sunum için ilk seferde iki kip sorulur: **Balonlu** (belge notu
 ## Not düzenleme {#editor}
 Alt çubuk soldan sağa:
 - **Aa — Biçim:** kalın, italik, altı çizili, yazı rengi, renkli vurgu, büyük başlık / alt başlık; notun yazı tipi, boyutu ve şeffaflığı; sayfa rengi (istersen kenar vurgusu) ve zemin görseli. Seçili yazıya uygulanır; seçim yoksa yazacağın kelimeye.
+  - Panelin üst sırası **kapsam**: **İmleç · Kelime · Satır · Tümü**. "Satır"ı seçip imleci bir satıra koy, sonra B / renk / boyut **+ −** — o satırın tamamı değişir, elle seçmek gerekmez. Seçim oturum boyu hatırlanır.
+  - Maddede panelde **Alt çizgi** sırası: düz, kesikli, noktalı çizgi (aynısına basmak kaldırır) ve ayar düğmesi.
 - **+ — Ekle:** simge ızgarası — **Not içeriği** (metin bloğu, liste, seçili yazıya ek gömme), **Görsel ve çizim** (görsel, görseli ek olarak yükle, kamera, tarama, çizim) ve **Ekler** (PDF, sunum, ses kaydı, video, YouTube, QR). Bir simgeye basılı tutunca ne yaptığı yazar.
 - **🔍 — Notta ara:** eşleşmeler yazarken vurgulanır.
 - **Paylaş.**
 - Sağdaki renkli kapsül: **✦ Yapay zekâ** (bkz. Yapay zekâ bölümü), **asistan mikrofonu** ve **sesli yazdır** mikrofonu.
-Üst çubuk: **geri al / yinele**, sabitle, kişi ekle (ortak not) ve ⋮ menüsü. ⋮ menüsünün üst satırında paylaş, notta ara ve **hesap makinesi**; altında **İçerik** (**Defter görünümü** ve kâğıt deseni, listeye/metne dönüştür, 2 sütun, maddeleri sırala, görselleri eke dönüştür, temizle), **Kopyala ve dışa aktar** (çoğalt, şablon olarak kaydet, deftere kopyala), **Araçlar** (sesli oku, istatistikler, ayarlar), **Koruma ve depolama** (arşivle, kilitle, senkron). Kopyalamak, arkadaşa göndermek ve dışa aktarmak **Paylaş** levhasında — menülerde ayrıca yok.
-- Liste notlarında maddeyi basılı tutup sürükleyerek sırala; "Seç" ile birden çok maddeyi kopyala/sil.
+Üst çubuk: **geri al / geri getir** (ikisi hep yan yana), sabitle, kişi ekle (ortak not) ve ⋮ menüsü. ⋮ menüsünün üst satırında paylaş, notta ara ve **hesap makinesi**; altında **İçerik** (**Defter görünümü** ve kâğıt deseni, listeye/metne dönüştür, 2 sütun, maddeleri sırala, görselleri eke dönüştür, temizle), **Kopyala ve dışa aktar** (çoğalt, şablon olarak kaydet, deftere kopyala), **Araçlar** (sesli oku, istatistikler, ayarlar), **Koruma ve depolama** (arşivle, kilitle, senkron). Kopyalamak, arkadaşa göndermek ve dışa aktarmak **Paylaş** levhasında — menülerde ayrıca yok.
+- Liste notlarında maddeyi basılı tutup sürükleyerek sırala; "Seç" ile birden çok maddeyi kopyala/sil. Seçim çubuğundaki **Kopyala ve işaretle** seçilenleri panoya alır ve tek dokunuşta işaretler.
+- Boş maddenin sağında küçük **×** belirir; dolu maddeyi silmek için madde menüsü (sol bölgeye basılı tut) ya da karalama jesti.
+
+## Madde jestleri {#gestures}
+Maddenin üstüne **parmakla ya da kalemle** çiz:
+- **Üstünü çiz** (yatay çizgi) ya da **✓** at → madde işaretlenir (işaretliyse işaret kalkar).
+- **Karala** (zikzak) → madde silinir; **Geri al** ile geri gelir.
+- **Daire içine al** → maddenin yazımı düzeltilir (yapay zekâ; yalnız imla ve noktalama).
+- Parmakla: maddenin sol bölgesine basılı tut → **Jestler**; altta şerit çıkar, çizerken iki parmakla kaydırırsın, şeritteki × ile çıkarsın.
+- Kalemle (S Pen vb.): jest kipine gerek yok — kalemle maddenin üstüne çizmek doğrudan jesttir; maddenin dışına dokununca el yazısı açılır.
 - Başlığın sağındaki **+**: **Yeni sayfa**, alarm, konum hatırlatıcısı, klasör, etiket ve etiket/başlık önerisi.
 
 ## Not sayfaları {#pages}
@@ -93,7 +104,9 @@ Bir kelimeye ya da cümleye **PDF, görsel, video, YouTube** ya da nottaki herha
 - Madde satırlarında da aynı: seçim menüsünde **Ek göm**, imleç etiketteyken **Önizle / Düzenle / Gömmeyi kaldır**.
 - **Çipe dokununca** (son harfi dahil) önizleme kartı açılır: video ve YouTube kartta oynar, PDF sayfaları kartta çevrilir. Kartta **Tam ekran** ve **Düzenle**; altta **Değiştir** ve **Gömmeyi kaldır** var.
 - Gömmeyi kaldırınca yazı kalır, yalnız bağ çözülür.
-- Ters yön de çalışır: önce eki seç (ek şeridindeki bağla düğmesi), sonra yazıyı seçip **Buraya bağla**.
+- Ters yön de çalışır: önce eki seç (ek şeridindeki bağla düğmesi), sonra yazıyı seçip **Buraya bağla**. Seçmek istemezsen şeritteki **✍ (daire çiz)** düğmesine bas ve bağlanacak yazıyı parmağınla **daire içine al**.
+- Önizleme kartındaki **Nota aktar** eki notun sayfasına (yazının arasına) alır, kelimedeki bağı çözer.
+- Ek silinirse ona bağlı kelimelerin çipi de kalkar (yazı kalır).
 
 ## PDF ve sunumlar {#documents}
 **Balonlu** kipte belge notun kendisidir: üstte sayfa, altta o sayfanın notu.

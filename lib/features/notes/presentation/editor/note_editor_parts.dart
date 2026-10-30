@@ -113,10 +113,12 @@ class _PendingEmbedBanner extends StatelessWidget {
     required this.fileName,
     required this.onPointerDown,
     required this.onLink,
+    required this.onLasso,
     required this.onCancel,
   });
 
   final String fileName;
+  final VoidCallback onLasso;
 
   /// Şeride PARMAK DEĞER DEĞMEZ (dokunuşun işlenmesinden, dolayısıyla olası
   /// odak/seçim kaybından ÖNCE) çağrılır — bkz. `_lastSelection`.
@@ -154,6 +156,13 @@ class _PendingEmbedBanner extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodySmall
                           ?.copyWith(color: scheme.onTertiaryContainer),
                     ),
+                  ),
+                  IconButton(
+                    key: const ValueKey('embed-lasso'),
+                    tooltip: l10n.embedLasso,
+                    icon: const Icon(Icons.gesture, size: 20),
+                    color: scheme.onTertiaryContainer,
+                    onPressed: onLasso,
                   ),
                   TextButton(
                     onPressed: onLink,

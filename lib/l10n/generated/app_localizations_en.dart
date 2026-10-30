@@ -5912,4 +5912,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inkStylusDetected => 'Pen detected — writing mode on';
+
+  @override
+  String get copyAndCheckSelectedItems => 'Copy and check';
+
+  @override
+  String get copiedAndChecked => 'Copied and checked';
+
+  @override
+  String get formatScopeCaret => 'Cursor';
+
+  @override
+  String get formatScopeWord => 'Word';
+
+  @override
+  String get formatScopeLine => 'Line';
+
+  @override
+  String get formatScopeAll => 'All';
+
+  @override
+  String get embedLasso => 'Select by circling';
+
+  @override
+  String get embedLassoHint =>
+      'Circle the text to link with your finger · scroll with two fingers';
+
+  @override
+  String get embedLassoMissed =>
+      'No text inside the circle — draw around the text';
+
+  @override
+  String get gestureModeHint =>
+      'Draw on an item: strike or ✓ → check · scribble → delete · circle → fix spelling · scroll with two fingers';
+
+  @override
+  String get gestureUnknown =>
+      'Gesture not recognized — strike, ✓, scribble or circle';
+
+  @override
+  String get gestureNoItem => 'Draw the gesture over an item';
+
+  @override
+  String get gestureItemDeleted => 'Item deleted (Undo brings it back)';
+
+  @override
+  String get gestureFixing => 'Fixing spelling…';
+
+  @override
+  String get gestureNothingToFix => 'No spelling mistakes to fix';
+
+  @override
+  String get gestureFixed => 'Spelling fixed';
+
+  @override
+  String get itemMenuGestures => 'Gestures';
+
+  @override
+  String get embedImportToNote => 'Move into note';
+
+  @override
+  String get embedImported => 'Attachment moved into the note';
 }

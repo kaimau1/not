@@ -266,7 +266,6 @@ extension _ItemsRow on ItemsEditorState {
           color: selected
               ? scheme.primaryContainer.withValues(alpha: 0.4)
               : null,
-          // Sağ pay dar: silme "x"i kenara yaklaşsın (bkz. [ItemsEditorState._kTrailingWidth]).
           padding: const EdgeInsetsDirectional.only(start: 12, end: 2),
           // İşaretli satırın soluk hâli KATMANSIZ: yazı, kutucuk ve yıldız
           // kendi renklerinde soluk çizilir (bkz. [_kCheckedDim]).
@@ -278,7 +277,9 @@ extension _ItemsRow on ItemsEditorState {
           // madde her karede ayrı bir saveLayer ile rasterleşiyordu. 80
           // işaretli maddede kaydırma ve not geçişi kare başına 80 katman
           // birleştiriyordu. Solma artık rengin alfasında, bedeli sıfır.
-          child: Row(
+          child: Stack(
+            children: [
+              Row(
               // Çok satırlı maddelerde kutucuk/numara artık tüm satır
               // yüksekliğine göre ORTALANMIYOR, ilk satıra hizalanıyor
               // (kullanıcı isteği). Üst pay [leadingTop] ile HESAPLANIR — bkz.
@@ -502,33 +503,41 @@ extension _ItemsRow on ItemsEditorState {
                         : scheme.tertiary,
                     onPressed: () => _toggleStar(item),
                   ),
-                // Silme "x" yalnızca satır odaklıyken görünür: kaydırırken ya
-                // da yazarken yanlışlıkla basılmaz (madde 11-12). Odaksızken
-                // yerini boş bir kutu tutar ki satırlar yatayda zıplamasın.
-                //
-                // BÜYÜDÜ VE SAĞA KAYDI (kullanıcı isteği 2026-08-30): simge 18 →
-                // 22, kutusu 48 → [ItemsEditorState._kTrailingWidth] ve satırın sağ payı 12 → 2 dp.
-                // Düğme kenara yaklaşınca hem hedefi büyüdü hem de metne kalan
-                // genişlik arttı.
-                if (focused && !_selectionMode)
-                  IconButton(
-                    tooltip: l10n.removeItem,
-                    icon: const Icon(Icons.close, size: 22),
-                    // Kutu, odaksız satırdaki boş yer tutucuyla BİREBİR aynı
-                    // (yoğunluk ayarı verilmiyor): odak değişince satır yatayda
-                    // bir piksel bile oynamasın.
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints.tightFor(
-                      width: ItemsEditorState._kTrailingWidth,
-                      height: 40,
-                    ),
-                    color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
-                    onPressed: () => _removeItem(item),
-                  )
-                else
-                  const SizedBox(width: ItemsEditorState._kTrailingWidth),
+                // SİL "x" ARTIK SATIRDA YER TUTMAZ (kullanıcı bulgusu
+                // 2026-10-30: "sağdaki sil işareti madde aktif yazılırken
+                // notu sağa itip satır genişliğini daraltıyor"). 40 dp'lik
+                // kalıcı yer tutucu kalktı; "x" yalnız odaklı BOŞ maddede,
+                // satırın sağ ucunda yüzer (yazının üstüne binmez). Dolu
+                // maddeyi silmek: uzun basış menüsü ya da karalama jesti.
+                const SizedBox(width: ItemsEditorState._kTrailingWidth),
               ],
             ),
+            if (focused && !_selectionMode)
+              PositionedDirectional(
+                end: 0,
+                top: 0,
+                child: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: controller,
+                  builder: (context, value, _) => value.text.isNotEmpty
+                      ? const SizedBox.shrink()
+                      : IconButton(
+                          key: ValueKey('item-remove-${item.id}'),
+                          tooltip: l10n.removeItem,
+                          icon: const Icon(Icons.close, size: 20),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints.tightFor(
+                            width: 36,
+                            height: 36,
+                          ),
+                          color: scheme.onSurfaceVariant.withValues(
+                            alpha: 0.8,
+                          ),
+                          onPressed: () => _removeItem(item),
+                        ),
+                ),
+              ),
+          ],
+          ),
         ),
       ),
     );
@@ -636,6 +645,15 @@ extension _ItemsRow on ItemsEditorState {
                 icon: const Icon(Icons.copy_outlined, size: 20),
                 onPressed: hasSelection ? _copySelected : null,
               ),
+              // KOPYALA + İŞARETLE (kullanıcı isteği 2026-10-30): alışveriş
+              // listesinden aldıklarını panoya alıp tek dokunuşla kapatmak.
+              if (widget.showCheckboxes)
+                IconButton(
+                  key: const ValueKey('items-copy-check'),
+                  tooltip: l10n.copyAndCheckSelectedItems,
+                  icon: const Icon(Icons.library_add_check_outlined, size: 20),
+                  onPressed: hasSelection ? _copyAndCheckSelected : null,
+                ),
               IconButton(
                 tooltip: l10n.delete,
                 icon: const Icon(Icons.delete_outline, size: 20),

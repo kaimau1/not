@@ -146,6 +146,7 @@ class ItemsEditor extends StatefulWidget {
     this.attachmentNames = const [],
     this.tagLooks = const {},
     this.onAttachmentTag,
+    this.onGestureMode,
     this.selectionMenu,
     this.videoTimestamps = false,
     this.onVideoTimestamp,
@@ -270,6 +271,10 @@ class ItemsEditor extends StatefulWidget {
   /// taşıdığı ad (bağ etiketi ya da dosya adı). Eki açmak editörün işi —
   /// görüntüleyiciler ve düzenleme geri çağrıları orada.
   final void Function(String fileName)? onAttachmentTag;
+
+  /// Uzun basış menüsündeki "Jestler": editör jest kipini açar (maddeye
+  /// çizerek işaretle / sil / düzelt). null ise seçenek yok.
+  final VoidCallback? onGestureMode;
 
   /// Madde satırının seçim menüsünü EDİTÖR kurar — gövdeyle AYNI seçenekler
   /// ve AYNI sıra (ek göm, etiket önizle/düzenle/kaldır, bağlantıyı aç,
@@ -816,7 +821,7 @@ class ItemsEditorState extends State<ItemsEditor>
   static const double _kLeadingWidth = 48;
 
   /// Sil düğmesinin (odaksızken boş kutunun) genişliği.
-  static const double _kTrailingWidth = 40;
+  static const double _kTrailingWidth = 8;
 
   /// Satırın iki yanındaki yatay dolgunun TOPLAMI (sol 12 + sağ 2).
   static const double _kRowPadding = 14;
@@ -1253,6 +1258,82 @@ class ItemsEditorState extends State<ItemsEditor>
       if (entry.value.hasFocus) return entry.key;
     }
     return null;
+  }
+
+  /// [controller] hangi maddenin alanı (biçim paneli hedefi → madde).
+  String? itemIdForController(TextEditingController controller) {
+    for (final entry in _controllers.entries) {
+      if (identical(entry.value, controller)) return entry.key;
+    }
+    return null;
+  }
+
+  /// Maddenin alt çizgi TÜRÜ ('' = yok); madde yoksa null.
+  String? dividerKindOf(String id) {
+    final item = _items.where((i) => i.id == id).firstOrNull;
+    if (item == null) return null;
+    return ItemDivider.parse(item.divider)?.kind ?? '';
+  }
+
+  /// Biçim panelinin alt çizgi sırası (bkz. [_setDivider]).
+  void setDividerOf(String id, String kind) {
+    final item = _items.where((i) => i.id == id).firstOrNull;
+    if (item != null) _setDivider(item, kind);
+  }
+
+  Future<void> editDividerStyleOf(String id) async {
+    final item = _items.where((i) => i.id == id).firstOrNull;
+    if (item != null) await _editDividerStyle(item);
+  }
+
+  /// [global] noktasının DİKEYDE düştüğü madde (jest katmanı, bkz.
+  /// `ink_gestures.dart`): satırın metin alanının üst/alt sınırı.
+  String? itemIdAt(Offset global) {
+    String? best;
+    var bestDistance = double.infinity;
+    for (final entry in _focusNodes.entries) {
+      final box = entry.value.context?.findRenderObject();
+      if (box is! RenderBox || !box.attached || !box.hasSize) continue;
+      final top = box.localToGlobal(Offset.zero).dy;
+      final bottom = top + box.size.height;
+      final distance = global.dy < top
+          ? top - global.dy
+          : global.dy > bottom
+          ? global.dy - bottom
+          : 0.0;
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = entry.key;
+      }
+    }
+    return bestDistance <= 12 ? best : null;
+  }
+
+  /// Jestle işaretle / işareti kaldır.
+  void toggleCheckedOf(String id) {
+    final item = _items.where((i) => i.id == id).firstOrNull;
+    if (item == null || item.text.trim().isEmpty) return;
+    _toggleItem(item, !item.checked);
+  }
+
+  /// Jestle sil (geri alma editörün notu saklamasıyla).
+  void removeItemOf(String id) {
+    final item = _items.where((i) => i.id == id).firstOrNull;
+    if (item == null) return;
+    _focusNodes[id]?.unfocus();
+    _removeItem(item);
+  }
+
+  /// Maddenin İŞARETLİ metni (yoksa null).
+  String? itemTextOf(String id) =>
+      _items.where((i) => i.id == id).firstOrNull?.text;
+
+  /// Maddenin metnini dışarıdan değiştirir (jestle yazım düzeltme).
+  void replaceItemText(String id, String text) {
+    final item = _items.where((i) => i.id == id).firstOrNull;
+    if (item == null) return;
+    _controllers[id]?.setLogical(text, text.length);
+    _updateText(item, text);
   }
 
   /// Maddeye odaklanır ve imleci sonuna koyar (dışarıdan eklenen madde —
@@ -1913,30 +1994,25 @@ enum _ItemAction {
   star,
   select,
   delete,
-  dividerSolid,
-  dividerDashed,
-  dividerDotted,
-  dividerStyle,
   moveToPage,
+  gestures,
 }
 
-/// Madde menüsünün tek parçalık gövdesi: üstte iş düğmeleri, altta çizgi
-/// türleri (bkz. [ItemsEditorState._showItemMenu]).
+/// Madde menüsünün tek parçalık gövdesi: iş düğmeleri (alt çizgi
+/// 2026-10-30'dan beri biçim panelinde — bkz. [ItemsEditorState._showItemMenu]).
 class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
   const _ItemMenuPanel({
     required this.starred,
-    required this.divider,
     required this.canMove,
+    required this.canGesture,
   });
 
   final bool starred;
-
-  /// Maddenin şimdiki çizgi türü ('' = yok).
-  final String divider;
   final bool canMove;
+  final bool canGesture;
 
   @override
-  double get height => 148;
+  double get height => 84;
 
   @override
   bool represents(_ItemAction? value) => false;
@@ -1977,38 +2053,11 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
     );
   }
 
-  Widget _line(_ItemAction action, String kind, String tooltip) {
-    final scheme = Theme.of(context).colorScheme;
-    final selected = widget.divider == kind;
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: () => _pick(action),
-        child: Container(
-          width: 40,
-          height: 32,
-          decoration: BoxDecoration(
-            color: selected ? scheme.secondaryContainer : null,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: CustomPaint(
-            painter: _LineSwatchPainter(
-              kind,
-              selected ? scheme.onSecondaryContainer : scheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
     return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 248, maxWidth: 300),
+      constraints: const BoxConstraints(minWidth: 248, maxWidth: 320),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6),
         child: Column(
@@ -2028,6 +2077,12 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
                     Icons.drive_file_move_outline,
                     l10n.itemMenuMove,
                   ),
+                if (widget.canGesture)
+                  _action(
+                    _ItemAction.gestures,
+                    Icons.gesture,
+                    l10n.itemMenuGestures,
+                  ),
                 _action(
                   _ItemAction.delete,
                   Icons.delete_outline,
@@ -2035,70 +2090,11 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
                 ),
               ],
             ),
-            Divider(height: 12, color: scheme.outlineVariant),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 2, 0, 6),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.itemMenuLine,
-                      style: Theme.of(context).textTheme.labelMedium,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  _line(
-                    _ItemAction.dividerSolid,
-                    NoteItem.dividerSolid,
-                    l10n.itemDividerSolid,
-                  ),
-                  _line(
-                    _ItemAction.dividerDashed,
-                    NoteItem.dividerDashed,
-                    l10n.itemDividerDashed,
-                  ),
-                  _line(
-                    _ItemAction.dividerDotted,
-                    NoteItem.dividerDotted,
-                    l10n.itemDividerDotted,
-                  ),
-                  IconButton(
-                    tooltip: l10n.dividerSettings,
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.tune, size: 20),
-                    onPressed: () => _pick(_ItemAction.dividerStyle),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
     );
   }
-}
-
-/// Menüdeki çizgi türü örneği (ortadan, ince).
-class _LineSwatchPainter extends CustomPainter {
-  _LineSwatchPainter(this.kind, this.color);
-
-  final String kind;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) => paintItemDivider(
-    canvas,
-    style: ItemDivider(kind),
-    fallbackColor: color,
-    left: 8,
-    right: size.width - 8,
-    y: size.height / 2,
-    baseWidth: 1.8,
-  );
-
-  @override
-  bool shouldRepaint(_LineSwatchPainter old) =>
-      old.kind != kind || old.color != color;
 }
 
 /// Madde altı ayırıcı çizgi (bkz. [NoteItem.divider], [ItemDivider]).

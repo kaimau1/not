@@ -19,6 +19,8 @@ extension _ItemsActions on ItemsEditorState {
       globalPosition & const Size(1, 1),
       Offset.zero & overlay.size,
     );
+    // ALT ÇİZGİ BİÇİM PANELİNE TAŞINDI (kullanıcı isteği 2026-10-30): menüde
+    // yalnız madde işleri kaldı.
     // SADE MENÜ (kullanıcı isteği 2026-10-28: "seç menüsü çok kalabalıklaştı"):
     // eskiden alt alta 7-8 satırdı (yıldız, seç, üç çizgi türü, çizgi
     // ayarları, çizgiyi kaldır, taşı, sil). Artık iki sıra: üstte madde işleri
@@ -30,8 +32,8 @@ extension _ItemsActions on ItemsEditorState {
       items: [
         _ItemMenuPanel(
           starred: item.starred,
-          divider: ItemDivider.parse(item.divider)?.kind ?? '',
           canMove: widget.onMoveToPage != null,
+          canGesture: widget.onGestureMode != null,
         ),
       ],
     );
@@ -43,14 +45,8 @@ extension _ItemsActions on ItemsEditorState {
         _toggleSelection(item);
       case _ItemAction.delete:
         _removeItem(item);
-      case _ItemAction.dividerSolid:
-        _setDivider(item, NoteItem.dividerSolid);
-      case _ItemAction.dividerDashed:
-        _setDivider(item, NoteItem.dividerDashed);
-      case _ItemAction.dividerDotted:
-        _setDivider(item, NoteItem.dividerDotted);
-      case _ItemAction.dividerStyle:
-        await _editDividerStyle(item);
+      case _ItemAction.gestures:
+        widget.onGestureMode?.call();
       case _ItemAction.moveToPage:
         // Önce satırdaki yazı nota işlensin: taşınan madde son hâliyle gitsin.
         _commit();
@@ -199,6 +195,29 @@ extension _ItemsActions on ItemsEditorState {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showMessage(context.l10n.copied);
+  }
+
+  /// Seçilileri panoya kopyalar VE işaretler (işaretsiz olanları; hepsi
+  /// işaretliyse yalnız kopyalar). Pano metni işaretlemeden ÖNCEKİ hâl.
+  Future<void> _copyAndCheckSelected() async {
+    final chosen = [
+      for (final item in _items)
+        if (_selected.contains(item.id)) item,
+    ];
+    if (chosen.isEmpty) return;
+    final text = itemsCopyText(chosen, checkboxes: widget.showCheckboxes);
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    _exitSelection();
+    for (final item in chosen) {
+      final live = _items.where((i) => i.id == item.id).firstOrNull;
+      if (live != null && !live.checked && live.text.trim().isNotEmpty) {
+        _toggleItem(live, true);
+      }
+    }
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showMessage(context.l10n.copiedAndChecked);
   }
 
   void _deleteSelected() {

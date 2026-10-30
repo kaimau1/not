@@ -145,6 +145,7 @@ List<TextSpan> guideInlineSpans(String text, TextStyle? bold) {
   'media' => (icon: Icons.image_outlined, route: null),
   'video' => (icon: Icons.smart_display_outlined, route: null),
   'pin' => (icon: Icons.vertical_align_top, route: null),
+  'gestures' => (icon: Icons.gesture, route: null),
   'embed' => (icon: Icons.attach_file, route: null),
   'documents' => (icon: Icons.picture_as_pdf_outlined, route: null),
   'scan' => (icon: Icons.document_scanner_outlined, route: null),

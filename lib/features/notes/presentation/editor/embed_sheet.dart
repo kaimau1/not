@@ -409,6 +409,7 @@ Future<void> showEmbedPreview(
   required VoidCallback onReplace,
   required VoidCallback onUnlink,
   VoidCallback? onEdit,
+  VoidCallback? onImport,
   ValueChanged<Attachment>? onChanged,
 }) => showAppSheet<void>(
   context: context,
@@ -529,6 +530,15 @@ Future<void> showEmbedPreview(
                   icon: const Icon(Icons.swap_horiz),
                   label: Text(l10n.embedReplace),
                 ),
+                // NOTA AKTAR (kullanıcı isteği 2026-10-30): gömülü ek notun
+                // SAYFASINA (yazının arasına) alınır, yazıdaki bağ çözülür.
+                if (onImport != null)
+                  TextButton.icon(
+                    key: const ValueKey('embed-import'),
+                    onPressed: () => then(onImport),
+                    icon: const Icon(Icons.move_down),
+                    label: Text(l10n.embedImportToNote),
+                  ),
                 const Spacer(),
                 TextButton.icon(
                   key: const ValueKey('embed-unlink'),
