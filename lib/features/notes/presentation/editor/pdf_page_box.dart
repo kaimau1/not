@@ -230,10 +230,21 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     return _bubbles ??= BubbleController(
       initial: a.bubbles,
       hidden: a.bubblesHidden,
-      onChanged: (list) =>
-          widget.onChanged(widget.attachment.copyWith(bubbles: list)),
-      onHiddenChanged: (hidden) =>
-          widget.onChanged(widget.attachment.copyWith(bubblesHidden: hidden)),
+      // İki yazım da İKİ alanın canlı değerini taşır: aynı karede gelen
+      // "göster" + "yeni balon" yazımı birbirini bayat ekle ezmesin (bkz.
+      // PdfNotePane._live).
+      onChanged: (list) => widget.onChanged(
+        widget.attachment.copyWith(
+          bubbles: list,
+          bubblesHidden: _bubbles?.hidden ?? widget.attachment.bubblesHidden,
+        ),
+      ),
+      onHiddenChanged: (hidden) => widget.onChanged(
+        widget.attachment.copyWith(
+          bubblesHidden: hidden,
+          bubbles: _bubbles?.bubbles ?? widget.attachment.bubbles,
+        ),
+      ),
     );
   }
 

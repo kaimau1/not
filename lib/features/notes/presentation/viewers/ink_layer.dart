@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 
 import '../../../../core/widgets/color_palette.dart';
 import '../../../../core/l10n_ext.dart';
@@ -37,6 +39,8 @@ class InkController extends ChangeNotifier {
     opacity = InkToolMemory.opacity;
     penOnly = InkToolMemory.penOnly;
     pressure = InkToolMemory.pressure;
+    shapeSnap = InkToolMemory.shapeSnap;
+    partialEraser = InkToolMemory.partialEraser;
   }
 
   /// Çizim değişince güncel çizgi listesiyle çağrılır (kaydetme).
@@ -82,6 +86,70 @@ class InkController extends ChangeNotifier {
 
   /// Basınç algısı: kalemle çizilen çizginin kalınlığı bastırmaya göre değişir.
   bool pressure = true;
+
+  /// Basılı tutunca şekle dönüştür (bkz. [recognizeInkShape]).
+  bool shapeSnap = true;
+
+  /// Kısmi silgi: yalnız silginin değdiği kısım silinir, çizgi bölünür.
+  bool partialEraser = false;
+
+  // ── KEMENT (seçim) ────────────────────────────────────────────────────
+  // Kullanıcı isteği 2026-10-30: "Samsung Notes gibi özelliklerimiz olsun".
+  // Kement aracı açıkken çizilen kapalı eğrinin içindeki çizgiler seçilir;
+  // seçimin içinden sürüklemek onları TAŞIR, renk seçmek BOYAR, "Sil" atar.
+
+  /// Kement aracı seçili mi.
+  bool lasso = false;
+
+  /// Çizilmekte olan kementin noktaları (oranlı) ve sayfası.
+  List<double>? _lassoPath;
+  int? _lassoPage;
+
+  /// Seçili çizgiler (nesne kimliğiyle — çizgiler değişmez, taşıma yenisini
+  /// kurar).
+  List<InkStroke> _selected = const [];
+  List<InkStroke> get selected => _selected;
+  bool get hasSelection => _selected.isNotEmpty;
+
+  /// Seçimin sayfası (seçim tek sayfada olur).
+  int? get selectionPage => _selected.isEmpty ? null : _selected.first.page;
+
+  /// Kement noktaları (çizimi sürerken; [page] sayfasında değilse null).
+  List<double>? lassoPathOn(int page) => _lassoPage == page ? _lassoPath : null;
+
+  /// Seçimin oranlı çevreleyen kutusu.
+  Rect? get selectionBounds {
+    if (_selected.isEmpty) return null;
+    var l = double.infinity, t = double.infinity;
+    var r = -double.infinity, b = -double.infinity;
+    for (final s in _selected) {
+      for (var i = 0; i + 1 < s.points.length; i += 2) {
+        l = math.min(l, s.points[i]);
+        r = math.max(r, s.points[i]);
+        t = math.min(t, s.points[i + 1]);
+        b = math.max(b, s.points[i + 1]);
+      }
+    }
+    if (l > r || t > b) return null;
+    return Rect.fromLTRB(l, t, r, b);
+  }
+
+  bool _moving = false;
+  double _moveX = 0, _moveY = 0;
+
+  /// Kalemin HAVADAKİ yeri (S Pen gibi yaklaşmayı bildiren kalemler): sayfa
+  /// ve yerel konum. Katman ucun kalınlığında bir önizleme çizer.
+  final hover = ValueNotifier<(int, Offset)?>(null);
+
+  // ── BASILI TUTUNCA ŞEKİL ──────────────────────────────────────────────
+  Timer? _holdTimer;
+  double _holdX = 0, _holdY = 0;
+
+  /// Etkin çizginin sayfa boyu (şekil tanıma piksel uzayında yapılır).
+  Size _activeSize = Size.zero;
+
+  /// Etkin çizgi şekle oturdu: kalkana dek uzamaz.
+  bool _snapped = false;
 
   /// Çizgiye yazılan renk: seçilen renk + kalemin saydamlığı (+ şeffaflık).
   Color get penColor => pen == InkPen.highlighter
@@ -159,7 +227,85 @@ class InkController extends ChangeNotifier {
     if (value) {
       arrow = false;
       shape = null;
+      _leaveLasso();
     }
+    notifyListeners();
+  }
+
+  /// Kement aracını açar/kapatır; kapanınca seçim bırakılır.
+  void setLasso(bool value) {
+    if (lasso == value) return;
+    lasso = value;
+    if (value) {
+      eraser = false;
+      arrow = false;
+      shape = null;
+    } else {
+      _leaveLasso();
+    }
+    notifyListeners();
+  }
+
+  void _leaveLasso() {
+    lasso = false;
+    _lassoPath = null;
+    _lassoPage = null;
+    _selected = const [];
+    _moving = false;
+  }
+
+  /// Seçimi bırakır (araç kement kalır).
+  void clearSelection() {
+    if (_selected.isEmpty) return;
+    _selected = const [];
+    notifyListeners();
+  }
+
+  /// Seçili çizgileri siler.
+  void deleteSelection() {
+    if (_selected.isEmpty) return;
+    final gone = _selected.toSet();
+    _pushHistory(_ink);
+    _ink = [
+      for (final s in _ink)
+        if (!gone.contains(s)) s,
+    ];
+    _selected = const [];
+    _dirty = true;
+    save();
+    notifyListeners();
+  }
+
+  /// Seçili çizgileri [value] rengine boyar; her çizgi kendi saydamlığını
+  /// (fosforlu/şeffaf kalem) korur.
+  void _recolorSelection(Color value) {
+    final map = <InkStroke, InkStroke>{
+      for (final s in _selected)
+        s: InkStroke(
+          page: s.page,
+          color: value.withAlpha((s.color >> 24) & 0xFF).toARGB32(),
+          width: s.width,
+          points: s.points,
+          arrow: s.arrow,
+          pressures: s.pressures,
+        ),
+    };
+    _pushHistory(_ink);
+    _ink = [for (final s in _ink) map[s] ?? s];
+    _selected = [for (final s in _selected) map[s]!];
+    _dirty = true;
+    save();
+  }
+
+  void setShapeSnap(bool value) {
+    shapeSnap = value;
+    InkToolMemory.saveShapeSnap(value);
+    notifyListeners();
+  }
+
+  void setPartialEraser(bool value) {
+    partialEraser = value;
+    InkToolMemory.savePartialEraser(value);
     notifyListeners();
   }
 
@@ -171,6 +317,7 @@ class InkController extends ChangeNotifier {
     if (value) {
       eraser = false;
       shape = null;
+      _leaveLasso();
     }
     notifyListeners();
   }
@@ -181,11 +328,15 @@ class InkController extends ChangeNotifier {
     if (value != null) {
       eraser = false;
       arrow = false;
+      _leaveLasso();
     }
     notifyListeners();
   }
 
   void setColor(Color value) {
+    // Kementle seçim varken renk SEÇİMİ boyar; kalemin rengi de değişir ki
+    // ardından yazılan aynı renkte olsun.
+    if (_selected.isNotEmpty) _recolorSelection(value);
     color = value;
     eraser = false;
     if (!kInkPalette.contains(value)) {
@@ -198,12 +349,13 @@ class InkController extends ChangeNotifier {
   /// Kalem türünü değiştirir. Kalınlık türün kendi aralığına taşınır:
   /// fosforluya geçip 3 px'te kalmak "fosforlu çalışmıyor" izlenimi veriyordu.
   void setPen(InkPen value) {
-    if (pen == value && !eraser && !arrow && shape == null) return;
+    if (pen == value && !eraser && !arrow && shape == null && !lasso) return;
     final wasDefault = widthPx == pen.defaultWidth;
     pen = value;
     eraser = false;
     arrow = false;
     shape = null;
+    _leaveLasso();
     widthPx = wasDefault ? value.defaultWidth : value.clampWidth(widthPx);
     _remember();
     notifyListeners();
@@ -255,6 +407,7 @@ class InkController extends ChangeNotifier {
   }
 
   void undo() {
+    _selected = const [];
     if (_history.isNotEmpty) {
       _future.add(_ink);
       _ink = _history.removeLast();
@@ -271,6 +424,7 @@ class InkController extends ChangeNotifier {
   }
 
   void redo() {
+    _selected = const [];
     if (_future.isEmpty) return;
     _history.add(_ink);
     _ink = _future.removeLast();
@@ -303,6 +457,8 @@ class InkController extends ChangeNotifier {
     if (_sameStrokes(_ink, strokes)) return;
     _dirty = false;
     _ink = [...strokes];
+    _selected = const [];
+    _lassoPath = null;
     // Dışarıdan gelen liste geçmişi geçersiz kılar (geri al eski listeye
     // dönüp başka cihazın çizimini silmesin).
     _history.clear();
@@ -340,6 +496,9 @@ class InkController extends ChangeNotifier {
   void beginNav() {
     if (_nav) return;
     _nav = true;
+    _holdTimer?.cancel();
+    _lassoPath = null;
+    _moving = false;
     if (_active != null) {
       _ink = [..._ink]..remove(_active);
       _active = null;
@@ -391,11 +550,33 @@ class InkController extends ChangeNotifier {
       // geri al ki ekranda kırıntı kalmasın.
       if (_active != null) _ink = [..._ink]..remove(_active);
       _active = null;
+      _holdTimer?.cancel();
+      _lassoPath = null;
+      _moving = false;
       notifyListeners();
       return;
     }
+    hover.value = null;
     _gestureBase = _ink;
     _tempEraser = stylusEraser;
+    if (lasso && !_tempEraser) {
+      final x = local.dx / size.width;
+      final y = local.dy / size.height;
+      final bounds = selectionBounds;
+      if (bounds != null &&
+          selectionPage == page &&
+          bounds.inflate(0.03).contains(Offset(x, y))) {
+        _moving = true;
+        _moveX = x;
+        _moveY = y;
+      } else {
+        _selected = const [];
+        _lassoPath = [x, y];
+        _lassoPage = page;
+      }
+      notifyListeners();
+      return;
+    }
     if (_erasing) {
       _eraseAt(page, local, size);
       notifyListeners();
@@ -423,8 +604,56 @@ class InkController extends ChangeNotifier {
     );
     _dirty = true;
     _active = stroke;
+    _activeSize = size;
+    _snapped = false;
+    _holdX = x;
+    _holdY = y;
     _ink = [..._ink, stroke];
     notifyListeners();
+  }
+
+  /// Kalem/parmak çizginin sonunda kıpırdamadan durdu: çizgi tanınan şekle
+  /// oturur (bkz. [recognizeInkShape]).
+  void _snapActive() {
+    final active = _active;
+    if (active == null || _pointers != 1 || _nav || active.arrow) return;
+    final size = _activeSize;
+    if (size.isEmpty) return;
+    final px = <Offset>[
+      for (var i = 0; i + 1 < active.points.length; i += 2)
+        Offset(
+          active.points[i] * size.width,
+          active.points[i + 1] * size.height,
+        ),
+    ];
+    final found = recognizeInkShape(px);
+    if (found == null) return;
+    final points = inkShapePoints(
+      found.shape,
+      found.a.dx / size.width,
+      found.a.dy / size.height,
+      found.b.dx / size.width,
+      found.b.dy / size.height,
+    );
+    // Basınç noktaya bağlı; şekil düzgün kalınlıkla çizilir.
+    final snapped = InkStroke(
+      page: active.page,
+      color: active.color,
+      width: active.width,
+      points: points,
+    );
+    _ink = [for (final s in _ink) identical(s, active) ? snapped : s];
+    _active = snapped;
+    _snapped = true;
+    HapticFeedback.selectionClick();
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _holdTimer?.cancel();
+    hover.dispose();
+    super.dispose();
   }
 
   void pointerMove(
@@ -436,13 +665,26 @@ class InkController extends ChangeNotifier {
   }) {
     if (pointer != null && !_accepted.contains(pointer)) return;
     if (_nav || _pointers != 1) return;
+    if (lasso && !_tempEraser) {
+      final x = local.dx / size.width;
+      final y = local.dy / size.height;
+      if (_moving) {
+        _translateSelection(x - _moveX, y - _moveY);
+        _moveX = x;
+        _moveY = y;
+      } else if (_lassoPage == page) {
+        _lassoPath?.addAll([x, y]);
+      }
+      notifyListeners();
+      return;
+    }
     if (_erasing) {
       _eraseAt(page, local, size);
       notifyListeners();
       return;
     }
     final active = _active;
-    if (active == null) return;
+    if (active == null || _snapped) return;
     final x = local.dx / size.width;
     final y = local.dy / size.height;
     // OK: nokta EKLENMEZ, ucu taşınır — parmak nereye giderse ok oraya bakar.
@@ -474,7 +716,54 @@ class InkController extends ChangeNotifier {
     if (pressures != null) {
       pressures.add(pressure ?? (pressures.isEmpty ? 0.5 : pressures.last));
     }
+    // Kıpırtı (kalemin titremesi) beklemeyi sıfırlamaz: zamanlayıcı ancak
+    // uç gerçekten yol alınca yeniden kurulur.
+    if (shapeSnap && math.max((x - _holdX).abs(), (y - _holdY).abs()) > 0.006) {
+      _holdX = x;
+      _holdY = y;
+      _holdTimer?.cancel();
+      _holdTimer = Timer(const Duration(milliseconds: 550), _snapActive);
+    }
     notifyListeners();
+  }
+
+  /// Seçimi oranlı (dx, dy) kadar taşır.
+  void _translateSelection(double dx, double dy) {
+    if (_selected.isEmpty || (dx == 0 && dy == 0)) return;
+    final map = <InkStroke, InkStroke>{
+      for (final s in _selected)
+        s: s.copyWith(
+          points: [
+            for (var i = 0; i < s.points.length; i++)
+              s.points[i] + (i.isEven ? dx : dy),
+          ],
+        ),
+    };
+    _ink = [for (final s in _ink) map[s] ?? s];
+    _selected = [for (final s in _selected) map[s]!];
+    _dirty = true;
+  }
+
+  /// Kement kapandı: içinde kalan çizgiler seçilir (noktalarının yarısından
+  /// çoğu çokgenin içinde olan).
+  void _closeLasso() {
+    final path = _lassoPath;
+    final page = _lassoPage;
+    _lassoPath = null;
+    if (path == null || page == null || path.length < 6) return;
+    final picked = <InkStroke>[];
+    for (final s in _ink) {
+      if (s.page != page) continue;
+      final samples = _sampled(s);
+      var inside = 0;
+      final n = samples.length ~/ 2;
+      for (var i = 0; i + 1 < samples.length; i += 2) {
+        if (inkPointInPolygon(samples[i], samples[i + 1], path)) inside++;
+      }
+      if (n > 0 && inside * 2 > n) picked.add(s);
+    }
+    _selected = picked;
+    if (picked.isNotEmpty) HapticFeedback.selectionClick();
   }
 
   void pointerUp({
@@ -492,6 +781,15 @@ class InkController extends ChangeNotifier {
       return;
     }
     _tempEraser = false;
+    _holdTimer?.cancel();
+    _snapped = false;
+    if (lasso) {
+      if (_moving) {
+        _moving = false;
+      } else {
+        _closeLasso();
+      }
+    }
     // Ok ya da şekille yalnız DOKUNULDUYSA (sürüklenmediyse) ortada yönü
     // olmayan bir kırıntı kalır: atılır.
     final active = _active;
@@ -519,6 +817,10 @@ class InkController extends ChangeNotifier {
   void _eraseAt(int page, Offset local, Size size) {
     final x = local.dx / size.width;
     final y = local.dy / size.height;
+    if (partialEraser) {
+      _erasePartAt(page, x, y);
+      return;
+    }
     final kept = <InkStroke>[];
     for (final s in _ink) {
       var hit = false;
@@ -540,6 +842,70 @@ class InkController extends ChangeNotifier {
     if (kept.length == _ink.length) return;
     _dirty = true;
     _ink = kept;
+  }
+
+  /// KISMİ SİLGİ: çizgi yalnız silginin değdiği yerden kesilir, kalan
+  /// parçalar ayrı çizgiler olur (basınç parçalarla taşınır). Ok bütün
+  /// silinir — yarım ok anlamsız.
+  void _erasePartAt(int page, double x, double y) {
+    bool near(double px, double py) =>
+        (px - x).abs() < _eraseRadius && (py - y).abs() < _eraseRadius;
+    var changed = false;
+    final out = <InkStroke>[];
+    for (final s in _ink) {
+      if (s.page != page) {
+        out.add(s);
+        continue;
+      }
+      final sampled = _sampled(s);
+      var touched = false;
+      for (var i = 0; i + 1 < sampled.length; i += 2) {
+        if (near(sampled[i], sampled[i + 1])) {
+          touched = true;
+          break;
+        }
+      }
+      if (!touched) {
+        out.add(s);
+        continue;
+      }
+      changed = true;
+      if (s.arrow) continue;
+      // Seyrek çizgide (şekil) örnek noktalarla kesilir; basınç yoksa kaybı
+      // yok, varsa nokta başına eşleştiği için yalnız yoğun çizgide taşınır.
+      final dense = identical(sampled, s.points);
+      final pressures = dense && s.hasPressure ? s.pressures : null;
+      var run = <double>[];
+      var runQ = <double>[];
+      void flush() {
+        if (run.length >= 4) {
+          out.add(
+            InkStroke(
+              page: s.page,
+              color: s.color,
+              width: s.width,
+              points: run,
+              pressures: pressures == null ? null : runQ,
+            ),
+          );
+        }
+        run = <double>[];
+        runQ = <double>[];
+      }
+
+      for (var i = 0; i + 1 < sampled.length; i += 2) {
+        if (near(sampled[i], sampled[i + 1])) {
+          flush();
+        } else {
+          run.addAll([sampled[i], sampled[i + 1]]);
+          if (pressures != null) runQ.add(pressures[i ~/ 2]);
+        }
+      }
+      flush();
+    }
+    if (!changed) return;
+    _dirty = true;
+    _ink = out;
   }
 
   /// Silgi için çizginin örnek noktaları: ardışık iki nokta arası silgi
@@ -604,53 +970,82 @@ class InkPageLayer extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final size = Size(constraints.maxWidth, constraints.maxHeight);
-          return Listener(
-            behavior: HitTestBehavior.translucent,
-            onPointerDown: (e) => controller.pointerDown(
-              page,
-              e.localPosition,
-              size,
-              pointer: e.pointer,
-              kind: e.kind,
-              pressure: _pressure(e),
-              stylusEraser:
-                  e.kind == PointerDeviceKind.invertedStylus ||
-                  e.buttons & kSecondaryStylusButton != 0,
-            ),
-            onPointerMove: (e) => controller.pointerMove(
-              page,
-              e.localPosition,
-              size,
-              pointer: e.pointer,
-              pressure: _pressure(e),
-            ),
-            onPointerUp: (e) =>
-                controller.pointerUp(pointer: e.pointer, kind: e.kind),
-            onPointerCancel: (e) =>
-                controller.pointerUp(pointer: e.pointer, kind: e.kind),
-            // Yalnız çizgiler değişince yeniden boyanır; görüntüleyici (PDF/slayt)
-            // yeniden kurulmaz — bu yüzden çizim sırasında jest bozulmaz.
-            // RepaintBoundary: tek bir çizgi uzarken üstteki PDF/slayt
-            // katmanının yeniden boyanmasına gerek yok.
-            child: RepaintBoundary(
-              child: ListenableBuilder(
-                listenable: controller,
-                builder: (context, _) {
-                  final painter = InkPainter(
-                    controller.ink,
-                    page,
-                    revision: controller.revision,
-                  );
-                  // Ekran okuyucu (F4.7): tuval kendisi okunamaz; en azından
-                  // sayfada çizim olduğu ve kaç çizgi olduğu söylenir.
-                  return Semantics(
-                    image: true,
-                    label: painter.strokes.isEmpty
-                        ? null
-                        : context.l10n.inkSemantics(painter.strokes.length),
-                    child: CustomPaint(painter: painter, size: Size.infinite),
-                  );
-                },
+          // Kalem HAVADA (S Pen yaklaşması): ucun kalınlığı/silgi halkası
+          // önizlenir. Fare de aynı yoldan gelir — onda önizleme yok.
+          void onHover(PointerEvent e) {
+            if (e.kind != PointerDeviceKind.stylus &&
+                e.kind != PointerDeviceKind.invertedStylus) {
+              return;
+            }
+            controller.hover.value = (page, e.localPosition);
+          }
+
+          void onExit(PointerEvent e) {
+            if (controller.hover.value?.$1 == page) {
+              controller.hover.value = null;
+            }
+          }
+
+          return MouseRegion(
+            opaque: false,
+            onHover: onHover,
+            onExit: onExit,
+            child: Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (e) => controller.pointerDown(
+                page,
+                e.localPosition,
+                size,
+                pointer: e.pointer,
+                kind: e.kind,
+                pressure: _pressure(e),
+                stylusEraser:
+                    e.kind == PointerDeviceKind.invertedStylus ||
+                    e.buttons & kSecondaryStylusButton != 0,
+              ),
+              onPointerMove: (e) => controller.pointerMove(
+                page,
+                e.localPosition,
+                size,
+                pointer: e.pointer,
+                pressure: _pressure(e),
+              ),
+              onPointerUp: (e) =>
+                  controller.pointerUp(pointer: e.pointer, kind: e.kind),
+              onPointerCancel: (e) =>
+                  controller.pointerUp(pointer: e.pointer, kind: e.kind),
+              // Yalnız çizgiler değişince yeniden boyanır; görüntüleyici (PDF/slayt)
+              // yeniden kurulmaz — bu yüzden çizim sırasında jest bozulmaz.
+              // RepaintBoundary: tek bir çizgi uzarken üstteki PDF/slayt
+              // katmanının yeniden boyanmasına gerek yok.
+              child: RepaintBoundary(
+                child: ListenableBuilder(
+                  listenable: controller,
+                  builder: (context, _) {
+                    final painter = InkPainter(
+                      controller.ink,
+                      page,
+                      revision: controller.revision,
+                    );
+                    // Ekran okuyucu (F4.7): tuval kendisi okunamaz; en azından
+                    // sayfada çizim olduğu ve kaç çizgi olduğu söylenir.
+                    return Semantics(
+                      image: true,
+                      label: painter.strokes.isEmpty
+                          ? null
+                          : context.l10n.inkSemantics(painter.strokes.length),
+                      child: CustomPaint(
+                        painter: painter,
+                        foregroundPainter: _InkOverlayPainter.of(
+                          controller,
+                          page,
+                          Theme.of(context).colorScheme.primary,
+                        ),
+                        size: Size.infinite,
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           );
@@ -658,6 +1053,128 @@ class InkPageLayer extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Kement çizgisi, seçimin çerçevesi ve kalemin havadaki ucunun önizlemesi.
+class _InkOverlayPainter extends CustomPainter {
+  _InkOverlayPainter({
+    required this.lassoPath,
+    required this.selection,
+    required this.accent,
+    required this.hover,
+  }) : super(repaint: hover);
+
+  /// Sayfanın o anki kement/seçim durumu; havadaki kalem kendi
+  /// dinleyicisiyle ([_HoverLook]) yalnız bu boyayıcıyı tazeler.
+  static _InkOverlayPainter? of(
+    InkController controller,
+    int page,
+    Color accent,
+  ) => _InkOverlayPainter(
+    lassoPath: controller.lassoPathOn(page),
+    selection: controller.selectionPage == page
+        ? controller.selectionBounds
+        : null,
+    accent: accent,
+    hover: _HoverLook(controller, page),
+  );
+
+  final List<double>? lassoPath;
+  final Rect? selection;
+  final Color accent;
+  final _HoverLook hover;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = lassoPath;
+    if (path != null && path.length >= 4) {
+      final p = Path()..moveTo(path[0] * size.width, path[1] * size.height);
+      for (var i = 2; i + 1 < path.length; i += 2) {
+        p.lineTo(path[i] * size.width, path[i + 1] * size.height);
+      }
+      canvas
+        ..drawPath(p, Paint()..color = accent.withValues(alpha: 0.08))
+        ..drawPath(
+          p,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5
+            ..color = accent,
+        );
+    }
+    final sel = selection;
+    if (sel != null) {
+      final rect = Rect.fromLTRB(
+        sel.left * size.width,
+        sel.top * size.height,
+        sel.right * size.width,
+        sel.bottom * size.height,
+      ).inflate(8);
+      canvas
+        ..drawRRect(
+          RRect.fromRectAndRadius(rect, const Radius.circular(6)),
+          Paint()..color = accent.withValues(alpha: 0.06),
+        )
+        ..drawRRect(
+          RRect.fromRectAndRadius(rect, const Radius.circular(6)),
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5
+            ..color = accent,
+        );
+    }
+    final at = hover.position;
+    if (at != null) {
+      final controller = hover.controller;
+      if (controller.eraser) {
+        canvas.drawCircle(
+          at,
+          InkController._eraseRadius * size.width,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.2
+            ..color = accent,
+        );
+      } else if (!controller.lasso) {
+        canvas.drawCircle(
+          at,
+          math.max(1.5, controller.widthPx / 2),
+          Paint()..color = controller.penColor,
+        );
+      }
+    }
+  }
+
+  @override
+  bool hitTest(Offset position) => false;
+
+  @override
+  bool shouldRepaint(_InkOverlayPainter old) =>
+      !identical(old.lassoPath, lassoPath) ||
+      (lassoPath?.length ?? 0) != (old.lassoPath?.length ?? 0) ||
+      old.selection != selection ||
+      old.accent != accent;
+}
+
+/// Havadaki kalemin bu sayfadaki yeri — yalnız önizleme yeniden boyanır.
+class _HoverLook extends Listenable {
+  _HoverLook(this.controller, this.page);
+
+  final InkController controller;
+  final int page;
+
+  Offset? get position {
+    final value = controller.hover.value;
+    return value != null && value.$1 == page ? value.$2 : null;
+  }
+
+  @override
+  void addListener(VoidCallback listener) =>
+      controller.hover.addListener(listener);
+
+  @override
+  void removeListener(VoidCallback listener) =>
+      controller.hover.removeListener(listener);
 }
 
 /// Çizim modunda ekranın altında beliren araç çubuğu: kalem türleri (tükenmez /
@@ -694,6 +1211,7 @@ class InkToolbar extends StatelessWidget {
     final selected =
         !controller.eraser &&
         !controller.arrow &&
+        !controller.lasso &&
         controller.shape == null &&
         controller.pen == pen;
     return IconButton(
@@ -810,6 +1328,8 @@ class InkToolbar extends StatelessWidget {
     // "Yalnız kalem"de parmak çizmiyor: "tek parmak çizer" ipucu yanlış olur.
     final hintText = hint == null
         ? null
+        : controller.lasso
+        ? l10n.inkLassoHint
         : controller.penOnly
         ? l10n.inkPenOnlyHint
         : hint;
@@ -865,6 +1385,30 @@ class InkToolbar extends StatelessWidget {
                             icon: const Icon(Icons.cleaning_services_outlined),
                             onPressed: () => controller.setEraser(true),
                           ),
+                          // KEMENT: çizgileri seç, taşı, boya, sil.
+                          IconButton(
+                            tooltip: l10n.inkLasso,
+                            isSelected: controller.lasso,
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.gesture),
+                            onPressed: () =>
+                                controller.setLasso(!controller.lasso),
+                          ),
+                          if (controller.hasSelection) ...[
+                            IconButton(
+                              tooltip: l10n.inkDeleteSelection,
+                              visualDensity: VisualDensity.compact,
+                              color: scheme.error,
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: controller.deleteSelection,
+                            ),
+                            IconButton(
+                              tooltip: l10n.inkClearSelection,
+                              visualDensity: VisualDensity.compact,
+                              icon: const Icon(Icons.deselect),
+                              onPressed: controller.clearSelection,
+                            ),
+                          ],
                           // YALNIZ KALEM: açıkken parmak kaydırır/yakınlaştırır.
                           IconButton(
                             tooltip: controller.penOnly
@@ -1105,6 +1649,23 @@ class InkSettingsSheet extends StatelessWidget {
               value: controller.pressure,
               onChanged: controller.setPressure,
             ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              secondary: const Icon(Icons.auto_fix_high),
+              title: Text(l10n.inkShapeSnapTitle),
+              subtitle: Text(l10n.inkShapeSnapInfo),
+              value: controller.shapeSnap,
+              onChanged: controller.setShapeSnap,
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              secondary: const Icon(Icons.cleaning_services_outlined),
+              title: Text(l10n.inkPartialEraserTitle),
+              subtitle: Text(l10n.inkPartialEraserInfo),
+              value: controller.partialEraser,
+              onChanged: controller.setPartialEraser,
+            ),
+            _AutoStylusSwitch(),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.edit_note),
@@ -1447,4 +2008,27 @@ class InkPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant InkPainter oldDelegate) =>
       oldDelegate.revision != revision || oldDelegate.page != page;
+}
+
+/// "Kalemi otomatik algıla" (cihaz tercihi, [InkToolMemory.autoStylus]):
+/// denetleyiciye bağlı değil — editör kalem dokunuşunda buna bakar.
+class _AutoStylusSwitch extends StatefulWidget {
+  @override
+  State<_AutoStylusSwitch> createState() => _AutoStylusSwitchState();
+}
+
+class _AutoStylusSwitchState extends State<_AutoStylusSwitch> {
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      secondary: const Icon(Icons.edit_note),
+      title: Text(l10n.inkAutoStylusTitle),
+      subtitle: Text(l10n.inkAutoStylusInfo),
+      value: InkToolMemory.autoStylus,
+      onChanged: (value) =>
+          setState(() => InkToolMemory.saveAutoStylus(value)),
+    );
+  }
 }

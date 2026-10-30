@@ -5,7 +5,6 @@ import 'package:flutter/gestures.dart'
     show
         LongPressGestureRecognizer,
         PointerDeviceKind,
-        TapGestureRecognizer,
         kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -368,20 +367,51 @@ class BubbleController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-10-30: "balonlu modda birçok sorun"):
+  /// karşılaştırma başlığı, aciliyeti, oku ve açık metnin biçimini (kalın,
+  /// italik, dolgu, hiza) atlıyordu. Tam ekranda yalnız başlığı yazılan,
+  /// "acil" işaretlenen ya da oku kaldırılan balon panoya dönünce "aynı"
+  /// sayılıyor, bölme ESKİ hâli göstermeye devam ediyordu (sonraki kayıt da
+  /// eskisini geri yazabiliyordu). Vurgu dikdörtgenleri de yalnız sayıyla
+  /// karşılaştırılıyordu.
   static bool _sameContent(List<PageBubble> a, List<PageBubble> b) {
     if (a.length != b.length) return false;
     for (var i = 0; i < a.length; i++) {
-      if (a[i].id != b[i].id ||
-          a[i].page != b[i].page ||
-          a[i].x != b[i].x ||
-          a[i].y != b[i].y ||
-          a[i].text != b[i].text ||
-          a[i].color != b[i].color ||
-          a[i].collapsed != b[i].collapsed ||
-          a[i].starred != b[i].starred ||
-          a[i].plain != b[i].plain ||
-          a[i].size != b[i].size ||
-          a[i].rects.length != b[i].rects.length) {
+      final x = a[i];
+      final y = b[i];
+      if (identical(x, y)) continue;
+      if (x.id != y.id ||
+          x.page != y.page ||
+          x.x != y.x ||
+          x.y != y.y ||
+          x.title != y.title ||
+          x.text != y.text ||
+          x.color != y.color ||
+          x.collapsed != y.collapsed ||
+          x.starred != y.starred ||
+          x.urgent != y.urgent ||
+          x.arrow != y.arrow ||
+          x.plain != y.plain ||
+          x.size != y.size ||
+          x.bold != y.bold ||
+          x.italic != y.italic ||
+          x.fill != y.fill ||
+          x.align != y.align ||
+          !_sameRects(x.rects, y.rects)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static bool _sameRects(List<PageBubbleRect> a, List<PageBubbleRect> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].left != b[i].left ||
+          a[i].top != b[i].top ||
+          a[i].right != b[i].right ||
+          a[i].bottom != b[i].bottom) {
         return false;
       }
     }
@@ -648,7 +678,7 @@ class BubbleController extends ChangeNotifier {
     _bubbles = next;
     justAdded = id;
     final target = byId(id);
-    editMode = edit || (target != null && target.text.trim().isEmpty);
+    editMode = edit || (target != null && target.text.trim().isEmpty && target.title.trim().isEmpty);
     if (changed) {
       _dirty = true;
       save();
@@ -660,10 +690,17 @@ class BubbleController extends ChangeNotifier {
   /// Boş kalmış SERBEST balonları atar — kullanıcı balon bırakıp hiçbir şey
   /// yazmadan çıkarsa sayfada anlamsız bir nokta kalmasın. Vurgular korunur:
   /// onların kendi başına bir anlamı var (metni işaretlemek).
+  ///
+  /// KÖK NEDEN (2026-10-30): yalnız GÖVDEYE bakılıyordu — başlığını yazıp
+  /// gövdesini boş bırakan balon ("Soru", "Önemli" gibi tek kelimelik
+  /// etiketler) kapanışta SİLİNİYORDU.
   void dropEmpty() {
     final kept = [
       for (final b in _bubbles)
-        if (b.text.trim().isNotEmpty || b.isHighlight) b,
+        if (b.text.trim().isNotEmpty ||
+            b.title.trim().isNotEmpty ||
+            b.isHighlight)
+          b,
     ];
     if (kept.length != _bubbles.length) {
       _bubbles = kept;
@@ -906,10 +943,10 @@ class _BubblePageLayerState extends State<BubblePageLayer> {
                     top: rect.top * size.height,
                     width: (rect.right - rect.left) * size.width,
                     height: (rect.bottom - rect.top) * size.height,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
+                    // Ham işaretçi (bkz. [TapToCollapse]): çift dokunuş
+                    // süresini beklemeden ANINDA açar.
+                    child: TapToCollapse(
                       onTap: () => controller.openOnly(bubble.id),
-                      child: const SizedBox.expand(),
                     ),
                   ),
             if (view.adding && !readOnly)

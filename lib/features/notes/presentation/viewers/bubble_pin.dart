@@ -434,47 +434,90 @@ class _BubbleDragAreaState extends State<BubbleDragArea> {
   /// parmaktan kat kat hızlı fırlıyordu.
   Offset _last = Offset.zero;
 
+  // ── ANINDA DOKUNUŞ ────────────────────────────────────────────────────
+  // KÖK NEDEN (kullanıcı bulgusu 2026-10-30, balonlu mod): dokunuş arenada
+  // `TapGestureRecognizer` ile alınıyordu; alttaki görüntüleyicinin ÇİFT
+  // dokunuş (yakınlaştırma) tanıyıcısı aynı arenada olduğundan tek dokunuş
+  // ancak çift dokunuş süresi (~300 ms) dolunca kabul ediliyor, balon
+  // gecikmeyle açılıyordu (açık balonu kapatmadaki gecikmenin aynısı — bkz.
+  // `TapToCollapse`). Dokunuş artık ham işaretçiden: taşımanın uzun basışından
+  // ([BubbleDragArea._pressDuration]) KISA, kıpırdamayan bir basış.
+  int? _tapPointer;
+  Offset _tapDown = Offset.zero;
+  DateTime _tapAt = DateTime.fromMillisecondsSinceEpoch(0);
+  bool _dragged = false;
+
+  static const _maxTap = Duration(milliseconds: 200);
+
+  void _onPointerDown(PointerDownEvent e) {
+    if (_tapPointer != null) {
+      _tapPointer = -1; // ikinci parmak: dokunuş değil
+      return;
+    }
+    _tapPointer = e.pointer;
+    _tapDown = e.position;
+    _tapAt = DateTime.now();
+    _dragged = false;
+  }
+
+  void _onPointerUp(PointerUpEvent e) {
+    final pointer = _tapPointer;
+    _tapPointer = null;
+    if (pointer != e.pointer || _dragged) return;
+    if ((e.position - _tapDown).distance > kTouchSlop) return;
+    if (DateTime.now().difference(_tapAt) > _maxTap) return;
+    widget.onTap?.call();
+  }
+
+  Widget _quickTap(Widget child) => widget.onTap == null
+      ? child
+      : Listener(
+          onPointerDown: _onPointerDown,
+          onPointerUp: _onPointerUp,
+          onPointerCancel: (_) => _tapPointer = null,
+          child: child,
+        );
+
   @override
   Widget build(BuildContext context) {
     if (!widget.enabled) {
-      return widget.onTap == null
-          ? widget.child
-          : GestureDetector(onTap: widget.onTap, child: widget.child);
+      return _quickTap(
+        widget.onTap == null
+            ? widget.child
+            : ColoredBox(color: Colors.transparent, child: widget.child),
+      );
     }
-    return RawGestureDetector(
-      behavior: HitTestBehavior.opaque,
-      gestures: <Type, GestureRecognizerFactory>{
-        if (widget.onTap != null)
-          TapGestureRecognizer:
-              GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
-                TapGestureRecognizer.new,
-                (instance) => instance.onTap = widget.onTap,
+    return _quickTap(
+      RawGestureDetector(
+        behavior: HitTestBehavior.opaque,
+        gestures: <Type, GestureRecognizerFactory>{
+          LongPressGestureRecognizer:
+              GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+                () => LongPressGestureRecognizer(
+                  duration: BubbleDragArea._pressDuration,
+                ),
+                (instance) => instance
+                  ..onLongPressStart = (_) {
+                    _last = Offset.zero;
+                    _dragged = true;
+                    widget.onDragStart();
+                  }
+                  ..onLongPressMoveUpdate = (d) {
+                    widget.onDragDelta(d.offsetFromOrigin - _last);
+                    _last = d.offsetFromOrigin;
+                  }
+                  ..onLongPressEnd = (_) {
+                    _last = Offset.zero;
+                    widget.onDragEnd();
+                  }
+                  ..onLongPressCancel = () {
+                    _last = Offset.zero;
+                    widget.onDragEnd();
+                  },
               ),
-        LongPressGestureRecognizer:
-            GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
-              () => LongPressGestureRecognizer(
-                duration: BubbleDragArea._pressDuration,
-              ),
-              (instance) => instance
-                ..onLongPressStart = (_) {
-                  _last = Offset.zero;
-                  widget.onDragStart();
-                }
-                ..onLongPressMoveUpdate = (d) {
-                  widget.onDragDelta(d.offsetFromOrigin - _last);
-                  _last = d.offsetFromOrigin;
-                }
-                ..onLongPressEnd = (_) {
-                  _last = Offset.zero;
-                  widget.onDragEnd();
-                }
-                ..onLongPressCancel = () {
-                  _last = Offset.zero;
-                  widget.onDragEnd();
-                },
-            ),
-      },
-      child: widget.child,
+        },
+        child: widget.child,
+      ),
     );
   }
 }

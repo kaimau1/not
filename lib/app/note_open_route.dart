@@ -212,20 +212,30 @@ class _ContainerTransformState extends State<_ContainerTransform> {
 
   void _onStatus(AnimationStatus status) {
     _snapshot.allowSnapshotting = status.isAnimating;
-    _snapAt = null;
+    if (!status.isAnimating) _refreshed = false;
   }
 
-  /// Görüntü geçiş boyunca donar; not içeriği geçiş sürerken gelirse
-  /// (ilk kare yükleniyor) eski kare kalmasın diye ilerleyişin her ~%30'unda
-  /// bir tazelenir — geçiş başına 2-3 rasterleştirme, kare başına değil.
-  double? _snapAt;
+  /// Görüntü geçiş boyunca donar. AÇILIŞTA not içeriği geçiş sürerken
+  /// gelebilir (ilk kare yükleniyor): içerik tam belirdiğinde ([_kRefreshAt])
+  /// görüntü BİR KEZ tazelenir. KAPANIŞTA hiç tazelenmez — sayfa artık
+  /// değişmiyor.
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-10-30: "not kapanırken küçülme
+  /// efektinde kasma var", "art arda açıp kapatınca kasmaya başlıyor"):
+  /// görüntü her iki yönde de ilerleyişin her ~%30'unda yeniden alınıyordu.
+  /// Her alım tam ekran editörün yeniden çizilip ekran boyunda bir dokuya
+  /// (≈10 MB) basılması demek; açılış + kapanış başına 5-6 alım, art arda
+  /// açıp kapatmada GPU belleğini çalkalıyor ve kareleri düşürüyordu.
+  bool _refreshed = false;
+
+  static const double _kRefreshAt = 0.45;
 
   void _refreshSnapshot(double t) {
-    final at = _snapAt;
-    if (at == null) {
-      _snapAt = t;
-    } else if ((t - at).abs() >= 0.3) {
-      _snapAt = t;
+    if (_refreshed || widget.animation.status != AnimationStatus.forward) {
+      return;
+    }
+    if (t >= _kRefreshAt) {
+      _refreshed = true;
       _snapshot.clear();
     }
   }
@@ -248,7 +258,12 @@ class _ContainerTransformState extends State<_ContainerTransform> {
       child: SnapshotWidget(
         controller: _snapshot,
         mode: SnapshotMode.permissive,
-        child: RepaintBoundary(child: widget.child),
+        child: RepaintBoundary(
+          child: _FrozenWhileClosing(
+            animation: widget.animation,
+            child: widget.child,
+          ),
+        ),
       ),
     );
   }
@@ -324,4 +339,50 @@ class _ContainerTransformState extends State<_ContainerTransform> {
       ],
     );
   }
+}
+
+/// Kapanış geçişi boyunca sayfanın gördüğü [MediaQuery] DONAR.
+///
+/// KÖK NEDEN (kapanış kasması): editörden çıkarken klavye de kapanıyor;
+/// klavyenin her karesinde `viewInsets` değişip bütün editör (Scaffold,
+/// gövde, maddeler, sabit bölme) yeniden yerleşiyordu — üstelik sayfa o
+/// sırada zaten donmuş bir görüntü olarak çiziliyor, yerleşimin hiçbir
+/// görünür etkisi yoktu. Ağacın şekli değişmez (MediaQuery hep burada); geri
+/// çekme jesti vazgeçilip geçiş ileri dönerse canlı değerlere dönülür.
+class _FrozenWhileClosing extends StatefulWidget {
+  const _FrozenWhileClosing({required this.animation, required this.child});
+
+  final Animation<double> animation;
+  final Widget child;
+
+  @override
+  State<_FrozenWhileClosing> createState() => _FrozenWhileClosingState();
+}
+
+class _FrozenWhileClosingState extends State<_FrozenWhileClosing> {
+  MediaQueryData? _frozen;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.animation.addStatusListener(_onStatus);
+  }
+
+  void _onStatus(AnimationStatus status) {
+    final closing = status == AnimationStatus.reverse;
+    if (closing == (_frozen != null)) return;
+    setState(() => _frozen = closing ? MediaQuery.of(context) : null);
+  }
+
+  @override
+  void dispose() {
+    widget.animation.removeStatusListener(_onStatus);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => MediaQuery(
+    data: _frozen ?? MediaQuery.of(context),
+    child: widget.child,
+  );
 }

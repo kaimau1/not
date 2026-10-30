@@ -85,21 +85,35 @@ class _PdfNotePaneState extends State<PdfNotePane> {
   /// gibi kayar. Kullanıcı kalemi kendisi açtığı için sürpriz yok.
   late final InkController _ink = InkController(
     initial: widget.attachment.ink,
-    onChanged: (strokes) =>
-        widget.onAttachmentChanged(widget.attachment.copyWith(ink: strokes)),
+    onChanged: (strokes) => widget.onAttachmentChanged(_live(ink: strokes)),
   );
+
+  /// Ekin GÜNCEL hâli: çizim ve balon yazımları HER İKİ denetleyicinin canlı
+  /// durumunu taşır.
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-10-30: "balonlu modda birçok sorun"):
+  /// yazımlar `widget.attachment.copyWith(...)` ile kuruluyordu. Editör yeni
+  /// eki ancak SONRAKİ karede geri verdiği için aynı karede gelen ikinci
+  /// yazım ilkini eziyordu — gizli balonların üstüne basılı tutup balon
+  /// bırakmak önce "göster"i, hemen ardından ESKİ "gizli" bayrağıyla yeni
+  /// balonu yazıyordu (not yeniden açılınca balonlar gizli); balon kaydından
+  /// hemen sonra çizilen çizgi de balonu bir önceki hâline döndürebiliyordu.
+  /// Tam ekran görüntüleyiciler bunu `_current` ile zaten çözmüştü.
+  Attachment _live({List<InkStroke>? ink, List<PageBubble>? bubbles}) =>
+      widget.attachment.copyWith(
+        ink: ink ?? _ink.ink,
+        bubbles: bubbles ?? _bubbles.bubbles,
+        bubblesHidden: _bubbles.hidden,
+      );
 
   /// Balonlar BURADA da düzenlenir (çizimden farkı bu): balon metin alanıdır,
   /// küçük bölmede de tıklanıp yazılabilir ve kullanıcı belgenin üzerinde
   /// planını tam ekrana geçmeden kurar.
   late final BubbleController _bubbles = BubbleController(
     initial: widget.attachment.bubbles,
-    onChanged: (list) =>
-        widget.onAttachmentChanged(widget.attachment.copyWith(bubbles: list)),
+    onChanged: (list) => widget.onAttachmentChanged(_live(bubbles: list)),
     hidden: widget.attachment.bubblesHidden,
-    onHiddenChanged: (hidden) => widget.onAttachmentChanged(
-      widget.attachment.copyWith(bubblesHidden: hidden),
-    ),
+    onHiddenChanged: (_) => widget.onAttachmentChanged(_live()),
   );
 
   /// Balon yazılırken alt not alanı gizlenir — iki bölme + klavye aynı anda
@@ -162,14 +176,21 @@ class _PdfNotePaneState extends State<PdfNotePane> {
     super.dispose();
   }
 
-  Future<void> _openFullScreen() => Navigator.of(context).push(
-    MediaRoute<void>(
-      builder: (_) => PdfViewerScreen(
-        attachment: widget.attachment,
-        onChanged: widget.onAttachmentChanged,
+  /// Tam ekran bölmenin CANLI hâliyle açılır: yazılırken henüz kaydedilmemiş
+  /// balon metni önce kaydedilir (kayıt odak düşünce yapılıyordu — yazma
+  /// kartı açıkken tam ekrana geçince son yazılanlar tam ekranda yoktu ve
+  /// dönüşte bölmenin üstüne eski hâl yazılıyordu).
+  Future<void> _openFullScreen() {
+    _bubbles.save();
+    return Navigator.of(context).push(
+      MediaRoute<void>(
+        builder: (_) => PdfViewerScreen(
+          attachment: _live(),
+          onChanged: widget.onAttachmentChanged,
+        ),
       ),
-    ),
-  );
+    );
+  }
 
   @override
   Widget build(BuildContext context) => PageNotePane(

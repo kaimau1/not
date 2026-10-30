@@ -2805,5 +2805,16 @@
   "youTubeEmbedInNote": "Nota göm",
   "goToLink": "Bağlantıya git",
   "noteFlatColors": "Düz renkler",
-  "youTubeEmbedded": "Video nota gömüldü"
+  "youTubeEmbedded": "Video nota gömüldü",
+  "inkLasso": "Kement (seç ve taşı)",
+  "inkLassoHint": "Çizgilerin çevresini çiz: seçilenler taşınır, renk seçmek boyar.",
+  "inkDeleteSelection": "Seçileni sil",
+  "inkClearSelection": "Seçimi bırak",
+  "inkShapeSnapTitle": "Basılı tutunca şekle dönüştür",
+  "inkShapeSnapInfo": "Çizginin sonunda kalemi kısa süre kıpırdatmadan tut: düz çizgi, daire ya da dikdörtgen olur.",
+  "inkPartialEraserTitle": "Kısmi silgi",
+  "inkPartialEraserInfo": "Silgi yalnız değdiği kısmı siler; kapalıyken bütün çizgiyi siler.",
+  "inkAutoStylusTitle": "Kalemi otomatik algıla",
+  "inkAutoStylusInfo": "Kalem nota değince yazma kipi kendiliğinden açılır: PDF ve sunumda kalem, metin notunda el yazısı.",
+  "inkStylusDetected": "Kalem algılandı — yazma kipi açıldı"
 }

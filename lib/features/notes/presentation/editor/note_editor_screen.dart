@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 // yerini ölçmek için doğrudan gerekiyor (bkz. _caretPageTop).
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -138,6 +139,7 @@ import '../viewers/image_crop.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
+import '../viewers/ink_tools.dart';
 import '../viewers/video_viewer.dart';
 import '../viewers/text_recognize_screen.dart';
 import '../viewers/transcript_screen.dart';
@@ -2099,6 +2101,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// iki parmak gezinir (kullanıcı isteği 2026-08-08).
   bool _penMode = false;
 
+  /// Kalem dokunuşu el yazısı tuvalini açıyor (ikinci dokunuş ikinci tuval
+  /// açmasın — bkz. [_onContentPointerDown]).
+  bool _stylusOpening = false;
+
   void _setImmersiveBubble(bool value) {
     if (_immersiveBubble == value || !mounted) return;
     setState(() => _immersiveBubble = value);
@@ -2468,6 +2474,40 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         Expanded(child: pane),
       ],
     );
+  }
+
+  /// **KALEMİ OTOMATİK ALGILA** (kullanıcı isteği 2026-10-30: "otomatik
+  /// kalem algılama olsun", Samsung Notes gibi): kalem (S Pen vb.) notun
+  /// içeriğine değince yazma kipi kendiliğinden açılır — belge notunda
+  /// (PDF/sunum) sayfanın üstüne yazma kalemi, metin/liste notunda el yazısı
+  /// tuvali. Ayar kalem ayarlarında ([InkToolMemory.autoStylus]); salt okunur
+  /// notta, kalem kipi zaten açıkken ve yazma kartı açıkken çalışmaz. Kalemle
+  /// araç çubuklarına dokunmak etkilenmez: dinleyici yalnız içerik alanında.
+  void _onContentPointerDown(PointerDownEvent event) {
+    if (event.kind != PointerDeviceKind.stylus &&
+        event.kind != PointerDeviceKind.invertedStylus) {
+      return;
+    }
+    final note = _note;
+    if (note == null || _readOnly || !InkToolMemory.autoStylus) return;
+    if (_stylusOpening) return;
+    // Yalnız bu ekran en üstteyken (levha/menü açıkken dokunuş onlarındır).
+    if (ModalRoute.of(context)?.isCurrent == false) return;
+    final document =
+        note.type == NoteType.pdf || note.type == NoteType.slides;
+    if (document) {
+      // Balona yazılırken kalem kartın alanlarına dokunuyor olabilir.
+      if (_penMode || _immersiveBubble) return;
+      setState(() => _penMode = true);
+      _showSnack(context.l10n.inkStylusDetected);
+      return;
+    }
+    // Metin/liste notu: imleç koymak için kalemle alana dokunan da olabilir
+    // — klavye açıkken (yazıyor) el yazısına geçilmez.
+    if (MediaQuery.viewInsetsOf(context).bottom > 0) return;
+    _stylusOpening = true;
+    HapticFeedback.selectionClick();
+    unawaited(_addDrawing().whenComplete(() => _stylusOpening = false));
   }
 
   @override
@@ -4187,7 +4227,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               child: Column(
                 children: [
                   Expanded(
-                    child: SafeArea(
+                    // KALEMİ OTOMATİK ALGILA (bkz. [_onContentPointerDown]).
+                    child: Listener(
+                      onPointerDown: _onContentPointerDown,
+                      child: SafeArea(
                       bottom: false,
                       // ÇERÇEVE EDİTÖRDE ÇİZİLMEZ (kullanıcı isteği
                       // 2026-10-20: "çerçeve sadece dashboarda görünsün"):
@@ -4208,6 +4251,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           ),
                         ),
                       ),
+                    ),
                     ),
                   ),
                   // KLAVYE: Scaffold yalnız GÖVDEYİ klavyeye göre kısaltır, alt

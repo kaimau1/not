@@ -2171,5 +2171,16 @@
   "youTubeEmbedInNote": "Embed in note",
   "goToLink": "Go to link",
   "noteFlatColors": "Plain colors",
-  "youTubeEmbedded": "Video embedded in the note"
+  "youTubeEmbedded": "Video embedded in the note",
+  "inkLasso": "Lasso (select and move)",
+  "inkLassoHint": "Draw around strokes: drag to move them, pick a color to recolor.",
+  "inkDeleteSelection": "Delete selection",
+  "inkClearSelection": "Deselect",
+  "inkShapeSnapTitle": "Hold to snap to shape",
+  "inkShapeSnapInfo": "Hold the pen still at the end of a stroke: it becomes a straight line, circle or rectangle.",
+  "inkPartialEraserTitle": "Partial eraser",
+  "inkPartialEraserInfo": "The eraser removes only what it touches; when off it removes the whole stroke.",
+  "inkAutoStylusTitle": "Detect pen automatically",
+  "inkAutoStylusInfo": "Touching the note with a pen turns on writing: pen mode on PDFs and slides, handwriting on text notes.",
+  "inkStylusDetected": "Pen detected — writing mode on"
 }

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -8,7 +10,7 @@ import '../viewers/ink_pen.dart';
 import '../viewers/ink_tools.dart';
 
 /// Tepsideki araçlar (soldan sağa).
-enum PenTrayTool { shapes, eraser, pen, marker, highlighter }
+enum PenTrayTool { lasso, shapes, eraser, pen, marker, highlighter }
 
 /// **KALEM TEPSİSİ** (kullanıcı isteği 2026-10-28: "örnek çizim ekranı daha
 /// görsel olarak bütün ve menüsü güzel"). Araçlar simge değil, tepside
@@ -32,6 +34,7 @@ class _PenTrayState extends State<PenTray> {
   InkController get _ink => widget.controller;
 
   PenTrayTool get _current {
+    if (_ink.lasso) return PenTrayTool.lasso;
     if (_ink.eraser) return PenTrayTool.eraser;
     if (_ink.arrow || _ink.shape != null) return PenTrayTool.shapes;
     return switch (_ink.pen) {
@@ -48,6 +51,8 @@ class _PenTrayState extends State<PenTray> {
       return;
     }
     switch (tool) {
+      case PenTrayTool.lasso:
+        _ink.setLasso(true);
       case PenTrayTool.shapes:
         // Son şekil hatırlanmıyor: ok en sık kullanılanı ("şuraya bak").
         _ink.setArrow(true);
@@ -75,6 +80,7 @@ class _PenTrayState extends State<PenTray> {
     final l10n = context.l10n;
     final current = _current;
     final labels = {
+      PenTrayTool.lasso: l10n.inkLasso,
       PenTrayTool.shapes: l10n.inkShapes,
       PenTrayTool.eraser: l10n.eraser,
       PenTrayTool.pen: l10n.penBallpoint,
@@ -297,7 +303,34 @@ class _ToolPainter extends CustomPainter {
         _eraser(canvas, size, cx);
       case PenTrayTool.shapes:
         _setSquare(canvas, size, cx);
+      case PenTrayTool.lasso:
+        _lasso(canvas, size, cx);
     }
+  }
+
+  /// Kement: kesik çizgili ilmek ve sapı.
+  void _lasso(Canvas c, Size s, double cx) {
+    final handle = Rect.fromLTRB(cx - 5, 46, cx + 5, s.height + 4);
+    c.drawRRect(
+      RRect.fromRectAndCorners(
+        handle,
+        topLeft: const Radius.circular(3),
+        topRight: const Radius.circular(3),
+      ),
+      _cylinder(handle),
+    );
+    final loop = Paint()
+      ..color = ink.withAlpha(255)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round;
+    const dashes = 12;
+    final rect = Rect.fromCenter(center: Offset(cx, 26), width: 32, height: 24);
+    for (var i = 0; i < dashes; i++) {
+      final start = 2 * math.pi * i / dashes;
+      c.drawArc(rect, start, math.pi / dashes, false, loop);
+    }
+    c.drawLine(Offset(cx, 38), Offset(cx, 47), loop);
   }
 
   void _ballpoint(Canvas c, Size s, double cx) {
@@ -566,7 +599,36 @@ class _Options extends StatelessWidget {
                 ],
               ),
             ),
-          if (tool == PenTrayTool.eraser)
+          if (tool == PenTrayTool.lasso)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: controller.hasSelection
+                  ? Wrap(
+                      spacing: 8,
+                      children: [
+                        TextButton.icon(
+                          icon: const Icon(Icons.delete_outline),
+                          label: Text(l10n.inkDeleteSelection),
+                          style: TextButton.styleFrom(
+                            foregroundColor: scheme.error,
+                          ),
+                          onPressed: controller.deleteSelection,
+                        ),
+                        TextButton.icon(
+                          icon: const Icon(Icons.deselect),
+                          label: Text(l10n.inkClearSelection),
+                          onPressed: controller.clearSelection,
+                        ),
+                      ],
+                    )
+                  : Text(
+                      l10n.inkLassoHint,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+            ),
+          if (tool == PenTrayTool.eraser) ...[
             Align(
               alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
@@ -574,7 +636,17 @@ class _Options extends StatelessWidget {
                 label: Text(l10n.clearInk),
                 onPressed: controller.ink.isEmpty ? null : controller.clear,
               ),
-            )
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              title: Text(l10n.inkPartialEraserTitle),
+              subtitle: Text(l10n.inkPartialEraserInfo),
+              value: controller.partialEraser,
+              onChanged: controller.setPartialEraser,
+            ),
+          ] else if (tool == PenTrayTool.lasso && !controller.hasSelection)
+            const SizedBox.shrink()
           else ...[
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,

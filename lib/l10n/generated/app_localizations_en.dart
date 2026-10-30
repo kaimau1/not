@@ -5875,4 +5875,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get youTubeEmbedded => 'Video embedded in the note';
+
+  @override
+  String get inkLasso => 'Lasso (select and move)';
+
+  @override
+  String get inkLassoHint =>
+      'Draw around strokes: drag to move them, pick a color to recolor.';
+
+  @override
+  String get inkDeleteSelection => 'Delete selection';
+
+  @override
+  String get inkClearSelection => 'Deselect';
+
+  @override
+  String get inkShapeSnapTitle => 'Hold to snap to shape';
+
+  @override
+  String get inkShapeSnapInfo =>
+      'Hold the pen still at the end of a stroke: it becomes a straight line, circle or rectangle.';
+
+  @override
+  String get inkPartialEraserTitle => 'Partial eraser';
+
+  @override
+  String get inkPartialEraserInfo =>
+      'The eraser removes only what it touches; when off it removes the whole stroke.';
+
+  @override
+  String get inkAutoStylusTitle => 'Detect pen automatically';
+
+  @override
+  String get inkAutoStylusInfo =>
+      'Touching the note with a pen turns on writing: pen mode on PDFs and slides, handwriting on text notes.';
+
+  @override
+  String get inkStylusDetected => 'Pen detected — writing mode on';
 }

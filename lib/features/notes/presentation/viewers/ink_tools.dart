@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart' show Offset, Rect;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Çizim aracının ŞEKİL kipleri. Ok ([InkController.arrow]) ayrı kalır —
@@ -49,6 +50,96 @@ List<double> inkShapePoints(
   }
 }
 
+/// **BASILI TUTUNCA ŞEKLE DÖNÜŞTÜR** (kullanıcı isteği 2026-10-30: "kalem
+/// modu üzerine çalış, Samsung Notes gibi özelliklerimiz olsun"). Elle
+/// çizilen çizginin sonunda kalem/parmak kısa süre kıpırdamadan tutulursa
+/// çizgi tanınan şekle oturur: düz çizgi, dikdörtgen ya da elips.
+///
+/// [points] EKRAN (piksel) uzayında olmalı — oranlı uzayda sayfanın eni ve
+/// boyu ayrı ölçeklendiği için daire elips, kare dikdörtgen görünürdü.
+/// Tanınmazsa null.
+({InkShape shape, Offset a, Offset b})? recognizeInkShape(
+  List<Offset> points,
+) {
+  if (points.length < 6) return null;
+  var length = 0.0;
+  var left = double.infinity, top = double.infinity;
+  var right = -double.infinity, bottom = -double.infinity;
+  for (var i = 0; i < points.length; i++) {
+    final p = points[i];
+    if (i > 0) length += (p - points[i - 1]).distance;
+    left = math.min(left, p.dx);
+    top = math.min(top, p.dy);
+    right = math.max(right, p.dx);
+    bottom = math.max(bottom, p.dy);
+  }
+  if (length < 24) return null;
+  final first = points.first;
+  final last = points.last;
+  final chord = (last - first).distance;
+
+  // DÜZ ÇİZGİ: her nokta iki uçtan geçen doğruya yakın.
+  if (chord >= 20 && chord >= length * 0.85) {
+    final dir = (last - first) / chord;
+    var deviation = 0.0;
+    for (final p in points) {
+      final d = p - first;
+      deviation = math.max(deviation, (d.dx * dir.dy - d.dy * dir.dx).abs());
+    }
+    if (deviation <= math.max(6.0, chord * 0.06)) {
+      return (shape: InkShape.line, a: first, b: last);
+    }
+    return null;
+  }
+
+  // KAPALI şekiller: uçlar birbirine yakın olmalı.
+  final box = Rect.fromLTRB(left, top, right, bottom);
+  if (box.width < 16 || box.height < 16) return null;
+  if (chord > length * 0.22) return null;
+  final cx = box.center.dx, cy = box.center.dy;
+  final rx = box.width / 2, ry = box.height / 2;
+  var ellipseError = 0.0;
+  var rectError = 0.0;
+  final shortSide = math.min(box.width, box.height);
+  for (final p in points) {
+    final nx = (p.dx - cx) / rx;
+    final ny = (p.dy - cy) / ry;
+    ellipseError += (math.sqrt(nx * nx + ny * ny) - 1).abs();
+    final edge = math.min(
+      math.min(p.dx - left, right - p.dx),
+      math.min(p.dy - top, bottom - p.dy),
+    );
+    rectError += edge.abs() / shortSide;
+  }
+  ellipseError /= points.length;
+  rectError /= points.length;
+  // Daire köşegenlerde kutunun kenarından uzaklaşır (dikdörtgen hatası
+  // büyür); kare köşelerinde elipsin dışına taşar (elips hatası büyür).
+  if (ellipseError < 0.09 && ellipseError <= rectError * 1.6) {
+    return (shape: InkShape.ellipse, a: box.topLeft, b: box.bottomRight);
+  }
+  if (rectError < 0.06) {
+    return (shape: InkShape.rectangle, a: box.topLeft, b: box.bottomRight);
+  }
+  return null;
+}
+
+/// Nokta çokgenin içinde mi? Kement (seçim çemberi) çokgeni için çift-tek
+/// kuralı; [polygon] düzleştirilmiş [x1, y1, x2, y2, ...].
+bool inkPointInPolygon(double x, double y, List<double> polygon) {
+  var inside = false;
+  final n = polygon.length ~/ 2;
+  for (var i = 0, j = n - 1; i < n; j = i++) {
+    final xi = polygon[2 * i], yi = polygon[2 * i + 1];
+    final xj = polygon[2 * j], yj = polygon[2 * j + 1];
+    if ((yi > y) != (yj > y) &&
+        x < (xj - xi) * (y - yi) / (yj - yi) + xi) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
 /// **KALEM TERCİHLERİNİN HAFIZASI** (kullanıcı isteği 2026-10-23: "pratiklik
 /// şart"): son seçilen kalem türü, renk, kalınlık, şeffaflık, "yalnız kalemle
 /// yaz" ve son kullanılan renkler. Her çizim ekranı (el yazısı, PDF, slayt,
@@ -68,6 +159,19 @@ class InkToolMemory {
   static const _kWidth = 'ink_width';
   static const _kOpacity = 'ink_opacity';
   static const _kRecent = 'ink_recent_colors';
+  static const _kShapeSnap = 'ink_shape_snap';
+  static const _kPartialEraser = 'ink_partial_eraser';
+  static const _kAutoStylus = 'ink_auto_stylus';
+
+  /// Basılı tutunca şekle dönüştür ([recognizeInkShape]).
+  static bool shapeSnap = true;
+
+  /// Silgi çizginin YALNIZ değdiği kısmını siler (kapalıyken bütün çizgi).
+  static bool partialEraser = false;
+
+  /// **KALEMİ OTOMATİK ALGILA**: kalem (S Pen vb.) nota değince yazma kipi
+  /// kendiliğinden açılır — PDF/slaytta kalem kipi, metin notunda el yazısı.
+  static bool autoStylus = true;
 
   /// "Yalnız kalemle yaz": parmak çizmez; kaydırır ve yakınlaştırır.
   static bool penOnly = false;
@@ -98,6 +202,9 @@ class InkToolMemory {
     pen = prefs.getInt(_kPen);
     width = prefs.getDouble(_kWidth);
     opacity = (prefs.getDouble(_kOpacity) ?? 1).clamp(0.1, 1.0).toDouble();
+    shapeSnap = prefs.getBool(_kShapeSnap) ?? true;
+    partialEraser = prefs.getBool(_kPartialEraser) ?? false;
+    autoStylus = prefs.getBool(_kAutoStylus) ?? true;
     recentColors = [
       for (final s in prefs.getStringList(_kRecent) ?? const <String>[])
         ?int.tryParse(s),
@@ -109,6 +216,21 @@ class InkToolMemory {
     if (chosen) penOnlyChosen = true;
     _prefs?.setBool(_kPenOnly, value);
     if (chosen) _prefs?.setBool(_kPenOnlyChosen, true);
+  }
+
+  static void saveShapeSnap(bool value) {
+    shapeSnap = value;
+    _prefs?.setBool(_kShapeSnap, value);
+  }
+
+  static void savePartialEraser(bool value) {
+    partialEraser = value;
+    _prefs?.setBool(_kPartialEraser, value);
+  }
+
+  static void saveAutoStylus(bool value) {
+    autoStylus = value;
+    _prefs?.setBool(_kAutoStylus, value);
   }
 
   static void savePressure(bool value) {
@@ -154,5 +276,8 @@ class InkToolMemory {
     width = null;
     opacity = 1;
     recentColors = [];
+    shapeSnap = true;
+    partialEraser = false;
+    autoStylus = true;
   }
 }

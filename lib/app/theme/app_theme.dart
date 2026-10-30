@@ -87,7 +87,33 @@ abstract final class AppTheme {
     if (offWhite) {
       // Kanallar arası fark ~6-8 birim: göz "beyaz" görür, ekran parlamaz;
       // kartlar (container) zeminden bir-iki ton koyu, ince ayrışır.
+      //
+      // VURGU SICAK GRAFİT (kullanıcı bulgusu 2026-10-30: "kırık beyaz
+      // temada mavi detaylar güzel değil"). Arduvaz tohumu HCT'de mavi
+      // birincil/ikincil/üçüncül üretiyordu; ılık beyaz zeminde soğuk mavi
+      // düğme, seçili çip ve imleç yabancı duruyordu. Bütün vurgu rolleri
+      // zeminle aynı ılık aileden (grafit, toprak, bronz) elle verilir.
       scheme = scheme.copyWith(
+        primary: const Color(0xFF4A453F),
+        onPrimary: const Color(0xFFFFFFFF),
+        primaryContainer: const Color(0xFFE5DFD5),
+        onPrimaryContainer: const Color(0xFF26221E),
+        secondary: const Color(0xFF6B6358),
+        onSecondary: const Color(0xFFFFFFFF),
+        secondaryContainer: const Color(0xFFE8E2D7),
+        onSecondaryContainer: const Color(0xFF2C2823),
+        tertiary: const Color(0xFF7D6449),
+        onTertiary: const Color(0xFFFFFFFF),
+        tertiaryContainer: const Color(0xFFF0E2D0),
+        onTertiaryContainer: const Color(0xFF2F2215),
+        onSurface: const Color(0xFF1E1C19),
+        onSurfaceVariant: const Color(0xFF4E4943),
+        outline: const Color(0xFF7E776D),
+        outlineVariant: const Color(0xFFD3CDC2),
+        inverseSurface: const Color(0xFF33302C),
+        onInverseSurface: const Color(0xFFF5F1EA),
+        inversePrimary: const Color(0xFFD4CCBF),
+        surfaceTint: const Color(0xFF4A453F),
         surface: const Color(0xFFF8F6F1),
         surfaceContainerLowest: const Color(0xFFFDFCF9),
         surfaceContainerLow: const Color(0xFFF2EFE9),

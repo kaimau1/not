@@ -5856,4 +5856,41 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get youTubeEmbedded => 'Video nota gömüldü';
+
+  @override
+  String get inkLasso => 'Kement (seç ve taşı)';
+
+  @override
+  String get inkLassoHint =>
+      'Çizgilerin çevresini çiz: seçilenler taşınır, renk seçmek boyar.';
+
+  @override
+  String get inkDeleteSelection => 'Seçileni sil';
+
+  @override
+  String get inkClearSelection => 'Seçimi bırak';
+
+  @override
+  String get inkShapeSnapTitle => 'Basılı tutunca şekle dönüştür';
+
+  @override
+  String get inkShapeSnapInfo =>
+      'Çizginin sonunda kalemi kısa süre kıpırdatmadan tut: düz çizgi, daire ya da dikdörtgen olur.';
+
+  @override
+  String get inkPartialEraserTitle => 'Kısmi silgi';
+
+  @override
+  String get inkPartialEraserInfo =>
+      'Silgi yalnız değdiği kısmı siler; kapalıyken bütün çizgiyi siler.';
+
+  @override
+  String get inkAutoStylusTitle => 'Kalemi otomatik algıla';
+
+  @override
+  String get inkAutoStylusInfo =>
+      'Kalem nota değince yazma kipi kendiliğinden açılır: PDF ve sunumda kalem, metin notunda el yazısı.';
+
+  @override
+  String get inkStylusDetected => 'Kalem algılandı — yazma kipi açıldı';
 }

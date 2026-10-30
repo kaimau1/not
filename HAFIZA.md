@@ -406,6 +406,20 @@ eskisini arşive taşıma.
   (`displayColor`), veri değişmez. Yazma kartı (`_KeyboardFollow`) gezinme
   çubuğunun da üstünde.
 
+- **Bölme yazımları CANLI ek taşır (2026-10-30):** `PdfNotePane`/
+  `SlideNotePane._live()` ve `PdfPageBox` çizim + balon + gizli bayrağını
+  denetleyicilerin O ANKİ hâlinden kurar. TUZAK: `widget.attachment.copyWith`
+  bayattır (editör yeni eki sonraki karede verir) — gizli balonların üstüne
+  basılı tutup bırakmak "göster"i eski bayrakla geri eziyordu. Tam ekran
+  görüntüleyiciler aynı işi `_current` ile yapar. Tam ekrana geçerken önce
+  `_bubbles.save()` + `_live()`. Bölmenin `dispose`unda kayıt YAPMA (kilitli
+  ağaçta editörün setState'i patlar).
+- `BubbleController._sameContent` başlık/acil/ok/biçim/dikdörtgenleri de
+  karşılaştırır (eksikti: tam ekrandan dönen başlık değişikliği yutuluyordu);
+  `dropEmpty` başlığı olan balonu silmez. Tutamaç ve vurgu dokunuşu ham
+  işaretçiyle (`BubbleDragArea._quickTap` < 200 ms, vurguda `TapToCollapse`) —
+  arenadaki tap çift dokunuş yüzünden ~300 ms gecikiyordu.
+
 ## Ses ve yapay zekâ
 - Seslendirme TEK kapı `SpeechService` (F3.9): motor ayardan (cihaz / AI /
   Antalia); seçilen düşerse cihaza geçer ve sebebi söyler. Ayarlardaki
@@ -493,10 +507,23 @@ eskisini arşive taşıma.
   seçilmediyse). Kalem değerken parmaklar (avuç) gezinmede yok sayılır.
   Yan düğme / ters uç = geçici silgi. Geri al/yinele jest başına anlık
   liste (silinen de geri gelir). El yazısı tuvali iki parmakla yakınlaşır.
+- **Kalem kipi S Note araçları (2026-10-30):** basılı tut → şekil
+  (`recognizeInkShape`, PİKSEL uzayında; 550 ms kıpırtısız, `shapeSnap`),
+  kement (`InkController.lasso`: seç/taşı/renk seçince boya/sil; araç değişince
+  seçim düşer), kısmi silgi (`partialEraser`, çizgi bölünür; ok bütün silinir),
+  havadaki kalem önizlemesi (`hover`, `_InkOverlayPainter`). **Kalemi otomatik
+  algıla** (`InkToolMemory.autoStylus`, varsayılan açık): editör içerik
+  alanındaki `Listener` — belge notunda `_penMode` açılır, metin notunda
+  (klavye kapalıysa) el yazısı tuvali. Tepside `PenTrayTool.lasso` en başta.
 - Görüntüleyicilerde "Eki kopyala" (`CopyAttachmentButton`): uygulama içi
   pano + görselde sistem panosu.
 - Uzun listeli not açılışı: `ItemsEditor` shrinkWrap'te HEPSİNİ kurar →
   `_rowBudget` ilk karede 18 madde, 380 ms sonra kare başına 14.
+- **İşaretli madde soluk hâli KATMANSIZ (2026-10-30):** satırda
+  `AnimatedOpacity(0.55)` vardı = madde başına kalıcı OpacityLayer
+  (saveLayer); çok işaretli notta kaydırma/geçiş kasıyordu. Solma renk
+  alfasında (`_kCheckedDim`, `_dimmed`). Listede kalıcı 0–1 opaklık KULLANMA
+  (test: `balloon_list_theme_fixes_test`).
 - Dinleme alanları TEK KART `ListeningCard` (`listening_visuals.dart`):
   editör diktesi ve sesli yakalama levhası aynı kart (~120 px). Başlık
   satırına düğme: `ListeningHeaderButton` (34 dp; M3 IconButton 48 dp yiyip
@@ -526,10 +553,16 @@ eskisini arşive taşıma.
   dönüşüm/kırpma değerleri değişir) — yapı değişirse editörün durumu
   sıfırlanır. Temanın geçişi yine sarılır (üstüne binen ekran, kenardan geri
   çekme jesti). **Kasma (2026-10-29):** geçiş boyunca sayfa `SnapshotWidget`
-  (permissive) ile görüntüye alınır, ilerleyişin ~%30'unda bir tazelenir;
-  büyüyen kutuda bulanık gölge YOK (tam ekran blur her kare pahalıydı).
+  (permissive) ile görüntüye alınır; büyüyen kutuda bulanık gölge YOK.
+  **2026-10-30:** görüntü yalnız AÇILIŞTA bir kez (t ≥ 0,45) tazelenir,
+  kapanışta hiç (her alım ≈10 MB doku; art arda aç-kapa GPU belleğini
+  çalkalıyordu). Kapanış boyunca sayfanın `MediaQuery`si donar
+  (`_FrozenWhileClosing`) — klavye kapanırken editör kare kare yeniden
+  yerleşiyordu.
 - **Genel tema varsayılanı KIRIK BEYAZ (2026-10-29):** `AppThemeChoice.offWhite`
-  (`AppTheme.offWhite`, arduvaz tohum, ılık beyaz yüzeyler); kayıtlı seçim
+  (`AppTheme.offWhite`, ılık beyaz yüzeyler; 2026-10-30'dan beri vurgu
+  rolleri ELLE sıcak grafit/toprak/bronz — arduvaz tohumu mavi üretiyordu,
+  "mavi detaylar güzel değil"); kayıtlı seçim
   korunur. Arama kutusunun tamamı dokunulur (alan dikey dolgulu + kutuya
   dokunmak odak verir).
 - **Not teması (2026-10-28):** palet (üst çubuk `UiItem.topTheme`, biçim

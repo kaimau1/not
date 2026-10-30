@@ -10501,6 +10501,72 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Video nota gömüldü'**
   String get youTubeEmbedded;
+
+  /// No description provided for @inkLasso.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kement (seç ve taşı)'**
+  String get inkLasso;
+
+  /// No description provided for @inkLassoHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizgilerin çevresini çiz: seçilenler taşınır, renk seçmek boyar.'**
+  String get inkLassoHint;
+
+  /// No description provided for @inkDeleteSelection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçileni sil'**
+  String get inkDeleteSelection;
+
+  /// No description provided for @inkClearSelection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçimi bırak'**
+  String get inkClearSelection;
+
+  /// No description provided for @inkShapeSnapTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Basılı tutunca şekle dönüştür'**
+  String get inkShapeSnapTitle;
+
+  /// No description provided for @inkShapeSnapInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizginin sonunda kalemi kısa süre kıpırdatmadan tut: düz çizgi, daire ya da dikdörtgen olur.'**
+  String get inkShapeSnapInfo;
+
+  /// No description provided for @inkPartialEraserTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kısmi silgi'**
+  String get inkPartialEraserTitle;
+
+  /// No description provided for @inkPartialEraserInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silgi yalnız değdiği kısmı siler; kapalıyken bütün çizgiyi siler.'**
+  String get inkPartialEraserInfo;
+
+  /// No description provided for @inkAutoStylusTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalemi otomatik algıla'**
+  String get inkAutoStylusTitle;
+
+  /// No description provided for @inkAutoStylusInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem nota değince yazma kipi kendiliğinden açılır: PDF ve sunumda kalem, metin notunda el yazısı.'**
+  String get inkAutoStylusInfo;
+
+  /// No description provided for @inkStylusDetected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem algılandı — yazma kipi açıldı'**
+  String get inkStylusDetected;
 }
 
 class _AppLocalizationsDelegate

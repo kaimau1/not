@@ -1,5 +1,12 @@
 part of 'items_editor.dart';
 
+/// İşaretli maddenin soluklaştırma oranı (eski satır opaklığı 0.55).
+const double _kCheckedDim = 0.55;
+
+/// [color]ın alfasını [factor] ile çarpar — katmansız solma.
+Color _dimmed(Color color, double factor) =>
+    color.withValues(alpha: color.a * factor);
+
 /// Madde satırının kurulumu: satır, bağlam menüsü, seçim çubuğu (C1, 2026-10-20: ItemsEditor konu dosyalarına bölündü).
 extension _ItemsRow on ItemsEditorState {
   /// Öğe metni seçim araç çubuğu. Varsayılan araçlar (kes/kopyala/yapıştır ve
@@ -147,6 +154,13 @@ extension _ItemsRow on ItemsEditorState {
             value: item.checked,
             child: Checkbox(
               value: item.checked,
+              // Soluk işaretli kutu (satır katmanı yok — bkz. [_kCheckedDim]).
+              fillColor: checked
+                  ? WidgetStatePropertyAll(
+                      _dimmed(scheme.primary, _kCheckedDim),
+                    )
+                  : null,
+              side: checked ? BorderSide.none : null,
               // Kutunun KENDİ kutusu 48 dp'lik dokunma hedefinden 40 dp'ye
               // iner: 48 dp'lik kutu ilk satırın ortasından her zaman daha
               // aşağıda kalıyordu (bkz. [leadingTop] — "madde kutuları
@@ -254,15 +268,17 @@ extension _ItemsRow on ItemsEditorState {
               : null,
           // Sağ pay dar: silme "x"i kenara yaklaşsın (bkz. [ItemsEditorState._kTrailingWidth]).
           padding: const EdgeInsetsDirectional.only(start: 12, end: 2),
-          // İşaretleme geçişi: satır sertçe sönmek yerine yumuşak solar.
-          // Kutucuğun kendi tik animasyonu Material'dan geliyor; buradaki solma
-          // ona eşlik eder. Üstü çizili hâl anında gelir — çizgi kısmi çizilemez,
-          // yarım çizgi animasyonu için satırı yeniden çizmek gerekirdi.
-          child: AnimatedOpacity(
-            opacity: checked ? 0.55 : 1,
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-            child: Row(
+          // İşaretli satırın soluk hâli KATMANSIZ: yazı, kutucuk ve yıldız
+          // kendi renklerinde soluk çizilir (bkz. [_kCheckedDim]).
+          //
+          // KÖK NEDEN (kullanıcı bulgusu 2026-10-30: "işaretli öğesi çok
+          // olanlarda daha fazla kasma — açıkken, açılıp kapanırken,
+          // kaydırırken"): satır `AnimatedOpacity(0.55)` ile sarılıydı; 1'den
+          // küçük opaklık KALICI bir `OpacityLayer` demek, yani her işaretli
+          // madde her karede ayrı bir saveLayer ile rasterleşiyordu. 80
+          // işaretli maddede kaydırma ve not geçişi kare başına 80 katman
+          // birleştiriyordu. Solma artık rengin alfasında, bedeli sıfır.
+          child: Row(
               // Çok satırlı maddelerde kutucuk/numara artık tüm satır
               // yüksekliğine göre ORTALANMIYOR, ilk satıra hizalanıyor
               // (kullanıcı isteği). Üst pay [leadingTop] ile HESAPLANIR — bkz.
@@ -318,6 +334,7 @@ extension _ItemsRow on ItemsEditorState {
                           builder: (context, strike, _) {
                             // Solma AnimatedOpacity'e bırakıldı (aşağıya bak);
                             // burada alfa verilirse iki kez soluyor.
+                            final dim = 1 - (1 - _kCheckedDim) * strike;
                             final fieldStyle = strike == 0
                                 ? baseStyle
                                 : baseStyle.copyWith(
@@ -326,12 +343,15 @@ extension _ItemsRow on ItemsEditorState {
                                       Colors.transparent,
                                       scheme.onSurfaceVariant,
                                       strike,
-                                    ),
+                                    )!.withValues(alpha: strike * _kCheckedDim),
                                     decorationThickness: 1 + strike,
-                                    color: Color.lerp(
-                                      baseStyle.color ?? scheme.onSurface,
-                                      scheme.onSurfaceVariant,
-                                      strike,
+                                    color: _dimmed(
+                                      Color.lerp(
+                                        baseStyle.color ?? scheme.onSurface,
+                                        scheme.onSurfaceVariant,
+                                        strike,
+                                      )!,
+                                      dim,
                                     ),
                                   );
                             // Dokunuşun konumu tutulur (etiket önizlemesi,
@@ -477,7 +497,9 @@ extension _ItemsRow on ItemsEditorState {
                       width: 26,
                       height: 34,
                     ),
-                    color: scheme.tertiary,
+                    color: checked
+                        ? _dimmed(scheme.tertiary, _kCheckedDim)
+                        : scheme.tertiary,
                     onPressed: () => _toggleStar(item),
                   ),
                 // Silme "x" yalnızca satır odaklıyken görünür: kaydırırken ya
@@ -507,7 +529,6 @@ extension _ItemsRow on ItemsEditorState {
                   const SizedBox(width: ItemsEditorState._kTrailingWidth),
               ],
             ),
-          ),
         ),
       ),
     );
