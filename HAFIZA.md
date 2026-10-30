@@ -237,6 +237,10 @@ eskisini arşive taşıma.
 - Ana izoleyi tutan iş (F6.3/F6.5/F6.6): büyük JSON kodlama/çözme ve PDF
   metni `compute`/`Isolate.run`'da. `Isolate.run` kapanışını STATİK
   yardımcıda kur (örnek alanı yakalarsa gönderilemez — akış denetleyicisi).
+  **TUZAK (2026-10-30, web'de görüldü):** `Isolate.run` WEB'DE YOK
+  (`Unsupported operation: RawReceivePort`) — `pdf_edit.dart` web'de PDF
+  eklemeyi, sayfa düzenlemeyi ve balonlu PDF'i kırıyor (F10.1). Web'e de giden
+  yolda `compute` (web'de aynı iş parçacığında koşar) ya da `kIsWeb` dalı.
 - `localFileExists` "yok" sonucunu 2 sn önbellekler (F6.9): dosya YAZAN yol
   `forgetLocalFile` çağırmalı (ya da toplu indirmede
   `localFilesRevisionProvider` bump) — yoksa yeni dosya 2 sn görünmez.
@@ -626,6 +630,10 @@ eskisini arşive taşıma.
   64 bit, JS yedeğinde 53 bit — bit işlemlerinde ikisini de düşün.
 - Geri tuşu: `HomeFirstRouteInformationProvider` (go_router görünmez
   geçmiş kayıtları yazıyordu).
+- Arayüz turu (2026-10-30): yayındaki web sürümü Playwright + Flutter
+  semantik ağacıyla gezilebiliyor (yöntem: `KULLANICI_DENEYIMI_PLANI.md`
+  Ek A). İlk açılış Firebase'de anonim hesap açar — tur sonunda uygulamadan
+  "Hesabımı ve verilerimi sil".
 - Web'de Drive ekleri (F4.4): `WebDriveAuth` Google penceresiyle Drive
   kapsamlı jeton (bellekte, ~1 sa); ek `blob:` adresiyle açılır, `blob:`
   `toMap`'te buluta yazılmaz. Web Drive'a yazmaz (ekleri Storage'a).
