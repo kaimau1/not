@@ -1958,7 +1958,7 @@
   "guideMenuInfo": "Bütün özellikler, adım adım",
   "guideSearchHint": "Kılavuzda ara — “sayfa”, “YouTube”",
   "guideContents": "İçindekiler",
-  "guideOpenScreen": "Ekranı aç",
+  "guideOpenScreen": "Göster",
   "guideNoResults": "«{query}» için sonuç yok",
   "@guideNoResults": {
     "placeholders": {
@@ -2938,5 +2938,18 @@
       }
     }
   },
-  "cardElementsSampleTag": "ev"
+  "cardElementsSampleTag": "ev",
+  "aiTaskIdle": "Şu an iş yok",
+  "aiSettingsTooltip": "Yapay zekâ ayarları",
+  "tipStylusCanvas": "Kalem algılandı: el yazısı tuvali açıldı. Kalem ayarlarındaki “Kalemi otomatik algıla” ile kapatılır.",
+  "tipSemanticSearch": "Anlam açıkken kelimeyi değil anlamı arar: “araba masrafları” benzin fişini de bulur.",
+  "tipListGestures": "İpucu: maddenin üstünü parmakla çiz → işaretlenir; karala → silinir.",
+  "tipPdfBubble": "İpucu: sayfaya basılı tut → oraya balon bırak.",
+  "tipMediaPin": "İpucu: görsele basılı tut, en üste sürükle → notun tepesine sabitlenir.",
+  "tipGridSwipeFolders": "İpucu: ekranı yana kaydır → klasörler arasında geç.",
+  "tipGridSwipeFilters": "İpucu: ekranı yana kaydır → süzgeçler arasında geç.",
+  "tipsResetTitle": "İpuçlarını yeniden göster",
+  "tipsResetInfo": "Bir kez çıkan küçük ipuçları (jestler, Anlam araması) yeniden çıkar.",
+  "tipsResetDone": "İpuçları yeniden gösterilecek",
+  "swipeModeInfo": "Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola)."
 }

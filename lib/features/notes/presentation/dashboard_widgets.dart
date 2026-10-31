@@ -432,14 +432,38 @@ class _RecentSearches extends ConsumerWidget {
   }
 }
 
-class _SemanticToggle extends StatelessWidget {
+class _SemanticToggle extends ConsumerStatefulWidget {
   const _SemanticToggle({required this.on, required this.onTap});
 
   final bool on;
   final VoidCallback onTap;
 
   @override
+  ConsumerState<_SemanticToggle> createState() => _SemanticToggleState();
+}
+
+class _SemanticToggleState extends ConsumerState<_SemanticToggle> {
+  @override
+  void initState() {
+    super.initState();
+    // NE YAPAR (F14.4): anahtar ilk kez göründüğünde tek satır — "Anlam"
+    // tek başına bir şey anlatmıyordu.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      TipOnce.show(
+        context,
+        ref.read(sharedPreferencesProvider),
+        TipOnce.semanticSearch,
+        context.l10n.tipSemanticSearch,
+        sessionLimit: false,
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final on = widget.on;
+    final onTap = widget.onTap;
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     return Tooltip(
@@ -879,7 +903,26 @@ class _DashVoiceButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             onTap: onTap,
             onLongPress: onLongPress,
-            child: Icon(icon, size: 24, color: scheme.onPrimaryContainer),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(icon, size: 24, color: scheme.onPrimaryContainer),
+                // BASILI TUTMA ROZETİ (F14.4): basılı tutmak AI sesli notu
+                // açar ama bu görünmüyordu. Köşedeki küçük ✨ "bu düğmenin
+                // bir de AI yüzü var" der (ad ipucu ayrıntıyı söyler).
+                if (onLongPress != null)
+                  PositionedDirectional(
+                    top: 5,
+                    end: 5,
+                    child: Icon(
+                      Icons.auto_awesome,
+                      key: const ValueKey('home-mic-ai-badge'),
+                      size: 11,
+                      color: scheme.primary,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

@@ -80,7 +80,7 @@ kullanıcıyla `git` "dubious ownership" verirse:
 | 11 | Ana ekran ve "+" akışı | Ö1 · Ö6 | Bitti | 2026-10-31 | 9/9 (3 KARAR: önerilenler onaylandı); 1755/1755 test; web önce/sonra görüntüsü ALINMADI (canlı Firebase'de misafir hesap açmamak için) — cihaz/web turu KALANLAR'da |
 | 12 | Not ekranı: çubuklar, ⋮, biçim, liste | Ö1 · Ö5 · Ö6 | Bitti | 2026-10-31 | 9/9 (F12.7 düğme gizleme yerine ipucu adı — 3 boş madde kararı korundu); 2 KARAR (palet üst çubukta; iki düğme + Diğer); ek istek: "Gelen" çipi Tümü'nün yanında; 1758/1758 test; web görüntüsü ALINMADI |
 | 13 | Balonlu mod, medya, kalem, paylaşım akışı | Ö1 · Ö2 | Bitti | 2026-10-31 | 6/6 (F13.2 KARAR: önerilen sade kart onaylandı); F13.5'te transkript ekranı zaten Kopyala/Paylaş/⋮ — dokunulmadı; 1766/1766 test; web görüntüsü ALINMADI |
-| 14 | Anlaşılırlık: adlar, ayarlar, kılavuz, ipuçları | Ö4 | Bekliyor | | Kılavuz eskimiş |
+| 14 | Anlaşılırlık: adlar, ayarlar, kılavuz, ipuçları | Ö4 | Bitti | 2026-10-31 | 6/6 (F14.6 KARAR: önerilen uygulandı); ek istek: klasör şeridinde sayı üst simge, Tüm klasörler simge, Gelen + Paylaşılan tek liste; web görüntüsü ALINMADI |
 | 15 | Erişilebilirlik | Ö3 | Bekliyor | | Yazı boyutu kararı |
 | 16 | Görsel bütünlük ve tekrar temizliği | Ö5 | Bekliyor | | Simge ve levha dili |
 | 17 | Ölçüm, uçtan uca test, cihaz turu | Ö2 | Bekliyor | | |
@@ -633,32 +633,59 @@ balonlarla → WhatsApp; balonu kopyala; PDF'e kalemle yaz (yeni tepsi).
 Her şey tek adla anılır; kılavuz uygulamayı doğru anlatır; gizli jestler
 kendini bir kez tanıtır.
 
-- [ ] **F14.1 Terim sözlüğü — U6, C2, G2, K4, P4.** `TERIMLER.md` (kısa
+- [x] **F14.1 Terim sözlüğü — U6, C2, G2, K4, P4.** `TERIMLER.md` (kısa
   tablo) + arb düzeltmesi: "Yapay zekâ" (başlıkta da), "madde" (öğe değil),
   hep "sen"; Balonlu ↔ Klasik (dosya levhasında da: "Balonlu: belge notun
   kendisi olur" / "Klasik: belge ek olur"); ses: Dikte · AI sesli not · Ses
   kaydı · Sesli dinle; kopya ailesi: Kopyala (panoya) · Çoğalt · Gönder ·
   Deftere topla; "arşiv defteri" adı her yerden kalkar. Test: `app_tr.arb`
   taraması (yasaklı yazımlar: "Yapay Zeka", "öğe", "-ın/-in" emir + "siz").
-- [ ] **F14.2 Ayarlar alanları — S1.** Tek "Kişiselleştir" girişi (üstteki
+  **Yapıldı:** `TERIMLER.md` + ~40 arb metni (TR/EN; "Yeni madde", "Dikte",
+  "AI sesli not", "Sesli dinle", "Arkadaşa gönder", "Deftere topla",
+  "Balonlu: belge notun kendisi olur / Klasik: belge ek olur", sen hitabı);
+  koddaki iki sabit "Yapay Zeka"; `test/terminology_test.dart` (Unicode harf
+  sınırıyla — `\b` "yazının"ı "yazın" sanıyordu).
+- [x] **F14.2 Ayarlar alanları — S1.** Tek "Kişiselleştir" girişi (üstteki
   kart; alan adı "Video ve oynatma" ya da içeriğe göre); alan özetleri
   içerikten; "Dil" Görünüm'e ya da kendi satırına; "Kartta görünenler" önizlemeli
   alt levha (12 anahtar bir yerde, canlı kart örneği).
-- [ ] **F14.3 Yapay Zekâ ekranı — M3.** Başlık bir kez; ayar düğmesinin adı;
+  **Yapıldı:** üst kartlar Kılavuz + Kişiselleştir (Düzenleme modu kartı
+  kalktı — Kişiselleştir ekranında var); "Kişiselleştir" alanı → "Eklentiler
+  ve hızlı not" (özet "N/M eklenti açık", kimlik `personalize` korundu);
+  Notlar özeti sıralama · yana kaydırma; "Sesli okuma" → "Sesli dinle ve
+  dikte" (özet motor · dikte kipi); Dil Görünüm'de; 11 kart anahtarı
+  `CardElementsSheet`'te (canlı `NoteCard` örneği), "Paylaşılan notlar ana
+  ekranda" Notlar'a (`settings_appearance.dart`, `settings_screen.dart`).
+- [x] **F14.3 Yapay Zekâ ekranı — M3.** Başlık bir kez; ayar düğmesinin adı;
   işi olmayan araç (0 başlıksız, 0 kopya) gizli ya da soluk "Şu an iş yok";
   öneri çipleri düğme rolünde.
-- [ ] **F14.4 Mikrofon ve arama ipuçları — C5, M7, I3.** Ana ekran
+  **Yapıldı:** kahraman kart başlık yerine slogan; ⚙ "Yapay zekâ ayarları"
+  → `/settings?area=ai`; işi olmayan kutu soluk + "Şu an iş yok"; öneriler
+  `OutlinedButton` (`ai_hub_screen.dart`, `ai_hub_tiles_test`).
+- [x] **F14.4 Mikrofon ve arama ipuçları — C5, M7, I3.** Ana ekran
   mikrofonunda basılı tutma rozeti; kalem otomatik algılama ilk seferde
   bildirim; "Anlam" anahtarının ne yaptığı ilk açılışta tek satır.
-- [ ] **F14.5 Kılavuzu yeniden yaz — S3, B6, B12.** Her bölüm koddan
+  **Yapıldı:** `_DashVoiceButton` köşesinde ✨ (`home-mic-ai-badge`); kalem
+  tuvali ve Anlam anahtarı ilk seferde `TipOnce` satırı (oturum sınırı
+  dışı); swipe ayarına ızgara/liste farkı alt yazısı (B6).
+- [x] **F14.5 Kılavuzu yeniden yaz — S3, B6, B12.** Her bölüm koddan
   doğrulanarak (tabloda listelenen 10+ çelişki); içindekiler tekrarı kalkar;
   her bölümde "Göster" (ilgili ekrana götürür) — mümkünse. `_en.md` da.
-- [ ] **F14.6 Bir kez çıkan ipuçları — U5, E3, B6. KARAR GEREKİR (hangi
+  **Yapıldı:** S3'teki 10 çelişkinin hepsi + ses/kopya adları, Ayarlar
+  bölümü yeni alanlarla, klasör şeridi, Gelen tek liste; içindekiler
+  çipleri kalktı; 13 bölümde "Göster" (`guideSectionMeta` rotaları; `/`
+  ana ekrana `go`). `guide_screen_test` eskimiş ifade taraması.
+- [x] **F14.6 Bir kez çıkan ipuçları — U5, E3, B6. KARAR GEREKİR (hangi
   jestler, ne sıklık).** `TipOnce(id)`: bağlamında, işi ilk kez mümkün
   olduğunda tek satırlık balon; gösterilenler cihazda; Ayarlar → "İpuçlarını
   yeniden göster". Öneri: liste notu (madde jestleri), ilk PDF notu (basılı
   tut → balon), ilk görsel (yukarı sürükle → sabitle), ilk ızgara (yana
   kaydır → klasör). En fazla oturumda bir ipucu.
+  **Yapıldı (öneri olduğu gibi uygulandı — iş tanımı "tüm maddeler"; oturumda
+  kullanıcıya sorulamadı):** `core/tips.dart` `TipOnce` (cihazda
+  `tips_shown`, oturumda bir); editör ilk açılışta tür → ipucu, ana ekran
+  ilk ızgara + klasör; Ayarlar → Eklentiler ve hızlı not → "İpuçlarını
+  yeniden göster" (`tip_once_test`).
 
 **Senin yapacakların:** kılavuzu baştan sona oku, yanlış kalan yeri bildir.
 

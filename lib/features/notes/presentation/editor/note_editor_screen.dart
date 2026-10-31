@@ -31,6 +31,7 @@ import '../../../../app/theme/note_themes.dart';
 import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
+import '../../../../core/tips.dart';
 import '../../../../core/utils/debouncer.dart';
 import '../../../../core/utils/doc_picker.dart';
 import '../../../../core/utils/format_bytes.dart';
@@ -2115,6 +2116,30 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// açmasın — bkz. [_onContentPointerDown]).
   bool _stylusOpening = false;
 
+  /// Bu açılışta ipucuna bakıldı mı (bkz. [_maybeShowTip]).
+  bool _tipChecked = false;
+
+  /// Notun türüne göre İLK KEZ mümkün olan gizli jest için tek satırlık
+  /// ipucu (F14.6): liste → madde jestleri, belge (Balonlu) → basılı tut,
+  /// sayfada görsel → yukarı sürükle. Oturumda en fazla bir ipucu.
+  void _maybeShowTip() {
+    final note = _note;
+    if (!mounted || note == null || _readOnly) return;
+    final l10n = context.l10n;
+    final prefs = ref.read(sharedPreferencesProvider);
+    final (String, String)? tip = switch (note.type) {
+      NoteType.checklist || NoteType.ordered
+          when note.items.isNotEmpty && ref.read(itemGesturesProvider) =>
+        (TipOnce.listGestures, l10n.tipListGestures),
+      NoteType.pdf || NoteType.slides => (TipOnce.pdfBubble, l10n.tipPdfBubble),
+      _ when note.attachments.any((a) => a.floatsOnPage) =>
+        (TipOnce.mediaPin, l10n.tipMediaPin),
+      _ => null,
+    };
+    if (tip == null) return;
+    TipOnce.show(context, prefs, tip.$1, tip.$2);
+  }
+
   void _setImmersiveBubble(bool value) {
     if (_immersiveBubble == value || !mounted) return;
     setState(() => _immersiveBubble = value);
@@ -2523,6 +2548,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (MediaQuery.viewInsetsOf(context).bottom > 0) return;
     _stylusOpening = true;
     HapticFeedback.selectionClick();
+    // İLK SEFERDE NEDEN (F14.4): kalem dokunuşu metin notunda tuvali
+    // kendiliğinden açar — beklemeyen için ani geçiş. Bir kez söylenir;
+    // az önce olanı açıkladığı için oturum sınırına takılmaz.
+    TipOnce.show(
+      context,
+      ref.read(sharedPreferencesProvider),
+      TipOnce.stylusCanvas,
+      context.l10n.tipStylusCanvas,
+      sessionLimit: false,
+    );
     unawaited(_addDrawing().whenComplete(() => _stylusOpening = false));
   }
 
@@ -2539,6 +2574,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _canvasCache = null;
     final l10n = context.l10n;
     final note = _note;
+    // BİR KEZ ÇIKAN İPUCU (F14.6): not eline ilk geçtiğinde bir kez bakılır.
+    if (!_tipChecked && note != null) {
+      _tipChecked = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTip());
+    }
     // Alt çubuğun iki yeni düğmesi için: sayfada YÜZMEYEN ekler (şerit) ve
     // notun belge notu olup olmadığı (kalem düğmesi yalnız orada anlamlı).
     final fileAttachments = [

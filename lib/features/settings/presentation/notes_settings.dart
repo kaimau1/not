@@ -87,6 +87,8 @@ class SwipeModeSetting extends ConsumerWidget {
     final l10n = context.l10n;
     return _ChoiceRow<SwipeMode>(
       title: l10n.swipeModeTitle,
+      // Izgara ≠ liste (B6): aynı jest iki görünümde iki iş yapar.
+      subtitle: l10n.swipeModeInfo,
       values: SwipeMode.values,
       selected: ref.watch(swipeModeProvider),
       label: (m) => swipeModeLabel(context, m),

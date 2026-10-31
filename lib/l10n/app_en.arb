@@ -1624,7 +1624,7 @@
   "guideMenuInfo": "Every feature, step by step",
   "guideSearchHint": "Search the guide — “page”, “YouTube”",
   "guideContents": "Contents",
-  "guideOpenScreen": "Open screen",
+  "guideOpenScreen": "Show me",
   "guideNoResults": "No results for “{query}”",
   "copyVideoLink": "Copy link",
   "videoLinkCopied": "Link copied",
@@ -2280,5 +2280,18 @@
       }
     }
   },
-  "cardElementsSampleTag": "home"
+  "cardElementsSampleTag": "home",
+  "aiTaskIdle": "Nothing to do right now",
+  "aiSettingsTooltip": "AI settings",
+  "tipStylusCanvas": "Stylus detected: the handwriting canvas opened. Turn this off with “Detect pen automatically” in the pen settings.",
+  "tipSemanticSearch": "With Meaning on, search matches meaning, not words: “car expenses” also finds the fuel receipt.",
+  "tipListGestures": "Tip: strike an item through with your finger → it is checked; scribble → it is deleted.",
+  "tipPdfBubble": "Tip: long-press the page → drop a bubble there.",
+  "tipMediaPin": "Tip: long-press an image and drag it to the top → it is pinned above the note.",
+  "tipGridSwipeFolders": "Tip: swipe the screen sideways → move between folders.",
+  "tipGridSwipeFilters": "Tip: swipe the screen sideways → move between filters.",
+  "tipsResetTitle": "Show tips again",
+  "tipsResetInfo": "The small one-time tips (gestures, Meaning search) appear again.",
+  "tipsResetDone": "Tips will be shown again",
+  "swipeModeInfo": "When you swipe the screen sideways in grid view. In list view, swiping a row pins it (right) or archives it (left)."
 }

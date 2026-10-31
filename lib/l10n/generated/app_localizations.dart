@@ -7679,7 +7679,7 @@ abstract class AppLocalizations {
   /// No description provided for @guideOpenScreen.
   ///
   /// In tr, this message translates to:
-  /// **'Ekranı aç'**
+  /// **'Göster'**
   String get guideOpenScreen;
 
   /// No description provided for @guideNoResults.
@@ -10987,6 +10987,84 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'ev'**
   String get cardElementsSampleTag;
+
+  /// No description provided for @aiTaskIdle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şu an iş yok'**
+  String get aiTaskIdle;
+
+  /// No description provided for @aiSettingsTooltip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ ayarları'**
+  String get aiSettingsTooltip;
+
+  /// No description provided for @tipStylusCanvas.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem algılandı: el yazısı tuvali açıldı. Kalem ayarlarındaki “Kalemi otomatik algıla” ile kapatılır.'**
+  String get tipStylusCanvas;
+
+  /// No description provided for @tipSemanticSearch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anlam açıkken kelimeyi değil anlamı arar: “araba masrafları” benzin fişini de bulur.'**
+  String get tipSemanticSearch;
+
+  /// No description provided for @tipListGestures.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: maddenin üstünü parmakla çiz → işaretlenir; karala → silinir.'**
+  String get tipListGestures;
+
+  /// No description provided for @tipPdfBubble.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: sayfaya basılı tut → oraya balon bırak.'**
+  String get tipPdfBubble;
+
+  /// No description provided for @tipMediaPin.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: görsele basılı tut, en üste sürükle → notun tepesine sabitlenir.'**
+  String get tipMediaPin;
+
+  /// No description provided for @tipGridSwipeFolders.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: ekranı yana kaydır → klasörler arasında geç.'**
+  String get tipGridSwipeFolders;
+
+  /// No description provided for @tipGridSwipeFilters.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: ekranı yana kaydır → süzgeçler arasında geç.'**
+  String get tipGridSwipeFilters;
+
+  /// No description provided for @tipsResetTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpuçlarını yeniden göster'**
+  String get tipsResetTitle;
+
+  /// No description provided for @tipsResetInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir kez çıkan küçük ipuçları (jestler, Anlam araması) yeniden çıkar.'**
+  String get tipsResetInfo;
+
+  /// No description provided for @tipsResetDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpuçları yeniden gösterilecek'**
+  String get tipsResetDone;
+
+  /// No description provided for @swipeModeInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola).'**
+  String get swipeModeInfo;
 }
 
 class _AppLocalizationsDelegate

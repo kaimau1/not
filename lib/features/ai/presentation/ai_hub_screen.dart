@@ -156,14 +156,18 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
         icon: Icons.new_label_outlined,
         accent: _AiAccent.teal,
         title: l10n.aiTaskTagUntagged,
-        subtitle: l10n.aiTaskTagUntaggedInfo(untagged),
+        subtitle: untagged == 0
+            ? l10n.aiTaskIdle
+            : l10n.aiTaskTagUntaggedInfo(untagged),
         onTap: untagged == 0 ? null : () => _send(l10n.aiTaskTagUntagged),
       ),
       _ToolCard(
         icon: Icons.title,
         accent: _AiAccent.rose,
         title: l10n.aiTaskSuggestTitles,
-        subtitle: l10n.aiTaskSuggestTitlesInfo(untitled),
+        subtitle: untitled == 0
+            ? l10n.aiTaskIdle
+            : l10n.aiTaskSuggestTitlesInfo(untitled),
         onTap: untitled == 0 ? null : () => _send(l10n.aiTaskSuggestTitles),
       ),
       // Bu kutu yapay zekâya HİÇ gitmez: benzerlik yerelde ölçülür, puan
@@ -173,7 +177,9 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
         icon: Icons.copy_all_outlined,
         accent: _AiAccent.slate,
         title: l10n.aiTaskDuplicates,
-        subtitle: l10n.aiTaskDuplicatesInfo(duplicates),
+        subtitle: duplicates == 0
+            ? l10n.aiTaskIdle
+            : l10n.aiTaskDuplicatesInfo(duplicates),
         onTap: duplicates == 0 ? null : () => showDuplicatesSheet(context),
       ),
     ];
@@ -218,10 +224,13 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
       appBar: AppBar(
         title: Text(l10n.aiHubTitle),
         actions: [
+          // Ad işi söyler (F14.3): eskiden ipucu yalnız "Yapay zekâ"ydı ve
+          // Ayarlar'ın en başına düşüyordu; artık AI alanı açık gelir.
           IconButton(
-            tooltip: l10n.settingsAi,
+            key: const ValueKey('ai-hub-settings'),
+            tooltip: l10n.aiSettingsTooltip,
             icon: const Icon(Icons.tune),
-            onPressed: () => context.push('/settings'),
+            onPressed: () => context.push('/settings?area=ai'),
           ),
           const SizedBox(width: 4),
         ],
@@ -396,20 +405,13 @@ class _Hero extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      l10n.aiHubTitle,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: scheme.onPrimaryContainer,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
+                    // Başlık BİR KEZ (F14.3): "Yapay zekâ" üst çubukta;
+                    // kahraman kart ne yaptığını söyler.
                     Text(
                       l10n.aiHubTagline,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: scheme.onPrimaryContainer.withValues(
-                          alpha: 0.8,
-                        ),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: scheme.onPrimaryContainer,
                       ),
                     ),
                   ],
@@ -536,9 +538,7 @@ class _TileGrid extends StatelessWidget {
             children: [
               for (var j = 0; j < columns; j++) ...[
                 if (j > 0) const SizedBox(width: 10),
-                Expanded(
-                  child: j < slice.length ? slice[j] : const SizedBox(),
-                ),
+                Expanded(child: j < slice.length ? slice[j] : const SizedBox()),
               ],
             ],
           ),
@@ -879,20 +879,25 @@ class _ChatCard extends StatelessWidget {
                   (Icons.work_outline, l10n.chatSuggestion2),
                   (Icons.alarm, l10n.chatSuggestion3),
                 ])
-                  ActionChip(
-                    avatar: Icon(icon, size: 16, color: scheme.primary),
-                    label: Text(
-                      text,
-                      style: const TextStyle(
+                  // DÜĞME ROLÜ (F14.3): ActionChip seçim durumu taşıdığı
+                  // için web'de onay kutusu gibi okunuyordu; öneri bir
+                  // eylemdir.
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: scheme.surface,
+                      foregroundColor: scheme.onSurface,
+                      side: BorderSide(color: scheme.outlineVariant),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      textStyle: const TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    backgroundColor: scheme.surface,
-                    side: BorderSide(color: scheme.outlineVariant),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    icon: Icon(icon, size: 16, color: scheme.primary),
+                    label: Text(text),
                     onPressed: () => onSuggestion(text),
                   ),
               ],
@@ -962,9 +967,7 @@ class _ToolCard extends StatelessWidget {
         color: scheme.surfaceContainerLowest,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.6),
-          ),
+          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(

@@ -27,6 +27,32 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
 numarasıyla bildir.
 
+**2026-10-31 Klasör şeridi + Gelen tek liste + Faz 14 (anlaşılırlık)**
+- [ ] Ana ekran klasör şeridi: not sayısı simgenin SAĞ ÜST köşesinde küçük
+  rakam (adın yanında değil), okunmamışta kırmızı rozet aynı köşede; rakam
+  kırpılmıyor; çipler sıkı, ekrana eskisinden çok klasör sığıyor; sağdaki
+  "Tüm klasörler" yalnız simge (basılı tut → ad).
+- [ ] "Gelen" çipi → sekme YOK; gelen kopyalar üstte ("Gelen" etiketi,
+  Sil · Kabul et), ortak notlar altta ("Paylaşılan" etiketi, "Yeni" rozeti).
+- [ ] Ayarlar: üstte yalnız Kılavuz + Kişiselleştir kartı; "Eklentiler ve
+  hızlı not" alanı (özet "8/9 eklenti açık"); Dil Görünüm'de; "Kartta
+  görünenler" satırı → levhada örnek kart anahtarla anında değişiyor;
+  "Sesli dinle ve dikte" özeti; Notlar özeti "Son güncellenen · …".
+- [ ] Yapay zekâ ekranı: başlık bir kez; boş iş kutusu "Şu an iş yok";
+  sağ üst ⚙ "Yapay zekâ ayarları" → Ayarlar'ın AI alanı açık.
+- [ ] Ana ekran mikrofonunun köşesinde küçük ✨; dokun = dikte, basılı
+  tut = AI sesli not.
+- [ ] S Pen ile metin notuna dokun → tuval açılır + İLK SEFERDE tek satır
+  açıklama; ikinci seferde yok.
+- [ ] Aramaya dokun → Anlam (✨) anahtarı ilk kez çıkınca tek satır açıklama.
+- [ ] İpuçları (oturumda en fazla bir): liste notu (madde jestleri), ilk
+  PDF (basılı tut → balon), ilk görsel (yukarı sürükle), ızgara + klasör
+  (yana kaydır). Ayarlar → Eklentiler ve hızlı not → İpuçlarını yeniden
+  göster → yeniden çıkıyor.
+- [ ] Kılavuz: içindekiler çipleri yok; bölümlerdeki "Göster" doğru ekrana
+  gidiyor (Ana ekran → ana ekrana döner). **Kılavuzu baştan sona oku,
+  yanlış kalan yeri bildir** (Faz 14 "Senin yapacakların").
+
 **2026-10-31 Faz 13 (balon, kalem, paylaşım, görüntüleyiciler)**
 - [ ] PDF notu → balonlar → Paylaş: "Balonlar" çipi açık, önizlemede
   "Sayfa N — …" satırları; WhatsApp'a giden metinde balonlar var.

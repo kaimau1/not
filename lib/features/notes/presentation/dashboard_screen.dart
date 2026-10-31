@@ -17,6 +17,7 @@ import '../../../app/theme/note_colors.dart';
 import '../../../core/widgets/action_menu_sheet.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
+import '../../../core/tips.dart';
 import '../../../core/widgets/customizable.dart';
 import '../../../core/widgets/freeze_when_hidden.dart';
 import '../../../core/utils/local_file.dart';
@@ -221,6 +222,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       );
     return true;
   }
+
+  /// Izgara kaydırma ipucuna bu açılışta bakıldı mı (bkz. dashboard_shelf).
+  bool _gridTipChecked = false;
 
   @override
   void initState() {

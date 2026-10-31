@@ -23,7 +23,10 @@ void main() {
     prefs = await SharedPreferences.getInstance();
   });
 
-  Future<void> pumpHub(WidgetTester tester, {List<Note> notes = const []}) async {
+  Future<void> pumpHub(
+    WidgetTester tester, {
+    List<Note> notes = const [],
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -80,5 +83,26 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text(l10n.aiTaskDuplicates), findsOneWidget);
+  });
+
+  // F14.3: başlık bir kez, işi olmayan kutu "Şu an iş yok", öneriler düğme.
+  testWidgets('başlık bir kez; boş iş "Şu an iş yok"; öneri düğme', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 3600);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await pumpHub(tester);
+    final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+    expect(find.text(l10n.aiHubTitle), findsOneWidget);
+    // Not yok → etiket, başlık ve kopya kutularının üçü de boşta.
+    expect(find.text(l10n.aiTaskIdle), findsNWidgets(3));
+    expect(find.byType(ActionChip), findsNothing);
+    expect(
+      find.widgetWithText(OutlinedButton, l10n.chatSuggestion1),
+      findsOneWidget,
+    );
+    expect(find.byTooltip(l10n.aiSettingsTooltip), findsOneWidget);
   });
 }

@@ -99,6 +99,7 @@ extension _DashShelf on _DashboardScreenState {
   /// Klasör rafının KOMPAKT (varsayılan) hâli: tek satır, yatay kaydırılan
   /// çipler. Yükseklik klasör sayısından BAĞIMSIZ — asıl kazanç bu.
   Widget _folderStrip(List<NoteFolder> folders, {String? selectedFolderId}) {
+    _maybeGridSwipeTip(folders);
     final shared = ref.watch(sharedFolderRefsProvider).value ?? const [];
     // YENİ HAREKET ÖNE (kullanıcı bulgusu 2026-10-17: "paylaşılanlarda yeni
     // bir şey geldiğinde anlaşılmıyor"): okunmamışı olan paylaşılan
@@ -199,5 +200,26 @@ extension _DashShelf on _DashboardScreenState {
         ),
       ),
     );
+  }
+
+  /// İLK IZGARA + KLASÖR (F14.6): ekranı yana kaydırmak klasörler (ya da
+  /// süzgeçler) arasında gezer ama görünmez. Klasör ilk kez varken bir kez.
+  void _maybeGridSwipeTip(List<NoteFolder> folders) {
+    if (_gridTipChecked) return;
+    final mode = ref.read(swipeModeProvider);
+    if (mode == SwipeMode.off || ref.read(noteListViewProvider)) return;
+    if (mode == SwipeMode.folders && folders.isEmpty) return;
+    _gridTipChecked = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      TipOnce.show(
+        context,
+        ref.read(sharedPreferencesProvider),
+        TipOnce.gridSwipe,
+        mode == SwipeMode.filters
+            ? context.l10n.tipGridSwipeFilters
+            : context.l10n.tipGridSwipeFolders,
+      );
+    });
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -137,19 +139,24 @@ List<TextSpan> guideInlineSpans(String text, TextStyle? bold) {
 
 /// Bölüm kimliği → simge ve (varsa) "Ekranı aç" ile gidilecek rota.
 ({IconData icon, String? route}) guideSectionMeta(String id) => switch (id) {
-  'start' => (icon: Icons.rocket_launch_outlined, route: null),
-  'home' => (icon: Icons.home_outlined, route: null),
-  'create' => (icon: Icons.add_circle_outline, route: null),
+  // "Göster" (F14.5): bölümün anlattığı ekran. '/' ana ekrana DÖNER (go),
+  // öbürleri üstüne açılır (push).
+  'start' => (icon: Icons.rocket_launch_outlined, route: '/settings?area=sync'),
+  'home' => (icon: Icons.home_outlined, route: '/'),
+  'create' => (icon: Icons.add_circle_outline, route: '/'),
   'editor' => (icon: Icons.edit_note, route: null),
   'pages' => (icon: Icons.auto_stories_outlined, route: null),
   'media' => (icon: Icons.image_outlined, route: null),
   'video' => (icon: Icons.smart_display_outlined, route: null),
   'pin' => (icon: Icons.vertical_align_top, route: null),
-  'gestures' => (icon: Icons.gesture, route: null),
+  'gestures' => (icon: Icons.gesture, route: '/settings?area=appearance'),
   'embed' => (icon: Icons.attach_file, route: null),
-  'documents' => (icon: Icons.picture_as_pdf_outlined, route: null),
+  'documents' => (
+    icon: Icons.picture_as_pdf_outlined,
+    route: '/settings?area=notes',
+  ),
   'scan' => (icon: Icons.document_scanner_outlined, route: null),
-  'voice' => (icon: Icons.mic_none, route: null),
+  'voice' => (icon: Icons.mic_none, route: '/settings?area=sound'),
   'transcript' => (icon: Icons.subtitles_outlined, route: null),
   'ai' => (icon: Icons.auto_awesome_outlined, route: '/ai'),
   'organize' => (icon: Icons.folder_outlined, route: '/folders'),
@@ -157,7 +164,10 @@ List<TextSpan> guideInlineSpans(String text, TextStyle? bold) {
   'share' => (icon: Icons.share_outlined, route: '/inbox'),
   'widgets' => (icon: Icons.widgets_outlined, route: null),
   'settings' => (icon: Icons.settings_outlined, route: '/settings'),
-  'tips' => (icon: Icons.lightbulb_outline, route: null),
+  'tips' => (
+    icon: Icons.lightbulb_outline,
+    route: '/settings?area=personalize',
+  ),
   _ => (icon: Icons.article_outlined, route: null),
 };
 
@@ -217,15 +227,6 @@ class _GuideScreenState extends State<GuideScreen> {
         curve: Curves.easeOut,
       );
     });
-  }
-
-  void _jump(String id) {
-    setState(() {
-      _expanded.add(id);
-      _query = '';
-      _search.clear();
-    });
-    _scrollTo(id);
   }
 
   @override
@@ -291,28 +292,9 @@ class _GuideScreenState extends State<GuideScreen> {
                     if (query.isEmpty) ...[
                       const SizedBox(height: 12),
                       for (final b in guide.intro) _GuideBlockView(block: b),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.guideContents,
-                        style: theme.textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          for (final s in guide.sections)
-                            ActionChip(
-                              key: ValueKey('guide-chip-${s.id}'),
-                              avatar: Icon(
-                                guideSectionMeta(s.id).icon,
-                                size: 18,
-                              ),
-                              label: Text(s.title),
-                              onPressed: () => _jump(s.id),
-                            ),
-                        ],
-                      ),
+                      // İÇİNDEKİLER ÇİPLERİ KALKTI (F14.5): altındaki kart
+                      // listesiyle aynı başlıkları ikinci kez sayıyordu.
+                      // Kapalı kartların kendisi içindekilerdir.
                     ],
                     const SizedBox(height: 12),
                     if (visible.isEmpty)
@@ -420,7 +402,13 @@ class _SectionCard extends StatelessWidget {
                               padding: const EdgeInsets.only(top: 6),
                               child: FilledButton.tonalIcon(
                                 key: ValueKey('guide-open-${section.id}'),
-                                onPressed: () => context.push(route),
+                                onPressed: () {
+                                  if (route == '/') {
+                                    context.go(route);
+                                  } else {
+                                    unawaited(context.push(route));
+                                  }
+                                },
                                 icon: const Icon(Icons.open_in_new, size: 18),
                                 label: Text(context.l10n.guideOpenScreen),
                               ),

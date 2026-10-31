@@ -1,49 +1,50 @@
 # User Guide
 
-Every feature of Notes, section by section. Tap a section to open it; use the search box above to find a feature by name.
+Every feature of Notes, section by section. Tap a section to open it; use the search box above to find a feature by name. **Show me** under a section takes you to the matching screen.
 
 ## Getting started {#start}
 Your notes belong to your account and **sync instantly** between phone, tablet, computer and the web. Everything works offline too; changes sync by themselves when you are back online.
 - Sign in with your Google account, or start right away without signing in.
 - **Attachments (images, PDFs, slides, audio) live in your Google Drive:** if you signed in with Google, go to Settings → Sync → **Keep attachments in your Google Drive → Connect** (or tap the "waiting for Google Drive" strip on the home screen). Attachments use your own Drive storage, sit in a hidden app folder and download to your other devices. Attachments of notes you share with others go to the app's cloud so everyone can see them.
-- **Guest accounts sync text only;** attachments stay on that device. Built-in AI, contacts and sharing need a Google account (they show a lock and explain why when tapped); you can still use AI by adding your own Gemini key in Settings.
+- **Without an account (guest), your notes stay on this device only:** they cannot be opened elsewhere and are gone if you uninstall the app. Built-in AI, contacts and sharing need a Google account (they show a lock and explain why when tapped); you can still use AI by adding your own Gemini key in Settings. Link a Google account any time — your notes carry over.
 - Want a note to stay **on this device only**? Note menu (⋮) → **Stop syncing**. That note and its attachments never go to the cloud.
 - Videos are always stored only on the device that recorded them (never uploaded); YouTube videos are links, so they play on every device.
 - Made a mistake? **Undo** (↶) and **Redo** on the note screen bring back every change.
 
 ## Home screen {#home}
 Your notes appear as cards grouped by **TODAY / THIS WEEK / EARLIER**; pinned notes stay on top.
-- **Swipe right:** pin the note. **Swipe left:** archive it.
+- **In list view**, swipe a row **right** to pin it and **left** to archive it (undoable). **In grid view**, swiping the screen sideways moves between folders (or filters) — Settings → Notes and folders → **Swipe sideways on home**.
 - **Long-press a card:** multi-select — move, archive, duplicate or delete several notes at once.
 - **Search:** type in the box at the top. Tapping the box reveals the ✨ **Meaning** switch on its right: off, it finds words; on, it understands what you mean ("car expenses" also finds the "tyre change" note).
 - **Avatar at the top right:** your account. The number on it counts pending friend requests; tap it for **Contacts · Premium · Account settings**.
-- **Inbox:** in the folder strip, right next to **All**. Copies sent to you and notes shared with you live here; a badge appears when something new arrives.
+- **Inbox:** in the folder strip, right next to **All**. Copies sent to you and notes shared with you are in **one list**; a small tag on each item tells them apart (**Received** = a copy waiting to be accepted, **Shared** = a shared note). A red badge appears on the chip's corner when something new arrives.
 - **Filter:** **View** (grid or list; images on cards, attachments on cards and shared notes as switches), **Type** (text, list, numbered), **Status** (pinned, starred, with alarm, locked, no folder or tag), tag and **Sort** (recently updated by default — date groups show in this order; title, most worked on; **Reorder manually** to drag cards into place).
-- **Folder strip:** switch folders by tapping or by **swiping sideways**. **All folders** at the end of the strip opens every folder; reorder them there.
-- **Quick note row:** type into "New note…" at the top of the list and save — without opening a note.
+- **Folder strip:** switch folders by tapping or by **swiping sideways**. The number of notes is written small at the top-right corner of each folder icon; empty folders are faded and last. The **folders icon** (All folders) at the right of the strip opens every folder; reorder them there.
+- **Quick note row** (off by default): turn it on in Settings → **Modules & quick note** → Quick note row, then type into "New note…" at the top of the list and save — without opening a note.
 - **Home screen background:** ⋮ → Home screen background for an image or pattern.
 - **Media on cards:** a pinned or single image/video shows as a cover at the top of the card; videos carry ▶, YouTube the red button. A bubbles note gets its document as the cover at the top of the card: the first page, the **PDF WITH BUBBLES** badge top left, the file name and bubble count at the bottom; voice recordings and other documents sit as rows at the bottom of the card.
 - The ⋮ at the top right opens a sheet: **AI, Reminders, Archive, Bin, Settings** on top (on wide screens these live in the rail on the left and are not repeated in ⋮); below them **Home screen** (background, hidden folders) and **App** (personalise, this guide).
-- **A card's ⋮ / long-press menu:** pin, star, move to folder, share, select on top; then **Organize** (colour — optionally with a border highlight), **Copy** (duplicate, save as template), **Tools** (read aloud, statistics), **Protection and storage** (archive, lock, sync); Delete at the bottom.
+- **A card's ⋮ / long-press menu:** pin, star, move to folder, share, select on top; then **Organize** (colour — optionally with a border highlight), **Copy** (copy, duplicate, save as template), **Tools** (listen, statistics), **Protection and storage** (archive, lock, sync); Delete at the bottom.
 
 ## Creating notes {#create}
 The **+** button at the bottom right opens a short panel, read from your thumb upwards:
 - **At the bottom, right above the button:** large **Text note · List** buttons.
 - Above them three groups: **Camera** (photo, video, scan, QR), **Files and links** — **Add file** (one picker: choose an image, PDF, slides, video or audio — the note opens according to the file type; images and videos also offer "Transcribe"; plus **YouTube video**) and **Templates and drawing** (from template, shopping list, handwriting, **notebook**). A note started from a video opens with the video pinned on top and the note below.
-- **The home screen has one microphone:** a tap opens the mode you used last — **voice note** (AI tidies it) or **type as I speak**; a long-press opens the other one.
-For PDFs, images and slides you choose a mode the first time: **Bubbles** (the document becomes the note itself, with bubbles and pen on top) or **Classic** (the document is an ordinary attachment). Your choice becomes the default; change it in Settings → Notes and folders → **Notes from content**. You can switch inside a note too: see **Bubbles ↔ classic**.
+- **The home screen has one microphone:** a tap starts **Dictate** (your words are typed into a new note, no quota); a **long-press starts an AI voice note** (AI builds the note — title, items and reminders). The small ✨ on its corner is the reminder of that second face.
+For PDFs, images and slides you choose a mode the first time: **Bubbles** (the document becomes the note itself, with bubbles and pen on top) or **Classic** (the document becomes an attachment). Your choice becomes the default; change it in Settings → Notes and folders → **Notes from content**. You can switch inside a note too: see **Bubbles ↔ classic**.
 
 ## Editing a note {#editor}
 Bottom bar, left to right:
 - **Aa — Format:** bold, italic, underline, text colour, highlight, heading / subheading; the note's font, size and transparency. Page colour, border highlight and background image live in the **palette** on the top bar (one place). Applies to the selection, or to the word you type next.
   - The panel's top row is the **scope**: **Cursor · Word · Line · All**. Pick "Line", put the cursor on a line, then B / colour / size **+ −** — the whole line changes, no manual selection. The choice is remembered for the session. When you select text yourself this row hides — the selection is the scope; **All** applies every format to the whole field.
   - On an item the panel has a **Line below** row: solid, dashed, dotted (tap the same one to remove) and a settings button.
-- **+ — Add:** an icon grid — **Note content** (text block, list, embed attachment in selection), **Images and drawing** (image, upload image as attachment, camera, scan, drawing) and **Attachments** (PDF, slides, voice recording, video, YouTube, QR). Long-press an icon to see what it does.
+- **+ — Add:** an icon grid — **Note content** (text block, list, embed attachment in selection), **Images and drawing** (image, camera, scan, drawing) and **Attachments** (**Add file** — one picker: image, PDF, slides, video or audio —, voice recording, record video, YouTube, QR). Long-press an icon to see what it does.
 - **🔍 — Search in note:** matches are highlighted as you type.
 - **Share.**
-- The coloured capsule on the right: **✦ AI** (see the AI section), the **assistant microphone** and the **dictate** microphone.
-Top bar: **undo / redo** (always side by side), pin, add people (shared note) and the ⋮ menu. The ⋮ menu's top row has star, move to folder, version history and listen; below are the same groups as the card menu: **Organize** (**Notebook view** and paper, convert to list/text, two columns, sort items, images to attachments, clear content), **Copy** (duplicate, save as template, copy to notebook), **Tools** (statistics, **calculator**; on narrow screens also search / share when they don't fit the bottom bar), **Protection and storage** (archive, lock, sync). A thin bottom row holds **Customize screen** and **Settings**. The bottom bar keeps the same order for every note type: Format · Add · Search · Share, with the type-specific button (☑ or Select) always last. Copying, sending to a friend and exporting live in the **Share** sheet — not repeated in the menus.
+- The coloured capsule on the right: **✦ AI** (with **AI voice note** at the top of its sheet; see the AI section), **Audio recording** and the **Dictate** microphone. Hide them from Personalise.
+Top bar: **undo / redo** (always side by side), pin, add people (shared note) and the ⋮ menu. The ⋮ menu's top row has star, move to folder, version history and listen; below are the same groups as the card menu: **Organize** (**Notebook view** and paper, convert to list/text, two columns, sort items, images to attachments, clear content), **Copy** (duplicate, save as template, **collect into notebook**), **Tools** (statistics, **calculator**), **Protection and storage** (archive, lock, sync). **Search** and **Share** also appear in this menu when they don't fit the bottom bar. A thin bottom row holds **Customize screen** and **Settings**. The bottom bar keeps the same order for every note type: Format · Add · Search · Share · Attachments, with the type-specific button (☑ or Select) always last. Copying to the clipboard, sending to a friend and exporting live in the **Share** sheet.
 - In lists, long-press an item and drag to reorder; use "Select" to copy/delete several items. **Copy and check** in the selection bar copies the selected items and checks them in one tap.
+- The **+** next to the title: **New page**, alarm, location reminder (Android), folder, tag and tag/title suggestions.
 - The item you're editing shows a small **×** delete button on the right (the line width doesn't change); the item menu (long-press its left area) and the scribble gesture delete too.
 
 ## Item gestures {#gestures}
@@ -53,8 +54,8 @@ Draw over an item **with your finger or a pen**:
 - **Circle** → the item's spelling is fixed (AI; spelling and punctuation only).
 - Nothing to turn on: a stroke that starts over an item is a gesture. Scrolling, long-presses and text selection don't count.
 - Same with a pen (S Pen etc.); touching outside items with the pen opens handwriting.
-- Turn it off in **Settings → Item gestures**.
-- The **+** next to the title: **New page**, alarm, location reminder, folder, tag and tag/title suggestions.
+- Turn it off in **Settings → Appearance → Item gestures**.
+- The first time you open a list note, a short tip appears once.
 
 ## Note pages {#pages}
 A note can have several **pages**; each page has its own text and images.
@@ -75,7 +76,7 @@ Images **float freely** on the note's page; text flows around them.
 - An image can become the note's **background image** (palette on the top bar).
 
 ## Video and YouTube {#video}
-- **+ Add → Video note** records with the camera; **Video from gallery** adds an existing video. The video sits on the page like an image and **plays in place**.
+- **+ Add → Record video** records with the camera; an existing video comes in through **+ Add → Add file**. The video sits on the page like an image and **plays in place**.
 - **+ Add → YouTube video:** paste the link (a YouTube link on the clipboard is filled in for you). Thumbnail and title come automatically.
 - Tap a YouTube box (to select it) and the **video's title** appears over the thumbnail.
 - The red **▶** plays the video **inside the box**; the **×** at its corner closes the player so the box can be moved again. In a small box YouTube's own controls shrink with the box.
@@ -91,7 +92,7 @@ Images **float freely** on the note's page; text flows around them.
 
 ## Media on top, note below {#pin}
 To take notes while watching a video or looking at an image:
-1. Press and hold the image/video and drag it **upwards** (pushing it past the title is enough). **"Release: pin to top"** strip appears at the top of the screen as soon as you start dragging; it fills in when your finger gets there.
+1. Press and hold the image/video and drag it **upwards** (pushing it past the title is enough). only while dragging, a **"Release: pin to top"** strip appears at the top of the screen; it fills in when your finger gets there.
 2. Release: the media stays fixed above the note, and the note scrolls on its own below. YouTube plays in place here too.
 - Drag the **bar** between them to resize the pane. The bar has **Full screen** on the left and the **view switch** (Pinned / Floating / Bubbles) on the right; for videos also **⏪ 10s · ▶/⏸ · 10s ⏩**, speed and **⏱ Note**; the thin line along the bar's top edge is the video's progress.
 - **Bubbles stay visible when pinned:** a PDF (or image) pinned from bubbles view keeps its bubbles; tap one to read it. The 💬 on the PDF box's bar (the button on the pane's bar for an image) **hides/shows** them.
@@ -135,10 +136,11 @@ In **Bubbles** mode the document is the note itself: the page on top, that page'
 - **Scan a QR code:** from the camera or a gallery photo; the content is written into the note.
 
 ## Voice and dictation {#voice}
-- **Dictate** (plain microphone): text appears at the cursor as you speak — uses no quota.
-- **Voice note assistant** (sparkle microphone, also on the home screen): say "dentist tomorrow at 9" and it creates the note, list and reminder itself.
-- **Voice recording:** + Add → Voice recording; play it from the attachment strip, transcribe it with AI.
-- **Add audio file:** + Add → Add audio file; an MP3/M4A/WAV recording from your phone goes into the note.
+Four jobs, four names:
+- **Dictate** (plain microphone in a note; tapping the home microphone): text appears at the cursor as you speak — uses no quota.
+- **AI voice note** (top of the ✦ AI sheet; long-pressing the home microphone; top of the AI screen): say "dentist tomorrow at 9" and it creates the note, list and reminder itself.
+- **Audio recording** (wave button in a note, or + Add → Voice recording): play it from the attachment strip, transcribe it with AI. An MP3/M4A/WAV file from your phone comes in through **+ Add → Add file**.
+- **Listen** (top row of the note ⋮ menu): reads the note aloud; voice, speed and how the dictate microphone works are in Settings → **Listening & dictation**.
 
 ## Transcripts {#transcript}
 - Tap the **subtitles icon** on an audio, video (YouTube too) or image tile in the attachment strip (or ⋮ → **Transcribe** on a picture/video on the page). Speech is written out with timestamps; text in images is read on the device (no internet).
@@ -148,29 +150,30 @@ In **Bubbles** mode the document is the note itself: the page on top, that page'
 - **Transcribe a file** (+ menu or + Add): pick audio, video or an image; the file goes into the note and its text is written straight into the note body.
 - Large recordings: the built-in AI accepts up to 15 MB; add your own Gemini key in Settings to transcribe long ones. On Android only the AUDIO track of a video is sent (much smaller).
 - Transcripts are searchable: a word spoken in a recording finds the note that holds it.
-- **Read aloud:** from the note menu, listen to the note (or a PDF/Word document); voice and speed in Settings → Read aloud.
+- **Listen:** from the note menu, listen to the note (or a PDF/Word document via AI → Read a document); voice and speed in Settings → Listening & dictation.
 
 ## AI {#ai}
 The **✦** button on the note screen:
 - **Summarise note** (short / detailed), **Analyse** (main points and to-dos), **Fix up the note** (simple / balanced / detailed), **Improve the note** (formal, shorter, bullet or numbered list), **Translate**.
 - **Chat:** one screen; the chips on top choose what you talk to — **All notes**, **This note** (its text and attachments) or **This document** — and, for a note, **Q&A** or **Brainstorm** (the AI drafts an outline, add an idea to the note with one tap).
 - For attachments: summarise/ask a PDF, text from an image, transcribe audio.
-The **AI** screen on the home screen:
-- **Note Assistant:** ask about all your notes ("what's missing from my shopping list?").
+The **AI** screen (⋮, or the rail on the left on wide screens):
+- **AI voice note:** at the top; speak and it builds the note.
+- **Note Assistant:** ask about all your notes ("what's missing from my shopping list?"); while empty it offers ready-made suggestion buttons.
 - **Brainstorm with AI:** it drafts an outline first, then you develop it together.
-- **Tools:** summarise the week, clean up duplicates, suggest titles, tag the untagged.
+- **On your notes:** summarise the week, tag the untagged, suggest titles, clean up duplicates (duplicates use no AI). A box with nothing to do is faded and says **Nothing to do right now**.
 - **Read a document:** listen to a PDF/Word/slides file.
 - **Daily briefing:** reminders and recent notes at a glance; can also arrive as a morning notification.
-- Your daily points renew at midnight; with your own Gemini API key AI works without limits (Settings → AI).
+- Your daily points renew at midnight; with your own Gemini API key AI works without limits. The settings button at the top right (**AI settings**) opens the AI area of Settings.
 
 ## Organising: folders, tags, archive {#organize}
 - **Folders:** create, colour and reorder them; move a note with ⋮ → Move to folder. A **hidden** folder's notes don't appear on the home screen; reveal them with ⋮ → Hidden folders and your fingerprint/face.
 - **Tags:** add with the + next to the title; long-press a tag in the filter sheet to rename or delete it.
-- **Pin:** keep important notes on top and in the Pinned filter (old starred notes are pinned too).
+- **Pin:** keep important notes on top and in the Pinned filter. **Star** is a separate mark (Starred filter).
 - **Lock:** lock a note with fingerprint/face; its content never leaks into search, widgets or AI.
 - **Archive** and **Bin:** from the ⋮ menu; restore from the bin.
 - **Templates:** + → From template; preview ready-made templates and pick items; turn your own note into one with ⋮ → **Save as template**, and change it in the template editor.
-- **Notebook:** + → Templates → Notebook, or ⋮ → **Notebook view** in any note: lined/grid/dotted paper and pages. Collect another note's attachments as copies with ⋮ → **Copy to notebook**.
+- **Notebook:** + → Templates → Notebook, or ⋮ → **Notebook view** in any note: lined/grid/dotted paper and pages. Collect another note's attachments into a notebook with ⋮ → **Collect into notebook**.
 
 ## Reminders {#reminders}
 - Use **+ → Alarm** next to the title to pick a date and time; you get a notification when it's due.
@@ -186,12 +189,12 @@ The **Share** button on the note screen: a preview of the text at the top with c
 - **Files:** send the note's photos, PDFs and videos as files.
 - **Custom PDF / Word…** (title, image position/size) and **PDF with bubbles** (bubbles and drawings printed into the PDF).
 
-**TO A NOT USER:** **Send a copy** (to a friend's inbox), **Edit together** (shared note or the note's folder) and **Note package** (one file with attachments, pages, drawings and bubbles; the other person opens it exactly the same in Notes).
+**TO A NOT USER:** **Send to a friend** (an independent copy lands in their Inbox), **Edit together** (shared note or the note's folder) and **Note package** (one file with attachments, pages, drawings and bubbles; the other person opens it exactly the same in Notes).
 
 An attachment you've opened (image, PDF, slides, video, YouTube) can be sent straight from **Share** in the full-screen viewer's top bar, or copied into another note with **Copy attachment**.
 Working together:
-- **Contacts:** add friends from ⋮ → Contacts.
-- **Send a copy** (in the Share sheet): an independent copy of the note lands in your friend's **Incoming notes**.
+- **Contacts:** add friends from the avatar at the top right → Contacts.
+- **Send to a friend** (in the Share sheet): an independent copy of the note lands in your friend's **Inbox** on the home screen; once accepted it becomes their own note.
 - **Shared note:** the add-people button in the top bar; you both edit the same note at the same time.
 - **Folder sharing:** with read / write permission; a shared folder has its own chat.
 From other apps: choose **Share → Notes** anywhere (text, link, image, PDF, slides, video). You choose whether to make a new note or add to an existing one.
@@ -207,10 +210,14 @@ Long-press the app icon for the **Voice note** shortcut. On a computer, **Keyboa
 
 ## Settings {#settings}
 Find any setting by name with the search box at the top of Settings ("briefing", "microphone").
-- **Appearance:** theme (system, light, dark, paper), dark theme schedule, font, card look, columns (also by pinching on the home screen).
-- **Language:** 16 languages, or the system language.
-- **AI:** model, your own API key, daily briefing time, keeping checked items untouched.
-- **Read aloud:** device voice or AI voice, reading speed.
+At the top are two cards: **User guide** and **Personalise** (which buttons and areas show; **edit mode** starts from there too). Below are the areas; a closed area's summary line tells you what is selected inside.
+- **Contacts:** friends, incoming notes, discoverability, shared-note notifications.
+- **AI:** model, your own API key, daily briefing, auto tag/title, keeping checked items untouched.
+- **Appearance:** sample text, theme (system, light, dark, paper, off-white), font and size, **Language** (Turkish, English or the system language), long items, item gestures, **Shown on cards** (with a live sample card: counter, tag, date, image, attachments, folder, paper…), dark theme schedule.
+- **Modules & quick note:** turn the AI, voice, video, scan, drawing, templates… modules on or off; the quick note row on the home screen; **Show tips again**.
+- **Notes and folders:** sideways swipe, folder order, sorting, grid/list and columns (also by pinching on the home screen), shared notes on the home screen, notes from content (Bubbles/Classic), searching inside attachments.
+- **Listening & dictation:** device voice, Turkish voice or AI voice; reading speed and pitch; how the dictate microphone works.
+
 - **Permissions:** microphone, camera, notifications, location — status and system settings.
 - **Sync:** Google Drive connection and Drive usage, the automatic upload limit, the cache on this device, backups.
 - **Account:** sign out, delete account; privacy policy and licences.
@@ -220,4 +227,6 @@ Find any setting by name with the search box at the top of Settings ("briefing",
 - A note you leave empty is deleted when you close it; a note with a reminder is kept.
 - Attachments waiting to upload show in the "uploading to the cloud" bar on the home screen; they are safe on this device.
 - Put a copied attachment into another note with **+ Add → Paste copied attachment**.
+- Hidden gestures are introduced **once**, with a single line, the first time they become possible (list note, first PDF, first image, folders in the grid); at most one tip per session. To see them again: Settings → Modules & quick note → **Show tips again**.
+- When a pen touches a text note, the handwriting canvas opens by itself (the first time, a line says why); to stop it, turn off **Detect pen automatically** in the pen settings.
 - This guide is always available from the ⋮ menu and from Settings.

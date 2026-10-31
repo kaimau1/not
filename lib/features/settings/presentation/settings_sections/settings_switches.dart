@@ -313,3 +313,26 @@ class _PrefSwitch extends ConsumerWidget {
     );
   }
 }
+
+/// "İpuçlarını yeniden göster" (F14.6): cihazda tutulan gösterilmiş ipucu
+/// listesini siler.
+class _TipsResetTile extends ConsumerWidget {
+  const _TipsResetTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return ListTile(
+      key: const ValueKey('settings-tips-reset'),
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.lightbulb_outline),
+      title: Text(l10n.tipsResetTitle),
+      subtitle: Text(l10n.tipsResetInfo),
+      onTap: () async {
+        final messenger = ScaffoldMessenger.of(context);
+        await TipOnce.resetAll(ref.read(sharedPreferencesProvider));
+        messenger.showMessage(l10n.tipsResetDone);
+      },
+    );
+  }
+}

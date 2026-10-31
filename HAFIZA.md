@@ -720,6 +720,29 @@ eskisini arşive taşıma.
   `showAppMessage(context, metin)`; eylemliyse `action:` (geri sayımlı).
   Elle `SnackBar(content: Text(...))` kurma.
 
+## Faz 14 kararları (2026-10-31)
+- **Terimler `TERIMLER.md`'de** (Yapay zekâ · madde · sen · Balonlu/Klasik ·
+  Dikte / AI sesli not / Ses kaydı / Sesli dinle · Kopyala / Çoğalt /
+  Gönder / Deftere topla); `terminology_test` arb'yi tarar. TUZAK: Dart
+  `RegExp` `\b` ASCII — Türkçe harfte (`ı`, `ş`) sınır sanar; Unicode
+  bakış `(?<!\p{L})…(?!\p{L})` + `unicode: true`. Yer tutucular (`{size}`)
+  taramadan önce silinir.
+- **Ayarlar:** Kişiselleştir'in TEK kapısı üstteki kart (Düzenleme modu
+  kartı yok, Kişiselleştir ekranından başlar). Alan özetleri içerikten. Kart
+  anahtarları "Kartta görünenler" levhasında (canlı `NoteCard`); satırın
+  `keywords`'ü bütün anahtar adlarını taşır ki arama bulsun.
+- **İpuçları `TipOnce`** (`core/tips.dart`): cihazda `tips_shown`, oturumda
+  en fazla bir; az önce olanı açıklayan (kalem tuvali, Anlam) `sessionLimit:
+  false`. Yeni gizli jest eklenince kimlik + metin + tetik yeri buraya.
+- **Klasör şeridi (kullanıcı isteği):** not sayısı simgenin sağ üst
+  köşesinde ~9 pt kalın (`_CornerCount`; okunmamışta kırmızı rozet aynı
+  köşede), çip yazısı 12, iç boşluk sıkı; "Tüm klasörler" yalnız simge
+  (`folder_copy_outlined`, ipucu = ad). **Gelen ekranı sekmesiz:**
+  `SharedHubBody` tek kaydırma — üstte gelen kopyalar ("Gelen"), altta ortak
+  notlar ("Paylaşılan"), `HubSourceTag`.
+- Kılavuz: içindekiler çipi YOK; "Göster" rotaları `guideSectionMeta`'da.
+  Kılavuz değişince `guide_screen_test` eskimiş ifade listesine bak.
+
 ## Faz 13 kararları (2026-10-31)
 - **Balon yazısı dışarı çıkar (F13.1):** paylaşım/kopya metni balonları
   "Sayfa N — Başlık: metin" satırlarıyla içerir (`ShareTextOptions.bubbles`,
@@ -770,7 +793,7 @@ eskisini arşive taşıma.
   eski not 0) görürse "Elle"yi kalıcılaştırır.
 - **Süz levhası:** Görünüm = segmentli + anahtar satırları; Tür ≠ Durum (ikisi
   aynı `NoteFilter`); "Elle sırala" metinli. Klasör sırası ⋮'te DEĞİL —
-  şeridin sonundaki "Tüm klasörler" (`/folders`).
+  şeridin sonundaki "Tüm klasörler" simgesi (`/folders`).
 - **İlk açılış izin levhası YOK:** izinler bağlamda; bildirim izni
   `ReminderService._askPermissionOnce` (ilk planlanan bildirimde, kurulumda
   değil). Konum hatırlatıcısı yok.

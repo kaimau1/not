@@ -1,49 +1,50 @@
 # Kullanım Kılavuzu
 
-Notlar'ın bütün özellikleri, bölüm bölüm. Bir bölüme dokunarak aç; yukarıdaki arama kutusuyla bir özelliği adıyla bul.
+Notlar'ın bütün özellikleri, bölüm bölüm. Bir bölüme dokunarak aç; yukarıdaki arama kutusuyla bir özelliği adıyla bul. Bölümün altındaki **Göster** seni ilgili ekrana götürür.
 
 ## Başlarken {#start}
 Notların hesabına bağlıdır ve telefon, tablet, bilgisayar ve web arasında **anında senkronlanır**. İnternet yokken de her şey çalışır; bağlantı gelince kendiliğinden eşitlenir.
 - Google hesabınla gir; giriş yapmadan da hemen kullanmaya başlayabilirsin.
 - **Ekler (görsel, PDF, sunum, ses) Google Drive'ında saklanır:** Google hesabıyla girdiysen Ayarlar → Senkron → **Ekleri Google Drive'ında sakla → Bağla** (ya da ana ekrandaki "Drive bağlantısını bekliyor" şeridine dokun). Ekler kendi Drive kotanda, uygulamaya özel gizli bir klasörde durur ve öbür cihazlarına iner. Başkasıyla paylaştığın notların ekleri herkes görebilsin diye uygulama bulutuna gider.
-- **Misafir hesapta yalnız yazılar senkronlanır;** ekler o cihazda kalır. Dahili yapay zekâ, Kişiler ve paylaşım Google hesabı ister (kilitli görünür, dokununca neden yazar); yapay zekâyı Ayarlar'dan kendi Gemini anahtarını ekleyerek kullanabilirsin.
+- **Hesapsız (misafir) kullanımda notların yalnız bu cihazda kalır:** başka cihazdan açılamaz, uygulamayı silersen geri gelmez. Dahili yapay zekâ, Kişiler ve paylaşım Google hesabı ister (kilitli görünür, dokununca neden yazar); yapay zekâyı Ayarlar'dan kendi Gemini anahtarını ekleyerek kullanabilirsin. İstediğin an Google hesabı bağla — notların olduğu gibi kalır.
 - Bir not **yalnız bu cihazda** kalsın istiyorsan: not menüsü (⋮) → **Senkronu kapat**. O not ve ekleri buluta hiç gitmez.
 - Videolar her zaman yalnız çekildiği cihazda saklanır (buluta yüklenmez); YouTube videoları ise bağlantı olarak her cihazda oynar.
 - Yanlış bir şey mi yaptın? Not ekranındaki **Geri al** (↶) ve **Yinele** her değişikliği geri getirir.
 
 ## Ana ekran {#home}
 Notların kart olarak, **BUGÜN / BU HAFTA / DAHA ÖNCE** gruplarıyla dizilir; sabitlenenler en üstte durur.
-- **Sağa kaydır:** notu sabitle. **Sola kaydır:** arşivle.
+- **Liste görünümünde** satırı **sağa kaydır:** sabitle; **sola kaydır:** arşivle (geri alınabilir). **Izgara görünümünde** ekranı yana kaydırmak klasörler (ya da süzgeçler) arasında gezer — Ayarlar → Notlar ve klasörler → **Ana ekranda yana kaydırınca**.
 - **Karta uzun bas:** çoklu seçim — birden çok notu birlikte taşı, arşivle, çoğalt ya da sil.
 - **Arama:** üstteki kutuya yaz. Kutuya dokununca sağında ✨ **Anlam** anahtarı çıkar: kapalıyken kelimeyi arar, açıkken ne demek istediğini anlar ("araba masrafları" yazınca "lastik değişimi" notunu da bulur).
 - **Sağ üstteki avatar:** hesabın. Köşesindeki sayı bekleyen arkadaşlık isteğidir; dokununca **Kişiler · Premium · Hesap ayarları**.
-- **Gelen:** klasör şeridinde **Tümü**'nün hemen yanında. Sana gönderilen kopyalar ve seninle ortak notlar burada; yeni bir şey gelince çipte rozet çıkar.
+- **Gelen:** klasör şeridinde **Tümü**'nün hemen yanında. Sana gönderilen kopyalar ve seninle ortak notlar **tek listede**; her öğenin başındaki küçük etiket hangisi olduğunu söyler (**Gelen** = kabul bekleyen kopya, **Paylaşılan** = ortak not). Yeni bir şey gelince çipin köşesinde kırmızı rozet çıkar.
 - **Süz:** **Görünüm** (ızgara ya da liste; kartta görseller, kartta ekler, paylaşılan notlar anahtarla), **Tür** (metin, liste, sıralı), **Durum** (sabitli, yıldızlı, alarmlı, kilitli, klasörsüz ve etiketsiz), etiket ve **Sıralama** (varsayılan son güncellenen — tarih grupları bu sıralamada görünür; başlık, en çok çalışılan; **Elle sırala** ile kartları sürükleyerek diz).
-- **Klasör şeridi:** klasörler arasında dokunarak ya da ekranı **yana kaydırarak** geç. Şeridin sonundaki **Tüm klasörler** bütün klasörleri açar; sıralarını da oradan değiştir.
-- **Hızlı not satırı:** listenin başındaki "Yeni not…" alanına yazıp kaydet — not açmadan.
+- **Klasör şeridi:** klasörler arasında dokunarak ya da ekranı **yana kaydırarak** geç. Klasördeki not sayısı simgesinin sağ üst köşesinde küçük rakamla yazar; boş klasörler soluk ve sonda. Şeridin sağındaki **klasörler simgesi** (Tüm klasörler) bütün klasörleri açar; sıralarını da oradan değiştir.
+- **Hızlı not satırı** (varsayılan kapalı): Ayarlar → **Eklentiler ve hızlı not** → Hızlı not satırı ile açılınca listenin başında "Yeni not…" alanı çıkar; yazıp kaydet — not açmadan.
 - **Ana ekran zemini:** ⋮ → Ana ekran zemini ile görsel ya da desen seç.
 - **Kartta medya:** üste sabitlenmiş ya da tek görsel/video kartın tepesinde kapak olarak görünür; video ▶, YouTube kırmızı düğmeyle işaretlidir. Balonlu notun belgesi de kartın tepesinde kapak olur: ilk sayfa, sol üstte **BALONLU PDF** rozeti, altta dosya adı ve balon sayısı; ses kayıtları ve öbür belgeler kartın altında satır olarak durur.
-- Sağ üstteki ⋮ alttan bir levha açar: en üstte **Yapay Zekâ, Hatırlatıcılar, Arşiv, Çöp Kutusu, Ayarlar** (geniş ekranda bunlar soldaki rayda durur, ⋮'te tekrarlanmaz); altında **Ana ekran** (zemin, gizli klasörler) ve **Uygulama** (kişiselleştir, bu kılavuz).
-- **Karttaki ⋮ ya da karta basılı tutma menüsü:** üst satırda sabitle, yıldızla, klasöre taşı, paylaş, seç; altında **Düzenle** (renk — istersen kenar vurgusuyla), **Kopyala** (çoğalt, şablon olarak kaydet), **Araçlar** (sesli oku, istatistik), **Koruma ve depolama** (arşivle, kilitle, senkron); en altta Sil.
+- Sağ üstteki ⋮ alttan bir levha açar: en üstte **Yapay zekâ, Hatırlatıcılar, Arşiv, Çöp Kutusu, Ayarlar** (geniş ekranda bunlar soldaki rayda durur, ⋮'te tekrarlanmaz); altında **Ana ekran** (zemin, gizli klasörler) ve **Uygulama** (kişiselleştir, bu kılavuz).
+- **Karttaki ⋮ ya da karta basılı tutma menüsü:** üst satırda sabitle, yıldızla, klasöre taşı, paylaş, seç; altında **Düzenle** (renk — istersen kenar vurgusuyla), **Kopyala** (kopyala, çoğalt, şablon olarak kaydet), **Araçlar** (sesli dinle, istatistik), **Koruma ve depolama** (arşivle, kilitle, senkron); en altta Sil.
 
 ## Yeni not oluşturma {#create}
 Sağ alttaki **+** düğmesi kısa bir panel açar — başparmağının olduğu yerden yukarı doğru:
 - **En altta, düğmenin hemen üstünde:** büyük **Metin notu · Liste** düğmeleri.
 - Üstünde üç grup: **Kamera** (fotoğraf, video, belge tara, QR), **Dosya ve bağlantı** — **Dosya ekle** (tek seçici: görsel, PDF, sunum, video ya da ses seç — not dosyanın türüne göre açılır; görsel ve videoda "Metne dök" de sorulur; ayrıca **YouTube videosu**) ve **Şablon ve çizim** (şablondan, alışveriş listesi, el yazısı, **defter**). Video ile açılan not "üstte video, altta not" düzeninde başlar.
-- **Ana ekranın mikrofonu tek:** dokunuş son kullandığın kipi açar — **sesli not** (yapay zekâ düzenler) ya da **doğrudan yazdır**; basılı tutmak öbürünü açar.
-PDF, görsel ve sunum için ilk seferde iki kip sorulur: **Balonlu** (belge notun kendisi olur, üzerine balon/kalem) ya da **Klasik** (belge sıradan bir ek olur). Seçimin varsayılan olur; Ayarlar → Notlar ve klasörler → **İçerikten not açılışı**'ndan değişir. Kip not içinden de değişir: bkz. **Balonlu ↔ klasik geçiş**.
+- **Ana ekranın mikrofonu tek:** dokunmak **Dikte** açar (konuştukça yeni nota yazılır, kota harcamaz); **basılı tutmak AI sesli not** açar (yapay zekâ başlığı, maddeleri ve hatırlatıcıyı çıkarıp notu kurar). Düğmenin köşesindeki küçük ✨ bu ikinci yüzü hatırlatır.
+PDF, görsel ve sunum için ilk seferde iki kip sorulur: **Balonlu** (belge notun kendisi olur, üzerine balon/kalem) ya da **Klasik** (belge ek olur). Seçimin varsayılan olur; Ayarlar → Notlar ve klasörler → **İçerikten not açılışı**'ndan değişir. Kip not içinden de değişir: bkz. **Balonlu ↔ klasik geçiş**.
 
 ## Not düzenleme {#editor}
 Alt çubuk soldan sağa:
 - **Aa — Biçim:** kalın, italik, altı çizili, yazı rengi, renkli vurgu, büyük başlık / alt başlık; notun yazı tipi, boyutu ve şeffaflığı. Sayfa rengi, kenar vurgusu ve zemin görseli üst çubuktaki **palette** (tek yer). Seçili yazıya uygulanır; seçim yoksa yazacağın kelimeye.
   - Panelin üst sırası **kapsam**: **İmleç · Kelime · Satır · Tümü**. "Satır"ı seçip imleci bir satıra koy, sonra B / renk / boyut **+ −** — o satırın tamamı değişir, elle seçmek gerekmez. Seçim oturum boyu hatırlanır. Kendin metin seçtiğinde bu sıra gizlenir — seçim zaten kapsamdır; **Tümü** her biçimi alanın tamamına uygular.
   - Maddede panelde **Alt çizgi** sırası: düz, kesikli, noktalı çizgi (aynısına basmak kaldırır) ve ayar düğmesi.
-- **+ — Ekle:** simge ızgarası — **Not içeriği** (metin bloğu, liste, seçili yazıya ek gömme), **Görsel ve çizim** (görsel, görseli ek olarak yükle, kamera, tarama, çizim) ve **Ekler** (PDF, sunum, ses kaydı, video, YouTube, QR). Bir simgeye basılı tutunca ne yaptığı yazar.
+- **+ — Ekle:** simge ızgarası — **Not içeriği** (metin bloğu, liste, seçili yazıya ek gömme), **Görsel ve çizim** (görsel, kamera, tarama, çizim) ve **Ekler** (**Dosya ekle** — tek seçici: görsel, PDF, sunum, video ya da ses —, ses kaydı, video çek, YouTube, QR). Bir simgeye basılı tutunca ne yaptığı yazar.
 - **🔍 — Notta ara:** eşleşmeler yazarken vurgulanır.
 - **Paylaş.**
-- Sağdaki renkli kapsül: **✦ Yapay zekâ** (bkz. Yapay zekâ bölümü), **asistan mikrofonu** ve **sesli yazdır** mikrofonu.
-Üst çubuk: **geri al / geri getir** (ikisi hep yan yana), sabitle, kişi ekle (ortak not) ve ⋮ menüsü. ⋮ menüsünün üst satırında yıldızla, klasöre taşı, sürüm geçmişi ve sesli dinle; altında kart menüsüyle aynı gruplar: **Düzenle** (**Defter görünümü** ve kâğıt deseni, listeye/metne dönüştür, 2 sütun, maddeleri sırala, görselleri eke dönüştür, içeriği temizle), **Kopyala** (çoğalt, şablon olarak kaydet, deftere kopyala), **Araçlar** (istatistikler, **hesap makinesi**; dar ekranda alt çubuğa sığmayan notta ara / paylaş), **Koruma ve depolama** (arşivle, kilitle, senkron). En altta ince satırda **Ekranı düzenle** ve **Ayarlar**. Alt çubuğun sırası her not türünde aynı: Biçim · Ekle · Ara · Paylaş; türe özgü düğme (☑ ya da Seç) hep en sonda. Kopyalamak, arkadaşa göndermek ve dışa aktarmak **Paylaş** levhasında — menülerde ayrıca yok.
+- Sağdaki renkli kapsül: **✦ Yapay zekâ** (levhanın en üstünde **AI sesli not**; bkz. Yapay zekâ bölümü), **Ses kaydı** ve **Dikte** mikrofonu. Kişiselleştir'den gizlenebilirler.
+Üst çubuk: **geri al / geri getir** (ikisi hep yan yana), sabitle, kişi ekle (ortak not) ve ⋮ menüsü. ⋮ menüsünün üst satırında yıldızla, klasöre taşı, sürüm geçmişi ve sesli dinle; altında kart menüsüyle aynı gruplar: **Düzenle** (**Defter görünümü** ve kâğıt deseni, listeye/metne dönüştür, 2 sütun, maddeleri sırala, görselleri eke dönüştür, içeriği temizle), **Kopyala** (çoğalt, şablon olarak kaydet, **deftere topla**), **Araçlar** (istatistikler, **hesap makinesi**), **Koruma ve depolama** (arşivle, kilitle, senkron). Alt çubuğa sığmayan **Ara** ve **Paylaş** de bu menüde çıkar. En altta ince satırda **Ekranı düzenle** ve **Ayarlar**. Alt çubuğun sırası her not türünde aynı: Biçim · Ekle · Ara · Paylaş · Ekler; türe özgü düğme (☑ ya da Seç) hep en sonda. Panoya kopyalamak, arkadaşa göndermek ve dışa aktarmak **Paylaş** levhasında.
 - Liste notlarında maddeyi basılı tutup sürükleyerek sırala; "Seç" ile birden çok maddeyi kopyala/sil. Seçim çubuğundaki **Kopyala ve işaretle** seçilenleri panoya alır ve tek dokunuşta işaretler.
+- Başlığın sağındaki **+**: **Yeni sayfa**, alarm, konum hatırlatıcısı (Android), klasör, etiket ve etiket/başlık önerisi.
 - Yazdığın maddenin sağında küçük **×** silme düğmesi durur (satırın genişliği değişmez); madde menüsü (sol bölgeye basılı tut) ve karalama jesti de siler.
 
 ## Madde jestleri {#gestures}
@@ -53,8 +54,8 @@ Maddenin üstüne **parmakla ya da kalemle** çiz:
 - **Daire içine al** → maddenin yazımı düzeltilir (yapay zekâ; yalnız imla ve noktalama).
 - Ayrıca açman gerekmez: maddenin üstünde başlayan çizgi doğrudan jesttir. Kaydırma, uzun basış ve metin seçimi jest sayılmaz.
 - Kalemle (S Pen vb.) de aynı; kalem maddenin dışına değince el yazısı açılır.
-- İstemezsen **Ayarlar → Madde jestleri** ile kapat.
-- Başlığın sağındaki **+**: **Yeni sayfa**, alarm, konum hatırlatıcısı, klasör, etiket ve etiket/başlık önerisi.
+- İstemezsen **Ayarlar → Görünüm → Madde jestleri** ile kapat.
+- Liste notunu ilk açtığında bir kez kısa bir ipucu çıkar.
 
 ## Not sayfaları {#pages}
 Bir nota birden çok **sayfa** ekleyebilirsin; her sayfanın kendi yazısı ve görselleri olur.
@@ -75,7 +76,7 @@ Görseller notun sayfasında **serbestçe yüzer**; yazı onların etrafından a
 - Bir görseli notun **zemin görseli** yapabilirsin (üst çubuktaki palet).
 
 ## Video ve YouTube {#video}
-- **+ Ekle → Görüntülü not** kamerayla çeker; **Galeriden video** var olan videoyu ekler. Video sayfada görsel gibi durur ve **olduğu yerde oynar**.
+- **+ Ekle → Video çek** kamerayla çeker; var olan video **+ Ekle → Dosya ekle** ile gelir. Video sayfada görsel gibi durur ve **olduğu yerde oynar**.
 - **+ Ekle → YouTube videosu:** bağlantıyı yapıştır (panoda bir YouTube bağlantısı varsa hazır gelir). Kapak görseli ve başlığı otomatik gelir.
 - YouTube kutusuna dokununca (seçilince) **videonun başlığı** kapağın üstünde görünür.
 - Kırmızı **▶** video **kutunun içinde** oynatır; köşedeki **×** oynatıcıyı kapatır ve kutu yeniden taşınabilir olur. Küçük kutuda YouTube'un kendi düğmeleri de kutuyla orantılı küçülür.
@@ -91,7 +92,7 @@ Görseller notun sayfasında **serbestçe yüzer**; yazı onların etrafından a
 
 ## Üstte medya, altta not {#pin}
 Bir videoyu izlerken ya da bir görsele bakarken altına not almak için:
-1. Görseli/videoyu basılı tut ve **yukarı doğru** sürükle (başlığın üstüne zorlaman yeter). Sürükleme başlayınca ekranın tepesinde **"Bırak: üste sabitle"** şeridi belirir; parmağın oraya gelince dolar.
+1. Görseli/videoyu basılı tut ve **yukarı doğru** sürükle (başlığın üstüne zorlaman yeter). Yalnız sürükleme sırasında ekranın tepesinde **"Bırak: üste sabitle"** şeridi belirir; parmağın oraya gelince dolar.
 2. Bırak: medya notun üstünde sabit durur, not altında kendi başına kayar. YouTube burada da yerinde oynar.
 - Aradaki **çubuğu** sürükleyerek bölmeyi büyüt/küçült. Çubuğun solunda **tam ekran**, sağında **görünüm anahtarı** (Sabit / Yüzen / Balonlu) var; videoda ayrıca **⏪ 10 sn · ▶/⏸ · 10 sn ⏩**, hız ve **⏱ Not al**; çubuğun üst kenarındaki ince çizgi videonun ilerlemesidir.
 - **Balonlar sabitte de görünür:** balonlu görünümden sabite alınan PDF (ya da görsel) balonlarıyla birlikte durur; balona dokununca okunur. PDF kutusunun çubuğundaki 💬 (görselde bölme çubuğundaki düğme) balonları **gizler/gösterir**.
@@ -135,10 +136,11 @@ Bir kelimeye ya da cümleye **PDF, görsel, video, YouTube** ya da nottaki herha
 - **QR kod tara:** kameradan ya da galerideki fotoğraftan okur, içeriği nota yazar.
 
 ## Ses ve dikte {#voice}
-- **Sesli yazdır** (sade mikrofon): konuştukça yazı imlecin olduğu yere düşer — kota harcamaz.
-- **Sesli not asistanı** (parıltılı mikrofon, ana ekranda da var): "yarın 9'da diş randevusu" de; not, liste ve hatırlatıcıyı kendisi oluşturur.
-- **Ses kaydı:** + Ekle → Ses kaydı; kayıt ek şeridinde oynatılır, yapay zekâ ile yazıya dökülür.
-- **Ses dosyası ekle:** + Ekle → Ses dosyası ekle; telefondaki MP3/M4A/WAV kaydı nota girer.
+Dört ayrı iş, dört ayrı ad:
+- **Dikte** (not ekranında düz mikrofon; ana ekran mikrofonuna dokunmak): konuştukça yazı imlecin olduğu yere düşer — kota harcamaz.
+- **AI sesli not** (✦ Yapay zekâ levhasının en üstü; ana ekran mikrofonuna basılı tutmak; Yapay zekâ ekranının en üstü): "yarın 9'da diş randevusu" de; not, liste ve hatırlatıcıyı kendisi oluşturur.
+- **Ses kaydı** (not ekranında dalgalı düğme ya da + Ekle → Ses kaydı): kayıt ek şeridinde oynatılır, yapay zekâ ile yazıya dökülür. Telefondaki MP3/M4A/WAV kaydı **+ Ekle → Dosya ekle** ile gelir.
+- **Sesli dinle** (not ⋮ menüsünün üst satırı): notu sesli okur; ses, hız ve dikte kullanım şekli Ayarlar → **Sesli dinle ve dikte**.
 
 ## Transkript (metne dök) {#transcript}
 - Ses kaydı, video (YouTube dahil) ya da görselin ek döşemesindeki **altyazı simgesine** (ya da sayfadaki görselin/videonun ⋮ → **Metne dök**) dokun. Konuşma zaman damgalarıyla yazıya dökülür; görseldeki yazı cihazda (internetsiz) okunur.
@@ -148,29 +150,30 @@ Bir kelimeye ya da cümleye **PDF, görsel, video, YouTube** ya da nottaki herha
 - **Dosyayı metne dök** (+ menüsü ya da + Ekle): ses, video veya görsel seç; dosya nota girer ve yazısı doğrudan notun gövdesine yazılır.
 - Büyük kayıtlar: dahili yapay zekâ en çok 15 MB alır; Ayarlar'dan kendi Gemini anahtarını girersen uzun kayıtlar da dökülür. Android'de videonun yalnız SES izi gönderilir (çok daha küçük).
 - Transkriptler aramaya girer: kayıtta geçen bir söz, kaydın olduğu notu bulur.
-- **Sesli oku:** not menüsünden notu (ya da bir PDF/Word belgesini) sesli dinle; hız ve ses Ayarlar → Sesli okuma'dan.
+- **Sesli dinle:** not menüsünden notu (ya da Yapay zekâ → Belge oku ile bir PDF/Word belgesini) sesli dinle; hız ve ses Ayarlar → Sesli dinle ve dikte.
 
 ## Yapay zekâ {#ai}
 Not ekranındaki **✦** düğmesi:
 - **Notu özetle** (kısa / detaylı), **Analiz et** (ana noktalar ve yapılacaklar), **Notu düzelt** (basit / dengeli / detaylı), **Notu geliştir** (resmî, kısa, madde ya da numaralı liste), **Çevir**.
 - **Sohbet:** tek ekran; üstteki çiplerle neyle konuşacağını seç — **Tüm notlar**, **Bu not** (yazısı ve ekleri) ya da **Bu belge** — ve not kapsamında **Soru-cevap** ya da **Beyin fırtınası** (yapay zekâ ana hat çıkarır, beğendiğin fikri tek dokunuşla nota eklersin).
 - Ek bölümünde: PDF özetle/soru sor, görselden metin, sesi yazıya dök.
-Ana ekrandaki **Yapay Zeka** ekranı:
-- **Not Asistanı:** bütün notlarına soru sor ("alışveriş listemde ne eksik?").
+Ana ekrandaki **Yapay zekâ** ekranı (⋮ ya da geniş ekranda soldaki ray):
+- **AI sesli not:** en üstte; konuş, notu kursun.
+- **Not Asistanı:** bütün notlarına soru sor ("alışveriş listemde ne eksik?"); boşken altında hazır öneri düğmeleri durur.
 - **AI ile beraber düşün:** önce bir ana hat çıkarır, sonra birlikte geliştirirsiniz.
-- **Araçlar:** haftayı özetle, kopyaları temizle, başlıksızlara başlık öner, etiketsizleri etiketle.
+- **Notlarının üzerinde:** haftayı özetle, etiketsizleri etiketle, başlıksızlara başlık öner, kopyaları temizle (kopyalar yapay zekâ harcamaz). Yapacak işi olmayan kutu soluk durur ve **Şu an iş yok** der.
 - **Belge oku:** PDF/Word/sunumu sesli dinle.
 - **Günlük brifing:** güne bakış — hatırlatıcılar ve son notlar; her sabah bildirim olarak da gelebilir.
-- Günlük puan gece yarısı yenilenir; kendi Gemini API anahtarını girersen kotasız çalışır (Ayarlar → Yapay Zeka).
+- Günlük puan gece yarısı yenilenir; kendi Gemini API anahtarını girersen kotasız çalışır. Sağ üstteki ayar düğmesi (**Yapay zekâ ayarları**) Ayarlar'ın Yapay zekâ alanını açar.
 
 ## Düzenleme: klasör, etiket, arşiv {#organize}
 - **Klasörler:** oluştur, renklendir, sırala; notu ⋮ → Klasöre taşı ile taşı. Klasörü **gizli** yaparsan notları ana ekranda görünmez; ⋮ → Gizli klasörler ve parmak izi/yüz ile açılır.
 - **Etiketler:** başlığın yanındaki + ile ekle; Süz levhasında etikete uzun basarak yeniden adlandır ya da sil.
-- **Sabitle:** önemli notlar üstte ve Sabitli süzgecinde (eski yıldızlılar da sabitlidir).
+- **Sabitle:** önemli notlar üstte ve Sabitli süzgecinde. **Yıldızla** ayrı bir işarettir (Yıldızlı süzgeci).
 - **Kilitle:** notu parmak izi/yüz kilidiyle kilitle; içeriği aramaya, widget'a ve yapay zekâya hiç sızmaz.
 - **Arşiv** ve **Çöp kutusu:** ⋮ menüsünden; çöpten geri yükle.
 - **Şablonlar:** + → Şablondan; hazır şablonları önizle, maddeleri seç; kendi notunu ⋮ → **Şablon olarak kaydet** ile şablon yap, şablon düzenleyicide değiştir.
-- **Defter:** + → Şablon → Defter ya da herhangi bir notta ⋮ → **Defter görünümü**: çizgili/kareli/noktalı kâğıt ve sayfalar. Başka notun eklerini ⋮ → **Deftere kopyala** ile kopyasıyla toplar.
+- **Defter:** + → Şablon → Defter ya da herhangi bir notta ⋮ → **Defter görünümü**: çizgili/kareli/noktalı kâğıt ve sayfalar. Başka notun eklerini ⋮ → **Deftere topla** ile kopyalarıyla bir deftere toplar.
 
 ## Hatırlatıcılar {#reminders}
 - Başlığın yanındaki **+ → Alarm** ile tarih ve saat seç; zamanı gelince bildirim gelir.
@@ -186,12 +189,12 @@ Not ekranındaki **Paylaş** düğmesi: üstte gönderilecek metnin önizlemesi 
 - **Ekler:** nottaki fotoğrafları, PDF'leri, videoları dosya olarak gönderir.
 - **Ayarlı PDF / Word…** (başlık, görsellerin yeri/boyu) ve **Balonlu PDF** (balonlar ve çizimler PDF'in içine basılır).
 
-**NOTLAR KULLANICISINA:** **Kopya gönder** (arkadaşın gelen kutusuna), **Birlikte düzenle** (ortak not ya da notun klasörü) ve **Not paketi** (ekleri, sayfaları, çizimleri ve balonlarıyla tek dosya; karşı taraf Notlar'da aynen açar).
+**NOTLAR KULLANICISINA:** **Arkadaşa gönder** (bağımsız bir kopya arkadaşının Gelen'ine düşer), **Birlikte düzenle** (ortak not ya da notun klasörü) ve **Not paketi** (ekleri, sayfaları, çizimleri ve balonlarıyla tek dosya; karşı taraf Notlar'da aynen açar).
 
 Açtığın bir eki (görsel, PDF, sunum, video, YouTube) tam ekran görüntüleyicinin üst çubuğundaki **Paylaş** ile doğrudan gönderebilir, **Eki kopyala** ile başka nota yapıştırabilirsin.
 Birlikte çalışma:
-- **Kişiler:** ⋮ → Kişiler'den arkadaş ekle.
-- **Kopya gönder** (Paylaş levhasında): notun bağımsız bir kopyası arkadaşının **Gelen notlar** kutusuna düşer.
+- **Kişiler:** sağ üstteki avatar → Kişiler'den arkadaş ekle.
+- **Arkadaşa gönder** (Paylaş levhasında): notun bağımsız bir kopyası arkadaşının ana ekranındaki **Gelen**'e düşer; o kabul edince kendi notu olur.
 - **Ortak not:** üst çubuktaki kişi ekle düğmesi; ikiniz aynı notu aynı anda düzenlersiniz.
 - **Klasör paylaşımı:** okuma / yazma yetkisiyle; paylaşılan klasörün kendi sohbeti var.
 Başka uygulamalardan: herhangi bir uygulamada **Paylaş → Notlar** de (metin, bağlantı, görsel, PDF, sunum, video). Yeni not mu, var olan bir nota mı ekleneceğini seçersin.
@@ -207,10 +210,13 @@ Uygulama simgesine uzun basınca **Sesli not** kısayolu çıkar. Bilgisayarda y
 
 ## Ayarlar {#settings}
 Ayarlar ekranının üstündeki arama kutusuyla her ayarı adıyla bul ("brifing", "mikrofon").
-- **Görünüm:** tema (sistem, açık, koyu, kâğıt), koyu tema zamanlaması, yazı tipi, kart görünümü, sütun sayısı (ana ekranda iki parmakla yakınlaştırarak da değişir).
-- **Dil:** 16 dil; ya da sistem dili.
-- **Yapay Zeka:** model, kendi API anahtarın, günlük brifing saati, işaretli maddeleri koruma.
-- **Sesli okuma:** cihaz sesi ya da yapay zekâ sesi, okuma hızı.
+En üstte iki kart: **Kullanım kılavuzu** ve **Kişiselleştir** (hangi düğme ve alan görünsün; oradan **düzenleme modu** da başlar). Altında alanlar; kapalı alanın satırındaki özet içinde ne seçili olduğunu söyler.
+- **Kişiler:** arkadaşlar, gelen notlar, bulunabilirlik, ortak not bildirimleri.
+- **Yapay zekâ:** model, kendi API anahtarın, günlük brifing, otomatik etiket/başlık, işaretli maddeleri koruma.
+- **Görünüm:** örnek metin, tema (sistem, açık, koyu, kâğıt, kırık beyaz), yazı tipi ve boyutu, **Dil** (Türkçe, İngilizce ya da sistem dili), uzun maddeler, madde jestleri, **Kartta görünenler** (canlı kart örneğiyle: sayaç, etiket, tarih, görsel, ekler, klasör, kâğıt…), koyu tema zamanlaması.
+- **Eklentiler ve hızlı not:** yapay zekâ, ses, video, tarama, çizim, şablon… eklentilerini aç/kapa; ana ekrandaki hızlı not satırı; **İpuçlarını yeniden göster**.
+- **Notlar ve klasörler:** yana kaydırma, klasör sırası, sıralama, ızgara/liste ve sütun sayısı (ana ekranda iki parmakla da değişir), paylaşılan notlar ana ekranda, içerikten not açılışı (Balonlu/Klasik), eklerin içinde arama.
+- **Sesli dinle ve dikte:** cihaz sesi, Türkçe ses ya da yapay zekâ sesi; okuma hızı ve tonu; dikte mikrofonunun kullanım şekli.
 - **İzinler:** mikrofon, kamera, bildirim, konum — durumu ve ayar ekranları.
 - **Senkron:** Google Drive bağlantısı ve Drive kullanımı, otomatik yükleme sınırı, bu cihazdaki önbellek, yedekleme.
 - **Hesap:** çıkış, hesabı silme; gizlilik politikası ve lisanslar.
@@ -220,4 +226,6 @@ Ayarlar ekranının üstündeki arama kutusuyla her ayarı adıyla bul ("brifing
 - Boş bıraktığın not kapatınca kendiliğinden silinir; hatırlatıcısı olan not silinmez.
 - Bekleyen ekler ana ekranda "buluta yükleniyor" çubuğunda görünür; ekler bu cihazda güvendedir.
 - Kopyaladığın bir eki başka bir nota **+ Ekle → Kopyalanan eki yapıştır** ile koyabilirsin.
+- Gizli jestler ilk kez mümkün olduğunda **bir kez** tek satırla tanıtılır (liste notu, ilk PDF, ilk görsel, ızgarada klasörler); bir oturumda en fazla bir ipucu. Yeniden görmek için Ayarlar → Eklentiler ve hızlı not → **İpuçlarını yeniden göster**.
+- Kalem metin notuna değince el yazısı tuvali kendiliğinden açılır (ilk seferde neden açıldığı yazar); istemezsen kalem ayarlarında **Kalemi otomatik algıla**'yı kapat.
 - Bu kılavuza her zaman ⋮ menüsünden ya da Ayarlar'dan ulaşırsın.

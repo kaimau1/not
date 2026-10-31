@@ -4242,7 +4242,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get guideContents => 'İçindekiler';
 
   @override
-  String get guideOpenScreen => 'Ekranı aç';
+  String get guideOpenScreen => 'Göster';
 
   @override
   String guideNoResults(String query) {
@@ -6121,4 +6121,51 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get cardElementsSampleTag => 'ev';
+
+  @override
+  String get aiTaskIdle => 'Şu an iş yok';
+
+  @override
+  String get aiSettingsTooltip => 'Yapay zekâ ayarları';
+
+  @override
+  String get tipStylusCanvas =>
+      'Kalem algılandı: el yazısı tuvali açıldı. Kalem ayarlarındaki “Kalemi otomatik algıla” ile kapatılır.';
+
+  @override
+  String get tipSemanticSearch =>
+      'Anlam açıkken kelimeyi değil anlamı arar: “araba masrafları” benzin fişini de bulur.';
+
+  @override
+  String get tipListGestures =>
+      'İpucu: maddenin üstünü parmakla çiz → işaretlenir; karala → silinir.';
+
+  @override
+  String get tipPdfBubble => 'İpucu: sayfaya basılı tut → oraya balon bırak.';
+
+  @override
+  String get tipMediaPin =>
+      'İpucu: görsele basılı tut, en üste sürükle → notun tepesine sabitlenir.';
+
+  @override
+  String get tipGridSwipeFolders =>
+      'İpucu: ekranı yana kaydır → klasörler arasında geç.';
+
+  @override
+  String get tipGridSwipeFilters =>
+      'İpucu: ekranı yana kaydır → süzgeçler arasında geç.';
+
+  @override
+  String get tipsResetTitle => 'İpuçlarını yeniden göster';
+
+  @override
+  String get tipsResetInfo =>
+      'Bir kez çıkan küçük ipuçları (jestler, Anlam araması) yeniden çıkar.';
+
+  @override
+  String get tipsResetDone => 'İpuçları yeniden gösterilecek';
+
+  @override
+  String get swipeModeInfo =>
+      'Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola).';
 }

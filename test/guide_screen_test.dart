@@ -49,9 +49,9 @@ Paragraf **kalın** yazı.
     expect(reference, contains('pages'));
     expect(reference, contains('embed'));
     for (final f in files) {
-      final ids = parseGuide(
-        f.readAsStringSync(),
-      ).sections.map((s) => s.id).toList();
+      final ids = parseGuide(f.readAsStringSync()).sections
+          .map((s) => s.id)
+          .toList();
       expect(ids, reference, reason: f.path);
       // Bilinmeyen kimlik genel simgeye düşerdi: her bölümün simgesi var.
       for (final id in ids) {
@@ -61,6 +61,44 @@ Paragraf **kalın** yazı.
           reason: id,
         );
       }
+    }
+  });
+
+  // F14.5: kılavuz koddan yeniden yazıldı; eskimiş iddialar geri gelmesin.
+  test('kılavuz eskimiş özellik adlarını taşımaz', () {
+    final tr = File('assets/guide/guide_tr.md').readAsStringSync();
+    for (final stale in [
+      '16 dil',
+      'asistan mikrofonu',
+      'eski yıldızlılar',
+      'Sesli yazdır',
+      'Sesli oku:',
+      'Yapay Zeka',
+      'Kopya gönder',
+      'Görüntülü not',
+      'Galeriden video',
+      'Ses dosyası ekle',
+      'Deftere kopyala',
+      'son kullandığın kipi',
+      'yalnız yazılar senkronlanır',
+      'menülerde ayrıca yok',
+    ]) {
+      expect(tr.contains(stale), isFalse, reason: stale);
+    }
+    final en = File('assets/guide/guide_en.md').readAsStringSync();
+    for (final stale in [
+      '16 languages',
+      'assistant microphone',
+      'old starred notes',
+      'Send a copy',
+      'Video note',
+      'Video from gallery',
+      'Add audio file',
+      'Copy to notebook',
+      'mode you used last',
+      'sync text only',
+    ]) {
+      expect(en.contains(stale), isFalse, reason: stale);
     }
   });
 
@@ -81,12 +119,15 @@ Paragraf **kalın** yazı.
     await tester.pumpAndSettle();
   }
 
-  testWidgets('içindekiler bölümü açar, arama süzer', (tester) async {
+  testWidgets('bölüm kartı açılır, arama süzer', (tester) async {
     await pump(tester);
     expect(find.text('Kullanım kılavuzu'), findsOneWidget);
+    // F14.5: içindekiler çipleri yok — kart listesinin kendisi içindekiler.
+    expect(find.byType(ActionChip), findsNothing);
     // Bölümler kapalı başlar.
     expect(find.textContaining('Başlığın altında'), findsNothing);
-    await tester.tap(find.byKey(const ValueKey('guide-chip-pages')));
+    await tester.ensureVisible(find.text('Not sayfaları'));
+    await tester.tap(find.text('Not sayfaları'));
     await tester.pumpAndSettle();
     expect(
       find.textContaining('Başlığın altında', findRichText: true),

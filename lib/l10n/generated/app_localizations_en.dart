@@ -4249,7 +4249,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guideContents => 'Contents';
 
   @override
-  String get guideOpenScreen => 'Open screen';
+  String get guideOpenScreen => 'Show me';
 
   @override
   String guideNoResults(String query) {
@@ -6141,4 +6141,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cardElementsSampleTag => 'home';
+
+  @override
+  String get aiTaskIdle => 'Nothing to do right now';
+
+  @override
+  String get aiSettingsTooltip => 'AI settings';
+
+  @override
+  String get tipStylusCanvas =>
+      'Stylus detected: the handwriting canvas opened. Turn this off with “Detect pen automatically” in the pen settings.';
+
+  @override
+  String get tipSemanticSearch =>
+      'With Meaning on, search matches meaning, not words: “car expenses” also finds the fuel receipt.';
+
+  @override
+  String get tipListGestures =>
+      'Tip: strike an item through with your finger → it is checked; scribble → it is deleted.';
+
+  @override
+  String get tipPdfBubble => 'Tip: long-press the page → drop a bubble there.';
+
+  @override
+  String get tipMediaPin =>
+      'Tip: long-press an image and drag it to the top → it is pinned above the note.';
+
+  @override
+  String get tipGridSwipeFolders =>
+      'Tip: swipe the screen sideways → move between folders.';
+
+  @override
+  String get tipGridSwipeFilters =>
+      'Tip: swipe the screen sideways → move between filters.';
+
+  @override
+  String get tipsResetTitle => 'Show tips again';
+
+  @override
+  String get tipsResetInfo =>
+      'The small one-time tips (gestures, Meaning search) appear again.';
+
+  @override
+  String get tipsResetDone => 'Tips will be shown again';
+
+  @override
+  String get swipeModeInfo =>
+      'When you swipe the screen sideways in grid view. In list view, swiping a row pins it (right) or archives it (left).';
 }

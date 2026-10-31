@@ -29,6 +29,7 @@ import '../../../core/constants.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
+import '../../../core/tips.dart';
 import 'personalize_screen.dart' show PersonalizeModuleSwitches;
 import '../../../core/utils/diagnostics.dart';
 import '../../../core/utils/doc_picker.dart';
@@ -380,6 +381,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _QuickCaptureRowSwitch(),
             title: l10n.quickCaptureRowSetting,
             keywords: '${l10n.quickCaptureRowInfo} duzenleme modu',
+          ),
+          // BİR KEZ ÇIKAN İPUÇLARI (F14.6) burada sıfırlanır.
+          _SettingRow(
+            const _TipsResetTile(),
+            title: l10n.tipsResetTitle,
+            keywords: '${l10n.tipsResetInfo} ipucu jest yardim',
           ),
         ],
       ),
