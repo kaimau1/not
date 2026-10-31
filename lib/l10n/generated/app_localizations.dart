@@ -263,13 +263,13 @@ abstract class AppLocalizations {
   /// No description provided for @newItemHint.
   ///
   /// In tr, this message translates to:
-  /// **'Yeni öğe'**
+  /// **'Yeni madde'**
   String get newItemHint;
 
   /// No description provided for @moreItemsCount.
   ///
   /// In tr, this message translates to:
-  /// **'+{count} öğe daha'**
+  /// **'+{count} madde daha'**
   String moreItemsCount(int count);
 
   /// No description provided for @addAttachment.
@@ -467,7 +467,7 @@ abstract class AppLocalizations {
   /// No description provided for @listenToNote.
   ///
   /// In tr, this message translates to:
-  /// **'Sesli oku'**
+  /// **'Sesli dinle'**
   String get listenToNote;
 
   /// No description provided for @aiNoApiKey.
@@ -479,7 +479,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiError.
   ///
   /// In tr, this message translates to:
-  /// **'Yapay zeka isteği başarısız: {error}'**
+  /// **'Yapay zekâ isteği başarısız: {error}'**
   String aiError(String error);
 
   /// No description provided for @aiSummaryTitle.
@@ -635,7 +635,7 @@ abstract class AppLocalizations {
   /// No description provided for @expandListItemsInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Uzun liste/işaret öğeleri birkaç satıra sarılıp tamamen görünür. Kapalıyken satır tek satırda kalır, dokununca açılır.'**
+  /// **'Uzun liste/işaret maddeleri birkaç satıra sarılıp tamamen görünür. Kapalıyken satır tek satırda kalır, dokununca açılır.'**
   String get expandListItemsInfo;
 
   /// No description provided for @quickCaptureRowSetting.
@@ -1187,7 +1187,7 @@ abstract class AppLocalizations {
   /// No description provided for @autoTagSettingInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Not kapanırken etiketi yoksa yapay zeka uygun etiketi kendisi ekler'**
+  /// **'Not kapanırken etiketi yoksa yapay zekâ uygun etiketi kendisi ekler'**
   String get autoTagSettingInfo;
 
   /// No description provided for @suggestTags.
@@ -1331,7 +1331,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceProcessing.
   ///
   /// In tr, this message translates to:
-  /// **'Söyledikleriniz uygulanıyor...'**
+  /// **'Söylediklerin uygulanıyor...'**
   String get voiceProcessing;
 
   /// No description provided for @voiceNothingHeard.
@@ -1433,7 +1433,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiModelVoice.
   ///
   /// In tr, this message translates to:
-  /// **'Sesli not asistanı'**
+  /// **'AI sesli not asistanı'**
   String get aiModelVoice;
 
   /// No description provided for @aiModelAuto.
@@ -1457,7 +1457,7 @@ abstract class AppLocalizations {
   /// No description provided for @clearNoteConfirm.
   ///
   /// In tr, this message translates to:
-  /// **'Notun içeriği (metin ve liste öğeleri) silinecek. Emin misin?'**
+  /// **'Notun içeriği (metin ve liste maddeleri) silinecek. Emin misin?'**
   String get clearNoteConfirm;
 
   /// No description provided for @themePaper.
@@ -1493,13 +1493,13 @@ abstract class AppLocalizations {
   /// No description provided for @liveDictation.
   ///
   /// In tr, this message translates to:
-  /// **'Sesli yazdır'**
+  /// **'Dikte'**
   String get liveDictation;
 
   /// No description provided for @dictationHoldHint.
   ///
   /// In tr, this message translates to:
-  /// **'Mikrofonu basılı tutup konuşun, bırakınca yazılır'**
+  /// **'Mikrofonu basılı tutup konuş, bırakınca yazılır'**
   String get dictationHoldHint;
 
   /// No description provided for @itemsSelected.
@@ -1697,7 +1697,7 @@ abstract class AppLocalizations {
   /// No description provided for @permMicInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Sesli not ve dikte için gerekli'**
+  /// **'AI sesli not, dikte ve ses kaydı için gerekli'**
   String get permMicInfo;
 
   /// No description provided for @permNotifications.
@@ -1793,7 +1793,7 @@ abstract class AppLocalizations {
   /// No description provided for @newVoiceCapture.
   ///
   /// In tr, this message translates to:
-  /// **'Sesli not'**
+  /// **'AI sesli not'**
   String get newVoiceCapture;
 
   /// No description provided for @suggestTitle.
@@ -1895,7 +1895,7 @@ abstract class AppLocalizations {
   /// No description provided for @removeItem.
   ///
   /// In tr, this message translates to:
-  /// **'Öğeyi sil'**
+  /// **'Maddeyi sil'**
   String get removeItem;
 
   /// No description provided for @copyWholeNote.
@@ -1913,7 +1913,7 @@ abstract class AppLocalizations {
   /// No description provided for @speechPlay.
   ///
   /// In tr, this message translates to:
-  /// **'Sesli oku'**
+  /// **'Sesli dinle'**
   String get speechPlay;
 
   /// No description provided for @speechPause.
@@ -2465,7 +2465,7 @@ abstract class AppLocalizations {
   /// No description provided for @pdfPagesHint.
   ///
   /// In tr, this message translates to:
-  /// **'Sayfaya dokunup seçin. Sayfa notları sayfalarıyla birlikte taşınır; silinen sayfanın notu listede görünmez ama kaydınızda kalır.'**
+  /// **'Sayfaya dokunup seç. Sayfa notları sayfalarıyla birlikte taşınır; silinen sayfanın notu listede görünmez ama kaydında kalır.'**
   String get pdfPagesHint;
 
   /// No description provided for @pdfEditFailed.
@@ -2489,7 +2489,7 @@ abstract class AppLocalizations {
   /// No description provided for @pdfNoPageNotes.
   ///
   /// In tr, this message translates to:
-  /// **'Henüz sayfa notu yok. Sayfayı çevirip alttaki alana yazın.'**
+  /// **'Henüz sayfa notu yok. Sayfayı çevirip alttaki alana yaz.'**
   String get pdfNoPageNotes;
 
   /// No description provided for @crop.
@@ -2999,7 +2999,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiHistoryVoiceNote.
   ///
   /// In tr, this message translates to:
-  /// **'Sesli not'**
+  /// **'AI sesli not'**
   String get aiHistoryVoiceNote;
 
   /// No description provided for @aiTaskWeekSummary.
@@ -3407,7 +3407,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiProvider.
   ///
   /// In tr, this message translates to:
-  /// **'Yapay zeka sağlayıcısı'**
+  /// **'Yapay zekâ sağlayıcısı'**
   String get aiProvider;
 
   /// No description provided for @aiProviderInfo.
@@ -3653,7 +3653,7 @@ abstract class AppLocalizations {
   /// No description provided for @premiumPerkAi.
   ///
   /// In tr, this message translates to:
-  /// **'Günlük yapay zeka puanı'**
+  /// **'Günlük yapay zekâ puanı'**
   String get premiumPerkAi;
 
   /// No description provided for @premiumPerkAttach.
@@ -4331,7 +4331,7 @@ abstract class AppLocalizations {
   /// No description provided for @captureModeClassicInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Düz metin notu; içerik ek olarak girer.'**
+  /// **'Düz metin notu; belge ek olur.'**
   String get captureModeClassicInfo;
 
   /// No description provided for @captureModeNew.
@@ -4997,13 +4997,13 @@ abstract class AppLocalizations {
   /// No description provided for @archiveCopyHere.
   ///
   /// In tr, this message translates to:
-  /// **'Arşiv defterine kopyala'**
+  /// **'Deftere topla'**
   String get archiveCopyHere;
 
   /// No description provided for @archiveNoNotebook.
   ///
   /// In tr, this message translates to:
-  /// **'Henüz arşiv defteri yok. Önce bir tane oluştur.'**
+  /// **'Henüz defter yok. Önce bir tane oluştur.'**
   String get archiveNoNotebook;
 
   /// No description provided for @archiveNothingToCopy.
@@ -5015,7 +5015,7 @@ abstract class AppLocalizations {
   /// No description provided for @archiveCopied.
   ///
   /// In tr, this message translates to:
-  /// **'{count} dosya arşiv defterine kopyalandı.'**
+  /// **'{count} dosya deftere toplandı.'**
   String archiveCopied(int count);
 
   /// No description provided for @attachmentTagInsert.
@@ -6167,7 +6167,7 @@ abstract class AppLocalizations {
   /// No description provided for @noteDuplicatedNoAttachments.
   ///
   /// In tr, this message translates to:
-  /// **'Kopyalandı — ekler kopyaya taşınmadı'**
+  /// **'Çoğaltıldı — ekler yeni nota taşınmadı'**
   String get noteDuplicatedNoAttachments;
 
   /// No description provided for @pdfGoToPage.
@@ -6203,7 +6203,7 @@ abstract class AppLocalizations {
   /// No description provided for @pdfNoBookmarks.
   ///
   /// In tr, this message translates to:
-  /// **'Henüz yer imi yok. Sayfa çubuğundaki yer imi düğmesine dokunun.'**
+  /// **'Henüz yer imi yok. Sayfa çubuğundaki yer imi düğmesine dokun.'**
   String get pdfNoBookmarks;
 
   /// No description provided for @pdfRotateView.
@@ -8105,7 +8105,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareToFriendShort.
   ///
   /// In tr, this message translates to:
-  /// **'Kopya gönder'**
+  /// **'Arkadaşa gönder'**
   String get shareToFriendShort;
 
   /// No description provided for @shareCollaborateShort.
@@ -8171,13 +8171,13 @@ abstract class AppLocalizations {
   /// No description provided for @customizeModeHint.
   ///
   /// In tr, this message translates to:
-  /// **'Gizlemek/göstermek için öğelere dokunun'**
+  /// **'Gizlemek/göstermek için düğmelere dokun'**
   String get customizeModeHint;
 
   /// No description provided for @customizeHiddenCount.
   ///
   /// In tr, this message translates to:
-  /// **'{count} öğe gizli · dokunarak değiştirin'**
+  /// **'{count} düğme gizli · dokunarak değiştir'**
   String customizeHiddenCount(int count);
 
   /// No description provided for @customizeSave.
@@ -8231,7 +8231,7 @@ abstract class AppLocalizations {
   /// No description provided for @customizeStartInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Düzenleme modunu açın; ekranlardaki düğme ve alanlara dokunarak gizleyin ya da gösterin. Bitince üstteki şeritten Kaydet\'e basın.'**
+  /// **'Düzenleme modunu aç; ekranlardaki düğme ve alanlara dokunarak gizle ya da göster. Bitince üstteki şeritten Kaydet\'e bas.'**
   String get customizeStartInfo;
 
   /// No description provided for @customizeStart.
@@ -8285,7 +8285,7 @@ abstract class AppLocalizations {
   /// No description provided for @moduleVoiceInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Sesli not, sesli yazdırma, ses kaydı'**
+  /// **'AI sesli not, dikte, ses kaydı'**
   String get moduleVoiceInfo;
 
   /// No description provided for @moduleVideo.
@@ -8339,7 +8339,7 @@ abstract class AppLocalizations {
   /// No description provided for @moduleTemplatesInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Şablondan not, alışveriş listesi, arşiv defteri'**
+  /// **'Şablondan not, alışveriş listesi, defter'**
   String get moduleTemplatesInfo;
 
   /// No description provided for @moduleTags.
@@ -8411,7 +8411,7 @@ abstract class AppLocalizations {
   /// No description provided for @personalizeHomeItemsInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Seçili olanlar ana ekranda görünür; düzenleme modunda ana ekrandaki öğelere dokunarak da gizleyebilirsiniz.'**
+  /// **'Seçili olanlar ana ekranda görünür; düzenleme modunda ana ekrandaki düğmelere dokunarak da gizleyebilirsin.'**
   String get personalizeHomeItemsInfo;
 
   /// No description provided for @personalizeBubbles.
@@ -8423,7 +8423,7 @@ abstract class AppLocalizations {
   /// No description provided for @personalizeChipsInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Seçili olanlar görünür; dokunarak açıp kapatın.'**
+  /// **'Seçili olanlar görünür; dokunarak aç ya da kapat.'**
   String get personalizeChipsInfo;
 
   /// No description provided for @personalizeReset.
@@ -9137,7 +9137,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceMicTooltipDictate.
   ///
   /// In tr, this message translates to:
-  /// **'Sesle yazdır — basılı tut: AI düzenlesin'**
+  /// **'Dikte — basılı tut: AI sesli not'**
   String get voiceMicTooltipDictate;
 
   /// No description provided for @quickAddCamera.
@@ -9227,7 +9227,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareTogetherInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Aynı notu/klasörü siz ikiniz görür ve değiştirirsiniz'**
+  /// **'Aynı notu/klasörü ikiniz de görür ve değiştirirsiniz'**
   String get shareTogetherInfo;
 
   /// No description provided for @shareCopySection.
@@ -9557,13 +9557,13 @@ abstract class AppLocalizations {
   /// No description provided for @fileUseBubbles.
   ///
   /// In tr, this message translates to:
-  /// **'Belge gibi not al'**
+  /// **'Balonlu: belge notun kendisi olur'**
   String get fileUseBubbles;
 
   /// No description provided for @fileUseClassic.
   ///
   /// In tr, this message translates to:
-  /// **'Nota ek olarak ekle'**
+  /// **'Klasik: belge ek olur'**
   String get fileUseClassic;
 
   /// No description provided for @fileUseClassicImageInfo.
@@ -9659,7 +9659,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiVoiceRowTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Sesli not'**
+  /// **'AI sesli not'**
   String get aiVoiceRowTitle;
 
   /// No description provided for @aiVoiceRowInfoEditor.
@@ -9917,7 +9917,7 @@ abstract class AppLocalizations {
   /// No description provided for @cardShowMoreCount.
   ///
   /// In tr, this message translates to:
-  /// **'“+N öğe daha” satırı'**
+  /// **'“+N madde daha” satırı'**
   String get cardShowMoreCount;
 
   /// No description provided for @cardShowStatusIcons.
@@ -10945,6 +10945,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Arkadaşlarının gönderdiği kopyalar ve seni eklediği ortak notlar burada birlikte görünür.'**
   String get sharedHubEmptyHint;
+
+  /// No description provided for @settingsModulesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklentiler ve hızlı not'**
+  String get settingsModulesTitle;
+
+  /// No description provided for @settingsModulesSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'{on}/{total} eklenti açık'**
+  String settingsModulesSummary(int on, int total);
+
+  /// No description provided for @settingsSoundTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli dinle ve dikte'**
+  String get settingsSoundTitle;
+
+  /// No description provided for @cardElementsSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'{on}/{total} açık · örnekle gör'**
+  String cardElementsSummary(int on, int total);
+
+  /// No description provided for @cardElementsSampleTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta sonu alışverişi'**
+  String get cardElementsSampleTitle;
+
+  /// No description provided for @cardElementsSampleItem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Madde {n}'**
+  String cardElementsSampleItem(int n);
+
+  /// No description provided for @cardElementsSampleTag.
+  ///
+  /// In tr, this message translates to:
+  /// **'ev'**
+  String get cardElementsSampleTag;
 }
 
 class _AppLocalizationsDelegate

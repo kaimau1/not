@@ -61,7 +61,7 @@
   "ask": "Ask a question",
   "extractText": "Extract text",
   "transcribe": "Transcribe",
-  "listenToNote": "Read aloud",
+  "listenToNote": "Listen",
   "aiNoApiKey": "Enter your Gemini API key in Settings first",
   "aiError": "AI request failed: {error}",
   "aiSummaryTitle": "AI summary",
@@ -236,7 +236,7 @@
   "aiModelChat": "Summaries, titles, tags and chat",
   "aiModelDocument": "Document chat and PDF summary",
   "aiModelTranslate": "Translation",
-  "aiModelVoice": "Voice note assistant",
+  "aiModelVoice": "AI voice note assistant",
   "aiModelAuto": "Automatic (recommended)",
   "aiModelsInfo": "You can pick a separate model per job: short text work is fine on a fast model, long documents want a capable one. If your chosen model hits its quota or is withdrawn, the next one is tried automatically.",
   "clearNote": "Clear content",
@@ -287,7 +287,7 @@
   "editorToolList": "List",
   "permissionsTitle": "Permissions",
   "permMic": "Microphone",
-  "permMicInfo": "Needed for voice notes and dictation",
+  "permMicInfo": "Needed for AI voice notes, dictation and audio recording",
   "permNotifications": "Notifications",
   "permNotificationsInfo": "Needed for reminders and the daily briefing",
   "permBattery": "Battery optimisation",
@@ -303,7 +303,7 @@
   "permGrant": "Grant",
   "permOpenSettings": "Open settings",
   "newHandwriting": "Handwriting",
-  "newVoiceCapture": "Voice note",
+  "newVoiceCapture": "AI voice note",
   "suggestTitle": "Suggest a title",
   "noteMetaMenu": "Tag · Reminder · Folder",
   "folder": "Folder",
@@ -323,7 +323,7 @@
   "removeItem": "Delete item",
   "copyWholeNote": "Copy the whole note",
   "allCopied": "The whole note was copied to the clipboard",
-  "speechPlay": "Read aloud",
+  "speechPlay": "Listen",
   "speechPause": "Pause",
   "speechResume": "Resume",
   "speechStop": "Stop",
@@ -538,7 +538,7 @@
   "aiHistoryClear": "Clear",
   "aiHistoryQuestion": "Question",
   "aiHistoryNoteAction": "Note action",
-  "aiHistoryVoiceNote": "Voice note",
+  "aiHistoryVoiceNote": "AI voice note",
   "aiTaskWeekSummary": "Summarise the week",
   "aiTaskWeekSummaryInfo": "One summary from the last 7 days",
   "aiTaskTagUntagged": "Tag the untagged",
@@ -836,7 +836,7 @@
   "captureModeBubbles": "Bubbles",
   "captureModeBubblesInfo": "Content becomes a document page: bubbles, highlights and pen.",
   "captureModeClassic": "Classic",
-  "captureModeClassicInfo": "Plain text note; content goes in as an attachment.",
+  "captureModeClassicInfo": "Plain text note; the document becomes an attachment.",
   "captureModeNew": "NEW",
   "imagePrepareTitle": "Adjust images",
   "imagePrepareDone": "Continue",
@@ -985,10 +985,10 @@
   "archiveDeletePage": "Delete page",
   "archivePrevPage": "Previous page",
   "archiveNextPage": "Next page",
-  "archiveCopyHere": "Copy to an archive notebook",
-  "archiveNoNotebook": "No archive notebook yet. Create one first.",
+  "archiveCopyHere": "Collect into notebook",
+  "archiveNoNotebook": "No notebook yet. Create one first.",
   "archiveNothingToCopy": "This note has no attachments to copy.",
-  "archiveCopied": "{count} files copied to the archive notebook.",
+  "archiveCopied": "{count} files collected into the notebook.",
   "@archiveCopied": {
     "placeholders": {
       "count": {
@@ -1351,7 +1351,7 @@
   "reminderDone": "Done",
   "dateToday": "Today",
   "dateTomorrow": "Tomorrow",
-  "noteDuplicatedNoAttachments": "Duplicated — attachments were not copied",
+  "noteDuplicatedNoAttachments": "Duplicated — attachments were not carried over",
   "pdfGoToPage": "Go to page",
   "pdfThumbnails": "Browse pages",
   "pdfBookmarks": "Bookmarks",
@@ -1702,7 +1702,7 @@
       }
     }
   },
-  "shareToFriendShort": "Send a copy",
+  "shareToFriendShort": "Send to a friend",
   "shareCollaborateShort": "Edit together",
   "shareAsNoteShort": "Note package",
   "shareMoreSection": "MORE",
@@ -1713,7 +1713,7 @@
   "customizeHideItem": "Hide",
   "customizeShowItem": "Show",
   "customizeModeTitle": "Edit mode",
-  "customizeModeHint": "Tap items to hide or show them",
+  "customizeModeHint": "Tap buttons to hide or show them",
   "customizeHiddenCount": "{count} hidden · tap to change",
   "customizeSave": "Save",
   "customizeSaved": "Layout saved",
@@ -1732,7 +1732,7 @@
   "moduleAi": "AI",
   "moduleAiInfo": "AI buttons on the home and note screens",
   "moduleVoice": "Voice",
-  "moduleVoiceInfo": "Voice notes, dictation, audio recording",
+  "moduleVoiceInfo": "AI voice notes, dictation, audio recording",
   "moduleVideo": "Video",
   "moduleVideoInfo": "Recording, gallery videos, YouTube",
   "moduleDocuments": "Documents",
@@ -1741,7 +1741,7 @@
   "moduleDrawing": "Drawing",
   "moduleDrawingInfo": "Handwriting and drawing",
   "moduleTemplates": "Templates",
-  "moduleTemplatesInfo": "Notes from templates, shopping list, archive notebook",
+  "moduleTemplatesInfo": "Notes from templates, shopping list, notebook",
   "moduleTags": "Note chips",
   "moduleTagsInfo": "Tag, folder and reminder chips under the title",
   "moduleCollaboration": "Collaboration",
@@ -1874,7 +1874,7 @@
   "captureModeSetting": "Notes from content",
   "captureModeSettingInfo": "When taking a note from a photo, scan, PDF, slides or image. Your first choice becomes the default.",
   "captureModeAsk": "Ask every time",
-  "voiceMicTooltipDictate": "Type as I speak — long-press: AI tidies",
+  "voiceMicTooltipDictate": "Dictate — long-press: AI voice note",
   "quickAddCamera": "Camera",
   "quickAddFile": "Add file",
   "quickAddFromDevice": "Choose a file",
@@ -1944,8 +1944,8 @@
   "presenceSomeone": "Someone",
   "frameColorInfo": "Drawn only around the card on the home screen, not inside the note",
   "filterStarred": "Starred",
-  "fileUseBubbles": "Annotate as a document",
-  "fileUseClassic": "Add to a note",
+  "fileUseBubbles": "Bubbles: the document becomes the note",
+  "fileUseClassic": "Classic: the document becomes an attachment",
   "fileUseClassicImageInfo": "A plain note opens; images sit on the page and text flows around them.",
   "fileUseVideo": "Take notes on the video",
   "fileUseVideoInfo": "The video plays on top, you write your notes below.",
@@ -1968,7 +1968,7 @@
   "listeningModeDictation": "Live typing",
   "dictationPanelHint": "Text appears at the cursor as you speak",
   "voiceStartShort": "Start",
-  "aiVoiceRowTitle": "Voice note",
+  "aiVoiceRowTitle": "AI voice note",
   "aiVoiceRowInfoEditor": "Speak; AI tidies it up and adds it to this note",
   "aiVoiceRowInfoHub": "Speak; AI builds the note — title, items and reminders",
   "archivePaperDashed": "Dashed lines",
@@ -2246,5 +2246,39 @@
   "sharedHubTagInbox": "Received",
   "sharedHubTagShared": "Shared",
   "sharedHubEmpty": "Nothing received or shared yet",
-  "sharedHubEmptyHint": "Copies your friends send you and shared notes they add you to appear here together."
+  "sharedHubEmptyHint": "Copies your friends send you and shared notes they add you to appear here together.",
+  "settingsModulesTitle": "Modules & quick note",
+  "settingsModulesSummary": "{on}/{total} modules on",
+  "@settingsModulesSummary": {
+    "placeholders": {
+      "on": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsSoundTitle": "Listening & dictation",
+  "cardElementsSummary": "{on}/{total} on · see a sample",
+  "@cardElementsSummary": {
+    "placeholders": {
+      "on": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "cardElementsSampleTitle": "Weekend shopping",
+  "cardElementsSampleItem": "Item {n}",
+  "@cardElementsSampleItem": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "cardElementsSampleTag": "home"
 }

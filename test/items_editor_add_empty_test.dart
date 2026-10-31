@@ -4,7 +4,7 @@ import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/presentation/editor/items_editor.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
-/// "+ Yeni öğe" düğmesi boş öğe BİRİKTİRMEZ (kullanıcı ekran görüntüsü
+/// "+ Yeni madde" düğmesi boş öğe BİRİKTİRMEZ (kullanıcı ekran görüntüsü
 /// 2026-09-23) — ama tek boş öğeyle de sınırlamaz: üst üste en çok
 /// [kMaxTrailingEmptyItems] boş öğe açılabilir (kullanıcı isteği 2026-09-26:
 /// "1'den fazla yeni boş öğe eklenebilmeli, max 3 tane").
@@ -16,7 +16,7 @@ void main() {
     home: Scaffold(body: child),
   );
 
-  final addButton = find.widgetWithText(TextButton, 'Yeni öğe');
+  final addButton = find.widgetWithText(TextButton, 'Yeni madde');
 
   test('sondaki boş öğe sayısı', () {
     NoteItem item(String text) => NoteItem(id: text, text: text);

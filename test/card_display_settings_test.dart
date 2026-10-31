@@ -5,6 +5,7 @@ import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/note_card.dart';
+import 'package:notlar/features/settings/presentation/settings_screen.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -63,7 +64,7 @@ void main() {
     expect(find.byType(LinearProgressIndicator), findsNothing);
     expect(find.text('#yazilim'), findsOneWidget);
     expect(find.byIcon(Icons.push_pin), findsOneWidget);
-    expect(find.textContaining('öğe daha'), findsOneWidget);
+    expect(find.textContaining('madde daha'), findsOneWidget);
   });
 
   testWidgets('her öğe tek tek açılıp kapatılır', (tester) async {
@@ -77,7 +78,44 @@ void main() {
     expect(find.text('3/10'), findsOneWidget);
     expect(find.text('#yazilim'), findsNothing);
     expect(find.byIcon(Icons.push_pin), findsNothing);
-    expect(find.textContaining('öğe daha'), findsNothing);
+    expect(find.textContaining('madde daha'), findsNothing);
     expect(find.text('22:21'), findsNothing);
+  });
+
+  // F14.2: 11 kart anahtarı Görünüm'de alt alta değil, canlı örnekli
+  // levhada; örnek kart anahtarla aynı anda değişir.
+  testWidgets('Kartta görünenler levhası: canlı örnek anahtarla değişir', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('tr'),
+          home: const Scaffold(body: CardElementsRow()),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.textContaining('açık'), findsOneWidget);
+    await tester.tap(find.byType(CardElementsRow));
+    await tester.pumpAndSettle();
+    final preview = find.byKey(const ValueKey('card-elements-preview'));
+    expect(preview, findsOneWidget);
+    expect(
+      find.descendant(of: preview, matching: find.text('#ev')),
+      findsOneWidget,
+    );
+    await tester.tap(find.widgetWithText(SwitchListTile, 'Etiket'));
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(of: preview, matching: find.text('#ev')),
+      findsNothing,
+    );
   });
 }

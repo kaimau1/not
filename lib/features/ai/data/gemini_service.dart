@@ -145,7 +145,7 @@ class GeminiService {
     if (_provider == AiProvider.gemini) return;
     throw GeminiException(
       '$feature şu an yalnızca Google Gemini ile çalışıyor. '
-      "Ayarlar > Yapay Zeka'dan sağlayıcıyı Gemini'ye çevirebilir ya da "
+      "Ayarlar > Yapay zekâ'dan sağlayıcıyı Gemini'ye çevirebilir ya da "
       'anahtarı kaldırıp dahili AI\'ı kullanabilirsin.',
     );
   }
@@ -273,7 +273,7 @@ class GeminiService {
     if (candidates.isEmpty && prefer == null && _activeModel == null) {
       throw GeminiException(
         '${_provider.label} model listesi alınamadı. '
-        "Ayarlar > Yapay Zeka > Model'den kullanmak istediğin modeli "
+        "Ayarlar > Yapay zekâ > Model'den kullanmak istediğin modeli "
         'elle seçebilirsin.',
       );
     }

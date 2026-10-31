@@ -66,7 +66,7 @@ void main() {
       NoteItem(id: 'd', text: 'Zeytin'),
     ];
 
-    testWidgets('"Yeni öğe" işaretsizlerin SONUNA girer', (tester) async {
+    testWidgets('"Yeni madde" işaretsizlerin SONUNA girer', (tester) async {
       List<NoteItem>? latest;
       await tester.pumpWidget(
         _wrap(
@@ -79,7 +79,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final addButton = find.widgetWithText(TextButton, 'Yeni öğe');
+      final addButton = find.widgetWithText(TextButton, 'Yeni madde');
       await tester.ensureVisible(addButton);
       await tester.pumpAndSettle();
       await tester.tap(addButton);
@@ -203,7 +203,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final addButton = find.widgetWithText(TextButton, 'Yeni öğe');
+    final addButton = find.widgetWithText(TextButton, 'Yeni madde');
     await tester.ensureVisible(addButton);
     await tester.pumpAndSettle();
     await tester.tap(addButton);

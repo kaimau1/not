@@ -231,7 +231,7 @@ class FirebaseAiClient {
       );
     }
     return GeminiException(
-      'Yapay zeka şu an yanıt veremiyor: '
+      'Yapay zekâ şu an yanıt veremiyor: '
       '${e?.message ?? error?.toString() ?? 'bilinmeyen hata'}',
     );
   }

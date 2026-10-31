@@ -61,7 +61,11 @@ import '../../notes/presentation/note_card_media.dart' show CardThumbs;
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
-import '../../notes/presentation/notes_providers.dart' show swipeModeProvider;
+import '../../notes/presentation/notes_providers.dart'
+    show noteSortProvider, swipeModeProvider;
+import '../../notes/presentation/filter_sheet.dart' show sortLabel;
+import '../../notes/presentation/note_card.dart' show NoteCard;
+import '../../notes/domain/note_item.dart';
 import '../../notes/data/drive_store.dart';
 import '../../notes/presentation/drive_ui.dart';
 import '../data/permissions_service.dart';
@@ -258,7 +262,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         icon: Icons.palette_outlined,
         title: l10n.settingsAppearance,
         summary: _appearanceSummary(l10n),
-        keywords: 'tema yazi boyutu zemin koyu acik kagit liste',
+        keywords: 'tema yazi boyutu zemin koyu acik kagit liste dil kart',
         rows: [
           _SettingRow(
             // ÖRNEK METİN en üstte (kullanıcı isteği 2026-08-16: "görünüm
@@ -298,6 +302,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '${l10n.fontSizeSmall} ${l10n.fontSizeMedium} '
                 '${l10n.fontSizeLarge} ${l10n.fontSizeXLarge}',
           ),
+          _SettingRow(
+            const _LanguageSelector(),
+            title: l10n.settingsLanguage,
+            keywords: 'dil language uygulama dili',
+          ),
           _SettingRow(_SubHeader(l10n.settingsCardsHeader)),
           _SettingRow(
             const _ExpandListItemsSwitch(),
@@ -309,119 +318,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: l10n.itemGesturesSetting,
             keywords: '${l10n.itemGesturesSettingInfo} jest cizim karala',
           ),
+          // KARTTA GÖRÜNENLER TEK SATIR (F14.2, 2026-10-31): 11 anahtar
+          // alt alta Görünüm'ü okunmaz yapıyordu ve sonucu ancak ana ekranda
+          // görülüyordu. Artık canlı kart örnekli bir alt levhada; satırın
+          // anahtar kelimeleri bütün anahtarları taşır, aramada bulunur.
           _SettingRow(
-            const _CardRichPreviewSwitch(),
-            title: l10n.cardRichPreview,
-            keywords: '${l10n.cardRichPreviewInfo} renk alti cizili kalin',
-          ),
-          _SettingRow(
-            const _CardHideSensitiveSwitch(),
-            title: l10n.cardHideSensitive,
-            keywords: '${l10n.cardHideSensitiveInfo} sifre parola iban gizli',
-          ),
-          // KARTTA GÖRÜNENLER (kullanıcı isteği 2026-10-20: "97/97 sayacı
-          // ayarlardan açılıp kapatılsın, varsayılan kapalı; bu tip
-          // şeylerin hepsi tek tek açılıp kapatılabilsin"). Her öğe ayrı
-          // satır: aramada tek tek bulunur.
-          _SettingRow(_SubHeader(l10n.cardElementsHeader)),
-          _SettingRow(
-            _PrefSwitch(
-              key: const ValueKey('settings-card-progress'),
-              provider: cardShowProgressProvider,
-              icon: Icons.linear_scale,
-              title: l10n.cardShowProgress,
-              subtitle: l10n.cardShowProgressInfo,
-            ),
-            title: l10n.cardShowProgress,
+            const CardElementsRow(),
+            title: l10n.cardElementsHeader,
             keywords:
-                '${l10n.cardShowProgressInfo} kart sayac ilerleme yuzde '
-                'tamamlanan',
-          ),
-          _SettingRow(
-            _PrefSwitch(
-              provider: cardShowMoreCountProvider,
-              icon: Icons.more_horiz,
-              title: l10n.cardShowMoreCount,
-            ),
-            title: l10n.cardShowMoreCount,
-            keywords: 'kart oge daha madde sayi',
-          ),
-          _SettingRow(
-            _PrefSwitch(
-              provider: cardShowStatusIconsProvider,
-              icon: Icons.push_pin_outlined,
-              title: l10n.cardShowStatusIcons,
-              subtitle: l10n.cardShowStatusIconsInfo,
-            ),
-            title: l10n.cardShowStatusIcons,
-            keywords: '${l10n.cardShowStatusIconsInfo} kart simge rozet',
-          ),
-          _SettingRow(
-            _PrefSwitch(
-              provider: cardShowTagProvider,
-              icon: Icons.tag,
-              title: l10n.cardShowTag,
-            ),
-            title: l10n.cardShowTag,
-            keywords: 'kart etiket hashtag',
-          ),
-          _SettingRow(
-            _PrefSwitch(
-              provider: cardShowDateProvider,
-              icon: Icons.schedule,
-              title: l10n.cardShowDate,
-            ),
-            title: l10n.cardShowDate,
-            keywords: 'kart tarih saat zaman',
-          ),
-          _SettingRow(
-            _PrefSwitch(
-              provider: cardShowMediaProvider,
-              icon: Icons.image_outlined,
-              title: l10n.cardShowMedia,
-            ),
-            title: l10n.cardShowMedia,
-            keywords: 'kart gorsel resim kapak kucuk resim video fotograf',
-          ),
-          _SettingRow(
-            _PrefSwitch(
-              provider: cardShowFilesProvider,
-              icon: Icons.attach_file,
-              title: l10n.cardShowFiles,
-              subtitle: l10n.cardShowFilesInfo,
-            ),
-            title: l10n.cardShowFiles,
-            keywords: '${l10n.cardShowFilesInfo} kart ek dosya pdf ses belge',
-          ),
-          _SettingRow(
-            _PrefSwitch(
-              provider: homeShowSharedProvider,
-              icon: Icons.people_alt_outlined,
-              title: l10n.homeShowShared,
-              subtitle: l10n.homeShowSharedInfo,
-            ),
-            title: l10n.homeShowShared,
-            keywords:
-                '${l10n.homeShowSharedInfo} paylasilan ortak not ana ekran',
-          ),
-          _SettingRow(
-            _PrefSwitch(
-              provider: cardShowFolderProvider,
-              icon: Icons.folder_outlined,
-              title: l10n.cardShowFolder,
-              subtitle: l10n.cardShowFolderInfo,
-            ),
-            title: l10n.cardShowFolder,
-            keywords: '${l10n.cardShowFolderInfo} kart klasor',
-          ),
-          _SettingRow(
-            _PrefSwitch(
-              provider: cardShowPaperProvider,
-              icon: Icons.menu_book_outlined,
-              title: l10n.cardShowPaper,
-            ),
-            title: l10n.cardShowPaper,
-            keywords: 'kart defter kagit cizgili kareli desen',
+                '${l10n.cardRichPreview} ${l10n.cardHideSensitive} '
+                '${l10n.cardShowProgress} ${l10n.cardShowMoreCount} '
+                '${l10n.cardShowStatusIcons} ${l10n.cardShowTag} '
+                '${l10n.cardShowDate} ${l10n.cardShowMedia} '
+                '${l10n.cardShowFiles} ${l10n.cardShowFolder} '
+                '${l10n.cardShowPaper} kart sayac ilerleme etiket tarih '
+                'gorsel ek klasor defter sifre renk',
           ),
           // ANA EKRAN ZEMİNİ BURADAN KALKTI (kullanıcı isteği 2026-08-16):
           // artık ana ekranın kendi 3 nokta menüsünde (bkz.
@@ -434,35 +345,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ],
       ),
-      // KİŞİSELLEŞTİR (kullanıcı isteği 2026-10-16): asıl ekran ayrı
-      // (`/personalize`); bu alan aramada bulunsun ve özet versin diye.
+      // EKLENTİLER (F14.2, 2026-10-31): eskiden adı "Kişiselleştir"di —
+      // üstteki Kişiselleştir kartıyla ikinci giriş, özeti de içinde
+      // olmayan video sarma süreleriydi. Kişiselleştir'in TEK kapısı artık
+      // üstteki kart; bu alan içindekini adlandırır ve özetler. Kimlik
+      // 'personalize' kalır (`?area=` bağlantıları).
       _Area(
         id: 'personalize',
-        icon: Icons.tune_rounded,
-        title: l10n.personalizeTitle,
-        summary: _personalizeSummary(l10n),
+        icon: Icons.extension_outlined,
+        title: l10n.settingsModulesTitle,
+        summary: _modulesSummary(l10n),
         keywords:
             'kisisellestir gizle goster eklenti duzenleme modu dugme alan '
             'arti menu ekle video sarma saniye ileri geri',
         rows: [
-          _SettingRow(
-            ListTile(
-              key: const ValueKey('settings-personalize-row'),
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.extension_outlined),
-              title: Text(l10n.personalizeOpen),
-              subtitle: Text(l10n.personalizeInfo),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () async {
-                final result = await context.push<String>('/personalize');
-                if (result == 'edit' && context.mounted) context.pop();
-              },
-            ),
-            title: l10n.personalizeTitle,
-            keywords:
-                '${l10n.personalizeModules} ${l10n.personalizeQuickAdd} '
-                '${l10n.videoSeekBack} ${l10n.videoSeekForward}',
-          ),
           // EKLENTİLER BURADA DA aç/kapa (kullanıcı isteği 2026-10-16:
           // "kişiselleştirme ayarlar kısmında aç kapa yapılamıyor, oradan da
           // yapılabilmeli") — Kişiselleştir ekranıyla aynı parça, aynı kayıt.
@@ -495,7 +391,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         id: 'notes',
         icon: Icons.dashboard_customize_outlined,
         title: l10n.notesSettingsTitle,
-        summary: swipeModeLabel(context, ref.watch(swipeModeProvider)),
+        summary: _notesSummary(context, l10n),
         keywords:
             'klasor sira kaydir yana cek sutun izgara liste siralama arama '
             'raf',
@@ -527,6 +423,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '${l10n.noteViewList} ${l10n.folderShelfSetting} sutun',
           ),
           _SettingRow(
+            _PrefSwitch(
+              provider: homeShowSharedProvider,
+              icon: Icons.people_alt_outlined,
+              title: l10n.homeShowShared,
+              subtitle: l10n.homeShowSharedInfo,
+            ),
+            title: l10n.homeShowShared,
+            keywords:
+                '${l10n.homeShowSharedInfo} paylasilan ortak not ana ekran',
+          ),
+          _SettingRow(
             const CaptureModeSetting(),
             title: l10n.captureModeSetting,
             keywords:
@@ -556,9 +463,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _Area(
         id: 'sound',
         icon: Icons.record_voice_over_outlined,
-        title: l10n.settingsSpeech,
+        // Alan adı İÇERİĞİ (F14.2): "Sesli okuma" deyip içinde dikte ve dil
+        // taşıyordu. Dil artık Görünüm'de.
+        title: l10n.settingsSoundTitle,
         summary: _soundSummary(l10n),
-        keywords: 'mikrofon ses okuma hiz dil basili tut',
+        keywords: 'mikrofon ses okuma sesli dinle dikte hiz basili tut',
         rows: [
           // SESLENDİRME TEK BLOKTA (kullanıcı isteği 2026-08-09: "sesli okuma
           // ayarları ve ai ayarları düzenlenmeli ve birleştirilmeli; ai ve
@@ -589,11 +498,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _VoiceModeSelector(),
             title: l10n.voiceModeSetting,
             keywords: '${l10n.voiceModeHold} ${l10n.voiceModeTap} mikrofon',
-          ),
-          _SettingRow(
-            const _LanguageSelector(),
-            title: l10n.settingsLanguage,
-            keywords: 'dil language uygulama dili',
           ),
         ],
       ),
@@ -750,17 +654,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       // ayarlar da kapanır: kullanıcı düzenleyeceği ekrana
                       // iner.
                       if (result == 'edit' && context.mounted) context.pop();
-                    },
-                  ),
-                  _ShortcutTile(
-                    key: const ValueKey('settings-edit-mode'),
-                    icon: Icons.touch_app_outlined,
-                    title: l10n.customizeModeTitle,
-                    subtitle: l10n.customizeModeShort,
-                    color: scheme.tertiary,
-                    onTap: () {
-                      Personalize.startEditing();
-                      context.pop();
                     },
                   ),
                 ],
@@ -962,16 +855,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  /// Kaç öğe gizli + sarma süreleri ("3 gizli · ⏪10 ⏩10 sn").
-  String _personalizeSummary(AppLocalizations l10n) {
+  /// Kaç eklenti açık ("8/9 açık"); kısmen açık eklenti açık sayılmaz.
+  String _modulesSummary(AppLocalizations l10n) {
     final p = Personalize.prefs.value;
-    final seek =
-        '${l10n.videoSeekBack} ${l10n.secondsShort(p.seekBack)} · '
-        '${l10n.videoSeekForward} ${l10n.secondsShort(p.seekForward)}';
-    return p.hidden.isEmpty
-        ? seek
-        : '${l10n.personalizeHiddenSummary(p.hidden.length)} · $seek';
+    final on = UiModule.all.where((m) => p.moduleState(m) ?? false).length;
+    return l10n.settingsModulesSummary(on, UiModule.all.length);
   }
+
+  /// Notlar alanının özeti İÇERİKTEN (F14.2): sıralama · yana kaydırma.
+  String _notesSummary(BuildContext context, AppLocalizations l10n) =>
+      '${sortLabel(l10n, ref.watch(noteSortProvider))} · '
+      '${swipeModeLabel(context, ref.watch(swipeModeProvider))}';
 
   String _aiSummary(AppLocalizations l10n) =>
       l10n.aiBuiltInRemaining(ref.watch(freeAiRemainingProvider));
@@ -999,8 +893,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// (speechOutputProvider.rate()), ozet satiri ise senkron bir String
   /// istiyor. Yaninda bekleyen bir "%100" yazmaktansa yalniz dugme modunu
   /// gosteriyorum.
-  String _soundSummary(AppLocalizations l10n) =>
-      ref.watch(voiceButtonModeProvider) == VoiceButtonMode.hold
-      ? l10n.voiceModeHold
-      : l10n.voiceModeTap;
+  String _soundSummary(AppLocalizations l10n) {
+    final engine = switch (ref.watch(ttsEngineProvider)) {
+      TtsEngine.device => l10n.ttsEngineDevice,
+      TtsEngine.gemini => l10n.ttsEngineAi,
+      TtsEngine.antalia => l10n.ttsEngineLocal,
+    };
+    final mode = ref.watch(voiceButtonModeProvider) == VoiceButtonMode.hold
+        ? l10n.voiceModeHold
+        : l10n.voiceModeTap;
+    return '${l10n.listen}: $engine · ${l10n.liveDictation}: $mode';
+  }
 }

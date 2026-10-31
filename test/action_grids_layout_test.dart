@@ -79,7 +79,7 @@ void main() {
     expect(text.center.dx, lessThan(list.center.dx));
     expect(fab.top - text.bottom, lessThan(60));
     // Ana ekranda sesli not menüde yok (tek mikrofon, F3.1).
-    expect(find.text('Sesli not'), findsNothing);
+    expect(find.text('AI sesli not'), findsNothing);
     // Gruplar başlıklı; dosya birincilin hemen üstünde, sonra kamera,
     // "Diğer" en üstte. Sıralı liste birincil satırda.
     final camera = tester.getRect(

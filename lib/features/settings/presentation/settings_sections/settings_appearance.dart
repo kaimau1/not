@@ -209,18 +209,16 @@ class _AppearancePreview extends ConsumerWidget {
             Text(
               l10n.appearancePreviewNoteTitle,
               textScaler: TextScaler.linear(step.scale),
-              style: styled(
-                theme.textTheme.titleMedium,
-              ).copyWith(color: scheme.onSurface),
+              style: styled(theme.textTheme.titleMedium)
+                  .copyWith(color: scheme.onSurface),
             ),
             const SizedBox(height: 6),
             Text.rich(
               TextSpan(
                 children: richSpans(
                   l10n.appearancePreviewBody,
-                  styled(
-                    theme.textTheme.bodyMedium,
-                  ).copyWith(color: scheme.onSurface),
+                  styled(theme.textTheme.bodyMedium)
+                      .copyWith(color: scheme.onSurface),
                   palette: NoteColors.richPalette,
                   markerColor: const Color(0x00000000),
                 ),
@@ -243,9 +241,8 @@ class _AppearancePreview extends ConsumerWidget {
                   child: Text(
                     l10n.appearancePreviewItem,
                     textScaler: TextScaler.linear(step.scale),
-                    style: styled(
-                      theme.textTheme.bodyMedium,
-                    ).copyWith(color: scheme.onSurfaceVariant),
+                    style: styled(theme.textTheme.bodyMedium)
+                        .copyWith(color: scheme.onSurfaceVariant),
                   ),
                 ),
               ],
@@ -468,9 +465,8 @@ class _VoiceModeSelector extends ConsumerWidget {
         const SizedBox(height: 6),
         Text(
           l10n.voiceModeInfo,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         // AKILLI DİNLEME (2026-10-19): sesli yakalama levhasındaki iki
         // anahtarın kalıcı karşılığı.
@@ -839,6 +835,171 @@ class _DarkScheduleEditor extends ConsumerWidget {
             ],
           ),
       ],
+    );
+  }
+}
+
+/// **KARTTA GÖRÜNENLER** satırı (F14.2, 2026-10-31): kaç anahtarın açık
+/// olduğunu söyler, dokununca canlı kart örnekli alt levhayı açar.
+class CardElementsRow extends ConsumerWidget {
+  const CardElementsRow({super.key});
+
+  static final _switches = <NotifierProvider<BoolPrefNotifier, bool>>[
+    cardRichPreviewProvider,
+    cardHideSensitiveProvider,
+    cardShowProgressProvider,
+    cardShowMoreCountProvider,
+    cardShowStatusIconsProvider,
+    cardShowTagProvider,
+    cardShowDateProvider,
+    cardShowMediaProvider,
+    cardShowFilesProvider,
+    cardShowFolderProvider,
+    cardShowPaperProvider,
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final on = _switches.where(ref.watch).length;
+    return ListTile(
+      key: const ValueKey('settings-card-elements'),
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.view_agenda_outlined),
+      title: Text(l10n.cardElementsHeader),
+      subtitle: Text(l10n.cardElementsSummary(on, _switches.length)),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => showAppSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (_) => const CardElementsSheet(),
+      ),
+    );
+  }
+}
+
+/// Kart anahtarlarının levhası: üstte SABİT canlı kart örneği (anahtar
+/// değişince aynı anda değişir — kart sağlayıcıları izliyor), altında
+/// kaydırılan anahtarlar.
+class CardElementsSheet extends ConsumerWidget {
+  const CardElementsSheet({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final now = DateTime.now();
+    final sample = Note(
+      id: 'card-elements-preview',
+      type: NoteType.checklist,
+      title: l10n.cardElementsSampleTitle,
+      items: [
+        for (var i = 0; i < 6; i++)
+          NoteItem(
+            id: 'p$i',
+            text: l10n.cardElementsSampleItem(i + 1),
+            checked: i < 2,
+          ),
+      ],
+      tags: [l10n.cardElementsSampleTag],
+      pinned: true,
+      createdAt: now,
+      updatedAt: now,
+    );
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Text(
+              l10n.cardElementsHeader,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          // Örnek kart: dokunulmaz (açacak gerçek not yok).
+          Container(
+            key: const ValueKey('card-elements-preview'),
+            color: scheme.surfaceContainerLow,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            alignment: Alignment.center,
+            child: SizedBox(
+              width: 200,
+              child: IgnorePointer(child: NoteCard(note: sample)),
+            ),
+          ),
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              padding: EdgeInsets.fromLTRB(
+                20,
+                8,
+                20,
+                16 + MediaQuery.paddingOf(context).bottom,
+              ),
+              children: [
+                const _CardRichPreviewSwitch(),
+                const _CardHideSensitiveSwitch(),
+                _PrefSwitch(
+                  key: const ValueKey('settings-card-progress'),
+                  provider: cardShowProgressProvider,
+                  icon: Icons.linear_scale,
+                  title: l10n.cardShowProgress,
+                  subtitle: l10n.cardShowProgressInfo,
+                ),
+                _PrefSwitch(
+                  provider: cardShowMoreCountProvider,
+                  icon: Icons.more_horiz,
+                  title: l10n.cardShowMoreCount,
+                ),
+                _PrefSwitch(
+                  provider: cardShowStatusIconsProvider,
+                  icon: Icons.push_pin_outlined,
+                  title: l10n.cardShowStatusIcons,
+                  subtitle: l10n.cardShowStatusIconsInfo,
+                ),
+                _PrefSwitch(
+                  provider: cardShowTagProvider,
+                  icon: Icons.tag,
+                  title: l10n.cardShowTag,
+                ),
+                _PrefSwitch(
+                  provider: cardShowDateProvider,
+                  icon: Icons.schedule,
+                  title: l10n.cardShowDate,
+                ),
+                _PrefSwitch(
+                  provider: cardShowMediaProvider,
+                  icon: Icons.image_outlined,
+                  title: l10n.cardShowMedia,
+                ),
+                _PrefSwitch(
+                  provider: cardShowFilesProvider,
+                  icon: Icons.attach_file,
+                  title: l10n.cardShowFiles,
+                  subtitle: l10n.cardShowFilesInfo,
+                ),
+                _PrefSwitch(
+                  provider: cardShowFolderProvider,
+                  icon: Icons.folder_outlined,
+                  title: l10n.cardShowFolder,
+                  subtitle: l10n.cardShowFolderInfo,
+                ),
+                _PrefSwitch(
+                  provider: cardShowPaperProvider,
+                  icon: Icons.menu_book_outlined,
+                  title: l10n.cardShowPaper,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

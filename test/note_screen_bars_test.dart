@@ -6,7 +6,7 @@ import 'package:notlar/features/notes/presentation/editor/format_bar.dart';
 import 'package:notlar/features/notes/presentation/editor/items_editor.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
-/// Faz 12 — not ekranı: biçim paneli adları, liste "+ Yeni öğe" tekrarı,
+/// Faz 12 — not ekranı: biçim paneli adları, liste "+ Yeni madde" tekrarı,
 /// menünün ince alt satırı.
 void main() {
   Widget wrap(Widget child) => MaterialApp(
@@ -61,7 +61,7 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('liste: boş madde ipucu düğmeden ayrı adda — tek "Yeni öğe"', (
+  testWidgets('liste: boş madde ipucu düğmeden ayrı adda — tek "Yeni madde"', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -78,7 +78,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('items-add-button')), findsOneWidget);
-    expect(find.text('Yeni öğe'), findsOneWidget);
+    expect(find.text('Yeni madde'), findsOneWidget);
     expect(find.text('Madde yaz'), findsWidgets);
   });
 

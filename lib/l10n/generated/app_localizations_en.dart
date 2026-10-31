@@ -212,7 +212,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transcribe => 'Transcribe';
 
   @override
-  String get listenToNote => 'Read aloud';
+  String get listenToNote => 'Listen';
 
   @override
   String get aiNoApiKey => 'Enter your Gemini API key in Settings first';
@@ -735,7 +735,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiModelTranslate => 'Translation';
 
   @override
-  String get aiModelVoice => 'Voice note assistant';
+  String get aiModelVoice => 'AI voice note assistant';
 
   @override
   String get aiModelAuto => 'Automatic (recommended)';
@@ -878,7 +878,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permMic => 'Microphone';
 
   @override
-  String get permMicInfo => 'Needed for voice notes and dictation';
+  String get permMicInfo =>
+      'Needed for AI voice notes, dictation and audio recording';
 
   @override
   String get permNotifications => 'Notifications';
@@ -931,7 +932,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newHandwriting => 'Handwriting';
 
   @override
-  String get newVoiceCapture => 'Voice note';
+  String get newVoiceCapture => 'AI voice note';
 
   @override
   String get suggestTitle => 'Suggest a title';
@@ -1000,7 +1001,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get allCopied => 'The whole note was copied to the clipboard';
 
   @override
-  String get speechPlay => 'Read aloud';
+  String get speechPlay => 'Listen';
 
   @override
   String get speechPause => 'Pause';
@@ -1588,7 +1589,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiHistoryNoteAction => 'Note action';
 
   @override
-  String get aiHistoryVoiceNote => 'Voice note';
+  String get aiHistoryVoiceNote => 'AI voice note';
 
   @override
   String get aiTaskWeekSummary => 'Summarise the week';
@@ -2323,7 +2324,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get captureModeClassicInfo =>
-      'Plain text note; content goes in as an attachment.';
+      'Plain text note; the document becomes an attachment.';
 
   @override
   String get captureModeNew => 'NEW';
@@ -2682,17 +2683,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archiveNextPage => 'Next page';
 
   @override
-  String get archiveCopyHere => 'Copy to an archive notebook';
+  String get archiveCopyHere => 'Collect into notebook';
 
   @override
-  String get archiveNoNotebook => 'No archive notebook yet. Create one first.';
+  String get archiveNoNotebook => 'No notebook yet. Create one first.';
 
   @override
   String get archiveNothingToCopy => 'This note has no attachments to copy.';
 
   @override
   String archiveCopied(int count) {
-    return '$count files copied to the archive notebook.';
+    return '$count files collected into the notebook.';
   }
 
   @override
@@ -3421,7 +3422,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noteDuplicatedNoAttachments =>
-      'Duplicated — attachments were not copied';
+      'Duplicated — attachments were not carried over';
 
   @override
   String get pdfGoToPage => 'Go to page';
@@ -4510,7 +4511,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get shareToFriendShort => 'Send a copy';
+  String get shareToFriendShort => 'Send to a friend';
 
   @override
   String get shareCollaborateShort => 'Edit together';
@@ -4544,7 +4545,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customizeModeTitle => 'Edit mode';
 
   @override
-  String get customizeModeHint => 'Tap items to hide or show them';
+  String get customizeModeHint => 'Tap buttons to hide or show them';
 
   @override
   String customizeHiddenCount(int count) {
@@ -4609,7 +4610,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleVoice => 'Voice';
 
   @override
-  String get moduleVoiceInfo => 'Voice notes, dictation, audio recording';
+  String get moduleVoiceInfo => 'AI voice notes, dictation, audio recording';
 
   @override
   String get moduleVideo => 'Video';
@@ -4637,7 +4638,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moduleTemplatesInfo =>
-      'Notes from templates, shopping list, archive notebook';
+      'Notes from templates, shopping list, notebook';
 
   @override
   String get moduleTags => 'Note chips';
@@ -5097,8 +5098,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get captureModeAsk => 'Ask every time';
 
   @override
-  String get voiceMicTooltipDictate =>
-      'Type as I speak — long-press: AI tidies';
+  String get voiceMicTooltipDictate => 'Dictate — long-press: AI voice note';
 
   @override
   String get quickAddCamera => 'Camera';
@@ -5333,10 +5333,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterStarred => 'Starred';
 
   @override
-  String get fileUseBubbles => 'Annotate as a document';
+  String get fileUseBubbles => 'Bubbles: the document becomes the note';
 
   @override
-  String get fileUseClassic => 'Add to a note';
+  String get fileUseClassic => 'Classic: the document becomes an attachment';
 
   @override
   String get fileUseClassicImageInfo =>
@@ -5392,7 +5392,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceStartShort => 'Start';
 
   @override
-  String get aiVoiceRowTitle => 'Voice note';
+  String get aiVoiceRowTitle => 'AI voice note';
 
   @override
   String get aiVoiceRowInfoEditor =>
@@ -6114,4 +6114,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sharedHubEmptyHint =>
       'Copies your friends send you and shared notes they add you to appear here together.';
+
+  @override
+  String get settingsModulesTitle => 'Modules & quick note';
+
+  @override
+  String settingsModulesSummary(int on, int total) {
+    return '$on/$total modules on';
+  }
+
+  @override
+  String get settingsSoundTitle => 'Listening & dictation';
+
+  @override
+  String cardElementsSummary(int on, int total) {
+    return '$on/$total on · see a sample';
+  }
+
+  @override
+  String get cardElementsSampleTitle => 'Weekend shopping';
+
+  @override
+  String cardElementsSampleItem(int n) {
+    return 'Item $n';
+  }
+
+  @override
+  String get cardElementsSampleTag => 'home';
 }
