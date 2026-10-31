@@ -27,6 +27,22 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
 numarasıyla bildir.
 
+**2026-10-31 Faz 13 (balon, kalem, paylaşım, görüntüleyiciler)**
+- [ ] PDF notu → balonlar → Paylaş: "Balonlar" çipi açık, önizlemede
+  "Sayfa N — …" satırları; WhatsApp'a giden metinde balonlar var.
+- [ ] Balon okuma kartında Kopyala; 💬 listede Tümünü kopyala ve Nota aktar
+  (sayfa notuna yazıldı, ikinci basışta çoğalmadı).
+- [ ] Balon yazma kartı: renk · işaret · Aa · sil; işaret/Aa şeritleri
+  klavyeyi KAPATMIYOR; yazı alanı 3 satır, küçük telefonda taşma yok.
+- [ ] PDF/sunum/görsel üstünde kalem: yeni tepsi + üstte geri al/yinele/
+  yalnız kalem/ayarlar; bölmede belge görünür kalıyor.
+- [ ] Paylaş levhası GÖNDER / NOTLAR KULLANICISINA; düğmeye basılı tut →
+  açıklama; web'de "Görsel" PNG gönderiyor.
+- [ ] Görüntüleyicilerde Paylaş (dosya gidiyor; YouTube'da bağlantı);
+  görselde ⋮ → kırp/döndür; PDF'te ⋮ → alan seç / balon listesi.
+- [ ] Görseli basılı tutup taşı → tepede soluk "Bırak: üste sabitle"
+  şeridi, tepeye gelince dolu; TalkBack taşıma yokken bunu okumuyor.
+
 **2026-10-31 Faz 12 (not ekranı) + Gelen çipi**
 - [ ] Klasör şeridinde "Tümü"nün yanında "Gelen" çipi; gelen not varken
   rozet, dokununca Gelen/Paylaşılanlar sekmeleri; avatar levhasında artık yok.

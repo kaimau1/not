@@ -17,6 +17,7 @@ import 'ink_layer.dart';
 import 'text_recognize_screen.dart';
 import 'zoom_math.dart';
 import '../editor/attachment_clipboard.dart';
+import '../editor/pen_tray.dart';
 
 /// Tam ekran görsel görüntüleyici (yakınlaştırma/kaydırma destekli).
 ///
@@ -545,29 +546,60 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
           ),
           actions: [
             // Eki kopyala (çizim kipinde gizli — araç çubuğu kalem için).
-            if (!_editing) CopyAttachmentButton(attachment: _attachment),
-            // Kırpma çizim MODUNDA gizlenir: o an araç çubuğu kalem/silgi
-            // için kullanılıyor, iki kip aynı anda anlamlı değil.
-            if (widget.onCrop != null && !_editing)
-              IconButton(
-                tooltip: l10n.crop,
-                icon: const Icon(Icons.crop),
-                onPressed: _busy ? null : () => _crop(aspect),
+            if (!_editing) ViewerCommonActions(attachment: _attachment),
+            // KIRP / DÖNDÜR ⋮'te (F13.5): ortak çubuk Paylaş · Eki kopyala;
+            // türe özgü düzenleme menüde. Çizim MODUNDA gizli — o an araç
+            // çubuğu kalem/silgi için, iki kip aynı anda anlamlı değil.
+            if ((widget.onCrop != null || widget.onRotate != null) &&
+                !_editing)
+              PopupMenuButton<String>(
+                key: const ValueKey('image-viewer-more'),
+                tooltip: l10n.more,
+                enabled: !_busy,
+                onSelected: (value) {
+                  switch (value) {
+                    case 'crop':
+                      _crop(aspect);
+                    case 'left':
+                      _rotate(-1);
+                    case 'right':
+                      _rotate(1);
+                  }
+                },
+                itemBuilder: (context) => [
+                  if (widget.onCrop != null)
+                    PopupMenuItem(
+                      value: 'crop',
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.crop),
+                        title: Text(l10n.crop),
+                      ),
+                    ),
+                  // Döndürme (kullanıcı isteği 2026-08-16).
+                  if (widget.onRotate != null) ...[
+                    PopupMenuItem(
+                      value: 'left',
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.rotate_left),
+                        title: Text(l10n.imageRotateLeft),
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'right',
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.rotate_right),
+                        title: Text(l10n.imageRotateRight),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-            // Döndürme (kullanıcı isteği 2026-08-16). Kırpmayla aynı kural:
-            // çizim MODUNDA gizlenir, o an araç çubuğu kalem/silgi için.
-            if (widget.onRotate != null && !_editing) ...[
-              IconButton(
-                tooltip: l10n.imageRotateLeft,
-                icon: const Icon(Icons.rotate_left),
-                onPressed: _busy ? null : () => _rotate(-1),
-              ),
-              IconButton(
-                tooltip: l10n.imageRotateRight,
-                icon: const Icon(Icons.rotate_right),
-                onPressed: _busy ? null : () => _rotate(1),
-              ),
-            ],
             // METİN ARACI (Paint'teki gibi): görselin üstüne yazı bırakır.
             // Çizim kipiyle karşılıklı dışlamalı — ikisi de tek parmağı
             // kullanıyor.
@@ -660,7 +692,11 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
                 ),
         ),
         bottomNavigationBar: _editing
-            ? InkToolbar(controller: _ink, hint: context.l10n.inkTwoFingerHint)
+            ? PenTray(
+                controller: _ink,
+                controls: true,
+                hint: context.l10n.inkTwoFingerHint,
+              )
             : ValueListenableBuilder<bool>(
                 valueListenable: _bubbles.addingListenable,
                 builder: (context, adding, _) => adding

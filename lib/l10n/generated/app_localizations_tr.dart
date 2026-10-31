@@ -2359,11 +2359,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get exportTitle => 'Dışa aktar';
 
   @override
-  String get exportNotesOption => 'Not metni (PDF / Word)';
+  String get exportNotesOption => 'Ayarlı PDF / Word…';
 
   @override
   String get exportNotesOptionInfo =>
-      'Notun yazısı ve görselleri; balonlar dahil değil.';
+      'Notun yazısı ve görselleri PDF ya da Word olarak, düzeni ayarlanır; balonlar dahil değil';
 
   @override
   String get captureNoteTitle => 'Not başlığı (isteğe bağlı)';
@@ -6036,4 +6036,53 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quickAddSectionFiles => 'Dosya ve bağlantı';
+
+  @override
+  String get shareIncludeBubbles => 'Balonlar';
+
+  @override
+  String get shareSendSection => 'GÖNDER';
+
+  @override
+  String get shareInAppSection => 'NOTLAR KULLANICISINA';
+
+  @override
+  String get shareTextHint =>
+      'Notun yazısını bir uygulamaya gönderir (WhatsApp, e-posta…)';
+
+  @override
+  String get shareCopyHint => 'Notun yazısını panoya kopyalar';
+
+  @override
+  String get shareQuickPdfHint =>
+      'Notu tek dokunuşla PDF dosyası olarak gönderir';
+
+  @override
+  String get shareAsImageHint => 'Notu sayfa sayfa resim olarak gönderir';
+
+  @override
+  String get shareAttachmentFilesHint =>
+      'Nottaki fotoğraf, PDF, ses ve videoların kendisini gönderir';
+
+  @override
+  String get shareAsNoteInfo =>
+      'Ekler, sayfalar, çizim ve balonlarla tek dosya; Notlar\'da birebir açılır';
+
+  @override
+  String get bubbleCopy => 'Kopyala';
+
+  @override
+  String get bubblesCopyAll => 'Tümünü kopyala';
+
+  @override
+  String get bubblesToNote => 'Nota aktar';
+
+  @override
+  String get bubblesToNoteDone => 'Balonlar notun sonuna eklendi';
+
+  @override
+  String get bubbleMark => 'İşaret';
+
+  @override
+  String get bubbleFormat => 'Biçim';
 }

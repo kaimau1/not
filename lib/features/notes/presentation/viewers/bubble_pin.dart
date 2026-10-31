@@ -237,6 +237,24 @@ class _BubbleReadCard extends StatelessWidget {
                     onPressed: () => controller.toggleArrow(bubble.id),
                   ),
                 const Spacer(),
+                // KOPYALA (F13.1, 2026-10-31): balon yazısı eskiden hiçbir
+                // yoldan panoya alınamıyordu. Salt okunur belgede de var.
+                if (bubbleShareLine(bubble).isNotEmpty)
+                  _action(
+                    key: const ValueKey('bubble-read-copy'),
+                    icon: Icons.copy_outlined,
+                    tooltip: l10n.bubbleCopy,
+                    color: muted,
+                    onPressed: () async {
+                      final messenger = ScaffoldMessenger.maybeOf(context);
+                      await Clipboard.setData(
+                        ClipboardData(text: bubbleShareLine(bubble)),
+                      );
+                      messenger
+                        ?..hideCurrentSnackBar()
+                        ..showMessage(l10n.copied);
+                    },
+                  ),
                 if (!readOnly)
                   TextButton.icon(
                     key: const ValueKey('bubble-read-edit'),
@@ -268,16 +286,18 @@ class _BubbleReadCard extends StatelessWidget {
   }
 
   Widget _action({
+    Key? key,
     required IconData icon,
     required String tooltip,
     required Color color,
     required VoidCallback onPressed,
   }) => IconButton(
+    key: key,
     tooltip: tooltip,
     onPressed: onPressed,
     visualDensity: VisualDensity.compact,
     padding: EdgeInsets.zero,
-    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
     icon: Icon(icon, size: 17, color: color),
   );
 }

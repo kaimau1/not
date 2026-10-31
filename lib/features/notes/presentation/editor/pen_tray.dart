@@ -19,10 +19,34 @@ enum PenTrayTool { lasso, shapes, eraser, pen, marker, highlighter }
 /// kalemin hangi renkte olduğu bir bakışta görülür. Seçili araca (ya da
 /// sağdaki renk düğmesine) yeniden dokunmak ayar panelini açar: renkler,
 /// kalınlık (canlı önizlemeli), şekil seçimi, silgide "temizle".
+///
+/// **TEK KALEM ARAYÜZÜ (F13.3, 2026-10-31):** PDF, sunum ve görsel üstünde
+/// çizim de bu tepsiyle yapılır (eski `InkToolbar` kalktı) — iki ayrı kalem
+/// arayüzü vardı, biri güncellenince öbürü geride kalıyordu. Belge üstünde
+/// üst çubuk olmadığı için [controls] tepsinin üstüne ince bir satır koyar:
+/// ipucu · geri al · yinele · yalnız kalem · ayarlar.
 class PenTray extends StatefulWidget {
-  const PenTray({super.key, required this.controller});
+  const PenTray({
+    super.key,
+    required this.controller,
+    this.controls = false,
+    this.hint,
+    this.trayHeight = 92,
+  });
 
   final InkController controller;
+
+  /// Tepsinin üstünde geri al / yinele / yalnız kalem / ayarlar satırı
+  /// (çizim ekranında bunlar uygulama çubuğunda, burada kapalı).
+  final bool controls;
+
+  /// Denetim satırındaki tek satırlık ipucu (iki parmak jesti); kement ya
+  /// da "yalnız kalem" açıkken onların ipucu yazılır.
+  final String? hint;
+
+  /// Kalemlerin durduğu şeridin yüksekliği: bölmede (belgenin altında) daha
+  /// alçak tutulur, belge görünür kalsın.
+  final double trayHeight;
 
   @override
   State<PenTray> createState() => _PenTrayState();
@@ -75,6 +99,69 @@ class _PenTrayState extends State<PenTray> {
     );
   }
 
+  /// [PenTray.controls] satırı: solda ipucu, sağda geçmiş ve ayarlar.
+  Widget _controlRow(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final hint = _ink.lasso
+        ? l10n.inkLassoHint
+        : _ink.penOnly
+        ? l10n.inkPenOnlyHint
+        : widget.hint;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 2, 4, 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: hint == null
+                ? const SizedBox.shrink()
+                : Text(
+                    hint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+          ),
+          IconButton(
+            key: const ValueKey('pen-tray-undo'),
+            tooltip: l10n.undo,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.undo_rounded),
+            onPressed: _ink.canUndo ? _ink.undo : null,
+          ),
+          IconButton(
+            tooltip: l10n.redo,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.redo_rounded),
+            onPressed: _ink.canRedo ? _ink.redo : null,
+          ),
+          // YALNIZ KALEM: açıkken parmak kaydırır/yakınlaştırır.
+          IconButton(
+            tooltip: _ink.penOnly ? l10n.inkPenOnlyOn : l10n.inkPenOnlyOff,
+            isSelected: _ink.penOnly,
+            visualDensity: VisualDensity.compact,
+            icon: Icon(
+              _ink.penOnly ? Icons.draw_rounded : Icons.touch_app_outlined,
+            ),
+            onPressed: () => _ink.setPenOnly(!_ink.penOnly),
+          ),
+          IconButton(
+            tooltip: l10n.inkSettings,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.tune_rounded),
+            onPressed: () => showModalBottomSheet<void>(
+              context: context,
+              showDragHandle: true,
+              isScrollControlled: true,
+              builder: (_) => InkSettingsSheet(controller: _ink),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
@@ -99,6 +186,7 @@ class _PenTrayState extends State<PenTray> {
               thickness: 1,
               color: scheme.outlineVariant.withValues(alpha: 0.5),
             ),
+            if (widget.controls) _controlRow(context),
             AnimatedSize(
               duration: const Duration(milliseconds: 240),
               curve: Curves.easeOutCubic,
@@ -108,7 +196,7 @@ class _PenTrayState extends State<PenTray> {
                   : const SizedBox(width: double.infinity),
             ),
             SizedBox(
-              height: 92,
+              height: widget.trayHeight,
               child: Row(
                 children: [
                   const SizedBox(width: 8),
@@ -623,9 +711,8 @@ class _Options extends StatelessWidget {
                     )
                   : Text(
                       l10n.inkLassoHint,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
                     ),
             ),
           if (tool == PenTrayTool.eraser) ...[

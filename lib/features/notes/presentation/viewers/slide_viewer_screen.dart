@@ -18,6 +18,7 @@ import 'slide_canvas.dart';
 import 'slide_scroll.dart';
 import 'zoom_box.dart';
 import '../editor/attachment_clipboard.dart';
+import '../editor/pen_tray.dart';
 
 /// Sunum (.pptx) ekini gerçek tasarımıyla slayt slayt gösterir. PDF'teki gibi
 /// üzerine elle yazılabilir: çizim slayt oranlı vektör olarak ekin `ink`
@@ -246,17 +247,36 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
             style: const TextStyle(fontSize: 14),
           ),
           actions: [
-            CopyAttachmentButton(attachment: _current),
-            IconButton(
-              tooltip: _areaMode ? l10n.areaSelectOff : l10n.areaSelect,
-              isSelected: _areaMode,
-              icon: const Icon(Icons.crop_free),
-              onPressed: _toggleAreaMode,
-            ),
-            IconButton(
-              tooltip: l10n.bubblesOverviewTitle,
-              icon: const Icon(Icons.forum_outlined),
-              onPressed: _openBubbles,
+            ViewerCommonActions(attachment: _current),
+            // Türe özgü araçlar ⋮'te (F13.5): ortak çubuk Paylaş · Eki
+            // kopyala; balon ekle ve kalem asıl iş, çubukta kalır.
+            PopupMenuButton<String>(
+              key: const ValueKey('doc-viewer-more'),
+              tooltip: l10n.more,
+              onSelected: (value) {
+                switch (value) {
+                  case 'area':
+                    _toggleAreaMode();
+                  case 'bubbles':
+                    _openBubbles();
+                }
+              },
+              itemBuilder: (context) => [
+                CheckedPopupMenuItem(
+                  value: 'area',
+                  checked: _areaMode,
+                  child: Text(l10n.areaSelect),
+                ),
+                PopupMenuItem(
+                  value: 'bubbles',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.forum_outlined),
+                    title: Text(l10n.bubblesOverviewTitle),
+                  ),
+                ),
+              ],
             ),
             if (widget.onChanged != null && (_slides?.isNotEmpty ?? false))
               IconButton(
@@ -305,7 +325,11 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
           ],
         ),
         bottomNavigationBar: _editing
-            ? InkToolbar(controller: _ink, hint: context.l10n.inkTwoFingerHint)
+            ? PenTray(
+                controller: _ink,
+                controls: true,
+                hint: context.l10n.inkTwoFingerHint,
+              )
             : (_bubbles.adding ? BubbleToolbar(controller: _bubbles) : null),
       ),
     );

@@ -258,7 +258,7 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
           style: const TextStyle(fontSize: 14),
         ),
         actions: [
-          CopyAttachmentButton(attachment: widget.attachment),
+          ViewerCommonActions(attachment: widget.attachment),
           if (controller != null)
             IconButton(
               key: const ValueKey('viewer-video-fullscreen'),

@@ -2067,6 +2067,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onSaveAs: (a) => unawaited(AttachmentSaveAs.run(context, ref, a)),
       onPinTop: _pinMediaTop,
       onPinHover: _setPinHover,
+      onPinDrag: _setPinDrag,
       onViewChange: _readOnly
           ? null
           : (a, view) => unawaited(_setAttachmentView(a, view)),
@@ -2141,6 +2142,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Görsel sabitleme bölgesinin üstündeyken true: "Bırak" şeridi görünür.
   bool _pinHover = false;
+
+  /// Bir görsel taşınıyor: tepedeki hedef şerit (soluk) görünür (F13.6).
+  bool _pinDrag = false;
 
   // ── BALONLU ⇄ KLASİK GÖRÜNÜM ─────────────────────────────────────────
   //

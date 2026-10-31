@@ -69,7 +69,7 @@ Görseller notun sayfasında **serbestçe yüzer**; yazı onların etrafından a
 - **Taşı:** görsele basılı tut ve parmağını kaldırmadan sürükle. Kenarlar sayfaya ve diğer görsellere yapışır, hizalama çizgileri çıkar.
 - **Boyutlandır:** görsele dokun (seçilir), sağ alt köşedeki tutamacı sürükle ya da alttaki kaydırıcıyı kullan.
 - **Önizleme:** seçili görsele çift dokun ya da köşe tutamacına dokun.
-- **Tam ekran:** kırp, döndür, üzerine kalemle yaz, görseldeki metni tanı (OCR).
+- **Tam ekran:** üst çubukta Paylaş ve Eki kopyala; ⋮'te kırp ve döndür; üzerine kalemle yaz, görseldeki metni tanı (OCR).
 - **Görünüm (Sabit / Yüzen / Balonlu):** seçili görselin panelinin üst satırında. **Sabit** üste alır (not altında kayar), **Yüzen** sayfada bırakır, **Balonlu** görseli tek sayfalık bir belgeye çevirip üzerine balon, vurgu ve kalem açar (görselin çizimleri de taşınır). Yüzen'e dönünce görsel yerine döner; yeniden Balonlu'ya geçince aynı belge balonlarıyla gelir.
 - **⋮ menüsü:** metni çıkar, kopyala, birden çok görsel seç (boyutları eşitle, 2/3 sütuna sığdır), ek olarak alta taşı.
 - Bir görseli notun **zemin görseli** yapabilirsin (üst çubuktaki palet).
@@ -91,7 +91,7 @@ Görseller notun sayfasında **serbestçe yüzer**; yazı onların etrafından a
 
 ## Üstte medya, altta not {#pin}
 Bir videoyu izlerken ya da bir görsele bakarken altına not almak için:
-1. Görseli/videoyu basılı tut ve **yukarı doğru** sürükle (başlığın üstüne zorlaman yeter). Ekranın tepesinde **"Bırak: üste sabitle"** yazısı çıkar.
+1. Görseli/videoyu basılı tut ve **yukarı doğru** sürükle (başlığın üstüne zorlaman yeter). Sürükleme başlayınca ekranın tepesinde **"Bırak: üste sabitle"** şeridi belirir; parmağın oraya gelince dolar.
 2. Bırak: medya notun üstünde sabit durur, not altında kendi başına kayar. YouTube burada da yerinde oynar.
 - Aradaki **çubuğu** sürükleyerek bölmeyi büyüt/küçült. Çubuğun solunda **tam ekran**, sağında **görünüm anahtarı** (Sabit / Yüzen / Balonlu) var; videoda ayrıca **⏪ 10 sn · ▶/⏸ · 10 sn ⏩**, hız ve **⏱ Not al**; çubuğun üst kenarındaki ince çizgi videonun ilerlemesidir.
 - **Balonlar sabitte de görünür:** balonlu görünümden sabite alınan PDF (ya da görsel) balonlarıyla birlikte durur; balona dokununca okunur. PDF kutusunun çubuğundaki 💬 (görselde bölme çubuğundaki düğme) balonları **gizler/gösterir**.
@@ -114,12 +114,13 @@ Bir kelimeye ya da cümleye **PDF, görsel, video, YouTube** ya da nottaki herha
 ## PDF ve sunumlar {#documents}
 **Balonlu** kipte belge notun kendisidir: üstte sayfa, altta o sayfanın notu.
 - **Balon:** sayfada notun ait olduğu yere **basılı tut** — balon oraya düşer ve yazma kartı açılır. Ya da alt çubuktaki **Balon** düğmesine bas, sonra sayfaya dokun. Balonun sivri köşesi o noktayı gösterir; yazdıktan sonra **Bitti**.
-- Balona dokununca not yerinde okunur; **Düzenle** ile yazmaya geçilir. Renk, yıldız, acil (yanıp söner), **boyut (− / +)** ve sil yazma kartında hep görünür; balonun kendisine basılı tutup sürükleyerek taşınır.
+- Balona dokununca not yerinde okunur; **Düzenle** ile yazmaya geçilir. Yazma kartının alt satırı: **renk** · **işaret** (yıldız ya da acil — acil yanıp söner) · **Aa** (boyut − / +; açık metinde kalın, italik, hiza, dolgu; vurguda ok) · sil. Balonun kendisine basılı tutup sürükleyerek taşınır.
+- **Balon yazısını dışarı al:** okuma kartında **Kopyala**; 💬 listesinde **Tümünü kopyala** ve **Nota aktar** (her balon kendi sayfasının sayfa notuna); Paylaş levhasında **Balonlar** çipi açıkken metne "Sayfa 3 — yazı" satırlarıyla girer.
 - **Bütün balonların boyu:** Balon düğmesiyle açılan kartta − / + (bu cihazdaki bütün belgelerde geçerli).
 - **Göster / gizle:** alt çubuktaki 👁 düğmesi belgenin balonlarını ve vurgularını gizler; silinmezler. Yeni balon bırakınca ya da listeden bir balona gidince yeniden görünürler.
 - Alt çubuktaki 💬 sayılı düğme bütün balonları listeler ve arar. Sayfa notu, tüm sayfa notları, sayfaları düzenle ve tam ekran telefonda ⋮ menüsündedir.
 - **Vurgu:** metne **çift dokun** (kelime seçilir; ikinci dokunuşta parmağını kaldırmadan sürüklersen seçim büyür), sonra vurgula; seçili metni kopyala ya da yapay zekâya sor. Taranmış sayfanın metni bir kez tanınır ve saklanır — bir daha beklemezsin.
-- **Kalem:** alt çubuktaki kalemle sayfanın üzerine yaz; tek parmak çizer, iki parmak kaydırır.
+- **Kalem:** alt çubuktaki kalemle sayfanın üzerine yaz; tek parmak çizer, iki parmak kaydırır. Kalem tepsisi el yazısı ekranıyla aynı (seçili kaleme yeniden dokununca renk/kalınlık); üstündeki ince satırda geri al, yinele, yalnız kalem ve ayarlar.
 - **Sayfaları düzenle:** sil, döndür, sırala — sayfa notları sayfalarıyla taşınır.
 - **Yer imleri** ve sayfa atlama; çift dokunuşla yakınlaştırma.
 - **PDF ile sohbet:** "cezai şart var mı?", "son teslim tarihi ne?" diye sor (sohbet ekranında **Bu belge**).
@@ -178,13 +179,16 @@ Ana ekrandaki **Yapay Zeka** ekranı:
 - **Bugün** widget'ı günün hatırlatıcılarını saatleriyle ana ekranında gösterir.
 
 ## Paylaşım ve birlikte çalışma {#share}
-Not ekranındaki **Paylaş** düğmesi: üstte gönderilecek metnin önizlemesi ve içerik çipleri (başlık, tamamlananlar, etiketler, **video bağlantıları** — seçimin bir sonraki paylaşımda da hatırlanır), altında tek dokunuşluk düğmeler:
+Not ekranındaki **Paylaş** düğmesi: üstte gönderilecek metnin önizlemesi ve içerik çipleri (başlık, tamamlananlar, **balonlar**, etiketler, **video bağlantıları** — seçimin bir sonraki paylaşımda da hatırlanır). Altında iki bölüm; düğmeye basılı tutunca ne gönderdiği yazar. **GÖNDER** (her uygulamaya):
 - **Paylaş / Kopyala:** metni her uygulamaya gönderir ya da panoya alır.
 - **PDF:** notu tek dokunuşta PDF olarak gönderir (görseller sonda).
 - **Görsel:** notu resim (PNG sayfalar) olarak gönderir — mesajlaşmada önizlenir.
 - **Ekler:** nottaki fotoğrafları, PDF'leri, videoları dosya olarak gönderir.
-- **Birlikte düzenle** (ortak not ya da notun klasörü), **Kopya gönder** (arkadaşın gelen kutusuna) ve **Not paketi** (ekleri, sayfaları, çizimleri ve balonlarıyla; karşı taraf Notlar'da aynen açar).
-- **Daha fazla:** ayarlı PDF/Word dışa aktarma (başlık, görsellerin yeri/boyu) ve **Balonlu PDF** (balonlar ve çizimler PDF'in içine basılır).
+- **Ayarlı PDF / Word…** (başlık, görsellerin yeri/boyu) ve **Balonlu PDF** (balonlar ve çizimler PDF'in içine basılır).
+
+**NOTLAR KULLANICISINA:** **Kopya gönder** (arkadaşın gelen kutusuna), **Birlikte düzenle** (ortak not ya da notun klasörü) ve **Not paketi** (ekleri, sayfaları, çizimleri ve balonlarıyla tek dosya; karşı taraf Notlar'da aynen açar).
+
+Açtığın bir eki (görsel, PDF, sunum, video, YouTube) tam ekran görüntüleyicinin üst çubuğundaki **Paylaş** ile doğrudan gönderebilir, **Eki kopyala** ile başka nota yapıştırabilirsin.
 Birlikte çalışma:
 - **Kişiler:** ⋮ → Kişiler'den arkadaş ekle.
 - **Kopya gönder** (Paylaş levhasında): notun bağımsız bir kopyası arkadaşının **Gelen notlar** kutusuna düşer.

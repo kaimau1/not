@@ -79,7 +79,7 @@ kullanıcıyla `git` "dubious ownership" verirse:
 | 10 | Kırık ve yanıltıcı olanlar | Ö2 · Ö4 | Bitti | 2026-10-31 | 7/7; 1750/1750 test; F10.7 kök neden koddan (web'de yeniden denenmedi); cihaz turu KALANLAR'da |
 | 11 | Ana ekran ve "+" akışı | Ö1 · Ö6 | Bitti | 2026-10-31 | 9/9 (3 KARAR: önerilenler onaylandı); 1755/1755 test; web önce/sonra görüntüsü ALINMADI (canlı Firebase'de misafir hesap açmamak için) — cihaz/web turu KALANLAR'da |
 | 12 | Not ekranı: çubuklar, ⋮, biçim, liste | Ö1 · Ö5 · Ö6 | Bitti | 2026-10-31 | 9/9 (F12.7 düğme gizleme yerine ipucu adı — 3 boş madde kararı korundu); 2 KARAR (palet üst çubukta; iki düğme + Diğer); ek istek: "Gelen" çipi Tümü'nün yanında; 1758/1758 test; web görüntüsü ALINMADI |
-| 13 | Balonlu mod, medya, kalem, paylaşım akışı | Ö1 · Ö2 | Bekliyor | | Balon yazısı paylaşılamıyor |
+| 13 | Balonlu mod, medya, kalem, paylaşım akışı | Ö1 · Ö2 | Bitti | 2026-10-31 | 6/6 (F13.2 KARAR: önerilen sade kart onaylandı); F13.5'te transkript ekranı zaten Kopyala/Paylaş/⋮ — dokunulmadı; 1766/1766 test; web görüntüsü ALINMADI |
 | 14 | Anlaşılırlık: adlar, ayarlar, kılavuz, ipuçları | Ö4 | Bekliyor | | Kılavuz eskimiş |
 | 15 | Erişilebilirlik | Ö3 | Bekliyor | | Yazı boyutu kararı |
 | 16 | Görsel bütünlük ve tekrar temizliği | Ö5 | Bekliyor | | Simge ve levha dili |
@@ -573,27 +573,57 @@ yerde durduğu; biçim paneli klavye açıkken.
 
 "Balonlu moddan kopyalamaya, paylaşmaya" akışı uçtan uca tamamlanır.
 
-- [ ] **F13.1 Balon yazısı dışarı çıkar (YÜKSEK) — H3, P3.** (a) Paylaşım
+- [x] **F13.1 Balon yazısı dışarı çıkar (YÜKSEK) — H3, P3.** (a) Paylaşım
   çiplerine "Balonlar" (balonlu notta varsayılan açık): `noteShareText`
   sayfa sırasıyla "Sayfa N — balon metni" (başlıklı balonda başlık); (b)
   balon okuma kartında Kopyala; (c) 💬 balon listesinde "Tümünü kopyala" ve
   "Nota aktar" (sayfa notuna ya da yeni nota). Test: paylaşım metni testi.
-- [ ] **F13.2 Balon yazma kartı — H2. KARAR GEREKİR.** Görünür: renk · sil ·
+  **Yapıldı:** `ShareTextOptions.bubbles` (5. hane, eski kayıtta açık) +
+  `bubblesShareText`/`orderedTextBubbles`/`pageNotesWithBubbles`
+  (`note_share_text.dart`); paylaş levhasında "Balonlar" çipi (yalnız yazılı
+  balon varsa); okuma kartında Kopyala (`bubble_pin.dart`); 💬 listede
+  Tümünü kopyala + Nota aktar (her balon kendi sayfa notuna, tekrar etmez;
+  yalnız bölmede — tam ekranda sayfa notu yok). Kart ⋮ Kopyala bölünmüş
+  notu önce `hydrateNote`. Test: `bubble_share_text_test.dart`.
+- [x] **F13.2 Balon yazma kartı — H2. KARAR GEREKİR.** Görünür: renk · sil ·
   Bitti; biçim (B/I, dolgu, boyut) tek "Aa" düğmesinin altında; yıldız/acil
   tek "işaret" düğmesinde. Kart yazı alanı en az 3 satır.
-- [ ] **F13.3 Tek kalem arayüzü — H5.** PDF/görsel üstündeki `InkToolbar` →
+  **Yapıldı (kullanıcı kararı: önerilen):** araç satırı renk · işaret ·
+  Aa · sil (`bubble_dock.dart`, `_DockPanel`); işaret şeridi yıldız/acil,
+  Aa şeridi kalın/italik/hiza/dolgu (açık metin) + boy + ok (vurgu); tek
+  seferde tek şerit; yazı alanı `minLines: 3`. Test: `bubble_dock_test.dart`.
+- [x] **F13.3 Tek kalem arayüzü — H5.** PDF/görsel üstündeki `InkToolbar` →
   `PenTray` (çizim ekranıyla aynı; `InkToolMemory` ortak). Eski araç çubuğu
   silinir.
-- [ ] **F13.4 Paylaş levhası — P1.** İki bölüm: **Gönder** (Metin · Kopyala ·
+  **Yapıldı:** `InkToolbar` silindi (−330 satır); PDF/sunum bölmesi ve
+  tam ekran PDF/sunum/görsel `PenTray(controls: true, hint:)` — tepsinin
+  üstünde ipucu · geri al · yinele · yalnız kalem · ayarlar satırı; bölmede
+  `trayHeight: 76`. Test: `pen_tray_controls_test.dart`.
+- [x] **F13.4 Paylaş levhası — P1.** İki bölüm: **Gönder** (Metin · Kopyala ·
   PDF · Görsel · Ekler) ve **Notlar kullanıcısına** (Kopya gönder · Birlikte
   düzenle · Not paketi, misafirde kilitli — F10.5); düğmeye uzun basınca kısa
   açıklama; "Not metni (PDF / Word)" → "Ayarlı PDF / Word…". Web'de Görsel ve
   Ekler neden yoksa ya eklenir ya kılavuzdan çıkar.
-- [ ] **F13.5 Görüntüleyicilerin ortak çubuğu — G7.** Görsel, PDF, sunum,
+  **Yapıldı:** `share_sheet.dart` iki bölüm GÖNDER (ızgara Metin ·
+  Kopyala · PDF · Görsel · Ekler + Ayarlı PDF/Word… + Balonlu PDF) ve
+  NOTLAR KULLANICISINA (Kopya gönder · Birlikte düzenle · Klasör · Not
+  paketi açıklamalı); ızgara düğmesine uzun bas → `Tooltip` açıklama. Web'de
+  Görsel: `NoteQuickExport.pngPages` artık `XFile` döner, web'de
+  `XFile.fromData` (gizli değil). Ekler web'de zaten vardı (incelemedeki
+  notta ek yoktu).
+- [x] **F13.5 Görüntüleyicilerin ortak çubuğu — G7.** Görsel, PDF, sunum,
   video, YouTube, transkript: Geri · ad · Paylaş · Eki kopyala · ⋮; türe özgü
   araçlar (kırp/döndür/OCR, balon listesi, hız/PiP) çubuğun altında ya da ⋮'te.
-- [ ] **F13.6 Üste sabitleme ipucu — G3.** Sürükleme başlayınca hedef şerit;
+  **Yapıldı:** `ViewerCommonActions` (Paylaş · Eki kopyala,
+  `attachment_clipboard.dart`) görsel/PDF/sunum/video/YouTube çubuğunun
+  başında; görselde kırp/döndür, PDF/sunumda alan seç + balon listesi ⋮'te;
+  YouTube'da ayrı "bağlantıyı kopyala" kalktı (Eki kopyala bağlantıyı
+  yazar). Transkript zaten Kopyala · Paylaş · ⋮ — değişmedi.
+- [x] **F13.6 Üste sabitleme ipucu — G3.** Sürükleme başlayınca hedef şerit;
   "Bırak: üste sabitle" etiketi yalnız sürüklerken semantik ağaçta.
+  **Yapıldı:** `NotePageCanvas.onPinDrag` → editör `_pinDrag`; şerit
+  taşıma başlayınca soluk, bölgede dolu; taşıma yokken AĞAÇTA YOK
+  (`note_editor_media_view.dart`).
 
 **Senin yapacakların:** telefonda PDF notu → balonlar → "Metni paylaş"
 balonlarla → WhatsApp; balonu kopyala; PDF'e kalemle yaz (yeni tepsi).

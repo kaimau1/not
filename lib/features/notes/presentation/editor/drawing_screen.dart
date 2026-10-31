@@ -15,7 +15,7 @@ import '../../../../core/friendly_error.dart';
 /// ve nota görsel eki olarak girer.
 ///
 /// Tuval, çizgi modeli ve araç çubuğu PDF/slayt/görsel üstü çizimle AYNI
-/// parçalardır ([InkController], [InkPageLayer], [InkToolbar]): kalem türleri,
+/// parçalardır ([InkController], [InkPageLayer], [PenTray]): kalem türleri,
 /// renkler, kalınlık, silgi, geri al ve temizle iki yerde birden, tek bir
 /// yerden gelir. Eskiden bu ekranın kendi küçük çizim motoru vardı ve PDF
 /// tarafına eklenen seçenekler buraya gelmiyordu.

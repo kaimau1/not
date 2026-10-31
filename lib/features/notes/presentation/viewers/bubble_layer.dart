@@ -8,15 +8,18 @@ import 'package:flutter/gestures.dart'
         kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart' show HapticFeedback;
+import 'package:flutter/services.dart'
+    show Clipboard, ClipboardData, HapticFeedback;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/widgets/color_palette.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/frame_loop.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../domain/arrow.dart';
 import '../../domain/attachment.dart';
+import '../../domain/note_share_text.dart';
 
 part 'bubble_pin.dart';
 part 'bubble_dock.dart';

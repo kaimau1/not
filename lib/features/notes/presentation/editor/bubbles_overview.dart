@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/utils/search_fold.dart';
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../domain/attachment.dart';
+import '../../domain/note_share_text.dart';
 import '../viewers/bubble_layer.dart';
 
 /// Belgedeki BÜTÜN not balonlarının tek listesi: arama, yıldız süzgeci,
@@ -16,19 +19,30 @@ import '../viewers/bubble_layer.dart';
 /// Dönen değer: gidilecek balon (null = kullanıcı yalnız baktı/düzenledi).
 /// Düzenleme ve silme ANINDA [BubbleController] üzerinden uygulanır — liste
 /// denetleyiciyi dinlediği için ekran kendiliğinden tazelenir.
+///
+/// **Dışarı çıkarma (F13.1, 2026-10-31):** üst çubukta "Tümünü kopyala"
+/// (görünen — aranmış/süzülmüş — balonlar, "Sayfa N — yazı" satırlarıyla)
+/// ve [onAddToNote] verilmişse "Nota aktar" (editör bölmesi: her balon kendi
+/// sayfasının sayfa notuna). Eskiden balon yazısı hiçbir yoldan dışarı
+/// çıkmıyordu.
 Future<PageBubble?> showBubblesOverview(
   BuildContext context,
-  BubbleController controller,
-) => Navigator.of(context).push<PageBubble>(
+  BubbleController controller, {
+  ValueChanged<List<PageBubble>>? onAddToNote,
+}) => Navigator.of(context).push<PageBubble>(
   MaterialPageRoute<PageBubble>(
-    builder: (_) => _BubblesOverviewScreen(controller: controller),
+    builder: (_) => _BubblesOverviewScreen(
+      controller: controller,
+      onAddToNote: onAddToNote,
+    ),
   ),
 );
 
 class _BubblesOverviewScreen extends StatefulWidget {
-  const _BubblesOverviewScreen({required this.controller});
+  const _BubblesOverviewScreen({required this.controller, this.onAddToNote});
 
   final BubbleController controller;
+  final ValueChanged<List<PageBubble>>? onAddToNote;
 
   @override
   State<_BubblesOverviewScreen> createState() => _BubblesOverviewScreenState();
@@ -93,6 +107,32 @@ class _BubblesOverviewScreenState extends State<_BubblesOverviewScreen> {
       ..save();
   }
 
+  void _snack(String message) => ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showMessage(message);
+
+  Future<void> _copyAll() async {
+    final l10n = context.l10n;
+    final text = bubblesShareText(_visible(), pageLabel: l10n.pageLabel);
+    if (text.isEmpty) {
+      _snack(l10n.bubblesEmpty);
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: text));
+    if (mounted) _snack(l10n.copied);
+  }
+
+  void _addToNote() {
+    final l10n = context.l10n;
+    final bubbles = orderedTextBubbles(_visible());
+    if (bubbles.isEmpty) {
+      _snack(l10n.bubblesEmpty);
+      return;
+    }
+    widget.onAddToNote!(bubbles);
+    _snack(l10n.bubblesToNoteDone);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -101,6 +141,19 @@ class _BubblesOverviewScreenState extends State<_BubblesOverviewScreen> {
       appBar: AppBar(
         title: Text(l10n.bubblesOverviewTitle),
         actions: [
+          IconButton(
+            key: const ValueKey('bubbles-copy-all'),
+            tooltip: l10n.bubblesCopyAll,
+            icon: const Icon(Icons.copy_all_outlined),
+            onPressed: _copyAll,
+          ),
+          if (widget.onAddToNote != null)
+            IconButton(
+              key: const ValueKey('bubbles-to-note'),
+              tooltip: l10n.bubblesToNote,
+              icon: const Icon(Icons.note_add_outlined),
+              onPressed: _addToNote,
+            ),
           IconButton(
             tooltip: l10n.bubbleStarredOnly,
             isSelected: _onlyStarred,

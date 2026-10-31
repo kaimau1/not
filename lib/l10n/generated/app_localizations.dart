@@ -4409,13 +4409,13 @@ abstract class AppLocalizations {
   /// No description provided for @exportNotesOption.
   ///
   /// In tr, this message translates to:
-  /// **'Not metni (PDF / Word)'**
+  /// **'Ayarlı PDF / Word…'**
   String get exportNotesOption;
 
   /// No description provided for @exportNotesOptionInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Notun yazısı ve görselleri; balonlar dahil değil.'**
+  /// **'Notun yazısı ve görselleri PDF ya da Word olarak, düzeni ayarlanır; balonlar dahil değil'**
   String get exportNotesOptionInfo;
 
   /// No description provided for @captureNoteTitle.
@@ -10831,6 +10831,96 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Dosya ve bağlantı'**
   String get quickAddSectionFiles;
+
+  /// No description provided for @shareIncludeBubbles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlar'**
+  String get shareIncludeBubbles;
+
+  /// No description provided for @shareSendSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'GÖNDER'**
+  String get shareSendSection;
+
+  /// No description provided for @shareInAppSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'NOTLAR KULLANICISINA'**
+  String get shareInAppSection;
+
+  /// No description provided for @shareTextHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun yazısını bir uygulamaya gönderir (WhatsApp, e-posta…)'**
+  String get shareTextHint;
+
+  /// No description provided for @shareCopyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun yazısını panoya kopyalar'**
+  String get shareCopyHint;
+
+  /// No description provided for @shareQuickPdfHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu tek dokunuşla PDF dosyası olarak gönderir'**
+  String get shareQuickPdfHint;
+
+  /// No description provided for @shareAsImageHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu sayfa sayfa resim olarak gönderir'**
+  String get shareAsImageHint;
+
+  /// No description provided for @shareAttachmentFilesHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nottaki fotoğraf, PDF, ses ve videoların kendisini gönderir'**
+  String get shareAttachmentFilesHint;
+
+  /// No description provided for @shareAsNoteInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekler, sayfalar, çizim ve balonlarla tek dosya; Notlar\'da birebir açılır'**
+  String get shareAsNoteInfo;
+
+  /// No description provided for @bubbleCopy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyala'**
+  String get bubbleCopy;
+
+  /// No description provided for @bubblesCopyAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü kopyala'**
+  String get bubblesCopyAll;
+
+  /// No description provided for @bubblesToNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota aktar'**
+  String get bubblesToNote;
+
+  /// No description provided for @bubblesToNoteDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlar notun sonuna eklendi'**
+  String get bubblesToNoteDone;
+
+  /// No description provided for @bubbleMark.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşaret'**
+  String get bubbleMark;
+
+  /// No description provided for @bubbleFormat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Biçim'**
+  String get bubbleFormat;
 }
 
 class _AppLocalizationsDelegate

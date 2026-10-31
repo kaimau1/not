@@ -6,10 +6,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:pasteboard/pasteboard.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
+import '../../../../core/friendly_error.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
+import '../../data/attachment_repository.dart';
+import '../../data/note_quick_export.dart';
 import '../../domain/attachment.dart';
 
 /// Uygulama içi EK panosu: "Kopyala" ile alınan ek burada bekler, başka bir
@@ -120,4 +124,83 @@ class _CopyAttachmentButtonState extends ConsumerState<CopyAttachmentButton> {
       onPressed: _busy ? null : _copy,
     );
   }
+}
+
+/// Tam ekran görüntüleyicilerin ORTAK çubuğu: **Paylaş · Eki kopyala**
+/// (F13.5, 2026-10-31). Görsel, PDF, sunum, video ve YouTube aynı iki
+/// düğmeyle, aynı sırayla başlar; türe özgü araçlar (kırp/döndür, alan seç,
+/// balon listesi, tam ekran/PiP) onların ARDINDA ya da ⋮'te. Eskiden
+/// paylaşım yalnız transkript ekranında vardı — açtığın eki göndermek için
+/// nota dönüp paylaş levhasından "Ekler"i seçmek gerekiyordu.
+class ViewerCommonActions extends StatelessWidget {
+  const ViewerCommonActions({super.key, required this.attachment});
+
+  final Attachment attachment;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      ShareAttachmentButton(attachment: attachment),
+      CopyAttachmentButton(attachment: attachment),
+    ],
+  );
+}
+
+/// Ekin KENDİSİNİ (dosya; YouTube'da bağlantı) sistem paylaşımıyla gönderir.
+class ShareAttachmentButton extends ConsumerStatefulWidget {
+  const ShareAttachmentButton({super.key, required this.attachment});
+
+  final Attachment attachment;
+
+  @override
+  ConsumerState<ShareAttachmentButton> createState() =>
+      _ShareAttachmentButtonState();
+}
+
+class _ShareAttachmentButtonState extends ConsumerState<ShareAttachmentButton> {
+  bool _busy = false;
+
+  Future<void> _share() async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final a = widget.attachment;
+    if (a.isWebVideo) {
+      await SharePlus.instance.share(
+        ShareParams(text: a.webUrl, subject: a.fileName),
+      );
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      final files = await NoteQuickExport.filesOf([
+        a,
+      ], attachments: ref.read(attachmentRepositoryProvider));
+      if (files.isEmpty) {
+        messenger.showMessage(l10n.shareAttachmentFilesNone);
+        return;
+      }
+      await SharePlus.instance.share(
+        ShareParams(files: files, subject: a.fileName),
+      );
+    } catch (e) {
+      messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    key: const ValueKey('viewer-share-attachment'),
+    tooltip: context.l10n.share,
+    icon: _busy
+        ? const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : const Icon(Icons.share_outlined),
+    onPressed: _busy ? null : _share,
+  );
 }

@@ -15,9 +15,10 @@ part of 'bubble_layer.dart';
 ///
 /// Başlık alanı şeridin İÇİNDE ve GENİŞ: eski kompakt şeritte beş simgeyle
 /// yan yanaydı ve dar sayfada birkaç piksele iniyordu ("başlık kısmı hiç
-/// görülmüyor"). Başlığın yanında yalnız YAZILI "Bitti" var; renk, yıldız,
-/// ünlem ve silme altta HEP GÖRÜNEN bir araç satırında (2026-10-15'e kadar
-/// "⋮" düğmesinin arkasındaydı ve bulunmuyordu).
+/// görülmüyor"). Başlığın yanında yalnız YAZILI "Bitti" var; altta HEP
+/// GÖRÜNEN araç satırı: renk · işaret (yıldız/acil) · Aa (biçim, boy) · sil
+/// (F13.2, 2026-10-31; 2026-10-15'e kadar "⋮"nin arkasındaydı ve
+/// bulunmuyordu, sonra 9 düğme yan yana kayıyordu).
 ///
 /// **Eylemler neden menü/levha DEĞİL** (kullanıcı bulgusu 2026-08-08:
 /// "balondaki yazıyı düzenlerken 3 noktaya basınca klavye kapanıyor,
@@ -56,11 +57,20 @@ class _BubbleDockState extends State<BubbleDock> {
   /// tutamaca dokunuldu) alanlar yeniden yüklenir.
   String? _loadedId;
 
-  /// Renk şeridi açık mı? (Araç satırındaki renk dairesi açar.)
-  bool _colors = false;
+  /// Araç satırının altında açık olan şerit (renk / işaret / biçim). Biri
+  /// açılınca öbürü kapanır — kart en çok bir şerit kadar uzar (F13.2).
+  _DockPanel _panel = _DockPanel.none;
 
-  /// Açık metin alanının DOLGU şeridi açık mı (bkz. [PageBubble.fill]).
+  bool get _colors => _panel == _DockPanel.colors;
+
+  /// Açık metin alanının DOLGU şeridi açık mı (bkz. [PageBubble.fill]);
+  /// yalnız biçim şeridi açıkken anlamlı.
   bool _fills = false;
+
+  void _toggle(_DockPanel panel) => setState(() {
+    _panel = _panel == panel ? _DockPanel.none : panel;
+    _fills = false;
+  });
 
   @override
   void initState() {
@@ -134,7 +144,7 @@ class _BubbleDockState extends State<BubbleDock> {
       _text.text = open.text;
       // Başka bir balona geçildi: açık kalan eylem satırı yeni balona ait
       // sanılmasın.
-      _colors = false;
+      _panel = _DockPanel.none;
       _fills = false;
       _focusedFor = null;
     }
@@ -352,7 +362,9 @@ class _BubbleDockState extends State<BubbleDock> {
                                 controller: _text,
                                 focusNode: _textFocus,
                                 maxLines: 6,
-                                minLines: 2,
+                                // En az 3 satır (F13.2): araçlar tek satıra
+                                // toplandı, yazı alanı daralmasın.
+                                minLines: 3,
                                 textCapitalization:
                                     TextCapitalization.sentences,
                                 keyboardType: TextInputType.multiline,
@@ -378,7 +390,14 @@ class _BubbleDockState extends State<BubbleDock> {
                 ),
                 if (!widget.readOnly) _toolRow(context, bubble),
                 if (_colors && !widget.readOnly) _colorStrip(bubble),
-                if (_fills && bubble.plain && !widget.readOnly)
+                if (_panel == _DockPanel.marks && !widget.readOnly)
+                  _markStrip(context, bubble),
+                if (_panel == _DockPanel.format && !widget.readOnly)
+                  _formatStrip(context, bubble),
+                if (_panel == _DockPanel.format &&
+                    _fills &&
+                    bubble.plain &&
+                    !widget.readOnly)
                   _fillStrip(bubble),
                 if (widget.readOnly) const SizedBox(height: 10),
               ],
@@ -401,6 +420,7 @@ class _BubbleDockState extends State<BubbleDock> {
   /// düşürmez — klavye açık kalır (bkz. sınıf açıklaması).
   Widget _barButton(
     BuildContext context, {
+    Key? key,
     required IconData icon,
     required String tooltip,
     required VoidCallback onPressed,
@@ -411,12 +431,13 @@ class _BubbleDockState extends State<BubbleDock> {
     return TextFieldTapRegion(
       child: ExcludeFocus(
         child: IconButton(
+          key: key,
           tooltip: tooltip.isEmpty ? null : tooltip,
           onPressed: onPressed,
           isSelected: selected,
           visualDensity: VisualDensity.compact,
           padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
           style: selected
               ? IconButton.styleFrom(backgroundColor: scheme.secondaryContainer)
               : null,
@@ -434,27 +455,91 @@ class _BubbleDockState extends State<BubbleDock> {
     );
   }
 
-  /// Renk, yıldız, acil, (vurguda) ok, (açık metinde) biçim ve silme.
-  ///
-  /// **HEP GÖRÜNÜR** (2026-10-15 yenilemesi): eskiden "⋮" düğmesinin
-  /// arkasındaydı ve çoğu kullanıcı yıldızın, rengin, silmenin nerede
-  /// olduğunu bulamıyordu. Satır kartın İÇİNDE, odak istemeyen düğmelerden
-  /// oluşur — menü/levha rotası klavyeyi kapatıyordu (bkz. sınıf açıklaması).
+  /// Araç satırı: **renk · işaret · Aa · sil** (F13.2, kullanıcı kararı
+  /// 2026-10-31). Eskiden 9 düğme yan yana kayıyordu (sil, renk, yıldız,
+  /// acil, kalın, italik, dolgu, küçült, büyüt) ve küçük ekranda yazı alanı
+  /// daralıyordu. Yıldız/acil tek "işaret" düğmesinin, biçim (kalın/italik,
+  /// hiza, dolgu, boy, ok) tek "Aa" düğmesinin altında — ikisi de kartın
+  /// İÇİNDE bir şerit açar (rota yok, klavye kapanmaz; bkz. sınıf açıklaması).
   Widget _toolRow(BuildContext context, PageBubble bubble) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    // Düğmeler YATAY KAYAR, Sil sabit sağda: açık metin alanında biçim
-    // düğmeleri ve boy düğmeleriyle satır dar telefona sığmıyordu.
     return Padding(
       padding: const EdgeInsets.fromLTRB(6, 0, 6, 4),
       child: Row(
         children: [
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(children: _tools(context, bubble, l10n, scheme)),
+          // Renk: balonun kendi rengiyle dolu bir daire — şeridi açar.
+          TextFieldTapRegion(
+            child: ExcludeFocus(
+              child: IconButton(
+                key: const ValueKey('bubble-color-toggle'),
+                tooltip: l10n.color,
+                onPressed: () => _toggle(_DockPanel.colors),
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                icon: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Color(bubble.color),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _colors ? scheme.primary : scheme.outlineVariant,
+                      width: _colors ? 2.5 : 1.5,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
+          // İşaret: simge balonun o anki işaretini gösterir (yıldız, acil
+          // ya da boş bayrak) — kapalıyken de ne seçili olduğu görünür.
+          _barButton(
+            context,
+            key: const ValueKey('bubble-mark-toggle'),
+            icon: bubble.urgent
+                ? Icons.priority_high_rounded
+                : bubble.starred
+                ? Icons.star_rounded
+                : Icons.outlined_flag_rounded,
+            tooltip: l10n.bubbleMark,
+            selected: _panel == _DockPanel.marks,
+            color: bubble.urgent
+                ? scheme.error
+                : bubble.starred
+                ? Colors.amber[800]
+                : null,
+            onPressed: () => _toggle(_DockPanel.marks),
+          ),
+          TextFieldTapRegion(
+            child: ExcludeFocus(
+              child: TextButton(
+                key: const ValueKey('bubble-format-toggle'),
+                onPressed: () => _toggle(_DockPanel.format),
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  minimumSize: const Size(40, 40),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  backgroundColor: _panel == _DockPanel.format
+                      ? scheme.secondaryContainer
+                      : null,
+                  foregroundColor: _panel == _DockPanel.format
+                      ? scheme.onSecondaryContainer
+                      : scheme.onSurfaceVariant,
+                ),
+                child: Semantics(
+                  label: l10n.bubbleFormat,
+                  excludeSemantics: true,
+                  child: const Text(
+                    'Aa',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const Spacer(),
           _barButton(
             context,
             icon: Icons.delete_outline,
@@ -471,145 +556,153 @@ class _BubbleDockState extends State<BubbleDock> {
     );
   }
 
-  List<Widget> _tools(
-    BuildContext context,
-    PageBubble bubble,
-    AppLocalizations l10n,
-    ColorScheme scheme,
-  ) => [
-    // Renk: balonun kendi rengiyle dolu bir daire — şeridi açar.
-    TextFieldTapRegion(
+  /// İşaret şeridi: yıldız ("sonra bakılacak") ve acil ("şimdi").
+  Widget _markStrip(BuildContext context, PageBubble bubble) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return TextFieldTapRegion(
       child: ExcludeFocus(
-        child: IconButton(
-          key: const ValueKey('bubble-color-toggle'),
-          tooltip: l10n.color,
-          onPressed: () => setState(() {
-            _colors = !_colors;
-            if (_colors) _fills = false;
-          }),
-          visualDensity: VisualDensity.compact,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          icon: Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: Color(bubble.color),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: _colors ? scheme.primary : scheme.outlineVariant,
-                width: _colors ? 2.5 : 1.5,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+          child: Wrap(
+            spacing: 8,
+            children: [
+              FilterChip(
+                key: const ValueKey('bubble-mark-star'),
+                avatar: Icon(
+                  bubble.starred
+                      ? Icons.star_rounded
+                      : Icons.star_border_rounded,
+                  size: 18,
+                  color: bubble.starred ? Colors.amber[800] : null,
+                ),
+                showCheckmark: false,
+                label: Text(l10n.bubbleStar),
+                selected: bubble.starred,
+                onSelected: (_) => widget.controller.toggleStar(bubble.id),
               ),
-            ),
+              FilterChip(
+                key: const ValueKey('bubble-mark-urgent'),
+                avatar: Icon(
+                  Icons.priority_high_rounded,
+                  size: 18,
+                  color: bubble.urgent ? scheme.error : null,
+                ),
+                showCheckmark: false,
+                label: Text(l10n.bubbleUrgent),
+                selected: bubble.urgent,
+                onSelected: (_) => widget.controller.toggleUrgent(bubble.id),
+              ),
+            ],
           ),
         ),
       ),
-    ),
-    _barButton(
-      context,
-      icon: bubble.starred ? Icons.star_rounded : Icons.star_border_rounded,
-      tooltip: l10n.bubbleStar,
-      selected: bubble.starred,
-      color: bubble.starred ? Colors.amber[800] : null,
-      onPressed: () => widget.controller.toggleStar(bubble.id),
-    ),
-    _barButton(
-      context,
-      icon: Icons.priority_high_rounded,
-      tooltip: l10n.bubbleUrgent,
-      selected: bubble.urgent,
-      color: bubble.urgent ? scheme.error : null,
-      onPressed: () => widget.controller.toggleUrgent(bubble.id),
-    ),
-    // Ok yalnız VURGULU balonda: serbest balonun bağlanacağı metin yok.
-    if (bubble.isHighlight)
-      _barButton(
-        context,
-        icon: bubble.arrow ? Icons.north_east : Icons.block,
-        tooltip: bubble.arrow ? l10n.bubbleArrowHide : l10n.bubbleArrowShow,
-        onPressed: () => widget.controller.toggleArrow(bubble.id),
-      ),
-    // **METİN KUTUSU BİÇİMİ** — yalnız AÇIK METİN alanında (normal
-    // balonun yazısı kartın içinde duruyor, sayfada değil; orada
-    // kalın/hiza/dolgu bir şey ifade etmez).
-    if (bubble.plain) ...[
-      _barButton(
-        context,
-        icon: Icons.format_bold,
-        tooltip: l10n.formatBold,
-        selected: bubble.bold,
-        onPressed: () => widget.controller
-          ..update(bubble.copyWith(bold: !bubble.bold))
-          ..save(),
-      ),
-      _barButton(
-        context,
-        icon: Icons.format_italic,
-        tooltip: l10n.formatItalic,
-        selected: bubble.italic,
-        onPressed: () => widget.controller
-          ..update(bubble.copyWith(italic: !bubble.italic))
-          ..save(),
-      ),
-      // Hiza tek düğmeyle DÖNER (sol → orta → sağ): kartta üç ayrı
-      // düğmeye yer yok, simge de o an hangi hizada olduğunu gösterir.
-      _barButton(
-        context,
-        icon: switch (bubble.align) {
-          1 => Icons.format_align_center,
-          2 => Icons.format_align_right,
-          _ => Icons.format_align_left,
-        },
-        tooltip: switch (bubble.align) {
-          1 => l10n.bubbleTextAlignCenter,
-          2 => l10n.bubbleTextAlignRight,
-          _ => l10n.bubbleTextAlignLeft,
-        },
-        selected: bubble.align != 0,
-        onPressed: () => widget.controller
-          ..update(bubble.copyWith(align: (bubble.align + 1) % 3))
-          ..save(),
-      ),
-      _barButton(
-        context,
-        icon: Icons.format_color_fill,
-        tooltip: l10n.bubbleTextFill,
-        selected: _fills,
-        onPressed: () => setState(() {
-          _fills = !_fills;
-          if (_fills) _colors = false;
-        }),
-      ),
-    ],
-    // BOY (kullanıcı isteği 2026-10-16: "balonların boyutu
-    // ayarlanabilir olsun"): normal balonda tutamaç, açık metinde yazı
-    // büyür/küçülür. Değer nota yazılır, her cihazda aynı.
-    _barButton(
-      context,
-      icon: Icons.zoom_out_rounded,
-      tooltip: l10n.bubbleSmaller,
-      onPressed: () => widget.controller.stepSize(bubble.id, -1),
-    ),
-    SizedBox(
-      width: 34,
-      child: Text(
-        '${(bubble.size * 100).round()}%',
-        key: const ValueKey('bubble-size-label'),
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: scheme.onSurfaceVariant,
+    );
+  }
+
+  /// Biçim şeridi ("Aa"): boy her balonda; kalın/italik/hiza/dolgu yalnız
+  /// AÇIK METİN alanında (normal balonun yazısı kartın içinde duruyor,
+  /// sayfada değil); ok yalnız vurgulu balonda. Şerit yatay kayar.
+  Widget _formatStrip(BuildContext context, PageBubble bubble) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(6, 0, 6, 4),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            if (bubble.plain) ...[
+              _barButton(
+                context,
+                icon: Icons.format_bold,
+                tooltip: l10n.formatBold,
+                selected: bubble.bold,
+                onPressed: () => widget.controller
+                  ..update(bubble.copyWith(bold: !bubble.bold))
+                  ..save(),
+              ),
+              _barButton(
+                context,
+                icon: Icons.format_italic,
+                tooltip: l10n.formatItalic,
+                selected: bubble.italic,
+                onPressed: () => widget.controller
+                  ..update(bubble.copyWith(italic: !bubble.italic))
+                  ..save(),
+              ),
+              // Hiza tek düğmeyle DÖNER (sol → orta → sağ).
+              _barButton(
+                context,
+                icon: switch (bubble.align) {
+                  1 => Icons.format_align_center,
+                  2 => Icons.format_align_right,
+                  _ => Icons.format_align_left,
+                },
+                tooltip: switch (bubble.align) {
+                  1 => l10n.bubbleTextAlignCenter,
+                  2 => l10n.bubbleTextAlignRight,
+                  _ => l10n.bubbleTextAlignLeft,
+                },
+                selected: bubble.align != 0,
+                onPressed: () => widget.controller
+                  ..update(bubble.copyWith(align: (bubble.align + 1) % 3))
+                  ..save(),
+              ),
+              _barButton(
+                context,
+                icon: Icons.format_color_fill,
+                tooltip: l10n.bubbleTextFill,
+                selected: _fills,
+                onPressed: () => setState(() => _fills = !_fills),
+              ),
+              const SizedBox(width: 6),
+            ],
+            // BOY (kullanıcı isteği 2026-10-16): normal balonda tutamaç,
+            // açık metinde yazı büyür/küçülür.
+            _barButton(
+              context,
+              icon: Icons.zoom_out_rounded,
+              tooltip: l10n.bubbleSmaller,
+              onPressed: () => widget.controller.stepSize(bubble.id, -1),
+            ),
+            SizedBox(
+              width: 38,
+              child: Text(
+                '${(bubble.size * 100).round()}%',
+                key: const ValueKey('bubble-size-label'),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            _barButton(
+              context,
+              icon: Icons.zoom_in_rounded,
+              tooltip: l10n.bubbleLarger,
+              onPressed: () => widget.controller.stepSize(bubble.id, 1),
+            ),
+            // Ok yalnız VURGULU balonda: serbest balonun bağlanacağı metin
+            // yok.
+            if (bubble.isHighlight) ...[
+              const SizedBox(width: 6),
+              _barButton(
+                context,
+                icon: bubble.arrow ? Icons.north_east : Icons.block,
+                tooltip: bubble.arrow
+                    ? l10n.bubbleArrowHide
+                    : l10n.bubbleArrowShow,
+                onPressed: () => widget.controller.toggleArrow(bubble.id),
+              ),
+            ],
+          ],
         ),
       ),
-    ),
-    _barButton(
-      context,
-      icon: Icons.zoom_in_rounded,
-      tooltip: l10n.bubbleLarger,
-      onPressed: () => widget.controller.stepSize(bubble.id, 1),
-    ),
-  ];
+    );
+  }
 
   /// Renk şeridi: modal levha yerine kartın içinde yatay bir sıra (levha da
   /// rota iterek klavyeyi kapatıyordu).
@@ -1138,3 +1231,6 @@ class _RenderKeyboardFollow extends RenderProxyBox {
     transform.translateByDouble(0, -_shift, 0, 1);
   }
 }
+
+/// Yazma kartında araç satırının altında açılan şerit (F13.2).
+enum _DockPanel { none, colors, marks, format }

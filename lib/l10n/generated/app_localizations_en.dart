@@ -2363,11 +2363,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportTitle => 'Export';
 
   @override
-  String get exportNotesOption => 'Note text (PDF / Word)';
+  String get exportNotesOption => 'Custom PDF / Word…';
 
   @override
   String get exportNotesOptionInfo =>
-      'The note’s text and images; bubbles not included.';
+      'The note\'s text and images as PDF or Word, layout adjustable; bubbles not included';
 
   @override
   String get captureNoteTitle => 'Note title (optional)';
@@ -6053,4 +6053,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickAddSectionFiles => 'Files and links';
+
+  @override
+  String get shareIncludeBubbles => 'Bubbles';
+
+  @override
+  String get shareSendSection => 'SEND';
+
+  @override
+  String get shareInAppSection => 'TO A NOT USER';
+
+  @override
+  String get shareTextHint =>
+      'Sends the note\'s text to an app (WhatsApp, email…)';
+
+  @override
+  String get shareCopyHint => 'Copies the note\'s text to the clipboard';
+
+  @override
+  String get shareQuickPdfHint => 'Sends the note as a PDF file in one tap';
+
+  @override
+  String get shareAsImageHint => 'Sends the note as images, page by page';
+
+  @override
+  String get shareAttachmentFilesHint =>
+      'Sends the note\'s photos, PDFs, audio and videos themselves';
+
+  @override
+  String get shareAsNoteInfo =>
+      'One file with attachments, pages, drawings and bubbles; opens exactly in Not';
+
+  @override
+  String get bubbleCopy => 'Copy';
+
+  @override
+  String get bubblesCopyAll => 'Copy all';
+
+  @override
+  String get bubblesToNote => 'Add to note';
+
+  @override
+  String get bubblesToNoteDone => 'Bubbles added to the end of the note';
+
+  @override
+  String get bubbleMark => 'Mark';
+
+  @override
+  String get bubbleFormat => 'Format';
 }

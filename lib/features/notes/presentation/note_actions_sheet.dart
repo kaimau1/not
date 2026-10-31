@@ -252,8 +252,10 @@ Future<void> _runNoteAction(
     case 'copy':
       if (!await unlockIfNeeded()) return;
       // Paylaşımla AYNI biçim (bkz. noteShareText): `- [ ]` işaretleri yok.
+      // Bölünmüş notun balonları ağır kısımda — önce tam hâli (F13.1).
+      final full = await hydrateNote(ref, note);
       await Clipboard.setData(
-        ClipboardData(text: noteShareText(note, pageLabel: l10n.pageLabel)),
+        ClipboardData(text: noteShareText(full, pageLabel: l10n.pageLabel)),
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context)

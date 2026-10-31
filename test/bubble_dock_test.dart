@@ -42,18 +42,52 @@ void main() {
     await tester.pumpAndSettle();
     expect(bodyHasFocus(tester), isTrue, reason: 'kart klavyeyi açmış olmalı');
 
-    // Menü yok; renk, yıldız, acil ve sil doğrudan kartta.
+    // Menü yok; araç satırı renk · işaret · Aa · sil (F13.2).
     expect(find.byIcon(Icons.more_vert), findsNothing);
     expect(find.byKey(const ValueKey('bubble-color-toggle')), findsOneWidget);
-    expect(find.byIcon(Icons.star_border_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.priority_high_rounded), findsOneWidget);
+    expect(find.byKey(const ValueKey('bubble-mark-toggle')), findsOneWidget);
+    expect(find.byKey(const ValueKey('bubble-format-toggle')), findsOneWidget);
     expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+    // Biçim ve boy düğmeleri "Aa"nın arkasında, satırda yok.
+    expect(find.byIcon(Icons.zoom_in_rounded), findsNothing);
+    expect(find.byIcon(Icons.star_border_rounded), findsNothing);
 
-    await tester.tap(find.byIcon(Icons.star_border_rounded));
+    // İşaret şeridi kartın içinde açılır; yıldız odak düşürmeden işler.
+    await tester.tap(find.byKey(const ValueKey('bubble-mark-toggle')));
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(bodyHasFocus(tester), isTrue);
+    await tester.tap(find.byKey(const ValueKey('bubble-mark-star')));
     await tester.pumpAndSettle();
     expect(controller.bubbles.single.starred, isTrue);
+    await tester.tap(find.byKey(const ValueKey('bubble-mark-urgent')));
+    await tester.pumpAndSettle();
+    expect(controller.bubbles.single.urgent, isTrue);
     // ASIL KİLİT: odak düşmedi, yani klavye kapanmadı.
     expect(bodyHasFocus(tester), isTrue);
+
+    // "Aa" → boy düğmeleri; büyüt balonu büyütür, odak korunur.
+    await tester.tap(find.byKey(const ValueKey('bubble-format-toggle')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('bubble-mark-star')), findsNothing,
+        reason: 'tek seferde tek şerit');
+    final before = controller.bubbles.single.size;
+    await tester.tap(find.byIcon(Icons.zoom_in_rounded));
+    await tester.pumpAndSettle();
+    expect(controller.bubbles.single.size, greaterThan(before));
+    expect(bodyHasFocus(tester), isTrue);
+  });
+
+  testWidgets('yazı alanı en az 3 satır (F13.2)', (tester) async {
+    final controller = BubbleController(initial: const [], onChanged: (_) {});
+    addTearDown(controller.dispose);
+    controller.add(1, 0.5, 0.5);
+    await tester.pumpWidget(host(BubbleDock(controller: controller)));
+    await tester.pumpAndSettle();
+    final field = tester.widget<TextField>(
+      find.byKey(const ValueKey('bubble-dock-text')),
+    );
+    expect(field.minLines, greaterThanOrEqualTo(3));
   });
 
   testWidgets('renk şeridi de kartın içinde — levha açılmaz, odak korunur', (

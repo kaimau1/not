@@ -622,7 +622,8 @@ eskisini arşive taşıma.
   açık renginde + baş harf) → `notlar://note/<id>`.
 - Çizim ekranı (`DrawingScreen`) kalem TEPSİSİ `PenTray`: cetvel(şekiller) ·
   silgi · tükenmez · keçeli · fosforlu; seçili kalem kalkar, ikinci dokunuş
-  renk/kalınlık panelini açar. PDF/görsel üstü çizim eski `InkToolbar`da.
+  renk/kalınlık panelini açar. PDF/sunum/görsel üstü çizim de AYNI tepsi
+  (`PenTray(controls: true)`, F13.3) — `InkToolbar` 2026-10-31'de silindi.
 - Kişiselleştirme (`Customizable`, `UiItem`): kimlikler kalıcı tercih
   anahtarıdır — değiştirme (`homeMic` = eski `home.voiceAi`).
 
@@ -718,6 +719,24 @@ eskisini arşive taşıma.
 - Bildirim (F8.3): düz metin için `messenger.showMessage(metin)` /
   `showAppMessage(context, metin)`; eylemliyse `action:` (geri sayımlı).
   Elle `SnackBar(content: Text(...))` kurma.
+
+## Faz 13 kararları (2026-10-31)
+- **Balon yazısı dışarı çıkar (F13.1):** paylaşım/kopya metni balonları
+  "Sayfa N — Başlık: metin" satırlarıyla içerir (`ShareTextOptions.bubbles`,
+  kayıt 5. hane; eski 4 haneli kayıtta AÇIK). Çip yalnız yazılı balon
+  varken. TUZAK: liste notu HAFİF olabilir (balonlar ağır kısımda) — dışarı
+  metin üreten yol önce `hydrateNote` (paylaş levhası ve kart ⋮ Kopyala
+  yapıyor; ana ekran toplu seçim kopyası YAPMIYOR, hafif notta balon
+  eksik kalabilir). "Nota aktar" balonu kendi sayfa notuna yazar, sayfa
+  notunda olan satırı yeniden eklemez.
+- **Balon yazma kartı (kullanıcı kararı):** renk · işaret · Aa · sil;
+  şeritler kartın İÇİNDE (rota yok → klavye kapanmaz), tek seferde tek
+  şerit; yazı alanı en az 3 satır.
+- **Paylaş levhası:** GÖNDER (dışarıya) / NOTLAR KULLANICISINA (uygulama
+  içi). Web'de "Görsel" var (`pngPages` → `XFile.fromData`).
+- **Görüntüleyiciler:** çubuk `ViewerCommonActions` (Paylaş · Eki kopyala)
+  ile başlar; türe özgü ikincil araçlar ⋮'te. Sabitleme şeridi yalnız
+  taşıma sırasında ağaçta (`onPinDrag`).
 
 ## Faz 12 kararları (2026-10-31)
 - **Not ⋮ hızlı satırı:** Yıldızla · Klasöre taşı · Sürüm geçmişi · Sesli

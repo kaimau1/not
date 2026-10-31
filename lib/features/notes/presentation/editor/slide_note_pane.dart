@@ -8,6 +8,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/pptx_render.dart';
 import '../../data/slide_deck.dart';
+import '../../domain/note_share_text.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
 import '../viewers/bubble_layer.dart';
@@ -20,6 +21,7 @@ import 'bubbles_overview.dart';
 import 'page_note_pane.dart';
 import 'text_wrap.dart';
 import '../../../../core/widgets/smooth_routes.dart';
+import 'pen_tray.dart';
 
 /// "Sunum ekle not al" notunun gövdesi: ÜSTTE slayt, ALTTA o slaydın notu.
 ///
@@ -142,7 +144,19 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
 
   /// Balon listesi; seçilen balonun slaydına gidilir ve balon açılır.
   Future<void> _openBubbles(ValueChanged<int> goToPage) async {
-    final target = await showBubblesOverview(context, _bubbles);
+    final target = await showBubblesOverview(
+      context,
+      _bubbles,
+      // "Nota aktar": balonlar kendi sayfalarının sayfa notuna (F13.1).
+      onAddToNote: (bubbles) {
+        final changed = pageNotesWithBubbles(
+          widget.noteOf(),
+          widget.attachment,
+          bubbles,
+        );
+        changed.forEach(widget.onPageNoteChanged);
+      },
+    );
     if (target == null || !mounted) return;
     goToPage(target.page);
     _bubbles.openOnly(target.id);
@@ -537,7 +551,12 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
           left: 0,
           right: 0,
           bottom: 0,
-          child: InkToolbar(controller: widget.ink),
+          child: PenTray(
+            controller: widget.ink,
+            controls: true,
+            hint: context.l10n.inkTwoFingerHint,
+            trayHeight: 76,
+          ),
         ),
     ],
   );

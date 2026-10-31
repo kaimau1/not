@@ -344,6 +344,10 @@ extension _EditorMediaView on _NoteEditorScreenState {
     if (_pinHover != value && mounted) _update(() => _pinHover = value);
   }
 
+  void _setPinDrag(bool value) {
+    if (_pinDrag != value && mounted) _update(() => _pinDrag = value);
+  }
+
   // ── GÖRÜNÜM: SABİT / YÜZEN / BALONLU ──────────────────────────────────
   //
   // Kullanıcı isteği 2026-10-16: "sabitleme, yüzen ve balonlu arasında
@@ -854,50 +858,58 @@ extension _EditorMediaView on _NoteEditorScreenState {
     return Stack(
       children: [
         Positioned.fill(child: content),
-        Positioned(
-          left: 0,
-          right: 0,
-          top: 0,
-          child: IgnorePointer(
-            child: AnimatedSlide(
-              offset: _pinHover ? Offset.zero : const Offset(0, -1.2),
-              duration: const Duration(milliseconds: 160),
-              curve: Curves.easeOut,
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(12, 6, 12, 0),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.vertical_align_top,
-                      size: 18,
-                      color: Theme.of(context).colorScheme.onPrimary,
+        // HEDEF ŞERİT (F13.6, 2026-10-31): taşıma başlayınca tepede SOLUK
+        // belirir (jest görünür olsun), parmak bölgeye girince dolar.
+        // Taşıma yokken şerit AĞAÇTA YOK: eskiden ekran dışına kaydırılmış
+        // hâliyle hep kuruluydu ve ekran okuyucu her açılışta "Bırak: üste
+        // sabitle" okuyordu.
+        if (_pinDrag || _pinHover)
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            child: IgnorePointer(
+              child: Builder(
+                builder: (context) {
+                  final scheme = Theme.of(context).colorScheme;
+                  final fg = _pinHover ? scheme.onPrimary : scheme.primary;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    curve: Curves.easeOut,
+                    margin: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
                     ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        context.l10n.pinMediaRelease,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          fontWeight: FontWeight.w600,
+                    decoration: BoxDecoration(
+                      color: _pinHover
+                          ? scheme.primary
+                          : scheme.primaryContainer.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: scheme.primary, width: 1.5),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.vertical_align_top, size: 18, color: fg),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            context.l10n.pinMediaRelease,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: fg,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
           ),
-        ),
       ],
     );
   }

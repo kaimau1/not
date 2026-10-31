@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
@@ -16,6 +15,7 @@ import '../../../../core/utils/video_time.dart';
 import '../../../../core/utils/youtube.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../domain/attachment.dart';
+import '../editor/attachment_clipboard.dart' show ViewerCommonActions;
 import '../editor/video_hub_scope.dart';
 import 'video_viewer.dart' show NoteAtTimeButton;
 import 'youtube_web_frame.dart';
@@ -372,13 +372,6 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
     super.dispose();
   }
 
-  Future<void> _copyLink() async {
-    final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    await Clipboard.setData(ClipboardData(text: _url));
-    messenger.showMessage(l10n.videoLinkCopied);
-  }
-
   Future<void> _openExternal() =>
       launchUrl(Uri.parse(_url), mode: LaunchMode.externalApplication);
 
@@ -420,11 +413,9 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
             overflow: TextOverflow.ellipsis,
           ),
           actions: [
-            IconButton(
-              tooltip: l10n.copyVideoLink,
-              icon: const Icon(Icons.link),
-              onPressed: _copyLink,
-            ),
+            // Ortak çubuk (F13.5): Paylaş (bağlantı) · Eki kopyala (bağlantı
+            // sistem panosuna + ek uygulama panosuna).
+            ViewerCommonActions(attachment: widget.attachment),
             IconButton(
               tooltip: l10n.youTubeOpenExternal,
               icon: const Icon(Icons.open_in_new),
@@ -496,6 +487,7 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     actions: [
+                      ViewerCommonActions(attachment: widget.attachment),
                       if (widget.onNoteAt != null)
                         NoteAtTimeButton(onPressed: _noteAt),
                       IconButton(
@@ -510,11 +502,6 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
                           icon: const Icon(Icons.picture_in_picture_alt),
                           onPressed: PictureInPicture.enter,
                         ),
-                      IconButton(
-                        tooltip: l10n.copyVideoLink,
-                        icon: const Icon(Icons.link),
-                        onPressed: _copyLink,
-                      ),
                       IconButton(
                         tooltip: l10n.youTubeOpenExternal,
                         icon: const Icon(Icons.open_in_new),

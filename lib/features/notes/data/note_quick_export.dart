@@ -105,26 +105,33 @@ class NoteQuickExport {
   }
 
   /// [bytes] PDF'inin sayfaları PNG dosyası olarak (en çok [maxPages]).
-  /// Web'de dosya sistemi yok — boş döner.
-  static Future<List<String>> pngPages(
+  /// Web'de dosya sistemi yok: sayfalar bellekten ([XFile.fromData]) verilir
+  /// (F13.4, 2026-10-31 — web'de "Görsel" düğmesi bu yüzden gizliydi).
+  static Future<List<XFile>> pngPages(
     Uint8List bytes, {
     required String name,
     int maxPages = 10,
     double width = 1240,
   }) async {
-    if (kIsWeb) return const [];
     final doc = await PdfDocument.openData(bytes);
-    final out = <String>[];
+    final out = <XFile>[];
     try {
-      final dir = await Directory.systemTemp.createTemp('note_png_');
+      final dir = kIsWeb
+          ? null
+          : await Directory.systemTemp.createTemp('note_png_');
       final count = doc.pages.length < maxPages ? doc.pages.length : maxPages;
       for (var i = 0; i < count; i++) {
         final png = await renderPdfPagePng(doc.pages[i], width: width);
         if (png == null) continue;
         final suffix = count > 1 ? '_${i + 1}' : '';
-        final file = File('${dir.path}/$name$suffix.png');
+        final fileName = '$name$suffix.png';
+        if (dir == null) {
+          out.add(XFile.fromData(png, name: fileName, mimeType: 'image/png'));
+          continue;
+        }
+        final file = File('${dir.path}/$fileName');
         await file.writeAsBytes(png);
-        out.add(file.path);
+        out.add(XFile(file.path, mimeType: 'image/png', name: fileName));
       }
     } finally {
       await doc.dispose();
@@ -139,10 +146,17 @@ class NoteQuickExport {
   static Future<List<XFile>> attachmentFiles(
     Note note, {
     required AttachmentRepository? attachments,
+  }) => filesOf(shareableAttachments(note), attachments: attachments);
+
+  /// [list]teki eklerin dosyaları ([attachmentFiles] kuralıyla). Tam ekran
+  /// görüntüleyicinin "Paylaş" düğmesi tek ekle çağırır (F13.5).
+  static Future<List<XFile>> filesOf(
+    List<Attachment> list, {
+    required AttachmentRepository? attachments,
   }) async {
     final out = <XFile>[];
     Directory? temp;
-    for (final a in shareableAttachments(note)) {
+    for (final a in list) {
       if (!kIsWeb && a.localPath.isNotEmpty && File(a.localPath).existsSync()) {
         out.add(XFile(a.localPath, mimeType: a.mimeType, name: a.fileName));
         continue;

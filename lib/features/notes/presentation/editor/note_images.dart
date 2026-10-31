@@ -533,6 +533,7 @@ class NotePageCanvas extends StatefulWidget {
     this.onSaveAs,
     this.onPinTop,
     this.onPinHover,
+    this.onPinDrag,
     this.onViewChange,
     this.onTapEmpty,
     this.topLimit = 0,
@@ -633,6 +634,12 @@ class NotePageCanvas extends StatefulWidget {
   /// ekranın tepesinde "Bırak: üste sabitle" şeridini gösterir.
   final ValueChanged<bool>? onPinHover;
 
+  /// Bir görsel taşınmaya başladı (true) / bıraktı (false). Editör taşıma
+  /// boyunca tepede hedef şeridi gösterir — sabitleme jesti görünür olsun,
+  /// "Bırak: üste sabitle" etiketi de yalnız o sırada ekran okuyucuya
+  /// girsin (F13.6).
+  final ValueChanged<bool>? onPinDrag;
+
   /// Görünüm anahtarı (Sabit / Yüzen / Balonlu — bkz. view_mode_switch.dart)
   /// seçili ekin araç panelinde; null ise anahtar çizilmez.
   final void Function(Attachment, AttachmentView)? onViewChange;
@@ -716,6 +723,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   /// Sürükleme bitince yeni konumu kaydeder ve canlı değerleri temizler.
   void _commitMove(Attachment img, double cw) {
     if (_moveId != img.id) return;
+    widget.onPinDrag?.call(false);
     if (_inPinZone) {
       _setPinZone(false);
       setState(() {
@@ -1947,6 +1955,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             return;
           }
           HapticFeedback.selectionClick();
+          if (widget.onPinTop != null) widget.onPinDrag?.call(true);
           setState(() {
             _selectedId = img.id;
             _moveId = img.id;
