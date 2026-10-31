@@ -500,8 +500,8 @@ eskisini arşive taşıma.
   mikrofon YOK (`UiItem.barVoiceAi` kimliği yalnız eski tercihler için).
   Klasörde sesli not "+" menüsünde.
 - "+" menüsü TEK PANEL (2026-10-20; F3.2'nin kapı levhaları kalktı):
-  Diğer (şablon, alışveriş, el yazısı, defter) · Kamera · Dosya (geniş) ·
-  birincil Metin/Liste/Sıralı. ≤2 seçenekli bölüm geniş düğme.
+  Şablon ve çizim (şablon, alışveriş, el yazısı, defter) · Kamera · Dosya ve
+  bağlantı (geniş) · birincil Metin/Liste/Sıralı (grup adları F11.6). ≤2 seçenekli bölüm geniş düğme.
 - Dosya akışı (2026-10-20): seçici → TEK levha `showFileUseSheet` (özet,
   başlık, türe göre seçenek; varsayılan kip başta) → akışa `preset` kip.
   Ses artık sorulmadan metne dökülmez (ek / metne dök; editör `?afile=1`).
@@ -718,6 +718,28 @@ eskisini arşive taşıma.
 - Bildirim (F8.3): düz metin için `messenger.showMessage(metin)` /
   `showAppMessage(context, metin)`; eylemliyse `action:` (geri sayımlı).
   Elle `SnackBar(content: Text(...))` kurma.
+
+## Faz 11 kararları (2026-10-31, kullanıcı kararları: önerilenler)
+- **Tek avatar:** üst çubukta arama · Süz · avatar · ⋮. Avatar rozeti
+  `accountPendingCountProvider` (istek + `sharedHubBadgeProvider`); "Gelen ve
+  paylaşılanlar" avatar levhasında (`SharedHubButton` silindi). Anlam
+  anahtarı yalnız odak/sorgu varken — `TextFieldTapRegion` ŞART (yoksa
+  dokunuş odağı düşürür, anahtar dokunuş bitmeden kaybolur).
+- **Varsayılan sıralama "Son güncellenen"** (`kDefaultNoteSort`). TUZAK: eski
+  varsayılan "Elle" kaydedilmezdi; `migrateDefaultNoteSort` kayıt yokken
+  `orderIndex > 0` (yalnız sürükleme pozitif yazar; yeni not negatif, alansız
+  eski not 0) görürse "Elle"yi kalıcılaştırır.
+- **Süz levhası:** Görünüm = segmentli + anahtar satırları; Tür ≠ Durum (ikisi
+  aynı `NoteFilter`); "Elle sırala" metinli. Klasör sırası ⋮'te DEĞİL —
+  şeridin sonundaki "Tüm klasörler" (`/folders`).
+- **İlk açılış izin levhası YOK:** izinler bağlamda; bildirim izni
+  `ReminderService._askPermissionOnce` (ilk planlanan bildirimde, kurulumda
+  değil). Konum hatırlatıcısı yok.
+- **Geniş ekran:** `AppRailScope.visible(context)` — rayda olan kapı ⋮'te
+  tekrarlanmaz. Boş bölmenin "Yeni not"u `quickAddOpenRequest` ile ana
+  ekranın "+" panelini açar (yalnız `listenOpenRequests: true` olan düğme).
+- Misafir kartı: "Sonra" → şerit; 5/20 notta bir kez tam kart
+  (`guestReminderMode`). Defter simgesi `book_outlined` (`menu_book` Kılavuz).
 
 ## Faz 10 kararları (2026-10-31)
 - **Hata metni (F10.4):** kullanıcıya `'$e'` GİTMEZ — `friendlyError(l10n, e)`

@@ -1742,30 +1742,6 @@ abstract class AppLocalizations {
   /// **'Görüntülü not ve fotoğraf çekimi için gerekli'**
   String get permCameraInfo;
 
-  /// No description provided for @permOnboardTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Başlamadan önce'**
-  String get permOnboardTitle;
-
-  /// No description provided for @permOnboardInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notlar bu izinleri yalnızca sen ilgili özelliği kullanınca ister. Şimdi vermek istersen aşağıdan açabilirsin; sonra Ayarlar > İzinler\'den de değiştirebilirsin.'**
-  String get permOnboardInfo;
-
-  /// No description provided for @permOnboardGrantAll.
-  ///
-  /// In tr, this message translates to:
-  /// **'İzinleri ver'**
-  String get permOnboardGrantAll;
-
-  /// No description provided for @permOnboardSkip.
-  ///
-  /// In tr, this message translates to:
-  /// **'Şimdi değil'**
-  String get permOnboardSkip;
-
   /// No description provided for @newVideoNote.
   ///
   /// In tr, this message translates to:
@@ -2885,7 +2861,7 @@ abstract class AppLocalizations {
   /// No description provided for @filterOthers.
   ///
   /// In tr, this message translates to:
-  /// **'Diğerleri'**
+  /// **'Klasörsüz ve etiketsiz'**
   String get filterOthers;
 
   /// No description provided for @chatSuggestion1.
@@ -3191,7 +3167,7 @@ abstract class AppLocalizations {
   /// No description provided for @filterSectionStatus.
   ///
   /// In tr, this message translates to:
-  /// **'DURUM'**
+  /// **'Durum'**
   String get filterSectionStatus;
 
   /// No description provided for @filterSectionFolder.
@@ -3203,19 +3179,19 @@ abstract class AppLocalizations {
   /// No description provided for @filterSectionTag.
   ///
   /// In tr, this message translates to:
-  /// **'ETİKET'**
+  /// **'Etiket'**
   String get filterSectionTag;
 
   /// No description provided for @filterSectionSort.
   ///
   /// In tr, this message translates to:
-  /// **'SIRALAMA'**
+  /// **'Sıralama'**
   String get filterSectionSort;
 
   /// No description provided for @filterSheetSortHint.
   ///
   /// In tr, this message translates to:
-  /// **'Tarih grupları (BUGÜN, BU HAFTA…) yalnız “Son düzenlenen” sıralamasında gösterilir.'**
+  /// **'Tarih grupları (BUGÜN, BU HAFTA…) yalnız “Son güncellenen” sıralamasında gösterilir.'**
   String get filterSheetSortHint;
 
   /// No description provided for @formatTitle.
@@ -9647,7 +9623,7 @@ abstract class AppLocalizations {
   /// No description provided for @quickAddSectionMore.
   ///
   /// In tr, this message translates to:
-  /// **'Diğer'**
+  /// **'Şablon ve çizim'**
   String get quickAddSectionMore;
 
   /// No description provided for @attachAnyFileInfo.
@@ -10193,7 +10169,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeShowSharedShort.
   ///
   /// In tr, this message translates to:
-  /// **'Paylaşılanlar'**
+  /// **'Paylaşılan notları göster'**
   String get homeShowSharedShort;
 
   /// No description provided for @homeSharedSection.
@@ -10777,6 +10753,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Hesabın ve verilerin siliniyor…'**
   String get deletingAccount;
+
+  /// No description provided for @allFolders.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm klasörler'**
+  String get allFolders;
+
+  /// No description provided for @guestReminderConnect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağla'**
+  String get guestReminderConnect;
+
+  /// No description provided for @filterSectionType.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tür'**
+  String get filterSectionType;
+
+  /// No description provided for @reorderNotesManually.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elle sırala'**
+  String get reorderNotesManually;
+
+  /// No description provided for @quickAddSectionFiles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya ve bağlantı'**
+  String get quickAddSectionFiles;
 }
 
 class _AppLocalizationsDelegate

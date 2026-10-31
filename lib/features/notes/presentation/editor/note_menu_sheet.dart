@@ -242,7 +242,7 @@ class _MenuGrid extends StatelessWidget {
             MenuAction(
               'toArchive',
               l10n.archiveCopyHere,
-              Icons.inventory_2_outlined,
+              Icons.book_outlined,
             ),
         ]),
         MenuSection(l10n.menuSectionTools, [

@@ -15,19 +15,20 @@ Your notes belong to your account and **sync instantly** between phone, tablet, 
 Your notes appear as cards grouped by **TODAY / THIS WEEK / EARLIER**; pinned notes stay on top.
 - **Swipe right:** pin the note. **Swipe left:** archive it.
 - **Long-press a card:** multi-select — move, archive, duplicate or delete several notes at once.
-- **Search:** type in the box at the top. The **Text** tab finds words; the **Meaning** tab understands what you mean ("car expenses" also finds the "tyre change" note).
-- **Filter:** by tag, type (list, numbered), status (pinned, locked, with alarm); change the sort order (last edited, title, most worked on, manual).
-- **Folder strip:** switch folders by tapping or by **swiping sideways**. Reorder them from ⋮ → **Folder order**.
+- **Search:** type in the box at the top. Tapping the box reveals the ✨ **Meaning** switch on its right: off, it finds words; on, it understands what you mean ("car expenses" also finds the "tyre change" note).
+- **Avatar at the top right:** your account. The number on it counts pending friend requests, incoming notes and unread shared notes; tap it for **Contacts · Incoming and shared · Premium · Account settings**.
+- **Filter:** **View** (grid or list; images on cards, attachments on cards and shared notes as switches), **Type** (text, list, numbered), **Status** (pinned, starred, with alarm, locked, no folder or tag), tag and **Sort** (recently updated by default — date groups show in this order; title, most worked on; **Reorder manually** to drag cards into place).
+- **Folder strip:** switch folders by tapping or by **swiping sideways**. **All folders** at the end of the strip opens every folder; reorder them there.
 - **Quick note row:** type into "New note…" at the top of the list and save — without opening a note.
 - **Home screen background:** ⋮ → Home screen background for an image or pattern.
 - **Media on cards:** a pinned or single image/video shows as a cover at the top of the card; videos carry ▶, YouTube the red button. A bubbles note gets its document as the cover at the top of the card: the first page, the **PDF WITH BUBBLES** badge top left, the file name and bubble count at the bottom; voice recordings and other documents sit as rows at the bottom of the card.
-- The ⋮ at the top right opens a sheet: **Reminders, Archive, Bin, From template** on top; below them **Account and people** (account, contacts, incoming notes), **Home screen** (folder order, background, hidden folders) and **App** (settings, this guide).
+- The ⋮ at the top right opens a sheet: **AI, Reminders, Archive, Bin, Settings** on top (on wide screens these live in the rail on the left and are not repeated in ⋮); below them **Home screen** (background, hidden folders) and **App** (personalise, this guide).
 - **A card's ⋮ / long-press menu:** pin, share, select on top; then **Organize** (folder, colour — optionally with a border highlight), **Copy and export** (duplicate, save as template), **Tools** (read aloud, statistics), **Protection and storage** (archive, lock, sync); Delete at the bottom.
 
 ## Creating notes {#create}
 The **+** button at the bottom right opens a short panel, read from your thumb upwards:
 - **At the bottom, right above the button:** large **Text note · List** buttons.
-- Above them three doors: **Camera** (photo, video, scan, QR), **Add file** (one picker: choose an image, PDF, slides, video or audio — the note opens according to the file type; images and videos also offer "Transcribe"; plus **YouTube video**) and **Templates** (from template, shopping list, numbered list, handwriting, **notebook**). A note started from a video opens with the video pinned on top and the note below.
+- Above them three groups: **Camera** (photo, video, scan, QR), **Files and links** — **Add file** (one picker: choose an image, PDF, slides, video or audio — the note opens according to the file type; images and videos also offer "Transcribe"; plus **YouTube video**) and **Templates and drawing** (from template, shopping list, handwriting, **notebook**). A note started from a video opens with the video pinned on top and the note below.
 - **The home screen has one microphone:** a tap opens the mode you used last — **voice note** (AI tidies it) or **type as I speak**; a long-press opens the other one.
 For PDFs, images and slides you choose a mode the first time: **Bubbles** (the document becomes the note itself, with bubbles and pen on top) or **Classic** (the document is an ordinary attachment). Your choice becomes the default; change it in Settings → Notes and folders → **Notes from content**. You can switch inside a note too: see **Bubbles ↔ classic**.
 

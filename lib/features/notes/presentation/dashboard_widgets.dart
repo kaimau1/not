@@ -319,10 +319,25 @@ class _SearchField extends ConsumerWidget {
             // yazıları çok yer kaplıyor, sadece bir AI işareti olsun, basınca
             // açılıp kapansın — metin ve anlam arasında geçiş"): açıkken dolu
             // vurgu rengi (anlamla arama), kapalıyken soluk çerçeve (metin).
-            _SemanticToggle(
-              on: semantic,
-              onTap: () =>
-                  ref.read(semanticSearchEnabledProvider.notifier).toggle(),
+            //
+            // YALNIZ ARAMA SIRASINDA (F11.1): odak yokken ve kutu boşken
+            // gizli — üst çubukta yer aramaya kalsın, ipucu kesilmesin.
+            ListenableBuilder(
+              listenable: focusNode ?? const AlwaysStoppedAnimation(0),
+              builder: (context, _) =>
+                  (focusNode?.hasFocus ?? true) || query.isNotEmpty
+                  // TextFieldTapRegion: anahtara dokunmak "alan dışı" sayılıp
+                  // odağı düşürmesin — düşürse anahtar dokunuş bitmeden
+                  // kaybolurdu.
+                  ? TextFieldTapRegion(
+                      child: _SemanticToggle(
+                        on: semantic,
+                        onTap: () => ref
+                            .read(semanticSearchEnabledProvider.notifier)
+                            .toggle(),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
             ),
             // SÜZ arama kutusunun sağında (bkz. [HomeFilterButton]);
             // kişiselleştirmede gizlenebilir.

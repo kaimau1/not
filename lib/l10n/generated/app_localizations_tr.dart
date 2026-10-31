@@ -905,19 +905,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get permCameraInfo => 'Görüntülü not ve fotoğraf çekimi için gerekli';
 
   @override
-  String get permOnboardTitle => 'Başlamadan önce';
-
-  @override
-  String get permOnboardInfo =>
-      'Notlar bu izinleri yalnızca sen ilgili özelliği kullanınca ister. Şimdi vermek istersen aşağıdan açabilirsin; sonra Ayarlar > İzinler\'den de değiştirebilirsin.';
-
-  @override
-  String get permOnboardGrantAll => 'İzinleri ver';
-
-  @override
-  String get permOnboardSkip => 'Şimdi değil';
-
-  @override
   String get newVideoNote => 'Video çek';
 
   @override
@@ -1522,7 +1509,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get undone => 'Geri alındı';
 
   @override
-  String get filterOthers => 'Diğerleri';
+  String get filterOthers => 'Klasörsüz ve etiketsiz';
 
   @override
   String get chatSuggestion1 => 'Alışveriş listemde ne eksik?';
@@ -1689,20 +1676,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get filterReset => 'Sıfırla';
 
   @override
-  String get filterSectionStatus => 'DURUM';
+  String get filterSectionStatus => 'Durum';
 
   @override
   String get filterSectionFolder => 'KLASÖR';
 
   @override
-  String get filterSectionTag => 'ETİKET';
+  String get filterSectionTag => 'Etiket';
 
   @override
-  String get filterSectionSort => 'SIRALAMA';
+  String get filterSectionSort => 'Sıralama';
 
   @override
   String get filterSheetSortHint =>
-      'Tarih grupları (BUGÜN, BU HAFTA…) yalnız “Son düzenlenen” sıralamasında gösterilir.';
+      'Tarih grupları (BUGÜN, BU HAFTA…) yalnız “Son güncellenen” sıralamasında gösterilir.';
 
   @override
   String get formatTitle => 'Biçim';
@@ -5370,7 +5357,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get quickAddSectionMore => 'Diğer';
+  String get quickAddSectionMore => 'Şablon ve çizim';
 
   @override
   String get attachAnyFileInfo =>
@@ -5700,7 +5687,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Benimle paylaşılan ortak notlar ana ekranın üstünde ayrı bir bölümde de görünsün';
 
   @override
-  String get homeShowSharedShort => 'Paylaşılanlar';
+  String get homeShowSharedShort => 'Paylaşılan notları göster';
 
   @override
   String get homeSharedSection => 'BENİMLE PAYLAŞILANLAR';
@@ -6008,4 +5995,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get deletingAccount => 'Hesabın ve verilerin siliniyor…';
+
+  @override
+  String get allFolders => 'Tüm klasörler';
+
+  @override
+  String get guestReminderConnect => 'Bağla';
+
+  @override
+  String get filterSectionType => 'Tür';
+
+  @override
+  String get reorderNotesManually => 'Elle sırala';
+
+  @override
+  String get quickAddSectionFiles => 'Dosya ve bağlantı';
 }

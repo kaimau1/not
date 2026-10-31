@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/widgets/action_menu_sheet.dart';
 import 'package:notlar/core/widgets/undo_snackbar.dart';
+import 'package:notlar/features/ai/data/ai_gate.dart';
+import 'package:notlar/features/auth/presentation/account_sheet.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
+import 'package:notlar/features/friends/data/friends_repository.dart';
+import 'package:notlar/features/friends/domain/friend.dart';
 import 'package:notlar/features/inbox/data/inbox_repository.dart';
-import 'package:notlar/features/inbox/presentation/shared_hub_screen.dart';
 import 'package:notlar/features/notes/data/attachment_save.dart';
 import 'package:notlar/features/notes/data/note_shares_repository.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
@@ -280,13 +283,24 @@ void main() {
             sharedNotesWithMeProvider.overrideWith(
               (ref) => Stream.value(const <NoteShare>[]),
             ),
+            authStateProvider.overrideWith((ref) => Stream.value(null)),
+            incomingFriendRequestsProvider.overrideWith(
+              (ref) => Stream.value(const <FriendRequest>[]),
+            ),
+            premiumProvider.overrideWith((ref) => Stream.value(false)),
           ],
-          child: _app(const Scaffold(body: Center(child: SharedHubButton()))),
+          child: _app(
+            const Scaffold(body: Center(child: AccountAvatarButton())),
+          ),
         ),
       );
       await tester.pumpAndSettle();
+      // F11.1: ayrı düğme yok — sayı TEK AVATARIN rozetinde, kapı hesap
+      // levhasında.
       expect(find.text('1'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('home-shared-hub')));
+      await tester.tap(find.byKey(const ValueKey('home-account-avatar')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('account-sheet-shared-hub')));
       await tester.pumpAndSettle();
       expect(find.text('Gelen ve paylaşılanlar'), findsOneWidget);
       expect(find.byKey(const ValueKey('hub-tab-inbox')), findsOneWidget);

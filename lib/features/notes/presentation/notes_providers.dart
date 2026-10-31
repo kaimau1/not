@@ -108,6 +108,13 @@ final noteSortProvider = NotifierProvider<NoteSortNotifier, NoteSort>(
   NoteSortNotifier.new,
 );
 
+/// VARSAYILAN SIRALAMA "Son güncellenen" (F11.4, kullanıcı kararı
+/// 2026-10-31): eskiden "Elle"ydi ve tarih grupları (BUGÜN / BU HAFTA) yeni
+/// kullanıcıda hiç görünmüyordu. Kayıtlı seçim korunur; kayıt yokken notları
+/// sürükleyerek dizmiş eski kullanıcı [migrateDefaultNoteSort] ile "Elle"de
+/// kalır.
+const kDefaultNoteSort = NoteSort.updated;
+
 class NoteSortNotifier extends Notifier<NoteSort> {
   static const _key = 'note_sort';
 
@@ -116,15 +123,39 @@ class NoteSortNotifier extends Notifier<NoteSort> {
     final stored = ref.watch(sharedPreferencesProvider).getString(_key);
     return NoteSort.values.firstWhere(
       (s) => s.name == stored,
-      orElse: () => NoteSort.manual,
+      orElse: () => kDefaultNoteSort,
     );
   }
+
+  /// Sıralama hiç kaydedilmemiş mi (eski varsayılan "Elle" sessizce mi
+  /// geçerliydi)?
+  bool get isUnset =>
+      !ref.read(sharedPreferencesProvider).containsKey(_key);
 
   void set(NoteSort value) {
     state = value;
     ref.read(sharedPreferencesProvider).setString(_key, value.name);
   }
 }
+
+/// Eski varsayılan "Elle" iken kayıt yazılmazdı: sürükleyerek dizen kullanıcı
+/// için `note_sort` hiç kaydedilmemiş olabilir. Notlardan biri sürüklemeyle
+/// sıra almışsa (yeni notun `orderIndex`i hep NEGATİF zaman damgası, alanı
+/// olmayan eski not 0; sürükleme 0, 1000, 2000… yazar — yani POZİTİF değer
+/// yalnız sürüklemeden gelir) "Elle" kalıcılaşır; yoksa yeni varsayılan
+/// kaydedilir. Bir kez çalışır (kayıt yazılınca [NoteSortNotifier.isUnset]
+/// false). Notlar boşken karar verilmez.
+void migrateDefaultNoteSort(WidgetRef ref, List<Note> notes) {
+  final notifier = ref.read(noteSortProvider.notifier);
+  if (!notifier.isUnset || notes.isEmpty) return;
+  notifier.set(
+    shouldKeepManualSort(notes) ? NoteSort.manual : kDefaultNoteSort,
+  );
+}
+
+/// Saf karar: notlardan biri elle sürüklenerek sıralanmış mı?
+bool shouldKeepManualSort(Iterable<Note> notes) =>
+    notes.any((n) => n.orderIndex > 0);
 
 /// Ana ekran ızgarasının sütun sayısı. 0 = otomatik (ekran genişliğinden
 /// hesaplanır); 1–4 arası değer kullanıcının iki parmakla yaptığı zoom

@@ -210,11 +210,15 @@ class RemindersScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _addReminder(context, ref),
-        icon: const Icon(Icons.alarm_add_outlined),
-        label: Text(l10n.newReminder),
-      ),
+      // BOŞKEN YÜZEN DÜĞME YOK (F11.7): boş durumun ortasında aynı
+      // "Yeni hatırlatıcı" düğmesi var; ikisi birden "hangisi?" dedirtiyordu.
+      floatingActionButton: _visibleReminders(ref, notesAsync.value).isEmpty
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => _addReminder(context, ref),
+              icon: const Icon(Icons.alarm_add_outlined),
+              label: Text(l10n.newReminder),
+            ),
       body: notesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(
@@ -222,15 +226,7 @@ class RemindersScreen extends ConsumerWidget {
           title: l10n.genericError(friendlyError(l10n, e)),
         ),
         data: (notes) {
-          // Gizli klasör bastırması: hatırlatıcılı gizli-klasör notu burada
-          // başlık+içerikle listeleniyordu (ana ekran kuralıyla aynı).
-          final suppressed = ref.watch(suppressedFolderIdsProvider);
-          final withReminder = [
-            for (final n in notes)
-              if (n.reminderAt != null &&
-                  (n.folderId == null || !suppressed.contains(n.folderId)))
-                n,
-          ]..sort((a, b) => a.reminderAt!.compareTo(b.reminderAt!));
+          final withReminder = _visibleReminders(ref, notes);
           if (withReminder.isEmpty) {
             return EmptyState(
               icon: Icons.alarm_outlined,
@@ -281,6 +277,19 @@ class RemindersScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Ekranda listelenecek hatırlatıcılı notlar, zamana göre. Gizli klasör
+/// bastırması: hatırlatıcılı gizli-klasör notu burada başlık+içerikle
+/// listeleniyordu (ana ekran kuralıyla aynı).
+List<Note> _visibleReminders(WidgetRef ref, List<Note>? notes) {
+  final suppressed = ref.watch(suppressedFolderIdsProvider);
+  return [
+    for (final n in notes ?? const <Note>[])
+      if (n.reminderAt != null &&
+          (n.folderId == null || !suppressed.contains(n.folderId)))
+        n,
+  ]..sort((a, b) => a.reminderAt!.compareTo(b.reminderAt!));
 }
 
 class _SectionHeader extends StatelessWidget {

@@ -27,6 +27,27 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
 numarasıyla bildir.
 
+**2026-10-31 Faz 11 (ana ekran ve "+" akışı)**
+- [ ] Telefon: üst çubukta arama · Süz · avatar · ⋮ (ayrı Gelen düğmesi yok);
+  gelen not / arkadaşlık isteği varken avatarda SAYI rozeti; avatar levhası
+  Kişiler · Gelen ve paylaşılanlar · Premium · Hesap ayarları (F11.1).
+- [ ] Arama kutusuna dokun → ✨ Anlam anahtarı çıkıyor; anahtara dokununca
+  klavye/odak kaybolmuyor; odak bırakılınca (kutu boşsa) anahtar gizleniyor.
+- [ ] Süz: Görünüm segmentli + anahtarlar, Tür ve Durum ayrı, "Elle sırala"
+  metinli; yeni kurulumda BUGÜN/BU HAFTA grupları görünüyor; eskiden notları
+  sürükleyerek dizmiş telefonda sıra BOZULMADAN "Elle" kalıyor (F11.4).
+- [ ] Klasör şeridinin sonunda "Tüm klasörler" → Klasörler ekranı, sırala
+  oradan (F11.5). "+" paneli: Kamera · Dosya ve bağlantı · Şablon ve çizim,
+  Defter kitap simgesi (F11.6).
+- [ ] Misafir: "Sonra" → tek satırlık şerit; 5. ve 20. notta bir kez tam kart
+  (F11.3). Hatırlatıcılar boşken tek "Yeni hatırlatıcı" düğmesi (F11.7).
+- [ ] Yeni kurulum (Android 13+): ilk açılışta izin levhası YOK; bildirim izni
+  ilk hatırlatıcı kurulunca soruluyor; mikrofon ilk diktede, kamera ilk
+  fotoğrafta (F11.9).
+- [ ] Web/tablet geniş: ⋮'te rayda olanlar (AI, Hatırlatıcılar, Arşiv, Çöp,
+  Ayarlar) yok; boş not bölmesinde tek "Yeni not" → "+" paneli açılıyor
+  (F11.8).
+
 **2026-10-31 Faz 10 (kırık/yanıltıcı olanlar)**
 - [ ] Web (Chrome): + → Dosya ekle → PDF → "Belge gibi not al" → PDF açılıyor
   ("PDF işleniyor…/Ek yükleniyor" göstergesi); balon ekle → Sayfaları düzenle

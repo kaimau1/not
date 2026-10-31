@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,25 +14,37 @@ import 'auth_providers.dart';
 /// İlk açılışta sessizce anonim oturum açılır (bkz. `login_screen.dart`);
 /// notlar yalnız o uid'de durur — uygulama silinince ya da cihaz değişince
 /// geri getirilemez. Kullanıcı bunu fark etmeden onlarca not biriktirebilir.
-/// Ana ekranın tepesinde "Google ile giriş yap" kartı çıkar — 2026-10-28'den
-/// beri İLK AÇILIŞTAN itibaren (kullanıcı isteği: "ilk girişte google
-/// girişini bulmak çok zor, girince ana ekranda üstte görülsün"; eskiden 3.
-/// nottan sonra geliyordu); "Sonra" kartı [kGuestReminderSnooze] boyunca gizler,
-/// süre bitince kart geri gelir (bağlanana dek kalıcı).
-const kGuestReminderNotes = 0;
-const kGuestReminderSnooze = Duration(days: 7);
-const _snoozeKey = 'guest_reminder_snoozed_until';
+/// Ana ekranın tepesinde "Google ile giriş yap" kartı İLK AÇILIŞTAN itibaren
+/// çıkar (kullanıcı isteği 2026-10-28: "ilk girişte google girişini bulmak
+/// çok zor").
+///
+/// F11.3 (2026-10-31): "Sonra" artık 7 gün sonra aynı kocaman kartı geri
+/// getirmez; kart TEK SATIRLIK şeride iner (giriş yolu yine görünür, notlara
+/// yer kalır). Not sayısı [kGuestReminderFullAt] eşiklerinden birini "Sonra"
+/// denildiği andaki sayıdan sonra geçince tam kart BİR KEZ geri gelir.
+const kGuestReminderFullAt = [5, 20];
+const _laterCountKey = 'guest_reminder_later_count';
+// Eski (≤ Faz 10) "Sonra" kaydı: süreli erteleme. Varsa "0 notta Sonra
+// denmiş" sayılır.
+const _legacySnoozeKey = 'guest_reminder_snoozed_until';
 
-/// Saf karar (test edilir).
-bool shouldShowGuestReminder({
+/// Misafir hatırlatmasının görünümü.
+enum GuestReminderMode { none, strip, full }
+
+/// Saf karar (test edilir). [laterAtCount]: "Sonra"ya basıldığı andaki not
+/// sayısı (hiç basılmadıysa null).
+GuestReminderMode guestReminderMode({
   required bool anonymous,
   required int noteCount,
-  required DateTime now,
-  DateTime? snoozedUntil,
-}) =>
-    anonymous &&
-    noteCount >= kGuestReminderNotes &&
-    (snoozedUntil == null || now.isAfter(snoozedUntil));
+  int? laterAtCount,
+}) {
+  if (!anonymous) return GuestReminderMode.none;
+  if (laterAtCount == null) return GuestReminderMode.full;
+  for (final t in kGuestReminderFullAt) {
+    if (laterAtCount < t && noteCount >= t) return GuestReminderMode.full;
+  }
+  return GuestReminderMode.strip;
+}
 
 class GuestBackupCard extends ConsumerStatefulWidget {
   const GuestBackupCard({super.key});
@@ -45,16 +59,17 @@ class _GuestBackupCardState extends ConsumerState<GuestBackupCard> {
     final user = ref.watch(authStateProvider).value;
     final notes = ref.watch(notesStreamProvider).value ?? const [];
     final prefs = ref.watch(sharedPreferencesProvider);
-    final until = prefs.getInt(_snoozeKey);
-    final show = shouldShowGuestReminder(
+    final noteCount = notes.where((n) => !n.isEmpty).length;
+    final laterAt =
+        prefs.getInt(_laterCountKey) ??
+        (prefs.containsKey(_legacySnoozeKey) ? 0 : null);
+    final mode = guestReminderMode(
       anonymous: user?.isAnonymous ?? false,
-      noteCount: notes.where((n) => !n.isEmpty).length,
-      now: DateTime.now(),
-      snoozedUntil: until == null
-          ? null
-          : DateTime.fromMillisecondsSinceEpoch(until),
+      noteCount: noteCount,
+      laterAtCount: laterAt,
     );
-    if (!show) return const SizedBox.shrink();
+    if (mode == GuestReminderMode.none) return const SizedBox.shrink();
+    if (mode == GuestReminderMode.strip) return _strip(context);
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return Padding(
@@ -95,12 +110,7 @@ class _GuestBackupCardState extends ConsumerState<GuestBackupCard> {
                   children: [
                     TextButton(
                       onPressed: () {
-                        prefs.setInt(
-                          _snoozeKey,
-                          DateTime.now()
-                              .add(kGuestReminderSnooze)
-                              .millisecondsSinceEpoch,
-                        );
+                        unawaited(prefs.setInt(_laterCountKey, noteCount));
                         setState(() {});
                       },
                       child: Text(l10n.guestReminderLater),
@@ -114,6 +124,56 @@ class _GuestBackupCardState extends ConsumerState<GuestBackupCard> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// "Sonra"dan sonraki tek satırlık şerit: dokununca Google bağlanır.
+  Widget _strip(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 2, 12, 6),
+      child: Material(
+        color: scheme.tertiaryContainer.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          key: const ValueKey('guest-reminder-strip'),
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => linkGuestAccount(context, ref),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.cloud_off_outlined,
+                    size: 18,
+                    color: scheme.onTertiaryContainer,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.guestReminderTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: scheme.onTertiaryContainer),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.guestReminderConnect,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onTertiaryContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

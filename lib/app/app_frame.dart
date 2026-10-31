@@ -42,6 +42,19 @@ class RailExtendedNotifier extends Notifier<bool?> {
   }
 }
 
+/// Gezinme rayı görünüyor mu? Rayın yanındaki ekranlar, rayda zaten duran
+/// kapıları (Yapay Zekâ, Hatırlatıcılar, Arşiv, Çöp, Ayarlar, Yeni not)
+/// kendi menülerinde TEKRARLAMASIN diye okur (F11.8).
+class AppRailScope extends InheritedWidget {
+  const AppRailScope({super.key, required super.child});
+
+  static bool visible(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<AppRailScope>() != null;
+
+  @override
+  bool updateShouldNotify(AppRailScope oldWidget) => false;
+}
+
 /// **GENİŞ EKRAN ÇERÇEVESİ** — kullanıcı isteği 2026-09-22: "not
 /// uygulamasının tablet gibi geniş ekranlı cihazlarda kullanımını baştan
 /// tasarlamalıyız, onlara özel özellikler getirmeliyiz".
@@ -91,7 +104,7 @@ class AppFrame extends ConsumerWidget {
                   context: context,
                   removeLeft: !rtl,
                   removeRight: rtl,
-                  child: child,
+                  child: AppRailScope(child: child),
                 ),
               ),
             ),

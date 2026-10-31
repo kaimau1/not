@@ -906,19 +906,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permCameraInfo => 'Needed for video notes and taking photos';
 
   @override
-  String get permOnboardTitle => 'Before you start';
-
-  @override
-  String get permOnboardInfo =>
-      'Notes only asks for these permissions when you use the matching feature. You can grant them now below, or change them later under Settings > Permissions.';
-
-  @override
-  String get permOnboardGrantAll => 'Grant permissions';
-
-  @override
-  String get permOnboardSkip => 'Not now';
-
-  @override
   String get newVideoNote => 'Record a video';
 
   @override
@@ -1525,7 +1512,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get undone => 'Undone';
 
   @override
-  String get filterOthers => 'Others';
+  String get filterOthers => 'No folder or tag';
 
   @override
   String get chatSuggestion1 => 'What is missing from my shopping list?';
@@ -1693,20 +1680,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterReset => 'Reset';
 
   @override
-  String get filterSectionStatus => 'STATUS';
+  String get filterSectionStatus => 'Status';
 
   @override
   String get filterSectionFolder => 'FOLDER';
 
   @override
-  String get filterSectionTag => 'TAG';
+  String get filterSectionTag => 'Tag';
 
   @override
-  String get filterSectionSort => 'SORT';
+  String get filterSectionSort => 'Sort';
 
   @override
   String get filterSheetSortHint =>
-      'Date groups (TODAY, THIS WEEK…) are only shown when sorting by last edited.';
+      'Date groups (TODAY, THIS WEEK…) are only shown when sorting by “Recently updated”.';
 
   @override
   String get formatTitle => 'Format';
@@ -5386,7 +5373,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get quickAddSectionMore => 'More';
+  String get quickAddSectionMore => 'Templates and drawing';
 
   @override
   String get attachAnyFileInfo =>
@@ -5718,7 +5705,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Also show notes shared with me in a separate section at the top of the home screen';
 
   @override
-  String get homeShowSharedShort => 'Shared';
+  String get homeShowSharedShort => 'Show shared notes';
 
   @override
   String get homeSharedSection => 'SHARED WITH ME';
@@ -6025,4 +6012,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deletingAccount => 'Deleting your account and data…';
+
+  @override
+  String get allFolders => 'All folders';
+
+  @override
+  String get guestReminderConnect => 'Connect';
+
+  @override
+  String get filterSectionType => 'Type';
+
+  @override
+  String get reorderNotesManually => 'Reorder manually';
+
+  @override
+  String get quickAddSectionFiles => 'Files and links';
 }

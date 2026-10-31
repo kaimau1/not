@@ -77,7 +77,7 @@ kullanıcıyla `git` "dubious ownership" verirse:
 | Faz | Konu | Öncelik | Durum | Tarih | Not |
 |---|---|---|---|---|---|
 | 10 | Kırık ve yanıltıcı olanlar | Ö2 · Ö4 | Bitti | 2026-10-31 | 7/7; 1750/1750 test; F10.7 kök neden koddan (web'de yeniden denenmedi); cihaz turu KALANLAR'da |
-| 11 | Ana ekran ve "+" akışı | Ö1 · Ö6 | Bekliyor | | Üst çubuk, Süz, misafir kartı, geniş ekran |
+| 11 | Ana ekran ve "+" akışı | Ö1 · Ö6 | Bitti | 2026-10-31 | 9/9 (3 KARAR: önerilenler onaylandı); 1755/1755 test; web önce/sonra görüntüsü ALINMADI (canlı Firebase'de misafir hesap açmamak için) — cihaz/web turu KALANLAR'da |
 | 12 | Not ekranı: çubuklar, ⋮, biçim, liste | Ö1 · Ö5 · Ö6 | Bekliyor | | |
 | 13 | Balonlu mod, medya, kalem, paylaşım akışı | Ö1 · Ö2 | Bekliyor | | Balon yazısı paylaşılamıyor |
 | 14 | Anlaşılırlık: adlar, ayarlar, kılavuz, ipuçları | Ö4 | Bekliyor | | Kılavuz eskimiş |
@@ -421,39 +421,78 @@ iki sayfalı notu WhatsApp'a paylaş, iki sayfanın da gittiğine bak.
 Ana ekran sadeleşir, aynı işin tek kapısı olur; boşalan yer aramaya ve
 notlara kalır (Ö6).
 
-- [ ] **F11.1 Üst çubuk: tek avatar — A5, B1. KARAR GEREKİR.** Hesap simgesi +
+- [x] **F11.1 Üst çubuk: tek avatar — A5, B1. KARAR GEREKİR.** Hesap simgesi +
   Gelen simgesi → tek avatar (misafirde kişi simgesi), okunmamış gelen/davet
   sayısı rozet; dokununca hesap levhası (Kişiler · Gelen ve paylaşılanlar ·
   Premium · Hesap ayarları). "Anlam" anahtarı arama odaklıyken görünür.
   `UiItem.homeAccount` kimliği korunur; Gelen için yeni kimlik gerekmez.
-- [ ] **F11.2 Ana ⋮ menüsü.** Hesap ve Kişiler satırları avatar levhasına
+  **Yapıldı:** `AccountAvatarButton` (`auth/presentation/account_sheet.dart`)
+  tek kapı: rozet = `accountPendingCountProvider` (arkadaşlık isteği +
+  `sharedHubBadgeProvider`), 48 dp, misafirde kişi simgesi; levhada "Gelen ve
+  paylaşılanlar" (`SharedHubScreen`). `SharedHubButton` silindi. Anlam
+  anahtarı yalnız odak/sorgu varken (`TextFieldTapRegion` — dokununca odak
+  düşmesin). Levha içeriğe göre boylanır (alçak pencerede taşıyordu).
+- [x] **F11.2 Ana ⋮ menüsü.** Hesap ve Kişiler satırları avatar levhasına
   gider; "Klasör sırası" klasör görünümüne (F11.5). Kalan: hızlı satır
   (Yapay Zekâ · Hatırlatıcılar · Arşiv · Çöp · Ayarlar) + Ana ekran zemini ·
   Kişiselleştir · Kılavuz.
-- [ ] **F11.3 Misafir kartı — A3.** "Sonra"dan sonra tek satırlık şerit (ya da
+  **Yapıldı:** `dashboard_menu.dart`: Hesap/Kişiler ve Klasör sırası çıktı;
+  "Hesap" yalnız avatar kişiselleştirmede gizliyse "Ana ekran" grubunda.
+- [x] **F11.3 Misafir kartı — A3.** "Sonra"dan sonra tek satırlık şerit (ya da
   yalnız avatar rozeti); not sayısı 5 ve 20'yi geçince bir kez yeniden tam kart.
-- [ ] **F11.4 Süz levhası — B3, B4. KARAR GEREKİR (varsayılan sıralama).**
+  **Yapıldı:** `guestReminderMode` (none/strip/full, `guest_backup_card.dart`):
+  "Sonra" o anki not sayısını yazar (`guest_reminder_later_count`); sonra
+  48 dp tek satır şerit (dokununca Google bağla); 5 ve 20 eşiği geçilince bir
+  kez tam kart. Eski 7 günlük erteleme kaydı "0'da Sonra" sayılır.
+- [x] **F11.4 Süz levhası — B3, B4. KARAR GEREKİR (varsayılan sıralama).**
   Görünüm: Izgara|Liste segmentli düğme + "Kartta görseller / ekler /
   Paylaşılanlar" anahtar satırları; "Tür" (Tümü/Metin/Liste/Sıralı) ve
   "Durum" (Sabitli/Yıldızlı/Alarmlı/Kilitli/…) ayrı satır; "Diğerleri" açık
   ad; ✥ → metinli "Elle sırala"; "Son güncellenen" / "Son düzenlenen" tek ad;
   bölüm başlıkları aynı stil. Öneri: varsayılan "Son güncellenen" (tarih
   grupları görünür), elle sıralayan kullanıcının kayıtlı seçimi korunur.
-- [ ] **F11.5 Klasör şeridi — B5.** ⇕ yerine şeridin sonunda "Tüm klasörler"
+  **Yapıldı:** varsayılan `kDefaultNoteSort = updated` (KARAR onaylandı);
+  `migrateDefaultNoteSort`: kayıt yokken sürüklenmiş not (`orderIndex > 0`)
+  varsa "Elle" kalıcılaşır. Süz: Görünüm `SegmentedButton` + `_SwitchRow`
+  anahtarlar; Tür ve Durum ayrı bölüm; "Klasörsüz ve etiketsiz"; ✥ → metinli
+  "Elle sırala"; dipnot "Son güncellenen"; başlıklar tek yazım (Durum,
+  Etiket, Sıralama). Test: `home_simplify_test.dart`.
+- [x] **F11.5 Klasör şeridi — B5.** ⇕ yerine şeridin sonunda "Tüm klasörler"
   (metinli, 48 dp); orada klasör sırası ve klasör ekranı tek yüzey.
-- [ ] **F11.6 "+" paneli — C1.** Defter simgesi kitap (`menu_book`); grup adları
+  **Yapıldı:** `dashboard_shelf.dart`: ⇕ yerine 48 dp "Tüm klasörler" →
+  `/folders` (klasör sırası orada, AppBar'da). Şerit 48 dp (çipler yine 32).
+  Karo görünümü Ayarlar'daki anahtarla kalır.
+- [x] **F11.6 "+" paneli — C1.** Defter simgesi kitap (`menu_book`); grup adları
   "Şablon ve çizim · Kamera · Dosya ve bağlantı"; grup başlığı ile ilk düğme
   aynı adı taşımasın.
-- [ ] **F11.7 Çift düğmeler — B8.** Hatırlatıcılar boşken yalnız ortadaki
+  **Yapıldı:** Defter simgesi `book_outlined` (+, kart rozeti, kart türü,
+  defter seçici, "Deftere kopyala"; `menu_book` Kılavuz'da kullanıldığı için
+  değil). Grup başlıkları "Kamera · Dosya ve bağlantı · Şablon ve çizim".
+  Not paketi simgesi (`share_sheet`) F16.1'e kaldı.
+- [x] **F11.7 Çift düğmeler — B8.** Hatırlatıcılar boşken yalnız ortadaki
   düğme; benzer boş durum + yüzen düğme çiftleri (arşiv, klasör) taranır.
-- [ ] **F11.8 Geniş ekran — B11.** Yan menü görünürken "+" ve ⋮'teki yan menü
+  **Yapıldı:** Hatırlatıcılar boşken yüzen düğme yok (`_visibleReminders`).
+  Tarandı: arşivde yüzen düğme yok; klasörün boş durumundaki "Metin notu"
+  ile "+" paneli aynı iş değil (panel bütün seçenekler) — dokunulmadı.
+- [x] **F11.8 Geniş ekran — B11.** Yan menü görünürken "+" ve ⋮'teki yan menü
   tekrarları gizli; arama kutusu liste bölmesinin tam genişliği; boş not
   bölmesinde tek "Yeni not" (+ menüsü açar).
-- [ ] **F11.9 İlk açılış izin levhası — A7. KARAR GEREKİR.** Öneri: levha
+  **Yapıldı:** `AppRailScope` (`app_frame.dart`): ray görünürken ⋮ hızlı
+  satırındaki AI/Hatırlatıcılar/Arşiv/Çöp/Ayarlar gizli. Boş not bölmesi
+  (`NoNoteSelected`) tek "Yeni not" → `quickAddOpenRequest` ile listenin "+"
+  panelini açar. Arama kutusu: üst çubuktan Gelen düğmesi ve (odak dışında)
+  Anlam anahtarı kalkınca genişledi; ayrıca genişlik kuralı eklenmedi.
+- [x] **F11.9 İlk açılış izin levhası — A7. KARAR GEREKİR.** Öneri: levha
   kalkar; her izin ilk kullanıldığı yerde kısa açıklamayla istenir (dikte,
   fotoğraf, bildirim → ilk hatırlatıcı, konum → ilk konum hatırlatıcısı);
   toplu görünüm Ayarlar → İzinler'de kalır. Bağlamda isteyen yolların hepsinin
   var olduğunu önce DOĞRULA.
+  **Yapıldı:** `PermissionsOnboarding` silindi. Doğrulama: mikrofon
+  (`record`/dikte `hasPermission` ilk kullanımda sorar, retteyse
+  `micPermissionDenied`), kamera/galeri (`image_picker`, `mobile_scanner`
+  kendileri sorar), bildirim: `ReminderService` artık kurulumda değil ilk
+  planlanacak bildirimde (`_askPermissionOnce`). **Konum hatırlatıcısı
+  uygulamada YOK** — o kol GEÇERSİZ. Ayarlar → İzinler yerinde.
 
 **Senin yapacakların:** telefonda ana ekranın yeni hâli — avatar, Süz, misafir
 şeridi; tablet/web üç bölme.

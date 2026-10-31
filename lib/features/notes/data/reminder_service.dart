@@ -231,14 +231,24 @@ class ReminderService {
           handleNotificationResponse(_ref, response),
     );
 
-    if (!kIsWeb && Platform.isAndroid) {
-      await _plugin
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.requestNotificationsPermission();
-    }
     _initialized = true;
+  }
+
+  bool _permissionAsked = false;
+
+  /// BİLDİRİM İZNİ BAĞLAMDA (F11.9, 2026-10-31): eskiden kurulumda — yani
+  /// uygulamanın ilk açılışında, hiç hatırlatıcı yokken — soruluyordu. Artık
+  /// ilk kez planlanacak bir bildirim (hatırlatıcı, brifing, çöp
+  /// hatırlatması) olduğunda, oturumda bir kez. İzin zaten verildiyse sistem
+  /// kutu açmaz.
+  Future<void> _askPermissionOnce() async {
+    if (_permissionAsked || kIsWeb || !Platform.isAndroid) return;
+    _permissionAsked = true;
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.requestNotificationsPermission();
   }
 
   static const _briefingNotificationId = 999001;
@@ -266,6 +276,7 @@ class ReminderService {
       await _plugin.cancel(id: _trashNotificationId);
       _trashPlanned = plan?.at;
       if (plan == null) return;
+      await _askPermissionOnce();
       final l10n = await loadNotificationL10n(_ref.read(localeProvider));
       await _plugin.zonedSchedule(
         id: _trashNotificationId,
@@ -329,6 +340,7 @@ class ReminderService {
       await _ensureInitialized();
       await _plugin.cancel(id: _briefingNotificationId);
       if (!settings.enabled) return;
+      await _askPermissionOnce();
 
       final now = tz.TZDateTime.now(tz.local);
       var next = tz.TZDateTime(
@@ -400,6 +412,8 @@ class ReminderService {
           if (note.reminderAt != null && note.reminderAt!.isAfter(now))
             note.id: note,
       };
+
+      if (wanted.isNotEmpty) await _askPermissionOnce();
 
       // Uygulama kapalıyken (başka cihazda) kaldırılan/silinen notların
       // eski bildirimleri: `_scheduled` yalnız bellekte, onları bilmez.

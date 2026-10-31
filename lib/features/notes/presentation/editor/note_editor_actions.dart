@@ -396,7 +396,7 @@ extension _EditorActions on _NoteEditorScreenState {
           children: [
             for (final notebook in notebooks)
               ListTile(
-                leading: const Icon(Icons.inventory_2_outlined),
+                leading: const Icon(Icons.book_outlined),
                 title: Text(
                   notebook.displayTitle.trim().isEmpty
                       ? sheetContext.l10n.archiveNotebook

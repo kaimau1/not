@@ -11,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../app/app_commands.dart';
+import '../../../app/app_frame.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../core/widgets/action_menu_sheet.dart';
@@ -34,12 +35,8 @@ import '../../folders/presentation/folder_tile.dart';
 import '../../auth/presentation/account_sheet.dart';
 import '../../auth/presentation/guest_backup_card.dart';
 import '../../friends/data/friends_repository.dart';
-import '../../friends/presentation/friends_screen.dart';
 import '../../friends/presentation/home_invites.dart';
-import '../../inbox/presentation/inbox_screen.dart';
-import '../../inbox/presentation/shared_hub_screen.dart';
 import '../../settings/settings_providers.dart';
-import '../../settings/presentation/permissions_onboarding.dart';
 import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
 import '../data/upload_queue.dart';
@@ -237,8 +234,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // sonra kontrol et; take() varsa asistanı başlatır.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _maybeAutostartVoice();
-      // İlk açılışta izin tanıtımı (bir kez).
-      if (mounted) PermissionsOnboarding.maybeShow(context, ref);
+      // İLK AÇILIŞ İZİN LEVHASI KALKTI (F11.9, kullanıcı kararı 2026-10-31):
+      // her izin ilk kullanıldığı yerde, kısa açıklamayla istenir; toplu
+      // görünüm Ayarlar → İzinler'de.
+      if (!mounted) return;
+      final notes = ref.read(notesStreamProvider).value;
+      if (notes != null) migrateDefaultNoteSort(ref, notes);
     });
     // Kendi e-posta → uid kaydını tazele (kişiler/klasör paylaşımı bunu
     // arar — bkz. FriendsRepository). Ucuz (tek doküman, merge), e-postası
@@ -715,6 +716,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // isteği: uygulama zaten ana sayfadayken gelirse burada yakalanır.
     // (Uygulama başka ekrandayken/soğuk açılışta gelen istek initState'teki
     // kontrolle okunur; take() çift başlatmayı önler.)
+    // Eski "Elle" varsayılanından geçiş (F11.4) — notlar ilk geldiğinde bir kez.
+    ref.listen(notesStreamProvider, (_, next) {
+      final notes = next.value;
+      if (notes != null) migrateDefaultNoteSort(ref, notes);
+    });
     // Ctrl+K (bkz. AppShortcuts): arama kutusuna odaklan, yazılı sorguyu
     // seç ki doğrudan üstüne yazılabilsin.
     ref.listen(searchFocusRequestProvider, (_, _) {
@@ -1103,14 +1109,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           id: UiItem.homeAccount,
                                           child: AccountAvatarButton(),
                                         ),
-                                        const SizedBox(width: 6),
-                                        // GELEN VE PAYLAŞILANLAR (kullanıcı
-                                        // isteği 2026-10-17): Yapay zekâ
-                                        // düğmesinin yeri; o alttaki "+"nın
-                                        // SOLUNA indi. Gelen not ya da yeni
-                                        // ortak not varsa köşede sayı rozeti.
-                                        const SharedHubButton(),
-                                        const SizedBox(width: 6),
+                                        // GELEN VE PAYLAŞILANLAR düğmesi
+                                        // AVATARA katıldı (F11.1, kullanıcı
+                                        // kararı 2026-10-31): sayısı avatar
+                                        // rozetinde, kendisi hesap levhasında.
+                                        const SizedBox(width: 2),
                                         // ⋮ ARTIK ALT LEVHA (kullanıcı isteği
                                         // 2026-10-11: "menüler yeniden dizayn
                                         // edilmeli"). On bir maddelik açılır
@@ -1483,6 +1486,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             child: QuickAddFab(
                               anchor: _fabColumnLink,
                               actions: this,
+                              listenOpenRequests: true,
                             ),
                           ),
                         ],

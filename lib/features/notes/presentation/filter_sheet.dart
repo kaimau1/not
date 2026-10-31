@@ -240,8 +240,10 @@ class DashboardFilterRow extends ConsumerWidget {
   }
 }
 
-/// Izgara ⇄ liste seçimi (Süz levhasında; eskiden ana ekrandaki süzgeç
-/// satırının sağındaki düğmeydi).
+/// Görünüm bölümü (F11.4): ızgara ⇄ liste TEK SEÇİMLİ segmentli düğme,
+/// açılıp kapanan seçenekler ANAHTAR satırı. Eskiden üçü de aynı çip
+/// görünümündeydi — hangisinin tekli seçim, hangisinin aç-kapa olduğu
+/// anlaşılmıyordu.
 class _ViewModeSection extends ConsumerWidget {
   const _ViewModeSection({this.inFolder = false});
 
@@ -260,56 +262,118 @@ class _ViewModeSection extends ConsumerWidget {
     return _Section(
       icon: Icons.grid_view,
       title: l10n.viewToggle,
-      child: _OptionWrap(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _Option(
-            label: l10n.viewGrid,
-            icon: Icons.grid_view,
-            selected: !list,
-            onTap: () => set(false),
+          SegmentedButton<bool>(
+            key: const ValueKey('filter-view-mode'),
+            showSelectedIcon: false,
+            segments: [
+              ButtonSegment(
+                value: false,
+                icon: const Icon(Icons.grid_view, size: 18),
+                label: Text(l10n.viewGrid),
+              ),
+              ButtonSegment(
+                value: true,
+                icon: const Icon(Icons.view_agenda_outlined, size: 18),
+                label: Text(l10n.viewList),
+              ),
+            ],
+            selected: {list},
+            onSelectionChanged: (v) => set(v.first),
           ),
-          _Option(
-            label: l10n.viewList,
-            icon: Icons.view_agenda_outlined,
-            selected: list,
-            onTap: () => set(true),
-          ),
+          const SizedBox(height: 4),
           // "Tümü" açıkken: klasör başlıkları altında grupla (D4).
           if (!inFolder && ref.watch(showAllNotesProvider))
-            _Option(
+            _SwitchRow(
               label: l10n.groupByFolder,
               icon: Icons.folder_copy_outlined,
-              selected: ref.watch(allNotesGroupByFolderProvider),
-              onTap: () =>
+              value: ref.watch(allNotesGroupByFolderProvider),
+              onChanged: (_) =>
                   ref.read(allNotesGroupByFolderProvider.notifier).toggle(),
             ),
           // KARTTA GÖRSEL / EK (kullanıcı isteği 2026-10-23): Ayarlar'daki
-          // "Kartta görünenler"in kısayolu — önizlemeyi ana ekrandan
-          // değiştirmek için ayarlara gitmek gerekmesin.
-          _Option(
+          // "Kartta görünenler"in kısayolu.
+          _SwitchRow(
             label: l10n.cardShowMediaShort,
             icon: Icons.image_outlined,
-            selected: ref.watch(cardShowMediaProvider),
-            onTap: () => ref.read(cardShowMediaProvider.notifier).toggle(),
+            value: ref.watch(cardShowMediaProvider),
+            onChanged: (_) => ref.read(cardShowMediaProvider.notifier).toggle(),
           ),
-          _Option(
+          _SwitchRow(
             label: l10n.cardShowFilesShort,
             icon: Icons.attach_file,
-            selected: ref.watch(cardShowFilesProvider),
-            onTap: () => ref.read(cardShowFilesProvider.notifier).toggle(),
+            value: ref.watch(cardShowFilesProvider),
+            onChanged: (_) => ref.read(cardShowFilesProvider.notifier).toggle(),
           ),
           if (!inFolder)
-            _Option(
+            _SwitchRow(
               label: l10n.homeShowSharedShort,
               icon: Icons.people_alt_outlined,
-              selected: ref.watch(homeShowSharedProvider),
-              onTap: () => ref.read(homeShowSharedProvider.notifier).toggle(),
+              value: ref.watch(homeShowSharedProvider),
+              onChanged: (_) =>
+                  ref.read(homeShowSharedProvider.notifier).toggle(),
             ),
         ],
       ),
     );
   }
 }
+
+/// Açılıp kapanan seçenek: simge + ad + anahtar, satırın tamamı dokunulur.
+class _SwitchRow extends StatelessWidget {
+  const _SwitchRow({
+    required this.label,
+    required this.icon,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return MergeSemantics(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => onChanged(!value),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Row(
+            children: [
+              const SizedBox(width: 4),
+              Icon(icon, size: 18, color: scheme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              Switch(value: value, onChanged: onChanged),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// TÜR süzgeçleri (notun yapısı) — DURUM'dan ayrı satır (F11.4).
+const _typeFilters = [
+  NoteFilter.all,
+  NoteFilter.text,
+  NoteFilter.checklist,
+  NoteFilter.ordered,
+];
 
 class _FilterSheet extends ConsumerWidget {
   const _FilterSheet({this.folderId});
@@ -328,7 +392,7 @@ class _FilterSheet extends ConsumerWidget {
     NoteFilter.starred => Icons.star_outline,
     NoteFilter.reminded => Icons.alarm,
     NoteFilter.locked => Icons.lock_outline,
-    NoteFilter.others => Icons.category_outlined,
+    NoteFilter.others => Icons.folder_off_outlined,
   };
 
   static IconData _sortIcon(NoteSort s) => switch (s) {
@@ -447,6 +511,24 @@ class _FilterSheet extends ConsumerWidget {
 
           _ViewModeSection(inFolder: inFolder),
 
+          // TÜR ve DURUM AYRI (F11.4): eskiden "DURUM" başlığı altında
+          // Metin/Liste/Sıralı (notun yapısı) ile Sabitli/Yıldızlı/Alarmlı
+          // (notun hâli) karışıktı. İkisi de aynı tek süzgeci seçer.
+          _Section(
+            icon: Icons.dashboard_outlined,
+            title: l10n.filterSectionType,
+            child: _OptionWrap(
+              children: [
+                for (final f in _typeFilters)
+                  _Option(
+                    label: filterLabel(l10n, f),
+                    icon: _filterIcon(f),
+                    selected: filter == f,
+                    onTap: () => setFilter(f),
+                  ),
+              ],
+            ),
+          ),
           _Section(
             icon: Icons.style_outlined,
             title: l10n.filterSectionStatus,
@@ -454,7 +536,8 @@ class _FilterSheet extends ConsumerWidget {
               children: [
                 for (final f in NoteFilter.values)
                   // "Diğer" = klasörsüz ve etiketsiz: klasörün içinde boş.
-                  if (!inFolder || f != NoteFilter.others)
+                  if (!_typeFilters.contains(f) &&
+                      (!inFolder || f != NoteFilter.others))
                     _Option(
                       label: filterLabel(l10n, f),
                       icon: _filterIcon(f),
@@ -498,11 +581,16 @@ class _FilterSheet extends ConsumerWidget {
             // Elle sıralama kipi sıralama bölümünün İÇİNDE: sıralamayı arayan
             // kullanıcı zaten burada. Yalnız süzgeçsiz görünümde anlamlı
             // (alt kümede sıra bozulur), o yüzden koşullu.
+            // ✥ simgesi yerine METİNLİ düğme (F11.4): "Notları sırala"
+            // simgesi açıklamasızdı.
             trailing: appliedCount == 0 && !inFolder
-                ? IconButton(
-                    tooltip: l10n.reorderNotes,
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.open_with, size: 18),
+                ? TextButton.icon(
+                    key: const ValueKey('filter-manual-reorder'),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    icon: const Icon(Icons.open_with, size: 16),
+                    label: Text(l10n.reorderNotesManually),
                     onPressed: () {
                       ref.read(noteSortProvider.notifier).set(NoteSort.manual);
                       ref.read(reorderModeProvider.notifier).set(true);

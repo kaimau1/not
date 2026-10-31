@@ -26,6 +26,8 @@ extension _DashMenu on _DashboardScreenState {
     required bool hiddenRevealed,
   }) async {
     final l10n = context.l10n;
+    // GENİŞ EKRAN (F11.8): rayda duran kapılar ⋮'te tekrarlanmaz.
+    final rail = AppRailScope.visible(context);
     final action = await showActionMenuSheet(
       context,
       ActionMenu(
@@ -33,31 +35,35 @@ extension _DashMenu on _DashboardScreenState {
         // sütunlu ızgarada sola yaslanıyordu (kullanıcı bulgusu 2026-10-20).
         wideSections: true,
         quick: [
-          // YAPAY ZEKÂ ilk sırada (B2): ana ekrandaki ✨ yüzen düğmesi kalktı.
-          if (Personalize.current.shows(UiItem.homeAi))
-            MenuAction('ai', l10n.aiHubTitle, Icons.auto_awesome),
-          MenuAction(
-            'reminders',
-            l10n.remindersTitle,
-            Icons.alarm_outlined,
-            count: _upcomingReminderCount(),
-          ),
-          MenuAction(
-            'archive',
-            l10n.archiveTitle,
-            Icons.archive_outlined,
-            count: ref.read(archivedNotesProvider).value?.length ?? 0,
-          ),
-          MenuAction('trash', l10n.trashTitle, Icons.delete_outline),
-          // AYARLAR hızlı satırda, GRİ (kullanıcı isteği 2026-10-17:
-          // "ayarlar butonunu üstteki 3'lü buton gibi yap ve oraya al,
-          // rengini de ayrıştır gri olsun").
-          MenuAction(
-            'settings',
-            l10n.settings,
-            Icons.settings_outlined,
-            neutral: true,
-          ),
+          // Rayın yanında (geniş ekran) bu beşi rayda: tekrarlanmaz.
+          if (!rail) ...[
+            // YAPAY ZEKÂ ilk sırada (B2): ana ekrandaki ✨ yüzen düğmesi
+            // kalktı.
+            if (Personalize.current.shows(UiItem.homeAi))
+              MenuAction('ai', l10n.aiHubTitle, Icons.auto_awesome),
+            MenuAction(
+              'reminders',
+              l10n.remindersTitle,
+              Icons.alarm_outlined,
+              count: _upcomingReminderCount(),
+            ),
+            MenuAction(
+              'archive',
+              l10n.archiveTitle,
+              Icons.archive_outlined,
+              count: ref.read(archivedNotesProvider).value?.length ?? 0,
+            ),
+            MenuAction('trash', l10n.trashTitle, Icons.delete_outline),
+            // AYARLAR hızlı satırda, GRİ (kullanıcı isteği 2026-10-17:
+            // "ayarlar butonunu üstteki 3'lü buton gibi yap ve oraya al,
+            // rengini de ayrıştır gri olsun").
+            MenuAction(
+              'settings',
+              l10n.settings,
+              Icons.settings_outlined,
+              neutral: true,
+            ),
+          ],
           // Şablondan not "+" menüsünde de var; burada YALNIZ orada
           // gizlenmişse çıkar (toparlama 2026-10-17: aynı işin iki kapısı).
           if (!Personalize.current.shows(UiItem.quickAdd('template')))
@@ -68,16 +74,16 @@ extension _DashMenu on _DashboardScreenState {
             ),
         ],
         sections: [
-          // **HESAP** (kullanıcı isteği 2026-08-18: "hesap seçeneklerini
-          // ana sayfadaki sağ üstteki 3 noktaya da koy").
-          MenuSection(l10n.menuSectionPeople, [
-            MenuAction('account', l10n.account, Icons.account_circle_outlined),
-            MenuAction('friends', l10n.friendsTitle, Icons.people_outline),
-            // GELEN NOTLAR menüden kalktı: üst çubuktaki "Gelen ve
-            // paylaşılanlar" düğmesinde (bkz. SharedHubButton).
-          ]),
+          // HESAP VE KİŞİLER avatar levhasında (F11.1–F11.2): ⋮'te yalnız
+          // avatar kişiselleştirmede gizlendiyse kapı olarak kalır.
+          // KLASÖR SIRASI klasör ekranında ("Tüm klasörler", F11.5).
           MenuSection(l10n.menuSectionHome, [
-            MenuAction('folderOrder', l10n.folderOrderTitle, Icons.swap_vert),
+            if (!Personalize.current.shows(UiItem.homeAccount))
+              MenuAction(
+                'account',
+                l10n.account,
+                Icons.account_circle_outlined,
+              ),
             // Zemin görseli AYARLARDAN BURAYA taşındı (2026-08-16).
             MenuAction('background', l10n.dashboardBackground, Icons.wallpaper),
             // Gizli klasörler yalnız gizli klasörü OLAN kullanıcıda.
@@ -109,10 +115,6 @@ extension _DashMenu on _DashboardScreenState {
         unawaited(context.push('/ai'));
       case 'account':
         unawaited(showAccountSheet(context));
-      case 'inbox':
-        unawaited(InboxScreen.open(context));
-      case 'friends':
-        openFriendsScreenOrExplain(context, ref);
       case 'hidden':
         unawaited(_toggleHiddenFolders());
       case 'reminders':
@@ -125,8 +127,6 @@ extension _DashMenu on _DashboardScreenState {
         unawaited(context.push('/trash'));
       case 'template':
         unawaited(createFromTemplate());
-      case 'folderOrder':
-        unawaited(showFolderOrderSheet(context));
       case 'settings':
         unawaited(context.push('/settings'));
       case 'personalize':

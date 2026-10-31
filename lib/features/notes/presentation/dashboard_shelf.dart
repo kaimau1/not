@@ -137,13 +137,15 @@ extension _DashShelf on _DashboardScreenState {
     });
     return SliverToBoxAdapter(
       child: SizedBox(
-        height: FolderChip.stripHeight,
+        // 48 dp: sondaki "Tüm klasörler" düğmesi tam dokunma yüksekliği
+        // alsın; çiplerin kendisi yine 32 dp (dikey dolgu 8 + 8).
+        height: FolderChip.stripHeight + 8,
         child: Row(
           children: [
             Expanded(
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+                padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
                 children: [
                   // "Tümü" en başta (kullanıcı isteği 2026-10-20).
                   const AllNotesChip(),
@@ -177,15 +179,20 @@ extension _DashShelf on _DashboardScreenState {
                 ],
               ),
             ),
-            // Karo görünümüne geçiş: klasörleri bir arada görmek isteyen
-            // kullanıcı için kapı açık kalsın.
-            IconButton(
-              tooltip: context.l10n.folderShelfExpand,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.unfold_more, size: 18),
-              onPressed: () =>
-                  ref.read(folderShelfExpandedProvider.notifier).toggle(),
+            // TÜM KLASÖRLER (F11.5): eski ⇕ "Klasörleri büyüt" simgesi
+            // (34×32 dp, anlamı belirsiz) yerine metinli düğme. Klasör ekranı
+            // klasör sırasını da taşır — sıra artık ⋮ menüsünde değil.
+            TextButton(
+              key: const ValueKey('home-all-folders'),
+              style: TextButton.styleFrom(
+                minimumSize: const Size(48, 48),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                visualDensity: VisualDensity.standard,
+              ),
+              onPressed: () => unawaited(context.push('/folders')),
+              child: Text(context.l10n.allFolders),
             ),
+            const SizedBox(width: 4),
           ],
         ),
       ),

@@ -31,13 +31,22 @@ import '../../../core/widgets/press_scale.dart';
 /// sırayı panele bırakır.
 final quickAddPanelOpen = ValueNotifier(false);
 
+/// Paneli DIŞARIDAN açma isteği (sayaç). Geniş ekranın boş not bölmesindeki
+/// tek "Yeni not" düğmesi (F11.8) ana ekranın "+" panelini bununla açar —
+/// ayrı bir "yeni not / yeni liste" düğme çifti yerine bütün seçenekler.
+final quickAddOpenRequest = ValueNotifier(0);
+
 class QuickAddFab extends StatefulWidget {
   const QuickAddFab({
     super.key,
     required this.anchor,
     required this.actions,
     this.onVoiceCapture,
+    this.listenOpenRequests = false,
   });
+
+  /// [quickAddOpenRequest]'i dinlesin mi (yalnız ana ekranın düğmesi).
+  final bool listenOpenRequests;
 
   /// Menünün demirlendiği nokta. Dashboard bunu mikrofon + "+" sütununun
   /// TAMAMINI saracak şekilde verir; menü sütunun tepesinden açılır ve
@@ -57,6 +66,18 @@ class QuickAddFab extends StatefulWidget {
 
 class _QuickAddFabState extends State<QuickAddFab> {
   OverlayEntry? _entry;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.listenOpenRequests) {
+      quickAddOpenRequest.addListener(_onOpenRequest);
+    }
+  }
+
+  void _onOpenRequest() {
+    if (mounted && !_open) _openMenu();
+  }
 
   bool get _open => _entry != null;
 
@@ -163,6 +184,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
 
   @override
   void dispose() {
+    quickAddOpenRequest.removeListener(_onOpenRequest);
     _entry?.remove();
     _entry = null;
     // Panel açıkken ekran kapanırsa bayrak takılı kalmasın.
@@ -374,7 +396,7 @@ List<QuickAddMeta> quickAddCatalog(AppLocalizations l10n) => [
   (
     key: 'archive',
     group: QuickAddGroup.more,
-    icon: Icons.inventory_2_outlined,
+    icon: Icons.book_outlined,
     label: l10n.archiveNotebook,
   ),
 ];
@@ -382,8 +404,11 @@ List<QuickAddMeta> quickAddCatalog(AppLocalizations l10n) => [
 /// Grubun paneldeki başlığı.
 String _groupTitle(AppLocalizations l10n, QuickAddGroup group) =>
     switch (group) {
+      // Grup başlığı ilk düğmeyle aynı adı taşımaz (F11.6): "DOSYA EKLE"
+      // başlığının altındaki ilk düğme yine "Dosya ekle"ydi; "Diğer" ne
+      // olduğunu söylemiyordu.
       QuickAddGroup.capture => l10n.quickAddCamera,
-      QuickAddGroup.files => l10n.quickAddFile,
+      QuickAddGroup.files => l10n.quickAddSectionFiles,
       QuickAddGroup.more => l10n.quickAddSectionMore,
       QuickAddGroup.primary => '',
     };

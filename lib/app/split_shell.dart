@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/l10n_ext.dart';
-import '../features/notes/domain/note_type.dart';
 import '../features/notes/presentation/dashboard_screen.dart';
+import '../features/notes/presentation/quick_add_fab.dart';
 import '../features/settings/settings_providers.dart';
 import 'app_commands.dart';
 
@@ -234,7 +234,6 @@ class NoNoteSelected extends ConsumerWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final l10n = context.l10n;
-    final router = GoRouter.of(context);
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -274,26 +273,15 @@ class NoNoteSelected extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    FilledButton.tonalIcon(
-                      onPressed: () => createAndOpenNote(ref, router),
-                      icon: const Icon(Icons.edit_outlined),
-                      label: Text(l10n.newNoteShort),
-                    ),
-                    FilledButton.tonalIcon(
-                      onPressed: () => createAndOpenNote(
-                        ref,
-                        router,
-                        type: NoteType.checklist,
-                      ),
-                      icon: const Icon(Icons.checklist),
-                      label: Text(l10n.newChecklistShort),
-                    ),
-                  ],
+                // TEK "YENİ NOT" (F11.8): eskiden yeni not + yeni liste
+                // çifti vardı; rayda ve "+"da da "Yeni not" olunca aynı iş üç
+                // yerdeydi. Bu düğme listenin "+" panelini açar — bütün
+                // seçenekler (liste, fotoğraf, dosya…) tek yerde.
+                FilledButton.tonalIcon(
+                  key: const ValueKey('empty-pane-new-note'),
+                  onPressed: () => quickAddOpenRequest.value++,
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.newNoteShort),
                 ),
                 const SizedBox(height: 28),
                 // Kısayol hatırlatması: fareli/klavyeli kullanıcı için;

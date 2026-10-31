@@ -2,41 +2,44 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/auth/presentation/guest_backup_card.dart';
 
 void main() {
-  final now = DateTime(2026, 10, 19);
-  test('misafir giriş kartı anonim hesapta ilk açılıştan itibaren', () {
+  test('misafir giriş kartı anonim hesapta ilk açılıştan itibaren tam', () {
     expect(
-      shouldShowGuestReminder(anonymous: true, noteCount: 3, now: now),
-      isTrue,
+      guestReminderMode(anonymous: true, noteCount: 3),
+      GuestReminderMode.full,
     );
     // Hiç not yokken de görünür: giriş yolu ilk karede bulunsun.
     expect(
-      shouldShowGuestReminder(anonymous: true, noteCount: 0, now: now),
-      isTrue,
+      guestReminderMode(anonymous: true, noteCount: 0),
+      GuestReminderMode.full,
     );
     expect(
-      shouldShowGuestReminder(anonymous: false, noteCount: 50, now: now),
-      isFalse,
+      guestReminderMode(anonymous: false, noteCount: 50, laterAtCount: 0),
+      GuestReminderMode.none,
     );
   });
 
-  test('"Sonra" süresi bitince kart geri gelir', () {
+  test('"Sonra"dan sonra şerit; 5 ve 20 notu geçince bir kez tam kart', () {
     expect(
-      shouldShowGuestReminder(
-        anonymous: true,
-        noteCount: 5,
-        now: now,
-        snoozedUntil: now.add(const Duration(days: 1)),
-      ),
-      isFalse,
+      guestReminderMode(anonymous: true, noteCount: 2, laterAtCount: 1),
+      GuestReminderMode.strip,
     );
     expect(
-      shouldShowGuestReminder(
-        anonymous: true,
-        noteCount: 5,
-        now: now,
-        snoozedUntil: now.subtract(const Duration(minutes: 1)),
-      ),
-      isTrue,
+      guestReminderMode(anonymous: true, noteCount: 5, laterAtCount: 1),
+      GuestReminderMode.full,
+    );
+    // 5'te yeniden "Sonra" → 20'ye kadar şerit.
+    expect(
+      guestReminderMode(anonymous: true, noteCount: 12, laterAtCount: 5),
+      GuestReminderMode.strip,
+    );
+    expect(
+      guestReminderMode(anonymous: true, noteCount: 20, laterAtCount: 5),
+      GuestReminderMode.full,
+    );
+    // 20'den sonra hep şerit.
+    expect(
+      guestReminderMode(anonymous: true, noteCount: 300, laterAtCount: 21),
+      GuestReminderMode.strip,
     );
   });
 }

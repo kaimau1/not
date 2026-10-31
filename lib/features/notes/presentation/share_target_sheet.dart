@@ -483,7 +483,7 @@ class _NoteRow extends StatelessWidget {
     NoteType.ordered => Icons.format_list_numbered,
     NoteType.pdf => Icons.picture_as_pdf_outlined,
     NoteType.slides => Icons.slideshow_outlined,
-    NoteType.archive => Icons.inventory_2_outlined,
+    NoteType.archive => Icons.book_outlined,
     NoteType.text => Icons.notes,
   };
 

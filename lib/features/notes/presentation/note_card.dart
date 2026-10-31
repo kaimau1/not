@@ -1327,7 +1327,7 @@ class _NotePreview extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.inventory_2_outlined,
+                    Icons.book_outlined,
                     size: 13,
                     color: scheme.onTertiaryContainer,
                   ),
@@ -1553,7 +1553,7 @@ class NoteListRow extends ConsumerWidget {
       NoteType.ordered => Icons.format_list_numbered,
       NoteType.pdf => Icons.picture_as_pdf_outlined,
       NoteType.slides => Icons.slideshow_outlined,
-      NoteType.archive => Icons.inventory_2_outlined,
+      NoteType.archive => Icons.book_outlined,
       NoteType.text => Icons.notes,
     };
   }

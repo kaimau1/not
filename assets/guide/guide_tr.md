@@ -15,19 +15,20 @@ Notların hesabına bağlıdır ve telefon, tablet, bilgisayar ve web arasında 
 Notların kart olarak, **BUGÜN / BU HAFTA / DAHA ÖNCE** gruplarıyla dizilir; sabitlenenler en üstte durur.
 - **Sağa kaydır:** notu sabitle. **Sola kaydır:** arşivle.
 - **Karta uzun bas:** çoklu seçim — birden çok notu birlikte taşı, arşivle, çoğalt ya da sil.
-- **Arama:** üstteki kutuya yaz. **Metin** sekmesi kelimeyi arar; **Anlam** sekmesi ne demek istediğini anlar ("araba masrafları" yazınca "lastik değişimi" notunu da bulur).
-- **Süz:** etikete, türe (liste, sıralı), duruma (sabit, kilitli, alarmlı) göre süz; sıralamayı değiştir (son düzenlenen, başlık, en çok çalışılan, elle).
-- **Klasör şeridi:** klasörler arasında dokunarak ya da ekranı **yana kaydırarak** geç. Sırasını ⋮ → **Klasör sırası**'ndan değiştir.
+- **Arama:** üstteki kutuya yaz. Kutuya dokununca sağında ✨ **Anlam** anahtarı çıkar: kapalıyken kelimeyi arar, açıkken ne demek istediğini anlar ("araba masrafları" yazınca "lastik değişimi" notunu da bulur).
+- **Sağ üstteki avatar:** hesabın. Köşesindeki sayı bekleyen arkadaşlık isteği, gelen not ve okunmamış ortak notlardır; dokununca **Kişiler · Gelen ve paylaşılanlar · Premium · Hesap ayarları**.
+- **Süz:** **Görünüm** (ızgara ya da liste; kartta görseller, kartta ekler, paylaşılan notlar anahtarla), **Tür** (metin, liste, sıralı), **Durum** (sabitli, yıldızlı, alarmlı, kilitli, klasörsüz ve etiketsiz), etiket ve **Sıralama** (varsayılan son güncellenen — tarih grupları bu sıralamada görünür; başlık, en çok çalışılan; **Elle sırala** ile kartları sürükleyerek diz).
+- **Klasör şeridi:** klasörler arasında dokunarak ya da ekranı **yana kaydırarak** geç. Şeridin sonundaki **Tüm klasörler** bütün klasörleri açar; sıralarını da oradan değiştir.
 - **Hızlı not satırı:** listenin başındaki "Yeni not…" alanına yazıp kaydet — not açmadan.
 - **Ana ekran zemini:** ⋮ → Ana ekran zemini ile görsel ya da desen seç.
 - **Kartta medya:** üste sabitlenmiş ya da tek görsel/video kartın tepesinde kapak olarak görünür; video ▶, YouTube kırmızı düğmeyle işaretlidir. Balonlu notun belgesi de kartın tepesinde kapak olur: ilk sayfa, sol üstte **BALONLU PDF** rozeti, altta dosya adı ve balon sayısı; ses kayıtları ve öbür belgeler kartın altında satır olarak durur.
-- Sağ üstteki ⋮ alttan bir levha açar: en üstte **Hatırlatıcılar, Arşiv, Çöp Kutusu, Şablondan**; altında **Hesap ve kişiler** (hesap, kişiler, gelen notlar), **Ana ekran** (klasör sırası, zemin, gizli klasörler) ve **Uygulama** (ayarlar, bu kılavuz).
+- Sağ üstteki ⋮ alttan bir levha açar: en üstte **Yapay Zekâ, Hatırlatıcılar, Arşiv, Çöp Kutusu, Ayarlar** (geniş ekranda bunlar soldaki rayda durur, ⋮'te tekrarlanmaz); altında **Ana ekran** (zemin, gizli klasörler) ve **Uygulama** (kişiselleştir, bu kılavuz).
 - **Karttaki ⋮ ya da karta basılı tutma menüsü:** üst satırda sabitle, paylaş, seç; altında **Düzenle** (klasör, renk — istersen kenar vurgusuyla), **Kopyala ve dışa aktar** (çoğalt, şablon olarak kaydet), **Araçlar** (sesli oku, istatistik), **Koruma ve depolama** (arşivle, kilitle, senkron); en altta Sil.
 
 ## Yeni not oluşturma {#create}
 Sağ alttaki **+** düğmesi kısa bir panel açar — başparmağının olduğu yerden yukarı doğru:
 - **En altta, düğmenin hemen üstünde:** büyük **Metin notu · Liste** düğmeleri.
-- Üstünde üç kapı: **Kamera** (fotoğraf, video, belge tara, QR), **Dosya ekle** (tek seçici: görsel, PDF, sunum, video ya da ses seç — not dosyanın türüne göre açılır; görsel ve videoda "Metne dök" de sorulur; ayrıca **YouTube videosu**) ve **Şablon** (şablondan, alışveriş listesi, sıralı liste, el yazısı, **defter**). Video ile açılan not "üstte video, altta not" düzeninde başlar.
+- Üstünde üç grup: **Kamera** (fotoğraf, video, belge tara, QR), **Dosya ve bağlantı** — **Dosya ekle** (tek seçici: görsel, PDF, sunum, video ya da ses seç — not dosyanın türüne göre açılır; görsel ve videoda "Metne dök" de sorulur; ayrıca **YouTube videosu**) ve **Şablon ve çizim** (şablondan, alışveriş listesi, el yazısı, **defter**). Video ile açılan not "üstte video, altta not" düzeninde başlar.
 - **Ana ekranın mikrofonu tek:** dokunuş son kullandığın kipi açar — **sesli not** (yapay zekâ düzenler) ya da **doğrudan yazdır**; basılı tutmak öbürünü açar.
 PDF, görsel ve sunum için ilk seferde iki kip sorulur: **Balonlu** (belge notun kendisi olur, üzerine balon/kalem) ya da **Klasik** (belge sıradan bir ek olur). Seçimin varsayılan olur; Ayarlar → Notlar ve klasörler → **İçerikten not açılışı**'ndan değişir. Kip not içinden de değişir: bkz. **Balonlu ↔ klasik geçiş**.
 
