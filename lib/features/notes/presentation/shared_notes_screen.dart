@@ -22,7 +22,7 @@ class SharedNotesScreen extends ConsumerWidget {
   /// (kullanıcı isteği 2026-10-17: "gelen ve paylaşılan notları birleştir,
   /// tek alandan yönetilsin").
   static Future<void> open(BuildContext context) =>
-      SharedHubScreen.open(context, tab: SharedHubTab.shared);
+      SharedHubScreen.open(context);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -82,76 +82,93 @@ class SharedNotesBody extends ConsumerWidget {
                 columns: columns,
                 itemBuilder: (context, index) {
                   final entry = entries[index];
-                  final isNew = unread.contains(entry.share.id);
-                  final scheme = Theme.of(context).colorScheme;
-                  final caption = sharedNoteCaption(
-                    l10n,
-                    entry.share,
-                    entry.note,
-                  );
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          NoteCard(
-                            note: entry.note,
-                            ownerId: entry.share.ownerId,
-                          ),
-                          if (isNew)
-                            PositionedDirectional(
-                              top: -4,
-                              end: -2,
-                              child: IgnorePointer(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 7,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: scheme.error,
-                                    borderRadius: BorderRadius.circular(9),
-                                  ),
-                                  child: Text(
-                                    l10n.sharedNoteNew,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: scheme.onError,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      if (caption.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsetsDirectional.only(
-                            start: 6,
-                            top: 3,
-                          ),
-                          child: Text(
-                            caption,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  color: isNew
-                                      ? scheme.error
-                                      : scheme.onSurfaceVariant,
-                                  fontWeight: isNew ? FontWeight.w700 : null,
-                                ),
-                          ),
-                        ),
-                    ],
+                  return SharedNoteCell(
+                    entry: entry,
+                    isNew: unread.contains(entry.share.id),
                   );
                 },
               );
             },
           );
+  }
+}
+
+/// Benimle paylaşılan bir notun hücresi: kart + "Yeni" rozeti + kim
+/// paylaştı/güncelledi satırı. [tag] birleşik listede kaynağı söyler.
+class SharedNoteCell extends StatelessWidget {
+  const SharedNoteCell({
+    super.key,
+    required this.entry,
+    required this.isNew,
+    this.tag,
+  });
+
+  final ({Note note, NoteShare share}) entry;
+  final bool isNew;
+  final Widget? tag;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final caption = sharedNoteCaption(l10n, entry.share, entry.note);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            NoteCard(note: entry.note, ownerId: entry.share.ownerId),
+            if (isNew)
+              PositionedDirectional(
+                top: -4,
+                end: -2,
+                child: IgnorePointer(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: scheme.error,
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Text(
+                      l10n.sharedNoteNew,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: scheme.onError,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        if (caption.isNotEmpty || tag != null)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 6, top: 3),
+            child: Row(
+              children: [
+                if (tag != null) ...[tag!, const SizedBox(width: 6)],
+                Expanded(
+                  child: Text(
+                    caption,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: isNew ? scheme.error : scheme.onSurfaceVariant,
+                      fontWeight: isNew ? FontWeight.w700 : null,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 }
 

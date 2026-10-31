@@ -237,9 +237,8 @@ void main() {
           ),
         ),
       );
-      final scheme = Theme.of(
-        tester.element(find.byType(ActionMenu)),
-      ).colorScheme;
+      final scheme = Theme.of(tester.element(find.byType(ActionMenu)))
+          .colorScheme;
       Color circleOf(String id) {
         final box = tester.widget<Container>(
           find
@@ -313,13 +312,24 @@ void main() {
         ),
         findsNothing,
       );
+      // Sayı adın yanında değil, simgenin sağ üst köşesinde (üst simge).
+      final chip = find.byKey(const ValueKey('shared-hub-chip'));
+      final count = tester.getRect(
+        find.descendant(of: chip, matching: find.text('1')),
+      );
+      final label = tester.getRect(
+        find.descendant(of: chip, matching: find.text('Gelen')),
+      );
+      expect(count.right, lessThanOrEqualTo(label.left + 1));
+      expect(count.top, lessThan(label.top));
       await tester.tap(find.byKey(const ValueKey('shared-hub-chip')));
       await tester.pumpAndSettle();
       expect(find.text('Gelen ve paylaşılanlar'), findsWidgets);
-      expect(find.byKey(const ValueKey('hub-tab-inbox')), findsOneWidget);
-      expect(find.byKey(const ValueKey('hub-tab-shared')), findsOneWidget);
-      // Gelen sekmesi açık: not listede.
+      // 2026-10-31: sekme YOK — gelen ve paylaşılan tek listede, her öğe
+      // kendi kaynak etiketini taşır.
+      expect(find.byType(TabBar), findsNothing);
       expect(find.text('Gelen not'), findsOneWidget);
+      expect(find.byKey(const ValueKey('hub-tag-inbox')), findsOneWidget);
     });
   });
 }

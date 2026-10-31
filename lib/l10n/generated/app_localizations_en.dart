@@ -6101,4 +6101,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bubbleFormat => 'Format';
+
+  @override
+  String get sharedHubTagInbox => 'Received';
+
+  @override
+  String get sharedHubTagShared => 'Shared';
+
+  @override
+  String get sharedHubEmpty => 'Nothing received or shared yet';
+
+  @override
+  String get sharedHubEmptyHint =>
+      'Copies your friends send you and shared notes they add you to appear here together.';
 }

@@ -6085,4 +6085,17 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bubbleFormat => 'Biçim';
+
+  @override
+  String get sharedHubTagInbox => 'Gelen';
+
+  @override
+  String get sharedHubTagShared => 'Paylaşılan';
+
+  @override
+  String get sharedHubEmpty => 'Gelen ya da seninle paylaşılan not yok';
+
+  @override
+  String get sharedHubEmptyHint =>
+      'Arkadaşlarının gönderdiği kopyalar ve seni eklediği ortak notlar burada birlikte görünür.';
 }

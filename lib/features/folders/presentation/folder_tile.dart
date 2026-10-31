@@ -88,10 +88,7 @@ class SharedFolderTile extends ConsumerWidget {
         )
         .maybeWhen(data: (notes) => notes.length, orElse: () => 0);
     final unread = ref.watch(
-      folderUnreadProvider((
-        ownerId: share.ownerId,
-        folderId: share.folderId,
-      )),
+      folderUnreadProvider((ownerId: share.ownerId, folderId: share.folderId)),
     );
     return _FolderTileBody(
       accent: folderAccent(share.folderId),
@@ -139,9 +136,7 @@ class _FolderTileBody extends StatelessWidget {
         color: scheme.surfaceContainerLowest,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.6),
-          ),
+          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -379,10 +374,7 @@ class SharedFolderChip extends ConsumerWidget {
               .maybeWhen(data: (notes) => notes.length, orElse: () => 0)
         : null;
     final unread = ref.watch(
-      folderUnreadProvider((
-        ownerId: share.ownerId,
-        folderId: share.folderId,
-      )),
+      folderUnreadProvider((ownerId: share.ownerId, folderId: share.folderId)),
     );
     return _ChipShell(
       accent: folderAccent(share.folderId),
@@ -391,11 +383,8 @@ class SharedFolderChip extends ConsumerWidget {
       label: share.name,
       count: count,
       trailingIcon: Icons.people_alt_outlined,
-      onTap: () => FolderScreen.open(
-        context,
-        share.folderId,
-        ownerId: share.ownerId,
-      ),
+      onTap: () =>
+          FolderScreen.open(context, share.folderId, ownerId: share.ownerId),
     );
   }
 }
@@ -574,52 +563,60 @@ class _ChipShell extends StatelessWidget {
         onTap: onTap,
         onLongPress: onLongPress,
         child: Padding(
+          // SIKI (kullanıcı isteği 2026-10-31: "görünür alana maksimum klasör
+          // butonu sığsın"): iç boşluk ve aralıklar küçük, sayı satırda değil.
           padding: EdgeInsetsDirectional.fromSTEB(
-            accent == null ? 10 : 4,
+            accent == null ? 8 : 3,
             0,
-            10,
+            8,
             0,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (accent != null)
-                FolderIconBox(accent: accent, icon: icon, size: 24)
-              else
-                Icon(icon, size: 17, color: muted),
-              const SizedBox(width: 7),
+              // NOT SAYISI ÜST SİMGE (kullanıcı isteği 2026-10-31: "not
+              // sayısını satırı uzatacak şekilde değil, simgesinde üssü
+              // şeklinde yaz, sağ üst köşesine"): sayı adın yanında yer
+              // kaplamaz; simgenin sağ üst köşesinde küçük kalın rakam.
+              // Okunmamış hareket varsa aynı köşede kırmızı rozet.
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  if (accent != null)
+                    FolderIconBox(accent: accent, icon: icon, size: 24)
+                  else
+                    Icon(icon, size: 17, color: muted),
+                  if (unread > 0 || count != null)
+                    PositionedDirectional(
+                      top: -3,
+                      end: -7,
+                      child: _CornerCount(
+                        count: unread > 0 ? unread : count!,
+                        alert: unread > 0,
+                        color: accent ?? muted,
+                      ),
+                    ),
+                ],
+              ),
+              SizedBox(width: unread > 0 || count != null ? 8 : 6),
               // Uzun klasör adları şeridi ele geçirmesin: çip en fazla
-              // 150 px, ad taşarsa kısalır.
+              // 120 px, ad taşarsa kısalır.
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 150),
+                constraints: const BoxConstraints(maxWidth: 120),
                 child: Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     color: subtle ? muted : scheme.onSurface,
                   ),
                 ),
               ),
-              if (unread > 0) ...[
-                const SizedBox(width: 6),
-                _InlineUnreadBadge(count: unread),
-              ] else if (count != null) ...[
-                const SizedBox(width: 6),
-                Text(
-                  '$count',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: muted,
-                  ),
-                ),
-              ],
               if (trailingIcon != null) ...[
-                const SizedBox(width: 5),
-                Icon(trailingIcon, size: 13, color: muted),
+                const SizedBox(width: 4),
+                Icon(trailingIcon, size: 12, color: muted),
               ],
             ],
           ),
@@ -629,31 +626,46 @@ class _ChipShell extends StatelessWidget {
   }
 }
 
-/// Çipin içindeki okunmamış sayacı — karodaki köşe rozetinin satır içi eşi
-/// (çip 40 px'lik şeritte; köşeye taşan rozet kırpılırdı).
-class _InlineUnreadBadge extends StatelessWidget {
-  const _InlineUnreadBadge({required this.count});
+/// Çip simgesinin sağ üst köşesindeki sayı: not sayısı (zemin renginde
+/// hap, vurgu renginde ~9 pt kalın rakam) ya da okunmamış hareket (kırmızı
+/// rozet). Hap zemini simgenin üstünde rakamı okunur tutar.
+class _CornerCount extends StatelessWidget {
+  const _CornerCount({
+    required this.count,
+    required this.alert,
+    required this.color,
+  });
 
   final int count;
+  final bool alert;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final text = alert && count > kFolderBadgeMax
+        ? '$kFolderBadgeMax+'
+        : count > 999
+        ? '999+'
+        : '$count';
     return Container(
-      constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-      padding: const EdgeInsets.symmetric(horizontal: 5),
+      constraints: const BoxConstraints(minWidth: 13, minHeight: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 2.5),
       decoration: BoxDecoration(
-        color: scheme.error,
-        borderRadius: BorderRadius.circular(9),
+        color: alert ? scheme.error : scheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(6),
+        border: alert
+            ? null
+            : Border.all(color: color.withValues(alpha: 0.45), width: 0.8),
       ),
       alignment: Alignment.center,
       child: Text(
-        count > kFolderBadgeMax ? '$kFolderBadgeMax+' : '$count',
+        text,
         style: TextStyle(
-          fontSize: 11,
-          height: 1.1,
-          fontWeight: FontWeight.w700,
-          color: scheme.onError,
+          fontSize: 9,
+          height: 1.15,
+          fontWeight: FontWeight.w800,
+          color: alert ? scheme.onError : color,
         ),
       ),
     );

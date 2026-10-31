@@ -2242,5 +2242,9 @@
   "bubblesToNote": "Add to note",
   "bubblesToNoteDone": "Bubbles added to the end of the note",
   "bubbleMark": "Mark",
-  "bubbleFormat": "Format"
+  "bubbleFormat": "Format",
+  "sharedHubTagInbox": "Received",
+  "sharedHubTagShared": "Shared",
+  "sharedHubEmpty": "Nothing received or shared yet",
+  "sharedHubEmptyHint": "Copies your friends send you and shared notes they add you to appear here together."
 }

@@ -152,16 +152,16 @@ extension _DashShelf on _DashboardScreenState {
                 children: [
                   // "Tümü" en başta (kullanıcı isteği 2026-10-20).
                   const AllNotesChip(),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 5),
                   // GELEN hemen Tümü'nün yanında (kullanıcı isteği 2026-10-31).
                   const SharedHubChip(),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 5),
                   for (final share in hotShared) ...[
                     SharedFolderChip(
                       key: ValueKey('shared-chip-${share.folderId}'),
                       share: share,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 5),
                   ],
                   for (final folder in ordered) ...[
                     _EnsureVisible(
@@ -172,33 +172,29 @@ extension _DashShelf on _DashboardScreenState {
                         selected: folder.id == selectedFolderId,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 5),
                   ],
                   for (final share in calmShared) ...[
                     SharedFolderChip(
                       key: ValueKey('shared-chip-${share.folderId}'),
                       share: share,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 5),
                   ],
                   const NewFolderChip(),
                 ],
               ),
             ),
-            // TÜM KLASÖRLER (F11.5): eski ⇕ "Klasörleri büyüt" simgesi
-            // (34×32 dp, anlamı belirsiz) yerine metinli düğme. Klasör ekranı
-            // klasör sırasını da taşır — sıra artık ⋮ menüsünde değil.
-            TextButton(
+            // TÜM KLASÖRLER (F11.5): yalnız SİMGE (kullanıcı isteği
+            // 2026-10-31: "sağdaki 'Tüm klasörler' yazısı olmasın, yerine bir
+            // simge koy") — yazı şeritten yer çalıyordu. Ad ipucu ve ekran
+            // okuyucu etiketi olarak kalır. Klasör ekranı sırayı da taşır.
+            IconButton(
               key: const ValueKey('home-all-folders'),
-              style: TextButton.styleFrom(
-                minimumSize: const Size(48, 48),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                visualDensity: VisualDensity.standard,
-              ),
+              tooltip: context.l10n.allFolders,
+              icon: const Icon(Icons.folder_copy_outlined, size: 21),
               onPressed: () => unawaited(context.push('/folders')),
-              child: Text(context.l10n.allFolders),
             ),
-            const SizedBox(width: 4),
           ],
         ),
       ),

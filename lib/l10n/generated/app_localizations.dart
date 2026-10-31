@@ -10921,6 +10921,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Biçim'**
   String get bubbleFormat;
+
+  /// No description provided for @sharedHubTagInbox.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelen'**
+  String get sharedHubTagInbox;
+
+  /// No description provided for @sharedHubTagShared.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşılan'**
+  String get sharedHubTagShared;
+
+  /// No description provided for @sharedHubEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelen ya da seninle paylaşılan not yok'**
+  String get sharedHubEmpty;
+
+  /// No description provided for @sharedHubEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arkadaşlarının gönderdiği kopyalar ve seni eklediği ortak notlar burada birlikte görünür.'**
+  String get sharedHubEmptyHint;
 }
 
 class _AppLocalizationsDelegate

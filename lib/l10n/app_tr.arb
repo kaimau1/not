@@ -2900,5 +2900,9 @@
   "bubblesToNote": "Nota aktar",
   "bubblesToNoteDone": "Balonlar notun sonuna eklendi",
   "bubbleMark": "İşaret",
-  "bubbleFormat": "Biçim"
+  "bubbleFormat": "Biçim",
+  "sharedHubTagInbox": "Gelen",
+  "sharedHubTagShared": "Paylaşılan",
+  "sharedHubEmpty": "Gelen ya da seninle paylaşılan not yok",
+  "sharedHubEmptyHint": "Arkadaşlarının gönderdiği kopyalar ve seni eklediği ortak notlar burada birlikte görünür."
 }

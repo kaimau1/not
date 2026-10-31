@@ -24,7 +24,7 @@ class InboxScreen extends ConsumerWidget {
   /// "Gelen ve paylaşılanlar" ekranının Gelen sekmesi (kullanıcı isteği
   /// 2026-10-17: gelen ve paylaşılan notlar tek alandan yönetilsin).
   static Future<void> open(BuildContext context) =>
-      SharedHubScreen.open(context, tab: SharedHubTab.inbox);
+      SharedHubScreen.open(context);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -64,8 +64,10 @@ class InboxList extends ConsumerWidget {
     final async = ref.watch(inboxNotesProvider);
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) =>
-          EmptyState(icon: Icons.error_outline, title: l10n.genericError(friendlyError(l10n, e))),
+      error: (e, _) => EmptyState(
+        icon: Icons.error_outline,
+        title: l10n.genericError(friendlyError(l10n, e)),
+      ),
       data: (notes) => notes.isEmpty
           ? EmptyState(
               icon: Icons.move_to_inbox_outlined,
@@ -76,16 +78,21 @@ class InboxList extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
               itemCount: notes.length,
               separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (context, index) => _InboxCard(note: notes[index]),
+              itemBuilder: (context, index) => InboxCard(note: notes[index]),
             ),
     );
   }
 }
 
-class _InboxCard extends ConsumerWidget {
-  const _InboxCard({required this.note});
+/// Gelen bir kopyanın kartı: gönderen, özet, Sil · Kabul et.
+class InboxCard extends ConsumerWidget {
+  const InboxCard({super.key, required this.note, this.tag});
 
   final InboxNote note;
+
+  /// Birleşik "Gelen ve paylaşılanlar" listesinde kaynağı söyleyen küçük
+  /// etiket (bkz. [HubSourceTag]); ayrı listede yok.
+  final Widget? tag;
 
   /// Kartta gösterilen özet: metin notunda gövde, listede maddeler.
   String _preview() {
@@ -170,6 +177,7 @@ class _InboxCard extends ConsumerWidget {
           children: [
             Row(
               children: [
+                if (tag != null) ...[tag!, const SizedBox(width: 8)],
                 Icon(
                   note.type == NoteType.text
                       ? Icons.sticky_note_2_outlined
@@ -197,9 +205,8 @@ class _InboxCard extends ConsumerWidget {
                 title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700),
               ),
             if (preview.isNotEmpty) ...[
               const SizedBox(height: 4),
