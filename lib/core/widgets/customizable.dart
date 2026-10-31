@@ -210,7 +210,7 @@ class _CustomizeStrip extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: scheme.onInverseSurface.withValues(alpha: 0.75),
-                      fontSize: 11.5,
+                      fontSize: 12,
                     ),
                   ),
                 ],

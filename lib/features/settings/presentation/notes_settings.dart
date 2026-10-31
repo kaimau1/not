@@ -11,6 +11,7 @@ import '../../notes/presentation/capture_mode_sheet.dart';
 import '../../notes/presentation/filter_sheet.dart' show sortLabel;
 import '../settings_providers.dart';
 import '../../notes/presentation/notes_providers.dart';
+import '../../../core/a11y/chip_roles.dart';
 
 /// **AYARLAR → NOTLAR VE KLASÖRLER** (kullanıcı isteği 2026-09-26: "eksik
 /// ayarların düzenlenmesi").
@@ -65,11 +66,11 @@ class _ChoiceRow<T> extends StatelessWidget {
             runSpacing: 4,
             children: [
               for (final v in values)
-                ChoiceChip(
+                radioChip(ChoiceChip(
                   label: Text(label(v)),
                   selected: v == selected,
                   onSelected: (_) => onSelected(v),
-                ),
+                )),
             ],
           ),
         ],

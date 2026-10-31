@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/note_colors.dart';
+import '../../../../core/a11y/color_names.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/note_fonts.dart';
 import '../../../../core/utils/rich_text.dart';
@@ -1171,13 +1172,7 @@ class _ColorRow extends StatelessWidget {
     final l10n = context.l10n;
     final palette = NoteColors.richPalette;
     // Dairelerin ADI (F12.5): beşi de "Yazı rengi" diye okunuyordu.
-    final names = [
-      l10n.colorNameRed,
-      l10n.colorNameYellow,
-      l10n.colorNameGreen,
-      l10n.colorNameBlue,
-      l10n.colorNamePurple,
-    ];
+    final names = richPaletteNames(l10n);
     final index = activeIndex;
     final custom = isCustomRichColor(index) ? Color(index!) : null;
 

@@ -8,6 +8,7 @@ import '../../../../core/widgets/color_palette.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/ink_pen.dart';
 import '../viewers/ink_tools.dart';
+import '../../../../core/a11y/chip_roles.dart';
 
 /// Tepsideki araçlar (soldan sağa).
 enum PenTrayTool { lasso, shapes, eraser, pen, marker, highlighter }
@@ -678,11 +679,13 @@ class _Options extends StatelessWidget {
                     onSelected: (_) => controller.setArrow(true),
                   ),
                   for (final s in InkShape.values)
-                    ChoiceChip(
-                      avatar: Icon(shapeIcon(s), size: 18),
-                      label: Text(shapeLabel(s)),
-                      selected: controller.shape == s,
-                      onSelected: (_) => controller.setShape(s),
+                    radioChip(
+                      ChoiceChip(
+                        avatar: Icon(shapeIcon(s), size: 18),
+                        label: Text(shapeLabel(s)),
+                        selected: controller.shape == s,
+                        onSelected: (_) => controller.setShape(s),
+                      ),
                     ),
                 ],
               ),

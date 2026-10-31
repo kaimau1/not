@@ -66,7 +66,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
                     Text(
                       l10n.folderNoteCount(count),
                       style: TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 12,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),

@@ -2125,6 +2125,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'The font used everywhere in the app. A note\'s own font choice overrides it. All fonts ship with the app — no internet needed.';
 
   @override
+  String get followSystemTextScale => 'Follow system text size';
+
+  @override
+  String get followSystemTextScaleInfo =>
+      'Your phone\'s text size and bold text apply here too; the size above is multiplied by it.';
+
+  @override
   String get fontGroupSans => 'Sans';
 
   @override
@@ -5166,14 +5173,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String bubbleSemantics(String text) {
-    return 'Note bubble: $text';
-  }
-
-  @override
-  String get bubbleSemanticsEmpty => 'Empty note bubble';
-
-  @override
   String get guestReminderTitle => 'Your notes are not backed up';
 
   @override
@@ -5926,6 +5925,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get colorNamePurple => 'Purple';
+
+  @override
+  String get colorNameNone => 'No colour';
+
+  @override
+  String get colorNameOrange => 'Orange';
+
+  @override
+  String get colorNameTeal => 'Teal';
+
+  @override
+  String get colorNameSlate => 'Slate blue';
+
+  @override
+  String get colorNamePink => 'Pink';
+
+  @override
+  String get colorNameBeige => 'Beige';
+
+  @override
+  String get colorNameGray => 'Grey';
+
+  @override
+  String get colorNameCyan => 'Cyan';
+
+  @override
+  String get colorNameWhite => 'White';
+
+  @override
+  String get colorNameBlack => 'Black';
+
+  @override
+  String get colorToneLight => 'light';
+
+  @override
+  String get colorToneVivid => 'vivid';
+
+  @override
+  String get colorToneDark => 'dark';
+
+  @override
+  String colorShade(String color, String tone) {
+    return '$color, $tone';
+  }
+
+  @override
+  String get itemEmptyLabel => 'Empty item';
+
+  @override
+  String bubbleSemantic(int page, String text) {
+    return 'Bubble, page $page: $text';
+  }
+
+  @override
+  String bubbleSemanticEmpty(int page) {
+    return 'Empty bubble, page $page';
+  }
+
+  @override
+  String mediaBoxSemantic(String kind, String name) {
+    return '$kind: $name';
+  }
 
   @override
   String get formatSizeLabel => 'Size';

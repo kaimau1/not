@@ -10,6 +10,7 @@ import '../../settings/data/permissions_service.dart';
 import '../data/place_reminders.dart';
 import '../domain/note.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/a11y/chip_roles.dart';
 
 /// **KONUM HATIRLATICISI levhası** (kullanıcı isteği 2026-09-23: "markete
 /// gelince hatırlat").
@@ -331,11 +332,11 @@ class _PlaceSheetState extends ConsumerState<_PlaceSheet> {
                   spacing: 8,
                   children: [
                     for (final r in const [100.0, 200.0, 500.0, 1000.0])
-                      ChoiceChip(
+                      radioChip(ChoiceChip(
                         label: Text(r >= 1000 ? '1 km' : '${r.round()} m'),
                         selected: _radius == r,
                         onSelected: (_) => setState(() => _radius = r),
-                      ),
+                      )),
                   ],
                 ),
                 const SizedBox(height: 16),

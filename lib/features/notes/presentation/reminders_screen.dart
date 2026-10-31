@@ -201,7 +201,7 @@ class RemindersScreen extends ConsumerWidget {
                 return Text(
                   l10n.reminderCountLabel(count),
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 12,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 );
@@ -419,7 +419,7 @@ class _ReminderTile extends ConsumerWidget {
                 Text(
                   relativeTimeLabel(l10n, at),
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 12,
                     color: scheme.onSurfaceVariant,
                   ),
                 ),

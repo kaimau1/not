@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/note_colors.dart';
+import '../../../core/a11y/color_names.dart';
 import '../../../core/l10n_ext.dart';
 import '../domain/note.dart';
 import '../../../core/widgets/app_sheet.dart';
@@ -170,31 +171,40 @@ class _ColorDot extends StatelessWidget {
             border: Border.all(color: swatch, width: 4),
           )
         : BoxDecoration(color: swatch, shape: BoxShape.circle);
-    return InkWell(
-      borderRadius: BorderRadius.circular(24),
+    // Ekran okuyucu: rengin adı + seçili mi (F15.2).
+    return Semantics(
+      container: true,
+      button: true,
+      selected: selected,
+      label: noteColorName(context.l10n, color),
+      excludeSemantics: true,
       onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: selected ? scheme.primary : Colors.transparent,
-            width: 3,
-          ),
-        ),
-        padding: const EdgeInsets.all(2),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: onTap,
         child: Container(
-          decoration: decoration,
-          child: isNone
-              ? const Icon(Icons.format_color_reset_outlined, size: 20)
-              : (selected
-                    ? Icon(
-                        Icons.check,
-                        size: 18,
-                        color: frame ? swatch : scheme.onSurface,
-                      )
-                    : null),
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: selected ? scheme.primary : Colors.transparent,
+              width: 3,
+            ),
+          ),
+          padding: const EdgeInsets.all(2),
+          child: Container(
+            decoration: decoration,
+            child: isNone
+                ? const Icon(Icons.format_color_reset_outlined, size: 20)
+                : (selected
+                      ? Icon(
+                          Icons.check,
+                          size: 18,
+                          color: frame ? swatch : scheme.onSurface,
+                        )
+                      : null),
+          ),
         ),
       ),
     );

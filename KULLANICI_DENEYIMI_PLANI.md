@@ -81,7 +81,7 @@ kullanıcıyla `git` "dubious ownership" verirse:
 | 12 | Not ekranı: çubuklar, ⋮, biçim, liste | Ö1 · Ö5 · Ö6 | Bitti | 2026-10-31 | 9/9 (F12.7 düğme gizleme yerine ipucu adı — 3 boş madde kararı korundu); 2 KARAR (palet üst çubukta; iki düğme + Diğer); ek istek: "Gelen" çipi Tümü'nün yanında; 1758/1758 test; web görüntüsü ALINMADI |
 | 13 | Balonlu mod, medya, kalem, paylaşım akışı | Ö1 · Ö2 | Bitti | 2026-10-31 | 6/6 (F13.2 KARAR: önerilen sade kart onaylandı); F13.5'te transkript ekranı zaten Kopyala/Paylaş/⋮ — dokunulmadı; 1766/1766 test; web görüntüsü ALINMADI |
 | 14 | Anlaşılırlık: adlar, ayarlar, kılavuz, ipuçları | Ö4 | Bitti | 2026-10-31 | 6/6 (F14.6 KARAR: önerilen uygulandı); ek istek: klasör şeridinde sayı üst simge, Tüm klasörler simge, Gelen + Paylaşılan tek liste; web görüntüsü ALINMADI |
-| 15 | Erişilebilirlik | Ö3 | Bekliyor | | Yazı boyutu kararı |
+| 15 | Erişilebilirlik | Ö3 | Bitti | 2026-10-31 | 7/7 (F15.1 KARAR: öneri uygulandı, varsayılan mevcut davranış); 1794/1794 test; TalkBack/en büyük yazı turu KALANLAR'da |
 | 16 | Görsel bütünlük ve tekrar temizliği | Ö5 | Bekliyor | | Simge ve levha dili |
 | 17 | Ölçüm, uçtan uca test, cihaz turu | Ö2 | Bekliyor | | |
 
@@ -693,32 +693,68 @@ kendini bir kez tanıtır.
 
 TalkBack ile uygulama baştan sona kullanılabilir; büyük yazıda bozulmaz.
 
-- [ ] **F15.1 Sistem yazı boyutu — U2. KARAR GEREKİR.** 2026-08-07 kararı
+- [x] **F15.1 Sistem yazı boyutu — U2. KARAR GEREKİR.** 2026-08-07 kararı
   ("yazı boyutu tüm telefonlarda sabit") erişilebilirlikle çatışıyor. Öneri:
   Ayarlar → Görünüm → "Sistem yazı boyutunu izle" (varsayılan KAPALI —
   mevcut davranış korunur; açıkken `fixedTypography` sistem ölçeğiyle
   çarpar); kalın metin aynı seçenekte. Taşma testleri 1.3×/1.6× ölçekte.
-- [ ] **F15.2 Adsız kontroller — B2, B9, E5, U1.** Kart ⋮; renk daireleri
+  **KARAR: öneri uygulandı, varsayılan mevcut davranış** (kullanıcı,
+  2026-10-31). **Yapıldı:** `followSystemTextScaleProvider`
+  (`follow_system_text_scale`, varsayılan false) → `fixedTypography(...,
+  followSystem:)` kademe × sistem ölçeği (üst sınır 2×,
+  `maxFollowedTextScale`) + sistemin kalın metni; anahtar Görünüm'deki
+  yazı bloğunda (`settings_appearance.dart`). 1.3×/1.6× taşma testi bir
+  hata buldu: Süz levhası çipinde uzun ad satırı taşırıyordu → kısalır.
+- [x] **F15.2 Adsız kontroller — B2, B9, E5, U1.** Kart ⋮; renk daireleri
   (biçim paneli, zemin, palet: renk adı); madde kutucukları (madde metni +
   durum); balonlar (sayfa no + ilk satır); sayfadaki görsel/video/PDF kutusu
   (tür + ad + açıklama); PDF sayfası (Sayfa N/M).
-- [ ] **F15.3 Yanlış roller ve çift okuma — G3, M3, B2.** Seçim çipleri
+  **Yapıldı:** kart ⋮ "Not menüsü" (ayrı düğüm); renk adları tek yerde
+  `core/a11y/color_names.dart` (biçim menüsü/paneli, zemin-çerçeve şeridi,
+  tam palet "Mavi, koyu", balon renk/dolgu şeritleri); `Checkbox.semanticLabel`
+  = madde metni (boşsa "Boş madde"); balon "Balon, sayfa N: ilk satır";
+  `NoteMediaBox` "Görsel/Video: ad. açıklama"; `PdfPageImage` ve PDF
+  görüntüleyici sayfası "Sayfa N / M".
+- [x] **F15.3 Yanlış roller ve çift okuma — G3, M3, B2.** Seçim çipleri
   `checkbox` → tekli seçimde `inMutuallyExclusiveGroup`/radyo, eylem çipinde
   düğme; kart tek düğüm (`MergeSemantics`); kökteki "Bırak: üste sabitle"
   etiketi kalkar (F13.6 ile).
-- [ ] **F15.4 Dokunma hedefleri ≥ 48 dp — U3.** Görünüm değişmeden dokunma
+  **Yapıldı:** `core/a11y/chip_roles.dart` — `radioChip(ChoiceChip)` /
+  `actionChip(ActionChip)` (23 çağrı yeri; aç/kapa olan "Ok" çipi hariç).
+  Kart: içerik `ExcludeSemantics`, dokunuş eylemi kart düğümünde; sağ tık
+  dedektörü semantikten çıktı (adsız "dokun" düğümü açıyordu). "Bırak"
+  etiketi F13.6'da zaten yalnız sürüklerken ağaçta — dokunulmadı.
+- [x] **F15.4 Dokunma hedefleri ≥ 48 dp — U3.** Görünüm değişmeden dokunma
   alanı büyür (`materialTapTargetSize`, saydam dolgu): kart ⋮, Klasörleri
   büyüt, Süz, ayar ✨, `ListeningHeaderButton`.
-- [ ] **F15.5 Hareketi azalt — U4.** `motionOf(context)`
+  **Yapıldı:** `core/a11y/min_tap_target.dart` `MinTapTarget` — yer
+  kaplamaz, dokunma + ekran okuyucu sınırı 48 dp: Süz, ayar ✨,
+  `ListeningHeaderButton`, Süz levhası çipleri (38 dp). Kart ⋮ kutusu
+  36 → 48 dp (simge köşede aynı yerde). "Klasörleri büyüt" GEÇERSİZ:
+  şeritte artık yok (Faz 11/14; yerinde standart 48 dp "Tüm klasörler").
+  Süz düğmesine ekran okuyucu dokunma eylemi eklendi (açılmıyordu).
+- [x] **F15.5 Hareketi azalt — U4.** `motionOf(context)`
   (`MediaQuery.disableAnimationsOf`): not açılış geçişi solmaya, `ExpandReveal`/
   `RevealUp`/`ScaleSettle`/`PopIn`/`PressScale` anında.
-- [ ] **F15.6 Küçük yazı ve kontrast.** 12 sp altındaki sabit yazılar
+  **Yapıldı:** `core/a11y/motion.dart`; `NoteOpenPage` hareket kapalıyken
+  150 ms solma (karttan büyüme yok, liste kımıldamaz); beş bileşen anında.
+- [x] **F15.6 Küçük yazı ve kontrast.** 12 sp altındaki sabit yazılar
   (`fontSize: 8.5…11.5`, ~80 yer) taranır: okunan metin en az 12, yalnız
   rozet/sayaçta küçük; ikincil metin kontrastı ≥ 4,5:1 (kırık beyaz ve kâğıt
   temada `onSurfaceVariant`).
-- [ ] **F15.7 Erişilebilirlik testleri.** Ana ekran, not ekranı, biçim paneli,
+  **Yapıldı:** 83 yerden 51'i 12'ye (etiket, açıklama, tarih, dosya adı,
+  bölüm başlığı); 32'si küçük kaldı (sayaç, rozet, sayfa no, "Yeni"/
+  "Gecikmiş", küçük önizleme). `onSurfaceVariant` dört temada da her
+  yüzeyde ≥ 6:1 (testte); düşük olanlar saydamlıktı: boş durum metni tam
+  renk, dikte bekleyen sözcük 0,6 → 0,8, işaretli madde solması 0,55 → 0,8
+  (2,8:1 → ≥ 4,5:1).
+- [x] **F15.7 Erişilebilirlik testleri.** Ana ekran, not ekranı, biçim paneli,
   Süz, Paylaş, AI levhası için `androidTapTargetGuideline`,
   `labeledTapTargetGuideline`, `textContrastGuideline` widget testleri.
+  **Yapıldı:** `test/accessibility_test.dart` (18 test). Tam ekranlar
+  testte kurulamadığı için parçalarla: ana ekran = kart + Süz düğmesi, not
+  ekranı = madde listesi (dokunma boyu hariç — satır kutusu bilinçli 40 dp),
+  biçim levhası, Süz, Paylaş, AI levhası.
 
 **Senin yapacakların:** TalkBack açıkken: not oluştur, listeyi işaretle, PDF'e
 balon bırak, paylaş. Sistem yazı boyutunu en büyüğe al, ana ekran ve not ekranı.

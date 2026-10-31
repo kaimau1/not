@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../a11y/color_names.dart';
 import '../l10n_ext.dart';
 import 'app_sheet.dart';
 
@@ -104,13 +105,14 @@ class _ColorPaletteState extends State<ColorPalette> {
               spacing: gap,
               runSpacing: gap,
               children: [
-                for (final color in kPaletteColors)
+                for (var i = 0; i < kPaletteColors.length; i++)
                   _Swatch(
-                    key: ValueKey('palette-${color.toARGB32()}'),
-                    color: color,
+                    key: ValueKey('palette-${kPaletteColors[i].toARGB32()}'),
+                    color: kPaletteColors[i],
+                    label: paletteColorName(l10n, i),
                     size: size,
-                    selected: _same(color, widget.current),
-                    onTap: () => widget.onPick(color),
+                    selected: _same(kPaletteColors[i], widget.current),
+                    onTap: () => widget.onPick(kPaletteColors[i]),
                   ),
               ],
             );
@@ -180,12 +182,16 @@ class _Swatch extends StatelessWidget {
   const _Swatch({
     super.key,
     required this.color,
+    required this.label,
     required this.size,
     required this.selected,
     required this.onTap,
   });
 
   final Color color;
+
+  /// Ekran okuyucunun okuduğu renk adı (F15.2).
+  final String label;
   final double size;
   final bool selected;
   final VoidCallback onTap;
@@ -194,27 +200,35 @@ class _Swatch extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final light = color.computeLuminance() > 0.5;
-    return InkWell(
+    return Semantics(
+      container: true,
+      button: true,
+      selected: selected,
+      label: label,
+      excludeSemantics: true,
       onTap: onTap,
-      customBorder: const CircleBorder(),
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: selected ? scheme.primary : scheme.outlineVariant,
-            width: selected ? 3 : 1,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: selected ? scheme.primary : scheme.outlineVariant,
+              width: selected ? 3 : 1,
+            ),
           ),
+          child: selected
+              ? Icon(
+                  Icons.check,
+                  size: size * 0.45,
+                  color: light ? Colors.black87 : Colors.white,
+                )
+              : null,
         ),
-        child: selected
-            ? Icon(
-                Icons.check,
-                size: size * 0.45,
-                color: light ? Colors.black87 : Colors.white,
-              )
-            : null,
       ),
     );
   }

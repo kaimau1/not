@@ -8,6 +8,7 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/color_palette.dart';
 import '../domain/note.dart';
 import 'color_picker_sheet.dart';
+import '../../../core/a11y/chip_roles.dart';
 
 /// Görünüm levhasının alt satırındaki seçenekler.
 enum NoteAppearanceAction { color, frame, image, paper }
@@ -248,11 +249,13 @@ class _ThemeSheetState extends State<_ThemeSheet> {
                   ])
                     Padding(
                       padding: const EdgeInsetsDirectional.only(end: 8),
-                      child: ActionChip(
-                        avatar: Icon(icon, size: 18, color: scheme.primary),
-                        label: Text(label),
-                        shape: const StadiumBorder(),
-                        onPressed: () => Navigator.pop(context, action),
+                      child: actionChip(
+                        ActionChip(
+                          avatar: Icon(icon, size: 18, color: scheme.primary),
+                          label: Text(label),
+                          shape: const StadiumBorder(),
+                          onPressed: () => Navigator.pop(context, action),
+                        ),
                       ),
                     ),
                 ],
@@ -344,7 +347,7 @@ class _ThemeTile extends StatelessWidget {
               label,
               maxLines: 1,
               style: TextStyle(
-                fontSize: 11.5,
+                fontSize: 12,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 color: selected ? scheme.primary : scheme.onSurfaceVariant,
               ),

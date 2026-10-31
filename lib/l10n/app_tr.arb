@@ -995,6 +995,8 @@
   "fontSizeXLarge": "Çok büyük",
   "appFontSetting": "Yazı tipi",
   "appFontInfo": "Uygulamanın her yerinde kullanılan yazı tipi. Notun kendi yazı tipi seçimi bunun üstüne biner. Tüm yazı tipleri uygulamayla birlikte geliyor — internet gerekmez.",
+  "followSystemTextScale": "Sistem yazı boyutunu izle",
+  "followSystemTextScaleInfo": "Telefonun yazı boyutu ve kalın metin ayarı uygulamaya da geçer; yukarıdaki boyut onunla çarpılır.",
   "fontGroupSans": "Sade",
   "fontGroupSerif": "Kitap",
   "fontGroupMono": "Daktilo",
@@ -2518,15 +2520,6 @@
       }
     }
   },
-  "bubbleSemantics": "Not balonu: {text}",
-  "@bubbleSemantics": {
-    "placeholders": {
-      "text": {
-        "type": "String"
-      }
-    }
-  },
-  "bubbleSemanticsEmpty": "Boş not balonu",
   "guestReminderTitle": "Notların yedeklenmiyor",
   "guestReminderBody": "Hesapsız kullanıyorsun: notların yalnız bu cihazda, dahili yapay zekâ ve paylaşım kapalı. Uygulama silinir ya da telefon değişirse notlar geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.",
   "guestReminderLater": "Sonra",
@@ -2846,6 +2839,28 @@
   "colorNameGreen": "Yeşil",
   "colorNameBlue": "Mavi",
   "colorNamePurple": "Mor",
+  "colorNameNone": "Renksiz",
+  "colorNameOrange": "Turuncu",
+  "colorNameTeal": "Su yeşili",
+  "colorNameSlate": "Gri mavi",
+  "colorNamePink": "Pembe",
+  "colorNameBeige": "Bej",
+  "colorNameGray": "Gri",
+  "colorNameCyan": "Camgöbeği",
+  "colorNameWhite": "Beyaz",
+  "colorNameBlack": "Siyah",
+  "colorToneLight": "açık",
+  "colorToneVivid": "canlı",
+  "colorToneDark": "koyu",
+  "colorShade": "{color}, {tone}",
+  "@colorShade": {"placeholders": {"color": {"type": "String"}, "tone": {"type": "String"}}},
+  "itemEmptyLabel": "Boş madde",
+  "bubbleSemantic": "Balon, sayfa {page}: {text}",
+  "@bubbleSemantic": {"placeholders": {"page": {"type": "int"}, "text": {"type": "String"}}},
+  "bubbleSemanticEmpty": "Boş balon, sayfa {page}",
+  "@bubbleSemanticEmpty": {"placeholders": {"page": {"type": "int"}}},
+  "mediaBoxSemantic": "{kind}: {name}",
+  "@mediaBoxSemantic": {"placeholders": {"kind": {"type": "String"}, "name": {"type": "String"}}},
   "formatSizeLabel": "Boyut",
   "formatSizeValue": "Boyut %{percent}",
   "@formatSizeValue": {"placeholders": {"percent": {"type": "int"}}},

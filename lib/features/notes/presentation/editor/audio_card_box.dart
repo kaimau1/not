@@ -220,7 +220,7 @@ class _AudioCardBoxState extends State<AudioCardBox> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: scheme.onSurfaceVariant,
                           ),

@@ -110,7 +110,7 @@ class _ReorderTile extends StatelessWidget {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 12,
                   height: 1.25,
                   color: scheme.onSurfaceVariant,
                 ),
@@ -387,7 +387,7 @@ class _RecentSearches extends ConsumerWidget {
               Text(
                 l10n.recentSearches,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: scheme.onSurfaceVariant,
                 ),
@@ -401,7 +401,7 @@ class _RecentSearches extends ConsumerWidget {
                 ),
                 child: Text(
                   l10n.clearRecentSearches,
-                  style: const TextStyle(fontSize: 11),
+                  style: const TextStyle(fontSize: 12),
                 ),
               ),
             ],

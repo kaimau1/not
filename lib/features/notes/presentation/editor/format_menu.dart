@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/color_palette.dart';
 import '../../../../app/theme/note_colors.dart';
+import '../../../../core/a11y/color_names.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/rich_text.dart';
 import 'text_wrap.dart';
@@ -372,12 +373,20 @@ class _ColorRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = NoteColors.richPalette;
+    final names = richPaletteNames(context.l10n);
     return Row(
       children: [
         for (var i = 0; i < palette.length; i++)
           Padding(
             padding: const EdgeInsetsDirectional.only(end: 10),
-            child: InkWell(
+            // Ekran okuyucu rengin ADINI okur (F15.2); "A" harfi okunmaz.
+            child: Semantics(
+              container: true,
+              button: true,
+              label: '$title: ${names[i]}',
+              excludeSemantics: true,
+              onTap: () => onPick(i + 1),
+              child: InkWell(
               onTap: () => onPick(i + 1),
               customBorder: const CircleBorder(),
               child: Container(
@@ -402,6 +411,7 @@ class _ColorRow extends StatelessWidget {
                         ),
                       ),
               ),
+            ),
             ),
           ),
         IconButton.filledTonal(

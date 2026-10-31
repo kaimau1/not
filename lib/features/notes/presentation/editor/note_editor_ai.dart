@@ -134,10 +134,10 @@ extension _EditorAi on _NoteEditorScreenState {
             spacing: 8,
             children: [
               for (final tag in suggestions)
-                ActionChip(
+                actionChip(ActionChip(
                   label: Text('#$tag'),
                   onPressed: () => Navigator.pop(sheetContext, tag),
-                ),
+                )),
             ],
           ),
         ),

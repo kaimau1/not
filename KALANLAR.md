@@ -27,6 +27,29 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
 numarasıyla bildir.
 
+**2026-10-31 Faz 15 (erişilebilirlik) — TalkBack + en büyük yazı**
+- [ ] Ayarlar → Görünüm → "Sistem yazı boyutunu izle" varsayılan KAPALI;
+  kapalıyken telefonun yazı boyutu/kalın metni uygulamayı DEĞİŞTİRMİYOR.
+- [ ] Anahtarı aç, telefonda yazıyı EN BÜYÜĞE al + Kalın metin: ana ekran
+  (kartlar, klasör şeridi, Süz), not ekranı (alt çubuk, biçim paneli, liste),
+  Paylaş ve Yapay zekâ levhası — kesilen/üst üste binen yazı var mı.
+- [ ] TalkBack: kart TEK seferde okunuyor ("başlık. özet. N madde"), çift
+  dokunuş açıyor; ⋮ ayrı "Not menüsü" diye okunuyor.
+- [ ] TalkBack: liste notunda kutucuk "Süt, onay kutusu, işaretli değil";
+  işaretle → durum söyleniyor.
+- [ ] TalkBack: biçim paneli/zemin şeridi/palet renkleri adıyla ("Mavi,
+  koyu"); yazı boyutu çipleri "radyo düğmesi"; #etiket çipi "düğme".
+- [ ] TalkBack: PDF notunda sayfa "Sayfa 2 / 5", balon "Balon, sayfa 2: …";
+  sayfadaki görsel "Görsel: ad. açıklama". PDF'e balon bırak, paylaş.
+- [ ] TalkBack: Süz düğmesi çift dokunuşla AÇILIYOR (önce açılmıyordu).
+- [ ] Geliştirici seçenekleri → animasyon ölçeği KAPALI (ya da Erişilebilirlik
+  → Animasyonları kaldır): not karttan büyümeden SOLARAK açılıyor; kart
+  basınca çökmüyor; ayar alanları anında açılıyor.
+- [ ] Küçük dokunuşlar: Süz, ayar ✨, dinleme kartı başlık düğmeleri, Süz
+  levhası çipleri biraz dışından dokununca da çalışıyor; görünüm aynı.
+- [ ] İşaretli maddeler eskisinden az soluk (0,55 → 0,8) — "bitti" hâlâ
+  belli mi.
+
 **2026-10-31 Klasör şeridi + Gelen tek liste + Faz 14 (anlaşılırlık)**
 - [ ] Ana ekran klasör şeridi: not sayısı simgenin SAĞ ÜST köşesinde küçük
   rakam (adın yanında değil), okunmamışta kırmızı rozet aynı köşede; rakam

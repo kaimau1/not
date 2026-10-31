@@ -405,6 +405,26 @@ class NoteMediaBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final a = attachment;
+    // Ekran okuyucu (F15.2): kutu "tür: ad. açıklama" diye okunur; içindeki
+    // oynat/durdur gibi denetimler kendi düğümleriyle kalır.
+    final l10n = context.l10n;
+    final name = a.fileName.trim();
+    final kind = a.kind == AttachmentKind.video
+        ? l10n.embedNewVideo
+        : l10n.embedNewImage;
+    final label = [
+      name.isEmpty ? kind : l10n.mediaBoxSemantic(kind, name),
+      if (a.caption.trim().isNotEmpty) a.caption.trim(),
+    ].join('. ');
+    return Semantics(
+      container: true,
+      image: a.kind == AttachmentKind.image,
+      label: label,
+      child: _box(a),
+    );
+  }
+
+  Widget _box(Attachment a) {
     if (a.isWebVideo) {
       return _WebVideoBox(
         video: a,

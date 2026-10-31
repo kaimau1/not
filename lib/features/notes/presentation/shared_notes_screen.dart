@@ -247,7 +247,7 @@ class SharedNotesHomeSection extends ConsumerWidget {
                 Text(
                   l10n.homeSharedSection,
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.4,
                     color: scheme.primary,

@@ -1017,7 +1017,7 @@ class _PreviewTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 10.5,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

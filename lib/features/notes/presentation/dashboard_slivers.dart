@@ -300,7 +300,7 @@ extension _DashSlivers on _DashboardScreenState {
             Text(
               text,
               style: TextStyle(
-                fontSize: 11.5,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.4,
                 color: Theme.of(context).colorScheme.primary,

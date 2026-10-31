@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 
+import '../../../../core/l10n_ext.dart';
 import '../../data/pdf/pdf_page_render.dart';
 
 /// Tek bir PDF sayfasının görüntüsü — pdfrx'in `PdfPageView`'ının YERİNE.
@@ -113,24 +114,34 @@ class _PdfPageImageState extends State<PdfPageImage> {
           }
         }
         final image = _image;
-        return Center(
-          child: AspectRatio(
-            aspectRatio: aspect,
-            child: ColoredBox(
-              color: widget.background,
-              child: widget.overlay == null
-                  ? (image == null
-                        ? const SizedBox.expand()
-                        : RawImage(image: image, fit: BoxFit.fill))
-                  : Stack(
-                      fit: StackFit.expand,
-                      clipBehavior: Clip.none,
-                      children: [
-                        if (image != null)
-                          RawImage(image: image, fit: BoxFit.fill),
-                        widget.overlay!,
-                      ],
-                    ),
+        // Ekran okuyucu (F15.2): sayfa "Sayfa N / M" diye okunur; üstteki
+        // balon katmanı kendi düğümleriyle kalır.
+        return Semantics(
+          container: true,
+          image: true,
+          label: context.l10n.pdfPageOf(
+            widget.pageNumber,
+            widget.document.pages.length,
+          ),
+          child: Center(
+            child: AspectRatio(
+              aspectRatio: aspect,
+              child: ColoredBox(
+                color: widget.background,
+                child: widget.overlay == null
+                    ? (image == null
+                          ? const SizedBox.expand()
+                          : RawImage(image: image, fit: BoxFit.fill))
+                    : Stack(
+                        fit: StackFit.expand,
+                        clipBehavior: Clip.none,
+                        children: [
+                          if (image != null)
+                            RawImage(image: image, fit: BoxFit.fill),
+                          widget.overlay!,
+                        ],
+                      ),
+              ),
             ),
           ),
         );

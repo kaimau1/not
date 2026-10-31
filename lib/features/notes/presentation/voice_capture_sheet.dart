@@ -19,6 +19,7 @@ import '../data/voice_listen_session.dart';
 import 'listening_visuals.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/friendly_error.dart';
+import '../../../core/a11y/chip_roles.dart';
 
 /// Sesli yakalama levhası — ana ekran ve not editörünün ORTAK bileşeni.
 ///
@@ -950,7 +951,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 12,
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
@@ -1101,7 +1102,9 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                       TextSpan(
                         text: pending,
                         style: style.copyWith(
-                          color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                          // Henüz oturmamış sözcük soluk ama okunur
+                          // (F15.6: 0,6 → 0,8, ≥ 4,5:1).
+                          color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
                         ),
                       ),
                     if (listening)
@@ -1371,7 +1374,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     // (AI not · Düz not ya da Nota ekle) yan yana kalır; üç çip ilk
     // kullanıcıya ağırdı — varsayılan tek "Diğer" çipi, dokununca açılır.
     if (!_moreOpen) {
-      return ActionChip(
+      return actionChip(ActionChip(
         key: const ValueKey('voice-more'),
         avatar: const Icon(Icons.expand_more, size: 18),
         label: Text(
@@ -1384,14 +1387,14 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         side: BorderSide(color: scheme.outlineVariant),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         onPressed: () => setState(() => _moreOpen = true),
-      );
+      ));
     }
     return Wrap(
       spacing: 6,
       runSpacing: 6,
       children: [
         for (final (label, action) in entries)
-          ActionChip(
+          actionChip(ActionChip(
             label: Text(
               label,
               style: const TextStyle(
@@ -1408,7 +1411,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
               borderRadius: BorderRadius.circular(10),
             ),
             onPressed: () => _submit(action),
-          ),
+          )),
       ],
     );
   }

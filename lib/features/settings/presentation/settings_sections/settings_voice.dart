@@ -614,7 +614,7 @@ class _VoicePickerSheetState extends ConsumerState<_VoicePickerSheet> {
                 spacing: 8,
                 children: [
                   for (final code in _languages)
-                    ChoiceChip(
+                    radioChip(ChoiceChip(
                       label: Text(languageLabel(code)),
                       selected: _language == code,
                       onSelected: (_) {
@@ -622,7 +622,7 @@ class _VoicePickerSheetState extends ConsumerState<_VoicePickerSheet> {
                         setState(() => _language = code);
                         _load();
                       },
-                    ),
+                    )),
                 ],
               ),
             const SizedBox(height: 6),

@@ -190,6 +190,17 @@ FontScaleStep nearestFontScaleStep(double value) {
 /// Sistem yazı ölçeğine en yakın kademe (ilk açılışın başlangıç değeri).
 double initialFontScale(double system) => nearestFontScaleStep(system).scale;
 
+/// **SİSTEM YAZI BOYUTUNU İZLE** (F15.1, 2026-10-31 — öneri uygulandı,
+/// varsayılan mevcut davranış). 2026-08-07 kararı ("yazı boyutu tüm
+/// telefonlarda sabit") varsayılanda korunur: KAPALIYKEN sistemin yazı ölçeği
+/// ve kalın metni yok sayılır. AÇIKKEN uygulamanın yazı boyutu kademesi
+/// sistem ölçeğiyle ÇARPILIR ve sistemin "Kalın metin" ayarı geçer (bkz.
+/// `fixedTypography`).
+final followSystemTextScaleProvider = boolPref(
+  'follow_system_text_scale',
+  defaultValue: false,
+);
+
 /// Yazı boyutu çarpanı. Sistem ayarının YERİNE geçer (bkz. `fixedTypography`).
 final fontScaleProvider = NotifierProvider<FontScaleNotifier, double>(
   FontScaleNotifier.new,

@@ -720,26 +720,33 @@ class _BubbleDockState extends State<BubbleDock> {
                 in bubble.plain
                     ? BubbleController.plainPalette
                     : BubbleController.palette)
-              GestureDetector(
-                key: ValueKey('bubble-color-$argb'),
-                onTap: () => widget.controller
-                  ..update(bubble.copyWith(color: argb))
-                  ..save(),
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Color(argb),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: bubble.color == argb
-                          ? Theme.of(context).colorScheme.onSurface
-                          : Colors.black26,
-                      width: bubble.color == argb ? 3 : 1,
+              Semantics(
+                container: true,
+                button: true,
+                selected: bubble.color == argb,
+                label: colorNameFor(context.l10n, Color(argb)),
+                excludeSemantics: true,
+                child: GestureDetector(
+                  key: ValueKey('bubble-color-$argb'),
+                  onTap: () => widget.controller
+                    ..update(bubble.copyWith(color: argb))
+                    ..save(),
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color(argb),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: bubble.color == argb
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Colors.black26,
+                        width: bubble.color == argb ? 3 : 1,
+                      ),
                     ),
                   ),
                 ),
@@ -761,38 +768,47 @@ class _BubbleDockState extends State<BubbleDock> {
           padding: const EdgeInsets.only(right: 8),
           children: [
             for (final argb in BubbleController.fillPalette)
-              GestureDetector(
-                key: ValueKey('bubble-fill-$argb'),
-                onTap: () => widget.controller
-                  ..update(bubble.copyWith(fill: argb))
-                  ..save(),
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: argb == 0 ? null : Color(argb),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: bubble.fill == argb
-                          ? Theme.of(context).colorScheme.onSurface
-                          : Colors.black26,
-                      width: bubble.fill == argb ? 3 : 1,
+              Semantics(
+                container: true,
+                button: true,
+                selected: bubble.fill == argb,
+                label: argb == 0
+                    ? context.l10n.bubbleTextFillNone
+                    : colorNameFor(context.l10n, Color(argb)),
+                excludeSemantics: true,
+                child: GestureDetector(
+                  key: ValueKey('bubble-fill-$argb'),
+                  onTap: () => widget.controller
+                    ..update(bubble.copyWith(fill: argb))
+                    ..save(),
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 7,
                     ),
+                    decoration: BoxDecoration(
+                      color: argb == 0 ? null : Color(argb),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: bubble.fill == argb
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Colors.black26,
+                        width: bubble.fill == argb ? 3 : 1,
+                      ),
+                    ),
+                    child: argb == 0
+                        ? Tooltip(
+                            message: context.l10n.bubbleTextFillNone,
+                            child: const Icon(
+                              Icons.format_color_reset,
+                              size: 14,
+                              color: Colors.black45,
+                            ),
+                          )
+                        : null,
                   ),
-                  child: argb == 0
-                      ? Tooltip(
-                          message: context.l10n.bubbleTextFillNone,
-                          child: const Icon(
-                            Icons.format_color_reset,
-                            size: 14,
-                            color: Colors.black45,
-                          ),
-                        )
-                      : null,
                 ),
               ),
           ],

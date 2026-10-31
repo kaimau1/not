@@ -54,7 +54,9 @@ class EmptyState extends StatelessWidget {
                 subtitle!,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  // Tam ikincil renk (F15.6): %70 saydamlık kırık beyaz ve
+                  // kâğıt temada 4,5:1'in altına iniyordu.
+                  color: scheme.onSurfaceVariant,
                 ),
               ),
             ],

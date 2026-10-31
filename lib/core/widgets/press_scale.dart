@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
+import '../a11y/motion.dart';
+
 /// **BASINCA HAFİFÇE ÇÖKEN KART** — iOS'taki dokunsal his (kullanıcı isteği
 /// 2026-10-17: "premium gösteren iPhone gibi akıcılık").
 ///
@@ -89,7 +91,8 @@ class _PressScaleState extends State<PressScale> {
     onPointerUp: _onUp,
     onPointerCancel: (_) => _release(),
     child: AnimatedScale(
-      scale: _pressed ? widget.scale : 1,
+      // Hareketi azalt (F15.5): kart çökmez.
+      scale: _pressed && motionOf(context) ? widget.scale : 1,
       duration: _pressed
           ? const Duration(milliseconds: 110)
           : const Duration(milliseconds: 260),

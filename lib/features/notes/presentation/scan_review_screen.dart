@@ -15,6 +15,7 @@ import '../data/scan/scan_title.dart';
 import 'editor/note_images.dart';
 import 'scan_edit_screen.dart';
 import '../../../core/friendly_error.dart';
+import '../../../core/a11y/chip_roles.dart';
 
 /// İnceleme ekranının sonucu: sayfalar ya tek (aranabilir) PDF'e dönüştü
 /// ya da düzeltilmiş görseller olarak eklenecek.
@@ -479,7 +480,7 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
           for (final filter in ScanFilter.values)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
+              child: radioChip(ChoiceChip(
                 label: Text(label(filter)),
                 selected: current == filter,
                 // Seçili çipte çalışırken küçük gösterge: dokunuşun
@@ -494,16 +495,16 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
                 onSelected: locked
                     ? null
                     : (_) => _chooseFilter(_index, filter),
-              ),
+              )),
             ),
           if (_pages.length > 1)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: ActionChip(
+              child: actionChip(ActionChip(
                 avatar: const Icon(Icons.done_all, size: 18),
                 label: Text(l10n.scanApplyAll),
                 onPressed: locked ? null : _applyToAll,
-              ),
+              )),
             ),
         ],
       ),

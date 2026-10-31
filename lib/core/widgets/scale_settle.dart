@@ -2,6 +2,8 @@ import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 
+import '../a11y/motion.dart';
+
 /// **YUMUŞAK YAZI BOYUTU GEÇİŞİ** (kullanıcı isteği 2026-10-28: "yazı boyutu
 /// geçişleri daha yumuşak"). [value] (ör. notun yazı ölçeği) değişince metin
 /// yeni boyutunda HEMEN yerleşir ama eski boyuttan yenisine doğru kısa bir
@@ -61,7 +63,10 @@ class _ScaleSettleState extends State<ScaleSettle>
       animation: _c,
       builder: (context, child) {
         final t = Curves.easeOutCubic.transform(_c.value);
-        final scale = widget.enabled ? lerpDouble(_from, 1, t)! : 1.0;
+        // Hareketi azalt (F15.5): yeni boya anında oturur.
+        final scale = widget.enabled && motionOf(context)
+            ? lerpDouble(_from, 1, t)!
+            : 1.0;
         return Transform.scale(
           scale: scale,
           alignment: widget.alignment,
@@ -89,6 +94,8 @@ class RevealUp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Hareketi azalt (F15.5): içerik anında yerinde.
+    if (!motionOf(context)) return child;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: duration,

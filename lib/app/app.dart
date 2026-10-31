@@ -50,13 +50,37 @@ Locale resolveLocale(List<Locale>? locales, Iterable<Locale> supported) {
 ///
 /// Android'in "Ekran boyutu" (yoğunluk) ayarı KAPSAM DIŞI: o metni değil tüm
 /// arayüzü ölçekler, uygulamadan bastırılamaz.
-Widget fixedTypography(BuildContext context, Widget child, double fontScale) =>
-    MediaQuery(
-      data: MediaQuery.of(
-        context,
-      ).copyWith(textScaler: TextScaler.linear(fontScale), boldText: false),
-      child: child,
-    );
+///
+/// **İSTİSNA — "Sistem yazı boyutunu izle"** (F15.1, erişilebilirlik;
+/// varsayılan KAPALI, yani yukarıdaki kural varsayılanda aynen geçerli):
+/// [followSystem] açıkken uygulamanın kademesi sistem ölçeğiyle ÇARPILIR ve
+/// sistemin kalın metin ayarı geçer. Çarpım [maxFollowedTextScale]'de durur:
+/// "Çok büyük" kademe × sistemin en büyüğü (2×) 2,7 eder, o boyda çubuklar ve
+/// kartlar okunmaz olur; 2× Android'in kendi üst sınırı.
+Widget fixedTypography(
+  BuildContext context,
+  Widget child,
+  double fontScale, {
+  bool followSystem = false,
+}) {
+  final system = MediaQuery.of(context);
+  final scale = followSystem
+      ? (fontScale * system.textScaler.scale(14) / 14).clamp(
+          0.5,
+          maxFollowedTextScale,
+        )
+      : fontScale;
+  return MediaQuery(
+    data: system.copyWith(
+      textScaler: TextScaler.linear(scale),
+      boldText: followSystem && system.boldText,
+    ),
+    child: child,
+  );
+}
+
+/// "Sistem yazı boyutunu izle" açıkken toplam yazı ölçeğinin üst sınırı.
+const double maxFollowedTextScale = 2.0;
 
 /// **GERİ TUŞU HER ZAMAN ÇERÇEVEYE** (kullanıcı bulgusu 2026-10-17:
 /// "paylaşılanlar sayfasından geri gidince uygulama kapanıyor").
@@ -105,6 +129,7 @@ class NotlarApp extends ConsumerWidget {
     final webInfo = ref.watch(_webRouteInfoProvider);
     final themeMode = ref.watch(effectiveThemeModeProvider);
     final fontScale = ref.watch(fontScaleProvider);
+    final followSystemText = ref.watch(followSystemTextScaleProvider);
     final font = ref.watch(appFontProvider);
     final choice = ref.watch(themeChoiceProvider);
 
@@ -180,6 +205,7 @@ class NotlarApp extends ConsumerWidget {
               ),
             ),
             fontScale,
+            followSystem: followSystemText,
           ),
         );
       },

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/a11y/min_tap_target.dart';
 
 /// Dinlemenin KİPİ: sesli yakalama (yapay zekâ levhası) ya da doğrudan
 /// yazdırma (editördeki canlı dikte).
@@ -488,7 +489,7 @@ class ListeningCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: 11.5,
+                                fontSize: 12,
                                 color: scheme.onSurfaceVariant,
                               ),
                             ),
@@ -593,16 +594,19 @@ class ListeningHeaderButton extends StatelessWidget {
   final double iconSize;
 
   @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: tooltip,
-    padding: EdgeInsets.zero,
-    constraints: const BoxConstraints.tightFor(width: 34, height: 34),
-    // M3 simge düğmesi 48 dp'lik dokunma kutusuna büyür; sıkı satırda
-    // üç düğme 144 dp yiyip başlığı eziyordu.
-    style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-    iconSize: iconSize,
-    color: Theme.of(context).colorScheme.onSurfaceVariant,
-    icon: Icon(icon),
-    onPressed: onPressed,
+  // Görünüm 34 dp kalır; dokunma/ekran okuyucu alanı 48 dp (F15.4).
+  Widget build(BuildContext context) => MinTapTarget(
+    child: IconButton(
+      tooltip: tooltip,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints.tightFor(width: 34, height: 34),
+      // M3 simge düğmesi 48 dp'lik dokunma kutusuna büyür; sıkı satırda
+      // üç düğme 144 dp yiyip başlığı eziyordu.
+      style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+      iconSize: iconSize,
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      icon: Icon(icon),
+      onPressed: onPressed,
+    ),
   );
 }

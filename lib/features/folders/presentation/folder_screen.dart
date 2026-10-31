@@ -519,7 +519,7 @@ class _FolderTitle extends StatelessWidget {
                 Text(
                   context.l10n.folderNoteCount(count!),
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 12,
                     color: scheme.onSurfaceVariant,
                   ),
                 ),

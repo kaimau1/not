@@ -157,6 +157,7 @@ import 'page_swipe.dart';
 import '../../../../core/widgets/smooth_routes.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/friendly_error.dart';
+import '../../../../core/a11y/chip_roles.dart';
 
 part 'note_editor_actions.dart';
 part 'note_editor_ai.dart';
@@ -4102,7 +4103,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 12,
                             fontWeight: FontWeight.w500,
                             color: Theme.of(
                               context,

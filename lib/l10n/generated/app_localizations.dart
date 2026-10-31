@@ -3968,6 +3968,18 @@ abstract class AppLocalizations {
   /// **'Uygulamanın her yerinde kullanılan yazı tipi. Notun kendi yazı tipi seçimi bunun üstüne biner. Tüm yazı tipleri uygulamayla birlikte geliyor — internet gerekmez.'**
   String get appFontInfo;
 
+  /// No description provided for @followSystemTextScale.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sistem yazı boyutunu izle'**
+  String get followSystemTextScale;
+
+  /// No description provided for @followSystemTextScaleInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefonun yazı boyutu ve kalın metin ayarı uygulamaya da geçer; yukarıdaki boyut onunla çarpılır.'**
+  String get followSystemTextScaleInfo;
+
   /// No description provided for @fontGroupSans.
   ///
   /// In tr, this message translates to:
@@ -9260,18 +9272,6 @@ abstract class AppLocalizations {
   /// **'Elle çizim, {count} çizgi'**
   String inkSemantics(int count);
 
-  /// No description provided for @bubbleSemantics.
-  ///
-  /// In tr, this message translates to:
-  /// **'Not balonu: {text}'**
-  String bubbleSemantics(String text);
-
-  /// No description provided for @bubbleSemanticsEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Boş not balonu'**
-  String get bubbleSemanticsEmpty;
-
   /// No description provided for @guestReminderTitle.
   ///
   /// In tr, this message translates to:
@@ -10597,6 +10597,114 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Mor'**
   String get colorNamePurple;
+
+  /// No description provided for @colorNameNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Renksiz'**
+  String get colorNameNone;
+
+  /// No description provided for @colorNameOrange.
+  ///
+  /// In tr, this message translates to:
+  /// **'Turuncu'**
+  String get colorNameOrange;
+
+  /// No description provided for @colorNameTeal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Su yeşili'**
+  String get colorNameTeal;
+
+  /// No description provided for @colorNameSlate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gri mavi'**
+  String get colorNameSlate;
+
+  /// No description provided for @colorNamePink.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pembe'**
+  String get colorNamePink;
+
+  /// No description provided for @colorNameBeige.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bej'**
+  String get colorNameBeige;
+
+  /// No description provided for @colorNameGray.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gri'**
+  String get colorNameGray;
+
+  /// No description provided for @colorNameCyan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Camgöbeği'**
+  String get colorNameCyan;
+
+  /// No description provided for @colorNameWhite.
+  ///
+  /// In tr, this message translates to:
+  /// **'Beyaz'**
+  String get colorNameWhite;
+
+  /// No description provided for @colorNameBlack.
+  ///
+  /// In tr, this message translates to:
+  /// **'Siyah'**
+  String get colorNameBlack;
+
+  /// No description provided for @colorToneLight.
+  ///
+  /// In tr, this message translates to:
+  /// **'açık'**
+  String get colorToneLight;
+
+  /// No description provided for @colorToneVivid.
+  ///
+  /// In tr, this message translates to:
+  /// **'canlı'**
+  String get colorToneVivid;
+
+  /// No description provided for @colorToneDark.
+  ///
+  /// In tr, this message translates to:
+  /// **'koyu'**
+  String get colorToneDark;
+
+  /// No description provided for @colorShade.
+  ///
+  /// In tr, this message translates to:
+  /// **'{color}, {tone}'**
+  String colorShade(String color, String tone);
+
+  /// No description provided for @itemEmptyLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boş madde'**
+  String get itemEmptyLabel;
+
+  /// No description provided for @bubbleSemantic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balon, sayfa {page}: {text}'**
+  String bubbleSemantic(int page, String text);
+
+  /// No description provided for @bubbleSemanticEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boş balon, sayfa {page}'**
+  String bubbleSemanticEmpty(int page);
+
+  /// No description provided for @mediaBoxSemantic.
+  ///
+  /// In tr, this message translates to:
+  /// **'{kind}: {name}'**
+  String mediaBoxSemantic(String kind, String name);
 
   /// No description provided for @formatSizeLabel.
   ///

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/color_palette.dart';
 import '../domain/note_item.dart';
+import '../../../core/a11y/chip_roles.dart';
 
 /// Madde altı ayırıcıyı ([ItemDivider]) çizer — editör satırı ve ana ekran
 /// kartı aynı çizimi kullanır (yalnız temel kalınlık ve kenar payı farklı).
@@ -224,11 +225,13 @@ class _ItemDividerSheetState extends State<_ItemDividerSheet> {
               runSpacing: 4,
               children: [
                 for (final kind in ItemDivider.kinds)
-                  ChoiceChip(
-                    label: Text(_kindLabel(kind)),
-                    selected: _style.kind == kind,
-                    onSelected: (_) =>
-                        setState(() => _style = _style.copyWith(kind: kind)),
+                  radioChip(
+                    ChoiceChip(
+                      label: Text(_kindLabel(kind)),
+                      selected: _style.kind == kind,
+                      onSelected: (_) =>
+                          setState(() => _style = _style.copyWith(kind: kind)),
+                    ),
                   ),
               ],
             ),

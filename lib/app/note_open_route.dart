@@ -3,6 +3,7 @@ import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 
 import 'split_shell.dart';
+import '../core/a11y/motion.dart';
 
 /// **NOT KARTTAN GENİŞLEYEREK AÇILIR** (kullanıcı isteği 2026-10-28:
 /// "notlar dashboard'dan açılırken sayfa kaydırma şeklinde değil, sanki o not
@@ -93,16 +94,28 @@ class NoteOpenPage<T> extends Page<T> {
     // Geniş ekranda not sağ bölmede açılır; soldaki karttan büyümesi bölme
     // sınırını aşan tuhaf bir hareket olurdu.
     final narrow = MediaQuery.sizeOf(context).width < kSplitBreakpoint;
-    return _NoteOpenRoute<T>(page: this, origin: narrow ? origin : null);
+    // Hareketi azalt (F15.5): karttan büyüme yerine kısa bir solma.
+    final motion = motionOf(context);
+    return _NoteOpenRoute<T>(
+      page: this,
+      origin: narrow && motion ? origin : null,
+      fadeOnly: !motion,
+    );
   }
 }
 
 class _NoteOpenRoute<T> extends PageRoute<T>
     with MaterialRouteTransitionMixin<T> {
-  _NoteOpenRoute({required NoteOpenPage<T> page, this.origin})
-    : super(settings: page);
+  _NoteOpenRoute({
+    required NoteOpenPage<T> page,
+    this.origin,
+    this.fadeOnly = false,
+  }) : super(settings: page);
 
   final NoteOpenOrigin? origin;
+
+  /// Sistemde "hareketi azalt" açık: yalnız solma, alttaki liste kımıldamaz.
+  final bool fadeOnly;
 
   NoteOpenPage<T> get _page => settings as NoteOpenPage<T>;
 
@@ -119,12 +132,16 @@ class _NoteOpenRoute<T> extends PageRoute<T>
   String get debugLabel => '${super.debugLabel}(${_page.name})';
 
   @override
-  Duration get transitionDuration => origin == null
+  Duration get transitionDuration => fadeOnly
+      ? const Duration(milliseconds: 150)
+      : origin == null
       ? super.transitionDuration
       : const Duration(milliseconds: 460);
 
   @override
-  Duration get reverseTransitionDuration => origin == null
+  Duration get reverseTransitionDuration => fadeOnly
+      ? const Duration(milliseconds: 150)
+      : origin == null
       ? super.reverseTransitionDuration
       : const Duration(milliseconds: 380);
 
@@ -132,7 +149,7 @@ class _NoteOpenRoute<T> extends PageRoute<T>
   /// onun üstünde büyür.
   @override
   bool canTransitionFrom(TransitionRoute<dynamic> previousRoute) =>
-      origin == null && super.canTransitionFrom(previousRoute);
+      origin == null && !fadeOnly && super.canTransitionFrom(previousRoute);
 
   @override
   Widget buildTransitions(
@@ -142,6 +159,17 @@ class _NoteOpenRoute<T> extends PageRoute<T>
     Widget child,
   ) {
     final origin = this.origin;
+    if (fadeOnly) {
+      return FadeTransition(
+        opacity: animation,
+        child: super.buildTransitions(
+          context,
+          kAlwaysCompleteAnimation,
+          secondaryAnimation,
+          child,
+        ),
+      );
+    }
     if (origin == null) {
       return super.buildTransitions(
         context,

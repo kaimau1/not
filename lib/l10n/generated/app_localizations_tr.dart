@@ -2120,6 +2120,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Uygulamanın her yerinde kullanılan yazı tipi. Notun kendi yazı tipi seçimi bunun üstüne biner. Tüm yazı tipleri uygulamayla birlikte geliyor — internet gerekmez.';
 
   @override
+  String get followSystemTextScale => 'Sistem yazı boyutunu izle';
+
+  @override
+  String get followSystemTextScaleInfo =>
+      'Telefonun yazı boyutu ve kalın metin ayarı uygulamaya da geçer; yukarıdaki boyut onunla çarpılır.';
+
+  @override
   String get fontGroupSans => 'Sade';
 
   @override
@@ -5147,14 +5154,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String bubbleSemantics(String text) {
-    return 'Not balonu: $text';
-  }
-
-  @override
-  String get bubbleSemanticsEmpty => 'Boş not balonu';
-
-  @override
   String get guestReminderTitle => 'Notların yedeklenmiyor';
 
   @override
@@ -5903,6 +5902,68 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get colorNamePurple => 'Mor';
+
+  @override
+  String get colorNameNone => 'Renksiz';
+
+  @override
+  String get colorNameOrange => 'Turuncu';
+
+  @override
+  String get colorNameTeal => 'Su yeşili';
+
+  @override
+  String get colorNameSlate => 'Gri mavi';
+
+  @override
+  String get colorNamePink => 'Pembe';
+
+  @override
+  String get colorNameBeige => 'Bej';
+
+  @override
+  String get colorNameGray => 'Gri';
+
+  @override
+  String get colorNameCyan => 'Camgöbeği';
+
+  @override
+  String get colorNameWhite => 'Beyaz';
+
+  @override
+  String get colorNameBlack => 'Siyah';
+
+  @override
+  String get colorToneLight => 'açık';
+
+  @override
+  String get colorToneVivid => 'canlı';
+
+  @override
+  String get colorToneDark => 'koyu';
+
+  @override
+  String colorShade(String color, String tone) {
+    return '$color, $tone';
+  }
+
+  @override
+  String get itemEmptyLabel => 'Boş madde';
+
+  @override
+  String bubbleSemantic(int page, String text) {
+    return 'Balon, sayfa $page: $text';
+  }
+
+  @override
+  String bubbleSemanticEmpty(int page) {
+    return 'Boş balon, sayfa $page';
+  }
+
+  @override
+  String mediaBoxSemantic(String kind, String name) {
+    return '$kind: $name';
+  }
 
   @override
   String get formatSizeLabel => 'Boyut';

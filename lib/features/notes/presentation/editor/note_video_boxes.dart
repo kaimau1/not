@@ -585,7 +585,7 @@ class _NoteAtChip extends StatelessWidget {
               context.l10n.videoNoteAtTimeShort,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),

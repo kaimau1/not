@@ -10,6 +10,7 @@ import '../../notes/presentation/editor/video_transport.dart' show SeekIcon;
 import '../../notes/presentation/quick_add_fab.dart' show quickAddCatalog;
 import '../../notes/presentation/viewers/bubble_layer.dart' show BubbleLook;
 import '../settings_providers.dart';
+import '../../../core/a11y/chip_roles.dart';
 
 /// **KİŞİSELLEŞTİR** ekranı — bütün kişisel düzen TEK menüde.
 ///
@@ -617,13 +618,13 @@ class _VideoSection extends StatelessWidget {
           runSpacing: 6,
           children: [
             for (final s in UiPrefs.seekChoices)
-              ChoiceChip(
+              radioChip(ChoiceChip(
                 key: ValueKey('seek-${forward ? 'fwd' : 'back'}-$s'),
                 label: Text(l10n.secondsShort(s)),
                 selected: value == s,
                 visualDensity: VisualDensity.compact,
                 onSelected: (_) => onSelected(s),
-              ),
+              )),
           ],
         ),
       ],

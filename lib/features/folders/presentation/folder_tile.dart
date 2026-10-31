@@ -701,7 +701,7 @@ class FolderUnreadBadge extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 12,
             height: 1.1,
             fontWeight: FontWeight.w700,
             color: scheme.onError,

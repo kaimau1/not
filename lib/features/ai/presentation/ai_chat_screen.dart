@@ -15,6 +15,7 @@ import '../data/gemini_service.dart';
 import 'assistant_confirm.dart';
 import 'chat_controller.dart';
 import '../../../core/friendly_error.dart';
+import '../../../core/a11y/chip_roles.dart';
 
 /// Sohbetin kapsamı: neyle konuşuluyor.
 enum ChatScope {
@@ -391,7 +392,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                   for (final s in _scopes)
                     Padding(
                       padding: const EdgeInsetsDirectional.only(end: 6),
-                      child: ChoiceChip(
+                      child: radioChip(ChoiceChip(
                         key: ValueKey('chat-scope-${s.name}'),
                         label: Text(switch (s) {
                           ChatScope.all => l10n.chatScopeAll,
@@ -400,14 +401,14 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         }),
                         selected: _scope == s,
                         onSelected: (_) => _setScope(s),
-                      ),
+                      )),
                     ),
                   if (_scope == ChatScope.note) ...[
                     const VerticalDivider(width: 16, indent: 12, endIndent: 12),
                     for (final m in ChatMode.values)
                       Padding(
                         padding: const EdgeInsetsDirectional.only(end: 6),
-                        child: ChoiceChip(
+                        child: radioChip(ChoiceChip(
                           key: ValueKey('chat-mode-${m.name}'),
                           label: Text(switch (m) {
                             ChatMode.qa => l10n.chatModeQa,
@@ -415,7 +416,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                           }),
                           selected: _mode == m,
                           onSelected: (_) => _setMode(m),
-                        ),
+                        )),
                       ),
                   ],
                 ],
@@ -635,7 +636,7 @@ class _OutlineBar extends StatelessWidget {
             child: Text(
               context.l10n.brainstormOutlineTitle,
               style: TextStyle(
-                fontSize: 11.5,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.3,
                 color: scheme.onSurfaceVariant,
@@ -664,11 +665,11 @@ class _OutlineBar extends StatelessWidget {
                       for (final heading in headings)
                         Padding(
                           padding: const EdgeInsetsDirectional.only(end: 8),
-                          child: ChoiceChip(
+                          child: radioChip(ChoiceChip(
                             label: Text(heading),
                             selected: focused == heading,
                             onSelected: (_) => onPick(heading),
-                          ),
+                          )),
                         ),
                     ],
                   ),

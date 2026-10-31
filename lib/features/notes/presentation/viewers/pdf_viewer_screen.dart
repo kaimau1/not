@@ -535,6 +535,18 @@ PdfViewerParams pdfLayerParams({
             builder: (context, adding, _) => Stack(
               clipBehavior: Clip.none,
               children: [
+                // Ekran okuyucu (F15.2): sayfa "Sayfa N / M" diye okunur.
+                Positioned.fill(
+                  child: Semantics(
+                    container: true,
+                    image: true,
+                    label: context.l10n.pdfPageOf(
+                      page.pageNumber,
+                      page.document.pages.length,
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
                 if (!inkEditing && !adding)
                   PdfSelectLayer(
                     page: page,

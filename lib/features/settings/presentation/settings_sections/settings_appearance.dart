@@ -633,11 +633,13 @@ class _TypographySection extends ConsumerWidget {
             runSpacing: 8,
             children: [
               for (final value in FontScaleStep.values)
-                ChoiceChip(
-                  label: Text(_fontScaleLabel(l10n, value)),
-                  selected: value == step,
-                  onSelected: (_) =>
-                      ref.read(fontScaleProvider.notifier).setStep(value),
+                radioChip(
+                  ChoiceChip(
+                    label: Text(_fontScaleLabel(l10n, value)),
+                    selected: value == step,
+                    onSelected: (_) =>
+                        ref.read(fontScaleProvider.notifier).setStep(value),
+                  ),
                 ),
             ],
           ),
@@ -672,6 +674,17 @@ class _TypographySection extends ConsumerWidget {
           style: theme.textTheme.bodySmall?.copyWith(
             color: scheme.onSurfaceVariant,
           ),
+        ),
+        // F15.1 — varsayılan KAPALI: yazı boyutu tüm telefonlarda sabit
+        // (2026-08-07 kararı). Açıkken sistem ölçeği ve kalın metin geçer.
+        SwitchListTile(
+          key: const ValueKey('settings-follow-system-text'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.followSystemTextScale),
+          subtitle: Text(l10n.followSystemTextScaleInfo),
+          value: ref.watch(followSystemTextScaleProvider),
+          onChanged: (v) =>
+              ref.read(followSystemTextScaleProvider.notifier).set(v),
         ),
       ],
     );
@@ -818,19 +831,23 @@ class _DarkScheduleEditor extends ConsumerWidget {
           Row(
             children: [
               const SizedBox(width: 4),
-              ActionChip(
-                avatar: const Icon(Icons.dark_mode_outlined, size: 16),
-                label: Text(_format(schedule.startMinutes)),
-                onPressed: () => _pick(context, ref, isStart: true),
+              actionChip(
+                ActionChip(
+                  avatar: const Icon(Icons.dark_mode_outlined, size: 16),
+                  label: Text(_format(schedule.startMinutes)),
+                  onPressed: () => _pick(context, ref, isStart: true),
+                ),
               ),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8),
                 child: Icon(Icons.arrow_forward, size: 14),
               ),
-              ActionChip(
-                avatar: const Icon(Icons.light_mode_outlined, size: 16),
-                label: Text(_format(schedule.endMinutes)),
-                onPressed: () => _pick(context, ref, isStart: false),
+              actionChip(
+                ActionChip(
+                  avatar: const Icon(Icons.light_mode_outlined, size: 16),
+                  label: Text(_format(schedule.endMinutes)),
+                  onPressed: () => _pick(context, ref, isStart: false),
+                ),
               ),
             ],
           ),

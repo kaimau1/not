@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
 
+import '../a11y/motion.dart';
+
 /// Açılır bölümün içeriğini AŞAĞI DOĞRU kayarak açan/kapatan sarmalayıcı —
 /// ayarların akordeon alanları ve "Gelişmiş" gibi iç bölümler hep bununla
 /// açılır.
@@ -86,7 +88,7 @@ class _ExpandRevealState extends State<ExpandReveal>
   @override
   Widget build(BuildContext context) {
     if (!_built) return const SizedBox(width: double.infinity);
-    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+    if (!motionOf(context)) {
       return widget.open
           ? widget.child
           : const SizedBox(width: double.infinity);

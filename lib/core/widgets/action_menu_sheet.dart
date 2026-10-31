@@ -163,7 +163,7 @@ class ActionMenu extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.4,
                     color: scheme.primary,
@@ -265,7 +265,7 @@ class _QuickButton extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 11.5, height: 1.2),
+              style: const TextStyle(fontSize: 12, height: 1.2),
             ),
           ],
         ),
@@ -406,7 +406,7 @@ class _GridTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 11.5,
+                fontSize: 12,
                 height: 1.2,
                 color: scheme.onSurface,
               ),

@@ -11,6 +11,7 @@ import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import 'notes_providers.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/a11y/min_tap_target.dart';
 
 /// Süz levhası — eski çip barının yerini alır.
 ///
@@ -107,87 +108,93 @@ class HomeFilterButton extends ConsumerWidget {
         : labels.length == 1
         ? labels.first
         : '${labels.first} +${labels.length - 1}';
-    return Tooltip(
-      message: active
-          ? '${l10n.filterSheetTitle}: ${labels.join(', ')}'
-          : l10n.filterSheetTitle,
-      child: Semantics(
-        button: true,
-        selected: active,
-        label: active
+    // Görünüm 34 dp; dokunma/ekran okuyucu alanı 48 dp (F15.4).
+    return MinTapTarget(
+      child: Tooltip(
+        message: active
             ? '${l10n.filterSheetTitle}: ${labels.join(', ')}'
             : l10n.filterSheetTitle,
-        excludeSemantics: true,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: AnimatedSize(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutCubic,
-            alignment: AlignmentDirectional.centerEnd,
-            // Boyut geçişi AnimatedSize'ta (kırparak); kutunun kendi
-            // kısıtı ANİMASYONSUZ — kısıtı canlandırmak geçiş boyunca
-            // içeriği dar kutuya sıkıştırıp taşırıyordu.
-            child: Container(
-              key: const ValueKey('home-filter-button'),
-              height: 34,
-              constraints: BoxConstraints(
-                minWidth: 34,
-                maxWidth: active ? 118 : 34,
-              ),
-              decoration: BoxDecoration(
-                color: active ? scheme.secondaryContainer : scheme.surface,
-                borderRadius: BorderRadius.circular(9),
-                border: Border.all(
-                  color: active ? scheme.primary : scheme.outlineVariant,
-                  width: active ? 1.5 : 1,
+        child: Semantics(
+          button: true,
+          selected: active,
+          // excludeSemantics içteki InkWell'in eylemini de siliyordu: ekran
+          // okuyucuyla Süz AÇILAMIYORDU.
+          onTap: () => showFilterSheet(context),
+          label: active
+              ? '${l10n.filterSheetTitle}: ${labels.join(', ')}'
+              : l10n.filterSheetTitle,
+          excludeSemantics: true,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              alignment: AlignmentDirectional.centerEnd,
+              // Boyut geçişi AnimatedSize'ta (kırparak); kutunun kendi
+              // kısıtı ANİMASYONSUZ — kısıtı canlandırmak geçiş boyunca
+              // içeriği dar kutuya sıkıştırıp taşırıyordu.
+              child: Container(
+                key: const ValueKey('home-filter-button'),
+                height: 34,
+                constraints: BoxConstraints(
+                  minWidth: 34,
+                  maxWidth: active ? 118 : 34,
                 ),
-              ),
-              child: Material(
-                type: MaterialType.transparency,
-                child: InkWell(
+                decoration: BoxDecoration(
+                  color: active ? scheme.secondaryContainer : scheme.surface,
                   borderRadius: BorderRadius.circular(9),
-                  onTap: () => showFilterSheet(context),
-                  child: !active
-                      ? Icon(
-                          Icons.tune,
-                          size: 18,
-                          color: scheme.onSurfaceVariant,
-                        )
-                      : Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                label,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: scheme.onSecondaryContainer,
+                  border: Border.all(
+                    color: active ? scheme.primary : scheme.outlineVariant,
+                    width: active ? 1.5 : 1,
+                  ),
+                ),
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(9),
+                    onTap: () => showFilterSheet(context),
+                    child: !active
+                        ? Icon(
+                            Icons.tune,
+                            size: 18,
+                            color: scheme.onSurfaceVariant,
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: scheme.onSecondaryContainer,
+                                  ),
                                 ),
                               ),
-                            ),
-                            // × hepsini kaldırır; ada dokunmak levhayı açar.
-                            InkResponse(
-                              key: const ValueKey('home-filter-clear'),
-                              radius: 16,
-                              onTap: () => resetFilters(ref),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 5,
-                                  vertical: 8,
-                                ),
-                                child: Icon(
-                                  Icons.close,
-                                  size: 15,
-                                  color: scheme.onSecondaryContainer,
+                              // × hepsini kaldırır; ada dokunmak levhayı açar.
+                              InkResponse(
+                                key: const ValueKey('home-filter-clear'),
+                                radius: 16,
+                                onTap: () => resetFilters(ref),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 8,
+                                  ),
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 15,
+                                    color: scheme.onSecondaryContainer,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                  ),
                 ),
               ),
             ),
@@ -614,13 +621,13 @@ class _FilterSheet extends ConsumerWidget {
           const SizedBox(height: 10),
           Text(
             l10n.filterSheetSortHint,
-            style: TextStyle(fontSize: 11.5, color: scheme.onSurfaceVariant),
+            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
           ),
           if (tags.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
               l10n.tagLongPressHint,
-              style: TextStyle(fontSize: 11.5, color: scheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
             ),
           ],
         ],
@@ -861,36 +868,48 @@ class _Option extends StatelessWidget {
     // eski tasarımda her çipin kenarlığı levhayı tel kafese çeviriyordu.
     final background = selected ? scheme.primary : scheme.surfaceContainerHigh;
     final foreground = selected ? scheme.onPrimary : scheme.onSurface;
-    return Material(
-      color: background,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        onLongPress: onLongPress,
-        child: Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                Icon(
-                  icon,
-                  size: 16,
-                  color: selected ? scheme.onPrimary : scheme.primary,
-                ),
-                const SizedBox(width: 6),
-              ],
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: foreground,
-                ),
+    // Görünüm 38 dp; dokunma/ekran okuyucu alanı 48 dp (F15.4). Seçili mi
+    // ekran okuyucuya da söylenir.
+    return MinTapTarget(
+      child: Semantics(
+        selected: selected,
+        child: Material(
+          color: background,
+          borderRadius: BorderRadius.circular(20),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: onTap,
+            onLongPress: onLongPress,
+            child: Container(
+              height: 38,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(
+                      icon,
+                      size: 16,
+                      color: selected ? scheme.onPrimary : scheme.primary,
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  // Büyük yazıda (F15.1) uzun ad çipi taşırmasın: kısalır.
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: foreground,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

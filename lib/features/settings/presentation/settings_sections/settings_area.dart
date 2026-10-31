@@ -442,7 +442,7 @@ class _ShortcutTile extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 11.5,
+                          fontSize: 12,
                           color: scheme.onSurfaceVariant,
                         ),
                       ),

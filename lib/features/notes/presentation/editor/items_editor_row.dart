@@ -1,7 +1,11 @@
 part of 'items_editor.dart';
 
 /// İşaretli maddenin soluklaştırma oranı (eski satır opaklığı 0.55).
-const double _kCheckedDim = 0.55;
+///
+/// 0.55 → 0.8 (F15.6, 2026-10-31): 0.55'te üstü çizili madde metni açık
+/// temada ~2,8:1'e düşüyordu (WCAG 4,5:1). Üstü çizgi + soluk ton "bitti"
+/// demeye yine yetiyor.
+const double _kCheckedDim = 0.8;
 
 /// [color]ın alfasını [factor] ile çarpar — katmansız solma.
 Color _dimmed(Color color, double factor) =>
@@ -154,6 +158,10 @@ extension _ItemsRow on ItemsEditorState {
             value: item.checked,
             child: Checkbox(
               value: item.checked,
+              // Ekran okuyucu: madde metni + durum (F15.2) — kutu adsızdı.
+              semanticLabel: item.text.trim().isEmpty
+                  ? context.l10n.itemEmptyLabel
+                  : item.text.trim(),
               // Soluk işaretli kutu (satır katmanı yok — bkz. [_kCheckedDim]).
               fillColor: checked
                   ? WidgetStatePropertyAll(

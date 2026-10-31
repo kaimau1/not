@@ -91,7 +91,7 @@ class FriendsScreen extends ConsumerWidget {
     child: Text(
       text,
       style: TextStyle(
-        fontSize: 11.5,
+        fontSize: 12,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.3,
         color: Theme.of(context).colorScheme.primary,

@@ -717,7 +717,7 @@ class NoteCard extends ConsumerWidget {
                   Text(
                     formatNoteDate(note.updatedAt!),
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: scheme.onSurfaceVariant,
                     ),
@@ -864,7 +864,13 @@ class NoteCard extends ConsumerWidget {
             button: true,
             selected: selectionActive ? selected : null,
             label: semanticLabel,
+            // F15.3: kartın İÇİ okunmaz (aşağıdaki ExcludeSemantics) — tek
+            // düğüm, tek etiket; dokunuş eylemi burada.
+            onTap: selectionActive ? toggleSelection : () => _openNote(context),
             child: GestureDetector(
+              // Ekran okuyucuda ADSIZ bir "dokun" düğümü açıyordu (F15.7);
+              // aynı menü ⋮ düğmesinde, ekran okuyucu oradan ulaşır.
+              excludeFromSemantics: true,
               // Sağ tık HER platformda: fareli tablet (Android) ve web de
               // masaüstü gibi bağlam menüsü alır. Dokunmatik ekran ikincil
               // dokunuş üretmediği için telefonda davranış değişmez.
@@ -875,9 +881,9 @@ class NoteCard extends ConsumerWidget {
                         _showContextMenu(context, ref, details.globalPosition),
               child: Stack(
                 children: [
-                  card,
+                  ExcludeSemantics(child: card),
                   // Üç nokta hızlı işlem düğmesi (madde 5): kartın SAĞ ÜST KÖŞESİnde
-                  // durur — ikon köşeye hizalı, dokunma alanı 36dp. Seçim modunda
+                  // durur — ikon köşeye hizalı, dokunma alanı 48dp (F15.4). Seçim modunda
                   // gizlenir; yerine tik rozeti gelir. Katmandan bağımsız olduğu için
                   // başlık satırının yerleşimini değiştirmez (masonry sütun dengesi
                   // seçim sırasında sabit kalır).
@@ -890,14 +896,24 @@ class NoteCard extends ConsumerWidget {
                     PositionedDirectional(
                       top: 2,
                       end: 2,
-                      child: Material(
+                      // Ekran okuyucuda kendi adıyla AYRI düğüm (F15.2);
+                      // dokunma alanı 48 dp (F15.4) — simge köşede aynı
+                      // yerde kalır, alan yalnız içeri doğru büyür.
+                      child: Semantics(
+                        container: true,
+                        button: true,
+                        label: context.l10n.noteMenu,
+                        excludeSemantics: true,
+                        onTap: () => showNoteActionsSheet(context, ref, note),
+                        child: Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(18),
+                          key: const ValueKey('note-card-menu'),
+                          borderRadius: BorderRadius.circular(24),
                           onTap: () => showNoteActionsSheet(context, ref, note),
                           child: SizedBox(
-                            width: 36,
-                            height: 36,
+                            width: kMinInteractiveDimension,
+                            height: kMinInteractiveDimension,
                             child: Align(
                               alignment: AlignmentDirectional.topEnd,
                               child: Padding(
@@ -928,6 +944,7 @@ class NoteCard extends ConsumerWidget {
                             ),
                           ),
                         ),
+                      ),
                       ),
                     ),
                   // Seçim çerçevesi: yerleşimi değiştirmeyen boya katmanı
@@ -1001,7 +1018,7 @@ class _FolderBadge extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 11.5,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: scheme.onSecondaryContainer,
               ),
@@ -1063,7 +1080,7 @@ class _SensitiveHidden extends StatelessWidget {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               padding: const EdgeInsets.symmetric(horizontal: 6),
               textStyle: const TextStyle(
-                fontSize: 11.5,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1659,7 +1676,7 @@ class NoteListRow extends ConsumerWidget {
                     Text(
                       formatNoteDate(note.updatedAt!),
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: scheme.onSurfaceVariant,
                       ),

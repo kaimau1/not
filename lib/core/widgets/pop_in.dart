@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
 
+import '../a11y/motion.dart';
+
 /// Yeni beliren bir parçanın (araç paneli, ek döşemesi, levha içeriği)
 /// yumuşak GİRİŞİ: hafif büyüyüp yukarı süzülerek belirir (kullanıcı isteği
 /// 2026-10-17: "tüm aşamalarda akıcılık ve geçiş animasyonları"). Eskiden bu
@@ -38,7 +40,7 @@ class PopIn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!animate || (MediaQuery.maybeDisableAnimationsOf(context) ?? false)) {
+    if (!animate || !motionOf(context)) {
       return child;
     }
     return TweenAnimationBuilder<double>(

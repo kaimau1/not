@@ -370,7 +370,7 @@ Widget _modelPickerTile({
                     Text(
                       label,
                       style: TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 12,
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
@@ -515,7 +515,7 @@ class _ModelPickerSheetState extends ConsumerState<_ModelPickerSheet> {
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 10.5,
+          fontSize: 12,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.5,
           color: scheme.onSurfaceVariant,
@@ -701,7 +701,7 @@ class _BriefingEditor extends ConsumerWidget {
           Wrap(
             spacing: 8,
             children: [
-              ActionChip(
+              actionChip(ActionChip(
                 avatar: const Icon(Icons.schedule, size: 16),
                 label: Text(time),
                 onPressed: () async {
@@ -718,13 +718,13 @@ class _BriefingEditor extends ConsumerWidget {
                         .update(minutes: picked.hour * 60 + picked.minute);
                   }
                 },
-              ),
+              )),
               // Ayar ile ekran birbirine bağlansın: brifing buradan da açılır.
-              ActionChip(
+              actionChip(ActionChip(
                 avatar: const Icon(Icons.wb_sunny_outlined, size: 16),
                 label: Text(context.l10n.openBriefing),
                 onPressed: () => context.push('/briefing'),
-              ),
+              )),
             ],
           ),
       ],

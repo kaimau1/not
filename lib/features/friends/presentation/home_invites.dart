@@ -92,7 +92,7 @@ class _InviteCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 12,
                       color: scheme.onTertiaryContainer.withValues(alpha: 0.8),
                     ),
                   ),

@@ -530,7 +530,7 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 10.5,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.5,
                           color: _doorColor(scheme, section.group),

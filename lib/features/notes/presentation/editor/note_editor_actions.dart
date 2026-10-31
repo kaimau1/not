@@ -84,14 +84,16 @@ extension _EditorActions on _NoteEditorScreenState {
                     runSpacing: 4,
                     children: [
                       for (final t in existing)
-                        ActionChip(
-                          label: Text('#$t'),
-                          onPressed: () {
-                            // Çipe dokununca doğrudan eklenir (metin kutusuna
-                            // yazmaya gerek yok), diyalog kapanır.
-                            Navigator.pop(dialogContext);
-                            _applyTag(t);
-                          },
+                        actionChip(
+                          ActionChip(
+                            label: Text('#$t'),
+                            onPressed: () {
+                              // Çipe dokununca doğrudan eklenir (metin kutusuna
+                              // yazmaya gerek yok), diyalog kapanır.
+                              Navigator.pop(dialogContext);
+                              _applyTag(t);
+                            },
+                          ),
                         ),
                     ],
                   ),

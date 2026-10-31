@@ -204,7 +204,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
       child: Text(
         l10n.aiPointsRenew,
         textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 11.5, color: scheme.onSurfaceVariant),
+        style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
       ),
     );
 
@@ -493,7 +493,7 @@ class _PointsPill extends StatelessWidget {
                     Text(
                       l10n.aiPointsToday,
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
@@ -612,7 +612,7 @@ class _HistoryCard extends StatelessWidget {
                   Text(
                     _when(entry.at),
                     style: TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 12,
                       color: scheme.onSurfaceVariant,
                     ),
                   ),
@@ -922,7 +922,7 @@ class _SectionLabel extends StatelessWidget {
         Text(
           text.toUpperCase(),
           style: TextStyle(
-            fontSize: 11.5,
+            fontSize: 12,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
             color: scheme.primary,

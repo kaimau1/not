@@ -1076,7 +1076,7 @@ class _AiRow extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 11.5,
+                          fontSize: 12,
                           height: 1.35,
                           color: scheme.onSurfaceVariant,
                         ),
@@ -1144,7 +1144,7 @@ class _AiTileGrid extends StatelessWidget {
                   Text(
                     info,
                     style: TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 12,
                       height: 1.35,
                       color: scheme.onSurfaceVariant,
                     ),

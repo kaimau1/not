@@ -768,9 +768,12 @@ class _BubblePinState extends State<_BubblePin>
       bubble.title.trim(),
       bubble.text.trim(),
     ].where((t) => t.isNotEmpty).join('. ');
+    // F15.2: sayfa numarası + İLK satır — uzun balonun tamamı her geçişte
+    // okunmasın; tamamı dokununca açılan okuma kartında.
+    final first = text.split('\n').first.trim();
     return text.isEmpty
-        ? context.l10n.bubbleSemanticsEmpty
-        : context.l10n.bubbleSemantics(text);
+        ? context.l10n.bubbleSemanticEmpty(bubble.page)
+        : context.l10n.bubbleSemantic(bubble.page, first);
   }
 
   /// Konuşma balonu biçimli tutamaç (bkz. [_pinPlacement]).

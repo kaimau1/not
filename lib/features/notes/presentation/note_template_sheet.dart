@@ -12,6 +12,7 @@ import '../domain/note_type.dart';
 import 'template_editor_screen.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
+import '../../../core/a11y/chip_roles.dart';
 
 /// **ŞABLON GALERİSİ + ÖNİZLEME/DÜZENLEME** (bkz. [NoteTemplate]).
 ///
@@ -400,13 +401,13 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
     IconData? icon,
   }) => Padding(
     padding: const EdgeInsets.only(right: 6),
-    child: ChoiceChip(
+    child: radioChip(ChoiceChip(
       label: Text(label),
       avatar: icon == null ? null : Icon(icon, size: 16),
       selected: selected,
       showCheckmark: false,
       onSelected: (_) => onTap(),
-    ),
+    )),
   );
 
   Widget _grid(BuildContext context, List<_Pick> picks) => LayoutBuilder(

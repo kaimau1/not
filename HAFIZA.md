@@ -720,6 +720,28 @@ eskisini arşive taşıma.
   `showAppMessage(context, metin)`; eylemliyse `action:` (geri sayımlı).
   Elle `SnackBar(content: Text(...))` kurma.
 
+## Faz 15 kararları (2026-10-31)
+- **Sistem yazı boyutu (F15.1 — öneri uygulandı, varsayılan mevcut
+  davranış):** Görünüm → "Sistem yazı boyutunu izle"
+  (`follow_system_text_scale`, varsayılan KAPALI = 2026-08-07 "sabit yazı"
+  kararı aynen). Açıkken `fixedTypography` kademe × sistem ölçeği (en çok
+  2×) ve sistemin kalın metni. Yeni sıkı satır yazınca 1.6×'te dene
+  (`accessibility_test`).
+- **Erişilebilirlik yardımcıları `lib/core/a11y/`:** `color_names.dart`
+  (renk dairesi = ad; yeni renk seçici buradan alır), `chip_roles.dart`
+  (`radioChip`/`actionChip` — yeni tekli seçim/eylem çipini sar; aç/kapa
+  çipi sarılmaz), `min_tap_target.dart` (`MinTapTarget`: yer kaplamadan 48 dp
+  dokunma + semantik sınır; ATA kutunun dışına taşan pay yakalanmaz),
+  `motion.dart` (`motionOf` — yeni animasyon hareket kapalıyken anında/solma).
+- **Kart semantiği:** kart TEK düğüm (içerik `ExcludeSemantics`, dokunuş
+  kart düğümünde), ⋮ ayrı "Not menüsü". Karta yeni dokunulur parça
+  eklenirse ekran okuyucuya ayrıca açılmaz — bilinçli. TUZAK:
+  `excludeSemantics: true` içteki InkWell'in EYLEMİNİ de siler → `onTap`'i
+  Semantics'e ver (Süz düğmesi TalkBack'te açılmıyordu).
+- **Kontrast:** `onSurfaceVariant` her temada ≥ 6:1; düşüren SAYDAMLIK.
+  Okunan metne < 0,8 alfa verme. İşaretli madde solması `_kCheckedDim` 0,8.
+- **Küçük yazı:** okunan metin ≥ 12; yalnız sayaç/rozet/sayfa no küçük.
+
 ## Faz 14 kararları (2026-10-31)
 - **Terimler `TERIMLER.md`'de** (Yapay zekâ · madde · sen · Balonlu/Klasik ·
   Dikte / AI sesli not / Ses kaydı / Sesli dinle · Kopyala / Çoğalt /

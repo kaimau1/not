@@ -76,6 +76,8 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/press_scale.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
+import '../../../core/a11y/chip_roles.dart';
+import '../../../core/a11y/min_tap_target.dart';
 
 part 'settings_sections/settings_area.dart';
 part 'settings_sections/settings_account.dart';
@@ -301,7 +303,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords:
                 '${l10n.appFontInfo} font yazi tipi boyut '
                 '${l10n.fontSizeSmall} ${l10n.fontSizeMedium} '
-                '${l10n.fontSizeLarge} ${l10n.fontSizeXLarge}',
+                '${l10n.fontSizeLarge} ${l10n.fontSizeXLarge} '
+                '${l10n.followSystemTextScale} kalin metin erisilebilirlik',
           ),
           _SettingRow(
             const _LanguageSelector(),
@@ -806,22 +809,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onPressed: _aiBusy ? null : _runAiSearch,
                   child: Text(l10n.settingsAiSearchGo),
                 ),
-              IconButton(
-                key: const ValueKey('settings-ai-search'),
-                tooltip: l10n.settingsAiSearch,
-                isSelected: _aiMode,
-                visualDensity: VisualDensity.compact,
-                style: IconButton.styleFrom(
-                  backgroundColor: _aiMode ? scheme.primary : null,
-                  foregroundColor: _aiMode
-                      ? scheme.onPrimary
-                      : scheme.onSurfaceVariant,
+              // compact = 40 dp görünüm; dokunma alanı 48 dp (F15.4).
+              MinTapTarget(
+                child: IconButton(
+                  key: const ValueKey('settings-ai-search'),
+                  tooltip: l10n.settingsAiSearch,
+                  isSelected: _aiMode,
+                  visualDensity: VisualDensity.compact,
+                  style: IconButton.styleFrom(
+                    backgroundColor: _aiMode ? scheme.primary : null,
+                    foregroundColor: _aiMode
+                        ? scheme.onPrimary
+                        : scheme.onSurfaceVariant,
+                  ),
+                  icon: const Icon(Icons.auto_awesome, size: 18),
+                  onPressed: () => setState(() {
+                    _aiMode = !_aiMode;
+                    _aiKeys = null;
+                  }),
                 ),
-                icon: const Icon(Icons.auto_awesome, size: 18),
-                onPressed: () => setState(() {
-                  _aiMode = !_aiMode;
-                  _aiKeys = null;
-                }),
               ),
             ],
           ),

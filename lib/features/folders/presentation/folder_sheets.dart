@@ -16,6 +16,7 @@ import 'folder_chat_screen.dart';
 import 'folder_tile.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../auth/presentation/account_required.dart';
+import '../../../core/a11y/chip_roles.dart';
 
 /// Klasör oluşturma/düzenleme diyaloğu: ad alanı + simge seçici.
 /// [existing] verilirse düzenleme modunda açılır. Oluşturulan/düzenlenen
@@ -526,14 +527,14 @@ class _FriendShareRow extends StatelessWidget {
               spacing: 6,
               children: [
                 for (final option in FolderRole.values)
-                  ChoiceChip(
+                  radioChip(ChoiceChip(
                     label: Text(folderRoleLabel(l10n, option)),
                     selected: role == option,
                     onSelected: repo == null
                         ? null
                         : (_) =>
                               repo!.setFolderRole(folder, friend.uid, option),
-                  ),
+                  )),
               ],
             ),
           ),
@@ -749,11 +750,11 @@ class FolderSortChoice extends StatelessWidget {
       runSpacing: 4,
       children: [
         for (final s in FolderSort.values)
-          ChoiceChip(
+          radioChip(ChoiceChip(
             label: Text(label(s)),
             selected: s == value,
             onSelected: (_) => onChanged(s),
-          ),
+          )),
       ],
     );
   }

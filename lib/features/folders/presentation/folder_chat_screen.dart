@@ -517,7 +517,7 @@ class _MessageBubble extends ConsumerWidget {
                 Text(
                   message.senderName,
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: scheme.primary,
                   ),
@@ -536,7 +536,7 @@ class _MessageBubble extends ConsumerWidget {
                       message.createdAt!,
                     ).format(context),
                     style: TextStyle(
-                      fontSize: 10.5,
+                      fontSize: 12,
                       color: scheme.onSurfaceVariant,
                     ),
                   ),

@@ -290,7 +290,7 @@ class _SectionLabel extends StatelessWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
-        fontSize: 11.5,
+        fontSize: 12,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.5,
         color: Theme.of(context).colorScheme.primary,
@@ -393,7 +393,7 @@ class _Cell extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                   height: 1.15,
                 ),
@@ -405,7 +405,7 @@ class _Cell extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 12,
                     color: scheme.onSurfaceVariant,
                   ),
                 ),

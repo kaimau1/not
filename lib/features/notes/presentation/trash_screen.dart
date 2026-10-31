@@ -711,7 +711,7 @@ class _MetaChip extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 11.5, color: muted),
+              style: TextStyle(fontSize: 12, color: muted),
             ),
           ),
         ],

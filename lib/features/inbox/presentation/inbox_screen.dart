@@ -42,7 +42,7 @@ class InboxScreen extends ConsumerWidget {
               Text(
                 l10n.inboxCountLabel(async.value!.length),
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 12,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -227,7 +227,7 @@ class InboxCard extends ConsumerWidget {
                       : Text(
                           formatNoteDate(note.sentAt!),
                           style: TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 12,
                             color: scheme.onSurfaceVariant,
                           ),
                         ),
