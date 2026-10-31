@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -76,7 +77,8 @@ class NoteShare {
   }) async {
     if (attachments == null) return 0;
     final files = <XFile>[];
-    final dir = await getTemporaryDirectory();
+    // Web'de geçici klasör yok: damgalı kopya bellekten paylaşılır (F10.1).
+    final dir = kIsWeb ? null : await getTemporaryDirectory();
     final titleBase = safePdfBaseName(note.displayTitle);
     // Aynı notta birden çok damgalı belge varsa adlar çakışmasın.
     var stamped = 0;
@@ -95,7 +97,12 @@ class NoteShare {
       final fallback = p.basenameWithoutExtension(attachment.fileName);
       final base = titleBase ?? fallback;
       final suffixed = stamped > 1 ? '$base-$stamped' : base;
-      final file = File(p.join(dir.path, '$suffixed$fileSuffix.pdf'));
+      final name = '$suffixed$fileSuffix.pdf';
+      if (dir == null) {
+        files.add(XFile.fromData(out, name: name, mimeType: 'application/pdf'));
+        continue;
+      }
+      final file = File(p.join(dir.path, name));
       await file.writeAsBytes(out, flush: true);
       files.add(XFile(file.path, mimeType: 'application/pdf'));
     }

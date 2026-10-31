@@ -24,6 +24,8 @@ import '../domain/note_type.dart';
 import 'collaborators_sheet.dart';
 import 'pdf_export_screen.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/friendly_error.dart';
+import '../../auth/presentation/account_required.dart';
 
 /// Notun PAYLAŞ levhası.
 ///
@@ -79,7 +81,8 @@ Future<void> showNoteShareSheet(
     builder: (_) => _ShareSheet(
       note: note,
       initial: initial,
-      canCollaborate: ownerId == null && !ref.read(isAnonymousProvider),
+      canCollaborate: ownerId == null,
+      guest: ref.read(isAnonymousProvider),
     ),
   );
   if (result == null || !context.mounted) return;
@@ -117,11 +120,15 @@ class _ShareSheet extends StatefulWidget {
   const _ShareSheet({
     required this.note,
     required this.canCollaborate,
+    this.guest = false,
     this.initial = const ShareTextOptions(),
   });
 
   final Note note;
   final bool canCollaborate;
+
+  /// Misafir: hesap isteyen girişler kilit rozetli (dokununca levha, F10.5).
+  final bool guest;
   final ShareTextOptions initial;
 
   @override
@@ -238,6 +245,7 @@ class _ShareSheetState extends State<_ShareSheet> {
               icon: Icons.group_add_outlined,
               title: l10n.shareCollaborateShort,
               subtitle: l10n.shareTogetherInfo,
+              locked: widget.guest,
             ),
             if (widget.note.folderId != null)
               _tile(
@@ -246,6 +254,7 @@ class _ShareSheetState extends State<_ShareSheet> {
                 icon: Icons.folder_shared_outlined,
                 title: l10n.shareFolderTogether,
                 subtitle: l10n.folderShareInfo,
+                locked: widget.guest,
               ),
           ],
           section(l10n.shareCopySection),
@@ -255,6 +264,7 @@ class _ShareSheetState extends State<_ShareSheet> {
             icon: Icons.send_outlined,
             title: l10n.shareToFriendShort,
             subtitle: l10n.shareCopyInfo,
+            locked: widget.guest,
           ),
           // TEK DOKUNUŞLUK IZGARA: dışarıya kopya (metin, PDF, görsel…).
           Padding(
@@ -656,7 +666,7 @@ Future<void> runNoteShare(
           shareSubject: subject,
         );
       } catch (e) {
-        snack(l10n.genericError('$e'));
+        snack(l10n.genericError(friendlyError(l10n, e)));
       }
     case 'pdf_quick':
     case 'png':
@@ -697,7 +707,7 @@ Future<void> runNoteShare(
           ShareParams(files: [file], subject: subject),
         );
       } catch (e) {
-        snack(l10n.genericError('$e'));
+        snack(l10n.genericError(friendlyError(l10n, e)));
       }
     case 'files':
       snack(l10n.shareQuickPreparing);
@@ -714,7 +724,7 @@ Future<void> runNoteShare(
           ShareParams(files: files, subject: subject),
         );
       } catch (e) {
-        snack(l10n.genericError('$e'));
+        snack(l10n.genericError(friendlyError(l10n, e)));
       }
     case 'pdf':
       if (countStampablePdfs(note) == 0) {
@@ -737,7 +747,7 @@ Future<void> runNoteShare(
         );
         if (count == 0) snack(l10n.sharePdfWithBubblesNone);
       } catch (e) {
-        snack(l10n.genericError('$e'));
+        snack(l10n.genericError(friendlyError(l10n, e)));
       }
   }
 }
@@ -748,6 +758,7 @@ Widget _tile(
   required IconData icon,
   required String title,
   required String subtitle,
+  bool locked = false,
 }) {
   final scheme = Theme.of(context).colorScheme;
   return ListTile(
@@ -755,6 +766,7 @@ Widget _tile(
     leading: Icon(icon, color: scheme.primary),
     title: Text(title),
     subtitle: Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+    trailing: locked ? const AccountLockBadge() : null,
     onTap: onTap,
   );
 }

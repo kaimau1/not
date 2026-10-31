@@ -35,6 +35,15 @@ final aiUnlimitedProvider = Provider<bool>((ref) {
   return hasKey || premium;
 });
 
+/// Misafir (anonim) hesapta dahili AI KAPALI ve kendi anahtarı da yok: AI
+/// ekranları puan yerine "Google ile gir ya da kendi anahtarını ekle" kartı
+/// gösterir, araçlar soluk (F10.5). Eskiden "30/30" puan görünüyor, her araç
+/// dokununca hata veriyordu ([AiGate.consume] misafiri reddediyor).
+final aiGuestLockedProvider = Provider<bool>((ref) {
+  if (!ref.watch(isAnonymousProvider)) return false;
+  return (ref.watch(activeApiKeyProvider).value ?? '').isEmpty;
+});
+
 /// Kota tüketildikçe artan sayaç; Ayarlar'daki "kalan hak" satırını tazeler.
 final aiQuotaVersionProvider = NotifierProvider<AiQuotaVersionNotifier, int>(
   AiQuotaVersionNotifier.new,

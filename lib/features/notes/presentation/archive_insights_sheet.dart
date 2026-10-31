@@ -9,6 +9,7 @@ import '../../ai/data/gemini_service.dart';
 import '../../folders/data/folders_repository.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
+import '../../../core/friendly_error.dart';
 import '../domain/trash_analysis.dart' show trashDigest;
 import 'note_card.dart' show formatNoteDate, openNoteRoute;
 
@@ -128,7 +129,7 @@ class _ArchiveInsightsSheetState extends ConsumerState<_ArchiveInsightsSheet> {
         );
       }
     } catch (e) {
-      if (mounted) setState(() => _aiError = l10n.aiError(e.toString()));
+      if (mounted) setState(() => _aiError = l10n.aiError(friendlyError(l10n, e)));
     } finally {
       if (mounted) setState(() => _aiLoading = false);
     }

@@ -858,7 +858,7 @@
   "recommendedModel": "Önerilen",
   "freeTierBadge": "Ücretsiz kademe var",
   "continueWithoutAccount": "Hesapsız devam et",
-  "localAccountInfo": "Notların yalnız bu cihazda kalır: başka cihazdan açılamaz, uygulamayı silersen geri getirilemez ve dahili yapay zeka kapalı olur. İstediğin an Google hesabı bağlayabilirsin — notların olduğu gibi kalır.",
+  "localAccountInfo": "Notların yalnız bu cihazda kalır: başka cihazdan açılamaz, uygulamayı silersen geri getirilemez. Dahili yapay zekâ, kişiler ve paylaşım Google hesabı ister; yapay zekâyı kendi API anahtarınla kullanabilirsin. İstediğin an Google hesabı bağlayabilirsin — notların olduğu gibi kalır.",
   "localAccountBadge": "Yerel hesap",
   "linkGoogleAccount": "Google hesabı bağla",
   "accountLinked": "Google hesabın bağlandı. Notların artık yedekleniyor.",
@@ -951,11 +951,29 @@
   "paletteLightness": "Açıklık",
   "itemMoveToPage": "Başka sayfaya taşı",
   "itemMovedToPage": "Madde {page}. sayfaya taşındı",
-  "@itemMovedToPage": {"placeholders": {"page": {"type": "int"}}},
+  "@itemMovedToPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
   "screenAiSearchHint": "Anlamca ara…",
   "archiveInsights": "Arşivimde neler var?",
   "archiveInsightsStats": "{count} not · {files} ek · {stale} not bir yıldır açılmadı",
-  "@archiveInsightsStats": {"placeholders": {"count": {"type": "int"}, "files": {"type": "int"}, "stale": {"type": "int"}}},
+  "@archiveInsightsStats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "files": {
+        "type": "int"
+      },
+      "stale": {
+        "type": "int"
+      }
+    }
+  },
   "archiveByFolder": "Klasörlere göre",
   "archiveNoFolder": "Klasörsüz",
   "archiveStale": "Bir yıldır dokunulmamış",
@@ -967,7 +985,13 @@
   "lineSpacingWider": "Çok geniş",
   "trashReminderTitle": "Çöpte geri yüklemen gereken not olabilir",
   "trashReminderBody": "{count, plural, =1{Bir not yarın kalıcı silinecek} other{{count} not yarın kalıcı silinecek}} — içinde iş ya da önemli bilgi var gibi. Göz at.",
-  "@trashReminderBody": {"placeholders": {"count": {"type": "int"}}},
+  "@trashReminderBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "groupByFolder": "Klasöre göre grupla",
   "fontSizeSmall": "Küçük",
   "fontSizeMedium": "Orta",
@@ -2508,7 +2532,7 @@
   },
   "bubbleSemanticsEmpty": "Boş not balonu",
   "guestReminderTitle": "Notların yedeklenmiyor",
-  "guestReminderBody": "Hesapsız kullanıyorsun: notların yalnız bu cihazda. Uygulama silinir ya da telefon değişirse geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.",
+  "guestReminderBody": "Hesapsız kullanıyorsun: notların yalnız bu cihazda, dahili yapay zekâ ve paylaşım kapalı. Uygulama silinir ya da telefon değişirse notlar geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.",
   "guestReminderLater": "Sonra",
   "driveWebConnectTitle": "Bu ek Google Drive’ında",
   "driveWebConnectBody": "Telefonundan eklenen dosyalar Drive’da saklanıyor. Tarayıcıda görmek için Google hesabınla Drive’a erişim izni ver (bu oturum boyunca geçerli).",
@@ -2833,5 +2857,23 @@
   "embedImportToNote": "Nota aktar",
   "embedImported": "Ek notun içine alındı",
   "itemGesturesSetting": "Madde jestleri",
-  "itemGesturesSettingInfo": "Maddenin üstüne parmakla ya da kalemle çiz: üstünü çiz / ✓ işaretler, karalamak siler, daire yazımı düzeltir"
+  "itemGesturesSettingInfo": "Maddenin üstüne parmakla ya da kalemle çiz: üstünü çiz / ✓ işaretler, karalamak siler, daire yazımı düzeltir",
+  "pdfEditWorking": "PDF işleniyor…",
+  "noteMenu": "Not menüsü",
+  "moreActions": "Diğer işlemler",
+  "errorOffline": "İnternet bağlantısı yok ya da zayıf. Bağlanınca yeniden dene.",
+  "errorTimeout": "İşlem çok uzun sürdü. Biraz sonra yeniden dene.",
+  "errorQuota": "Kullanım sınırına ulaşıldı. Biraz sonra yeniden dene.",
+  "errorPermission": "Bunun için izin yok. Hesabını ya da uygulama izinlerini kontrol et.",
+  "errorTooLarge": "Dosya çok büyük.",
+  "errorUnsupported": "Bu işlem burada desteklenmiyor.",
+  "errorUnknown": "Beklenmeyen bir sorun oldu. Ayrıntı hata günlüğünde.",
+  "copyErrorDetail": "Ayrıntıyı kopyala",
+  "accountRequiredTitle": "Google hesabı gerekir",
+  "accountRequiredBody": "Kişiler, ortak çalışma ve kopya gönderme e-posta adresiyle çalışır; hesapsız kullanımda seni kimse bulamaz. Google hesabını bağla — notların olduğu gibi kalır.",
+  "accountRequiredBadge": "Google hesabı gerekir",
+  "guestAiTitle": "Yapay zekâ için Google hesabı ya da kendi anahtarın",
+  "guestAiBody": "Dahili yapay zekâ Google hesabıyla açılır. Hesapsız da Ayarlar'dan kendi Gemini API anahtarını ekleyerek bütün yapay zekâ araçlarını kullanabilirsin.",
+  "guestAiAddKey": "Kendi anahtarımı ekle",
+  "deletingAccount": "Hesabın ve verilerin siliniyor…"
 }

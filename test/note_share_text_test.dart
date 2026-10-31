@@ -63,4 +63,38 @@ void main() {
   test('boş not boş metin verir', () {
     expect(noteShareText(const Note(id: 'e', type: NoteType.text)), isEmpty);
   });
+
+  test('çok sayfalı not: bütün sayfalar "Sayfa N" altında (F10.2)', () {
+    // Etkin sayfa ikinci: içeriği gövdede, listedeki karşılığı boş.
+    const paged = Note(
+      id: 'p',
+      type: NoteType.text,
+      title: 'Ders',
+      body: 'İkinci sayfa',
+      activePage: 'b',
+      textPages: [
+        NoteTextPage(
+          id: '',
+          body: 'Birinci sayfa',
+          items: [NoteItem(id: '1', text: 'Madde')],
+        ),
+        NoteTextPage(id: 'b'),
+        NoteTextPage(id: 'c'),
+      ],
+    );
+    expect(
+      noteShareText(paged, pageLabel: (n) => 'Sayfa $n'),
+      'Ders\n\nSayfa 1\nBirinci sayfa\n\n☐ Madde\n\nSayfa 2\nİkinci sayfa',
+    );
+  });
+
+  test('tek sayfalı notta sayfa başlığı yok', () {
+    const one = Note(
+      id: 'q',
+      type: NoteType.text,
+      body: 'Yalnız',
+      textPages: [NoteTextPage(id: '')],
+    );
+    expect(noteShareText(one, pageLabel: (n) => 'Sayfa $n'), 'Yalnız');
+  });
 }

@@ -8,6 +8,7 @@ import '../data/attachment_repository.dart';
 import '../data/note_shares_repository.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
+import '../../../core/friendly_error.dart';
 
 /// Bu cihazda "yalnız bu cihazda" özelliği var mı (web'de yok — bkz.
 /// `LocalNotesStore.forUid`).
@@ -79,7 +80,7 @@ Future<bool?> toggleNoteLocalOnly(
     snack(l10n.localOnlyDownloadFailed);
     return null;
   } catch (e) {
-    snack(l10n.genericError('$e'));
+    snack(l10n.genericError(friendlyError(l10n, e)));
     return null;
   }
   snack(nowLocal ? l10n.localOnlyOffDone : l10n.localOnlyOnDone);

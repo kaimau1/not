@@ -415,7 +415,7 @@ extension _EditorAppearance on _NoteEditorScreenState {
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
     }
   }
 

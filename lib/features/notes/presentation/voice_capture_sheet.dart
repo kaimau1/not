@@ -18,6 +18,7 @@ import '../data/device_speech.dart';
 import '../data/voice_listen_session.dart';
 import 'listening_visuals.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/friendly_error.dart';
 
 /// Sesli yakalama levhası — ana ekran ve not editörünün ORTAK bileşeni.
 ///
@@ -304,7 +305,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         setState(() => _elapsed += const Duration(seconds: 1));
       });
     } catch (e) {
-      _fail(e.toString());
+      _fail(mounted ? friendlyError(context.l10n, e) : '$e');
     }
   }
 

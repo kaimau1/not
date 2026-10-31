@@ -6,7 +6,7 @@ Notlar'ın bütün özellikleri, bölüm bölüm. Bir bölüme dokunarak aç; yu
 Notların hesabına bağlıdır ve telefon, tablet, bilgisayar ve web arasında **anında senkronlanır**. İnternet yokken de her şey çalışır; bağlantı gelince kendiliğinden eşitlenir.
 - Google hesabınla gir; giriş yapmadan da hemen kullanmaya başlayabilirsin.
 - **Ekler (görsel, PDF, sunum, ses) Google Drive'ında saklanır:** Google hesabıyla girdiysen Ayarlar → Senkron → **Ekleri Google Drive'ında sakla → Bağla** (ya da ana ekrandaki "Drive bağlantısını bekliyor" şeridine dokun). Ekler kendi Drive kotanda, uygulamaya özel gizli bir klasörde durur ve öbür cihazlarına iner. Başkasıyla paylaştığın notların ekleri herkes görebilsin diye uygulama bulutuna gider.
-- **Misafir hesapta yalnız yazılar senkronlanır;** ekler o cihazda kalır.
+- **Misafir hesapta yalnız yazılar senkronlanır;** ekler o cihazda kalır. Dahili yapay zekâ, Kişiler ve paylaşım Google hesabı ister (kilitli görünür, dokununca neden yazar); yapay zekâyı Ayarlar'dan kendi Gemini anahtarını ekleyerek kullanabilirsin.
 - Bir not **yalnız bu cihazda** kalsın istiyorsan: not menüsü (⋮) → **Senkronu kapat**. O not ve ekleri buluta hiç gitmez.
 - Videolar her zaman yalnız çekildiği cihazda saklanır (buluta yüklenmez); YouTube videoları ise bağlantı olarak her cihazda oynar.
 - Yanlış bir şey mi yaptın? Not ekranındaki **Geri al** (↶) ve **Yinele** her değişikliği geri getirir.

@@ -6,7 +6,7 @@ Every feature of Notes, section by section. Tap a section to open it; use the se
 Your notes belong to your account and **sync instantly** between phone, tablet, computer and the web. Everything works offline too; changes sync by themselves when you are back online.
 - Sign in with your Google account, or start right away without signing in.
 - **Attachments (images, PDFs, slides, audio) live in your Google Drive:** if you signed in with Google, go to Settings → Sync → **Keep attachments in your Google Drive → Connect** (or tap the "waiting for Google Drive" strip on the home screen). Attachments use your own Drive storage, sit in a hidden app folder and download to your other devices. Attachments of notes you share with others go to the app's cloud so everyone can see them.
-- **Guest accounts sync text only;** attachments stay on that device.
+- **Guest accounts sync text only;** attachments stay on that device. Built-in AI, contacts and sharing need a Google account (they show a lock and explain why when tapped); you can still use AI by adding your own Gemini key in Settings.
 - Want a note to stay **on this device only**? Note menu (⋮) → **Stop syncing**. That note and its attachments never go to the cloud.
 - Videos are always stored only on the device that recorded them (never uploaded); YouTube videos are links, so they play on every device.
 - Made a mistake? **Undo** (↶) and **Redo** on the note screen bring back every change.

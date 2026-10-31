@@ -15,6 +15,7 @@ import '../domain/note_folder.dart';
 import 'folder_chat_screen.dart';
 import 'folder_tile.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../auth/presentation/account_required.dart';
 
 /// Klasör oluşturma/düzenleme diyaloğu: ad alanı + simge seçici.
 /// [existing] verilirse düzenleme modunda açılır. Oluşturulan/düzenlenen
@@ -219,15 +220,18 @@ Future<void> showFolderActionsSheet(
           ),
           // **PAYLAŞ** (kullanıcı isteği 2026-08-18: "ortak notlar klasörü
           // kişiler bağlanır notları ortak görür"). Yerel (anonim) hesapta
-          // e-posta olmadığından özellik hiç görünmez.
-          if (!ref.read(isAnonymousProvider))
-            ListTile(
+          // e-posta olmadığından özellik çalışmaz: kilit rozetiyle görünür,
+          // dokununca hesap levhası (F10.5).
+          ListTile(
               leading: Icon(
                 folder.isShared ? Icons.people : Icons.person_add_alt_outlined,
               ),
               title: Text(l10n.folderShare),
               subtitle: folder.isShared
                   ? Text(l10n.folderShareCount(folder.sharedWith.length))
+                  : null,
+              trailing: ref.read(isAnonymousProvider)
+                  ? const AccountLockBadge()
                   : null,
               onTap: () => Navigator.pop(sheetContext, 'share'),
             ),
@@ -377,6 +381,10 @@ Future<void> showFolderShareSheet(
   WidgetRef ref,
   NoteFolder folder,
 ) async {
+  if (ref.read(isAnonymousProvider)) {
+    await showAccountRequiredSheet(context, ref);
+    return;
+  }
   await showAppSheet<void>(
     context: context,
     showDragHandle: true,

@@ -18,6 +18,7 @@ import '../../notes/presentation/editor/drawing_screen.dart';
 import '../../notes/presentation/editor/note_images.dart';
 import '../data/folder_chat_repository.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/friendly_error.dart';
 
 /// **PAYLAŞILAN KLASÖRÜN SOHBETİ** (kullanıcı isteği 2026-08-18: "birde
 /// birbirine mesaj gönderme alanı olabilir").
@@ -82,7 +83,7 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
       _controller.text = text;
       ScaffoldMessenger.of(
         context,
-      ).showMessage(context.l10n.genericError('$e'));
+      ).showMessage(context.l10n.genericError(friendlyError(context.l10n, e)));
     }
   }
 
@@ -202,7 +203,7 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
     } on FolderImageTooLargeException catch (e) {
       if (mounted) _snack(l10n.attachmentTooLarge(e.maxBytes ~/ (1024 * 1024)));
     } catch (e) {
-      if (mounted) _snack(l10n.genericError('$e'));
+      if (mounted) _snack(l10n.genericError(friendlyError(l10n, e)));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -263,7 +264,7 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
                     const Center(child: CircularProgressIndicator()),
                 error: (e, _) => EmptyState(
                   icon: Icons.error_outline,
-                  title: l10n.genericError('$e'),
+                  title: l10n.genericError(friendlyError(l10n, e)),
                 ),
                 data: (messages) => messages.isEmpty
                     ? EmptyState(

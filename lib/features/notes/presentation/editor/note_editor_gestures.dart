@@ -131,7 +131,7 @@ extension _EditorGestures on _NoteEditorScreenState {
       items.replaceItemText(id, line);
       _showSnack(l10n.gestureFixed);
     } catch (e) {
-      if (mounted) _showSnack(l10n.aiError('$e'));
+      if (mounted) _showSnack(l10n.aiError(friendlyError(l10n, e)));
     }
   }
 

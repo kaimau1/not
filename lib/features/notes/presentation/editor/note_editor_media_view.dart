@@ -543,7 +543,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      if (mounted) _showSnack(l10n.genericError('$e'));
+      if (mounted) _showSnack(l10n.genericError(friendlyError(l10n, e)));
     } finally {
       temp?.delete().ignore();
     }
@@ -620,7 +620,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      if (mounted) _showSnack(l10n.genericError('$e'));
+      if (mounted) _showSnack(l10n.genericError(friendlyError(l10n, e)));
     }
   }
 

@@ -26,6 +26,7 @@ import '../drive_ui.dart';
 import '../note_card_media.dart' show CardMediaTile, PdfFirstPageThumb;
 import '../../../../core/widgets/smooth_routes.dart';
 import '../../../../core/widgets/app_sheet.dart';
+import '../../../../core/friendly_error.dart';
 
 /// Görsel olmayan ekleri (PDF, sunum, ses, video) gösteren yatay şerit.
 ///
@@ -336,7 +337,7 @@ class _AudioTileState extends State<_AudioTile> {
       }
     } catch (e) {
       if (mounted) {
-        showAppMessage(context, context.l10n.genericError(e.toString()));
+        showAppMessage(context, context.l10n.genericError(friendlyError(context.l10n, e)));
       }
     }
   }

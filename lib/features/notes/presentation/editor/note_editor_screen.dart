@@ -155,6 +155,7 @@ import 'view_mode_switch.dart';
 import 'page_swipe.dart';
 import '../../../../core/widgets/smooth_routes.dart';
 import '../../../../core/widgets/app_sheet.dart';
+import '../../../../core/friendly_error.dart';
 
 part 'note_editor_actions.dart';
 part 'note_editor_ai.dart';
@@ -4275,7 +4276,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               // ⋮ artık açılır menü değil, iki sütunlu levha açar
               // (bkz. note_menu_sheet.dart — kullanıcı isteği 2026-08-09).
               IconButton(
-                tooltip: l10n.noteMetaMenu,
+                tooltip: l10n.noteMenu,
                 icon: const Icon(Icons.more_vert),
                 onPressed: _openNoteMenu,
               ),

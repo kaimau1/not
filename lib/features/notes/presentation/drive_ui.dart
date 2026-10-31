@@ -10,6 +10,7 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../data/attachment_repository.dart';
 import '../data/drive_store.dart';
 import '../domain/attachment.dart';
+import '../../../core/friendly_error.dart';
 
 /// Google Drive'ı BAĞLAR: onay ekranı açılır, ardından Drive'a gerçekten
 /// ulaşılabildiği sınanır (Cloud projesinde Drive API kapalıysa bağlantı
@@ -48,7 +49,7 @@ Future<bool> connectDrive(BuildContext context, WidgetRef ref) async {
     say(l10n.driveConnectFailed(e.description ?? e.code.name));
     return false;
   } catch (e) {
-    say(l10n.driveConnectFailed('$e'));
+    say(l10n.driveConnectFailed(friendlyError(l10n, e)));
     return false;
   }
 }
@@ -90,7 +91,7 @@ Future<bool> fetchAttachmentNow(
   } catch (e) {
     messenger
       ..hideCurrentSnackBar()
-      ..showMessage(l10n.attachmentFailed('$e'));
+      ..showMessage(l10n.attachmentFailed(friendlyError(l10n, e)));
     return false;
   }
   messenger.hideCurrentSnackBar();
@@ -164,7 +165,7 @@ Future<Attachment?> resolveWebDriveAttachment(
     messenger.hideCurrentSnackBar();
     return attachment.copyWith(downloadUrl: url);
   } catch (e) {
-    say(l10n.attachmentFailed('$e'));
+    say(l10n.attachmentFailed(friendlyError(l10n, e)));
     return null;
   }
 }

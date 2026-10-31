@@ -13,6 +13,7 @@ import '../domain/note_type.dart';
 import 'note_card.dart';
 import 'notes_providers.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/friendly_error.dart';
 
 /// Kullanıcının "ne zaman?" sorusuna en sık verdiği üç cevap. Tarih+saat
 /// seçici İKİ ayrı diyalog demek (önce takvim, sonra saat); "yarın sabah"
@@ -218,7 +219,7 @@ class RemindersScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(
           icon: Icons.error_outline,
-          title: l10n.genericError(e.toString()),
+          title: l10n.genericError(friendlyError(l10n, e)),
         ),
         data: (notes) {
           // Gizli klasör bastırması: hatırlatıcılı gizli-klasör notu burada

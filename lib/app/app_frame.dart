@@ -9,6 +9,7 @@ import '../features/inbox/presentation/shared_hub_screen.dart';
 import '../features/settings/settings_providers.dart';
 import 'app_commands.dart';
 import 'split_shell.dart';
+import '../core/utils/web_ready.dart';
 
 /// Gezinme rayının belirdiği genişlik (Material 3 "orta" pencere sınıfı):
 /// tablet dikey, katlanabilir açık, web penceresi. Altında —
@@ -61,6 +62,8 @@ class AppFrame extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Oturum açık, ilk anlamlı ekran: web açılış katmanı kalkar (F10.6).
+    signalWebReady();
     final size = MediaQuery.sizeOf(context);
     final showRail =
         size.width >= kRailBreakpoint && size.height >= _minRailHeight;

@@ -14,6 +14,7 @@ import '../../domain/note.dart';
 import '../../domain/page_notes.dart';
 import '../viewers/text_recognize_screen.dart';
 import '../../../../core/widgets/app_sheet.dart';
+import '../../../../core/friendly_error.dart';
 
 /// **Not içinde arama** — gövde, maddeler, sayfa notları VE eklerin içi.
 ///
@@ -226,7 +227,7 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _aiAnswer = context.l10n.aiError('$e');
+        _aiAnswer = context.l10n.aiError(friendlyError(context.l10n, e));
         _asking = false;
       });
     }

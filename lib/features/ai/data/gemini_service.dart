@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import '../../../core/constants.dart';
+import '../../../core/friendly_error.dart';
 import '../../../core/utils/markdown.dart';
 import '../../notes/domain/note.dart';
 import '../../settings/settings_providers.dart';
@@ -60,9 +61,10 @@ final allModelsProvider = FutureProvider<List<AiModel>>(
   (ref) => ref.watch(geminiServiceProvider).availableModels(includeAll: true),
 );
 
-class GeminiException implements Exception {
+class GeminiException implements UserFacingException {
   const GeminiException(this.message, {this.isAuthError = false});
 
+  @override
   final String message;
   final bool isAuthError;
 

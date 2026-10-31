@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/web_ready.dart';
 import '../../settings/settings_providers.dart';
 import '../data/auth_repository.dart';
 import 'auth_errors.dart';
@@ -42,6 +43,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    // İLK karede bilinsin: yoksa ilk kare düğmeleri çizip web açılış
+    // katmanını erken kaldırıyordu (F10.6).
+    _autoSigningIn = !(ref.read(sharedPreferencesProvider).getBool(
+          _autoGuestTriedKey,
+        ) ??
+        false);
     _maybeAutoGuestSignIn();
   }
 
@@ -107,6 +114,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // ilk bu ekranı görüyor; dar sütunlu telefon ekranı geniş tarayıcıda
     // boşlukta yüzen küçük bir kutuydu. Geniş ekranda solda uygulamayı
     // anlatan bir vitrin, sağda giriş kartı. Telefonda eski görünüm aynen.
+    // Sessiz giriş sürerken HTML açılışı kalır (tek katman, F10.6); düğmeler
+    // çizilince kalkar. Giriş başarılıysa ilk anlamlı ekran notlardır.
+    if (!_autoSigningIn) signalWebReady();
     final wide = MediaQuery.sizeOf(context).width >= 840;
     if (!wide) {
       return Scaffold(

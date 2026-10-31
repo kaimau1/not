@@ -14,6 +14,8 @@ import '../data/ai_history.dart';
 import 'assistant_confirm.dart';
 import 'chat_controller.dart';
 import 'read_document.dart';
+import '../../../core/friendly_error.dart';
+import '../../auth/presentation/account_required.dart';
 
 /// Tüm yapay zekâ özelliklerinin tek giriş noktası.
 ///
@@ -50,6 +52,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
           text,
           noApiKeyText: l10n.aiNoApiKey,
           errorText: l10n.aiError,
+          describeError: (e) => friendlyError(l10n, e),
           historyLabel: l10n.aiHistoryQuestion,
           confirmDelete: (title) => confirmAssistantDelete(context, title),
         );
@@ -199,6 +202,18 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
       ),
     );
 
+    // Misafir, anahtarsız (F10.5): puan yerine açıklama kartı, AI araçları
+    // soluk. Kopyalar (sondaki kart) AI'sız — açık kalır.
+    final locked = ref.watch(aiGuestLockedProvider);
+    Widget dim(Widget w) => GuestAiDim(locked: locked, child: w);
+    final shownTasks = [
+      for (var i = 0; i < tasks.length; i++)
+        i < tasks.length - 1 ? dim(tasks[i]) : tasks[i],
+    ];
+    final guestCard = [
+      if (locked) ...[const SizedBox(height: 12), const GuestAiCard()],
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.aiHubTitle),
@@ -223,7 +238,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
             24 + MediaQuery.viewPaddingOf(context).bottom,
           );
           final hero = _Hero(
-            metered: metered,
+            metered: metered && !locked,
             remaining: remaining,
             limit: limit,
             onPoints: () => context.push('/premium'),
@@ -234,18 +249,19 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
               padding: padding,
               children: [
                 hero,
+                ...guestCard,
                 const SizedBox(height: 16),
-                voiceCard,
+                dim(voiceCard),
                 const SizedBox(height: 12),
-                chatCard,
+                dim(chatCard),
                 const SizedBox(height: 22),
                 _SectionLabel(l10n.aiToolsSection),
                 const SizedBox(height: 10),
-                _TileGrid(columns: columns, children: tools),
+                dim(_TileGrid(columns: columns, children: tools)),
                 const SizedBox(height: 22),
                 _SectionLabel(l10n.aiOnYourNotes),
                 const SizedBox(height: 10),
-                _TileGrid(columns: 2, children: tasks),
+                _TileGrid(columns: 2, children: shownTasks),
                 ...historySection,
                 footer,
               ],
@@ -260,6 +276,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     hero,
+                    ...guestCard,
                     const SizedBox(height: 20),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,9 +286,9 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              voiceCard,
+                              dim(voiceCard),
                               const SizedBox(height: 12),
-                              chatCard,
+                              dim(chatCard),
                               ...historySection,
                             ],
                           ),
@@ -284,11 +301,11 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
                             children: [
                               _SectionLabel(l10n.aiToolsSection),
                               const SizedBox(height: 10),
-                              _TileGrid(columns: 1, children: tools),
+                              dim(_TileGrid(columns: 1, children: tools)),
                               const SizedBox(height: 22),
                               _SectionLabel(l10n.aiOnYourNotes),
                               const SizedBox(height: 10),
-                              _TileGrid(columns: 2, children: tasks),
+                              _TileGrid(columns: 2, children: shownTasks),
                             ],
                           ),
                         ),

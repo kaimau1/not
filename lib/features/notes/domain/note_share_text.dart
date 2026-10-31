@@ -97,14 +97,38 @@ String noteShareText(
   final title = note.displayTitle.trim();
   if (options.title && title.isNotEmpty) blocks.add(title);
 
-  final body = _tidy(stripRichMarkers(note.body));
-  if (body.isNotEmpty) blocks.add(body);
+  final label = pageLabel ?? (int page) => '#$page';
 
-  final items = _itemLines(note, includeChecked: options.checked);
-  if (items.isNotEmpty) blocks.add(items.join('\n'));
+  // SAYFALI NOT (F10.2, 2026-10-31): yalnız ETKİN sayfa yazılıyordu — iki
+  // sayfalı not WhatsApp'a yarım gidiyordu. Etkin sayfanın içeriği
+  // `body/items`te, diğerleri [Note.textPages]te (bkz. [Note.toPlainText]).
+  // Tek sayfada başlık yok; birden çokta her dolu sayfa "Sayfa N" altında.
+  final pages = note.textPages.isEmpty
+      ? [(note.body, note.items)]
+      : [
+          for (final p in note.textPages)
+            p.id == note.activePage ? (note.body, note.items) : (p.body, p.items),
+        ];
+  for (var i = 0; i < pages.length; i++) {
+    final (rawBody, rawItems) = pages[i];
+    final parts = <String>[];
+    final body = _tidy(stripRichMarkers(rawBody));
+    if (body.isNotEmpty) parts.add(body);
+    final items = _itemLines(
+      note.type,
+      rawItems,
+      includeChecked: options.checked,
+    );
+    if (items.isNotEmpty) parts.add(items.join('\n'));
+    if (parts.isEmpty) continue;
+    if (pages.length == 1) {
+      blocks.addAll(parts);
+    } else {
+      blocks.add('${label(i + 1)}\n${parts.join('\n\n')}');
+    }
+  }
 
   if (note.type.isPageNoteType) {
-    final label = pageLabel ?? (int page) => '#$page';
     for (final attachment in note.attachments) {
       for (final entry in orderedPageNotes(
         attachment: attachment,
@@ -144,15 +168,19 @@ String joinShareTexts(Iterable<String> texts) => texts
     .where((t) => t.isNotEmpty)
     .join('\n\n—————\n\n');
 
-List<String> _itemLines(Note note, {required bool includeChecked}) {
+List<String> _itemLines(
+  NoteType type,
+  List<NoteItem> all, {
+  required bool includeChecked,
+}) {
   String clean(NoteItem item) =>
       _tidy(stripRichMarkers(item.text)).replaceAll('\n', '\n   ');
   final items = [
-    for (final i in note.items)
+    for (final i in all)
       if (clean(i).isNotEmpty) i,
   ];
   if (items.isEmpty) return const [];
-  switch (note.type) {
+  switch (type) {
     case NoteType.ordered:
       var n = 0;
       return [for (final i in items) '${++n}. ${clean(i)}'];

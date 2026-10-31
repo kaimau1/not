@@ -16,7 +16,9 @@ class _FriendsRow extends ConsumerWidget {
       leading: const Icon(Icons.people_outline),
       title: Text(l10n.friendsTitle),
       subtitle: Text(l10n.friendsRowInfo),
-      trailing: requestCount > 0
+      trailing: ref.watch(isAnonymousProvider)
+          ? const AccountLockBadge()
+          : requestCount > 0
           ? Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
@@ -459,7 +461,7 @@ class _BackupButton extends ConsumerWidget {
         );
       }
     } catch (e) {
-      messenger.showMessage(l10n.genericError(e.toString()));
+      messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
     }
   }
 
@@ -557,7 +559,7 @@ class _RestoreButton extends ConsumerWidget {
     } on FormatException {
       messenger.showMessage(l10n.importBackupInvalid);
     } catch (e) {
-      messenger.showMessage(l10n.genericError(e.toString()));
+      messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
     }
   }
 
@@ -606,24 +608,48 @@ class _AccountSection extends ConsumerWidget {
     );
     if (!(confirmed ?? false) || !context.mounted) return;
 
-    // Silme sürerken kapatılamayan bir bekleme göstergesi.
-    unawaited(
-      showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
+    // Silme sürerken kapatılamayan, NE OLDUĞUNU söyleyen gösterge (F10.7).
+    //
+    // KÖK NEDEN (web, 2026-10-30: onaydan sonra ~6 sn bomboş ekran): oturum
+    // düşünce router giriş ekranına geçerken bu pencereyi kendisi
+    // kaldırabiliyor; ardından gelen körlemesine `navigator.pop()` bu kez
+    // giriş SAYFASINI atıyordu. Pencere artık kendi rotası üzerinden, yalnız
+    // hâlâ açıksa kapatılır.
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final progress = DialogRoute<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 3),
+              ),
+              const SizedBox(width: 16),
+              Expanded(child: Text(l10n.deletingAccount)),
+            ],
+          ),
+        ),
       ),
     );
-    final navigator = Navigator.of(context, rootNavigator: true);
+    void closeProgress() {
+      if (progress.isActive) navigator.removeRoute(progress);
+    }
+
+    unawaited(navigator.push(progress));
     try {
       await ref.read(accountServiceProvider).deleteAccountAndData();
-      // Başarıda auth durumu değişir; router login ekranına yönlendirir.
-      navigator.pop();
+      // Başarıda auth durumu değişir; router giriş ekranına yönlendirir.
+      closeProgress();
     } catch (e) {
-      navigator.pop();
+      closeProgress();
       messenger
         ..hideCurrentSnackBar()
-        ..showMessage(l10n.genericError(e.toString()));
+        ..showMessage(l10n.genericError(friendlyError(l10n, e)));
     }
   }
 
@@ -884,7 +910,7 @@ class _ErrorLogButton extends StatelessWidget {
               ),
             );
           } catch (e) {
-            messenger.showMessage(l10n.genericError('$e'));
+            messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
           }
         },
       ),

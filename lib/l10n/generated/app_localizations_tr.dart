@@ -1836,7 +1836,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get localAccountInfo =>
-      'Notların yalnız bu cihazda kalır: başka cihazdan açılamaz, uygulamayı silersen geri getirilemez ve dahili yapay zeka kapalı olur. İstediğin an Google hesabı bağlayabilirsin — notların olduğu gibi kalır.';
+      'Notların yalnız bu cihazda kalır: başka cihazdan açılamaz, uygulamayı silersen geri getirilemez. Dahili yapay zekâ, kişiler ve paylaşım Google hesabı ister; yapay zekâyı kendi API anahtarınla kullanabilirsin. İstediğin an Google hesabı bağlayabilirsin — notların olduğu gibi kalır.';
 
   @override
   String get localAccountBadge => 'Yerel hesap';
@@ -5176,7 +5176,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get guestReminderBody =>
-      'Hesapsız kullanıyorsun: notların yalnız bu cihazda. Uygulama silinir ya da telefon değişirse geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.';
+      'Hesapsız kullanıyorsun: notların yalnız bu cihazda, dahili yapay zekâ ve paylaşım kapalı. Uygulama silinir ya da telefon değişirse notlar geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.';
 
   @override
   String get guestReminderLater => 'Sonra';
@@ -5947,4 +5947,65 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get itemGesturesSettingInfo =>
       'Maddenin üstüne parmakla ya da kalemle çiz: üstünü çiz / ✓ işaretler, karalamak siler, daire yazımı düzeltir';
+
+  @override
+  String get pdfEditWorking => 'PDF işleniyor…';
+
+  @override
+  String get noteMenu => 'Not menüsü';
+
+  @override
+  String get moreActions => 'Diğer işlemler';
+
+  @override
+  String get errorOffline =>
+      'İnternet bağlantısı yok ya da zayıf. Bağlanınca yeniden dene.';
+
+  @override
+  String get errorTimeout => 'İşlem çok uzun sürdü. Biraz sonra yeniden dene.';
+
+  @override
+  String get errorQuota =>
+      'Kullanım sınırına ulaşıldı. Biraz sonra yeniden dene.';
+
+  @override
+  String get errorPermission =>
+      'Bunun için izin yok. Hesabını ya da uygulama izinlerini kontrol et.';
+
+  @override
+  String get errorTooLarge => 'Dosya çok büyük.';
+
+  @override
+  String get errorUnsupported => 'Bu işlem burada desteklenmiyor.';
+
+  @override
+  String get errorUnknown =>
+      'Beklenmeyen bir sorun oldu. Ayrıntı hata günlüğünde.';
+
+  @override
+  String get copyErrorDetail => 'Ayrıntıyı kopyala';
+
+  @override
+  String get accountRequiredTitle => 'Google hesabı gerekir';
+
+  @override
+  String get accountRequiredBody =>
+      'Kişiler, ortak çalışma ve kopya gönderme e-posta adresiyle çalışır; hesapsız kullanımda seni kimse bulamaz. Google hesabını bağla — notların olduğu gibi kalır.';
+
+  @override
+  String get accountRequiredBadge => 'Google hesabı gerekir';
+
+  @override
+  String get guestAiTitle =>
+      'Yapay zekâ için Google hesabı ya da kendi anahtarın';
+
+  @override
+  String get guestAiBody =>
+      'Dahili yapay zekâ Google hesabıyla açılır. Hesapsız da Ayarlar\'dan kendi Gemini API anahtarını ekleyerek bütün yapay zekâ araçlarını kullanabilirsin.';
+
+  @override
+  String get guestAiAddKey => 'Kendi anahtarımı ekle';
+
+  @override
+  String get deletingAccount => 'Hesabın ve verilerin siliniyor…';
 }

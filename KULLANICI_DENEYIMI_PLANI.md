@@ -76,7 +76,7 @@ kullanıcıyla `git` "dubious ownership" verirse:
 
 | Faz | Konu | Öncelik | Durum | Tarih | Not |
 |---|---|---|---|---|---|
-| 10 | Kırık ve yanıltıcı olanlar | Ö2 · Ö4 | Bekliyor | | Web'de PDF eklenemiyor; çok sayfalı not eksik paylaşılıyor |
+| 10 | Kırık ve yanıltıcı olanlar | Ö2 · Ö4 | Bitti | 2026-10-31 | 7/7; 1750/1750 test; F10.7 kök neden koddan (web'de yeniden denenmedi); cihaz turu KALANLAR'da |
 | 11 | Ana ekran ve "+" akışı | Ö1 · Ö6 | Bekliyor | | Üst çubuk, Süz, misafir kartı, geniş ekran |
 | 12 | Not ekranı: çubuklar, ⋮, biçim, liste | Ö1 · Ö5 · Ö6 | Bekliyor | | |
 | 13 | Balonlu mod, medya, kalem, paylaşım akışı | Ö1 · Ö2 | Bekliyor | | Balon yazısı paylaşılamıyor |
@@ -336,7 +336,7 @@ Her satır: ne iyi, ne kötü, ne yapılmalı, hangi fazda. Sorun sütunu boşsa
 Kısa ve yüksek değerli. Bitince web'de PDF akışı, çok sayfalı paylaşım ve
 misafir deneyimi doğru çalışır; kullanıcı ham hata metni görmez.
 
-- [ ] **F10.1 Web'de `Isolate.run` (YÜKSEK) — C3, H7, H8.**
+- [x] **F10.1 Web'de `Isolate.run` (YÜKSEK) — C3, H7, H8.**
   `pdf_edit.dart:715` (`readSharedPdfInBackground`) ve `:726` (`_bg`: sayfa
   sil/sırala/döndür, damgalama) `Isolate.run` kullanıyor; web'de
   `RawReceivePort` yok → "Ek eklenemedi: Unsupported operation". Tek yardımcı
@@ -346,33 +346,72 @@ misafir deneyimi doğru çalışır; kullanıcı ham hata metni görmez.
   büyük PDF'te `_runBusy` göstergesi şart. Test: yardımcının web dalı için
   birim testi + `PdfEdit` sarmalayıcılarının çağrı testi. Cihaz: web'de PDF
   ekle → balon → sayfa sil → Balonlu PDF paylaş.
-- [ ] **F10.2 Çok sayfalı not paylaşımı (YÜKSEK) — P2, P6.**
+  **Yapıldı:** `core/utils/run_heavy.dart` (`runHeavy`: web'de bir kare
+  bekleyip aynı iş parçacığı, diğerinde `Isolate.run`); `pdf_edit.dart` ve
+  `local_notes_store.dart` oradan. PDF okuma `_runBusy` içine alındı, sayfa
+  düzenleme "PDF işleniyor…" göstergesiyle. Ek bulgu: balonlu PDF paylaşımı
+  web'de `getTemporaryDirectory` ile de kırılırdı → `XFile.fromData`
+  (`note_share.dart`). Test: `run_heavy_test.dart`, `pdf_edit_test.dart`
+  (sarmalayıcılar).
+- [x] **F10.2 Çok sayfalı not paylaşımı (YÜKSEK) — P2, P6.**
   `noteShareText` (`note_share_text.dart:91`) `textPages`'i dolaşsın: etkin
   sayfa `body/items`ten, diğerleri listeden; "Sayfa N" başlığı (tek sayfada
   başlık yok). Aynı işlevi kullanan kart ⋮ Kopyala, seçim Kopyala, editör
   Kopyala kendiliğinden düzelir. PDF/Word/Görsel çıktısında sayfaların
   girdiğini doğrula (`note_pdf.dart`, `note_docx.dart`). Test:
   `note_share_text_test.dart`'a iki sayfalı not.
-- [ ] **F10.3 ⋮ düğmelerinin adı — D1.** `note_editor_screen.dart:4278`,
+  **Yapıldı:** `noteShareText` bütün sayfaları yazar (tek sayfada başlık
+  yok, boş sayfa atlanır). PDF/Word dışa aktarma da yalnız etkin sayfayı
+  alıyordu → `exportContentOf` (`pdf_export_screen.dart`). Görsel çıktısı
+  ekranın görüntüsü olduğundan etkin sayfadır (değişmedi). Test:
+  `note_share_text_test.dart`, `export_pages_test.dart`.
+- [x] **F10.3 ⋮ düğmelerinin adı — D1.** `note_editor_screen.dart:4278`,
   `dashboard_screen.dart:964`, `folder_screen.dart:282` `l10n.noteMetaMenu`
   yerine yeni anahtar ("Not menüsü" / "Diğer işlemler"); başlık "+"ı
   `noteMetaMenu`de kalır. Test: `find.byTooltip`.
-- [ ] **F10.4 Ham hata metni yok — M5.** `core/` altında `friendlyError(l10n, e)`:
+  **Yapıldı:** editör ⋮ = `noteMenu` ("Not menüsü"), seçim çubuklarının ⋮'i
+  = `moreActions` ("Diğer işlemler"). Editör için widget testi altyapısı
+  yok; `menu_names_test.dart` adların ayrı olduğunu denetler.
+- [x] **F10.4 Ham hata metni yok — M5.** `core/` altında `friendlyError(l10n, e)`:
   ağ yok, zaman aşımı, kota/oran, izin, dosya çok büyük, desteklenmeyen
   (web), bilinmeyen → kısa Türkçe metin; ham metin `ErrorLog`a ve bildirimde
   "Ayrıntıyı kopyala"ya. `aiError('$e')`/`genericError('$e')` çağrılarının
   hepsi (~80, `grep -rn "('\$e')\|(e.toString())"`). Test: eşleyici birim testi.
-- [ ] **F10.5 Misafir deneyimi — A2, A4, M1, Q1.** Misafirde (a) AI levhası ve
+  **Yapıldı:** `core/friendly_error.dart` (`classifyError` + `friendlyError`;
+  `UserFacingException` — `GeminiException` iletisi olduğu gibi kalır); 81
+  çağrı yeri + sohbet denetleyicisi, ses kaydı, tarama, QR, geçmiş, giriş
+  yedeği. Ham metin `ErrorLog`a; `showMessage` az önceki hatanın
+  bildirimine kendiliğinden "Ayrıntıyı kopyala" ekler. Test:
+  `friendly_error_test.dart`.
+- [x] **F10.5 Misafir deneyimi — A2, A4, M1, Q1.** Misafirde (a) AI levhası ve
   AI ekranı puan yerine "Google ile gir ya da kendi anahtarını ekle" kartı,
   araçlar soluk; (b) Kişiler, Ortak çalışanlar, Kopya gönder, Birlikte düzenle
   kilit rozetli, dokununca ortak `showAccountRequiredSheet` (neden + Google
   ile giriş yap); (c) giriş ekranı ve misafir kartı metni bununla aynı şeyi
   söylesin. Kendi anahtarı olan misafirde AI açık kalır (`ai_gate.dart:149`).
-- [ ] **F10.6 Web açılış ekranı — A1.** `web/index.html` açılışı Flutter'ın
+  **Yapıldı:** `aiGuestLockedProvider` (misafir + anahtarsız); AI ekranı ve
+  not içi AI levhası puan yerine `GuestAiCard` (Google ile giriş · Kendi
+  anahtarımı ekle), araçlar `GuestAiDim` ile soluk (Kopyalar açık). Ortak
+  `showAccountRequiredSheet` + `AccountLockBadge`
+  (`auth/presentation/account_required.dart`): Kişiler, Ortak çalışanlar,
+  Kopya gönder, Birlikte düzenle, klasör paylaşımı — girişler misafirde
+  artık gizli değil, kilitli. `localAccountInfo` ve `guestReminderBody`
+  aynı şeyi söyler. Test: `guest_ai_lock_test.dart`.
+- [x] **F10.6 Web açılış ekranı — A1.** `web/index.html` açılışı Flutter'ın
   ilk anlamlı karesine kadar kalsın; Flutter'daki başlangıç ekranı web'de
   çizilmesin (ya da tam tersi — tek katman); dil `navigator.language`.
-- [ ] **F10.7 Hesap silme sonrası boş ekran — A6.** Önce DOĞRULA (web'de ~6 sn
+  **Yapıldı:** HTML katmanı `notlar-ready` olayında kalkar
+  (`core/utils/web_ready.dart`; giriş düğmeleri ya da `AppFrame` çizilince);
+  sessiz misafir girişi sürerken Flutter ara ekranı HTML'in altında kalır.
+  Yedek: ilk kareden 6 sn sonra. Dil `navigator.language` (tr değilse
+  İngilizce). `_autoSigningIn` artık ilk karede doğru.
+- [x] **F10.7 Hesap silme sonrası boş ekran — A6.** Önce DOĞRULA (web'de ~6 sn
   boş ekran görüldü); silme sürerken gösterge, bitince giriş ekranı.
+  **Yapıldı:** kök neden koddan: oturum düşünce router bekleme penceresini
+  kaldırabiliyor, ardından körlemesine `navigator.pop()` giriş sayfasını
+  atıyordu. Pencere `DialogRoute` olarak tutulur, yalnız açıksa
+  `removeRoute`; içinde "Hesabın ve verilerin siliniyor…". Web'de yeniden
+  denenmedi (KALANLAR).
 
 **Senin yapacakların:** web'de (Chrome) PDF ekle → balon → paylaş; telefonda
 iki sayfalı notu WhatsApp'a paylaş, iki sayfanın da gittiğine bak.

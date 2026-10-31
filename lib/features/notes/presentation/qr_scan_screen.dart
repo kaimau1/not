@@ -10,6 +10,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/utils/link_text.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
+import '../../../core/friendly_error.dart';
 
 /// Okunan kod bir adresse kullanıcının seçtiği eylem.
 enum _QrAction { open, save, cancel }
@@ -206,7 +207,7 @@ class _QrScanScreenState extends State<QrScanScreen>
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showMessage(context.l10n.qrScanFailed('$e'));
+        ).showMessage(context.l10n.qrScanFailed(friendlyError(context.l10n, e)));
       }
     } finally {
       if (mounted) setState(() => _analyzing = false);
@@ -244,7 +245,7 @@ class _QrScanScreenState extends State<QrScanScreen>
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  l10n.qrScanFailed('$error'),
+                  l10n.qrScanFailed(friendlyError(l10n, error)),
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white70),
                 ),

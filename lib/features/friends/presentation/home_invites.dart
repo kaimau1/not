@@ -6,6 +6,7 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../../folders/data/folders_repository.dart';
 import '../data/friends_repository.dart';
 import '../domain/friend.dart';
+import '../../../core/friendly_error.dart';
 
 /// **ANA EKRANIN DAVET ŞERİDİ** — kullanıcı isteği 2026-08-18: "arkadaşlık
 /// isteği geldiğinde ana sayfada görülsün" ve "klasör paylaşıldığında kabul
@@ -134,7 +135,7 @@ class _FriendRequestCard extends ConsumerWidget {
           await repo.acceptRequest(request);
           messenger.showMessage(l10n.friendRequestAccepted);
         } catch (e) {
-          messenger.showMessage(l10n.genericError('$e'));
+          messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
         }
       },
     );
@@ -168,7 +169,7 @@ class _FolderInviteCard extends ConsumerWidget {
           await repo.declineInvite(invite);
           messenger.showMessage(l10n.folderInviteDeclined);
         } catch (e) {
-          messenger.showMessage(l10n.genericError('$e'));
+          messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
         }
       },
       onAccept: () async {
@@ -178,7 +179,7 @@ class _FolderInviteCard extends ConsumerWidget {
           await repo.acceptInvite(invite);
           messenger.showMessage(l10n.folderInviteAccepted);
         } catch (e) {
-          messenger.showMessage(l10n.genericError('$e'));
+          messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
         }
       },
     );

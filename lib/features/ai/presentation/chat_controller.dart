@@ -46,6 +46,8 @@ class ChatController extends Notifier<ChatState> {
     String text, {
     required String noApiKeyText,
     required String Function(String) errorText,
+    // Ham istisnayı okunur metne çevirir (F10.4); verilmezse ham metin.
+    String Function(Object error)? describeError,
     String? historyLabel,
     Future<bool> Function(String noteTitle)? confirmDelete,
   }) async {
@@ -99,7 +101,7 @@ class ChatController extends Notifier<ChatState> {
     } on GeminiException catch (e) {
       _addReply(e.isAuthError ? noApiKeyText : errorText(e.message));
     } catch (e) {
-      _addReply(errorText('$e'));
+      _addReply(errorText(describeError?.call(e) ?? '$e'));
     } finally {
       state = state.copyWith(busy: false);
     }

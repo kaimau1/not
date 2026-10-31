@@ -1,10 +1,11 @@
 import 'dart:convert';
-import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' show Offset, Rect, Size;
 
 import 'package:syncfusion_flutter_pdf/pdf.dart';
+
+import '../../../core/utils/run_heavy.dart';
 
 import '../domain/arrow.dart';
 import '../domain/attachment.dart';
@@ -637,8 +638,9 @@ class PdfEdit {
   //
   // Syncfusion belgeyi TÜMÜYLE belleğe açıp yeniden yazıyor: yüz sayfalık bir
   // ders notunda bu saniyeler sürer ve UI iş parçacığında yapılırsa uygulama
-  // donar. `Isolate.run` kapanışı yalnız GÖNDERİLEBİLİR değerleri yakalayabilir
-  // — bu yüzden kapanışlar sınıf durumuna değil, yalnız yerel değişkenlere
+  // donar. `runHeavy` (Android'de `Isolate.run`; web'de izole olmadığı için
+  // aynı iş parçacığı, F10.1) kapanışı yalnız GÖNDERİLEBİLİR değerleri
+  // yakalayabilir — bu yüzden kapanışlar sınıf durumuna değil, yalnız yerel değişkenlere
   // bakar.
   //
   // Hata metne çevrilerek yeniden atılır: isolate sınırından Syncfusion'ın iç
@@ -712,7 +714,7 @@ class PdfEdit {
   /// dosyadaki genel kural.
   static Future<Map<String, dynamic>?> readSharedPdfInBackground(
     Uint8List bytes,
-  ) => Isolate.run(() {
+  ) => runHeavy(() {
     final result = readSharedPdf(bytes);
     if (result == null) return null;
     return <String, dynamic>{
@@ -723,7 +725,7 @@ class PdfEdit {
   });
 
   static Future<Uint8List> _bg(Uint8List Function() task) =>
-      Isolate.run(() {
+      runHeavy(() {
         try {
           return task();
         } catch (e) {

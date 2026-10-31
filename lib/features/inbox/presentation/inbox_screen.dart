@@ -9,6 +9,7 @@ import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/note_card.dart';
 import '../data/inbox_repository.dart';
 import 'shared_hub_screen.dart';
+import '../../../core/friendly_error.dart';
 
 /// **GELEN NOTLAR** ekranı — kullanıcı isteği 2026-08-18: "paylaşılan not
 /// alıcıda farklı gelen notlar klasöründe görülsün ve oradan normal
@@ -64,7 +65,7 @@ class InboxList extends ConsumerWidget {
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) =>
-          EmptyState(icon: Icons.error_outline, title: l10n.genericError('$e')),
+          EmptyState(icon: Icons.error_outline, title: l10n.genericError(friendlyError(l10n, e))),
       data: (notes) => notes.isEmpty
           ? EmptyState(
               icon: Icons.move_to_inbox_outlined,
@@ -148,7 +149,7 @@ class _InboxCard extends ConsumerWidget {
         Note(id: id, type: note.type, title: note.title),
       );
     } catch (e) {
-      messenger.showMessage(l10n.genericError('$e'));
+      messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
     }
   }
 

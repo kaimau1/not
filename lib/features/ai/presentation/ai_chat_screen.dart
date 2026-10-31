@@ -14,6 +14,7 @@ import '../data/ai_report.dart';
 import '../data/gemini_service.dart';
 import 'assistant_confirm.dart';
 import 'chat_controller.dart';
+import '../../../core/friendly_error.dart';
 
 /// Sohbetin kapsamı: neyle konuşuluyor.
 enum ChatScope {
@@ -219,7 +220,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         );
       }
     } catch (e) {
-      if (mounted) setState(() => _loadError = context.l10n.aiError('$e'));
+      if (mounted) setState(() => _loadError = context.l10n.aiError(friendlyError(context.l10n, e)));
     } finally {
       if (mounted && _outlineLoading) setState(() => _outlineLoading = false);
     }
@@ -248,6 +249,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             text,
             noApiKeyText: l10n.aiNoApiKey,
             errorText: l10n.aiError,
+            describeError: (e) => friendlyError(l10n, e),
             historyLabel: l10n.aiHistoryQuestion,
             confirmDelete: (title) => confirmAssistantDelete(context, title),
           );
@@ -289,7 +291,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     } on GeminiException catch (e) {
       reply = e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message);
     } catch (e) {
-      reply = l10n.aiError('$e');
+      reply = l10n.aiError(friendlyError(l10n, e));
     }
     if (!mounted) return;
     setState(() {
@@ -315,7 +317,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       if (!mounted) return;
       final message = e is GeminiException
           ? (e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message))
-          : l10n.aiError('$e');
+          : l10n.aiError(friendlyError(l10n, e));
       ScaffoldMessenger.of(
         context,
       ).showMessage(message);

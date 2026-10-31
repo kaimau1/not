@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../core/friendly_error.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
 /// Giriş hatalarının KULLANICIYA gösterilecek karşılıkları.
@@ -28,7 +29,7 @@ String authErrorText(
     case 'unavailable':
       return l10n.signInNetworkError;
   }
-  return l10n.loginError(error.toString());
+  return l10n.loginError(friendlyError(l10n, error));
 }
 
 /// Kullanıcının kendisi vazgeçti mi? (Hesap seçiciyi kapattı / geri tuşu.)

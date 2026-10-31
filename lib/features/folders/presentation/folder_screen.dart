@@ -29,6 +29,7 @@ import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
 import 'folder_chat_screen.dart';
 import 'folder_sheets.dart';
+import '../../../core/friendly_error.dart';
 
 /// **KLASÖRÜN KENDİ SAYFASI.**
 ///
@@ -279,7 +280,7 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
           onPressed: () => _deleteSelected(ids, visible),
         ),
         PopupMenuButton<String>(
-          tooltip: l10n.noteMetaMenu,
+          tooltip: l10n.moreActions,
           onSelected: (action) => switch (action) {
             'pin' => _updateSelected(ids, {'pinned': true}),
             'unpin' => _updateSelected(ids, {'pinned': false}),
@@ -580,7 +581,7 @@ class _NotesGrid extends ConsumerWidget {
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) =>
-          EmptyState(icon: Icons.error_outline, title: l10n.genericError('$e')),
+          EmptyState(icon: Icons.error_outline, title: l10n.genericError(friendlyError(l10n, e))),
       data: (all) {
         final result = runScreenSearch(
           ref,

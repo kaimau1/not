@@ -25,6 +25,8 @@ import 'listen_screen.dart';
 import '../data/gemini_service.dart';
 import 'ai_chat_screen.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/friendly_error.dart';
+import '../../auth/presentation/account_required.dart';
 
 /// "Notu değiştir" geri çağırması: AI çıktısı notun içeriğiyle değiştirilir;
 /// [asType] verilirse notun çalışma modu da o tipe geçer (madde/sıralı liste).
@@ -179,7 +181,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
         );
       }
     } catch (e) {
-      if (mounted) setState(() => _error = context.l10n.aiError(e.toString()));
+      if (mounted) setState(() => _error = context.l10n.aiError(friendlyError(context.l10n, e)));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -696,7 +698,14 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                   // Sınırsız kullanıcıda (BYOK/premium) çubuk gizlenir: sayaç
                   // hiç azalmadığı için sürekli dolu görünüyor ve yanlış
                   // bilgi veriyordu (bkz. ai_hub_screen.dart).
-                  if (!ref.watch(aiUnlimitedProvider))
+                  // Misafir, anahtarsız (F10.5): puan yerine açıklama kartı,
+                  // araçlar soluk ve dokunulamaz.
+                  if (ref.watch(aiGuestLockedProvider))
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 4, 16, 14),
+                      child: GuestAiCard(),
+                    )
+                  else if (!ref.watch(aiUnlimitedProvider))
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
                       child: AiPointsBar(
@@ -704,6 +713,12 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         limit: ref.watch(aiDailyLimitProvider),
                       ),
                     ),
+                  GuestAiDim(
+                    locked: ref.watch(aiGuestLockedProvider),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                   if (widget.onVoiceNote != null)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -992,6 +1007,9 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       ),
                     ),
                   ],
+                      ],
+                    ),
+                  ),
                 ],
                 const SizedBox(height: 16),
               ],

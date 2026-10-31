@@ -440,4 +440,20 @@ void main() {
       expect(ordered.single.text, 'dorduncu sayfanin notu');
     });
   });
+
+  group('arka plan sarmalayıcıları (F10.1 — runHeavy üzerinden)', () {
+    test('deletePagesInBackground doğru sayfayı siler', () async {
+      final out = await PdfEdit.deletePagesInBackground(sample(3), [1]);
+      expect(pageTexts(out), ['P1', 'P3']);
+    });
+
+    test('reorderPagesInBackground sırayı uygular', () async {
+      final out = await PdfEdit.reorderPagesInBackground(sample(3), [2, 0, 1]);
+      expect(pageTexts(out), ['P3', 'P1', 'P2']);
+    });
+
+    test('sıradan PDF readSharedPdfInBackground\'da null döner', () async {
+      expect(await PdfEdit.readSharedPdfInBackground(sample(1)), isNull);
+    });
+  });
 }

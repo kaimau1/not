@@ -9,6 +9,8 @@ import '../../friends/domain/friend.dart';
 import '../../friends/presentation/friends_screen.dart';
 import '../data/note_shares_repository.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/friendly_error.dart';
+import '../../auth/presentation/account_required.dart';
 
 /// **ORTAK ÇALIŞANLAR** levhası — Keep'teki "Ortak çalışan" düğmesinin
 /// karşılığı (kullanıcı isteği 2026-09-22: "ortak not butonu keepteki gibi").
@@ -30,7 +32,7 @@ Future<void> showCollaboratorsSheet(
   // Yerel (anonim) hesapta arkadaş kavramı yok — klasör paylaşımıyla aynı
   // açıklama (bkz. openFriendsScreenOrExplain).
   if (ownerId == null && ref.read(isAnonymousProvider)) {
-    ScaffoldMessenger.of(context).showMessage(context.l10n.friendsNeedsAccount);
+    await showAccountRequiredSheet(context, ref);
     return;
   }
   final result = await showAppSheet<_SheetResult>(
@@ -90,7 +92,7 @@ class _OwnerViewState extends ConsumerState<_OwnerView> {
         ..showMessage(l10n.collaboratorsSaved);
     } catch (e) {
       if (mounted) setState(() => _saving = false);
-      messenger.showMessage(l10n.genericError('$e'));
+      messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
     }
   }
 
@@ -364,7 +366,7 @@ class _CollaboratorView extends ConsumerWidget {
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      showAppMessage(context, l10n.genericError('$e'));
+                      showAppMessage(context, l10n.genericError(friendlyError(l10n, e)));
                     }
                   }
                 },

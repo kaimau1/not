@@ -1840,7 +1840,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get localAccountInfo =>
-      'Your notes stay on this device only: they cannot be opened elsewhere, they are gone if you uninstall the app, and built-in AI is off. You can link a Google account at any time — your notes carry over.';
+      'Your notes stay on this device only: they cannot be opened elsewhere and are gone if you uninstall the app. Built-in AI, contacts and sharing need a Google account; you can still use AI with your own API key. You can link a Google account at any time — your notes carry over.';
 
   @override
   String get localAccountBadge => 'Local account';
@@ -5191,7 +5191,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guestReminderBody =>
-      'You are using the app without an account: your notes live only on this device. If the app is removed or you change phones they cannot be recovered. Link your Google account — your notes stay as they are.';
+      'You are using the app without an account: your notes live only on this device, and built-in AI and sharing are off. If the app is removed or you change phones they cannot be recovered. Link your Google account — your notes stay as they are.';
 
   @override
   String get guestReminderLater => 'Later';
@@ -5966,4 +5966,63 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get itemGesturesSettingInfo =>
       'Draw over an item with a finger or pen: strike / ✓ checks, scribble deletes, circle fixes spelling';
+
+  @override
+  String get pdfEditWorking => 'Processing PDF…';
+
+  @override
+  String get noteMenu => 'Note menu';
+
+  @override
+  String get moreActions => 'More actions';
+
+  @override
+  String get errorOffline =>
+      'No or weak internet connection. Try again once you\'re online.';
+
+  @override
+  String get errorTimeout => 'That took too long. Try again in a moment.';
+
+  @override
+  String get errorQuota => 'Usage limit reached. Try again a bit later.';
+
+  @override
+  String get errorPermission =>
+      'Not allowed. Check your account or the app\'s permissions.';
+
+  @override
+  String get errorTooLarge => 'The file is too large.';
+
+  @override
+  String get errorUnsupported => 'This isn\'t supported here.';
+
+  @override
+  String get errorUnknown =>
+      'Something unexpected happened. Details are in the error log.';
+
+  @override
+  String get copyErrorDetail => 'Copy details';
+
+  @override
+  String get accountRequiredTitle => 'Google account needed';
+
+  @override
+  String get accountRequiredBody =>
+      'Contacts, collaboration and sending copies work through your email address; without an account nobody can find you. Link your Google account — your notes stay as they are.';
+
+  @override
+  String get accountRequiredBadge => 'Needs a Google account';
+
+  @override
+  String get guestAiTitle => 'AI needs a Google account or your own key';
+
+  @override
+  String get guestAiBody =>
+      'Built-in AI turns on with a Google account. Without one, add your own Gemini API key in Settings to use every AI tool.';
+
+  @override
+  String get guestAiAddKey => 'Add my own key';
+
+  @override
+  String get deletingAccount => 'Deleting your account and data…';
 }

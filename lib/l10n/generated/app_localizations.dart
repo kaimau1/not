@@ -3473,7 +3473,7 @@ abstract class AppLocalizations {
   /// No description provided for @localAccountInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Notların yalnız bu cihazda kalır: başka cihazdan açılamaz, uygulamayı silersen geri getirilemez ve dahili yapay zeka kapalı olur. İstediğin an Google hesabı bağlayabilirsin — notların olduğu gibi kalır.'**
+  /// **'Notların yalnız bu cihazda kalır: başka cihazdan açılamaz, uygulamayı silersen geri getirilemez. Dahili yapay zekâ, kişiler ve paylaşım Google hesabı ister; yapay zekâyı kendi API anahtarınla kullanabilirsin. İstediğin an Google hesabı bağlayabilirsin — notların olduğu gibi kalır.'**
   String get localAccountInfo;
 
   /// No description provided for @localAccountBadge.
@@ -9305,7 +9305,7 @@ abstract class AppLocalizations {
   /// No description provided for @guestReminderBody.
   ///
   /// In tr, this message translates to:
-  /// **'Hesapsız kullanıyorsun: notların yalnız bu cihazda. Uygulama silinir ya da telefon değişirse geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.'**
+  /// **'Hesapsız kullanıyorsun: notların yalnız bu cihazda, dahili yapay zekâ ve paylaşım kapalı. Uygulama silinir ya da telefon değişirse notlar geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.'**
   String get guestReminderBody;
 
   /// No description provided for @guestReminderLater.
@@ -10669,6 +10669,114 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Maddenin üstüne parmakla ya da kalemle çiz: üstünü çiz / ✓ işaretler, karalamak siler, daire yazımı düzeltir'**
   String get itemGesturesSettingInfo;
+
+  /// No description provided for @pdfEditWorking.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF işleniyor…'**
+  String get pdfEditWorking;
+
+  /// No description provided for @noteMenu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not menüsü'**
+  String get noteMenu;
+
+  /// No description provided for @moreActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer işlemler'**
+  String get moreActions;
+
+  /// No description provided for @errorOffline.
+  ///
+  /// In tr, this message translates to:
+  /// **'İnternet bağlantısı yok ya da zayıf. Bağlanınca yeniden dene.'**
+  String get errorOffline;
+
+  /// No description provided for @errorTimeout.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem çok uzun sürdü. Biraz sonra yeniden dene.'**
+  String get errorTimeout;
+
+  /// No description provided for @errorQuota.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanım sınırına ulaşıldı. Biraz sonra yeniden dene.'**
+  String get errorQuota;
+
+  /// No description provided for @errorPermission.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bunun için izin yok. Hesabını ya da uygulama izinlerini kontrol et.'**
+  String get errorPermission;
+
+  /// No description provided for @errorTooLarge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya çok büyük.'**
+  String get errorTooLarge;
+
+  /// No description provided for @errorUnsupported.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu işlem burada desteklenmiyor.'**
+  String get errorUnsupported;
+
+  /// No description provided for @errorUnknown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Beklenmeyen bir sorun oldu. Ayrıntı hata günlüğünde.'**
+  String get errorUnknown;
+
+  /// No description provided for @copyErrorDetail.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayrıntıyı kopyala'**
+  String get copyErrorDetail;
+
+  /// No description provided for @accountRequiredTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google hesabı gerekir'**
+  String get accountRequiredTitle;
+
+  /// No description provided for @accountRequiredBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişiler, ortak çalışma ve kopya gönderme e-posta adresiyle çalışır; hesapsız kullanımda seni kimse bulamaz. Google hesabını bağla — notların olduğu gibi kalır.'**
+  String get accountRequiredBody;
+
+  /// No description provided for @accountRequiredBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google hesabı gerekir'**
+  String get accountRequiredBadge;
+
+  /// No description provided for @guestAiTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ için Google hesabı ya da kendi anahtarın'**
+  String get guestAiTitle;
+
+  /// No description provided for @guestAiBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dahili yapay zekâ Google hesabıyla açılır. Hesapsız da Ayarlar\'dan kendi Gemini API anahtarını ekleyerek bütün yapay zekâ araçlarını kullanabilirsin.'**
+  String get guestAiBody;
+
+  /// No description provided for @guestAiAddKey.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi anahtarımı ekle'**
+  String get guestAiAddKey;
+
+  /// No description provided for @deletingAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesabın ve verilerin siliniyor…'**
+  String get deletingAccount;
 }
 
 class _AppLocalizationsDelegate

@@ -18,6 +18,7 @@ import '../../data/media_transcriber.dart';
 import '../../data/note_pdf.dart';
 import '../../domain/attachment.dart';
 import '../../domain/transcript.dart';
+import '../../../../core/friendly_error.dart';
 
 /// Transkripti kaydeder (yoksa oluşturur, varsa içeriğini değiştirir) ve
 /// nottaki güncel eki döndürür; kaydedilemiyorsa (salt okunur not) null.
@@ -186,7 +187,7 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
     } on GeminiException catch (e) {
       _fail(e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message));
     } catch (e) {
-      _fail(l10n.aiError('$e'));
+      _fail(l10n.aiError(friendlyError(l10n, e)));
     }
   }
 

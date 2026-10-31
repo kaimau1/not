@@ -20,6 +20,7 @@ import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'viewers/pdf_viewer_screen.dart';
 import '../../../core/widgets/smooth_routes.dart';
+import '../../../core/friendly_error.dart';
 
 /// Notu PDF'e ya da Word'e (.docx) aktarmadan önce düzenleme ekranı.
 ///
@@ -78,7 +79,11 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
   /// KÖK NEDEN (kullanıcı ekran görüntüsü 2026-08-08): alanlara HAM metin
   /// konuyordu ve başlık `##5:**_~ezan vakti~_**##` olarak görünüyordu.
   late final String _markedTitle = widget.note.title.trim();
-  late final String _markedContent = _contentOf(widget.note);
+  // İlk erişim build'de (alan denetleyicisi) — sayfa başlığı l10n'dan.
+  late final String _markedContent = exportContentOf(
+    widget.note,
+    pageLabel: context.l10n.pageLabel,
+  );
 
   late final TextEditingController _title = TextEditingController(
     text: stripRichMarkers(_markedTitle),
@@ -92,45 +97,6 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
 
   bool get _hasImages =>
       widget.note.attachments.any((a) => a.kind == AttachmentKind.image);
-
-  /// Dışa aktarılacak metin — biçim İŞARETLERİYLE (çözümlemeyi `NotePdf`
-  /// yapıyor, bkz. `NotePdf._rich`).
-  ///
-  /// **KÖK NEDEN (kullanıcı bulgusu 2026-08-08: "maddeler, veriler
-  /// yazılmıyor").** Metin notunun MADDELERİ buraya hiç girmiyordu: gövde
-  /// alınıyor, aynı notun içindeki onay kutuları/maddeler atlanıyordu. Karışık
-  /// içerik (gövde + maddeler) uygulamada olağan — `Note.toPlainText` zaten
-  /// ikisini de yazıyor, burası yazmıyordu. Artık üç liste türünde de gövde ve
-  /// maddeler birlikte gider.
-  static String _contentOf(Note note) => switch (note.type) {
-    NoteType.text => [
-      if (note.body.trim().isNotEmpty) note.body.trimRight(),
-      for (final item in note.items)
-        if (item.text.trim().isNotEmpty)
-          '[${item.checked ? 'x' : ' '}] ${item.text}',
-    ].join('\n'),
-    NoteType.checklist => [
-      if (note.body.trim().isNotEmpty) note.body.trimRight(),
-      for (final item in note.items)
-        '[${item.checked ? 'x' : ' '}] ${item.text}',
-    ].join('\n'),
-    NoteType.ordered => [
-      if (note.body.trim().isNotEmpty) note.body.trimRight(),
-      for (var i = 0; i < note.items.length; i++)
-        '${i + 1}. ${note.items[i].text}',
-    ].join('\n'),
-    // PDF notu dışa aktarılırken KAYNAK BELGE değil, kullanıcının sayfa
-    // notları yazılır (belgenin kendisi zaten ek olarak duruyor ve buradaki
-    // dışa aktarma metin + görsel üretiyor).
-    NoteType.pdf || NoteType.slides => note.pageNotesText().trimRight(),
-    // Arşiv defteri: açıklaması + metin girdileri. Ekler (görsel/belge)
-    // dışa aktarmanın görsel bölümünden zaten geçiyor.
-    NoteType.archive => [
-      if (note.body.trim().isNotEmpty) note.body.trimRight(),
-      for (final item in note.items)
-        if (item.text.trim().isNotEmpty) item.text,
-    ].join('\n'),
-  };
 
   /// Dışa aktarılacak GÖVDE metni: metin içi ek etiketleri ("📎 rapor.pdf")
   /// gömülü fontun çizebileceği "[ek: rapor.pdf]" biçimine çevrilir
@@ -270,7 +236,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
   void _showError(Object e) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showMessage(context.l10n.aiError(e.toString()));
+      ..showMessage(context.l10n.aiError(friendlyError(context.l10n, e)));
   }
 
   /// PDF byte'larını üretir. Diske/blob'a yazmayı çağıran taraf yapar —
@@ -664,3 +630,66 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
     );
   }
 }
+
+/// Dışa aktarılacak metin — biçim İŞARETLERİYLE (bkz. [_PdfExportScreenState]).
+///
+/// SAYFALI NOT (F10.2, 2026-10-31): yalnız ETKİN sayfa çıkıyordu. Artık her
+/// dolu sayfa sırayla, birden çok sayfada "Sayfa N" satırıyla; etkin sayfanın
+/// içeriği `body/items`te, diğerleri [Note.textPages]te.
+String exportContentOf(
+  Note note, {
+  required String Function(int page) pageLabel,
+}) {
+  if (note.type.isPageNoteType || note.textPages.length < 2) {
+    return _pageContentOf(note);
+  }
+  final out = <String>[];
+  for (var i = 0; i < note.textPages.length; i++) {
+    final page = note.textPages[i];
+    final text = page.id == note.activePage
+        ? _pageContentOf(note)
+        : _pageContentOf(note.copyWith(body: page.body, items: page.items));
+    if (text.trim().isEmpty) continue;
+    out.add('${pageLabel(i + 1)}\n$text');
+  }
+  return out.join('\n\n');
+}
+
+/// Dışa aktarılacak metin — biçim İŞARETLERİYLE (çözümlemeyi `NotePdf`
+/// yapıyor, bkz. `NotePdf._rich`).
+///
+/// **KÖK NEDEN (kullanıcı bulgusu 2026-08-08: "maddeler, veriler
+/// yazılmıyor").** Metin notunun MADDELERİ buraya hiç girmiyordu: gövde
+/// alınıyor, aynı notun içindeki onay kutuları/maddeler atlanıyordu. Karışık
+/// içerik (gövde + maddeler) uygulamada olağan — `Note.toPlainText` zaten
+/// ikisini de yazıyor, burası yazmıyordu. Artık üç liste türünde de gövde ve
+/// maddeler birlikte gider.
+String _pageContentOf(Note note) => switch (note.type) {
+  NoteType.text => [
+    if (note.body.trim().isNotEmpty) note.body.trimRight(),
+    for (final item in note.items)
+      if (item.text.trim().isNotEmpty)
+        '[${item.checked ? 'x' : ' '}] ${item.text}',
+  ].join('\n'),
+  NoteType.checklist => [
+    if (note.body.trim().isNotEmpty) note.body.trimRight(),
+    for (final item in note.items)
+      '[${item.checked ? 'x' : ' '}] ${item.text}',
+  ].join('\n'),
+  NoteType.ordered => [
+    if (note.body.trim().isNotEmpty) note.body.trimRight(),
+    for (var i = 0; i < note.items.length; i++)
+      '${i + 1}. ${note.items[i].text}',
+  ].join('\n'),
+  // PDF notu dışa aktarılırken KAYNAK BELGE değil, kullanıcının sayfa
+  // notları yazılır (belgenin kendisi zaten ek olarak duruyor ve buradaki
+  // dışa aktarma metin + görsel üretiyor).
+  NoteType.pdf || NoteType.slides => note.pageNotesText().trimRight(),
+  // Arşiv defteri: açıklaması + metin girdileri. Ekler (görsel/belge)
+  // dışa aktarmanın görsel bölümünden zaten geçiyor.
+  NoteType.archive => [
+    if (note.body.trim().isNotEmpty) note.body.trimRight(),
+    for (final item in note.items)
+      if (item.text.trim().isNotEmpty) item.text,
+  ].join('\n'),
+};

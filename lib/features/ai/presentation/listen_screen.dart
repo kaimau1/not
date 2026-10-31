@@ -17,6 +17,7 @@ import '../data/antalia/antalia_engine.dart';
 import '../data/antalia/antalia_speech.dart';
 import '../data/speech_service.dart';
 import '../data/gemini_service.dart';
+import '../../../core/friendly_error.dart';
 
 /// Bir belgeyi sesli dinleme ekranı. Üç mod var:
 ///
@@ -136,7 +137,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = context.l10n.aiError(e.toString());
+        _error = context.l10n.aiError(friendlyError(context.l10n, e));
         _busy = false;
       });
     }
@@ -200,7 +201,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
       // true kalıyor ve ekran sonsuza dek dönen çarkta takılıyordu.
       if (!mounted) return;
       setState(() {
-        _error = context.l10n.aiError('$e');
+        _error = context.l10n.aiError(friendlyError(context.l10n, e));
         _generating = false;
       });
     }
@@ -290,7 +291,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _rendering = false);
-      _snack(context.l10n.aiError('$e'));
+      _snack(context.l10n.aiError(friendlyError(context.l10n, e)));
     }
   }
 
@@ -317,7 +318,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
       unawaited(context.pushNote(noteRoutePath(id)));
     } catch (e) {
       if (!mounted) return;
-      _snack(context.l10n.aiError('$e'));
+      _snack(context.l10n.aiError(friendlyError(context.l10n, e)));
     }
   }
 

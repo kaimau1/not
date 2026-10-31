@@ -69,6 +69,8 @@ import '../settings_providers.dart';
 import 'notes_settings.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/press_scale.dart';
+import '../../../core/friendly_error.dart';
+import '../../auth/presentation/account_required.dart';
 
 part 'settings_sections/settings_area.dart';
 part 'settings_sections/settings_account.dart';
@@ -954,7 +956,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
       );
     } catch (e) {
-      messenger.showMessage(l10n.aiError('$e'));
+      messenger.showMessage(l10n.aiError(friendlyError(l10n, e)));
     } finally {
       if (mounted) setState(() => _aiBusy = false);
     }

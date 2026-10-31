@@ -27,6 +27,24 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
 numarasıyla bildir.
 
+**2026-10-31 Faz 10 (kırık/yanıltıcı olanlar)**
+- [ ] Web (Chrome): + → Dosya ekle → PDF → "Belge gibi not al" → PDF açılıyor
+  ("PDF işleniyor…/Ek yükleniyor" göstergesi); balon ekle → Sayfaları düzenle
+  → bir sayfa sil → Paylaş → Balonlu PDF iniyor/paylaşılıyor (F10.1).
+- [ ] Telefon: iki sayfalı notu WhatsApp'a paylaş → iki sayfa da "Sayfa 1 /
+  Sayfa 2" başlığıyla gidiyor; ⋮ → Dışa aktar → PDF'te de iki sayfa (F10.2).
+- [ ] Hata bildirimi (ör. uçak kipinde AI) "İnternet bağlantısı yok…" diyor,
+  "Ayrıntıyı kopyala" ham metni panoya alıyor (F10.4).
+- [ ] Misafir: AI ekranında puan yerine "Google hesabı ya da kendi anahtarın"
+  kartı, araçlar soluk; Paylaş → Birlikte düzenle / Kopya gönder kilitli,
+  dokununca "Google hesabı gerekir" levhası; Google ile giriş notları
+  koruyor (F10.5).
+- [ ] Web soğuk açılış: tek açılış ekranı (üst üste iki logo yok), İngilizce
+  tarayıcıda "Notes" (F10.6).
+- [ ] Web'de geçici misafirle Ayarlar → Hesabımı ve verilerimi sil →
+  "Hesabın ve verilerin siliniyor…" görünüyor, bitince giriş ekranı (boş
+  ekran yok) (F10.7).
+
 **2026-10-28 görünüm + medya turu (APK'da HİÇ derlenmedi — Actions kotası
 doluydu; ilk `[apk]` koşusunda önce derlemenin yeşil olduğuna bak:
 `NotKisayolu.kt` yeni Kotlin)**

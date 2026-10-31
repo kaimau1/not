@@ -5,6 +5,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../data/notes_repository.dart';
 import '../../domain/note_version.dart';
+import '../../../../core/friendly_error.dart';
 
 /// **SÜRÜM GEÇMİŞİ** levhası (F4.2): notun saklanan sürümleri, yeniden
 /// eskiye. Birine dokunmak önizlemeyi açar; "Bu sürüme dön" seçilen sürümü
@@ -52,7 +53,7 @@ class _HistoryList extends StatelessWidget {
         if (snap.hasError) {
           return Padding(
             padding: const EdgeInsets.all(24),
-            child: Text(l10n.genericError('${snap.error}')),
+            child: Text(l10n.genericError(friendlyError(l10n, snap.error!))),
           );
         }
         final versions = snap.data;

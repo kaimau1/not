@@ -150,7 +150,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
       // Yalnız FileTooLargeException yakalanıyordu; başka her hata (web'de
       // dosya sistemi yok, disk dolu, izin reddi) yukarı kaçıp await'i
       // tamamlanmadan bırakıyordu → ekran donmuş görünüyor, mesaj çıkmıyordu.
-      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
     }
     return null;
   }
@@ -341,7 +341,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
       if (picked == null) return;
       await _addImageBytes(await picked.readAsBytes(), picked.name);
     } catch (e) {
-      if (mounted) _showSnack(l10n.attachmentFailed('$e'));
+      if (mounted) _showSnack(l10n.attachmentFailed(friendlyError(l10n, e)));
     }
   }
 
@@ -368,7 +368,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
       try {
         pages = await DocumentScan.scanPages();
       } catch (e) {
-        if (mounted) _showSnack(l10n.scanFailed('$e'));
+        if (mounted) _showSnack(l10n.scanFailed(friendlyError(l10n, e)));
         return;
       }
     } else {
@@ -401,7 +401,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
       } on FileTooLargeException catch (e) {
         if (mounted) _showSnack(_tooLargeMessage(e));
       } catch (e) {
-        if (mounted) _showSnack(l10n.attachmentFailed('$e'));
+        if (mounted) _showSnack(l10n.attachmentFailed(friendlyError(l10n, e)));
       }
       return;
     }
@@ -1176,25 +1176,30 @@ extension _EditorAttachments on _NoteEditorScreenState {
       // Başka bir Not kullanıcısının gönderdiği "balonlu PDF" ise damga
       // katmanı sökülür ve balonlar/çizimler DÜZENLENEBİLİR olarak geri
       // yüklenir (bkz. PdfEdit.readSharedPdf). Sıradan PDF'te null döner.
-      final restored = await PdfEdit.readSharedPdfInBackground(bytes);
-      if (!mounted) return null;
+      // Okuma da göstergenin İÇİNDE: web'de izole yok, büyük PDF'te ana iş
+      // parçacığında sürer (F10.1).
+      Map<String, dynamic>? restored;
       final attachment = await _runBusy(
         context.l10n.attachmentUploading,
-        () => repo.preparePdf(
-          noteId: widget.noteId,
-          bytes: restored == null ? bytes : restored['bytes'] as Uint8List,
-          fileName: _documentFileName(file.name, '.pdf'),
-        ),
+        () async {
+          restored = await PdfEdit.readSharedPdfInBackground(bytes);
+          return repo.preparePdf(
+            noteId: widget.noteId,
+            bytes: restored == null ? bytes : restored!['bytes'] as Uint8List,
+            fileName: _documentFileName(file.name, '.pdf'),
+          );
+        },
       );
-      final stored = restored == null
+      final shared = restored;
+      final stored = shared == null
           ? attachment
           : attachment.copyWith(
               bubbles: [
-                for (final e in (restored['b'] as List?) ?? const [])
+                for (final e in (shared['b'] as List?) ?? const [])
                   PageBubble.fromMap(Map<String, dynamic>.from(e as Map)),
               ],
               ink: [
-                for (final e in (restored['i'] as List?) ?? const [])
+                for (final e in (shared['i'] as List?) ?? const [])
                   InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
               ],
             );
@@ -1207,7 +1212,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
     }
     return null;
   }
@@ -1290,7 +1295,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
     }
   }
 
@@ -1365,7 +1370,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
     }
   }
 
@@ -1526,7 +1531,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
     } on AttachmentMissingException {
       if (mounted) _showSnack(context.l10n.attachmentNotSynced);
     } catch (e) {
-      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
     }
   }
 
@@ -1607,7 +1612,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
     } on AttachmentMissingException {
       if (mounted) _showSnack(context.l10n.cropFailed);
     } catch (e) {
-      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
     }
   }
 
@@ -1639,7 +1644,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
     } on AttachmentMissingException {
       if (mounted) _showSnack(context.l10n.rotateFailed);
     } catch (e) {
-      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
     }
     return null;
   }
@@ -1808,7 +1813,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
       );
       if (mounted) _showSnack(l10n.videoLocalOnly);
     } catch (e) {
-      if (mounted) _showSnack(l10n.attachmentFailed('$e'));
+      if (mounted) _showSnack(l10n.attachmentFailed(friendlyError(l10n, e)));
     }
   }
 
@@ -1839,7 +1844,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
       _showSnack(l10n.videoLocalOnly);
       return added;
     } catch (e) {
-      if (mounted) _showSnack(l10n.attachmentFailed('$e'));
+      if (mounted) _showSnack(l10n.attachmentFailed(friendlyError(l10n, e)));
     }
     return null;
   }
@@ -2080,7 +2085,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      if (mounted) _showSnack(l10n.attachmentFailed('$e'));
+      if (mounted) _showSnack(l10n.attachmentFailed(friendlyError(l10n, e)));
     }
     return null;
   }
@@ -2159,7 +2164,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      if (mounted) _showSnack(l10n.attachmentFailed('$e'));
+      if (mounted) _showSnack(l10n.attachmentFailed(friendlyError(l10n, e)));
     }
   }
 
@@ -2324,7 +2329,12 @@ extension _EditorAttachments on _NoteEditorScreenState {
         if (mounted) _showSnack(context.l10n.attachmentNotSynced);
         return;
       }
-      final result = await work(bytes);
+      if (!mounted) return;
+      // Web'de izole yok, iş ana iş parçacığında sürer: gösterge şart (F10.1).
+      final result = await _runBusy(
+        context.l10n.pdfEditWorking,
+        () => work(bytes),
+      );
       final stored = await repo.replaceDocumentBytes(
         noteId: widget.noteId,
         attachment: clearInk ? doc.copyWith(ink: const []) : doc,
@@ -2343,7 +2353,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      if (mounted) _showSnack(context.l10n.pdfEditFailed('$e'));
+      if (mounted) _showSnack(context.l10n.pdfEditFailed(friendlyError(context.l10n, e)));
     }
   }
 }

@@ -11,6 +11,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import 'editor/note_images.dart';
 import 'viewers/image_crop.dart';
+import '../../../core/friendly_error.dart';
 
 /// Seçilen görselleri NOT KURULMADAN ÖNCE düzeltme ekranı: kırp, döndür,
 /// gereksizini at, sırayı gözden geçir.
@@ -72,7 +73,7 @@ class _ImagePrepareScreenState extends State<ImagePrepareScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showMessage(context.l10n.genericError('$e'));
+          ..showMessage(context.l10n.genericError(friendlyError(context.l10n, e)));
       }
     } finally {
       if (mounted) setState(() => _busy = false);

@@ -91,12 +91,31 @@
     </p>
   </noscript>
   <script>
-    window.addEventListener('flutter-first-frame', function () {
+    // TEK AÇILIŞ KATMANI (F10.6, 2026-10-31): bu katman Flutter'ın ilk
+    // karesinde değil, uygulama İLK ANLAMLI ekranını çizince ('notlar-ready',
+    // bkz. lib/core/utils/web_ready.dart) kalkar — sessiz misafir girişi
+    // sürerken çizilen ara ekran ile bu katman artık üst üste binmiyor. Bir
+    // şey ters giderse ilk kareden 6 sn sonra yine kalkar.
+    (function () {
       var s = document.getElementById('splash');
-      if (!s) return;
-      s.classList.add('gone');
-      setTimeout(function () { s.remove(); }, 400);
-    });
+      var en = !/^tr\b/i.test(navigator.language || 'tr');
+      if (en) {
+        document.documentElement.lang = 'en';
+        s.querySelector('h1').textContent = 'Notes';
+        s.querySelector('p').textContent = 'Getting your notes ready…';
+      }
+      var gone = false;
+      function hide() {
+        if (gone || !s) return;
+        gone = true;
+        s.classList.add('gone');
+        setTimeout(function () { s.remove(); }, 400);
+      }
+      window.addEventListener('notlar-ready', hide);
+      window.addEventListener('flutter-first-frame', function () {
+        setTimeout(hide, 6000);
+      });
+    })();
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>

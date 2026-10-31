@@ -33,7 +33,7 @@ extension _EditorAi on _NoteEditorScreenState {
         );
       }
     } catch (e) {
-      if (mounted) _showSnack(context.l10n.aiError('$e'));
+      if (mounted) _showSnack(context.l10n.aiError(friendlyError(context.l10n, e)));
     } finally {
       if (mounted) _aiTaskN.value = null;
     }

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../friendly_error.dart';
 
 /// Uygulama genelinde tek, kök ScaffoldMessenger. MaterialApp'e verilir; bu
 /// sayede bildirimler go_router sayfa geçişlerinden bağımsız, aynı messenger
@@ -128,13 +131,25 @@ extension AppMessages on ScaffoldMessengerState {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 4),
   }) {
+    // Hata bildirimi: ham ayrıntı kopyalanabilsin (F10.4).
+    final detail = action == null ? errorDetailFor(message) : null;
+    final act =
+        action ??
+        (detail == null
+            ? null
+            : SnackBarAction(
+                label: detail.label,
+                onPressed: () =>
+                    Clipboard.setData(ClipboardData(text: detail.raw)),
+              ));
+    final shown = detail == null ? duration : const Duration(seconds: 6);
     showSnackBar(
-      action == null
-          ? SnackBar(content: Text(message), duration: duration)
+      act == null
+          ? SnackBar(content: Text(message), duration: shown)
           : timedSnackBar(
               content: Text(message),
-              action: action,
-              duration: duration,
+              action: act,
+              duration: shown,
             ),
     );
   }

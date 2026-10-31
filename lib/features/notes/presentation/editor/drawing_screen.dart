@@ -9,6 +9,7 @@ import '../../../../core/widgets/undo_snackbar.dart';
 import '../viewers/ink_layer.dart';
 import 'note_images.dart';
 import 'pen_tray.dart';
+import '../../../../core/friendly_error.dart';
 
 /// El yazısı notu: beyaz bir tuvale çizilir, kaydedilirse PNG baytları döner
 /// ve nota görsel eki olarak girer.
@@ -160,7 +161,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showMessage(context.l10n.attachmentFailed('$e'));
+        ..showMessage(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
     }
   }
 

@@ -12,6 +12,8 @@ import '../../friends/presentation/friends_screen.dart';
 import '../../notes/domain/note.dart';
 import '../data/inbox_repository.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/friendly_error.dart';
+import '../../auth/presentation/account_required.dart';
 
 /// **NOTU ARKADAŞA GÖNDER** (kullanıcı isteği 2026-08-18: "not paylaş
 /// seçeneği de lazım"). Arkadaş listesinden seçilen kişinin GELEN NOTLAR
@@ -27,7 +29,7 @@ Future<void> showSendNoteToFriendSheet(
   // Yerel (anonim) hesapta arkadaş kavramı yok: e-posta olmadan kimse
   // bulunamaz, kural da arkadaşlık kanıtı arar.
   if (ref.read(isAnonymousProvider)) {
-    ScaffoldMessenger.of(context).showMessage(context.l10n.friendsNeedsAccount);
+    await showAccountRequiredSheet(context, ref);
     return;
   }
   // Bölünmüş notun çizim/balon kısmı da kopyaya girsin (F3.13).
@@ -138,6 +140,6 @@ Future<void> _send(
       ..hideCurrentSnackBar()
       ..showMessage(l10n.sendNoteSent(label));
   } catch (e) {
-    messenger.showMessage(l10n.genericError('$e'));
+    messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
   }
 }

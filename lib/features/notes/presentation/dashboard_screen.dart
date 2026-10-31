@@ -61,6 +61,7 @@ import 'voice_assistant_widgets.dart';
 import 'voice_capture_sheet.dart';
 import 'drive_ui.dart';
 import '../../../core/widgets/skeleton.dart';
+import '../../../core/friendly_error.dart';
 
 part 'dashboard_widgets.dart';
 part 'dashboard_selection.dart';
@@ -653,7 +654,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       });
     } catch (e) {
       File(path).delete().ignore();
-      if (mounted) showQuickAddSnack(context.l10n.attachmentFailed('$e'));
+      if (mounted) showQuickAddSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
     }
   }
 
@@ -961,7 +962,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         _deleteSelected(selectedIds),
                                   ),
                                   PopupMenuButton<String>(
-                                    tooltip: l10n.noteMetaMenu,
+                                    tooltip: l10n.moreActions,
                                     onSelected: (action) {
                                       switch (action) {
                                         case 'pin':
@@ -1357,9 +1358,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                             hasScrollBody: false,
                                             child: EmptyState(
                                               icon: Icons.error_outline,
-                                              title: l10n.genericError(
-                                                e.toString(),
-                                              ),
+                                              title: l10n.genericError(friendlyError(l10n, e)),
                                             ),
                                           ),
                                         ],

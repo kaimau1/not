@@ -244,7 +244,7 @@ extension _EditorVoice on _NoteEditorScreenState {
     } on GeminiException catch (e) {
       if (mounted) _showSnack(e.isAuthError ? l10n.aiNoApiKey : e.message);
     } catch (e) {
-      if (mounted) _showSnack(l10n.aiError(e.toString()));
+      if (mounted) _showSnack(l10n.aiError(friendlyError(l10n, e)));
     } finally {
       if (mounted) _aiTaskN.value = null;
     }
@@ -273,7 +273,7 @@ extension _EditorVoice on _NoteEditorScreenState {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
       File(path).delete().ignore();
-      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
     }
   }
 }

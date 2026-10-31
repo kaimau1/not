@@ -10,6 +10,8 @@ import '../../auth/presentation/auth_providers.dart';
 import '../data/friends_repository.dart';
 import '../domain/friend.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/friendly_error.dart';
+import '../../auth/presentation/account_required.dart';
 
 /// **KİŞİLER** — arkadaş listesi, bekleyen istekler, e-postayla ekleme.
 ///
@@ -202,7 +204,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet>
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showMessage(l10n.genericError('$e'));
+        ).showMessage(l10n.genericError(friendlyError(l10n, e)));
       }
     }
   }
@@ -242,7 +244,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet>
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showMessage(l10n.genericError('$e'));
+        ).showMessage(l10n.genericError(friendlyError(l10n, e)));
       }
     }
   }
@@ -449,9 +451,7 @@ class _FriendTile extends ConsumerWidget {
 /// e-posta olmadığı için özellik anlamsız — düğme yerine bilgi verir.
 void openFriendsScreenOrExplain(BuildContext context, WidgetRef ref) {
   if (ref.read(isAnonymousProvider)) {
-    ScaffoldMessenger.of(
-      context,
-    ).showMessage(context.l10n.friendsNeedsAccount);
+    showAccountRequiredSheet(context, ref);
     return;
   }
   FriendsScreen.open(context);

@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
 import '../../../core/utils/local_file.dart';
+import '../../../core/utils/run_heavy.dart';
 import '../domain/note.dart';
 
 /// **YALNIZ BU CİHAZDA TUTULAN NOTLAR** (kullanıcı isteği 2026-09-26:
@@ -273,7 +273,7 @@ class LocalNotesStore {
   /// Statik: izoleye giden kapanış örneği (akış denetleyicisi vb.)
   /// yakalamasın.
   static Future<String> _encodeAll(Map<String, Map<String, dynamic>> docs) =>
-      Isolate.run(
+      runHeavy(
         () => jsonEncode({
           for (final e in docs.entries) e.key: _encode(e.value),
         }),

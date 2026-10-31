@@ -239,8 +239,11 @@ eskisini arşive taşıma.
   yardımcıda kur (örnek alanı yakalarsa gönderilemez — akış denetleyicisi).
   **TUZAK (2026-10-30, web'de görüldü):** `Isolate.run` WEB'DE YOK
   (`Unsupported operation: RawReceivePort`) — `pdf_edit.dart` web'de PDF
-  eklemeyi, sayfa düzenlemeyi ve balonlu PDF'i kırıyor (F10.1). Web'e de giden
-  yolda `compute` (web'de aynı iş parçacığında koşar) ya da `kIsWeb` dalı.
+  eklemeyi, sayfa düzenlemeyi ve balonlu PDF'i kırıyordu. **KURAL
+  (2026-10-31, F10.1):** `Isolate.run` doğrudan YAZILMAZ — `runHeavy`
+  (`core/utils/run_heavy.dart`; web'de aynı iş parçacığı). Web'de iş UI'ı
+  tuttuğu için çağıran gösterge açar. Web'de `getTemporaryDirectory` da yok
+  → paylaşımda `XFile.fromData`.
 - `localFileExists` "yok" sonucunu 2 sn önbellekler (F6.9): dosya YAZAN yol
   `forgetLocalFile` çağırmalı (ya da toplu indirmede
   `localFilesRevisionProvider` bump) — yoksa yeni dosya 2 sn görünmez.
@@ -634,6 +637,10 @@ eskisini arşive taşıma.
   semantik ağacıyla gezilebiliyor (yöntem: `KULLANICI_DENEYIMI_PLANI.md`
   Ek A). İlk açılış Firebase'de anonim hesap açar — tur sonunda uygulamadan
   "Hesabımı ve verilerimi sil".
+- Açılış (F10.6, 2026-10-31): `#splash` Flutter'ın ilk karesinde DEĞİL,
+  `notlar-ready` olayında kalkar (`signalWebReady`: giriş düğmeleri ya da
+  `AppFrame`). Yeni bir ilk ekran eklenirse orada da çağır; yoksa 6 sn
+  yedeğe kalır. Dil `navigator.language`.
 - Web'de Drive ekleri (F4.4): `WebDriveAuth` Google penceresiyle Drive
   kapsamlı jeton (bellekte, ~1 sa); ek `blob:` adresiyle açılır, `blob:`
   `toMap`'te buluta yazılmaz. Web Drive'a yazmaz (ekleri Storage'a).
@@ -711,6 +718,22 @@ eskisini arşive taşıma.
 - Bildirim (F8.3): düz metin için `messenger.showMessage(metin)` /
   `showAppMessage(context, metin)`; eylemliyse `action:` (geri sayımlı).
   Elle `SnackBar(content: Text(...))` kurma.
+
+## Faz 10 kararları (2026-10-31)
+- **Hata metni (F10.4):** kullanıcıya `'$e'` GİTMEZ — `friendlyError(l10n, e)`
+  (`core/friendly_error.dart`); ham metin `ErrorLog`a, `showMessage` az önceki
+  hatanın bildirimine "Ayrıntıyı kopyala" ekler (5 sn penceresi). Kendi
+  okunur iletisi olan istisna `UserFacingException` uygular.
+- **Misafir (F10.5):** hesap isteyen giriş GİZLENMEZ, `AccountLockBadge` ile
+  görünür; dokununca `showAccountRequiredSheet` (Google bağla, uid korunur).
+  AI: `aiGuestLockedProvider` (misafir + anahtarsız) → `GuestAiCard` +
+  `GuestAiDim`.
+- **Çok sayfalı not (F10.2):** paylaşım/kopya/PDF-Word metni bütün
+  sayfaları yazar ("Sayfa N"; tek sayfada başlık yok). Etkin sayfa
+  `body/items`ten.
+- **Bekleme penceresi + oturum değişimi (F10.7):** oturumu düşüren işin
+  penceresi `DialogRoute` tutulup `isActive` ise `removeRoute` — router
+  pencereyi kaldırabilir, körlemesine `pop()` alttaki sayfayı atar.
 
 ## Kod hijyeni (Faz 8, 2026-10-20)
 - Lint: `unawaited_futures`, `cancel_subscriptions`, `unnecessary_lambdas`,

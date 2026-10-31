@@ -15,6 +15,7 @@ import '../../../core/utils/rich_text.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/friendly_error.dart';
 
 /// Çöp kutusu: silinen notlar geri alınabilir veya kalıcı silinebilir.
 ///
@@ -203,7 +204,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(
           icon: Icons.error_outline,
-          title: l10n.genericError(e.toString()),
+          title: l10n.genericError(friendlyError(l10n, e)),
         ),
         data: (raw) => ValueListenableBuilder<TextEditingValue>(
           valueListenable: _search.controller,

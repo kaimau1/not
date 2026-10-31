@@ -31,6 +31,7 @@ import 'image_prepare_screen.dart';
 import 'notes_providers.dart';
 import 'qr_scan_screen.dart';
 import 'scan_review_screen.dart';
+import '../../../core/friendly_error.dart';
 
 /// **SAĞ ALTTAKİ YÜZEN "+" DÜĞMESİNİN ARDINDAKİ İŞ.**
 ///
@@ -306,7 +307,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     try {
       pages = await DocumentScan.scanPages();
     } catch (e) {
-      if (mounted) showQuickAddSnack(l10n.scanFailed('$e'));
+      if (mounted) showQuickAddSnack(l10n.scanFailed(friendlyError(l10n, e)));
       return;
     }
     if (pages == null || pages.isEmpty || !mounted) return;
@@ -585,7 +586,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     } catch (e) {
       messenger
         ..hideCurrentSnackBar()
-        ..showMessage(l10n.genericError('$e'));
+        ..showMessage(l10n.genericError(friendlyError(l10n, e)));
     }
   }
 
@@ -629,7 +630,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     } catch (e) {
       messenger
         ..hideCurrentSnackBar()
-        ..showMessage(l10n.genericError('$e'));
+        ..showMessage(l10n.genericError(friendlyError(l10n, e)));
     }
   }
 
@@ -685,7 +686,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       if (!mounted) return;
       await openNewNote(id);
     } catch (e) {
-      if (mounted) showQuickAddSnack(l10n.genericError('$e'));
+      if (mounted) showQuickAddSnack(l10n.genericError(friendlyError(l10n, e)));
     }
   }
 
@@ -743,7 +744,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     } catch (e) {
       messenger
         ..hideCurrentSnackBar()
-        ..showMessage(l10n.genericError('$e'));
+        ..showMessage(l10n.genericError(friendlyError(l10n, e)));
     }
   }
 

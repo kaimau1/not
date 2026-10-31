@@ -12,6 +12,7 @@ import '../../../../core/constants.dart';
 import '../../../../core/error_log.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
+import '../../../../core/friendly_error.dart';
 
 /// Kaydedicinin evresi.
 enum VoiceRecordPhase { starting, recording, paused, finishing }
@@ -109,7 +110,7 @@ class VoiceNoteRecorder extends ChangeNotifier {
       return null;
     } catch (e, s) {
       ErrorLog.record('voice note start', e, s);
-      return l10n.attachmentFailed('$e');
+      return l10n.attachmentFailed(friendlyError(l10n, e));
     }
   }
 

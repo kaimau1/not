@@ -9,6 +9,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../data/scan/doc_edges.dart';
 import '../data/scan/perspective.dart';
+import '../../../core/friendly_error.dart';
 
 /// Taranan bir sayfanın **köşelerini elle ayarlama** ekranı.
 ///
@@ -82,7 +83,7 @@ class _ScanEditScreenState extends State<ScanEditScreen> {
       // sürüklemek zorunda kalmasın.
       await _autoDetect();
     } catch (e) {
-      if (mounted) setState(() => _error = '$e');
+      if (mounted) setState(() => _error = friendlyError(context.l10n, e));
     }
   }
 
@@ -163,7 +164,7 @@ class _ScanEditScreenState extends State<ScanEditScreen> {
       setState(() => _busy = false);
       ScaffoldMessenger.of(
         context,
-      ).showMessage(context.l10n.genericError('$e'));
+      ).showMessage(context.l10n.genericError(friendlyError(context.l10n, e)));
     }
   }
 

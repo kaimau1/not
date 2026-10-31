@@ -14,6 +14,7 @@ import '../data/scan/scan_pdf.dart';
 import '../data/scan/scan_title.dart';
 import 'editor/note_images.dart';
 import 'scan_edit_screen.dart';
+import '../../../core/friendly_error.dart';
 
 /// İnceleme ekranının sonucu: sayfalar ya tek (aranabilir) PDF'e dönüştü
 /// ya da düzeltilmiş görseller olarak eklenecek.
@@ -184,7 +185,7 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
       if (!mounted || silent) return false;
       ScaffoldMessenger.of(
         context,
-      ).showMessage(context.l10n.genericError('$e'));
+      ).showMessage(context.l10n.genericError(friendlyError(context.l10n, e)));
       return false;
     }
   }
@@ -225,7 +226,7 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
       }
     } catch (e) {
       if (mounted) {
-        showAppMessage(context, context.l10n.genericError('$e'));
+        showAppMessage(context, context.l10n.genericError(friendlyError(context.l10n, e)));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -298,7 +299,7 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
       setState(() => _exporting = null);
       ScaffoldMessenger.of(
         context,
-      ).showMessage(l10n.genericError('$e'));
+      ).showMessage(l10n.genericError(friendlyError(l10n, e)));
     }
   }
 

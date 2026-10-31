@@ -9,6 +9,7 @@ import '../../ai/data/gemini_service.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/trash_analysis.dart';
+import '../../../core/friendly_error.dart';
 import 'trash_screen.dart' show trashDaysLeft;
 
 /// Çöp kutusunun AKILLI ANALİZ levhası (kullanıcı isteği 2026-10-20: "çöp
@@ -108,7 +109,7 @@ class _TrashAnalysisSheetState extends ConsumerState<_TrashAnalysisSheet> {
         );
       }
     } catch (e) {
-      if (mounted) setState(() => _aiError = l10n.aiError(e.toString()));
+      if (mounted) setState(() => _aiError = l10n.aiError(friendlyError(l10n, e)));
     } finally {
       if (mounted) setState(() => _aiLoading = false);
     }

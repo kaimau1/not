@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../data/gemini_service.dart';
+import '../../../core/friendly_error.dart';
 
 /// Düz metin döndüren AI çıktılarının (brifing, öneriler, haftalık özet)
 /// ortak gövdesi: yükleniyor / hata + "Tekrar dene" / boş durum / başlık +
@@ -53,7 +54,7 @@ class AiTextResult extends StatelessWidget {
               Text(
                 e is GeminiException && e.isAuthError
                     ? l10n.aiNoApiKey
-                    : l10n.aiError(e.toString()),
+                    : l10n.aiError(friendlyError(l10n, e)),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
