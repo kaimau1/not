@@ -37,11 +37,14 @@ extension _DashShelf on _DashboardScreenState {
         SliverToBoxAdapter(
           child: Row(
             children: [
-              // Ortak notlar artık üst çubuktaki "Gelen ve paylaşılanlar"
-              // düğmesinde (bkz. SharedHubButton).
               const Padding(
                 padding: EdgeInsetsDirectional.only(start: 12),
                 child: AllNotesChip(),
+              ),
+              // Gelen ve paylaşılanlar: Tümü'nün yanında (2026-10-31).
+              const Padding(
+                padding: EdgeInsetsDirectional.only(start: 6),
+                child: SharedHubChip(),
               ),
               const Spacer(),
               TextButton.icon(
@@ -149,6 +152,9 @@ extension _DashShelf on _DashboardScreenState {
                 children: [
                   // "Tümü" en başta (kullanıcı isteği 2026-10-20).
                   const AllNotesChip(),
+                  const SizedBox(width: 6),
+                  // GELEN hemen Tümü'nün yanında (kullanıcı isteği 2026-10-31).
+                  const SharedHubChip(),
                   const SizedBox(width: 6),
                   for (final share in hotShared) ...[
                     SharedFolderChip(

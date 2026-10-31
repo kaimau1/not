@@ -813,6 +813,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Biçim çubuğu açık mı (alt çubuktaki "Aa" düğmesi açıp kapatır).
   bool _formatBarOpen = false;
 
+  /// Alt çubukta son karede "Notta ara" / "Paylaş" görünüyor muydu (F12.1):
+  /// ⋮ menüsü çubukta duranı tekrar etmez, düşeni Araçlar'da gösterir.
+  /// Kurulum sırasında yazılır (setState yok — yalnız menü açılınca okunur).
+  bool _barHasSearch = false;
+  bool _barHasShare = false;
+
   /// Çubuğun yazacağı alan: en son odaklanan metin alanı (gövde ya da bir
   /// liste maddesi). Çubuğun kendisi odak İSTEMEDİĞİ için bu değer düğmeye
   /// basıldığında hâlâ geçerlidir (bkz. FormatBar).
@@ -913,54 +919,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Seçimdeki tüm biçimleri siler.
   void _clearFormat() => _runOnTarget(clearRichFormat);
-
-  /// **TÜMÜNE / MADDEYE UYGULA** (biçim paneli, kullanıcı isteği
-  /// 2026-10-28): imleçte etkin olan biçimler ([carried] — bekleyenler dahil)
-  /// alanın TAMAMINA yazılır, alanın tamamı seçili kalır: sonraki her biçim
-  /// dokunuşu da bütün metne (maddede bütün maddeye) işler. Başlık düzeyi
-  /// taşınmaz — satır başına anlamlı, tüm metni başlık yapmak istenmez.
-  void _applyToAll(RichMark carried) {
-    final target = _formatTarget;
-    if (target == null) return;
-    final c = target.controller;
-    if (c.text.isEmpty) return;
-    unawaited(HapticFeedback.selectionClick());
-    // Bekleyen biçim zaten [carried]da; imleçte boş işaret bırakmasın.
-    c.clearPendingFormat();
-    c.selection = TextSelection(baseOffset: 0, extentOffset: c.text.length);
-    final whole = activeRichFormats(c);
-    var changed = false;
-    void all() =>
-        c.selection = TextSelection(baseOffset: 0, extentOffset: c.text.length);
-    for (final (on, already, format) in [
-      (carried.bold, whole.bold, RichFormat.bold),
-      (carried.italic, whole.italic, RichFormat.italic),
-      (carried.underline, whole.underline, RichFormat.underline),
-    ]) {
-      if (!on || already) continue;
-      all();
-      changed |= applyRichFormat(c, format);
-    }
-    for (final (index, current, format) in [
-      (carried.color, whole.color, RichFormat.color),
-      (carried.highlight, whole.highlight, RichFormat.highlight),
-    ]) {
-      if (index == null || index == current) continue;
-      all();
-      changed |= applyRichFormat(c, format, colorIndex: index);
-    }
-    for (final (index, current, format) in [
-      (carried.size, whole.size, RichFormat.size),
-      (carried.opacity, whole.opacity, RichFormat.opacity),
-    ]) {
-      if (index == null || index == current) continue;
-      all();
-      changed |= applyRichStep(c, format, index);
-    }
-    all();
-    if (changed) target.commit();
-    if (!target.focusNode.hasFocus) target.focusNode.requestFocus();
-  }
 
   /// Renk/vurgu paletindeki "Kaldır": yalnız o biçmi düşürür (bkz.
   /// [removeRichFormat] — geri dönüşün keşfedilebilir tek yolu).
@@ -2889,19 +2847,54 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         }
       },
       itemBuilder: (context) => actionEntries,
+      // F12.4: çıplak "+" alt çubuktaki "+ Ekle" ile aynı simgeydi, ne
+      // açacağı belli değildi. Artık ETİKET + ALARM simgeli küçük çip: hem
+      // ne açtığını söyler hem DURUMU gösterir (Ö6) — etiket varsa dolu
+      // etiket simgesi ve sayısı, hatırlatıcı kuruluysa dolu ve vurgulu
+      // alarm.
       child: Chip(
-        avatar: ValueListenableBuilder<bool>(
+        key: const ValueKey('note-meta-chip'),
+        label: ValueListenableBuilder<bool>(
           valueListenable: _titleGeneratingN,
-          builder: (context, generating, _) => generating
-              ? const SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.add, size: 16),
+          builder: (context, generating, _) {
+            if (generating) {
+              return const SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              );
+            }
+            final scheme = theme.colorScheme;
+            final tagged = note.tags.isNotEmpty;
+            final alarmed = note.reminderAt != null;
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  tagged ? Icons.label : Icons.new_label_outlined,
+                  size: 15,
+                  color: tagged ? scheme.primary : scheme.onSurfaceVariant,
+                ),
+                if (tagged) ...[
+                  const SizedBox(width: 2),
+                  Text(
+                    '${note.tags.length}',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+                const SizedBox(width: 4),
+                Icon(
+                  alarmed ? Icons.alarm : Icons.alarm_add_outlined,
+                  size: 15,
+                  color: alarmed ? scheme.primary : scheme.onSurfaceVariant,
+                ),
+              ],
+            );
+          },
         ),
-        // Etiketsiz, dar bir düğme: satırda yer kaplamasın.
-        label: const SizedBox.shrink(),
         labelPadding: EdgeInsets.zero,
         padding: _kChipPadding,
         visualDensity: _kChipDensity,
@@ -3634,9 +3627,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                     ? n.copyWith(titleFontScale: value)
                                     : n.copyWith(fontScale: value),
                               ),
-                              // Sayfa rengi/çerçeve/zemin görseli: "Ekle"
-                              // levhasından buraya taşındı (bkz. FormatBar).
-                              onPageStyle: _showColorSheet,
                               // Başlık yalnız GÖVDEDE ve maddelerde: notun
                               // başlık alanı zaten başlık.
                               onHeading: _titleIsTarget
@@ -3646,14 +3636,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                     ),
                               onClose: () =>
                                   setState(() => _formatBarOpen = false),
-                              onApplyToAll: _formatTarget == null
-                                  ? null
-                                  : _applyToAll,
-                              applyToAllLabel:
-                                  _formatTarget?.controller == _bodyController ||
-                                      _titleIsTarget
-                                  ? l10n.formatApplyAll
-                                  : l10n.formatApplyItem,
                               // Hedef MADDEYSE alt çizgi sırası (2026-10-30:
                               // uzun basış menüsünden buraya taşındı).
                               dividerKind: _formatItemId == null
@@ -3785,7 +3767,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       final showSearch =
                           plan.search && on(UiItem.barSearch);
                       final showShare = plan.share && on(UiItem.barShare);
-                      // Biçim · Ekle · Seç · Ara · Paylaş · Ekler. Gerekçeler:
+                      _barHasSearch = showSearch && !editingUi;
+                      _barHasShare = showShare && !editingUi;
+                      // Biçim · Ekle · Ara · Paylaş · Ekler · (☑ | Seç).
+                      // Gerekçeler:
                       // "Metin/Liste ekle" Ekle levhasında (attach_sheet);
                       // SEÇ burada (2026-08-09), simgesi `select_all`
                       // (2026-09-01: `checklist` "liste ekle" ile
@@ -3813,37 +3798,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             id: UiItem.barAdd,
                             child: _addToolButton(l10n),
                           ),
-                        if (showCheckbox)
-                          Customizable(
-                            id: UiItem.barCheckbox,
-                            child: _toolSegment(
-                              icon: Icons.check_box_outlined,
-                              label: l10n.checkboxToggle,
-                              onTap: _toggleChecklistLine,
-                            ),
-                          ),
-                        // EKLER Ekle'nin hemen YANINDA (kullanıcı bulgusu
-                        // 2026-10-17: "alttaki ek alanı göster gizle
-                        // yapılamıyor"): kapsülün SONUNDAYKEN dar ekranda
-                        // yatay kaydırmanın dışında kalıyor, görünmüyordu.
-                        if (showAttachments)
-                          Customizable(
-                            id: UiItem.barAttachments,
-                            child: _attachmentsToggle(
-                              l10n,
-                              fileAttachments.length,
-                            ),
-                          ),
-                        if (showSelect)
-                          Customizable(
-                            id: UiItem.barSelect,
-                            child: _toolSegment(
-                              icon: Icons.select_all,
-                              label: l10n.select,
-                              onTap: () => _itemsEditorKey.currentState
-                                  ?.startSelection(),
-                            ),
-                          ),
                         if (showSearch)
                           Customizable(
                             id: UiItem.barSearch,
@@ -3860,6 +3814,42 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                               icon: Icons.share_outlined,
                               label: l10n.share,
                               onTap: () => unawaited(_share()),
+                            ),
+                          ),
+                        // EKLER ortak dörtlüden SONRA (F12.3): yalnız ekli
+                        // notta var; önde dururken Ara/Paylaş'ı nota göre
+                        // kaydırıyordu. Plan (planEditorBar) eki hesaba
+                        // katıp önce Ara/Paylaş'ı düşürdüğü için kaydırma
+                        // dışında kalmaz (2026-10-17 bulgusunun kök nedeni).
+                        if (showAttachments)
+                          Customizable(
+                            id: UiItem.barAttachments,
+                            child: _attachmentsToggle(
+                              l10n,
+                              fileAttachments.length,
+                            ),
+                          ),
+                        // TÜRE ÖZGÜ düğme (☑ metinde, Seç listede) HER ZAMAN
+                        // sol grubun EN SONUNDA (F12.3, kas hafızası): aynı
+                        // konumdaki düğme türe göre başka iş yapıyordu.
+                        // Belge notunun kalemi kapsülün hemen sağında.
+                        if (showCheckbox)
+                          Customizable(
+                            id: UiItem.barCheckbox,
+                            child: _toolSegment(
+                              icon: Icons.check_box_outlined,
+                              label: l10n.checkboxToggle,
+                              onTap: _toggleChecklistLine,
+                            ),
+                          ),
+                        if (showSelect)
+                          Customizable(
+                            id: UiItem.barSelect,
+                            child: _toolSegment(
+                              icon: Icons.select_all,
+                              label: l10n.select,
+                              onTap: () => _itemsEditorKey.currentState
+                                  ?.startSelection(),
                             ),
                           ),
                       ];

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderFlex;
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
@@ -1383,6 +1384,17 @@ class ItemsEditorState extends State<ItemsEditor>
   /// açıp sonra sırayla doldurmak isteyeni engelliyordu. İşaretsizlerin
   /// sonunda üst üste [kMaxTrailingEmptyItems] boş öğe varsa YENİSİ açılmaz,
   /// ilk boş olana odaklanılır — birikme yine sınırlı.
+  /// "+ Yeni öğe" düğmesi. F12.7: düğme GİZLENMEZ — art arda en çok
+  /// [kMaxTrailingEmptyItems] boş madde açılabilmesi kullanıcı kararı
+  /// (2026-09-26); tekrar, boş maddenin ipucunun ayrı adıyla ("Madde yaz")
+  /// giderildi.
+  Widget _addItemButton(AppLocalizations l10n) => TextButton.icon(
+    key: const ValueKey('items-add-button'),
+    onPressed: _addItem,
+    icon: const Icon(Icons.add, size: 20),
+    label: Text(l10n.newItemHint),
+  );
+
   void _addItem() {
     final open = [
       for (final i in _items)
@@ -1661,11 +1673,7 @@ class ItemsEditorState extends State<ItemsEditor>
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Row(
           children: [
-            TextButton.icon(
-              onPressed: _addItem,
-              icon: const Icon(Icons.add, size: 20),
-              label: Text(l10n.newItemHint),
-            ),
+            _addItemButton(l10n),
             if (widget.addRowTrailing != null) ...[
               const Spacer(),
               widget.addRowTrailing!,
@@ -1985,6 +1993,18 @@ class _FloatRowState extends State<_FloatRow> {
       });
     }
   }
+}
+
+/// Madde satırının kutusu, [overlay]in koordinatlarında: [anchor] satırın
+/// sol bölgesinin bağlamı, en yakın [RenderFlex] atası satırın kendisi
+/// (bkz. `items_editor_row.dart`). Bulunamazsa null (menü parmağın yerinde).
+@visibleForTesting
+Rect? itemMenuRowRect(BuildContext? anchor, RenderBox overlay) {
+  if (anchor == null || !anchor.mounted) return null;
+  final row = anchor.findAncestorRenderObjectOfType<RenderFlex>();
+  if (row == null || !row.hasSize || !row.attached) return null;
+  final topLeft = row.localToGlobal(Offset.zero, ancestor: overlay);
+  return topLeft & row.size;
 }
 
 /// Satır menüsünün ([ItemsEditorState._showItemMenu]) seçenekleri.

@@ -5,6 +5,8 @@ import '../../../core/l10n_ext.dart';
 import '../../notes/data/note_shares_repository.dart';
 import '../../notes/data/shared_note_activity.dart';
 import '../../notes/presentation/notes_providers.dart';
+import '../../inbox/data/inbox_repository.dart';
+import '../../inbox/presentation/shared_hub_screen.dart';
 import '../../notes/presentation/shared_notes_screen.dart';
 import '../data/folder_activity.dart';
 import '../data/folder_order.dart';
@@ -453,6 +455,37 @@ class AllNotesChip extends ConsumerWidget {
   }
 }
 
+/// **"GELEN" ÇİPİ** — "Tümü"nün hemen YANINDA (kullanıcı isteği 2026-10-31:
+/// "Gelen ve paylaşılanlar klasör olsun, Tümü'nün yanında dursun, ismi kısa
+/// olsun"). Gelen kopyalar ve ortak notlar bir klasör gibi şeritte durur;
+/// sayı = bekleyen gelen + benimle paylaşılan notlar, yeni hareket kırmızı
+/// rozet (bkz. [sharedHubBadgeProvider]). Boşken de görünür: kapı sabit yerde.
+/// Tek kapı burası — avatar levhasındaki satır kalktı.
+class SharedHubChip extends ConsumerWidget {
+  const SharedHubChip({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final inbox = ref.watch(
+      inboxNotesProvider.select((s) => s.value?.length ?? 0),
+    );
+    final shared = ref.watch(
+      sharedNotesWithMeProvider.select((s) => s.value?.length ?? 0),
+    );
+    final unread = ref.watch(sharedHubBadgeProvider);
+    final scheme = Theme.of(context).colorScheme;
+    return _ChipShell(
+      key: const ValueKey('shared-hub-chip'),
+      accent: scheme.tertiary,
+      icon: Icons.move_to_inbox_outlined,
+      label: context.l10n.sharedHubShort,
+      count: inbox + shared,
+      unread: unread,
+      onTap: () => SharedHubScreen.open(context),
+    );
+  }
+}
+
 /// "Yeni klasör" çipi — şeridin sonunda.
 class NewFolderChip extends ConsumerWidget {
   const NewFolderChip({super.key});
@@ -481,6 +514,7 @@ class NewFolderChip extends ConsumerWidget {
 /// kutusu: şerit sakinleşti, klasörler renkle ayırt ediliyor.
 class _ChipShell extends StatelessWidget {
   const _ChipShell({
+    super.key,
     required this.icon,
     required this.label,
     required this.onTap,

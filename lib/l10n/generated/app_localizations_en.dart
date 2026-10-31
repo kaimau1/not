@@ -745,7 +745,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'You can pick a separate model per job: short text work is fine on a fast model, long documents want a capable one. If your chosen model hits its quota or is withdrawn, the next one is tried automatically.';
 
   @override
-  String get clearNote => 'Clear';
+  String get clearNote => 'Clear content';
 
   @override
   String get clearNoteConfirm =>
@@ -937,7 +937,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestTitle => 'Suggest a title';
 
   @override
-  String get noteMetaMenu => 'Tag · Title · Reminder';
+  String get noteMetaMenu => 'Tag · Reminder · Folder';
 
   @override
   String get folder => 'Folder';
@@ -4265,7 +4265,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuSectionOrganize => 'Organize';
 
   @override
-  String get menuSectionCopy => 'Copy and export';
+  String get menuSectionCopy => 'Copy';
 
   @override
   String get menuSectionTools => 'Tools';
@@ -5840,12 +5840,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inkColor => 'Pen color';
 
   @override
-  String get formatApplyAll => 'Apply to all';
-
-  @override
-  String get formatApplyItem => 'Apply to item';
-
-  @override
   String get cardMediaHide => 'Hide image preview';
 
   @override
@@ -5917,6 +5911,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get formatScopeAll => 'All';
+
+  @override
+  String get colorNameRed => 'Red';
+
+  @override
+  String get colorNameYellow => 'Yellow';
+
+  @override
+  String get colorNameGreen => 'Green';
+
+  @override
+  String get colorNameBlue => 'Blue';
+
+  @override
+  String get colorNamePurple => 'Purple';
+
+  @override
+  String get formatSizeLabel => 'Size';
+
+  @override
+  String formatSizeValue(int percent) {
+    return 'Size $percent%';
+  }
+
+  @override
+  String get customColor => 'Custom colour…';
 
   @override
   String get embedLasso => 'Select by circling';
@@ -6012,6 +6032,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deletingAccount => 'Deleting your account and data…';
+
+  @override
+  String get sharedHubShort => 'Inbox';
+
+  @override
+  String get itemEmptyHint => 'Write an item';
 
   @override
   String get allFolders => 'All folders';

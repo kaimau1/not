@@ -14,7 +14,6 @@ void main() {
   final headings = <RichHeading>[];
   final fonts = <String?>[];
   final scales = <double>[];
-  var pageStyle = 0;
   var closed = 0;
 
   Widget app() => MaterialApp(
@@ -38,7 +37,6 @@ void main() {
           onOpacityChanged: (_) {},
           onOpacityEnd: (_) {},
           onClose: () => closed++,
-          onPageStyle: () => pageStyle++,
           onHeading: headings.add,
         ),
       ),
@@ -51,7 +49,6 @@ void main() {
     headings.clear();
     fonts.clear();
     scales.clear();
-    pageStyle = 0;
     closed = 0;
   });
 
@@ -93,16 +90,13 @@ void main() {
       'format-size-down',
       'format-size-up',
       'format-clear',
-      'format-page',
       'format-close',
     ]) {
       expectTappable(tester, find.byKey(ValueKey(key)));
     }
     await tester.tap(find.byKey(const ValueKey('format-bold')));
-    await tester.tap(find.byKey(const ValueKey('format-page')));
     await tester.tap(find.byKey(const ValueKey('format-close')));
     expect(formats, [(RichFormat.bold, null)]);
-    expect(pageStyle, 1);
     expect(closed, 1);
   });
 

@@ -96,12 +96,15 @@ class _ActionsGrid extends StatelessWidget {
         // TOPARLAMA (kullanıcı isteği 2026-10-17: "tekrarlar düzelsin"):
         // "Arkadaşa gönder", "Kopyala" ve "Dışa aktar" bu menüden kalktı —
         // aynı işin iki kapısı kafa karıştırıyordu.
+        // KLASÖRE TAŞI hızlı satırda — not ⋮ ile aynı yer (F12.2: iki menü
+        // aynı iskelet; Yıldızla · Klasöre taşı sırası ortak, grup adları ve
+        // sırası Düzenle · Kopyala · Araçlar · Koruma).
+        MenuAction('folder', l10n.moveToFolder, Icons.folder_outlined),
         MenuAction('share', l10n.share, Icons.share_outlined),
         MenuAction('select', l10n.select, Icons.check_circle_outline),
       ],
       sections: [
         MenuSection(l10n.menuSectionOrganize, [
-          MenuAction('folder', l10n.moveToFolder, Icons.folder_outlined),
           MenuAction('color', l10n.backgroundColor, Icons.palette_outlined),
           // ÇERÇEVE GERİ GELDİ — yalnız ana ekran kartında çizilir.
           MenuAction('frame', l10n.frameColor, Icons.border_color_outlined),

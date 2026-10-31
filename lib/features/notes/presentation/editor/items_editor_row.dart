@@ -296,21 +296,31 @@ extension _ItemsRow on ItemsEditorState {
                 // seçimini açtığı için madde jestleri buraya bağlandı, ikisi
                 // çakışmaz. Seçim kipinde dokunuş ve uzun basış doğrudan seçer.
                 // OPAK ve üst payı da kapsar (bkz. [leading] kök neden notu).
-                GestureDetector(
-                  behavior: _selectionMode
-                      ? HitTestBehavior.opaque
-                      : HitTestBehavior.deferToChild,
-                  onLongPressStart: (details) {
-                    if (_selectionMode) {
-                      _toggleSelection(item);
-                    } else {
-                      _showItemMenu(item, details.globalPosition);
-                    }
-                  },
-                  onTap: _selectionMode ? () => _toggleSelection(item) : null,
-                  child: Padding(
-                    padding: EdgeInsets.only(top: leadingTop),
-                    child: leading,
+                // Builder: menü satırın KENDİ kutusunu bulsun (F12.7 —
+                // hedef madde vurgulanır, menü maddenin altında açılır).
+                Builder(
+                  builder: (leadContext) => GestureDetector(
+                    behavior: _selectionMode
+                        ? HitTestBehavior.opaque
+                        : HitTestBehavior.deferToChild,
+                    onLongPressStart: (details) {
+                      if (_selectionMode) {
+                        _toggleSelection(item);
+                      } else {
+                        _showItemMenu(
+                          item,
+                          details.globalPosition,
+                          anchor: leadContext,
+                        );
+                      }
+                    },
+                    onTap: _selectionMode
+                        ? () => _toggleSelection(item)
+                        : null,
+                    child: Padding(
+                      padding: EdgeInsets.only(top: leadingTop),
+                      child: leading,
+                    ),
                   ),
                 ),
                 Expanded(
@@ -403,7 +413,10 @@ extension _ItemsRow on ItemsEditorState {
                                   // ayrışmasın.
                                   strutStyle: wrapStrutStyle(fieldStyle),
                                   decoration: InputDecoration(
-                                    hintText: l10n.newItemHint,
+                                    // Boş maddenin ipucu "Madde yaz" (F12.7):
+                                    // altındaki "+ Yeni öğe" düğmesiyle aynı
+                                    // adı taşıyınca iki "Yeni öğe" görünüyordu.
+                                    hintText: l10n.itemEmptyHint,
                                     filled: false,
                                     border: InputBorder.none,
                                     isDense: true,

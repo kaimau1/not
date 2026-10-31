@@ -10,15 +10,51 @@ extension _ItemsActions on ItemsEditorState {
   /// tek bir menüde toplandı; satırın kendisinde yalnız YILDIZLI olanın
   /// işareti ve odaklıyken silme "x"i duruyor.
   ///
-  /// Menü parmağın bastığı yerde açılır — uzun basışın nereden geldiği
-  /// böylece görünür olur.
-  Future<void> _showItemMenu(NoteItem item, Offset globalPosition) async {
-    final overlay = Overlay.of(context).context.findRenderObject();
+  /// F12.7 (2026-10-31): menü maddelerin ÜSTÜNE biniyor, hangi maddeye ait
+  /// olduğu belli olmuyordu. Artık [anchor] (satırın sol bölgesi) verilince
+  /// satırın kutusu bulunur: madde menü açıkken hafifçe VURGULANIR ve menü
+  /// maddenin ALTINDA, parmağın hizasında açılır (aşağıda yer yoksa
+  /// `showMenu` kendisi yukarı çevirir).
+  Future<void> _showItemMenu(
+    NoteItem item,
+    Offset globalPosition, {
+    BuildContext? anchor,
+  }) async {
+    final overlayState = Overlay.of(context);
+    final overlay = overlayState.context.findRenderObject();
     if (overlay is! RenderBox || !overlay.hasSize) return;
+    final rowRect = itemMenuRowRect(anchor, overlay);
     final position = RelativeRect.fromRect(
-      globalPosition & const Size(1, 1),
+      rowRect == null
+          ? globalPosition & const Size(1, 1)
+          : Rect.fromLTWH(
+              overlay.globalToLocal(globalPosition).dx,
+              rowRect.bottom,
+              1,
+              1,
+            ),
       Offset.zero & overlay.size,
     );
+    OverlayEntry? highlight;
+    if (rowRect != null) {
+      final color = Theme.of(context).colorScheme.primary;
+      highlight = OverlayEntry(
+        builder: (_) => Positioned.fromRect(
+          rect: rowRect,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              key: const ValueKey('item-menu-highlight'),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.10),
+                border: Border.all(color: color.withValues(alpha: 0.45)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ),
+      );
+      overlayState.insert(highlight);
+    }
     // ALT ÇİZGİ BİÇİM PANELİNE TAŞINDI (kullanıcı isteği 2026-10-30): menüde
     // yalnız madde işleri kaldı.
     // SADE MENÜ (kullanıcı isteği 2026-10-28: "seç menüsü çok kalabalıklaştı"):
@@ -26,7 +62,9 @@ extension _ItemsActions on ItemsEditorState {
     // ayarları, çizgiyi kaldır, taşı, sil). Artık iki sıra: üstte madde işleri
     // simge düğmeleri, altta çizgi türleri — aynı türe yeniden basmak çizgiyi
     // kaldırır, ayar düğmesi renk/kalınlık levhasını açar.
-    final choice = await showMenu<_ItemAction>(
+    final _ItemAction? choice;
+    try {
+      choice = await showMenu<_ItemAction>(
       context: context,
       position: position,
       items: [
@@ -36,6 +74,9 @@ extension _ItemsActions on ItemsEditorState {
         ),
       ],
     );
+    } finally {
+      highlight?.remove();
+    }
     if (!mounted || choice == null) return;
     switch (choice) {
       case _ItemAction.star:

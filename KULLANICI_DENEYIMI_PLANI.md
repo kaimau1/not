@@ -78,7 +78,7 @@ kullanıcıyla `git` "dubious ownership" verirse:
 |---|---|---|---|---|---|
 | 10 | Kırık ve yanıltıcı olanlar | Ö2 · Ö4 | Bitti | 2026-10-31 | 7/7; 1750/1750 test; F10.7 kök neden koddan (web'de yeniden denenmedi); cihaz turu KALANLAR'da |
 | 11 | Ana ekran ve "+" akışı | Ö1 · Ö6 | Bitti | 2026-10-31 | 9/9 (3 KARAR: önerilenler onaylandı); 1755/1755 test; web önce/sonra görüntüsü ALINMADI (canlı Firebase'de misafir hesap açmamak için) — cihaz/web turu KALANLAR'da |
-| 12 | Not ekranı: çubuklar, ⋮, biçim, liste | Ö1 · Ö5 · Ö6 | Bekliyor | | |
+| 12 | Not ekranı: çubuklar, ⋮, biçim, liste | Ö1 · Ö5 · Ö6 | Bitti | 2026-10-31 | 9/9 (F12.7 düğme gizleme yerine ipucu adı — 3 boş madde kararı korundu); 2 KARAR (palet üst çubukta; iki düğme + Diğer); ek istek: "Gelen" çipi Tümü'nün yanında; 1758/1758 test; web görüntüsü ALINMADI |
 | 13 | Balonlu mod, medya, kalem, paylaşım akışı | Ö1 · Ö2 | Bekliyor | | Balon yazısı paylaşılamıyor |
 | 14 | Anlaşılırlık: adlar, ayarlar, kılavuz, ipuçları | Ö4 | Bekliyor | | Kılavuz eskimiş |
 | 15 | Erişilebilirlik | Ö3 | Bekliyor | | Yazı boyutu kararı |
@@ -501,34 +501,70 @@ notlara kalır (Ö6).
 
 Not ekranında her işin tek ve sabit yeri olur; kas hafızası bozulmaz.
 
-- [ ] **F12.1 ⋮ not menüsü — D3.** Hızlı satır şimdi Yıldızla · Paylaş ·
+- [x] **F12.1 ⋮ not menüsü — D3.** Hızlı satır şimdi Yıldızla · Paylaş ·
   Notta ara · Hesap makinesi: Paylaş ve Notta ara kalkar (alt çubukta var —
   HAFIZA kuralı), Hesap makinesi Araçlar'a iner; yerine sık iş (öneri:
   Yıldızla · Klasöre taşı · Sürüm geçmişi · Sesli dinle; Sabitle üst çubukta
   zaten var). "Temizle" → "İçeriği temizle"; "Kopyala
   ve dışa aktar" → "Kopyala"; "Ekranı düzenle" ve "Ayarlar" en altta ince satır.
-- [ ] **F12.2 Kart ⋮ ile not ⋮ aynı iskelet.** İki menü aynı not için farklı
+  **Yapıldı:** `note_menu_sheet.dart`: hızlı satır Yıldızla · Klasöre taşı ·
+  Sürüm geçmişi · Sesli dinle. Ara/Paylaş yalnız alt çubukta GÖRÜNMÜYORSA
+  (dar ekranda `planEditorBar` düşürdü ya da gizlendi) Araçlar'da
+  (`_barHasSearch/_barHasShare`); Hesap makinesi Araçlar'da. "İçeriği
+  temizle", grup "Kopyala"; Ekranı düzenle · Ayarlar `ActionMenu.footer`
+  (Sil'in altında ince satır).
+- [x] **F12.2 Kart ⋮ ile not ⋮ aynı iskelet.** İki menü aynı not için farklı
   sıra ve grup adı kullanıyor (kart: Düzenle/Kopyala ve dışa aktar/Araçlar/
   Koruma; not: İçerik/Kopyala ve dışa aktar/Araçlar/Koruma). Ortak grup adları
   ve sıra; yalnız bağlama özgü maddeler farklı.
-- [ ] **F12.3 Alt çubuk sabit sıra — D4.** Biçim · Ekle · Ara · Paylaş ortak
+  **Yapıldı:** iki menü de Düzenle · Kopyala · Araçlar · Koruma (editörün
+  "İçerik"i → "Düzenle"); kartta Klasöre taşı hızlı satıra çıktı (Yıldızla ·
+  Klasöre taşı sırası ortak). Test: `menus_youtube_test.dart`.
+- [x] **F12.3 Alt çubuk sabit sıra — D4.** Biçim · Ekle · Ara · Paylaş ortak
   sırada; türe özgü düğme (☑ / Seç / Kalem) her zaman sol grubun EN SONUNDA.
   `UiItem` kimlikleri değişmez.
-- [ ] **F12.4 Başlık "+" — D2.** Etiket/alarm simgeli küçük çip; notta etiket
+  **Yapıldı:** kapsül sırası Biçim · Ekle · Ara · Paylaş · Ekler · (☑ | Seç);
+  kalem (belge notu) kapsülün hemen sağında. Kimlikler aynı.
+- [x] **F12.4 Başlık "+" — D2.** Etiket/alarm simgeli küçük çip; notta etiket
   ya da alarm varsa çip onları gösterir (tek alanda hem durum hem eylem, Ö6).
-- [ ] **F12.5 Biçim paneli — F1.** "Tümüne uygula" kapsam "Tümü"ye katılır
+  **Yapıldı:** çıplak "+" yerine etiket + alarm simgeli çip
+  (`note-meta-chip`): etiket varsa dolu simge + sayı, alarm kuruluysa dolu
+  vurgulu alarm. İpucu "Etiket · Alarm · Klasör".
+- [x] **F12.5 Biçim paneli — F1.** "Tümüne uygula" kapsam "Tümü"ye katılır
   (Tümü seçiliyken biçim zaten tamamına); renk dairelerine renk adı; "%100" →
   "Boyut %100" (ekran okuyucuda da); klavye açıkken panel yüksekliği ölçülür,
   kapsam sırası seçim varken gizlenir (seçim zaten kapsamdır).
-- [ ] **F12.6 Görünüm levhası — D7. KARAR GEREKİR.** "Zemin rengi" → "Özel
+  **Yapıldı:** `format_bar.dart`: "Tümüne uygula" (`_applyToAll`) kalktı —
+  kapsam "Tümü" aynı iş; daire ipuçları "Yazı rengi: Kırmızı"…; boyut
+  üstte küçük "Boyut", ekran okuyucu "Boyut %100"; elle seçim varken kapsam
+  sırası gizli (`_manualSelection`, kapsamın kendi seçimi sayılmaz) — panel
+  o kadar alçalır. Klavye açıkken panel yine `Flexible` + kaydırma içinde;
+  ayrı yükseklik ölçümü EKLENMEDİ (cihazda bakılacak, KALANLAR). Test:
+  `note_screen_bars_test`, `format_scope_switch_test`.
+- [x] **F12.6 Görünüm levhası — D7. KARAR GEREKİR.** "Zemin rengi" → "Özel
   renk…"; Sayfa rengi tek yerden (öneri: üst çubuk palet; biçim panelinden
   kalksın).
-- [ ] **F12.7 Liste — E1, E2.** Boş son madde varken "+ Yeni öğe" düğmesi
+  **Yapıldı (KARAR: üst çubuk palet):** biçim panelindeki "Sayfa rengi"
+  (`onPageStyle`) kalktı; görünüm levhasındaki "Zemin rengi" → "Özel renk…"
+  (`customColor`). Kart ⋮ "Zemin rengi" (yalnız renk) yerinde.
+- [x] **F12.7 Liste — E1, E2.** Boş son madde varken "+ Yeni öğe" düğmesi
   gizli; madde menüsü açılınca hedef madde vurgulanır, menü maddenin altında.
-- [ ] **F12.8 AI levhası — M2.** Araç kartları eşit yükseklik (ya da tek sütun
+  **Yapıldı (değiştirildi):** düğme GİZLENMEDİ — art arda en çok 3 boş
+  madde açılabilmesi kullanıcı kararı (2026-09-26), gizlemek onu bozuyordu
+  (2 test kırıldı). İki "Yeni öğe" tekrarı boş maddenin ipucu "Madde yaz"
+  (`itemEmptyHint`) ile giderildi. Madde menüsü: satır kutusu bulunur
+  (`itemMenuRowRect`), menü açıkken madde vurgulu, menü maddenin altında.
+- [x] **F12.8 AI levhası — M2.** Araç kartları eşit yükseklik (ya da tek sütun
   liste); başlık "Yapay zekâ" (F14.1 sözlüğü).
-- [ ] **F12.9 AI sesli not levhası — K2. KARAR GEREKİR.** Tek birincil eylem
+  **Yapıldı:** `_AiTileGrid` iki sütunlu satırlar (IntrinsicHeight +
+  stretch) — yan yana kutular eşit boy, tek kalan son kutu tam genişlik.
+  Başlık "Yapay zekâ" (`aiTitle`, `aiHubTitle`, `settingsAi`).
+- [x] **F12.9 AI sesli not levhası — K2. KARAR GEREKİR.** Tek birincil eylem
   ("Notu kur"), çipler ve öbür eylemler "Diğer" altında.
+  **Yapıldı (KARAR: iki düğme kalsın, çipler Diğer'e):** AI not · Düz not
+  yan yana (önceki kullanıcı kararı); Özetleyerek kaydet / Liste notu yap /
+  Düzelt varsayılan kapalı "Diğer" çipinin altında (`_moreOpen`). Levhanın
+  gözden geçirme evresine test yolu yok — cihazda bakılacak.
 
 **Senin yapacakların:** metin, liste ve belge notunda alt çubuğun aynı
 yerde durduğu; biçim paneli klavye açıkken.

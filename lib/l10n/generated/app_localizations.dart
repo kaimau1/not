@@ -377,7 +377,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Yapay Zeka'**
+  /// **'Yapay zekâ'**
   String get aiTitle;
 
   /// No description provided for @aiSummarize.
@@ -551,7 +551,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAi.
   ///
   /// In tr, this message translates to:
-  /// **'Yapay Zeka'**
+  /// **'Yapay zekâ'**
   String get settingsAi;
 
   /// No description provided for @geminiApiKeyInfo.
@@ -1451,7 +1451,7 @@ abstract class AppLocalizations {
   /// No description provided for @clearNote.
   ///
   /// In tr, this message translates to:
-  /// **'Temizle'**
+  /// **'İçeriği temizle'**
   String get clearNote;
 
   /// No description provided for @clearNoteConfirm.
@@ -1805,7 +1805,7 @@ abstract class AppLocalizations {
   /// No description provided for @noteMetaMenu.
   ///
   /// In tr, this message translates to:
-  /// **'Etiket · Başlık · Alarm'**
+  /// **'Etiket · Alarm · Klasör'**
   String get noteMetaMenu;
 
   /// No description provided for @folder.
@@ -2249,7 +2249,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiHubTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Yapay Zeka'**
+  /// **'Yapay zekâ'**
   String get aiHubTitle;
 
   /// No description provided for @aiSummarizeInfo.
@@ -3695,7 +3695,7 @@ abstract class AppLocalizations {
   /// No description provided for @premiumByokHint.
   ///
   /// In tr, this message translates to:
-  /// **'Kendi Gemini API anahtarını girersen yapay zeka özellikleri kotasız çalışır — Premium\'dan bağımsız (Ayarlar → Yapay Zeka).'**
+  /// **'Kendi Gemini API anahtarını girersen yapay zekâ özellikleri kotasız çalışır — Premium\'dan bağımsız (Ayarlar → Yapay zekâ).'**
   String get premiumByokHint;
 
   /// No description provided for @premiumDiscoverTitle.
@@ -7709,7 +7709,7 @@ abstract class AppLocalizations {
   /// No description provided for @menuSectionCopy.
   ///
   /// In tr, this message translates to:
-  /// **'Kopyala ve dışa aktar'**
+  /// **'Kopyala'**
   String get menuSectionCopy;
 
   /// No description provided for @menuSectionTools.
@@ -10430,18 +10430,6 @@ abstract class AppLocalizations {
   /// **'Kalem rengi'**
   String get inkColor;
 
-  /// No description provided for @formatApplyAll.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tümüne uygula'**
-  String get formatApplyAll;
-
-  /// No description provided for @formatApplyItem.
-  ///
-  /// In tr, this message translates to:
-  /// **'Maddeye uygula'**
-  String get formatApplyItem;
-
   /// No description provided for @cardMediaHide.
   ///
   /// In tr, this message translates to:
@@ -10579,6 +10567,54 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tümü'**
   String get formatScopeAll;
+
+  /// No description provided for @colorNameRed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kırmızı'**
+  String get colorNameRed;
+
+  /// No description provided for @colorNameYellow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sarı'**
+  String get colorNameYellow;
+
+  /// No description provided for @colorNameGreen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeşil'**
+  String get colorNameGreen;
+
+  /// No description provided for @colorNameBlue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mavi'**
+  String get colorNameBlue;
+
+  /// No description provided for @colorNamePurple.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mor'**
+  String get colorNamePurple;
+
+  /// No description provided for @formatSizeLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boyut'**
+  String get formatSizeLabel;
+
+  /// No description provided for @formatSizeValue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boyut %{percent}'**
+  String formatSizeValue(int percent);
+
+  /// No description provided for @customColor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel renk…'**
+  String get customColor;
 
   /// No description provided for @embedLasso.
   ///
@@ -10753,6 +10789,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Hesabın ve verilerin siliniyor…'**
   String get deletingAccount;
+
+  /// No description provided for @sharedHubShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelen'**
+  String get sharedHubShort;
+
+  /// No description provided for @itemEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Madde yaz'**
+  String get itemEmptyHint;
 
   /// No description provided for @allFolders.
   ///

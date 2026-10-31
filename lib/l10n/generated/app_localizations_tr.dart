@@ -165,7 +165,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get color => 'Renk';
 
   @override
-  String get aiTitle => 'Yapay Zeka';
+  String get aiTitle => 'Yapay zekâ';
 
   @override
   String get aiSummarize => 'Notu özetle';
@@ -257,7 +257,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get themeDark => 'Koyu';
 
   @override
-  String get settingsAi => 'Yapay Zeka';
+  String get settingsAi => 'Yapay zekâ';
 
   @override
   String get geminiApiKeyInfo =>
@@ -744,7 +744,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Her iş için ayrı model seçebilirsin: kısa metin işleri hızlı modelle yeter, uzun belge işi yetenekli model ister. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir.';
 
   @override
-  String get clearNote => 'Temizle';
+  String get clearNote => 'İçeriği temizle';
 
   @override
   String get clearNoteConfirm =>
@@ -936,7 +936,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get suggestTitle => 'Başlık öner';
 
   @override
-  String get noteMetaMenu => 'Etiket · Başlık · Alarm';
+  String get noteMetaMenu => 'Etiket · Alarm · Klasör';
 
   @override
   String get folder => 'Klasör';
@@ -1179,7 +1179,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get importBackupInvalid => 'Geçersiz yedek dosyası';
 
   @override
-  String get aiHubTitle => 'Yapay Zeka';
+  String get aiHubTitle => 'Yapay zekâ';
 
   @override
   String get aiSummarizeInfo => 'Kısa bir özet çıkarır';
@@ -1958,7 +1958,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get premiumByokHint =>
-      'Kendi Gemini API anahtarını girersen yapay zeka özellikleri kotasız çalışır — Premium\'dan bağımsız (Ayarlar → Yapay Zeka).';
+      'Kendi Gemini API anahtarını girersen yapay zekâ özellikleri kotasız çalışır — Premium\'dan bağımsız (Ayarlar → Yapay zekâ).';
 
   @override
   String get premiumDiscoverTitle => 'Gözden kaçan özellikler';
@@ -4261,7 +4261,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get menuSectionOrganize => 'Düzenle';
 
   @override
-  String get menuSectionCopy => 'Kopyala ve dışa aktar';
+  String get menuSectionCopy => 'Kopyala';
 
   @override
   String get menuSectionTools => 'Araçlar';
@@ -5821,12 +5821,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get inkColor => 'Kalem rengi';
 
   @override
-  String get formatApplyAll => 'Tümüne uygula';
-
-  @override
-  String get formatApplyItem => 'Maddeye uygula';
-
-  @override
   String get cardMediaHide => 'Görsel önizlemesini gizle';
 
   @override
@@ -5898,6 +5892,32 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get formatScopeAll => 'Tümü';
+
+  @override
+  String get colorNameRed => 'Kırmızı';
+
+  @override
+  String get colorNameYellow => 'Sarı';
+
+  @override
+  String get colorNameGreen => 'Yeşil';
+
+  @override
+  String get colorNameBlue => 'Mavi';
+
+  @override
+  String get colorNamePurple => 'Mor';
+
+  @override
+  String get formatSizeLabel => 'Boyut';
+
+  @override
+  String formatSizeValue(int percent) {
+    return 'Boyut %$percent';
+  }
+
+  @override
+  String get customColor => 'Özel renk…';
 
   @override
   String get embedLasso => 'Daire çizerek seç';
@@ -5995,6 +6015,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get deletingAccount => 'Hesabın ve verilerin siliniyor…';
+
+  @override
+  String get sharedHubShort => 'Gelen';
+
+  @override
+  String get itemEmptyHint => 'Madde yaz';
 
   @override
   String get allFolders => 'Tüm klasörler';

@@ -68,9 +68,18 @@ void main() {
     expect(selected(), 'def');
     await scope('caret');
     expect(controller.selection, const TextSelection.collapsed(offset: 5));
-    // Elle yapılan seçime kapsam dokunmaz.
-    controller.selection = const TextSelection(baseOffset: 0, extentOffset: 2);
+    // Kapsamın kendi açtığı seçimde sıra GÖRÜNÜR kalır (F12.5).
     await scope('line');
+    expect(find.byKey(const ValueKey('format-scope-line')), findsOneWidget);
+    // Elle yapılan seçimde kapsam sırası GİZLİ: seçim zaten kapsam (F12.5);
+    // seçime dokunulmaz.
+    controller.selection = const TextSelection(baseOffset: 0, extentOffset: 2);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('format-scope-line')), findsNothing);
     expect(selected(), 'ab');
+    // Seçim kalkınca sıra geri gelir.
+    controller.selection = const TextSelection.collapsed(offset: 1);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('format-scope-line')), findsOneWidget);
   });
 }

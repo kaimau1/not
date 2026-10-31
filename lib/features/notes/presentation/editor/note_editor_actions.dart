@@ -243,6 +243,8 @@ extension _EditorActions on _NoteEditorScreenState {
       canTemplate: canSaveAsTemplate(note),
       canRemoveParts: !_readOnly && _hasBothParts(note),
       canPinHome: NoteShortcut.supported && widget.ownerId == null,
+      searchInBar: _barHasSearch,
+      shareInBar: _barHasShare,
       // Yalnız KENDİ notum (başkasının notu yerel yapılamaz) ve özellik
       // destekleniyorsa (web'de yok).
       localOnly: widget.ownerId == null && localOnlySupported(ref)
@@ -265,6 +267,8 @@ extension _EditorActions on _NoteEditorScreenState {
         await _pickPaper();
       case 'search':
         await _openNoteSearch();
+      case 'folder':
+        await _pickFolder();
       case 'history':
         await _openHistory();
       case 'stats':

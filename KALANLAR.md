@@ -27,6 +27,23 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
 numarasıyla bildir.
 
+**2026-10-31 Faz 12 (not ekranı) + Gelen çipi**
+- [ ] Klasör şeridinde "Tümü"nün yanında "Gelen" çipi; gelen not varken
+  rozet, dokununca Gelen/Paylaşılanlar sekmeleri; avatar levhasında artık yok.
+- [ ] Not ⋮: üstte Yıldızla · Klasöre taşı · Sürüm geçmişi · Sesli dinle;
+  dar telefonda alt çubuktan düşen Ara/Paylaş Araçlar'da; en altta Ekranı
+  düzenle · Ayarlar (F12.1). Kart ⋮ ile grup adları aynı (F12.2).
+- [ ] Metin, liste ve belge notunda alt çubuk Biçim · Ekle · Ara · Paylaş
+  aynı yerde; ☑/Seç en sonda (F12.3).
+- [ ] Başlık yanındaki etiket+alarm çipi: etiket/alarm eklenince dolu simge
+  ve sayı (F12.4).
+- [ ] Biçim paneli KLAVYE AÇIKKEN: taşma yok, metin seçince kapsam sırası
+  kalkıp panel alçalıyor; renk dairelerinin ipucunda ad (F12.5).
+- [ ] Görünüm levhasında "Özel renk…"; biçim panelinde Sayfa rengi yok (F12.6).
+- [ ] Liste maddesine uzun bas: madde vurgulu, menü altında (F12.7).
+- [ ] AI levhası kutuları eşit boy (F12.8); sesli not gözden geçirmede
+  "Diğer" çipi açılıyor (F12.9).
+
 **2026-10-31 Faz 11 (ana ekran ve "+" akışı)**
 - [ ] Telefon: üst çubukta arama · Süz · avatar · ⋮ (ayrı Gelen düğmesi yok);
   gelen not / arkadaşlık isteği varken avatarda SAYI rozeti; avatar levhası

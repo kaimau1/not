@@ -1105,63 +1105,78 @@ class _AiTileGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    // Levha yatayda 16+16 dolgulu; iki sütun, arada 8 px.
-    final width = ((MediaQuery.sizeOf(context).width - 32 - 8) / 2).clamp(
-      120.0,
-      300.0,
-    );
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final (icon, title, info, onTap) in tiles)
-          SizedBox(
-            width: width,
-            child: Opacity(
-              opacity: onTap == null ? 0.5 : 1,
-              child: Material(
-                color: scheme.surfaceContainerLow,
+    // EŞİT YÜKSEKLİK (F12.8): kutular `Wrap` içinde açıklamanın uzunluğu
+    // kadar uzuyordu (96 / 107 px yan yana) ve tek kalan son kutu ("Notu
+    // geliştir") yarım genişlikte sola yığılıyordu. Artık iki sütunlu SATIRLAR:
+    // satırdaki iki kutu aynı boy (IntrinsicHeight + stretch), tek kalan son
+    // kutu tam genişlik.
+    Widget tile((IconData, String, String, VoidCallback?) t) {
+      final (icon, title, info, onTap) = t;
+      return Opacity(
+        opacity: onTap == null ? 0.5 : 1,
+        child: Material(
+          color: scheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: onTap,
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 96),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(14),
-                  onTap: onTap,
-                  child: Container(
-                    constraints: const BoxConstraints(minHeight: 96),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: scheme.outlineVariant),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(icon, size: 20, color: scheme.primary),
-                        const SizedBox(height: 8),
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          info,
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            height: 1.35,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+                border: Border.all(color: scheme.outlineVariant),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 20, color: scheme.primary),
+                  const SizedBox(height: 8),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 2),
+                  Text(
+                    info,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      height: 1.35,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-      ],
+        ),
+      );
+    }
+
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < tiles.length; i += 2)
+            Padding(
+              padding: EdgeInsets.only(top: i == 0 ? 0 : 8),
+              child: i + 1 < tiles.length
+                  ? IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(child: tile(tiles[i])),
+                          const SizedBox(width: 8),
+                          Expanded(child: tile(tiles[i + 1])),
+                        ],
+                      ),
+                    )
+                  : tile(tiles[i]),
+            ),
+        ],
     );
   }
 }

@@ -103,7 +103,13 @@ class ActionMenu extends StatelessWidget {
     required this.sections,
     this.danger,
     this.wideSections = false,
+    this.footer = const [],
   });
+
+  /// En altta, Sil'in ALTINDA ince metin satırı: notun değil ekranın/
+  /// uygulamanın işi olan maddeler (Ekranı düzenle, Ayarlar — F12.1).
+  /// Araçların arasında durunca not işi sanılıyordu.
+  final List<MenuAction> footer;
 
   /// Gruplar yuvarlak simge ızgarası yerine İKİ SÜTUNLU geniş satırlarla
   /// (simge + yanında ad) çizilsin mi. Ana ekranın ⋮ menüsü (kullanıcı
@@ -172,6 +178,26 @@ class ActionMenu extends StatelessWidget {
           if (danger != null) ...[
             const SizedBox(height: 10),
             _Tile(action: danger!, scheme: scheme, danger: true),
+          ],
+          if (footer.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 4,
+              children: [
+                for (final a in footer)
+                  TextButton.icon(
+                    key: ValueKey('menu-footer-${a.id}'),
+                    onPressed: () => Navigator.pop(context, a.id),
+                    icon: Icon(a.icon, size: 18),
+                    label: Text(a.label),
+                    style: TextButton.styleFrom(
+                      foregroundColor: scheme.onSurfaceVariant,
+                      minimumSize: const Size(48, 48),
+                    ),
+                  ),
+              ],
+            ),
           ],
         ],
       ),

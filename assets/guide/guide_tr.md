@@ -16,14 +16,15 @@ Notların kart olarak, **BUGÜN / BU HAFTA / DAHA ÖNCE** gruplarıyla dizilir; 
 - **Sağa kaydır:** notu sabitle. **Sola kaydır:** arşivle.
 - **Karta uzun bas:** çoklu seçim — birden çok notu birlikte taşı, arşivle, çoğalt ya da sil.
 - **Arama:** üstteki kutuya yaz. Kutuya dokununca sağında ✨ **Anlam** anahtarı çıkar: kapalıyken kelimeyi arar, açıkken ne demek istediğini anlar ("araba masrafları" yazınca "lastik değişimi" notunu da bulur).
-- **Sağ üstteki avatar:** hesabın. Köşesindeki sayı bekleyen arkadaşlık isteği, gelen not ve okunmamış ortak notlardır; dokununca **Kişiler · Gelen ve paylaşılanlar · Premium · Hesap ayarları**.
+- **Sağ üstteki avatar:** hesabın. Köşesindeki sayı bekleyen arkadaşlık isteğidir; dokununca **Kişiler · Premium · Hesap ayarları**.
+- **Gelen:** klasör şeridinde **Tümü**'nün hemen yanında. Sana gönderilen kopyalar ve seninle ortak notlar burada; yeni bir şey gelince çipte rozet çıkar.
 - **Süz:** **Görünüm** (ızgara ya da liste; kartta görseller, kartta ekler, paylaşılan notlar anahtarla), **Tür** (metin, liste, sıralı), **Durum** (sabitli, yıldızlı, alarmlı, kilitli, klasörsüz ve etiketsiz), etiket ve **Sıralama** (varsayılan son güncellenen — tarih grupları bu sıralamada görünür; başlık, en çok çalışılan; **Elle sırala** ile kartları sürükleyerek diz).
 - **Klasör şeridi:** klasörler arasında dokunarak ya da ekranı **yana kaydırarak** geç. Şeridin sonundaki **Tüm klasörler** bütün klasörleri açar; sıralarını da oradan değiştir.
 - **Hızlı not satırı:** listenin başındaki "Yeni not…" alanına yazıp kaydet — not açmadan.
 - **Ana ekran zemini:** ⋮ → Ana ekran zemini ile görsel ya da desen seç.
 - **Kartta medya:** üste sabitlenmiş ya da tek görsel/video kartın tepesinde kapak olarak görünür; video ▶, YouTube kırmızı düğmeyle işaretlidir. Balonlu notun belgesi de kartın tepesinde kapak olur: ilk sayfa, sol üstte **BALONLU PDF** rozeti, altta dosya adı ve balon sayısı; ses kayıtları ve öbür belgeler kartın altında satır olarak durur.
 - Sağ üstteki ⋮ alttan bir levha açar: en üstte **Yapay Zekâ, Hatırlatıcılar, Arşiv, Çöp Kutusu, Ayarlar** (geniş ekranda bunlar soldaki rayda durur, ⋮'te tekrarlanmaz); altında **Ana ekran** (zemin, gizli klasörler) ve **Uygulama** (kişiselleştir, bu kılavuz).
-- **Karttaki ⋮ ya da karta basılı tutma menüsü:** üst satırda sabitle, paylaş, seç; altında **Düzenle** (klasör, renk — istersen kenar vurgusuyla), **Kopyala ve dışa aktar** (çoğalt, şablon olarak kaydet), **Araçlar** (sesli oku, istatistik), **Koruma ve depolama** (arşivle, kilitle, senkron); en altta Sil.
+- **Karttaki ⋮ ya da karta basılı tutma menüsü:** üst satırda sabitle, yıldızla, klasöre taşı, paylaş, seç; altında **Düzenle** (renk — istersen kenar vurgusuyla), **Kopyala** (çoğalt, şablon olarak kaydet), **Araçlar** (sesli oku, istatistik), **Koruma ve depolama** (arşivle, kilitle, senkron); en altta Sil.
 
 ## Yeni not oluşturma {#create}
 Sağ alttaki **+** düğmesi kısa bir panel açar — başparmağının olduğu yerden yukarı doğru:
@@ -34,14 +35,14 @@ PDF, görsel ve sunum için ilk seferde iki kip sorulur: **Balonlu** (belge notu
 
 ## Not düzenleme {#editor}
 Alt çubuk soldan sağa:
-- **Aa — Biçim:** kalın, italik, altı çizili, yazı rengi, renkli vurgu, büyük başlık / alt başlık; notun yazı tipi, boyutu ve şeffaflığı; sayfa rengi (istersen kenar vurgusu) ve zemin görseli. Seçili yazıya uygulanır; seçim yoksa yazacağın kelimeye.
-  - Panelin üst sırası **kapsam**: **İmleç · Kelime · Satır · Tümü**. "Satır"ı seçip imleci bir satıra koy, sonra B / renk / boyut **+ −** — o satırın tamamı değişir, elle seçmek gerekmez. Seçim oturum boyu hatırlanır.
+- **Aa — Biçim:** kalın, italik, altı çizili, yazı rengi, renkli vurgu, büyük başlık / alt başlık; notun yazı tipi, boyutu ve şeffaflığı. Sayfa rengi, kenar vurgusu ve zemin görseli üst çubuktaki **palette** (tek yer). Seçili yazıya uygulanır; seçim yoksa yazacağın kelimeye.
+  - Panelin üst sırası **kapsam**: **İmleç · Kelime · Satır · Tümü**. "Satır"ı seçip imleci bir satıra koy, sonra B / renk / boyut **+ −** — o satırın tamamı değişir, elle seçmek gerekmez. Seçim oturum boyu hatırlanır. Kendin metin seçtiğinde bu sıra gizlenir — seçim zaten kapsamdır; **Tümü** her biçimi alanın tamamına uygular.
   - Maddede panelde **Alt çizgi** sırası: düz, kesikli, noktalı çizgi (aynısına basmak kaldırır) ve ayar düğmesi.
 - **+ — Ekle:** simge ızgarası — **Not içeriği** (metin bloğu, liste, seçili yazıya ek gömme), **Görsel ve çizim** (görsel, görseli ek olarak yükle, kamera, tarama, çizim) ve **Ekler** (PDF, sunum, ses kaydı, video, YouTube, QR). Bir simgeye basılı tutunca ne yaptığı yazar.
 - **🔍 — Notta ara:** eşleşmeler yazarken vurgulanır.
 - **Paylaş.**
 - Sağdaki renkli kapsül: **✦ Yapay zekâ** (bkz. Yapay zekâ bölümü), **asistan mikrofonu** ve **sesli yazdır** mikrofonu.
-Üst çubuk: **geri al / geri getir** (ikisi hep yan yana), sabitle, kişi ekle (ortak not) ve ⋮ menüsü. ⋮ menüsünün üst satırında paylaş, notta ara ve **hesap makinesi**; altında **İçerik** (**Defter görünümü** ve kâğıt deseni, listeye/metne dönüştür, 2 sütun, maddeleri sırala, görselleri eke dönüştür, temizle), **Kopyala ve dışa aktar** (çoğalt, şablon olarak kaydet, deftere kopyala), **Araçlar** (sesli oku, istatistikler, ayarlar), **Koruma ve depolama** (arşivle, kilitle, senkron). Kopyalamak, arkadaşa göndermek ve dışa aktarmak **Paylaş** levhasında — menülerde ayrıca yok.
+Üst çubuk: **geri al / geri getir** (ikisi hep yan yana), sabitle, kişi ekle (ortak not) ve ⋮ menüsü. ⋮ menüsünün üst satırında yıldızla, klasöre taşı, sürüm geçmişi ve sesli dinle; altında kart menüsüyle aynı gruplar: **Düzenle** (**Defter görünümü** ve kâğıt deseni, listeye/metne dönüştür, 2 sütun, maddeleri sırala, görselleri eke dönüştür, içeriği temizle), **Kopyala** (çoğalt, şablon olarak kaydet, deftere kopyala), **Araçlar** (istatistikler, **hesap makinesi**; dar ekranda alt çubuğa sığmayan notta ara / paylaş), **Koruma ve depolama** (arşivle, kilitle, senkron). En altta ince satırda **Ekranı düzenle** ve **Ayarlar**. Alt çubuğun sırası her not türünde aynı: Biçim · Ekle · Ara · Paylaş; türe özgü düğme (☑ ya da Seç) hep en sonda. Kopyalamak, arkadaşa göndermek ve dışa aktarmak **Paylaş** levhasında — menülerde ayrıca yok.
 - Liste notlarında maddeyi basılı tutup sürükleyerek sırala; "Seç" ile birden çok maddeyi kopyala/sil. Seçim çubuğundaki **Kopyala ve işaretle** seçilenleri panoya alır ve tek dokunuşta işaretler.
 - Yazdığın maddenin sağında küçük **×** silme düğmesi durur (satırın genişliği değişmez); madde menüsü (sol bölgeye basılı tut) ve karalama jesti de siler.
 
@@ -71,7 +72,7 @@ Görseller notun sayfasında **serbestçe yüzer**; yazı onların etrafından a
 - **Tam ekran:** kırp, döndür, üzerine kalemle yaz, görseldeki metni tanı (OCR).
 - **Görünüm (Sabit / Yüzen / Balonlu):** seçili görselin panelinin üst satırında. **Sabit** üste alır (not altında kayar), **Yüzen** sayfada bırakır, **Balonlu** görseli tek sayfalık bir belgeye çevirip üzerine balon, vurgu ve kalem açar (görselin çizimleri de taşınır). Yüzen'e dönünce görsel yerine döner; yeniden Balonlu'ya geçince aynı belge balonlarıyla gelir.
 - **⋮ menüsü:** metni çıkar, kopyala, birden çok görsel seç (boyutları eşitle, 2/3 sütuna sığdır), ek olarak alta taşı.
-- Bir görseli notun **zemin görseli** yapabilirsin (Biçim → sayfa görünümü).
+- Bir görseli notun **zemin görseli** yapabilirsin (üst çubuktaki palet).
 
 ## Video ve YouTube {#video}
 - **+ Ekle → Görüntülü not** kamerayla çeker; **Galeriden video** var olan videoyu ekler. Video sayfada görsel gibi durur ve **olduğu yerde oynar**.

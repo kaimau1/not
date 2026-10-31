@@ -16,14 +16,15 @@ Your notes appear as cards grouped by **TODAY / THIS WEEK / EARLIER**; pinned no
 - **Swipe right:** pin the note. **Swipe left:** archive it.
 - **Long-press a card:** multi-select — move, archive, duplicate or delete several notes at once.
 - **Search:** type in the box at the top. Tapping the box reveals the ✨ **Meaning** switch on its right: off, it finds words; on, it understands what you mean ("car expenses" also finds the "tyre change" note).
-- **Avatar at the top right:** your account. The number on it counts pending friend requests, incoming notes and unread shared notes; tap it for **Contacts · Incoming and shared · Premium · Account settings**.
+- **Avatar at the top right:** your account. The number on it counts pending friend requests; tap it for **Contacts · Premium · Account settings**.
+- **Inbox:** in the folder strip, right next to **All**. Copies sent to you and notes shared with you live here; a badge appears when something new arrives.
 - **Filter:** **View** (grid or list; images on cards, attachments on cards and shared notes as switches), **Type** (text, list, numbered), **Status** (pinned, starred, with alarm, locked, no folder or tag), tag and **Sort** (recently updated by default — date groups show in this order; title, most worked on; **Reorder manually** to drag cards into place).
 - **Folder strip:** switch folders by tapping or by **swiping sideways**. **All folders** at the end of the strip opens every folder; reorder them there.
 - **Quick note row:** type into "New note…" at the top of the list and save — without opening a note.
 - **Home screen background:** ⋮ → Home screen background for an image or pattern.
 - **Media on cards:** a pinned or single image/video shows as a cover at the top of the card; videos carry ▶, YouTube the red button. A bubbles note gets its document as the cover at the top of the card: the first page, the **PDF WITH BUBBLES** badge top left, the file name and bubble count at the bottom; voice recordings and other documents sit as rows at the bottom of the card.
 - The ⋮ at the top right opens a sheet: **AI, Reminders, Archive, Bin, Settings** on top (on wide screens these live in the rail on the left and are not repeated in ⋮); below them **Home screen** (background, hidden folders) and **App** (personalise, this guide).
-- **A card's ⋮ / long-press menu:** pin, share, select on top; then **Organize** (folder, colour — optionally with a border highlight), **Copy and export** (duplicate, save as template), **Tools** (read aloud, statistics), **Protection and storage** (archive, lock, sync); Delete at the bottom.
+- **A card's ⋮ / long-press menu:** pin, star, move to folder, share, select on top; then **Organize** (colour — optionally with a border highlight), **Copy** (duplicate, save as template), **Tools** (read aloud, statistics), **Protection and storage** (archive, lock, sync); Delete at the bottom.
 
 ## Creating notes {#create}
 The **+** button at the bottom right opens a short panel, read from your thumb upwards:
@@ -34,14 +35,14 @@ For PDFs, images and slides you choose a mode the first time: **Bubbles** (the d
 
 ## Editing a note {#editor}
 Bottom bar, left to right:
-- **Aa — Format:** bold, italic, underline, text colour, highlight, heading / subheading; the note's font, size and transparency; page colour (optionally a border highlight) and background image. Applies to the selection, or to the word you type next.
-  - The panel's top row is the **scope**: **Cursor · Word · Line · All**. Pick "Line", put the cursor on a line, then B / colour / size **+ −** — the whole line changes, no manual selection. The choice is remembered for the session.
+- **Aa — Format:** bold, italic, underline, text colour, highlight, heading / subheading; the note's font, size and transparency. Page colour, border highlight and background image live in the **palette** on the top bar (one place). Applies to the selection, or to the word you type next.
+  - The panel's top row is the **scope**: **Cursor · Word · Line · All**. Pick "Line", put the cursor on a line, then B / colour / size **+ −** — the whole line changes, no manual selection. The choice is remembered for the session. When you select text yourself this row hides — the selection is the scope; **All** applies every format to the whole field.
   - On an item the panel has a **Line below** row: solid, dashed, dotted (tap the same one to remove) and a settings button.
 - **+ — Add:** an icon grid — **Note content** (text block, list, embed attachment in selection), **Images and drawing** (image, upload image as attachment, camera, scan, drawing) and **Attachments** (PDF, slides, voice recording, video, YouTube, QR). Long-press an icon to see what it does.
 - **🔍 — Search in note:** matches are highlighted as you type.
 - **Share.**
 - The coloured capsule on the right: **✦ AI** (see the AI section), the **assistant microphone** and the **dictate** microphone.
-Top bar: **undo / redo** (always side by side), pin, add people (shared note) and the ⋮ menu. The ⋮ menu's top row has share, search in note and the **calculator**; below are **Content** (**Notebook view** and paper, convert to list/text, two columns, sort items, images to attachments, clear), **Copy and export** (duplicate, save as template, copy to notebook), **Tools** (read aloud, statistics, settings), **Protection and storage** (archive, lock, sync). Copying, sending to a friend and exporting live in the **Share** sheet — not repeated in the menus.
+Top bar: **undo / redo** (always side by side), pin, add people (shared note) and the ⋮ menu. The ⋮ menu's top row has star, move to folder, version history and listen; below are the same groups as the card menu: **Organize** (**Notebook view** and paper, convert to list/text, two columns, sort items, images to attachments, clear content), **Copy** (duplicate, save as template, copy to notebook), **Tools** (statistics, **calculator**; on narrow screens also search / share when they don't fit the bottom bar), **Protection and storage** (archive, lock, sync). A thin bottom row holds **Customize screen** and **Settings**. The bottom bar keeps the same order for every note type: Format · Add · Search · Share, with the type-specific button (☑ or Select) always last. Copying, sending to a friend and exporting live in the **Share** sheet — not repeated in the menus.
 - In lists, long-press an item and drag to reorder; use "Select" to copy/delete several items. **Copy and check** in the selection bar copies the selected items and checks them in one tap.
 - The item you're editing shows a small **×** delete button on the right (the line width doesn't change); the item menu (long-press its left area) and the scribble gesture delete too.
 
@@ -71,7 +72,7 @@ Images **float freely** on the note's page; text flows around them.
 - **Full screen:** crop, rotate, write on it with the pen, recognise its text (OCR).
 - **View (Pinned / Floating / Bubbles):** on the top row of the selected image's panel. **Pinned** puts it on top (the note scrolls below), **Floating** keeps it on the page, **Bubbles** turns the image into a one-page document with bubbles, highlights and pen (the image's drawings come along). Back to Floating, the image returns to its place; switching to Bubbles again brings back the same document with its bubbles.
 - **⋮ menu:** extract text, copy, select images (equalise sizes, fit 2/3 per row), move to attachments.
-- An image can become the note's **background image** (Format → page appearance).
+- An image can become the note's **background image** (palette on the top bar).
 
 ## Video and YouTube {#video}
 - **+ Add → Video note** records with the camera; **Video from gallery** adds an existing video. The video sits on the page like an image and **plays in place**.

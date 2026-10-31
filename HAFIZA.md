@@ -604,8 +604,8 @@ eskisini arşive taşıma.
   "mavi detaylar güzel değil"); kayıtlı seçim
   korunur. Arama kutusunun tamamı dokunulur (alan dikey dolgulu + kutuya
   dokunmak odak verir).
-- **Not teması (2026-10-28):** palet (üst çubuk `UiItem.topTheme`, biçim
-  paneli, Ekle) önce TEMA ŞERİDİ açar (`showNoteThemeSheet`, karartısız,
+- **Not teması (2026-10-28):** palet (üst çubuk `UiItem.topTheme` — 2026-10-31'den
+  beri TEK kapı, biçim panelinde yok) önce TEMA ŞERİDİ açar (`showNoteThemeSheet`, karartısız,
   dokunulan anında). Temalar dosya değil çizim (`note_themes.dart`): açık/
   koyu tonları ayrı; editörde Scaffold ve üst çubuk saydam, süsleme
   `NoteThemeBackdrop` ile arkada; kartta da çizilir.
@@ -719,10 +719,30 @@ eskisini arşive taşıma.
   `showAppMessage(context, metin)`; eylemliyse `action:` (geri sayımlı).
   Elle `SnackBar(content: Text(...))` kurma.
 
+## Faz 12 kararları (2026-10-31)
+- **Not ⋮ hızlı satırı:** Yıldızla · Klasöre taşı · Sürüm geçmişi · Sesli
+  dinle. Ara/Paylaş menüde yalnız alt çubukta GÖRÜNMÜYORSA (editör her
+  kurulumda `_barHasSearch/_barHasShare` yazar). Ekran/ayar işleri
+  `ActionMenu.footer` (Sil'in altında). Kart ⋮ ile not ⋮ grupları AYNI ad ve
+  sırada: Düzenle · Kopyala · Araçlar · Koruma.
+- **Alt çubuk sırası sabit:** Biçim · Ekle · Ara · Paylaş · Ekler · (☑|Seç);
+  türe özgü düğme hep EN SONDA.
+- **Sayfa rengi tek kapı üst çubuk palet** (kullanıcı kararı); biçim
+  panelinde "Sayfa rengi" ve "Tümüne uygula" YOK (kapsam "Tümü" aynı iş).
+  Elle seçim varken kapsam sırası gizli — kapsamın KENDİ açtığı seçim elle
+  sayılmaz (`_syncManual`, denetleyici bildirimi kayıttan önce gelir).
+- **"+ Yeni öğe" GİZLENMEZ** (3 boş madde kararı, 2026-09-26); boş madde
+  ipucu "Madde yaz". Madde menüsü satırın altında + vurgu (`itemMenuRowRect`
+  = sol bölgenin en yakın `RenderFlex` atası).
+- **Sesli not levhası:** AI not · Düz not yan yana KALIR (kullanıcı kararı);
+  akıllı çipler "Diğer" altında, varsayılan kapalı.
+
 ## Faz 11 kararları (2026-10-31, kullanıcı kararları: önerilenler)
 - **Tek avatar:** üst çubukta arama · Süz · avatar · ⋮. Avatar rozeti
-  `accountPendingCountProvider` (istek + `sharedHubBadgeProvider`); "Gelen ve
-  paylaşılanlar" avatar levhasında (`SharedHubButton` silindi). Anlam
+  `accountPendingCountProvider` = YALNIZ arkadaşlık isteği. **"Gelen ve
+  paylaşılanlar" = klasör şeridinde "Tümü"nün yanındaki kısa adlı "Gelen"
+  çipi** (`SharedHubChip`, rozet `sharedHubBadgeProvider`; kullanıcı isteği
+  2026-10-31) — avatar levhasında değil, tek kapı. Anlam
   anahtarı yalnız odak/sorgu varken — `TextFieldTapRegion` ŞART (yoksa
   dokunuş odağı düşürür, anahtar dokunuş bitmeden kaybolur).
 - **Varsayılan sıralama "Son güncellenen"** (`kDefaultNoteSort`). TUZAK: eski

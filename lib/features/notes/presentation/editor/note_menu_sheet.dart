@@ -34,6 +34,8 @@ Future<String?> showNoteEditorMenu(
   bool canTemplate = false,
   bool canRemoveParts = false,
   bool canPinHome = false,
+  bool searchInBar = false,
+  bool shareInBar = false,
 }) {
   final l10n = context.l10n;
   return showAppSheet<String>(
@@ -60,6 +62,8 @@ Future<String?> showNoteEditorMenu(
           canTemplate: canTemplate,
           canRemoveParts: canRemoveParts,
           canPinHome: canPinHome,
+          searchInBar: searchInBar,
+          shareInBar: shareInBar,
         ),
       ),
     ),
@@ -84,7 +88,16 @@ class _MenuGrid extends StatelessWidget {
     this.canTemplate = false,
     this.canRemoveParts = false,
     this.canPinHome = false,
+    this.searchInBar = false,
+    this.shareInBar = false,
   });
+
+  /// Alt çubukta "Notta ara" / "Paylaş" GÖRÜNÜYOR mu (F12.1). Görünüyorsa
+  /// menüde tekrar edilmez (çubukta duran iş menüde tekrar edilmez); dar
+  /// ekranda çubuktan düştüyse ya da kişiselleştirmede gizlendiyse Araçlar'da
+  /// durur — iş hiçbir zaman erişilemez kalmaz (bkz. planEditorBar).
+  final bool searchInBar;
+  final bool shareInBar;
 
   /// "Ana ekrana yerleştir" gösterilsin mi (Android, kendi notum).
   final bool canPinHome;
@@ -140,10 +153,13 @@ class _MenuGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     // 2026-10-11 YENİDEN DÜZEN (bkz. [ActionMenu]). Üst çubukta ve alt
     // çubukta zaten AÇIKÇA duran işler burada tekrar edilmez: "Sabitle" üst
-    // çubukta (raptiye), Biçim/Ekle/Seç alt çubukta. Ara ve Paylaş alt
-    // çubuktan dar ekranda düşebildiği için (bkz. planEditorBar) burada da
-    // kalır. Hesap makinesi üst çubuktan buraya geldi: üst çubuk notun
-    // DURUMUNA (geri al, sabitle, ortak çalışan) ayrıldı.
+    // çubukta (raptiye), Biçim/Ekle/Seç alt çubukta.
+    //
+    // F12.1 (2026-10-31): hızlı satır SIK İŞ — Yıldızla · Klasöre taşı ·
+    // Sürüm geçmişi · Sesli dinle. Paylaş ve Notta ara alt çubukta durduğu
+    // için hızlı satırdan çıktı (çubuktan düştüklerinde Araçlar'da);
+    // Hesap makinesi Araçlar'a indi. Grup adları ve sırası kart ⋮ ile AYNI
+    // (F12.2): Düzenle · Kopyala · Araçlar · Koruma.
     return ActionMenu(
       quick: [
         // YILDIZLA GERİ GELDİ (kullanıcı isteği 2026-10-20). Sabitle üst
@@ -154,20 +170,13 @@ class _MenuGrid extends StatelessWidget {
           starred ? Icons.star : Icons.star_outline,
           selected: starred,
         ),
-        // TOPARLAMA (kullanıcı isteği 2026-10-17: "tekrarlar düzelsin"):
-        // "Kopyala", "Arkadaşa gönder" ve "Dışa aktar" bu menüden kalktı —
-        // üçü de Paylaş levhasında (Kopyala · Arkadaşa · Dışa aktar) tek
-        // dokunuşla duruyor. Menüde aynı işin iki kapısı kafa karıştırıyordu.
-        MenuAction('share', l10n.share, Icons.share_outlined),
-        MenuAction('search', l10n.noteSearchTitle, Icons.manage_search),
-        MenuAction(
-          'calculator',
-          l10n.calculatorTitle,
-          Icons.calculate_outlined,
-        ),
+        MenuAction('folder', l10n.moveToFolder, Icons.folder_outlined),
+        // SÜRÜM GEÇMİŞİ (F4.2): "dünkü hâline dön".
+        MenuAction('history', l10n.versionHistory, Icons.history),
+        MenuAction('listen', l10n.listenToNote, Icons.headphones_outlined),
       ],
       sections: [
-        MenuSection(l10n.menuSectionContent, [
+        MenuSection(l10n.menuSectionOrganize, [
           // DEFTER GÖRÜNÜMÜ (F3.5): kâğıt deseni + hep görünen sayfa çubuğu.
           if (notebookAvailable)
             MenuAction(
@@ -254,14 +263,17 @@ class _MenuGrid extends StatelessWidget {
               l10n.pinToHomeScreen,
               Icons.add_to_home_screen_rounded,
             ),
-          MenuAction('listen', l10n.listenToNote, Icons.headphones_outlined),
           MenuAction('stats', l10n.noteStatsTitle, Icons.insights_outlined),
-          // SÜRÜM GEÇMİŞİ (F4.2): "dünkü hâline dön".
-          MenuAction('history', l10n.versionHistory, Icons.history),
-          // EKRANI DÜZENLE (kullanıcı isteği 2026-10-16): düzenleme modunu
-          // doğrudan buradan açar — çubuktaki düğmelere dokunarak gizle/göster.
-          MenuAction('customize', l10n.noteMenuCustomize, Icons.tune_rounded),
-          MenuAction('settings', l10n.settings, Icons.settings_outlined),
+          // Çubuktan düşen (dar ekran) ya da gizlenen Ara/Paylaş.
+          if (!searchInBar)
+            MenuAction('search', l10n.noteSearchTitle, Icons.manage_search),
+          if (!shareInBar)
+            MenuAction('share', l10n.share, Icons.share_outlined),
+          MenuAction(
+            'calculator',
+            l10n.calculatorTitle,
+            Icons.calculate_outlined,
+          ),
         ]),
         MenuSection(l10n.menuSectionProtect, [
           MenuAction(
@@ -284,6 +296,13 @@ class _MenuGrid extends StatelessWidget {
         ]),
       ],
       danger: MenuAction('delete', l10n.delete, Icons.delete_outline),
+      // Notun değil ekranın/uygulamanın işi: en altta ince satır (F12.1).
+      footer: [
+        // EKRANI DÜZENLE (kullanıcı isteği 2026-10-16): düzenleme modunu
+        // doğrudan buradan açar — çubuktaki düğmelere dokunarak gizle/göster.
+        MenuAction('customize', l10n.noteMenuCustomize, Icons.tune_rounded),
+        MenuAction('settings', l10n.settings, Icons.settings_outlined),
+      ],
     );
   }
 }

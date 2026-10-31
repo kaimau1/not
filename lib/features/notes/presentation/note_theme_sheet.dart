@@ -221,10 +221,13 @@ class _ThemeSheetState extends State<_ThemeSheet> {
               child: Row(
                 children: [
                   for (final (action, icon, label) in [
+                    // "Zemin rengi" → "Özel renk…" (F12.6): düz renkler hemen
+                    // üstteki satırda; bu düğme ADLI renk seçicisini açar,
+                    // ikinci bir "zemin rengi" gibi okunuyordu.
                     (
                       NoteAppearanceAction.color,
-                      Icons.palette_outlined,
-                      l10n.backgroundColor,
+                      Icons.colorize_outlined,
+                      l10n.customColor,
                     ),
                     (
                       NoteAppearanceAction.frame,

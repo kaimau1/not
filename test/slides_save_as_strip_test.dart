@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/features/folders/presentation/folder_tile.dart';
 import 'package:notlar/core/widgets/action_menu_sheet.dart';
 import 'package:notlar/core/widgets/undo_snackbar.dart';
 import 'package:notlar/features/ai/data/ai_gate.dart';
@@ -290,19 +291,31 @@ void main() {
             premiumProvider.overrideWith((ref) => Stream.value(false)),
           ],
           child: _app(
-            const Scaffold(body: Center(child: AccountAvatarButton())),
+            const Scaffold(
+              body: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [SharedHubChip(), AccountAvatarButton()],
+                ),
+              ),
+            ),
           ),
         ),
       );
       await tester.pumpAndSettle();
-      // F11.1: ayrı düğme yok — sayı TEK AVATARIN rozetinde, kapı hesap
-      // levhasında.
-      expect(find.text('1'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('home-account-avatar')));
+      // 2026-10-31: kapı klasör şeridindeki kısa adlı "Gelen" çipi; rozet
+      // onun üstünde, avatar artık saymaz (yalnız arkadaşlık isteği).
+      expect(find.text('Gelen'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('home-account-avatar')),
+          matching: find.text('1'),
+        ),
+        findsNothing,
+      );
+      await tester.tap(find.byKey(const ValueKey('shared-hub-chip')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('account-sheet-shared-hub')));
-      await tester.pumpAndSettle();
-      expect(find.text('Gelen ve paylaşılanlar'), findsOneWidget);
+      expect(find.text('Gelen ve paylaşılanlar'), findsWidgets);
       expect(find.byKey(const ValueKey('hub-tab-inbox')), findsOneWidget);
       expect(find.byKey(const ValueKey('hub-tab-shared')), findsOneWidget);
       // Gelen sekmesi açık: not listede.

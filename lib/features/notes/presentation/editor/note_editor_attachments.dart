@@ -1715,8 +1715,8 @@ extension _EditorAttachments on _NoteEditorScreenState {
         await _addVideo();
       case 'youtube':
         await _addYouTube();
-      // 'color' BURADAN KALKTI: sayfa görünümü artık biçim şeridinde
-      // (bkz. attach_sheet.dart'taki gerekçe ve [_showColorSheet]).
+      // 'color' BURADAN KALKTI: sayfa görünümünün TEK kapısı üst çubuktaki
+      // palet (F12.6, kullanıcı kararı 2026-10-31; bkz. [_showColorSheet]).
     }
   }
 

@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../ai/data/ai_gate.dart';
+import '../../inbox/presentation/shared_hub_screen.dart' show HubCountBadge;
 import '../../friends/data/friends_repository.dart';
 import '../../friends/presentation/friends_screen.dart';
-import '../../inbox/presentation/shared_hub_screen.dart';
 import 'auth_providers.dart';
 import '../../../core/widgets/app_sheet.dart';
 
@@ -78,17 +78,16 @@ class AccountAvatarButton extends ConsumerWidget {
   }
 }
 
-/// Avatar rozetinin sayısı: bekleyen arkadaşlık isteği + Gelen ve
-/// paylaşılanlar rozeti (kabul bekleyen gelen not + okunmamış ortak not).
+/// Avatar rozetinin sayısı: bekleyen arkadaşlık isteği. Gelen ve
+/// paylaşılanlar 2026-10-31'den beri klasör şeridinde "Gelen" çipi (kendi
+/// rozetiyle; bkz. SharedHubChip) — avatar onu artık saymaz.
 final accountPendingCountProvider = Provider<int>((ref) {
-  final requests = ref.watch(
+  return ref.watch(
     incomingFriendRequestsProvider.select((s) => s.value?.length ?? 0),
   );
-  return requests + ref.watch(sharedHubBadgeProvider);
 });
 
-/// Hesap levhası: kimlik kartı + Kişiler / Gelen ve paylaşılanlar / Premium /
-/// Hesap ayarları.
+/// Hesap levhası: kimlik kartı + Kişiler / Premium / Hesap ayarları.
 ///
 /// Kullanıcı isteği 2026-08-18: "hesap seçeneklerini ana sayfadaki sağ
 /// üstteki 3 noktaya da koy, profil bilgileri vs." Ayarların HESAP alanının
@@ -109,7 +108,6 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
       final anonymous = ref.watch(isAnonymousProvider);
       final requests =
           ref.watch(incomingFriendRequestsProvider).value?.length ?? 0;
-      final incoming = ref.watch(sharedHubBadgeProvider);
       final premium = ref.watch(premiumProvider).value ?? false;
       final email = user?.email?.trim() ?? '';
       final name = (user?.displayName?.trim().isNotEmpty ?? false)
@@ -158,18 +156,6 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
                 onTap: () {
                   Navigator.pop(sheetContext);
                   openFriendsScreenOrExplain(context, ref);
-                },
-              ),
-              // GELEN VE PAYLAŞILANLAR (F11.1): üst çubuktaki ayrı düğme
-              // kalktı; gelen kopyalar ve ortak notlar tek ekranda.
-              ListTile(
-                key: const ValueKey('account-sheet-shared-hub'),
-                leading: const Icon(Icons.move_to_inbox_outlined),
-                title: Text(l10n.sharedHubTitle),
-                trailing: _Badge(count: incoming),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  SharedHubScreen.open(context);
                 },
               ),
               // Plan da hesabın bir parçası: hangi sürümde olduğunu görmek için

@@ -199,6 +199,10 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   /// "Bitir"e döner.
   bool _latched = false;
 
+  /// Gözden geçirmedeki akıllı komut çipleri açık mı (F12.9, kullanıcı
+  /// kararı 2026-10-31): varsayılan KAPALI, tek "Diğer" çipinin altında.
+  bool _moreOpen = false;
+
   /// Dökümü yapılamamış ama korunan ses kaydının yolu; dolu olduğunda not
   /// SES EKİYLE oluşur (bkz. [_toAudioFallback]).
   String? _readyAudioPath;
@@ -1363,6 +1367,25 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     // ekranın dışında kalıyordu — kaydırılabildiği belli olmadığı için o
     // seçenek yok sayılıyordu. Wrap taşanı ALT SATIRA indirir; hepsi tek
     // bakışta görünür.
+    // "DİĞER" ALTINDA (F12.9, kullanıcı kararı 2026-10-31): bitiş satırı
+    // (AI not · Düz not ya da Nota ekle) yan yana kalır; üç çip ilk
+    // kullanıcıya ağırdı — varsayılan tek "Diğer" çipi, dokununca açılır.
+    if (!_moreOpen) {
+      return ActionChip(
+        key: const ValueKey('voice-more'),
+        avatar: const Icon(Icons.expand_more, size: 18),
+        label: Text(
+          l10n.more,
+          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+        ),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+        visualDensity: VisualDensity.compact,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        side: BorderSide(color: scheme.outlineVariant),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        onPressed: () => setState(() => _moreOpen = true),
+      );
+    }
     return Wrap(
       spacing: 6,
       runSpacing: 6,

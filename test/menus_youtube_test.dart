@@ -181,31 +181,46 @@ void main() {
       await tester.tap(find.text('aç'));
       await tester.pumpAndSettle();
 
-      // Hızlı satır: aynı yükseklikte yan yana; "Yıldızla" başta
-      // (2026-10-20'de geri geldi).
-      final star = tester.getRect(find.text('Yıldızla'));
-      final share = tester.getRect(find.text('Paylaş'));
-      final calc = tester.getRect(find.text('Hesap Makinesi'));
-      expect(star.top, closeTo(share.top, 1));
-      expect(share.top, closeTo(calc.top, 1));
-      expect(star.center.dx, lessThan(share.center.dx));
-      expect(share.center.dx, lessThan(calc.center.dx));
+      // Hızlı satır (F12.1): Yıldızla · Klasöre taşı · Sürüm geçmişi ·
+      // Sesli dinle — aynı yükseklikte, bu sırayla.
+      final quick = [
+        for (final id in ['star', 'folder', 'history', 'listen'])
+          tester.getRect(find.byKey(ValueKey('menu-quick-$id'))),
+      ];
+      for (var i = 1; i < quick.length; i++) {
+        expect(quick[i].top, closeTo(quick[0].top, 1));
+        expect(quick[i - 1].center.dx, lessThan(quick[i].center.dx));
+      }
+      // Alt çubukta duran Paylaş / Notta ara hızlı satırda yok; çubuktan
+      // düştüklerinde (burada çubuk bilgisi verilmedi) Araçlar'da.
+      expect(find.byKey(const ValueKey('menu-quick-share')), findsNothing);
+      expect(find.byKey(const ValueKey('menu-quick-search')), findsNothing);
+      expect(find.byKey(const ValueKey('menu-tile-share')), findsOneWidget);
+      expect(find.byKey(const ValueKey('menu-tile-search')), findsOneWidget);
+      expect(find.byKey(const ValueKey('menu-tile-calculator')), findsOneWidget);
 
-      // Grup başlıkları.
+      // Grup başlıkları — kart ⋮ ile aynı adlar (F12.2).
       for (final title in [
-        'İçerik',
-        'Kopyala ve dışa aktar',
+        'Düzenle',
+        'Kopyala',
         'Araçlar',
         'Koruma ve depolama',
       ]) {
         expect(find.text(title), findsOneWidget, reason: title);
       }
+      expect(find.text('İçeriği temizle'), findsOneWidget);
       // Üst çubukta açıkça duran "Sabitle" burada tekrar etmez.
       expect(find.text('Sabitle'), findsNothing);
       // Editörde eksik olan işler eklendi.
       expect(find.text('Notu çoğalt'), findsOneWidget);
+      // Ekran/ayar en altta, Sil'in ALTINDA ince satır.
+      final delete = tester.getRect(find.byKey(const ValueKey('menu-tile-delete')));
+      for (final id in ['customize', 'settings']) {
+        final r = tester.getRect(find.byKey(ValueKey('menu-footer-$id')));
+        expect(r.top, greaterThan(delete.bottom), reason: id);
+      }
 
-      await tester.tap(find.text('Hesap Makinesi'));
+      await tester.tap(find.byKey(const ValueKey('menu-tile-calculator')));
       await tester.pumpAndSettle();
       expect(picked, 'calculator');
     });

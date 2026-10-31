@@ -23,8 +23,13 @@ import 'text_wrap.dart';
 ///  1. **Stil** — Metin · Başlık · Alt başlık hapları + B · I · U.
 ///  2. **Renk** — solda yazı rengi / vurgu anahtarı (her birinin altında
 ///     etkin renk şeridi), yanında 5 ton + tam palet + kaldır.
-///  3. **Yazı** — yazı tipi tepsisi (Aa), boyut − %100 +, temizle, sayfa
-///     görünümü, kapat.
+///  3. **Yazı** — yazı tipi tepsisi (Aa), boyut − %100 +, temizle, kapat.
+///
+/// F12.5 (2026-10-31): "Tümüne uygula" kalktı — kapsam "Tümü" aynı işi
+/// yapıyordu (Tümü seçiliyken her biçim alanın tamamına işler); "Sayfa
+/// rengi" kalktı — sayfa görünümünün tek kapısı üst çubuktaki palet (F12.6,
+/// kullanıcı kararı). Kapsam sırası elle seçim VARKEN gizlenir: seçim zaten
+/// kapsamdır.
 /// Yalnız yazı tipi listesi ve ince ayar kaydırıcıları (boyut, şeffaflık)
 /// panelin ÜSTÜNDE açılan tepside; menü katmanı yok, metin örtülmez.
 ///
@@ -50,10 +55,7 @@ class FormatBar extends StatefulWidget {
     required this.onOpacityEnd,
     required this.onClose,
     this.target,
-    this.onPageStyle,
     this.onHeading,
-    this.onApplyToAll,
-    this.applyToAllLabel,
     this.dividerKind,
     this.onDivider,
     this.onDividerStyle,
@@ -66,22 +68,9 @@ class FormatBar extends StatefulWidget {
   final ValueChanged<String>? onDivider;
   final VoidCallback? onDividerStyle;
 
-  /// **TÜMÜNE / MADDEYE UYGULA** (kullanıcı isteği 2026-10-28): imleçteki
-  /// (ya da seçimdeki) etkin biçimler alanın TAMAMINA uygulanır ve alanın
-  /// tamamı seçili kalır — sonraki dokunuşlar da hepsine işler. null ise
-  /// düğme çizilmez. [applyToAllLabel] düğmenin adı (gövdede "Tümüne
-  /// uygula", maddede "Maddeye uygula").
-  final ValueChanged<RichMark>? onApplyToAll;
-  final String? applyToAllLabel;
-
   /// Satırı başlık / alt başlık / düz metin yapar (bkz. [setLineHeading]).
   /// null ise başlık düğmesi çizilmez (notun başlık alanı zaten başlık).
   final ValueChanged<RichHeading>? onHeading;
-
-  /// SAYFA görünümü (zemin rengi, çerçeve rengi, zemin görseli) levhasını
-  /// açar (kullanıcı isteği 2026-08-10: "sayfa rengi ve yanındaki kısımları
-  /// biçim menüsüne al"). null ise düğme hiç çizilmez.
-  final VoidCallback? onPageStyle;
 
   /// Çubuğun yazdığı alan. Yalnız AKTİF BİÇİM vurgusu için gerekli: imleç ya
   /// da seçim değiştikçe hangi düğmenin basılı duracağı buradan hesaplanır
@@ -207,6 +196,18 @@ class _FormatBarState extends State<FormatBar> {
   /// İmlecin satırının başlık düzeyi.
   RichHeading _heading = RichHeading.normal;
 
+  /// Kullanıcı ELLE metin seçti mi (kapsamın açtığı seçim sayılmaz). Seçim
+  /// varken kapsam sırası gizlenir: seçim zaten kapsamdır (F12.5).
+  bool _manualSelection = false;
+
+  bool _computeManualSelection() {
+    final selection = widget.target?.controller.selection;
+    if (selection == null || !selection.isValid || selection.isCollapsed) {
+      return false;
+    }
+    return selection != _scopedSelection;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -242,6 +243,7 @@ class _FormatBarState extends State<FormatBar> {
     // setState'siz atama yeterli (ve initState'te setState yasak).
     _active = _computeActive();
     _heading = _computeHeading();
+    _manualSelection = _computeManualSelection();
   }
 
   RichHeading _computeHeading() {
@@ -260,11 +262,13 @@ class _FormatBarState extends State<FormatBar> {
     if (!mounted) return;
     final next = _computeActive();
     final heading = _computeHeading();
+    final manual = _computeManualSelection();
     // Her tuş vuruşunda değil, vurgu GERÇEKTEN değişince çiz.
-    if (next != _active || heading != _heading) {
+    if (next != _active || heading != _heading || manual != _manualSelection) {
       setState(() {
         _active = next;
         _heading = heading;
+        _manualSelection = manual;
       });
     }
   }
@@ -302,6 +306,17 @@ class _FormatBarState extends State<FormatBar> {
     _scopedSelection = next.isCollapsed ? null : next;
     if (next.isCollapsed) _scopeCaret = null;
     if (controller.selection != next) controller.selection = next;
+    _syncManual();
+  }
+
+  /// Kapsamın açtığı seçim kayıt altına alındıktan SONRA elle seçim bayrağını
+  /// tazeler: denetleyicinin bildirimi kayıttan önce gelir ve kapsam seçimini
+  /// elle seçim sanıp sırayı gizlerdi.
+  void _syncManual() {
+    final manual = _computeManualSelection();
+    if (manual != _manualSelection && mounted) {
+      setState(() => _manualSelection = manual);
+    }
   }
 
   /// Kapsamlı biçim işi: önce seçim genişler, sonra iş koşar; işaretler
@@ -331,6 +346,7 @@ class _FormatBarState extends State<FormatBar> {
     final relative = (caret - before.start).clamp(0, before.end - before.start);
     _scopeCaret = (after.start + relative).clamp(after.start, after.end);
     _scopedSelection = after;
+    _syncManual();
   }
 
   void _setScope(FormatScope scope) {
@@ -475,8 +491,16 @@ class _FormatBarState extends State<FormatBar> {
                   ),
                 },
               ),
-              // 0. SIRA — KAPSAM: imleç boşken biçim neye işler.
-              _ScopeRow(scope: _scope, onChanged: _setScope),
+              // 0. SIRA — KAPSAM: imleç boşken biçim neye işler. Elle seçim
+              // varken GİZLİ (seçim zaten kapsam); panel o kadar alçalır.
+              AnimatedSize(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.bottomCenter,
+                child: _manualSelection
+                    ? const SizedBox(width: double.infinity)
+                    : _ScopeRow(scope: _scope, onChanged: _setScope),
+              ),
               if (widget.dividerKind != null) ...[
                 divider,
                 _DividerRow(
@@ -609,13 +633,35 @@ class _FormatBarState extends State<FormatBar> {
                         ? null
                         : () => _stepScale(-1),
                   ),
-                  SizedBox(
-                    width: 44,
-                    child: Text(
-                      '%${(size * 100).round()}',
-                      key: const ValueKey('format-size-value'),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.labelMedium,
+                  // "%100" tek başına ne olduğunu söylemiyordu (F12.5):
+                  // üstte küçük "Boyut", ekran okuyucu "Boyut %100" okur.
+                  Semantics(
+                    label: l10n.formatSizeValue((size * 100).round()),
+                    excludeSemantics: true,
+                    child: SizedBox(
+                      width: 48,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.formatSizeLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.fade,
+                            softWrap: false,
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              height: 1.1,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                          Text(
+                            '%${(size * 100).round()}',
+                            key: const ValueKey('format-size-value'),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.labelMedium,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   _Btn(
@@ -626,13 +672,6 @@ class _FormatBarState extends State<FormatBar> {
                         ? null
                         : () => _stepScale(1),
                   ),
-                  if (widget.onApplyToAll != null)
-                    _Btn(
-                      key: const ValueKey('format-apply-all'),
-                      icon: Icons.select_all_rounded,
-                      tooltip: widget.applyToAllLabel ?? l10n.formatApplyAll,
-                      onTap: () => widget.onApplyToAll!(_active),
-                    ),
                   // Biçimi temizle: biçimsiz metinde SOLUK ve tıklanamaz —
                   // düğmenin işe yarayıp yaramadığı görünür.
                   _Btn(
@@ -643,13 +682,6 @@ class _FormatBarState extends State<FormatBar> {
                         ? null
                         : () => _scoped(widget.onClearFormat),
                   ),
-                  if (widget.onPageStyle != null)
-                    _Btn(
-                      key: const ValueKey('format-page'),
-                      icon: Icons.palette_outlined,
-                      tooltip: l10n.formatPageColor,
-                      onTap: widget.onPageStyle,
-                    ),
                   SizedBox(
                     height: 26,
                     child: VerticalDivider(
@@ -1138,6 +1170,14 @@ class _ColorRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final palette = NoteColors.richPalette;
+    // Dairelerin ADI (F12.5): beşi de "Yazı rengi" diye okunuyordu.
+    final names = [
+      l10n.colorNameRed,
+      l10n.colorNameYellow,
+      l10n.colorNameGreen,
+      l10n.colorNameBlue,
+      l10n.colorNamePurple,
+    ];
     final index = activeIndex;
     final custom = isCustomRichColor(index) ? Color(index!) : null;
 
@@ -1187,7 +1227,7 @@ class _ColorRow extends StatelessWidget {
           slot(
             circle(
               key: ValueKey('$keyPrefix-${i + 1}'),
-              tooltip: label,
+              tooltip: i < names.length ? '$label: ${names[i]}' : label,
               onTap: () => onPick(i + 1),
               fill: filled ? palette[i].withValues(alpha: 0.45) : palette[i],
               border: filled ? palette[i] : null,
