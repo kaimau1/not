@@ -1,3 +1,4 @@
+import '../../../../core/app_icons.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -283,7 +284,7 @@ class _SlideBar extends StatelessWidget {
             ),
           ),
           button(Icons.chevron_right, l10n.pdfNextPage, onNext),
-          button(Icons.open_in_full, l10n.fullscreen, onFull),
+          button(AppIcons.fullscreen, l10n.fullscreen, onFull),
         ],
       ),
     );

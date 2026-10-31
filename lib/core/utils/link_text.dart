@@ -4,6 +4,7 @@
 /// bir kalıp, birinde düzeltilip diğerinde unutulurdu.
 library;
 
+import '../../app/theme/fixed_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -190,7 +191,7 @@ List<InlineSpan> linkSpans(
   // altında ve inceltilmiş. Zemin ve çizgi yerleşimi etkilemez (ölçüm yolu
   // renksiz/zeminsiz ölçer; satırlar kaymaz). Metin vurgulu bir aralıktaysa
   // vurgunun kendi zemini korunur.
-  const attachmentColor = Color(0xFFD32F2F);
+  const attachmentColor = FixedColors.kindPdf;
   final tagBase = base.background != null || base.backgroundColor != null
       ? base.copyWith(color: attachmentColor)
       : base.copyWith(

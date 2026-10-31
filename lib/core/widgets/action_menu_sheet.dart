@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_sheet.dart';
+import 'sheet_header.dart';
 
 /// Menü levhasındaki tek işlem.
 class MenuAction {
@@ -126,7 +127,6 @@ class ActionMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
     final heading = title?.trim() ?? '';
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -134,15 +134,11 @@ class ActionMenu extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Menü levhasında başlık = notun adı, ✕ sağda (F16.2).
           if (heading.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
-              child: Text(
-                heading,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: textTheme.titleSmall,
-              ),
+            SheetHeader(
+              title: heading,
+              padding: const EdgeInsets.fromLTRB(4, 0, 0, 4),
             ),
           if (quick.isNotEmpty)
             Row(
@@ -158,17 +154,7 @@ class ActionMenu extends StatelessWidget {
             if (section.actions.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
-                child: Text(
-                  section.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.4,
-                    color: scheme.primary,
-                  ),
-                ),
+                child: SectionLabel(section.title),
               ),
               if (wideSections)
                 _TileColumns(actions: section.actions, scheme: scheme)

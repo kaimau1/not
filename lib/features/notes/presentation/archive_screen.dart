@@ -1,3 +1,5 @@
+import '../../../core/widgets/skeleton.dart';
+import '../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,7 +12,6 @@ import 'note_sort_menu.dart';
 import 'notes_providers.dart';
 import 'archive_insights_sheet.dart';
 import 'screen_search.dart';
-import '../../../core/friendly_error.dart';
 
 /// Arşivlenen notlar. Karta dokununca editör açılır; menüden arşivden
 /// çıkarılabilir veya silinebilir.
@@ -92,10 +93,10 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
         ],
       ),
       body: archived.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => EmptyState(
-          icon: Icons.error_outline,
-          title: l10n.genericError(friendlyError(l10n, e)),
+        loading: () => const NoteListSkeleton(),
+        error: (e, _) => ErrorState(
+          error: e,
+          onRetry: () => ref.invalidate(archivedNotesProvider),
         ),
         data: (all) => ValueListenableBuilder<TextEditingValue>(
           valueListenable: _search.controller,
@@ -115,7 +116,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
               }
               return needle.isEmpty
                   ? EmptyState(
-                      icon: Icons.archive_outlined,
+                      icon: AppIcons.archive,
                       title: l10n.archiveEmpty,
                     )
                   : EmptyState(

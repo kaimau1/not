@@ -1,3 +1,6 @@
+import '../../../core/app_icons.dart';
+import '../../../core/widgets/skeleton.dart';
+import '../../../core/widgets/sheet_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,7 +18,6 @@ import '../../../core/utils/rich_text.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../../../core/widgets/app_sheet.dart';
-import '../../../core/friendly_error.dart';
 
 /// Çöp kutusu: silinen notlar geri alınabilir veya kalıcı silinebilir.
 ///
@@ -201,10 +203,10 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
         ],
       ),
       body: trash.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => EmptyState(
-          icon: Icons.error_outline,
-          title: l10n.genericError(friendlyError(l10n, e)),
+        loading: () => const NoteListSkeleton(),
+        error: (e, _) => ErrorState(
+          error: e,
+          onRetry: () => ref.invalidate(trashStreamProvider),
         ),
         data: (raw) => ValueListenableBuilder<TextEditingValue>(
           valueListenable: _search.controller,
@@ -352,14 +354,7 @@ class _TrashHeader extends StatelessWidget {
               Icon(Icons.hourglass_bottom, size: 15, color: color),
               const SizedBox(width: 6),
             ],
-            Text(
-              title.toUpperCase(),
-              style: theme.textTheme.labelMedium?.copyWith(
-                letterSpacing: 0.8,
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
-            ),
+            SectionLabel(title, color: color),
             const SizedBox(width: 8),
             Text(
               '$count',
@@ -442,7 +437,7 @@ class _TrashCard extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.restore_from_trash_outlined),
+              leading: const Icon(AppIcons.restore),
               title: Text(l10n.restore),
               onTap: () => Navigator.pop(sheetContext, 'restore'),
             ),
@@ -667,7 +662,7 @@ class _TrashCard extends ConsumerWidget {
                     visualDensity: VisualDensity.compact,
                     iconSize: 20,
                     tooltip: l10n.restore,
-                    icon: const Icon(Icons.restore_from_trash_outlined),
+                    icon: const Icon(AppIcons.restore),
                     onPressed: () => _restore(context, ref),
                   ),
                   IconButton(

@@ -1,3 +1,5 @@
+import '../../../core/app_icons.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -466,7 +468,7 @@ class SharedHubChip extends ConsumerWidget {
     return _ChipShell(
       key: const ValueKey('shared-hub-chip'),
       accent: scheme.tertiary,
-      icon: Icons.move_to_inbox_outlined,
+      icon: AppIcons.inbox,
       label: context.l10n.sharedHubShort,
       count: inbox + shared,
       unread: unread,

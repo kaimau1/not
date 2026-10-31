@@ -1,3 +1,6 @@
+import '../../../core/widgets/skeleton.dart';
+import '../../../core/app_icons.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -62,11 +65,9 @@ class SharedHubBody extends ConsumerWidget {
     final entries = sharedNoteEntries(ref);
     final unread = ref.watch(sharedNoteUnreadProvider);
     if (inbox.isEmpty && entries.isEmpty) {
-      if (inboxAsync.isLoading) {
-        return const Center(child: CircularProgressIndicator());
-      }
+      if (inboxAsync.isLoading) return const NoteListSkeleton();
       return EmptyState(
-        icon: Icons.move_to_inbox_outlined,
+        icon: AppIcons.inbox,
         title: l10n.sharedHubEmpty,
         subtitle: l10n.sharedHubEmptyHint,
       );
@@ -74,7 +75,7 @@ class SharedHubBody extends ConsumerWidget {
     final inboxTag = HubSourceTag(
       key: const ValueKey('hub-tag-inbox'),
       label: l10n.sharedHubTagInbox,
-      icon: Icons.move_to_inbox_outlined,
+      icon: AppIcons.inbox,
       color: scheme.tertiary,
     );
     final sharedTag = HubSourceTag(

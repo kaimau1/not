@@ -1,3 +1,5 @@
+import '../../../../app/theme/fixed_colors.dart';
+import '../../../../core/app_icons.dart';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -539,7 +541,7 @@ class _AttachmentTile extends ConsumerWidget {
         preview: _TextPreview(text: attachment.text),
         name: attachment.fileName,
         badge: 'TXT',
-        badgeColor: const Color(0xFF6D4C41),
+        badgeColor: FixedColors.kindText,
       );
     } else if (attachment.kind == AttachmentKind.pdf) {
       content = _PreviewTile(
@@ -561,7 +563,7 @@ class _AttachmentTile extends ConsumerWidget {
             ? 'YouTube'
             : context.l10n.uiItemVideoBadge,
         badgeColor: attachment.isWebVideo
-            ? const Color(0xFFE53935)
+            ? FixedColors.youtubeRed
             : scheme.primary,
       );
     } else if (attachment.kind == AttachmentKind.slide) {
@@ -866,7 +868,7 @@ class _AttachmentTile extends ConsumerWidget {
                     l10n.attachmentTagInsert,
                   ),
                 if (onCopy != null)
-                  tile('copy', Icons.copy_outlined, l10n.copy),
+                  tile('copy', AppIcons.copy, l10n.copy),
                 // EKİ FARKLI KAYDET (2026-10-17): kullanıcının seçtiği yere.
                 if (!attachment.isWebVideo)
                   tile(
@@ -985,7 +987,7 @@ class _PreviewTile extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0x00000000), Color(0xC0000000)],
+                  colors: FixedColors.scrimBottom,
                 ),
               ),
               child: Row(

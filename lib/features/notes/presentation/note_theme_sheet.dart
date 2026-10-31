@@ -1,3 +1,7 @@
+import '../../../app/theme/fixed_colors.dart';
+import '../../../core/widgets/sheet_header.dart';
+import '../../../core/app_icons.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -152,13 +156,7 @@ class _ThemeSheetState extends State<_ThemeSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-              child: Text(
-                l10n.noteAppearance,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-            ),
+            SheetHeader(title: l10n.noteAppearance),
             SizedBox(
               height: 150,
               child: ListView.separated(
@@ -243,7 +241,7 @@ class _ThemeSheetState extends State<_ThemeSheet> {
                     if (widget.paper)
                       (
                         NoteAppearanceAction.paper,
-                        Icons.menu_book_outlined,
+                        AppIcons.notebook,
                         l10n.archivePaper,
                       ),
                   ])
@@ -403,21 +401,12 @@ class _FlatTile extends StatelessWidget {
             color: fill,
             border: Border.all(color: scheme.outlineVariant, width: 0.6),
             gradient: palette && fill == null
-                ? const SweepGradient(
-                    colors: [
-                      Color(0xFFE57373),
-                      Color(0xFFFFD54F),
-                      Color(0xFF81C784),
-                      Color(0xFF64B5F6),
-                      Color(0xFF9575CD),
-                      Color(0xFFE57373),
-                    ],
-                  )
+                ? FixedColors.rainbowSweep
                 : null,
           ),
           child: palette
               ? Icon(
-                  Icons.palette_outlined,
+                  AppIcons.color,
                   size: 20,
                   color: fill == null ? Colors.white : scheme.onSurface,
                 )

@@ -1,3 +1,4 @@
+import '../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -956,13 +957,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                   ),
                                   IconButton(
                                     tooltip: l10n.archive,
-                                    icon: const Icon(Icons.archive_outlined),
+                                    icon: const Icon(AppIcons.archive),
                                     onPressed: () =>
                                         _archiveSelected(selectedIds),
                                   ),
                                   IconButton(
                                     tooltip: l10n.copy,
-                                    icon: const Icon(Icons.copy_outlined),
+                                    icon: const Icon(AppIcons.copy),
                                     onPressed: () => _copySelected(selectedIds),
                                   ),
                                   IconButton(
@@ -1034,17 +1035,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                       const PopupMenuDivider(),
                                       _menuItem(
                                         'folder',
-                                        Icons.folder_outlined,
+                                        AppIcons.moveToFolder,
                                         l10n.moveToFolder,
                                       ),
                                       _menuItem(
                                         'duplicate',
-                                        Icons.content_copy_outlined,
+                                        AppIcons.duplicate,
                                         l10n.duplicateNote,
                                       ),
                                       _menuItem(
                                         'color',
-                                        Icons.palette_outlined,
+                                        AppIcons.color,
                                         l10n.backgroundColor,
                                       ),
                                       _menuItem(
@@ -1363,10 +1364,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         error: (e, _) => [
                                           SliverFillRemaining(
                                             hasScrollBody: false,
-                                            child: EmptyState(
-                                              icon: Icons.error_outline,
-                                              title: l10n.genericError(friendlyError(l10n, e)),
-                                            ),
+                                            child: ErrorState(error: e),
                                           ),
                                         ],
                                       ),

@@ -50,7 +50,7 @@ extension _DashMenu on _DashboardScreenState {
             MenuAction(
               'archive',
               l10n.archiveTitle,
-              Icons.archive_outlined,
+              AppIcons.archive,
               count: ref.read(archivedNotesProvider).value?.length ?? 0,
             ),
             MenuAction('trash', l10n.trashTitle, Icons.delete_outline),
@@ -104,7 +104,7 @@ extension _DashMenu on _DashboardScreenState {
               l10n.personalizeTitle,
               Icons.tune_rounded,
             ),
-            MenuAction('guide', l10n.guideTitle, Icons.menu_book_outlined),
+            MenuAction('guide', l10n.guideTitle, AppIcons.guide),
           ]),
         ],
       ),

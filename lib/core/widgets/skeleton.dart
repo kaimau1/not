@@ -80,3 +80,30 @@ class _NoteGridSkeletonState extends State<NoteGridSkeleton>
     );
   }
 }
+
+/// Liste ekranlarının (arşiv, çöp, klasör, Gelen, hatırlatıcılar) ilk
+/// yükleme iskeleti (F16.4): ortada dönen çark yerine kartların yeri.
+/// Sütun sayısı genişlikten (ızgaradaki gibi ~260 dp'lik kart); kaydırma
+/// içinde de güvenli — taşan kısım kırpılır.
+class NoteListSkeleton extends StatelessWidget {
+  const NoteListSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final width = constraints.maxWidth.isFinite
+          ? constraints.maxWidth
+          : MediaQuery.sizeOf(context).width;
+      // Kısa alanda (ör. Hatırlatıcılar'ın üst şeridinin altı) kartlar
+      // taşmasın: kaydırılamaz kapsayıcı yüksekliği serbest bırakır, fazlası
+      // kırpılır.
+      return SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: NoteGridSkeleton(
+          key: const ValueKey('list-skeleton'),
+          columns: (width / 260).floor().clamp(1, 4),
+        ),
+      );
+    },
+  );
+}

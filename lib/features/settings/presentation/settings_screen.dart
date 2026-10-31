@@ -1,3 +1,5 @@
+import '../../../core/app_icons.dart';
+
 import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
@@ -183,7 +185,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       // buradan da erişilebilir (asıl giriş klasör ⋮ menüsündeki "Paylaş").
       _Area(
         id: 'friends',
-        icon: Icons.people_outline,
+        icon: AppIcons.friends,
         title: l10n.friendsTitle,
         summary: '',
         keywords: 'arkadas kisi paylas klasor ortak gelen not',
@@ -262,7 +264,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
       _Area(
         id: 'appearance',
-        icon: Icons.palette_outlined,
+        icon: AppIcons.appearance,
         title: l10n.settingsAppearance,
         summary: _appearanceSummary(l10n),
         keywords: 'tema yazi boyutu zemin koyu acik kagit liste dil kart',
@@ -646,7 +648,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 tiles: [
                   _ShortcutTile(
                     key: const ValueKey('settings-guide'),
-                    icon: Icons.menu_book_outlined,
+                    icon: AppIcons.guide,
                     title: l10n.guideTitle,
                     subtitle: l10n.guideMenuInfo,
                     color: scheme.secondary,

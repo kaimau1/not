@@ -1,3 +1,4 @@
+import '../../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -335,7 +336,7 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
           if (hasText && !_editing) ...[
             IconButton(
               tooltip: l10n.copy,
-              icon: const Icon(Icons.copy_outlined),
+              icon: const Icon(AppIcons.copy),
               onPressed: () => _copy(
                 _selection.value.isNotEmpty ? _selection.value : _shown,
               ),

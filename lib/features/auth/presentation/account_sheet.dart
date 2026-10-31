@@ -1,3 +1,4 @@
+import '../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -150,7 +151,7 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
               ),
               const Divider(height: 8),
               ListTile(
-                leading: const Icon(Icons.people_outline),
+                leading: const Icon(AppIcons.friends),
                 title: Text(l10n.friendsTitle),
                 trailing: _Badge(count: requests),
                 onTap: () {

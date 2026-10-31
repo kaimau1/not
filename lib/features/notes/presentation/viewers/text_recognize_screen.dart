@@ -1,3 +1,4 @@
+import '../../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -368,7 +369,7 @@ class _TextRecognizeScreenState extends State<TextRecognizeScreen> {
                               minimumSize: const Size.fromHeight(46),
                             ),
                             onPressed: _copy,
-                            icon: const Icon(Icons.copy_outlined),
+                            icon: const Icon(AppIcons.copy),
                             label: Text(l10n.copy),
                           ),
                         ),

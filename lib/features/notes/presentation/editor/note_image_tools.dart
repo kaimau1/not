@@ -193,7 +193,7 @@ class _ImageTools extends StatelessWidget {
                   child: ListTile(
                     dense: true,
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.copy_outlined),
+                    leading: const Icon(AppIcons.copy),
                     title: Text(l10n.copy),
                   ),
                 ),

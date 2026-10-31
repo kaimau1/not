@@ -27,6 +27,19 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
 numarasıyla bildir.
 
+**2026-10-31 Faz 16 (görsel bütünlük) — koyu tema + simgeler**
+- [ ] Koyu, kâğıt ve kırık beyaz temada: ana ekran, klasör, Arşiv, Çöp,
+  Gelen ve paylaşılanlar, Hatırlatıcılar — ilk açılışta çark yerine kart
+  iskeleti; çevrimdışı/izin hatasında tek hata görünümü + "Tekrar dene".
+- [ ] Simgeler: Gelen artık ZARF (rayda, şeritte, Ayarlar'da); Not paketi
+  zip; Kılavuz soru işareti; ⋮'de "Klasöre taşı" taşıma simgesi; renk
+  seçimleri boya kovası, palet yalnız Görünüm. "Bu ne?" dediğin kaldı mı?
+- [ ] Levhalar: Süz, Paylaş, Görünüm, AI ve not ⋮ menüsü başlık solda + ✕
+  sağda (Süz'deki "Kapat" hapı ✕ oldu); bölüm başlıkları cümle düzeninde
+  (Ekle, Çöp, Klasörler, Hatırlatıcılar, Yapay zekâ ekranı).
+- [ ] YouTube rozeti/oynat simgesi marka kırmızısı; fotoğraf üstü koyu
+  geçiş her yerde aynı.
+
 **2026-10-31 Faz 15 (erişilebilirlik) — TalkBack + en büyük yazı**
 - [ ] Ayarlar → Görünüm → "Sistem yazı boyutunu izle" varsayılan KAPALI;
   kapalıyken telefonun yazı boyutu/kalın metni uygulamayı DEĞİŞTİRMİYOR.

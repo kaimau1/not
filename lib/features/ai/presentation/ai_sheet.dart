@@ -1,3 +1,5 @@
+import '../../../core/app_icons.dart';
+import '../../../core/widgets/sheet_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -578,23 +580,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.auto_awesome,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.aiTitle,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ],
-                  ),
-                ),
+                SheetHeader(title: l10n.aiTitle),
                 if (_loading)
                   Padding(
                     padding: const EdgeInsets.all(32),
@@ -1249,7 +1235,7 @@ class _ResultView extends StatelessWidget {
                 ),
               TextButton.icon(
                 onPressed: onCopy,
-                icon: const Icon(Icons.copy, size: 16),
+                icon: const Icon(AppIcons.copy, size: 16),
                 label: Text(context.l10n.copy),
               ),
               if (onCreateNote != null)

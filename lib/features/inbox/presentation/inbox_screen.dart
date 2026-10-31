@@ -1,3 +1,6 @@
+import '../../../core/widgets/skeleton.dart';
+import '../../../core/app_icons.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -63,14 +66,14 @@ class InboxList extends ConsumerWidget {
     final l10n = context.l10n;
     final async = ref.watch(inboxNotesProvider);
     return async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => EmptyState(
-        icon: Icons.error_outline,
-        title: l10n.genericError(friendlyError(l10n, e)),
-      ),
+      loading: () => const NoteListSkeleton(),
+      error: (e, _) => ErrorState(
+          error: e,
+          onRetry: () => ref.invalidate(inboxNotesProvider),
+        ),
       data: (notes) => notes.isEmpty
           ? EmptyState(
-              icon: Icons.move_to_inbox_outlined,
+              icon: AppIcons.inbox,
               title: l10n.inboxEmpty,
               subtitle: l10n.inboxEmptyHint,
             )

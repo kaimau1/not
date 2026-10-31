@@ -1,3 +1,4 @@
+import '../../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -4285,7 +4286,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   id: UiItem.topTheme,
                   child: IconButton(
                     tooltip: l10n.noteAppearance,
-                    icon: const Icon(Icons.palette_outlined),
+                    icon: const Icon(AppIcons.appearance),
                     onPressed: () => unawaited(_showColorSheet()),
                   ),
                 ),

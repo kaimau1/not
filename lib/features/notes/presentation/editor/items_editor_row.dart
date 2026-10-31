@@ -655,7 +655,7 @@ extension _ItemsRow on ItemsEditorState {
                 ),
               IconButton(
                 tooltip: l10n.copy,
-                icon: const Icon(Icons.copy_outlined, size: 20),
+                icon: const Icon(AppIcons.copy, size: 20),
                 onPressed: hasSelection ? _copySelected : null,
               ),
               // KOPYALA + İŞARETLE (kullanıcı isteği 2026-10-30): alışveriş

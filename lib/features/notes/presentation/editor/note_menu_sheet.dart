@@ -1,3 +1,4 @@
+import '../../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
@@ -170,7 +171,7 @@ class _MenuGrid extends StatelessWidget {
           starred ? Icons.star : Icons.star_outline,
           selected: starred,
         ),
-        MenuAction('folder', l10n.moveToFolder, Icons.folder_outlined),
+        MenuAction('folder', l10n.moveToFolder, AppIcons.moveToFolder),
         // SÜRÜM GEÇMİŞİ (F4.2): "dünkü hâline dön".
         MenuAction('history', l10n.versionHistory, Icons.history),
         MenuAction('listen', l10n.listenToNote, Icons.headphones_outlined),
@@ -182,7 +183,7 @@ class _MenuGrid extends StatelessWidget {
             MenuAction(
               'paged',
               paged ? l10n.notebookViewOff : l10n.notebookViewOn,
-              Icons.menu_book_outlined,
+              AppIcons.notebook,
               selected: paged,
             ),
           if (paged)
@@ -237,7 +238,7 @@ class _MenuGrid extends StatelessWidget {
           MenuAction(
             'duplicate',
             l10n.duplicateNote,
-            Icons.library_add_outlined,
+            AppIcons.duplicate,
           ),
           // KENDİ ŞABLONUM (kullanıcı isteği 2026-09-29).
           if (canTemplate)
@@ -266,7 +267,7 @@ class _MenuGrid extends StatelessWidget {
           MenuAction('stats', l10n.noteStatsTitle, Icons.insights_outlined),
           // Çubuktan düşen (dar ekran) ya da gizlenen Ara/Paylaş.
           if (!searchInBar)
-            MenuAction('search', l10n.noteSearchTitle, Icons.manage_search),
+            MenuAction('search', l10n.noteSearchTitle, AppIcons.search),
           if (!shareInBar)
             MenuAction('share', l10n.share, Icons.share_outlined),
           MenuAction(
@@ -279,7 +280,7 @@ class _MenuGrid extends StatelessWidget {
           MenuAction(
             'archive',
             archived ? l10n.unarchive : l10n.archive,
-            archived ? Icons.unarchive_outlined : Icons.archive_outlined,
+            archived ? AppIcons.unarchive : AppIcons.archive,
           ),
           MenuAction(
             'lock',

@@ -1006,7 +1006,7 @@ class _SwipeActions extends StatelessWidget {
       ),
       secondaryBackground: background(
         alignment: AlignmentDirectional.centerEnd,
-        icon: Icons.archive_outlined,
+        icon: AppIcons.archive,
         label: l10n.archive,
         color: scheme.tertiaryContainer,
         ink: scheme.onTertiaryContainer,

@@ -20,3 +20,29 @@ Arayüz metni yazarken bu tablo geçerli. `test/terminology_test.dart`
 | Ekleri bir deftere taşı | **Deftere topla** · **defter** | Arşiv defteri, Arşiv defterine kopyala |
 | Sıralama | **Son güncellenen** | Son düzenlenen |
 | Gelen kopyalar + ortak notlar | **Gelen** (şerit çipi) · ekran: "Gelen ve paylaşılanlar"; liste etiketleri **Gelen** / **Paylaşılan** | — |
+
+## Simgeler — tek simge, tek anlam (F16.1, 2026-10-31)
+
+Kaynak: `lib/core/app_icons.dart` (`AppIcons`). Tabloda olan bir iş için
+`Icons.*` doğrudan yazılmaz; `test/visual_consistency_test.dart` tarar.
+
+| Anlam | Simge (`AppIcons.`) | Material | Bu simge başka iş için kullanılmaz |
+|---|---|---|---|
+| Arşiv / arşivle / arşivden çıkar | `archive` · `unarchive` | archive_outlined · unarchive_outlined | Defter, Not paketi, Gelen |
+| Gelen ve paylaşılanlar | `inbox` | mail_outline (zarf) | — (eski move_to_inbox arşive benziyordu) |
+| Defter (sayfalı görünüm, defter kâğıdı) | `notebook` | menu_book_outlined | Kılavuz |
+| Kullanım kılavuzu | `guide` | help_outline | — |
+| Not paketi (.notlar) | `notePackage` | folder_zip_outlined | — |
+| Kopyala (pano) | `copy` | content_copy_outlined | Çoğalt |
+| Çoğalt | `duplicate` | library_add_outlined | Kopyala |
+| Görünüm (tema) | `appearance` | palette_outlined | renk seçimi |
+| Renk seçimi (zemin, sayfa, özel renk, renge göre) | `color` | format_color_fill | Görünüm |
+| Klasöre taşı | `moveToFolder` | drive_file_move_outline | Klasörler bölümü (folder) |
+| Ara / Notta ara | `search` | search | — (derin arama manage_search ayrı iş) |
+| Tam ekran | `fullscreen` | fullscreen | — |
+| Çöpten geri yükle | `restore` | restore_from_trash_outlined | — |
+| Kişiler | `friends` | people_outline | Paylaşılan (people_alt) |
+
+Levhalar: başlık solda + ✕ sağda (`SheetHeader`); bölüm başlığı cümle
+düzeninde (`SectionLabel`, BÜYÜK HARF yok). Sabit renkler
+`lib/app/theme/fixed_colors.dart`.

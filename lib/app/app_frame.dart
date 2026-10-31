@@ -1,3 +1,4 @@
+import '../core/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -255,7 +256,7 @@ class _AppRail extends ConsumerWidget {
                             ),
                           _RailAction(
                             extended: extended,
-                            icon: Icons.people_alt_outlined,
+                            icon: AppIcons.friends,
                             label: l10n.friendsTitle,
                             onPressed: () =>
                                 openFriendsScreenOrExplain(context, ref),

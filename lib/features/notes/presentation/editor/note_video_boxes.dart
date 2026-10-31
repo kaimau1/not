@@ -140,7 +140,7 @@ class _WebVideoBoxState extends State<_WebVideoBox> {
               width: 52,
               height: 36,
               decoration: BoxDecoration(
-                color: const Color(0xFFFF0000),
+                color: FixedColors.youtubeRed,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(
@@ -167,7 +167,7 @@ class _WebVideoBoxState extends State<_WebVideoBox> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0xCC000000), Color(0x00000000)],
+                    colors: FixedColors.scrimTop,
                   ),
                 ),
                 child: Text(
@@ -517,7 +517,7 @@ class _VideoBoxState extends State<_VideoBox> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0x00000000), Color(0xAA000000)],
+                  colors: FixedColors.scrimBottom,
                 ),
               ),
               alignment: Alignment.center,

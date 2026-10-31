@@ -1,3 +1,4 @@
+import '../../../app/theme/fixed_colors.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -330,7 +331,7 @@ class CardMediaBody extends StatelessWidget {
       children.add(
         _FileRow(
           icon: Icons.subject,
-          color: const Color(0xFF6D4C41),
+          color: FixedColors.kindText,
           label: l10n.cardTranscriptCount(plan.transcriptCount),
           style: labelStyle,
         ),
@@ -527,7 +528,7 @@ class CardDocumentCover extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0x00000000), Color(0xB3000000)],
+                    colors: FixedColors.scrimBottom,
                   ),
                 ),
                 child: Row(
@@ -674,7 +675,7 @@ class CardMediaTile extends StatelessWidget {
             width: large ? 44 : 30,
             height: large ? 30 : 21,
             decoration: BoxDecoration(
-              color: const Color(0xFFFF0000),
+              color: FixedColors.youtubeRed,
               borderRadius: BorderRadius.circular(large ? 9 : 6),
             ),
             child: Icon(
@@ -695,7 +696,7 @@ class CardMediaTile extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0x00000000), Color(0xB3000000)],
+                  colors: FixedColors.scrimBottom,
                 ),
               ),
               child: Text(

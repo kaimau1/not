@@ -1,3 +1,4 @@
+import '../../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -160,7 +161,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
             Row(
               children: [
                 TextButton.icon(
-                  icon: const Icon(Icons.copy_outlined, size: 18),
+                  icon: const Icon(AppIcons.copy, size: 18),
                   label: Text(l10n.copy),
                   onPressed: value == null
                       ? null

@@ -131,7 +131,7 @@ extension NoteTemplateInfo on NoteTemplate {
     NoteTemplate.recipe => Icons.restaurant_menu,
     NoteTemplate.weekly => Icons.view_week_outlined,
     NoteTemplate.expense => Icons.payments_outlined,
-    NoteTemplate.reading => Icons.menu_book_outlined,
+    NoteTemplate.reading => Icons.auto_stories_outlined,
   };
 
   /// Şablonun rengi — levhadaki simge kutusu (klasör renk dilinin aynısı).

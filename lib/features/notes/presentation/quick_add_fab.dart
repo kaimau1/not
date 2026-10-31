@@ -1,3 +1,5 @@
+import '../../../core/widgets/sheet_header.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -525,14 +527,12 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
                     Padding(
                       padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
                       child: Text(
-                        _groupTitle(l10n, section.group).toUpperCase(),
+                        _groupTitle(l10n, section.group),
                         key: ValueKey('quick-section-${section.group.name}'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
+                        style: sectionLabelStyle(
+                          context,
                           color: _doorColor(scheme, section.group),
                         ),
                       ),

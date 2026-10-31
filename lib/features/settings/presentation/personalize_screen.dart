@@ -1,3 +1,4 @@
+import '../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -527,7 +528,7 @@ class _EditorSection extends StatelessWidget {
               ),
               (
                 id: UiItem.topTheme,
-                icon: Icons.palette_outlined,
+                icon: AppIcons.appearance,
                 label: l10n.noteAppearance,
               ),
               (

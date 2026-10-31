@@ -13,7 +13,7 @@ class _FriendsRow extends ConsumerWidget {
         ref.watch(incomingFriendRequestsProvider).value?.length ?? 0;
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: const Icon(Icons.people_outline),
+      leading: const Icon(AppIcons.friends),
       title: Text(l10n.friendsTitle),
       subtitle: Text(l10n.friendsRowInfo),
       trailing: ref.watch(isAnonymousProvider)
@@ -52,7 +52,7 @@ class _InboxRow extends ConsumerWidget {
     final count = ref.watch(inboxNotesProvider).value?.length ?? 0;
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: const Icon(Icons.move_to_inbox_outlined),
+      leading: const Icon(AppIcons.inbox),
       title: Text(l10n.inboxTitle),
       subtitle: Text(l10n.inboxEmptyHint),
       trailing: count > 0

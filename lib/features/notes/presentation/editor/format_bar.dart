@@ -1,3 +1,5 @@
+import '../../../../app/theme/fixed_colors.dart';
+import '../../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -1253,22 +1255,11 @@ class _ColorRow extends StatelessWidget {
             fill: custom,
             gradient: custom != null
                 ? null
-                : const SweepGradient(
-                    colors: [
-                      Color(0xFFE57373),
-                      Color(0xFFFFD54F),
-                      Color(0xFF81C784),
-                      Color(0xFF64B5F6),
-                      Color(0xFF9575CD),
-                      Color(0xFFE57373),
-                    ],
-                  ),
+                : FixedColors.rainbowSweep,
             child: Icon(
-              custom != null ? Icons.check : Icons.palette_outlined,
+              custom != null ? Icons.check : AppIcons.color,
               size: 15,
-              color: custom != null && custom.computeLuminance() > 0.5
-                  ? Colors.black87
-                  : Colors.white,
+              color: custom != null ? FixedColors.inkOn(custom) : Colors.white,
             ),
           ),
         ),

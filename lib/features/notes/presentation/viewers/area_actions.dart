@@ -1,3 +1,5 @@
+import '../../../../core/app_icons.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -67,7 +69,7 @@ class _AreaActionsSheet extends StatelessWidget {
             const SizedBox(height: 12),
             FilledButton.tonalIcon(
               onPressed: () => _copy(context),
-              icon: const Icon(Icons.copy_outlined),
+              icon: const Icon(AppIcons.copy),
               label: Text(l10n.areaCopyImage),
             ),
             const SizedBox(height: 8),
@@ -195,7 +197,7 @@ class _AreaAskScreenState extends ConsumerState<AreaAskScreen> {
               alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
                 onPressed: () => _copyAnswer(_answer!),
-                icon: const Icon(Icons.copy_outlined),
+                icon: const Icon(AppIcons.copy),
                 label: Text(l10n.copy),
               ),
             ),

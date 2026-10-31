@@ -728,6 +728,23 @@ eskisini arşive taşıma.
   `showAppMessage(context, metin)`; eylemliyse `action:` (geri sayımlı).
   Elle `SnackBar(content: Text(...))` kurma.
 
+## Faz 16 kararları (2026-10-31)
+- **Simge sözlüğü `lib/core/app_icons.dart`:** tabloda olan iş (Arşiv,
+  Gelen=zarf, Defter, Kılavuz, Not paketi, Kopyala/Çoğalt, Görünüm/Renk,
+  Klasöre taşı, Ara, Tam ekran, Geri yükle, Kişiler) `AppIcons.*`'tan alınır;
+  `visual_consistency_test` doğrudan `Icons.*` kullanımını yakalar. Okunur
+  sözlük `TERIMLER.md`. TUZAK (betikle değiştirirken): `Icons.archive\b`
+  deseni `AppIcons.archive` içinde de eşleşir → `AppAppIcons`.
+- **Levha iskeleti:** yeni levha `SheetHeader` (başlık solda, ✕ sağda,
+  `Navigator.maybePop`) ile açılır; bölüm başlığı `SectionLabel` — ASLA
+  `toUpperCase()` (Türkçe i/I; test tarar).
+- **Sabit renk** gerekiyorsa `app/theme/fixed_colors.dart`'a, nedeniyle;
+  `SweepGradient` yalnız orada (test). Arayüz rengi şemadan.
+- **Liste ekranı ilk yüklemesi** `NoteListSkeleton`, hatası `ErrorState`
+  (+ `onRetry: ref.invalidate(...)`); ortada çark yok (test). TUZAK:
+  iskelet sabit yükseklikli `Column` — kısa alanda taşar; kaydırılamaz
+  `SingleChildScrollView` içinde durur (Hatırlatıcılar testi yakaladı).
+
 ## Faz 15 kararları (2026-10-31)
 - **Sistem yazı boyutu (F15.1 — öneri uygulandı, varsayılan mevcut
   davranış):** Görünüm → "Sistem yazı boyutunu izle"

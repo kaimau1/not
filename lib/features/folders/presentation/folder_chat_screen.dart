@@ -1,3 +1,4 @@
+import '../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -440,7 +441,7 @@ class _MessageBubble extends ConsumerWidget {
           children: [
             if (message.hasImage)
               ListTile(
-                leading: const Icon(Icons.copy_outlined),
+                leading: const Icon(AppIcons.copy),
                 title: Text(l10n.copy),
                 onTap: () => Navigator.pop(sheetContext, 'copy'),
               ),

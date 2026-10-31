@@ -1,3 +1,5 @@
+import '../../../core/widgets/sheet_header.dart';
+import '../../../core/app_icons.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData, rootBundle;
@@ -179,10 +181,7 @@ class _ShareSheetState extends State<_ShareSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-            child: Text(l10n.share, style: theme.textTheme.titleLarge),
-          ),
+          SheetHeader(title: l10n.share),
           // ÖNİZLEME: gönderilecek metnin kendisi — seçenekler değişince
           // anında güncellenir. KAYDIRILABİLİR (bkz. [_SharePreview]).
           Padding(
@@ -280,7 +279,7 @@ class _ShareSheetState extends State<_ShareSheet> {
                     cell(
                       _QuickShareButton(
                         key: const ValueKey('share-quick-copy'),
-                        icon: Icons.copy_outlined,
+                        icon: AppIcons.copy,
                         label: l10n.copy,
                         hint: l10n.shareCopyHint,
                         onTap: hasText ? () => _pop('copy') : null,
@@ -366,7 +365,7 @@ class _ShareSheetState extends State<_ShareSheet> {
             context,
             key: const ValueKey('share-package'),
             onTap: () => _pop('package'),
-            icon: Icons.inventory_2_outlined,
+            icon: AppIcons.notePackage,
             title: l10n.shareAsNoteShort,
             subtitle: l10n.shareAsNoteInfo,
           ),

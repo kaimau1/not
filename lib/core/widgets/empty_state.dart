@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../friendly_error.dart';
+import '../l10n_ext.dart';
+
 /// Boş ekran açıklaması — isteğe bağlı bir ÇIKIŞ YOLU ile.
 ///
 /// NEDEN eylem düğmesi: boş durumlar yalnız "burada bir şey yok" diyordu.
@@ -71,6 +74,30 @@ class EmptyState extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Tek HATA görünümü (F16.4, 2026-10-31): liste ekranları yüklenemeyince
+/// hep aynı simge, aynı okunur metin (F10.4 `friendlyError`) ve — verilirse
+/// — "Tekrar dene". Ekranlar `EmptyState(icon: error_outline, …)`ı ayrı
+/// ayrı kuruyordu.
+class ErrorState extends StatelessWidget {
+  const ErrorState({super.key, required this.error, this.onRetry});
+
+  final Object error;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return EmptyState(
+      key: const ValueKey('error-state'),
+      icon: Icons.error_outline,
+      title: l10n.genericError(friendlyError(l10n, error)),
+      actionLabel: onRetry == null ? null : l10n.retry,
+      actionIcon: Icons.refresh,
+      onAction: onRetry,
     );
   }
 }

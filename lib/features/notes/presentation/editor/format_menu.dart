@@ -1,3 +1,4 @@
+import '../../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/color_palette.dart';
@@ -416,7 +417,7 @@ class _ColorRow extends StatelessWidget {
           ),
         IconButton.filledTonal(
           tooltip: context.l10n.paletteMore,
-          icon: const Icon(Icons.palette_outlined),
+          icon: const Icon(AppIcons.color),
           onPressed: () async {
             final picked = await showColorPaletteSheet(context, title: title);
             if (picked != null) onPick(picked.toARGB32() | 0xFF000000);

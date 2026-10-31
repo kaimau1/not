@@ -1,3 +1,5 @@
+import '../../../../app/theme/fixed_colors.dart';
+import '../../../../core/widgets/sheet_header.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
@@ -55,25 +57,17 @@ IconData embedKindIcon(Attachment a) => a.isWebVideo
 /// Ekin türünün rengi — editördeki çip, seçici ve önizleme kartı aynı rengi
 /// kullanır ki "bu bir PDF" bir bakışta okunsun.
 Color embedKindColor(Attachment a) => a.isWebVideo
-    ? _webVideoColor
+    ? FixedColors.kindWebVideo
     : switch (a.kind) {
-        AttachmentKind.pdf => _pdfColor,
-        AttachmentKind.slide => _slideColor,
-        AttachmentKind.video => _videoColor,
-        AttachmentKind.audio => _audioColor,
-        AttachmentKind.image => _imageColor,
-        AttachmentKind.text => _textColor,
-        AttachmentKind.unknown => _unknownColor,
+        AttachmentKind.pdf => FixedColors.kindPdf,
+        AttachmentKind.slide => FixedColors.kindSlide,
+        AttachmentKind.video => FixedColors.kindVideo,
+        AttachmentKind.audio => FixedColors.kindAudio,
+        AttachmentKind.image => FixedColors.kindImage,
+        AttachmentKind.text => FixedColors.kindText,
+        AttachmentKind.unknown => FixedColors.kindUnknown,
       };
 
-const _pdfColor = Color(0xFFD32F2F);
-const _imageColor = Color(0xFF00897B);
-const _videoColor = Color(0xFF7B1FA2);
-const _webVideoColor = Color(0xFFAD1457);
-const _slideColor = Color(0xFFEF6C00);
-const _audioColor = Color(0xFF1565C0);
-const _textColor = Color(0xFF6D4C41);
-const _unknownColor = Color(0xFF757575);
 
 /// Notun bütün etiket adlarının (bağ etiketleri + dosya adları) görünümü.
 /// Çözüm kuralı editördeki `_attachmentForTag` ile aynı: aynı ad hem bağ
@@ -137,14 +131,14 @@ class _EmbedPicker extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final creates = <(String, IconData, String, Color)>[
-      ('pdf', Icons.picture_as_pdf_outlined, l10n.embedNewPdf, _pdfColor),
-      ('image', Icons.image_outlined, l10n.embedNewImage, _imageColor),
-      ('video', Icons.videocam_outlined, l10n.embedNewVideo, _videoColor),
+      ('pdf', Icons.picture_as_pdf_outlined, l10n.embedNewPdf, FixedColors.kindPdf),
+      ('image', Icons.image_outlined, l10n.embedNewImage, FixedColors.kindImage),
+      ('video', Icons.videocam_outlined, l10n.embedNewVideo, FixedColors.kindVideo),
       (
         'youtube',
         Icons.smart_display_outlined,
         l10n.embedNewYouTube,
-        _webVideoColor,
+        FixedColors.kindWebVideo,
       ),
     ];
     return SafeArea(
@@ -248,14 +242,7 @@ class _SectionLabel extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) => Text(
-    text.toUpperCase(),
-    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-      letterSpacing: 0.8,
-      fontWeight: FontWeight.w700,
-      color: Theme.of(context).colorScheme.onSurfaceVariant,
-    ),
-  );
+  Widget build(BuildContext context) => SectionLabel(text);
 }
 
 /// "Yeni ekle" kutusu: türün renginde simge, altında adı.

@@ -1,3 +1,4 @@
+import '../../../../core/app_icons.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -270,7 +271,7 @@ class _TextPageBoxState extends State<TextPageBox> {
           ],
           if (widget.onOpen != null)
             _BarIcon(
-              icon: Icons.open_in_full_rounded,
+              icon: AppIcons.fullscreen,
               tooltip: l10n.fullscreen,
               onTap: widget.onOpen,
               size: 11,

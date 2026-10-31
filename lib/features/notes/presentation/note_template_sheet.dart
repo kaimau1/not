@@ -1,3 +1,4 @@
+import '../../../core/app_icons.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -464,7 +465,7 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
               onTap: () => Navigator.pop(sheetContext, 'edit'),
             ),
             ListTile(
-              leading: const Icon(Icons.copy_outlined),
+              leading: const Icon(AppIcons.copy),
               title: Text(l10n.templateDuplicate),
               onTap: () => Navigator.pop(sheetContext, 'duplicate'),
             ),

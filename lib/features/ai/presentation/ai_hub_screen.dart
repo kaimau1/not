@@ -1,3 +1,5 @@
+import '../../../core/widgets/sheet_header.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -919,15 +921,7 @@ class _SectionLabel extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Text(
-          text.toUpperCase(),
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
-            color: scheme.primary,
-          ),
-        ),
+        SectionLabel(text),
         const SizedBox(width: 12),
         Expanded(child: Divider(color: scheme.outlineVariant)),
       ],

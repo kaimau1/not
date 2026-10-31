@@ -1,3 +1,5 @@
+import '../../../core/widgets/skeleton.dart';
+import '../../../core/app_icons.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -29,7 +31,6 @@ import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
 import 'folder_chat_screen.dart';
 import 'folder_sheets.dart';
-import '../../../core/friendly_error.dart';
 
 /// **KLASÖRÜN KENDİ SAYFASI.**
 ///
@@ -266,12 +267,12 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
         ),
         IconButton(
           tooltip: l10n.moveToFolder,
-          icon: const Icon(Icons.drive_file_move_outline),
+          icon: const Icon(AppIcons.moveToFolder),
           onPressed: () => _moveSelected(ids),
         ),
         IconButton(
           tooltip: l10n.archive,
-          icon: const Icon(Icons.archive_outlined),
+          icon: const Icon(AppIcons.archive),
           onPressed: () => _archiveSelected(ids),
         ),
         IconButton(
@@ -579,9 +580,9 @@ class _NotesGrid extends ConsumerWidget {
       selectedNoteIdsProvider.select((s) => s.isNotEmpty),
     );
     return async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const NoteListSkeleton(),
       error: (e, _) =>
-          EmptyState(icon: Icons.error_outline, title: l10n.genericError(friendlyError(l10n, e))),
+          ErrorState(error: e),
       data: (all) {
         final result = runScreenSearch(
           ref,
@@ -838,7 +839,7 @@ class _SharedFolderViewState extends ConsumerState<_SharedFolderView> {
               // Yalnız YAZMA yetkisi: notları göremez ama bırakabilir. Boş
               // liste yerine NEDENİ yazılır, yoksa "klasör bozuk" sanılır.
               : EmptyState(
-                  icon: Icons.drive_file_move_outline,
+                  icon: AppIcons.moveToFolder,
                   title: l10n.folderWriteOnlyTitle,
                   subtitle: l10n.folderWriteOnlyHint,
                 ),

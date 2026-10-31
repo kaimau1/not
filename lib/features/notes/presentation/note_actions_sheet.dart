@@ -1,3 +1,4 @@
+import '../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -99,13 +100,13 @@ class _ActionsGrid extends StatelessWidget {
         // KLASÖRE TAŞI hızlı satırda — not ⋮ ile aynı yer (F12.2: iki menü
         // aynı iskelet; Yıldızla · Klasöre taşı sırası ortak, grup adları ve
         // sırası Düzenle · Kopyala · Araçlar · Koruma).
-        MenuAction('folder', l10n.moveToFolder, Icons.folder_outlined),
+        MenuAction('folder', l10n.moveToFolder, AppIcons.moveToFolder),
         MenuAction('share', l10n.share, Icons.share_outlined),
         MenuAction('select', l10n.select, Icons.check_circle_outline),
       ],
       sections: [
         MenuSection(l10n.menuSectionOrganize, [
-          MenuAction('color', l10n.backgroundColor, Icons.palette_outlined),
+          MenuAction('color', l10n.backgroundColor, AppIcons.color),
           // ÇERÇEVE GERİ GELDİ — yalnız ana ekran kartında çizilir.
           MenuAction('frame', l10n.frameColor, Icons.border_color_outlined),
           // GÖRSEL ÖNİZLEMESİNİ GİZLE (kullanıcı isteği 2026-10-28): yalnız
@@ -126,7 +127,7 @@ class _ActionsGrid extends StatelessWidget {
           MenuAction(
             'duplicate',
             l10n.duplicateNote,
-            Icons.library_add_outlined,
+            AppIcons.duplicate,
           ),
           // KENDİ ŞABLONUM (kullanıcı isteği 2026-09-29).
           if (canSaveAsTemplate(note))
@@ -145,8 +146,8 @@ class _ActionsGrid extends StatelessWidget {
             'archive',
             note.archivedAt != null ? l10n.unarchive : l10n.archive,
             note.archivedAt != null
-                ? Icons.unarchive_outlined
-                : Icons.archive_outlined,
+                ? AppIcons.unarchive
+                : AppIcons.archive,
           ),
           MenuAction(
             'lock',

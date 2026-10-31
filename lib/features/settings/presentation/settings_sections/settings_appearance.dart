@@ -1009,7 +1009,7 @@ class CardElementsSheet extends ConsumerWidget {
                 ),
                 _PrefSwitch(
                   provider: cardShowPaperProvider,
-                  icon: Icons.menu_book_outlined,
+                  icon: AppIcons.notebook,
                   title: l10n.cardShowPaper,
                 ),
               ],

@@ -1,3 +1,5 @@
+import '../../../core/widgets/skeleton.dart';
+import '../../../core/widgets/sheet_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -13,7 +15,6 @@ import '../domain/note_type.dart';
 import 'note_card.dart';
 import 'notes_providers.dart';
 import '../../../core/widgets/app_sheet.dart';
-import '../../../core/friendly_error.dart';
 
 /// Kullanıcının "ne zaman?" sorusuna en sık verdiği üç cevap. Tarih+saat
 /// seçici İKİ ayrı diyalog demek (önce takvim, sonra saat); "yarın sabah"
@@ -220,10 +221,10 @@ class RemindersScreen extends ConsumerWidget {
               label: Text(l10n.newReminder),
             ),
       body: notesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => EmptyState(
-          icon: Icons.error_outline,
-          title: l10n.genericError(friendlyError(l10n, e)),
+        loading: () => const NoteListSkeleton(),
+        error: (e, _) => ErrorState(
+          error: e,
+          onRetry: () => ref.invalidate(notesStreamProvider),
         ),
         data: (notes) {
           final withReminder = _visibleReminders(ref, notes);
@@ -301,13 +302,7 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
-      child: Text(
-        text.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          letterSpacing: 1.1,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-      ),
+      child: SectionLabel(text),
     );
   }
 }

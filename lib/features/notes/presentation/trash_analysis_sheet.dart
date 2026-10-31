@@ -1,3 +1,4 @@
+import '../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -320,7 +321,7 @@ class _TrashAnalysisSheetState extends ConsumerState<_TrashAnalysisSheet> {
                   note: _notes[s.noteId]!,
                   reason: _reasonText(s),
                   fromAi: s.reason == TrashReason.ai,
-                  actionIcon: Icons.restore,
+                  actionIcon: AppIcons.restore,
                   actionTooltip: l10n.restore,
                   onAction: () => _restore([s.noteId]),
                 ),

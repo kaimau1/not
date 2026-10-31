@@ -1,3 +1,5 @@
+import '../../../../app/theme/fixed_colors.dart';
+import '../../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -1776,7 +1778,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
               IconButton(
                 tooltip: l10n.copy,
                 visualDensity: _kBarDensity,
-                icon: const Icon(Icons.copy_outlined, size: 20),
+                icon: const Icon(AppIcons.copy, size: 20),
                 onPressed: chosen.isEmpty
                     ? null
                     : () {

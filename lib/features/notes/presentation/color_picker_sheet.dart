@@ -1,3 +1,6 @@
+import '../../../app/theme/fixed_colors.dart';
+import '../../../core/app_icons.dart';
+
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/note_colors.dart';
@@ -253,19 +256,10 @@ class _PaletteDot extends StatelessWidget {
                   : null,
               gradient: selected
                   ? null
-                  : const SweepGradient(
-                      colors: [
-                        Color(0xFFE57373),
-                        Color(0xFFFFD54F),
-                        Color(0xFF81C784),
-                        Color(0xFF64B5F6),
-                        Color(0xFF9575CD),
-                        Color(0xFFE57373),
-                      ],
-                    ),
+                  : FixedColors.rainbowSweep,
             ),
             child: Icon(
-              selected ? Icons.check : Icons.palette_outlined,
+              selected ? Icons.check : AppIcons.color,
               size: 18,
               color: Colors.white,
             ),

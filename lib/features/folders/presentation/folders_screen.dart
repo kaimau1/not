@@ -1,3 +1,4 @@
+import '../../../core/widgets/sheet_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -153,14 +154,7 @@ class _SectionHeader extends StatelessWidget {
       sliver: SliverToBoxAdapter(
         child: Row(
           children: [
-            Text(
-              title.toUpperCase(),
-              style: theme.textTheme.labelMedium?.copyWith(
-                letterSpacing: 0.8,
-                fontWeight: FontWeight.w700,
-                color: theme.colorScheme.primary,
-              ),
-            ),
+            SectionLabel(title),
             const SizedBox(width: 8),
             Text(
               '$count',

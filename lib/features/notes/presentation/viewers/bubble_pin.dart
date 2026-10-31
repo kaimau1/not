@@ -242,7 +242,7 @@ class _BubbleReadCard extends StatelessWidget {
                 if (bubbleShareLine(bubble).isNotEmpty)
                   _action(
                     key: const ValueKey('bubble-read-copy'),
-                    icon: Icons.copy_outlined,
+                    icon: AppIcons.copy,
                     tooltip: l10n.bubbleCopy,
                     color: muted,
                     onPressed: () async {

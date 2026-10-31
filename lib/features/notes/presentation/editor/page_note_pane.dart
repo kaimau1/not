@@ -1,3 +1,4 @@
+import '../../../../core/app_icons.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show ValueListenable;
@@ -670,7 +671,7 @@ class _PageNotePaneState extends State<PageNotePane> {
             enabled: _pageCount > 0,
           ),
         if (widget.onFullScreen != null)
-          item(Icons.open_in_full, l10n.pdfFullScreen, _openFullScreen),
+          item(AppIcons.fullscreen, l10n.pdfFullScreen, _openFullScreen),
       ],
     );
   }

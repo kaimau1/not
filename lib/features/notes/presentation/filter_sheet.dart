@@ -1,3 +1,6 @@
+import '../../../core/widgets/sheet_header.dart';
+import '../../../core/app_icons.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -407,7 +410,7 @@ class _FilterSheet extends ConsumerWidget {
     NoteSort.updated => Icons.history,
     NoteSort.created => Icons.fiber_new_outlined,
     NoteSort.title => Icons.sort_by_alpha,
-    NoteSort.color => Icons.palette_outlined,
+    NoteSort.color => AppIcons.color,
     NoteSort.active => Icons.local_fire_department_outlined,
   };
 
@@ -466,52 +469,39 @@ class _FilterSheet extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(
-                l10n.filterSheetTitle,
-                style: Theme.of(context).textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              if (appliedCount > 0) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: scheme.primary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '$appliedCount',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: scheme.onPrimary,
+          SheetHeader(
+            title: l10n.filterSheetTitle,
+            padding: const EdgeInsets.only(left: 4),
+            badge: appliedCount > 0
+                ? Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
                     ),
-                  ),
-                ),
-              ],
-              const Spacer(),
+                    decoration: BoxDecoration(
+                      color: scheme.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$appliedCount',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: scheme.onPrimary,
+                      ),
+                    ),
+                  )
+                : null,
+            // ✕ levhayı kapatmanın görünür yolu (F16.2: eskiden "Kapat" hapı).
+            // Aşağı sürüklemek ya da dışarı dokunmak da kapatır ama levha
+            // ekranı doldurduğunda ikisi de akla gelmiyordu.
+            actions: [
               if (appliedCount > 0)
                 TextButton.icon(
                   onPressed: reset,
                   icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
                   label: Text(l10n.filterReset),
                 ),
-              // "Bitti": levhayı kapatmanın görünür yolu. Aşağı sürüklemek ya
-              // da dışarı dokunmak da kapatır ama levha ekranı doldurduğunda
-              // ikisi de akla gelmiyordu.
-              FilledButton.tonal(
-                onPressed: () => Navigator.pop(context),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(0, 36),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                ),
-                child: Text(l10n.close),
-              ),
             ],
           ),
           const SizedBox(height: 12),

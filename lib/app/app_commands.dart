@@ -1,3 +1,5 @@
+import '../core/app_icons.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,10 +39,10 @@ class _Counter extends Notifier<int> {
 enum AppSection {
   notes('/', Icons.sticky_note_2_outlined, Icons.sticky_note_2),
   folders('/folders', Icons.folder_outlined, Icons.folder),
-  inbox('/inbox', Icons.move_to_inbox_outlined, Icons.move_to_inbox),
+  inbox('/inbox', AppIcons.inbox, AppIcons.inboxSelected),
   ai('/ai', Icons.auto_awesome_outlined, Icons.auto_awesome),
   reminders('/reminders', Icons.alarm_outlined, Icons.alarm),
-  archive('/archive', Icons.archive_outlined, Icons.archive),
+  archive('/archive', AppIcons.archive, AppIcons.archiveSelected),
   trash('/trash', Icons.delete_outline, Icons.delete),
   settings('/settings', Icons.settings_outlined, Icons.settings);
 

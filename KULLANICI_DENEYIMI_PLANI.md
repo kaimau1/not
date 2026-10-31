@@ -82,7 +82,7 @@ kullanıcıyla `git` "dubious ownership" verirse:
 | 13 | Balonlu mod, medya, kalem, paylaşım akışı | Ö1 · Ö2 | Bitti | 2026-10-31 | 6/6 (F13.2 KARAR: önerilen sade kart onaylandı); F13.5'te transkript ekranı zaten Kopyala/Paylaş/⋮ — dokunulmadı; 1766/1766 test; web görüntüsü ALINMADI |
 | 14 | Anlaşılırlık: adlar, ayarlar, kılavuz, ipuçları | Ö4 | Bitti | 2026-10-31 | 6/6 (F14.6 KARAR: önerilen uygulandı); ek istek: klasör şeridinde sayı üst simge, Tüm klasörler simge, Gelen + Paylaşılan tek liste; web görüntüsü ALINMADI |
 | 15 | Erişilebilirlik | Ö3 | Bitti | 2026-10-31 | 7/7 (F15.1 KARAR: öneri uygulandı, varsayılan mevcut davranış); 1794/1794 test; TalkBack/en büyük yazı turu KALANLAR'da |
-| 16 | Görsel bütünlük ve tekrar temizliği | Ö5 | Bekliyor | | Simge ve levha dili |
+| 16 | Görsel bütünlük ve tekrar temizliği | Ö5 | Bitti | 2026-10-31 | 5/5; `AppIcons` + `SheetHeader`/`SectionLabel` + `FixedColors` + `NoteListSkeleton`/`ErrorState`; `visual_consistency_test` (10); 1804/1804 test; tema ekran turu KALANLAR'da |
 | 17 | Ölçüm, uçtan uca test, cihaz turu | Ö2 | Bekliyor | | |
 
 ## Özet — en önemli bulgular
@@ -764,25 +764,67 @@ balon bırak, paylaş. Sistem yazı boyutunu en büyüğe al, ana ekran ve not e
 Tek tasarım dili: aynı simge aynı anlam, levhalar aynı iskelet, renkler
 temadan.
 
-- [ ] **F16.1 Simge sözlüğü — U8, B7, P7, Q4.** Tek simge = tek anlam:
+- [x] **F16.1 Simge sözlüğü — U8, B7, P7, Q4.** Tek simge = tek anlam:
   Arşiv (`archive`) ↔ Gelen (`inbox`/zarf — `move_to_inbox` arşive çok
   benziyor); Defter (`menu_book`), Not paketi (paket/zip simgesi), arşiv
   kutusu yalnız Arşiv; palet yalnız "görünüm"; Kopyala (`content_copy`) ↔
   Çoğalt (`library_add`) ayrımı her yerde. Sözlük `TERIMLER.md`'nin yanına.
-- [ ] **F16.2 Levha iskeleti — U7.** `showAppSheet` için tek başlık bileşeni
+  **Yapıldı:** `lib/core/app_icons.dart` (`AppIcons`, 14 anlam) — Gelen zarf
+  (`mail_outline`), Not paketi `folder_zip_outlined`, Kılavuz `help_outline`
+  (Defter'in açık kitabından ayrıldı), renk seçimleri `format_color_fill`
+  (palet yalnız Görünüm), kart menüsünde "Notu çoğalt" Kopyala simgesinden
+  `library_add`'e, "Klasöre taşı" `drive_file_move` (düz klasör = Klasörler),
+  Notta ara / Tam ekran / Kişiler / Geri yükle tek simge; okuma şablonu
+  `auto_stories`. ~40 dosya. Sözlük `TERIMLER.md` → "Simgeler".
+  `UiItem.*` kimlikleri değişmedi.
+- [x] **F16.2 Levha iskeleti — U7.** `showAppSheet` için tek başlık bileşeni
   (başlık solda + ✕ sağda; menü levhalarında başlık = not adı) ve tek bölüm
   başlığı stili (cümle düzeni, `labelLarge`); Süz, Ekle, ⋮, Paylaş, AI,
   Görünüm aynı iskelette.
-- [ ] **F16.3 Renk tokenları — U9.** Tema dışı `Color(0x…)` (151) ve
+  **Yapıldı:** `core/widgets/sheet_header.dart` — `SheetHeader` (başlık
+  `titleMedium` kalın + rozet + eylemler + 48 dp ✕ "Kapat") ve
+  `SectionLabel`/`sectionLabelStyle` (`labelLarge` kalın, `primary`). Süz
+  ("Kapat" hapı → ✕, Sıfırla eylem), Paylaş, Görünüm, AI levhası,
+  `ActionMenu` (⋮ menüleri: başlık = not adı + ✕). Bölüm başlıkları
+  `ActionMenu`, Ekle (+), Çöp, Klasörler, Hatırlatıcılar, Yapay zekâ ekranı,
+  ek levhası: BÜYÜK HARF kalktı (Türkçe "i" → "I" bozuluyordu). Ekle levhası
+  zaten yalnız gruplu ızgara (başlıksız açılır menü) — ✕ eklenmedi.
+- [x] **F16.3 Renk tokenları — U9.** Tema dışı `Color(0x…)` (151) ve
   `Colors.white/black` (207) taranır: arayüz rengi olanlar `ColorScheme`/
   `NoteColors`'a; kasıtlı olanlar (fotoğraf üstü koyu yuvarlak vb.) yorumlu
   kalır. Koyu, kâğıt ve kırık beyaz temada ekran turu.
-- [ ] **F16.4 Yükleniyor ve hata durumları — U10.** Ana ekran, klasör, arşiv,
+  **Yapıldı:** tarama: tema/palet dosyaları dışındaki `Color(0x…)` ~90,
+  `Colors.white/black` 207 — büyük çoğunluk medya üstü (video/görsel
+  görüntüleyici, kamera, tarama) ve kâğıt sayfa kutusu (her temada açık
+  kâğıt) — kasıtlı. Tekrar edenler `app/theme/fixed_colors.dart`
+  (`FixedColors`, her biri neden sabit yorumlu): gökkuşağı "özel renk"
+  halkası (4 kopya → 1), ek türü renkleri (embed levhası + ek rozeti + kart
+  satırı + etiket çipi), YouTube kırmızısı (iki farklı kırmızı → marka),
+  fotoğraf üstü geçiş (`scrimTop/Bottom`, üç farklı alfa → bir),
+  `inkOn` (renkli daire üstü simge). Arayüz rengi olup şema dışı kalan yer
+  bulunmadı. Tema ekran turu ALINMADI (canlı Firebase'de misafir hesap
+  açmamak için) — KALANLAR'da.
+- [x] **F16.4 Yükleniyor ve hata durumları — U10.** Ana ekran, klasör, arşiv,
   çöp, paylaşılanlar ilk yüklemede iskelet; hata görünümü tek bileşen (F10.4
   metniyle).
-- [ ] **F16.5 Kalan tekrar taraması.** Faz 11–15'ten sonra aynı işin iki
+  **Yapıldı:** `NoteListSkeleton` (`skeleton.dart`, genişliğe göre 1–4
+  sütun) → klasör, Arşiv, Çöp, Gelen, Gelen ve paylaşılanlar,
+  Hatırlatıcılar (ana ekran zaten `NoteGridSkeleton`). `ErrorState`
+  (`empty_state.dart`): `friendlyError` metni + isteğe bağlı "Tekrar dene"
+  (`ref.invalidate`) — 6 ekranın ayrı ayrı kurduğu hata görünümü yerine.
+  Arama sırasındaki küçük gösterge (anlamsal arama sürüyor) kaldı: o ilk
+  yükleme değil.
+- [x] **F16.5 Kalan tekrar taraması.** Faz 11–15'ten sonra aynı işin iki
   yerde durduğu kalan yerler (ör. Hesap makinesi, "Notta ara", palet) — liste
   çıkar, gereksizleri kaldır.
+  **Yapıldı:** etiket → simge eşleşme taraması (aynı metin, farklı simge).
+  Hesap makinesi: tek kapı (not ⋮ → Araçlar) — GEÇERSİZ. "Notta ara": çubuk
+  ve ⋮ aynı kapının iki hâli (çubuktan düşünce ⋮'de) — kalır, simgesi
+  birleşti (`manage_search` → `search`). Palet: Faz 12'de tek kapı; simge
+  yalnız Görünüm. Birleşen simgeler: Klasöre taşı (3 yer), Tam ekran
+  (`open_in_full` 3 yer), Kişiler (`people_alt` → `people_outline`; people_alt
+  = Paylaşılan), Geri yükle, Kopyala (`Icons.copy`). Kaldırılacak ikinci
+  kapı bulunmadı.
 
 **Senin yapacakların:** koyu temada her ana ekranın görüntüsü; simgeleri
 "bu ne?" diye sorduğun yer kaldı mı.
