@@ -19,6 +19,9 @@ plugins {
 // şifreleri android/key.properties dosyasına yazar; böylece her derleme
 // aynı imzayla çıkar ve telefondaki uygulama sorunsuz güncellenir.
 // key.properties yoksa (ör. secrets tanımlanmadıysa) debug imzasına düşülür.
+/** Kişisel derleme mi (aşağıda `sourceSets`). */
+val kisisel = System.getenv("NOTLAR_KISISEL") == "1" || findProperty("kisisel")?.toString() == "true"
+
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
@@ -136,6 +139,25 @@ android {
             )
         }
     }
+
+    // KİŞİSEL KÖPRÜ (ses deposu PLAN K4: derleme bayrağı, ürün çeşidi değil): `NOTLAR_KISISEL=1`
+    // (ya da `-Pkisisel=true`) verilince release'e `src/kisisel` girer: Harita/Kanallarım/Asistan
+    // not alıcısı, izni ve sertifikaları. Verilmezse `src/genel` (boş KisiselKopru): dağıtılan
+    // APK'da köprü yok. Debug ve profile hep genel (kendi manifestleri var). CI kullanıcının
+    // telefonu için bayrakla derler (build.yml).
+    sourceSets {
+        getByName("release") {
+            if (kisisel) {
+                java.srcDir("src/kisisel/kotlin")
+                manifest.srcFile("src/kisisel/AndroidManifest.xml")
+                res.srcDir("src/kisisel/res")
+            } else {
+                java.srcDir("src/genel/kotlin")
+            }
+        }
+        getByName("debug") { java.srcDir("src/genel/kotlin") }
+        maybeCreate("profile").java.srcDir("src/genel/kotlin")
+    }
 }
 
 kotlin {
@@ -171,7 +193,7 @@ dependencies {
     // Konum hatırlatıcısı: sistem geofence'i + tek seferlik konum okuması
     // (bkz. PlaceReminders.kt).
     implementation("com.google.android.gms:play-services-location:21.3.0")
-    // Yerel Firestore/Auth: Harita köprüsü (kişisel, HaritaNotlari.kt) ve Gemini
+    // Yerel Firestore/Auth: kişisel köprü (src/kisisel, HaritaNotlari.kt) ve Gemini
     // işlevleri (Ajan.kt) notu Flutter açılmadan yazar/okur (ortak yol YerelNot.kt). Sürüm ayrı bir BoM SEÇİLMEZ: FlutterFire'ın
     // kendi kullandığı BoM (firebase_core'un gradle.properties'indeki
     // FirebaseSDKVersion) okunur, eklentilerle hep aynı sürüm kalır.

@@ -33,14 +33,18 @@ import java.util.concurrent.TimeUnit
  * Oturum yoksa not cihazda sıraya alınır, uygulama açılınca ([flushPending],
  * MainActivity.onCreate) yazılır.
  *
- * **GENEL SÜRÜMDE KALDIRILIR**: bu dosya (not yazma ortak [YerelNot]'ta, o
- * Gemini işlevleri için kalır) + AndroidManifest'teki
- * `HaritaNotAlici` girdisi + build.gradle.kts'teki "Harita köprüsü"
- * bağımlılıkları + MainActivity'deki tek `flushPending` satırı. Başka hiçbir
- * yere dokunmaz (HAFIZA.md › Harita köprüsü).
+ * **ASİSTAN** (com.ses.asistan, 2026-10-31): aynı alıcıya "not al" (`folder` = "Asistan") ve
+ * [ACTION_SORGU] ("son notum", "notlarımda X'i ara") gelir. Sorgu kilitli notları ve gizli
+ * klasörleri ASLA vermez ([YerelNot.gorunurNotlar]).
+ *
+ * **YALNIZ KİŞİSEL DERLEMEDE** (`NOTLAR_KISISEL=1`, `src/kisisel`): alıcı
+ * `dev.kaimau.notlar.izin.ASISTAN` ile korunur (knownSigner: asistan, Harita,
+ * Kanallarım). Genel (dağıtılan) APK'da bu kaynak kümesi yoktur; `src/genel`
+ * deki boş [KisiselKopru] girer (HAFIZA.md › Kişisel köprü).
  */
 class HaritaNotAlici : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == ACTION_SORGU) return sorgu(context, intent)
         if (intent.action != ACTION) return
         val text = intent.getStringExtra("text")?.trim().orEmpty()
         if (text.isEmpty()) return
@@ -60,6 +64,40 @@ class HaritaNotAlici : BroadcastReceiver() {
     }
 
     /**
+     * Asistanın sorusu: `istek` "son" (en yeni [adet] not) ya da "ara" (`terimler`in hepsi
+     * geçen notlar). Cevap kodu [SAVED] (tamam), [NO_SESSION] (oturum yok) ya da 0; ekler
+     * `basliklar`, `metinler`, `zamanlar` (ms). Notlar öne gelmez.
+     */
+    private fun sorgu(context: Context, intent: Intent) {
+        val ara = intent.getStringExtra("istek") == "ara"
+        val terimler = intent.getStringArrayListExtra("terimler").orEmpty()
+        val adet = intent.getIntExtra("adet", 1).coerceIn(1, 10)
+        val result = goAsync()
+        Thread {
+            try {
+                val uid = FirebaseAuth.getInstance().currentUser?.uid
+                if (uid == null) {
+                    result.resultCode = NO_SESSION
+                } else {
+                    val son = YerelNot.gorunurNotlar(uid, if (ara) ARA_SINIR else adet)
+                    val bulunan = (if (ara) YerelNot.ara(son, terimler) else son).take(adet)
+                    result.resultCode = SAVED
+                    result.setResultExtras(
+                        android.os.Bundle().apply {
+                            putStringArrayList("basliklar", ArrayList(bulunan.map { it.title }))
+                            putStringArrayList("metinler", ArrayList(bulunan.map { it.text.take(METIN_SINIR) }))
+                            putLongArray("zamanlar", bulunan.map { it.updatedMs }.toLongArray())
+                        },
+                    )
+                }
+            } catch (_: Exception) {
+                result.resultCode = 0
+            }
+            result.finish()
+        }.start()
+    }
+
+    /**
      * Gelen not: Harita'nınki başlıksız ve "Haritalar"da, Kanallarım'ınki başlıklı, sabitli ve "YouTube"da.
      * [transcript]: Kanallarım'ın gönderdiği videonun TAM zamanlı altyazısı ("[d:ss] metin" satırları).
      */
@@ -70,6 +108,12 @@ class HaritaNotAlici : BroadcastReceiver() {
 
     companion object {
         const val ACTION = "dev.kaimau.notlar.HARITA_NOT"
+        const val ACTION_SORGU = "dev.kaimau.notlar.ASISTAN_SORGU"
+        const val NO_SESSION = 3
+        /** Aramanın taradığı en yeni not sayısı (Ajan.kt ile aynı; Firestore'da tam metin araması yok). */
+        private const val ARA_SINIR = 500
+        /** Sesli okunacak metin: bir yayının ekleri küçük kalsın (Binder sınırı ~1 MB). */
+        private const val METIN_SINIR = 4000
         const val FOLDER_NAME = "Haritalar"
         const val SAVED = 1
         const val QUEUED = 2

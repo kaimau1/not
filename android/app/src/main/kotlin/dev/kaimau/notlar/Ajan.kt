@@ -10,16 +10,10 @@ import androidx.appfunctions.AppFunctionPermissionRequiredException
 import androidx.appfunctions.AppFunctionSerializable
 import androidx.appfunctions.AppFunctionService
 import androidx.appfunctions.AppFunctionServiceEntryPoint
-import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.Source
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 /*
  * Gemini gibi bir ajanın Notlar'ı açmadan kullanabileceği işlevler (Android 16+ AppFunctions).
@@ -80,12 +74,8 @@ abstract class AjanTemel : AppFunctionService() {
      */
     @AppFunctionDeclaration(isDescribedByKDoc = true)
     suspend fun searchNotes(query: String): List<AjanNot> = withContext(Dispatchers.IO) {
-        val kelimeler = query.lowercase(TR).split(Regex("\\s+")).filter { it.isNotEmpty() }
-        if (kelimeler.isEmpty()) throw AppFunctionInvalidArgumentException("query boş olamaz")
-        gorunurNotlar(SON_SINIR).filter { n ->
-            val metin = (n.title + "\n" + n.text).lowercase(TR)
-            kelimeler.all { it in metin }
-        }.take(10)
+        if (query.isBlank()) throw AppFunctionInvalidArgumentException("query boş olamaz")
+        YerelNot.ara(YerelNot.gorunurNotlar(uid(), SON_SINIR), listOf(query)).take(10).map { AjanNot(it.id, it.title, it.text) }
     }
 
     /**
@@ -116,39 +106,11 @@ abstract class AjanTemel : AppFunctionService() {
 
     private fun kullanici(uid: String): DocumentReference = YerelNot.firestore().collection("users").document(uid)
 
-    /** Silinmemiş, arşivlenmemiş, kilitsiz ve gizli klasörde olmayan son notlar. */
-    private fun gorunurNotlar(sinir: Int): List<AjanNot> {
-        val user = kullanici(uid())
-        val gizli = oku(user.collection("folders").whereEqualTo("hidden", true))
-            .map { it.id }.toSet()
-        // Sıralama cihazda: deletedAt eşitliği + updatedAt sıralaması bileşik dizin isterdi
-        // (Dart tarafı da aynı tek filtreyle okuyor, bkz. notes_repository.dart)
-        val notlar = oku(user.collection("notes").whereEqualTo("deletedAt", null))
-            .sortedByDescending { it.getTimestamp("updatedAt")?.toDate()?.time ?: Long.MAX_VALUE }
-        return notlar.asSequence()
-            .filter { it.get("archivedAt") == null && it.getBoolean("locked") != true }
-            .filter { it.getString("folderId")?.let { f -> f in gizli } != true }
-            .map(::ajanNot)
-            .take(sinir)
-            .toList()
-    }
-
-    // Önce sunucu (taze), ağ yoksa önbellek: ajan cevabı çevrimdışıyken de dönebilsin
-    private fun oku(q: Query): List<DocumentSnapshot> =
-        runCatching { Tasks.await(q.get(), 8, TimeUnit.SECONDS).documents }
-            .getOrElse { Tasks.await(q.get(Source.CACHE), 3, TimeUnit.SECONDS).documents }
-
-    private fun ajanNot(d: DocumentSnapshot): AjanNot {
-        val govde = d.getString("body").orEmpty()
-        @Suppress("UNCHECKED_CAST")
-        val maddeler = (d.get("items") as? List<Map<String, Any?>>).orEmpty().joinToString("\n") { m ->
-            (if (m["checked"] == true) "[x] " else "") + (m["text"] as? String).orEmpty()
-        }
-        return AjanNot(d.id, d.getString("title").orEmpty(), listOf(govde, maddeler).filter { it.isNotBlank() }.joinToString("\n"))
-    }
+    /** Kilitsiz, gizli klasörde olmayan son notlar ([YerelNot.gorunurNotlar]). */
+    private fun gorunurNotlar(sinir: Int): List<AjanNot> =
+        YerelNot.gorunurNotlar(uid(), sinir).map { AjanNot(it.id, it.title, it.text) }
 
     private companion object {
-        val TR: Locale = Locale.forLanguageTag("tr")
         /** Firestore otomatik kimliği (20 harf/rakam); yol enjeksiyonuna karşı. */
         val KIMLIK = Regex("[A-Za-z0-9_-]{1,64}")
         /** Aramanın taradığı en yeni not sayısı (Firestore'da tam metin araması yok). */

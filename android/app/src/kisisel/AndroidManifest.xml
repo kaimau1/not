@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- YALNIZ KİŞİSEL DERLEME (NOTLAR_KISISEL=1): Harita, Kanallarım ve Asistan'ın not köprüsü
+     (HaritaNotlari.kt). Genel APK'da bu dosya yoktur; CI genel manifesti denetler. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Dört uygulama farklı anahtarla imzalı: signature yetmez, knownSigner (Android 12+) -->
+    <permission
+        android:name="dev.kaimau.notlar.izin.ASISTAN"
+        android:protectionLevel="signature|knownSigner"
+        android:knownCerts="@array/kopru_sertifikalari" />
+
+    <application>
+        <receiver android:name=".HaritaNotAlici"
+            android:exported="true"
+            android:permission="dev.kaimau.notlar.izin.ASISTAN">
+            <intent-filter>
+                <action android:name="dev.kaimau.notlar.HARITA_NOT" />
+                <action android:name="dev.kaimau.notlar.ASISTAN_SORGU" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

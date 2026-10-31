@@ -698,12 +698,20 @@ eskisini arşive taşıma.
   → köprü `ytTranscript` alanına → Dart onu öncelikli kaynak yapar, tam
   transkript ekini paragraflı (`fullText`) üretir, alanı siler. Gemini
   dökümü yalnız bu yoksa (Harita'nın sesli notu, eski Kanallarım). YouTube iç API'si (altyazı)
-  KAZINMAZ — bot korumasına takılıyor (bulut IP'sinde LOGIN_REQUIRED). **GENEL (public) SÜRÜMDE KALDIR:** `HaritaNotlari.kt` +
-  manifestteki `HaritaNotAlici` + build.gradle.kts "Harita köprüsü"
-  bağımlılıkları/`firebaseSdkVersion()` + MainActivity'deki `flushPending`
-  satırı (başka dokunduğu yer yok; dışa açık alıcı herkesin not yazmasına izin
-  veriyor). Not yazma ortak `YerelNot.kt`'de; yerel Firestore/Auth Gemini
-  işlevleri için de gerekli, köprü silinince ikisi KALIR. **TUZAK:** alıcı Firestore'u Dart'tan önce başlatabilir; ayarı
+  KAZINMAZ — bot korumasına takılıyor (bulut IP'sinde LOGIN_REQUIRED). **KİŞİSEL KAYNAK KÜMESİ (2026-10-31, ses deposu Faz 4 — K4 derleme bayrağı):**
+  köprü artık `android/app/src/kisisel/` (`HaritaNotlari.kt`, `KisiselKopru.kt`, manifest, sertifikalar);
+  yalnız `NOTLAR_KISISEL=1` (ya da `-Pkisisel=true`) ile release'e girer. Bayraksız (dağıtılacak genel APK,
+  debug, profile) `src/genel/KisiselKopru` boş; MainActivity yalnız `KisiselKopru.basla` çağırır. CI telefona
+  giden APK'yı bayrakla derler; "genel kaynakta köprü yok" ve "alıcı izinle korunuyor" denetimleri CI'da.
+  Alıcı artık `dev.kaimau.notlar.izin.ASISTAN` (`signature|knownSigner`; knownCerts: Asistan `9f9ba7d6…9551`,
+  Harita `d03a9766…359c`, Kanallarım `ccfa3c33…a1c7`) ile korunur — dışa açık alıcı herkesin not yazmasına
+  izin veriyordu. Harita ve Kanallarım manifestinde `uses-permission` var; izni tanımlayan Notlar onlardan SONRA
+  kurulduysa onlar yeniden kurulur (izin kurulumda verilir). **Asistan** (com.ses.asistan) aynı alıcıya "not al"
+  (`folder`="Asistan") ve `ASISTAN_SORGU` (`istek` son|ara, `terimler`, `adet` 1–10 → kod 1 tamam / 3 oturum yok /
+  0; ekler `basliklar`, `metinler`, `zamanlar`) yollar. Sorgu ve Gemini işlevleri (`Ajan.kt`) ortak
+  `YerelNot.gorunurNotlar`/`ara`'yı kullanır: kilitli not ve gizli klasör ASLA dışarı verilmez.
+  Not: 2026-10-31'de bu iş önce yanlışlıkla başka bir depo kopyasında (fatihsenel273806-tech/not) yapılmıştı;
+  geçerli depo bu (kaimau1/not). **TUZAK:** alıcı Firestore'u Dart'tan önce başlatabilir; ayarı
   main.dart'takinin AYNISI (persistence + `firestoreCacheBytes`) olmalı —
   farklıysa FlutterFire `setFirestoreSettings`te istisna atar.
 - **Gemini işlevleri — AppFunctions (2026-10-28):** `Ajan.kt` (Android 16+):

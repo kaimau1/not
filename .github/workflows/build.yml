@@ -259,7 +259,20 @@ jobs:
       # pdfrx 2.x web motorunu (`pdfium.wasm`) yalnız web'e paketler
       # (`platforms: [web]`); 1.3.5 için pub önbelleğini yamalayan adım
       # kaldırıldı (F3.15).
+      # KİŞİSEL KÖPRÜ (ses deposu PLAN K4): kullanıcının telefonuna giden APK kişisel derlenir
+      # (NOTLAR_KISISEL=1 → src/kisisel: Harita/Kanallarım/Asistan not alıcısı). Dağıtılacak genel
+      # APK bayraksız derlenir; köprünün genel kaynakta OLMADIĞI burada denetlenir.
+      - name: Genel kaynakta köprü yok (denetim)
+        run: |
+          if grep -rqE 'HaritaNotAlici|ASISTAN_SORGU|izin\.ASISTAN' android/app/src/main android/app/src/genel; then
+            echo "::error::Kişisel köprü genel kaynağa sızmış (yalnız android/app/src/kisisel'de olmalı)."
+            exit 1
+          fi
+          echo "Genel kaynakta köprü yok: doğrulandı."
+
       - name: APK derle
+        env:
+          NOTLAR_KISISEL: "1"
         run: >
           flutter build apk --release
           --target-platform android-arm64
@@ -279,6 +292,14 @@ jobs:
       # dosyaların olduğunu yazar. 2026-08-16'da APK 60 MB'tan 100 MB'a
       # çıkınca (arm64'e indirilmiş olmasına RAĞMEN) nedeni loglardan
       # okunamadı — bu adım bir daha tahmin yürütmek zorunda kalmamak için.
+      - name: Kişisel köprü korumalı (denetim)
+        run: |
+          m=$(find build/app/intermediates -path '*release*' -name AndroidManifest.xml -path '*merged_manifest*' | head -1)
+          echo "$m"
+          grep -q 'HaritaNotAlici' "$m" && grep -q 'android:permission="dev.kaimau.notlar.izin.ASISTAN"' "$m" \
+            || { echo "::error::Kişisel APK'da köprü alıcısı yok ya da izinle korunmuyor."; exit 1; }
+          echo "Köprü alıcısı izinle korunuyor: doğrulandı."
+
       - name: APK içeriğini raporla
         run: |
           apk=build/app/outputs/flutter-apk/app-release.apk

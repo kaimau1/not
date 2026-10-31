@@ -278,15 +278,8 @@
         </service>
 
         <!-- Konum hatırlatıcısı: geofence tetiği + yeniden başlatmada geri kurma -->
-        <!-- HARİTA KÖPRÜSÜ (kişisel, HaritaNotlari.kt): "Hey Harita, not al"
-             Haritalar klasörüne arka planda yazılır. Genel sürümde bu girdi
-             dosyayla birlikte silinir. -->
-        <receiver android:name=".HaritaNotAlici"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="dev.kaimau.notlar.HARITA_NOT" />
-            </intent-filter>
-        </receiver>
+        <!-- Kişisel not köprüsü (Harita, Kanallarım, Asistan) burada DEĞİL: yalnız kişisel
+             derlemede, src/kisisel/AndroidManifest.xml (NOTLAR_KISISEL=1). -->
         <receiver android:name=".PlaceReminderReceiver"
             android:exported="false" />
         <receiver android:name=".PlaceBootReceiver"
