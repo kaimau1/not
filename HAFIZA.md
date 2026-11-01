@@ -710,6 +710,13 @@ eskisini arşive taşıma.
   (`folder`="Asistan") ve `ASISTAN_SORGU` (`istek` son|ara, `terimler`, `adet` 1–10 → kod 1 tamam / 3 oturum yok /
   0; ekler `basliklar`, `metinler`, `zamanlar`) yollar. Sorgu ve Gemini işlevleri (`Ajan.kt`) ortak
   `YerelNot.gorunurNotlar`/`ara`'yı kullanır: kilitli not ve gizli klasör ASLA dışarı verilmez.
+  **ASİSTAN EKRAN GÖRÜNTÜSÜ (2026-11-01):** `HARITA_NOT`'a `image` (asistanın FileProvider content:// JPEG'i, okuma
+  izni yalnız bize) ve `video` (YouTube kimliği) ekleri; metin boş olabilir. Alıcı görseli önce `filesDir/asistan_gelen`e
+  kopyalar (izin kalıcı değil; oturumsuz sıra da onu bulsun), sonra notun EKİ yapar: dosya Dart'ın
+  `derivedAttachmentPath`'iyle aynı yere (`filesDir/attachments/<not>/<ek>_<ad>`; `appSupportPath` = filesDir), kayıt
+  yüklenmemiş (`downloadUrl` boş). Yerelde HEMEN görünür; buluta UploadQueue uygulama açılınca kullanıcının seçtiği
+  hedefe (Drive/Storage/yalnız metin) yükler — yerelden Storage'a yüklemek o seçimi atlardı. `video` + `yt_<id>`
+  notu varsa görsel (ve metin) oraya eklenir (`arrayUnion`), yoksa normal not.
   Not: 2026-10-31'de bu iş önce yanlışlıkla başka bir depo kopyasında (fatihsenel273806-tech/not) yapılmıştı;
   geçerli depo bu (kaimau1/not). **TUZAK:** alıcı Firestore'u Dart'tan önce başlatabilir; ayarı
   main.dart'takinin AYNISI (persistence + `firestoreCacheBytes`) olmalı —

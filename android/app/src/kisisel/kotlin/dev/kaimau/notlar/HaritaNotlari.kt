@@ -3,6 +3,7 @@ package dev.kaimau.notlar
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -10,6 +11,7 @@ import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
@@ -36,6 +38,12 @@ import java.util.concurrent.TimeUnit
  * **ASİSTAN** (com.ses.asistan, 2026-10-31): aynı alıcıya "not al" (`folder` = "Asistan") ve
  * [ACTION_SORGU] ("son notum", "notlarımda X'i ara") gelir. Sorgu kilitli notları ve gizli
  * klasörleri ASLA vermez ([YerelNot.gorunurNotlar]).
+ * **EKRAN GÖRÜNTÜSÜ** (2026-11-01, kullanıcı: "SS alabilmeli nota ekleyebilmeli"): asistan `image` ekiyle
+ * görüntünün content:// adresini (okuma izni verilmiş) yollar; görsel notun EKİ olur ([resimEki]): dosya
+ * Dart'ın türettiği yerel yola (`<filesDir>/attachments/<not>/<ek>_<ad>`) kopyalanır, ek kaydı yüklenmemiş
+ * (`downloadUrl` boş) yazılır; buluta (Drive ya da Storage, kullanıcının seçimi) Dart'ın UploadQueue'su
+ * uygulama açılınca yükler. `video` ekiyle gelirse (Kanallarım'da "video notu … ekran görüntüsü") görsel o
+ * videonun notuna (`yt_<id>`) eklenir. Metin boş olabilir (yalnız görsel).
  *
  * **YALNIZ KİŞİSEL DERLEMEDE** (`NOTLAR_KISISEL=1`, `src/kisisel`): alıcı
  * `dev.kaimau.notlar.izin.ASISTAN` ile korunur (knownSigner: asistan, Harita,
@@ -47,15 +55,20 @@ class HaritaNotAlici : BroadcastReceiver() {
         if (intent.action == ACTION_SORGU) return sorgu(context, intent)
         if (intent.action != ACTION) return
         val text = intent.getStringExtra("text")?.trim().orEmpty()
-        if (text.isEmpty()) return
-        val note = Gelen(
-            text, intent.getStringExtra("place"), intent.getStringExtra("title")?.trim().orEmpty(),
-            intent.getStringExtra("folder")?.trim()?.ifEmpty { null } ?: FOLDER_NAME, intent.getBooleanExtra("pinned", false),
-            intent.getStringExtra("transcript")?.trim()?.ifEmpty { null },
-        )
+        val image = intent.getStringExtra("image")?.ifEmpty { null }
+        if (text.isEmpty() && image == null) return
         val ctx = context.applicationContext
         val result = goAsync()
         Thread {
+            // görsel önce kendi klasörümüze: asistanın verdiği okuma izni kalıcı değil, sıradaki not da onu bulsun
+            val local = image?.let { gelenResim(ctx, it) }
+            if (text.isEmpty() && local == null) { result.resultCode = 0; result.finish(); return@Thread }
+            val note = Gelen(
+                text, intent.getStringExtra("place"), intent.getStringExtra("title")?.trim().orEmpty(),
+                intent.getStringExtra("folder")?.trim()?.ifEmpty { null } ?: FOLDER_NAME, intent.getBooleanExtra("pinned", false),
+                intent.getStringExtra("transcript")?.trim()?.ifEmpty { null },
+                local?.path, intent.getStringExtra("video")?.takeIf { YouTubeNotu.gecerliKimlik(it) },
+            )
             val code = try { save(ctx, note, System.currentTimeMillis()) } catch (_: Exception) { 0 }
             if (code == 0) queue(ctx, note)
             result.resultCode = if (code == 0) QUEUED else code
@@ -100,10 +113,11 @@ class HaritaNotAlici : BroadcastReceiver() {
     /**
      * Gelen not: Harita'nınki başlıksız ve "Haritalar"da, Kanallarım'ınki başlıklı, sabitli ve "YouTube"da.
      * [transcript]: Kanallarım'ın gönderdiği videonun TAM zamanlı altyazısı ("[d:ss] metin" satırları).
+     * [image]: asistanın ekran görüntüsünün bu uygulamadaki kopyası (yol); [video]: görsel o videonun notuna.
      */
     class Gelen(
         val text: String, val place: String?, val title: String, val folder: String, val pinned: Boolean,
-        val transcript: String? = null,
+        val transcript: String? = null, val image: String? = null, val video: String? = null,
     )
 
     companion object {
@@ -118,19 +132,92 @@ class HaritaNotAlici : BroadcastReceiver() {
         const val SAVED = 1
         const val QUEUED = 2
         private const val PREFS = "harita_notlari"
+        /** Asistandan gelen görsellerin nota eklenene kadar durduğu klasör (filesDir altında). */
+        private const val GELEN_DIR = "asistan_gelen"
+        /** Ekran görüntüsü JPEG'i birkaç yüz KB; bundan büyüğü kabul edilmez. */
+        private const val RESIM_SINIR = 15L * 1024 * 1024
 
         /** Notu yazar; oturum yoksa 0. Yazım yerelde hemen geçerli, sunucu onayı beklenmez. */
         private fun save(ctx: Context, n: Gelen, atMs: Long): Int {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return 0
             val db = YerelNot.firestore()
             val user = db.collection("users").document(uid)
+            n.video?.let { id -> videoyaResim(ctx, user, uid, n, id)?.let { return it } }
             val folderId = folderFor(user.collection("folders"), uid, n.folder)
             YouTubeNotu.parse(n.text)?.let { return saveVideo(ctx, user, uid, n, it, folderId, atMs) }
             val doc = user.collection("notes").document()
             // Harita'dan gelen başlıksız: söylenen metin gövdede (kartta olduğu gibi görünür); navigasyondaysa hedef altta
-            val body = listOfNotNull(n.text, n.place?.let { "($it)" }).joinToString("\n")
-            doc.set(YerelNot.belge(uid, n.title, body, folderId, atMs).apply { put("pinned", n.pinned) })
+            val body = listOfNotNull(n.text.ifEmpty { null }, n.place?.let { "($it)" }).joinToString("\n")
+            val ekler = listOfNotNull(n.image?.let { resimEki(ctx, doc.id, File(it)) })
+            doc.set(YerelNot.belge(uid, n.title, body, folderId, atMs).apply { put("pinned", n.pinned); put("attachments", ekler) })
             return SAVED
+        }
+
+        /**
+         * Görsel (ve varsa metin satırı) videonun notuna (`yt_<id>`) eklenir. Not yoksa / çöpteyse null: normal
+         * not açılır (Kanallarım'ın video notu henüz gelmediyse görsel kaybolmasın).
+         */
+        private fun videoyaResim(
+            ctx: Context, user: com.google.firebase.firestore.DocumentReference, uid: String, n: Gelen, id: String,
+        ): Int? {
+            val doc = user.collection("notes").document("yt_$id")
+            val snap = runCatching { Tasks.await(doc.get(Source.CACHE), 3, TimeUnit.SECONDS) }.getOrNull()
+                ?: runCatching { Tasks.await(doc.get(), 4, TimeUnit.SECONDS) }.getOrNull()
+            if (snap == null || !snap.exists() || snap.get("deletedAt") != null) return null
+            val update = hashMapOf<String, Any>("updatedAt" to FieldValue.serverTimestamp(), "updatedBy" to uid)
+            n.image?.let { update["attachments"] = FieldValue.arrayUnion(resimEki(ctx, doc.id, File(it))) }
+            if (n.text.isNotEmpty()) {
+                val old = snap.getString("body").orEmpty().trimEnd()
+                update["body"] = if (old.isEmpty()) n.text else "$old\n\n${n.text}"
+            }
+            doc.update(update)
+            return SAVED
+        }
+
+        /** Asistanın content:// görselini kendi klasörümüze kopyalar (en çok [RESIM_SINIR]); olmadıysa null. */
+        private fun gelenResim(ctx: Context, uri: String): File? = runCatching {
+            val dir = File(ctx.filesDir, GELEN_DIR).apply { mkdirs() }
+            val out = File(dir, "ekran_${System.currentTimeMillis()}.jpg")
+            ctx.contentResolver.openInputStream(android.net.Uri.parse(uri))!!.use { i ->
+                out.outputStream().use { o ->
+                    val buf = ByteArray(1 shl 16)
+                    var total = 0L
+                    while (true) {
+                        val r = i.read(buf)
+                        if (r < 0) break
+                        total += r
+                        if (total > RESIM_SINIR) throw java.io.IOException("görsel çok büyük")
+                        o.write(buf, 0, r)
+                    }
+                }
+            }
+            out
+        }.getOrNull()
+
+        /**
+         * Görseli notun ek klasörüne taşır, ek kaydını döner. Yol Dart'ın `derivedAttachmentPath`'i ile aynı
+         * (`appSupportPath` = filesDir): uygulama görseli hemen gösterir, UploadQueue buluta yükler.
+         */
+        private fun resimEki(ctx: Context, noteId: String, kaynak: File): HashMap<String, Any?> {
+            val id = java.util.UUID.randomUUID().toString()
+            val hedef = File(ctx.filesDir, "attachments/$noteId/${id}_${kaynak.name}")
+            hedef.parentFile?.mkdirs()
+            if (!kaynak.renameTo(hedef)) { kaynak.copyTo(hedef, overwrite = true); kaynak.delete() }
+            val o = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(hedef.path, o)
+            return hashMapOf(
+                "id" to id,
+                "kind" to "image",
+                "fileName" to kaynak.name,
+                "mimeType" to "image/jpeg",
+                "storagePath" to "",
+                "downloadUrl" to "",
+                "sizeBytes" to hedef.length(),
+                "width" to o.outWidth.takeIf { it > 0 },
+                "height" to o.outHeight.takeIf { it > 0 },
+                "align" to "center",
+                "createdAt" to com.google.firebase.Timestamp.now(),
+            )
         }
 
         /**
@@ -230,7 +317,8 @@ class HaritaNotAlici : BroadcastReceiver() {
                 val arr = runCatching { JSONArray(sp.getString("q", "[]")) }.getOrDefault(JSONArray())
                 arr.put(
                     JSONObject().put("t", n.text).put("p", n.place ?: "").put("at", System.currentTimeMillis())
-                        .put("b", n.title).put("k", n.folder).put("s", n.pinned).put("tr", n.transcript ?: ""),
+                        .put("b", n.title).put("k", n.folder).put("s", n.pinned).put("tr", n.transcript ?: "")
+                        .put("i", n.image ?: "").put("v", n.video ?: ""),
                 )
                 sp.edit().putString("q", arr.toString()).apply()
             }
@@ -251,6 +339,7 @@ class HaritaNotAlici : BroadcastReceiver() {
                             o.optString("t"), o.optString("p").ifEmpty { null }, o.optString("b"),
                             o.optString("k").ifEmpty { FOLDER_NAME }, o.optBoolean("s"),
                             o.optString("tr").ifEmpty { null },
+                            o.optString("i").ifEmpty { null }?.takeIf { File(it).exists() }, o.optString("v").ifEmpty { null },
                         )
                         val ok = runCatching { save(app, n, o.optLong("at")) }.getOrDefault(0)
                         if (ok == 0) left.put(o)
@@ -316,6 +405,9 @@ class YouTubeNotu(val id: String, val start: Int, val rest: String, val caption:
 
         private fun uri(url: String) =
             runCatching { android.net.Uri.parse(if (url.contains("://")) url else "https://$url") }.getOrNull()
+
+        /** Kanallarım'ın verdiği video kimliği gerçekten YouTube kimliği mi (belge adına girer). */
+        fun gecerliKimlik(s: String) = ID.matches(s)
 
         fun videoId(url: String): String? {
             val uri = uri(url) ?: return null
