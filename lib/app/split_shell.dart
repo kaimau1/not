@@ -65,7 +65,7 @@ class NoteFullscreenNotifier extends Notifier<bool> {
   bool build() => false;
 
   void set(bool value) {
-    if (value == state) return;
+    if (!ref.mounted || value == state) return;
     state = value;
     unawaited(value ? ImmersiveNote.enter() : ImmersiveNote.exit());
   }

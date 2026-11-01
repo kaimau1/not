@@ -245,6 +245,7 @@ bool sameRenderedNote(Note a, Note b) {
   if (identical(a, b)) return true;
   if (!sameItemsVisually(a.items, b.items)) return false;
   if (a.type != b.type ||
+      a.pageInk.length != b.pageInk.length ||
       // Sayfa geçişi/ekleme çubuğu ve tuvali değiştirir (Note.textPages).
       a.activePage != b.activePage ||
       a.textPages.length != b.textPages.length ||
@@ -1241,7 +1242,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             heavyLoaded: previous.heavyLoaded || incoming.heavyLoaded,
             // Bizim çizgilerimiz henüz yazılmadıysa onlar kalır; yoksa gelen
             // (başka cihaz ya da ağır belgenin geç gelen çizimi).
-            pageInk: _debouncer.hasPending ? previous.pageInk : incoming.pageInk,
+            pageInk: _debouncer.hasPending || incoming.heavyMissing
+                ? null
+                : incoming.pageInk,
             attachments: hydrating
                 ? hydrateAttachments(
                     local: previous.attachments,
@@ -2146,7 +2149,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final existing = _pageInkCtl;
     if (existing != null) {
       if (!identical(existing.ink, note.pageInk) && !existing.drawing) {
-        existing.replaceAll(note.pageInk);
+        // Derleme sırasında bildirim yapılamaz; bir kare sonra.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final current = _note?.pageInk;
+          if (mounted && current != null && !identical(existing.ink, current)) {
+            existing.replaceAll(current);
+          }
+        });
       }
       _syncPageInkKinds(existing);
       return existing;
@@ -2163,6 +2172,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Kalem kipi kapalıyken yalnız kalem yazar (ayar açıksa); parmak ve fare
   /// metne, kaydırmaya gider.
   void _syncPageInkKinds(InkController ink) {
+    // Daire çizerek gömerken kalem örtüye çizer, sayfaya yazmaz.
+    if (_gestureMode != _GestureMode.off) {
+      ink.allowedKinds = const {};
+      return;
+    }
     ink.allowedKinds = {
       if (_penMode || InkToolMemory.autoStylus) ...const [
         PointerDeviceKind.stylus,
@@ -2616,6 +2630,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
     final note = _note;
     if (note == null || _readOnly || !InkToolMemory.autoStylus) return;
+    if (_gestureMode != _GestureMode.off) return;
     // Yalnız bu ekran en üstteyken (levha/menü açıkken dokunuş onlarındır).
     if (ModalRoute.of(context)?.isCurrent == false) return;
     final document =

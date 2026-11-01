@@ -735,6 +735,40 @@ eskisini arşive taşıma.
   `showAppMessage(context, metin)`; eylemliyse `action:` (geri sayımlı).
   Elle `SnackBar(content: Text(...))` kurma.
 
+## Tablet listesi 2026-11-02 (10 madde)
+- **Sayfa üstü el yazısı `Note.pageInk`:** metin/liste notunda kalem doğrudan
+  sayfaya yazar (`PageInkStack`, `page_ink_layer.dart`); `DrawingScreen` artık
+  yalnız klasör sohbetinde. Belgede `attachments` içinde `_page_ink` kimlikli sahte
+  kayıt, `fromMap` onu ek listesinden çıkarır: böylece ağır belge bölünmesi
+  (ek kimliği + `ink`) değişmeden çalışır. `hasPageInk` hafif listede de doğrudur;
+  `isEmpty` buna bakar — yoksa temizlik yalnız el yazılı notu SİLERDİ.
+- **Koordinat:** `InkPageLayer(uniform: true)` → y de GENİŞLİĞE bölünür (1'i aşar).
+  Uzun tuvalde 0–1 normalleştirme YAPMA: silgi yarıçapı ve 0,002 nokta eşiği y'de
+  şişer. Sınır: metin sonradan akarsa çizim kaymaz; genişlik değişince orantılı büyür.
+- **Kalem/parmak ayrımı:** `EagerGestureRecognizer` altsınıfı izinli girdiyi (kalem)
+  arenada anında kazanır, metin alanı/kaydırma görmez; parmak yarışa girmez ve
+  metne gider. İzin `InkController.allowedKinds`. Derleme içinde `replaceAll`
+  çağırma (bildirim yapar): kare sonrasına bırakıldı. Gömme dairesi açıkken izin boş.
+- Kalem kipinde alt çubuk (ek şeridi dahil) gizli; tablet (`PenTray.useRail`,
+  PENCERE ≥ 600 dp; MediaQuery rayı düştüğü için değil) sol sütun 64 dp, ayarlar
+  ve renk paneli açılır pencere; tam ekran + kalemde üst çubuk da gizli.
+- **Tam ekran** `noteFullscreenProvider`: kalıcı değil, editör `dispose`unda biter.
+  AppFrame'de Row şekli sabit kalmalı; değişirse açık not yeniden kurulur.
+- **Web ekleri kök neden (ölçüm: Storage CORS `*`, Wasm'da ağ görseli yükleniyor):**
+  (1) Android'de Google hesabı ekleri Drive'a gider, `downloadUrl` boş; gövde/kart/
+  PDF yalnız bulut simgesi çiziyordu → `WebDriveGate` (jeton varsa iner, yoksa
+  dokununca bağlan). (2) `cloudAttachmentBytes` Drive eklerini de sayıyordu; web
+  kotası (Storage) doluyor, 50 MB üstü hesap yükleyemiyordu. Canlı hesapta
+  doğrulanmadı (parola/hesap yok). Paylaşılan klasörde Drive eki başkasına inmez:
+  sahibin telefonu Storage'a yükleyince görünür; Drive bağlı değilse dosya telefondan
+  hiç çıkmaz.
+- **"Gelen" klasör:** `sharedHubFolderProvider` (cihaz tercihi, senkron yok, sahte
+  `NoteFolder`, `order` = önündeki klasör sayısı). Karo görünümünde sıra yok.
+- Gömme: `_startPendingEmbed` daireyi açar; `_applyEmbed` eki şeride indirir.
+- Yerel Flutter yolu uzunsa `flutter analyze` kendi deposunu tararken patlıyor;
+  `dart analyze lib test` kullan. `perf_phase6` paralel koşuda Windows'ta dosya
+  kilidine takılabilir (tek başına geçer).
+
 ## Kullanıcı listesi 2026-11-01 (8 madde)
 - **"Gelen" çipi ana ekranı SÜZER** (ayrı sayfa açmaz): `sharedHubOnHomeProvider`
   (kalıcı değil). Dashboard `ref.listen` ile başka klasör/Tümü/süzgeç/etiket

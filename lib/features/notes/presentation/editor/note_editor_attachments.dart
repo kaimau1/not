@@ -831,7 +831,9 @@ extension _EditorAttachments on _NoteEditorScreenState {
     }
     // GÖMÜLEN EK EKRANDAN KALKAR (kullanıcı isteği 2026-11-02): artık yazıdan
     // açılıyor; sayfada ya da sabit bölmede ikinci kez yer kaplamasın.
-    unawaited(_setAttachmentView(attachment, AttachmentView.attached));
+    if (!(_note?.type.isPageNoteType ?? true)) {
+      unawaited(_setAttachmentView(attachment, AttachmentView.attached));
+    }
     _showSnack(context.l10n.attachmentTagInserted);
   }
 

@@ -202,6 +202,7 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
                     Icon(
                       Icons.add_to_drive_outlined,
                       color: scheme.onSurfaceVariant,
+                      semanticLabel: context.l10n.webDriveTapToOpen,
                     ),
                     if (box.maxWidth >= 120 && box.maxHeight >= 72)
                       Padding(

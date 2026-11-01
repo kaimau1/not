@@ -17,7 +17,7 @@ Notların kart olarak, **BUGÜN / BU HAFTA / DAHA ÖNCE** gruplarıyla dizilir; 
 - **Karta uzun bas:** çoklu seçim — birden çok notu birlikte taşı, arşivle, çoğalt ya da sil.
 - **Arama:** üstteki kutuya yaz. Kutuya dokununca sağında ✨ **Anlam** anahtarı çıkar: kapalıyken kelimeyi arar, açıkken ne demek istediğini anlar ("araba masrafları" yazınca "lastik değişimi" notunu da bulur).
 - **Sağ üstteki avatar:** hesabın. Köşesindeki sayı bekleyen arkadaşlık isteğidir; dokununca **Kişiler · Premium · Hesap ayarları**.
-- **Gelen** (zarf simgesi): klasör şeridinde **Tümü**'nün hemen yanında. Sana gönderilen kopyalar ve seninle ortak notlar **tek listede**; her öğenin başındaki küçük etiket hangisi olduğunu söyler (**Gelen** = kabul bekleyen kopya, **Paylaşılan** = ortak not). Çipe dokununca öbür klasörler gibi ana ekran buna süzülür; başka klasöre ya da Tümü'ne geçince, geri tuşuyla kalkar. Yeni bir şey gelince çipin köşesinde kırmızı rozet çıkar.
+- **Gelen** (zarf simgesi): klasör şeridinde **Tümü**'nün hemen yanında. Sana gönderilen kopyalar ve seninle ortak notlar **tek listede**; her öğenin başındaki küçük etiket hangisi olduğunu söyler (**Gelen** = kabul bekleyen kopya, **Paylaşılan** = ortak not). Çipe dokununca öbür klasörler gibi ana ekran buna süzülür; başka klasöre ya da Tümü'ne geçince, geri tuşuyla kalkar. Yeni bir şey gelince çipin köşesinde kırmızı rozet çıkar. Basılı tut: adını/simgesini değiştir, gizle, sırasını ayarla (gizliyken **Tüm klasörler**'den geri açılır); yana kaydırmada da durak.
 - **Süz:** **Görünüm** (ızgara ya da liste; kartta görseller, kartta ekler, paylaşılan notlar ve **paylaşılanlar altta** anahtarla), **Tür** (metin, liste, sıralı), **Durum** (sabitli, yıldızlı, alarmlı, kilitli, klasörsüz ve etiketsiz), etiket ve **Sıralama** (varsayılan son güncellenen — tarih grupları bu sıralamada görünür; başlık, en çok çalışılan; **Elle sırala** ile kartları sürükleyerek diz).
 - **Klasör şeridi:** klasörler arasında dokunarak ya da ekranı **yana kaydırarak** geç. Klasördeki not sayısı simgesinin sağ üst köşesinde küçük rakamla yazar; boş klasörler soluk ve sonda. Şeridin sağındaki **klasörler simgesi** (Tüm klasörler) bütün klasörleri açar; sıralarını da oradan değiştir.
 - **Hızlı not satırı** (varsayılan kapalı): Ayarlar → **Eklentiler ve hızlı not** → Hızlı not satırı ile açılınca listenin başında "Yeni not…" alanı çıkar; yazıp kaydet — not açmadan.
@@ -53,7 +53,7 @@ Maddenin üstüne **parmakla ya da kalemle** çiz:
 - **Karala** (zikzak) → madde silinir; **Geri al** ile geri gelir.
 - **Daire içine al** → maddenin yazımı düzeltilir (yapay zekâ; yalnız imla ve noktalama).
 - Ayrıca açman gerekmez: maddenin üstünde başlayan çizgi doğrudan jesttir. Kaydırma, uzun basış ve metin seçimi jest sayılmaz.
-- Kalemle (S Pen vb.) de aynı; kalem maddenin dışına değince el yazısı açılır.
+- Kalem (S Pen vb.) sayfaya yazar, jest yapmaz. **Kalemi otomatik algıla** kapalıyken jestler kalemle de çalışır.
 - İstemezsen **Ayarlar → Görünüm → Madde jestleri** ile kapat.
 - Liste notunu ilk açtığında bir kez kısa bir ipucu çıkar.
 
@@ -227,5 +227,6 @@ En üstte iki kart: **Kullanım kılavuzu** ve **Kişiselleştir** (hangi düğm
 - Bekleyen ekler ana ekranda "buluta yükleniyor" çubuğunda görünür; ekler bu cihazda güvendedir.
 - Kopyaladığın bir eki başka bir nota **+ Ekle → Kopyalanan eki yapıştır** ile koyabilirsin.
 - Gizli jestler ilk kez mümkün olduğunda **bir kez** tek satırla tanıtılır (liste notu, ilk PDF, ilk görsel, ızgarada klasörler); bir oturumda en fazla bir ipucu. Yeniden görmek için Ayarlar → Eklentiler ve hızlı not → **İpuçlarını yeniden göster**.
-- Kalem metin notuna değince el yazısı tuvali kendiliğinden açılır (ilk seferde neden açıldığı yazar); istemezsen kalem ayarlarında **Kalemi otomatik algıla**'yı kapat.
+- **Kalemle yazma:** kalem notun sayfasına değince yazı doğrudan sayfaya işlenir, araçlar açılır (tablette solda, telefonda altta). Parmakla dokunup klavyeyle aynı notta devam edersin; ✓ araçları kapatır. **Ekle → El yazısı** aynı kipi açar. İstemezsen kalem ayarlarında **Kalemi otomatik algıla**'yı kapat. Metin sonradan akarsa çizim birlikte kaymaz.
+- **Tam ekran (tablet, web):** not üst çubuğundaki düğme ray ve listeyi gizler.
 - Bu kılavuza her zaman ⋮ menüsünden ya da Ayarlar'dan ulaşırsın.

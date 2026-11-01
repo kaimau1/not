@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/widgets/color_palette.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/ink_pen.dart';
@@ -150,7 +151,14 @@ class _PenTrayState extends State<PenTray> {
             child: ListenableBuilder(
               listenable: _ink,
               builder: (_, _) => SingleChildScrollView(
-                child: _Options(controller: _ink, tool: _current),
+                padding: const EdgeInsets.only(top: 12, bottom: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SheetHeader(title: _labels(context.l10n)[_current]!),
+                    _Options(controller: _ink, tool: _current),
+                  ],
+                ),
               ),
             ),
           ),
@@ -186,7 +194,7 @@ class _PenTrayState extends State<PenTray> {
                 for (final tool in PenTrayTool.values)
                   SizedBox(
                     width: 64,
-                    height: 46,
+                    height: 48,
                     child: RotatedBox(
                       quarterTurns: 1,
                       child: _TrayTool(
