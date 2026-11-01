@@ -17,6 +17,13 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 ## 2. Cihaz doğrulama turu
 Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
 numarasıyla bildir.
+**2026-11-01 cihaz turu sonucu (Mi Note 10 Lite, Android 12, misafir, v1.1.567):**
+tam görülen 3 madde silindi. Kısmen görülenler listede duruyor: ana ekran üst çubuğu ve
+Süz, koyu tema, Lagün teması, Hatırlatıcılar boş hâl + `Yarın 09:00` (OS alarmı kuruluyor),
+klasörle süzme, el yazısı → nota görsel, PDF → Balonlu, balon yazma, Balonlar listesi,
+misafir AI kartı, Paylaş levhası. Geri kalan hiçbir madde denenmedi (token bütçesi); Google
+hesabı, ikinci cihaz, tablet, S Pen, Android 13+, web, TalkBack sesi bu telefonda/oturumda yapılamaz.
+
 
 **2026-10-31 Faz 16 (görsel bütünlük) — koyu tema + simgeler**
 - [ ] Koyu, kâğıt ve kırık beyaz temada: ana ekran, klasör, Arşiv, Çöp,
@@ -97,11 +104,6 @@ numarasıyla bildir.
   şeridi, tepeye gelince dolu; TalkBack taşıma yokken bunu okumuyor.
 
 **2026-10-31 Faz 12 (not ekranı) + Gelen çipi**
-- [ ] Klasör şeridinde "Tümü"nün yanında "Gelen" çipi; gelen not varken
-  rozet, dokununca Gelen/Paylaşılanlar sekmeleri; avatar levhasında artık yok.
-- [ ] Not ⋮: üstte Yıldızla · Klasöre taşı · Sürüm geçmişi · Sesli dinle;
-  dar telefonda alt çubuktan düşen Ara/Paylaş Araçlar'da; en altta Ekranı
-  düzenle · Ayarlar (F12.1). Kart ⋮ ile grup adları aynı (F12.2).
 - [ ] Metin, liste ve belge notunda alt çubuk Biçim · Ekle · Ara · Paylaş
   aynı yerde; ☑/Seç en sonda (F12.3).
 - [ ] Başlık yanındaki etiket+alarm çipi: etiket/alarm eklenince dolu simge
@@ -122,9 +124,6 @@ numarasıyla bildir.
 - [ ] Süz: Görünüm segmentli + anahtarlar, Tür ve Durum ayrı, "Elle sırala"
   metinli; yeni kurulumda BUGÜN/BU HAFTA grupları görünüyor; eskiden notları
   sürükleyerek dizmiş telefonda sıra BOZULMADAN "Elle" kalıyor (F11.4).
-- [ ] Klasör şeridinin sonunda "Tüm klasörler" → Klasörler ekranı, sırala
-  oradan (F11.5). "+" paneli: Kamera · Dosya ve bağlantı · Şablon ve çizim,
-  Defter kitap simgesi (F11.6).
 - [ ] Misafir: "Sonra" → tek satırlık şerit; 5. ve 20. notta bir kez tam kart
   (F11.3). Hatırlatıcılar boşken tek "Yeni hatırlatıcı" düğmesi (F11.7).
 - [ ] Yeni kurulum (Android 13+): ilk açılışta izin levhası YOK; bildirim izni
