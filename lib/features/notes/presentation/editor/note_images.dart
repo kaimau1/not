@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -20,6 +21,7 @@ import '../../../../core/utils/video_time.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/video_frame.dart';
 import '../../domain/attachment.dart';
+import '../drive_ui.dart';
 import '../note_card_media.dart' show VideoPoster;
 import '../viewers/image_viewer.dart';
 import '../viewers/ink_layer.dart';
@@ -55,7 +57,9 @@ void openImageViewer(
   List<Attachment> gallery = const [],
 }) {
   final hasLocal = localFileExists(img.localPath);
-  if (!hasLocal && !img.isUploaded) {
+  // Web: Drive'dan inmiş görsel kutuda görünüyor, görüntüleyici de açabilsin.
+  final shown = webDriveResolved(img);
+  if (!hasLocal && !shown.isUploaded) {
     ScaffoldMessenger.of(
       context,
     ).showMessage(context.l10n.attachmentNotSynced);
@@ -64,9 +68,9 @@ void openImageViewer(
   Navigator.of(context).push(
     MediaRoute<void>(
       builder: (_) => ImageViewerScreen(
-        attachment: img,
+        attachment: shown,
         // Tam ekranda yana kaydırarak nottaki diğer görsellere geçilir.
-        gallery: gallery,
+        gallery: [for (final a in gallery) webDriveResolved(a)],
         onChanged: onChanged,
         onCrop: onCrop,
         onRotate: onRotate,
@@ -342,6 +346,18 @@ class _ImageBox extends StatelessWidget {
                 Icons.broken_image_outlined,
                 color: scheme.onSurfaceVariant,
               ),
+            ),
+          );
+        }
+        // Web: Drive'daki görsel burada iner, aynı kutuda yeniden çizilir.
+        if (kIsWeb && img.isInDrive) {
+          return WebDriveGate(
+            attachment: img,
+            builder: (_, a) => Image.network(
+              a.downloadUrl,
+              fit: fit,
+              width: double.infinity,
+              height: double.infinity,
             ),
           );
         }
@@ -1357,27 +1373,33 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     // SAYFAYA GÖMÜLÜ PDF: görselin kutusunun belge karşılığı — sayfası
     // çevrilebilir, yer imi konur, tam ekrana geçer (bkz. [PdfPageBox]).
     if (a.kind == AttachmentKind.pdf) {
-      return PdfPageBox(
+      return WebDriveGate(
         attachment: a,
-        onChanged: widget.onChanged,
-        // Büyük önizlemede de sayfa çevrilebilir (önizleme okumak için
-        // açılıyor) ama YATAY KAYDIRMA orada nottaki diğer eke geçiyor;
-        // sayfa yalnız çubuğun oklarıyla değişir.
-        swipeToTurn: fit == BoxFit.cover,
-        onDetach: widget.onDetach == null
-            ? null
-            : () {
-                _deselect();
-                widget.onDetach!(a);
-              },
+        builder: (_, shown) => PdfPageBox(
+          attachment: shown,
+          onChanged: widget.onChanged,
+          // Büyük önizlemede de sayfa çevrilebilir (önizleme okumak için
+          // açılıyor) ama YATAY KAYDIRMA orada nottaki diğer eke geçiyor;
+          // sayfa yalnız çubuğun oklarıyla değişir.
+          swipeToTurn: fit == BoxFit.cover,
+          onDetach: widget.onDetach == null
+              ? null
+              : () {
+                  _deselect();
+                  widget.onDetach!(a);
+                },
+        ),
       );
     }
     // SAYFAYA GÖMÜLÜ SUNUM (2026-10-17): slaytı çevrilebilen kutu.
     if (a.kind == AttachmentKind.slide) {
-      return SlidePageBox(
+      return WebDriveGate(
         attachment: a,
-        onChanged: widget.onChanged,
-        swipeToTurn: fit == BoxFit.cover,
+        builder: (_, shown) => SlidePageBox(
+          attachment: shown,
+          onChanged: widget.onChanged,
+          swipeToTurn: fit == BoxFit.cover,
+        ),
       );
     }
     return NoteMediaBox(

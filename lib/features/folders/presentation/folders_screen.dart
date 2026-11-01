@@ -80,7 +80,14 @@ class FoldersScreen extends ConsumerWidget {
                 alignment: AlignmentDirectional.centerStart,
                 child: SizedBox(
                   height: FolderChip.stripHeight - 8,
-                  child: SharedNotesChip(),
+                  child: Row(
+                    children: [
+                      // Gizlenen Gelen buradan geri açılır (basılı tut).
+                      SharedHubChip(showHidden: true),
+                      SizedBox(width: 6),
+                      SharedNotesChip(),
+                    ],
+                  ),
                 ),
               ),
             ),

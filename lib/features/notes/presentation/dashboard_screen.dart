@@ -52,7 +52,7 @@ import 'filter_sheet.dart';
 import 'note_card.dart';
 import 'note_grid.dart';
 import 'shared_notes_screen.dart';
-import '../../inbox/presentation/shared_hub_screen.dart' show sharedHubSlivers;
+import '../../inbox/presentation/shared_hub_screen.dart' show sharedHubSlivers, showSharedHubOnHome;
 import 'notes_providers.dart';
 import 'quick_add_actions.dart';
 import 'quick_add_fab.dart';
@@ -386,19 +386,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             !suppressed.contains(n.folderId))
           n,
     ];
-    final stop = nextHomeSwipeStop(
-      mode: ref.read(swipeModeProvider),
-      notes: notes,
+    final mode = ref.read(swipeModeProvider);
+    final hub = ref.read(sharedHubFolderProvider);
+    final folderIds = [
       // Şeritle AYNI sıra: boş klasörler sonda (B3).
-      folderIds: [
-        for (final f in emptyFoldersLast(
-          ref.read(visibleOrderedFoldersProvider),
-          ref.read(folderSortProvider),
-          ref.read(folderNoteCountsProvider),
-        ))
-          f.id,
-      ],
-      folderId: ref.read(selectedFolderProvider),
+      for (final f in emptyFoldersLast(
+        ref.read(visibleOrderedFoldersProvider),
+        ref.read(folderSortProvider),
+        ref.read(folderNoteCountsProvider),
+      ))
+        f.id,
+    ];
+    final stop = nextHomeSwipeStop(
+      mode: mode,
+      notes: notes,
+      // GELEN de bir durak (2026-11-02), gizli değilse şeritteki yerinde.
+      folderIds: hub.hidden
+          ? folderIds
+          : withSharedHub(folderIds, kSharedHubFolderId, hub.order ?? 0),
+      folderId: ref.read(sharedHubOnHomeProvider) && mode != SwipeMode.filters
+          ? kSharedHubFolderId
+          : ref.read(selectedFolderProvider),
       filter: ref.read(noteFilterProvider),
       tag: ref.read(selectedTagProvider),
       direction: direction,
@@ -406,6 +414,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (stop == null) return;
     // Geçiş animasyonunun yönünü çekiş yönüne göre ayarla (madde 2).
     _swipeForward = direction > 0;
+    if (stop.folderId == kSharedHubFolderId) {
+      ref.read(sharedHubOnHomeProvider.notifier).set(false);
+      showSharedHubOnHome(context);
+      HapticFeedback.selectionClick();
+      return;
+    }
     ref.read(sharedHubOnHomeProvider.notifier).set(false);
     ref.read(selectedFolderProvider.notifier).set(stop.folderId);
     ref.read(noteFilterProvider.notifier).set(stop.filter);

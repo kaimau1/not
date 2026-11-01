@@ -9,6 +9,15 @@ import 'package:flutter/services.dart';
 /// kullanıcının beklediği (YouTube'daki gibi) yan dönen, kenarsız görüntü
 /// değildi. Çıkışta her şey uygulamanın varsayılanına döner (main.dart:
 /// edgeToEdge, yönelim serbest).
+/// Not tam ekranı: yalnız sistem çubukları (yönelim serbest kalır).
+abstract final class ImmersiveNote {
+  static Future<void> enter() =>
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
+  static Future<void> exit() =>
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+}
+
 abstract final class ImmersiveVideo {
   static Future<void> enter({required bool landscape}) async {
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);

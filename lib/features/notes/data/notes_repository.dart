@@ -102,6 +102,11 @@ int cloudAttachmentBytes(List<Note> notes) {
     for (final attachment in note.attachments) {
       // Metin eki de: içeriği not belgesinde, Storage'da değil.
       if (attachment.skipsUpload) continue;
+      // Drive'daki ek Storage'da yer tutmaz. KÖK NEDEN (2026-11-02, "web'de
+      // ekler yüklenmiyor"): web kotası Storage'a göre ama sayaç Drive'daki
+      // ekleri de sayıyordu; 50 MB'ı aşan Google hesabı web'den hiç ek
+      // yükleyemiyordu (StorageFullException).
+      if (attachment.isInDrive && !attachment.isUploaded) continue;
       total += attachment.sizeBytes;
     }
   }

@@ -1,3 +1,4 @@
+import '../../../../core/app_icons.dart';
 import '../../../../app/theme/fixed_colors.dart';
 import '../../../../core/widgets/sheet_header.dart';
 import 'package:flutter/material.dart';
@@ -397,6 +398,7 @@ Future<void> showEmbedPreview(
   required VoidCallback onUnlink,
   VoidCallback? onEdit,
   VoidCallback? onImport,
+  VoidCallback? onCopy,
   ValueChanged<Attachment>? onChanged,
 }) => showAppSheet<void>(
   context: context,
@@ -517,6 +519,13 @@ Future<void> showEmbedPreview(
                   icon: const Icon(Icons.swap_horiz),
                   label: Text(l10n.embedReplace),
                 ),
+                if (onCopy != null)
+                  IconButton(
+                    key: const ValueKey('embed-copy'),
+                    tooltip: l10n.copyAttachment,
+                    onPressed: () => then(onCopy),
+                    icon: const Icon(AppIcons.copy),
+                  ),
                 // NOTA AKTAR (kullanıcı isteği 2026-10-30): gömülü ek notun
                 // SAYFASINA (yazının arasına) alınır, yazıdaki bağ çözülür.
                 if (onImport != null)

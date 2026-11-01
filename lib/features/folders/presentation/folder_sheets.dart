@@ -1,3 +1,4 @@
+import '../../../core/app_icons.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -27,7 +28,12 @@ Future<String?> showFolderEditorDialog(
   NoteFolder? existing,
 }) async {
   final l10n = context.l10n;
-  final nameController = TextEditingController(text: existing?.name ?? '');
+  final hub = existing?.id == kSharedHubFolderId;
+  final nameController = TextEditingController(
+    text: hub && existing!.name.isEmpty
+        ? l10n.sharedHubShort
+        : existing?.name ?? '',
+  );
   var icon = existing?.icon ?? NoteFolder.defaultIcon;
   var hidden = existing?.hidden ?? false;
   // null = otomatik (kimlikten türetilen renk, bkz. folderAccent).
@@ -162,6 +168,13 @@ Future<String?> showFolderEditorDialog(
 
     final name = nameController.text.trim();
     if (!(saved ?? false) || name.isEmpty) return null;
+    if (hub) {
+      ref
+          .read(sharedHubFolderProvider.notifier)
+          .edit(name: name, icon: icon, color: color, hidden: hidden);
+      if (hidden) ref.read(sharedHubOnHomeProvider.notifier).set(false);
+      return existing!.id;
+    }
     final repo = ref.read(foldersRepositoryProvider);
     if (repo == null) return null;
     if (existing == null) {
@@ -195,6 +208,8 @@ Future<void> showFolderActionsSheet(
   NoteFolder folder,
 ) async {
   final l10n = context.l10n;
+  // "Gelen": belgesi yok, paylaşılamaz ve silinemez (bkz. kSharedHubFolderId).
+  final hub = folder.id == kSharedHubFolderId;
   final action = await showAppSheet<String>(
     context: context,
     showDragHandle: true,
@@ -223,7 +238,8 @@ Future<void> showFolderActionsSheet(
           // kişiler bağlanır notları ortak görür"). Yerel (anonim) hesapta
           // e-posta olmadığından özellik çalışmaz: kilit rozetiyle görünür,
           // dokununca hesap levhası (F10.5).
-          ListTile(
+          if (!hub)
+            ListTile(
               leading: Icon(
                 folder.isShared ? Icons.people : Icons.person_add_alt_outlined,
               ),
@@ -254,11 +270,12 @@ Future<void> showFolderActionsSheet(
             title: Text(l10n.folderReorder),
             onTap: () => Navigator.pop(sheetContext, 'order'),
           ),
-          ListTile(
-            leading: const Icon(Icons.delete_outline),
-            title: Text(l10n.deleteFolder),
-            onTap: () => Navigator.pop(sheetContext, 'delete'),
-          ),
+          if (!hub)
+            ListTile(
+              leading: const Icon(Icons.delete_outline),
+              title: Text(l10n.deleteFolder),
+              onTap: () => Navigator.pop(sheetContext, 'delete'),
+            ),
         ],
       ),
     ),
@@ -269,6 +286,9 @@ Future<void> showFolderActionsSheet(
       await showFolderOrderSheet(context);
     case 'edit':
       await showFolderEditorDialog(context, ref, existing: folder);
+    case 'hide' when hub:
+      ref.read(sharedHubFolderProvider.notifier).setHidden(!folder.hidden);
+      if (!folder.hidden) ref.read(sharedHubOnHomeProvider.notifier).set(false);
     case 'hide':
       ref
           .read(foldersRepositoryProvider)
@@ -627,14 +647,23 @@ class _FolderOrderPanelState extends ConsumerState<FolderOrderPanel> {
   List<NoteFolder>? _pending;
 
   void _reorder(List<NoteFolder> visible, int from, int to) {
-    final moved = [...visible];
-    final item = moved.removeAt(from);
-    moved.insert(to, item);
+    final withHub = [...visible];
+    final item = withHub.removeAt(from);
+    withHub.insert(to, item);
+    // "Gelen" kendi yerini cihazda tutar, öteki klasörlerin sırasına girmez.
+    ref
+        .read(sharedHubFolderProvider.notifier)
+        .setSlot(withHub.indexWhere((f) => f.id == kSharedHubFolderId));
+    if (item.id == kSharedHubFolderId) return;
+    final moved = [
+      for (final f in withHub)
+        if (f.id != kSharedHubFolderId) f,
+    ];
     setState(() => _pending = moved);
     // Gizli (şu an görünmeyen) klasörler YERİNDE kalır: tam listede
     // görünenlerin yuvaları yeni sırayla doldurulur.
     final full = ref.read(orderedFoldersProvider);
-    final visibleIds = {for (final f in visible) f.id};
+    final visibleIds = {for (final f in moved) f.id};
     final queue = moved.iterator;
     final ids = <String>[
       for (final f in full)
@@ -664,6 +693,8 @@ class _FolderOrderPanelState extends ConsumerState<FolderOrderPanel> {
         folders = pending;
       }
     }
+    final hub = ref.watch(sharedHubFolderProvider);
+    final rows = withSharedHub(folders, hub, hub.order ?? 0);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -688,33 +719,66 @@ class _FolderOrderPanelState extends ConsumerState<FolderOrderPanel> {
           ),
         ),
         Expanded(
-          child: folders.isEmpty
-              ? Center(child: Text(l10n.foldersEmpty))
-              : ReorderableListView.builder(
+          child: ReorderableListView.builder(
                   padding: const EdgeInsets.fromLTRB(8, 4, 8, 24),
-                  itemCount: folders.length,
+                  itemCount: rows.length,
                   buildDefaultDragHandles: false,
-                  onReorderItem: (from, to) => _reorder(folders, from, to),
+                  onReorderItem: (from, to) => _reorder(rows, from, to),
                   itemBuilder: (context, index) {
-                    final folder = folders[index];
+                    final folder = rows[index];
+                    final isHub = folder.id == kSharedHubFolderId;
                     return ListTile(
                       key: ValueKey('order-${folder.id}'),
                       leading: FolderIconBox(
-                        accent: folder.accent,
-                        icon: folder.iconData,
+                        accent: isHub && folder.color == null
+                            ? theme.colorScheme.tertiary
+                            : folder.accent,
+                        icon: isHub && folder.icon.isEmpty
+                            ? AppIcons.inbox
+                            : folder.iconData,
                         size: 32,
                       ),
                       title: Text(
-                        folder.name,
+                        isHub && folder.name.isEmpty
+                            ? l10n.sharedHubShort
+                            : folder.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      trailing: ReorderableDragStartListener(
-                        index: index,
-                        child: const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Icon(Icons.drag_handle),
-                        ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Gelen'i gizleyip geri açmanın kısa yolu.
+                          if (isHub)
+                            IconButton(
+                              key: const ValueKey('order-hub-hide'),
+                              tooltip: folder.hidden
+                                  ? l10n.makeFolderVisible
+                                  : l10n.makeFolderHidden,
+                              icon: Icon(
+                                folder.hidden
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                              ),
+                              onPressed: () {
+                                ref
+                                    .read(sharedHubFolderProvider.notifier)
+                                    .setHidden(!folder.hidden);
+                                if (!folder.hidden) {
+                                  ref
+                                      .read(sharedHubOnHomeProvider.notifier)
+                                      .set(false);
+                                }
+                              },
+                            ),
+                          ReorderableDragStartListener(
+                            index: index,
+                            child: const Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Icon(Icons.drag_handle),
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   },

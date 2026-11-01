@@ -90,6 +90,25 @@ class _QuickAddFabState extends State<QuickAddFab> {
     if (mounted) setState(() {});
   }
 
+  /// PANEL EKRANA SIĞSIN (kullanıcı bulgusu 2026-11-02: "tablette artı menüsü
+  /// sola taşıyor"): panel "+"nın sağına hizalı ve 380 dp; ana-detayda liste
+  /// paneli 260 dp'ye kadar daraldığından düğme ekranın solunda kalabiliyor.
+  /// Taşan kadar sağa kaydırılır, yüksekliği de düğmenin üstündeki alanla
+  /// sınırlanır. Saf hesap: [quickAddPanelFit].
+  ({double width, double dx, double maxHeight}) _panelFit() {
+    final overlay = Overlay.of(context).context;
+    final fab = context.findRenderObject()! as RenderBox;
+    final box = overlay.findRenderObject()! as RenderBox;
+    final rect =
+        fab.localToGlobal(Offset.zero, ancestor: box) & fab.size;
+    return quickAddPanelFit(
+      screen: box.size,
+      fabRight: rect.right,
+      fabTop: rect.top,
+      topInset: MediaQuery.paddingOf(overlay).top,
+    );
+  }
+
   void _openMenu() {
     _entry = OverlayEntry(
       builder: (context) => Stack(
@@ -109,10 +128,11 @@ class _QuickAddFabState extends State<QuickAddFab> {
             link: widget.anchor,
             targetAnchor: Alignment.topRight,
             followerAnchor: Alignment.bottomRight,
-            offset: const Offset(0, -12),
+            offset: Offset(_panelFit().dx, -12),
             child: _QuickAddPanel(
               options: _options(context),
               onSelected: _select,
+              fit: _panelFit(),
             ),
           ),
           // Bulanıklığın ÜSTÜnde duran keskin "×" kopyası: bariyer tüm sayfayı
@@ -428,10 +448,34 @@ String _groupTitle(AppLocalizations l10n, QuickAddGroup group) =>
 ///     YouTube) — en sık kullanılanlar başparmağa yakın.
 ///  3. En üstte DİĞER (şablon, alışveriş, sıralı liste, çizim, defter).
 /// Gizlenen seçenek yer kaplamaz; boş kalan grup başlığıyla birlikte düşer.
+/// "+" panelinin ekrana sığan ölçüsü: [dx] panelin sağa kayması, düğmenin
+/// sağ kenarı panele yetmiyorsa. Kenarda 12 dp boşluk kalır.
+({double width, double dx, double maxHeight}) quickAddPanelFit({
+  required Size screen,
+  required double fabRight,
+  required double fabTop,
+  double topInset = 0,
+}) {
+  const margin = 12.0;
+  final width = math.min(380.0, screen.width - margin * 2);
+  return (
+    width: width,
+    dx: math.max(0, width + margin - fabRight),
+    maxHeight: math.max(160, fabTop - margin * 2 - topInset),
+  );
+}
+
 class _QuickAddPanel extends StatefulWidget {
-  const _QuickAddPanel({required this.options, required this.onSelected});
+  const _QuickAddPanel({
+    required this.options,
+    required this.onSelected,
+    required this.fit,
+  });
 
   final List<QuickAddOption> options;
+
+  /// Ekrana sığan ölçü (bkz. [quickAddPanelFit]).
+  final ({double width, double dx, double maxHeight}) fit;
 
   /// Seçilen işlemi paneli kapatarak çalıştırır.
   final void Function(VoidCallback action) onSelected;
@@ -464,8 +508,7 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
   Widget _build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final size = MediaQuery.sizeOf(context);
-    final width = math.min(380.0, size.width - 24);
+    final width = widget.fit.width;
     const gap = 6.0;
     const columns = 4;
 
@@ -511,7 +554,7 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
       clipBehavior: Clip.antiAlias,
       child: ConstrainedBox(
         // Büyük yazı ölçeğinde/kısa ekranda panel ekranı aşmasın: kayar.
-        constraints: BoxConstraints(maxHeight: size.height * 0.72),
+        constraints: BoxConstraints(maxHeight: widget.fit.maxHeight),
         child: SingleChildScrollView(
           reverse: true,
           padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),

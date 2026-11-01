@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/stable_value.dart';
 
@@ -165,3 +167,103 @@ final visibleOrderedFoldersProvider = Provider<List<NoteFolder>>((ref) {
       if (!f.hidden || revealHidden) f,
   ];
 });
+
+/// **"GELEN" DA BİR KLASÖR** (kullanıcı isteği 2026-11-02: "düzenlenebilmeli,
+/// sırası ayarlanabilmeli, kaydırınca geçilebilmeli, gizlenebilmeli").
+/// Firestore'da belgesi yok (içeriği gelen kopyalar + ortak notlar), görünümü
+/// cihaz tercihinde: öteki klasörlerin levhaları aynı [NoteFolder] üzerinden
+/// çalışır. `name`/`icon` boşsa varsayılan ad ve zarf simgesi; `order` =
+/// şeritte önünde kaç klasör olduğu.
+const kSharedHubFolderId = '__shared_hub__';
+
+final sharedHubFolderProvider =
+    NotifierProvider<SharedHubFolderNotifier, NoteFolder>(
+      SharedHubFolderNotifier.new,
+    );
+
+class SharedHubFolderNotifier extends Notifier<NoteFolder> {
+  static const _key = 'shared_hub_folder';
+
+  @override
+  NoteFolder build() {
+    final raw = ref.watch(sharedPreferencesProvider).getString(_key);
+    final map = raw == null
+        ? const <String, dynamic>{}
+        : jsonDecode(raw) as Map<String, dynamic>;
+    return _folder(
+      name: map['name'] as String? ?? '',
+      icon: map['icon'] as String? ?? '',
+      color: map['color'] as int?,
+      hidden: map['hidden'] as bool? ?? false,
+      slot: map['slot'] as int? ?? 0,
+    );
+  }
+
+  static NoteFolder _folder({
+    required String name,
+    required String icon,
+    required int? color,
+    required bool hidden,
+    required int slot,
+  }) => NoteFolder(
+    id: kSharedHubFolderId,
+    ownerId: '',
+    name: name,
+    icon: icon,
+    color: color,
+    hidden: hidden,
+    order: slot,
+  );
+
+  void _write(NoteFolder f) {
+    state = f;
+    ref
+        .read(sharedPreferencesProvider)
+        .setString(
+          _key,
+          jsonEncode({
+            'name': f.name,
+            'icon': f.icon,
+            'color': f.color,
+            'hidden': f.hidden,
+            'slot': f.order,
+          }),
+        );
+  }
+
+  void edit({
+    required String name,
+    required String icon,
+    required int? color,
+    required bool hidden,
+  }) => _write(
+    _folder(
+      name: name,
+      icon: icon,
+      color: color,
+      hidden: hidden,
+      slot: state.order ?? 0,
+    ),
+  );
+
+  void setHidden(bool hidden) => edit(
+    name: state.name,
+    icon: state.icon,
+    color: state.color,
+    hidden: hidden,
+  );
+
+  void setSlot(int slot) => _write(
+    _folder(
+      name: state.name,
+      icon: state.icon,
+      color: state.color,
+      hidden: state.hidden,
+      slot: slot,
+    ),
+  );
+}
+
+/// [hub]'ı klasör listesindeki yerine koyar (sıra levhası, şerit, yana çekiş).
+List<T> withSharedHub<T>(List<T> folders, T hub, int slot) => [...folders]
+  ..insert(slot.clamp(0, folders.length), hub);

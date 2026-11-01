@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/l10n_ext.dart';
+import '../core/utils/immersive.dart';
 import '../features/notes/presentation/dashboard_screen.dart';
 import '../features/notes/presentation/quick_add_fab.dart';
 import '../features/settings/settings_providers.dart';
@@ -49,6 +52,24 @@ class ListPaneWidthNotifier extends Notifier<double> {
 /// alırken listenin kapladığı üçte bir ekran geri kazanılır. Ray'daki
 /// düğme ve Ctrl+\ ile açılıp kapanır; tercih kalıcıdır.
 final listPaneCollapsedProvider = boolPref('list_pane_collapsed', defaultValue: false);
+
+/// **NOT TAM EKRAN** (kullanıcı isteği 2026-11-02: "üç parçalı görünümde not
+/// tam ekran olmuyor"): ray ve liste geçici olarak kalkar, sistem çubukları
+/// gizlenir. Kalıcı değil: not kapanınca biter (bkz. editörün `dispose`u).
+final noteFullscreenProvider = NotifierProvider<NoteFullscreenNotifier, bool>(
+  NoteFullscreenNotifier.new,
+);
+
+class NoteFullscreenNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void set(bool value) {
+    if (!ref.mounted || value == state) return;
+    state = value;
+    unawaited(value ? ImmersiveNote.enter() : ImmersiveNote.exit());
+  }
+}
 
 /// Geniş ekranda solda not listesi, sağda açık not gösterir.
 ///
@@ -101,7 +122,8 @@ class _SplitShellState extends ConsumerState<SplitShell> {
         // Açık not yokken (yalnız yer tutucu) liste gizlenmez: gizli liste +
         // boş sağ panel, kullanıcıya hiçbir şey göstermeyen bir ekran olurdu.
         final collapsed =
-            ref.watch(listPaneCollapsedProvider) &&
+            (ref.watch(listPaneCollapsedProvider) ||
+                ref.watch(noteFullscreenProvider)) &&
             currentLocation(router) != '/';
         return _split(context, paneWidth, maxPane, collapsed);
       },

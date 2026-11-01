@@ -132,6 +132,25 @@ class AppLocalizationsTr extends AppLocalizations {
   String get attachmentNotSynced => 'Dosya bu cihaza henüz senkronlanmadı';
 
   @override
+  String get webDriveTapToOpen => 'Google Drive\'da · açmak için dokun';
+
+  @override
+  String get noteFullscreen => 'Tam ekran';
+
+  @override
+  String get noteFullscreenExit => 'Tam ekrandan çık';
+
+  @override
+  String get penModeDone => 'Kalemi kapat';
+
+  @override
+  String get tipPagePen =>
+      'Kalemle sayfanın her yerine yazabilirsin; parmakla dokunup klavyeyle aynı notta devam et.';
+
+  @override
+  String get pageInkOnCard => 'El yazısı var';
+
+  @override
   String attachmentTooLarge(int limit) {
     return 'Dosya çok büyük (en fazla $limit MB)';
   }
@@ -6205,10 +6224,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get aiSettingsTooltip => 'Yapay zekâ ayarları';
-
-  @override
-  String get tipStylusCanvas =>
-      'Kalem algılandı: el yazısı tuvali açıldı. Kalem ayarlarındaki “Kalemi otomatik algıla” ile kapatılır.';
 
   @override
   String get tipSemanticSearch =>

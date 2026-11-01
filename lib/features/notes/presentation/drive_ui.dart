@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -100,7 +103,129 @@ Future<bool> fetchAttachmentNow(
 }
 
 /// Web'de Drive'dan indirilmiş eklerin `blob:` adresleri (sekme boyunca).
-final _webDriveUrls = <String, String>{};
+/// Değişince açık [WebDriveGate]'ler yeniden bakar.
+final _webDriveUrls = ValueNotifier<Map<String, String>>(const {});
+
+void _rememberWebDriveUrl(String driveId, String url) =>
+    _webDriveUrls.value = {..._webDriveUrls.value, driveId: url};
+
+/// Bu sekmede Drive'dan inmiş ekin blob adresli kopyası; inmediyse aynı ek.
+Attachment webDriveResolved(Attachment attachment) {
+  final url = _webDriveUrls.value[attachment.driveId];
+  return url == null ? attachment : attachment.copyWith(downloadUrl: url);
+}
+
+/// Web'de ekin içeriği Drive'da mı (dosya yok, Storage adresi de yok).
+bool _waitsWebDrive(Attachment a) =>
+    kIsWeb && a.isInDrive && !a.isUploaded;
+
+/// **WEB: DRIVE'DAKİ EKİ NOTUN İÇİNDE GÖSTER** (kullanıcı bulgusu 2026-11-02:
+/// "web'de ekler gelmiyor"). KÖK NEDEN: Android'de Google hesabının ekleri
+/// Drive'a gider, `downloadUrl` boştur; görsel, kart, ek şeridi ve PDF bu
+/// durumda yalnız bulut simgesi çiziyor, Drive'dan hiç istemiyordu (indirme
+/// yalnız ek şeridinden dokununca vardı). Ölçüm: Storage CORS'u `*`, Wasm'da
+/// ağ görseli yükleniyor — sorun gösterimde değil, bu yolun eksikliğinde.
+///
+/// Jeton varsa ek kendiliğinden iner; yoksa dokununca "Drive'a bağlan" sorulur
+/// (Google penceresi ancak bir dokunuşla açılır). Bağlandıktan sonra açık
+/// kutular sırayla iner. Android'de ve Storage'daki ekte hiçbir şey yapmaz.
+class WebDriveGate extends ConsumerStatefulWidget {
+  const WebDriveGate({
+    super.key,
+    required this.attachment,
+    required this.builder,
+  });
+
+  final Attachment attachment;
+
+  /// İçerik hazır: ek, `downloadUrl`'i dolu kopyayla verilir.
+  final Widget Function(BuildContext context, Attachment attachment) builder;
+
+  @override
+  ConsumerState<WebDriveGate> createState() => _WebDriveGateState();
+}
+
+class _WebDriveGateState extends ConsumerState<WebDriveGate> {
+  /// Aynı ek birkaç kutuda açıkken bir kez iner; başarısız olan kendiliğinden
+  /// yeniden denenmez (izin yok, ek başkasının Drive'ında) — dokunuş dener.
+  static final _busy = <String>{};
+  static final _failed = <String>{};
+
+  Future<void> _fetch() async {
+    final id = widget.attachment.driveId;
+    if (_busy.contains(id) || _failed.contains(id)) return;
+    final store = ref.read(driveStoreProvider);
+    if (store == null || await ref.read(driveAuthProvider).accessToken() == null) {
+      return;
+    }
+    if (!_busy.add(id)) return;
+    try {
+      final bytes = await store.downloadBytes(id);
+      _rememberWebDriveUrl(
+        id,
+        createBlobUrl(bytes, widget.attachment.mimeType),
+      );
+    } catch (e) {
+      debugPrint('Drive eki inmedi ($id): $e');
+      _failed.add(id);
+    } finally {
+      _busy.remove(id);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final a = widget.attachment;
+    if (!_waitsWebDrive(a)) return widget.builder(context, a);
+    return ValueListenableBuilder(
+      valueListenable: _webDriveUrls,
+      builder: (context, urls, _) {
+        final url = urls[a.driveId];
+        if (url != null) {
+          return widget.builder(context, a.copyWith(downloadUrl: url));
+        }
+        unawaited(_fetch());
+        final scheme = Theme.of(context).colorScheme;
+        return Material(
+          color: scheme.surfaceContainerHigh,
+          child: InkWell(
+            key: ValueKey('web-drive-${a.id}'),
+            onTap: () {
+              _failed.remove(a.driveId);
+              unawaited(resolveWebDriveAttachment(context, ref, a));
+            },
+            child: LayoutBuilder(
+              builder: (context, box) => Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.add_to_drive_outlined,
+                      color: scheme.onSurfaceVariant,
+                      semanticLabel: context.l10n.webDriveTapToOpen,
+                    ),
+                    if (box.maxWidth >= 120 && box.maxHeight >= 72)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+                        child: Text(
+                          context.l10n.webDriveTapToOpen,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
 
 /// **WEB: DRIVE'DAKİ EKİ AÇ** (F4.4). Tarayıcıda yerel dosya yok: ek Drive'dan
 /// belleğe indirilir ve `blob:` adresiyle (Storage'daki bir ekmiş gibi
@@ -112,7 +237,7 @@ Future<Attachment?> resolveWebDriveAttachment(
   WidgetRef ref,
   Attachment attachment,
 ) async {
-  final cached = _webDriveUrls[attachment.driveId];
+  final cached = _webDriveUrls.value[attachment.driveId];
   if (cached != null) return attachment.copyWith(downloadUrl: cached);
   final l10n = context.l10n;
   final messenger = ScaffoldMessenger.of(context);
@@ -161,7 +286,7 @@ Future<Attachment?> resolveWebDriveAttachment(
   try {
     final bytes = await store.downloadBytes(attachment.driveId);
     final url = createBlobUrl(bytes, attachment.mimeType);
-    _webDriveUrls[attachment.driveId] = url;
+    _rememberWebDriveUrl(attachment.driveId, url);
     messenger.hideCurrentSnackBar();
     return attachment.copyWith(downloadUrl: url);
   } catch (e) {

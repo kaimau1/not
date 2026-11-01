@@ -53,7 +53,7 @@ Draw over an item **with your finger or a pen**:
 - **Scribble** (zigzag) → the item is deleted; **Undo** brings it back.
 - **Circle** → the item's spelling is fixed (AI; spelling and punctuation only).
 - Nothing to turn on: a stroke that starts over an item is a gesture. Scrolling, long-presses and text selection don't count.
-- Same with a pen (S Pen etc.); touching outside items with the pen opens handwriting.
+- A pen (S Pen etc.) writes on the page instead of making gestures. With **Detect pen automatically** off, gestures work with the pen too.
 - Turn it off in **Settings → Appearance → Item gestures**.
 - The first time you open a list note, a short tip appears once.
 
@@ -228,5 +228,6 @@ At the top are two cards: **User guide** and **Personalise** (which buttons and 
 - Attachments waiting to upload show in the "uploading to the cloud" bar on the home screen; they are safe on this device.
 - Put a copied attachment into another note with **+ Add → Paste copied attachment**.
 - Hidden gestures are introduced **once**, with a single line, the first time they become possible (list note, first PDF, first image, folders in the grid); at most one tip per session. To see them again: Settings → Modules & quick note → **Show tips again**.
-- When a pen touches a text note, the handwriting canvas opens by itself (the first time, a line says why); to stop it, turn off **Detect pen automatically** in the pen settings.
+- **Writing with a pen:** touching the note page with a pen writes directly on it and opens the tools (left on tablets, bottom on phones). Tap with a finger to keep typing in the same note; ✓ closes the tools. **Add → Handwriting** opens the same mode. To stop it, turn off **Detect pen automatically** in the pen settings. Handwriting doesn't move if text reflows later.
+- **Full screen (tablet, web):** the button in the note's top bar hides the rail and list.
 - This guide is always available from the ⋮ menu and from Settings.

@@ -513,7 +513,24 @@ class InkController extends ChangeNotifier {
   /// Bu tür girdi çizer mi: "yalnız kalem" açıkken parmak çizmez (kalem,
   /// ters kalem ve fare çizer).
   bool accepts(PointerDeviceKind kind) =>
-      !penOnly || kind != PointerDeviceKind.touch;
+      (allowedKinds == null || allowedKinds!.contains(kind)) &&
+      (!penOnly || kind != PointerDeviceKind.touch);
+
+  /// Yalnız bu girdiler çizer; null = hepsi. Sayfa katmanında kalem kipi
+  /// kapalıyken yalnız kalem geçer, parmak ve fare metne gider.
+  Set<PointerDeviceKind>? allowedKinds;
+
+  /// Çizgi çizilirken değil, dışarıdan (geri al, başka cihaz) gelen çizgileri
+  /// alır; geçmişe girmez.
+  void replaceAll(List<InkStroke> strokes) {
+    if (_pointers > 0) return;
+    _ink = strokes;
+    _selected = [];
+    notifyListeners();
+  }
+
+  /// Şu an çizim sürüyor mu.
+  bool get drawing => _pointers > 0;
 
   /// [pointer] verilirse dokunuş türüne göre süzülür (bkz. [accepts]);
   /// [pressure] 0–1 (kalemde), [stylusEraser] yan düğme / ters uç.
@@ -943,9 +960,19 @@ class InkController extends ChangeNotifier {
 /// Bir sayfanın/slaytın üstüne serilen dokunma + çizim katmanı. İçeren
 /// widget'ın tüm alanını kaplar (sayfa boyutu [LayoutBuilder]'dan alınır).
 class InkPageLayer extends StatelessWidget {
-  const InkPageLayer({super.key, required this.controller, required this.page});
+  const InkPageLayer({
+    super.key,
+    required this.controller,
+    required this.page,
+    this.uniform = false,
+  });
 
   final InkController controller;
+
+  /// y de GENİŞLİĞE oranlanır (kare birim): katmanın boyu değişse de çizim
+  /// yerinde kalır, silgi yarıçapı iki eksende aynıdır. Uzayan not sayfası
+  /// için (bkz. `PageInkStack`); PDF/görsel sayfasının oranı sabit.
+  final bool uniform;
 
   /// 1 tabanlı sayfa/slayt numarası.
   final int page;
@@ -968,7 +995,9 @@ class InkPageLayer extends StatelessWidget {
       ignoring: !controller.editing,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final size = Size(constraints.maxWidth, constraints.maxHeight);
+          final size = uniform
+              ? Size.square(constraints.maxWidth)
+              : Size(constraints.maxWidth, constraints.maxHeight);
           // Kalem HAVADA (S Pen yaklaşması): ucun kalınlığı/silgi halkası
           // önizlenir. Fare de aynı yoldan gelir — onda önizleme yok.
           void onHover(PointerEvent e) {
@@ -1028,20 +1057,24 @@ class InkPageLayer extends StatelessWidget {
                     );
                     // Ekran okuyucu (F4.7): tuval kendisi okunamaz; en azından
                     // sayfada çizim olduğu ve kaç çizgi olduğu söylenir.
+                    final paint = CustomPaint(
+                      painter: painter,
+                      foregroundPainter: _InkOverlayPainter.of(
+                        controller,
+                        page,
+                        Theme.of(context).colorScheme.primary,
+                      ),
+                      size: uniform ? size : Size.infinite,
+                    );
                     return Semantics(
-                      image: true,
+                      image: painter.strokes.isNotEmpty,
                       label: painter.strokes.isEmpty
                           ? null
                           : context.l10n.inkSemantics(painter.strokes.length),
-                      child: CustomPaint(
-                        painter: painter,
-                        foregroundPainter: _InkOverlayPainter.of(
-                          controller,
-                          page,
-                          Theme.of(context).colorScheme.primary,
-                        ),
-                        size: Size.infinite,
-                      ),
+                      // Kare kutudan taşan çizgi de boyanır (kırpılmaz).
+                      child: uniform
+                          ? Align(alignment: Alignment.topLeft, child: paint)
+                          : paint,
                     );
                   },
                 ),

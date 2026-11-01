@@ -239,12 +239,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
                     case 'penOnly':
                       _ink.setPenOnly(!_ink.penOnly);
                     case 'settings':
-                      showModalBottomSheet<void>(
-                        context: context,
-                        showDragHandle: true,
-                        isScrollControlled: true,
-                        builder: (_) => InkSettingsSheet(controller: _ink),
-                      );
+                      showInkSettings(context, _ink);
                     case 'clear':
                       _ink.clear();
                   }
@@ -298,8 +293,10 @@ class _DrawingScreenState extends State<DrawingScreen> {
             ),
           ],
         ),
-        body: Column(
+        body: Flex(
+          direction: PenTray.useRail(context) ? Axis.horizontal : Axis.vertical,
           children: [
+            if (PenTray.useRail(context)) PenTray(controller: _ink, rail: true),
             Expanded(
               // Tuval kâğıt gibi: kenarlarda ince pay, yuvarlak köşe, hafif
               // gölge — çevresindeki sakin zeminden ayrışır.
@@ -337,7 +334,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
                 ),
               ),
             ),
-            PenTray(controller: _ink),
+            if (!PenTray.useRail(context)) PenTray(controller: _ink),
           ],
         ),
       ),

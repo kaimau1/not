@@ -40,6 +40,18 @@ uygulama; ek ekleme denenmedi), widget (başlatıcıya dokunmak gerekir), en bü
   kapatma). Tekrar görülürse tam adımları yaz; tahminle yama yapılmadı.
 
 
+**2026-11-02 tablet listesi — TABLETTE GÖRÜLMEDİ (oturumda tablet bağlı değildi)**
+- [ ] Kalem: notun her yerine yaz, parmakla dokun + klavyeyle yaz, yazı çizimin altında
+  kalmıyor; basınç, avuç içi, yan düğme/silgi (adb ile denenemez). Sol sütun, ayar
+  penceresi, tam ekran (dikey + yatay, ray/liste kalkıyor, sistem çubukları, çıkış).
+- [ ] PDF/sunum/görsel üstünde kalem solda; tepsi belgenin solunu örtüyor mu.
+- [ ] Artı menüsü: liste panelini en dara çek, panel sola taşmıyor.
+- [ ] Web, gerçek hesap: Drive'daki görsel/PDF "Google Drive'da" kutusu → dokun → bağlan →
+  iniyor; web'den ek yükleme; paylaşılan klasörde ek geliyor (gelmiyorsa sahibin
+  telefonunda Drive bağlı mı, "yükleniyor" göstergesi var mı).
+- [ ] Gelen: basılı tut → düzenle/gizle/sırala, yana kaydırma durağı, Tüm klasörler'den geri aç.
+- [ ] Gömme: elle daire baştan açık, ipucu şeritte, ek şeride iniyor; önizlemede kopyala.
+
 **2026-10-31 Faz 16 (görsel bütünlük) — koyu tema + simgeler**
 - [ ] Koyu, kâğıt ve kırık beyaz temada: ana ekran, klasör, Arşiv, Çöp,
   Gelen ve paylaşılanlar, Hatırlatıcılar — ilk açılışta çark yerine kart
