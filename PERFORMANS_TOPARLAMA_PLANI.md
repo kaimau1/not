@@ -1,5 +1,9 @@
 # PERFORMANS VE TOPARLAMA PLANI — Faz 5–9
 
+> **TAMAMLANDI** (2026-10-20). ERTELENDİ kalanlar (FlutterFire yükseltmesi,
+> F9.1 cihaz ölçümü, F9.3 kalanı) 2026-11-01'de `KALAN_ISLER_PLANI.md`'ye
+> taşındı (F18.22, F18.7, F18.23).
+
 Kaynak: 2026-10-20 inceleme (kod DEĞİŞTİRİLMEDİ). Konu: CPU/RAM performansı,
 doğrulanmış hatalar, kod tabanının derlenip toparlanması. Fazlar **ayrı
 oturumlarda, sırayla** yapılır. Faz 1–4 `YOL_HARITASI.md`'de (hepsi bitti);

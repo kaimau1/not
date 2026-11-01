@@ -5,23 +5,14 @@ Biten madde silinir; karar/neden bilgisi HAFIZA.md'ye yazılır. 2026-10-20
 indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 `KALANLAR_ARSIV.md` (dondurulmuş).
 
-## 1. Senin yapacakların (konsol / hesap)
-- [ ] Telefonlar v1.1.N'e geçince Firebase konsolu → `config/app` →
-  `minClient: 3` (eski sürüm yıldızları siler; ağır belge bölmesini görmez).
-- [ ] Actions → deploy → "Cloud Functions'ı yayınla" adımı yeşil mi (Blaze
-  plan; itme bildirimleri ve kişi araması buna bağlı).
-- [ ] Google Cloud (notlar-kaimau): "Google Drive API" etkin, OAuth onay
-  ekranında `drive.appdata` kapsamı.
-- [ ] Crashlytics'i konsolda etkinleştir → Ayarlar → Hakkında → sürüm
-  satırına uzun bas → "Çökert" → yeniden aç → konsolda ilk rapor.
-- [ ] Actions → Derleme → Run workflow → "Kare ölçümü"; `perf-summary`
-  p90 değerleri HAFIZA'ya taban olarak (F2.6). Ölçüm protokolü: F9.1
-  (`PERFORMANS_TOPARLAMA_PLANI.md`).
-- [ ] Eski Actions artifact'lerini sil (depolama kotası).
-- [ ] **Play'e çıkarken:** App Check'i önce izle, sonra ZORLA (ters sıra
-  herkesi kilitler; sideload APK doğrulanmaz) · `PRIVACY_POLICY.md` herkese
-  açık URL'de · mağaza simgesi `assets/icon/play_store_512.png` · listede
-  "yalnız 64 bit" notu.
+> **2026-11-01:** Açık işlerin TEK planı artık `KALAN_ISLER_PLANI.md`
+> (Faz 18 bulut · Faz 19 senin). Eski §1 (konsol/hesap) → F19.B/F19.D,
+> §3 (açık kararlar/sınırlar) → F18.2–F18.5, F18.11, F18.13, F18.27 ve
+> "Bilinen sınırlar", §4 (sonra yapılacak) → F18.17–F18.20, F18.22 —
+> burada tekrar tutulmaz. Bu dosyada yalnız **§2 cihaz doğrulama listesi**
+> kalır (F19.C1'in ayrıntısı); F18.31 onu ~10 dakikalık duman testine indirir.
+
+## 1. Senin yapacakların → `KALAN_ISLER_PLANI.md` Faz 19 (B, D)
 
 ## 2. Cihaz doğrulama turu
 Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
@@ -363,25 +354,6 @@ doluydu; ilk `[apk]` koşusunda önce derlemenin yeşil olduğuna bak:
   renk/kâğıt/zemin, not içi arama, dikte — her biri bir kez denensin
   (kod satır satır taşındı, davranış değişmemeli).
 
-## 3. Açık kararlar / bilinen sınırlar
-- Play Billing (lifetime + AI aboneliği): RevenueCat mı `in_app_purchase` +
-  Function mı — karar bekliyor. Deneme süresi hesaba bağlı olmalı.
-- Depolama tavanı ve AI kota sayacı istemcide; sunucu zorlaması (Function)
-  Play Billing'le birlikte.
-- AI günlük kotası yuvarlanan 24 saat mi, takvim günü mü — karar kullanıcıda
-  (kural tavanını gevşetmek gerekir).
-- Anonim → Google geçişinde hesap çakışması: güvenli yol "yedek al → gir →
-  geri yükle" (yedekleme mantığı servise çıkarılmalı).
-- Sesli notta canlı yazım yok (Google sesli giriş, `GET_AUDIO` belgesiz);
-  görüntülü not yalnız cihazda; AI videosu 60 sn; IME oluşturma aralığı
-  sarmada gizli; editör diktesi web'de AI'sız çalışmaz.
-- Görsele yazılan metin dışa aktarmada yok; paylaşılan klasörün "+"
-  düğmesi yalnız metin notu açar (bilinçli).
-- Kesme noktası geçişinde liste kaydırma konumu sıfırlanıyor.
+## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
-## 4. Sonra yapılacak
-- PPTX'i "dosya okuyucu" reposundan port (kendi oturumu).
-- Farklılaşma: aralıklı tekrar kartları → tüm defterle sohbet (RAG) →
-  otomatik not bağlama.
-- FlutterFire paketlerini BİRLİKTE yükselt (F8.6; ayrı oturum, APK ile
-  doğrula).
+## 4. Sonra yapılacak → `KALAN_ISLER_PLANI.md` (F18.17–F18.20, F18.22)

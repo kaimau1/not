@@ -83,7 +83,7 @@ kullanıcıyla `git` "dubious ownership" verirse:
 | 14 | Anlaşılırlık: adlar, ayarlar, kılavuz, ipuçları | Ö4 | Bitti | 2026-10-31 | 6/6 (F14.6 KARAR: önerilen uygulandı); ek istek: klasör şeridinde sayı üst simge, Tüm klasörler simge, Gelen + Paylaşılan tek liste; web görüntüsü ALINMADI |
 | 15 | Erişilebilirlik | Ö3 | Bitti | 2026-10-31 | 7/7 (F15.1 KARAR: öneri uygulandı, varsayılan mevcut davranış); 1794/1794 test; TalkBack/en büyük yazı turu KALANLAR'da |
 | 16 | Görsel bütünlük ve tekrar temizliği | Ö5 | Bitti | 2026-10-31 | 5/5; `AppIcons` + `SheetHeader`/`SectionLabel` + `FixedColors` + `NoteListSkeleton`/`ErrorState`; `visual_consistency_test` (10); 1804/1804 test; tema ekran turu KALANLAR'da |
-| 17 | Ölçüm, uçtan uca test, cihaz turu | Ö2 | Bekliyor | | |
+| 17 | Ölçüm, uçtan uca test, cihaz turu | Ö2 | Taşındı | 2026-11-01 | `KALAN_ISLER_PLANI.md`'ye: F17.1 → F18.7, F17.2 → F18.8, F17.3 → F18.9, F17.4 → F18.31, F17.5 → F18.23; web turu F18.10; cihaz turları F19.C |
 
 ## Özet — en önemli bulgular
 
@@ -830,6 +830,9 @@ temadan.
 "bu ne?" diye sorduğun yer kaldı mı.
 
 ## FAZ 17 — Ölçüm, uçtan uca test, cihaz turu
+
+> **TAŞINDI (2026-11-01) → `KALAN_ISLER_PLANI.md`** (F18.7–F18.10, F18.23,
+> F18.31, F19.B6, F19.C). Aşağıdaki maddeler kayıt için; burada işaretlenmez.
 
 Yapılanların cihazda doğru ve akıcı olduğunu ölçerek bitirir.
 
