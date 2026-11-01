@@ -30,7 +30,9 @@ açıkken (taşma yok; Tümü + kalın/renk/boyut; metin seçince alçalma gör�
 hâl, geri dönmeden önce, bu sürüme dön; AI öncesi görülmedi), not kilidi (şifre, 5 yanlışta bekleme, silmede de
 soruyor; desen ve Unuttum sonucu görülmedi), çöp listesi, Paylaş levhası (PDF seçici), Paylaş → Notlar →
 Balonlu, balon yazma + Balonlar listesi, ses kaydı nota giriyor (çalma görülmedi), liste Seç/yıldız menüsü.
-Telefonda ekran kilidi yok: kilit yöntemi "Parmak izi" iken not doğrulamasız açılır (kasıtlı, `note_guard.dart`).
+Tur 3 hata düzeltti; v1.1.578 telefona kurulup doğrulandı: izinsiz paylaşım çökmüyor (uygulama kapalı/açık),
+izinli paylaşım çalışıyor, biçim işaretleri erişilebilirlik metninde ve sürüm önizlemesinde yok. Toast metni gözle
+görülmedi (günlükte kayıt var); TalkBack'in nasıl okuduğu dinlenmedi. Telefonda ekran kilidi yok: kilit yöntemi "Parmak izi" iken not doğrulamasız açılır (kasıtlı, `note_guard.dart`).
 Geri kalan ~125 madde denenmedi. Yapılamayanlar: dosya seçici telefonda Dosya Okuyucu'ya gidiyor (başka
 uygulama; ek ekleme denenmedi), widget (başlatıcıya dokunmak gerekir), en büyük yazı (sistem ayarı).
 - [ ] **Veri kaybı — kanıt bekliyor:** liste notunda bir maddenin metni boşaldı ("Boş madde"), adımlar
