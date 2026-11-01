@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="share_unreadable">Paylaşılan dosya okunamadı: gönderen uygulama izin vermedi.</string>
     <string name="shortcut_voice_short">Sesli not</string>
     <string name="shortcut_voice_long">Sesli not al</string>
     <string name="widget_voice_label">Sesli Not</string>

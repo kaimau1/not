@@ -2,7 +2,7 @@
 
 Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web hedefli (Windows sürümü 2026-10-19'da kaldırıldı — bilgisayarda web kullanılır). AI özellikleri Gemini tabanlı: asistan, sesli komut, canlı konuşma çevirisi, semantik arama, OCR, PDF sohbet, günlük brifing. Dil: Türkçe.
 
-> 🔐 **İmza anahtarı**: `android/app/notlar-release.jks` (gitignore'lu, commit'lenmiyor) + parolalar `android/key.properties`. **`Desktop\notlar-keystore\` klasörü ARTIK YOK** — 2026-08-04'te kontrol edildi, tek kopya repo klasöründe. Asla commit'leme, grafa/zip'e katma; **kaybolursa aynı imzayla güncelleme yayınlanamaz — makine dışında bir yedeği olmalı.** CI imzası GitHub Secrets üzerinden.
+> 🔐 **İmza anahtarı**: `Desktop\Yazılımlar\notlar-keystore\notlar-release.jks` (repo DIŞINDA; 2026-11-01'de doğrulandı — repo klasöründe `android/app/*.jks` ve `android/key.properties` YOK, yani yerel imzalı derleme için önce ikisi yerine konmalı). Kullanıcı makine dışı yedeği aldığını bildirdi (2026-11-01; yeri bu dosyada tutulmuyor). Asla commit'leme, grafa/zip'e katma, içeriğini yazdırma; **kaybolursa aynı imzayla güncelleme yayınlanamaz.** CI imzası GitHub Secrets üzerinden.
 
 ## Komutlar
 > ⚠️ **`flutter` PATH'te DEĞİL** (2026-08-30'da doğrulandı): tam yol `C:\src\flutter\bin\flutter.bat`. Bash aracından `"C:/src/flutter/bin/flutter.bat" test`. "flutter: command not found" görünce SDK yok sanma — 2026-08-30'un ilk turu bu yüzden testleri hiç koşmadan 3 KIRMIZI test commit'ledi ve aynı bug iki tur kaçtı.
@@ -19,7 +19,7 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web he
 - Firestore/Storage kural değişince: önce `cd rules-test && npm ci && npm test` (emülatör, Java 11+ — CI `rules` işi de koşar), yayın main push'ta CI'da (elle: `firebase deploy`)
 
 ## Hafıza (usta koordineli — 3 katman)
-- Kod yapısı        → graphify-out/     (oku: GRAPH_REPORT.md · güncelle: elle `graphify update .` — depoda otomatik kanca YOK; grafik 2026-07-30'dan (`ebba874e`) beri BAYAT, satır/dosya bilgisini koddan doğrula)
+- Kod yapısı        → graphify-out/     (oku: GRAPH_REPORT.md · güncelle: elle `graphify update .` — depoda otomatik kanca YOK; grafik son 2026-11-01 (`4d556dc`) güncellendi; kod ilerledikçe bayatlar, satır/dosya bilgisini koddan doğrula)
 - Proje ne/niye     → HAFIZA.md         (≤30 KB, geçerli kararlar/tuzaklar — oku: iş başı · yaz: iş sonu, ilgili bölüme; değişen kuralı GÜNCELLE) · tarihçe `HAFIZA_ARSIV.md` (2026-10-19'a kadar, dondurulmuş, grep ile)
 - Kullanıcı tercihi → .claude memory/   (otomatik, projeler-arası — proje bilgisi buraya YAZILMAZ)
 Yaz kuralı: usta rule 12 / YAZ — tetikleyici (kalıcı karar, bug kök nedeni, yanlış yol) oluştuysa iş bitmeden yaz. Sır/anahtar/kişisel veri hafızaya YAZILMAZ.

@@ -118,7 +118,7 @@ extension _EditorFind on _NoteEditorScreenState {
         );
         return;
       }
-      final length = editable.text?.toPlainText().length ?? 0;
+      final length = editable.text?.toPlainText(includeSemanticsLabels: false).length ?? 0;
       final start = hit.match.start.clamp(0, length);
       final end = hit.match.end.clamp(start, length);
       final boxes = editable.getBoxesForSelection(

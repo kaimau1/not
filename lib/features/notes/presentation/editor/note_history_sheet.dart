@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/rich_text.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../data/notes_repository.dart';
 import '../../domain/note_version.dart';
@@ -107,13 +108,17 @@ class _HistoryList extends StatelessWidget {
     DateFormat format,
   ) {
     final l10n = context.l10n;
-    final text = [
-      if (v.title.trim().isNotEmpty) v.title.trim(),
-      if (v.body.trim().isNotEmpty) v.body.trim(),
-      for (final i in v.items) '${i.checked ? '☑' : '☐'} ${i.text}',
-      for (final p in v.textPages)
-        if (p.body.trim().isNotEmpty) p.body.trim(),
-    ].join('\n\n');
+    // Biçim işaretleri düz metin önizlemesinde ham görünürdü (cihaz turu
+    // 2026-11-01: "%%1:##5:**yazı**##%%").
+    final text = stripRichMarkers(
+      [
+        if (v.title.trim().isNotEmpty) v.title.trim(),
+        if (v.body.trim().isNotEmpty) v.body.trim(),
+        for (final i in v.items) '${i.checked ? '☑' : '☐'} ${i.text}',
+        for (final p in v.textPages)
+          if (p.body.trim().isNotEmpty) p.body.trim(),
+      ].join('\n\n'),
+    );
     return showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(

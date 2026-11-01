@@ -24,6 +24,19 @@ klasörle süzme, el yazısı → nota görsel, PDF → Balonlu, balon yazma, Ba
 misafir AI kartı, Paylaş levhası. Geri kalan hiçbir madde denenmedi (token bütçesi); Google
 hesabı, ikinci cihaz, tablet, S Pen, Android 13+, web, TalkBack sesi bu telefonda/oturumda yapılamaz.
 
+**2026-11-01 Faz 19 cihaz turu (aynı telefon, misafir, v1.1.572):** yalnız 1 madde tam görülüp silindi
+(madde ortasında Enter + eskiyen menü tarifi). Kısmen görülenler listede duruyor: biçim paneli klavye
+açıkken (taşma yok; Tümü + kalın/renk/boyut; metin seçince alçalma görülmedi), sürüm geçmişi (açıldığı
+hâl, geri dönmeden önce, bu sürüme dön; AI öncesi görülmedi), not kilidi (şifre, 5 yanlışta bekleme, silmede de
+soruyor; desen ve Unuttum sonucu görülmedi), çöp listesi, Paylaş levhası (PDF seçici), Paylaş → Notlar →
+Balonlu, balon yazma + Balonlar listesi, ses kaydı nota giriyor (çalma görülmedi), liste Seç/yıldız menüsü.
+Telefonda ekran kilidi yok: kilit yöntemi "Parmak izi" iken not doğrulamasız açılır (kasıtlı, `note_guard.dart`).
+Geri kalan ~125 madde denenmedi. Yapılamayanlar: dosya seçici telefonda Dosya Okuyucu'ya gidiyor (başka
+uygulama; ek ekleme denenmedi), widget (başlatıcıya dokunmak gerekir), en büyük yazı (sistem ayarı).
+- [ ] **Veri kaybı — kanıt bekliyor:** liste notunda bir maddenin metni boşaldı ("Boş madde"), adımlar
+  3 denemede yeniden üretilemedi (bölme+birleştirme, işaretleme, yıldız, Seç, dosya seçici, çökme, zorla
+  kapatma). Tekrar görülürse tam adımları yaz; tahminle yama yapılmadı.
+
 
 **2026-10-31 Faz 16 (görsel bütünlük) — koyu tema + simgeler**
 - [ ] Koyu, kâğıt ve kırık beyaz temada: ana ekran, klasör, Arşiv, Çöp,
@@ -198,9 +211,6 @@ doluydu; ilk `[apk]` koşusunda önce derlemenin yeşil olduğuna bak:
 **2026-10-28 madde + biçim + giriş turu**
 - [ ] Çok işaretli maddeli notta işaretlemek / yazmak / görsel eklemek
   akıcı (eskiden donma-kasma).
-- [ ] Madde ortasında Enter → madde imleçten bölünüyor, imleç yeni maddenin
-  başında. Maddeye uzun bas → iki sıralı sade menü (yıldız·seç·taşı·sil /
-  çizgi türleri + ⚙).
 - [ ] Biçim paneli: üç sıra; başlık hapı, renk tonu tek dokunuş; yazı/vurgu
   anahtarı; boyut −/+; Aa tepsisinde yazı tipi + kaydırıcılar.
 - [ ] Paylaş → Notlar'a ekle → Var olan nota: ana ekran kartlarıyla ızgara,

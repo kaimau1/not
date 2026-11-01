@@ -57,7 +57,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
 | 18 | Bulut oturumunda yapılabilecekler (31 madde) | Bekliyor (0/31) | | F bölümü yalnız Play'e çıkılırsa |
-| 19 | Telefon, konsol, hesap işleri (senin) | Bekliyor | | A bölümü acil |
+| 19 | Telefon, konsol, hesap işleri (senin) | Kısmen | 2026-11-01 | A3, B5, B7, C3 bitti; B6 ertelendi (ölçüm zaman aşımı); C1/C2/C4 kısmen (nedenleri maddelerde); A1, A2, A4, A5, B1–B4, C5, D açık |
 
 ---
 
@@ -347,11 +347,9 @@ hâlâ."** Karar değişmeden bu bölüme başlanmaz; değişirse önce F18.27.
   APK Play'den (iç test kanalı da olur) kuruluyorsa; o zamana kadar F19.A1.
   Ters sıra (önce zorla) herkesi kilitler.
 
-- [ ] **F19.A3 İmza anahtarının makine dışı yedeği.**
-  `android/app/notlar-release.jks` + `android/key.properties` şifreli olarak
-  Drive/harici diske. Kaybolursa aynı imzayla güncelleme çıkmaz. Yaptıktan
-  sonra oturuma söyle → CLAUDE.md ve YAPILACAKLAR.md'deki "tek kopya"
-  uyarıları güncellenir.
+- [x] **F19.A3 İmza anahtarının makine dışı yedeği.**
+  **Yapıldı (2026-11-01):** kullanıcı yedeklediğini bildirdi (oturum yedeği görmedi). Anahtar
+  `Desktop\Yazılımlar\notlar-keystore\`; CLAUDE.md ve YAPILACAKLAR.md düzeltildi.
 
 - [ ] **F19.A4 Tam yedeği dene** (← F18.4): telefonda tam yedek al, web'de
   (ya da başka hesapta) geri yükle — görseller, çizimler, balonlar, sayfalar,
@@ -372,23 +370,37 @@ hâlâ."** Karar değişmeden bu bölüme başlanmaz; değişirse önce F18.27.
   `drive.appdata` kapsamı.
 - [ ] **F19.B4** Crashlytics'i konsolda etkinleştir → Ayarlar → Hakkında →
   sürüm satırına uzun bas → "Çökert" → yeniden aç → konsolda ilk rapor.
-- [ ] **F19.B5** Eski Actions artifact'lerini sil (depolama kotası).
+- [x] **F19.B5** Eski Actions artifact'lerini sil (depolama kotası).
+  **Yapıldı (2026-11-01):** 33 `notlar-android-apk`, 1434 MB silindi; v1.1.572 sürüm dosyası yerinde.
 - [ ] **F19.B6** (← F18.7 bulutta yapılamazsa) Actions → Derleme → Run
   workflow → "Kare ölçümü"; `perf-summary` p90'larını oturuma ver.
-- [ ] **F19.B7** (← F18.25 bulutta yapılamazsa) Windows'ta `graphify update .`.
+  **ERTELENDİ (2026-11-01):** koşu 41340200235 sonuç vermedi: profil APK 8,6 dk'da derlendi, `flutter drive`
+  sonra 34 dk çıktısız kaldı, 45 dk `timeout-minutes` işi iptal etti, `perf-summary` yok. Neden bulunmadı
+  (tahmin: yazılım GPU'lu emülatörde `pumpAndSettle` bitmiyor). Tekrar koşmadan önce `integration_test/perf_test.dart`
+  incelenmeli. Tuzak: bu tetikleme Deploy ve Release'i de koştu, v1.1.573 yayınlandı.
+- [x] **F19.B7** (← F18.25 bulutta yapılamazsa) Windows'ta `graphify update .`.
+  **Yapıldı (2026-11-01):** 18 980 düğüm; CLAUDE.md'deki "bayat" notu güncellendi.
 
 ### C. Cihaz doğrulama
 
 - [ ] **F19.C1 Duman testi** (← F18.31): ~10 dakikalık telefon + web turu;
   sorun görünce madde numarasıyla bildir. F18.31 bitene kadar liste
   `KALANLAR.md` §2'deki 143 madde.
+  **Kısmen (2026-11-01):** riskli akışlar misafirle denendi, 3 hata düzeltildi; sonuç ve denenmeyenler
+  KALANLAR §2'nin başında. Liste hâlâ duruyor.
 - [ ] **F19.C2 TalkBack + en büyük yazı turu** (Faz 15 "senin
   yapacakların"): TalkBack açıkken not oluştur, listeyi işaretle, PDF'e balon
   bırak, paylaş; yazı en büyük + kalın metin (ayrıntı KALANLAR §2 Faz 15).
-- [ ] **F19.C3 Kılavuzu baştan sona oku**, yanlış kalan yeri bildir (Faz 14).
+  **Kısmen (2026-11-01):** semantik etiketler uiautomator'la okundu (madde, balon, kart; işaret sızıntısı
+  düzeltildi). KALAN: TalkBack sesi ve en büyük yazı (sistem ayarı değiştirilmedi) kullanıcıda.
+- [x] **F19.C3 Kılavuzu baştan sona oku**, yanlış kalan yeri bildir (Faz 14).
+  **Yapıldı (2026-11-01):** koda ve cihaza göre düzeltildi (başlık çipi, ortak çalışanlar, Ekle grupları,
+  Gelen süzmesi, paylaşılanların yeri, not kilidi yöntemleri, Hatırlat).
 - [ ] **F19.C4 Kişisel köprüler uçtan uca**: Harita'da "Hey Harita, not al…"
   (uygulama kapalıyken ve çevrimdışı), Kanallarım "Not al" (YouTube klasörü,
   transkript), Asistan not al + `ASISTAN_SORGU`.
+  **Kısmen (2026-11-01):** alıcı izinsiz yayını reddediyor (doğru). Uçtan uca denenemedi: Harita, Kanallarım
+  ve Asistan bu telefonda kurulu değil; uygulamalar kurulu cihazda kullanıcıda.
 - [ ] **F19.C5 Faz 18'in yeni işleri cihazda** (← ilgili F18): tekrarlayan
   hatırlatıcı (telefonu yeniden başlatınca da çalıyor), Keep Takeout içe
   aktarma, uygulama kilidi (bildirimden/widget'tan açılış dahil), FlutterFire

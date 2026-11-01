@@ -17,8 +17,8 @@ Your notes appear as cards grouped by **TODAY / THIS WEEK / EARLIER**; pinned no
 - **Long-press a card:** multi-select — move, archive, duplicate or delete several notes at once.
 - **Search:** type in the box at the top. Tapping the box reveals the ✨ **Meaning** switch on its right: off, it finds words; on, it understands what you mean ("car expenses" also finds the "tyre change" note).
 - **Avatar at the top right:** your account. The number on it counts pending friend requests; tap it for **Contacts · Premium · Account settings**.
-- **Inbox** (envelope icon): in the folder strip, right next to **All**. Copies sent to you and notes shared with you are in **one list**; a small tag on each item tells them apart (**Received** = a copy waiting to be accepted, **Shared** = a shared note). A red badge appears on the chip's corner when something new arrives.
-- **Filter:** **View** (grid or list; images on cards, attachments on cards and shared notes as switches), **Type** (text, list, numbered), **Status** (pinned, starred, with alarm, locked, no folder or tag), tag and **Sort** (recently updated by default — date groups show in this order; title, most worked on; **Reorder manually** to drag cards into place).
+- **Inbox** (envelope icon): in the folder strip, right next to **All**. Copies sent to you and notes shared with you are in **one list**; a small tag on each item tells them apart (**Received** = a copy waiting to be accepted, **Shared** = a shared note). Tapping the chip filters the home screen like any folder; switching to another folder or All, or pressing back, clears it. A red badge appears on the chip's corner when something new arrives.
+- **Filter:** **View** (grid or list; images on cards, attachments on cards, shared notes and **shared notes below mine** as switches), **Type** (text, list, numbered), **Status** (pinned, starred, with alarm, locked, no folder or tag), tag and **Sort** (recently updated by default — date groups show in this order; title, most worked on; **Reorder manually** to drag cards into place).
 - **Folder strip:** switch folders by tapping or by **swiping sideways**. The number of notes is written small at the top-right corner of each folder icon; empty folders are faded and last. The **folders icon** (All folders) at the right of the strip opens every folder; reorder them there.
 - **Quick note row** (off by default): turn it on in Settings → **Modules & quick note** → Quick note row, then type into "New note…" at the top of the list and save — without opening a note.
 - **Home screen background:** ⋮ → Home screen background for an image or pattern.
@@ -38,13 +38,13 @@ Bottom bar, left to right:
 - **Aa — Format:** bold, italic, underline, text colour, highlight, heading / subheading; the note's font, size and transparency. Page colour, border highlight and background image live in the **palette** on the top bar (one place). Applies to the selection, or to the word you type next.
   - The panel's top row is the **scope**: **Cursor · Word · Line · All**. Pick "Line", put the cursor on a line, then B / colour / size **+ −** — the whole line changes, no manual selection. The choice is remembered for the session. When you select text yourself this row hides — the selection is the scope; **All** applies every format to the whole field.
   - On an item the panel has a **Line below** row: solid, dashed, dotted (tap the same one to remove) and a settings button.
-- **+ — Add:** an icon grid — **Note content** (text block, list, embed attachment in selection), **Images and drawing** (image, camera, scan, drawing) and **Attachments** (**Add file** — one picker: image, PDF, slides, video or audio —, voice recording, record video, YouTube, QR). Long-press an icon to see what it does.
+- **+ — Add:** an icon grid — **Note content** (text block, list, embed attachment in selection), **Files and links** (**Add file** — one picker: image, PDF, slides, video or audio —, image, YouTube video, drawing) and **Camera and recording** (take photo, scan document, voice recording, record video, QR). Long-press an icon to see what it does.
 - **🔍 — Search in note:** matches are highlighted as you type.
 - **Share.**
 - The coloured capsule on the right: **✦ AI** (with **AI voice note** at the top of its sheet; see the AI section), **Audio recording** and the **Dictate** microphone. Hide them from Personalise.
-Top bar: **undo / redo** (always side by side), pin, add people (shared note) and the ⋮ menu. The ⋮ menu's top row has star, move to folder, version history and listen; below are the same groups as the card menu: **Organize** (**Notebook view** and paper, convert to list/text, two columns, sort items, images to attachments, clear content), **Copy** (duplicate, save as template, **collect into notebook**), **Tools** (statistics, **calculator**), **Protection and storage** (archive, lock, sync). **Search** and **Share** also appear in this menu when they don't fit the bottom bar. A thin bottom row holds **Customize screen** and **Settings**. The bottom bar keeps the same order for every note type: Format · Add · Search · Share · Attachments, with the type-specific button (☑ or Select) always last. Copying to the clipboard, sending to a friend and exporting live in the **Share** sheet.
+Top bar: **undo / redo** (always side by side), palette, pin and the ⋮ menu. The ⋮ menu's top row has star, move to folder, version history and listen; below are the same groups as the card menu: **Organize** (**Notebook view** and paper, convert to list/text, two columns, sort items, images to attachments, clear content), **Copy** (duplicate, save as template, **collect into notebook**), **Tools** (add to home screen, statistics, **calculator**), **Protection and storage** (archive, lock, sync). **Search** and **Share** also appear in this menu when they don't fit the bottom bar. A thin bottom row holds **Customize screen** and **Settings**. The bottom bar keeps the same order for every note type: Format · Add · Search · Share · Attachments, with the type-specific button (☑ or Select) always last. Copying to the clipboard, sending to a friend and exporting live in the **Share** sheet.
 - In lists, long-press an item and drag to reorder; use "Select" to copy/delete several items. **Copy and check** in the selection bar copies the selected items and checks them in one tap.
-- The **+** next to the title: **New page**, alarm, location reminder (Android), folder, tag and tag/title suggestions.
+- The **chip** next to the title (tag · alarm · person icons): **New page**, alarm, location reminder (Android), **Collaborators**, folder, tag and tag/title suggestions. The chip's person icon shows how many collaborators there are.
 - The item you're editing shows a small **×** delete button on the right (the line width doesn't change); the item menu (long-press its left area) and the scribble gesture delete too.
 
 ## Item gestures {#gestures}
@@ -59,7 +59,7 @@ Draw over an item **with your finger or a pen**:
 
 ## Note pages {#pages}
 A note can have several **pages**; each page has its own text and images.
-1. Tap the **+** next to the title → **New page**.
+1. Tap the **chip** next to the title → **New page**.
 2. A **‹ Page 2 / 3 ›** bar appears under the title; use the arrows to move between pages.
 3. The bar's **new page** button adds a page after the current one; **delete** removes the current page.
 - Images of a deleted page are not lost — they move to the neighbouring page; the text comes back with **Undo**.
@@ -168,15 +168,15 @@ The **AI** screen (⋮, or the rail on the left on wide screens):
 
 ## Organising: folders, tags, archive {#organize}
 - **Folders:** create, colour and reorder them; move a note with ⋮ → Move to folder. A **hidden** folder's notes don't appear on the home screen; reveal them with ⋮ → Hidden folders and your fingerprint/face.
-- **Tags:** add with the + next to the title; long-press a tag in the filter sheet to rename or delete it.
+- **Tags:** add from the chip next to the title; long-press a tag in the filter sheet to rename or delete it.
 - **Pin:** keep important notes on top and in the Pinned filter. **Star** is a separate mark (Starred filter).
-- **Lock:** lock a note with fingerprint/face; its content never leaks into search, widgets or AI.
+- **Lock:** lock a note; choose how it opens in Settings → **Note lock** (fingerprint, password or pattern; password or pattern on the web). Its content never leaks into search, widgets or AI. A lock is not encryption: it only stops this app from showing the note.
 - **Archive** and **Bin:** from the ⋮ menu; restore from the bin.
 - **Templates:** + → From template; preview ready-made templates and pick items; turn your own note into one with ⋮ → **Save as template**, and change it in the template editor.
 - **Notebook:** + → Templates → Notebook, or ⋮ → **Notebook view** in any note: lined/grid/dotted paper and pages. Collect another note's attachments into a notebook with ⋮ → **Collect into notebook**.
 
 ## Reminders {#reminders}
-- Use **+ → Alarm** next to the title to pick a date and time; you get a notification when it's due.
+- Use **chip → Remind me** next to the title to pick a date and time; you get a notification when it's due.
 - **Location reminder:** the note arrives as a notification when you arrive at or leave a place (location permission must be "always").
 - All reminders are on the ⋮ → **Reminders** screen.
 - The **Today** widget shows today's reminders with their times on your home screen.
@@ -195,7 +195,7 @@ An attachment you've opened (image, PDF, slides, video, YouTube) can be sent str
 Working together:
 - **Contacts:** add friends from the avatar at the top right → Contacts.
 - **Send to a friend** (in the Share sheet): an independent copy of the note lands in your friend's **Inbox** on the home screen; once accepted it becomes their own note.
-- **Shared note:** the add-people button in the top bar; you both edit the same note at the same time.
+- **Shared note:** **chip** next to the title → **Collaborators**; you both edit the same note at the same time.
 - **Folder sharing:** with read / write permission; a shared folder has its own chat.
 From other apps: choose **Share → Notes** anywhere (text, link, image, PDF, slides, video). You choose whether to make a new note or add to an existing one.
 

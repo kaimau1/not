@@ -922,7 +922,7 @@ List<InlineSpan> _richSpansUncached(
           ),
         );
       }
-      spans.add(TextSpan(text: box[0], style: markerStyle));
+      spans.add(TextSpan(text: box[0], style: markerStyle, semanticsLabel: ''));
       cursor = box.end;
     }
     if (cursor < part.length) {
@@ -954,10 +954,15 @@ List<InlineSpan> _richSpansUncached(
         TextSpan(
           text: m[0]!.substring(0, _openLength(format, index)),
           style: markerStyle,
+          // TalkBack işareti okumasın ("yüzde yüzde bir iki nokta…"); boş
+          // etiket yalnız erişilebilirlik metnini etkiler (cihaz turu 2026-11-01).
+          semanticsLabel: '',
         ),
       );
       walk(content, mark.applied(format, index));
-      spans.add(TextSpan(text: format.marker, style: markerStyle));
+      spans.add(
+        TextSpan(text: format.marker, style: markerStyle, semanticsLabel: ''),
+      );
       cursor = m.end;
     }
     if (cursor < part.length) {

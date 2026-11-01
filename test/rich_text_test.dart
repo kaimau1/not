@@ -405,4 +405,16 @@ void main() {
       expect(r.text, '_bir_ iki');
     });
   });
+
+  // Cihaz turu 2026-11-01: biçim işaretleri erişilebilirlik metnine sızıyordu.
+  test('işaretler TalkBack metninde yok, düz metin ve konumlar aynı', () {
+    const raw = '%%1:##5:**Kalın yazı**##%% sonu';
+    final span = TextSpan(children: _spans(raw));
+    expect(span.toPlainText(includeSemanticsLabels: false), raw);
+    final spoken = span
+        .getSemanticsInformation()
+        .map((info) => info.semanticsLabel ?? info.text)
+        .join();
+    expect(spoken, 'Kalın yazı sonu');
+  });
 }
