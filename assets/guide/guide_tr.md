@@ -17,8 +17,8 @@ Notların kart olarak, **BUGÜN / BU HAFTA / DAHA ÖNCE** gruplarıyla dizilir; 
 - **Karta uzun bas:** çoklu seçim — birden çok notu birlikte taşı, arşivle, çoğalt ya da sil.
 - **Arama:** üstteki kutuya yaz. Kutuya dokununca sağında ✨ **Anlam** anahtarı çıkar: kapalıyken kelimeyi arar, açıkken ne demek istediğini anlar ("araba masrafları" yazınca "lastik değişimi" notunu da bulur).
 - **Sağ üstteki avatar:** hesabın. Köşesindeki sayı bekleyen arkadaşlık isteğidir; dokununca **Kişiler · Premium · Hesap ayarları**.
-- **Gelen** (zarf simgesi): klasör şeridinde **Tümü**'nün hemen yanında. Sana gönderilen kopyalar ve seninle ortak notlar **tek listede**; her öğenin başındaki küçük etiket hangisi olduğunu söyler (**Gelen** = kabul bekleyen kopya, **Paylaşılan** = ortak not). Yeni bir şey gelince çipin köşesinde kırmızı rozet çıkar.
-- **Süz:** **Görünüm** (ızgara ya da liste; kartta görseller, kartta ekler, paylaşılan notlar anahtarla), **Tür** (metin, liste, sıralı), **Durum** (sabitli, yıldızlı, alarmlı, kilitli, klasörsüz ve etiketsiz), etiket ve **Sıralama** (varsayılan son güncellenen — tarih grupları bu sıralamada görünür; başlık, en çok çalışılan; **Elle sırala** ile kartları sürükleyerek diz).
+- **Gelen** (zarf simgesi): klasör şeridinde **Tümü**'nün hemen yanında. Sana gönderilen kopyalar ve seninle ortak notlar **tek listede**; her öğenin başındaki küçük etiket hangisi olduğunu söyler (**Gelen** = kabul bekleyen kopya, **Paylaşılan** = ortak not). Çipe dokununca öbür klasörler gibi ana ekran buna süzülür; başka klasöre ya da Tümü'ne geçince, geri tuşuyla kalkar. Yeni bir şey gelince çipin köşesinde kırmızı rozet çıkar.
+- **Süz:** **Görünüm** (ızgara ya da liste; kartta görseller, kartta ekler, paylaşılan notlar ve **paylaşılanlar altta** anahtarla), **Tür** (metin, liste, sıralı), **Durum** (sabitli, yıldızlı, alarmlı, kilitli, klasörsüz ve etiketsiz), etiket ve **Sıralama** (varsayılan son güncellenen — tarih grupları bu sıralamada görünür; başlık, en çok çalışılan; **Elle sırala** ile kartları sürükleyerek diz).
 - **Klasör şeridi:** klasörler arasında dokunarak ya da ekranı **yana kaydırarak** geç. Klasördeki not sayısı simgesinin sağ üst köşesinde küçük rakamla yazar; boş klasörler soluk ve sonda. Şeridin sağındaki **klasörler simgesi** (Tüm klasörler) bütün klasörleri açar; sıralarını da oradan değiştir.
 - **Hızlı not satırı** (varsayılan kapalı): Ayarlar → **Eklentiler ve hızlı not** → Hızlı not satırı ile açılınca listenin başında "Yeni not…" alanı çıkar; yazıp kaydet — not açmadan.
 - **Ana ekran zemini:** ⋮ → Ana ekran zemini ile görsel ya da desen seç.
@@ -42,9 +42,9 @@ Alt çubuk soldan sağa:
 - **🔍 — Notta ara:** eşleşmeler yazarken vurgulanır.
 - **Paylaş.**
 - Sağdaki renkli kapsül: **✦ Yapay zekâ** (levhanın en üstünde **AI sesli not**; bkz. Yapay zekâ bölümü), **Ses kaydı** ve **Dikte** mikrofonu. Kişiselleştir'den gizlenebilirler.
-Üst çubuk: **geri al / geri getir** (ikisi hep yan yana), sabitle, kişi ekle (ortak not) ve ⋮ menüsü. ⋮ menüsünün üst satırında yıldızla, klasöre taşı, sürüm geçmişi ve sesli dinle; altında kart menüsüyle aynı gruplar: **Düzenle** (**Defter görünümü** ve kâğıt deseni, listeye/metne dönüştür, 2 sütun, maddeleri sırala, görselleri eke dönüştür, içeriği temizle), **Kopyala** (çoğalt, şablon olarak kaydet, **deftere topla**), **Araçlar** (istatistikler, **hesap makinesi**), **Koruma ve depolama** (arşivle, kilitle, senkron). Alt çubuğa sığmayan **Ara** ve **Paylaş** de bu menüde çıkar. En altta ince satırda **Ekranı düzenle** ve **Ayarlar**. Alt çubuğun sırası her not türünde aynı: Biçim · Ekle · Ara · Paylaş · Ekler; türe özgü düğme (☑ ya da Seç) hep en sonda. Panoya kopyalamak, arkadaşa göndermek ve dışa aktarmak **Paylaş** levhasında.
+Üst çubuk: **geri al / geri getir** (ikisi hep yan yana), sabitle ve ⋮ menüsü. ⋮ menüsünün üst satırında yıldızla, klasöre taşı, sürüm geçmişi ve sesli dinle; altında kart menüsüyle aynı gruplar: **Düzenle** (**Defter görünümü** ve kâğıt deseni, listeye/metne dönüştür, 2 sütun, maddeleri sırala, görselleri eke dönüştür, içeriği temizle), **Kopyala** (çoğalt, şablon olarak kaydet, **deftere topla**), **Araçlar** (istatistikler, **hesap makinesi**), **Koruma ve depolama** (arşivle, kilitle, senkron). Alt çubuğa sığmayan **Ara** ve **Paylaş** de bu menüde çıkar. En altta ince satırda **Ekranı düzenle** ve **Ayarlar**. Alt çubuğun sırası her not türünde aynı: Biçim · Ekle · Ara · Paylaş · Ekler; türe özgü düğme (☑ ya da Seç) hep en sonda. Panoya kopyalamak, arkadaşa göndermek ve dışa aktarmak **Paylaş** levhasında.
 - Liste notlarında maddeyi basılı tutup sürükleyerek sırala; "Seç" ile birden çok maddeyi kopyala/sil. Seçim çubuğundaki **Kopyala ve işaretle** seçilenleri panoya alır ve tek dokunuşta işaretler.
-- Başlığın sağındaki **+**: **Yeni sayfa**, alarm, konum hatırlatıcısı (Android), klasör, etiket ve etiket/başlık önerisi.
+- Başlığın sağındaki **+**: **Yeni sayfa**, alarm, konum hatırlatıcısı (Android), **Ortak çalışanlar**, klasör, etiket ve etiket/başlık önerisi. Yanındaki kişi simgesi ortak çalışan sayısını gösterir.
 - Yazdığın maddenin sağında küçük **×** silme düğmesi durur (satırın genişliği değişmez); madde menüsü (sol bölgeye basılı tut) ve karalama jesti de siler.
 
 ## Madde jestleri {#gestures}
@@ -170,7 +170,7 @@ Ana ekrandaki **Yapay zekâ** ekranı (⋮ ya da geniş ekranda soldaki ray):
 - **Klasörler:** oluştur, renklendir, sırala; notu ⋮ → Klasöre taşı ile taşı. Klasörü **gizli** yaparsan notları ana ekranda görünmez; ⋮ → Gizli klasörler ve parmak izi/yüz ile açılır.
 - **Etiketler:** başlığın yanındaki + ile ekle; Süz levhasında etikete uzun basarak yeniden adlandır ya da sil.
 - **Sabitle:** önemli notlar üstte ve Sabitli süzgecinde. **Yıldızla** ayrı bir işarettir (Yıldızlı süzgeci).
-- **Kilitle:** notu parmak izi/yüz kilidiyle kilitle; içeriği aramaya, widget'a ve yapay zekâya hiç sızmaz.
+- **Kilitle:** notu kilitle; nasıl açılacağını Ayarlar → **Not kilidi**'nden seç (parmak izi, şifre ya da desen; web'de şifre ya da desen). İçeriği aramaya, widget'a ve yapay zekâya hiç sızmaz. Kilit şifreleme değildir: yalnız uygulamanın notu göstermesini engeller.
 - **Arşiv** ve **Çöp kutusu:** ⋮ menüsünden; çöpten geri yükle.
 - **Şablonlar:** + → Şablondan; hazır şablonları önizle, maddeleri seç; kendi notunu ⋮ → **Şablon olarak kaydet** ile şablon yap, şablon düzenleyicide değiştir.
 - **Defter:** + → Şablon → Defter ya da herhangi bir notta ⋮ → **Defter görünümü**: çizgili/kareli/noktalı kâğıt ve sayfalar. Başka notun eklerini ⋮ → **Deftere topla** ile kopyalarıyla bir deftere toplar.
@@ -195,7 +195,7 @@ Açtığın bir eki (görsel, PDF, sunum, video, YouTube) tam ekran görüntüle
 Birlikte çalışma:
 - **Kişiler:** sağ üstteki avatar → Kişiler'den arkadaş ekle.
 - **Arkadaşa gönder** (Paylaş levhasında): notun bağımsız bir kopyası arkadaşının ana ekranındaki **Gelen**'e düşer; o kabul edince kendi notu olur.
-- **Ortak not:** üst çubuktaki kişi ekle düğmesi; ikiniz aynı notu aynı anda düzenlersiniz.
+- **Ortak not:** başlığın sağındaki **+** → **Ortak çalışanlar**; ikiniz aynı notu aynı anda düzenlersiniz.
 - **Klasör paylaşımı:** okuma / yazma yetkisiyle; paylaşılan klasörün kendi sohbeti var.
 Başka uygulamalardan: herhangi bir uygulamada **Paylaş → Notlar** de (metin, bağlantı, görsel, PDF, sunum, video). Yeni not mu, var olan bir nota mı ekleneceğini seçersin.
 
@@ -215,11 +215,11 @@ En üstte iki kart: **Kullanım kılavuzu** ve **Kişiselleştir** (hangi düğm
 - **Yapay zekâ:** model, kendi API anahtarın, günlük brifing, otomatik etiket/başlık, işaretli maddeleri koruma.
 - **Görünüm:** örnek metin, tema (sistem, açık, koyu, kâğıt, kırık beyaz), yazı tipi ve boyutu, **Dil** (Türkçe, İngilizce ya da sistem dili), uzun maddeler, madde jestleri, **Kartta görünenler** (canlı kart örneğiyle: sayaç, etiket, tarih, görsel, ekler, klasör, kâğıt…), koyu tema zamanlaması.
 - **Eklentiler ve hızlı not:** yapay zekâ, ses, video, tarama, çizim, şablon… eklentilerini aç/kapa; ana ekrandaki hızlı not satırı; **İpuçlarını yeniden göster**.
-- **Notlar ve klasörler:** yana kaydırma, klasör sırası, sıralama, ızgara/liste ve sütun sayısı (ana ekranda iki parmakla da değişir), paylaşılan notlar ana ekranda, içerikten not açılışı (Balonlu/Klasik), eklerin içinde arama.
+- **Notlar ve klasörler:** yana kaydırma, klasör sırası, sıralama, ızgara/liste ve sütun sayısı (ana ekranda iki parmakla da değişir), paylaşılan notlar ana ekranda (üstte ya da notlarının altında), içerikten not açılışı (Balonlu/Klasik), eklerin içinde arama.
 - **Sesli dinle ve dikte:** cihaz sesi, Türkçe ses ya da yapay zekâ sesi; okuma hızı ve tonu; dikte mikrofonunun kullanım şekli.
 - **İzinler:** mikrofon, kamera, bildirim, konum — durumu ve ayar ekranları.
 - **Senkron:** Google Drive bağlantısı ve Drive kullanımı, otomatik yükleme sınırı, bu cihazdaki önbellek, yedekleme.
-- **Hesap:** çıkış, hesabı silme; gizlilik politikası ve lisanslar.
+- **Hesap:** çıkış, hesabı silme, not kilidi; gizlilik politikası ve lisanslar.
 
 ## İpuçları {#tips}
 - Geri tuşu önce açık önizlemeyi, seçimi ya da levhayı kapatır; not ancak sonra kapanır.

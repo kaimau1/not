@@ -35,9 +35,8 @@ Geriye sadece **uygulamayı kurmak** ve **Gemini anahtarını girmek** kaldı.
 | Storage | kurallar yayınlandı (dosya başına 25 MB sınırı) |
 | GitHub secret'ları | 5/5 tanımlı |
 
-**İmza anahtarı:** `android/app/notlar-release.jks` (gitignore'lu) + parolalar
-`android/key.properties`. `Masaüstü\notlar-keystore\` klasörü ARTIK YOK — tek kopya
-repo klasöründe. ⚠️ **Makine dışında bir yedeği olmalı** (Drive, harici disk vb.).
+**İmza anahtarı:** `Masaüstü\Yazılımlar\notlar-keystore\notlar-release.jks` (repo
+dışında). Makine dışı yedek alındı (kullanıcı bildirdi, 2026-11-01).
 Kaybolursa aynı imza bir daha üretilemez; güncellemeler için uygulamayı silip yeniden
 kurman gerekir. CI imzası GitHub Secrets'tan.
 
