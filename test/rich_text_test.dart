@@ -410,7 +410,7 @@ void main() {
   test('işaretler TalkBack metninde yok, düz metin ve konumlar aynı', () {
     const raw = '%%1:##5:**Kalın yazı**##%% sonu';
     final span = TextSpan(children: _spans(raw));
-    expect(span.toPlainText(), raw);
+    expect(span.toPlainText(includeSemanticsLabels: false), raw);
     final spoken = span
         .getSemanticsInformation()
         .map((info) => info.semanticsLabel ?? info.text)

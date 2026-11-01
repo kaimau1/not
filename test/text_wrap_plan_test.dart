@@ -118,7 +118,7 @@ void main() {
       return found;
     }
 
-    expect(build().toPlainText(), c.text);
+    expect(build().toPlainText(includeSemanticsLabels: false), c.text);
     expect(hasColor(build(), link, 'www.ornek.com'), isTrue);
     // İLK paragrafa yazınca öbür paragraflar önbellekten gelir — ama
     // çizim aynı kalmalı.
@@ -126,7 +126,7 @@ void main() {
       text: 'ilk **kalın** satırX\nikinci www.ornek.com\nüçüncü',
       selection: const TextSelection.collapsed(offset: 20),
     );
-    expect(build().toPlainText(), c.text);
+    expect(build().toPlainText(includeSemanticsLabels: false), c.text);
     expect(hasColor(build(), link, 'www.ornek.com'), isTrue);
   });
 
@@ -163,7 +163,7 @@ void main() {
     c.videoTimestamps = true;
     expect(stampColored(), isTrue);
     expect(
-      c.buildTextSpan(context: ctx, withComposing: false).toPlainText(),
+      c.buildTextSpan(context: ctx, withComposing: false).toPlainText(includeSemanticsLabels: false),
       c.text,
     );
   });

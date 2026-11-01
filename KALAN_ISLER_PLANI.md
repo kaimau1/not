@@ -57,7 +57,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
 | 18 | Bulut oturumunda yapılabilecekler (31 madde) | Bekliyor (0/31) | | F bölümü yalnız Play'e çıkılırsa |
-| 19 | Telefon, konsol, hesap işleri (senin) | Kısmen | 2026-11-01 | A3, B5, B7, C3 bitti; B6 yukarıda; C1/C2/C4 kısmen (nedenleri maddelerde); A1, A2, A4, A5, B1–B4, C5, D açık |
+| 19 | Telefon, konsol, hesap işleri (senin) | Kısmen | 2026-11-01 | A3, B5, B7, C3 bitti; B6 ertelendi (ölçüm zaman aşımı); C1/C2/C4 kısmen (nedenleri maddelerde); A1, A2, A4, A5, B1–B4, C5, D açık |
 
 ---
 
@@ -374,6 +374,10 @@ hâlâ."** Karar değişmeden bu bölüme başlanmaz; değişirse önce F18.27.
   **Yapıldı (2026-11-01):** 33 `notlar-android-apk`, 1434 MB silindi; v1.1.572 sürüm dosyası yerinde.
 - [ ] **F19.B6** (← F18.7 bulutta yapılamazsa) Actions → Derleme → Run
   workflow → "Kare ölçümü"; `perf-summary` p90'larını oturuma ver.
+  **ERTELENDİ (2026-11-01):** koşu 41340200235 sonuç vermedi: profil APK 8,6 dk'da derlendi, `flutter drive`
+  sonra 34 dk çıktısız kaldı, 45 dk `timeout-minutes` işi iptal etti, `perf-summary` yok. Neden bulunmadı
+  (tahmin: yazılım GPU'lu emülatörde `pumpAndSettle` bitmiyor). Tekrar koşmadan önce `integration_test/perf_test.dart`
+  incelenmeli. Tuzak: bu tetikleme Deploy ve Release'i de koştu, v1.1.573 yayınlandı.
 - [x] **F19.B7** (← F18.25 bulutta yapılamazsa) Windows'ta `graphify update .`.
   **Yapıldı (2026-11-01):** 18 980 düğüm; CLAUDE.md'deki "bayat" notu güncellendi.
 
