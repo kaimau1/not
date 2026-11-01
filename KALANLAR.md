@@ -41,6 +41,9 @@ uygulama; ek ekleme denenmedi), widget (başlatıcıya dokunmak gerekir), en bü
 
 
 **2026-11-02 tablet listesi — TABLETTE GÖRÜLMEDİ (oturumda tablet bağlı değildi)**
+Telefonda görüldü (Mi Note 10 Lite, misafir, v1.1.583, `adb shell input stylus`): kalem sayfaya
+yazıyor ve tepsi açılıyor, metne imleç koymuyor; parmakla dokunup klavyeyle yazma; ✓ ile kapanma; geri
+dönüp yeniden açınca çizgiler duruyor; kartta el yazısı; Gelen basılı tut levhası ve yana kaydırma durağı.
 - [ ] Kalem: notun her yerine yaz, parmakla dokun + klavyeyle yaz, yazı çizimin altında
   kalmıyor; basınç, avuç içi, yan düğme/silgi (adb ile denenemez). Sol sütun, ayar
   penceresi, tam ekran (dikey + yatay, ray/liste kalkıyor, sistem çubukları, çıkış).
