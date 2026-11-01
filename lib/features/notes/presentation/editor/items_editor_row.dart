@@ -535,15 +535,22 @@ extension _ItemsRow on ItemsEditorState {
               PositionedDirectional(
                 end: 0,
                 // İlk satırın ortasına hizalı (kutucukla aynı çizgide).
-                top: math.max(0.0, firstLineCenter - 18),
+                // 2026-11-01 (kullanıcı isteği: "silme x'ini 2 punto küçült,
+                // hitbox'ını da daralt"): simge 20 → 18, dokunma alanı
+                // 30×36 → 24×28 — yazının sonuna dokunurken madde kazara
+                // silinmesin.
+                top: math.max(0.0, firstLineCenter - 14),
                 child: IconButton(
                   key: ValueKey('item-remove-${item.id}'),
                   tooltip: l10n.removeItem,
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: const Icon(Icons.close, size: 18),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints.tightFor(
-                    width: ItemsEditorState._kTrailingWidth + 2,
-                    height: 36,
+                    width: ItemsEditorState._kTrailingWidth - 4,
+                    height: 28,
+                  ),
+                  style: const ButtonStyle(
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
                   onPressed: () => _removeItem(item),

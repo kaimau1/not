@@ -154,11 +154,24 @@ class CustomizeModeHost extends StatelessWidget {
             _CustomizeStrip(hiddenCount: draft.hidden.length)
           else
             const SizedBox.shrink(),
+          // **EKRAN BOYU ŞERİDİN ALTINDAKİ ALAN** (kullanıcı bulgusu
+          // 2026-11-01: "ekranı düzenle açılınca ekran alta kayıyor, alttaki
+          // butonlar görülmüyor"). KÖK NEDEN: şerit içeriği aşağı itiyor
+          // ama `MediaQuery.size` hâlâ TAM ekranı söylüyordu; not açılış
+          // geçişi (note_open_route) sayfayı o boyla çiziyor, editörün alt
+          // çubuğu şerit kadar ekranın dışına taşıyordu. Boy artık bu alanın
+          // kendisi — `MediaQuery.sizeOf` okuyan her yer doğru ölçer. Ağaç
+          // şekli mod açık/kapalı aynı (LayoutBuilder hep burada).
           Expanded(
-            child: MediaQuery.removePadding(
-              context: context,
-              removeTop: draft != null,
-              child: child!,
+            child: LayoutBuilder(
+              // Tek MediaQuery: `removePadding(context:)` burada DIŞTAKİ
+              // (tam ekran) veriyi okuyup boyu geri yazardı.
+              builder: (context, box) => MediaQuery(
+                data: MediaQuery.of(context)
+                    .removePadding(removeTop: draft != null)
+                    .copyWith(size: draft != null ? box.biggest : null),
+                child: child!,
+              ),
             ),
           ),
         ],

@@ -3,11 +3,15 @@ import '../../../core/app_icons.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../app/router.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../notes/data/shared_note_activity.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../notes/presentation/note_grid.dart';
+import '../../notes/presentation/notes_providers.dart';
 import '../../notes/presentation/shared_notes_screen.dart';
 import '../data/inbox_repository.dart';
 import 'inbox_screen.dart';
@@ -59,11 +63,9 @@ class SharedHubBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
     final inboxAsync = ref.watch(inboxNotesProvider);
     final inbox = inboxAsync.value ?? const <InboxNote>[];
     final entries = sharedNoteEntries(ref);
-    final unread = ref.watch(sharedNoteUnreadProvider);
     if (inbox.isEmpty && entries.isEmpty) {
       if (inboxAsync.isLoading) return const NoteListSkeleton();
       return EmptyState(
@@ -72,18 +74,6 @@ class SharedHubBody extends ConsumerWidget {
         subtitle: l10n.sharedHubEmptyHint,
       );
     }
-    final inboxTag = HubSourceTag(
-      key: const ValueKey('hub-tag-inbox'),
-      label: l10n.sharedHubTagInbox,
-      icon: AppIcons.inbox,
-      color: scheme.tertiary,
-    );
-    final sharedTag = HubSourceTag(
-      key: const ValueKey('hub-tag-shared'),
-      label: l10n.sharedHubTagShared,
-      icon: Icons.people_alt_outlined,
-      color: scheme.primary,
-    );
     return LayoutBuilder(
       builder: (context, constraints) {
         const pad = 12.0;
@@ -92,39 +82,99 @@ class SharedHubBody extends ConsumerWidget {
             (constraints.maxWidth - pad * 2 - 8 * (columns - 1)) / columns;
         return CustomScrollView(
           slivers: [
-            if (inbox.isNotEmpty)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(pad, pad, pad, 0),
-                sliver: SliverList.separated(
-                  itemCount: inbox.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) =>
-                      InboxCard(note: inbox[index], tag: inboxTag),
-                ),
-              ),
-            if (entries.isNotEmpty)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(pad, pad, pad, 0),
-                sliver: sliverBalancedNoteColumns(
-                  items: [for (final e in entries) e.note],
-                  columns: columns,
-                  cellWidth: cellWidth,
-                  cell: (context, index) {
-                    final entry = entries[index];
-                    return SharedNoteCell(
-                      entry: entry,
-                      isNew: unread.contains(entry.share.id),
-                      tag: sharedTag,
-                    );
-                  },
-                ),
-              ),
+            ...sharedHubSlivers(
+              context,
+              ref,
+              columns: columns,
+              cellWidth: cellWidth,
+            ),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
         );
       },
     );
   }
+}
+
+/// Birleşik listenin SLIVER'ları — ayrı ekran ([SharedHubBody]) ve ana
+/// ekranın "Gelen" süzgeci (bkz. `sharedHubOnHomeProvider`) aynı içeriği
+/// çizer. İkisi de boşsa boş liste döner; boş durumu çağıran seçer.
+List<Widget> sharedHubSlivers(
+  BuildContext context,
+  WidgetRef ref, {
+  required int columns,
+  required double cellWidth,
+  double pad = 12,
+}) {
+  final l10n = context.l10n;
+  final scheme = Theme.of(context).colorScheme;
+  final inbox = ref.watch(inboxNotesProvider).value ?? const <InboxNote>[];
+  final entries = sharedNoteEntries(ref);
+  final unread = ref.watch(sharedNoteUnreadProvider);
+  if (inbox.isEmpty && entries.isEmpty) return const [];
+  final inboxTag = HubSourceTag(
+    key: const ValueKey('hub-tag-inbox'),
+    label: l10n.sharedHubTagInbox,
+    icon: AppIcons.inbox,
+    color: scheme.tertiary,
+  );
+  final sharedTag = HubSourceTag(
+    key: const ValueKey('hub-tag-shared'),
+    label: l10n.sharedHubTagShared,
+    icon: Icons.people_alt_outlined,
+    color: scheme.primary,
+  );
+  return [
+    if (inbox.isNotEmpty)
+      SliverPadding(
+        padding: EdgeInsets.fromLTRB(pad, pad, pad, 0),
+        sliver: SliverList.separated(
+          itemCount: inbox.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
+          itemBuilder: (context, index) =>
+              InboxCard(note: inbox[index], tag: inboxTag),
+        ),
+      ),
+    if (entries.isNotEmpty)
+      SliverPadding(
+        padding: EdgeInsets.fromLTRB(pad, pad, pad, 0),
+        sliver: sliverBalancedNoteColumns(
+          items: [for (final e in entries) e.note],
+          columns: columns,
+          cellWidth: cellWidth,
+          cell: (context, index) {
+            final entry = entries[index];
+            return SharedNoteCell(
+              entry: entry,
+              isNew: unread.contains(entry.share.id),
+              tag: sharedTag,
+            );
+          },
+        ),
+      ),
+  ];
+}
+
+/// Ana ekranı "Gelen" süzgecine alır (klasör çipiyle aynı davranış — bkz.
+/// `FolderScreen.showFolderOnHome`): öteki süzgeçler bırakılır, ana ekran
+/// dışındaysa ana ekrana dönülür. Zaten açıksa kapatır ("Tümü" gibi).
+void showSharedHubOnHome(BuildContext context) {
+  final container = ProviderScope.containerOf(context, listen: false);
+  if (container.read(sharedHubOnHomeProvider)) {
+    container.read(sharedHubOnHomeProvider.notifier).set(false);
+    return;
+  }
+  container.read(noteFilterProvider.notifier).set(NoteFilter.all);
+  container.read(selectedTagProvider.notifier).set(null);
+  container.read(selectedFolderProvider.notifier).set(null);
+  if (container.read(showAllNotesProvider)) {
+    container.read(showAllNotesProvider.notifier).set(false);
+  }
+  container.read(sharedHubOnHomeProvider.notifier).set(true);
+  final router = GoRouter.maybeOf(context);
+  if (router == null) return;
+  Navigator.of(context).popUntil((route) => route.settings is Page);
+  if (!isSplitShellLocation(router.state.uri.path)) router.go('/');
 }
 
 /// Birleşik listede öğenin kaynağı: küçük renkli hap ("Gelen" /

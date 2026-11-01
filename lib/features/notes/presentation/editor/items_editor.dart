@@ -1674,11 +1674,29 @@ class ItemsEditorState extends State<ItemsEditor>
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Row(
           children: [
-            _addItemButton(l10n),
-            if (widget.addRowTrailing != null) ...[
-              const Spacer(),
-              widget.addRowTrailing!,
-            ],
+            // **SATIRIN TAMAMI "YENİ MADDE"** (kullanıcı isteği 2026-11-01:
+            // "madde eklemenin hitbox'ını artır, aynı satırda çok daha
+            // sağına tıklanırsa da yeni madde eklensin"). Düğme yalnız yazısı
+            // kadardı; satırın boş sağı artık aynı işi yapar (sağdaki
+            // ek düğmesine kadar).
+            Expanded(
+              child: GestureDetector(
+                key: const ValueKey('items-add-row'),
+                behavior: HitTestBehavior.opaque,
+                // Erişilebilirlikte tek düğme ("Yeni madde") kalsın; satırın
+                // boş kısmı yalnız dokunma kolaylığı.
+                excludeFromSemantics: true,
+                onTap: _addItem,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 44),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: _addItemButton(l10n),
+                  ),
+                ),
+              ),
+            ),
+            if (widget.addRowTrailing != null) widget.addRowTrailing!,
           ],
         ),
       ),

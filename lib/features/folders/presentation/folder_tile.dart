@@ -440,6 +440,7 @@ class AllNotesChip extends ConsumerWidget {
       onTap: () {
         // Yana çekişle bir klasöre geçilmişse "Tümü" oradan da çıkarır.
         ref.read(selectedFolderProvider.notifier).set(null);
+        ref.read(sharedHubOnHomeProvider.notifier).set(false);
         ref.read(showAllNotesProvider.notifier).set(!selected);
       },
     );
@@ -464,7 +465,10 @@ class SharedHubChip extends ConsumerWidget {
       sharedNotesWithMeProvider.select((s) => s.value?.length ?? 0),
     );
     final unread = ref.watch(sharedHubBadgeProvider);
+    final selected = ref.watch(sharedHubOnHomeProvider);
     final scheme = Theme.of(context).colorScheme;
+    // 2026-11-01: ayrı sayfa açmaz, öteki klasörler gibi ana ekranı süzer
+    // (bkz. [sharedHubOnHomeProvider]).
     return _ChipShell(
       key: const ValueKey('shared-hub-chip'),
       accent: scheme.tertiary,
@@ -472,7 +476,8 @@ class SharedHubChip extends ConsumerWidget {
       label: context.l10n.sharedHubShort,
       count: inbox + shared,
       unread: unread,
-      onTap: () => SharedHubScreen.open(context),
+      selected: selected,
+      onTap: () => showSharedHubOnHome(context),
     );
   }
 }

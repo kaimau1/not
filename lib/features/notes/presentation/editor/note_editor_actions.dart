@@ -6,6 +6,50 @@ part of 'note_editor_screen.dart';
 extension _EditorActions on _NoteEditorScreenState {
   // ---- Diğer eylemler -------------------------------------------------
 
+  /// Etiket/hatırlatıcı çipindeki ORTAK ÇALIŞAN işareti (2026-11-01):
+  /// paylaşılmışsa dolu kişi simgesi + kişi sayısı, değilse soluk "kişi
+  /// ekle". Abonelik yalnız bu küçük parçada — paylaşım akışı editörün
+  /// tamamını yeniden kurmasın.
+  Widget _collabMarker(ThemeData theme) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final scheme = theme.colorScheme;
+        final owner = widget.ownerId;
+        final count = owner == null
+            ? ref.watch(
+                myNoteSharesProvider.select(
+                  (m) => m.value?[widget.noteId]?.sharedWith.length ?? 0,
+                ),
+              )
+            : 1;
+        final shared = count > 0;
+        final color = shared ? scheme.primary : scheme.onSurfaceVariant;
+        return Row(
+          key: const ValueKey('note-meta-collab'),
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(width: 4),
+            Icon(
+              shared ? Icons.people_alt : Icons.person_add_alt_1_outlined,
+              size: 15,
+              color: color,
+            ),
+            if (owner == null && shared) ...[
+              const SizedBox(width: 2),
+              Text(
+                '$count',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _pickReminder() async {
     final note = _note;
     if (note == null) return;

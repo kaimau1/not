@@ -600,6 +600,14 @@ final homeShowSharedProvider = boolPref(
   defaultValue: false,
 );
 
+/// Ana ekrandaki PAYLAŞILANLAR bölümünün yeri (kullanıcı isteği 2026-11-01:
+/// "paylaşılan notlar en üstte görülüyor, görünüm sıralamasını ayarlama
+/// olmalı"): kapalı = kendi notlarımın üstünde (eski davranış), açık = altında.
+final homeSharedAtBottomProvider = boolPref(
+  'home_shared_at_bottom',
+  defaultValue: false,
+);
+
 /// Arama sonucunda ve "Tümü" görünümünde notun klasör rozeti.
 final cardShowFolderProvider = boolPref(
   'card_show_folder',

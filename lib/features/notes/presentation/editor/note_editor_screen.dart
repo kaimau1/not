@@ -155,6 +155,7 @@ import 'audio_card_box.dart' show kAudioBoxWidth, kAudioBoxHeight;
 import 'text_page_box.dart' show kTextBoxWidth, kTextBoxHeight;
 import 'view_mode_switch.dart';
 import 'page_swipe.dart';
+import 'title_fit.dart';
 import '../../../../core/widgets/smooth_routes.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/friendly_error.dart';
@@ -2074,6 +2075,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onViewChange: _readOnly
           ? null
           : (a, view) => unawaited(_setAttachmentView(a, view)),
+      // Yazıya göm kısayolu (2026-11-01): gövdesi olan notta.
+      onEmbed: _readOnly || note.type.isPageNoteType
+          ? null
+          : _startPendingEmbed,
       topLimit: _bodyTop,
       // İpucu, gövde alanının İLK METİN SATIRINA hizalanır (dikeyde iç dolgu,
       // yatayda kenar boşluğu): imleçle aynı çizgide dursun.
@@ -2713,40 +2718,67 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
     // Üstündeki çip satırına yapışık: aradaki 8 dp, çipler başlığın ALTINDAYKEN
     // üst barla başlığı ayırmak içindi; artık o işi çip satırı görüyor.
+    final titleBaseStyle = applyNoteOpacity(
+      applyNoteFont(
+        (Theme.of(context).textTheme.headlineSmall ?? const TextStyle())
+            .copyWith(
+              // w500: kalın (w800) başlıkta açıkça ayırt edilsin (bkz.
+              // rich_text `markStyle`).
+              fontWeight: FontWeight.w500,
+              fontSize:
+                  (Theme.of(context).textTheme.headlineSmall?.fontSize ??
+                      24) *
+                  note.titleFontScale,
+              color:
+                  Theme.of(context).textTheme.headlineSmall?.color ??
+                  theme.colorScheme.onSurface,
+            ),
+        note.titleFontFamily,
+      ),
+      note.titleTextOpacity,
+      theme.colorScheme.onSurface,
+    );
+    final titleBaseSize = titleBaseStyle.fontSize ?? 24;
     final titleField = Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(16, 2, 4, 0),
       // Başlığın yazı ölçeği değişince yumuşak oturur (bkz. ScaleSettle).
       child: ScaleSettle(
       value: note.titleFontScale,
-      child: TextField(
+      // UZUN BAŞLIK KÜÇÜLEREK SIĞAR (kullanıcı isteği 2026-11-01, bkz.
+      // [fitTitleFontSize]): yazı değiştikçe yalnız bu parça yeniden
+      // kurulur. Satır yüksekliği taban boyda SABİT (strut) — yazı
+      // küçülürken alttaki sayfa harf harf yukarı kaymasın.
+      child: ValueListenableBuilder<TextEditingValue>(
+        valueListenable: _titleController,
+        builder: (context, _, _) => LayoutBuilder(
+          builder: (context, box) {
+            final fitted = fitTitleFontSize(
+              spanFor: (size) => _titleController.buildTextSpan(
+                context: context,
+                style: titleBaseStyle.copyWith(fontSize: size),
+                withComposing: false,
+              ),
+              // İmleç ve iç dolgu payı.
+              maxWidth: box.maxWidth - 8,
+              baseSize: titleBaseSize,
+              textScaler: MediaQuery.textScalerOf(context),
+              textDirection: Directionality.of(context),
+            );
+            return TextField(
         controller: _titleController,
         focusNode: _titleFocus,
         readOnly: _readOnly,
         onChanged: (_) =>
             _mutate((n) => n.copyWith(title: _titleController.logicalText)),
-        style: applyNoteOpacity(
-          applyNoteFont(
-            (Theme.of(context).textTheme.headlineSmall ?? const TextStyle())
-                .copyWith(
-                  // w500: kalın (w800) başlıkta açıkça ayırt edilsin (bkz.
-                  // rich_text `markStyle`).
-                  fontWeight: FontWeight.w500,
-                  fontSize:
-                      (Theme.of(context).textTheme.headlineSmall?.fontSize ??
-                          24) *
-                      note.titleFontScale,
-                  color:
-                      Theme.of(context).textTheme.headlineSmall?.color ??
-                      theme.colorScheme.onSurface,
-                ),
-            note.titleFontFamily,
-          ),
-          note.titleTextOpacity,
-          theme.colorScheme.onSurface,
+        style: titleBaseStyle.copyWith(fontSize: fitted),
+        strutStyle: StrutStyle(
+          fontSize: titleBaseSize,
+          height: titleBaseStyle.height,
+          forceStrutHeight: true,
         ),
         // TEK SATIR (kullanıcı isteği 2026-08-08: "başlık tek satırdan
-        // taşmasın"): uzun başlık alanın içinde yatay kayar, sayfa düzenini
-        // aşağı itmez.
+        // taşmasın"): sığmayan başlık önce küçülür (yukarıda), en küçük
+        // boyda da sığmazsa alanın içinde yatay kayar.
         // ignore: avoid_redundant_argument_values
         maxLines: 1,
         textInputAction: TextInputAction.next,
@@ -2765,6 +2797,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           hintText: l10n.titleHint,
           filled: false,
           border: InputBorder.none,
+        ),
+      );
+          },
         ),
       ),
       ),
@@ -2792,6 +2827,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // düğmesi satırı doldurduğu için asıl bilgi (etiketler) ekrandan taşıyordu
     // (ekran görüntüsündeki dağınıklık). Artık satır boş notta tek bir "+"
     // düğmesinden ibaret, doldukça büyür.
+    // Ortak çalışan eklenebilir mi: yalnız bu cihazdaki not kimseyle
+    // paylaşılamaz; kişiselleştirmede "Ortak çalışma" kapatılabilir.
+    final canCollab =
+        Customizable.shows(UiItem.topCollab) &&
+        (widget.ownerId != null ||
+            !(ref.read(notesRepositoryProvider)?.isLocal(widget.noteId) ??
+                false));
     final actionEntries = <PopupMenuEntry<String>>[
       // YENİ SAYFA BURADA (kullanıcı isteği 2026-10-11: "yeni sayfa ekleyi
       // üst alana koyabilir miyiz"). "Ekle" levhasının en üst bölümündeydi;
@@ -2827,6 +2869,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.add_location_alt_outlined),
             title: Text(l10n.placeReminder),
+          ),
+        ),
+      // **ORTAK ÇALIŞANLAR BU MENÜDE** (kullanıcı isteği 2026-11-01:
+      // "ortak çalışanlar simgesini etiket ve hatırlatıcı içerisine koy,
+      // işaretine çıksın"). Üst çubuktaki ayrı düğme kalktı; durum çipteki
+      // kişi simgesinde (bkz. [_collabMarker]).
+      if (canCollab)
+        PopupMenuItem(
+          value: 'collaborators',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.person_add_alt_1_outlined),
+            title: Text(l10n.collaborators),
           ),
         ),
       PopupMenuItem(
@@ -2884,6 +2940,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             unawaited(showPlaceReminderSheet(context, ref, note));
           case 'folder':
             _pickFolder();
+          case 'collaborators':
+            unawaited(
+              showCollaboratorsSheet(
+                context,
+                ref,
+                noteId: widget.noteId,
+                ownerId: widget.ownerId,
+              ),
+            );
           case 'add-tag':
             _addTag();
           case 'suggest-tags':
@@ -2937,6 +3002,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   size: 15,
                   color: alarmed ? scheme.primary : scheme.onSurfaceVariant,
                 ),
+                if (canCollab) _collabMarker(theme),
               ],
             );
           },
@@ -4235,50 +4301,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   ],
                 ),
               ),
-              Customizable(
-                id: UiItem.topCollab,
-                child: Consumer(
-                builder: (context, ref, _) {
-                  final owner = widget.ownerId;
-                  final count = owner == null
-                      ? ref.watch(
-                          myNoteSharesProvider.select(
-                            (m) =>
-                                m.value?[widget.noteId]?.sharedWith.length ?? 0,
-                          ),
-                        )
-                      : 1;
-                  // Yalnız bu cihazdaki not kimseyle paylaşılamaz.
-                  if (owner == null &&
-                      (ref
-                              .read(notesRepositoryProvider)
-                              ?.isLocal(widget.noteId) ??
-                          false)) {
-                    return const SizedBox.shrink();
-                  }
-                  return IconButton(
-                    tooltip: count > 0
-                        ? l10n.collaboratorsCount(count)
-                        : l10n.collaborators,
-                    icon: Badge(
-                      isLabelVisible: owner == null && count > 0,
-                      label: Text('$count'),
-                      child: Icon(
-                        count > 0
-                            ? Icons.people_alt
-                            : Icons.person_add_alt_1_outlined,
-                      ),
-                    ),
-                    onPressed: () => showCollaboratorsSheet(
-                      context,
-                      ref,
-                      noteId: widget.noteId,
-                      ownerId: owner,
-                    ),
-                  );
-                },
-              ),
-              ),
+              // ORTAK ÇALIŞAN düğmesi buradaydı; 2026-11-01'den beri
+              // başlığın yanındaki etiket/hatırlatıcı çipinde (bkz.
+              // [_collabMarker]).
               // GÖRÜNÜM (tema şeridi) üst çubukta — örnek uygulamadaki palet
               // düğmesi; biçim panelinden ve Ekle levhasından da açılır.
               if (!_readOnly)

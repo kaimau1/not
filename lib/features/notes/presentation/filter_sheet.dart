@@ -325,6 +325,14 @@ class _ViewModeSection extends ConsumerWidget {
               onChanged: (_) =>
                   ref.read(homeShowSharedProvider.notifier).toggle(),
             ),
+          if (!inFolder && ref.watch(homeShowSharedProvider))
+            _SwitchRow(
+              label: l10n.homeSharedAtBottomShort,
+              icon: Icons.vertical_align_bottom,
+              value: ref.watch(homeSharedAtBottomProvider),
+              onChanged: (_) =>
+                  ref.read(homeSharedAtBottomProvider.notifier).toggle(),
+            ),
         ],
       ),
     );

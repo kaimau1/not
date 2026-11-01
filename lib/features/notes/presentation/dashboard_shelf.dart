@@ -8,11 +8,17 @@ extension _DashShelf on _DashboardScreenState {
   ///
   /// Gizli klasörler yalnız o oturumda açığa çıkarıldıysa çizilir — karonun
   /// adı bile gizli notların varlığını ele verirdi.
-  Widget _folderShelf(int columns, {String? selectedFolderId}) {
+  Widget _folderShelf(
+    int columns, {
+    String? selectedFolderId,
+    bool hubSelected = false,
+  }) {
     // Kullanıcının KLASÖR SIRASI (Ayarlar → Notlar → Klasör sırası; bkz.
     // FolderSort). Gizli klasörler yalnız açığa çıkarıldıysa.
     final folders = ref.watch(visibleOrderedFoldersProvider);
-    if (selectedFolderId != null) {
+    // "Gelen" seçiliyken de şerit (klasör seçiliyken olduğu gibi): çip
+    // vurgulu görünsün, karo rafı notların yerini kaplamasın.
+    if (selectedFolderId != null || hubSelected) {
       return _folderStrip(folders, selectedFolderId: selectedFolderId);
     }
     // **YER SORUNU** (kullanıcı isteği 2026-08-18: "klasörler ana ekranda çok

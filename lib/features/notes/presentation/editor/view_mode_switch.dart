@@ -93,6 +93,7 @@ class AttachmentViewSwitch extends StatelessWidget {
     required this.onChanged,
     this.dense = false,
     this.compact = false,
+    this.onEmbed,
   });
 
   final AttachmentView current;
@@ -100,6 +101,13 @@ class AttachmentViewSwitch extends StatelessWidget {
   final ValueChanged<AttachmentView> onChanged;
   final bool dense;
   final bool compact;
+
+  /// **YAZIYA GÖM** kısayolu (kullanıcı isteği 2026-11-01: "görsellerin ve
+  /// dosyaların görünüm menüsüne yazıya gömme simgesi de koy, hızlı
+  /// erişim"). Verilirse anahtarın sağında ayrı bir düğme: eki nottaki bir
+  /// yazıya bağlama kipini başlatır (eskiden yalnız ⋯ levhasında / Ekle
+  /// levhasında). Görünüm DEĞİL, eylem — kayan zeminin dilimi olmaz.
+  final VoidCallback? onEmbed;
 
   /// Kayan zeminin süresi/eğrisi — uygulamanın öbür geçişleriyle aynı dil.
   static const slideDuration = Duration(milliseconds: 280);
@@ -138,19 +146,33 @@ class AttachmentViewSwitch extends StatelessWidget {
       for (final v in AttachmentView.values)
         if (available.contains(v)) v,
     ];
-    if (views.length < 2) return const SizedBox.shrink();
+    if (views.length < 2) {
+      return onEmbed == null
+          ? const SizedBox.shrink()
+          : _EmbedButton(compact: compact, onTap: onEmbed!);
+    }
     // SIĞMAZSA SİMGEYE İNER: eşit dilimler en uzun yazının boyunu alır;
     // dört kip ve uzun bir dil (Almanca, Rusça) dar panele sığmayabilir.
     // Sınırlı genişlik verilmişse (Expanded/Flexible içinde) yazılı hâlin
     // genişliği ölçülür, taşacaksa yalnız simgeler çizilir.
     return LayoutBuilder(
       builder: (context, constraints) {
+        final embedWidth = onEmbed == null ? 0.0 : (compact ? 32.0 : 42.0);
         final tight =
             !dense &&
             !compact &&
             constraints.hasBoundedWidth &&
-            _labeledWidth(context, views) > constraints.maxWidth;
-        return _build(context, scheme, views, dense || tight);
+            _labeledWidth(context, views) + embedWidth > constraints.maxWidth;
+        final body = _build(context, scheme, views, dense || tight);
+        if (onEmbed == null) return body;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            body,
+            SizedBox(width: compact ? 4 : 6),
+            _EmbedButton(compact: compact, onTap: onEmbed!),
+          ],
+        );
       },
     );
   }
@@ -329,6 +351,54 @@ class _Segment extends StatelessWidget {
                     ],
                   ],
                 ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Anahtarın yanındaki "Yazıya göm" düğmesi — anahtarla aynı boy ve çerçeve.
+class _EmbedButton extends StatelessWidget {
+  const _EmbedButton({required this.compact, required this.onTap});
+
+  final bool compact;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final size = compact ? 28.0 : 36.0;
+    return Tooltip(
+      message: l10n.viewModeEmbedHint,
+      child: Semantics(
+        button: true,
+        label: l10n.viewModeEmbed,
+        child: Material(
+          key: const ValueKey('view-embed'),
+          color: scheme.surfaceContainerHighest,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(compact ? 13 : 20),
+            side: BorderSide(
+              color: scheme.outlineVariant.withValues(alpha: 0.6),
+            ),
+          ),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: () {
+              HapticFeedback.selectionClick();
+              onTap();
+            },
+            child: SizedBox(
+              width: size,
+              height: size,
+              child: Icon(
+                Icons.link,
+                size: compact ? 15 : 18,
+                color: scheme.primary,
               ),
             ),
           ),

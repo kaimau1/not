@@ -52,6 +52,7 @@ import 'filter_sheet.dart';
 import 'note_card.dart';
 import 'note_grid.dart';
 import 'shared_notes_screen.dart';
+import '../../inbox/presentation/shared_hub_screen.dart' show sharedHubSlivers;
 import 'notes_providers.dart';
 import 'quick_add_actions.dart';
 import 'quick_add_fab.dart';
@@ -405,6 +406,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (stop == null) return;
     // Geçiş animasyonunun yönünü çekiş yönüne göre ayarla (madde 2).
     _swipeForward = direction > 0;
+    ref.read(sharedHubOnHomeProvider.notifier).set(false);
     ref.read(selectedFolderProvider.notifier).set(stop.folderId);
     ref.read(noteFilterProvider.notifier).set(stop.filter);
     ref.read(selectedTagProvider.notifier).set(stop.tag);
@@ -802,7 +804,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         ref.watch(noteFilterProvider) == NoteFilter.all &&
         ref.watch(selectedFolderProvider) == null &&
         !ref.watch(showAllNotesProvider) &&
+        !ref.watch(sharedHubOnHomeProvider) &&
         ref.watch(selectedTagProvider) == null;
+    // **"GELEN" SÜZGECİ** (2026-11-01, bkz. [sharedHubOnHomeProvider]):
+    // başka bir klasör/süzgeç/etiket seçilince kendiliğinden kapanır —
+    // klasör çipleri, yana çekiş, Süz levhası hepsi bu dört sağlayıcıdan
+    // birini değiştirir. Yalnız "seçildi" yönü kapatır: Gelen'e geçerken
+    // ötekiler varsayılana döner, o geçiş Gelen'i kapatmaz.
+    void closeHub() {
+      if (ref.read(sharedHubOnHomeProvider)) {
+        ref.read(sharedHubOnHomeProvider.notifier).set(false);
+      }
+    }
+
+    ref.listen(selectedFolderProvider, (_, next) {
+      if (next != null) closeHub();
+    });
+    ref.listen(showAllNotesProvider, (_, next) {
+      if (next) closeHub();
+    });
+    ref.listen(noteFilterProvider, (_, next) {
+      if (next != NoteFilter.all) closeHub();
+    });
+    ref.listen(selectedTagProvider, (_, next) {
+      if (next != null) closeHub();
+    });
+    // Ana ekrandaki paylaşılanlar bölümünün YERİ (kullanıcı isteği
+    // 2026-11-01: "paylaşılan notlar en üstte görülüyor, sıralaması
+    // ayarlanabilmeli") — üstte (varsayılan) ya da kendi notlarımın altında.
+    final sharedAtBottom = ref.watch(homeSharedAtBottomProvider);
+    final hubActive =
+        ref.watch(sharedHubOnHomeProvider) &&
+        !searchActive &&
+        !selectionActive &&
+        ref.watch(selectedFolderProvider) == null;
     // Dar ekranda arama odaklıyken sağdaki butonlar gizlenir; arama alanı
     // tüm genişliği kullanır. Klavye kapatılınca (sistem geri tuşu dahil)
     // odak sürse bile bar kendiliğinden daralır — viewInsets bunu izler.
@@ -864,7 +899,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     final segmentKey =
                         '${ref.watch(noteFilterProvider)}'
                         '|${ref.watch(selectedFolderProvider) ?? ''}'
-                        '|${ref.watch(selectedTagProvider) ?? ''}';
+                        '|${ref.watch(selectedTagProvider) ?? ''}'
+                        '|${hubActive ? 'hub' : ''}';
                     // Başlık (arama/seçim barı + filtre çipleri) kaydırma
                     // görünümünün DIŞINDA sabit durur: liste kayarken çipler
                     // yerinde kalır; filtre değişim animasyonu yalnız not
@@ -1323,6 +1359,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           selectedFolderId: ref.watch(
                                             selectedFolderProvider,
                                           ),
+                                          hubSelected: hubActive,
                                         ),
                                       // BENİMLE PAYLAŞILANLAR (seçenek,
                                       // varsayılan kapalı — bkz.
@@ -1331,6 +1368,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                       if (!searchActive &&
                                           !reorderActive &&
                                           !selectionActive &&
+                                          !hubActive &&
+                                          !sharedAtBottom &&
                                           ref.watch(homeShowSharedProvider) &&
                                           ref.watch(noteFilterProvider) ==
                                               NoteFilter.all &&
@@ -1342,6 +1381,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           columns: columns,
                                           cellWidth: cellWidth,
                                         ),
+                                      if (hubActive)
+                                        ..._hubSlivers(
+                                          context,
+                                          columns,
+                                          cellWidth,
+                                        )
+                                      else
                                       ...notesAsync.when(
                                         data: (notes) => _buildNoteSlivers(
                                           context,
@@ -1368,6 +1414,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           ),
                                         ],
                                       ),
+                                      // Paylaşılanlar ALTTA seçildiyse
+                                      // (bkz. homeSharedAtBottomProvider).
+                                      if (!searchActive &&
+                                          !reorderActive &&
+                                          !selectionActive &&
+                                          !hubActive &&
+                                          sharedAtBottom &&
+                                          ref.watch(homeShowSharedProvider) &&
+                                          ref.watch(noteFilterProvider) ==
+                                              NoteFilter.all &&
+                                          ref.watch(selectedTagProvider) ==
+                                              null &&
+                                          ref.watch(selectedFolderProvider) ==
+                                              null)
+                                        SharedNotesHomeSection(
+                                          columns: columns,
+                                          cellWidth: cellWidth,
+                                        ),
                                       // Listenin sonu düğme sütununun
                                       // ÜSTÜNE çıkabilsin (bkz.
                                       // [_kFabClearance]).
@@ -1509,7 +1573,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // (uzun basış) seçimi kapatmanın tek yolu ekrandaki "×" idi.
     // KLASÖR SÜZGECİ (2026-10-28): klasör artık ana ekranın süzgeci; geri
     // tuşu önce klasörden çıkar (eski klasör sayfasındaki gibi).
-    final inFolder = ref.watch(selectedFolderProvider) != null;
+    final inFolder =
+        ref.watch(selectedFolderProvider) != null ||
+        ref.watch(sharedHubOnHomeProvider);
     return PopScope(
       canPop: !selectionActive && !reorderActive && !inFolder,
       onPopInvokedWithResult: (didPop, _) {
@@ -1525,6 +1591,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         } else if (inFolder) {
           _swipeForward = false;
           ref.read(selectedFolderProvider.notifier).set(null);
+          ref.read(sharedHubOnHomeProvider.notifier).set(false);
         }
       },
       // Editör (ya da bir bölüm) ana ekranı TAMAMEN örtünce ızgara yeniden

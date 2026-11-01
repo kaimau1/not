@@ -4447,6 +4447,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewModeTitle => 'View';
 
   @override
+  String get viewModeEmbed => 'Embed in text';
+
+  @override
+  String get viewModeEmbedHint =>
+      'Embed this attachment in a word of the note — tapping the word opens it';
+
+  @override
   String get viewModePinned => 'Pinned';
 
   @override
@@ -5705,6 +5712,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeShowSharedShort => 'Show shared notes';
+
+  @override
+  String get homeSharedAtBottom => 'Shared notes below mine';
+
+  @override
+  String get homeSharedAtBottomInfo =>
+      'Off: shared notes sit at the top of the home screen. On: below my own notes';
+
+  @override
+  String get homeSharedAtBottomShort => 'Shared notes at bottom';
 
   @override
   String get homeSharedSection => 'SHARED WITH ME';

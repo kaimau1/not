@@ -7982,6 +7982,18 @@ abstract class AppLocalizations {
   /// **'Görünüm'**
   String get viewModeTitle;
 
+  /// No description provided for @viewModeEmbed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazıya göm'**
+  String get viewModeEmbed;
+
+  /// No description provided for @viewModeEmbedHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu eki nottaki bir yazıya göm — yazıya dokununca açılır'**
+  String get viewModeEmbedHint;
+
   /// No description provided for @viewModePinned.
   ///
   /// In tr, this message translates to:
@@ -10171,6 +10183,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Paylaşılan notları göster'**
   String get homeShowSharedShort;
+
+  /// No description provided for @homeSharedAtBottom.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşılanlar notlarımın altında'**
+  String get homeSharedAtBottom;
+
+  /// No description provided for @homeSharedAtBottomInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalıyken paylaşılan notlar ana ekranın en üstünde, açıkken kendi notlarımın altında görünür'**
+  String get homeSharedAtBottomInfo;
+
+  /// No description provided for @homeSharedAtBottomShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşılanlar altta'**
+  String get homeSharedAtBottomShort;
 
   /// No description provided for @homeSharedSection.
   ///

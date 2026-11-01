@@ -4431,6 +4431,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get viewModeTitle => 'Görünüm';
 
   @override
+  String get viewModeEmbed => 'Yazıya göm';
+
+  @override
+  String get viewModeEmbedHint =>
+      'Bu eki nottaki bir yazıya göm — yazıya dokununca açılır';
+
+  @override
   String get viewModePinned => 'Sabit';
 
   @override
@@ -5683,6 +5690,16 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeShowSharedShort => 'Paylaşılan notları göster';
+
+  @override
+  String get homeSharedAtBottom => 'Paylaşılanlar notlarımın altında';
+
+  @override
+  String get homeSharedAtBottomInfo =>
+      'Kapalıyken paylaşılan notlar ana ekranın en üstünde, açıkken kendi notlarımın altında görünür';
+
+  @override
+  String get homeSharedAtBottomShort => 'Paylaşılanlar altta';
 
   @override
   String get homeSharedSection => 'BENİMLE PAYLAŞILANLAR';

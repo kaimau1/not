@@ -853,6 +853,11 @@ class _AttachmentTile extends ConsumerWidget {
                             onChanged: (v) => Navigator.of(
                               sheetContext,
                             ).pop('view:${v.name}'),
+                            // Yazıya göm: "Metne ekle" ile aynı iş, görünüm
+                            // satırında tek dokunuşla (2026-11-01).
+                            onEmbed: onInsertTag == null
+                                ? null
+                                : () => Navigator.of(sheetContext).pop('tag'),
                           ),
                         ),
                       ],

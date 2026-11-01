@@ -557,6 +557,7 @@ class NotePageCanvas extends StatefulWidget {
     this.onPinHover,
     this.onPinDrag,
     this.onViewChange,
+    this.onEmbed,
     this.onTapEmpty,
     this.topLimit = 0,
     this.onFloats,
@@ -665,6 +666,10 @@ class NotePageCanvas extends StatefulWidget {
   /// Görünüm anahtarı (Sabit / Yüzen / Balonlu — bkz. view_mode_switch.dart)
   /// seçili ekin araç panelinde; null ise anahtar çizilmez.
   final void Function(Attachment, AttachmentView)? onViewChange;
+
+  /// Görünüm anahtarının yanındaki "Yazıya göm" (bkz.
+  /// [AttachmentViewSwitch.onEmbed]); null ise düğme çizilmez.
+  final ValueChanged<Attachment>? onEmbed;
 
   /// Boş alana dokununca (seçili görsel yokken) çağrılır — editör bununla
   /// gövde metnine odaklanır ("aşağıya dokun, yazmaya başla" davranışı).
@@ -2263,6 +2268,12 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                 _deselect();
                 widget.onViewChange!(img, view);
               },
+              onEmbed: widget.onEmbed == null
+                  ? null
+                  : () {
+                      _deselect();
+                      widget.onEmbed!(img);
+                    },
             ),
       onSaveAs: widget.onSaveAs == null || img.isWebVideo
           ? null

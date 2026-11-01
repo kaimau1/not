@@ -386,6 +386,8 @@ extension _EditorMediaView on _NoteEditorScreenState {
       available: available,
       dense: dense,
       onChanged: (view) => unawaited(_setAttachmentView(a, view)),
+      // Yazıya göm kısayolu (2026-11-01) — belge notunda gövde metni yok.
+      onEmbed: note.type.isPageNoteType ? null : () => _startPendingEmbed(a),
     );
   }
 

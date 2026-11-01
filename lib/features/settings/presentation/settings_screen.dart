@@ -446,6 +446,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '${l10n.homeShowSharedInfo} paylasilan ortak not ana ekran',
           ),
           _SettingRow(
+            _PrefSwitch(
+              provider: homeSharedAtBottomProvider,
+              icon: Icons.vertical_align_bottom,
+              title: l10n.homeSharedAtBottom,
+              subtitle: l10n.homeSharedAtBottomInfo,
+            ),
+            title: l10n.homeSharedAtBottom,
+            keywords:
+                '${l10n.homeSharedAtBottomInfo} paylasilan siralama alt ust',
+          ),
+          _SettingRow(
             const CaptureModeSetting(),
             title: l10n.captureModeSetting,
             keywords:

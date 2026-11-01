@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,6 +12,8 @@ import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/friends/data/friends_repository.dart';
 import 'package:notlar/features/friends/domain/friend.dart';
 import 'package:notlar/features/inbox/data/inbox_repository.dart';
+import 'package:notlar/features/inbox/presentation/shared_hub_screen.dart';
+import 'package:notlar/features/notes/presentation/notes_providers.dart';
 import 'package:notlar/features/notes/data/attachment_save.dart';
 import 'package:notlar/features/notes/data/note_shares_repository.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
@@ -322,7 +326,23 @@ void main() {
       );
       expect(count.right, lessThanOrEqualTo(label.left + 1));
       expect(count.top, lessThan(label.top));
+      // 2026-11-01: çip ayrı sayfa AÇMAZ, ana ekranı süzer (öteki
+      // klasörler gibi — bkz. sharedHubOnHomeProvider).
+      final container = ProviderScope.containerOf(
+        tester.element(find.byKey(const ValueKey('shared-hub-chip'))),
+      );
       await tester.tap(find.byKey(const ValueKey('shared-hub-chip')));
+      await tester.pumpAndSettle();
+      expect(container.read(sharedHubOnHomeProvider), isTrue);
+      expect(find.text('Gelen ve paylaşılanlar'), findsNothing);
+      // İçerik ayrı ekranla aynı (sharedHubSlivers).
+      unawaited(
+        Navigator.of(
+          tester.element(find.byKey(const ValueKey('shared-hub-chip'))),
+        ).push(
+          MaterialPageRoute<void>(builder: (_) => const SharedHubScreen()),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Gelen ve paylaşılanlar'), findsWidgets);
       // 2026-10-31: sekme YOK — gelen ve paylaşılan tek listede, her öğe

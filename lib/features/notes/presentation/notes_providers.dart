@@ -366,6 +366,24 @@ class SelectedFolderNotifier extends Notifier<String?> {
   void set(String? value) => state = value;
 }
 
+/// **"GELEN" ANA EKRANDA SÜZGEÇ** (kullanıcı isteği 2026-11-01: "gelen
+/// klasörü diğer klasörler gibi olmalı, dashboard'da filtre yapıyormuş gibi
+/// gelmeli; şu an kendi sayfası açılıyor"). Açıkken ana ekranın not ızgarası
+/// yerine gelen kopyalar + benimle paylaşılan notlar çizilir; şerit yerinde
+/// kalır, "Gelen" çipi vurgulanır. Kalıcı değil (klasör seçimi gibi);
+/// başka bir klasör/süzgeç/etiket seçilince dashboard kapatır.
+final sharedHubOnHomeProvider =
+    NotifierProvider<SharedHubOnHomeNotifier, bool>(
+      SharedHubOnHomeNotifier.new,
+    );
+
+class SharedHubOnHomeNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void set(bool value) => state = value;
+}
+
 /// Not kartlarının elle sıralama modu (⋮ → "Notları sırala").
 ///
 /// Eskiden sürükle-sırala kalıcı olarak açıktı ve uzun basış SÜRÜKLEMEYİ

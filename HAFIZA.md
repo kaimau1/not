@@ -735,6 +735,29 @@ eskisini arşive taşıma.
   `showAppMessage(context, metin)`; eylemliyse `action:` (geri sayımlı).
   Elle `SnackBar(content: Text(...))` kurma.
 
+## Kullanıcı listesi 2026-11-01 (8 madde)
+- **"Gelen" çipi ana ekranı SÜZER** (ayrı sayfa açmaz): `sharedHubOnHomeProvider`
+  (kalıcı değil). Dashboard `ref.listen` ile başka klasör/Tümü/süzgeç/etiket
+  SEÇİLİNCE kapatır (yalnız "seçildi" yönü — Gelen'e geçerken ötekiler
+  varsayılana döner, o geçiş Gelen'i kapatmaz). İçerik `sharedHubSlivers`
+  (ayrı ekranla ortak). Geri tuşu ve yana çekiş de kapatır.
+- Ana ekrandaki paylaşılanlar bölümünün yeri: `homeSharedAtBottomProvider`
+  (üstte varsayılan / kendi notlarımın altında; Süz levhası + Ayarlar).
+- Ortak çalışan düğmesi üst çubuktan kalktı → başlıktaki etiket/hatırlatıcı
+  çipinin menüsünde; çipte kişi işareti (`_collabMarker`). `UiItem.topCollab`
+  kişiselleştirme anahtarı artık menü girdisini/işareti gizler.
+- **KÖK NEDEN — düzenleme modu ekranı aşağı itip alt çubuğu gizliyordu:**
+  `CustomizeModeHost` şeridi içeriği aşağı itiyor ama `MediaQuery.size` tam
+  ekran kalıyordu; not açılış geçişi (`note_open_route`) sayfayı
+  `OverflowBox(size)` ile o boyda çiziyor → alt çubuk şerit kadar ekran
+  dışında. Host artık alanın kendi boyunu `MediaQuery.size` olarak veriyor.
+- Görünüm anahtarına `onEmbed` ("Yazıya göm" → bağlama kipi `_startPendingEmbed`).
+- Madde sil ✕: 18 px, 24×28 dokunma alanı (`tapTargetSize: shrinkWrap` —
+  M3 IconButton varsayılanı 48 dp'ye şişiriyordu). "Yeni madde" satırının
+  tamamı dokunulabilir (`items-add-row`).
+- Editör başlığı sığmazsa küçülür (`fitTitleFontSize`, en az 14; altında
+  yatay kayar); satır yüksekliği strut ile taban boyda sabit.
+
 ## Faz 16 kararları (2026-10-31)
 - **Simge sözlüğü `lib/core/app_icons.dart`:** tabloda olan iş (Arşiv,
   Gelen=zarf, Defter, Kılavuz, Not paketi, Kopyala/Çoğalt, Görünüm/Renk,

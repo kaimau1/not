@@ -2,6 +2,34 @@ part of 'dashboard_screen.dart';
 
 /// Not ızgarasının dilimleri: bölümler, boş durum, sürükleyerek sıralama (C1).
 extension _DashSlivers on _DashboardScreenState {
+  /// "Gelen" süzgeci açıkken (bkz. [sharedHubOnHomeProvider]) not ızgarasının
+  /// yerine gelen kopyalar + benimle paylaşılan notlar. Ayrı ekranla aynı
+  /// içerik ([sharedHubSlivers]); boşsa klasörün boş hâli gibi tek mesaj.
+  List<Widget> _hubSlivers(
+    BuildContext context,
+    int columns,
+    double cellWidth,
+  ) {
+    final slivers = sharedHubSlivers(
+      context,
+      ref,
+      columns: columns,
+      cellWidth: cellWidth,
+    );
+    if (slivers.isNotEmpty) return slivers;
+    final l10n = context.l10n;
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: EmptyState(
+          icon: AppIcons.inbox,
+          title: l10n.sharedHubEmpty,
+          subtitle: l10n.sharedHubEmptyHint,
+        ),
+      ),
+    ];
+  }
+
   List<Widget> _buildNoteSlivers(
     BuildContext context,
     List<Note> notes,
