@@ -1,3 +1,4 @@
+import '../../../core/utils/rich_text.dart';
 import 'note.dart';
 import 'note_item.dart';
 
@@ -50,7 +51,7 @@ class NoteVersion {
       for (final i in items) i.text,
       for (final p in textPages) p.body,
     ]) {
-      final line = text.trim().split('\n').first.trim();
+      final line = stripRichMarkers(text).trim().split('\n').first.trim();
       if (line.isNotEmpty) return line;
     }
     return '';

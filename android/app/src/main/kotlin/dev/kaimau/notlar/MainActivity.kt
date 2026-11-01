@@ -23,6 +23,7 @@ import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
 import android.util.Rational
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -197,6 +198,50 @@ class MainActivity : FlutterFragmentActivity() {
     ) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         systemChannel?.invokeMethod("pipChanged", isInPictureInPictureMode)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        dropUnreadableShare(intent)
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        dropUnreadableShare(intent)
+        super.onNewIntent(intent)
+    }
+
+    /**
+     * Okuma izni verilmemiş paylaşımı eklentiye (receive_sharing_intent) gelmeden
+     * eler: eklenti SecurityException'ı yakalamıyor, uygulama çöküyordu
+     * (cihaz turu 2026-11-01). Hepsi okunamıyorsa niyet sıradan açılışa döner.
+     */
+    @Suppress("DEPRECATION")
+    private fun dropUnreadableShare(intent: Intent?) {
+        val action = intent?.action
+        val uris: List<Uri> = when (action) {
+            Intent.ACTION_SEND ->
+                listOfNotNull(intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM))
+            Intent.ACTION_SEND_MULTIPLE ->
+                intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM).orEmpty()
+            else -> return
+        }
+        val readable = uris.filter { uri ->
+            try {
+                contentResolver.openInputStream(uri)?.close()
+                true
+            } catch (e: Exception) {
+                Log.w("MainActivity", "Paylaşılan dosya okunamadı: ${e.javaClass.simpleName}")
+                false
+            }
+        }
+        if (readable.size == uris.size) return
+        Toast.makeText(this, R.string.share_unreadable, Toast.LENGTH_LONG).show()
+        if (readable.isEmpty()) {
+            intent.action = Intent.ACTION_MAIN
+            intent.removeExtra(Intent.EXTRA_STREAM)
+        } else {
+            intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(readable))
+        }
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

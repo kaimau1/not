@@ -836,7 +836,7 @@ class NoteCard extends ConsumerWidget {
                 ? maskSensitiveNumbers(stripRichMarkers(rawBody))
                 : stripRichMarkers(rawBody))
             .trim(),
-        if (note.items.isNotEmpty)
+        if (note.items.any((i) => i.text.trim().isNotEmpty))
           context.l10n.noteStatsItems(
             note.items.where((i) => i.text.trim().isNotEmpty).length,
           ),
