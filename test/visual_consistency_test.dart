@@ -115,6 +115,11 @@ void main() {
       final title = tester.getCenter(find.text('Süz'));
       final close = find.byKey(const ValueKey('sheet-close'));
       expect(tester.getCenter(close).dx, greaterThan(title.dx));
+      // ✕ gerçekten sağ kenarda (Flexible + Spacer ortaya düşürüyordu).
+      expect(
+        tester.getTopRight(close).dx,
+        greaterThan(tester.getTopRight(find.byType(SheetHeader)).dx - 16),
+      );
       expect(tester.getSize(close).height, greaterThanOrEqualTo(48));
       expect(find.byTooltip('Kapat'), findsOneWidget);
       // Bölüm başlığı yazıldığı gibi.

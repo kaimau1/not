@@ -36,19 +36,26 @@ class SheetHeader extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 48),
         child: Row(
           children: [
-            Flexible(
-              child: Semantics(
-                header: true,
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: sheetTitleStyle(context),
-                ),
+            // Expanded: Flexible + Spacer boş alanı yarı yarıya bölüyor, ✕ sağ
+            // kenara değil ortaya yakın düşüyordu (cihaz turu 2026-11-01).
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Semantics(
+                      header: true,
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: sheetTitleStyle(context),
+                      ),
+                    ),
+                  ),
+                  if (badge != null) ...[const SizedBox(width: 8), badge!],
+                ],
               ),
             ),
-            if (badge != null) ...[const SizedBox(width: 8), badge!],
-            const Spacer(),
             ...actions,
             if (showClose)
               IconButton(

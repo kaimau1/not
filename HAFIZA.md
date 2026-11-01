@@ -915,3 +915,9 @@ eskisini arşive taşıma.
 - Tembel `ListView` ekran dışını kurmaz → `ensureVisible` bulamaz.
 - Yerleşim testi tasarım değişince kırılır, kırılmalıdır da: niyete göre
   güncelle.
+
+## 2026-11-01 cihaz turu (adb)
+- `SheetHeader`: `Flexible` + `Spacer` boş alanı paylaşıyor, ✕ ortaya düşüyordu → başlık `Expanded` içinde; `visual_consistency_test` korur.
+- Ayarlar `_aiSummary` misafire "ücretsiz puan 30" diyordu; `_BuiltInAiStatus` sırasıyla hizalandı (anahtar → misafir → premium → ücretsiz).
+- Açık soru: misafir notunda üst çubuk "Senkronize" diyor, ana ekran "yalnız bu cihazda" diyor; yanıltıcı olabilir, karara bağlanmadı.
+- Cihaz testi tuzakları: uiautomator Flutter semantiğini okur (ekran görüntüsünden ucuz); levhayı dışına dokunarak kapatma (yerleşim klavyeyle değişir, alttaki düğmeye basar), geri tuşu kullan. Yerel Flutter 3.47.9 altında kalınca `pub get` başarısız: doğrulama CI'da.

@@ -893,8 +893,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       '${sortLabel(l10n, ref.watch(noteSortProvider))} · '
       '${swipeModeLabel(context, ref.watch(swipeModeProvider))}';
 
-  String _aiSummary(AppLocalizations l10n) =>
-      l10n.aiBuiltInRemaining(ref.watch(freeAiRemainingProvider));
+  // Sırası `_BuiltInAiStatus` ile aynı: misafire ve kendi anahtarı olana "ücretsiz
+  // puan" denmez (cihaz turu 2026-11-01: misafir özeti "kalan puan 30" diyordu).
+  String _aiSummary(AppLocalizations l10n) {
+    final remaining = ref.watch(freeAiRemainingProvider);
+    if ((ref.watch(activeApiKeyProvider).value ?? '').isNotEmpty) {
+      return l10n.aiBuiltInByok;
+    }
+    if (ref.watch(isAnonymousProvider)) return l10n.guestAiTitle;
+    return (ref.watch(premiumProvider).value ?? false)
+        ? l10n.aiBuiltInPremium(remaining)
+        : l10n.aiBuiltInRemaining(remaining);
+  }
 
   String _appearanceSummary(AppLocalizations l10n) {
     final theme = switch (ref.watch(themeChoiceProvider)) {
