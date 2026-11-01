@@ -118,7 +118,7 @@ void main() {
       // ✕ gerçekten sağ kenarda (Flexible + Spacer ortaya düşürüyordu).
       expect(
         tester.getTopRight(close).dx,
-        greaterThan(tester.getSize(find.byType(Scaffold)).width - 16),
+        greaterThan(tester.getTopRight(find.byType(BottomSheet)).dx - 16),
       );
       expect(tester.getSize(close).height, greaterThanOrEqualTo(48));
       expect(find.byTooltip('Kapat'), findsOneWidget);
