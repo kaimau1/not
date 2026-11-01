@@ -6,7 +6,7 @@ void main() {
   test('önizleme biçim işaretlerini göstermez', () {
     final v = NoteVersion(
       id: '1',
-      at: DateTime(2026, 11, 1),
+      at: DateTime(2026, 11, 2),
       reason: 'open',
       by: '',
       title: '',
