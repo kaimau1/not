@@ -132,6 +132,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'This file hasn\'t synced to this device yet';
 
   @override
+  String get webDriveTapToOpen => 'In Google Drive · tap to open';
+
+  @override
+  String get noteFullscreen => 'Full screen';
+
+  @override
+  String get noteFullscreenExit => 'Exit full screen';
+
+  @override
+  String get penModeDone => 'Close pen';
+
+  @override
+  String get tipPagePen =>
+      'Write anywhere on the page with the pen; tap with a finger to keep typing in the same note.';
+
+  @override
+  String get pageInkOnCard => 'Has handwriting';
+
+  @override
   String attachmentTooLarge(int limit) {
     return 'File is too large ($limit MB max)';
   }
@@ -6225,10 +6244,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiSettingsTooltip => 'AI settings';
-
-  @override
-  String get tipStylusCanvas =>
-      'Stylus detected: the handwriting canvas opened. Turn this off with “Detect pen automatically” in the pen settings.';
 
   @override
   String get tipSemanticSearch =>

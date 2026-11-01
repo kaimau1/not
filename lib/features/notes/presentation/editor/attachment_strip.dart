@@ -608,6 +608,20 @@ class _AttachmentTile extends ConsumerWidget {
           ),
         ),
       );
+    } else if (kIsWeb && attachment.isInDrive) {
+      // Web: Drive'daki görsel küçük resmi de iner (bkz. [WebDriveGate]).
+      content = SizedBox(
+        width: 140,
+        child: WebDriveGate(
+          attachment: attachment,
+          builder: (_, a) => Image.network(
+            a.downloadUrl,
+            width: 140,
+            fit: BoxFit.cover,
+            cacheWidth: 420,
+          ),
+        ),
+      );
     } else {
       content = Container(
         width: 140,

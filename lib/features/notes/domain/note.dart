@@ -41,6 +41,9 @@ enum NoteColor {
 
 /// Metne gömülü bir ek bağı: `📎 <label>` etiketi hangi eke gider.
 /// Bkz. `Note.tagLinks`.
+/// Belgede el yazısının durduğu sahte ek kaydının kimliği (bkz. [Note.pageInk]).
+const kPageInkId = '_page_ink';
+
 class NoteTagLink {
   const NoteTagLink({required this.label, required this.attachmentId});
 
@@ -165,6 +168,8 @@ class Note {
     this.pageNotes = const {},
     this.updatedBy = '',
     this.attachments = const [],
+    this.pageInk = const [],
+    this.hasPageInk = false,
     this.tags = const [],
     this.folderId,
     this.color = NoteColor.none,
@@ -282,6 +287,16 @@ class Note {
   final String updatedBy;
 
   final List<Attachment> attachments;
+
+  /// **SAYFANIN ÜSTÜNDEKİ EL YAZISI** (2026-11-02, bkz. `PageInkStack`).
+  /// Belgede `attachments` içinde [kPageInkId] kimlikli sahte bir kayıt olarak
+  /// durur, uygulamaya ek diye hiç girmez: böylece ağır belgeye bölünme
+  /// (`note_heavy.dart`, ek kimliğiyle `ink`) olduğu gibi çalışır.
+  final List<InkStroke> pageInk;
+
+  /// Belgede el yazısı var; hafif listede [pageInk] boş olsa da doğru
+  /// (bölünmüş not): boş sanılıp temizlenmesin, kart "el yazısı var" desin.
+  final bool hasPageInk;
 
   /// Serbest etiketler ("iş", "ev"...). '#' işareti olmadan saklanır.
   final List<String> tags;
@@ -533,6 +548,8 @@ class Note {
             p.body.trim().isEmpty && p.items.every((i) => i.text.trim().isEmpty),
       ) &&
       attachments.isEmpty &&
+      pageInk.isEmpty &&
+      !hasPageInk &&
       reminderAt == null;
 
   /// [a] bir görselden BALONLU görünüm için üretilmiş belge mi ve şu an
@@ -729,6 +746,7 @@ class Note {
     List<NoteItem>? items,
     Map<String, String>? pageNotes,
     List<Attachment>? attachments,
+    List<InkStroke>? pageInk,
     List<String>? tags,
     String? folderId,
     bool clearFolderId = false,
@@ -783,6 +801,8 @@ class Note {
     items: items ?? this.items,
     pageNotes: pageNotes ?? this.pageNotes,
     attachments: attachments ?? this.attachments,
+    pageInk: pageInk ?? this.pageInk,
+    hasPageInk: pageInk == null ? hasPageInk : pageInk.isNotEmpty,
     tags: tags ?? this.tags,
     folderId: clearFolderId ? null : (folderId ?? this.folderId),
     color: color ?? this.color,
@@ -866,13 +886,20 @@ class Note {
     // pratikte kalıcı kayıp. Belgesi ve sayfa notu olan bir "text" notu
     // aslında bir belge notudur; tipi geri yükseltiliyor.
     final storedType = NoteType.fromId(map['type'] as String?);
-    final rawAttachments = (map['attachments'] as List<dynamic>? ?? const []);
+    final allAttachments = (map['attachments'] as List<dynamic>? ?? const []);
+    final rawPageInk = allAttachments
+        .where((raw) => (raw as Map)['id'] == kPageInkId)
+        .firstOrNull as Map?;
+    final rawAttachments = [
+      for (final raw in allAttachments)
+        if ((raw as Map)['id'] != kPageInkId) raw,
+    ];
     final rawPageNotes =
         (map['pageNotes'] as Map<dynamic, dynamic>? ?? const {});
     final type = repairNoteType(
       storedType,
       attachmentKinds: [
-        for (final raw in rawAttachments) (raw as Map)['kind']?.toString(),
+        for (final raw in rawAttachments) raw['kind']?.toString(),
       ],
       hasPageNotes: rawPageNotes.isNotEmpty,
       classicDocument: map['classicDocument'] == true,
@@ -892,11 +919,16 @@ class Note {
             in (map['pageNotes'] as Map<dynamic, dynamic>? ?? const {}).entries)
           e.key.toString(): e.value?.toString() ?? '',
       },
+      pageInk: [
+        for (final raw in (rawPageInk?['ink'] as List<dynamic>? ?? const []))
+          InkStroke.fromMap(Map<String, dynamic>.from(raw as Map)),
+      ],
+      hasPageInk: rawPageInk != null,
       attachments: [
-        for (final raw in (map['attachments'] as List<dynamic>? ?? const []))
+        for (final raw in rawAttachments)
           // noteId ile: ekin yerel yolu cihazda türetilir, belgeden okunmaz.
           Attachment.fromMap(
-            Map<String, dynamic>.from(raw as Map),
+            Map<String, dynamic>.from(raw),
             noteId: id,
           ),
       ],
@@ -995,7 +1027,15 @@ class Note {
     // oluşmaz. Dolduğunda anahtarlar tek tek birleşir — merge derin
     // birleştirdiği için başka cihazın yazdığı BAŞKA sayfanın notu ezilmez.
     if (pageNotes.isNotEmpty) 'pageNotes': pageNotes,
-    'attachments': [for (final a in attachments) a.toMap()],
+    'attachments': [
+      for (final a in attachments) a.toMap(),
+      if (pageInk.isNotEmpty || (hasPageInk && heavyMissing))
+        {
+          'id': kPageInkId,
+          'kind': 'pageInk',
+          if (pageInk.isNotEmpty) 'ink': [for (final s in pageInk) s.toMap()],
+        },
+    ],
     'tags': tags,
     'folderId': folderId,
     'color': color.id,

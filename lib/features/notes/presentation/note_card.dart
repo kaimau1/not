@@ -682,6 +682,10 @@ class NoteCard extends ConsumerWidget {
               const SizedBox(height: 8),
               CardMediaBody(plan: media),
             ],
+            if (note.hasPageInk) ...[
+              const SizedBox(height: 8),
+              CardPageInk(note: note),
+            ],
           ],
           if (folderName != null && folderName.isNotEmpty) ...[
             const SizedBox(height: 8),

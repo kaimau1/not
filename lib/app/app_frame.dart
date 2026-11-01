@@ -83,13 +83,21 @@ class AppFrame extends ConsumerWidget {
         size.width >= kRailBreakpoint && size.height >= _minRailHeight;
     void toggleList() => ref.read(listPaneCollapsedProvider.notifier).toggle();
 
+    final fullscreen = ref.watch(noteFullscreenProvider);
     Widget content = child;
     if (showRail) {
       final rtl = Directionality.of(context) == TextDirection.rtl;
       content = Row(
         children: [
-          _AppRail(showListToggle: size.width >= kSplitBreakpoint),
-          const VerticalDivider(width: 1, thickness: 1),
+          // Ağaç şekli sabit: tam ekrana geçişte açık not yeniden kurulmaz.
+          if (fullscreen)
+            const SizedBox.shrink()
+          else
+            _AppRail(showListToggle: size.width >= kSplitBreakpoint),
+          if (fullscreen)
+            const SizedBox.shrink()
+          else
+            const VerticalDivider(width: 1, thickness: 1),
           Expanded(
             // İçerik, pencerenin değil KENDİ alanının boyunu "ekran" sanmalı:
             // ana-detay kararı (kSplitBreakpoint), sütun sayısı ve dar ekran

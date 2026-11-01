@@ -115,6 +115,10 @@ void main() {
   testWidgets('fosforlu seçilince kalınlık kendiliğinden artar', (
     tester,
   ) async {
+    // Telefon: panel tepsinin içinde (tablette açılır pencere, aşağıda).
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -139,5 +143,29 @@ void main() {
       tester.widget<Slider>(find.byType(Slider)).value,
       InkPen.highlighter.defaultWidth,
     );
+  });
+
+  testWidgets('tablette kalemler solda, ayarlar açılır pencerede', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        locale: const Locale('tr'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const DrawingScreen(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final pen = tester.getRect(find.byKey(const ValueKey('pen-tray-pen')));
+    expect(pen.right, lessThanOrEqualTo(64));
+    // Seçili araca ikinci dokunuş: renk/kalınlık açılır pencerede.
+    await tester.tap(find.byKey(const ValueKey('pen-tray-pen')));
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byType(Slider), findsWidgets);
   });
 }

@@ -10,6 +10,7 @@ import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/widgets/customizable.dart';
 import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
+import '../drive_ui.dart';
 import '../viewers/bubble_layer.dart';
 import 'note_images.dart';
 import 'audio_card_box.dart';
@@ -371,10 +372,13 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                     : isSlide
                     // SUNUM (2026-10-17): slayt çevrilebilen kutu; bölmeden
                     // çıkış görünüm anahtarından.
-                    ? SlidePageBox(
-                        key: ValueKey('pinned-slide-${widget.media.id}'),
+                    ? WebDriveGate(
                         attachment: widget.media,
-                        onChanged: widget.onChanged ?? (_) {},
+                        builder: (_, shown) => SlidePageBox(
+                          key: ValueKey('pinned-slide-${widget.media.id}'),
+                          attachment: shown,
+                          onChanged: widget.onChanged ?? (_) {},
+                        ),
                       )
                     : isPdf
                     // Belge kutusu kendi jestlerini kullanır (yatay kaydırma
@@ -389,13 +393,16 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                               (widget.media.height ?? 0).toDouble(),
                               widget.media.pdfTurns,
                             ),
-                            child: PdfPageBox(
-                              key: ValueKey('pinned-pdf-${widget.media.id}'),
+                            child: WebDriveGate(
                               attachment: widget.media,
-                              onChanged: widget.onChanged ?? (_) {},
-                              // Balonludan sabite alınan belge balonlarıyla
-                              // görünür; çubukta göster/gizle.
-                              showBubbles: true,
+                              builder: (_, shown) => PdfPageBox(
+                                key: ValueKey('pinned-pdf-${widget.media.id}'),
+                                attachment: shown,
+                                onChanged: widget.onChanged ?? (_) {},
+                                // Balonludan sabite alınan belge balonlarıyla
+                                // görünür; çubukta göster/gizle.
+                                showBubbles: true,
+                              ),
                             ),
                           ),
                         ),

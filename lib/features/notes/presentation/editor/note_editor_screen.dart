@@ -110,8 +110,11 @@ import 'calculator_sheet.dart';
 import '../../data/place_reminders.dart';
 import '../../data/drive_store.dart' show localFilesRevisionProvider;
 import '../drive_ui.dart';
+import '../../../../app/split_shell.dart';
+import 'page_ink_layer.dart';
 import '../place_reminder_sheet.dart';
-import 'drawing_screen.dart';
+import '../viewers/ink_layer.dart';
+import 'pen_tray.dart';
 import 'editor_bar_layout.dart';
 import 'format_bar.dart';
 import 'format_menu.dart';
@@ -607,7 +610,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (!mounted || _note == null) return;
     if (_pendingDraw) {
       _pendingDraw = false;
-      _addDrawing();
+      _openPen();
     }
     if (_pendingVoice) {
       _pendingVoice = false;
@@ -1062,6 +1065,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // depo/ayar bağımlılıkları ilk build'den ÖNCE de elde olmalı: yaşam
     // döngüsü kaydı ilk kare çizilmeden gelebilir.
     _cacheDeps();
+    _fullscreenNotifier = ref.read(noteFullscreenProvider.notifier);
     // İlk açılış kasması (madde 3): editör başlangıçta _note null olduğu için
     // bir kare boyunca CircularProgressIndicator gösterip ardından tüm editörü
     // kuruyordu; bu geçiş, sayfa animasyonuyla aynı anda büyük bir yerleşim
@@ -1235,6 +1239,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           merged = previous.copyWith(
             heavyRef: incoming.heavyRef,
             heavyLoaded: previous.heavyLoaded || incoming.heavyLoaded,
+            // Bizim çizgilerimiz henüz yazılmadıysa onlar kalır; yoksa gelen
+            // (başka cihaz ya da ağır belgenin geç gelen çizimi).
+            pageInk: _debouncer.hasPending ? previous.pageInk : incoming.pageInk,
             attachments: hydrating
                 ? hydrateAttachments(
                     local: previous.attachments,
@@ -1452,6 +1459,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     openEditorNoteIds.remove(widget.noteId);
+    _pageInkCtl?.dispose();
+    // Tam ekran nota bağlı; ağaç kilitliyken durum yazılamaz.
+    final fullscreen = _fullscreenNotifier;
+    if (fullscreen != null) unawaited(Future.microtask(() => fullscreen.set(false)));
     // Dikte açıkken editörden çıkılabiliyor: mikrofon ekranla birlikte
     // kapanmazsa arka planda dinlemeye devam ederdi.
     if (_dictation != null) {
@@ -2053,7 +2064,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }) => SingleChildScrollView(
     controller: _pageScroll,
     padding: const EdgeInsets.only(bottom: 96),
-    child: _withRuledLines(note, bodyStyle, NotePageCanvas(
+    child: _withRuledLines(note, bodyStyle, PageInkStack(
+      ink: _pageInkOf(note),
+      page: textPagePosition(note).index + 1,
+      penActive: _penMode,
+      scroll: _pageScroll,
+      child: NotePageCanvas(
       // KLAVYEDEN BAĞIMSIZ taban — bkz. [_stableCanvasHeight].
       minHeight: minHeight,
       images: imageAttachments,
@@ -2108,7 +2124,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             }
           : null,
       child: KeyedSubtree(key: _pageKey, child: pageContent),
-    )),
+    ))),
   );
 
   /// Belge notunda bir BALONA yazılıyor: editörün alt çubuğu gizlenir.
@@ -2119,9 +2135,66 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// iki parmak gezinir (kullanıcı isteği 2026-08-08).
   bool _penMode = false;
 
-  /// Kalem dokunuşu el yazısı tuvalini açıyor (ikinci dokunuş ikinci tuval
-  /// açmasın — bkz. [_onContentPointerDown]).
-  bool _stylusOpening = false;
+  NoteFullscreenNotifier? _fullscreenNotifier;
+
+  /// Metin/liste notunun sayfa üstü el yazısı (bkz. [PageInkStack]).
+  InkController? _pageInkCtl;
+
+  /// Son kez nota yazılan çizgi listesi: nottan gelen başka değer (geri al,
+  /// başka cihaz) denetleyiciye bununla anlaşılır.
+  InkController _pageInkOf(Note note) {
+    final existing = _pageInkCtl;
+    if (existing != null) {
+      if (!identical(existing.ink, note.pageInk) && !existing.drawing) {
+        existing.replaceAll(note.pageInk);
+      }
+      _syncPageInkKinds(existing);
+      return existing;
+    }
+    final created = InkController(
+      initial: note.pageInk,
+      onChanged: (strokes) => _mutate((n) => n.copyWith(pageInk: strokes)),
+    )..setEditing(!_readOnly);
+    _pageInkCtl = created;
+    _syncPageInkKinds(created);
+    return created;
+  }
+
+  /// Kalem kipi kapalıyken yalnız kalem yazar (ayar açıksa); parmak ve fare
+  /// metne, kaydırmaya gider.
+  void _syncPageInkKinds(InkController ink) {
+    ink.allowedKinds = {
+      if (_penMode || InkToolMemory.autoStylus) ...const [
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.invertedStylus,
+      ],
+      if (_penMode) ...const [PointerDeviceKind.touch, PointerDeviceKind.mouse],
+    };
+  }
+
+  /// Metin/liste notunda kalem kipi mi (belge notunun kalemi kendi bölmesinde).
+  bool get _pagePen => _penMode && !(_note?.type.isPageNoteType ?? false);
+
+  void _openPen() => _update(() => _penMode = true);
+
+  /// Tablette tam ekran düğmesi.
+  Widget _fullscreenButton(AppLocalizations l10n) {
+    final on = ref.watch(noteFullscreenProvider);
+    return IconButton(
+      key: const ValueKey('note-fullscreen'),
+      tooltip: on ? l10n.noteFullscreenExit : l10n.noteFullscreen,
+      icon: Icon(on ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded),
+      onPressed: () => ref.read(noteFullscreenProvider.notifier).set(!on),
+    );
+  }
+
+  /// Kalem kipinin kapatma düğmesi (tepsi/sütun sonunda).
+  Widget _penDoneButton(AppLocalizations l10n) => IconButton(
+    key: const ValueKey('pen-done'),
+    tooltip: l10n.penModeDone,
+    icon: const Icon(Icons.check_rounded),
+    onPressed: () => _update(() => _penMode = false),
+  );
 
   /// Bu açılışta ipucuna bakıldı mı (bkz. [_maybeShowTip]).
   bool _tipChecked = false;
@@ -2477,7 +2550,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // `noteOf`: anlık görüntü değil CANLI okuyucu — sayfa notuna yazmak "saf
     // yazım" sayıldığı için ekran geneli setState atlanır ve buraya geçirilen
     // bir `Note` bayat kalırdı (bkz. PageNotePane.noteOf).
-    final pane = isSlides
+    // Web: Drive'daki belge önce iner (bkz. [WebDriveGate]); blob adresi
+    // buluta yazılmaz (`Attachment.toMap`).
+    final pane = WebDriveGate(
+      attachment: doc,
+      builder: (context, doc) => isSlides
         ? SlideNotePane(
             key: ValueKey('slide-pane-${doc.id}'),
             noteOf: () => _note ?? note,
@@ -2508,7 +2585,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             onImmersiveChanged: _setImmersiveBubble,
             penMode: _penMode,
             onPenModeChanged: (value) => setState(() => _penMode = value),
-          );
+          ),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2524,8 +2602,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// **KALEMİ OTOMATİK ALGILA** (kullanıcı isteği 2026-10-30: "otomatik
   /// kalem algılama olsun", Samsung Notes gibi): kalem (S Pen vb.) notun
   /// içeriğine değince yazma kipi kendiliğinden açılır — belge notunda
-  /// (PDF/sunum) sayfanın üstüne yazma kalemi, metin/liste notunda el yazısı
-  /// tuvali. Ayar kalem ayarlarında ([InkToolMemory.autoStylus]); salt okunur
+  /// (PDF/sunum) sayfanın üstüne yazma kalemi, metin/liste notunda aynı
+  /// sayfada kalem kipi (çizgi [PageInkStack]'te zaten başlamıştır). Ayar kalem ayarlarında ([InkToolMemory.autoStylus]); salt okunur
   /// notta, kalem kipi zaten açıkken ve yazma kartı açıkken çalışmaz. Kalemle
   /// araç çubuklarına dokunmak etkilenmez: dinleyici yalnız içerik alanında.
   void _onContentPointerDown(PointerDownEvent event) {
@@ -2538,7 +2616,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
     final note = _note;
     if (note == null || _readOnly || !InkToolMemory.autoStylus) return;
-    if (_stylusOpening) return;
     // Yalnız bu ekran en üstteyken (levha/menü açıkken dokunuş onlarındır).
     if (ModalRoute.of(context)?.isCurrent == false) return;
     final document =
@@ -2550,22 +2627,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _showSnack(context.l10n.inkStylusDetected);
       return;
     }
-    // Metin/liste notu: imleç koymak için kalemle alana dokunan da olabilir
-    // — klavye açıkken (yazıyor) el yazısına geçilmez.
-    if (MediaQuery.viewInsetsOf(context).bottom > 0) return;
-    _stylusOpening = true;
+    if (_penMode) return;
     HapticFeedback.selectionClick();
-    // İLK SEFERDE NEDEN (F14.4): kalem dokunuşu metin notunda tuvali
-    // kendiliğinden açar — beklemeyen için ani geçiş. Bir kez söylenir;
-    // az önce olanı açıkladığı için oturum sınırına takılmaz.
+    _openPen();
+    // İLK SEFERDE NEDEN (F14.4): araçlar kendiliğinden açıldı. Bir kez
+    // söylenir; az önce olanı açıkladığı için oturum sınırına takılmaz.
     TipOnce.show(
       context,
       ref.read(sharedPreferencesProvider),
       TipOnce.stylusCanvas,
-      context.l10n.tipStylusCanvas,
+      context.l10n.tipPagePen,
       sessionLimit: false,
     );
-    unawaited(_addDrawing().whenComplete(() => _stylusOpening = false));
   }
 
   @override
@@ -3521,8 +3594,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     //
     // RepaintBoundary: çubuk klavye animasyonu boyunca yer değiştiriyor;
     // ayrı katmanda olmazsa her karede GÖVDEYİ de yeniden boyatır.
-    final Widget? bottomBar = _immersiveBubble
+    final penRail = _pagePen && PenTray.useRail(context);
+    final Widget? bottomBar = _immersiveBubble || penRail
         ? null
+        : _pagePen
+        // Telefon: kalemler altta, biçim çubuğunun yerinde.
+        ? PenTray(
+            controller: _pageInkOf(note),
+            controls: true,
+            trayHeight: 76,
+            actions: [_penDoneButton(l10n)],
+          )
         : RepaintBoundary(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -4150,7 +4232,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // değişiyor; çubuğun klavyeyle birlikte akan hareketi ise
           // [KeyboardSlide] ile yalnız boyama katmanında yapılıyor.
           resizeToAvoidBottomInset: false,
-          appBar: AppBar(
+          // Kalem + tam ekran: üst de sayfa olur (çıkış sütunda).
+          appBar: penRail && ref.watch(noteFullscreenProvider)
+              ? null
+              : AppBar(
             backgroundColor: themed ? Colors.transparent : background,
             scrolledUnderElevation: themed ? 0 : null,
             // Başlık yerinde düzenleme tarihi: notun kendi başlığı zaten gövdenin
@@ -4336,6 +4421,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               // barın başlık alanındaki göstergelerden okunuyor.
               // ⋮ artık açılır menü değil, iki sütunlu levha açar
               // (bkz. note_menu_sheet.dart — kullanıcı isteği 2026-08-09).
+              if (PenTray.useRail(context)) _fullscreenButton(l10n),
               IconButton(
                 tooltip: l10n.noteMenu,
                 icon: const Icon(Icons.more_vert),
@@ -4372,6 +4458,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               child: Column(
                 children: [
                   Expanded(
+                    // Sütun yokken de Row: kaleme geçişte sayfa yeniden kurulmaz.
+                    child: Row(
+                      children: [
+                        if (penRail)
+                          PenTray(
+                            controller: _pageInkOf(note),
+                            rail: true,
+                            actions: [
+                              _fullscreenButton(l10n),
+                              _penDoneButton(l10n),
+                            ],
+                          )
+                        else
+                          const SizedBox.shrink(),
+                        Expanded(
                     // KALEMİ OTOMATİK ALGILA (bkz. [_onContentPointerDown]).
                     child: Listener(
                       onPointerDown: _onContentPointerDown,
@@ -4397,6 +4498,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           PageSwipeDetector(
                             enabled:
                                 !note.type.isPageNoteType &&
+                                !_penMode &&
                                 textPagePosition(note).count > 1,
                             onSwipe: _swipePage,
                             child: body,
@@ -4417,6 +4519,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             ),
                         ],
                       ),
+                    ),
+                        ),
+                      ],
                     ),
                   ),
                   // KLAVYE: Scaffold yalnız GÖVDEYİ klavyeye göre kısaltır, alt

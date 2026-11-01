@@ -48,10 +48,11 @@ extension _DashShelf on _DashboardScreenState {
                 child: AllNotesChip(),
               ),
               // Gelen ve paylaşılanlar: Tümü'nün yanında (2026-10-31).
-              const Padding(
-                padding: EdgeInsetsDirectional.only(start: 6),
-                child: SharedHubChip(),
-              ),
+              if (!ref.watch(sharedHubFolderProvider).hidden)
+                const Padding(
+                  padding: EdgeInsetsDirectional.only(start: 6),
+                  child: SharedHubChip(),
+                ),
               const Spacer(),
               TextButton.icon(
                 onPressed: () =>
@@ -145,6 +146,8 @@ extension _DashShelf on _DashboardScreenState {
     final ordered = emptyFoldersLast(folders, ref.watch(folderSortProvider), {
       for (final f in folders) f.id: empty.contains(f.id) ? 0 : 1,
     });
+    final hub = ref.watch(sharedHubFolderProvider);
+    final hubOn = ref.watch(sharedHubOnHomeProvider);
     return SliverToBoxAdapter(
       child: SizedBox(
         // 48 dp: sondaki "Tüm klasörler" düğmesi tam dokunma yüksekliği
@@ -160,9 +163,6 @@ extension _DashShelf on _DashboardScreenState {
                   // "Tümü" en başta (kullanıcı isteği 2026-10-20).
                   const AllNotesChip(),
                   const SizedBox(width: 5),
-                  // GELEN hemen Tümü'nün yanında (kullanıcı isteği 2026-10-31).
-                  const SharedHubChip(),
-                  const SizedBox(width: 5),
                   for (final share in hotShared) ...[
                     SharedFolderChip(
                       key: ValueKey('shared-chip-${share.folderId}'),
@@ -170,17 +170,30 @@ extension _DashShelf on _DashboardScreenState {
                     ),
                     const SizedBox(width: 5),
                   ],
-                  for (final folder in ordered) ...[
-                    _EnsureVisible(
-                      key: ValueKey('folder-chip-${folder.id}'),
-                      active: folder.id == selectedFolderId,
-                      child: FolderChip(
-                        folder: folder,
-                        selected: folder.id == selectedFolderId,
+                  // GELEN varsayılan olarak Tümü'nün yanında (2026-10-31); yeri
+                  // Klasör sırası levhasından değişir (2026-11-02).
+                  for (final folder in withSharedHub(
+                    ordered,
+                    hub,
+                    hub.order ?? 0,
+                  ))
+                    if (folder.id != kSharedHubFolderId) ...[
+                      _EnsureVisible(
+                        key: ValueKey('folder-chip-${folder.id}'),
+                        active: folder.id == selectedFolderId,
+                        child: FolderChip(
+                          folder: folder,
+                          selected: folder.id == selectedFolderId,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 5),
-                  ],
+                      const SizedBox(width: 5),
+                    ] else if (!hub.hidden) ...[
+                      _EnsureVisible(
+                        active: hubOn,
+                        child: const SharedHubChip(),
+                      ),
+                      const SizedBox(width: 5),
+                    ],
                   for (final share in calmShared) ...[
                     SharedFolderChip(
                       key: ValueKey('shared-chip-${share.folderId}'),

@@ -712,6 +712,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
           ? () => _openAttachmentTag(attachment, editing: true)
           : null,
       onChanged: _updateAttachment,
+      onCopy: () => unawaited(_copyAttachment(attachment)),
       onReplace: () => unawaited(_replaceEmbed(label)),
       onUnlink: () => _unlinkEmbed(label),
       onImport: _canImportEmbed(attachment)
@@ -828,6 +829,9 @@ extension _EditorAttachments on _NoteEditorScreenState {
       target!.commit();
       _mutate((n) => n.copyWith(tagLinks: links(n)), immediate: true);
     }
+    // GÖMÜLEN EK EKRANDAN KALKAR (kullanıcı isteği 2026-11-02): artık yazıdan
+    // açılıyor; sayfada ya da sabit bölmede ikinci kez yer kaplamasın.
+    unawaited(_setAttachmentView(attachment, AttachmentView.attached));
     _showSnack(context.l10n.attachmentTagInserted);
   }
 
@@ -844,7 +848,9 @@ extension _EditorAttachments on _NoteEditorScreenState {
   /// Bağlama kipini başlatır (ek seçildi, yazı bekleniyor).
   void _startPendingEmbed(Attachment attachment) {
     _update(() => _pendingEmbed = attachment);
-    _showSnack(context.l10n.attachmentTagPickText);
+    // ELLE DAİRE EN BAŞTAN AÇIK (kullanıcı isteği 2026-11-02): ipucu örtünün
+    // şeridinde; ✕ ile metin seçerek bağlamaya dönülür.
+    _setGestureMode(_GestureMode.embedLasso);
   }
 
   /// Bağlama kipini o anki SEÇİMLE bitirir.
@@ -1083,6 +1089,10 @@ extension _EditorAttachments on _NoteEditorScreenState {
         ContextMenuButtonItem(
           label: l10n.attachmentTagEdit,
           onPressed: () => run(() => _openAttachmentTag(tagged, editing: true)),
+        ),
+        ContextMenuButtonItem(
+          label: l10n.copyAttachment,
+          onPressed: () => run(() => unawaited(_copyAttachment(tagged))),
         ),
         ContextMenuButtonItem(
           label: l10n.embedRemove,
@@ -1372,14 +1382,6 @@ extension _EditorAttachments on _NoteEditorScreenState {
     } catch (e) {
       if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
     }
-  }
-
-  Future<void> _addDrawing() async {
-    final bytes = await Navigator.of(
-      context,
-    ).push<Uint8List>(MaterialPageRoute(builder: (_) => const DrawingScreen()));
-    if (bytes == null) return;
-    await _addImageBytes(bytes, 'cizim.png');
   }
 
   void _removeAttachment(Attachment attachment) {
@@ -1707,8 +1709,9 @@ extension _EditorAttachments on _NoteEditorScreenState {
       // dosyayı metne dök TEK girişte (2026-10-20, bkz. attach_sheet.dart).
       case 'any-file':
         await _attachAnyFile();
+      // El yazısı artık ayrı tuval değil, sayfanın kendisi (2026-11-02).
       case 'drawing':
-        await _addDrawing();
+        _openPen();
       case 'audio':
         await _recordAudio();
       case 'video':

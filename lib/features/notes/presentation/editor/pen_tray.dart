@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -26,6 +28,33 @@ enum PenTrayTool { lasso, shapes, eraser, pen, marker, highlighter }
 /// arayüzü vardı, biri güncellenince öbürü geride kalıyordu. Belge üstünde
 /// üst çubuk olmadığı için [controls] tepsinin üstüne ince bir satır koyar:
 /// ipucu · geri al · yinele · yalnız kalem · ayarlar.
+/// Kalem ayarları: tablette açılır pencere (kullanıcı isteği 2026-11-02),
+/// telefonda alt levha.
+void showInkSettings(BuildContext context, InkController ink) {
+  if (PenTray.useRail(context)) {
+    unawaited(
+      showDialog<void>(
+        context: context,
+        builder: (_) => Dialog(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: InkSettingsSheet(controller: ink),
+          ),
+        ),
+      ),
+    );
+    return;
+  }
+  unawaited(
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (_) => InkSettingsSheet(controller: ink),
+    ),
+  );
+}
+
 class PenTray extends StatefulWidget {
   const PenTray({
     super.key,
@@ -33,7 +62,21 @@ class PenTray extends StatefulWidget {
     this.controls = false,
     this.hint,
     this.trayHeight = 92,
+    this.rail = false,
+    this.actions = const [],
   });
+
+  /// Tablet penceresi mi (ray + ana-detayda da pencerenin kendisi ölçülür):
+  /// orada kalemler sayfanın SOLUNDA sütun olur (kullanıcı isteği 2026-11-02:
+  /// "üst ve alt kısımlar tamamen not sayfası olsun").
+  static bool useRail(BuildContext context) =>
+      MediaQueryData.fromView(View.of(context)).size.width >= 600;
+
+  /// Dikey sütun: araçlar, renk, geri al/yinele, ayarlar ve [actions].
+  final bool rail;
+
+  /// Denetimlerin sonuna eklenen düğmeler (tam ekran, kalemi kapat).
+  final List<Widget> actions;
 
   final InkController controller;
 
@@ -72,7 +115,7 @@ class _PenTrayState extends State<PenTray> {
   void _tap(PenTrayTool tool) {
     HapticFeedback.selectionClick();
     if (tool == _current) {
-      setState(() => _panel = !_panel);
+      _togglePanel();
       return;
     }
     switch (tool) {
@@ -92,13 +135,152 @@ class _PenTrayState extends State<PenTray> {
     }
   }
 
+  /// Renk/kalınlık paneli: şeritte yerinde açılır, sütunda açılır pencere.
+  void _togglePanel() {
+    if (!widget.rail) {
+      setState(() => _panel = !_panel);
+      return;
+    }
+    unawaited(
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) => Dialog(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: ListenableBuilder(
+              listenable: _ink,
+              builder: (_, _) => SingleChildScrollView(
+                child: _Options(controller: _ink, tool: _current),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: _ink,
-      builder: (context, _) => _build(context),
+      builder: (context, _) => widget.rail ? _buildRail(context) : _build(context),
     );
   }
+
+  /// Sayfanın solundaki sütun: kalemler ucu sayfaya bakacak şekilde yatık.
+  Widget _buildRail(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final current = _current;
+    final labels = _labels(l10n);
+    return Material(
+      color: scheme.surfaceContainerLow,
+      child: SafeArea(
+        right: false,
+        child: SizedBox(
+          width: 64,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Column(
+              children: [
+                for (final tool in PenTrayTool.values)
+                  SizedBox(
+                    width: 64,
+                    height: 46,
+                    child: RotatedBox(
+                      quarterTurns: 1,
+                      child: _TrayTool(
+                        key: ValueKey('pen-tray-${tool.name}'),
+                        tool: tool,
+                        label: labels[tool]!,
+                        selected: tool == current,
+                        ink: _ink.color,
+                        onTap: () => _tap(tool),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                _colorDot(scheme, l10n),
+                const Divider(height: 18, indent: 12, endIndent: 12),
+                ..._controlButtons(l10n),
+                ...widget.actions,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Map<PenTrayTool, String> _labels(AppLocalizations l10n) => {
+    PenTrayTool.lasso: l10n.inkLasso,
+    PenTrayTool.shapes: l10n.inkShapes,
+    PenTrayTool.eraser: l10n.eraser,
+    PenTrayTool.pen: l10n.penBallpoint,
+    PenTrayTool.marker: l10n.penMarker,
+    PenTrayTool.highlighter: l10n.penHighlighter,
+  };
+
+  /// RENK düğmesi: seçili renk; dokununca panel.
+  Widget _colorDot(ColorScheme scheme, AppLocalizations l10n) => Tooltip(
+    message: l10n.inkColor,
+    child: InkResponse(
+      key: const ValueKey('pen-tray-color'),
+      radius: 26,
+      onTap: _togglePanel,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: _ink.color,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: _panel ? scheme.primary : scheme.outlineVariant,
+            width: _panel ? 3 : 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  List<Widget> _controlButtons(AppLocalizations l10n) => [
+    IconButton(
+      key: const ValueKey('pen-tray-undo'),
+      tooltip: l10n.undo,
+      visualDensity: VisualDensity.compact,
+      icon: const Icon(Icons.undo_rounded),
+      onPressed: _ink.canUndo ? _ink.undo : null,
+    ),
+    IconButton(
+      tooltip: l10n.redo,
+      visualDensity: VisualDensity.compact,
+      icon: const Icon(Icons.redo_rounded),
+      onPressed: _ink.canRedo ? _ink.redo : null,
+    ),
+    // YALNIZ KALEM: açıkken parmak kaydırır/yakınlaştırır.
+    IconButton(
+      tooltip: _ink.penOnly ? l10n.inkPenOnlyOn : l10n.inkPenOnlyOff,
+      isSelected: _ink.penOnly,
+      visualDensity: VisualDensity.compact,
+      icon: Icon(_ink.penOnly ? Icons.draw_rounded : Icons.touch_app_outlined),
+      onPressed: () => _ink.setPenOnly(!_ink.penOnly),
+    ),
+    IconButton(
+      key: const ValueKey('pen-tray-settings'),
+      tooltip: l10n.inkSettings,
+      visualDensity: VisualDensity.compact,
+      icon: const Icon(Icons.tune_rounded),
+      onPressed: () => showInkSettings(context, _ink),
+    ),
+  ];
 
   /// [PenTray.controls] satırı: solda ipucu, sağda geçmiş ve ayarlar.
   Widget _controlRow(BuildContext context) {
@@ -124,40 +306,8 @@ class _PenTrayState extends State<PenTray> {
                         ?.copyWith(color: scheme.onSurfaceVariant),
                   ),
           ),
-          IconButton(
-            key: const ValueKey('pen-tray-undo'),
-            tooltip: l10n.undo,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.undo_rounded),
-            onPressed: _ink.canUndo ? _ink.undo : null,
-          ),
-          IconButton(
-            tooltip: l10n.redo,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.redo_rounded),
-            onPressed: _ink.canRedo ? _ink.redo : null,
-          ),
-          // YALNIZ KALEM: açıkken parmak kaydırır/yakınlaştırır.
-          IconButton(
-            tooltip: _ink.penOnly ? l10n.inkPenOnlyOn : l10n.inkPenOnlyOff,
-            isSelected: _ink.penOnly,
-            visualDensity: VisualDensity.compact,
-            icon: Icon(
-              _ink.penOnly ? Icons.draw_rounded : Icons.touch_app_outlined,
-            ),
-            onPressed: () => _ink.setPenOnly(!_ink.penOnly),
-          ),
-          IconButton(
-            tooltip: l10n.inkSettings,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.tune_rounded),
-            onPressed: () => showModalBottomSheet<void>(
-              context: context,
-              showDragHandle: true,
-              isScrollControlled: true,
-              builder: (_) => InkSettingsSheet(controller: _ink),
-            ),
-          ),
+          ..._controlButtons(l10n),
+          ...widget.actions,
         ],
       ),
     );
@@ -167,14 +317,7 @@ class _PenTrayState extends State<PenTray> {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final current = _current;
-    final labels = {
-      PenTrayTool.lasso: l10n.inkLasso,
-      PenTrayTool.shapes: l10n.inkShapes,
-      PenTrayTool.eraser: l10n.eraser,
-      PenTrayTool.pen: l10n.penBallpoint,
-      PenTrayTool.marker: l10n.penMarker,
-      PenTrayTool.highlighter: l10n.penHighlighter,
-    };
+    final labels = _labels(l10n);
     return Material(
       color: scheme.surfaceContainerLow,
       child: SafeArea(
@@ -215,36 +358,7 @@ class _PenTrayState extends State<PenTray> {
                   // RENK düğmesi: seçili renk; dokununca panel.
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Tooltip(
-                      message: l10n.inkColor,
-                      child: InkResponse(
-                        key: const ValueKey('pen-tray-color'),
-                        radius: 26,
-                        onTap: () => setState(() => _panel = !_panel),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: _ink.color,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: _panel
-                                  ? scheme.primary
-                                  : scheme.outlineVariant,
-                              width: _panel ? 3 : 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.12),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                    child: _colorDot(scheme, l10n),
                   ),
                 ],
               ),

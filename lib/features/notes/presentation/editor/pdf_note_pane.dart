@@ -442,7 +442,14 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
           ),
         ),
         // Kalem çubuğu bölmenin DİBİNDE: renk, kalınlık, silgi, ok, geri al.
-        if (widget.penMode)
+        if (widget.penMode && PenTray.useRail(context))
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            child: PenTray(controller: widget.ink, rail: true),
+          )
+        else if (widget.penMode)
           Positioned(
             left: 0,
             right: 0,

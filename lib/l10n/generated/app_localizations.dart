@@ -320,6 +320,42 @@ abstract class AppLocalizations {
   /// **'Dosya bu cihaza henüz senkronlanmadı'**
   String get attachmentNotSynced;
 
+  /// No description provided for @webDriveTapToOpen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive\'da · açmak için dokun'**
+  String get webDriveTapToOpen;
+
+  /// No description provided for @noteFullscreen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekran'**
+  String get noteFullscreen;
+
+  /// No description provided for @noteFullscreenExit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekrandan çık'**
+  String get noteFullscreenExit;
+
+  /// No description provided for @penModeDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalemi kapat'**
+  String get penModeDone;
+
+  /// No description provided for @tipPagePen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalemle sayfanın her yerine yazabilirsin; parmakla dokunup klavyeyle aynı notta devam et.'**
+  String get tipPagePen;
+
+  /// No description provided for @pageInkOnCard.
+  ///
+  /// In tr, this message translates to:
+  /// **'El yazısı var'**
+  String get pageInkOnCard;
+
   /// No description provided for @attachmentTooLarge.
   ///
   /// In tr, this message translates to:
@@ -11137,12 +11173,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yapay zekâ ayarları'**
   String get aiSettingsTooltip;
-
-  /// No description provided for @tipStylusCanvas.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kalem algılandı: el yazısı tuvali açıldı. Kalem ayarlarındaki “Kalemi otomatik algıla” ile kapatılır.'**
-  String get tipStylusCanvas;
 
   /// No description provided for @tipSemanticSearch.
   ///

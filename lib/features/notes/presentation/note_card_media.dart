@@ -17,6 +17,8 @@ import '../../../core/utils/youtube.dart';
 import '../data/pdf/pdf_page_render.dart';
 import '../data/video_frame.dart';
 import '../domain/attachment.dart';
+import 'drive_ui.dart';
+import 'viewers/ink_layer.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 
@@ -740,7 +742,76 @@ class CardMediaTile extends StatelessWidget {
         errorWidget: (_, _, _) => const _MissingTile(icon: Icons.image),
       );
     }
+    // Web: Drive'daki kapak da kartta görünsün (bkz. [WebDriveGate]).
+    if (kIsWeb && a.isInDrive) {
+      return WebDriveGate(
+        attachment: a,
+        builder: (_, resolved) => Image.network(
+          resolved.downloadUrl,
+          fit: BoxFit.cover,
+          cacheWidth: 480,
+          errorBuilder: (_, _, _) => const _MissingTile(icon: Icons.image),
+        ),
+      );
+    }
     return const _MissingTile(icon: Icons.image_outlined);
+  }
+}
+
+/// Kartta sayfa üstü el yazısının başı (bkz. `Note.pageInk`). Bölünmüş notta
+/// çizgiler kartta yüklü değildir: yalnız "el yazısı var" denir.
+class CardPageInk extends StatelessWidget {
+  const CardPageInk({super.key, required this.note});
+
+  final Note note;
+
+  static const double _maxHeight = 120;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    if (note.pageInk.isEmpty) {
+      return Row(
+        children: [
+          Icon(Icons.draw_outlined, size: 14, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              context.l10n.pageInkOnCard,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, box) {
+        var bottom = 0.0;
+        for (final s in note.pageInk) {
+          if (s.page != 1) continue;
+          for (var i = 1; i < s.points.length; i += 2) {
+            bottom = math.max(bottom, s.points[i]);
+          }
+        }
+        return ClipRect(
+          child: SizedBox(
+            width: box.maxWidth,
+            height: math.min(_maxHeight, bottom * box.maxWidth + 4),
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: CustomPaint(
+                size: Size.square(box.maxWidth),
+                painter: InkPainter(note.pageInk, 1),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 

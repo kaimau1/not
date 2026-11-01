@@ -454,10 +454,15 @@ class AllNotesChip extends ConsumerWidget {
 /// rozet (bkz. [sharedHubBadgeProvider]). Boşken de görünür: kapı sabit yerde.
 /// Tek kapı burası — avatar levhasındaki satır kalktı.
 class SharedHubChip extends ConsumerWidget {
-  const SharedHubChip({super.key});
+  const SharedHubChip({super.key, this.showHidden = false});
+
+  /// Gizliyken de çizilir (Tüm klasörler ekranı: geri açılacak yer).
+  final bool showHidden;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final folder = ref.watch(sharedHubFolderProvider);
+    if (folder.hidden && !showHidden) return const SizedBox.shrink();
     final inbox = ref.watch(
       inboxNotesProvider.select((s) => s.value?.length ?? 0),
     );
@@ -471,13 +476,15 @@ class SharedHubChip extends ConsumerWidget {
     // (bkz. [sharedHubOnHomeProvider]).
     return _ChipShell(
       key: const ValueKey('shared-hub-chip'),
-      accent: scheme.tertiary,
-      icon: AppIcons.inbox,
-      label: context.l10n.sharedHubShort,
+      accent: folder.color == null ? scheme.tertiary : folder.accent,
+      icon: folder.icon.isEmpty ? AppIcons.inbox : folder.iconData,
+      label: folder.name.isEmpty ? context.l10n.sharedHubShort : folder.name,
       count: inbox + shared,
       unread: unread,
       selected: selected,
+      trailingIcon: folder.hidden ? Icons.visibility_off_outlined : null,
       onTap: () => showSharedHubOnHome(context),
+      onLongPress: () => showFolderActionsSheet(context, ref, folder),
     );
   }
 }
