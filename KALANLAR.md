@@ -102,6 +102,10 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
    tam genişlik ana sayfa, kaldığın kart görünür. Ctrl+Shift+F ve Esc
    klavyeyle (tarayıcı otomasyonunda Ctrl'li kısayollar Flutter'a ulaşmadı —
    Ctrl+/ dahil; elle denenmeli).
+30. [ ] Kalem tepsisi (2026-11-02 yeniden): web'de fareyle kalem kipinde imleç
+   artı, çizgi tam tıklanan noktada; tepsi tek satır, alçak; seçili kaleme
+   yeniden dokun → renk paneli üstte kart; sayfaya yaz → panel kapanır, tepsi
+   iner (yalnız tutamak + renk noktası); telefonda "⋯" → yinele/ayarlar.
 
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 

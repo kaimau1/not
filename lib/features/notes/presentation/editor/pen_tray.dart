@@ -135,13 +135,17 @@ class _PenTrayState extends State<PenTray> {
     super.dispose();
   }
 
-  /// Çizim değişti (yeni çizgi, silme): kullanıcı sayfayla meşgul — tepsi
-  /// yol vermek için iner.
+  /// Çizim değişti (yeni çizgi, silme): kullanıcı sayfayla meşgul — açık
+  /// renk paneli kapanır, tepsi yol vermek için iner (kullanıcı bulgusu
+  /// 2026-11-02: "kalem seçildikten sonra yazmaya başlayınca otomatik
+  /// kapanmıyor" — panel açıkken iniş engelleniyordu).
   void _onInk() {
     final count = _ink.ink.length;
     final changed = count != _strokes;
     _strokes = count;
-    if ((_ink.drawing || changed) && !_panel) _setTucked(true);
+    if (!_ink.drawing && !changed) return;
+    if (_panel) setState(() => _panel = false);
+    _setTucked(true);
   }
 
   void _armIdle() {
@@ -291,122 +295,194 @@ class _PenTrayState extends State<PenTray> {
   }
 
 
-  /// Çekmece tepsisi: ince tutamak · denetimler · kalemler. Aşağıdayken
-  /// yalnız tutamak + kalem uçları görünür ([_kDockPeek]).
+  /// Çekmece tepsisi — TEK SATIR (kullanıcı bulgusu 2026-11-02: "çok
+  /// yükseliyor ve dar"): ince tutamak, altında kalemler · renk · geri al ·
+  /// (geniş ekranda) yinele/yalnız kalem/ayarlar · [actions]. Dar ekranda
+  /// seyrek düğmeler "⋯" menüsünde. Renk/kalınlık paneli tepsiyi
+  /// yükseltmez, üstünde ayrı kart olarak açılır. Aşağıdayken yalnız
+  /// tutamak + seçili rengin noktası görünür.
   Widget _buildDock(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final current = _current;
     final labels = _labels(l10n);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final tray = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Tutamak: çekmece olduğunu söyler; dokununca/çekince açılır-kapanır.
-        Semantics(
-          button: true,
-          label: _tucked ? l10n.penTrayShow : l10n.penTrayHide,
-          child: GestureDetector(
-            key: const ValueKey('pen-dock-handle'),
-            behavior: HitTestBehavior.opaque,
-            onTap: () => _setTucked(!_tucked),
-            child: SizedBox(
-              height: _kDockHandle,
-              width: double.infinity,
-              child: Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: scheme.onSurfaceVariant.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
+    final wide = MediaQuery.sizeOf(context).width >= 640;
+    Widget tool(PenTrayTool t) => _TrayTool(
+      key: ValueKey('pen-tray-${t.name}'),
+      tool: t,
+      label: labels[t]!,
+      selected: t == current,
+      ink: _ink.color,
+      onTap: () => _tap(t),
+      tipUp: true,
+    );
+    final buttons = _controlButtons(l10n);
+    final row = SizedBox(
+      height: _kDockTools,
+      child: Row(
+        mainAxisSize: wide ? MainAxisSize.min : MainAxisSize.max,
+        children: [
+          const SizedBox(width: 6),
+          for (final t in PenTrayTool.values)
+            wide
+                ? SizedBox(width: 52, child: tool(t))
+                : Expanded(child: tool(t)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: _colorDot(scheme, l10n),
+          ),
+          SizedBox(
+            height: 28,
+            child: VerticalDivider(
+              width: 10,
+              color: scheme.outlineVariant.withValues(alpha: 0.6),
             ),
           ),
-        ),
-        // Kalemler tutamağın hemen altında: aşağıdayken UÇLARI görünür.
-        SizedBox(
-          height: _kDockTools,
+          if (wide) ...buttons else ...[buttons.first, _moreMenu(l10n)],
+          ...widget.actions,
+          const SizedBox(width: 4),
+        ],
+      ),
+    );
+    final handle = Semantics(
+      button: true,
+      label: _tucked ? l10n.penTrayShow : l10n.penTrayHide,
+      child: GestureDetector(
+        key: const ValueKey('pen-dock-handle'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _setTucked(!_tucked),
+        child: SizedBox(
+          height: _kDockHandle,
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(width: 6),
-              for (final tool in PenTrayTool.values)
-                Expanded(
-                  child: _TrayTool(
-                    key: ValueKey('pen-tray-${tool.name}'),
-                    tool: tool,
-                    label: labels[tool]!,
-                    selected: tool == current,
-                    ink: _ink.color,
-                    onTap: () => _tap(tool),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Aşağıdayken hangi renkle yazıldığı bir bakışta görülür.
+              AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: _tucked ? 1 : 0,
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  margin: const EdgeInsets.only(left: 8),
+                  decoration: BoxDecoration(
+                    color: _ink.eraser ? scheme.primary : _ink.color,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: scheme.outlineVariant),
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: _colorDot(scheme, l10n),
               ),
             ],
           ),
         ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
-          child: _panel
-              ? _Options(controller: _ink, tool: current)
-              : const SizedBox(width: double.infinity),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(4, 0, 4, 2),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [..._controlButtons(l10n), ...widget.actions],
-          ),
-        ),
-      ],
+      ),
+    );
+    final tray = Material(
+      color: scheme.surfaceContainerHigh.withValues(alpha: 0.97),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.55)),
+      ),
+      elevation: 3,
+      shadowColor: Colors.black.withValues(alpha: 0.25),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [handle, row],
+      ),
+    );
+    final panel = Material(
+      color: scheme.surfaceContainerHigh,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.55)),
+      ),
+      elevation: 3,
+      shadowColor: Colors.black.withValues(alpha: 0.25),
+      clipBehavior: Clip.antiAlias,
+      child: _Options(controller: _ink, tool: current),
     );
     return Align(
       alignment: Alignment.bottomCenter,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560),
-        child: _DockSlide(
-          tucked: _tucked && !_panel,
-          peek: _kDockHandle + _kDockPeek,
-          bottomGap: 8 + bottomInset,
-          onExpand: _touched,
-          onCollapse: () => _setTucked(true),
-          child: Listener(
-            onPointerDown: (_) => _armIdle(),
-            child: Material(
-              color: scheme.surfaceContainerHigh.withValues(alpha: 0.97),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-                side: BorderSide(
-                  color: scheme.outlineVariant.withValues(alpha: 0.55),
-                ),
+      child: _DockSlide(
+        tucked: _tucked && !_panel,
+        peek: _kDockHandle,
+        bottomGap: 8 + bottomInset,
+        onExpand: _touched,
+        onCollapse: () => _setTucked(true),
+        child: Listener(
+          onPointerDown: (_) => _armIdle(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: wide
+                ? CrossAxisAlignment.center
+                : CrossAxisAlignment.stretch,
+            children: [
+              AnimatedSize(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.bottomCenter,
+                child: _panel
+                    ? Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 440),
+                          child: panel,
+                        ),
+                      )
+                    : const SizedBox.shrink(),
               ),
-              shadowColor: Colors.transparent,
-              clipBehavior: Clip.antiAlias,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.10),
-                      blurRadius: 18,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: tray,
-              ),
-            ),
+              // Geniş ekranda tepsi içeriği kadar, ortada.
+              if (wide) IntrinsicWidth(child: tray) else tray,
+            ],
           ),
         ),
       ),
     );
   }
+
+  /// Dar ekranda seyrek kullanılan denetimler: yinele, yalnız kalem, ayarlar.
+  Widget _moreMenu(AppLocalizations l10n) => PopupMenuButton<int>(
+    key: const ValueKey('pen-tray-more'),
+    tooltip: l10n.more,
+    icon: const Icon(Icons.more_horiz_rounded),
+    onSelected: (v) => switch (v) {
+      0 => _ink.redo(),
+      1 => _ink.setPenOnly(!_ink.penOnly),
+      _ => showInkSettings(context, _ink),
+    },
+    itemBuilder: (_) => [
+      PopupMenuItem(
+        value: 0,
+        enabled: _ink.canRedo,
+        child: ListTile(
+          leading: const Icon(Icons.redo_rounded),
+          title: Text(l10n.redo),
+        ),
+      ),
+      CheckedPopupMenuItem(
+        value: 1,
+        checked: _ink.penOnly,
+        child: Text(_ink.penOnly ? l10n.inkPenOnlyOn : l10n.inkPenOnlyOff),
+      ),
+      PopupMenuItem(
+        value: 2,
+        child: ListTile(
+          leading: const Icon(Icons.tune_rounded),
+          title: Text(l10n.inkSettings),
+        ),
+      ),
+    ],
+  );
 
   Map<PenTrayTool, String> _labels(AppLocalizations l10n) => {
     PenTrayTool.lasso: l10n.inkLasso,
@@ -566,14 +642,11 @@ class _PenTrayState extends State<PenTray> {
   }
 }
 
-/// Çekmece tutamağının yüksekliği.
-const double _kDockHandle = 18;
+/// Çekmece tutamağının yüksekliği; aşağıdayken görünen pay da bu kadar.
+const double _kDockHandle = 24;
 
 /// Kalem şeridinin çekmecedeki yüksekliği.
-const double _kDockTools = 62;
-
-/// Aşağıdayken kalem uçlarından görünen pay.
-const double _kDockPeek = 22;
+const double _kDockTools = 56;
 
 /// Çekmeceyi aşağı/yukarı kaydırır. Aşağıdayken yalnız [peek] kadarı görünür
 /// ve TAMAMI tek dokunuşluk "aç" hedefidir (kalemlere yanlışlıkla basılıp
@@ -687,7 +760,12 @@ class _TrayTool extends StatelessWidget {
     required this.selected,
     required this.ink,
     required this.onTap,
+    this.tipUp = false,
   });
+
+  /// Kalemin UCU kutunun üstüne hizalanır (alçak çekmece şeridi: kutu
+  /// kalemden kısa, alttan hizalanınca uçlar kırpılıyordu).
+  final bool tipUp;
 
   final PenTrayTool tool;
   final String label;
@@ -710,7 +788,7 @@ class _TrayTool extends StatelessWidget {
           onTap: onTap,
           child: ClipRect(
             child: Stack(
-              alignment: Alignment.bottomCenter,
+              alignment: tipUp ? Alignment.topCenter : Alignment.bottomCenter,
               children: [
                 AnimatedSlide(
                   duration: const Duration(milliseconds: 320),
@@ -730,7 +808,9 @@ class _TrayTool extends StatelessWidget {
                   ),
                 ),
                 // Seçili aracın altındaki çizgi (örnekteki gibi).
-                AnimatedOpacity(
+                Positioned(
+                  bottom: 0,
+                  child: AnimatedOpacity(
                   duration: const Duration(milliseconds: 200),
                   opacity: selected ? 1 : 0,
                   child: Container(
@@ -745,6 +825,7 @@ class _TrayTool extends StatelessWidget {
                         width: 0.5,
                       ),
                     ),
+                  ),
                   ),
                 ),
               ],

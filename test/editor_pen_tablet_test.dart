@@ -106,7 +106,12 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const ValueKey('pen-dock-peek')), findsNothing);
-    expect(tester.getRect(tool).bottom, lessThan(screen.height - 40));
+    // Tek satırlık alçak tepsi (2026-11-02): kalemler dipte, ama görünür.
+    expect(tester.getRect(tool).top, lessThan(screen.height - 60));
+    expect(
+      tester.getRect(find.byKey(const ValueKey('pen-dock-handle'))).top,
+      greaterThan(screen.height - 100),
+    );
     // İlk çizgi kaybolmadı, alt çubuk yok: alt da sayfa.
     final ink = tester.widget<InkPageLayer>(find.byType(InkPageLayer));
     expect(ink.controller.ink, hasLength(1));

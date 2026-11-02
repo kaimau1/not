@@ -1016,6 +1016,10 @@ class InkPageLayer extends StatelessWidget {
 
           return MouseRegion(
             opaque: false,
+            // Artı imleç: alttaki metnin "I" imleci kalırsa göz ucuna bakar,
+            // tıklama ise ortasından olur — çizgi "biraz yukarıda" çıkıyordu
+            // (kullanıcı bulgusu 2026-11-02).
+            cursor: SystemMouseCursors.precise,
             onHover: onHover,
             onExit: onExit,
             child: Listener(

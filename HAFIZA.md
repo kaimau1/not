@@ -195,9 +195,13 @@ maddeyi GÜNCELLE.
   Kalem `EagerGestureRecognizer` altsınıfıyla arenayı kazanır, parmak metne.
   **Not editöründe kalemler ALTTA çekmecede** (`PenTray(dock: true)`, kullanıcı
   isteği 2026-11-02 — tablet sol sütunu kalktı): sayfanın ÜSTÜNDE yüzer
-  (yerleşim değişmez), çizim başlayınca/6 sn dokunulmayınca iner, yalnız
-  tutamak + kalem uçları görünür; aşağıdayken görünen pay tek dokunuşla
-  açar. Belge/görsel/çizim ekranları eski şerit/sütunu kullanır
+  (yerleşim değişmez), çizim başlayınca/6 sn dokunulmayınca iner (açık renk
+  paneli de kapanır — panel açıkken inmiyordu), yalnız tutamak + seçili renk
+  noktası görünür; tek dokunuşla açar. 2026-11-02 yeniden tasarım: TEK SATIR
+  (tutamak 24 + şerit 56), dar ekranda yinele/yalnız kalem/ayarlar "⋯"
+  menüsünde, ≥640 dp'de içerik kadar ortada; panel tepsinin ÜSTÜNDE ayrı
+  kart. Mürekkep katmanında fare imleci `precise` (metnin I imleci kalınca
+  çizgi "tıkladığım yerin üstünde" görünüyordu; koordinat doğru, testli). Belge/görsel/çizim ekranları eski şerit/sütunu kullanır
   (`PenTray.useRail` = PENCERE ≥ 600 dp). Tam ekran `noteFullscreenProvider`.
   "+ → Çizim ekle" = ayrı `DrawingScreen` → PNG görsel eki; "Sayfaya el
   yazısı" (`handwriting`) = kalem kipi.

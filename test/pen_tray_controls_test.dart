@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/presentation/editor/pen_tray.dart';
@@ -50,5 +51,83 @@ void main() {
   testWidgets('çizim ekranı kipinde denetim satırı yok', (tester) async {
     await pump(tester, controls: false);
     expect(find.byKey(const ValueKey('pen-tray-undo')), findsNothing);
+  });
+
+  // Kullanıcı bulgusu 2026-11-02: "kalem seçildikten sonra yazmaya başlayınca
+  // otomatik kapanmıyor" — renk paneli açıkken çekmece inmiyordu.
+  testWidgets('çekmecede yazmaya başlayınca panel kapanır, tepsi iner', (
+    tester,
+  ) async {
+    final ink = InkController(initial: const [], onChanged: (_) {});
+    addTearDown(ink.dispose);
+    ink.setEditing(true);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        locale: const Locale('tr'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Stack(children: [PenTray(controller: ink, dock: true)]),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('pen-tray-color')));
+    await tester.pumpAndSettle();
+    expect(find.byType(Slider), findsOneWidget);
+    ink.pointerDown(1, const Offset(10, 10), const Size(400, 400));
+    await tester.pumpAndSettle();
+    expect(find.byType(Slider), findsNothing);
+    expect(find.byKey(const ValueKey('pen-dock-peek')), findsOneWidget);
+    ink.pointerUp();
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 7));
+  });
+
+  // Kullanıcı bulgusu 2026-11-02: "fareyle tıkladığım yerin biraz üzerine
+  // yazıyor". Çizgi tam tıklanan noktada başlar; imleç artıdır.
+  testWidgets('fareyle çizgi tıklanan noktada başlar, imleç artı', (
+    tester,
+  ) async {
+    final ink = InkController(initial: const [], onChanged: (_) {});
+    addTearDown(ink.dispose);
+    ink.setEditing(true);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        locale: const Locale('tr'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Stack(
+          children: [
+            Positioned(
+              left: 30,
+              top: 120,
+              width: 400,
+              height: 900,
+              child: InkPageLayer(controller: ink, page: 1, uniform: true),
+            ),
+          ],
+        ),
+      ),
+    );
+    final mouse = await tester.startGesture(
+      const Offset(130, 320),
+      kind: PointerDeviceKind.mouse,
+    );
+    await mouse.moveBy(const Offset(40, 0));
+    await mouse.up();
+    await tester.pump();
+    final p = ink.ink.single.points;
+    expect(p[0] * 400, closeTo(100, 0.01));
+    expect(p[1] * 400, closeTo(200, 0.01));
+    final cursors = tester
+        .widgetList<MouseRegion>(
+          find.descendant(
+            of: find.byType(InkPageLayer),
+            matching: find.byType(MouseRegion),
+          ),
+        )
+        .map((r) => r.cursor);
+    expect(cursors, contains(SystemMouseCursors.precise));
   });
 }
