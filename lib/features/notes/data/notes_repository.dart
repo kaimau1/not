@@ -568,6 +568,27 @@ class NotesRepository {
       titleFontScale: note.titleFontScale,
       titleTextOpacity: note.titleTextOpacity,
       listColumns: note.listColumns,
+      // Sayfalar da kopyalanır (F18.8 akış testi yakaladı: iki sayfalı notun
+      // kopyası yalnız ilk sayfayla doğuyordu). Madde kimlikleri yine yeni.
+      textPages: [
+        for (final page in note.textPages)
+          page.copyWith(
+            items: [
+              for (final item in page.items)
+                NoteItem(
+                  id: _uuid.v4(),
+                  text: item.text,
+                  checked: item.checked,
+                  starred: item.starred,
+                  section: item.section,
+                  title: item.title,
+                  divider: item.divider,
+                ),
+            ],
+          ),
+      ],
+      activePage: note.activePage,
+      theme: note.theme,
       orderIndex: -DateTime.now().millisecondsSinceEpoch.toDouble(),
     );
     unawaited(
