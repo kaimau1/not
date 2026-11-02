@@ -24,17 +24,17 @@ dependencies:
 
   flutter_localizations:
     sdk: flutter
-  firebase_core: ^4.12.1
-  firebase_auth: ^6.5.6
-  cloud_firestore: ^6.7.1
-  firebase_storage: ^13.4.5
+  firebase_core: ^5.1.0
+  firebase_auth: ^7.0.1
+  cloud_firestore: ^7.1.0
+  firebase_storage: ^14.0.1
   # Arkadaş aramada tüm kullanıcılar içinde arama: userSearch koleksiyonu
   # istemciden OKUNAMIYOR (bkz. firestore.rules), yalnız functions/searchUsers
   # callable'ı Admin SDK ile okuyup sınırlı sonuç döner.
-  cloud_functions: ^6.1.1
+  cloud_functions: ^7.0.1
   # Dahili AI ve Firestore'u sahte istemcilerden korur. Şu an yalnızca token
   # üretir (zorlama Firebase konsolundan AÇILMADI) — bkz. main.dart.
-  firebase_app_check: ^0.4.1
+  firebase_app_check: ^0.5.1
   google_sign_in: ^7.2.0
   # Drive ek senkronunda yetki isteği HESAP E-POSTASIYLA yapılır (cihazda
   # birden çok Google hesabı varsa doğru Drive'a yazılsın) — bu ayrıntı
@@ -91,7 +91,7 @@ dependencies:
   share_plus: ^13.2.1
   home_widget: ^0.9.3
   app_links: ^7.2.1
-  firebase_ai: ^3.14.1
+  firebase_ai: ^5.1.0
   local_auth: ^3.0.2
   receive_sharing_intent: ^1.9.0
   flutter_tts: ^4.2.5
@@ -121,10 +121,11 @@ dependencies:
   syncfusion_flutter_core: ^33.2.13
   # Çökme raporları (F1.9, 2026-10-19) — yalnız Android; web için
   # eklenti yok, orada yalnız cihazdaki hata günlüğü (core/error_log.dart).
-  # Sürüm firebase_core 4.12.1 ile EŞ ZAMANLI yayın: daha yenisi core'u (ve
+  # Sürüm firebase_core ile EŞ ZAMANLI yayın (F18.22: hepsi birlikte 5.x/7.x/…
+  # serisine geçti, 2026-11-02): ayrı yükseltmek core'u (ve
   # Android Firebase BoM'unu) öbür Firebase eklentilerinden ayırırdı.
-  firebase_crashlytics: ^5.2.6
-  firebase_messaging: ^16.7.0
+  firebase_crashlytics: ^6.0.1
+  firebase_messaging: ^17.0.1
 
 dev_dependencies:
   flutter_test:
@@ -142,7 +143,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
-  fake_cloud_firestore: ^4.3.0
+  fake_cloud_firestore: ^4.5.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

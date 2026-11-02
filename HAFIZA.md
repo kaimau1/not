@@ -14,11 +14,15 @@ maddeyi GÜNCELLE.
 - **`dart format` yalnız değiştirdiğin/yeni dosyaya** (`lib/l10n/generated`
   hariç: `flutter gen-l10n` sonrası hep formatla).
 - `flutter test -j 4` (~2 dk). Yerel Flutter yolu uzunsa `flutter analyze`
-  patlar → `dart analyze lib test`.
+  patlar → `dart analyze lib test`. CI `flutter analyze` BİLGİ (info) düzeyini
+  de hata sayar — push'tan önce bilgi satırı da kalmasın.
 - `flutter install` DERLEMEZ. Yerel APK'da `--build-number` (yoksa
   versionCode 1 → DOWNGRADE) ve `--dart-define-from-file=env.json` (yoksa
   Google girişi çöker) ZORUNLU.
-- **Bulutta APK derlenebilir:** scratchpad'e cmdline-tools → `sdkmanager
+- **Bulutta APK derlenebilir** (2026-11-02'de yine yapıldı, ~15 dk ilk derleme):
+  Maven 429 için init betiği YETMEZ — Flutter'ın kendi `flutter_tools/gradle`
+  dahil derlemesi ayrı; scratchpad'deki SDK'nın `settings.gradle.kts`ine ayna
+  `maven {}` satırı (pluginManagement + dependencyResolution) elle eklenir. scratchpad'e cmdline-tools → `sdkmanager
   "platform-tools" "platforms;android-37.0" "build-tools;36.0.0"
   "ndk;28.2.13676358"`, `flutter config --android-sdk`. Maven Central 429 →
   `$GRADLE_USER_HOME/init.d` betiğiyle Google aynası (depo EKLEME; Flutter
@@ -33,7 +37,11 @@ maddeyi GÜNCELLE.
   (+ F18.21: `tool/set_latest_build.js` → `config/app.latestBuild/
   latestName`), kırmızıysa siler. Sürüm adı `1.1.<koşu>`, versionCode koşu no.
 - **`[perf]`** (F18.7, 2026-11-02): başlıkta varsa kare ölçümü HER dalda
-  koşar; özet iş günlüğüne de basılır. TUZAK: odaktaki metin alanının
+  koşar; özet iş günlüğüne de basılır. **KÖK NEDEN (2. oturum):** yayın APK'sı
+  yalnız arm64 paketliyor (`abiFilters` + `jniLibs.excludes`) → x86_64
+  emülatörde `libflutter.so` yok, uygulama açılışta çöküyor, `flutter drive`
+  sonsuza dek bekliyordu (`| tail` de çıktıyı saklıyordu). Ölçüm işi
+  `NOTLAR_ALL_ABIS=1` verir; drive 20 dk'da kesilir. TUZAK: odaktaki metin alanının
   imleci sürekli kare ister → `pumpAndSettle` HİÇ bitmez (ilk koşu 34 dk
   çıktısız kaldı) — `integration_test/perf_test.dart` sabit süreli pompalar.
   `workflow_dispatch` perf Deploy+Release'i de koşturur.
@@ -185,8 +193,24 @@ maddeyi GÜNCELLE.
 - Sayfa üstü el yazısı `Note.pageInk` (sahte `_page_ink` eki; `isEmpty`
   ona bakar). `InkPageLayer(uniform: true)` → y de genişliğe bölünür.
   Kalem `EagerGestureRecognizer` altsınıfıyla arenayı kazanır, parmak metne.
-  Tablet rayı PENCERE ≥ 600 dp. Tam ekran `noteFullscreenProvider`.
+  **Not editöründe kalemler ALTTA çekmecede** (`PenTray(dock: true)`, kullanıcı
+  isteği 2026-11-02 — tablet sol sütunu kalktı): sayfanın ÜSTÜNDE yüzer
+  (yerleşim değişmez), çizim başlayınca/6 sn dokunulmayınca iner, yalnız
+  tutamak + kalem uçları görünür; aşağıdayken görünen pay tek dokunuşla
+  açar. Belge/görsel/çizim ekranları eski şerit/sütunu kullanır
+  (`PenTray.useRail` = PENCERE ≥ 600 dp). Tam ekran `noteFullscreenProvider`.
+  "+ → Çizim ekle" = ayrı `DrawingScreen` → PNG görsel eki; "Sayfaya el
+  yazısı" (`handwriting`) = kalem kipi.
 - Gömme: `_applyEmbed` (ek ya da `noteId`), `_startPendingEmbed` bağlama kipi.
+- **Liste maddesi + görsel iki katmanlı sarma** (2026-11-02): görsel maddenin
+  İLK satırına değiyorsa `_FloatRow` satırı bütün kaydırır; maddenin içinde
+  (bir satır boyu aşağıda) başlıyorsa satır kaymaz, alanın kendi sarma planı
+  (`WrapFieldMeasure.minTop`) yalnız hizadaki satırları girintiler. Bir görseli
+  YALNIZ biri işler (ikisi birden metni kutucuktan koparıyordu).
+- Editör parçaları (F18.23): `note_editor_flow/embed/video.dart` uzantılar.
+  TUZAK: uzantı yönteminin tear-off'u her seferinde YENİ kapanış —
+  `addListener/removeListener`a verilen ya da `setState` çağıran yöntem
+  sınıfta kalır.
 
 ## PDF, balon, görüntüleyici
 - PDF YAZMA yalnız Syncfusion (`pdf_edit.dart`, `NotePdf`), görüntüleme pdfrx;
@@ -223,6 +247,12 @@ maddeyi GÜNCELLE.
   web reCAPTCHA Enterprise yalnız `RECAPTCHA_SITE_KEY` derlemeye verildiyse;
   firebase_ai jetonu kendiliğinden taşır. Zorlama konsolda, önce izle
   (elle kurulan APK'yı Play Integrity doğrulayamaz).
+- **Google girişi yedeği** (tablet bulgusu 2026-11-02): yerel seçici
+  (Credential Manager) yapılandırma hatası verir ya da < 1,5 sn'de "iptal"
+  dönerse (seçici hiç açılmadı) Firebase tarayıcı akışına
+  (`signInWithProvider`/`linkWithProvider`) düşer
+  (`AndroidGoogleAuth.shouldUseBrowserFlow`). Web'de seçici hep
+  `prompt: select_account`.
 - AI çıktıları `AiCache`te (cihazda). Ek metni indeksi
   `attachment_text_<uid>.json`.
 
@@ -264,8 +294,16 @@ maddeyi GÜNCELLE.
 - `--wasm` (skwasm, JS yedeği); COOP/COEP yok. Wasm'da `int` 64, JS'de 53 bit.
 - Geri tuşu `HomeFirstRouteInformationProvider`. Açılış `notlar-ready`
   olayında (`signalWebReady`).
-- Drive ekleri `WebDriveAuth`/`WebDriveGate` (jeton bellekte, `blob:`
-  buluta yazılmaz). Web Drive'a yazmaz; yerel not/video yok.
+- Drive ekleri `WebDriveAuth`/`WebDriveGate` (`blob:` buluta yazılmaz). Jeton
+  SEKMEDE (`sessionStorage`, uid'e bağlı, ~55 dk — yenilemede yeniden izin
+  sormaz); notta `WebAttachmentsBanner`: "N ek Drive'da · Göster" (tek
+  dokunuş hepsini indirir) ya da "telefondan çıkmamış" uyarısı (Android'de
+  Drive bağlı değilse ekler cihazda bekler — web'in yapabileceği yok). Web
+  Drive'a yazmaz; yerel not/video yok.
+- **Bulut tarayıcısı TUZAĞI (2026-11-02):** sandbox Chromium'unda yolu `%2F`
+  içeren HER Firebase Storage isteği 400 (ön istek dahil; curl'de aynısı
+  403/200). Yükleme (`?name=`) geçer, okuma/silme geçmez → web turunda ek
+  gösterme, PDF açma ve "Hesabımı sil" ölçülemez/bitmez. Canlı site etkilenmez.
 - Web turu: Playwright + semantik ağaç (`KULLANICI_DENEYIMI_PLANI.md` Ek A);
   misafir hesabı tur sonunda sil. App Check web'de anahtarla.
 
@@ -329,7 +367,17 @@ maddeyi GÜNCELLE.
 - Balon paleti koyu tonlar; eski amber ekranda yeni varsayılanla çizilir.
   `BubbleController._sameContent` başlık/acil/ok/biçimi de karşılaştırır.
 - Tek avatar (rozet = yalnız arkadaşlık isteği); geniş ekranda rayda olan
-  kapı ⋮'te tekrarlanmaz (`AppRailScope.visible`).
+  kapı ⋮'te tekrarlanmaz (`AppRailScope.visible`). Avatar levhasında
+  "Hesap değiştir" + "Oturumu kapat" (`sign_out_actions.dart`, Ayarlar da
+  aynı kapı; misafirde kırmızı uyarı).
+- **Geniş ekran (2026-11-02):** ray 64 dp etiketsiz (adı ipucunda),
+  kendiliğinden etiketli ≥ 1600; "Gelen" RAYDA YOK (`railSections`). Not
+  açıkken ray ÇEKMECE (sol kenar tutamağı / kenardan çekme, Esc + geri
+  kapatır) ve liste TEK SÜTUN solda: yan yana sınırı not açıkken
+  `kNoteSplitBreakpoint` 640 (yoksa 840), not kipinin liste genişliği ayrı
+  (`note_pane_width`). `/` rotası kararı `SplitScope`tan okur (genişlikten
+  değil — liste iki kez kurulmasın). Dikey menteşe (`verticalHingeOf`) varsa
+  ayraç menteşeye oturur; AppFrame menteşe koordinatını içerik alanına kaydırır.
 - Misafir kartı "Sonra" → şerit; 5/20 notta bir kez tam kart.
 - `CustomizeModeHost` alanın kendi boyunu `MediaQuery.size` verir (alt çubuk
   ekran dışına itiliyordu).

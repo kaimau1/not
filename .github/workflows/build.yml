@@ -192,10 +192,13 @@ jobs:
       - name: Gradle yapı önbelleğini geri yükle
         uses: actions/cache/restore@v4
         with:
+          # bc2 (F18.22, 2026-11-02): FlutterFire büyük sürüm geçişinde eski
+          # yapı önbelleği Kotlin derlemesini YARIM bıraktı (bulutta görüldü:
+          # aynı paketteki sınıflar "çözülemedi"); temiz önbellekle başlanır.
           path: ~/.gradle/caches/build-cache-1
-          key: gradle-bc-${{ runner.os }}-${{ github.run_id }}
+          key: gradle-bc2-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
-            gradle-bc-${{ runner.os }}-
+            gradle-bc2-${{ runner.os }}-
 
       - uses: subosito/flutter-action@v2
         with:
@@ -294,7 +297,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ~/.gradle/caches/build-cache-1
-          key: gradle-bc-${{ runner.os }}-${{ github.run_id }}
+          key: gradle-bc2-${{ runner.os }}-${{ github.run_id }}
 
       # BOYUT RAPORU: APK'nın içinde hangi mimarilerin ve hangi büyük
       # dosyaların olduğunu yazar. 2026-08-16'da APK 60 MB'tan 100 MB'a

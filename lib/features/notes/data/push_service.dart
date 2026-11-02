@@ -55,10 +55,18 @@ class _PushService {
       final messaging = FirebaseMessaging.instance;
       final prefs = _ref.read(sharedPreferencesProvider);
       final last = prefs.getString(_lastUidKey);
+      // FCM 17 (F18.22, 2026-11-02): getToken/deleteToken/onTokenRefresh
+      // "eskidi" — yerine gelen register()/onRegistered FCM JETONU değil
+      // kurulum kimliği (FID) veriyor ve doğrudan gönderim API'si istiyor.
+      // Cloud Functions jetonla gönderiyor (`fcmTokens`); geçiş sunucuyla
+      // birlikte yapılmalı, bu yüzden jeton yolu bilerek korunuyor.
+      // ignore: deprecated_member_use
       if (last != null && last != _uid) await messaging.deleteToken();
       await prefs.setString(_lastUidKey, _uid);
+      // ignore: deprecated_member_use
       final token = await messaging.getToken();
       if (token != null) await _save(token);
+      // ignore: deprecated_member_use
       _subs.add(messaging.onTokenRefresh.listen((t) => unawaited(_save(t))));
       // Bildirime dokunarak açılış: yerel bildirimlerle AYNI yük biçimi
       // ('shared:…', 'folder:…') — tek işleyici.
