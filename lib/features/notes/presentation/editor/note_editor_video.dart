@@ -576,8 +576,9 @@ extension _EditorVideo on _NoteEditorScreenState {
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         _showSnack(context.l10n.pdfEditFailed(friendlyError(context.l10n, e)));
+      }
     }
   }
 }
