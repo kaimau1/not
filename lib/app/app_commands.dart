@@ -155,6 +155,8 @@ List<({String keys, String label})> shortcutHelpRows(BuildContext context) {
     (keys: 'Ctrl + \\', label: l10n.shortcutToggleList),
     (keys: 'Ctrl + ,', label: l10n.settings),
     (keys: 'Alt + 1…8', label: l10n.shortcutSections),
+    (keys: 'Ctrl + Shift + F', label: l10n.shortcutFullscreen),
+    (keys: 'Esc', label: l10n.shortcutEscape),
     (keys: 'Ctrl + /', label: l10n.shortcutHelp),
   ];
 }

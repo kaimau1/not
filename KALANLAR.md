@@ -97,7 +97,16 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 28. [ ] Tablette not açıkken liste/not ayracını sola zorla → "Tam ekran için
    çek" → biraz daha → "Bırak: tam ekran" → bırak: tam ekran. Sol kenardan
    sağa çek → tam ekrandan çıkar.
+29. [ ] Geniş ekranda (web ≥ 640 px): not yokken liste tam genişlik; not aç →
+   solda tek sütun; tam ekran → sol üstte ☰ → liste geri gelir; geri ok →
+   tam genişlik ana sayfa, kaldığın kart görünür. Ctrl+Shift+F ve Esc
+   klavyeyle (tarayıcı otomasyonunda Ctrl'li kısayollar Flutter'a ulaşmadı —
+   Ctrl+/ dahil; elle denenmeli).
 
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
+
+- [ ] `import_service_test` iki testi Windows'ta KIRMIZI (Keep Takeout eki bulunmuyor) — main'de de kırık, geniş ekran işinden önce de vardı (2026-11-02)
+- [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)
+- [ ] Web debug konsolunda "+" düğmesinin ipucunda `RenderFollowerLayer` uyarısı (yalnız debug assert) — kaynağı araştırılmadı (2026-11-02)
 
 ## 4. Sonra yapılacak → `KALAN_ISLER_PLANI.md` (F18.17–F18.20, F18.22)

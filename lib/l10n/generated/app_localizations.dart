@@ -284,12 +284,6 @@ abstract class AppLocalizations {
   /// **'Görsel ekle'**
   String get addImage;
 
-  /// No description provided for @noNoteSelected.
-  ///
-  /// In tr, this message translates to:
-  /// **'Soldan bir not seç'**
-  String get noNoteSelected;
-
   /// No description provided for @attachmentFailed.
   ///
   /// In tr, this message translates to:
@@ -6518,11 +6512,23 @@ abstract class AppLocalizations {
   /// **'Kısayolları göster'**
   String get shortcutHelp;
 
-  /// No description provided for @noNoteSelectedHint.
+  /// No description provided for @shortcutFullscreen.
   ///
   /// In tr, this message translates to:
-  /// **'ya da yeni bir not başlat'**
-  String get noNoteSelectedHint;
+  /// **'Notu tam ekran yap / çık'**
+  String get shortcutFullscreen;
+
+  /// No description provided for @shortcutEscape.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekrandan çık, sonra notu kapat'**
+  String get shortcutEscape;
+
+  /// No description provided for @showNoteList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not listesini göster'**
+  String get showNoteList;
 
   /// No description provided for @loginFeatureSyncTitle.
   ///

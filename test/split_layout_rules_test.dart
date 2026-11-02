@@ -8,15 +8,14 @@ import 'package:notlar/app/split_shell.dart';
 /// açıkken liste rayın yerine geçer ve daha dar pencerede de yan yana çizilir;
 /// dikey menteşe varsa ayraç ona oturur.
 void main() {
-  test('not açıkken yan yana sınırı daha dar', () {
-    // Dikey tablet (~800) ve açık katlanabilir (~673): not açıkken yan yana.
-    expect(splitActiveFor(800, noteOpen: true), isTrue);
-    expect(splitActiveFor(673, noteOpen: true), isTrue);
-    // Not yokken liste tam ekran kalır.
-    expect(splitActiveFor(800, noteOpen: false), isFalse);
+  test('liste sol panelde: dikey tablet ve açık katlanabilir dahil', () {
+    // Dikey tablet (~800) ve açık katlanabilir (~673): liste kabukta (not
+    // yokken tam genişlik, açıkken yan yana).
+    expect(splitActiveFor(800), isTrue);
+    expect(splitActiveFor(673), isTrue);
+    expect(splitActiveFor(1024), isTrue);
     // Telefon / kapalı katlanabilir hiç bölünmez.
-    expect(splitActiveFor(412, noteOpen: true), isFalse);
-    expect(splitActiveFor(1024, noteOpen: false), isTrue);
+    expect(splitActiveFor(412), isFalse);
   });
 
   test('not konumu', () {

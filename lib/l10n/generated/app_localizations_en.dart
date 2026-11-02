@@ -111,9 +111,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addImage => 'Add image';
 
   @override
-  String get noNoteSelected => 'Pick a note from the left';
-
-  @override
   String attachmentFailed(String error) {
     return 'Couldn\'t add the attachment: $error';
   }
@@ -3632,7 +3629,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutHelp => 'Show shortcuts';
 
   @override
-  String get noNoteSelectedHint => 'or start a new note';
+  String get shortcutFullscreen => 'Toggle note full screen';
+
+  @override
+  String get shortcutEscape => 'Leave full screen, then close the note';
+
+  @override
+  String get showNoteList => 'Show note list';
 
   @override
   String get loginFeatureSyncTitle => 'Same notes on every device';

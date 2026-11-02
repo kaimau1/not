@@ -378,6 +378,18 @@ maddeyi GÜNCELLE.
   (`note_pane_width`). `/` rotası kararı `SplitScope`tan okur (genişlikten
   değil — liste iki kez kurulmasın). Dikey menteşe (`verticalHingeOf`) varsa
   ayraç menteşeye oturur; AppFrame menteşe koordinatını içerik alanına kaydırır.
+  **Tek liste örneği (2026-11-02, kullanıcı isteği "sağda not seç alanı
+  kalmasın"):** ≥ 640 dp'de liste HEP kabuğun sol panelinde; not yokken tam
+  genişlik (LayoutBuilder — `MediaQuery` genişliği rayı içerir, taşar),
+  `/` rotası boş döner; `NoNoteSelected` + `listPaneWidthProvider` silindi.
+  Aynı State kaldığı için arama/süzgeç/kaydırma korunur; sütun sayısı
+  değişince konum oranla taşınır + açılan/kapatılan notun kartı vurgusuz
+  görünür alana gelir (`DashboardPaneScope.anchorNoteId`, `_revealCard`).
+  **Liste gizliyken (tam ekran / odak modu) ☰**: editör AppBar `leading`,
+  kalem+tam ekranda kalem tepsisinde; Esc ve geri önce tam ekrandan çıkarır,
+  Ctrl+Shift+F tam ekran. Başka nota geçince tam ekran SÜRER (dispose'da
+  `openEditorNoteIds` boşsa kapanır). Tarayıcı geri tuşu PopScope'a uğramaz
+  (go_router popstate) — orada tam ekran önce kapanmaz.
   **Çekerek tam ekran** (2026-11-02): not açıkken ayraç en dar hâlden SOLA
   56 dp itilince ipucu "Bırak: tam ekran" (lastik daralma + titreşim),
   bırakınca `noteFullscreenProvider`; tam ekrandan sol kenardan sağa çekip çık.

@@ -356,6 +356,12 @@ hâlâ."** Karar değişmeden bu bölüme başlanmaz; değişirse önce F18.27.
 - [x] **Çekerek tam ekran** (aynı gün, ek istek): tablette ayracı sola zorlayınca ipucu, bırakınca tam ekran; sol kenardan sağa çekmek çıkarır (`fullscreen_pull_test`).
 - [x] **Web'de ekler**: Drive jetonu sekmede kalır (yenilemede yeniden sormaz), notta tek dokunuşla tümünü indiren şerit, telefondan çıkmamış ekler için açık uyarı. Kök neden ihtimalleri: (a) telefonda Drive bağlı değilse ekler cihazda bekler, (b) Drive ekleri her kutuya ayrı dokunuş istiyordu. Canlı hesapta doğrulama → adım 27.
 
+### I. Geniş ekran turu (2026-11-02, 3. oturum)
+
+- [x] **A · Tek liste örneği**: not yokken liste tam genişlik ("Soldan bir not seç" kalktı); not açılıp kapanınca arama/süzgeç/kaydırma korunur, liste açılan/kapatılan karta döner (`fullscreen_pull_test`).
+- [x] **B · Tam ekrandan çıkış**: liste gizliyken sol üstte ☰ (kalem kipinde tepside), Esc/geri önce tam ekrandan çıkar, Ctrl+Shift+F, nota geçince tam ekran sürer.
+- [ ] **C · İyileştirmeler** (ayrı oturum, `genis-ekran-c` dalı): okuma genişliği ~760 dp, açık notun kartı vurgulu, Alt+↑/↓ · Ctrl+W, kısayol yardımı, ayraca çift tık → varsayılan genişlik.
+
 ### G. Kapanış
 
 - [x] **F18.31 Cihaz listesini duman testine indir** (eski F17.4 / U12; en son

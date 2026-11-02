@@ -9,7 +9,6 @@ import 'package:go_router/go_router.dart';
 import '../core/l10n_ext.dart';
 import '../core/utils/immersive.dart';
 import '../features/notes/presentation/dashboard_screen.dart';
-import '../features/notes/presentation/quick_add_fab.dart';
 import '../features/settings/settings_providers.dart';
 import 'app_commands.dart';
 
@@ -35,14 +34,17 @@ const double kNoteSplitBreakpoint = 640;
 bool isNoteLocation(String path) =>
     path.startsWith('/note/') || path.startsWith('/notebook/');
 
-/// Liste + not yan yana mı çizilecek? [width] kabuğun genişliği.
-bool splitActiveFor(double width, {required bool noteOpen}) =>
-    width >= kSplitBreakpoint || (noteOpen && width >= kNoteSplitBreakpoint);
+/// Liste kabuğun sol panelinde mi çizilecek? [width] kabuğun genişliği.
+///
+/// Not açık olsun olmasın aynı sınır (2026-11-02): not yokken sol panel tam
+/// genişliğe yayılır, not açılınca daralır. Liste hep AYNI örnek kalır —
+/// eskiden not yokken `/` rotası ikinci bir örnek kuruyordu, not açılıp
+/// kapanınca arama/kaydırma sıfırlanıyordu.
+bool splitActiveFor(double width) => width >= kNoteSplitBreakpoint;
 
-/// Kabuğun ŞU AN yan yana çizip çizmediği ve solda listenin tek sütun olup
-/// olmadığı. `/` rotası buna bakar: yan yanayken liste zaten solda,
-/// sağa yer tutucu konur (eskiden genişliğe bakıyordu; not açıkken sınır
-/// değişince liste iki kez kurulurdu).
+/// Kabuğun ŞU AN listeyi sol panelde çizip çizmediği ve listenin tek sütun
+/// olup olmadığı. `/` rotası buna bakar: etkinken liste zaten solda, rota
+/// hiçbir şey çizmez.
 class SplitScope extends InheritedWidget {
   const SplitScope({
     super.key,
@@ -72,20 +74,26 @@ class DashboardPaneScope extends InheritedWidget {
   const DashboardPaneScope({
     super.key,
     required this.singleColumn,
+    this.anchorNoteId,
     required super.child,
   });
 
   final bool singleColumn;
 
+  /// Sütun sayısı değişince listenin gözden kaçırmaması gereken not: açılan
+  /// not ya da az önce kapatılan not (kaldığın karta dönüş).
+  final String? anchorNoteId;
+
+  static DashboardPaneScope? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<DashboardPaneScope>();
+
   static bool singleColumnOf(BuildContext context) =>
-      context
-          .dependOnInheritedWidgetOfExactType<DashboardPaneScope>()
-          ?.singleColumn ??
-      false;
+      maybeOf(context)?.singleColumn ?? false;
 
   @override
   bool updateShouldNotify(DashboardPaneScope oldWidget) =>
-      singleColumn != oldWidget.singleColumn;
+      singleColumn != oldWidget.singleColumn ||
+      anchorNoteId != oldWidget.anchorNoteId;
 }
 
 /// Not açıkken sol listenin varsayılan genişliği (tek sütun kart).
@@ -111,14 +119,10 @@ class NotePaneWidthNotifier extends Notifier<double> {
   }
 }
 
-const double _defaultListPaneWidth = 380;
 const double _minListPaneWidth = 260;
 
-/// Sağ panele de en az bu kadar yer kalsın; ayraç sona kadar itilip editör
-/// görünmez hâle gelmesin.
-const double _minDetailWidth = 360;
-
-/// Not açıkken notun en dar hâli (bkz. [kNoteSplitBreakpoint]).
+/// Notun en dar hâli (bkz. [kNoteSplitBreakpoint]); ayraç sona kadar itilip
+/// editör görünmez hâle gelmesin.
 const double _minNoteDetailWidth = 380;
 
 /// Pencerede DİKEY bir menteşe/kıvrım (katlanabilir telefon açık, kitap
@@ -134,25 +138,6 @@ Rect? verticalHingeOf(BuildContext context) {
     if (vertical && b.left > 0 && b.right < size.width) return b;
   }
   return null;
-}
-
-/// Sol panel genişliği (kullanıcı ayraçla değiştirir, kalıcı saklanır).
-final listPaneWidthProvider = NotifierProvider<ListPaneWidthNotifier, double>(
-  ListPaneWidthNotifier.new,
-);
-
-class ListPaneWidthNotifier extends Notifier<double> {
-  static const _key = 'list_pane_width';
-
-  @override
-  double build() =>
-      ref.watch(sharedPreferencesProvider).getDouble(_key) ??
-      _defaultListPaneWidth;
-
-  void set(double value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setDouble(_key, value);
-  }
 }
 
 /// **ODAK MODU** — liste paneli gizli mi (kullanıcı isteği 2026-09-22,
@@ -213,6 +198,9 @@ class _SplitShellState extends ConsumerState<SplitShell> {
   /// kalıcı kayıt yalnızca BIRAKINCA bir kez yapılır.
   double? _dragWidth;
 
+  /// Son açık notun kimliği: not kapanınca liste o karta döner.
+  String? _lastNoteId;
+
   /// **ÇEKEREK TAM EKRAN** (kullanıcı isteği 2026-11-02: "tam ekran yapmak
   /// çok daha kolay olsun; sürükleyici sola doğru azıcık zorlayınca tam
   /// ekrana geçilebilsin — görseli sabitlemedeki basılı tut-bırak gibi").
@@ -232,8 +220,10 @@ class _SplitShellState extends ConsumerState<SplitShell> {
       builder: (context, _) {
         final location = currentLocation(router);
         final noteOpen = isNoteLocation(location);
-        final active = splitActiveFor(total, noteOpen: noteOpen);
-        if (!active) {
+        if (location.startsWith('/note/')) {
+          _lastNoteId = location.substring('/note/'.length);
+        }
+        if (!splitActiveFor(total)) {
           return SplitScope(
             active: false,
             singleColumn: false,
@@ -241,14 +231,10 @@ class _SplitShellState extends ConsumerState<SplitShell> {
           );
         }
         // Pencere daralınca saklanan genişlik sağ panele yer bırakmayabilir.
-        final minDetail = noteOpen ? _minNoteDetailWidth : _minDetailWidth;
-        final maxPane = (total - minDetail).clamp(
+        final maxPane = (total - _minNoteDetailWidth).clamp(
           _minListPaneWidth,
           double.infinity,
         );
-        final stored = noteOpen
-            ? ref.watch(notePaneWidthProvider)
-            : ref.watch(listPaneWidthProvider);
         // KATLANABİLİR (2026-11-02): dikey menteşe varsa ayraç menteşeye
         // oturur — liste bir yarıda, not öbür yarıda; hiçbir şey kıvrımın
         // altında kalmaz. Kullanıcı sürüklerse onun seçimi geçerli.
@@ -256,16 +242,20 @@ class _SplitShellState extends ConsumerState<SplitShell> {
         final hingeWidth = hinge == null || _dragWidth != null
             ? null
             : hinge.center.dx - _dividerWidth / 2;
-        final paneWidth = (_dragWidth ?? hingeWidth ?? stored).clamp(
-          _minListPaneWidth,
-          maxPane,
-        );
-        // Açık not yokken (yalnız yer tutucu) liste gizlenmez: gizli liste +
-        // boş sağ panel, kullanıcıya hiçbir şey göstermeyen bir ekran olurdu.
+        // Not yokken liste TAM genişlik (sağda yer tutucu yok — kullanıcı
+        // isteği 2026-11-02). Aynı sol panel örneği genişler: arama, süzgeç
+        // ve kaydırma not açılıp kapanınca korunur.
+        final double stored = ref.watch(notePaneWidthProvider);
+        final double noteWidth = _dragWidth ?? hingeWidth ?? stored;
+        final paneWidth = noteOpen
+            ? noteWidth.clamp(_minListPaneWidth, maxPane)
+            : null;
+        // Açık not yokken liste gizlenmez: gizli liste + boş sağ panel,
+        // kullanıcıya hiçbir şey göstermeyen bir ekran olurdu.
         final collapsed =
             (ref.watch(listPaneCollapsedProvider) ||
                 ref.watch(noteFullscreenProvider)) &&
-            location != '/';
+            noteOpen;
         return SplitScope(
           active: true,
           singleColumn: noteOpen,
@@ -277,105 +267,111 @@ class _SplitShellState extends ConsumerState<SplitShell> {
 
   Widget _split(
     BuildContext context,
-    double paneWidth,
+    double? notePaneWidth,
     double maxPane,
     bool collapsed,
     bool noteOpen,
   ) {
     return Scaffold(
-      body: Row(
-        children: [
-          // ShellRoute sol paneli rota değişse de aynı konumda tuttuğu için
-          // DashboardScreen'in State'i korunur — not değiştirince liste
-          // başa sarmaz.
-          //
-          // ODAK MODUNDA liste ağaçtan ÇIKARILMAZ, yalnız genişliği sıfıra
-          // akar: ağaçtan çıksaydı kaydırma konumu ve arama kutusu sıfırlanırdı.
-          // Liste hep kendi genişliğinde ölçülür (SizedBox), yalnız
-          // görünen kısmı daralır — ızgara her karede yeniden dizilmez.
-          TweenAnimationBuilder<double>(
-            tween: Tween<double>(end: collapsed ? 0 : 1),
-            duration: const Duration(milliseconds: 240),
-            curve: Curves.easeInOutCubic,
-            child: SizedBox(
-              width: paneWidth,
-              child: DashboardPaneScope(
-                singleColumn: noteOpen,
-                child: const DashboardScreen(),
-              ),
-            ),
-            builder: (context, open, pane) => ClipRect(
-              child: Align(
-                alignment: AlignmentDirectional.centerEnd,
-                // Lastik: en dar hâlden sonra itiş görünür daralma verir
-                // (çekişin üçte biri kadar), liste yeniden dizilmez.
-                widthFactor:
-                    open * (1 - (_overPull / 3) / paneWidth).clamp(0.5, 1.0),
-                // Ağaç şekli sabit (Offstage hep var): State korunur.
-                child: Offstage(offstage: open == 0, child: pane),
-              ),
-            ),
-          ),
-          if (!collapsed)
-            _PaneDivider(
-              // Delta DEĞİL mutlak konum: fare bir karede birden çok sürükleme
-              // olayı üretebiliyor ve hepsi build'de yakalanmış aynı eski
-              // genişliğe eklendiğinden yalnız sonuncusu işe yarıyordu — panel
-              // farenin gerisinde kalıyordu. İmlecin x'ini doğrudan kullanmak
-              // kare zamanlamasından tamamen bağımsız.
-              onDrag: (globalX) {
-                final raw = globalX - _dividerWidth / 2;
-                final over = noteOpen
-                    ? (_minListPaneWidth - raw).clamp(0.0, 200.0)
-                    : 0.0;
-                final wasArmed = _armed;
-                setState(() {
-                  _overPull = over;
-                  _dragWidth = raw.clamp(_minListPaneWidth, maxPane);
-                });
-                if (_armed != wasArmed) HapticFeedback.mediumImpact();
-              },
-              onDragEnd: () {
-                if (_armed) {
-                  setState(() {
-                    _overPull = 0;
-                    _dragWidth = null;
-                  });
-                  ref.read(noteFullscreenProvider.notifier).set(true);
-                  return;
-                }
-                _overPull = 0;
-                final width = _dragWidth;
-                if (width != null) {
-                  if (noteOpen) {
-                    ref.read(notePaneWidthProvider.notifier).set(width);
-                  } else {
-                    ref.read(listPaneWidthProvider.notifier).set(width);
-                  }
-                }
-                setState(() => _dragWidth = null);
-              },
-            ),
-          Expanded(
-            child: Stack(
-              children: [
-                widget.child,
-                if (_overPull > 0)
-                  PositionedDirectional(
-                    start: 12,
-                    top: 0,
-                    bottom: 0,
-                    child: Center(
-                      child: _FullscreenPullHint(
-                        progress: (_overPull / _kFullscreenPull).clamp(0, 1),
-                        armed: _armed,
-                      ),
-                    ),
+      // Not yokken liste kabuğun TAM genişliği (ray düşülmüş hâli; pencere
+      // genişliği değil — LayoutBuilder).
+      body: LayoutBuilder(
+        builder: (context, box) {
+          final paneWidth = notePaneWidth ?? box.maxWidth;
+          return Row(
+            children: [
+              // ShellRoute sol paneli rota değişse de aynı konumda tuttuğu için
+              // DashboardScreen'in State'i korunur — not değiştirince liste
+              // başa sarmaz.
+              //
+              // ODAK MODUNDA liste ağaçtan ÇIKARILMAZ, yalnız genişliği sıfıra
+              // akar: ağaçtan çıksaydı kaydırma konumu ve arama kutusu sıfırlanırdı.
+              // Liste hep kendi genişliğinde ölçülür (SizedBox), yalnız
+              // görünen kısmı daralır — ızgara her karede yeniden dizilmez.
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(end: collapsed ? 0 : 1),
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeInOutCubic,
+                child: SizedBox(
+                  width: paneWidth,
+                  child: DashboardPaneScope(
+                    singleColumn: noteOpen,
+                    anchorNoteId: _lastNoteId,
+                    child: const DashboardScreen(),
                   ),
-              ],
-            ),
-          ),
-        ],
+                ),
+                builder: (context, open, pane) => ClipRect(
+                  child: Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    // Lastik: en dar hâlden sonra itiş görünür daralma verir
+                    // (çekişin üçte biri kadar), liste yeniden dizilmez.
+                    widthFactor:
+                        open *
+                        (1 - (_overPull / 3) / paneWidth).clamp(0.5, 1.0),
+                    // Ağaç şekli sabit (Offstage hep var): State korunur.
+                    child: Offstage(offstage: open == 0, child: pane),
+                  ),
+                ),
+              ),
+              if (noteOpen && !collapsed)
+                _PaneDivider(
+                  // Delta DEĞİL mutlak konum: fare bir karede birden çok sürükleme
+                  // olayı üretebiliyor ve hepsi build'de yakalanmış aynı eski
+                  // genişliğe eklendiğinden yalnız sonuncusu işe yarıyordu — panel
+                  // farenin gerisinde kalıyordu. İmlecin x'ini doğrudan kullanmak
+                  // kare zamanlamasından tamamen bağımsız.
+                  onDrag: (globalX) {
+                    final raw = globalX - _dividerWidth / 2;
+                    final over = (_minListPaneWidth - raw).clamp(0.0, 200.0);
+                    final wasArmed = _armed;
+                    setState(() {
+                      _overPull = over;
+                      _dragWidth = raw.clamp(_minListPaneWidth, maxPane);
+                    });
+                    if (_armed != wasArmed) HapticFeedback.mediumImpact();
+                  },
+                  onDragEnd: () {
+                    if (_armed) {
+                      setState(() {
+                        _overPull = 0;
+                        _dragWidth = null;
+                      });
+                      ref.read(noteFullscreenProvider.notifier).set(true);
+                      return;
+                    }
+                    _overPull = 0;
+                    final width = _dragWidth;
+                    if (width != null) {
+                      ref.read(notePaneWidthProvider.notifier).set(width);
+                    }
+                    setState(() => _dragWidth = null);
+                  },
+                ),
+              Expanded(
+                child: Stack(
+                  children: [
+                    widget.child,
+                    if (_overPull > 0)
+                      PositionedDirectional(
+                        start: 12,
+                        top: 0,
+                        bottom: 0,
+                        child: Center(
+                          child: _FullscreenPullHint(
+                            progress: (_overPull / _kFullscreenPull).clamp(
+                              0,
+                              1,
+                            ),
+                            armed: _armed,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -488,95 +484,6 @@ class _PaneDividerState extends State<_PaneDivider> {
               duration: const Duration(milliseconds: 120),
               width: active ? 4 : 1,
               color: active ? scheme.primary : scheme.outlineVariant,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Geniş ekranda `/` rotasının sağ panelde gösterdiği yer tutucu.
-///
-/// Eskiden yalnız "soldan bir not seç" yazıyordu; ekranın yarısı boş bir
-/// davetti. Artık aynı alan bir BAŞLANGIÇ noktası: yeni not / yeni liste
-/// düğmeleri ve klavye kısayollarının kısa bir hatırlatması (bkz.
-/// [shortcutHelpRows]).
-class NoNoteSelected extends ConsumerWidget {
-  const NoNoteSelected({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final l10n = context.l10n;
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    color: scheme.primaryContainer.withValues(alpha: 0.55),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.sticky_note_2_outlined,
-                    size: 44,
-                    color: scheme.onPrimaryContainer,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  l10n.noNoteSelected,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.noNoteSelectedHint,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // TEK "YENİ NOT" (F11.8): eskiden yeni not + yeni liste
-                // çifti vardı; rayda ve "+"da da "Yeni not" olunca aynı iş üç
-                // yerdeydi. Bu düğme listenin "+" panelini açar — bütün
-                // seçenekler (liste, fotoğraf, dosya…) tek yerde.
-                FilledButton.tonalIcon(
-                  key: const ValueKey('empty-pane-new-note'),
-                  onPressed: () => quickAddOpenRequest.value++,
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.newNoteShort),
-                ),
-                const SizedBox(height: 28),
-                // Kısayol hatırlatması: fareli/klavyeli kullanıcı için;
-                // dokunmatikte de zararsız, küçük ve soluk.
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 14,
-                  runSpacing: 6,
-                  children: [
-                    for (final row in shortcutHelpRows(context).take(3))
-                      Text(
-                        '${row.keys}  ${row.label}',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
             ),
           ),
         ),

@@ -154,18 +154,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/',
-                // Geniş ekranda liste zaten SOL panelde; burada onu bir daha
-                // çizmek yerine sağ panele yer tutucu koyulur.
-                // Not açıkken sınır daha dar (kNoteSplitBreakpoint) — karar
-                // kabuğun kendisinden okunur, liste iki kez kurulmasın.
+                // Geniş ekranda liste zaten SOL panelde (not yokken tam
+                // genişlik); burada bir daha çizilmez. Karar kabuğun
+                // kendisinden okunur, liste iki kez kurulmasın.
                 builder: (context, state) => SplitScope.activeOf(context)
-                    ? const NoNoteSelected()
+                    ? const SizedBox.shrink()
                     : const DashboardScreen(),
               ),
-              GoRoute(
-                path: '/notebook/:id',
-                builder: _notebookBuilder,
-              ),
+              GoRoute(path: '/notebook/:id', builder: _notebookBuilder),
               GoRoute(
                 path: '/note/:id',
                 // ValueKey(noteId): editör State'i tüm kurulumunu initState'te

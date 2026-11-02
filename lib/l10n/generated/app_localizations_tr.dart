@@ -111,9 +111,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addImage => 'Görsel ekle';
 
   @override
-  String get noNoteSelected => 'Soldan bir not seç';
-
-  @override
   String attachmentFailed(String error) {
     return 'Ek eklenemedi: $error';
   }
@@ -3628,7 +3625,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shortcutHelp => 'Kısayolları göster';
 
   @override
-  String get noNoteSelectedHint => 'ya da yeni bir not başlat';
+  String get shortcutFullscreen => 'Notu tam ekran yap / çık';
+
+  @override
+  String get shortcutEscape => 'Tam ekrandan çık, sonra notu kapat';
+
+  @override
+  String get showNoteList => 'Not listesini göster';
 
   @override
   String get loginFeatureSyncTitle => 'Her cihazda aynı notlar';

@@ -59,7 +59,6 @@
   },
   "addAttachment": "Ekle",
   "addImage": "Görsel ekle",
-  "noNoteSelected": "Soldan bir not seç",
   "attachmentFailed": "Ek eklenemedi: {error}",
   "@attachmentFailed": {
     "placeholders": {
@@ -1694,7 +1693,9 @@
   "shortcutToggleList": "Not listesini gizle / göster",
   "shortcutSections": "Bölümler arasında geç",
   "shortcutHelp": "Kısayolları göster",
-  "noNoteSelectedHint": "ya da yeni bir not başlat",
+  "shortcutFullscreen": "Notu tam ekran yap / çık",
+  "shortcutEscape": "Tam ekrandan çık, sonra notu kapat",
+  "showNoteList": "Not listesini göster",
   "loginFeatureSyncTitle": "Her cihazda aynı notlar",
   "loginFeatureSyncBody": "Telefon, tablet, bilgisayar ve web arasında anında senkron.",
   "loginFeatureAiTitle": "Yapay zekâ yanında",

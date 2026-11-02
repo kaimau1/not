@@ -33,22 +33,13 @@ import '../../../core/widgets/press_scale.dart';
 /// sırayı panele bırakır.
 final quickAddPanelOpen = ValueNotifier(false);
 
-/// Paneli DIŞARIDAN açma isteği (sayaç). Geniş ekranın boş not bölmesindeki
-/// tek "Yeni not" düğmesi (F11.8) ana ekranın "+" panelini bununla açar —
-/// ayrı bir "yeni not / yeni liste" düğme çifti yerine bütün seçenekler.
-final quickAddOpenRequest = ValueNotifier(0);
-
 class QuickAddFab extends StatefulWidget {
   const QuickAddFab({
     super.key,
     required this.anchor,
     required this.actions,
     this.onVoiceCapture,
-    this.listenOpenRequests = false,
   });
-
-  /// [quickAddOpenRequest]'i dinlesin mi (yalnız ana ekranın düğmesi).
-  final bool listenOpenRequests;
 
   /// Menünün demirlendiği nokta. Dashboard bunu mikrofon + "+" sütununun
   /// TAMAMINI saracak şekilde verir; menü sütunun tepesinden açılır ve
@@ -69,18 +60,6 @@ class QuickAddFab extends StatefulWidget {
 class _QuickAddFabState extends State<QuickAddFab> {
   OverlayEntry? _entry;
 
-  @override
-  void initState() {
-    super.initState();
-    if (widget.listenOpenRequests) {
-      quickAddOpenRequest.addListener(_onOpenRequest);
-    }
-  }
-
-  void _onOpenRequest() {
-    if (mounted && !_open) _openMenu();
-  }
-
   bool get _open => _entry != null;
 
   void _close() {
@@ -99,8 +78,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
     final overlay = Overlay.of(context).context;
     final fab = context.findRenderObject()! as RenderBox;
     final box = overlay.findRenderObject()! as RenderBox;
-    final rect =
-        fab.localToGlobal(Offset.zero, ancestor: box) & fab.size;
+    final rect = fab.localToGlobal(Offset.zero, ancestor: box) & fab.size;
     return quickAddPanelFit(
       screen: box.size,
       fabRight: rect.right,
@@ -206,7 +184,6 @@ class _QuickAddFabState extends State<QuickAddFab> {
 
   @override
   void dispose() {
-    quickAddOpenRequest.removeListener(_onOpenRequest);
     _entry?.remove();
     _entry = null;
     // Panel açıkken ekran kapanırsa bayrak takılı kalmasın.

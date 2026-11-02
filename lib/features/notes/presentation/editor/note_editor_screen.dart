@@ -1218,9 +1218,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     WidgetsBinding.instance.removeObserver(this);
     openEditorNoteIds.remove(widget.noteId);
     _pageInkCtl?.dispose();
-    // Tam ekran nota bağlı; ağaç kilitliyken durum yazılamaz.
+    // Tam ekran nota bağlı; ağaç kilitliyken durum yazılamaz. Başka bir nota
+    // GEÇİLDİYSE (yeni editör çoktan açık) tam ekran sürer.
     final fullscreen = _fullscreenNotifier;
-    if (fullscreen != null) unawaited(Future.microtask(() => fullscreen.set(false)));
+    if (fullscreen != null) {
+      unawaited(
+        Future.microtask(() {
+          if (openEditorNoteIds.isEmpty) fullscreen.set(false);
+        }),
+      );
+    }
     // Dikte açıkken editörden çıkılabiliyor: mikrofon ekranla birlikte
     // kapanmazsa arka planda dinlemeye devam ederdi.
     if (_dictation != null) {
@@ -1794,6 +1801,26 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onPressed: () => ref.read(noteFullscreenProvider.notifier).set(!on),
     );
   }
+
+  /// Geniş ekranda not listesi şu an gizli mi (tam ekran ya da odak modu)?
+  bool _listHidden(BuildContext context) =>
+      SplitScope.activeOf(context) &&
+      (ref.watch(noteFullscreenProvider) ||
+          ref.watch(listPaneCollapsedProvider));
+
+  /// Tam ekrandan ve odak modundan çıkar: solda tek sütunluk liste görünür.
+  void _showNoteList() {
+    ref.read(noteFullscreenProvider.notifier).set(false);
+    ref.read(listPaneCollapsedProvider.notifier).set(false);
+  }
+
+  /// ☰ — gizli listeyi geri getirir (bkz. [_listHidden]).
+  Widget _showListButton(AppLocalizations l10n) => IconButton(
+    key: const ValueKey('note-show-list'),
+    tooltip: l10n.showNoteList,
+    icon: const Icon(Icons.menu_rounded),
+    onPressed: _showNoteList,
+  );
 
   /// Kalem kipinin kapatma düğmesi (tepsi/sütun sonunda).
   Widget _penDoneButton(AppLocalizations l10n) => IconButton(
@@ -3725,13 +3752,33 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             control: true,
             shift: true,
           ): _redo,
+          // Esc: önce tam ekrandan çık, sonra notu kapat (geri tuşu sırası).
+          const SingleActivator(LogicalKeyboardKey.escape): () =>
+              Navigator.of(context).maybePop(),
+          if (PenTray.useRail(context))
+            const SingleActivator(
+              LogicalKeyboardKey.keyF,
+              control: true,
+              shift: true,
+            ): () => ref
+                .read(noteFullscreenProvider.notifier)
+                .set(!ref.read(noteFullscreenProvider)),
         },
         // Geri tuşu önce CANLI ARAMAYI kapatır, notu değil.
         child: PopScope(
-          // Geri tuşu sırayla: kayıt → biçim paneli → canlı arama → not.
-          canPop: !_findOpen && !_formatBarOpen && _voiceRecorder == null,
+          // Geri tuşu sırayla: tam ekran → kayıt → biçim paneli → canlı
+          // arama → not.
+          canPop:
+              !_findOpen &&
+              !_formatBarOpen &&
+              _voiceRecorder == null &&
+              !ref.watch(noteFullscreenProvider),
           onPopInvokedWithResult: (didPop, _) {
             if (didPop) return;
+            if (ref.read(noteFullscreenProvider)) {
+              _showNoteList();
+              return;
+            }
             // Kayıt sürerken geri = kaydı BİTİR ve ekle, sonra çık (eski
             // kayıt levhasının "geri kaydeder" kuralı — kayıt kaybolmasın).
             if (_voiceRecorder != null) {
@@ -3769,6 +3816,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           appBar: _pagePen && ref.watch(noteFullscreenProvider)
               ? null
               : AppBar(
+            // Liste gizliyken (tam ekran / odak modu) geri okunun yerinde ☰:
+            // tek dokunuşla liste geri gelir (kullanıcı isteği 2026-11-02:
+            // "tam ekrandan çıkmak çok zor").
+            leading: _listHidden(context) ? _showListButton(l10n) : null,
             backgroundColor: themed ? Colors.transparent : background,
             scrolledUnderElevation: themed ? 0 : null,
             // Başlık yerinde düzenleme tarihi: notun kendi başlığı zaten gövdenin
@@ -4052,6 +4103,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                 controller: _pageInkOf(note),
                                 dock: true,
                                 actions: [
+                                  // Kalem + tam ekranda üst çubuk yok: listeye
+                                  // dönüş tepside.
+                                  if (_listHidden(context))
+                                    _showListButton(l10n),
                                   if (PenTray.useRail(context))
                                     _fullscreenButton(l10n),
                                   _penDoneButton(l10n),

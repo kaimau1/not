@@ -356,6 +356,56 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     p.jumpTo(target.clamp(0.0, p.maxScrollExtent));
   }
 
+  /// Geniş ekranda sol panelin son sütun kipi (tek sütun = not açık).
+  bool? _singleColumn;
+
+  /// Not açılıp kapanınca (geniş ekran) sütun sayısı değişir; piksel konumu
+  /// artık aynı kartları göstermez. Önce konum ORANLA taşınır (kabaca aynı
+  /// bölge), sonra açılan/kapatılan notun kartı vurgusuz görünür alana
+  /// getirilir — "kaldığın yer" (kullanıcı isteği 2026-11-02).
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final pane = DashboardPaneScope.maybeOf(context);
+    final single = pane?.singleColumn ?? false;
+    final anchor = pane?.anchorNoteId;
+    if (_singleColumn != null && single != _singleColumn && anchor != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _restoreScroll();
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _revealCard(anchor),
+        );
+      });
+    }
+    _singleColumn = single;
+  }
+
+  /// [noteId]'nin kartı kuruluysa (kaydırma önbelleğinde) görünür alana
+  /// kaydırır. Kartlar `ValueKey(note.id)` ile sarılı (dashboard_slivers).
+  void _revealCard(String noteId) {
+    if (!mounted) return;
+    final key = ValueKey(noteId);
+    Element? found;
+    void visit(Element e) {
+      if (found != null) return;
+      if (e.widget.key == key) {
+        found = e;
+        return;
+      }
+      e.visitChildren(visit);
+    }
+
+    context.visitChildElements(visit);
+    final card = found;
+    if (card == null) return;
+    Scrollable.ensureVisible(
+      card,
+      alignment: 0.3,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
   /// Izgarayı tepeye döndürür. `animateTo` birden çok konumla çalışır
   /// (bkz. [_gridScroll]).
   void _backToTop() {
@@ -1609,7 +1659,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             child: QuickAddFab(
                               anchor: _fabColumnLink,
                               actions: this,
-                              listenOpenRequests: true,
                             ),
                           ),
                         ],

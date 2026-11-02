@@ -10,6 +10,7 @@ import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
 import 'package:notlar/features/notes/data/attachment_repository.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
+import 'package:notlar/features/notes/presentation/dashboard_screen.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,14 +30,17 @@ class _NoAuth implements AuthRepository {
 }
 
 void main() {
-  Future<ProviderContainer> pump(WidgetTester tester) async {
+  Future<ProviderContainer> pump(
+    WidgetTester tester, {
+    String initial = '/note/n1',
+  }) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     tester.view.physicalSize = const Size(1200, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final router = GoRouter(
-      initialLocation: '/note/n1',
+      initialLocation: initial,
       routes: [
         ShellRoute(
           builder: (c, s, child) => AppFrame(child: child),
@@ -127,6 +131,35 @@ void main() {
     await tester.dragFrom(const Offset(6, 400), const Offset(120, 0));
     await tester.pump(const Duration(milliseconds: 400));
     expect(container.read(noteFullscreenProvider), isFalse);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 2));
+  });
+
+  // Kullanıcı isteği 2026-11-02: not yokken sağda "not seç" alanı kalmasın,
+  // liste tam genişlik olsun; not açılıp kapanınca liste AYNI örnek kalsın
+  // (arama, süzgeç ve kaydırma korunur).
+  testWidgets('not yokken liste tam genişlik, açıp kapayınca aynı örnek', (
+    tester,
+  ) async {
+    await pump(tester, initial: '/');
+    final dash = find.byType(DashboardScreen);
+    expect(dash, findsOneWidget);
+    final before = tester.state(dash);
+    final shellWidth = tester.getSize(find.byType(SplitShell)).width;
+    expect(tester.getSize(dash).width, shellWidth);
+
+    GoRouter.of(tester.element(dash)).go('/note/n1');
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('NOT'), findsOneWidget);
+    expect(tester.getSize(dash).width, lessThan(shellWidth / 2));
+    expect(tester.state(dash), same(before));
+
+    GoRouter.of(tester.element(dash)).go('/');
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(tester.getSize(dash).width, shellWidth);
+    expect(tester.state(dash), same(before));
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 2));
   });
