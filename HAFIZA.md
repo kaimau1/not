@@ -159,6 +159,20 @@ maddeyi GÜNCELLE.
 - `ConsumerState.dispose` içinde `ref` yok. Türetilmiş sağlayıcı içerik
   aynıysa önceki örneği döner (`StableBox`). Toplu işlem tek `WriteBatch`
   (450'lik). Animasyonda `FrameLoop`.
+- **Uzun liste açılış/kapanış kasması** (2026-11-02, telefonda ölçüldü: 90
+  maddelik not; kısa notta yok → sorun madde sayısına bağlı). Ölçüm yolu:
+  `adb shell dumpsys SurfaceFlinger --latency '"SurfaceView[<paket>/<paket>.MainActivity](BLAST)#0"'`
+  (Flutter kareleri `gfxinfo`da SAYILMAZ; ad tırnaklı). Öncesi: açılış sonunda
+  5 kare 33–82 ms (kademeli kurulum 380 ms'de, 14 madde/kare), kapanış sonunda
+  2 kare ~50 ms (rota kalkarken 90 satırın tek karede yıkımı). Şimdi:
+  kurulum geçiş BİTİNCE (520 ms) 4 madde/kare; kapanırken `noteRouteClosing`
+  ile kare başına 6 madde sökülür (`ItemsEditor._shrinkBudget`). Kapanış
+  temiz; açılışta ~geçiş sonunda TEK ~100 ms kare kaldı (şüpheli: 450 ms
+  ertelenmiş `_setStateAfterOpening` yeniden çizimi ya da donmuş görüntüden
+  canlı çizime geçiş — ayrıştırılmadı). TUZAK: yerelde ölçmek için ayrı
+  `applicationId` + `google-services.json` `package_name` (geçici, commit'leme;
+  imza anahtarı yok → CI imzalı uygulamanın üstüne kurulmaz); ilk release
+  derlemesi ~20 dk.
 - Ana ekran ızgarası deterministik sütun ataması (`balancedColumnAssignment`).
   Kesme noktası geçişinde `DashboardScreen` başka yerde yeniden kurulur →
   kaydırma `DashboardScrollMemory`de ORANLA taşınır (F18.11).

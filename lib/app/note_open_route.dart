@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'split_shell.dart';
 import '../core/a11y/motion.dart';
+import '../core/widgets/note_route_closing.dart';
 
 /// **NOT KARTTAN GENİŞLEYEREK AÇILIR** (kullanıcı isteği 2026-10-28:
 /// "notlar dashboard'dan açılırken sayfa kaydırma şeklinde değil, sanki o not
@@ -399,6 +400,7 @@ class _FrozenWhileClosingState extends State<_FrozenWhileClosing> {
 
   void _onStatus(AnimationStatus status) {
     final closing = status == AnimationStatus.reverse;
+    noteRouteClosing.value = closing;
     if (closing == (_frozen != null)) return;
     setState(() => _frozen = closing ? MediaQuery.of(context) : null);
   }

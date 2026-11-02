@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/frame_loop.dart';
+import '../../../../core/widgets/note_route_closing.dart';
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/sentence_select.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
@@ -492,8 +493,9 @@ class ItemsEditorState extends State<ItemsEditor>
     _items = _adopt(widget.items);
     if (_items.length > _kFirstRows) {
       _rowBudget = _kFirstRows;
-      _budgetTimer = Timer(const Duration(milliseconds: 380), _growBudget);
+      _budgetTimer = Timer(_kGrowAfter, _growBudget);
     }
+    noteRouteClosing.addListener(_onRouteClosing);
   }
 
   /// **UZUN LİSTEDE KADEMELİ İLK KURULUM** (kullanıcı bulgusu 2026-10-20:
@@ -505,13 +507,50 @@ class ItemsEditorState extends State<ItemsEditor>
   /// [_kFirstRows] madde kurulur; geçiş bitince (≈380 ms) kalanlar kare
   /// başına [_kRowsPerFrame] madde eklenerek tamamlanır. Kurulmamış
   /// maddeler zaten ekranın altında — kullanıcı farkı görmez.
+  ///
+  /// **ÖLÇÜM (2026-11-02, telefon, 90 maddelik not):** 14 madde/kare ve 380 ms
+  /// başlangıçla geçişin son karelerinde 5 kare 33–82 ms sürüyordu (kısa notta
+  /// hiç yok). Geçiş (460 ms) BİTTİKTEN sonra, kare başına [_kRowsPerFrame]
+  /// madde.
   static const _kFirstRows = 18;
-  static const _kRowsPerFrame = 14;
+  static const _kRowsPerFrame = 4;
+  static const _kGrowAfter = Duration(milliseconds: 520);
+
+  /// Kapanışta kare başına sökülen madde (bkz. [noteRouteClosing]).
+  static const _kRowsPerShrink = 6;
 
   /// Kurulacak en çok madde sayısı (işaretsizler önce, sonra işaretliler);
   /// null = hepsi.
   int? _rowBudget;
   Timer? _budgetTimer;
+
+  void _onRouteClosing() {
+    if (!noteRouteClosing.value) {
+      // Kapanıştan vazgeçildi (geri çekme jesti): kalanlar yine kurulur.
+      if (_rowBudget != null) {
+        _budgetTimer?.cancel();
+        _budgetTimer = Timer(_kGrowAfter, _growBudget);
+      }
+      return;
+    }
+    if (_items.length <= _kFirstRows) return;
+    _budgetTimer?.cancel();
+    _budgetTimer = null;
+    _rowBudget ??= _items.length;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _shrinkBudget());
+  }
+
+  void _shrinkBudget() {
+    final budget = _rowBudget;
+    if (!mounted ||
+        !noteRouteClosing.value ||
+        budget == null ||
+        budget <= _kFirstRows) {
+      return;
+    }
+    setState(() => _rowBudget = math.max(_kFirstRows, budget - _kRowsPerShrink));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _shrinkBudget());
+  }
 
   void _growBudget() {
     _budgetTimer = null;
@@ -674,6 +713,7 @@ class ItemsEditorState extends State<ItemsEditor>
 
   @override
   void dispose() {
+    noteRouteClosing.removeListener(_onRouteClosing);
     _budgetTimer?.cancel();
     _autoScroll?.dispose();
     for (final c in _controllers.values) {
