@@ -2372,5 +2372,8 @@
   "backupShareSubject": "Notes backup",
   "backupCancelled": "Cancelled",
   "backupProgressCount": "{done} / {total} notes",
-  "restoreBackupResult": "{restored} notes restored, {skipped} skipped (already there)"
+  "restoreBackupResult": "{restored} notes restored, {skipped} skipped (already there)",
+  "accountRecoverBringNotes": "Bring my notes",
+  "accountRecoverBringDone": "Switched account, {count} notes moved",
+  "accountRecoverBringFailed": "Switched account but notes couldn't be moved; the guest notes are untouched"
 }

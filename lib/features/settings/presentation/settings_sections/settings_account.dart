@@ -541,34 +541,67 @@ class _AccountSection extends ConsumerWidget {
   ) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    final noteCount = (ref.read(notesStreamProvider).value ?? const [])
-        .where((n) => !n.isEmpty)
-        .length;
+    final guestNotes = [
+      for (final n in ref.read(notesStreamProvider).value ?? const <Note>[])
+        if (!n.isEmpty) n,
+    ];
+    final noteCount = guestNotes.length;
+    // Oturum değişince bu widget'ın ref'i yeniden kurulabilir: kapsayıcı
+    // ÖNCEDEN alınır (giriş sonrası hedef hesabın depoları ondan okunur).
+    final container = ProviderScope.containerOf(context);
+    Uint8List? carried;
     if (noteCount > 0) {
-      final proceed = await showDialog<bool>(
+      final choice = await showDialog<_RecoverChoice>(
         context: context,
         builder: (dialogContext) => AlertDialog(
           title: Text(l10n.accountRecoverConflictTitle),
           content: Text(l10n.accountRecoverConflictBody(noteCount)),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
+              onPressed: () => Navigator.pop(dialogContext),
               child: Text(l10n.cancel),
             ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
+            TextButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, _RecoverChoice.leave),
               child: Text(l10n.accountRecoverConflictProceed),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, _RecoverChoice.bring),
+              child: Text(l10n.accountRecoverBringNotes),
             ),
           ],
         ),
       );
-      if (proceed != true || !context.mounted) return;
+      if (choice == null || !context.mounted) return;
+      if (choice == _RecoverChoice.bring) {
+        // F18.5: misafir notları oturum DEĞİŞMEDEN yedeklenir (misafir
+        // kimliğiyle okunabilsinler), girişten sonra hedefe yüklenir.
+        try {
+          carried = await backupServiceOf(ref)!.prepareMigration(
+            allNotes: guestNotes,
+            folderList: ref.read(foldersStreamProvider).value ?? const [],
+          );
+        } catch (e) {
+          messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
+          return;
+        }
+      }
     }
     try {
       await FirebaseAuth.instance.signInWithCredential(credential);
       // Başarıda auth durumu değişir; kullanıcı gerçek hesabına döner,
       // notları olduğu gibi orada bekliyor olur.
-      if (context.mounted) {
+      final backup = carried;
+      if (backup != null) {
+        final result = await _restoreCarried(container, backup);
+        messenger.showMessage(
+          result == null
+              ? l10n.accountRecoverBringFailed
+              : l10n.accountRecoverBringDone(result.restored),
+        );
+      } else {
         messenger.showMessage(l10n.accountLinked);
       }
     } catch (e) {
@@ -910,3 +943,39 @@ dynamic settingsAreaForTest({
   keywords: keywords,
   rows: [for (final r in rows) r as _SettingRow],
 );
+
+enum _RecoverChoice { leave, bring }
+
+/// Girişten sonra misafirden taşınan yedeği YENİ oturumun hesabına yükler
+/// (F18.5). Oturum kimliği sağlayıcılara yansıyana dek kısa süre beklenir.
+/// Misafir hesabın bulut kopyası olduğu yerde kalır (oturum değiştiği için
+/// silinemez; anonim kullanıcı başka cihazdan açılamaz).
+Future<RestoreResult?> _restoreCarried(
+  ProviderContainer container,
+  Uint8List backup,
+) async {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return null;
+  for (var i = 0; i < 50 && container.read(currentUidProvider) != uid; i++) {
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+  }
+  if (container.read(currentUidProvider) != uid) return null;
+  final notes = container.read(notesRepositoryProvider);
+  if (notes == null) return null;
+  final folders = container.read(foldersRepositoryProvider);
+  final target = BackupService(
+    notes: notes,
+    attachments: container.read(attachmentRepositoryProvider),
+    folders: folders,
+  );
+  try {
+    return await BackupService.completeMigration(
+      backup,
+      target,
+      existing: await notes.watchNotes().first,
+      existingFolders: await folders?.watchFolders().first ?? const [],
+    );
+  } catch (_) {
+    return null;
+  }
+}

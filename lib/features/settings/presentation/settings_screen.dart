@@ -2,6 +2,7 @@ import '../../../core/app_icons.dart';
 
 import 'dart:convert';
 import 'dart:async';
+import 'dart:typed_data';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart'
@@ -70,6 +71,9 @@ import '../data/permissions_service.dart';
 import '../settings_providers.dart';
 import 'notes_settings.dart';
 import 'backup_ui.dart';
+import '../../notes/data/backup_service.dart';
+import '../../notes/data/attachment_repository.dart';
+import '../../folders/data/folders_repository.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/press_scale.dart';
 import '../../../core/friendly_error.dart';

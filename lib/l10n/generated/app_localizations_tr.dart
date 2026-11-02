@@ -6292,4 +6292,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String restoreBackupResult(int restored, int skipped) {
     return '$restored not geri yüklendi, $skipped atlandı (zaten var)';
   }
+
+  @override
+  String get accountRecoverBringNotes => 'Notları yanıma al';
+
+  @override
+  String accountRecoverBringDone(int count) {
+    return 'Hesabına geçildi, $count not taşındı';
+  }
+
+  @override
+  String get accountRecoverBringFailed =>
+      'Hesabına geçildi ama notlar taşınamadı; misafir notları yerinde duruyor';
 }

@@ -6312,4 +6312,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String restoreBackupResult(int restored, int skipped) {
     return '$restored notes restored, $skipped skipped (already there)';
   }
+
+  @override
+  String get accountRecoverBringNotes => 'Bring my notes';
+
+  @override
+  String accountRecoverBringDone(int count) {
+    return 'Switched account, $count notes moved';
+  }
+
+  @override
+  String get accountRecoverBringFailed =>
+      'Switched account but notes couldn\'t be moved; the guest notes are untouched';
 }

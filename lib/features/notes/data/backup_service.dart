@@ -327,6 +327,31 @@ class BackupService {
     return RestoreResult(restored: count, skipped: skipped);
   }
 
+  /// Bu hesabın notlarını [target] hesaba TAŞIR (F18.5): misafir, zaten var
+  /// olan bir Google hesabına girerken notlarını yanına alır. Önce bellekte
+  /// tam yedek kurulur ([prepareMigration] — oturum değişmeden ÖNCE, misafir
+  /// kimliğiyle okunur), giriş sonrası [target]e geri yüklenir; çift kayıt
+  /// atlaması burada da geçerli (aynı notu iki kez taşımak çoğaltmaz).
+  Future<Uint8List> prepareMigration({
+    required List<Note> allNotes,
+    List<NoteFolder> folderList = const [],
+  }) async {
+    final sink = MemoryBackupSink();
+    await export(sink, allNotes: allNotes, folderList: folderList);
+    return sink.bytes!;
+  }
+
+  static Future<RestoreResult> completeMigration(
+    Uint8List backup,
+    BackupService target, {
+    required List<Note> existing,
+    List<NoteFolder> existingFolders = const [],
+  }) => target.restore(
+    ZipDecoder().decodeBytes(backup),
+    existing: existing,
+    existingFolders: existingFolders,
+  );
+
   static Map<String, dynamic> _encodeFolder(NoteFolder f) => {
     'id': f.id,
     'name': f.name,

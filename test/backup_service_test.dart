@@ -51,8 +51,12 @@ void main() {
       mimeType: 'application/pdf',
       sizeBytes: 3,
       createdAt: DateTime(2026, 11, 2),
-      ink: const [InkStroke(page: 1, color: 0xFF000000, width: 2, points: [0, 0, 1, 1])],
-      bubbles: const [PageBubble(id: 'b1', page: 1, x: 0.5, y: 0.5, text: 'balon')],
+      ink: const [
+        InkStroke(page: 1, color: 0xFF000000, width: 2, points: [0, 0, 1, 1]),
+      ],
+      bubbles: const [
+        PageBubble(id: 'b1', page: 1, x: 0.5, y: 0.5, text: 'balon'),
+      ],
     );
     files.store['a1'] = Uint8List.fromList([1, 2, 3]);
     await repo.updateNote(
@@ -176,6 +180,37 @@ void main() {
     expect(noteDigest(a), noteDigest(b));
     expect(noteDigest(a), isNot(noteDigest(a.copyWith(title: 'U'))));
   });
+
+  test(
+    'misafir → Google hesabı taşıma: notlar gelir, tekrar çoğaltmaz',
+    () async {
+      await repo.createNote(NoteType.text, title: 'misafir notu');
+      final guest = BackupService(notes: repo, attachments: files);
+      final bytes = await guest.prepareMigration(allNotes: await allNotes());
+
+      final db2 = FakeFirebaseFirestore();
+      final repo2 = NotesRepository(db2, 'google');
+      await repo2.createNote(NoteType.text, title: 'eski hesabın notu');
+      final target = BackupService(
+        notes: repo2,
+        attachments: _MemAttachments(),
+      );
+      final r = await BackupService.completeMigration(
+        bytes,
+        target,
+        existing: await repo2.watchNotes().first,
+      );
+      expect(r.restored, 1);
+      final titles = (await repo2.watchNotes().first).map((n) => n.title);
+      expect(titles, containsAll(['misafir notu', 'eski hesabın notu']));
+      final again = await BackupService.completeMigration(
+        bytes,
+        target,
+        existing: await repo2.watchNotes().first,
+      );
+      expect(again.restored, 0);
+    },
+  );
 
   test('iptal yarıda keser', () async {
     await repo.createNote(NoteType.text, title: 'bir');

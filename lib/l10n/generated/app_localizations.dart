@@ -11281,6 +11281,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{restored} not geri yüklendi, {skipped} atlandı (zaten var)'**
   String restoreBackupResult(int restored, int skipped);
+
+  /// No description provided for @accountRecoverBringNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notları yanıma al'**
+  String get accountRecoverBringNotes;
+
+  /// No description provided for @accountRecoverBringDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesabına geçildi, {count} not taşındı'**
+  String accountRecoverBringDone(int count);
+
+  /// No description provided for @accountRecoverBringFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesabına geçildi ama notlar taşınamadı; misafir notları yerinde duruyor'**
+  String get accountRecoverBringFailed;
 }
 
 class _AppLocalizationsDelegate

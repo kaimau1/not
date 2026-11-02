@@ -3051,5 +3051,15 @@
         "type": "int"
       }
     }
-  }
+  },
+  "accountRecoverBringNotes": "Notları yanıma al",
+  "accountRecoverBringDone": "Hesabına geçildi, {count} not taşındı",
+  "@accountRecoverBringDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accountRecoverBringFailed": "Hesabına geçildi ama notlar taşınamadı; misafir notları yerinde duruyor"
 }
