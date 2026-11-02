@@ -13,6 +13,7 @@ import '../domain/note.dart';
 import '../domain/note_share_text.dart';
 import '../domain/note_type.dart';
 import 'attachment_repository.dart';
+import 'image_annotations.dart';
 import 'note_pdf.dart';
 import 'pdf/pdf_page_render.dart';
 
@@ -79,14 +80,16 @@ class NoteQuickExport {
         if (a.kind != AttachmentKind.image) continue;
         if (a.id == note.backgroundImageId) continue;
         try {
-          final bytes = await attachments.readBytes(a);
-          if (bytes == null) continue;
+          final raw = await attachments.readBytes(a);
+          if (raw == null) continue;
+          // Çizim + açık metin görselin üstüne basılır (F18.13).
+          final img = await exportImageBytes(raw, a);
           images.add(
             ExportImage(
-              bytes: bytes,
-              width: a.width ?? 0,
-              height: a.height ?? 0,
-              mimeType: a.mimeType,
+              bytes: img.bytes,
+              width: img.width ?? 0,
+              height: img.height ?? 0,
+              mimeType: img.mimeType,
               widthFraction: 0.8,
             ),
           );
@@ -157,24 +160,30 @@ class NoteQuickExport {
     final out = <XFile>[];
     Directory? temp;
     for (final a in list) {
-      if (!kIsWeb && a.localPath.isNotEmpty && File(a.localPath).existsSync()) {
+      if (!kIsWeb &&
+          a.localPath.isNotEmpty &&
+          !hasImageAnnotations(a) &&
+          File(a.localPath).existsSync()) {
         out.add(XFile(a.localPath, mimeType: a.mimeType, name: a.fileName));
         continue;
       }
       if (attachments == null || a.kind == AttachmentKind.video) continue;
       try {
-        final bytes = await attachments.readBytes(a);
-        if (bytes == null) continue;
+        final raw = await attachments.readBytes(a);
+        if (raw == null) continue;
+        // Katmanlı görsel basılmış PNG olarak gider (F18.13).
+        final burned = await burnImageAnnotations(raw, a);
+        final bytes = burned ?? raw;
+        final name = burned == null ? a.fileName : _pngName(a.fileName);
+        final mime = burned == null ? a.mimeType : 'image/png';
         if (kIsWeb) {
-          out.add(
-            XFile.fromData(bytes, name: a.fileName, mimeType: a.mimeType),
-          );
+          out.add(XFile.fromData(bytes, name: name, mimeType: mime));
           continue;
         }
         temp ??= await Directory.systemTemp.createTemp('note_files_');
-        final file = File('${temp.path}/${NotePdf.safeFileName(a.fileName)}');
+        final file = File('${temp.path}/${NotePdf.safeFileName(name)}');
         await file.writeAsBytes(bytes);
-        out.add(XFile(file.path, mimeType: a.mimeType, name: a.fileName));
+        out.add(XFile(file.path, mimeType: mime, name: name));
       } catch (_) {
         // Erişilemeyen ek atlanır.
       }
@@ -193,3 +202,9 @@ List<Attachment> shareableAttachments(Note note) => [
         !note.hidesDerivedDocument(a))
       a,
 ];
+
+String _pngName(String fileName) {
+  final dot = fileName.lastIndexOf('.');
+  final base = dot > 0 ? fileName.substring(0, dot) : fileName;
+  return '${base.isEmpty ? 'gorsel' : base}.png';
+}

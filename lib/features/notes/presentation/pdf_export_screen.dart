@@ -11,6 +11,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/utils/attachment_tag.dart';
 import '../../../core/utils/local_file.dart';
 import '../../../core/widgets/undo_snackbar.dart';
+import '../data/image_annotations.dart';
 import '../data/attachment_repository.dart';
 import '../data/note_docx.dart';
 import '../data/note_pdf.dart';
@@ -131,14 +132,16 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
       if (!option.include) continue;
       final a = option.attachment;
       try {
-        final bytes = await repo.readBytes(a);
-        if (bytes == null) continue;
+        final raw = await repo.readBytes(a);
+        if (raw == null) continue;
+        // Çizim + açık metin görselin üstüne basılır (F18.13).
+        final img = await exportImageBytes(raw, a);
         out.add(
           ExportImage(
-            bytes: bytes,
-            width: a.width ?? 0,
-            height: a.height ?? 0,
-            mimeType: a.mimeType,
+            bytes: img.bytes,
+            width: img.width ?? 0,
+            height: img.height ?? 0,
+            mimeType: img.mimeType,
             line: option.line,
             widthFraction: option.widthFraction,
             align: option.align,
