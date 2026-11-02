@@ -355,6 +355,14 @@ class _SplitShellState extends ConsumerState<SplitShell> {
                 }
                 setState(() => _dragWidth = null);
               },
+              // Çift tık: bu kipin varsayılan genişliği (kalıcı tercih de).
+              onReset: () => noteOpen
+                  ? ref
+                        .read(notePaneWidthProvider.notifier)
+                        .set(_defaultNotePaneWidth)
+                  : ref
+                        .read(listPaneWidthProvider.notifier)
+                        .set(_defaultListPaneWidth),
             ),
           Expanded(
             child: Stack(
@@ -450,10 +458,17 @@ const double _dividerWidth = 16;
 /// Sürüklenebilir ayraç. [onDrag] imlecin MUTLAK x konumunu verir (delta
 /// değil); nedeni SplitShell'deki nota bakılabilir.
 class _PaneDivider extends StatefulWidget {
-  const _PaneDivider({required this.onDrag, required this.onDragEnd});
+  const _PaneDivider({
+    required this.onDrag,
+    required this.onDragEnd,
+    required this.onReset,
+  });
 
   final void Function(double globalX) onDrag;
   final VoidCallback onDragEnd;
+
+  /// Çift tık: varsayılan genişliğe dön.
+  final VoidCallback onReset;
 
   @override
   State<_PaneDivider> createState() => _PaneDividerState();
@@ -473,6 +488,7 @@ class _PaneDividerState extends State<_PaneDivider> {
       onExit: (_) => setState(() => _hovering = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
+        onDoubleTap: widget.onReset,
         // Fare imleci pikselden piksele atlar; `pan` yerine yatay sürükleme
         // kullanmak dikey kaydırmayı ayraca kaptırmamak için.
         onHorizontalDragStart: (_) => setState(() => _dragging = true),

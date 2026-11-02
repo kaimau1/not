@@ -395,6 +395,10 @@ bool _sameInts(List<int> a, List<int> b) {
   return (text: s.trim(), checked: checked);
 }
 
+/// Not sayfasının en geniş hâli (bkz. `_buildCanvas`) — geniş ekranda
+/// satırlar okunur uzunlukta kalsın.
+const double kReadingWidth = 760;
+
 class NoteEditorScreen extends ConsumerStatefulWidget {
   const NoteEditorScreen({
     super.key,
@@ -902,6 +906,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Arka plandaki boş not temizliği bu notu ATLASIN (bkz. cleanupEmptyNotes):
     // kullanıcı yazmaya yeni başladığında doküman kısa bir süre boş görünür.
     openEditorNoteIds.add(widget.noteId);
+    // Listede açık not vurgusu (geniş ekran). Ağaç kurulurken sağlayıcı
+    // yazılamaz → mikro görev; dispose'da `ref` yok → notifier saklanır.
+    final openNotes = _openNotes = ref.read(openNoteIdsProvider.notifier);
+    final openId = widget.noteId;
+    unawaited(Future.microtask(() => openNotes.open(openId)));
     // Notu AÇMAK da bir çalışma izidir ("en çok çalışılan" sıralaması).
     // GEÇİŞ BİTİNCE (kullanıcı bulgusu 2026-10-20: "notu açarken ufak
     // donma"): ilk kareden hemen sonra yazılınca "en çok çalışılan"
@@ -1217,6 +1226,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     openEditorNoteIds.remove(widget.noteId);
+    final openNotes = _openNotes;
+    final openId = widget.noteId;
+    unawaited(Future.microtask(() => openNotes.close(openId)));
     _pageInkCtl?.dispose();
     // Tam ekran nota bağlı; ağaç kilitliyken durum yazılamaz.
     final fullscreen = _fullscreenNotifier;
@@ -1703,7 +1715,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }) => SingleChildScrollView(
     controller: _pageScroll,
     padding: const EdgeInsets.only(bottom: 96),
-    child: _withRuledLines(note, bodyStyle, PageInkStack(
+    // OKUMA GENİŞLİĞİ (geniş ekran, 2026-11-02): tam ekranda 1920 px'te
+    // satırlar ~250 karaktere çıkıyordu. Sayfanın TAMAMI (metin, görseller,
+    // mürekkep) ortada [kReadingWidth]'te durur: görsel x'i ve mürekkep
+    // koordinatları sayfa genişliğine ORANLI saklandığından hepsi birlikte
+    // ölçeklenir, metinle görsel birbirinden kaymaz. Kaydırma görünümü tam
+    // genişlikte kalır — kenar boşluğunda da tekerlek kaydırır. Telefonda
+    // (< 760) hiçbir şey değişmez.
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: kReadingWidth),
+        child: _withRuledLines(note, bodyStyle, PageInkStack(
       ink: _pageInkOf(note),
       page: textPagePosition(note).index + 1,
       penActive: _penMode,
@@ -1764,6 +1786,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           : null,
       child: KeyedSubtree(key: _pageKey, child: pageContent),
     ))),
+      ),
+    ),
   );
 
   /// Belge notunda bir BALONA yazılıyor: editörün alt çubuğu gizlenir.
@@ -1775,6 +1799,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _penMode = false;
 
   NoteFullscreenNotifier? _fullscreenNotifier;
+
+  late final OpenNoteIdsNotifier _openNotes;
 
   /// Metin/liste notunun sayfa üstü el yazısı (bkz. [PageInkStack]).
   InkController? _pageInkCtl;

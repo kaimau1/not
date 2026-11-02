@@ -1694,6 +1694,8 @@
   "shortcutToggleList": "Not listesini gizle / göster",
   "shortcutSections": "Bölümler arasında geç",
   "shortcutHelp": "Kısayolları göster",
+  "shortcutAdjacentNote": "Listede önceki / sonraki not",
+  "shortcutCloseNote": "Notu kapat",
   "noNoteSelectedHint": "ya da yeni bir not başlat",
   "loginFeatureSyncTitle": "Her cihazda aynı notlar",
   "loginFeatureSyncBody": "Telefon, tablet, bilgisayar ve web arasında anında senkron.",

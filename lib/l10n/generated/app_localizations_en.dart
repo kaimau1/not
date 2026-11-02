@@ -3632,6 +3632,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutHelp => 'Show shortcuts';
 
   @override
+  String get shortcutAdjacentNote => 'Previous / next note in list';
+
+  @override
+  String get shortcutCloseNote => 'Close note';
+
+  @override
   String get noNoteSelectedHint => 'or start a new note';
 
   @override

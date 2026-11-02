@@ -3628,6 +3628,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shortcutHelp => 'Kısayolları göster';
 
   @override
+  String get shortcutAdjacentNote => 'Listede önceki / sonraki not';
+
+  @override
+  String get shortcutCloseNote => 'Notu kapat';
+
+  @override
   String get noNoteSelectedHint => 'ya da yeni bir not başlat';
 
   @override

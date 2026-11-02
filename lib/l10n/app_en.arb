@@ -1410,6 +1410,8 @@
   "shortcutToggleList": "Hide / show note list",
   "shortcutSections": "Switch between sections",
   "shortcutHelp": "Show shortcuts",
+  "shortcutAdjacentNote": "Previous / next note in list",
+  "shortcutCloseNote": "Close note",
   "noNoteSelectedHint": "or start a new note",
   "loginFeatureSyncTitle": "Same notes on every device",
   "loginFeatureSyncBody": "Instant sync across phone, tablet, computer and web.",

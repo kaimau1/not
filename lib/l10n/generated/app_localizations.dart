@@ -6518,6 +6518,18 @@ abstract class AppLocalizations {
   /// **'Kısayolları göster'**
   String get shortcutHelp;
 
+  /// No description provided for @shortcutAdjacentNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listede önceki / sonraki not'**
+  String get shortcutAdjacentNote;
+
+  /// No description provided for @shortcutCloseNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu kapat'**
+  String get shortcutCloseNote;
+
   /// No description provided for @noNoteSelectedHint.
   ///
   /// In tr, this message translates to:

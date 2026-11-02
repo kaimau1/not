@@ -10,6 +10,7 @@ import '../features/notes/data/notes_repository.dart';
 import '../features/notes/domain/note_type.dart';
 import '../features/notes/presentation/notes_providers.dart';
 import 'router.dart';
+import 'split_shell.dart' show isNoteLocation;
 
 /// **UYGULAMA KOMUTLARI** — gezinme rayı, klavye kısayolları ve boş sağ
 /// panel aynı işleri (yeni not, arama, bölüm değiştirme) yapıyor; üç yerde
@@ -145,6 +146,41 @@ Future<void> createAndOpenNote(
   await router.pushNote(noteRoutePath(id));
 }
 
+/// Açık notun listede [step] kadar ötesindeki notu açar (Alt+↑ / Alt+↓):
+/// ana ekranın o an GÖRÜNEN sırasıyla (süzgeç/arama dahil, bkz.
+/// [visibleNoteOrder]). Yığın büyümesin diye açık notun YERİNE geçer.
+/// ponytail: kilitli notlar atlanır (açmak kimlik doğrulaması ister —
+/// karttan açılır).
+void openAdjacentNote(GoRouter router, int step) {
+  final segments = Uri.parse(currentLocation(router)).pathSegments;
+  if (segments.length != 2 || segments.first != 'note') return;
+  final order = [
+    for (final n in visibleNoteOrder)
+      if (!n.locked || n.id == segments[1]) n,
+  ];
+  final i = order.indexWhere((n) => n.id == segments[1]);
+  final j = i + step;
+  if (i < 0 || j < 0 || j >= order.length) return;
+  router.pushReplacement(noteRoutePath(order[j].id));
+}
+
+/// Açık notu (ve üstüne açılmış notları) kapatıp ana ekrana döner (Ctrl+W).
+/// `popRoute` sistem geri tuşunun yolu: editörün PopScope'u (kayıt sürerken
+/// önce kaydı bitir) atlanmaz; geri çevrilirse döngü durur.
+Future<void> closeOpenNote(GoRouter router) async {
+  var guard = 0;
+  while (isNoteLocation(currentLocation(router)) && guard++ < 8) {
+    // Derin bağlantıyla (web adresi) açılan notun altında ana sayfa yok.
+    if (!router.canPop()) {
+      router.go('/');
+      return;
+    }
+    final before = currentLocation(router);
+    await router.routerDelegate.popRoute();
+    if (currentLocation(router) == before) return;
+  }
+}
+
 /// Kısayolların tek listesi — hem bağlama hem de yardım penceresi buradan
 /// okur; biri değişip öbürü eski kalmasın.
 List<({String keys, String label})> shortcutHelpRows(BuildContext context) {
@@ -155,6 +191,8 @@ List<({String keys, String label})> shortcutHelpRows(BuildContext context) {
     (keys: 'Ctrl + \\', label: l10n.shortcutToggleList),
     (keys: 'Ctrl + ,', label: l10n.settings),
     (keys: 'Alt + 1…8', label: l10n.shortcutSections),
+    (keys: 'Alt + ↑ / ↓', label: l10n.shortcutAdjacentNote),
+    (keys: 'Ctrl + W', label: l10n.shortcutCloseNote),
     (keys: 'Ctrl + /', label: l10n.shortcutHelp),
   ];
 }
@@ -244,6 +282,12 @@ class AppShortcuts extends ConsumerWidget {
             onToggleList,
         const SingleActivator(LogicalKeyboardKey.slash, control: true): () =>
             showShortcutsHelp(context),
+        const SingleActivator(LogicalKeyboardKey.arrowUp, alt: true): () =>
+            openAdjacentNote(router, -1),
+        const SingleActivator(LogicalKeyboardKey.arrowDown, alt: true): () =>
+            openAdjacentNote(router, 1),
+        const SingleActivator(LogicalKeyboardKey.keyW, control: true): () =>
+            closeOpenNote(router),
         for (final (i, section) in AppSection.values.indexed)
           SingleActivator(_digitKeys[i], alt: true): () =>
               openSection(router, section),
