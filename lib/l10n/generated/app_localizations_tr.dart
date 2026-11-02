@@ -6382,4 +6382,27 @@ class AppLocalizationsTr extends AppLocalizations {
   String importOtherResult(int imported, int skipped, int failed) {
     return '$imported not içe aktarıldı, $skipped atlandı (zaten var), $failed okunamadı';
   }
+
+  @override
+  String get noteLinkAction => 'Nota bağla';
+
+  @override
+  String get noteLinkOpen => 'Notu aç';
+
+  @override
+  String get noteLinkPickTitle => 'Hangi nota bağlansın?';
+
+  @override
+  String get noteLinkInserted => 'Nota bağlandı';
+
+  @override
+  String get noteLinkMissing => 'Bağlı not bulunamadı (silinmiş olabilir)';
+
+  @override
+  String get backlinksTitle => 'Bu nota bağlananlar';
+
+  @override
+  String backlinksCount(int count) {
+    return '$count bağlantı';
+  }
 }

@@ -1,3 +1,6 @@
+import '../note_link_ui.dart';
+import '../note_card.dart' show openNoteRoute;
+import '../../domain/note_links.dart';
 import '../reminder_repeat_ui.dart';
 import '../../domain/reminder_repeat.dart';
 import '../../../../core/app_icons.dart';
@@ -2766,13 +2769,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // Eki silinmiş bağ etiket sayılmaz (çip görünümü kalmasın).
         for (final link in note.tagLinks)
           if (link.label.isNotEmpty &&
-              note.attachments.any((a) => a.id == link.attachmentId))
+              (linkedNoteId(link) != null ||
+                  note.attachments.any((a) => a.id == link.attachmentId)))
             link.label,
         for (final a in note.attachments) a.fileName,
       ];
       // Gömülü yazının ÇİP görünümü: ekin türüne göre renk ve rozet (bkz.
       // AttachmentTagChips). Denetleyici renkleri yalnız değişince alır.
-      final tagLooks = embedTagLooks(note, dark: dark);
+      // Not bağlantısı (F18.16): hedef silinmiş/çöpteyse soluk.
+      final liveIds = {
+        for (final n in ref.read(notesStreamProvider).value ?? const <Note>[])
+          if (n.deletedAt == null) n.id,
+      };
+      final tagLooks = embedTagLooks(note, dark: dark, liveNoteIds: liveIds);
       _tagLooks = tagLooks;
       _bodyController.tagChipColors = {
         for (final e in tagLooks.entries) e.key: e.value.color,
@@ -3141,6 +3150,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           onPressed: _pickReminder,
           onDeleted: _clearReminder,
         ),
+      // GERİ BAĞLANTILAR (F18.16): bu nota bağlanan notlar.
+      BacklinksChip(
+        noteId: note.id,
+        notes: ref.watch(notesStreamProvider).value ?? const <Note>[],
+        labelStyle: chipLabelStyle,
+      ),
       // Klasör çipi yalnız notun klasörü VARSA; seçmek "+" menüsünden.
       if (noteFolder != null)
         InputChip(
@@ -3337,6 +3352,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             _mutate((n) => n.copyWith(body: after));
             // Yapıştırılan YouTube bağlantısı videoyu gömer.
             _maybeEmbedPastedVideo(before, after);
+            // `[[` yazınca not seçici (F18.16): iki parantez silinir, seçilen
+            // notun başlığı bağlantı olarak imlece yazılır.
+            _maybeLinkTrigger(before, after);
           },
           maxLines: null,
           minLines: note.items.isEmpty ? 8 : 2,
@@ -3357,6 +3375,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             if (seconds != null) {
               editable?.hideToolbar();
               _seekVideoTo(seconds);
+              return;
+            }
+            // NOT BAĞLANTISI (F18.16): okurken açar, yazarken önerir.
+            final linked = _tappedNoteLink(editable);
+            if (linked != null) {
+              editable?.hideToolbar();
+              _openLinkedNote(linked, editing: _bodyTapPoint.wasFocused);
               return;
             }
             final tapped = _tappedEmbed(editable);

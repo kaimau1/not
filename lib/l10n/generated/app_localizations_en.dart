@@ -6402,4 +6402,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String importOtherResult(int imported, int skipped, int failed) {
     return '$imported notes imported, $skipped skipped (already there), $failed unreadable';
   }
+
+  @override
+  String get noteLinkAction => 'Link to note';
+
+  @override
+  String get noteLinkOpen => 'Open note';
+
+  @override
+  String get noteLinkPickTitle => 'Link to which note?';
+
+  @override
+  String get noteLinkInserted => 'Linked to note';
+
+  @override
+  String get noteLinkMissing => 'Linked note not found (it may be deleted)';
+
+  @override
+  String get backlinksTitle => 'Notes linking here';
+
+  @override
+  String backlinksCount(int count) {
+    return '$count backlinks';
+  }
 }

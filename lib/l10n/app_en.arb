@@ -2398,5 +2398,12 @@
   "importOtherInfo": "Google Keep (Takeout zip), Markdown/txt (file or zip), Evernote (.enex)",
   "importInProgress": "Importing",
   "importOtherNone": "No notes to import in this file",
-  "importOtherResult": "{imported} notes imported, {skipped} skipped (already there), {failed} unreadable"
+  "importOtherResult": "{imported} notes imported, {skipped} skipped (already there), {failed} unreadable",
+  "noteLinkAction": "Link to note",
+  "noteLinkOpen": "Open note",
+  "noteLinkPickTitle": "Link to which note?",
+  "noteLinkInserted": "Linked to note",
+  "noteLinkMissing": "Linked note not found (it may be deleted)",
+  "backlinksTitle": "Notes linking here",
+  "backlinksCount": "{count} backlinks"
 }

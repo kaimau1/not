@@ -3111,5 +3111,19 @@
         "type": "int"
       }
     }
+  },
+  "noteLinkAction": "Nota bağla",
+  "noteLinkOpen": "Notu aç",
+  "noteLinkPickTitle": "Hangi nota bağlansın?",
+  "noteLinkInserted": "Nota bağlandı",
+  "noteLinkMissing": "Bağlı not bulunamadı (silinmiş olabilir)",
+  "backlinksTitle": "Bu nota bağlananlar",
+  "backlinksCount": "{count} bağlantı",
+  "@backlinksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

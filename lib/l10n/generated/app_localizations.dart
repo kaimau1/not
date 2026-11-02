@@ -11437,6 +11437,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{imported} not içe aktarıldı, {skipped} atlandı (zaten var), {failed} okunamadı'**
   String importOtherResult(int imported, int skipped, int failed);
+
+  /// No description provided for @noteLinkAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota bağla'**
+  String get noteLinkAction;
+
+  /// No description provided for @noteLinkOpen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu aç'**
+  String get noteLinkOpen;
+
+  /// No description provided for @noteLinkPickTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hangi nota bağlansın?'**
+  String get noteLinkPickTitle;
+
+  /// No description provided for @noteLinkInserted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota bağlandı'**
+  String get noteLinkInserted;
+
+  /// No description provided for @noteLinkMissing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlı not bulunamadı (silinmiş olabilir)'**
+  String get noteLinkMissing;
+
+  /// No description provided for @backlinksTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu nota bağlananlar'**
+  String get backlinksTitle;
+
+  /// No description provided for @backlinksCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} bağlantı'**
+  String backlinksCount(int count);
 }
 
 class _AppLocalizationsDelegate
