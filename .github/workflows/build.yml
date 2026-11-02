@@ -400,6 +400,22 @@ jobs:
             exit 1
           fi
 
+      # F18.21: uygulama "Yeni sürüm var" desin — `config/app.latestBuild`.
+      # Yazılamazsa Release yine yayında kalır (bilgi amaçlı).
+      - uses: actions/checkout@v4
+        if: needs.test.result == 'success'
+
+      - name: Son sürümü config/app'a yaz
+        if: needs.test.result == 'success'
+        continue-on-error: true
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-sa.json
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$GOOGLE_APPLICATION_CREDENTIALS"
+          npm install --prefix functions --omit=dev --no-audit --no-fund
+          node tool/set_latest_build.js "${{ github.run_number }}" "${{ needs.android.outputs.version }}"
+          rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
+
   # main'e her push'ta Firestore/Storage kurallarını ve web sürümünü otomatik
   # yayınlar. Elle `firebase deploy` / `wrangler pages deploy` çalıştırmaya
   # gerek kalmaz.

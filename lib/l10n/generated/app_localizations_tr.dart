@@ -6479,4 +6479,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String studyCardsSaved(int count) {
     return '$count kart kaydedildi';
   }
+
+  @override
+  String updateAvailable(String name) {
+    return 'Yeni sürüm var: $name';
+  }
+
+  @override
+  String get updateDownload => 'GitHub\'dan indir';
 }

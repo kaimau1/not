@@ -417,7 +417,7 @@ class _ImportOtherButton extends ConsumerWidget {
     return Tooltip(
       message: context.l10n.importOtherInfo,
       child: TextButton.icon(
-        icon: const Icon(Icons.move_to_inbox_outlined),
+        icon: const Icon(Icons.download_for_offline_outlined),
         label: Text(context.l10n.importOther),
         onPressed: () => importFromOtherApps(context, ref),
       ),
@@ -859,7 +859,28 @@ class _AppVersionRowState extends State<_AppVersionRow> {
     final version = _version;
     if (version == null) return const SizedBox.shrink();
     final l10n = context.l10n;
-    final row = _versionButton(context, l10n, version);
+    final versionRow = _versionButton(context, l10n, version);
+    // Yeni sürüm (F18.21, yalnız Android): CI'ın `config/app.latestBuild`ı.
+    final row = Consumer(
+      builder: (context, ref, _) {
+        final newer = ref.watch(newVersionAvailableProvider);
+        if (newer == null) return versionRow;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            versionRow,
+            TextButton.icon(
+              key: const ValueKey('update-available-row'),
+              icon: const Icon(Icons.system_update),
+              label: Text(
+                '${l10n.updateAvailable(newer)} · ${l10n.updateDownload}',
+              ),
+              onPressed: openReleasesPage,
+            ),
+          ],
+        );
+      },
+    );
     if (!Diagnostics.enabled) return row;
     // Teşhis sayaçları (F9.2): yalnız hata ayıklama/profil derlemesinde;
     // dokununca tazelenir.

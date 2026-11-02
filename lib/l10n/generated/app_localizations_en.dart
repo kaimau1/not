@@ -6499,4 +6499,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String studyCardsSaved(int count) {
     return '$count cards saved';
   }
+
+  @override
+  String updateAvailable(String name) {
+    return 'New version available: $name';
+  }
+
+  @override
+  String get updateDownload => 'Download from GitHub';
 }

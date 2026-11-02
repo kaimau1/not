@@ -2426,5 +2426,7 @@
   "studyCardsFailed": "Couldn't make cards",
   "studyCardsPreview": "{count} cards made",
   "studyCardsSave": "Save to note",
-  "studyCardsSaved": "{count} cards saved"
+  "studyCardsSaved": "{count} cards saved",
+  "updateAvailable": "New version available: {name}",
+  "updateDownload": "Download from GitHub"
 }

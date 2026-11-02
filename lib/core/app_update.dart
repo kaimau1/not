@@ -1,9 +1,14 @@
+import '../features/settings/settings_providers.dart';
+
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'l10n_ext.dart';
+import 'widgets/undo_snackbar.dart' show rootScaffoldMessengerKey;
 
 /// **İSTEMCİ VERİ SÜRÜMÜ** (F1.5, 2026-10-19). Bu derlemenin güvenle
 /// okuyup YAZABİLDİĞİ veri biçiminin numarası. Yeni bir sürüm, eski
@@ -38,6 +43,86 @@ final minClientVersionProvider = StreamProvider<int>((ref) {
       .map((d) => (d.data()?['minClient'] as num?)?.toInt() ?? 0)
       .handleError((Object _) {});
 });
+
+/// **"Yeni sürüm var"** (F18.21, 2026-11-02): CI `release` işi Release'i
+/// yayınlayınca `config/app` belgesine `latestBuild` (koşu numarası =
+/// versionCode) ve `latestName` (`1.1.N`) yazar. APK elle kurulduğu için
+/// telefon yeni sürümden habersizdi. Belge yoksa/okunamazsa null.
+final latestReleaseProvider = StreamProvider<({int build, String name})?>((
+  ref,
+) {
+  return FirebaseFirestore.instance
+      .collection('config')
+      .doc('app')
+      .snapshots()
+      .map((d) {
+        final build = (d.data()?['latestBuild'] as num?)?.toInt();
+        if (build == null || build <= 0) return null;
+        return (build: build, name: d.data()?['latestName'] as String? ?? '');
+      })
+      .handleError((Object _) {});
+});
+
+/// Bu kurulumun derleme numarası (PackageInfo; okunamazsa null).
+final installedBuildProvider = FutureProvider<int?>((ref) async {
+  try {
+    final info = await PackageInfo.fromPlatform();
+    return int.tryParse(info.buildNumber);
+  } catch (_) {
+    return null;
+  }
+});
+
+/// Yeni sürüm adı (yalnız Android — web her zaman son sürümdür); yoksa null.
+final newVersionAvailableProvider = Provider<String?>((ref) {
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return null;
+  final latest = ref.watch(latestReleaseProvider).value;
+  final installed = ref.watch(installedBuildProvider).value;
+  return isNewerBuild(latest?.build, installed)
+      ? (latest!.name.isEmpty ? '${latest.build}' : latest.name)
+      : null;
+});
+
+@visibleForTesting
+bool isNewerBuild(int? latest, int? installed) =>
+    latest != null && installed != null && installed > 1 && latest > installed;
+
+/// Yeni sürümü BİR KEZ (sürüm başına) kısa bir bildirimle söyler; sonrası
+/// Ayarlar → Hakkında'daki satırda.
+class NewVersionNotice extends ConsumerStatefulWidget {
+  const NewVersionNotice({super.key, required this.child});
+  final Widget child;
+
+  @override
+  ConsumerState<NewVersionNotice> createState() => _NewVersionNoticeState();
+}
+
+class _NewVersionNoticeState extends ConsumerState<NewVersionNotice> {
+  static const _prefsKey = 'update_notice_shown_for';
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<String?>(newVersionAvailableProvider, (prev, next) {
+      if (next == null || next == prev) return;
+      final prefs = ref.read(sharedPreferencesProvider);
+      if (prefs.getString(_prefsKey) == next) return;
+      prefs.setString(_prefsKey, next);
+      final messenger = rootScaffoldMessengerKey.currentState;
+      final l10n = context.l10n;
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text(l10n.updateAvailable(next)),
+          duration: const Duration(seconds: 8),
+          action: SnackBarAction(
+            label: l10n.updateDownload,
+            onPressed: openReleasesPage,
+          ),
+        ),
+      );
+    });
+    return widget.child;
+  }
+}
 
 /// Bu istemci güncellenmeden veri YAZMAMALI mı?
 final updateRequiredProvider = Provider<bool>((ref) {

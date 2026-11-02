@@ -71,6 +71,8 @@ import '../data/permissions_service.dart';
 import '../settings_providers.dart';
 import 'notes_settings.dart';
 import 'backup_ui.dart';
+import '../../../core/app_update.dart'
+    show newVersionAvailableProvider, openReleasesPage;
 import 'app_lock.dart';
 import '../../notes/data/backup_service.dart';
 import '../../notes/data/attachment_repository.dart';

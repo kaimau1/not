@@ -11605,6 +11605,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} kart kaydedildi'**
   String studyCardsSaved(int count);
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni sürüm var: {name}'**
+  String updateAvailable(String name);
+
+  /// No description provided for @updateDownload.
+  ///
+  /// In tr, this message translates to:
+  /// **'GitHub\'dan indir'**
+  String get updateDownload;
 }
 
 class _AppLocalizationsDelegate

@@ -3181,5 +3181,14 @@
         "type": "int"
       }
     }
-  }
+  },
+  "updateAvailable": "Yeni sürüm var: {name}",
+  "@updateAvailable": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "updateDownload": "GitHub'dan indir"
 }
