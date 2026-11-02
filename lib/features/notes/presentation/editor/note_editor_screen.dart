@@ -1,4 +1,5 @@
 import '../note_link_ui.dart';
+import '../study_cards_screen.dart' show generateCardsForNote;
 import '../note_card.dart' show openNoteRoute;
 import '../../domain/note_links.dart';
 import '../reminder_repeat_ui.dart';
@@ -3014,6 +3015,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             title: Text(l10n.suggestTags),
           ),
         ),
+      // KART ÜRET (F18.19): nottan aralıklı tekrar kartları (AI).
+      if (!note.isEmpty && !note.locked && !_readOnly)
+        PopupMenuItem(
+          value: 'study-cards',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.style_outlined),
+            title: Text(
+              note.cards.isEmpty
+                  ? l10n.studyCardsMake
+                  : l10n.studyCardsMakeMore(note.cards.length),
+            ),
+          ),
+        ),
       // İLGİLİ NOTLAR (F18.17): dokununca hesaplanır; kilitli notta yok.
       if (!note.isEmpty && !note.locked && !_readOnly)
         PopupMenuItem(
@@ -3065,6 +3081,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             _suggestTags();
           case 'suggest-title':
             _suggestTitle();
+          case 'study-cards':
+            unawaited(generateCardsForNote(context, ref, note));
           case 'related-notes':
             unawaited(
               showRelatedNotesSheet(

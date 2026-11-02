@@ -3128,5 +3128,58 @@
   },
   "relatedNotesTitle": "İlgili notlar",
   "relatedNotesNone": "İlgili not bulunamadı",
-  "relatedNotesLink": "Bağla"
+  "relatedNotesLink": "Bağla",
+  "studyCardsTitle": "Bugünün kartları",
+  "studyCardsHubInfo": "Aralıklı tekrar: bugün {count} kart",
+  "@studyCardsHubInfo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studyCardsEmpty": "Bugün tekrar edilecek kart yok",
+  "studyCardsDone": "Bugünlük bitti!",
+  "studyCardsEmptyInfo": "Bir notun ⋮ menüsünden \"Kart üret\" ile yapay zekâ nottan soru–cevap kartları çıkarır.",
+  "studyCardsLeft": "{count} kart kaldı",
+  "@studyCardsLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studyCardsReveal": "Cevabı göster",
+  "studyGradeAgain": "Tekrar",
+  "studyGradeHard": "Zor",
+  "studyGradeGood": "İyi",
+  "studyGradeEasy": "Kolay",
+  "studyCardsMake": "Kart üret",
+  "studyCardsMakeMore": "Kart üret ({count} kart var)",
+  "@studyCardsMakeMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studyCardsGenerating": "Kartlar hazırlanıyor…",
+  "studyCardsFailed": "Kart üretilemedi",
+  "studyCardsPreview": "{count} kart üretildi",
+  "@studyCardsPreview": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studyCardsSave": "Nota kaydet",
+  "studyCardsSaved": "{count} kart kaydedildi",
+  "@studyCardsSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

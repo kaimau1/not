@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/notes/presentation/study_cards_screen.dart';
 import '../features/ai/presentation/ai_hub_screen.dart';
 import '../features/ai/presentation/briefing_screen.dart';
 import '../features/ai/presentation/ai_chat_screen.dart';
@@ -221,6 +222,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/briefing',
             builder: (context, state) => const BriefingScreen(),
+          ),
+          GoRoute(
+            path: '/cards',
+            builder: (context, state) => const StudyCardsScreen(),
           ),
           GoRoute(
             path: '/reminders',

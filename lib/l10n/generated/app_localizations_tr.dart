@@ -6414,4 +6414,69 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get relatedNotesLink => 'Bağla';
+
+  @override
+  String get studyCardsTitle => 'Bugünün kartları';
+
+  @override
+  String studyCardsHubInfo(int count) {
+    return 'Aralıklı tekrar: bugün $count kart';
+  }
+
+  @override
+  String get studyCardsEmpty => 'Bugün tekrar edilecek kart yok';
+
+  @override
+  String get studyCardsDone => 'Bugünlük bitti!';
+
+  @override
+  String get studyCardsEmptyInfo =>
+      'Bir notun ⋮ menüsünden \"Kart üret\" ile yapay zekâ nottan soru–cevap kartları çıkarır.';
+
+  @override
+  String studyCardsLeft(int count) {
+    return '$count kart kaldı';
+  }
+
+  @override
+  String get studyCardsReveal => 'Cevabı göster';
+
+  @override
+  String get studyGradeAgain => 'Tekrar';
+
+  @override
+  String get studyGradeHard => 'Zor';
+
+  @override
+  String get studyGradeGood => 'İyi';
+
+  @override
+  String get studyGradeEasy => 'Kolay';
+
+  @override
+  String get studyCardsMake => 'Kart üret';
+
+  @override
+  String studyCardsMakeMore(int count) {
+    return 'Kart üret ($count kart var)';
+  }
+
+  @override
+  String get studyCardsGenerating => 'Kartlar hazırlanıyor…';
+
+  @override
+  String get studyCardsFailed => 'Kart üretilemedi';
+
+  @override
+  String studyCardsPreview(int count) {
+    return '$count kart üretildi';
+  }
+
+  @override
+  String get studyCardsSave => 'Nota kaydet';
+
+  @override
+  String studyCardsSaved(int count) {
+    return '$count kart kaydedildi';
+  }
 }

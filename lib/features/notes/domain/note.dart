@@ -6,6 +6,7 @@ import 'attachment.dart';
 import 'note_item.dart';
 import 'note_type.dart';
 import 'page_notes.dart';
+import 'study_card.dart';
 
 /// Renk belirteci — tema tarafında gerçek renklere çözülür.
 /// Notun zemin rengi. Sıra ve tonlar Keep'in paletiyle aynı (kullanıcı
@@ -208,6 +209,7 @@ class Note {
     this.archivedAt,
     this.reminderAt,
     this.reminderRepeat = '',
+    this.cards = const [],
     this.aiSummary,
     this.localOnly = false,
     this.extras = const {},
@@ -238,7 +240,8 @@ class Note {
     'tagLinks',
     'textPages',
     'activePage', 'orderIndex', 'createdAt', 'updatedAt', 'deletedAt',
-    'archivedAt', 'reminderAt', 'reminderRepeat', 'aiSummary', 'schema',
+    'archivedAt', 'reminderAt', 'reminderRepeat', 'cards', 'aiSummary',
+    'schema',
     // Depo katmanının her yazımda kendisi koyduğu alan — notla taşınmaz.
     // (`createdBy` BİLEREK burada değil: [extras] olarak AYNEN geri yazılır;
     // kurallar paylaşılan yolda değişmemesini istiyor — F1.4.)
@@ -524,6 +527,9 @@ class Note {
   /// Hatırlatıcı tekrarı (F18.14, `ReminderRepeat` dizesi); boş = tek sefer.
   /// [reminderAt] hep SONRAKİ çalmadır.
   final String reminderRepeat;
+
+  /// Aralıklı tekrar kartları (F18.19).
+  final List<StudyCard> cards;
   final AiSummary? aiSummary;
 
   /// **YALNIZ BU CİHAZDA** (kullanıcı isteği 2026-09-26: "senkronizasyon
@@ -797,6 +803,7 @@ class Note {
     DateTime? reminderAt,
     bool clearReminderAt = false,
     String? reminderRepeat,
+    List<StudyCard>? cards,
     AiSummary? aiSummary,
     bool? localOnly,
   }) => Note(
@@ -855,6 +862,7 @@ class Note {
     reminderRepeat: clearReminderAt
         ? ''
         : (reminderRepeat ?? this.reminderRepeat),
+    cards: cards ?? this.cards,
     aiSummary: aiSummary ?? this.aiSummary,
     localOnly: localOnly ?? this.localOnly,
     // Parametresi YOK: "kim yazdı" kaydın bir olgusu, çağıranın seçimi
@@ -1013,6 +1021,10 @@ class Note {
       archivedAt: (map['archivedAt'] as Timestamp?)?.toDate(),
       reminderAt: (map['reminderAt'] as Timestamp?)?.toDate(),
       reminderRepeat: map['reminderRepeat'] as String? ?? '',
+      cards: [
+        for (final raw in (map['cards'] as List? ?? const []))
+          if (raw is Map) StudyCard.fromMap(Map<String, dynamic>.from(raw)),
+      ],
       aiSummary: map['aiSummary'] is Map
           ? AiSummary.fromMap(
               Map<String, dynamic>.from(map['aiSummary'] as Map),
@@ -1120,6 +1132,8 @@ class Note {
     // KOŞULSUZ (kaldırılabilir alan, merge tuzağı): tekrar kapatılınca ''
     // yazılmalı, yoksa sunucudaki eski tekrar kalırdı.
     'reminderRepeat': reminderRepeat,
+    // Kartlar da koşulsuz (son kart silinince alan boşalmalı).
+    'cards': [for (final c in cards) c.toMap()],
     'aiSummary': aiSummary?.toMap(),
   };
 }

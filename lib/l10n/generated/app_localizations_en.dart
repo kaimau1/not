@@ -6434,4 +6434,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get relatedNotesLink => 'Link';
+
+  @override
+  String get studyCardsTitle => 'Today\'s cards';
+
+  @override
+  String studyCardsHubInfo(int count) {
+    return 'Spaced repetition: $count cards today';
+  }
+
+  @override
+  String get studyCardsEmpty => 'No cards due today';
+
+  @override
+  String get studyCardsDone => 'All done for today!';
+
+  @override
+  String get studyCardsEmptyInfo =>
+      'Use \"Make cards\" in a note\'s ⋮ menu and AI turns the note into question–answer cards.';
+
+  @override
+  String studyCardsLeft(int count) {
+    return '$count cards left';
+  }
+
+  @override
+  String get studyCardsReveal => 'Show answer';
+
+  @override
+  String get studyGradeAgain => 'Again';
+
+  @override
+  String get studyGradeHard => 'Hard';
+
+  @override
+  String get studyGradeGood => 'Good';
+
+  @override
+  String get studyGradeEasy => 'Easy';
+
+  @override
+  String get studyCardsMake => 'Make cards';
+
+  @override
+  String studyCardsMakeMore(int count) {
+    return 'Make cards ($count so far)';
+  }
+
+  @override
+  String get studyCardsGenerating => 'Making cards…';
+
+  @override
+  String get studyCardsFailed => 'Couldn\'t make cards';
+
+  @override
+  String studyCardsPreview(int count) {
+    return '$count cards made';
+  }
+
+  @override
+  String get studyCardsSave => 'Save to note';
+
+  @override
+  String studyCardsSaved(int count) {
+    return '$count cards saved';
+  }
 }

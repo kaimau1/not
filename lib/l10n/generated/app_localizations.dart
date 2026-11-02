@@ -11497,6 +11497,114 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bağla'**
   String get relatedNotesLink;
+
+  /// No description provided for @studyCardsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugünün kartları'**
+  String get studyCardsTitle;
+
+  /// No description provided for @studyCardsHubInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aralıklı tekrar: bugün {count} kart'**
+  String studyCardsHubInfo(int count);
+
+  /// No description provided for @studyCardsEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün tekrar edilecek kart yok'**
+  String get studyCardsEmpty;
+
+  /// No description provided for @studyCardsDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugünlük bitti!'**
+  String get studyCardsDone;
+
+  /// No description provided for @studyCardsEmptyInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir notun ⋮ menüsünden \"Kart üret\" ile yapay zekâ nottan soru–cevap kartları çıkarır.'**
+  String get studyCardsEmptyInfo;
+
+  /// No description provided for @studyCardsLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kart kaldı'**
+  String studyCardsLeft(int count);
+
+  /// No description provided for @studyCardsReveal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cevabı göster'**
+  String get studyCardsReveal;
+
+  /// No description provided for @studyGradeAgain.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrar'**
+  String get studyGradeAgain;
+
+  /// No description provided for @studyGradeHard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zor'**
+  String get studyGradeHard;
+
+  /// No description provided for @studyGradeGood.
+  ///
+  /// In tr, this message translates to:
+  /// **'İyi'**
+  String get studyGradeGood;
+
+  /// No description provided for @studyGradeEasy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kolay'**
+  String get studyGradeEasy;
+
+  /// No description provided for @studyCardsMake.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart üret'**
+  String get studyCardsMake;
+
+  /// No description provided for @studyCardsMakeMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart üret ({count} kart var)'**
+  String studyCardsMakeMore(int count);
+
+  /// No description provided for @studyCardsGenerating.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartlar hazırlanıyor…'**
+  String get studyCardsGenerating;
+
+  /// No description provided for @studyCardsFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart üretilemedi'**
+  String get studyCardsFailed;
+
+  /// No description provided for @studyCardsPreview.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kart üretildi'**
+  String studyCardsPreview(int count);
+
+  /// No description provided for @studyCardsSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota kaydet'**
+  String get studyCardsSave;
+
+  /// No description provided for @studyCardsSaved.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kart kaydedildi'**
+  String studyCardsSaved(int count);
 }
 
 class _AppLocalizationsDelegate
