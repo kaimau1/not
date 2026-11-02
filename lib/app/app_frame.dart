@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:ui' show DisplayFeature;
 
 import '../core/app_icons.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -145,13 +147,29 @@ class _RailFrameState extends State<_RailFrame>
     duration: const Duration(milliseconds: 220),
   );
 
+  /// Açık çekmece Esc'i alsın diye odak onda (çerçevenin kökü zaten odaklı,
+  /// `autofocus` yetmiyor).
+  final _drawerFocus = FocusNode(debugLabel: 'rail-drawer');
+
+  @override
+  void initState() {
+    super.initState();
+    _drawer.addStatusListener((status) {
+      if (status == AnimationStatus.forward) _drawerFocus.requestFocus();
+    });
+  }
+
   @override
   void dispose() {
     _drawer.dispose();
+    _drawerFocus.dispose();
     super.dispose();
   }
 
-  void _close() => _drawer.reverse();
+  void _close() {
+    _drawerFocus.unfocus();
+    unawaited(_drawer.reverse());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -245,39 +263,60 @@ class _RailFrameState extends State<_RailFrame>
                   final t = Curves.easeOutCubic.transform(_drawer.value);
                   if (t == 0) return const SizedBox.shrink();
                   final scheme = Theme.of(context).colorScheme;
-                  return Stack(
-                    children: [
-                      Positioned.fill(
-                        child: GestureDetector(
-                          onTap: _close,
-                          child: ColoredBox(
-                            color: Colors.black.withValues(alpha: 0.32 * t),
-                          ),
-                        ),
-                      ),
-                      PositionedDirectional(
-                        start: 0,
-                        top: 0,
-                        bottom: 0,
-                        child: FractionalTranslation(
-                          translation: Offset((rtl ? 1 : -1) * (1 - t), 0),
-                          child: Material(
-                            elevation: 8,
-                            color: scheme.surfaceContainerLow,
-                            borderRadius:
-                                const BorderRadiusDirectional.horizontal(
-                                  end: Radius.circular(20),
-                                ).resolve(Directionality.of(context)),
-                            clipBehavior: Clip.antiAlias,
-                            child: _AppRail(
-                              showListToggle: false,
-                              forceExtended: true,
-                              onNavigate: _close,
+                  // Açık çekmece geri tuşunu ve Esc'i önce kendisi alır.
+                  return BackButtonListener(
+                    onBackButtonPressed: () async {
+                      _close();
+                      return true;
+                    },
+                    child: CallbackShortcuts(
+                      bindings: {
+                        const SingleActivator(LogicalKeyboardKey.escape):
+                            _close,
+                      },
+                      child: Focus(
+                        focusNode: _drawerFocus,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: GestureDetector(
+                                onTap: _close,
+                                child: ColoredBox(
+                                  color: Colors.black.withValues(
+                                    alpha: 0.32 * t,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
+                            PositionedDirectional(
+                              start: 0,
+                              top: 0,
+                              bottom: 0,
+                              child: FractionalTranslation(
+                                translation: Offset(
+                                  (rtl ? 1 : -1) * (1 - t),
+                                  0,
+                                ),
+                                child: Material(
+                                  elevation: 8,
+                                  color: scheme.surfaceContainerLow,
+                                  borderRadius:
+                                      const BorderRadiusDirectional.horizontal(
+                                        end: Radius.circular(20),
+                                      ).resolve(Directionality.of(context)),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: _AppRail(
+                                    showListToggle: false,
+                                    forceExtended: true,
+                                    onNavigate: _close,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
                   );
                 },
               ),

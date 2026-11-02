@@ -194,6 +194,12 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('rail-drawer-handle')));
     await tester.pumpAndSettle();
     expect(find.byType(NavigationRail), findsOneWidget);
+    // Esc kapatır, tutamak yeniden açar.
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.byType(NavigationRail), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('rail-drawer-handle')));
+    await tester.pumpAndSettle();
     // Çekmecede bölüme gidince çekmece kapanır, ray yerine oturur.
     await tester.tap(find.text('Arşiv'));
     await tester.pumpAndSettle();
