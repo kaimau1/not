@@ -329,8 +329,15 @@ class FirebaseAiClient {
                 'MUTLAKA doldur — kullanıcı "hatırlat" demese, sadece '
                 'planını anlatsa bile.',
           ),
+          'reminderRepeat': Schema.string(description: _repeatDescription),
         },
-        optionalParameters: ['body', 'items', 'tags', 'reminderAt'],
+        optionalParameters: [
+          'body',
+          'items',
+          'tags',
+          'reminderAt',
+          'reminderRepeat',
+        ],
       ),
       FunctionDeclaration(
         'update_note',
@@ -376,6 +383,7 @@ class FirebaseAiClient {
           ),
           'locked': Schema.boolean(),
           'reminderAt': Schema.string(description: 'ISO 8601'),
+          'reminderRepeat': Schema.string(description: _repeatDescription),
           'clearReminder': Schema.boolean(),
           'pinned': Schema.boolean(),
           'archived': Schema.boolean(),
@@ -393,6 +401,7 @@ class FirebaseAiClient {
           'starred',
           'locked',
           'reminderAt',
+          'reminderRepeat',
           'clearReminder',
           'pinned',
           'archived',
@@ -406,3 +415,9 @@ class FirebaseAiClient {
     ]),
   ];
 }
+
+/// Hatırlatıcı tekrarı argümanının açıklaması (F18.14; gemini_service ile aynı).
+const _repeatDescription =
+    'Hatırlatıcı TEKRARI: daily (her gün), weekdays (hafta içi), weekly:1,3 '
+    '(ISO gün no; 1=Pazartesi), monthly, yearly ya da none. Kullanıcı "her '
+    'pazartesi", "her gün", "her ay" derse doldur; reminderAt ilk çalma.';

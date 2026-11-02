@@ -80,7 +80,20 @@ extension _EditorActions on _NoteEditorScreenState {
       if (mounted) _showSnack(context.l10n.reminderInPast);
       return;
     }
-    _mutate((n) => n.copyWith(reminderAt: reminder), immediate: true);
+    if (!mounted) return;
+    // Tekrar (F18.14): vazgeçilirse var olan tekrar korunur.
+    final repeat = await pickReminderRepeat(
+      context,
+      current: ReminderRepeat.parse(note.reminderRepeat),
+      anchor: reminder,
+    );
+    _mutate(
+      (n) => n.copyWith(
+        reminderAt: reminder,
+        reminderRepeat: repeat?.encode() ?? n.reminderRepeat,
+      ),
+      immediate: true,
+    );
   }
 
   void _clearReminder() =>

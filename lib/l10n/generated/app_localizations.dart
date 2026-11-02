@@ -11359,6 +11359,54 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Son uygulamalarda içeriği gizle'**
   String get appLockHideRecents;
+
+  /// No description provided for @repeatTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrar'**
+  String get repeatTitle;
+
+  /// No description provided for @repeatNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrarlama'**
+  String get repeatNone;
+
+  /// No description provided for @repeatDaily.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her gün'**
+  String get repeatDaily;
+
+  /// No description provided for @repeatWeekdays.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta içi her gün'**
+  String get repeatWeekdays;
+
+  /// No description provided for @repeatWeekly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her hafta'**
+  String get repeatWeekly;
+
+  /// No description provided for @repeatWeeklyOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her hafta: {days}'**
+  String repeatWeeklyOn(String days);
+
+  /// No description provided for @repeatMonthly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her ay'**
+  String get repeatMonthly;
+
+  /// No description provided for @repeatYearly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her yıl'**
+  String get repeatYearly;
 }
 
 class _AppLocalizationsDelegate

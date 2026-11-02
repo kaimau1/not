@@ -3078,5 +3078,20 @@
       }
     }
   },
-  "appLockHideRecents": "Son uygulamalarda içeriği gizle"
+  "appLockHideRecents": "Son uygulamalarda içeriği gizle",
+  "repeatTitle": "Tekrar",
+  "repeatNone": "Tekrarlama",
+  "repeatDaily": "Her gün",
+  "repeatWeekdays": "Hafta içi her gün",
+  "repeatWeekly": "Her hafta",
+  "repeatWeeklyOn": "Her hafta: {days}",
+  "@repeatWeeklyOn": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "repeatMonthly": "Her ay",
+  "repeatYearly": "Her yıl"
 }

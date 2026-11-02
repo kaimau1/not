@@ -6338,4 +6338,30 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get appLockHideRecents => 'Son uygulamalarda içeriği gizle';
+
+  @override
+  String get repeatTitle => 'Tekrar';
+
+  @override
+  String get repeatNone => 'Tekrarlama';
+
+  @override
+  String get repeatDaily => 'Her gün';
+
+  @override
+  String get repeatWeekdays => 'Hafta içi her gün';
+
+  @override
+  String get repeatWeekly => 'Her hafta';
+
+  @override
+  String repeatWeeklyOn(String days) {
+    return 'Her hafta: $days';
+  }
+
+  @override
+  String get repeatMonthly => 'Her ay';
+
+  @override
+  String get repeatYearly => 'Her yıl';
 }

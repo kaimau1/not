@@ -1,3 +1,4 @@
+import '../../../core/utils/spoken_repeat.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -151,7 +152,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
           // AI hiç çalışmasa da hatırlatıcı kurulur: zaman ayrıştırması
           // yerelde yapılıyor, modele ihtiyaç yok.
           final when = parseSpokenDateTimeNow(transcript);
-          if (when != null) repo.setReminder(id, when);
+          if (when != null) repo.setReminder(id, when, repeat: spokenRepeatOrNull(transcript, when));
           resultNoteId = id;
         }
         reply = savedText;
@@ -179,7 +180,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
             // yerelde çıkarılır — hatırlatıcı modelin keyfine kalmaz.
             if (created.reminderAt == null) {
               final when = parseSpokenDateTimeNow(transcript);
-              if (when != null) repo.setReminder(createdId, when);
+              if (when != null) repo.setReminder(createdId, when, repeat: spokenRepeatOrNull(transcript, when));
             }
           }
         }
@@ -258,7 +259,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
     final id = await repo.createNote(NoteType.text);
     repo.updateFields(id, {'body': text});
     final when = parseSpokenDateTimeNow(text);
-    if (when != null) repo.setReminder(id, when);
+    if (when != null) repo.setReminder(id, when, repeat: spokenRepeatOrNull(text, when));
     state = state.copyWith(noteId: id, message: createdText);
     ref.read(focusedNoteProvider.notifier).focus(id);
     return id;

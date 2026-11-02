@@ -1895,6 +1895,7 @@ class GeminiService {
                 'MUTLAKA doldur — kullanıcı "hatırlat" demese, sadece '
                 'planını anlatsa bile.',
           },
+          'reminderRepeat': {'type': 'STRING', 'description': _kRepeatDescription},
         },
         'required': ['type', 'title'],
       },
@@ -1957,6 +1958,7 @@ class GeminiService {
           },
           'locked': {'type': 'BOOLEAN'},
           'reminderAt': {'type': 'STRING', 'description': 'ISO 8601'},
+          'reminderRepeat': {'type': 'STRING', 'description': _kRepeatDescription},
           'clearReminder': {'type': 'BOOLEAN'},
           'pinned': {'type': 'BOOLEAN'},
           'archived': {'type': 'BOOLEAN'},
@@ -1977,3 +1979,9 @@ class GeminiService {
     },
   ];
 }
+
+/// Hatırlatıcı tekrarı argümanının açıklaması (F18.14).
+const _kRepeatDescription =
+    'Hatırlatıcı TEKRARI: daily (her gün), weekdays (hafta içi), weekly:1,3 '
+    '(ISO gün no; 1=Pazartesi), monthly, yearly ya da none. Kullanıcı "her '
+    'pazartesi", "her gün", "her ay" derse doldur; reminderAt ilk çalma.';

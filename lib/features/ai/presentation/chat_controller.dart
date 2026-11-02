@@ -1,3 +1,4 @@
+import '../../../core/utils/spoken_repeat.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/spoken_datetime.dart';
@@ -126,6 +127,6 @@ class ChatController extends Notifier<ChatState> {
     final note = await repo.watchNote(noteId).first;
     if (note == null || note.reminderAt != null) return;
     final when = parseSpokenDateTimeNow(source);
-    if (when != null) repo.setReminder(noteId, when);
+    if (when != null) repo.setReminder(noteId, when, repeat: spokenRepeatOrNull(source, when));
   }
 }

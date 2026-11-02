@@ -1,3 +1,5 @@
+import '../reminder_repeat_ui.dart';
+import '../../domain/reminder_repeat.dart';
 import '../../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:io';
@@ -3117,11 +3119,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // Yalnız KURULU hatırlatıcı çipte görünür; kurmak "+" menüsünden.
       if (note.reminderAt != null)
         InputChip(
-          avatar: const Icon(Icons.alarm, size: 14),
+          avatar: Icon(
+            note.reminderRepeat.isEmpty ? Icons.alarm : Icons.repeat,
+            size: 14,
+          ),
           // Dar alanda çip etiketleri KISALTILIR (`...`): sığmayan bir metin
           // `Chip` içinde taşma hatası verir.
           label: Text(
-            DateFormat('d MMM HH:mm').format(note.reminderAt!),
+            note.reminderRepeat.isEmpty
+                ? DateFormat('d MMM HH:mm').format(note.reminderAt!)
+                : '${DateFormat('d MMM HH:mm').format(note.reminderAt!)} · '
+                      '${reminderRepeatLabel(context.l10n, ReminderRepeat.parse(note.reminderRepeat))}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

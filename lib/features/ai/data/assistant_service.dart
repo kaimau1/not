@@ -1,3 +1,4 @@
+import '../../notes/domain/reminder_repeat.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -156,6 +157,8 @@ class AssistantService {
         ],
       'tags': _stringList(args['tags']),
       if (reminder != null) 'reminderAt': Timestamp.fromDate(reminder),
+      if (reminder != null && _repeat(args, reminder) != null)
+        'reminderRepeat': _repeat(args, reminder),
     });
     return {'status': 'ok', 'noteId': id};
   }
@@ -239,9 +242,14 @@ class AssistantService {
     }
     if (args['clearReminder'] == true) {
       fields['reminderAt'] = null;
+      fields['reminderRepeat'] = '';
     } else if (args['reminderAt'] is String) {
       final reminder = DateTime.tryParse(args['reminderAt'] as String);
-      if (reminder != null) fields['reminderAt'] = Timestamp.fromDate(reminder);
+      if (reminder != null) {
+        fields['reminderAt'] = Timestamp.fromDate(reminder);
+        final repeat = _repeat(args, reminder);
+        if (repeat != null) fields['reminderRepeat'] = repeat;
+      }
     }
 
     // MADDE İŞLEMLERİ tek okumada toplanır: üçü de aynı listeyi yeniden
@@ -296,4 +304,15 @@ class AssistantService {
     repo.updateFields(noteId, fields);
     return {'status': 'ok', 'noteId': noteId};
   }
+}
+
+/// Modelin `reminderRepeat` argümanı (F18.14): daily | weekdays |
+/// weekly:1,3 | monthly | yearly | none. Ay/yıl günü hatırlatıcıdan
+/// sabitlenir; 'none' tekrarı kaldırır, tanınmayan değer yok sayılır.
+String? _repeat(Map<String, dynamic> args, DateTime reminder) {
+  final raw = args['reminderRepeat'];
+  if (raw is! String) return null;
+  if (raw.trim() == 'none') return '';
+  final r = ReminderRepeat.parse(raw);
+  return r.isNone ? null : r.anchoredTo(reminder).encode();
 }

@@ -1088,10 +1088,13 @@ class NotesRepository {
   void setArchived(String noteId, bool archived) =>
       updateFields(noteId, {'archivedAt': archived ? Timestamp.now() : null});
 
-  void setReminder(String noteId, DateTime? reminderAt) => updateFields(
-    noteId,
-    {'reminderAt': reminderAt != null ? Timestamp.fromDate(reminderAt) : null},
-  );
+  /// [repeat] verilmezse tekrar alanına dokunulmaz (ertele/ilerlet); hatırlatıcı
+  /// kaldırılınca (null) tekrar da silinir (F18.14).
+  void setReminder(String noteId, DateTime? reminderAt, {String? repeat}) =>
+      updateFields(noteId, {
+        'reminderAt': reminderAt != null ? Timestamp.fromDate(reminderAt) : null,
+        if (reminderAt == null) 'reminderRepeat': '' else 'reminderRepeat': ?repeat,
+      });
 
   /// Boş notlar editörden çıkarken tamamen silinir.
   /// Bir etiketi TÜM notlarda yeniden adlandırır. Aynı ada sahip bir etiket

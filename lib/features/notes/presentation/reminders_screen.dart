@@ -1,3 +1,5 @@
+import 'reminder_repeat_ui.dart';
+import '../domain/reminder_repeat.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/sheet_header.dart';
 import 'package:flutter/material.dart';
@@ -160,8 +162,15 @@ class RemindersScreen extends ConsumerWidget {
       context,
       note.reminderAt ?? DateTime.now().add(const Duration(hours: 1)),
     );
-    if (picked == null) return;
-    ref.read(notesRepositoryProvider)?.setReminder(note.id, picked);
+    if (picked == null || !context.mounted) return;
+    final repeat = await pickReminderRepeat(
+      context,
+      current: ReminderRepeat.parse(note.reminderRepeat),
+      anchor: picked,
+    );
+    ref
+        .read(notesRepositoryProvider)
+        ?.setReminder(note.id, picked, repeat: repeat?.encode());
   }
 
   /// Yeni hatırlatıcı: önce zaman seçilir, ardından o zamana kurulu boş bir
@@ -330,7 +339,9 @@ class _ReminderTile extends ConsumerWidget {
       context,
       message: context.l10n.reminderRemoved,
       undoLabel: context.l10n.undo,
-      onUndo: () => repo.setReminder(note.id, previous),
+      // Tekrar da geri gelir (kaldırma onu da siliyor — F18.14).
+      onUndo: () =>
+          repo.setReminder(note.id, previous, repeat: note.reminderRepeat),
     );
   }
 
@@ -374,7 +385,11 @@ class _ReminderTile extends ConsumerWidget {
       child: ListTile(
         onTap: () => openNoteRoute(context, note),
         leading: Icon(
-          overdue ? Icons.alarm_on_outlined : Icons.alarm,
+          overdue
+              ? Icons.alarm_on_outlined
+              : note.reminderRepeat.isNotEmpty
+              ? Icons.repeat
+              : Icons.alarm,
           color: overdue ? scheme.error : scheme.primary,
         ),
         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -383,7 +398,10 @@ class _ReminderTile extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              RemindersScreen._format().format(at),
+              note.reminderRepeat.isEmpty
+                  ? RemindersScreen._format().format(at)
+                  : '${RemindersScreen._format().format(at)} · '
+                        '${reminderRepeatLabel(l10n, ReminderRepeat.parse(note.reminderRepeat))}',
               style: TextStyle(color: timeColor),
             ),
             // "Ne zaman?" değil "ne kadar kaldı?": mutlak tarihi bugünün

@@ -2385,5 +2385,13 @@
   "appLockDelayTitle": "Lock:",
   "appLockDelayNow": "immediately",
   "appLockDelayMinutes": "after {minutes} min",
-  "appLockHideRecents": "Hide content in recent apps"
+  "appLockHideRecents": "Hide content in recent apps",
+  "repeatTitle": "Repeat",
+  "repeatNone": "Don't repeat",
+  "repeatDaily": "Every day",
+  "repeatWeekdays": "Every weekday",
+  "repeatWeekly": "Every week",
+  "repeatWeeklyOn": "Weekly: {days}",
+  "repeatMonthly": "Every month",
+  "repeatYearly": "Every year"
 }

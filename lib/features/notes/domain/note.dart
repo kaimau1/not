@@ -207,6 +207,7 @@ class Note {
     this.deletedAt,
     this.archivedAt,
     this.reminderAt,
+    this.reminderRepeat = '',
     this.aiSummary,
     this.localOnly = false,
     this.extras = const {},
@@ -237,7 +238,7 @@ class Note {
     'tagLinks',
     'textPages',
     'activePage', 'orderIndex', 'createdAt', 'updatedAt', 'deletedAt',
-    'archivedAt', 'reminderAt', 'aiSummary', 'schema',
+    'archivedAt', 'reminderAt', 'reminderRepeat', 'aiSummary', 'schema',
     // Depo katmanının her yazımda kendisi koyduğu alan — notla taşınmaz.
     // (`createdBy` BİLEREK burada değil: [extras] olarak AYNEN geri yazılır;
     // kurallar paylaşılan yolda değişmemesini istiyor — F1.4.)
@@ -519,6 +520,10 @@ class Note {
 
   /// Doluysa bu tarihte yerel bildirim planlanır.
   final DateTime? reminderAt;
+
+  /// Hatırlatıcı tekrarı (F18.14, `ReminderRepeat` dizesi); boş = tek sefer.
+  /// [reminderAt] hep SONRAKİ çalmadır.
+  final String reminderRepeat;
   final AiSummary? aiSummary;
 
   /// **YALNIZ BU CİHAZDA** (kullanıcı isteği 2026-09-26: "senkronizasyon
@@ -791,6 +796,7 @@ class Note {
     bool clearArchivedAt = false,
     DateTime? reminderAt,
     bool clearReminderAt = false,
+    String? reminderRepeat,
     AiSummary? aiSummary,
     bool? localOnly,
   }) => Note(
@@ -846,6 +852,9 @@ class Note {
     deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
     archivedAt: clearArchivedAt ? null : (archivedAt ?? this.archivedAt),
     reminderAt: clearReminderAt ? null : (reminderAt ?? this.reminderAt),
+    reminderRepeat: clearReminderAt
+        ? ''
+        : (reminderRepeat ?? this.reminderRepeat),
     aiSummary: aiSummary ?? this.aiSummary,
     localOnly: localOnly ?? this.localOnly,
     // Parametresi YOK: "kim yazdı" kaydın bir olgusu, çağıranın seçimi
@@ -1003,6 +1012,7 @@ class Note {
       deletedAt: (map['deletedAt'] as Timestamp?)?.toDate(),
       archivedAt: (map['archivedAt'] as Timestamp?)?.toDate(),
       reminderAt: (map['reminderAt'] as Timestamp?)?.toDate(),
+      reminderRepeat: map['reminderRepeat'] as String? ?? '',
       aiSummary: map['aiSummary'] is Map
           ? AiSummary.fromMap(
               Map<String, dynamic>.from(map['aiSummary'] as Map),
@@ -1107,6 +1117,9 @@ class Note {
     'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
     'archivedAt': archivedAt != null ? Timestamp.fromDate(archivedAt!) : null,
     'reminderAt': reminderAt != null ? Timestamp.fromDate(reminderAt!) : null,
+    // KOŞULSUZ (kaldırılabilir alan, merge tuzağı): tekrar kapatılınca ''
+    // yazılmalı, yoksa sunucudaki eski tekrar kalırdı.
+    'reminderRepeat': reminderRepeat,
     'aiSummary': aiSummary?.toMap(),
   };
 }

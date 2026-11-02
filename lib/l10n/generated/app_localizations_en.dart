@@ -6358,4 +6358,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appLockHideRecents => 'Hide content in recent apps';
+
+  @override
+  String get repeatTitle => 'Repeat';
+
+  @override
+  String get repeatNone => 'Don\'t repeat';
+
+  @override
+  String get repeatDaily => 'Every day';
+
+  @override
+  String get repeatWeekdays => 'Every weekday';
+
+  @override
+  String get repeatWeekly => 'Every week';
+
+  @override
+  String repeatWeeklyOn(String days) {
+    return 'Weekly: $days';
+  }
+
+  @override
+  String get repeatMonthly => 'Every month';
+
+  @override
+  String get repeatYearly => 'Every year';
 }
