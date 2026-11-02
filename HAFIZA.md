@@ -378,6 +378,9 @@ maddeyi GÜNCELLE.
   (`note_pane_width`). `/` rotası kararı `SplitScope`tan okur (genişlikten
   değil — liste iki kez kurulmasın). Dikey menteşe (`verticalHingeOf`) varsa
   ayraç menteşeye oturur; AppFrame menteşe koordinatını içerik alanına kaydırır.
+  **Çekerek tam ekran** (2026-11-02): not açıkken ayraç en dar hâlden SOLA
+  56 dp itilince ipucu "Bırak: tam ekran" (lastik daralma + titreşim),
+  bırakınca `noteFullscreenProvider`; tam ekrandan sol kenardan sağa çekip çık.
 - Misafir kartı "Sonra" → şerit; 5/20 notta bir kez tam kart.
 - `CustomizeModeHost` alanın kendi boyunu `MediaQuery.size` verir (alt çubuk
   ekran dışına itiliyordu).

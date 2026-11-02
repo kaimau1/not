@@ -842,6 +842,18 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 ek henüz eklendiği telefondan buluta çıkmadı. Telefonda Ayarlar → Senkron → Drive’ı bağla.} other{{count} ek henüz eklendiği telefondan buluta çıkmadı. Telefonda Ayarlar → Senkron → Drive’ı bağla.}}'**
   String webAttachmentsOnPhone(int count);
 
+  /// No description provided for @fullscreenPullHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekran için çek'**
+  String get fullscreenPullHint;
+
+  /// No description provided for @fullscreenPullRelease.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bırak: tam ekran'**
+  String get fullscreenPullRelease;
+
   /// No description provided for @signOutConfirm.
   ///
   /// In tr, this message translates to:

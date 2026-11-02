@@ -439,6 +439,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get fullscreenPullHint => 'Pull for full screen';
+
+  @override
+  String get fullscreenPullRelease => 'Release: full screen';
+
+  @override
   String get signOutConfirm => 'Are you sure you want to sign out?';
 
   @override

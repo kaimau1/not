@@ -151,6 +151,9 @@ class _RailFrameState extends State<_RailFrame>
   /// `autofocus` yetmiyor).
   final _drawerFocus = FocusNode(debugLabel: 'rail-drawer');
 
+  /// Tam ekrandan çıkış jestinin sağa çekiş miktarı.
+  double _exitPull = 0;
+
   @override
   void initState() {
     super.initState();
@@ -231,6 +234,31 @@ class _RailFrameState extends State<_RailFrame>
                 ),
               ],
             ),
+            // TAM EKRANDAN ÇIKIŞ (2026-11-02): ayraçla sola çekip girilen tam
+            // ekrandan sol kenardan sağa çekerek çıkılır — aynı jestin tersi.
+            if (noteOpen && widget.fullscreen)
+              PositionedDirectional(
+                start: 0,
+                top: 0,
+                bottom: 0,
+                width: 18,
+                child: GestureDetector(
+                  key: const ValueKey('fullscreen-exit-edge'),
+                  behavior: HitTestBehavior.translucent,
+                  onHorizontalDragStart: (_) => _exitPull = 0,
+                  onHorizontalDragUpdate: (d) =>
+                      _exitPull += rtl ? -d.delta.dx : d.delta.dx,
+                  onHorizontalDragEnd: (d) {
+                    final v = d.primaryVelocity ?? 0;
+                    if (_exitPull > 56 || (rtl ? v < -300 : v > 300)) {
+                      HapticFeedback.mediumImpact();
+                      ProviderScope.containerOf(context)
+                          .read(noteFullscreenProvider.notifier)
+                          .set(false);
+                    }
+                  },
+                ),
+              ),
             if (canDrawer) ...[
               // Kenardan çekme + görünür tutamak.
               PositionedDirectional(

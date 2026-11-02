@@ -437,6 +437,12 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get fullscreenPullHint => 'Tam ekran için çek';
+
+  @override
+  String get fullscreenPullRelease => 'Bırak: tam ekran';
+
+  @override
   String get signOutConfirm => 'Çıkış yapmak istediğine emin misin?';
 
   @override
