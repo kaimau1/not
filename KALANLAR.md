@@ -91,12 +91,12 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
    üstündeki satırlar tam genişlik, yalnız hizadaki satırlar sağa kayar.
 26. [ ] Kalem kipindeyken + → Çizim ekle → ayrı tuval → Nota ekle → görsel
    olarak nota gömülür; "Sayfaya el yazısı" kalem kipini açar.
-28. [ ] Tablette not açıkken liste/not ayracını sola zorla → "Tam ekran için
-   çek" → biraz daha → "Bırak: tam ekran" → bırak: tam ekran. Sol kenardan
-   sağa çek → tam ekrandan çıkar.
 27. [ ] Web'de Drive ekli not: üstte "N ek Google Drive'ında · Göster" →
    tek dokunuşla hepsi iner; sayfayı yenile → yeniden izin istemez (~55 dk).
    Telefondan çıkmamış ek için "telefonda Drive'ı bağla" uyarısı.
+28. [ ] Tablette not açıkken liste/not ayracını sola zorla → "Tam ekran için
+   çek" → biraz daha → "Bırak: tam ekran" → bırak: tam ekran. Sol kenardan
+   sağa çek → tam ekrandan çıkar.
 
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
