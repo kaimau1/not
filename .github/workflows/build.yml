@@ -538,6 +538,11 @@ jobs:
 
       - name: Emülatörde ölç
         uses: reactivecircus/android-emulator-runner@v2
+        # KÖK NEDEN (F18.7, koşu 41412956542 logcat): yayın APK'sı yalnız
+        # arm64 paketliyor; x86_64 emülatörde libflutter.so yoktu, uygulama
+        # açılışta çöküyordu. Ölçüm derlemesi bütün mimarileri alır.
+        env:
+          NOTLAR_ALL_ABIS: '1'
         with:
           api-level: 34
           arch: x86_64
