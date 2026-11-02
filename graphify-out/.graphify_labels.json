@@ -7,7 +7,6 @@
   "21": "settings_screen.dart",
   "22": "mail_summary_screen.dart",
   "25": "notesRepositoryProvider",
-  "33": "audio_recorder_sheet.dart",
   "36": "package:flutter_riverpod/flutter_riverpod.dart",
   "55": "pubspec.yaml",
   "56": ".onUpdate",
@@ -36,6 +35,5 @@
   "165": "Flutter Theme System",
   "169": "Flutter Design Thinking",
   "172": "SKILL.md",
-  "174": "⛔ ANTI-PATTERNS",
-  "206": "SpeechOutputController"
+  "174": "⛔ ANTI-PATTERNS"
 }

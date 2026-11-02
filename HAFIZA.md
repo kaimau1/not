@@ -25,7 +25,7 @@ maddeyi GÜNCELLE.
   PREFER_SETTINGS). Anahtar deposu yok → DEBUG imzalı, telefondaki CI
   sürümünün üstüne kurulmaz. Oturum `workflow_dispatch` tetikleyemez (403)
   → CI işleri commit BAŞLIĞI etiketiyle (`[apk]`, `[perf]`).
-- graphify grafiği elle (`graphify update .`); satır bilgisini koddan doğrula.
+- graphify grafiği elle (`graphify update .`; bulutta `pip install graphifyy` ile venv'e); satır bilgisini koddan doğrula.
 
 ## CI (`.github/workflows/build.yml`)
 - APK yalnız main'de, commit **BAŞLIĞINDA** `[apk]`; dalda derlenmez. APK
