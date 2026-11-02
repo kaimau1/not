@@ -554,7 +554,10 @@ jobs:
           # F18.7 (2026-11-02): `| tail` çıktıyı koşu BİTENE kadar tutuyordu —
           # "32 dk çıktı yok" aslında görünmeyen çıktıydı. Artık akar; drive
           # 20 dk'da kesilir ki logcat özeti her durumda basılsın.
-          script: mkdir -p build && (adb logcat -v time > build/logcat.txt &) ; timeout 20m flutter drive -v --profile --driver=test_driver/perf_driver.dart --target=integration_test/perf_test.dart -d emulator-5554 2>&1 | grep -v '^\s*$' | cut -c1-400 ; echo "drive bitti" 
+          # --no-dds (koşu 41418608415): DDS VM servisini tek istemciye
+          # kilitliyor; testin `traceAction`ı kendi servisine bağlanamıyordu
+          # ("Failed to connect to VM Service … Connection refused").
+          script: mkdir -p build && (adb logcat -v time > build/logcat.txt &) ; timeout 20m flutter drive -v --profile --no-dds --driver=test_driver/perf_driver.dart --target=integration_test/perf_test.dart -d emulator-5554 2>&1 | grep -v '^\s*$' | cut -c1-400 ; echo "drive bitti" 
 
       # Özet iş günlüğüne de basılır: artifact kotası sık dolu (F18.7).
       - name: Özeti göster

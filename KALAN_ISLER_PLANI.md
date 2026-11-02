@@ -56,8 +56,8 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
-| 18 | Bulut oturumunda yapılabilecekler (31 madde) | Kısmen (21/27 — F hariç) | 2026-11-02 | Açık: F18.7 (ölçüm koşusu takılıyor), F18.9, F18.10, F18.22, F18.23 (bulut, sonraki oturum); F18.20 → F19.B8; F bölümü (F18.27–30) yalnız Play'e çıkılırsa |
-| 19 | Telefon, konsol, hesap işleri (senin) | Kısmen | 2026-11-01 | A3, B5, B7, C3 bitti; B6 ertelendi (ölçüm zaman aşımı); C1/C2/C4 kısmen (nedenleri maddelerde); A1, A2, A4, A5, B1–B4, C5, D açık |
+| 18 | Bulut oturumunda yapılabilecekler (31 madde) | Bitti (26/27 — F hariç; F18.7 sonucu aşağıda) | 2026-11-02 | 2. oturum: F18.7 kök neden + koşu, F18.9 kısmen (kalanı F19.C6), F18.10, F18.22, F18.23; F18.20 → F19.B8; F bölümü (F18.27–30) yalnız Play'e çıkılırsa |
+| 19 | Telefon, konsol, hesap işleri (senin) | Kısmen | 2026-11-01 | A3, B5, B7, C3 bitti; B6 ertelendi (ölçüm zaman aşımı); C1/C2/C4 kısmen (nedenleri maddelerde); A1, A2, A4, A5, B1–B4, C5, C6, C7, D açık |
 
 ---
 
@@ -342,6 +342,17 @@ hâlâ."** Karar değişmeden bu bölüme başlanmaz; değişirse önce F18.27.
   ekran görüntüleri (web/emülatör), veri güvenliği formu taslağı
   (`PRIVACY_POLICY.md` ile tutarlı), "yalnız 64 bit" notu;
   `assets/icon/play_store_512.png` hazır.
+
+### H. Kullanıcı listesi 2026-11-02 (2. oturum — hepsi yapıldı)
+
+- [x] Hesap levhasında **Oturumu kapat** + **Hesap değiştir** (onaylı; misafirde kırmızı uyarı; Ayarlar aynı kapıdan).
+- [x] **Tablette Google girişi**: yerel seçici açılmadan düşerse (yapılandırma hatası / < 1,5 sn'de "iptal") Firebase tarayıcı akışına geçer. Cihazda doğrulama → KALANLAR §2 adım 22.
+- [x] **Tablet rayı** 64 dp etiketsiz, "Gelen" rayda yok; **not açılınca** ray çekmeceye döner (tutamak / kenardan çekme / Esc / geri), liste tek sütun olarak rayın yerine geçer (yan yana sınırı not açıkken 640 dp).
+- [x] **Katlanabilir**: kapalıyken telefon düzeni; açıkken yan yana, dikey menteşe varsa ayraç menteşeye oturur.
+- [x] **Görsel yanında madde sarması**: görsel maddenin içinde başlıyorsa üstteki satırlar tam genişlik, yalnız hizadakiler kayar.
+- [x] **Kalem paneli altta, çekmece**: yüzen yuvarlak tepsi; çizince iner (yalnız uçlar görünür), dokununca çıkar; tablette de altta.
+- [x] **Kalem kipinde de "Çizim ekle"** ayrı tuval → görsel eki; "Sayfaya el yazısı" ayrı seçenek.
+- [x] **Web'de ekler**: Drive jetonu sekmede kalır (yenilemede yeniden sormaz), notta tek dokunuşla tümünü indiren şerit, telefondan çıkmamış ekler için açık uyarı. Kök neden ihtimalleri: (a) telefonda Drive bağlı değilse ekler cihazda bekler, (b) Drive ekleri her kutuya ayrı dokunuş istiyordu. Canlı hesapta doğrulama → adım 27.
 
 ### G. Kapanış
 
