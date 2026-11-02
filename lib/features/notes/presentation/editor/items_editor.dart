@@ -512,9 +512,9 @@ class ItemsEditorState extends State<ItemsEditor>
   /// başlangıçla geçişin son karelerinde 5 kare 33–82 ms sürüyordu (kısa notta
   /// hiç yok). Geçiş (460 ms) BİTTİKTEN sonra, kare başına [_kRowsPerFrame]
   /// madde.
-  static const _kFirstRows = 18;
+  static const _kFirstRows = 12;
   static const _kRowsPerFrame = 4;
-  static const _kGrowAfter = Duration(milliseconds: 520);
+  static const _kGrowAfter = Duration(milliseconds: 1100);
 
   /// Kapanışta kare başına sökülen madde (bkz. [noteRouteClosing]).
   static const _kRowsPerShrink = 6;

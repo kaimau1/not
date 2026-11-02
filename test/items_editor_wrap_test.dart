@@ -90,7 +90,7 @@ void main() {
     // ...gecis bitince kalanlar kare kare eklenir. Kendi kaydiricisi yok:
     // dis SingleChildScrollView tum listeyi uzatir, yani listenin sonu da
     // agacta kurulmus olur.
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 1200));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.text('Oge 29'), findsOneWidget);

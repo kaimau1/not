@@ -36,21 +36,21 @@ void main() {
 
   tearDown(() => noteRouteClosing.value = false);
 
-  testWidgets('ilk karede 18, geçiş bitince kalanı küçük adımlarla', (
+  testWidgets('ilk karede 12, geçiş bitince kalanı küçük adımlarla', (
     tester,
   ) async {
     await pump(tester);
-    expect(built(), 18);
+    expect(built(), 12);
 
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(built(), 18, reason: 'geçiş sürerken büyümez');
+    await tester.pump(const Duration(milliseconds: 1000));
+    expect(built(), 12, reason: 'geçiş sürerken büyümez');
 
-    await tester.pump(const Duration(milliseconds: 40));
+    await tester.pump(const Duration(milliseconds: 150));
     await tester.pump();
     final first = built();
-    expect(first, inInclusiveRange(19, 30), reason: 'kare başına birkaç madde');
+    expect(first, inInclusiveRange(13, 24), reason: 'kare başına birkaç madde');
 
-    for (var i = 0; i < 40; i++) {
+    for (var i = 0; i < 60; i++) {
       await tester.pump(const Duration(milliseconds: 16));
     }
     expect(built(), 90);
@@ -60,7 +60,7 @@ void main() {
     tester,
   ) async {
     await pump(tester);
-    for (var i = 0; i < 60; i++) {
+    for (var i = 0; i < 140; i++) {
       await tester.pump(const Duration(milliseconds: 16));
     }
     expect(built(), 90);
@@ -71,12 +71,12 @@ void main() {
     await tester.pump();
     await tester.pump();
     final step = built();
-    expect(step, greaterThan(18));
+    expect(step, greaterThan(12));
     expect(step, lessThan(90));
 
     for (var i = 0; i < 30; i++) {
       await tester.pump(const Duration(milliseconds: 16));
     }
-    expect(built(), 18);
+    expect(built(), 12);
   });
 }

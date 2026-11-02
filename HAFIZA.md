@@ -163,16 +163,21 @@ maddeyi GÜNCELLE.
   maddelik not; kısa notta yok → sorun madde sayısına bağlı). Ölçüm yolu:
   `adb shell dumpsys SurfaceFlinger --latency '"SurfaceView[<paket>/<paket>.MainActivity](BLAST)#0"'`
   (Flutter kareleri `gfxinfo`da SAYILMAZ; ad tırnaklı). Öncesi: açılış sonunda
-  5 kare 33–82 ms (kademeli kurulum 380 ms'de, 14 madde/kare), kapanış sonunda
-  2 kare ~50 ms (rota kalkarken 90 satırın tek karede yıkımı). Şimdi:
-  kurulum geçiş BİTİNCE (520 ms) 4 madde/kare; kapanırken `noteRouteClosing`
-  ile kare başına 6 madde sökülür (`ItemsEditor._shrinkBudget`). Kapanış
-  temiz; açılışta ~geçiş sonunda TEK ~100 ms kare kaldı (şüpheli: 450 ms
-  ertelenmiş `_setStateAfterOpening` yeniden çizimi ya da donmuş görüntüden
-  canlı çizime geçiş — ayrıştırılmadı). TUZAK: yerelde ölçmek için ayrı
+  5 kare 33–82 ms + bir 99 ms, kapanış sonunda 2 kare ~50 ms. Kök nedenler:
+  (1) kademeli madde kurulumu geçiş sonunda başlıyor ve her adım 20–30 ms
+  raster/build'li kare üretiyordu; (2) kapanışta rota kalkarken 90 satırın tek
+  karede yıkımı; (3) ilk karede 18 satırın yerleşimi ~55 ms. Şimdi:
+  `_kFirstRows` 12, kalanı geçişten SONRA (1100 ms) 4 madde/kare; kapanırken
+  `noteRouteClosing` ile kare başına 6 madde sökülür (`_shrinkBudget`). Sonuç:
+  açılış en kötü 49 ms, kapanış temiz. YANLIŞ YOL: satıra `RepaintBoundary`
+  (raster 19–32 → 16–21 ms, anlamlı kazanç yok; geri alındı). "Animasyon
+  bitişinde 65 ms" ölçümü yanıltıcıydı: o, büyütme zamanlayıcısının (520 ms)
+  bekleme süresiydi, tamamlanma karesi 4–9 ms. Tanı yolu (release'te de
+  çalışır): `print` + `adb logcat -v time`, `WidgetsBinding.addTimingsCallback`
+  ile kare build/raster süreleri. TUZAK: yerelde ölçmek için ayrı
   `applicationId` + `google-services.json` `package_name` (geçici, commit'leme;
-  imza anahtarı yok → CI imzalı uygulamanın üstüne kurulmaz); ilk release
-  derlemesi ~20 dk.
+  imza anahtarı yok → CI imzalı uygulamanın üstüne kurulmaz); derleme 5–20 dk;
+  Xiaomi "USB üzerinden yükle" onayı 8 sn içinde dokunuş ister.
 - Ana ekran ızgarası deterministik sütun ataması (`balancedColumnAssignment`).
   Kesme noktası geçişinde `DashboardScreen` başka yerde yeniden kurulur →
   kaydırma `DashboardScrollMemory`de ORANLA taşınır (F18.11).
