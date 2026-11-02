@@ -74,7 +74,26 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
   görülürse tam adımları yaz; tahminle yama yapılmadı.
 
 **Tablet / S Pen (varsa)**
-20. [ ] Kalem sayfaya yazar, parmak metne gider; sol ray, tam ekran.
+20. [ ] Kalem sayfaya yazar, parmak metne gider; kalemler ALTTAKİ çekmecede
+   (çizince iner, dokununca çıkar), tam ekran.
+
+**2026-11-02 kullanıcı listesi (bu sürümde yapıldı, cihazda bak)**
+21. [ ] Ana ekran avatarı → levhada "Hesap değiştir" (çıkar, Google seçici
+   açılır) ve "Oturumu kapat" (onaylı; misafirde kırmızı uyarı).
+22. [ ] Tablette Google ile giriş: seçici açılmazsa tarayıcı penceresiyle
+   girmeli (yerel giriş anında düşerse yedek yol).
+23. [ ] Tablette ray dar (64 dp, etiketsiz), "Gelen" rayda yok. Not açınca
+   ray kalkar, solda tek sütun liste, sağda not; sol kenardaki tutamak /
+   kenardan çekme ray çekmecesini açar, geri tuşu kapatır.
+24. [ ] Katlanabilir: kapalıyken telefon düzeni; açınca liste + not yan yana,
+   ayraç menteşeye oturur; açıp kapatırken liste yerinde.
+25. [ ] Liste notunda görsel maddenin ortasına denk gelince: görselin
+   üstündeki satırlar tam genişlik, yalnız hizadaki satırlar sağa kayar.
+26. [ ] Kalem kipindeyken + → Çizim ekle → ayrı tuval → Nota ekle → görsel
+   olarak nota gömülür; "Sayfaya el yazısı" kalem kipini açar.
+27. [ ] Web'de Drive ekli not: üstte "N ek Google Drive'ında · Göster" →
+   tek dokunuşla hepsi iner; sayfayı yenile → yeniden izin istemez (~55 dk).
+   Telefondan çıkmamış ek için "telefonda Drive'ı bağla" uyarısı.
 
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 

@@ -107,7 +107,8 @@ void main() {
     final items = [
       NoteItem(
         id: 'a',
-        text: 'Bu madde epey uzun bir metin icerir ve gorselin yaninda '
+        text:
+            'Bu madde epey uzun bir metin icerir ve gorselin yaninda '
             'butun olarak durmasi beklenir cunku ust bantta duruyor',
       ),
       NoteItem(id: 'b', text: 'Asagidaki madde gorselden uzak'),
@@ -129,6 +130,36 @@ void main() {
     // Nota giden metin degismeden durur.
     expect(first.logicalText, items.first.text);
     expect(second.isPlain, isTrue);
+  });
+
+  testWidgets('maddenin ICINDE baslayan gorsel: ust satirlar tam genislik', (
+    tester,
+  ) async {
+    // Kullanici bulgusu 2026-11-02 (ekran goruntusu): uzun maddenin alt
+    // satirlari gorselin hizasina dusuyor diye maddenin TAMAMI saga
+    // kayiyordu; gorselin ustunde kalan satirlar da daralmisti. Artik satir
+    // kaymaz, yalniz gorselin hizasindaki satirlar alan ici sarmayla girer.
+    final items = [
+      NoteItem(id: 'a', text: List.filled(30, 'uzun madde metni').join(' ')),
+    ];
+    await pumpList(tester, items, const [
+      FloatBox(top: 120, left: 0, right: 160, height: 200),
+    ]);
+    await tester.pumpAndSettle();
+    final field = find.byType(TextField).first;
+    expect(
+      tester.getTopLeft(field).dx,
+      lessThan(100.0),
+      reason: 'satir butun kaymamali (ust satirlar gorselin ustunde)',
+    );
+    final controller =
+        tester.widget<TextField>(field).controller! as WrapTextController;
+    expect(
+      controller.text.contains(kWrapAnchorChar),
+      isTrue,
+      reason: 'gorselin hizasindaki satirlar alan ici sarmayla girintilenir',
+    );
+    expect(controller.logicalText, items.first.text);
   });
 
   testWidgets('sutunu kaplayan gorsel satiri ASAGI iter', (tester) async {

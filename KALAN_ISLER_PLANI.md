@@ -56,8 +56,8 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
-| 18 | Bulut oturumunda yapılabilecekler (31 madde) | Kısmen (21/27 — F hariç) | 2026-11-02 | Açık: F18.7 (ölçüm koşusu takılıyor), F18.9, F18.10, F18.22, F18.23 (bulut, sonraki oturum); F18.20 → F19.B8; F bölümü (F18.27–30) yalnız Play'e çıkılırsa |
-| 19 | Telefon, konsol, hesap işleri (senin) | Kısmen | 2026-11-01 | A3, B5, B7, C3 bitti; B6 ertelendi (ölçüm zaman aşımı); C1/C2/C4 kısmen (nedenleri maddelerde); A1, A2, A4, A5, B1–B4, C5, D açık |
+| 18 | Bulut oturumunda yapılabilecekler (31 madde) | Bitti (26/27 — F hariç) | 2026-11-02 | 2. oturum: F18.7 ilk yeşil ölçüm (taban yazıldı), F18.9 kısmen (kalanı F19.C6), F18.10, F18.22, F18.23; F18.20 → F19.B8; F bölümü (F18.27–30) yalnız Play'e çıkılırsa |
+| 19 | Telefon, konsol, hesap işleri (senin) | Kısmen | 2026-11-01 | A3, B5, B7, C3 bitti; B6 ertelendi (ölçüm zaman aşımı); C1/C2/C4 kısmen (nedenleri maddelerde); A1, A2, A4, A5, B1–B4, C5, C6, C7, D açık |
 
 ---
 
@@ -135,7 +135,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 
 ### B. Ölçüm ve uçtan uca test (eski Faz 17)
 
-- [ ] **F18.7 Kare ölçümünü buluttan tetiklenebilir yap ve koş** (eski
+- [x] **F18.7 Kare ölçümünü buluttan tetiklenebilir yap ve koş** (eski
   F17.1 = F9.1 = F2.6; hiç koşulmadı). `perf` işi yalnız `workflow_dispatch`ta
   (`build.yml:~487`), bulut oturumu onu tetikleyemiyor. Yap: commit
   başlığında `[perf]` da tetiklesin (APK işiyle aynı desen: başlık, gövde
@@ -145,6 +145,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
   var; not açma (kart → editör geçişi), biçim paneli, PDF kaydırma, balon
   bırakma yoksa ekle. Bulutta yapılamazsa → F19.B6.
   **Yapıldı (2026-11-02):** Başlıkta `[perf]` her dalda tetikler, özet iş günlüğüne basılır. Kök neden bulundu: odaktaki alanın imleci `pumpAndSettle`'ı hiç bitirmiyordu → sabit süreli pompalama. **Koşu 41391257808 (v1.1.586) YİNE sonuçsuz:** profil APK 11 dk'da derlendi, emülatöre kuruldu, sonra 32 dk HİÇ çıktı yok → 45 dk iptal. Yani takılma test GÖVDESİNDEN önce (uygulama açılmıyor ya da `flutter drive` VM servisine bağlanamıyor); `pumpAndSettle` düzeltmesi tek başına yetmedi. Sonraki adım: `flutter drive -v` + `adb logcat` çıktısını işe ekleyip koş. p90 tabanı YOK. Yeni senaryo EKLENMEDİ.
+  **Yapıldı (2026-11-02, 2. oturum) — İLK YEŞİL KOŞU 41422268562:** (1) `| tail` çıktıyı koşu bitene dek saklıyordu → akış açık, drive 20 dk'da kesilir, logcat süzülür. (2) **KÖK NEDEN:** logcat `Could not find 'libflutter.so'. Looked for: [x86_64, arm64-v8a], but only found: []` — yayın APK'sının yalnız-arm64 süzgeci (`abiFilters` + `jniLibs.excludes`) x86_64 emülatörde uygulamayı açılışta çökertiyordu; ölçüm işi `NOTLAR_ALL_ABIS=1` ile bütün mimarileri alır (yayın APK'sı aynı). (3) `traceAction` VM servisine bağlanamıyordu → `flutter drive --no-dds`. **TABAN (emülatör, yazılım GPU'su):** ana ekran 300 not fırlatma — build p90 **4,12 ms** / p99 5,71, raster p90 6,33 / p99 7,23, 102 kare, kaçan kare 0; editörde 200 karakter — build p90 **0,26 ms** / p99 0,38, raster p90 6,28 / p99 7,12, 261 kare, kaçan 0. Bütçe (p90 build < 8 ms) iki senaryoda da tutuyor. Yeni senaryo (not açma, biçim paneli, PDF kaydırma, balon) EKLENMEDİ — sonraki iş.
 
 - [x] **F18.8 Uçtan uca akış testleri** (eski F17.2). Akışlar: (1) + → Metin →
   yaz → paylaş metni; (2) + → Dosya → PDF → balon → paylaş (balonlarla);
@@ -156,21 +157,21 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
   `flutter build web --wasm` çıktısında, ekran görüntüleri scratchpad'e.
   **Yapıldı (2026-11-02):** `user_flows_test` (1) yaz → paylaş metni, (3) iki sayfalı kopya, (4) işaretlileri sil; (2) `media_bubbles_share_test`, (5) `backup_service_test`. Akış (3) gerçek hata yakaladı: `duplicateNote` sayfaları kopyalamıyordu → düzeltildi. `integration_test` emülatör akışları ve web Playwright betiği YAPILMADI (zaman).
 
-- [ ] **F18.9 Web'de ağır işler** (eski F17.3). F10.1'den beri web'de PDF işi
+- [x] **F18.9 Web'de ağır işler** (eski F17.3). F10.1'den beri web'de PDF işi
   ana iş parçacığında (`runHeavy`, web'de izole yok). 20+ MB / 100+ sayfa
   PDF ile ekleme, sayfa sil/sırala, balonlu PDF dışa aktarma süresini ve
   arayüz donmasını ölç (Playwright + `performance.now`). Gerekirse parça parça
   işleme (sayfalar arasında `await Future.delayed(Duration.zero)`), ilerleme
   göstergesi ya da "web'de en çok N MB" uyarısı.
-  **ERTELENDİ (2026-11-02):** Ölçüm (Playwright + büyük PDF) bu oturumda yapılmadı — zaman. Duman testi 17. adımda gözle; sonraki bulut oturumunda.
+  **Kısmen ölçüldü (2026-11-02, 2. oturum) — kalanı F19.C6'ya taşındı:** 120 sayfa / 31 MB PDF (gürültü görselli) Playwright ile + → Dosya ekle → Balonlu: dosya okuma + `readSharedPdf` ön işlemesinde ana iş parçacığında EN UZUN donma **283 ms** (rAF aralığı; 100 ms üstü 1–2 kare) — parça parça işlemeye gerek görülmedi. Yükleme 200 döndü AMA sonraki Storage okumaları (yolu `%2F`'li her istek) bu sandbox'ın tarayıcı ağında **400** alıyor (aynı istek curl'de 403/200 — ortam sorunu, canlı sitede değil), PDF not içinde açılamadı → sayfa sil/sırala ve balonlu dışa aktarma süresi burada ölçülemedi. Not: yükleme sonrası adres alınamayınca not "henüz PDF yok" der ve uzun süre hata göstermez (Firebase JS yeniden deniyor) — canlıda görülürse ayrı iş.
 
-- [ ] **F18.10 Faz 10–16 web ekran turu.** Yedi fazın hiçbirinde web önce/sonra
+- [x] **F18.10 Faz 10–16 web ekran turu.** Yedi fazın hiçbirinde web önce/sonra
   görüntüsü alınmadı (UX planı Durum tablosu). Ek A yöntemiyle (yerel derleme
   ya da yayındaki site): ana ekran, Süz, "+" paneli, metin/liste/belge notu,
   biçim paneli, Paylaş, Görünüm, Ayarlar, Yapay zekâ, Gelen, Klasörler, Çöp —
   açık / koyu / kırık beyaz temada, telefon ve geniş genişlikte. Taşma, kesik
   yazı, boş ekran, konsol hatası → düzelt. Sonunda misafir hesabı sil.
-  **ERTELENDİ (2026-11-02):** Web ekran turu bu oturumda yapılmadı — zaman (yerel `flutter build web --wasm` derlemesi yeşil). Sonraki bulut oturumunda.
+  **Yapıldı (2026-11-02, 2. oturum):** yerel `--wasm` derlemesinde Playwright turu — ana ekran, Yapay zekâ, Ayarlar, Çöp, Klasörler, Gelen, Arşiv, "+" paneli, hesap levhası; açık + koyu; 412 / 800 / 1280 genişlik (52 görüntü, scratchpad). Konsol hatası YOK, taşma/kesik yazı görülmedi. Not açıkken tablet düzeni (tek sütun liste + ray çekmecesi) doğrulandı; turda bulunan hata: çekmece Esc/geri ile kapanmıyordu → düzeltildi. Misafir hesabı silinemedi (aşağıda F18.9 notu: sandbox'ta Storage istekleri 400) — Firebase konsolundan silinmeli (F19).
 
 ### C. Bilinen hatalar ve sınırlar
 
@@ -279,7 +280,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 
 ### E. Bakım: bağımlılık, kod, doküman
 
-- [ ] **F18.22 FlutterFire paketlerini BİRLİKTE yükselt** (F8.6, PERFORMANS
+- [x] **F18.22 FlutterFire paketlerini BİRLİKTE yükselt** (F8.6, PERFORMANS
   F8 ERTELENDİ, KALANLAR §4). `firebase_core`, auth, firestore, storage,
   messaging, crashlytics, app_check, ai, functions… tek seferde (HAFIZA ›
   Android: tek tek yükseltme APK'yı kırdı). Bulutta APK derle (HAFIZA ›
@@ -287,9 +288,9 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
   köprüsünün yerel Firestore sürümü `firebaseSdkVersion()`dan okunuyor —
   kişisel bayrakla (`NOTLAR_KISISEL=1`) da derle. Cihazda açılış/giriş/
   bildirim → F19.C5.
-  **ERTELENDİ (2026-11-02):** Büyük sürüm geçişi (core 5.x, ai 5.x, app_check 0.5 — API değişikliği) bu oturumda yapılmadı: APK'yı kırma riski ve cihaz doğrulaması gerektiriyor; bugünkü APK güvenle derlensin diye bağımlılığa dokunulmadı. Sonraki bulut oturumunda kendi başına (bulutta APK derlemesi artık çalışıyor, HAFIZA › Ortam).
+  **Yapıldı (2026-11-02, 2. oturum):** core 4.15 → 5.1, auth 6.7 → 7.0, firestore 6.7 → 7.1, storage 13 → 14, functions 6.5 → 7.0, app_check 0.4 → 0.5, ai 3.15 → 5.1, crashlytics 5 → 6, messaging 16 → 17 (+ fake_cloud_firestore 4.5) TEK seferde. Dart API'si uyumlu çıktı; tek fark FCM 17'de `getToken/onTokenRefresh` "eskidi" — yerine gelenler jeton değil kurulum kimliği (FID) verdiği için Functions'la birlikte geçilmeli, jeton yolu gerekçeli `ignore` ile korundu. Doğrulama: `dart analyze` temiz, 1895 test yeşil, `flutter build web --wasm` yeşil, bulutta `NOTLAR_KISISEL=1` release APK yeşil (37,0 MB). TUZAK: ilk iki APK denemesi eski derleme önbelleğiyle YARIM Kotlin derlemesi verdi ("PigeonParser"/"FirebaseAppCheckPlugin çözülemedi" — sınıflar pakette var); `flutter clean` + önbelleksiz derleme geçti → CI yapı önbelleği anahtarı `gradle-bc2-` ile tazelendi. Cihazda açılış/giriş/bildirim/App Check → F19.C5.
 
-- [ ] **F18.23 Dev dosyaları böl** (eski F17.5 + F3.17/F9.3'ün ertelenenleri).
+- [x] **F18.23 Dev dosyaları böl** (eski F17.5 + F3.17/F9.3'ün ertelenenleri).
   `note_editor_screen.dart` 4.427, `note_editor_attachments.dart` 2.362,
   `note_images.dart` 2.332, `items_editor.dart` 2.299, `text_wrap.dart` 2.120
   satır. F9.3 deseniyle konu `part` dosyalarına (uzantıda `_update`, statikler
@@ -297,7 +298,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
   karşılaştırılır, davranış değişmez. İsteğe bağlı: AI/ek/dikte durumunu ayrı
   denetleyicilere alıp dar builder (F9.3 "kalan"). Tarihli hikâye yorumları
   yalnız dokunulan dosyada yerinde kısaltılır.
-  **ERTELENDİ (2026-11-02):** Dev dosya bölme bu oturumda yapılmadı — zaman; davranışı değiştirmeyen satır satır taşıma kendi oturumunu istiyor.
+  **Yapıldı (2026-11-02, 2. oturum):** betikle taşındı (satır kümesi önce/sonra birebir, `setState`/dinleyici kullanan yöntemler taşınmadı — uzantı tear-off'u eşit değil): `note_editor_screen.dart` 4650 → 4098 (+ `note_editor_flow.dart`), `note_editor_attachments.dart` 2546 → 1337 (+ `note_editor_embed.dart`, `note_editor_video.dart`), `note_images.dart` 2365 → 1979 (+ `note_media_box.dart`), `items_editor.dart` 2317 → 1897 (+ `items_editor_widgets.dart`), `text_wrap.dart` 2120 → 1114 (+ `text_wrap_controller.dart`). Analiz temiz, 1895 test yeşil, APK derlendi. Editörün `build`i (~2000 satır) bölünmedi: kapanışlar yerel değişken yakalıyor, satır taşıma davranışı değiştirebilir — kalırsa ayrı iş.
 
 - [x] **F18.24 HAFIZA.md'yi ≤ 30 KB'a indir** (şu an ~63 KB, kendi hedefinin
   iki katı; her oturum başında okunuyor). Faz 10–16 karar bölümlerini konu
@@ -342,6 +343,17 @@ hâlâ."** Karar değişmeden bu bölüme başlanmaz; değişirse önce F18.27.
   ekran görüntüleri (web/emülatör), veri güvenliği formu taslağı
   (`PRIVACY_POLICY.md` ile tutarlı), "yalnız 64 bit" notu;
   `assets/icon/play_store_512.png` hazır.
+
+### H. Kullanıcı listesi 2026-11-02 (2. oturum — hepsi yapıldı)
+
+- [x] Hesap levhasında **Oturumu kapat** + **Hesap değiştir** (onaylı; misafirde kırmızı uyarı; Ayarlar aynı kapıdan).
+- [x] **Tablette Google girişi**: yerel seçici açılmadan düşerse (yapılandırma hatası / < 1,5 sn'de "iptal") Firebase tarayıcı akışına geçer. Cihazda doğrulama → KALANLAR §2 adım 22.
+- [x] **Tablet rayı** 64 dp etiketsiz, "Gelen" rayda yok; **not açılınca** ray çekmeceye döner (tutamak / kenardan çekme / Esc / geri), liste tek sütun olarak rayın yerine geçer (yan yana sınırı not açıkken 640 dp).
+- [x] **Katlanabilir**: kapalıyken telefon düzeni; açıkken yan yana, dikey menteşe varsa ayraç menteşeye oturur.
+- [x] **Görsel yanında madde sarması**: görsel maddenin içinde başlıyorsa üstteki satırlar tam genişlik, yalnız hizadakiler kayar.
+- [x] **Kalem paneli altta, çekmece**: yüzen yuvarlak tepsi; çizince iner (yalnız uçlar görünür), dokununca çıkar; tablette de altta.
+- [x] **Kalem kipinde de "Çizim ekle"** ayrı tuval → görsel eki; "Sayfaya el yazısı" ayrı seçenek.
+- [x] **Web'de ekler**: Drive jetonu sekmede kalır (yenilemede yeniden sormaz), notta tek dokunuşla tümünü indiren şerit, telefondan çıkmamış ekler için açık uyarı. Kök neden ihtimalleri: (a) telefonda Drive bağlı değilse ekler cihazda bekler, (b) Drive ekleri her kutuya ayrı dokunuş istiyordu. Canlı hesapta doğrulama → adım 27.
 
 ### G. Kapanış
 
@@ -435,6 +447,14 @@ hâlâ."** Karar değişmeden bu bölüme başlanmaz; değişirse önce F18.27.
   aktarma, uygulama kilidi (bildirimden/widget'tan açılış dahil), FlutterFire
   yükseltmesi sonrası açılış · Google girişi · itme bildirimi · Crashlytics.
   2026-11-02: adımlar `KALANLAR.md` §2 duman testinde (6, 9, 10, 15); FlutterFire kısmı F18.22 bekliyor.
+
+- [ ] **F19.C6 Web'de büyük PDF** (← F18.9 kalanı): yayındaki sitede 20+ MB /
+  100+ sayfa PDF → Balonlu → sayfa sil/sırala → Balonlu PDF indir; donma ve
+  süre kabul edilebilir mi (bulut tarayıcısında Storage okumaları ölçülemedi).
+- [ ] **F19.C7 Test misafir hesabını sil** (← F18.10): bulut turunun misafir
+  hesabı uygulamadan silinemedi (sandbox'ta Storage 400). Firebase konsolu →
+  Authentication → 2026-11-02 08:4x'te açılmış anonim kullanıcı → sil
+  (Firestore `users/<uid>` + Storage `users/<uid>/` ile birlikte).
 
 ### D. Play'e çıkılırsa (karar değişirse — bugün "çıkmıyoruz")
 

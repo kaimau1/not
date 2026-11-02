@@ -192,10 +192,13 @@ jobs:
       - name: Gradle yapı önbelleğini geri yükle
         uses: actions/cache/restore@v4
         with:
+          # bc2 (F18.22, 2026-11-02): FlutterFire büyük sürüm geçişinde eski
+          # yapı önbelleği Kotlin derlemesini YARIM bıraktı (bulutta görüldü:
+          # aynı paketteki sınıflar "çözülemedi"); temiz önbellekle başlanır.
           path: ~/.gradle/caches/build-cache-1
-          key: gradle-bc-${{ runner.os }}-${{ github.run_id }}
+          key: gradle-bc2-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
-            gradle-bc-${{ runner.os }}-
+            gradle-bc2-${{ runner.os }}-
 
       - uses: subosito/flutter-action@v2
         with:
@@ -294,7 +297,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ~/.gradle/caches/build-cache-1
-          key: gradle-bc-${{ runner.os }}-${{ github.run_id }}
+          key: gradle-bc2-${{ runner.os }}-${{ github.run_id }}
 
       # BOYUT RAPORU: APK'nın içinde hangi mimarilerin ve hangi büyük
       # dosyaların olduğunu yazar. 2026-08-16'da APK 60 MB'tan 100 MB'a
@@ -538,19 +541,31 @@ jobs:
 
       - name: Emülatörde ölç
         uses: reactivecircus/android-emulator-runner@v2
+        # KÖK NEDEN (F18.7, koşu 41412956542 logcat): yayın APK'sı yalnız
+        # arm64 paketliyor; x86_64 emülatörde libflutter.so yoktu, uygulama
+        # açılışta çöküyordu. Ölçüm derlemesi bütün mimarileri alır.
+        env:
+          NOTLAR_ALL_ABIS: '1'
         with:
           api-level: 34
           arch: x86_64
           target: google_apis
           disable-animations: true
-          script: (adb logcat -v time flutter:V AndroidRuntime:E '*:S' > build/logcat.txt &) ; flutter drive -v --profile --driver=test_driver/perf_driver.dart --target=integration_test/perf_test.dart -d emulator-5554 2>&1 | tail -n 400
+          # F18.7 (2026-11-02): `| tail` çıktıyı koşu BİTENE kadar tutuyordu —
+          # "32 dk çıktı yok" aslında görünmeyen çıktıydı. Artık akar; drive
+          # 20 dk'da kesilir ki logcat özeti her durumda basılsın.
+          # --no-dds (koşu 41418608415): DDS VM servisini tek istemciye
+          # kilitliyor; testin `traceAction`ı kendi servisine bağlanamıyordu
+          # ("Failed to connect to VM Service … Connection refused").
+          script: mkdir -p build && (adb logcat -v time > build/logcat.txt &) ; timeout 20m flutter drive -v --profile --no-dds --driver=test_driver/perf_driver.dart --target=integration_test/perf_test.dart -d emulator-5554 2>&1 | grep -v '^\s*$' | cut -c1-400 ; echo "drive bitti" 
 
       # Özet iş günlüğüne de basılır: artifact kotası sık dolu (F18.7).
       - name: Özeti göster
         if: always()
         run: |
           cat build/perf/perf_summary.json 2>/dev/null || echo "özet yok"
-          echo '--- logcat (son 200) ---'; tail -n 200 build/logcat.txt 2>/dev/null || true
+          echo '--- logcat: flutter / hata (son 300) ---'
+          grep -E 'flutter|AndroidRuntime|FATAL|dev.kaimau|Dart VM|Observatory' build/logcat.txt 2>/dev/null | tail -n 300 || true
 
       - name: Özeti yükle
         if: always()

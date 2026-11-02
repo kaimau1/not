@@ -205,6 +205,11 @@ void main() {
   testWidgets('not karttan genişleyerek açılır, kapanınca karta döner', (
     tester,
   ) async {
+    // Telefon genişliği: geniş pencerede not yan bölmede açılır (2026-11-02:
+    // not açıkken yan yana sınırı 640 dp), karttan büyümez.
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final cardKey = GlobalKey();
     final pages = ValueNotifier<List<Page<void>>>([]);
     late BuildContext cardContext;

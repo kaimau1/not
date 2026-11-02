@@ -380,7 +380,61 @@ class AppLocalizationsTr extends AppLocalizations {
   String get account => 'Hesap';
 
   @override
-  String get signOut => 'Çıkış yap';
+  String get signOut => 'Oturumu kapat';
+
+  @override
+  String get switchAccount => 'Hesap değiştir';
+
+  @override
+  String get switchAccountConfirm =>
+      'Bu hesaptan çıkılıp Google hesap seçici açılacak. Notların bu hesapta kalır, geri döndüğünde yine burada olur.';
+
+  @override
+  String get switchAccountGuestWarning =>
+      'Misafir hesaptasın: hesap değiştirirsen bu cihazdaki notlara bir daha ulaşamazsın. Önce Google hesabına bağla ya da tam yedek al.';
+
+  @override
+  String get penTrayShow => 'Kalem tepsisini aç';
+
+  @override
+  String get penTrayHide => 'Kalem tepsisini indir';
+
+  @override
+  String get addDrawingSubtitle =>
+      'Ayrı tuvalde çiz, görsel olarak nota gömülsün';
+
+  @override
+  String get addHandwriting => 'Sayfaya el yazısı';
+
+  @override
+  String get addHandwritingSubtitle =>
+      'Kalem kipi: notun sayfasına doğrudan yaz';
+
+  @override
+  String webDriveBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ek Google Drive’ında — görmek için izin ver',
+      one: '1 ek Google Drive’ında — görmek için izin ver',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get webDriveShow => 'Göster';
+
+  @override
+  String webAttachmentsOnPhone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count ek henüz eklendiği telefondan buluta çıkmadı. Telefonda Ayarlar → Senkron → Drive’ı bağla.',
+      one: '1 ek henüz eklendiği telefondan buluta çıkmadı. Telefonda Ayarlar → Senkron → Drive’ı bağla.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get signOutConfirm => 'Çıkış yapmak istediğine emin misin?';

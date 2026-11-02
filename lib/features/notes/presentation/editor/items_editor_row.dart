@@ -571,6 +571,9 @@ extension _ItemsRow on ItemsEditorState {
         phase: _movePhase(item.id),
         child: _floatRow(
           id: item.id,
+          // Görsel maddenin ilk satırından aşağıda başlıyorsa satır kaymaz;
+          // yalnız o hizadaki satırlar sarılır (bkz. `_wrapped`).
+          inlineBelow: ItemsEditorState.itemLineHeight(context, baseStyle),
           // Satırın metne AYRILAMAYAN payı: yatay dolgu + tutamaç + kutucuk/
           // numara + sil düğmesinin yeri. Sarma kararı bu pay düşülerek
           // verilmeli (bkz. _FloatRow.reserved).

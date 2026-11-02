@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show DisplayFeatureType;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,12 +22,118 @@ import 'app_commands.dart';
 /// tablet (~800) ve telefon tek panelde kalır.
 const double kSplitBreakpoint = 840;
 
+/// **NOT AÇIKKEN** ana-detay sınırı (kullanıcı isteği 2026-11-02: "tablet
+/// modunda not açılınca direkt ekranı kapladı; soldaki dashboard en soldaki
+/// menünün yerine gelsin, tek sütunluk olsun, menü gizlensin"). Not açıkken
+/// ray çekmeceye döner (bkz. AppFrame) ve liste tek sütuna iner; dikey tablet
+/// (~800 dp) ve açık katlanabilir (~670 dp) de listeyle notu yan yana
+/// gösterebilir: 260 dp liste + ≥ 380 dp not.
+const double kNoteSplitBreakpoint = 640;
+
+/// Konum bir not/defter ekranı mı (kabuğun içinden açılmış)?
+bool isNoteLocation(String path) =>
+    path.startsWith('/note/') || path.startsWith('/notebook/');
+
+/// Liste + not yan yana mı çizilecek? [width] kabuğun genişliği.
+bool splitActiveFor(double width, {required bool noteOpen}) =>
+    width >= kSplitBreakpoint || (noteOpen && width >= kNoteSplitBreakpoint);
+
+/// Kabuğun ŞU AN yan yana çizip çizmediği ve solda listenin tek sütun olup
+/// olmadığı. `/` rotası buna bakar: yan yanayken liste zaten solda,
+/// sağa yer tutucu konur (eskiden genişliğe bakıyordu; not açıkken sınır
+/// değişince liste iki kez kurulurdu).
+class SplitScope extends InheritedWidget {
+  const SplitScope({
+    super.key,
+    required this.active,
+    required this.singleColumn,
+    required super.child,
+  });
+
+  final bool active;
+
+  /// Sol paneldeki liste tek sütun çizilsin (not açık).
+  final bool singleColumn;
+
+  static SplitScope? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<SplitScope>();
+
+  static bool activeOf(BuildContext context) =>
+      maybeOf(context)?.active ?? false;
+
+  @override
+  bool updateShouldNotify(SplitScope oldWidget) =>
+      active != oldWidget.active || singleColumn != oldWidget.singleColumn;
+}
+
+/// Sol paneldeki listeye "tek sütun çiz" der (bkz. DashboardScreen).
+class DashboardPaneScope extends InheritedWidget {
+  const DashboardPaneScope({
+    super.key,
+    required this.singleColumn,
+    required super.child,
+  });
+
+  final bool singleColumn;
+
+  static bool singleColumnOf(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<DashboardPaneScope>()
+          ?.singleColumn ??
+      false;
+
+  @override
+  bool updateShouldNotify(DashboardPaneScope oldWidget) =>
+      singleColumn != oldWidget.singleColumn;
+}
+
+/// Not açıkken sol listenin varsayılan genişliği (tek sütun kart).
+const double _defaultNotePaneWidth = 320;
+
+/// Not açıkken sol panel genişliği — liste kipindekinden AYRI saklanır:
+/// tek sütunluk dar liste ile geniş ızgara aynı tercihi paylaşamaz.
+final notePaneWidthProvider = NotifierProvider<NotePaneWidthNotifier, double>(
+  NotePaneWidthNotifier.new,
+);
+
+class NotePaneWidthNotifier extends Notifier<double> {
+  static const _key = 'note_pane_width';
+
+  @override
+  double build() =>
+      ref.watch(sharedPreferencesProvider).getDouble(_key) ??
+      _defaultNotePaneWidth;
+
+  void set(double value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setDouble(_key, value);
+  }
+}
+
 const double _defaultListPaneWidth = 380;
 const double _minListPaneWidth = 260;
 
 /// Sağ panele de en az bu kadar yer kalsın; ayraç sona kadar itilip editör
 /// görünmez hâle gelmesin.
 const double _minDetailWidth = 360;
+
+/// Not açıkken notun en dar hâli (bkz. [kNoteSplitBreakpoint]).
+const double _minNoteDetailWidth = 380;
+
+/// Pencerede DİKEY bir menteşe/kıvrım (katlanabilir telefon açık, kitap
+/// gibi tutulmuş) varsa onun alanı; yoksa `null`. Yatay kıvrım (masa üstü
+/// duruşu) yan yana düzeni etkilemez.
+Rect? verticalHingeOf(BuildContext context) {
+  final size = MediaQuery.sizeOf(context);
+  for (final f in MediaQuery.displayFeaturesOf(context)) {
+    if (f.type == DisplayFeatureType.cutout) continue;
+    final b = f.bounds;
+    // Dikey: kıvrım ekranın boyunca uzanır ve iki yanda yer kalır.
+    final vertical = b.height >= size.height * 0.9 && b.width < size.width / 4;
+    if (vertical && b.left > 0 && b.right < size.width) return b;
+  }
+  return null;
+}
 
 /// Sol panel genişliği (kullanıcı ayraçla değiştirir, kalıcı saklanır).
 final listPaneWidthProvider = NotifierProvider<ListPaneWidthNotifier, double>(
@@ -51,7 +158,10 @@ class ListPaneWidthNotifier extends Notifier<double> {
 /// geniş ekran tasarımı). Uzun bir notu yazarken ya da PDF'in yanında not
 /// alırken listenin kapladığı üçte bir ekran geri kazanılır. Ray'daki
 /// düğme ve Ctrl+\ ile açılıp kapanır; tercih kalıcıdır.
-final listPaneCollapsedProvider = boolPref('list_pane_collapsed', defaultValue: false);
+final listPaneCollapsedProvider = boolPref(
+  'list_pane_collapsed',
+  defaultValue: false,
+);
 
 /// **NOT TAM EKRAN** (kullanıcı isteği 2026-11-02: "üç parçalı görünümde not
 /// tam ekran olmuyor"): ray ve liste geçici olarak kalkar, sistem çubukları
@@ -105,27 +215,51 @@ class _SplitShellState extends ConsumerState<SplitShell> {
   @override
   Widget build(BuildContext context) {
     final total = MediaQuery.sizeOf(context).width;
-    if (total < kSplitBreakpoint) return widget.child;
-
-    // Pencere daralınca saklanan genişlik sağ panele yer bırakmayabilir.
-    final maxPane = (total - _minDetailWidth).clamp(
-      _minListPaneWidth,
-      double.infinity,
-    );
-    final stored = ref.watch(listPaneWidthProvider);
-    final paneWidth = (_dragWidth ?? stored).clamp(_minListPaneWidth, maxPane);
     final router = GoRouter.of(context);
-
     return ListenableBuilder(
       listenable: router.routerDelegate,
       builder: (context, _) {
+        final location = currentLocation(router);
+        final noteOpen = isNoteLocation(location);
+        final active = splitActiveFor(total, noteOpen: noteOpen);
+        if (!active) {
+          return SplitScope(
+            active: false,
+            singleColumn: false,
+            child: widget.child,
+          );
+        }
+        // Pencere daralınca saklanan genişlik sağ panele yer bırakmayabilir.
+        final minDetail = noteOpen ? _minNoteDetailWidth : _minDetailWidth;
+        final maxPane = (total - minDetail).clamp(
+          _minListPaneWidth,
+          double.infinity,
+        );
+        final stored = noteOpen
+            ? ref.watch(notePaneWidthProvider)
+            : ref.watch(listPaneWidthProvider);
+        // KATLANABİLİR (2026-11-02): dikey menteşe varsa ayraç menteşeye
+        // oturur — liste bir yarıda, not öbür yarıda; hiçbir şey kıvrımın
+        // altında kalmaz. Kullanıcı sürüklerse onun seçimi geçerli.
+        final hinge = verticalHingeOf(context);
+        final hingeWidth = hinge == null || _dragWidth != null
+            ? null
+            : hinge.center.dx - _dividerWidth / 2;
+        final paneWidth = (_dragWidth ?? hingeWidth ?? stored).clamp(
+          _minListPaneWidth,
+          maxPane,
+        );
         // Açık not yokken (yalnız yer tutucu) liste gizlenmez: gizli liste +
         // boş sağ panel, kullanıcıya hiçbir şey göstermeyen bir ekran olurdu.
         final collapsed =
             (ref.watch(listPaneCollapsedProvider) ||
                 ref.watch(noteFullscreenProvider)) &&
-            currentLocation(router) != '/';
-        return _split(context, paneWidth, maxPane, collapsed);
+            location != '/';
+        return SplitScope(
+          active: true,
+          singleColumn: noteOpen,
+          child: _split(context, paneWidth, maxPane, collapsed, noteOpen),
+        );
       },
     );
   }
@@ -135,6 +269,7 @@ class _SplitShellState extends ConsumerState<SplitShell> {
     double paneWidth,
     double maxPane,
     bool collapsed,
+    bool noteOpen,
   ) {
     return Scaffold(
       body: Row(
@@ -151,7 +286,13 @@ class _SplitShellState extends ConsumerState<SplitShell> {
             tween: Tween<double>(end: collapsed ? 0 : 1),
             duration: const Duration(milliseconds: 240),
             curve: Curves.easeInOutCubic,
-            child: SizedBox(width: paneWidth, child: const DashboardScreen()),
+            child: SizedBox(
+              width: paneWidth,
+              child: DashboardPaneScope(
+                singleColumn: noteOpen,
+                child: const DashboardScreen(),
+              ),
+            ),
             builder: (context, open, pane) => ClipRect(
               child: Align(
                 alignment: AlignmentDirectional.centerEnd,
@@ -177,7 +318,11 @@ class _SplitShellState extends ConsumerState<SplitShell> {
               onDragEnd: () {
                 final width = _dragWidth;
                 if (width != null) {
-                  ref.read(listPaneWidthProvider.notifier).set(width);
+                  if (noteOpen) {
+                    ref.read(notePaneWidthProvider.notifier).set(width);
+                  } else {
+                    ref.read(listPaneWidthProvider.notifier).set(width);
+                  }
                 }
                 setState(() => _dragWidth = null);
               },

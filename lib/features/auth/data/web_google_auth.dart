@@ -30,7 +30,12 @@ class WebGoogleAuth implements AuthRepository {
   // aynı Firebase projesi kullanılırsa) kullanıcı zaten girişli geldiği için
   // bu akış hiç çalışmaz. Tek başına çalışırken popup doğru seçim.
   Future<UserCredential> signInWithGoogle() =>
-      _auth.signInWithPopup(GoogleAuthProvider());
+      _auth.signInWithPopup(_provider());
+
+  /// Hesap seçici HER SEFERİNDE görünsün: "Hesap değiştir" (2026-11-02)
+  /// tarayıcının son hesabıyla sessizce aynı hesaba dönüyordu.
+  static GoogleAuthProvider _provider() =>
+      GoogleAuthProvider()..setCustomParameters({'prompt': 'select_account'});
 
   @override
   Future<UserCredential> signInAnonymously() => _auth.signInAnonymously();
@@ -39,7 +44,7 @@ class WebGoogleAuth implements AuthRepository {
   Future<UserCredential> linkWithGoogle() {
     final user = _auth.currentUser;
     if (user == null) return signInWithGoogle();
-    return user.linkWithPopup(GoogleAuthProvider());
+    return user.linkWithPopup(_provider());
   }
 
   @override

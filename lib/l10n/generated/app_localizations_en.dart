@@ -384,6 +384,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signOut => 'Sign out';
 
   @override
+  String get switchAccount => 'Switch account';
+
+  @override
+  String get switchAccountConfirm =>
+      'You\'ll be signed out of this account and the Google account picker will open. Your notes stay in this account and will be here when you come back.';
+
+  @override
+  String get switchAccountGuestWarning =>
+      'You\'re using a guest account: if you switch, you\'ll lose access to the notes on this device. Link a Google account or make a full backup first.';
+
+  @override
+  String get penTrayShow => 'Show pen tray';
+
+  @override
+  String get penTrayHide => 'Tuck pen tray away';
+
+  @override
+  String get addDrawingSubtitle =>
+      'Draw on a separate canvas, embedded as an image';
+
+  @override
+  String get addHandwriting => 'Handwrite on page';
+
+  @override
+  String get addHandwritingSubtitle =>
+      'Pen mode: write directly on the note page';
+
+  @override
+  String webDriveBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count attachments are in your Google Drive — allow access to see them',
+      one: '1 attachment is in your Google Drive — allow access to see it',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get webDriveShow => 'Show';
+
+  @override
+  String webAttachmentsOnPhone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count attachments haven\'t left the phone they were added on yet. On the phone: Settings → Sync → connect Drive.',
+      one: '1 attachment hasn\'t left the phone it was added on yet. On the phone: Settings → Sync → connect Drive.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get signOutConfirm => 'Are you sure you want to sign out?';
 
   @override

@@ -1,4 +1,5 @@
 import '../../../core/app_icons.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +10,7 @@ import '../../inbox/presentation/shared_hub_screen.dart' show HubCountBadge;
 import '../../friends/data/friends_repository.dart';
 import '../../friends/presentation/friends_screen.dart';
 import 'auth_providers.dart';
+import 'sign_out_actions.dart';
 import '../../../core/widgets/app_sheet.dart';
 
 /// **ANA EKRANIN HESAP SİMGESİ** — kullanıcı isteği 2026-08-18: "giriş
@@ -92,8 +94,8 @@ final accountPendingCountProvider = Provider<int>((ref) {
 ///
 /// Kullanıcı isteği 2026-08-18: "hesap seçeneklerini ana sayfadaki sağ
 /// üstteki 3 noktaya da koy, profil bilgileri vs." Ayarların HESAP alanının
-/// kısayolu: burada yalnız sık gereken üç yol var, yıkıcı işlemler (çıkış,
-/// hesap silme) Ayarlar'da kalır ki yanlışlıkla dokunulmasın.
+/// kısayolu: sık gereken yollar + oturum (hesap değiştir, oturumu kapat —
+/// ikisi de onaylı). Hesap SİLME Ayarlar'da kalır ki yanlışlıkla dokunulmasın.
 Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
   context: context,
   showDragHandle: true,
@@ -182,6 +184,34 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
                 onTap: () {
                   Navigator.pop(sheetContext);
                   context.push('/settings?area=account');
+                },
+              ),
+              // OTURUM (kullanıcı isteği 2026-11-02): hesap değiştirmek ve
+              // çıkmak için Ayarlar'ın dibine inmek gerekiyordu. İkisi de
+              // onay ister; misafirde uyarı kırmızıdır (veri kaybı).
+              const Divider(height: 8),
+              ListTile(
+                key: const ValueKey('account-switch'),
+                leading: const Icon(Icons.switch_account_outlined),
+                title: Text(l10n.switchAccount),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  await confirmAndSwitchAccount(context, ref);
+                },
+              ),
+              ListTile(
+                key: const ValueKey('account-sign-out'),
+                leading: Icon(
+                  Icons.logout,
+                  color: anonymous ? scheme.error : null,
+                ),
+                title: Text(
+                  l10n.signOut,
+                  style: anonymous ? TextStyle(color: scheme.error) : null,
+                ),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  await confirmAndSignOut(context, ref);
                 },
               ),
               const SizedBox(height: 8),

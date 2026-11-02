@@ -177,10 +177,11 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
   Widget build(BuildContext context) {
     final a = widget.attachment;
     if (!_waitsWebDrive(a)) return widget.builder(context, a);
-    return ValueListenableBuilder(
-      valueListenable: _webDriveUrls,
-      builder: (context, urls, _) {
-        final url = urls[a.driveId];
+    // Jeton gelince (şeritteki "Göster" ya da başka kutu) bu kutu da iner.
+    return ListenableBuilder(
+      listenable: Listenable.merge([_webDriveUrls, webDriveTokenRevision]),
+      builder: (context, _) {
+        final url = _webDriveUrls.value[a.driveId];
         if (url != null) {
           return widget.builder(context, a.copyWith(downloadUrl: url));
         }
@@ -218,6 +219,126 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
                       ),
                   ],
                 ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Web'de bu ekin içeriğine HİÇBİR yoldan ulaşılamıyor mu: Storage adresi
+/// yok, Drive kimliği yok — dosya ekleyen cihazdan (telefon) henüz çıkmamış.
+bool webAttachmentStuckOnDevice(Attachment a) =>
+    kIsWeb &&
+    !a.skipsUpload &&
+    !a.isWebVideo &&
+    !a.isUploaded &&
+    !a.isInDrive;
+
+/// **WEB: NOTUN EKLERİ İÇİN TEK ŞERİT** (kullanıcı bulgusu 2026-11-02: "ekler
+/// hâlâ webte gelmiyor"). İki ayrı durum açıkça söylenir:
+/// * Ekler Drive'da, bu sekmede izin yok → "N ek Google Drive'da · Göster":
+///   TEK dokunuşla bağlanır ve hepsi iner (eskiden her kutuya ayrı ayrı
+///   dokunmak gerekiyordu, şerit yoktu).
+/// * Ekler telefondan hiç çıkmamış (Drive telefonda bağlanmamış) → nasıl
+///   düzeltileceğini söyler; web'in yapabileceği bir şey yok.
+class WebAttachmentsBanner extends ConsumerStatefulWidget {
+  const WebAttachmentsBanner({super.key, required this.attachments});
+
+  final List<Attachment> attachments;
+
+  @override
+  ConsumerState<WebAttachmentsBanner> createState() =>
+      _WebAttachmentsBannerState();
+}
+
+class _WebAttachmentsBannerState extends ConsumerState<WebAttachmentsBanner> {
+  bool _busy = false;
+  bool _hasToken = false;
+
+  @override
+  void initState() {
+    super.initState();
+    webDriveTokenRevision.addListener(_check);
+    _check();
+  }
+
+  @override
+  void dispose() {
+    webDriveTokenRevision.removeListener(_check);
+    super.dispose();
+  }
+
+  Future<void> _check() async {
+    final token = await ref.read(driveAuthProvider).accessToken();
+    if (mounted && (token != null) != _hasToken) {
+      setState(() => _hasToken = token != null);
+    }
+  }
+
+  Future<void> _connect(Attachment first) async {
+    setState(() => _busy = true);
+    // Diyalog + bağlan + ilk eki indir; jeton gelince öbür kutular kendisi
+    // iner (bkz. WebDriveGate).
+    await resolveWebDriveAttachment(context, ref, first);
+    await _check();
+    if (mounted) setState(() => _busy = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!kIsWeb) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return ValueListenableBuilder(
+      valueListenable: _webDriveUrls,
+      builder: (context, urls, _) {
+        final inDrive = [
+          for (final a in widget.attachments)
+            if (_waitsWebDrive(a) && !urls.containsKey(a.driveId)) a,
+        ];
+        final stuck = widget.attachments
+            .where(webAttachmentStuckOnDevice)
+            .length;
+        final needsConnect = inDrive.isNotEmpty && !_hasToken;
+        if (!needsConnect && stuck == 0) return const SizedBox.shrink();
+        return Padding(
+          key: const ValueKey('web-attachments-banner'),
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+          child: Material(
+            color: scheme.secondaryContainer.withValues(alpha: 0.7),
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
+              child: Row(
+                children: [
+                  Icon(
+                    needsConnect
+                        ? Icons.add_to_drive_outlined
+                        : Icons.phone_android_outlined,
+                    size: 20,
+                    color: scheme.onSecondaryContainer,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      needsConnect
+                          ? l10n.webDriveBanner(inDrive.length)
+                          : l10n.webAttachmentsOnPhone(stuck),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSecondaryContainer,
+                      ),
+                    ),
+                  ),
+                  if (needsConnect)
+                    TextButton(
+                      key: const ValueKey('web-attachments-connect'),
+                      onPressed: _busy ? null : () => _connect(inDrive.first),
+                      child: Text(l10n.webDriveShow),
+                    ),
+                ],
               ),
             ),
           ),

@@ -64,8 +64,18 @@ class PenTray extends StatefulWidget {
     this.hint,
     this.trayHeight = 92,
     this.rail = false,
+    this.dock = false,
     this.actions = const [],
   });
+
+  /// **ÇEKMECE KİPİ** (kullanıcı isteği 2026-11-02: "kalem modunda kalem
+  /// paneli altta olsun, daha kibar olsun; kullanılmıyorken çekmece gibi
+  /// içeri girsin, oraya tıklanınca birazcık yukarı gelsin"). Not sayfasının
+  /// ÜSTÜNDE, altta yüzen yuvarlak bir tepsi: çizim başlayınca (ya da bir
+  /// süre dokunulmayınca) aşağı kayar, yalnız kalemlerin uçları görünür;
+  /// dokununca ya da yukarı çekince geri çıkar. Sayfa yerleşimi hiç
+  /// değişmez (yer kaplamaz, üstte durur).
+  final bool dock;
 
   /// Tablet penceresi mi (ray + ana-detayda da pencerenin kendisi ölçülür):
   /// orada kalemler sayfanın SOLUNDA sütun olur (kullanıcı isteği 2026-11-02:
@@ -100,6 +110,60 @@ class PenTray extends StatefulWidget {
 class _PenTrayState extends State<PenTray> {
   bool _panel = false;
 
+  /// Çekmece kipinde tepsi aşağıda mı (bkz. [PenTray.dock]).
+  bool _tucked = false;
+  Timer? _idle;
+  int _strokes = 0;
+
+  /// Bu kadar dokunulmazsa çekmece kendiliğinden iner.
+  static const _idleDelay = Duration(seconds: 6);
+
+  @override
+  void initState() {
+    super.initState();
+    _strokes = _ink.ink.length;
+    if (widget.dock) {
+      _ink.addListener(_onInk);
+      _armIdle();
+    }
+  }
+
+  @override
+  void dispose() {
+    _idle?.cancel();
+    if (widget.dock) _ink.removeListener(_onInk);
+    super.dispose();
+  }
+
+  /// Çizim değişti (yeni çizgi, silme): kullanıcı sayfayla meşgul — tepsi
+  /// yol vermek için iner.
+  void _onInk() {
+    final count = _ink.ink.length;
+    final changed = count != _strokes;
+    _strokes = count;
+    if ((_ink.drawing || changed) && !_panel) _setTucked(true);
+  }
+
+  void _armIdle() {
+    _idle?.cancel();
+    if (!widget.dock) return;
+    _idle = Timer(_idleDelay, () {
+      if (mounted && !_panel) _setTucked(true);
+    });
+  }
+
+  void _setTucked(bool value) {
+    if (!widget.dock || value == _tucked || !mounted) return;
+    setState(() => _tucked = value);
+    if (!value) _armIdle();
+  }
+
+  /// Tepsiye her dokunuş: açık tut, zamanlayıcıyı yeniden kur.
+  void _touched() {
+    if (_tucked) _setTucked(false);
+    _armIdle();
+  }
+
   InkController get _ink => widget.controller;
 
   PenTrayTool get _current {
@@ -115,6 +179,7 @@ class _PenTrayState extends State<PenTray> {
 
   void _tap(PenTrayTool tool) {
     HapticFeedback.selectionClick();
+    _touched();
     if (tool == _current) {
       _togglePanel();
       return;
@@ -138,6 +203,7 @@ class _PenTrayState extends State<PenTray> {
 
   /// Renk/kalınlık paneli: şeritte yerinde açılır, sütunda açılır pencere.
   void _togglePanel() {
+    _touched();
     if (!widget.rail) {
       setState(() => _panel = !_panel);
       return;
@@ -171,7 +237,11 @@ class _PenTrayState extends State<PenTray> {
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: _ink,
-      builder: (context, _) => widget.rail ? _buildRail(context) : _build(context),
+      builder: (context, _) => widget.rail
+          ? _buildRail(context)
+          : widget.dock
+          ? _buildDock(context)
+          : _build(context),
     );
   }
 
@@ -213,6 +283,124 @@ class _PenTrayState extends State<PenTray> {
                 ..._controlButtons(l10n),
                 ...widget.actions,
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  /// Çekmece tepsisi: ince tutamak · denetimler · kalemler. Aşağıdayken
+  /// yalnız tutamak + kalem uçları görünür ([_kDockPeek]).
+  Widget _buildDock(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final current = _current;
+    final labels = _labels(l10n);
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final tray = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Tutamak: çekmece olduğunu söyler; dokununca/çekince açılır-kapanır.
+        Semantics(
+          button: true,
+          label: _tucked ? l10n.penTrayShow : l10n.penTrayHide,
+          child: GestureDetector(
+            key: const ValueKey('pen-dock-handle'),
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _setTucked(!_tucked),
+            child: SizedBox(
+              height: _kDockHandle,
+              width: double.infinity,
+              child: Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: scheme.onSurfaceVariant.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Kalemler tutamağın hemen altında: aşağıdayken UÇLARI görünür.
+        SizedBox(
+          height: _kDockTools,
+          child: Row(
+            children: [
+              const SizedBox(width: 6),
+              for (final tool in PenTrayTool.values)
+                Expanded(
+                  child: _TrayTool(
+                    key: ValueKey('pen-tray-${tool.name}'),
+                    tool: tool,
+                    label: labels[tool]!,
+                    selected: tool == current,
+                    ink: _ink.color,
+                    onTap: () => _tap(tool),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: _colorDot(scheme, l10n),
+              ),
+            ],
+          ),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: _panel
+              ? _Options(controller: _ink, tool: current)
+              : const SizedBox(width: double.infinity),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 2),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [..._controlButtons(l10n), ...widget.actions],
+          ),
+        ),
+      ],
+    );
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560),
+        child: _DockSlide(
+          tucked: _tucked && !_panel,
+          peek: _kDockHandle + _kDockPeek,
+          bottomGap: 8 + bottomInset,
+          onExpand: _touched,
+          onCollapse: () => _setTucked(true),
+          child: Listener(
+            onPointerDown: (_) => _armIdle(),
+            child: Material(
+              color: scheme.surfaceContainerHigh.withValues(alpha: 0.97),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(
+                  color: scheme.outlineVariant.withValues(alpha: 0.55),
+                ),
+              ),
+              shadowColor: Colors.transparent,
+              clipBehavior: Clip.antiAlias,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.10),
+                      blurRadius: 18,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: tray,
+              ),
             ),
           ),
         ),
@@ -375,6 +563,117 @@ class _PenTrayState extends State<PenTray> {
         ),
       ),
     );
+  }
+}
+
+/// Çekmece tutamağının yüksekliği.
+const double _kDockHandle = 18;
+
+/// Kalem şeridinin çekmecedeki yüksekliği.
+const double _kDockTools = 62;
+
+/// Aşağıdayken kalem uçlarından görünen pay.
+const double _kDockPeek = 22;
+
+/// Çekmeceyi aşağı/yukarı kaydırır. Aşağıdayken yalnız [peek] kadarı görünür
+/// ve TAMAMI tek dokunuşluk "aç" hedefidir (kalemlere yanlışlıkla basılıp
+/// araç değişmesin). Dikey sürükleme de açar/kapar.
+class _DockSlide extends StatefulWidget {
+  const _DockSlide({
+    required this.tucked,
+    required this.peek,
+    required this.bottomGap,
+    required this.onExpand,
+    required this.onCollapse,
+    required this.child,
+  });
+
+  final bool tucked;
+  final double peek;
+  final double bottomGap;
+  final VoidCallback onExpand;
+  final VoidCallback onCollapse;
+  final Widget child;
+
+  @override
+  State<_DockSlide> createState() => _DockSlideState();
+}
+
+class _DockSlideState extends State<_DockSlide> {
+  double _height = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final hidden = math.max(0.0, _height - widget.peek);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return GestureDetector(
+      behavior: HitTestBehavior.deferToChild,
+      onVerticalDragEnd: (d) {
+        final v = d.primaryVelocity ?? 0;
+        if (v > 150) widget.onCollapse();
+        if (v < -150) widget.onExpand();
+      },
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(end: widget.tucked ? hidden + widget.bottomGap : 0),
+        duration: reduceMotion
+            ? Duration.zero
+            : const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+        builder: (context, dy, child) => Transform.translate(
+          offset: Offset(0, dy),
+          child: child,
+        ),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(10, 0, 10, widget.bottomGap),
+          child: _MeasureHeight(
+            onHeight: (h) {
+              if ((h - _height).abs() > 0.5) setState(() => _height = h);
+            },
+            child: Stack(
+              children: [
+                AbsorbPointer(absorbing: widget.tucked, child: widget.child),
+                if (widget.tucked)
+                  // Yalnız GÖRÜNEN pay (tutamak + kalem uçları).
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    height: widget.peek,
+                    child: GestureDetector(
+                      key: const ValueKey('pen-dock-peek'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: widget.onExpand,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Çocuğun yüksekliğini kare sonunda bildirir (panel açılınca değişir).
+class _MeasureHeight extends StatefulWidget {
+  const _MeasureHeight({required this.onHeight, required this.child});
+
+  final ValueChanged<double> onHeight;
+  final Widget child;
+
+  @override
+  State<_MeasureHeight> createState() => _MeasureHeightState();
+}
+
+class _MeasureHeightState extends State<_MeasureHeight> {
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final box = context.findRenderObject();
+      if (box is RenderBox && box.hasSize) widget.onHeight(box.size.height);
+    });
+    return widget.child;
   }
 }
 

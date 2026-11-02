@@ -773,8 +773,74 @@ abstract class AppLocalizations {
   /// No description provided for @signOut.
   ///
   /// In tr, this message translates to:
-  /// **'Çıkış yap'**
+  /// **'Oturumu kapat'**
   String get signOut;
+
+  /// No description provided for @switchAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap değiştir'**
+  String get switchAccount;
+
+  /// No description provided for @switchAccountConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu hesaptan çıkılıp Google hesap seçici açılacak. Notların bu hesapta kalır, geri döndüğünde yine burada olur.'**
+  String get switchAccountConfirm;
+
+  /// No description provided for @switchAccountGuestWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Misafir hesaptasın: hesap değiştirirsen bu cihazdaki notlara bir daha ulaşamazsın. Önce Google hesabına bağla ya da tam yedek al.'**
+  String get switchAccountGuestWarning;
+
+  /// No description provided for @penTrayShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem tepsisini aç'**
+  String get penTrayShow;
+
+  /// No description provided for @penTrayHide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem tepsisini indir'**
+  String get penTrayHide;
+
+  /// No description provided for @addDrawingSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayrı tuvalde çiz, görsel olarak nota gömülsün'**
+  String get addDrawingSubtitle;
+
+  /// No description provided for @addHandwriting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaya el yazısı'**
+  String get addHandwriting;
+
+  /// No description provided for @addHandwritingSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem kipi: notun sayfasına doğrudan yaz'**
+  String get addHandwritingSubtitle;
+
+  /// No description provided for @webDriveBanner.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 ek Google Drive’ında — görmek için izin ver} other{{count} ek Google Drive’ında — görmek için izin ver}}'**
+  String webDriveBanner(int count);
+
+  /// No description provided for @webDriveShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Göster'**
+  String get webDriveShow;
+
+  /// No description provided for @webAttachmentsOnPhone.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 ek henüz eklendiği telefondan buluta çıkmadı. Telefonda Ayarlar → Senkron → Drive’ı bağla.} other{{count} ek henüz eklendiği telefondan buluta çıkmadı. Telefonda Ayarlar → Senkron → Drive’ı bağla.}}'**
+  String webAttachmentsOnPhone(int count);
 
   /// No description provided for @signOutConfirm.
   ///

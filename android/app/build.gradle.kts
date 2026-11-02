@@ -28,6 +28,9 @@ if (keystorePropertiesFile.exists()) {
     keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
 
+/// Bütün mimariler paketlensin mi (yalnız emülatörde kare ölçümü — F18.7).
+val allAbis = System.getenv("NOTLAR_ALL_ABIS") == "1"
+
 android {
     namespace = "dev.kaimau.notlar"
     // receive_sharing_intent 1.9.0 compileSdk 37 istiyor (Google'ın önerdiği
@@ -70,8 +73,14 @@ android {
         //
         // BEDELİ: uygulama 32 bit cihazlarda (2015 öncesi telefonlar,
         // bazı ucuz tabletler) HİÇ kurulmaz. Bilinçli karar.
-        ndk {
-            abiFilters += "arm64-v8a"
+        // EMÜLATÖR (F18.7, 2026-11-02): kare ölçümü x86_64 emülatörde koşar;
+        // bu süzgeçler orada `libflutter.so`yu da atıyordu → uygulama açılışta
+        // çöküyor, `flutter drive` sonsuza dek bekliyordu ("32 dk çıktı yok").
+        // `NOTLAR_ALL_ABIS=1` yalnız ölçüm işinde verilir; yayın APK'sı değişmez.
+        if (!allAbis) {
+            ndk {
+                abiFilters += "arm64-v8a"
+            }
         }
     }
 
@@ -102,12 +111,14 @@ android {
             // .so'lar diske açılır (kurulu boyut biraz artar) — indirme ve
             // paylaşım boyutu öncelikli.
             useLegacyPackaging = true
-            excludes += setOf(
-                "**/x86_64/**",
-                "**/x86/**",
-                "**/armeabi-v7a/**",
-                "**/armeabi/**",
-            )
+            if (!allAbis) {
+                excludes += setOf(
+                    "**/x86_64/**",
+                    "**/x86/**",
+                    "**/armeabi-v7a/**",
+                    "**/armeabi/**",
+                )
+            }
         }
     }
 

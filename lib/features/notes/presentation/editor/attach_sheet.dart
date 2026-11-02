@@ -78,6 +78,7 @@ List<({String id, IconData icon, String label})> attachSheetCatalog(
       label: l10n.scanDocument,
     ),
   (id: 'drawing', icon: Icons.brush_outlined, label: l10n.addDrawing),
+  (id: 'handwriting', icon: Icons.draw_outlined, label: l10n.addHandwriting),
   (id: 'any-file', icon: Icons.upload_file_outlined, label: l10n.quickAddFile),
   if (!kIsWeb) (id: 'audio', icon: Icons.mic_none, label: l10n.recordAudio),
   if (!kIsWeb)
@@ -176,7 +177,21 @@ class _AttachSheet extends StatelessWidget {
         l10n.addYouTubeVideo,
         l10n.addYouTubeVideoSubtitle,
       ),
-      ('drawing', Icons.brush_outlined, l10n.addDrawing, null),
+      // ÇİZİM = ayrı bir çizim GÖRSELİ (kullanıcı isteği 2026-11-02: "kalem
+      // modu olsa bile eski çizim ekle ayrı bir çizim görseli ekleyip nota
+      // gömülmesi için açılsın"); sayfanın kendisine yazmak ayrı satır.
+      (
+        'drawing',
+        Icons.brush_outlined,
+        l10n.addDrawing,
+        l10n.addDrawingSubtitle,
+      ),
+      (
+        'handwriting',
+        Icons.draw_outlined,
+        l10n.addHandwriting,
+        l10n.addHandwritingSubtitle,
+      ),
       if (copied != null)
         (
           'paste-attachment',

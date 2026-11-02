@@ -93,7 +93,8 @@ class NoteOpenPage<T> extends Page<T> {
     final origin = NoteOpenOrigin.take(noteId);
     // Geniş ekranda not sağ bölmede açılır; soldaki karttan büyümesi bölme
     // sınırını aşan tuhaf bir hareket olurdu.
-    final narrow = MediaQuery.sizeOf(context).width < kSplitBreakpoint;
+    // Not açıkken kabuk daha dar pencerede de yan yana çizer.
+    final narrow = MediaQuery.sizeOf(context).width < kNoteSplitBreakpoint;
     // Hareketi azalt (F15.5): karttan büyüme yerine kısa bir solma.
     final motion = motionOf(context);
     return _NoteOpenRoute<T>(

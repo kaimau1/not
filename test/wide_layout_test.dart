@@ -46,6 +46,7 @@ GoRouter _router() => GoRouter(
           '/archive',
           '/trash',
           '/settings',
+          '/note/n1',
         ])
           GoRoute(
             path: path,
@@ -150,9 +151,9 @@ void main() {
   testWidgets('ray elle daraltılıp genişletilir, tercih kalıcıdır', (
     tester,
   ) async {
-    await _pump(tester, const Size(1400, 900));
+    await _pump(tester, const Size(1700, 900));
     NavigationRail rail() => tester.widget(find.byType(NavigationRail));
-    // 1280 üstünde kendiliğinden etiketli.
+    // 1600 üstünde kendiliğinden etiketli.
     expect(rail().extended, isTrue);
     await tester.tap(find.byTooltip('Menüyü daralt'));
     await tester.pumpAndSettle();
@@ -168,9 +169,43 @@ void main() {
     await tester.tap(find.text('Klasörler'));
     await tester.pumpAndSettle();
     expect(currentLocation(router), '/folders');
-    await tester.tap(find.text('Gelen ve paylaşılanlar').first);
+    await tester.tap(find.byTooltip('Arşiv').first);
     await tester.pumpAndSettle();
-    expect(currentLocation(router), '/inbox');
+    expect(currentLocation(router), '/archive');
+  });
+
+  testWidgets('dar ray: 64 dp, etiketsiz, Gelen bölümü yok', (tester) async {
+    await _pump(tester, const Size(1024, 768));
+    final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
+    expect(rail.extended, isFalse);
+    expect(rail.minWidth, kRailWidth);
+    expect(rail.destinations.length, AppSection.values.length - 1);
+    expect(find.byTooltip('Gelen ve paylaşılanlar'), findsNothing);
+  });
+
+  testWidgets('not açıkken ray çekmeceye döner, tutamakla açılır', (
+    tester,
+  ) async {
+    final router = await _pump(tester, const Size(1024, 768));
+    router.go('/note/n1');
+    await tester.pumpAndSettle();
+    expect(find.byType(NavigationRail), findsNothing);
+    expect(find.byKey(const ValueKey('rail-drawer-handle')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('rail-drawer-handle')));
+    await tester.pumpAndSettle();
+    expect(find.byType(NavigationRail), findsOneWidget);
+    // Esc kapatır, tutamak yeniden açar.
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.byType(NavigationRail), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('rail-drawer-handle')));
+    await tester.pumpAndSettle();
+    // Çekmecede bölüme gidince çekmece kapanır, ray yerine oturur.
+    await tester.tap(find.text('Arşiv'));
+    await tester.pumpAndSettle();
+    expect(currentLocation(router), '/archive');
+    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(find.byKey(const ValueKey('rail-drawer-handle')), findsNothing);
   });
 
   test('konumdan bölüm çözümü', () {

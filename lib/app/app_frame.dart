@@ -1,12 +1,16 @@
+import 'dart:async';
+import 'dart:ui' show DisplayFeature;
+
 import '../core/app_icons.dart';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/l10n_ext.dart';
 import '../features/folders/data/folder_activity.dart';
 import '../features/friends/presentation/friends_screen.dart';
-import '../features/inbox/presentation/shared_hub_screen.dart';
 import '../features/settings/settings_providers.dart';
 import 'app_commands.dart';
 import 'split_shell.dart';
@@ -17,9 +21,21 @@ import '../core/utils/web_ready.dart';
 /// telefonda — hiçbir şey değişmez.
 const double kRailBreakpoint = 600;
 
+/// DAR RAYIN genişliği (kullanıcı isteği 2026-11-02: "tablette soldaki menü
+/// daraltılmalı, çok yer kaplıyor"): Material'in 80 dp'si yerine 64, etiket
+/// yok — adı ipucunda. Kendiliğinden etiketli açılış da 1280 → 1600.
+const double kRailWidth = 64;
+
+/// Rayın bölümleri: "Gelen ve paylaşılanlar" RAYDA YOK (aynı istek: "geleni
+/// oradan çıkar, zaten ana ekranda var" — ana ekranın "Gelen" çipi).
+final List<AppSection> railSections = [
+  for (final s in AppSection.values)
+    if (s != AppSection.inbox) s,
+];
+
 /// Rayın kendiliğinden ETİKETLİ (geniş) açıldığı genişlik. Kullanıcı elle
 /// daraltıp genişletirse o seçim kalıcıdır (bkz. [railExtendedProvider]).
-const double kRailAutoExtendBreakpoint = 1280;
+const double kRailAutoExtendBreakpoint = 1600;
 
 /// Ray bu yükseklikten kısa pencerede çizilmez: yatay tutulan TELEFON 600 dp
 /// genişliği aşıyor ama 360–420 dp yüksekliğe altı bölüm + düğmeler sığmıyor.
@@ -86,39 +102,10 @@ class AppFrame extends ConsumerWidget {
     final fullscreen = ref.watch(noteFullscreenProvider);
     Widget content = child;
     if (showRail) {
-      final rtl = Directionality.of(context) == TextDirection.rtl;
-      content = Row(
-        children: [
-          // Ağaç şekli sabit: tam ekrana geçişte açık not yeniden kurulmaz.
-          if (fullscreen)
-            const SizedBox.shrink()
-          else
-            _AppRail(showListToggle: size.width >= kSplitBreakpoint),
-          if (fullscreen)
-            const SizedBox.shrink()
-          else
-            const VerticalDivider(width: 1, thickness: 1),
-          Expanded(
-            // İçerik, pencerenin değil KENDİ alanının boyunu "ekran" sanmalı:
-            // ana-detay kararı (kSplitBreakpoint), sütun sayısı ve dar ekran
-            // kısayolları hep `MediaQuery.sizeOf` okuyor. Ray yer kaplarken
-            // pencere genişliğine bakmak, listenin yanındaki editörü
-            // [kSplitBreakpoint]'in söz verdiğinden dar bırakırdı.
-            child: LayoutBuilder(
-              builder: (context, box) => MediaQuery(
-                data: MediaQuery.of(context).copyWith(size: box.biggest),
-                // Rayın yanındaki ekran, kenar çentiği/sistem payını ikinci
-                // kez uygulamasın — o kenarı ray zaten karşılıyor.
-                child: MediaQuery.removePadding(
-                  context: context,
-                  removeLeft: !rtl,
-                  removeRight: rtl,
-                  child: AppRailScope(child: child),
-                ),
-              ),
-            ),
-          ),
-        ],
+      content = _RailFrame(
+        showListToggle: size.width >= kSplitBreakpoint,
+        fullscreen: fullscreen,
+        child: child,
       );
     }
     return AppShortcuts(
@@ -130,8 +117,280 @@ class AppFrame extends ConsumerWidget {
   }
 }
 
+/// Ray + içerik. **Not açıkken ray ÇEKMECE olur** (kullanıcı isteği
+/// 2026-11-02: "not açılınca soldaki dashboard en soldaki menünün yerine
+/// gelsin, menü gizlensin, oradan çekilip açılan bir çekmece olsun"): sol
+/// kenarda ince bir tutamak kalır; dokununca ya da kenardan sağa çekince ray
+/// notun üstüne kayar. Liste rayın yerine geçer (bkz. kNoteSplitBreakpoint).
+///
+/// Ağaç şekli sabit (ray yuvası hep var, yalnız genişliği değişir): not
+/// açılıp kapanırken ve tam ekrana geçerken içerik YENİDEN KURULMAZ.
+class _RailFrame extends StatefulWidget {
+  const _RailFrame({
+    required this.showListToggle,
+    required this.fullscreen,
+    required this.child,
+  });
+
+  final bool showListToggle;
+  final bool fullscreen;
+  final Widget child;
+
+  @override
+  State<_RailFrame> createState() => _RailFrameState();
+}
+
+class _RailFrameState extends State<_RailFrame>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _drawer = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 220),
+  );
+
+  /// Açık çekmece Esc'i alsın diye odak onda (çerçevenin kökü zaten odaklı,
+  /// `autofocus` yetmiyor).
+  final _drawerFocus = FocusNode(debugLabel: 'rail-drawer');
+
+  @override
+  void initState() {
+    super.initState();
+    _drawer.addStatusListener((status) {
+      if (status == AnimationStatus.forward) _drawerFocus.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _drawer.dispose();
+    _drawerFocus.dispose();
+    super.dispose();
+  }
+
+  void _close() {
+    _drawerFocus.unfocus();
+    unawaited(_drawer.reverse());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final router = GoRouter.of(context);
+    return ListenableBuilder(
+      listenable: router.routerDelegate,
+      builder: (context, _) {
+        final noteOpen = isNoteLocation(currentLocation(router));
+        final docked = !widget.fullscreen && !noteOpen;
+        if (docked && _drawer.value > 0) _drawer.value = 0;
+        final canDrawer = noteOpen && !widget.fullscreen;
+        return Stack(
+          children: [
+            Row(
+              children: [
+                if (docked)
+                  _AppRail(showListToggle: widget.showListToggle)
+                else
+                  const SizedBox.shrink(),
+                if (docked)
+                  const VerticalDivider(width: 1, thickness: 1)
+                else
+                  const SizedBox.shrink(),
+                Expanded(
+                  // İçerik, pencerenin değil KENDİ alanının boyunu "ekran"
+                  // sanmalı: ana-detay kararı (kSplitBreakpoint), sütun sayısı
+                  // ve dar ekran kısayolları hep `MediaQuery.sizeOf` okuyor.
+                  child: LayoutBuilder(
+                    builder: (context, box) {
+                      final window = MediaQuery.of(context);
+                      // Menteşe/kıvrım PENCERE koordinatında gelir; içerik
+                      // rayın sağından başlıyorsa kaydırılır (katlanabilir,
+                      // bkz. verticalHingeOf).
+                      final dx = rtl ? 0.0 : window.size.width - box.maxWidth;
+                      return MediaQuery(
+                        data: window.copyWith(
+                          size: box.biggest,
+                          displayFeatures: [
+                            for (final f in window.displayFeatures)
+                              DisplayFeature(
+                                bounds: f.bounds.shift(Offset(-dx, 0)),
+                                type: f.type,
+                                state: f.state,
+                              ),
+                          ],
+                        ),
+                        // Rayın yanındaki ekran, kenar çentiği/sistem payını
+                        // ikinci kez uygulamasın — o kenarı ray karşılıyor.
+                        child: MediaQuery.removePadding(
+                          context: context,
+                          removeLeft: docked && !rtl,
+                          removeRight: docked && rtl,
+                          child: AppRailScope(child: widget.child),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+            if (canDrawer) ...[
+              // Kenardan çekme + görünür tutamak.
+              PositionedDirectional(
+                start: 0,
+                top: 0,
+                bottom: 0,
+                width: 14,
+                child: GestureDetector(
+                  key: const ValueKey('rail-drawer-edge'),
+                  behavior: HitTestBehavior.translucent,
+                  onHorizontalDragUpdate: (d) {
+                    final delta = (rtl ? -d.delta.dx : d.delta.dx) / 240;
+                    _drawer.value = (_drawer.value + delta).clamp(0, 1);
+                  },
+                  onHorizontalDragEnd: (d) {
+                    final v = d.primaryVelocity ?? 0;
+                    final open = rtl ? v < -200 : v > 200;
+                    if (open || _drawer.value > 0.4) {
+                      _drawer.forward();
+                    } else {
+                      _drawer.reverse();
+                    }
+                  },
+                ),
+              ),
+              _DrawerHandle(onTap: _drawer.forward),
+              AnimatedBuilder(
+                animation: _drawer,
+                builder: (context, _) {
+                  final t = Curves.easeOutCubic.transform(_drawer.value);
+                  if (t == 0) return const SizedBox.shrink();
+                  final scheme = Theme.of(context).colorScheme;
+                  // Açık çekmece geri tuşunu ve Esc'i önce kendisi alır.
+                  return BackButtonListener(
+                    onBackButtonPressed: () async {
+                      _close();
+                      return true;
+                    },
+                    child: CallbackShortcuts(
+                      bindings: {
+                        const SingleActivator(LogicalKeyboardKey.escape):
+                            _close,
+                      },
+                      child: Focus(
+                        focusNode: _drawerFocus,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: GestureDetector(
+                                onTap: _close,
+                                child: ColoredBox(
+                                  color: Colors.black.withValues(
+                                    alpha: 0.32 * t,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            PositionedDirectional(
+                              start: 0,
+                              top: 0,
+                              bottom: 0,
+                              child: FractionalTranslation(
+                                translation: Offset(
+                                  (rtl ? 1 : -1) * (1 - t),
+                                  0,
+                                ),
+                                child: Material(
+                                  elevation: 8,
+                                  color: scheme.surfaceContainerLow,
+                                  borderRadius:
+                                      const BorderRadiusDirectional.horizontal(
+                                        end: Radius.circular(20),
+                                      ).resolve(Directionality.of(context)),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: _AppRail(
+                                    showListToggle: false,
+                                    forceExtended: true,
+                                    onNavigate: _close,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Çekmecenin sol kenardaki küçük tutamağı: notun yazısını örtmesin diye
+/// ince ve soluk; dokunulabilir alanı 48 dp.
+class _DrawerHandle extends StatelessWidget {
+  const _DrawerHandle({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return PositionedDirectional(
+      start: 0,
+      top: 0,
+      bottom: 0,
+      child: Center(
+        child: Semantics(
+          button: true,
+          label: context.l10n.railExpand,
+          child: Tooltip(
+            message: context.l10n.railExpand,
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                key: const ValueKey('rail-drawer-handle'),
+                onTap: onTap,
+                borderRadius: const BorderRadius.horizontal(
+                  right: Radius.circular(12),
+                ),
+                child: SizedBox(
+                  width: 20,
+                  height: 72,
+                  child: Center(
+                    child: Container(
+                      width: 5,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: scheme.outline.withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AppRail extends ConsumerWidget {
-  const _AppRail({required this.showListToggle});
+  const _AppRail({
+    required this.showListToggle,
+    this.forceExtended = false,
+    this.onNavigate,
+  });
+
+  /// Çekmece hâli: hep etiketli.
+  final bool forceExtended;
+
+  /// Bir bölüme gidilince (çekmeceyi kapatmak için).
+  final VoidCallback? onNavigate;
 
   /// Liste panelini gizle/göster düğmesi yalnız ana-detay düzeninde
   /// ([kSplitBreakpoint] üstü) anlamlı.
@@ -144,11 +403,14 @@ class _AppRail extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final width = MediaQuery.sizeOf(context).width;
     final extended =
-        ref.watch(railExtendedProvider) ?? width >= kRailAutoExtendBreakpoint;
+        forceExtended ||
+        (ref.watch(railExtendedProvider) ?? width >= kRailAutoExtendBreakpoint);
+    void go(VoidCallback action) {
+      onNavigate?.call();
+      action();
+    }
+
     final collapsed = ref.watch(listPaneCollapsedProvider);
-    // "Gelen ve paylaşılanlar" bölümü (2026-10-17): gelen notlar + okunmamış
-    // ortak notlar tek rozette (bkz. sharedHubBadgeProvider).
-    final inboxCount = ref.watch(sharedHubBadgeProvider);
     // Paylaşılan KLASÖRLERDE okunmamış hareket — geniş ekranda/web'de klasör
     // şeridi solda kalabalıkta kayboluyordu (kullanıcı bulgusu 2026-10-17:
     // "yeni bir şey geldiğinde anlaşılmıyor"). Ortak notlar artık Gelen ve
@@ -179,17 +441,19 @@ class _AppRail extends ConsumerWidget {
                           final section = AppSection.of(
                             currentLocation(router),
                           );
+                          final index = railSections.indexOf(
+                            section ?? AppSection.inbox,
+                          );
                           return NavigationRail(
                             backgroundColor: Colors.transparent,
                             extended: extended,
-                            minExtendedWidth: 220,
-                            labelType: extended
-                                ? NavigationRailLabelType.none
-                                : NavigationRailLabelType.all,
-                            selectedIndex: section?.index,
+                            minWidth: kRailWidth,
+                            minExtendedWidth: 200,
+                            labelType: NavigationRailLabelType.none,
+                            selectedIndex: index < 0 ? null : index,
                             groupAlignment: -0.85,
                             onDestinationSelected: (i) =>
-                                openSection(router, AppSection.values[i]),
+                                go(() => openSection(router, railSections[i])),
                             leading: Padding(
                               padding: const EdgeInsets.only(
                                 top: 8,
@@ -199,8 +463,9 @@ class _AppRail extends ConsumerWidget {
                                   ? FloatingActionButton.extended(
                                       heroTag: 'rail-new-note',
                                       elevation: 0,
-                                      onPressed: () =>
-                                          createAndOpenNote(ref, router),
+                                      onPressed: () => go(
+                                        () => createAndOpenNote(ref, router),
+                                      ),
                                       icon: const Icon(Icons.edit_outlined),
                                       label: Text(l10n.newNoteShort),
                                     )
@@ -208,30 +473,29 @@ class _AppRail extends ConsumerWidget {
                                       heroTag: 'rail-new-note',
                                       elevation: 0,
                                       tooltip: '${l10n.newNoteShort} (Ctrl+N)',
-                                      onPressed: () =>
-                                          createAndOpenNote(ref, router),
+                                      onPressed: () => go(
+                                        () => createAndOpenNote(ref, router),
+                                      ),
                                       child: const Icon(Icons.edit_outlined),
                                     ),
                             ),
                             destinations: [
-                              for (final s in AppSection.values)
+                              for (final s in railSections)
                                 NavigationRailDestination(
-                                  // Gelen notlarda bekleyen sayısı: rayda göz önünde
-                                  // dursun, menüye girmeden görülsün.
-                                  icon: Badge(
-                                    isLabelVisible:
-                                        (s == AppSection.inbox &&
-                                            inboxCount > 0) ||
-                                        (s == AppSection.folders &&
-                                            sharedUnread > 0),
-                                    label: Text(
-                                      s == AppSection.folders
-                                          ? (sharedUnread > kFolderBadgeMax
-                                                ? '$kFolderBadgeMax+'
-                                                : '$sharedUnread')
-                                          : '$inboxCount',
+                                  // Etiketsiz dar rayda ad ipucunda.
+                                  icon: Tooltip(
+                                    message: s.label(context),
+                                    child: Badge(
+                                      isLabelVisible:
+                                          s == AppSection.folders &&
+                                          sharedUnread > 0,
+                                      label: Text(
+                                        sharedUnread > kFolderBadgeMax
+                                            ? '$kFolderBadgeMax+'
+                                            : '$sharedUnread',
+                                      ),
+                                      child: Icon(s.icon),
                                     ),
-                                    child: Icon(s.icon),
                                   ),
                                   selectedIcon: Icon(s.selectedIcon),
                                   label: Text(s.label(context)),
@@ -266,8 +530,9 @@ class _AppRail extends ConsumerWidget {
                             extended: extended,
                             icon: AppIcons.friends,
                             label: l10n.friendsTitle,
-                            onPressed: () =>
-                                openFriendsScreenOrExplain(context, ref),
+                            onPressed: () => go(
+                              () => openFriendsScreenOrExplain(context, ref),
+                            ),
                           ),
                           _RailAction(
                             extended: extended,
@@ -276,16 +541,17 @@ class _AppRail extends ConsumerWidget {
                             shortcut: 'Ctrl+/',
                             onPressed: () => showShortcutsHelp(context),
                           ),
-                          _RailAction(
-                            extended: extended,
-                            icon: extended ? Icons.menu_open : Icons.menu,
-                            label: extended
-                                ? l10n.railCollapse
-                                : l10n.railExpand,
-                            onPressed: () => ref
-                                .read(railExtendedProvider.notifier)
-                                .set(!extended),
-                          ),
+                          if (!forceExtended)
+                            _RailAction(
+                              extended: extended,
+                              icon: extended ? Icons.menu_open : Icons.menu,
+                              label: extended
+                                  ? l10n.railCollapse
+                                  : l10n.railExpand,
+                              onPressed: () => ref
+                                  .read(railExtendedProvider.notifier)
+                                  .set(!extended),
+                            ),
                         ],
                       ),
                     ),
@@ -325,7 +591,7 @@ class _RailAction extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     if (!extended) {
       return SizedBox(
-        width: 80,
+        width: kRailWidth,
         child: Center(
           child: IconButton(
             tooltip: tooltip,
@@ -339,7 +605,7 @@ class _RailAction extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: SizedBox(
-        width: 220,
+        width: 200,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
           child: TextButton.icon(
