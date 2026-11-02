@@ -5,7 +5,7 @@ Firebase senkronlu, yapay zeka destekli not uygulaması — **Android** ve **web
 ## Özellikler
 
 - **Kesintisiz otomatik senkron** — Firestore offline-first çalışır: notlar internet yokken de yazılır, bağlantı gelince kendiliğinden tüm cihazlara yayılır. Senkron düğmesi yoktur, her şey anlıktır.
-- **Dashboard** — Google Keep tarzı masonry ızgara; pencere genişliğine göre 2–6 sütun, tek sayfada olabildiğince çok not.
+- **Dashboard** — dengeli sütunlu ızgara ya da liste; pencere genişliğine göre sütun sayısı, geniş ekranda liste + not yan yana.
 - **Not tipleri** — metin, alışveriş/kontrol listesi (işaretlenebilir), sıralı liste (sürükle-bırak).
 - **Ekler** — fotoğraf/ekran görüntüsü ve PDF; Firebase Storage'da (istersen Google Drive'ında) saklanır.
 - **Yapay zeka** — not özeti/analizi, PDF sohbeti, sesli komut, canlı çeviri, semantik arama, günlük brifing. Varsayılan dahili Gemini (Firebase AI Logic, günlük kota); istersen kendi anahtarınla Gemini, OpenAI, Anthropic ya da OpenRouter. Anahtar yalnızca cihazda saklanır.
@@ -20,7 +20,12 @@ Firebase senkronlu, yapay zeka destekli not uygulaması — **Android** ve **web
 - **Fotoğraftan metin (OCR)** — görseldeki metni yapay zeka ile çıkarıp nota ekle.
 - **Notlarla sohbet** — "geçen hafta yazdığım tarif neydi?" gibi soruları AI'a sor.
 - **Haftalık özet** — son 7 günün notlarından otomatik özet ve yapılacaklar.
-- **Android ana ekran widget'ı** — son notların bir bakışta.
+- **Android ana ekran widget'ları** — son notlar, hızlı not, sesli not, bugünün hatırlatıcıları.
+- **Not bağlantıları** — `[[` ile başka nota bağla, geri bağlantılar ve "İlgili notlar" önerisi.
+- **Tekrarlayan hatırlatıcılar** — her gün / hafta içi / haftalık / aylık / yıllık; sesle de kurulur.
+- **Aralıklı tekrar kartları** — nottan AI ile soru–cevap kartları, SM-2 planlama, "Bugünün kartları".
+- **Tam yedek ve içe aktarma** — ekler, çizimler, balonlar ve klasörlerle tek `.notyedek` dosyası (çift kayıtsız geri yükleme); Google Keep Takeout, Markdown/txt, Evernote `.enex` içe aktarma.
+- **Uygulama kilidi** (isteğe bağlı) ve not kilidi — cihaz kilidi, şifre ya da desen.
 
 ## Kurulum
 

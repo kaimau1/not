@@ -256,6 +256,16 @@ class MainActivity : FlutterFragmentActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "pipSupported" -> result.success(pipSupported)
+                    // Uygulama kilidi (F18.6): "son uygulamalarda içeriği
+                    // gizle" — FLAG_SECURE ekran görüntüsünü de engeller.
+                    "setSecure" -> {
+                        if (call.argument<Boolean>("enabled") == true) {
+                            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+                        } else {
+                            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+                        }
+                        result.success(true)
+                    }
                     // Oynatıcı hemen küçük pencereye alınır (PiP düğmesi).
                     "enterPip" -> {
                         pipRatio = clampedRatio(

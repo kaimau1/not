@@ -63,6 +63,8 @@ import 'drive_ui.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/friendly_error.dart';
 
+import 'dashboard_scroll_memory.dart';
+
 part 'dashboard_widgets.dart';
 part 'dashboard_selection.dart';
 part 'dashboard_menu.dart';
@@ -121,6 +123,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// segment tepeden başlar; aynı segment içinde konum zaten korunur (widget
   /// aynı kalır, konum nesnesi yeniden kurulmaz).
   final _gridScroll = ScrollController(keepScrollOffset: false);
+
+  /// Şu an görünen ızgara bölümünün anahtarı (kaydırma hafızası için).
+  String _segmentKey = '';
 
   /// Kart widget'ı önbelleği (F2.1): not ÖRNEĞİ ve arama sorgusu aynıysa
   /// AYNI `NoteCard` örneği döner — Flutter aynı örneği görünce o kartın alt
@@ -239,6 +244,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // olabilir (uygulama kapalıyken ya da başka ekrandayken). İlk kareden
     // sonra kontrol et; take() varsa asistanı başlatır.
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _restoreScroll();
       _maybeAutostartVoice();
       // İLK AÇILIŞ İZİN LEVHASI KALKTI (F11.9, kullanıcı kararı 2026-10-31):
       // her izin ilk kullanıldığı yerde, kısa açıklamayla istenir; toplu
@@ -307,6 +313,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   bool _onGridScroll(ScrollNotification notification) {
     if (notification.metrics.axis != Axis.vertical) return false;
     final pixels = notification.metrics.pixels;
+    // Kesme noktası geçişinde (F18.11) liste başka bir yerde YENİDEN kurulur
+    // (dar: rota sayfası, geniş: sol panel) → konum hafızada taşınır.
+    if (notification.depth == 0) {
+      DashboardScrollMemory.save(
+        _segmentKey,
+        pixels,
+        notification.metrics.maxScrollExtent,
+      );
+    }
     final scrolled = pixels > 2;
     if (_gridScrolled.value != scrolled) _gridScrolled.value = scrolled;
     // "Başa dön" düğmesinin görünürlüğü de AYNI bildirimden beslenir; ayrı
@@ -316,6 +331,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       setState(() => _showBackToTop = showTop);
     }
     return false;
+  }
+
+  /// Telefon ↔ geniş ekran geçişinde (F18.11) önceki örneğin kaldığı yere
+  /// döner — yalnız AYNI bölümdeyse. İçerik henüz ölçülmediyse bir kare daha
+  /// beklenir (en çok birkaç kez).
+  void _restoreScroll([int tries = 0]) {
+    if (!mounted || !_gridScroll.hasClients) return;
+    final positions = _gridScroll.positions.toList();
+    if (positions.length != 1) return;
+    final p = positions.single;
+    final target = DashboardScrollMemory.restoreOffset(
+      _segmentKey,
+      p.maxScrollExtent,
+    );
+    if (target == null) return;
+    if (target > p.maxScrollExtent && tries < 5) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _restoreScroll(tries + 1),
+      );
+      return;
+    }
+    p.jumpTo(target.clamp(0.0, p.maxScrollExtent));
   }
 
   /// Izgarayı tepeye döndürür. `animateTo` birden çok konumla çalışır
@@ -915,6 +952,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         '|${ref.watch(selectedFolderProvider) ?? ''}'
                         '|${ref.watch(selectedTagProvider) ?? ''}'
                         '|${hubActive ? 'hub' : ''}';
+                    _segmentKey = segmentKey;
                     // Başlık (arama/seçim barı + filtre çipleri) kaydırma
                     // görünümünün DIŞINDA sabit durur: liste kayarken çipler
                     // yerinde kalır; filtre değişim animasyonu yalnız not

@@ -318,7 +318,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unlockAuthReason => 'Verify your identity to open the locked note';
 
   @override
-  String get exportBackup => 'Export backup (JSON)';
+  String get exportBackup => 'Full backup';
 
   @override
   String get expandListItems => 'Show list rows in full';
@@ -1189,7 +1189,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncLimitUnlimited => 'No limit';
 
   @override
-  String get importBackup => 'Restore from backup (JSON)';
+  String get importBackup => 'Restore from backup';
 
   @override
   String importBackupDone(int count) {
@@ -6281,4 +6281,230 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get swipeModeInfo =>
       'When you swipe the screen sideways in grid view. In list view, swiping a row pins it (right) or archives it (left).';
+
+  @override
+  String aiQuotaRenewsAt(String time) {
+    return 'Renews at $time';
+  }
+
+  @override
+  String get backupInfo =>
+      'All notes with attachments, drawings, bubbles and folders in one file. Restoring twice doesn\'t duplicate notes.';
+
+  @override
+  String get backupInProgress => 'Preparing backup';
+
+  @override
+  String get restoreInProgress => 'Restoring';
+
+  @override
+  String get backupShareSubject => 'Notes backup';
+
+  @override
+  String get backupCancelled => 'Cancelled';
+
+  @override
+  String backupProgressCount(int done, int total) {
+    return '$done / $total notes';
+  }
+
+  @override
+  String restoreBackupResult(int restored, int skipped) {
+    return '$restored notes restored, $skipped skipped (already there)';
+  }
+
+  @override
+  String get accountRecoverBringNotes => 'Bring my notes';
+
+  @override
+  String accountRecoverBringDone(int count) {
+    return 'Switched account, $count notes moved';
+  }
+
+  @override
+  String get accountRecoverBringFailed =>
+      'Switched account but notes couldn\'t be moved; the guest notes are untouched';
+
+  @override
+  String get appLockTitle => 'App lock';
+
+  @override
+  String get appLockInfo =>
+      'Asks on launch and when returning from background, using the note lock method. Not encryption; this device only.';
+
+  @override
+  String get appLockWebNeedsSecret =>
+      'No device lock on the web: pick a password or pattern above first.';
+
+  @override
+  String get appLockReason => 'Unlock Notes';
+
+  @override
+  String get appLockLockedTitle => 'Notes is locked';
+
+  @override
+  String get appLockUnlock => 'Unlock';
+
+  @override
+  String get appLockDelayTitle => 'Lock:';
+
+  @override
+  String get appLockDelayNow => 'immediately';
+
+  @override
+  String appLockDelayMinutes(int minutes) {
+    return 'after $minutes min';
+  }
+
+  @override
+  String get appLockHideRecents => 'Hide content in recent apps';
+
+  @override
+  String get repeatTitle => 'Repeat';
+
+  @override
+  String get repeatNone => 'Don\'t repeat';
+
+  @override
+  String get repeatDaily => 'Every day';
+
+  @override
+  String get repeatWeekdays => 'Every weekday';
+
+  @override
+  String get repeatWeekly => 'Every week';
+
+  @override
+  String repeatWeeklyOn(String days) {
+    return 'Weekly: $days';
+  }
+
+  @override
+  String get repeatMonthly => 'Every month';
+
+  @override
+  String get repeatYearly => 'Every year';
+
+  @override
+  String get importOther => 'Import from other apps';
+
+  @override
+  String get importOtherInfo =>
+      'Google Keep (Takeout zip), Markdown/txt (file or zip), Evernote (.enex)';
+
+  @override
+  String get importInProgress => 'Importing';
+
+  @override
+  String get importOtherNone => 'No notes to import in this file';
+
+  @override
+  String importOtherResult(int imported, int skipped, int failed) {
+    return '$imported notes imported, $skipped skipped (already there), $failed unreadable';
+  }
+
+  @override
+  String get noteLinkAction => 'Link to note';
+
+  @override
+  String get noteLinkOpen => 'Open note';
+
+  @override
+  String get noteLinkPickTitle => 'Link to which note?';
+
+  @override
+  String get noteLinkInserted => 'Linked to note';
+
+  @override
+  String get noteLinkMissing => 'Linked note not found (it may be deleted)';
+
+  @override
+  String get backlinksTitle => 'Notes linking here';
+
+  @override
+  String backlinksCount(int count) {
+    return '$count backlinks';
+  }
+
+  @override
+  String get relatedNotesTitle => 'Related notes';
+
+  @override
+  String get relatedNotesNone => 'No related notes found';
+
+  @override
+  String get relatedNotesLink => 'Link';
+
+  @override
+  String get studyCardsTitle => 'Today\'s cards';
+
+  @override
+  String studyCardsHubInfo(int count) {
+    return 'Spaced repetition: $count cards today';
+  }
+
+  @override
+  String get studyCardsEmpty => 'No cards due today';
+
+  @override
+  String get studyCardsDone => 'All done for today!';
+
+  @override
+  String get studyCardsEmptyInfo =>
+      'Use \"Make cards\" in a note\'s ⋮ menu and AI turns the note into question–answer cards.';
+
+  @override
+  String studyCardsLeft(int count) {
+    return '$count cards left';
+  }
+
+  @override
+  String get studyCardsReveal => 'Show answer';
+
+  @override
+  String get studyGradeAgain => 'Again';
+
+  @override
+  String get studyGradeHard => 'Hard';
+
+  @override
+  String get studyGradeGood => 'Good';
+
+  @override
+  String get studyGradeEasy => 'Easy';
+
+  @override
+  String get studyCardsMake => 'Make cards';
+
+  @override
+  String studyCardsMakeMore(int count) {
+    return 'Make cards ($count so far)';
+  }
+
+  @override
+  String get studyCardsGenerating => 'Making cards…';
+
+  @override
+  String get studyCardsFailed => 'Couldn\'t make cards';
+
+  @override
+  String studyCardsPreview(int count) {
+    return '$count cards made';
+  }
+
+  @override
+  String get studyCardsSave => 'Save to note';
+
+  @override
+  String studyCardsSaved(int count) {
+    return '$count cards saved';
+  }
+
+  @override
+  String updateAvailable(String name) {
+    return 'New version available: $name';
+  }
+
+  @override
+  String get updateDownload => 'Download from GitHub';
 }

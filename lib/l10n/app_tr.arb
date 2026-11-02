@@ -180,7 +180,7 @@
   "unlockNote": "Kilidi kaldır",
   "lockedNote": "Kilitli not",
   "unlockAuthReason": "Kilitli notu açmak için kimliğini doğrula",
-  "exportBackup": "Yedeği dışa aktar (JSON)",
+  "exportBackup": "Tam yedek al",
   "expandListItems": "Liste satırlarını tam göster",
   "expandListItemsInfo": "Uzun liste/işaret maddeleri birkaç satıra sarılıp tamamen görünür. Kapalıyken satır tek satırda kalır, dokununca açılır.",
   "quickCaptureRowSetting": "Hızlı not satırı",
@@ -553,7 +553,7 @@
   "syncLimitTitle": "Otomatik yükleme sınırı",
   "syncLimitInfo": "Bu boyuttan büyük ekler cihazda kalır, buluta yüklenmez. Not metni her zaman senkronlanır.",
   "syncLimitUnlimited": "Sınırsız",
-  "importBackup": "Yedekten geri yükle (JSON)",
+  "importBackup": "Yedekten geri yükle",
   "importBackupDone": "{count} not geri yüklendi",
   "@importBackupDone": {
     "placeholders": {
@@ -2864,17 +2864,56 @@
   "colorToneVivid": "canlı",
   "colorToneDark": "koyu",
   "colorShade": "{color}, {tone}",
-  "@colorShade": {"placeholders": {"color": {"type": "String"}, "tone": {"type": "String"}}},
+  "@colorShade": {
+    "placeholders": {
+      "color": {
+        "type": "String"
+      },
+      "tone": {
+        "type": "String"
+      }
+    }
+  },
   "itemEmptyLabel": "Boş madde",
   "bubbleSemantic": "Balon, sayfa {page}: {text}",
-  "@bubbleSemantic": {"placeholders": {"page": {"type": "int"}, "text": {"type": "String"}}},
+  "@bubbleSemantic": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "bubbleSemanticEmpty": "Boş balon, sayfa {page}",
-  "@bubbleSemanticEmpty": {"placeholders": {"page": {"type": "int"}}},
+  "@bubbleSemanticEmpty": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
   "mediaBoxSemantic": "{kind}: {name}",
-  "@mediaBoxSemantic": {"placeholders": {"kind": {"type": "String"}, "name": {"type": "String"}}},
+  "@mediaBoxSemantic": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "formatSizeLabel": "Boyut",
   "formatSizeValue": "Boyut %{percent}",
-  "@formatSizeValue": {"placeholders": {"percent": {"type": "int"}}},
+  "@formatSizeValue": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "customColor": "Özel renk…",
   "embedLasso": "Daire çizerek seç",
   "embedLassoHint": "Bağlanacak yazıyı parmağınla daire içine al · iki parmakla kaydır",
@@ -2976,5 +3015,180 @@
   "tipsResetTitle": "İpuçlarını yeniden göster",
   "tipsResetInfo": "Bir kez çıkan küçük ipuçları (jestler, Anlam araması) yeniden çıkar.",
   "tipsResetDone": "İpuçları yeniden gösterilecek",
-  "swipeModeInfo": "Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola)."
+  "swipeModeInfo": "Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola).",
+  "aiQuotaRenewsAt": "{time} itibarıyla yenilenir",
+  "@aiQuotaRenewsAt": {
+    "description": "Dahili AI puanlarının yenileneceği saat (yuvarlanan 24 saat).",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "backupInfo": "Bütün notlar ekleri, çizimleri, balonları ve klasörleriyle tek dosyada. İki kez yüklense de not çoğalmaz.",
+  "backupInProgress": "Yedek hazırlanıyor",
+  "restoreInProgress": "Geri yükleniyor",
+  "backupShareSubject": "Notlar yedeği",
+  "backupCancelled": "İptal edildi",
+  "backupProgressCount": "{done} / {total} not",
+  "@backupProgressCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "restoreBackupResult": "{restored} not geri yüklendi, {skipped} atlandı (zaten var)",
+  "@restoreBackupResult": {
+    "placeholders": {
+      "restored": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "accountRecoverBringNotes": "Notları yanıma al",
+  "accountRecoverBringDone": "Hesabına geçildi, {count} not taşındı",
+  "@accountRecoverBringDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accountRecoverBringFailed": "Hesabına geçildi ama notlar taşınamadı; misafir notları yerinde duruyor",
+  "appLockTitle": "Uygulama kilidi",
+  "appLockInfo": "Açılışta ve arka plandan dönüşte not kilidinin yöntemiyle sorar. Şifreleme değildir; yalnız bu cihazda geçerli.",
+  "appLockWebNeedsSecret": "Web'de cihaz kilidi yok: önce yukarıdan şifre ya da desen seç.",
+  "appLockReason": "Notlar'ın kilidini aç",
+  "appLockLockedTitle": "Notlar kilitli",
+  "appLockUnlock": "Kilidi aç",
+  "appLockDelayTitle": "Kilitle:",
+  "appLockDelayNow": "hemen",
+  "appLockDelayMinutes": "{minutes} dk sonra",
+  "@appLockDelayMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "appLockHideRecents": "Son uygulamalarda içeriği gizle",
+  "repeatTitle": "Tekrar",
+  "repeatNone": "Tekrarlama",
+  "repeatDaily": "Her gün",
+  "repeatWeekdays": "Hafta içi her gün",
+  "repeatWeekly": "Her hafta",
+  "repeatWeeklyOn": "Her hafta: {days}",
+  "@repeatWeeklyOn": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "repeatMonthly": "Her ay",
+  "repeatYearly": "Her yıl",
+  "importOther": "Başka uygulamadan içe aktar",
+  "importOtherInfo": "Google Keep (Takeout zip'i), Markdown/txt (tek dosya ya da zip), Evernote (.enex)",
+  "importInProgress": "İçe aktarılıyor",
+  "importOtherNone": "Bu dosyada içe aktarılacak not bulunamadı",
+  "importOtherResult": "{imported} not içe aktarıldı, {skipped} atlandı (zaten var), {failed} okunamadı",
+  "@importOtherResult": {
+    "placeholders": {
+      "imported": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "noteLinkAction": "Nota bağla",
+  "noteLinkOpen": "Notu aç",
+  "noteLinkPickTitle": "Hangi nota bağlansın?",
+  "noteLinkInserted": "Nota bağlandı",
+  "noteLinkMissing": "Bağlı not bulunamadı (silinmiş olabilir)",
+  "backlinksTitle": "Bu nota bağlananlar",
+  "backlinksCount": "{count} bağlantı",
+  "@backlinksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relatedNotesTitle": "İlgili notlar",
+  "relatedNotesNone": "İlgili not bulunamadı",
+  "relatedNotesLink": "Bağla",
+  "studyCardsTitle": "Bugünün kartları",
+  "studyCardsHubInfo": "Aralıklı tekrar: bugün {count} kart",
+  "@studyCardsHubInfo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studyCardsEmpty": "Bugün tekrar edilecek kart yok",
+  "studyCardsDone": "Bugünlük bitti!",
+  "studyCardsEmptyInfo": "Bir notun ⋮ menüsünden \"Kart üret\" ile yapay zekâ nottan soru–cevap kartları çıkarır.",
+  "studyCardsLeft": "{count} kart kaldı",
+  "@studyCardsLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studyCardsReveal": "Cevabı göster",
+  "studyGradeAgain": "Tekrar",
+  "studyGradeHard": "Zor",
+  "studyGradeGood": "İyi",
+  "studyGradeEasy": "Kolay",
+  "studyCardsMake": "Kart üret",
+  "studyCardsMakeMore": "Kart üret ({count} kart var)",
+  "@studyCardsMakeMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studyCardsGenerating": "Kartlar hazırlanıyor…",
+  "studyCardsFailed": "Kart üretilemedi",
+  "studyCardsPreview": "{count} kart üretildi",
+  "@studyCardsPreview": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studyCardsSave": "Nota kaydet",
+  "studyCardsSaved": "{count} kart kaydedildi",
+  "@studyCardsSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateAvailable": "Yeni sürüm var: {name}",
+  "@updateAvailable": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "updateDownload": "GitHub'dan indir"
 }

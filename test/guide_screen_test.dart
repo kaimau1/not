@@ -82,6 +82,8 @@ Paragraf **kalın** yazı.
       'son kullandığın kipi',
       'yalnız yazılar senkronlanır',
       'menülerde ayrıca yok',
+      'gece yarısı yenilenir',
+      'Yedeği dışa aktar (JSON)',
     ]) {
       expect(tr.contains(stale), isFalse, reason: stale);
     }
@@ -97,6 +99,7 @@ Paragraf **kalın** yazı.
       'Copy to notebook',
       'mode you used last',
       'sync text only',
+      'renew at midnight',
     ]) {
       expect(en.contains(stale), isFalse, reason: stale);
     }

@@ -659,7 +659,7 @@ abstract class AppLocalizations {
   /// No description provided for @exportBackup.
   ///
   /// In tr, this message translates to:
-  /// **'Yedeği dışa aktar (JSON)'**
+  /// **'Tam yedek al'**
   String get exportBackup;
 
   /// No description provided for @expandListItems.
@@ -2267,7 +2267,7 @@ abstract class AppLocalizations {
   /// No description provided for @importBackup.
   ///
   /// In tr, this message translates to:
-  /// **'Yedekten geri yükle (JSON)'**
+  /// **'Yedekten geri yükle'**
   String get importBackup;
 
   /// No description provided for @importBackupDone.
@@ -11233,6 +11233,390 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola).'**
   String get swipeModeInfo;
+
+  /// Dahili AI puanlarının yenileneceği saat (yuvarlanan 24 saat).
+  ///
+  /// In tr, this message translates to:
+  /// **'{time} itibarıyla yenilenir'**
+  String aiQuotaRenewsAt(String time);
+
+  /// No description provided for @backupInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütün notlar ekleri, çizimleri, balonları ve klasörleriyle tek dosyada. İki kez yüklense de not çoğalmaz.'**
+  String get backupInfo;
+
+  /// No description provided for @backupInProgress.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedek hazırlanıyor'**
+  String get backupInProgress;
+
+  /// No description provided for @restoreInProgress.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri yükleniyor'**
+  String get restoreInProgress;
+
+  /// No description provided for @backupShareSubject.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlar yedeği'**
+  String get backupShareSubject;
+
+  /// No description provided for @backupCancelled.
+  ///
+  /// In tr, this message translates to:
+  /// **'İptal edildi'**
+  String get backupCancelled;
+
+  /// No description provided for @backupProgressCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{done} / {total} not'**
+  String backupProgressCount(int done, int total);
+
+  /// No description provided for @restoreBackupResult.
+  ///
+  /// In tr, this message translates to:
+  /// **'{restored} not geri yüklendi, {skipped} atlandı (zaten var)'**
+  String restoreBackupResult(int restored, int skipped);
+
+  /// No description provided for @accountRecoverBringNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notları yanıma al'**
+  String get accountRecoverBringNotes;
+
+  /// No description provided for @accountRecoverBringDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesabına geçildi, {count} not taşındı'**
+  String accountRecoverBringDone(int count);
+
+  /// No description provided for @accountRecoverBringFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesabına geçildi ama notlar taşınamadı; misafir notları yerinde duruyor'**
+  String get accountRecoverBringFailed;
+
+  /// No description provided for @appLockTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama kilidi'**
+  String get appLockTitle;
+
+  /// No description provided for @appLockInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açılışta ve arka plandan dönüşte not kilidinin yöntemiyle sorar. Şifreleme değildir; yalnız bu cihazda geçerli.'**
+  String get appLockInfo;
+
+  /// No description provided for @appLockWebNeedsSecret.
+  ///
+  /// In tr, this message translates to:
+  /// **'Web\'de cihaz kilidi yok: önce yukarıdan şifre ya da desen seç.'**
+  String get appLockWebNeedsSecret;
+
+  /// No description provided for @appLockReason.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlar\'ın kilidini aç'**
+  String get appLockReason;
+
+  /// No description provided for @appLockLockedTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlar kilitli'**
+  String get appLockLockedTitle;
+
+  /// No description provided for @appLockUnlock.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilidi aç'**
+  String get appLockUnlock;
+
+  /// No description provided for @appLockDelayTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilitle:'**
+  String get appLockDelayTitle;
+
+  /// No description provided for @appLockDelayNow.
+  ///
+  /// In tr, this message translates to:
+  /// **'hemen'**
+  String get appLockDelayNow;
+
+  /// No description provided for @appLockDelayMinutes.
+  ///
+  /// In tr, this message translates to:
+  /// **'{minutes} dk sonra'**
+  String appLockDelayMinutes(int minutes);
+
+  /// No description provided for @appLockHideRecents.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son uygulamalarda içeriği gizle'**
+  String get appLockHideRecents;
+
+  /// No description provided for @repeatTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrar'**
+  String get repeatTitle;
+
+  /// No description provided for @repeatNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrarlama'**
+  String get repeatNone;
+
+  /// No description provided for @repeatDaily.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her gün'**
+  String get repeatDaily;
+
+  /// No description provided for @repeatWeekdays.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta içi her gün'**
+  String get repeatWeekdays;
+
+  /// No description provided for @repeatWeekly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her hafta'**
+  String get repeatWeekly;
+
+  /// No description provided for @repeatWeeklyOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her hafta: {days}'**
+  String repeatWeeklyOn(String days);
+
+  /// No description provided for @repeatMonthly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her ay'**
+  String get repeatMonthly;
+
+  /// No description provided for @repeatYearly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her yıl'**
+  String get repeatYearly;
+
+  /// No description provided for @importOther.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başka uygulamadan içe aktar'**
+  String get importOther;
+
+  /// No description provided for @importOtherInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Keep (Takeout zip\'i), Markdown/txt (tek dosya ya da zip), Evernote (.enex)'**
+  String get importOtherInfo;
+
+  /// No description provided for @importInProgress.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçe aktarılıyor'**
+  String get importInProgress;
+
+  /// No description provided for @importOtherNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dosyada içe aktarılacak not bulunamadı'**
+  String get importOtherNone;
+
+  /// No description provided for @importOtherResult.
+  ///
+  /// In tr, this message translates to:
+  /// **'{imported} not içe aktarıldı, {skipped} atlandı (zaten var), {failed} okunamadı'**
+  String importOtherResult(int imported, int skipped, int failed);
+
+  /// No description provided for @noteLinkAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota bağla'**
+  String get noteLinkAction;
+
+  /// No description provided for @noteLinkOpen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu aç'**
+  String get noteLinkOpen;
+
+  /// No description provided for @noteLinkPickTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hangi nota bağlansın?'**
+  String get noteLinkPickTitle;
+
+  /// No description provided for @noteLinkInserted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota bağlandı'**
+  String get noteLinkInserted;
+
+  /// No description provided for @noteLinkMissing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlı not bulunamadı (silinmiş olabilir)'**
+  String get noteLinkMissing;
+
+  /// No description provided for @backlinksTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu nota bağlananlar'**
+  String get backlinksTitle;
+
+  /// No description provided for @backlinksCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} bağlantı'**
+  String backlinksCount(int count);
+
+  /// No description provided for @relatedNotesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlgili notlar'**
+  String get relatedNotesTitle;
+
+  /// No description provided for @relatedNotesNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlgili not bulunamadı'**
+  String get relatedNotesNone;
+
+  /// No description provided for @relatedNotesLink.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağla'**
+  String get relatedNotesLink;
+
+  /// No description provided for @studyCardsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugünün kartları'**
+  String get studyCardsTitle;
+
+  /// No description provided for @studyCardsHubInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aralıklı tekrar: bugün {count} kart'**
+  String studyCardsHubInfo(int count);
+
+  /// No description provided for @studyCardsEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün tekrar edilecek kart yok'**
+  String get studyCardsEmpty;
+
+  /// No description provided for @studyCardsDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugünlük bitti!'**
+  String get studyCardsDone;
+
+  /// No description provided for @studyCardsEmptyInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir notun ⋮ menüsünden \"Kart üret\" ile yapay zekâ nottan soru–cevap kartları çıkarır.'**
+  String get studyCardsEmptyInfo;
+
+  /// No description provided for @studyCardsLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kart kaldı'**
+  String studyCardsLeft(int count);
+
+  /// No description provided for @studyCardsReveal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cevabı göster'**
+  String get studyCardsReveal;
+
+  /// No description provided for @studyGradeAgain.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrar'**
+  String get studyGradeAgain;
+
+  /// No description provided for @studyGradeHard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zor'**
+  String get studyGradeHard;
+
+  /// No description provided for @studyGradeGood.
+  ///
+  /// In tr, this message translates to:
+  /// **'İyi'**
+  String get studyGradeGood;
+
+  /// No description provided for @studyGradeEasy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kolay'**
+  String get studyGradeEasy;
+
+  /// No description provided for @studyCardsMake.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart üret'**
+  String get studyCardsMake;
+
+  /// No description provided for @studyCardsMakeMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart üret ({count} kart var)'**
+  String studyCardsMakeMore(int count);
+
+  /// No description provided for @studyCardsGenerating.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartlar hazırlanıyor…'**
+  String get studyCardsGenerating;
+
+  /// No description provided for @studyCardsFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart üretilemedi'**
+  String get studyCardsFailed;
+
+  /// No description provided for @studyCardsPreview.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kart üretildi'**
+  String studyCardsPreview(int count);
+
+  /// No description provided for @studyCardsSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota kaydet'**
+  String get studyCardsSave;
+
+  /// No description provided for @studyCardsSaved.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kart kaydedildi'**
+  String studyCardsSaved(int count);
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni sürüm var: {name}'**
+  String updateAvailable(String name);
+
+  /// No description provided for @updateDownload.
+  ///
+  /// In tr, this message translates to:
+  /// **'GitHub\'dan indir'**
+  String get updateDownload;
 }
 
 class _AppLocalizationsDelegate

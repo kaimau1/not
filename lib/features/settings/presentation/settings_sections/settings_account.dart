@@ -375,200 +375,52 @@ class _PermissionTile extends StatelessWidget {
   }
 }
 
-/// Tüm notları (arşiv dahil, çöp hariç) tek JSON dosyası olarak dışa
-/// aktarıp paylaşım sayfasını açar. Ek dosyaları bulutta kaldığından
-/// yalnızca adları ve bağlantıları yazılır.
+/// Tam yedek (F18.4): bütün notlar ekleriyle tek `.notyedek` dosyasında
+/// (bkz. `backup_ui.dart`, `BackupService`).
 class _BackupButton extends ConsumerWidget {
   const _BackupButton();
 
-  Map<String, dynamic> _exportNote(Note n) => {
-    'id': n.id,
-    'type': n.type.id,
-    'title': n.title,
-    'body': n.body,
-    'items': [
-      for (final i in n.items) {'text': i.text, 'checked': i.checked},
-    ],
-    'tags': n.tags,
-    'color': n.color.id,
-    'frameColor': n.frameColor.id,
-    if (n.customColor != null) 'customColor': n.customColor,
-    if (n.customFrameColor != null) 'customFrameColor': n.customFrameColor,
-    'folderId': n.folderId,
-    'pinned': n.pinned,
-    'starred': n.starred,
-    'locked': n.locked,
-    'createdAt': n.createdAt?.toIso8601String(),
-    'updatedAt': n.updatedAt?.toIso8601String(),
-    'archivedAt': n.archivedAt?.toIso8601String(),
-    'reminderAt': n.reminderAt?.toIso8601String(),
-    'attachments': [
-      // BİLEREK storagePath, downloadUrl DEĞİL: downloadUrl içindeki
-      // `?token=` Storage kurallarını atlayan, süresi dolmayan bir anahtardır.
-      // Yedek dosyası e-posta/bulut diskle elden ele dolaşır; URL yazılsaydı
-      // yedeği gören herkes kullanıcının tüm eklerine oturum açmadan süresiz
-      // erişirdi. storagePath tek başına işe yaramaz (kural denetiminden
-      // geçer); geri yükleme ekleri zaten atlıyor (bkz. _RestoreButton).
-      for (final a in n.attachments)
-        {'fileName': a.fileName, 'kind': a.kind.name, 'path': a.storagePath},
-    ],
-  };
-
-  Future<void> _export(BuildContext context, WidgetRef ref) async {
-    final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    final notes = ref.read(notesStreamProvider).value;
-    if (notes == null) return;
-    // Kilitli not varsa dışa aktarma kimlik ister: yedek, kilitli notların
-    // gövdesini DÜZ METİN taşır — kapı yalnız ekran geçişinde kalsaydı kilit
-    // buradan boşaltılabilirdi (locked bayrağı yedekte yine de yazılıdır).
-    if (notes.any((n) => n.locked) &&
-        !await authenticateForNote(l10n.unlockAuthReason)) {
-      return;
-    }
-    try {
-      final payload = const JsonEncoder.withIndent('  ').convert({
-        'app': 'notlar',
-        'exportedAt': DateTime.now().toIso8601String(),
-        'noteCount': notes.length,
-        'notes': [for (final n in notes) _exportNote(n)],
-      });
-      final now = DateTime.now();
-      final stamp =
-          '${now.year}-${now.month.toString().padLeft(2, '0')}-'
-          '${now.day.toString().padLeft(2, '0')}';
-      final fileName = 'notlar-yedek-$stamp.json';
-      if (kIsWeb) {
-        // Web'de dosya sistemi/path_provider yok: baytlar bellekten paylaşılır.
-        await SharePlus.instance.share(
-          ShareParams(
-            files: [
-              XFile.fromData(
-                utf8.encode(payload),
-                name: fileName,
-                mimeType: 'application/json',
-              ),
-            ],
-            subject: 'Notlar yedeği',
-          ),
-        );
-      } else {
-        final dir = await getTemporaryDirectory();
-        final file = File('${dir.path}/$fileName');
-        await file.writeAsString(payload);
-        await SharePlus.instance.share(
-          ShareParams(files: [XFile(file.path)], subject: 'Notlar yedeği'),
-        );
-      }
-    } catch (e) {
-      messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return TextButton.icon(
-      icon: const Icon(Icons.file_download_outlined),
-      label: Text(context.l10n.exportBackup),
-      onPressed: () => _export(context, ref),
+    return Tooltip(
+      message: context.l10n.backupInfo,
+      child: TextButton.icon(
+        icon: const Icon(Icons.file_download_outlined),
+        label: Text(context.l10n.exportBackup),
+        onPressed: () => exportFullBackup(context, ref),
+      ),
     );
   }
 }
 
-/// Dışa aktarılan JSON yedeği geri okur: her kayıt YENİ not olarak oluşturulur
-/// (mevcut notlara dokunulmaz — id çakışması/veri ezme riski yok). Ekler
-/// bulut bağlantısı olarak dışa aktarıldığından geri yüklemede atlanır.
+/// Tam yedeği ya da eski JSON yedeği geri yükler; var olan notlar (kimlik ya
+/// da içerik özeti aynı) atlanır — iki kez yükleme çoğaltmaz.
 class _RestoreButton extends ConsumerWidget {
   const _RestoreButton();
-
-  Future<void> _import(BuildContext context, WidgetRef ref) async {
-    final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    final repo = ref.read(notesRepositoryProvider);
-    if (repo == null) return;
-    final file = await DocPicker.pickOne(
-      const XTypeGroup(
-        label: 'JSON',
-        extensions: ['json'],
-        mimeTypes: ['application/json'],
-      ),
-    );
-    if (file == null) return;
-    try {
-      final decoded = jsonDecode(await file.readAsString());
-      final rawNotes = (decoded as Map<String, dynamic>)['notes'];
-      if (rawNotes is! List) throw const FormatException();
-      const uuid = Uuid();
-      var count = 0;
-      for (final raw in rawNotes) {
-        if (raw is! Map) continue;
-        final map = raw.cast<String, dynamic>();
-        final type = NoteType.fromId(map['type'] as String?);
-        final title = map['title'] as String? ?? '';
-        final body = map['body'] as String? ?? '';
-        final items = [
-          for (final i in (map['items'] as List<dynamic>? ?? const []))
-            if (i is Map)
-              {
-                'id': uuid.v4(),
-                'text': i['text'] as String? ?? '',
-                'checked': i['checked'] as bool? ?? false,
-              },
-        ];
-        if (title.trim().isEmpty && body.trim().isEmpty && items.isEmpty) {
-          continue;
-        }
-        final id = await repo.createNote(type);
-        // Yedekteki alanların OLABİLDİĞİNCE çoğu geri yazılır. Eskiden yalnız
-        // title/body/items/tags/pinned dönüyordu: kilitli notlar KİLİTSİZ
-        // (içerik açıkta!), arşivdekiler ana duvara, renk/hatırlatıcı/tarih
-        // kayıp geliyordu. Klasör geri yüklenmez (id başka hesapta anlamsız).
-        Timestamp? ts(String key) {
-          final v = map[key] as String?;
-          final parsed = v == null ? null : DateTime.tryParse(v);
-          return parsed == null ? null : Timestamp.fromDate(parsed);
-        }
-
-        repo.updateFields(id, {
-          'title': title,
-          'body': body,
-          'items': items,
-          'tags': [
-            for (final t in (map['tags'] as List<dynamic>? ?? const []))
-              t.toString(),
-          ],
-          'pinned': map['pinned'] as bool? ?? false,
-          'starred': map['starred'] as bool? ?? false,
-          'locked': map['locked'] as bool? ?? false,
-          if (map['color'] is String) 'color': map['color'],
-          if (map['frameColor'] is String) 'frameColor': map['frameColor'],
-          if (map['customColor'] is num) 'customColor': map['customColor'],
-          if (map['customFrameColor'] is num)
-            'customFrameColor': map['customFrameColor'],
-          if (ts('createdAt') != null) 'createdAt': ts('createdAt'),
-          if (ts('archivedAt') != null) 'archivedAt': ts('archivedAt'),
-          // Geçmişte kalmış hatırlatıcı geri kurulmaz (bildirim zaten
-          // planlanmaz, "Geçmiş" listesini şişirir).
-          if (ts('reminderAt') != null &&
-              ts('reminderAt')!.toDate().isAfter(DateTime.now()))
-            'reminderAt': ts('reminderAt'),
-        });
-        count++;
-      }
-      messenger.showMessage(l10n.importBackupDone(count));
-    } on FormatException {
-      messenger.showMessage(l10n.importBackupInvalid);
-    } catch (e) {
-      messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
-    }
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return TextButton.icon(
       icon: const Icon(Icons.file_upload_outlined),
       label: Text(context.l10n.importBackup),
-      onPressed: () => _import(context, ref),
+      onPressed: () => restoreBackup(context, ref),
+    );
+  }
+}
+
+/// Başka uygulamadan içe aktar (F18.15).
+class _ImportOtherButton extends ConsumerWidget {
+  const _ImportOtherButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Tooltip(
+      message: context.l10n.importOtherInfo,
+      child: TextButton.icon(
+        icon: const Icon(Icons.download_for_offline_outlined),
+        label: Text(context.l10n.importOther),
+        onPressed: () => importFromOtherApps(context, ref),
+      ),
     );
   }
 }
@@ -706,34 +558,67 @@ class _AccountSection extends ConsumerWidget {
   ) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    final noteCount = (ref.read(notesStreamProvider).value ?? const [])
-        .where((n) => !n.isEmpty)
-        .length;
+    final guestNotes = [
+      for (final n in ref.read(notesStreamProvider).value ?? const <Note>[])
+        if (!n.isEmpty) n,
+    ];
+    final noteCount = guestNotes.length;
+    // Oturum değişince bu widget'ın ref'i yeniden kurulabilir: kapsayıcı
+    // ÖNCEDEN alınır (giriş sonrası hedef hesabın depoları ondan okunur).
+    final container = ProviderScope.containerOf(context);
+    Uint8List? carried;
     if (noteCount > 0) {
-      final proceed = await showDialog<bool>(
+      final choice = await showDialog<_RecoverChoice>(
         context: context,
         builder: (dialogContext) => AlertDialog(
           title: Text(l10n.accountRecoverConflictTitle),
           content: Text(l10n.accountRecoverConflictBody(noteCount)),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
+              onPressed: () => Navigator.pop(dialogContext),
               child: Text(l10n.cancel),
             ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
+            TextButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, _RecoverChoice.leave),
               child: Text(l10n.accountRecoverConflictProceed),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, _RecoverChoice.bring),
+              child: Text(l10n.accountRecoverBringNotes),
             ),
           ],
         ),
       );
-      if (proceed != true || !context.mounted) return;
+      if (choice == null || !context.mounted) return;
+      if (choice == _RecoverChoice.bring) {
+        // F18.5: misafir notları oturum DEĞİŞMEDEN yedeklenir (misafir
+        // kimliğiyle okunabilsinler), girişten sonra hedefe yüklenir.
+        try {
+          carried = await backupServiceOf(ref)!.prepareMigration(
+            allNotes: guestNotes,
+            folderList: ref.read(foldersStreamProvider).value ?? const [],
+          );
+        } catch (e) {
+          messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
+          return;
+        }
+      }
     }
     try {
       await FirebaseAuth.instance.signInWithCredential(credential);
       // Başarıda auth durumu değişir; kullanıcı gerçek hesabına döner,
       // notları olduğu gibi orada bekliyor olur.
-      if (context.mounted) {
+      final backup = carried;
+      if (backup != null) {
+        final result = await _restoreCarried(container, backup);
+        messenger.showMessage(
+          result == null
+              ? l10n.accountRecoverBringFailed
+              : l10n.accountRecoverBringDone(result.restored),
+        );
+      } else {
         messenger.showMessage(l10n.accountLinked);
       }
     } catch (e) {
@@ -974,7 +859,28 @@ class _AppVersionRowState extends State<_AppVersionRow> {
     final version = _version;
     if (version == null) return const SizedBox.shrink();
     final l10n = context.l10n;
-    final row = _versionButton(context, l10n, version);
+    final versionRow = _versionButton(context, l10n, version);
+    // Yeni sürüm (F18.21, yalnız Android): CI'ın `config/app.latestBuild`ı.
+    final row = Consumer(
+      builder: (context, ref, _) {
+        final newer = ref.watch(newVersionAvailableProvider);
+        if (newer == null) return versionRow;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            versionRow,
+            TextButton.icon(
+              key: const ValueKey('update-available-row'),
+              icon: const Icon(Icons.system_update),
+              label: Text(
+                '${l10n.updateAvailable(newer)} · ${l10n.updateDownload}',
+              ),
+              onPressed: openReleasesPage,
+            ),
+          ],
+        );
+      },
+    );
     if (!Diagnostics.enabled) return row;
     // Teşhis sayaçları (F9.2): yalnız hata ayıklama/profil derlemesinde;
     // dokununca tazelenir.
@@ -1075,3 +981,39 @@ dynamic settingsAreaForTest({
   keywords: keywords,
   rows: [for (final r in rows) r as _SettingRow],
 );
+
+enum _RecoverChoice { leave, bring }
+
+/// Girişten sonra misafirden taşınan yedeği YENİ oturumun hesabına yükler
+/// (F18.5). Oturum kimliği sağlayıcılara yansıyana dek kısa süre beklenir.
+/// Misafir hesabın bulut kopyası olduğu yerde kalır (oturum değiştiği için
+/// silinemez; anonim kullanıcı başka cihazdan açılamaz).
+Future<RestoreResult?> _restoreCarried(
+  ProviderContainer container,
+  Uint8List backup,
+) async {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return null;
+  for (var i = 0; i < 50 && container.read(currentUidProvider) != uid; i++) {
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+  }
+  if (container.read(currentUidProvider) != uid) return null;
+  final notes = container.read(notesRepositoryProvider);
+  if (notes == null) return null;
+  final folders = container.read(foldersRepositoryProvider);
+  final target = BackupService(
+    notes: notes,
+    attachments: container.read(attachmentRepositoryProvider),
+    folders: folders,
+  );
+  try {
+    return await BackupService.completeMigration(
+      backup,
+      target,
+      existing: await notes.watchNotes().first,
+      existingFolders: await folders?.watchFolders().first ?? const [],
+    );
+  } catch (_) {
+    return null;
+  }
+}

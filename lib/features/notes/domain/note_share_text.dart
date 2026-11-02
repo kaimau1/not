@@ -351,3 +351,17 @@ Map<int, String> pageNotesWithBubbles(
   });
   return out;
 }
+
+/// Ana ekran toplu seçiminin metni (Paylaş levhasıyla AYNI biçim — bkz.
+/// [noteShareText]): kilitli notun yalnız başlığı gider; displayTitle,
+/// başlık biçimlendirilebildiği için işaretler panoya sızmasın.
+String joinSelectedShareText(
+  Iterable<Note> notes, {
+  required String Function(int page) pageLabel,
+}) => joinShareTexts([
+  for (final n in notes)
+    if (n.locked)
+      n.displayTitle.trim()
+    else
+      noteShareText(n, pageLabel: pageLabel),
+]);

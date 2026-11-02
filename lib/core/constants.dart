@@ -204,4 +204,11 @@ abstract final class AppConstants {
   static const String serverClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
   );
+
+  /// Web App Check'in reCAPTCHA Enterprise site anahtarı (F18.1). Boşsa web'de
+  /// App Check hiç etkinleştirilmez (yerel/dal derlemesi kırılmasın — bugünkü
+  /// davranış). CI aynı adlı GitHub secret'ını geçer; anahtar F19.A2'de alınır.
+  static const String recaptchaSiteKey = String.fromEnvironment(
+    'RECAPTCHA_SITE_KEY',
+  );
 }

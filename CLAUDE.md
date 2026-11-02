@@ -11,7 +11,7 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web he
 - **`dart format lib` ÇALIŞTIRMA**: depo tek biçimde değil; toplu biçimlendirme yüzlerce ilgisiz dosyaya dokunur. Yalnız kendi eklediğin dosyayı biçimlendir (üretilen `lib/l10n/generated` hariç — o hep `dart format`).
 - **Yerel release APK**: `flutter build apk --release --target-platform android-arm64 --build-number=<N> --dart-define-from-file=env.json`
   - `--dart-define-from-file` ZORUNLU: `GOOGLE_SERVER_CLIENT_ID` olmadan uygulama derlenir ama **Google girişi çalışma anında çöker** (bkz. `env.example.json`, `core/constants.dart`). CI aynı değeri Secrets'tan geçer.
-  - `--build-number=<N>` YEREL KURULUM İÇİN ZORUNLU: `pubspec.yaml` sabit `1.1.0+1`, CI ise `--build-name=1.1.<koşu> --build-number=${{ github.run_number }}` geçiyor (sürüm adı her derlemede ilerler, Release `v1.1.N`). Bayraksız derlenen APK versionCode 1 olur ve telefondaki CI sürümünün üstüne kurulmaz: `INSTALL_FAILED_VERSION_DOWNGRADE` (adb'nin `-d` bayrağı da bunu geçmez). N, telefondaki sürümün üstü olmalı — telefondaki en güncel sürüm CI'ın ürettiği **372** (v1.0.372, 2026-09-01), yerel derlemede bunun üstünü ver.
+  - `--build-number=<N>` YEREL KURULUM İÇİN ZORUNLU: `pubspec.yaml` sabit `1.1.0+1`, CI ise `--build-name=1.1.<koşu> --build-number=${{ github.run_number }}` geçiyor (sürüm adı her derlemede ilerler, Release `v1.1.N`). Bayraksız derlenen APK versionCode 1 olur ve telefondaki CI sürümünün üstüne kurulmaz: `INSTALL_FAILED_VERSION_DOWNGRADE` (adb'nin `-d` bayrağı da bunu geçmez). N, telefondaki sürümün üstü olmalı — telefondaki sürüm CI'ın ürettiği `v1.1.N`'dir (2026-11-01'de v1.1.583; Ayarlar → Hakkında'daki parantezli sayı), yerel derlemede GitHub Releases'teki son sürümün koşu numarasının üstünü ver.
   - `flutter install` **DERLEMEZ**, var olan APK'yı kurar — önce `build`, sonra `install`. Kurmadan önce APK'nın tarihine bak.
   - `--target-platform android-arm64`: CI de böyle derliyor; bayrak olmadan APK ~110 MB (tüm mimariler), onunla ~60 MB.
   - CI ayrıca `--split-debug-info=build/app/outputs/symbols` verir. pdfrx 2.x `pdfium.wasm`'ı yalnız web'e paketler; eski pub önbelleği yaması (1.3.5) kaldırıldı.
@@ -19,8 +19,8 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web he
 - Firestore/Storage kural değişince: önce `cd rules-test && npm ci && npm test` (emülatör, Java 11+ — CI `rules` işi de koşar), yayın main push'ta CI'da (elle: `firebase deploy`)
 
 ## Hafıza (usta koordineli — 3 katman)
-- Kod yapısı        → graphify-out/     (oku: GRAPH_REPORT.md · güncelle: elle `graphify update .` — depoda otomatik kanca YOK; grafik son 2026-11-01 (`4d556dc`) güncellendi; kod ilerledikçe bayatlar, satır/dosya bilgisini koddan doğrula)
-- Proje ne/niye     → HAFIZA.md         (≤30 KB, geçerli kararlar/tuzaklar — oku: iş başı · yaz: iş sonu, ilgili bölüme; değişen kuralı GÜNCELLE) · tarihçe `HAFIZA_ARSIV.md` (2026-10-19'a kadar, dondurulmuş, grep ile)
+- Kod yapısı        → graphify-out/     (oku: GRAPH_REPORT.md · güncelle: elle `graphify update .` — depoda otomatik kanca YOK; grafik son 2026-11-02 (bulutta, 19 810 düğüm) güncellendi; kod ilerledikçe bayatlar, satır/dosya bilgisini koddan doğrula)
+- Proje ne/niye     → HAFIZA.md         (≤30 KB, geçerli kararlar/tuzaklar — oku: iş başı · yaz: iş sonu, ilgili bölüme; değişen kuralı GÜNCELLE) · tarihçe `HAFIZA_ARSIV.md` (→ 2026-10-19) ve `HAFIZA_ARSIV_2.md` (→ 2026-11-02, sıkıştırma öncesi tam hâl) — ikisi de dondurulmuş, grep ile
 - Kullanıcı tercihi → .claude memory/   (otomatik, projeler-arası — proje bilgisi buraya YAZILMAZ)
 Yaz kuralı: usta rule 12 / YAZ — tetikleyici (kalıcı karar, bug kök nedeni, yanlış yol) oluştuysa iş bitmeden yaz. Sır/anahtar/kişisel veri hafızaya YAZILMAZ.
 

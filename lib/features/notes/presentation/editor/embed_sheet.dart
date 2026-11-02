@@ -1,3 +1,4 @@
+import '../../domain/note_links.dart';
 import '../../../../core/app_icons.dart';
 import '../../../../app/theme/fixed_colors.dart';
 import '../../../../core/widgets/sheet_header.dart';
@@ -74,8 +75,15 @@ Color embedKindColor(Attachment a) => a.isWebVideo
 /// Çözüm kuralı editördeki `_attachmentForTag` ile aynı: aynı ad hem bağ
 /// etiketi hem dosya adıysa BAĞ kazanır. Koyu temada renk açılır: koyu
 /// zeminde koyu kırmızı yazı okunmuyordu.
-Map<String, TagLook> embedTagLooks(Note note, {bool dark = false}) {
-  if (note.attachments.isEmpty) return const {};
+Map<String, TagLook> embedTagLooks(
+  Note note, {
+  bool dark = false,
+  Set<String>? liveNoteIds,
+}) {
+  if (note.attachments.isEmpty &&
+      !note.tagLinks.any((l) => linkedNoteId(l) != null)) {
+    return const {};
+  }
   final byId = {for (final a in note.attachments) a.id: a};
   TagLook look(Attachment a) {
     final color = embedKindColor(a);
@@ -91,6 +99,17 @@ Map<String, TagLook> embedTagLooks(Note note, {bool dark = false}) {
     for (final link in note.tagLinks)
       if (link.label.trim().isNotEmpty && byId[link.attachmentId] != null)
         link.label.trim(): look(byId[link.attachmentId]!),
+    // Not bağlantısı (F18.16): kendi rengi; hedef yoksa soluk.
+    for (final link in note.tagLinks)
+      if (link.label.trim().isNotEmpty && linkedNoteId(link) != null)
+        link.label.trim(): TagLook(
+          Icons.sticky_note_2_outlined,
+          liveNoteIds == null || liveNoteIds.contains(linkedNoteId(link))
+              ? (dark
+                    ? Color.lerp(FixedColors.kindNoteLink, Colors.white, 0.3)!
+                    : FixedColors.kindNoteLink)
+              : FixedColors.kindNoteLink.withValues(alpha: 0.4),
+        ),
   };
 }
 

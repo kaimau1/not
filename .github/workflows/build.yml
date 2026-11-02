@@ -27,6 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       apk: ${{ steps.marker.outputs.apk }}
+      perf: ${{ steps.marker.outputs.perf }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,6 +43,13 @@ jobs:
           else
             echo "apk=false" >> "$GITHUB_OUTPUT"
             echo "Başlıkta [apk] yok → APK derlenmeyecek."
+          fi
+          # [perf] (F18.7): bulut oturumu workflow_dispatch tetikleyemiyor
+          # (403) — kare ölçümü başlık etiketiyle de koşar, HER dalda.
+          if [[ "$title" == *'[perf]'* ]]; then
+            echo "perf=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "perf=false" >> "$GITHUB_OUTPUT"
           fi
 
   test:
@@ -392,6 +400,22 @@ jobs:
             exit 1
           fi
 
+      # F18.21: uygulama "Yeni sürüm var" desin — `config/app.latestBuild`.
+      # Yazılamazsa Release yine yayında kalır (bilgi amaçlı).
+      - uses: actions/checkout@v4
+        if: needs.test.result == 'success'
+
+      - name: Son sürümü config/app'a yaz
+        if: needs.test.result == 'success'
+        continue-on-error: true
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-sa.json
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$GOOGLE_APPLICATION_CREDENTIALS"
+          npm install --prefix functions --omit=dev --no-audit --no-fund
+          node tool/set_latest_build.js "${{ github.run_number }}" "${{ needs.android.outputs.version }}"
+          rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
+
   # main'e her push'ta Firestore/Storage kurallarını ve web sürümünü otomatik
   # yayınlar. Elle `firebase deploy` / `wrangler pages deploy` çalıştırmaya
   # gerek kalmaz.
@@ -423,7 +447,8 @@ jobs:
           flutter build web --release --wasm \
             --build-name="${base:-1.0}.${{ github.run_number }}" \
             --build-number=${{ github.run_number }} \
-            --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+            --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }} \
+            --dart-define=RECAPTCHA_SITE_KEY=${{ secrets.RECAPTCHA_SITE_KEY }}
 
       - name: Firebase kurallarını yayınla
         env:
@@ -483,8 +508,10 @@ jobs:
   perf:
     name: Kare ölçümü
     runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name == 'workflow_dispatch' && inputs.perf
+    needs: [marker, test]
+    if: >
+      (github.event_name == 'workflow_dispatch' && inputs.perf) ||
+      needs.marker.outputs.perf == 'true'
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -518,8 +545,14 @@ jobs:
           disable-animations: true
           script: flutter drive --profile --driver=test_driver/perf_driver.dart --target=integration_test/perf_test.dart -d emulator-5554
 
+      # Özet iş günlüğüne de basılır: artifact kotası sık dolu (F18.7).
+      - name: Özeti göster
+        if: always()
+        run: cat build/perf/perf_summary.json 2>/dev/null || echo "özet yok"
+
       - name: Özeti yükle
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: perf-summary

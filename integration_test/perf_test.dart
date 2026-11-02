@@ -22,7 +22,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Koşturma (Android cihaz/emülatör bağlıyken):
 ///   flutter drive --profile --driver=test_driver/perf_driver.dart \
 ///     --target=integration_test/perf_test.dart
-/// CI: build.yml → `perf` işi (yalnız elle tetiklenince).
+/// CI: build.yml → `perf` işi (elle ya da commit başlığında `[perf]`).
+///
+/// **pumpAndSettle YOK** (F18.7, 2026-11-02): koşu 41340200235 34 dk çıktısız
+/// kaldı. Kök neden: odaktaki metin alanının imleci sürekli yanıp söner
+/// (her 500 ms yeni kare ister) → `pumpAndSettle` hiç "durulmaz", 10 dk'lık
+/// zaman aşımına kadar bekler; senaryo başına birkaç kez. Yerine sabit süreli
+/// [_settle] — ölçüm için yeterli, asla takılmaz.
+Future<void> _settle(WidgetTester tester, [int frames = 30]) async {
+  for (var i = 0; i < frames; i++) {
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+}
+
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -82,7 +94,7 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     await binding.traceAction(() async {
       for (var i = 0; i < 6; i++) {
@@ -91,7 +103,7 @@ void main() {
           const Offset(0, -900),
           4000,
         );
-        await tester.pumpAndSettle();
+        await _settle(tester, 120);
       }
       for (var i = 0; i < 3; i++) {
         await tester.fling(
@@ -99,7 +111,7 @@ void main() {
           const Offset(0, 900),
           4000,
         );
-        await tester.pumpAndSettle();
+        await _settle(tester, 120);
       }
     }, reportKey: 'dashboard_scroll');
   });
@@ -120,7 +132,7 @@ void main() {
       ),
     );
     await tester.tap(find.byType(TextField));
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     await binding.traceAction(() async {
       var text = controller.text;
@@ -129,7 +141,7 @@ void main() {
         await tester.enterText(find.byType(TextField), text);
         await tester.pump(const Duration(milliseconds: 16));
       }
-      await tester.pumpAndSettle();
+      await _settle(tester);
     }, reportKey: 'editor_typing');
   });
 }

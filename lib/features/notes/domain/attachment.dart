@@ -1170,6 +1170,7 @@ class Attachment {
     String? sourceDigest,
     String? caption,
     List<int>? wave,
+    DateTime? createdAt,
   }) => Attachment(
     id: id,
     kind: kind,
@@ -1205,7 +1206,7 @@ class Attachment {
     sourceDigest: sourceDigest ?? this.sourceDigest,
     caption: caption ?? this.caption,
     wave: wave ?? this.wave,
-    createdAt: createdAt,
+    createdAt: createdAt ?? this.createdAt,
     rawKind: rawKind,
     extras: extras,
   );

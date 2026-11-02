@@ -8,6 +8,7 @@ import '../core/app_update.dart';
 import '../core/l10n_ext.dart';
 import '../core/widgets/customizable.dart';
 import '../core/widgets/undo_snackbar.dart';
+import '../features/settings/presentation/app_lock.dart';
 import '../features/notes/presentation/note_write_issues.dart';
 import '../features/settings/settings_providers.dart';
 import 'app_services.dart';
@@ -193,16 +194,21 @@ class NotlarApp extends ConsumerWidget {
             context,
             // DÜZENLEME MODU şeridi bütün ekranların üstünde (bkz.
             // customizable.dart) — mod kapalıyken ağaca hiçbir şey eklemez.
-            CustomizeModeHost(
+            // Uygulama kilidi (F18.6, varsayılan kapalı) her şeyin üstünde.
+            AppLockGate(
+              child: CustomizeModeHost(
               // Eski istemci kapısı (F1.5): `config/app.minClient` bu
               // sürümün veri sürümünü aştıysa tepede "güncelle" şeridi.
               child: UpdateRequiredBanner(
                 // Not yazım sorunları (F1.6: 1 MiB sınırı / sunucu reddi).
                 child: NoteWriteIssueListener(
                   // Oturum servisleri (F2.4) — ana ekranın build'inden çıktı.
-                  child: AppServices(child: child ?? const SizedBox.shrink()),
+                  child: NewVersionNotice(
+                    child: AppServices(child: child ?? const SizedBox.shrink()),
+                  ),
                 ),
               ),
+            ),
             ),
             fontScale,
             followSystem: followSystemText,

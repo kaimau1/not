@@ -1,3 +1,5 @@
+import '../domain/reminder_repeat.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -47,7 +49,11 @@ const _monthsTr = [
 /// `initializeDateFormatting` çağrılması gerekir, bildirim planlaması ise
 /// arka planda da koşuyor — 12 sabit dizgi bu bağımlılıktan ucuz.
 @visibleForTesting
-String reminderTimePrefix(DateTime when, {DateTime? now, AppLocalizations? l10n}) {
+String reminderTimePrefix(
+  DateTime when, {
+  DateTime? now,
+  AppLocalizations? l10n,
+}) {
   final reference = now ?? DateTime.now();
   final today = DateTime(reference.year, reference.month, reference.day);
   final day = DateTime(when.year, when.month, when.day);
@@ -156,11 +162,28 @@ void handleNotificationResponse(Ref ref, NotificationResponse response) {
   if (payload.startsWith('note:')) {
     final noteId = payload.substring('note:'.length);
     final repo = ref.read(notesRepositoryProvider);
+    // Tekrarlayan hatırlatıcı (F18.14): "Tamam" sonraki çalmaya kaydırır;
+    // "Ertele" tek seferlik ayrı bir bildirim kurar — reminderAt'i bir saat
+    // kaydırmak tekrarın SAATİNİ de kaydırırdı.
+    final note = (ref.read(notesStreamProvider).value ?? const <Note>[])
+        .where((n) => n.id == noteId)
+        .firstOrNull;
+    final repeat = ReminderRepeat.parse(note?.reminderRepeat);
+    final now = DateTime.now();
     switch (response.actionId) {
       case 'done':
-        repo?.setReminder(noteId, null);
+        if (note?.reminderAt != null && !repeat.isNone) {
+          repo?.setReminder(noteId, repeat.next(note!.reminderAt!, now));
+        } else {
+          repo?.setReminder(noteId, null);
+        }
       case 'snooze1h':
-        repo?.setReminder(noteId, DateTime.now().add(const Duration(hours: 1)));
+        final later = now.add(const Duration(hours: 1));
+        if (note != null && !repeat.isNone) {
+          unawaited(ref.read(reminderServiceProvider).snooze(note, later));
+        } else {
+          repo?.setReminder(noteId, later);
+        }
       default:
         try {
           ref.read(routerProvider).pushNote(noteRoutePath(noteId));
@@ -186,16 +209,31 @@ void handleNotificationResponse(Ref ref, NotificationResponse response) {
 /// zaten planlanır.
 List<int> orphanReminderIds(
   Iterable<({int id, String? payload})> pending,
-  Map<String, int> wanted,
+  Map<String, Set<int>> wanted,
 ) {
   const prefix = 'note:';
   return [
     for (final r in pending)
       if (r.payload != null &&
           r.payload!.startsWith(prefix) &&
-          wanted[r.payload!.substring(prefix.length)] != r.id)
+          !(wanted[r.payload!.substring(prefix.length)]?.contains(r.id) ??
+              false))
         r.id,
   ];
+}
+
+/// Notun planlanacak çalma anları (F18.14): tek seferlikte yalnız gelecekteki
+/// [Note.reminderAt]; tekrarlıda sonraki [count] çalma — uygulama günlerce
+/// açılmasa da her gün/hafta çalsın diye birkaç tanesi ÖNCEDEN kurulur.
+/// Geçmişte kalmış tekrarlı hatırlatıcı bir sonrakine ilerler.
+List<DateTime> reminderFireTimes(Note note, DateTime now, {int count = 7}) {
+  final at = note.reminderAt;
+  if (at == null) return const [];
+  final repeat = ReminderRepeat.parse(note.reminderRepeat);
+  if (repeat.isNone) return at.isAfter(now) ? [at] : const [];
+  final first = at.isAfter(now) ? at : repeat.next(at, now);
+  if (first == null) return const [];
+  return [first, ...repeat.upcoming(at, first, count - 1)];
 }
 
 class ReminderService {
@@ -206,8 +244,41 @@ class ReminderService {
   bool _initialized = false;
   ProviderSubscription<AsyncValue<List<Note>>>? _sub;
 
-  /// Planlanan bildirimlerin not bazında takibi (id → zaman).
-  final Map<String, DateTime> _scheduled = {};
+  /// Planlanan bildirimlerin not bazında takibi (id → zaman|tekrar imzası).
+  final Map<String, String> _scheduled = {};
+
+  /// Tekrarlı notta önceden kurulan çalma sayısı (F18.14).
+  static const _repeatAhead = 7;
+
+  static int _occurrenceId(String noteId, int k) =>
+      k == 0 ? _notificationId(noteId) : '$noteId#$k'.hashCode & 0x7fffffff;
+
+  static int _snoozeId(String noteId) => '$noteId#snooze'.hashCode & 0x7fffffff;
+
+  static Set<int> _idsFor(String noteId) => {
+    for (var k = 0; k < _repeatAhead; k++) _occurrenceId(noteId, k),
+    _snoozeId(noteId),
+  };
+
+  static String _signature(Note n) =>
+      '${n.reminderAt?.millisecondsSinceEpoch}|${n.reminderRepeat}';
+
+  Future<void> _cancelAll(String noteId) async {
+    for (var k = 0; k < _repeatAhead; k++) {
+      await _plugin.cancel(id: _occurrenceId(noteId, k));
+    }
+  }
+
+  /// Tekrarlı hatırlatıcıyı bir saat ertele: tek seferlik ayrı bildirim
+  /// (sıradaki düzenli çalmalar yerinde kalır).
+  Future<void> snooze(Note note, DateTime at) async {
+    try {
+      await _ensureInitialized();
+      await _scheduleOne(_snoozeId(note.id), note.id, note, at);
+    } catch (e) {
+      debugPrint('Erteleme kurulamadı: $e');
+    }
+  }
 
   Future<void> _ensureInitialized() async {
     if (_initialized) return;
@@ -224,9 +295,7 @@ class ReminderService {
       '@drawable/ic_stat_notlar',
     );
     await _plugin.initialize(
-      settings: const InitializationSettings(
-        android: androidInit,
-      ),
+      settings: const InitializationSettings(android: androidInit),
       onDidReceiveNotificationResponse: (response) =>
           handleNotificationResponse(_ref, response),
     );
@@ -393,7 +462,7 @@ class ReminderService {
       final pending = await _plugin.pendingNotificationRequests();
       final orphans = orphanReminderIds(
         [for (final r in pending) (id: r.id, payload: r.payload)],
-        {for (final id in wanted) id: _notificationId(id)},
+        {for (final id in wanted) id: _idsFor(id)},
       );
       for (final id in orphans) {
         await _plugin.cancel(id: id);
@@ -409,9 +478,17 @@ class ReminderService {
       final now = DateTime.now();
       final wanted = <String, Note>{
         for (final note in notes)
-          if (note.reminderAt != null && note.reminderAt!.isAfter(now))
-            note.id: note,
+          if (reminderFireTimes(note, now, count: 1).isNotEmpty) note.id: note,
       };
+      // Geçmişte kalmış TEKRARLI hatırlatıcı notta da ilerletilir (F18.14):
+      // kartlar ve Hatırlatıcılar ekranı sonraki çalmayı göstersin.
+      final repo = _ref.read(notesRepositoryProvider);
+      for (final note in wanted.values) {
+        final at = note.reminderAt!;
+        if (at.isAfter(now)) continue;
+        final next = reminderFireTimes(note, now, count: 1).first;
+        repo?.setReminder(note.id, next);
+      }
 
       if (wanted.isNotEmpty) await _askPermissionOnce();
 
@@ -422,7 +499,7 @@ class ReminderService {
       // Kaldırılan veya geçmişte kalanları iptal et.
       for (final id in _scheduled.keys.toList()) {
         if (!wanted.containsKey(id)) {
-          await _plugin.cancel(id: _notificationId(id));
+          await _cancelAll(id);
           _scheduled.remove(id);
         }
       }
@@ -434,10 +511,19 @@ class ReminderService {
       // planlanmıyordu.
       for (final entry in wanted.entries) {
         final note = entry.value;
-        if (_scheduled[entry.key] == note.reminderAt) continue;
+        if (_scheduled[entry.key] == _signature(note)) continue;
         try {
-          await _scheduleReminder(entry.key, note);
-          _scheduled[entry.key] = note.reminderAt!;
+          await _cancelAll(entry.key);
+          final times = reminderFireTimes(note, now);
+          for (var k = 0; k < times.length; k++) {
+            await _scheduleOne(
+              _occurrenceId(entry.key, k),
+              entry.key,
+              note,
+              times[k],
+            );
+          }
+          _scheduled[entry.key] = _signature(note);
         } catch (e) {
           debugPrint('Hatırlatıcı planlanamadı (${entry.key}): $e');
         }
@@ -448,7 +534,12 @@ class ReminderService {
     }
   }
 
-  Future<void> _scheduleReminder(String noteId, Note note) async {
+  Future<void> _scheduleOne(
+    int id,
+    String noteId,
+    Note note,
+    DateTime when,
+  ) async {
     final l10n = await loadNotificationL10n(_ref.read(localeProvider));
     final title = note.displayTitle.trim().isEmpty
         ? l10n.remindersUntitled
@@ -460,11 +551,7 @@ class ReminderService {
     // Önek ÇALMA anına göre: bildirim tam reminderAt'te görünür, yani o an
     // "bugün"dür. Planlama anına göre hesaplansaydı yarına kurulan
     // hatırlatıcı çaldığında hâlâ "Yarın 09:00" yazıyordu.
-    final prefix = reminderTimePrefix(
-      note.reminderAt!,
-      now: note.reminderAt,
-      l10n: l10n,
-    );
+    final prefix = reminderTimePrefix(when, now: when, l10n: l10n);
     final details = NotificationDetails(
       android: AndroidNotificationDetails(
         'reminders',
@@ -489,10 +576,10 @@ class ReminderService {
       ),
     );
     final body = trimmed.trim().isEmpty ? prefix : '$prefix · $trimmed';
-    final scheduledDate = tz.TZDateTime.from(note.reminderAt!, tz.local);
+    final scheduledDate = tz.TZDateTime.from(when, tz.local);
     try {
       await _plugin.zonedSchedule(
-        id: _notificationId(noteId),
+        id: id,
         title: title,
         body: body,
         scheduledDate: scheduledDate,
@@ -505,7 +592,7 @@ class ReminderService {
       // kurulmamaktansa birkaç dakika kayabilen inexact ile kurulur.
       if (e.code != 'exact_alarms_not_permitted') rethrow;
       await _plugin.zonedSchedule(
-        id: _notificationId(noteId),
+        id: id,
         title: title,
         body: body,
         scheduledDate: scheduledDate,

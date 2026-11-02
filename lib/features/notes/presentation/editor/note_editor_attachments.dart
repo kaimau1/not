@@ -507,6 +507,28 @@ extension _EditorAttachments on _NoteEditorScreenState {
     return (label: tag.fileName, attachment: attachment);
   }
 
+  /// Gövdede dokunulan NOT BAĞLANTISI etiketinin hedefi (F18.16).
+  String? _tappedNoteLink(EditableTextState? editable) {
+    final note = _note;
+    final selection = _bodyController.selection;
+    if (note == null || !selection.isValid || !selection.isCollapsed) {
+      return null;
+    }
+    final tag = tappedAttachmentTag(
+      logicalText: _bodyController.logicalText,
+      logicalCaret: wrapToLogicalOffset(
+        _bodyController.text,
+        selection.baseOffset,
+      ),
+      displayText: _bodyController.text,
+      selection: selection,
+      names: _bodyController.attachmentNames,
+      editable: editable,
+      tapGlobal: _bodyTapPoint.last,
+    );
+    return tag == null ? null : noteLinkTarget(note, tag.fileName);
+  }
+
   /// Metne gömülü ek etiketini AÇAR.
   ///
   /// [editing] false ise ÖNİZLEME: görsel/belge salt okunur açılır (çizim,
@@ -592,6 +614,11 @@ extension _EditorAttachments on _NoteEditorScreenState {
   void _openTagByName(String name) {
     final note = _note;
     if (note == null) return;
+    final linked = noteLinkTarget(note, name);
+    if (linked != null) {
+      _openLinkedNote(linked, editing: false);
+      return;
+    }
     final attachment = _NoteEditorScreenState._attachmentForTag(note, name);
     if (attachment != null) _showEmbedPreviewFor(attachment, name);
   }
@@ -787,11 +814,16 @@ extension _EditorAttachments on _NoteEditorScreenState {
   /// ile bağ TEK yazımda kaydedilir.
   void _applyEmbed({
     required String label,
-    required Attachment attachment,
+    Attachment? attachment,
+    String? noteId,
     required int start,
     required int end,
     FormatTarget? target,
   }) {
+    // Bağın hedefi: ek ya da (F18.16) not — `note:<kimlik>`.
+    final linkId = noteId != null
+        ? '$kNoteLinkPrefix$noteId'
+        : attachment!.id;
     final controller = target?.controller ?? _bodyController;
     final logical = controller.logicalText;
     // Aralığın iki ucundaki boşluklar etikete girmez ve YUTULMAZ (bkz.
@@ -816,7 +848,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
     List<NoteTagLink> links(Note note) => [
       for (final l in note.tagLinks)
         if (l.label != label) l,
-      NoteTagLink(label: label, attachmentId: attachment.id),
+      NoteTagLink(label: label, attachmentId: linkId),
     ];
     if (identical(controller, _bodyController)) {
       _mutate(
@@ -831,10 +863,124 @@ extension _EditorAttachments on _NoteEditorScreenState {
     }
     // GÖMÜLEN EK EKRANDAN KALKAR (kullanıcı isteği 2026-11-02): artık yazıdan
     // açılıyor; sayfada ya da sabit bölmede ikinci kez yer kaplamasın.
-    if (!(_note?.type.isPageNoteType ?? true)) {
+    if (attachment != null && !(_note?.type.isPageNoteType ?? true)) {
       unawaited(_setAttachmentView(attachment, AttachmentView.attached));
     }
-    _showSnack(context.l10n.attachmentTagInserted);
+    _showSnack(
+      noteId != null
+          ? context.l10n.noteLinkInserted
+          : context.l10n.attachmentTagInserted,
+    );
+  }
+
+  /// SEÇİLİ YAZIYI BİR NOTA BAĞLA (F18.16). Seçim yoksa imlece hedefin
+  /// başlığı etiket olarak yazılır.
+  Future<void> _linkToNote(
+    WrapTextController controller, {
+    FormatTarget? target,
+  }) async {
+    final note = _note;
+    if (note == null) return;
+    final selection = controller.selection;
+    final logical = controller.logicalText;
+    final start = selection.isValid
+        ? wrapToLogicalOffset(
+            controller.text,
+            selection.start,
+          ).clamp(0, logical.length)
+        : logical.length;
+    final end = selection.isValid
+        ? wrapToLogicalOffset(
+            controller.text,
+            selection.end,
+          ).clamp(start, logical.length)
+        : start;
+    final picked = await showNotePicker(
+      context,
+      notes: ref.read(notesStreamProvider).value ?? const <Note>[],
+      excludeId: note.id,
+    );
+    if (picked == null || !mounted) return;
+    final now = controller.logicalText;
+    if (end > start &&
+        end <= now.length &&
+        now.substring(start, end) == logical.substring(start, end)) {
+      _applyEmbed(
+        label: logical.substring(start, end),
+        noteId: picked.id,
+        start: start,
+        end: end,
+        target: target,
+      );
+      return;
+    }
+    // Seçim yok: başlık imlece yazılır, sonra etikete çevrilir.
+    final title = noteLinkLabel(picked, context.l10n.remindersUntitled);
+    final at = start.clamp(0, now.length);
+    final needsSpace = at > 0 && !RegExp(r'\s').hasMatch(now[at - 1]);
+    final inserted = '${needsSpace ? ' ' : ''}$title';
+    controller.setLogical(now.replaceRange(at, at, inserted), at + inserted.length);
+    if (target != null) target.commit();
+    _applyEmbed(
+      label: title,
+      noteId: picked.id,
+      start: at + inserted.length - title.length,
+      end: at + inserted.length,
+      target: target,
+    );
+  }
+
+  /// Öneriden bağlantı (F18.17): hedefin başlığı gövdenin SONUNA etiket
+  /// olarak eklenir.
+  void _linkNoteAtEnd(Note target) {
+    final title = noteLinkLabel(target, context.l10n.remindersUntitled);
+    final now = _bodyController.logicalText;
+    final prefix = now.trim().isEmpty ? '' : (now.endsWith('\n') ? '' : '\n');
+    final text = '$now$prefix$title';
+    _bodyController.setLogical(text, text.length);
+    _applyEmbed(
+      label: title,
+      noteId: target.id,
+      start: text.length - title.length,
+      end: text.length,
+    );
+  }
+
+  /// Gövdeye TEK karakter eklenip imlecin solu `[[` olduysa not seçici açılır.
+  void _maybeLinkTrigger(String before, String after) {
+    if (_readOnly || after.length != before.length + 1) return;
+    final sel = _bodyController.selection;
+    if (!sel.isValid || !sel.isCollapsed) return;
+    final caret = wrapToLogicalOffset(
+      _bodyController.text,
+      sel.baseOffset,
+    ).clamp(0, after.length);
+    if (caret < 2 || after.substring(caret - 2, caret) != '[[') return;
+    final text = after.replaceRange(caret - 2, caret, '');
+    _bodyController.setLogical(text, caret - 2);
+    _mutate((n) => n.copyWith(body: text));
+    unawaited(_linkToNote(_bodyController));
+  }
+
+  /// Bağlı notu açar (okurken doğrudan, yazarken "Aç" önerisiyle).
+  void _openLinkedNote(String noteId, {required bool editing}) {
+    final notes = ref.read(notesStreamProvider).value ?? const <Note>[];
+    final target = notes.where((n) => n.id == noteId).firstOrNull;
+    if (target == null) {
+      _showSnack(context.l10n.noteLinkMissing);
+      return;
+    }
+    void open() => openNoteRoute(context, target);
+    if (!editing) {
+      open();
+      return;
+    }
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showMessage(
+        noteLinkLabel(target, context.l10n.remindersUntitled),
+        action: SnackBarAction(label: context.l10n.openLink, onPressed: open),
+      );
   }
 
   void _rememberTargetSelection() {
@@ -1036,6 +1182,9 @@ extension _EditorAttachments on _NoteEditorScreenState {
     final tagged = tagLabel == null
         ? null
         : _NoteEditorScreenState._attachmentForTag(note!, tagLabel);
+    final linkedNote = tagLabel == null || note == null
+        ? null
+        : noteLinkTarget(note, tagLabel);
     void run(VoidCallback action) {
       state.hideToolbar();
       action();
@@ -1054,6 +1203,12 @@ extension _EditorAttachments on _NoteEditorScreenState {
         ContextMenuButtonItem(
           label: l10n.attachmentTagPreview,
           onPressed: () => run(() => _showEmbedPreviewFor(tagged, tagLabel!)),
+        ),
+      if (linkedNote != null)
+        ContextMenuButtonItem(
+          label: l10n.noteLinkOpen,
+          onPressed: () =>
+              run(() => _openLinkedNote(linkedNote, editing: false)),
         ),
       if (url != null)
         ContextMenuButtonItem(
@@ -1086,6 +1241,18 @@ extension _EditorAttachments on _NoteEditorScreenState {
           onPressed: () => run(
             () => unawaited(_embedIntoSelection(controller, target: target)),
           ),
+        ),
+      // NOTA BAĞLA (F18.16): seçili yazı ya da imleç (başlık yazılır).
+      if (tagged == null && linkedNote == null && !_readOnly)
+        ContextMenuButtonItem(
+          label: l10n.noteLinkAction,
+          onPressed: () =>
+              run(() => unawaited(_linkToNote(controller, target: target))),
+        ),
+      if (linkedNote != null)
+        ContextMenuButtonItem(
+          label: l10n.embedRemove,
+          onPressed: () => run(() => _unlinkEmbed(tagLabel!)),
         ),
       if (tagged != null) ...[
         ContextMenuButtonItem(

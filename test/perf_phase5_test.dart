@@ -110,7 +110,10 @@ void main() {
           (id: 999001, payload: 'briefing'), // brifinge dokunulmaz
           (id: 5, payload: null),
         ],
-        {'a': 1, 'c': 30},
+        {
+          'a': {1},
+          'c': {30},
+        },
       );
       expect(orphans, [2, 3]);
     });

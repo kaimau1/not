@@ -100,7 +100,7 @@
   "unlockNote": "Unlock",
   "lockedNote": "Locked note",
   "unlockAuthReason": "Verify your identity to open the locked note",
-  "exportBackup": "Export backup (JSON)",
+  "exportBackup": "Full backup",
   "expandListItems": "Show list rows in full",
   "expandListItemsInfo": "Long list items wrap over several lines and stay fully visible. When off, a row stays on one line and expands when tapped.",
   "quickCaptureRowSetting": "Quick note bar",
@@ -382,7 +382,7 @@
   "syncLimitTitle": "Automatic upload limit",
   "syncLimitInfo": "Attachments larger than this stay on the device and aren't uploaded. Note text always syncs.",
   "syncLimitUnlimited": "No limit",
-  "importBackup": "Restore from backup (JSON)",
+  "importBackup": "Restore from backup",
   "importBackupDone": "{count} notes restored",
   "importBackupInvalid": "Invalid backup file",
   "aiHubTitle": "AI",
@@ -2213,17 +2213,56 @@
   "colorToneVivid": "vivid",
   "colorToneDark": "dark",
   "colorShade": "{color}, {tone}",
-  "@colorShade": {"placeholders": {"color": {"type": "String"}, "tone": {"type": "String"}}},
+  "@colorShade": {
+    "placeholders": {
+      "color": {
+        "type": "String"
+      },
+      "tone": {
+        "type": "String"
+      }
+    }
+  },
   "itemEmptyLabel": "Empty item",
   "bubbleSemantic": "Bubble, page {page}: {text}",
-  "@bubbleSemantic": {"placeholders": {"page": {"type": "int"}, "text": {"type": "String"}}},
+  "@bubbleSemantic": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "bubbleSemanticEmpty": "Empty bubble, page {page}",
-  "@bubbleSemanticEmpty": {"placeholders": {"page": {"type": "int"}}},
+  "@bubbleSemanticEmpty": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
   "mediaBoxSemantic": "{kind}: {name}",
-  "@mediaBoxSemantic": {"placeholders": {"kind": {"type": "String"}, "name": {"type": "String"}}},
+  "@mediaBoxSemantic": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "formatSizeLabel": "Size",
   "formatSizeValue": "Size {percent}%",
-  "@formatSizeValue": {"placeholders": {"percent": {"type": "int"}}},
+  "@formatSizeValue": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "customColor": "Custom colour…",
   "embedLasso": "Select by circling",
   "embedLassoHint": "Circle the text to link with your finger · scroll with two fingers",
@@ -2325,5 +2364,69 @@
   "tipsResetTitle": "Show tips again",
   "tipsResetInfo": "The small one-time tips (gestures, Meaning search) appear again.",
   "tipsResetDone": "Tips will be shown again",
-  "swipeModeInfo": "When you swipe the screen sideways in grid view. In list view, swiping a row pins it (right) or archives it (left)."
+  "swipeModeInfo": "When you swipe the screen sideways in grid view. In list view, swiping a row pins it (right) or archives it (left).",
+  "aiQuotaRenewsAt": "Renews at {time}",
+  "backupInfo": "All notes with attachments, drawings, bubbles and folders in one file. Restoring twice doesn't duplicate notes.",
+  "backupInProgress": "Preparing backup",
+  "restoreInProgress": "Restoring",
+  "backupShareSubject": "Notes backup",
+  "backupCancelled": "Cancelled",
+  "backupProgressCount": "{done} / {total} notes",
+  "restoreBackupResult": "{restored} notes restored, {skipped} skipped (already there)",
+  "accountRecoverBringNotes": "Bring my notes",
+  "accountRecoverBringDone": "Switched account, {count} notes moved",
+  "accountRecoverBringFailed": "Switched account but notes couldn't be moved; the guest notes are untouched",
+  "appLockTitle": "App lock",
+  "appLockInfo": "Asks on launch and when returning from background, using the note lock method. Not encryption; this device only.",
+  "appLockWebNeedsSecret": "No device lock on the web: pick a password or pattern above first.",
+  "appLockReason": "Unlock Notes",
+  "appLockLockedTitle": "Notes is locked",
+  "appLockUnlock": "Unlock",
+  "appLockDelayTitle": "Lock:",
+  "appLockDelayNow": "immediately",
+  "appLockDelayMinutes": "after {minutes} min",
+  "appLockHideRecents": "Hide content in recent apps",
+  "repeatTitle": "Repeat",
+  "repeatNone": "Don't repeat",
+  "repeatDaily": "Every day",
+  "repeatWeekdays": "Every weekday",
+  "repeatWeekly": "Every week",
+  "repeatWeeklyOn": "Weekly: {days}",
+  "repeatMonthly": "Every month",
+  "repeatYearly": "Every year",
+  "importOther": "Import from other apps",
+  "importOtherInfo": "Google Keep (Takeout zip), Markdown/txt (file or zip), Evernote (.enex)",
+  "importInProgress": "Importing",
+  "importOtherNone": "No notes to import in this file",
+  "importOtherResult": "{imported} notes imported, {skipped} skipped (already there), {failed} unreadable",
+  "noteLinkAction": "Link to note",
+  "noteLinkOpen": "Open note",
+  "noteLinkPickTitle": "Link to which note?",
+  "noteLinkInserted": "Linked to note",
+  "noteLinkMissing": "Linked note not found (it may be deleted)",
+  "backlinksTitle": "Notes linking here",
+  "backlinksCount": "{count} backlinks",
+  "relatedNotesTitle": "Related notes",
+  "relatedNotesNone": "No related notes found",
+  "relatedNotesLink": "Link",
+  "studyCardsTitle": "Today's cards",
+  "studyCardsHubInfo": "Spaced repetition: {count} cards today",
+  "studyCardsEmpty": "No cards due today",
+  "studyCardsDone": "All done for today!",
+  "studyCardsEmptyInfo": "Use \"Make cards\" in a note's ⋮ menu and AI turns the note into question–answer cards.",
+  "studyCardsLeft": "{count} cards left",
+  "studyCardsReveal": "Show answer",
+  "studyGradeAgain": "Again",
+  "studyGradeHard": "Hard",
+  "studyGradeGood": "Good",
+  "studyGradeEasy": "Easy",
+  "studyCardsMake": "Make cards",
+  "studyCardsMakeMore": "Make cards ({count} so far)",
+  "studyCardsGenerating": "Making cards…",
+  "studyCardsFailed": "Couldn't make cards",
+  "studyCardsPreview": "{count} cards made",
+  "studyCardsSave": "Save to note",
+  "studyCardsSaved": "{count} cards saved",
+  "updateAvailable": "New version available: {name}",
+  "updateDownload": "Download from GitHub"
 }

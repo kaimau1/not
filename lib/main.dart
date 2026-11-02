@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'app/app.dart';
+import 'core/app_check_policy.dart';
 import 'core/constants.dart';
 import 'core/crash_reporting.dart';
 import 'core/error_log.dart';
@@ -48,9 +49,20 @@ import 'firebase_options.dart';
 /// Play Integrity, uygulamanın Play üzerinden dağıtılmasını bekler; elle
 /// kurulan APK'da doğrulama başarısız olabilir — zorlama kapalı olduğu için
 /// bu bir sorun değil, yalnız o istekler "doğrulanmamış" sayılır.
+///
+/// Web (F18.1, 2026-11-02): site herkese açık ve Google hesaplı kullanıcının
+/// AI'ı projenin faturasına gidiyor → reCAPTCHA Enterprise. Anahtar
+/// (`RECAPTCHA_SITE_KEY`) yoksa web'de hiç etkinleştirilmez; Firebase AI
+/// istekleri App Check etkinse jetonu kendiliğinden taşır (firebase_ai 3.x
+/// `googleAI()` App Check hizmetini uygulamadan kendisi alır, `app.getService`).
 Future<void> _activateAppCheck() async {
-  // Yalnız Android: masaüstünde App Check eklentisi yok, çağrı hata verir.
-  if (kIsWeb || !Platform.isAndroid) return;
+  if (!appCheckSupported(
+    isWeb: kIsWeb,
+    isAndroid: !kIsWeb && Platform.isAndroid,
+    webSiteKey: AppConstants.recaptchaSiteKey,
+  )) {
+    return;
+  }
   try {
     await FirebaseAppCheck.instance.activate(
       // Hata ayıklama derlemesi Play Integrity'den geçemez; debug sağlayıcısı
@@ -58,6 +70,9 @@ Future<void> _activateAppCheck() async {
       providerAndroid: kDebugMode
           ? const AndroidDebugProvider()
           : const AndroidPlayIntegrityProvider(),
+      providerWeb: kIsWeb
+          ? ReCaptchaEnterpriseProvider(AppConstants.recaptchaSiteKey)
+          : null,
     );
   } catch (e) {
     // App Check kurulamazsa uygulama yine çalışmalı (zorlama kapalı).

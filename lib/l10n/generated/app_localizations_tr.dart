@@ -317,7 +317,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get unlockAuthReason => 'Kilitli notu açmak için kimliğini doğrula';
 
   @override
-  String get exportBackup => 'Yedeği dışa aktar (JSON)';
+  String get exportBackup => 'Tam yedek al';
 
   @override
   String get expandListItems => 'Liste satırlarını tam göster';
@@ -1187,7 +1187,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get syncLimitUnlimited => 'Sınırsız';
 
   @override
-  String get importBackup => 'Yedekten geri yükle (JSON)';
+  String get importBackup => 'Yedekten geri yükle';
 
   @override
   String importBackupDone(int count) {
@@ -6261,4 +6261,230 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get swipeModeInfo =>
       'Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola).';
+
+  @override
+  String aiQuotaRenewsAt(String time) {
+    return '$time itibarıyla yenilenir';
+  }
+
+  @override
+  String get backupInfo =>
+      'Bütün notlar ekleri, çizimleri, balonları ve klasörleriyle tek dosyada. İki kez yüklense de not çoğalmaz.';
+
+  @override
+  String get backupInProgress => 'Yedek hazırlanıyor';
+
+  @override
+  String get restoreInProgress => 'Geri yükleniyor';
+
+  @override
+  String get backupShareSubject => 'Notlar yedeği';
+
+  @override
+  String get backupCancelled => 'İptal edildi';
+
+  @override
+  String backupProgressCount(int done, int total) {
+    return '$done / $total not';
+  }
+
+  @override
+  String restoreBackupResult(int restored, int skipped) {
+    return '$restored not geri yüklendi, $skipped atlandı (zaten var)';
+  }
+
+  @override
+  String get accountRecoverBringNotes => 'Notları yanıma al';
+
+  @override
+  String accountRecoverBringDone(int count) {
+    return 'Hesabına geçildi, $count not taşındı';
+  }
+
+  @override
+  String get accountRecoverBringFailed =>
+      'Hesabına geçildi ama notlar taşınamadı; misafir notları yerinde duruyor';
+
+  @override
+  String get appLockTitle => 'Uygulama kilidi';
+
+  @override
+  String get appLockInfo =>
+      'Açılışta ve arka plandan dönüşte not kilidinin yöntemiyle sorar. Şifreleme değildir; yalnız bu cihazda geçerli.';
+
+  @override
+  String get appLockWebNeedsSecret =>
+      'Web\'de cihaz kilidi yok: önce yukarıdan şifre ya da desen seç.';
+
+  @override
+  String get appLockReason => 'Notlar\'ın kilidini aç';
+
+  @override
+  String get appLockLockedTitle => 'Notlar kilitli';
+
+  @override
+  String get appLockUnlock => 'Kilidi aç';
+
+  @override
+  String get appLockDelayTitle => 'Kilitle:';
+
+  @override
+  String get appLockDelayNow => 'hemen';
+
+  @override
+  String appLockDelayMinutes(int minutes) {
+    return '$minutes dk sonra';
+  }
+
+  @override
+  String get appLockHideRecents => 'Son uygulamalarda içeriği gizle';
+
+  @override
+  String get repeatTitle => 'Tekrar';
+
+  @override
+  String get repeatNone => 'Tekrarlama';
+
+  @override
+  String get repeatDaily => 'Her gün';
+
+  @override
+  String get repeatWeekdays => 'Hafta içi her gün';
+
+  @override
+  String get repeatWeekly => 'Her hafta';
+
+  @override
+  String repeatWeeklyOn(String days) {
+    return 'Her hafta: $days';
+  }
+
+  @override
+  String get repeatMonthly => 'Her ay';
+
+  @override
+  String get repeatYearly => 'Her yıl';
+
+  @override
+  String get importOther => 'Başka uygulamadan içe aktar';
+
+  @override
+  String get importOtherInfo =>
+      'Google Keep (Takeout zip\'i), Markdown/txt (tek dosya ya da zip), Evernote (.enex)';
+
+  @override
+  String get importInProgress => 'İçe aktarılıyor';
+
+  @override
+  String get importOtherNone => 'Bu dosyada içe aktarılacak not bulunamadı';
+
+  @override
+  String importOtherResult(int imported, int skipped, int failed) {
+    return '$imported not içe aktarıldı, $skipped atlandı (zaten var), $failed okunamadı';
+  }
+
+  @override
+  String get noteLinkAction => 'Nota bağla';
+
+  @override
+  String get noteLinkOpen => 'Notu aç';
+
+  @override
+  String get noteLinkPickTitle => 'Hangi nota bağlansın?';
+
+  @override
+  String get noteLinkInserted => 'Nota bağlandı';
+
+  @override
+  String get noteLinkMissing => 'Bağlı not bulunamadı (silinmiş olabilir)';
+
+  @override
+  String get backlinksTitle => 'Bu nota bağlananlar';
+
+  @override
+  String backlinksCount(int count) {
+    return '$count bağlantı';
+  }
+
+  @override
+  String get relatedNotesTitle => 'İlgili notlar';
+
+  @override
+  String get relatedNotesNone => 'İlgili not bulunamadı';
+
+  @override
+  String get relatedNotesLink => 'Bağla';
+
+  @override
+  String get studyCardsTitle => 'Bugünün kartları';
+
+  @override
+  String studyCardsHubInfo(int count) {
+    return 'Aralıklı tekrar: bugün $count kart';
+  }
+
+  @override
+  String get studyCardsEmpty => 'Bugün tekrar edilecek kart yok';
+
+  @override
+  String get studyCardsDone => 'Bugünlük bitti!';
+
+  @override
+  String get studyCardsEmptyInfo =>
+      'Bir notun ⋮ menüsünden \"Kart üret\" ile yapay zekâ nottan soru–cevap kartları çıkarır.';
+
+  @override
+  String studyCardsLeft(int count) {
+    return '$count kart kaldı';
+  }
+
+  @override
+  String get studyCardsReveal => 'Cevabı göster';
+
+  @override
+  String get studyGradeAgain => 'Tekrar';
+
+  @override
+  String get studyGradeHard => 'Zor';
+
+  @override
+  String get studyGradeGood => 'İyi';
+
+  @override
+  String get studyGradeEasy => 'Kolay';
+
+  @override
+  String get studyCardsMake => 'Kart üret';
+
+  @override
+  String studyCardsMakeMore(int count) {
+    return 'Kart üret ($count kart var)';
+  }
+
+  @override
+  String get studyCardsGenerating => 'Kartlar hazırlanıyor…';
+
+  @override
+  String get studyCardsFailed => 'Kart üretilemedi';
+
+  @override
+  String studyCardsPreview(int count) {
+    return '$count kart üretildi';
+  }
+
+  @override
+  String get studyCardsSave => 'Nota kaydet';
+
+  @override
+  String studyCardsSaved(int count) {
+    return '$count kart kaydedildi';
+  }
+
+  @override
+  String updateAvailable(String name) {
+    return 'Yeni sürüm var: $name';
+  }
+
+  @override
+  String get updateDownload => 'GitHub\'dan indir';
 }

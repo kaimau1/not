@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../notes/presentation/study_cards_screen.dart' show dueCards;
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_similarity.dart';
@@ -136,6 +137,18 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
         subtitle: l10n.hubBriefingInfo,
         showChevron: true,
         onTap: () => context.push('/briefing'),
+      ),
+      // Aralıklı tekrar (F18.19): bugün sırası gelen kartlar.
+      _ToolCard(
+        key: const ValueKey('ai-hub-cards'),
+        icon: Icons.style_outlined,
+        accent: _AiAccent.teal,
+        title: l10n.studyCardsTitle,
+        subtitle: l10n.studyCardsHubInfo(
+          dueCards(notes, DateTime.now()).length,
+        ),
+        showChevron: true,
+        onTap: () => context.push('/cards'),
       ),
       _ToolCard(
         icon: Icons.headphones_outlined,

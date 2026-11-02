@@ -150,26 +150,26 @@ extension _DashSelection on _DashboardScreenState {
 
   /// Seçili notların metnini birleştirir. Kilitli notlardan yalnız başlık
   /// alınır (içerik kimlik doğrulaması olmadan sızmasın).
-  String _joinSelected(Set<String> ids) {
+  ///
+  /// Liste HAFİF notlar taşır (F3.13: balon/sayfa notu ağır belgede) →
+  /// metin üretilmeden önce [hydrateNote] (F18.12: toplu kopya balonları
+  /// kaçırıyordu; Paylaş levhası ve kart ⋮ Kopyala zaten yapıyordu).
+  Future<String> _joinSelected(Set<String> ids) async {
     final l10n = context.l10n;
-    // Paylaş levhasıyla AYNI biçim (bkz. noteShareText): `- [ ]` yerine
-    // ☐/☑, sayfa notlarında "Sayfa 3". Kilitli notun yalnız başlığı gider.
-    return joinShareTexts([
+    final notes = [
       for (final n in _selectedNotes(ids))
-        // displayTitle: başlık biçimlendirilebiliyor, işaretler panoya sızmasın.
-        if (n.locked)
-          n.displayTitle.trim()
-        else
-          noteShareText(n, pageLabel: l10n.pageLabel),
-    ]);
+        n.locked ? n : await hydrateNote(ref, n),
+    ];
+    return joinSelectedShareText(notes, pageLabel: l10n.pageLabel);
   }
 
   Future<void> _copySelected(Set<String> ids) async {
     final l10n = context.l10n;
-    await Clipboard.setData(ClipboardData(text: _joinSelected(ids)));
+    final messenger = ScaffoldMessenger.of(context);
+    final text = await _joinSelected(ids);
+    await Clipboard.setData(ClipboardData(text: text));
     ref.read(selectedNoteIdsProvider.notifier).clear();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
+    messenger
       ..hideCurrentSnackBar()
       ..showMessage(l10n.copied);
   }
@@ -177,7 +177,7 @@ extension _DashSelection on _DashboardScreenState {
   Future<void> _shareSelected(Set<String> ids) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    final text = _joinSelected(ids);
+    final text = await _joinSelected(ids);
     ref.read(selectedNoteIdsProvider.notifier).clear();
     // Sessiz kapanmak YOK: yalnız belge notu seçildiyse (düz metni boştur)
     // düğmenin neden bir şey yapmadığı söylenir.

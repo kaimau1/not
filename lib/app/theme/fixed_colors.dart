@@ -32,6 +32,9 @@ abstract final class FixedColors {
   static const kindSlide = Color(0xFFEF6C00);
   static const kindAudio = Color(0xFF1565C0);
   static const kindText = Color(0xFF6D4C41);
+
+  /// Not bağlantısı etiketi (F18.16).
+  static const kindNoteLink = Color(0xFF00796B);
   static const kindUnknown = Color(0xFF757575);
 
   /// Fotoğraf/video üstündeki koyu geçiş: altta yazı okunsun diye. Medya

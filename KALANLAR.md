@@ -14,371 +14,67 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 
 ## 1. Senin yapacakların → `KALAN_ISLER_PLANI.md` Faz 19 (B, D)
 
-## 2. Cihaz doğrulama turu
-Hepsi testlerle korunuyor; risk "gözle görülmedi". Sorun görünce madde
-numarasıyla bildir.
-**2026-11-01 cihaz turu sonucu (Mi Note 10 Lite, Android 12, misafir, v1.1.567):**
-tam görülen 3 madde silindi. Kısmen görülenler listede duruyor: ana ekran üst çubuğu ve
-Süz, koyu tema, Lagün teması, Hatırlatıcılar boş hâl + `Yarın 09:00` (OS alarmı kuruluyor),
-klasörle süzme, el yazısı → nota görsel, PDF → Balonlu, balon yazma, Balonlar listesi,
-misafir AI kartı, Paylaş levhası. Geri kalan hiçbir madde denenmedi (token bütçesi); Google
-hesabı, ikinci cihaz, tablet, S Pen, Android 13+, web, TalkBack sesi bu telefonda/oturumda yapılamaz.
+## 2. Duman testi (~10 dk telefon + web) — F18.31, 2026-11-02
+143 maddelik eski liste `KALANLAR_ARSIV.md` sonunda (olduğu gibi). Hepsi
+testlerle korunuyor; burada alan başına 1–2 adım. F18.8 akış testleri
+(yaz → paylaş, iki sayfalı kopya, işaretlileri sil, tam yedek) ve birim
+testleri otomatik doğrulananları kapsıyor. Sorun görünce madde numarasıyla
+bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 
-**2026-11-01 Faz 19 cihaz turu (aynı telefon, misafir, v1.1.572):** yalnız 1 madde tam görülüp silindi
-(madde ortasında Enter + eskiyen menü tarifi). Kısmen görülenler listede duruyor: biçim paneli klavye
-açıkken (taşma yok; Tümü + kalın/renk/boyut; metin seçince alçalma görülmedi), sürüm geçmişi (açıldığı
-hâl, geri dönmeden önce, bu sürüme dön; AI öncesi görülmedi), not kilidi (şifre, 5 yanlışta bekleme, silmede de
-soruyor; desen ve Unuttum sonucu görülmedi), çöp listesi, Paylaş levhası (PDF seçici), Paylaş → Notlar →
-Balonlu, balon yazma + Balonlar listesi, ses kaydı nota giriyor (çalma görülmedi), liste Seç/yıldız menüsü.
-Tur 3 hata düzeltti; v1.1.578 telefona kurulup doğrulandı: izinsiz paylaşım çökmüyor (uygulama kapalı/açık),
-izinli paylaşım çalışıyor, biçim işaretleri erişilebilirlik metninde ve sürüm önizlemesinde yok. Toast metni gözle
-görülmedi (günlükte kayıt var); TalkBack'in nasıl okuduğu dinlenmedi. Telefonda ekran kilidi yok: kilit yöntemi "Parmak izi" iken not doğrulamasız açılır (kasıtlı, `note_guard.dart`).
-Geri kalan ~125 madde denenmedi. Yapılamayanlar: dosya seçici telefonda Dosya Okuyucu'ya gidiyor (başka
-uygulama; ek ekleme denenmedi), widget (başlatıcıya dokunmak gerekir), en büyük yazı (sistem ayarı).
-- [ ] **Veri kaybı — kanıt bekliyor:** liste notunda bir maddenin metni boşaldı ("Boş madde"), adımlar
-  3 denemede yeniden üretilemedi (bölme+birleştirme, işaretleme, yıldız, Seç, dosya seçici, çökme, zorla
-  kapatma). Tekrar görülürse tam adımları yaz; tahminle yama yapılmadı.
+**Telefon (v1.1.N, Google hesabı; ~7 dk)**
+1. [ ] Açılış + ana ekran: 100+ notla hızlı kaydır, nota dokun → karttan
+   genişleyerek açılır, geri → karta küçülür. Telefonu çevir → liste aynı
+   yerde (F18.11).
+2. [ ] Metin notu: yaz, Biçim → kalın + renk, ☑ ile satırı maddeye çevir;
+   `[[` yaz → not seç → bağlantı; dokun → o not açılır; hedef notta
+   "1 bağlantı" çipi (F18.16). ⋮ → İlgili notlar → Bağla (F18.17).
+3. [ ] Liste notu: işaretle, madde ortasında Enter + başta Backspace,
+   "İşaretlileri sil".
+4. [ ] Görsel ekle → üstüne kalemle çiz + açık metin → Paylaş → Ekler / PDF:
+   çizim ve yazı görselde (F18.13).
+5. [ ] + → Dosya → PDF → Belge gibi not al → basılı tut → balon → Paylaş:
+   "Sayfa N — …" satırı; ana ekranda toplu seç → Kopyala → balon satırı
+   panoda (F18.12).
+6. [ ] Hatırlatıcı: başlık çipi → Hatırlat → saat → Tekrar: Her gün;
+   Hatırlatıcılar ekranında 🔁. Telefonu YENİDEN BAŞLAT → bildirim yine
+   geliyor; "Tamam" yarına kaydırıyor (F18.14).
+7. [ ] Sesli: ana ekran mikrofonu = dikte; basılı tut = AI sesli not
+   ("her pazartesi 9'da toplantı" → tekrarlı hatırlatıcı).
+8. [ ] Yapay zekâ: Tüm notlar sohbetine eski bir nottaki bilgiyi sor →
+   cevap + kaynak not çipi (F18.18). Bir notta ⋮ → Kart üret → kaydet →
+   Yapay zekâ → Bugünün kartları → Cevabı göster → İyi (F18.19).
+9. [ ] Ayarlar → Hesap → Tam yedek al (ilerleme + iptal) → web'de ya da başka
+   hesapta Yedekten geri yükle → görsel/çizim/balon/sayfa/klasör geliyor;
+   ikinci yükleme "N atlandı" (F18.4 = F19.A4). Başka uygulamadan içe aktar
+   → Keep Takeout zip'i (F18.15).
+10. [ ] Ayarlar → Hesap → Uygulama kilidi aç → uygulamayı arka plana al,
+   1 dk sonra dön → kilit; widget'tan / bildirimden açınca da kilit;
+   "Son uygulamalarda gizle" → son uygulamalar boş (F18.6).
+11. [ ] Not kilidi (şifre) + sürüm geçmişi "Bu sürüme dön".
+12. [ ] Paylaş → Notlar (başka uygulamadan metin + PDF) → yeni not / var olan
+   not; Not paketi gönder-aç.
+13. [ ] Erişilebilirlik: TalkBack'te kart tek seferde okunuyor; telefon yazısı
+   en büyük + "Sistem yazı boyutunu izle" → taşma yok (F19.C2).
+14. [ ] Kişisel köprü: Harita "not al" (uygulama kapalı), Kanallarım "Not al",
+   Asistan sorgu (F19.C4).
+15. [ ] Yeni sürüm çıkınca açılışta bir kez "Yeni sürüm var" + Ayarlar →
+   Hakkında satırı (F18.21).
 
+**Web (Chrome, ~3 dk)**
+16. [ ] Soğuk açılış tek logo; giriş; not yaz → telefonda ≤ 20 sn.
+17. [ ] + → Dosya → büyük PDF → balon → Balonlu PDF indir (web'de ağır iş:
+   donma süresi kabul edilebilir mi — F18.9).
+18. [ ] Pencereyi daralt/genişlet → liste yerinde; Drive'daki ek "bağlan" ile
+   iniyor.
+19. [ ] Ayarlar → Uygulama kilidi web'de yalnız şifre/desenle açılıyor.
 
-**2026-11-02 tablet listesi — TABLETTE GÖRÜLMEDİ (oturumda tablet bağlı değildi)**
-Telefonda görüldü (Mi Note 10 Lite, misafir, v1.1.583, `adb shell input stylus`): kalem sayfaya
-yazıyor ve tepsi açılıyor, metne imleç koymuyor; parmakla dokunup klavyeyle yazma; ✓ ile kapanma; geri
-dönüp yeniden açınca çizgiler duruyor; kartta el yazısı; Gelen basılı tut levhası ve yana kaydırma durağı.
-- [ ] Kalem: notun her yerine yaz, parmakla dokun + klavyeyle yaz, yazı çizimin altında
-  kalmıyor; basınç, avuç içi, yan düğme/silgi (adb ile denenemez). Sol sütun, ayar
-  penceresi, tam ekran (dikey + yatay, ray/liste kalkıyor, sistem çubukları, çıkış).
-- [ ] PDF/sunum/görsel üstünde kalem solda; tepsi belgenin solunu örtüyor mu.
-- [ ] Artı menüsü: liste panelini en dara çek, panel sola taşmıyor.
-- [ ] Web, gerçek hesap: Drive'daki görsel/PDF "Google Drive'da" kutusu → dokun → bağlan →
-  iniyor; web'den ek yükleme; paylaşılan klasörde ek geliyor (gelmiyorsa sahibin
-  telefonunda Drive bağlı mı, "yükleniyor" göstergesi var mı).
-- [ ] Gelen: basılı tut → düzenle/gizle/sırala, yana kaydırma durağı, Tüm klasörler'den geri aç.
-- [ ] Gömme: elle daire baştan açık, ipucu şeritte, ek şeride iniyor; önizlemede kopyala.
+**Açık kalan gözlem**
+- [ ] **Veri kaybı — kanıt bekliyor (2026-11-01):** liste notunda bir maddenin
+  metni boşaldı ("Boş madde"); 3 denemede yeniden üretilemedi. Tekrar
+  görülürse tam adımları yaz; tahminle yama yapılmadı.
 
-**2026-10-31 Faz 16 (görsel bütünlük) — koyu tema + simgeler**
-- [ ] Koyu, kâğıt ve kırık beyaz temada: ana ekran, klasör, Arşiv, Çöp,
-  Gelen ve paylaşılanlar, Hatırlatıcılar — ilk açılışta çark yerine kart
-  iskeleti; çevrimdışı/izin hatasında tek hata görünümü + "Tekrar dene".
-- [ ] Simgeler: Gelen artık ZARF (rayda, şeritte, Ayarlar'da); Not paketi
-  zip; Kılavuz soru işareti; ⋮'de "Klasöre taşı" taşıma simgesi; renk
-  seçimleri boya kovası, palet yalnız Görünüm. "Bu ne?" dediğin kaldı mı?
-- [ ] Levhalar: Süz, Paylaş, Görünüm, AI ve not ⋮ menüsü başlık solda + ✕
-  sağda (Süz'deki "Kapat" hapı ✕ oldu); bölüm başlıkları cümle düzeninde
-  (Ekle, Çöp, Klasörler, Hatırlatıcılar, Yapay zekâ ekranı).
-- [ ] YouTube rozeti/oynat simgesi marka kırmızısı; fotoğraf üstü koyu
-  geçiş her yerde aynı.
-
-**2026-10-31 Faz 15 (erişilebilirlik) — TalkBack + en büyük yazı**
-- [ ] Ayarlar → Görünüm → "Sistem yazı boyutunu izle" varsayılan KAPALI;
-  kapalıyken telefonun yazı boyutu/kalın metni uygulamayı DEĞİŞTİRMİYOR.
-- [ ] Anahtarı aç, telefonda yazıyı EN BÜYÜĞE al + Kalın metin: ana ekran
-  (kartlar, klasör şeridi, Süz), not ekranı (alt çubuk, biçim paneli, liste),
-  Paylaş ve Yapay zekâ levhası — kesilen/üst üste binen yazı var mı.
-- [ ] TalkBack: kart TEK seferde okunuyor ("başlık. özet. N madde"), çift
-  dokunuş açıyor; ⋮ ayrı "Not menüsü" diye okunuyor.
-- [ ] TalkBack: liste notunda kutucuk "Süt, onay kutusu, işaretli değil";
-  işaretle → durum söyleniyor.
-- [ ] TalkBack: biçim paneli/zemin şeridi/palet renkleri adıyla ("Mavi,
-  koyu"); yazı boyutu çipleri "radyo düğmesi"; #etiket çipi "düğme".
-- [ ] TalkBack: PDF notunda sayfa "Sayfa 2 / 5", balon "Balon, sayfa 2: …";
-  sayfadaki görsel "Görsel: ad. açıklama". PDF'e balon bırak, paylaş.
-- [ ] TalkBack: Süz düğmesi çift dokunuşla AÇILIYOR (önce açılmıyordu).
-- [ ] Geliştirici seçenekleri → animasyon ölçeği KAPALI (ya da Erişilebilirlik
-  → Animasyonları kaldır): not karttan büyümeden SOLARAK açılıyor; kart
-  basınca çökmüyor; ayar alanları anında açılıyor.
-- [ ] Küçük dokunuşlar: Süz, ayar ✨, dinleme kartı başlık düğmeleri, Süz
-  levhası çipleri biraz dışından dokununca da çalışıyor; görünüm aynı.
-- [ ] İşaretli maddeler eskisinden az soluk (0,55 → 0,8) — "bitti" hâlâ
-  belli mi.
-
-**2026-10-31 Klasör şeridi + Gelen tek liste + Faz 14 (anlaşılırlık)**
-- [ ] Ana ekran klasör şeridi: not sayısı simgenin SAĞ ÜST köşesinde küçük
-  rakam (adın yanında değil), okunmamışta kırmızı rozet aynı köşede; rakam
-  kırpılmıyor; çipler sıkı, ekrana eskisinden çok klasör sığıyor; sağdaki
-  "Tüm klasörler" yalnız simge (basılı tut → ad).
-- [ ] "Gelen" çipi → sekme YOK; gelen kopyalar üstte ("Gelen" etiketi,
-  Sil · Kabul et), ortak notlar altta ("Paylaşılan" etiketi, "Yeni" rozeti).
-- [ ] Ayarlar: üstte yalnız Kılavuz + Kişiselleştir kartı; "Eklentiler ve
-  hızlı not" alanı (özet "8/9 eklenti açık"); Dil Görünüm'de; "Kartta
-  görünenler" satırı → levhada örnek kart anahtarla anında değişiyor;
-  "Sesli dinle ve dikte" özeti; Notlar özeti "Son güncellenen · …".
-- [ ] Yapay zekâ ekranı: başlık bir kez; boş iş kutusu "Şu an iş yok";
-  sağ üst ⚙ "Yapay zekâ ayarları" → Ayarlar'ın AI alanı açık.
-- [ ] Ana ekran mikrofonunun köşesinde küçük ✨; dokun = dikte, basılı
-  tut = AI sesli not.
-- [ ] S Pen ile metin notuna dokun → tuval açılır + İLK SEFERDE tek satır
-  açıklama; ikinci seferde yok.
-- [ ] Aramaya dokun → Anlam (✨) anahtarı ilk kez çıkınca tek satır açıklama.
-- [ ] İpuçları (oturumda en fazla bir): liste notu (madde jestleri), ilk
-  PDF (basılı tut → balon), ilk görsel (yukarı sürükle), ızgara + klasör
-  (yana kaydır). Ayarlar → Eklentiler ve hızlı not → İpuçlarını yeniden
-  göster → yeniden çıkıyor.
-- [ ] Kılavuz: içindekiler çipleri yok; bölümlerdeki "Göster" doğru ekrana
-  gidiyor (Ana ekran → ana ekrana döner). **Kılavuzu baştan sona oku,
-  yanlış kalan yeri bildir** (Faz 14 "Senin yapacakların").
-
-**2026-10-31 Faz 13 (balon, kalem, paylaşım, görüntüleyiciler)**
-- [ ] PDF notu → balonlar → Paylaş: "Balonlar" çipi açık, önizlemede
-  "Sayfa N — …" satırları; WhatsApp'a giden metinde balonlar var.
-- [ ] Balon okuma kartında Kopyala; 💬 listede Tümünü kopyala ve Nota aktar
-  (sayfa notuna yazıldı, ikinci basışta çoğalmadı).
-- [ ] Balon yazma kartı: renk · işaret · Aa · sil; işaret/Aa şeritleri
-  klavyeyi KAPATMIYOR; yazı alanı 3 satır, küçük telefonda taşma yok.
-- [ ] PDF/sunum/görsel üstünde kalem: yeni tepsi + üstte geri al/yinele/
-  yalnız kalem/ayarlar; bölmede belge görünür kalıyor.
-- [ ] Paylaş levhası GÖNDER / NOTLAR KULLANICISINA; düğmeye basılı tut →
-  açıklama; web'de "Görsel" PNG gönderiyor.
-- [ ] Görüntüleyicilerde Paylaş (dosya gidiyor; YouTube'da bağlantı);
-  görselde ⋮ → kırp/döndür; PDF'te ⋮ → alan seç / balon listesi.
-- [ ] Görseli basılı tutup taşı → tepede soluk "Bırak: üste sabitle"
-  şeridi, tepeye gelince dolu; TalkBack taşıma yokken bunu okumuyor.
-
-**2026-10-31 Faz 12 (not ekranı) + Gelen çipi**
-- [ ] Metin, liste ve belge notunda alt çubuk Biçim · Ekle · Ara · Paylaş
-  aynı yerde; ☑/Seç en sonda (F12.3).
-- [ ] Başlık yanındaki etiket+alarm çipi: etiket/alarm eklenince dolu simge
-  ve sayı (F12.4).
-- [ ] Biçim paneli KLAVYE AÇIKKEN: taşma yok, metin seçince kapsam sırası
-  kalkıp panel alçalıyor; renk dairelerinin ipucunda ad (F12.5).
-- [ ] Görünüm levhasında "Özel renk…"; biçim panelinde Sayfa rengi yok (F12.6).
-- [ ] Liste maddesine uzun bas: madde vurgulu, menü altında (F12.7).
-- [ ] AI levhası kutuları eşit boy (F12.8); sesli not gözden geçirmede
-  "Diğer" çipi açılıyor (F12.9).
-
-**2026-10-31 Faz 11 (ana ekran ve "+" akışı)**
-- [ ] Telefon: üst çubukta arama · Süz · avatar · ⋮ (ayrı Gelen düğmesi yok);
-  gelen not / arkadaşlık isteği varken avatarda SAYI rozeti; avatar levhası
-  Kişiler · Gelen ve paylaşılanlar · Premium · Hesap ayarları (F11.1).
-- [ ] Arama kutusuna dokun → ✨ Anlam anahtarı çıkıyor; anahtara dokununca
-  klavye/odak kaybolmuyor; odak bırakılınca (kutu boşsa) anahtar gizleniyor.
-- [ ] Süz: Görünüm segmentli + anahtarlar, Tür ve Durum ayrı, "Elle sırala"
-  metinli; yeni kurulumda BUGÜN/BU HAFTA grupları görünüyor; eskiden notları
-  sürükleyerek dizmiş telefonda sıra BOZULMADAN "Elle" kalıyor (F11.4).
-- [ ] Misafir: "Sonra" → tek satırlık şerit; 5. ve 20. notta bir kez tam kart
-  (F11.3). Hatırlatıcılar boşken tek "Yeni hatırlatıcı" düğmesi (F11.7).
-- [ ] Yeni kurulum (Android 13+): ilk açılışta izin levhası YOK; bildirim izni
-  ilk hatırlatıcı kurulunca soruluyor; mikrofon ilk diktede, kamera ilk
-  fotoğrafta (F11.9).
-- [ ] Web/tablet geniş: ⋮'te rayda olanlar (AI, Hatırlatıcılar, Arşiv, Çöp,
-  Ayarlar) yok; boş not bölmesinde tek "Yeni not" → "+" paneli açılıyor
-  (F11.8).
-
-**2026-10-31 Faz 10 (kırık/yanıltıcı olanlar)**
-- [ ] Web (Chrome): + → Dosya ekle → PDF → "Belge gibi not al" → PDF açılıyor
-  ("PDF işleniyor…/Ek yükleniyor" göstergesi); balon ekle → Sayfaları düzenle
-  → bir sayfa sil → Paylaş → Balonlu PDF iniyor/paylaşılıyor (F10.1).
-- [ ] Telefon: iki sayfalı notu WhatsApp'a paylaş → iki sayfa da "Sayfa 1 /
-  Sayfa 2" başlığıyla gidiyor; ⋮ → Dışa aktar → PDF'te de iki sayfa (F10.2).
-- [ ] Hata bildirimi (ör. uçak kipinde AI) "İnternet bağlantısı yok…" diyor,
-  "Ayrıntıyı kopyala" ham metni panoya alıyor (F10.4).
-- [ ] Misafir: AI ekranında puan yerine "Google hesabı ya da kendi anahtarın"
-  kartı, araçlar soluk; Paylaş → Birlikte düzenle / Kopya gönder kilitli,
-  dokununca "Google hesabı gerekir" levhası; Google ile giriş notları
-  koruyor (F10.5).
-- [ ] Web soğuk açılış: tek açılış ekranı (üst üste iki logo yok), İngilizce
-  tarayıcıda "Notes" (F10.6).
-- [ ] Web'de geçici misafirle Ayarlar → Hesabımı ve verilerimi sil →
-  "Hesabın ve verilerin siliniyor…" görünüyor, bitince giriş ekranı (boş
-  ekran yok) (F10.7).
-
-**2026-10-28 görünüm + medya turu (APK'da HİÇ derlenmedi — Actions kotası
-doluydu; ilk `[apk]` koşusunda önce derlemenin yeşil olduğuna bak:
-`NotKisayolu.kt` yeni Kotlin)**
-- [ ] Ana ekrandan bir nota dokun → not KARTIN YERİNDEN genişleyerek açılıyor,
-  geri → karta küçülerek dönüyor (not ızgarada yer değiştirdiyse yeni yerine).
-  Klasör listesinden ve liste görünümünden de; geniş ekranda eskisi gibi.
-- [ ] Editörde ⋮ → "Ana ekrana yerleştir" → başlatıcı onayı → simge notun
-  renginde, baş harfli; dokununca not açılıyor (kilitli not kilitli).
-- [ ] Alt çubuktaki dalga düğmesi (ya da Ekle → Ses kaydı) → alt şeritte
-  kırmızı hap, canlı dalga; kayıt sürerken yazılabiliyor; ⏸/✕/■ çalışıyor;
-  bitince ses YAZILAN SATIRA dalgalı hap olarak giriyor, dokununca çalıyor,
-  dalgaya dokununca/sürükleyince sarıyor. Kayıtta geri tuşu kaydı ekleyip
-  çıkıyor.
-- [ ] Üst çubukta palet → altta tema şeridi (Palmiye, Lagün, Gece…) dokunulan
-  anında uygulanıyor; kartta da aynı tema; Zemin rengi seçince tema kalkıyor;
-  koyu temada okunur.
-- [ ] Görsele dokun → araç panelinde "Açıklama ekle" → görselin altına yazılıyor,
-  metin görselle açıklamanın etrafından akıyor; açıklamaya dokunup düzenleme.
-- [ ] Çizim ekranı (Ekle → El yazısı): kalem tepsisi; seçili kalem kalkıyor,
-  ikinci dokunuşta renk/kalınlık paneli; ✓ ve geri çizimi nota ekliyor.
-- [ ] Metin notunda ☑: imlecin satırı kutulu madde oluyor, maddede ☑ kutuyu
-  kaldırıp metne döndürüyor. Biçim paneli açılıp kapanırken alt çubukla
-  zıplamadan yer değiştiriyor; yazı boyutu −/+ yumuşak.
-
-**2026-10-28 ikinci tur**
-- [ ] Biçim paneli açıkken geri → yalnız panel kapanıyor. Panelde "Tümüne
-  uygula" (maddede "Maddeye uygula"): imleçte kalın+kırmızı varken basınca
-  bütün metin kalın+kırmızı, metin seçili kalıyor.
-- [ ] Ana ekranda bir klasöre dokun → ayrı sayfa değil, ana ekran klasöre
-  süzülüyor (Süz düğmesinde klasör adı ×); "+" klasöre not açıyor; geri →
-  süzgeç kalkıyor. Paylaşılan klasör eski sayfada.
-- [ ] Notu okurken bağlantıya dokun → tarayıcıda açılıyor; yazarken dokununca
-  altta "Aç" önerisi. YouTube adresini gövdeye yapıştır → video imlecin
-  satırına gömülüyor ("Geri al" kaldırıyor).
-- [ ] Madde ortasında Enter ile bölünen maddenin başında Backspace → üst
-  maddeyle birleşiyor (Gboard'da ve Samsung klavyede).
-- [ ] Kart ⋮ → "Görsel önizlemesini gizle" → kartta görsel yok, editörde var.
-
-**2026-10-28 Harita köprüsü (kişisel)**
-- [ ] Harita'da navigasyondayken "Hey Harita, not al …" → Notlar öne
-  gelmeden "Haritalar" klasöründe not (uygulama kapalıyken de); çevrimdışı
-  söylenen not ağ gelince buluta gidiyor mu; Harita "Not alındı" diyor mu.
-- [ ] Genel sürüm çıkarken köprüyü kaldır (HAFIZA › Android › Harita köprüsü).
-
-**2026-10-28 madde + biçim + giriş turu**
-- [ ] Çok işaretli maddeli notta işaretlemek / yazmak / görsel eklemek
-  akıcı (eskiden donma-kasma).
-- [ ] Biçim paneli: üç sıra; başlık hapı, renk tonu tek dokunuş; yazı/vurgu
-  anahtarı; boyut −/+; Aa tepsisinde yazı tipi + kaydırıcılar.
-- [ ] Paylaş → Notlar'a ekle → Var olan nota: ana ekran kartlarıyla ızgara,
-  karta dokununca o nota ekliyor (not açılmıyor).
-- [ ] Web: videolu notta başka sekmeye geç / uygulamada başka sayfa aç →
-  video duruyor.
-- [ ] Misafir hesapta ana ekranın tepesinde "Google ile giriş yap" kartı;
-  Ayarlar'ın en üstünde düğme; giriş sonrası kart sayfa yenilemeden kalkıyor.
-- [ ] Klasör: Süz düğmesi (durum, etiket, görünüm, sıralama), liste
-  görünümü, uzun basışla seçim + çubuk (taşı/arşivle/sil).
-
-**2026-10-23 kalem + ses + kart turu**
-- [ ] Ayarlar → Ses: Türkçe sesi denerken yapay zekâ denemesine geç (ya da
-  tersi) — iki ses ÜST ÜSTE çalmıyor; motor değişince süren deneme susuyor.
-- [ ] APK boyutu ~45 MB civarı (eski 73 MB); Türkçe ses hâlâ çalışıyor.
-- [ ] Tablette kalem: ilk kalem dokunuşunda "yalnız kalem" açılıyor; parmak
-  çizmiyor, kaydırıyor; iki parmak yakınlaştırıyor; avuç içi iz bırakmıyor.
-- [ ] Kalem basıncı: hafif/sert bastırınca kalınlık değişiyor. Yan düğme
-  ya da ters uç siliyor. Şekiller (düz çizgi, dikdörtgen, daire, ok).
-- [ ] Kalem ayarları (⚙): şeffaflık, son renkler, basınç aç/kapa; uygulama
-  kapanıp açılınca kalem/renk/kalınlık hatırlanıyor. Geri al + yinele.
-- [ ] El yazısı ekranında iki parmakla yakınlaştır/kaydır; "tam görünüm".
-- [ ] Ayarlar → Kartlar → "Paylaşılan notlar ana ekranda" açınca ortak
-  notlar ana ekranın üstünde ayrı bölümde; karta dokununca not açılıyor.
-- [ ] Madde uzun bas → Çizgi ayarları: tür (çift/dalgalı dahil), renk,
-  kalınlık, "Tüm çizgilere"; kartta da aynı görünüyor.
-- [ ] Görsel/PDF/sunum/video görüntüleyicide "Eki kopyala" → başka notta
-  + → yapıştır.
-- [ ] Süz levhası: "Kartta görseller" / "Kartta ekler" ayrı ayrı kapanıyor.
-
-**2026-10-20 geliştirme raporu + kullanıcı turu 2**
-- [ ] Madde uzun bas → Alta çizgi çek: çizgi ANINDA görünüyor (çıkıp girmeden).
-- [ ] Biçim paneli açıkken alt çubuk gizli; "Tt" düğmesi boyut satırını
-  açıp kapatıyor; boyut sürüklerken kasma yok. Panel kapalıyken Biçim
-  düğmesinin yanında B/I/U/renk rozetleri.
-- [ ] Başlıkta Kalın açılıp kapanınca fark görünüyor.
-- [ ] Renk paleti (🎨): yazı rengi, vurgu, not zemini, çerçeve, balon,
-  kalem, ana ekran zemini — hazır ton + Özel (ton/doygunluk/açıklık).
-- [ ] Sayfalı notta sola/sağa hızlı çekiş sayfa çeviriyor; yazarken/seçerken
-  yanlışlıkla çevirmiyor. Madde menüsü → Başka sayfaya taşı.
-- [ ] Ayarlar: bir alanı açınca o alan ekranın tepesine geliyor.
-- [ ] Ana ekran: ✨ yüzen düğme yok (⋮ → Yapay Zekâ), mikrofon "+"nın solunda;
-  boş klasörler şeridin sonunda ve soluk. "Şifreler" notu kartta gizli +
-  Kilitle; IBAN/kart no örtülü. Kartta kutucuğa dokununca madde işaretleniyor.
-- [ ] Arşiv/çöp/klasör aramasında ✨; Arşiv → 📊 "Arşivimde neler var?".
-- [ ] Defter → Kâğıt levhası → Satır aralığı (Normal/Geniş/Çok geniş);
-  düz metinde tek başına `---` satırı çizgi. Tümü → klasör başlıkları.
-
-**Ana ekran ve menüler**
-- [ ] 100+ notla açılış ve hızlı kaydırma akıcı; boş kart / sıçrama yok;
-  klasör ve arşiv ızgarası aynı. Editörden dönüşte kart güncel, takılma yok.
-- [ ] Tek mikrofon: dokun = doğrudan yazdır; basılı tut = AI sesli not.
-  Yapay Zekâ ekranının en üstündeki "Sesli not" aynı kartı açar.
-- [ ] "+" tek panel (Diğer · Kamera · Dosya · Metin/Liste/Sıralı); büyük
-  yazı ölçeğinde taşmıyor. Dosya ekle → tek levha (ses: ek / metne dök;
-  HEIC tek seçimde).
-- [ ] Süz düğmesi arama kutusunda; seçili süzgeç adı + ×. Görünüm Süz
-  levhasında. Yıldız (Süz → Yıldızlı) ve çerçeve (yalnız kartta) ayrı.
-- [ ] Toplu seçim → sil/arşivle/taşı/renk + "Geri al" (yerel notlarda da).
-- [ ] Menüler kompakt ızgara; Paylaş levhası: Birlikte düzenle + Kopya gönder;
-  PDF/PNG/ek çıktıları okunur, çip seçimi hatırlanıyor.
-- [ ] Ana ekran widget'ları (açık/koyu tema, 4 satır kart).
-
-**Defter + menü turu (2026-10-20, bkz. `GELISTIRME_RAPORU.md` E)**
-- [ ] Defter (çizgili/kesikli/bloknot): yazı çizgide; büyük yazı ölçeği,
-  başlık + etiket + sayfa çubuğu; kartta da aynı kâğıt.
-- [ ] Madde uzun bas → alta düz/kesikli/noktalı çizgi; kartta görünüyor.
-- [ ] Ekle → tek "Dosya ekle" (görsel/ses/video soru levhası); "Tümü"
-  çipi; aramada klasör rozeti; arşivde ✨; çöpte 📊 Akıllı analiz.
-
-**Editör ve klavye**
-- [ ] Görselli/PDF'li not açılışı takılmasız; sabit medya geçiş bitince yerine.
-- [ ] Klavye açılınca sabit görsel/video/PDF zıplamıyor, alt kısmı örtülüyor;
-  balonlu PDF'te sayfa notuna yazarken belge yeniden ölçeklenmiyor.
-- [ ] 10.000+ karakterlik ve görselli notta yazarken takılma yok; imleç ve
-  "Not…" ipucu aynı satırda.
-- [ ] Madde seçimi (kutunun kenarı, satırın sağı); seçince klavye kapanıyor.
-- [ ] Defter kâğıdı seçimi anında değişiyor (bloknot/milimetrik/izometrik).
-- [ ] Dikte: yalnız İLK bip, bitince müzik/bildirim sesi geri geliyor;
-  dikte sırasında uygulamayı kapat-aç → ses açık.
-- [ ] Görsel sürükleme / PDF kutusu boyutlandırma akıcı; Sabit/Yüzen/Balonlu
-  geçişleri geri dönüşte yerinde.
-- [ ] Video zaman damgası "1:23" (yerel + YouTube) sarıyor, klavye açmıyor;
-  video çubuğu ⏪/▶/⏩/hız 360 dp'de taşmıyor.
-- [ ] Sürüm geçmişi: "Açıldığı hâli", "AI değiştirmeden önce", "Bu sürüme dön".
-- [ ] Not kilidi (şifre/desen, 5 yanlışta bekleme, "Unuttum").
-
-**PDF, balon, görsel**
-- [ ] Uzun bas → balon; ekran grileşmiyor, klavye açık kalıyor, yazma kartı
-  gezinme düğmelerinin üstünde; uzun PDF'te fırlatma liste gibi akıyor.
-- [ ] Açık balon: sayfanın boş yerine dokununca ANINDA kapanıyor; kaydırma,
-  iki parmak yakınlaştırma ve basılı tutma onu kapatmıyor.
-- [ ] Balona dokununca belge kaymıyor; Düzenle/Bitti'de sayfa başına sıçrama
-  yok (bölme, slayt, tam ekran).
-- [ ] Çok sayfalı PDF'e yoğun çizim/balon → başka cihazda geliyor (ağır belge);
-  ≥900 KB'ta "Not çok büyüdü" uyarısı. Çizimden sonra yazmaya devam → çizim
-  kaybolmuyor (F6.1).
-- [ ] Taranmış PDF: OCR bir kez, sonra çift dokunuş beklemeden seçim; dışa
-  aktarılan PDF'te Türkçe karakter, kalın/italik doğru.
-- [ ] Tam ekran görsel galerisi: yakınlaştırılmışken kaydırma kilitli.
-- [ ] Alan seçimi (PDF/sunum/görsel) panoya PNG; "AI'ya sor".
-
-**Ses, AI, transkript**
-- [ ] Ses/video transkripti (Kotlin `extractAudio`), .opus/.amr ekleri,
-  15 MB üstü kayıt (kendi anahtarla), görsel OCR "internet harcanmadı".
-- [ ] Sohbet kapsamları (Tüm notlar / Bu not / Bu belge) + Beyin fırtınası.
-- [ ] Sesli asistan hatırlatıcısı uçtan uca; ağ kesikken sesli not tek not.
-
-**Paylaşım ve senkron (iki hesap)**
-- [ ] Ortak not: "X düzenliyor", iki taraf farklı paragrafa yazar → ikisi de
-  kalır; aynı satır → iki hâl + uyarı.
-- [ ] Paylaşılan notta "Yeni" izi ve bildirim; uygulama KAPALIYKEN itme
-  bildirimi (klasör sohbeti / ortak not / gelen not).
-- [ ] Klasör 'write' rolü yalnız kendi notunu düzenler.
-- [ ] Kişi araması: misafirde uyarı, ≥3 harf ad, TAM e-posta, dakikada 10.
-- [ ] Hesap silme: paylaşımlar, `userSearch`, sohbet dosyaları, Drive verisi
-  gidiyor.
-- [ ] Drive iki cihazda (yükle/indir), web'de "Drive'a bağlan"; "Yalnız bu
-  cihaz"a alınca ekler açılıyor, Drive kopyası ve sürüm geçmişi siliniyor.
-- [ ] Ayar senkronu: telefonda tema/yazı tipi → web'de ≤20 sn.
-- [ ] Senkronu kapat/aç (yerel not) ikinci cihazda kaybolur/geri gelir.
-
-**Hatırlatıcı ve Android**
-- [ ] Kesin alarm izni yokken hatırlatıcı yine çalıyor (inexact); izinle
-  dakikasında. "Tamam / 1 saat ertele" düğmeleri.
-- [ ] Web'de kaldırılan hatırlatıcı, uygulama KAPALIYKEN çalmıyor (F5.3).
-- [ ] R8'li APK: widget güncellemesi, yeniden başlatmada hatırlatıcı,
-  Google girişi, ML Kit (QR/OCR Play Hizmetleri modeli).
-- [ ] Simge (başlatıcı maskeleri, Android 13+ temalı, bildirim beyaz "N").
-- [ ] Tablet: gezinme rayı ve ana-detay; yatay telefonda ray yok.
-- [ ] Web: geri tuşu gerçek sitede, Drive eki.
-- [ ] **Web WASM (F9.4)**: Chrome/Edge'de site açılıyor, giriş penceresi,
-  not yazma, PDF görüntüleme, YouTube kapağı, yazı tipleri çalışıyor;
-  Safari/Firefox (eski) JS yedeğiyle açılıyor. Sorun olursa CI'daki
-  `--wasm` bayrağını kaldırmak yeterli.
-
-**Performans (Faz 5–7)**
-- [ ] 20-30 not aç-kapat, sonra yerel notta 2 dk yaz — ısınma/yavaşlama yok.
-- [ ] Galeriden 10 büyük fotoğraf (küçük resim şeridi) — çökme yok; büyük
-  fotoğraflı PPTX net.
-- [ ] "Ek içeriğinde ara" açıkken büyük PDF — donma yok; indeks kapat-aç
-  sonrası duruyor. Çöp kutusu listeleniyor, geri yükle/kalıcı sil.
-- [ ] Çok PDF'li ana ekranda kaydırma; PDF kart kapakları geliyor (artık
-  JPEG, F7.1 — eski kapaklar bir kez yeniden üretilir).
-- [ ] Çizimli eski bir notu aç, bir çizgi ekle → kaydet → başka cihazda
-  çizimler yerinde (F7.2 float32; F7.3 16 KB'ı aşan ağır kısım ayrı belgeye
-  taşınır).
-- [ ] Düşük RAM'li (≤4 GB) telefonda görselli notlar arasında gezinme (F7.6).
-- [ ] Editör (F9.3 bölündü): ekler, ⋮ menüsü, sayfalar/görünüm kipleri,
-  renk/kâğıt/zemin, not içi arama, dikte — her biri bir kez denensin
-  (kod satır satır taşındı, davranış değişmemeli).
+**Tablet / S Pen (varsa)**
+20. [ ] Kalem sayfaya yazar, parmak metne gider; sol ray, tam ekran.
 
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 

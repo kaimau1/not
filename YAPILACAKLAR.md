@@ -3,7 +3,8 @@
 ## Durum: kurulum tamamlandı ✅
 
 Firebase, Google girişi, imza anahtarı ve GitHub secret'ları hazır.
-Geriye sadece **uygulamayı kurmak** ve **Gemini anahtarını girmek** kaldı.
+Geriye sadece **uygulamayı kurmak** kaldı. Gemini anahtarı İSTEĞE BAĞLI: Google
+hesabıyla girince dahili yapay zekâ günlük puanla çalışır; kendi anahtarın kotasız yapar.
 
 ---
 
@@ -16,7 +17,7 @@ Geriye sadece **uygulamayı kurmak** ve **Gemini anahtarını girmek** kaldı.
    güncellenir). Windows sürümü 2026-10-19'da kaldırıldı.
 3. Uygulamada **Google ile giriş yap**.
 
-## 2. Gemini API anahtarı
+## 2. Gemini API anahtarı (isteğe bağlı)
 
 1. https://aistudio.google.com → **Get API key** → **Create API key** → kopyala.
 2. Bu anahtarı hiçbir yere yazma; uygulamada **Ayarlar → Gemini API Anahtarı** alanına
