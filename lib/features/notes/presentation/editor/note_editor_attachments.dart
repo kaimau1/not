@@ -1670,6 +1670,15 @@ extension _EditorAttachments on _NoteEditorScreenState {
   }
 
   /// Panodaki eki bu nota kopyalar (baytlar yeniden yazılır, yeni kimlik alır).
+  /// Ayrı çizim ekranı → PNG → sayfaya yerleşen görsel eki.
+  Future<void> _addDrawing() async {
+    final bytes = await Navigator.of(
+      context,
+    ).push<Uint8List>(MaterialPageRoute(builder: (_) => const DrawingScreen()));
+    if (bytes == null || !mounted) return;
+    await _addImageBytes(bytes, 'cizim.png');
+  }
+
   Future<void> _pasteAttachment() async {
     final sources = ref.read(attachmentClipboardProvider);
     final repo = _attachments;
@@ -1878,8 +1887,11 @@ extension _EditorAttachments on _NoteEditorScreenState {
       // dosyayı metne dök TEK girişte (2026-10-20, bkz. attach_sheet.dart).
       case 'any-file':
         await _attachAnyFile();
-      // El yazısı artık ayrı tuval değil, sayfanın kendisi (2026-11-02).
+      // Çizim: ayrı tuvalde çizilip GÖRSEL olarak gömülür (kullanıcı isteği
+      // 2026-11-02 — kalem kipi varken de). Sayfaya el yazısı ayrı seçenek.
       case 'drawing':
+        await _addDrawing();
+      case 'handwriting':
         _openPen();
       case 'audio':
         await _recordAudio();

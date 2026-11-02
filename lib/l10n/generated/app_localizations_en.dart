@@ -395,6 +395,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'You\'re using a guest account: if you switch, you\'ll lose access to the notes on this device. Link a Google account or make a full backup first.';
 
   @override
+  String get penTrayShow => 'Show pen tray';
+
+  @override
+  String get penTrayHide => 'Tuck pen tray away';
+
+  @override
+  String get addDrawingSubtitle =>
+      'Draw on a separate canvas, embedded as an image';
+
+  @override
+  String get addHandwriting => 'Handwrite on page';
+
+  @override
+  String get addHandwritingSubtitle =>
+      'Pen mode: write directly on the note page';
+
+  @override
   String get signOutConfirm => 'Are you sure you want to sign out?';
 
   @override

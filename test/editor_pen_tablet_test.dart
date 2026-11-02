@@ -84,7 +84,7 @@ Future<void> _end(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('kalem değince sayfaya yazar, araçlar solda açılır', (
+  testWidgets('kalem değince sayfaya yazar, araçlar alttaki çekmecede', (
     tester,
   ) async {
     await _pump(tester);
@@ -93,7 +93,20 @@ void main() {
     await _write(tester, tester.getCenter(find.byType(PageInkStack)));
     final tool = find.byKey(const ValueKey('pen-tray-pen'));
     expect(tool, findsOneWidget);
-    expect(tester.getRect(tool).right, lessThanOrEqualTo(64));
+    // Kullanıcı isteği 2026-11-02: tablette de kalemler ALTTA (sol sütun
+    // kalktı); çizim başlayınca çekmece iner, yalnız uçlar görünür.
+    await tester.pump(const Duration(milliseconds: 400));
+    final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+    expect(tester.getRect(tool).top, greaterThan(screen.height - 60));
+    expect(find.byKey(const ValueKey('pen-dock-peek')), findsOneWidget);
+    // Dokununca yukarı gelir (önce ilk seferki ipucu kalksın).
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.byKey(const ValueKey('pen-dock-peek')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const ValueKey('pen-dock-peek')), findsNothing);
+    expect(tester.getRect(tool).bottom, lessThan(screen.height - 40));
     // İlk çizgi kaybolmadı, alt çubuk yok: alt da sayfa.
     final ink = tester.widget<InkPageLayer>(find.byType(InkPageLayer));
     expect(ink.controller.ink, hasLength(1));
@@ -142,6 +155,10 @@ void main() {
     // İlk seferki ipucu tepsinin üstünden kalksın.
     await tester.pump(const Duration(seconds: 6));
     await tester.pump(const Duration(seconds: 1));
+    // Çizimden sonra çekmece aşağıda: önce aç, sonra kapat.
+    await tester.tap(find.byKey(const ValueKey('pen-dock-peek')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.tap(find.byKey(const ValueKey('pen-done')));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(PenTray), findsNothing);

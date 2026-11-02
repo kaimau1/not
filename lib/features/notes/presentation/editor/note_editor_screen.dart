@@ -121,6 +121,7 @@ import 'page_ink_layer.dart';
 import '../place_reminder_sheet.dart';
 import '../viewers/ink_layer.dart';
 import 'pen_tray.dart';
+import 'drawing_screen.dart';
 import 'editor_bar_layout.dart';
 import 'format_bar.dart';
 import 'format_menu.dart';
@@ -3679,17 +3680,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     //
     // RepaintBoundary: çubuk klavye animasyonu boyunca yer değiştiriyor;
     // ayrı katmanda olmazsa her karede GÖVDEYİ de yeniden boyatır.
-    final penRail = _pagePen && PenTray.useRail(context);
-    final Widget? bottomBar = _immersiveBubble || penRail
+    // KALEM ÇEKMECESİ (kullanıcı isteği 2026-11-02): telefonda da tablette
+    // de kalemler ALTTA, sayfanın üstünde yüzen bir çekmecede (bkz.
+    // PenTray.dock). Sayfa yerleşimi kalem kipinde değişmez; çubuk yer
+    // kaplamaz.
+    final Widget? bottomBar = _immersiveBubble || _pagePen
         ? null
-        : _pagePen
-        // Telefon: kalemler altta, biçim çubuğunun yerinde.
-        ? PenTray(
-            controller: _pageInkOf(note),
-            controls: true,
-            trayHeight: 76,
-            actions: [_penDoneButton(l10n)],
-          )
         : RepaintBoundary(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -4318,7 +4314,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // [KeyboardSlide] ile yalnız boyama katmanında yapılıyor.
           resizeToAvoidBottomInset: false,
           // Kalem + tam ekran: üst de sayfa olur (çıkış sütunda).
-          appBar: penRail && ref.watch(noteFullscreenProvider)
+          appBar: _pagePen && ref.watch(noteFullscreenProvider)
               ? null
               : AppBar(
             backgroundColor: themed ? Colors.transparent : background,
@@ -4546,17 +4542,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     // Sütun yokken de Row: kaleme geçişte sayfa yeniden kurulmaz.
                     child: Row(
                       children: [
-                        if (penRail)
-                          PenTray(
-                            controller: _pageInkOf(note),
-                            rail: true,
-                            actions: [
-                              _fullscreenButton(l10n),
-                              _penDoneButton(l10n),
-                            ],
-                          )
-                        else
-                          const SizedBox.shrink(),
+                        // Eski kalem sütununun yuvası (ağaç şekli sabit
+                        // kalsın; kalemler artık alttaki çekmecede).
+                        const SizedBox.shrink(),
                         Expanded(
                     // KALEMİ OTOMATİK ALGILA (bkz. [_onContentPointerDown]).
                     child: Listener(
@@ -4600,6 +4588,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                 ).colorScheme.primary.withValues(alpha: 0.7),
                                 scrollPosition: _gestureScrollPosition,
                                 onStroke: _onGestureStroke,
+                              ),
+                            ),
+                          if (_pagePen)
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              child: PenTray(
+                                key: const ValueKey('page-pen-dock'),
+                                controller: _pageInkOf(note),
+                                dock: true,
+                                actions: [
+                                  if (PenTray.useRail(context))
+                                    _fullscreenButton(l10n),
+                                  _penDoneButton(l10n),
+                                ],
                               ),
                             ),
                         ],

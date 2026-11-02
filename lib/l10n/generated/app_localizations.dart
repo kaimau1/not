@@ -794,6 +794,36 @@ abstract class AppLocalizations {
   /// **'Misafir hesaptasın: hesap değiştirirsen bu cihazdaki notlara bir daha ulaşamazsın. Önce Google hesabına bağla ya da tam yedek al.'**
   String get switchAccountGuestWarning;
 
+  /// No description provided for @penTrayShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem tepsisini aç'**
+  String get penTrayShow;
+
+  /// No description provided for @penTrayHide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem tepsisini indir'**
+  String get penTrayHide;
+
+  /// No description provided for @addDrawingSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayrı tuvalde çiz, görsel olarak nota gömülsün'**
+  String get addDrawingSubtitle;
+
+  /// No description provided for @addHandwriting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaya el yazısı'**
+  String get addHandwriting;
+
+  /// No description provided for @addHandwritingSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem kipi: notun sayfasına doğrudan yaz'**
+  String get addHandwritingSubtitle;
+
   /// No description provided for @signOutConfirm.
   ///
   /// In tr, this message translates to:

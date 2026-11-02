@@ -394,6 +394,23 @@ class AppLocalizationsTr extends AppLocalizations {
       'Misafir hesaptasın: hesap değiştirirsen bu cihazdaki notlara bir daha ulaşamazsın. Önce Google hesabına bağla ya da tam yedek al.';
 
   @override
+  String get penTrayShow => 'Kalem tepsisini aç';
+
+  @override
+  String get penTrayHide => 'Kalem tepsisini indir';
+
+  @override
+  String get addDrawingSubtitle =>
+      'Ayrı tuvalde çiz, görsel olarak nota gömülsün';
+
+  @override
+  String get addHandwriting => 'Sayfaya el yazısı';
+
+  @override
+  String get addHandwritingSubtitle =>
+      'Kalem kipi: notun sayfasına doğrudan yaz';
+
+  @override
   String get signOutConfirm => 'Çıkış yapmak istediğine emin misin?';
 
   @override
