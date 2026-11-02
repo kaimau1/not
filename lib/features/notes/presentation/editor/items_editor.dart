@@ -854,6 +854,7 @@ class ItemsEditorState extends State<ItemsEditor>
     String? id,
     double reserved = 0,
     bool pushOnly = false,
+    double? inlineBelow,
   }) {
     final pageBox = widget.pageBox;
     if (pageBox == null) return child;
@@ -862,6 +863,7 @@ class ItemsEditorState extends State<ItemsEditor>
       pageBox: pageBox,
       reserved: reserved,
       pushOnly: pushOnly,
+      inlineBelow: inlineBelow,
       initial: id == null ? null : (_pads[id] ?? _padOfNeighbour(id)),
       onMeasured: id == null ? null : (pad) => _pads[id] = pad,
       child: child,
@@ -878,12 +880,18 @@ class ItemsEditorState extends State<ItemsEditor>
 
   /// Madde alanını sarma denetleyicisinin ölçümüne bağlar.
   ///
-  /// Bantlar BİLEREK BOŞ geçilir: liste satırını görselin yanına [_FloatRow]
-  /// satırın TAMAMINI kaydırarak taşıyor. Alan içi sarma çapaları da aynı
-  /// bantlara göre girinti basınca ikisi üst üste biniyor ve görselin
-  /// yanındaki maddelerin metni kutucuktan kopuk, "kaymış" görünüyordu
-  /// (ekran görüntüsüyle bildirilen hata). Boş bant listesi ayrıca daha
-  /// önce eklenmiş çapaları da temizler.
+  /// **İKİ KATMANLI SARMA** (kullanıcı bulgusu 2026-11-02, ekran görüntüsü:
+  /// "üstte alan varken alt satırlar sığmadığı için hepsi sağa kaydırılmış;
+  /// üstte sığan kısımlar görselin üzerinde olmalı, sığmayanlar sağa
+  /// kayabilir"). Görsel maddenin İLK satırına değiyorsa satırın TAMAMI
+  /// (kutucukla birlikte) [_FloatRow] ile yana kayar. Görsel maddenin İÇİNDE,
+  /// ilk satırından aşağıda başlıyorsa satır kaymaz: o görsel alanın kendi
+  /// sarma planına verilir ve yalnız görselin hizasına düşen satırlar
+  /// girintilenir. Bir görseli iki katmandan YALNIZ biri işler — eskiden
+  /// ikisi aynı bantla girinti basınca metin kutucuktan kopuyordu.
+  /// [WrapFieldMeasure.minTop] ile [_FloatRow.inlineBelow] aynı ölçüyü (bir
+  /// satır boyu) kullanır; alanın metni satırın tepesinden aşağıda
+  /// başladığından "ikisi birden" durumu oluşamaz.
   Widget _wrapped(
     WrapTextController controller,
     TextStyle style,
@@ -894,11 +902,17 @@ class ItemsEditorState extends State<ItemsEditor>
     return WrapFieldMeasure(
       controller: controller,
       style: style,
-      floats: const [],
+      floats: widget.floats,
+      minTop: itemLineHeight(context, style),
       pageBox: pageBox,
       child: field,
     );
   }
+
+  /// Madde metninin bir satır boyu (sarma katmanlarının ortak eşiği).
+  static double itemLineHeight(BuildContext context, TextStyle style) =>
+      MediaQuery.textScalerOf(context).scale(style.fontSize ?? 16) *
+      (style.height ?? 1.3);
 
   void _updateText(NoteItem target, String text) {
     final index = _items.indexWhere((i) => i.id == target.id);
@@ -1866,9 +1880,15 @@ class _FloatRow extends StatefulWidget {
     required this.child,
     this.reserved = 0,
     this.pushOnly = false,
+    this.inlineBelow,
     this.initial,
     this.onMeasured,
   });
+
+  /// Satırın tepesinden bu kadar (dp) AŞAĞIDA başlayan görsel satırı
+  /// kaydırmaz — alanın kendi sarması işler (bkz. `_wrapped`). `null`:
+  /// her görsel satırı kaydırır.
+  final double? inlineBelow;
 
   /// true ise satır görselin YANINA hiç geçmez, bandına değdiği her görselin
   /// ALTINA iner. Küçülemeyen satırlar ("Yeni öğe", "İşaretlileri sil") böyle:
@@ -1961,10 +1981,18 @@ class _FloatRowState extends State<_FloatRow> {
     // büyütür, büyüyen bant daha çok görsele değer ve satır sonsuza dek
     // aşağı kaçardı. `_top` çıkarılınca ölçüm itmeden bağımsız ve kararlı.
     final bottom = origin.dy + box.size.height - _top;
+    // Satırın İÇİNDE başlayan görsel alanın işi (bkz. [_FloatRow.inlineBelow]).
+    final inline = widget.pushOnly ? null : widget.inlineBelow;
+    final floats = inline == null
+        ? widget.floats
+        : [
+            for (final f in widget.floats)
+              if (f.top < origin.dy + _top + inline) f,
+          ];
     var start = 0.0;
     var end = 0.0;
     if (!widget.pushOnly) {
-      for (final f in widget.floats) {
+      for (final f in floats) {
         if (f.bottom <= origin.dy || f.top >= bottom) continue;
         final left = f.left - origin.dx;
         final right = f.right - origin.dx;
@@ -1994,7 +2022,7 @@ class _FloatRowState extends State<_FloatRow> {
       // edip görselin altında kalıyordu.
       start = 0;
       end = 0;
-      for (final f in widget.floats) {
+      for (final f in floats) {
         if (f.bottom <= origin.dy || f.top >= bottom) continue;
         if (f.right - origin.dx <= 0 || f.left - origin.dx >= width) continue;
         final push = f.bottom - origin.dy;

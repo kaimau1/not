@@ -1007,10 +1007,16 @@ class WrapFieldMeasure extends StatefulWidget {
     required this.pageBox,
     required this.child,
     this.textTop = 0,
+    this.minTop,
   });
 
   final WrapTextController controller;
   final TextStyle style;
+
+  /// Verilirse yalnız metnin ilk satırından en az bu kadar (dp, metin
+  /// uzayında) AŞAĞIDA başlayan görseller plana girer; daha yukarıdakileri
+  /// çağıran başka yoldan işler (liste maddesinde satırın tamamı kayar).
+  final double? minTop;
 
   /// Alanın ÜST KENARI ile İLK METİN SATIRI arasındaki boşluk (dp) —
   /// `InputDecoration.contentPadding`in üst yarısı.
@@ -1084,7 +1090,9 @@ class _WrapFieldMeasureState extends State<WrapFieldMeasure> {
           // Süzgeç artık yalnız alanın SABİT üst kenarına bakar: plan girdileri
           // planın çıktısından bağımsız, yani KARARLI. Alanın altında kalan
           // bant zaten hiçbir satırı kesmediği için tek bir dolgu bile üretmez.
-          if (f.bottom > origin.dy && f.right > origin.dx)
+          if (f.bottom > origin.dy &&
+              f.right > origin.dx &&
+              (widget.minTop == null || f.top - textOrigin >= widget.minTop!))
             FloatBox(
               top: f.top - textOrigin,
               left: (f.left - origin.dx).clamp(0.0, width).toDouble(),
