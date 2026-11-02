@@ -773,8 +773,26 @@ abstract class AppLocalizations {
   /// No description provided for @signOut.
   ///
   /// In tr, this message translates to:
-  /// **'Çıkış yap'**
+  /// **'Oturumu kapat'**
   String get signOut;
+
+  /// No description provided for @switchAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap değiştir'**
+  String get switchAccount;
+
+  /// No description provided for @switchAccountConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu hesaptan çıkılıp Google hesap seçici açılacak. Notların bu hesapta kalır, geri döndüğünde yine burada olur.'**
+  String get switchAccountConfirm;
+
+  /// No description provided for @switchAccountGuestWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Misafir hesaptasın: hesap değiştirirsen bu cihazdaki notlara bir daha ulaşamazsın. Önce Google hesabına bağla ya da tam yedek al.'**
+  String get switchAccountGuestWarning;
 
   /// No description provided for @signOutConfirm.
   ///

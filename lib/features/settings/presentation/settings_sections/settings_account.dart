@@ -679,47 +679,7 @@ class _AccountSection extends ConsumerWidget {
         TextButton.icon(
           icon: const Icon(Icons.logout),
           label: Text(l10n.signOut),
-          onPressed: () async {
-            // Anonim (yerel) hesapta çıkış GERİ DÖNÜŞSÜZ veri kaybıdır: uid
-            // bir daha ele geçirilemez, "Yerel devam et" YENİ uid açar ve
-            // eski notların tamamı erişilmez kalır. Sıradan onay yetmez —
-            // diyalog açık uyarır ve silme düğmesi gibi kırmızı görünür.
-            final anonymous = ref.read(isAnonymousProvider);
-            final confirmed = await showDialog<bool>(
-              context: context,
-              builder: (dialogContext) => AlertDialog(
-                title: Text(l10n.signOut),
-                content: Text(
-                  anonymous
-                      ? l10n.signOutAnonymousWarning
-                      : l10n.signOutConfirm,
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext, false),
-                    child: Text(l10n.cancel),
-                  ),
-                  FilledButton(
-                    style: anonymous
-                        ? FilledButton.styleFrom(
-                            backgroundColor: Theme.of(
-                              dialogContext,
-                            ).colorScheme.error,
-                            foregroundColor: Theme.of(
-                              dialogContext,
-                            ).colorScheme.onError,
-                          )
-                        : null,
-                    onPressed: () => Navigator.pop(dialogContext, true),
-                    child: Text(l10n.signOut),
-                  ),
-                ],
-              ),
-            );
-            if (confirmed ?? false) {
-              await ref.read(authRepositoryProvider).signOut();
-            }
-          },
+          onPressed: () => confirmAndSignOut(context, ref),
         ),
         TextButton.icon(
           style: TextButton.styleFrom(

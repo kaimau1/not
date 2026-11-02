@@ -380,7 +380,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get account => 'Hesap';
 
   @override
-  String get signOut => 'Çıkış yap';
+  String get signOut => 'Oturumu kapat';
+
+  @override
+  String get switchAccount => 'Hesap değiştir';
+
+  @override
+  String get switchAccountConfirm =>
+      'Bu hesaptan çıkılıp Google hesap seçici açılacak. Notların bu hesapta kalır, geri döndüğünde yine burada olur.';
+
+  @override
+  String get switchAccountGuestWarning =>
+      'Misafir hesaptasın: hesap değiştirirsen bu cihazdaki notlara bir daha ulaşamazsın. Önce Google hesabına bağla ya da tam yedek al.';
 
   @override
   String get signOutConfirm => 'Çıkış yapmak istediğine emin misin?';

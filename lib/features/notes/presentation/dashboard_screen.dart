@@ -14,6 +14,7 @@ import 'package:uuid/uuid.dart';
 import '../../../app/app_commands.dart';
 import '../../../app/app_frame.dart';
 import '../../../app/router.dart';
+import '../../../app/split_shell.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../core/widgets/action_menu_sheet.dart';
 import '../../../core/l10n_ext.dart';
@@ -934,7 +935,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     // Sütun sayısı: kullanıcı iki parmakla zoom yaptıysa onun
                     // seçimi (1–4), yoksa ekran genişliğinden otomatik.
                     final manualColumns = ref.watch(gridColumnsProvider);
-                    final columns = manualColumns > 0
+                    // Not açıkken solda dar liste: TEK sütun (kullanıcı
+                    // isteği 2026-11-02, bkz. kNoteSplitBreakpoint).
+                    final columns = DashboardPaneScope.singleColumnOf(context)
+                        ? 1
+                        : manualColumns > 0
                         ? manualColumns
                         : (constraints.maxWidth / 220).floor().clamp(2, 6);
                     // Masonry hücre genişliği: sürükle-sırala sırasında taşınan

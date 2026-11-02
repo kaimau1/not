@@ -384,6 +384,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signOut => 'Sign out';
 
   @override
+  String get switchAccount => 'Switch account';
+
+  @override
+  String get switchAccountConfirm =>
+      'You\'ll be signed out of this account and the Google account picker will open. Your notes stay in this account and will be here when you come back.';
+
+  @override
+  String get switchAccountGuestWarning =>
+      'You\'re using a guest account: if you switch, you\'ll lose access to the notes on this device. Link a Google account or make a full backup first.';
+
+  @override
   String get signOutConfirm => 'Are you sure you want to sign out?';
 
   @override
