@@ -56,7 +56,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
-| 18 | Bulut oturumunda yapılabilecekler (31 madde) | Kısmen (22/27 — F hariç) | 2026-11-02 | Açık: F18.9, F18.10, F18.22, F18.23 (bulut, sonraki oturum); F18.20 → F19.B8; F bölümü (F18.27–30) yalnız Play'e çıkılırsa |
+| 18 | Bulut oturumunda yapılabilecekler (31 madde) | Kısmen (21/27 — F hariç) | 2026-11-02 | Açık: F18.7 (ölçüm koşusu takılıyor), F18.9, F18.10, F18.22, F18.23 (bulut, sonraki oturum); F18.20 → F19.B8; F bölümü (F18.27–30) yalnız Play'e çıkılırsa |
 | 19 | Telefon, konsol, hesap işleri (senin) | Kısmen | 2026-11-01 | A3, B5, B7, C3 bitti; B6 ertelendi (ölçüm zaman aşımı); C1/C2/C4 kısmen (nedenleri maddelerde); A1, A2, A4, A5, B1–B4, C5, D açık |
 
 ---
@@ -135,7 +135,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 
 ### B. Ölçüm ve uçtan uca test (eski Faz 17)
 
-- [x] **F18.7 Kare ölçümünü buluttan tetiklenebilir yap ve koş** (eski
+- [ ] **F18.7 Kare ölçümünü buluttan tetiklenebilir yap ve koş** (eski
   F17.1 = F9.1 = F2.6; hiç koşulmadı). `perf` işi yalnız `workflow_dispatch`ta
   (`build.yml:~487`), bulut oturumu onu tetikleyemiyor. Yap: commit
   başlığında `[perf]` da tetiklesin (APK işiyle aynı desen: başlık, gövde
@@ -144,7 +144,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
   olarak yaz. Senaryolar: bugün 300 notlu ızgarada fırlatma + editörde yazma
   var; not açma (kart → editör geçişi), biçim paneli, PDF kaydırma, balon
   bırakma yoksa ekle. Bulutta yapılamazsa → F19.B6.
-  **Yapıldı (2026-11-02):** Başlıkta `[perf]` her dalda tetikler, özet iş günlüğüne basılır. Kök neden bulundu: odaktaki alanın imleci `pumpAndSettle`'ı hiç bitirmiyordu → sabit süreli pompalama. Koşu: bu oturumun main birleştirmesi `[perf]` taşır; p90 tabanı sonuçtan HAFIZA'ya yazılacak (sonuç gelmezse F19.B6). Yeni senaryo (not açma, biçim paneli, PDF, balon) EKLENMEDİ.
+  **Yapıldı (2026-11-02):** Başlıkta `[perf]` her dalda tetikler, özet iş günlüğüne basılır. Kök neden bulundu: odaktaki alanın imleci `pumpAndSettle`'ı hiç bitirmiyordu → sabit süreli pompalama. **Koşu 41391257808 (v1.1.586) YİNE sonuçsuz:** profil APK 11 dk'da derlendi, emülatöre kuruldu, sonra 32 dk HİÇ çıktı yok → 45 dk iptal. Yani takılma test GÖVDESİNDEN önce (uygulama açılmıyor ya da `flutter drive` VM servisine bağlanamıyor); `pumpAndSettle` düzeltmesi tek başına yetmedi. Sonraki adım: `flutter drive -v` + `adb logcat` çıktısını işe ekleyip koş. p90 tabanı YOK. Yeni senaryo EKLENMEDİ.
 
 - [x] **F18.8 Uçtan uca akış testleri** (eski F17.2). Akışlar: (1) + → Metin →
   yaz → paylaş metni; (2) + → Dosya → PDF → balon → paylaş (balonlarla);

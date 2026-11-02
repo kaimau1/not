@@ -512,7 +512,7 @@ jobs:
     if: >
       (github.event_name == 'workflow_dispatch' && inputs.perf) ||
       needs.marker.outputs.perf == 'true'
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -543,12 +543,14 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
-          script: flutter drive --profile --driver=test_driver/perf_driver.dart --target=integration_test/perf_test.dart -d emulator-5554
+          script: (adb logcat -v time flutter:V AndroidRuntime:E '*:S' > build/logcat.txt &) ; flutter drive -v --profile --driver=test_driver/perf_driver.dart --target=integration_test/perf_test.dart -d emulator-5554 2>&1 | tail -n 400
 
       # Özet iş günlüğüne de basılır: artifact kotası sık dolu (F18.7).
       - name: Özeti göster
         if: always()
-        run: cat build/perf/perf_summary.json 2>/dev/null || echo "özet yok"
+        run: |
+          cat build/perf/perf_summary.json 2>/dev/null || echo "özet yok"
+          echo '--- logcat (son 200) ---'; tail -n 200 build/logcat.txt 2>/dev/null || true
 
       - name: Özeti yükle
         if: always()
