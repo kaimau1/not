@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Köprüye yazabilen uygulamaların imza sertifikası SHA-256'sı (ses deposu PROTOKOL.md) -->
+    <!-- Köprüye yazabilen uygulamaların imza sertifikası SHA-256'sı -->
     <string-array name="kopru_sertifikalari" translatable="false">
-        <!-- Asistan (com.ses.asistan) -->
-        <item>9f9ba7d6e0465f41e500744010cdb5e8428a09a5ec6d6e33ccd6510ff4209551</item>
         <!-- Harita (com.harita.ankara) -->
         <item>d03a97662ef327430eae1debfd7632c29deacd156a146f0e9bc7236177b3359c</item>
         <!-- Kanallarım (com.kanallarim.app) -->

@@ -55,8 +55,7 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
    not; Not paketi gönder-aç.
 13. [ ] Erişilebilirlik: TalkBack'te kart tek seferde okunuyor; telefon yazısı
    en büyük + "Sistem yazı boyutunu izle" → taşma yok (F19.C2).
-14. [ ] Kişisel köprü: Harita "not al" (uygulama kapalı), Kanallarım "Not al",
-   Asistan sorgu (F19.C4).
+14. [ ] Kişisel köprü: Harita "not al" (uygulama kapalı), Kanallarım "Not al" (F19.C4).
 15. [ ] Yeni sürüm çıkınca açılışta bir kez "Yeni sürüm var" + Ayarlar →
    Hakkında satırı (F18.21).
 

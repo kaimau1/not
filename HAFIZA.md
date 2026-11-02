@@ -436,6 +436,11 @@ maddeyi GÜNCELLE.
 - Çöp analizi `trash_analysis.dart` + AI; çöp hatırlatması bildirim 999002.
 - `KALANLAR.md` tek cihaz doğrulama listesi; eski turlar `KALANLAR_ARSIV.md`.
 
+## Merkezi asistan bırakıldı (2026-11-02)
+- Kullanıcı: asistan (`com.ses.asistan`) çok pil yiyordu; ses her uygulamanın içinde. Kişisel alıcıdan
+  `ASISTAN_SORGU` ve asistan sertifikası silindi; `HARITA_NOT` (Harita, Kanallarım) aynen. `image` eki
+  şimdilik gönderen yok (yalnız asistan yolluyordu) — Kanallarım/Dosya Okuyucu notunda kullanılabilir.
+
 ## Açık sorular / bilinen
 - Misafir notunda üst çubuk "Senkronize", ana ekran "yalnız bu cihazda"
   diyor — karara bağlanmadı (2026-11-01).

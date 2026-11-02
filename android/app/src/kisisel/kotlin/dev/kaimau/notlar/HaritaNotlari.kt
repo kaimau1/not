@@ -35,9 +35,6 @@ import java.util.concurrent.TimeUnit
  * Oturum yoksa not cihazda sıraya alınır, uygulama açılınca ([flushPending],
  * MainActivity.onCreate) yazılır.
  *
- * **ASİSTAN** (com.ses.asistan, 2026-10-31): aynı alıcıya "not al" (`folder` = "Asistan") ve
- * [ACTION_SORGU] ("son notum", "notlarımda X'i ara") gelir. Sorgu kilitli notları ve gizli
- * klasörleri ASLA vermez ([YerelNot.gorunurNotlar]).
  * **EKRAN GÖRÜNTÜSÜ** (2026-11-01, kullanıcı: "SS alabilmeli nota ekleyebilmeli"): asistan `image` ekiyle
  * görüntünün content:// adresini (okuma izni verilmiş) yollar; görsel notun EKİ olur ([resimEki]): dosya
  * Dart'ın türettiği yerel yola (`<filesDir>/attachments/<not>/<ek>_<ad>`) kopyalanır, ek kaydı yüklenmemiş
@@ -46,13 +43,12 @@ import java.util.concurrent.TimeUnit
  * videonun notuna (`yt_<id>`) eklenir. Metin boş olabilir (yalnız görsel).
  *
  * **YALNIZ KİŞİSEL DERLEMEDE** (`NOTLAR_KISISEL=1`, `src/kisisel`): alıcı
- * `dev.kaimau.notlar.izin.ASISTAN` ile korunur (knownSigner: asistan, Harita,
+ * `dev.kaimau.notlar.izin.ASISTAN` ile korunur (knownSigner: Harita ve
  * Kanallarım). Genel (dağıtılan) APK'da bu kaynak kümesi yoktur; `src/genel`
  * deki boş [KisiselKopru] girer (HAFIZA.md › Kişisel köprü).
  */
 class HaritaNotAlici : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == ACTION_SORGU) return sorgu(context, intent)
         if (intent.action != ACTION) return
         val text = intent.getStringExtra("text")?.trim().orEmpty()
         val image = intent.getStringExtra("image")?.ifEmpty { null }
@@ -77,40 +73,6 @@ class HaritaNotAlici : BroadcastReceiver() {
     }
 
     /**
-     * Asistanın sorusu: `istek` "son" (en yeni [adet] not) ya da "ara" (`terimler`in hepsi
-     * geçen notlar). Cevap kodu [SAVED] (tamam), [NO_SESSION] (oturum yok) ya da 0; ekler
-     * `basliklar`, `metinler`, `zamanlar` (ms). Notlar öne gelmez.
-     */
-    private fun sorgu(context: Context, intent: Intent) {
-        val ara = intent.getStringExtra("istek") == "ara"
-        val terimler = intent.getStringArrayListExtra("terimler").orEmpty()
-        val adet = intent.getIntExtra("adet", 1).coerceIn(1, 10)
-        val result = goAsync()
-        Thread {
-            try {
-                val uid = FirebaseAuth.getInstance().currentUser?.uid
-                if (uid == null) {
-                    result.resultCode = NO_SESSION
-                } else {
-                    val son = YerelNot.gorunurNotlar(uid, if (ara) ARA_SINIR else adet)
-                    val bulunan = (if (ara) YerelNot.ara(son, terimler) else son).take(adet)
-                    result.resultCode = SAVED
-                    result.setResultExtras(
-                        android.os.Bundle().apply {
-                            putStringArrayList("basliklar", ArrayList(bulunan.map { it.title }))
-                            putStringArrayList("metinler", ArrayList(bulunan.map { it.text.take(METIN_SINIR) }))
-                            putLongArray("zamanlar", bulunan.map { it.updatedMs }.toLongArray())
-                        },
-                    )
-                }
-            } catch (_: Exception) {
-                result.resultCode = 0
-            }
-            result.finish()
-        }.start()
-    }
-
-    /**
      * Gelen not: Harita'nınki başlıksız ve "Haritalar"da, Kanallarım'ınki başlıklı, sabitli ve "YouTube"da.
      * [transcript]: Kanallarım'ın gönderdiği videonun TAM zamanlı altyazısı ("[d:ss] metin" satırları).
      * [image]: asistanın ekran görüntüsünün bu uygulamadaki kopyası (yol); [video]: görsel o videonun notuna.
@@ -122,12 +84,6 @@ class HaritaNotAlici : BroadcastReceiver() {
 
     companion object {
         const val ACTION = "dev.kaimau.notlar.HARITA_NOT"
-        const val ACTION_SORGU = "dev.kaimau.notlar.ASISTAN_SORGU"
-        const val NO_SESSION = 3
-        /** Aramanın taradığı en yeni not sayısı (Ajan.kt ile aynı; Firestore'da tam metin araması yok). */
-        private const val ARA_SINIR = 500
-        /** Sesli okunacak metin: bir yayının ekleri küçük kalsın (Binder sınırı ~1 MB). */
-        private const val METIN_SINIR = 4000
         const val FOLDER_NAME = "Haritalar"
         const val SAVED = 1
         const val QUEUED = 2
