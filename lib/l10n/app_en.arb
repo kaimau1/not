@@ -2393,5 +2393,10 @@
   "repeatWeekly": "Every week",
   "repeatWeeklyOn": "Weekly: {days}",
   "repeatMonthly": "Every month",
-  "repeatYearly": "Every year"
+  "repeatYearly": "Every year",
+  "importOther": "Import from other apps",
+  "importOtherInfo": "Google Keep (Takeout zip), Markdown/txt (file or zip), Evernote (.enex)",
+  "importInProgress": "Importing",
+  "importOtherNone": "No notes to import in this file",
+  "importOtherResult": "{imported} notes imported, {skipped} skipped (already there), {failed} unreadable"
 }

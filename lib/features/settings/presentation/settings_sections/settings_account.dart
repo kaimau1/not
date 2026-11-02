@@ -408,6 +408,23 @@ class _RestoreButton extends ConsumerWidget {
   }
 }
 
+/// Başka uygulamadan içe aktar (F18.15).
+class _ImportOtherButton extends ConsumerWidget {
+  const _ImportOtherButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Tooltip(
+      message: context.l10n.importOtherInfo,
+      child: TextButton.icon(
+        icon: const Icon(Icons.move_to_inbox_outlined),
+        label: Text(context.l10n.importOther),
+        onPressed: () => importFromOtherApps(context, ref),
+      ),
+    );
+  }
+}
+
 /// Misafir hesabı Google hesabına bağlar (uid korunur, notlar yerinde
 /// kalır). Ayarlar'daki satır ve ana ekrandaki hatırlatma kartı (F4.3)
 /// aynı akışı kullanır.

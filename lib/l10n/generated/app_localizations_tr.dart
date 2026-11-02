@@ -6364,4 +6364,22 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get repeatYearly => 'Her yıl';
+
+  @override
+  String get importOther => 'Başka uygulamadan içe aktar';
+
+  @override
+  String get importOtherInfo =>
+      'Google Keep (Takeout zip\'i), Markdown/txt (tek dosya ya da zip), Evernote (.enex)';
+
+  @override
+  String get importInProgress => 'İçe aktarılıyor';
+
+  @override
+  String get importOtherNone => 'Bu dosyada içe aktarılacak not bulunamadı';
+
+  @override
+  String importOtherResult(int imported, int skipped, int failed) {
+    return '$imported not içe aktarıldı, $skipped atlandı (zaten var), $failed okunamadı';
+  }
 }

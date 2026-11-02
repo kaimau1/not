@@ -6384,4 +6384,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get repeatYearly => 'Every year';
+
+  @override
+  String get importOther => 'Import from other apps';
+
+  @override
+  String get importOtherInfo =>
+      'Google Keep (Takeout zip), Markdown/txt (file or zip), Evernote (.enex)';
+
+  @override
+  String get importInProgress => 'Importing';
+
+  @override
+  String get importOtherNone => 'No notes to import in this file';
+
+  @override
+  String importOtherResult(int imported, int skipped, int failed) {
+    return '$imported notes imported, $skipped skipped (already there), $failed unreadable';
+  }
 }

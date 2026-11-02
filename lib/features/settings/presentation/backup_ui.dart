@@ -19,6 +19,7 @@ import '../../folders/data/folders_repository.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/data/backup_files.dart';
 import '../../notes/data/backup_service.dart';
+import '../../notes/data/import_service.dart';
 import '../../notes/data/notes_repository.dart';
 
 /// Ayarlar → Hesap → "Tam yedek" ve "Yedekten geri yükle" akışları (F18.4).
@@ -157,6 +158,88 @@ Future<void> restoreBackup(BuildContext context, WidgetRef ref) async {
     messenger.showMessage(l10n.backupCancelled);
   } on FormatException {
     messenger.showMessage(l10n.importBackupInvalid);
+  } catch (e) {
+    messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
+  } finally {
+    progress.finish();
+    await dialog;
+  }
+}
+
+/// Başka uygulamadan içe aktarma (F18.15): Keep Takeout zip'i, Markdown/txt
+/// (tek dosya ya da zip), Evernote `.enex`, tek Keep `.json`.
+Future<void> importFromOtherApps(BuildContext context, WidgetRef ref) async {
+  final l10n = context.l10n;
+  final messenger = ScaffoldMessenger.of(context);
+  final notes = ref.read(notesRepositoryProvider);
+  if (notes == null) return;
+  final file = await DocPicker.pickOne(
+    const XTypeGroup(
+      label: 'Notlar',
+      extensions: ['zip', 'md', 'markdown', 'txt', 'enex', 'json'],
+      mimeTypes: [
+        'application/zip',
+        'text/markdown',
+        'text/plain',
+        'application/json',
+        'application/xml',
+        'text/xml',
+        'application/octet-stream',
+      ],
+    ),
+  );
+  if (file == null || !context.mounted) return;
+  final name = file.name.toLowerCase();
+  final failed = <int>[];
+  final progress = BackupProgress();
+  Future<void>? dialog;
+  try {
+    final List<ImportedNote> items;
+    final head = await _head(file);
+    if (sniffBackup(head) == BackupFormat.full) {
+      final Archive archive = kIsWeb || file.path.isEmpty
+          ? ZipDecoder().decodeBytes(await file.readAsBytes())
+          : openBackupFile(file.path);
+      items = looksLikeKeepTakeout(archive)
+          ? parseKeepTakeout(archive, failed: failed)
+          : parseMarkdownArchive(archive, failed: failed);
+    } else if (name.endsWith('.enex')) {
+      items = parseEnex(await file.readAsString(), failed: failed);
+    } else if (name.endsWith('.json')) {
+      final decoded = jsonDecode(await file.readAsString());
+      final one = decoded is Map
+          ? parseKeepNoteJson(Map<String, dynamic>.from(decoded))
+          : null;
+      items = [?one];
+    } else {
+      final text = utf8.decode(await file.readAsBytes(), allowMalformed: true);
+      final one = parseMarkdownNote(file.name, text);
+      items = [?one];
+    }
+    if (items.isEmpty) {
+      messenger.showMessage(l10n.importOtherNone);
+      return;
+    }
+    if (!context.mounted) return;
+    dialog = showBackupProgress(context, l10n.importInProgress, progress);
+    final result =
+        await ImportService(
+          notes: notes,
+          attachments: ref.read(attachmentRepositoryProvider),
+        ).importAll(
+          items,
+          existing: ref.read(notesStreamProvider).value ?? const [],
+          failed: failed.length,
+          onProgress: progress.update,
+          cancelled: () => progress.cancelled,
+        );
+    messenger.showMessage(
+      l10n.importOtherResult(result.imported, result.skipped, result.failed),
+    );
+  } on BackupCancelled {
+    messenger.showMessage(l10n.backupCancelled);
+  } on FormatException {
+    messenger.showMessage(l10n.importOtherNone);
   } catch (e) {
     messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
   } finally {

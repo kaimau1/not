@@ -1,0 +1,10 @@
+{
+  "attachments": [{"filePath": "foto.png", "mimetype": "image/png"}],
+  "color": "DEFAULT",
+  "isTrashed": false,
+  "isPinned": false,
+  "isArchived": true,
+  "textContent": "Uygulama fikri\nikinci satır",
+  "title": "Fikir",
+  "createdTimestampUsec": 1695000000000000
+}

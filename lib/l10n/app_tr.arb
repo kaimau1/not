@@ -3093,5 +3093,23 @@
     }
   },
   "repeatMonthly": "Her ay",
-  "repeatYearly": "Her yıl"
+  "repeatYearly": "Her yıl",
+  "importOther": "Başka uygulamadan içe aktar",
+  "importOtherInfo": "Google Keep (Takeout zip'i), Markdown/txt (tek dosya ya da zip), Evernote (.enex)",
+  "importInProgress": "İçe aktarılıyor",
+  "importOtherNone": "Bu dosyada içe aktarılacak not bulunamadı",
+  "importOtherResult": "{imported} not içe aktarıldı, {skipped} atlandı (zaten var), {failed} okunamadı",
+  "@importOtherResult": {
+    "placeholders": {
+      "imported": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  }
 }

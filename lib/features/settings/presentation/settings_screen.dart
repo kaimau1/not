@@ -586,6 +586,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: l10n.importBackup,
             keywords: 'geri yukle ice aktar',
           ),
+          _SettingRow(
+            const _ImportOtherButton(),
+            title: l10n.importOther,
+            keywords: 'ice aktar keep evernote markdown takeout txt',
+          ),
         ],
       ),
     ];

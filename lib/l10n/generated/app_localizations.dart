@@ -11407,6 +11407,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Her yıl'**
   String get repeatYearly;
+
+  /// No description provided for @importOther.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başka uygulamadan içe aktar'**
+  String get importOther;
+
+  /// No description provided for @importOtherInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Keep (Takeout zip\'i), Markdown/txt (tek dosya ya da zip), Evernote (.enex)'**
+  String get importOtherInfo;
+
+  /// No description provided for @importInProgress.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçe aktarılıyor'**
+  String get importInProgress;
+
+  /// No description provided for @importOtherNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dosyada içe aktarılacak not bulunamadı'**
+  String get importOtherNone;
+
+  /// No description provided for @importOtherResult.
+  ///
+  /// In tr, this message translates to:
+  /// **'{imported} not içe aktarıldı, {skipped} atlandı (zaten var), {failed} okunamadı'**
+  String importOtherResult(int imported, int skipped, int failed);
 }
 
 class _AppLocalizationsDelegate
