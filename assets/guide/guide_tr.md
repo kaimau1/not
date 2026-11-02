@@ -164,13 +164,16 @@ Ana ekrandaki **Yapay zekâ** ekranı (⋮ ya da geniş ekranda soldaki ray):
 - **Notlarının üzerinde:** haftayı özetle, etiketsizleri etiketle, başlıksızlara başlık öner, kopyaları temizle (kopyalar yapay zekâ harcamaz). Yapacak işi olmayan kutu soluk durur ve **Şu an iş yok** der.
 - **Belge oku:** PDF/Word/sunumu sesli dinle.
 - **Günlük brifing:** güne bakış — hatırlatıcılar ve son notlar; her sabah bildirim olarak da gelebilir.
-- Günlük puan gece yarısı yenilenir; kendi Gemini API anahtarını girersen kotasız çalışır. Sağ üstteki ayar düğmesi (**Yapay zekâ ayarları**) Ayarlar'ın Yapay zekâ alanını açar.
+- **Tüm notlar** sohbeti soruna en uygun notları bulup cevaplar; yanıtın altındaki not çipleri dayandığı notları açar.
+- **Bugünün kartları:** bir notun ⋮ menüsünden **Kart üret** dersen yapay zekâ nottan soru–cevap kartları çıkarır; kartlar aralıklı tekrarla (Tekrar · Zor · İyi · Kolay) her gün sırası gelince burada çıkar.
+- Günlük puan ilk kullanımdan 24 saat sonra yenilenir (Ayarlar'da saati yazar); kendi Gemini API anahtarını girersen kotasız çalışır. Sağ üstteki ayar düğmesi (**Yapay zekâ ayarları**) Ayarlar'ın Yapay zekâ alanını açar.
 
 ## Düzenleme: klasör, etiket, arşiv {#organize}
 - **Klasörler:** oluştur, renklendir, sırala; notu ⋮ → Klasöre taşı ile taşı. Klasörü **gizli** yaparsan notları ana ekranda görünmez; ⋮ → Gizli klasörler ve parmak izi/yüz ile açılır.
 - **Etiketler:** başlığın yanındaki çipten ekle; Süz levhasında etikete uzun basarak yeniden adlandır ya da sil.
 - **Sabitle:** önemli notlar üstte ve Sabitli süzgecinde. **Yıldızla** ayrı bir işarettir (Yıldızlı süzgeci).
 - **Kilitle:** notu kilitle; nasıl açılacağını Ayarlar → **Not kilidi**'nden seç (parmak izi, şifre ya da desen; web'de şifre ya da desen). İçeriği aramaya, widget'a ve yapay zekâya hiç sızmaz. Kilit şifreleme değildir: yalnız uygulamanın notu göstermesini engeller.
+- **Not bağlantıları:** yazarken `[[` yaz ya da bir yazıyı seçip **Nota bağla** de; seçtiğin notun adı bağlantı olur, dokununca o not açılır (adı değişse de bağ kalır). Bağlanılan notun başlığının altında **N bağlantı** çipi, ona bağlanan notları listeler. Not ⋮ → **İlgili notlar** benzer notları önerir; **Bağla** tek dokunuşla bağlantı ekler.
 - **Arşiv** ve **Çöp kutusu:** ⋮ menüsünden; çöpten geri yükle.
 - **Şablonlar:** + → Şablondan; hazır şablonları önizle, maddeleri seç; kendi notunu ⋮ → **Şablon olarak kaydet** ile şablon yap, şablon düzenleyicide değiştir.
 - **Defter:** + → Şablon → Defter ya da herhangi bir notta ⋮ → **Defter görünümü**: çizgili/kareli/noktalı kâğıt ve sayfalar. Başka notun eklerini ⋮ → **Deftere topla** ile kopyalarıyla bir deftere toplar.
@@ -178,6 +181,7 @@ Ana ekrandaki **Yapay zekâ** ekranı (⋮ ya da geniş ekranda soldaki ray):
 ## Hatırlatıcılar {#reminders}
 - Başlığın yanındaki **çip → Hatırlat** ile tarih ve saat seç; zamanı gelince bildirim gelir.
 - **Konum hatırlatıcısı:** bir yere varınca ya da oradan ayrılınca not bildirim olarak gelir (konum izni "her zaman" olmalı).
+- **Tekrar:** saati seçtikten sonra her gün, hafta içi, her hafta (gün seçerek), her ay ya da her yıl; "her pazartesi 9'da" diye söylemek de olur. Bildirimdeki **Tamam** sıradaki güne geçirir.
 - Bütün hatırlatıcılar ⋮ → **Hatırlatıcılar** ekranında.
 - **Bugün** widget'ı günün hatırlatıcılarını saatleriyle ana ekranında gösterir.
 
@@ -219,7 +223,7 @@ En üstte iki kart: **Kullanım kılavuzu** ve **Kişiselleştir** (hangi düğm
 - **Sesli dinle ve dikte:** cihaz sesi, Türkçe ses ya da yapay zekâ sesi; okuma hızı ve tonu; dikte mikrofonunun kullanım şekli.
 - **İzinler:** mikrofon, kamera, bildirim, konum — durumu ve ayar ekranları.
 - **Senkron:** Google Drive bağlantısı ve Drive kullanımı, otomatik yükleme sınırı, bu cihazdaki önbellek, yedekleme.
-- **Hesap:** çıkış, hesabı silme, not kilidi; gizlilik politikası ve lisanslar.
+- **Hesap:** çıkış, hesabı silme, not kilidi, **uygulama kilidi** (açılışta ve arka plandan dönüşte sorar; isteğe bağlı "son uygulamalarda gizle"); **Tam yedek al** (bütün notlar ekleri, çizimleri, balonları ve klasörleriyle tek dosya), **Yedekten geri yükle** (iki kez yüklense de not çoğalmaz) ve **Başka uygulamadan içe aktar** (Google Keep Takeout, Markdown/txt, Evernote); gizlilik politikası ve lisanslar.
 
 ## İpuçları {#tips}
 - Geri tuşu önce açık önizlemeyi, seçimi ya da levhayı kapatır; not ancak sonra kapanır.

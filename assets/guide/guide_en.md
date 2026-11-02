@@ -164,7 +164,9 @@ The **AI** screen (⋮, or the rail on the left on wide screens):
 - **On your notes:** summarise the week, tag the untagged, suggest titles, clean up duplicates (duplicates use no AI). A box with nothing to do is faded and says **Nothing to do right now**.
 - **Read a document:** listen to a PDF/Word/slides file.
 - **Daily briefing:** reminders and recent notes at a glance; can also arrive as a morning notification.
-- Your daily points renew at midnight; with your own Gemini API key AI works without limits. The settings button at the top right (**AI settings**) opens the AI area of Settings.
+- The **All notes** chat finds the notes that fit your question; the note chips under the answer open the notes it used.
+- **Today's cards:** choose **Make cards** in a note's ⋮ menu and AI turns the note into question–answer cards; spaced repetition (Again · Hard · Good · Easy) brings each card back here on its day.
+- Your daily points renew 24 hours after first use (Settings shows the time); with your own Gemini API key AI works without limits. The settings button at the top right (**AI settings**) opens the AI area of Settings.
 
 ## Organising: folders, tags, archive {#organize}
 - **Folders:** create, colour and reorder them; move a note with ⋮ → Move to folder. A **hidden** folder's notes don't appear on the home screen; reveal them with ⋮ → Hidden folders and your fingerprint/face.
@@ -172,12 +174,14 @@ The **AI** screen (⋮, or the rail on the left on wide screens):
 - **Pin:** keep important notes on top and in the Pinned filter. **Star** is a separate mark (Starred filter).
 - **Lock:** lock a note; choose how it opens in Settings → **Note lock** (fingerprint, password or pattern; password or pattern on the web). Its content never leaks into search, widgets or AI. A lock is not encryption: it only stops this app from showing the note.
 - **Archive** and **Bin:** from the ⋮ menu; restore from the bin.
+- **Note links:** type `[[` while writing, or select text and choose **Link to note**; the chosen note's name becomes a link that opens it (the link survives renames). A **N backlinks** chip under the linked note's title lists the notes pointing to it. Note ⋮ → **Related notes** suggests similar notes; **Link** adds one in a tap.
 - **Templates:** + → From template; preview ready-made templates and pick items; turn your own note into one with ⋮ → **Save as template**, and change it in the template editor.
 - **Notebook:** + → Templates → Notebook, or ⋮ → **Notebook view** in any note: lined/grid/dotted paper and pages. Collect another note's attachments into a notebook with ⋮ → **Collect into notebook**.
 
 ## Reminders {#reminders}
 - Use **chip → Remind me** next to the title to pick a date and time; you get a notification when it's due.
 - **Location reminder:** the note arrives as a notification when you arrive at or leave a place (location permission must be "always").
+- **Repeat:** after the time, pick every day, every weekday, weekly (choose days), monthly or yearly; saying "every monday at 9" works too. **Done** on the notification moves it to the next time.
 - All reminders are on the ⋮ → **Reminders** screen.
 - The **Today** widget shows today's reminders with their times on your home screen.
 
@@ -220,7 +224,7 @@ At the top are two cards: **User guide** and **Personalise** (which buttons and 
 
 - **Permissions:** microphone, camera, notifications, location — status and system settings.
 - **Sync:** Google Drive connection and Drive usage, the automatic upload limit, the cache on this device, backups.
-- **Account:** sign out, delete account; privacy policy and licences.
+- **Account:** sign out, delete account, note lock, **app lock** (asks on launch and when returning from the background; optional "hide in recent apps"); **Full backup** (all notes with attachments, drawings, bubbles and folders in one file), **Restore from backup** (restoring twice doesn't duplicate) and **Import from other apps** (Google Keep Takeout, Markdown/txt, Evernote); privacy policy and licences.
 
 ## Tips {#tips}
 - The back button first closes an open preview, selection or sheet; only then the note.
