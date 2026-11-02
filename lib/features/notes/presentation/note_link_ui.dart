@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../ai/data/semantic_search.dart' show relatedNotesProvider;
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/search_fold.dart';
@@ -174,3 +177,79 @@ class BacklinksChip extends StatelessWidget {
     );
   }
 }
+
+/// "İlgili notlar" levhası (F18.17): öneriler, dokununca açılır; "Bağla"
+/// tek dokunuşla bağlantıya çevirir.
+Future<void> showRelatedNotesSheet(
+  BuildContext context, {
+  required String noteId,
+  required ValueChanged<Note> onLink,
+}) => showAppSheet<void>(
+  context: context,
+  showDragHandle: true,
+  builder: (ctx) => SafeArea(
+    child: Consumer(
+      builder: (ctx, ref, _) {
+        final l10n = ctx.l10n;
+        final async = ref.watch(relatedNotesProvider(noteId));
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text(
+                l10n.relatedNotesTitle,
+                style: Theme.of(ctx).textTheme.titleMedium,
+              ),
+            ),
+            ...async.when(
+              loading: () => const [
+                Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ],
+              error: (_, _) => [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(l10n.relatedNotesNone),
+                ),
+              ],
+              data: (list) => list.isEmpty
+                  ? [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(l10n.relatedNotesNone),
+                      ),
+                    ]
+                  : [
+                      for (final n in list)
+                        ListTile(
+                          leading: const Icon(Icons.sticky_note_2_outlined),
+                          title: Text(
+                            noteLinkLabel(n, l10n.remindersUntitled),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            openNoteRoute(context, n);
+                          },
+                          trailing: TextButton.icon(
+                            icon: const Icon(Icons.link, size: 18),
+                            label: Text(l10n.relatedNotesLink),
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              onLink(n);
+                            },
+                          ),
+                        ),
+                    ],
+            ),
+          ],
+        );
+      },
+    ),
+  ),
+);

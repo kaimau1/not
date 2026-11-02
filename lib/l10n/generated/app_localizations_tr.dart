@@ -6405,4 +6405,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String backlinksCount(int count) {
     return '$count bağlantı';
   }
+
+  @override
+  String get relatedNotesTitle => 'İlgili notlar';
+
+  @override
+  String get relatedNotesNone => 'İlgili not bulunamadı';
+
+  @override
+  String get relatedNotesLink => 'Bağla';
 }

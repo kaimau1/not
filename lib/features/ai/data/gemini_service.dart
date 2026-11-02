@@ -85,10 +85,18 @@ class MediaTooLargeException implements Exception {
 }
 
 class ChatTurn {
-  const ChatTurn({required this.isUser, required this.text});
+  const ChatTurn({
+    required this.isUser,
+    required this.text,
+    this.sources = const [],
+  });
 
   final bool isUser;
   final String text;
+
+  /// "Tüm notlar" sohbetinde yanıtın dayandığı notlar (F18.18 — getirme
+  /// sonucu; dokunulabilir çip). Modele GİTMEZ, yalnız arayüz için.
+  final List<String> sources;
 }
 
 /// Konuşma çevirmeninin tek bir tur sonucu.

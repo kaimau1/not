@@ -11479,6 +11479,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} bağlantı'**
   String backlinksCount(int count);
+
+  /// No description provided for @relatedNotesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlgili notlar'**
+  String get relatedNotesTitle;
+
+  /// No description provided for @relatedNotesNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlgili not bulunamadı'**
+  String get relatedNotesNone;
+
+  /// No description provided for @relatedNotesLink.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağla'**
+  String get relatedNotesLink;
 }
 
 class _AppLocalizationsDelegate

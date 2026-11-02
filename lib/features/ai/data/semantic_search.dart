@@ -9,6 +9,8 @@ import '../../auth/presentation/auth_providers.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/presentation/notes_providers.dart';
+import '../../notes/domain/note_links.dart';
+import 'assistant_service.dart' show keywordRelevant;
 import 'attachment_text_index.dart';
 import 'gemini_service.dart';
 
@@ -50,6 +52,46 @@ final semanticSearchProvider = FutureProvider.autoDispose
             if (foldForSearch(n.toPlainText()).contains(q)) n,
         ];
       }
+    });
+
+/// **İlgili notlar** (F18.17): [noteId]ye anlamca yakın notlar. Anlamsal
+/// indeks (kendi anahtarıyla; vektör önbellekteyse yeni çağrı yok) olmazsa
+/// AI'sız kelime örtüşmesi. Kilitli, gizli klasördeki, arşivdeki ve zaten
+/// bağlı notlar öneriye girmez; hedef kilitliyse öneri yok.
+final relatedNotesProvider = FutureProvider.autoDispose
+    .family<List<Note>, String>((ref, noteId) async {
+      final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+      final target = notes.where((n) => n.id == noteId).firstOrNull;
+      if (target == null || target.locked) return const [];
+      final hidden = ref.watch(hiddenFoldersRevealedProvider)
+          ? const <String>{}
+          : ref.watch(hiddenFolderIdsProvider);
+      final linked = outgoingNoteLinks(target).toSet();
+      final candidates = [
+        for (final n in notes)
+          if (n.id != noteId &&
+              !n.locked &&
+              n.archivedAt == null &&
+              n.deletedAt == null &&
+              !hidden.contains(n.folderId) &&
+              !linked.contains(n.id))
+            n,
+      ];
+      if (candidates.isEmpty) return const [];
+      try {
+        final found = await ref
+            .read(semanticIndexProvider)
+            .related(target, candidates);
+        if (found.isNotEmpty) return found;
+      } catch (_) {
+        // Gömme yok (dahili mod) ya da ağ: yerel yedek.
+      }
+      final text = '${target.title} ${target.toPlainText()}';
+      return keywordRelevant(
+        text.length > 400 ? text.substring(0, 400) : text,
+        candidates,
+        limit: 5,
+      );
     });
 
 /// Ana ekran DIŞINDAKİ arama yüzeyleri (arşiv, çöp, klasör) için anlamsal
@@ -129,11 +171,64 @@ class SemanticIndex {
   @visibleForTesting
   void debugPut(String id) => _cache[id] = (null, Float32List(0), 0);
 
+  /// [target]a anlamca en yakın notlar (F18.17 "İlgili notlar"). Vektörler
+  /// önbellekteyse yeni çağrı YOK; eksik/bayat olanlar bir kez üretilir.
+  Future<List<Note>> related(
+    Note target,
+    List<Note> candidates, {
+    int limit = 5,
+    double threshold = 0.55,
+  }) async {
+    final others = [
+      for (final n in candidates)
+        if (n.id != target.id) n,
+    ];
+    await _ensureVectors([target, ...others]);
+    final tv = _cache[target.id]?.$2;
+    if (tv == null || tv.isEmpty) return const [];
+    final scored = <(Note, double)>[];
+    for (final n in others) {
+      final v = _cache[n.id]?.$2;
+      if (v == null) continue;
+      scored.add((n, _dot(tv, v)));
+    }
+    scored.sort((a, b) => b.$2.compareTo(a.$2));
+    return [
+      for (final (note, score) in scored.take(limit))
+        if (score > threshold) note,
+    ];
+  }
+
   Future<List<Note>> search(String query, List<Note> notes) async {
     final service = _ref.read(geminiServiceProvider);
-    final extra = _ref.read(attachmentTextProvider);
+    await _ensureVectors(notes);
 
-    // Eksik veya bayat vektörleri toplu üret (100'erlik gruplar).
+    var queryVector = _queryCache[query];
+    if (queryVector == null) {
+      queryVector = _normalized((await service.embedTexts([query])).first);
+      if (_queryCache.length >= _maxQueryCache) {
+        _queryCache.remove(_queryCache.keys.first);
+      }
+      _queryCache[query] = queryVector;
+    }
+
+    final scored = <(Note, double)>[];
+    for (final note in notes) {
+      final entry = _cache[note.id];
+      if (entry == null) continue;
+      scored.add((note, _dot(queryVector, entry.$2)));
+    }
+    scored.sort((a, b) => b.$2.compareTo(a.$2));
+    return [
+      for (final (note, score) in scored.take(30))
+        if (score > 0.35) note,
+    ];
+  }
+
+  /// Eksik veya bayat vektörleri toplu üretir (100'erlik gruplar).
+  Future<void> _ensureVectors(List<Note> notes) async {
+    final service = _ref.read(geminiServiceProvider);
+    final extra = _ref.read(attachmentTextProvider);
     final stale = [
       for (final note in notes)
         if (!_cache.containsKey(note.id) ||
@@ -165,27 +260,6 @@ class SemanticIndex {
         );
       }
     }
-
-    var queryVector = _queryCache[query];
-    if (queryVector == null) {
-      queryVector = _normalized((await service.embedTexts([query])).first);
-      if (_queryCache.length >= _maxQueryCache) {
-        _queryCache.remove(_queryCache.keys.first);
-      }
-      _queryCache[query] = queryVector;
-    }
-
-    final scored = <(Note, double)>[];
-    for (final note in notes) {
-      final entry = _cache[note.id];
-      if (entry == null) continue;
-      scored.add((note, _dot(queryVector, entry.$2)));
-    }
-    scored.sort((a, b) => b.$2.compareTo(a.$2));
-    return [
-      for (final (note, score) in scored.take(30))
-        if (score > 0.35) note,
-    ];
   }
 
   /// Birim uzunluğa ölçekler; sıfır vektör olduğu gibi kalır (skoru 0 çıkar).

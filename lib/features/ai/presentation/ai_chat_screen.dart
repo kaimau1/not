@@ -1,3 +1,5 @@
+import '../../notes/presentation/note_link_ui.dart' show noteLinkLabel;
+import '../../notes/presentation/note_card.dart' show openNoteRoute;
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -9,6 +11,7 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/domain/attachment.dart';
 import '../../notes/domain/note.dart';
+import '../../notes/data/notes_repository.dart' show notesStreamProvider;
 import '../../notes/presentation/editor/audio_recorder_sheet.dart';
 import '../data/ai_report.dart';
 import '../data/gemini_service.dart';
@@ -552,6 +555,9 @@ class _Bubble extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           SelectableText(turn.text),
+          // KAYNAK NOTLAR (F18.18): yanıtın dayandığı notlar, dokununca açılır.
+          if (!turn.isUser && turn.sources.isNotEmpty)
+            _SourceChips(ids: turn.sources),
           if (!turn.isUser && add != null)
             Align(
               alignment: AlignmentDirectional.centerEnd,
@@ -603,6 +609,41 @@ class _Bubble extends StatelessWidget {
                 ),
               ],
             ),
+    );
+  }
+}
+
+class _SourceChips extends ConsumerWidget {
+  const _SourceChips({required this.ids});
+  final List<String> ids;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+    final byId = {for (final n in notes) n.id: n};
+    final found = [for (final id in ids) ?byId[id]];
+    if (found.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 4,
+        children: [
+          for (final n in found)
+            ActionChip(
+              avatar: const Icon(Icons.sticky_note_2_outlined, size: 14),
+              label: Text(
+                noteLinkLabel(n, l10n.remindersUntitled),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              onPressed: () => openNoteRoute(context, n),
+            ),
+        ],
+      ),
     );
   }
 }

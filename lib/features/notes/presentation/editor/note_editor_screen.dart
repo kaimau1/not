@@ -3014,6 +3014,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             title: Text(l10n.suggestTags),
           ),
         ),
+      // İLGİLİ NOTLAR (F18.17): dokununca hesaplanır; kilitli notta yok.
+      if (!note.isEmpty && !note.locked && !_readOnly)
+        PopupMenuItem(
+          value: 'related-notes',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.hub_outlined),
+            title: Text(l10n.relatedNotesTitle),
+          ),
+        ),
       if (!note.isEmpty && note.title.trim().isEmpty)
         PopupMenuItem(
           value: 'suggest-title',
@@ -3054,6 +3065,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             _suggestTags();
           case 'suggest-title':
             _suggestTitle();
+          case 'related-notes':
+            unawaited(
+              showRelatedNotesSheet(
+                context,
+                noteId: note.id,
+                onLink: _linkNoteAtEnd,
+              ),
+            );
         }
       },
       itemBuilder: (context) => actionEntries,

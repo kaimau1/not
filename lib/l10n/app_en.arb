@@ -2405,5 +2405,8 @@
   "noteLinkInserted": "Linked to note",
   "noteLinkMissing": "Linked note not found (it may be deleted)",
   "backlinksTitle": "Notes linking here",
-  "backlinksCount": "{count} backlinks"
+  "backlinksCount": "{count} backlinks",
+  "relatedNotesTitle": "Related notes",
+  "relatedNotesNone": "No related notes found",
+  "relatedNotesLink": "Link"
 }

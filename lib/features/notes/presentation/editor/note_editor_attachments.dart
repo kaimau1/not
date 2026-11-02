@@ -930,6 +930,22 @@ extension _EditorAttachments on _NoteEditorScreenState {
     );
   }
 
+  /// Öneriden bağlantı (F18.17): hedefin başlığı gövdenin SONUNA etiket
+  /// olarak eklenir.
+  void _linkNoteAtEnd(Note target) {
+    final title = noteLinkLabel(target, context.l10n.remindersUntitled);
+    final now = _bodyController.logicalText;
+    final prefix = now.trim().isEmpty ? '' : (now.endsWith('\n') ? '' : '\n');
+    final text = '$now$prefix$title';
+    _bodyController.setLogical(text, text.length);
+    _applyEmbed(
+      label: title,
+      noteId: target.id,
+      start: text.length - title.length,
+      end: text.length,
+    );
+  }
+
   /// Gövdeye TEK karakter eklenip imlecin solu `[[` olduysa not seçici açılır.
   void _maybeLinkTrigger(String before, String after) {
     if (_readOnly || after.length != before.length + 1) return;

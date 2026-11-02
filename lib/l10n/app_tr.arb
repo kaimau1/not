@@ -3125,5 +3125,8 @@
         "type": "int"
       }
     }
-  }
+  },
+  "relatedNotesTitle": "İlgili notlar",
+  "relatedNotesNone": "İlgili not bulunamadı",
+  "relatedNotesLink": "Bağla"
 }

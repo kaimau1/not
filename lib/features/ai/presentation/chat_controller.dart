@@ -1,3 +1,6 @@
+import '../../notes/presentation/notes_providers.dart';
+import '../../notes/domain/note.dart';
+import '../data/semantic_search.dart';
 import '../../../core/utils/spoken_repeat.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -62,10 +65,14 @@ class ChatController extends Notifier<ChatState> {
       final notes = ref.read(notesStreamProvider).value ?? const [];
       final assistant = ref.read(assistantServiceProvider);
       String? createdNoteId;
+      final relevant = await _retrieve(trimmed, notes);
       final reply = await ref
           .read(geminiServiceProvider)
           .assistantChat(
-            notesContext: assistant.buildNotesContext(notes),
+            notesContext: assistant.buildNotesContext(
+              notes,
+              relevant: relevant,
+            ),
             history: List.of(state.turns),
             onToolCall: (name, args) async {
               if (name == 'delete_note' && confirmDelete != null) {
@@ -93,7 +100,10 @@ class ChatController extends Notifier<ChatState> {
             },
           );
       await _ensureReminder(createdNoteId, trimmed);
-      _addReply(reply);
+      _addReply(
+        reply,
+        sources: [for (final n in relevant.take(5)) n.id],
+      );
       // Yalnız BAŞARILI iş geçmişe girer: hata alan bir istek "yapılan iş"
       // değil, kullanıcı onu zaten ekranda gördü.
       if (historyLabel != null) {
@@ -108,10 +118,37 @@ class ChatController extends Notifier<ChatState> {
     }
   }
 
-  void _addReply(String text) {
+  void _addReply(String text, {List<String> sources = const []}) {
     state = state.copyWith(
-      turns: [...state.turns, ChatTurn(isUser: false, text: text)],
+      turns: [
+        ...state.turns,
+        ChatTurn(isUser: false, text: text, sources: sources),
+      ],
     );
+  }
+
+  /// Soruya göre getirme (F18.18): önce anlamsal arama (kendi anahtarıyla —
+  /// gömme önbelleği varsa yeni çağrı yok), olmazsa anahtar kelime örtüşmesi.
+  /// Kilitli ve gizli klasördeki notlar girmez.
+  Future<List<Note>> _retrieve(String query, List<Note> notes) async {
+    final hidden = ref.read(hiddenFoldersRevealedProvider)
+        ? const <String>{}
+        : ref.read(hiddenFolderIdsProvider);
+    final candidates = [
+      for (final n in notes)
+        if (!n.locked && !hidden.contains(n.folderId)) n,
+    ];
+    if (candidates.isEmpty) return const [];
+    try {
+      final found = await ref
+          .read(semanticIndexProvider)
+          .search(query, candidates)
+          .timeout(const Duration(seconds: 8));
+      if (found.isNotEmpty) return found.take(12).toList();
+    } catch (_) {
+      // Gömme yok/başarısız: anahtar kelime yedeği.
+    }
+    return keywordRelevant(query, candidates);
   }
 
   /// Güvenlik ağı: "yarın 9'a diş randevusu notu ekle" gibi cümlelerde model

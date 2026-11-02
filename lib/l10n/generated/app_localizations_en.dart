@@ -6425,4 +6425,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String backlinksCount(int count) {
     return '$count backlinks';
   }
+
+  @override
+  String get relatedNotesTitle => 'Related notes';
+
+  @override
+  String get relatedNotesNone => 'No related notes found';
+
+  @override
+  String get relatedNotesLink => 'Link';
 }
