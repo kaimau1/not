@@ -411,6 +411,32 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kalem kipi: notun sayfasına doğrudan yaz';
 
   @override
+  String webDriveBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ek Google Drive’ında — görmek için izin ver',
+      one: '1 ek Google Drive’ında — görmek için izin ver',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get webDriveShow => 'Göster';
+
+  @override
+  String webAttachmentsOnPhone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count ek henüz eklendiği telefondan buluta çıkmadı. Telefonda Ayarlar → Senkron → Drive’ı bağla.',
+      one: '1 ek henüz eklendiği telefondan buluta çıkmadı. Telefonda Ayarlar → Senkron → Drive’ı bağla.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get signOutConfirm => 'Çıkış yapmak istediğine emin misin?';
 
   @override

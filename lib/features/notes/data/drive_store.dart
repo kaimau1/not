@@ -9,6 +9,7 @@ import 'package:google_sign_in_platform_interface/google_sign_in_platform_interf
 import 'package:http/http.dart' as http;
 
 import '../../../core/utils/local_file.dart';
+import '../../../core/utils/web_session.dart';
 import '../../auth/data/android_google_auth.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
@@ -206,8 +207,34 @@ class WebDriveAuth implements DriveAuth {
   String? _token;
   DateTime? _expiry;
 
+  /// Jeton SEKMEDE saklanır (kullanıcı bulgusu 2026-11-02: "ekler hâlâ
+  /// webte gelmiyor"): yalnız bellekteyken her yenilemede bütün ekler yeniden
+  /// "Drive'a bağlan" istiyordu. `sessionStorage` sekmeyle ölür, kapsam
+  /// yalnız `drive.appdata`, süre ~55 dk; hesap değişince geçersiz.
+  static const _sessionKey = 'notlar_drive_token';
+
+  void _restore() {
+    if (_token != null) return;
+    final raw = sessionRead(_sessionKey);
+    if (raw == null) return;
+    final parts = raw.split('|');
+    final uid = _auth.currentUser?.uid;
+    if (parts.length != 3 || uid == null || parts[2] != uid) return;
+    final ms = int.tryParse(parts[1]);
+    if (ms == null) return;
+    _token = parts[0];
+    _expiry = DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  void _clear() {
+    _token = null;
+    _expiry = null;
+    sessionWrite(_sessionKey, null);
+  }
+
   @override
   Future<String?> accessToken() async {
+    _restore();
     final expiry = _expiry;
     if (_token == null || expiry == null || DateTime.now().isAfter(expiry)) {
       return null;
@@ -228,17 +255,26 @@ class WebDriveAuth implements DriveAuth {
     if (token == null) return false;
     _token = token;
     _expiry = DateTime.now().add(const Duration(minutes: 55));
+    sessionWrite(
+      _sessionKey,
+      '$token|${_expiry!.millisecondsSinceEpoch}|${user.uid}',
+    );
+    webDriveTokenRevision.value++;
     return true;
   }
 
   @override
   Future<void> invalidate(String token) async {
-    if (token == _token) _token = null;
+    if (token == _token) _clear();
   }
 
   @override
-  Future<void> disconnect() async => _token = null;
+  Future<void> disconnect() async => _clear();
 }
+
+/// Web'de Drive jetonu alındıkça artar: açık ek kutuları ve not şeridi
+/// yeniden bakıp beklemedeki ekleri indirir.
+final webDriveTokenRevision = ValueNotifier<int>(0);
 
 /// Drive'ın olmadığı yer (misafir, testler).
 class NoDriveAuth implements DriveAuth {

@@ -824,6 +824,24 @@ abstract class AppLocalizations {
   /// **'Kalem kipi: notun sayfasına doğrudan yaz'**
   String get addHandwritingSubtitle;
 
+  /// No description provided for @webDriveBanner.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 ek Google Drive’ında — görmek için izin ver} other{{count} ek Google Drive’ında — görmek için izin ver}}'**
+  String webDriveBanner(int count);
+
+  /// No description provided for @webDriveShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Göster'**
+  String get webDriveShow;
+
+  /// No description provided for @webAttachmentsOnPhone.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 ek henüz eklendiği telefondan buluta çıkmadı. Telefonda Ayarlar → Senkron → Drive’ı bağla.} other{{count} ek henüz eklendiği telefondan buluta çıkmadı. Telefonda Ayarlar → Senkron → Drive’ı bağla.}}'**
+  String webAttachmentsOnPhone(int count);
+
   /// No description provided for @signOutConfirm.
   ///
   /// In tr, this message translates to:

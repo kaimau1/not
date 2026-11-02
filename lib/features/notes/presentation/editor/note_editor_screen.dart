@@ -3822,6 +3822,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       // kapalı ya da ek sayfaya gömülüyken de görünür bir iz.
                       : _NoteUploadsBanner(attachments: note.attachments),
                 ),
+                // WEB: Drive'daki ya da telefondan çıkmamış ekler için tek
+                // şerit (kullanıcı bulgusu 2026-11-02: "ekler hâlâ webte
+                // gelmiyor").
+                if (kIsWeb) WebAttachmentsBanner(attachments: note.attachments),
                 // Yatay ekranda klavye + çubuk ekranı aşabilir; çubuk taşmak
                 // yerine kendi içinde kaydırılır (Flexible + kaydırma).
                 //

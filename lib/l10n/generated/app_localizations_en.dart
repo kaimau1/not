@@ -412,6 +412,33 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pen mode: write directly on the note page';
 
   @override
+  String webDriveBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count attachments are in your Google Drive — allow access to see them',
+      one: '1 attachment is in your Google Drive — allow access to see it',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get webDriveShow => 'Show';
+
+  @override
+  String webAttachmentsOnPhone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count attachments haven\'t left the phone they were added on yet. On the phone: Settings → Sync → connect Drive.',
+      one: '1 attachment hasn\'t left the phone it was added on yet. On the phone: Settings → Sync → connect Drive.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get signOutConfirm => 'Are you sure you want to sign out?';
 
   @override

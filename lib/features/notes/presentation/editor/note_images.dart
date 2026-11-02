@@ -364,6 +364,22 @@ class _ImageBox extends StatelessWidget {
         // Başka cihazda eklenmiş, henüz buluta çıkmamış görsel: boş bir
         // görsel simgesi "bozuk" gibi okunuyordu; bulut-senkron simgesi
         // "geliyor" der.
+        // Web'de "geliyor" değil: dosya telefondan hiç çıkmamış, nedenini
+        // söyle (bkz. WebAttachmentsBanner).
+        if (webAttachmentStuckOnDevice(img)) {
+          return Tooltip(
+            message: context.l10n.webAttachmentsOnPhone(1),
+            child: Container(
+              color: scheme.surfaceContainerHigh,
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.phone_android_outlined,
+                color: scheme.onSurfaceVariant,
+                semanticLabel: context.l10n.webAttachmentsOnPhone(1),
+              ),
+            ),
+          );
+        }
         return Container(
           color: scheme.surfaceContainerHigh,
           alignment: Alignment.center,
