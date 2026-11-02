@@ -56,7 +56,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
-| 18 | Bulut oturumunda yapılabilecekler (31 madde) | Bitti (26/27 — F hariç; F18.7 sonucu aşağıda) | 2026-11-02 | 2. oturum: F18.7 kök neden + koşu, F18.9 kısmen (kalanı F19.C6), F18.10, F18.22, F18.23; F18.20 → F19.B8; F bölümü (F18.27–30) yalnız Play'e çıkılırsa |
+| 18 | Bulut oturumunda yapılabilecekler (31 madde) | Bitti (26/27 — F hariç) | 2026-11-02 | 2. oturum: F18.7 ilk yeşil ölçüm (taban yazıldı), F18.9 kısmen (kalanı F19.C6), F18.10, F18.22, F18.23; F18.20 → F19.B8; F bölümü (F18.27–30) yalnız Play'e çıkılırsa |
 | 19 | Telefon, konsol, hesap işleri (senin) | Kısmen | 2026-11-01 | A3, B5, B7, C3 bitti; B6 ertelendi (ölçüm zaman aşımı); C1/C2/C4 kısmen (nedenleri maddelerde); A1, A2, A4, A5, B1–B4, C5, C6, C7, D açık |
 
 ---
@@ -135,7 +135,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 
 ### B. Ölçüm ve uçtan uca test (eski Faz 17)
 
-- [ ] **F18.7 Kare ölçümünü buluttan tetiklenebilir yap ve koş** (eski
+- [x] **F18.7 Kare ölçümünü buluttan tetiklenebilir yap ve koş** (eski
   F17.1 = F9.1 = F2.6; hiç koşulmadı). `perf` işi yalnız `workflow_dispatch`ta
   (`build.yml:~487`), bulut oturumu onu tetikleyemiyor. Yap: commit
   başlığında `[perf]` da tetiklesin (APK işiyle aynı desen: başlık, gövde
@@ -145,6 +145,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
   var; not açma (kart → editör geçişi), biçim paneli, PDF kaydırma, balon
   bırakma yoksa ekle. Bulutta yapılamazsa → F19.B6.
   **Yapıldı (2026-11-02):** Başlıkta `[perf]` her dalda tetikler, özet iş günlüğüne basılır. Kök neden bulundu: odaktaki alanın imleci `pumpAndSettle`'ı hiç bitirmiyordu → sabit süreli pompalama. **Koşu 41391257808 (v1.1.586) YİNE sonuçsuz:** profil APK 11 dk'da derlendi, emülatöre kuruldu, sonra 32 dk HİÇ çıktı yok → 45 dk iptal. Yani takılma test GÖVDESİNDEN önce (uygulama açılmıyor ya da `flutter drive` VM servisine bağlanamıyor); `pumpAndSettle` düzeltmesi tek başına yetmedi. Sonraki adım: `flutter drive -v` + `adb logcat` çıktısını işe ekleyip koş. p90 tabanı YOK. Yeni senaryo EKLENMEDİ.
+  **Yapıldı (2026-11-02, 2. oturum) — İLK YEŞİL KOŞU 41422268562:** (1) `| tail` çıktıyı koşu bitene dek saklıyordu → akış açık, drive 20 dk'da kesilir, logcat süzülür. (2) **KÖK NEDEN:** logcat `Could not find 'libflutter.so'. Looked for: [x86_64, arm64-v8a], but only found: []` — yayın APK'sının yalnız-arm64 süzgeci (`abiFilters` + `jniLibs.excludes`) x86_64 emülatörde uygulamayı açılışta çökertiyordu; ölçüm işi `NOTLAR_ALL_ABIS=1` ile bütün mimarileri alır (yayın APK'sı aynı). (3) `traceAction` VM servisine bağlanamıyordu → `flutter drive --no-dds`. **TABAN (emülatör, yazılım GPU'su):** ana ekran 300 not fırlatma — build p90 **4,12 ms** / p99 5,71, raster p90 6,33 / p99 7,23, 102 kare, kaçan kare 0; editörde 200 karakter — build p90 **0,26 ms** / p99 0,38, raster p90 6,28 / p99 7,12, 261 kare, kaçan 0. Bütçe (p90 build < 8 ms) iki senaryoda da tutuyor. Yeni senaryo (not açma, biçim paneli, PDF kaydırma, balon) EKLENMEDİ — sonraki iş.
 
 - [x] **F18.8 Uçtan uca akış testleri** (eski F17.2). Akışlar: (1) + → Metin →
   yaz → paylaş metni; (2) + → Dosya → PDF → balon → paylaş (balonlarla);

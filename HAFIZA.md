@@ -392,5 +392,5 @@ maddeyi GÜNCELLE.
 ## Açık sorular / bilinen
 - Misafir notunda üst çubuk "Senkronize", ana ekran "yalnız bu cihazda"
   diyor — karara bağlanmadı (2026-11-01).
-- Kare ölçümü (F18.7): 2026-11-02 koşusu da APK kurulduktan sonra 32 dk çıktısız takıldı — `pumpAndSettle` düzeltmesi yetmedi, takılma test gövdesinden ÖNCE. Taban yok; sıradaki koşu `flutter drive -v` + logcat ile.
+- **Kare ölçümü tabanı** (F18.7, koşu 41422268562, emülatör): ana ekran fırlatma build p90 4,12 / raster p90 6,33 ms; editör yazma build p90 0,26 / raster p90 6,28 ms; kaçan kare 0. Karşılaştırma koşudan koşuya (mutlak değer cihazda farklı). Ölçüm işi `NOTLAR_ALL_ABIS=1` + `--no-dds` ister.
 - Cihaz doğrulama listesi `KALANLAR.md` §2 (F18.31 duman testi).
