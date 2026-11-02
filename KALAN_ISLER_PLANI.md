@@ -353,6 +353,7 @@ hâlâ."** Karar değişmeden bu bölüme başlanmaz; değişirse önce F18.27.
 - [x] **Görsel yanında madde sarması**: görsel maddenin içinde başlıyorsa üstteki satırlar tam genişlik, yalnız hizadakiler kayar.
 - [x] **Kalem paneli altta, çekmece**: yüzen yuvarlak tepsi; çizince iner (yalnız uçlar görünür), dokununca çıkar; tablette de altta.
 - [x] **Kalem kipinde de "Çizim ekle"** ayrı tuval → görsel eki; "Sayfaya el yazısı" ayrı seçenek.
+- [x] **Çekerek tam ekran** (aynı gün, ek istek): tablette ayracı sola zorlayınca ipucu, bırakınca tam ekran; sol kenardan sağa çekmek çıkarır (`fullscreen_pull_test`).
 - [x] **Web'de ekler**: Drive jetonu sekmede kalır (yenilemede yeniden sormaz), notta tek dokunuşla tümünü indiren şerit, telefondan çıkmamış ekler için açık uyarı. Kök neden ihtimalleri: (a) telefonda Drive bağlı değilse ekler cihazda bekler, (b) Drive ekleri her kutuya ayrı dokunuş istiyordu. Canlı hesapta doğrulama → adım 27.
 
 ### G. Kapanış

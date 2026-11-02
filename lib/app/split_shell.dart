@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' show DisplayFeatureType;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -212,6 +213,16 @@ class _SplitShellState extends ConsumerState<SplitShell> {
   /// kalıcı kayıt yalnızca BIRAKINCA bir kez yapılır.
   double? _dragWidth;
 
+  /// **ÇEKEREK TAM EKRAN** (kullanıcı isteği 2026-11-02: "tam ekran yapmak
+  /// çok daha kolay olsun; sürükleyici sola doğru azıcık zorlayınca tam
+  /// ekrana geçilebilsin — görseli sabitlemedeki basılı tut-bırak gibi").
+  /// Ayraç listenin en dar hâlinden sola itildikçe liste lastik gibi biraz
+  /// daha daralır; [_kFullscreenPull] aşılınca ipucu "Bırak: tam ekran" olur
+  /// ve bırakınca not tam ekrana geçer. Eşiğin gerisinde bırakılırsa hiçbir
+  /// şey olmaz (yalnız genişlik ayarı).
+  double _overPull = 0;
+  bool get _armed => _overPull >= _kFullscreenPull;
+
   @override
   Widget build(BuildContext context) {
     final total = MediaQuery.sizeOf(context).width;
@@ -296,7 +307,10 @@ class _SplitShellState extends ConsumerState<SplitShell> {
             builder: (context, open, pane) => ClipRect(
               child: Align(
                 alignment: AlignmentDirectional.centerEnd,
-                widthFactor: open,
+                // Lastik: en dar hâlden sonra itiş görünür daralma verir
+                // (çekişin üçte biri kadar), liste yeniden dizilmez.
+                widthFactor:
+                    open * (1 - (_overPull / 3) / paneWidth).clamp(0.5, 1.0),
                 // Ağaç şekli sabit (Offstage hep var): State korunur.
                 child: Offstage(offstage: open == 0, child: pane),
               ),
@@ -309,13 +323,28 @@ class _SplitShellState extends ConsumerState<SplitShell> {
               // genişliğe eklendiğinden yalnız sonuncusu işe yarıyordu — panel
               // farenin gerisinde kalıyordu. İmlecin x'ini doğrudan kullanmak
               // kare zamanlamasından tamamen bağımsız.
-              onDrag: (globalX) => setState(
-                () => _dragWidth = (globalX - _dividerWidth / 2).clamp(
-                  _minListPaneWidth,
-                  maxPane,
-                ),
-              ),
+              onDrag: (globalX) {
+                final raw = globalX - _dividerWidth / 2;
+                final over = noteOpen
+                    ? (_minListPaneWidth - raw).clamp(0.0, 200.0)
+                    : 0.0;
+                final wasArmed = _armed;
+                setState(() {
+                  _overPull = over;
+                  _dragWidth = raw.clamp(_minListPaneWidth, maxPane);
+                });
+                if (_armed != wasArmed) HapticFeedback.mediumImpact();
+              },
               onDragEnd: () {
+                if (_armed) {
+                  setState(() {
+                    _overPull = 0;
+                    _dragWidth = null;
+                  });
+                  ref.read(noteFullscreenProvider.notifier).set(true);
+                  return;
+                }
+                _overPull = 0;
                 final width = _dragWidth;
                 if (width != null) {
                   if (noteOpen) {
@@ -327,8 +356,88 @@ class _SplitShellState extends ConsumerState<SplitShell> {
                 setState(() => _dragWidth = null);
               },
             ),
-          Expanded(child: widget.child),
+          Expanded(
+            child: Stack(
+              children: [
+                widget.child,
+                if (_overPull > 0)
+                  PositionedDirectional(
+                    start: 12,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: _FullscreenPullHint(
+                        progress: (_overPull / _kFullscreenPull).clamp(0, 1),
+                        armed: _armed,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+/// Tam ekrana geçmek için ayracın en dar hâlden SOLA itilmesi gereken pay.
+const double _kFullscreenPull = 56;
+
+/// Ayraç itilirken notun sol kenarında beliren ipucu: dolan halka + "Tam
+/// ekran için çek" → eşikte "Bırak: tam ekran".
+class _FullscreenPullHint extends StatelessWidget {
+  const _FullscreenPullHint({required this.progress, required this.armed});
+
+  final double progress;
+  final bool armed;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    return IgnorePointer(
+      child: AnimatedContainer(
+        key: const ValueKey('fullscreen-pull-hint'),
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.fromLTRB(10, 8, 14, 8),
+        decoration: BoxDecoration(
+          color: armed
+              ? scheme.primary
+              : scheme.inverseSurface.withValues(alpha: 0.88),
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 22,
+              height: 22,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    value: progress,
+                    strokeWidth: 2.5,
+                    color: armed ? scheme.onPrimary : scheme.onInverseSurface,
+                  ),
+                  Icon(
+                    Icons.fullscreen_rounded,
+                    size: 14,
+                    color: armed ? scheme.onPrimary : scheme.onInverseSurface,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              armed ? l10n.fullscreenPullRelease : l10n.fullscreenPullHint,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: armed ? scheme.onPrimary : scheme.onInverseSurface,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
