@@ -3061,5 +3061,22 @@
       }
     }
   },
-  "accountRecoverBringFailed": "Hesabına geçildi ama notlar taşınamadı; misafir notları yerinde duruyor"
+  "accountRecoverBringFailed": "Hesabına geçildi ama notlar taşınamadı; misafir notları yerinde duruyor",
+  "appLockTitle": "Uygulama kilidi",
+  "appLockInfo": "Açılışta ve arka plandan dönüşte not kilidinin yöntemiyle sorar. Şifreleme değildir; yalnız bu cihazda geçerli.",
+  "appLockWebNeedsSecret": "Web'de cihaz kilidi yok: önce yukarıdan şifre ya da desen seç.",
+  "appLockReason": "Notlar'ın kilidini aç",
+  "appLockLockedTitle": "Notlar kilitli",
+  "appLockUnlock": "Kilidi aç",
+  "appLockDelayTitle": "Kilitle:",
+  "appLockDelayNow": "hemen",
+  "appLockDelayMinutes": "{minutes} dk sonra",
+  "@appLockDelayMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "appLockHideRecents": "Son uygulamalarda içeriği gizle"
 }

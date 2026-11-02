@@ -2375,5 +2375,15 @@
   "restoreBackupResult": "{restored} notes restored, {skipped} skipped (already there)",
   "accountRecoverBringNotes": "Bring my notes",
   "accountRecoverBringDone": "Switched account, {count} notes moved",
-  "accountRecoverBringFailed": "Switched account but notes couldn't be moved; the guest notes are untouched"
+  "accountRecoverBringFailed": "Switched account but notes couldn't be moved; the guest notes are untouched",
+  "appLockTitle": "App lock",
+  "appLockInfo": "Asks on launch and when returning from background, using the note lock method. Not encryption; this device only.",
+  "appLockWebNeedsSecret": "No device lock on the web: pick a password or pattern above first.",
+  "appLockReason": "Unlock Notes",
+  "appLockLockedTitle": "Notes is locked",
+  "appLockUnlock": "Unlock",
+  "appLockDelayTitle": "Lock:",
+  "appLockDelayNow": "immediately",
+  "appLockDelayMinutes": "after {minutes} min",
+  "appLockHideRecents": "Hide content in recent apps"
 }

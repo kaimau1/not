@@ -11299,6 +11299,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Hesabına geçildi ama notlar taşınamadı; misafir notları yerinde duruyor'**
   String get accountRecoverBringFailed;
+
+  /// No description provided for @appLockTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama kilidi'**
+  String get appLockTitle;
+
+  /// No description provided for @appLockInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açılışta ve arka plandan dönüşte not kilidinin yöntemiyle sorar. Şifreleme değildir; yalnız bu cihazda geçerli.'**
+  String get appLockInfo;
+
+  /// No description provided for @appLockWebNeedsSecret.
+  ///
+  /// In tr, this message translates to:
+  /// **'Web\'de cihaz kilidi yok: önce yukarıdan şifre ya da desen seç.'**
+  String get appLockWebNeedsSecret;
+
+  /// No description provided for @appLockReason.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlar\'ın kilidini aç'**
+  String get appLockReason;
+
+  /// No description provided for @appLockLockedTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlar kilitli'**
+  String get appLockLockedTitle;
+
+  /// No description provided for @appLockUnlock.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilidi aç'**
+  String get appLockUnlock;
+
+  /// No description provided for @appLockDelayTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilitle:'**
+  String get appLockDelayTitle;
+
+  /// No description provided for @appLockDelayNow.
+  ///
+  /// In tr, this message translates to:
+  /// **'hemen'**
+  String get appLockDelayNow;
+
+  /// No description provided for @appLockDelayMinutes.
+  ///
+  /// In tr, this message translates to:
+  /// **'{minutes} dk sonra'**
+  String appLockDelayMinutes(int minutes);
+
+  /// No description provided for @appLockHideRecents.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son uygulamalarda içeriği gizle'**
+  String get appLockHideRecents;
 }
 
 class _AppLocalizationsDelegate

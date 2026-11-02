@@ -6304,4 +6304,38 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get accountRecoverBringFailed =>
       'Hesabına geçildi ama notlar taşınamadı; misafir notları yerinde duruyor';
+
+  @override
+  String get appLockTitle => 'Uygulama kilidi';
+
+  @override
+  String get appLockInfo =>
+      'Açılışta ve arka plandan dönüşte not kilidinin yöntemiyle sorar. Şifreleme değildir; yalnız bu cihazda geçerli.';
+
+  @override
+  String get appLockWebNeedsSecret =>
+      'Web\'de cihaz kilidi yok: önce yukarıdan şifre ya da desen seç.';
+
+  @override
+  String get appLockReason => 'Notlar\'ın kilidini aç';
+
+  @override
+  String get appLockLockedTitle => 'Notlar kilitli';
+
+  @override
+  String get appLockUnlock => 'Kilidi aç';
+
+  @override
+  String get appLockDelayTitle => 'Kilitle:';
+
+  @override
+  String get appLockDelayNow => 'hemen';
+
+  @override
+  String appLockDelayMinutes(int minutes) {
+    return '$minutes dk sonra';
+  }
+
+  @override
+  String get appLockHideRecents => 'Son uygulamalarda içeriği gizle';
 }

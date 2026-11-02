@@ -6324,4 +6324,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get accountRecoverBringFailed =>
       'Switched account but notes couldn\'t be moved; the guest notes are untouched';
+
+  @override
+  String get appLockTitle => 'App lock';
+
+  @override
+  String get appLockInfo =>
+      'Asks on launch and when returning from background, using the note lock method. Not encryption; this device only.';
+
+  @override
+  String get appLockWebNeedsSecret =>
+      'No device lock on the web: pick a password or pattern above first.';
+
+  @override
+  String get appLockReason => 'Unlock Notes';
+
+  @override
+  String get appLockLockedTitle => 'Notes is locked';
+
+  @override
+  String get appLockUnlock => 'Unlock';
+
+  @override
+  String get appLockDelayTitle => 'Lock:';
+
+  @override
+  String get appLockDelayNow => 'immediately';
+
+  @override
+  String appLockDelayMinutes(int minutes) {
+    return 'after $minutes min';
+  }
+
+  @override
+  String get appLockHideRecents => 'Hide content in recent apps';
 }

@@ -71,6 +71,7 @@ import '../data/permissions_service.dart';
 import '../settings_providers.dart';
 import 'notes_settings.dart';
 import 'backup_ui.dart';
+import 'app_lock.dart';
 import '../../notes/data/backup_service.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../folders/data/folders_repository.dart';
@@ -177,6 +178,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const NoteLockSettingsTile(),
             title: l10n.lockMethodTitle,
             keywords: 'kilit sifre desen parmak izi gizlilik',
+          ),
+          _SettingRow(
+            const AppLockSettingsTile(),
+            title: l10n.appLockTitle,
+            keywords: 'uygulama kilidi acilis kilit gizle son uygulamalar',
           ),
         ],
       ),
