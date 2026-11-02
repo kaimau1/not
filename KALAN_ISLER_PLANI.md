@@ -56,7 +56,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
-| 18 | Bulut oturumunda yapılabilecekler (31 madde) | Bitti (26/27 — F hariç) | 2026-11-02 | 2. oturum: F18.7 ilk yeşil ölçüm (taban yazıldı), F18.9 kısmen (kalanı F19.C6), F18.10, F18.22, F18.23; F18.20 → F19.B8; F bölümü (F18.27–30) yalnız Play'e çıkılırsa |
+| 18 | Bulut oturumunda yapılabilecekler (31 madde) | Bitti (F18.20/27/28 hariç — nedenleri maddelerde) | 2026-11-02 | 2. oturum: F18.7 ilk yeşil ölçüm (taban yazıldı), F18.9 kısmen (kalanı F19.C6), F18.10, F18.22, F18.23; F18.20 → F19.B8; 4. oturum: F18.29, F18.30, geniş ekran C; F18.27/28 Play kararına bağlı |
 | 19 | Telefon, konsol, hesap işleri (senin) | Kısmen | 2026-11-01 | A3, B5, B7, C3 bitti; B6 ertelendi (ölçüm zaman aşımı); C1/C2/C4 kısmen (nedenleri maddelerde); A1, A2, A4, A5, B1–B4, C5, C6, C7, D açık |
 
 ---
@@ -268,6 +268,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
   `add_repo` ile oturuma ekle; değilse ERTELENDİ → Faz 19 (dosyaları
   getir ya da yerel oturum).
   **ERTELENDİ (2026-11-02):** `kaimau1/dosya-okuyucu` erişilebilir ama oturuma ekleme (add_repo) izni reddedildi → Faz 19'a (F19.B8): izni ver ya da yerel oturumda port et.
+  **4. oturum (yerel, kaynak `Desktop\dosya okuyucu` okundu) — ölçüm:** servis katmanı ~3.900 satır (`pptx_editor` 1586, `pptx_objects` 709, `pptx_geometry` 695, `pptx_rich_text` 504, `pptx_writer` 432) + editör ekranı ~3.360 satır (`slides_editor_screen` + `slides/*`), testler ~2.200 satır. Ekran, o uygulamanın `EditSession/EditHistory/editor_chrome/safe_write/doc_fonts/app_strings` altyapısına bağlı. **Engel:** editör, o deponun YENİ `pptx_render.dart`'ına (1842 satır; grafik, geçiş, özel geometri, `SlideVM` ek alanları) dayanıyor; buradaki `pptx_render.dart` 1111 satır ve eski. Sıra: (1) renderı yükselt + `pptx_render_test` (1102 satır) taşı → görüntüleyici regresyonu cihazda; (2) servis katmanı + testleri; (3) notlar uygulamasına özel dar editör arayüzü (metin/şekil seç-düzenle) + eki yeniden yükleme. Cihazda sınanamayan ~7.000 satırı tek turda main'e (otomatik APK) basmak görüntülemeyi bozma riski taşıdığı için YAPILMADI.
 
 - [x] **F18.21 "Yeni sürüm var" bildirimi (isteğe bağlı)** (YOL_HARITASI
   F1.5(d), ERTELENDİ). Telefona APK elle kuruluyor; yeni sürümden haberin
@@ -326,23 +327,25 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 Kullanıcı kararı (2026-10-19/20, YOL_HARITASI F4.10): **"Play'e çıkmıyoruz
 hâlâ."** Karar değişmeden bu bölüme başlanmaz; değişirse önce F18.27.
 
-- [ ] **F18.27 Play Billing — KARAR GEREKİR** (KALANLAR §3): RevenueCat mı,
+- [ ] **F18.27 Play Billing — KARAR GEREKİR (4. oturum: yapılmadı — "Play'e çıkmıyoruz" kararı yürürlükte, ürün/fiyat kararı sende)** (KALANLAR §3): RevenueCat mı,
   `in_app_purchase` + doğrulama Cloud Function'ı mı; ürünler (ömür boyu +
   AI aboneliği); deneme süresi HESABA bağlı; `premiumUntil` yalnız sunucudan
   yazılır (kural zaten istemciyi kapatıyor). Kod + Function + emülatör testi
   bulutta; ürünler ve gerçek satın alma F19.D.
 
-- [ ] **F18.28 AI kotası ve depolama tavanı sunucuda** (F18.2 seçenek a,
+- [ ] **F18.28 AI kotası ve depolama tavanı sunucuda (4. oturum: yapılmadı — F18.2'de (b) seçildi, (a) yalnız Play'e çıkılırsa)** (F18.2 seçenek a,
   YOL_HARITASI F4.10 "G2'nin kod tarafı").
 
-- [ ] **F18.29 Genel sürüm derleme işi.** CI'da bayraksız (kişisel köprüsüz)
+- [x] **F18.29 Genel sürüm derleme işi.** CI'da bayraksız (kişisel köprüsüz)
   `flutter build appbundle`; "genel kaynakta köprü yok" denetimi zaten var;
   Play yükleme anahtarı (upload key) akışı; sürüm kodu.
+  **Yapıldı (2026-11-02, 4. oturum):** `build.yml` elle tetiklemeye `play` girdisi: işaretliyse bayraksız `flutter build appbundle`, AAB manifestinde köprü yok denetimi, `notlar-play-aab` artifact'ı. Her main derlemesini uzatmaz. Mevcut anahtar = Play yükleme anahtarı (Play App Signing kaydında bu yüklenir → F19.D). Çalıştırılmadı: ilk gerçek koşu Play kararıyla.
 
-- [ ] **F18.30 Mağaza metni ve görselleri.** Kısa/uzun açıklama tr + en,
+- [x] **F18.30 Mağaza metni ve görselleri.** Kısa/uzun açıklama tr + en,
   ekran görüntüleri (web/emülatör), veri güvenliği formu taslağı
   (`PRIVACY_POLICY.md` ile tutarlı), "yalnız 64 bit" notu;
   `assets/icon/play_store_512.png` hazır.
+  **Yapıldı (2026-11-02, 4. oturum):** `STORE_LISTING.md` — tr + en ad/kısa/uzun açıklama, veri güvenliği tablosu, "yalnız 64 bit" notu. Ekran görüntüleri ve 1024×500 görsel cihazdan alınır → F19.D.
 
 ### H. Kullanıcı listesi 2026-11-02 (2. oturum — hepsi yapıldı)
 
@@ -360,7 +363,7 @@ hâlâ."** Karar değişmeden bu bölüme başlanmaz; değişirse önce F18.27.
 
 - [x] **A · Tek liste örneği**: not yokken liste tam genişlik ("Soldan bir not seç" kalktı); not açılıp kapanınca arama/süzgeç/kaydırma korunur, liste açılan/kapatılan karta döner (`fullscreen_pull_test`).
 - [x] **B · Tam ekrandan çıkış**: liste gizliyken sol üstte ☰ (kalem kipinde tepside), Esc/geri önce tam ekrandan çıkar, Ctrl+Shift+F, nota geçince tam ekran sürer.
-- [ ] **C · İyileştirmeler** (ayrı oturum, `genis-ekran-c` dalı): okuma genişliği ~760 dp, açık notun kartı vurgulu, Alt+↑/↓ · Ctrl+W, kısayol yardımı, ayraca çift tık → varsayılan genişlik.
+- [x] **C · İyileştirmeler** (main'de: b710270): okuma genişliği ~760 dp, açık notun kartı vurgulu, Alt+↑/↓ · Ctrl+W, kısayol yardımı, ayraca çift tık → varsayılan genişlik.
 
 ### G. Kapanış
 

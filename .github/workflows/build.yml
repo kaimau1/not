@@ -9,6 +9,10 @@ on:
         description: 'Kare ölçümü (emülatör, ~20 dk) — F2.6'
         type: boolean
         default: false
+      play:
+        description: 'Genel Play paketi (AAB, kişisel köprüsüz) — F18.29'
+        type: boolean
+        default: false
 
 # Aynı dala arka arkaya push edilirse eskisi iptal edilir: iki ağır derleme
 # yan yana koştuğunda runner'lardan biri geri alınıyor (aşağıya bak).
@@ -332,11 +336,38 @@ jobs:
           fi
           echo "Yalnız arm64-v8a: doğrulandı."
 
-      # AAB (Play App Bundle) derlemesi şimdilik DEVRE DIŞI: uygulama henüz
-      # Play'e yüklenmediğinden her main derlemesini gereksiz ~2-3 dk
-      # uzatıyordu. Play'e göndermeye hazır olunca aşağıdaki adımlar geri
-      # eklenir: `flutter build appbundle --release` + upload-artifact (aab).
-      # Şimdilik yalnızca APK derlenir ve Release yayınlanır.
+      # GENEL PLAY PAKETİ (F18.29): yalnız elle tetiklenen koşuda ("play" işaretli) —
+      # her main derlemesini ~2-3 dk uzatmasın. Bayraksız (kişisel köprüsüz) AAB; imza
+      # üstteki anahtar = Play'e yükleme anahtarı (upload key). Sürüm kodu APK ile aynı
+      # koşu numarası; Play her yüklemede daha büyük kod ister, koşu numarası zaten artar.
+      - name: Genel AAB derle (Play)
+        if: github.event_name == 'workflow_dispatch' && inputs.play
+        run: >
+          flutter build appbundle --release
+          --split-debug-info=build/app/outputs/symbols
+          --build-name=${{ steps.version.outputs.name }}
+          --build-number=${{ github.run_number }}
+          --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+
+      - name: Genel AAB'de köprü yok (denetim)
+        if: github.event_name == 'workflow_dispatch' && inputs.play
+        run: |
+          aab=build/app/outputs/bundle/release/app-release.aab
+          ls -l "$aab"
+          if unzip -p "$aab" base/manifest/AndroidManifest.xml | strings | grep -qE 'HaritaNotAlici|izin\.ASISTAN'; then
+            echo "::error::Genel pakette kişisel köprü var."
+            exit 1
+          fi
+          echo "Genel pakette köprü yok: doğrulandı."
+
+      - name: Genel AAB'yi yükle
+        if: github.event_name == 'workflow_dispatch' && inputs.play
+        uses: actions/upload-artifact@v4
+        with:
+          name: notlar-play-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 7
+          if-no-files-found: error
 
       # main'e push'ta APK kalıcı bir Release olarak yayınlanır. Artifact'ten
       # farkı: doğrudan .apk linki (zip yok), süresi dolmaz, telefondan tıkla-kur.
