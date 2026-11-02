@@ -3634,6 +3634,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get showNoteList => 'Not listesini göster';
 
   @override
+  String get shortcutAdjacentNote => 'Listede önceki / sonraki not';
+
+  @override
+  String get shortcutCloseNote => 'Notu kapat';
+
+  @override
   String get loginFeatureSyncTitle => 'Her cihazda aynı notlar';
 
   @override

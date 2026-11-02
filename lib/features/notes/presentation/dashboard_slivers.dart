@@ -40,6 +40,10 @@ extension _DashSlivers on _DashboardScreenState {
     required bool reorderEnabled,
   }) {
     final l10n = context.l10n;
+    // Ekrandaki sıra: rows()/grid() bölümleri çizdikçe doldurur (bkz.
+    // [visibleNoteOrder]).
+    final order = <Note>[];
+    visibleNoteOrder = order;
     if (notes.isEmpty) {
       return [
         SliverFillRemaining(
@@ -114,57 +118,62 @@ extension _DashSlivers on _DashboardScreenState {
     /// Liste görünümü: tek sütun, kompakt satır. Sürükle-sırala BURADA yok —
     /// o mod ızgaraya özgü (hücre genişliğiyle çalışıyor); liste görünümünde
     /// ⋮ menüsündeki sıralama maddesi zaten görünmüyor.
-    Widget rows(List<Note> items) => SliverList.separated(
-      itemCount: items.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 2),
-      itemBuilder: (context, index) {
-        final note = items[index];
-        // ANAHTAR ŞART: anahtarsız satırlarda bir not silinince ya da sıra
-        // değişince `_FocusHaloState` YANLIŞ nota bağlanır — vurgu başka
-        // satırda yanıp söner ve state boşuna taşınır. Izgarada zaten var,
-        // liste görünümünde eksikti.
-        //
-        // RepaintBoundary: tek satırın vurgusu değişince görünen listenin
-        // TAMAMI yeniden boyanıyordu.
-        return KeyedSubtree(
-          key: ValueKey(note.id),
-          child: RepaintBoundary(
-            child: Consumer(
-              builder: (context, cellRef, _) {
-                final focused = cellRef.watch(
-                  focusedNoteProvider.select((id) => id == note.id),
-                );
-                final selected = cellRef.watch(
-                  selectedNoteIdsProvider.select((s) => s.contains(note.id)),
-                );
-                return _FocusHalo(
-                  focused: focused,
-                  noteId: note.id,
-                  child: _SwipeActions(
-                    note: note,
-                    enabled: !selectionActive,
-                    onPin: () => _swipePin(note),
-                    onArchive: () => _swipeArchive(note),
-                    child: GestureDetector(
-                      onLongPress: () => cellRef
-                          .read(selectedNoteIdsProvider.notifier)
-                          .toggle(note.id),
-                      child: NoteListRow(
-                        note: note,
-                        selected: selected,
-                        selectionActive: selectionActive,
+    Widget rows(List<Note> items) {
+      order.addAll(items);
+      return SliverList.separated(
+        itemCount: items.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 2),
+        itemBuilder: (context, index) {
+          final note = items[index];
+          // ANAHTAR ŞART: anahtarsız satırlarda bir not silinince ya da sıra
+          // değişince `_FocusHaloState` YANLIŞ nota bağlanır — vurgu başka
+          // satırda yanıp söner ve state boşuna taşınır. Izgarada zaten var,
+          // liste görünümünde eksikti.
+          //
+          // RepaintBoundary: tek satırın vurgusu değişince görünen listenin
+          // TAMAMI yeniden boyanıyordu.
+          return KeyedSubtree(
+            key: ValueKey(note.id),
+            child: RepaintBoundary(
+              child: Consumer(
+                builder: (context, cellRef, _) {
+                  final focused = cellRef.watch(
+                    focusedNoteProvider.select((id) => id == note.id),
+                  );
+                  final selected = cellRef.watch(
+                    selectedNoteIdsProvider.select((s) => s.contains(note.id)),
+                  );
+                  return _FocusHalo(
+                    focused: focused,
+                    open: _isOpenNote(cellRef, note.id),
+                    noteId: note.id,
+                    child: _SwipeActions(
+                      note: note,
+                      enabled: !selectionActive,
+                      onPin: () => _swipePin(note),
+                      onArchive: () => _swipeArchive(note),
+                      child: GestureDetector(
+                        onLongPress: () => cellRef
+                            .read(selectedNoteIdsProvider.notifier)
+                            .toggle(note.id),
+                        child: NoteListRow(
+                          note: note,
+                          selected: selected,
+                          selectionActive: selectionActive,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        );
-      },
-    );
+          );
+        },
+      );
+    }
 
     Widget grid(List<Note> section) {
+      order.addAll(section);
       // Sürükleme sürerken ızgara ÖNİZLENEN sırayı çizer (bkz.
       // [_startCardDrag]) — kullanıcı notun nereye düşeceğini canlı görür.
       // Uzunluk denetimi: akış sürükleme ortasında yeni bir liste
@@ -234,6 +243,7 @@ extension _DashSlivers on _DashboardScreenState {
             );
             return _FocusHalo(
               focused: focused,
+              open: _isOpenNote(cellRef, note.id),
               noteId: note.id,
               child: _cachedCard(note, query),
             );
@@ -460,3 +470,9 @@ extension _DashSlivers on _DashboardScreenState {
     ];
   }
 }
+
+/// Kart, editörde EN ÜSTTE açık not mu? `select`: not değişince yalnız eski
+/// ve yeni açık notun hücresi yeniden çizilir (kart önbelleği, F2.1, durur).
+bool _isOpenNote(WidgetRef ref, String id) => ref.watch(
+  openNoteIdsProvider.select((ids) => ids.isNotEmpty && ids.last == id),
+);

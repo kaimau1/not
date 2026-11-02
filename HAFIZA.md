@@ -393,6 +393,15 @@ maddeyi GÜNCELLE.
   **Çekerek tam ekran** (2026-11-02): not açıkken ayraç en dar hâlden SOLA
   56 dp itilince ipucu "Bırak: tam ekran" (lastik daralma + titreşim),
   bırakınca `noteFullscreenProvider`; tam ekrandan sol kenardan sağa çekip çık.
+  **Ekler (2026-11-02):** metin/liste notunun sayfası `kReadingWidth` 760'ta
+  ortada (`_buildCanvas`; görsel x'i ve mürekkep sayfa genişliğine ORANLI →
+  hepsi birlikte ölçeklenir, kaydırma tam genişlikte). Açık not listede
+  çerçeveli: editör `openNoteIdsProvider` yığınına yazar, hücre `select` ile
+  izler (kart önbelleği bozulmaz). Alt+↑/↓ `visibleNoteOrder` (ekranda çizilen
+  sıra) ile komşu notu `pushReplacement` eder, kilitliyi atlar; Ctrl+W
+  `popRoute` (PopScope'a uyar), derin bağlantıda `go('/')`. TUZAK: tarayıcı
+  Ctrl+W/Ctrl+N'yi sayfaya vermez (sekmeyi kapatır) — yalnız Android/kurulu
+  PWA'da çalışır. Ayraca çift tık = o kipin varsayılan genişliği.
 - Misafir kartı "Sonra" → şerit; 5/20 notta bir kez tam kart.
 - `CustomizeModeHost` alanın kendi boyunu `MediaQuery.size` verir (alt çubuk
   ekran dışına itiliyordu).

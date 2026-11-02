@@ -643,10 +643,14 @@ class NoteCard extends ConsumerWidget {
                   color: scheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  context.l10n.lockedNote,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                // Dar hücrede / büyük yazı ölçeğinde taşmasın.
+                Flexible(
+                  child: Text(
+                    context.l10n.lockedNote,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ],

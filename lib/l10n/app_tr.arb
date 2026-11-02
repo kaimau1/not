@@ -1696,6 +1696,8 @@
   "shortcutFullscreen": "Notu tam ekran yap / çık",
   "shortcutEscape": "Tam ekrandan çık, sonra notu kapat",
   "showNoteList": "Not listesini göster",
+  "shortcutAdjacentNote": "Listede önceki / sonraki not",
+  "shortcutCloseNote": "Notu kapat",
   "loginFeatureSyncTitle": "Her cihazda aynı notlar",
   "loginFeatureSyncBody": "Telefon, tablet, bilgisayar ve web arasında anında senkron.",
   "loginFeatureAiTitle": "Yapay zekâ yanında",

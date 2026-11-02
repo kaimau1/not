@@ -628,6 +628,34 @@ class FocusedNoteNotifier extends Notifier<String?> {
   }
 }
 
+/// Editörde AÇIK notlar, en üstteki sonda (geniş ekranda listede vurgulanan
+/// kart, bkz. `_FocusHalo.open`). Yığın: karttan ikinci not açılıp
+/// kapatılınca alttaki notun vurgusu geri gelsin. Editör `initState`te
+/// ekler, `dispose`ta çıkarır.
+final openNoteIdsProvider = NotifierProvider<OpenNoteIdsNotifier, List<String>>(
+  OpenNoteIdsNotifier.new,
+);
+
+class OpenNoteIdsNotifier extends Notifier<List<String>> {
+  @override
+  List<String> build() => const [];
+
+  void open(String id) {
+    if (ref.mounted) state = [...state, id];
+  }
+
+  void close(String id) {
+    if (!ref.mounted) return;
+    final i = state.lastIndexOf(id);
+    if (i >= 0) state = [...state]..removeAt(i);
+  }
+}
+
+/// Ana ekranın ŞU AN çizdiği notlar, ekrandaki sırayla (bölümler dahil).
+/// Alt+↑/↓ bununla önceki/sonraki notu açar (bkz. `openAdjacentNote`).
+/// Sağlayıcı değil düz değişken: kimse dinlemiyor, yalnız kısayol okur.
+List<Note> visibleNoteOrder = const [];
+
 final selectedNoteIdsProvider =
     NotifierProvider<SelectedNoteIdsNotifier, Set<String>>(
       SelectedNoteIdsNotifier.new,

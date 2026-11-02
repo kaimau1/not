@@ -3638,6 +3638,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get showNoteList => 'Show note list';
 
   @override
+  String get shortcutAdjacentNote => 'Previous / next note in list';
+
+  @override
+  String get shortcutCloseNote => 'Close note';
+
+  @override
   String get loginFeatureSyncTitle => 'Same notes on every device';
 
   @override

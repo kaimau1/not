@@ -516,11 +516,17 @@ class _SemanticToggleState extends ConsumerState<_SemanticToggle> {
 class _FocusHalo extends StatefulWidget {
   const _FocusHalo({
     required this.focused,
+    this.open = false,
     required this.noteId,
     required this.child,
   });
 
   final bool focused;
+
+  /// Not sağ panelde AÇIK (geniş ekran): sabit, ince çerçeve — kullanıcı
+  /// listede nerede olduğunu görsün. Telefonda liste editörün altında
+  /// görünmediğinden fark etmez.
+  final bool open;
   final String noteId;
   final Widget child;
 
@@ -603,7 +609,11 @@ class _FocusHaloState extends State<_FocusHalo>
       return Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.transparent, width: 2),
+          // Aynı 2 dp: vurgu gelip gidince kart yerinden oynamaz.
+          border: Border.all(
+            color: widget.open ? scheme.primary : Colors.transparent,
+            width: 2,
+          ),
         ),
         child: widget.child,
       );
