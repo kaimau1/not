@@ -423,7 +423,8 @@ jobs:
           flutter build web --release --wasm \
             --build-name="${base:-1.0}.${{ github.run_number }}" \
             --build-number=${{ github.run_number }} \
-            --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+            --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }} \
+            --dart-define=RECAPTCHA_SITE_KEY=${{ secrets.RECAPTCHA_SITE_KEY }}
 
       - name: Firebase kurallarını yayınla
         env:

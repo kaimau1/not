@@ -22,6 +22,13 @@ class _BuiltInAiStatus extends ConsumerWidget {
         : premium
         ? (Icons.workspace_premium_outlined, l10n.aiBuiltInPremium(remaining))
         : (Icons.bolt_outlined, l10n.aiBuiltInRemaining(remaining));
+    // Yenilenme saati yalnız sayaç işleyen kullanıcıda (F18.3).
+    final renews = hasKey || ref.watch(isAnonymousProvider)
+        ? null
+        : ref.watch(aiQuotaRenewsAtProvider);
+    final line = renews == null
+        ? text
+        : '$text · ${l10n.aiQuotaRenewsAt(MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(renews), alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context)))}';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -36,7 +43,7 @@ class _BuiltInAiStatus extends ConsumerWidget {
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                text,
+                line,
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),

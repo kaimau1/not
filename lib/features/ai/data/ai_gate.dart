@@ -219,8 +219,9 @@ class AiGate {
     final doc = FirebaseFirestore.instance
         .collection(AppConstants.aiQuotaCollection)
         .doc(uid);
+    DateTime? windowStart;
     try {
-      return await FirebaseFirestore.instance
+      final result = await FirebaseFirestore.instance
           .runTransaction<int>((tx) async {
             final snap = await tx.get(doc);
             final data = snap.data();
@@ -235,6 +236,7 @@ class AiGate {
             // Tavan aşılıyorsa sayaç ARTIRILMAZ ve çağırana "reddedildi"
             // bildirilir; sayacın kendisini döndürmek, yerel yedek kontrolün
             // hakkı geçirmesine yol açıyordu.
+            windowStart = expired ? DateTime.now() : dayStart;
             if (next > limit) return _remoteDenied;
             if (!snap.exists || expired) {
               // Yeni pencere: damga SUNUCUdan alınır (kural bunu şart koşuyor).
@@ -249,8 +251,42 @@ class AiGate {
             return next;
           })
           .timeout(const Duration(seconds: 8));
+      final start = windowStart;
+      if (start != null) {
+        await _ref
+            .read(sharedPreferencesProvider)
+            .setInt(_windowStartKey, start.millisecondsSinceEpoch);
+      }
+      return result;
     } on Object {
       return null;
     }
   }
+
+  /// Sunucu penceresinin başladığı an (cihazda son görülen; F18.3).
+  static const _windowStartKey = 'ai_quota_window_start';
+
+  /// Puanların yenileneceği an; bilinmiyorsa ya da geçtiyse null.
+  DateTime? renewsAt() {
+    final ms = _ref.read(sharedPreferencesProvider).getInt(_windowStartKey);
+    return aiQuotaRenewsAt(
+      ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms),
+      DateTime.now(),
+    );
+  }
 }
+
+/// Yuvarlanan 24 saatlik kota penceresinin bitişi (kullanıcı kararı
+/// 2026-11-02, F18.3: takvim gününe geçilmedi). [windowStart] yoksa ya da
+/// pencere çoktan bittiyse null — o zaman bir sonraki çağrı yeni pencere açar.
+DateTime? aiQuotaRenewsAt(DateTime? windowStart, DateTime now) {
+  if (windowStart == null) return null;
+  final end = windowStart.add(const Duration(hours: 24));
+  return end.isAfter(now) ? end : null;
+}
+
+/// Ayarlar/Yapay zekâ ekranındaki "yenilenme saati" satırı için.
+final aiQuotaRenewsAtProvider = Provider<DateTime?>((ref) {
+  ref.watch(aiQuotaVersionProvider);
+  return ref.watch(aiGateProvider).renewsAt();
+});

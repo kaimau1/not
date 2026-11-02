@@ -11233,6 +11233,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola).'**
   String get swipeModeInfo;
+
+  /// Dahili AI puanlarının yenileneceği saat (yuvarlanan 24 saat).
+  ///
+  /// In tr, this message translates to:
+  /// **'{time} itibarıyla yenilenir'**
+  String aiQuotaRenewsAt(String time);
 }
 
 class _AppLocalizationsDelegate

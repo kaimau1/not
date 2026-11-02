@@ -6261,4 +6261,9 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get swipeModeInfo =>
       'Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola).';
+
+  @override
+  String aiQuotaRenewsAt(String time) {
+    return '$time itibarıyla yenilenir';
+  }
 }

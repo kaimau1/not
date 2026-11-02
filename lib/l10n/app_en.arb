@@ -2325,5 +2325,6 @@
   "tipsResetTitle": "Show tips again",
   "tipsResetInfo": "The small one-time tips (gestures, Meaning search) appear again.",
   "tipsResetDone": "Tips will be shown again",
-  "swipeModeInfo": "When you swipe the screen sideways in grid view. In list view, swiping a row pins it (right) or archives it (left)."
+  "swipeModeInfo": "When you swipe the screen sideways in grid view. In list view, swiping a row pins it (right) or archives it (left).",
+  "aiQuotaRenewsAt": "Renews at {time}"
 }

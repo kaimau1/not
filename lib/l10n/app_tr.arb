@@ -2976,5 +2976,14 @@
   "tipsResetTitle": "İpuçlarını yeniden göster",
   "tipsResetInfo": "Bir kez çıkan küçük ipuçları (jestler, Anlam araması) yeniden çıkar.",
   "tipsResetDone": "İpuçları yeniden gösterilecek",
-  "swipeModeInfo": "Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola)."
+  "swipeModeInfo": "Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola).",
+  "aiQuotaRenewsAt": "{time} itibarıyla yenilenir",
+  "@aiQuotaRenewsAt": {
+    "description": "Dahili AI puanlarının yenileneceği saat (yuvarlanan 24 saat).",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

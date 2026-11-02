@@ -6281,4 +6281,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get swipeModeInfo =>
       'When you swipe the screen sideways in grid view. In list view, swiping a row pins it (right) or archives it (left).';
+
+  @override
+  String aiQuotaRenewsAt(String time) {
+    return 'Renews at $time';
+  }
 }
