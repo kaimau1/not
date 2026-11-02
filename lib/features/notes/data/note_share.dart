@@ -159,7 +159,12 @@ class NoteShare {
 
     final stored = <Attachment>[];
     if (attachments != null) {
-      for (final meta in source.attachments) {
+      // Paket/yedek eklerinde oluşturma tarihi yok: boş kalsa `toMap`
+      // dizinin İÇİNE serverTimestamp yazardı — Firestore dizide onu kabul
+      // etmez (F18.4'te sahte Firestore testi yakaladı).
+      final now = DateTime.now();
+      for (final raw in source.attachments) {
+        final meta = raw.createdAt == null ? raw.copyWith(createdAt: now) : raw;
         // YouTube eki ve metin eki dosyasızdır: kayıt olduğu gibi taşınır.
         if (meta.isWebVideo || meta.kind == AttachmentKind.text) {
           stored.add(meta);

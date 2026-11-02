@@ -318,7 +318,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unlockAuthReason => 'Verify your identity to open the locked note';
 
   @override
-  String get exportBackup => 'Export backup (JSON)';
+  String get exportBackup => 'Full backup';
 
   @override
   String get expandListItems => 'Show list rows in full';
@@ -1189,7 +1189,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncLimitUnlimited => 'No limit';
 
   @override
-  String get importBackup => 'Restore from backup (JSON)';
+  String get importBackup => 'Restore from backup';
 
   @override
   String importBackupDone(int count) {
@@ -6285,5 +6285,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String aiQuotaRenewsAt(String time) {
     return 'Renews at $time';
+  }
+
+  @override
+  String get backupInfo =>
+      'All notes with attachments, drawings, bubbles and folders in one file. Restoring twice doesn\'t duplicate notes.';
+
+  @override
+  String get backupInProgress => 'Preparing backup';
+
+  @override
+  String get restoreInProgress => 'Restoring';
+
+  @override
+  String get backupShareSubject => 'Notes backup';
+
+  @override
+  String get backupCancelled => 'Cancelled';
+
+  @override
+  String backupProgressCount(int done, int total) {
+    return '$done / $total notes';
+  }
+
+  @override
+  String restoreBackupResult(int restored, int skipped) {
+    return '$restored notes restored, $skipped skipped (already there)';
   }
 }

@@ -180,7 +180,7 @@
   "unlockNote": "Kilidi kaldır",
   "lockedNote": "Kilitli not",
   "unlockAuthReason": "Kilitli notu açmak için kimliğini doğrula",
-  "exportBackup": "Yedeği dışa aktar (JSON)",
+  "exportBackup": "Tam yedek al",
   "expandListItems": "Liste satırlarını tam göster",
   "expandListItemsInfo": "Uzun liste/işaret maddeleri birkaç satıra sarılıp tamamen görünür. Kapalıyken satır tek satırda kalır, dokununca açılır.",
   "quickCaptureRowSetting": "Hızlı not satırı",
@@ -553,7 +553,7 @@
   "syncLimitTitle": "Otomatik yükleme sınırı",
   "syncLimitInfo": "Bu boyuttan büyük ekler cihazda kalır, buluta yüklenmez. Not metni her zaman senkronlanır.",
   "syncLimitUnlimited": "Sınırsız",
-  "importBackup": "Yedekten geri yükle (JSON)",
+  "importBackup": "Yedekten geri yükle",
   "importBackupDone": "{count} not geri yüklendi",
   "@importBackupDone": {
     "placeholders": {
@@ -2864,17 +2864,56 @@
   "colorToneVivid": "canlı",
   "colorToneDark": "koyu",
   "colorShade": "{color}, {tone}",
-  "@colorShade": {"placeholders": {"color": {"type": "String"}, "tone": {"type": "String"}}},
+  "@colorShade": {
+    "placeholders": {
+      "color": {
+        "type": "String"
+      },
+      "tone": {
+        "type": "String"
+      }
+    }
+  },
   "itemEmptyLabel": "Boş madde",
   "bubbleSemantic": "Balon, sayfa {page}: {text}",
-  "@bubbleSemantic": {"placeholders": {"page": {"type": "int"}, "text": {"type": "String"}}},
+  "@bubbleSemantic": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "bubbleSemanticEmpty": "Boş balon, sayfa {page}",
-  "@bubbleSemanticEmpty": {"placeholders": {"page": {"type": "int"}}},
+  "@bubbleSemanticEmpty": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
   "mediaBoxSemantic": "{kind}: {name}",
-  "@mediaBoxSemantic": {"placeholders": {"kind": {"type": "String"}, "name": {"type": "String"}}},
+  "@mediaBoxSemantic": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "formatSizeLabel": "Boyut",
   "formatSizeValue": "Boyut %{percent}",
-  "@formatSizeValue": {"placeholders": {"percent": {"type": "int"}}},
+  "@formatSizeValue": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "customColor": "Özel renk…",
   "embedLasso": "Daire çizerek seç",
   "embedLassoHint": "Bağlanacak yazıyı parmağınla daire içine al · iki parmakla kaydır",
@@ -2983,6 +3022,33 @@
     "placeholders": {
       "time": {
         "type": "String"
+      }
+    }
+  },
+  "backupInfo": "Bütün notlar ekleri, çizimleri, balonları ve klasörleriyle tek dosyada. İki kez yüklense de not çoğalmaz.",
+  "backupInProgress": "Yedek hazırlanıyor",
+  "restoreInProgress": "Geri yükleniyor",
+  "backupShareSubject": "Notlar yedeği",
+  "backupCancelled": "İptal edildi",
+  "backupProgressCount": "{done} / {total} not",
+  "@backupProgressCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "restoreBackupResult": "{restored} not geri yüklendi, {skipped} atlandı (zaten var)",
+  "@restoreBackupResult": {
+    "placeholders": {
+      "restored": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
       }
     }
   }

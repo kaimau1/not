@@ -4,8 +4,6 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
-import 'package:file_selector/file_selector.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     show AuthCredential, FirebaseAuth, FirebaseAuthException;
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
@@ -16,10 +14,8 @@ import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../core/utils/search_fold.dart';
 import '../../../app/theme/note_colors.dart';
@@ -40,7 +36,6 @@ import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/language_names.dart';
 import '../../../core/utils/note_fonts.dart';
 import '../../../core/utils/rich_text.dart';
-import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/ai_speech.dart';
@@ -74,6 +69,7 @@ import '../../notes/presentation/drive_ui.dart';
 import '../data/permissions_service.dart';
 import '../settings_providers.dart';
 import 'notes_settings.dart';
+import 'backup_ui.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/press_scale.dart';
 import '../../../core/friendly_error.dart';

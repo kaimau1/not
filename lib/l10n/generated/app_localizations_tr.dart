@@ -317,7 +317,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get unlockAuthReason => 'Kilitli notu açmak için kimliğini doğrula';
 
   @override
-  String get exportBackup => 'Yedeği dışa aktar (JSON)';
+  String get exportBackup => 'Tam yedek al';
 
   @override
   String get expandListItems => 'Liste satırlarını tam göster';
@@ -1187,7 +1187,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get syncLimitUnlimited => 'Sınırsız';
 
   @override
-  String get importBackup => 'Yedekten geri yükle (JSON)';
+  String get importBackup => 'Yedekten geri yükle';
 
   @override
   String importBackupDone(int count) {
@@ -6265,5 +6265,31 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String aiQuotaRenewsAt(String time) {
     return '$time itibarıyla yenilenir';
+  }
+
+  @override
+  String get backupInfo =>
+      'Bütün notlar ekleri, çizimleri, balonları ve klasörleriyle tek dosyada. İki kez yüklense de not çoğalmaz.';
+
+  @override
+  String get backupInProgress => 'Yedek hazırlanıyor';
+
+  @override
+  String get restoreInProgress => 'Geri yükleniyor';
+
+  @override
+  String get backupShareSubject => 'Notlar yedeği';
+
+  @override
+  String get backupCancelled => 'İptal edildi';
+
+  @override
+  String backupProgressCount(int done, int total) {
+    return '$done / $total not';
+  }
+
+  @override
+  String restoreBackupResult(int restored, int skipped) {
+    return '$restored not geri yüklendi, $skipped atlandı (zaten var)';
   }
 }

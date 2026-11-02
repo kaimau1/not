@@ -100,7 +100,7 @@
   "unlockNote": "Unlock",
   "lockedNote": "Locked note",
   "unlockAuthReason": "Verify your identity to open the locked note",
-  "exportBackup": "Export backup (JSON)",
+  "exportBackup": "Full backup",
   "expandListItems": "Show list rows in full",
   "expandListItemsInfo": "Long list items wrap over several lines and stay fully visible. When off, a row stays on one line and expands when tapped.",
   "quickCaptureRowSetting": "Quick note bar",
@@ -382,7 +382,7 @@
   "syncLimitTitle": "Automatic upload limit",
   "syncLimitInfo": "Attachments larger than this stay on the device and aren't uploaded. Note text always syncs.",
   "syncLimitUnlimited": "No limit",
-  "importBackup": "Restore from backup (JSON)",
+  "importBackup": "Restore from backup",
   "importBackupDone": "{count} notes restored",
   "importBackupInvalid": "Invalid backup file",
   "aiHubTitle": "AI",
@@ -2213,17 +2213,56 @@
   "colorToneVivid": "vivid",
   "colorToneDark": "dark",
   "colorShade": "{color}, {tone}",
-  "@colorShade": {"placeholders": {"color": {"type": "String"}, "tone": {"type": "String"}}},
+  "@colorShade": {
+    "placeholders": {
+      "color": {
+        "type": "String"
+      },
+      "tone": {
+        "type": "String"
+      }
+    }
+  },
   "itemEmptyLabel": "Empty item",
   "bubbleSemantic": "Bubble, page {page}: {text}",
-  "@bubbleSemantic": {"placeholders": {"page": {"type": "int"}, "text": {"type": "String"}}},
+  "@bubbleSemantic": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "bubbleSemanticEmpty": "Empty bubble, page {page}",
-  "@bubbleSemanticEmpty": {"placeholders": {"page": {"type": "int"}}},
+  "@bubbleSemanticEmpty": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
   "mediaBoxSemantic": "{kind}: {name}",
-  "@mediaBoxSemantic": {"placeholders": {"kind": {"type": "String"}, "name": {"type": "String"}}},
+  "@mediaBoxSemantic": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "formatSizeLabel": "Size",
   "formatSizeValue": "Size {percent}%",
-  "@formatSizeValue": {"placeholders": {"percent": {"type": "int"}}},
+  "@formatSizeValue": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "customColor": "Custom colour…",
   "embedLasso": "Select by circling",
   "embedLassoHint": "Circle the text to link with your finger · scroll with two fingers",
@@ -2326,5 +2365,12 @@
   "tipsResetInfo": "The small one-time tips (gestures, Meaning search) appear again.",
   "tipsResetDone": "Tips will be shown again",
   "swipeModeInfo": "When you swipe the screen sideways in grid view. In list view, swiping a row pins it (right) or archives it (left).",
-  "aiQuotaRenewsAt": "Renews at {time}"
+  "aiQuotaRenewsAt": "Renews at {time}",
+  "backupInfo": "All notes with attachments, drawings, bubbles and folders in one file. Restoring twice doesn't duplicate notes.",
+  "backupInProgress": "Preparing backup",
+  "restoreInProgress": "Restoring",
+  "backupShareSubject": "Notes backup",
+  "backupCancelled": "Cancelled",
+  "backupProgressCount": "{done} / {total} notes",
+  "restoreBackupResult": "{restored} notes restored, {skipped} skipped (already there)"
 }

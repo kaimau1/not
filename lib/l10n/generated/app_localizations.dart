@@ -659,7 +659,7 @@ abstract class AppLocalizations {
   /// No description provided for @exportBackup.
   ///
   /// In tr, this message translates to:
-  /// **'Yedeği dışa aktar (JSON)'**
+  /// **'Tam yedek al'**
   String get exportBackup;
 
   /// No description provided for @expandListItems.
@@ -2267,7 +2267,7 @@ abstract class AppLocalizations {
   /// No description provided for @importBackup.
   ///
   /// In tr, this message translates to:
-  /// **'Yedekten geri yükle (JSON)'**
+  /// **'Yedekten geri yükle'**
   String get importBackup;
 
   /// No description provided for @importBackupDone.
@@ -11239,6 +11239,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{time} itibarıyla yenilenir'**
   String aiQuotaRenewsAt(String time);
+
+  /// No description provided for @backupInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütün notlar ekleri, çizimleri, balonları ve klasörleriyle tek dosyada. İki kez yüklense de not çoğalmaz.'**
+  String get backupInfo;
+
+  /// No description provided for @backupInProgress.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedek hazırlanıyor'**
+  String get backupInProgress;
+
+  /// No description provided for @restoreInProgress.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri yükleniyor'**
+  String get restoreInProgress;
+
+  /// No description provided for @backupShareSubject.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlar yedeği'**
+  String get backupShareSubject;
+
+  /// No description provided for @backupCancelled.
+  ///
+  /// In tr, this message translates to:
+  /// **'İptal edildi'**
+  String get backupCancelled;
+
+  /// No description provided for @backupProgressCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{done} / {total} not'**
+  String backupProgressCount(int done, int total);
+
+  /// No description provided for @restoreBackupResult.
+  ///
+  /// In tr, this message translates to:
+  /// **'{restored} not geri yüklendi, {skipped} atlandı (zaten var)'**
+  String restoreBackupResult(int restored, int skipped);
 }
 
 class _AppLocalizationsDelegate
