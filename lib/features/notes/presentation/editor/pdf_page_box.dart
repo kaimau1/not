@@ -10,6 +10,7 @@ import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/pdf_copy_text.dart';
 import '../../../../core/utils/pdf_ref.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
+import '../../../../core/widgets/wheel_scroll_viewer.dart';
 import '../../data/pdf/pdf_page_ocr.dart';
 import '../../data/pdf_text.dart';
 import '../../domain/attachment.dart';
@@ -755,9 +756,9 @@ class _PdfPageBoxState extends State<PdfPageBox> {
             onTap: _toggleBar,
             onDoubleTapDown: (d) => _doubleTapAt = d.localPosition,
             onDoubleTap: () => _toggleZoomAt(_doubleTapAt),
-            child: InteractiveViewer(
-              transformationController: _zoom,
-              maxScale: 4,
+            // Fare tekerleği sayfayı kaydırır, zoom Ctrl+tekerlekle.
+            child: WheelScrollViewer(
+              controller: _zoom,
               panEnabled: _zoomed,
               child: pages,
             ),

@@ -295,6 +295,12 @@ maddeyi GÜNCELLE.
   çift dokunuş 2,5×), şerit saydam hap ve 2,5 sn'de söner, "balon ekle"
   düğmesi katmanı düzenlenebilir yapar. Seçim tutamacı `EagerGestureRecognizer`
   + `Listener` (onPan kaydırmaya yeniliyordu).
+- **Web fare tekerleği** (2026-11-03): `InteractiveViewer` tekerlek sinyalini
+  PointerSignalResolver'sız DOĞRUDAN zoom sayar → sabit PDF'te tekerlek hep
+  zoom yapıyor, yakınlaşınca kaydırma da kilitleniyordu. `WheelScrollViewer`
+  (core/widgets) sarar: tekerlek kaydırır, zoom yalnız Ctrl+tekerlek;
+  dokunmatik/trackpad dokunulmaz. Slayt `ZoomBox`/resim görüntüleyicide
+  tekerlek zoom'u bilerek kalıyor. `scaleFactor`'ı büyütme: pinch ataleti bozulur.
 - Balonlu/klasik BAŞLANGIÇ sorusu yok (2026-11-03): içerikten not hep
   klasik; "BALONLU PDF" kart rozeti ve ayardaki kip satırı kalktı.
 - Görsele çizim + açık metin (`PageBubble.plain`) dışa aktarmada/paylaşımda
