@@ -56,9 +56,19 @@ jobs:
             echo "perf=false" >> "$GITHUB_OUTPUT"
           fi
 
+  # TEST 3 PARÇADA PARALEL (2026-11-03): tek iş ~5 dk sürüyordu (testler
+  # 3,5 dk). Dosyalar sıralanıp parçalara dağıtılır (her parça yalnız kendi
+  # dosyalarını derler — package:test'in --total-shards'ı her dosyayı her
+  # parçada yükler, Flutter'da derleme baskın olduğu için o kazandırmaz).
+  # Analiz 0. parçada: `needs.test.result` eskisi gibi analiz + testin
+  # toplamı (release/perf/deploy aynı anlamda bekler).
   test:
-    name: Analiz + Test
+    name: Analiz + Test (${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
     steps:
       - uses: actions/checkout@v4
 
@@ -72,12 +82,15 @@ jobs:
         run: flutter pub get
 
       - name: Analiz
+        if: matrix.shard == 0
         run: flutter analyze
 
       # -j 4: package:test varsayılanı çekirdeklerin YARISI (4 vCPU'da 2).
-      # Ölçüm (2026-10-19, 4 çekirdek): varsayılan ~200 sn, -j 4 ~90 sn.
       - name: Testler
-        run: flutter test -j 4
+        run: |
+          mapfile -t files < <(find test -name '*_test.dart' | sort | awk -v n=3 -v i=${{ matrix.shard }} '(NR-1) % n == i')
+          echo "Bu parçada ${#files[@]} test dosyası."
+          flutter test -j 4 "${files[@]}"
 
   # GÜVENLİK KURALLARI (F4.9): Firestore emülatörüne karşı rules-test/ ve
   # Cloud Functions'ın saf testleri. Testle paralel; deploy ikisini de bekler
@@ -450,13 +463,13 @@ jobs:
           node tool/set_latest_build.js "${{ github.run_number }}" "${{ needs.android.outputs.version }}"
           rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
 
-  # main'e her push'ta Firestore/Storage kurallarını ve web sürümünü otomatik
-  # yayınlar. Elle `firebase deploy` / `wrangler pages deploy` çalıştırmaya
-  # gerek kalmaz.
-  deploy:
-    name: Firebase + Cloudflare Deploy
+  # WEB DERLEMESİ TESTLE PARALEL (2026-11-03): eskiden deploy içinde, testi
+  # BEKLEDİKTEN sonra derleniyordu (~3,5 dk sırada). Derleme hiçbir şey
+  # yayınlamaz; yayın (deploy) testleri ve kuralları bekler — kırmızı test
+  # yine yayınlanmaz.
+  web:
+    name: Web derle
     runs-on: ubuntu-latest
-    needs: [test, rules]
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
@@ -483,6 +496,30 @@ jobs:
             --build-number=${{ github.run_number }} \
             --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }} \
             --dart-define=RECAPTCHA_SITE_KEY=${{ secrets.RECAPTCHA_SITE_KEY }}
+
+      # Artifact DEĞİL önbellek: artifact depolama kotası daha önce doldu ve
+      # işi kesti (aşağıdaki APK notu); önbellek ayrı kotada, anahtar commit'e özgü.
+      - uses: actions/cache/save@v4
+        with:
+          path: build/web
+          key: web-build-${{ github.sha }}-${{ github.run_id }}
+
+  # main'e her push'ta Firestore/Storage kurallarını ve web sürümünü otomatik
+  # yayınlar. Elle `firebase deploy` / `wrangler pages deploy` çalıştırmaya
+  # gerek kalmaz.
+  deploy:
+    name: Firebase + Cloudflare Deploy
+    runs-on: ubuntu-latest
+    needs: [test, rules, web]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: build/web
+          key: web-build-${{ github.sha }}-${{ github.run_id }}
+          fail-on-cache-miss: true
 
       - name: Firebase kurallarını yayınla
         env:
