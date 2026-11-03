@@ -30,6 +30,7 @@ import '../domain/note_type.dart';
 import '../domain/page_notes.dart';
 import '../domain/sensitive_text.dart';
 import '../data/drive_store.dart' show localFilesRevisionProvider;
+import 'card_preview.dart';
 import 'editor/notebook_paper.dart';
 import 'note_actions_sheet.dart';
 import 'item_divider_style.dart';
@@ -294,6 +295,41 @@ Widget highlightedText(
   );
 }
 
+/// Kartın izlediği HER ŞEY tek sağlayıcıda (F21.4).
+///
+/// KÖK NEDEN (telefonda ölçüldü 2026-11-03): her kart sekiz-dokuz ayrı
+/// `ref.watch` ile kuruluyordu — kaydırmada `ConsumerStatefulElement.mount`
+/// %7; pano örtülünce Riverpod her aboneliği tek tek duraklatıp sürdürüyor
+/// (K5). Kart buradan `select` ile YALNIZ kendi değerini çeker: kart başına
+/// tek abonelik; kayıt `==` ile karşılaştırıldığından yalnız değeri değişen
+/// kart yeniden kurulur (seçim, silinme, paylaşım hâlâ nota özgü).
+typedef _CardEnv = ({
+  CardDisplay display,
+  bool rich,
+  bool hideSensitive,
+  int filesRevision,
+  Set<String> selected,
+  Set<String> leaving,
+  Map<String, NoteShare>? shares,
+  bool allView,
+});
+
+final _cardEnvProvider = Provider<_CardEnv>(
+  (ref) => (
+    display: ref.watch(cardDisplayProvider),
+    rich: ref.watch(cardRichPreviewProvider),
+    hideSensitive: ref.watch(cardHideSensitiveProvider),
+    // Drive'dan bir ek inince kart küçük resmini yerel kopyadan çizsin.
+    filesRevision: ref.watch(localFilesRevisionProvider),
+    selected: ref.watch(selectedNoteIdsProvider),
+    leaving: ref.watch(leavingNotesProvider),
+    shares: ref.watch(myNoteSharesProvider).value,
+    allView:
+        ref.watch(showAllNotesProvider) &&
+        ref.watch(selectedFolderProvider) == null,
+  ),
+);
+
 /// Dashboard'daki kompakt not kartı.
 class NoteCard extends ConsumerWidget {
   const NoteCard({
@@ -495,42 +531,48 @@ class NoteCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    // select() ŞART: küme her değişimde yeni bir Set olduğundan kümenin
-    // kendisini izlemek, TEK not seçilince görünürdeki BÜTÜN kartları yeniden
-    // çiziyordu; artık yalnız durumu değişen kart çizilir.
-    final selectionActive = ref.watch(
-      selectedNoteIdsProvider.select((s) => s.isNotEmpty),
+    // TEK abonelik (F21.4, bkz. [_cardEnvProvider]). select() ŞART: seçim
+    // kümesi her değişimde yeni bir Set; kümeyi izlemek TEK not seçilince
+    // görünürdeki BÜTÜN kartları yeniden çiziyordu — yalnız durumu değişen
+    // kart çizilir.
+    final env = ref.watch(
+      _cardEnvProvider.select(
+        (e) => (
+          display: e.display,
+          rich: e.rich,
+          hideSensitive: e.hideSensitive,
+          filesRevision: e.filesRevision,
+          selectionActive: e.selected.isNotEmpty,
+          selected: e.selected.contains(note.id),
+          leaving: e.leaving.contains(note.id),
+          // Yalnız BU notun paylaşım durumu: ayna akışı her değiştiğinde
+          // bütün kartlar yeniden kurulmasın.
+          shared: e.shares?.containsKey(note.id) ?? false,
+          allView: e.allView,
+        ),
+      ),
     );
-    final selected = ref.watch(
-      selectedNoteIdsProvider.select((s) => s.contains(note.id)),
-    );
-    final richPreview = ref.watch(cardRichPreviewProvider);
+    final selectionActive = env.selectionActive;
+    final selected = env.selected;
+    final richPreview = env.rich;
     // HASSAS İÇERİK (B1): parola notunun içeriği kartta çizilmez, öbür
     // notlarda IBAN/kart numarası örtülür. Yalnız gösterim (bkz.
     // sensitive_text.dart); ayar Ayarlar → Görünüm.
-    final hideSensitive = ref.watch(cardHideSensitiveProvider);
+    final hideSensitive = env.hideSensitive;
     // Kartta hangi öğeler görünsün (Ayarlar → Görünüm → Kartlar).
-    final display = ref.watch(cardDisplayProvider);
-    final credential = hideSensitive && !note.locked && isCredentialNote(note);
+    final display = env.display;
+    // Dilim, örtme, parola taraması not sürümü başına bir kez (F21.1/F21.2).
+    final preview = CardPreview.of(note, hideSensitive: hideSensitive);
+    final credential = hideSensitive && !note.locked && preview.credential;
     // KARTTAN İŞARETLEME (D6): kendi notumda, seçim kipi dışında maddenin
     // kutucuğuna dokunmak editörü açmadan işaretler (Keep'teki gibi).
     final canToggle = !selectionActive && ownerId == null && !readOnly;
-    // Drive'dan bir ek inince kart küçük resmini yerel kopyadan çizsin.
-    ref.watch(localFilesRevisionProvider);
 
     void toggleSelection() =>
         ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
 
     final hasTitle = note.title.trim().isNotEmpty;
-    // Yalnız BU notun paylaşım durumu izlenir: ayna akışı her değiştiğinde
-    // bütün kartlar yeniden kurulmasın.
-    final shared =
-        ownerId != null ||
-        ref.watch(
-          myNoteSharesProvider.select(
-            (m) => m.value?.containsKey(note.id) ?? false,
-          ),
-        );
+    final shared = ownerId != null || env.shared;
     // Durum simgeleri ALT meta satırına indi. Eskiden başlık satırının sağında
     // akıyorlardı ve başlığı sola sıkıştırıyorlardı: üç rozetli bir notta
     // başlık iki kelimede kesiliyordu. Altta, tarihle aynı bantta duruyorlar.
@@ -584,9 +626,7 @@ class NoteCard extends ConsumerWidget {
         !showFolder ||
             !display.folder ||
             folderId == null ||
-            (highlightQuery.trim().isEmpty &&
-                !(ref.watch(showAllNotesProvider) &&
-                    ref.watch(selectedFolderProvider) == null))
+            (highlightQuery.trim().isEmpty && !env.allView)
         ? null
         : ref.watch(
             foldersStreamProvider.select(
@@ -620,7 +660,7 @@ class NoteCard extends ConsumerWidget {
                 context,
                 // Biçimli başlık kartta da biçimli görünür; ayar kapalıyken
                 // (ya da arama sürerken) düz `displayTitle` çizilir.
-                note.title,
+                preview.title,
                 highlightQuery,
                 rich: richPreview,
                 maxLines: 2,
@@ -666,11 +706,11 @@ class NoteCard extends ConsumerWidget {
           else ...[
             _NotePreview(
               note: note,
+              preview: preview,
               highlightQuery: highlightQuery,
               rich: richPreview,
               showProgress: display.progress,
               showMoreCount: display.moreCount,
-              mask: hideSensitive ? maskSensitiveNumbers : _identity,
               onToggle: canToggle
                   ? (item) => toggleCardItem(ref, note, item)
                   : null,
@@ -827,11 +867,7 @@ class NoteCard extends ConsumerWidget {
     // Etiket UCUZ tutulur: `toPlainText()` notun bütün maddelerini dolaşıp
     // yeni bir dizgi kurar ve bu KART BAŞINA, HER build'de olurdu (önbellek
     // payında ~130 kart canlı). Ekran okuyucunun önizlemesi için notun ilk
-    // birkaç satırı zaten yeterli; gövde sınırlı bir dilimden alınır.
-    const previewLimit = 160;
-    final rawBody = note.body.length > previewLimit
-        ? note.body.substring(0, previewLimit)
-        : note.body;
+    // birkaç satırı zaten yeterli; gövde hazır önizlemeden (ilk 160 karakter).
     final semanticLabel = [
       if (note.locked)
         context.l10n.lockedNote
@@ -840,10 +876,7 @@ class NoteCard extends ConsumerWidget {
         context.l10n.sensitiveHiddenOnCard,
       ] else ...[
         if (hasTitle) note.displayTitle.trim(),
-        (hideSensitive
-                ? maskSensitiveNumbers(stripRichMarkers(rawBody))
-                : stripRichMarkers(rawBody))
-            .trim(),
+        preview.label,
         if (note.items.any((i) => i.text.trim().isNotEmpty))
           context.l10n.noteStatsItems(
             note.items.where((i) => i.text.trim().isNotEmpty).length,
@@ -855,10 +888,8 @@ class NoteCard extends ConsumerWidget {
     ].where((s) => s.isNotEmpty).join('. ');
 
     // SİLİNİRKEN küçülüp solar (bkz. leavingNotesProvider) — yalnız bu kart
-    // izler, ızgaranın geri kalanı yeniden çizilmez.
-    final leaving = ref.watch(
-      leavingNotesProvider.select((s) => s.contains(note.id)),
-    );
+    // yeniden kurulur (tek abonelikteki `leaving`).
+    final leaving = env.leaving;
     // BASINCA HAFİFÇE ÇÖKER (iOS dokunsal hissi — bkz. PressScale): dönüşüm
     // RepaintBoundary'nin DIŞINDA, yani kartın önbellekli katmanı yalnız
     // ölçeklenir, yeniden boyanmaz.
@@ -1038,8 +1069,6 @@ class _FolderBadge extends StatelessWidget {
   }
 }
 
-String _identity(String text) => text;
-
 /// Kartta maddenin kutucuğuna dokunuş (D6): notun maddesini editörü açmadan
 /// işaretler / işareti kaldırır. Metni boş madde işaretlenmez (editördeki
 /// kuralla aynı, bkz. `ItemsEditor._toggleItem`). Editör açıksa (geniş
@@ -1109,20 +1138,23 @@ class _SensitiveHidden extends StatelessWidget {
 class _CardItemRow extends StatelessWidget {
   const _CardItemRow({
     required this.item,
+    required this.text,
     required this.style,
     required this.query,
     required this.rich,
-    required this.mask,
     this.checkbox = false,
     this.number,
     this.onToggle,
   });
 
   final NoteItem item;
+
+  /// Maddenin kartta çizilen metni: dilimlenmiş, gerekirse örtülmüş
+  /// (bkz. [CardPreview.item]).
+  final String text;
   final TextStyle style;
   final String query;
   final bool rich;
-  final String Function(String) mask;
   final bool checkbox;
   final int? number;
 
@@ -1175,7 +1207,7 @@ class _CardItemRow extends StatelessWidget {
             // Ham biçim işaretleri (**kalın**, %%2:renk%%) HİÇBİR durumda
             // görünmez: ayar kapalıyken sökülür, açıkken görünmez çizilip
             // yerine biçim uygulanır.
-            mask(item.text),
+            text,
             query,
             // Üstü çizili stil satır içi biçimin üstünde kalmalı: biçimli
             // çizim yalnız işaretsiz maddede.
@@ -1281,9 +1313,9 @@ class _ChecklistProgress extends StatelessWidget {
 class _NotePreview extends StatelessWidget {
   const _NotePreview({
     required this.note,
+    required this.preview,
     required this.rich,
     this.highlightQuery = '',
-    this.mask = _identity,
     this.onToggle,
     this.showProgress = false,
     this.showMoreCount = true,
@@ -1291,14 +1323,15 @@ class _NotePreview extends StatelessWidget {
 
   final Note note;
 
+  /// Notun hazır (dilimlenmiş, gerekirse örtülmüş) metinleri — gösterilen
+  /// her metin buradan gelir (F21.1/F21.2, hassas numaralar B1).
+  final CardPreview preview;
+
   /// Yapılacaklar ilerlemesi ("3/10") ve "+N öğe daha" satırı çizilsin mi
   /// (Ayarlar → Görünüm → Kartlar).
   final bool showProgress;
   final bool showMoreCount;
   final String highlightQuery;
-
-  /// Gösterilen her metne uygulanır (hassas numaraları örtme, B1).
-  final String Function(String) mask;
 
   /// Madde kutucuğuna dokunuş (D6); null = salt gösterim.
   final ValueChanged<NoteItem>? onToggle;
@@ -1404,17 +1437,31 @@ class _NotePreview extends StatelessWidget {
         // Madde varsa metin 2 satıra kısalır ki maddelere yer kalsın; yoksa
         // 4 satır (8 satır 2 sütunlu ızgarada metin duvarına dönüşüyordu).
         final maxItems = hasBody ? 3 : 5;
+        final bodyLines = items.isEmpty ? 4 : 2;
+        // Aramada eşleşme gövdenin görünen başında değilse onun çevresi
+        // gösterilir (F21.3) — yoksa vurgu kartta hiç görünmezdi.
+        final excerpt = hasBody && highlightQuery.isNotEmpty
+            ? preview.excerpt(highlightQuery, bodyLines)
+            : null;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (hasBody)
+            if (excerpt != null)
+              highlightedText(
+                context,
+                excerpt,
+                highlightQuery,
+                style: bodyStyle,
+                maxLines: bodyLines,
+              )
+            else if (hasBody)
               noteBodyText(
                 context,
-                mask(note.body),
+                preview.body,
                 highlightQuery,
                 rich: rich,
-                maxLines: items.isEmpty ? 4 : 2,
+                maxLines: bodyLines,
                 style: bodyStyle,
               ),
             if (items.isNotEmpty) ...[
@@ -1422,10 +1469,10 @@ class _NotePreview extends StatelessWidget {
               for (final item in items.take(maxItems))
                 _CardItemRow(
                   item: item,
+                  text: preview.item(item.text),
                   style: bodyStyle,
                   query: highlightQuery,
                   rich: rich,
-                  mask: mask,
                   checkbox: true,
                   onToggle: onToggle,
                 ),
@@ -1469,10 +1516,10 @@ class _NotePreview extends StatelessWidget {
             for (var i = 0; i < shown.length; i++)
               _CardItemRow(
                 item: shown[i],
+                text: preview.item(shown[i].text),
                 style: bodyStyle,
                 query: highlightQuery,
                 rich: rich,
-                mask: mask,
                 checkbox: note.type == NoteType.checklist,
                 number: note.type == NoteType.ordered ? i + 1 : null,
                 onToggle: onToggle,
@@ -1525,7 +1572,7 @@ class _NotePreview extends StatelessWidget {
                     Expanded(
                       child: noteBodyText(
                         context,
-                        mask(entry.text),
+                        preview.item(entry.text),
                         highlightQuery,
                         rich: rich,
                         maxLines: 1,
@@ -1606,16 +1653,22 @@ class NoteListRow extends ConsumerWidget {
   /// Tek satırlık önizleme. Kilitli notta içerik SIZDIRILMAZ.
   String _preview(BuildContext context, {required bool hideSensitive}) {
     if (note.locked) return context.l10n.lockedNote;
-    if (hideSensitive && isCredentialNote(note)) {
+    if (hideSensitive &&
+        CardPreview.of(note, hideSensitive: hideSensitive).credential) {
       return context.l10n.sensitiveHiddenOnCard;
     }
     // Biçim işaretleri BURADA da sökülür: satır önizlemesi tek satırda 46
     // karakterde kesiliyor, işaretli metin hem ham `**` gösteriyor hem de
     // kesme işaretin ortasına düşebiliyordu (kart önizlemesi bunu çoktan
-    // yapıyordu, satır dalı atlanmıştı).
+    // yapıyordu, satır dalı atlanmıştı). Yalnız baştaki dilim işlenir
+    // (F21.1, kartla aynı kök neden): 46 karakter için uzun notun tamamı
+    // ayrıştırılıyordu. 16 madde boş olsa da ayırıcılarla 46'yı aşar.
     final source = note.body.trim().isNotEmpty
-        ? stripRichMarkers(note.body)
-        : [for (final i in note.items) stripRichMarkers(i.text)].join(' · ');
+        ? stripRichMarkers(previewSlice(note.body, maxChars: kPreviewItemChars))
+        : [
+            for (final i in note.items.take(16))
+              stripRichMarkers(previewSlice(i.text, maxChars: 60)),
+          ].join(' · ');
     var flat = source.replaceAll('\n', ' ').trim();
     if (hideSensitive) flat = maskSensitiveNumbers(flat);
     // 46 karakter: iki satırlık bir cümlenin başı. Daha uzunu zaten

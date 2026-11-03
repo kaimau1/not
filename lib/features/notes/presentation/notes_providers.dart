@@ -1195,7 +1195,9 @@ List<Note> _sortedNotes(
 ///
 /// Anahtar `updatedAt`: not değişmedikçe yeniden ayrıştırma yok, bayatlama da
 /// yok. Küresel ve sınırsız DEĞİL — girdi sayısı not sayısıyla sınırlı.
-final Map<String, (DateTime?, String)> _searchBodyCache = {};
+/// Üçüncü alan işaretleri sökülmüş GÖVDE: kartın arama kesiti (F21.3) onu
+/// buradan alır (işaretsiz gövdede aynı örnek, kopya değil).
+final Map<String, (DateTime?, String, String)> _searchBodyCache = {};
 
 /// Hesap değişince (F5.5): önbellek her notun katlanmış TAM metnini
 /// (transkriptler dahil) tutuyor — öbür hesabınki bellekte kalmasın.
@@ -1215,10 +1217,26 @@ int get searchBodyCacheSize => _searchBodyCache.length;
 @visibleForTesting
 String searchableBodyForTest(Note note) => _searchableBody(note);
 
-String _searchableBody(Note note) {
+String _searchableBody(Note note) => _searchEntry(note).$2;
+
+/// Sorgunun not GÖVDESİNDEKİ ilk eşleşmesi (F21.3, kartın arama kesiti):
+/// işaretleri sökülmüş gövde ve eşleşmenin oradaki konumu; gövdede yoksa ya
+/// da not kilitliyse null. Süzgecin önbelleğinden — kart uzun gövdeyi her
+/// tuşta yeniden taramaz. [query] [foldForSearch] ile katlanmış gelir.
+(String, int)? bodySearchMatch(Note note, String query) {
+  if (query.isEmpty || note.locked) return null;
+  final (_, folded, plain) = _searchEntry(note);
+  final index = folded.indexOf(query);
+  return index >= 0 && index + query.length <= plain.length
+      ? (plain, index)
+      : null;
+}
+
+(DateTime?, String, String) _searchEntry(Note note) {
   final cached = _searchBodyCache[note.id];
-  if (cached != null && cached.$1 == note.updatedAt) return cached.$2;
-  final buffer = StringBuffer(stripRichMarkers(note.body));
+  if (cached != null && cached.$1 == note.updatedAt) return cached;
+  final plainBody = stripRichMarkers(note.body);
+  final buffer = StringBuffer(plainBody);
   for (final item in note.items) {
     buffer
       ..write('\n')
@@ -1262,9 +1280,9 @@ String _searchableBody(Note note) {
       ..write('\n')
       ..write(attachment.text);
   }
-  final text = foldForSearch(buffer.toString());
-  _searchBodyCache[note.id] = (note.updatedAt, text);
-  return text;
+  final entry = (note.updatedAt, foldForSearch(buffer.toString()), plainBody);
+  _searchBodyCache[note.id] = entry;
+  return entry;
 }
 
 /// **Not, arama sorgusuna uyuyor mu** — ana ekranın süzgeciyle AYNI kural.

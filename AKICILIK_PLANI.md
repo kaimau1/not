@@ -35,7 +35,7 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 20…27):
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
 | 20 | Ölçüm kapısı (gerçekçi veri, yan yana profil derlemesi, CI bütçesi) | Açık | — | F20.1 bu oturumda yapıldı (araçlar) |
-| 21 | Ana ekran kartı: önizlemeyi kırp, kart başına işi azalt | Açık | — | En yüksek etki / en düşük risk |
+| 21 | Ana ekran kartı: önizlemeyi kırp, kart başına işi azalt | Kısmen | 2026-11-03 | F21.1–5 yapıldı; takılma %8,4→%3,5, arama 465→143 ms; kabul sağlanmadı (bkz. faz notu) |
 | 22 | Firestore trafiği: yazımda tüm koleksiyon ana iş parçacığında | Açık | — | 3 KARAR maddesi |
 | 23 | Geçişler: not açma/kapama | Açık | — | Kapanışta her seferinde 99 ms |
 | 24 | Uzun not editörü: tuş başına O(n) | Açık | — | En büyük iş; mimari KARAR |
@@ -170,29 +170,64 @@ zamanlama yamaları.
 
 ## FAZ 21 — Ana ekran kartı: önizlemeyi kırp, kart başına işi azalt (K1, K6)
 
-- [ ] **F21.1 Önizleme dilimi.** Gövdenin kartta görünecek kadarı:
+**Ölçüm (2026-11-03, profil derlemesi "Notlar Ölçüm", aynı telefon/veri; önce → sonra):**
+kaydırma SF takılan **%8,4 → %3,5 / %3,4** (iki koşu), kayıp vsync 96 → 38, en
+kötü kare **115 → 50 / 66 ms**, ana iş parçacığı en uzun blok 110 → 96 ms;
+VM: bütçeyi aşan UI karesi 14 → 5, LAYOUT p99 **34 → 20 ms** (en çok 90 → 27);
+aşan karelerde `_NativeParagraph._layout` %62 → %33, `maskSensitiveNumbers` %8,4
+ve `isCredentialNote` %2,2 → listeden çıktı. Arama (5 harf + silme): en uzun
+UI karesi **465 → 143 ms**, ana blok 482 → 150 ms. Kapanış (kısa sabit not):
+en kötü kare 29 → 34 ms (gürültü), `NoteCard.build` kapanış karesinde hâlâ %3.
+**Kabul SAĞLANMADI** (hedef takılma < %1, kare < 33 ms, LAYOUT p99 < 8 ms,
+arama < 16 ms). Kalan, ölçülen: (1) her yeni kart dilimini (≤ 600 karakter,
+10 satır) ve maddelerini (≤ 200) yine şekillendiriyor — görünen ~100 karakter;
+(2) aramada sorgu değişince önbellek payındaki ~130 kartın HEPSİ yeniden
+kuruluyor (`SliverMultiBoxAdaptorElement.performRebuild` %17, BUILD 50-74 ms);
+(3) hücre `Consumer` + kart `ConsumerWidget` bağlama %10 (`mount`). Önerilen
+devam: dilimi görünen satıra göre daralt (5 satır / ~300) ve aramada yalnız
+görünen kartları yenile — ayrı karar/oturum.
+
+- [x] **F21.1 Önizleme dilimi.** Gövdenin kartta görünecek kadarı:
   `previewSlice(body)` — ilk ~10 satır ve ≤ ~600 karakter (kod birimi değil
   grapheme sınırında kes). `mask`, `richSpans`, `stripRichMarkers`,
   `foldForSearch` YALNIZ dilime. Liste maddesi metni de ≤ ~200 karakter. Başlık
   zaten kısa ama aynı kapıdan geçsin. Biçim işareti dilimin sonunda kapanmamış
   kalırsa düz metin çizilsin (`richSpans` eşleşmeyeni düz sayıyor — testle doğrula).
-- [ ] **F21.2 Önizleme önbelleği.** Not örneği (kimlik/`updatedAt`) + ayar
+  **Yapıldı:** `card_preview.dart` `previewSlice` (10 satır / 600, grafem sınırı
+  `CharacterRange.at`, satır ortasında `…`); örtme dilimden 64 karakter taşar
+  (kesimde bölünen numara açık kalmasın); madde/sayfa notu 200; başlık dilimlenir
+  (örtülmez, eskisi gibi). Liste görünümü satırı (`NoteListRow`) da dilimden.
+- [x] **F21.2 Önizleme önbelleği.** Not örneği (kimlik/`updatedAt`) + ayar
   kümesi → hazır önizleme (`InlineSpan` ya da küçük bir değer nesnesi);
   `isCredentialNote` / hassas tarama not sürümü başına bir kez. Mevcut
   `_cardCache` (dashboard) aynı örneği döndürüyor ama ilk kurulum ve her not
   değişiminde maliyet hâlâ tam metin — önbellek dilim üzerinden.
-- [ ] **F21.3 Arama vurgusu dilimin dışındaysa** eşleşmenin çevresinden kısa
+  **Yapıldı:** `CardPreview.of(note, hideSensitive:)` — not ÖRNEĞİ başına
+  `Expando` (akış değişmeyen notun örneğini koruyor): başlık/gövde/madde
+  dilimleri, ekran okuyucu etiketi, TAM metinde parola taraması bir kez.
+- [x] **F21.3 Arama vurgusu dilimin dışındaysa** eşleşmenin çevresinden kısa
   kesit göster ("… eşleşen kelime …", Keep gibi); yoksa sonuç kartında vurgu
   görünmez olur. Süzme (`filteredNotesProvider`) tam metinle kalır.
-- [ ] **F21.4 Kart başına aboneliği azalt.** Kartta izlenen ayarlar
+  **Yapıldı:** ölçüt "dilimin dışı" değil "dar kartın ilk satırlarında
+  görünmüyor" (2 sütunlu telefonda 600 karakterin ~100'ü görünür).
+  `searchExcerpt` eşleşmenin satır başından ya da ~24 karakter önceki sözcükten
+  `… ` ile; gövde+konum süzgecin önbelleğinden (`bodySearchMatch`, önbelleğe
+  işaretsiz gövde eklendi) — kart uzun gövdeyi yeniden taramaz.
+- [x] **F21.4 Kart başına aboneliği azalt.** Kartta izlenen ayarlar
   (`cardDisplayProvider`, `cardRichPreviewProvider`, `cardHideSensitiveProvider`,
   `localFilesRevisionProvider`, klasör adı için `showAllNotesProvider` /
   `selectedFolderProvider` / `foldersStreamProvider`, `myNoteSharesProvider`)
   ızgara düzeyinde BİR kez izlensin, karta değer olarak geçsin; seçim durumu
   yalnız seçim kipi açıkken hücre düzeyinde. Hedef: kart `StatelessWidget` (ya
   da tek `watch`). Bu, K5'teki Riverpod duraklat/sürdür maliyetini de düşürür.
-- [ ] **F21.5 Kart kurulumunda bellek çalkantısı:** regex/dize üretimi dilim ve
+  **Yapıldı (tek watch):** `_cardEnvProvider` hepsini toplar, kart `select`
+  ile yalnız kendi kaydını çeker (9 abonelik → 1; klasör adı yalnız arama /
+  "Tümü"de ikinci). Kart API'si değişmedi (7 çağrı yeri aynen). Kart hâlâ
+  `ConsumerWidget`; `mount` payı sürüyor (yukarıdaki (3)).
+- [x] **F21.5 Kart kurulumunda bellek çalkantısı:** regex/dize üretimi dilim ve
   önbellekle düşer; kaydırmada scavenge sayısını ölç (taban 34 / 13 sn).
+  **Ölçüldü:** 10 fırlatmada scavenge **29 → 27** (en uzun 10,9 → 8,4 ms) —
+  sayı pek düşmedi; çalkantı artık metinden değil widget/eleman üretiminden.
 - Kabul: kaydırma senaryosu takılan kare **< %1**, en kötü kare < 33 ms,
   LAYOUT p99 < 8 ms; arama senaryosunda en uzun ana blok < 16 ms; kapanış
   profilinde `NoteCard.build` / `maskSensitiveNumbers` YOK; testler: dilim
@@ -364,3 +399,4 @@ Ayrıntı ve komutlar: `tool/perf/README.md`. Özet:
 | Tarih | Sürüm | Kaydırma takılan % / en kötü | Kapanış en kötü | Kısa not yazma: kayıt sonrası ana blok | 35 KB yazma tuş→kare | Açılış ilk kare / donuk kare |
 |---|---|---|---|---|---|---|
 | 2026-11-03 | v1.1.613 | %6,5 / 99–115 ms | 99 ms (12/12) | 27–56 ms | 90–110 ms LAYOUT, 4,6 fps | ~770 ms / 313–396 ms |
+| 2026-11-03 | profil, Faz 21 öncesi → sonrası | %8,4 / 115 ms → %3,5 / 50–66 ms | — | — | — | — |

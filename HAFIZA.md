@@ -179,9 +179,18 @@ maddeyi GÜNCELLE.
   yok; profilde CPU örnekleyici `setFlag profiler true` ister. Test telefonunda
   yan yana "Notlar Ölçüm" (`dev.kaimau.notlar.olcum`, 244 not) kurulu.
   Varsayılan kimlikle `flutter run/drive` o telefonda ASLA (kaldır-kur → veri gider).
-- **Ölçülen kök nedenler (2026-11-03):** kart önizlemesi TÜM gövdeyi
-  mask+rich+yerleşimden geçiriyor (kaydırma karelerinde CPU'nun %60'ı metin
-  yerleşimi; `maxLines` şekillendirmeyi kısmaz); tek `TextField` tuş başına
+- **Kart önizlemesi DİLİM (F21, 2026-11-03):** kart notun yalnız baştaki
+  dilimini işler (`card_preview.dart`: `previewSlice` 10 satır / 600 kod
+  birimi, grafem sınırında; madde 200). `maxLines` şekillendirmeyi KISMAZ —
+  kartta TAM metni maske/biçim/`Text`ten geçiren kod yazma. Örtme dilimden
+  64 karakter taşar (kesimde bölünen numara açık kalmasın). `CardPreview.of`
+  not ÖRNEĞİ başına (Expando): dilim + TAM metinde parola taraması bir kez.
+  Aramada eşleşme görünen başta değilse kesit (`searchExcerpt`; gövde+konum
+  süzgecin önbelleğinden, `bodySearchMatch`). Kart TEK abonelik:
+  `_cardEnvProvider` + `select` (kayıt `==`) — yeni kart ayarı oraya, karta
+  ayrı `ref.watch` koyma.
+- **Ölçülen kök nedenler (2026-11-03):** kart önizlemesi (F21'de çözüldü,
+  yukarıda); tek `TextField` tuş başına
   O(n) (35 KB'ta 90–110 ms); FlutterFire her olayda TÜM koleksiyonu ana iş
   parçacığında kodluyor + `serverTimestamp` kayıt başına 2 olay (27–56 ms
   blok); HeroController her geçişte tüm ağacı geziyor (elle Hero yok, yalnız
