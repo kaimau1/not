@@ -25,8 +25,9 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 3. **KARAR GEREKİR** etiketli maddede önce kısa öneri sun, onay al
    (AskUserQuestion). Kullanıcının daha önce verdiği kararı yeniden açma
    (HAFIZA'daki "kullanıcı kararı" maddeleri).
-4. Her madde: düzeltme + mümkünse test. Oturum sonunda `flutter analyze`
-   temiz ve `flutter test -j 4` tamamen yeşil olmadan "bitti" denmez.
+4. Her madde: düzeltme + mümkünse test. Oturumda değişenin testi; tam takım
+   (`flutter analyze` + `flutter test -j 4`) CI'da — CI yeşil olmadan "bitti"
+   denmez (CLAUDE.md › DOĞRULAMA — KISA YOL).
 5. Oturum sonunda: biten maddeyi `[x]` + altına 1–2 satır **Yapıldı:**;
    yapılamayanı `ERTELENDİ: neden` — bulutta yapılamadığı anlaşılırsa
    Faz 19'a taşı ve oraya yaz. **Durum** tablosunu güncelle; kalıcı karar /
@@ -58,6 +59,7 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 |---|---|---|---|---|
 | 18 | Bulut oturumunda yapılabilecekler (31 madde) | Bitti (F18.20/27/28 hariç — nedenleri maddelerde) | 2026-11-02 | 2. oturum: F18.7 ilk yeşil ölçüm (taban yazıldı), F18.9 kısmen (kalanı F19.C6), F18.10, F18.22, F18.23; F18.20 → F19.B8; 4. oturum: F18.29, F18.30, geniş ekran C; F18.27/28 Play kararına bağlı |
 | 19 | Telefon, konsol, hesap işleri (senin) | Kısmen | 2026-11-01 | A3, B5, B7, C3 bitti; B6 ertelendi (ölçüm zaman aşımı); C1/C2/C4 kısmen (nedenleri maddelerde); A1, A2, A4, A5, B1–B4, C5, C6, C7, D açık |
+| 28 | Kullanıcı listesi 2026-11-03 (5 madde, bulut) | Açık | 2026-11-03 | Sıra: F28.5 → F28.3 → F28.4 → F28.2 → F28.1; F28.1/F28.2 KARAR |
 
 ---
 
@@ -374,6 +376,61 @@ hâlâ."** Karar değişmeden bu bölüme başlanmaz; değişirse önce F18.27.
   F18.10'da otomatik doğrulananları ve eskiyenleri at. Sonuç `KALANLAR.md`
   §2'nin yerine geçer ve **F19.C1** olur.
   **Yapıldı (2026-11-02):** `KALANLAR.md` §2 → 20 adımlık ~10 dk duman testi (F18'in yeni adımları dahil); eski 143 madde `KALANLAR_ARSIV.md` sonunda. Bu liste artık **F19.C1**.
+
+---
+
+## FAZ 28 — Kullanıcı listesi 2026-11-03 (bulut oturumu)
+
+Sıra (kırık önce): **F28.5 → F28.3 → F28.4 → F28.2 → F28.1**. Protokol Faz 18
+ile aynı ("Faz 28'i yap" sıradaki açık maddeden, "F28.3'ü yap" tek madde).
+Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
+
+- [ ] **F28.5 Web'de üç nokta menüsünden Ayarlar açılmıyor (KIRIK).**
+  Kod görünüşte doğru: `dashboard_menu.dart` `case 'settings'` →
+  `context.push('/settings')`; rota `router.dart` (`path: '/settings'`).
+  Önce yayındaki web'de / `flutter run -d web-server` ile yeniden üret
+  (dar + geniş ekran, misafir + Google hesap); kök neden adayları: menü
+  kapanırken bağlamın düşmesi, geniş ekran yan yana düzeninde iç gezgin,
+  yönlendirme koruması (`redirect`). Düzelt + menüden Ayarlar'a giden
+  widget testi. Diğer menü maddelerinin (Arşiv, Çöp, Kılavuz) de web'de
+  açıldığını aynı testte doğrula.
+- [ ] **F28.3 Web'de ve tablette her zaman görünen "Ana sayfaya dön" düğmesi.**
+  Her ekranda (not, Ayarlar, AI, Arşiv, Çöp, Kılavuz, klasör) tek dokunuşla
+  `/`; geçmiş yığını temizlenir (`context.go('/')`), açık not kaydı
+  flush edilir. Yer: tablet rayının (64 dp) tepesi ve dar web'de üst çubuk;
+  tam ekran kipinde (liste gizli) de görünsün. Telefonda değişiklik yok.
+  İlgili: `router.dart`, `app_commands.dart`, tablet rayı. Kısayol (ör.
+  Alt+Home) + kısayol yardımına satır. Test: her rotadan düğme → `/`.
+- [ ] **F28.4 Balonlu ve sabit mod arasında görsel farklılık.** Önce iki
+  modu aynı notla yan yana ekran görüntüsüyle karşılaştır (web turu,
+  scratchpad) ve farkları listele (yazı tipi/boyut, satır aralığı, kenar
+  boşluğu, ek/görsel kutuları, renk/zemin, başlık). Kullanıcıya listeyi
+  göster, hangi modun "doğru" olduğunu sor; sonra ortak stil kaynağına
+  bağla (iki yerde ayrı sabit kalmasın). İlgili: `note_editor_media_view.dart`,
+  `pinned_media_pane.dart`, `text_page_box.dart`, `note_images.dart`.
+  Test: iki modda aynı stil değerleri (golden ya da stil karşılaştırma).
+- [ ] **F28.2 Ek senkronunu baştan yaz; bugünkü yapı silinsin — KARAR GEREKİR
+  (büyük).** Bugünkü parçalar: `attachment_repository.dart`, `upload_queue.dart`,
+  `drive_store.dart`, `drive_ui.dart`, `attachment_strip.dart`, Ayarlar'daki
+  senkron anahtarı; bilinen sorunlar: telefondan çıkmamış ekler, web'de ölü
+  `blob:` adresleri, ek başına ayrı dokunuş. Önce kısa tasarım + KARAR:
+  (a) tek depolama yeri (Firebase Storage mı Google Drive mı), (b) durum
+  makinesi (yerel → kuyrukta → yüklendi → her cihazda indirilebilir; hata ve
+  yeniden deneme), (c) **mevcut ekler**: "silinsin" kodu mu kastediyor, buluttaki
+  ek verisini mi — kullanıcı verisi silinmeden önce AÇIKÇA sor; varsayılan:
+  kod silinir, mevcut ekler yeni yapıya bir kez göç eder. Sonra eski kod
+  kaldırılır (ölü yol bırakılmaz), testler yeni durum makinesi üzerinden.
+- [ ] **F28.1 Gmail bağlantısı: e-postaları gör, kaydet, içerikten not al —
+  KARAR GEREKİR.** Google girişi + Drive'daki ek-kapsam akışı örnek
+  (`drive_store.dart`). Kapsam: `gmail.readonly` (kısıtlı kapsam → OAuth
+  "Testing" modunda kişisel kullanım sorunsuz; yayına alınırsa Google
+  güvenlik denetimi gerekir — Play kararıyla bağlantılı). Özellik: gelen
+  kutusu listesi + arama, e-postayı nota kaydet (konu → başlık, gövde →
+  metin, ekler → not ekleri, kaynak bağlantısı), AI ile içerikten özet /
+  görev listesi / not çıkarma (mevcut Gemini asistanı). KARAR: yalnız okuma mı
+  (önerilen) yoksa etiketleme/arşivleme de mi; web + Android birlikte.
+  Konsol adımı → Faz 19: Google Cloud'da "Gmail API" etkin + OAuth onay
+  ekranına kapsam.
 
 ---
 
