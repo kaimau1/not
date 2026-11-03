@@ -6594,4 +6594,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get placementHintBody =>
       'Pinned: top of the note · Floating: within the text · Bubbles: notes on top · Attached: file below';
+
+  @override
+  String showMoreChecked(int n) {
+    return 'Show checked ($n hidden)';
+  }
+
+  @override
+  String get hideMoreChecked => 'Collapse checked';
 }

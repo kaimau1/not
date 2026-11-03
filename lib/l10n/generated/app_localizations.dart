@@ -11743,6 +11743,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sabit: notun tepesinde · Yüzen: yazının arasında · Balonlu: üstüne not · Ek: altta dosya'**
   String get placementHintBody;
+
+  /// No description provided for @showMoreChecked.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşaretlileri göster ({n} gizli)'**
+  String showMoreChecked(int n);
+
+  /// No description provided for @hideMoreChecked.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşaretlileri daralt'**
+  String get hideMoreChecked;
 }
 
 class _AppLocalizationsDelegate

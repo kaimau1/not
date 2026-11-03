@@ -241,7 +241,8 @@ final shareIntakeProvider = Provider<void>((ref) {
         notes: notes,
         folderNames: {for (final f in folders) f.id: f.name},
         cardBuilder: (n) => NoteCard(note: n),
-        askMode: asksMode,
+        // Kip SORULMAZ (2026-11-03, `askMode` verilmez): yeni not klasik
+        // açılır, balonlu görünüm notun içinden seçilir.
         newNoteLabel: !asksMode
             ? null
             : docKind == AttachmentKind.slide

@@ -514,6 +514,15 @@ class ItemsEditorState extends State<ItemsEditor>
   /// hiç yok). Geçiş (460 ms) BİTTİKTEN sonra, kare başına [_kRowsPerFrame]
   /// madde.
   static const _kFirstRows = 12;
+
+  /// **İŞARETLİLER 10'AR** (kullanıcı isteği 2026-11-03: "çok işaretli
+  /// maddesi olan notlar kasıyor; belli sayının üzerindeki işaretliler
+  /// gizlensin, 'işaretlileri göster' ile her basışta 10 tanesi yüklensin,
+  /// not kapanınca da kapansın"). İşaretli blokta ilk [_kCheckedStep] madde
+  /// kurulur; kalanı ağaçta HİÇ yok (kurulum, ölçüm, sarma maliyeti yok).
+  /// Durum yalnız bu açılışa ait — not yeniden açılınca yine 10.
+  static const _kCheckedStep = 10;
+  int _checkedShown = _kCheckedStep;
   static const _kRowsPerFrame = 4;
   static const _kGrowAfter = Duration(milliseconds: 1100);
 
@@ -1736,6 +1745,10 @@ class ItemsEditorState extends State<ItemsEditor>
     // Kademeli ilk kurulum (bkz. [_rowBudget]): yalnız ÖNEK kurulur, yani
     // sürükleme dizinleri [_reorder]'ın eşlemesiyle yine örtüşür.
     final checkedCount = checkedItems.length;
+    final checkedHidden = math.max(0, checkedCount - _checkedShown);
+    if (checkedHidden > 0) {
+      checkedItems = checkedItems.sublist(0, _checkedShown);
+    }
     final budget = _rowBudget;
     if (budget != null) {
       if (listItems.length > budget) listItems = listItems.sublist(0, budget);
@@ -1806,6 +1819,31 @@ class ItemsEditorState extends State<ItemsEditor>
         // her işaret ve görsel eklenince bütün üstü çizili satırlar (metin
         // alanı, taşma ölçümü, sarma ölçümü) yeniden kuruluyordu.
         for (final item in checkedItems) _cachedItemRow(item),
+        if (checkedHidden > 0 || _checkedShown > _kCheckedStep)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 2, 12, 0),
+            child: Wrap(
+              spacing: 4,
+              children: [
+                if (checkedHidden > 0)
+                  TextButton.icon(
+                    key: const ValueKey('items-show-more-checked'),
+                    onPressed: () =>
+                        setState(() => _checkedShown += _kCheckedStep),
+                    icon: const Icon(Icons.expand_more, size: 20),
+                    label: Text(l10n.showMoreChecked(checkedHidden)),
+                  ),
+                if (_checkedShown > _kCheckedStep)
+                  TextButton.icon(
+                    key: const ValueKey('items-hide-checked'),
+                    onPressed: () =>
+                        setState(() => _checkedShown = _kCheckedStep),
+                    icon: const Icon(Icons.expand_less, size: 20),
+                    label: Text(l10n.hideMoreChecked),
+                  ),
+              ],
+            ),
+          ),
         if (checkedItems.isNotEmpty)
           _floatRow(
             reserved: _kButtonRowWidth,

@@ -174,7 +174,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('balonlu PDF notu rozetle ayırt edilir', (tester) async {
+    testWidgets('balonlu PDF notunda tür rozeti YOK (görünüm notta seçilir)', (tester) async {
       await pump(
         tester,
         Note(
@@ -185,7 +185,7 @@ void main() {
           updatedAt: DateTime(2026, 10, 15),
         ),
       );
-      expect(find.text('BALONLU PDF'), findsOneWidget);
+      expect(find.text('BALONLU PDF'), findsNothing);
       expect(find.text('rapor.pdf'), findsOneWidget);
       expect(find.text('2 balon'), findsOneWidget);
       expect(tester.takeException(), isNull);

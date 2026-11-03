@@ -2657,7 +2657,24 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // ne açtığını söyler hem DURUMU gösterir (Ö6) — etiket varsa dolu
       // etiket simgesi ve sayısı, hatırlatıcı kuruluysa dolu ve vurgulu
       // alarm.
-      child: Chip(
+      // ÜST ÇUBUKTA (başlık oradayken) tek simge: üç simgeli çip başlığı
+      // 40 dp'ye sıkıştırıp üstüne biniyordu (kullanıcı bulgusu 2026-11-03,
+      // ekran görüntüsü "Lüt[çip]").
+      child: titleInBar
+          ? Padding(
+              key: const ValueKey('note-meta-chip'),
+              padding: const EdgeInsets.all(6),
+              child: Icon(
+                note.tags.isNotEmpty || note.reminderAt != null
+                    ? Icons.label
+                    : Icons.new_label_outlined,
+                size: 20,
+                color: note.tags.isNotEmpty || note.reminderAt != null
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+            )
+          : Chip(
         key: const ValueKey('note-meta-chip'),
         label: ValueListenableBuilder<bool>(
           valueListenable: _titleGeneratingN,
@@ -4082,12 +4099,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       icon: const Icon(Icons.undo),
                       onPressed: _canUndo ? _undo : null,
                     ),
-                    IconButton(
-                      key: const ValueKey('editor-redo'),
-                      tooltip: l10n.redo,
-                      icon: const Icon(Icons.redo),
-                      onPressed: _canRedo ? _redo : null,
-                    ),
+                    // Başlık üst çubuktayken yer dar: yinele yalnız
+                    // kullanılabilirken.
+                    if (_barTitle == null || _canRedo)
+                      IconButton(
+                        key: const ValueKey('editor-redo'),
+                        tooltip: l10n.redo,
+                        icon: const Icon(Icons.redo),
+                        onPressed: _canRedo ? _redo : null,
+                      ),
                   ],
                 ),
               ),
@@ -4096,7 +4116,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               // [_collabMarker]).
               // GÖRÜNÜM (tema şeridi) üst çubukta — örnek uygulamadaki palet
               // düğmesi; biçim panelinden ve Ekle levhasından da açılır.
-              if (!_readOnly)
+              // Başlık üst çubuktayken görünüm ve sabitle ⋮ / biçim
+              // panelinde (başlığa yer kalsın).
+              if (!_readOnly && _barTitle == null)
                 Customizable(
                   id: UiItem.topTheme,
                   child: IconButton(
@@ -4105,6 +4127,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     onPressed: () => unawaited(_showColorSheet()),
                   ),
                 ),
+              if (_barTitle == null)
               Customizable(
                 id: UiItem.topPin,
                 child: IconButton(

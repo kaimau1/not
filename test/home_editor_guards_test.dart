@@ -177,12 +177,11 @@ void main() {
     });
 
     test('seçenekler türe göre; varsayılan kip başta', () {
-      expect(fileUsesFor(PickedFileKind.pdf, preferred: CaptureMode.classic), [
+      // Balonlu/klasik sorusu yok (2026-11-03): not klasik açılır.
+      expect(fileUsesFor(PickedFileKind.pdf, preferred: CaptureMode.bubbles), [
         FileUse.classic,
-        FileUse.bubbles,
       ]);
       expect(fileUsesFor(PickedFileKind.image, web: false), [
-        FileUse.bubbles,
         FileUse.classic,
         FileUse.transcribe,
       ]);
@@ -205,8 +204,8 @@ void main() {
               builder: (context) => TextButton(
                 onPressed: () async => picked = await showFileUseSheet(
                   context,
-                  kind: PickedFileKind.pdf,
-                  names: const ['rapor.pdf', 'ek.pdf'],
+                  kind: PickedFileKind.image,
+                  names: const ['rapor.jpg', 'ek.jpg'],
                   preferred: CaptureMode.bubbles,
                 ),
                 child: const Text('aç'),
@@ -217,9 +216,8 @@ void main() {
       );
       await tester.tap(find.text('aç'));
       await tester.pumpAndSettle();
-      expect(find.text('rapor.pdf'), findsOneWidget);
+      expect(find.text('rapor.jpg'), findsOneWidget);
       expect(find.text('+1 dosya daha'), findsOneWidget);
-      expect(find.text('Varsayılan'), findsOneWidget);
       await tester.enterText(
         find.byKey(const ValueKey('file-use-title')),
         'Toplantı',

@@ -569,50 +569,9 @@ class CardDocumentCover extends StatelessWidget {
                 ),
               ),
             ),
-            // Tür rozeti sol üstte: balonlu not ana ekranda sıradan bir PDF
-            // ekinden bakışta ayrılsın (sağ üstte kartın ⋮ düğmesi var).
-            PositionedDirectional(
-              start: 8,
-              top: 8,
-              end: 40,
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: scheme.primary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.chat_bubble_outline,
-                        size: 11,
-                        color: scheme.onPrimary,
-                      ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          pdf ? l10n.cardBubbleDocument : l10n.cardBubbleSlides,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: scheme.onPrimary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            // "BALONLU PDF" rozeti KALKTI (kullanıcı isteği 2026-11-03:
+            // "dashboarddaki balonlu PDF yazısı kalmasın, artık hepsini
+            // birleştirdik") — görünüm notun içinde seçilir.
           ],
         ),
       ),

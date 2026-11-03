@@ -57,6 +57,7 @@ Future<CaptureChoice?> showCaptureModeSheet(
   BuildContext context, {
   required String title,
   String? kind,
+  bool askAnyway = false,
 }) {
   SharedPreferences? prefs;
   try {
@@ -66,6 +67,15 @@ Future<CaptureChoice?> showCaptureModeSheet(
     ).read(sharedPreferencesProvider);
   } catch (_) {
     prefs = null; // sağlayıcısız ağaç (testler): hep sorulur
+  }
+  // KİP SORUSU KALKTI (kullanıcı isteği 2026-11-03: "not başlatırken
+  // balonlu-balonsuz seçimi kalksın, kişi içeride seçer"): hep klasik;
+  // balonlu görünüm notun içindeki görünüm anahtarından. Levha aşağıda
+  // korunuyor ([askAnyway] — testler ve ileride gerekirse).
+  if (!askAnyway) {
+    return Future.value(
+      const CaptureChoice(mode: CaptureMode.classic, noteTitle: ''),
+    );
   }
   final stored = prefs?.getString(captureModeDefaultKey);
   final preset = CaptureMode.values.where((m) => m.name == stored).firstOrNull;

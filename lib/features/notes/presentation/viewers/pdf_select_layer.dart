@@ -2,7 +2,11 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart'
-    show PointerDeviceKind, PointerHoverEvent, kPrimaryButton;
+    show
+        EagerGestureRecognizer,
+        PointerDeviceKind,
+        PointerHoverEvent,
+        kPrimaryButton;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:pdfrx/pdfrx.dart';
@@ -959,22 +963,37 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
     return Positioned(
       left: point.dx - touch / 2,
       top: point.dy - touch / 2 + 10,
-      child: GestureDetector(
+      // TUTAMAÇ JEST YARIŞINI HEMEN KAZANIR (kullanıcı bulgusu 2026-11-03:
+      // "metin seçilince kulakçıklar hareket ettirilemiyor"). KÖK NEDEN:
+      // `onPanStart` kaydırma eşiğinin İKİ katında kabul eder; sabit
+      // bölmedeki dikey kaydırma ve sayfa çeviren PageView'ın sürüklemesi
+      // eşiği önce geçip parmağı alıyordu. Eager tanıyıcı arenayı basışta
+      // kazanır, hareket ham işaretçi olaylarından okunur.
+      child: RawGestureDetector(
         behavior: HitTestBehavior.opaque,
-        onPanStart: (d) {
-          final at = _globalToOverlay(d.globalPosition);
+        gestures: {
+          EagerGestureRecognizer:
+              GestureRecognizerFactoryWithHandlers<EagerGestureRecognizer>(
+                EagerGestureRecognizer.new,
+                (_) {},
+              ),
+        },
+        child: Listener(
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: (d) {
+          final at = _globalToOverlay(d.position);
           if (at != null) setState(() => _magnifier = at - const Offset(0, 14));
         },
-        onPanUpdate: (d) {
-          _dragHandle(isStart, d.globalPosition);
-          _notifyDragAt(d.globalPosition);
+        onPointerMove: (d) {
+          _dragHandle(isStart, d.position);
+          _notifyDragAt(d.position);
         },
-        onPanEnd: (_) {
+        onPointerUp: (_) {
           _notifyDragAt(null);
           setState(() => _magnifier = null);
           _report();
         },
-        onPanCancel: () {
+        onPointerCancel: (_) {
           _notifyDragAt(null);
           setState(() => _magnifier = null);
         },
@@ -998,6 +1017,7 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
               ),
             ),
           ),
+        ),
         ),
       ),
     );

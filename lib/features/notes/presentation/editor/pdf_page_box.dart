@@ -149,6 +149,10 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   void initState() {
     super.initState();
     _attachDocument();
+    _zoom.addListener(_onZoom);
+    if (widget.fitWidth) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _flashBar());
+    }
   }
 
   /// Ekin kaynağı (yerel kopya → indirme adresi) için belge dinleyicisi.
@@ -235,6 +239,8 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     _pager?.dispose();
     _bubbles?.dispose();
     _selection.dispose();
+    _zoom.dispose();
+    _barHide?.cancel();
     super.dispose();
   }
 
@@ -252,6 +258,73 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   bool _selectionFromOcr = false;
 
   bool get _selectable => widget.onNoteFromSelection != null;
+
+  // ── OKUMA KİPİ: yakınlaştırma, şerit, balon (2026-11-03) ──────────────
+  /// İki parmakla / çift dokunuşla yakınlaştırma (yalnız [fitWidth]).
+  final _zoom = TransformationController();
+  bool _zoomed = false;
+  Offset? _doubleTapAt;
+
+  void _onZoom() {
+    final zoomed = _zoom.value.getMaxScaleOnAxis() > 1.01;
+    if (zoomed != _zoomed && mounted) setState(() => _zoomed = zoomed);
+  }
+
+  void _resetZoom() {
+    if (_zoom.value.getMaxScaleOnAxis() != 1) _zoom.value = Matrix4.identity();
+  }
+
+  /// Çift dokunuş: yakınsa sıfırlar, değilse dokunulan yere 2,5×.
+  void _toggleZoomAt(Offset? at) {
+    if (_zoomed) {
+      _resetZoom();
+      return;
+    }
+    final p = at ?? Offset.zero;
+    const scale = 2.5;
+    _zoom.value = Matrix4.identity()
+      ..translateByDouble(-p.dx * (scale - 1), -p.dy * (scale - 1), 0, 1)
+      ..scaleByDouble(scale, scale, 1, 1);
+  }
+
+  /// Sayfa şeridi görünür mü (yalnız [fitWidth]: sayfa değişince ya da
+  /// sayfaya dokununca belirir, 2,5 sn sonra söner).
+  bool _barShown = true;
+  Timer? _barHide;
+
+  void _flashBar() {
+    if (!widget.fitWidth) return;
+    _barHide?.cancel();
+    if (!_barShown && mounted) setState(() => _barShown = true);
+    _barHide = Timer(const Duration(milliseconds: 2500), () {
+      // Balon yazılırken / menü işlerken şerit kalır.
+      if (mounted && !_bubbleEdit) setState(() => _barShown = false);
+    });
+  }
+
+  void _toggleBar() {
+    if (!widget.fitWidth) return;
+    if (_barShown) {
+      _barHide?.cancel();
+      setState(() => _barShown = false);
+    } else {
+      _flashBar();
+    }
+  }
+
+  /// Sabit bölmede BALON EKLEME kipi (kullanıcı isteği 2026-11-03:
+  /// "sabitleme ekranında da balon ekleme olsun, bir buton yardımı ile").
+  /// Açıkken balon katmanı düzenlenebilir, sayfaya dokunmak balon bırakır;
+  /// yazma kartı kutunun dibinde.
+  bool _bubbleEdit = false;
+
+  void _toggleBubbleEdit() {
+    final controller = _bubbleController();
+    setState(() => _bubbleEdit = !_bubbleEdit);
+    controller.setAdding(_bubbleEdit);
+    if (!_bubbleEdit) controller.save();
+    _flashBar();
+  }
 
   void _onSelected(
     PdfDocument document,
@@ -402,6 +475,8 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     if (next == _page) return;
     final previous = _page;
     setState(() => _page = next);
+    _resetZoom();
+    _flashBar();
     final pager = _pager;
     if (pager != null && pager.hasClients) {
       if ((next - previous).abs() == 1) {
@@ -423,6 +498,8 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     final next = _clamp(index + 1);
     if (next == _page) return;
     if (_selection.page.value != 0) _clearSelection();
+    _resetZoom();
+    _flashBar();
     setState(() => _page = next);
     widget.onChanged(widget.attachment.copyWith(pdfPage: next));
   }
@@ -617,23 +694,16 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     final a = widget.attachment;
     final pager = _pager ??= PageController(initialPage: _page - 1);
     final swipe = widget.controls && widget.swipeToTurn;
-    final bubbles = widget.showBubbles && a.bubbles.isNotEmpty
+    final bubbles = widget.showBubbles && (a.bubbles.isNotEmpty || _bubbleEdit)
         ? _bubbleController()
         : null;
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // Yatay kaydırma sayfa çevirir: kutunun küçük düğmelerine nişan
-        // almadan da gezilebilsin. Dikey kaydırma NOTUN kendi kaydırması
-        // olarak kalır (çevirici yalnız yatay sürüklemeyi alır); uzun basıp
-        // kutuyu taşımak da bozulmaz (taşıma hareketsiz basılı tutmayla
-        // başlar, çevirici ise ancak parmak yana kayınca devreye girer).
-        ColoredBox(
+    final locked = _selecting || _zoomed;
+    final pages = ColoredBox(
           color: Colors.white,
           child: PageView.builder(
             controller: pager,
-            // Seçim sürerken sayfa çevrilmez (parmak yazıyı seçiyor).
-            physics: swipe && !_selecting
+            // Seçim sürerken / yakınken sayfa çevrilmez.
+            physics: swipe && !locked
                 ? const PageScrollPhysics()
                 : const NeverScrollableScrollPhysics(),
             allowImplicitScrolling: true,
@@ -651,22 +721,47 @@ class _PdfPageBoxState extends State<PdfPageBox> {
                 ),
               );
               if (!widget.fitWidth) return page;
-              // GENİŞLİĞE OTURAN sayfa: boyu taşarsa dikeyde kayar; alttaki
-              // çubuğun payı kadar dolgu (son satır çubuğun altında kalmasın).
+              // GENİŞLİĞE OTURAN sayfa: boyu taşarsa dikeyde kayar. Şerit
+              // kendiliğinden söndüğü için küçük bir dip payı yeter.
               final p = document.pages[i];
               final aspect = p.height <= 0 || p.width <= 0
                   ? 1 / 1.41
                   : (a.pdfTurns.isOdd ? p.height / p.width : p.width / p.height);
               return SingleChildScrollView(
-                physics: _selecting
+                physics: locked
                     ? const NeverScrollableScrollPhysics()
                     : const ClampingScrollPhysics(),
-                padding: EdgeInsets.only(bottom: widget.controls ? 36 : 0),
+                padding: const EdgeInsets.only(bottom: 24),
                 child: AspectRatio(aspectRatio: aspect, child: page),
               );
             },
           ),
-        ),
+        );
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Yatay kaydırma sayfa çevirir: kutunun küçük düğmelerine nişan
+        // almadan da gezilebilsin. Dikey kaydırma NOTUN kendi kaydırması
+        // olarak kalır (çevirici yalnız yatay sürüklemeyi alır); uzun basıp
+        // kutuyu taşımak da bozulmaz (taşıma hareketsiz basılı tutmayla
+        // başlar, çevirici ise ancak parmak yana kayınca devreye girer).
+        if (!widget.fitWidth)
+          pages
+        else
+          // YAKINLAŞTIRMA (kullanıcı isteği 2026-11-03): iki parmak ya da çift
+          // dokunuş; yakınken tek parmak sayfayı gezdirir, sayfa çevirme ve
+          // dikey kaydırma kilitli. Tek dokunuş sayfa şeridini aç/kapa.
+          GestureDetector(
+            onTap: _toggleBar,
+            onDoubleTapDown: (d) => _doubleTapAt = d.localPosition,
+            onDoubleTap: () => _toggleZoomAt(_doubleTapAt),
+            child: InteractiveViewer(
+              transformationController: _zoom,
+              maxScale: 4,
+              panEnabled: _zoomed,
+              child: pages,
+            ),
+          ),
         // El yazısı katmanı: PDF'in üzerine yapılan çizim kutuda da görünür
         // (tam ekranda çizip nota dönünce sayfa boş görünmesin). Genişliğe
         // oturan kipte sayfanın kendi katmanında (sayfayla birlikte kayar).
@@ -676,13 +771,53 @@ class _PdfPageBoxState extends State<PdfPageBox> {
               child: CustomPaint(painter: InkPainter(a.ink, _page)),
             ),
           ),
-        if (widget.controls)
+        if (widget.controls && !widget.fitWidth)
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
             child: _bar(context, document),
           ),
+        // OKUMA KİPİNDE ŞERİT (kullanıcı isteği 2026-11-03: "sayfa sayısının
+        // yazdığı koyu gri şerit çok kötü görünüyor; şeffaf olsun, açılıp
+        // kapansın, sayfa değiştikçe görülsün"): yüzen saydam hap, sayfa
+        // değişince ya da sayfaya dokununca belirir, sonra söner.
+        if (widget.controls && widget.fitWidth)
+          Positioned(
+            left: 8,
+            right: 8,
+            bottom: 8,
+            child: IgnorePointer(
+              ignoring: !_barShown,
+              child: AnimatedOpacity(
+                opacity: _barShown ? 1 : 0,
+                duration: const Duration(milliseconds: 220),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: _bar(context, document),
+                ),
+              ),
+            ),
+          ),
+        if (_bubbleEdit && bubbles != null) ...[
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: BubbleDock(controller: bubbles),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: ValueListenableBuilder<bool>(
+              valueListenable: bubbles.addingListenable,
+              builder: (context, adding, _) => adding
+                  ? BubbleToolbar(controller: bubbles)
+                  : const SizedBox.shrink(),
+            ),
+          ),
+        ],
         if (_selectable)
           Positioned(
             left: 6,
@@ -738,7 +873,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
             BubblePageLayer(
               controller: bubbles,
               page: pageNumber,
-              readOnly: true,
+              readOnly: !_bubbleEdit,
               longPressAdd: false,
             ),
         ],
@@ -815,7 +950,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     final showArrows = width >= 110;
     final big = width >= 150;
     return Material(
-      color: Colors.black.withValues(alpha: 0.55),
+      color: Colors.black.withValues(alpha: widget.fitWidth ? 0.38 : 0.55),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
         child: Row(
@@ -905,6 +1040,16 @@ class _PdfPageBoxState extends State<PdfPageBox> {
                 onPressed: () => widget.onChanged(
                   a.copyWith(bubblesHidden: !a.bubblesHidden),
                 ),
+              ),
+            // BALON EKLE (sabit bölme): kipi aç/kapa.
+            if (widget.fitWidth && widget.showBubbles && showMark)
+              _barButton(
+                key: const ValueKey('pdf-box-add-bubble'),
+                icon: _bubbleEdit ? Icons.check : Icons.add_comment_outlined,
+                tooltip: _bubbleEdit ? l10n.bubbleAddDone : l10n.bubbleAdd,
+                color: _bubbleEdit ? Colors.amber : Colors.white,
+                big: big,
+                onPressed: _toggleBubbleEdit,
               ),
             if (showMark)
               _barButton(

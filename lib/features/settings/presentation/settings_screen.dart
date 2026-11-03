@@ -465,13 +465,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords:
                 '${l10n.homeSharedAtBottomInfo} paylasilan siralama alt ust',
           ),
-          _SettingRow(
-            const CaptureModeSetting(),
-            title: l10n.captureModeSetting,
-            keywords:
-                '${l10n.captureModeBubbles} ${l10n.captureModeClassic} '
-                'balonlu klasik kip',
-          ),
+          // "İçerikten not açılışı" (Balonlu / Klasik / Sor) KALKTI
+          // (kullanıcı isteği 2026-11-03): not hep klasik açılır, görünüm
+          // notun içinde seçilir.
           // EKOSİSTEM (kullanıcı isteği 2026-10-17): kardeş uygulama Dosya
           // Okuyucu kuruluysa dosya seçimi onda, istenen türe süzülmüş açılır.
           // Kurulu değilse satır hiç çizilmez.

@@ -6573,4 +6573,12 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get placementHintBody =>
       'Sabit: notun tepesinde · Yüzen: yazının arasında · Balonlu: üstüne not · Ek: altta dosya';
+
+  @override
+  String showMoreChecked(int n) {
+    return 'İşaretlileri göster ($n gizli)';
+  }
+
+  @override
+  String get hideMoreChecked => 'İşaretlileri daralt';
 }

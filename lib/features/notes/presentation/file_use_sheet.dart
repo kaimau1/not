@@ -125,9 +125,11 @@ List<FileUse> fileUsesFor(
   CaptureMode? preferred,
   bool web = kIsWeb,
 }) {
-  List<FileUse> modes() => preferred == CaptureMode.classic
-      ? const [FileUse.classic, FileUse.bubbles]
-      : const [FileUse.bubbles, FileUse.classic];
+  // BALONLU/KLASİK SEÇİMİ KALKTI (kullanıcı isteği 2026-11-03: "not
+  // başlatırken balonlu-balonsuz seçimi kalksın, kişi içeride seçer"): not
+  // hep klasik açılır; görünüm (Sabit / Yüzen / Balonlu / Ek) notun içinde,
+  // ek eklenince çıkan yerleşim ipucuyla seçilir. [preferred] yok sayılır.
+  List<FileUse> modes() => const [FileUse.classic];
   return switch (kind) {
     PickedFileKind.image => [...modes(), if (!web) FileUse.transcribe],
     PickedFileKind.pdf || PickedFileKind.slides => modes(),
@@ -157,6 +159,10 @@ Future<FileUseChoice?> showFileUseSheet(
   CaptureMode? preferred,
 }) {
   final uses = fileUsesFor(kind, preferred: preferred);
+  // Tek seçenek (PDF/sunum): sorulacak bir şey yok, doğrudan nota.
+  if (uses.length == 1) {
+    return Future.value((use: uses.single, title: ''));
+  }
   return showAppSheet<FileUseChoice>(
     context: context,
     isScrollControlled: true,
