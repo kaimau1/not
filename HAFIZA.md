@@ -32,7 +32,10 @@ maddeyi GÜNCELLE.
 - graphify grafiği elle (`graphify update .`; bulutta `pip install graphifyy` ile venv'e); satır bilgisini koddan doğrula.
 
 ## CI (`.github/workflows/build.yml`)
-- APK yalnız main'de, commit **BAŞLIĞINDA** `[apk]`; dalda derlenmez. APK
+- APK yalnız main'de, commit **BAŞLIĞINDA** `[apk]`; dalda derlenmez.
+  TUZAK (2026-11-03): main'e ARDINDAN etiketsiz commit itmek koşan `[apk]`
+  koşusunu İPTAL eder (concurrency) → Release çıkmaz. Hafıza/ek düzeltme
+  aynı commit'e girsin ya da sonraki commit de `[apk]` taşısın. APK
   testi beklemez; Release TASLAK, `release` işi testler yeşilse yayınlar
   (+ F18.21: `tool/set_latest_build.js` → `config/app.latestBuild/
   latestName`), kırmızıysa siler. Sürüm adı `1.1.<koşu>`, versionCode koşu no.
