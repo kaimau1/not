@@ -35,7 +35,7 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 20…27):
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
 | 20 | Ölçüm kapısı (gerçekçi veri, yan yana profil derlemesi, CI bütçesi) | Açık | — | F20.1 bu oturumda yapıldı (araçlar) |
-| 21 | Ana ekran kartı: önizlemeyi kırp, kart başına işi azalt | Kısmen | 2026-11-03 | F21.1–5 yapıldı; takılma %8,4→%3,5, arama 465→143 ms; kabul sağlanmadı (bkz. faz notu) |
+| 21 | Ana ekran kartı: önizlemeyi kırp, kart başına işi azalt | Kısmen | 2026-11-03 | 2 tur: takılma %8,4→%3,4–4,2, en kötü 115→33–50 ms, arama 465→139 ms; kabul sağlanmadı — kalan engel raster+kurulum (K7) ve arama KARARI (faz notu) |
 | 22 | Firestore trafiği: yazımda tüm koleksiyon ana iş parçacığında | Açık | — | 3 KARAR maddesi |
 | 23 | Geçişler: not açma/kapama | Açık | — | Kapanışta her seferinde 99 ms |
 | 24 | Uzun not editörü: tuş başına O(n) | Açık | — | En büyük iş; mimari KARAR |
@@ -186,6 +186,24 @@ kuruluyor (`SliverMultiBoxAdaptorElement.performRebuild` %17, BUILD 50-74 ms);
 (3) hücre `Consumer` + kart `ConsumerWidget` bağlama %10 (`mount`). Önerilen
 devam: dilimi görünen satıra göre daralt (5 satır / ~300) ve aramada yalnız
 görünen kartları yenile — ayrı karar/oturum.
+
+**2. tur (aynı gün, aynı ölçüm):** dilim 10 satır/600 → **5 satır/300**, madde
+200 → 120; hücrenin odak/açık-not `Consumer`ı kartın tek aboneliğine katıldı
+(`NoteCard.frame`, hücre başına bir bağlama eksik). Kaydırma SF takılan
+%4,2 / %3,4 / %4,0 (üç koşu), en kötü **33,5 / 49,5 ms**, LAYOUT p99 19 ms
+(dilimi yarıya indirmek LAYOUT'u değiştirmedi), scavenge 27; arama en uzun
+kare 139 ms (BUILD 65, LAYOUT 126). **Kabul yine SAĞLANMADI; iki denemeden
+sonra yama yok, kalan engel ölçüldü:** (a) kaydırma: SF'ye hizalı atrace
+(`hitch.py`) — kalan takılmaların hepsi tek kaçan vsync (33 ms); o karelerde
+ana iş parçacığı 10-20 ms VE raster 10-17 ms birlikte → kart kurulumu +
+Impeller GLES çizimi birlikte bütçeyi aşıyor (K7; Faz 23.4 / Faz 26 GPU işi,
+kart küçük resim/zemin katmanları). (b) arama: süzgeç yalnız eşleşeni
+gösterdiği ve kesit eşleşmeyi her kartta görünür kıldığı için her tuşta
+görünen kartların vurgusu GERÇEKTEN değişiyor — "eşleşmesi değişmeyen kartı
+koru" önerisinin yakalayacağı kart yok; kare önbellek payındaki (1600 px,
+~30-40 kart) bütün kartların yeniden kurulumu + süzgeç sonrası ızgaranın
+yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramada
+önbellek payını daraltmak ya da vurguyu kartın dışına (katman) almak.
 
 - [x] **F21.1 Önizleme dilimi.** Gövdenin kartta görünecek kadarı:
   `previewSlice(body)` — ilk ~10 satır ve ≤ ~600 karakter (kod birimi değil
@@ -399,4 +417,4 @@ Ayrıntı ve komutlar: `tool/perf/README.md`. Özet:
 | Tarih | Sürüm | Kaydırma takılan % / en kötü | Kapanış en kötü | Kısa not yazma: kayıt sonrası ana blok | 35 KB yazma tuş→kare | Açılış ilk kare / donuk kare |
 |---|---|---|---|---|---|---|
 | 2026-11-03 | v1.1.613 | %6,5 / 99–115 ms | 99 ms (12/12) | 27–56 ms | 90–110 ms LAYOUT, 4,6 fps | ~770 ms / 313–396 ms |
-| 2026-11-03 | profil, Faz 21 öncesi → sonrası | %8,4 / 115 ms → %3,5 / 50–66 ms | — | — | — | — |
+| 2026-11-03 | profil, Faz 21 öncesi → sonrası | %8,4 / 115 ms → %3,5 / 50–66 ms (1. tur) → %3,4–4,2 / 33–50 ms (2. tur) | — | — | — | — |

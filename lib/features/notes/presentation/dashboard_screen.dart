@@ -140,7 +140,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (hit != null && identical(hit.$1, note) && hit.$2 == query) {
       return hit.$3;
     }
-    final card = NoteCard(note: note, highlightQuery: query);
+    final card = NoteCard(
+      note: note,
+      highlightQuery: query,
+      frame: (child, {required focused, required open}) => _FocusHalo(
+        focused: focused,
+        open: open,
+        noteId: note.id,
+        child: child,
+      ),
+    );
     _cardCache[note.id] = (note, query, card);
     return card;
   }

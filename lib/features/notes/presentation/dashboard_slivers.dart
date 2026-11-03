@@ -234,21 +234,10 @@ extension _DashSlivers on _DashboardScreenState {
         final note = items[index];
         // Asistanın dokunduğu not: kart kısa süre vurgulanır ve görünür alana
         // kaydırılır (bkz. focusedNoteProvider). Anahtar, kaydırma için
-        // kartın bağlamını bulmaya yarar. Consumer + select: vurgu değişince
-        // tüm dashboard değil yalnız ilgili hücre yeniden çizilir.
-        final card = Consumer(
-          builder: (context, cellRef, _) {
-            final focused = cellRef.watch(
-              focusedNoteProvider.select((id) => id == note.id),
-            );
-            return _FocusHalo(
-              focused: focused,
-              open: _isOpenNote(cellRef, note.id),
-              noteId: note.id,
-              child: _cachedCard(note, query),
-            );
-          },
-        );
+        // kartın bağlamını bulmaya yarar. Hale kartın İÇİNDEN çizilir
+        // ([NoteCard.frame]): odak/açık not kartın tek aboneliğinde, hücrede
+        // ayrı Consumer yok (F21.4) — vurgu değişince yalnız o kart kurulur.
+        final card = _cachedCard(note, query);
         void select() =>
             ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
         // Olağan hâl: uzun basış toplu seçime girer. SEÇİLİ bir kartta ise

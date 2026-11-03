@@ -115,4 +115,4 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 ## 4. Sonra yapılacak → `KALAN_ISLER_PLANI.md` (F18.17–F18.20, F18.22)
 
 - [ ] **Akıcılık Faz 20–27** → `AKICILIK_PLANI.md` (telefonda ölçülmüş kök nedenler; önerilen sıra 20 → 27, KARAR maddeleri F22.2–F22.4, F24.2, F25.1, F26.2) (2026-11-03)
-- [ ] **Faz 21 kabulü sağlanmadı** (kaydırma %3,5 takılma / 50–66 ms, arama 143 ms): dilimi görünen satıra daralt + aramada yalnız görünen kartları yenile — ayrıntı `AKICILIK_PLANI.md` Faz 21 notu (2026-11-03)
+- [ ] **Faz 21 kabulü sağlanmadı** (2 tur sonra kaydırma %3,4–4,2 / 33–50 ms, arama 139 ms): kalan engel raster+kart kurulumu birlikte (Faz 23.4/26) ve arama için KARAR (önbellek payı ya da vurgu katmanı) — `AKICILIK_PLANI.md` Faz 21 notu (2026-11-03)

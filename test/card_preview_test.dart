@@ -39,33 +39,40 @@ void main() {
       expect(identical(previewSlice(text), text), isTrue);
     });
 
-    test('uzun gövde: en çok 600 karakter, satır ortasında `…`', () {
-      final text = 'kelime ' * 2000;
-      final slice = previewSlice(text);
-      expect(slice.length, lessThanOrEqualTo(kPreviewMaxChars + 1));
-      expect(slice, endsWith('…'));
-      expect(text.startsWith(slice.substring(0, slice.length - 1)), isTrue);
-    });
+    test(
+      'uzun gövde: en çok kPreviewMaxChars karakter, satır ortasında `…`',
+      () {
+        final text = 'kelime ' * 2000;
+        final slice = previewSlice(text);
+        expect(slice.length, lessThanOrEqualTo(kPreviewMaxChars + 1));
+        expect(slice, endsWith('…'));
+        expect(text.startsWith(slice.substring(0, slice.length - 1)), isTrue);
+      },
+    );
 
-    test('uzun gövde: en çok 10 satır, satır sonunda `…` eklenmez', () {
-      final slice = previewSlice(lines(500));
-      expect('\n'.allMatches(slice), hasLength(kPreviewMaxLines - 1));
-      expect(slice, endsWith('satır 9'));
-    });
+    test(
+      'uzun gövde: en çok kPreviewMaxLines satır, satır sonunda `…` eklenmez',
+      () {
+        final slice = previewSlice(lines(500));
+        expect('\n'.allMatches(slice), hasLength(kPreviewMaxLines - 1));
+        expect(slice, endsWith('satır ${kPreviewMaxLines - 1}'));
+      },
+    );
 
     test('kesim grafem sınırında: emoji ve birleşik harf bölünmez', () {
-      // 👍🏽 dört kod birimi, TEK grafem; 600. birim içine düşer.
-      final emoji = '${'a' * 598}👍🏽${'b' * 50}';
+      // 👍🏽 dört kod birimi, TEK grafem; son birim içine düşer.
+      final emoji = '${'a' * (kPreviewMaxChars - 2)}👍🏽${'b' * 50}';
       final s1 = previewSlice(emoji);
       expect(hasLoneSurrogate(s1), isFalse);
-      expect(s1, '${'a' * 598}…');
-      // e + birleşik vurgu (U+0301) tek grafem: 600. birim vurguya düşer.
-      final accent = '${'a' * 599}é${'b' * 50}';
-      expect(previewSlice(accent), '${'a' * 599}…');
+      expect(s1, '${'a' * (kPreviewMaxChars - 2)}…');
+      // e + birleşik vurgu (U+0301) tek grafem: son birim vurguya düşer.
+      final accent = '${'a' * (kPreviewMaxChars - 1)}é${'b' * 50}';
+      expect(previewSlice(accent), '${'a' * (kPreviewMaxChars - 1)}…');
     });
 
     test('dilimin sonunda açık kalan biçim işareti düz metin çizilir', () {
-      final text = '${'x' * 590} **kalın ama kapanmıyor** son';
+      final text =
+          '${'x' * (kPreviewMaxChars - 10)} **kalın ama kapanmıyor** son';
       final slice = previewSlice(text);
       expect(slice, contains('**kalın'));
       // Çözümleyici eşleşmeyen işareti düz sayar: hiçbir şey yutulmaz.
@@ -80,7 +87,7 @@ void main() {
     });
 
     test('kesimde bölünen kart numarası da örtülür (yarısı açık kalmaz)', () {
-      final text = '${'a' * 590} 4543 1234 5678 9012 son';
+      final text = '${'a' * (kPreviewMaxChars - 10)} 4543 1234 5678 9012 son';
       final slice = previewSlice(text, mask: true);
       expect(slice, isNot(contains('4543')));
       expect(slice, contains('•'));
@@ -155,7 +162,7 @@ void main() {
       expect(CardPreview.of(n, hideSensitive: true).credential, isTrue);
     });
 
-    test('madde metni 200 karakterle sınırlı', () {
+    test('madde metni kPreviewItemChars ile sınırlı', () {
       final n = note('', items: ['uzun ' * 300]);
       final item = CardPreview.of(
         n,

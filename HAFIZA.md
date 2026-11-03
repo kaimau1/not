@@ -180,15 +180,17 @@ maddeyi GÜNCELLE.
   yan yana "Notlar Ölçüm" (`dev.kaimau.notlar.olcum`, 244 not) kurulu.
   Varsayılan kimlikle `flutter run/drive` o telefonda ASLA (kaldır-kur → veri gider).
 - **Kart önizlemesi DİLİM (F21, 2026-11-03):** kart notun yalnız baştaki
-  dilimini işler (`card_preview.dart`: `previewSlice` 10 satır / 600 kod
-  birimi, grafem sınırında; madde 200). `maxLines` şekillendirmeyi KISMAZ —
+  dilimini işler (`card_preview.dart`: `previewSlice` 5 satır / 300 kod
+  birimi, grafem sınırında; madde 120). `maxLines` şekillendirmeyi KISMAZ —
   kartta TAM metni maske/biçim/`Text`ten geçiren kod yazma. Örtme dilimden
   64 karakter taşar (kesimde bölünen numara açık kalmasın). `CardPreview.of`
   not ÖRNEĞİ başına (Expando): dilim + TAM metinde parola taraması bir kez.
   Aramada eşleşme görünen başta değilse kesit (`searchExcerpt`; gövde+konum
   süzgecin önbelleğinden, `bodySearchMatch`). Kart TEK abonelik:
   `_cardEnvProvider` + `select` (kayıt `==`) — yeni kart ayarı oraya, karta
-  ayrı `ref.watch` koyma.
+  ayrı `ref.watch` koyma; ana ekran halesi de oradan (`NoteCard.frame`,
+  hücrede `Consumer` yok). Dilimi 600→300 indirmek LAYOUT'u değiştirmedi:
+  kalan kaydırma takılması 33 ms'lik tek vsync, ana + raster BİRLİKTE (K7).
 - **Ölçülen kök nedenler (2026-11-03):** kart önizlemesi (F21'de çözüldü,
   yukarıda); tek `TextField` tuş başına
   O(n) (35 KB'ta 90–110 ms); FlutterFire her olayda TÜM koleksiyonu ana iş

@@ -15,12 +15,14 @@ import 'notes_providers.dart' show bodySearchMatch;
 /// metin motorundan geçiriyordu. Metin motoru `maxLines`'tan bağımsız bütün
 /// paragrafı şekillendirir: kaydırmada bütçeyi aşan karelerin CPU'sunun
 /// %60'ı `_NativeParagraph._layout`, LAYOUT 60-90 ms/kare; aramada 450 ms.
-/// Kart artık yalnız görünebilecek kadarını işler.
-const kPreviewMaxLines = 10;
-const kPreviewMaxChars = 600;
+/// Kart artık yalnız görünebilecek kadarını işler: gövde en çok 4 satır
+/// çizilir (5. satır kartın kendi `…`sunu korur); 300 karakter dört sütunlu
+/// tablette de dört satırı doldurur. 600'de kaydırma LAYOUT p99 hâlâ 20 ms'ydi.
+const kPreviewMaxLines = 5;
+const kPreviewMaxChars = 300;
 
-/// Madde ve sayfa notu satırı tek satır: 200 karakter en geniş kartı doldurur.
-const kPreviewItemChars = 200;
+/// Madde ve sayfa notu satırı tek satır: 120 karakter geniş kartı da doldurur.
+const kPreviewItemChars = 120;
 
 /// Örtme dilimin iki yanından bu kadar taşar: kesimde bölünen IBAN/kart
 /// numarası tanınmaz, ilk haneleri AÇIK görünürdü (IBAN en çok 64 karakter).

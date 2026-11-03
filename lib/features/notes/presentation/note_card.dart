@@ -312,6 +312,8 @@ typedef _CardEnv = ({
   Set<String> leaving,
   Map<String, NoteShare>? shares,
   bool allView,
+  String? focused,
+  String? open,
 });
 
 final _cardEnvProvider = Provider<_CardEnv>(
@@ -327,6 +329,11 @@ final _cardEnvProvider = Provider<_CardEnv>(
     allView:
         ref.watch(showAllNotesProvider) &&
         ref.watch(selectedFolderProvider) == null,
+    // Ana ekran hücresinin halesi (bkz. [NoteCard.frame]).
+    focused: ref.watch(focusedNoteProvider),
+    open: ref.watch(
+      openNoteIdsProvider.select((ids) => ids.isEmpty ? null : ids.last),
+    ),
   ),
 );
 
@@ -339,9 +346,16 @@ class NoteCard extends ConsumerWidget {
     this.ownerId,
     this.readOnly = false,
     this.showFolder = true,
+    this.frame,
   });
 
   final Note note;
+
+  /// Kartın çevresine çizilen hale (ana ekranda odak / açık not vurgusu).
+  /// Hücrede ayrı `Consumer` YOK (F21.4): odak ve açık not da kartın TEK
+  /// aboneliğinden gelir — kaydırmada hücre başına bir bağlama eksik.
+  final Widget Function(Widget card, {required bool focused, required bool open})?
+  frame;
 
   /// Arama sürerken notun klasör adı kartta yazsın mı? Klasörün kendi
   /// ekranında (zaten o klasördeyiz) false.
@@ -549,6 +563,8 @@ class NoteCard extends ConsumerWidget {
           // bütün kartlar yeniden kurulmasın.
           shared: e.shares?.containsKey(note.id) ?? false,
           allView: e.allView,
+          focused: frame != null && e.focused == note.id,
+          open: frame != null && e.open == note.id,
         ),
       ),
     );
@@ -893,7 +909,8 @@ class NoteCard extends ConsumerWidget {
     // BASINCA HAFİFÇE ÇÖKER (iOS dokunsal hissi — bkz. PressScale): dönüşüm
     // RepaintBoundary'nin DIŞINDA, yani kartın önbellekli katmanı yalnız
     // ölçeklenir, yeniden boyanmaz.
-    return _Leaving(
+    final framed = frame;
+    final out = _Leaving(
       leaving: leaving,
       child: PressScale(
         enabled: !selectionActive,
@@ -1024,6 +1041,9 @@ class NoteCard extends ConsumerWidget {
         ),
       ),
     );
+    return framed == null
+        ? out
+        : framed(out, focused: env.focused, open: env.open);
   }
 }
 
