@@ -29,6 +29,7 @@ import '../note_card_media.dart' show CardMediaTile, PdfFirstPageThumb;
 import '../../../../core/widgets/smooth_routes.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/friendly_error.dart';
+import 'attachment_clipboard.dart' show shareAttachment;
 
 /// Görsel olmayan ekleri (PDF, sunum, ses, video) gösteren yatay şerit.
 ///
@@ -888,6 +889,7 @@ class _AttachmentTile extends ConsumerWidget {
                   ),
                 if (onCopy != null)
                   tile('copy', AppIcons.copy, l10n.copy),
+                tile('share', Icons.share_outlined, l10n.share),
                 // EKİ FARKLI KAYDET (2026-10-17): kullanıcının seçtiği yere.
                 if (!attachment.isWebVideo)
                   tile(
@@ -931,6 +933,8 @@ class _AttachmentTile extends ConsumerWidget {
         onInsertTag?.call(attachment);
       case 'copy':
         onCopy?.call(attachment);
+      case 'share':
+        await shareAttachment(context, ref, attachment);
       case 'saveAs':
         await AttachmentSaveAs.run(context, ref, attachment);
       case 'transcribe':

@@ -148,6 +148,37 @@ class ViewerCommonActions extends StatelessWidget {
 }
 
 /// Ekin KENDİSİNİ (dosya; YouTube'da bağlantı) sistem paylaşımıyla gönderir.
+/// Görüntüleyici düğmesi, ek menüsü ve gömülü ek menüsü ortak kullanır.
+Future<void> shareAttachment(
+  BuildContext context,
+  WidgetRef ref,
+  Attachment a,
+) async {
+  final l10n = context.l10n;
+  final messenger = ScaffoldMessenger.of(context);
+  if (a.isWebVideo) {
+    await SharePlus.instance.share(
+      ShareParams(text: a.webUrl, subject: a.fileName),
+    );
+    return;
+  }
+  try {
+    final files = await NoteQuickExport.filesOf([
+      a,
+    ], attachments: ref.read(attachmentRepositoryProvider));
+    if (files.isEmpty) {
+      messenger.showMessage(l10n.shareAttachmentFilesNone);
+      return;
+    }
+    await SharePlus.instance.share(
+      ShareParams(files: files, subject: a.fileName),
+    );
+  } catch (e) {
+    messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
+  }
+}
+
+/// Ekin KENDİSİNİ (dosya; YouTube'da bağlantı) sistem paylaşımıyla gönderir.
 class ShareAttachmentButton extends ConsumerStatefulWidget {
   const ShareAttachmentButton({super.key, required this.attachment});
 
@@ -162,29 +193,9 @@ class _ShareAttachmentButtonState extends ConsumerState<ShareAttachmentButton> {
   bool _busy = false;
 
   Future<void> _share() async {
-    final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    final a = widget.attachment;
-    if (a.isWebVideo) {
-      await SharePlus.instance.share(
-        ShareParams(text: a.webUrl, subject: a.fileName),
-      );
-      return;
-    }
     setState(() => _busy = true);
     try {
-      final files = await NoteQuickExport.filesOf([
-        a,
-      ], attachments: ref.read(attachmentRepositoryProvider));
-      if (files.isEmpty) {
-        messenger.showMessage(l10n.shareAttachmentFilesNone);
-        return;
-      }
-      await SharePlus.instance.share(
-        ShareParams(files: files, subject: a.fileName),
-      );
-    } catch (e) {
-      messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
+      await shareAttachment(context, ref, widget.attachment);
     } finally {
       if (mounted) setState(() => _busy = false);
     }

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../../core/error_log.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/local_file.dart';
@@ -150,9 +151,17 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
   /// yeniden denenmez (izin yok, ek başkasının Drive'ında) — dokunuş dener.
   static final _busy = <String>{};
   static final _failed = <String>{};
+  static int _failedAtRevision = 0;
 
   Future<void> _fetch() async {
     final id = widget.attachment.driveId;
+    // Yeniden bağlanınca (yeni jeton) eskiden düşenler YENİDEN denenir
+    // (kullanıcı bulgusu 2026-11-03: "Drive ekleri webe hâlâ gelmiyor" —
+    // ilk denemede düşen ek sayfa yenilenene dek bir daha istenmiyordu).
+    if (_failedAtRevision != webDriveTokenRevision.value) {
+      _failed.clear();
+      _failedAtRevision = webDriveTokenRevision.value;
+    }
     if (_busy.contains(id) || _failed.contains(id)) return;
     final store = ref.read(driveStoreProvider);
     if (store == null || await ref.read(driveAuthProvider).accessToken() == null) {
@@ -167,7 +176,14 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
       );
     } catch (e) {
       debugPrint('Drive eki inmedi ($id): $e');
+      ErrorLog.record('web-drive-fetch', e);
       _failed.add(id);
+      if (mounted) {
+        final l10n = context.l10n;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showMessage(l10n.attachmentFailed(friendlyError(l10n, e)));
+      }
     } finally {
       _busy.remove(id);
     }
@@ -390,7 +406,12 @@ Future<Attachment?> resolveWebDriveAttachment(
               try {
                 connected = await auth.connect();
               } catch (e) {
+                // Sessiz yutma YOK (2026-11-03): açılır pencere engeli, hesap
+                // uyuşmazlığı vb. kullanıcıya söylenmeden "ekler gelmiyor"
+                // olarak kalıyordu.
                 debugPrint('Drive (web) bağlanamadı: $e');
+                ErrorLog.record('web-drive-connect', e);
+                say(l10n.attachmentFailed(friendlyError(l10n, e)));
               }
               if (dialogContext.mounted) {
                 Navigator.pop(dialogContext, connected);
