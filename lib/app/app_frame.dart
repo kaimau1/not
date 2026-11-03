@@ -63,13 +63,22 @@ class RailExtendedNotifier extends Notifier<bool?> {
 /// kapıları (Yapay Zekâ, Hatırlatıcılar, Arşiv, Çöp, Ayarlar, Yeni not)
 /// kendi menülerinde TEKRARLAMASIN diye okur (F11.8).
 class AppRailScope extends InheritedWidget {
-  const AppRailScope({super.key, required super.child});
+  const AppRailScope({super.key, this.docked = true, required super.child});
+
+  /// Ray gerçekten ekranda mı. Not açıkken ray çekmeceye döner, tam ekranda
+  /// gizlidir: o durumda "rayda zaten var" diye menüden düşen kapılar (Ayarlar
+  /// dahil) menüde KALMALI (F28.5: web'de ⋮ menüsünde Ayarlar yoktu).
+  final bool docked;
 
   static bool visible(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<AppRailScope>() != null;
+      context
+          .dependOnInheritedWidgetOfExactType<AppRailScope>()
+          ?.docked ??
+      false;
 
   @override
-  bool updateShouldNotify(AppRailScope oldWidget) => false;
+  bool updateShouldNotify(AppRailScope oldWidget) =>
+      docked != oldWidget.docked;
 }
 
 /// **GENİŞ EKRAN ÇERÇEVESİ** — kullanıcı isteği 2026-09-22: "not
@@ -226,7 +235,7 @@ class _RailFrameState extends State<_RailFrame>
                           context: context,
                           removeLeft: docked && !rtl,
                           removeRight: docked && rtl,
-                          child: AppRailScope(child: widget.child),
+                          child: AppRailScope(docked: docked, child: widget.child),
                         ),
                       );
                     },
