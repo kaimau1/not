@@ -170,6 +170,23 @@ maddeyi GÜNCELLE.
   `noteRouteClosing` ile kare başına 6 madde sökülür. YANLIŞ YOL: satıra
   `RepaintBoundary` (kazanç yok). TUZAK: yerel ölçüm ayrı `applicationId` +
   `google-services.json` ister (commit'leme); Xiaomi USB onayı 8 sn.
+- **Akıcılık ölçümü (2026-11-03, `AKICILIK_PLANI.md`, araçlar `tool/perf/`):**
+  Flutter 3.47 Android'de Dart UI = ana iş parçacığı (birleşik, KAPATILAMAZ:
+  `DisableMergedPlatformUIThread` motorda yasak) → her platform kanalı
+  çağrısının Java tarafı kareyi bekletir. Adreno ≤ 650 → Impeller OpenGLES
+  (motor kara listesi). Release'te Skia A/B `am start … --ez enable-impeller
+  false` ile; kaydırmada fark yok (sorun Dart). Release'te Dart zaman çizelgesi
+  yok; profilde CPU örnekleyici `setFlag profiler true` ister. Test telefonunda
+  yan yana "Notlar Ölçüm" (`dev.kaimau.notlar.olcum`, 244 not) kurulu.
+  Varsayılan kimlikle `flutter run/drive` o telefonda ASLA (kaldır-kur → veri gider).
+- **Ölçülen kök nedenler (2026-11-03):** kart önizlemesi TÜM gövdeyi
+  mask+rich+yerleşimden geçiriyor (kaydırma karelerinde CPU'nun %60'ı metin
+  yerleşimi; `maxLines` şekillendirmeyi kısmaz); tek `TextField` tuş başına
+  O(n) (35 KB'ta 90–110 ms); FlutterFire her olayda TÜM koleksiyonu ana iş
+  parçacığında kodluyor + `serverTimestamp` kayıt başına 2 olay (27–56 ms
+  blok); HeroController her geçişte tüm ağacı geziyor (elle Hero yok, yalnız
+  FAB `heroTag`ları). Zamanlama/parça
+  hileleri (ilk N madde, kare başına K) belirti yaması — önce kök neden.
 - **Klavye/kapanış kasması (2026-11-03)**: (1) büyüme klavye animasyonuna
   biniyordu → klavye yüksekliği değiştikçe 320 ms bekler (`_keyboardMoving`).
   (2) Örtülü ana ekran `MediaQuery`yi geçiriyordu (klavyenin her karesinde

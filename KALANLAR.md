@@ -113,3 +113,5 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 - [ ] Web debug konsolunda "+" düğmesinin ipucunda `RenderFollowerLayer` uyarısı (yalnız debug assert) — kaynağı araştırılmadı (2026-11-02)
 
 ## 4. Sonra yapılacak → `KALAN_ISLER_PLANI.md` (F18.17–F18.20, F18.22)
+
+- [ ] **Akıcılık Faz 20–27** → `AKICILIK_PLANI.md` (telefonda ölçülmüş kök nedenler; önerilen sıra 20 → 27, KARAR maddeleri F22.2–F22.4, F24.2, F25.1, F26.2) (2026-11-03)
