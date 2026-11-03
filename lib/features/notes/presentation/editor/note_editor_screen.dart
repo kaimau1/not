@@ -51,6 +51,7 @@ import '../../../../core/utils/note_fonts.dart';
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/note_guard.dart';
 import '../../../../core/utils/sentence_select.dart';
+import '../../../../core/utils/pdf_ref.dart';
 import '../../../../core/utils/video_time.dart';
 import '../../../../core/utils/youtube.dart';
 import '../../../../core/widgets/customizable.dart';
@@ -644,6 +645,32 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Gövde metninin sayfa kenarlarından boşluğu.
   static const double _kGutter = 16;
+
+  /// Editörün üst çubuğunun yüksekliği (bkz. AppBar `toolbarHeight`).
+  static const double _kEditorToolbarHeight = 48;
+
+  /// Az önce BU EKRANDA eklenen ve sayfada yüzen ek — tuval onu seçip
+  /// görünüm anahtarını ipucuyla gösterir (bkz.
+  /// [NotePageCanvas.placementHintId]); gösterilince temizlenir.
+  String? _placementHintId;
+
+  /// Üst çubuğun başlığı: başlık alanı oraya taşındıysa (bkz.
+  /// [_titleInBar]) dolu, değilse null (tarih gösterilir). `build` içinde
+  /// gövdeyi kurarken yazılır, aynı build'deki AppBar okur.
+  Widget? _barTitle;
+
+  /// Başlık üst çubukta mı: medya notun tepesine SABİTLENMİŞ ya da not
+  /// balonlu belge görünümünde (belge üstte, sayfa notu altta). Balona
+  /// yazılırken (sürükleyici kip) başlık zaten gizlenir.
+  bool _titleInBar(Note note) {
+    if (note.type.isPageNoteType) {
+      final kind = note.type == NoteType.slides
+          ? AttachmentKind.slide
+          : AttachmentKind.pdf;
+      return note.attachments.any((a) => a.kind == kind);
+    }
+    return note.attachments.any((a) => a.isPinnedTop);
+  }
 
   /// Gövde alanının İÇ DOLGUSU (üst = alt). Üç yerde birden geçerlidir:
   /// alanın `contentPadding`i, sarma ölçümünün metin başlangıcı
@@ -1444,6 +1471,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         : transformed.copyWith(body: clean);
     if (!_restoring) {
       _undoStack.push(note, next, now: DateTime.now());
+      // YENİ EK (kullanıcının eklediği; akıştan gelen değil — o _mutate'ten
+      // geçmez): sayfada yüzüyorsa yerleşim ipucu açılır.
+      if (next.attachments.length > note.attachments.length) {
+        final known = {for (final a in note.attachments) a.id};
+        final added = next.attachments
+            .where(
+              (a) =>
+                  !known.contains(a.id) &&
+                  a.floatsOnPage &&
+                  a.sourceId.isEmpty &&
+                  a.id != next.backgroundImageId,
+            )
+            .lastOrNull;
+        if (added != null) _placementHintId = added.id;
+      }
     }
     // SAF YAZIM (yalnız başlık/gövde metni değişti, geri al düğmesinin durumu
     // dahil görünür hiçbir parça etkilenmedi): 3700 satırlık build'i her tuş
@@ -1740,6 +1782,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       child: NotePageCanvas(
       // KLAVYEDEN BAĞIMSIZ taban — bkz. [_stableCanvasHeight].
       minHeight: minHeight,
+      placementHintId: _placementHintId,
+      onPlacementHintShown: () => _placementHintId = null,
       images: imageAttachments,
       onRemove: _removeAttachment,
       onChanged: _updateAttachment,
@@ -2320,6 +2364,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
     // Üstündeki çip satırına yapışık: aradaki 8 dp, çipler başlığın ALTINDAYKEN
     // üst barla başlığı ayırmak içindi; artık o işi çip satırı görüyor.
+    final titleInBar = _titleInBar(note);
     final titleBaseStyle = applyNoteOpacity(
       applyNoteFont(
         (Theme.of(context).textTheme.headlineSmall ?? const TextStyle())
@@ -2327,9 +2372,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               // w500: kalın (w800) başlıkta açıkça ayırt edilsin (bkz.
               // rich_text `markStyle`).
               fontWeight: FontWeight.w500,
+              // Üst çubukta 48 dp'ye sığan boy (bkz. [_titleInBar]).
               fontSize:
-                  (Theme.of(context).textTheme.headlineSmall?.fontSize ??
-                      24) *
+                  (titleInBar
+                      ? 18.0
+                      : (Theme.of(context).textTheme.headlineSmall?.fontSize ??
+                            24)) *
                   note.titleFontScale,
               color:
                   Theme.of(context).textTheme.headlineSmall?.color ??
@@ -2340,9 +2388,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       note.titleTextOpacity,
       theme.colorScheme.onSurface,
     );
+    // BAŞLIK ÜST ÇUBUKTA (kullanıcı isteği 2026-11-03: "üste sabitlemede
+    // başlık sabitin üstünde olmalı; şu an not alanında kalıyor ve orayı
+    // daraltıyor" + "balonlu PDF başlığını kaldır, ana sayfada yazmasına
+    // gerek yok"): medya/belge notun TEPESİNDEYKEN (sabit bölme ya da
+    // balonlu belge) başlık gövdeden kalkar, üst çubukta tarihin yerine
+    // oturur — gövdede hiç satır harcamaz, belge ve not yukarı çıkar.
     final titleBaseSize = titleBaseStyle.fontSize ?? 24;
     final titleField = Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(16, 2, 4, 0),
+      padding: titleInBar
+          ? const EdgeInsetsDirectional.only(start: 4)
+          : const EdgeInsetsDirectional.fromSTEB(16, 2, 4, 0),
       // Başlığın yazı ölçeği değişince yumuşak oturur (bkz. ScaleSettle).
       child: ScaleSettle(
       value: note.titleFontScale,
@@ -2782,20 +2838,32 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final bubbleSwitch = bubbleDocument == null
         ? null
         : _viewSwitchFor(note, bubbleDocument, dense: true);
-    final titleRow = Row(
-      children: [
-        Expanded(child: titleField),
-        if (bubbleSwitch != null)
-          Padding(
-            padding: const EdgeInsetsDirectional.only(end: 4),
-            child: bubbleSwitch,
-          ),
-        Padding(
-          padding: const EdgeInsetsDirectional.only(end: 10),
-          child: actionsMenu,
-        ),
-      ],
-    );
+    final titleRow = titleInBar
+        // Başlık ve "+" üst çubukta; gövdede yalnız balonlu belgenin görünüm
+        // anahtarı kalır (çip satırının sağında — ayrı satır harcamaz).
+        ? null
+        : Row(
+            children: [
+              Expanded(child: titleField),
+              if (bubbleSwitch != null)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 4),
+                  child: bubbleSwitch,
+                ),
+              Padding(
+                padding: const EdgeInsetsDirectional.only(end: 10),
+                child: actionsMenu,
+              ),
+            ],
+          );
+    _barTitle = titleInBar
+        ? Row(
+            children: [
+              Expanded(child: titleField),
+              actionsMenu,
+            ],
+          )
+        : null;
 
     // Sayfada yüzen görseller ve videolar: "ek olarak" işaretlenenler buraya
     // girmez, alt şeritte dosya eki olarak durur (bkz. Attachment.asFile).
@@ -2850,8 +2918,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        titleRow,
-        metaChips,
+        ?titleRow,
+        if (titleRow == null && bubbleSwitch != null)
+          Row(
+            children: [
+              Expanded(child: metaChips),
+              Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(4, 2, 10, 2),
+                child: bubbleSwitch,
+              ),
+            ],
+          )
+        else
+          metaChips,
         if ((note.textPages.isNotEmpty || note.paged) &&
             !note.type.isPageNoteType)
           _pageBar(note),
@@ -2910,6 +2989,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // yazmaya devam etmektir, önizleme açmaz).
           onTap: () {
             final editable = editableTextBelow(fieldContext);
+            // PDF REFERANSI (📖 s.12): belge o sayfaya döner.
+            final pdfRef = _tappedPdfRef(editable);
+            if (pdfRef != null) {
+              editable?.hideToolbar();
+              _goToPdfPage(pdfRef.page);
+              return;
+            }
             final seconds = _tappedTimestamp(editable);
             if (seconds != null) {
               editable?.hideToolbar();
@@ -3480,10 +3566,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     context,
                   ).colorScheme.outlineVariant.withValues(alpha: 0.6),
                 ),
+                // SIKI ÇUBUK (kullanıcı isteği 2026-11-03: "telefon
+                // butonları ile kendi butonlarımız arasında boşluk çok,
+                // satır aralığını daraltırsak yer açılır"): 64 → 56 dp,
+                // dikey dolgu 8 → 4 (düğmeler 48 dp dokunma alanında kalır).
                 BottomAppBar(
                   color: background,
-                  height: 64,
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                  height: 56,
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
                   // KİŞİSELLEŞTİRME (kullanıcı isteği 2026-10-16): her
                   // düğme gizlenebilir; düzenleme modunda hepsi çerçeveli
                   // görünür ve dokunmak gizle/göster yapar (bkz.
@@ -3842,6 +3932,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           appBar: _pagePen && ref.watch(noteFullscreenProvider)
               ? null
               : AppBar(
+            // SIKI ÜST ÇUBUK (kullanıcı isteği 2026-11-03): 56 → 48 dp —
+            // durum çubuğu ile düğmeler arasındaki boşluk yer harcıyordu;
+            // simge düğmeleri 48 dp dokunma alanını korur.
+            toolbarHeight: _kEditorToolbarHeight,
             // Liste gizliyken (tam ekran / odak modu) geri okunun yerinde ☰:
             // tek dokunuşla liste geri gelir (kullanıcı isteği 2026-11-02:
             // "tam ekrandan çıkmak çok zor").
@@ -3853,7 +3947,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             // Sabitlenmiş/yıldızlı göstergesi tarihin yanında — düğmeler ⋯
             // menüsüne taşındığı için durum bir yerde görünmeliydi.
             titleSpacing: 0,
-            title: note.updatedAt == null
+            title: _barTitle ??
+                (note.updatedAt == null
                 ? null
                 : Customizable(
                     id: UiItem.editorDate,
@@ -3891,7 +3986,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         ),
                     ],
                   ),
-                  ),
+                  )),
             actions: [
               // Ortak notta başka biri düzenliyorsa (F4.1).
               NotePresenceIndicator(

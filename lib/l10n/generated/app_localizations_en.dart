@@ -6577,4 +6577,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateDownload => 'Download from GitHub';
+
+  @override
+  String get pdfNoteFromSelection => 'Take note';
+
+  @override
+  String get pdfNoteAtPage => 'Note this page';
+
+  @override
+  String get tipPdfReadNote =>
+      'Tip: long-press text, select → \"Take note\": the page and line go into your note, tap to jump back.';
+
+  @override
+  String get placementHintTitle => 'Where should the attachment go?';
+
+  @override
+  String get placementHintBody =>
+      'Pinned: top of the note · Floating: within the text · Bubbles: notes on top · Attached: file below';
 }

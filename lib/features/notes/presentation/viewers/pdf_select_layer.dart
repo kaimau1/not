@@ -229,8 +229,14 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
     super.didUpdateWidget(old);
     // Seçimi başka bir sayfa devraldı: buradaki vurguyu SESSİZCE bırak
     // (rapor yok — rapor, devralan sayfanın seçimini ezerdi).
-    if (widget.activeSelectionPage != 0 &&
-        widget.activeSelectionPage != widget.page.pageNumber &&
+    // Seçim DIŞARIDAN temizlendi (Kopyala / Not al sonrası — etkin sayfa
+    // bu sayfadan 0'a düştü): vurgu da kalkar.
+    final clearedHere =
+        widget.activeSelectionPage == 0 &&
+        old.activeSelectionPage == widget.page.pageNumber;
+    if ((clearedHere ||
+            (widget.activeSelectionPage != 0 &&
+                widget.activeSelectionPage != widget.page.pageNumber)) &&
         _hasSelection) {
       setState(() {
         _anchor = null;

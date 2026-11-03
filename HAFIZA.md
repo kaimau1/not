@@ -196,6 +196,12 @@ maddeyi GÜNCELLE.
   statik `_NoteEditorScreenState._x`, YENİ ALAN sınıfa. Dashboard ve
   ItemsEditor de aynı desen.
 - Yeni GÖRÜNÜR not alanı → `sameRenderedNote` VE `_sameVisual`.
+- **Başlık üst çubukta** (2026-11-03) medya sabitken ya da balonlu belgede
+  (`_titleInBar`; tarih yerine, 18 pt, "+" yanında); balonluda görünüm
+  anahtarı çip satırının sağında. Üst çubuk 48 dp, alt çubuk 56 dp,
+  sabit bölme çubuğu 40 dp. Yeni yüzen ek `_mutate`te yakalanır
+  (`_placementHintId`) → tuval seçer, görünüm anahtarı nabızlı + "nerede
+  dursun?" satırı.
 - Klavye açılınca üst parçalar yeniden ölçülmez (`KeyboardClipWindow`);
   sabit görsel ölçeklenir, metin/PDF kırpılır.
 - Not açılışı: önbellekteki hafif notla açılır, akış değişikliği ~450 ms
@@ -246,6 +252,13 @@ maddeyi GÜNCELLE.
 - Dışarı dokununca kapatma `GestureDetector(onTap)` ile değil, ham
   `Listener` (`TapToCollapse`). Çizim PDF'e gömülmez (ayrı katman).
 - Bölme yazımları CANLI ek taşır (`_live()`); `dispose`ta kayıt yapma.
+- **PDF okuma notu** (2026-11-03): sabit bölmede PDF GENİŞLİĞE oturur
+  (`PdfPageBox.fitWidth`, sayfa dikeyde kayar; mürekkep sayfa katmanında)
+  ve basılı tutunca `PdfSelectLayer` seçer → tepede "Not al · Kopyala ·
+  Vurgula". Not satırı `📖 s.12 · 5. satır “alıntı”` (`core/utils/pdf_ref.dart`;
+  satır = aynı sütundaki parça bantları, `pdfLineNumber`); referans
+  `linkSpans`ta damga gibi çizilir, dokununca sabit/ilk PDF'in `pdfPage`i
+  yazılır. Çubuktaki "Not al" seçimsiz o anki sayfa.
 - Görsele çizim + açık metin (`PageBubble.plain`) dışa aktarmada/paylaşımda
   görselin üstüne BASILIR (`image_annotations.dart`, PNG; F18.13).
 

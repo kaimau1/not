@@ -7,6 +7,8 @@ import 'package:pdfrx/pdfrx.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
+import '../../../../core/utils/pdf_copy_text.dart';
+import '../../../../core/utils/pdf_ref.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/pdf/pdf_page_ocr.dart';
 import '../../data/pdf_text.dart';
@@ -15,6 +17,8 @@ import '../viewers/area_actions.dart';
 import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/pdf_page_image.dart';
+import '../viewers/pdf_select_layer.dart';
+import '../viewers/pdf_selection_bar.dart' show PdfSelectionState;
 import '../viewers/pdf_viewer_screen.dart';
 import '../../../../core/widgets/smooth_routes.dart';
 import '../../../../core/widgets/app_sheet.dart';
@@ -59,7 +63,22 @@ class PdfPageBox extends StatefulWidget {
     this.swipeToTurn = true,
     this.onDetach,
     this.showBubbles = false,
+    this.onNoteFromSelection,
+    this.fitWidth = false,
   });
+
+  /// **OKUMA NOTU** (kullanıcı isteği 2026-11-03): verilirse sayfadaki yazı
+  /// BASILI TUTARAK seçilir (Chrome'daki gibi kelime kelime büyür) ve
+  /// kutunun tepesinde "Not al · Kopyala · Vurgula" çubuğu çıkar. "Not al"
+  /// sayfa numarasını, seçimin sayfadaki SATIRINI ve alıntıyı verir —
+  /// YouTube'da dakikaya not almak gibi (bkz. `pdf_ref.dart`). Yalnız sabit
+  /// bölmede: sayfadaki yüzen kutuda basılı tutmak kutuyu taşır.
+  final void Function(int page, int? line, String quote)? onNoteFromSelection;
+
+  /// Sayfa kutunun GENİŞLİĞİNİ doldurur, boyu taşarsa sayfa dikeyde kayar
+  /// (okuma kipi: dar bölmede A4 sayfanın yanlarında boşluk kalmaz, yazı
+  /// büyük okunur). Kapalıyken sayfa kutuya bütünüyle sığar.
+  final bool fitWidth;
 
   /// Belgenin BALONLARI sayfanın üstünde çizilsin mi (salt okunur: dokununca
   /// okuma kartı açılır). Kullanıcı isteği 2026-10-16: "balonludan üste
@@ -215,7 +234,115 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     _detachDocument();
     _pager?.dispose();
     _bubbles?.dispose();
+    _selection.dispose();
     super.dispose();
+  }
+
+  // ── OKUMA NOTU: seçim ────────────────────────────────────────────────
+  /// Seçili yazı ve sayfası (tam ekran görüntüleyiciyle aynı denetleyici).
+  final _selection = PdfSelectionState();
+
+  /// Seçimin PDF-koordinat satır dikdörtgenleri (satır numarası için).
+  List<PdfRect> _selectionPdfRects = const [];
+
+  /// Sürükleyerek seçim sürüyor mu — sürerken sayfa çevrilmez/kaymaz.
+  bool _selecting = false;
+
+  /// Seçimin hangi kaynaktan geldiği (taranmış sayfada OCR).
+  bool _selectionFromOcr = false;
+
+  bool get _selectable => widget.onNoteFromSelection != null;
+
+  void _onSelected(
+    PdfDocument document,
+    String text,
+    List<PdfRect> rects,
+    int pageNumber,
+    bool fromOcr,
+  ) {
+    if (pageNumber < 1 || pageNumber > document.pages.length) return;
+    _selectionPdfRects = rects;
+    _selectionFromOcr = fromOcr;
+    _selection.set(
+      value: text,
+      pageNumber: pageNumber,
+      pdfRects: rects,
+      source: document.pages[pageNumber - 1],
+    );
+  }
+
+  void _setSelecting(bool value) {
+    if (!mounted || value == _selecting) return;
+    setState(() => _selecting = value);
+  }
+
+  void _clearSelection() {
+    _selectionPdfRects = const [];
+    _selection.clear();
+  }
+
+  /// Seçimin İLK satırının sayfadaki sırası (1 tabanlı); bilinmiyorsa null.
+  Future<int?> _selectionLine(PdfDocument document, int pageNumber) async {
+    final rects = _selectionPdfRects;
+    if (rects.isEmpty) return null;
+    try {
+      final page = document.pages[pageNumber - 1];
+      final PdfPageText? text = _selectionFromOcr
+          ? await PdfPageOcr.forPage(page)
+          : await page.loadStructuredText();
+      if (text == null) return null;
+      final first = rects.first;
+      return pdfLineNumber(
+        [
+          for (final f in text.fragments)
+            (
+              left: f.bounds.left,
+              top: f.bounds.top,
+              right: f.bounds.right,
+              bottom: f.bounds.bottom,
+            ),
+        ],
+        (
+          left: first.left,
+          top: first.top,
+          right: first.right,
+          bottom: first.bottom,
+        ),
+      );
+    } catch (_) {
+      // Satır bulunamazsa not yalnız sayfayla alınır.
+      return null;
+    }
+  }
+
+  Future<void> _noteFromSelection(PdfDocument document) async {
+    final callback = widget.onNoteFromSelection;
+    final page = _selection.page.value;
+    final quote = cleanPdfCopyText(_selection.text.value);
+    if (callback == null || page == 0) return;
+    final line = await _selectionLine(document, page);
+    if (!mounted) return;
+    _clearSelection();
+    callback(page, line, quote);
+  }
+
+  Future<void> _copySelection() async {
+    final text = cleanPdfCopyText(_selection.text.value);
+    if (text.isEmpty) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final message = context.l10n.pdfSelectCopied(text.length);
+    await Clipboard.setData(ClipboardData(text: text));
+    _clearSelection();
+    messenger.showMessage(message);
+  }
+
+  void _highlightSelection() {
+    final page = _selection.page.value;
+    final rects = _selection.rects;
+    if (page == 0 || rects.isEmpty) return;
+    HapticFeedback.selectionClick();
+    _bubbleController().addHighlight(page: page, rects: rects, open: false);
+    _clearSelection();
   }
 
   /// Balon katmanının denetleyicisi — yalnız [PdfPageBox.showBubbles] açık
@@ -295,6 +422,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   void _onPagerChanged(int index) {
     final next = _clamp(index + 1);
     if (next == _page) return;
+    if (_selection.page.value != 0) _clearSelection();
     setState(() => _page = next);
     widget.onChanged(widget.attachment.copyWith(pdfPage: next));
   }
@@ -504,34 +632,45 @@ class _PdfPageBoxState extends State<PdfPageBox> {
           color: Colors.white,
           child: PageView.builder(
             controller: pager,
-            physics: swipe
+            // Seçim sürerken sayfa çevrilmez (parmak yazıyı seçiyor).
+            physics: swipe && !_selecting
                 ? const PageScrollPhysics()
                 : const NeverScrollableScrollPhysics(),
             allowImplicitScrolling: true,
             itemCount: _count,
             onPageChanged: _onPagerChanged,
-            itemBuilder: (context, i) => RotatedBox(
-              quarterTurns: a.pdfTurns,
-              // Kendi çizicimiz: pdfrx'in PdfPageView'ı aynı boydaki
-              // sayfalarda görüntüyü yenilemiyordu (bkz. PdfPageImage).
-              child: PdfPageImage(
-                document: document,
-                pageNumber: i + 1,
-                overlay: bubbles == null
-                    ? null
-                    : BubblePageLayer(
-                        controller: bubbles,
-                        page: i + 1,
-                        readOnly: true,
-                        longPressAdd: false,
-                      ),
-              ),
-            ),
+            itemBuilder: (context, i) {
+              final page = RotatedBox(
+                quarterTurns: a.pdfTurns,
+                // Kendi çizicimiz: pdfrx'in PdfPageView'ı aynı boydaki
+                // sayfalarda görüntüyü yenilemiyordu (bkz. PdfPageImage).
+                child: PdfPageImage(
+                  document: document,
+                  pageNumber: i + 1,
+                  overlay: _pageOverlay(document, i + 1, bubbles),
+                ),
+              );
+              if (!widget.fitWidth) return page;
+              // GENİŞLİĞE OTURAN sayfa: boyu taşarsa dikeyde kayar; alttaki
+              // çubuğun payı kadar dolgu (son satır çubuğun altında kalmasın).
+              final p = document.pages[i];
+              final aspect = p.height <= 0 || p.width <= 0
+                  ? 1 / 1.41
+                  : (a.pdfTurns.isOdd ? p.height / p.width : p.width / p.height);
+              return SingleChildScrollView(
+                physics: _selecting
+                    ? const NeverScrollableScrollPhysics()
+                    : const ClampingScrollPhysics(),
+                padding: EdgeInsets.only(bottom: widget.controls ? 36 : 0),
+                child: AspectRatio(aspectRatio: aspect, child: page),
+              );
+            },
           ),
         ),
         // El yazısı katmanı: PDF'in üzerine yapılan çizim kutuda da görünür
-        // (tam ekranda çizip nota dönünce sayfa boş görünmesin).
-        if (a.ink.isNotEmpty)
+        // (tam ekranda çizip nota dönünce sayfa boş görünmesin). Genişliğe
+        // oturan kipte sayfanın kendi katmanında (sayfayla birlikte kayar).
+        if (a.ink.isNotEmpty && !widget.fitWidth)
           Positioned.fill(
             child: IgnorePointer(
               child: CustomPaint(painter: InkPainter(a.ink, _page)),
@@ -544,7 +683,107 @@ class _PdfPageBoxState extends State<PdfPageBox> {
             bottom: 0,
             child: _bar(context, document),
           ),
+        if (_selectable)
+          Positioned(
+            left: 6,
+            right: 6,
+            top: 6,
+            child: ValueListenableBuilder<String>(
+              valueListenable: _selection.text,
+              builder: (context, text, _) => text.trim().isEmpty
+                  ? const SizedBox.shrink()
+                  : Center(child: _selectionBar(context, document)),
+            ),
+          ),
       ],
+    );
+  }
+
+  /// Sayfanın üst katmanları: balonlar, (genişliğe oturan kipte) el yazısı
+  /// ve seçim katmanı. Hiçbiri yoksa null.
+  Widget? _pageOverlay(
+    PdfDocument document,
+    int pageNumber,
+    BubbleController? bubbles,
+  ) {
+    final a = widget.attachment;
+    final inkHere = widget.fitWidth && a.ink.isNotEmpty;
+    if (bubbles == null && !inkHere && !_selectable) return null;
+    return LayoutBuilder(
+      builder: (context, box) => Stack(
+        fit: StackFit.expand,
+        children: [
+          if (inkHere)
+            IgnorePointer(
+              child: CustomPaint(painter: InkPainter(a.ink, pageNumber)),
+            ),
+          if (_selectable)
+            ValueListenableBuilder<int>(
+              valueListenable: _selection.page,
+              builder: (context, active, _) => Stack(
+                fit: StackFit.expand,
+                children: [
+                  PdfSelectLayer(
+                    page: document.pages[pageNumber - 1],
+                    pageSize: box.biggest,
+                    activeSelectionPage: active,
+                    onSelected: (text, rects, page, fromOcr) =>
+                        _onSelected(document, text, rects, page, fromOcr),
+                    onSelectingChanged: _setSelecting,
+                  ),
+                ],
+              ),
+            ),
+          if (bubbles != null)
+            BubblePageLayer(
+              controller: bubbles,
+              page: pageNumber,
+              readOnly: true,
+              longPressAdd: false,
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Seçim varken kutunun TEPESİNDE beliren çubuk: **Not al** (birincil,
+  /// yazılı) · Kopyala · Vurgula · Kapat. Tepede: alttaki sayfa çubuğunu ve
+  /// seçimin tutamaçlarını örtmesin.
+  Widget _selectionBar(BuildContext context, PdfDocument document) {
+    final l10n = context.l10n;
+    Widget icon(IconData icon, String tooltip, VoidCallback onPressed) =>
+        IconButton(
+          tooltip: tooltip,
+          onPressed: onPressed,
+          icon: Icon(icon, color: Colors.white, size: 20),
+          visualDensity: VisualDensity.compact,
+        );
+    return Material(
+      key: const ValueKey('pdf-box-selection-bar'),
+      color: Colors.black.withValues(alpha: 0.82),
+      borderRadius: BorderRadius.circular(24),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextButton.icon(
+              key: const ValueKey('pdf-box-note-from-selection'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+              ),
+              onPressed: () => _noteFromSelection(document),
+              icon: const Icon(Icons.edit_note, size: 20),
+              label: Text(l10n.pdfNoteFromSelection),
+            ),
+            icon(Icons.copy, l10n.copy, _copySelection),
+            icon(Icons.border_color, l10n.pdfHighlight, _highlightSelection),
+            icon(Icons.close, l10n.close, _clearSelection),
+          ],
+        ),
+      ),
     );
   }
 

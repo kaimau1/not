@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart' show RenderEditable;
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/attachment_tag.dart';
 import '../../../../core/utils/link_text.dart';
+import '../../../../core/utils/pdf_ref.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../../core/utils/video_time.dart';
 import '../../../../core/utils/youtube.dart';
@@ -113,6 +114,8 @@ bool linkAtPoint({
   }
 
   final offset = render.getPositionForPoint(global).offset;
+  final pdfRef = pdfPageRefAt(displayText, offset);
+  if (pdfRef != null && hits(pdfRef.start, pdfRef.end, 3)) return true;
   if (timestamps) {
     final hit = videoTimestampAt(displayText, offset);
     if (hit != null && hits(hit.start, hit.end, 3)) return true;
@@ -349,6 +352,33 @@ int? tappedVideoTimestamp({
   );
   for (final box in boxes) {
     if (box.toRect().inflate(3).contains(local)) return hit.seconds;
+  }
+  return null;
+}
+
+/// Dokunulan PDF SAYFA REFERANSI (bkz. pdf_ref.dart) — [tappedVideoTimestamp]
+/// ile aynı kural: imleç referansın içindeyse ya da dokunuş kutusuna
+/// düştüyse referans, yoksa null.
+PdfPageRef? tappedPdfRef({
+  required String displayText,
+  required TextSelection selection,
+  EditableTextState? editable,
+  Offset? tapGlobal,
+}) {
+  if (!selection.isValid || !selection.isCollapsed) return null;
+  final caret = selection.baseOffset;
+  final hit = pdfPageRefAt(displayText, caret);
+  if (hit == null) return null;
+  if (caret > hit.start && caret < hit.end) return hit;
+  if (editable == null || tapGlobal == null) return null;
+  final render = editable.renderEditable;
+  if (!render.attached || !render.hasSize) return null;
+  final local = render.globalToLocal(tapGlobal);
+  final boxes = render.getBoxesForSelection(
+    TextSelection(baseOffset: hit.start, extentOffset: hit.end),
+  );
+  for (final box in boxes) {
+    if (box.toRect().inflate(3).contains(local)) return hit;
   }
   return null;
 }

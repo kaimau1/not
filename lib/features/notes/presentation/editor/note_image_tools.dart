@@ -23,7 +23,12 @@ class _ImageTools extends StatelessWidget {
     this.onSaveAs,
     this.onCaption,
     this.hasCaption = false,
+    this.placementHint = false,
   });
+
+  /// Ek AZ ÖNCE eklendi: görünüm anahtarı parlayan çerçeveyle ve "nerede
+  /// dursun?" açıklamasıyla öne çıkar (bkz. NotePageCanvas.placementHintId).
+  final bool placementHint;
 
   /// Görselin altına açıklama yazar (yerinde düzenleme açılır).
   final VoidCallback? onCaption;
@@ -243,6 +248,39 @@ class _ImageTools extends StatelessWidget {
           children: [
             // GÖRÜNÜM satırı: ekin nasıl duracağı tek dokunuşla değişir
             // (kullanıcı isteği 2026-10-16 — "kolay geçişin yeri ve düzeni").
+            if (viewSwitch != null && placementHint)
+              Padding(
+                key: const ValueKey('placement-hint'),
+                padding: const EdgeInsets.fromLTRB(10, 0, 10, 4),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.lightbulb_outline,
+                      size: 16,
+                      color: scheme.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '${l10n.placementHintTitle} ',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            TextSpan(text: l10n.placementHintBody),
+                          ],
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             if (viewSwitch != null)
               LayoutBuilder(
                 builder: (context, constraints) => Row(
@@ -266,7 +304,9 @@ class _ImageTools extends StatelessWidget {
                     Expanded(
                       child: Align(
                         alignment: AlignmentDirectional.centerEnd,
-                        child: viewSwitch,
+                        child: placementHint
+                            ? _PlacementPulse(child: viewSwitch)
+                            : viewSwitch,
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -277,6 +317,75 @@ class _ImageTools extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Yeni ekin görünüm anahtarının çevresinde birkaç kez nabız gibi atan
+/// çerçeve — göz panele değil SEÇİME gitsin (bkz. `placementHint`).
+/// Hareket azaltıldıysa çerçeve sabit durur.
+class _PlacementPulse extends StatefulWidget {
+  const _PlacementPulse({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_PlacementPulse> createState() => _PlacementPulseState();
+}
+
+class _PlacementPulseState extends State<_PlacementPulse>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 700),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _pulse.value = 1;
+    } else if (!_pulse.isAnimating && _pulse.value == 0) {
+      // Üç nabız, sonra çerçeve yerinde kalır.
+      unawaited(
+        _pulse
+            .repeat(reverse: true, count: 3)
+            .whenComplete(() {
+              if (mounted) _pulse.value = 1;
+            }),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return AnimatedBuilder(
+      animation: _pulse,
+      builder: (context, child) {
+        final t = Curves.easeInOut.transform(_pulse.value);
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: scheme.primary, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: scheme.primary.withValues(alpha: 0.15 + 0.35 * t),
+                blurRadius: 4 + 10 * t,
+                spreadRadius: 1 + 2 * t,
+              ),
+            ],
+          ),
+          child: Padding(padding: const EdgeInsets.all(2), child: child),
+        );
+      },
+      child: widget.child,
     );
   }
 }

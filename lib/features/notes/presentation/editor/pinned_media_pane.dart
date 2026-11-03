@@ -27,7 +27,9 @@ const double kPinnedMaxFraction = 0.7;
 const double kPinnedUnpinHeight = 72;
 
 /// Medya ile not arasındaki çubuğun (tutamaç + düğmeler) yüksekliği.
-const double kPinnedBarHeight = 44;
+/// 44 → 40 (kullanıcı isteği 2026-11-03: "üste sabitken PDF ve not alanı
+/// daha yukarı gelsin, genişlesin").
+const double kPinnedBarHeight = 40;
 
 /// Klavye açıkken bölmenin altında notun yazılan satırına kalan en az yer.
 const double kPinnedNoteMinHeight = 72;
@@ -105,7 +107,13 @@ class PinnedMediaPane extends StatefulWidget {
     this.onDetach,
     this.onSaveAs,
     this.onTranscribe,
+    this.onPdfNote,
   });
+
+  /// Sabit PDF'te SEÇİLEN YAZIDAN NOT (kullanıcı isteği 2026-11-03): basılı
+  /// tutup seçilen yazı "Not al" ile sayfa + satır + alıntı olarak nota
+  /// girer (bkz. [PdfPageBox.onNoteFromSelection]). null ise seçim kapalı.
+  final void Function(int page, int? line, String quote)? onPdfNote;
 
   /// Sabit görselin/videonun TRANSKRİPTİ (metne dök / kayıtlıysa aç).
   final VoidCallback? onTranscribe;
@@ -384,26 +392,25 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                     // Belge kutusu kendi jestlerini kullanır (yatay kaydırma
                     // sayfa çevirir, çubuğu sayfa atlar); bölmeden çıkış
                     // görünüm anahtarından.
+                    //
+                    // OKUMA KİPİ (kullanıcı isteği 2026-11-03: "kitabını
+                    // okurken güzel kullanışlı bir not uygulaması"): sayfa
+                    // bölmenin GENİŞLİĞİNE oturur (yanlarda boşluk yok, yazı
+                    // büyük), boyu taşarsa dikeyde kayar; yazı basılı
+                    // tutularak seçilir → "Not al".
                     ? ColoredBox(
                         color: scheme.surfaceContainerHigh,
-                        child: Center(
-                          child: AspectRatio(
-                            aspectRatio: pdfBoxAspect(
-                              (widget.media.width ?? 0).toDouble(),
-                              (widget.media.height ?? 0).toDouble(),
-                              widget.media.pdfTurns,
-                            ),
-                            child: WebDriveGate(
-                              attachment: widget.media,
-                              builder: (_, shown) => PdfPageBox(
-                                key: ValueKey('pinned-pdf-${widget.media.id}'),
-                                attachment: shown,
-                                onChanged: widget.onChanged ?? (_) {},
-                                // Balonludan sabite alınan belge balonlarıyla
-                                // görünür; çubukta göster/gizle.
-                                showBubbles: true,
-                              ),
-                            ),
+                        child: WebDriveGate(
+                          attachment: widget.media,
+                          builder: (_, shown) => PdfPageBox(
+                            key: ValueKey('pinned-pdf-${widget.media.id}'),
+                            attachment: shown,
+                            onChanged: widget.onChanged ?? (_) {},
+                            // Balonludan sabite alınan belge balonlarıyla
+                            // görünür; çubukta göster/gizle.
+                            showBubbles: true,
+                            fitWidth: true,
+                            onNoteFromSelection: widget.onPdfNote,
                           ),
                         ),
                       )
@@ -558,8 +565,12 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     final l10n = context.l10n;
     final isVideo = widget.media.kind == AttachmentKind.video;
     final isAudio = widget.media.kind == AttachmentKind.audio;
+    final isPdf = widget.media.kind == AttachmentKind.pdf;
     final timed = isVideo || isAudio;
     final noteAtLabel = !timed || width >= 430;
+    // PDF'te "Not al" o anki SAYFAYA not açar (zamanlı medyada o ANA).
+    final noteAtIcon = isPdf ? Icons.edit_note : Icons.more_time;
+    final noteAtTooltip = isPdf ? l10n.pdfNoteAtPage : l10n.videoNoteAtTime;
     final showLink = !isVideo || width >= 360;
     return Row(
       children: [
@@ -610,17 +621,17 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                       ),
                       onPressed: widget.onNoteAt,
-                      icon: const Icon(Icons.more_time, size: 18),
+                      icon: Icon(noteAtIcon, size: 18),
                       label: Text(l10n.videoNoteAtTimeShort),
                     ),
                   )
                 : IconButton(
                     key: const ValueKey('pinned-note-at'),
-                    tooltip: l10n.videoNoteAtTime,
+                    tooltip: noteAtTooltip,
                     visualDensity: VisualDensity.compact,
                     iconSize: 20,
                     color: scheme.primary,
-                    icon: const Icon(Icons.more_time),
+                    icon: Icon(noteAtIcon),
                     onPressed: widget.onNoteAt,
                   ),
           ),

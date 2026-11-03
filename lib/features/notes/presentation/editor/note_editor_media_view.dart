@@ -462,6 +462,17 @@ extension _EditorMediaView on _NoteEditorScreenState {
             _note?.attachments.where((x) => x.id == target.id).firstOrNull ??
             target;
         _pinMediaTop(latest);
+        // Sabitlenen PDF okuma kipine girer: seçerek not alma bir kez
+        // anlatılır (az önce olan şeyi açıkladığı için oturum sınırı yok).
+        if (latest.kind == AttachmentKind.pdf && mounted) {
+          TipOnce.show(
+            context,
+            ref.read(sharedPreferencesProvider),
+            TipOnce.pdfReadNote,
+            context.l10n.tipPdfReadNote,
+            sessionLimit: false,
+          );
+        }
     }
   }
 
@@ -768,6 +779,82 @@ extension _EditorMediaView on _NoteEditorScreenState {
     _revealCaretSoon();
   }
 
+  // ── PDF OKUMA NOTU (kullanıcı isteği 2026-11-03) ──────────────────────
+  //
+  // "Okurken not almak çok kolay ve pratik olmalı — YouTube'da dakika
+  // kaydetmek gibi": sabit (ya da sayfadaki) PDF'te basılı tutup seçilen
+  // yazı "Not al" ile nota "📖 s.12 · 5. satır “alıntı”" satırı olarak
+  // girer, imleç satırın sonunda — kullanıcı yorumunu yazmaya devam eder.
+  // Referansa dokunmak belgeyi o sayfaya döndürür (bkz. [_goToPdfPage]).
+
+  /// PDF'ten nota satır ekler: [quote] boşsa yalnız sayfa referansı
+  /// (bölme çubuğundaki "Not al" — o anki sayfa).
+  void _noteAtPdf({required int page, int? line, String quote = ''}) {
+    final note = _note;
+    if (note == null || _readOnly) return;
+    final text = pdfNoteLine(
+      page: page,
+      line: line,
+      quote: quote,
+      turkish: Localizations.localeOf(context).languageCode == 'tr',
+    );
+    HapticFeedback.selectionClick();
+    final target = _formatTarget?.controller;
+    final itemsState = _itemsEditorKey.currentState;
+    final isList =
+        note.type == NoteType.checklist || note.type == NoteType.ordered;
+    final focusedItem =
+        target != null &&
+        target != _bodyController &&
+        target != _titleController;
+    if (itemsState != null && (focusedItem || (isList && !_listBodyOpen))) {
+      itemsState.addItemWithText('$text ', after: focusedItem ? target : null);
+      return;
+    }
+    final logical = _bodyController.logicalText;
+    final selection = _bodyController.selection;
+    final caret = selection.isValid
+        ? wrapToLogicalOffset(_bodyController.text, selection.extentOffset)
+        : -1;
+    final result = insertTimestampLine(logical, caret, text);
+    _bodyController.setLogical(result.text, result.caret);
+    _mutate((n) => n.copyWith(body: result.text), immediate: true);
+    if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
+    _revealCaretSoon();
+  }
+
+  /// Referansın gideceği belge: üste sabit PDF, yoksa sayfadaki ilk PDF.
+  Attachment? _pdfForRefs(Note note) =>
+      note.attachments
+          .where((a) => a.kind == AttachmentKind.pdf && a.isPinnedTop)
+          .firstOrNull ??
+      note.attachments
+          .where((a) => a.kind == AttachmentKind.pdf && !a.offPage)
+          .firstOrNull;
+
+  /// Gövdede dokunulan PDF referansı; notta PDF yoksa null.
+  PdfPageRef? _tappedPdfRef(EditableTextState? editable) {
+    final note = _note;
+    if (note == null || _pdfForRefs(note) == null) return null;
+    return tappedPdfRef(
+      displayText: _bodyController.text,
+      selection: _bodyController.selection,
+      editable: editable,
+      tapGlobal: _bodyTapPoint.last,
+    );
+  }
+
+  /// Referansa dokunuldu: belge o sayfaya döner (sabit bölme / sayfadaki
+  /// kutu `pdfPage`i izler).
+  void _goToPdfPage(int page) {
+    final note = _note;
+    if (note == null) return;
+    final pdf = _pdfForRefs(note);
+    if (pdf == null) return;
+    HapticFeedback.selectionClick();
+    if (pdf.pdfPage != page) _updateAttachment(pdf.copyWith(pdfPage: page));
+  }
+
   /// Gövdede dokunulan damga (saniye); yoksa null.
   int? _tappedTimestamp(EditableTextState? editable) {
     final note = _note;
@@ -801,12 +888,20 @@ extension _EditorMediaView on _NoteEditorScreenState {
             onCopyLink: () => _copyAttachment(pinned),
             onChanged: _updateAttachment,
             viewSwitch: _viewSwitchFor(note, pinned, dense: true),
-            onNoteAt:
-                (pinned.kind == AttachmentKind.video ||
-                        pinned.kind == AttachmentKind.audio) &&
-                    !_readOnly
+            onNoteAt: _readOnly
+                ? null
+                : (pinned.kind == AttachmentKind.video ||
+                      pinned.kind == AttachmentKind.audio)
                 ? () => _noteAtPinned(pinned)
+                // PDF: o anki sayfanın referansı (seçimsiz "Not al").
+                : pinned.kind == AttachmentKind.pdf
+                ? () => _noteAtPdf(page: pinned.pdfPage)
                 : null,
+            // Seçilen yazıdan not (basılı tut → seç → "Not al").
+            onPdfNote: _readOnly
+                ? null
+                : (page, line, quote) =>
+                      _noteAtPdf(page: page, line: line, quote: quote),
             // Sabit bölmenin ⋮ menüsü (kullanıcı bulgusu 2026-10-16: "video
             // sabitken kaldırmak yok, gömülü hale getirmek gerekiyor").
             onRemove: _readOnly

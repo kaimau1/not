@@ -3208,5 +3208,10 @@
       }
     }
   },
-  "updateDownload": "GitHub'dan indir"
+  "updateDownload": "GitHub'dan indir",
+  "pdfNoteFromSelection": "Not al",
+  "pdfNoteAtPage": "Bu sayfaya not al",
+  "tipPdfReadNote": "İpucu: yazıya basılı tut, seç → \"Not al\": sayfa ve satır nota yazılır, dokununca oraya döner.",
+  "placementHintTitle": "Yeni ek nerede dursun?",
+  "placementHintBody": "Sabit: notun tepesinde · Yüzen: yazının arasında · Balonlu: üstüne not · Ek: altta dosya"
 }

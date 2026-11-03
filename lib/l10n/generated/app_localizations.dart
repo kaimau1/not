@@ -11713,6 +11713,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'GitHub\'dan indir'**
   String get updateDownload;
+
+  /// No description provided for @pdfNoteFromSelection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not al'**
+  String get pdfNoteFromSelection;
+
+  /// No description provided for @pdfNoteAtPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu sayfaya not al'**
+  String get pdfNoteAtPage;
+
+  /// No description provided for @tipPdfReadNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: yazıya basılı tut, seç → \"Not al\": sayfa ve satır nota yazılır, dokununca oraya döner.'**
+  String get tipPdfReadNote;
+
+  /// No description provided for @placementHintTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni ek nerede dursun?'**
+  String get placementHintTitle;
+
+  /// No description provided for @placementHintBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sabit: notun tepesinde · Yüzen: yazının arasında · Balonlu: üstüne not · Ek: altta dosya'**
+  String get placementHintBody;
 }
 
 class _AppLocalizationsDelegate

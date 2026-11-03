@@ -25,6 +25,9 @@ abstract final class TipOnce {
   /// Notta ilk görsel: yukarı sürükle → üste sabitle.
   static const mediaPin = 'media_pin';
 
+  /// Üste sabit PDF: yazıya basılı tut → "Not al" (2026-11-03).
+  static const pdfReadNote = 'pdf_read_note';
+
   /// İlk ızgara + klasör: ekranı yana kaydır → klasörler arası.
   static const gridSwipe = 'grid_swipe';
 

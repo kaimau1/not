@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'attachment_tag.dart';
+import 'pdf_ref.dart';
 import 'video_time.dart';
 
 /// Bulunan bağlantının türü. E-posta ayrı tutulur çünkü açılışı farklıdır
@@ -170,6 +171,11 @@ List<InlineSpan> linkSpans(
         if (videoTimestamps)
           for (final t in findVideoTimestamps(text))
             (start: t.start, end: t.end, attachment: false, time: true),
+        // PDF SAYFA REFERANSI (bkz. pdf_ref.dart): damgayla aynı görünüm,
+        // dokununca belge o sayfaya döner. İşaret (📖) kendine özgü olduğu
+        // için bayrak gerekmez.
+        for (final r in findPdfPageRefs(text))
+          (start: r.start, end: r.end, attachment: false, time: true),
       ]..sort((a, b) => a.start - b.start);
   if (marks.isEmpty) return [TextSpan(text: text, style: style)];
 

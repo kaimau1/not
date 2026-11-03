@@ -234,6 +234,8 @@ class NotePageCanvas extends StatefulWidget {
     this.onViewChange,
     this.onEmbed,
     this.onTapEmpty,
+    this.placementHintId,
+    this.onPlacementHintShown,
     this.topLimit = 0,
     this.onFloats,
     this.hint,
@@ -350,12 +352,55 @@ class NotePageCanvas extends StatefulWidget {
   /// gövde metnine odaklanır ("aşağıya dokun, yazmaya başla" davranışı).
   final VoidCallback? onTapEmpty;
 
+  /// **YENİ EKİN YERLEŞİM İPUCU** (kullanıcı isteği 2026-11-03: "bir ek
+  /// eklendiğinde nereye yerleşeceğinin sorulması — eklendiğinde ayar
+  /// menüsünün gösterilmesi ve odaklanması, kişiye ipucu"). Az önce eklenen
+  /// ekin kimliği: katman onu SEÇER (araç paneli açılır) ve paneldeki görünüm
+  /// anahtarını (Sabit / Yüzen / Balonlu / Ek) parlayan çerçeve + tek satır
+  /// açıklamayla öne çıkarır. Gösterilince [onPlacementHintShown].
+  final String? placementHintId;
+  final VoidCallback? onPlacementHintShown;
+
   @override
   State<NotePageCanvas> createState() => _NotePageCanvasState();
 }
 
 class _NotePageCanvasState extends State<NotePageCanvas> {
   String? _selectedId;
+
+  /// Yerleşim ipucu gösterilen ek (bkz. [NotePageCanvas.placementHintId]);
+  /// seçim değişince/düşünce kalkar.
+  String? _hintId;
+
+  /// Son işlenen ipucu kimliği — aynı ek için ikinci kez açılmasın.
+  String? _hintHandled;
+
+  @override
+  void initState() {
+    super.initState();
+    _takePlacementHint();
+  }
+
+  @override
+  void didUpdateWidget(NotePageCanvas old) {
+    super.didUpdateWidget(old);
+    _takePlacementHint();
+  }
+
+  void _takePlacementHint() {
+    final id = widget.placementHintId;
+    if (id == null || id == _hintHandled) return;
+    if (!widget.images.any((a) => a.id == id)) return;
+    _hintHandled = id;
+    // Kurulum/güncelleme sırasında: setState değil doğrudan yazılır (bu
+    // karenin build'i zaten gelecek).
+    _selectedId = id;
+    _hintId = id;
+    final shown = widget.onPlacementHintShown;
+    if (shown != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => shown());
+    }
+  }
 
   /// Seçili ekin araç paneli. "Dışarıya dokunuldu mu" kararı panelin
   /// GERÇEK dikdörtgeninden verilir (bkz. build'deki Listener).
@@ -482,8 +527,10 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   /// sayacı 360 dp'lik bir ekrana yan yana sığmalı.
   static const _kBarDensity = VisualDensity(horizontal: -4, vertical: -2);
 
-  void _select(String id) =>
-      setState(() => _selectedId = _selectedId == id ? null : id);
+  void _select(String id) => setState(() {
+    _selectedId = _selectedId == id ? null : id;
+    _hintId = null;
+  });
 
   // ── AÇIKLAMA ────────────────────────────────────────────────────────────
   /// Açıklaması yerinde düzenlenen görsel (null = yok) ve yazılan taslak:
@@ -559,7 +606,12 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   }
 
   void _deselect() {
-    if (_selectedId != null) setState(() => _selectedId = null);
+    if (_selectedId != null) {
+      setState(() {
+        _selectedId = null;
+        _hintId = null;
+      });
+    }
   }
 
   // ── ÇOKLU SEÇİM ─────────────────────────────────────────────────────────
@@ -1896,6 +1948,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   ) {
     return _ImageTools(
       key: _toolbarKey,
+      placementHint: _hintId == img.id,
       wFrac: wFrac,
       minWidthFrac: _minWidthFrac,
       onWidthChanged: (v) => setState(() {

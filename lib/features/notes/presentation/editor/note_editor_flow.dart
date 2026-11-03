@@ -510,6 +510,11 @@ extension _EditorFlowX on _NoteEditorScreenState {
           when note.items.isNotEmpty && ref.read(itemGesturesProvider) =>
         (TipOnce.listGestures, l10n.tipListGestures),
       NoteType.pdf || NoteType.slides => (TipOnce.pdfBubble, l10n.tipPdfBubble),
+      _
+          when note.attachments.any(
+            (a) => a.kind == AttachmentKind.pdf && a.isPinnedTop,
+          ) =>
+        (TipOnce.pdfReadNote, l10n.tipPdfReadNote),
       _ when note.attachments.any((a) => a.floatsOnPage) => (
         TipOnce.mediaPin,
         l10n.tipMediaPin,

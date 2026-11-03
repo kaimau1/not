@@ -6556,4 +6556,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get updateDownload => 'GitHub\'dan indir';
+
+  @override
+  String get pdfNoteFromSelection => 'Not al';
+
+  @override
+  String get pdfNoteAtPage => 'Bu sayfaya not al';
+
+  @override
+  String get tipPdfReadNote =>
+      'İpucu: yazıya basılı tut, seç → \"Not al\": sayfa ve satır nota yazılır, dokununca oraya döner.';
+
+  @override
+  String get placementHintTitle => 'Yeni ek nerede dursun?';
+
+  @override
+  String get placementHintBody =>
+      'Sabit: notun tepesinde · Yüzen: yazının arasında · Balonlu: üstüne not · Ek: altta dosya';
 }
