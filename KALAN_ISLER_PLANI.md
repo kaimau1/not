@@ -381,7 +381,8 @@ hâlâ."** Karar değişmeden bu bölüme başlanmaz; değişirse önce F18.27.
 
 ## FAZ 28 — Kullanıcı listesi 2026-11-03 (bulut oturumu)
 
-Sıra (kırık önce): **F28.5 → F28.3 → F28.4 → F28.2 → F28.1**. Protokol Faz 18
+Sıra (kırık önce): **F28.5 → F28.3 → F28.4 → F28.2 → F28.1**. Bütün kararlar
+verildi (2026-11-03) — gece görevi sormadan uygular. Protokol Faz 18
 ile aynı ("Faz 28'i yap" sıradaki açık maddeden, "F28.3'ü yap" tek madde).
 Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
 
@@ -408,9 +409,20 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
   göster, hangi modun "doğru" olduğunu sor; sonra ortak stil kaynağına
   bağla (iki yerde ayrı sabit kalmasın). İlgili: `note_editor_media_view.dart`,
   `pinned_media_pane.dart`, `text_page_box.dart`, `note_images.dart`.
+  **KARAR (kullanıcı, 2026-11-03):** **SABİT MOD DOĞRU** — balonlu mod sabit moda benzetilir (sormadan uygula; farkları maddeye yaz).
   Test: iki modda aynı stil değerleri (golden ya da stil karşılaştırma).
-- [ ] **F28.2 Ek senkronunu baştan yaz; bugünkü yapı silinsin — KARAR GEREKİR
-  (büyük).** Bugünkü parçalar: `attachment_repository.dart`, `upload_queue.dart`,
+- [ ] **F28.2 Ek senkronunu baştan yaz; bugünkü yapı silinsin (büyük).**
+  **KARAR (kullanıcı, 2026-11-03):** (1) **Kod + buluttaki ek KAYITLARI sıfırlanır**; ekler cihazlardan
+  yeniden yüklenir — hiçbir cihazda olmayan ek kaybolur (kullanıcı kabul etti).
+  Kullanıcının Drive'ındaki dosyalar SİLİNMEZ (yalnız kayıtlar); sıfırlamadan
+  önce yerel tam yedek. (2) Ölçek şartı: "binlerce kullanıcıda Firebase Storage
+  bizi kurtarmaz" → depolama yeri Claude'un önerisiyle: **asıl dosya
+  kullanıcının KENDİ Google Drive'ı** (`drive.file` kapsamı — hassas değil,
+  görünür "Notlar" klasörü; maliyet kullanıcı sayısıyla büyümez), **Firebase
+  Storage yalnız küçük önizleme** (≤ ~40 KB küçük resim, kullanıcı başına
+  tavan) kartlar her cihazda anında görünsün diye. Misafir: ekler cihazda +
+  "Google'a bağla ki diğer cihazlara gitsin" uyarısı. Web: jeton akışı yeni
+  yapıda baştan (yenilemede sessiz yenileme). Aşağıdaki eski metin bilgi için: Bugünkü parçalar: `attachment_repository.dart`, `upload_queue.dart`,
   `drive_store.dart`, `drive_ui.dart`, `attachment_strip.dart`, Ayarlar'daki
   senkron anahtarı; bilinen sorunlar: telefondan çıkmamış ekler, web'de ölü
   `blob:` adresleri, ek başına ayrı dokunuş. Önce kısa tasarım + KARAR:
@@ -420,8 +432,8 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
   ek verisini mi — kullanıcı verisi silinmeden önce AÇIKÇA sor; varsayılan:
   kod silinir, mevcut ekler yeni yapıya bir kez göç eder. Sonra eski kod
   kaldırılır (ölü yol bırakılmaz), testler yeni durum makinesi üzerinden.
-- [ ] **F28.1 Gmail bağlantısı: e-postaları gör, kaydet, içerikten not al —
-  KARAR GEREKİR.** Google girişi + Drive'daki ek-kapsam akışı örnek
+- [ ] **F28.1 Gmail bağlantısı: e-postaları gör, kaydet, içerikten not al.**
+  **KARAR (kullanıcı, 2026-11-03):** **YALNIZ OKUMA** (`gmail.readonly`); Gmail'de hiçbir şey değiştirilmez. Google girişi + Drive'daki ek-kapsam akışı örnek
   (`drive_store.dart`). Kapsam: `gmail.readonly` (kısıtlı kapsam → OAuth
   "Testing" modunda kişisel kullanım sorunsuz; yayına alınırsa Google
   güvenlik denetimi gerekir — Play kararıyla bağlantılı). Özellik: gelen

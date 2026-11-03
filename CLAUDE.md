@@ -24,6 +24,12 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web he
 - APK: CI push'ta imzalı üretir (`.github/workflows/`)
 - Firestore/Storage kural değişince: önce `cd rules-test && npm ci && npm test` (emülatör, Java 11+ — CI `rules` işi de koşar), yayın main push'ta CI'da (elle: `firebase deploy`)
 
+## Gece / zamanlanmış görev kuralı (2026-11-03 kullanıcı kararı)
+- Plan dosyalarındaki KARAR maddelerinin hepsi 2026-11-03'te verildi (maddelerde **KARAR (kullanıcı, 2026-11-03)**) — zamanlanmış görev SORMADAN uygular; yeni bir karar çıkarsa en güvenli seçeneği uygula ve maddeye "sabah bakılacak" yaz.
+- Akış: kendi dalında çalış → değişenin testi → push → **CI yeşilse main'e birleştir, başlıkta `[apk]`** (kişisel APK; `NOTLAR_KISISEL=1` CI'da) → main CI'ını da izle; kırmızıysa düzelt ya da birleştirmeyi geri al (`git revert -m 1`). CI kırmızıyken main'e ASLA birleştirme.
+- Telefon gerektiren ölçüm yapılamaz: maddeyi "yazıldı, cihazda doğrulanmadı" diye işaretle, `KALANLAR.md` §2'ye adım ekle.
+- Veri göçü / kayıt sıfırlama (F22.4, F28.2) içeren iş: önce yerel tam yedek, göç geri alınabilir, kural testleri (`rules-test`) yeşil.
+
 ## Hafıza (usta koordineli — 3 katman)
 - Kod yapısı        → graphify-out/     (oku: GRAPH_REPORT.md · güncelle: elle `graphify update .` — depoda otomatik kanca YOK; grafik son 2026-11-02 (bulutta, 19 810 düğüm) güncellendi; kod ilerledikçe bayatlar, satır/dosya bilgisini koddan doğrula)
 - Proje ne/niye     → HAFIZA.md         (≤30 KB, geçerli kararlar/tuzaklar — oku: iş başı · yaz: iş sonu, ilgili bölüme; değişen kuralı GÜNCELLE) · tarihçe `HAFIZA_ARSIV.md` (→ 2026-10-19) ve `HAFIZA_ARSIV_2.md` (→ 2026-11-02, sıkıştırma öncesi tam hâl) — ikisi de dondurulmuş, grep ile

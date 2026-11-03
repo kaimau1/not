@@ -204,6 +204,7 @@ koru" önerisinin yakalayacağı kart yok; kare önbellek payındaki (1600 px,
 ~30-40 kart) bütün kartların yeniden kurulumu + süzgeç sonrası ızgaranın
 yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramada
 önbellek payını daraltmak ya da vurguyu kartın dışına (katman) almak.
+**KARAR (kullanıcı, 2026-11-03):** **vurgu kartın üstünde ayrı katman** — sorgu değişince kart yeniden kurulmaz, yalnız vurgu katmanı (madde **F21.6**, açık).
 
 - [x] **F21.1 Önizleme dilimi.** Gövdenin kartta görünecek kadarı:
   `previewSlice(body)` — ilk ~10 satır ve ≤ ~600 karakter (kod birimi değil
@@ -251,24 +252,31 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   profilinde `NoteCard.build` / `maskSensitiveNumbers` YOK; testler: dilim
   (uzun gövde, grapheme, açık kalan işaret), arama kesiti.
 
+- [ ] **F21.6 Arama vurgusu kartın üstünde ayrı katman** (KARAR 2026-11-03).
+  Sorgu değişince kart yeniden kurulmaz; vurgu dikdörtgenleri kartın metin
+  düzeninden (önbellekli `TextPainter`/paragraf kutuları) hesaplanıp üstte
+  ayrı `CustomPaint` katmanında çizilir. Süzgeç sonucu değişmeyen kartlar
+  aynı örnek kalır (`ValueKey(note.id)`). Kabul: arama karesi < 16 ms
+  (bugün 139 ms); vurgu testleri yeşil.
+
 ## FAZ 22 — Firestore trafiği (K3, K4)
 
 - [ ] **F22.1 Önce ölç:** 50 / 250 / 500 notla kısa notta yazma senaryosu →
   kayıt sonrası ana blok (ms) ve kayıt başına olay sayısı. Beklenen: not
   sayısıyla doğrusal; olay sayısı 2.
-- [ ] **F22.2 Otomatik kaydı seyrekleştir — KARAR GEREKİR.** Debounce 0,5 sn →
+- [ ] **F22.2 Otomatik kaydı seyrekleştir.** **KARAR (kullanıcı, 2026-11-03):** EVET — ~2 sn boşluk, en geç 10 sn; kapanış/arka plan/odak kaybında hemen. Debounce 0,5 sn →
   ~2 sn boşluk, en geç 3 sn → ~10 sn; kapanış/arka plan/odak kaybında hemen
   (bugün de var: `_debouncer.flush`, `onPause`). Bedel: uygulama öldürülürse en
   çok ~10 sn'lik yazı (yerel önbellek yazımı anlık değil kayıtta). Kazanç: olay
   sayısı 3–4× azalır. Öneri: evet.
-- [ ] **F22.3 Kayıt başına ikinci olayı kaldır — KARAR GEREKİR.** Otomatik
+- [ ] **F22.3 Kayıt başına ikinci olayı kaldır.** **KARAR (kullanıcı, 2026-11-03):** EVET — otomatik kayıtta istemci saati, sunucu zamanı kapanışta (`serverUpdatedAt ?? updatedAt`). Otomatik
   kayıtta `updatedAt` istemci saatiyle (`Timestamp.now()`); sunucu zamanı yalnız
   editör kapanışında (ya da ayrı `serverUpdatedAt` alanında). Etkilenenler
   (`grep updatedAt`, 7 karşılaştırma): `shared_note_activity` okunmamış
   hesabı, `push_service`, yedek, sıralama, `text_merge` üç yönlü birleştirme.
   Risk: cihaz saati yanlışsa sıra/okunmamış kayar. Öneri: sunucu zamanı
   kapanışta + karşılaştırmalar `serverUpdatedAt ?? updatedAt`.
-- [ ] **F22.4 Delta dinleyici — KARAR GEREKİR (büyük).** Ana liste: ilk liste
+- [ ] **F22.4 Senkron yükü not sayısından bağımsız.** **KARAR (kullanıcı, 2026-11-03):** **B seçildi** — hafif "kart dizini" + gövde ayrı belge. GÜVENLİK ŞARTLARI: göçten önce yerel tam yedek; göç idempotent ve sürümlü; eski şema bir sürüm boyunca okunmaya devam (geri dönüş mümkün); kurallar + `rules-test` + yedek/geri yükleme aynı oturumda; birden çok oturuma bölünebilir (önce okuma tarafı, sonra yazma, en son eski alanların kaldırılması). Aşağıdaki A metni bilgi için: Ana liste: ilk liste
   önbellekten bir kez (`GetOptions(source: cache)`), sonra yalnız
   `updatedAt > son görülen` sorgusu dinlenir → her olay yalnız değişen notları
   taşır, bedel not sayısından bağımsızlaşır. Gerekenler: kalıcı silmeler için
@@ -317,7 +325,7 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
 
 - [ ] **F24.1 Eşik ölçümü:** 1 / 5 / 10 / 20 / 35 KB metinde tuş→kare ve Java
   `commitText` süresi → pencereli kipe geçiş eşiği (tahmin ~4–6 KB).
-- [ ] **F24.2 Pencereli düzenleme — KARAR GEREKİR (mimari).** Gövde, eşiği
+- [ ] **F24.2 Pencereli düzenleme.** **KARAR (kullanıcı, 2026-11-03):** PENCERELİ KİP (blok editörü değil). Gövde, eşiği
   aşınca paragraf listesi olarak çizilir (tembel `SliverList`, paragraf başına
   önbellekli `Text.rich` — biçim işaretleri satır sonunu aşmadığı için
   paragraflar bağımsız, bkz. `text_wrap_controller.dart` paragraf önbelleği);
@@ -340,7 +348,7 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
 
 ## FAZ 25 — Soğuk açılış (K8)
 
-- [ ] **F25.1 Yazı tipi beklemesi — KARAR GEREKİR.** Önce ölç:
+- [ ] **F25.1 Yazı tipi beklemesi.** **KARAR (kullanıcı, 2026-11-03):** yalnız ana ekranda görünen yazı tipi beklenir, gerisi arka planda. Önce ölç:
   `preloadNoteFonts` gerçek süresi ve beklemeyi kaldırınca ilk kullanımdaki
   yeniden yerleşim maliyeti (HAFIZA: bekleme bir kasmayı çözmek için kondu).
   Seçenek: yalnız ana ekranda görünen yazı tipini bekle, gerisi arka planda.
@@ -360,7 +368,7 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   açılış, arka plandan dönüş, segment/klasör geçişi, editörden dönüş, kaydırma;
   kare kare inceleme (ffmpeg ile kareler) → titreme listesi (iskelet,
   görsel geç gelme, yerleşim zıplaması, renk/tema yanıp sönmesi).
-- [ ] **F26.2 Arka planda görsel önbelleği — KARAR GEREKİR (RAM ↔ titreme).**
+- [ ] **F26.2 Arka planda görsel önbelleği.** **KARAR (kullanıcı, 2026-11-03):** TUT — yalnız `onTrimMemory`/`didHaveMemoryPressure`'da boşalt.
   `onPause`ta `imageCache.clear()` + `CardThumbs.clearMemory()` yerine yalnız
   `onTrimMemory`/`didHaveMemoryPressure`'da boşalt. Bedel: arkadaki uygulama
   birkaç MB fazla tutar.
