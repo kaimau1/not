@@ -228,6 +228,7 @@ class NotePageCanvas extends StatefulWidget {
     this.onVideoToNote,
     this.onTranscribe,
     this.onSaveAs,
+    this.onShare,
     this.onPinTop,
     this.onPinHover,
     this.onPinDrag,
@@ -323,6 +324,9 @@ class NotePageCanvas extends StatefulWidget {
 
   /// Eki FARKLI KAYDET (dosyası olan her tür; YouTube bağlantısında yok).
   final ValueChanged<Attachment>? onSaveAs;
+
+  /// Eki paylaş (gömülü ek menüsü).
+  final ValueChanged<Attachment>? onShare;
 
   /// **ÜSTE SABİTLE** (kullanıcı isteği 2026-10-11: "üstte video/resim, altta
   /// not — görseli sürükleyerek"): basılı tutup sürüklenen görsel ekranın
@@ -2012,6 +2016,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       onSaveAs: widget.onSaveAs == null || img.isWebVideo
           ? null
           : () => widget.onSaveAs!(img),
+      onShare: widget.onShare == null ? null : () => widget.onShare!(img),
       onDetach: widget.onDetach == null
           ? null
           : () {

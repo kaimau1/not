@@ -300,6 +300,11 @@ maddeyi GÜNCELLE.
 - Görsele çizim + açık metin (`PageBubble.plain`) dışa aktarmada/paylaşımda
   görselin üstüne BASILIR (`image_annotations.dart`, PNG; F18.13).
 
+- Taranmış PDF OCR (2026-11-03): işler TEK KUYRUKTA + 40 sn zaman aşımı
+  (eşzamanlı çizim+ML Kit ilk açılışta takılıyordu); disk önbellek anahtarı
+  `v2`, damga yalnız dosya BOYU (mtime yeniden indirmede değişip her açılışta
+  baştan tanıtıyordu).
+
 ## Ses ve yapay zekâ
 - Seslendirme tek kapı `SpeechService`; Antalia ONNX isteğe bağlı, yalnız
   Android + tr.
@@ -379,6 +384,10 @@ maddeyi GÜNCELLE.
   dokunuş hepsini indirir) ya da "telefondan çıkmamış" uyarısı (Android'de
   Drive bağlı değilse ekler cihazda bekler — web'in yapabileceği yok). Web
   Drive'a yazmaz; yerel not/video yok.
+- Web Drive (2026-11-03): bağlanma/indirme hatası artık SNACKBAR + ErrorLog
+  (`web-drive-connect`/`web-drive-fetch`; eskiden sessizdi → "gelmiyor"un
+  kökü görülemedi). Yeni jetonla düşen ekler yeniden denenir. Kök neden hâlâ
+  doğrulanmadı: sıradaki turda kullanıcıdan ekrandaki hata metnini iste.
 - **Bulut tarayıcısı TUZAĞI (2026-11-02):** sandbox Chromium'unda yolu `%2F`
   içeren HER Firebase Storage isteği 400 (ön istek dahil; curl'de aynısı
   403/200). Yükleme (`?name=`) geçer, okuma/silme geçmez → web turunda ek

@@ -21,6 +21,7 @@ class _ImageTools extends StatelessWidget {
     this.copyIsLink = false,
     this.onOpenExternal,
     this.onSaveAs,
+    this.onShare,
     this.onCaption,
     this.hasCaption = false,
     this.placementHint = false,
@@ -36,6 +37,9 @@ class _ImageTools extends StatelessWidget {
 
   /// EKİ FARKLI KAYDET (2026-10-17): dosya kullanıcının seçtiği yere.
   final VoidCallback? onSaveAs;
+
+  /// Eki sistem paylaşımıyla gönderir (2026-11-03).
+  final VoidCallback? onShare;
 
   /// Üst satırdaki görünüm anahtarı (Sabit / Yüzen / Balonlu).
   final Widget? viewSwitch;
@@ -117,7 +121,8 @@ class _ImageTools extends StatelessWidget {
             onVideoToNote != null ||
             onTranscribe != null ||
             onOpenExternal != null ||
-            onSaveAs != null)
+            onSaveAs != null ||
+            onShare != null)
           PopupMenuButton<String>(
             tooltip: l10n.more,
             icon: const Icon(Icons.more_vert, size: 20),
@@ -139,6 +144,8 @@ class _ImageTools extends StatelessWidget {
                   onOpenExternal?.call();
                 case 'saveAs':
                   onSaveAs?.call();
+                case 'share':
+                  onShare?.call();
               }
             },
             itemBuilder: (context) => [
@@ -210,6 +217,16 @@ class _ImageTools extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.checklist),
                     title: Text(l10n.selectImages),
+                  ),
+                ),
+              if (onShare != null)
+                PopupMenuItem(
+                  value: 'share',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.share_outlined),
+                    title: Text(l10n.share),
                   ),
                 ),
               if (onSaveAs != null)

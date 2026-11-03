@@ -58,10 +58,25 @@ class PdfPageOcr {
       _cache[key] = value;
       return Future.value(value);
     }
-    return _inFlight[key] ??= _run(
+    return _inFlight[key] ??= _queued(
       page,
       key,
     ).whenComplete(() => _inFlight.remove(key));
+  }
+
+  /// OCR işleri SIRAYLA koşar (kullanıcı bulgusu 2026-11-03: "metin tanınıyor
+  /// ilk seferde bitmiyor, nota girip çıkınca oluyor"): görünür her taranmış
+  /// sayfa aynı anda 1600 px çizim + ayrı ML Kit tanıyıcısı açıyordu; ilk
+  /// açılışta (model ısınırken) iş takılıp çip sonsuza kalıyordu. Tek kuyruk +
+  /// zaman aşımı: takılan iş en geç [_timeout]'ta düşer, önbelleğe YAZILMAZ
+  /// (sonra yeniden denenir).
+  static Future<void> _chain = Future.value();
+  static const _timeout = Duration(seconds: 40);
+
+  static Future<OcrPageText?> _queued(PdfPage page, String key) {
+    final job = _chain.then((_) => _run(page, key).timeout(_timeout));
+    _chain = job.then((_) {}, onError: (_) {});
+    return job.catchError((_) => null);
   }
 
   static Future<OcrPageText?> _run(PdfPage page, String key) async {
@@ -149,7 +164,7 @@ class PdfPageOcr {
     required double height,
   }) {
     final raw =
-        'v1|$source|$stamp|$pageNumber|'
+        'v2|$source|$stamp|$pageNumber|'
         '${width.toStringAsFixed(1)}x${height.toStringAsFixed(1)}';
     return '${sha1.convert(utf8.encode(raw))}.json';
   }
@@ -163,7 +178,10 @@ class PdfPageOcr {
       final file = File(source);
       if (file.existsSync()) {
         final stat = file.statSync();
-        stamp = '${stat.size}_${stat.modified.millisecondsSinceEpoch}';
+        // Yalnız BOY (2026-11-03): değişme zamanı, ek eşitlemede/yeniden
+        // indirmede dosya aynı kalsa da değişiyordu → her açılışta önbellek
+        // ıskalanıp sayfa baştan tanınıyordu. Sayfa düzenleme boyu değiştirir.
+        stamp = '${stat.size}';
       }
     } catch (_) {
       // Damgasız önbellek anahtarı yine çalışır.
