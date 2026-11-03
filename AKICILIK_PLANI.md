@@ -23,7 +23,7 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 20…27):
    cihazda doğrulanmadı" diye işaretle, KALANLAR'a ekle.
 3. Satır numaraları 2026-11-03 hâlidir: önce `grep`, kök nedeni koddan doğrula.
 4. **KARAR GEREKİR** maddesinde önce kullanıcıya kısa öneri + bedel, onay al.
-5. Faz sonunda `dart analyze lib test` temiz + `flutter test -j 4` yeşil;
+5. Faz sonunda değişenin testi oturumda + tam takım CI'da yeşil (CLAUDE.md › DOĞRULAMA — KISA YOL);
    maddeler `[x]` + **Yapıldı/Ölçüldü:** satırı (önce→sonra sayı); Durum tablosu;
    kalıcı karar/tuzak → HAFIZA.md; commit + push (APK isteniyorsa başlıkta `[apk]`).
 6. Belirti yamalama YASAK: "ilk N satır sonra geri kalanı", "kare başına K öğe"
