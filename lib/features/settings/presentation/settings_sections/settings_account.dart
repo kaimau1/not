@@ -679,7 +679,7 @@ class _AccountSection extends ConsumerWidget {
         TextButton.icon(
           icon: const Icon(Icons.logout),
           label: Text(l10n.signOut),
-          onPressed: () => confirmAndSignOut(context, ref),
+          onPressed: () => confirmAndSignOut(context),
         ),
         TextButton.icon(
           style: TextButton.styleFrom(

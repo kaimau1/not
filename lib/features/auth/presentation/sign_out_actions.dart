@@ -13,9 +13,17 @@ import 'auth_providers.dart';
 /// Anonim (yerel) hesapta çıkış GERİ DÖNÜŞSÜZ veri kaybıdır: uid bir daha
 /// ele geçirilemez, "Yerel devam et" YENİ uid açar. Sıradan onay yetmez —
 /// diyalog açık uyarır ve düğme silme düğmesi gibi kırmızıdır.
-Future<bool> confirmAndSignOut(BuildContext context, WidgetRef ref) async {
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-11-03: "hesap değiştir ve oturumu kapat
+/// tepki vermiyor"): hesap levhası düğmeye basınca KAPANIR ve levhanın
+/// `WidgetRef`i onay diyaloğu açıkken ağaçtan kalkar; onaydan sonraki
+/// `ref.read` hata atıyor, çıkış hiç yapılmıyordu. Artık [ProviderContainer]
+/// diyalogdan ÖNCE, yaşayan [context]ten (levhanın değil, onu açan ekranın)
+/// alınır — `WidgetRef` hiç tutulmaz.
+Future<bool> confirmAndSignOut(BuildContext context) async {
   final l10n = context.l10n;
-  final anonymous = ref.read(isAnonymousProvider);
+  final container = ProviderScope.containerOf(context, listen: false);
+  final anonymous = container.read(isAnonymousProvider);
   final confirmed = await _confirm(
     context,
     title: l10n.signOut,
@@ -24,19 +32,17 @@ Future<bool> confirmAndSignOut(BuildContext context, WidgetRef ref) async {
     danger: anonymous,
   );
   if (!confirmed) return false;
-  await ref.read(authRepositoryProvider).signOut();
+  await container.read(authRepositoryProvider).signOut();
   return true;
 }
 
 /// **Hesap değiştir**: bu hesaptan çıkar ve Google hesap seçicisini hemen
 /// açar. Seçici kapatılırsa kullanıcı giriş ekranında kalır (oradan yine
 /// girebilir); başka hata giriş ekranına değil bildirime yazılır.
-Future<void> confirmAndSwitchAccount(
-  BuildContext context,
-  WidgetRef ref,
-) async {
+Future<void> confirmAndSwitchAccount(BuildContext context) async {
   final l10n = context.l10n;
-  final anonymous = ref.read(isAnonymousProvider);
+  final container = ProviderScope.containerOf(context, listen: false);
+  final anonymous = container.read(isAnonymousProvider);
   final confirmed = await _confirm(
     context,
     title: l10n.switchAccount,
@@ -48,7 +54,7 @@ Future<void> confirmAndSwitchAccount(
   );
   if (!confirmed) return;
   // Kapsayıcı ve bildirim kökü ÖNCEDEN: çıkışla bu ekran ağaçtan kalkar.
-  final auth = ref.read(authRepositoryProvider);
+  final auth = container.read(authRepositoryProvider);
   final messenger = rootScaffoldMessengerKey.currentState;
   final errorText = l10n;
   await auth.signOut();

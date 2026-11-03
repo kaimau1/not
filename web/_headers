@@ -1,0 +1,13 @@
+# Cloudflare Pages başlıkları (2026-11-03, web açılışını hızlandırma).
+# Varsayılan "max-age=0, must-revalidate": HER açılışta her dosya için ayrı
+# bir doğrulama turu. Adı değişmeyen ama içeriği de pratikte değişmeyen
+# dosyalar (simgeler, paketli yazı tipleri) bir hafta önbellekte kalır;
+# arka planda tazelenir. index.html, flutter_bootstrap.js, main.dart.* ve
+# diğerleri varsayılanda kalır (her sürümde değişir). /assets/fonts/ BİLEREK
+# yok: MaterialIcons her derlemede ağaç-sarsmayla yeniden üretilir.
+/icons/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/favicon.png
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/assets/assets/google_fonts/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400

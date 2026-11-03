@@ -32,7 +32,23 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/Icon-192.png"/>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    HIZLI AÇILIŞ (kullanıcı isteği 2026-11-03): motor dosyaları (skwasm /
+    CanvasKit, yedek yazı tipleri) gstatic'ten, oturum ve veri Firebase
+    sunucularından gelir. Bağlantılar (DNS + TLS) Flutter'ın önyükleyicisi
+    onları istemeden ÖNCE açılır; önyükleyici de gövdenin sonunu beklemeden
+    başta indirilir (defer: sırası korunur, ayrıştırmayı durdurmaz).
+  -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
+  <link rel="preload" href="icons/Icon-192.png" as="image" fetchpriority="high">
+  <script src="flutter_bootstrap.js" defer></script>
 
   <!--
     AÇILIŞ EKRANI (2026-09-22, web tasarımı): Flutter motoru indirilip ilk
@@ -42,9 +58,9 @@
     solup kaldırılır. Renkler AppTheme.paper / dark ile aynı.
   -->
   <style>
-    :root { --bg: #F3EFE3; --fg: #3B2A08; --muted: #7A6A4F; --mark: #7D5703; }
+    :root { --bg: #F3EFE3; --fg: #3B2A08; --muted: #7A6A4F; --mark: #13254A; }
     @media (prefers-color-scheme: dark) {
-      :root { --bg: #0E0E11; --fg: #ECE6DA; --muted: #9A958C; --mark: #D9A441; }
+      :root { --bg: #0E0E11; --fg: #ECE6DA; --muted: #9A958C; --mark: #8FA8D8; }
     }
     html, body { margin: 0; height: 100%; background: var(--bg); }
     #splash {
@@ -52,10 +68,16 @@
       align-items: center; justify-content: center; gap: 18px;
       background: var(--bg); color: var(--fg);
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      transition: opacity .35s ease; z-index: 10;
+      transition: opacity .2s ease; z-index: 10;
     }
     #splash.gone { opacity: 0; pointer-events: none; }
-    #splash svg { width: 72px; height: 72px; animation: rise .6s ease-out both; }
+    /* Uygulamanın GERÇEK simgesi (i6, lacivert "N") — eski kahverengi sayfa
+       çizimi 2026-10-19'daki simge değişikliğinde burada unutulmuştu. */
+    #splash img {
+      width: 88px; height: 88px; border-radius: 20px;
+      box-shadow: 0 6px 20px rgba(19, 37, 74, .22);
+      animation: rise .35s ease-out both;
+    }
     #splash h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: .2px; }
     #splash p { margin: 0; font-size: 14px; color: var(--muted); }
     #splash .bar {
@@ -70,17 +92,13 @@
     @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
     @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
     @media (prefers-reduced-motion: reduce) {
-      #splash svg, #splash .bar::after { animation: none; }
+      #splash img, #splash .bar::after { animation: none; }
     }
   </style>
 </head>
 <body>
   <div id="splash" role="status" aria-live="polite">
-    <svg viewBox="13 7 50 67" aria-hidden="true">
-      <path d="M13 7h33.5L63 23.5V69a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5V12a5 5 0 0 1 5-5z" fill="var(--mark)"/>
-      <path d="M46.5 7L63 23.5H50.5a4 4 0 0 1-4-4V7z" fill="var(--bg)"/>
-      <path d="M25 35h26M25 47h26M25 59h15" stroke="var(--bg)" stroke-width="5.4" stroke-linecap="round"/>
-    </svg>
+    <img src="icons/Icon-192.png" width="88" height="88" alt="" decoding="async" fetchpriority="high">
     <h1>Notlar</h1>
     <div class="bar"></div>
     <p>Notların hazırlanıyor…</p>
@@ -109,7 +127,7 @@
         if (gone || !s) return;
         gone = true;
         s.classList.add('gone');
-        setTimeout(function () { s.remove(); }, 400);
+        setTimeout(function () { s.remove(); }, 250);
       }
       window.addEventListener('notlar-ready', hide);
       window.addEventListener('flutter-first-frame', function () {
@@ -117,6 +135,5 @@
       });
     })();
   </script>
-  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

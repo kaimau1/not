@@ -56,9 +56,7 @@ void main() {
     expect(built(), 90);
   });
 
-  testWidgets('kapanırken maddeler kare başına birkaç sökülür', (
-    tester,
-  ) async {
+  testWidgets('kapanırken maddeler kare başına birkaç sökülür', (tester) async {
     await pump(tester);
     for (var i = 0; i < 140; i++) {
       await tester.pump(const Duration(milliseconds: 16));
@@ -78,5 +76,30 @@ void main() {
       await tester.pump(const Duration(milliseconds: 16));
     }
     expect(built(), 12);
+  });
+
+  // Kullanıcı bulgusu 2026-11-03: "son kasma güncellemesinden sonra klavye
+  // açılırken kasma, titreme". Notu açıp hemen maddeye dokunan kullanıcıda
+  // kalan maddelerin kurulumu klavye animasyonuna biniyordu.
+  testWidgets('klavye hareket ederken kurulum bekler, durunca sürer', (
+    tester,
+  ) async {
+    addTearDown(tester.view.reset);
+    await pump(tester);
+    await tester.pump(const Duration(milliseconds: 1000));
+    expect(built(), 12);
+
+    // Kurulum başlamak üzereyken klavye açılmaya başlar.
+    for (var i = 1; i <= 16; i++) {
+      tester.view.viewInsets = FakeViewPadding(bottom: 600.0 * i / 16);
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(built(), 12, reason: 'klavye karesi $i: madde eklenmez');
+    }
+    // Klavye durdu: sessizlik süresi dolunca kalanlar kurulur.
+    await tester.pump(const Duration(milliseconds: 400));
+    for (var i = 0; i < 60; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    expect(built(), 90);
   });
 }

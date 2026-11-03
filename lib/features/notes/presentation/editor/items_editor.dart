@@ -1,6 +1,7 @@
 import '../../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderFlex;
@@ -552,10 +553,38 @@ class ItemsEditorState extends State<ItemsEditor>
     WidgetsBinding.instance.addPostFrameCallback((_) => _shrinkBudget());
   }
 
+  /// KLAVYE HAREKETİNDE BEKLE (kullanıcı bulgusu 2026-11-03: "son kasma
+  /// güncellemesinden sonra klavye açılırken kasma, titreme"). Kalan maddeler
+  /// 2026-11-02'den beri açılıştan 1100 ms SONRA kare başına eklenir; uzun
+  /// notu açıp hemen bir maddeye dokunan kullanıcıda bu ~20 karelik kurulum
+  /// tam klavyenin açılış animasyonuna (ve [KeyboardSnap]'in oturma
+  /// yerleşimine) biniyordu: her karede hem yeni satırlar hem klavye.
+  /// Klavye yüksekliği değiştiği sürece kurulum [_kKeyboardQuiet] kadar
+  /// ertelenir; klavye durup gövde oturduktan sonra kaldığı yerden sürer.
+  static const _kKeyboardQuiet = Duration(milliseconds: 320);
+
+  /// Kurulumun son gördüğü klavye yüksekliği (fiziksel piksel) ve okunduğu
+  /// pencere (`didChangeDependencies`te; zamanlayıcıdan bağlam araması
+  /// yapılmaz).
+  double _growInset = 0;
+  ui.FlutterView? _view;
+
+  bool _keyboardMoving() {
+    final inset = _view?.viewInsets.bottom ?? 0;
+    final moved = inset != _growInset;
+    _growInset = inset;
+    return moved;
+  }
+
   void _growBudget() {
     _budgetTimer = null;
     final budget = _rowBudget;
     if (!mounted || budget == null) return;
+    if (_keyboardMoving() || noteRouteClosing.value) {
+      if (noteRouteClosing.value) return;
+      _budgetTimer = Timer(_kKeyboardQuiet, _growBudget);
+      return;
+    }
     setState(() {
       final next = budget + _kRowsPerFrame;
       _rowBudget = next >= _items.length ? null : next;
@@ -592,6 +621,11 @@ class ItemsEditorState extends State<ItemsEditor>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _outerScroll = widget.shrinkWrap ? Scrollable.maybeOf(context) : null;
+    final view = View.maybeOf(context);
+    if (!identical(view, _view)) {
+      _view = view;
+      _growInset = view?.viewInsets.bottom ?? 0;
+    }
   }
 
   /// Sürükleme sırasında parmağın konumuna göre kenar kaydırmasını ayarlar.

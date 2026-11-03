@@ -196,7 +196,7 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
                 title: Text(l10n.switchAccount),
                 onTap: () async {
                   Navigator.pop(sheetContext);
-                  await confirmAndSwitchAccount(context, ref);
+                  await confirmAndSwitchAccount(context);
                 },
               ),
               ListTile(
@@ -211,7 +211,7 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
                 ),
                 onTap: () async {
                   Navigator.pop(sheetContext);
-                  await confirmAndSignOut(context, ref);
+                  await confirmAndSignOut(context);
                 },
               ),
               const SizedBox(height: 8),

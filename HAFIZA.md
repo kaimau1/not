@@ -159,28 +159,30 @@ maddeyi GÜNCELLE.
 - `ConsumerState.dispose` içinde `ref` yok. Türetilmiş sağlayıcı içerik
   aynıysa önceki örneği döner (`StableBox`). Toplu işlem tek `WriteBatch`
   (450'lik). Animasyonda `FrameLoop`.
-- **Uzun liste açılış/kapanış kasması** (2026-11-02, telefonda ölçüldü: 90
-  maddelik not; kısa notta yok → sorun madde sayısına bağlı). Ölçüm yolu:
-  `adb shell dumpsys SurfaceFlinger --latency '"SurfaceView[<paket>/<paket>.MainActivity](BLAST)#0"'`
-  (Flutter kareleri `gfxinfo`da SAYILMAZ; ad tırnaklı). Öncesi: açılış sonunda
-  5 kare 33–82 ms + bir 99 ms, kapanış sonunda 2 kare ~50 ms. Kök nedenler:
-  (1) kademeli madde kurulumu geçiş sonunda başlıyor ve her adım 20–30 ms
-  raster/build'li kare üretiyordu; (2) kapanışta rota kalkarken 90 satırın tek
-  karede yıkımı; (3) ilk karede 18 satırın yerleşimi ~55 ms. Şimdi:
+- **Uzun liste açılış/kapanış kasması** (2026-11-02, telefonda ölçüldü, 90
+  madde; kısa notta yok). Ölçüm: `adb shell dumpsys SurfaceFlinger --latency
+  '"SurfaceView[<paket>/<paket>.MainActivity](BLAST)#0"'` (Flutter kareleri
+  `gfxinfo`da YOK) ya da `print` + `adb logcat` + `addTimingsCallback`. Şimdi:
   `_kFirstRows` 12, kalanı geçişten SONRA (1100 ms) 4 madde/kare; kapanırken
-  `noteRouteClosing` ile kare başına 6 madde sökülür (`_shrinkBudget`). Sonuç:
-  açılış en kötü 49 ms, kapanış temiz. YANLIŞ YOL: satıra `RepaintBoundary`
-  (raster 19–32 → 16–21 ms, anlamlı kazanç yok; geri alındı). "Animasyon
-  bitişinde 65 ms" ölçümü yanıltıcıydı: o, büyütme zamanlayıcısının (520 ms)
-  bekleme süresiydi, tamamlanma karesi 4–9 ms. Tanı yolu (release'te de
-  çalışır): `print` + `adb logcat -v time`, `WidgetsBinding.addTimingsCallback`
-  ile kare build/raster süreleri. TUZAK: yerelde ölçmek için ayrı
-  `applicationId` + `google-services.json` `package_name` (geçici, commit'leme;
-  imza anahtarı yok → CI imzalı uygulamanın üstüne kurulmaz); derleme 5–20 dk;
-  Xiaomi "USB üzerinden yükle" onayı 8 sn içinde dokunuş ister.
+  `noteRouteClosing` ile kare başına 6 madde sökülür. YANLIŞ YOL: satıra
+  `RepaintBoundary` (kazanç yok). TUZAK: yerel ölçüm ayrı `applicationId` +
+  `google-services.json` ister (commit'leme); Xiaomi USB onayı 8 sn.
+- **Klavye/kapanış kasması (2026-11-03)**: (1) büyüme klavye animasyonuna
+  biniyordu → klavye yüksekliği değiştikçe 320 ms bekler (`_keyboardMoving`).
+  (2) Örtülü ana ekran `MediaQuery`yi geçiriyordu (klavyenin her karesinde
+  Scaffold + kartlar uyarılıyordu) → `FreezeWhenHidden` gizliyken donar.
+  (3) Yetişme (380 ms) karttan kapanışın son karesine biniyordu → artık
+  `noteRouteClosing` bitince +120 ms. Cihazsız tanı: widget testinde
+  `tester.view.viewInsets` kare kare + `debugOnRebuildDirtyWidget` /
+  `debugPrintLayouts` sayımı. TUZAK: debug'da `MediaQuery` bildirimi bağımlı
+  sayısıyla pahalı, release'te değil — debug ms'ine göre karar verme.
 - Ana ekran ızgarası deterministik sütun ataması (`balancedColumnAssignment`).
   Kesme noktası geçişinde `DashboardScreen` başka yerde yeniden kurulur →
   kaydırma `DashboardScrollMemory`de ORANLA taşınır (F18.11).
+
+- Levha kapandıktan sonra sağlayıcı okunacaksa levhanın `ref`i DEĞİL, açan
+  ekranın `ProviderScope.containerOf`u (2026-11-03: hesap levhasında "Oturumu
+  kapat/Hesap değiştir" bu yüzden sessizce çalışmıyordu).
 
 ## Editör, klavye, metin
 - Alt çubuk klavye ALTINDA: `KeyboardSnap/KeyboardSlide`, hareket ile
@@ -316,7 +318,10 @@ maddeyi GÜNCELLE.
 ## Web
 - `--wasm` (skwasm, JS yedeği); COOP/COEP yok. Wasm'da `int` 64, JS'de 53 bit.
 - Geri tuşu `HomeFirstRouteInformationProvider`. Açılış `notlar-ready`
-  olayında (`signalWebReady`).
+  olayında (`signalWebReady`). Açılış katmanı GERÇEK simgeyi
+  (`icons/Icon-192.png`) gösterir — simge değişince `index.html`i de
+  güncelle. `web/_headers`: simge + `google_fonts` 1 hafta önbellek
+  (`/assets/fonts/` HAYIR: MaterialIcons her derlemede değişir).
 - Drive ekleri `WebDriveAuth`/`WebDriveGate` (`blob:` buluta yazılmaz). Jeton
   SEKMEDE (`sessionStorage`, uid'e bağlı, ~55 dk — yenilemede yeniden izin
   sormaz); notta `WebAttachmentsBanner`: "N ek Drive'da · Göster" (tek
