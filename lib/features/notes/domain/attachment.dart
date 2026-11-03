@@ -1221,7 +1221,14 @@ class Attachment {
         fileName: map['fileName'] as String? ?? '',
         mimeType: map['mimeType'] as String? ?? '',
         storagePath: map['storagePath'] as String? ?? '',
-        downloadUrl: map['downloadUrl'] as String? ?? '',
+        // ÖLÜ `blob:` ADRESİ (kullanıcı bulgusu 2026-11-03: web'de Drive
+        // ekleri gelmiyor): 2026-10-29'dan önce web, Drive'dan indirdiği
+        // dosyanın sekmeye özel adresini buluta yazabiliyordu. Okurken boş
+        // say: ek "yüklenmiş" görünüp Drive kapısını atlamasın.
+        downloadUrl: switch (map['downloadUrl']) {
+          final String u when !u.startsWith('blob:') => u,
+          _ => '',
+        },
         driveId: map['driveId'] as String? ?? '',
         localPath: _resolveLocalPath(map, noteId),
         sizeBytes: (map['sizeBytes'] as num?)?.toInt() ?? 0,
