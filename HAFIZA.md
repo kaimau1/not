@@ -197,7 +197,8 @@ maddeyi GÜNCELLE.
   ItemsEditor de aynı desen.
 - Yeni GÖRÜNÜR not alanı → `sameRenderedNote` VE `_sameVisual`.
 - **Başlık üst çubukta** (2026-11-03) medya sabitken ya da balonlu belgede
-  (`_titleInBar`; tarih yerine, 18 pt, "+" yanında); balonluda görünüm
+  (`_titleInBar`; tarih yerine, 18 pt, meta çip tek simge; sabitle/tema
+  gizli, yinele yalnız doluyken); balonluda görünüm
   anahtarı çip satırının sağında. Üst çubuk 48 dp, alt çubuk 56 dp,
   sabit bölme çubuğu 40 dp. Yeni yüzen ek `_mutate`te yakalanır
   (`_placementHintId`) → tuval seçer, görünüm anahtarı nabızlı + "nerede
@@ -258,7 +259,13 @@ maddeyi GÜNCELLE.
   Vurgula". Not satırı `📖 s.12 · 5. satır “alıntı”` (`core/utils/pdf_ref.dart`;
   satır = aynı sütundaki parça bantları, `pdfLineNumber`); referans
   `linkSpans`ta damga gibi çizilir, dokununca sabit/ilk PDF'in `pdfPage`i
-  yazılır. Çubuktaki "Not al" seçimsiz o anki sayfa.
+  yazılır. Çubuktaki "Not al" seçimsiz o anki sayfa. Okuma kipinde
+  yakınlaştırma (`InteractiveViewer`, yakınken çevirme/kaydırma kilitli,
+  çift dokunuş 2,5×), şerit saydam hap ve 2,5 sn'de söner, "balon ekle"
+  düğmesi katmanı düzenlenebilir yapar. Seçim tutamacı `EagerGestureRecognizer`
+  + `Listener` (onPan kaydırmaya yeniliyordu).
+- Balonlu/klasik BAŞLANGIÇ sorusu yok (2026-11-03): içerikten not hep
+  klasik; "BALONLU PDF" kart rozeti ve ayardaki kip satırı kalktı.
 - Görsele çizim + açık metin (`PageBubble.plain`) dışa aktarmada/paylaşımda
   görselin üstüne BASILIR (`image_annotations.dart`, PNG; F18.13).
 
@@ -394,7 +401,8 @@ maddeyi GÜNCELLE.
   eklentiyi tembel kurar (testte platform kanalı patlar).
 - ☑ `_toggleChecklistLine`: gövde hep maddelerin üstünde.
 - Görsel açıklaması sayfa düzeninin parçası (`_captionBand`).
-- Uzun listeli not ilk karede 18 madde (`_rowBudget`).
+- Uzun listeli not ilk karede 18 madde (`_rowBudget`). İşaretli blok 10'ar
+  (`_checkedShown`, "İşaretlileri göster (N gizli)"), açılışa özgü.
 - Dinleme alanı tek kart `ListeningCard`; başlık düğmesi
   `ListeningHeaderButton` (34 dp).
 - Ayar alanları `ExpandReveal` (+ `_StaggeredRows`, `_followIntoView`);
