@@ -27,6 +27,7 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web he
 ## Gece / zamanlanmış görev kuralı (2026-11-03 kullanıcı kararı)
 - Plan dosyalarındaki KARAR maddelerinin hepsi 2026-11-03'te verildi (maddelerde **KARAR (kullanıcı, 2026-11-03)**) — zamanlanmış görev SORMADAN uygular; yeni bir karar çıkarsa en güvenli seçeneği uygula ve maddeye "sabah bakılacak" yaz.
 - Akış: kendi dalında çalış → değişenin testi → push → **CI yeşilse main'e birleştir, başlıkta `[apk]`** (kişisel APK; `NOTLAR_KISISEL=1` CI'da) → main CI'ını da izle; kırmızıysa düzelt ya da birleştirmeyi geri al (`git revert -m 1`). CI kırmızıyken main'e ASLA birleştirme.
+- **Oturum başlatma (2026-11-04 kullanıcı kararı):** gece döngüsünde yeni oturumları YALNIZ ana oturum başlatır (`create_session`). Alt oturumlar yeni oturum başlatmaz; başlatılan her oturumun istemine "sonraki oturumu sen başlatma, bitince durumu bu ana oturuma bildir" yazılır. Bulutta iş kalmadıysa (2026-11-04: AKICILIK 2. tur bitti, PR #98/#99 main'de, CI yeşil) oturum açılmaz; kalanlar telefonda ölçüm (KALAN_ISLER Faz 19 F1–F4, KALANLAR §2 #34–46).
 - Telefon gerektiren ölçüm yapılamaz: maddeyi "yazıldı, cihazda doğrulanmadı" diye işaretle, `KALANLAR.md` §2'ye adım ekle.
 - Veri göçü / kayıt sıfırlama (F22.4, F28.2) içeren iş: önce yerel tam yedek, göç geri alınabilir, kural testleri (`rules-test`) yeşil.
 
