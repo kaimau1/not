@@ -837,7 +837,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
     final note = _note;
     if (note == null || _pdfForRefs(note) == null) return null;
     return tappedPdfRef(
-      displayText: _bodyController.text,
+      displayText: _bodyField.text,
       selection: _bodyController.selection,
       editable: editable,
       tapGlobal: _bodyTapPoint.last,
@@ -860,7 +860,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
     final note = _note;
     if (note == null || !_NoteEditorScreenState._hasVideo(note)) return null;
     return tappedVideoTimestamp(
-      displayText: _bodyController.text,
+      displayText: _bodyField.text,
       selection: _bodyController.selection,
       editable: editable,
       tapGlobal: _bodyTapPoint.last,

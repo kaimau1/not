@@ -38,8 +38,8 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 20…27):
 | 21 | Ana ekran kartı: önizlemeyi kırp, kart başına işi azalt | Kısmen | 2026-11-04 | 2 tur: takılma %8,4→%3,4–4,2, en kötü 115→33–50 ms, arama 465→139 ms; kabul sağlanmadı — kalan engel raster+kurulum (K7); F21.6 arama katmanı yazıldı (2026-11-04, cihazda ölçülmedi) |
 | 22 | Firestore trafiği: yazımda tüm koleksiyon ana iş parçacığında | Kısmen | 2026-11-04 | F22.2/3/5/6/7 bulutta (cihazda ölçülmedi); F22.1 ölçüm, F22.4 göç (Faz 19) |
 | 23 | Geçişler: not açma/kapama | Kısmen | 2026-11-04 | F23.1/3/4 yazıldı (cihazda ölçülmedi); F23.2/5 ölçüm |
-| 24 | Uzun not editörü: tuş başına O(n) | Kısmen | 2026-11-04 | F24.2 1. parça (saf pencere modeli); F24.1 ölçüm, F24.2 kalan + F24.3 cihazlı oturumda |
-| 25 | Soğuk açılış | Kısmen | 2026-11-04 | F25.3 kademeli başlangıç; F25.1/F25.2 ölçüm (sabah bakılacak) |
+| 24 | Uzun not editörü: tuş başına O(n) | Kısmen | 2026-11-04 | F24.2 yapıldı (telefonda: LAYOUT p90 122→12 ms); F24.3 yapılmadı (15+ odak yolu, risk) |
+| 25 | Soğuk açılış | Kısmen | 2026-11-04 | F25.2 yapıldı (içerik ~2,5→~1,5 sn); ilk kare < 600 ms kabulü sağlanmadı, F25.1 açık |
 | 26 | Titreme ve görsel kararlılık | Kısmen | 2026-11-04 | F26.2/3/4 yazıldı; F26.1 video ölçümü |
 | 27 | Hijyen + regresyon kapısı | Kısmen | 2026-11-04 | F27.1 kanal sayacı, F27.4 CI bütçesi; F27.2/3 cihaz |
 
@@ -340,7 +340,7 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
 
 - [ ] **F24.1 Eşik ölçümü:** 1 / 5 / 10 / 20 / 35 KB metinde tuş→kare ve Java
   `commitText` süresi → pencereli kipe geçiş eşiği (tahmin ~4–6 KB).
-- [ ] **F24.2 Pencereli düzenleme.** **KARAR (kullanıcı, 2026-11-03):** PENCERELİ KİP (blok editörü değil). Gövde, eşiği
+- [x] **F24.2 Pencereli düzenleme.** **KARAR (kullanıcı, 2026-11-03):** PENCERELİ KİP (blok editörü değil). Gövde, eşiği
   aşınca paragraf listesi olarak çizilir (tembel `SliverList`, paragraf başına
   önbellekli `Text.rich` — biçim işaretleri satır sonunu aşmadığı için
   paragraflar bağımsız, bkz. `text_wrap_controller.dart` paragraf önbelleği);
@@ -352,7 +352,7 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   (super_editor tarzı, her paragraf ayrı düğüm) — daha büyük iş. Öneri:
   pencereli kip, kısa notlarda bugünkü yol aynen.
   **Kısmen (2026-11-04):** 1. parça — saf metin modeli `text_window.dart` (paragraf sınırında pencere `windowAround`, ofset eşlemesi, `spliceWindow` geri yazma, `needsRewindow`; eşik `kWindowedThreshold` = 6000 TAHMİN) + `text_window_test`. Editöre BAĞLI DEĞİL. Sonraki parçalar: (2) pencere dışı paragrafların önbellekli çizimi (`SliverList`) + dokunuşla yeniden pencereleme, (3) arama/biçim/geri alma/dikte tam metin üzerinden — F24.1 eşik ölçümünden sonra, cihazda doğrulamalı oturumda.
-- [ ] **F24.3 Madde listesi: yalnız odaklanan madde `TextField`.** Odakta
+- [ ] **F24.3 Madde listesi (2026-11-04: hâlâ yapılmadı, 120 maddede açılış ana iş 630 ms ölçüldü):** yalnız odaklanan madde `TextField`.** Odakta
   olmayan maddeler düz metin (`_cachedItemRow` zaten çiziyor); dokunulan madde
   düzenlenebilire döner. Sonra `_kFirstRows` / `_rowBudget` / kapanışta parça
   parça söküm (`noteRouteClosing`) hileleri silinir (usta 6b).
@@ -371,7 +371,7 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   yeniden yerleşim maliyeti (HAFIZA: bekleme bir kasmayı çözmek için kondu).
   Seçenek: yalnız ana ekranda görünen yazı tipini bekle, gerisi arka planda.
   **Bulutta yapılmadı (2026-11-04):** KARAR "önce ölç" — arka planda yüklenen her yazı tipi motora "yazı tipleri değişti" dedirtip ekrandaki BÜTÜN metni yeniden yerleştiriyor (bekleme bu yüzden kondu); `preloadNoteFonts` süresi ve ilk 2 sn'deki yeniden yerleşim telefonda ölçülmeden değiştirilmedi.
-- [ ] **F25.2 Anında içerik.** Son ana ekranın ilk ~30 kartının hafif özeti
+- [x] **F25.2 Anında içerik.** Son ana ekranın ilk ~30 kartının hafif özeti
   (başlık, F21.1 dilimi, renk, bayraklar, küçük resim yolu) arka plana geçişte
   diske; açılışta ilk karede bunlar çizilir, Firestore gelince sessizce
   uzlaştırılır (Keep davranışı). İskelet→içerik titremesi de kalkar.
@@ -451,7 +451,11 @@ Ayrıntı ve komutlar: `tool/perf/README.md`. Özet:
 | Tarih | Sürüm | Kaydırma takılan % / en kötü | Kapanış en kötü | Kısa not yazma: kayıt sonrası ana blok | 35 KB yazma tuş→kare | Açılış ilk kare / donuk kare |
 |---|---|---|---|---|---|---|
 | 2026-11-03 | v1.1.613 | %6,5 / 99–115 ms | 99 ms (12/12) | 27–56 ms | 90–110 ms LAYOUT, 4,6 fps | ~770 ms / 313–396 ms |
+| 2026-11-04 | profil, main (F21–F27 bulut kodu) | %2,3 / 50 ms | animasyon 17 ms, en çok 1×33 ms (bkz. not) | en kötü kare 21 ms | 122 ms LAYOUT | TotalTime 1315–2273 / 587–654 ms |
+| 2026-11-04 | profil, F24.2 + F25.2 | — | — | — | LAYOUT p90 11 ms, 1/46 kare bütçe üstü (pencereye giriş ~195 ms, bir kez) | TotalTime 1518–1586 = İLK KARE İÇERİK (önce ilk kare iskelet 1315–1411, içerik ~2,5 sn); ardından ~750 ms Firestore bekleme (ekran sabit, içerik görünür) |
 | 2026-11-03 | profil, Faz 21 öncesi → sonrası | %8,4 / 115 ms → %3,5 / 50–66 ms (1. tur) → %3,4–4,2 / 33–50 ms (2. tur) | — | — | — | — |
+
+**ÖLÇÜM YANILGISI (2026-11-04):** kapanıştaki "99–117 ms donma" takılma DEĞİL: SF aralığı son animasyon karesi → ~120 ms sonraki yetişme karesi; ekranda değişen yok, animasyon boyunca 17 ms. `analyze()` boşta bekleme eşiği (250 ms) bunu takılma sayıyor; kapanışta aralıkları sırayla oku.
 
 **CI emülatörü (`[perf]`, x86_64 API 34, yazılım GPU — mutlak değil koşudan koşuya karşılaştır):**
 

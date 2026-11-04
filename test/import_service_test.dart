@@ -19,7 +19,8 @@ void main() {
     final archive = Archive();
     for (final f in Directory(dir).listSync(recursive: true)) {
       if (f is! File) continue;
-      final name = f.path.substring(root.length + 1);
+      // Zip girdisi hep `/`: Windows'ta `listSync` `\` verir (girdi bulunmaz).
+      final name = f.path.substring(root.length + 1).replaceAll(r'\', '/');
       final bytes = f.readAsBytesSync();
       archive.addFile(ArchiveFile(name, bytes.length, bytes));
     }

@@ -164,6 +164,7 @@ import '../../domain/transcript.dart';
 import 'tag_chips.dart';
 import 'tag_tap.dart';
 import 'text_wrap.dart';
+import 'windowed_body.dart';
 import 'video_hub_scope.dart';
 import 'audio_card_box.dart' show kAudioBoxWidth, kAudioBoxHeight;
 import 'text_page_box.dart' show kTextBoxWidth, kTextBoxHeight;
@@ -571,6 +572,29 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// `.text` çapa karakterleri içerebilir — nota giden gövde her zaman
   /// `.logicalText` üzerinden okunur (bkz. text_wrap.dart).
   final _bodyController = WrapTextController();
+
+  /// Uzun notta yazarken alan yalnız imlecin çevresini taşır (F24.2).
+  late final _bodyWindow = BodyWindow(_bodyController)
+    ..addListener(() {
+      if (mounted) _update(() {});
+    });
+  final _bodyFieldKey = GlobalKey();
+
+  /// Metin alanına o an bağlı denetleyici; model hep [_bodyController].
+  WrapTextController get _bodyField =>
+      _bodyWindow.active ? _bodyWindow.win : _bodyController;
+
+  /// Pencereli yazıma uygun mu? Ek etiketi çipleri, sarma, not içi arama ve
+  /// bekleyen biçim alanın kendi metriklerine bakar: tek alanda kalırlar.
+  bool _windowAllowed(Note note) =>
+      _bodyFocus.hasFocus &&
+      !_readOnly &&
+      _floats.isEmpty &&
+      !_findOpen &&
+      !note.paged &&
+      !note.hasPageInk &&
+      _bodyController.pendingRange == null &&
+      !_bodyController.text.contains('\u{1F4CE}');
   final _bodyFocus = FocusNode();
 
   /// Gövdeye yapılan son dokunuşun konumu (etiket önizlemesi, bkz.
@@ -987,6 +1011,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Uzun basışla seçilen kelime, içinde bulunduğu CÜMLEYE genişletilir —
     // notta seçim neredeyse hep bir cümleyi taşımak/silmek için yapılıyor.
     attachSentenceSelection(_bodyController);
+    attachSentenceSelection(_bodyWindow.win);
     attachSentenceSelection(_titleController);
     // Etkin alandaki SON DOLU seçimi sakla (bkz. [_lastSelection]). Gövde
     // açılışta zaten varsayılan hedef; madde satırları odaklanınca
@@ -1016,6 +1041,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _bodyFocus.addListener(() {
       if (!_bodyFocus.hasFocus) {
         _flushPending(_bodyController);
+        // Kapanışta yerleşim yinelenmesin: sayfa zaten gidiyor.
+        if (!noteRouteClosing.value) _bodyWindow.exit();
         return;
       }
       _setFormatTarget(
@@ -1383,6 +1410,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _titleController.dispose();
     _formatTargetN.dispose();
     _titleFocus.dispose();
+    _bodyWindow.dispose();
     _bodyController.dispose();
     _bodyFocus.dispose();
     _pageScroll.dispose();
@@ -3035,12 +3063,62 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       value: note.fontScale,
       enabled: _floats.isEmpty,
       child: Builder(
-      builder: (fieldContext) => AttachmentTagChips(
-        controller: _bodyController,
+      builder: (fieldContext) {
+        void onBodyTap() {
+        final editable = editableTextBelow(fieldContext);
+        // PDF REFERANSI (📖 s.12): belge o sayfaya döner.
+        final pdfRef = _tappedPdfRef(editable);
+        if (pdfRef != null) {
+          editable?.hideToolbar();
+          _goToPdfPage(pdfRef.page);
+          return;
+        }
+        final seconds = _tappedTimestamp(editable);
+        if (seconds != null) {
+          editable?.hideToolbar();
+          _seekVideoTo(seconds);
+          return;
+        }
+        // NOT BAĞLANTISI (F18.16): okurken açar, yazarken önerir.
+        final linked = _tappedNoteLink(editable);
+        if (linked != null) {
+          editable?.hideToolbar();
+          _openLinkedNote(linked, editing: _bodyTapPoint.wasFocused);
+          return;
+        }
+        final tapped = _tappedEmbed(editable);
+        if (tapped != null) {
+          // Dokunuşun açtığı Yapıştır menüsü önizlemenin altında kalmasın.
+          editable?.hideToolbar();
+          _showEmbedPreviewFor(tapped.attachment, tapped.label);
+          return;
+        }
+        // BAĞLANTIYA DOKUNUŞ (2026-10-28): okurken açar, yazarken önerir.
+        final link = tappedLink(
+          displayText: _bodyField.text,
+          editable: editable,
+          tapGlobal: _bodyTapPoint.last,
+        );
+        if (link != null) {
+          editable?.hideToolbar();
+          handleLinkTap(
+            context,
+            link,
+            editing: _bodyTapPoint.wasFocused,
+            onEmbedVideo: _readOnly || note.type.isPageNoteType
+                ? null
+                : _embedLinkedVideo,
+          );
+        }
+        }
+
+        Widget fieldOf(bool top, bool bottom) => AttachmentTagChips(
+        key: _bodyFieldKey,
+        controller: _bodyField,
         looks: _tagLooks,
         child: _bodyTapPoint.wrap(
         TextField(
-          controller: _bodyController,
+          controller: _bodyField,
           focusNode: _bodyFocus,
           readOnly: _readOnly,
           // Sarma planı bu stille hesaplanır; TextField'ın örtük varsayılanına
@@ -3060,9 +3138,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             // `[[` yazınca not seçici (F18.16): iki parantez silinir, seçilen
             // notun başlığı bağlantı olarak imlece yazılır.
             _maybeLinkTrigger(before, after);
+            if (_windowAllowed(note)) _bodyWindow.enter();
           },
           maxLines: null,
-          minLines: note.items.isEmpty ? 8 : 2,
+          minLines: _bodyWindow.active
+              ? 1
+              : note.items.isEmpty
+              ? 8
+              : 2,
           keyboardType: TextInputType.multiline,
           // EK ETİKETİNE DOKUNUNCA ÖNİZLEME (kullanıcı isteği 2026-08-16).
           //
@@ -3074,53 +3157,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // YENİ (gömme yeniden tasarımı): tam ekran yerine YERİNDE önizleme
           // kartı; yalnız dokunuş etiketin İÇİNE düşünce (yanına imleç koymak
           // yazmaya devam etmektir, önizleme açmaz).
-          onTap: () {
-            final editable = editableTextBelow(fieldContext);
-            // PDF REFERANSI (📖 s.12): belge o sayfaya döner.
-            final pdfRef = _tappedPdfRef(editable);
-            if (pdfRef != null) {
-              editable?.hideToolbar();
-              _goToPdfPage(pdfRef.page);
-              return;
-            }
-            final seconds = _tappedTimestamp(editable);
-            if (seconds != null) {
-              editable?.hideToolbar();
-              _seekVideoTo(seconds);
-              return;
-            }
-            // NOT BAĞLANTISI (F18.16): okurken açar, yazarken önerir.
-            final linked = _tappedNoteLink(editable);
-            if (linked != null) {
-              editable?.hideToolbar();
-              _openLinkedNote(linked, editing: _bodyTapPoint.wasFocused);
-              return;
-            }
-            final tapped = _tappedEmbed(editable);
-            if (tapped != null) {
-              // Dokunuşun açtığı Yapıştır menüsü önizlemenin altında kalmasın.
-              editable?.hideToolbar();
-              _showEmbedPreviewFor(tapped.attachment, tapped.label);
-              return;
-            }
-            // BAĞLANTIYA DOKUNUŞ (2026-10-28): okurken açar, yazarken önerir.
-            final link = tappedLink(
-              displayText: _bodyController.text,
-              editable: editable,
-              tapGlobal: _bodyTapPoint.last,
-            );
-            if (link != null) {
-              editable?.hideToolbar();
-              handleLinkTap(
-                context,
-                link,
-                editing: _bodyTapPoint.wasFocused,
-                onEmbedVideo: _readOnly || note.type.isPageNoteType
-                    ? null
-                    : _embedLinkedVideo,
-              );
-            }
-          },
+          onTap: onBodyTap,
           // Bağlantıya uzun basınca seçim menüsüne "Bağlantıyı aç" eklenir.
           // Düzenlenebilir bir alanda span'e tıklama Flutter'da çalışmaz (dokunuş
           // imleci taşımak için EditableText'e gider), bu yüzden yol seçim menüsü.
@@ -3135,20 +3172,56 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             // aşağıda başladığı hem sarma ölçümüne ([_wrapped]) hem de tuval
             // ipucuna ([NotePageCanvas.textTop]) veriliyor. Flutter'ın örtük
             // varsayılanına bırakılırsa üç yer sessizce ayrışır.
-            contentPadding: const EdgeInsets.symmetric(vertical: _kBodyTextTop),
+            contentPadding: EdgeInsets.only(
+              top: top ? _kBodyTextTop : 0,
+              bottom: bottom ? _kBodyTextTop : 0,
+            ),
           ),
         ),
         // Damgaya/etikete dokunmak klavyeyi AÇMAZ (bkz. TapPointTracker.wrap).
         focusNode: _bodyFocus,
         keepsKeyboardClosed: (global) => linkAtPoint(
           editable: editableTextBelow(fieldContext),
-          displayText: _bodyController.text,
+          displayText: _bodyField.text,
           global: global,
           timestamps: _note != null && _hasVideo(_note!),
           tagNames: _bodyController.attachmentNames,
         ),
         ),
-      ),
+        );
+
+        // Uzun notta yazarken (F24.2): alan aynı State'le ([_bodyFieldKey])
+        // pencere parçalarının arasına taşınır, klavye kapanmaz.
+        if (_bodyWindow.active && !_windowAllowed(note) && !noteRouteClosing.value) {
+          _bodyWindow.exit(notify: false);
+        }
+        if (!_bodyWindow.active) return fieldOf(true, true);
+        return WindowedBodyField(
+          window: _bodyWindow,
+          style: windowedFieldStyle(context, noteBodyStyle),
+          strut: wrapStrutStyle(noteBodyStyle),
+          linkColor: Theme.of(context).colorScheme.primary,
+          topPadding: _kBodyTextTop,
+          field: fieldOf,
+          onTileTap: (offset, global) {
+            _bodyWindow.moveCaretTo(offset);
+            _bodyTapPoint
+              ..last = global
+              ..wasFocused = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) onBodyTap();
+            });
+          },
+          onTileLongPress: (offset, global) {
+            _bodyWindow.moveCaretTo(offset);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                selectWordAt(editableTextBelow(fieldContext), global);
+              }
+            });
+          },
+        );
+      },
     ),
     );
 

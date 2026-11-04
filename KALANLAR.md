@@ -169,9 +169,12 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
    ekranda yazarken soldaki listede kart yerinde. Segment (süzgeç/klasör)
    kaydırması videoda flaşsız (F26.1).
 
+**2026-11-04 (yazıldı, telefonda kısmen denendi)**
+47. [ ] (F24.2) 6 KB+ notta GERÇEK klavyeyle yaz (Gboard, otomatik düzeltme, dikte): metin doğru yerde; uzak paragrafa dokun → imleç orada; uzun bas → seçim; Tümünü seç + Kopyala tüm notu alır; kapat-aç → metin aynı. adb ile denendi, Gboard önerisi ve dikte DENENMEDİ.
+48. [ ] (F25.2) Telefon SOĞUKKEN soğuk açılış ×3: içerik ilk ~1 sn'de, sabit notlar yerinde, liste gelince zıplama yok; özet gösterilirken karta dokunmak bir şey yapmaz (<1 sn).
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
-- [ ] `import_service_test` iki testi Windows'ta KIRMIZI (Keep Takeout eki bulunmuyor) — main'de de kırık, geniş ekran işinden önce de vardı (2026-11-02)
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)
 - [ ] Web debug konsolunda "+" düğmesinin ipucunda `RenderFollowerLayer` uyarısı (yalnız debug assert) — kaynağı araştırılmadı (2026-11-02)
 

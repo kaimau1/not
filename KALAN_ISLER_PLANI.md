@@ -563,16 +563,16 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
 
 ### F. Akıcılık (AKICILIK_PLANI) — bulutta yapılamayanlar, sabah bakılacak (2026-11-04)
 
-- [ ] **F19.F1** (← F22.4, KARAR B: kart dizini + gövde ayrı belge) Veri göçü. Güvenlik şartı
+- [ ] **F19.F1 (2026-11-04: YAPILMADI, ölçüm gerekçesi zayıfladı — kısa notta yazma 194 notla en kötü 21 ms; göç yalnız açılış için, gerçek veride yedek şartıyla karar senin)** (← F22.4, KARAR B: kart dizini + gövde ayrı belge) Veri göçü. Güvenlik şartı
   "göçten önce yerel tam yedek" senin cihazında; okuma tarafı tek başına (dizin belgesi henüz yok)
   ölü kod olurdu. Sıra: (1) F22.1 ölçümü (50/250/500 notla kayıt sonrası ana blok — KALANLAR §2
   #34) göçün kazancını doğrulasın; (2) "F22.4 okuma tarafı" dersen bulut oturumu dizini OKUYAN +
   yoksa eski şemaya düşen kodu ve `rules-test`i yazar; (3) sen Ayarlar → Yedek; (4) yazma + göç;
   (5) bir sürüm sonra eski alanlar.
-- [ ] **F19.F2** (← F24.1/F24.2/F24.3) Uzun not editörü: önce F24.1 eşik ölçümü (1–35 KB tuş→kare),
+- [ ] **F19.F2 (2026-11-04: F24.2 yapıldı; F24.3 açık)** (← F24.1/F24.2/F24.3) Uzun not editörü: önce F24.1 eşik ölçümü (1–35 KB tuş→kare),
   sonra pencereli kipin 2.–3. parçası ve madde listesinde yalnız odaktaki satır `TextField` —
   cihazda yazma/seçim/dikte doğrulamalı oturumda (saf pencere modeli hazır: `text_window.dart`).
-- [ ] **F19.F3** (← F23.5, F25.1, F25.2, F26.1) Ölçüm sonrası karar: editör ilk karesinin pahalı
+- [ ] **F19.F3 (2026-11-04: F25.2 yapıldı; F23.5, F25.1, F26.1 açık)** (← F23.5, F25.1, F25.2, F26.1) Ölçüm sonrası karar: editör ilk karesinin pahalı
   parçası, yazı tipi beklemesi, anında içerik (bayat/kilitli özet kararı), videoyla titreme listesi —
   KALANLAR §2 #40, #43, #44, #46.
 - [ ] **F19.F4** Faz 20–27'nin kalan ÖLÇÜM maddeleri (bulutta iş kalmadı, 2026-11-04): F20.4 taban

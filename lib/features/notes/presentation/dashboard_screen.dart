@@ -52,6 +52,7 @@ import 'color_picker_sheet.dart';
 import 'dashboard_background_sheet.dart';
 import 'dashboard_pattern.dart';
 import 'filter_sheet.dart';
+import 'home_snapshot.dart';
 import 'note_card.dart';
 import 'note_grid.dart';
 import 'shared_notes_screen.dart';
@@ -300,7 +301,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) _syncOwnDirectoryEntry();
+    if (state == AppLifecycleState.paused &&
+        _isDefaultHome(
+          searchActive: ref.read(searchQueryProvider).trim().isNotEmpty,
+        )) {
+      final notes = ref.read(filteredNotesProvider).value;
+      if (notes != null) unawaited(saveHomeSnapshot(ref, notes));
+    }
   }
+
+  /// Ana ekranın süzgeçsiz hâli mi: özet yalnız bu görünümün karşılığı (F25.2).
+  bool _isDefaultHome({required bool searchActive}) =>
+      !searchActive &&
+      ref.read(noteFilterProvider) == NoteFilter.all &&
+      ref.read(selectedTagProvider) == null &&
+      ref.read(selectedFolderProvider) == null;
 
   /// Ana ekran mikrofon widget'ının isteği varsa sesli not levhasını açar
   /// (tek seferlik — bayrak take ile tüketilir).
@@ -1460,9 +1475,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     // yalnız hızlı kaydırma için (bkz.
                                     // [_kGridCacheExtent]).
                                     scrollCacheExtent:
-                                        const ScrollCacheExtent.pixels(
-                                          _kGridCacheExtent,
-                                        ),
+                                        ScrollCacheExtent.pixels(
+                            // Her sorguda sonuç ızgarası baştan kurulur,
+                            // açılışın ilk içerik karesi de: ekran dışı kart
+                            // bekletmesin.
+                            searchActive || notesAsync.isLoading
+                                ? 250
+                                : _kGridCacheExtent,
+                          ),
                                     slivers: [
                                       // Misafir hesap hatırlatması (F4.3).
                                       if (!searchActive && !reorderActive)
@@ -1521,24 +1541,60 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         )
                                       else
                                       ...notesAsync.when(
-                                        data: (notes) => _buildNoteSlivers(
-                                          context,
-                                          notes,
-                                          columns,
-                                          cellWidth: cellWidth,
-                                          selectionActive: selectionActive,
-                                          searchActive: searchActive,
-                                          reorderEnabled: reorderActive,
-                                        ),
-                                        // Yüklenirken kart İSKELETİ (tek
-                                        // çark yerine — bkz. skeleton.dart).
-                                        loading: () => [
-                                          SliverToBoxAdapter(
-                                            child: NoteGridSkeleton(
-                                              columns: columns,
+                                        data: (notes) => [
+                                          // Aynı sarmalayıcı özette de var:
+                                          // kartlar yeniden kurulmaz (F25.2).
+                                          for (final sliver
+                                              in _buildNoteSlivers(
+                                                context,
+                                                notes,
+                                                columns,
+                                                cellWidth: cellWidth,
+                                                selectionActive:
+                                                    selectionActive,
+                                                searchActive: searchActive,
+                                                reorderEnabled: reorderActive,
+                                              ))
+                                            SliverIgnorePointer(
+                                              ignoring: false,
+                                              sliver: sliver,
                                             ),
-                                          ),
                                         ],
+                                        // Yüklenirken diskteki özet, dokunuşa
+                                        // kapalı (F25.2, home_snapshot.dart);
+                                        // yoksa kart İSKELETİ (skeleton.dart).
+                                        loading: () {
+                                          final snapshot =
+                                              _isDefaultHome(
+                                                searchActive: searchActive,
+                                              )
+                                              ? ref.watch(homeSnapshotProvider)
+                                              : const <Note>[];
+                                          if (snapshot.isEmpty) {
+                                            return [
+                                              SliverToBoxAdapter(
+                                                child: NoteGridSkeleton(
+                                                  columns: columns,
+                                                ),
+                                              ),
+                                            ];
+                                          }
+                                          return [
+                                            for (final sliver
+                                                in _buildNoteSlivers(
+                                                  context,
+                                                  snapshot,
+                                                  columns,
+                                                  cellWidth: cellWidth,
+                                                  selectionActive: false,
+                                                  searchActive: false,
+                                                  reorderEnabled: false,
+                                                ))
+                                              SliverIgnorePointer(
+                                                sliver: sliver,
+                                              ),
+                                          ];
+                                        },
                                         error: (e, _) => [
                                           SliverFillRemaining(
                                             hasScrollBody: false,

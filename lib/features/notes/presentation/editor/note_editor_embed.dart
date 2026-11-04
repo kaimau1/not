@@ -15,7 +15,7 @@ extension _EditorEmbed on _NoteEditorScreenState {
         _bodyController.text,
         selection.baseOffset,
       ),
-      displayText: _bodyController.text,
+      displayText: _bodyField.text,
       selection: selection,
       names: _bodyController.attachmentNames,
       editable: editable,

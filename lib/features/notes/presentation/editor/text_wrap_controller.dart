@@ -702,6 +702,24 @@ class WrapTextController extends TextEditingController {
     );
   }
 
+  /// Pencereli yazımda karşı denetleyiciden gelen değer (bkz. `BodyWindow`):
+  /// imleç/işaret düzeltmeleri kaynakta yapıldı, burada yinelenmez.
+  void mirrorValue(TextEditingValue next) => super.value = next;
+
+  /// Pencere denetleyicisi notun görünüş girdilerini alır.
+  void copyLooksFrom(WrapTextController other) {
+    _rich = other._rich;
+    _attachmentNames = other._attachmentNames;
+    _tagChipColors = other._tagChipColors;
+    _videoTimestamps = other._videoTimestamps;
+    _spanCache = null;
+    _scanText = null;
+  }
+
+  /// Pencere dışındaki parçanın span'i: alanın kendi çizim yolu.
+  InlineSpan tileSpan(String text, TextStyle? style, Color linkColor) =>
+      _paragraphSpan(text, const [], style, linkColor);
+
   /// Değer gerçekten değiştiyse yazar (bkz. [_reflow] içindeki not).
   void _write(TextEditingValue next) {
     if (next.text == value.text && next.selection == value.selection) return;

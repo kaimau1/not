@@ -38,7 +38,7 @@ void main() {
   test('tavandan uzun tek paragraf yine pencerede', () {
     final t = 'kısa\n${'x' * 5000}\nson';
     final w = windowAround(t, 10, maxChars: 100);
-    expect(w, const TextWindow(5, 5005));
+    expect(w, const TextWindow(0, 5009));
   });
 
   test('baş ve son kenarlar', () {

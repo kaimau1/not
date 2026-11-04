@@ -50,6 +50,9 @@ class TextWindow {
   String toString() => 'TextWindow($start, $end)';
 }
 
+/// Pencere uzunluğu üst sınırı (bkz. [windowAround]).
+const int kWindowMaxChars = 3000;
+
 /// [offset]'in bulunduğu paragrafın başı (önceki `\n`'den sonrası).
 int paragraphStartAt(String text, int offset) {
   if (offset <= 0) return 0;
@@ -66,19 +69,28 @@ int paragraphEndAt(String text, int offset) {
 }
 
 /// İmlecin ([caret]) çevresinde, iki yana en çok [paragraphs] paragraf ve
-/// toplam en çok [maxChars] karakter (imlecin kendi paragrafı bu sınırı
-/// aşsa da HEP içeride) taşıyan pencere.
+/// toplam en çok [maxChars] karakter taşıyan pencere. İmlecin paragrafı ve iki
+/// komşusu sınırı aşsa da HEP içeride: yoksa paragraf başında geri silme üst
+/// paragrafa birleşemez, satır sonunda Delete alta geçemezdi.
 TextWindow windowAround(
   String text,
   int caret, {
   int paragraphs = 20,
-  int maxChars = 3000,
+  int maxChars = kWindowMaxChars,
 }) {
   final c = caret.clamp(0, text.length).toInt();
   var start = paragraphStartAt(text, c);
   var end = paragraphEndAt(text, c);
   var before = 0;
   var after = 0;
+  if (paragraphs > 0 && end < text.length) {
+    end = paragraphEndAt(text, end + 1);
+    after++;
+  }
+  if (paragraphs > 0 && start > 0) {
+    start = paragraphStartAt(text, start - 1);
+    before++;
+  }
   // İki yana sırayla genişle (önce aşağı: yazım çoğunlukla ileri gider).
   var grew = true;
   while (grew) {
