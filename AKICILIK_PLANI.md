@@ -357,8 +357,9 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   düzenlenebilire döner. Sonra `_kFirstRows` / `_rowBudget` / kapanışta parça
   parça söküm (`noteRouteClosing`) hileleri silinir (usta 6b).
   **Bulutta yapılmadı (2026-11-04):** madde denetleyicilerine 15+ yerden kimlikle erişiliyor (biçim çubuğu hedefi, `insertTextAtCaret`, not içi arama/değiştir, dikte, ek etiketi çipleri, sürükle-bırak, Enter/Backspace birleştirme); düz metin satırına dokunuşta imleç konumu (`TextPainter.getPositionForOffset`) ve uzun basışla seçim yeniden kurulmalı. Cihazda yazma/seçim/dikte doğrulaması olmadan editörün en çok kullanılan yolu değiştirilmedi — **sabah bakılacak** (cihazlı oturumda, F24.1 ölçümüyle birlikte).
-- [ ] **F24.4 Görsel sarma ölçümü** (`WrapFieldMeasure`, `text_wrap.dart`) tam
+- [x] **F24.4 Görsel sarma ölçümü** (`WrapFieldMeasure`, `text_wrap.dart`) tam
   metni ikinci bir `TextPainter` ile yerleştiriyorsa paragraf bazlı önbellek.
+  **İncelendi (2026-11-04):** kod değişikliği gerekmedi — `WrapFieldMeasure` görsel yokken ve tampon temizken (`floats.isEmpty && isPlain`) kare sonu geri çağrısını HİÇ kurmuyor (K2'nin uzun düz metin notunda ikinci yerleşim yok); görsel varken `planTextWrap` 2026-10-16'dan beri yalnız görsel BANDINI kapsayan öneki diziyor. Görselli uzun notta kalan maliyet F24.1 ölçümünde ayrıca görülür.
 - Kabul: 35 KB notta tuş→kare **p95 < 16 ms**, yazarken 0 kare > 33 ms; 120
   maddelik liste açılışı dokunuş→ilk kare < 60 ms, açılıştan sonra 100 ms'yi
   aşan kesintisiz ana iş yok; geri alma/dikte/arama testleri yeşil.
