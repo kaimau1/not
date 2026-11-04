@@ -150,23 +150,39 @@ TextStyle applyNoteFont(TextStyle base, String? family) {
   return applied;
 }
 
-/// Katalog yazı tiplerini (normal + orta kalınlık) ÖNDEN yükler.
+/// Uygulamanın genel yazı tipini (temanın kullandığı kalınlıklarla) ÖNDEN
+/// yükler; `main` ilk kareden önce en çok 400 ms bekler.
 ///
 /// KÖK NEDEN (kullanıcı bulgusu 2026-10-30: "yazı tipi değiştiğinde kasma
 /// oluyor"): gömülü yazı tipi ilk KULLANILDIĞI an yükleniyor ve her yükleme
-/// motora "yazı tipleri değişti" dedirtiyor — çerçeve o anda ekrandaki
-/// BÜTÜN metni yeniden yerleştiriyor (uzun notta yüzlerce paragraf). Seçici
-/// tepsisi kaydırılırken her yeni önizleme, seçimde de kalın dosyası ayrıca
-/// bir kez daha. Yükleme ilk kareden ÖNCE biterse yerleştirilecek metin
-/// henüz yoktur, bedel sıfırdır. Hata sessiz (yazı tipi kullanımda yine
-/// yüklenmeye çalışılır).
-Future<void> preloadNoteFonts() async {
+/// motora "yazı tipleri değişti" dedirtiyor — çerçeve o anda ekrandaki BÜTÜN
+/// metni yeniden yerleştiriyor. Yükleme ilk kareden ÖNCE biterse
+/// yerleştirilecek metin henüz yoktur.
+///
+/// F25.1 (2026-11-04, telefonda ölçüldü): 19 ailenin hepsini açılışta yüklemek
+/// 35 dosya / 5,2 MB'ı ana iş parçacığında açıp çözüyordu. Artık yalnız ana
+/// ekranda görünen aile; kalanı seçici açılınca ([preloadRemainingNoteFonts]).
+/// Seçicinin dışında başka aileyi yalnız o aileyi kullanan not ister: o da
+/// ilk kullanımda bir kez yüklenir. Hata sessiz (kullanımda yine denenir).
+Future<void> preloadNoteFonts(String? appFamily) async {
+  try {
+    appFontTextTheme(ThemeData().textTheme, appFamily);
+    await GoogleFonts.pendingFonts();
+  } catch (_) {}
+}
+
+bool _remainingFontsAsked = false;
+
+/// Yazı tipi seçicisi açılınca: seçicinin satırları kendi aileleriyle çizilir;
+/// kaydırılırken ayrı ayrı yüklenmesin (yukarıdaki kök neden), hepsi bir kez.
+void preloadRemainingNoteFonts() {
+  if (_remainingFontsAsked) return;
+  _remainingFontsAsked = true;
   try {
     for (final builder in _googleBuilders.values) {
       builder(const TextStyle());
       builder(const TextStyle(fontWeight: FontWeight.w500));
     }
-    await GoogleFonts.pendingFonts();
   } catch (_) {}
 }
 

@@ -708,6 +708,7 @@ class _TypographySection extends ConsumerWidget {
 /// el yazısı) ve her satır kendi yazı tipiyle yazılıyor.
 Future<void> _showAppFontSheet(BuildContext context, WidgetRef ref) {
   final l10n = context.l10n;
+  preloadRemainingNoteFonts();
   String groupLabel(NoteFontGroup group) => switch (group) {
     NoteFontGroup.sans => l10n.fontGroupSans,
     NoteFontGroup.serif => l10n.fontGroupSerif,

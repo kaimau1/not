@@ -245,6 +245,9 @@ TrashAnalysis analyzeTrash(
   required Duration retention,
   DateTime? now,
 }) {
+  // Çöp boşken bütün notların parmak izi boşuna çıkarılıyordu (195 notta
+  // açılıştan 5 sn sonra ana iş parçacığında ~80 ms — F25.3, profilde ölçüldü).
+  if (trash.isEmpty) return null;
   final at = now ?? DateTime.now();
   DateTime? due(Note n) => n.deletedAt?.add(retention);
   final analysis = analyzeTrash(

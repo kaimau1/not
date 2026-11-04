@@ -1309,6 +1309,7 @@ class _FontTray extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final current = family ?? '';
+    preloadRemainingNoteFonts();
     return _TrayBox(
       child: Column(
         mainAxisSize: MainAxisSize.min,

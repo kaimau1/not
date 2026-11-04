@@ -109,10 +109,13 @@ Future<void> main() async {
     return;
   }
 
-  // Yazı tipleri Firebase kurulumuyla PARALEL yüklenir; ilk kareden önce
-  // en çok 400 ms beklenir (bkz. preloadNoteFonts — kasma kök nedeni). Web'de
-  // 5 MB'lık indirme olurdu: yalnız kullanılanlar yüklenir.
-  final fonts = kIsWeb ? Future<void>.value() : preloadNoteFonts();
+  // Genel yazı tipi Firebase kurulumuyla PARALEL yüklenir; ilk kareden önce
+  // en çok 400 ms beklenir (bkz. preloadNoteFonts). Web'de indirme olurdu:
+  // kullanılınca yüklenir.
+  final prefsReady = SharedPreferences.getInstance();
+  final fonts = kIsWeb
+      ? Future<void>.value()
+      : prefsReady.then((p) => preloadNoteFonts(p.getString('app_font')));
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Offline-first: yerel önbellek her platformda açık.
@@ -128,7 +131,7 @@ Future<void> main() async {
     cacheSizeBytes: AppConstants.firestoreCacheBytes,
   );
 
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await prefsReady;
   if (kDebugMode) {
     final footprint = prefsFootprint(prefs);
     debugPrint(
