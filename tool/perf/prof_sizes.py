@@ -14,7 +14,7 @@ sizes = [int(a) for a in sys.argv[1:]] or [1, 2, 3, 4, 5, 8, 20, 35]
 vm = VM(open(os.path.join(OUT, "vm.url")).read())
 print("KB  kare  LAYOUT p50/p90/en çok  kare p90/en çok  >16.7  IME bayt/ileti  sıcaklık")
 for k in sizes:
-    x, y = reveal(f"boyut {k}$")
+    x, y = reveal(f"boyut {k}" + r"\b")
     time.sleep(1)
     tap(x, y); time.sleep(2.6)
     tap(700, 900); time.sleep(2.0)

@@ -58,7 +58,7 @@ void main() {
         findsNothing,
       );
       await tester.pump(const Duration(milliseconds: 600));
-      for (var i = 0; i < 16; i++) {
+      for (var i = 0; i < 30; i++) {
         await tester.pump(const Duration(milliseconds: 16));
       }
       expect(fields(), 0);

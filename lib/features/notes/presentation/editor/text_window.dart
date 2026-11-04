@@ -13,9 +13,9 @@ import 'dart:math' as math;
 /// aşmadığı için (bkz. `text_wrap_controller.dart` paragraf önbelleği)
 /// pencerenin içi ve dışı birbirinden bağımsız çizilebilir.
 
-/// Pencereli kipe geçiş eşiği (karakter). TAHMİN — F24.1 ölçümü (1/5/10/20/35
-/// KB'de tuş→kare) kesinleştirecek.
-const int kWindowedThreshold = 6000;
+/// Pencereli kipe geçiş eşiği (karakter). F24.1 (telefonda ölçüldü, 2026-11-04,
+/// tek alan): tuş başına LAYOUT ~5 ms/KB, 3 KB'ta karelerin yarısı bütçeyi aşıyor.
+const int kWindowedThreshold = 2500;
 
 /// Tam metin içinde `[start, end)` aralığı; ikisi de paragraf sınırında.
 class TextWindow {
@@ -51,7 +51,7 @@ class TextWindow {
 }
 
 /// Pencere uzunluğu üst sınırı (bkz. [windowAround]).
-const int kWindowMaxChars = 3000;
+const int kWindowMaxChars = 1500;
 
 /// [offset]'in bulunduğu paragrafın başı (önceki `\n`'den sonrası).
 int paragraphStartAt(String text, int offset) {
