@@ -8,6 +8,7 @@ import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/card_preview.dart';
 import 'package:notlar/features/notes/presentation/note_card.dart';
 import 'package:notlar/features/notes/presentation/notes_providers.dart';
+import 'package:notlar/features/notes/presentation/search_highlight.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -262,20 +263,15 @@ void main() {
       await pump(tester, long, query: 'benzersiz');
       final text = longestText(tester);
       expect(text, startsWith('… benzersiz sözcük'));
-      final highlighted = tester
-          .widgetList<RichText>(find.byType(RichText))
-          .expand((w) {
-            final spans = <TextSpan>[];
-            w.text.visitChildren((s) {
-              if (s is TextSpan && s.style?.fontWeight == FontWeight.w700) {
-                spans.add(s);
-              }
-              return true;
-            });
-            return spans;
-          })
-          .map((s) => s.text);
-      expect(highlighted, contains('benzersiz'));
+      // Vurgu ayrı katmanda (F21.6): metin span'ı değil boyanan aralık.
+      final highlighted = [
+        for (final r in tester.renderObjectList<RenderSearchHighlight>(
+          find.byType(SearchHighlight),
+        ))
+          for (final range in r.currentRanges()) range,
+      ];
+      expect(highlighted, isNotEmpty);
+      expect(highlighted.first.end - highlighted.first.start, 9);
     });
 
     testWidgets('"hassas içeriği gizle" değişince kart yenilenir', (

@@ -57,6 +57,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Uygulama adı (F20.2): profil derlemesi "Notlar Ölçüm" adıyla yan yana.
+        manifestPlaceholders["appLabel"] = "Notlar"
 
         // YALNIZ 64 BİT — 1. savunma hattı (kullanıcı isteği 2026-08-16:
         // "32 bit derlenmesin boşuna kota harcamasın").
@@ -123,6 +125,16 @@ android {
     }
 
     buildTypes {
+        // ÖLÇÜM DERLEMESİ YAN YANA (F20.2, AKICILIK_PLANI): `--profile`
+        // çıktısı ayrı kimlikle (`dev.kaimau.notlar.olcum`, "Notlar Ölçüm")
+        // kurulur → telefondaki release'e (imza uyuşmazlığı → kaldır-kur →
+        // VERİ SİLİNİR) hiç dokunmaz. Firebase istemcisi
+        // `src/profile/google-services.json`da. Bilinen sınır: uygulama
+        // kısayolları (`app_shortcuts.xml`) sabit paket adıyla release'i açar.
+        maybeCreate("profile").apply {
+            applicationIdSuffix = ".olcum"
+            manifestPlaceholders["appLabel"] = "Notlar Ölçüm"
+        }
         release {
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")

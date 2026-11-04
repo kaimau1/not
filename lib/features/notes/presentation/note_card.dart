@@ -3,11 +3,11 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/utils/search_fold.dart';
 import '../../../app/note_open_route.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/note_colors.dart';
@@ -31,6 +31,7 @@ import '../domain/page_notes.dart';
 import '../domain/sensitive_text.dart';
 import '../data/drive_store.dart' show localFilesRevisionProvider;
 import 'card_preview.dart';
+import 'search_highlight.dart';
 import 'editor/notebook_paper.dart';
 import 'note_actions_sheet.dart';
 import 'item_divider_style.dart';
@@ -214,12 +215,15 @@ Future<void> openNoteRoute(
 Widget noteBodyText(
   BuildContext context,
   String text,
-  String query, {
+  ValueListenable<String> query, {
   required bool rich,
   TextStyle? style,
   int? maxLines,
 }) {
-  if (!rich || query.isNotEmpty) {
+  // Arama sürüyor mu: boş ↔ dolu geçişinde kart yeniden kurulur (bkz.
+  // `NoteCard.liveQuery`); sorgunun KENDİSİ değişince yalnız vurgu
+  // katmanı yeniden boyanır (F21.6).
+  if (!rich || query.value.trim().isNotEmpty) {
     // Biçim işaretleri (**kalın**, %%2:renk%%) ham hâlleriyle GÖSTERİLMEZ.
     return highlightedText(
       context,
@@ -246,52 +250,29 @@ Widget noteBodyText(
   );
 }
 
-/// Aranan kelimeyi kalın ve renkli vurgulayan metin parçaları üretir.
+/// Aranan kelimeyi vurgulayan metin: metin sorgudan BAĞIMSIZ çizilir,
+/// eşleşmeler üstteki katmanda boyanır ([SearchHighlight], F21.6) — sorgu
+/// değişince metin yeniden şekillendirilmez.
 Widget highlightedText(
   BuildContext context,
   String text,
-  String query, {
+  ValueListenable<String> query, {
   TextStyle? style,
   int? maxLines,
 }) {
-  // Katlama uzunluğu korur (F1.8): katlanmış metindeki indeks özgün metinde
-  // de doğru — vurgu aynı konumlara düşer.
-  if (query.isEmpty || !foldForSearch(text).contains(foldForSearch(query))) {
-    return Text(
-      text,
-      style: style,
-      maxLines: maxLines,
-      overflow: maxLines != null ? TextOverflow.ellipsis : null,
-    );
-  }
-  final scheme = Theme.of(context).colorScheme;
-  final lower = foldForSearch(text);
-  final lowerQuery = foldForSearch(query);
-  final spans = <TextSpan>[];
-  var start = 0;
-  while (true) {
-    final index = lower.indexOf(lowerQuery, start);
-    if (index < 0) {
-      spans.add(TextSpan(text: text.substring(start)));
-      break;
-    }
-    if (index > start) spans.add(TextSpan(text: text.substring(start, index)));
-    spans.add(
-      TextSpan(
-        text: text.substring(index, index + query.length),
-        style: TextStyle(
-          fontWeight: FontWeight.w700,
-          color: scheme.primary,
-          backgroundColor: scheme.primaryContainer.withValues(alpha: 0.45),
-        ),
-      ),
-    );
-    start = index + query.length;
-  }
-  return Text.rich(
-    TextSpan(style: style, children: spans),
+  final plain = Text(
+    text,
+    style: style,
     maxLines: maxLines,
     overflow: maxLines != null ? TextOverflow.ellipsis : null,
+  );
+  if (identical(query, FixedQuery.empty)) return plain;
+  final scheme = Theme.of(context).colorScheme;
+  return SearchHighlight(
+    query: query,
+    fill: scheme.primaryContainer.withValues(alpha: 0.7),
+    underline: scheme.primary,
+    child: plain,
   );
 }
 
@@ -343,6 +324,7 @@ class NoteCard extends ConsumerWidget {
     super.key,
     required this.note,
     this.highlightQuery = '',
+    this.liveQuery,
     this.ownerId,
     this.readOnly = false,
     this.showFolder = true,
@@ -372,6 +354,17 @@ class NoteCard extends ConsumerWidget {
 
   /// Aktif arama sorgusu; boş değilse eşleşmeler vurgulanır.
   final String highlightQuery;
+
+  /// CANLI sorgu (F21.6, ana ekran): verilirse [highlightQuery] yerine bu
+  /// izlenir ve sorgu değişince kart yeniden KURULMAZ, yalnız vurgu
+  /// katmanı boyanır. Sözleşme: değer boş ↔ dolu arasında geçerken çağıran
+  /// kartı yeniden kurar (aramada biçim/klasör adı yapısal olarak değişir).
+  final ValueListenable<String>? liveQuery;
+
+  /// Kartın izlediği sorgu kaynağı.
+  ValueListenable<String> get _query =>
+      liveQuery ??
+      (highlightQuery.isEmpty ? FixedQuery.empty : FixedQuery(highlightQuery));
 
   Future<void> _openNote(BuildContext context) =>
       openNoteRoute(context, note, ownerId: ownerId, readOnly: readOnly);
@@ -545,6 +538,7 @@ class NoteCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final query = _query;
     // TEK abonelik (F21.4, bkz. [_cardEnvProvider]). select() ŞART: seçim
     // kümesi her değişimde yeni bir Set; kümeyi izlemek TEK not seçilince
     // görünürdeki BÜTÜN kartları yeniden çiziyordu — yalnız durumu değişen
@@ -642,7 +636,7 @@ class NoteCard extends ConsumerWidget {
         !showFolder ||
             !display.folder ||
             folderId == null ||
-            (highlightQuery.trim().isEmpty && !env.allView)
+            (query.value.trim().isEmpty && !env.allView)
         ? null
         : ref.watch(
             foldersStreamProvider.select(
@@ -677,7 +671,7 @@ class NoteCard extends ConsumerWidget {
                 // Biçimli başlık kartta da biçimli görünür; ayar kapalıyken
                 // (ya da arama sürerken) düz `displayTitle` çizilir.
                 preview.title,
-                highlightQuery,
+                query,
                 rich: richPreview,
                 maxLines: 2,
                 // Başlık kartta da KENDİ yazı tipini kullanır (gövdeninkini
@@ -723,7 +717,7 @@ class NoteCard extends ConsumerWidget {
             _NotePreview(
               note: note,
               preview: preview,
-              highlightQuery: highlightQuery,
+              highlightQuery: query,
               rich: richPreview,
               showProgress: display.progress,
               showMoreCount: display.moreCount,
@@ -1173,7 +1167,7 @@ class _CardItemRow extends StatelessWidget {
   /// (bkz. [CardPreview.item]).
   final String text;
   final TextStyle style;
-  final String query;
+  final ValueListenable<String> query;
   final bool rich;
   final bool checkbox;
   final int? number;
@@ -1330,12 +1324,94 @@ class _ChecklistProgress extends StatelessWidget {
 // _MiniBadge (etiket/alarm için küçük hap rozeti) kaldırıldı: kart meta
 // satırı artık düz simge + metin, ayrı bir zemin kutusu taşımıyor.
 
+/// Metin notunun kart gövdesi; aramada eşleşme görünen başta değilse
+/// eşleşmenin çevresindeki kesit (F21.3). Kesit sorgunun KENDİSİNE bağlı
+/// olduğu için yalnız bu parça sorguyu dinler ve yalnız kesit DEĞİŞİNCE
+/// yeniden kurulur (F21.6) — harf eklemek çoğu kartta hiçbir şey kurmaz.
+class _SearchExcerptBody extends StatefulWidget {
+  const _SearchExcerptBody({
+    required this.preview,
+    required this.query,
+    required this.rich,
+    required this.maxLines,
+    required this.style,
+  });
+
+  final CardPreview preview;
+  final ValueListenable<String> query;
+  final bool rich;
+  final int maxLines;
+  final TextStyle style;
+
+  @override
+  State<_SearchExcerptBody> createState() => _SearchExcerptBodyState();
+}
+
+class _SearchExcerptBodyState extends State<_SearchExcerptBody> {
+  String? _excerpt;
+
+  String? _compute() {
+    final q = widget.query.value.trim();
+    return q.isEmpty ? null : widget.preview.excerpt(q, widget.maxLines);
+  }
+
+  void _onQuery() {
+    final next = _compute();
+    if (next != _excerpt) setState(() => _excerpt = next);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _excerpt = _compute();
+    widget.query.addListener(_onQuery);
+  }
+
+  @override
+  void didUpdateWidget(_SearchExcerptBody old) {
+    super.didUpdateWidget(old);
+    if (!identical(old.query, widget.query)) {
+      old.query.removeListener(_onQuery);
+      widget.query.addListener(_onQuery);
+    }
+    _excerpt = _compute();
+  }
+
+  @override
+  void dispose() {
+    widget.query.removeListener(_onQuery);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final excerpt = _excerpt;
+    if (excerpt != null) {
+      return highlightedText(
+        context,
+        excerpt,
+        widget.query,
+        style: widget.style,
+        maxLines: widget.maxLines,
+      );
+    }
+    return noteBodyText(
+      context,
+      widget.preview.body,
+      widget.query,
+      rich: widget.rich,
+      maxLines: widget.maxLines,
+      style: widget.style,
+    );
+  }
+}
+
 class _NotePreview extends StatelessWidget {
   const _NotePreview({
     required this.note,
     required this.preview,
     required this.rich,
-    this.highlightQuery = '',
+    this.highlightQuery = FixedQuery.empty,
     this.onToggle,
     this.showProgress = false,
     this.showMoreCount = true,
@@ -1351,7 +1427,7 @@ class _NotePreview extends StatelessWidget {
   /// (Ayarlar → Görünüm → Kartlar).
   final bool showProgress;
   final bool showMoreCount;
-  final String highlightQuery;
+  final ValueListenable<String> highlightQuery;
 
   /// Madde kutucuğuna dokunuş (D6); null = salt gösterim.
   final ValueChanged<NoteItem>? onToggle;
@@ -1460,26 +1536,16 @@ class _NotePreview extends StatelessWidget {
         final bodyLines = items.isEmpty ? 4 : 2;
         // Aramada eşleşme gövdenin görünen başında değilse onun çevresi
         // gösterilir (F21.3) — yoksa vurgu kartta hiç görünmezdi.
-        final excerpt = hasBody && highlightQuery.isNotEmpty
-            ? preview.excerpt(highlightQuery, bodyLines)
-            : null;
+        // Kesit sorgunun KENDİSİNE bağlı (eşleşmenin konumu) — yalnız bu
+        // parça sorguyu izler, kartın gerisi kurulmaz (F21.6).
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (excerpt != null)
-              highlightedText(
-                context,
-                excerpt,
-                highlightQuery,
-                style: bodyStyle,
-                maxLines: bodyLines,
-              )
-            else if (hasBody)
-              noteBodyText(
-                context,
-                preview.body,
-                highlightQuery,
+            if (hasBody)
+              _SearchExcerptBody(
+                preview: preview,
+                query: highlightQuery,
                 rich: rich,
                 maxLines: bodyLines,
                 style: bodyStyle,
