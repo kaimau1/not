@@ -224,8 +224,8 @@ Widget noteBodyText(
   Color? background,
 }) {
   // Renkli yazı kartın zeminine göre okunur hâle getirilir (verilmediyse
-  // kartın içindeyiz: zemin [_CardAccent]'ten).
-  final ground = background ?? _CardAccent.maybeOf(context)?.background;
+  // kartın içindeyiz: zemin [NoteAccent]'ten).
+  final ground = background ?? NoteAccent.maybeOf(context)?.background;
   // Arama sürüyor mu: boş ↔ dolu geçişinde kart yeniden kurulur (bkz.
   // `NoteCard.liveQuery`); sorgunun KENDİSİ değişince yalnız vurgu
   // katmanı yeniden boyanır (F21.6).
@@ -335,28 +335,6 @@ final _cardInk = Expando<ThemeData>('cardInk');
 
 ThemeData _cardThemeOf(BuildContext context) =>
     _cardInk[context] ?? Theme.of(context);
-
-/// Renkli kartın KOYU TONU ve zemini (TEMA_PLANI F31.3): etiket hapı,
-/// kutucuk, ilerleme çubuğu ve klasör rozeti bu tonla çizilir; zemin satır içi
-/// renkli yazının okunur hâle getirilmesi için. Renksiz kartta [accent] null
-/// (temanın vurgusu).
-class _CardAccent extends InheritedWidget {
-  const _CardAccent({
-    required this.accent,
-    required this.background,
-    required super.child,
-  });
-
-  final Color? accent;
-  final Color background;
-
-  static _CardAccent? maybeOf(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<_CardAccent>();
-
-  @override
-  bool updateShouldNotify(_CardAccent old) =>
-      old.accent != accent || old.background != background;
-}
 
 class NoteCard extends ConsumerWidget {
   const NoteCard({
@@ -882,7 +860,7 @@ class NoteCard extends ConsumerWidget {
 
     // Okunurluk teması ve koyu ton içeriğe iner; kart kabuğu (zemin, çizgi,
     // dokunuş dalgası) dış temada kalır.
-    Widget inner = _CardAccent(
+    Widget inner = NoteAccent(
       accent: accent,
       background: background,
       child: content,
@@ -1137,7 +1115,7 @@ class _FolderBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = _cardThemeOf(context).colorScheme;
     // Renkli kartta kartın koyu tonu (TEMA_PLANI F31.3).
-    final accent = _CardAccent.maybeOf(context)?.accent;
+    final accent = NoteAccent.maybeOf(context)?.accent;
     final ink = accent ?? scheme.onSecondaryContainer;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -1272,11 +1250,16 @@ class _CardItemRow extends StatelessWidget {
     final struck = checkbox && item.checked;
     Widget? leading;
     if (checkbox) {
-      // Renkli kartta kutucuk kartın koyu tonunda (TEMA_PLANI F31.3).
+      // Kutucuk EDİTÖRLE AYNI kural (bkz. [NoteCheckColors]): işaretli kutu
+      // notun vurgusuyla dolu ve soluk, boş kutu çerçeve — renkli kartta
+      // notun koyu tonu, renksizde temanın vurgusu.
+      final accent = NoteAccent.maybeOf(context)?.accent;
       final icon = Icon(
         item.checked ? Icons.check_box : Icons.check_box_outline_blank,
         size: 14,
-        color: _CardAccent.maybeOf(context)?.accent ?? scheme.onSurfaceVariant,
+        color: item.checked
+            ? NoteCheckColors.checked(scheme, accent)
+            : NoteCheckColors.unchecked(scheme, accent),
       );
       leading = onToggle == null
           ? Padding(
@@ -1383,7 +1366,7 @@ class _ChecklistProgress extends StatelessWidget {
     final done = items.where((i) => i.checked).length;
     if (total < 4 || done == 0) return const SizedBox.shrink();
     final scheme = _cardThemeOf(context).colorScheme;
-    final accent = _CardAccent.maybeOf(context)?.accent;
+    final accent = NoteAccent.maybeOf(context)?.accent;
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Row(

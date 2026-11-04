@@ -85,7 +85,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get deleteSelected => 'Seçilenleri sil';
 
   @override
-  String get undo => 'Geri Al';
+  String get undo => 'Geri al';
 
   @override
   String get redo => 'Geri getir';
@@ -305,7 +305,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiReportThanks => 'Bildirimin alındı, teşekkürler';
 
   @override
-  String get privacyPolicyTitle => 'Gizlilik Politikası';
+  String get privacyPolicyTitle => 'Gizlilik politikası';
 
   @override
   String get lockNote => 'Kilitle';
@@ -588,7 +588,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get archiveEmpty => 'Arşivde not yok';
 
   @override
-  String get trashTitle => 'Çöp Kutusu';
+  String get trashTitle => 'Çöp kutusu';
 
   @override
   String get trashEmpty => 'Çöp kutusu boş';
@@ -634,7 +634,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addToNote => 'Nota ekle';
 
   @override
-  String get chatTitle => 'Not Asistanı';
+  String get chatTitle => 'Not asistanı';
 
   @override
   String get chatHint =>
@@ -669,7 +669,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get semanticSearchHint => 'Anlamıyla ara: \"araba masrafları\"...';
 
   @override
-  String get briefingTitle => 'Günlük Brifing';
+  String get briefingTitle => 'Günlük brifing';
 
   @override
   String get briefingLoading => 'Brifing hazırlanıyor...';
@@ -833,7 +833,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Notun içeriği (metin ve liste maddeleri) silinecek. Emin misin?';
 
   @override
-  String get calculatorTitle => 'Hesap Makinesi';
+  String get calculatorTitle => 'Hesap makinesi';
 
   @override
   String get calcExpressionHint => 'ör. 12,5×3+40';
@@ -875,7 +875,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu içerik bugün oluşturuldu. Ücretsiz planda günde bir kez yenilenir; yarın tekrar oluşturabilirsin.';
 
   @override
-  String get voiceAssistantTitle => 'Sesli Not Asistanı';
+  String get voiceAssistantTitle => 'Sesli not asistanı';
 
   @override
   String get voiceListening => 'Dinliyorum...';
@@ -1608,7 +1608,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiPointsRenew => 'gece yarısı yenilenir';
 
   @override
-  String get aiChatWithNotes => 'Not Asistanı';
+  String get aiChatWithNotes => 'Not asistanı';
 
   @override
   String get aiChatInputHint => 'Notlarına bir şey sor…';
@@ -1620,7 +1620,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiChatFullScreen => 'Tam ekran';
 
   @override
-  String get aiOnYourNotes => 'NOTLARIN ÜZERİNDE';
+  String get aiOnYourNotes => 'Notların üzerinde';
 
   @override
   String get aiTaskDuplicates => 'Kopyaları temizle';
@@ -1649,7 +1649,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get aiRecentActions => 'SON İŞLEMLER';
+  String get aiRecentActions => 'Son işlemler';
 
   @override
   String get aiHistoryClear => 'Temizle';
@@ -1686,16 +1686,16 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get sectionPinnedShort => 'SABİT';
+  String get sectionPinnedShort => 'Sabit';
 
   @override
-  String get sectionToday => 'BUGÜN';
+  String get sectionToday => 'Bugün';
 
   @override
-  String get sectionThisWeek => 'BU HAFTA';
+  String get sectionThisWeek => 'Bu hafta';
 
   @override
-  String get sectionEarlier => 'DAHA ÖNCE';
+  String get sectionEarlier => 'Daha önce';
 
   @override
   String sectionNoteCount(int count) {
@@ -1755,7 +1755,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get filterSectionStatus => 'Durum';
 
   @override
-  String get filterSectionFolder => 'KLASÖR';
+  String get filterSectionFolder => 'Klasör';
 
   @override
   String get filterSectionTag => 'Etiket';
@@ -2507,7 +2507,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiModelSearch => 'Model ara';
 
   @override
-  String get aiModelOthers => 'DİĞER MODELLER';
+  String get aiModelOthers => 'Diğer modeller';
 
   @override
   String get aiModelNoMatch => 'Eşleşen model yok.';
@@ -2871,7 +2871,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yukarıdaki başlıklardan birine dokun ya da doğrudan yaz — birlikte düşünmeye başlayalım.';
 
   @override
-  String get brainstormOutlineTitle => 'ANA HAT';
+  String get brainstormOutlineTitle => 'Ana hat';
 
   @override
   String get brainstormInputHint => 'Bir fikir yaz ya da soru sor…';
@@ -2896,10 +2896,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Henüz kimse yok. E-postayla bir arkadaş ekle, klasörlerini onunla paylaş.';
 
   @override
-  String get friendsRequestsTitle => 'İSTEKLER';
+  String get friendsRequestsTitle => 'İstekler';
 
   @override
-  String get friendsListTitle => 'ARKADAŞLARIM';
+  String get friendsListTitle => 'Arkadaşlarım';
 
   @override
   String get friendsAddEmailHint => 'arkadas@eposta.com';
@@ -3555,7 +3555,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get collaboratorsOwner => 'Sahibi';
 
   @override
-  String get collaboratorsFriendsTitle => 'ARKADAŞLARIN';
+  String get collaboratorsFriendsTitle => 'Arkadaşların';
 
   @override
   String get collaboratorsLeave => 'Paylaşımdan ayrıl';
@@ -4608,9 +4608,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shareAsNoteShort => 'Not paketi';
 
   @override
-  String get shareMoreSection => 'DAHA FAZLA';
-
-  @override
   String get shareQuickPreparing => 'Hazırlanıyor…';
 
   @override
@@ -4682,7 +4679,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get customizeModeShort => 'Ekranlarda dokunarak gizle/göster';
 
   @override
-  String get personalizeModules => 'EKLENTİLER';
+  String get personalizeModules => 'Eklentiler';
 
   @override
   String get personalizeModulesInfo =>
@@ -4757,17 +4754,17 @@ class AppLocalizationsTr extends AppLocalizations {
   String get personalizeAttachSheet => 'EKLE LEVHASI (NOTUN İÇİNDE +)';
 
   @override
-  String get personalizeVideo => 'VİDEO';
+  String get personalizeVideo => 'Video';
 
   @override
-  String get personalizeHome => 'ANA EKRAN';
+  String get personalizeHome => 'Ana ekran';
 
   @override
   String get personalizeHomeItemsInfo =>
       'Seçili olanlar ana ekranda görünür; düzenleme modunda ana ekrandaki düğmelere dokunarak da gizleyebilirsin.';
 
   @override
-  String get personalizeBubbles => 'BALONLAR';
+  String get personalizeBubbles => 'Balonlar';
 
   @override
   String get personalizeChipsInfo =>
@@ -5227,14 +5224,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shareFolderTogether => 'Klasörü birlikte düzenle';
 
   @override
-  String get shareTogetherSection => 'BİRLİKTE DÜZENLE';
-
-  @override
   String get shareTogetherInfo =>
       'Aynı notu/klasörü ikiniz de görür ve değiştirirsiniz';
-
-  @override
-  String get shareCopySection => 'KOPYA GÖNDER';
 
   @override
   String get shareCopyInfo =>
@@ -5793,7 +5784,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get homeSharedAtBottomShort => 'Paylaşılanlar altta';
 
   @override
-  String get homeSharedSection => 'BENİMLE PAYLAŞILANLAR';
+  String get homeSharedSection => 'Benimle paylaşılanlar';
 
   @override
   String get copyAttachment => 'Eki kopyala';
@@ -6096,7 +6087,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Dairenin içinde yazı bulunamadı — yazının çevresine çiz';
 
   @override
-  String get gestureItemDeleted => 'Madde silindi (Geri al ile geri getir)';
+  String get gestureItemDeleted => 'Madde silindi';
 
   @override
   String get gestureFixing => 'Yazım düzeltiliyor…';
@@ -6106,6 +6097,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gestureFixed => 'Yazım düzeltildi';
+
+  @override
+  String get gestureFixNeedsAi =>
+      'Daire jesti yazımı yapay zekâyla düzeltir; yapay zekâ şu an kullanılamıyor (Ayarlar → Yapay zekâ).';
 
   @override
   String get embedImportToNote => 'Nota aktar';
@@ -6206,10 +6201,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shareIncludeBubbles => 'Balonlar';
 
   @override
-  String get shareSendSection => 'GÖNDER';
+  String get shareSendSection => 'Gönder';
 
   @override
-  String get shareInAppSection => 'NOTLAR KULLANICISINA';
+  String get shareInAppSection => 'Notlar kullanıcısına';
 
   @override
   String get shareTextHint =>

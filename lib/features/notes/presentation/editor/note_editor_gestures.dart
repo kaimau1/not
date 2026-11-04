@@ -87,8 +87,26 @@ extension _EditorGestures on _NoteEditorScreenState {
       case InkGesture.scribble:
         HapticFeedback.mediumImpact();
         items.removeItemOf(id);
-        _showSnack(l10n.gestureItemDeleted);
+        // Kazara karalama (parmakla kaydırırken) maddeyi siliyor olabilir:
+        // geri alma bildirimin İÇİNDE, üst çubuğa gitmeden (F36.5).
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            timedSnackBar(
+              content: Text(l10n.gestureItemDeleted),
+              action: SnackBarAction(label: l10n.undo, onPressed: _undo),
+            ),
+          );
       case InkGesture.circle:
+        // Yapay zekâ bu oturumda kullanılamıyorsa (bir kez söylendi) ya da
+        // misafirde kapalıysa jest sessiz kalır — her kazara dairede hata
+        // bildirimi çıkmasın (kullanıcı ekran görüntüsü 2026-11-04, web).
+        if (_NoteEditorScreenState._aiGestureUnavailable) return;
+        if (ref.read(aiGuestLockedProvider)) {
+          _NoteEditorScreenState._aiGestureUnavailable = true;
+          _showSnack(l10n.gestureFixNeedsAi);
+          return;
+        }
         HapticFeedback.selectionClick();
         unawaited(_fixItemSpelling(id));
       case InkGesture.none:
@@ -127,8 +145,18 @@ extension _EditorGestures on _NoteEditorScreenState {
       }
       items.replaceItemText(id, line);
       _showSnack(l10n.gestureFixed);
+    } on GeminiException catch (e) {
+      if (!mounted) return;
+      if (e.isAuthError) {
+        // Anahtar yok / dahili AI bu sürümde kapalı: jest ne yaptığını ve
+        // neden olmadığını BİR KEZ söyler (F36.5).
+        _NoteEditorScreenState._aiGestureUnavailable = true;
+        _showSnack(l10n.gestureFixNeedsAi);
+        return;
+      }
+      _showSnack(aiErrorText(l10n, e));
     } catch (e) {
-      if (mounted) _showSnack(l10n.aiError(friendlyError(l10n, e)));
+      if (mounted) _showSnack(aiErrorText(l10n, e));
     }
   }
 

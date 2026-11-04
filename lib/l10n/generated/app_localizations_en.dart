@@ -636,7 +636,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addToNote => 'Add to note';
 
   @override
-  String get chatTitle => 'Note Assistant';
+  String get chatTitle => 'Note assistant';
 
   @override
   String get chatHint =>
@@ -1613,7 +1613,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiPointsRenew => 'renews at midnight';
 
   @override
-  String get aiChatWithNotes => 'Note Assistant';
+  String get aiChatWithNotes => 'Note assistant';
 
   @override
   String get aiChatInputHint => 'Ask something about your notes…';
@@ -1625,7 +1625,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiChatFullScreen => 'Full screen';
 
   @override
-  String get aiOnYourNotes => 'ON YOUR NOTES';
+  String get aiOnYourNotes => 'On your notes';
 
   @override
   String get aiTaskDuplicates => 'Clean up duplicates';
@@ -1654,7 +1654,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get aiRecentActions => 'RECENT ACTIONS';
+  String get aiRecentActions => 'Recent actions';
 
   @override
   String get aiHistoryClear => 'Clear';
@@ -1691,16 +1691,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get sectionPinnedShort => 'PINNED';
+  String get sectionPinnedShort => 'Pinned';
 
   @override
-  String get sectionToday => 'TODAY';
+  String get sectionToday => 'Today';
 
   @override
-  String get sectionThisWeek => 'THIS WEEK';
+  String get sectionThisWeek => 'This week';
 
   @override
-  String get sectionEarlier => 'EARLIER';
+  String get sectionEarlier => 'Earlier';
 
   @override
   String sectionNoteCount(int count) {
@@ -1761,7 +1761,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterSectionStatus => 'Status';
 
   @override
-  String get filterSectionFolder => 'FOLDER';
+  String get filterSectionFolder => 'Folder';
 
   @override
   String get filterSectionTag => 'Tag';
@@ -2514,7 +2514,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiModelSearch => 'Search models';
 
   @override
-  String get aiModelOthers => 'OTHER MODELS';
+  String get aiModelOthers => 'Other models';
 
   @override
   String get aiModelNoMatch => 'No matching model.';
@@ -2878,7 +2878,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap one of the headings above or just type — let\'s start thinking together.';
 
   @override
-  String get brainstormOutlineTitle => 'OUTLINE';
+  String get brainstormOutlineTitle => 'Outline';
 
   @override
   String get brainstormInputHint => 'Write an idea or ask a question…';
@@ -2903,10 +2903,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'No one yet. Add a friend by email to share folders with them.';
 
   @override
-  String get friendsRequestsTitle => 'REQUESTS';
+  String get friendsRequestsTitle => 'Requests';
 
   @override
-  String get friendsListTitle => 'MY FRIENDS';
+  String get friendsListTitle => 'My friends';
 
   @override
   String get friendsAddEmailHint => 'friend@email.com';
@@ -3559,7 +3559,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collaboratorsOwner => 'Owner';
 
   @override
-  String get collaboratorsFriendsTitle => 'YOUR FRIENDS';
+  String get collaboratorsFriendsTitle => 'Your friends';
 
   @override
   String get collaboratorsLeave => 'Leave shared note';
@@ -4626,9 +4626,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareAsNoteShort => 'Note package';
 
   @override
-  String get shareMoreSection => 'MORE';
-
-  @override
   String get shareQuickPreparing => 'Preparing…';
 
   @override
@@ -4700,7 +4697,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customizeModeShort => 'Hide or show by tapping on screens';
 
   @override
-  String get personalizeModules => 'PLUG-INS';
+  String get personalizeModules => 'Plug-ins';
 
   @override
   String get personalizeModulesInfo =>
@@ -4775,17 +4772,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get personalizeAttachSheet => 'ADD SHEET (+ INSIDE A NOTE)';
 
   @override
-  String get personalizeVideo => 'VIDEO';
+  String get personalizeVideo => 'Video';
 
   @override
-  String get personalizeHome => 'HOME SCREEN';
+  String get personalizeHome => 'Home screen';
 
   @override
   String get personalizeHomeItemsInfo =>
       'Selected items appear on the home screen; in edit mode you can also tap them on the home screen to hide.';
 
   @override
-  String get personalizeBubbles => 'BUBBLES';
+  String get personalizeBubbles => 'Bubbles';
 
   @override
   String get personalizeChipsInfo =>
@@ -5247,14 +5244,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareFolderTogether => 'Edit folder together';
 
   @override
-  String get shareTogetherSection => 'EDIT TOGETHER';
-
-  @override
   String get shareTogetherInfo =>
       'You both see and change the same note or folder';
-
-  @override
-  String get shareCopySection => 'SEND A COPY';
 
   @override
   String get shareCopyInfo =>
@@ -5816,7 +5807,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSharedAtBottomShort => 'Shared notes at bottom';
 
   @override
-  String get homeSharedSection => 'SHARED WITH ME';
+  String get homeSharedSection => 'Shared with me';
 
   @override
   String get copyAttachment => 'Copy attachment';
@@ -6120,7 +6111,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No text inside the circle — draw around the text';
 
   @override
-  String get gestureItemDeleted => 'Item deleted (Undo brings it back)';
+  String get gestureItemDeleted => 'Item deleted';
 
   @override
   String get gestureFixing => 'Fixing spelling…';
@@ -6130,6 +6121,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gestureFixed => 'Spelling fixed';
+
+  @override
+  String get gestureFixNeedsAi =>
+      'Circling an item fixes its spelling with AI; AI isn\'t available right now (Settings → AI).';
 
   @override
   String get embedImportToNote => 'Move into note';
@@ -6228,10 +6223,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareIncludeBubbles => 'Bubbles';
 
   @override
-  String get shareSendSection => 'SEND';
+  String get shareSendSection => 'Send';
 
   @override
-  String get shareInAppSection => 'TO A NOT USER';
+  String get shareInAppSection => 'To a Not user';
 
   @override
   String get shareTextHint =>

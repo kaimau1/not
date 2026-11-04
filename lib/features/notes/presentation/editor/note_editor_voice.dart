@@ -244,7 +244,7 @@ extension _EditorVoice on _NoteEditorScreenState {
     } on GeminiException catch (e) {
       if (mounted) _showSnack(e.isAuthError ? l10n.aiNoApiKey : e.message);
     } catch (e) {
-      if (mounted) _showSnack(l10n.aiError(friendlyError(l10n, e)));
+      if (mounted) _showSnack(aiErrorText(l10n, e));
     } finally {
       if (mounted) _aiTaskN.value = null;
     }

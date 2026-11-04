@@ -110,7 +110,7 @@ class _TrashAnalysisSheetState extends ConsumerState<_TrashAnalysisSheet> {
         );
       }
     } catch (e) {
-      if (mounted) setState(() => _aiError = l10n.aiError(friendlyError(l10n, e)));
+      if (mounted) setState(() => _aiError = aiErrorText(l10n, e));
     } finally {
       if (mounted) setState(() => _aiLoading = false);
     }

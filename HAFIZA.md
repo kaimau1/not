@@ -383,6 +383,27 @@ maddeyi GÜNCELLE.
   aşılınca alt ağaç yeniden kurulmasın). Renkli yazı `RichTextTheme.background`
   → `markStyle` → `readableOn` (≥ 4,5, ton korunur). Renkli kartın koyu tonu
   `NoteColors.noteInk` (hap, kutucuk, ilerleme, defter çizgisi `PaperInks`).
+- **Not vurgusu — kart = açık not (TUTARLILIK F36.1, 2026-11-04):** içerik
+  öğeleri (kutucuk, "Yeni madde", etiket/klasör/hatırlatıcı hapı, raptiye,
+  madde ayırıcı) `NoteAccent`'ten: renkli notta `noteInk`, renksizde null →
+  temanın vurgusu; kutucuk `NoteCheckColors` (işaretli soluk dolgu).
+  Editör ağacı `NoteAccent` ile sarılı, değer DIŞ temadan (zıt temada zemin
+  yanlış çıkar); ItemsEditor `_accent` satır önbelleği anahtarında. Krom
+  (çubuk, levha, menü) temanın. Test `note_accent_consistency_test`.
+- **Başlık sığdırma ölçümü (F36.2 kök neden):** `TextField` M3'te stilini
+  `bodyLarge`ın ÜSTÜNE birleştirir (harf aralığı 0,5 miras) → ölçüm
+  `fieldMergedStyle(bodyLarge, stil)` ile; yoksa uzun başlık çipin altına taşar.
+- **AI hata metni (F36.5):** `aiErrorText(l10n, e)` — `aiError(friendlyError())`
+  YAZMA (okunur `GeminiException` çift başlık alıyordu). Daire jesti AI yoksa
+  bir kez `gestureFixNeedsAi`, sonra oturum boyu sessiz; karalama silmesi
+  bildirimde Geri al.
+- **Bölüm başlığı (F36.7):** tek `SectionLabel`, cümle düzeni (büyük harf
+  yalnız rozet: BALONLU PDF, SUNUM, VİDEO, YENİ); Başlık Düzeni ad yok
+  ("Çöp kutusu"). Sayı 0 → rozet çizilmez; boş klasör solması renkte
+  (`Opacity` yok).
+- **Ekran turu (F36.3):** `tool/tour/screen_tour_test.dart` (CI dışı) →
+  `build/tour/*.png`, 4 boyut. TUZAK: testte `debugDisableShadows` → FAB/panel
+  çevresinde koyu halka çizilir, GERÇEK DEĞİL.
 - Ana ekran tek mikrofon = doğrudan yazdır; AI sesli not Yapay zekâ
   ekranının en üstünde. "+" tek panel. Dosya akışı tek levha
   `showFileUseSheet`; HEIC → PNG.

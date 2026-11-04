@@ -159,7 +159,7 @@ The **✦** button on the note screen:
 - For attachments: summarise/ask a PDF, text from an image, transcribe audio.
 The **AI** screen (⋮, or the rail on the left on wide screens):
 - **AI voice note:** at the top; speak and it builds the note.
-- **Note Assistant:** ask about all your notes ("what's missing from my shopping list?"); while empty it offers ready-made suggestion buttons.
+- **Note assistant:** ask about all your notes ("what's missing from my shopping list?"); while empty it offers ready-made suggestion buttons.
 - **Brainstorm with AI:** it drafts an outline first, then you develop it together.
 - **On your notes:** summarise the week, tag the untagged, suggest titles, clean up duplicates (duplicates use no AI). A box with nothing to do is faded and says **Nothing to do right now**.
 - **Read a document:** listen to a PDF/Word/slides file.

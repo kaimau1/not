@@ -224,7 +224,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         );
       }
     } catch (e) {
-      if (mounted) setState(() => _loadError = context.l10n.aiError(friendlyError(context.l10n, e)));
+      if (mounted) setState(() => _loadError = aiErrorText(context.l10n, e));
     } finally {
       if (mounted && _outlineLoading) setState(() => _outlineLoading = false);
     }
@@ -295,7 +295,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     } on GeminiException catch (e) {
       reply = e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message);
     } catch (e) {
-      reply = l10n.aiError(friendlyError(l10n, e));
+      reply = aiErrorText(l10n, e);
     }
     if (!mounted) return;
     setState(() {
@@ -321,7 +321,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       if (!mounted) return;
       final message = e is GeminiException
           ? (e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message))
-          : l10n.aiError(friendlyError(l10n, e));
+          : aiErrorText(l10n, e);
       ScaffoldMessenger.of(
         context,
       ).showMessage(message);

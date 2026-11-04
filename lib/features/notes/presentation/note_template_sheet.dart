@@ -2,6 +2,7 @@ import '../../../core/app_icons.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../../../core/widgets/sheet_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
@@ -629,16 +630,10 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    // Uygulamanın tek bölüm başlığı (TUTARLILIK F36.7).
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 14, 4, 8),
-      child: Text(
-        label,
-        style: theme.textTheme.labelLarge?.copyWith(
-          color: theme.colorScheme.primary,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+      child: SectionLabel(label),
     );
   }
 }

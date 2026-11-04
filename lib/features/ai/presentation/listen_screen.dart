@@ -137,7 +137,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = context.l10n.aiError(friendlyError(context.l10n, e));
+        _error = aiErrorText(context.l10n, e);
         _busy = false;
       });
     }
@@ -201,7 +201,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
       // true kalıyor ve ekran sonsuza dek dönen çarkta takılıyordu.
       if (!mounted) return;
       setState(() {
-        _error = context.l10n.aiError(friendlyError(context.l10n, e));
+        _error = aiErrorText(context.l10n, e);
         _generating = false;
       });
     }
@@ -291,7 +291,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _rendering = false);
-      _snack(context.l10n.aiError(friendlyError(context.l10n, e)));
+      _snack(aiErrorText(context.l10n, e));
     }
   }
 
@@ -318,7 +318,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
       unawaited(context.pushNote(noteRoutePath(id)));
     } catch (e) {
       if (!mounted) return;
-      _snack(context.l10n.aiError(friendlyError(context.l10n, e)));
+      _snack(aiErrorText(context.l10n, e));
     }
   }
 

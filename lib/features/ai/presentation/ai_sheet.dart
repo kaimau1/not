@@ -183,7 +183,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
         );
       }
     } catch (e) {
-      if (mounted) setState(() => _error = context.l10n.aiError(friendlyError(context.l10n, e)));
+      if (mounted) setState(() => _error = aiErrorText(context.l10n, e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -1169,14 +1169,10 @@ class _AiTileGrid extends StatelessWidget {
 
 /// Sayfa içi bölüm başlığı ("Bu not" / "Ekler"). Düz liste hangi işlemin
 /// nota, hangisinin eke ait olduğunu göstermiyordu.
+// Uygulamanın tek bölüm başlığı (TUTARLILIK F36.7).
 Widget _sectionLabel(BuildContext context, String text) => Padding(
   padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-  child: Text(
-    text,
-    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-      color: Theme.of(context).colorScheme.onSurfaceVariant,
-    ),
-  ),
+  child: SectionLabel(text),
 );
 
 class _ResultView extends StatelessWidget {

@@ -54,7 +54,7 @@ class AiTextResult extends StatelessWidget {
               Text(
                 e is GeminiException && e.isAuthError
                     ? l10n.aiNoApiKey
-                    : l10n.aiError(friendlyError(l10n, e)),
+                    : aiErrorText(l10n, e),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),

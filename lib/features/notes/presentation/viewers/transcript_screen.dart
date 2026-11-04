@@ -188,7 +188,7 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
     } on GeminiException catch (e) {
       _fail(e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message));
     } catch (e) {
-      _fail(l10n.aiError(friendlyError(l10n, e)));
+      _fail(aiErrorText(l10n, e));
     }
   }
 

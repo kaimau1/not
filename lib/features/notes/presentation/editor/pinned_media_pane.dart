@@ -107,6 +107,7 @@ class PinnedMediaPane extends StatefulWidget {
     this.onRemove,
     this.onDetach,
     this.onSaveAs,
+    this.onShare,
     this.onTranscribe,
     this.onPdfNote,
   });
@@ -132,6 +133,11 @@ class PinnedMediaPane extends StatefulWidget {
 
   /// EKİ FARKLI KAYDET (2026-10-17). null ise menüde yok.
   final VoidCallback? onSaveAs;
+
+  /// Eki sistem paylaşımıyla gönderir (TUTARLILIK F36.4 — kullanıcı
+  /// listesi: "ekleri paylaş seçeneği ek menüsünde ve gömülmüş ek menüsünde
+  /// olsun"; şerit ve yüzen görselde vardı, sabit bölmede yoktu).
+  final VoidCallback? onShare;
 
   /// GÖRSELDEN TÜRETİLMİŞ balonlu belge (bkz. `Attachment.sourceId`).
   /// Kullanıcı isteği 2026-10-16: "balonludan üste sabitlemeye alınca da
@@ -687,7 +693,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
       widget.onRemove != null ||
       widget.onDetach != null ||
       widget.onTranscribe != null ||
-      widget.onSaveAs != null;
+      widget.onSaveAs != null ||
+      widget.onShare != null;
 
   /// YAZILI işlemler: sayfaya göm (yüzen), alta ek olarak, bağlantı, kaldır.
   Widget _menu(BuildContext context) {
@@ -713,6 +720,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             widget.onCopyLink?.call();
           case 'transcribe':
             widget.onTranscribe?.call();
+          case 'share':
+            widget.onShare?.call();
           case 'saveAs':
             widget.onSaveAs?.call();
           case 'remove':
@@ -738,6 +747,12 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
           PopupMenuItem(
             value: 'transcribe',
             child: item(Icons.subtitles_outlined, l10n.transcriptAction),
+          ),
+        // Paylaş + Farklı kaydet: şerit ve yüzen görsel menüsüyle aynı sıra.
+        if (widget.onShare != null)
+          PopupMenuItem(
+            value: 'share',
+            child: item(Icons.share_outlined, l10n.share),
           ),
         if (widget.onSaveAs != null && !widget.media.isWebVideo)
           PopupMenuItem(

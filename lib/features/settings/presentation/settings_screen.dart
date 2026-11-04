@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart'
     show AuthCredential, FirebaseAuth, FirebaseAuthException;
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
+import '../../../core/widgets/sheet_header.dart';
 import 'package:flutter/rendering.dart' show RenderAbstractViewport;
 import 'package:flutter/scheduler.dart' show SchedulerBinding;
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
@@ -888,7 +889,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
       );
     } catch (e) {
-      messenger.showMessage(l10n.aiError(friendlyError(l10n, e)));
+      messenger.showMessage(aiErrorText(l10n, e));
     } finally {
       if (mounted) setState(() => _aiBusy = false);
     }

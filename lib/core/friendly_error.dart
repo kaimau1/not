@@ -121,6 +121,21 @@ String friendlyError(AppLocalizations l10n, Object error) {
   return text;
 }
 
+/// YAPAY ZEKÂ HATASININ TEK METNİ (TUTARLILIK F36.5, kullanıcı ekran
+/// görüntüsü 2026-11-04: "Yapay zekâ isteği başarısız: Dahili yapay zeka bu
+/// sürümde etkinleştirilmemiş…"). Uygulamanın kendi okunur iletisi
+/// ([UserFacingException] — `GeminiException`) zaten ne olduğunu ve ne
+/// yapılacağını söylüyor; önüne "istek başarısız" eklenince iki başlıklı,
+/// uzun ve çelişkili bir cümle çıkıyordu. Ham istisnalar eskisi gibi
+/// "Yapay zekâ isteği başarısız: …" kalıbıyla.
+String aiErrorText(AppLocalizations l10n, Object error) {
+  if (error is UserFacingException) {
+    ErrorLog.record('ai', error);
+    return error.message;
+  }
+  return l10n.aiError(friendlyError(l10n, error));
+}
+
 ({String text, String raw, String label, DateTime at})? _last;
 
 /// Az önce [friendlyError]den geçmiş bir hatanın bildirimi mi? Öyleyse ham
