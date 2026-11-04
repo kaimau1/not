@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
@@ -413,7 +414,7 @@ class NotesRepository {
 
     controller = StreamController(
       onListen: () {
-        mainSub = _notes.doc(noteId).snapshots().listen((doc) {
+        mainSub = _dataChangesOnly(_sharedDoc(noteId)).listen((doc) {
           last = doc;
           final split = doc.data()?['heavyRef'] == true;
           if (split && heavySub == null) {
@@ -456,10 +457,51 @@ class NotesRepository {
   /// geldi bayrağı dahil) olay üretir; boolean değişmeden editörün göstergesi
   /// boşuna yeniden çizilirdi.
   Stream<bool> watchPendingWrites(String noteId) => _withLocal(
-    _notes.doc(noteId).snapshots(includeMetadataChanges: true),
+    _sharedDoc(noteId),
     (DocumentSnapshot<Map<String, dynamic>> doc) =>
         !isLocal(noteId) && doc.metadata.hasPendingWrites,
   ).distinct();
+
+  /// F22.6: editörün iki belge dinleyicisi (not verisi + senkron göstergesi)
+  /// AYNI yerel Firestore dinleyicisini paylaşır. Eskiden kayıt başına 3 yerel
+  /// olay vardı (yazım: veri + metadata dinleyicisi, onay: metadata) ve her
+  /// biri tüm belgeyi platform kanalından kodluyordu; şimdi 2 (yazım + onay).
+  /// Firestore örneğine bağlı (paylaşılan klasördeki not için her seferinde
+  /// yeni [NotesRepository] kurulur, örnek aynıdır).
+  static final Expando<Map<String, _DocHub>> _hubs = Expando();
+
+  /// Testler için: açık paylaşılan belge dinleyicisi sayısı.
+  @visibleForTesting
+  static int debugSharedDocListeners = 0;
+
+  Stream<DocumentSnapshot<Map<String, dynamic>>> _sharedDoc(String noteId) {
+    final ref = _notes.doc(noteId);
+    final hubs = _hubs[_firestore] ??= <String, _DocHub>{};
+    var hub = hubs[ref.path];
+    if (hub == null) {
+      late final _DocHub created;
+      created = _DocHub(ref, () {
+        if (identical(hubs[ref.path], created)) hubs.remove(ref.path);
+      });
+      hubs[ref.path] = hub = created;
+    }
+    return hub.stream();
+  }
+
+  /// `includeMetadataChanges` akışından yalnız VERİSİ değişen olaylar —
+  /// varsayılan `snapshots()` ile aynı anlam (yalnız metadata değişen onay /
+  /// önbellek→sunucu olayı editörü yeniden kurmaz). İlk olay hep geçer.
+  static Stream<DocumentSnapshot<Map<String, dynamic>>> _dataChangesOnly(
+    Stream<DocumentSnapshot<Map<String, dynamic>>> source,
+  ) {
+    DocumentSnapshot<Map<String, dynamic>>? prev;
+    return source.where((doc) {
+      final p = prev;
+      prev = doc;
+      if (p == null) return true;
+      return p.exists != doc.exists || !deepDataEquals(p.data(), doc.data());
+    });
+  }
 
   static int _compare(Note a, Note b) {
     if (a.pinned != b.pinned) return a.pinned ? -1 : 1;
@@ -1504,4 +1546,81 @@ class NoteWriteIssue {
   final String? reason;
 
   bool get isRejected => reason != null;
+}
+
+/// Firestore belge verisinin derin eşitliği (Map/List iç içe; diğer
+/// değerler `==` — `Timestamp`, `GeoPoint`, `Blob` değer eşitliği taşır).
+@visibleForTesting
+bool deepDataEquals(Object? a, Object? b) {
+  if (identical(a, b)) return true;
+  if (a is Map && b is Map) {
+    if (a.length != b.length) return false;
+    for (final e in a.entries) {
+      if (!b.containsKey(e.key) || !deepDataEquals(e.value, b[e.key])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (a is List && b is List) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (!deepDataEquals(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  return a == b;
+}
+
+/// Bir belgenin tek `includeMetadataChanges` dinleyicisi, birden çok aboneye
+/// dağıtılır; geç gelen abone son anlık görüntüyü hemen alır (F22.6).
+class _DocHub {
+  _DocHub(this.ref, this._onEmpty);
+
+  final DocumentReference<Map<String, dynamic>> ref;
+  final void Function() _onEmpty;
+  final _sinks = <StreamController<DocumentSnapshot<Map<String, dynamic>>>>[];
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _sub;
+  DocumentSnapshot<Map<String, dynamic>>? _last;
+
+  Stream<DocumentSnapshot<Map<String, dynamic>>> stream() {
+    late StreamController<DocumentSnapshot<Map<String, dynamic>>> c;
+    c = StreamController(
+      onListen: () {
+        _sinks.add(c);
+        final last = _last;
+        if (last != null) c.add(last);
+        if (_sub == null) {
+          NotesRepository.debugSharedDocListeners++;
+          _sub = ref
+              .snapshots(includeMetadataChanges: true)
+              .listen(
+                (doc) {
+                  _last = doc;
+                  for (final s in List.of(_sinks)) {
+                    s.add(doc);
+                  }
+                },
+                onError: (Object e, StackTrace st) {
+                  for (final s in List.of(_sinks)) {
+                    s.addError(e, st);
+                  }
+                },
+              );
+        }
+      },
+      onCancel: () async {
+        _sinks.remove(c);
+        if (_sinks.isNotEmpty) return;
+        if (_sub == null) return;
+        final cancelled = _sub?.cancel();
+        _sub = null;
+        _last = null;
+        NotesRepository.debugSharedDocListeners--;
+        _onEmpty();
+        await cancelled;
+      },
+    );
+    return c.stream;
+  }
 }
