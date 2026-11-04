@@ -636,7 +636,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addToNote => 'Add to note';
 
   @override
-  String get chatTitle => 'Note Assistant';
+  String get chatTitle => 'Note assistant';
 
   @override
   String get chatHint =>
@@ -1613,7 +1613,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiPointsRenew => 'renews at midnight';
 
   @override
-  String get aiChatWithNotes => 'Note Assistant';
+  String get aiChatWithNotes => 'Note assistant';
 
   @override
   String get aiChatInputHint => 'Ask something about your notes…';

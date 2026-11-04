@@ -115,7 +115,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(currentLocation(router), '/');
 
-    await tester.tap(find.byTooltip('Çöp Kutusu').first);
+    await tester.tap(find.byTooltip('Çöp kutusu').first);
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Notlar').first);
     await tester.pumpAndSettle();

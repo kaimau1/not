@@ -180,6 +180,13 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 52. [ ] (F33) Defter: mavi sayfada çizgiler mavi-gri, adaçayında yeşil-gri; kenar çizgisi mercan (kırmızı hata rengi değil); kartta da aynı. Noktalı desende noktalar görünür.
 53. [ ] (F35) Ana ekran widget'ı Adaçayı renklerinde (gece: koyu Adaçayı); uygulama açılışında beyaz parlama yok (açılış zemini `#EAF0EB`). Web: açılış ekranı ve tarayıcı çubuğu rengi yeni zemin.
 
+**2026-11-04 — tutarlılık (TUTARLILIK_PLANI Faz 36, yazıldı, cihazda doğrulanmadı)**
+54. [ ] (F36.1) Koyu pembe/siyah özel renkli liste notu: ana ekrandaki kart ile açık not AYNI renkte kutucuk, etiket, "Yeni madde", raptiye (ikisi de notun tonu); renksiz notta kart ve editör kutucuğu petrol yeşili; adaçayı notta koyu yeşil.
+55. [ ] (F36.2) 30+ harfli başlıklı not: başlık sağdaki çipin altına girmez, küçülerek sığar (telefon dikey + web).
+56. [ ] (F36.4) Üste sabit görsel/PDF/video ⋮ → Paylaş; yazıya gömülü eke dokun → önizlemede Paylaş simgesi; ikisi de dosyayı (YouTube'da bağlantıyı) paylaşır.
+57. [ ] (F36.5) Web'de (dahili AI kapalı) liste notunda parmakla kaydırırken hata yağmuru YOK; maddenin üstüne bilerek daire çiz → bir kez "Daire jesti yazımı yapay zekâyla düzeltir…", ikinci dairede sessiz; karala → "Madde silindi · Geri al" geri getirir.
+58. [ ] (F36.6/F36.7) Ana ekran: boş klasör çiplerinde "0" yok, soluk; bölüm başlıkları "Sabit · Bugün · Bu hafta · Daha önce" cümle düzeninde, levhalardaki başlıklarla aynı stilde; ⋮ menüsünde "Çöp kutusu".
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)

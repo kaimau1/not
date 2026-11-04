@@ -198,7 +198,7 @@
   "addDrawing": "Add drawing",
   "drawingTitle": "Drawing",
   "addToNote": "Add to note",
-  "chatTitle": "Note Assistant",
+  "chatTitle": "Note assistant",
   "chatHint": "Ask about your notes: \"what was that recipe I wrote last week?\", \"what's missing from my shopping list?\"",
   "chatInputHint": "Type a question...",
   "fontSize": "Text size",
@@ -540,7 +540,7 @@
     }
   },
   "aiPointsRenew": "renews at midnight",
-  "aiChatWithNotes": "Note Assistant",
+  "aiChatWithNotes": "Note assistant",
   "aiChatInputHint": "Ask something about your notes…",
   "aiChatLooking": "looking through your notes…",
   "aiChatFullScreen": "Full screen",

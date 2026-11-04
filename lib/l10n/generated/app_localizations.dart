@@ -239,7 +239,7 @@ abstract class AppLocalizations {
   /// No description provided for @undo.
   ///
   /// In tr, this message translates to:
-  /// **'Geri Al'**
+  /// **'Geri al'**
   String get undo;
 
   /// No description provided for @redo.
@@ -635,7 +635,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyPolicyTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Gizlilik Politikası'**
+  /// **'Gizlilik politikası'**
   String get privacyPolicyTitle;
 
   /// No description provided for @lockNote.
@@ -1121,7 +1121,7 @@ abstract class AppLocalizations {
   /// No description provided for @trashTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Çöp Kutusu'**
+  /// **'Çöp kutusu'**
   String get trashTitle;
 
   /// No description provided for @trashEmpty.
@@ -1205,7 +1205,7 @@ abstract class AppLocalizations {
   /// No description provided for @chatTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Not Asistanı'**
+  /// **'Not asistanı'**
   String get chatTitle;
 
   /// No description provided for @chatHint.
@@ -1271,7 +1271,7 @@ abstract class AppLocalizations {
   /// No description provided for @briefingTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Günlük Brifing'**
+  /// **'Günlük brifing'**
   String get briefingTitle;
 
   /// No description provided for @briefingLoading.
@@ -1583,7 +1583,7 @@ abstract class AppLocalizations {
   /// No description provided for @calculatorTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Hesap Makinesi'**
+  /// **'Hesap makinesi'**
   String get calculatorTitle;
 
   /// No description provided for @calcExpressionHint.
@@ -1655,7 +1655,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceAssistantTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Sesli Not Asistanı'**
+  /// **'Sesli not asistanı'**
   String get voiceAssistantTitle;
 
   /// No description provided for @voiceListening.
@@ -3011,7 +3011,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiChatWithNotes.
   ///
   /// In tr, this message translates to:
-  /// **'Not Asistanı'**
+  /// **'Not asistanı'**
   String get aiChatWithNotes;
 
   /// No description provided for @aiChatInputHint.

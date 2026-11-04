@@ -23,7 +23,7 @@ Notların kart olarak, **BUGÜN / BU HAFTA / DAHA ÖNCE** gruplarıyla dizilir; 
 - **Hızlı not satırı** (varsayılan kapalı): Ayarlar → **Eklentiler ve hızlı not** → Hızlı not satırı ile açılınca listenin başında "Yeni not…" alanı çıkar; yazıp kaydet — not açmadan.
 - **Ana ekran zemini:** ⋮ → Ana ekran zemini ile görsel ya da desen seç.
 - **Kartta medya:** üste sabitlenmiş ya da tek görsel/video kartın tepesinde kapak olarak görünür; video ▶, YouTube kırmızı düğmeyle işaretlidir. Balonlu notun belgesi de kartın tepesinde kapak olur: ilk sayfa, sol üstte **BALONLU PDF** rozeti, altta dosya adı ve balon sayısı; ses kayıtları ve öbür belgeler kartın altında satır olarak durur.
-- Sağ üstteki ⋮ alttan bir levha açar: en üstte **Yapay zekâ, Hatırlatıcılar, Arşiv, Çöp Kutusu, Ayarlar** (geniş ekranda bunlar soldaki rayda durur, ⋮'te tekrarlanmaz); altında **Ana ekran** (zemin, gizli klasörler) ve **Uygulama** (kişiselleştir, bu kılavuz).
+- Sağ üstteki ⋮ alttan bir levha açar: en üstte **Yapay zekâ, Hatırlatıcılar, Arşiv, Çöp kutusu, Ayarlar** (geniş ekranda bunlar soldaki rayda durur, ⋮'te tekrarlanmaz); altında **Ana ekran** (zemin, gizli klasörler) ve **Uygulama** (kişiselleştir, bu kılavuz).
 - **Karttaki ⋮ ya da karta basılı tutma menüsü:** üst satırda sabitle, yıldızla, klasöre taşı, paylaş, seç; altında **Düzenle** (renk — istersen kenar vurgusuyla), **Kopyala** (kopyala, çoğalt, şablon olarak kaydet), **Araçlar** (sesli dinle, istatistik), **Koruma ve depolama** (arşivle, kilitle, senkron); en altta Sil.
 
 ## Yeni not oluşturma {#create}
@@ -159,7 +159,7 @@ Not ekranındaki **✦** düğmesi:
 - Ek bölümünde: PDF özetle/soru sor, görselden metin, sesi yazıya dök.
 Ana ekrandaki **Yapay zekâ** ekranı (⋮ ya da geniş ekranda soldaki ray):
 - **AI sesli not:** en üstte; konuş, notu kursun.
-- **Not Asistanı:** bütün notlarına soru sor ("alışveriş listemde ne eksik?"); boşken altında hazır öneri düğmeleri durur.
+- **Not asistanı:** bütün notlarına soru sor ("alışveriş listemde ne eksik?"); boşken altında hazır öneri düğmeleri durur.
 - **AI ile beraber düşün:** önce bir ana hat çıkarır, sonra birlikte geliştirirsiniz.
 - **Notlarının üzerinde:** haftayı özetle, etiketsizleri etiketle, başlıksızlara başlık öner, kopyaları temizle (kopyalar yapay zekâ harcamaz). Yapacak işi olmayan kutu soluk durur ve **Şu an iş yok** der.
 - **Belge oku:** PDF/Word/sunumu sesli dinle.

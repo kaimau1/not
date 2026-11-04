@@ -85,7 +85,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get deleteSelected => 'Seçilenleri sil';
 
   @override
-  String get undo => 'Geri Al';
+  String get undo => 'Geri al';
 
   @override
   String get redo => 'Geri getir';
@@ -305,7 +305,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiReportThanks => 'Bildirimin alındı, teşekkürler';
 
   @override
-  String get privacyPolicyTitle => 'Gizlilik Politikası';
+  String get privacyPolicyTitle => 'Gizlilik politikası';
 
   @override
   String get lockNote => 'Kilitle';
@@ -588,7 +588,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get archiveEmpty => 'Arşivde not yok';
 
   @override
-  String get trashTitle => 'Çöp Kutusu';
+  String get trashTitle => 'Çöp kutusu';
 
   @override
   String get trashEmpty => 'Çöp kutusu boş';
@@ -634,7 +634,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addToNote => 'Nota ekle';
 
   @override
-  String get chatTitle => 'Not Asistanı';
+  String get chatTitle => 'Not asistanı';
 
   @override
   String get chatHint =>
@@ -669,7 +669,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get semanticSearchHint => 'Anlamıyla ara: \"araba masrafları\"...';
 
   @override
-  String get briefingTitle => 'Günlük Brifing';
+  String get briefingTitle => 'Günlük brifing';
 
   @override
   String get briefingLoading => 'Brifing hazırlanıyor...';
@@ -833,7 +833,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Notun içeriği (metin ve liste maddeleri) silinecek. Emin misin?';
 
   @override
-  String get calculatorTitle => 'Hesap Makinesi';
+  String get calculatorTitle => 'Hesap makinesi';
 
   @override
   String get calcExpressionHint => 'ör. 12,5×3+40';
@@ -875,7 +875,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu içerik bugün oluşturuldu. Ücretsiz planda günde bir kez yenilenir; yarın tekrar oluşturabilirsin.';
 
   @override
-  String get voiceAssistantTitle => 'Sesli Not Asistanı';
+  String get voiceAssistantTitle => 'Sesli not asistanı';
 
   @override
   String get voiceListening => 'Dinliyorum...';
@@ -1608,7 +1608,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiPointsRenew => 'gece yarısı yenilenir';
 
   @override
-  String get aiChatWithNotes => 'Not Asistanı';
+  String get aiChatWithNotes => 'Not asistanı';
 
   @override
   String get aiChatInputHint => 'Notlarına bir şey sor…';
