@@ -162,14 +162,7 @@ maddeyi GÜNCELLE.
 - `ConsumerState.dispose` içinde `ref` yok. Türetilmiş sağlayıcı içerik
   aynıysa önceki örneği döner (`StableBox`). Toplu işlem tek `WriteBatch`
   (450'lik). Animasyonda `FrameLoop`.
-- **Uzun liste açılış/kapanış kasması** (2026-11-02, telefonda ölçüldü, 90
-  madde; kısa notta yok). Ölçüm: `adb shell dumpsys SurfaceFlinger --latency
-  '"SurfaceView[<paket>/<paket>.MainActivity](BLAST)#0"'` (Flutter kareleri
-  `gfxinfo`da YOK) ya da `print` + `adb logcat` + `addTimingsCallback`. Şimdi:
-  `_kFirstRows` 12, kalanı geçişten SONRA (1100 ms) 4 madde/kare; kapanırken
-  `noteRouteClosing` ile kare başına 6 madde sökülür. YANLIŞ YOL: satıra
-  `RepaintBoundary` (kazanç yok). TUZAK: yerel ölçüm ayrı `applicationId` +
-  `google-services.json` ister (commit'leme); Xiaomi USB onayı 8 sn.
+- **Uzun liste (F24.3, 2026-11-04):** madde düz `RichText` (`items_editor_lazy.dart`), dokununca/`requestFocus`la gerçek alan. Odak için `_LazyFocusNode` (yeni odak yolu da `requestFocus` kullansın). Düz çizim gerçek alanla birebir: `windowedFieldStyle` + 3 dp imleç payı. Düz çizimin bilmediği görünüm/dokunuş ekleyen satır `_needsRealField`e. Testler `debugEagerItemFields` ile gerçek alan kurar. Kademeli: ilk 16, 500 ms sonra kare başına 2 (100 düz satır bile tek karede 163 ms). Ölçüm tuzağı: SF'deki açılış "680 ms" donma değil bekleme boşluğuydu.
 - **Akıcılık ölçümü (2026-11-03, `AKICILIK_PLANI.md`, araçlar `tool/perf/`):**
   Flutter 3.47 Android'de Dart UI = ana iş parçacığı (birleşik, KAPATILAMAZ:
   `DisableMergedPlatformUIThread` motorda yasak) → her platform kanalı
@@ -222,7 +215,8 @@ maddeyi GÜNCELLE.
   F23.5, F24.3, F25.2, F22.4 → KALAN_ISLER F19.F1–F3.
 - **Pencereli yazma (F24.2, 2026-11-04, telefonda LAYOUT p90 122→12 ms):** `editor/windowed_body.dart`. MODEL HEP `_bodyController`; alan `_bodyField` (yazarken `BodyWindow.win`). Yalnız odaklıyken, ilk tuştan sonra, ≥ 6000 krk; ek etiketi (📎), yüzen görsel, not içi arama, bekleyen biçim, sayfalı/mürekkepli not → tek alan (`_windowAllowed`). `displayText` veren yerde `_bodyField.text` kullan. TUZAK: alan State'i `_bodyFieldKey` ile taşınır (yoksa klavye kapanır); parça `RenderEditable` genişliği için sağdan 3 dp pay + birleşmiş giriş stili ister (yoksa satır zıplar, test sabitler); alt parça kimliği SONDAN uzaklık (baştan olsa yazınca bütün alt parçalar yeniden yerleşir, yeri de bayatlar); klavyeden gelen eski pencere durumu `_isStale` ile yazılmaz (paragraf çoğalırdı). Gerçek klavye önerisi/dikte denenmedi (KALANLAR #47).
 - **Anında içerik (F25.2, 2026-11-04):** `home_snapshot.dart`, arka plana geçişte ilk 30 kartın KISALTILMIŞ kopyası tercihte; yalnız dashboard `loading` dalında, `SliverIgnorePointer` ile çizilir. TUZAK: depo akışına ya da editöre SOKMA (kısaltılmış not tam notun üstüne yazılır; eksik liste hatırlatıcıları "silinmiş" sanır). Kilitli/parola notu içeriği yazılmaz; sabitliler önce girer (yoksa liste gelince zıplar). Tercih anahtarı `home_snapshot`, hesap çıkışında silinmez (uid eşleşmezse okunmaz).
-- **Ölçüm tuzakları (2026-11-04):** kapanış "99 ms donma" yanılgıydı (AKICILIK Ek B notu). Uzun ölçüm + şarj telefonu 52 °C'ye çıkardı, MIUI "Aşırı ısınıyor" verdi: sayılar geçersiz; `dumpsys battery | grep temperature` ile bak. Soğuk açılış profili: `am start … --ez start-paused true`, sonra profiler + `resume`.
+- **Metin eşiği (F24.1, ölçüldü):** tek alanda LAYOUT ~5 ms/KB → pencere eşiği 2500, pencere 1500; 4–6 KB tahmini yanlıştı. Firestore olayı not sayısıyla doğrusal: 200 not 593 KB / 11 ms Dart, 414 not ~1,2 MB / 21–27 ms (F22.4'ün gerekçesi). Açılışta ana iş parçacığına düşen saf hesap arıyorsan `prof_cold.py` (boş çöpte parmak izi böyle bulundu).
+- **Ölçüm tuzakları (2026-11-04):** kapanış "99 ms donma" yanılgıydı (AKICILIK Ek B notu). Uzun ölçüm + şarj telefonu 52 °C'ye çıkardı, MIUI "Aşırı ısınıyor" verdi: sayılar geçersiz; `dumpsys battery | grep temperature` ile bak (derleme arasında `KEYCODE_SLEEP`). Telefon yan dönebilir: release uygulaması döner (senaryo koordinatları bozulur, `dumpsys input | grep SurfaceOrientation`), profil derlemesi dikey kilitli. Veri setini ikinci kez içe aktarmak kopya sayılır; `OLCUM_SEED` ile başka set. Ölçüm uygulamasında (`.olcum`) artık 414 not var, stres notları dipte: arama ile bul. Soğuk açılış profili: `am start … --ez start-paused true`, sonra profiler + `resume`.
 - **Klavye/kapanış kasması (2026-11-03)**: madde büyümesi klavye oynarken
   320 ms bekler (`_keyboardMoving`); örtülü pano `FreezeWhenHidden` ile
   donar (MediaQuery geçirmez); yetişme `noteRouteClosing` bitince +120 ms.
@@ -266,8 +260,9 @@ maddeyi GÜNCELLE.
 - ItemsEditor: işaretli blok da `_cachedItemRow`'dan; soluk hâl renk
   alfasıyla (kalıcı Opacity katmanı YOK). Madde Enter'ı `_enterAt` (böler),
   başta Backspace üst maddeye birleşir. Jestler kipsiz (`classifyInkGesture`).
-- Yazı tipi ilk kullanımda bütün metni yeniden yerleştirir →
-  `preloadNoteFonts` main'de, ≤ 400 ms.
+- Yazı tipi ilk kullanımda bütün metni yeniden yerleştirir → `main` yalnız
+  genel yazı tipini bekler (≤ 400 ms), kalanı seçici açılınca
+  (`preloadRemainingNoteFonts`, F25.1: açılış 5,2 MB → 295 KB). Yeni seçici de çağırsın.
 - Canlı dikte TAM metni yollar ("değiştir"); bipler MainActivity'de
   susturulur. Tek mikrofonu son açan alır.
 - Sayfa üstü el yazısı `Note.pageInk` (sahte `_page_ink` eki; `isEmpty`
@@ -507,7 +502,7 @@ maddeyi GÜNCELLE.
   eklentiyi tembel kurar (testte platform kanalı patlar).
 - ☑ `_toggleChecklistLine`: gövde hep maddelerin üstünde.
 - Görsel açıklaması sayfa düzeninin parçası (`_captionBand`).
-- Uzun listeli not ilk karede 18 madde (`_rowBudget`). İşaretli blok 10'ar
+- İşaretli blok 10'ar
   (`_checkedShown`, "İşaretlileri göster (N gizli)"), açılışa özgü.
 - Dinleme alanı tek kart `ListeningCard`; başlık düğmesi
   `ListeningHeaderButton` (34 dp).

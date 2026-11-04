@@ -565,20 +565,12 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
 
 - [ ] **F19.F1 (2026-11-04: YAPILMADI, ölçüm gerekçesi zayıfladı — kısa notta yazma 194 notla en kötü 21 ms; göç yalnız açılış için, gerçek veride yedek şartıyla karar senin)** (← F22.4, KARAR B: kart dizini + gövde ayrı belge) Veri göçü. Güvenlik şartı
   "göçten önce yerel tam yedek" senin cihazında; okuma tarafı tek başına (dizin belgesi henüz yok)
-  ölü kod olurdu. Sıra: (1) F22.1 ölçümü (50/250/500 notla kayıt sonrası ana blok — KALANLAR §2
-  #34) göçün kazancını doğrulasın; (2) "F22.4 okuma tarafı" dersen bulut oturumu dizini OKUYAN +
+  ölü kod olurdu. Sıra: (1) F22.1 ölçüldü (2026-11-04): olay başına bedel not sayısıyla doğrusal (200 not 11 ms, 414 not 21–27 ms Dart); (2) "F22.4 okuma tarafı" dersen bulut oturumu dizini OKUYAN +
   yoksa eski şemaya düşen kodu ve `rules-test`i yazar; (3) sen Ayarlar → Yedek; (4) yazma + göç;
   (5) bir sürüm sonra eski alanlar.
-- [ ] **F19.F2 (2026-11-04: F24.2 yapıldı; F24.3 açık)** (← F24.1/F24.2/F24.3) Uzun not editörü: önce F24.1 eşik ölçümü (1–35 KB tuş→kare),
-  sonra pencereli kipin 2.–3. parçası ve madde listesinde yalnız odaktaki satır `TextField` —
-  cihazda yazma/seçim/dikte doğrulamalı oturumda (saf pencere modeli hazır: `text_window.dart`).
-- [ ] **F19.F3 (2026-11-04: F25.2 yapıldı; F23.5, F25.1, F26.1 açık)** (← F23.5, F25.1, F25.2, F26.1) Ölçüm sonrası karar: editör ilk karesinin pahalı
-  parçası, yazı tipi beklemesi, anında içerik (bayat/kilitli özet kararı), videoyla titreme listesi —
-  KALANLAR §2 #40, #43, #44, #46.
-- [ ] **F19.F4** Faz 20–27'nin kalan ÖLÇÜM maddeleri (bulutta iş kalmadı, 2026-11-04): F20.4 taban
-  çizelgesi, F22.1, F23.2, F24.1, F26.1, F27.2 (erişilebilirlik servisi), F27.3 (Vulkan cihaz),
-  F27.4 duman testi + yazılıp ölçülmeyen F21.6/F22.2/3/6/F23.1/3/4/F25.3/F26.2/3/4 →
-  KALANLAR §2 #34–46. Ölçüm kabulü sağlamazsa ilgili madde yeniden açılır.
+- [x] **F19.F2** F24.1/F24.2/F24.3 cihazlı oturumda yapıldı (2026-11-04): eşik 2500, liste düz çizim. Gerçek klavye/dikte: KALANLAR §2 #47, #60.
+- [x] **F19.F3** F23.5, F25.1, F26.1 yapıldı/ölçüldü (2026-11-04); F25.1'de "arka planda" yerine seçici açılınca (sabah bakılacak, KALANLAR §2 #61).
+- [ ] **F19.F4** Faz 20–27 ölçümlerinden kalan: F27.3 (Vulkan cihaz, #59), F21.6 arama karesi (#36), F23.4 raster (#42), F26.3/4 gözle (#46). Akıcılıkta kod işi yalnız F22.4 göçü (F19.F1). Kabulü tutmayan hedefler: kaydırma < %1 (bugün %3,8; K7 çizim + kurulum), açılış < 600 ms (bugün ~780).
 
 ### D. Play'e çıkılırsa (karar değişirse — bugün "çıkmıyoruz")
 

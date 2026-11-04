@@ -121,49 +121,22 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 **2026-11-04 gece görevi (AKICILIK Faz 20–27 bulut kısmı — yazıldı, cihazda ölçülmedi)**
 Ölçüm "Notlar Ölçüm" profil derlemesinde ya da release'te `tool/perf` ile
 (AKICILIK_PLANI Ek A); sayıları AKICILIK_PLANI Ek B'ye satır olarak yaz.
-34. [ ] (F22.2/F22.3, F22.1 ölçümü) Kısa notta 20 sn aralıksız yaz → kayıt
-   ~10 sn'de bir (eskiden 3 sn); yazmayı bırak → 2 sn sonra kayıt. Kayıt
-   sonrası ana blok < 8 ms, yazarken 0 kare > 33 ms
-   (`python -u prof_type.py kisa …`). Editörü kapat → başka cihazda
-   (web) not "Son güncellenen"de doğru yerde (sunucu zamanı kapanışta).
-   Uygulamayı yazarken görev listesinden kapat → en çok son ~10 sn'lik yazı
-   gidebilir (bilinen bedel); arka plana alıp öldür → hiçbir şey gitmez.
-35. [ ] (F23.1/F23.3) 4 not türünde aç/kapa ×3 (`scen.open_close`): kapanışta
-   0 kare > 33 ms (bugün 12/12'de 99 ms); profilde `_allHeroesFor` yok.
-   Yazıp 1 sn içinde geri → kayıt animasyon bitince (veri kaybı yok).
-   Ana ekran FAB'ı sayfa geçişinde uçmuyor, sayfayla geçiyor (gözle).
 36. [ ] (F21.6) Ana ekranda "önemli" yaz-sil: arama karesi < 16 ms (bugün
    139 ms); vurgu artık kalın yazı değil, sarımsı zemin + alt çizgi —
    okunuyor mu, derin eşleşmede kesit görünüyor mu (gözle).
 37. [ ] (F22.7) Geri tuşu: paylaşılanlar → not → geri → geri → uygulama
    kapanmıyor; ana ekranda geri → çıkar.
-38. [ ] (F20.3/F27.4) Sürüm öncesi duman: `scen.py scroll`, `open_close`,
-   `prof_type.py` (30 KB) → Ek B'ye satır; CI `[perf]` bütçesi p90 < 8,
-   p99 < 16, en kötü < 33 ms (bugün 30 KB yazma ve arama KIRMIZI beklenir).
-   F20.2: `flutter build apk --profile` → `adb install -r …app-profile.apk`
-   → telefonda iki ayrı uygulama ("Notlar" + "Notlar Ölçüm"), release'in
-   verisi yerinde.
 39. [ ] (F26.2) Görselli 20+ notla ana ekran → uygulamayı arka plana al,
    başka uygulama aç, 1 dk sonra dön → kart görselleri boş kutu/tek tek
    belirme OLMADAN yerinde (videoyla: F26.1).
 40. [ ] (F25.1, önce ölç) `preloadNoteFonts` gerçek süresi (profil zaman
    çizelgesi) ve beklemeyi kaldırınca ilk 2 sn'deki yeniden yerleşim → karar
    AKICILIK_PLANI F25.1.
-41. [ ] (F22.6/F27.1) Profil derlemesinde kısa notta 10 sn yaz → kapat;
-   `VM.channels(reset=True)` önce/sonra: `plugins.flutter.io/firebase_firestore`
-   olay sayısı kayıt başına ~2 (yazım + onay), editördeki senkron bulutu
-   doğru (yazarken bekliyor → sonra tamam).
 42. [ ] (F23.4) 4 not türünde aç/kapa (`scen.open_close`): geçiş raster
    < 12 ms/kare (bugün 18–26); içerik solması gözle aynı.
-43. [ ] (F23.5, ölç) Profilde `ext.flutter.profileWidgetBuilds` ile kısa /
-   görselli notta editörün İLK karesinin build dökümü → en pahalı parça →
-   AKICILIK_PLANI F23.5'e yaz.
 44. [ ] (F25.2, ölç) Soğuk açılışta Firestore yerel önbelleğinin ilk not
    listesi yayını (ms, profil zaman çizelgesi) → anında içerik gerekli mi;
    bayat özet / kilitli not kararı.
-45. [ ] (F25.3) Soğuk açılış ×3: ilk 2 sn'de > 50 ms kare (bugün 313–396 ms
-   donuk kare) ve `VM.channels()` ilk 2 sn dökümü; hatırlatıcı, widget,
-   bildirim, paylaşım menüsü, not kilidi açılıştan sonra çalışıyor (gözle).
 46. [ ] (F26.3/F26.4) "Son güncellenen" sıralamasında bir notu aç, yaz,
    kapat → not kapanırken tepedeki yerine iner, sonra zıplamaz; geniş
    ekranda yazarken soldaki listede kart yerinde. Segment (süzgeç/klasör)
@@ -186,6 +159,9 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 56. [ ] (F36.4) Üste sabit görsel/PDF/video ⋮ → Paylaş; yazıya gömülü eke dokun → önizlemede Paylaş simgesi; ikisi de dosyayı (YouTube'da bağlantıyı) paylaşır.
 57. [ ] (F36.5) Web'de (dahili AI kapalı) liste notunda parmakla kaydırırken hata yağmuru YOK; maddenin üstüne bilerek daire çiz → bir kez "Daire jesti yazımı yapay zekâyla düzeltir…", ikinci dairede sessiz; karala → "Madde silindi · Geri al" geri getirir.
 58. [ ] (F36.6/F36.7) Ana ekran: boş klasör çiplerinde "0" yok, soluk; bölüm başlıkları "Sabit · Bugün · Bu hafta · Daha önce" cümle düzeninde, levhalardaki başlıklarla aynı stilde; ⋮ menüsünde "Çöp kutusu".
+59. [ ] (F27.3) Vulkan'lı bir cihaz (Adreno > 650 ya da Mali) varsa: `tool/perf/taban.py` kaydırma + geçiş; hedefler iki arka uçta da sağlansın. Test telefonu GLES, ölçülemedi.
+60. [ ] (F24.3) 120 maddeli listede gerçek klavyeyle: maddeye dokun → imleç dokunulan harfte, klavye önerisi seç, uzun bas → sözcük seçilir, sesle yazdır, TalkBack'te madde okunuyor ve çift dokunuşla açılıyor. Otomatik denendi: dokun, yaz, Enter.
+61. [ ] (F25.1) Farklı yazı tipli (kaydedilmiş) not açılınca ilk seferde metin kısa süre başka yazı tipiyle görünüp oturuyor mu; rahatsız ediyorsa söyle (sabah bakılacak).
 
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 

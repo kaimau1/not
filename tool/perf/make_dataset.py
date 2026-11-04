@@ -10,7 +10,7 @@ Telefona: adb push <zip> /sdcard/Download/ → uygulamada Ayarlar → Senkroniza
 import io, json, os, random, sys, zipfile, time
 from PIL import Image, ImageDraw, ImageFilter
 
-random.seed(42)
+random.seed(int(os.environ.get("OLCUM_SEED", 42)))  # başka tohum = kopya sayılmayan ikinci set
 OUT = os.path.join(os.environ.get("PERF_OUT") or __import__("tempfile").gettempdir(), "keep_olcum.zip")
 
 WORDS = ("bugün yarın toplantı rapor hasta kontrol tahlil ilaç doz randevu market süt ekmek "

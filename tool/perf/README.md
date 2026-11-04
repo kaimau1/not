@@ -11,6 +11,12 @@
 | `hitch.py` | SF karelerini atrace saatine hizalar (`deliverInputEvent eventTimeNano`), her takılmada ana iş parçacığı meşguliyeti |
 | `vmsvc.py` | profil derlemesinin Dart VM servisi (HTTP GET): zaman çizelgesi, CPU örnekleri, widget build profili, platform kanalı sayacı (`VM.channels(reset=True)` — F27.1) |
 | `prof_oc.py`, `prof_scroll.py`, `prof_type.py` | profil uygulamasında aç/kapa, kaydırma, yazma + kök neden dökümü |
+| `taban.py` | **duman testi / Ek B satırı** (F20.4, F27.4): açılış, kaydırma, 4 not aç/kapa, yazma; sıcaklık yazar |
+| `prof_cold.py` | soğuk açılış profili (start-paused): kareler, kanallar, CPU |
+| `prof_sizes.py` | metin boyutuna göre tuş maliyeti (F24.1; `make_dataset.py boyut`) |
+| `prof_save.py` | kayıt başına Firestore olayı + Dart bloğu (F22.1) |
+| `prof_a11y.py` | erişilebilirlik istemcisi açıkken SEMANTICS maliyeti (F27.2) |
+| `video.py` | ekran videosu, kare farkıyla flaş/zıplama (F26.1, ffmpeg) |
 | `make_dataset.py` | Keep Takeout zip'leri: 240 not + 4 adlı stres notu (`OLCUM …`) |
 
 ## Hazırlık

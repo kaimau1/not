@@ -34,14 +34,14 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 20…27):
 
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
-| 20 | Ölçüm kapısı (gerçekçi veri, yan yana profil derlemesi, CI bütçesi) | Kısmen | 2026-11-04 | F20.1 araçlar, F20.3 gerçekçi CI verisi + 2 senaryo; F20.2/F20.4 telefon |
+| 20 | Ölçüm kapısı (gerçekçi veri, yan yana profil derlemesi, CI bütçesi) | Bitti | 2026-11-04 | F20.4 taban `tool/perf/taban.py` (Ek B v1.1.661 satırı) |
 | 21 | Ana ekran kartı: önizlemeyi kırp, kart başına işi azalt | Kısmen | 2026-11-04 | 2 tur: takılma %8,4→%3,4–4,2, en kötü 115→33–50 ms, arama 465→139 ms; kabul sağlanmadı — kalan engel raster+kurulum (K7); F21.6 arama katmanı yazıldı (2026-11-04, cihazda ölçülmedi) |
-| 22 | Firestore trafiği: yazımda tüm koleksiyon ana iş parçacığında | Kısmen | 2026-11-04 | F22.2/3/5/6/7 bulutta (cihazda ölçülmedi); F22.1 ölçüm, F22.4 göç (Faz 19) |
-| 23 | Geçişler: not açma/kapama | Kısmen | 2026-11-04 | F23.1/3/4 yazıldı (cihazda ölçülmedi); F23.2/5 ölçüm |
-| 24 | Uzun not editörü: tuş başına O(n) | Kısmen | 2026-11-04 | F24.2 yapıldı (telefonda: LAYOUT p90 122→12 ms); F24.3 yapılmadı (15+ odak yolu, risk) |
-| 25 | Soğuk açılış | Kısmen | 2026-11-04 | F25.2 yapıldı (içerik ~2,5→~1,5 sn); ilk kare < 600 ms kabulü sağlanmadı, F25.1 açık |
-| 26 | Titreme ve görsel kararlılık | Kısmen | 2026-11-04 | F26.2/3/4 yazıldı; F26.1 video ölçümü |
-| 27 | Hijyen + regresyon kapısı | Kısmen | 2026-11-04 | F27.1 kanal sayacı, F27.4 CI bütçesi; F27.2/3 cihaz |
+| 22 | Firestore trafiği: yazımda tüm koleksiyon ana iş parçacığında | Kısmen | 2026-11-04 | F22.1 ölçüldü (kayıt başına 1 olay; bedel not sayısıyla doğrusal: 200 not 593 KB / 11 ms, 414 not ~1,2 MB / 21–27 ms Dart); yalnız F22.4 göçü açık |
+| 23 | Geçişler: not açma/kapama | Bitti (kabul kısmen) | 2026-11-04 | F23.2/5 ölçüldü; kapanış animasyonu çoğunlukla ≤ 33 ms, uzun notlarda bazen tek 50 ms |
+| 24 | Uzun not editörü: tuş başına O(n) | Bitti | 2026-11-04 | F24.1 eşik 2500 / pencere 1500; 35 KB'ta kare p90 13,5 ms; F24.3 liste maddesi düz çizim (bütçe üstü kare 27→7) |
+| 25 | Soğuk açılış | Bitti (kabul kısmen) | 2026-11-04 | F25.1 açılışta 5,2 MB→295 KB yazı tipi, Dart ilk kare 119→53 ms; donuk kare 198–264→115–181 ms; release TotalTime ~780 ms, < 600 hedefi SAĞLANMADI (kalan motor+Activity) |
+| 26 | Titreme ve görsel kararlılık | Bitti | 2026-11-04 | F26.1 video: flaş/zıplama yok; beyaz açılış penceresi TEMA Faz 35'e |
+| 27 | Hijyen + regresyon kapısı | Kısmen | 2026-11-04 | F27.2 ölçüldü, F27.4 duman testi; F27.3 Vulkan'lı cihaz yok (KALANLAR §2 #59) |
 
 ## Özet — ölçülen taban çizgisi (v1.1.613, release)
 
@@ -265,9 +265,10 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
 
 ## FAZ 22 — Firestore trafiği (K3, K4)
 
-- [ ] **F22.1 Önce ölç:** 50 / 250 / 500 notla kısa notta yazma senaryosu →
+- [x] **F22.1 Önce ölç:** 50 / 250 / 500 notla kısa notta yazma senaryosu →
   kayıt sonrası ana blok (ms) ve kayıt başına olay sayısı. Beklenen: not
   sayısıyla doğrusal; olay sayısı 2.
+  **Ölçüldü (2026-11-04, profil, `prof_save.py`, F22.3 sonrası):** kayıt başına ana liste olayı **1** (3 kayıtta 3; tek not dinleyicisi 2). 200 notta olay başına 593 KB, Dart çözme bloğu 11 ms, yazarken en kötü kare 15,7 ms, 0 kare > 16,7. 414 notta olay ~1,2 MB, Dart 21–27 ms, en kötü kare 26 ms, 2 kare aşan (bu koşuda içe aktarmadan kalan yükleme kuyruğu da olay üretti: 14 olay). Doğrusal → F22.4 hâlâ gerekçeli. 50 not ÖLÇÜLMEDİ (veriyi silmek gerekirdi); doğrudan ~3 ms. Java tarafı kodlama profilde görünmez.
 - [x] **F22.2 Otomatik kaydı seyrekleştir.** **KARAR (kullanıcı, 2026-11-03):** EVET — ~2 sn boşluk, en geç 10 sn; kapanış/arka plan/odak kaybında hemen. Debounce 0,5 sn →
   ~2 sn boşluk, en geç 3 sn → ~10 sn; kapanış/arka plan/odak kaybında hemen
   (bugün de var: `_debouncer.flush`, `onPause`). Bedel: uygulama öldürülürse en
@@ -316,10 +317,10 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   geçişinde FAB altta kalıyor; gözle kontrol). `Hero(` kullanımını yakalayan
   küçük test. Kabul: kapanış profilinde `_allHeroesFor` yok.
   **Yapıldı (2026-11-04, yazıldı, cihazda ölçülmedi):** `HeroControllerScope.none` İŞLEMEZ — go_router her gezgine (`_CustomNavigator`) kendi HeroController'ını koyuyor. Yerine `withoutHeroWalk` = `HeroMode(enabled: false)` (tarama o düğümde durur): ana ekran, not (`_NoteOpenRoute.buildContent`) ve defter sayfaları. `hero_walk_test`: uçuş yok + `lib`te elle `Hero(` yok.
-- [ ] **F23.2 Kapanışta pano yeniden kurulmasın.** `FreezeWhenHidden` çözülürken
+- [x] **F23.2 Kapanışta pano yeniden kurulmasın.** `FreezeWhenHidden` çözülürken
   değişmeyen kart kurulmasın (F21.4 sonrası ölç); Riverpod duraklat/sürdür
   maliyeti (`_updateTickerMode`) abonelik sayısı düşünce kalan kısmıyla ölç.
-  **Açık (ölçüm):** kart önbelleği (F2.1) + F21.4 sonrası yetişmede değişmeyen kart aynı örnek; kalan maliyet ancak profilde görülür — KALANLAR §2 #35 ile ölç.
+  **Ölçüldü (2026-11-04, widget profili):** kapanış karesinde yalnız 2 `NoteCard` kuruluyor (değişen not); `_updateTickerMode`/abonelik sürdürme %9, `filteredNotesProvider` yeniden hesabı %6,6 (~3-4 ms). Kod değişmedi: kalan maliyet düz dağılmış, tek hedef yok.
 - [x] **F23.3 Editör sökümünü kapanış animasyonunun sonrasına ertele.** Kayıt
   flush'ı hemen (veri güvenliği); dinleyici/denetleyici/mürekkep/PDF sökümü ve
   `POST_FRAME` işleri geçiş bittikten sonra. Kabul: kapanışın ilk karesi < 16 ms.
@@ -330,17 +331,19 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   karartmayı tek katmanda; kenar yumuşatmalı kırpma yalnız yarıçap > 0 iken.
   Kabul: geçişte raster < 12 ms/kare (bugün 18–26).
   **Yapıldı (2026-11-04, yazıldı, cihazda ölçülmedi):** `Opacity` kaldırıldı — dondurulmuş görüntü `_FadeSnapshotPainter` ile boya alfasıyla çizilir (görüntü yoksa `pushOpacity`/doğrudan); kırpma yarıçap > 0,5 iken `antiAlias`, sonra `hardEdge`, oturunca yok. Karartma zaten tek `ColoredBox`. Alttaki panonun görüntüden çizilmesi YAPILMADI (pano `FreezeWhenHidden`; ayrı görüntü ~10 MB doku — önce raster ölçümü). Test `note_open_transition_test`. Ölçüm KALANLAR §2 #42.
-- [ ] **F23.5 Editör ilk karesi hafif.** İlk karede yalnız görünen kısım (üst
+- [x] **F23.5 Editör ilk karesi hafif.** İlk karede yalnız görünen kısım (üst
   çubuk + ilk ekran metni); ek şeridi, kalem tepsisi, AI parçaları, sesli kayıt
   sonraki karelerde. Kabul: kısa/görselli notta dokunuş→ilk kare < 50 ms.
   **Bulutta yapılmadı (2026-11-04):** açılış geçişi sayfanın İLK karesini görüntüye alıp yalnız t=0,45'te bir kez tazeliyor (F23.4 / 2026-10-30 kök nedeni); sonraki karelere ertelenen parça (ek şeridi vb.) görüntüde yok, t=0,45'te içerik neredeyse opakken "pat" diye belirir. Kalem tepsisi, sesli kayıt paneli, AI şeridi ilk karede zaten boş (`null`/`SizedBox.shrink`). Hangi parçanın ilk karede pahalı olduğu profil olmadan bilinmiyor — KALANLAR §2 #43 (profilde editör ilk karesinin widget build dökümü), sonra erteleme + görüntü tazeleme birlikte.
+  **Ölçüldü, kod değişmedi (2026-11-04, widget + CPU profili):** kısa notta ilk kare 47 ms (40 °C, profil), düz dağılmış: en büyük uygulama payı `ConsumerStatefulElement.mount` %10, tek başına ağır parça yok; ertelemek görüntü tazelemeyle "pat" etkisi getirir. Release: kısa/görselli açma en kötü aralık 33–50 ms, yani kabul (< 50 ms) sınırda (bir kez 66 ms). 120 maddede ilk kare 97→70 ms.
 - Kabul (faz): 4 not türünde kapanışta **0 kare > 33 ms** (bugün 12/12'de 99
   ms); açılışta en çok 1 kare > 16,7 ms.
 
 ## FAZ 24 — Uzun not editörü: tuş başına O(n) (K2)
 
-- [ ] **F24.1 Eşik ölçümü:** 1 / 5 / 10 / 20 / 35 KB metinde tuş→kare ve Java
+- [x] **F24.1 Eşik ölçümü:** 1 / 5 / 10 / 20 / 35 KB metinde tuş→kare ve Java
   `commitText` süresi → pencereli kipe geçiş eşiği (tahmin ~4–6 KB).
+  **Ölçüldü (2026-11-04, profil, `prof_sizes.py`):** tahmin YANLIŞ, eşik çok daha aşağıda. Tek alanda LAYOUT ~5 ms/KB (41 °C): 1 KB p90 9 ms, 2 KB 12, 3 KB 17 (karelerin %43'ü bütçe üstü), 4 KB 21 (%75). **Eşik 6000 → 2500, pencere 3000 → 1500.** Sonra (38–40 °C) boyuttan bağımsız: 3/8/20/35 KB'ta LAYOUT p90 12 / 11,6 / 12,5 / 9,5 ms, kare p90 15,5 / 17,5 / 15,9 / 13,5 ms, IME iletisi ~1 KB (tek alanda 4 KB'ta 2,7 KB). Java `commitText` süresi profilde görünmez; bayt oranı yerine geçti.
 - [x] **F24.2 Pencereli düzenleme.** **KARAR (kullanıcı, 2026-11-03):** PENCERELİ KİP (blok editörü değil). Gövde, eşiği
   aşınca paragraf listesi olarak çizilir (tembel `SliverList`, paragraf başına
   önbellekli `Text.rich` — biçim işaretleri satır sonunu aşmadığı için
@@ -353,11 +356,12 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   (super_editor tarzı, her paragraf ayrı düğüm) — daha büyük iş. Öneri:
   pencereli kip, kısa notlarda bugünkü yol aynen.
   **Kısmen (2026-11-04):** 1. parça — saf metin modeli `text_window.dart` (paragraf sınırında pencere `windowAround`, ofset eşlemesi, `spliceWindow` geri yazma, `needsRewindow`; eşik `kWindowedThreshold` = 6000 TAHMİN) + `text_window_test`. Editöre BAĞLI DEĞİL. Sonraki parçalar: (2) pencere dışı paragrafların önbellekli çizimi (`SliverList`) + dokunuşla yeniden pencereleme, (3) arama/biçim/geri alma/dikte tam metin üzerinden — F24.1 eşik ölçümünden sonra, cihazda doğrulamalı oturumda.
-- [ ] **F24.3 Madde listesi (2026-11-04: hâlâ yapılmadı, 120 maddede açılış ana iş 630 ms ölçüldü):** yalnız odaklanan madde `TextField`.** Odakta
+- [x] **F24.3 Madde listesi:** yalnız odaklanan madde `TextField`.** Odakta
   olmayan maddeler düz metin (`_cachedItemRow` zaten çiziyor); dokunulan madde
   düzenlenebilire döner. Sonra `_kFirstRows` / `_rowBudget` / kapanışta parça
   parça söküm (`noteRouteClosing`) hileleri silinir (usta 6b).
   **Bulutta yapılmadı (2026-11-04):** madde denetleyicilerine 15+ yerden kimlikle erişiliyor (biçim çubuğu hedefi, `insertTextAtCaret`, not içi arama/değiştir, dikte, ek etiketi çipleri, sürükle-bırak, Enter/Backspace birleştirme); düz metin satırına dokunuşta imleç konumu (`TextPainter.getPositionForOffset`) ve uzun basışla seçim yeniden kurulmalı. Cihazda yazma/seçim/dikte doğrulaması olmadan editörün en çok kullanılan yolu değiştirilmedi — **sabah bakılacak** (cihazlı oturumda, F24.1 ölçümüyle birlikte).
+  **Yapıldı (2026-11-04):** `items_editor_lazy.dart`: madde `RichText`, dokununca/odak istenince gerçek alan ve öyle kalır. Bütün odak yolları `_LazyFocusNode.requestFocus` üzerinden alanı kurdurur (15+ yere dokunulmadı). Baştan gerçek alan: boş madde, görsel sarması, 📎, 📖, bağlantı, video damgası. Kırılım birebir: birleşmiş stil + 3 dp imleç payı (test). Testler varsayılan `debugEagerItemFields=true` (`test/flutter_test_config.dart`), düz yolu `items_editor_lazy_test` sınar. **Ölçüldü (aynı profil, ~34 °C):** bütçe üstü kare 27 → 7, ilk kare 97 → 70 ms, büyüme kareleri 23 ms → bütçe altı; kapanıştaki parça parça söküm silindi (tek kare, animasyon sonunda). Kademeli kurulum ÖLÇÜMLE kaldı: 100 satır tek karede 163 ms → ilk 16, 500 ms sonra kare başına 2. Telefonda dokun-yaz-Enter denendi; gerçek klavye önerisi, uzun basış, dikte KALANLAR §2 #60.
 - [x] **F24.4 Görsel sarma ölçümü** (`WrapFieldMeasure`, `text_wrap.dart`) tam
   metni ikinci bir `TextPainter` ile yerleştiriyorsa paragraf bazlı önbellek.
   **İncelendi (2026-11-04):** kod değişikliği gerekmedi — `WrapFieldMeasure` görsel yokken ve tampon temizken (`floats.isEmpty && isPlain`) kare sonu geri çağrısını HİÇ kurmuyor (K2'nin uzun düz metin notunda ikinci yerleşim yok); görsel varken `planTextWrap` 2026-10-16'dan beri yalnız görsel BANDINI kapsayan öneki diziyor. Görselli uzun notta kalan maliyet F24.1 ölçümünde ayrıca görülür.
@@ -367,11 +371,12 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
 
 ## FAZ 25 — Soğuk açılış (K8)
 
-- [ ] **F25.1 Yazı tipi beklemesi.** **KARAR (kullanıcı, 2026-11-03):** yalnız ana ekranda görünen yazı tipi beklenir, gerisi arka planda. Önce ölç:
+- [x] **F25.1 Yazı tipi beklemesi.** **KARAR (kullanıcı, 2026-11-03):** yalnız ana ekranda görünen yazı tipi beklenir, gerisi arka planda. Önce ölç:
   `preloadNoteFonts` gerçek süresi ve beklemeyi kaldırınca ilk kullanımdaki
   yeniden yerleşim maliyeti (HAFIZA: bekleme bir kasmayı çözmek için kondu).
   Seçenek: yalnız ana ekranda görünen yazı tipini bekle, gerisi arka planda.
   **Bulutta yapılmadı (2026-11-04):** KARAR "önce ölç" — arka planda yüklenen her yazı tipi motora "yazı tipleri değişti" dedirtip ekrandaki BÜTÜN metni yeniden yerleştiriyor (bekleme bu yüzden kondu); `preloadNoteFonts` süresi ve ilk 2 sn'deki yeniden yerleşim telefonda ölçülmeden değiştirilmedi.
+  **Yapıldı (2026-11-04):** ölçüm: açılışta 35 dosya / 5,2 MB ana iş parçacığında (kanal sayacı `flutter/assets`), ama `loadFontFromList` yalnız %1,7. Yalnız genel yazı tipi beklenir (`preloadNoteFonts(appFamily)`). KARARDAN SAPMA: "gerisi arka planda" yerine **seçici açılınca** (`preloadRemainingNoteFonts`): arka plan yüklemesi her dosyada motora "yazı tipleri değişti" dedirtip ekrandaki metni yeniden dizerdi; kaydedilen ailesi farklı not ilk açılışta o aileyi bir kez yükler — **sabah bakılacak**. Sonuç: `flutter/assets` 5248 → 295 KB, Dart ilk kare 119 → 53 ms.
 - [x] **F25.2 Anında içerik.** Son ana ekranın ilk ~30 kartının hafif özeti
   (başlık, F21.1 dilimi, renk, bayraklar, küçük resim yolu) arka plana geçişte
   diske; açılışta ilk karede bunlar çizilir, Firestore gelince sessizce
@@ -383,13 +388,15 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   **Yapıldı (2026-11-04, yazıldı, cihazda ölçülmedi):** `AppServices` kademeli — not kilidi, derin bağlantı, paylaş menüsü ilk karede; premium, göçler, yükleme kuyruğu, tercih senkronu, hatırlatıcı, konum temizliği, paylaşım hareketi, FCM, widget, transkript ilk kareden SONRA kare başına BİR (`Priority.idle` dilimi, en geç 400 ms). `main` App Check / `DisplayRate` / `ImageCacheBudget` aynı biçimde (`_staggerAfterFirstFrame`). Test `app_services_stagger_test`. Ölçüm KALANLAR §2 #45 (F27.1 sayacı + zaman çizelgesi).
 - Kabul: soğuk açılış ilk kare < 600 ms (bugün ~770), içerik ilk karede, ilk 2
   sn'de > 50 ms kare yok (bugün 313–396 ms donuk kare).
+  **Durum (v1.1.667):** TotalTime 776–802 ms (< 600 SAĞLANMADI; kalan büyük kısmı Dart öncesi), içerik ilk karede evet, donuk kare 115–181 ms (> 50 sürüyor: ilk ızgara 138 ms, Firestore yetişmesi 55 ms). Ek kök neden düzeltildi: boş çöpte bütün notların parmak izi (açılıştan 5 sn sonra CPU'nun %20'si) → `trashReminderPlan` erken döner, dolu çöpte `runHeavy`.
 
 ## FAZ 26 — Titreme ve görsel kararlılık (K9)
 
-- [ ] **F26.1 Videoyla ölç.** `adb shell screenrecord --bit-rate 20000000` ile
+- [x] **F26.1 Videoyla ölç.** `adb shell screenrecord --bit-rate 20000000` ile
   açılış, arka plandan dönüş, segment/klasör geçişi, editörden dönüş, kaydırma;
   kare kare inceleme (ffmpeg ile kareler) → titreme listesi (iskelet,
   görsel geç gelme, yerleşim zıplaması, renk/tema yanıp sönmesi).
+  **Ölçüldü (2026-11-04, v1.1.667, `video.py`, 30 fps fark + kare yaprağı):** uygulama içinde flaş 0, zıplama 0; iskelet→içerik ve görsel geç gelme görülmedi. Tek bulgu: soğuk açılışta ~0,6 sn BEYAZ sistem penceresi, sonra tema zemini (titreme değil, marka uyumu) → TEMA_PLANI Faz 35'e bırakıldı. Klasör çipi geçişi kısa çapraz solma, bilinçli.
 - [x] **F26.2 Arka planda görsel önbelleği.** **KARAR (kullanıcı, 2026-11-03):** TUT — yalnız `onTrimMemory`/`didHaveMemoryPressure`'da boşalt.
   `onPause`ta `imageCache.clear()` + `CardThumbs.clearMemory()` yerine yalnız
   `onTrimMemory`/`didHaveMemoryPressure`'da boşalt. Bedel: arkadaki uygulama
@@ -410,14 +417,16 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   günlüğü (geçici `BinaryMessenger` sarmalayıcısı) → senaryo başına en çok
   konuşan kanallar; gereksizleri ele (K4).
   **Yapıldı (2026-11-04):** `channel_counter.dart` — `Diagnostics.enabled` (debug/profil) derlemede `ChannelCountingBinding` varsayılan ileticiyi sarar (kanal başına giden/gelen ileti + bayt); VM servisi `ext.notlar.channels` (`reset=true`), `tool/perf/vmsvc.py` `VM.channels()`, Ayarlar → Hakkında teşhis satırında ilk 3 kanal. Release'te kod yok. Test `channel_counter_test`. "Gereksizleri ele" kısmı ölçümden sonra (KALANLAR §2 #41/#45).
-- [ ] **F27.2 Erişilebilirlik servisi açıkken** (şifre yöneticisi, ekran
+- [x] **F27.2 Erişilebilirlik servisi açıkken** (şifre yöneticisi, ekran
   okuyucu) semantik ağacın kare maliyetini ölç; büyük ağaçlarda süsleri
   `ExcludeSemantics`.
-- [ ] **F27.3 Vulkan'lı bir cihazda** (Adreno > 650 ya da Mali) geçiş ve kaydırma
+  **Ölçüldü (2026-11-04, `prof_a11y.py`, sistem ayarı değişmeden `uiautomator events`):** kaydırmada SEMANTICS p50 6,7 / p90 10,2 / en çok 20 ms; bütçe üstü kare 10 → 50 (~300 karede), kare p90 10,6 → 19,7 ms. Kart zaten tek düğüm (+ ⋮); kesilecek süs yok, kalan bedel çerçevenin kaydırmada geometri güncellemesi. Kod değişmedi. Şifre yöneticisi açık kullanıcıda kaydırma ~%15 takılır: bilinen sınır.
+- [ ] **F27.3 (yapılamadı: Vulkan'lı cihaz yok, KALANLAR §2 #59) Vulkan'lı bir cihazda** (Adreno > 650 ya da Mali) geçiş ve kaydırma
   ölçümü — hedefler iki arka uçta da sağlansın.
-- [ ] **F27.4 Sürüm öncesi duman testi:** `tool/perf` senaryoları test
+- [x] **F27.4 Sürüm öncesi duman testi:** `tool/perf` senaryoları test
   telefonunda; Ek B'ye satır. CI bütçesi: p90 < 8 ms, p99 < 16 ms, en kötü < 33 ms.
   **Kısmen (2026-11-04):** CI bütçesi `perf_driver.dart`ta p90 < 8, p99 < 16, en kötü < 33 ms. Telefon duman testi KALANLAR §2 #38.
+  **Yapıldı (2026-11-04):** `python -u tool/perf/taban.py <etiket>` (~8 dk) Ek B satırı üretir; v1.1.661 ve v1.1.667 satırları.
 
 ---
 
@@ -455,9 +464,12 @@ Ayrıntı ve komutlar: `tool/perf/README.md`. Özet:
 | 2026-11-04 | profil, main (F21–F27 bulut kodu) | %2,3 / 50 ms | animasyon 17 ms, en çok 1×33 ms (bkz. not) | en kötü kare 21 ms | 122 ms LAYOUT | TotalTime 1315–2273 / 587–654 ms |
 | 2026-11-04 | profil, F24.2 + F25.2 | — | — | — | LAYOUT p90 11 ms, 1/46 kare bütçe üstü (pencereye giriş ~195 ms, bir kez) | TotalTime 1518–1586 = İLK KARE İÇERİK (önce ilk kare iskelet 1315–1411, içerik ~2,5 sn); ardından ~750 ms Firestore bekleme (ekran sabit, içerik görünür) |
 | 2026-11-04 | **v1.1.661 release — ZİNCİR TABANI** (Tema/Tutarlılık bununla karşılaştırır; `tool/perf/taban.py`, 230 not, dikey) | %3,5 / 49,7 ms (39 kayıp vsync) | animasyon 33 ms (son aralık ~99 ms bekleme, takılma değil); 120 maddede 50 ms ×3 | ana blok en uzun 90 ms, >16 ms 12 blok | ana blok en uzun 164 ms, >16 ms 35 blok | TotalTime 690–880 / 198–264 ms |
+| 2026-11-04 | **v1.1.667 release** (F24.1, F24.3, F25.1; aynı betik, soğuk telefon 26–30 °C) | %3,8 / 49,9 ms (44 kayıp vsync; K7, bu turda dokunulmadı) | animasyon 33 ms; uzun notlarda 50 ms ×1–2 | ana blok en uzun 90 ms, >16 ms 16 blok | ana blok en uzun 148 ms (pencereye giriş), >16 ms 40 blok* | TotalTime 776–802 (kurulum sonrası ilk 1516) / 115–181 ms |
 | 2026-11-03 | profil, Faz 21 öncesi → sonrası | %8,4 / 115 ms → %3,5 / 50–66 ms (1. tur) → %3,4–4,2 / 33–50 ms (2. tur) | — | — | — | — |
 
 **Taban ayrıntısı (v1.1.661):** açma en kötü aralık kısa 33–50, görselli 33–50, 500 satır 33–66 ms; 120 maddede 680–697 ms görünen aralık DA yanılgı: donma değil, ilk 12 madde çizilip 1100 ms bekleme boşluğu (profilde en uzun kare 97 ms). Yazma sütunlarında SF aralığı boşta beklemeyi de sayar; güvenilir sayı ana blok ve profil LAYOUT'u.
+
+*`adb input text` tuş olayı yolu, gerçek IME değil; bu sütunda tuş başına kare için profil sayısı (F24.1) esas.
 
 **ÖLÇÜM YANILGISI (2026-11-04):** kapanıştaki "99–117 ms donma" takılma DEĞİL: SF aralığı son animasyon karesi → ~120 ms sonraki yetişme karesi; ekranda değişen yok, animasyon boyunca 17 ms. `analyze()` boşta bekleme eşiği (250 ms) bunu takılma sayıyor; kapanışta aralıkları sırayla oku.
 
