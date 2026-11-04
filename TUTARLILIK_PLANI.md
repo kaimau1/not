@@ -67,7 +67,7 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 37…45) ya da "F40.3'ü yap" (tek mad
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
 | 36 | Kırık ve tutarsız olanlar (hemen) | Yapıldı | 2026-11-04 | 9/9; cihazda doğrulanmadı (KALANLAR §2 #54–#58) |
-| 37 | Not her yerde aynı görünür | Açık | | kart ↔ editör ↔ liste satırı ↔ widget |
+| 37 | Not her yerde aynı görünür | Yapıldı | 2026-11-05 | 5/5; KALANLAR §2 #62–#65 |
 | 38 | Not ekranı: çubuklar, başlık satırı, tek not menüsü | Açık | | K2; F38.7 klavye kasması (ölçüm kapılı) |
 | 39 | Ana ekran: başlık, çipler, bölümler, jestler | Açık | | ölçüm kapılı (zoom, kaydırma) |
 | 40 | Ekler: tek model, tek menü | Açık | | K6; en büyük faz |
@@ -115,8 +115,8 @@ Değerlendirme: 🔴 kırık/yanıltıcı · 🟡 tutarsız/eksik · 🟢 iyi (c
 | A1 🔴 | Renkli notta kutucuk, etiket, raptiye kartta notun koyu tonuyla (pembe), editörde temanın vurgusuyla (petrol yeşili) — kullanıcının bulgusu | E, T; K `note_card.dart` `_CardAccent` (F31.3), `items_editor_row.dart` `scheme.primary` | tek `NoteAccent` | **F36.1 ✓** |
 | A2 🟡 | Renksiz notta kart kutucuğu gri, editörde petrol yeşili dolu | T | aynı kural (`NoteCheckColors`) | **F36.1 ✓** |
 | A3 🔴 | Uzun başlık editörde sağdaki meta çipin ALTINA giriyor ("hatalar\|") | E, T; K `title_fit.dart`: ölçüm alanın birleşik stilini (bodyLarge harf aralığı 0,5) almıyordu, 34 harfte ~17 px dar | ölçüm `fieldMergedStyle` | **F36.2 ✓** |
-| A4 🟡 | Kart başlığı 15/600, editör başlığı 24/500 + 0,5 harf aralığı: aynı başlık iki farklı karakterde | T | kart başlığı editörün ailesi/ağırlığı/aralığıyla, boyu oranlı (K9) | F37.1 |
-| A5 🟡 | Kartta hatırlatıcı yalnız simge; editörde tarihli çip | T | yakın hatırlatıcıda kartta saat ("yarın 15:17") | F37.2 |
+| A4 🟡 | Kart başlığı 15/600, editör başlığı 24/500 + 0,5 harf aralığı: aynı başlık iki farklı karakterde | T | kart başlığı editörün ailesi/ağırlığı/aralığıyla, boyu oranlı (K9) | **F37.1 ✓** |
+| A5 🟡 | Kartta hatırlatıcı yalnız simge; editörde tarihli çip | T | yakın hatırlatıcıda kartta saat ("yarın 15:17") | **F37.2 ✓** |
 | A6 🟡 | Kart ⋮ ile not ⋮ AYNI işleri farklı yerde: "Sesli dinle" kartta Araçlar'da, notta hızlı satırda; "Zemin rengi/Çerçeve" yalnız kartta; "Ana ekrana yerleştir", "Hesap makinesi" yalnız notta | T; K `note_actions_sheet.dart`, `editor/note_menu_sheet.dart` | tek not menüsü modeli (K2) | F38.1 |
 | A7 🟢 | Renkli notun zıt okunurluk teması kartta ve editörde aynı (`inkThemeFor`) | K | korunur | — |
 
@@ -350,20 +350,38 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
 
 ## FAZ 37 — Not her yerde aynı görünür
 
-- [ ] **F37.1 Kart başlığı tipografisi** (A4, K9): kart başlığı editör
-  başlığıyla aynı aile/ağırlık/harf aralığı; boyu oranlı. Kart önbelleği ve
-  `previewSlice` dokunulmaz (yalnız stil). Tur: 4 boyut.
-- [ ] **F37.2 Kartta yakın hatırlatıcı saati** (A5): 48 saat içindeyse meta
-  satırında "yarın 15:17" (yalnız `display.statusIcons`; yeni abonelik YOK —
-  saat `_cardEnvProvider` dışında, notun alanından).
-- [ ] **F37.3 Liste satırı (`NoteListRow`), çöp/arşiv/paylaşılan kartları,
-  ana ekran widget'ı** aynı `NoteAccent` kuralı (kutucuk, etiket, raptiye).
-  Widget (Android) `NotKisayolu`/today widget yükü renk taşır mı kontrol.
-- [ ] **F37.4 Paylaşım görseli / PDF dışa aktarımı** notun rengini ve
-  kutucuk rengini aynı kuraldan alır (`note_pdf.dart`, `pngPages`).
-- [ ] **F37.5 Kural testi:** her tema ailesi × {renksiz, hazır, koyu özel,
-  açık özel} × {kart, editör, liste satırı}: kutucuk/etiket/raptiye renkleri
-  eşit (`note_accent_consistency_test` genişler).
+- [x] **F37.1 Kart başlığı tipografisi** (A4, K9).
+  **Yapıldı:** tek stil `noteTitleStyle` (`editor/title_fit.dart`: aile, w500,
+  aralık 0,5, opaklık); editör 24, kart 16, satır 15, çöp 16, başlık ölçeğiyle
+  oranlı. Önizleme dilimi ve kart önbelleği aynı. Kart yükseklik tahmini
+  güncellendi (dengeyi etkiler). Tur: 4 boyut.
+- [x] **F37.2 Kartta yakın hatırlatıcı saati** (A5).
+  **Yapıldı:** `cardReminderLabel`: 48 saat içi "bugün/yarın 15:17", ertesi gün
+  adı + saat; geçmiş ve uzak: yalnız simge. `display.statusIcons` ardında, yeni
+  abonelik yok; simge editörle aynı (tekrarda ↻), ton notun. Kart ve satırda.
+  Sınır: saat geçince kart yeniden kurulana dek etiket bayat.
+- [x] **F37.3 Liste satırı, çöp/arşiv/paylaşılan kartları, widget.**
+  **Yapıldı:** `NoteListRow` zemini notun rengi (önceden hep renksizdi), zıt
+  okunurluk teması, tür simgesi/raptiye/yıldız/etiket `NoteAccent` kuralıyla;
+  etiket satırda da görünür. Çöp kartı `NoteAccent` + `NoteCheckColors`. Sürükleme
+  kartı raptiyesi ve sayısı aynı kural. Arşiv, paylaşılan, klasör zaten `NoteCard`.
+  **Widget KONTROL:** `widget_notes`/`widget_today` yalnız başlık ve saat taşır,
+  renk yok; widget kutucuk, etiket, raptiye çizmez, kuralın uygulanacağı öğe yok,
+  DEĞİŞMEDİ. Not rengi widget satırına istenirse ayrı iş (API 31 öncesi çizim
+  boyanamıyor, bkz. `WidgetTheme.kt`) — sabah bakılacak.
+- [x] **F37.4 Paylaşım görseli / PDF.**
+  **Yapıldı:** `PdfNoteStyle.forNote` (`note_pdf.dart`): sayfa notun zemini,
+  yazı/soluk/çizgi okunur temadan, kutucuk `NoteCheckColors`, renkli yazı
+  `readableOn`. `pngPages` PDF'ten çıktığı için görsel de aynı. Belge kâğıttır:
+  temanın AÇIK hâlinden hesaplanır; renksiz notta sayfa boyanmaz. **Karar (en
+  güvenli, sabah bakılacak):** koyu özel renkli not koyu sayfa basar, kapatma
+  anahtarı eklenmedi. Word çıktısı ve metin eki → balonlu PDF değişmedi.
+- [x] **F37.5 Kural testi:** `test/note_everywhere_same_test.dart`: 3 aile × açık/koyu
+  × {renksiz, hazır, koyu özel, açık özel} × {kart, editör, liste satırı}: kutucuk,
+  etiket, raptiye, başlık aile/ağırlık/aralık eşit. Yakaladığı gerçek hata: renksiz
+  notta etiket kartta soluk, editörde tam ton (editör hapları `onSurfaceVariant`).
+- Kabul: değişenin testleri ve tam takım oturumda, CI'da yeşil; cihaz adımları
+  `KALANLAR.md` §2 #62–#65.
 
 ## FAZ 38 — Not ekranı: çubuklar, başlık satırı, tek not menüsü
 

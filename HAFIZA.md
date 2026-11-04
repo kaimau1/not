@@ -388,6 +388,7 @@ maddeyi GÜNCELLE.
   Editör ağacı `NoteAccent` ile sarılı, değer DIŞ temadan (zıt temada zemin
   yanlış çıkar); ItemsEditor `_accent` satır önbelleği anahtarında. Krom
   (çubuk, levha, menü) temanın. Test `note_accent_consistency_test`.
+- **Not her yerde aynı (TUTARLILIK Faz 37, 2026-11-05):** başlık tek stil `noteTitleStyle` (`editor/title_fit.dart`), yeni yüzey de bunu kullansın. TUZAK: `AppTheme.opposite` (zıt okunurluk) `Theme.of`tan geçmemiş HAM temadır, M3 ölçüleri (`letterSpacing`, `height`, kimi `fontSize`) onda null; ondan ölçü okuyan yer sabit yedek versin. Liste satırı artık notun rengini taşır. PDF/görsel `PdfNoteStyle.forNote` (temanın AÇIK hâlinden; renksiz not boyanmaz). Kural `note_everywhere_same_test`. Meta satırında `Flexible` ile `Spacer` boşluğu eşit böler, metin yer varken kesilir: oran ver (etiket 8, tag 3).
 - **Başlık sığdırma ölçümü (F36.2 kök neden):** `TextField` M3'te stilini
   `bodyLarge`ın ÜSTÜNE birleştirir (harf aralığı 0,5 miras) → ölçüm
   `fieldMergedStyle(bodyLarge, stil)` ile; yoksa uzun başlık çipin altına taşar.

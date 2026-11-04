@@ -165,6 +165,12 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 60. [ ] (F24.3) 120 maddeli listede gerçek klavyeyle: maddeye dokun → imleç dokunulan harfte, klavye önerisi seç, uzun bas → sözcük seçilir, sesle yazdır, TalkBack'te madde okunuyor ve çift dokunuşla açılıyor. Otomatik denendi: dokun, yaz, Enter.
 61. [ ] (F25.1) Farklı yazı tipli (kaydedilmiş) not açılınca ilk seferde metin kısa süre başka yazı tipiyle görünüp oturuyor mu; rahatsız ediyorsa söyle (sabah bakılacak).
 
+**2026-11-05 — not her yerde aynı (TUTARLILIK_PLANI Faz 37, yazıldı, cihazda ayrıntılı doğrulanmadı)**
+62. [ ] (F37.1) Aynı notun başlığı kartta, liste görünümünde, açık notta aynı yazı karakterinde; kart başlığı 2 satırda taşmıyor, farklı yazı tipli başlıkta da.
+63. [ ] (F37.2) 1 saat sonrasına ve yarına hatırlatıcı kur: kartta ve liste satırında "bugün/yarın HH:mm"; 3 gün sonrası yalnız simge; dar kartta (zoom ile çok sütun) taşma yok.
+64. [ ] (F37.3) Liste görünümünde renkli not kendi renginde; koyu özel renkte yazı okunur; çöpte kutucuk notun tonunda; seçince seçim rengi.
+65. [ ] (F37.4) Renkli, siyah özel renkli ve renksiz liste notunu Paylaş → PDF ve Görsel: sayfa notun renginde (renksiz beyaz), kutucuk notun tonunda, yazı okunur, çok sayfalıda her sayfa boyalı. Koyu sayfa baskıda rahatsız ediyorsa söyle (sabah bakılacak).
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)
