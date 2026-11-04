@@ -6,6 +6,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -171,9 +172,16 @@ Future<void> main() async {
   //   bloklamasının hiçbir getirisi yoktu.
   // - Yüksek yenileme hızı: ilk kareyi etkilemez; bazı OEM'ler Flutter'ı
   //   60 Hz'e sabitlediği için istek yine de gerekli.
-  unawaited(_activateAppCheck());
-  unawaited(DisplayRate.apply());
-  unawaited(ImageCacheBudget.apply());
+  // F25.3: üçü de İLK KAREDEN SONRA ve ayrı olay döngüsü dilimlerinde
+  // (her biri platform kanalı turu) — ilk karenin ve servislerin
+  // (bkz. AppServices) üstüne binmesinler.
+  unawaited(
+    _staggerAfterFirstFrame([
+      _activateAppCheck,
+      DisplayRate.apply,
+      ImageCacheBudget.apply,
+    ]),
+  );
   // Eski geçici dosyalar (paylaşım/dışa aktarma/tarama/ses artıkları): açılışı
   // yavaşlatmasın diye birkaç saniye sonra, arka planda (bkz. DeviceStorage).
   unawaited(
@@ -205,6 +213,26 @@ Future<void> main() async {
 /// kendisi boşaltıyor; kart küçük resimleri ise bizim haritamızda kalıyordu —
 /// sıkışan telefonda arkadaki uygulama ilk öldürülenlerden olur, öldürülen
 /// uygulama da soğuk açılışta her şeyi baştan kurup pili yakar.
+/// [tasks]'ı ilk kare bittikten sonra, boş bir zamanlayıcı diliminde
+/// (`Priority.idle`; gelmezse en geç 300 ms) birer birer başlatır (F25.3).
+Future<void> _staggerAfterFirstFrame(List<Future<void> Function()> tasks) async {
+  await SchedulerBinding.instance.endOfFrame;
+  for (final task in tasks) {
+    final slot = Completer<void>();
+    final fallback = Timer(const Duration(milliseconds: 300), () {
+      if (!slot.isCompleted) slot.complete();
+    });
+    unawaited(
+      SchedulerBinding.instance.scheduleTask(() {
+        if (!slot.isCompleted) slot.complete();
+      }, Priority.idle),
+    );
+    await slot.future;
+    fallback.cancel();
+    unawaited(task().catchError((Object _) {}));
+  }
+}
+
 class _MemoryPressure with WidgetsBindingObserver {
   @override
   void didHaveMemoryPressure() {
