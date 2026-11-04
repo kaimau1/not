@@ -820,8 +820,11 @@ class NoteCard extends ConsumerWidget {
                     padding: const EdgeInsetsDirectional.only(end: 4),
                     child: icon,
                   ),
+                // Oranlar: boşluğu Spacer'la eşit bölüşen etiket yer varken
+                // "bugün 1…" diye kesiliyordu (tur, F37.2).
                 if (reminderLabel != null)
                   Flexible(
+                    flex: 8,
                     child: Padding(
                       padding: const EdgeInsetsDirectional.only(end: 6),
                       child: Text(
@@ -838,6 +841,7 @@ class NoteCard extends ConsumerWidget {
                   ),
                 if (showTag)
                   Flexible(
+                    flex: 3,
                     child: Text(
                       '#${note.tags.first}',
                       maxLines: 1,

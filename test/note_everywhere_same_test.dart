@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -235,6 +236,28 @@ void main() {
         isNull,
       );
       expect(cardReminderLabel(l10n, DateTime(2026, 11, 5, 9), now), isNull);
+    });
+
+    testWidgets('yer varken kesilmez', (tester) async {
+      final note = _note().copyWith(
+        tags: const [],
+        reminderAt: DateTime.now().add(const Duration(hours: 1)),
+      );
+      await _pump(
+        tester,
+        AppTheme.of(ThemeFamily.sage, Brightness.light),
+        _card(note),
+      );
+      final label = tester.renderObject<RenderParagraph>(
+        find
+            .descendant(
+              of: find.textContaining(RegExp(r'(bugün|yarın) \d\d:\d\d')),
+              matching: find.byType(RichText),
+            )
+            .first,
+      );
+      expect(label.didExceedMaxLines, isFalse);
+      await _end(tester);
     });
 
     testWidgets('kartta ve satırda görünür, dar kartta taşmaz', (tester) async {
