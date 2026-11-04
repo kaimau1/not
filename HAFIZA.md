@@ -208,15 +208,23 @@ maddeyi GÜNCELLE.
   Arama vurgusu `SearchHighlight` boya katmanı (span değil): kart önbelleği
   anahtarı "arama var mı", canlı sorgu `_liveQuery` — vurgu metne span olarak
   geri KONMAZ (sorgu başına kart kurulumu/şekillendirme, 139 ms).
-- **Klavye/kapanış kasması (2026-11-03)**: (1) büyüme klavye animasyonuna
-  biniyordu → klavye yüksekliği değiştikçe 320 ms bekler (`_keyboardMoving`).
-  (2) Örtülü ana ekran `MediaQuery`yi geçiriyordu (klavyenin her karesinde
-  Scaffold + kartlar uyarılıyordu) → `FreezeWhenHidden` gizliyken donar.
-  (3) Yetişme (380 ms) karttan kapanışın son karesine biniyordu → artık
-  `noteRouteClosing` bitince +120 ms. Cihazsız tanı: widget testinde
-  `tester.view.viewInsets` kare kare + `debugOnRebuildDirtyWidget` /
-  `debugPrintLayouts` sayımı. TUZAK: debug'da `MediaQuery` bildirimi bağımlı
-  sayısıyla pahalı, release'te değil — debug ms'ine göre karar verme.
+- **AKICILIK 2. tur (2026-11-04, cihazda ölçülmedi):** editörün not akışı +
+  senkron göstergesi TEK yerel dinleyici (`_DocHub`, Firestore örneği başına;
+  not akışı metadata-only olayı `deepDataEquals` ile eler) — yeni tek-belge
+  dinleyicisi açma, `_sharedDoc`u kullan. Not geçişinde `Opacity` YOK
+  (görüntü boya alfası, `_FadeSnapshotPainter`). Açık not sıralamada
+  TUTULUR (`sortHeldNoteIdsProvider`), kapanış başında bırakılır. Açılışta
+  servisler kare başına bir (`AppServices` kademeleri; kilit/derin bağlantı/
+  paylaş ilk karede) — yeni servis kademeye eklenir. Segment geçişinde
+  ayrılan ızgara `SnapshotWhenLeaving`. Kanal sayacı: debug/profil
+  `ext.notlar.channels` (`VM.channels()`). F24.2 saf pencere modeli
+  `text_window.dart` (bağlı değil). Bulutta YAPILMAYANLAR + gerekçe:
+  F23.5, F24.3, F25.2, F22.4 → KALAN_ISLER F19.F1–F3.
+- **Klavye/kapanış kasması (2026-11-03)**: madde büyümesi klavye oynarken
+  320 ms bekler (`_keyboardMoving`); örtülü pano `FreezeWhenHidden` ile
+  donar (MediaQuery geçirmez); yetişme `noteRouteClosing` bitince +120 ms.
+  Cihazsız tanı: `tester.view.viewInsets` kare kare + `debugOnRebuildDirtyWidget`.
+  TUZAK: debug'da `MediaQuery` bildirimi pahalı, release'te değil.
 - Ana ekran ızgarası deterministik sütun ataması (`balancedColumnAssignment`).
   Kesme noktası geçişinde `DashboardScreen` başka yerde yeniden kurulur →
   kaydırma `DashboardScrollMemory`de ORANLA taşınır (F18.11).

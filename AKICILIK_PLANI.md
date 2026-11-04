@@ -36,12 +36,12 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 20…27):
 |---|---|---|---|---|
 | 20 | Ölçüm kapısı (gerçekçi veri, yan yana profil derlemesi, CI bütçesi) | Kısmen | 2026-11-04 | F20.1 araçlar, F20.3 gerçekçi CI verisi + 2 senaryo; F20.2/F20.4 telefon |
 | 21 | Ana ekran kartı: önizlemeyi kırp, kart başına işi azalt | Kısmen | 2026-11-04 | 2 tur: takılma %8,4→%3,4–4,2, en kötü 115→33–50 ms, arama 465→139 ms; kabul sağlanmadı — kalan engel raster+kurulum (K7); F21.6 arama katmanı yazıldı (2026-11-04, cihazda ölçülmedi) |
-| 22 | Firestore trafiği: yazımda tüm koleksiyon ana iş parçacığında | Kısmen | 2026-11-04 | F22.2/3/5/7 bulutta (cihazda ölçülmedi); F22.1 ölçüm, F22.4 göç, F22.6 açık |
-| 23 | Geçişler: not açma/kapama | Kısmen | 2026-11-04 | F23.1 Hero taraması + F23.3 kayıt zamanlayıcısı (cihazda ölçülmedi); F23.2/4/5 ölçüm |
-| 24 | Uzun not editörü: tuş başına O(n) | Açık | — | En büyük iş; mimari KARAR |
-| 25 | Soğuk açılış | Açık | — | |
-| 26 | Titreme ve görsel kararlılık | Açık | — | Önce videoyla ölç |
-| 27 | Hijyen + regresyon kapısı | Kısmen | 2026-11-04 | F27.4 CI bütçesi (p90/p99/en kötü) |
+| 22 | Firestore trafiği: yazımda tüm koleksiyon ana iş parçacığında | Kısmen | 2026-11-04 | F22.2/3/5/6/7 bulutta (cihazda ölçülmedi); F22.1 ölçüm, F22.4 göç (Faz 19) |
+| 23 | Geçişler: not açma/kapama | Kısmen | 2026-11-04 | F23.1/3/4 yazıldı (cihazda ölçülmedi); F23.2/5 ölçüm |
+| 24 | Uzun not editörü: tuş başına O(n) | Kısmen | 2026-11-04 | F24.2 1. parça (saf pencere modeli); F24.1 ölçüm, F24.2 kalan + F24.3 cihazlı oturumda |
+| 25 | Soğuk açılış | Kısmen | 2026-11-04 | F25.3 kademeli başlangıç; F25.1/F25.2 ölçüm (sabah bakılacak) |
+| 26 | Titreme ve görsel kararlılık | Kısmen | 2026-11-04 | F26.2/3/4 yazıldı; F26.1 video ölçümü |
+| 27 | Hijyen + regresyon kapısı | Kısmen | 2026-11-04 | F27.1 kanal sayacı, F27.4 CI bütçesi; F27.2/3 cihaz |
 
 ## Özet — ölçülen taban çizgisi (v1.1.613, release)
 
@@ -290,14 +290,16 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   için pay (`updatedAt` sunucu zamanı olmalı → F22.3 ile birlikte tasarla),
   ara sıra tam uzlaştırma. Alternatif B: hafif "kart dizini" belgesi + gövde
   ayrı belge (veri göçü, kurallar, yedek — daha büyük). Öneri: A.
+  **Bulutta yapılmadı (2026-11-04):** yerel tam yedek şartı kullanıcının cihazında; dizin belgesi olmadan okuma tarafı ölü kod olur — `KALAN_ISLER_PLANI` **F19.F1** (sabah bakılacak).
 - [x] **F22.5 Dart tarafı tek geçiş:** `watchNotes` → `_withLocal` → sıralama →
   `filteredNotesProvider` olay başına bir kez sıralasın; editör açıkken
   (telefonda tam ekran) gizli pano iş yapmasın — profil zaman çizelgesiyle ölç.
   **İncelendi (2026-11-04):** kod değişikliği gerekmedi — gizli pano (`TickerMode` kapalı) Riverpod 3'te aboneliği duraklatıyor, `filteredNotesProvider` editör açıkken olay başına hesaplanmıyor, görünür olunca bir kez yetişiyor (`hidden_dashboard_pause_test` sabitler). Olay başına sıralama: depo (`_compare`, ~0,2 ms/500 not) — diğer tüketiciler sıraya bağlı, kaldırılmadı. Profil ölçümü KALANLAR §2 #34 ile birlikte.
-- [ ] **F22.6 Editörün tek not dinleyicileri:** `noteStreamProvider` +
+- [x] **F22.6 Editörün tek not dinleyicileri:** `noteStreamProvider` +
   `pendingWritesProvider` (`includeMetadataChanges`) kayıt başına kaç olay
   üretiyor, ölç; senkron göstergesi için gerekmeyen olayları ele.
   **Ertelendi (2026-11-04):** iki belge dinleyicisi (veri + `includeMetadataChanges`) tek akışa birleştirilebilir ama metadata-only olayı ayıklamak derin karşılaştırma ister; kazanç tek belge kodlaması (~ms), F22.3 ile kayıt başına olay zaten 3→2. Ölçmeden değiştirilmedi — **sabah bakılacak** (profilde `noteStreamProvider`/`pendingWritesProvider` olay sayısı).
+  **Yapıldı (2026-11-04, 2. tur, cihazda ölçülmedi):** iki akış AYNI yerel `includeMetadataChanges` dinleyicisini paylaşır (`_DocHub`, Firestore örneğine bağlı — paylaşılan klasör deposu da aynı dinleyiciyi bulur; geç abone son görüntüyü hemen alır); not akışı metadata-only olayı `deepDataEquals` ile eler (varsayılan `snapshots()` anlamı). Kayıt başına yerel olay 3→2 (yazım + onay), her biri tam belge kodlaması. Test `shared_doc_listener_test`. Ölçüm KALANLAR §2 #41 (F27.1 sayacıyla).
 - [x] **F22.7 Platform kanalı israfı:** `alwaysHandleBack` son değeri saklasın,
   değişmediyse kanal çağrısı yok (K4).
   **Yapıldı (2026-11-04):** `alwaysHandleBack` bir kez yazar, `detached`/`AppLifecycleListener.onDetach`ta unutur. `shared_notes_back_test`: üç geçişte tek kanal çağrısı.
@@ -321,14 +323,16 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   flush'ı hemen (veri güvenliği); dinleyici/denetleyici/mürekkep/PDF sökümü ve
   `POST_FRAME` işleri geçiş bittikten sonra. Kabul: kapanışın ilk karesi < 16 ms.
   **Yapıldı (2026-11-04, yazıldı, cihazda ölçülmedi):** söküm zaten rota kalkınca; kapanış karelerine binen asıl iş bekleyen 2 sn'lik kayıt zamanlayıcısıydı → `noteRouteClosing`da `Debouncer.pause()`, rota kalkınca `dispose → _saveNow` yazar, jest vazgeçilirse `resume()`. Test `debouncer_test`.
-- [ ] **F23.4 Kapsayıcı dönüşümün GPU maliyeti (GLES).** `note_open_route.dart`
+- [x] **F23.4 Kapsayıcı dönüşümün GPU maliyeti (GLES).** `note_open_route.dart`
   `_ContainerTransform`: alttaki panoyu geçiş boyunca da görüntüden çiz (ya da
   tam örtülen bölgeyi hiç çizme), `Opacity` yerine görüntünün boya alfası,
   karartmayı tek katmanda; kenar yumuşatmalı kırpma yalnız yarıçap > 0 iken.
   Kabul: geçişte raster < 12 ms/kare (bugün 18–26).
+  **Yapıldı (2026-11-04, yazıldı, cihazda ölçülmedi):** `Opacity` kaldırıldı — dondurulmuş görüntü `_FadeSnapshotPainter` ile boya alfasıyla çizilir (görüntü yoksa `pushOpacity`/doğrudan); kırpma yarıçap > 0,5 iken `antiAlias`, sonra `hardEdge`, oturunca yok. Karartma zaten tek `ColoredBox`. Alttaki panonun görüntüden çizilmesi YAPILMADI (pano `FreezeWhenHidden`; ayrı görüntü ~10 MB doku — önce raster ölçümü). Test `note_open_transition_test`. Ölçüm KALANLAR §2 #42.
 - [ ] **F23.5 Editör ilk karesi hafif.** İlk karede yalnız görünen kısım (üst
   çubuk + ilk ekran metni); ek şeridi, kalem tepsisi, AI parçaları, sesli kayıt
   sonraki karelerde. Kabul: kısa/görselli notta dokunuş→ilk kare < 50 ms.
+  **Bulutta yapılmadı (2026-11-04):** açılış geçişi sayfanın İLK karesini görüntüye alıp yalnız t=0,45'te bir kez tazeliyor (F23.4 / 2026-10-30 kök nedeni); sonraki karelere ertelenen parça (ek şeridi vb.) görüntüde yok, t=0,45'te içerik neredeyse opakken "pat" diye belirir. Kalem tepsisi, sesli kayıt paneli, AI şeridi ilk karede zaten boş (`null`/`SizedBox.shrink`). Hangi parçanın ilk karede pahalı olduğu profil olmadan bilinmiyor — KALANLAR §2 #43 (profilde editör ilk karesinin widget build dökümü), sonra erteleme + görüntü tazeleme birlikte.
 - Kabul (faz): 4 not türünde kapanışta **0 kare > 33 ms** (bugün 12/12'de 99
   ms); açılışta en çok 1 kare > 16,7 ms.
 
@@ -347,10 +351,12 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   görsel sarma tam metin modeli üzerinden. Alternatif: blok editörü
   (super_editor tarzı, her paragraf ayrı düğüm) — daha büyük iş. Öneri:
   pencereli kip, kısa notlarda bugünkü yol aynen.
+  **Kısmen (2026-11-04):** 1. parça — saf metin modeli `text_window.dart` (paragraf sınırında pencere `windowAround`, ofset eşlemesi, `spliceWindow` geri yazma, `needsRewindow`; eşik `kWindowedThreshold` = 6000 TAHMİN) + `text_window_test`. Editöre BAĞLI DEĞİL. Sonraki parçalar: (2) pencere dışı paragrafların önbellekli çizimi (`SliverList`) + dokunuşla yeniden pencereleme, (3) arama/biçim/geri alma/dikte tam metin üzerinden — F24.1 eşik ölçümünden sonra, cihazda doğrulamalı oturumda.
 - [ ] **F24.3 Madde listesi: yalnız odaklanan madde `TextField`.** Odakta
   olmayan maddeler düz metin (`_cachedItemRow` zaten çiziyor); dokunulan madde
   düzenlenebilire döner. Sonra `_kFirstRows` / `_rowBudget` / kapanışta parça
   parça söküm (`noteRouteClosing`) hileleri silinir (usta 6b).
+  **Bulutta yapılmadı (2026-11-04):** madde denetleyicilerine 15+ yerden kimlikle erişiliyor (biçim çubuğu hedefi, `insertTextAtCaret`, not içi arama/değiştir, dikte, ek etiketi çipleri, sürükle-bırak, Enter/Backspace birleştirme); düz metin satırına dokunuşta imleç konumu (`TextPainter.getPositionForOffset`) ve uzun basışla seçim yeniden kurulmalı. Cihazda yazma/seçim/dikte doğrulaması olmadan editörün en çok kullanılan yolu değiştirilmedi — **sabah bakılacak** (cihazlı oturumda, F24.1 ölçümüyle birlikte).
 - [ ] **F24.4 Görsel sarma ölçümü** (`WrapFieldMeasure`, `text_wrap.dart`) tam
   metni ikinci bir `TextPainter` ile yerleştiriyorsa paragraf bazlı önbellek.
 - Kabul: 35 KB notta tuş→kare **p95 < 16 ms**, yazarken 0 kare > 33 ms; 120
@@ -368,9 +374,11 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   (başlık, F21.1 dilimi, renk, bayraklar, küçük resim yolu) arka plana geçişte
   diske; açılışta ilk karede bunlar çizilir, Firestore gelince sessizce
   uzlaştırılır (Keep davranışı). İskelet→içerik titremesi de kalkar.
-- [ ] **F25.3 İlk 2 saniyenin platform kanalı trafiği:** App Check,
+  **Bulutta yapılmadı (2026-11-04):** yeni KARAR doğuyor — diskteki özet bayatsa (başka cihazda silinen/taşınan not) ilk karede hayalet kart çizilir, dokununca "not bulunamadı"; kilitli/gizli klasör notlarının özeti diske düz yazılır mı. Ayrıca Firestore yerel önbelleğinin ilk yayın süresi ölçülmedi (kazanç bilinmiyor). En güvenli: ölçmeden yapma — KALANLAR §2 #44, **sabah bakılacak**.
+- [x] **F25.3 İlk 2 saniyenin platform kanalı trafiği:** App Check,
   `DisplayRate`, `ImageCacheBudget`, widget teması/güncellemesi, göçler,
   presence, FCM — ilk içerik karesinden sonraya ve birbirinden ayrı karelere yay.
+  **Yapıldı (2026-11-04, yazıldı, cihazda ölçülmedi):** `AppServices` kademeli — not kilidi, derin bağlantı, paylaş menüsü ilk karede; premium, göçler, yükleme kuyruğu, tercih senkronu, hatırlatıcı, konum temizliği, paylaşım hareketi, FCM, widget, transkript ilk kareden SONRA kare başına BİR (`Priority.idle` dilimi, en geç 400 ms). `main` App Check / `DisplayRate` / `ImageCacheBudget` aynı biçimde (`_staggerAfterFirstFrame`). Test `app_services_stagger_test`. Ölçüm KALANLAR §2 #45 (F27.1 sayacı + zaman çizelgesi).
 - Kabul: soğuk açılış ilk kare < 600 ms (bugün ~770), içerik ilk karede, ilk 2
   sn'de > 50 ms kare yok (bugün 313–396 ms donuk kare).
 
@@ -385,18 +393,21 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   `onTrimMemory`/`didHaveMemoryPressure`'da boşalt. Bedel: arkadaki uygulama
   birkaç MB fazla tutar.
   **Yapıldı (2026-11-04, cihazda ölçülmedi):** `main.dart` `onPause`ta `imageCache.clear()` + `CardThumbs.clearMemory()` kaldırıldı; boşaltma yalnız `_MemoryPressure.didHaveMemoryPressure` (Android `onTrimMemory`).
-- [ ] **F26.3 Sıra zıplaması.** Editör açıkken düzenlenen not "Son
+- [x] **F26.3 Sıra zıplaması.** Editör açıkken düzenlenen not "Son
   güncellenen"de tepeye zıplamasın: editör kapanınca kart yerinden tepeye
   animasyonla taşınsın (ya da Keep gibi dönüşte bir kez yerleşsin).
-- [ ] **F26.4 Segment geçişinde çift ızgara:** `AnimatedSwitcher` sırasında
+  **Yapıldı (2026-11-04, cihazda ölçülmedi):** `sortHeldNoteIdsProvider` — editör notu tutar, sıralama o not için açıldığı andaki `updatedAt`i kullanır (son güncellenen, renk/başlık eşitliği, elle sıralamadaki eşit `orderIndex`); kart içeriği güncel. KAPANIŞ başlayınca (`noteRouteClosing`) bırakılır: telefonda pano görünmeden yerine oturur, küçülen not yeni yere iner; jestten vazgeçilirse yeniden tutulur; geniş ekranda kapanışta bir kez. Test `sort_hold_test`. Gözle: KALANLAR §2 #46.
+- [x] **F26.4 Segment geçişinde çift ızgara:** `AnimatedSwitcher` sırasında
   eski + yeni ızgaranın birlikte kurulma maliyeti ve görsel flaşı ölç.
+  **Yapıldı (2026-11-04, yazıldı, ölçülmedi):** ayrılan ızgara `SnapshotWhenLeaving` ile bir kez görüntüye alınır (her karede yarı saydam katmanda rasterleşmez, dokunuş almaz); sarmalayıcı hep ağaçta — durum/kaydırma korunur. Flaş (iki yarı saydam ızgara) videoyla ölçülecek — KALANLAR §2 #46. Test `snapshot_when_leaving_test`.
 - Kabul: videoda belirgin flaş/zıplama yok; listede düzeltilenler.
 
 ## FAZ 27 — Hijyen ve regresyon kapısı (K6, K10)
 
-- [ ] **F27.1 Platform kanalı sayacı:** profil derlemesinde kanal adı + bayt
+- [x] **F27.1 Platform kanalı sayacı:** profil derlemesinde kanal adı + bayt
   günlüğü (geçici `BinaryMessenger` sarmalayıcısı) → senaryo başına en çok
   konuşan kanallar; gereksizleri ele (K4).
+  **Yapıldı (2026-11-04):** `channel_counter.dart` — `Diagnostics.enabled` (debug/profil) derlemede `ChannelCountingBinding` varsayılan ileticiyi sarar (kanal başına giden/gelen ileti + bayt); VM servisi `ext.notlar.channels` (`reset=true`), `tool/perf/vmsvc.py` `VM.channels()`, Ayarlar → Hakkında teşhis satırında ilk 3 kanal. Release'te kod yok. Test `channel_counter_test`. "Gereksizleri ele" kısmı ölçümden sonra (KALANLAR §2 #41/#45).
 - [ ] **F27.2 Erişilebilirlik servisi açıkken** (şifre yöneticisi, ekran
   okuyucu) semantik ağacın kare maliyetini ölç; büyük ağaçlarda süsleri
   `ExcludeSemantics`.

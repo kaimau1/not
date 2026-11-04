@@ -561,6 +561,21 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
   hiçbir cihazda olmayan ek kaybolur — kararında kabul ettin); (4) D eski kodu siler. Gece
   görevi C'yi kendiliğinden ÇALIŞTIRMAZ.
 
+### F. Akıcılık (AKICILIK_PLANI) — bulutta yapılamayanlar, sabah bakılacak (2026-11-04)
+
+- [ ] **F19.F1** (← F22.4, KARAR B: kart dizini + gövde ayrı belge) Veri göçü. Güvenlik şartı
+  "göçten önce yerel tam yedek" senin cihazında; okuma tarafı tek başına (dizin belgesi henüz yok)
+  ölü kod olurdu. Sıra: (1) F22.1 ölçümü (50/250/500 notla kayıt sonrası ana blok — KALANLAR §2
+  #34) göçün kazancını doğrulasın; (2) "F22.4 okuma tarafı" dersen bulut oturumu dizini OKUYAN +
+  yoksa eski şemaya düşen kodu ve `rules-test`i yazar; (3) sen Ayarlar → Yedek; (4) yazma + göç;
+  (5) bir sürüm sonra eski alanlar.
+- [ ] **F19.F2** (← F24.1/F24.2/F24.3) Uzun not editörü: önce F24.1 eşik ölçümü (1–35 KB tuş→kare),
+  sonra pencereli kipin 2.–3. parçası ve madde listesinde yalnız odaktaki satır `TextField` —
+  cihazda yazma/seçim/dikte doğrulamalı oturumda (saf pencere modeli hazır: `text_window.dart`).
+- [ ] **F19.F3** (← F23.5, F25.1, F25.2, F26.1) Ölçüm sonrası karar: editör ilk karesinin pahalı
+  parçası, yazı tipi beklemesi, anında içerik (bayat/kilitli özet kararı), videoyla titreme listesi —
+  KALANLAR §2 #40, #43, #44, #46.
+
 ### D. Play'e çıkılırsa (karar değişirse — bugün "çıkmıyoruz")
 
 - [ ] **F19.D1** OAuth onay ekranını "Testing"ten yayına al — bugün yalnız
