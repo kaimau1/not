@@ -651,6 +651,39 @@ class OpenNoteIdsNotifier extends Notifier<List<String>> {
   }
 }
 
+/// F26.3 (AKICILIK_PLANI, K9): editörü AÇIK notlar listede yerinde durur.
+/// Otomatik kayıt `updatedAt`i tazeledikçe "son güncellenen" (ve elle
+/// sıralamadaki eşit sıra) notu her 2 sn'de tepeye zıplatıyordu — geniş
+/// ekranda yan bölmede gözle görülüyordu. Editör tutar, KAPANIŞ başlayınca
+/// (telefonda pano görünmeden önce) bırakır: not bir kez yerine oturur ve
+/// küçülen not kartın YENİ yerine iner (Keep gibi).
+final sortHeldNoteIdsProvider =
+    NotifierProvider<SortHeldNoteIdsNotifier, Set<String>>(
+      SortHeldNoteIdsNotifier.new,
+    );
+
+class SortHeldNoteIdsNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => const {};
+
+  void hold(String id) {
+    if (ref.mounted && !state.contains(id)) state = {...state, id};
+  }
+
+  void release(String id) {
+    if (ref.mounted && state.contains(id)) {
+      state = {
+        for (final s in state)
+          if (s != id) s,
+      };
+    }
+  }
+}
+
+/// Tutulan notların sıralamada kullanılan `updatedAt`i: tutulduktan sonra
+/// listede ilk görüldüğü değer.
+final _sortAnchorsBox = Provider<Map<String, DateTime?>>((ref) => {});
+
 /// Ana ekranın ŞU AN çizdiği notlar, ekrandaki sırayla (bölümler dahil).
 /// Alt+↑/↓ bununla önceki/sonraki notu açar (bkz. `openAdjacentNote`).
 /// Sağlayıcı değil düz değişken: kimse dinlemiyor, yalnız kısayol okur.
@@ -1058,9 +1091,17 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
       ? ref.watch(noteActivityProvider)
       : const <String, int>{};
   final box = ref.watch(_filteredNotesBox);
+  final held = ref.watch(sortHeldNoteIdsProvider);
+  final anchors = ref.watch(_sortAnchorsBox);
 
   return notes.whenData((list) {
     _pruneSearchBodyCache(list);
+    anchors.removeWhere((id, _) => !held.contains(id));
+    if (held.length > anchors.length) {
+      for (final n in list) {
+        if (held.contains(n.id)) anchors.putIfAbsent(n.id, () => n.updatedAt);
+      }
+    }
     // Boş notlar (yeni oluşturulup hiç doldurulmamış) listede gösterilmez;
     // editörden çıkışta zaten silinirler, arka plan temizliği de kalıntıyı
     // toplar. Böylece boş kart dashboard'da hiç belirmez.
@@ -1121,7 +1162,10 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
     // İçerik (not örnekleri ve sıraları) aynıysa ÖNCEKİ liste (F2.1):
     // ilgisiz bir yayın (ör. arşivdeki/klasördeki notun yazımı) ana ekranı
     // yeniden kurmaz.
-    return box.keep(_sortedNotes(result, sort, activity), sameInstances);
+    return box.keep(
+      _sortedNotes(result, sort, activity, anchors),
+      sameInstances,
+    );
   });
 });
 
@@ -1136,27 +1180,46 @@ List<Note> _sortedNotes(
   List<Note> notes,
   NoteSort sort, [
   Map<String, int> activity = const {},
+  Map<String, DateTime?> anchors = const {},
 ]) {
-  if (sort == NoteSort.manual) return notes;
-  final list = [...notes];
+  // Tutulan (editörü açık) notun sıralama zamanı açıldığı andaki değer.
+  DateTime? upd(Note n) =>
+      anchors.containsKey(n.id) ? anchors[n.id] : n.updatedAt;
   int dateDesc(DateTime? a, DateTime? b) {
     final at = a ?? DateTime.fromMillisecondsSinceEpoch(0);
     final bt = b ?? DateTime.fromMillisecondsSinceEpoch(0);
     return bt.compareTo(at);
   }
 
+  if (sort == NoteSort.manual) {
+    // Akışın sırası (depo: sabit → orderIndex → updatedAt). Tutulan not
+    // tazelendiyse aynı ölçütle, onun için açılış zamanıyla yeniden dizilir.
+    final drifted = anchors.isNotEmpty &&
+        notes.any(
+          (n) => anchors.containsKey(n.id) && anchors[n.id] != n.updatedAt,
+        );
+    if (!drifted) return notes;
+    return [...notes]..sort((a, b) {
+      if (a.pinned != b.pinned) return a.pinned ? -1 : 1;
+      final byOrder = a.orderIndex.compareTo(b.orderIndex);
+      if (byOrder != 0) return byOrder;
+      return dateDesc(upd(a), upd(b));
+    });
+  }
+  final list = [...notes];
+
   switch (sort) {
     case NoteSort.manual:
       break;
     case NoteSort.updated:
-      list.sort((a, b) => dateDesc(a.updatedAt, b.updatedAt));
+      list.sort((a, b) => dateDesc(upd(a), upd(b)));
     case NoteSort.created:
       list.sort((a, b) => dateDesc(a.createdAt, b.createdAt));
     case NoteSort.title:
       list.sort((a, b) {
         final at = a.title.trim().toLowerCase();
         final bt = b.title.trim().toLowerCase();
-        if (at.isEmpty && bt.isEmpty) return dateDesc(a.updatedAt, b.updatedAt);
+        if (at.isEmpty && bt.isEmpty) return dateDesc(upd(a), upd(b));
         if (at.isEmpty) return 1;
         if (bt.isEmpty) return -1;
         return at.compareTo(bt);
@@ -1169,7 +1232,7 @@ List<Note> _sortedNotes(
         final ai = a.color == NoteColor.none ? 999 : a.color.index;
         final bi = b.color == NoteColor.none ? 999 : b.color.index;
         if (ai != bi) return ai.compareTo(bi);
-        return dateDesc(a.updatedAt, b.updatedAt);
+        return dateDesc(upd(a), upd(b));
       });
     // En çok çalışılan: sayaç büyükten küçüğe. Hiç açılmamış notlar (sayaç
     // yok = 0) sona düşer ve KENDİ ARALARINDA son güncellenene göre dizilir —
@@ -1179,7 +1242,7 @@ List<Note> _sortedNotes(
         final av = activity[a.id] ?? 0;
         final bv = activity[b.id] ?? 0;
         if (av != bv) return bv.compareTo(av);
-        return dateDesc(a.updatedAt, b.updatedAt);
+        return dateDesc(upd(a), upd(b));
       });
   }
   return list;
