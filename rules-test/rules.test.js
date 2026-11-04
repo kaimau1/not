@@ -210,3 +210,24 @@ test("Storage: ortak çalışan sahibin notuna ek yükler ve okur", async () => 
   await assertSucceeds(getBytes(ref(store("b"), "users/a/notes/n1/b.png")));
   await assertFails(getBytes(ref(store("c"), "users/a/notes/n1/b.png")));
 });
+
+// F28.2-B: önizlemeler (≤ 40 KB, yalnız JPEG/PNG/WebP), sahibine açık.
+test("Storage: önizleme 40 KB tavanı ve yalnız görsel", async () => {
+  const jpg = { contentType: "image/jpeg" };
+  await assertSucceeds(
+    uploadString(ref(store("a"), "users/a/thumbs/e1.jpg"), "x".repeat(30 * 1024), "raw", jpg),
+  );
+  await assertSucceeds(getBytes(ref(store("a"), "users/a/thumbs/e1.jpg")));
+  await assertFails(getBytes(ref(store("b"), "users/a/thumbs/e1.jpg")));
+  await assertFails(
+    uploadString(ref(store("a"), "users/a/thumbs/e2.jpg"), "x".repeat(41 * 1024), "raw", jpg),
+  );
+  await assertFails(
+    uploadString(ref(store("a"), "users/a/thumbs/e3.pdf"), "x", "raw", {
+      contentType: "application/pdf",
+    }),
+  );
+  await assertFails(
+    uploadString(ref(store("b"), "users/a/thumbs/e4.jpg"), "x", "raw", jpg),
+  );
+});
