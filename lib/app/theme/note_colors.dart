@@ -105,16 +105,22 @@ abstract final class NoteColors {
 
   /// Notun koyu tonu: hazır renkte paletten, özel renkte rengin kendisinden
   /// zemine göre okunur hâle getirilerek; renksiz ya da temalı notta null.
-  static Color? noteInk(BuildContext context, Note note) {
+  static Color? noteInk(BuildContext context, Note note) =>
+      noteInkIn(Theme.of(context), note);
+
+  /// [noteInk]'in bağlamsız hâli (dışa aktarma, F37.4).
+  static Color? noteInkIn(ThemeData theme, Note note) {
     if (NoteThemes.byId(note.theme) != null) return null;
     final custom = note.customColor;
     if (custom != null) {
       return readableOn(
         Color(custom).withAlpha(255),
-        noteSurface(context, note),
+        noteSurfaceIn(theme, note),
       );
     }
-    return ink(context, note.color);
+    if (note.color == NoteColor.none) return null;
+    return (theme.brightness == Brightness.dark ? _darkInk : _lightInk)[note
+        .color];
   }
 
   /// Mercan koyusu: defter kâğıdının kenar çizgisi (eskiden hata rengi

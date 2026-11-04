@@ -659,6 +659,7 @@ Future<void> runNoteShare(
 }) async {
   final l10n = context.l10n;
   final messenger = ScaffoldMessenger.of(context);
+  final theme = Theme.of(context);
   final subject = note.displayTitle.trim().isEmpty
       ? l10n.appName
       : note.displayTitle.trim();
@@ -709,6 +710,7 @@ Future<void> runNoteShare(
           options: options,
           attachments: ref.read(attachmentRepositoryProvider),
           palette: NoteColors.richPalette,
+          style: PdfNoteStyle.forNote(theme, note),
         );
         final name = NotePdf.safeFileName(subject);
         if (choice == 'png') {

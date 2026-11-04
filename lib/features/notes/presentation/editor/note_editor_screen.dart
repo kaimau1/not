@@ -2506,28 +2506,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Üstündeki çip satırına yapışık: aradaki 8 dp, çipler başlığın ALTINDAYKEN
     // üst barla başlığı ayırmak içindi; artık o işi çip satırı görüyor.
     final titleInBar = _titleInBar(note);
-    final titleBaseStyle = applyNoteOpacity(
-      applyNoteFont(
-        (_themeOf(context).textTheme.headlineSmall ?? const TextStyle())
-            .copyWith(
-              // w500: kalın (w800) başlıkta açıkça ayırt edilsin (bkz.
-              // rich_text `markStyle`).
-              fontWeight: FontWeight.w500,
-              // Üst çubukta 48 dp'ye sığan boy (bkz. [_titleInBar]).
-              fontSize:
-                  (titleInBar
-                      ? 18.0
-                      : (_themeOf(context).textTheme.headlineSmall?.fontSize ??
-                            24)) *
-                  note.titleFontScale,
-              color:
-                  _themeOf(context).textTheme.headlineSmall?.color ??
-                  theme.colorScheme.onSurface,
-            ),
-        note.titleFontFamily,
-      ),
-      note.titleTextOpacity,
-      theme.colorScheme.onSurface,
+    final titleBaseStyle = noteTitleStyle(
+      theme,
+      note,
+      // Üst çubukta 48 dp'ye sığan boy (bkz. [_titleInBar]).
+      fontSize:
+          (titleInBar ? 18.0 : (theme.textTheme.headlineSmall?.fontSize ?? 24)) *
+          note.titleFontScale,
     );
     // BAŞLIK ÜST ÇUBUKTA (kullanıcı isteği 2026-11-03: "üste sabitlemede
     // başlık sabitin üstünde olmalı; şu an not alanında kalıyor ve orayı
@@ -2884,8 +2869,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // arasındaki dar banda sığmalı (bkz. [metaChips]).
     final chipLabelStyle = theme.textTheme.labelMedium?.copyWith(
       fontSize: 12.5,
-      // Renkli notta haplar notun koyu tonunda (kartın etiketiyle aynı).
-      color: noteAccent,
+      // Haplar kartın etiketiyle aynı: renkli notta koyu ton, renksizde soluk.
+      color: noteAccent ?? theme.colorScheme.onSurfaceVariant,
     );
 
     // BALONLU ⇄ KLASİK görünüm çipleri buradaydı (başlığın altında, etiket ve

@@ -1,4 +1,41 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
+
+import '../../../../core/utils/note_fonts.dart';
+import '../../domain/note.dart';
+
+/// **NOT BAŞLIĞI TEK STİL** (K9, F37.1): editör, kart ve satır aynı aile, ağırlık
+/// (w500: kalın w800 başlıkta ayırt edilsin, bkz. `markStyle`) ve harf aralığı;
+/// yalnız boy yere göre. Aralık alanın gerçekte çizdiği ([fieldMergedStyle]),
+/// `Text` `bodyLarge`ı miras almadığı için burada somutlaşır.
+TextStyle noteTitleStyle(
+  ThemeData theme,
+  Note note, {
+  required double fontSize,
+}) {
+  final headline = theme.textTheme.headlineSmall ?? const TextStyle();
+  final ink = theme.colorScheme.onSurface;
+  return applyNoteOpacity(
+    applyNoteFont(
+      headline.copyWith(
+        fontWeight: FontWeight.w500,
+        fontSize: fontSize,
+        // TUZAK: zıt okunurluk teması `Theme.of`tan geçmemiş ham temadır, M3
+        // ölçüleri (aralık, satır yüksekliği) onda null; değerler sabit yedekli.
+        letterSpacing:
+            fieldMergedStyle(
+              theme.textTheme.bodyLarge,
+              headline,
+            ).letterSpacing ??
+            0.5,
+        height: headline.height ?? 1.33,
+        color: headline.color ?? ink,
+      ),
+      note.titleFontFamily,
+    ),
+    note.titleTextOpacity,
+    ink,
+  );
+}
 
 /// **BAŞLIK ALANA SIĞAR** (kullanıcı isteği 2026-11-01: "aksi yapılamadıkça
 /// başlıklar yazı alanına sığsın, otomatik boyutlandırma ile — şu an uzun

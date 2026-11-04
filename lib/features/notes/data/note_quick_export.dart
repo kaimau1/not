@@ -73,6 +73,7 @@ class NoteQuickExport {
     required ShareTextOptions options,
     required AttachmentRepository? attachments,
     List<Color> palette = const [],
+    PdfNoteStyle style = const PdfNoteStyle(),
   }) async {
     final images = <ExportImage>[];
     if (attachments != null) {
@@ -104,6 +105,7 @@ class NoteQuickExport {
       date: note.updatedAt,
       images: images,
       palette: palette,
+      style: style,
     );
   }
 
