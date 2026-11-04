@@ -77,7 +77,8 @@ extension _ItemsRow on ItemsEditorState {
         widget.videoTimestamps ||
         text.contains('📎') ||
         text.contains('📖') ||
-        findLinks(text).isNotEmpty;
+        // Bağlantının (e-posta, alan adı, şema) hepsinde nokta var; regex'siz ön süzgeç.
+        (text.contains('.') && findLinks(text).isNotEmpty);
   }
 
   Widget _itemRow(NoteItem item, {int? reorderIndex, int? orderNumber}) {

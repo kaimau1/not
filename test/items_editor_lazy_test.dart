@@ -47,11 +47,20 @@ void main() {
   int fields() => find.byType(TextField, skipOffstage: false).evaluate().length;
 
   testWidgets(
-    '120 maddede hiç metin alanı kurulmaz; hepsi ilk karede çizilir',
+    '120 maddede hiç metin alanı kurulmaz; ilk kare kısmi, geçişten sonra tamam',
     (tester) async {
       await pump(tester, [
         for (var i = 0; i < 120; i++) NoteItem(id: 'i$i', text: 'Madde $i'),
       ]);
+      expect(fields(), 0);
+      expect(
+        find.text('Madde 119', skipOffstage: false, findRichText: true),
+        findsNothing,
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+      for (var i = 0; i < 16; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
       expect(fields(), 0);
       expect(
         find.text('Madde 119', skipOffstage: false, findRichText: true),

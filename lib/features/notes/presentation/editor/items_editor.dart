@@ -499,6 +499,35 @@ class ItemsEditorState extends State<ItemsEditor>
     super.initState();
     _adoptedFrom = widget.items;
     _items = _adopt(widget.items);
+    if (_items.length > _kFirstRows) {
+      _rowBudget = _kFirstRows;
+      _budgetTimer = Timer(_kGrowAfter, _growBudget);
+    }
+  }
+
+  /// **UZUN LİSTEDE KADEMELİ KURULUM.** Dış sayfa kaydırıcısının içinde liste
+  /// tembel değil. Satır düz çizim olsa da (bkz. [_LazyItemField]) 100 satır
+  /// geçişin ilk karesinde 100+ ms (telefonda ölçüldü, 2026-11-04) → ilk karede
+  /// ekranı dolduran kadarı, geçiş (460 ms) bitince kalanı kare başına birkaç.
+  static const _kFirstRows = 16;
+  static const _kRowsPerFrame = 8;
+  static const _kGrowAfter = Duration(milliseconds: 500);
+
+  /// Kurulacak en çok madde (işaretsizler önce, sonra işaretliler); null = hepsi.
+  int? _rowBudget;
+  Timer? _budgetTimer;
+
+  void _growBudget() {
+    _budgetTimer = null;
+    final budget = _rowBudget;
+    if (!mounted || budget == null) return;
+    setState(() {
+      final next = budget + _kRowsPerFrame;
+      _rowBudget = next >= _items.length ? null : next;
+    });
+    if (_rowBudget != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _growBudget());
+    }
   }
 
   /// **İŞARETLİLER 10'AR** (kullanıcı isteği 2026-11-03: "çok işaretli
@@ -657,6 +686,7 @@ class ItemsEditorState extends State<ItemsEditor>
 
   @override
   void dispose() {
+    _budgetTimer?.cancel();
     _autoScroll?.dispose();
     for (final c in _controllers.values) {
       c.dispose();
@@ -1648,11 +1678,20 @@ class ItemsEditorState extends State<ItemsEditor>
           ]
         : const <NoteItem>[];
     // Sürüklenebilir liste ile [_reorder]'ın eşlemesi AYNI süzgeçten geçmeli.
-    final listItems = _visibleItems();
+    var listItems = _visibleItems();
+    // Yalnız ÖNEK kurulur: sürükleme dizinleri [_reorder]'ın eşlemesiyle örtüşür.
     final checkedCount = checkedItems.length;
     final checkedHidden = math.max(0, checkedCount - _checkedShown);
     if (checkedHidden > 0) {
       checkedItems = checkedItems.sublist(0, _checkedShown);
+    }
+    final budget = _rowBudget;
+    if (budget != null) {
+      if (listItems.length > budget) listItems = listItems.sublist(0, budget);
+      final left = budget - listItems.length;
+      if (checkedItems.length > left) {
+        checkedItems = checkedItems.sublist(0, left);
+      }
     }
 
     // "Yeni öğe" LİSTENİN İÇİNDE, işaretsizlerin hemen altında (eski yeri).

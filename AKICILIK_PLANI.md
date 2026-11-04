@@ -167,8 +167,9 @@ zamanlama yamaları.
   yazma, kart ızgarasında arama sorgusu değişimi. Bütçe p90 build < 8 ms →
   **bugün KIRMIZI olmalı** (K1/K2'yi yakaladığını göster); Faz 21/24 sonrası yeşil.
   **Yapıldı (2026-11-04):** veri setine 10 uzun gövde (300–600 satır) + 120 maddelik liste; yeni senaryolar `editor_typing_30kb` (30 KB'ta 100 tuş) ve `dashboard_search` ("önemli" yaz-sil ×3). Bütçe F27.4 ile p90/p99/en kötü. İlk `[perf]` koşusu (41785838651, Ek B): dördü de bütçe İÇİNDE — **beklenen kırmızı GÖRÜLMEDİ.** 30 KB senaryosu K2'yi yakalamıyor: `enterText` IME kanalını (Java `commitText`, telefonda tuş başına maliyetin büyüğü) atlıyor, x86 emülatörde yerleşim hızlı; arama senaryosu F21.6 SONRASI ölçüldü (öncesi yok). K2'yi CI'da yakalamak için gerçek IME yolu (`TestTextInput` yerine platform kanalı) ya da cihaz gerekir — **sabah bakılacak**; telefondaki ölçüm KALANLAR §2 #38. Ayrıca koşucu diski doldu (41784350487) → perf işine "Disk aç" adımı.
-- [ ] **F20.4 Taban çizelgesi** bu dosyadaki tablo; her faz sonunda aynı
+- [x] **F20.4 Taban çizelgesi** bu dosyadaki tablo; her faz sonunda aynı
   senaryolarla yeni satır (Ek B).
+  **Yapıldı (2026-11-04):** `tool/perf/taban.py <etiket>` Ek B'nin bütün sütunlarını tek koşuda üretir (v1.1.661 satırı). Sonraki Tema/Tutarlılık oturumları aynı komutla satır ekler.
 
 ## FAZ 21 — Ana ekran kartı: önizlemeyi kırp, kart başına işi azalt (K1, K6)
 
@@ -453,7 +454,10 @@ Ayrıntı ve komutlar: `tool/perf/README.md`. Özet:
 | 2026-11-03 | v1.1.613 | %6,5 / 99–115 ms | 99 ms (12/12) | 27–56 ms | 90–110 ms LAYOUT, 4,6 fps | ~770 ms / 313–396 ms |
 | 2026-11-04 | profil, main (F21–F27 bulut kodu) | %2,3 / 50 ms | animasyon 17 ms, en çok 1×33 ms (bkz. not) | en kötü kare 21 ms | 122 ms LAYOUT | TotalTime 1315–2273 / 587–654 ms |
 | 2026-11-04 | profil, F24.2 + F25.2 | — | — | — | LAYOUT p90 11 ms, 1/46 kare bütçe üstü (pencereye giriş ~195 ms, bir kez) | TotalTime 1518–1586 = İLK KARE İÇERİK (önce ilk kare iskelet 1315–1411, içerik ~2,5 sn); ardından ~750 ms Firestore bekleme (ekran sabit, içerik görünür) |
+| 2026-11-04 | **v1.1.661 release — ZİNCİR TABANI** (Tema/Tutarlılık bununla karşılaştırır; `tool/perf/taban.py`, 230 not, dikey) | %3,5 / 49,7 ms (39 kayıp vsync) | animasyon 33 ms (son aralık ~99 ms bekleme, takılma değil); 120 maddede 50 ms ×3 | ana blok en uzun 90 ms, >16 ms 12 blok | ana blok en uzun 164 ms, >16 ms 35 blok | TotalTime 690–880 / 198–264 ms |
 | 2026-11-03 | profil, Faz 21 öncesi → sonrası | %8,4 / 115 ms → %3,5 / 50–66 ms (1. tur) → %3,4–4,2 / 33–50 ms (2. tur) | — | — | — | — |
+
+**Taban ayrıntısı (v1.1.661):** açma en kötü aralık kısa 33–50, görselli 33–50, 500 satır 33–66 ms; 120 maddede 680–697 ms görünen aralık DA yanılgı: donma değil, ilk 12 madde çizilip 1100 ms bekleme boşluğu (profilde en uzun kare 97 ms). Yazma sütunlarında SF aralığı boşta beklemeyi de sayar; güvenilir sayı ana blok ve profil LAYOUT'u.
 
 **ÖLÇÜM YANILGISI (2026-11-04):** kapanıştaki "99–117 ms donma" takılma DEĞİL: SF aralığı son animasyon karesi → ~120 ms sonraki yetişme karesi; ekranda değişen yok, animasyon boyunca 17 ms. `analyze()` boşta bekleme eşiği (250 ms) bunu takılma sayıyor; kapanışta aralıkları sırayla oku.
 
