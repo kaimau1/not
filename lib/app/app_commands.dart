@@ -11,7 +11,7 @@ import '../features/notes/data/notes_repository.dart';
 import '../features/notes/domain/note_type.dart';
 import '../features/notes/presentation/notes_providers.dart';
 import 'router.dart';
-import 'split_shell.dart' show isNoteLocation;
+import 'split_shell.dart' show isNoteLocation, noteFullscreenProvider;
 
 /// **UYGULAMA KOMUTLARI** — gezinme rayı, klavye kısayolları ve boş sağ
 /// panel aynı işleri (yeni not, arama, bölüm değiştirme) yapıyor; üç yerde
@@ -129,6 +129,18 @@ void openSection(GoRouter router, AppSection section) {
   }
 }
 
+/// **ANA SAYFAYA DÖN** (F28.3): her ekrandan tek dokunuşla `/`. Yığın
+/// TEMİZLENİR (`go`); açık not editörü sökülürken kaydını kendisi yazar
+/// (dispose'ta flush). Tam ekran kipi de kapanır ki liste gizli kalmasın.
+void goHome(WidgetRef ref, GoRouter router) {
+  ref.read(noteFullscreenProvider.notifier).set(false);
+  router.go('/');
+}
+
+/// Dar web'de üst "Ana sayfa" çubuğu açık mı (telefonda kapalı — yalnız web).
+/// Testte değiştirilebilir.
+bool homeBarOnNarrow = kIsWeb;
+
 /// Yeni not oluşturup AÇ — rayın "+" düğmesi, Ctrl+N ve boş sağ panelin
 /// düğmeleri. Ana ekranda seçili klasör varsa not oraya doğar (hızlı ekle
 /// menüsüyle aynı kural).
@@ -192,6 +204,7 @@ List<({String keys, String label})> shortcutHelpRows(BuildContext context) {
     (keys: 'Ctrl + \\', label: l10n.shortcutToggleList),
     (keys: 'Ctrl + ,', label: l10n.settings),
     (keys: 'Alt + 1…8', label: l10n.shortcutSections),
+    (keys: 'Alt + Home', label: l10n.goHome),
     (keys: 'Ctrl + Shift + F', label: l10n.shortcutFullscreen),
     (keys: 'Esc', label: l10n.shortcutEscape),
     (keys: 'Alt + ↑ / ↓', label: l10n.shortcutAdjacentNote),
@@ -292,6 +305,8 @@ class AppShortcuts extends ConsumerWidget {
             openAdjacentNote(router, 1),
         const SingleActivator(LogicalKeyboardKey.keyW, control: true): () =>
             closeOpenNote(router),
+        const SingleActivator(LogicalKeyboardKey.home, alt: true): () =>
+            goHome(ref, router),
         for (final (i, section) in AppSection.values.indexed)
           SingleActivator(_digitKeys[i], alt: true): () =>
               openSection(router, section),

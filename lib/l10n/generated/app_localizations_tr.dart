@@ -3640,6 +3640,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shortcutCloseNote => 'Notu kapat';
 
   @override
+  String get goHome => 'Ana sayfaya dön';
+
+  @override
   String get loginFeatureSyncTitle => 'Her cihazda aynı notlar';
 
   @override

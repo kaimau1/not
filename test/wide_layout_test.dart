@@ -102,23 +102,22 @@ void main() {
     tester,
   ) async {
     final router = await _pump(tester, const Size(1280, 800));
-
-    await tester.tap(find.text('Arşiv'));
+    await tester.tap(find.byTooltip('Arşiv').first);
     await tester.pumpAndSettle();
     expect(currentLocation(router), '/archive');
     expect(find.text('sayfa:/archive'), findsOneWidget);
 
     // Bölümden bölüme: katman DEĞİŞİR, üst üste binmez.
-    await tester.tap(find.text('Ayarlar'));
+    await tester.tap(find.byTooltip('Ayarlar').first);
     await tester.pumpAndSettle();
     expect(currentLocation(router), '/settings');
     router.pop();
     await tester.pumpAndSettle();
     expect(currentLocation(router), '/');
 
-    await tester.tap(find.text('Çöp Kutusu'));
+    await tester.tap(find.byTooltip('Çöp Kutusu').first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Notlar'));
+    await tester.tap(find.byTooltip('Notlar').first);
     await tester.pumpAndSettle();
     expect(currentLocation(router), '/');
     expect(router.canPop(), isFalse);
@@ -169,6 +168,9 @@ void main() {
     await tester.tap(find.text('Klasörler'));
     await tester.pumpAndSettle();
     expect(currentLocation(router), '/folders');
+    // Ray kayar (ana sayfa düğmesi eklendi, F28.3): önce görünür kıl.
+    await tester.ensureVisible(find.byTooltip('Arşiv').first);
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Arşiv').first);
     await tester.pumpAndSettle();
     expect(currentLocation(router), '/archive');
