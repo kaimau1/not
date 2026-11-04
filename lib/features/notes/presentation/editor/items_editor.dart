@@ -8,6 +8,7 @@ import 'package:flutter/rendering.dart' show RenderFlex;
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/frame_loop.dart';
 import '../../../../core/widgets/note_route_closing.dart';
@@ -298,6 +299,11 @@ class ItemsEditorState extends State<ItemsEditor>
   /// Konu dosyalarındaki uzantılar (`items_editor_*.dart`) için `setState`:
   /// korumalı üye uzantıdan doğrudan çağrılamaz (editördeki `_update`).
   void _update(VoidCallback fn) => setState(fn);
+
+  /// Notun vurgusu (kartla AYNI kural, bkz. [NoteAccent]): kutucuk, "Yeni
+  /// madde" ve ayırıcı bundan çizilir. build'de en yakın [NoteAccent]'ten
+  /// okunur; yoksa (başka ekran, test) temanın vurgusu.
+  NoteAccent? _accent;
 
   static const _uuid = Uuid();
 
@@ -1489,6 +1495,10 @@ class ItemsEditorState extends State<ItemsEditor>
   /// giderildi.
   Widget _addItemButton(AppLocalizations l10n) => TextButton.icon(
     key: const ValueKey('items-add-button'),
+    // Kutucuklarla aynı renk (bkz. [_accent]).
+    style: _accent?.accent == null
+        ? null
+        : TextButton.styleFrom(foregroundColor: _accent!.accent),
     onPressed: _addItem,
     icon: const Icon(Icons.add, size: 20),
     label: Text(l10n.newItemHint),
@@ -1673,6 +1683,9 @@ class ItemsEditorState extends State<ItemsEditor>
   void _syncRowCache(ThemeData theme, AppLocalizations l10n) {
     final env = (
       theme.colorScheme,
+      // Notun vurgusu (rengi değişince kutucuklar yeniden çizilsin).
+      _accent?.accent,
+      _accent?.background,
       widget.textStyle,
       widget.richTheme,
       widget.showCheckboxes,
@@ -1715,6 +1728,7 @@ class ItemsEditorState extends State<ItemsEditor>
     final scheme = theme.colorScheme;
     final l10n = context.l10n;
     final showChecks = widget.showCheckboxes;
+    _accent = NoteAccent.maybeOf(context);
     // Satır önbelleğinin liste düzeyi girdileri (bkz. [_rowCache]).
     _syncRowCache(theme, l10n);
     // Ek listesi değişince (ek silindi/eklendi) etiketin kırmızı çizilip

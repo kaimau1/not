@@ -259,6 +259,64 @@ class ThemeFamilyKey {
   int get hashCode => Object.hash(family, card);
 }
 
+/// **NOTUN VURGUSU — KART VE AÇIK NOT AYNI** (kullanıcı bulgusu 2026-11-04,
+/// ekran görüntüleriyle: "notun açık hali ile dashboarddaki görüntüsü
+/// farklı"). KÖK NEDEN: TEMA_PLANI F31.3 kartta kutucuk, etiket, klasör ve
+/// raptiyeyi notun KENDİ koyu tonuyla ([NoteColors.noteInk]) çizdi; editör
+/// aynı öğeleri temanın vurgusuyla (`primary`) çizmeye devam etti — koyu
+/// pembe bir notta kart pembe, açık not petrol yeşili kutucuk gösteriyordu.
+///
+/// Kural tek: [accent] renkli notta notun koyu tonu, renksiz/temalı notta
+/// null (temanın rengi). Kart ve editör bu sarmalayıcıyı DIŞ temadan
+/// hesaplanmış değerle kurar (zıt okunurluk teması içeride yanlış zemin
+/// hesaplardı). Kutucuk renkleri [NoteCheckColors]'tan okunur; etiket,
+/// klasör ve hatırlatıcı hapları yazı + çerçeve olarak [accent]'ten.
+class NoteAccent extends InheritedWidget {
+  const NoteAccent({
+    super.key,
+    required this.accent,
+    required this.background,
+    required super.child,
+  });
+
+  /// Notun koyu tonu; null = renksiz not (temanın vurgusu).
+  final Color? accent;
+
+  /// Notun gerçek zemini ([NoteColors.noteSurface]).
+  final Color background;
+
+  static NoteAccent? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<NoteAccent>();
+
+  @override
+  bool updateShouldNotify(NoteAccent oldWidget) =>
+      oldWidget.accent != accent || oldWidget.background != background;
+}
+
+/// Madde kutucuğunun renkleri — kartta ve editörde AYNI kural (bkz.
+/// [NoteAccent]). İşaretli kutu notun vurgusuyla DOLU ve soluk (üstü çizili
+/// yazıyla aynı oran), boş kutu ince çerçeve.
+abstract final class NoteCheckColors {
+  /// İşaretli maddenin soluklaştırma oranı (yazı ve kutu birlikte; F15.6:
+  /// 0,55'te üstü çizili yazı açık temada 2,8:1'e düşüyordu).
+  static const double checkedDim = 0.8;
+
+  /// İşaretli kutunun dolgusu (soluk hâli dahil).
+  static Color checked(ColorScheme scheme, Color? accent) {
+    final c = accent ?? scheme.primary;
+    return c.withValues(alpha: c.a * checkedDim);
+  }
+
+  /// Boş kutunun çerçevesi.
+  static Color unchecked(ColorScheme scheme, Color? accent) =>
+      accent ?? scheme.onSurfaceVariant;
+
+  /// İşaretin (✓) rengi: dolgunun üstünde zemin rengi — kartın simgesindeki
+  /// "oyuk" onay işaretiyle aynı görünüm. Renksiz notta temanın `onPrimary`.
+  static Color mark(ColorScheme scheme, Color? accent, Color background) =>
+      accent == null ? scheme.onPrimary : background;
+}
+
 /// [background] üstündeki içeriği okunur temayla çizer: zemin temanın
 /// yazısıyla okunmuyorsa ([NoteColors.inkThemeFor]) çocuk ZIT temada kurulur.
 /// Gerekmiyorsa çocuk olduğu gibi döner (ek katman yok — ızgarada onlarca

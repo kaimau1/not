@@ -12,6 +12,13 @@ import 'package:flutter/widgets.dart';
 ///
 /// [spanFor], verilen yazı boyunda alanın ÇİZECEĞİ metni döner (biçim
 /// işaretleri gizli, kalın/italik dahil) — ölçüm gerçek çizimle aynı olsun.
+/// `TextField`ın metne GERÇEKTEN verdiği stil: Material 3'te alan kendi
+/// stilini temanın `bodyLarge`ının üstüne birleştirir (`TextField` →
+/// `_m3InputStyle`). Ölçüm bununla yapılmazsa başlığın vermediği her özellik
+/// (harf aralığı 0,5, yazı özellikleri) ölçüme girmez, çizime girer.
+TextStyle fieldMergedStyle(TextStyle? fieldDefault, TextStyle style) =>
+    (fieldDefault ?? const TextStyle()).merge(style);
+
 double fitTitleFontSize({
   required InlineSpan Function(double fontSize) spanFor,
   required double maxWidth,

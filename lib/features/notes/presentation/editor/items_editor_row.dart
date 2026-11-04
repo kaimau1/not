@@ -5,7 +5,7 @@ part of 'items_editor.dart';
 /// 0.55 → 0.8 (F15.6, 2026-10-31): 0.55'te üstü çizili madde metni açık
 /// temada ~2,8:1'e düşüyordu (WCAG 4,5:1). Üstü çizgi + soluk ton "bitti"
 /// demeye yine yetiyor.
-const double _kCheckedDim = 0.8;
+const double _kCheckedDim = NoteCheckColors.checkedDim;
 
 /// [color]ın alfasını [factor] ile çarpar — katmansız solma.
 Color _dimmed(Color color, double factor) =>
@@ -163,12 +163,25 @@ extension _ItemsRow on ItemsEditorState {
                   ? context.l10n.itemEmptyLabel
                   : item.text.trim(),
               // Soluk işaretli kutu (satır katmanı yok — bkz. [_kCheckedDim]).
+              // Renk KARTLA AYNI kural (bkz. [NoteCheckColors]): renkli notta
+              // notun koyu tonu, renksizde temanın vurgusu.
               fillColor: checked
                   ? WidgetStatePropertyAll(
-                      _dimmed(scheme.primary, _kCheckedDim),
+                      NoteCheckColors.checked(scheme, _accent?.accent),
                     )
                   : null,
-              side: checked ? BorderSide.none : null,
+              checkColor: _accent == null
+                  ? null
+                  : NoteCheckColors.mark(
+                      scheme,
+                      _accent!.accent,
+                      _accent!.background,
+                    ),
+              side: checked
+                  ? BorderSide.none
+                  : (_accent?.accent == null
+                        ? null
+                        : BorderSide(color: _accent!.accent!, width: 2)),
               // Kutunun KENDİ kutusu 48 dp'lik dokunma hedefinden 40 dp'ye
               // iner: 48 dp'lik kutu ilk satırın ortasından her zaman daha
               // aşağıda kalıyordu (bkz. [leadingTop] — "madde kutuları
@@ -268,7 +281,7 @@ extension _ItemsRow on ItemsEditorState {
             ? null
             : _ItemDividerPainter(
                 item.divider,
-                scheme.primary.withValues(alpha: 0.75),
+                (_accent?.accent ?? scheme.primary).withValues(alpha: 0.75),
               ),
         child: Container(
           color: selected

@@ -2404,6 +2404,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Zemin temanın yazısıyla okunmuyorsa notun içi zıt temada (bkz.
     // [_editorInk]). `Theme.of` BURADA bilerek dış tema: karar dış temaya göre.
     _editorInk[context] = NoteColors.inkThemeFor(Theme.of(context), background);
+    // NOTUN VURGUSU — kartla AYNI (bkz. [NoteAccent]): kutucuk, "Yeni madde",
+    // etiket/klasör/hatırlatıcı hapları ve raptiye bu tondan. Dış temadan
+    // hesaplanır (zıt temada zemin yanlış hesaplanırdı).
+    final noteAccent = NoteColors.noteInk(context, note);
     // Çizilmiş tema varsa sayfa ve üst çubuk saydam: süsleme arkadan görünür
     // (bkz. NoteThemeBackdrop); alt çubuk temanın alt tonunda düz kalır.
     final themed = NoteThemes.byId(note.theme) != null;
@@ -2531,10 +2535,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         valueListenable: _titleController,
         builder: (context, _, _) => LayoutBuilder(
           builder: (context, box) {
+            // ÖLÇÜM ALANIN ÇİZDİĞİ STİLLE (kullanıcı bulgusu 2026-11-04:
+            // "uzun başlık sağdaki çipin altına giriyor"). KÖK NEDEN:
+            // TextField stili temanın `bodyLarge`ının ÜSTÜNE birleştirir;
+            // başlık stili harf aralığı vermediği için alan `bodyLarge`ın
+            // 0,5 aralığını miras alıyor, ölçüm ise aralıksız yapılıyordu —
+            // 34 harflik başlık ~17 px dar ölçülüp "sığdı" sayılıyordu.
+            final fieldStyle = fieldMergedStyle(
+              Theme.of(context).textTheme.bodyLarge,
+              titleBaseStyle,
+            );
             final fitted = fitTitleFontSize(
               spanFor: (size) => _titleController.buildTextSpan(
                 context: context,
-                style: titleBaseStyle.copyWith(fontSize: size),
+                style: fieldStyle.copyWith(fontSize: size),
                 withComposing: false,
               ),
               // İmleç ve iç dolgu payı.
@@ -2791,7 +2805,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     : Icons.new_label_outlined,
                 size: 20,
                 color: note.tags.isNotEmpty || note.reminderAt != null
-                    ? theme.colorScheme.primary
+                    ? (noteAccent ?? theme.colorScheme.primary)
                     : theme.colorScheme.onSurfaceVariant,
               ),
             )
@@ -2816,14 +2830,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 Icon(
                   tagged ? Icons.label : Icons.new_label_outlined,
                   size: 15,
-                  color: tagged ? scheme.primary : scheme.onSurfaceVariant,
+                  color: tagged
+                      ? (noteAccent ?? scheme.primary)
+                      : scheme.onSurfaceVariant,
                 ),
                 if (tagged) ...[
                   const SizedBox(width: 2),
                   Text(
                     '${note.tags.length}',
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: scheme.primary,
+                      color: noteAccent ?? scheme.primary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -2832,7 +2848,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 Icon(
                   alarmed ? Icons.alarm : Icons.alarm_add_outlined,
                   size: 15,
-                  color: alarmed ? scheme.primary : scheme.onSurfaceVariant,
+                  color: alarmed
+                      ? (noteAccent ?? scheme.primary)
+                      : scheme.onSurfaceVariant,
                 ),
                 if (canCollab) _collabMarker(theme),
               ],
@@ -2850,6 +2868,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // arasındaki dar banda sığmalı (bkz. [metaChips]).
     final chipLabelStyle = theme.textTheme.labelMedium?.copyWith(
       fontSize: 12.5,
+      // Renkli notta haplar notun koyu tonunda (kartın etiketiyle aynı).
+      color: noteAccent,
     );
 
     // BALONLU ⇄ KLASİK görünüm çipleri buradaydı (başlığın altında, etiket ve
@@ -2944,7 +2964,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         : Customizable(
             id: UiItem.editorTags,
             badgeInset: 8,
-            child: SizedBox(
+            // Renkli notta hapların çerçevesi, simgesi ve × işareti notun
+            // koyu tonunda (yazısı [chipLabelStyle]'da) — kartla aynı ton.
+            child: ChipTheme(
+              data: noteAccent == null
+                  ? theme.chipTheme
+                  : theme.chipTheme.copyWith(
+                      side: BorderSide(
+                        color: noteAccent.withValues(alpha: 0.45),
+                      ),
+                      deleteIconColor: noteAccent,
+                      iconTheme: IconThemeData(color: noteAccent, size: 14),
+                    ),
+              child: SizedBox(
               height: 36,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
@@ -2954,6 +2986,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 itemBuilder: (context, i) =>
                     Align(child: metaChildren[i]),
               ),
+            ),
             ),
           );
 
@@ -4101,6 +4134,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // arkasında; sayfa ve üst çubuk saydamlaşır.
           child: NoteThemeBackdrop(
           themeId: note.theme,
+          // Notun vurgusu alt ağaca (madde kutucukları, "Yeni madde") —
+          // kartla aynı kaynak (bkz. [NoteAccent]).
+          child: NoteAccent(
+          accent: noteAccent,
+          background: background,
           // Ağaç şekli hep aynı (Theme her zaman var): renk eşiği aşılınca
           // editörün alt ağacı yeniden kurulmasın (odak/kaydırma korunur).
           child: Theme(
@@ -4314,6 +4352,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   isSelected: note.pinned,
                   icon: Icon(
                     note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                    // Sabitli not: kartın raptiyesiyle AYNI renk (notun
+                    // koyu tonu, renksizde temanın sıcak vurgusu).
+                    color: note.pinned
+                        ? (noteAccent ?? _themeOf(context).colorScheme.secondary)
+                        : null,
                   ),
                   onPressed: () => _mutate(
                     (n) => n.copyWith(pinned: !n.pinned),
@@ -4467,7 +4510,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               ),
             ),
           ),
-        )),
+        ))),
         ),
         ),
       ),
