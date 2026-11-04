@@ -17,6 +17,7 @@ import '../../../app/theme/note_colors.dart';
 import '../../../core/utils/rich_text.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
+import 'editor/title_fit.dart';
 import '../../../core/widgets/app_sheet.dart';
 
 /// Çöp kutusu: silinen notlar geri alınabilir veya kalıcı silinebilir.
@@ -254,12 +255,16 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
               gridDelegate: grid,
               delegate: SliverChildBuilderDelegate(
                 // Koyu özel renkli notun kartı zıt temada (okunurluk —
-                // bkz. NoteInkScope); karar dış temaya göre.
-                (context, index) => NoteInkScope(
+                // bkz. NoteInkScope); karar ve vurgu dış temaya göre.
+                (context, index) => NoteAccent(
+                  accent: NoteColors.noteInk(context, list[index]),
                   background: NoteColors.noteSurface(context, list[index]),
-                  child: _TrashCard(
-                    key: ValueKey('trash-${list[index].id}'),
-                    note: list[index],
+                  child: NoteInkScope(
+                    background: NoteColors.noteSurface(context, list[index]),
+                    child: _TrashCard(
+                      key: ValueKey('trash-${list[index].id}'),
+                      note: list[index],
+                    ),
                   ),
                 ),
                 childCount: list.length,
@@ -472,6 +477,7 @@ class _TrashCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final muted = scheme.onSurfaceVariant;
+    final accent = NoteAccent.maybeOf(context)?.accent;
     final small = theme.textTheme.bodySmall?.copyWith(
       color: scheme.onSurface.withValues(alpha: 0.8),
       height: 1.35,
@@ -517,7 +523,10 @@ class _TrashCard extends ConsumerWidget {
                       ? Icons.check_box
                       : Icons.check_box_outline_blank,
                   size: 14,
-                  color: muted,
+                  // Kart ve editörle aynı kural (F37.3).
+                  color: item.checked
+                      ? NoteCheckColors.checked(scheme, accent)
+                      : NoteCheckColors.unchecked(scheme, accent),
                 ),
                 const SizedBox(width: 6),
                 Expanded(
@@ -596,9 +605,7 @@ class _TrashCard extends ConsumerWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: noteTitleStyle(theme, note, fontSize: 16),
               ),
             ),
             Expanded(

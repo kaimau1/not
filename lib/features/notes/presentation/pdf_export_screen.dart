@@ -245,6 +245,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
   /// PDF byte'larını üretir. Diske/blob'a yazmayı çağıran taraf yapar —
   /// web ve masaüstü/mobil farklı hedeflere yazdığı için ayrıldı.
   Future<Uint8List?> _generateBytes() async {
+    final style = PdfNoteStyle.forNote(Theme.of(context), widget.note);
     setState(() => _busy = true);
     try {
       return await NotePdf.build(
@@ -253,6 +254,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
         date: _date,
         images: await _loadImages(),
         palette: NoteColors.richPalette,
+        style: style,
       );
     } catch (e) {
       if (mounted) _showError(e);

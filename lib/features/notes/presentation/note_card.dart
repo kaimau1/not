@@ -35,6 +35,7 @@ import '../data/drive_store.dart' show localFilesRevisionProvider;
 import 'card_preview.dart';
 import 'search_highlight.dart';
 import 'editor/notebook_paper.dart';
+import 'editor/title_fit.dart';
 import 'note_actions_sheet.dart';
 import 'item_divider_style.dart';
 import 'note_card_media.dart';
@@ -64,7 +65,7 @@ double estimateNoteCardHeight(Note note, double width) {
 
   var height = 20.0; // dikey dolgu (10 + 10)
   if (note.title.trim().isNotEmpty) {
-    height += lines(note.title, 2) * 17.0 + 6;
+    height += lines(note.title, 2) * 21.0 + 6;
   }
   if (note.locked) {
     height += 18;
@@ -145,6 +146,29 @@ String formatNoteDate(DateTime date) {
   }
   if (date.year == now.year) return _dateFormat('d MMM').format(date);
   return _dateFormat('d MMM y').format(date);
+}
+
+/// Karttaki yakın hatırlatıcı (F37.2): önümüzdeki 48 saat içindeyse "yarın
+/// 15:17", yoksa null (yalnız simge). Kart yeniden kurulurken hesaplanır
+/// ([formatNoteDate] gibi).
+// ponytail: saat geçince kart yeniden kurulana dek etiket bayat kalır; dakikalık
+// zamanlayıcı kart başına abonelik demek (F21.4 bütçesi).
+String? cardReminderLabel(AppLocalizations l10n, DateTime at, DateTime now) {
+  if (at.isBefore(now) || at.difference(now) > const Duration(hours: 48)) {
+    return null;
+  }
+  final clock = _dateFormat('HH:mm').format(at);
+  // UTC gün farkı: yaz saati geçişinde 23 saatlik gün 0 sayılmasın.
+  final days = DateTime.utc(
+    at.year,
+    at.month,
+    at.day,
+  ).difference(DateTime.utc(now.year, now.month, now.day)).inDays;
+  return switch (days) {
+    0 => '${l10n.dateToday.toLowerCase()} $clock',
+    1 => '${l10n.dateTomorrow.toLowerCase()} $clock',
+    _ => '${_dateFormat('E').format(at)} $clock',
+  };
 }
 
 /// Testlerin (ve dil kataloğu değişirse çalışma anının) önbelleği
@@ -623,16 +647,25 @@ class NoteCard extends ConsumerWidget {
           Icon(Icons.star, size: 13, color: accent ?? scheme.secondary),
         if (!note.locked && note.aiSummary != null)
           Icon(Icons.auto_awesome, size: 13, color: scheme.primary),
-        if (note.reminderAt != null)
-          Icon(Icons.alarm, size: 13, color: scheme.onSurfaceVariant),
         // ORTAK NOT: başkalarıyla paylaşılan (ya da bana paylaşılmış) not
         // kartında da belli olsun — Keep'teki ortak çalışan simgesi gibi.
         if (shared) Icon(Icons.people_alt, size: 13, color: scheme.primary),
         // YALNIZ BU CİHAZDA (senkron kapalı) — kart bakışta söylesin.
         if (note.localOnly)
           Icon(Icons.cloud_off_outlined, size: 13, color: scheme.tertiary),
+        // Hatırlatıcı en sonda: yakınsa yanında saati (F37.2), editörün
+        // çipiyle aynı simge ve ton.
+        if (note.reminderAt != null)
+          Icon(
+            note.reminderRepeat.isEmpty ? Icons.alarm : Icons.repeat,
+            size: 13,
+            color: accent ?? scheme.onSurfaceVariant,
+          ),
       ],
     ];
+    final reminderLabel = display.statusIcons && note.reminderAt != null
+        ? cardReminderLabel(context.l10n, note.reminderAt!, DateTime.now())
+        : null;
     final showTag = display.tag && note.tags.isNotEmpty;
     final showDate = display.date && note.updatedAt != null;
     // Üst satır yalnızca başlık varsa çizilir. Başlıksız notta (madde 5) boş
@@ -704,12 +737,12 @@ class NoteCard extends ConsumerWidget {
                 rich: richPreview,
                 maxLines: 2,
                 background: background,
-                // Başlık kartta da KENDİ yazı tipini kullanır (gövdeninkini
-                // değil): başlığın yazı tipi artık gövdeden bağımsız.
-                style: applyNoteFont(
-                  (_cardThemeOf(context).textTheme.titleSmall ?? const TextStyle())
-                      .copyWith(fontWeight: FontWeight.w600),
-                  note.titleFontFamily,
+                // Editör başlığının ailesi, ağırlığı, aralığı (K9, F37.1); boyu
+                // 24 → 16, notun başlık ölçeğiyle oranlı.
+                style: noteTitleStyle(
+                  _cardThemeOf(context),
+                  note,
+                  fontSize: 16 * note.titleFontScale.clamp(0.8, 1.4),
                 ),
               ),
             ),
@@ -787,8 +820,28 @@ class NoteCard extends ConsumerWidget {
                     padding: const EdgeInsetsDirectional.only(end: 4),
                     child: icon,
                   ),
+                // Oranlar: boşluğu Spacer'la eşit bölüşen etiket yer varken
+                // "bugün 1…" diye kesiliyordu (tur, F37.2).
+                if (reminderLabel != null)
+                  Flexible(
+                    flex: 8,
+                    child: Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 6),
+                      child: Text(
+                        reminderLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: accent ?? scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
                 if (showTag)
                   Flexible(
+                    flex: 3,
                     child: Text(
                       '#${note.tags.first}',
                       maxLines: 1,
@@ -1802,13 +1855,17 @@ class NoteListRow extends ConsumerWidget {
 
   /// Satırın solu: notun görseli/videosu varsa küçük resmi (video oynat
   /// işaretiyle), yoksa tür simgesi. Kilitli notta hep simge.
-  Widget _rowLeading(ColorScheme scheme, {required bool showMedia}) {
+  Widget _rowLeading(
+    ColorScheme scheme,
+    Color? accent, {
+    required bool showMedia,
+  }) {
     final media = note.locked || note.cardMediaHidden || !showMedia
         ? null
         : CardMediaPlan.of(note, showFiles: false);
     final visual = media?.hero ?? media?.strip.firstOrNull;
     if (visual == null) {
-      return Icon(_icon, size: 20, color: scheme.onSurfaceVariant);
+      return Icon(_icon, size: 20, color: accent ?? scheme.onSurfaceVariant);
     }
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
@@ -1848,102 +1905,148 @@ class NoteListRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = _cardThemeOf(context).colorScheme;
+    // Satır notun küçük kopyası (F37.3): zemin, okunurluk teması ve vurgu kartla
+    // aynı kaynaktan. Seçiliyken zemin seçim rengi, içerik temanın.
+    final outer = Theme.of(context);
+    final background = selected
+        ? outer.colorScheme.secondaryContainer
+        : NoteColors.noteSurface(context, note);
+    final inkTheme = NoteColors.inkThemeFor(outer, background);
+    _cardInk[context] = inkTheme;
+    final theme = _cardThemeOf(context);
+    final scheme = theme.colorScheme;
+    final accent = selected ? null : NoteColors.noteInk(context, note);
     final preview = _preview(
       context,
       hideSensitive: ref.watch(cardHideSensitiveProvider),
     );
     final display = ref.watch(cardDisplayProvider);
+    final reminderLabel = display.statusIcons && note.reminderAt != null
+        ? cardReminderLabel(context.l10n, note.reminderAt!, DateTime.now())
+        : null;
+    final row = Container(
+      constraints: const BoxConstraints(minHeight: 64),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _rowLeading(scheme, accent, showMedia: display.media),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  note.displayTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: noteTitleStyle(
+                    theme,
+                    note,
+                    fontSize: 15 * note.titleFontScale.clamp(0.8, 1.2),
+                  ),
+                ),
+                if (preview.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    preview,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (display.date && note.updatedAt != null)
+                Text(
+                  formatNoteDate(note.updatedAt!),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (display.tag && note.tags.isNotEmpty)
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 72),
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.only(end: 4),
+                        child: Text(
+                          '#${note.tags.first}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: accent ?? scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (display.statusIcons) ...[
+                    if (note.pinned)
+                      Icon(
+                        Icons.push_pin,
+                        size: 13,
+                        color: accent ?? scheme.secondary,
+                      ),
+                    if (note.starred)
+                      Icon(
+                        Icons.star,
+                        size: 13,
+                        color: accent ?? scheme.secondary,
+                      ),
+                    if (note.reminderAt != null)
+                      Icon(
+                        note.reminderRepeat.isEmpty
+                            ? Icons.alarm
+                            : Icons.repeat,
+                        size: 13,
+                        color: accent ?? scheme.onSurfaceVariant,
+                      ),
+                    if (reminderLabel != null)
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(start: 3),
+                        child: Text(
+                          reminderLabel,
+                          maxLines: 1,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: accent ?? scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
     return Material(
-      color: selected
-          ? scheme.secondaryContainer
-          : AppTokens.fromTheme(_cardThemeOf(context)).card,
+      color: background,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: selectionActive
             ? () => ref.read(selectedNoteIdsProvider.notifier).toggle(note.id)
             : () => openNoteRoute(context, note),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 64),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _rowLeading(scheme, showMedia: display.media),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      note.displayTitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (preview.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        preview,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (display.date && note.updatedAt != null)
-                    Text(
-                      formatNoteDate(note.updatedAt!),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  const SizedBox(height: 4),
-                  if (display.statusIcons)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (note.pinned)
-                          Icon(
-                            Icons.push_pin,
-                            size: 13,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        if (note.starred)
-                          Icon(
-                            Icons.star,
-                            size: 13,
-                            color: Colors.amber.shade600,
-                          ),
-                        if (note.reminderAt != null)
-                          Icon(
-                            Icons.alarm,
-                            size: 13,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                      ],
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
+        child: inkTheme == null ? row : Theme(data: inkTheme, child: row),
       ),
     );
   }

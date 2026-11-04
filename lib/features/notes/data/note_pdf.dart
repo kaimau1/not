@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'dart:ui' show Color, Offset, Rect;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show Brightness, ThemeData;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
@@ -11,8 +12,13 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
+import '../../../app/theme/app_theme.dart';
+import '../../../app/theme/note_colors.dart';
+import '../../../app/theme/note_themes.dart';
+import '../../../core/utils/color_contrast.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/utils/web_blob.dart';
+import '../domain/note.dart';
 
 /// Notu paylaşılabilir bir PDF'e çevirir (Syncfusion — uygulamadaki TEK PDF
 /// yazma kütüphanesi; görüntüleme pdfrx'te).
@@ -39,6 +45,7 @@ abstract final class NotePdf {
     DateTime? date,
     List<ExportImage> images = const [],
     List<Color> palette = const [],
+    PdfNoteStyle style = const PdfNoteStyle(),
   }) async {
     final fontBytes = await rootBundle.load(fontAsset);
     final boldBytes = await rootBundle.load(boldFontAsset);
@@ -56,6 +63,7 @@ abstract final class NotePdf {
         italicBytes: italicBytes,
         // `Color` izolede tema olmadan anlamsız: ARGB tamsayısı taşınır.
         palette: [for (final c in palette) c.toARGB32()],
+        style: style,
       ),
     );
   }
@@ -248,6 +256,14 @@ class _PdfWriter {
   void _newPage() {
     _page = doc.pages.add();
     _y = _top;
+    final fill = r.style.page;
+    if (fill != null) {
+      final size = _page.getClientSize();
+      _page.graphics.drawRectangle(
+        brush: PdfSolidBrush(_pdfColor(fill)),
+        bounds: Rect.fromLTWH(0, 0, size.width, size.height),
+      );
+    }
   }
 
   void _ensure(double h) {
@@ -265,12 +281,12 @@ class _PdfWriter {
     }
     if (r.dateLabel != null) {
       _y += 4;
-      _plain(r.dateLabel!, 9.5, PdfColor(117, 117, 117));
+      _plain(r.dateLabel!, 9.5, _pdfColor(r.style.muted));
     }
     if (title.isNotEmpty || r.dateLabel != null) {
       _y += 12;
       _page.graphics.drawLine(
-        PdfPen(PdfColor(189, 189, 189)),
+        PdfPen(_pdfColor(r.style.rule)),
         Offset(_left, _y),
         Offset(_pageWidth - _right, _y),
       );
@@ -295,7 +311,7 @@ class _PdfWriter {
       page.graphics.drawString(
         '${i + 1} / $count',
         font,
-        brush: PdfSolidBrush(PdfColor(117, 117, 117)),
+        brush: PdfSolidBrush(_pdfColor(r.style.muted)),
         bounds: Rect.fromLTWH(
           _left,
           size.height - _bottom - 12,
@@ -443,7 +459,7 @@ class _PdfWriter {
             _page.graphics.drawString(
               line.marker,
               _font(false, false, _bodySize),
-              brush: PdfSolidBrush(PdfColor(97, 97, 97)),
+              brush: PdfSolidBrush(_pdfColor(r.style.muted)),
               bounds: Rect.fromLTWH(x, y, 20, _bodySize * 1.3),
             );
           },
@@ -458,7 +474,7 @@ class _PdfWriter {
             _page.graphics.drawString(
               '•',
               _font(false, false, _bodySize),
-              brush: PdfSolidBrush(PdfColor(0, 0, 0)),
+              brush: PdfSolidBrush(_pdfColor(r.style.ink)),
               bounds: Rect.fromLTWH(x, y, 14, _bodySize * 1.3),
             );
           },
@@ -498,12 +514,15 @@ class _PdfWriter {
     final g = _page.graphics;
     final box = Rect.fromLTWH(x, y, 11, 11);
     g.drawRectangle(
-      pen: PdfPen(PdfColor(120, 144, 156), width: .8),
-      brush: checked ? PdfSolidBrush(PdfColor(69, 90, 100)) : null,
+      pen: PdfPen(
+        _pdfColor(checked ? r.style.checkFill : r.style.checkBorder),
+        width: .8,
+      ),
+      brush: checked ? PdfSolidBrush(_pdfColor(r.style.checkFill)) : null,
       bounds: box,
     );
     if (checked) {
-      final pen = PdfPen(PdfColor(255, 255, 255), width: 1.4);
+      final pen = PdfPen(_pdfColor(r.style.checkMark), width: 1.4);
       g
         ..drawLine(
           pen,
@@ -619,10 +638,14 @@ class _PdfWriter {
         ? null
         : palette[(mark.color! - 1).clamp(0, palette.length - 1)];
     final color = argb != null
-        ? PdfColor((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF)
-        : strike
-        ? PdfColor(117, 117, 117)
-        : PdfColor(0, 0, 0);
+        // Renkli yazı zemine göre okunur (ekrandaki `markStyle` kuralı).
+        ? _pdfColor(
+            readableOn(
+              Color(argb).withAlpha(255),
+              Color(r.style.page ?? 0xFFFFFFFF),
+            ).toARGB32(),
+          )
+        : _pdfColor(strike ? r.style.muted : r.style.ink);
     return (
       font: _font(
         mark.bold,
@@ -650,6 +673,64 @@ class _Run {
   _Run copy(String text) => _Run(text, font, brush, size, opacity);
 }
 
+PdfColor _pdfColor(int argb) =>
+    PdfColor((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF);
+
+/// Notun PDF'teki renkleri (F37.4): ekranla AYNI kural ([NoteColors],
+/// [NoteCheckColors]). ARGB tamsayıları: izoleye tema taşınmaz. Varsayılan
+/// beyaz kâğıt, siyah yazı (notla ilgisiz belge, ör. metin eki → balonlu).
+class PdfNoteStyle {
+  const PdfNoteStyle({
+    this.page,
+    this.ink = 0xFF000000,
+    this.muted = 0xFF757575,
+    this.rule = 0xFFBDBDBD,
+    this.checkFill = 0xFF455A64,
+    this.checkBorder = 0xFF78909C,
+    this.checkMark = 0xFFFFFFFF,
+  });
+
+  /// Belge kâğıttır: not uygulamada koyu temada açılmış olsa da temanın AÇIK
+  /// hâlinden hesaplanır (yazıcı, mesajlaşma önizlemesi). Koyu özel renk zıt
+  /// mürekkebiyle koyu kalır. Renksiz notta sayfa boyanmaz; kutucuk temanın
+  /// vurgusu, kartla aynı.
+  factory PdfNoteStyle.forNote(ThemeData theme, Note note) {
+    final light = theme.brightness == Brightness.light
+        ? theme
+        : AppTheme.opposite(theme);
+    final colored =
+        note.customColor != null ||
+        note.color != NoteColor.none ||
+        NoteThemes.byId(note.theme) != null;
+    final paper = colored
+        ? NoteColors.noteSurfaceIn(light, note)
+        : const Color(0xFFFFFFFF);
+    final scheme = (NoteColors.inkThemeFor(light, paper) ?? light).colorScheme;
+    final accent = NoteColors.noteInkIn(light, note);
+    return PdfNoteStyle(
+      page: colored ? paper.toARGB32() : null,
+      ink: colored ? scheme.onSurface.toARGB32() : 0xFF000000,
+      muted: scheme.onSurfaceVariant.toARGB32(),
+      rule: (accent ?? scheme.outlineVariant).toARGB32(),
+      // PDF'te alfa yok: soluk dolgu kâğıtla birleştirilir.
+      checkFill: Color.alphaBlend(
+        NoteCheckColors.checked(scheme, accent),
+        paper,
+      ).toARGB32(),
+      checkBorder: NoteCheckColors.unchecked(scheme, accent).toARGB32(),
+      checkMark: NoteCheckColors.mark(scheme, accent, paper).toARGB32(),
+    );
+  }
+
+  final int? page;
+  final int ink;
+  final int muted;
+  final int rule;
+  final int checkFill;
+  final int checkBorder;
+  final int checkMark;
+}
+
 /// [NotePdf._buildInIsolate]'a taşınan istek — tüm alanlar izoleler arası
 /// gönderilebilir (String/ByteData/Uint8List).
 class _PdfRequest {
@@ -662,8 +743,10 @@ class _PdfRequest {
     required this.boldBytes,
     required this.italicBytes,
     required this.palette,
+    required this.style,
   });
 
+  final PdfNoteStyle style;
   final String title;
   final String content;
   final String? dateLabel;

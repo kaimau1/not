@@ -56,12 +56,15 @@ class _ReorderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final dark = Theme.of(context).brightness == Brightness.dark;
     final frame = NoteColors.noteFrame(note, dark: dark);
     final title = note.title.trim();
     final preview = stripRichMarkers(note.toPlainText()).trim();
     final surface = NoteColors.noteSurface(context, note);
+    // Sayı ve raptiye de yazıyla aynı okunur temadan (bkz. NoteInkScope).
+    final scheme =
+        (NoteColors.inkThemeFor(Theme.of(context), surface) ?? Theme.of(context))
+            .colorScheme;
     final radius = AppTokens.of(context).cardRadius;
     return Material(
       color: surface,
@@ -87,7 +90,11 @@ class _ReorderTile extends StatelessWidget {
             Row(
               children: [
                 if (note.pinned) ...[
-                  Icon(Icons.push_pin, size: 13, color: scheme.primary),
+                  Icon(
+                    Icons.push_pin,
+                    size: 13,
+                    color: NoteColors.noteInk(context, note) ?? scheme.secondary,
+                  ),
                   const SizedBox(width: 4),
                 ],
                 Expanded(
