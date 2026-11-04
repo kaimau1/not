@@ -42,7 +42,7 @@ yapıldı** (aşağıda `[x]`); Faz 37–45 sıradaki oturumların işi.
 Kullanıcı "Faz N'i yap" dediğinde (N = 37…45) ya da "F40.3'ü yap" (tek madde):
 
 1. Bu dosyayı + HAFIZA.md'yi oku. Yalnız **Faz N**; kendiliğinden sonrakine geçme.
-2. **Kararlar** bölümünde "AÇIK" kalan madde o fazı ilgilendiriyorsa önce sor
+2. **Kararlar** bölümünde (şu an AÇIK madde yok: K1–K10 onaylı) "AÇIK" kalan madde o fazı ilgilendiriyorsa önce sor
    (gece görevi: en güvenli seçenek + "sabah bakılacak").
 3. Satır numaraları 2026-11-04 hâli: önce `grep`, bulguyu koddan (ve turdan)
    yeniden DOĞRULA; geçersizse `GEÇERSİZ: neden` yaz.
@@ -68,7 +68,7 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 37…45) ya da "F40.3'ü yap" (tek mad
 |---|---|---|---|---|
 | 36 | Kırık ve tutarsız olanlar (hemen) | Yapıldı | 2026-11-04 | 9/9; cihazda doğrulanmadı (KALANLAR §2 #54–#58) |
 | 37 | Not her yerde aynı görünür | Açık | | kart ↔ editör ↔ liste satırı ↔ widget |
-| 38 | Not ekranı: çubuklar, başlık satırı, tek not menüsü | Açık | | K2 |
+| 38 | Not ekranı: çubuklar, başlık satırı, tek not menüsü | Açık | | K2; F38.7 klavye kasması (ölçüm kapılı) |
 | 39 | Ana ekran: başlık, çipler, bölümler, jestler | Açık | | ölçüm kapılı (zoom, kaydırma) |
 | 40 | Ekler: tek model, tek menü | Açık | | K6; en büyük faz |
 | 41 | Ekleme akışı ve şablonlar | Açık | | tek "Ekle" kataloğu |
@@ -268,39 +268,45 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
 
 ## Kararlar
 
-Önerilenler **kalın**. Faz 36'da yalnız K1 uygulandı (geri dönülebilir).
+Önerilenler **kalın**. **2026-11-04'te kullanıcı K1–K10'un hepsini onayladı
+(hepsi önerilen seçenek).** K1 Faz 36'da uygulandı.
 
 - **K1 — Kutucuk rengi:** **renkli notta notun koyu tonu, renksizde temanın
   vurgusu — kartta ve editörde aynı** / renksizde ikisi de gri (Keep gibi).
-  — **UYGULANDI (F36.1), kullanıcı onayı bekliyor**
+  — **KARAR (kullanıcı, 2026-11-04): ONAYLANDI; UYGULANDI (F36.1)**
 - **K2 — Not menüsü:** **kart ⋮ ve not ⋮ tek modelden; gruplar ve sıra aynı,
   yalnız o ekranda zaten görünen düşer (kural yazılı + test)** / bugünkü gibi
-  ayrı. — AÇIK
+  ayrı. — **KARAR (kullanıcı, 2026-11-04): önerilen**
 - **K3 — Geniş ekranda yeni not kapıları:** **raydaki kalem kalır, sağ alttaki
   "+" ve mikrofon geniş ekranda raya iner (kalemin altında mikrofon)** / üçü de
-  kalır / raydaki kalem kalkar. — AÇIK
+  kalır / raydaki kalem kalkar. — **KARAR (kullanıcı, 2026-11-04): önerilen**
 - **K4 — Rayda ana sayfa:** **🏠 düğmesi kalkar, "Notlar" hedefi ana sayfa
   (Alt+Home aynı; F28.3 isteği "her zaman görünen" ray hedefiyle karşılanır)** /
-  ikisi kalır. — AÇIK
+  ikisi kalır. — **KARAR (kullanıcı, 2026-11-04): önerilen**
 - **K5 — Dar web "Ana sayfaya dön" şeridi:** **üst çubuğu olan ekranlarda (not,
   ayarlar, klasörler…) üst çubuğun en soluna 🏠 simgesi, şerit kalkar; üst
   çubuğu olmayan ekranlarda şerit kalır** / şerit 32 dp'ye incelir / bugünkü.
-  — AÇIK
+  — **KARAR (kullanıcı, 2026-11-04): önerilen**
 - **K6 — Ek görünüm adları:** **her menüde yalnız "Görünüm: Sabit · Yüzen ·
   Balonlu · Ek · Yazıya göm" anahtarı; "Sayfaya göm (yüzen)", "Sayfaya geri
-  koy", "Ek olarak taşı", "Nota aktar" kalkar** / eşanlamlılar kalır. — AÇIK
+  koy", "Ek olarak taşı", "Nota aktar" kalkar** / eşanlamlılar kalır.
+  — **KARAR (kullanıcı, 2026-11-04): önerilen**
 - **K7 — Ses kapıları:** **Dikte = mikrofon (AI'sız), AI sesli not = ✨
   mikrofon, Ses kaydı = dalga, Canlı dinleme = kulaklık; ana ekran mikrofonu
-  rozetsiz (dokun: dikte, basılı tut: AI sesli not ipucuyla)** / bugünkü. — AÇIK
+  rozetsiz (dokun: dikte, basılı tut: AI sesli not ipucuyla)** / bugünkü.
+  — **KARAR (kullanıcı, 2026-11-04): önerilen**
 - **K8 — Paylaşılan klasör:** **kendi klasörüm gibi ana ekranı süzer (yetkiye
-  göre salt okunur şerit)** / ayrı ekran kalır. — AÇIK
+  göre salt okunur şerit)** / ayrı ekran kalır.
+  — **KARAR (kullanıcı, 2026-11-04): önerilen**
 - **K9 — Kart başlığı:** **editör başlığının ailesi, ağırlığı ve harf
-  aralığıyla; boyu oranlı (15 → ~16)** / bugünkü. — AÇIK
+  aralığıyla; boyu oranlı (15 → ~16)** / bugünkü.
+  — **KARAR (kullanıcı, 2026-11-04): önerilen**
 - **K10 — Kazara jest:** **parmakta yalnız "üstünü çiz / ✓ = işaretle";
   "karala = sil" ve "daire = AI ile düzelt" kalemde, parmakta Ayarlar'dan
   açılırsa** / bugünkü (hepsi parmakta; F36.5 ile geri al + tek açıklama).
   Not: kullanıcı 2026-10-30'da "jestler direkt çalışmalı" demişti — bu madde o
-  kararı daraltır, ONAYSIZ uygulanmaz. — AÇIK
+  kararı daraltır; kullanıcı 2026-11-04'te daraltmayı ONAYLADI.
+  — **KARAR (kullanıcı, 2026-11-04): önerilen**
 
 ---
 
@@ -382,6 +388,23 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
   açılır menü. Ana ekran ⋮'deki geniş satırlar ızgara diline (ya da tersi —
   tek dil). `PopupMenuButton`/`MenuAnchor` listesi gözden geçirilir.
 
+- [ ] **F38.7 Klavye açılırken alt çubuk kasması** (kullanıcı bildirimi
+  2026-11-04, telefonda): klavye açılırken alttaki ek/mikrofon vb. araç çubuğu
+  alanı KASARAK açılıyor — ilk açılışta çok az, sonraki her açılışta artarak
+  sürüyor (birikim belirtisi: dinleyici/animasyon/ağaç yeniden kurulumu
+  sızıyor olabilir). **Ölçüm kapısı:** önce telefonda (`tool/perf/`) klavye
+  açma/kapama × 10 tekrar için kare süreleri ve her turda artış (bellek,
+  `AnimationController`/dinleyici sayısı, yeniden kurulum sayacı); kök nedeni
+  bul (aday: klavye yüksekliğiyle her karede yeniden düzen — `viewInsets`
+  değişince tüm editör ağacının yeniden kurulması, alt çubuğun her açılışta
+  yeni controller/`StreamSubscription` bırakması, `AnimatedPadding`/
+  `Scaffold.resizeToAvoidBottomInset` ile çift düzen). Düzeltme: alt çubuk
+  `viewInsets`'e yalnız kendi `RepaintBoundary`'si içinde bağlanır, editör
+  gövdesi klavye animasyonunda yeniden kurulmaz, eski abonelik/controller
+  `dispose` edilir. Test: tekrarlı açma/kapamada dinleyici/controller sayısı
+  sabit (widget testi) + `perf_test` klavye senaryosu; Faz 38 kabulüne dahil.
+  Cihazda doğrulanmadı (KALANLAR §2'ye adım).
+
 ## FAZ 39 — Ana ekran: başlık, çipler, bölümler, jestler
 
 - [ ] **F39.1 Bölüm başlığı + sayı** (B4): "Sabit · 3" başlığın yanında,
@@ -462,7 +485,9 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
 - [ ] **F42.4 AI'lı / AI'sız dikte:** dikte bitince tek dokunuşla "AI ile
   düzelt" önerisi (anahtar/kota varsa); AI sesli not ile aynı talimat.
 - [ ] **F42.5 "AI" ↔ "Yapay zekâ"** kullanım denetimi (TERİMLER: kısa yerde AI).
-- [ ] **F42.6 Jest güvenliği** (F7, K10) — ONAYSIZ uygulanmaz.
+- [ ] **F42.6 Jest güvenliği** (F7, K10 — onaylandı 2026-11-04): parmakta yalnız
+  "üstünü çiz / ✓ = işaretle"; "karala = sil" ve "daire = AI ile düzelt"
+  kalemde, parmakta Ayarlar'dan açılırsa; tek açıklama + geri al (F36.5) korunur.
 
 ## FAZ 43 — Paylaşım, Gelen, benimle paylaşılanlar
 
