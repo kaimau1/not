@@ -188,6 +188,11 @@ part 'note_editor_flow.dart';
 part 'note_editor_video.dart';
 part 'note_editor_embed.dart';
 
+/// Otomatik kaydın sessizlik süresi ve aralıksız yazımdaki üst sınırı
+/// (F22.2, KARAR 2026-11-03).
+const kEditorSaveDelay = Duration(seconds: 2);
+const kEditorSaveMaxWait = Duration(seconds: 10);
+
 /// İki madde listesi EKRANDA aynı mı? Yalnız madde METNİ değiştiyse aynı
 /// sayılır: o metni satırın kendi denetleyicisi zaten çiziyor.
 ///
@@ -883,7 +888,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
-  final _debouncer = Debouncer();
+  /// F22.2 (KARAR 2026-11-03): ~2 sn boşluk, aralıksız yazımda en geç
+  /// 10 sn. Her kayıt FlutterFire'da TÜM koleksiyonu ana iş parçacığında
+  /// yeniden kodlatıyor (K3) — 0,5 sn / 3 sn'de yazarken saniyede bir blok
+  /// demekti. Çıkış kapılarında (kapanış, arka plan, `inactive`) bekleyen
+  /// kayıt hemen yazılır ([_saveNow]); bedel: uygulama öldürülürse en çok
+  /// ~10 sn'lik yazı.
+  final _debouncer = Debouncer(
+    delay: kEditorSaveDelay,
+    maxWait: kEditorSaveMaxWait,
+  );
+
+  /// Otomatik kayıt istemci saatiyle yazıldı mı (F22.3): kapanışta bir kez
+  /// sunucu zamanı damgalanır ki sıralama/okunmamış hesabı cihaz saatine
+  /// bağlı kalmasın.
+  bool _clientStamped = false;
 
   /// ÜÇ YÖNLÜ BİRLEŞTİRMENİN TABANI (F4.1): bu editörün sunucuyla en son
   /// ORTAK gördüğü içerik. Başkasından gelen değişiklik yerelde henüz
@@ -1249,6 +1268,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // öldürülmeden hemen önce `detached` gelir. Kayıt hepsinde zorlanır —
     // fazladan yazımın maliyeti yok (Firestore merge, aynı içerik).
     if (state != AppLifecycleState.resumed) _saveNow();
+    // Arka plana geçiş gerçek bir çıkış olabilir (öldürülürse dispose yok):
+    // istemci saatli son kayıt sunucu zamanıyla mühürlenir. `inactive`
+    // (bildirim perdesi vb.) sık gelir — orada damgalanmaz.
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _stampServerTimeOnExit();
+    }
+  }
+
+  /// F22.3: oturumda istemci saatli kayıt olduysa `updatedAt`i bir kez
+  /// sunucu zamanıyla yazar ([_saveNow] zaten sunucu zamanıyla yazdıysa
+  /// bayrak inmiş olur, ikinci yazım yok).
+  void _stampServerTimeOnExit() {
+    if (!_clientStamped || _deleted) return;
+    _clientStamped = false;
+    _notesRepo?.updateFields(widget.noteId, const {});
   }
 
   @override
@@ -1288,6 +1323,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // commit ettiği otomatik düzeltme, alan içi Ctrl+Z) flush hiçbir şey
     // yazmazdı — _saveNow aynı drift ağını çıkış yolunda da kurar.
     _saveNow();
+    _stampServerTimeOnExit();
     // Silinen eklerin baytları burada gider: "Geri al" ile geri gelenler
     // dosyalarını korur (bkz. _flushAttachmentDeletes).
     _flushAttachmentDeletes();
@@ -1524,7 +1560,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     void save() {
       final current = _note;
       if (current != null && !_deleted) {
-        _notesRepo?.updateNote(current);
+        _clientStamped = true;
+        _notesRepo?.updateNote(current, clientTime: true);
       }
     }
 

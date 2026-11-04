@@ -181,6 +181,8 @@ extension _EditorFlowX on _NoteEditorScreenState {
     // setState YOK: denetleyiciler bu metni zaten gösteriyor, yeniden çizime
     // gerek yok — üstelik `detached` evresinde setState çağırmak güvensiz.
     _debouncer.cancel();
+    // Sunucu zamanıyla yazılıyor: istemci saatli damga burada düzelir.
+    _clientStamped = false;
     return _notesRepo?.updateNote(current);
   }
 
