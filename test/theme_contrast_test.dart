@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/app/theme/app_palette.dart';
@@ -5,8 +7,10 @@ import 'package:notlar/app/theme/app_theme.dart';
 import 'package:notlar/app/theme/app_tokens.dart';
 import 'package:notlar/app/theme/note_colors.dart';
 import 'package:notlar/app/theme/note_themes.dart';
+import 'package:notlar/core/a11y/color_names.dart';
 import 'package:notlar/core/utils/color_contrast.dart';
 import 'package:notlar/features/notes/domain/note.dart';
+import 'package:notlar/l10n/generated/app_localizations.dart';
 
 /// TEMA_PLANI F29.4: yeni temanın her rolü okunur kalsın. Renk değiştiren
 /// biri bu testi kırmadan "güzel ama okunmaz" bir ton ekleyemez.
@@ -100,5 +104,79 @@ void main() {
     final lo = lum.reduce((a, b) => a < b ? a : b);
     // Keep'in kendi paletinde oran ~1,9 idi (şeftali 0,45 ↔ bal 0,92).
     expect(hi / lo, lessThan(1.45));
+  });
+
+  // F32.6: not renkleri birbirinden ayrılır. Plandaki 0,08 eşiği, kullanıcının
+  // seçtiği (K5) palette tutmuyor: eşit parlaklıklı pastel zeminde komşular
+  // 0,03-0,05, koyu tonda en az 0,028 (mavi/fırtına). Palet değiştirilmedi
+  // (TEMA_PLANI F32.6, sabah bakılacak); test bugünkü ayrımın altına inmeyi
+  // yakalar, ekran okuyucu ayrımı renk adlarında.
+  group('F32.6 renk ayrımı (OKLab)', () {
+    List<double> oklab(Color c) {
+      double lin(double v) =>
+          v <= 0.04045 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
+      final r = lin(c.r), g = lin(c.g), b = lin(c.b);
+      double cbrt(double v) => math.pow(v, 1 / 3).toDouble();
+      final l = cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+      final m = cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+      final s = cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+      return [
+        0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+        1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+        0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s,
+      ];
+    }
+
+    double delta(Color a, Color b) {
+      final x = oklab(a), y = oklab(b);
+      return math.sqrt(
+        math.pow(x[0] - y[0], 2) +
+            math.pow(x[1] - y[1], 2) +
+            math.pow(x[2] - y[2], 2),
+      );
+    }
+
+    final colors = NoteColor.values.where((c) => c != NoteColor.none).toList();
+
+    test('zemin tonları bugünkü ayrımın altına inmez', () {
+      for (final a in colors) {
+        for (final b in colors) {
+          if (a.index >= b.index) continue;
+          expect(
+            delta(NoteColors.swatch(a), NoteColors.swatch(b)),
+            greaterThanOrEqualTo(0.029),
+            reason: '$a / $b',
+          );
+        }
+      }
+    });
+
+    testWidgets('koyu tonlar bugünkü ayrımın altına inmez', (tester) async {
+      late BuildContext context;
+      await tester.pumpWidget(
+        Builder(
+          builder: (c) {
+            context = c;
+            return const SizedBox();
+          },
+        ),
+      );
+      for (var i = 0; i + 1 < colors.length; i++) {
+        final a = NoteColors.ink(context, colors[i]);
+        final b = NoteColors.ink(context, colors[i + 1]);
+        expect(
+          delta(a!, b!),
+          greaterThanOrEqualTo(0.028),
+          reason: '${colors[i]} / ${colors[i + 1]}',
+        );
+      }
+    });
+
+    test('her rengin adı ayrı (ekran okuyucu)', () async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final names = {for (final c in colors) noteColorName(l10n, c)};
+      expect(names, hasLength(colors.length));
+      expect(noteColorName(l10n, NoteColor.amber), 'Bal');
+    });
   });
 }

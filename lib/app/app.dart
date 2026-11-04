@@ -176,6 +176,10 @@ class NotlarApp extends ConsumerWidget {
       theme: AppTheme.of(choice.family, Brightness.light, font: font),
       darkTheme: AppTheme.of(choice.family, Brightness.dark, font: font),
       themeMode: themeMode,
+      // ÖLÇÜLDÜ (TEMA_PLANI F34.3, v1.1.669): varsayılan 200 ms geçiş her karede
+      // `ThemeData.lerp` + tam ağaç, telefonda kare başına 50–66 ms, dört
+      // kareye düşüyordu (hedef < 12 ms). Tek keskin kare daha iyi.
+      themeAnimationDuration: Duration.zero,
       // null = sistem dilini kullan. Ayarlar'dan elle seçilirse o dil sabitlenir.
       locale: ref.watch(localeProvider),
       supportedLocales: AppLocalizations.supportedLocales,
@@ -202,6 +206,11 @@ class NotlarApp extends ConsumerWidget {
         final dark = Theme.of(context).brightness == Brightness.dark;
         return AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle(
+            // Durum çubuğu da saydam, altında ekranın zemini (F30.6). AppBar'lı
+            // ekranda AppBar kendi zeminine göre seçer; bu, AppBar'sız ana ekran.
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+            statusBarBrightness: dark ? Brightness.dark : Brightness.light,
             systemNavigationBarColor: Colors.transparent,
             systemNavigationBarDividerColor: Colors.transparent,
             systemNavigationBarContrastEnforced: false,

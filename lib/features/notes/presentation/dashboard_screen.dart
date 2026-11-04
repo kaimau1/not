@@ -18,7 +18,10 @@ import '../../../app/app_frame.dart';
 import '../../../app/router.dart';
 import '../../../app/split_shell.dart';
 import '../../../app/theme/note_colors.dart';
+import 'dart:math' as math;
+
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/a11y/motion.dart';
 import '../../../core/widgets/snapshot_when_leaving.dart';
 import '../../../core/widgets/action_menu_sheet.dart';
 import '../../../core/l10n_ext.dart';
@@ -209,6 +212,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Filtreler arası geçiş yönü (madde 2): sola çekiş → sonraki (sağdan girer),
   /// sağa çekiş → önceki (soldan girer). Geçiş animasyonu bu yönü kullanır.
   bool _swipeForward = true;
+
+  /// İskelet görünürken true: ilk içerik solarak gelir, sonra hep anında (F31.7).
+  bool _skeletonShown = false;
+
+  /// Veri dalı kurulduktan sonraki karede bayrağı indirir (liste öğesi üretmez).
+  Iterable<Widget> _afterSkeleton() {
+    if (_skeletonShown) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _skeletonShown = false);
+    }
+    return const [];
+  }
 
   /// İki parmak zoom başlangıcındaki sütun sayısı. Hedef sütun bu değere göre
   /// hesaplanır; canlı değere bakmak hareketi katlardı (parmak sabit dururken
@@ -1031,9 +1045,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         : (constraints.maxWidth / 220).floor().clamp(2, 6);
                     // Masonry hücre genişliği: sürükle-sırala sırasında taşınan
                     // notun "hayalet" kopyası (feedback) bu genişlikte çizilir.
-                    // gridPadding yatayda 12+12, crossAxisSpacing 8.
+                    // Izgara payları `kGridInset` / `kGridGap`.
                     final cellWidth =
-                        (constraints.maxWidth - 24 - 8 * (columns - 1)) /
+                        (constraints.maxWidth -
+                            2 * kGridInset -
+                            kGridGap * (columns - 1)) /
                         columns;
                     // Aktif segment (filtre|klasör|etiket) anahtarı: değişince
                     // AnimatedSwitcher yeni görünümü kaydırarak getirir (madde 2).
@@ -1409,9 +1425,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         _cycleFilterFolder(forward ? 1 : -1);
                                       },
                                 child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 260),
-                                  switchInCurve: Curves.easeOutCubic,
-                                  switchOutCurve: Curves.easeInCubic,
+                                  duration: AppMotion.of(
+                                    context,
+                                    AppMotion.medium,
+                                  ),
+                                  switchInCurve: AppMotion.curveOf(
+                                    context,
+                                    AppMotion.enter,
+                                  ),
+                                  switchOutCurve: AppMotion.curveOf(
+                                    context,
+                                    AppMotion.exit,
+                                  ),
                                   transitionBuilder: (child, animation) {
                                     // Çekiş yönüne göre yumuşak kaydır + soldur.
                                     //
@@ -1425,7 +1450,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     // yana çıkar.
                                     final incoming =
                                         child.key == ValueKey(segmentKey);
-                                    final dir = _swipeForward ? 1.0 : -1.0;
+                                    // Hareketi azalt: yalnız solma (F34.7).
+                                    final dir = !motionOf(context)
+                                        ? 0.0
+                                        : _swipeForward
+                                        ? 1.0
+                                        : -1.0;
                                     final rtl =
                                         Directionality.of(context) ==
                                         TextDirection.rtl;
@@ -1544,6 +1574,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                       else
                                       ...notesAsync.when(
                                         data: (notes) => [
+                                          ..._afterSkeleton(),
                                           // Aynı sarmalayıcı özette de var:
                                           // kartlar yeniden kurulmaz (F25.2).
                                           for (final sliver
@@ -1559,7 +1590,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                               ))
                                             SliverIgnorePointer(
                                               ignoring: false,
-                                              sliver: sliver,
+                                              sliver: SliverRevealFade(
+                                                play: _skeletonShown,
+                                                sliver: sliver,
+                                              ),
                                             ),
                                         ],
                                         // Yüklenirken diskteki özet, dokunuşa
@@ -1573,6 +1607,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                               ? ref.watch(homeSnapshotProvider)
                                               : const <Note>[];
                                           if (snapshot.isEmpty) {
+                                            _skeletonShown = true;
                                             return [
                                               SliverToBoxAdapter(
                                                 child: NoteGridSkeleton(
@@ -1593,7 +1628,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                                   reorderEnabled: false,
                                                 ))
                                               SliverIgnorePointer(
-                                                sliver: sliver,
+                                                sliver: SliverRevealFade(
+                                                  play: false,
+                                                  sliver: sliver,
+                                                ),
                                               ),
                                           ];
                                         },

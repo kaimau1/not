@@ -2,7 +2,40 @@ import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 
+import '../../core/a11y/motion.dart';
 import 'app_palette.dart';
+
+/// Ana ekran ızgarası (TEMA_PLANI F31.5): kenar payı 13, kartlar arası 10.
+const double kGridInset = 13;
+const double kGridGap = 10;
+
+/// **HAREKET BELİRTEÇLERİ** (TEMA_PLANI F34.1). Süre + eğri tek yerde; en sık
+/// sabit süreler bağlı, gerisine dokunulmadı (toplu değişiklik yok).
+abstract final class AppMotion {
+  /// Kart basma, düğme, kutucuk.
+  static const instant = Duration(milliseconds: 100);
+
+  /// Not rengi, çip, simge, seçim halkası.
+  static const short = Duration(milliseconds: 200);
+
+  /// Levha, menü, süzgeç/segment.
+  static const medium = Duration(milliseconds: 300);
+
+  /// "Hareketi azalt" açıkken üst sınır (F34.7).
+  static const reduced = Duration(milliseconds: 150);
+
+  static const Curve standard = Easing.standard;
+  static const Curve enter = Easing.emphasizedDecelerate;
+  static const Curve exit = Easing.emphasizedAccelerate;
+
+  /// [duration], hareket azaltılmışsa en çok [reduced].
+  static Duration of(BuildContext context, Duration duration) =>
+      motionOf(context) || duration <= reduced ? duration : reduced;
+
+  /// [curve], hareket azaltılmışsa doğrusal solma.
+  static Curve curveOf(BuildContext context, Curve curve) =>
+      motionOf(context) ? curve : Curves.linear;
+}
 
 /// Temanın `ColorScheme`'de karşılığı olmayan belirteçleri (TEMA_PLANI F29.1):
 /// kart rengi, kart çizgisi, kart gölgesi, köşe. `Theme.of` üstünden okunur —

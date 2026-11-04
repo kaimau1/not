@@ -205,8 +205,8 @@ extension _DashSlivers on _DashboardScreenState {
         return SliverGrid.builder(
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
+            mainAxisSpacing: kGridGap,
+            crossAxisSpacing: kGridGap,
             mainAxisExtent: _kReorderTileHeight,
           ),
           itemCount: items.length,
@@ -352,7 +352,7 @@ extension _DashSlivers on _DashboardScreenState {
       ),
     );
 
-    const gridPadding = EdgeInsets.symmetric(horizontal: 12);
+    const gridPadding = EdgeInsets.symmetric(horizontal: kGridInset);
 
     // Tarih kovaları yalnız "Son düzenlenen" sıralamasında anlamlı: kullanıcı
     // Başlık ya da Renk sıralamasını seçtiyse "BUGÜN" başlığı altındaki sıra

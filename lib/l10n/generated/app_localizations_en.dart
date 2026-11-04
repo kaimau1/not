@@ -6012,6 +6012,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formatScopeAll => 'All';
 
   @override
+  String get colorNameCoral => 'Coral';
+
+  @override
+  String get colorNamePeach => 'Peach';
+
+  @override
+  String get colorNameHoney => 'Honey';
+
+  @override
+  String get colorNameSage => 'Sage';
+
+  @override
+  String get colorNameStorm => 'Storm';
+
+  @override
+  String get colorNameLavender => 'Lavender';
+
+  @override
+  String get colorNameClay => 'Clay';
+
+  @override
+  String get colorNameChalk => 'Chalk';
+
+  @override
   String get colorNameRed => 'Red';
 
   @override
@@ -6033,16 +6057,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get colorNameOrange => 'Orange';
 
   @override
-  String get colorNameTeal => 'Teal';
-
-  @override
-  String get colorNameSlate => 'Slate blue';
-
-  @override
   String get colorNamePink => 'Pink';
-
-  @override
-  String get colorNameBeige => 'Beige';
 
   @override
   String get colorNameGray => 'Grey';

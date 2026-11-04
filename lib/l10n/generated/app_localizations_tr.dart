@@ -5988,6 +5988,30 @@ class AppLocalizationsTr extends AppLocalizations {
   String get formatScopeAll => 'Tümü';
 
   @override
+  String get colorNameCoral => 'Mercan';
+
+  @override
+  String get colorNamePeach => 'Şeftali';
+
+  @override
+  String get colorNameHoney => 'Bal';
+
+  @override
+  String get colorNameSage => 'Adaçayı';
+
+  @override
+  String get colorNameStorm => 'Fırtına';
+
+  @override
+  String get colorNameLavender => 'Lavanta';
+
+  @override
+  String get colorNameClay => 'Kil';
+
+  @override
+  String get colorNameChalk => 'Tebeşir';
+
+  @override
   String get colorNameRed => 'Kırmızı';
 
   @override
@@ -6009,16 +6033,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get colorNameOrange => 'Turuncu';
 
   @override
-  String get colorNameTeal => 'Su yeşili';
-
-  @override
-  String get colorNameSlate => 'Gri mavi';
-
-  @override
   String get colorNamePink => 'Pembe';
-
-  @override
-  String get colorNameBeige => 'Bej';
 
   @override
   String get colorNameGray => 'Gri';

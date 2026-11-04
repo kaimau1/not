@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../app/theme/app_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
@@ -266,7 +267,7 @@ class SharedNotesHomeSection extends ConsumerWidget {
           ),
         ),
         SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: kGridInset),
           sliver: sliverBalancedNoteColumns(
             items: [for (final e in entries) e.note],
             columns: columns,
