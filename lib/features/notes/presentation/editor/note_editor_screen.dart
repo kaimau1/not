@@ -56,6 +56,7 @@ import '../../../../core/utils/video_time.dart';
 import '../../../../core/utils/youtube.dart';
 import '../../../../core/widgets/customizable.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
+import '../../../../core/widgets/note_route_closing.dart';
 import '../../../../core/widgets/scale_settle.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/attachment_save.dart';
@@ -951,6 +952,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Uygulama arka plana alınırken/kapatılırken bekleyen kaydı zorlamak için
     // (bkz. [_saveNow] — "kapatınca not kayboluyor" kök nedeni).
     WidgetsBinding.instance.addObserver(this);
+    noteRouteClosing.addListener(_holdSaveWhileClosing);
     // Arka plandaki boş not temizliği bu notu ATLASIN (bkz. cleanupEmptyNotes):
     // kullanıcı yazmaya yeni başladığında doküman kısa bir süre boş görünür.
     openEditorNoteIds.add(widget.noteId);
@@ -1286,9 +1288,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _notesRepo?.updateFields(widget.noteId, const {});
   }
 
+  /// F23.3: not karttan küçülerek kapanırken bekleyen otomatik kayıt
+  /// zamanlayıcısı DURUR — yazım + ardından gelen koleksiyon olayının
+  /// kodlaması (K3) kapanış karelerine binmesin. Kayıt kaybolmaz: rota
+  /// kalkınca [dispose] içindeki [_saveNow] yazar; geri çekme jesti
+  /// vazgeçilirse zamanlayıcı yeniden kurulur.
+  void _holdSaveWhileClosing() {
+    if (noteRouteClosing.value) {
+      _debouncer.pause();
+    } else {
+      _debouncer.resume();
+    }
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    noteRouteClosing.removeListener(_holdSaveWhileClosing);
     openEditorNoteIds.remove(widget.noteId);
     final openNotes = _openNotes;
     final openId = widget.noteId;

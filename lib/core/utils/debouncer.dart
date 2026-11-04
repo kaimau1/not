@@ -56,6 +56,18 @@ class Debouncer {
     if (_pending != null) _run();
   }
 
+  /// Zamanlayıcıları durdurur, bekleyen çağrıyı KORUR: [flush] ya da
+  /// [resume] gelene dek kendiliğinden çalışmaz (F23.3 — not kapanış
+  /// animasyonunun ortasında kayıt patlamasın; rota kalkınca flush yazar).
+  void pause() => _clearTimers();
+
+  /// [pause] sonrası bekleyen çağrı varsa zamanlayıcıları baştan kurar.
+  void resume() {
+    if (_pending == null || _timer != null) return;
+    _timer = Timer(delay, _run);
+    _maxTimer = Timer(maxWait, _run);
+  }
+
   /// Bekleyen çağrıyı çalıştırmadan iptal eder.
   void cancel() {
     _clearTimers();
