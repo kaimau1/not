@@ -43,7 +43,7 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 29…35):
 | 32 | Not renk paleti ve not temaları | Yapıldı | 2026-11-05 | ΔE 0,08 K5 paletinde tutmuyor: sabah bakılacak (F32.6) |
 | 33 | Defter modu | Yapıldı | 2026-11-05 | PDF'te desen yok, madde düştü (F33.7) |
 | 34 | Geçişler ve hareket | Yapıldı | 2026-11-05 | tema geçişi ölçüldü, animasyonsuz (F34.3) |
-| 35 | Platform kenarları, koyu tema, temizlik | Yapıldı | 2026-11-05 | beyaz sistem penceresi kapatıldı (F30.6); simge K6 gereği dokunulmadı |
+| 35 | Platform kenarları, koyu tema, temizlik | Yapıldı | 2026-11-05 | MIUI'de beyaz açılış sürüyor (F30.6, #60); simge K6 gereği dokunulmadı |
 
 **Okunurluk düzeltmesi (2026-11-04, kullanıcı bulgusu — plan dışı, Faz 32 ile
 birlikte):** "not arka plan rengini değiştirince bazen yazı rengi sabit
@@ -200,7 +200,7 @@ Görünür değişiklik YOK: bugünkü temalar aynı piksellerle çizilir.
   **Yapıldı:** `AppThemeChoice.fromStored` okurken eşler, kayda yazmaz (bayrak gerekmedi; eski sürüm eski adı okumaya devam eder). Test `theme_default_test`.
 - [x] **F30.6** Durum/gezinme çubuğu (`SystemUiOverlayStyle`) zemin renginde,
   simgeler koyu.
-  **Yapıldı (2026-11-05):** kök `AnnotatedRegion` durum çubuğunu da saydam + zemine göre simge; editörde saydam üst çubuk `_statusBarFor(sayfa rengi)` (çizilmiş temalı notta simge beyaz kalıyordu). Android `NormalTheme` penceresi `@color/launch_bg`, 12+ için `values(-night)-v31/styles.xml`: soğuk açılıştaki ~0,6 sn beyaz pencere için, cihazda KALANLAR #60.
+  **Yapıldı (2026-11-05):** kök `AnnotatedRegion` durum çubuğunu da saydam + zemine göre simge; editörde saydam üst çubuk `_statusBarFor(sayfa rengi)` (çizilmiş temalı notta simge beyaz kalıyordu). Android `NormalTheme` penceresi `@color/launch_bg`, 12+ için `values(-night)-v31/styles.xml`. **Beyaz açılış ÇÖZÜLMEDİ (v1.1.671, Mi Note 10 Lite, MIUI 13):** video ~0,6 sn beyaz gösteriyor, "Splash Screen" penceresi o sırada var, APK'da kaynaklar doğru. Tahmin: MIUI `windowSplashScreenBackground`ı yok sayıyor; kanıtlanmadı (ilk Flutter karesi elenmedi). KALANLAR #60.
 - Kabul: her aile için ayarlar, ana ekran, not ekranı altın görüntüsü; kontrast
   testi yeşil; `perf_test` bütçesi yeşil.
 
@@ -348,7 +348,7 @@ kaynağında `data-dir="Ad"` kümesi. Pembe mercandan ayrışsın diye ton 34° 
 - [x] **F34.3 Tema değişimi:** `themeAnimationDuration` 300 ms +
   `easeInOutCubic`. ÖNCE ölç: `AnimatedTheme` her karede `ThemeData.lerp` +
   tam ağaç kurulumu. Pahalıysa `Duration.zero`.
-  **Yapıldı (2026-11-05):** **ÖLÇÜLDÜ (v1.1.669, Ayarlar'da 6 geçiş): 200 ms'lik varsayılan geçiş kare başına 50–66 ms, en kötü 98 ms, 4 kareye düşüyor → `Duration.zero`** (planın "pahalıysa" kolu).
+  **Yapıldı (2026-11-05):** **ÖLÇÜLDÜ (Ayarlar'da 6 geçiş): v1.1.669'da 200 ms'lik varsayılan geçiş kare başına 50–66 ms, en kötü 98 ms, 4 kareye düşüyor → `Duration.zero`** (planın "pahalıysa" kolu). v1.1.671'de en kötü aralık 33 ms.
 - [x] **F34.4 Not rengi değişimi** 200 ms (editör zemini + kart).
   **Yapıldı (2026-11-05):** `ColorFade` (`core/widgets/color_fade.dart`): denetleyici ilk değişimde kurulur, kart başına kalıcı ticker yok; tema değişiminde kimlik değişir, animasyon yok. Editörde zemin Scaffold'un arkasında `ColoredBox`, dev ağaç kurulmaz.
 - [x] **F34.5** Kart basma/seçme/sürükleme (F31.4 ile aynı madde, tek yerde).

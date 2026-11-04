@@ -160,7 +160,7 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 57. [ ] (F36.5) Web'de (dahili AI kapalı) liste notunda parmakla kaydırırken hata yağmuru YOK; maddenin üstüne bilerek daire çiz → bir kez "Daire jesti yazımı yapay zekâyla düzeltir…", ikinci dairede sessiz; karala → "Madde silindi · Geri al" geri getirir.
 58. [ ] (F36.6/F36.7) Ana ekran: boş klasör çiplerinde "0" yok, soluk; bölüm başlıkları "Sabit · Bugün · Bu hafta · Daha önce" cümle düzeninde, levhalardaki başlıklarla aynı stilde; ⋮ menüsünde "Çöp kutusu".
 59. [ ] (F27.3) Vulkan'lı bir cihaz (Adreno > 650 ya da Mali) varsa: `tool/perf/taban.py` kaydırma + geçiş; hedefler iki arka uçta da sağlansın. Test telefonu GLES, ölçülemedi.
-60. [ ] (F30.6) Soğuk açılışta beyaz pencere yok (zemin Adaçayı); koyu notta durum çubuğu simgeleri açık, açık notta koyu; çizilmiş temalı açık notta da koyu.
+60. [ ] (F30.6) Beyaz açılış: Mi Note 10 Lite'ta (MIUI 13, v1.1.671) ~0,6 sn beyaz SÜRÜYOR, kaynaklar APK'da doğru; temiz Android 12+ cihazda dene, orada da beyazsa ilk Flutter karesine bak. Ayrıca koyu notta durum çubuğu simgeleri açık, açık notta koyu; çizilmiş temalı açık notta da koyu.
 61. [ ] (F31.4, F33.6, F34.4) Seçili kartı sürükle: hafif eğik + büyük gölge; kart ⋮'ten renk değiştir ve editörde renk değiştir: 200 ms solma; sayfalı notta yana çek: sayfa kayar, altta "2 / 5" hapı söner.
 60. [ ] (F24.3) 120 maddeli listede gerçek klavyeyle: maddeye dokun → imleç dokunulan harfte, klavye önerisi seç, uzun bas → sözcük seçilir, sesle yazdır, TalkBack'te madde okunuyor ve çift dokunuşla açılıyor. Otomatik denendi: dokun, yaz, Enter.
 61. [ ] (F25.1) Farklı yazı tipli (kaydedilmiş) not açılınca ilk seferde metin kısa süre başka yazı tipiyle görünüp oturuyor mu; rahatsız ediyorsa söyle (sabah bakılacak).
