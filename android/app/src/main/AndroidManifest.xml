@@ -27,7 +27,7 @@
          şifreli kayıtlar cihaz yedeğine girmez; geri yüklemede çözülemeyen
          (bozuk) secure-storage verisi ve veri sızıntısı riski kapanır. -->
     <application
-        android:label="Notlar"
+        android:label="${appLabel}"
         android:name="${applicationName}"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher">

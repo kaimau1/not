@@ -19,6 +19,15 @@ import '../core/widgets/note_route_closing.dart';
 ///
 /// Karttan gelmeyen açılış (bildirim, "+", derin bağlantı) ve geniş ekran
 /// (liste solda dururken not sağ bölmede açılır) eskisi gibi yandan kayar.
+/// **HERO TARAMASI KAPALI (F23.1, K5):** her `PageRoute` geçişinde
+/// HeroController iki rotanın TÜM alt ağacını gezer (`Hero._allHeroesFor`) —
+/// elle `Hero` yok, yalnız FAB `heroTag`ları; ana ekran + editör ağacında bu
+/// kapanışın ilk karesine biniyordu. `HeroControllerScope.none` işe yaramaz:
+/// go_router her gezgine kendi HeroController'ını koyuyor. `HeroMode(enabled:
+/// false)` taramayı o düğümde DURDURUR (alt ağaca inilmez). Bedel: FAB'lar
+/// sayfalar arasında uçmaz, sayfayla birlikte geçer.
+Widget withoutHeroWalk(Widget child) => HeroMode(enabled: false, child: child);
+
 class NoteOpenOrigin {
   NoteOpenOrigin._(this.noteId, this._card, this.radius, this.color);
 
@@ -122,7 +131,7 @@ class _NoteOpenRoute<T> extends PageRoute<T>
   NoteOpenPage<T> get _page => settings as NoteOpenPage<T>;
 
   @override
-  Widget buildContent(BuildContext context) => _page.child;
+  Widget buildContent(BuildContext context) => withoutHeroWalk(_page.child);
 
   @override
   bool get maintainState => true;

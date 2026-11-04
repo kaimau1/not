@@ -177,15 +177,14 @@ Future<void> main() async {
     // Pil tasarrufu kipi uygulama arkadayken açılıp kapanabilir: yenileme
     // hızı kararı her öne gelişte yeniden verilir (bkz. [DisplayRate]).
     onResume: () => unawaited(DisplayRate.apply()),
-    // **RAM**: uygulama arka plana geçince çözülmüş görsel önbelleği
-    // boşaltılır (ekranda KULLANILAN görseller etkilenmez, yalnız
-    // önbellekte bekleyenler). Arkadaki uygulamanın bellek ayak izi
-    // küçüldükçe sistemin onu öldürme olasılığı düşer — öldürülen uygulama
-    // soğuk açılışta her şeyi baştan yükler, bu da pili yakar.
+    // **GÖRSEL ÖNBELLEĞİ ARKADA DA KALIR (F26.2, KARAR 2026-11-03: TUT).**
+    // Eskiden arka plana geçişte `imageCache` + kart küçük resimleri
+    // boşaltılıyordu; dönüşte bütün kart görselleri yeniden çözülüyor, ızgara
+    // bir an boş kutularla çizilip görseller tek tek beliriyordu (titreme,
+    // K9). Artık yalnız sistem bellek sıkışıklığı bildirince bırakılır
+    // ([_MemoryPressure], Android `onTrimMemory`). Bedel: arkadaki uygulama
+    // birkaç MB fazla tutar.
     onPause: () {
-      PaintingBinding.instance.imageCache.clear();
-      // Kart küçük resimleri de (diskte kalırlar, dönüşte anında okunur).
-      CardThumbs.clearMemory();
       // Yalnız bu cihazdaki notların bekleyen yazımı diske insin: arka
       // plandaki uygulama her an öldürülebilir (bkz. LocalNotesStore).
       unawaited(LocalNotesStore.flushAll());
@@ -201,7 +200,12 @@ Future<void> main() async {
 /// uygulama da soğuk açılışta her şeyi baştan kurup pili yakar.
 class _MemoryPressure with WidgetsBindingObserver {
   @override
-  void didHaveMemoryPressure() => CardThumbs.clearMemory();
+  void didHaveMemoryPressure() {
+    // Flutter çözülmüş görsel önbelleğini kendisi de boşaltıyor; açıkça
+    // yazmak F26.2 sonrası tek boşaltma yolunun burası olduğunu belgeler.
+    PaintingBinding.instance.imageCache.clear();
+    CardThumbs.clearMemory();
+  }
 }
 
 /// Uygulama yaşam döngüsü dinleyicisi (bkz. [main]). Referans tutulur ki

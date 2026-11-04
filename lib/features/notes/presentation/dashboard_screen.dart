@@ -134,16 +134,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// ağacını hiç kurmaz. Bir notun yazımı (editörde otomatik kayıt) ana ekranı
   /// yeniden kurduğunda görünen BÜTÜN kartlar (medya planı, zengin önizleme
   /// ayrıştırması, kapak) baştan kuruluyordu; artık yalnız değişen kart.
-  final Map<String, (Note, String, Widget)> _cardCache = {};
+  ///
+  /// Anahtar sorgunun KENDİSİ değil yalnız "arama var mı" (F21.6): sorgu
+  /// harf harf değişirken kartlar aynı örnek kalır, vurgu [_liveQuery]
+  /// üzerinden yalnız yeniden BOYANIR (bkz. `SearchHighlight`).
+  final Map<String, (Note, bool, Widget)> _cardCache = {};
+
+  /// Kartların izlediği canlı arama sorgusu (F21.6).
+  final _liveQuery = ValueNotifier<String>('');
 
   Widget _cachedCard(Note note, String query) {
+    final searching = query.isNotEmpty;
     final hit = _cardCache[note.id];
-    if (hit != null && identical(hit.$1, note) && hit.$2 == query) {
+    if (hit != null && identical(hit.$1, note) && hit.$2 == searching) {
       return hit.$3;
     }
     final card = NoteCard(
       note: note,
-      highlightQuery: query,
+      liveQuery: searching ? _liveQuery : null,
       frame: (child, {required focused, required open}) => _FocusHalo(
         focused: focused,
         open: open,
@@ -151,7 +159,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         child: child,
       ),
     );
-    _cardCache[note.id] = (note, query, card);
+    _cardCache[note.id] = (note, searching, card);
     return card;
   }
 
@@ -430,6 +438,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _liveQuery.dispose();
     _searchController.dispose();
     _searchFocus.dispose();
     _gridScrolled.dispose();

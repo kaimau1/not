@@ -198,6 +198,16 @@ maddeyi GÜNCELLE.
   blok); HeroController her geçişte tüm ağacı geziyor (elle Hero yok, yalnız
   FAB `heroTag`ları). Zamanlama/parça
   hileleri (ilk N madde, kare başına K) belirti yaması — önce kök neden.
+- **AKICILIK bulut turu (2026-11-04, cihazda ölçülmedi):** editör kaydı
+  2 sn / en geç 10 sn (`kEditorSaveDelay/MaxWait`), otomatik kayıt
+  `updateNote(clientTime: true)` (istemci saati → kayıt başına 2. olay yok),
+  kapanış/`paused`ta bir kez sunucu damgası; not kapanırken zamanlayıcı
+  `Debouncer.pause` (rota kalkınca yazar). Hero: `HeroControllerScope.none`
+  go_router'da İŞLEMEZ (her gezginin kendi HeroController'ı) → sayfalar
+  `withoutHeroWalk` (`HeroMode(false)`); `lib`te elle `Hero(` yasak (test).
+  Arama vurgusu `SearchHighlight` boya katmanı (span değil): kart önbelleği
+  anahtarı "arama var mı", canlı sorgu `_liveQuery` — vurgu metne span olarak
+  geri KONMAZ (sorgu başına kart kurulumu/şekillendirme, 139 ms).
 - **Klavye/kapanış kasması (2026-11-03)**: (1) büyüme klavye animasyonuna
   biniyordu → klavye yüksekliği değiştikçe 320 ms bekler (`_keyboardMoving`).
   (2) Örtülü ana ekran `MediaQuery`yi geçiriyordu (klavyenin her karesinde

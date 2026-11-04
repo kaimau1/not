@@ -98,6 +98,10 @@ extension _DashSlivers on _DashboardScreenState {
     ];
 
     final query = ref.read(searchQueryProvider).trim();
+    // Kartların canlı vurgusu (F21.6): kurulum sırasında yazılır — tembel
+    // hücreler yerleşimde kurulduğu için orada yazmak dinleyen kesitlerde
+    // yerleşim içinde setState olurdu.
+    if (_liveQuery.value != query) _liveQuery.value = query;
     // [reorderEnabled] çağırandan gelir: sürükle-sırala artık ⋮ → "Notları
     // sırala" ile açılan AYRI bir moddur ([reorderModeProvider]). Eskiden
     // kalıcı olarak açıktı ve uzun basış sürüklemeyi başlatıyordu; seçmek

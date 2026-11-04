@@ -158,9 +158,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 // Geniş ekranda liste zaten SOL panelde (not yokken tam
                 // genişlik); burada bir daha çizilmez. Karar kabuğun
                 // kendisinden okunur, liste iki kez kurulmasın.
+                // Hero taraması kapalı (F23.1, bkz. withoutHeroWalk).
                 builder: (context, state) => SplitScope.activeOf(context)
                     ? const SizedBox.shrink()
-                    : const DashboardScreen(),
+                    : withoutHeroWalk(const DashboardScreen()),
               ),
               GoRoute(path: '/notebook/:id', builder: _notebookBuilder),
               GoRoute(
@@ -336,9 +337,11 @@ class _RefreshNotifier extends ChangeNotifier {
 }
 
 Widget _notebookBuilder(BuildContext context, GoRouterState state) =>
-    NoteEditorScreen(
-      key: ValueKey('note-${state.pathParameters['id']}'),
-      noteId: state.pathParameters['id']!,
+    withoutHeroWalk(
+      NoteEditorScreen(
+        key: ValueKey('note-${state.pathParameters['id']}'),
+        noteId: state.pathParameters['id']!,
+      ),
     );
 
 /// `/note/:id` sayfası: karttan açılışta genişleyen geçiş (bkz.

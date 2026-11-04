@@ -616,14 +616,25 @@ class NotesRepository {
   /// yankı anlık görüntüsünde ekleri yeniden birleştirip YENİ liste kuruyor.
   /// Özet yalnız sunucu onayında saklanır: yazım reddedilirse (ya da
   /// çevrimdışı bekliyorsa) sonraki kayıt listeyi yine tam gönderir.
-  Future<void> updateNote(Note note) {
+  ///
+  /// [clientTime] (F22.3): `updatedAt` sunucu zamanı yerine İSTEMCİ saatiyle
+  /// yazılır. Sunucu zamanı yerelde tahminle görünüp onayda GERÇEK değerle
+  /// değiştiği için her kayıt dinleyicilere İKİ olay (iki tam koleksiyon
+  /// kodlaması) üretiyordu; istemci saatinde onay yalnız meta veriyi
+  /// değiştirir. Editörün otomatik kaydı bunu kullanır, kapanışta sunucu
+  /// zamanı yine yazılır (bkz. editörde `_stampServerTimeOnExit`).
+  Future<void> updateNote(Note note, {bool clientTime = false}) {
     if (isLocal(note.id)) {
       local!.merge(note.id, note.toMap());
       return Future.value();
     }
     _maybeVersion(note);
     _rememberWrite(note);
-    final fields = {...note.toMap(), 'updatedBy': editorUid};
+    final fields = {
+      ...note.toMap(),
+      'updatedBy': editorUid,
+      if (clientTime) 'updatedAt': Timestamp.now(),
+    };
     // AĞIR ALANLAR (F3.13): bölünmüş ya da ağır kısmı eşiği aşan not iki
     // belgeye yazılır. HAFİF not (ağır belge işlenmemiş) yalnız ana belgeye
     // yazılır — eksik veriyle ağır belgenin üstüne yazılmasın.

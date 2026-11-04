@@ -5,8 +5,9 @@ import 'package:flutter_driver/flutter_driver.dart';
 import 'package:integration_test/integration_test_driver.dart';
 
 /// Ölçüm raporu (F2.6): her senaryonun zaman çizelgesi özetlenir,
-/// `build/perf/perf_summary.json`a yazılır ve bütçe denetlenir — p90 kare
-/// build süresi 8 ms'yi aşarsa koşu başarısız.
+/// `build/perf/perf_summary.json`a yazılır ve bütçe denetlenir (F27.4,
+/// AKICILIK_PLANI): kare build süresi p90 < 8 ms, p99 < 16 ms, en kötü
+/// kare < 33 ms — biri aşılırsa koşu başarısız.
 Future<void> main() => integrationDriver(
   responseDataCallback: (data) async {
     if (data == null) return;
@@ -14,6 +15,7 @@ Future<void> main() => integrationDriver(
       'average_frame_build_time_millis',
       '90th_percentile_frame_build_time_millis',
       '99th_percentile_frame_build_time_millis',
+      'worst_frame_build_time_millis',
       'average_frame_rasterizer_time_millis',
       '90th_percentile_frame_rasterizer_time_millis',
       '99th_percentile_frame_rasterizer_time_millis',
@@ -32,16 +34,19 @@ Future<void> main() => integrationDriver(
     await out.parent.create(recursive: true);
     await out.writeAsString(text);
     stdout.writeln(text);
-    const budgetMs = 8.0;
+    const budgets = {
+      '90th_percentile_frame_build_time_millis': 8.0,
+      '99th_percentile_frame_build_time_millis': 16.0,
+      'worst_frame_build_time_millis': 33.0,
+    };
     final over = [
       for (final e in report.entries)
-        if (((e.value['90th_percentile_frame_build_time_millis'] as num?) ??
-                0) >
-            budgetMs)
-          e.key,
+        for (final b in budgets.entries)
+          if (((e.value[b.key] as num?) ?? 0) > b.value)
+            '${e.key}: ${b.key} ${e.value[b.key]} > ${b.value} ms',
     ];
     if (over.isNotEmpty) {
-      stderr.writeln('Bütçe aşıldı (p90 build > $budgetMs ms): $over');
+      stderr.writeln('Bütçe aşıldı:\n${over.join('\n')}');
       exitCode = 1;
     }
   },

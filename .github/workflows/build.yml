@@ -571,8 +571,9 @@ jobs:
 
   # KARE ÖLÇÜMÜ (F2.6): "kasma" bulgusu sayıyla izlensin. Emülatörde profil
   # kipinde integration_test/perf_test.dart (300 notlu ızgarada fırlatma +
-  # editörde 200 karakter); özet `perf-summary` artefaktında, p90 build
-  # > 8 ms ise iş kırmızı. Dakika kotası yüzünden YALNIZ elle:
+  # editörde 200 karakter; F20.3'ten beri 30 KB'ta 100 tuş + arama sorgusu
+  # değişimi, gerçekçi veri); özet `perf-summary` artefaktında; build p90 >
+  # 8 / p99 > 16 / en kötü > 33 ms ise iş kırmızı (F27.4). Dakika kotası yüzünden YALNIZ elle:
   # Actions → Derleme → Run workflow → "Kare ölçümü" kutusu.
   # Not: emülatör yazılım GPU'su kullanır — raster süreleri gerçek cihazdan
   # kötüdür; karşılaştırma koşudan koşuya yapılmalı, mutlak değerle değil.
@@ -597,6 +598,17 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+
+      # KÖK NEDEN (koşu 41784350487, 2026-11-04): emülatör imajı + NDK +
+      # profil derlemesi + `-v` günlüğü koşucunun diskini doldurdu ("No space
+      # left on device", D8 birleştirmesinde). Kullanılmayan araç zincirleri
+      # silinir (~20 GB).
+      - name: Disk aç
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost \
+            /usr/local/lib/node_modules /usr/share/swift /opt/hostedtoolcache/CodeQL \
+            /usr/local/share/powershell /usr/local/share/chromium || true
+          df -h /
 
       - name: KVM'i aç (emülatör hızlandırma)
         run: |

@@ -26,15 +26,13 @@ Uygulamada: Ayarlar → Senkronizasyon → "Başka uygulamadan içe aktar" (ya d
 
 ## Profil derlemesi yan yana ("Notlar Ölçüm")
 
-F20.2 yapılana dek ELLE ve GEÇİCİ (commit'leme, derleyince `git restore`):
-1. `android/app/build.gradle.kts`: `applicationId = "dev.kaimau.notlar.olcum"`
-2. `android/app/src/main/AndroidManifest.xml`: uygulama `android:label="Notlar Ölçüm"`
-3. `android/app/google-services.json`: `client[0]`ın kopyası, `package_name`
-   `dev.kaimau.notlar.olcum`
-4. `C:/src/flutter/bin/flutter.bat build apk --profile --target-platform android-arm64 --build-number=1`
-5. `git restore android/app/build.gradle.kts android/app/google-services.json android/app/src/main/AndroidManifest.xml`
-6. `adb install -r build/app/outputs/flutter-apk/app-profile.apk` → telefonda
-   "USB üzerinden yükle" onayı (Xiaomi).
+F20.2 (2026-11-04) sonrası KENDİLİĞİNDEN: `profile` derleme türü
+`applicationIdSuffix = ".olcum"` + etiket "Notlar Ölçüm" + kendi
+`android/app/src/profile/google-services.json`'ı ile derlenir.
+1. `C:/src/flutter/bin/flutter.bat build apk --profile --target-platform android-arm64 --build-number=1`
+2. `adb install -r build/app/outputs/flutter-apk/app-profile.apk` → telefonda
+   "USB üzerinden yükle" onayı (Xiaomi). Release'e dokunmaz.
+Bilinen sınır: uygulama kısayolları sabit paket adıyla release'i açar.
 
 Varsayılan kimlikle `flutter run/drive/install` test telefonunda **ASLA**: imza
 uyuşmazlığında araç uygulamayı kaldırıp kurar → telefondaki veri silinir.

@@ -127,11 +127,16 @@ void main() {
       );
     });
 
+    setUp(resetAlwaysHandleBackCache);
+
     testWidgets('düzeltme: platforma hep "çerçeve karşılar" gider', (
       tester,
     ) async {
       final calls = await run(tester, handler: alwaysHandleBack);
       expect(calls, isNotEmpty);
+      // F22.7: aynı değer her gezinmede yeniden yazılmaz (kanal israfı) —
+      // üç sayfa geçişine karşın tek çağrı.
+      expect(calls.where((c) => c.startsWith('handles:')), hasLength(1));
       expect(calls.where((c) => c.startsWith('handles:')).toSet(), {
         'handles:true',
       });

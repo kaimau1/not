@@ -118,6 +118,38 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 33. [ ] (F28.3/F28.5) Web'de ⋮ → Ayarlar/Arşiv/Çöp açılıyor; tablette ray tepesindeki
    ev simgesi her ekrandan ana sayfaya; Alt+Home.
 
+**2026-11-04 gece görevi (AKICILIK Faz 20–27 bulut kısmı — yazıldı, cihazda ölçülmedi)**
+Ölçüm "Notlar Ölçüm" profil derlemesinde ya da release'te `tool/perf` ile
+(AKICILIK_PLANI Ek A); sayıları AKICILIK_PLANI Ek B'ye satır olarak yaz.
+34. [ ] (F22.2/F22.3, F22.1 ölçümü) Kısa notta 20 sn aralıksız yaz → kayıt
+   ~10 sn'de bir (eskiden 3 sn); yazmayı bırak → 2 sn sonra kayıt. Kayıt
+   sonrası ana blok < 8 ms, yazarken 0 kare > 33 ms
+   (`python -u prof_type.py kisa …`). Editörü kapat → başka cihazda
+   (web) not "Son güncellenen"de doğru yerde (sunucu zamanı kapanışta).
+   Uygulamayı yazarken görev listesinden kapat → en çok son ~10 sn'lik yazı
+   gidebilir (bilinen bedel); arka plana alıp öldür → hiçbir şey gitmez.
+35. [ ] (F23.1/F23.3) 4 not türünde aç/kapa ×3 (`scen.open_close`): kapanışta
+   0 kare > 33 ms (bugün 12/12'de 99 ms); profilde `_allHeroesFor` yok.
+   Yazıp 1 sn içinde geri → kayıt animasyon bitince (veri kaybı yok).
+   Ana ekran FAB'ı sayfa geçişinde uçmuyor, sayfayla geçiyor (gözle).
+36. [ ] (F21.6) Ana ekranda "önemli" yaz-sil: arama karesi < 16 ms (bugün
+   139 ms); vurgu artık kalın yazı değil, sarımsı zemin + alt çizgi —
+   okunuyor mu, derin eşleşmede kesit görünüyor mu (gözle).
+37. [ ] (F22.7) Geri tuşu: paylaşılanlar → not → geri → geri → uygulama
+   kapanmıyor; ana ekranda geri → çıkar.
+38. [ ] (F20.3/F27.4) Sürüm öncesi duman: `scen.py scroll`, `open_close`,
+   `prof_type.py` (30 KB) → Ek B'ye satır; CI `[perf]` bütçesi p90 < 8,
+   p99 < 16, en kötü < 33 ms (bugün 30 KB yazma ve arama KIRMIZI beklenir).
+   F20.2: `flutter build apk --profile` → `adb install -r …app-profile.apk`
+   → telefonda iki ayrı uygulama ("Notlar" + "Notlar Ölçüm"), release'in
+   verisi yerinde.
+39. [ ] (F26.2) Görselli 20+ notla ana ekran → uygulamayı arka plana al,
+   başka uygulama aç, 1 dk sonra dön → kart görselleri boş kutu/tek tek
+   belirme OLMADAN yerinde (videoyla: F26.1).
+40. [ ] (F25.1, önce ölç) `preloadNoteFonts` gerçek süresi (profil zaman
+   çizelgesi) ve beklemeyi kaldırınca ilk 2 sn'deki yeniden yerleşim → karar
+   AKICILIK_PLANI F25.1.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] `import_service_test` iki testi Windows'ta KIRMIZI (Keep Takeout eki bulunmuyor) — main'de de kırık, geniş ekran işinden önce de vardı (2026-11-02)

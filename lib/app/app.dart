@@ -100,13 +100,34 @@ const double maxFollowedTextScale = 2.0;
 /// şey yoksa yönlendirici `popRoute`'ta false döner ve Flutter kendisi
 /// `SystemNavigator.pop()` çağırır — ana ekrandan çıkış eskisi gibi çalışır.
 /// Web'de varsayılan kalır (tarayıcı geçmişi ayrı yönetiliyor).
+///
+/// F22.7 (K4): değer hep `true` — her gezinme bildiriminde (her rota
+/// değişimi, her `PopScope` güncellemesi) platform kanalına aynı çağrıyı
+/// yazmak ana iş parçacığını boşuna bekletiyordu (Flutter 3.47'de Dart UI =
+/// Android ana iş parçacığı). Bir kez yazılır; motor ayrılınca (`detached`,
+/// Activity yeniden kurulabilir) unutulur ve sonraki bildirimde yine yazılır.
 bool alwaysHandleBack(NavigationNotification notification) {
   final state = WidgetsBinding.instance.lifecycleState;
   // Varsayılanla aynı: motor hazır değilken platforma yazılmaz.
-  if (state == null || state == AppLifecycleState.detached) return true;
+  if (state == null || state == AppLifecycleState.detached) {
+    _handlesBackSent = false;
+    return true;
+  }
+  if (_handlesBackSent) return true;
+  _handlesBackSent = true;
+  _handlesBackReset ??= AppLifecycleListener(
+    onDetach: () => _handlesBackSent = false,
+  );
   SystemNavigator.setFrameworkHandlesBack(true);
   return true;
 }
+
+bool _handlesBackSent = false;
+AppLifecycleListener? _handlesBackReset;
+
+/// Testler için: bir sonraki bildirimde kanal çağrısı yeniden yazılsın.
+@visibleForTesting
+void resetAlwaysHandleBackCache() => _handlesBackSent = false;
 
 /// Web'de tarayıcı geçmişini "önce ana sayfa, sonra çıkış" kuralıyla yazan
 /// konum sağlayıcısı (bkz. [HomeFirstRouteInformationProvider]). Yönlendirici

@@ -8,10 +8,10 @@ import 'package:notlar/core/utils/debouncer.dart';
 /// `testWidgets` kullanılıyor çünkü sahte saati (`tester.pump(duration)`)
 /// fazladan bağımlılık olmadan yalnız o sağlıyor.
 void main() {
-  testWidgets('aralıksız yazımda maxWait dolunca kayıt yapılır', (tester) async {
-    final debouncer = Debouncer(
-      
-    );
+  testWidgets('aralıksız yazımda maxWait dolunca kayıt yapılır', (
+    tester,
+  ) async {
+    final debouncer = Debouncer();
     var saves = 0;
     // 5 saniye boyunca her 100 ms'de bir "tuş vuruşu": delay hiç dolmaz.
     for (var i = 0; i < 50; i++) {
@@ -25,9 +25,7 @@ void main() {
   testWidgets('maxWait dolduktan sonra yeni yazım yine kaydedilir', (
     tester,
   ) async {
-    final debouncer = Debouncer(
-      
-    );
+    final debouncer = Debouncer();
     var saves = 0;
     for (var i = 0; i < 40; i++) {
       debouncer(() => saves++);
@@ -80,4 +78,27 @@ void main() {
     expect(saves, 1);
     debouncer.dispose();
   });
+
+  testWidgets(
+    'F23.3: pause bekleyeni tutar, flush yazar; resume yeniden kurar',
+    (tester) async {
+      final d = Debouncer();
+      var saves = 0;
+      d(() => saves++);
+      d.pause();
+      await tester.pump(const Duration(seconds: 5));
+      expect(saves, 0, reason: 'kapanış sürerken zamanlayıcı patlamaz');
+      expect(d.hasPending, isTrue);
+      d.resume();
+      await tester.pump(const Duration(seconds: 1));
+      expect(saves, 1, reason: 'jest vazgeçilince kayıt yine olur');
+      d(() => saves++);
+      d.pause();
+      d.flush();
+      expect(saves, 2, reason: 'rota kalkınca flush beklemeden yazar');
+      d.resume();
+      await tester.pump(const Duration(seconds: 5));
+      expect(saves, 2, reason: 'bekleyen yokken resume bir şey kurmaz');
+    },
+  );
 }
