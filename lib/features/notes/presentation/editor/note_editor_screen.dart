@@ -961,6 +961,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final openNotes = _openNotes = ref.read(openNoteIdsProvider.notifier);
     final openId = widget.noteId;
     unawaited(Future.microtask(() => openNotes.open(openId)));
+    // F26.3: açıkken listede yerinde dursun (kapanış başlayınca bırakılır).
+    final sortHold = ref.read(sortHeldNoteIdsProvider.notifier);
+    _sortHold = sortHold;
+    unawaited(Future.microtask(() => sortHold.hold(openId)));
     // Notu AÇMAK da bir çalışma izidir ("en çok çalışılan" sıralaması).
     // GEÇİŞ BİTİNCE (kullanıcı bulgusu 2026-10-20: "notu açarken ufak
     // donma"): ilk kareden hemen sonra yazılınca "en çok çalışılan"
@@ -1294,12 +1298,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// kalkınca [dispose] içindeki [_saveNow] yazar; geri çekme jesti
   /// vazgeçilirse zamanlayıcı yeniden kurulur.
   void _holdSaveWhileClosing() {
+    final id = widget.noteId;
+    final hold = _sortHold;
     if (noteRouteClosing.value) {
       _debouncer.pause();
+      // Pano görünmeden ÖNCE yerine otursun: küçülen not yeni yerine iner.
+      unawaited(Future.microtask(() => hold?.release(id)));
     } else {
       _debouncer.resume();
+      unawaited(Future.microtask(() => hold?.hold(id)));
     }
   }
+
+  /// F26.3 (bkz. [sortHeldNoteIdsProvider]); dispose'da `ref` yok.
+  SortHeldNoteIdsNotifier? _sortHold;
 
   @override
   void dispose() {
@@ -1309,6 +1321,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final openNotes = _openNotes;
     final openId = widget.noteId;
     unawaited(Future.microtask(() => openNotes.close(openId)));
+    final sortHold = _sortHold;
+    unawaited(Future.microtask(() => sortHold?.release(openId)));
     _pageInkCtl?.dispose();
     // Tam ekran nota bağlı; ağaç kilitliyken durum yazılamaz. Başka bir nota
     // GEÇİLDİYSE (yeni editör çoktan açık) tam ekran sürer.

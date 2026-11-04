@@ -149,6 +149,25 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 40. [ ] (F25.1, önce ölç) `preloadNoteFonts` gerçek süresi (profil zaman
    çizelgesi) ve beklemeyi kaldırınca ilk 2 sn'deki yeniden yerleşim → karar
    AKICILIK_PLANI F25.1.
+41. [ ] (F22.6/F27.1) Profil derlemesinde kısa notta 10 sn yaz → kapat;
+   `VM.channels(reset=True)` önce/sonra: `plugins.flutter.io/firebase_firestore`
+   olay sayısı kayıt başına ~2 (yazım + onay), editördeki senkron bulutu
+   doğru (yazarken bekliyor → sonra tamam).
+42. [ ] (F23.4) 4 not türünde aç/kapa (`scen.open_close`): geçiş raster
+   < 12 ms/kare (bugün 18–26); içerik solması gözle aynı.
+43. [ ] (F23.5, ölç) Profilde `ext.flutter.profileWidgetBuilds` ile kısa /
+   görselli notta editörün İLK karesinin build dökümü → en pahalı parça →
+   AKICILIK_PLANI F23.5'e yaz.
+44. [ ] (F25.2, ölç) Soğuk açılışta Firestore yerel önbelleğinin ilk not
+   listesi yayını (ms, profil zaman çizelgesi) → anında içerik gerekli mi;
+   bayat özet / kilitli not kararı.
+45. [ ] (F25.3) Soğuk açılış ×3: ilk 2 sn'de > 50 ms kare (bugün 313–396 ms
+   donuk kare) ve `VM.channels()` ilk 2 sn dökümü; hatırlatıcı, widget,
+   bildirim, paylaşım menüsü, not kilidi açılıştan sonra çalışıyor (gözle).
+46. [ ] (F26.3/F26.4) "Son güncellenen" sıralamasında bir notu aç, yaz,
+   kapat → not kapanırken tepedeki yerine iner, sonra zıplamaz; geniş
+   ekranda yazarken soldaki listede kart yerinde. Segment (süzgeç/klasör)
+   kaydırması videoda flaşsız (F26.1).
 
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 

@@ -851,7 +851,10 @@ class _AppVersionRowState extends State<_AppVersionRow> {
         GestureDetector(
           onTap: () => setState(() {}),
           child: Text(
-            Diagnostics.summary(thumbBytes: CardThumbs.memoryBytes),
+            [
+              Diagnostics.summary(thumbBytes: CardThumbs.memoryBytes),
+              channelSummary(),
+            ].where((s) => s.isNotEmpty).join('\n'),
             key: const ValueKey('diagnostics-row'),
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.labelSmall,

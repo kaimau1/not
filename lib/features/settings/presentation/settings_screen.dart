@@ -30,6 +30,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
 import '../../../core/tips.dart';
 import 'personalize_screen.dart' show PersonalizeModuleSwitches;
+import '../../../core/utils/channel_counter.dart';
 import '../../../core/utils/diagnostics.dart';
 import '../../../core/utils/doc_picker.dart';
 import '../../../core/widgets/expand_reveal.dart';

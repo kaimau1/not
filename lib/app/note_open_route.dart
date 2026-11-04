@@ -1,6 +1,8 @@
+import 'dart:ui' as ui show Image;
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show PaintingContextCallback;
 
 import 'split_shell.dart';
 import '../core/a11y/motion.dart';
@@ -242,6 +244,11 @@ class _ContainerTransformState extends State<_ContainerTransform> {
   /// kapanır — editör canlı çizilir.
   final SnapshotController _snapshot = SnapshotController();
 
+  /// F23.4: içeriğin solması `Opacity` (ekran boyunda ara katman + birleştirme,
+  /// GLES'te kare başına ~tam ekran fazladan doku) yerine görüntünün BOYA
+  /// ALFASIYLA — dondurulmuş görüntü yarı saydam boyayla bir kez çizilir.
+  final _FadeSnapshotPainter _fade = _FadeSnapshotPainter();
+
   @override
   void initState() {
     super.initState();
@@ -283,6 +290,7 @@ class _ContainerTransformState extends State<_ContainerTransform> {
   void dispose() {
     widget.animation.removeStatusListener(_onStatus);
     _snapshot.dispose();
+    _fade.dispose();
     _curve.dispose();
     super.dispose();
   }
@@ -297,6 +305,7 @@ class _ContainerTransformState extends State<_ContainerTransform> {
       child: SnapshotWidget(
         controller: _snapshot,
         mode: SnapshotMode.permissive,
+        painter: _fade,
         child: RepaintBoundary(
           child: _FrozenWhileClosing(
             animation: widget.animation,
@@ -337,6 +346,12 @@ class _ContainerTransformState extends State<_ContainerTransform> {
     final content = const Interval(0.08, 0.42).transform(t);
     final fill = lostCard ? content : const Interval(0, 0.12).transform(t);
     final settled = t >= 1;
+    _fade.opacity = content;
+    // Kenar yumuşatmalı kırpma (ara katman) yalnız köşe yuvarlakken; yarıçap
+    // sıfıra inince düz dikdörtgen kırpma yeter (F23.4).
+    final clip = settled
+        ? Clip.none
+        : (radius > 0.5 ? Clip.antiAlias : Clip.hardEdge);
     // Büyüyen kutunun bulanık gölgesi YOK: tam ekrana varan bir dikdörtgenin
     // 28 px bulanıklığı her karede GPU'da yeniden hesaplanıyordu (kasmanın
     // ikinci kaynağı); derinliği alttaki kararma veriyor.
@@ -359,7 +374,7 @@ class _ContainerTransformState extends State<_ContainerTransform> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(radius),
-              clipBehavior: settled ? Clip.none : Clip.antiAlias,
+              clipBehavior: clip,
               child: OverflowBox(
                 alignment: Alignment.topLeft,
                 minWidth: size.width,
@@ -369,7 +384,7 @@ class _ContainerTransformState extends State<_ContainerTransform> {
                 child: Transform.scale(
                   scale: scale,
                   alignment: Alignment.topLeft,
-                  child: Opacity(opacity: content, child: page),
+                  child: page,
                 ),
               ),
             ),
@@ -378,6 +393,57 @@ class _ContainerTransformState extends State<_ContainerTransform> {
       ],
     );
   }
+}
+
+/// Dondurulmuş sayfa görüntüsünü [opacity] alfasıyla çizer (F23.4). Görüntü
+/// yokken (geçiş bitti, platform görünümü) alfa < 1 ise olağan opaklık
+/// katmanına, 1 ise doğrudan çizime döner; 0 ise hiç çizmez.
+class _FadeSnapshotPainter extends SnapshotPainter {
+  double _opacity = 1;
+
+  double get opacity => _opacity;
+  set opacity(double value) {
+    if (value == _opacity) return;
+    _opacity = value;
+    notifyListeners();
+  }
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset offset,
+    Size size,
+    PaintingContextCallback painter,
+  ) {
+    if (_opacity <= 0) return;
+    if (_opacity >= 1) {
+      painter(context, offset);
+    } else {
+      context.pushOpacity(offset, (_opacity * 255).round(), painter);
+    }
+  }
+
+  @override
+  void paintSnapshot(
+    PaintingContext context,
+    Offset offset,
+    Size size,
+    ui.Image image,
+    Size sourceSize,
+    double pixelRatio,
+  ) {
+    if (_opacity <= 0) return;
+    final src = Rect.fromLTWH(0, 0, sourceSize.width, sourceSize.height);
+    final dst = Rect.fromLTWH(offset.dx, offset.dy, size.width, size.height);
+    final paint = Paint()
+      ..filterQuality = FilterQuality.medium
+      ..color = Color.fromRGBO(0, 0, 0, _opacity);
+    context.canvas.drawImageRect(image, src, dst, paint);
+  }
+
+  @override
+  bool shouldRepaint(_FadeSnapshotPainter oldPainter) =>
+      oldPainter._opacity != _opacity;
 }
 
 /// Kapanış geçişi boyunca sayfanın gördüğü [MediaQuery] DONAR.
