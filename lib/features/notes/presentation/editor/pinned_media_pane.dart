@@ -12,6 +12,7 @@ import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
 import '../drive_ui.dart';
 import '../viewers/bubble_layer.dart';
+import '../viewers/pdf_read_style.dart';
 import 'note_images.dart';
 import 'audio_card_box.dart';
 import 'pdf_page_box.dart';
@@ -399,7 +400,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                     // büyük), boyu taşarsa dikeyde kayar; yazı basılı
                     // tutularak seçilir → "Not al".
                     ? ColoredBox(
-                        color: scheme.surfaceContainerHigh,
+                        color: PdfReadStyle.of(context).background,
                         child: WebDriveGate(
                           attachment: widget.media,
                           builder: (_, shown) => PdfPageBox(

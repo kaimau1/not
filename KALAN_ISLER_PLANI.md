@@ -386,7 +386,7 @@ verildi (2026-11-03) — gece görevi sormadan uygular. Protokol Faz 18
 ile aynı ("Faz 28'i yap" sıradaki açık maddeden, "F28.3'ü yap" tek madde).
 Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
 
-- [ ] **F28.5 Web'de üç nokta menüsünden Ayarlar açılmıyor (KIRIK).**
+- [x] **F28.5 Web'de üç nokta menüsünden Ayarlar açılmıyor (KIRIK).**
   Kod görünüşte doğru: `dashboard_menu.dart` `case 'settings'` →
   `context.push('/settings')`; rota `router.dart` (`path: '/settings'`).
   Önce yayındaki web'de / `flutter run -d web-server` ile yeniden üret
@@ -395,14 +395,16 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
   yönlendirme koruması (`redirect`). Düzelt + menüden Ayarlar'a giden
   widget testi. Diğer menü maddelerinin (Arşiv, Çöp, Kılavuz) de web'de
   açıldığını aynı testte doğrula.
-- [ ] **F28.3 Web'de ve tablette her zaman görünen "Ana sayfaya dön" düğmesi.**
+  **Yapıldı (2026-11-04):** KÖK NEDEN: `AppRailScope` ray çekmeceye dönmüşken (not açık) ve tam ekranda da "ray görünüyor" diyordu → ⋮ menüsü Ayarlar/Arşiv/Çöp/Hatırlatıcılar/Yapay zekâ'yı "rayda var" diye ÇIKARIYOR, ray ise gizliydi. Kapsam artık `docked` bayrağı taşır (yalnız ray yuvalıyken kapılar menüden düşer). Test `rail_scope_menu_test`. (Menüdeki `context.push` yolları değişmedi; gerçek tarayıcıda doğrulanmadı.)
+- [x] **F28.3 Web'de ve tablette her zaman görünen "Ana sayfaya dön" düğmesi.**
   Her ekranda (not, Ayarlar, AI, Arşiv, Çöp, Kılavuz, klasör) tek dokunuşla
   `/`; geçmiş yığını temizlenir (`context.go('/')`), açık not kaydı
   flush edilir. Yer: tablet rayının (64 dp) tepesi ve dar web'de üst çubuk;
   tam ekran kipinde (liste gizli) de görünsün. Telefonda değişiklik yok.
   İlgili: `router.dart`, `app_commands.dart`, tablet rayı. Kısayol (ör.
   Alt+Home) + kısayol yardımına satır. Test: her rotadan düğme → `/`.
-- [ ] **F28.4 Balonlu ve sabit mod arasında görsel farklılık.** Önce iki
+  **Yapıldı (2026-11-04):** `goHome` (tam ekranı kapatır, `go('/')`; editör sökülürken kendi kaydını yazar). Rayın tepesinde ana sayfa düğmesi (geniş rayda "Yeni not" yanında, dar rayda üstünde — dikey yer yemesin), çekmece aynı rayı taşır; dar web'de (`homeBarOnNarrow`) ana sayfa dışında ince üst çubuk; editör üst çubuğunda (≥600 dp) ev simgesi (çekmece/tam ekranda ray gizli); Alt+Home + kısayol yardımı. Test `rail_scope_menu_test` (ray: 5 rota; dar web çubuğu; telefonda yok).
+- [x] **F28.4 Balonlu ve sabit mod arasında görsel farklılık.** Önce iki
   modu aynı notla yan yana ekran görüntüsüyle karşılaştır (web turu,
   scratchpad) ve farkları listele (yazı tipi/boyut, satır aralığı, kenar
   boşluğu, ek/görsel kutuları, renk/zemin, başlık). Kullanıcıya listeyi
@@ -411,6 +413,7 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
   `pinned_media_pane.dart`, `text_page_box.dart`, `note_images.dart`.
   **KARAR (kullanıcı, 2026-11-03):** **SABİT MOD DOĞRU** — balonlu mod sabit moda benzetilir (sormadan uygula; farkları maddeye yaz).
   Test: iki modda aynı stil değerleri (golden ya da stil karşılaştırma).
+  **Yapıldı (2026-11-04) — PDF için; ekran görüntüsüyle DOĞRULANMADI (bulutta PDF notu açılamıyor, Storage 400):** Koddan bulunan farklar — balonlu (pdfrx `PdfViewer`, `pdfLayerParams`): gri zemin (`Colors.grey` varsayılanı), 8 dp kenar/sayfa boşluğu, sayfa gölgesi; sabit (`PdfPageBox fitWidth`): `surfaceContainerHigh` zemin, boşluksuz, gölgesiz. Tek kaynak `viewers/pdf_read_style.dart` (`PdfReadStyle`): zemin = sabitin zemini, boşluk 2 dp ayraç, gölge yok; ikisi de buradan okur. Test `pdf_read_style_test`. Cihazda görsel karşılaştırma `KALANLAR.md` §2'ye. Görsel/metin/slayt balonlu sayfaları ayrı çizim yolları — karşılaştırılmadı.
 - [ ] **F28.2 Ek senkronunu baştan yaz; bugünkü yapı silinsin (büyük).**
   **KARAR (kullanıcı, 2026-11-03):** (1) **Kod + buluttaki ek KAYITLARI sıfırlanır**; ekler cihazlardan
   yeniden yüklenir — hiçbir cihazda olmayan ek kaybolur (kullanıcı kabul etti).

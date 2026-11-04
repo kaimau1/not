@@ -19,6 +19,7 @@ import 'area_select.dart';
 import 'bubble_layer.dart';
 import 'ink_layer.dart';
 import 'pdf_document_view.dart';
+import 'pdf_read_style.dart';
 import 'pdf_select_layer.dart';
 import 'pdf_selection_bar.dart';
 import '../editor/attachment_clipboard.dart';
@@ -233,6 +234,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen>
       valueListenable: _selection.selecting,
       builder: (context, dragging, _) {
         final params = pdfLayerParams(
+          style: PdfReadStyle.of(context),
           selection: _selection,
           bubbles: _bubbles,
           inkLayer: (page) => InkPageLayer(controller: _ink, page: page),
@@ -484,6 +486,7 @@ void revealPdfBubble({
 /// başına tazelenir. Eskiden her seçim olayı ekranın `setState`ini çağırıyor,
 /// o da tüm sayfa katmanlarını yeniden kuruyordu (kasmanın kök nedeni).
 PdfViewerParams pdfLayerParams({
+  required PdfReadStyle style,
   required PdfSelectionState selection,
   required BubbleController bubbles,
   required bool editable,
@@ -586,6 +589,10 @@ PdfViewerParams pdfLayerParams({
   }
 
   return PdfViewerParams(
+    // Zemin, kenar boşluğu, gölge: sabit bölmeyle ORTAK (bkz. PdfReadStyle).
+    backgroundColor: style.background,
+    margin: PdfReadStyle.pageGap,
+    pageDropShadow: PdfReadStyle.pageShadow,
     // Sürükleyerek seçim ya da balon taşıma sürerken pan kapalı: parmak
     // seçimi büyütür / balonu taşır, sayfa kaymaz. Bu bayrak jest BAŞINDA ve
     // SONUNDA (saniyede iki kez değil, hareket başına iki kez) değişir; params
