@@ -2452,5 +2452,18 @@
   "placementHintTitle": "Where should the attachment go?",
   "placementHintBody": "Pinned: top of the note · Floating: within the text · Bubbles: notes on top · Attached: file below",
   "showMoreChecked": "Show checked ({n} hidden)",
-  "hideMoreChecked": "Collapse checked"
+  "hideMoreChecked": "Collapse checked",
+  "gmailTitle": "Gmail",
+  "gmailConnect": "Connect Gmail",
+  "gmailReadOnlyHint": "Read-only: see your emails and save them as notes. Nothing in Gmail is changed.",
+  "gmailGoogleOnly": "Sign in with Google to use Gmail.",
+  "gmailSearchHint": "Search mail (Gmail search syntax)",
+  "gmailEmpty": "No emails",
+  "gmailLoadMore": "Load more",
+  "gmailError": "Couldn't reach Gmail",
+  "gmailSaveNote": "Save as note",
+  "gmailAiSummary": "Note with AI summary",
+  "gmailAiTasks": "Extract task list",
+  "gmailWithAttachments": "Include attachments",
+  "gmailNoteCreated": "Note created"
 }

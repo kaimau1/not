@@ -1289,6 +1289,24 @@ class GeminiService {
     ];
   }
 
+  /// E-postadan not içeriği (F28.1): [tasks] true ise yalnız yapılacaklar
+  /// ("- " ile başlayan satırlar; liste notuna dönüşür), değilse kısa özet.
+  Future<String> fromEmail(String subject, String body, {bool tasks = false}) =>
+      _generate([
+        {
+          'text': tasks
+              ? 'Aşağıdaki e-postadan yapılması gereken işleri çıkar. Her işi '
+                    '"- " ile başlayan ayrı bir satıra yaz (tarih/kişi varsa '
+                    'işin içinde belirt). İş yoksa yalnız "- (iş yok)" yaz. '
+                    'Açıklama ekleme.'
+              : 'Aşağıdaki e-postayı not olarak saklanacak biçimde kısa '
+                    'özetle: ana konu, önemli bilgiler (tarih, tutar, kişi, '
+                    'adres) ve varsa istenen eylem. E-postanın dilini koru. '
+                    'Yalnız özeti ver.',
+        },
+        {'text': 'Konu: $subject\n\n---\n$body'},
+      ]);
+
   /// Metni verilen yönergeye göre yeniden yazar (düzelt/resmîleştir/kısalt...).
   Future<String> rewriteText(String text, String instruction) => _generate([
     {

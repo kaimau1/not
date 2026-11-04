@@ -6605,4 +6605,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hideMoreChecked => 'Collapse checked';
+
+  @override
+  String get gmailTitle => 'Gmail';
+
+  @override
+  String get gmailConnect => 'Connect Gmail';
+
+  @override
+  String get gmailReadOnlyHint =>
+      'Read-only: see your emails and save them as notes. Nothing in Gmail is changed.';
+
+  @override
+  String get gmailGoogleOnly => 'Sign in with Google to use Gmail.';
+
+  @override
+  String get gmailSearchHint => 'Search mail (Gmail search syntax)';
+
+  @override
+  String get gmailEmpty => 'No emails';
+
+  @override
+  String get gmailLoadMore => 'Load more';
+
+  @override
+  String get gmailError => 'Couldn\'t reach Gmail';
+
+  @override
+  String get gmailSaveNote => 'Save as note';
+
+  @override
+  String get gmailAiSummary => 'Note with AI summary';
+
+  @override
+  String get gmailAiTasks => 'Extract task list';
+
+  @override
+  String get gmailWithAttachments => 'Include attachments';
+
+  @override
+  String get gmailNoteCreated => 'Note created';
 }

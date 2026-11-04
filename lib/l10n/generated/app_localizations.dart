@@ -11761,6 +11761,84 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'İşaretlileri daralt'**
   String get hideMoreChecked;
+
+  /// No description provided for @gmailTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gmail'**
+  String get gmailTitle;
+
+  /// No description provided for @gmailConnect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gmail\'e bağlan'**
+  String get gmailConnect;
+
+  /// No description provided for @gmailReadOnlyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız okuma: e-postalarını görür, nota kaydedersin. Gmail\'de hiçbir şey değiştirilmez.'**
+  String get gmailReadOnlyHint;
+
+  /// No description provided for @gmailGoogleOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gmail için Google hesabıyla giriş yap.'**
+  String get gmailGoogleOnly;
+
+  /// No description provided for @gmailSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-postalarda ara (Gmail arama sözdizimi)'**
+  String get gmailSearchHint;
+
+  /// No description provided for @gmailEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta yok'**
+  String get gmailEmpty;
+
+  /// No description provided for @gmailLoadMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha fazla'**
+  String get gmailLoadMore;
+
+  /// No description provided for @gmailError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gmail\'e ulaşılamadı'**
+  String get gmailError;
+
+  /// No description provided for @gmailSaveNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota kaydet'**
+  String get gmailSaveNote;
+
+  /// No description provided for @gmailAiSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI özetiyle not'**
+  String get gmailAiSummary;
+
+  /// No description provided for @gmailAiTasks.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görev listesi çıkar'**
+  String get gmailAiTasks;
+
+  /// No description provided for @gmailWithAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekleri de al'**
+  String get gmailWithAttachments;
+
+  /// No description provided for @gmailNoteCreated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not oluşturuldu'**
+  String get gmailNoteCreated;
 }
 
 class _AppLocalizationsDelegate

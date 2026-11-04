@@ -6584,4 +6584,44 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get hideMoreChecked => 'İşaretlileri daralt';
+
+  @override
+  String get gmailTitle => 'Gmail';
+
+  @override
+  String get gmailConnect => 'Gmail\'e bağlan';
+
+  @override
+  String get gmailReadOnlyHint =>
+      'Yalnız okuma: e-postalarını görür, nota kaydedersin. Gmail\'de hiçbir şey değiştirilmez.';
+
+  @override
+  String get gmailGoogleOnly => 'Gmail için Google hesabıyla giriş yap.';
+
+  @override
+  String get gmailSearchHint => 'E-postalarda ara (Gmail arama sözdizimi)';
+
+  @override
+  String get gmailEmpty => 'E-posta yok';
+
+  @override
+  String get gmailLoadMore => 'Daha fazla';
+
+  @override
+  String get gmailError => 'Gmail\'e ulaşılamadı';
+
+  @override
+  String get gmailSaveNote => 'Nota kaydet';
+
+  @override
+  String get gmailAiSummary => 'AI özetiyle not';
+
+  @override
+  String get gmailAiTasks => 'Görev listesi çıkar';
+
+  @override
+  String get gmailWithAttachments => 'Ekleri de al';
+
+  @override
+  String get gmailNoteCreated => 'Not oluşturuldu';
 }
