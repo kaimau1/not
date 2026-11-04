@@ -34,14 +34,14 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 20…27):
 
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
-| 20 | Ölçüm kapısı (gerçekçi veri, yan yana profil derlemesi, CI bütçesi) | Açık | — | F20.1 bu oturumda yapıldı (araçlar) |
-| 21 | Ana ekran kartı: önizlemeyi kırp, kart başına işi azalt | Kısmen | 2026-11-03 | 2 tur: takılma %8,4→%3,4–4,2, en kötü 115→33–50 ms, arama 465→139 ms; kabul sağlanmadı — kalan engel raster+kurulum (K7) ve arama KARARI (faz notu) |
-| 22 | Firestore trafiği: yazımda tüm koleksiyon ana iş parçacığında | Açık | — | 3 KARAR maddesi |
-| 23 | Geçişler: not açma/kapama | Açık | — | Kapanışta her seferinde 99 ms |
+| 20 | Ölçüm kapısı (gerçekçi veri, yan yana profil derlemesi, CI bütçesi) | Kısmen | 2026-11-04 | F20.1 araçlar, F20.3 gerçekçi CI verisi + 2 senaryo; F20.2/F20.4 telefon |
+| 21 | Ana ekran kartı: önizlemeyi kırp, kart başına işi azalt | Kısmen | 2026-11-04 | 2 tur: takılma %8,4→%3,4–4,2, en kötü 115→33–50 ms, arama 465→139 ms; kabul sağlanmadı — kalan engel raster+kurulum (K7); F21.6 arama katmanı yazıldı (2026-11-04, cihazda ölçülmedi) |
+| 22 | Firestore trafiği: yazımda tüm koleksiyon ana iş parçacığında | Kısmen | 2026-11-04 | F22.2/3/5/7 bulutta (cihazda ölçülmedi); F22.1 ölçüm, F22.4 göç, F22.6 açık |
+| 23 | Geçişler: not açma/kapama | Kısmen | 2026-11-04 | F23.1 Hero taraması + F23.3 kayıt zamanlayıcısı (cihazda ölçülmedi); F23.2/4/5 ölçüm |
 | 24 | Uzun not editörü: tuş başına O(n) | Açık | — | En büyük iş; mimari KARAR |
 | 25 | Soğuk açılış | Açık | — | |
 | 26 | Titreme ve görsel kararlılık | Açık | — | Önce videoyla ölç |
-| 27 | Hijyen + regresyon kapısı | Açık | — | |
+| 27 | Hijyen + regresyon kapısı | Kısmen | 2026-11-04 | F27.4 CI bütçesi (p90/p99/en kötü) |
 
 ## Özet — ölçülen taban çizgisi (v1.1.613, release)
 
@@ -152,7 +152,7 @@ zamanlama yamaları.
   SurfaceFlinger kare zamanları, atrace iş parçacığı yükü + saat hizalama,
   profil uygulamasında VM servisi (zaman çizelgesi + CPU örnekleri),
   Keep Takeout veri seti üreticisi. **Yapıldı (2026-11-03).**
-- [ ] **F20.2 Profil derlemesi kendiliğinden yan yana kurulsun.** Bugün elle
+- [x] **F20.2 Profil derlemesi kendiliğinden yan yana kurulsun.** Bugün elle
   yapıldı (Ek A): `applicationId` → `dev.kaimau.notlar.olcum`, manifest etiketi
   "Notlar Ölçüm", `google-services.json`a aynı istemcinin kopyası. Yap:
   `buildTypes.profile { applicationIdSuffix = ".olcum" }` + etiket için manifest
@@ -161,10 +161,12 @@ zamanlama yamaları.
   yok; test telefonunda varsayılan kimlikle `flutter run/drive/install` ASLA
   (imza uyuşmazlığı → kaldır-kur → telefondaki veri silinir).
   Kabul: `flutter build apk --profile` çıktısı telefondaki release'e dokunmadan kurulur.
-- [ ] **F20.3 CI `perf_test`'i gerçekçi yap.** Veri setine 10 uzun gövde
+  **Yapıldı (2026-11-04):** `build.gradle.kts` `profile { applicationIdSuffix = ".olcum" }` + `manifestPlaceholders["appLabel"]` ("Notlar" / "Notlar Ölçüm") + `android/app/src/profile/google-services.json` (aynı istemcinin `…olcum` kopyası). CI `[perf]` işi profil derlemesini bu kimlikle kurdu (bkz. Ek B). Telefonda kabul (release'e dokunmadan kurulum) KALANLAR §2 #38. Sınır: `app_shortcuts.xml` sabit paket adı → kısayollar release'i açar.
+- [x] **F20.3 CI `perf_test`'i gerçekçi yap.** Veri setine 10 uzun gövde
   (300–600 satır) ve 120 maddelik liste; yeni senaryolar: 30 KB notta 100 tuş
   yazma, kart ızgarasında arama sorgusu değişimi. Bütçe p90 build < 8 ms →
   **bugün KIRMIZI olmalı** (K1/K2'yi yakaladığını göster); Faz 21/24 sonrası yeşil.
+  **Yapıldı (2026-11-04):** veri setine 10 uzun gövde (300–600 satır) + 120 maddelik liste; yeni senaryolar `editor_typing_30kb` (30 KB'ta 100 tuş) ve `dashboard_search` ("önemli" yaz-sil ×3). Bütçe F27.4 ile p90/p99/en kötü. İlk `[perf]` koşusu: bkz. Ek B.
 - [ ] **F20.4 Taban çizelgesi** bu dosyadaki tablo; her faz sonunda aynı
   senaryolarla yeni satır (Ek B).
 
@@ -252,30 +254,33 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   profilinde `NoteCard.build` / `maskSensitiveNumbers` YOK; testler: dilim
   (uzun gövde, grapheme, açık kalan işaret), arama kesiti.
 
-- [ ] **F21.6 Arama vurgusu kartın üstünde ayrı katman** (KARAR 2026-11-03).
+- [x] **F21.6 Arama vurgusu kartın üstünde ayrı katman** (KARAR 2026-11-03).
   Sorgu değişince kart yeniden kurulmaz; vurgu dikdörtgenleri kartın metin
   düzeninden (önbellekli `TextPainter`/paragraf kutuları) hesaplanıp üstte
   ayrı `CustomPaint` katmanında çizilir. Süzgeç sonucu değişmeyen kartlar
   aynı örnek kalır (`ValueKey(note.id)`). Kabul: arama karesi < 16 ms
   (bugün 139 ms); vurgu testleri yeşil.
+  **Yapıldı (2026-11-04, yazıldı, cihazda ölçülmedi):** `search_highlight.dart` — `SearchHighlight` render nesnesi canlı sorguyu (`ValueListenable`) dinler, eşleşme kutularını paragrafın `getBoxesForSelection`ından metnin ALTINA boyar; metin sorgudan bağımsız. Pano kart önbelleği anahtarı "arama var mı" (sorgu değil) → harf eklemek kart kurmaz; yalnız kesit (`_SearchExcerptBody`) değişince o parça kurulur. Bedel: vurgu kalın/renkli yazı değil (glif genişliği → yerleşim), zemin + alt çizgi. Testler: `search_highlight_test`, `card_preview_test`. Ölçüm: KALANLAR §2 #36.
 
 ## FAZ 22 — Firestore trafiği (K3, K4)
 
 - [ ] **F22.1 Önce ölç:** 50 / 250 / 500 notla kısa notta yazma senaryosu →
   kayıt sonrası ana blok (ms) ve kayıt başına olay sayısı. Beklenen: not
   sayısıyla doğrusal; olay sayısı 2.
-- [ ] **F22.2 Otomatik kaydı seyrekleştir.** **KARAR (kullanıcı, 2026-11-03):** EVET — ~2 sn boşluk, en geç 10 sn; kapanış/arka plan/odak kaybında hemen. Debounce 0,5 sn →
+- [x] **F22.2 Otomatik kaydı seyrekleştir.** **KARAR (kullanıcı, 2026-11-03):** EVET — ~2 sn boşluk, en geç 10 sn; kapanış/arka plan/odak kaybında hemen. Debounce 0,5 sn →
   ~2 sn boşluk, en geç 3 sn → ~10 sn; kapanış/arka plan/odak kaybında hemen
   (bugün de var: `_debouncer.flush`, `onPause`). Bedel: uygulama öldürülürse en
   çok ~10 sn'lik yazı (yerel önbellek yazımı anlık değil kayıtta). Kazanç: olay
   sayısı 3–4× azalır. Öneri: evet.
-- [ ] **F22.3 Kayıt başına ikinci olayı kaldır.** **KARAR (kullanıcı, 2026-11-03):** EVET — otomatik kayıtta istemci saati, sunucu zamanı kapanışta (`serverUpdatedAt ?? updatedAt`). Otomatik
+  **Yapıldı (2026-11-04, yazıldı, cihazda ölçülmedi):** `kEditorSaveDelay` 2 sn / `kEditorSaveMaxWait` 10 sn; çıkış kapıları değişmedi (`_saveNow`: dispose + `resumed` dışı her evre). Test `autosave_cadence_test`. Ölçüm KALANLAR §2 #34.
+- [x] **F22.3 Kayıt başına ikinci olayı kaldır.** **KARAR (kullanıcı, 2026-11-03):** EVET — otomatik kayıtta istemci saati, sunucu zamanı kapanışta (`serverUpdatedAt ?? updatedAt`). Otomatik
   kayıtta `updatedAt` istemci saatiyle (`Timestamp.now()`); sunucu zamanı yalnız
   editör kapanışında (ya da ayrı `serverUpdatedAt` alanında). Etkilenenler
   (`grep updatedAt`, 7 karşılaştırma): `shared_note_activity` okunmamış
   hesabı, `push_service`, yedek, sıralama, `text_merge` üç yönlü birleştirme.
   Risk: cihaz saati yanlışsa sıra/okunmamış kayar. Öneri: sunucu zamanı
   kapanışta + karşılaştırmalar `serverUpdatedAt ?? updatedAt`.
+  **Yapıldı (2026-11-04, yazıldı, cihazda ölçülmedi):** `updateNote(clientTime: true)` otomatik kayıtta `updatedAt = Timestamp.now()`; kapanışta ve `paused/detached`ta bir kez sunucu damgası (`_stampServerTimeOnExit` → `updateFields(id, {})`); `_saveNow` zaten sunucu zamanıyla yazar. Ayrı `serverUpdatedAt` alanı EKLENMEDİ (en güvenli: şema/kural/yedek değişmez, 7 karşılaştırma aynen `updatedAt`); cihaz saati yanlışsa sapma yalnız editör açıkken. Alan gerekirse **sabah bakılacak**.
 - [ ] **F22.4 Senkron yükü not sayısından bağımsız.** **KARAR (kullanıcı, 2026-11-03):** **B seçildi** — hafif "kart dizini" + gövde ayrı belge. GÜVENLİK ŞARTLARI: göçten önce yerel tam yedek; göç idempotent ve sürümlü; eski şema bir sürüm boyunca okunmaya devam (geri dönüş mümkün); kurallar + `rules-test` + yedek/geri yükleme aynı oturumda; birden çok oturuma bölünebilir (önce okuma tarafı, sonra yazma, en son eski alanların kaldırılması). Aşağıdaki A metni bilgi için: Ana liste: ilk liste
   önbellekten bir kez (`GetOptions(source: cache)`), sonra yalnız
   `updatedAt > son görülen` sorgusu dinlenir → her olay yalnız değişen notları
@@ -285,31 +290,37 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   için pay (`updatedAt` sunucu zamanı olmalı → F22.3 ile birlikte tasarla),
   ara sıra tam uzlaştırma. Alternatif B: hafif "kart dizini" belgesi + gövde
   ayrı belge (veri göçü, kurallar, yedek — daha büyük). Öneri: A.
-- [ ] **F22.5 Dart tarafı tek geçiş:** `watchNotes` → `_withLocal` → sıralama →
+- [x] **F22.5 Dart tarafı tek geçiş:** `watchNotes` → `_withLocal` → sıralama →
   `filteredNotesProvider` olay başına bir kez sıralasın; editör açıkken
   (telefonda tam ekran) gizli pano iş yapmasın — profil zaman çizelgesiyle ölç.
+  **İncelendi (2026-11-04):** kod değişikliği gerekmedi — gizli pano (`TickerMode` kapalı) Riverpod 3'te aboneliği duraklatıyor, `filteredNotesProvider` editör açıkken olay başına hesaplanmıyor, görünür olunca bir kez yetişiyor (`hidden_dashboard_pause_test` sabitler). Olay başına sıralama: depo (`_compare`, ~0,2 ms/500 not) — diğer tüketiciler sıraya bağlı, kaldırılmadı. Profil ölçümü KALANLAR §2 #34 ile birlikte.
 - [ ] **F22.6 Editörün tek not dinleyicileri:** `noteStreamProvider` +
   `pendingWritesProvider` (`includeMetadataChanges`) kayıt başına kaç olay
   üretiyor, ölç; senkron göstergesi için gerekmeyen olayları ele.
-- [ ] **F22.7 Platform kanalı israfı:** `alwaysHandleBack` son değeri saklasın,
+  **Ertelendi (2026-11-04):** iki belge dinleyicisi (veri + `includeMetadataChanges`) tek akışa birleştirilebilir ama metadata-only olayı ayıklamak derin karşılaştırma ister; kazanç tek belge kodlaması (~ms), F22.3 ile kayıt başına olay zaten 3→2. Ölçmeden değiştirilmedi — **sabah bakılacak** (profilde `noteStreamProvider`/`pendingWritesProvider` olay sayısı).
+- [x] **F22.7 Platform kanalı israfı:** `alwaysHandleBack` son değeri saklasın,
   değişmediyse kanal çağrısı yok (K4).
+  **Yapıldı (2026-11-04):** `alwaysHandleBack` bir kez yazar, `detached`/`AppLifecycleListener.onDetach`ta unutur. `shared_notes_back_test`: üç geçişte tek kanal çağrısı.
 - Kabul: kısa notta yazma senaryosunda kayıt sonrası ana blok **< 8 ms**,
   yazarken 0 kare > 33 ms; 500 notla da aynı (F22.4 sonrası).
 
 ## FAZ 23 — Geçişler: not açma/kapama (K5, K7)
 
-- [ ] **F23.1 Hero taramasını kapat.** Elle `Hero` yok; FAB'ların örtük Hero'su
+- [x] **F23.1 Hero taramasını kapat.** Elle `Hero` yok; FAB'ların örtük Hero'su
   (`heroTag`) sayfa geçişinde uçmasın diye de gereksiz. Yönlendirici gezginini
   `HeroControllerScope.none` ile sar (MaterialApp `builder` içinde) — bedel:
   FAB'lar sayfalar arasında uçmaz, sayfayla birlikte geçer (zaten not
   geçişinde FAB altta kalıyor; gözle kontrol). `Hero(` kullanımını yakalayan
   küçük test. Kabul: kapanış profilinde `_allHeroesFor` yok.
+  **Yapıldı (2026-11-04, yazıldı, cihazda ölçülmedi):** `HeroControllerScope.none` İŞLEMEZ — go_router her gezgine (`_CustomNavigator`) kendi HeroController'ını koyuyor. Yerine `withoutHeroWalk` = `HeroMode(enabled: false)` (tarama o düğümde durur): ana ekran, not (`_NoteOpenRoute.buildContent`) ve defter sayfaları. `hero_walk_test`: uçuş yok + `lib`te elle `Hero(` yok.
 - [ ] **F23.2 Kapanışta pano yeniden kurulmasın.** `FreezeWhenHidden` çözülürken
   değişmeyen kart kurulmasın (F21.4 sonrası ölç); Riverpod duraklat/sürdür
   maliyeti (`_updateTickerMode`) abonelik sayısı düşünce kalan kısmıyla ölç.
-- [ ] **F23.3 Editör sökümünü kapanış animasyonunun sonrasına ertele.** Kayıt
+  **Açık (ölçüm):** kart önbelleği (F2.1) + F21.4 sonrası yetişmede değişmeyen kart aynı örnek; kalan maliyet ancak profilde görülür — KALANLAR §2 #35 ile ölç.
+- [x] **F23.3 Editör sökümünü kapanış animasyonunun sonrasına ertele.** Kayıt
   flush'ı hemen (veri güvenliği); dinleyici/denetleyici/mürekkep/PDF sökümü ve
   `POST_FRAME` işleri geçiş bittikten sonra. Kabul: kapanışın ilk karesi < 16 ms.
+  **Yapıldı (2026-11-04, yazıldı, cihazda ölçülmedi):** söküm zaten rota kalkınca; kapanış karelerine binen asıl iş bekleyen 2 sn'lik kayıt zamanlayıcısıydı → `noteRouteClosing`da `Debouncer.pause()`, rota kalkınca `dispose → _saveNow` yazar, jest vazgeçilirse `resume()`. Test `debouncer_test`.
 - [ ] **F23.4 Kapsayıcı dönüşümün GPU maliyeti (GLES).** `note_open_route.dart`
   `_ContainerTransform`: alttaki panoyu geçiş boyunca da görüntüden çiz (ya da
   tam örtülen bölgeyi hiç çizme), `Opacity` yerine görüntünün boya alfası,
@@ -352,6 +363,7 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   `preloadNoteFonts` gerçek süresi ve beklemeyi kaldırınca ilk kullanımdaki
   yeniden yerleşim maliyeti (HAFIZA: bekleme bir kasmayı çözmek için kondu).
   Seçenek: yalnız ana ekranda görünen yazı tipini bekle, gerisi arka planda.
+  **Bulutta yapılmadı (2026-11-04):** KARAR "önce ölç" — arka planda yüklenen her yazı tipi motora "yazı tipleri değişti" dedirtip ekrandaki BÜTÜN metni yeniden yerleştiriyor (bekleme bu yüzden kondu); `preloadNoteFonts` süresi ve ilk 2 sn'deki yeniden yerleşim telefonda ölçülmeden değiştirilmedi.
 - [ ] **F25.2 Anında içerik.** Son ana ekranın ilk ~30 kartının hafif özeti
   (başlık, F21.1 dilimi, renk, bayraklar, küçük resim yolu) arka plana geçişte
   diske; açılışta ilk karede bunlar çizilir, Firestore gelince sessizce
@@ -368,10 +380,11 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   açılış, arka plandan dönüş, segment/klasör geçişi, editörden dönüş, kaydırma;
   kare kare inceleme (ffmpeg ile kareler) → titreme listesi (iskelet,
   görsel geç gelme, yerleşim zıplaması, renk/tema yanıp sönmesi).
-- [ ] **F26.2 Arka planda görsel önbelleği.** **KARAR (kullanıcı, 2026-11-03):** TUT — yalnız `onTrimMemory`/`didHaveMemoryPressure`'da boşalt.
+- [x] **F26.2 Arka planda görsel önbelleği.** **KARAR (kullanıcı, 2026-11-03):** TUT — yalnız `onTrimMemory`/`didHaveMemoryPressure`'da boşalt.
   `onPause`ta `imageCache.clear()` + `CardThumbs.clearMemory()` yerine yalnız
   `onTrimMemory`/`didHaveMemoryPressure`'da boşalt. Bedel: arkadaki uygulama
   birkaç MB fazla tutar.
+  **Yapıldı (2026-11-04, cihazda ölçülmedi):** `main.dart` `onPause`ta `imageCache.clear()` + `CardThumbs.clearMemory()` kaldırıldı; boşaltma yalnız `_MemoryPressure.didHaveMemoryPressure` (Android `onTrimMemory`).
 - [ ] **F26.3 Sıra zıplaması.** Editör açıkken düzenlenen not "Son
   güncellenen"de tepeye zıplamasın: editör kapanınca kart yerinden tepeye
   animasyonla taşınsın (ya da Keep gibi dönüşte bir kez yerleşsin).
@@ -391,6 +404,7 @@ yeniden dağıtımı (`sliverBalancedNoteColumns`). Çözüm KARAR ister: aramad
   ölçümü — hedefler iki arka uçta da sağlansın.
 - [ ] **F27.4 Sürüm öncesi duman testi:** `tool/perf` senaryoları test
   telefonunda; Ek B'ye satır. CI bütçesi: p90 < 8 ms, p99 < 16 ms, en kötü < 33 ms.
+  **Kısmen (2026-11-04):** CI bütçesi `perf_driver.dart`ta p90 < 8, p99 < 16, en kötü < 33 ms. Telefon duman testi KALANLAR §2 #38.
 
 ---
 
