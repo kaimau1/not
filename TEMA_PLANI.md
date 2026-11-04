@@ -233,6 +233,10 @@ Görünür değişiklik YOK: bugünkü temalar aynı piksellerle çizilir.
   mürekkep, iğne ikinci vurguda (`toUpperCase` YOK); ızgara aralığı 8 → 10,
   kenar payı 12 → 13 (`dashboard_slivers.dart`, `dashboard_shelf.dart`,
   satır 1032 hesabı).
+  **Kısmen (2026-11-04, TUTARLILIK F36.7):** bölüm etiketleri cümle düzeninde
+  ("Sabit · Bugün · Bu hafta · Daha önce") ve uygulamanın TEK başlık
+  bileşeniyle (`SectionLabel`, levha başlıklarıyla aynı boy/renk) — 11,5/soluk
+  yerine bilerek (tek bileşen ilkesi). Sayının yeri TUTARLILIK F39.1.
 - [x] **F31.6 Hızlı ekle** (`quick_add_fab.dart`): `primary` dolgu, açılan menü
   levha rengi.
   **Yapıldı:** FAB teması `primary` dolgu.
