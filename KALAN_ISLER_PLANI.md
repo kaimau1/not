@@ -435,6 +435,12 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
   ek verisini mi — kullanıcı verisi silinmeden önce AÇIKÇA sor; varsayılan:
   kod silinir, mevcut ekler yeni yapıya bir kez göç eder. Sonra eski kod
   kaldırılır (ölü yol bırakılmaz), testler yeni durum makinesi üzerinden.
+  **TASARIM (2026-11-04, kod yazılmadı — sonraki oturum A'dan başlar; her adım ayrı commit+CI, A–C canlı veriye DOKUNMAZ):**
+  - **A. Yeni durum makinesi (saf Dart, testli)** `attachment_sync.dart`: ek başına `AttachState` = `local` (yalnız bu cihazda) → `queued` → `uploading` → `synced` (Drive `driveFileId` + küçük önizleme yüklü) → `remote` (başka cihaz: dosya yok, indirilebilir) ; hata: `failed(n, nextRetryAt)` üstel bekleme; geçişler tek fonksiyon `next(state, event)`; kalıcılık = ek kaydındaki alanlar, ayrı yerel tablo yok. Eski `UploadQueue` yerine tek `AttachmentSyncService`.
+  - **B. Depolama:** asıl dosya kullanıcının Drive'ında `drive.file` kapsamı, "Notlar" klasörü (görünür); Firebase Storage'ta yalnız `users/{uid}/thumbs/{ekId}.jpg` ≤ 40 KB, kullanıcı başı tavan (kural + `rules-test`). Misafir: yerel + "Google'a bağla" şeridi. Web: jeton sessiz yenileme (`DriveAuth` yeni arayüz), `blob:` buluta yazılmaz.
+  - **C. Göç/sıfırlama (ANCAK A+B cihazda doğrulanınca):** önce `BackupService` ile yerel tam yedek (zorunlu, başarısızsa dur); sonra Firestore ek kayıtlarının `attachments` alanı + eski Storage `users/{uid}/attachments/` temizlenir (Drive dosyalarına DOKUNMA); cihazdaki yerel dosyalar yeni kuyruğa girer; sürümlü (`attachSchema: 2`), idempotent, `kClientDataVersion` artar, `minClient` bekler (F19.B1).
+  - **D. Eski kod silinir:** `attachment_repository` yükleme/indirme yolları, `upload_queue`, `drive_store` appdata yolu, `drive_ui` eski akış, Ayarlar senkron anahtarı; ölü yol bırakılmaz.
+  - ⚠ Bu iş gece görevinde YALNIZ A (ve B'nin salt-kod kısmı) yapılır; C (kayıt silme) telefon doğrulaması gerektirdiğinden F19'a "C'yi çalıştırma onayı" olarak yazılır.
 - [ ] **F28.1 Gmail bağlantısı: e-postaları gör, kaydet, içerikten not al.**
   **KARAR (kullanıcı, 2026-11-03):** **YALNIZ OKUMA** (`gmail.readonly`); Gmail'de hiçbir şey değiştirilmez. Google girişi + Drive'daki ek-kapsam akışı örnek
   (`drive_store.dart`). Kapsam: `gmail.readonly` (kısıtlı kapsam → OAuth
