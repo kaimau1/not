@@ -3217,5 +3217,18 @@
   "placementHintBody": "Sabit: notun tepesinde · Yüzen: yazının arasında · Balonlu: üstüne not · Ek: altta dosya",
   "showMoreChecked": "İşaretlileri göster ({n} gizli)",
   "hideMoreChecked": "İşaretlileri daralt",
-  "@showMoreChecked": {"placeholders": {"n": {"type": "int"}}}
+  "@showMoreChecked": {"placeholders": {"n": {"type": "int"}}},
+  "gmailTitle": "Gmail",
+  "gmailConnect": "Gmail'e bağlan",
+  "gmailReadOnlyHint": "Yalnız okuma: e-postalarını görür, nota kaydedersin. Gmail'de hiçbir şey değiştirilmez.",
+  "gmailGoogleOnly": "Gmail için Google hesabıyla giriş yap.",
+  "gmailSearchHint": "E-postalarda ara (Gmail arama sözdizimi)",
+  "gmailEmpty": "E-posta yok",
+  "gmailLoadMore": "Daha fazla",
+  "gmailError": "Gmail'e ulaşılamadı",
+  "gmailSaveNote": "Nota kaydet",
+  "gmailAiSummary": "AI özetiyle not",
+  "gmailAiTasks": "Görev listesi çıkar",
+  "gmailWithAttachments": "Ekleri de al",
+  "gmailNoteCreated": "Not oluşturuldu"
 }

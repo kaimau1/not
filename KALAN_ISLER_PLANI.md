@@ -58,8 +58,8 @@ olarak kalır; **bu dosyada olmayan açık iş yoktur.**
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
 | 18 | Bulut oturumunda yapılabilecekler (31 madde) | Bitti (F18.20/27/28 hariç — nedenleri maddelerde) | 2026-11-02 | 2. oturum: F18.7 ilk yeşil ölçüm (taban yazıldı), F18.9 kısmen (kalanı F19.C6), F18.10, F18.22, F18.23; F18.20 → F19.B8; 4. oturum: F18.29, F18.30, geniş ekran C; F18.27/28 Play kararına bağlı |
-| 19 | Telefon, konsol, hesap işleri (senin) | Kısmen | 2026-11-01 | A3, B5, B7, C3 bitti; B6 ertelendi (ölçüm zaman aşımı); C1/C2/C4 kısmen (nedenleri maddelerde); A1, A2, A4, A5, B1–B4, C5, C6, C7, D açık |
-| 28 | Kullanıcı listesi 2026-11-03 (5 madde, bulut) | Açık | 2026-11-03 | Sıra: F28.5 → F28.3 → F28.4 → F28.2 → F28.1; F28.1/F28.2 KARAR |
+| 19 | Telefon, konsol, hesap işleri (senin) | Kısmen | 2026-11-04 | 2026-11-04: Faz 28'in bulut dışı kalanı eklendi (B9, E1); A3, B5, B7, C3 bitti; B6 ertelendi (ölçüm zaman aşımı); C1/C2/C4 kısmen (nedenleri maddelerde); A1, A2, A4, A5, B1–B4, C5, C6, C7, D açık |
+| 28 | Kullanıcı listesi 2026-11-03 (5 madde, bulut) | Bulut kısmı bitti (F28.2 C/D → F19.E1) | 2026-11-04 | F28.5/3/4 main'de (PR #95, koşu 631 yeşil); F28.2 A+B kod; F28.1 yazıldı (cihazda/konsolda doğrulanmadı → F19.B9) |
 
 ---
 
@@ -441,7 +441,9 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
   - **C. Göç/sıfırlama (ANCAK A+B cihazda doğrulanınca):** önce `BackupService` ile yerel tam yedek (zorunlu, başarısızsa dur); sonra Firestore ek kayıtlarının `attachments` alanı + eski Storage `users/{uid}/attachments/` temizlenir (Drive dosyalarına DOKUNMA); cihazdaki yerel dosyalar yeni kuyruğa girer; sürümlü (`attachSchema: 2`), idempotent, `kClientDataVersion` artar, `minClient` bekler (F19.B1).
   - **D. Eski kod silinir:** `attachment_repository` yükleme/indirme yolları, `upload_queue`, `drive_store` appdata yolu, `drive_ui` eski akış, Ayarlar senkron anahtarı; ölü yol bırakılmaz.
   - ⚠ Bu iş gece görevinde YALNIZ A (ve B'nin salt-kod kısmı) yapılır; C (kayıt silme) telefon doğrulaması gerektirdiğinden F19'a "C'yi çalıştırma onayı" olarak yazılır.
-- [ ] **F28.1 Gmail bağlantısı: e-postaları gör, kaydet, içerikten not al.**
+  **A + B (salt kod) yapıldı (2026-11-04, gece görevi; CI yeşil):** A `domain/attachment_sync.dart` (`AttachState`, `nextAttachState`, üstel bekleme, `toMap/fromMap` cihaza göre synced/remote, `pickUploads`) — test `attachment_sync_test`. B: `storage.rules` `users/{uid}/thumbs/` ≤ 40 KB, yalnız jpeg/png/webp, genel 50 MB kuralı bu yolu DIŞLAR (kurallar OR'lanır) — `rules-test` 13/13; `data/drive_files_api.dart` (`drive.file`, görünür "Notlar" klasörü, yükle/indir/çöpe, 401'de tek yeniden deneme) + `DriveTokenCache` (sessiz yenileme, eşzamanlı istekte tek yenileme); `data/attachment_thumb.dart` (≤ 40 KB JPEG) — testler `drive_files_api_test`, `attachment_thumb_test`. Hiçbiri canlı yola BAĞLI DEĞİL; eski `UploadQueue` aynen çalışıyor.
+  **KALAN — sabah bakılacak (→ F19.E1):** B'nin bağlanması (`AttachmentSyncService`'in `UploadQueue` yerine geçmesi; misafir "Google'a bağla" şeridi; web GIS sessiz yenileme) cihazda doğrulanmadan C (kayıt sıfırlama) çalıştırılamaz — koşullar (A+B cihazda doğrulandı, yerel tam yedek) sağlanmadı; D (eski kodun silinmesi) C'yi bekler. Gece görevi en güvenli seçeneği uyguladı: canlı veriye dokunulmadı.
+- [x] **F28.1 Gmail bağlantısı: e-postaları gör, kaydet, içerikten not al.**
   **KARAR (kullanıcı, 2026-11-03):** **YALNIZ OKUMA** (`gmail.readonly`); Gmail'de hiçbir şey değiştirilmez. Google girişi + Drive'daki ek-kapsam akışı örnek
   (`drive_store.dart`). Kapsam: `gmail.readonly` (kısıtlı kapsam → OAuth
   "Testing" modunda kişisel kullanım sorunsuz; yayına alınırsa Google
@@ -452,6 +454,7 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
   (önerilen) yoksa etiketleme/arşivleme de mi; web + Android birlikte.
   Konsol adımı → Faz 19: Google Cloud'da "Gmail API" etkin + OAuth onay
   ekranına kapsam.
+  **Yazıldı, cihazda doğrulanmadı (2026-11-04, gece görevi):** `features/gmail/` — `data/gmail_api.dart` (YALNIZ GET: liste/arama, ileti, ek; UTF-8 çözme, HTML→metin), `data/gmail_auth.dart` (Android `google_sign_in` yetki istemcisi, web açılır pencere + sekmede jeton; Drive'dan AYRI kapsam), `domain/gmail_note.dart` (konu → başlık, gövde + kaynak satırı/bağlantı; AI görev satırı → liste maddesi), `presentation/gmail_screen.dart` (gelen kutusu + arama + sayfalama, "Bağlan" kartı, ileti ekranı: Nota kaydet / AI özetiyle not / Görev listesi çıkar, görsel+PDF ekleri nota). Rota `/gmail`, ⋮ → Uygulama → Gmail (yalnız Google hesabında). `GeminiService.fromEmail`. Test `gmail_test` (yalnız GET doğrulanır). Gerçek Gmail'e karşı denenmedi: konsol adımı **F19.B9**, cihaz adımı `KALANLAR.md` §2.
 
 ---
 
@@ -510,6 +513,10 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
 - [x] **F19.B7** (← F18.25 bulutta yapılamazsa) Windows'ta `graphify update .`.
   **Yapıldı (2026-11-01):** 18 980 düğüm; CLAUDE.md'deki "bayat" notu güncellendi.
 
+- [ ] **F19.B9** (← F28.1, F28.2-B) Google Cloud (notlar-kaimau): **Gmail API** etkin; OAuth onay
+  ekranına `gmail.readonly` (kısıtlı — "Testing"te kişisel kullanım sorunsuz) ve `drive.file`
+  kapsamları. Sonra telefonda + web'de ⋮ → Gmail → Bağlan → bir e-postayı "Nota kaydet" (ekiyle).
+
 ### C. Cihaz doğrulama
 
 - [ ] **F19.C1 Duman testi** (← F18.31): ~10 dakikalık telefon + web turu;
@@ -543,6 +550,16 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
   hesabı uygulamadan silinemedi (sandbox'ta Storage 400). Firebase konsolu →
   Authentication → 2026-11-02 08:4x'te açılmış anonim kullanıcı → sil
   (Firestore `users/<uid>` + Storage `users/<uid>/` ile birlikte).
+
+### E. Ek senkronu (F28.2) — sabah bakılacak
+
+- [ ] **F19.E1** (← F28.2 A+B) Yeni ek senkronunun BAĞLANMASI ve göçü için onay + cihaz doğrulaması.
+  Sıra: (1) sen "F19.E1 bağla" deyince bulut oturumu `AttachmentSyncService`'i bayrak arkasında bağlar (eski `UploadQueue`
+  kapalı değil); (2) sen telefonda + web'de yeni ek ekle → Drive'da görünür "Notlar" klasörüne
+  düştü mü, öbür cihazda önizleme + indirme geliyor mu; (3) ancak o zaman C: önce yerel tam yedek
+  (Ayarlar → Yedek), sonra buluttaki eski ek KAYITLARI sıfırlanır (Drive dosyaları SİLİNMEZ,
+  hiçbir cihazda olmayan ek kaybolur — kararında kabul ettin); (4) D eski kodu siler. Gece
+  görevi C'yi kendiliğinden ÇALIŞTIRMAZ.
 
 ### D. Play'e çıkılırsa (karar değişirse — bugün "çıkmıyoruz")
 

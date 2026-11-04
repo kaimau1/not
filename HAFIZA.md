@@ -508,6 +508,9 @@ maddeyi GÜNCELLE.
 - Çöp analizi `trash_analysis.dart` + AI; çöp hatırlatması bildirim 999002.
 - `KALANLAR.md` tek cihaz doğrulama listesi; eski turlar `KALANLAR_ARSIV.md`.
 
+- **Ek senkronu v2 (F28.2, 2026-11-04):** yeni yapı `domain/attachment_sync.dart` (durum makinesi, saf) + `data/drive_files_api.dart` (`drive.file`, görünür "Notlar" klasörü) + `data/attachment_thumb.dart`; Storage'ta yalnız `users/{uid}/thumbs/` ≤ 40 KB. HENÜZ BAĞLI DEĞİL — canlı yol hâlâ `UploadQueue` + `drive_store` (`drive.appdata`). TUZAK: Storage kuralları OR'lanır; genel `users/{uid}/**` 50 MB kuralı thumbs yolunu `request.resource.name` ile dışlamazsa 40 KB tavanı boşa düşer. Kayıt sıfırlama (C) gece görevinde ÇALIŞTIRILMAZ (F19.E1).
+- **Gmail (F28.1, 2026-11-04):** `features/gmail/`, yalnız GET (`gmail_test` doğrular), kapsam `gmail.readonly` Drive'dan AYRI istenir. TUZAK: `http.Response.body` charset başlığı yoksa latin1 çözer → Gmail JSON'unu `utf8.decode(bodyBytes)` ile oku. Jeton önbelleği `DriveTokenCache` (adı Drive ama kapsamdan bağımsız).
+
 ## Merkezi asistan bırakıldı (2026-11-02)
 - Kullanıcı: asistan (`com.ses.asistan`) çok pil yiyordu; ses her uygulamanın içinde. Kişisel alıcıdan
   `ASISTAN_SORGU` ve asistan sertifikası silindi; `HARITA_NOT` (Harita, Kanallarım) aynen. `image` eki

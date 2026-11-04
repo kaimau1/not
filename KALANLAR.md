@@ -106,6 +106,18 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
    yeniden dokun → renk paneli üstte kart; sayfaya yaz → panel kapanır, tepsi
    iner (yalnız tutamak + renk noktası); telefonda "⋯" → yinele/ayarlar.
 
+**2026-11-04 gece görevi (Faz 28 — yazıldı, cihazda doğrulanmadı)**
+31. [ ] (F28.1, önce F19.B9 konsol adımı) ⋮ → Gmail → "Gmail'e bağlan" → izin → gelen
+   kutusu listeleniyor; aramada `from:…` çalışıyor; bir e-posta → "Nota kaydet"
+   (PDF/görsel ekiyle) → not açılır, sonda kaynak satırı + Gmail bağlantısı;
+   "AI özetiyle not" ve "Görev listesi çıkar" (liste notu). Gmail'de hiçbir şey
+   değişmemiş olmalı (okundu işareti dahil). Web'de sayfayı yenile → yeniden
+   bağlan istemiyor (≤ 55 dk).
+32. [ ] (F28.4) Aynı PDF'i sabit ve balonlu modda aç → zemin, sayfa arası boşluk,
+   gölge aynı.
+33. [ ] (F28.3/F28.5) Web'de ⋮ → Ayarlar/Arşiv/Çöp açılıyor; tablette ray tepesindeki
+   ev simgesi her ekrandan ana sayfaya; Alt+Home.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] `import_service_test` iki testi Windows'ta KIRMIZI (Keep Takeout eki bulunmuyor) — main'de de kırık, geniş ekran işinden önce de vardı (2026-11-02)

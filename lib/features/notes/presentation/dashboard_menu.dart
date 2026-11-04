@@ -104,6 +104,9 @@ extension _DashMenu on _DashboardScreenState {
               l10n.personalizeTitle,
               Icons.tune_rounded,
             ),
+            // Gmail (F28.1): yalnız Google hesabında, Android + web.
+            if (ref.read(gmailAvailableProvider))
+              MenuAction('gmail', l10n.gmailTitle, Icons.mail_outline),
             MenuAction('guide', l10n.guideTitle, AppIcons.guide),
           ]),
         ],
@@ -133,6 +136,8 @@ extension _DashMenu on _DashboardScreenState {
         unawaited(context.push('/personalize'));
       case 'guide':
         unawaited(context.push('/guide'));
+      case 'gmail':
+        unawaited(context.push('/gmail'));
     }
   }
 

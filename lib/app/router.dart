@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/gmail/presentation/gmail_screen.dart';
 import '../features/notes/presentation/study_cards_screen.dart';
 import '../features/ai/presentation/ai_hub_screen.dart';
 import '../features/ai/presentation/briefing_screen.dart';
@@ -203,6 +204,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => GuideScreen(
               initialSection: state.uri.queryParameters['section'],
             ),
+          ),
+          // Gmail — yalnız okuma (F28.1).
+          GoRoute(
+            path: '/gmail',
+            builder: (context, state) => const GmailScreen(),
           ),
           GoRoute(
             path: '/premium',
