@@ -58,7 +58,7 @@ def scroll(pkg):
     return a
 
 
-def reveal(label, tries=12):
+def reveal(label, tries=45):
     """Kartı ekranın orta bölgesine getirir → (x, y). Liste en üstten taranır."""
     for _ in range(5):
         swipe(540, 700, 540, 2000, 80)

@@ -7,10 +7,12 @@ from vmsvc import *
 
 vm = VM(open(os.path.join(OUT, "vm.url")).read())
 print("not sayısı", [n[0][:12] for n in find("Tümü")], "sıcaklık", temp())
-x, y = reveal("kisa metin")
-time.sleep(1)
-tap(x, y); time.sleep(2.6)
-tap(540, 1000); time.sleep(2.0)
+# Sabit bölümün ilk kartı: not sayısı artınca stres notu listenin dibine düşüyor.
+for _ in range(5):
+    swipe(540, 700, 540, 2000, 80); time.sleep(0.4)
+time.sleep(0.8)
+tap(281, 875); time.sleep(2.6)
+tap(540, 700); time.sleep(2.0)
 vm.start(widgets=None)
 vm.channels(reset=True, top=0)
 N = 3
