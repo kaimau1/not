@@ -575,6 +575,10 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
 - [ ] **F19.F3** (← F23.5, F25.1, F25.2, F26.1) Ölçüm sonrası karar: editör ilk karesinin pahalı
   parçası, yazı tipi beklemesi, anında içerik (bayat/kilitli özet kararı), videoyla titreme listesi —
   KALANLAR §2 #40, #43, #44, #46.
+- [ ] **F19.F4** Faz 20–27'nin kalan ÖLÇÜM maddeleri (bulutta iş kalmadı, 2026-11-04): F20.4 taban
+  çizelgesi, F22.1, F23.2, F24.1, F26.1, F27.2 (erişilebilirlik servisi), F27.3 (Vulkan cihaz),
+  F27.4 duman testi + yazılıp ölçülmeyen F21.6/F22.2/3/6/F23.1/3/4/F25.3/F26.2/3/4 →
+  KALANLAR §2 #34–46. Ölçüm kabulü sağlamazsa ilgili madde yeniden açılır.
 
 ### D. Play'e çıkılırsa (karar değişirse — bugün "çıkmıyoruz")
 
