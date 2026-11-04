@@ -41,12 +41,12 @@ void main() {
     );
     await tester.tap(find.text('aç'));
     await tester.pump();
-    // Varsayılan 250 ms'den uzun: 250 ms'de henüz yerine oturmamış olmalı.
-    await tester.pump(const Duration(milliseconds: 250));
+    // Orta hareket (F34.1): 100 ms'de henüz yerine oturmamış olmalı.
+    await tester.pump(const Duration(milliseconds: 100));
     final mid = tester.getTopLeft(find.text('L')).dy;
     await tester.pumpAndSettle();
     final end = tester.getTopLeft(find.text('L')).dy;
     expect(mid, greaterThan(end));
-    expect(kAppSheetAnimation.duration, const Duration(milliseconds: 340));
+    expect(kAppSheetAnimation.duration, const Duration(milliseconds: 300));
   });
 }

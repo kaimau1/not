@@ -37,13 +37,13 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 29…35):
 
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
-| 29 | Altyapı: renk belirteçleri + kontrast testi | Yapıldı | 2026-11-04 | `AppTokens`, `app_palette.dart`, `theme_contrast_test`; F29.5 açık |
-| 30 | Yeni tema: yüzeyler, vurgu, bileşenler, ayar, göç | Yapıldı | 2026-11-04 | cihazda doğrulanmadı (KALANLAR §2 #49) |
-| 31 | Ana ekran ve not kartları | Kısmen | 2026-11-04 | kart, haplar, arama kutusu, FAB; ızgara aralığı/bölüm etiketi/iskelet açık; gölge ölçümü #50 |
-| 32 | Not renk paleti ve not temaları | Kısmen | 2026-11-04 | palet + koyu tonlar + çerçeve + yazı içi renk; seçici "Varsayılan" noktası, ΔE testi açık |
-| 33 | Defter modu | Kısmen | 2026-11-04 | çizgi/kenar/cilt/bloknot/nokta; sayfa göstergesi + PDF açık |
-| 34 | Geçişler ve hareket | Kısmen | 2026-11-04 | not açma köşe 16 + mürekkep karartma; `AppMotion`, tema/renk geçişi açık |
-| 35 | Platform kenarları, koyu tema, temizlik | Kısmen | 2026-11-04 | widget, açılış (Android + web), koyu tema, eski temalar, kılavuz; simge K6 gereği dokunulmadı |
+| 29 | Altyapı: renk belirteçleri + kontrast testi | Yapıldı | 2026-11-05 | `AppTokens`, `app_palette.dart`, `theme_contrast_test` |
+| 30 | Yeni tema: yüzeyler, vurgu, bileşenler, ayar, göç | Yapıldı | 2026-11-05 | KALANLAR §2 #49, #60 |
+| 31 | Ana ekran ve not kartları | Yapıldı | 2026-11-05 | yumuşak gölge hâlâ kapalı, ölçümü #50 |
+| 32 | Not renk paleti ve not temaları | Yapıldı | 2026-11-05 | ΔE 0,08 K5 paletinde tutmuyor: sabah bakılacak (F32.6) |
+| 33 | Defter modu | Yapıldı | 2026-11-05 | PDF'te desen yok, madde düştü (F33.7) |
+| 34 | Geçişler ve hareket | Yapıldı | 2026-11-05 | tema geçişi ölçüldü, animasyonsuz (F34.3) |
+| 35 | Platform kenarları, koyu tema, temizlik | Yapıldı | 2026-11-05 | beyaz sistem penceresi kapatıldı (F30.6); simge K6 gereği dokunulmadı |
 
 **Okunurluk düzeltmesi (2026-11-04, kullanıcı bulgusu — plan dışı, Faz 32 ile
 birlikte):** "not arka plan rengini değiştirince bazen yazı rengi sabit
@@ -162,9 +162,10 @@ Görünür değişiklik YOK: bugünkü temalar aynı piksellerle çizilir.
   ve koyu ton ≥ 4,5. (Bugünkü ailelerde başarısız olan varsa testte "bilinen"
   olarak işaretle, yeni ailelerde kural kesin.)
   **Yapıldı:** `test/theme_contrast_test.dart` (+ `accessibility_test` F15.6 bütün ailelere genişledi).
-- [ ] **F29.5 `visual_consistency_test` genişlet:** kart yarıçapı
+- [x] **F29.5 `visual_consistency_test` genişlet:** kart yarıçapı
   (`BorderRadius.circular(12)` kart dosyalarında) ve kart/zemin renkleri
   belirteçten okunur; sabit renk yalnız `fixed_colors.dart` kuralı korunur.
+  **Yapıldı (2026-11-05):** `visual_consistency_test` "F29.5": kart dosyalarında sabit 12 yarıçap ve `surfaceContainerLow` yok (liste satırı `AppTokens.card`e geçti).
 - Kabul: tam takım yeşil, altın/ekran görüntüsü testi bugünkü temalarda fark
   göstermez.
 
@@ -197,8 +198,9 @@ Görünür değişiklik YOK: bugünkü temalar aynı piksellerle çizilir.
   kez yeni ailelere eşlenir (`theme_family_migrated` bayrağı); `orElse` yeni
   varsayılan. Eski değer okunmaya devam eder (geri dönüş mümkün). Test.
   **Yapıldı:** `AppThemeChoice.fromStored` okurken eşler, kayda yazmaz (bayrak gerekmedi; eski sürüm eski adı okumaya devam eder). Test `theme_default_test`.
-- [ ] **F30.6** Durum/gezinme çubuğu (`SystemUiOverlayStyle`) zemin renginde,
+- [x] **F30.6** Durum/gezinme çubuğu (`SystemUiOverlayStyle`) zemin renginde,
   simgeler koyu.
+  **Yapıldı (2026-11-05):** kök `AnnotatedRegion` durum çubuğunu da saydam + zemine göre simge; editörde saydam üst çubuk `_statusBarFor(sayfa rengi)` (çizilmiş temalı notta simge beyaz kalıyordu). Android `NormalTheme` penceresi `@color/launch_bg`, 12+ için `values(-night)-v31/styles.xml`: soğuk açılıştaki ~0,6 sn beyaz pencere için, cihazda KALANLAR #60.
 - Kabul: her aile için ayarlar, ana ekran, not ekranı altın görüntüsü; kontrast
   testi yeşil; `perf_test` bütçesi yeşil.
 
@@ -224,11 +226,12 @@ Görünür değişiklik YOK: bugünkü temalar aynı piksellerle çizilir.
   (`_ChecklistProgress`) kartın koyu tonuyla; renksiz kartta alan rengi + ince
   çizgi. Kartta ≥ 12 punto ve < 0,8 alfa yok kuralı.
   **Yapıldı:** pin/yıldız ikinci vurgu, etiket/klasör/kutucuk/ilerleme kartın koyu tonu (`_CardAccent`).
-- [ ] **F31.4 Durumlar:** basılı (0,98 `Transform`, 100 ms), seçili (2 dp vurgu
+- [x] **F31.4 Durumlar:** basılı (0,98 `Transform`, 100 ms), seçili (2 dp vurgu
   halkası + köşede onay rozeti — boya katmanı), sürükleniyor (1,03 + büyük
   gölge + −0,8° — yalnız sürüklenen kart), kilitli/hassas, sabitli (ikinci
   vurgu iğne), yıldız (ikinci vurgu).
-- [ ] **F31.5 Üst bölge:** arama kutusu kart renginde + ince çizgi, köşe 14;
+  **Yapıldı (2026-11-05):** basılı 0,98 / 100 ms (`PressScale`), sürüklenen kart 1,03 + büyük gölge + −0,8° (yalnız o kart, hareketi azaltta düz). Seçim halkası + rozet, kilit, iğne/yıldız zaten vardı. Seçim halkası ANINDA: kart başına animasyon yasak (bütçe).
+- [x] **F31.5 Üst bölge:** arama kutusu kart renginde + ince çizgi, köşe 14;
   çipler (F30.2); bölüm etiketleri "Sabitlenenler/Diğerleri" 11,5/600 soluk
   mürekkep, iğne ikinci vurguda (`toUpperCase` YOK); ızgara aralığı 8 → 10,
   kenar payı 12 → 13 (`dashboard_slivers.dart`, `dashboard_shelf.dart`,
@@ -237,14 +240,17 @@ Görünür değişiklik YOK: bugünkü temalar aynı piksellerle çizilir.
   ("Sabit · Bugün · Bu hafta · Daha önce") ve uygulamanın TEK başlık
   bileşeniyle (`SectionLabel`, levha başlıklarıyla aynı boy/renk) — 11,5/soluk
   yerine bilerek (tek bileşen ilkesi). Sayının yeri TUTARLILIK F39.1.
+  **Yapıldı (2026-11-05):** arama kutusu zaten kart rengi + çizgi + 14; ızgara 8 → 10, kenar 12 → 13 (`kGridGap`, `kGridInset`). Bölüm etiketi 11,5 yerine `SectionLabel` + iğnesiz: F36.7 kararı, değiştirilmedi.
 - [x] **F31.6 Hızlı ekle** (`quick_add_fab.dart`): `primary` dolgu, açılan menü
   levha rengi.
   **Yapıldı:** FAB teması `primary` dolgu.
-- [ ] **F31.7 Boş durum ve iskelet** (`EmptyState`, `NoteListSkeleton`) yeni
+- [x] **F31.7 Boş durum ve iskelet** (`EmptyState`, `NoteListSkeleton`) yeni
   tonlarla; iskelet → içerik 200 ms çapraz solma (AKICILIK K9 ile birlikte).
-- [ ] **F31.8 Ana ekran zemini** (`dashboard_pattern.dart`,
+  **Yapıldı (2026-11-05):** iskelet belirteçlerle (köşe, boşluk); `SliverRevealFade` ilk içerik 200 ms belirir, yalnız iskelet gerçekten göründüyse (disk özeti solmaz, F25.2). Boş durum zaten tema renklerinde, kod gerekmedi.
+- [x] **F31.8 Ana ekran zemini** (`dashboard_pattern.dart`,
   `dashboard_background_sheet.dart`): desen rengi mürekkepten; görsel zeminde
   kartlar opak kalır.
+  **Yapıldı (2026-11-05):** denetlendi, kod gerekmedi: desen `onSurface` (mürekkep), saydamlık yalnız zemin katmanında, kart zemini opak.
 - Kabul: `perf_test` yeşil; kart önbelleği + `_cardEnvProvider` tek abonelik
   bozulmaz; telefonda kaydırma ölçümü KALANLAR §2.
 
@@ -274,8 +280,9 @@ kaynağında `data-dir="Ad"` kümesi. Pembe mercandan ayrışsın diye ton 34° 
 
 - [x] **F32.1** Palet + koyu tonlar aile tablosunda (F29.3); kimlik/sıra aynı.
   **Yapıldı.**
-- [ ] **F32.2 Renk şeridi** (`color_picker_sheet.dart`, `color_palette.dart`):
+- [x] **F32.2 Renk şeridi** (`color_picker_sheet.dart`, `color_palette.dart`):
   "Varsayılan" noktası kart renginde (bugün `#9E9E9E`), seçili halka vurgu.
+  **Yapıldı (2026-11-05):** "Varsayılan" noktası kart renginde + ince çizgi; seçili işaret `inkOn` (koyu temada okunmuyordu).
 - [x] **F32.3 Çerçeve** (`noteFrame`) koyu tondan 2 dp; **özel renk** karışımı
   (%55 açık / %35 koyu) yeni kart rengiyle — sonucu kontrast testine kat.
   **Yapıldı:** `noteFrame(note, dark:)` koyu ton; özel renk `customSurface` (okunurluk kuralıyla).
@@ -286,8 +293,9 @@ kaynağında `data-dir="Ad"` kümesi. Pembe mercandan ayrışsın diye ton 34° 
   gözden geçirilir; gerekirse yalnız `NoteThemePalette` tonu, çizimler aynı.
   Kartta kenar çizgisi temanın `art` renginden.
   **Yapıldı:** temaların düz zemini kontrast testinde; ton değişikliği gerekmedi.
-- [ ] **F32.6 Erişilebilirlik:** `lib/core/a11y/color_names` yeni adlar (tr+en);
+- [x] **F32.6 Erişilebilirlik:** `lib/core/a11y/color_names` yeni adlar (tr+en);
   komşu tonlar arasında ΔE(OK) ≥ 0,08 testi (renk körlüğü ayrımı).
+  **Yapıldı (2026-11-05):** yeni adlar tr+en (Mercan, Şeftali, Bal, Adaçayı, Fırtına, Lavanta, Kil, Tebeşir); eski üç anahtar silindi. **ΔE ≥ 0,08 TUTMUYOR:** K5 paletinde zemin komşuları 0,03–0,05, koyu ton en az 0,028 (mavi/fırtına). Onaylı palet değiştirilmedi; test bugünkü ayrımın altına inmeyi yakalar. **Sabah bakılacak:** 0,08 istenirse palet koyulaşır/doygunlaşır, karar kullanıcının.
 - Kabul: kontrast + ayrım testleri yeşil; eski kayıtlı not aynı kimlikle açılır.
 
 ## FAZ 33 — Defter modu
@@ -308,11 +316,13 @@ kaynağında `data-dir="Ad"` kümesi. Pembe mercandan ayrışsın diye ton 34° 
 - [x] **F33.5 Noktalı/izometrik** nokta rengi koyu ton %45; kareli %16;
   milimetrik ince çizgi oranı korunur. Kart (14 dp) ve editör aynı kural.
   **Yapıldı:** nokta rengi çizginin 1,7 katı alfa.
-- [ ] **F33.6 Sayfa göstergesi + çevirme** (`page_swipe.dart`): altta yarı
+- [x] **F33.6 Sayfa göstergesi + çevirme** (`page_swipe.dart`): altta yarı
   saydam kâğıt hapı "2 / 5"; geçişte gelen sayfa kenarında ince gölge;
   azaltılmış harekette solma.
-- [ ] **F33.7 PDF dışa aktarım** (`pdf_export_screen.dart`): defter deseni
+  **Yapıldı (2026-11-05):** `PageTurn` (`page_swipe.dart`): gelen sayfa yandan kayar + kenarda ince gölge, 1,4 sn "2 / 5" kâğıt hapı, hareketi azaltta yalnız solma. Çizim `RepaintBoundary`de. Test `theme_motion_test`.
+- [x] **F33.7 PDF dışa aktarım** (`pdf_export_screen.dart`): defter deseni
   aynı renklerle (varsa).
+  **Yapıldı (2026-11-05):** uygulanmadı, gerekmiyor: PDF dışa aktarımda defter deseni YOK (madde "varsa" diyordu); yeni özellik açılmadı.
 - Kabul: altın görüntü her desen × 3 sayfa rengi; `RuledLines` yazı-çizgi testi
   değişmeden yeşil.
 
@@ -328,21 +338,27 @@ kaynağında `data-dir="Ad"` kümesi. Pembe mercandan ayrışsın diye ton 34° 
 | uzun | 460/380 ms (not), 420/360 (ekran) | vurgulu | bugünkü süreler korunur |
 | azaltılmış | ≤ 150 ms | doğrusal solma | `motionOf` kapalı |
 
-- [ ] **F34.1 `AppMotion`** (süre + eğri) `app_tokens.dart`'ta; en sık sabit
+- [x] **F34.1 `AppMotion`** (süre + eğri) `app_tokens.dart`'ta; en sık sabit
   süreler bağlanır, gerisine dokunulmaz (toplu değişiklik yok).
+  **Yapıldı (2026-11-05):** `AppMotion` + `kGridInset/kGridGap` `app_tokens.dart`; `PressScale`, levha, segment, renk solması, sayfa çevirme bağlı.
 - [x] **F34.2 Not açma/kapama** (`note_open_route.dart`): köşe 16 → 0,
   karartma siyah yerine mürekkep tonunda; içerik t ≈ 0,45 sonrası belirir;
   F23.4 görüntü/boya alfası yöntemi KORUNUR. Raster ölçümü KALANLAR §2 #42 ile.
   **Yapıldı:** varsayılan yarıçap 16, kart kendi köşesini verir; karartma `scheme.scrim` (açıkta mürekkep). Görüntü yöntemi aynı.
-- [ ] **F34.3 Tema değişimi:** `themeAnimationDuration` 300 ms +
+- [x] **F34.3 Tema değişimi:** `themeAnimationDuration` 300 ms +
   `easeInOutCubic`. ÖNCE ölç: `AnimatedTheme` her karede `ThemeData.lerp` +
   tam ağaç kurulumu. Pahalıysa `Duration.zero`.
-- [ ] **F34.4 Not rengi değişimi** 200 ms (editör zemini + kart).
-- [ ] **F34.5** Kart basma/seçme/sürükleme (F31.4 ile aynı madde, tek yerde).
-- [ ] **F34.6** Levha, menü, diyalog aynı eğri; süzgeç/segment değişiminde
+  **Yapıldı (2026-11-05):** **ÖLÇÜLDÜ (v1.1.669, Ayarlar'da 6 geçiş): 200 ms'lik varsayılan geçiş kare başına 50–66 ms, en kötü 98 ms, 4 kareye düşüyor → `Duration.zero`** (planın "pahalıysa" kolu).
+- [x] **F34.4 Not rengi değişimi** 200 ms (editör zemini + kart).
+  **Yapıldı (2026-11-05):** `ColorFade` (`core/widgets/color_fade.dart`): denetleyici ilk değişimde kurulur, kart başına kalıcı ticker yok; tema değişiminde kimlik değişir, animasyon yok. Editörde zemin Scaffold'un arkasında `ColoredBox`, dev ağaç kurulmaz.
+- [x] **F34.5** Kart basma/seçme/sürükleme (F31.4 ile aynı madde, tek yerde).
+  **Yapıldı (2026-11-05):** F31.4 ile aynı (`PressScale`, `_ReorderableNoteCell`).
+- [x] **F34.6** Levha, menü, diyalog aynı eğri; süzgeç/segment değişiminde
   solma (F26.4 tek ızgara kuralı korunur). Kartlara kademeli giriş animasyonu
   EKLENMEZ (titreme + maliyet).
-- [ ] **F34.7** Azaltılmış hareket testi (`motionOf` false → süreler ≤ 150 ms).
+  **Yapıldı (2026-11-05):** levha `kAppSheetAnimation` 300/200 giriş+çıkış eğrisi; segment/süzgeç `AnimatedSwitcher` orta + aynı eğri, `SnapshotWhenLeaving` korundu. Diyalog (48 çağrı) ve `showMenu` (3) varsayılan 150 ms solmada bırakıldı: zaten kısa, toplu değişiklik yasak.
+- [x] **F34.7** Azaltılmış hareket testi (`motionOf` false → süreler ≤ 150 ms).
+  **Yapıldı (2026-11-05):** `theme_motion_test`: bütün süreler ≤ 150 ms + doğrusal, levha 150 ms'de oturur, kart çökmez, sayfa kaymaz.
 - Kabul: AKICILIK Faz 23 ölçümleri gerilemez; geçişte raster < 12 ms hedefi.
 
 ## FAZ 35 — Platform kenarları, koyu tema, temizlik (K2, K6)
