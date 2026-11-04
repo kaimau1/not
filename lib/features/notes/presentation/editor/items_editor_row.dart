@@ -67,6 +67,20 @@ extension _ItemsRow on ItemsEditorState {
     );
   }
 
+  /// Düz çizimin (bkz. [_LazyItemField]) karşılayamadığı madde: ipucu, görsel
+  /// çevresinde sarma, ek çipi, dokununca açılan bağlantı/damga/kaynak.
+  bool _needsRealField(NoteItem item) {
+    final text = item.text;
+    return debugEagerItemFields ||
+        text.trim().isEmpty ||
+        widget.floats.isNotEmpty ||
+        widget.videoTimestamps ||
+        text.contains('📎') ||
+        text.contains('📖') ||
+        // Bağlantının (e-posta, alan adı, şema) hepsinde nokta var; regex'siz ön süzgeç.
+        (text.contains('.') && findLinks(text).isNotEmpty);
+  }
+
   Widget _itemRow(NoteItem item, {int? reorderIndex, int? orderNumber}) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
@@ -389,7 +403,17 @@ extension _ItemsRow on ItemsEditorState {
                             // Dokunuşun konumu tutulur (etiket önizlemesi,
                             // bkz. _tapAttachmentTag); sarmalayıcı HEP ağaçta.
                             // Gömülü yazı çip olarak çizilir (gövdeyle aynı).
-                            final field = AttachmentTagChips(
+                            final field = _LazyItemField(
+                              controller: controller,
+                              focusNode: _focusFor(item),
+                              style: fieldStyle,
+                              strut: wrapStrutStyle(fieldStyle),
+                              verticalPad: fieldPad,
+                              maxLines: widget.expandItems || focused
+                                  ? null
+                                  : 1,
+                              eager: _needsRealField(item),
+                              field: AttachmentTagChips(
                               controller: controller,
                               looks: widget.tagLooks,
                               child: _tapPoint.wrap(
@@ -459,6 +483,7 @@ extension _ItemsRow on ItemsEditorState {
                                       ? const []
                                       : widget.attachmentNames,
                                 ),
+                              ),
                               ),
                             );
                             // Tek satır kipinde taşan metnin "devamı var"

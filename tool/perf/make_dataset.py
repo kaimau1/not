@@ -7,7 +7,7 @@
 Telefona: adb push <zip> /sdcard/Download/ → uygulamada Ayarlar → Senkronizasyon →
 "Başka uygulamadan içe aktar" (ya da perf.open_import("<zip>")).
 """
-import io, json, os, random, zipfile, time
+import io, json, os, random, sys, zipfile, time
 from PIL import Image, ImageDraw, ImageFilter
 
 random.seed(42)
@@ -162,6 +162,26 @@ def main_ozel():
     print(out)
 
 
+def main_boyut():
+    """F24.1 eşik ölçümü: "OLCUM boyut N" gövdesi N KB metin."""
+    random.seed(11)
+    now = int(time.time() * 1e6)
+    out = os.path.join(os.path.dirname(OUT), "olcum_boyut.zip")
+    with zipfile.ZipFile(out, "w") as z:
+        for k in (1, 2, 3, 4, 5, 8, 20, 35):
+            t = ""
+            while len(t) < k * 1000:
+                t += body(5) + chr(10)
+            n = {"color": "DEFAULT", "isTrashed": False, "isPinned": False, "isArchived": False,
+                 "title": f"OLCUM boyut {k}", "textContent": t[:k * 1000],
+                 "userEditedTimestampUsec": now + k, "createdTimestampUsec": now + k, "labels": []}
+            z.writestr(f"Takeout/Keep/boyut_{k}.json", json.dumps(n, ensure_ascii=False))
+    print(out)
+
+
 if __name__ == "__main__":
+    if sys.argv[1:] == ["boyut"]:
+        main_boyut()
+        sys.exit()
     main()
     main_ozel()

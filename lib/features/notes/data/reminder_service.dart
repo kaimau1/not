@@ -21,6 +21,7 @@ import '../../../core/error_log.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/note.dart';
+import '../../../core/utils/run_heavy.dart';
 import '../domain/trash_analysis.dart' show trashReminderPlan;
 import 'notes_repository.dart';
 
@@ -329,6 +330,22 @@ class ReminderService {
   Timer? _trashDebounce;
   DateTime? _trashPlanned;
 
+  /// Çöpte not varken parmak izi hesabı not sayısıyla büyür: ana iş
+  /// parçacığından uzakta (F25.3). Kapanış örnek alanı yakalamaz (`runHeavy`).
+  static Future<({DateTime at, int count})?> _trashPlan(
+    List<Note> trash,
+    List<Note> active,
+  ) {
+    if (trash.isEmpty) return Future.value();
+    return runHeavy(
+      () => trashReminderPlan(
+        trash,
+        active: active,
+        retention: NotesRepository.trashRetention,
+      ),
+    );
+  }
+
   Future<void> _syncTrash(List<Note> trash) async {
     try {
       await _ensureInitialized();
@@ -336,11 +353,7 @@ class ReminderService {
         for (final n in _ref.read(notesStreamProvider).value ?? const <Note>[])
           if (n.deletedAt == null) n,
       ];
-      final plan = trashReminderPlan(
-        trash,
-        active: active,
-        retention: NotesRepository.trashRetention,
-      );
+      final plan = await _trashPlan(trash, active);
       if (plan?.at == _trashPlanned) return;
       await _plugin.cancel(id: _trashNotificationId);
       _trashPlanned = plan?.at;

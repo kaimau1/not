@@ -1,17 +1,16 @@
 import '../../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show RenderFlex;
+import 'package:flutter/rendering.dart' show RenderFlex, RenderParagraph;
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/frame_loop.dart';
-import '../../../../core/widgets/note_route_closing.dart';
+import '../../../../core/utils/link_text.dart' show findLinks;
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/sentence_select.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
@@ -22,7 +21,9 @@ import 'format_menu.dart';
 import 'tag_chips.dart';
 import 'tag_tap.dart';
 import 'text_wrap.dart';
+import 'windowed_body.dart' show kWindowedCaretMargin, selectWordAt, windowedFieldStyle;
 
+part 'items_editor_lazy.dart';
 part 'items_editor_row.dart';
 part 'items_editor_actions.dart';
 part 'items_editor_widgets.dart';
@@ -309,7 +310,7 @@ class ItemsEditorState extends State<ItemsEditor>
 
   late List<NoteItem> _items;
   final _controllers = <String, WrapTextController>{};
-  final _focusNodes = <String, FocusNode>{};
+  final _focusNodes = <String, _LazyFocusNode>{};
 
   /// Satır başına "odaklı mı" bayrağı.
   ///
@@ -502,104 +503,24 @@ class ItemsEditorState extends State<ItemsEditor>
       _rowBudget = _kFirstRows;
       _budgetTimer = Timer(_kGrowAfter, _growBudget);
     }
-    noteRouteClosing.addListener(_onRouteClosing);
   }
 
-  /// **UZUN LİSTEDE KADEMELİ İLK KURULUM** (kullanıcı bulgusu 2026-10-20:
-  /// "not ilk açılırken kasma oluyor"). Editörde liste `shrinkWrap` — dış
-  /// sayfa kaydırıcısının içinde olduğu için tembel değil, BÜTÜN maddeleri
-  /// ilk karede kurar. 97 maddelik notta bu, rota geçişinin ilk karesinde
-  /// 97 zengin metin alanı (RenderEditable + sarma ölçümü) demekti; sayfa
-  /// kayarken takılıyordu. Artık ilk karede yalnız ekranı dolduran ilk
-  /// [_kFirstRows] madde kurulur; geçiş bitince (≈380 ms) kalanlar kare
-  /// başına [_kRowsPerFrame] madde eklenerek tamamlanır. Kurulmamış
-  /// maddeler zaten ekranın altında — kullanıcı farkı görmez.
-  ///
-  /// **ÖLÇÜM (2026-11-02, telefon, 90 maddelik not):** 14 madde/kare ve 380 ms
-  /// başlangıçla geçişin son karelerinde 5 kare 33–82 ms sürüyordu (kısa notta
-  /// hiç yok). Geçiş (460 ms) BİTTİKTEN sonra, kare başına [_kRowsPerFrame]
-  /// madde.
-  static const _kFirstRows = 12;
-
-  /// **İŞARETLİLER 10'AR** (kullanıcı isteği 2026-11-03: "çok işaretli
-  /// maddesi olan notlar kasıyor; belli sayının üzerindeki işaretliler
-  /// gizlensin, 'işaretlileri göster' ile her basışta 10 tanesi yüklensin,
-  /// not kapanınca da kapansın"). İşaretli blokta ilk [_kCheckedStep] madde
-  /// kurulur; kalanı ağaçta HİÇ yok (kurulum, ölçüm, sarma maliyeti yok).
-  /// Durum yalnız bu açılışa ait — not yeniden açılınca yine 10.
-  static const _kCheckedStep = 10;
-  int _checkedShown = _kCheckedStep;
+  /// **UZUN LİSTEDE KADEMELİ KURULUM.** Dış sayfa kaydırıcısının içinde liste
+  /// tembel değil. Satır düz çizim olsa da (bkz. [_LazyItemField]) 100 satır
+  /// geçişin ilk karesinde 100+ ms (telefonda ölçüldü, 2026-11-04) → ilk karede
+  /// ekranı dolduran kadarı, geçiş (460 ms) bitince kalanı kare başına birkaç.
+  static const _kFirstRows = 16;
   static const _kRowsPerFrame = 4;
-  static const _kGrowAfter = Duration(milliseconds: 1100);
+  static const _kGrowAfter = Duration(milliseconds: 500);
 
-  /// Kapanışta kare başına sökülen madde (bkz. [noteRouteClosing]).
-  static const _kRowsPerShrink = 6;
-
-  /// Kurulacak en çok madde sayısı (işaretsizler önce, sonra işaretliler);
-  /// null = hepsi.
+  /// Kurulacak en çok madde (işaretsizler önce, sonra işaretliler); null = hepsi.
   int? _rowBudget;
   Timer? _budgetTimer;
-
-  void _onRouteClosing() {
-    if (!noteRouteClosing.value) {
-      // Kapanıştan vazgeçildi (geri çekme jesti): kalanlar yine kurulur.
-      if (_rowBudget != null) {
-        _budgetTimer?.cancel();
-        _budgetTimer = Timer(_kGrowAfter, _growBudget);
-      }
-      return;
-    }
-    if (_items.length <= _kFirstRows) return;
-    _budgetTimer?.cancel();
-    _budgetTimer = null;
-    _rowBudget ??= _items.length;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _shrinkBudget());
-  }
-
-  void _shrinkBudget() {
-    final budget = _rowBudget;
-    if (!mounted ||
-        !noteRouteClosing.value ||
-        budget == null ||
-        budget <= _kFirstRows) {
-      return;
-    }
-    setState(() => _rowBudget = math.max(_kFirstRows, budget - _kRowsPerShrink));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _shrinkBudget());
-  }
-
-  /// KLAVYE HAREKETİNDE BEKLE (kullanıcı bulgusu 2026-11-03: "son kasma
-  /// güncellemesinden sonra klavye açılırken kasma, titreme"). Kalan maddeler
-  /// 2026-11-02'den beri açılıştan 1100 ms SONRA kare başına eklenir; uzun
-  /// notu açıp hemen bir maddeye dokunan kullanıcıda bu ~20 karelik kurulum
-  /// tam klavyenin açılış animasyonuna (ve [KeyboardSnap]'in oturma
-  /// yerleşimine) biniyordu: her karede hem yeni satırlar hem klavye.
-  /// Klavye yüksekliği değiştiği sürece kurulum [_kKeyboardQuiet] kadar
-  /// ertelenir; klavye durup gövde oturduktan sonra kaldığı yerden sürer.
-  static const _kKeyboardQuiet = Duration(milliseconds: 320);
-
-  /// Kurulumun son gördüğü klavye yüksekliği (fiziksel piksel) ve okunduğu
-  /// pencere (`didChangeDependencies`te; zamanlayıcıdan bağlam araması
-  /// yapılmaz).
-  double _growInset = 0;
-  ui.FlutterView? _view;
-
-  bool _keyboardMoving() {
-    final inset = _view?.viewInsets.bottom ?? 0;
-    final moved = inset != _growInset;
-    _growInset = inset;
-    return moved;
-  }
 
   void _growBudget() {
     _budgetTimer = null;
     final budget = _rowBudget;
     if (!mounted || budget == null) return;
-    if (_keyboardMoving() || noteRouteClosing.value) {
-      if (noteRouteClosing.value) return;
-      _budgetTimer = Timer(_kKeyboardQuiet, _growBudget);
-      return;
-    }
     setState(() {
       final next = budget + _kRowsPerFrame;
       _rowBudget = next >= _items.length ? null : next;
@@ -609,6 +530,14 @@ class ItemsEditorState extends State<ItemsEditor>
     }
   }
 
+  /// **İŞARETLİLER 10'AR** (kullanıcı isteği 2026-11-03: "çok işaretli
+  /// maddesi olan notlar kasıyor; belli sayının üzerindeki işaretliler
+  /// gizlensin, 'işaretlileri göster' ile her basışta 10 tanesi yüklensin,
+  /// not kapanınca da kapansın"). İşaretli blokta ilk [_kCheckedStep] madde
+  /// kurulur; kalanı ağaçta HİÇ yok (kurulum, ölçüm, sarma maliyeti yok).
+  /// Durum yalnız bu açılışa ait — not yeniden açılınca yine 10.
+  static const _kCheckedStep = 10;
+  int _checkedShown = _kCheckedStep;
   /// Dışarıdan gelen listeyi yerel duruma alır: checklist'te "işaretsizler
   /// önce" düzenine getirilir (bkz. [normalizeItems] — bozuk kayıt burada
   /// onarılır). Sıralı listede işaret kavramı yok, sıra olduğu gibi kalır.
@@ -636,11 +565,6 @@ class ItemsEditorState extends State<ItemsEditor>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _outerScroll = widget.shrinkWrap ? Scrollable.maybeOf(context) : null;
-    final view = View.maybeOf(context);
-    if (!identical(view, _view)) {
-      _view = view;
-      _growInset = view?.viewInsets.bottom ?? 0;
-    }
   }
 
   /// Sürükleme sırasında parmağın konumuna göre kenar kaydırmasını ayarlar.
@@ -762,7 +686,6 @@ class ItemsEditorState extends State<ItemsEditor>
 
   @override
   void dispose() {
-    noteRouteClosing.removeListener(_onRouteClosing);
     _budgetTimer?.cancel();
     _autoScroll?.dispose();
     for (final c in _controllers.values) {
@@ -794,8 +717,8 @@ class ItemsEditorState extends State<ItemsEditor>
     return controller;
   }
 
-  FocusNode _focusFor(NoteItem item) => _focusNodes.putIfAbsent(item.id, () {
-    final node = FocusNode();
+  _LazyFocusNode _focusFor(NoteItem item) => _focusNodes.putIfAbsent(item.id, () {
+    final node = _LazyFocusNode();
     // MADDE BAŞINDA GERİ SİL = ÜSTTEKİYLE BİRLEŞ (kullanıcı isteği
     // 2026-10-28: "Enter madde ekliyorsa diğer maddenin en başından geri
     // silme üst maddeyle birleştirsin"). Silinecek harf yokken klavye
@@ -1756,8 +1679,7 @@ class ItemsEditorState extends State<ItemsEditor>
         : const <NoteItem>[];
     // Sürüklenebilir liste ile [_reorder]'ın eşlemesi AYNI süzgeçten geçmeli.
     var listItems = _visibleItems();
-    // Kademeli ilk kurulum (bkz. [_rowBudget]): yalnız ÖNEK kurulur, yani
-    // sürükleme dizinleri [_reorder]'ın eşlemesiyle yine örtüşür.
+    // Yalnız ÖNEK kurulur: sürükleme dizinleri [_reorder]'ın eşlemesiyle örtüşür.
     final checkedCount = checkedItems.length;
     final checkedHidden = math.max(0, checkedCount - _checkedShown);
     if (checkedHidden > 0) {
