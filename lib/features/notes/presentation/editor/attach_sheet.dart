@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sheet_header.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
@@ -298,19 +299,10 @@ class _SectionLabel extends StatelessWidget {
   final String text;
 
   @override
+  // Uygulamanın tek bölüm başlığı (TUTARLILIK F36.7).
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(2, 6, 2, 4),
-    child: Text(
-      text,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.5,
-        color: Theme.of(context).colorScheme.primary,
-      ),
-    ),
+    child: SectionLabel(text),
   );
 }
 

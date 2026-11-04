@@ -81,4 +81,15 @@ void main() {
     expect(detail.label, l10n.copyErrorDetail);
     expect(errorDetailFor('Kopyalandı'), isNull);
   });
+
+  test('F36.5 yapay zekâ hatası: kendi iletisi ÖNEKSİZ, ham hata kalıplı', () {
+    // Kullanıcının ekran görüntüsü (web): "Yapay zekâ isteği başarısız:
+    // Dahili yapay zeka bu sürümde etkinleştirilmemiş…" — iki başlık.
+    const own = GeminiException('Dahili yapay zekâ bu sürümde kapalı.');
+    expect(aiErrorText(l10n, own), own.message);
+    expect(
+      aiErrorText(l10n, Exception('SocketException: Failed host lookup')),
+      l10n.aiError(l10n.errorOffline),
+    );
+  });
 }

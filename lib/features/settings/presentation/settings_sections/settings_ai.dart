@@ -517,17 +517,10 @@ class _ModelPickerSheetState extends ConsumerState<_ModelPickerSheet> {
       subtitle: m.note == null ? null : Text(m.note!),
     );
 
+    // Uygulamanın tek bölüm başlığı (TUTARLILIK F36.7).
     Widget header(String text) => Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
-          color: scheme.onSurfaceVariant,
-        ),
-      ),
+      child: SectionLabel(text),
     );
 
     return Padding(

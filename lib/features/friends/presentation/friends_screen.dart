@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
+import '../../../core/widgets/sheet_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
@@ -86,17 +87,10 @@ class FriendsScreen extends ConsumerWidget {
     );
   }
 
+  // Uygulamanın tek bölüm başlığı (TUTARLILIK F36.7).
   Widget _sectionLabel(BuildContext context, String text) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-    child: Text(
-      text,
-      style: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.3,
-        color: Theme.of(context).colorScheme.primary,
-      ),
-    ),
+    child: SectionLabel(text),
   );
 
   Future<void> _addFriend(BuildContext context, WidgetRef ref) => showAppSheet<void>(

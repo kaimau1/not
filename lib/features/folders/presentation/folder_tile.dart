@@ -335,23 +335,21 @@ class FolderChip extends ConsumerWidget {
             )),
           )
         : 0;
-    final chip = _ChipShell(
+    // BOŞ klasör soluk (B3): şeritte dolu klasörler öne çıksın. Seçiliyken
+    // ya da okunmamışı varken tam renk. Solma RENKTE (katman yok) ve "0"
+    // rozeti çizilmez (TUTARLILIK F36.6: "0" her boş çipte gürültüydü).
+    return _ChipShell(
       accent: folder.accent,
       unread: unread,
       icon: folder.iconData,
       label: folder.name,
       count: count,
+      dimmed: count == 0 && unread == 0 && !selected,
       selected: selected,
       trailingIcon: folder.hidden ? Icons.visibility_off_outlined : null,
       onTap: () => FolderScreen.open(context, folder.id),
       onLongPress: () => showFolderActionsSheet(context, ref, folder),
     );
-    // BOŞ klasör soluk (B3): şeritte dolu klasörler öne çıksın. Seçiliyken
-    // ya da okunmamışı varken tam renk.
-    if (count == 0 && unread == 0 && !selected) {
-      return Opacity(opacity: 0.55, child: chip);
-    }
-    return chip;
   }
 }
 
@@ -528,10 +526,15 @@ class _ChipShell extends StatelessWidget {
     this.selected = false,
     this.onLongPress,
     this.unread = 0,
+    this.dimmed = false,
   });
 
   /// Okunmamış hareket: sayının yerine kırmızı rozet (bkz. [FolderUnreadBadge]).
   final int unread;
+
+  /// Boş klasör: simge kutusu soluk, ad soluk mürekkepte — `Opacity` katmanı
+  /// YOK (şeritte her boş çip ayrı bir birleştirme katmanı açıyordu).
+  final bool dimmed;
 
   /// Seçili çip: klasör renginde kontur ve hafif zemin.
   final bool selected;
@@ -552,8 +555,13 @@ class _ChipShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final muted = scheme.onSurfaceVariant;
-    final accent = this.accent;
+    final accent = dimmed
+        ? this.accent?.withValues(alpha: (this.accent?.a ?? 1) * 0.55)
+        : this.accent;
     final highlight = selected ? (accent ?? scheme.primary) : null;
+    // SIFIR SAYI ÇİZİLMEZ (F36.6): "0" rozeti boş çipte bilgi değil gürültü
+    // (ekran görüntüsünde Gelen 0, Dualar 0, Genel 0).
+    final count = (this.count ?? 0) > 0 ? this.count : null;
     return Material(
       color: highlight != null
           ? Color.alphaBlend(
@@ -624,7 +632,7 @@ class _ChipShell extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    color: subtle ? muted : scheme.onSurface,
+                    color: subtle || dimmed ? muted : scheme.onSurface,
                   ),
                 ),
               ),

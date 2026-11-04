@@ -235,6 +235,7 @@ extension _EditorEmbed on _NoteEditorScreenState {
           : null,
       onChanged: _updateAttachment,
       onCopy: () => unawaited(_copyAttachment(attachment)),
+      onShare: () => unawaited(shareAttachment(context, ref, attachment)),
       onReplace: () => unawaited(_replaceEmbed(label)),
       onUnlink: () => _unlinkEmbed(label),
       onImport: _canImportEmbed(attachment)

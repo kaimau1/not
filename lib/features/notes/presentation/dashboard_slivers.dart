@@ -320,23 +320,17 @@ extension _DashSlivers on _DashboardScreenState {
       );
     }
 
-    // Başlık metni ZATEN büyük harfli anahtarlardan gelir; kodda
-    // `toUpperCase()` çağırmıyoruz — Türkçe'de "Etiket" → "ETIKET" olur
-    // (noktasız I), Dart'ın büyük harfe çevirmesi yerel ayar tanımıyor.
+    // BÖLÜM BAŞLIĞI uygulamanın TEK bölüm başlığıyla aynı (TUTARLILIK
+    // F36.7): cümle düzeni, `SectionLabel` stili. Eskiden büyük harfli
+    // anahtarlar ("SABİT", "BU HAFTA") + kendi 12/0,4 aralıklı stiliyle
+    // levhalardaki "Düzenle", "Not içeriği" başlıklarından ayrı bir dil
+    // konuşuyordu (TERİMLER: "bölüm başlığı cümle düzeninde").
     Widget header(String text, int count) => SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
         child: Row(
           children: [
-            Text(
-              text,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.4,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
+            SectionLabel(text),
             const SizedBox(width: 8),
             Expanded(
               child: Divider(

@@ -323,13 +323,27 @@ void main() {
   bool wanted(String id) => only.isEmpty || only.contains(id);
 
   final dark = Platform.environment['TOUR_DARK'] == '1';
+  // Sahne: (kimlik, adres, dokunulacak şey — null = yalnız ekran).
+  final scenes = <(String, String, Finder Function()?)>[
+    ('ana', '/', null),
+    ('n1', '/note/n1', null),
+    ('n2', '/note/n2', null),
+    ('n4', '/note/n4', null),
+    ('n1-menu', '/note/n1', () => find.byTooltip('Not menüsü')),
+    ('n4-menu', '/note/n4', () => find.byTooltip('Not menüsü')),
+    (
+      'n4-ekle',
+      '/note/n4',
+      () => find.byKey(const ValueKey('editor-add-button')),
+    ),
+    ('n4-ai', '/note/n4', () => find.byTooltip('Yapay zekâ').last),
+    ('n4-bicim', '/note/n4', () => find.byTooltip('Biçim').first),
+    ('ana-menu', '/', () => find.byTooltip('Diğer').first),
+    ('ana-kart-menu', '/', () => find.byIcon(Icons.more_vert).at(1)),
+    ('ana-hizli', '/', () => find.byTooltip('Yeni not — tip seç')),
+  ];
   for (final size in _sizes) {
-    for (final (id, location) in [
-      ('ana', '/'),
-      ('n1', '/note/n1'),
-      ('n2', '/note/n2'),
-      ('n4', '/note/n4'),
-    ]) {
+    for (final (id, location, tap) in scenes) {
       if (!wanted(id)) continue;
       testWidgets('${size.name} · $id', (tester) async {
         final key = GlobalKey();
@@ -340,6 +354,17 @@ void main() {
           key: key,
           brightness: dark ? Brightness.dark : Brightness.light,
         );
+        if (tap != null) {
+          final target = tap();
+          if (target.evaluate().isEmpty) {
+            // ignore: avoid_print
+            print('TOUR: $id için dokunulacak öğe yok');
+            await _end(tester);
+            return;
+          }
+          await tester.tap(target, warnIfMissed: false);
+          await _settle(tester);
+        }
         await _shot(tester, key, '${size.name}-$id${dark ? '-koyu' : ''}');
         await _end(tester);
       });

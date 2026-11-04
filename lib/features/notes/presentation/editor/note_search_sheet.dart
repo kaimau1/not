@@ -227,7 +227,7 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _aiAnswer = context.l10n.aiError(friendlyError(context.l10n, e));
+        _aiAnswer = aiErrorText(context.l10n, e);
         _asking = false;
       });
     }

@@ -1494,6 +1494,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _restoring = false;
   }
 
+  /// Daire jestinin yapay zekâsı bu OTURUMDA kullanılamıyor mu (TUTARLILIK
+  /// F36.5 — web'de dahili AI kapalıyken her kazara daire aynı hatayı
+  /// basıyordu). İlk yetki hatasında bir kez söylenir, sonra jest sessiz.
+  static bool _aiGestureUnavailable = false;
+
   /// Metin DIŞINDA görünür hiçbir şey değişmedi mi? (saf yazım tespiti)
   static bool _sameVisual(Note a, Note b) =>
       sameItemsVisually(a.items, b.items) &&

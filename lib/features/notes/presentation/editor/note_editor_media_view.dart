@@ -928,6 +928,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
             onSaveAs: pinned.isWebVideo
                 ? null
                 : () => unawaited(AttachmentSaveAs.run(context, ref, pinned)),
+            onShare: () => unawaited(shareAttachment(context, ref, pinned)),
             onDetach: _readOnly || pinned.isWebVideo
                 ? null
                 : () {

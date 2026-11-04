@@ -3035,7 +3035,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiOnYourNotes.
   ///
   /// In tr, this message translates to:
-  /// **'NOTLARIN ÜZERİNDE'**
+  /// **'Notların üzerinde'**
   String get aiOnYourNotes;
 
   /// No description provided for @aiTaskDuplicates.
@@ -3083,7 +3083,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiRecentActions.
   ///
   /// In tr, this message translates to:
-  /// **'SON İŞLEMLER'**
+  /// **'Son işlemler'**
   String get aiRecentActions;
 
   /// No description provided for @aiHistoryClear.
@@ -3149,25 +3149,25 @@ abstract class AppLocalizations {
   /// No description provided for @sectionPinnedShort.
   ///
   /// In tr, this message translates to:
-  /// **'SABİT'**
+  /// **'Sabit'**
   String get sectionPinnedShort;
 
   /// No description provided for @sectionToday.
   ///
   /// In tr, this message translates to:
-  /// **'BUGÜN'**
+  /// **'Bugün'**
   String get sectionToday;
 
   /// No description provided for @sectionThisWeek.
   ///
   /// In tr, this message translates to:
-  /// **'BU HAFTA'**
+  /// **'Bu hafta'**
   String get sectionThisWeek;
 
   /// No description provided for @sectionEarlier.
   ///
   /// In tr, this message translates to:
-  /// **'DAHA ÖNCE'**
+  /// **'Daha önce'**
   String get sectionEarlier;
 
   /// No description provided for @sectionNoteCount.
@@ -3281,7 +3281,7 @@ abstract class AppLocalizations {
   /// No description provided for @filterSectionFolder.
   ///
   /// In tr, this message translates to:
-  /// **'KLASÖR'**
+  /// **'Klasör'**
   String get filterSectionFolder;
 
   /// No description provided for @filterSectionTag.
@@ -4655,7 +4655,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiModelOthers.
   ///
   /// In tr, this message translates to:
-  /// **'DİĞER MODELLER'**
+  /// **'Diğer modeller'**
   String get aiModelOthers;
 
   /// No description provided for @aiModelNoMatch.
@@ -5315,7 +5315,7 @@ abstract class AppLocalizations {
   /// No description provided for @brainstormOutlineTitle.
   ///
   /// In tr, this message translates to:
-  /// **'ANA HAT'**
+  /// **'Ana hat'**
   String get brainstormOutlineTitle;
 
   /// No description provided for @brainstormInputHint.
@@ -5363,13 +5363,13 @@ abstract class AppLocalizations {
   /// No description provided for @friendsRequestsTitle.
   ///
   /// In tr, this message translates to:
-  /// **'İSTEKLER'**
+  /// **'İstekler'**
   String get friendsRequestsTitle;
 
   /// No description provided for @friendsListTitle.
   ///
   /// In tr, this message translates to:
-  /// **'ARKADAŞLARIM'**
+  /// **'Arkadaşlarım'**
   String get friendsListTitle;
 
   /// No description provided for @friendsAddEmailHint.
@@ -6389,7 +6389,7 @@ abstract class AppLocalizations {
   /// No description provided for @collaboratorsFriendsTitle.
   ///
   /// In tr, this message translates to:
-  /// **'ARKADAŞLARIN'**
+  /// **'Arkadaşların'**
   String get collaboratorsFriendsTitle;
 
   /// No description provided for @collaboratorsLeave.
@@ -8282,12 +8282,6 @@ abstract class AppLocalizations {
   /// **'Not paketi'**
   String get shareAsNoteShort;
 
-  /// No description provided for @shareMoreSection.
-  ///
-  /// In tr, this message translates to:
-  /// **'DAHA FAZLA'**
-  String get shareMoreSection;
-
   /// No description provided for @shareQuickPreparing.
   ///
   /// In tr, this message translates to:
@@ -8417,7 +8411,7 @@ abstract class AppLocalizations {
   /// No description provided for @personalizeModules.
   ///
   /// In tr, this message translates to:
-  /// **'EKLENTİLER'**
+  /// **'Eklentiler'**
   String get personalizeModules;
 
   /// No description provided for @personalizeModulesInfo.
@@ -8561,13 +8555,13 @@ abstract class AppLocalizations {
   /// No description provided for @personalizeVideo.
   ///
   /// In tr, this message translates to:
-  /// **'VİDEO'**
+  /// **'Video'**
   String get personalizeVideo;
 
   /// No description provided for @personalizeHome.
   ///
   /// In tr, this message translates to:
-  /// **'ANA EKRAN'**
+  /// **'Ana ekran'**
   String get personalizeHome;
 
   /// No description provided for @personalizeHomeItemsInfo.
@@ -8579,7 +8573,7 @@ abstract class AppLocalizations {
   /// No description provided for @personalizeBubbles.
   ///
   /// In tr, this message translates to:
-  /// **'BALONLAR'**
+  /// **'Balonlar'**
   String get personalizeBubbles;
 
   /// No description provided for @personalizeChipsInfo.
@@ -9380,23 +9374,11 @@ abstract class AppLocalizations {
   /// **'Klasörü birlikte düzenle'**
   String get shareFolderTogether;
 
-  /// No description provided for @shareTogetherSection.
-  ///
-  /// In tr, this message translates to:
-  /// **'BİRLİKTE DÜZENLE'**
-  String get shareTogetherSection;
-
   /// No description provided for @shareTogetherInfo.
   ///
   /// In tr, this message translates to:
   /// **'Aynı notu/klasörü ikiniz de görür ve değiştirirsiniz'**
   String get shareTogetherInfo;
-
-  /// No description provided for @shareCopySection.
-  ///
-  /// In tr, this message translates to:
-  /// **'KOPYA GÖNDER'**
-  String get shareCopySection;
 
   /// No description provided for @shareCopyInfo.
   ///
@@ -10343,7 +10325,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeSharedSection.
   ///
   /// In tr, this message translates to:
-  /// **'BENİMLE PAYLAŞILANLAR'**
+  /// **'Benimle paylaşılanlar'**
   String get homeSharedSection;
 
   /// No description provided for @copyAttachment.
@@ -10913,7 +10895,7 @@ abstract class AppLocalizations {
   /// No description provided for @gestureItemDeleted.
   ///
   /// In tr, this message translates to:
-  /// **'Madde silindi (Geri al ile geri getir)'**
+  /// **'Madde silindi'**
   String get gestureItemDeleted;
 
   /// No description provided for @gestureFixing.
@@ -10933,6 +10915,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yazım düzeltildi'**
   String get gestureFixed;
+
+  /// No description provided for @gestureFixNeedsAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daire jesti yazımı yapay zekâyla düzeltir; yapay zekâ şu an kullanılamıyor (Ayarlar → Yapay zekâ).'**
+  String get gestureFixNeedsAi;
 
   /// No description provided for @embedImportToNote.
   ///
@@ -11117,13 +11105,13 @@ abstract class AppLocalizations {
   /// No description provided for @shareSendSection.
   ///
   /// In tr, this message translates to:
-  /// **'GÖNDER'**
+  /// **'Gönder'**
   String get shareSendSection;
 
   /// No description provided for @shareInAppSection.
   ///
   /// In tr, this message translates to:
-  /// **'NOTLAR KULLANICISINA'**
+  /// **'Notlar kullanıcısına'**
   String get shareInAppSection;
 
   /// No description provided for @shareTextHint.

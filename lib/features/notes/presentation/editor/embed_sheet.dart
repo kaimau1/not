@@ -418,6 +418,7 @@ Future<void> showEmbedPreview(
   VoidCallback? onEdit,
   VoidCallback? onImport,
   VoidCallback? onCopy,
+  VoidCallback? onShare,
   ValueChanged<Attachment>? onChanged,
 }) => showAppSheet<void>(
   context: context,
@@ -544,6 +545,15 @@ Future<void> showEmbedPreview(
                     tooltip: l10n.copyAttachment,
                     onPressed: () => then(onCopy),
                     icon: const Icon(AppIcons.copy),
+                  ),
+                // PAYLAŞ (TUTARLILIK F36.4, kullanıcı listesi: "ekleri paylaş
+                // seçeneği ... gömülmüş ek menüsünde olsun").
+                if (onShare != null)
+                  IconButton(
+                    key: const ValueKey('embed-share'),
+                    tooltip: l10n.share,
+                    onPressed: () => then(onShare),
+                    icon: const Icon(Icons.share_outlined),
                   ),
                 // NOTA AKTAR (kullanıcı isteği 2026-10-30): gömülü ek notun
                 // SAYFASINA (yazının arasına) alınır, yazıdaki bağ çözülür.

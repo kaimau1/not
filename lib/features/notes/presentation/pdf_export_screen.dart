@@ -239,7 +239,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
   void _showError(Object e) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showMessage(context.l10n.aiError(friendlyError(context.l10n, e)));
+      ..showMessage(aiErrorText(context.l10n, e));
   }
 
   /// PDF byte'larını üretir. Diske/blob'a yazmayı çağıran taraf yapar —
