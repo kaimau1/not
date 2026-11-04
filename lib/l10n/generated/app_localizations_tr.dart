@@ -267,7 +267,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get themeSystem => 'Sistem';
 
   @override
-  String get themeLight => 'Açık';
+  String get themeSage => 'Adaçayı';
+
+  @override
+  String get themePorcelain => 'Porselen';
+
+  @override
+  String get themeClay => 'Kil';
 
   @override
   String get themeDark => 'Koyu';
@@ -825,12 +831,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get clearNoteConfirm =>
       'Notun içeriği (metin ve liste maddeleri) silinecek. Emin misin?';
-
-  @override
-  String get themePaper => 'Kağıt';
-
-  @override
-  String get themeOffWhite => 'Kırık beyaz';
 
   @override
   String get calculatorTitle => 'Hesap Makinesi';

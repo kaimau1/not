@@ -50,7 +50,7 @@ class NoteOpenOrigin {
   static void register(
     BuildContext card,
     String noteId, {
-    double radius = 12,
+    double radius = 16,
     required Color color,
   }) {
     _pending = null;
@@ -360,7 +360,13 @@ class _ContainerTransformState extends State<_ContainerTransform> {
         // Alttaki liste hafifçe kararır: derinlik hissi, açılan not öne çıkar.
         Positioned.fill(
           child: IgnorePointer(
-            child: ColoredBox(color: Colors.black.withValues(alpha: 0.10 * t)),
+            // Karartma temanın mürekkebinden (TEMA_PLANI F34.2): siyah perde
+            // renkli zemini griye çekiyordu; açık temada `scrim` = mürekkep.
+            child: ColoredBox(
+              color: Theme.of(
+                context,
+              ).colorScheme.scrim.withValues(alpha: 0.10 * t),
+            ),
           ),
         ),
         Positioned.fromRect(

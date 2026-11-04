@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Varsayılan tema kırık beyaz (2026-10-29; önce kağıttı).
+/// Varsayılan tema Adaçayı (TEMA_PLANI K1, 2026-11-04; önce kırık beyaz,
+/// daha önce kağıttı). Eski temaların kayıtlı adları yeni ailelere eşlenir
+/// (K2) — kayıt değiştirilmez.
 /// Asıl risk varsayılanın kendisi değil, GERİYE UYUM: kayıtlı seçimi olan
 /// kullanıcının teması varsayılan değişince kaymamalı.
 void main() {
@@ -18,10 +20,27 @@ void main() {
     );
   }
 
-  test('kayıt yoksa varsayılan kırık beyaz', () async {
+  test('kayıt yoksa varsayılan Adaçayı', () async {
     final c = await container();
     addTearDown(c.dispose);
-    expect(c.read(themeChoiceProvider), AppThemeChoice.offWhite);
+    expect(c.read(themeChoiceProvider), AppThemeChoice.sage);
+  });
+
+  test('eski temalar yeni ailelere eşlenir, kayıt değişmez', () async {
+    for (final (stored, expected) in [
+      ('offWhite', AppThemeChoice.sage),
+      ('light', AppThemeChoice.porcelain),
+      ('paper', AppThemeChoice.clay),
+      ('system', AppThemeChoice.system),
+      ('clay', AppThemeChoice.clay),
+      ('bilinmeyen', AppThemeChoice.sage),
+    ]) {
+      final c = await container({'theme_mode': stored});
+      addTearDown(c.dispose);
+      expect(c.read(themeChoiceProvider), expected, reason: stored);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('theme_mode'), stored);
+    }
   });
 
   test('kayıtlı seçim varsayılanı ezer', () async {
@@ -30,7 +49,7 @@ void main() {
     expect(c.read(themeChoiceProvider), AppThemeChoice.dark);
   });
 
-  test('kağıt açık temadır (ThemeMode.light)', () async {
+  test('aileler açık temadır (ThemeMode.light)', () async {
     final c = await container();
     addTearDown(c.dispose);
     expect(c.read(effectiveThemeModeProvider), ThemeMode.light);

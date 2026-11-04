@@ -613,7 +613,7 @@ extension _EditorActions on _NoteEditorScreenState {
   Widget? _partsMenu(Note note) {
     if (_readOnly || !_hasBothParts(note)) return null;
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _themeOf(context).colorScheme;
     return PopupMenuButton<String>(
       key: const ValueKey('note-parts-menu'),
       tooltip: l10n.notePartsMenu,

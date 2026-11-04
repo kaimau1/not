@@ -267,16 +267,24 @@ class _ThemeSelector extends ConsumerWidget {
     final l10n = context.l10n;
     final choice = ref.watch(themeChoiceProvider);
     final font = ref.watch(appFontProvider);
-    final light = AppTheme.light(font: font).colorScheme;
-    final dark = AppTheme.dark(font: font).colorScheme;
-    final paper = AppTheme.paper(font: font).colorScheme;
-    final offWhite = AppTheme.offWhite(font: font).colorScheme;
-    final options = <(AppThemeChoice, String, List<ColorScheme>)>[
-      (AppThemeChoice.system, l10n.themeSystem, [light, dark]),
-      (AppThemeChoice.light, l10n.themeLight, [light]),
+    ThemeData of(ThemeFamily f, Brightness b) =>
+        AppTheme.of(f, b, font: font);
+    final sage = of(ThemeFamily.sage, Brightness.light);
+    final dark = of(ThemeFamily.sage, Brightness.dark);
+    final options = <(AppThemeChoice, String, List<ThemeData>)>[
+      (AppThemeChoice.system, l10n.themeSystem, [sage, dark]),
+      (AppThemeChoice.sage, l10n.themeSage, [sage]),
+      (
+        AppThemeChoice.porcelain,
+        l10n.themePorcelain,
+        [of(ThemeFamily.porcelain, Brightness.light)],
+      ),
+      (
+        AppThemeChoice.clay,
+        l10n.themeClay,
+        [of(ThemeFamily.clay, Brightness.light)],
+      ),
       (AppThemeChoice.dark, l10n.themeDark, [dark]),
-      (AppThemeChoice.offWhite, l10n.themeOffWhite, [offWhite]),
-      (AppThemeChoice.paper, l10n.themePaper, [paper]),
     ];
     return Row(
       children: [
@@ -285,7 +293,7 @@ class _ThemeSelector extends ConsumerWidget {
           Expanded(
             child: _ThemeCard(
               label: options[i].$2,
-              schemes: options[i].$3,
+              themes: options[i].$3,
               selected: choice == options[i].$1,
               onTap: () =>
                   ref.read(themeChoiceProvider.notifier).set(options[i].$1),
@@ -297,29 +305,33 @@ class _ThemeSelector extends ConsumerWidget {
   }
 }
 
-/// Tek tema seçeneği: mini önizleme + ad. [schemes] iki tane ise (Sistem)
-/// önizleme ortadan açık/koyu ikiye bölünür.
+/// Tek tema seçeneği: mini önizleme (zemin + kâğıt kart + yazı + vurgu) +
+/// ad. [themes] iki tane ise (Sistem) önizleme ortadan açık/koyu ikiye
+/// bölünür.
 class _ThemeCard extends StatelessWidget {
   const _ThemeCard({
     required this.label,
-    required this.schemes,
+    required this.themes,
     required this.selected,
     required this.onTap,
   });
 
   final String label;
-  final List<ColorScheme> schemes;
+  final List<ThemeData> themes;
   final bool selected;
   final VoidCallback onTap;
 
-  Widget _preview(ColorScheme c) => ColoredBox(
+  Widget _preview(ThemeData theme) {
+    final c = theme.colorScheme;
+    return ColoredBox(
     color: c.surface,
     child: Padding(
       padding: const EdgeInsets.all(6),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: c.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(5),
+          color: AppTokens.fromTheme(theme).card,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppTokens.fromTheme(theme).hairline),
         ),
         child: Padding(
           padding: const EdgeInsets.all(5),
@@ -341,6 +353,7 @@ class _ThemeCard extends StatelessWidget {
       ),
     ),
   );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -371,7 +384,7 @@ class _ThemeCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        for (final c in schemes) Expanded(child: _preview(c)),
+                        for (final t in themes) Expanded(child: _preview(t)),
                       ],
                     ),
                     if (selected)

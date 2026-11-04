@@ -268,7 +268,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeSystem => 'System';
 
   @override
-  String get themeLight => 'Light';
+  String get themeSage => 'Sage';
+
+  @override
+  String get themePorcelain => 'Porcelain';
+
+  @override
+  String get themeClay => 'Clay';
 
   @override
   String get themeDark => 'Dark';
@@ -827,12 +833,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get clearNoteConfirm =>
       'The note\'s contents (text and list items) will be deleted. Are you sure?';
-
-  @override
-  String get themePaper => 'Paper';
-
-  @override
-  String get themeOffWhite => 'Off-white';
 
   @override
   String get calculatorTitle => 'Calculator';

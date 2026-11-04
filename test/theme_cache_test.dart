@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/app/theme/app_palette.dart';
 import 'package:notlar/app/theme/app_theme.dart';
 import 'package:notlar/core/utils/note_fonts.dart';
 
@@ -20,7 +21,11 @@ void main() {
   test('aynı ayarlar AYNI ThemeData nesnesini verir', () {
     expect(identical(AppTheme.light(), AppTheme.light()), isTrue);
     expect(identical(AppTheme.dark(), AppTheme.dark()), isTrue);
-    expect(identical(AppTheme.paper(), AppTheme.paper()), isTrue);
+    for (final f in ThemeFamily.values) {
+      for (final b in Brightness.values) {
+        expect(identical(AppTheme.of(f, b), AppTheme.of(f, b)), isTrue);
+      }
+    }
     expect(
       identical(AppTheme.light(font: 'Lora'), AppTheme.light(font: 'Lora')),
       isTrue,
@@ -30,11 +35,32 @@ void main() {
   test('farklı ayarlar AYRI tema verir (önbellek anahtarı doğru)', () {
     final light = AppTheme.light();
     expect(identical(light, AppTheme.dark()), isFalse);
-    // Kağıt teması da açık parlaklıkta: anahtarda `paper` olmasa ikisi
-    // birbirine karışır ve kağıt yüzeyler açık temaya sızardı.
-    expect(identical(light, AppTheme.paper()), isFalse);
+    // Aileler aynı parlaklıkta: anahtarda aile olmasa birbirine karışırdı.
+    expect(
+      identical(light, AppTheme.of(ThemeFamily.clay, Brightness.light)),
+      isFalse,
+    );
     expect(identical(light, AppTheme.light(font: 'Lora')), isFalse);
-    expect(AppTheme.paper().colorScheme.surface, const Color(0xFFF3EFE3));
+    expect(
+      AppTheme.of(ThemeFamily.clay, Brightness.light).colorScheme.surface,
+      const Color(0xFFF3ECE9),
+    );
+    // Varsayılan aile Adaçayı.
+    expect(light.colorScheme.surface, const Color(0xFFEAF0EB));
+  });
+
+  test('zıt tema aynı aile + yazı tipinden, önbellekten gelir', () {
+    final clay = AppTheme.of(ThemeFamily.clay, Brightness.light, font: 'Lora');
+    final opp = AppTheme.opposite(clay);
+    expect(opp.brightness, Brightness.dark);
+    expect(
+      identical(
+        opp,
+        AppTheme.of(ThemeFamily.clay, Brightness.dark, font: 'Lora'),
+      ),
+      isTrue,
+    );
+    expect(identical(AppTheme.opposite(opp), clay), isTrue);
   });
 
   test('katalogdaki her yazı tipi kendi temasını kurabiliyor', () {

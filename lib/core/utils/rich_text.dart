@@ -38,6 +38,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'color_contrast.dart';
 import 'link_text.dart';
 
 /// Biçim türü ve metindeki işareti.
@@ -752,7 +753,7 @@ RichMark activeFormats(String text, int start, int end) {
 /// muhasebesi bu boyutta kazançtan çok yer tutar).
 const _spanCacheLimit = 256;
 final Map<
-  (String, TextStyle?, Color?, List<Color>, Color, String, String, bool),
+  (String, TextStyle?, Color?, List<Color>, Color, String, String, bool, Color?),
   List<InlineSpan>
 >
 _spanCache = {};
@@ -793,6 +794,7 @@ List<InlineSpan> richSpans(
   Iterable<String> attachmentNames = const [],
   Map<String, Color>? tagChipColors,
   bool videoTimestamps = false,
+  Color? background,
 }) {
   if (text.isEmpty) return [TextSpan(text: text, style: style)];
   // AYIRICI ÇİZGİ (geliştirme raporu D2, 2026-10-20): tek başına `---`
@@ -812,6 +814,7 @@ List<InlineSpan> richSpans(
               attachmentNames: attachmentNames,
               tagChipColors: tagChipColors,
               videoTimestamps: videoTimestamps,
+              background: background,
             );
       final out = <InlineSpan>[];
       var cursor = 0;
@@ -850,6 +853,7 @@ List<InlineSpan> richSpans(
               '${e.key}=${e.value.toARGB32()}',
           ].join('\u0000'),
     videoTimestamps,
+    background,
   );
   final cached = _spanCache[cacheKey];
   if (cached != null) return cached;
@@ -862,6 +866,7 @@ List<InlineSpan> richSpans(
     attachmentNames: attachmentNames,
     tagChipColors: tagChipColors,
     videoTimestamps: videoTimestamps,
+    background: background,
   );
   if (_spanCache.length >= _spanCacheLimit) _spanCache.clear();
   // Değiştirilemez: liste artık PAYLAŞILIYOR, bir çağıranın onu yerinde
@@ -880,6 +885,7 @@ List<InlineSpan> _richSpansUncached(
   bool videoTimestamps = false,
   required List<Color> palette,
   required Color markerColor,
+  Color? background,
 }) {
 
   final base = style ?? const TextStyle();
@@ -940,7 +946,7 @@ List<InlineSpan> _richSpansUncached(
   }
 
   void walk(String part, RichMark mark) {
-    final styleFor = markStyle(base, mark, palette);
+    final styleFor = markStyle(base, mark, palette, background: background);
     var cursor = 0;
     for (final m in _formatPattern.allMatches(part)) {
       final content = _contentOf(m);
@@ -1051,7 +1057,16 @@ InlineSpan restyleRange(
 
 /// [mark] biçimlerinin tümünü [base] stiline uygular (iç içe biçim = stil
 /// birikimi).
-TextStyle markStyle(TextStyle base, RichMark mark, List<Color> palette) {
+///
+/// [background] verilirse renkli YAZI o zemine göre okunur hâle getirilir
+/// (`readableOn`, ≥ 4,5:1): sarı/yeşil yazı açık zeminde koyulaşır, koyu
+/// zeminde açılır. Vurgu (arka plan) rengine dokunulmaz.
+TextStyle markStyle(
+  TextStyle base,
+  RichMark mark,
+  List<Color> palette, {
+  Color? background,
+}) {
   var style = base;
   // Taban zaten kalınsa (başlık w500-w600) kalın bir kademe DAHA koyu:
   // w700 tabanla neredeyse aynı göründüğü için başlıkta kalın "çalışmıyor"
@@ -1071,7 +1086,10 @@ TextStyle markStyle(TextStyle base, RichMark mark, List<Color> palette) {
     );
   }
   if (mark.color != null) {
-    style = style.copyWith(color: _paletteColor(palette, mark.color));
+    final color = _paletteColor(palette, mark.color);
+    style = style.copyWith(
+      color: background == null ? color : readableOn(color, background),
+    );
   }
   if (mark.opacity != null && style.color != null) {
     style = style.copyWith(

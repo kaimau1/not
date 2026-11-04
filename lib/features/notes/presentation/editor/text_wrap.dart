@@ -790,6 +790,7 @@ InlineSpan buildWrapSpan(
           linkColor: linkColor,
           palette: rich.palette,
           markerColor: rich.markerColor,
+          background: rich.background,
           attachmentNames: attachmentNames,
           tagChipColors: tagChipColors,
           videoTimestamps: videoTimestamps,
@@ -823,7 +824,11 @@ InlineSpan buildWrapSpan(
 /// aksi hâlde kalın/italik metnin genişliği ikisinde ayrışır ve imleç kayar.
 @immutable
 class RichTextTheme {
-  const RichTextTheme({required this.palette, required this.markerColor});
+  const RichTextTheme({
+    required this.palette,
+    required this.markerColor,
+    this.background,
+  });
 
   /// Renk indeksinin (1..n) karşılığı renkler.
   final List<Color> palette;
@@ -831,14 +836,19 @@ class RichTextTheme {
   /// Biçim işaretlerinin (sönük) rengi.
   final Color markerColor;
 
+  /// Metnin çizildiği zemin (notun rengi): renkli yazı buna göre okunur
+  /// hâle getirilir (bkz. `markStyle`). null = renkler olduğu gibi.
+  final Color? background;
+
   @override
   bool operator ==(Object other) =>
       other is RichTextTheme &&
       other.markerColor == markerColor &&
+      other.background == background &&
       other.palette.length == palette.length;
 
   @override
-  int get hashCode => Object.hash(markerColor, palette.length);
+  int get hashCode => Object.hash(markerColor, background, palette.length);
 }
 
 /// Dikeyde [top] ile başlayan satırın metindeki aralığı.

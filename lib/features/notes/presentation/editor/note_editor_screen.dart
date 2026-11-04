@@ -190,6 +190,21 @@ part 'note_editor_flow.dart';
 part 'note_editor_video.dart';
 part 'note_editor_embed.dart';
 
+/// **OKUNURLUK — NOTUN İÇİ ZEMİNE GÖRE** (kullanıcı bulgusu 2026-11-04: "not
+/// arka plan rengini değiştirince bazen yazı rengi sabit kaldığı için okuma
+/// zorluğu oluyor"). Not zemini temanın yazısıyla okunmuyorsa
+/// (`NoteColors.inkThemeFor` — açık temada koyu özel renk ya da tersi)
+/// editör ZIT temayla çizilir: build notun zeminini hesaplayınca o temayı
+/// burada saklar ve ağacı `Theme` ile sarar. Bu dosyada (ve parçalarında)
+/// ekranın KENDİ bağlamından tema okuyan her yer `Theme.of` yerine bunu
+/// kullanır — yoksa build içinde hesaplanan yazı stili (gövde, başlık, işaret
+/// rengi) dış temada kalırdı. Başka bağlamlar (alt widget'lar) zaten sarılan
+/// temanın altında, `Theme.of` ile doğru temayı görür.
+final _editorInk = Expando<ThemeData>('editorInk');
+
+ThemeData _themeOf(BuildContext context) =>
+    _editorInk[context] ?? Theme.of(context);
+
 /// Otomatik kaydın sessizlik süresi ve aralıksız yazımdaki üst sınırı
 /// (F22.2, KARAR 2026-11-03).
 const kEditorSaveDelay = Duration(seconds: 2);
@@ -904,7 +919,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Notun kendi yazı tipi/boyutu uygulanmış gövde stili (ölçüm ve çizim
   /// ortak kaynağı).
   TextStyle? _noteTextStyle() {
-    final base = Theme.of(context).textTheme.bodyLarge;
+    final base = _themeOf(context).textTheme.bodyLarge;
     final note = _note;
     if (base == null || note == null) return base;
     return applyNoteFont(
@@ -1922,7 +1937,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // ipucu ile imleç ayrı satırlara düşer.
           ? Text(
               l10n.bodyHint,
-              style: hintStyle.copyWith(color: Theme.of(context).hintColor),
+              style: hintStyle.copyWith(color: _themeOf(context).hintColor),
             )
           : null,
       onFloats: _applyFloats,
@@ -2182,7 +2197,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         ? Icons.slideshow_outlined
                         : Icons.picture_as_pdf_outlined,
                     size: 40,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: _themeOf(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -2319,6 +2334,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _canvasCache = null;
     final l10n = context.l10n;
     final note = _note;
+    // Okunurluk teması aşağıda, not zemini hesaplanınca kurulur; o ana dek
+    // (ve not yokken) dış tema.
+    _editorInk[context] = null;
     // BİR KEZ ÇIKAN İPUCU (F14.6): not eline ilk geçtiğinde bir kez bakılır.
     if (!_tipChecked && note != null) {
       _tipChecked = true;
@@ -2361,13 +2379,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       Icon(
                         Icons.note_alt_outlined,
                         size: 40,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: _themeOf(context).colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(height: 12),
                       Text(
                         l10n.noteNotFound,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: _themeOf(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 12),
                       FilledButton.tonal(
@@ -2383,6 +2401,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
 
     final background = NoteColors.noteSurface(context, note);
+    // Zemin temanın yazısıyla okunmuyorsa notun içi zıt temada (bkz.
+    // [_editorInk]). `Theme.of` BURADA bilerek dış tema: karar dış temaya göre.
+    _editorInk[context] = NoteColors.inkThemeFor(Theme.of(context), background);
     // Çizilmiş tema varsa sayfa ve üst çubuk saydam: süsleme arkadan görünür
     // (bkz. NoteThemeBackdrop); alt çubuk temanın alt tonunda düz kalır.
     final themed = NoteThemes.byId(note.theme) != null;
@@ -2390,9 +2411,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // paleti kullanır (metindeki 1..5 indeksi her ikisinde aynı rengi verir).
     final richTheme = RichTextTheme(
       palette: NoteColors.richPalette,
-      markerColor: Theme.of(
+      markerColor: _themeOf(
         context,
       ).colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
+      // Renkli yazı notun zeminine göre okunur hâle getirilir.
+      background: background,
     );
     _bodyController.richTheme = richTheme;
     _titleController.richTheme = richTheme;
@@ -2406,7 +2429,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // (F2.7): build başka nedenlerle de koşuyor (odak, klavye, biçim
     // çubuğu) ve her seferinde ad listesi + çip görünümleri baştan
     // kuruluyordu.
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final dark = _themeOf(context).brightness == Brightness.dark;
     if (!identical(note, _fedNote) || dark != _fedDark) {
       _fedNote = note;
       _fedDark = dark;
@@ -2438,7 +2461,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Notun kendi yazı tipi/boyutu: gövde ve maddeler `fontFamily`/`fontScale`
     // çiftinden, BAŞLIK ise kendi `titleFontFamily`/`titleFontScale`
     // değerlerinden beslenir — biçim çubuğu odaktaki alana yazar.
-    final theme = Theme.of(context);
+    final theme = _themeOf(context);
     final bodyBase = theme.textTheme.bodyLarge ?? const TextStyle();
     // Renk BURADA somutlaşır: satır içi opaklık (`&&k:...&&`) ancak var olan
     // bir rengin alfasını düşürebilir; stil rengi null bırakılırsa seçime
@@ -2465,7 +2488,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final titleInBar = _titleInBar(note);
     final titleBaseStyle = applyNoteOpacity(
       applyNoteFont(
-        (Theme.of(context).textTheme.headlineSmall ?? const TextStyle())
+        (_themeOf(context).textTheme.headlineSmall ?? const TextStyle())
             .copyWith(
               // w500: kalın (w800) başlıkta açıkça ayırt edilsin (bkz.
               // rich_text `markStyle`).
@@ -2474,11 +2497,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               fontSize:
                   (titleInBar
                       ? 18.0
-                      : (Theme.of(context).textTheme.headlineSmall?.fontSize ??
+                      : (_themeOf(context).textTheme.headlineSmall?.fontSize ??
                             24)) *
                   note.titleFontScale,
               color:
-                  Theme.of(context).textTheme.headlineSmall?.color ??
+                  _themeOf(context).textTheme.headlineSmall?.color ??
                   theme.colorScheme.onSurface,
             ),
         note.titleFontFamily,
@@ -3200,7 +3223,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           window: _bodyWindow,
           style: windowedFieldStyle(context, noteBodyStyle),
           strut: wrapStrutStyle(noteBodyStyle),
-          linkColor: Theme.of(context).colorScheme.primary,
+          linkColor: _themeOf(context).colorScheme.primary,
           topPadding: _kBodyTextTop,
           field: fieldOf,
           onTileTap: (offset, global) {
@@ -3722,7 +3745,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: Theme.of(
+                  color: _themeOf(
                     context,
                   ).colorScheme.outlineVariant.withValues(alpha: 0.6),
                 ),
@@ -3896,12 +3919,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                               child: Container(
                                 padding: const EdgeInsets.all(3),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(
+                                  color: _themeOf(
                                     context,
                                   ).colorScheme.surface,
                                   borderRadius: BorderRadius.circular(13),
                                   border: Border.all(
-                                    color: Theme.of(
+                                    color: _themeOf(
                                       context,
                                     ).colorScheme.outlineVariant,
                                   ),
@@ -4078,6 +4101,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // arkasında; sayfa ve üst çubuk saydamlaşır.
           child: NoteThemeBackdrop(
           themeId: note.theme,
+          // Ağaç şekli hep aynı (Theme her zaman var): renk eşiği aşılınca
+          // editörün alt ağacı yeniden kurulmasın (odak/kaydırma korunur).
+          child: Theme(
+          data: _themeOf(context),
           child: Scaffold(
           backgroundColor: themed ? Colors.transparent : background,
           // **KASMA — klavye boşluğu artık KARARLI** (bkz. [KeyboardSnap]).
@@ -4122,7 +4149,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: Theme.of(
+                            color: _themeOf(
                               context,
                             ).colorScheme.onSurfaceVariant,
                           ),
@@ -4199,7 +4226,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         child: Icon(
                           Icons.cloud_off_outlined,
                           size: 18,
-                          color: Theme.of(context).colorScheme.tertiary,
+                          color: _themeOf(context).colorScheme.tertiary,
                         ),
                       );
                     }
@@ -4210,7 +4237,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             ? Icons.cloud_upload_outlined
                             : Icons.cloud_done_outlined,
                         size: 18,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant
+                        color: _themeOf(context).colorScheme.onSurfaceVariant
                             .withValues(alpha: pending ? 0.9 : 0.5),
                       ),
                     );
@@ -4382,7 +4409,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             Positioned.fill(
                               child: InkGestureLayer(
                                 key: const ValueKey('ink-gesture-layer'),
-                                color: Theme.of(
+                                color: _themeOf(
                                   context,
                                 ).colorScheme.primary.withValues(alpha: 0.7),
                                 scrollPosition: _gestureScrollPosition,
@@ -4440,7 +4467,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               ),
             ),
           ),
-        ),
+        )),
         ),
         ),
       ),

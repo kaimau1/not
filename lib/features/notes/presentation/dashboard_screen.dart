@@ -17,6 +17,7 @@ import '../../../app/app_frame.dart';
 import '../../../app/router.dart';
 import '../../../app/split_shell.dart';
 import '../../../app/theme/note_colors.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/snapshot_when_leaving.dart';
 import '../../../core/widgets/action_menu_sheet.dart';
 import '../../../core/l10n_ext.dart';

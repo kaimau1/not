@@ -129,7 +129,7 @@ class _PendingEmbedBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _themeOf(context).colorScheme;
     // TextFieldTapRegion + ExcludeFocus: şeride dokunmak gövdenin odağını
     // DÜŞÜRMEZ, dolayısıyla seçim imlece çökmez (bkz. `_lastSelection`
     // kök nedeni). Aynı kural notta metin yazılırken açılan her yardımcı
@@ -153,7 +153,7 @@ class _PendingEmbedBanner extends StatelessWidget {
                       l10n.attachmentTagPendingBanner(fileName),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall
+                      style: _themeOf(context).textTheme.bodySmall
                           ?.copyWith(color: scheme.onTertiaryContainer),
                     ),
                   ),
@@ -227,7 +227,7 @@ class _DictationPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _themeOf(context).colorScheme;
     final l10n = context.l10n;
     return Padding(
       key: const ValueKey('dictation-panel'),
@@ -275,7 +275,7 @@ class _AiBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _themeOf(context).colorScheme;
     return Material(
       color: scheme.secondaryContainer,
       child: InkWell(
@@ -296,7 +296,7 @@ class _AiBanner extends StatelessWidget {
                   Expanded(
                     child: Text(
                       label,
-                      style: Theme.of(context).textTheme.bodySmall
+                      style: _themeOf(context).textTheme.bodySmall
                           ?.copyWith(color: scheme.onSecondaryContainer),
                     ),
                   ),

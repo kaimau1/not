@@ -225,7 +225,7 @@ class _GestureModeBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _themeOf(context).colorScheme;
     return Material(
       color: scheme.secondaryContainer,
       child: Padding(
@@ -239,7 +239,7 @@ class _GestureModeBanner extends StatelessWidget {
                 l10n.embedLassoHint,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall
+                style: _themeOf(context).textTheme.bodySmall
                     ?.copyWith(color: scheme.onSecondaryContainer),
               ),
             ),

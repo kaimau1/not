@@ -4,6 +4,10 @@
      Widget'ların tüm renkleri bu belirteçlerden okunur; çizimler (drawable)
      ve düzenler (layout) ham hex taşımaz. Gece karşılığı values-night/.
 
+     TEMA_PLANI F35.1 (2026-11-04): renkler Adaçayı ailesinden (kâğıt kart
+     #FAFCFA, petrol vurgu #106561); gece karşılığı Adaçayı koyu. Simge
+     (ic_launcher_*) bilerek değişmedi (K6).
+
      KARAR (i1 simge çalışması): burası eskiden yalnızca Android 12 öncesi
      YEDEKti; 12+ cihazda values-v31/colors.xml aynı adları duvar kâğıdından
      türeyen sistem renklerine (Material You) bağlıyordu. O bağ kaldırıldı,
@@ -18,26 +22,26 @@
      1px kenar var. Bu yüzden eski _start/_end çiftleri tek belirtece indi. -->
 <resources>
     <!-- Yüzeyler: surface / surfaceContainerLow / outlineVariant -->
-    <color name="widget_surface">#F5EDD8</color>
-    <color name="widget_row">#F0E6CC</color>
-    <color name="widget_outline">#CFC5B8</color>
+    <color name="widget_surface">#FAFCFA</color>
+    <color name="widget_row">#EFF4F0</color>
+    <color name="widget_outline">#D1D8D2</color>
 
     <!-- Metin: onSurface / onSurfaceVariant -->
-    <color name="widget_on_surface">#1F1B16</color>
-    <color name="widget_on_surface_muted">#4E453B</color>
+    <color name="widget_on_surface">#1B2420</color>
+    <color name="widget_on_surface_muted">#4D5853</color>
 
     <!-- Vurgu: mikrofon / sesli not — primary + onPrimary -->
-    <color name="widget_accent">#7D5703</color>
-    <color name="widget_on_accent">#FFF8EE</color>
+    <color name="widget_accent">#106561</color>
+    <color name="widget_on_accent">#FFFFFF</color>
 
     <!-- İkincil vurgu: hızlı not — primaryContainer + onPrimaryContainer.
          Mikrofonla yan yana dururken ayırt edilsin diye daha açık tonda. -->
-    <color name="widget_note">#FFDDAE</color>
-    <color name="widget_on_note">#261A01</color>
+    <color name="widget_note">#C8E9E6</color>
+    <color name="widget_on_note">#002E2C</color>
 
     <!-- Hızlı eylemler çubuğundaki ikonlar -->
-    <color name="widget_icon">#1F1B16</color>
-    <color name="widget_icon_accent">#7D5703</color>
+    <color name="widget_icon">#1B2420</color>
+    <color name="widget_icon_accent">#106561</color>
 
     <!-- flutter_launcher_icons tarafından yazılır (adaptive_icon_background). -->
     <color name="ic_launcher_background">#3A2FC9</color>
@@ -55,27 +59,29 @@
          Değerler yukarıdaki (açık) ve values-night/ (koyu) ile birebir aynı;
          biri değişirse ikizi de değişmeli.
          ============================================================ -->
-    <color name="widget_light_surface">#F5EDD8</color>
-    <color name="widget_light_row">#F0E6CC</color>
-    <color name="widget_light_outline">#CFC5B8</color>
-    <color name="widget_light_on_surface">#1F1B16</color>
-    <color name="widget_light_on_surface_muted">#4E453B</color>
-    <color name="widget_light_accent">#7D5703</color>
-    <color name="widget_light_on_accent">#FFF8EE</color>
-    <color name="widget_light_note">#FFDDAE</color>
-    <color name="widget_light_on_note">#261A01</color>
-    <color name="widget_light_icon">#1F1B16</color>
-    <color name="widget_light_icon_accent">#7D5703</color>
+    <color name="widget_light_surface">#FAFCFA</color>
+    <color name="widget_light_row">#EFF4F0</color>
+    <color name="widget_light_outline">#D1D8D2</color>
+    <color name="widget_light_on_surface">#1B2420</color>
+    <color name="widget_light_on_surface_muted">#4D5853</color>
+    <color name="widget_light_accent">#106561</color>
+    <color name="widget_light_on_accent">#FFFFFF</color>
+    <color name="widget_light_note">#C8E9E6</color>
+    <color name="widget_light_on_note">#002E2C</color>
+    <color name="widget_light_icon">#1B2420</color>
+    <color name="widget_light_icon_accent">#106561</color>
 
-    <color name="widget_dark_surface">#241C10</color>
-    <color name="widget_dark_row">#30271A</color>
-    <color name="widget_dark_outline">#4E453B</color>
-    <color name="widget_dark_on_surface">#F5EDD8</color>
-    <color name="widget_dark_on_surface_muted">#CFC5B8</color>
-    <color name="widget_dark_accent">#FFDDAE</color>
-    <color name="widget_dark_on_accent">#261A01</color>
-    <color name="widget_dark_note">#E1AD66</color>
-    <color name="widget_dark_on_note">#241C10</color>
-    <color name="widget_dark_icon">#F5EDD8</color>
-    <color name="widget_dark_icon_accent">#FFDDAE</color>
+    <color name="widget_dark_surface">#1C221E</color>
+    <color name="widget_dark_row">#29302C</color>
+    <color name="widget_dark_outline">#383F3B</color>
+    <color name="widget_dark_on_surface">#E1E8E4</color>
+    <color name="widget_dark_on_surface_muted">#B1BAB5</color>
+    <color name="widget_dark_accent">#76CDC5</color>
+    <color name="widget_dark_on_accent">#002E2B</color>
+    <color name="widget_dark_note">#0B4A46</color>
+    <color name="widget_dark_on_note">#C8E9E5</color>
+    <color name="widget_dark_icon">#E1E8E4</color>
+    <color name="widget_dark_icon_accent">#76CDC5</color>
+    <!-- Açılış zemini (launch_background.xml): AppTheme Adaçayı zemini. -->
+    <color name="launch_bg">#EAF0EB</color>
 </resources>

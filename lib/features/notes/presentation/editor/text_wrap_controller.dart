@@ -1029,7 +1029,12 @@ class WrapTextController extends TextEditingController {
       range.$1,
       range.$2,
       (current) =>
-          markStyle(current ?? style ?? const TextStyle(), mark, palette),
+          markStyle(
+            current ?? style ?? const TextStyle(),
+            mark,
+            palette,
+            background: _rich?.background,
+          ),
     );
     return restyled is TextSpan ? restyled : span;
   }

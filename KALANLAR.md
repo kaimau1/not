@@ -173,6 +173,13 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 47. [ ] (F24.2) 6 KB+ notta GERÇEK klavyeyle yaz (Gboard, otomatik düzeltme, dikte): metin doğru yerde; uzak paragrafa dokun → imleç orada; uzun bas → seçim; Tümünü seç + Kopyala tüm notu alır; kapat-aç → metin aynı. adb ile denendi, Gboard önerisi ve dikte DENENMEDİ.
 48. [ ] (F25.2) Telefon SOĞUKKEN soğuk açılış ×3: içerik ilk ~1 sn'de, sabit notlar yerinde, liste gelince zıplama yok; özet gösterilirken karta dokunmak bir şey yapmaz (<1 sn).
 
+**2026-11-04 — yeni tema (TEMA_PLANI Faz 29–35, yazıldı, cihazda doğrulanmadı)**
+49. [ ] (F30) Güncelleme sonrası tema Adaçayı (eski kırık beyaz seçimi Adaçayı'na, kağıt Kil'e, beyaz Porselen'e geçmiş olmalı). Ayarlar → Görünüm → Tema: beş kart (Sistem, Adaçayı, Porselen, Kil, Koyu) önizlemeleri doğru; birine geçince bütün ekran değişir, yazı tipi korunur.
+50. [ ] (F31.2, K4) Ana ekranı 200+ notla hızlı kaydır (`tool/perf/`): raster p90 ≤ 9 ms (önce 8,6). Kart gölgesi şimdilik bulanıksız 1 dp; bütçe tutuyorsa `AppTokens.cardShadow`'a yumuşak gölge (0 3 10 /%5) denenip AYNI ölçüm tekrarlanacak.
+51. [ ] (okunurluk) Bir nota paletten SİYAH/LACİVERT özel renk ver: zemin koyu kalır, yazı/simge/imleç/kutucuk açık; ana ekranda kartı da açık yazılı. Koyu temada BEYAZ özel renk: yazı okunur. Renkli yazı (sarı vurgu kalemi değil, sarı YAZI) açık notta koyu sarı-kahve, koyu notta açık görünür. Renk seçerken (canlı şerit) editör odağı ve kaydırma yerinde kalır.
+52. [ ] (F33) Defter: mavi sayfada çizgiler mavi-gri, adaçayında yeşil-gri; kenar çizgisi mercan (kırmızı hata rengi değil); kartta da aynı. Noktalı desende noktalar görünür.
+53. [ ] (F35) Ana ekran widget'ı Adaçayı renklerinde (gece: koyu Adaçayı); uygulama açılışında beyaz parlama yok (açılış zemini `#EAF0EB`). Web: açılış ekranı ve tarayıcı çubuğu rengi yeni zemin.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)

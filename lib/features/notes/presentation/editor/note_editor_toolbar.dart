@@ -14,7 +14,7 @@ extension _EditorToolbar on _NoteEditorScreenState {
     required VoidCallback onTap,
     bool active = false,
   }) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _themeOf(context).colorScheme;
     return Tooltip(
       message: label,
       child: Material(
@@ -52,7 +52,7 @@ extension _EditorToolbar on _NoteEditorScreenState {
   /// anlıyordu. Sayı artınca düğme iki kez vurgu rengine yanar
   /// (bkz. [_attachPulse]).
   Widget _attachmentsToggle(AppLocalizations l10n, int count) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _themeOf(context).colorScheme;
     final open = ref.watch(attachmentsExpandedProvider);
     return Tooltip(
       message: open ? l10n.hideAttachments : l10n.showAttachments,
@@ -106,7 +106,7 @@ extension _EditorToolbar on _NoteEditorScreenState {
   /// çizer, iki parmak gezinir; renk/kalınlık/silgi/ok çubuğu bölmenin
   /// altında belirir (bkz. PdfNotePane.penMode).
   Widget _penToolButton(AppLocalizations l10n) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _themeOf(context).colorScheme;
     return Tooltip(
       message: _penMode ? l10n.annotateDone : l10n.annotate,
       child: SizedBox(
@@ -142,7 +142,7 @@ extension _EditorToolbar on _NoteEditorScreenState {
     bool active = false,
     double size = 48,
   }) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _themeOf(context).colorScheme;
     final background = active ? scheme.primary : Colors.transparent;
     final ink = active ? scheme.onPrimary : scheme.onPrimaryContainer;
     return Tooltip(
@@ -182,7 +182,7 @@ extension _EditorToolbar on _NoteEditorScreenState {
     required double gap,
     required List<Widget> children,
   }) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _themeOf(context).colorScheme;
     return Container(
       key: const ValueKey('editor-ai-capsule'),
       padding: const EdgeInsets.all(3),
@@ -208,7 +208,7 @@ extension _EditorToolbar on _NoteEditorScreenState {
   /// yuvarlak rozet ve kalın, yuvarlak uçlu artı — kapsüldeki diğer
   /// simgelerden ayrışır, "buradan ekle" diye okunur.
   Widget _addToolButton(AppLocalizations l10n) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _themeOf(context).colorScheme;
     const segment = _NoteEditorScreenState._kToolSegment;
     return Tooltip(
       message: l10n.addAttachment,

@@ -100,6 +100,8 @@ extension _EditorAppearance on _NoteEditorScreenState {
       // Çizgili desenlerde satırları içerik çizer (bkz. [_withRuledLines]);
       // belge notunun tuvali yok, orada ızgara kalır.
       contentRuled: !note.type.isPageNoteType,
+      // Çizgi sayfanın kendi renginden (TEMA_PLANI F33.1).
+      accent: NoteColors.noteInk(context, note),
       child: child,
     );
   }
@@ -116,11 +118,15 @@ extension _EditorAppearance on _NoteEditorScreenState {
   Widget _withRuledLines(Note note, TextStyle bodyStyle, Widget child) {
     if (!note.paged || !note.archivePaper.ruled) return child;
     final dashed = note.archivePaper == ArchivePaper.dashed;
+    final line = PaperInks.of(
+      _themeOf(context),
+      accent: NoteColors.noteInk(context, note),
+    ).line;
     return RuledLines(
       gap: _paperGap(bodyStyle),
-      color: Theme.of(context).colorScheme.outlineVariant.withValues(
-        alpha: dashed ? 0.7 : 0.55,
-      ),
+      color: dashed
+          ? line.withValues(alpha: (line.a * 1.25).clamp(0, 1))
+          : line,
       dashed: dashed,
       // Kaydırma alanının alt dolgusu (bkz. [_buildCanvas]).
       extraBottom: 96,
@@ -166,7 +172,7 @@ extension _EditorAppearance on _NoteEditorScreenState {
                       children: [
                         Text(
                           l10n.lineSpacing,
-                          style: Theme.of(context).textTheme.labelLarge,
+                          style: _themeOf(context).textTheme.labelLarge,
                         ),
                         const SizedBox(height: 8),
                         SegmentedButton<double>(

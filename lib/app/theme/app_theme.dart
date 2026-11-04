@@ -1,22 +1,19 @@
-
 import 'package:flutter/material.dart';
 
 import '../../core/utils/note_fonts.dart';
+import 'app_palette.dart';
+import 'app_tokens.dart';
 import 'page_transitions.dart';
 
-/// Premium sade görünüm: tek tohum renk, ince kenarlıklar, gölgesiz yüzeyler,
-/// koyu temada siyaha yakın arka plan.
+/// Uygulamanın teması: üç aile (bkz. [ThemeFamily] — "masa ve kâğıt"), her
+/// birinin açık ve koyu hâli. Renkler [FamilyPalettes]'ten, şemada karşılığı
+/// olmayanlar [AppTokens]'tan.
+///
+/// Eski "kırık beyaz", "kağıt" ve "beyaz" temaları kalktı (TEMA_PLANI K2,
+/// 2026-11-04); kayıtlı seçimler `ThemeChoiceNotifier`'da yeni ailelere
+/// eşlenir.
 abstract final class AppTheme {
-  static const Color seed = Color(0xFF4A5CCC);
-
-  /// Kağıt temasının tohum rengi: sıcak sepya; saman kağıdı yüzeylerle uyumlu.
-  static const Color paperSeed = Color(0xFF8A6C3C);
-
-  /// Kırık beyaz temanın tohumu: soğuk-gri arduvaz; vurgu sakin kalır, zemin
-  /// ılık beyaz.
-  static const Color offWhiteSeed = Color(0xFF55627A);
-
-  /// Kurulmuş temalar (anahtar: parlaklık + kağıt + yazı tipi).
+  /// Kurulmuş temalar (anahtar: aile + parlaklık + yazı tipi).
   ///
   /// KÖK NEDEN (kasma — "font değişince kasıyor"): `NotlarApp.build` her
   /// çalıştığında `theme:` ve `darkTheme:` için İKİ tam [ThemeData] sıfırdan
@@ -25,17 +22,16 @@ abstract final class AppTheme {
   /// tek tek kuran çağrısı) demek; ölçülebilir birkaç milisaniye. Kök widget
   /// yalnız ayar değişince değil, yönlendirici/dil/tema kipi her
   /// kıpırdadığında da yeniden kurulduğu için bu bedel kare bütçesine
-  /// giriyordu — ayarlardan yazı tipini değiştirmek gibi arka arkaya birkaç
-  /// build üreten işlemlerde de gözle görülür takılma yapıyordu.
+  /// giriyordu.
   ///
-  /// Ayrıca ÖNEMLİ bir ikinci kazanç: aynı ayarlar için AYNI nesne dönüyor.
-  /// `Theme.updateShouldNotify` temaları `==` ile karşılaştırır ve
-  /// [ThemeData]'nın `==`'i yüzlerce alanı dolaşır; kimlik eşitliği bu
-  /// karşılaştırmayı da bedavaya indirir ve tema değişmediğinde ağacın
-  /// tamamının yeniden çizilmesini önler.
+  /// Ayrıca aynı ayarlar için AYNI nesne dönüyor: `Theme.updateShouldNotify`
+  /// temaları `==` ile karşılaştırır ve [ThemeData]'nın `==`'i yüzlerce alanı
+  /// dolaşır; kimlik eşitliği bu karşılaştırmayı bedavaya indirir. Okunurluk
+  /// düzeltmesi (bkz. `NoteInkScope`) zıt temayı da buradan alır — not
+  /// başına yeni tema kurulmaz.
   ///
-  /// Önbellek SINIRSIZ DEĞİL: katalogda 19 yazı tipi × 3 tema = en çok 57
-  /// giriş, hepsi de kullanıcının gerçekten seçebildiği kombinasyonlar.
+  /// Önbellek SINIRSIZ DEĞİL: 19 yazı tipi × 3 aile × 2 parlaklık = en çok
+  /// 114 giriş, hepsi kullanıcının gerçekten seçebildiği kombinasyonlar.
   static final Map<String, ThemeData> _cache = {};
 
   /// Testlerin (ve yazı tipi kataloğu değişirse çalışma anının) önbelleği
@@ -43,151 +39,134 @@ abstract final class AppTheme {
   @visibleForTesting
   static void clearCache() => _cache.clear();
 
-  /// [font] uygulamanın genel yazı tipi (Ayarlar → Görünüm → Yazı tipi);
-  /// null ise varsayılan ([kAppDefaultFont]) kullanılır.
-  static ThemeData light({String? font}) => _cached(Brightness.light, font);
+  /// Varsayılan ailenin (Adaçayı) açık hâli. [font] uygulamanın genel yazı
+  /// tipi (Ayarlar → Görünüm → Yazı tipi); null ise varsayılan.
+  static ThemeData light({String? font}) =>
+      of(ThemeFamily.sage, Brightness.light, font: font);
 
-  static ThemeData dark({String? font}) => _cached(Brightness.dark, font);
+  static ThemeData dark({String? font}) =>
+      of(ThemeFamily.sage, Brightness.dark, font: font);
 
-  /// "Kağıt" teması: açık temanın hafif saman kağıdı renkli sürümü.
-  static ThemeData paper({String? font}) =>
-      _cached(Brightness.light, font, paper: true);
-
-  /// "Kırık beyaz" (kullanıcı isteği 2026-10-29: "kırık beyaz genel teması
-  /// yapalım"): saf beyaz yerine hafif ılık, kâğıt kadar sarı olmayan
-  /// beyaz yüzeyler. Varsayılan tema budur.
-  static ThemeData offWhite({String? font}) =>
-      _cached(Brightness.light, font, offWhite: true);
-
-  static ThemeData _cached(
-    Brightness brightness,
-    String? font, {
-    bool paper = false,
-    bool offWhite = false,
+  static ThemeData of(
+    ThemeFamily family,
+    Brightness brightness, {
+    String? font,
   }) => _cache.putIfAbsent(
-    '${brightness.name}|$paper|$offWhite|${font ?? ''}',
-    () => _base(brightness, paper: paper, offWhite: offWhite, font: font),
+    '${family.name}|${brightness.name}|${font ?? ''}',
+    () => _base(family, brightness, font),
   );
 
-  static ThemeData _base(
-    Brightness brightness, {
-    bool paper = false,
-    bool offWhite = false,
-    String? font,
-  }) {
-    final isDark = brightness == Brightness.dark;
-    var scheme = ColorScheme.fromSeed(
-      seedColor: paper
-          ? paperSeed
-          : offWhite
-          ? offWhiteSeed
-          : seed,
-      brightness: brightness,
+  /// [theme] ile aynı aile ve yazı tipinde, ZIT parlaklıktaki tema: açık
+  /// temada koyu bir not zemini (ya da tersi) seçilince notun içi bu temayla
+  /// çizilir — yazı, simge, imleç ve kutucuklar zemine göre okunur kalır.
+  static ThemeData opposite(ThemeData theme) {
+    final tokens = AppTokens.fromTheme(theme);
+    return of(
+      tokens.family,
+      theme.brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+      font: tokens.font,
     );
-    if (offWhite) {
-      // Kanallar arası fark ~6-8 birim: göz "beyaz" görür, ekran parlamaz;
-      // kartlar (container) zeminden bir-iki ton koyu, ince ayrışır.
-      //
-      // VURGU SICAK GRAFİT (kullanıcı bulgusu 2026-10-30: "kırık beyaz
-      // temada mavi detaylar güzel değil"). Arduvaz tohumu HCT'de mavi
-      // birincil/ikincil/üçüncül üretiyordu; ılık beyaz zeminde soğuk mavi
-      // düğme, seçili çip ve imleç yabancı duruyordu. Bütün vurgu rolleri
-      // zeminle aynı ılık aileden (grafit, toprak, bronz) elle verilir.
-      scheme = scheme.copyWith(
-        primary: const Color(0xFF4A453F),
-        onPrimary: const Color(0xFFFFFFFF),
-        primaryContainer: const Color(0xFFE5DFD5),
-        onPrimaryContainer: const Color(0xFF26221E),
-        secondary: const Color(0xFF6B6358),
-        onSecondary: const Color(0xFFFFFFFF),
-        secondaryContainer: const Color(0xFFE8E2D7),
-        onSecondaryContainer: const Color(0xFF2C2823),
-        tertiary: const Color(0xFF7D6449),
-        onTertiary: const Color(0xFFFFFFFF),
-        tertiaryContainer: const Color(0xFFF0E2D0),
-        onTertiaryContainer: const Color(0xFF2F2215),
-        onSurface: const Color(0xFF1E1C19),
-        onSurfaceVariant: const Color(0xFF4E4943),
-        outline: const Color(0xFF7E776D),
-        outlineVariant: const Color(0xFFD3CDC2),
-        inverseSurface: const Color(0xFF33302C),
-        onInverseSurface: const Color(0xFFF5F1EA),
-        inversePrimary: const Color(0xFFD4CCBF),
-        surfaceTint: const Color(0xFF4A453F),
-        surface: const Color(0xFFF8F6F1),
-        surfaceContainerLowest: const Color(0xFFFDFCF9),
-        surfaceContainerLow: const Color(0xFFF2EFE9),
-        surfaceContainer: const Color(0xFFEDEAE3),
-        surfaceContainerHigh: const Color(0xFFE7E4DC),
-        surfaceContainerHighest: const Color(0xFFE0DCD3),
-      );
-    }
-    if (paper) {
-      // Kağıt tonu: SARI-GRİ arası, ılık ama doygun olmayan yüzeyler.
-      //
-      // Sarı YARIYA İNDİRİLDİ (kullanıcı isteği 2026-08-10: "kağıt tonunun
-      // sarısını biraz azalt, çok sarı; hafif grileşebilir, sarı gri arası").
-      // Eski küme saman kağıdıydı — en koyu yüzeyde kırmızı ile mavi kanal
-      // arasındaki fark 53 birimdi (0xFFDCCDA7), yani belirgin sarı. Kanal
-      // farkı yarıya indirilip parlaklık korunarak ton griye çekildi: kağıt
-      // hissi (yüzeyler hâlâ sıcak tarafta) kalır, sarılık göze batmaz.
-      scheme = scheme.copyWith(
-        surface: const Color(0xFFF3EFE3),
-        surfaceContainerLowest: const Color(0xFFFAF7EF),
-        surfaceContainerLow: const Color(0xFFEDE8DA),
-        surfaceContainer: const Color(0xFFE7E1D1),
-        surfaceContainerHigh: const Color(0xFFDFD9C7),
-        surfaceContainerHighest: const Color(0xFFD6CFBB),
-      );
-    }
-    if (isDark) {
-      scheme = scheme.copyWith(
-        surface: const Color(0xFF0E0E11),
-        surfaceContainerLowest: const Color(0xFF0A0A0C),
-        surfaceContainerLow: const Color(0xFF16161A),
-        surfaceContainer: const Color(0xFF1A1A1F),
-        surfaceContainerHigh: const Color(0xFF212127),
-        surfaceContainerHighest: const Color(0xFF28282F),
-      );
-    }
+  }
+
+  static ThemeData _base(
+    ThemeFamily family,
+    Brightness brightness,
+    String? font,
+  ) {
+    final isDark = brightness == Brightness.dark;
+    final t = FamilyPalettes.of(family, brightness);
+    // fromSeed yalnız hata rolleri ve gölge/karartma için; diğer her rol
+    // ailenin elle verilmiş değeri.
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: t.primary,
+          brightness: brightness,
+        ).copyWith(
+          primary: t.primary,
+          onPrimary: t.onPrimary,
+          primaryContainer: t.primaryContainer,
+          onPrimaryContainer: t.onPrimaryContainer,
+          secondary: t.secondary,
+          onSecondary: t.onSecondary,
+          secondaryContainer: t.secondaryContainer,
+          onSecondaryContainer: t.onSecondaryContainer,
+          tertiary: t.tertiary,
+          onTertiary: t.onTertiary,
+          tertiaryContainer: t.tertiaryContainer,
+          onTertiaryContainer: t.onTertiaryContainer,
+          surface: t.ground,
+          onSurface: t.ink,
+          onSurfaceVariant: t.muted,
+          surfaceContainerLowest: t.lowest,
+          // KATMAN SIRASI (masa ve kâğıt): açık temada Low/Container zeminden
+          // AÇIK (kart dili: liste satırı, giriş kutusu, alt levha kâğıt
+          // gibi durur), High/Highest zeminden koyu (seçili, basılı, iskelet).
+          surfaceContainerLow: isDark ? t.card : t.sheet,
+          surfaceContainer: t.field,
+          surfaceContainerHigh: t.high,
+          surfaceContainerHighest: t.highest,
+          surfaceTint: Colors.transparent,
+          outline: t.outline,
+          outlineVariant: t.hair,
+          inverseSurface: t.inverse,
+          onInverseSurface: t.onInverse,
+          inversePrimary: t.inversePrimary,
+          shadow: t.ink,
+          scrim: isDark ? Colors.black : t.ink,
+        );
+    final tokens = AppTokens(
+      family: family,
+      font: font,
+      card: t.card,
+      hairline: t.ink.withValues(alpha: isDark ? 0.10 : 0.08),
+      cardShadow: [
+        BoxShadow(
+          color: isDark
+              ? Colors.black.withValues(alpha: 0.32)
+              : t.ink.withValues(alpha: 0.07),
+          offset: const Offset(0, 1),
+        ),
+      ],
+      cardRadius: 16,
+    );
 
     // Uygulamanın tipografisi: varsayılan Inter Tight, kullanıcı Ayarlar →
     // Görünüm → Yazı tipi'nden katalogdaki her yazı tipine geçebilir.
     // Dosyaların TAMAMI APK'ya GÖMÜLÜ (`assets/google_fonts/`), yani
     // `google_fonts` burada ağa hiç çıkmaz ve yazı tipi her telefonda AYNI
-    // çizilir — indirme başarısız olduğunda cihazın sistem fontuna düşme
-    // davranışı bitti (bkz. pubspec'teki gerekçe). Gömülü ağırlıklar 400 ve
-    // 500: paketin gövde temasına yüklediği ağırlıklar bunlar, daha kalın
-    // metinler bu iki yüzden türetiliyor.
+    // çizilir.
     final textTheme = appFontTextTheme(
       ThemeData(brightness: brightness).textTheme,
       font,
-    );
+    ).apply(bodyColor: t.ink, displayColor: t.ink);
 
+    final sheetShape = const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    );
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       brightness: brightness,
       textTheme: textTheme,
+      extensions: [tokens],
       scaffoldBackgroundColor: scheme.surface,
+      canvasColor: scheme.surface,
       splashFactory: InkSparkle.splashFactory,
       // METİN SEÇİMİ (kullanıcı bulgusu 2026-10-15: "metin seçim kalitesi
       // düzeltilmeli"). M3 varsayılanı seçimi birincil rengin %40'ıyla
-      // boyuyordu; kâğıt temasının koyu kahvesinde seçili kelime yazının
-      // üstüne basılmış koyu bir blok gibi duruyor, harfler zor okunuyordu.
-      // Daha açık bir zemin seçimi gösterir ama yazıyı örtmez; tutamaçlar ve
-      // imleç birincil renkte kalır (nerede tutulacağı belli olsun).
+      // boyuyordu; seçili kelime yazının üstüne basılmış koyu bir blok gibi
+      // duruyordu. Daha açık bir zemin seçimi gösterir ama yazıyı örtmez.
       textSelectionTheme: TextSelectionThemeData(
         cursorColor: scheme.primary,
-        selectionColor: scheme.primary.withValues(
-          alpha: brightness == Brightness.dark ? 0.38 : 0.24,
-        ),
+        selectionColor: scheme.primary.withValues(alpha: isDark ? 0.38 : 0.24),
         selectionHandleColor: scheme.primary,
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,
+        foregroundColor: scheme.onSurface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: textTheme.titleLarge?.copyWith(
           color: scheme.onSurface,
@@ -196,52 +175,132 @@ abstract final class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: scheme.surfaceContainerLow,
+        color: t.card,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: tokens.hairline),
         ),
         margin: EdgeInsets.zero,
       ),
+      // ÇİP: seçili = vurgunun açık tonu (bugüne dek zeminle neredeyse aynı
+      // renkteydi), seçisiz = şeffaf + ince çizgi.
       chipTheme: ChipThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
-        backgroundColor: scheme.surface,
-        selectedColor: scheme.secondaryContainer,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.9)),
+        backgroundColor: Colors.transparent,
+        selectedColor: scheme.primaryContainer,
+        secondarySelectedColor: scheme.primaryContainer,
+        checkmarkColor: scheme.onPrimaryContainer,
         showCheckmark: false,
-        labelStyle: textTheme.labelLarge,
+        labelStyle: textTheme.labelLarge?.copyWith(color: scheme.onSurface),
+        secondaryLabelStyle: textTheme.labelLarge?.copyWith(
+          color: scheme.onPrimaryContainer,
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: scheme.surfaceContainerLow,
+        fillColor: isDark ? t.field : t.card,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
         hintStyle: textTheme.bodyMedium?.copyWith(
-          color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+          color: scheme.onSurfaceVariant.withValues(alpha: 0.85),
         ),
       ),
+      searchBarTheme: SearchBarThemeData(
+        backgroundColor: WidgetStatePropertyAll(isDark ? t.field : t.card),
+        elevation: const WidgetStatePropertyAll(0),
+        side: WidgetStatePropertyAll(BorderSide(color: scheme.outlineVariant)),
+      ),
+      // EKLE DÜĞMESİ vurgunun kendisi (eskiden açık bej kap — ekranda
+      // kayboluyordu).
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         elevation: 2,
-        backgroundColor: scheme.primaryContainer,
-        foregroundColor: scheme.onPrimaryContainer,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        highlightElevation: 3,
+        backgroundColor: scheme.primary,
+        foregroundColor: scheme.onPrimary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: t.sheet,
+        modalBackgroundColor: t.sheet,
+        surfaceTintColor: Colors.transparent,
+        shape: sheetShape,
+        dragHandleColor: scheme.onSurface.withValues(alpha: 0.25),
+        modalBarrierColor: scheme.scrim.withValues(alpha: 0.32),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: t.card,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: t.card,
+        surfaceTintColor: Colors.transparent,
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(t.card),
+          surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+        ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        backgroundColor: scheme.inverseSurface,
+        contentTextStyle: textTheme.bodyMedium?.copyWith(
+          color: scheme.onInverseSurface,
+        ),
+        actionTextColor: scheme.inversePrimary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: scheme.inverseSurface,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        textStyle: textTheme.bodySmall?.copyWith(
+          color: scheme.onInverseSurface,
+        ),
+      ),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: scheme.surface,
+        indicatorColor: scheme.primaryContainer,
+        selectedIconTheme: IconThemeData(color: scheme.onPrimaryContainer),
+        unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: t.sheet,
+        indicatorColor: scheme.primaryContainer,
+        surfaceTintColor: Colors.transparent,
+      ),
+      drawerTheme: DrawerThemeData(
+        backgroundColor: t.sheet,
+        surfaceTintColor: Colors.transparent,
       ),
       dividerTheme: DividerThemeData(
-        color: scheme.outlineVariant.withValues(alpha: 0.4),
+        color: scheme.outlineVariant.withValues(alpha: 0.6),
         space: 1,
         thickness: 1,
       ),
-      listTileTheme: const ListTileThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
+      listTileTheme: ListTileThemeData(
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
+        iconColor: scheme.onSurfaceVariant,
+        selectedColor: scheme.onPrimaryContainer,
+        selectedTileColor: scheme.primaryContainer.withValues(alpha: 0.6),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: scheme.primary,
+        linearTrackColor: scheme.outlineVariant.withValues(alpha: 0.5),
+        circularTrackColor: Colors.transparent,
       ),
       // EKRAN GEÇİŞLERİ iPhone gibi yandan kayar (bkz. page_transitions.dart).
       // Web'de tarayıcının bildirdiği platforma göre seçilir: masaüstü

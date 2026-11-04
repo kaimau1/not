@@ -217,7 +217,7 @@ Ayarlar ekranının üstündeki arama kutusuyla her ayarı adıyla bul ("brifing
 En üstte iki kart: **Kullanım kılavuzu** ve **Kişiselleştir** (hangi düğme ve alan görünsün; oradan **düzenleme modu** da başlar). Altında alanlar; kapalı alanın satırındaki özet içinde ne seçili olduğunu söyler.
 - **Kişiler:** arkadaşlar, gelen notlar, bulunabilirlik, ortak not bildirimleri.
 - **Yapay zekâ:** model, kendi API anahtarın, günlük brifing, otomatik etiket/başlık, işaretli maddeleri koruma.
-- **Görünüm:** örnek metin, tema (sistem, açık, koyu, kâğıt, kırık beyaz), yazı tipi ve boyutu, **Dil** (Türkçe, İngilizce ya da sistem dili), uzun maddeler, madde jestleri, **Kartta görünenler** (canlı kart örneğiyle: sayaç, etiket, tarih, görsel, ekler, klasör, kâğıt…), koyu tema zamanlaması.
+- **Görünüm:** örnek metin, tema (sistem, Adaçayı, Porselen, Kil, koyu), yazı tipi ve boyutu, **Dil** (Türkçe, İngilizce ya da sistem dili), uzun maddeler, madde jestleri, **Kartta görünenler** (canlı kart örneğiyle: sayaç, etiket, tarih, görsel, ekler, klasör, kâğıt…), koyu tema zamanlaması.
 - **Eklentiler ve hızlı not:** yapay zekâ, ses, video, tarama, çizim, şablon… eklentilerini aç/kapa; ana ekrandaki hızlı not satırı; **İpuçlarını yeniden göster**.
 - **Notlar ve klasörler:** yana kaydırma, klasör sırası, sıralama, ızgara/liste ve sütun sayısı (ana ekranda iki parmakla da değişir), paylaşılan notlar ana ekranda (üstte ya da notlarının altında), içerikten not açılışı (Balonlu/Klasik), eklerin içinde arama.
 - **Sesli dinle ve dikte:** cihaz sesi, Türkçe ses ya da yapay zekâ sesi; okuma hızı ve tonu; dikte mikrofonunun kullanım şekli.
