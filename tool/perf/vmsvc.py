@@ -34,6 +34,17 @@ class VM:
             self.call("ext.flutter.profileWidgetBuilds", isolateId=self.iso, enabled=str(widgets).lower())
         self.t0 = self.now()
 
+    def channels(self, reset=False, top=12):
+        """F27.1: platform kanalı sayacı (`ext.notlar.channels`) — kanal başına
+        giden/gelen ileti + bayt. reset=True okuduktan sonra sıfırlar."""
+        r = self.call("ext.notlar.channels", isolateId=self.iso, reset=str(reset).lower())
+        rows = sorted(((k, v) for k, v in r.items() if isinstance(v, dict)),
+                      key=lambda kv: -(kv[1]["outBytes"] + kv[1]["inBytes"]))
+        for k, v in rows[:top]:
+            print(f"{k:60s} {v['outCount']:5d}↑ {v['inCount']:5d}↓ "
+                  f"{(v['outBytes'] + v['inBytes']) / 1024:8.1f} KB")
+        return dict(rows)
+
     def stop(self):
         t1 = self.now()
         tl = self.call("getVMTimeline", timeOriginMicros=self.t0, timeExtentMicros=t1 - self.t0)

@@ -13,6 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'app/app.dart';
+import 'core/utils/channel_counter.dart';
+import 'core/utils/diagnostics.dart';
 import 'core/app_check_policy.dart';
 import 'core/constants.dart';
 import 'core/crash_reporting.dart';
@@ -81,7 +83,12 @@ Future<void> _activateAppCheck() async {
 }
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // F27.1: hata ayıklama/profil derlemesinde platform kanalı sayacı.
+  if (Diagnostics.enabled) {
+    ChannelCountingBinding.ensureInitialized();
+  } else {
+    WidgetsFlutterBinding.ensureInitialized();
+  }
   registerAntaliaLicense();
   // Web'de tarayıcının kendi sağ tık menüsü kapatılır: not kartlarına sağ
   // tıklayınca uygulamanın bağlam menüsü açılsın (masaüstündeki gibi),

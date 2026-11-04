@@ -9,7 +9,7 @@
 | `perf.py` | adb yardımcıları (`wake`, `tap`, `swipe`, `text`, `front`, `find`/`tap_label` uiautomator), SurfaceFlinger kare toplayıcı (`SF`, `analyze`), atrace (`atrace_start/stop`, `parse_sched`, `burst_stats`, `sections`), içe aktarma (`open_import`, `wait_import`) |
 | `scen.py` | release senaryoları: `scroll` (12 fırlatma), `open_close` (not aç/kapa ×3), `typing`, `measure_sections` |
 | `hitch.py` | SF karelerini atrace saatine hizalar (`deliverInputEvent eventTimeNano`), her takılmada ana iş parçacığı meşguliyeti |
-| `vmsvc.py` | profil derlemesinin Dart VM servisi (HTTP GET): zaman çizelgesi, CPU örnekleri, widget build profili |
+| `vmsvc.py` | profil derlemesinin Dart VM servisi (HTTP GET): zaman çizelgesi, CPU örnekleri, widget build profili, platform kanalı sayacı (`VM.channels(reset=True)` — F27.1) |
 | `prof_oc.py`, `prof_scroll.py`, `prof_type.py` | profil uygulamasında aç/kapa, kaydırma, yazma + kök neden dökümü |
 | `make_dataset.py` | Keep Takeout zip'leri: 240 not + 4 adlı stres notu (`OLCUM …`) |
 
