@@ -166,7 +166,7 @@ zamanlama yamaları.
   (300–600 satır) ve 120 maddelik liste; yeni senaryolar: 30 KB notta 100 tuş
   yazma, kart ızgarasında arama sorgusu değişimi. Bütçe p90 build < 8 ms →
   **bugün KIRMIZI olmalı** (K1/K2'yi yakaladığını göster); Faz 21/24 sonrası yeşil.
-  **Yapıldı (2026-11-04):** veri setine 10 uzun gövde (300–600 satır) + 120 maddelik liste; yeni senaryolar `editor_typing_30kb` (30 KB'ta 100 tuş) ve `dashboard_search` ("önemli" yaz-sil ×3). Bütçe F27.4 ile p90/p99/en kötü. İlk `[perf]` koşusu: bkz. Ek B.
+  **Yapıldı (2026-11-04):** veri setine 10 uzun gövde (300–600 satır) + 120 maddelik liste; yeni senaryolar `editor_typing_30kb` (30 KB'ta 100 tuş) ve `dashboard_search` ("önemli" yaz-sil ×3). Bütçe F27.4 ile p90/p99/en kötü. İlk `[perf]` koşusu (41785838651, Ek B): dördü de bütçe İÇİNDE — **beklenen kırmızı GÖRÜLMEDİ.** 30 KB senaryosu K2'yi yakalamıyor: `enterText` IME kanalını (Java `commitText`, telefonda tuş başına maliyetin büyüğü) atlıyor, x86 emülatörde yerleşim hızlı; arama senaryosu F21.6 SONRASI ölçüldü (öncesi yok). K2'yi CI'da yakalamak için gerçek IME yolu (`TestTextInput` yerine platform kanalı) ya da cihaz gerekir — **sabah bakılacak**; telefondaki ölçüm KALANLAR §2 #38. Ayrıca koşucu diski doldu (41784350487) → perf işine "Disk aç" adımı.
 - [ ] **F20.4 Taban çizelgesi** bu dosyadaki tablo; her faz sonunda aynı
   senaryolarla yeni satır (Ek B).
 
@@ -440,3 +440,12 @@ Ayrıntı ve komutlar: `tool/perf/README.md`. Özet:
 |---|---|---|---|---|---|---|
 | 2026-11-03 | v1.1.613 | %6,5 / 99–115 ms | 99 ms (12/12) | 27–56 ms | 90–110 ms LAYOUT, 4,6 fps | ~770 ms / 313–396 ms |
 | 2026-11-03 | profil, Faz 21 öncesi → sonrası | %8,4 / 115 ms → %3,5 / 50–66 ms (1. tur) → %3,4–4,2 / 33–50 ms (2. tur) | — | — | — | — |
+
+**CI emülatörü (`[perf]`, x86_64 API 34, yazılım GPU — mutlak değil koşudan koşuya karşılaştır):**
+
+| Tarih | Koşu | Senaryo | build p90 / p99 / en kötü (ms) | raster p90 |
+|---|---|---|---|---|
+| 2026-11-04 | 41785838651 (F21.6 + F20.2 dahil) | dashboard_scroll | 3,4 / 4,7 / 5,7 | 5,1 |
+| 2026-11-04 | 41785838651 | editor_typing (200 krk) | 0,3 / 0,4 / 1,2 | 5,1 |
+| 2026-11-04 | 41785838651 | editor_typing_30kb (100 tuş) | 0,3 / 2,0 / 4,8 | 4,7 |
+| 2026-11-04 | 41785838651 | dashboard_search ("önemli" ×3) | 3,6 / 6,2 / 6,9 | 4,3 |
