@@ -198,6 +198,7 @@ class _ReorderableNoteCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return DragTarget<String>(
       onWillAcceptWithDetails: (details) =>
           details.data != noteId && inSection(details.data),
@@ -210,9 +211,10 @@ class _ReorderableNoteCell extends StatelessWidget {
         // Üzerine bırakılmak üzere olan hücre vurgulanır; kenarlık HER ZAMAN
         // 2 px (saydam) — kalınlığı değiştirmek yerleşimi oynatırdı.
         final framed = AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: AppMotion.short,
+          curve: AppMotion.standard,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(tokens.cardRadius + 2),
             border: Border.all(
               color: hovering ? scheme.primary : Colors.transparent,
               width: 2,
@@ -230,11 +232,28 @@ class _ReorderableNoteCell extends StatelessWidget {
           // önizlenen sıra kaydedilir; kullanıcı zaten onu görüyordu.
           onDragEnd: (_) => onDragEnd(),
           onDraggableCanceled: (_, _) => onDragEnd(),
-          feedback: Material(
-            color: Colors.transparent,
-            child: Opacity(
-              opacity: 0.9,
-              child: SizedBox(width: cellWidth, child: feedback),
+          // Elde tutulan kâğıt (F31.4): büyük gölge + 1,03 + −0,8°, YALNIZ
+          // sürüklenen kartta. Hareketi azaltta düz durur.
+          feedback: Transform.rotate(
+            angle: motionOf(context) ? -0.8 * math.pi / 180 : 0,
+            child: Transform.scale(
+              scale: motionOf(context) ? 1.03 : 1,
+              child: Material(
+                color: Colors.transparent,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(tokens.cardRadius),
+                    boxShadow: [
+                      BoxShadow(
+                        color: scheme.onSurface.withValues(alpha: 0.22),
+                        blurRadius: 24,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: SizedBox(width: cellWidth, child: feedback),
+                ),
+              ),
             ),
           ),
           // Kart önizlemede zaten YENİ yerinde duruyor; burada soluk bir
@@ -391,7 +410,7 @@ class _RecentSearches extends ConsumerWidget {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 2, 12, 6),
+      padding: const EdgeInsets.fromLTRB(kGridInset, 2, kGridInset, 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -708,7 +727,7 @@ class _QuickCaptureRowState extends ConsumerState<_QuickCaptureRow> {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      padding: const EdgeInsets.fromLTRB(kGridInset, 10, kGridInset, 0),
       child: Container(
         height: 46,
         decoration: BoxDecoration(
@@ -1074,7 +1093,7 @@ class _PendingUploadsBar extends ConsumerWidget {
       child: state.pending == 0
           ? const SizedBox(width: double.infinity)
           : Padding(
-              padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+              padding: const EdgeInsets.fromLTRB(kGridInset, 6, kGridInset, 0),
               child: Material(
                 color: failing
                     ? scheme.errorContainer

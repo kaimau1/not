@@ -1,3 +1,4 @@
+import '../../../app/theme/app_tokens.dart';
 import '../../../app/theme/fixed_colors.dart';
 import '../../../core/app_icons.dart';
 
@@ -167,7 +168,14 @@ class _ColorDot extends StatelessWidget {
     final swatch = NoteColors.swatch(color);
     final isNone = color == NoteColor.none;
     // Çerçeve önizlemesi: içi boş, kenarı renkli halka. Zemin önizlemesi: dolu.
-    final decoration = frame && !isNone
+    // "Varsayılan" noktası renksiz kartın kendisi (F32.2; eskiden nötr gri).
+    final decoration = isNone
+        ? BoxDecoration(
+            color: AppTokens.of(context).card,
+            shape: BoxShape.circle,
+            border: Border.all(color: scheme.outlineVariant),
+          )
+        : frame
         ? BoxDecoration(
             color: scheme.surface,
             shape: BoxShape.circle,
@@ -199,12 +207,16 @@ class _ColorDot extends StatelessWidget {
           child: Container(
             decoration: decoration,
             child: isNone
-                ? const Icon(Icons.format_color_reset_outlined, size: 20)
+                ? Icon(
+                    Icons.format_color_reset_outlined,
+                    size: 20,
+                    color: scheme.onSurfaceVariant,
+                  )
                 : (selected
                       ? Icon(
                           Icons.check,
                           size: 18,
-                          color: frame ? swatch : scheme.onSurface,
+                          color: frame ? swatch : FixedColors.inkOn(swatch),
                         )
                       : null),
           ),

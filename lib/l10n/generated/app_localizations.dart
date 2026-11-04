@@ -10718,6 +10718,54 @@ abstract class AppLocalizations {
   /// **'Tümü'**
   String get formatScopeAll;
 
+  /// No description provided for @colorNameCoral.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mercan'**
+  String get colorNameCoral;
+
+  /// No description provided for @colorNamePeach.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şeftali'**
+  String get colorNamePeach;
+
+  /// No description provided for @colorNameHoney.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bal'**
+  String get colorNameHoney;
+
+  /// No description provided for @colorNameSage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Adaçayı'**
+  String get colorNameSage;
+
+  /// No description provided for @colorNameStorm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fırtına'**
+  String get colorNameStorm;
+
+  /// No description provided for @colorNameLavender.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lavanta'**
+  String get colorNameLavender;
+
+  /// No description provided for @colorNameClay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kil'**
+  String get colorNameClay;
+
+  /// No description provided for @colorNameChalk.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tebeşir'**
+  String get colorNameChalk;
+
   /// No description provided for @colorNameRed.
   ///
   /// In tr, this message translates to:
@@ -10760,29 +10808,11 @@ abstract class AppLocalizations {
   /// **'Turuncu'**
   String get colorNameOrange;
 
-  /// No description provided for @colorNameTeal.
-  ///
-  /// In tr, this message translates to:
-  /// **'Su yeşili'**
-  String get colorNameTeal;
-
-  /// No description provided for @colorNameSlate.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gri mavi'**
-  String get colorNameSlate;
-
   /// No description provided for @colorNamePink.
   ///
   /// In tr, this message translates to:
   /// **'Pembe'**
   String get colorNamePink;
-
-  /// No description provided for @colorNameBeige.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bej'**
-  String get colorNameBeige;
 
   /// No description provided for @colorNameGray.
   ///

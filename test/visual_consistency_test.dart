@@ -147,6 +147,32 @@ void main() {
     });
   });
 
+  group('F29.5 kart belirteçten', () {
+    const cardFiles = {
+      'presentation/note_card.dart',
+      'presentation/note_card_media.dart',
+      'core/widgets/skeleton.dart',
+    };
+    Iterable<String> inCards(RegExp p) => offenders(p).where(
+      (l) => cardFiles.any((f) => l.replaceAll(r'\', '/').contains(f)),
+    );
+
+    test('kart yarıçapı sabit 12 değil, AppTokens.cardRadius', () {
+      expect(inCards(RegExp(r'BorderRadius\.circular\(12\)')), isEmpty);
+    });
+
+    test('kart zemini eski yüzey rolünden okunmaz', () {
+      expect(inCards(RegExp(r'surfaceContainerLow\b')), isEmpty);
+    });
+
+    test('tema geçişi ölçüldü: animasyonsuz; durum çubuğu saydam (F34.3, F30.6)', () {
+      final app = File('lib/app/app.dart').readAsStringSync();
+      expect(app, contains('themeAnimationDuration: Duration.zero'));
+      expect(app, contains('statusBarColor: Colors.transparent'));
+      expect(app, contains('statusBarIconBrightness'));
+    });
+  });
+
   group('F16.4 yükleniyor ve hata', () {
     Widget host(Widget child) => MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,

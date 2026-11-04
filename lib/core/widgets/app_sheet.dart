@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_tokens.dart';
+import '../a11y/motion.dart';
+
 /// Uygulamanın BÜTÜN alt levhalarının ortak açılış/kapanış hareketi
 /// (kullanıcı isteği 2026-10-17: "olmamış hissi"; iPhone gibi akıcılık).
 ///
@@ -9,9 +12,18 @@ import 'package:flutter/material.dart';
 /// otur" hissi) ve biraz daha uzun bir açılış; kapanış kısa — kullanıcı
 /// levhayı kapatınca bekletilmesin.
 const kAppSheetAnimation = AnimationStyle(
-  duration: Duration(milliseconds: 340),
-  reverseDuration: Duration(milliseconds: 220),
-  curve: Easing.emphasizedDecelerate,
+  duration: AppMotion.medium,
+  reverseDuration: AppMotion.short,
+  curve: AppMotion.enter,
+  reverseCurve: AppMotion.exit,
+);
+
+/// Hareketi azalt (F34.7): levha kısa ve doğrusal.
+const kAppSheetAnimationReduced = AnimationStyle(
+  duration: AppMotion.reduced,
+  reverseDuration: AppMotion.reduced,
+  curve: Curves.linear,
+  reverseCurve: Curves.linear,
 );
 
 /// [showModalBottomSheet]'in birebir aynısı; yalnız [sheetAnimationStyle]
@@ -61,6 +73,7 @@ Future<T?> showAppSheet<T>({
   anchorPoint: anchorPoint,
   sheetAnimationStyle: transitionAnimationController != null
       ? null
-      : (sheetAnimationStyle ?? kAppSheetAnimation),
+      : (sheetAnimationStyle ??
+            (motionOf(context) ? kAppSheetAnimation : kAppSheetAnimationReduced)),
   requestFocus: requestFocus,
 );

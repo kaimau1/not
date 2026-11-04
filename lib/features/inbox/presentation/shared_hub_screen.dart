@@ -1,3 +1,4 @@
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/app_icons.dart';
 
@@ -79,7 +80,7 @@ class SharedHubBody extends ConsumerWidget {
         const pad = 12.0;
         final columns = (constraints.maxWidth / 220).floor().clamp(2, 6);
         final cellWidth =
-            (constraints.maxWidth - pad * 2 - 8 * (columns - 1)) / columns;
+            (constraints.maxWidth - pad * 2 - kGridGap * (columns - 1)) / columns;
         return CustomScrollView(
           slivers: [
             ...sharedHubSlivers(

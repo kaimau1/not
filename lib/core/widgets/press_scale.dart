@@ -2,12 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
+import '../../app/theme/app_tokens.dart';
 import '../a11y/motion.dart';
 
 /// **BASINCA HAFİFÇE ÇÖKEN KART** — iOS'taki dokunsal his (kullanıcı isteği
 /// 2026-10-17: "premium gösteren iPhone gibi akıcılık").
 ///
-/// Parmak kartın üstüne inince kart %3 küçülür, kalkınca yaylı bir eğriyle
+/// Parmak kartın üstüne inince kart %2 küçülür (TEMA_PLANI F31.4), kalkınca
 /// yerine oturur. Yalnız GÖRSEL bir dönüşüm: dokunuş, uzun basış, sürükleme
 /// ve seçim davranışlarına hiç karışmaz (dinleyici [Listener] — jest
 /// yarışmasına girmez).
@@ -19,7 +20,7 @@ class PressScale extends StatefulWidget {
   const PressScale({
     super.key,
     required this.child,
-    this.scale = 0.97,
+    this.scale = 0.98,
     this.enabled = true,
   });
 
@@ -93,10 +94,8 @@ class _PressScaleState extends State<PressScale> {
     child: AnimatedScale(
       // Hareketi azalt (F15.5): kart çökmez.
       scale: _pressed && motionOf(context) ? widget.scale : 1,
-      duration: _pressed
-          ? const Duration(milliseconds: 110)
-          : const Duration(milliseconds: 260),
-      curve: _pressed ? Curves.easeOut : Curves.easeOutBack,
+      duration: _pressed ? AppMotion.instant : AppMotion.short,
+      curve: AppMotion.standard,
       child: widget.child,
     ),
   );

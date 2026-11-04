@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_tokens.dart';
+
 import '../domain/note.dart';
 import 'note_card.dart';
 
@@ -46,7 +48,7 @@ Widget sliverBalancedNoteColumns({
   required int columns,
   required double cellWidth,
   required Widget Function(BuildContext context, int index) cell,
-  double spacing = 8,
+  double spacing = kGridGap,
 }) {
   if (columns <= 1) {
     return SliverList.separated(
@@ -90,7 +92,7 @@ class NoteBalancedGrid extends StatelessWidget {
     required this.notes,
     required this.columns,
     required this.itemBuilder,
-    this.padding = const EdgeInsets.fromLTRB(12, 8, 12, 88),
+    this.padding = const EdgeInsets.fromLTRB(kGridInset, 8, kGridInset, 88),
   });
 
   final List<Note> notes;
@@ -105,7 +107,9 @@ class NoteBalancedGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final cellWidth =
-            (constraints.maxWidth - padding.horizontal - 8 * (columns - 1)) /
+            (constraints.maxWidth -
+                padding.horizontal -
+                kGridGap * (columns - 1)) /
             columns;
         return CustomScrollView(
           slivers: [

@@ -19,17 +19,17 @@ List<String> richPaletteNames(AppLocalizations l10n) => [
 /// Not zemini / çerçeve şeridindeki hazır tonun adı.
 String noteColorName(AppLocalizations l10n, NoteColor color) => switch (color) {
   NoteColor.none => l10n.colorNameNone,
-  NoteColor.red => l10n.colorNameRed,
-  NoteColor.peach => l10n.colorNameOrange,
-  NoteColor.amber => l10n.colorNameYellow,
+  NoteColor.red => l10n.colorNameCoral,
+  NoteColor.peach => l10n.colorNamePeach,
+  NoteColor.amber => l10n.colorNameHoney,
   NoteColor.green => l10n.colorNameGreen,
-  NoteColor.sage => l10n.colorNameTeal,
+  NoteColor.sage => l10n.colorNameSage,
   NoteColor.blue => l10n.colorNameBlue,
-  NoteColor.storm => l10n.colorNameSlate,
-  NoteColor.purple => l10n.colorNamePurple,
+  NoteColor.storm => l10n.colorNameStorm,
+  NoteColor.purple => l10n.colorNameLavender,
   NoteColor.blossom => l10n.colorNamePink,
-  NoteColor.clay => l10n.colorNameBeige,
-  NoteColor.chalk => l10n.colorNameGray,
+  NoteColor.clay => l10n.colorNameClay,
+  NoteColor.chalk => l10n.colorNameChalk,
 };
 
 /// Tam paletteki (`kPaletteColors`, 5 satır × 8 sütun) [index]. tonun adı:

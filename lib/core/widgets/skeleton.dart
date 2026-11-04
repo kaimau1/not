@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../../app/theme/app_tokens.dart';
+import '../a11y/motion.dart';
 
 /// Notlar yüklenirken ızgaranın İSKELETİ — ortada dönen tek bir çark
 /// yerine kartların yerini tutan, yumuşakça nabız atan kutular (kullanıcı
@@ -41,10 +46,10 @@ class _NoteGridSkeletonState extends State<NoteGridSkeleton>
     final color = scheme.surfaceContainerHigh;
     Widget card(double h) => Container(
       height: h,
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: kGridGap),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTokens.of(context).cardRadius),
       ),
     );
     final opacity = Tween<double>(
@@ -57,12 +62,12 @@ class _NoteGridSkeletonState extends State<NoteGridSkeleton>
         child: FadeTransition(
           opacity: opacity,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            padding: const EdgeInsets.fromLTRB(kGridInset, 8, kGridInset, 0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 for (var c = 0; c < columns; c++) ...[
-                  if (c > 0) const SizedBox(width: 10),
+                  if (c > 0) const SizedBox(width: kGridGap),
                   Expanded(
                     child: Column(
                       children: [
@@ -106,4 +111,48 @@ class NoteListSkeleton extends StatelessWidget {
       );
     },
   );
+}
+
+/// İskeletten içeriğe geçişte içerik 200 ms'de belirir (TEMA_PLANI F31.7):
+/// iskelet sliver'ı yerini bıraktığı için tek kalem solma yeter. Yalnız gerçekten
+/// iskelet görünmüşse [play] true (disk özetinden gelen içerik solmaz, F25.2).
+class SliverRevealFade extends StatefulWidget {
+  const SliverRevealFade({super.key, required this.play, required this.sliver});
+
+  final bool play;
+  final Widget sliver;
+
+  @override
+  State<SliverRevealFade> createState() => _SliverRevealFadeState();
+}
+
+class _SliverRevealFadeState extends State<SliverRevealFade>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: AppMotion.short,
+    value: widget.play ? 0 : 1,
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_c.isDismissed) {
+      if (motionOf(context)) {
+        unawaited(_c.forward());
+      } else {
+        _c.value = 1;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      SliverFadeTransition(opacity: _c, sliver: widget.sliver);
 }

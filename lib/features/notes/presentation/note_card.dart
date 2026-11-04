@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import '../../../app/note_open_route.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/color_fade.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../app/theme/note_themes.dart';
 import '../../../core/l10n_ext.dart';
@@ -875,9 +876,15 @@ class NoteCard extends ConsumerWidget {
         ),
       );
     }
-    final card = Material(
+    // Not rengi 200 ms'de değişir (F34.4); denetleyici yalnız değişince kurulur.
+    final card = ColorFade(
       color: background,
-      borderRadius: BorderRadius.circular(radius),
+      identity: (note.id, tokens.family, Theme.of(context).brightness),
+      builder: (context, color, child) => Material(
+        color: color,
+        borderRadius: BorderRadius.circular(radius),
+        child: child,
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(radius),
         // Seçim modunda dokunuş seçimi değiştirir; normalde notu açar. Uzun
@@ -1848,7 +1855,9 @@ class NoteListRow extends ConsumerWidget {
     );
     final display = ref.watch(cardDisplayProvider);
     return Material(
-      color: selected ? scheme.secondaryContainer : scheme.surfaceContainerLow,
+      color: selected
+          ? scheme.secondaryContainer
+          : AppTokens.fromTheme(_cardThemeOf(context)).card,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),

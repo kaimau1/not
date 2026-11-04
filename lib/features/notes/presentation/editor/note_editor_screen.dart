@@ -1,4 +1,5 @@
 import '../note_link_ui.dart';
+import '../../../../core/widgets/color_fade.dart';
 import '../study_cards_screen.dart' show generateCardsForNote;
 import '../note_card.dart' show openNoteRoute;
 import '../../domain/note_links.dart';
@@ -200,6 +201,16 @@ part 'note_editor_embed.dart';
 /// kullanır — yoksa build içinde hesaplanan yazı stili (gövde, başlık, işaret
 /// rengi) dış temada kalırdı. Başka bağlamlar (alt widget'lar) zaten sarılan
 /// temanın altında, `Theme.of` ile doğru temayı görür.
+/// Üst çubuk saydam olduğu için durum çubuğu simgesi sayfanın renginden seçilir.
+SystemUiOverlayStyle _statusBarFor(Color page) {
+  final dark = ThemeData.estimateBrightnessForColor(page) == Brightness.dark;
+  return SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+    statusBarBrightness: dark ? Brightness.dark : Brightness.light,
+  );
+}
+
 final _editorInk = Expando<ThemeData>('editorInk');
 
 ThemeData _themeOf(BuildContext context) =>
@@ -4148,8 +4159,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // editörün alt ağacı yeniden kurulmasın (odak/kaydırma korunur).
           child: Theme(
           data: _themeOf(context),
+          // Sayfa rengi Scaffold'un ARKASINDA, 200 ms'de değişir (F34.4):
+          // editörün dev ağacı her karede yeniden kurulmaz. Üst çubuk saydam.
+          child: ColorFade(
+          color: themed ? Colors.transparent : background,
+          identity: (note.id, Theme.of(context).brightness),
+          builder: (context, color, child) =>
+              ColoredBox(color: color, child: child),
           child: Scaffold(
-          backgroundColor: themed ? Colors.transparent : background,
+          backgroundColor: Colors.transparent,
           // **KASMA — klavye boşluğu artık KARARLI** (bkz. [KeyboardSnap]).
           // Scaffold gövdeyi klavye animasyonunun HER karesinde kısaltıyordu;
           // görselli/uzun notlarda ve PDF bölmesinde yalnızca bu yeniden
@@ -4170,8 +4188,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             // tek dokunuşla liste geri gelir (kullanıcı isteği 2026-11-02:
             // "tam ekrandan çıkmak çok zor").
             leading: _listHidden(context) ? _showListButton(l10n) : null,
-            backgroundColor: themed ? Colors.transparent : background,
-            scrolledUnderElevation: themed ? 0 : null,
+            backgroundColor: Colors.transparent,
+            // Saydam çubukta Flutter simge rengini zeminden çıkaramaz (çizilmiş
+            // temalı notta beyaz simge kalıyordu): sayfanın rengine göre (F30.6).
+            systemOverlayStyle: _statusBarFor(background),
+            scrolledUnderElevation: 0,
             // Başlık yerinde düzenleme tarihi: notun kendi başlığı zaten gövdenin
             // en üstünde duruyor, üst barda ikinci kez göstermek yer harcıyordu.
             // Sabitlenmiş/yıldızlı göstergesi tarihin yanında — düğmeler ⋯
@@ -4448,7 +4469,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                 !_penMode &&
                                 textPagePosition(note).count > 1,
                             onSwipe: _swipePage,
-                            child: body,
+                            child: PageTurn(
+                              index: textPagePosition(note).index,
+                              count: note.type.isPageNoteType
+                                  ? 1
+                                  : textPagePosition(note).count,
+                              child: body,
+                            ),
                           ),
                         ),
                       ),
@@ -4516,6 +4543,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             ),
           ),
         ))),
+        ),
         ),
         ),
       ),

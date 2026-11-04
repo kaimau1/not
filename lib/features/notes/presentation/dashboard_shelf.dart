@@ -76,12 +76,12 @@ extension _DashShelf on _DashboardScreenState {
     int total,
   ) {
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      padding: const EdgeInsets.fromLTRB(kGridInset, 8, kGridInset, 4),
       sliver: SliverGrid(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columns,
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
+          mainAxisSpacing: kGridGap,
+          crossAxisSpacing: kGridGap,
           mainAxisExtent: FolderTile.height,
         ),
         delegate: SliverChildBuilderDelegate((context, index) {
@@ -158,7 +158,7 @@ extension _DashShelf on _DashboardScreenState {
             Expanded(
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+                padding: const EdgeInsets.fromLTRB(kGridInset, 8, 4, 8),
                 children: [
                   // "Tümü" en başta (kullanıcı isteği 2026-10-20).
                   const AllNotesChip(),
