@@ -171,12 +171,10 @@ class NotlarApp extends ConsumerWidget {
           ? null
           : router.backButtonDispatcher,
       onNavigationNotification: kIsWeb ? null : alwaysHandleBack,
-      theme: switch (choice) {
-        AppThemeChoice.paper => AppTheme.paper(font: font),
-        AppThemeChoice.offWhite => AppTheme.offWhite(font: font),
-        _ => AppTheme.light(font: font),
-      },
-      darkTheme: AppTheme.dark(font: font),
+      // Koyu kip (Koyu seçimi, sistem ya da gece zamanlaması) seçili ailenin
+      // KENDİ koyu hâlini kullanır.
+      theme: AppTheme.of(choice.family, Brightness.light, font: font),
+      darkTheme: AppTheme.of(choice.family, Brightness.dark, font: font),
       themeMode: themeMode,
       // null = sistem dilini kullan. Ayarlar'dan elle seçilirse o dil sabitlenir.
       locale: ref.watch(localeProvider),

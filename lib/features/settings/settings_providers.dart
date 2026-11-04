@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../app/theme/app_palette.dart';
 import '../../core/constants.dart';
 import '../../core/crash_reporting.dart';
 import '../../core/utils/language_names.dart';
@@ -62,18 +63,39 @@ NotifierProvider<BoolPrefNotifier, bool> boolPref(
   () => BoolPrefNotifier(key, defaultValue),
 );
 
-/// Tema seçimi: sistem/açık/koyu artı "kağıt" (hafif saman kağıdı renkli
-/// açık tema). ThemeMode'da karşılığı olmadığından kendi enum'ımız var;
-/// aynı prefs anahtarını kullandığı için eski kayıtlar geriye uyumludur.
+/// Tema seçimi: sistem, üç tema ailesi (bkz. `ThemeFamily`) ve koyu.
+/// ThemeMode'da karşılığı olmadığından kendi enum'ımız var; aynı prefs
+/// anahtarı (`theme_mode`) kullanılır.
 ///
-/// VARSAYILAN kağıt: i1 simge çalışmasıyla marka kağıt paletine geçti
-/// (simge, uygulama ve ana ekran widget'ları aynı palet). Ayarı hiç
-/// ellememiş kullanıcı güncellemede kağıda geçer; kayıtlı seçimi olan
-/// kendi temasında kalır — bunu bozmamak için orElse dışına dokunulmadı.
-///
-/// VARSAYILAN kırık beyaz (kullanıcı isteği 2026-10-29: "kırık beyaz genel
-/// teması yapalım"): ayarı hiç ellememiş kullanıcı kırık beyaza geçer.
-enum AppThemeChoice { system, light, dark, paper, offWhite }
+/// VARSAYILAN Adaçayı (TEMA_PLANI K1, 2026-11-04; önce kırık beyaz, daha önce
+/// kağıttı). ESKİ SEÇİMLER (K2) okunurken eşlenir — kayda dokunulmaz, yani
+/// eski sürüme dönülürse kullanıcının eski seçimi aynen durur:
+/// kırık beyaz → Adaçayı, beyaz (`light`) → Porselen, kağıt → Kil.
+enum AppThemeChoice {
+  system,
+  sage,
+  porcelain,
+  clay,
+  dark;
+
+  /// Bu seçimin tema ailesi (Sistem ve Koyu varsayılan aileyi kullanır).
+  ThemeFamily get family => switch (this) {
+    AppThemeChoice.porcelain => ThemeFamily.porcelain,
+    AppThemeChoice.clay => ThemeFamily.clay,
+    _ => ThemeFamily.sage,
+  };
+
+  /// Kayıttaki adın seçimi; eski temaların adları yeni ailelere eşlenir.
+  static AppThemeChoice fromStored(String? stored) => switch (stored) {
+    'offWhite' => AppThemeChoice.sage,
+    'light' => AppThemeChoice.porcelain,
+    'paper' => AppThemeChoice.clay,
+    _ => AppThemeChoice.values.firstWhere(
+      (m) => m.name == stored,
+      orElse: () => AppThemeChoice.sage,
+    ),
+  };
+}
 
 final themeChoiceProvider =
     NotifierProvider<ThemeChoiceNotifier, AppThemeChoice>(
@@ -84,13 +106,8 @@ class ThemeChoiceNotifier extends Notifier<AppThemeChoice> {
   static const _key = 'theme_mode';
 
   @override
-  AppThemeChoice build() {
-    final stored = watchPrefs(ref).getString(_key);
-    return AppThemeChoice.values.firstWhere(
-      (m) => m.name == stored,
-      orElse: () => AppThemeChoice.offWhite,
-    );
-  }
+  AppThemeChoice build() =>
+      AppThemeChoice.fromStored(watchPrefs(ref).getString(_key));
 
   void set(AppThemeChoice choice) {
     state = choice;
@@ -837,8 +854,8 @@ DateTime _nextBoundary(DateTime now, DarkSchedule schedule) {
 }
 
 /// Kullanıcı seçimi + zamanlama birleşimiyle geçerli tema modu.
-/// "Kağıt" açık tema gibi davranır; hangi açık temanın kullanılacağına
-/// app.dart, themeChoiceProvider'a bakarak karar verir.
+/// Aileler (Adaçayı/Porselen/Kil) açık tema gibi davranır; hangi ailenin
+/// kullanılacağına app.dart, `AppThemeChoice.family`'ye bakarak karar verir.
 /// autoDispose: _clockProvider'ı izleyebilmek için zorunlu (autoDispose
 /// olmayan sağlayıcı autoDispose'u izleyemez); kök widget sürekli izlediği
 /// için pratikte hep canlı kalır.
@@ -850,9 +867,9 @@ final effectiveThemeModeProvider = Provider.autoDispose<ThemeMode>((ref) {
   }
   return switch (ref.watch(themeChoiceProvider)) {
     AppThemeChoice.system => ThemeMode.system,
-    AppThemeChoice.light ||
-    AppThemeChoice.paper ||
-    AppThemeChoice.offWhite => ThemeMode.light,
+    AppThemeChoice.sage ||
+    AppThemeChoice.porcelain ||
+    AppThemeChoice.clay => ThemeMode.light,
     AppThemeChoice.dark => ThemeMode.dark,
   };
 });

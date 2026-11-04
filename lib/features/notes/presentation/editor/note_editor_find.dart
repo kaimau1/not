@@ -72,7 +72,7 @@ extension _EditorFind on _NoteEditorScreenState {
   }
 
   void _paintFind() =>
-      _find.paint(dark: Theme.of(context).brightness == Brightness.dark);
+      _find.paint(dark: _themeOf(context).brightness == Brightness.dark);
 
   void _stepFind(int delta) {
     if (_find.hits.isEmpty) return;

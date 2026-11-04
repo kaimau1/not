@@ -365,6 +365,24 @@ maddeyi GÜNCELLE.
   `attachment_text_<uid>.json`.
 
 ## Arayüz kararları
+- **Tema (TEMA_PLANI, 2026-11-04):** üç aile `ThemeFamily` (Adaçayı
+  varsayılan, Porselen, Kil) × açık/koyu, renkler `app_palette.dart`,
+  şemada olmayanlar `AppTokens` (kart, kart çizgisi, gölge, köşe 16).
+  "Masa ve kâğıt": açık temada kart zeminden AÇIK — `surfaceContainerLow`
+  zeminden açık (levha), High/Highest koyu; renksiz not kartı
+  `AppTokens.card` (eski `surfaceContainerLow` değil). Eski kırık beyaz /
+  kağıt / beyaz `AppThemeChoice.fromStored`'da okunurken eşlenir, kayıt
+  değişmez. Kart gölgesi bulanıksız 1 dp (GLES; bulanık gölge ölçülmeden
+  açılmaz). `theme_contrast_test` her rol + not paleti kontrastını korur.
+- **Okunurluk (2026-11-04 kök neden):** özel renk kâğıda sabit oranda
+  karışıp yazı hep tema mürekkebinde kalıyordu → `NoteColors.customSurface`
+  + `inkThemeFor` (zıt parlaklıktaki AYNI tema, önbellekten). Editör
+  `_editorInk` / kart `_cardInk` Expando + `_themeOf` — bu dosyalarda
+  ekranın kendi bağlamından `Theme.of(context)` YAZMA (dış temayı okur,
+  yazı stili okunmaz kalır). Editör ağacı hep `Theme` ile sarılı (renk eşiği
+  aşılınca alt ağaç yeniden kurulmasın). Renkli yazı `RichTextTheme.background`
+  → `markStyle` → `readableOn` (≥ 4,5, ton korunur). Renkli kartın koyu tonu
+  `NoteColors.noteInk` (hap, kutucuk, ilerleme, defter çizgisi `PaperInks`).
 - Ana ekran tek mikrofon = doğrudan yazdır; AI sesli not Yapay zekâ
   ekranının en üstünde. "+" tek panel. Dosya akışı tek levha
   `showFileUseSheet`; HEIC → PNG.

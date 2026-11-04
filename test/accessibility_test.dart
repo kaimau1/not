@@ -3,6 +3,7 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/app/app.dart';
+import 'package:notlar/app/theme/app_palette.dart';
 import 'package:notlar/app/theme/app_theme.dart';
 import 'package:notlar/core/a11y/chip_roles.dart';
 import 'package:notlar/core/a11y/color_names.dart';
@@ -344,10 +345,8 @@ void main() {
 
     test('ikincil metin her temada her yüzeyde ≥ 4,5:1', () {
       for (final theme in [
-        AppTheme.light(),
-        AppTheme.dark(),
-        AppTheme.paper(),
-        AppTheme.offWhite(),
+        for (final f in ThemeFamily.values)
+          for (final b in Brightness.values) AppTheme.of(f, b),
       ]) {
         final s = theme.colorScheme;
         for (final bg in [

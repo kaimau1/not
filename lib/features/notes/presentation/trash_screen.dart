@@ -253,9 +253,14 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
             SliverGrid section(List<Note> list) => SliverGrid(
               gridDelegate: grid,
               delegate: SliverChildBuilderDelegate(
-                (context, index) => _TrashCard(
-                  key: ValueKey('trash-${list[index].id}'),
-                  note: list[index],
+                // Koyu özel renkli notun kartı zıt temada (okunurluk —
+                // bkz. NoteInkScope); karar dış temaya göre.
+                (context, index) => NoteInkScope(
+                  background: NoteColors.noteSurface(context, list[index]),
+                  child: _TrashCard(
+                    key: ValueKey('trash-${list[index].id}'),
+                    note: list[index],
+                  ),
                 ),
                 childCount: list.length,
               ),

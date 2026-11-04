@@ -7,8 +7,47 @@ import 'dart:ui' show PointMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/archive_paper.dart';
+
+/// **DEFTER KÂĞIDININ RENKLERİ** (TEMA_PLANI F33.1–F33.3): çizgi sayfanın
+/// KENDİ renginden (renkli sayfada koyu tonu %26, renksizde mürekkep %13) —
+/// eskiden her sayfa renginde aynı gri `outlineVariant` çiziliyordu ve renkli
+/// sayfayı kirletiyordu. Kenar çizgisi hata rengi (`scheme.error`) yerine
+/// mercan koyusu; kırmızı/pembe sayfada sayfanın kendi tonu. Cilt gölgesi
+/// siyah değil, mürekkepten.
+@immutable
+class PaperInks {
+  const PaperInks({
+    required this.line,
+    required this.margin,
+    required this.spine,
+  });
+
+  final Color line;
+  final Color margin;
+  final Color spine;
+
+  /// [accent]: sayfanın koyu tonu (`NoteColors.noteInk`); null = renksiz
+  /// sayfa. [theme] sayfanın ÇİZİLDİĞİ tema (okunurluk teması olabilir).
+  factory PaperInks.of(ThemeData theme, {Color? accent}) {
+    final s = theme.colorScheme;
+    final dark = theme.brightness == Brightness.dark;
+    final hue = accent == null ? 0.0 : HSLColor.fromColor(accent).hue;
+    final reddish = accent != null && (hue >= 330 || hue <= 25);
+    final marginInk = reddish
+        ? accent
+        : NoteColors.marginInkFor(dark: dark);
+    return PaperInks(
+      line:
+          accent?.withValues(alpha: 0.26) ??
+          s.onSurface.withValues(alpha: dark ? 0.16 : 0.13),
+      margin: marginInk.withValues(alpha: 0.4),
+      spine: s.onSurface.withValues(alpha: dark ? 0.14 : 0.09),
+    );
+  }
+}
 
 /// **DEFTER KÂĞIDI** (F3.5): Defter görünümündeki notun ([Note.paged])
 /// arkasına çizilen desen (çizgili / kareli / noktalı / düz) ve cilt gölgesi.
@@ -25,7 +64,11 @@ class NotebookPaper extends StatelessWidget {
     this.scroll,
     this.topInset = 0,
     this.contentRuled = false,
+    this.accent,
   });
+
+  /// Sayfanın koyu tonu (bkz. [PaperInks]); null = renksiz sayfa.
+  final Color? accent;
 
   final ArchivePaper style;
   final double gap;
@@ -42,13 +85,13 @@ class NotebookPaper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final inks = PaperInks.of(Theme.of(context), accent: accent);
     return CustomPaint(
       painter: NotebookPaperPainter(
         style: style,
-        line: scheme.outlineVariant.withValues(alpha: 0.55),
-        margin: scheme.error.withValues(alpha: 0.35),
-        spine: scheme.shadow.withValues(alpha: 0.10),
+        line: inks.line,
+        margin: inks.margin,
+        spine: inks.spine,
         scroll: scroll,
         gap: gap,
         topInset: topInset,
@@ -105,7 +148,11 @@ class NotebookPaperPainter extends CustomPainter {
 
   /// Sarı bloknot zemini (bkz. [ArchivePaper.legal]). Saydam: notun kendi
   /// rengi ve koyu tema altta kalır, yalnız sıcak bir ton bindirilir.
-  static const Color legalTint = Color(0x33FFE36E);
+  static const Color legalTint = Color(0x3DF2D774);
+
+  /// Noktalı desenlerde nokta çizgiden belirgin (tek nokta ince çizgiden
+  /// az mürekkep taşır).
+  Color get _dotColor => line.withValues(alpha: (line.a * 1.7).clamp(0, 1));
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -196,7 +243,7 @@ class NotebookPaperPainter extends CustomPainter {
           PointMode.points,
           dots,
           Paint()
-            ..color = line
+            ..color = _dotColor
             ..strokeWidth = 2.4
             ..strokeCap = StrokeCap.round,
         );
@@ -218,7 +265,7 @@ class NotebookPaperPainter extends CustomPainter {
           PointMode.points,
           dots,
           Paint()
-            ..color = line
+            ..color = _dotColor
             ..strokeWidth = 2.2
             ..strokeCap = StrokeCap.round,
         );

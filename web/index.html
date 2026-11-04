@@ -13,8 +13,8 @@
   <title>Notlar — akıllı not defteri</title>
   <meta name="description" content="Notlar: telefon, tablet, bilgisayar ve web arasında anında senkron olan akıllı not defteri. Yapay zekâ asistanı, el yazısı, PDF üstüne not, notta YouTube videosu, çok sayfalı notlar, ortak notlar ve klasörler.">
   <meta name="application-name" content="Notlar">
-  <meta name="theme-color" content="#F3EFE3" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0E0E11" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#EAF0EB" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#131916" media="(prefers-color-scheme: dark)">
 
   <!-- Paylaşım önizlemesi (bağlantı mesajlaşmada/sosyal medyada açılınca) -->
   <meta property="og:type" content="website">
@@ -55,12 +55,13 @@
     kareyi çizene kadar sayfa bembeyaz duruyordu — yavaş bağlantıda birkaç
     saniye "site bozuk" gibi görünüyordu. Bu katman uygulamanın kendi kâğıt
     zeminini ve simgesini gösterir; ilk kare çizilince (flutter-first-frame)
-    solup kaldırılır. Renkler AppTheme.paper / dark ile aynı.
+    solup kaldırılır. Renkler AppTheme Adaçayı açık / koyu ile aynı
+    (TEMA_PLANI F35.2).
   -->
   <style>
-    :root { --bg: #F3EFE3; --fg: #3B2A08; --muted: #7A6A4F; --mark: #13254A; }
+    :root { --bg: #EAF0EB; --fg: #1B2420; --muted: #4D5853; --mark: #106561; }
     @media (prefers-color-scheme: dark) {
-      :root { --bg: #0E0E11; --fg: #ECE6DA; --muted: #9A958C; --mark: #8FA8D8; }
+      :root { --bg: #131916; --fg: #E1E8E4; --muted: #B1BAB5; --mark: #76CDC5; }
     }
     html, body { margin: 0; height: 100%; background: var(--bg); }
     #splash {

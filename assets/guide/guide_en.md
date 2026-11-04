@@ -217,7 +217,7 @@ Find any setting by name with the search box at the top of Settings ("briefing",
 At the top are two cards: **User guide** and **Personalise** (which buttons and areas show; **edit mode** starts from there too). Below are the areas; a closed area's summary line tells you what is selected inside.
 - **Contacts:** friends, incoming notes, discoverability, shared-note notifications.
 - **AI:** model, your own API key, daily briefing, auto tag/title, keeping checked items untouched.
-- **Appearance:** sample text, theme (system, light, dark, paper, off-white), font and size, **Language** (Turkish, English or the system language), long items, item gestures, **Shown on cards** (with a live sample card: counter, tag, date, image, attachments, folder, paper…), dark theme schedule.
+- **Appearance:** sample text, theme (system, Sage, Porcelain, Clay, dark), font and size, **Language** (Turkish, English or the system language), long items, item gestures, **Shown on cards** (with a live sample card: counter, tag, date, image, attachments, folder, paper…), dark theme schedule.
 - **Modules & quick note:** turn the AI, voice, video, scan, drawing, templates… modules on or off; the quick note row on the home screen; **Show tips again**.
 - **Notes and folders:** sideways swipe, folder order, sorting, grid/list and columns (also by pinching on the home screen), shared notes on the home screen, notes from content (Bubbles/Classic), searching inside attachments.
 - **Listening & dictation:** device voice, Turkish voice or AI voice; reading speed and pitch; how the dictate microphone works.

@@ -57,17 +57,26 @@ class _ReorderTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final frame = NoteColors.noteFrame(note);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final frame = NoteColors.noteFrame(note, dark: dark);
     final title = note.title.trim();
     final preview = stripRichMarkers(note.toPlainText()).trim();
+    final surface = NoteColors.noteSurface(context, note);
+    final radius = AppTokens.of(context).cardRadius;
     return Material(
-      color: NoteColors.noteSurface(context, note),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
+      color: surface,
+      borderRadius: BorderRadius.circular(radius),
+      // Koyu özel renkte yazı zemine göre döner (bkz. NoteInkScope).
+      child: NoteInkScope(
+        background: surface,
+        child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(radius),
           border: Border.all(
-            color: frame ?? scheme.outlineVariant.withValues(alpha: 0.5),
+            color:
+                frame ??
+                NoteColors.noteInk(context, note)?.withValues(alpha: 0.16) ??
+                AppTokens.of(context).hairline,
             width: frame != null ? 2.5 : 1,
           ),
         ),
@@ -134,6 +143,7 @@ class _ReorderTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -261,11 +271,14 @@ class _SearchField extends ConsumerWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => focusNode?.requestFocus(),
+      // Arama kutusu kâğıt renginde, ince çizgili (TEMA_PLANI F31.5):
+      // zeminin üstünde kart gibi durur.
       child: Container(
         height: 44,
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(12),
+          color: AppTokens.of(context).card,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppTokens.of(context).hairline),
         ),
         child: Row(
           children: [

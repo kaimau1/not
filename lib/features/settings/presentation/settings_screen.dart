@@ -26,6 +26,8 @@ import '../../../core/crash_reporting.dart';
 import '../../../core/error_log.dart';
 import '../../../core/constants.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../app/theme/app_palette.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
 import '../../../core/tips.dart';
@@ -302,8 +304,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             title: l10n.settingsAppearance,
             keywords:
-                'tema ${l10n.themeSystem} ${l10n.themeLight} '
-                '${l10n.themeDark} ${l10n.themePaper}',
+                'tema ${l10n.themeSystem} ${l10n.themeSage} '
+                '${l10n.themePorcelain} ${l10n.themeClay} ${l10n.themeDark}',
           ),
           // Yazı tipi + yazı boyutu TEK satırda: ikisi de "yazı nasıl
           // görünsün" işidir ve ayrı kartlarda dururken (üstelik biri
@@ -920,10 +922,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String _appearanceSummary(AppLocalizations l10n) {
     final theme = switch (ref.watch(themeChoiceProvider)) {
       AppThemeChoice.system => l10n.themeSystem,
-      AppThemeChoice.light => l10n.themeLight,
+      AppThemeChoice.sage => l10n.themeSage,
+      AppThemeChoice.porcelain => l10n.themePorcelain,
+      AppThemeChoice.clay => l10n.themeClay,
       AppThemeChoice.dark => l10n.themeDark,
-      AppThemeChoice.paper => l10n.themePaper,
-      AppThemeChoice.offWhite => l10n.themeOffWhite,
     };
     // Yüzde yerine KADEME ADI: ayar artık dört adlı seçenekten ibaret,
     // özet satırında "%107" görmek kullanıcıya hiçbir şey anlatmıyordu.

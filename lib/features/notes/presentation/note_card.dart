@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 
 import '../../../app/note_open_route.dart';
 import '../../../app/router.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../app/theme/note_themes.dart';
 import '../../../core/l10n_ext.dart';
@@ -185,6 +186,7 @@ Future<void> openNoteRoute(
       NoteOpenOrigin.register(
         context,
         note.id,
+        radius: AppTokens.of(context).cardRadius,
         color: NoteColors.noteSurface(context, note),
       );
       // Arşiv/çöp gibi kabuk dışı ekranlardan da doğru yol (bkz.
@@ -219,7 +221,11 @@ Widget noteBodyText(
   required bool rich,
   TextStyle? style,
   int? maxLines,
+  Color? background,
 }) {
+  // Renkli yazı kartın zeminine göre okunur hâle getirilir (verilmediyse
+  // kartın içindeyiz: zemin [_CardAccent]'ten).
+  final ground = background ?? _CardAccent.maybeOf(context)?.background;
   // Arama sürüyor mu: boş ↔ dolu geçişinde kart yeniden kurulur (bkz.
   // `NoteCard.liveQuery`); sorgunun KENDİSİ değişince yalnız vurgu
   // katmanı yeniden boyanır (F21.6).
@@ -243,6 +249,7 @@ Widget noteBodyText(
         // renklendirilmez (linkColor null = ölçüm yolundaki davranış).
         palette: NoteColors.richPalette,
         markerColor: const Color(0x00000000),
+        background: ground,
       ),
     ),
     maxLines: maxLines,
@@ -267,7 +274,7 @@ Widget highlightedText(
     overflow: maxLines != null ? TextOverflow.ellipsis : null,
   );
   if (identical(query, FixedQuery.empty)) return plain;
-  final scheme = Theme.of(context).colorScheme;
+  final scheme = _cardThemeOf(context).colorScheme;
   return SearchHighlight(
     query: query,
     fill: scheme.primaryContainer.withValues(alpha: 0.7),
@@ -319,6 +326,38 @@ final _cardEnvProvider = Provider<_CardEnv>(
 );
 
 /// Dashboard'daki kompakt not kartı.
+/// **OKUNURLUK — KART ZEMİNE GÖRE** (kullanıcı bulgusu 2026-11-04; editördeki
+/// `_editorInk` ile aynı kural). Kartın zemini temanın yazısıyla okunmuyorsa
+/// (koyu özel renk açık temada, ya da tersi) kartın içi ZIT temayla çizilir.
+/// [NoteCard.build] kararı kendi bağlamına yazar; bu dosyada kart bağlamından
+/// tema okuyan her yer `Theme.of` yerine bunu kullanır.
+final _cardInk = Expando<ThemeData>('cardInk');
+
+ThemeData _cardThemeOf(BuildContext context) =>
+    _cardInk[context] ?? Theme.of(context);
+
+/// Renkli kartın KOYU TONU ve zemini (TEMA_PLANI F31.3): etiket hapı,
+/// kutucuk, ilerleme çubuğu ve klasör rozeti bu tonla çizilir; zemin satır içi
+/// renkli yazının okunur hâle getirilmesi için. Renksiz kartta [accent] null
+/// (temanın vurgusu).
+class _CardAccent extends InheritedWidget {
+  const _CardAccent({
+    required this.accent,
+    required this.background,
+    required super.child,
+  });
+
+  final Color? accent;
+  final Color background;
+
+  static _CardAccent? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_CardAccent>();
+
+  @override
+  bool updateShouldNotify(_CardAccent old) =>
+      old.accent != accent || old.background != background;
+}
+
 class NoteCard extends ConsumerWidget {
   const NoteCard({
     super.key,
@@ -450,16 +489,16 @@ class NoteCard extends ConsumerWidget {
 
   /// Kart içeriğini notun TEMASININ (çizilmiş zemin) ve zemin görselinin
   /// üstüne serer — editörde ne görünüyorsa kartta da o (küçülmüş hâli).
-  Widget _withNoteBackground(Note note, Widget child) {
-    final withImage = _withNoteImage(note, child);
+  Widget _withNoteBackground(Note note, Widget child, double radius) {
+    final withImage = _withNoteImage(note, child, radius);
     if (NoteThemes.byId(note.theme) == null) return withImage;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(radius),
       child: NoteThemeBackdrop(themeId: note.theme, child: withImage),
     );
   }
 
-  Widget _withNoteImage(Note note, Widget child) {
+  Widget _withNoteImage(Note note, Widget child, double radius) {
     final id = note.backgroundImageId;
     if (id == null) return child;
     final image = note.attachments.where((a) => a.id == id).firstOrNull;
@@ -477,7 +516,7 @@ class NoteCard extends ConsumerWidget {
     // (ızgarada onlarca kart aynı anda ayakta).
     provider = ResizeImage(provider, width: 800);
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(radius),
       child: Stack(
         children: [
           // PİL: görselin kendi opaklığı; `Opacity` widget'ı her kart için
@@ -504,9 +543,12 @@ class NoteCard extends ConsumerWidget {
     Widget child,
     BorderRadius radius,
   ) {
-    final scheme = Theme.of(context).colorScheme;
     final paper = note.archivePaper;
-    final line = scheme.outlineVariant.withValues(alpha: 0.6);
+    final inks = PaperInks.of(
+      _cardThemeOf(context),
+      accent: NoteColors.noteInk(context, note),
+    );
+    final line = inks.line;
     // Kartın küçük yazısına göre satır aralığı (bodyMedium ~14 × 1.43).
     const gap = 20.0;
     Widget body = child;
@@ -525,8 +567,8 @@ class NoteCard extends ConsumerWidget {
         painter: NotebookPaperPainter(
           style: paper,
           line: line,
-          margin: scheme.error.withValues(alpha: 0.35),
-          spine: scheme.shadow.withValues(alpha: 0.08),
+          margin: inks.margin,
+          spine: inks.spine,
           gap: 14,
           contentRuled: true,
         ),
@@ -537,7 +579,14 @@ class NoteCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
+    // Zemin ve okunurluk teması DIŞ temaya göre (bkz. [_cardInk]).
+    final background = NoteColors.noteSurface(context, note);
+    final inkTheme = NoteColors.inkThemeFor(Theme.of(context), background);
+    _cardInk[context] = inkTheme;
+    final accent = NoteColors.noteInk(context, note);
+    final tokens = AppTokens.of(context);
+    final radius = tokens.cardRadius;
+    final scheme = _cardThemeOf(context).colorScheme;
     final query = _query;
     // TEK abonelik (F21.4, bkz. [_cardEnvProvider]). select() ŞART: seçim
     // kümesi her değişimde yeni bir Set; kümeyi izlemek TEK not seçilince
@@ -588,10 +637,11 @@ class NoteCard extends ConsumerWidget {
     // başlık iki kelimede kesiliyordu. Altta, tarihle aynı bantta duruyorlar.
     final statusIcons = <Widget>[
       if (display.statusIcons) ...[
+        // Sabitli ve yıldızlı: temanın SICAK vurgusu (TEMA_PLANI F31.4).
         if (note.pinned)
-          Icon(Icons.push_pin, size: 13, color: scheme.onSurfaceVariant),
+          Icon(Icons.push_pin, size: 13, color: accent ?? scheme.secondary),
         if (note.starred)
-          Icon(Icons.star, size: 13, color: Colors.amber.shade600),
+          Icon(Icons.star, size: 13, color: accent ?? scheme.secondary),
         if (!note.locked && note.aiSummary != null)
           Icon(Icons.auto_awesome, size: 13, color: scheme.primary),
         if (note.reminderAt != null)
@@ -674,10 +724,11 @@ class NoteCard extends ConsumerWidget {
                 query,
                 rich: richPreview,
                 maxLines: 2,
+                background: background,
                 // Başlık kartta da KENDİ yazı tipini kullanır (gövdeninkini
                 // değil): başlığın yazı tipi artık gövdeden bağımsız.
                 style: applyNoteFont(
-                  (Theme.of(context).textTheme.titleSmall ?? const TextStyle())
+                  (_cardThemeOf(context).textTheme.titleSmall ?? const TextStyle())
                       .copyWith(fontWeight: FontWeight.w600),
                   note.titleFontFamily,
                 ),
@@ -698,7 +749,7 @@ class NoteCard extends ConsumerWidget {
                   child: Text(
                     context.l10n.lockedNote,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    style: _cardThemeOf(context).textTheme.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
                   ),
@@ -766,7 +817,7 @@ class NoteCard extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: scheme.onSurfaceVariant,
+                        color: accent ?? scheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -803,9 +854,9 @@ class NoteCard extends ConsumerWidget {
             // Cilt gölgesi köşelerden taşmasın; kapak varsa üst köşeler düz.
             hasCover
                 ? BorderRadius.vertical(
-                    bottom: Radius.circular(12 - borderWidth),
+                    bottom: Radius.circular(radius - borderWidth),
                   )
-                : BorderRadius.circular(12 - borderWidth),
+                : BorderRadius.circular(radius - borderWidth),
           )
         : padded;
     final content = !hasCover
@@ -816,7 +867,7 @@ class NoteCard extends ConsumerWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(12 - borderWidth),
+                  top: Radius.circular(radius - borderWidth),
                 ),
                 child: hero != null
                     ? CardHeroMedia(attachment: hero)
@@ -829,11 +880,28 @@ class NoteCard extends ConsumerWidget {
             ],
           );
 
+    // Okunurluk teması ve koyu ton içeriğe iner; kart kabuğu (zemin, çizgi,
+    // dokunuş dalgası) dış temada kalır.
+    Widget inner = _CardAccent(
+      accent: accent,
+      background: background,
+      child: content,
+    );
+    if (inkTheme != null) {
+      inner = Theme(
+        data: inkTheme,
+        // Renksiz `Text` kart Material'ının (dış tema) stilini miras alır.
+        child: DefaultTextStyle.merge(
+          style: TextStyle(color: inkTheme.colorScheme.onSurface),
+          child: inner,
+        ),
+      );
+    }
     final card = Material(
-      color: NoteColors.noteSurface(context, note),
-      borderRadius: BorderRadius.circular(12),
+      color: background,
+      borderRadius: BorderRadius.circular(radius),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(radius),
         // Seçim modunda dokunuş seçimi değiştirir; normalde notu açar. Uzun
         // basış dashboard sarmalayıcısında yönetilir: yerinde bırakınca çoklu
         // seçim, sürükleyince yeniden sıralama (üç nokta menüsündeki "Seç" de
@@ -841,7 +909,7 @@ class NoteCard extends ConsumerWidget {
         onTap: selectionActive ? toggleSelection : () => _openNote(context),
         child: Ink(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(radius),
             // SEÇİM BURADA DEĞİL: seçili kenarlık ayrı bir katman olarak
             // kartın ÜZERİNE çizilir (aşağıdaki Positioned.fill).
             //
@@ -853,10 +921,16 @@ class NoteCard extends ConsumerWidget {
             // 2 px'i altındaki bütün sütunu kaydırıyor, arka arkaya seçimde
             // liste gözle görülür biçimde zıplıyordu. Kenarlık artık sabit
             // kalınlıkta; seçim yalnız BOYA katmanı, yerleşimi hiç etkilemez.
+            // KENAR ÇİZGİSİ (TEMA_PLANI F31.1): renksiz kartta mürekkep %8,
+            // renkli kartta kendi koyu tonu %16 — gri çizgi renkli kartı
+            // kirletiyordu. Kalınlık sabit (yukarıdaki kök neden).
             border: Border.all(
               color:
-                  NoteColors.noteFrame(note) ??
-                  scheme.outlineVariant.withValues(alpha: 0.5),
+                  NoteColors.noteFrame(
+                    note,
+                    dark: Theme.of(context).brightness == Brightness.dark,
+                  ) ??
+                  (accent?.withValues(alpha: 0.16) ?? tokens.hairline),
               width: borderWidth,
             ),
           ),
@@ -864,10 +938,22 @@ class NoteCard extends ConsumerWidget {
           // notun zemin görseli dashboard'ta da görülmeli"). Editördeki
           // görünürlük ayarı burada da geçerli; görsel kartın köşelerine
           // kırpılır ve içeriğin ARKASINDA durur.
-          child: _withNoteBackground(note, content),
+          child: _withNoteBackground(note, inner, radius),
         ),
       ),
     );
+    // KÂĞIT MASADAN AYRILIR (TEMA_PLANI F31.2, K4): bulanıksız 1 dp alt
+    // kenar — bulanık gölge Adreno ≤ 650'de (GLES, AKICILIK K7) her karede
+    // yeniden taranırdı. Yumuşak gölge telefonda ölçülünce (KALANLAR §2).
+    final shadowed = tokens.cardShadow.isEmpty
+        ? card
+        : DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(radius),
+              boxShadow: tokens.cardShadow,
+            ),
+            child: card,
+          );
 
     // **EKRAN OKUYUCU** (TalkBack/Narrator): kart onlarca küçük parçadan
     // (başlık, gövde, madde satırları, rozetler, tarih) oluşuyor ve hepsi tek
@@ -931,7 +1017,7 @@ class NoteCard extends ConsumerWidget {
                         _showContextMenu(context, ref, details.globalPosition),
               child: Stack(
                 children: [
-                  ExcludeSemantics(child: card),
+                  ExcludeSemantics(child: shadowed),
                   // Üç nokta hızlı işlem düğmesi (madde 5): kartın SAĞ ÜST KÖŞESİnde
                   // durur — ikon köşeye hizalı, dokunma alanı 48dp (F15.4). Seçim modunda
                   // gizlenir; yerine tik rozeti gelir. Katmandan bağımsız olduğu için
@@ -1005,7 +1091,7 @@ class NoteCard extends ConsumerWidget {
                       child: IgnorePointer(
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(radius),
                             border: Border.all(color: scheme.primary, width: 2),
                           ),
                         ),
@@ -1049,11 +1135,16 @@ class _FolderBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _cardThemeOf(context).colorScheme;
+    // Renkli kartta kartın koyu tonu (TEMA_PLANI F31.3).
+    final accent = _CardAccent.maybeOf(context)?.accent;
+    final ink = accent ?? scheme.onSecondaryContainer;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: scheme.secondaryContainer.withValues(alpha: 0.75),
+        color:
+            accent?.withValues(alpha: 0.12) ??
+            scheme.secondaryContainer.withValues(alpha: 0.75),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -1062,7 +1153,7 @@ class _FolderBadge extends StatelessWidget {
           Icon(
             Icons.folder_outlined,
             size: 13,
-            color: scheme.onSecondaryContainer,
+            color: ink,
           ),
           const SizedBox(width: 4),
           Flexible(
@@ -1073,7 +1164,7 @@ class _FolderBadge extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: scheme.onSecondaryContainer,
+                color: ink,
               ),
             ),
           ),
@@ -1108,7 +1199,7 @@ class _SensitiveHidden extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _cardThemeOf(context).colorScheme;
     final l10n = context.l10n;
     return Row(
       children: [
@@ -1119,7 +1210,7 @@ class _SensitiveHidden extends StatelessWidget {
             l10n.sensitiveHiddenOnCard,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(
+            style: _cardThemeOf(
               context,
             ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
@@ -1177,14 +1268,15 @@ class _CardItemRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _cardThemeOf(context).colorScheme;
     final struck = checkbox && item.checked;
     Widget? leading;
     if (checkbox) {
+      // Renkli kartta kutucuk kartın koyu tonunda (TEMA_PLANI F31.3).
       final icon = Icon(
         item.checked ? Icons.check_box : Icons.check_box_outline_blank,
         size: 14,
-        color: scheme.onSurfaceVariant,
+        color: _CardAccent.maybeOf(context)?.accent ?? scheme.onSurfaceVariant,
       );
       leading = onToggle == null
           ? Padding(
@@ -1290,7 +1382,8 @@ class _ChecklistProgress extends StatelessWidget {
     final total = items.length;
     final done = items.where((i) => i.checked).length;
     if (total < 4 || done == 0) return const SizedBox.shrink();
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _cardThemeOf(context).colorScheme;
+    final accent = _CardAccent.maybeOf(context)?.accent;
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Row(
@@ -1301,8 +1394,9 @@ class _ChecklistProgress extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: done / total,
                 minHeight: 3,
-                backgroundColor: scheme.outlineVariant.withValues(alpha: 0.4),
-                color: scheme.primary.withValues(alpha: 0.75),
+                backgroundColor:
+                    (accent ?? scheme.outlineVariant).withValues(alpha: 0.18),
+                color: (accent ?? scheme.primary).withValues(alpha: 0.85),
               ),
             ),
           ),
@@ -1437,13 +1531,13 @@ class _NotePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _cardThemeOf(context).colorScheme;
     // Kart önizlemesi notun KENDİ yazı tipini ve boyut çarpanını kullanır:
     // kullanıcı yazı tipini değiştirdiğinde ana ekranda da görmeli, yoksa
     // seçim yalnız editörde varmış gibi duruyordu. Kartın kendi küçük taban
     // boyutu korunur; çarpan onun üzerine biner (ızgara bozulmasın diye
     // makul bir tavanla).
-    final cardBase = Theme.of(context).textTheme.bodySmall ?? const TextStyle();
+    final cardBase = _cardThemeOf(context).textTheme.bodySmall ?? const TextStyle();
     final bodyStyle = applyNoteOpacity(
       applyNoteFont(
         cardBase.copyWith(
@@ -1567,7 +1661,7 @@ class _NotePreview extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
                     context.l10n.moreItemsCount(items.length - maxItems),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    style: _cardThemeOf(context).textTheme.labelSmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
                   ),
@@ -1615,7 +1709,7 @@ class _NotePreview extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
                   context.l10n.moreItemsCount(remaining),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  style: _cardThemeOf(context).textTheme.labelSmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
@@ -1673,7 +1767,7 @@ class _NotePreview extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
                   context.l10n.moreItemsCount(morePages),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  style: _cardThemeOf(context).textTheme.labelSmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
@@ -1764,7 +1858,7 @@ class NoteListRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _cardThemeOf(context).colorScheme;
     final preview = _preview(
       context,
       hideSensitive: ref.watch(cardHideSensitiveProvider),
@@ -1772,9 +1866,9 @@ class NoteListRow extends ConsumerWidget {
     final display = ref.watch(cardDisplayProvider);
     return Material(
       color: selected ? scheme.secondaryContainer : scheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         onTap: selectionActive
             ? () => ref.read(selectedNoteIdsProvider.notifier).toggle(note.id)
             : () => openNoteRoute(context, note),

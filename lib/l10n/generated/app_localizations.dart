@@ -566,11 +566,23 @@ abstract class AppLocalizations {
   /// **'Sistem'**
   String get themeSystem;
 
-  /// No description provided for @themeLight.
+  /// No description provided for @themeSage.
   ///
   /// In tr, this message translates to:
-  /// **'Açık'**
-  String get themeLight;
+  /// **'Adaçayı'**
+  String get themeSage;
+
+  /// No description provided for @themePorcelain.
+  ///
+  /// In tr, this message translates to:
+  /// **'Porselen'**
+  String get themePorcelain;
+
+  /// No description provided for @themeClay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kil'**
+  String get themeClay;
 
   /// No description provided for @themeDark.
   ///
@@ -1567,18 +1579,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Notun içeriği (metin ve liste maddeleri) silinecek. Emin misin?'**
   String get clearNoteConfirm;
-
-  /// No description provided for @themePaper.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kağıt'**
-  String get themePaper;
-
-  /// No description provided for @themeOffWhite.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kırık beyaz'**
-  String get themeOffWhite;
 
   /// No description provided for @calculatorTitle.
   ///

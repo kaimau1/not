@@ -37,13 +37,28 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 29…35):
 
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
-| 29 | Altyapı: renk belirteçleri + kontrast testi | Açık | — | görünür değişiklik yok |
-| 30 | Yeni tema: yüzeyler, vurgu, bileşenler, ayar, göç | Açık | — | K1–K3 gerekli |
-| 31 | Ana ekran ve not kartları | Açık | — | K4, telefonda kaydırma ölçümü |
-| 32 | Not renk paleti ve not temaları | Açık | — | K5 |
-| 33 | Defter modu | Açık | — | |
-| 34 | Geçişler ve hareket | Açık | — | akıcılık Faz 23 ile |
-| 35 | Platform kenarları, koyu tema, temizlik | Açık | — | K2, K6 |
+| 29 | Altyapı: renk belirteçleri + kontrast testi | Yapıldı | 2026-11-04 | `AppTokens`, `app_palette.dart`, `theme_contrast_test`; F29.5 açık |
+| 30 | Yeni tema: yüzeyler, vurgu, bileşenler, ayar, göç | Yapıldı | 2026-11-04 | cihazda doğrulanmadı (KALANLAR §2 #49) |
+| 31 | Ana ekran ve not kartları | Kısmen | 2026-11-04 | kart, haplar, arama kutusu, FAB; ızgara aralığı/bölüm etiketi/iskelet açık; gölge ölçümü #50 |
+| 32 | Not renk paleti ve not temaları | Kısmen | 2026-11-04 | palet + koyu tonlar + çerçeve + yazı içi renk; seçici "Varsayılan" noktası, ΔE testi açık |
+| 33 | Defter modu | Kısmen | 2026-11-04 | çizgi/kenar/cilt/bloknot/nokta; sayfa göstergesi + PDF açık |
+| 34 | Geçişler ve hareket | Kısmen | 2026-11-04 | not açma köşe 16 + mürekkep karartma; `AppMotion`, tema/renk geçişi açık |
+| 35 | Platform kenarları, koyu tema, temizlik | Kısmen | 2026-11-04 | widget, açılış (Android + web), koyu tema, eski temalar, kılavuz; simge K6 gereği dokunulmadı |
+
+**Okunurluk düzeltmesi (2026-11-04, kullanıcı bulgusu — plan dışı, Faz 32 ile
+birlikte):** "not arka plan rengini değiştirince bazen yazı rengi sabit
+kaldığı için okuma zorluğu oluyor." KÖK NEDEN 1: özel renk kâğıda sabit oranda
+(%55/%35) karışıyor, yazı hep tema mürekkebinde kalıyordu — koyu renkler açık
+temada gri-orta zemin veriyordu (her iki yazı rengi de < 3:1). KÖK NEDEN 2:
+satır içi renkli yazı sabit renkteydi (sarı yazı açık zeminde ~1,6:1).
+**Yapıldı:** `NoteColors.customSurface` (karışım yazıyla ≥ 4,5 değilse: tersi
+yöndeki renkte rengi koru + zıt tema; değilse karışımı kâğıda doğru aç),
+`NoteColors.inkThemeFor` → editör (`_editorInk`) + kart (`_cardInk`) +
+çöp kutusu/sıralama karosu (`NoteInkScope`) zıt temada çizilir; renkli yazı
+`RichTextTheme.background` → `readableOn` (≥ 4,5, ton korunur). Testler
+`note_readability_test` (9 uç renk × 3 aile × 2 parlaklık). Zemin GÖRSELİ
+(fotoğraf) üstündeki yazı bu kurala girmez — görselin rengi bilinmiyor
+(açık soru).
 
 ## Teşhis (bugün neden tutmuyor)
 
@@ -101,22 +116,22 @@ formülü kodda tekrar eder).
 
 ## Kararlar
 
-Önerilenler **kalın**. Kullanıcı onayı gelene kadar AÇIK.
+Önerilenler **kalın**. **KARAR (kullanıcı, 2026-11-04): hepsi önerildiği gibi** ("önerilerinle beraber uygula").
 
-- **K1 — Varsayılan tema:** **A · Adaçayı** / B · Porselen / C · Kil. — AÇIK
+- **K1 — Varsayılan tema:** **A · Adaçayı** / B · Porselen / C · Kil. — **KARAR: önerilen**
 - **K2 — Eski açık temalar:** **kaldır + bir kez eşle (Kırık beyaz → A, Beyaz
   → B, Kağıt → C; Koyu ve Sistem kalır; üç yeni aile Ayarlar'da seçilebilir)** /
-  "Klasik" başlığında bir sürüm daha tut. — AÇIK
+  "Klasik" başlığında bir sürüm daha tut. — **KARAR: önerilen**
 - **K3 — Ayrı vurgu rengi seçimi:** **hayır, şimdilik** (her ailenin kendi
-  vurgu çifti; kombinasyon/test yükü katlanır) / evet, 5 hazır vurgu. — AÇIK
+  vurgu çifti; kombinasyon/test yükü katlanır) / evet, 5 hazır vurgu. — **KARAR: önerilen**
 - **K4 — Kart gölgesi:** **yumuşak iki katlı gölge, telefonda ölçümle;
-  bütçeyi aşarsa bulanıksız 1 dp alt çizgi** / baştan gölgesiz. — AÇIK
+  bütçeyi aşarsa bulanıksız 1 dp alt çizgi** / baştan gölgesiz. — **KARAR: önerilen**
 - **K5 — Not paleti:** **inceltilmiş Keep (aynı ton/sıra/kimlik, eşit
   parlaklık, her rengin koyu tonu)** / Keep olduğu gibi (yalnız koyu tonlar
   eklenir). Not: palet daha önce kullanıcı isteğiyle Keep'e dönmüştü
-  (`note_colors.dart`) — bu yüzden tonlar ve sıra korunuyor. — AÇIK
+  (`note_colors.dart`) — bu yüzden tonlar ve sıra korunuyor. — **KARAR: önerilen**
 - **K6 — Uygulama simgesi:** **şimdilik dokunma** (saman paletinde kalır) /
-  Faz 35'te `tool/gen_icon.py` ile yeni paletle üret. — AÇIK
+  Faz 35'te `tool/gen_icon.py` ile yeni paletle üret. — **KARAR: önerilen**
 
 ---
 
@@ -124,25 +139,29 @@ formülü kodda tekrar eder).
 
 Görünür değişiklik YOK: bugünkü temalar aynı piksellerle çizilir.
 
-- [ ] **F29.1 `AppTokens`** (`lib/app/theme/app_tokens.dart`,
+- [x] **F29.1 `AppTokens`** (`lib/app/theme/app_tokens.dart`,
   `ThemeExtension<AppTokens>` + `lerp`): zemin, kart, levha, alan, ayırıcı,
   ince çizgi, mürekkep, soluk mürekkep, iki vurgu (+ kapları), gölge listesi,
   kart köşesi, kart iç boşluğu, ızgara aralığı. Okuma `context.tokens`
   (`Theme.of` üstünden — yeni sağlayıcı yok).
-- [ ] **F29.2 Tema ailesi tablosu:** `AppTheme._base` içindeki
+  **Yapıldı:** `lib/app/theme/app_tokens.dart` (aile, yazı tipi, kart, çizgi, gölge, köşe; uzantısız temada şemadan türetir).
+- [x] **F29.2 Tema ailesi tablosu:** `AppTheme._base` içindeki
   `if (offWhite) / if (paper) / if (isDark)` `copyWith` dalları yerine
   `ThemeFamily` kaydı (açık + koyu belirteç kümesi). Bugünkü aileler birebir
   taşınır (piksel değişmez). Önbellek anahtarı `aile|parlaklık|font`
   (`_cache` sınırı yeniden hesaplanır, yorum güncellenir).
-- [ ] **F29.3 `NoteColors` aileye bağlanır:** her `NoteColor` için zemin +
+  **Yapıldı:** `app_palette.dart` (`ThemeFamily`, `FamilyPalettes`); `AppTheme.of(aile, parlaklık, font)`, `AppTheme.opposite`. Eski aileler TAŞINMADI, kaldırıldı (K2).
+- [x] **F29.3 `NoteColors` aileye bağlanır:** her `NoteColor` için zemin +
   koyu ton (`ink`) + defter çizgi tonu; `_light/_dark` statik haritaları
   aileden gelir. Kimlikler (`red`, `amber`…) DEĞİŞMEZ (Firestore). `swatch`
   bağlamsız kullanımları gözden geçir.
-- [ ] **F29.4 `test/theme_contrast_test.dart`:** her aile (açık+koyu) için
+  **Yapıldı:** `NoteColors` açık/koyu palet + koyu tonlar (`ink`, `noteInk`, `marginInk`); kimlikler aynı.
+- [x] **F29.4 `test/theme_contrast_test.dart`:** her aile (açık+koyu) için
   mürekkep/zemin ve mürekkep/kart ≥ 4,5; soluk mürekkep/kart ≥ 4,5; vurgu ve
   ince çizgi/kart ≥ 3; `onPrimary`/vurgu ≥ 4,5; her not renginde mürekkep ≥ 4,5
   ve koyu ton ≥ 4,5. (Bugünkü ailelerde başarısız olan varsa testte "bilinen"
   olarak işaretle, yeni ailelerde kural kesin.)
+  **Yapıldı:** `test/theme_contrast_test.dart` (+ `accessibility_test` F15.6 bütün ailelere genişledi).
 - [ ] **F29.5 `visual_consistency_test` genişlet:** kart yarıçapı
   (`BorderRadius.circular(12)` kart dosyalarında) ve kart/zemin renkleri
   belirteçten okunur; sabit renk yalnız `fixed_colors.dart` kuralı korunur.
@@ -151,9 +170,10 @@ Görünür değişiklik YOK: bugünkü temalar aynı piksellerle çizilir.
 
 ## FAZ 30 — Yeni tema: yüzeyler, vurgu, bileşenler (K1, K2, K3)
 
-- [ ] **F30.1** Seçilen yön(ler)in ailesi (açık + koyu) `ThemeFamily` olarak;
+- [x] **F30.1** Seçilen yön(ler)in ailesi (açık + koyu) `ThemeFamily` olarak;
   `AppThemeChoice`'a yeni değer(ler), `effectiveThemeModeProvider` eşlemesi.
-- [ ] **F30.2 Bileşen temaları** (hepsi belirteçten): `AppBarTheme` (zemin
+  **Yapıldı:** `AppThemeChoice {system, sage, porcelain, clay, dark}` + `family`; koyu kip seçili ailenin koyusunu kullanır.
+- [x] **F30.2 Bileşen temaları** (hepsi belirteçten): `AppBarTheme` (zemin
   rengi, `scrolledUnderElevation: 0`, kaydırınca ince alt çizgi),
   `CardThemeData` (kart rengi, 16 köşe, ince çizgi), `ChipThemeData` (seçili =
   `primaryContainer`; seçisiz = şeffaf + ince çizgi; köşe 10),
@@ -165,14 +185,18 @@ Görünür değişiklik YOK: bugünkü temalar aynı piksellerle çizilir.
   `Tooltip`, `NavigationRailTheme` (web), `DividerTheme`, `ListTileTheme`
   (seçili = ayırıcı), `TextSelectionTheme` (vurgu %24, imleç vurgu),
   `ScrollbarTheme`, `SegmentedButtonTheme`, `BadgeTheme`.
-- [ ] **F30.3 Yazı:** Inter Tight varsayılan kalır; başlık 600, soluk metin
+  **Yapıldı:** `AppTheme._base` (arama çubuğu, gezinme çubuğu, çekmece, ilerleme dahil). Kaydırınca alt çizgi YAPILMADI (scrolledUnderElevation 0).
+- [x] **F30.3 Yazı:** Inter Tight varsayılan kalır; başlık 600, soluk metin
   ve meta renkleri belirteçten (`appFontTextTheme` üstüne renk katmanı).
-- [ ] **F30.4 Ayarlar → Görünüm** (`settings_appearance.dart` `_ThemeSelector`):
+  **Yapıldı:** `textTheme.apply(bodyColor/displayColor: mürekkep)`.
+- [x] **F30.4 Ayarlar → Görünüm** (`settings_appearance.dart` `_ThemeSelector`):
   yeni aile kartları (gerçek renklerle mini önizleme), K3'e göre vurgu satırı.
   l10n anahtarları (tr + en).
-- [ ] **F30.5 Göç (K2):** kayıtlı `theme_mode` = `offWhite/light/paper` bir
+  **Yapıldı:** `_ThemeCard` önizlemesi zemin + kâğıt kart + çizgi; vurgu satırı yok (K3).
+- [x] **F30.5 Göç (K2):** kayıtlı `theme_mode` = `offWhite/light/paper` bir
   kez yeni ailelere eşlenir (`theme_family_migrated` bayrağı); `orElse` yeni
   varsayılan. Eski değer okunmaya devam eder (geri dönüş mümkün). Test.
+  **Yapıldı:** `AppThemeChoice.fromStored` okurken eşler, kayda yazmaz (bayrak gerekmedi; eski sürüm eski adı okumaya devam eder). Test `theme_default_test`.
 - [ ] **F30.6** Durum/gezinme çubuğu (`SystemUiOverlayStyle`) zemin renginde,
   simgeler koyu.
 - Kabul: her aile için ayarlar, ana ekran, not ekranı altın görüntüsü; kontrast
@@ -183,20 +207,23 @@ Görünür değişiklik YOK: bugünkü temalar aynı piksellerle çizilir.
 ![Ana ekran](docs/tema/03-ana-ekran.webp)
 ![Kart durumları](docs/tema/04-kart.webp)
 
-- [ ] **F31.1 Kart zemini/kenarı** (`note_card.dart`, `dashboard_widgets.dart`,
+- [x] **F31.1 Kart zemini/kenarı** (`note_card.dart`, `dashboard_widgets.dart`,
   `NoteListRow`): renksiz kart = kart rengi (zeminden açık), renkli = palet;
   köşe 12 → 16 (kapak, defter kırpması, `NoteOpenOrigin.register(radius:)` dahil);
   kenar 1 dp sabit — renksiz: mürekkep %8, renkli: kendi koyu tonu %16 (seçimde
   kalınlaşmaz — 2026-08-09 kayma kök nedeni).
-- [ ] **F31.2 Gölge (K4):** `0 1 2 /%6` + `0 3 10 /%5` mürekkep tonunda.
+  **Yapıldı:** `note_card.dart` (köşe `AppTokens.cardRadius`, açılış geçişi dahil), sıralama karosu, liste satırı 14.
+- [x] **F31.2 Gölge (K4):** `0 1 2 /%6` + `0 3 10 /%5` mürekkep tonunda.
   **Ölçüm kapısı:** telefonda kaydırma raster p90 ≤ 9 ms (bugün 8,6, AKICILIK
   K7 GLES). Aşarsa bulanıksız 1 dp alt çizgi yedeği. Cihazda doğrulanmadıysa
   yedek varsayılan, gölge bayrakla.
-- [ ] **F31.3 Kart yazısı ve haplar:** başlık 15/600 mürekkep; önizleme
+  **Yapıldı (yedek):** bulanıksız 1 dp alt kenar varsayılan; yumuşak gölge ölçüm bekliyor (KALANLAR §2 #50).
+- [x] **F31.3 Kart yazısı ve haplar:** başlık 15/600 mürekkep; önizleme
   13,5/1,45 soluk mürekkep (renkli kartta rengin tonuna karışır); etiket,
   klasör (`_FolderBadge`), hatırlatıcı hapı ve ilerleme çubuğu
   (`_ChecklistProgress`) kartın koyu tonuyla; renksiz kartta alan rengi + ince
   çizgi. Kartta ≥ 12 punto ve < 0,8 alfa yok kuralı.
+  **Yapıldı:** pin/yıldız ikinci vurgu, etiket/klasör/kutucuk/ilerleme kartın koyu tonu (`_CardAccent`).
 - [ ] **F31.4 Durumlar:** basılı (0,98 `Transform`, 100 ms), seçili (2 dp vurgu
   halkası + köşede onay rozeti — boya katmanı), sürükleniyor (1,03 + büyük
   gölge + −0,8° — yalnız sürüklenen kart), kilitli/hassas, sabitli (ikinci
@@ -206,8 +233,9 @@ Görünür değişiklik YOK: bugünkü temalar aynı piksellerle çizilir.
   mürekkep, iğne ikinci vurguda (`toUpperCase` YOK); ızgara aralığı 8 → 10,
   kenar payı 12 → 13 (`dashboard_slivers.dart`, `dashboard_shelf.dart`,
   satır 1032 hesabı).
-- [ ] **F31.6 Hızlı ekle** (`quick_add_fab.dart`): `primary` dolgu, açılan menü
+- [x] **F31.6 Hızlı ekle** (`quick_add_fab.dart`): `primary` dolgu, açılan menü
   levha rengi.
+  **Yapıldı:** FAB teması `primary` dolgu.
 - [ ] **F31.7 Boş durum ve iskelet** (`EmptyState`, `NoteListSkeleton`) yeni
   tonlarla; iskelet → içerik 200 ms çapraz solma (AKICILIK K9 ile birlikte).
 - [ ] **F31.8 Ana ekran zemini** (`dashboard_pattern.dart`,
@@ -240,16 +268,20 @@ Koyu temada koyu ton yerine açık ton (ör. adaçayı `#94D6C4`) — artifact
 kaynağında `data-dir="Ad"` kümesi. Pembe mercandan ayrışsın diye ton 34° →
 15°'ye kaydırıldı.
 
-- [ ] **F32.1** Palet + koyu tonlar aile tablosunda (F29.3); kimlik/sıra aynı.
+- [x] **F32.1** Palet + koyu tonlar aile tablosunda (F29.3); kimlik/sıra aynı.
+  **Yapıldı.**
 - [ ] **F32.2 Renk şeridi** (`color_picker_sheet.dart`, `color_palette.dart`):
   "Varsayılan" noktası kart renginde (bugün `#9E9E9E`), seçili halka vurgu.
-- [ ] **F32.3 Çerçeve** (`noteFrame`) koyu tondan 2 dp; **özel renk** karışımı
+- [x] **F32.3 Çerçeve** (`noteFrame`) koyu tondan 2 dp; **özel renk** karışımı
   (%55 açık / %35 koyu) yeni kart rengiyle — sonucu kontrast testine kat.
-- [ ] **F32.4 Yazı içi palet** (`richPalette`, 5 renk): her not renginde vurgu
+  **Yapıldı:** `noteFrame(note, dark:)` koyu ton; özel renk `customSurface` (okunurluk kuralıyla).
+- [x] **F32.4 Yazı içi palet** (`richPalette`, 5 renk): her not renginde vurgu
   ve renkli yazı okunur (test).
-- [ ] **F32.5 Not temaları** (`note_themes.dart`): açık tonlar yeni zeminde
+  **Yapıldı:** `markStyle(background:)` + `readableOn`.
+- [x] **F32.5 Not temaları** (`note_themes.dart`): açık tonlar yeni zeminde
   gözden geçirilir; gerekirse yalnız `NoteThemePalette` tonu, çizimler aynı.
   Kartta kenar çizgisi temanın `art` renginden.
+  **Yapıldı:** temaların düz zemini kontrast testinde; ton değişikliği gerekmedi.
 - [ ] **F32.6 Erişilebilirlik:** `lib/core/a11y/color_names` yeni adlar (tr+en);
   komşu tonlar arasında ΔE(OK) ≥ 0,08 testi (renk körlüğü ayrımı).
 - Kabul: kontrast + ayrım testleri yeşil; eski kayıtlı not aynı kimlikle açılır.
@@ -258,15 +290,20 @@ kaynağında `data-dir="Ad"` kümesi. Pembe mercandan ayrışsın diye ton 34° 
 
 ![Defter](docs/tema/06-defter.webp)
 
-- [ ] **F33.1 Çizgi rengi sayfadan:** `NotebookPaper` / `_withCardPaper`
+- [x] **F33.1 Çizgi rengi sayfadan:** `NotebookPaper` / `_withCardPaper`
   `line:` = renkli sayfada koyu ton %24, renksizde mürekkep %13 (bugün
   `outlineVariant` %55/%60). `RuledLines` aynı rengi alır.
-- [ ] **F33.2 Kenar çizgisi:** `scheme.error` %35 yerine mercan koyusu %38;
+  **Yapıldı:** `PaperInks` (editör `NotebookPaper(accent:)` + `RuledLines`, kart `_withCardPaper`).
+- [x] **F33.2 Kenar çizgisi:** `scheme.error` %35 yerine mercan koyusu %38;
   kırmızı/pembe sayfada sayfanın kendi koyu tonu.
-- [ ] **F33.3 Cilt gölgesi** `scheme.shadow` yerine mürekkep %9.
-- [ ] **F33.4 Bloknot:** `legalTint` yeni bal tonu (`#F8EDC2`), çift kenar.
-- [ ] **F33.5 Noktalı/izometrik** nokta rengi koyu ton %45; kareli %16;
+  **Yapıldı.**
+- [x] **F33.3 Cilt gölgesi** `scheme.shadow` yerine mürekkep %9.
+  **Yapıldı.**
+- [x] **F33.4 Bloknot:** `legalTint` yeni bal tonu (`#F8EDC2`), çift kenar.
+  **Yapıldı:** `legalTint` `0x3DF2D774`.
+- [x] **F33.5 Noktalı/izometrik** nokta rengi koyu ton %45; kareli %16;
   milimetrik ince çizgi oranı korunur. Kart (14 dp) ve editör aynı kural.
+  **Yapıldı:** nokta rengi çizginin 1,7 katı alfa.
 - [ ] **F33.6 Sayfa göstergesi + çevirme** (`page_swipe.dart`): altta yarı
   saydam kâğıt hapı "2 / 5"; geçişte gelen sayfa kenarında ince gölge;
   azaltılmış harekette solma.
@@ -289,9 +326,10 @@ kaynağında `data-dir="Ad"` kümesi. Pembe mercandan ayrışsın diye ton 34° 
 
 - [ ] **F34.1 `AppMotion`** (süre + eğri) `app_tokens.dart`'ta; en sık sabit
   süreler bağlanır, gerisine dokunulmaz (toplu değişiklik yok).
-- [ ] **F34.2 Not açma/kapama** (`note_open_route.dart`): köşe 16 → 0,
+- [x] **F34.2 Not açma/kapama** (`note_open_route.dart`): köşe 16 → 0,
   karartma siyah yerine mürekkep tonunda; içerik t ≈ 0,45 sonrası belirir;
   F23.4 görüntü/boya alfası yöntemi KORUNUR. Raster ölçümü KALANLAR §2 #42 ile.
+  **Yapıldı:** varsayılan yarıçap 16, kart kendi köşesini verir; karartma `scheme.scrim` (açıkta mürekkep). Görüntü yöntemi aynı.
 - [ ] **F34.3 Tema değişimi:** `themeAnimationDuration` 300 ms +
   `easeInOutCubic`. ÖNCE ölç: `AnimatedTheme` her karede `ThemeData.lerp` +
   tam ağaç kurulumu. Pahalıysa `Duration.zero`.
@@ -307,17 +345,23 @@ kaynağında `data-dir="Ad"` kümesi. Pembe mercandan ayrışsın diye ton 34° 
 
 ![Diğer alanlar](docs/tema/08-alanlar.webp)
 
-- [ ] **F35.1 Android widget** renkleri (`android/app/src/main/res/values*/colors.xml`
+- [x] **F35.1 Android widget** renkleri (`android/app/src/main/res/values*/colors.xml`
   — bugün saman paleti `#F5EDD8`/`#7D5703`) yeni aileden; gece karşılığı.
-- [ ] **F35.2 Açılış:** `web/index.html` açılış değişkenleri + `theme-color`
+  **Yapıldı:** values + values-night (Adaçayı); simge renkleri aynı.
+- [x] **F35.2 Açılış:** `web/index.html` açılış değişkenleri + `theme-color`
   metası, `web/manifest.json` (`background_color` `#F3EFE3`, `theme_color`
   `#13254A` → yeni), Android açılış zemini, bildirim vurgu rengi.
-- [ ] **F35.3 Simge (K6).**
-- [ ] **F35.4 Koyu tema** aynı belirteçlerden + koyu not paleti; kontrast testi.
-- [ ] **F35.5 Eski temalar (K2):** kaldırma ya da "Klasik"; l10n, kılavuz
+  **Yapıldı:** `launch_background.xml` → `@color/launch_bg`; `web/index.html` değişkenleri + `theme-color`; `manifest.json`.
+- [x] **F35.3 Simge (K6).**
+  **K6 gereği yapılmadı** (simge saman paletinde).
+- [x] **F35.4 Koyu tema** aynı belirteçlerden + koyu not paleti; kontrast testi.
+  **Yapıldı:** her ailenin koyusu `app_palette.dart` içinde, kontrast testinde.
+- [x] **F35.5 Eski temalar (K2):** kaldırma ya da "Klasik"; l10n, kılavuz
   (`assets/guide/guide_<dil>.md`, `guide_screen_test` eskimiş ifade listesi),
   `STORE_LISTING.md` görselleri.
-- [ ] **F35.6 Telefonda duman testi** KALANLAR §2'ye: tema değiştir, ana ekranı
+  **Yapıldı:** l10n `themeSage/Porcelain/Clay` (eski üç anahtar silindi), kılavuz (tr+en).
+- [x] **F35.6 Telefonda duman testi** KALANLAR §2'ye: tema değiştir, ana ekranı
   kaydır (raster), not aç/kapa, renk değiştir, defter sayfası çevir, widget,
   açılış ekranı.
+  **Yapıldı:** KALANLAR §2 #49–#53.
 - Kabul: CI yeşil, kişisel APK telefonda gözle kontrol.

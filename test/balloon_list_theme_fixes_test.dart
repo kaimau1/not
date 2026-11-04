@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/app/theme/app_palette.dart';
 import 'package:notlar/app/theme/app_theme.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
@@ -73,18 +74,25 @@ void main() {
     expect(dimmed, findsNothing);
   });
 
-  test('kırık beyaz temanın vurgusu mavi değil, ılık', () {
-    final scheme = AppTheme.offWhite().colorScheme;
-    for (final color in [
-      scheme.primary,
-      scheme.secondary,
-      scheme.secondaryContainer,
-      scheme.primaryContainer,
-    ]) {
-      final hsl = HSLColor.fromColor(color);
-      // Mavi/mor bant (≈190–290°) dışında ya da neredeyse doygunluksuz.
-      final bluish = hsl.hue > 190 && hsl.hue < 290 && hsl.saturation > 0.12;
-      expect(bluish, isFalse, reason: '$color');
+  // Eski kırık beyaz temanın "mavi değil, ılık vurgu" kuralı: o tema kalktı
+  // (TEMA_PLANI K2). Yerine: her ailenin vurgusu gerçekten RENKLİ (grafit
+  // gri değil — kırık beyazın "sıkıcı" bulunmasının bir nedeni) ve Kil
+  // ailesinin zemini sarıya kaçmıyor (saman bulgusu).
+  test('tema ailelerinin vurgusu renkli; Kil zemini sarı değil', () {
+    for (final f in ThemeFamily.values) {
+      final scheme = AppTheme.of(f, Brightness.light).colorScheme;
+      for (final color in [scheme.primary, scheme.secondary]) {
+        expect(
+          HSLColor.fromColor(color).saturation,
+          greaterThan(0.2),
+          reason: '$f $color',
+        );
+      }
     }
+    final ground = AppTheme.of(ThemeFamily.clay, Brightness.light)
+        .colorScheme
+        .surface;
+    final hue = HSLColor.fromColor(ground).hue;
+    expect(hue < 40 || hue > 300, isTrue, reason: 'ton $hue');
   });
 }

@@ -147,7 +147,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
   /// Yalnız sayfalı notta görünür (tek sayfalı notta yer kaplamaz).
   Widget _pageBar(Note note) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = _themeOf(context).colorScheme;
     final pos = textPagePosition(note);
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -968,7 +968,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
             child: IgnorePointer(
               child: Builder(
                 builder: (context) {
-                  final scheme = Theme.of(context).colorScheme;
+                  final scheme = _themeOf(context).colorScheme;
                   final fg = _pinHover ? scheme.onPrimary : scheme.primary;
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 160),
