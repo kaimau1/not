@@ -3644,6 +3644,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutCloseNote => 'Close note';
 
   @override
+  String get goHome => 'Back to home';
+
+  @override
   String get loginFeatureSyncTitle => 'Same notes on every device';
 
   @override

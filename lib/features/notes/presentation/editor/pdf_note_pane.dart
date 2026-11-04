@@ -12,6 +12,7 @@ import '../../domain/note.dart';
 import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/pdf_document_view.dart';
+import '../viewers/pdf_read_style.dart';
 import '../viewers/pdf_selection_bar.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import 'bubbles_overview.dart';
@@ -350,6 +351,7 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
       valueListenable: _selection.selecting,
       builder: (context, dragging, _) {
         final params = pdfLayerParams(
+          style: PdfReadStyle.of(context),
           selection: _selection,
           bubbles: widget.bubbles,
           editable: true,

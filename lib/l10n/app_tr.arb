@@ -1698,6 +1698,7 @@
   "showNoteList": "Not listesini göster",
   "shortcutAdjacentNote": "Listede önceki / sonraki not",
   "shortcutCloseNote": "Notu kapat",
+  "goHome": "Ana sayfaya dön",
   "loginFeatureSyncTitle": "Her cihazda aynı notlar",
   "loginFeatureSyncBody": "Telefon, tablet, bilgisayar ve web arasında anında senkron.",
   "loginFeatureAiTitle": "Yapay zekâ yanında",

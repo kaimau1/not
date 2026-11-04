@@ -1414,6 +1414,7 @@
   "showNoteList": "Show note list",
   "shortcutAdjacentNote": "Previous / next note in list",
   "shortcutCloseNote": "Close note",
+  "goHome": "Back to home",
   "loginFeatureSyncTitle": "Same notes on every device",
   "loginFeatureSyncBody": "Instant sync across phone, tablet, computer and web.",
   "loginFeatureAiTitle": "AI at your side",

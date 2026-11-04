@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:notlar/features/notes/presentation/viewers/pdf_read_style.dart';
 import 'package:notlar/features/ai/data/ai_gate.dart';
 import 'package:notlar/features/ai/presentation/ai_hub_screen.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
@@ -138,6 +139,7 @@ void main() {
       final bubbles = BubbleController(initial: const [], onChanged: (_) {});
       addTearDown(bubbles.dispose);
       final params = pdfLayerParams(
+        style: PdfReadStyle.of(context),
         selection: selection,
         bubbles: bubbles,
         editable: true,

@@ -63,13 +63,22 @@ class RailExtendedNotifier extends Notifier<bool?> {
 /// kapıları (Yapay Zekâ, Hatırlatıcılar, Arşiv, Çöp, Ayarlar, Yeni not)
 /// kendi menülerinde TEKRARLAMASIN diye okur (F11.8).
 class AppRailScope extends InheritedWidget {
-  const AppRailScope({super.key, required super.child});
+  const AppRailScope({super.key, this.docked = true, required super.child});
+
+  /// Ray gerçekten ekranda mı. Not açıkken ray çekmeceye döner, tam ekranda
+  /// gizlidir: o durumda "rayda zaten var" diye menüden düşen kapılar (Ayarlar
+  /// dahil) menüde KALMALI (F28.5: web'de ⋮ menüsünde Ayarlar yoktu).
+  final bool docked;
 
   static bool visible(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<AppRailScope>() != null;
+      context
+          .dependOnInheritedWidgetOfExactType<AppRailScope>()
+          ?.docked ??
+      false;
 
   @override
-  bool updateShouldNotify(AppRailScope oldWidget) => false;
+  bool updateShouldNotify(AppRailScope oldWidget) =>
+      docked != oldWidget.docked;
 }
 
 /// **GENİŞ EKRAN ÇERÇEVESİ** — kullanıcı isteği 2026-09-22: "not
@@ -108,11 +117,70 @@ class AppFrame extends ConsumerWidget {
         child: child,
       );
     }
+    if (!showRail && homeBarOnNarrow) {
+      content = _NarrowHomeBar(child: content);
+    }
     return AppShortcuts(
       onToggleList: toggleList,
       // Kısayollar odak ağacından geçer; hiçbir şey odaklı değilken (ayarlar
       // ekranı yeni açıldı) de çalışsınlar diye çerçeve kendisi odak alır.
       child: Focus(autofocus: true, skipTraversal: true, child: content),
+    );
+  }
+}
+
+Widget _flex({required bool horizontal, required List<Widget> children}) =>
+    horizontal
+    ? Row(mainAxisSize: MainAxisSize.min, children: children)
+    : Column(mainAxisSize: MainAxisSize.min, children: children);
+
+/// Dar web'de (ray yok) ana sayfa dışındaki her ekranın üstünde ince çubuk:
+/// "Ana sayfaya dön" (F28.3). Telefon uygulamasında kapalı.
+class _NarrowHomeBar extends ConsumerWidget {
+  const _NarrowHomeBar({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = GoRouter.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return ListenableBuilder(
+      listenable: router.routerDelegate,
+      builder: (context, _) {
+        if (currentLocation(router) == '/') return child;
+        final top = MediaQuery.paddingOf(context).top;
+        return Column(
+          children: [
+            Material(
+              color: scheme.surfaceContainerLow,
+              child: Padding(
+                padding: EdgeInsets.only(top: top),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    key: const ValueKey('narrow-home'),
+                    onPressed: () => goHome(ref, router),
+                    icon: const Icon(Icons.home_outlined, size: 18),
+                    label: Text(context.l10n.goHome),
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(48, 36),
+                      foregroundColor: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                child: child,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -226,7 +294,7 @@ class _RailFrameState extends State<_RailFrame>
                           context: context,
                           removeLeft: docked && !rtl,
                           removeRight: docked && rtl,
-                          child: AppRailScope(child: widget.child),
+                          child: AppRailScope(docked: docked, child: widget.child),
                         ),
                       );
                     },
@@ -487,25 +555,46 @@ class _AppRail extends ConsumerWidget {
                                 top: 8,
                                 bottom: 12,
                               ),
-                              child: extended
-                                  ? FloatingActionButton.extended(
-                                      heroTag: 'rail-new-note',
-                                      elevation: 0,
-                                      onPressed: () => go(
-                                        () => createAndOpenNote(ref, router),
-                                      ),
-                                      icon: const Icon(Icons.edit_outlined),
-                                      label: Text(l10n.newNoteShort),
-                                    )
-                                  : FloatingActionButton(
-                                      heroTag: 'rail-new-note',
-                                      elevation: 0,
-                                      tooltip: '${l10n.newNoteShort} (Ctrl+N)',
-                                      onPressed: () => go(
-                                        () => createAndOpenNote(ref, router),
-                                      ),
-                                      child: const Icon(Icons.edit_outlined),
-                                    ),
+                              // Geniş rayda yan yana (dikey yer harcamasın),
+                              // dar rayda alt alta.
+                              child: _flex(
+                                horizontal: extended,
+                                children: [
+                                  IconButton(
+                                    key: const ValueKey('rail-home'),
+                                    tooltip: '${l10n.goHome} (Alt+Home)',
+                                    icon: const Icon(Icons.home_outlined),
+                                    onPressed: () =>
+                                        go(() => goHome(ref, router)),
+                                  ),
+                                  extended
+                                      ? FloatingActionButton.extended(
+                                          heroTag: 'rail-new-note',
+                                          elevation: 0,
+                                          onPressed: () => go(
+                                            () => createAndOpenNote(
+                                              ref,
+                                              router,
+                                            ),
+                                          ),
+                                          icon: const Icon(Icons.edit_outlined),
+                                          label: Text(l10n.newNoteShort),
+                                        )
+                                      : FloatingActionButton(
+                                          heroTag: 'rail-new-note',
+                                          elevation: 0,
+                                          tooltip:
+                                              '${l10n.newNoteShort} (Ctrl+N)',
+                                          onPressed: () => go(
+                                            () => createAndOpenNote(
+                                              ref,
+                                              router,
+                                            ),
+                                          ),
+                                          child: const Icon(Icons.edit_outlined),
+                                        ),
+                                ],
+                              ),
                             ),
                             destinations: [
                               for (final s in railSections)

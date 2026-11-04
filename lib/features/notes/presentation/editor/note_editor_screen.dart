@@ -117,6 +117,8 @@ import 'calculator_sheet.dart';
 import '../../data/place_reminders.dart';
 import '../../data/drive_store.dart' show localFilesRevisionProvider;
 import '../drive_ui.dart';
+import '../../../../app/app_commands.dart' show goHome;
+import '../../../../app/app_frame.dart' show kRailBreakpoint;
 import '../../../../app/split_shell.dart';
 import 'page_ink_layer.dart';
 import '../place_reminder_sheet.dart';
@@ -4006,6 +4008,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   ),
                   )),
             actions: [
+              // ANA SAYFAYA DÖN (F28.3): geniş ekranda/web'de ray bu sırada
+              // çekmece ya da gizli; tek dokunuşla `/`. Telefonda yok.
+              if (MediaQuery.sizeOf(context).width >= kRailBreakpoint)
+                IconButton(
+                  key: const ValueKey('editor-home'),
+                  tooltip: '${l10n.goHome} (Alt+Home)',
+                  icon: const Icon(Icons.home_outlined),
+                  onPressed: () => goHome(ref, GoRouter.of(context)),
+                ),
               // Ortak notta başka biri düzenliyorsa (F4.1).
               NotePresenceIndicator(
                 noteId: widget.noteId,

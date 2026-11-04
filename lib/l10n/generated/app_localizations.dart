@@ -6542,6 +6542,12 @@ abstract class AppLocalizations {
   /// **'Notu kapat'**
   String get shortcutCloseNote;
 
+  /// No description provided for @goHome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana sayfaya dön'**
+  String get goHome;
+
   /// No description provided for @loginFeatureSyncTitle.
   ///
   /// In tr, this message translates to:

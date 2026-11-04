@@ -386,7 +386,7 @@ verildi (2026-11-03) — gece görevi sormadan uygular. Protokol Faz 18
 ile aynı ("Faz 28'i yap" sıradaki açık maddeden, "F28.3'ü yap" tek madde).
 Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
 
-- [ ] **F28.5 Web'de üç nokta menüsünden Ayarlar açılmıyor (KIRIK).**
+- [x] **F28.5 Web'de üç nokta menüsünden Ayarlar açılmıyor (KIRIK).**
   Kod görünüşte doğru: `dashboard_menu.dart` `case 'settings'` →
   `context.push('/settings')`; rota `router.dart` (`path: '/settings'`).
   Önce yayındaki web'de / `flutter run -d web-server` ile yeniden üret
@@ -395,14 +395,16 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
   yönlendirme koruması (`redirect`). Düzelt + menüden Ayarlar'a giden
   widget testi. Diğer menü maddelerinin (Arşiv, Çöp, Kılavuz) de web'de
   açıldığını aynı testte doğrula.
-- [ ] **F28.3 Web'de ve tablette her zaman görünen "Ana sayfaya dön" düğmesi.**
+  **Yapıldı (2026-11-04):** KÖK NEDEN: `AppRailScope` ray çekmeceye dönmüşken (not açık) ve tam ekranda da "ray görünüyor" diyordu → ⋮ menüsü Ayarlar/Arşiv/Çöp/Hatırlatıcılar/Yapay zekâ'yı "rayda var" diye ÇIKARIYOR, ray ise gizliydi. Kapsam artık `docked` bayrağı taşır (yalnız ray yuvalıyken kapılar menüden düşer). Test `rail_scope_menu_test`. (Menüdeki `context.push` yolları değişmedi; gerçek tarayıcıda doğrulanmadı.)
+- [x] **F28.3 Web'de ve tablette her zaman görünen "Ana sayfaya dön" düğmesi.**
   Her ekranda (not, Ayarlar, AI, Arşiv, Çöp, Kılavuz, klasör) tek dokunuşla
   `/`; geçmiş yığını temizlenir (`context.go('/')`), açık not kaydı
   flush edilir. Yer: tablet rayının (64 dp) tepesi ve dar web'de üst çubuk;
   tam ekran kipinde (liste gizli) de görünsün. Telefonda değişiklik yok.
   İlgili: `router.dart`, `app_commands.dart`, tablet rayı. Kısayol (ör.
   Alt+Home) + kısayol yardımına satır. Test: her rotadan düğme → `/`.
-- [ ] **F28.4 Balonlu ve sabit mod arasında görsel farklılık.** Önce iki
+  **Yapıldı (2026-11-04):** `goHome` (tam ekranı kapatır, `go('/')`; editör sökülürken kendi kaydını yazar). Rayın tepesinde ana sayfa düğmesi (geniş rayda "Yeni not" yanında, dar rayda üstünde — dikey yer yemesin), çekmece aynı rayı taşır; dar web'de (`homeBarOnNarrow`) ana sayfa dışında ince üst çubuk; editör üst çubuğunda (≥600 dp) ev simgesi (çekmece/tam ekranda ray gizli); Alt+Home + kısayol yardımı. Test `rail_scope_menu_test` (ray: 5 rota; dar web çubuğu; telefonda yok).
+- [x] **F28.4 Balonlu ve sabit mod arasında görsel farklılık.** Önce iki
   modu aynı notla yan yana ekran görüntüsüyle karşılaştır (web turu,
   scratchpad) ve farkları listele (yazı tipi/boyut, satır aralığı, kenar
   boşluğu, ek/görsel kutuları, renk/zemin, başlık). Kullanıcıya listeyi
@@ -411,6 +413,7 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
   `pinned_media_pane.dart`, `text_page_box.dart`, `note_images.dart`.
   **KARAR (kullanıcı, 2026-11-03):** **SABİT MOD DOĞRU** — balonlu mod sabit moda benzetilir (sormadan uygula; farkları maddeye yaz).
   Test: iki modda aynı stil değerleri (golden ya da stil karşılaştırma).
+  **Yapıldı (2026-11-04) — PDF için; ekran görüntüsüyle DOĞRULANMADI (bulutta PDF notu açılamıyor, Storage 400):** Koddan bulunan farklar — balonlu (pdfrx `PdfViewer`, `pdfLayerParams`): gri zemin (`Colors.grey` varsayılanı), 8 dp kenar/sayfa boşluğu, sayfa gölgesi; sabit (`PdfPageBox fitWidth`): `surfaceContainerHigh` zemin, boşluksuz, gölgesiz. Tek kaynak `viewers/pdf_read_style.dart` (`PdfReadStyle`): zemin = sabitin zemini, boşluk 2 dp ayraç, gölge yok; ikisi de buradan okur. Test `pdf_read_style_test`. Cihazda görsel karşılaştırma `KALANLAR.md` §2'ye. Görsel/metin/slayt balonlu sayfaları ayrı çizim yolları — karşılaştırılmadı.
 - [ ] **F28.2 Ek senkronunu baştan yaz; bugünkü yapı silinsin (büyük).**
   **KARAR (kullanıcı, 2026-11-03):** (1) **Kod + buluttaki ek KAYITLARI sıfırlanır**; ekler cihazlardan
   yeniden yüklenir — hiçbir cihazda olmayan ek kaybolur (kullanıcı kabul etti).
@@ -432,6 +435,12 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
   ek verisini mi — kullanıcı verisi silinmeden önce AÇIKÇA sor; varsayılan:
   kod silinir, mevcut ekler yeni yapıya bir kez göç eder. Sonra eski kod
   kaldırılır (ölü yol bırakılmaz), testler yeni durum makinesi üzerinden.
+  **TASARIM (2026-11-04, kod yazılmadı — sonraki oturum A'dan başlar; her adım ayrı commit+CI, A–C canlı veriye DOKUNMAZ):**
+  - **A. Yeni durum makinesi (saf Dart, testli)** `attachment_sync.dart`: ek başına `AttachState` = `local` (yalnız bu cihazda) → `queued` → `uploading` → `synced` (Drive `driveFileId` + küçük önizleme yüklü) → `remote` (başka cihaz: dosya yok, indirilebilir) ; hata: `failed(n, nextRetryAt)` üstel bekleme; geçişler tek fonksiyon `next(state, event)`; kalıcılık = ek kaydındaki alanlar, ayrı yerel tablo yok. Eski `UploadQueue` yerine tek `AttachmentSyncService`.
+  - **B. Depolama:** asıl dosya kullanıcının Drive'ında `drive.file` kapsamı, "Notlar" klasörü (görünür); Firebase Storage'ta yalnız `users/{uid}/thumbs/{ekId}.jpg` ≤ 40 KB, kullanıcı başı tavan (kural + `rules-test`). Misafir: yerel + "Google'a bağla" şeridi. Web: jeton sessiz yenileme (`DriveAuth` yeni arayüz), `blob:` buluta yazılmaz.
+  - **C. Göç/sıfırlama (ANCAK A+B cihazda doğrulanınca):** önce `BackupService` ile yerel tam yedek (zorunlu, başarısızsa dur); sonra Firestore ek kayıtlarının `attachments` alanı + eski Storage `users/{uid}/attachments/` temizlenir (Drive dosyalarına DOKUNMA); cihazdaki yerel dosyalar yeni kuyruğa girer; sürümlü (`attachSchema: 2`), idempotent, `kClientDataVersion` artar, `minClient` bekler (F19.B1).
+  - **D. Eski kod silinir:** `attachment_repository` yükleme/indirme yolları, `upload_queue`, `drive_store` appdata yolu, `drive_ui` eski akış, Ayarlar senkron anahtarı; ölü yol bırakılmaz.
+  - ⚠ Bu iş gece görevinde YALNIZ A (ve B'nin salt-kod kısmı) yapılır; C (kayıt silme) telefon doğrulaması gerektirdiğinden F19'a "C'yi çalıştırma onayı" olarak yazılır.
 - [ ] **F28.1 Gmail bağlantısı: e-postaları gör, kaydet, içerikten not al.**
   **KARAR (kullanıcı, 2026-11-03):** **YALNIZ OKUMA** (`gmail.readonly`); Gmail'de hiçbir şey değiştirilmez. Google girişi + Drive'daki ek-kapsam akışı örnek
   (`drive_store.dart`). Kapsam: `gmail.readonly` (kısıtlı kapsam → OAuth
