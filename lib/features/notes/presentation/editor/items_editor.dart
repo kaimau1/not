@@ -510,7 +510,7 @@ class ItemsEditorState extends State<ItemsEditor>
   /// geçişin ilk karesinde 100+ ms (telefonda ölçüldü, 2026-11-04) → ilk karede
   /// ekranı dolduran kadarı, geçiş (460 ms) bitince kalanı kare başına birkaç.
   static const _kFirstRows = 16;
-  static const _kRowsPerFrame = 8;
+  static const _kRowsPerFrame = 4;
   static const _kGrowAfter = Duration(milliseconds: 500);
 
   /// Kurulacak en çok madde (işaretsizler önce, sonra işaretliler); null = hepsi.
