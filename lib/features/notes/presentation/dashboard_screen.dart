@@ -17,6 +17,7 @@ import '../../../app/app_frame.dart';
 import '../../../app/router.dart';
 import '../../../app/split_shell.dart';
 import '../../../app/theme/note_colors.dart';
+import '../../../core/widgets/snapshot_when_leaving.dart';
 import '../../../core/widgets/action_menu_sheet.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
@@ -1424,7 +1425,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           begin: begin,
                                           end: Offset.zero,
                                         ).animate(animation),
-                                        child: child,
+                                        // F26.4: ayrılan ızgara donmuş
+                                        // görüntü (her karede rasterleşmez).
+                                        child: SnapshotWhenLeaving(
+                                          leaving: !incoming,
+                                          child: child,
+                                        ),
                                       ),
                                     );
                                   },
