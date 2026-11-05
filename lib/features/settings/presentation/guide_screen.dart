@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/utils/search_fold.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/app_icons.dart';
 
 /// KULLANIM KILAVUZU (kullanıcı isteği 2026-10-11: "tüm özellikleri anlatan,
 /// gösteren bir kullanım kılavuzu").
@@ -156,7 +157,7 @@ List<TextSpan> guideInlineSpans(String text, TextStyle? bold) {
     route: '/settings?area=notes',
   ),
   'scan' => (icon: Icons.document_scanner_outlined, route: null),
-  'voice' => (icon: Icons.mic_none, route: '/settings?area=sound'),
+  'voice' => (icon: AppIcons.dictation, route: '/settings?area=sound'),
   'transcript' => (icon: Icons.subtitles_outlined, route: null),
   'ai' => (icon: Icons.auto_awesome_outlined, route: '/ai'),
   'organize' => (icon: Icons.folder_outlined, route: '/folders'),

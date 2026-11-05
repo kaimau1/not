@@ -1,12 +1,13 @@
 import 'dart:convert';
 
 import 'package:firebase_ai/firebase_ai.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import '../../../core/constants.dart';
-import 'gemini_service.dart' show GeminiException;
+import 'gemini_service.dart' show GeminiErrorKind, GeminiException;
 
-/// Dahili AI'ın son ham hatalarını tutar. [FirebaseAiClient._mapError]
-/// kullanıcıya sade Türkçe mesaj döndürdüğü için ham metin (hangi model,
+/// Dahili AI'ın son ham hatalarını tutar. [FirebaseAiClient.mapError]
+/// kullanıcıya sade ileti döndürdüğü için ham metin (hangi model,
 /// hangi hata) aksi hâlde kayboluyor ve "çalışmıyor" şikâyeti teşhis
 /// edilemiyordu. Ayarlar > AI tanılama bu listeyi gösterir.
 ///
@@ -44,7 +45,11 @@ class AiDiagnostics {
 class FirebaseAiClient {
   FirebaseAiClient({
     Future<void> Function(List<Map<String, dynamic>> contents)? beforeCall,
+    this._onBuiltInOff,
   }) : _beforeCall = beforeCall ?? _noop;
+
+  /// Dahili yolun açık/kapalı olduğu öğrenilince (F42.2, `aiBuiltInOffProvider`).
+  final void Function(bool off)? _onBuiltInOff;
 
   static Future<void> _noop(List<Map<String, dynamic>> _) async {}
 
@@ -155,7 +160,11 @@ class FirebaseAiClient {
     for (var i = 0; i < models.length; i++) {
       for (var attempt = 0; attempt <= _backoff.length; attempt++) {
         try {
-          return await run(models[i]).timeout(timeout ?? _requestTimeout);
+          final result = await run(
+            models[i],
+          ).timeout(timeout ?? _requestTimeout);
+          _onBuiltInOff?.call(false);
+          return result;
         } on Object catch (e) {
           AiDiagnostics.record(models[i], e);
           if (_isTransient(e) && attempt < _backoff.length) {
@@ -167,7 +176,7 @@ class FirebaseAiClient {
               lastSkipped = e;
               break; // sıradaki modeli dene
             }
-            throw _mapError(e);
+            throw _fail(e);
           }
           // İlk sıradaki [prefer] yalnızca bir HIZ tercihidir (ör. otomatik
           // başlıkta hızlı "lite" modeli). O model bu arka uçta yoksa dönen
@@ -179,17 +188,24 @@ class FirebaseAiClient {
             lastSkipped = e;
             break; // sıradaki modeli dene
           }
-          throw _mapError(e);
+          throw _fail(e);
         }
       }
     }
-    throw _mapError(lastSkipped);
+    throw _fail(lastSkipped);
   }
 
-  /// Firebase AI Logic hatalarını kullanıcının anlayacağı Türkçe mesaja
-  /// çevirir. En sık karşılaşılan iki durum: (1) konsolda AI Logic hiç
-  /// etkinleştirilmemiş, (2) App Check zorunlu ama token geçersiz.
-  static GeminiException _mapError(Object? error) {
+  GeminiException _fail(Object? error) {
+    final mapped = mapError(error);
+    if (mapped.kind == GeminiErrorKind.builtInOff) _onBuiltInOff?.call(true);
+    return mapped;
+  }
+
+  /// Firebase AI Logic hatasının TÜRÜ. En sık karşılaşılan iki durum: (1)
+  /// konsolda AI Logic hiç etkinleştirilmemiş, (2) App Check zorunlu ama token
+  /// geçersiz.
+  @visibleForTesting
+  static GeminiException mapError(Object? error) {
     final e = error is FirebaseAIException ? error : null;
     final message = (e?.message ?? error?.toString() ?? '').toLowerCase();
     if (message.contains('app check') ||
@@ -198,41 +214,28 @@ class FirebaseAiClient {
         message.contains('unauthenticated') ||
         message.contains('permission') ||
         message.contains('403')) {
-      return const GeminiException(
-        'Dahili yapay zeka bu sürümde etkinleştirilmemiş. Kendi Gemini '
-        "anahtarını Ayarlar'dan girerek AI özelliklerini hemen "
-        'kullanabilirsin.',
-        isAuthError: true,
-      );
+      return const GeminiException.of(GeminiErrorKind.builtInOff);
     }
     if (message.contains('not enabled') ||
         message.contains('has not been used') ||
         message.contains('disabled') ||
         message.contains('service_disabled')) {
-      return const GeminiException(
-        'Dahili yapay zeka altyapısı henüz hazır değil. Kendi Gemini '
-        "anahtarını Ayarlar'dan girerek AI özelliklerini kullanabilirsin.",
-        isAuthError: true,
-      );
+      return const GeminiException.of(GeminiErrorKind.builtInOff);
     }
     // Projenin Gemini faturası/ön ödemeli kredisi bittiğinde tüm modeller bu
     // hatayı verir (İngilizce "prepayment credits are depleted / billing").
-    // Kullanıcıya ham İngilizce metin yerine kendi anahtarını girme yolunu
-    // gösteririz — dahili AI parası bitmiştir, kendi anahtarı sınırsızdır.
+    // Dahili AI parası bitmiştir, kendi anahtarı sınırsızdır.
     if (message.contains('prepay') ||
         message.contains('billing') ||
         message.contains('credit') ||
         message.contains('depleted') ||
         message.contains('resource_exhausted')) {
-      return const GeminiException(
-        'Dahili yapay zeka şu an kullanılamıyor. Kendi Gemini anahtarını '
-        "Ayarlar'dan girerek AI özelliklerini hemen kullanabilirsin.",
-        isAuthError: true,
-      );
+      return const GeminiException.of(GeminiErrorKind.builtInOff);
     }
-    return GeminiException(
-      'Yapay zekâ şu an yanıt veremiyor: '
-      '${e?.message ?? error?.toString() ?? 'bilinmeyen hata'}',
+    // Ham metin kullanıcıya gitmez: [AiDiagnostics] ve günlükte kalır.
+    return GeminiException.of(
+      GeminiErrorKind.unavailable,
+      detail: e?.message ?? error?.toString(),
     );
   }
 
@@ -252,7 +255,7 @@ class FirebaseAiClient {
       timeout: timeout,
     );
     final text = response.text ?? '';
-    if (text.isEmpty) throw const GeminiException('Modelden boş yanıt döndü');
+    if (text.isEmpty) throw const GeminiException.of(GeminiErrorKind.emptyResponse);
     return text;
   }
 
@@ -279,7 +282,7 @@ class FirebaseAiClient {
       if (calls.isEmpty) {
         final text = response.text ?? '';
         if (text.isEmpty) {
-          throw const GeminiException('Modelden boş yanıt döndü');
+          throw const GeminiException.of(GeminiErrorKind.emptyResponse);
         }
         return text;
       }
@@ -301,7 +304,7 @@ class FirebaseAiClient {
       }
       history.add(Content.functionResponses(results));
     }
-    throw const GeminiException('İşlem tamamlanamadı, tekrar deneyin');
+    throw const GeminiException.of(GeminiErrorKind.notCompleted);
   }
 
   /// GeminiService._assistantTools ile aynı sözleşme, firebase_ai tipleriyle.

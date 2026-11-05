@@ -1,11 +1,14 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
 import 'api_key_store.dart';
-import 'gemini_service.dart' show GeminiException;
+import 'gemini_service.dart' show GeminiErrorKind, GeminiException;
 
 /// Premium durumu: `users/{uid}` dokümanındaki `premiumUntil` alanı
 /// gelecekte bir tarihse kullanıcı premium'dur. Şimdilik alan konsoldan
@@ -35,14 +38,76 @@ final aiUnlimitedProvider = Provider<bool>((ref) {
   return hasKey || premium;
 });
 
-/// Misafir (anonim) hesapta dahili AI KAPALI ve kendi anahtarı da yok: AI
-/// ekranları puan yerine "Google ile gir ya da kendi anahtarını ekle" kartı
-/// gösterir, araçlar soluk (F10.5). Eskiden "30/30" puan görünüyor, her araç
-/// dokununca hata veriyordu ([AiGate.consume] misafiri reddediyor).
-final aiGuestLockedProvider = Provider<bool>((ref) {
-  if (!ref.watch(isAnonymousProvider)) return false;
-  return (ref.watch(activeApiKeyProvider).value ?? '').isEmpty;
+/// Yapay zekâ şu an kullanılabilir mi, değilse neden (TUTARLILIK F42.2).
+enum AiAvailability {
+  ready,
+
+  /// Dahili yol kapalı ya da bitti: kendi anahtarı çözer.
+  needsKey,
+
+  /// Misafir, anahtarsız: dahili AI kapalı ([AiGate.consume] reddeder; F10.5).
+  guest,
+
+  /// Web'de dahili yol kapalı (App Check / konsol).
+  webBuiltInOff,
+
+  /// Puan bitti; yenilenme saati [aiQuotaRenewsAtProvider].
+  quotaOut,
+}
+
+/// TEK KAYNAK: düğmeler bunu izler ([AiStatusCard], [AiIcon]), dokununca
+/// [ensureAiReady] tek açıklama levhasını açar. Eskiden düğmeler hep etkindi,
+/// hata sonradan geliyordu (F5, I2).
+final aiAvailabilityProvider = Provider<AiAvailability>((ref) {
+  if ((ref.watch(activeApiKeyProvider).value ?? '').isNotEmpty) {
+    return AiAvailability.ready;
+  }
+  if (ref.watch(isAnonymousProvider)) return AiAvailability.guest;
+  if (ref.watch(aiBuiltInOffProvider)) {
+    return kIsWeb ? AiAvailability.webBuiltInOff : AiAvailability.needsKey;
+  }
+  ref.watch(premiumProvider);
+  ref.watch(aiQuotaVersionProvider);
+  final gate = ref.watch(aiGateProvider);
+  final renewsAt = gate.renewsAt();
+  // Pencere bilinmiyorsa kilitleme: son sözü sunucu sayacı söyler.
+  if (gate.remainingToday() > 0 || renewsAt == null) {
+    return AiAvailability.ready;
+  }
+  final timer = Timer(renewsAt.difference(DateTime.now()), ref.invalidateSelf);
+  ref.onDispose(timer.cancel);
+  return AiAvailability.quotaOut;
 });
+
+/// Dahili yolun kapalı olduğu öğrenildi mi: yanıt [FirebaseAiClient]dan gelir,
+/// 24 saat hatırlanır (her açılışta ilk dokunuş hatayla öğrenmesin). Levhadaki
+/// "Tekrar dene" siler; başarılı dahili istek de siler.
+final aiBuiltInOffProvider = NotifierProvider<AiBuiltInOffNotifier, bool>(
+  AiBuiltInOffNotifier.new,
+);
+
+class AiBuiltInOffNotifier extends Notifier<bool> {
+  static const _key = 'ai_builtin_off_at';
+
+  @override
+  bool build() {
+    final at = ref.read(sharedPreferencesProvider).getInt(_key);
+    return at != null &&
+        DateTime.now().millisecondsSinceEpoch - at <
+            const Duration(hours: 24).inMilliseconds;
+  }
+
+  void set(bool off) {
+    if (off == state) return;
+    state = off;
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (off) {
+      unawaited(prefs.setInt(_key, DateTime.now().millisecondsSinceEpoch));
+    } else {
+      unawaited(prefs.remove(_key));
+    }
+  }
+}
 
 /// Kota tüketildikçe artan sayaç; Ayarlar'daki "kalan hak" satırını tazeler.
 final aiQuotaVersionProvider = NotifierProvider<AiQuotaVersionNotifier, int>(
@@ -161,14 +226,7 @@ class AiGate {
     // olurdu — üstelik fatura projeye çıkar. Anonim kullanıcı kendi
     // anahtarını girerse (BYOK) bu kapıya hiç uğramaz, orada sınır yok.
     if (_ref.read(isAnonymousProvider)) {
-      throw const GeminiException(
-        'Dahili yapay zeka için Google hesabıyla giriş yapman gerekiyor. '
-        "Yerel hesapla, Ayarlar'dan kendi API anahtarını girerek tüm AI "
-        'özelliklerini kullanabilirsin.',
-        // isAuthError BİLEREK false: çağrı yerleri (ör. editörün _runAi'si)
-        // bu bayrakta kendi genel "anahtar gir" metnini gösteriyor ve buradaki
-        // asıl açıklama kaybolurdu.
-      );
+      throw const GeminiException.of(GeminiErrorKind.guestLocked);
     }
     final premium = _ref.read(premiumProvider).value ?? false;
     final limit = premium
@@ -182,7 +240,12 @@ class AiGate {
     if (uid != null) {
       final remote = await _consumeRemote(uid, cost, limit);
       // Sunucu sayacı okunabildiyse o esastır (cihazlar arası ortak).
-      if (remote == _remoteDenied) _throwOut(premium, limit);
+      if (remote == _remoteDenied) {
+        // Başka cihaz bitirmiş olabilir: durum (F42.2) buradan da öğrensin.
+        await prefs.setInt(_prefsKey(day), limit);
+        _ref.read(aiQuotaVersionProvider.notifier).bump();
+        _throwOut(premium, limit);
+      }
       if (remote != null) used = remote - cost;
     }
     if (used + cost > limit) _throwOut(premium, limit);
@@ -197,14 +260,9 @@ class AiGate {
   /// hesaplamak mümkün değil). Mesaj da buna göre yazıldı.
   static const _quotaWindow = Duration(hours: 24);
 
-  static Never _throwOut(bool premium, int limit) => throw GeminiException(
-    premium
-        ? 'Premium AI puanın ($limit) doldu. 24 saat içinde yenilenir; '
-              "dilersen Ayarlar'dan kendi API anahtarını girerek sınırsız "
-              'kullanabilirsin.'
-        : 'Ücretsiz AI puanın doldu. 24 saat içinde yenilenir; dilersen '
-              "Ayarlar'dan kendi API anahtarını girebilir veya Premium'a "
-              'geçebilirsin.',
+  static Never _throwOut(bool premium, int limit) => throw GeminiException.of(
+    premium ? GeminiErrorKind.quotaPremium : GeminiErrorKind.quotaFree,
+    detail: '$limit',
   );
 
   /// Sunucu sayacını işlemle (transaction) artırır ve YENİ toplamı döndürür.

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/utils/rich_text.dart';
@@ -15,6 +16,35 @@ void main() {
   List<Offset> line(Offset from, Offset to, {int steps = 20}) => [
     for (var i = 0; i <= steps; i++) Offset.lerp(from, to, i / steps)!,
   ];
+
+  group('F42.6 jest güvenliği (K10)', () {
+    bool allowed(InkGesture g, PointerDeviceKind k, {bool all = false}) =>
+        inkGestureAllowed(g, k, fingerAll: all);
+
+    test('parmak yalnız işaretler; silme ve AI kalemde', () {
+      const finger = PointerDeviceKind.touch;
+      const pen = PointerDeviceKind.stylus;
+      expect(allowed(InkGesture.strike, finger), isTrue);
+      expect(allowed(InkGesture.check, finger), isTrue);
+      expect(allowed(InkGesture.scribble, finger), isFalse);
+      expect(allowed(InkGesture.circle, finger), isFalse);
+      expect(allowed(InkGesture.circle, PointerDeviceKind.mouse), isFalse);
+      expect(allowed(InkGesture.scribble, pen), isTrue);
+      expect(allowed(InkGesture.circle, pen), isTrue);
+    });
+
+    test('Ayarlar açarsa parmakta da', () {
+      expect(
+        allowed(InkGesture.scribble, PointerDeviceKind.touch, all: true),
+        isTrue,
+      );
+      expect(
+        allowed(InkGesture.circle, PointerDeviceKind.touch, all: true),
+        isTrue,
+      );
+      expect(allowed(InkGesture.none, PointerDeviceKind.stylus), isFalse);
+    });
+  });
 
   group('classifyInkGesture', () {
     test('yatay çizgi → üstünü çiz', () {

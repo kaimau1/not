@@ -9,6 +9,8 @@ import '../../ai/data/gemini_service.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/study_card.dart';
+import '../../auth/presentation/account_required.dart';
+import '../../../core/friendly_error.dart';
 import 'note_link_ui.dart' show noteLinkLabel;
 
 /// Bugün tekrar edilecek kartlar (F18.19): bütün notlardan, kilitli ve
@@ -151,6 +153,7 @@ Future<void> generateCardsForNote(
   WidgetRef ref,
   Note note,
 ) async {
+  if (!ensureAiReady(context, ref)) return;
   final l10n = context.l10n;
   final messenger = ScaffoldMessenger.of(context);
   messenger.showMessage(l10n.studyCardsGenerating);
@@ -158,7 +161,7 @@ Future<void> generateCardsForNote(
   try {
     made = await ref.read(geminiServiceProvider).generateStudyCards(note);
   } on GeminiException catch (e) {
-    messenger.showMessage(e.message);
+    messenger.showMessage(aiErrorText(l10n, e));
     return;
   } catch (e) {
     messenger.showMessage(l10n.studyCardsFailed);

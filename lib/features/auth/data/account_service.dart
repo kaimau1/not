@@ -188,7 +188,7 @@ class AccountService {
       if (fresh == null || fresh.uid != uid) {
         throw FirebaseAuthException(
           code: 'user-mismatch',
-          message: 'Yeniden giriş farklı bir hesapla yapıldı; silme iptal.',
+          message: 'Reauthentication used a different account; delete cancelled.',
         );
       }
       await fresh.delete();

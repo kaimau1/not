@@ -15,6 +15,7 @@ import '../../notes/domain/note_type.dart';
 import '../data/gmail_api.dart';
 import '../data/gmail_auth.dart';
 import '../domain/gmail_note.dart';
+import '../../auth/presentation/account_required.dart';
 
 /// **GMAIL** (F28.1): gelen kutusu + arama, e-postayı nota kaydet, AI ile
 /// özet / görev listesi. YALNIZ OKUMA — Gmail'de hiçbir şey değişmez.
@@ -285,6 +286,7 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
     final repo = ref.read(notesRepositoryProvider);
     final session = ref.read(gmailSessionProvider);
     if (m == null || repo == null || session == null || _busy) return;
+    if (mode != _SaveMode.plain && !ensureAiReady(context, ref)) return;
     final l10n = context.l10n;
     final router = ref.read(routerProvider);
     final messenger = ScaffoldMessenger.of(context);
@@ -322,7 +324,7 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
       messenger.showSnackBar(SnackBar(content: Text(l10n.gmailNoteCreated)));
       unawaited(router.pushNote(noteRoutePath(id)));
     } on GeminiException catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+      messenger.showSnackBar(SnackBar(content: Text(aiErrorText(l10n, e))));
     } catch (e) {
       ErrorLog.record('gmail-save', e);
       messenger.showSnackBar(SnackBar(content: Text(friendlyError(l10n, e))));
@@ -433,7 +435,7 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
                           ),
                           OutlinedButton.icon(
                             onPressed: () => _save(_SaveMode.summary),
-                            icon: const Icon(Icons.auto_awesome),
+                            icon: const AiIcon(),
                             label: Text(l10n.gmailAiSummary),
                           ),
                           OutlinedButton.icon(

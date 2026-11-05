@@ -20,6 +20,7 @@ import 'listening_visuals.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/friendly_error.dart';
 import '../../../core/a11y/chip_roles.dart';
+import '../../../core/app_icons.dart';
 
 /// Sesli yakalama levhası — ana ekran ve not editörünün ORTAK bileşeni.
 ///
@@ -449,7 +450,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       }
       _toReview(clean.trim(), l10n.voiceNothingHeard);
     } on GeminiException catch (e) {
-      _toAudioFallback(path, e.isAuthError ? l10n.aiNoApiKey : e.message);
+      _toAudioFallback(path, aiErrorText(l10n, e));
     } catch (e) {
       _toAudioFallback(path, e.toString());
     }
@@ -601,7 +602,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
               onTap: () => Navigator.pop(sheetContext, 'save'),
             ),
             ListTile(
-              leading: const Icon(Icons.mic_none),
+              leading: const Icon(AppIcons.dictation),
               title: Text(l10n.voiceCloseKeepTalking),
               onTap: () => Navigator.pop(sheetContext, 'stay'),
             ),
@@ -1014,7 +1015,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.mic_none, size: 16, color: scheme.primary),
+                      Icon(AppIcons.voiceRecord, size: 16, color: scheme.primary),
                       const SizedBox(width: 6),
                       Text(
                         '${context.l10n.recordAudio} · ${_format(_elapsed)}',
@@ -1249,7 +1250,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                 ),
                 child: Tooltip(
                   message: l10n.voiceCaptureContinue,
-                  child: const Icon(Icons.mic_none),
+                  child: const Icon(AppIcons.dictation),
                 ),
               ),
             ),

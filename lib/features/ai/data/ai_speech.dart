@@ -282,7 +282,7 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
     void Function(int done, int total)? onProgress,
   }) async {
     final chunks = chunk(text);
-    if (chunks.isEmpty) throw const GeminiException('Seslendirilecek metin yok');
+    if (chunks.isEmpty) throw const GeminiException.of(GeminiErrorKind.noSpeechText);
     final parts = <Uint8List>[];
     for (var i = 0; i < chunks.length; i++) {
       parts.add(await _synthesize(chunks[i]));
@@ -290,7 +290,7 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
     }
     final merged = concatWav(parts);
     if (merged.isEmpty) {
-      throw const GeminiException('Seslendirme modeli ses döndürmedi');
+      throw const GeminiException.of(GeminiErrorKind.speechFailed);
     }
     // Geçici klasör: dosya paylaşıldıktan sonra sistemin temizlemesi
     // beklenir; kalıcı klasörde tutmak kullanıcının depolamasını sessizce

@@ -20,6 +20,7 @@ import '../../data/note_pdf.dart';
 import '../../domain/attachment.dart';
 import '../../domain/transcript.dart';
 import '../../../../core/friendly_error.dart';
+import '../../../auth/presentation/account_required.dart';
 
 /// Transkripti kaydeder (yoksa oluşturur, varsa içeriğini değiştirir) ve
 /// nottaki güncel eki döndürür; kaydedilemiyorsa (salt okunur not) null.
@@ -139,6 +140,7 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
       : Transcripts.stripTimestamps(text);
 
   Future<void> _run({bool preferAi = false}) async {
+    if (preferAi && !ensureAiReady(context, ref)) return;
     final source = widget.source;
     if (source == null || _busy) return;
     final l10n = context.l10n;
@@ -186,7 +188,7 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
     } on AttachmentMissingException {
       _fail(l10n.attachmentNotSynced);
     } on GeminiException catch (e) {
-      _fail(e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message));
+      _fail(aiErrorText(l10n, e));
     } catch (e) {
       _fail(aiErrorText(l10n, e));
     }
@@ -482,7 +484,7 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
                   if (isImage && _onDevice)
                     FilledButton.icon(
                       onPressed: () => _run(preferAi: true),
-                      icon: const Icon(Icons.auto_awesome_outlined),
+                      icon: const AiIcon(),
                       label: Text(l10n.transcriptReadWithAi),
                     ),
                 ],
@@ -585,7 +587,7 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
   }
 
   static IconData _sourceIcon(Attachment? source) => switch (source?.kind) {
-    AttachmentKind.audio => Icons.graphic_eq,
+    AttachmentKind.audio => AppIcons.voiceRecord,
     AttachmentKind.video => Icons.videocam_outlined,
     AttachmentKind.image => Icons.image_outlined,
     _ => Icons.subject,

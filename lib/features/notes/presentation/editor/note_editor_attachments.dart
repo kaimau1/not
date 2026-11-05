@@ -816,7 +816,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
   Future<void> _recordAudio() async {
     if (_voiceRecorder != null) return;
     // Tek mikrofon: dikte açıksa önce kapanır (son açan alır — bkz. HAFIZA).
-    if (_dictating) await _stopDictation();
+    if (_dictating) await _stopDictation(offerFix: false);
     if (!mounted) return;
     final recorder = VoiceNoteRecorder()
       ..onLimit = () => unawaited(_finishVoiceRecording());

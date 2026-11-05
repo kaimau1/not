@@ -7,6 +7,7 @@ import 'package:flutter/scheduler.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/a11y/min_tap_target.dart';
+import '../../../core/app_icons.dart';
 
 /// Dinlemenin KİPİ: sesli yakalama (yapay zekâ levhası) ya da doğrudan
 /// yazdırma (editördeki canlı dikte).
@@ -99,7 +100,7 @@ class _ListeningBadgeState extends State<ListeningBadge>
         alignment: Alignment.center,
         children: [
           Icon(
-            Icons.mic,
+            AppIcons.dictation,
             size: size * 0.5,
             color: widget.active ? scheme.onPrimary : scheme.onSurfaceVariant,
           ),
@@ -568,7 +569,7 @@ class ListeningActionButton extends StatelessWidget {
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
         icon: Icon(
-          icon ?? (listening ? Icons.stop_rounded : Icons.mic),
+          icon ?? (listening ? Icons.stop_rounded : AppIcons.dictation),
           size: 20,
         ),
         label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),

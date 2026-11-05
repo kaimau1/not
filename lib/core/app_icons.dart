@@ -51,4 +51,42 @@ abstract final class AppIcons {
 
   /// Renk seçimi (zemin rengi, sayfa rengi, özel renk, renge göre sırala).
   static const color = Icons.format_color_fill;
+
+  // SES KAPILARI (TUTARLILIK F42.1, K7): her kapı aynı ad + aynı simge.
+
+  /// Dikte: konuştukça yazar, AI'sız. Ana ekran mikrofonu bu (rozetsiz).
+  static const dictation = Icons.mic;
+
+  /// AI sesli not: ✨ mikrofon. Bileşik simge, [glyph] ile çizilir.
+  static const aiVoiceNote = Icons.mic_none_rounded;
+
+  /// Ses kaydı ve ses eki: dalga.
+  static const voiceRecord = Icons.graphic_eq;
+
+  /// Sesli dinle (notu, belgeyi okutma): kulaklık.
+  static const listen = Icons.headphones_outlined;
+
+  /// Sesli komut (sohbette konuşarak sor).
+  static const voiceCommand = Icons.settings_voice_outlined;
+
+  /// `IconData` alan satırların tek çizimi: [aiVoiceNote] köşesinde ✨ taşır,
+  /// gerisi düz [Icon]. Satır API'leri bu yüzden `IconData` kalabildi.
+  static Widget glyph(IconData icon, {double? size, Color? color}) {
+    if (icon != aiVoiceNote) return Icon(icon, size: size, color: color);
+    final side = size ?? 24;
+    return SizedBox.square(
+      dimension: side,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Icon(dictation, size: side, color: color),
+          Positioned(
+            top: -side * 0.12,
+            right: -side * 0.2,
+            child: Icon(Icons.auto_awesome, size: side * 0.5, color: color),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -15,6 +15,7 @@ import '../../domain/page_notes.dart';
 import '../viewers/text_recognize_screen.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/friendly_error.dart';
+import '../../../auth/presentation/account_required.dart';
 
 /// **Not içinde arama** — gövde, maddeler, sayfa notları VE eklerin içi.
 ///
@@ -203,6 +204,7 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
 
   /// Aranan şeyi NOTUN KENDİSİNE sorar (kota harcar).
   Future<void> _askAi() async {
+    if (!ensureAiReady(context, ref)) return;
     final query = _query;
     if (query.isEmpty || _asking) return;
     setState(() {
@@ -221,7 +223,7 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
     } on GeminiException catch (e) {
       if (!mounted) return;
       setState(() {
-        _aiAnswer = e.message;
+        _aiAnswer = aiErrorText(context.l10n, e);
         _asking = false;
       });
     } catch (e) {
@@ -356,7 +358,7 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.auto_awesome, size: 18),
+                          : const AiIcon(size: 18),
                       label: Text(l10n.noteSearchAskAi),
                     ),
                     if (_aiAnswer != null)

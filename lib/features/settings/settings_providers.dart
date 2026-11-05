@@ -541,6 +541,13 @@ final expandListItemsProvider = boolPref('expand_list_items', defaultValue: true
 /// çizmek — üstünü çiz/✓ işaretle, karala sil, daire yazım düzelt.
 final itemGesturesProvider = boolPref('item_gestures', defaultValue: true);
 
+/// Karalama (siler) ve daire (AI ile düzeltir) parmakta da çalışsın mı (K10,
+/// F42.6): varsayılan KAPALI, kaydırırken kazara çalışmasın.
+final itemGesturesFingerAllProvider = boolPref(
+  'item_gestures_finger_all',
+  defaultValue: false,
+);
+
 /// Ana ekranın üstündeki tek satırlık "Yeni not..." hızlı yakalama alanı
 /// görünsün mü? Varsayılan GİZLİ (kullanıcı isteği 2026-08-06): satır dikey
 /// yer kaplıyor ve "+" menüsü aynı işi görüyor; isteyen Ayarlar'dan açar.

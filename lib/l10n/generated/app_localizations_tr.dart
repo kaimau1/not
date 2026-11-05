@@ -247,7 +247,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get aiSummaryTitle => 'AI Özeti';
+  String get aiSummaryTitle => 'AI özeti';
 
   @override
   String get aiThinking => 'Düşünüyor...';
@@ -292,7 +292,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get geminiApiKeyInfo =>
-      'Anahtar girmek isteğe bağlıdır: girmezsen AI istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile daha yüksek günlük hak). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.';
+      'Anahtar girmek isteğe bağlıdır: girmezsen yapay zekâ istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile daha yüksek günlük hak). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.';
 
   @override
   String aiBuiltInPremium(int count) {
@@ -753,7 +753,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get aiSkipCheckedInfo =>
-      'Checklist notunu AI ile düzeltir/çevirirken tamamlanmış (işaretli) maddeler değiştirilmeden korunur; yalnız işaretsiz maddeler düzenlenir.';
+      'Liste notunu yapay zekâyla düzeltir ya da çevirirken tamamlanmış (işaretli) maddeler değiştirilmeden korunur; yalnız işaretsiz maddeler düzenlenir.';
 
   @override
   String get noteUpdatedUndo => 'Not güncellendi';
@@ -995,7 +995,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String videoTooBigForAi(int mb) {
-    return 'Video AI\'ya göndermek için çok büyük ($mb MB). Daha kısa çek.';
+    return 'Video yapay zekâya göndermek için çok büyük ($mb MB). Daha kısa çek.';
   }
 
   @override
@@ -2070,7 +2070,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get discoverLockBody =>
-      'Bir notu parmak izi/yüz kilidiyle kilitleyebilirsin: içeriği aramaya, widget\'a ve AI\'a hiç sızmaz.';
+      'Bir notu parmak izi/yüz kilidiyle kilitleyebilirsin: içeriği aramaya, widget\'a ve yapay zekâya hiç sızmaz.';
 
   @override
   String get discoverHiddenBody =>
@@ -5365,7 +5365,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get versionHistoryInfo =>
-      'Notun metni açıldığında, uzun düzenlemede yarım saatte bir ve AI değiştirmeden önce saklanır. Ekler sürümlenmez.';
+      'Notun metni açıldığında, uzun düzenlemede yarım saatte bir ve yapay zekâ değiştirmeden önce saklanır. Ekler sürümlenmez.';
 
   @override
   String get versionHistoryEmpty =>
@@ -5518,7 +5518,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get trashAiInfo =>
-      'Cihazdaki kurallar hazır. AI analizi notların kısa dökümünü modele gönderir; kilitli notlar gönderilmez.';
+      'Cihazdaki kurallar hazır. Yapay zekâ analizi notların kısa dökümünü modele gönderir; kilitli notlar gönderilmez.';
 
   @override
   String get trashAiNothing =>
@@ -6120,7 +6120,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get itemGesturesSettingInfo =>
-      'Maddenin üstüne parmakla ya da kalemle çiz: üstünü çiz / ✓ işaretler, karalamak siler, daire yazımı düzeltir';
+      'Maddenin üstüne çiz: üstünü çiz ya da ✓ işaretler. Kalemle karalamak siler, daire yazımı düzeltir.';
 
   @override
   String get pdfEditWorking => 'PDF işleniyor…';
@@ -6302,7 +6302,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tipListGestures =>
-      'İpucu: maddenin üstünü parmakla çiz → işaretlenir; karala → silinir.';
+      'İpucu: maddenin üstünü parmakla çiz → işaretlenir.';
 
   @override
   String get tipPdfBubble => 'İpucu: sayfaya basılı tut → oraya balon bırak.';
@@ -6623,4 +6623,124 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gmailNoteCreated => 'Not oluşturuldu';
+
+  @override
+  String get aiErrInvalidKey =>
+      'API anahtarı geçersiz. Ayarlar → Yapay zekâ\'dan denetle.';
+
+  @override
+  String get aiErrModelNotFound =>
+      'Yapay zekâ modeli bulunamadı. Uygulamanın güncel sürümünü kur; sorun sürerse geliştiriciye bildir.';
+
+  @override
+  String get aiErrRateLimited =>
+      'Çok fazla istek gitti; biraz sonra yeniden dene.';
+
+  @override
+  String get aiErrConnection =>
+      'Yapay zekâya bağlanılamadı. Bağlantını denetleyip yeniden dene.';
+
+  @override
+  String get aiErrEmptyResponse => 'Model boş yanıt döndü; yeniden dene.';
+
+  @override
+  String get aiErrUnexpected =>
+      'Modelden beklenmeyen bir yanıt geldi; yeniden dene.';
+
+  @override
+  String get aiErrNotCompleted => 'İşlem tamamlanamadı; yeniden dene.';
+
+  @override
+  String get aiErrBuiltInOff =>
+      'Dahili yapay zekâ şu an kullanılamıyor. Kendi Gemini anahtarını Ayarlar\'dan girersen hemen kullanabilirsin.';
+
+  @override
+  String get aiErrQuotaFree =>
+      'Ücretsiz yapay zekâ puanın doldu. 24 saat içinde yenilenir; dilersen Ayarlar\'dan kendi anahtarını girebilir ya da Premium\'a geçebilirsin.';
+
+  @override
+  String aiErrQuotaPremium(Object limit) {
+    return 'Premium yapay zekâ puanın ($limit) doldu. 24 saat içinde yenilenir; dilersen Ayarlar\'dan kendi anahtarını girerek sınırsız kullanabilirsin.';
+  }
+
+  @override
+  String get aiErrUnavailable =>
+      'Yapay zekâ şu an yanıt veremiyor; biraz sonra yeniden dene.';
+
+  @override
+  String aiErrModelList(Object provider) {
+    return '$provider model listesi alınamadı. Ayarlar → Yapay zekâ → Model\'den modeli elle seçebilirsin.';
+  }
+
+  @override
+  String aiErrNeedsGemini(Object feature) {
+    return '$feature şu an yalnız Google Gemini ile çalışıyor. Ayarlar → Yapay zekâ\'dan sağlayıcıyı Gemini yapabilir ya da anahtarı kaldırıp dahili yapay zekâyı kullanabilirsin.';
+  }
+
+  @override
+  String aiErrKindNeedsGemini(Object kind, Object provider) {
+    return '$kind $provider ile gönderilemiyor. Ayarlar → Yapay zekâ\'dan sağlayıcıyı Gemini yapabilir ya da anahtarı kaldırıp dahili yapay zekâyı kullanabilirsin.';
+  }
+
+  @override
+  String get aiErrFeatureTts => 'Yapay zekâ seslendirmesi';
+
+  @override
+  String get aiErrFeatureSemantic => 'Anlamsal arama';
+
+  @override
+  String get aiErrKindAudio => 'Ses dosyası';
+
+  @override
+  String get aiErrKindVideo => 'Video';
+
+  @override
+  String get aiErrKindFile => 'Bu dosya türü';
+
+  @override
+  String get aiErrUpload => 'Kayıt yüklenemedi; yeniden dene.';
+
+  @override
+  String get aiErrSpeech => 'Seslendirme modeli ses döndürmedi; yeniden dene.';
+
+  @override
+  String get aiErrNoSpeechText => 'Seslendirilecek metin yok.';
+
+  @override
+  String get aiErrNoContent => 'Sesli not için içerik yok.';
+
+  @override
+  String get aiStatusBuiltInOffTitle => 'Dahili yapay zekâ şu an kapalı';
+
+  @override
+  String get aiStatusWebOffTitle => 'Web\'de dahili yapay zekâ kapalı';
+
+  @override
+  String get aiStatusWebOffBody =>
+      'Telefondaki uygulamada çalışır. Burada kendi Gemini anahtarınla bütün araçları kullanabilirsin.';
+
+  @override
+  String get aiStatusQuotaTitle => 'Yapay zekâ puanın doldu';
+
+  @override
+  String aiStatusQuotaBody(Object time) {
+    return 'Puanların $time civarında yenilenir. Kendi Gemini anahtarınla beklemeden kullanabilirsin.';
+  }
+
+  @override
+  String get dictationFixOffer => 'Dikte bitti';
+
+  @override
+  String get dictationFixAction => 'AI ile düzelt';
+
+  @override
+  String get tipHomeMicHold =>
+      'İpucu: mikrofona basılı tutarsan AI sesli not açılır.';
+
+  @override
+  String get itemGesturesFingerAll => 'Sil ve düzelt jestleri parmakla da';
+
+  @override
+  String get itemGesturesFingerAllInfo =>
+      'Kapalıyken parmak yalnız işaretler; karalama (siler) ve daire (yazımı düzeltir) kalemle çalışır.';
 }

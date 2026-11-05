@@ -6,10 +6,11 @@ import 'package:flutter/services.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'error_log.dart';
 
-/// İletisi uygulamanın kendi yazdığı, kullanıcıya olduğu gibi gösterilebilen
-/// istisna (ör. `GeminiException`: "Kota aşıldı, sonra tekrar deneyin").
+/// İletisini uygulamanın kendisi veren istisna (ör. `GeminiException`): metin
+/// arayüz dilinde [localized]dan gelir.
 abstract interface class UserFacingException implements Exception {
-  String get message;
+  String? get message;
+  String localized(AppLocalizations l10n);
 }
 
 /// Kullanıcıya gösterilen hatanın türü (bkz. [friendlyError]).
@@ -98,20 +99,12 @@ ErrorKind classifyError(Object error) {
 /// girer. Ham metin kaybolmaz: [ErrorLog]a yazılır (Ayarlar → Hakkında →
 /// "Hata günlüğünü paylaş").
 ///
-/// Uygulamanın kendi ürettiği, zaten okunur iletiler ([UserFacingException]
-/// — ör. `GeminiException`) türü bilinmiyorsa olduğu gibi gösterilir.
+/// Uygulamanın kendi iletileri ([UserFacingException]) kendi metniyle.
 String friendlyError(AppLocalizations l10n, Object error) {
   ErrorLog.record('ui', error);
-  final text = switch (classifyError(error)) {
-    ErrorKind.offline => l10n.errorOffline,
-    ErrorKind.timeout => l10n.errorTimeout,
-    ErrorKind.quota => l10n.errorQuota,
-    ErrorKind.permission => l10n.errorPermission,
-    ErrorKind.tooLarge => l10n.errorTooLarge,
-    ErrorKind.unsupported => l10n.errorUnsupported,
-    ErrorKind.unknown =>
-      error is UserFacingException ? error.message : l10n.errorUnknown,
-  };
+  final text = error is UserFacingException
+      ? error.localized(l10n)
+      : _kindText(l10n, error);
   _last = (
     text: text,
     raw: '$error',
@@ -120,6 +113,17 @@ String friendlyError(AppLocalizations l10n, Object error) {
   );
   return text;
 }
+
+String _kindText(AppLocalizations l10n, Object error) =>
+    switch (classifyError(error)) {
+    ErrorKind.offline => l10n.errorOffline,
+    ErrorKind.timeout => l10n.errorTimeout,
+    ErrorKind.quota => l10n.errorQuota,
+    ErrorKind.permission => l10n.errorPermission,
+    ErrorKind.tooLarge => l10n.errorTooLarge,
+    ErrorKind.unsupported => l10n.errorUnsupported,
+    ErrorKind.unknown => l10n.errorUnknown,
+  };
 
 /// YAPAY ZEKÂ HATASININ TEK METNİ (TUTARLILIK F36.5, kullanıcı ekran
 /// görüntüsü 2026-11-04: "Yapay zekâ isteği başarısız: Dahili yapay zeka bu
@@ -131,7 +135,7 @@ String friendlyError(AppLocalizations l10n, Object error) {
 String aiErrorText(AppLocalizations l10n, Object error) {
   if (error is UserFacingException) {
     ErrorLog.record('ai', error);
-    return error.message;
+    return error.localized(l10n);
   }
   return l10n.aiError(friendlyError(l10n, error));
 }

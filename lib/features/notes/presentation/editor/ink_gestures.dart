@@ -10,6 +10,7 @@
 library;
 
 import 'dart:math' as math;
+import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderEditable;
@@ -72,6 +73,22 @@ double _pathLength(List<Offset> points) {
 
 /// Bir çizgiyi jest olarak sınıflar. Sıra önemli: karalama da kapanabilir
 /// (önce o), halka ✓'ten, ✓ düz çizgiden önce bakılır.
+/// Bu jest bu aygıtla çalışır mı (K10, F42.6)? İşaretlemek her aygıtta; silen
+/// ve AI harcayan iki jest yalnız kalemde, parmakta [fingerAll] ile. Fare de
+/// parmak sayılır (metin seçerken sürükler).
+bool inkGestureAllowed(
+  InkGesture gesture,
+  PointerDeviceKind kind, {
+  required bool fingerAll,
+}) => switch (gesture) {
+  InkGesture.strike || InkGesture.check => true,
+  InkGesture.none => false,
+  InkGesture.scribble || InkGesture.circle =>
+    fingerAll ||
+        kind == PointerDeviceKind.stylus ||
+        kind == PointerDeviceKind.invertedStylus,
+};
+
 InkGesture classifyInkGesture(List<Offset> points) {
   if (points.length < 4) return InkGesture.none;
   final box = inkBounds(points);

@@ -11,6 +11,7 @@ import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/trash_analysis.dart';
 import '../../../core/friendly_error.dart';
+import '../../auth/presentation/account_required.dart';
 import 'trash_screen.dart' show trashDaysLeft;
 
 /// Çöp kutusunun AKILLI ANALİZ levhası (kullanıcı isteği 2026-10-20: "çöp
@@ -71,6 +72,7 @@ class _TrashAnalysisSheetState extends ConsumerState<_TrashAnalysisSheet> {
   }
 
   Future<void> _runAi() async {
+    if (!ensureAiReady(context, ref)) return;
     final l10n = context.l10n;
     final (:digest, :ids) = trashDigest(widget.initial);
     if (ids.isEmpty) {
@@ -104,9 +106,7 @@ class _TrashAnalysisSheetState extends ConsumerState<_TrashAnalysisSheet> {
     } on GeminiException catch (e) {
       if (mounted) {
         setState(
-          () => _aiError = e.isAuthError
-              ? l10n.aiNoApiKey
-              : l10n.aiError(e.message),
+          () => _aiError = aiErrorText(l10n, e),
         );
       }
     } catch (e) {
@@ -287,7 +287,7 @@ class _TrashAnalysisSheetState extends ConsumerState<_TrashAnalysisSheet> {
                       dimension: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.auto_awesome),
+                  : const AiIcon(),
               label: Text(_aiLoading ? l10n.trashAiRunning : l10n.trashAiRun),
             ),
           if (_aiError != null)

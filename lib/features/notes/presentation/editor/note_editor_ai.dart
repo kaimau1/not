@@ -20,16 +20,14 @@ extension _EditorAi on _NoteEditorScreenState {
   /// hataları tek biçimde bildirir. Yeni bir AI özelliği eklenirken
   /// göstergeyi ayrıca düşünmek gerekmesin diye burada toplandı.
   Future<void> _runAi(String label, Future<void> Function() body) async {
-    if (_aiTask != null) return;
+    if (_aiTask != null || !ensureAiReady(context, ref)) return;
     _aiTaskN.value = label;
     try {
       await body();
     } on GeminiException catch (e) {
       if (mounted) {
         _showSnack(
-          e.isAuthError
-              ? context.l10n.aiNoApiKey
-              : context.l10n.aiError(e.message),
+          aiErrorText(context.l10n, e),
         );
       }
     } catch (e) {
@@ -79,6 +77,7 @@ extension _EditorAi on _NoteEditorScreenState {
   /// başlık alanına yazar (etiket önerisi gibi bağımsız, isteğe bağlı buton;
   /// eski "kapanırken otomatik başlık" genel ayarının yerini aldı).
   Future<void> _suggestTitle() async {
+    if (!ensureAiReady(context, ref)) return;
     final note = _note;
     if (note == null || note.isEmpty || _titleGeneratingN.value) return;
     final l10n = context.l10n;
@@ -91,7 +90,7 @@ extension _EditorAi on _NoteEditorScreenState {
       _mutate((n) => n.copyWith(title: title), immediate: true);
     } on GeminiException catch (e) {
       messenger.showMessage(
-        e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
+        aiErrorText(l10n, e),
       );
     } finally {
       if (mounted) _titleGeneratingN.value = false;
@@ -114,7 +113,7 @@ extension _EditorAi on _NoteEditorScreenState {
       } on GeminiException catch (e) {
         failed = true;
         messenger.showMessage(
-          e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
+          aiErrorText(l10n, e),
         );
       }
     });

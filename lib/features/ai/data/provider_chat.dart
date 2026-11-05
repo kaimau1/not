@@ -11,15 +11,19 @@ library;
 import 'dart:convert';
 
 import 'ai_provider.dart';
+import 'gemini_service.dart' show GeminiErrorKind;
 
 /// Sağlayıcının bu içerik türünü kabul etmediği durumlarda atılır — çağıran
 /// bunu kullanıcının anlayacağı bir mesaja çevirir.
 class UnsupportedContentException implements Exception {
-  const UnsupportedContentException(this.message);
-  final String message;
+  const UnsupportedContentException(this.kind, this.provider);
+
+  /// Hangi içerik (ses / video / diğer dosya); metin arayüzde (F42.3).
+  final GeminiErrorKind kind;
+  final String provider;
 
   @override
-  String toString() => message;
+  String toString() => 'UnsupportedContentException($kind, $provider)';
 }
 
 /// Sohbet uç noktasının [AiProvider.baseUrl]'e eklenecek yolu.
@@ -132,7 +136,7 @@ Map<String, dynamic> _openAiPart(AiProvider provider, Map<String, dynamic> part)
       },
     };
   }
-  throw UnsupportedContentException(_unsupported(provider, inline.mime));
+  throw _unsupported(provider, inline.mime);
 }
 
 Map<String, dynamic> _anthropicPart(
@@ -163,22 +167,21 @@ Map<String, dynamic> _anthropicPart(
       },
     };
   }
-  throw UnsupportedContentException(_unsupported(provider, inline.mime));
+  throw _unsupported(provider, inline.mime);
 }
 
 /// Ses ve video yalnızca Gemini'ye doğrudan gönderilebiliyor. Sessizce
 /// atlamak yerine açıkça söylenir: kullanıcı "sesi neden okumadı" diye
 /// aramasın, ne yapması gerektiğini görsün.
-String _unsupported(AiProvider provider, String mime) {
-  final kind = mime.startsWith('audio/')
-      ? 'Ses'
-      : mime.startsWith('video/')
-      ? 'Video'
-      : 'Bu dosya türü ($mime)';
-  return '$kind dosyaları ${provider.label} ile gönderilemiyor. '
-      "Ayarlar'dan sağlayıcıyı Google Gemini'ye çevirebilir ya da anahtarı "
-      'kaldırıp dahili AI\'ı kullanabilirsin.';
-}
+UnsupportedContentException _unsupported(AiProvider provider, String mime) =>
+    UnsupportedContentException(
+      mime.startsWith('audio/')
+          ? GeminiErrorKind.audioNeedsGemini
+          : mime.startsWith('video/')
+          ? GeminiErrorKind.videoNeedsGemini
+          : GeminiErrorKind.fileNeedsGemini,
+      provider.label,
+    );
 
 /// Sağlayıcının yanıt gövdesinden düz metni çıkarır. Metin yoksa null döner
 /// (çağıran "boş yanıt" hatası üretir).

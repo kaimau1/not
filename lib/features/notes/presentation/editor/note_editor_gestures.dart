@@ -2,7 +2,8 @@ part of 'note_editor_screen.dart';
 
 /// Jestler (kullanıcı isteği 2026-10-30): maddelerin üstüne çizilen jestler
 /// KİPSİZ çalışır (ikinci tur: "jestler direkt çalışmalı, aktif edilmeden;
-/// ayarlardan opsiyonel" — [itemGesturesProvider]); yalnız "Buraya bağla"da
+/// ayarlardan opsiyonel" — [itemGesturesProvider]; K10 parmağı üstünü çiz / ✓
+/// ile sınırlar, [inkGestureAllowed]); yalnız "Buraya bağla"da
 /// daire içine alarak seçim bir örtü kipidir. Tanıma ve örtü
 /// `ink_gestures.dart`ta; burada jestin NOTA etkisi.
 enum _GestureMode { off, embedLasso }
@@ -98,11 +99,11 @@ extension _EditorGestures on _NoteEditorScreenState {
             ),
           );
       case InkGesture.circle:
-        // Yapay zekâ bu oturumda kullanılamıyorsa (bir kez söylendi) ya da
-        // misafirde kapalıysa jest sessiz kalır — her kazara dairede hata
+        // Yapay zekâ bu oturumda kullanılamıyorsa (bir kez söylendi) jest
+        // sessiz kalır — her kazara dairede hata
         // bildirimi çıkmasın (kullanıcı ekran görüntüsü 2026-11-04, web).
         if (_NoteEditorScreenState._aiGestureUnavailable) return;
-        if (ref.read(aiGuestLockedProvider)) {
+        if (ref.read(aiAvailabilityProvider) != AiAvailability.ready) {
           _NoteEditorScreenState._aiGestureUnavailable = true;
           _showSnack(l10n.gestureFixNeedsAi);
           return;
@@ -236,6 +237,13 @@ extension _EditorGestures on _NoteEditorScreenState {
         selection.isValid &&
         !selection.isCollapsed &&
         selection != _gestureSelectionStart) {
+      return;
+    }
+    if (!inkGestureAllowed(
+      gesture,
+      event.kind,
+      fingerAll: ref.read(itemGesturesFingerAllProvider),
+    )) {
       return;
     }
     // Kalemin sürüklemesi alanda imleç açmış olabilir: jestten sonra bırak.

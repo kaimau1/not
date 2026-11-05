@@ -35,6 +35,26 @@ class _ItemGesturesSwitch extends ConsumerWidget {
   }
 }
 
+/// Karalama ve daire parmakla da (K10, bkz. [itemGesturesFingerAllProvider]).
+class _ItemGesturesFingerSwitch extends ConsumerWidget {
+  const _ItemGesturesFingerSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      key: const ValueKey('item-gestures-finger-switch'),
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.itemGesturesFingerAll),
+      subtitle: Text(l10n.itemGesturesFingerAllInfo),
+      value: ref.watch(itemGesturesFingerAllProvider),
+      onChanged: ref.watch(itemGesturesProvider)
+          ? (value) => ref.read(itemGesturesFingerAllProvider.notifier).set(value)
+          : null,
+    );
+  }
+}
+
 /// **EK İÇERİĞİNDE ARAMA** (kullanıcı isteği 2026-09-04: "anlamsal arama
 /// görsel ve pdf'leri de arayabilir, seçenek olarak sunmalıyız").
 ///

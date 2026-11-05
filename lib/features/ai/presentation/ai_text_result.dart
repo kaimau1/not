@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
-import '../data/gemini_service.dart';
 import '../../../core/friendly_error.dart';
 
 /// Düz metin döndüren AI çıktılarının (brifing, öneriler, haftalık özet)
@@ -52,9 +51,7 @@ class AiTextResult extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                e is GeminiException && e.isAuthError
-                    ? l10n.aiNoApiKey
-                    : aiErrorText(l10n, e),
+                aiErrorText(l10n, e),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),

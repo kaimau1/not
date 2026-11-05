@@ -9,6 +9,8 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../../../core/widgets/app_sheet.dart';
+import '../../../auth/presentation/account_required.dart';
+import '../../../../core/friendly_error.dart';
 
 /// Seçilen alan yakalandıktan sonra çıkan levha: **panoya kopyala** ya da
 /// **yapay zekâya sor** (kullanıcı seçimi).
@@ -123,6 +125,7 @@ class _AreaAskScreenState extends ConsumerState<AreaAskScreen> {
   }
 
   Future<void> _ask() async {
+    if (!ensureAiReady(context, ref)) return;
     setState(() {
       _loading = true;
       _answer = null;
@@ -137,7 +140,7 @@ class _AreaAskScreenState extends ConsumerState<AreaAskScreen> {
       );
       if (mounted) setState(() => _answer = text.trim());
     } on GeminiException catch (e) {
-      if (mounted) setState(() => _error = e.message);
+      if (mounted) setState(() => _error = aiErrorText(context.l10n, e));
     } catch (e) {
       if (mounted) setState(() => _error = '$e');
     } finally {
@@ -178,7 +181,7 @@ class _AreaAskScreenState extends ConsumerState<AreaAskScreen> {
           const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: _loading ? null : _ask,
-            icon: const Icon(Icons.auto_awesome),
+            icon: const AiIcon(),
             label: Text(l10n.areaAskRun),
           ),
           const SizedBox(height: 16),

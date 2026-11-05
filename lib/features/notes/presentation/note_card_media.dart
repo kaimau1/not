@@ -22,6 +22,7 @@ import 'drive_ui.dart';
 import 'viewers/ink_layer.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
+import '../../../core/app_icons.dart';
 
 /// **KARTIN MEDYA PLANI** — ana ekran kartında hangi ekin nasıl görüneceği.
 ///
@@ -323,7 +324,7 @@ class CardMediaBody extends StatelessWidget {
     if (plan.audioCount > 0) {
       children.add(
         _FileRow(
-          icon: Icons.graphic_eq,
+          icon: AppIcons.voiceRecord,
           color: scheme.primary,
           label: l10n.cardAudioCount(plan.audioCount),
           style: labelStyle,

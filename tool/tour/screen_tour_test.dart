@@ -223,6 +223,7 @@ Future<void> _pumpApp(
       TipOnce.gridSwipe,
       TipOnce.stylusCanvas,
       TipOnce.semanticSearch,
+      TipOnce.homeMicHold,
     ],
   });
   final sp = await SharedPreferences.getInstance();

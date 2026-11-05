@@ -50,6 +50,35 @@ void main() {
       );
     });
 
+    test('F42.1 ses kapıları sözlükten (K7)', () {
+      expect(
+        offenders(
+          RegExp(
+            r'Icons\.(mic|mic_none|mic_outlined|mic_rounded|mic_none_rounded|'
+            r'graphic_eq|graphic_eq_rounded|headphones|headphones_outlined|'
+            r'settings_voice_outlined)\b',
+          ),
+          allow: {'lib/core/app_icons.dart'},
+        ),
+        isEmpty,
+      );
+    });
+
+    test('F42.1 AI sesli not bileşik simge, gerisi düz', () {
+      expect(AppIcons.glyph(AppIcons.listen), isA<Icon>());
+      expect(AppIcons.glyph(AppIcons.aiVoiceNote), isNot(isA<Icon>()));
+      expect(
+        {
+          AppIcons.dictation,
+          AppIcons.aiVoiceNote,
+          AppIcons.voiceRecord,
+          AppIcons.listen,
+          AppIcons.voiceCommand,
+        }.length,
+        5,
+      );
+    });
+
     test('her anlamın simgesi ayrı', () {
       const meanings = {
         'archive': AppIcons.archive,

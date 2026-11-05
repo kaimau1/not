@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/l10n_ext.dart';
 import '../data/document_scan.dart';
 import 'qr_scan_screen.dart';
+import '../../../core/app_icons.dart';
 
 /// **TEK "EKLE" KATALOĞU** (TUTARLILIK F41.1–F41.2): "+" paneli (yeni not) ve
 /// not içindeki Ekle levhası aynı satırları okur; ad, simge ve grup burada bir
@@ -155,10 +156,10 @@ List<AddEntry> addCatalog(
     attach: 'youtube',
     info: l10n.addYouTubeVideoSubtitle,
   );
-  row(AddGroup.sound, Icons.graphic_eq, l10n.newVoiceCapture, quick: 'voice');
+  row(AddGroup.sound, AppIcons.aiVoiceNote, l10n.newVoiceCapture, quick: 'voice');
   row(
     AddGroup.sound,
-    Icons.mic_none,
+    AppIcons.voiceRecord,
     l10n.recordAudio,
     attach: web ? null : 'audio',
   );
@@ -228,7 +229,7 @@ class AddTile extends StatelessWidget {
         color: color.withValues(alpha: 0.14),
         shape: BoxShape.circle,
       ),
-      child: Icon(icon, size: 18, color: color),
+      child: AppIcons.glyph(icon, size: 18, color: color),
     );
     final sub = subtitle;
     // Levha zemini surfaceContainerLow: karo onda da, panelde de seçilsin.

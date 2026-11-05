@@ -19,6 +19,8 @@ import 'assistant_confirm.dart';
 import 'chat_controller.dart';
 import '../../../core/friendly_error.dart';
 import '../../../core/a11y/chip_roles.dart';
+import '../../../core/app_icons.dart';
+import '../../auth/presentation/account_required.dart';
 
 /// Sohbetin kapsamı: neyle konuşuluyor.
 enum ChatScope {
@@ -218,9 +220,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     } on GeminiException catch (e) {
       if (mounted) {
         setState(
-          () => _loadError = e.isAuthError
-              ? context.l10n.aiNoApiKey
-              : context.l10n.aiError(e.message),
+          () => _loadError = aiErrorText(context.l10n, e),
         );
       }
     } catch (e) {
@@ -231,6 +231,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   }
 
   Future<void> _send([String? spoken]) async {
+    if (!ensureAiReady(context, ref)) return;
     final text = (spoken ?? _controller.text).trim();
     final busy = _scope == ChatScope.all ? ref.read(chatProvider).busy : _busy;
     if (text.isEmpty || busy) return;
@@ -251,9 +252,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           .read(chatProvider.notifier)
           .send(
             text,
-            noApiKeyText: l10n.aiNoApiKey,
-            errorText: l10n.aiError,
-            describeError: (e) => friendlyError(l10n, e),
+            describeError: (e) => aiErrorText(l10n, e),
             historyLabel: l10n.aiHistoryQuestion,
             confirmDelete: (title) => confirmAssistantDelete(context, title),
           );
@@ -293,7 +292,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         );
       }
     } on GeminiException catch (e) {
-      reply = e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message);
+      reply = aiErrorText(l10n, e);
     } catch (e) {
       reply = aiErrorText(l10n, e);
     }
@@ -307,6 +306,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
   /// Sesli komut ("Tüm notlar"): kaydet → yazıya dök → gönder.
   Future<void> _voiceInput() async {
+    if (!ensureAiReady(context, ref)) return;
     final l10n = context.l10n;
     final result = await showAudioRecorderSheet(context);
     if (result == null) return;
@@ -320,7 +320,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     } catch (e) {
       if (!mounted) return;
       final message = e is GeminiException
-          ? (e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message))
+          ? aiErrorText(l10n, e)
           : aiErrorText(l10n, e);
       ScaffoldMessenger.of(
         context,
@@ -487,7 +487,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                     IconButton.filledTonal(
                       tooltip: l10n.voiceCommand,
                       onPressed: busy ? null : _voiceInput,
-                      icon: const Icon(Icons.mic_none),
+                      icon: const Icon(AppIcons.voiceCommand),
                     ),
                     const SizedBox(width: 8),
                   ],

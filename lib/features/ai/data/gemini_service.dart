@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:notlar/core/net/json_http.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -35,6 +36,7 @@ final geminiServiceProvider = Provider<GeminiService>(
       // çağrı yerlerinin doğru puanı geçmesi beklenmez.
       beforeCall: (contents) =>
           ref.read(aiGateProvider).consume(AiCost.forContents(contents)),
+      onBuiltInOff: (off) => ref.read(aiBuiltInOffProvider.notifier).set(off),
     ),
   ),
 );
@@ -61,15 +63,109 @@ final allModelsProvider = FutureProvider<List<AiModel>>(
   (ref) => ref.watch(geminiServiceProvider).availableModels(includeAll: true),
 );
 
+/// AI hatasının TÜRÜ (TUTARLILIK F42.3): veri katmanı metin yazmaz, türü
+/// döner; metin `app_*.arb`de ([GeminiException.localized]). Eskiden Türkçe
+/// sabitti ve İngilizce arayüzde de Türkçe çıkıyordu (F4).
+enum GeminiErrorKind {
+  noKey,
+  invalidKey,
+  modelNotFound,
+  rateLimited,
+  connection,
+  emptyResponse,
+  unexpectedResponse,
+  notCompleted,
+
+  /// Dahili yol kapalı ya da bitti (konsol, App Check, fatura): anahtar çözer.
+  builtInOff,
+  guestLocked,
+  quotaFree,
+  quotaPremium,
+  unavailable,
+  modelListFailed,
+  ttsNeedsGemini,
+  semanticNeedsGemini,
+  audioNeedsGemini,
+  videoNeedsGemini,
+  fileNeedsGemini,
+  uploadFailed,
+  speechFailed,
+  noSpeechText,
+  noContent,
+
+  /// Metni çağıran vermiş (arayüzden gelen, zaten yerelleşmiş ileti).
+  other,
+}
+
 class GeminiException implements UserFacingException {
-  const GeminiException(this.message, {this.isAuthError = false});
+  /// [message] zaten yerelleşmiş metin (arayüzden atılan: `l10n.…`). Veri
+  /// katmanı [GeminiException.of] kullanır (`terminology_test` yakalar).
+  const GeminiException(String this.message)
+    : kind = GeminiErrorKind.other,
+      detail = null;
+
+  const GeminiException.of(this.kind, {this.detail}) : message = null;
+
+  final GeminiErrorKind kind;
+
+  /// Metne giren değer (sağlayıcı adı, kota tavanı, dosya türü) ya da yalnız
+  /// günlüğe giden ham ayrıntı.
+  final String? detail;
 
   @override
-  final String message;
-  final bool isAuthError;
+  final String? message;
+
+  /// Anahtar girmek çözer mi?
+  bool get isAuthError => const {
+    GeminiErrorKind.noKey,
+    GeminiErrorKind.invalidKey,
+    GeminiErrorKind.builtInOff,
+  }.contains(kind);
 
   @override
-  String toString() => message;
+  String localized(AppLocalizations l10n) => switch (kind) {
+    GeminiErrorKind.noKey => l10n.aiNoApiKey,
+    GeminiErrorKind.invalidKey => l10n.aiErrInvalidKey,
+    GeminiErrorKind.modelNotFound => l10n.aiErrModelNotFound,
+    GeminiErrorKind.rateLimited => l10n.aiErrRateLimited,
+    GeminiErrorKind.connection => l10n.aiErrConnection,
+    GeminiErrorKind.emptyResponse => l10n.aiErrEmptyResponse,
+    GeminiErrorKind.unexpectedResponse => l10n.aiErrUnexpected,
+    GeminiErrorKind.notCompleted => l10n.aiErrNotCompleted,
+    GeminiErrorKind.builtInOff => l10n.aiErrBuiltInOff,
+    GeminiErrorKind.guestLocked => l10n.guestAiBody,
+    GeminiErrorKind.quotaFree => l10n.aiErrQuotaFree,
+    GeminiErrorKind.quotaPremium => l10n.aiErrQuotaPremium(detail ?? ''),
+    GeminiErrorKind.unavailable => l10n.aiErrUnavailable,
+    GeminiErrorKind.modelListFailed => l10n.aiErrModelList(detail ?? ''),
+    GeminiErrorKind.ttsNeedsGemini => l10n.aiErrNeedsGemini(
+      l10n.aiErrFeatureTts,
+    ),
+    GeminiErrorKind.semanticNeedsGemini => l10n.aiErrNeedsGemini(
+      l10n.aiErrFeatureSemantic,
+    ),
+    GeminiErrorKind.audioNeedsGemini => l10n.aiErrKindNeedsGemini(
+      l10n.aiErrKindAudio,
+      detail ?? '',
+    ),
+    GeminiErrorKind.videoNeedsGemini => l10n.aiErrKindNeedsGemini(
+      l10n.aiErrKindVideo,
+      detail ?? '',
+    ),
+    GeminiErrorKind.fileNeedsGemini => l10n.aiErrKindNeedsGemini(
+      l10n.aiErrKindFile,
+      detail ?? '',
+    ),
+    GeminiErrorKind.uploadFailed => l10n.aiErrUpload,
+    GeminiErrorKind.speechFailed => l10n.aiErrSpeech,
+    GeminiErrorKind.noSpeechText => l10n.aiErrNoSpeechText,
+    GeminiErrorKind.noContent => l10n.aiErrNoContent,
+    GeminiErrorKind.other => message ?? l10n.errorUnknown,
+  };
+
+  /// Günlük ve tanılama için; kullanıcıya [localized] gider.
+  @override
+  String toString() => message ?? 'GeminiException(${kind.name}: $detail)';
 }
 
 /// Kayıt satır içi gönderilemeyecek kadar büyük ve onu Dosya API'sine
@@ -149,13 +245,9 @@ class GeminiService {
   /// Yalnız Gemini'de olan yetenekler (embedding, ses/video girişi) için kapı.
   /// Başka sağlayıcı seçiliyken bu işler sessizce yanlış sonuç vermek yerine
   /// ne yapılacağını söyleyen bir hata verir.
-  void _requireGemini(String feature) {
+  void _requireGemini(GeminiErrorKind kind) {
     if (_provider == AiProvider.gemini) return;
-    throw GeminiException(
-      '$feature şu an yalnızca Google Gemini ile çalışıyor. '
-      "Ayarlar > Yapay zekâ'dan sağlayıcıyı Gemini'ye çevirebilir ya da "
-      'anahtarı kaldırıp dahili AI\'ı kullanabilirsin.',
-    );
+    throw GeminiException.of(kind);
   }
 
   /// Anahtarsız kullanımda devreye giren dahili yol (Firebase AI Logic).
@@ -186,23 +278,19 @@ class GeminiService {
   Future<String> _apiKey() async {
     final key = await _keyStore.read(_provider);
     if (key == null || key.isEmpty) {
-      throw const GeminiException('API anahtarı yok', isAuthError: true);
+      throw const GeminiException.of(GeminiErrorKind.noKey);
     }
     return key;
   }
 
   static GeminiException _mapDioError(JsonHttpException e) =>
       switch (e.response?.statusCode) {
-        400 || 401 || 403 => const GeminiException(
-          'API anahtarı geçersiz',
-          isAuthError: true,
+        400 || 401 || 403 => const GeminiException.of(
+          GeminiErrorKind.invalidKey,
         ),
-        404 => const GeminiException(
-          'AI modeli bulunamadı. Uygulamanın güncel sürümünü kurun; '
-          'sorun sürerse geliştiriciye bildirin.',
-        ),
-        429 => const GeminiException('Kota aşıldı, sonra tekrar deneyin'),
-        _ => GeminiException('Bağlantı hatası: ${e.message}'),
+        404 => const GeminiException.of(GeminiErrorKind.modelNotFound),
+        429 => const GeminiException.of(GeminiErrorKind.rateLimited),
+        _ => GeminiException.of(GeminiErrorKind.connection, detail: e.message),
       };
 
   /// Sağlayıcının model kataloğunu çeker ve uygulamaya uygun sıraya sokar
@@ -279,10 +367,9 @@ class GeminiService {
     // `ordered` boş kalır, döngü hiç dönmez ve eskiden `lastSkipped!` null
     // kontrolünde patlıyordu. Kullanıcıya ne yapacağını söyle.
     if (candidates.isEmpty && prefer == null && _activeModel == null) {
-      throw GeminiException(
-        '${_provider.label} model listesi alınamadı. '
-        "Ayarlar > Yapay zekâ > Model'den kullanmak istediğin modeli "
-        'elle seçebilirsin.',
+      throw GeminiException.of(
+        GeminiErrorKind.modelListFailed,
+        detail: _provider.label,
       );
     }
     final first =
@@ -349,7 +436,7 @@ class GeminiService {
     if (stored == null || stored.isEmpty) {
       final builtIn = _builtIn;
       if (builtIn == null) {
-        throw const GeminiException('API anahtarı yok', isAuthError: true);
+        throw const GeminiException.of(GeminiErrorKind.noKey);
       }
       return builtIn.generate(
         contents,
@@ -379,11 +466,11 @@ class GeminiService {
         prefer: preferModel ?? _taskModel(AiTask.general),
       );
     } on UnsupportedContentException catch (e) {
-      throw GeminiException(e.message);
+      throw GeminiException.of(e.kind, detail: e.provider);
     }
     final text = parseChatText(_provider, response.data);
     if (text == null || text.isEmpty) {
-      throw const GeminiException('Modelden boş yanıt döndü');
+      throw const GeminiException.of(GeminiErrorKind.emptyResponse);
     }
     return text;
   }
@@ -446,7 +533,7 @@ class GeminiService {
     ], jsonOutput: true);
     final decoded = jsonDecode(raw);
     if (decoded is! Map<String, dynamic>) {
-      throw const GeminiException('Beklenmeyen yanıt');
+      throw const GeminiException.of(GeminiErrorKind.unexpectedResponse);
     }
     return decoded;
   }
@@ -472,7 +559,7 @@ class GeminiService {
     ], jsonOutput: true);
     final decoded = jsonDecode(raw);
     if (decoded is! Map<String, dynamic>) {
-      throw const GeminiException('Beklenmeyen yanıt');
+      throw const GeminiException.of(GeminiErrorKind.unexpectedResponse);
     }
     return decoded;
   }
@@ -680,10 +767,9 @@ class GeminiService {
     // OpenAI çevirisi tanımadığı parçayı BOŞ metne indirgerdi ve model
     // ortada kayıt yokken "transkript" uydururdu.
     if (hasKey && _provider != AiProvider.gemini) {
-      throw GeminiException(
-        '${video ? 'Video' : 'Ses'} dökümü ${_provider.label} ile '
-        "yapılamıyor. Ayarlar'dan sağlayıcıyı Google Gemini'ye çevirebilir "
-        "ya da anahtarı kaldırıp dahili AI'ı kullanabilirsin.",
+      throw GeminiException.of(
+        video ? GeminiErrorKind.videoNeedsGemini : GeminiErrorKind.audioNeedsGemini,
+        detail: _provider.label,
       );
     }
     final Map<String, dynamic> media;
@@ -846,7 +932,7 @@ class GeminiService {
       );
       final uploadUrl = start.headers['x-goog-upload-url'];
       if (uploadUrl == null || uploadUrl.isEmpty) {
-        throw const GeminiException('Dosya yükleme oturumu açılamadı.');
+        throw const GeminiException.of(GeminiErrorKind.uploadFailed);
       }
       final done = await _http.post<Map<String, dynamic>>(
         uploadUrl,
@@ -860,7 +946,7 @@ class GeminiService {
       );
       var file = (done.data?['file'] as Map?)?.cast<String, dynamic>();
       if (file == null) {
-        throw const GeminiException('Dosya yüklenemedi.');
+        throw const GeminiException.of(GeminiErrorKind.uploadFailed);
       }
       final name = file['name'] as String? ?? '';
       // Video sunucuda İŞLENİR (kare çıkarma); hazır olmadan istek
@@ -874,7 +960,7 @@ class GeminiService {
         file = polled.data;
       }
       if (file == null || file['state'] == 'FAILED') {
-        throw const GeminiException('Kayıt sunucuda işlenemedi.');
+        throw const GeminiException.of(GeminiErrorKind.uploadFailed);
       }
       return (
         name: name,
@@ -961,7 +1047,7 @@ class GeminiService {
     required String voice,
     String? model,
   }) async {
-    _requireGemini('Yapay zekâ seslendirmesi');
+    _requireGemini(GeminiErrorKind.ttsNeedsGemini);
     final key = await _apiKey();
     // ADAY ZİNCİRİ (kullanıcı bulgusu 2026-08-09: "gemini TTS'den okuma
     // çalışmıyor"): eskiden tek bir kimlik denenirdi — kullanıcının seçtiği
@@ -1036,10 +1122,10 @@ class GeminiService {
         return pcmToWav(base64Decode(data), sampleRate: pcmSampleRate(mime));
       }
       // Model yanıt verdi ama ses yok: başka bir modelde şansımızı deneriz.
-      lastMissing = const GeminiException('Seslendirme modeli ses döndürmedi');
+      lastMissing = const GeminiException.of(GeminiErrorKind.speechFailed);
     }
     throw lastMissing ??
-        const GeminiException('Seslendirme modeli bulunamadı');
+        const GeminiException.of(GeminiErrorKind.speechFailed);
   }
 
   /// Not içi aramanın AI katmanı: soruyu notun METNİNE (ve varsa eklerden
@@ -1126,7 +1212,7 @@ class GeminiService {
         },
       ], jsonOutput: true);
       final decoded = jsonDecode(response);
-      if (decoded is! Map) throw const GeminiException('Beklenmeyen yanıt');
+      if (decoded is! Map) throw const GeminiException.of(GeminiErrorKind.unexpectedResponse);
       final text = (decoded['metin'] as String? ?? '').trim();
       return (
         category: (decoded['tur'] as String? ?? '').trim(),
@@ -1516,7 +1602,7 @@ class GeminiService {
     // boyut uyuşmadığı için (aynı dizinde karışık vektör arama sonucunu
     // bozar) yalnız Gemini desteklenir. Çağıran (semantic_search) hata
     // gelince düz aramaya düşer — kullanıcı arama yapamaz duruma gelmez.
-    _requireGemini('Semantik arama');
+    _requireGemini(GeminiErrorKind.semanticNeedsGemini);
     final key = await _apiKey();
     const embedModel = 'models/gemini-embedding-001';
     try {
@@ -1544,7 +1630,7 @@ class GeminiService {
       // semanticSearchProvider'ın `on GeminiException` yedeğine takılmadığı
       // için arama düz metne düşmek yerine hata ekranına düşüyordu.
       if (embeddings.isEmpty) {
-        throw const GeminiException('Semantik arama için vektör alınamadı');
+        throw const GeminiException.of(GeminiErrorKind.unavailable);
       }
       return [
         for (final e in embeddings)
@@ -1663,7 +1749,7 @@ class GeminiService {
         'Anlaşılır bir istek yoksa not oluşturma ve bunu belirt.';
     final hasTranscript = transcript != null && transcript.trim().isNotEmpty;
     if (!hasTranscript && audioBytes == null) {
-      throw const GeminiException('Sesli not için içerik yok');
+      throw const GeminiException.of(GeminiErrorKind.noContent);
     }
     final contents = [
       ..._assistantPreamble(notesContext),
@@ -1696,7 +1782,7 @@ class GeminiService {
     if (stored == null || stored.isEmpty) {
       final builtIn = _builtIn;
       if (builtIn == null) {
-        throw const GeminiException('API anahtarı yok', isAuthError: true);
+        throw const GeminiException.of(GeminiErrorKind.noKey);
       }
       return builtIn.runToolLoop(contents, onToolCall, prefer: prefer);
     }
@@ -1728,7 +1814,7 @@ class GeminiService {
     if (stored == null || stored.isEmpty) {
       final builtIn = _builtIn;
       if (builtIn == null) {
-        throw const GeminiException('API anahtarı yok', isAuthError: true);
+        throw const GeminiException.of(GeminiErrorKind.noKey);
       }
       return builtIn.runToolLoop(
         contents,
@@ -1810,7 +1896,7 @@ class GeminiService {
 
       final candidates = data?['candidates'] as List<dynamic>?;
       if (candidates == null || candidates.isEmpty) {
-        throw const GeminiException('Modelden yanıt alınamadı');
+        throw const GeminiException.of(GeminiErrorKind.emptyResponse);
       }
       final content =
           (candidates.first as Map<String, dynamic>)['content']
@@ -1833,7 +1919,7 @@ class GeminiService {
       if (functionCalls.isEmpty) {
         final text = textBuffer.toString();
         if (text.isEmpty) {
-          throw const GeminiException('Modelden boş yanıt döndü');
+          throw const GeminiException.of(GeminiErrorKind.emptyResponse);
         }
         return text;
       }
@@ -1860,7 +1946,7 @@ class GeminiService {
       }
       contents.add({'role': 'user', 'parts': responseParts});
     }
-    throw const GeminiException('İşlem tamamlanamadı, tekrar deneyin');
+    throw const GeminiException.of(GeminiErrorKind.notCompleted);
   }
 
   /// OpenAI ve Anthropic teli için araç çağrısı döngüsü.
@@ -1899,7 +1985,7 @@ class GeminiService {
       final reply = parseToolReply(_provider, response.data);
       if (reply.calls.isEmpty) {
         if (reply.text.isEmpty) {
-          throw const GeminiException('Modelden boş yanıt döndü');
+          throw const GeminiException.of(GeminiErrorKind.emptyResponse);
         }
         return reply.text;
       }
@@ -1918,7 +2004,7 @@ class GeminiService {
       }
       messages.addAll(toolResultTurns(_provider, results));
     }
-    throw const GeminiException('İşlem tamamlanamadı, tekrar deneyin');
+    throw const GeminiException.of(GeminiErrorKind.notCompleted);
   }
 
   static const _assistantTools = <Map<String, dynamic>>[

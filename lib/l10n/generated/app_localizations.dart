@@ -533,7 +533,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiSummaryTitle.
   ///
   /// In tr, this message translates to:
-  /// **'AI Özeti'**
+  /// **'AI özeti'**
   String get aiSummaryTitle;
 
   /// No description provided for @aiThinking.
@@ -617,7 +617,7 @@ abstract class AppLocalizations {
   /// No description provided for @geminiApiKeyInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Anahtar girmek isteğe bağlıdır: girmezsen AI istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile daha yüksek günlük hak). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.'**
+  /// **'Anahtar girmek isteğe bağlıdır: girmezsen yapay zekâ istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile daha yüksek günlük hak). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.'**
   String get geminiApiKeyInfo;
 
   /// No description provided for @aiBuiltInPremium.
@@ -1433,7 +1433,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiSkipCheckedInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Checklist notunu AI ile düzeltir/çevirirken tamamlanmış (işaretli) maddeler değiştirilmeden korunur; yalnız işaretsiz maddeler düzenlenir.'**
+  /// **'Liste notunu yapay zekâyla düzeltir ya da çevirirken tamamlanmış (işaretli) maddeler değiştirilmeden korunur; yalnız işaretsiz maddeler düzenlenir.'**
   String get aiSkipCheckedInfo;
 
   /// No description provided for @noteUpdatedUndo.
@@ -1883,7 +1883,7 @@ abstract class AppLocalizations {
   /// No description provided for @videoTooBigForAi.
   ///
   /// In tr, this message translates to:
-  /// **'Video AI\'ya göndermek için çok büyük ({mb} MB). Daha kısa çek.'**
+  /// **'Video yapay zekâya göndermek için çok büyük ({mb} MB). Daha kısa çek.'**
   String videoTooBigForAi(int mb);
 
   /// No description provided for @permCamera.
@@ -3863,7 +3863,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoverLockBody.
   ///
   /// In tr, this message translates to:
-  /// **'Bir notu parmak izi/yüz kilidiyle kilitleyebilirsin: içeriği aramaya, widget\'a ve AI\'a hiç sızmaz.'**
+  /// **'Bir notu parmak izi/yüz kilidiyle kilitleyebilirsin: içeriği aramaya, widget\'a ve yapay zekâya hiç sızmaz.'**
   String get discoverLockBody;
 
   /// No description provided for @discoverHiddenBody.
@@ -9617,7 +9617,7 @@ abstract class AppLocalizations {
   /// No description provided for @versionHistoryInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Notun metni açıldığında, uzun düzenlemede yarım saatte bir ve AI değiştirmeden önce saklanır. Ekler sürümlenmez.'**
+  /// **'Notun metni açıldığında, uzun düzenlemede yarım saatte bir ve yapay zekâ değiştirmeden önce saklanır. Ekler sürümlenmez.'**
   String get versionHistoryInfo;
 
   /// No description provided for @versionHistoryEmpty.
@@ -9893,7 +9893,7 @@ abstract class AppLocalizations {
   /// No description provided for @trashAiInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Cihazdaki kurallar hazır. AI analizi notların kısa dökümünü modele gönderir; kilitli notlar gönderilmez.'**
+  /// **'Cihazdaki kurallar hazır. Yapay zekâ analizi notların kısa dökümünü modele gönderir; kilitli notlar gönderilmez.'**
   String get trashAiInfo;
 
   /// No description provided for @trashAiNothing.
@@ -10949,7 +10949,7 @@ abstract class AppLocalizations {
   /// No description provided for @itemGesturesSettingInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Maddenin üstüne parmakla ya da kalemle çiz: üstünü çiz / ✓ işaretler, karalamak siler, daire yazımı düzeltir'**
+  /// **'Maddenin üstüne çiz: üstünü çiz ya da ✓ işaretler. Kalemle karalamak siler, daire yazımı düzeltir.'**
   String get itemGesturesSettingInfo;
 
   /// No description provided for @pdfEditWorking.
@@ -11273,7 +11273,7 @@ abstract class AppLocalizations {
   /// No description provided for @tipListGestures.
   ///
   /// In tr, this message translates to:
-  /// **'İpucu: maddenin üstünü parmakla çiz → işaretlenir; karala → silinir.'**
+  /// **'İpucu: maddenin üstünü parmakla çiz → işaretlenir.'**
   String get tipListGestures;
 
   /// No description provided for @tipPdfBubble.
@@ -11827,6 +11827,204 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Not oluşturuldu'**
   String get gmailNoteCreated;
+
+  /// No description provided for @aiErrInvalidKey.
+  ///
+  /// In tr, this message translates to:
+  /// **'API anahtarı geçersiz. Ayarlar → Yapay zekâ\'dan denetle.'**
+  String get aiErrInvalidKey;
+
+  /// No description provided for @aiErrModelNotFound.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ modeli bulunamadı. Uygulamanın güncel sürümünü kur; sorun sürerse geliştiriciye bildir.'**
+  String get aiErrModelNotFound;
+
+  /// No description provided for @aiErrRateLimited.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çok fazla istek gitti; biraz sonra yeniden dene.'**
+  String get aiErrRateLimited;
+
+  /// No description provided for @aiErrConnection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâya bağlanılamadı. Bağlantını denetleyip yeniden dene.'**
+  String get aiErrConnection;
+
+  /// No description provided for @aiErrEmptyResponse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Model boş yanıt döndü; yeniden dene.'**
+  String get aiErrEmptyResponse;
+
+  /// No description provided for @aiErrUnexpected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Modelden beklenmeyen bir yanıt geldi; yeniden dene.'**
+  String get aiErrUnexpected;
+
+  /// No description provided for @aiErrNotCompleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem tamamlanamadı; yeniden dene.'**
+  String get aiErrNotCompleted;
+
+  /// No description provided for @aiErrBuiltInOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dahili yapay zekâ şu an kullanılamıyor. Kendi Gemini anahtarını Ayarlar\'dan girersen hemen kullanabilirsin.'**
+  String get aiErrBuiltInOff;
+
+  /// No description provided for @aiErrQuotaFree.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ücretsiz yapay zekâ puanın doldu. 24 saat içinde yenilenir; dilersen Ayarlar\'dan kendi anahtarını girebilir ya da Premium\'a geçebilirsin.'**
+  String get aiErrQuotaFree;
+
+  /// No description provided for @aiErrQuotaPremium.
+  ///
+  /// In tr, this message translates to:
+  /// **'Premium yapay zekâ puanın ({limit}) doldu. 24 saat içinde yenilenir; dilersen Ayarlar\'dan kendi anahtarını girerek sınırsız kullanabilirsin.'**
+  String aiErrQuotaPremium(Object limit);
+
+  /// No description provided for @aiErrUnavailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ şu an yanıt veremiyor; biraz sonra yeniden dene.'**
+  String get aiErrUnavailable;
+
+  /// No description provided for @aiErrModelList.
+  ///
+  /// In tr, this message translates to:
+  /// **'{provider} model listesi alınamadı. Ayarlar → Yapay zekâ → Model\'den modeli elle seçebilirsin.'**
+  String aiErrModelList(Object provider);
+
+  /// No description provided for @aiErrNeedsGemini.
+  ///
+  /// In tr, this message translates to:
+  /// **'{feature} şu an yalnız Google Gemini ile çalışıyor. Ayarlar → Yapay zekâ\'dan sağlayıcıyı Gemini yapabilir ya da anahtarı kaldırıp dahili yapay zekâyı kullanabilirsin.'**
+  String aiErrNeedsGemini(Object feature);
+
+  /// No description provided for @aiErrKindNeedsGemini.
+  ///
+  /// In tr, this message translates to:
+  /// **'{kind} {provider} ile gönderilemiyor. Ayarlar → Yapay zekâ\'dan sağlayıcıyı Gemini yapabilir ya da anahtarı kaldırıp dahili yapay zekâyı kullanabilirsin.'**
+  String aiErrKindNeedsGemini(Object kind, Object provider);
+
+  /// No description provided for @aiErrFeatureTts.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ seslendirmesi'**
+  String get aiErrFeatureTts;
+
+  /// No description provided for @aiErrFeatureSemantic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anlamsal arama'**
+  String get aiErrFeatureSemantic;
+
+  /// No description provided for @aiErrKindAudio.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses dosyası'**
+  String get aiErrKindAudio;
+
+  /// No description provided for @aiErrKindVideo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Video'**
+  String get aiErrKindVideo;
+
+  /// No description provided for @aiErrKindFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dosya türü'**
+  String get aiErrKindFile;
+
+  /// No description provided for @aiErrUpload.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıt yüklenemedi; yeniden dene.'**
+  String get aiErrUpload;
+
+  /// No description provided for @aiErrSpeech.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seslendirme modeli ses döndürmedi; yeniden dene.'**
+  String get aiErrSpeech;
+
+  /// No description provided for @aiErrNoSpeechText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seslendirilecek metin yok.'**
+  String get aiErrNoSpeechText;
+
+  /// No description provided for @aiErrNoContent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli not için içerik yok.'**
+  String get aiErrNoContent;
+
+  /// No description provided for @aiStatusBuiltInOffTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dahili yapay zekâ şu an kapalı'**
+  String get aiStatusBuiltInOffTitle;
+
+  /// No description provided for @aiStatusWebOffTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Web\'de dahili yapay zekâ kapalı'**
+  String get aiStatusWebOffTitle;
+
+  /// No description provided for @aiStatusWebOffBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefondaki uygulamada çalışır. Burada kendi Gemini anahtarınla bütün araçları kullanabilirsin.'**
+  String get aiStatusWebOffBody;
+
+  /// No description provided for @aiStatusQuotaTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ puanın doldu'**
+  String get aiStatusQuotaTitle;
+
+  /// No description provided for @aiStatusQuotaBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Puanların {time} civarında yenilenir. Kendi Gemini anahtarınla beklemeden kullanabilirsin.'**
+  String aiStatusQuotaBody(Object time);
+
+  /// No description provided for @dictationFixOffer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dikte bitti'**
+  String get dictationFixOffer;
+
+  /// No description provided for @dictationFixAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI ile düzelt'**
+  String get dictationFixAction;
+
+  /// No description provided for @tipHomeMicHold.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: mikrofona basılı tutarsan AI sesli not açılır.'**
+  String get tipHomeMicHold;
+
+  /// No description provided for @itemGesturesFingerAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sil ve düzelt jestleri parmakla da'**
+  String get itemGesturesFingerAll;
+
+  /// No description provided for @itemGesturesFingerAllInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalıyken parmak yalnız işaretler; karalama (siler) ve daire (yazımı düzeltir) kalemle çalışır.'**
+  String get itemGesturesFingerAllInfo;
 }
 
 class _AppLocalizationsDelegate
