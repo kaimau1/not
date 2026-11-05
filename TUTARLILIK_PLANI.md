@@ -448,12 +448,12 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
   (ölçek 0,85–1,15, `RepaintBoundary` içinde), bırakınca sütun değişimi +
   kısa oturma; "N sütun" bildirimi yerine köşede kısa sütun simgesi. Bütçe:
   kaydırma raster p90 ≤ 9 ms (TEMA K4 ölçümüyle aynı senaryo).
-  **Yapıldı (2026-11-05):** `PinchColumns`: jest boyunca tek `Transform` (0,85–1,15, `RepaintBoundary`), köşede yazısız sütun simgesi, bırakınca TEK değişim + 200 ms oturma; bildirim kalktı. Düz iki parmak kaydırma ölçeklemez. ÖLÇÜM_ZOOM
+  **Yapıldı (2026-11-05):** `PinchColumns`: jest boyunca tek `Transform` (0,85–1,15, `RepaintBoundary`), köşede yazısız sütun simgesi, bırakınca TEK değişim + 200 ms oturma; bildirim kalktı. Düz iki parmak kaydırma ölçeklemez. **Ölçüm (gerçek çoklu dokunuş, 4 jest, `tool/perf/jest.py`):** v1.1.680 jest başına birkaç kare 99–247 ms; v1.1.683 jest boyunca kare 33–49 ms, bırakınca tek yerleşim karesi 115–180 ms. Raster p90 telefonda ayrı ölçülmedi: CI `[perf]` dashboard_scroll raster p90 4,5 ms (önceki kayıt 5,1, emülatör), telefonda kaydırma %1,1 / 33,3 ms.
 - [x] **F39.3 Yana kaydırarak klasör geçişi** (B7) — **ölçüm kapısı:** parmağı
   izleyen geçiş (gelen klasör kenardan görünür), eşik aşılınca oturur; seçili
   çip şeritte ortalanır; ilk iki kullanımda kenar ipucu ("→ Genel").
   `SnapshotWhenLeaving` (F26.4) korunur; dikey kaydırmayla yarışmaz.
-  **Yapıldı (2026-11-05):** `FolderSwipe`: ızgara parmağı izler, kenarda sonraki durağın adı, %22 ya da hızlı fiskede geçer, yoksa yerine döner; durak yoksa lastik. "Tümü" çipi de ortalanır, ekran dışı çip kurulu (`scrollCacheExtent`). **Bilinçli sapma:** gelen klasörün KARTLARI çizilmez (jest sırasında ikinci ızgara bütçeyi aşar), yalnız adı; "ilk iki kullanım" yerine ad her çekişte görünür. `SnapshotWhenLeaving` korundu. ÖLÇÜM_YANA
+  **Yapıldı (2026-11-05):** `FolderSwipe`: ızgara parmağı izler, kenarda sonraki durağın adı, %22 ya da hızlı fiskede geçer, yoksa yerine döner; durak yoksa lastik. "Tümü" çipi de ortalanır, ekran dışı çip kurulu (`scrollCacheExtent`). **Bilinçli sapma:** gelen klasörün KARTLARI çizilmez (jest sırasında ikinci ızgara bütçeyi aşar), yalnız adı; "ilk iki kullanım" yerine ad her çekişte görünür. `SnapshotWhenLeaving` korundu. **Ölçüm (`input swipe`, 4 çekiş):** v1.1.680 en kötü 33 ms, v1.1.683 en kötü 33 ms; gerileme yok. Fiske hızında ölçüldü: yavaş parmak takibi cihazda elle (KALANLAR).
 - [x] **F39.4 Süzgeç görünürlüğü:** Süz levhasından tür/durum/etiket süzgeci
   etkinken çip şeridinin başında "süzgeç hapı" (× ile kaldır) — boş görünen
   ana ekranın nedeni görünsün. (Tur + kod: bugün nerede görünüyor, doğrula.)
