@@ -404,6 +404,7 @@ maddeyi GÜNCELLE.
 - **Ekran turu (F36.3):** `tool/tour/screen_tour_test.dart` (CI dışı) →
   `build/tour/*.png`, 4 boyut. TUZAK: testte `debugDisableShadows` → FAB/panel
   çevresinde koyu halka çizilir, GERÇEK DEĞİL.
+- **Ana ekran jestleri (F39, 2026-11-05):** zoom ve yana çekiş jest boyunca YALNIZ `Transform` (`PinchColumns`, `FolderSwipe`), yerleşim bırakınca bir kez; jestte ikinci ızgara kurma. TUZAK: `Row`da `Flexible` + `Expanded` boş alanı yarı yarıya böler; `build` içinde `context.size` assert atar. Çoklu dokunuş ölçümü: `adb input` iki parmak bilmez, `InputManager.injectInputEvent` + `app_process` küçük dex (`tool/perf/Pinch.java`).
 - Ana ekran tek mikrofon = doğrudan yazdır; AI sesli not Yapay zekâ
   ekranının en üstünde. "+" tek panel. Dosya akışı tek levha
   `showFileUseSheet`; HEIC → PNG.
