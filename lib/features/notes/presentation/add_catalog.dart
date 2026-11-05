@@ -248,7 +248,8 @@ class AddTile extends StatelessWidget {
                     Expanded(
                       child: Text(
                         label,
-                        maxLines: 1,
+                        // Telefonda "Sayfaya yaz (kalem)" tek satıra sığmadı (F41, cihazda).
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: style,
                       ),

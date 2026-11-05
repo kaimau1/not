@@ -180,7 +180,7 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 71. [ ] (F40.1–F40.3) Görselli notta eke: şerit ⋯, yüzen ⋮, sabit ⋮ aynı sıra; anahtardan Sabit → Yüzen → bildirimde "Sabit → Yüzen · Geri al" geri getiriyor; gömülü yazıya dokun → önizlemede anahtar. Dar ekranda sabit ⋮ → Görünüm.
 72. [ ] (F40.5) Sabit video: döndür düğmesi görüntüyü çeviriyor, tam ekranda da; oynarken ekran üstüne başka sayfa aç ya da Ana ekrana çık → video duruyor, kendi başlamıyor.
 73. [ ] (F40.6/F40.7) Aynı görsel sabit ↔ balonlu: çubuk rengi ve açıklama aynı; açıklama sabitte görselin altında, dokununca düzenleniyor. Sunum balonluda zemin artık siyah değil.
-75. [ ] (F41.1–F41.4 telefon) "+" paneli ve not içi Ekle: aynı grup adları ve karolar; "Ayrı çizim (görsel)" çizim ekranını açar, kaydedince görsel eki, vazgeçince boş not kalmaz; başka uygulamadan görsel paylaş → not "Yeni ek nerede dursun?" ipucuyla açılır; not içinde Dosya ekle → görsel: aynı dosya levhası, başlık alanı yok.
+75. [ ] (F41.1–F41.4 telefon) "+" paneli ve not içi Ekle: aynı grup adları ve karolar; "Ayrı çizim (görsel)" çizim ekranını açar (v1.1.688 telefonda görüldü), PARMAKLA çiz ve kaydet: görsel eki gelir (adb swipe çizgi bırakmadı, boş tuvalde ✓ eksiz döndü; elle bakılmalı), vazgeçince boş not kalmaz; başka uygulamadan görsel paylaş → not "Yeni ek nerede dursun?" ipucuyla açılır; not içinde Dosya ekle → görsel: aynı dosya levhası, başlık alanı yok.
 76. [ ] (F41.4 web) Not açıkken dosyayı sayfaya bırak ya da görsel yapıştır → o nota girer; not kapalıyken yeni not; Word'den metin+resim yapıştır → yalnız metin yazılır.
 74. [ ] (F40.8) Web: görsele sağ tık menüsü, üstüne gelince ⋮, masaüstünden dosyayı sayfaya sürükle-bırak → "dosya" levhası. Android tablette sürükle-bırak yok (bilerek).
 
