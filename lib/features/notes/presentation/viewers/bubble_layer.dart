@@ -737,7 +737,7 @@ class BubblePageLayer extends StatefulWidget {
     required this.controller,
     required this.page,
     this.readOnly = false,
-    this.longPressAdd = true,
+    this.longPressAdd = false,
   });
 
   final BubbleController controller;
@@ -750,8 +750,13 @@ class BubblePageLayer extends StatefulWidget {
   /// balon ekleme olsun; şu an metin tanıma yapıyor"). Sayfanın boş ya da
   /// yazılı herhangi bir yerine parmağı ~0,45 sn kıpırdatmadan tutmak oraya
   /// balon bırakır ve yazma kartını açar — "Balon" kipine geçmeden. Kalem
-  /// kipinde kapalı (o parmak çizer). Metin seçimi PDF'te ÇİFT DOKUNUŞA
-  /// geçti (bkz. `PdfSelectLayer.longPressSelects`).
+  /// kipinde kapalı (o parmak çizer).
+  ///
+  /// **VARSAYILAN KAPALI** (kullanıcı kararı 2026-11-05: "basılı tutmak
+  /// metin seçimini açsın, balon sadece butonla eklensin"): uygulamanın her
+  /// yerinde basılı tutmak METİN SEÇER, balon "Balon ekle" düğmesiyle açılan
+  /// bırakma kipinde dokunarak eklenir. Bayrak eski davranışı isteyen bir
+  /// yüzey için duruyor; bugün hiçbir yüzey açmıyor.
   final bool longPressAdd;
 
   @override

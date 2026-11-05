@@ -501,7 +501,6 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
                         child: BubblePageLayer(
                           controller: widget.bubbles,
                           page: i + 1,
-                          longPressAdd: !widget.penMode,
                         ),
                       ),
                     ],

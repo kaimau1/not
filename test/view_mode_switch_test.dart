@@ -364,8 +364,15 @@ void main() {
     );
     final add = find.byKey(const ValueKey('pinned-add-bubble'));
     expect(add, findsOneWidget);
+    // Düğme tür menüsü açar: Balon · Açık metin.
     await tester.tap(add);
-    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('pinned-add-bubble-plain')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('pinned-add-bubble-note')));
+    await tester.pumpAndSettle();
     expect(find.byIcon(Icons.check), findsOneWidget);
     // Kapatınca eski hâline döner.
     await tester.tap(add);

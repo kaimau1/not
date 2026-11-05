@@ -12085,6 +12085,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kapalıyken parmak yalnız işaretler; karalama (siler) ve daire (yazımı düzeltir) kalemle çalışır.'**
   String get itemGesturesFingerAllInfo;
+
+  /// No description provided for @bubbleAddNoteHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutamaçlı not; dokununca açılır'**
+  String get bubbleAddNoteHint;
+
+  /// No description provided for @bubbleAddPlainHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfanın üstüne doğrudan yazı'**
+  String get bubbleAddPlainHint;
+
+  /// No description provided for @bubbleAddPlainTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık metin'**
+  String get bubbleAddPlainTitle;
 }
 
 class _AppLocalizationsDelegate

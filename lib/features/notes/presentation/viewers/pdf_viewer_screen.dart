@@ -555,9 +555,9 @@ PdfViewerParams pdfLayerParams({
                     page: page,
                     pageSize: pageSize,
                     activeSelectionPage: activePage,
-                    // Düzenlenebilir görünümde basılı tutmak balon bırakır;
-                    // seçim çift dokunuşla (bkz. longPressSelects).
-                    longPressSelects: !editable,
+                    // Basılı tut = seçim, çift dokunuş = yakınlaştırma
+                    // (kullanıcı kararı 2026-11-05); balon "Balon" düğmesiyle.
+                    doubleTapSelects: false,
                     onSelected: (text, rects, pageNo, fromOcr) => selection.set(
                       value: text,
                       pageNumber: pageNo,
@@ -575,7 +575,6 @@ PdfViewerParams pdfLayerParams({
                     controller: bubbles,
                     page: page.pageNumber,
                     readOnly: !editable,
-                    longPressAdd: !inkEditing,
                   ),
                 ),
               ],
@@ -621,6 +620,10 @@ PdfViewerParams pdfLayerParams({
     // kaybediyor, klavye gelmiyor ya da kapanıyordu.
     textSelectionParams: const PdfTextSelectionParams(enabled: false),
     buildContextMenu: _noPdfContextMenu,
+    // ÇİFT DOKUNUŞ = OTOMATİK YAKINLAŞTIRMA (kullanıcı kararı 2026-11-05):
+    // sığdırılmışken dokunulan yer 2,5 kat büyür, yakınken sayfa genişliğine
+    // geri döner. Seçim basılı tutmakla (bkz. PdfSelectLayer.doubleTapSelects).
+    onGeneralTap: pdfDoubleTapZoom,
     // Dokunmatik cihazda görüntüleyici odak istemez (bkz. (3)); masaüstünde
     // ok tuşlarıyla gezinme için ister.
     keyHandlerParams: _pdfKeyHandlerParams,
@@ -628,6 +631,23 @@ PdfViewerParams pdfLayerParams({
       layersFor(page, pageRect.size),
     ],
   );
+}
+
+/// Çift dokunuşu yakınlaştırmaya çevirir (bkz. [PdfViewerParams.onGeneralTap]);
+/// öbür dokunuşlar pdfrx'e kalır.
+bool pdfDoubleTapZoom(
+  BuildContext context,
+  PdfViewerController controller,
+  PdfViewerGeneralTapHandlerDetails details,
+) {
+  if (details.type != PdfViewerGeneralTapType.doubleTap) return false;
+  final fit = controller.coverScale;
+  if (controller.currentZoom > fit * 1.2) {
+    unawaited(controller.setZoom(controller.centerPosition, fit));
+  } else {
+    unawaited(controller.setZoom(details.documentPosition, fit * 2.5));
+  }
+  return true;
 }
 
 final ScrollPhysics _pdfScrollPhysics =

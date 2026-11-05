@@ -291,6 +291,42 @@ void main() {
       );
     });
 
+    testWidgets('varsayılan: basılı tutmak balon BIRAKMAZ (yalnız düğmeyle)', (
+      tester,
+    ) async {
+      // Kullanıcı kararı 2026-11-05: "basılı tutmak metin seçimini açsın,
+      // balon sadece butonla eklensin".
+      final c = BubbleController(initial: const [], onChanged: (_) {});
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('tr'),
+          home: Scaffold(
+            body: Align(
+              alignment: Alignment.topLeft,
+              child: SizedBox(
+                width: 400,
+                height: 400,
+                child: BubblePageLayer(controller: c, page: 1),
+              ),
+            ),
+          ),
+        ),
+      );
+      final gesture = await tester.startGesture(const Offset(100, 200));
+      await tester.pump(const Duration(milliseconds: 700));
+      await gesture.up();
+      await tester.pump();
+      expect(c.bubbles, isEmpty);
+      // Düğmenin açtığı bırakma kipinde dokunuş balon bırakır.
+      c.setAdding(true);
+      await tester.pump();
+      await tester.tapAt(const Offset(100, 200));
+      await tester.pump();
+      expect(c.bubbles, hasLength(1));
+    });
+
     testWidgets('basılı tutmak o noktaya balon bırakır; gizliyken de', (
       tester,
     ) async {
@@ -306,7 +342,13 @@ void main() {
               child: SizedBox(
                 width: 400,
                 height: 400,
-                child: BubblePageLayer(controller: c, page: 1),
+                // Mekanizma bayrakla duruyor; varsayılan KAPALI (aşağıdaki
+                // test).
+                child: BubblePageLayer(
+                  controller: c,
+                  page: 1,
+                  longPressAdd: true,
+                ),
               ),
             ),
           ),
@@ -431,11 +473,7 @@ void main() {
     );
 
     test('seçenekler saklanır ve geri okunur', () {
-      const options = ShareTextOptions(
-        title: false,
-        tags: true,
-        links: false,
-      );
+      const options = ShareTextOptions(title: false, tags: true, links: false);
       final back = ShareTextOptions.decode(options.encode());
       expect(back.title, isFalse);
       expect(back.checked, isTrue);

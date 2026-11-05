@@ -401,7 +401,6 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
                               controller: _bubbles,
                               page: i + 1,
                               readOnly: widget.onChanged == null,
-                              longPressAdd: !_editing,
                             ),
                           ),
                         ],

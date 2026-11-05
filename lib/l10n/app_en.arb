@@ -2520,5 +2520,8 @@
   "dictationFixAction": "Fix with AI",
   "tipHomeMicHold": "Tip: long-press the microphone for an AI voice note.",
   "itemGesturesFingerAll": "Delete and fix gestures with a finger too",
-  "itemGesturesFingerAllInfo": "When off, a finger only checks; scribble (deletes) and circle (fixes spelling) need a pen."
+  "itemGesturesFingerAllInfo": "When off, a finger only checks; scribble (deletes) and circle (fixes spelling) need a pen.",
+  "bubbleAddNoteHint": "A pinned note that opens on tap",
+  "bubbleAddPlainHint": "Text written straight on the page",
+  "bubbleAddPlainTitle": "Plain text"
 }

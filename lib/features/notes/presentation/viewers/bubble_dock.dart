@@ -225,16 +225,21 @@ class _BubbleDockState extends State<BubbleDock> {
       // hiç güzel değil, göz yoruyor"): başlık şeridi artık balonun rengine
       // BOYANMIYOR — sarı balonda kartın tepesi sarı bir bant oluyordu. Kart
       // nötr yüzey + ince kenar; balonun rengi yalnız soldaki küçük rozette.
+      // **KOMPAKT KART** (kullanıcı bulgusu 2026-11-05: "balon ilk yazılma
+      // ekranı çok büyük, özellikle başlık kısmı aşırı yüksek"): başlık
+      // şeridi 46 → 34 dp (küçük rozet, ince dolgu, alçak "Bitti"), yazı alanı
+      // 3 satırdan 1 satırdan başlar ve en çok 4 satıra büyür, araç satırı
+      // 40 → 34 dp. Kart ilk açılışta ~190 dp yerine ~120 dp.
       return _KeyboardFollow(
         child: Padding(
-          padding: EdgeInsets.fromLTRB(8, 6, 8, 8 + widget.bottomPadding),
+          padding: EdgeInsets.fromLTRB(6, 4, 6, 6 + widget.bottomPadding),
           child: Material(
             key: _cardKey,
             color: scheme.surface,
             elevation: 8,
             shadowColor: Colors.black38,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(18),
               side: BorderSide(
                 color: scheme.outlineVariant.withValues(alpha: 0.7),
               ),
@@ -245,12 +250,12 @@ class _BubbleDockState extends State<BubbleDock> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 8, 2),
+                  padding: const EdgeInsets.fromLTRB(10, 4, 4, 0),
                   child: Row(
                     children: [
                       Container(
-                        width: 30,
-                        height: 30,
+                        width: 22,
+                        height: 22,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
@@ -260,7 +265,7 @@ class _BubbleDockState extends State<BubbleDock> {
                               color,
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(7),
                         ),
                         child: Icon(
                           bubble.plain
@@ -268,11 +273,11 @@ class _BubbleDockState extends State<BubbleDock> {
                               : bubble.isHighlight
                               ? Icons.border_color_rounded
                               : Icons.chat_bubble_rounded,
-                          size: 15,
+                          size: 13,
                           color: onColor,
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: widget.readOnly
                             ? Text(
@@ -299,7 +304,7 @@ class _BubbleDockState extends State<BubbleDock> {
                                   filled: false,
                                   counterText: '',
                                   contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 6,
+                                    vertical: 4,
                                   ),
                                   border: InputBorder.none,
                                   hintText: l10n.bubbleTitleHint,
@@ -319,11 +324,12 @@ class _BubbleDockState extends State<BubbleDock> {
                             style: FilledButton.styleFrom(
                               visualDensity: VisualDensity.compact,
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
+                                horizontal: 10,
                               ),
-                              minimumSize: const Size(0, 34),
+                              minimumSize: const Size(0, 28),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            icon: const Icon(Icons.check_rounded, size: 18),
+                            icon: const Icon(Icons.check_rounded, size: 16),
                             label: Text(l10n.bubbleDone),
                           ),
                         ),
@@ -332,7 +338,7 @@ class _BubbleDockState extends State<BubbleDock> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 6, 10, 2),
+                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
                   child: widget.readOnly
                       ? Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -356,15 +362,18 @@ class _BubbleDockState extends State<BubbleDock> {
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+                              padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
                               child: TextField(
                                 key: const ValueKey('bubble-dock-text'),
                                 controller: _text,
                                 focusNode: _textFocus,
-                                maxLines: 6,
-                                // En az 3 satır (F13.2): araçlar tek satıra
-                                // toplandı, yazı alanı daralmasın.
-                                minLines: 3,
+                                // 1 satırdan başlar, yazdıkça 4 satıra dek
+                                // büyür, sonrası alanın içinde kayar (bkz.
+                                // KOMPAKT KART). Eskiden en az 3, en çok 6
+                                // satırdı: klavyeyle birlikte belgenin
+                                // görünen yeri bir şeride iniyordu.
+                                maxLines: 4,
+                                minLines: 1,
                                 textCapitalization:
                                     TextCapitalization.sentences,
                                 keyboardType: TextInputType.multiline,
@@ -409,7 +418,7 @@ class _BubbleDockState extends State<BubbleDock> {
   );
 
   static const _titleStyle = TextStyle(
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: FontWeight.w700,
   );
   static const _bodyStyle = TextStyle(fontSize: 14, height: 1.35);
@@ -437,7 +446,7 @@ class _BubbleDockState extends State<BubbleDock> {
           isSelected: selected,
           visualDensity: VisualDensity.compact,
           padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 34),
           style: selected
               ? IconButton.styleFrom(backgroundColor: scheme.secondaryContainer)
               : null,
@@ -465,7 +474,7 @@ class _BubbleDockState extends State<BubbleDock> {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(6, 0, 6, 4),
+      padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
       child: Row(
         children: [
           // Renk: balonun kendi rengiyle dolu bir daire — şeridi açar.
@@ -477,7 +486,7 @@ class _BubbleDockState extends State<BubbleDock> {
                 onPressed: () => _toggle(_DockPanel.colors),
                 visualDensity: VisualDensity.compact,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 34),
                 icon: Container(
                   width: 20,
                   height: 20,
@@ -519,7 +528,7 @@ class _BubbleDockState extends State<BubbleDock> {
                 onPressed: () => _toggle(_DockPanel.format),
                 style: TextButton.styleFrom(
                   visualDensity: VisualDensity.compact,
-                  minimumSize: const Size(40, 40),
+                  minimumSize: const Size(36, 34),
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   backgroundColor: _panel == _DockPanel.format
                       ? scheme.secondaryContainer
@@ -850,7 +859,7 @@ class BubbleToolbar extends StatelessWidget {
               shadowColor: Colors.black54,
               borderRadius: BorderRadius.circular(18),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 4, 6, 8),
+                padding: const EdgeInsets.fromLTRB(10, 0, 4, 4),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [

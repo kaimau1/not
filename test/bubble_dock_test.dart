@@ -69,8 +69,11 @@ void main() {
     // "Aa" → boy düğmeleri; büyüt balonu büyütür, odak korunur.
     await tester.tap(find.byKey(const ValueKey('bubble-format-toggle')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('bubble-mark-star')), findsNothing,
-        reason: 'tek seferde tek şerit');
+    expect(
+      find.byKey(const ValueKey('bubble-mark-star')),
+      findsNothing,
+      reason: 'tek seferde tek şerit',
+    );
     final before = controller.bubbles.single.size;
     await tester.tap(find.byIcon(Icons.zoom_in_rounded));
     await tester.pumpAndSettle();
@@ -78,7 +81,11 @@ void main() {
     expect(bodyHasFocus(tester), isTrue);
   });
 
-  testWidgets('yazı alanı en az 3 satır (F13.2)', (tester) async {
+  testWidgets('kompakt kart: yazı 1 satırdan başlar, 4 satıra büyür', (
+    tester,
+  ) async {
+    // Kullanıcı bulgusu 2026-11-05: "balon ilk yazılma ekranı çok büyük,
+    // başlık kısmı aşırı yüksek".
     final controller = BubbleController(initial: const [], onChanged: (_) {});
     addTearDown(controller.dispose);
     controller.add(1, 0.5, 0.5);
@@ -87,7 +94,19 @@ void main() {
     final field = tester.widget<TextField>(
       find.byKey(const ValueKey('bubble-dock-text')),
     );
-    expect(field.minLines, greaterThanOrEqualTo(3));
+    expect(field.minLines, 1);
+    expect(field.maxLines, 4);
+    final card = tester.getSize(
+      find
+          .ancestor(
+            of: find.byKey(const ValueKey('bubble-dock-title')),
+            matching: find.byType(Material),
+          )
+          .first,
+    );
+    expect(card.height, lessThan(140), reason: 'ilk açılışta kart alçak');
+    final done = tester.getSize(find.byKey(const ValueKey('bubble-dock-done')));
+    expect(done.height, lessThanOrEqualTo(32), reason: 'başlık şeridi alçak');
   });
 
   testWidgets('renk şeridi de kartın içinde — levha açılmaz, odak korunur', (
