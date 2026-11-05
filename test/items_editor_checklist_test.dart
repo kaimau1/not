@@ -71,8 +71,8 @@ void main() {
     )));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('İşaretlileri sil'), findsOneWidget);
-    await tester.tap(find.textContaining('İşaretlileri sil'));
+    expect(find.byKey(const ValueKey('items-delete-checked')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('items-delete-checked')));
     await tester.pumpAndSettle();
 
     expect(latest!.map((i) => i.text).toList(), ['Ekmek']);

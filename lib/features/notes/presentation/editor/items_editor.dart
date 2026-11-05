@@ -1760,7 +1760,12 @@ class ItemsEditorState extends State<ItemsEditor>
               padding: const EdgeInsets.fromLTRB(16, 4, 8, 0),
               child: Row(
                 children: [
-                  Expanded(child: SectionLabel(l10n.checkedHeader(checkedCount))),
+                  Expanded(
+                    child: SectionLabel(
+                      l10n.checkedHeader(checkedCount),
+                      color: NoteAccent.maybeOf(context)?.accent,
+                    ),
+                  ),
                   Tooltip(
                     message: l10n.deleteChecked(checkedCount),
                     child: TextButton.icon(

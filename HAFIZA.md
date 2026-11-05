@@ -217,6 +217,7 @@ maddeyi GÜNCELLE.
 - **Anında içerik (F25.2, 2026-11-04):** `home_snapshot.dart`, arka plana geçişte ilk 30 kartın KISALTILMIŞ kopyası tercihte; yalnız dashboard `loading` dalında, `SliverIgnorePointer` ile çizilir. TUZAK: depo akışına ya da editöre SOKMA (kısaltılmış not tam notun üstüne yazılır; eksik liste hatırlatıcıları "silinmiş" sanır). Kilitli/parola notu içeriği yazılmaz; sabitliler önce girer (yoksa liste gelince zıplar). Tercih anahtarı `home_snapshot`, hesap çıkışında silinmez (uid eşleşmezse okunmaz).
 - **Metin eşiği (F24.1, ölçüldü):** tek alanda LAYOUT ~5 ms/KB → pencere eşiği 2500, pencere 1500; 4–6 KB tahmini yanlıştı. Firestore olayı not sayısıyla doğrusal: 200 not 593 KB / 11 ms Dart, 414 not ~1,2 MB / 21–27 ms (F22.4'ün gerekçesi). Açılışta ana iş parçacığına düşen saf hesap arıyorsan `prof_cold.py` (boş çöpte parmak izi böyle bulundu).
 - **Ölçüm tuzakları (2026-11-04):** kapanış "99 ms donma" yanılgıydı (AKICILIK Ek B notu). Uzun ölçüm + şarj telefonu 52 °C'ye çıkardı, MIUI "Aşırı ısınıyor" verdi: sayılar geçersiz; `dumpsys battery | grep temperature` ile bak (derleme arasında `KEYCODE_SLEEP`). Telefon yan dönebilir: release uygulaması döner (senaryo koordinatları bozulur, `dumpsys input | grep SurfaceOrientation`), profil derlemesi dikey kilitli. Veri setini ikinci kez içe aktarmak kopya sayılır; `OLCUM_SEED` ile başka set. Ölçüm uygulamasında (`.olcum`) artık 414 not var, stres notları dipte: arama ile bul. Soğuk açılış profili: `am start … --ez start-paused true`, sonra profiler + `resume`.
+- **Klavye turu ölçümü (F38.7, 2026-11-05):** `tool/perf/klavye.py`: birikim yok, kare başına ana ≤ 15 ms, raster ≤ 10 ms; yalnız `Scaffold` kabuğu kurulur. Kapanış sonu 33 ms ×4–5 uygulama işi değil (tahmin: sistem). SF aralığında ~500 ms imleç yanıp sönmesi, ilk aralık boşta bekleme: takılma sayma. `note_screen_chrome_test` 20 turu sabitler. TUZAK: Bash aracında tırnak içeren heredoc ve `rtk grep` + glob takılabiliyor: uzun betiği Write ile dosyaya yaz.
 - **Klavye/kapanış kasması (2026-11-03)**: madde büyümesi klavye oynarken
   320 ms bekler (`_keyboardMoving`); örtülü pano `FreezeWhenHidden` ile
   donar (MediaQuery geçirmez); yetişme `noteRouteClosing` bitince +120 ms.
@@ -413,7 +414,7 @@ maddeyi GÜNCELLE.
 - Süz düğmesi arama kutusunun içinde; varsayılan sıralama "Son güncellenen"
   (`migrateDefaultNoteSort`).
 - Kartta görünenler `card_show_*`; kart TEK semantik düğüm, ⋮ ayrı.
-- Menüler `ActionMenu`; not ⋮ ve kart ⋮ grupları aynı ad/sıra. Alt çubuk
+- Menüler `ActionMenu`; not ⋮ ve kart ⋮ TEK katalog `noteMenuModel` (F38.1): yeni iş oraya + iki handler (`note_menu_model_test` ölü düğmeyi yakalar). Çok işlemli = levha, tek seçimli ya da ≤ 4 madde = açılır menü (F38.6). Hızlı satır en çok 5: 6'da dar ekranda ad kesilir. Alt çubuk
   sırası sabit: Biçim · Ekle · Ara · Paylaş · Ekler · (☑|Seç).
 - Simgeler `lib/core/app_icons.dart` sözlüğünden (`visual_consistency_test`
   doğrudan `Icons.archive/move_to_inbox/…` kullanımını yakalar; F18.15'te

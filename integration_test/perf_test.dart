@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:notlar/core/widgets/keyboard_snap.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
@@ -173,6 +174,39 @@ void main() {
       }
       await _settle(tester);
     }, reportKey: 'editor_typing_30kb');
+  });
+
+  testWidgets('editör: klavye aç/kapa ×10 (F38.7)', (tester) async {
+    await tester.pumpWidget(
+      host(
+        KeyboardSnap(
+          builder: (context, inset) => Padding(
+            padding: EdgeInsets.only(bottom: inset),
+            child: TextField(
+              controller: WrapTextController(text: _longBody(4 * 1024)),
+              maxLines: null,
+              expands: true,
+            ),
+          ),
+        ),
+      ),
+    );
+    await _settle(tester);
+    addTearDown(tester.view.resetViewInsets);
+    await binding.traceAction(() async {
+      for (var round = 0; round < 10; round++) {
+        for (var i = 1; i <= 15; i++) {
+          tester.view.viewInsets = FakeViewPadding(bottom: i * 20);
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+        await tester.pump(const Duration(milliseconds: 200));
+        for (var i = 14; i >= 0; i--) {
+          tester.view.viewInsets = FakeViewPadding(bottom: i * 20);
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+    }, reportKey: 'keyboard_cycle');
   });
 
   testWidgets('ana ekran: arama sorgusu değişimi', (tester) async {
