@@ -44,6 +44,20 @@ void main() {
     }
   });
 
+  test('sabit bölme de Kopyala ve Metni çıkar sunar (cihaz turu)', () {
+    final pane = sources
+        .singleWhere((f) => f.uri.pathSegments.last == 'pinned_media_pane.dart')
+        .readAsStringSync();
+    expect(pane, contains('copy: widget.onCopy != null'));
+    expect(pane, contains('extractText: widget.onExtractText != null'));
+    final view = sources
+        .singleWhere(
+          (f) => f.uri.pathSegments.last == 'note_editor_media_view.dart',
+        )
+        .readAsStringSync();
+    expect(view, contains('onExtractText: _readOnly'));
+  });
+
   testWidgets('sayı 0 ise rozet çizilmez', (tester) async {
     Widget menu(int count) => MaterialApp(
       home: Scaffold(

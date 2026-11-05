@@ -91,13 +91,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField).first, '**ek
-mek sut**');
+    await tester.enterText(find.byType(TextField).first, '**ek\nmek sut**');
     await tester.pumpAndSettle();
-    expect(latest!.map((i) => i.text).toList(), [
-      '**ek**',
-      '**mek sut**',
-    ]);
+    expect(latest!.map((i) => i.text).toList(), ['**ek**', '**mek sut**']);
   });
 
   testWidgets('çok satırlı yapıştırmada kalın satır bozulmaz', (tester) async {
