@@ -79,6 +79,7 @@ abstract final class TipOnce {
       SnackBar(
         key: ValueKey('tip-$id'),
         duration: duration,
+        margin: snackBarMarginOverKeyboard(),
         content: Row(
           children: [
             Icon(

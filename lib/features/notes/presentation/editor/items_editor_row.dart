@@ -175,7 +175,7 @@ extension _ItemsRow on ItemsEditorState {
               // Ekran okuyucu: madde metni + durum (F15.2) — kutu adsızdı.
               semanticLabel: item.text.trim().isEmpty
                   ? context.l10n.itemEmptyLabel
-                  : item.text.trim(),
+                  : stripRichMarkers(item.text).trim(),
               // Soluk işaretli kutu (satır katmanı yok — bkz. [_kCheckedDim]).
               // Renk KARTLA AYNI kural (bkz. [NoteCheckColors]): renkli notta
               // notun koyu tonu, renksizde temanın vurgusu.

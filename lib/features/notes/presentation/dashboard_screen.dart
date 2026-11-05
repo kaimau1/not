@@ -399,23 +399,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Telefon ↔ geniş ekran geçişinde (F18.11) önceki örneğin kaldığı yere
   /// döner — yalnız AYNI bölümdeyse. İçerik henüz ölçülmediyse bir kare daha
   /// beklenir (en çok birkaç kez).
-  void _restoreScroll([int tries = 0]) {
+  void _restoreScroll([int tries = 0, double? lastExtent]) {
     if (!mounted || !_gridScroll.hasClients) return;
     final positions = _gridScroll.positions.toList();
     if (positions.length != 1) return;
     final p = positions.single;
-    final target = DashboardScrollMemory.restoreOffset(
-      _segmentKey,
-      p.maxScrollExtent,
-    );
+    final extent = p.maxScrollExtent;
+    final target = DashboardScrollMemory.restoreOffset(_segmentKey, extent);
     if (target == null) return;
-    if (target > p.maxScrollExtent && tries < 5) {
+    p.jumpTo(target.clamp(0.0, extent));
+    // KÖK NEDEN (cihaz turu 2026-11-05, telefonu çevirince liste tepeye
+    // atlıyordu): tembel listede maxScrollExtent ilk karelerde yalnız kurulan
+    // kartlardan TAHMİN; oran o küçük tahmine uygulanınca liste başa yakın
+    // kalıyordu. Tahmin oturana dek aynı oran yeniden uygulanır.
+    if (tries < 8 && extent != lastExtent) {
       WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _restoreScroll(tries + 1),
+        (_) => _restoreScroll(tries + 1, extent),
       );
-      return;
     }
-    p.jumpTo(target.clamp(0.0, p.maxScrollExtent));
   }
 
   /// Geniş ekranda sol panelin son sütun kipi (tek sütun = not açık).
