@@ -621,6 +621,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             video: widget.media,
             showTime: width >= 500,
             showSpeed: width >= 400,
+            // Dik çekilmiş videoyu asıl telefonda döndürmek gerekir; 392 dp
+            // telefonda hız sığmaz ama bu düğme sığar (cihaz turu 2026-11-05).
+            showRotate: width >= 380,
           ),
         Expanded(
           child: Semantics(

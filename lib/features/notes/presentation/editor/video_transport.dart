@@ -28,10 +28,14 @@ class VideoTransportControls extends StatelessWidget {
     this.onDark = false,
     this.iconSize = 22,
     this.showSpeed = false,
+    this.showRotate,
   });
 
   /// Oynatma hızı düğmesi ("1×" → 1.25× → 1.5× → 2× → 0.5× → 0.75×).
   final bool showSpeed;
+
+  /// Döndür düğmesi; null ise [showSpeed] ile aynı.
+  final bool? showRotate;
 
   final Attachment video;
 
@@ -181,7 +185,7 @@ class VideoTransportControls extends StatelessWidget {
             ),
           ),
         // DÖNDÜR (F40.5): yerel videoda; YouTube oynatıcısı kendi içinde.
-        if (showSpeed && source != null && !video.isWebVideo)
+        if ((showRotate ?? showSpeed) && source != null && !video.isWebVideo)
           IconButton(
             key: const ValueKey('video-rotate'),
             tooltip: l10n.videoRotate,

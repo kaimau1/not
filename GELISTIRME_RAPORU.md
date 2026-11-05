@@ -107,8 +107,8 @@ maddeyi başka sayfaya taşı, ayarlarda açılan alana kaydırma.
 
 - [ ] Defter (çizgili/kesikli/bloknot): uzun maddeler, büyük yazı ölçeği,
   başlık + etiket çipi + sayfa çubuğu olan not — yazı çizginin üstünde mi?
-- [ ] Madde uzun bas → Alta çizgi çek (düz/kesikli/noktalı), kartta görünüyor mu?
-- [ ] Ekle → Dosya ekle: görsel / ses / video için soru levhası; PDF ve
+- [x] Biçim paneli → Alta çizgi çek (düz/kesikli/noktalı): kartta görünüyor (2026-11-05; uzun bastan biçim paneline taşındı).
+- [x] Ekle → Dosya ekle (2026-11-05 video ve PDF ile): görsel / ses / video için soru levhası; PDF ve
   sunum doğrudan.
-- [ ] "Tümü" çipi; aramada klasör rozeti.
+- [x] "Tümü" çipi (2026-11-05); aramada klasör rozeti: klasörlü not yok, denenmedi.
 - [ ] Arşiv → ara → ✨; Çöp → 📊 Akıllı analiz → AI ile derin analiz.
