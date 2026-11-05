@@ -38,7 +38,6 @@ void main() {
     expect(availableViews(image), {
       AttachmentView.pinned,
       AttachmentView.floating,
-      AttachmentView.bubbles,
       AttachmentView.attached,
     });
     const pdf = Attachment(
@@ -48,7 +47,8 @@ void main() {
       mimeType: 'application/pdf',
     );
     expect(availableViews(pdf), contains(AttachmentView.pinned));
-    expect(availableViews(pdf), contains(AttachmentView.bubbles));
+    // Balonlu görünüm 2026-11-05'te kalktı: balonlar sabit görünümde.
+    expect(availableViews(pdf), isNot(contains(AttachmentView.bubbles)));
     const video = Attachment(
       id: 'v',
       kind: AttachmentKind.video,
@@ -96,7 +96,6 @@ void main() {
     expect(availableViews(text), {
       AttachmentView.pinned,
       AttachmentView.floating,
-      AttachmentView.bubbles,
       AttachmentView.attached,
     });
     const slide = Attachment(
@@ -111,7 +110,6 @@ void main() {
     expect(availableViews(slide), {
       AttachmentView.pinned,
       AttachmentView.floating,
-      AttachmentView.bubbles,
       AttachmentView.attached,
     });
   });
@@ -133,11 +131,11 @@ void main() {
     );
     expect(find.text('Sabit'), findsOneWidget);
     expect(find.text('Yüzen'), findsOneWidget);
-    expect(find.text('Balonlu'), findsOneWidget);
+    expect(find.text('Balonlu'), findsNothing);
     // Seçili olana dokunmak hiçbir şey yapmaz.
     await tester.tap(find.text('Yüzen'));
-    await tester.tap(find.text('Balonlu'));
-    expect(picked, [AttachmentView.bubbles]);
+    await tester.tap(find.text('Sabit'));
+    expect(picked, [AttachmentView.pinned]);
   });
 
   testWidgets('dar kip yalnız simge çizer ve 360 dp ekrana sığar', (
@@ -344,5 +342,34 @@ void main() {
       final back = Attachment.fromMap(derived.toMap()..remove('createdAt'));
       expect(back.sourceId, 'g');
     });
+  });
+
+  testWidgets('sabit görselde Balon ekle düğmesi kipi açar (balonlu kalktı)', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(520, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      _app(
+        PinnedMediaPane(
+          media: image.copyWith(pinHeight: 200),
+          onHeightChanged: (_) {},
+          onUnpin: () {},
+          onOpen: () {},
+          onChanged: (_) {},
+          child: const Text('not gövdesi'),
+        ),
+      ),
+    );
+    final add = find.byKey(const ValueKey('pinned-add-bubble'));
+    expect(add, findsOneWidget);
+    await tester.tap(add);
+    await tester.pump();
+    expect(find.byIcon(Icons.check), findsOneWidget);
+    // Kapatınca eski hâline döner.
+    await tester.tap(add);
+    await tester.pump();
+    expect(find.byIcon(Icons.add_comment_outlined), findsOneWidget);
   });
 }

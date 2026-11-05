@@ -402,11 +402,7 @@ extension _EditorActions on _NoteEditorScreenState {
           if (_barHasSearch) 'search',
           if (_barHasShare) 'share',
         },
-        bubbleView:
-            _readOnly ||
-                _NoteEditorScreenState._switchableDocument(note) == null
-            ? null
-            : note.type.isPageNoteType,
+        // bubbleView verilmez: balonlu görünüm kalktı (2026-11-05).
         canRemoveParts: !_readOnly && _hasBothParts(note),
         canPinHome: NoteShortcut.supported && widget.ownerId == null,
         // Yalnız KENDİ notum (başkasının notu yerel yapılamaz) ve özellik

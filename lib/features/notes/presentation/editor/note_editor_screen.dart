@@ -98,6 +98,7 @@ import '../../domain/list_convert.dart';
 import '../../domain/note_item.dart';
 import '../../domain/note_type.dart';
 import '../../domain/page_notes.dart';
+import '../../domain/bubble_view_retire.dart';
 import '../collaborators_sheet.dart';
 import '../../../../core/widgets/action_menu_sheet.dart';
 import '../color_picker_sheet.dart';
@@ -2080,6 +2081,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Bu açılışta ipucuna bakıldı mı (bkz. [_maybeShowTip]).
   bool _tipChecked = false;
 
+  /// Balonlu görünümden sabite göç bir kez bakıldı mı (bkz. [_retireBubbleView]).
+  bool _bubbleRetireChecked = false;
+
   void _setImmersiveBubble(bool value) {
     if (_immersiveBubble == value || !mounted) return;
     setState(() => _immersiveBubble = value);
@@ -2405,6 +2409,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (!_tipChecked && note != null) {
       _tipChecked = true;
       WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTip());
+    }
+    // BALONLU GÖRÜNÜM KALKTI (2026-11-05): eski belge notu sabit görünüme
+    // geçer. Ağır alanlar (balonlar) gelmeden yazılmaz; açılış geçişinin
+    // ortasında yeniden çizim olmasın diye geçiş sonrasına.
+    if (!_bubbleRetireChecked &&
+        note != null &&
+        !note.heavyMissing &&
+        !_readOnly) {
+      _bubbleRetireChecked = true;
+      if (note.type.isPageNoteType || note.hasPageNotes) {
+        Timer(const Duration(milliseconds: 500), () {
+          if (mounted) _retireBubbleView();
+        });
+      }
     }
     // Alt çubuğun iki yeni düğmesi için: sayfada YÜZMEYEN ekler (şerit) ve
     // notun belge notu olup olmadığı (kalem düğmesi yalnız orada anlamlı).
