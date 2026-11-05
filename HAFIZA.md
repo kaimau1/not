@@ -32,6 +32,10 @@ maddeyi GÜNCELLE.
 - graphify grafiği elle (`graphify update .`; bulutta `pip install graphifyy` ile venv'e); satır bilgisini koddan doğrula.
 
 ## CI (`.github/workflows/build.yml`)
+- **Sürüm adı (2026-11-05, kullanıcı kararı):** eskiden `1.1.<koşu no>`; artık `ANA.ARA.N` —
+  ANA.ARA pubspec `version:` (1.2'ye çıkarıldı), N = o tabandan bu yana main'de `[apk]` başlıklı
+  commit sayısı (`tool/surum_hesapla.sh`, marker → android + web). `[minor]` → ARA +1. `v<ad>`
+  etiketi varsa N artar (çakışma yok). versionCode / `latestBuild` yine koşu no.
 - **Test seçimi (2026-11-05, kullanıcı kararı):** dalda yalnız etkilenen testler
   (`tool/etkilenen_testler.py`: import grafiği + test kaynağındaki yol dizeleri;
   taban = main'le ortak ata, son push DEĞİL — iptal edilen koşunun değişikliği

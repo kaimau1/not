@@ -38,6 +38,7 @@ jobs:
       perf: ${{ steps.marker.outputs.perf }}
       test_mod: ${{ steps.secim.outputs.mod }}
       test_liste: ${{ steps.secim.outputs.liste }}
+      surum: ${{ steps.surum.outputs.name }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -72,6 +73,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash tool/ci_test_secimi.sh 'Analiz + Test'
+
+      # SÜRÜM ADI (2026-11-05, kullanıcı kararı): ANA.ARA pubspec'ten, son hane
+      # main'de yayınlanan [apk] derlemesi sayısı (tool/surum_hesapla.sh) —
+      # CI/belge birleştirmesi sürümü ilerletmez. Başlıkta [minor] → ARA +1.
+      # APK ve web aynı adı buradan alır; versionCode koşu numarası.
+      - name: Sürüm adı
+        id: surum
+        run: |
+          base=$(sed -nE 's/^version: *([0-9]+\.[0-9]+)\..*/\1/p' pubspec.yaml)
+          name=$(bash tool/surum_hesapla.sh pubspec.yaml '^version:' "${base:-1.0}" '\[apk\]')
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "Sürüm: $name (${{ github.run_number }})"
 
   # TEST 3 PARÇADA PARALEL (2026-11-03): tek iş ~5 dk sürüyordu (testler
   # 3,5 dk). Dosyalar sıralanıp parçalara dağıtılır (her parça yalnız kendi
@@ -197,18 +210,11 @@ jobs:
           sudo docker image prune --all --force >/dev/null 2>&1 || true
           df -h /
 
-      # SÜRÜM ADI İLERLER (kullanıcı isteği 2026-10-20: "sürüm ilerlemesi
-      # lazım"). Uygulama içinde hep "1.0.0" yazıyordu: pubspec sabitti,
-      # yalnız versionCode (koşu numarası) artıyordu; Release adı "v1.0.N"
-      # ile Ayarlar → Hakkında'daki sürüm birbirini tutmuyordu. Artık ad
-      # pubspec'in ANA.ARA'sı + koşu numarası (ör. 1.1.412): her derlemede
-      # ilerler, Release etiketiyle aynıdır. Büyük adımda pubspec'teki ara
-      # sayı elle artırılır (1.2.0+1).
+      # Ad marker işinde hesaplanır (tool/surum_hesapla.sh); burada yalnız aktarılır.
       - name: Sürüm adını hesapla
         id: version
         run: |
-          base=$(sed -nE 's/^version: *([0-9]+\.[0-9]+)\..*/\1/p' pubspec.yaml)
-          name="${base:-1.0}.${{ github.run_number }}"
+          name="${{ needs.marker.outputs.surum }}"
           echo "name=$name" >> "$GITHUB_OUTPUT"
           echo "Sürüm: $name (${{ github.run_number }})"
 
@@ -509,6 +515,7 @@ jobs:
   web:
     name: Web derle
     runs-on: ubuntu-latest
+    needs: marker
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
@@ -529,9 +536,8 @@ jobs:
       # görselleri (YouTube kapağı, Drive) bozar; skwasm tek iş parçacığında koşar.
       - name: Web derle
         run: |
-          base=$(sed -nE 's/^version: *([0-9]+\.[0-9]+)\..*/\1/p' pubspec.yaml)
           flutter build web --release --wasm \
-            --build-name="${base:-1.0}.${{ github.run_number }}" \
+            --build-name="${{ needs.marker.outputs.surum }}" \
             --build-number=${{ github.run_number }} \
             --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }} \
             --dart-define=RECAPTCHA_SITE_KEY=${{ secrets.RECAPTCHA_SITE_KEY }}
