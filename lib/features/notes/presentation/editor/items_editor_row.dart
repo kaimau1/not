@@ -349,6 +349,14 @@ extension _ItemsRow on ItemsEditorState {
                         );
                       }
                     },
+                    // Sağ tık = uzun basış (F44.5).
+                    onSecondaryTapUp: _selectionMode
+                        ? null
+                        : (details) => _showItemMenu(
+                            item,
+                            details.globalPosition,
+                            anchor: leadContext,
+                          ),
                     onTap: _selectionMode
                         ? () => _toggleSelection(item)
                         : null,
@@ -362,6 +370,12 @@ extension _ItemsRow on ItemsEditorState {
                   // Seçim modunda metne dokunmak düzenlemeye değil seçime gider.
                   child: GestureDetector(
                     onTap: _selectionMode ? () => _toggleSelection(item) : null,
+                    // Düz çizilen satır (F24.3) sağ tıkta menü açar; odaklı
+                    // alanın sağ tıkı metin menüsü, alan önce kazanır.
+                    onSecondaryTapUp: _selectionMode
+                        ? null
+                        : (details) =>
+                              _showItemMenu(item, details.globalPosition),
                     child: AbsorbPointer(
                       absorbing: _selectionMode,
                       child: _wrapped(

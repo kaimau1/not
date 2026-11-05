@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RendererBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -1061,7 +1062,8 @@ class NoteCard extends ConsumerWidget {
                   ? null
                   : (details) =>
                         _showContextMenu(context, ref, details.globalPosition),
-              child: Stack(
+              child: _CardHover(
+                child: Stack(
                 children: [
                   ExcludeSemantics(child: shadowed),
                   // Üç nokta hızlı işlem düğmesi (madde 5): kartın SAĞ ÜST KÖŞESİnde
@@ -1087,6 +1089,7 @@ class NoteCard extends ConsumerWidget {
                         label: context.l10n.noteMenu,
                         excludeSemantics: true,
                         onTap: () => showNoteActionsSheet(context, ref, note),
+                        child: _RevealOnCardHover(
                         child: Material(
                         color: Colors.transparent,
                         child: InkWell(
@@ -1128,6 +1131,7 @@ class NoteCard extends ConsumerWidget {
                         ),
                       ),
                       ),
+                      ),
                     ),
                   // Seçim çerçevesi: yerleşimi değiştirmeyen boya katmanı
                   // (yukarıdaki kök nedene bak). `IgnorePointer` şart — katman
@@ -1162,6 +1166,7 @@ class NoteCard extends ConsumerWidget {
                     ),
                 ],
               ),
+              ),
             ),
           ),
         ),
@@ -1170,6 +1175,69 @@ class NoteCard extends ConsumerWidget {
     return framed == null
         ? out
         : framed(out, focused: env.focused, open: env.open);
+  }
+}
+
+/// Kartın üstünde fare var mı (F44.5): ⋮ fareyle yalnız üstüne gelince. Durum
+/// burada, kart yeniden kurulmaz; dokunmatikte ⋮ hep görünür, davranış aynı.
+class _CardHover extends StatefulWidget {
+  const _CardHover({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_CardHover> createState() => _CardHoverState();
+}
+
+class _CardHoverState extends State<_CardHover> {
+  final _hovered = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    _hovered.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => MouseRegion(
+    onEnter: (_) => _hovered.value = true,
+    onExit: (_) => _hovered.value = false,
+    child: _CardHoverScope(hovered: _hovered, child: widget.child),
+  );
+}
+
+class _CardHoverScope extends InheritedWidget {
+  const _CardHoverScope({required this.hovered, required super.child});
+
+  final ValueNotifier<bool> hovered;
+
+  @override
+  bool updateShouldNotify(_CardHoverScope oldWidget) =>
+      hovered != oldWidget.hovered;
+}
+
+class _RevealOnCardHover extends StatelessWidget {
+  const _RevealOnCardHover({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final hovered = context
+        .dependOnInheritedWidgetOfExactType<_CardHoverScope>()
+        ?.hovered;
+    if (hovered == null) return child;
+    return ListenableBuilder(
+      listenable: hovered,
+      // Yer ve ekran okuyucu düğümü kalır, yalnız çizilmez.
+      builder: (context, shown) => Visibility.maintain(
+        visible:
+            hovered.value ||
+            !RendererBinding.instance.mouseTracker.mouseIsConnected,
+        child: shown!,
+      ),
+      child: child,
+    );
   }
 }
 

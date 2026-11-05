@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import '../../notes/presentation/note_link_ui.dart' show noteLinkLabel;
 import '../../notes/presentation/note_card.dart' show openNoteRoute;
 import 'dart:io';
@@ -381,7 +382,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     final brainstorm = _scope == ChatScope.note && _mode == ChatMode.brainstorm;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.chatTitle)),
+      appBar: HomeInBar(appBar: AppBar(title: Text(l10n.chatTitle))),
       body: Column(
         children: [
           // KAPSAM + KİP çipleri: neyle, nasıl konuşulduğu tek bakışta.

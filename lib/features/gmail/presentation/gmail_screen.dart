@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -104,7 +105,7 @@ class _GmailScreenState extends ConsumerState<GmailScreen> {
     final l10n = context.l10n;
     final available = ref.watch(gmailAvailableProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.gmailTitle)),
+      appBar: HomeInBar(appBar: AppBar(title: Text(l10n.gmailTitle))),
       body: !available
           ? _Message(icon: Icons.mail_lock_outlined, text: l10n.gmailGoogleOnly)
           : _needsConnect
@@ -379,13 +380,13 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
     final l10n = context.l10n;
     final m = _message;
     return Scaffold(
-      appBar: AppBar(
+      appBar: HomeInBar(appBar: AppBar(
         title: Text(
           m?.subject ?? '',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-      ),
+      )),
       body: _error != null
           ? _Message(
               icon: Icons.error_outline,

@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -236,7 +237,7 @@ class _GuideScreenState extends State<GuideScreen> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.guideTitle)),
+      appBar: HomeInBar(appBar: AppBar(title: Text(l10n.guideTitle))),
       body: FutureBuilder<ParsedGuide>(
         future: _guide,
         builder: (context, snapshot) {

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/sheet_header.dart';
 // ScrollCacheExtent (ızgara önbellek payı) yalnız rendering katmanında.
 import 'package:flutter/rendering.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -117,7 +118,41 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen>
-    with WidgetsBindingObserver, QuickAddActions {
+    with WidgetsBindingObserver, QuickAddActions
+    implements HomeDoors {
+  // ---- Ray ve kısayol kapıları (bkz. HomeDoors) ------------------------
+  @override
+  QuickAddActions get quickAddActions => this;
+
+  @override
+  void dictateNote() => unawaited(_dictateNote());
+
+  @override
+  void captureVoiceNote() => unawaited(_captureVoiceNote());
+
+  /// Yana çekişin açık olduğu durumla aynı kural (bkz. [FolderSwipe.enabled]).
+  @override
+  void cycleFolder(int direction) {
+    if (ref.read(selectedNoteIdsProvider).isNotEmpty ||
+        ref.read(reorderModeProvider) ||
+        _dragNoteId != null ||
+        ref.read(swipeModeProvider) == SwipeMode.off) {
+      return;
+    }
+    _cycleFilterFolder(direction);
+  }
+
+  /// "Tümünü seç" düğmesiyle aynı kapsam: ekranda görünen notlar.
+  @override
+  void selectAllVisible() => ref
+      .read(selectedNoteIdsProvider.notifier)
+      .selectAll(ref.read(filteredNotesProvider).value?.map((n) => n.id) ?? const []);
+
+  @override
+  void deleteSelection() {
+    final ids = ref.read(selectedNoteIdsProvider);
+    if (ids.isNotEmpty) unawaited(_deleteSelected(ids));
+  }
 
   /// Kart ızgarasının kaydırma denetleyicisi — "başa dön" düğmesi buradan
   /// tepeye döner.
@@ -235,7 +270,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   @override
   void initState() {
     super.initState();
-    _stopFileDrops = addFileDropHandler((files) => unawaited(useFiles(files)));
+    homeDoors = this;
+    _stopFileDrops = addFileDropHandler((files) {
+      // Paylaşılan klasörde dosya akışı notu KENDİ koleksiyonuma açardı (F43.2).
+      if (ref.read(selectedSharedFolderProvider) != null) {
+        showQuickAddSnack(context.l10n.sharedFolderNoFileDrop);
+        return;
+      }
+      unawaited(useFiles(files));
+    });
     // KÖK NEDEN (kasma): burada `_searchFocus.addListener(() => setState(...))`
     // vardı — arama alanına her dokunuş EKRANIN TAMAMINI (ve önbellek
     // payındaki ~130 kartı) yeniden kuruyordu. Odak artık yalnız arama
@@ -433,6 +476,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   @override
   void dispose() {
+    // Dar↔geniş geçişinde yeni örnek önce kurulur, kapıyı ondan alma.
+    if (identical(homeDoors, this)) homeDoors = null;
     _stopFileDrops();
     WidgetsBinding.instance.removeObserver(this);
     _liveQuery.dispose();
@@ -1268,9 +1313,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                       )
                                     : null,
                                 automaticallyImplyLeading: false,
-                                title: _SearchField(
-                                  controller: _searchController,
-                                  focusNode: _searchFocus,
+                                // Masaüstünde ekran boyu olmasın (F44.4).
+                                title: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 720,
+                                  ),
+                                  child: _SearchField(
+                                    controller: _searchController,
+                                    focusNode: _searchFocus,
+                                  ),
                                 ),
                                 actions: searchExpanded
                                     ? const [SizedBox(width: 4)]
@@ -1729,10 +1780,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       // MİKROFON "+"nın SOLUNDA, aynı satırda (B2): sütun
                       // eskiden iki düğme boyu yükseliyor ve sağ sütunun
                       // son kartını örtüyordu; tek satır 56 dp.
-                      if (sharedFolder != null)
-                        SharedFolderFab(folder: sharedFolder)
-                      else
-                      Row(
+                      //
+                      // Ray görünürken kapılar rayda (K3, F44.1): Builder yalnız
+                      // bu dalı ray durumuna bağlar.
+                      Builder(
+                        builder: (context) => AppRailScope.visible(context)
+                            ? const SizedBox.shrink()
+                            : sharedFolder != null
+                            ? SharedFolderFab(folder: sharedFolder)
+                            : Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           // TEK MİKROFON (F3.1) = DOĞRUDAN YAZDIR (kullanıcı
@@ -1765,10 +1821,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             link: _fabColumnLink,
                             child: QuickAddFab(
                               anchor: _fabColumnLink,
-                              actions: this,
+                              actions: () => this,
                             ),
                           ),
                         ],
+                      ),
                       ),
                     ],
                   ),

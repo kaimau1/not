@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
@@ -54,7 +55,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
     final count = archived.value?.length;
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: HomeInBar(appBar: AppBar(
         title: _search.open
             ? ScreenSearchField(search: _search, aiHint: l10n.archiveAiSearchHint)
             : Column(
@@ -91,7 +92,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
             onPick: (sort) => ref.read(noteSortProvider.notifier).set(sort),
           ),
         ],
-      ),
+      )),
       body: archived.when(
         loading: () => const NoteListSkeleton(),
         error: (e, _) => ErrorState(

@@ -3645,6 +3645,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get showNoteList => 'Show note list';
 
   @override
+  String get shortcutSwitchFolder => 'Switch folders';
+
+  @override
+  String get shortcutMouseWheel => 'wheel';
+
+  @override
+  String get shortcutGridColumns => 'Column count';
+
+  @override
+  String get shortcutSelectAll => 'While selecting: select all';
+
+  @override
+  String get shortcutDeleteSelected => 'Move selected to trash';
+
+  @override
+  String get sharedFolderNoFileDrop =>
+      'Files can\'t be dropped on a shared folder. Open a note and drop the file there.';
+
+  @override
   String get shortcutAdjacentNote => 'Previous / next note in list';
 
   @override

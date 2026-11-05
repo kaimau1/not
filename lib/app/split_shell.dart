@@ -42,6 +42,46 @@ bool isNoteLocation(String path) =>
 /// kapanınca arama/kaydırma sıfırlanıyordu.
 bool splitActiveFor(double width) => width >= kNoteSplitBreakpoint;
 
+/// **Dikey tablette liste çekmece gibi** (J3, F44.7): 800 dp'de liste + not
+/// notu ~460 dp'ye indiriyordu. Bu genişliğin altında DİKEY pencerede not açılınca
+/// liste kenara çekilir; ☰ geri getirir, başka nota geçince yine çekilir. Tek
+/// liste örneği korunur (genişliği sıfıra iner, ağaçtan çıkmaz). Menteşeli
+/// katlanabilirde ayraç menteşede kalır.
+const double kPortraitListBreakpoint = 960;
+
+bool listAutoHidesFor(Size window, {required bool hasHinge}) =>
+    !hasHinge &&
+    window.width < kPortraitListBreakpoint &&
+    window.height > window.width;
+
+/// ☰ ile bu not için listeyi açtı (konum); başka notta geçersiz.
+final listPeekLocationProvider = NotifierProvider<_ListPeek, String?>(
+  _ListPeek.new,
+);
+
+class _ListPeek extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void set(String? location) => state = location;
+}
+
+/// Ctrl+\ ve ☰: kendiliğinden çekilen listede yalnız bu not için, başka yerde
+/// kalıcı tercih (odak modu).
+void toggleNoteListPane(BuildContext context, WidgetRef ref) {
+  final location = currentLocation(GoRouter.of(context));
+  final auto = listAutoHidesFor(
+    MediaQuery.sizeOf(context),
+    hasHinge: verticalHingeOf(context) != null,
+  );
+  if (auto && isNoteLocation(location)) {
+    final peek = ref.read(listPeekLocationProvider.notifier);
+    peek.set(ref.read(listPeekLocationProvider) == location ? null : location);
+    return;
+  }
+  ref.read(listPaneCollapsedProvider.notifier).toggle();
+}
+
 /// Kabuğun ŞU AN listeyi sol panelde çizip çizmediği ve listenin tek sütun
 /// olup olmadığı. `/` rotası buna bakar: etkinken liste zaten solda, rota
 /// hiçbir şey çizmez.
@@ -50,6 +90,8 @@ class SplitScope extends InheritedWidget {
     super.key,
     required this.active,
     required this.singleColumn,
+    this.listHidden = false,
+    this.listAutoHides = false,
     required super.child,
   });
 
@@ -57,6 +99,12 @@ class SplitScope extends InheritedWidget {
 
   /// Sol paneldeki liste tek sütun çizilsin (not açık).
   final bool singleColumn;
+
+  /// Not açık ve liste şu an gizli (tam ekran, odak modu, dikey tablet).
+  final bool listHidden;
+
+  /// Liste bu pencerede kendiliğinden çekiliyor (bkz. [listAutoHidesFor]).
+  final bool listAutoHides;
 
   static SplitScope? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<SplitScope>();
@@ -66,7 +114,10 @@ class SplitScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(SplitScope oldWidget) =>
-      active != oldWidget.active || singleColumn != oldWidget.singleColumn;
+      active != oldWidget.active ||
+      singleColumn != oldWidget.singleColumn ||
+      listHidden != oldWidget.listHidden ||
+      listAutoHides != oldWidget.listAutoHides;
 }
 
 /// Sol paneldeki listeye "tek sütun çiz" der (bkz. DashboardScreen).
@@ -252,14 +303,29 @@ class _SplitShellState extends ConsumerState<SplitShell> {
             : null;
         // Açık not yokken liste gizlenmez: gizli liste + boş sağ panel,
         // kullanıcıya hiçbir şey göstermeyen bir ekran olurdu.
+        final autoHides = listAutoHidesFor(
+          MediaQuery.sizeOf(context),
+          hasHinge: hinge != null,
+        );
         final collapsed =
             (ref.watch(listPaneCollapsedProvider) ||
-                ref.watch(noteFullscreenProvider)) &&
+                ref.watch(noteFullscreenProvider) ||
+                (autoHides &&
+                    ref.watch(listPeekLocationProvider) != location)) &&
             noteOpen;
         return SplitScope(
           active: true,
           singleColumn: noteOpen,
-          child: _split(context, paneWidth, maxPane, collapsed, noteOpen),
+          listHidden: collapsed,
+          listAutoHides: autoHides && noteOpen,
+          child: _split(
+            context,
+            paneWidth,
+            maxPane,
+            collapsed,
+            noteOpen,
+            animate: !autoHides,
+          ),
         );
       },
     );
@@ -270,8 +336,9 @@ class _SplitShellState extends ConsumerState<SplitShell> {
     double? notePaneWidth,
     double maxPane,
     bool collapsed,
-    bool noteOpen,
-  ) {
+    bool noteOpen, {
+    required bool animate,
+  }) {
     return Scaffold(
       // Not yokken liste kabuğun TAM genişliği (ray düşülmüş hâli; pencere
       // genişliği değil — LayoutBuilder).
@@ -290,7 +357,11 @@ class _SplitShellState extends ConsumerState<SplitShell> {
               // görünen kısmı daralır — ızgara her karede yeniden dizilmez.
               TweenAnimationBuilder<double>(
                 tween: Tween<double>(end: collapsed ? 0 : 1),
-                duration: const Duration(milliseconds: 240),
+                // Dikey tablette not açılış geçişiyle üst üste binmesin: not
+                // alanı her karede yeniden yerleşirdi (F44.7).
+                duration: animate
+                    ? const Duration(milliseconds: 240)
+                    : Duration.zero,
                 curve: Curves.easeInOutCubic,
                 child: SizedBox(
                   width: paneWidth,

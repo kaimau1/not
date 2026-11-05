@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -104,7 +105,7 @@ class BriefingScreen extends ConsumerWidget {
         !briefing.isLoading &&
         !briefing.hasError) {
       return Scaffold(
-        appBar: AppBar(title: Text(l10n.briefingTitle)),
+        appBar: HomeInBar(appBar: AppBar(title: Text(l10n.briefingTitle))),
         body: AiGeneratePrompt(
           icon: Icons.wb_sunny_outlined,
           buttonLabel: l10n.aiGenerate,
@@ -114,7 +115,7 @@ class BriefingScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: HomeInBar(appBar: AppBar(
         title: Text(l10n.briefingTitle),
         actions: [
           IconButton(
@@ -123,7 +124,7 @@ class BriefingScreen extends ConsumerWidget {
             onPressed: onRefresh,
           ),
         ],
-      ),
+      )),
       body: AiTextResult(
         value: briefing,
         loadingText: l10n.briefingLoading,

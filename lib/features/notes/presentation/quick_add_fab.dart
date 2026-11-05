@@ -38,6 +38,8 @@ class QuickAddFab extends StatefulWidget {
     required this.anchor,
     required this.actions,
     this.onVoiceCapture,
+    this.inRail = false,
+    this.beforeAction,
   });
 
   /// Menünün demirlendiği nokta. Dashboard bunu mikrofon + "+" sütununun
@@ -45,12 +47,20 @@ class QuickAddFab extends StatefulWidget {
   /// mikrofon düğmesinin üstünü örtmez.
   final LayerLink anchor;
 
-  /// Oluşturma akışlarının sahibi (ana ekran ya da klasör sayfası).
-  final QuickAddActions actions;
+  /// Oluşturma akışlarının sahibi (ana ekran). Dokunuş anında okunur: rayın
+  /// düğmesi ana ekrandan önce kurulur; yoksa panel açılmaz.
+  final QuickAddActions? Function() actions;
 
   /// Sesli not. Ana ekranın kendi TEK mikrofonu var (F3.1) — orada null;
   /// klasör sayfasında menünün birincil satırında durur.
   final VoidCallback? onVoiceCapture;
+
+  /// Rayda (K3): küçük düğme, panel düğmenin SAĞINDA tepeden açılır, Esc
+  /// kapatır.
+  final bool inRail;
+
+  /// Seçilen iş başlamadan önce (ray: bölümden notlara dön).
+  final VoidCallback? beforeAction;
 
   @override
   State<QuickAddFab> createState() => _QuickAddFabState();
@@ -78,6 +88,13 @@ class _QuickAddFabState extends State<QuickAddFab> {
     final fab = context.findRenderObject()! as RenderBox;
     final box = overlay.findRenderObject()! as RenderBox;
     final rect = fab.localToGlobal(Offset.zero, ancestor: box) & fab.size;
+    if (widget.inRail) {
+      return (
+        width: math.min(380.0, box.size.width - rect.right - 24),
+        dx: 0.0,
+        maxHeight: math.max(160.0, box.size.height - rect.top - 12),
+      );
+    }
     return quickAddPanelFit(
       screen: box.size,
       fabRight: rect.right,
@@ -87,9 +104,26 @@ class _QuickAddFabState extends State<QuickAddFab> {
   }
 
   void _openMenu() {
+    final actions = widget.actions();
+    if (actions == null) return;
+    final rail = widget.inRail;
     _entry = OverlayEntry(
       builder: (context) => Stack(
         children: [
+          // Masaüstü: klavye odağı panelde, Esc kapatır.
+          if (rail)
+            Focus(
+              autofocus: true,
+              onKeyEvent: (_, event) {
+                if (event is! KeyDownEvent ||
+                    event.logicalKey != LogicalKeyboardKey.escape) {
+                  return KeyEventResult.ignored;
+                }
+                _close();
+                return KeyEventResult.handled;
+              },
+              child: const SizedBox.shrink(),
+            ),
           // Dışarı dokununca kapanan tam ekran bariyer; arka planı bulanık
           // yapar ve hafifçe karartır.
           Positioned.fill(
@@ -104,10 +138,10 @@ class _QuickAddFabState extends State<QuickAddFab> {
           CompositedTransformFollower(
             link: widget.anchor,
             targetAnchor: Alignment.topRight,
-            followerAnchor: Alignment.bottomRight,
-            offset: Offset(_panelFit().dx, -12),
+            followerAnchor: rail ? Alignment.topLeft : Alignment.bottomRight,
+            offset: rail ? const Offset(12, 0) : Offset(_panelFit().dx, -12),
             child: _QuickAddPanel(
-              options: _options(context),
+              options: _options(context, actions),
               onSelected: _select,
               fit: _panelFit(),
             ),
@@ -122,7 +156,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
             link: widget.anchor,
             targetAnchor: Alignment.bottomCenter,
             followerAnchor: Alignment.bottomCenter,
-            child: FloatingActionButton(
+            child: _fab(
               heroTag: 'add-fab-open',
               tooltip: context.l10n.close,
               onPressed: _close,
@@ -142,8 +176,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
 
   /// Menüdeki BÜTÜN seçenekler. Anahtar kişiselleştirmenin (`UiItem.quickAdd`)
   /// kalıcı kimliğidir. Ad/simge/grup TEK listeden ([addCatalog]) gelir.
-  List<QuickAddOption> _options(BuildContext context) {
-    final a = widget.actions;
+  List<QuickAddOption> _options(BuildContext context, QuickAddActions a) {
     final actions = <String, VoidCallback?>{
       'text': () => a.createNote(NoteType.text),
       'checklist': () => a.createNote(NoteType.checklist),
@@ -170,7 +203,39 @@ class _QuickAddFabState extends State<QuickAddFab> {
 
   void _select(VoidCallback action) {
     _close();
+    widget.beforeAction?.call();
     action();
+  }
+
+  /// Rayda küçük ve ikincil ton (K3: birincil kapı kalem), ana ekranda tam boy.
+  Widget _fab({
+    required String heroTag,
+    required String tooltip,
+    required VoidCallback onPressed,
+    required Widget child,
+  }) {
+    if (!widget.inRail) {
+      return FloatingActionButton(
+        heroTag: heroTag,
+        tooltip: tooltip,
+        onPressed: onPressed,
+        child: child,
+      );
+    }
+    final scheme = Theme.of(context).colorScheme;
+    return SizedBox.square(
+      dimension: 48,
+      child: FloatingActionButton(
+        heroTag: heroTag,
+        tooltip: tooltip,
+        elevation: 0,
+        backgroundColor: scheme.primaryContainer,
+        foregroundColor: scheme.onPrimaryContainer,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        onPressed: onPressed,
+        child: child,
+      ),
+    );
   }
 
   @override
@@ -191,7 +256,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
     // PopScope: panel bir Overlay katmanı, rota DEĞİL — sistem geri tuşu
     // Navigator'a gidiyor ve panel açıkken geri basmak paneli bırakıp
     // UYGULAMADAN çıkıyordu. Geri artık önce paneli kapatır.
-    return PopScope(
+    final button = PopScope(
       canPop: !_open,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _close();
@@ -201,7 +266,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
           HapticFeedback.mediumImpact();
           if (!_open) _openMenu();
         },
-        child: FloatingActionButton(
+        child: _fab(
           heroTag: 'add-fab',
           tooltip: l10n.quickAddTooltip,
           // Dokunmak tip menüsünü açar (metin/madde/sıralı/el yazısı); açıkken
@@ -215,6 +280,16 @@ class _QuickAddFabState extends State<QuickAddFab> {
           ),
         ),
       ),
+    );
+    if (!widget.inRail) return button;
+    // Ray iç gezginlerin üstünde: PopScope sistem geri tuşuna denk gelmez.
+    return BackButtonListener(
+      onBackButtonPressed: () async {
+        if (!_open) return false;
+        _close();
+        return true;
+      },
+      child: button,
     );
   }
 }

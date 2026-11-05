@@ -11,10 +11,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/l10n_ext.dart';
+import '../core/personalize.dart';
+import '../core/widgets/customizable.dart';
+import '../features/ai/data/ai_gate.dart';
 import '../features/folders/data/folder_activity.dart';
+import '../features/folders/domain/note_folder.dart';
+import '../features/folders/presentation/shared_folder_home.dart';
 import '../features/friends/presentation/friends_screen.dart';
+import '../features/notes/presentation/notes_providers.dart';
+import '../features/notes/presentation/quick_add_fab.dart';
 import '../features/settings/settings_providers.dart';
 import 'app_commands.dart';
+import 'router.dart' show kOutsideShellNotePrefix;
 import 'split_shell.dart';
 import '../core/utils/web_ready.dart';
 
@@ -106,9 +114,8 @@ class AppFrame extends ConsumerWidget {
     // Oturum açık, ilk anlamlı ekran: web açılış katmanı kalkar (F10.6).
     signalWebReady();
     final size = MediaQuery.sizeOf(context);
-    final showRail =
-        size.width >= kRailBreakpoint && size.height >= _minRailHeight;
-    void toggleList() => ref.read(listPaneCollapsedProvider.notifier).toggle();
+    final showRail = _railFits(size);
+    void toggleList() => toggleNoteListPane(context, ref);
 
     final fullscreen = ref.watch(noteFullscreenProvider);
     Widget content = child;
@@ -131,13 +138,71 @@ class AppFrame extends ConsumerWidget {
   }
 }
 
-Widget _flex({required bool horizontal, required List<Widget> children}) =>
-    horizontal
-    ? Row(mainAxisSize: MainAxisSize.min, children: children)
-    : Column(mainAxisSize: MainAxisSize.min, children: children);
+/// Üst çubuğu [HomeInBar] ile 🏠 taşıyan konumlar (K5): buralarda şerit çizilmez.
+/// Yeni bölüm ekranı: çubuğu [HomeInBar] ile sar + buraya yaz (test tarar).
+const kHomeInBarLocations = [
+  '/settings',
+  '/personalize',
+  '/privacy',
+  '/guide',
+  '/gmail',
+  '/premium',
+  '/ai',
+  '/chat',
+  '/briefing',
+  '/cards',
+  '/reminders',
+  '/archive',
+  '/trash',
+  '/folders',
+  '/inbox',
+  '/note/',
+  '/notebook/',
+  '$kOutsideShellNotePrefix/',
+];
 
-/// Dar web'de (ray yok) ana sayfa dışındaki her ekranın üstünde ince çubuk:
-/// "Ana sayfaya dön" (F28.3). Telefon uygulamasında kapalı.
+bool hasHomeInBar(String location) =>
+    kHomeInBarLocations.any(location.startsWith);
+
+/// **Dar web'de üst çubuğun en solunda 🏠** (K5, F44.2). Çubuğun kendi geri oku
+/// ve başlığı olduğu gibi kalır; [appBar] kalan genişliğe oturur. Telefon
+/// uygulamasında ve rayın göründüğü pencerede [appBar]ın kendisi çizilir.
+class HomeInBar extends ConsumerWidget implements PreferredSizeWidget {
+  const HomeInBar({super.key, required this.appBar});
+
+  final PreferredSizeWidget appBar;
+
+  @override
+  Size get preferredSize => appBar.preferredSize;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!homeBarOnNarrow || _railFits(MediaQuery.sizeOf(context))) return appBar;
+    // Saydam: üst çubuğun zemini iskeleyle aynı (not rengi dahil).
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
+          child: IconButton(
+            key: const ValueKey('narrow-home'),
+            tooltip: '${context.l10n.goHome} (Alt+Home)',
+            icon: const Icon(Icons.home_outlined),
+            onPressed: () => goHome(ref, GoRouter.of(context)),
+          ),
+        ),
+        Expanded(child: appBar),
+      ],
+    );
+  }
+}
+
+bool _railFits(Size window) =>
+    window.width >= kRailBreakpoint && window.height >= _minRailHeight;
+
+/// Dar web'de üst çubuğu olmayan ekranın üstünde ince çubuk: "Ana sayfaya dön"
+/// (F28.3, K5). Çubuklu ekranlarda 🏠 çubuğun içinde ([HomeInBar]). Telefon
+/// uygulamasında kapalı.
 class _NarrowHomeBar extends ConsumerWidget {
   const _NarrowHomeBar({required this.child});
 
@@ -150,7 +215,8 @@ class _NarrowHomeBar extends ConsumerWidget {
     return ListenableBuilder(
       listenable: router.routerDelegate,
       builder: (context, _) {
-        if (currentLocation(router) == '/') return child;
+        final location = currentLocation(router);
+        if (location == '/' || hasHomeInBar(location)) return child;
         final top = MediaQuery.paddingOf(context).top;
         return Column(
           children: [
@@ -514,6 +580,7 @@ class _AppRail extends ConsumerWidget {
     // "yeni bir şey geldiğinde anlaşılmıyor"). Ortak notlar artık Gelen ve
     // paylaşılanlar bölümünde sayılıyor.
     final sharedUnread = ref.watch(sharedUnreadTotalProvider);
+    final aiLocked = ref.watch(aiAvailabilityProvider) != AiAvailability.ready;
 
     return ColoredBox(
       color: scheme.surfaceContainerLow,
@@ -550,52 +617,24 @@ class _AppRail extends ConsumerWidget {
                             labelType: NavigationRailLabelType.none,
                             selectedIndex: index < 0 ? null : index,
                             groupAlignment: -0.85,
-                            onDestinationSelected: (i) =>
-                                go(() => openSection(router, railSections[i])),
+                            // "Notlar" = ana sayfa (K4): açık not da kapanır,
+                            // Alt+Home ile aynı. Ayrı 🏠 düğmesi kalktı.
+                            onDestinationSelected: (i) => go(
+                              () => railSections[i] == AppSection.notes
+                                  ? goHome(ref, router)
+                                  : openSection(router, railSections[i]),
+                            ),
                             leading: Padding(
                               padding: const EdgeInsets.only(
                                 top: 8,
                                 bottom: 12,
                               ),
-                              // Geniş rayda yan yana (dikey yer harcamasın),
-                              // dar rayda alt alta.
-                              child: _flex(
-                                horizontal: extended,
-                                children: [
-                                  IconButton(
-                                    key: const ValueKey('rail-home'),
-                                    tooltip: '${l10n.goHome} (Alt+Home)',
-                                    icon: const Icon(Icons.home_outlined),
-                                    onPressed: () =>
-                                        go(() => goHome(ref, router)),
-                                  ),
-                                  extended
-                                      ? FloatingActionButton.extended(
-                                          heroTag: 'rail-new-note',
-                                          elevation: 0,
-                                          onPressed: () => go(
-                                            () => createAndOpenNote(
-                                              ref,
-                                              router,
-                                            ),
-                                          ),
-                                          icon: const Icon(Icons.edit_outlined),
-                                          label: Text(l10n.newNoteShort),
-                                        )
-                                      : FloatingActionButton(
-                                          heroTag: 'rail-new-note',
-                                          elevation: 0,
-                                          tooltip:
-                                              '${l10n.newNoteShort} (Ctrl+N)',
-                                          onPressed: () => go(
-                                            () => createAndOpenNote(
-                                              ref,
-                                              router,
-                                            ),
-                                          ),
-                                          child: const Icon(Icons.edit_outlined),
-                                        ),
-                                ],
+                              child: _RailDoors(
+                                extended: extended,
+                                // Çekmecede yalnız kalem: not açıkken mikrofon
+                                // ve "+" listenin altında duruyor.
+                                penOnly: forceExtended,
+                                onNavigate: onNavigate,
                               ),
                             ),
                             destinations: [
@@ -613,7 +652,13 @@ class _AppRail extends ConsumerWidget {
                                             ? '$kFolderBadgeMax+'
                                             : '$sharedUnread',
                                       ),
-                                      child: Icon(s.icon),
+                                      // Yapay zekâ kapalıysa kilit (F44.6): web'de
+                                      // dahili AI kapalıyken de görünür olsun.
+                                      child: Icon(
+                                        s == AppSection.ai && aiLocked
+                                            ? Icons.lock_outline
+                                            : s.icon,
+                                      ),
                                     ),
                                   ),
                                   selectedIcon: Icon(s.selectedIcon),
@@ -629,22 +674,9 @@ class _AppRail extends ConsumerWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        // İki grup (F44.1): kişiler + yardım · rayın ve
+                        // listenin görünümü.
                         children: [
-                          if (showListToggle)
-                            _RailAction(
-                              extended: extended,
-                              selected: collapsed,
-                              icon: collapsed
-                                  ? Icons.view_sidebar
-                                  : Icons.view_sidebar_outlined,
-                              label: collapsed
-                                  ? l10n.listPaneShow
-                                  : l10n.listPaneHide,
-                              shortcut: 'Ctrl+\\',
-                              onPressed: () => ref
-                                  .read(listPaneCollapsedProvider.notifier)
-                                  .toggle(),
-                            ),
                           _RailAction(
                             extended: extended,
                             icon: AppIcons.friends,
@@ -661,6 +693,30 @@ class _AppRail extends ConsumerWidget {
                             shortcut: 'Ctrl+/',
                             onPressed: () => showShortcutsHelp(context),
                           ),
+                          if (showListToggle || !forceExtended)
+                            SizedBox(
+                              width: extended ? 200 : kRailWidth,
+                              child: const Divider(
+                                height: 9,
+                                indent: 14,
+                                endIndent: 14,
+                              ),
+                            ),
+                          if (showListToggle)
+                            _RailAction(
+                              extended: extended,
+                              selected: collapsed,
+                              icon: collapsed
+                                  ? Icons.view_sidebar
+                                  : Icons.view_sidebar_outlined,
+                              label: collapsed
+                                  ? l10n.listPaneShow
+                                  : l10n.listPaneHide,
+                              shortcut: 'Ctrl+\\',
+                              onPressed: () => ref
+                                  .read(listPaneCollapsedProvider.notifier)
+                                  .toggle(),
+                            ),
                           if (!forceExtended)
                             _RailAction(
                               extended: extended,
@@ -682,6 +738,134 @@ class _AppRail extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// **Yeni not kapıları tek yerde** (K3, F44.1): kalem (doğrudan metin notu),
+/// altında mikrofon ve "+" paneli. Ray görünürken ana ekranın sağ altındaki
+/// düğmeler çizilmez. İşin kendisi ana ekranda ([homeDoors]).
+class _RailDoors extends ConsumerStatefulWidget {
+  const _RailDoors({
+    required this.extended,
+    required this.penOnly,
+    this.onNavigate,
+  });
+
+  final bool extended;
+  final bool penOnly;
+  final VoidCallback? onNavigate;
+
+  @override
+  ConsumerState<_RailDoors> createState() => _RailDoorsState();
+}
+
+class _RailDoorsState extends ConsumerState<_RailDoors> {
+  final _addLink = LayerLink();
+
+  /// Bölümdeysek önce notlara döner, sonra ana ekranın kapısını çağırır.
+  void _atHome(void Function(HomeDoors doors) action) {
+    openSection(GoRouter.of(context), AppSection.notes);
+    final doors = homeDoors;
+    if (doors != null) return action(doors);
+    // Derin bağlantı: altta ana ekran yoktu, bu kare kuruluyor.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final late = homeDoors;
+      if (late != null) action(late);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final router = GoRouter.of(context);
+    final shared = ref.watch(selectedSharedFolderProvider);
+    // Paylaşılan klasörde not sahibin koleksiyonuna doğar: salt okunurda
+    // düğme yok, mikrofon ve "+" paneli burada çizilmez (F43.2).
+    final canWrite =
+        shared == null ||
+        (sharedFolderRefOf(ref, shared)?.role ?? FolderRole.both).canWrite;
+    void newNote() {
+      widget.onNavigate?.call();
+      unawaited(createAndOpenNote(context, ref, router));
+    }
+
+    final pen = !canWrite
+        ? const SizedBox.shrink()
+        : widget.extended
+        ? FloatingActionButton.extended(
+            key: const ValueKey('rail-new-note'),
+            heroTag: 'rail-new-note',
+            elevation: 0,
+            tooltip: '${l10n.newNoteShort} (Ctrl+N)',
+            onPressed: newNote,
+            icon: const Icon(Icons.edit_outlined),
+            label: Text(l10n.newNoteShort),
+          )
+        : FloatingActionButton(
+            key: const ValueKey('rail-new-note'),
+            heroTag: 'rail-new-note',
+            elevation: 0,
+            tooltip: '${l10n.newNoteShort} (Ctrl+N)',
+            onPressed: newNote,
+            child: const Icon(Icons.edit_outlined),
+          );
+    if (widget.penOnly || shared != null) return pen;
+
+    final others = <Widget>[
+      Customizable(
+        id: UiItem.homeMic,
+        child: Tooltip(
+          message: l10n.voiceMicTooltipDictate,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Material(
+              color: scheme.primaryContainer,
+              borderRadius: BorderRadius.circular(14),
+              child: InkWell(
+                key: const ValueKey('home-mic'),
+                borderRadius: BorderRadius.circular(14),
+                onTap: () => _atHome((d) => d.dictateNote()),
+                onLongPress: () => _atHome((d) => d.captureVoiceNote()),
+                child: Icon(
+                  AppIcons.dictation,
+                  size: 24,
+                  color: scheme.onPrimaryContainer,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      CompositedTransformTarget(
+        link: _addLink,
+        child: QuickAddFab(
+          anchor: _addLink,
+          actions: () => homeDoors?.quickAddActions,
+          inRail: true,
+          beforeAction: () => openSection(router, AppSection.notes),
+        ),
+      ),
+    ];
+    const gap = SizedBox.square(dimension: 8);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        pen,
+        gap,
+        // Geniş rayda yan yana (dikey yer harcamasın), dar rayda alt alta.
+        widget.extended
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [others[0], gap, others[1]],
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [others[0], gap, others[1]],
+              ),
+      ],
     );
   }
 }

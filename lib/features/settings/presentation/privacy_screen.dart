@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -13,7 +14,7 @@ class PrivacyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.privacyPolicyTitle)),
+      appBar: HomeInBar(appBar: AppBar(title: Text(l10n.privacyPolicyTitle))),
       body: FutureBuilder<String>(
         future: rootBundle.loadString('PRIVACY_POLICY.md'),
         builder: (context, snapshot) {

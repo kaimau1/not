@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import 'reminder_repeat_ui.dart';
 import '../domain/reminder_repeat.dart';
 import '../../../core/widgets/skeleton.dart';
@@ -195,7 +196,7 @@ class RemindersScreen extends ConsumerWidget {
     final notesAsync = ref.watch(notesStreamProvider);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: HomeInBar(appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -219,7 +220,7 @@ class RemindersScreen extends ConsumerWidget {
             ),
           ],
         ),
-      ),
+      )),
       // BOŞKEN YÜZEN DÜĞME YOK (F11.7): boş durumun ortasında aynı
       // "Yeni hatırlatıcı" düğmesi var; ikisi birden "hangisi?" dedirtiyordu.
       floatingActionButton: _visibleReminders(ref, notesAsync.value).isEmpty
