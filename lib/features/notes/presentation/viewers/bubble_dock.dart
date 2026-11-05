@@ -230,7 +230,20 @@ class _BubbleDockState extends State<BubbleDock> {
       // şeridi 46 → 34 dp (küçük rozet, ince dolgu, alçak "Bitti"), yazı alanı
       // 3 satırdan 1 satırdan başlar ve en çok 4 satıra büyür, araç satırı
       // 40 → 34 dp. Kart ilk açılışta ~190 dp yerine ~120 dp.
-      return _KeyboardFollow(
+      // **GERİ ÖNCE KARTI KAPATIR** (kullanıcı bulgusu 2026-11-05: "balon
+      // düzenlenirken en son geri butonu nottan dashboarda dönüyor, önce
+      // yazma alanı kapatılmalı"): kart açıkken rota kapanamaz; geri "Bitti"
+      // ile aynı işi yapar. (Klavye açıksa ilk geri klavyeyi indirir —
+      // sistemin işi; ikincisi kartı, üçüncüsü notu kapatır.)
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) _close();
+        },
+        child: _KeyboardFollow(
+        // AÇILIŞ: kart alttan yumuşakça süzülür (yalnız boyama — yerleşim
+        // bir kez kurulur). Balondan balona geçişte yeniden oynamaz.
+        child: _DockEntrance(
         child: Padding(
           padding: EdgeInsets.fromLTRB(6, 4, 6, 6 + widget.bottomPadding),
           child: Material(
@@ -412,6 +425,8 @@ class _BubbleDockState extends State<BubbleDock> {
               ],
             ),
           ),
+        ),
+        ),
         ),
       );
     },
@@ -1255,6 +1270,64 @@ class _RenderKeyboardFollow extends RenderProxyBox {
   void applyPaintTransform(RenderBox child, Matrix4 transform) {
     transform.translateByDouble(0, -_shift, 0, 1);
   }
+}
+
+/// Yazma kartının AÇILIŞ hareketi (kullanıcı bulgusu 2026-11-05: "yazma
+/// alanı açılıp kapanırken güzel değil"): kart eskiden bir karede
+/// beliriyordu; şimdi 200 ms'de alttan 24 dp süzülüp saydamdan gelir.
+/// Yalnız boyama katmanında (Fade/Slide) — kart ölçüsü ilk karede kesin,
+/// belge kaydırması ([BubbleController.dockHeight]) beklemez. Hareket
+/// azaltılmışsa doğrudan görünür.
+class _DockEntrance extends StatefulWidget {
+  const _DockEntrance({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_DockEntrance> createState() => _DockEntranceState();
+}
+
+class _DockEntranceState extends State<_DockEntrance>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 200),
+  );
+  late final Animation<double> _curve = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOutCubic,
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_controller.status == AnimationStatus.dismissed) {
+      if (MediaQuery.disableAnimationsOf(context)) {
+        _controller.value = 1;
+      } else {
+        _controller.forward();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+    opacity: _curve,
+    child: AnimatedBuilder(
+      animation: _curve,
+      child: widget.child,
+      builder: (context, child) => Transform.translate(
+        offset: Offset(0, 24 * (1 - _curve.value)),
+        child: child,
+      ),
+    ),
+  );
 }
 
 /// Yazma kartında araç satırının altında açılan şerit (F13.2).

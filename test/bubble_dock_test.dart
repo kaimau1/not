@@ -152,4 +152,39 @@ void main() {
     expect(find.byType(TextField), findsNothing);
     expect(saved.last.single.text, 'oku', reason: 'yazılan kaydedilmeli');
   });
+
+  testWidgets('geri tuşu önce yazma kartını kapatır, notu değil', (
+    tester,
+  ) async {
+    // Kullanıcı bulgusu 2026-11-05: balon düzenlenirken geri nottan
+    // panoya dönüyordu.
+    final controller = BubbleController(initial: const [], onChanged: (_) {});
+    addTearDown(controller.dispose);
+    controller.add(1, 0.5, 0.5);
+    final navigator = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navigator,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        locale: const Locale('tr'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const Scaffold(body: Text('pano')),
+      ),
+    );
+    navigator.currentState!.push(
+      MaterialPageRoute<void>(
+        builder: (_) => Scaffold(body: BubbleDock(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('bubble-dock-done')), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    // Kart kapandı, rota yerinde.
+    expect(find.byKey(const ValueKey('bubble-dock-done')), findsNothing);
+    expect(find.text('pano'), findsNothing);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('pano'), findsOneWidget);
+  });
 }

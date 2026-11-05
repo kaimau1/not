@@ -223,11 +223,27 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     _bound = document;
     // İlerlemeli yükleme: sayfa ölçüleri geldikçe kutu tazelenir.
     _events = document.events.listen((event) {
-      if (mounted && event.type == PdfDocumentEventType.pageStatusChanged) {
-        setState(() {});
+      if (event.type == PdfDocumentEventType.pageStatusChanged) {
+        _refreshSoon();
       }
     });
     document.loadPagesProgressively();
+  }
+
+  /// İlerlemeli yüklemenin sayfa olaylarını TEK yeniden kuruluşta toplar
+  /// (kullanıcı bulgusu 2026-11-05: "PDF'lerde kaydırırken kasma"): her
+  /// sayfanın ölçüsü geldikçe bütün kutu — sayfa görünümü ve her sayfanın
+  /// katmanları — yeniden kuruluyordu; uzun belgede açılıştan sonraki ilk
+  /// saniyelerde kaydırma, saniyede onlarca tam kuruluşla yarışıyordu.
+  /// Artık en çok 150 ms'de bir.
+  Timer? _refreshTimer;
+
+  void _refreshSoon() {
+    if (_refreshTimer != null) return;
+    _refreshTimer = Timer(const Duration(milliseconds: 150), () {
+      _refreshTimer = null;
+      if (mounted) setState(() {});
+    });
   }
 
   /// Belge yüklendi (ya da yeniden yüklendi).
@@ -274,6 +290,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   @override
   void dispose() {
     _autoPlay?.cancel();
+    _refreshTimer?.cancel();
     _detachDocument();
     _pager?.dispose();
     widget.addingBubbles?.removeListener(_onExternalAdding);
@@ -800,12 +817,18 @@ class _PdfPageBoxState extends State<PdfPageBox> {
               final aspect = p.height <= 0 || p.width <= 0
                   ? 1 / 1.41
                   : (a.pdfTurns.isOdd ? p.height / p.width : p.width / p.height);
+              // `RepaintBoundary`: kaydırırken sayfa görüntüsü ve katmanları
+              // (balon, mürekkep, seçim) her karede YENİDEN ÇİZİLMESİN —
+              // kaydırıcı yalnız hazır katmanı kaydırır (SingleChildScrollView
+              // listelerin aksine çocuğuna kendiliğinden sınır koymuyor).
               return SingleChildScrollView(
                 physics: locked
                     ? const NeverScrollableScrollPhysics()
                     : const ClampingScrollPhysics(),
                 padding: const EdgeInsets.only(bottom: 24),
-                child: AspectRatio(aspectRatio: aspect, child: page),
+                child: RepaintBoundary(
+                  child: AspectRatio(aspectRatio: aspect, child: page),
+                ),
               );
             },
           ),
