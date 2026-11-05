@@ -202,6 +202,11 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
           return widget.builder(context, a.copyWith(downloadUrl: url));
         }
         unawaited(_fetch());
+        // Görselin önizlemesi varsa asıl dosya inene dek o çizilir (Storage,
+        // izin gerekmez); not şeridi "Göster" ile tam boyu indirir.
+        if (a.kind == AttachmentKind.image && a.thumbUrl.isNotEmpty) {
+          return widget.builder(context, a.copyWith(downloadUrl: a.thumbUrl));
+        }
         final scheme = Theme.of(context).colorScheme;
         return Material(
           color: scheme.surfaceContainerHigh,

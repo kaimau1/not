@@ -1880,6 +1880,30 @@ abstract class AppLocalizations {
   /// **'Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut'**
   String get permBatteryInfo;
 
+  /// No description provided for @permAutoStart.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik başlatma (Xiaomi)'**
+  String get permAutoStart;
+
+  /// No description provided for @permAutoStartInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon yeniden başlayınca hatırlatıcılar uygulamayı açmadan da kurulsun: Notlar için “Otomatik başlatma”yı aç'**
+  String get permAutoStartInfo;
+
+  /// No description provided for @autoStartHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Xiaomi: telefon yeniden başlayınca da çalması için Notlar’a “Otomatik başlatma” izni ver'**
+  String get autoStartHint;
+
+  /// No description provided for @autoStartHintAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aç'**
+  String get autoStartHintAction;
+
   /// No description provided for @videoTooBigForAi.
   ///
   /// In tr, this message translates to:
@@ -8018,18 +8042,6 @@ abstract class AppLocalizations {
   /// **'Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.'**
   String get captureModeChangeLater;
 
-  /// No description provided for @attachmentSyncV2Title.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ekleri Drive\'daki Notlar klasörüne de yükle (deneme)'**
-  String get attachmentSyncV2Title;
-
-  /// No description provided for @attachmentSyncV2Info.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yeni senkron. Hiçbir kayıt silinmez, eski yol da çalışır.'**
-  String get attachmentSyncV2Info;
-
   /// No description provided for @attachmentSyncTitle.
   ///
   /// In tr, this message translates to:
@@ -8051,7 +8063,7 @@ abstract class AppLocalizations {
   /// No description provided for @driveConnectInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Görseller, PDF\'ler, sunumlar ve ses kayıtları kendi Drive kotanda, uygulamaya özel gizli klasörde saklanır ve öbür cihazlarına iner. Videolar cihazda kalır.'**
+  /// **'Görseller, PDF\'ler, sunumlar ve ses kayıtları kendi Drive kotanda, Drive\'ındaki “Notlar” klasöründe saklanır ve öbür cihazlarına iner. Videolar cihazda kalır.'**
   String get driveConnectInfo;
 
   /// No description provided for @driveConnect.
@@ -8075,7 +8087,7 @@ abstract class AppLocalizations {
   /// No description provided for @driveConnectedInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Bağlı · ekler Drive\'ının uygulama klasöründe'**
+  /// **'Bağlı · ekler Drive\'ındaki “Notlar” klasöründe'**
   String get driveConnectedInfo;
 
   /// No description provided for @driveUsage.

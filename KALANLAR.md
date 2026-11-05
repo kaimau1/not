@@ -22,7 +22,7 @@ testleri otomatik doğrulananları kapsıyor. Sorun görünce madde numarasıyla
 bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 
 **Cihaz turu sonucu (2026-11-05, v1.1.701–704, Mi Note 10 Lite, yerel hesap):** geçenler silindi, kalanlar kısaltıldı. Bulunan ve düzeltilen hatalar HAFIZA "Cihaz turu kök nedenleri". Denenmedi, nedenleri: Google hesabı/AI gerekir (#7, #8, #31, #79, Gelen ve Kişiler); ikinci hesap (#81, #82, #83); ses (#7, #47 dikte); şifre girişi otomasyonda yapılmadı (#10, #11 kilit); web (#16–19, #27, #29, #30, #33, #57, #74, #76, #84, #85); tablet/kalem (#20, #22–24, #28, #86); Vulkan ya da temiz Android 12 cihazı (#59, #60 beyaz açılış); kişisel köprü APK'sı (#14).
-**Karar bekleyen (sabah bakılacak):** yeni metin notunda klavye kendiliğinden açılmıyor; iki ayrı hatırlatıcı akışı (not "+": tarih seçici, Hatırlatıcılar: "Ne zaman" levhası); MIUI'de otomatik başlatma izni yoksa açılışta alarm kurulmuyor (uygulama açılınca kuruluyor), Xiaomi'ye ipucu verilsin mi; yazma ana bloğu `taban.py`'de 148 → 229 ms, >16 ms 42 → 51 blok (v1.1.671 → v1.1.701, tek koşu, `adb` tuşu; CI bütçesi temiz; profil ile nedenine bakılmalı).
+**Açık ölçüm:** yazma ana bloğu `taban.py`'de 148 → 229 ms, >16 ms 42 → 51 blok (v1.1.671 → v1.1.701, tek koşu, `adb` tuşu; CI bütçesi temiz; profil ile nedenine bakılmalı).
 
 **Telefon (v1.1.N, Google hesabı; ~7 dk)**
 2. [ ] ⋮ yerine başlık "+" levhası → Araçlar → İlgili notlar → Bağla (F18.17). Biçim, `[[` bağlantısı ve "1 bağlantı" çipi telefonda geçti.

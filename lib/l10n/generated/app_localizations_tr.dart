@@ -994,6 +994,20 @@ class AppLocalizationsTr extends AppLocalizations {
       'Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut';
 
   @override
+  String get permAutoStart => 'Otomatik başlatma (Xiaomi)';
+
+  @override
+  String get permAutoStartInfo =>
+      'Telefon yeniden başlayınca hatırlatıcılar uygulamayı açmadan da kurulsun: Notlar için “Otomatik başlatma”yı aç';
+
+  @override
+  String get autoStartHint =>
+      'Xiaomi: telefon yeniden başlayınca da çalması için Notlar’a “Otomatik başlatma” izni ver';
+
+  @override
+  String get autoStartHintAction => 'Aç';
+
+  @override
   String videoTooBigForAi(int mb) {
     return 'Video yapay zekâya göndermek için çok büyük ($mb MB). Daha kısa çek.';
   }
@@ -4455,14 +4469,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.';
 
   @override
-  String get attachmentSyncV2Title =>
-      'Ekleri Drive\'daki Notlar klasörüne de yükle (deneme)';
-
-  @override
-  String get attachmentSyncV2Info =>
-      'Yeni senkron. Hiçbir kayıt silinmez, eski yol da çalışır.';
-
-  @override
   String get attachmentSyncTitle => 'Ek senkronu';
 
   @override
@@ -4473,7 +4479,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get driveConnectInfo =>
-      'Görseller, PDF\'ler, sunumlar ve ses kayıtları kendi Drive kotanda, uygulamaya özel gizli klasörde saklanır ve öbür cihazlarına iner. Videolar cihazda kalır.';
+      'Görseller, PDF\'ler, sunumlar ve ses kayıtları kendi Drive kotanda, Drive\'ındaki “Notlar” klasöründe saklanır ve öbür cihazlarına iner. Videolar cihazda kalır.';
 
   @override
   String get driveConnect => 'Bağla';
@@ -4486,7 +4492,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get driveConnectedInfo =>
-      'Bağlı · ekler Drive\'ının uygulama klasöründe';
+      'Bağlı · ekler Drive\'ındaki “Notlar” klasöründe';
 
   @override
   String driveUsage(String used, String limit) {

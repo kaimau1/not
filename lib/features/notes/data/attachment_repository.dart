@@ -2,9 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import '../domain/attachment_sync.dart';
-import 'attachment_sync_service.dart';
-import 'drive_files_api.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +15,7 @@ import '../../../core/utils/local_file.dart';
 import '../../ai/data/ai_gate.dart' show premiumProvider;
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/attachment.dart';
+import 'attachment_thumb.dart';
 import 'drive_store.dart';
 import 'media_transcriber.dart' show audioMimeFromName, audioMimeOf;
 import 'notes_repository.dart' show storageUsedBytesProvider;
@@ -41,7 +39,6 @@ final attachmentRepositoryProvider = Provider<AttachmentRepository?>((ref) {
     uid,
     maxBytes,
     drive: ref.watch(driveStoreProvider),
-    driveFiles: ref.watch(attachmentDriveSessionProvider)?.api,
     quotaBytes: !firebaseBound
         ? 0
         : premium
@@ -182,11 +179,7 @@ class AttachmentRepository {
     this.quotaBytes = 0,
     this.usedBytes,
     this.drive,
-    this.driveFiles,
   });
-
-  /// Yeni ek senkronu (F28.2): bayrak açık + Google hesabı; değilse null.
-  final DriveFilesApi? driveFiles;
 
   final FirebaseStorage _storage;
   final String uid;
@@ -420,6 +413,7 @@ class AttachmentRepository {
         storagePath: '',
         downloadUrl: '',
         driveId: '',
+        thumbUrl: '',
         ink: cropInk(
           attachment.ink,
           left: left,
@@ -489,6 +483,7 @@ class AttachmentRepository {
         storagePath: '',
         downloadUrl: '',
         driveId: '',
+        thumbUrl: '',
         ink: rotateInk(attachment.ink, quarterTurns),
       ),
       result.bytes,
@@ -561,6 +556,7 @@ class AttachmentRepository {
         storagePath: '',
         downloadUrl: '',
         driveId: '',
+        thumbUrl: '',
         pageIds: pageIds,
       ),
       bytes,
@@ -915,21 +911,33 @@ class AttachmentRepository {
           ? 'application/octet-stream'
           : attachment.mimeType,
     );
-    return attachment.copyWith(driveId: id);
+    // Önizleme (yalnız görsel): Drive izni olmayan sekme/cihaz kartı hemen
+    // çizsin. Düşerse yükleme yine başarılı — kart Drive'dan iner.
+    var thumbUrl = '';
+    if (attachment.kind == AttachmentKind.image) {
+      try {
+        final thumb = await compute(makeThumbnail, await file.readAsBytes());
+        if (thumb != null) {
+          final ref = _storage.ref(thumbStoragePath(uid, attachment.id));
+          await ref.putData(
+            thumb,
+            SettableMetadata(
+              contentType: 'image/jpeg',
+              cacheControl: AppConstants.attachmentCacheControl,
+            ),
+          );
+          thumbUrl = await ref.getDownloadURL();
+        }
+      } catch (e) {
+        debugPrint('Önizleme yüklenemedi (${attachment.id}): $e');
+      }
+    }
+    return attachment.copyWith(driveId: id, thumbUrl: thumbUrl);
   }
 
   /// Drive'daki eki bu cihazın yerel kopyasına indirir (yoksa). İndirildiyse
   /// true; Drive yoksa/ek Drive'da değilse false.
   Future<bool> fetchFromDrive(Attachment attachment) async {
-    final v2 = driveFiles;
-    final v2Id = attachmentDriveFileId(attachment);
-    if (v2 != null && v2Id.isNotEmpty && attachment.localPath.isNotEmpty) {
-      final target = File(attachment.localPath);
-      if (await target.exists()) return false;
-      await target.parent.create(recursive: true);
-      await target.writeAsBytes(await v2.download(v2Id), flush: true);
-      return true;
-    }
     final store = drive;
     if (store == null || !attachment.isInDrive) return false;
     if (attachment.localPath.isEmpty) return false;
@@ -940,16 +948,7 @@ class AttachmentRepository {
   }
 
   Future<void> deleteFromStorage(Attachment attachment) async {
-    // Yeni yapı: Drive dosyası ÇÖPE (kullanıcı geri alabilir), önizleme silinir.
-    final v2Id = attachmentDriveFileId(attachment);
-    if (v2Id.isNotEmpty) {
-      await driveFiles?.trash(v2Id);
-      try {
-        await _storage.ref(thumbStoragePath(uid, attachment.id)).delete();
-      } on FirebaseException catch (e) {
-        if (e.code != 'object-not-found') rethrow;
-      }
-    }
+    await deleteThumb(attachment);
     // Drive kopyası da gider (bağlı değilse dosya Drive'da kalır — yalnız
     // yer kaplar, veri riski yok).
     if (attachment.isInDrive) {
@@ -964,13 +963,6 @@ class AttachmentRepository {
     }
   }
 
-  /// Yalnız bu cihazdaki kopya (yeni senkron yükleyicisi): ağa çıkmaz.
-  Future<Uint8List?> readLocalBytes(Attachment attachment) async {
-    if (attachment.localPath.isEmpty) return null;
-    final file = File(attachment.localPath);
-    return await file.exists() ? file.readAsBytes() : null;
-  }
-
   /// PDF baytlarını getirir: önce yerel kopya, yoksa Drive'dan (bağlıysa
   /// indirip yerel kopyaya da yazarak), o da yoksa Storage'dan.
   Future<Uint8List?> readBytes(Attachment attachment) async {
@@ -982,14 +974,6 @@ class AttachmentRepository {
     if (attachment.localPath.isNotEmpty) {
       final file = File(attachment.localPath);
       if (await file.exists()) return file.readAsBytes();
-    }
-    final v2Id = attachmentDriveFileId(attachment);
-    if (v2Id.isNotEmpty && driveFiles != null) {
-      if (kIsWeb || attachment.localPath.isEmpty) {
-        return driveFiles!.download(v2Id);
-      }
-      await fetchFromDrive(attachment);
-      return File(attachment.localPath).readAsBytes();
     }
     if (attachment.isInDrive && drive != null) {
       if (!kIsWeb && attachment.localPath.isNotEmpty) {
@@ -1017,6 +1001,17 @@ class AttachmentRepository {
       '.gif' => 'image/gif',
       _ => 'image/jpeg',
     };
+  }
+}
+
+/// Drive ekinin önizlemesini siler (yoksa sessiz). Not silme yolları da
+/// kullanır (bkz. `NotesRepository`).
+Future<void> deleteThumb(Attachment attachment) async {
+  if (attachment.thumbUrl.isEmpty) return;
+  try {
+    await FirebaseStorage.instance.refFromURL(attachment.thumbUrl).delete();
+  } catch (_) {
+    // Zaten yok ya da çevrimdışı: yalnız birkaç KB yer kaplar.
   }
 }
 

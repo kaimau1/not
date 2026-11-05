@@ -4,6 +4,7 @@ part of 'note_editor_screen.dart';
 extension _EditorFlowX on _NoteEditorScreenState {
   void _runPendingIntents() {
     if (!mounted || _note == null) return;
+    _focusIfNewEmptyNote();
     if (_pendingDraw) {
       _pendingDraw = false;
       _openPen();
@@ -572,4 +573,48 @@ extension _EditorFlowX on _NoteEditorScreenState {
       if (_penMode) ...const [PointerDeviceKind.touch, PointerDeviceKind.mouse],
     };
   }
+
+  /// **YENİ METİN NOTUNDA KLAVYE AÇIK** (kullanıcı kararı 2026-11-06): az önce
+  /// oluşturulmuş, boş metin notu açılınca imleç gövdede, klavye açık başlar.
+  /// Başka bir niyetle açılan (çizim, ses, foto…) ya da salt okunur not
+  /// odaklanmaz; var olan nota dokunmak klavyeyi açmaz (yalnız yeni not).
+  void _focusIfNewEmptyNote() {
+    if (_newNoteFocused) return;
+    _newNoteFocused = true;
+    final note = _note;
+    if (note == null || _readOnly || !isFreshEmptyTextNote(note)) return;
+    final anyIntent =
+        _pendingDraw ||
+        _pendingSeparateDrawing ||
+        _pendingVoice ||
+        _pendingDictation ||
+        _pendingVideo ||
+        _pendingPhoto ||
+        _pendingScan ||
+        _pendingPdf ||
+        _pendingSlides ||
+        _pendingGalleryVideo ||
+        _pendingYouTube ||
+        _pendingTranscribe ||
+        _pendingAudioFile;
+    if (anyIntent) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_bodyFocus.hasFocus) _bodyFocus.requestFocus();
+    });
+  }
+}
+
+/// Az önce (≤ 30 sn) oluşturulmuş, içi boş metin notu mu.
+@visibleForTesting
+bool isFreshEmptyTextNote(Note note, {DateTime? now}) {
+  final created = note.createdAt;
+  if (created == null) return false;
+  return note.type == NoteType.text &&
+      note.title.isEmpty &&
+      note.body.isEmpty &&
+      note.items.isEmpty &&
+      note.attachments.isEmpty &&
+      !note.paged &&
+      (now ?? DateTime.now()).difference(created).abs() <
+          const Duration(seconds: 30);
 }

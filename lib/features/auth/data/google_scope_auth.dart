@@ -110,3 +110,55 @@ class _WebScopeAuth implements GoogleScopeAuth {
 /// [sessionKey]: web'de jetonun sekmede saklandığı anahtar.
 GoogleScopeAuth googleScopeAuth(String scope, String sessionKey) =>
     kIsWeb ? _WebScopeAuth(scope, sessionKey) : _AndroidScopeAuth(scope);
+
+/// Kapsam jetonunun önbelleği: süresi [refreshMargin] içinde dolacaksa
+/// [silentRefresh] ile pencere açmadan yenilenir; eşzamanlı istekler tek
+/// yenilemeyi bekler. Yenilenemezse null (arayüz "bağla" der).
+class ScopeTokenCache {
+  ScopeTokenCache({
+    required this.silentRefresh,
+    DateTime Function()? clock,
+    this.refreshMargin = const Duration(minutes: 2),
+  }) : _now = clock ?? DateTime.now;
+
+  final Future<({String token, DateTime expiry})?> Function() silentRefresh;
+  final DateTime Function() _now;
+  final Duration refreshMargin;
+
+  String? _token;
+  DateTime? _expiry;
+  Future<String?>? _inFlight;
+
+  void put(String token, DateTime expiry) {
+    _token = token;
+    _expiry = expiry;
+  }
+
+  void invalidate() {
+    _token = null;
+    _expiry = null;
+  }
+
+  Future<String?> get() {
+    final t = _token, e = _expiry;
+    if (t != null && e != null && _now().add(refreshMargin).isBefore(e)) {
+      return Future.value(t);
+    }
+    return _inFlight ??= _refresh().whenComplete(() => _inFlight = null);
+  }
+
+  Future<String?> _refresh() async {
+    try {
+      final r = await silentRefresh();
+      if (r == null) {
+        invalidate();
+        return null;
+      }
+      put(r.token, r.expiry);
+      return r.token;
+    } catch (_) {
+      invalidate();
+      return null;
+    }
+  }
+}

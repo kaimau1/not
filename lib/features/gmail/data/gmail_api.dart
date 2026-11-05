@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
-import '../../notes/data/drive_files_api.dart' show DriveTokenCache;
+import '../../auth/data/google_scope_auth.dart' show ScopeTokenCache;
 
 /// **GMAIL — YALNIZ OKUMA** (F28.1, 2026-11-04).
 ///
@@ -83,7 +83,7 @@ class GmailApi {
   GmailApi({required this._client, required this._tokens});
 
   final http.Client _client;
-  final DriveTokenCache _tokens;
+  final ScopeTokenCache _tokens;
 
   /// YALNIZ GET — yazma uç noktası bu sınıfta yok.
   Future<http.Response> _get(Uri uri) async {

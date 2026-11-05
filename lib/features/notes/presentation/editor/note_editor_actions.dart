@@ -188,31 +188,10 @@ extension _EditorActions on _NoteEditorScreenState {
     if (note == null) return;
     final now = DateTime.now();
     final initial = note.reminderAt ?? now.add(const Duration(hours: 1));
-    final date = await showDatePicker(
-      context: context,
-      initialDate: initial.isAfter(now) ? initial : now,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365 * 5)),
-    );
-    if (date == null || !mounted) return;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(initial),
-    );
-    if (time == null) return;
-    final reminder = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
-    // Bugünün geçmiş bir saati: bildirim hiç planlanmaz (reminder_service
-    // yalnız geleceği kurar) — sessizce kurmuş gibi görünmek yerine uyar.
-    if (!reminder.isAfter(DateTime.now())) {
-      if (mounted) _showSnack(context.l10n.reminderInPast);
-      return;
-    }
+    // Hatırlatıcılar ekranıyla AYNI levha (bu akşam / yarın / gelecek hafta /
+    // tarih seç); geçmiş saat orada uyarılır.
+    final reminder = await pickReminderWhen(context, initial);
+    if (reminder == null) return;
     if (!mounted) return;
     // Tekrar (F18.14): vazgeçilirse var olan tekrar korunur.
     final repeat = await pickReminderRepeat(

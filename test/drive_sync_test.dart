@@ -136,48 +136,76 @@ void main() {
       await dir.delete(recursive: true);
     });
 
-    test(
-      'sürdürülebilir yükleme: önce oturum, sonra dosya; kimlik döner',
-      () async {
-        final requests = <http.BaseRequest>[];
-        final client = MockClient.streaming((request, body) async {
-          requests.add(request);
-          final bytes = await body.toBytes();
-          if (request.method == 'POST') {
-            expect(request.url.queryParameters['uploadType'], 'resumable');
-            expect(request.headers['Authorization'], 'Bearer t1');
-            final meta = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
-            expect(meta['parents'], ['appDataFolder']);
-            expect(meta['name'], 'n_a_f.jpg');
-            return http.StreamedResponse(
-              const Stream.empty(),
-              200,
-              headers: {'location': 'https://upload.example/session'},
-            );
-          }
-          expect(request.method, 'PUT');
-          expect(request.url.toString(), 'https://upload.example/session');
-          expect(utf8.decode(bytes), 'görsel');
+    test('yükleme görünür "Notlar" klasörüne: klasör yoksa açılır, sonra '
+        'önbellekten; oturum + dosya, kimlik döner', () async {
+      final requests = <http.BaseRequest>[];
+      var folderCreated = false;
+      final client = MockClient.streaming((request, body) async {
+        requests.add(request);
+        final bytes = await body.toBytes();
+        final isUpload = request.url.path.startsWith('/upload/');
+        if (request.method == 'GET') {
+          // Klasör araması: yalnız kökteki, çöpte olmayan "Notlar".
+          final q = request.url.queryParameters['q']!;
+          expect(q, contains("name = 'Notlar'"));
+          expect(q, contains("'root' in parents"));
           return http.StreamedResponse(
-            Stream.value(utf8.encode('{"id":"drv9"}')),
+            Stream.value(utf8.encode('{"files":[]}')),
             200,
           );
-        });
-        final store = DriveStore(_FakeAuth(['t1']), client: client);
-        final file = File('${dir.path}/f.jpg')..writeAsStringSync('görsel');
-        final id = await store.upload(
-          file,
-          name: driveFileName(
-            noteId: 'n',
-            attachmentId: 'a',
-            fileName: 'f.jpg',
-          ),
-          mimeType: 'image/jpeg',
+        }
+        if (request.method == 'POST' && !isUpload) {
+          final meta = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+          expect(meta['name'], 'Notlar');
+          expect(meta['mimeType'], 'application/vnd.google-apps.folder');
+          folderCreated = true;
+          return http.StreamedResponse(
+            Stream.value(utf8.encode('{"id":"klasor1"}')),
+            200,
+          );
+        }
+        if (request.method == 'POST') {
+          expect(request.url.queryParameters['uploadType'], 'resumable');
+          expect(request.headers['Authorization'], 'Bearer t1');
+          final meta = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+          expect(meta['parents'], ['klasor1']);
+          expect(meta['name'], 'n_a_f.jpg');
+          return http.StreamedResponse(
+            const Stream.empty(),
+            200,
+            headers: {'location': 'https://upload.example/session'},
+          );
+        }
+        expect(request.method, 'PUT');
+        expect(request.url.toString(), 'https://upload.example/session');
+        expect(utf8.decode(bytes), 'görsel');
+        return http.StreamedResponse(
+          Stream.value(utf8.encode('{"id":"drv9"}')),
+          200,
         );
-        expect(id, 'drv9');
-        expect(requests, hasLength(2));
-      },
-    );
+      });
+      final store = DriveStore(_FakeAuth(['t1']), client: client);
+      final file = File('${dir.path}/f.jpg')..writeAsStringSync('görsel');
+      Future<String> up() => store.upload(
+        file,
+        name: driveFileName(noteId: 'n', attachmentId: 'a', fileName: 'f.jpg'),
+        mimeType: 'image/jpeg',
+      );
+      expect(await up(), 'drv9');
+      expect(folderCreated, isTrue);
+      expect(requests, hasLength(4)); // ara + aç + oturum + dosya
+      expect(await up(), 'drv9');
+      expect(requests, hasLength(6), reason: 'klasör ikinci kez aranmaz');
+    });
+
+    test('var olan "Notlar" klasörü yeniden açılmaz', () async {
+      final client = MockClient((request) async {
+        expect(request.method, 'GET');
+        return http.Response('{"files":[{"id":"var1"}]}', 200);
+      });
+      final store = DriveStore(_FakeAuth(['t1']), client: client);
+      expect(await store.ensureFolder(), 'var1');
+    });
 
     test(
       'indirme yerel kopyaya yazılır; 401\'de jeton yenilenip denenir',
@@ -222,5 +250,21 @@ void main() {
       );
       expect(await store.probe(), contains('accessNotConfigured'));
     });
+  });
+
+  test('önizleme adresi kayıtla gidip gelir, yükleme sonucuyla geçer', () {
+    final a = Attachment(
+      id: 'e1',
+      kind: AttachmentKind.image,
+      fileName: 'f.jpg',
+      mimeType: 'image/jpeg',
+      createdAt: DateTime(2026, 11, 6),
+    );
+    expect(a.toMap().containsKey('thumbUrl'), isFalse);
+    final up = a.copyWith(driveId: 'd1', thumbUrl: 'https://t/e1.jpg');
+    final back = Attachment.fromMap(up.toMap());
+    expect(back.thumbUrl, 'https://t/e1.jpg');
+    expect(back.driveId, 'd1');
+    expect(a.withUploadOf(up).thumbUrl, 'https://t/e1.jpg');
   });
 }

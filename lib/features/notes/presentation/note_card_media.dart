@@ -703,6 +703,17 @@ class CardMediaTile extends StatelessWidget {
         errorWidget: (_, _, _) => const _MissingTile(icon: Icons.image),
       );
     }
+    // Drive ekinin küçük önizlemesi (Storage): dosya inmeden / web'de izin
+    // olmadan kart hemen dolar (2026-11-06, "telefondaki ek web'e gelmiyor").
+    if (a.thumbUrl.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: a.thumbUrl,
+        fit: BoxFit.cover,
+        fadeInDuration: const Duration(milliseconds: 150),
+        placeholder: (context, _) => const ColoredBox(color: Colors.black12),
+        errorWidget: (_, _, _) => const _MissingTile(icon: Icons.image),
+      );
+    }
     // Web: Drive'daki kapak da kartta görünsün (bkz. [WebDriveGate]).
     if (kIsWeb && a.isInDrive) {
       return WebDriveGate(

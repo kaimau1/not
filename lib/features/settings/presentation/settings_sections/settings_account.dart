@@ -204,6 +204,7 @@ class _PermissionsSectionState extends ConsumerState<_PermissionsSection>
   bool? _mic;
   bool? _camera;
   bool? _notifications;
+  bool _xiaomi = false;
 
   @override
   void initState() {
@@ -229,8 +230,10 @@ class _PermissionsSectionState extends ConsumerState<_PermissionsSection>
     final mic = await service.micGranted();
     final camera = await service.cameraGranted();
     final notifications = await service.notificationsGranted();
+    final xiaomi = await service.isXiaomi();
     if (mounted) {
       setState(() {
+        _xiaomi = xiaomi;
         _mic = mic;
         _camera = camera;
         _notifications = notifications;
@@ -298,6 +301,15 @@ class _PermissionsSectionState extends ConsumerState<_PermissionsSection>
           actionLabel: l10n.permOpenSettings,
           onAction: service.openBatterySettings,
         ),
+        if (_xiaomi)
+          _PermissionTile(
+            icon: Icons.restart_alt,
+            title: l10n.permAutoStart,
+            subtitle: l10n.permAutoStartInfo,
+            granted: null,
+            actionLabel: l10n.permOpenSettings,
+            onAction: service.openAutoStartSettings,
+          ),
       ],
     );
   }

@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 
 import '../../auth/data/google_scope_auth.dart';
 import '../../auth/presentation/auth_providers.dart';
-import '../../notes/data/drive_files_api.dart' show DriveTokenCache;
 import '../../notes/data/drive_store.dart' show isGoogleUser;
 import 'gmail_api.dart';
 
@@ -25,11 +24,11 @@ final gmailAuthProvider = Provider<GmailAuth?>((ref) {
 
 /// Oturum boyunca tek jeton önbelleği + istemci (hesap değişince yenilenir).
 final gmailSessionProvider =
-    Provider<({GmailApi api, DriveTokenCache tokens, GmailAuth auth})?>((ref) {
+    Provider<({GmailApi api, ScopeTokenCache tokens, GmailAuth auth})?>((ref) {
       ref.watch(currentUidProvider);
       final auth = ref.watch(gmailAuthProvider);
       if (auth == null) return null;
-      final tokens = DriveTokenCache(silentRefresh: auth.silent);
+      final tokens = ScopeTokenCache(silentRefresh: auth.silent);
       final client = http.Client();
       ref.onDispose(client.close);
       return (

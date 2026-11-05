@@ -1242,6 +1242,7 @@ class NotesRepository {
       for (final attachment in note.attachments)
         if (attachment.isInDrive && deleteDrive != null)
           deleteDrive(attachment.driveId).catchError((Object _) {}),
+      for (final attachment in note.attachments) deleteThumb(attachment),
     ]);
     // Cihazdaki ek klasörü de gitsin: yalnız bulut temizliği, her kalıcı
     // silmede `<destek>/attachments/<noteId>/` altında yetim dosya bırakıyor
@@ -1478,7 +1479,14 @@ class NotesRepository {
           await file.writeAsBytes(bytes, flush: true);
           forgetLocalFile(a.localPath);
         }
-        kept.add(a.copyWith(storagePath: '', downloadUrl: '', driveId: ''));
+        kept.add(
+          a.copyWith(
+            storagePath: '',
+            downloadUrl: '',
+            driveId: '',
+            thumbUrl: '',
+          ),
+        );
       }
       store.put(note.id, {
         ...note.copyWith(attachments: kept).toMap(),
@@ -1499,6 +1507,7 @@ class NotesRepository {
         if (a.isInDrive && deleteDrive != null) {
           unawaited(deleteDrive(a.driveId).catchError((Object _) {}));
         }
+        unawaited(deleteThumb(a));
       }
       _deleteCloudCopy(note.id);
       return;

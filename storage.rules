@@ -95,8 +95,8 @@ service firebase.storage {
 
     // **ÖNİZLEMELER** (F28.2-B, 2026-11-04): yeni ek senkronunda asıl dosya
     // kullanıcının Drive'ında; Storage'ta yalnız kartlar için küçük resim
-    // (istemci tavanı `kThumbMaxBytes`, `attachment_sync.dart`). Kullanıcı
-    // başına sayı tavanı burada sayılamaz — istemci zorlar (kMaxThumbsPerUser).
+    // (istemci tavanı `kThumbMaxBytes`, `attachment_thumb.dart`). Kullanıcı
+    // başına sayı tavanı yok: önizleme ek başına bir tane, ekle birlikte silinir.
     match /users/{uid}/thumbs/{thumbId} {
       allow read, delete: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null

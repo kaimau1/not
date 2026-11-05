@@ -4,6 +4,7 @@ import '../study_cards_screen.dart' show generateCardsForNote;
 import '../note_card.dart' show openNoteRoute;
 import '../../domain/note_links.dart';
 import '../reminder_repeat_ui.dart';
+import '../reminders_screen.dart' show pickReminderWhen;
 import '../../domain/reminder_repeat.dart';
 import '../../../../core/app_icons.dart';
 import 'dart:async';
@@ -1013,6 +1014,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Bu oturumda çalışma sayacı işlendi mi (bkz. [noteActivityProvider]).
   bool _workCounted = false;
+
+  /// Yeni boş not odağı bir kez denendi (bkz. `_focusIfNewEmptyNote`).
+  bool _newNoteFocused = false;
 
   /// Madde editörünün durumu: başlıktaki klavye "İleri" tuşu liste notunda
   /// ilk maddeye odaklanabilsin diye GlobalKey. Karışık ve saf liste dalları
