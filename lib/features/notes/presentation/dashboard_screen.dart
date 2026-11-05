@@ -1853,8 +1853,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         ref.watch(selectedFolderProvider) != null ||
         sharedFolder != null ||
         ref.watch(sharedHubOnHomeProvider);
+    // Arama da mod: geri önce aramayı kapatır (cihaz turu 2026-11-05: uygulamadan
+    // çıkıyor, yeniden açılınca süzgeç duruyordu).
+    final searching = ref.watch(
+      searchQueryProvider.select((q) => q.isNotEmpty),
+    );
     return PopScope(
-      canPop: !selectionActive && !reorderActive && !inFolder,
+      canPop: !selectionActive && !reorderActive && !inFolder && !searching,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
         // "+" paneli açıksa geri tuşu ONUN: Flutter aynı rotadaki tüm
@@ -1865,6 +1870,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           ref.read(selectedNoteIdsProvider.notifier).clear();
         } else if (reorderActive) {
           ref.read(reorderModeProvider.notifier).set(false);
+        } else if (searching) {
+          _searchController.clear();
+          ref.read(searchQueryProvider.notifier).set('');
+          FocusManager.instance.primaryFocus?.unfocus();
         } else if (inFolder) {
           _swipeForward = false;
           ref.read(selectedFolderProvider.notifier).set(null);

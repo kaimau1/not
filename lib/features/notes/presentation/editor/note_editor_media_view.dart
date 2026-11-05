@@ -958,6 +958,12 @@ extension _EditorMediaView on _NoteEditorScreenState {
                 ? () => unawaited(_openPinnedVideoFullscreen(pinned))
                 : () => _openAttachmentTag(pinned, editing: true),
             onCopyLink: () => _copyAttachment(pinned),
+            onCopy: pinned.kind == AttachmentKind.video
+                ? null
+                : () => _copyAttachment(pinned),
+            onExtractText: _readOnly || pinned.kind != AttachmentKind.image
+                ? null
+                : () => unawaited(_ocrImage(pinned)),
             onChanged: _updateAttachment,
             viewSwitch: _viewSwitchFor(note, pinned, dense: true),
             onShowViews: () => _showViewSheet(pinned),

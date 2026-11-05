@@ -102,6 +102,8 @@ class PinnedMediaPane extends StatefulWidget {
     required this.onOpen,
     required this.child,
     this.onCopyLink,
+    this.onCopy,
+    this.onExtractText,
     this.onChanged,
     this.viewSwitch,
     this.onShowViews,
@@ -119,6 +121,12 @@ class PinnedMediaPane extends StatefulWidget {
   /// tutup seçilen yazı "Not al" ile sayfa + satır + alıntı olarak nota
   /// girer (bkz. [PdfPageBox.onNoteFromSelection]). null ise seçim kapalı.
   final void Function(int page, int? line, String quote)? onPdfNote;
+
+  /// Eki panoya kopyalar: yüzen ve şeritle aynı liste (cihaz turu 2026-11-05).
+  final VoidCallback? onCopy;
+
+  /// Görseldeki yazıyı çıkarır (OCR).
+  final VoidCallback? onExtractText;
 
   /// Sabit görselin/videonun TRANSKRİPTİ (metne dök / kayıtlıysa aç).
   final VoidCallback? onTranscribe;
@@ -723,6 +731,10 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         widget.onCaption?.call();
       case AttachmentAction.copyLink:
         widget.onCopyLink?.call();
+      case AttachmentAction.copy:
+        widget.onCopy?.call();
+      case AttachmentAction.extractText:
+        widget.onExtractText?.call();
       case AttachmentAction.transcribe:
         widget.onTranscribe?.call();
       case AttachmentAction.share:
@@ -746,6 +758,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
       viewRow: viewRow && widget.onShowViews != null,
       caption: widget.onCaption != null,
       transcribe: widget.onTranscribe != null,
+      extractText: widget.onExtractText != null,
+      copy: widget.onCopy != null,
       share: widget.onShare != null,
       saveAs: widget.onSaveAs != null,
       copyLink: widget.onCopyLink != null,

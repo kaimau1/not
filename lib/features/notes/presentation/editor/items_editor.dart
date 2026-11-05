@@ -946,11 +946,22 @@ class ItemsEditorState extends State<ItemsEditor>
   /// `- [x]`, `-`, `•`, `3.` gibi liste öneklerini soyar; checklist'te
   /// işaret durumunu da okur.
   static final _lineMarker = RegExp(
-    r'^\s*(?:[-*•]\s*)?(?:\[([ xX])\]\s*)?(?:\d+[.)]\s+)?',
+    // `**` kalın işareti madde imi değil.
+    r'^\s*(?:(?:[-•]|\*(?!\*))\s*)?(?:\[([ xX])\]\s*)?(?:\d+[.)]\s+)?',
   );
 
   void _splitMultiline(NoteItem target, int index, String text) {
-    final lines = text.split('\n');
+    // Donanım Enter'ı: var olan metne tek satır sonu girdi. Biçim işareti
+    // ortadan kesilmesin (`**ek` / `mek**`): iki parça da kendi biçimiyle.
+    final previous = _items[index].text;
+    final enter = text.indexOf('\n');
+    final List<String> lines;
+    if (text.replaceRange(enter, enter + 1, '') == previous) {
+      final (:before, :after) = splitRichText(previous, enter, enter);
+      lines = [before, after];
+    } else {
+      lines = text.split('\n');
+    }
     // Hedef madde yapıştırmadan önce BOŞSA ilk satırın liste öneki de
     // soyulur (sonraki satırlarla tutarlı); doluysa ilk satır kullanıcının
     // yazmakta olduğu metnin devamıdır, dokunulmaz.
@@ -1319,7 +1330,7 @@ class ItemsEditorState extends State<ItemsEditor>
     String? best;
     var bestDistance = double.infinity;
     for (final entry in _focusNodes.entries) {
-      final box = entry.value.context?.findRenderObject();
+      final box = entry.value.rowContext?.findRenderObject();
       if (box is! RenderBox || !box.attached || !box.hasSize) continue;
       final top = box.localToGlobal(Offset.zero).dy;
       final bottom = top + box.size.height;
