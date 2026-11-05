@@ -131,6 +131,7 @@ import '../viewers/ink_layer.dart';
 import 'pen_tray.dart';
 import 'drawing_screen.dart';
 import 'editor_bar_layout.dart';
+import 'editor_bar_tags.dart';
 import 'format_bar.dart';
 import 'format_menu.dart';
 import 'ink_gestures.dart';
@@ -252,6 +253,8 @@ bool sameItemsVisually(List<NoteItem> a, List<NoteItem> b) {
         x.starred != y.starred ||
         // Madde altı ayırıcı çizgi de satırda çiziliyor.
         x.divider != y.divider ||
+        // Ara başlık kutucuksuz, kalın çizilir.
+        x.header != y.header ||
         isBlankText(x.text) != isBlankText(y.text)) {
       return false;
     }
@@ -2798,6 +2801,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           onDeleted: () =>
               _mutate((n) => n.copyWith(clearFolderId: true), immediate: true),
         ),
+      // Etiketler üst çubukta, tarihin solunda (kullanıcı isteği
+      // 2026-11-05); başlık çubuktayken tarih yok — o zaman burada.
+      if (titleInBar)
       for (final tag in note.tags)
         InputChip(
           label: Text('#$tag', maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -4132,13 +4138,34 @@ child: NoteFindBar(
                   (Navigator.maybeOf(context)?.canPop() ?? false),
             ),
             title: _barTitle ??
-                (note.updatedAt == null
+                (note.updatedAt == null && note.tags.isEmpty
                 ? null
                 : Customizable(
                     id: UiItem.editorDate,
                     child: Row(
                     children: [
-                      Flexible(
+                      // ETİKETLER TARİHİN SOLUNDA (kullanıcı isteği
+                      // 2026-11-05): gövdedeki çip şeridi yalnız etiket
+                      // için bir satır harcıyordu. Çok etiket yana kayar;
+                      // dokununca "Etiketi kaldır".
+                      if (note.tags.isNotEmpty)
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.only(end: 8),
+                            child: EditorBarTags(
+                              tags: note.tags,
+                              color: noteAccent ??
+                                  _themeOf(context).colorScheme.onSurfaceVariant,
+                              removeLabel: l10n.tagRemove,
+                              onRemove: _removeTag,
+                            ),
+                          ),
+                        ),
+                      // Tarih kısa (bkz. [editorBarDate]); etiketler
+                      // yer isteyince o kesilmesin diye esnek değil, tavanlı.
+                      if (note.updatedAt != null)
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 96),
                         child: Text(
                           editorBarDate(note.updatedAt!, DateTime.now()),
                           maxLines: 1,

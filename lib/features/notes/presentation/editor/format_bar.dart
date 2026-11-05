@@ -115,9 +115,10 @@ class FormatBar extends StatefulWidget {
   State<FormatBar> createState() => _FormatBarState();
 }
 
-/// Panelin ÜSTÜNDE açılan tepsi (2026-11-05: kapsam, stil, renk ve çizgi de
-/// tepside — panel iki sıraya indi).
-enum _Tray { none, font, scope, style, color, divider }
+/// Panelin ÜSTÜNDE açılan tepsi (2026-11-05: renk ve çizgi tepside — panel
+/// iki sıraya indi). Stil ve kapsam tepsisi YOK: haplara basmak sırayla
+/// geçer (kullanıcı isteği 2026-11-05, bkz. [_FormatBarState._cycleScope]).
+enum _Tray { none, font, color, divider }
 
 /// Renk satırının yazdığı biçim: yazı rengi mi, vurgu mu.
 enum _ColorMode { text, highlight }
@@ -222,6 +223,7 @@ class _FormatBarState extends State<FormatBar> {
   void didUpdateWidget(covariant FormatBar old) {
     super.didUpdateWidget(old);
     if (old.target?.controller != widget.target?.controller) {
+      _clearPreviewLater(old.target?.controller);
       _watchTarget(old.target);
       // Başka alana geçildi: seçime uygulanmış kaydırıcı değeri artık o
       // alanın değil.
@@ -235,7 +237,18 @@ class _FormatBarState extends State<FormatBar> {
   void dispose() {
     _liveTimer?.cancel();
     widget.target?.controller.removeListener(_refreshActive);
+    _clearPreviewLater(widget.target?.controller);
     super.dispose();
+  }
+
+  /// Önizlemeyi bir kare SONRA kaldırır: dispose/didUpdateWidget ağaç
+  /// kilitliyken koşar, denetleyici bildirimi alanı yeniden kurdurmaya
+  /// çalışırdı. Atılmış denetleyici kendini korur.
+  static void _clearPreviewLater(WrapTextController? controller) {
+    if (controller == null) return;
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => controller.setScopePreview(null),
+    );
   }
 
   /// Denetleyici değişince aboneliği taşı. TextEditingController hem metin
@@ -248,6 +261,27 @@ class _FormatBarState extends State<FormatBar> {
     _active = _computeActive();
     _heading = _computeHeading();
     _manualSelection = _computeManualSelection();
+    // Önizleme bildirimi build'den sonra (initState/didUpdateWidget içinde
+    // denetleyiciyi dinleyen alan yeniden kurulamaz).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncPreview();
+    });
+  }
+
+  /// Kapsamın kapsayacağı parça ekranda soluk zeminle görünür (bkz.
+  /// [WrapTextController.setScopePreview]). İmleç kipinde, elle seçimde ve
+  /// biçim uygulanırken (geçici seçim açık) önizleme yok.
+  void _syncPreview() {
+    final controller = widget.target?.controller;
+    if (controller == null) return;
+    final selection = controller.selection;
+    final range = _scopedSelection != null
+        ? null
+        : scopeSelection(controller.text, selection, _scope);
+    controller.setScopePreview(
+      range == null ? null : (range.start, range.end),
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.16),
+    );
   }
 
   RichHeading _computeHeading() {
@@ -275,6 +309,7 @@ class _FormatBarState extends State<FormatBar> {
         _manualSelection = manual;
       });
     }
+    _syncPreview();
   }
 
   /// **KAPSAM SEÇİMİ GEÇİCİ** (kullanıcı bulgusu 2026-11-05: "imleç kelime
@@ -343,13 +378,44 @@ class _FormatBarState extends State<FormatBar> {
     final before = _applyScopeTracked();
     action();
     _releaseScope(before);
+    _syncPreview();
   }
 
-  void _setScope(FormatScope scope) {
+  /// **KAPSAM SIRAYLA GEÇER** (kullanıcı isteği 2026-11-05: "yeni bir seçim
+  /// ekranı açılmasına gerek yok, butona basarak sırayla geçsin"): İmleç →
+  /// Kelime → Satır → Tümü → İmleç. Elle seçim varken ilk basış seçimi
+  /// bırakır (imleç seçimin ucunda) ve son kapsama döner — eskiden düğme
+  /// "Seçim"de kilitli kalıyor, kapsam değiştirilemiyordu.
+  void _cycleScope() {
+    final controller = widget.target?.controller;
+    final selection = controller?.selection;
+    if (_manualSelection &&
+        controller != null &&
+        selection != null &&
+        selection.isValid) {
+      controller.selection = TextSelection.collapsed(
+        offset: selection.extentOffset,
+      );
+      return;
+    }
+    const order = FormatScope.values;
     setState(() {
-      _scope = _lastScope = scope;
+      _scope = _lastScope = order[(order.indexOf(_scope) + 1) % order.length];
       _tray = _Tray.none;
     });
+    _syncPreview();
+  }
+
+  /// **STİL SIRAYLA GEÇER** (kullanıcı isteği 2026-11-05): Metin → Başlık →
+  /// Alt başlık → Metin; tepsi açılmaz.
+  void _cycleHeading() {
+    final next = switch (_heading) {
+      RichHeading.normal => RichHeading.h1,
+      RichHeading.h1 => RichHeading.h2,
+      RichHeading.h2 => RichHeading.normal,
+    };
+    setState(() => _tray = _Tray.none);
+    widget.onHeading?.call(next);
   }
 
   void _toggleTray(_Tray tray) =>
@@ -475,33 +541,6 @@ class _FormatBarState extends State<FormatBar> {
         onSlide: _onSlide,
         onSlideEnd: _onSlideEnd,
       ),
-      _Tray.scope => _ScopeRow(scope: _scope, onChanged: _setScope),
-      // PARAGRAF STİLİ: seçince tepsi kapanır (tek iş).
-      _Tray.style => _PanelRow(
-        children: [
-          for (final (h, label, weight) in [
-            (RichHeading.normal, l10n.formatStyleText, FontWeight.w400),
-            (RichHeading.h1, l10n.formatStyleH1, FontWeight.w800),
-            (RichHeading.h2, l10n.formatStyleH2, FontWeight.w700),
-          ])
-            Expanded(
-              child: _Chip(
-                key: ValueKey('format-heading-${h.name}'),
-                selected: _heading == h,
-                onTap: () {
-                  widget.onHeading?.call(h);
-                  setState(() => _tray = _Tray.none);
-                },
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 13, fontWeight: weight),
-                ),
-              ),
-            ),
-        ],
-      ),
       // RENK: soldaki anahtar neyin boyanacağını seçer (yazı / vurgu); tepsi
       // açık kalır — art arda renk denenebilir.
       _Tray.color => _PanelRow(
@@ -596,9 +635,10 @@ class _FormatBarState extends State<FormatBar> {
                       flex: 5,
                       child: _MenuChip(
                         key: const ValueKey('format-style-menu'),
-                        open: _tray == _Tray.style,
+                        open: false,
+                        cycles: true,
                         tooltip: l10n.formatStyleMenu,
-                        onTap: () => _toggleTray(_Tray.style),
+                        onTap: _cycleHeading,
                         child: Text(
                           _headingLabel(l10n),
                           maxLines: 1,
@@ -664,11 +704,10 @@ class _FormatBarState extends State<FormatBar> {
                     flex: 2,
                     child: _MenuChip(
                       key: const ValueKey('format-scope-menu'),
-                      open: _tray == _Tray.scope,
+                      open: false,
+                      cycles: true,
                       tooltip: l10n.formatScopeHint,
-                      onTap: _manualSelection
-                          ? null
-                          : () => _toggleTray(_Tray.scope),
+                      onTap: _cycleScope,
                       child: Text(
                         _scopeLabel(l10n),
                         maxLines: 1,
@@ -783,9 +822,13 @@ class _MenuChip extends StatelessWidget {
     required this.tooltip,
     required this.onTap,
     required this.child,
+    this.cycles = false,
   });
 
   final bool open;
+
+  /// Basış tepsi açmaz, SIRADAKİ değere geçer: ▾ yerine ⇅ simgesi.
+  final bool cycles;
   final String tooltip;
   final VoidCallback? onTap;
   final Widget child;
@@ -798,7 +841,7 @@ class _MenuChip extends StatelessWidget {
       message: tooltip,
       child: Semantics(
         button: true,
-        expanded: open,
+        expanded: cycles ? null : open,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2),
           child: Material(
@@ -826,10 +869,12 @@ class _MenuChip extends StatelessWidget {
                       Expanded(child: Center(child: child)),
                       if (enabled)
                         Icon(
-                          open
+                          cycles
+                              ? Icons.unfold_more_rounded
+                              : open
                               ? Icons.arrow_drop_up_rounded
                               : Icons.arrow_drop_down_rounded,
-                          size: 20,
+                          size: cycles ? 16 : 20,
                           color: scheme.onSurfaceVariant,
                         ),
                     ],
@@ -883,57 +928,6 @@ class _ColorGlyph extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-/// Kapsam sırası: İmleç · Kelime · Satır · Tümü (bkz. [FormatScope]).
-class _ScopeRow extends StatelessWidget {
-  const _ScopeRow({required this.scope, required this.onChanged});
-
-  final FormatScope scope;
-  final ValueChanged<FormatScope> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    return SizedBox(
-      height: 40,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6),
-        child: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsetsDirectional.only(start: 4, end: 6),
-              child: Icon(
-                Icons.ads_click,
-                size: 18,
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-            for (final (value, label) in [
-              (FormatScope.caret, l10n.formatScopeCaret),
-              (FormatScope.word, l10n.formatScopeWord),
-              (FormatScope.line, l10n.formatScopeLine),
-              (FormatScope.all, l10n.formatScopeAll),
-            ])
-              Expanded(
-                child: _Chip(
-                  key: ValueKey('format-scope-${value.name}'),
-                  selected: scope == value,
-                  onTap: () => onChanged(value),
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12.5),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
     );
   }
 }

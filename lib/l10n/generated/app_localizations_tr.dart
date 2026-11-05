@@ -6787,4 +6787,22 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bubbleAddPlainTitle => 'Açık metin';
+
+  @override
+  String get itemAddHeader => 'Ara başlık';
+
+  @override
+  String get itemHeaderHint => 'Ara başlık yaz';
+
+  @override
+  String get itemMenuToHeader => 'Başlık yap';
+
+  @override
+  String get itemMenuToItem => 'Maddeye çevir';
+
+  @override
+  String get pinnedMediaFit => 'Sığdır';
+
+  @override
+  String get tagRemove => 'Etiketi kaldır';
 }

@@ -68,8 +68,9 @@ void main() {
     tester.hitTestOnBinding(center);
   }
 
-  testWidgets('iki sıra: dar ekranda her düğme görünür; stil ve renk '
-      'tepsilerde', (tester) async {
+  testWidgets('iki sıra: dar ekranda her düğme görünür; renk tepside', (
+    tester,
+  ) async {
     await pumpNarrow(tester);
     expect(tester.takeException(), isNull);
     for (final key in [
@@ -94,15 +95,6 @@ void main() {
     expect(find.byKey(const ValueKey('format-scope-line')), findsNothing);
     expect(tester.getSize(find.byType(FormatBar)).height, lessThan(110));
 
-    await tester.tap(find.byKey(const ValueKey('format-style-menu')));
-    await tester.pumpAndSettle();
-    for (final key in [
-      'format-heading-normal',
-      'format-heading-h1',
-      'format-heading-h2',
-    ]) {
-      expectTappable(tester, find.byKey(ValueKey(key)));
-    }
     await tester.tap(find.byKey(const ValueKey('format-color-menu')));
     await tester.pumpAndSettle();
     for (final key in [
@@ -148,12 +140,10 @@ void main() {
   testWidgets('başlık hapı tek dokunuş; boyut − / + adım uygular; yazı '
       'tipi tepsisi ikinci dokunuşla kapanır', (tester) async {
     await pumpNarrow(tester);
+    // Stil hapı tepsi açmaz, sıradakine geçer (2026-11-05).
     await tester.tap(find.byKey(const ValueKey('format-style-menu')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('format-heading-h1')));
     expect(headings, [RichHeading.h1]);
-    // Stil seçilince tepsi kapanır.
-    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('format-heading-h1')), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('format-size-up')));

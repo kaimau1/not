@@ -191,10 +191,14 @@ void main() {
             reason: 'editör kutucuğu',
           );
           expect(_pin(tester), cardPin, reason: 'editör raptiyesi');
-          final chip = tester.widget<InputChip>(
-            find.widgetWithText(InputChip, '#yazilim'),
+          // Etiket üst çubukta, tarihin solunda (2026-11-05).
+          final tag = tester.widget<Text>(
+            find.descendant(
+              of: find.byKey(const ValueKey('editor-bar-tags')),
+              matching: find.text('#yazilim'),
+            ),
           );
-          expect(chip.labelStyle?.color, cardTag, reason: 'editör etiketi');
+          expect(tag.style?.color, cardTag, reason: 'editör etiketi');
 
           // Başlık: aynı aile, ağırlık, aralık (K9).
           final editorTitle = tester

@@ -86,9 +86,18 @@ extension _ItemsRow on ItemsEditorState {
     final scheme = theme.colorScheme;
     final l10n = context.l10n;
     final controller = _controllerFor(item);
-    final baseStyle =
+    final plainStyle =
         widget.textStyle ?? theme.textTheme.bodyLarge ?? const TextStyle();
-    final checked = widget.showCheckboxes && item.checked;
+    // ARA BAŞLIK (bkz. [NoteItem.header]): kalın, biraz büyük, notun vurgu
+    // renginde; kutucuk/numara yok.
+    final baseStyle = item.header
+        ? plainStyle.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: (plainStyle.fontSize ?? 16) * 1.15,
+            color: _accent?.accent ?? plainStyle.color,
+          )
+        : plainStyle;
+    final checked = widget.showCheckboxes && item.checked && !item.header;
     final selected = _selected.contains(item.id);
     // Odak durumu SATIRIN KENDİ dinleyicisinden gelir (bkz. [_focusFlags]).
     _focusFor(item);
@@ -163,6 +172,20 @@ extension _ItemsRow on ItemsEditorState {
                 size: 22,
                 color: selected ? scheme.primary : scheme.onSurfaceVariant,
               ),
+            ),
+          )
+        else if (item.header)
+          // Ara başlık: kutucuk yerinde soluk bir işaret — yazı maddelerle
+          // aynı hizada başlar, uzun basış menüsü (maddeye çevir) bulunur.
+          SizedBox(
+            key: ValueKey('item-header-${item.id}'),
+            width: 40,
+            height: 18,
+            child: Icon(
+              Icons.segment,
+              size: 18,
+              color: (_accent?.accent ?? scheme.onSurfaceVariant)
+                  .withValues(alpha: 0.6),
             ),
           )
         else if (widget.showCheckboxes)
@@ -257,6 +280,8 @@ extension _ItemsRow on ItemsEditorState {
     final firstLineCenter = fieldPad + lineHeight / 2;
     final leadingHeight = _selectionMode
         ? 22.0
+        : item.header
+        ? 18.0
         : (widget.showCheckboxes
               ? (widget.paperLines ? 24.0 : 40.0)
               : lineHeight);
@@ -467,7 +492,9 @@ extension _ItemsRow on ItemsEditorState {
                                     // Boş maddenin ipucu "Madde yaz" (F12.7):
                                     // altındaki "+ Yeni öğe" düğmesiyle aynı
                                     // adı taşıyınca iki "Yeni öğe" görünüyordu.
-                                    hintText: l10n.itemEmptyHint,
+                                    hintText: item.header
+                                        ? l10n.itemHeaderHint
+                                        : l10n.itemEmptyHint,
                                     filled: false,
                                     border: InputBorder.none,
                                     isDense: true,

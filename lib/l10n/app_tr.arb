@@ -3288,5 +3288,11 @@
   "itemGesturesFingerAllInfo": "Kapalıyken parmak yalnız işaretler; karalama (siler) ve daire (yazımı düzeltir) kalemle çalışır.",
   "bubbleAddNoteHint": "Tutamaçlı not; dokununca açılır",
   "bubbleAddPlainHint": "Sayfanın üstüne doğrudan yazı",
-  "bubbleAddPlainTitle": "Açık metin"
+  "bubbleAddPlainTitle": "Açık metin",
+  "itemAddHeader": "Ara başlık",
+  "itemHeaderHint": "Ara başlık yaz",
+  "itemMenuToHeader": "Başlık yap",
+  "itemMenuToItem": "Maddeye çevir",
+  "pinnedMediaFit": "Sığdır",
+  "tagRemove": "Etiketi kaldır"
 }

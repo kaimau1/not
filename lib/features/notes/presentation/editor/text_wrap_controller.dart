@@ -205,6 +205,24 @@ class WrapTextController extends TextEditingController {
     notifyListeners();
   }
 
+  /// Bekleyen biçimleri [formats] ile DEĞİŞTİRİR (aç/kapa değil): boş
+  /// satırda başlık düzeyi seçmek (bkz. `applyRichHeading`). Boş küme
+  /// beklemeyi kaldırır. Süren koşu önce metne yazılır.
+  void setPendingFormats(Map<RichFormat, int?> formats) {
+    if (pendingRange != null) flushPendingFormat(caretOutside: true);
+    _pending
+      ..clear()
+      ..addAll(formats);
+    if (formats.isEmpty) {
+      _pendingAt = null;
+      _pendingEnd = null;
+    } else {
+      _pendingAt = selection.baseOffset;
+      _pendingEnd = selection.baseOffset;
+    }
+    notifyListeners();
+  }
+
   void clearPendingFormat() {
     if (_pending.isEmpty && _pendingAt == null) return;
     _pending.clear();
@@ -943,7 +961,48 @@ class WrapTextController extends TextEditingController {
       // aralığın konumunu kaydırır ve altı çizili bölge yanlış yere düşer.
       span = _cachedSpan(text, _widths, style, linkColor);
     }
-    return _withSearchHits(_withPendingPreview(span, style), style);
+    return _withScopePreview(
+      _withSearchHits(_withPendingPreview(span, style), style),
+      style,
+    );
+  }
+
+  // ---- Biçim kapsamı önizlemesi ------------------------------------------
+
+  (int, int)? _scopePreview;
+  Color _scopePreviewColor = const Color(0x22000000);
+
+  /// Biçim panelinin KAPSAMI (Kelime / Satır / Tümü) ekranda soluk zeminle
+  /// gösterilir (kullanıcı bulgusu 2026-11-05: "metin satır kelime seçimi
+  /// hâlâ doğru düzgün çalışmıyor"): kapsam seçimi geçici olduğu için hangi
+  /// parçanın biçimleneceği hiç görünmüyordu, düğme "çalışmıyor" sanılıyordu.
+  /// Yalnız ÇİZİM: metne, seçime, IME'ye dokunulmaz. [range] TAMPON
+  /// konumları; null kaldırır.
+  void setScopePreview((int, int)? range, {Color? color}) {
+    if (_disposed) return;
+    if (range == _scopePreview &&
+        (color == null || color == _scopePreviewColor)) {
+      return;
+    }
+    _scopePreview = range;
+    if (color != null) _scopePreviewColor = color;
+    notifyListeners();
+  }
+
+  TextSpan _withScopePreview(TextSpan span, TextStyle? style) {
+    final range = _scopePreview;
+    if (range == null) return span;
+    final (start, end) = range;
+    if (start < 0 || end > text.length || end <= start) return span;
+    final out = restyleRange(
+      span,
+      start,
+      end,
+      (current) => (current ?? style ?? const TextStyle()).copyWith(
+        backgroundColor: _scopePreviewColor,
+      ),
+    );
+    return out is TextSpan ? out : span;
   }
 
   // ---- Not içi arama vurgusu ---------------------------------------------

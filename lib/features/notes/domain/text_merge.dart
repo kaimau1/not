@@ -148,4 +148,5 @@ bool _sameItem(NoteItem a, NoteItem b) =>
     a.text == b.text &&
     a.checked == b.checked &&
     a.title == b.title &&
-    a.divider == b.divider;
+    a.divider == b.divider &&
+    a.header == b.header;

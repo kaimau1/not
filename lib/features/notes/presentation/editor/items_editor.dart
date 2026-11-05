@@ -678,7 +678,8 @@ class ItemsEditorState extends State<ItemsEditor>
       if (a[i].id != b[i].id ||
           a[i].text != b[i].text ||
           a[i].checked != b[i].checked ||
-          a[i].divider != b[i].divider) {
+          a[i].divider != b[i].divider ||
+          a[i].header != b[i].header) {
         return false;
       }
     }
@@ -1108,6 +1109,8 @@ class ItemsEditorState extends State<ItemsEditor>
     // indiriyordu — ne silinebilir bir iş, ne okunur bir satır. İşareti geri
     // almak da gerekmesin diye kutucuk hiç tepki vermez.
     if (nowChecked && _items[index].text.trim().isEmpty) return;
+    // Ara başlık işaretlenmez (kutucuğu da yok; toplu işaret buraya düşer).
+    if (nowChecked && _items[index].header) return;
     if (nowChecked && !wasChecked) {
       // Eski sıra ŞİMDİ saklanmalı: işaret anında öğe listede yer değiştirir.
       _checkedFrom[target.id] = (index: index, at: DateTime.now());
@@ -1456,6 +1459,49 @@ class ItemsEditorState extends State<ItemsEditor>
     });
   }
 
+  /// İşaretsizlerin sonuna boş bir ARA BAŞLIK açar ve odaklar (bkz.
+  /// [NoteItem.header]). Sonda zaten boş bir başlık varsa yenisi açılmaz.
+  @visibleForTesting
+  void addHeader() {
+    final open = [
+      for (final i in _items)
+        if (!i.checked) i,
+    ];
+    final last = open.lastOrNull;
+    if (last != null && last.header && last.text.trim().isEmpty) {
+      _focusFor(last).requestFocus();
+      return;
+    }
+    final item = NoteItem(id: _uuid.v4(), text: '', header: true);
+    setState(() => _items.insert(_uncheckedInsertIndex(_uncheckedCount), item));
+    _commit();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusFor(item).requestFocus();
+    });
+  }
+
+  /// Maddeyi ara başlığa çevirir ya da geri alır. Başlık işaretlenmez:
+  /// işaretli madde başlık olunca işareti kalkar ve işaretsizlerin sonuna
+  /// gelir.
+  void _toggleHeader(NoteItem target) {
+    final index = _items.indexWhere((i) => i.id == target.id);
+    if (index < 0) return;
+    final current = _items[index];
+    final header = !current.header;
+    _update(() {
+      if (header && current.checked) {
+        _items.removeAt(index);
+        _items.insert(
+          _uncheckedInsertIndex(_uncheckedCount),
+          current.copyWith(header: true, checked: false),
+        );
+      } else {
+        _items[index] = current.copyWith(header: header);
+      }
+    });
+    _commit();
+  }
+
   /// İmleç maddenin EN BAŞINDAYKEN (seçim yok) maddeyi üstteki maddeye
   /// ekler: metin üstün sonuna yapışır, imleç birleşme noktasında kalır —
   /// Enter'ın [_enterAt] ile böldüğü maddeyi geri birleştirmenin yolu.
@@ -1596,6 +1642,7 @@ class ItemsEditorState extends State<ItemsEditor>
       // ESKİ hâliyle dönüyordu, çizgi ancak başka bir şey satırı yeniden
       // kurunca beliriyordu.
       item.divider,
+      item.header,
       reorderIndex,
       orderNumber,
       _selected.contains(item.id),
@@ -1721,7 +1768,8 @@ class ItemsEditorState extends State<ItemsEditor>
       pushOnly: true,
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Row(
+        child: LayoutBuilder(
+          builder: (context, addRow) => Row(
           children: [
             // **SATIRIN TAMAMI "YENİ MADDE"** (kullanıcı isteği 2026-11-01:
             // "madde eklemenin hitbox'ını artır, aynı satırda çok daha
@@ -1745,8 +1793,32 @@ class ItemsEditorState extends State<ItemsEditor>
                 ),
               ),
             ),
+            // ARA BAŞLIK (kullanıcı isteği 2026-11-05): maddeleri gruplayan
+            // kutucuksuz satır; uzun basış menüsünden de çevrilebilir.
+            // Dar satırda yalnız simge (yazı "Yeni madde"yi taşırırdı).
+            if (addRow.maxWidth < 340)
+                  IconButton(
+                      key: const ValueKey('items-add-header'),
+                      tooltip: l10n.itemAddHeader,
+                      visualDensity: VisualDensity.compact,
+                      color: _accent?.accent,
+                      onPressed: addHeader,
+                      icon: const Icon(Icons.title, size: 18),
+                    )
+            else
+                  TextButton.icon(
+                      key: const ValueKey('items-add-header'),
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        foregroundColor: _accent?.accent,
+                      ),
+                      onPressed: addHeader,
+                      icon: const Icon(Icons.title, size: 18),
+                      label: Text(l10n.itemAddHeader),
+                    ),
             if (widget.addRowTrailing != null) widget.addRowTrailing!,
           ],
+        ),
         ),
       ),
     );
@@ -1847,7 +1919,10 @@ class ItemsEditorState extends State<ItemsEditor>
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 for (var i = range.start; i < range.end; i++)
-                  _cachedItemRow(listItems[i], orderNumber: i + 1),
+                  _cachedItemRow(
+                    listItems[i],
+                    orderNumber: itemOrderNumber(listItems, i),
+                  ),
               ],
             ),
           ),
@@ -1907,7 +1982,7 @@ class ItemsEditorState extends State<ItemsEditor>
       itemBuilder: (context, index) => _cachedItemRow(
         listItems[index],
         reorderIndex: index,
-        orderNumber: index + 1,
+        orderNumber: itemOrderNumber(listItems, index),
       ),
     );
 

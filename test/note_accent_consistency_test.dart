@@ -173,10 +173,14 @@ void main() {
       find.byKey(const ValueKey('items-add-button')),
     );
     expect(add.style?.foregroundColor?.resolve(<WidgetState>{}), accent);
-    final tag = tester.widget<InputChip>(
-      find.widgetWithText(InputChip, '#yazilim'),
+    // Etiket üst çubukta, tarihin solunda (2026-11-05).
+    final tag = tester.widget<Text>(
+      find.descendant(
+        of: find.byKey(const ValueKey('editor-bar-tags')),
+        matching: find.text('#yazilim'),
+      ),
     );
-    expect(tag.labelStyle?.color, accent);
+    expect(tag.style?.color, accent);
     await _end(tester);
   });
 

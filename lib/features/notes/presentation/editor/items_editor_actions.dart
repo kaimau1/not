@@ -88,6 +88,7 @@ extension _ItemsActions on ItemsEditorState {
         _ItemMenuPanel(
           starred: item.starred,
           canMove: widget.onMoveToPage != null,
+          header: item.header,
         ),
       ],
     );
@@ -98,6 +99,8 @@ extension _ItemsActions on ItemsEditorState {
     switch (choice) {
       case _ItemAction.star:
         _toggleStar(item);
+      case _ItemAction.header:
+        _toggleHeader(item);
       case _ItemAction.select:
         _toggleSelection(item);
       case _ItemAction.delete:
