@@ -21,41 +21,26 @@ testlerle korunuyor; burada alan başına 1–2 adım. F18.8 akış testleri
 testleri otomatik doğrulananları kapsıyor. Sorun görünce madde numarasıyla
 bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 
-**Cihaz turu notu (2026-11-05, v1.1.699, YARIM — kullanım sınırı):** telefon yerel hesapta (Google yok). Denenen: #1, #2, #3, #5'in toplu kopyası, #6'nın bir kısmı, #71'in bir kısmı. #3 geçti, silindi. Düzeltilenlerin (#1 çevirme, klavye arkası bildirim, biçimli madde bölme, kutucuk etiketi) yeni APK'da telefonda yeniden bakılmadı. #9 açıldı: yedek paylaşım seçicisine kadar geldi, dosya kaydedilmedi. #6: MIUI, otomatik başlatma izni yokken `BOOT_COMPLETED`'ı engelliyor (`Unable to launch app`), plan uygulama açılınca kuruluyor; çalma + "Tamam" denenmedi, reboot sonrası yol MIUI'de çalışmıyor (sabah bakılacak: Xiaomi'de izin ipucu). #1: nota dokunma açılıyor, kart geçişi gözle bakılmadı. Geri kalan maddeler denenmedi: süre.
-Bulgu (düzeltilmedi, sabah bakılacak): yeni metin notunda klavye kendiliğinden açılmıyor; sabit görsel ⋮'te Kopyala ve Metni çıkar yok (yüzende var); iki ayrı hatırlatıcı akışı (not "+": tarih seçici, Hatırlatıcılar: "Ne zaman" levhası). Tarif eskimiş: İlgili notlar artık başlık "+" levhasında, Tam yedek Ayarlar → Senkronizasyon'da.
+**Cihaz turu sonucu (2026-11-05, v1.1.701–704, Mi Note 10 Lite, yerel hesap):** geçenler silindi, kalanlar kısaltıldı. Bulunan ve düzeltilen hatalar HAFIZA "Cihaz turu kök nedenleri". Denenmedi, nedenleri: Google hesabı/AI gerekir (#7, #8, #31, #79, Gelen ve Kişiler); ikinci hesap (#81, #82, #83); ses (#7, #47 dikte); şifre girişi otomasyonda yapılmadı (#10, #11 kilit); web (#16–19, #27, #29, #30, #33, #57, #74, #76, #84, #85); tablet/kalem (#20, #22–24, #28, #86); Vulkan ya da temiz Android 12 cihazı (#59, #60 beyaz açılış); kişisel köprü APK'sı (#14).
+**Karar bekleyen (sabah bakılacak):** yeni metin notunda klavye kendiliğinden açılmıyor; iki ayrı hatırlatıcı akışı (not "+": tarih seçici, Hatırlatıcılar: "Ne zaman" levhası); MIUI'de otomatik başlatma izni yoksa açılışta alarm kurulmuyor (uygulama açılınca kuruluyor), Xiaomi'ye ipucu verilsin mi; yazma ana bloğu `taban.py`'de 148 → 229 ms, >16 ms 42 → 51 blok (v1.1.671 → v1.1.701, tek koşu, `adb` tuşu; CI bütçesi temiz; profil ile nedenine bakılmalı).
 
 **Telefon (v1.1.N, Google hesabı; ~7 dk)**
-1. [ ] Açılış + ana ekran: 100+ notla hızlı kaydır, nota dokun → karttan
-   genişleyerek açılır, geri → karta küçülür. Telefonu çevir → liste aynı
-   yerde (F18.11).
-2. [ ] Metin notu: yaz, Biçim → kalın + renk, ☑ ile satırı maddeye çevir;
-   `[[` yaz → not seç → bağlantı; dokun → o not açılır; hedef notta
-   "1 bağlantı" çipi (F18.16). ⋮ → İlgili notlar → Bağla (F18.17).
-4. [ ] Görsel ekle → üstüne kalemle çiz + açık metin → Paylaş → Ekler / PDF:
-   çizim ve yazı görselde (F18.13).
-5. [ ] + → Dosya → PDF → Belge gibi not al → basılı tut → balon → Paylaş:
-   "Sayfa N — …" satırı; ana ekranda toplu seç → Kopyala → balon satırı
-   panoda (F18.12).
-6. [ ] Hatırlatıcı: başlık çipi → Hatırlat → saat → Tekrar: Her gün;
-   Hatırlatıcılar ekranında 🔁. Telefonu YENİDEN BAŞLAT → bildirim yine
-   geliyor; "Tamam" yarına kaydırıyor (F18.14).
+2. [ ] ⋮ yerine başlık "+" levhası → Araçlar → İlgili notlar → Bağla (F18.17). Biçim, `[[` bağlantısı ve "1 bağlantı" çipi telefonda geçti.
+4. [ ] Görsel: üstüne kalemle çiz + açık metin → Paylaş → Ekler / PDF: çizim ve yazı görselde (F18.13). Çıkan dosyaya telefonda bakılmadı; test `image_annotations_export`.
+5. [ ] PDF balonlu notta basılı tut → balon → Paylaş: "Sayfa N — …" satırı. Toplu Kopyala balon satırını veriyor (görsel balonda geçti).
+6. [ ] Hatırlatıcı bildiriminde "Tamam" yarına kaydırıyor (bildirim MIUI'de eylemleri göstermedi). Çalma, Hatırlatıcılar ekranı ve sonraki güne ilerleme geçti. Yeniden başlatma: MIUI otomatik başlatma izni açıkken dene.
 7. [ ] Sesli: ana ekran mikrofonu = dikte; basılı tut = AI sesli not
    ("her pazartesi 9'da toplantı" → tekrarlı hatırlatıcı).
 8. [ ] Yapay zekâ: Tüm notlar sohbetine eski bir nottaki bilgiyi sor →
    cevap + kaynak not çipi (F18.18). Bir notta ⋮ → Kart üret → kaydet →
    Yapay zekâ → Bugünün kartları → Cevabı göster → İyi (F18.19).
-9. [ ] Ayarlar → Hesap → Tam yedek al (ilerleme + iptal) → web'de ya da başka
-   hesapta Yedekten geri yükle → görsel/çizim/balon/sayfa/klasör geliyor;
-   ikinci yükleme "N atlandı" (F18.4 = F19.A4). Başka uygulamadan içe aktar
-   → Keep Takeout zip'i (F18.15).
+9. [ ] Tam yedek (Ayarlar → Senkronizasyon): seçicide dosyayı kaydet → geri yükle → görsel/çizim/balon/sayfa/klasör geliyor; ikinci yükleme "N atlandı" (F18.4 = F19.A4). Keep Takeout zip (F18.15).
 10. [ ] Ayarlar → Hesap → Uygulama kilidi aç → uygulamayı arka plana al,
    1 dk sonra dön → kilit; widget'tan / bildirimden açınca da kilit;
    "Son uygulamalarda gizle" → son uygulamalar boş (F18.6).
 11. [ ] Not kilidi (şifre) + sürüm geçmişi "Bu sürüme dön".
-12. [ ] Paylaş → Notlar (başka uygulamadan metin + PDF) → yeni not / var olan
-   not; Not paketi gönder-aç.
-13. [ ] Erişilebilirlik: TalkBack'te kart tek seferde okunuyor; telefon yazısı
-   en büyük + "Sistem yazı boyutunu izle" → taşma yok (F19.C2).
+12. [ ] Başka uygulamadan PDF paylaş → yeni not / var olan not; Not paketi gönder-aç. Metin paylaşımı (iki hedef) geçti.
+13. [ ] TalkBack'te kart tek seferde okunuyor (F19.C2). Yazı ölçeği 1,3 + "Sistem yazı boyutunu izle" taşmadı.
 14. [ ] Kişisel köprü: Harita "not al" (uygulama kapalı), Kanallarım "Not al" (F19.C4).
 15. [ ] Yeni sürüm çıkınca açılışta bir kez "Yeni sürüm var" + Ayarlar →
    Hakkında satırı (F18.21).
@@ -78,8 +63,6 @@ Bulgu (düzeltilmedi, sabah bakılacak): yeni metin notunda klavye kendiliğinde
    (çizince iner, dokununca çıkar), tam ekran.
 
 **2026-11-02 kullanıcı listesi (bu sürümde yapıldı, cihazda bak)**
-21. [ ] Ana ekran avatarı → levhada "Hesap değiştir" (çıkar, Google seçici
-   açılır) ve "Oturumu kapat" (onaylı; misafirde kırmızı uyarı).
 22. [ ] Tablette Google ile giriş: seçici açılmazsa tarayıcı penceresiyle
    girmeli (yerel giriş anında düşerse yedek yol).
 23. [ ] Tablette ray dar (64 dp, etiketsiz), "Gelen" rayda yok. Not açınca
@@ -122,9 +105,6 @@ Bulgu (düzeltilmedi, sabah bakılacak): yeni metin notunda klavye kendiliğinde
 **2026-11-04 gece görevi (AKICILIK Faz 20–27 bulut kısmı — yazıldı, cihazda ölçülmedi)**
 Ölçüm "Notlar Ölçüm" profil derlemesinde ya da release'te `tool/perf` ile
 (AKICILIK_PLANI Ek A); sayıları AKICILIK_PLANI Ek B'ye satır olarak yaz.
-36. [ ] (F21.6) Ana ekranda "önemli" yaz-sil: arama karesi < 16 ms (bugün
-   139 ms); vurgu artık kalın yazı değil, sarımsı zemin + alt çizgi —
-   okunuyor mu, derin eşleşmede kesit görünüyor mu (gözle).
 37. [ ] (F22.7) Geri tuşu: paylaşılanlar → not → geri → geri → uygulama
    kapanmıyor; ana ekranda geri → çıkar.
 39. [ ] (F26.2) Görselli 20+ notla ana ekran → uygulamayı arka plana al,
@@ -148,18 +128,14 @@ Bulgu (düzeltilmedi, sabah bakılacak): yeni metin notunda klavye kendiliğinde
 48. [ ] (F25.2) Telefon SOĞUKKEN soğuk açılış ×3: içerik ilk ~1 sn'de, sabit notlar yerinde, liste gelince zıplama yok; özet gösterilirken karta dokunmak bir şey yapmaz (<1 sn).
 
 **2026-11-04 — yeni tema (TEMA_PLANI Faz 29–35, yazıldı, cihazda doğrulanmadı)**
-49. [ ] (F30) Güncelleme sonrası tema Adaçayı (eski kırık beyaz seçimi Adaçayı'na, kağıt Kil'e, beyaz Porselen'e geçmiş olmalı). Ayarlar → Görünüm → Tema: beş kart (Sistem, Adaçayı, Porselen, Kil, Koyu) önizlemeleri doğru; birine geçince bütün ekran değişir, yazı tipi korunur.
 50. [ ] (F31.2, K4) Ana ekranı 200+ notla hızlı kaydır (`tool/perf/`): raster p90 ≤ 9 ms (önce 8,6). Kart gölgesi şimdilik bulanıksız 1 dp; bütçe tutuyorsa `AppTokens.cardShadow`'a yumuşak gölge (0 3 10 /%5) denenip AYNI ölçüm tekrarlanacak.
-51. [ ] (okunurluk) Bir nota paletten SİYAH/LACİVERT özel renk ver: zemin koyu kalır, yazı/simge/imleç/kutucuk açık; ana ekranda kartı da açık yazılı. Koyu temada BEYAZ özel renk: yazı okunur. Renkli yazı (sarı vurgu kalemi değil, sarı YAZI) açık notta koyu sarı-kahve, koyu notta açık görünür. Renk seçerken (canlı şerit) editör odağı ve kaydırma yerinde kalır.
+51. [ ] Koyu temada BEYAZ özel renk: yazı okunur. Sarı YAZI açık notta koyu sarı-kahve, koyu notta açık; renk seçerken odak ve kaydırma yerinde. Siyah renkte not ve kart geçti.
 52. [ ] (F33) Defter: mavi sayfada çizgiler mavi-gri, adaçayında yeşil-gri; kenar çizgisi mercan (kırmızı hata rengi değil); kartta da aynı. Noktalı desende noktalar görünür.
 53. [ ] (F35) Ana ekran widget'ı Adaçayı renklerinde (gece: koyu Adaçayı); uygulama açılışında beyaz parlama yok (açılış zemini `#EAF0EB`). Web: açılış ekranı ve tarayıcı çubuğu rengi yeni zemin.
 
 **2026-11-04 — tutarlılık (TUTARLILIK_PLANI Faz 36, yazıldı, cihazda doğrulanmadı)**
-54. [ ] (F36.1) Koyu pembe/siyah özel renkli liste notu: ana ekrandaki kart ile açık not AYNI renkte kutucuk, etiket, "Yeni madde", raptiye (ikisi de notun tonu); renksiz notta kart ve editör kutucuğu petrol yeşili; adaçayı notta koyu yeşil.
-55. [ ] (F36.2) 30+ harfli başlıklı not: başlık sağdaki çipin altına girmez, küçülerek sığar (telefon dikey + web).
 56. [ ] (F36.4) Üste sabit görsel/PDF/video ⋮ → Paylaş; yazıya gömülü eke dokun → önizlemede Paylaş simgesi; ikisi de dosyayı (YouTube'da bağlantıyı) paylaşır.
 57. [ ] (F36.5) Web'de (dahili AI kapalı) liste notunda parmakla kaydırırken hata yağmuru YOK; maddenin üstüne bilerek daire çiz → bir kez "Daire jesti yazımı yapay zekâyla düzeltir…", ikinci dairede sessiz; karala → "Madde silindi · Geri al" geri getirir.
-58. [ ] (F36.6/F36.7) Ana ekran: boş klasör çiplerinde "0" yok, soluk; bölüm başlıkları "Sabit · Bugün · Bu hafta · Daha önce" cümle düzeninde, levhalardaki başlıklarla aynı stilde; ⋮ menüsünde "Çöp kutusu".
 59. [ ] (F27.3) Vulkan'lı bir cihaz (Adreno > 650 ya da Mali) varsa: `tool/perf/taban.py` kaydırma + geçiş; hedefler iki arka uçta da sağlansın. Test telefonu GLES, ölçülemedi.
 60. [ ] (F30.6) Beyaz açılış: Mi Note 10 Lite'ta (MIUI 13, v1.1.671) ~0,6 sn beyaz SÜRÜYOR, kaynaklar APK'da doğru; temiz Android 12+ cihazda dene, orada da beyazsa ilk Flutter karesine bak. Ayrıca koyu notta durum çubuğu simgeleri açık, açık notta koyu; çizilmiş temalı açık notta da koyu.
 61. [ ] (F31.4, F33.6, F34.4) Seçili kartı sürükle: hafif eğik + büyük gölge; kart ⋮'ten renk değiştir ve editörde renk değiştir: 200 ms solma; sayfalı notta yana çek: sayfa kayar, altta "2 / 5" hapı söner.
@@ -167,29 +143,23 @@ Bulgu (düzeltilmedi, sabah bakılacak): yeni metin notunda klavye kendiliğinde
 61. [ ] (F25.1) Farklı yazı tipli (kaydedilmiş) not açılınca ilk seferde metin kısa süre başka yazı tipiyle görünüp oturuyor mu; rahatsız ediyorsa söyle (sabah bakılacak).
 
 **2026-11-05 — not her yerde aynı (TUTARLILIK_PLANI Faz 37, yazıldı, cihazda ayrıntılı doğrulanmadı)**
-62. [ ] (F37.1) Aynı notun başlığı kartta, liste görünümünde, açık notta aynı yazı karakterinde; kart başlığı 2 satırda taşmıyor, farklı yazı tipli başlıkta da.
 63. [ ] (F37.2) 1 saat sonrasına ve yarına hatırlatıcı kur: kartta ve liste satırında "bugün/yarın HH:mm"; 3 gün sonrası yalnız simge; dar kartta (zoom ile çok sütun) taşma yok.
-64. [ ] (F37.3) Liste görünümünde renkli not kendi renginde; koyu özel renkte yazı okunur; çöpte kutucuk notun tonunda; seçince seçim rengi.
 65. [ ] (F37.4) Renkli, siyah özel renkli ve renksiz liste notunu Paylaş → PDF ve Görsel: sayfa notun renginde (renksiz beyaz), kutucuk notun tonunda, yazı okunur, çok sayfalıda her sayfa boyalı. Koyu sayfa baskıda rahatsız ediyorsa söyle (sabah bakılacak).
 
 **2026-11-05 — not ekranı (TUTARLILIK_PLANI Faz 38, yazıldı, cihazda elle doğrulanmadı)**
-66. [ ] (F38.1) Kart ⋮ ve not ⋮ yan yana: aynı işler aynı grupta, aynı sırada; notta Çerçeve ve Görsel önizlemesi çalışıyor, kartta Ana ekrana yerleştir kısayol koyuyor.
-67. [ ] (F38.3) Başlıktaki "+" levha açar (Etiket, Hatırlatıcı, Kişiler, Klasör); uzun başlık daha geniş; paylaşılmış notta "+"nın yanında kişi sayısı, dokununca ortak çalışanlar. Medya sabit notta başlık üst çubuktayken de aynı.
-68. [ ] (F38.4) 12+ işaretli maddeli listede "İşaretliler (N) · Sil" kaydırmadan bulunuyor, silme Geri al veriyor; görsel yanındayken satır görselin altına iniyor.
 69. [ ] (F38.7) Klavye açılırken alt çubuk: telefonda ölçümde birikim çıkmadı (15 tur). Kendi notlarında hâlâ "her açılışta artıyor" görüyorsan hangi notta (ekli mi, uzun mu) söyle: sabah bakılacak. Görselli notta ilk açılış 33 ms, sonrakiler 66–149 ms farkı açık.
 70. [ ] (F39.2, F39.3) Gerçek parmakla: ana ekranda iki parmak aç/kapa ızgarayı ölçekler, köşede sütun simgesi, bırakınca oturur; yana çek: ızgara parmağı izler, kenarda sonraki klasörün adı, kısa çekişte geri döner, seçili çip ortalanır. Dikey kaydırmayla yarışmıyor mu bak.
-71. [ ] (F40.1–F40.3) Görselli notta eke: şerit ⋯, yüzen ⋮, sabit ⋮ aynı sıra; anahtardan Sabit → Yüzen → bildirimde "Sabit → Yüzen · Geri al" geri getiriyor; gömülü yazıya dokun → önizlemede anahtar. Dar ekranda sabit ⋮ → Görünüm.
-72. [ ] (F40.5) Sabit video: döndür düğmesi görüntüyü çeviriyor, tam ekranda da; oynarken ekran üstüne başka sayfa aç ya da Ana ekrana çık → video duruyor, kendi başlamıyor.
+72. [ ] (F40.5) v1.1.704 üstü: sabit videoda döndür düğmesi görünüyor (telefonda gizliydi, düzeltildi) ve görüntüyü çeviriyor, tam ekranda da. Arka plana çıkınca durma ve kendi başlamama geçti.
 73. [ ] (F40.6/F40.7) Aynı görsel sabit ↔ balonlu: çubuk rengi ve açıklama aynı; açıklama sabitte görselin altında, dokununca düzenleniyor. Sunum balonluda zemin artık siyah değil.
-75. [ ] (F41.1–F41.4 telefon) "+" paneli ve not içi Ekle: aynı grup adları ve karolar; "Ayrı çizim (görsel)" çizim ekranını açar (v1.1.688 telefonda görüldü), PARMAKLA çiz ve kaydet: görsel eki gelir (adb swipe çizgi bırakmadı, boş tuvalde ✓ eksiz döndü; elle bakılmalı), vazgeçince boş not kalmaz; başka uygulamadan görsel paylaş → not "Yeni ek nerede dursun?" ipucuyla açılır; not içinde Dosya ekle → görsel: aynı dosya levhası, başlık alanı yok.
+75. [ ] (F41.4) Başka uygulamadan görsel paylaş → not "Yeni ek nerede dursun?" ipucuyla açılır. Panel, Ayrı çizim (parmak; "Yalnız kalem" kapalıyken), vazgeçince boş not kalmaması, not içi dosya levhası geçti.
 76. [ ] (F41.4 web) Not açıkken dosyayı sayfaya bırak ya da görsel yapıştır → o nota girer; not kapalıyken yeni not; Word'den metin+resim yapıştır → yalnız metin yazılır.
 74. [ ] (F40.8) Web: görsele sağ tık menüsü, üstüne gelince ⋮, masaüstünden dosyayı sayfaya sürükle-bırak → "dosya" levhası. Android tablette sürükle-bırak yok (bilerek).
 
 **2026-11-05 — yapay zekâ ve ses (TUTARLILIK_PLANI Faz 42, yazıldı, cihazda elle doğrulanmadı)**
-77. [ ] (F42.1) Ana ekran mikrofonu rozetsiz; ilk dokunuşta "basılı tutarsan AI sesli not" ipucu bir kez; basılı tutunca AI sesli not açılıyor. AI levhasında AI sesli not satırı ✨ mikrofon; "+" panelinde dalga Ses kaydında.
-78. [ ] (F42.2) Misafirde ya da puan bitince: editör ✨ üstünde kilit, AI levhasında tek kart, Çöp analizi/Sohbet gibi düğmelerde dokununca aynı kart; kotada yenilenme saati doğru. Web'de dahili kapalıysa ilk istekten sonra kart, "Tekrar dene" kapatıyor.
+77. [ ] (F42.1) Ana ekran mikrofonuna basılı tut → AI sesli not. Rozetsiz mikrofon ve bir kezlik ipucu geçti.
+78. [ ] (F42.2) Puan bitince kota kartı ve yenilenme saati; web'de dahili kapalıysa kart, "Tekrar dene". Misafir kilidi ve AI levhası kartı geçti.
 79. [ ] (F42.4) Notta dikte bitir (uzun cümle) → bildirimde "AI ile düzelt" → aralık düzeliyor, Geri al çalışıyor; bu arada metni değiştirdiysen dokunmuyor. Anahtarsız misafirde öneri çıkmıyor.
-80. [ ] (F42.6) Parmakla maddeyi çiz → işaretlenir; parmakla karala/daire → hiçbir şey olmaz; Ayarlar → Görünüm'den açınca çalışır. Kalemli cihazda "Kalemi otomatik algıla" kapalıyken kalemle karala/daire çalışıyor.
+80. [ ] (F42.6) Parmakla karala/daire → hiçbir şey olmaz; Ayarlar → Görünüm'den açınca çalışır; kalemli cihazda otomatik algılama kapalıyken. Parmakla üstünü çizme v1.1.704'te geçti.
 
 **2026-11-05 — paylaşım ve Gelen (TUTARLILIK_PLANI Faz 43, yazıldı, cihazda doğrulanmadı: ikinci hesap ister, gerçek kişiye davet gönderilmedi)**
 81. [ ] (F43.2) İkinci hesapla klasör paylaş, çipine dokun: ayrı sayfa açılmıyor, ana ekran süzülüyor, çip vurgulu, Süz düğmesinde ad ve ×, arama çalışıyor, geri tuşu kaldırıyor, yana kaydırmada durak. Üç yetkiyi dene: Okuma (kilit, düğme yok, not salt okunur), Okuma + yazma (yeni not sahibin klasöründe), Yazma (notlar yok, tek seferlik pencere). Sohbet şeritten açılıyor. Sahip paylaşımı kaldırınca süzgeç kapanıyor.
