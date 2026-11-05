@@ -12,7 +12,6 @@ import '../features/notes/data/local_notes_store.dart';
 import '../features/notes/data/place_reminders.dart';
 import '../features/notes/data/push_service.dart';
 import '../features/notes/data/reminder_service.dart';
-import '../features/notes/data/attachment_sync_service.dart';
 import '../features/notes/data/share_intake.dart';
 import '../features/notes/data/upload_queue.dart';
 import '../features/notes/data/video_note_transcripts.dart';
@@ -64,8 +63,6 @@ class _AppServicesState extends ConsumerState<AppServices> {
     // Bir defalık veri göçleri (F3.5 defter).
     (ref) => ref.listen<void>(dataMigrationsProvider, _ignore),
     (ref) => ref.listen(uploadQueueProvider, _ignore),
-    // Yeni ek senkronu (F28.2): bayrak kapalıyken hiçbir şey yapmaz.
-    (ref) => ref.listen<void>(attachmentSyncServiceProvider, _ignore),
     // Kişiye ait tercihler kullanıcı belgesine (F4.5).
     (ref) => ref.listen<void>(prefsSyncProvider, _ignore),
     (ref) => ref.listen(reminderServiceProvider, _ignore),

@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:notlar/features/notes/data/attachment_thumb.dart';
-import 'package:notlar/features/notes/domain/attachment_sync.dart';
 
 void main() {
   test('büyük, gürültülü görsel ≤ 40 KB JPEG olur, oran korunur', () {

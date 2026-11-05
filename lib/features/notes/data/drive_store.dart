@@ -20,18 +20,25 @@ import '../../settings/settings_providers.dart';
 /// sadece metin senkronu olsun").
 ///
 /// KARARLAR:
-/// * Kapsam `drive.appdata`: dosyalar kullanıcının Drive'ında, uygulamaya
-///   ÖZEL gizli klasörde durur (Drive listesini kirletmez, yanlışlıkla
-///   taşınıp silinemez) ve KULLANICININ kotasından düşer. Google'ın
-///   "hassas olmayan" kapsamlarından — doğrulama gerektirmez. Kullanıcı
-///   alanı Drive → Ayarlar → Uygulamaları yönet'ten görür/siler.
+/// * **2026-11-06 (F28.2/F19.E1, kullanıcı kararı):** yeni ekler kullanıcının
+///   Drive'ında GÖRÜNÜR "Notlar" klasörüne gider (`drive.file` — yalnız
+///   uygulamanın açtığı dosyalar, hassas değil). Eski ekler gizli uygulama
+///   klasöründe (`drive.appdata`) kalır ve OKUNUR: iki kapsam tek jetonla
+///   istenir, indirme kimlikle yapıldığı için hangi klasörde olduğu önemsiz.
+///   Kotası KULLANICININ; dosyalar silinmez, taşınmaz.
 /// * Drive dosyası ÖZELDİR (herkese açık adres yok). Başka cihaz dosyayı
 ///   kendi yetkisiyle indirip yerel kopyaya yazar; uygulamanın her ekranı
 ///   zaten önce yerel kopyaya bakıyor (bkz. `Attachment.driveId`).
 /// * Ortak çalışanlar Drive dosyasına erişemez: PAYLAŞILAN notun ekleri eski
 ///   yoldan (Firebase Storage) gider (bkz. `UploadQueue`).
 /// * Web'de dosya sistemi yok: orada eski yol sürer.
-const kDriveScope = 'https://www.googleapis.com/auth/drive.appdata';
+const kDriveScopes = [
+  'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/drive.appdata',
+];
+
+/// Drive'da eklerin durduğu görünür klasörün adı (kökte).
+const kDriveFolderName = 'Notlar';
 
 /// Ek senkronunun kipi — hesaba ve platforma göre.
 enum AttachmentSyncMode {
@@ -73,12 +80,30 @@ final driveConnectedProvider = NotifierProvider<DriveConnectedNotifier, bool>(
 );
 
 class DriveConnectedNotifier extends Notifier<bool> {
+  /// Sessiz bağlanma hesap başına bir kez denenir (her yeniden kurulumda değil).
+  static final _silentTried = <String>{};
+
   String get _key => 'drive_connected_${ref.read(currentUidProvider) ?? ''}';
 
   @override
   bool build() {
-    ref.watch(currentUidProvider);
-    return ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
+    final uid = ref.watch(currentUidProvider);
+    // Misafir → Google bağlanınca uid aynı kalır; hesap türü için auth izlenir.
+    final user = ref.watch(authStateProvider).value;
+    final saved = ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
+    // KÖK NEDEN (2026-11-06, "telefondaki ek web'e gelmiyor / sürekli
+    // bekliyor"): Google hesabının ekleri yalnız Ayarlar'da elle "Bağla"
+    // denince yükleniyordu; denmeyen hesapta ekler sessizce cihazda kalıyordu.
+    // İzin daha önce verildiyse (giriş, başka kurulum) pencere açmadan bağlan.
+    if (!saved && !kIsWeb && Platform.isAndroid && uid != null) {
+      if (isGoogleUser(user) && _silentTried.add(uid)) {
+        unawaited(() async {
+          final token = await ref.read(driveAuthProvider).accessToken();
+          if (token != null && ref.mounted) set(true);
+        }());
+      }
+    }
+    return saved;
   }
 
   void set(bool value) {
@@ -150,7 +175,7 @@ class AndroidDriveAuth implements DriveAuth {
         .clientAuthorizationTokensForScopes(
           ClientAuthorizationTokensForScopesParameters(
             request: AuthorizationRequestDetails(
-              scopes: const [kDriveScope],
+              scopes: kDriveScopes,
               userId: null,
               email: _email,
               promptIfUnauthorized: prompt,
@@ -211,7 +236,8 @@ class WebDriveAuth implements DriveAuth {
   /// webte gelmiyor"): yalnız bellekteyken her yenilemede bütün ekler yeniden
   /// "Drive'a bağlan" istiyordu. `sessionStorage` sekmeyle ölür, kapsam
   /// yalnız `drive.appdata`, süre ~55 dk; hesap değişince geçersiz.
-  static const _sessionKey = 'notlar_drive_token';
+  // _v2: kapsam değişti (2026-11-06); eski yalnız-appdata jetonu kullanılmasın.
+  static const _sessionKey = 'notlar_drive_token_v2';
 
   void _restore() {
     if (_token != null) return;
@@ -246,7 +272,10 @@ class WebDriveAuth implements DriveAuth {
   Future<bool> connect() async {
     final user = _auth.currentUser;
     if (user == null) return false;
-    final provider = GoogleAuthProvider()..addScope(kDriveScope);
+    final provider = GoogleAuthProvider();
+    for (final scope in kDriveScopes) {
+      provider.addScope(scope);
+    }
     final email = user.email;
     if (email != null) provider.setCustomParameters({'login_hint': email});
     final result = await user.reauthenticateWithPopup(provider);
@@ -304,8 +333,7 @@ final driveAuthProvider = Provider<DriveAuth>((ref) {
 final driveStoreProvider = Provider<DriveStore?>((ref) {
   // Web'de Google hesabı Drive'daki ekleri OKUYABİLİR (bkz. [WebDriveAuth]);
   // yükleme yine Storage'a (kip `storage` kalır).
-  final webReader =
-      kIsWeb && isGoogleUser(ref.watch(authStateProvider).value);
+  final webReader = kIsWeb && isGoogleUser(ref.watch(authStateProvider).value);
   if (!webReader &&
       ref.watch(attachmentSyncModeProvider) != AttachmentSyncMode.drive) {
     driveFileDeleter = null;
@@ -386,6 +414,7 @@ class DriveStore {
     required String mimeType,
   }) async {
     final length = await file.length();
+    final folder = await ensureFolder();
     final session = await _send((token) async {
       final request =
           http.Request(
@@ -400,7 +429,7 @@ class DriveStore {
             })
             ..body = jsonEncode({
               'name': name,
-              'parents': ['appDataFolder'],
+              'parents': [folder],
               'mimeType': mimeType,
             });
       return request;
@@ -440,6 +469,52 @@ class DriveStore {
       throw const HttpException('Drive: dosya kimliği dönmedi');
     }
     return id;
+  }
+
+  String? _folderId;
+
+  /// Görünür "Notlar" klasörünün kimliği; yoksa kökte açılır. `drive.file`
+  /// yalnız uygulamanın açtığı klasörü görür — kullanıcının aynı adlı kendi
+  /// klasörüne dokunulmaz.
+  Future<String> ensureFolder() async {
+    final cached = _folderId;
+    if (cached != null) return cached;
+    const folderMime = 'application/vnd.google-apps.folder';
+    final q = Uri.encodeQueryComponent(
+      "name = '$kDriveFolderName' and mimeType = '$folderMime' "
+      "and trashed = false and 'root' in parents",
+    );
+    final found = await _send(
+      (token) async => http.Request(
+        'GET',
+        Uri.parse('$_api?q=$q&pageSize=1&fields=files(id)'),
+      )..headers['Authorization'] = 'Bearer $token',
+    );
+    final foundBody = await found.stream.bytesToString();
+    if (found.statusCode != 200) {
+      throw HttpException('Drive ${found.statusCode}: $foundBody');
+    }
+    final files = (jsonDecode(foundBody) as Map)['files'] as List? ?? const [];
+    if (files.isNotEmpty) {
+      return _folderId = (files.first as Map)['id'] as String;
+    }
+    final created = await _send(
+      (token) async => http.Request('POST', Uri.parse('$_api?fields=id'))
+        ..headers.addAll({
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        })
+        ..body = jsonEncode({
+          'name': kDriveFolderName,
+          'mimeType': folderMime,
+          'parents': ['root'],
+        }),
+    );
+    final createdBody = await created.stream.bytesToString();
+    if (created.statusCode != 200) {
+      throw HttpException('Drive ${created.statusCode}: $createdBody');
+    }
+    return _folderId = (jsonDecode(createdBody) as Map)['id'] as String;
   }
 
   /// Dosyayı [target]'a indirir (önce geçici dosyaya, bitince yerine —
@@ -505,11 +580,24 @@ class DriveStore {
   /// sayfa listeler; listeleme başarısızsa sessizce durur — dosyalar
   /// kullanıcının kendi Drive'ında kalır, veri sızıntısı değil.
   Future<void> deleteAllAppData() async {
+    await _deleteListed('spaces=appDataFolder');
+    // Görünür "Notlar" klasöründekiler (yalnız uygulamanın açtıkları).
+    try {
+      final folder = await ensureFolder();
+      await _deleteListed(
+        'q=${Uri.encodeQueryComponent("'$folder' in parents")}',
+      );
+    } catch (e) {
+      debugPrint('Drive klasörü temizlenemedi: $e');
+    }
+  }
+
+  Future<void> _deleteListed(String filter) async {
     String? pageToken;
     try {
       do {
         final query = StringBuffer(
-          '$_api?spaces=appDataFolder&pageSize=1000'
+          '$_api?$filter&pageSize=1000'
           '&fields=nextPageToken,files(id)',
         );
         if (pageToken != null) {
@@ -524,9 +612,9 @@ class DriveStore {
           debugPrint(await _failure(response));
           return;
         }
-        final body =
-            jsonDecode(await response.stream.bytesToString())
-                as Map<String, dynamic>;
+        final body = jsonDecode(
+          await response.stream.bytesToString(),
+        ) as Map<String, dynamic>;
         for (final f in (body['files'] as List? ?? const [])) {
           final id = (f as Map)['id'] as String?;
           if (id != null) await delete(id);

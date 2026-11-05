@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:notlar/features/gmail/data/gmail_api.dart';
 import 'package:notlar/features/gmail/domain/gmail_note.dart';
-import 'package:notlar/features/notes/data/drive_files_api.dart';
+import 'package:notlar/features/auth/data/google_scope_auth.dart';
 
 String b64(String s) => base64Url.encode(utf8.encode(s)).replaceAll('=', '');
 
@@ -42,7 +42,7 @@ Map<String, dynamic> fullMessage() => {
   },
 };
 
-DriveTokenCache tokens() => DriveTokenCache(
+ScopeTokenCache tokens() => ScopeTokenCache(
   silentRefresh: () async =>
       (token: 'g', expiry: DateTime.now().add(const Duration(hours: 1))),
 );

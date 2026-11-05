@@ -4469,14 +4469,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'You can switch later with the Bubbles / Classic chip in the note.';
 
   @override
-  String get attachmentSyncV2Title =>
-      'Also upload attachments to the Notes folder in Drive (trial)';
-
-  @override
-  String get attachmentSyncV2Info =>
-      'New sync. No record is deleted, the old path keeps working.';
-
-  @override
   String get attachmentSyncTitle => 'Attachment sync';
 
   @override
@@ -4487,7 +4479,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driveConnectInfo =>
-      'Images, PDFs, slides and voice recordings are kept in your own Drive storage, in a hidden app folder, and download to your other devices. Videos stay on the device.';
+      'Images, PDFs, slides and voice recordings are kept in your own Drive storage, in the “Notlar” folder of your Drive, and download to your other devices. Videos stay on the device.';
 
   @override
   String get driveConnect => 'Connect';
@@ -4501,7 +4493,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driveConnectedInfo =>
-      'Connected · attachments live in your Drive\'s app folder';
+      'Connected · attachments live in the “Notlar” folder of your Drive';
 
   @override
   String driveUsage(String used, String limit) {

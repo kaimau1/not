@@ -2052,16 +2052,14 @@
   "docViewSwitchedClassic": "Klasik görünüm: belge sayfada bir ek. Balonlar ve sayfa notları saklandı.",
   "docViewTextKept": "Notun yazısı klasik görünümde duruyor.",
   "captureModeChangeLater": "Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.",
-  "attachmentSyncV2Title": "Ekleri Drive'daki Notlar klasörüne de yükle (deneme)",
-  "attachmentSyncV2Info": "Yeni senkron. Hiçbir kayıt silinmez, eski yol da çalışır.",
   "attachmentSyncTitle": "Ek senkronu",
   "driveSectionTitle": "Ekler Google Drive'ında",
   "driveConnectTitle": "Ekleri Google Drive'ında sakla",
-  "driveConnectInfo": "Görseller, PDF'ler, sunumlar ve ses kayıtları kendi Drive kotanda, uygulamaya özel gizli klasörde saklanır ve öbür cihazlarına iner. Videolar cihazda kalır.",
+  "driveConnectInfo": "Görseller, PDF'ler, sunumlar ve ses kayıtları kendi Drive kotanda, Drive'ındaki “Notlar” klasöründe saklanır ve öbür cihazlarına iner. Videolar cihazda kalır.",
   "driveConnect": "Bağla",
   "driveDisconnect": "Bağlantıyı kes",
   "driveConnected": "Google Drive bağlandı — ekler yedekleniyor.",
-  "driveConnectedInfo": "Bağlı · ekler Drive'ının uygulama klasöründe",
+  "driveConnectedInfo": "Bağlı · ekler Drive'ındaki “Notlar” klasöründe",
   "driveUsage": "Drive: {used} / {limit} kullanıldı",
   "@driveUsage": {
     "placeholders": {

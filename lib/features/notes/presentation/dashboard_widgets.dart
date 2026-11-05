@@ -1460,6 +1460,9 @@ class _SwipeActions extends StatelessWidget {
 class _PendingUploadsBar extends ConsumerWidget {
   const _PendingUploadsBar();
 
+  /// İzin penceresi oturumda en çok bir kez kendiliğinden açılır.
+  static bool _autoAsked = false;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(pendingUploadsProvider);
@@ -1468,6 +1471,15 @@ class _PendingUploadsBar extends ConsumerWidget {
     // Google hesabı ama Drive bağlanmadı: ekler bağlantı bekliyor — şerit
     // bunu söyler ve dokununca bağlar (kullanıcı isteği 2026-10-15).
     final needsDrive = state.needsDrive;
+    // KÖK NEDEN (2026-11-06, "ek sürekli bekliyor"): şeride dokunmayan
+    // kullanıcının ekleri hiç çıkmıyordu. Bekleyen ek varken izin bir kez
+    // kendiliğinden sorulur (reddedilirse şerit kalır, dokununca yine sorar).
+    if (needsDrive && !_autoAsked) {
+      _autoAsked = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) unawaited(connectDrive(context, ref));
+      });
+    }
     final failing = state.failed > 0 && !needsDrive;
     return AnimatedSize(
       duration: const Duration(milliseconds: 200),

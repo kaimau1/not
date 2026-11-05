@@ -705,6 +705,7 @@ class Attachment {
     this.storagePath = '',
     this.downloadUrl = '',
     this.driveId = '',
+    this.thumbUrl = '',
     this.localPath = '',
     this.sizeBytes = 0,
     this.width,
@@ -757,6 +758,7 @@ class Attachment {
     'storagePath',
     'downloadUrl',
     'driveId',
+    'thumbUrl',
     'localPath',
     'sizeBytes',
     'width',
@@ -905,6 +907,11 @@ class Attachment {
   /// kopyaya baktığı için oradan çizer. Bu yüzden [downloadUrl]'a
   /// (Storage'ın herkese açık jetonlu adresi) dokunulmaz, ayrı alan.
   final String driveId;
+
+  /// Drive'daki görselin KÜÇÜK önizlemesi (Firebase Storage, ≤ 40 KB, jetonlu
+  /// adres): Drive izni olmayan cihaz/sekme (web) kartı hemen çizsin diye.
+  /// Asıl dosya yine Drive'dadır; boş = önizleme yok.
+  final String thumbUrl;
 
   /// Yükleme bitene kadar kullanılan cihaz içi kopya. Firestore'a yazılır ki
   /// aynı cihazda uygulama yeniden açıldığında kuyruk kaldığı yerden sürsün;
@@ -1103,6 +1110,7 @@ class Attachment {
     storagePath: uploaded.storagePath,
     downloadUrl: uploaded.downloadUrl,
     driveId: uploaded.driveId,
+    thumbUrl: uploaded.thumbUrl,
     localPath: uploaded.localPath,
     sizeBytes: uploaded.sizeBytes,
     fileName: uploaded.fileName,
@@ -1143,6 +1151,7 @@ class Attachment {
     String? storagePath,
     String? downloadUrl,
     String? driveId,
+    String? thumbUrl,
     String? localPath,
     int? sizeBytes,
     int? width,
@@ -1179,6 +1188,7 @@ class Attachment {
     storagePath: storagePath ?? this.storagePath,
     downloadUrl: downloadUrl ?? this.downloadUrl,
     driveId: driveId ?? this.driveId,
+    thumbUrl: thumbUrl ?? this.thumbUrl,
     localPath: localPath ?? this.localPath,
     sizeBytes: sizeBytes ?? this.sizeBytes,
     width: width ?? this.width,
@@ -1230,6 +1240,7 @@ class Attachment {
           _ => '',
         },
         driveId: map['driveId'] as String? ?? '',
+        thumbUrl: map['thumbUrl'] as String? ?? '',
         localPath: _resolveLocalPath(map, noteId),
         sizeBytes: (map['sizeBytes'] as num?)?.toInt() ?? 0,
         width: (map['width'] as num?)?.toInt(),
@@ -1308,6 +1319,7 @@ class Attachment {
     'downloadUrl': downloadUrl.startsWith('blob:') ? '' : downloadUrl,
     // Yalnız doluysa: Drive'sız eklerin şeması büyümez.
     if (driveId.isNotEmpty) 'driveId': driveId,
+    if (thumbUrl.isNotEmpty) 'thumbUrl': thumbUrl,
     // localPath BİLEREK YAZILMIYOR: mutlak cihaz yolu (Windows'ta kullanıcı
     // adı içerir) buluta senkronlanıyordu, başka cihazda anlamsızdı ve dosya
     // sistemi işlemlerini yanlış yola yönlendirebiliyordu. Yol artık okuma

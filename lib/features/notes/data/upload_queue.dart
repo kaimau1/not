@@ -560,6 +560,12 @@ class UploadQueue {
         _lastFailure.remove(key);
         _ref.read(uploadFailuresProvider.notifier).clear(attachment.id);
       } catch (e) {
+        // İzin yok (eski yalnız-appdata onayı ya da geri alındı): "bağlı"
+        // sanıp sonsuza dek "yüklenemedi" demek yerine bağlantıyı düşür —
+        // ana ekran şeridi yeniden izin ister (2026-11-06).
+        if (e is DriveUnavailableException && e.message == 'no-token') {
+          _ref.read(driveConnectedProvider.notifier).set(false);
+        }
         // Bağlantı yoksa veya yükleme başarısızsa bir sonraki tetikte
         // (üstel bekleme dolduysa) yeniden denenir.
         final attempts = (lastFailure?.attempts ?? 0) + 1;
