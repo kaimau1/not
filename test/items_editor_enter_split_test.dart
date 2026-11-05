@@ -76,6 +76,47 @@ void main() {
     expect(latest!.map((i) => i.text).toList(), ['**ekmek**', '']);
   });
 
+  testWidgets('donanım Enter: biçimli madde iki biçimli parçaya bölünür', (
+    tester,
+  ) async {
+    // Cihaz turu 2026-11-05: adb/donanım Enter `\n` yazar, ayrı yoldan geçer.
+    List<NoteItem>? latest;
+    await tester.pumpWidget(
+      _wrap(
+        ItemsEditor(
+          items: const [NoteItem(id: 'a', text: '**ekmek sut**')],
+          onChanged: (updated) => latest = updated,
+          showCheckboxes: true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, '**ek
+mek sut**');
+    await tester.pumpAndSettle();
+    expect(latest!.map((i) => i.text).toList(), [
+      '**ek**',
+      '**mek sut**',
+    ]);
+  });
+
+  testWidgets('çok satırlı yapıştırmada kalın satır bozulmaz', (tester) async {
+    List<NoteItem>? latest;
+    await tester.pumpWidget(
+      _wrap(
+        ItemsEditor(
+          items: const [NoteItem(id: 'a', text: '')],
+          onChanged: (updated) => latest = updated,
+          showCheckboxes: true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, '- bir\n**iki**');
+    await tester.pumpAndSettle();
+    expect(latest!.map((i) => i.text).toList(), ['bir', '**iki**']);
+  });
+
   testWidgets('sonda Enter: altına boş madde açar', (tester) async {
     final latest = await _enterAt(tester, text: 'ekmek', caret: 5);
     expect(latest!.map((i) => i.text).toList(), ['ekmek', '']);
