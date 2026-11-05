@@ -1330,7 +1330,7 @@ class ItemsEditorState extends State<ItemsEditor>
     String? best;
     var bestDistance = double.infinity;
     for (final entry in _focusNodes.entries) {
-      final box = entry.value.context?.findRenderObject();
+      final box = entry.value.rowContext?.findRenderObject();
       if (box is! RenderBox || !box.attached || !box.hasSize) continue;
       final top = box.localToGlobal(Offset.zero).dy;
       final bottom = top + box.size.height;

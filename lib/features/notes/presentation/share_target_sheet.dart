@@ -451,8 +451,10 @@ class _PickableCard extends StatelessWidget {
         children: [
           IgnorePointer(child: child),
           Positioned(
+            // Sağ üst: kartın (burada çalışmayan) ⋮'ünü örter; altta tarihi
+            // kesiyordu (cihaz turu 2026-11-05).
             right: 6,
-            bottom: 6,
+            top: 6,
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: scheme.primary,

@@ -69,6 +69,18 @@ void main() {
     },
   );
 
+  testWidgets('jest katmanı hiç dokunulmamış maddeyi bulur', (tester) async {
+    // Cihaz turu 2026-11-05: düz satırda parmakla üstünü çizmek boşa gidiyordu.
+    await pump(tester, const [
+      NoteItem(id: 'a', text: 'Bir'),
+      NoteItem(id: 'b', text: 'İki'),
+    ]);
+    expect(fields(), 0);
+    final state = tester.state<ItemsEditorState>(find.byType(ItemsEditor));
+    final second = tester.getCenter(find.text('İki', findRichText: true));
+    expect(state.itemIdAt(second), 'b');
+  });
+
   testWidgets('düz çizim gerçek alanla aynı yükseklikte', (tester) async {
     final items = [
       const NoteItem(id: 'a', text: 'Kısa'),

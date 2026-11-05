@@ -19,6 +19,14 @@ class _LazyFocusNode extends FocusNode {
   VoidCallback? _needField;
   bool _pending = false;
 
+  /// Satırın bağlamı: düz çizimde düğüm henüz alana bağlı değil, [context]
+  /// boş. KÖK NEDEN (cihaz turu 2026-11-05): jest katmanı maddeyi düğümün
+  /// bağlamından buluyordu; F24.3'ten beri hiç dokunulmamış maddeye çizilen
+  /// jest (üstünü çiz, ✓) sessizce boşa gidiyordu.
+  BuildContext? _rowContext;
+
+  BuildContext? get rowContext => context ?? _rowContext;
+
   @override
   void requestFocus([FocusNode? node]) {
     final needField = _needField;
@@ -78,6 +86,7 @@ class _LazyItemFieldState extends State<_LazyItemField> {
     _active =
         widget.eager || widget.focusNode.hasFocus || widget.focusNode._pending;
     widget.focusNode._needField = _activate;
+    widget.focusNode._rowContext = context;
     if (_active) _afterFieldBuilt();
   }
 
@@ -88,7 +97,11 @@ class _LazyItemFieldState extends State<_LazyItemField> {
       if (identical(oldWidget.focusNode._needField, _activate)) {
         oldWidget.focusNode._needField = null;
       }
+      if (identical(oldWidget.focusNode._rowContext, context)) {
+        oldWidget.focusNode._rowContext = null;
+      }
       widget.focusNode._needField = _activate;
+      widget.focusNode._rowContext = context;
     }
     if (widget.eager && !_active) {
       _active = true;
@@ -100,6 +113,9 @@ class _LazyItemFieldState extends State<_LazyItemField> {
   void dispose() {
     if (identical(widget.focusNode._needField, _activate)) {
       widget.focusNode._needField = null;
+    }
+    if (identical(widget.focusNode._rowContext, context)) {
+      widget.focusNode._rowContext = null;
     }
     super.dispose();
   }
