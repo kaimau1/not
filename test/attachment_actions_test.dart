@@ -8,6 +8,37 @@ import 'package:notlar/features/notes/presentation/editor/attachment_actions.dar
 /// F40.1: tek ek menüsü. Sıra tek yerde; yüzeyler yalnız kendi çubuğunda
 /// görünen işi düşürür. F40.2 (K6): eşanlamlı metinler yok.
 void main() {
+  test('dar çubukta döndür yalnız yerel videoda menüde', () {
+    const local = Attachment(
+      id: 'v',
+      kind: AttachmentKind.video,
+      fileName: 'a.mp4',
+      mimeType: 'video/mp4',
+    );
+    const youtube = Attachment(
+      id: 'y',
+      kind: AttachmentKind.video,
+      fileName: 'y',
+      mimeType: 'video/mp4',
+      webUrl: 'https://youtu.be/x',
+    );
+    const image = Attachment(
+      id: 'i',
+      kind: AttachmentKind.image,
+      fileName: 'a.jpg',
+      mimeType: 'image/jpeg',
+    );
+    const caps = AttachmentCaps(rotate: true);
+    bool has(Attachment a) => attachmentActionsFor(
+      a,
+      AttachmentSurface.pinned,
+      caps,
+    ).contains(AttachmentAction.rotate);
+    expect(has(local), isTrue);
+    expect(has(youtube), isFalse);
+    expect(has(image), isFalse);
+  });
+
   const image = Attachment(
     id: 'i',
     kind: AttachmentKind.image,
