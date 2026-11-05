@@ -37,6 +37,7 @@ import '../../../core/a11y/chip_roles.dart';
 Future<NoteTemplateContent?> showNoteTemplateSheet(
   BuildContext context, {
   NoteTemplate? initial,
+  UserTemplate? initialUser,
 }) => showAppSheet<NoteTemplateContent>(
   context: context,
   showDragHandle: true,
@@ -47,7 +48,7 @@ Future<NoteTemplateContent?> showNoteTemplateSheet(
     padding: EdgeInsets.only(
       bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
     ),
-    child: NoteTemplateSheet(initial: initial),
+    child: NoteTemplateSheet(initial: initial, initialUser: initialUser),
   ),
 );
 
@@ -66,9 +67,12 @@ class _Pick {
 
 /// Levhanın kendisi (testte doğrudan kurulabilsin diye açık).
 class NoteTemplateSheet extends ConsumerStatefulWidget {
-  const NoteTemplateSheet({super.key, this.initial});
+  const NoteTemplateSheet({super.key, this.initial, this.initialUser});
 
   final NoteTemplate? initial;
+
+  /// "+" menüsündeki favori KENDİ şablonum: galeri atlanır.
+  final UserTemplate? initialUser;
 
   @override
   ConsumerState<NoteTemplateSheet> createState() => _NoteTemplateSheetState();
@@ -76,9 +80,11 @@ class NoteTemplateSheet extends ConsumerStatefulWidget {
 
 /// Bölüm çipi: null = tümü; [_mine] = kendi şablonlarım.
 class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
-  late _Pick? _picked = widget.initial == null
-      ? null
-      : _Pick.builtin(widget.initial!);
+  late _Pick? _picked = widget.initial != null
+      ? _Pick.builtin(widget.initial!)
+      : widget.initialUser != null
+      ? _Pick.user(widget.initialUser!)
+      : null;
   TemplateCategory? _category;
   bool _mine = false;
   String _query = '';
@@ -143,6 +149,7 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
             title: user.title,
             body: user.body,
             items: user.items,
+            columns: 1,
           );
     return TemplateComposer(
       base: base,
@@ -219,6 +226,7 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
     final scheme = theme.colorScheme;
     final userTemplates = ref.watch(userTemplatesProvider);
     final recents = ref.watch(recentTemplatesProvider);
+    final favorites = ref.watch(favoriteTemplatesProvider);
     final q = _fold(_query.trim());
 
     bool matchesBuiltin(NoteTemplate t) =>
@@ -274,10 +282,18 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
         );
       }
     } else {
-      // Son kullanılanlar yalnız "Tümü"nde, aramasızken — hızlı dönüş.
+      // Favoriler ve son kullanılanlar yalnız "Tümü"nde, aramasızken —
+      // hızlı dönüş. Favori olan son kullanılanlarda tekrar görünmez.
       if (_category == null) {
+        final favoritePicks = <_Pick>[];
+        for (final key in favorites) {
+          final pick = _resolve(key, userTemplates);
+          if (pick != null) favoritePicks.add(pick);
+        }
+        addSection(l10n.templatesFavorites, favoritePicks);
         final recentPicks = <_Pick>[];
         for (final key in recents) {
+          if (favorites.contains(key)) continue;
           final pick = _resolve(key, userTemplates);
           if (pick != null) recentPicks.add(pick);
         }
@@ -414,11 +430,13 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
 
   Widget _grid(BuildContext context, List<_Pick> picks) => LayoutBuilder(
     builder: (context, constraints) {
-      final columns = constraints.maxWidth > 480 ? 3 : 2;
-      final width = (constraints.maxWidth - 10 * (columns - 1)) / columns;
+      // KÜÇÜK KARTLAR (kullanıcı isteği 2026-11-05: "şablonların kart boyutu
+      // küçültülür"): telefonda 3, genişte 4 sütun, kart dikey ve kısa.
+      final columns = constraints.maxWidth > 480 ? 4 : 3;
+      final width = (constraints.maxWidth - 8 * (columns - 1)) / columns;
       return Wrap(
-        spacing: 10,
-        runSpacing: 10,
+        spacing: 8,
+        runSpacing: 8,
         children: [
           for (final pick in picks)
             SizedBox(width: math.max(0, width), child: _card(context, pick)),
@@ -431,21 +449,35 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final builtin = pick.builtin;
+    final favorite = ref.watch(favoriteTemplatesProvider).contains(pick.key);
+    void toggleFavorite() {
+      final ok = ref
+          .read(favoriteTemplatesProvider.notifier)
+          .toggle(pick.key);
+      if (!ok) _announce(l10n.templateFavoritesFull);
+    }
+
     if (builtin != null) {
       return _TemplateCard(
+        key: ValueKey('tpl-card-${pick.key}'),
         icon: builtin.icon,
         accent: builtin.accent,
         label: builtin.label(l10n),
         description: builtin.description(l10n),
+        favorite: favorite,
+        onFavorite: toggleFavorite,
         onTap: () => setState(() => _picked = pick),
       );
     }
     final user = pick.user!;
     return _TemplateCard(
+      key: ValueKey('tpl-card-${pick.key}'),
       icon: _userIcon(user.type),
       accent: scheme.primary,
       label: user.name.isEmpty ? l10n.remindersUntitled : user.name,
       description: _userSummary(user, l10n),
+      favorite: favorite,
+      onFavorite: toggleFavorite,
       onTap: () => setState(() => _picked = pick),
       onMenu: () => _userMenu(user),
     );
@@ -497,6 +529,7 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
     if (action == 'delete') {
       notifier.remove(template.id);
       ref.read(recentTemplatesProvider.notifier).forget('u:${template.id}');
+      ref.read(favoriteTemplatesProvider.notifier).forget('u:${template.id}');
       // Geri al: yanlışlıkla silinen şablonun içeriği bir daha yazılmaz.
       final messenger = ScaffoldMessenger.maybeOf(context);
       messenger
@@ -678,11 +711,14 @@ class _EmptyMine extends StatelessWidget {
 
 class _TemplateCard extends StatelessWidget {
   const _TemplateCard({
+    super.key,
     required this.icon,
     required this.accent,
     required this.label,
     required this.description,
     required this.onTap,
+    this.favorite = false,
+    this.onFavorite,
     this.onMenu,
   });
 
@@ -692,70 +728,91 @@ class _TemplateCard extends StatelessWidget {
   final String description;
   final VoidCallback onTap;
 
-  /// Kendi şablonumda ⋮ (yeniden adlandır / sil); uzun basış da açar.
+  /// Favori mi (yıldız dolu) — favoriler "+" menüsünde görünür.
+  final bool favorite;
+  final VoidCallback? onFavorite;
+
+  /// Kendi şablonumda menü (yeniden adlandır / sil): uzun basış açar.
   final VoidCallback? onMenu;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return Material(
-      color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onMenu,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
-          child: Row(
+    final l10n = context.l10n;
+    // KÜÇÜK DİKEY KART (2026-11-05): simge + ad + tek satır açıklama;
+    // köşede favori yıldızı. Uzun açıklama `Tooltip`te.
+    return Tooltip(
+      message: description,
+      waitDuration: const Duration(milliseconds: 600),
+      child: Material(
+        color: scheme.surfaceContainerLow,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(
+            color: favorite
+                ? accent.withValues(alpha: 0.7)
+                : scheme.outlineVariant.withValues(alpha: 0.6),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onMenu ?? onFavorite,
+          child: Stack(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: accent, size: 22),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icon, color: accent, size: 18),
+                    ),
+                    const SizedBox(height: 6),
                     Text(
                       label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleSmall,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    const SizedBox(height: 2),
                     Text(
                       description,
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: scheme.onSurfaceVariant,
-                        height: 1.25,
+                        fontSize: 11,
                       ),
                     ),
                   ],
                 ),
               ),
-              if (onMenu != null)
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  iconSize: 18,
-                  tooltip: context.l10n.more,
-                  icon: const Icon(Icons.more_vert),
-                  onPressed: onMenu,
-                )
-              else
-                const SizedBox(width: 8),
+              if (onFavorite != null)
+                PositionedDirectional(
+                  top: 0,
+                  end: 0,
+                  child: IconButton(
+                    key: ValueKey('tpl-fav-$label'),
+                    visualDensity: VisualDensity.compact,
+                    iconSize: 18,
+                    tooltip: favorite
+                        ? l10n.templateUnfavorite
+                        : l10n.templateFavorite,
+                    color: favorite ? accent : scheme.outline,
+                    icon: Icon(favorite ? Icons.star : Icons.star_outline),
+                    onPressed: onFavorite,
+                  ),
+                ),
             ],
           ),
         ),
@@ -824,6 +881,10 @@ class _TemplateComposerState extends State<TemplateComposer> {
   late final List<_Item> _items = [for (final t in widget.base.items) _Item(t)];
   late NoteType _type = widget.base.type;
 
+  /// İKİ SÜTUN (kullanıcı isteği 2026-11-05: "çift satırlı açma seçeneği"):
+  /// liste not iki sütunlu doğar (`Note.listColumns`).
+  late bool _twoColumns = widget.base.columns == 2;
+
   bool get _isList =>
       widget.base.type == NoteType.checklist ||
       widget.base.type == NoteType.ordered;
@@ -879,6 +940,7 @@ class _TemplateComposerState extends State<TemplateComposer> {
       widget.base,
       title: _title.text,
       type: _type,
+      columns: _twoColumns ? 2 : 1,
       items: [
         for (final i in _items)
           if (i.selected) i.text,
@@ -997,6 +1059,20 @@ class _TemplateComposerState extends State<TemplateComposer> {
           selected: {_type},
           showSelectedIcon: false,
           onSelectionChanged: (v) => setState(() => _type = v.first),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.only(left: 4, top: 8),
+        child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: FilterChip(
+            key: const ValueKey('tpl-two-columns'),
+            avatar: const Icon(Icons.view_column_outlined, size: 18),
+            label: Text(l10n.templateTwoColumns),
+            selected: _twoColumns,
+            showCheckmark: false,
+            onSelected: (v) => setState(() => _twoColumns = v),
+          ),
         ),
       ),
       _SectionLabel(
@@ -1123,6 +1199,7 @@ NoteTemplateContent composeTemplateContent(
   required String title,
   required NoteType type,
   required List<String> items,
+  int columns = 1,
 }) {
   final isList =
       base.type == NoteType.checklist || base.type == NoteType.ordered;
@@ -1137,5 +1214,6 @@ NoteTemplateContent composeTemplateContent(
               if (i.trim().isNotEmpty) i.trim(),
           ]
         : base.items,
+    columns: isList ? columns : 1,
   );
 }

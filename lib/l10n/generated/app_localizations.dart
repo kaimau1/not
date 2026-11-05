@@ -12169,6 +12169,336 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Zeytin'**
   String get themeOlive;
+
+  /// No description provided for @tplShopMeat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Et, tavuk ve balık'**
+  String get tplShopMeat;
+
+  /// No description provided for @tplShopMeatItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kıyma, Tavuk göğsü, Tavuk but, Kuşbaşı et, Balık, Sucuk, Hindi füme, Köfte'**
+  String get tplShopMeatItems;
+
+  /// No description provided for @tplShopDrinks.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçecek'**
+  String get tplShopDrinks;
+
+  /// No description provided for @tplShopDrinksItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Su, Maden suyu, Meyve suyu, Ayran, Gazoz, Soğuk çay, Süt'**
+  String get tplShopDrinksItems;
+
+  /// No description provided for @tplShopSnacks.
+  ///
+  /// In tr, this message translates to:
+  /// **'Atıştırmalık'**
+  String get tplShopSnacks;
+
+  /// No description provided for @tplShopSnacksItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bisküvi, Çikolata, Cips, Kuruyemiş, Kraker, Gofret, Kuru meyve'**
+  String get tplShopSnacksItems;
+
+  /// No description provided for @tplShopFrozen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dondurulmuş'**
+  String get tplShopFrozen;
+
+  /// No description provided for @tplShopFrozenItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dondurma, Bezelye, Patates kızartması, Mantı, Pizza, Börek'**
+  String get tplShopFrozenItems;
+
+  /// No description provided for @tplShopBaby.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bebek'**
+  String get tplShopBaby;
+
+  /// No description provided for @tplShopBabyItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bez, Islak mendil, Mama, Bebek şampuanı, Pişik kremi'**
+  String get tplShopBabyItems;
+
+  /// No description provided for @tplShopPet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Evcil hayvan'**
+  String get tplShopPet;
+
+  /// No description provided for @tplShopPetItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kedi maması, Köpek maması, Kum, Ödül maması, Tüy toplayıcı'**
+  String get tplShopPetItems;
+
+  /// No description provided for @tplTravelHealth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağlık'**
+  String get tplTravelHealth;
+
+  /// No description provided for @tplTravelHealthItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ağrı kesici, Yara bandı, Mide ilacı, Reçeteli ilaçlar, Sivrisinek kovucu, Maske'**
+  String get tplTravelHealthItems;
+
+  /// No description provided for @tplTravelBeforeGo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çıkmadan önce'**
+  String get tplTravelBeforeGo;
+
+  /// No description provided for @tplTravelBeforeGoItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ocağı kontrol et, Pencereleri kapat, Çöpü at, Bitkileri sula, Fişleri çek, Anahtarları al'**
+  String get tplTravelBeforeGoItems;
+
+  /// No description provided for @tplCleanKitchen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mutfak'**
+  String get tplCleanKitchen;
+
+  /// No description provided for @tplCleanKitchenItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bulaşık, Tezgâh, Ocak, Fırın içi, Buzdolabı, Lavabo, Mikrodalga'**
+  String get tplCleanKitchenItems;
+
+  /// No description provided for @tplCleanBath.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banyo'**
+  String get tplCleanBath;
+
+  /// No description provided for @tplCleanBathItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klozet, Lavabo, Duş, Ayna, Fayans derzleri, Havluları değiştir'**
+  String get tplCleanBathItems;
+
+  /// No description provided for @tplCleanRooms.
+  ///
+  /// In tr, this message translates to:
+  /// **'Odalar'**
+  String get tplCleanRooms;
+
+  /// No description provided for @tplCleanRoomsItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toz al, Süpür, Paspas, Yatakları topla, Camları sil, Halıları silkele'**
+  String get tplCleanRoomsItems;
+
+  /// No description provided for @tplCleanMonthly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık'**
+  String get tplCleanMonthly;
+
+  /// No description provided for @tplCleanMonthlyItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Perdeler, Klima filtresi, Dolap içleri, Çamaşır makinesi bakımı, Davlumbaz filtresi'**
+  String get tplCleanMonthlyItems;
+
+  /// No description provided for @tplMoveBefore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taşınmadan önce'**
+  String get tplMoveBefore;
+
+  /// No description provided for @tplMoveBeforeItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nakliyeci ayarla, Koli ve bant al, Eşyaları ayıkla, Kolileri etiketle, Abonelikleri bildir, Adres değişikliği'**
+  String get tplMoveBeforeItems;
+
+  /// No description provided for @tplMoveDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taşınma günü'**
+  String get tplMoveDay;
+
+  /// No description provided for @tplMoveDayItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayaçların fotoğrafı, Anahtar teslimi, Değerli eşyaları yanına al, Son kontrol, İlk gece çantası'**
+  String get tplMoveDayItems;
+
+  /// No description provided for @tplMoveAfter.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taşındıktan sonra'**
+  String get tplMoveAfter;
+
+  /// No description provided for @tplMoveAfterItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'İnternet kurulumu, Muhtarlık kaydı, Kilitleri değiştir, Banka adresini güncelle, Komşularla tanış'**
+  String get tplMoveAfterItems;
+
+  /// No description provided for @tplHabitHealth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağlık'**
+  String get tplHabitHealth;
+
+  /// No description provided for @tplHabitHealthItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'8 bardak su, 30 dakika yürüyüş, Erken yat, Şekersiz gün, Vitamin al, Esneme'**
+  String get tplHabitHealthItems;
+
+  /// No description provided for @tplHabitMind.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zihin'**
+  String get tplHabitMind;
+
+  /// No description provided for @tplHabitMindItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'20 sayfa kitap, Meditasyon, Günlük yaz, Ekransız bir saat, Yeni kelime öğren'**
+  String get tplHabitMindItems;
+
+  /// No description provided for @tplHabitHome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ev ve düzen'**
+  String get tplHabitHome;
+
+  /// No description provided for @tplHabitHomeItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bulaşığı bitir, 10 dakika toparlan, Bitkileri sula, Yarını planla'**
+  String get tplHabitHomeItems;
+
+  /// No description provided for @tplWorkoutUpper.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üst vücut'**
+  String get tplWorkoutUpper;
+
+  /// No description provided for @tplWorkoutUpperItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şınav 3×10, Barfiks 3×6, Omuz pres 3×10, Biceps curl 3×12, Triceps dips 3×10, Plank 3×45 sn'**
+  String get tplWorkoutUpperItems;
+
+  /// No description provided for @tplWorkoutLower.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt vücut'**
+  String get tplWorkoutLower;
+
+  /// No description provided for @tplWorkoutLowerItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Squat 3×12, Lunge 3×10, Köprü 3×15, Baldır 3×20, Duvar oturuşu 3×40 sn'**
+  String get tplWorkoutLowerItems;
+
+  /// No description provided for @tplWorkoutCardio.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kardiyo'**
+  String get tplWorkoutCardio;
+
+  /// No description provided for @tplWorkoutCardioItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Koşu 20 dk, İp atlama 5 dk, Bisiklet 30 dk, Jumping jack 3×30, Burpee 3×10'**
+  String get tplWorkoutCardioItems;
+
+  /// No description provided for @tplGiftPeople.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişiler'**
+  String get tplGiftPeople;
+
+  /// No description provided for @tplGiftPeopleItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anne, Baba, Kardeş, Eş, Arkadaş, Öğretmen, İş arkadaşı, Çocuk'**
+  String get tplGiftPeopleItems;
+
+  /// No description provided for @tplGiftIdeas.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fikirler'**
+  String get tplGiftIdeas;
+
+  /// No description provided for @tplGiftIdeasItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kitap, Çiçek, Parfüm, Saat, Deneyim hediyesi, El yapımı, Kupa, Hediye çeki'**
+  String get tplGiftIdeasItems;
+
+  /// No description provided for @tplTodoHome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ev'**
+  String get tplTodoHome;
+
+  /// No description provided for @tplTodoHomeItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Faturaları öde, Çamaşır, Market, Tamir işleri, Randevu al'**
+  String get tplTodoHomeItems;
+
+  /// No description provided for @tplTodoErrands.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dışarıda'**
+  String get tplTodoErrands;
+
+  /// No description provided for @tplTodoErrandsItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bankaya uğra, Kargo gönder, Eczane, Kuru temizleme, Postane'**
+  String get tplTodoErrandsItems;
+
+  /// No description provided for @templateTwoColumns.
+  ///
+  /// In tr, this message translates to:
+  /// **'İki sütun'**
+  String get templateTwoColumns;
+
+  /// No description provided for @templateFavorite.
+  ///
+  /// In tr, this message translates to:
+  /// **'Favorilere ekle'**
+  String get templateFavorite;
+
+  /// No description provided for @templateUnfavorite.
+  ///
+  /// In tr, this message translates to:
+  /// **'Favorilerden çıkar'**
+  String get templateUnfavorite;
+
+  /// No description provided for @templatesFavorites.
+  ///
+  /// In tr, this message translates to:
+  /// **'Favoriler'**
+  String get templatesFavorites;
+
+  /// No description provided for @templateFavoritesFull.
+  ///
+  /// In tr, this message translates to:
+  /// **'En çok 4 favori seçilebilir — önce birini çıkar'**
+  String get templateFavoritesFull;
 }
 
 class _AppLocalizationsDelegate

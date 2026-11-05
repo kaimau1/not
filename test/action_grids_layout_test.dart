@@ -7,12 +7,21 @@ import 'package:notlar/features/notes/presentation/note_actions_sheet.dart';
 import 'package:notlar/features/notes/presentation/quick_add_actions.dart';
 import 'package:notlar/features/notes/presentation/quick_add_fab.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
+import 'package:notlar/features/settings/settings_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Not işlem menüsü (⋮ / uzun basış) iki sütunlu, "+" paneli üç sütunlu
 /// ızgaradır. Bu testler yerleşimi doğrular: Flutter testlerinde taşma
 /// (overflow) hata attığından, sığmayan bir ızgara testi kırar.
 void main() {
+  late SharedPreferences prefs;
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
+  });
+
   Widget host(Widget child) => ProviderScope(
+    overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       locale: const Locale('tr'),

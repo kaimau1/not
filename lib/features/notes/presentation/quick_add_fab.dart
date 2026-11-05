@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
 import '../../../core/widgets/customizable.dart';
+import '../data/user_templates.dart';
 import '../domain/note_templates.dart';
 import '../domain/note_type.dart';
 import 'add_catalog.dart';
@@ -190,15 +191,22 @@ class _QuickAddFabState extends State<QuickAddFab> {
       'ordered': () => a.createNote(NoteType.ordered),
       'draw': a.createHandwritingNote,
       'drawing': a.createDrawingNote,
-      'shopping': () => a.createFromTemplate(NoteTemplate.shopping),
       'template': a.createFromTemplate,
       'archive': a.createNotebook,
     };
-    return [
-      for (final m in addCatalog(context.l10n, AddContext.newNote))
-        if (actions[m.id] case final action?)
-          QuickAddOption(m.id, m.group, m.icon, m.label, m.info, action),
-    ];
+    // FAVORİ ŞABLONLAR (kullanıcı isteği 2026-11-05: "favori şablonlar ekle
+    // menüsünde görünür, en çok 4"): şablon bölümünün başına girer; bölüm
+    // ızgarası karo sayısına göre kendini dizer. Eski sabit "Alışveriş
+    // listesi" karosu artık varsayılan favori (bkz. FavoriteTemplatesNotifier).
+    final favorites = favoriteTemplateOptions(context, a);
+    final out = <QuickAddOption>[];
+    for (final m in addCatalog(context.l10n, AddContext.newNote)) {
+      if (m.id == 'template') out.addAll(favorites);
+      if (actions[m.id] case final action?) {
+        out.add(QuickAddOption(m.id, m.group, m.icon, m.label, m.info, action));
+      }
+    }
+    return out;
   }
 
   void _select(VoidCallback action) {
@@ -576,4 +584,50 @@ class _PrimaryButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Favori şablonların "+" karoları (en çok 4; bkz.
+/// [FavoriteTemplatesNotifier]). Silinmiş kendi şablonum atlanır.
+List<QuickAddOption> favoriteTemplateOptions(
+  BuildContext context,
+  QuickAddActions a,
+) {
+  final l10n = context.l10n;
+  final users = a.ref.read(userTemplatesProvider);
+  final out = <QuickAddOption>[];
+  for (final key in a.ref.read(favoriteTemplatesProvider)) {
+    final id = key.substring(2);
+    if (key.startsWith('b:')) {
+      final t = NoteTemplate.values.where((t) => t.key == id).firstOrNull;
+      if (t == null) continue;
+      out.add(
+        QuickAddOption(
+          'fav-$key',
+          AddGroup.template,
+          t.icon,
+          t.label(l10n),
+          t.description(l10n),
+          () => a.createFromTemplate(t),
+        ),
+      );
+    } else if (key.startsWith('u:')) {
+      final u = users.where((u) => u.id == id).firstOrNull;
+      if (u == null) continue;
+      out.add(
+        QuickAddOption(
+          'fav-$key',
+          AddGroup.template,
+          switch (u.type) {
+            NoteType.checklist => Icons.checklist,
+            NoteType.ordered => Icons.format_list_numbered,
+            _ => Icons.bookmark_outline,
+          },
+          u.name.isEmpty ? l10n.remindersUntitled : u.name,
+          null,
+          () => a.createFromTemplate(null, u),
+        ),
+      );
+    }
+  }
+  return out;
 }
