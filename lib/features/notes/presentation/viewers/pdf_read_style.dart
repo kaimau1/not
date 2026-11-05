@@ -20,6 +20,12 @@ class PdfReadStyle {
   /// Sayfaların arkasındaki zemin.
   final Color background;
 
+  /// Ekin araç satırı: sabit bölmenin çubuğu ve balonlu sayfa çubuğu AYNI
+  /// zemin ve çizgi (F40.6).
+  static Color barColor(ColorScheme scheme) => scheme.surfaceContainer;
+  static BorderSide barLine(ColorScheme scheme) =>
+      BorderSide(color: scheme.outlineVariant);
+
   /// Sayfa kenar boşluğu / sayfalar arası ince ayraç (dp). Sabit bölmede
   /// sayfa genişliğe oturur; balonluda ayraç yalnız sayfaları ayırır.
   static const double pageGap = 2;

@@ -547,10 +547,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                 height: kPinnedBarHeight,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: scheme.surfaceContainer,
-                  border: Border(
-                    bottom: BorderSide(color: scheme.outlineVariant),
-                  ),
+                  color: PdfReadStyle.barColor(scheme),
+                  border: Border(bottom: PdfReadStyle.barLine(scheme)),
                 ),
                 // Dar ekranda önce süre yazısı, sonra "Not al" yazısı, en
                 // son bağlantı düğmesi düşer — denetimler ve anahtar kalır.

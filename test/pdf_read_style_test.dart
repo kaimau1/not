@@ -37,4 +37,10 @@ void main() {
     expect(params.margin, PdfReadStyle.pageGap);
     expect(params.pageDropShadow, isNull);
   });
+
+  test('F40.6: araç satırı tek zemin + çizgi', () {
+    final scheme = ColorScheme.fromSeed(seedColor: Colors.green);
+    expect(PdfReadStyle.barColor(scheme), scheme.surfaceContainer);
+    expect(PdfReadStyle.barLine(scheme).color, scheme.outlineVariant);
+  });
 }

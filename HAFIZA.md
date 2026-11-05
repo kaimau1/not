@@ -397,6 +397,7 @@ maddeyi GÜNCELLE.
   YAZMA (okunur `GeminiException` çift başlık alıyordu). Daire jesti AI yoksa
   bir kez `gestureFixNeedsAi`, sonra oturum boyu sessiz; karalama silmesi
   bildirimde Geri al.
+- **Ek tek model (F40, 2026-11-05):** menü sırası yalnız `attachmentActionsFor`; yeni ek işi oraya + `AttachmentAction`. Görünüm geçişi menü maddesi değil anahtar (K6; "Sayfaya göm/Ek olarak taşı/Nota aktar" YOK), her geçiş `_setAttachmentView` → "A → B · Geri al". Durum tek dil `attachmentStatusOf` + rozet; ek kutusuna tıklanabilir yer tutucu koyma (yüzende dokunuş seçer, kartta notu açar; `interactive: false` + köşe rozeti). Araç satırı zemini `PdfReadStyle.barColor`. Video dönüşü oturumluk (`NoteVideoHub.rotate`). Web dosya bırakma `listenFileDrops` → `useFiles`.
 - **Bölüm başlığı (F36.7):** tek `SectionLabel`, cümle düzeni (büyük harf
   yalnız rozet: BALONLU PDF, SUNUM, VİDEO, YENİ); Başlık Düzeni ad yok
   ("Çöp kutusu"). Sayı 0 → rozet çizilmez; boş klasör solması renkte

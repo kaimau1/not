@@ -70,7 +70,7 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 37…45) ya da "F40.3'ü yap" (tek mad
 | 37 | Not her yerde aynı görünür | Yapıldı | 2026-11-05 | 5/5; KALANLAR §2 #62–#65 |
 | 38 | Not ekranı: çubuklar, başlık satırı, tek not menüsü | Yapıldı | 2026-11-05 | 7/7; F38.7 birikim yok (kod değişmedi), Biçim paneli başlığı GEÇERSİZ; KALANLAR §2 #66–#69 |
 | 39 | Ana ekran: başlık, çipler, bölümler, jestler | Yapıldı | 2026-11-05 | 6/6; F39.4 GEÇERSİZ; KALANLAR §2 #70 |
-| 40 | Ekler: tek model, tek menü | Açık | | K6; en büyük faz |
+| 40 | Ekler: tek model, tek menü | Yapıldı | 2026-11-05 | 9/9; Android tablette sürükle-bırak yok (motor), videoda dönüş oturumluk, tur F45.1'e; KALANLAR §2 #71–#74 |
 | 41 | Ekleme akışı ve şablonlar | Açık | | tek "Ekle" kataloğu |
 | 42 | Yapay zekâ ve ses: tek dil, görünür durum | Açık | | K7, K10 |
 | 43 | Paylaşım, Gelen, benimle paylaşılanlar | Açık | | K8 |
@@ -467,7 +467,7 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
 
 ## FAZ 40 — Ekler: tek model, tek menü
 
-- [ ] **F40.1 `AttachmentActions` kataloğu** (D2, H1): saf işlev
+- [x] **F40.1 `AttachmentActions` kataloğu** (D2, H1): saf işlev
   `attachmentActionsFor(a, view, caps)` → sıralı `(id, ad, simge, tehlikeli)`
   listesi. Sıra: Aç/Tam ekran · Görünüm · Düzenle (kırp/çiz/sayfalar) · Metne
   dök / Metni çıkar · Videodan not · Kopyala · Paylaş · Farklı kaydet ·
@@ -475,24 +475,33 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
   ⋮, gömülü önizleme, balonlu belge ⋮, video kutusu, görüntüleyici ⋮ aynı
   listeyi çizer (biçim F38.6 kuralıyla). Birim test: her görünüm × tür için
   liste ve sıra.
-- [ ] **F40.2 Görünüm adları** (D3, K6): menülerde yalnız görünüm anahtarı;
+  **Yapıldı:** `attachment_actions.dart` (`attachmentActionsFor`, yüzeyler: şerit, yüzen, sabit, gömülü, sağ tık). Yüzeyin kendi çubuğunda görünen iş menüde tekrarlanmaz (K2 kuralı). Şerit, yüzen ⋮, sabit ⋮ bağlı; gömülü önizleme düğme biçiminde aynı sıra; balonlu belge ⋮ ve PDF kutusu ⋮ yalnız görünüme özgü araç (sayfalar, yer imi); görüntüleyici çubuğu Kopyala · Paylaş sırası. Test `attachment_actions_test`.
+- [x] **F40.2 Görünüm adları** (D3, K6): menülerde yalnız görünüm anahtarı;
   eşanlamlı arb metinleri silinir; kılavuz güncellenir.
-- [ ] **F40.3 Görünüm geçişi geri alınabilir** ve bildirimli ("Sabit → Yüzen ·
+  **Yapıldı:** `moveImageToAttachments`, `unpinMedia`, `pinnedEmbedOnPage`, `embedImportToNote`, `attachmentTagInsert`, `attachmentViewTitle` silindi; dar sabit çubukta ⋮ → Görünüm aynı anahtarı levhada açar. Gömülü önizlemede "Nota aktar" yerine anahtar: Yüzen seçmek bağı ÇÖZMEZ, çözmek ayrı "Gömmeyi kaldır" (bilinçli davranış değişikliği — sabah bakılacak). Balonun "Nota aktar"ı başka iş, kaldı.
+- [x] **F40.3 Görünüm geçişi geri alınabilir** ve bildirimli ("Sabit → Yüzen ·
   Geri al"); yeni ekin "nerede dursun?" akışı aynı anahtar.
-- [ ] **F40.4 Tek ek durum dili** (D4): yükleniyor / bekliyor / senkronlanmadı
+  **Yapıldı:** `_setAttachmentView` her geçişte `viewModeChanged` + Geri al; geri alma aynı yoldan, sessiz. Yeni ek ipucu zaten aynı anahtar. Editör private akışı: cihazda KALANLAR §2 #71.
+- [x] **F40.4 Tek ek durum dili** (D4): yükleniyor / bekliyor / senkronlanmadı
   / dosya yok (web: "telefonda") — tek rozet bileşeni, her görünümde ve kartta;
   dokununca aynı açıklama levhası (web Drive akışı dahil).
-- [ ] **F40.5 Video** (D5): tek denetim çubuğu (oynat, ±10 sn, hız, döndür,
+  **Yapıldı:** `attachment_status.dart`: saf `attachmentStatusOf`, `AttachmentStatusBadge`, `AttachmentStatusPlaceholder`, tek levha. Şerit, yüzen, sabit (`NoteMediaBox`), kart. Yüzende kutuya dokunuş seçer, açıklama köşedeki rozette; kartta dokunuş notu açar. Test `attachment_status_test`.
+- [x] **F40.5 Video** (D5): tek denetim çubuğu (oynat, ±10 sn, hız, döndür,
   tam ekran, "Not al"), her görünümde aynı; rota/sekme örtülünce durur (web'de
   var, cihazda doğrula); döndürme kullanıcı listesinden.
-- [ ] **F40.6 Balonlu ↔ sabit görsel birlik** (D6): aynı ekin çerçevesi, köşe
+  **Yapıldı:** çubuk zaten tek (`VideoTransportControls`, sabit + yüzen); döndür eklendi, tam ekran oynatıcıda da. Dönüş OTURUMLUK (dosya/not değişmez; kalıcılık alan ister, sabah bakılacak). Yerel video rota örtülünce (`TickerMode`) ve arka planda durur, kendiliğinden başlamaz. Cihaz: KALANLAR §2 #72.
+- [x] **F40.6 Balonlu ↔ sabit görsel birlik** (D6): aynı ekin çerçevesi, köşe
   yarıçapı, gölgesi, açıklaması, araç satırı iki görünümde aynı; tur
   görüntüsüyle karşılaştır (sahte ek dosyası tura eklenir — F45.1).
-- [ ] **F40.7 Açıklama (caption)** her görünümde aynı yerde/stilde (D7).
-- [ ] **F40.8 Masaüstü** (D8): eke sağ tık = katalog; üstüne gelince araç
+  **Yapıldı (görüntü karşılaştırması F45.1'e):** `PdfReadStyle` genişledi: araç satırı tek zemin + çizgi (sabit çubuk, balonlu sayfa çubuğu); sunum balonlusu siyah zemin yerine sabitin zemini; köşe/gölge F28.4'te eşitlendi. Açıklama F40.7. Cihaz: KALANLAR §2 #73.
+- [x] **F40.7 Açıklama (caption)** her görünümde aynı yerde/stilde (D7).
+  **Yapıldı:** `AttachmentCaptionBand` + `showCaptionSheet`, stil `captionTextStyle`: sabitte görselin altında (⋮ ve bant düzenler), balonluda kaynak görselin açıklaması başlık altında, yüzende yerinde kaldı.
+- [x] **F40.8 Masaüstü** (D8): eke sağ tık = katalog; üstüne gelince araç
   satırı; dosya sürükle-bırak (web + Android tablet) aynı `showFileUseSheet`.
-- [ ] **F40.9 Kabul:** katalog testleri + tur (4 boyut × 4 görünüm) +
+  **Yapıldı:** sağ tık yüzen + sabit + şerit; yüzende üstüne gelince ⋮; web'de belgeye dosya bırakma (`web_file_drop`, yeni paket yok) → `useFiles` → aynı levha. Android tablette başka uygulamadan sürükleme YAPILMADI: Flutter motorunda yok, yerel köprü ister — sabah bakılacak. Web: KALANLAR §2 #74.
+- [x] **F40.9 Kabul:** katalog testleri + tur (4 boyut × 4 görünüm) +
   `perf_test` (görselli not açılışı, kaydırma) gerilemez.
+  **Durum:** katalog testleri yeşil; `[perf]` CI koşusu Ek B'de `AKICILIK_PLANI.md`; tur (4 boyut × 4 görünüm) sahte ek dosyası ister → F45.1. Kart başına yeni abonelik yok (durum saf işlev, `localFileExists` önbellekli).
 
 ## FAZ 41 — Ekleme akışı ve şablonlar
 
