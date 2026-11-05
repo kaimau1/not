@@ -51,5 +51,7 @@ Kaynak: `lib/core/app_icons.dart` (`AppIcons`). Tabloda olan bir iş için
 | Ortak not, paylaşılan klasör (kart, editör, şerit, etiket) | `shared` | people_alt_outlined | Kişiler |
 
 Levhalar: başlık solda + ✕ sağda (`SheetHeader`); bölüm başlığı cümle
-düzeninde (`SectionLabel`, BÜYÜK HARF yok). Sabit renkler
+düzeninde (`SectionLabel`, BÜYÜK HARF yok). Büyük harf yalnız rozette (BALONLU
+PDF, SUNUM, VİDEO, YENİ) ve kısaltmada; vurgu için büyük harf yazılmaz; Başlık
+Düzeni yok (`arb_case_test`). Sabit renkler
 `lib/app/theme/fixed_colors.dart`.

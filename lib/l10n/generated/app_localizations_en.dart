@@ -479,7 +479,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signOutAnonymousWarning =>
-      'You are on a local account: signing out makes this account and ALL its notes permanently inaccessible — without a backup they cannot be recovered. Link a Google account first to keep your notes. Sign out anyway?';
+      'You are on a local account: signing out makes this account and all its notes permanently inaccessible — without a backup they cannot be recovered. Link a Google account first to keep your notes. Sign out anyway?';
 
   @override
   String get deleteAccount => 'Delete my account and data';
@@ -1791,7 +1791,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filterSheetSortHint =>
-      'Date groups (TODAY, THIS WEEK…) are only shown when sorting by “Recently updated”.';
+      'Date groups (Today, This week…) are only shown when sorting by “Recently updated”.';
 
   @override
   String get formatTitle => 'Format';
@@ -2063,11 +2063,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoverScanBody =>
-      'Scanned pages are straightened and enhanced, then turned into a SEARCHABLE PDF with one tap — the text layer is produced on device, for free.';
+      'Scanned pages are straightened and enhanced, then turned into a searchable PDF with one tap — the text layer is produced on device, for free.';
 
   @override
   String get discoverSemanticBody =>
-      'The \"Smart\" tab in the search box searches by MEANING, not words: type \"flight times\" and your travel note shows up.';
+      'The \"Smart\" tab in the search box searches by meaning, not words: type \"flight times\" and your travel note shows up.';
 
   @override
   String get discoverAssistantBody =>
@@ -4782,16 +4782,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleMixed => 'partly on';
 
   @override
-  String get personalizeEditorBar => 'NOTE SCREEN · BOTTOM BAR';
+  String get personalizeEditorBar => 'Note screen · bottom bar';
 
   @override
-  String get personalizeEditorTop => 'NOTE SCREEN · TOP BAR AND AREAS';
+  String get personalizeEditorTop => 'Note screen · top bar and areas';
 
   @override
-  String get personalizeQuickAdd => 'NEW NOTE MENU (+)';
+  String get personalizeQuickAdd => 'New note menu (+)';
 
   @override
-  String get personalizeAttachSheet => 'ADD SHEET (+ INSIDE A NOTE)';
+  String get personalizeAttachSheet => 'Add sheet (+ inside a note)';
 
   @override
   String get personalizeVideo => 'Video';

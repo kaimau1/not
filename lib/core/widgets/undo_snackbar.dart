@@ -8,6 +8,35 @@ import '../friendly_error.dart';
 /// üzerinde gösterilir (sayaç sıfırlanmaz).
 final rootScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
+/// Bildirimi klavyenin üstüne çıkaran kenar boşluğu ([base] yoksa temanın
+/// varsayılanı). Klavye yoksa [base] aynen döner.
+///
+/// KÖK NEDEN (cihaz turu 2026-11-05): not ve ana ekran kasmasın diye Scaffold
+/// `resizeToAvoidBottomInset: false` (bkz. `KeyboardSnap`); Scaffold bildirimi
+/// bu durumda klavyenin ARKASINA koyuyordu: yazarken "Geri al", "Bağlantıyı
+/// aç", "AI ile düzelt" hiç görünmüyordu. Bildirimi çizen EN DIŞ Scaffold
+/// klavyeyi kendi hesaplıyorsa dokunulmaz (geniş ekran kabuğu, Ayarlar).
+EdgeInsetsGeometry? snackBarMarginOverKeyboard([EdgeInsetsGeometry? base]) {
+  final focus = FocusManager.instance.primaryFocus?.context;
+  if (focus == null) return base;
+  ScaffoldState? root;
+  focus.visitAncestorElements((element) {
+    if (element is StatefulElement && element.state is ScaffoldState) {
+      root = element.state as ScaffoldState;
+    }
+    return true;
+  });
+  if (root?.widget.resizeToAvoidBottomInset != false) return base;
+  // MediaQuery değil: odaktaki alana bağımlılık kurar, klavye kayarken her
+  // karede yeniden kurulurdu.
+  final view = WidgetsBinding.instance.platformDispatcher.views.first;
+  final lift = view.viewInsets.bottom / view.devicePixelRatio;
+  if (lift <= 0) return base;
+  // Temanın (M3) varsayılan boşluğu: 15, 5, 15, 10.
+  final start = base ?? const EdgeInsets.fromLTRB(15, 5, 15, 10);
+  return start.add(EdgeInsets.only(bottom: lift));
+}
+
 /// Silme sonrası kompakt "geri al" bildirimi. Ekranın tümünü kaplamaz; kalan
 /// süre "Geri al" düğmesinin hemen yanındaki küçük dairesel göstergede akar ve
 /// süre dolunca bildirim KENDİLİĞİNDEN kapanır.
@@ -59,9 +88,10 @@ SnackBar timedSnackBar({
   Duration duration = const Duration(seconds: 5),
   EdgeInsetsGeometry? margin,
 }) {
+  final lifted = snackBarMarginOverKeyboard(margin);
   return SnackBar(
-    behavior: margin == null ? null : SnackBarBehavior.floating,
-    margin: margin,
+    behavior: lifted == null ? null : SnackBarBehavior.floating,
+    margin: lifted,
     duration: duration,
     persist: false,
     padding: EdgeInsets.zero,
@@ -145,7 +175,11 @@ extension AppMessages on ScaffoldMessengerState {
     final shown = detail == null ? duration : const Duration(seconds: 6);
     showSnackBar(
       act == null
-          ? SnackBar(content: Text(message), duration: shown)
+          ? SnackBar(
+              content: Text(message),
+              duration: shown,
+              margin: snackBarMarginOverKeyboard(),
+            )
           : timedSnackBar(
               content: Text(message),
               action: act,

@@ -12,7 +12,7 @@ Notların hesabına bağlıdır ve telefon, tablet, bilgisayar ve web arasında 
 - Yanlış bir şey mi yaptın? Not ekranındaki **Geri al** (↶) ve **Yinele** her değişikliği geri getirir.
 
 ## Ana ekran {#home}
-Notların kart olarak, **BUGÜN / BU HAFTA / DAHA ÖNCE** gruplarıyla dizilir; sabitlenenler en üstte durur.
+Notların kart olarak, **Bugün · Bu hafta · Daha önce** gruplarıyla dizilir; sabitlenenler en üstte durur.
 - **Liste görünümünde** satırı **sağa kaydır:** sabitle; **sola kaydır:** arşivle (geri alınabilir). **Izgara görünümünde** ekranı yana kaydırmak klasörler (ya da süzgeçler) arasında gezer — Ayarlar → Notlar ve klasörler → **Ana ekranda yana kaydırınca**.
 - **Karta uzun bas:** çoklu seçim — birden çok notu birlikte taşı, arşivle, çoğalt ya da sil.
 - **Arama:** üstteki kutuya yaz. Kutuya dokununca sağında ✨ **Anlam** anahtarı çıkar: kapalıyken kelimeyi arar, açıkken ne demek istediğini anlar ("araba masrafları" yazınca "lastik değişimi" notunu da bulur).

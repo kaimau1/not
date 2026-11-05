@@ -923,7 +923,7 @@ abstract class AppLocalizations {
   /// No description provided for @signOutAnonymousWarning.
   ///
   /// In tr, this message translates to:
-  /// **'Yerel hesaptasın: çıkış yaparsan bu hesaba ve TÜM notlarına bir daha ERİŞİLEMEZ — yedeğin yoksa geri getirilemezler. Notlarını korumak için önce Google hesabı bağla. Yine de çıkış yapılsın mı?'**
+  /// **'Yerel hesaptasın: çıkış yaparsan bu hesaba ve tüm notlarına bir daha erişilemez — yedeğin yoksa geri getirilemezler. Notlarını korumak için önce Google hesabı bağla. Yine de çıkış yapılsın mı?'**
   String get signOutAnonymousWarning;
 
   /// No description provided for @deleteAccount.
@@ -3335,7 +3335,7 @@ abstract class AppLocalizations {
   /// No description provided for @filterSheetSortHint.
   ///
   /// In tr, this message translates to:
-  /// **'Tarih grupları (BUGÜN, BU HAFTA…) yalnız “Son güncellenen” sıralamasında gösterilir.'**
+  /// **'Tarih grupları (Bugün, Bu hafta…) yalnız “Son güncellenen” sıralamasında gösterilir.'**
   String get filterSheetSortHint;
 
   /// No description provided for @formatTitle.
@@ -3845,13 +3845,13 @@ abstract class AppLocalizations {
   /// No description provided for @discoverScanBody.
   ///
   /// In tr, this message translates to:
-  /// **'Kamerayla taranan sayfalar kenar bulma ve netleştirmeyle düzelir, tek dokunuşla ARANABİLİR PDF olur — metin katmanı cihazda, ücretsiz üretilir.'**
+  /// **'Kamerayla taranan sayfalar kenar bulma ve netleştirmeyle düzelir, tek dokunuşla aranabilir PDF olur — metin katmanı cihazda, ücretsiz üretilir.'**
   String get discoverScanBody;
 
   /// No description provided for @discoverSemanticBody.
   ///
   /// In tr, this message translates to:
-  /// **'Arama kutusundaki \"Akıllı\" sekmesi kelime değil ANLAM arar: \"uçak saatleri\" yazınca seyahat notun çıkar.'**
+  /// **'Arama kutusundaki \"Akıllı\" sekmesi kelime değil anlam arar: \"uçak saatleri\" yazınca seyahat notun çıkar.'**
   String get discoverSemanticBody;
 
   /// No description provided for @discoverAssistantBody.
@@ -8567,25 +8567,25 @@ abstract class AppLocalizations {
   /// No description provided for @personalizeEditorBar.
   ///
   /// In tr, this message translates to:
-  /// **'NOT EKRANI · ALT ÇUBUK'**
+  /// **'Not ekranı · alt çubuk'**
   String get personalizeEditorBar;
 
   /// No description provided for @personalizeEditorTop.
   ///
   /// In tr, this message translates to:
-  /// **'NOT EKRANI · ÜST ÇUBUK VE ALANLAR'**
+  /// **'Not ekranı · üst çubuk ve alanlar'**
   String get personalizeEditorTop;
 
   /// No description provided for @personalizeQuickAdd.
   ///
   /// In tr, this message translates to:
-  /// **'YENİ NOT MENÜSÜ (+)'**
+  /// **'Yeni not menüsü (+)'**
   String get personalizeQuickAdd;
 
   /// No description provided for @personalizeAttachSheet.
   ///
   /// In tr, this message translates to:
-  /// **'EKLE LEVHASI (NOTUN İÇİNDE +)'**
+  /// **'Ekle levhası (notun içinde +)'**
   String get personalizeAttachSheet;
 
   /// No description provided for @personalizeVideo.

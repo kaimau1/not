@@ -1161,8 +1161,7 @@ class ItemsEditorState extends State<ItemsEditor>
       controller.text,
       controller.selection.end,
     ).clamp(start, logical.length);
-    final before = logical.substring(0, start);
-    final after = logical.substring(end);
+    final (:before, :after) = splitRichText(logical, start, end);
     if (after.isEmpty) {
       if (end != start) {
         // Sona kadar seçili metin Enter'la silinir (yazılan Enter gibi).
@@ -1172,7 +1171,7 @@ class ItemsEditorState extends State<ItemsEditor>
       _insertAfter(target);
       return;
     }
-    if (before.trim().isEmpty) {
+    if (stripRichMarkers(before).trim().isEmpty) {
       // Baştan Enter: madde aşağı kayar, üstüne boş madde açılır; imleç
       // yerinde kalır (Keep ve kelime işlemcilerdeki gibi).
       final blank = NoteItem(id: _uuid.v4(), text: '');

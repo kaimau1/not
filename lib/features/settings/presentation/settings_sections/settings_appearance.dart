@@ -435,11 +435,7 @@ class _SubHeader extends StatelessWidget {
     padding: const EdgeInsets.fromLTRB(0, 14, 0, 8),
     child: Text(
       text,
-      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-        color: Theme.of(context).colorScheme.primary,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.3,
-      ),
+      style: sectionLabelStyle(context),
     ),
   );
 }
@@ -741,12 +737,7 @@ Future<void> _showAppFontSheet(BuildContext context, WidgetRef ref) {
                   padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
                   child: Text(
                     groupLabel(group),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.6,
-                      color: scheme.onSurfaceVariant,
-                    ),
+                    style: sectionLabelStyle(context),
                   ),
                 ),
                 for (final font in kCatalogFonts)

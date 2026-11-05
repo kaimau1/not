@@ -420,6 +420,54 @@ void main() {
     });
   });
 
+  group('F18.11 telefonu çevir (cihaz turu kök nedeni)', () {
+    ScrollPosition grid(WidgetTester tester) => tester
+        .stateList<ScrollableState>(find.byType(Scrollable))
+        .where(
+          (s) =>
+              s.position.axis == Axis.vertical &&
+              s.position.maxScrollExtent > 0,
+        )
+        .first
+        .position;
+
+    testWidgets('dar → geniş → dar: ana liste aynı bölgede kalır', (
+      tester,
+    ) async {
+      final notes = [
+        for (var i = 0; i < 80; i++)
+          Note(
+            id: 'k$i',
+            type: NoteType.text,
+            title: 'Not $i',
+            body: 'içerik satırı\nikinci satır',
+          ),
+      ];
+      await pump(
+        tester,
+        const Size(392, 850),
+        extra: [notesStreamProvider.overrideWith((ref) => Stream.value(notes))],
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      grid(tester).jumpTo(1500);
+      await tester.pump(const Duration(milliseconds: 100));
+      final before = grid(tester).pixels / grid(tester).maxScrollExtent;
+
+      tester.view.physicalSize = const Size(850, 392);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 400));
+      final wide = grid(tester).pixels / grid(tester).maxScrollExtent;
+      expect(wide, closeTo(before, 0.2), reason: 'yatayda konum');
+
+      tester.view.physicalSize = const Size(392, 850);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 400));
+      final back = grid(tester).pixels / grid(tester).maxScrollExtent;
+      expect(back, closeTo(before, 0.2), reason: 'dikeyde konum');
+      await end(tester);
+    });
+  });
+
   group('F44.3 okuma sütunu', () {
     Future<void> at(WidgetTester tester, Size size) async {
       SharedPreferences.setMockInitialValues({});
@@ -550,10 +598,7 @@ void main() {
       );
       await tester.pump(const Duration(seconds: 1));
       final box = tester.getTopLeft(find.byType(ItemsEditor));
-      await tester.tapAt(
-        box + const Offset(24, 24),
-        buttons: kSecondaryButton,
-      );
+      await tester.tapAt(box + const Offset(24, 24), buttons: kSecondaryButton);
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byKey(const ValueKey('item-menu-highlight')), findsOneWidget);
       await tester.pumpWidget(const SizedBox());

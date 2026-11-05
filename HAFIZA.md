@@ -440,6 +440,8 @@ maddeyi GÜNCELLE.
   kurulu derleme (yerel 1 sayılmaz) → sürüm başına bir kez bildirim
   (`update_notice_shown_for`) + Ayarlar → Hakkında satırı.
 
+- **Cihaz turu kök nedenleri (2026-11-05):** `resizeToAvoidBottomInset: false` ekranda bildirim klavyenin arkasında kalır: yeni bildirim `timedSnackBar`/`showMessage` ile ya da `snackBarMarginOverKeyboard`. Tembel listede `maxScrollExtent` ilk karelerde tahmin: oranı tahmin oturana dek yeniden uygula (`_restoreScroll`). Biçimli metni `substring` ile bölme: `splitRichText`. Cihaz turu tuzağı: Bash heredoc'ta `\n` bozulur; `adb` ile koordinat basarken klavyenin açık olup olmadığına bak.
+
 ## Web
 - `--wasm` (skwasm, JS yedeği); COOP/COEP yok. Wasm'da `int` 64, JS'de 53 bit.
 - Geri tuşu `HomeFirstRouteInformationProvider`. Açılış `notlar-ready`

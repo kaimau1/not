@@ -12,7 +12,7 @@ Your notes belong to your account and **sync instantly** between phone, tablet, 
 - Made a mistake? **Undo** (↶) and **Redo** on the note screen bring back every change.
 
 ## Home screen {#home}
-Your notes appear as cards grouped by **TODAY / THIS WEEK / EARLIER**; pinned notes stay on top.
+Your notes appear as cards grouped by **Today · This week · Earlier**; pinned notes stay on top.
 - **In list view**, swipe a row **right** to pin it and **left** to archive it (undoable). **In grid view**, swiping the screen sideways moves between folders (or filters) — Settings → Notes and folders → **Swipe sideways on home**.
 - **Long-press a card:** multi-select — move, archive, duplicate or delete several notes at once.
 - **Search:** type in the box at the top. Tapping the box reveals the ✨ **Meaning** switch on its right: off, it finds words; on, it understands what you mean ("car expenses" also finds the "tyre change" note).
