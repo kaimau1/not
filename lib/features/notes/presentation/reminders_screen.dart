@@ -3,7 +3,6 @@ import 'reminder_repeat_ui.dart';
 import '../domain/reminder_repeat.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/sheet_header.dart';
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -133,7 +132,10 @@ Future<DateTime?> _pickReminderWhen(
   }
 }
 
-Future<DateTime?> _pickDateTime(BuildContext context, DateTime initial) async {
+Future<DateTime?> _pickDateTime(
+  BuildContext context,
+  DateTime initial,
+) async {
   final now = DateTime.now();
   final date = await showDatePicker(
     context: context,
@@ -234,34 +236,31 @@ class RemindersScreen extends ConsumerWidget {
     final notesAsync = ref.watch(notesStreamProvider);
 
     return Scaffold(
-      appBar: HomeInBar(
-        appBar: AppBar(
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.remindersTitle),
-              // Kaç hatırlatıcı var: listeyi kaydırmadan görünsün.
-              Consumer(
-                builder: (context, ref, _) {
-                  final count =
-                      (ref.watch(notesStreamProvider).value ?? const [])
-                          .where((n) => n.reminderAt != null)
-                          .length;
-                  if (count == 0) return const SizedBox.shrink();
-                  return Text(
-                    l10n.reminderCountLabel(count),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
+      appBar: HomeInBar(appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.remindersTitle),
+            // Kaç hatırlatıcı var: listeyi kaydırmadan görünsün.
+            Consumer(
+              builder: (context, ref, _) {
+                final count = (ref.watch(notesStreamProvider).value ?? const [])
+                    .where((n) => n.reminderAt != null)
+                    .length;
+                if (count == 0) return const SizedBox.shrink();
+                return Text(
+                  l10n.reminderCountLabel(count),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                );
+              },
+            ),
+          ],
         ),
-      ),
+      )),
       // BOŞKEN YÜZEN DÜĞME YOK (F11.7): boş durumun ortasında aynı
       // "Yeni hatırlatıcı" düğmesi var; ikisi birden "hangisi?" dedirtiyordu.
       floatingActionButton: _visibleReminders(ref, notesAsync.value).isEmpty
