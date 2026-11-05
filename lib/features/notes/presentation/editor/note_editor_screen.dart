@@ -3519,6 +3519,16 @@ child: ConstrainedBox(
 constraints: BoxConstraints(
 maxWidth: readingColumn ? kReadingWidth : double.infinity,
 ),
+child: ClipRRect(
+// Sütunda sayfanın üstünde kart: köşesiz kutu kopuk duruyordu.
+// Dar ekranda kenardan kenara, köşe yok.
+borderRadius: BorderRadius.vertical(
+top: Radius.circular(
+readingColumn && MediaQuery.sizeOf(context).width > kReadingWidth
+? 16
+: 0,
+),
+),
 child: FormatBar(
                               target: _formatTarget,
                               onFormat: _applyFormat,
@@ -3599,6 +3609,7 @@ child: FormatBar(
                                     ?.editDividerStyleOf(_formatItemId ?? ''),
                               ),
                             ),
+),
 ),
 ),
                           ),

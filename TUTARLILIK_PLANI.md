@@ -578,7 +578,7 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
 - [x] **F44.3 Okuma sütunu hizası** (C3, J4): editör üst çubuğu, başlık
   satırı, alt çubuklar `kReadingWidth` (760) sütunuyla hizalı; kalem tepsisi
   zaten ortada (≥ 640 dp).
-  **Yapıldı (2026-11-05):** üst çubuk düğmeleri (`actionsPadding`), alt çubuk, Biçim paneli ve not içi arama çubuğu sütunda; çubukların zemini tam genişlik. Sabit medyalı ve belge notunda sayfa bölmeyi doldurduğu için çubuklar da doldurur (`readingColumn`). Ek şeridi tam genişlikte kaldı (kaydırılan bir şerit, sütuna sıkışırsa az ek görünür).
+  **Yapıldı (2026-11-05):** üst çubuk düğmeleri (`actionsPadding`), alt çubuk, Biçim paneli ve not içi arama çubuğu sütunda; alt çubuğun zemini tam genişlik, Biçim paneli sütunda üst köşesi yuvarlak kart. Sabit medyalı ve belge notunda sayfa bölmeyi doldurduğu için çubuklar da doldurur (`readingColumn`). Ek şeridi tam genişlikte kaldı (kaydırılan bir şerit, sütuna sıkışırsa az ek görünür).
 - [x] **F44.4 Arama kutusu** en çok ~720 dp (I5); bölüm sayısı F39.1.
   **Yapıldı (2026-11-05):** kutu 720 dp, avatar ve ⋮ sağ kenarda kalır. Bölüm sayısı F39.1'de yapılmıştı.
 - [x] **F44.5 Fare/klavye/dokunmatik yüzey karşılıkları** (I3, I4):
