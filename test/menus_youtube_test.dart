@@ -5,9 +5,12 @@ import 'package:notlar/core/utils/youtube.dart';
 import 'package:notlar/features/notes/data/web_video.dart';
 import 'package:notlar/features/notes/presentation/editor/attach_sheet.dart';
 import 'package:notlar/features/notes/presentation/editor/note_images.dart';
-import 'package:notlar/features/notes/presentation/editor/note_menu_sheet.dart';
+import 'package:notlar/core/l10n_ext.dart';
+import 'package:notlar/core/widgets/action_menu_sheet.dart';
+import 'package:notlar/features/notes/domain/note.dart';
+import 'package:notlar/features/notes/domain/note_type.dart';
+import 'package:notlar/features/notes/presentation/note_menu_model.dart';
 import 'package:notlar/features/notes/presentation/editor/pinned_media_pane.dart';
-import 'package:notlar/l10n/generated/app_localizations.dart';
 
 /// Kullanıcı istekleri 2026-10-11: YouTube başlığı/bağlantısı, küçük
 /// oynatıcıda ölçek, menülerin yeniden düzeni, "Yeni sayfa"nın yeri.
@@ -161,15 +164,14 @@ void main() {
             body: Builder(
               builder: (context) => TextButton(
                 onPressed: () async {
-                  picked = await showNoteEditorMenu(
+                  picked = await showActionMenuSheet(
                     context,
-                    pinned: false,
-                    locked: false,
-                    archived: false,
-                    isList: false,
-                    twoColumns: false,
-                    hasFloatingImages: false,
-                    hasAttachments: false,
+                    noteMenuModel(
+                      context.l10n,
+                      const Note(id: 'n', type: NoteType.text),
+                      surface: NoteMenuSurface.editor,
+                      visibleElsewhere: const {'pin', 'color'},
+                    ),
                   );
                 },
                 child: const Text('aç'),
@@ -191,11 +193,9 @@ void main() {
         expect(quick[i].top, closeTo(quick[0].top, 1));
         expect(quick[i - 1].center.dx, lessThan(quick[i].center.dx));
       }
-      // Alt çubukta duran Paylaş / Notta ara hızlı satırda yok; çubuktan
-      // düştüklerinde (burada çubuk bilgisi verilmedi) Araçlar'da.
-      expect(find.byKey(const ValueKey('menu-quick-share')), findsNothing);
-      expect(find.byKey(const ValueKey('menu-quick-search')), findsNothing);
-      expect(find.byKey(const ValueKey('menu-tile-share')), findsOneWidget);
+      // Çubuktan düşen (burada çubuk bilgisi verilmedi) Paylaş hızlı satırda,
+      // Notta ara Araçlar'da: kart ⋮ ile aynı yer (F38.1).
+      expect(find.byKey(const ValueKey('menu-quick-share')), findsOneWidget);
       expect(find.byKey(const ValueKey('menu-tile-search')), findsOneWidget);
       expect(find.byKey(const ValueKey('menu-tile-calculator')), findsOneWidget);
 

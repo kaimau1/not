@@ -1,4 +1,3 @@
-import '../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,18 +5,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../../ai/presentation/listen_screen.dart';
 import '../../../core/utils/note_guard.dart';
-import '../../../core/widgets/action_menu_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../folders/presentation/folder_sheets.dart';
 import '../../inbox/presentation/send_note_sheet.dart';
 import '../data/attachment_repository.dart';
+import '../data/note_shortcut.dart';
 import '../data/note_speech.dart';
 import '../data/notes_repository.dart';
-import '../data/user_templates.dart';
 import '../domain/note.dart';
 import '../domain/note_share_text.dart';
 import 'color_picker_sheet.dart';
 import 'local_only_action.dart';
+import 'note_menu_model.dart';
 import 'note_stats_sheet.dart';
 import 'note_template_sheet.dart';
 import 'notes_providers.dart';
@@ -29,8 +28,7 @@ import '../../../core/widgets/app_sheet.dart';
 /// arşivle, kilitle, seç, sil. Kilitli notun içeriği kimlik doğrulaması
 /// yapılmadan paylaşılmaz/kopyalanmaz.
 ///
-/// Yerleşim: hızlı satır + başlıklı gruplar + ayrı "Sil" (bkz.
-/// [ActionMenu]).
+/// Liste tek katalogdan: [noteMenuModel] (F38.1).
 Future<void> showNoteActionsSheet(
   BuildContext context,
   WidgetRef ref,
@@ -45,129 +43,19 @@ Future<void> showNoteActionsSheet(
     isScrollControlled: true,
     builder: (sheetContext) => SafeArea(
       child: SingleChildScrollView(
-        child: _ActionsGrid(
-          note: note,
-          l10n: l10n,
+        child: noteMenuModel(
+          l10n,
+          note,
+          surface: NoteMenuSurface.card,
+          canPinHome: NoteShortcut.supported,
           localOnlyAvailable: localOnlySupported(ref),
+          localOnly: note.localOnly,
         ),
       ),
     ),
   );
   if (action == null || !context.mounted) return;
   await _runNoteAction(context, ref, note, action);
-}
-
-/// Not işlemleri levhası; "Sil" ayrı satırda ve uyarı renginde durur ki
-/// yıkıcı işlem yanlışlıkla seçilmesin.
-class _ActionsGrid extends StatelessWidget {
-  const _ActionsGrid({
-    required this.note,
-    required this.l10n,
-    this.localOnlyAvailable = false,
-  });
-
-  final Note note;
-  final AppLocalizations l10n;
-
-  /// "Senkronu kapat/aç" gösterilsin mi (bkz. `localOnlySupported`).
-  final bool localOnlyAvailable;
-
-  @override
-  Widget build(BuildContext context) {
-    // Gruplar ve sıra: bkz. [ActionMenu] (2026-10-11 yeniden düzen).
-    return ActionMenu(
-      title: note.displayTitle,
-      quick: [
-        MenuAction(
-          'pin',
-          note.pinned ? l10n.unpin : l10n.pin,
-          note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
-          selected: note.pinned,
-        ),
-        // YILDIZLA GERİ GELDİ (kullanıcı isteği 2026-10-20) — sabitlemeden
-        // ayrı bir işaret; Süz → "Yıldızlı" ile bulunur.
-        MenuAction(
-          'star',
-          note.starred ? l10n.unstar : l10n.star,
-          note.starred ? Icons.star : Icons.star_outline,
-          selected: note.starred,
-        ),
-        // Tek "Paylaş": düz metin, kopyala, PDF/görsel, ARKADAŞA GÖNDER, ortak
-        // not ve DIŞA AKTAR hepsi levhada (bkz. showNoteShareSheet).
-        // TOPARLAMA (kullanıcı isteği 2026-10-17: "tekrarlar düzelsin"):
-        // "Arkadaşa gönder", "Kopyala" ve "Dışa aktar" bu menüden kalktı —
-        // aynı işin iki kapısı kafa karıştırıyordu.
-        // KLASÖRE TAŞI hızlı satırda — not ⋮ ile aynı yer (F12.2: iki menü
-        // aynı iskelet; Yıldızla · Klasöre taşı sırası ortak, grup adları ve
-        // sırası Düzenle · Kopyala · Araçlar · Koruma).
-        MenuAction('folder', l10n.moveToFolder, AppIcons.moveToFolder),
-        MenuAction('share', l10n.share, Icons.share_outlined),
-        MenuAction('select', l10n.select, Icons.check_circle_outline),
-      ],
-      sections: [
-        MenuSection(l10n.menuSectionOrganize, [
-          MenuAction('color', l10n.backgroundColor, AppIcons.color),
-          // ÇERÇEVE GERİ GELDİ — yalnız ana ekran kartında çizilir.
-          MenuAction('frame', l10n.frameColor, Icons.border_color_outlined),
-          // GÖRSEL ÖNİZLEMESİNİ GİZLE (kullanıcı isteği 2026-10-28): yalnız
-          // görseli/dosyası olan notta.
-          if (note.attachments.isNotEmpty || note.cardMediaHidden)
-            MenuAction(
-              'cardMedia',
-              note.cardMediaHidden
-                  ? l10n.cardMediaShow
-                  : l10n.cardMediaHide,
-              note.cardMediaHidden
-                  ? Icons.image_outlined
-                  : Icons.hide_image_outlined,
-            ),
-        ]),
-        MenuSection(l10n.menuSectionCopy, [
-          // **NOTU ÇOĞALT** (bkz. NotesRepository.duplicateNote).
-          MenuAction(
-            'duplicate',
-            l10n.duplicateNote,
-            AppIcons.duplicate,
-          ),
-          // KENDİ ŞABLONUM (kullanıcı isteği 2026-09-29).
-          if (canSaveAsTemplate(note))
-            MenuAction(
-              'saveTemplate',
-              l10n.saveAsTemplate,
-              Icons.bookmark_add_outlined,
-            ),
-        ]),
-        MenuSection(l10n.menuSectionTools, [
-          MenuAction('listen', l10n.listenToNote, Icons.headphones_outlined),
-          MenuAction('stats', l10n.noteStatsTitle, Icons.insights_outlined),
-        ]),
-        MenuSection(l10n.menuSectionProtect, [
-          MenuAction(
-            'archive',
-            note.archivedAt != null ? l10n.unarchive : l10n.archive,
-            note.archivedAt != null
-                ? AppIcons.unarchive
-                : AppIcons.archive,
-          ),
-          MenuAction(
-            'lock',
-            note.locked ? l10n.unlockNote : l10n.lockNote,
-            note.locked ? Icons.lock_open_outlined : Icons.lock_outline,
-          ),
-          // NOTA ÖZEL SENKRON (kullanıcı isteği 2026-09-26). Web'de yok.
-          if (localOnlyAvailable)
-            MenuAction(
-              'localOnly',
-              note.localOnly ? l10n.localOnlyTurnOff : l10n.localOnlyTurnOn,
-              note.localOnly
-                  ? Icons.cloud_sync_outlined
-                  : Icons.cloud_off_outlined,
-            ),
-        ]),
-      ],
-      danger: MenuAction('delete', l10n.delete, Icons.delete_outline),
-    );
-  }
 }
 
 /// Seçilen işlemi uygular. Kilitli notun içeriğine dokunan işlemler önce
@@ -189,6 +77,8 @@ Future<void> _runNoteAction(
   }
 
   switch (action) {
+    case 'pinHome':
+      await pinNoteToHome(context, note);
     case 'pin':
       repo.setPinned(note.id, !note.pinned);
     case 'star':

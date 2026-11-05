@@ -337,6 +337,14 @@
   "pendingUploads": "{count} attachments uploading",
   "pendingUploadsFailed": "{count} attachments failed, will retry",
   "pendingUploadsInfo": "Attachments are safe on this device. They upload automatically when you are online; until then they do not appear on your other devices.",
+  "checkedHeader": "Checked ({count})",
+  "@checkedHeader": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "deleteChecked": "Delete ticked ({count})",
   "removeItem": "Delete item",
   "copyWholeNote": "Copy the whole note",
@@ -1659,7 +1667,6 @@
   "menuSectionProtect": "Protection and storage",
   "menuSectionContent": "Content",
   "menuSectionPeople": "Account and people",
-  "menuSectionHome": "Home screen",
   "menuSectionApp": "App",
   "cardMoreFiles": "+{count} more files",
   "cardAudioCount": "{count, plural, =1{Voice recording} other{{count} voice recordings}}",

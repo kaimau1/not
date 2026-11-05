@@ -1168,93 +1168,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     onPressed: () =>
                                         _deleteSelected(selectedIds),
                                   ),
-                                  PopupMenuButton<String>(
+                                  IconButton(
                                     tooltip: l10n.moreActions,
-                                    onSelected: (action) {
-                                      switch (action) {
-                                        case 'pin':
-                                          _setPinnedSelected(selectedIds, true);
-                                        case 'unpin':
-                                          _setPinnedSelected(
-                                            selectedIds,
-                                            false,
-                                          );
-                                        case 'star':
-                                          _setStarredSelected(
-                                            selectedIds,
-                                            true,
-                                          );
-                                        case 'unstar':
-                                          _setStarredSelected(
-                                            selectedIds,
-                                            false,
-                                          );
-                                        case 'share':
-                                          _shareSelected(selectedIds);
-                                        case 'folder':
-                                          _moveSelectedToFolder(selectedIds);
-                                        case 'duplicate':
-                                          _duplicateSelected(selectedIds);
-                                        case 'color':
-                                          _colorSelected(
-                                            selectedIds,
-                                            frame: false,
-                                          );
-                                        case 'frame':
-                                          _colorSelected(
-                                            selectedIds,
-                                            frame: true,
-                                          );
-                                      }
-                                    },
-                                    itemBuilder: (context) => [
-                                      _menuItem(
-                                        'pin',
-                                        Icons.push_pin_outlined,
-                                        l10n.pin,
-                                      ),
-                                      _menuItem(
-                                        'unpin',
-                                        Icons.push_pin,
-                                        l10n.unpin,
-                                      ),
-                                      _menuItem(
-                                        'star',
-                                        Icons.star_outline,
-                                        l10n.star,
-                                      ),
-                                      _menuItem(
-                                        'unstar',
-                                        Icons.star,
-                                        l10n.unstar,
-                                      ),
-                                      const PopupMenuDivider(),
-                                      _menuItem(
-                                        'folder',
-                                        AppIcons.moveToFolder,
-                                        l10n.moveToFolder,
-                                      ),
-                                      _menuItem(
-                                        'duplicate',
-                                        AppIcons.duplicate,
-                                        l10n.duplicateNote,
-                                      ),
-                                      _menuItem(
-                                        'color',
-                                        AppIcons.color,
-                                        l10n.backgroundColor,
-                                      ),
-                                      _menuItem(
-                                        'frame',
-                                        Icons.border_color_outlined,
-                                        l10n.frameColor,
-                                      ),
-                                      _menuItem(
-                                        'share',
-                                        Icons.share_outlined,
-                                        l10n.share,
-                                      ),
-                                    ],
+                                    icon: const Icon(Icons.more_vert),
+                                    onPressed: () =>
+                                        _openSelectionMenu(selectedIds),
                                   ),
                                   const SizedBox(width: 4),
                                 ],

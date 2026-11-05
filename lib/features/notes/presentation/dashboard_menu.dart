@@ -31,9 +31,6 @@ extension _DashMenu on _DashboardScreenState {
     final action = await showActionMenuSheet(
       context,
       ActionMenu(
-        // Gruplar iki sütunlu geniş satır: ikişer maddelik gruplar üç
-        // sütunlu ızgarada sola yaslanıyordu (kullanıcı bulgusu 2026-10-20).
-        wideSections: true,
         quick: [
           // Rayın yanında (geniş ekran) bu beşi rayda: tekrarlanmaz.
           if (!rail) ...[
@@ -77,7 +74,9 @@ extension _DashMenu on _DashboardScreenState {
           // HESAP VE KİŞİLER avatar levhasında (F11.1–F11.2): ⋮'te yalnız
           // avatar kişiselleştirmede gizlendiyse kapı olarak kalır.
           // KLASÖR SIRASI klasör ekranında ("Tüm klasörler", F11.5).
-          MenuSection(l10n.menuSectionHome, [
+          // TEK GRUP, not menüleriyle aynı ızgara (F38.6): ikişer maddelik iki
+          // grup üç sütunda sola yığılıyordu (kullanıcı bulgusu 2026-10-20).
+          MenuSection(l10n.menuSectionApp, [
             if (!Personalize.current.shows(UiItem.homeAccount))
               MenuAction(
                 'account',
@@ -95,8 +94,6 @@ extension _DashMenu on _DashboardScreenState {
                     ? Icons.visibility_off_outlined
                     : Icons.visibility_outlined,
               ),
-          ]),
-          MenuSection(l10n.menuSectionApp, [
             // KİŞİSELLEŞTİR (kullanıcı isteği 2026-10-16): hangi alan ve
             // düğme görünsün — menüden; ekranda kalıcı ayar düğmesi yok.
             MenuAction(
@@ -141,54 +138,49 @@ extension _DashMenu on _DashboardScreenState {
     }
   }
 
-  PopupMenuItem<String> _menuItem(
-    String value,
-    IconData icon,
-    String label, {
-    int count = 0,
-    bool highlight = false,
-  }) => PopupMenuItem<String>(
-    value: value,
-    height: 42,
-    // ListTile satırı daima erişilebilir tüm genişliği kaplıyordu; menü de
-    // bu yüzden sağ-sol ekseninde gereksiz genişliyordu (madde 5). İçeriğe
-    // göre daralan Row ile menü yalnız ikon + etiket kadar yer kaplar.
-    child: Builder(
-      builder: (context) {
-        final scheme = Theme.of(context).colorScheme;
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20, color: scheme.onSurfaceVariant),
-            const SizedBox(width: 14),
-            Text(label),
-            if (count > 0) ...[
-              const SizedBox(width: 10),
-              Container(
-                constraints: const BoxConstraints(minWidth: 20),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                decoration: BoxDecoration(
-                  color: highlight
-                      ? scheme.primary
-                      : scheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  count > 99 ? '99+' : '$count',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: highlight
-                        ? scheme.onPrimary
-                        : scheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        );
-      },
-    ),
-  );
+  /// Çoklu seçimin ⋮ menüsü: çok işlemli, levha (F38.6).
+  Future<void> _openSelectionMenu(Set<String> selectedIds) async {
+    final l10n = context.l10n;
+    final action = await showActionMenuSheet(
+      context,
+      ActionMenu(
+        quick: [
+          MenuAction('folder', l10n.moveToFolder, AppIcons.moveToFolder),
+          MenuAction('share', l10n.share, Icons.share_outlined),
+          MenuAction('duplicate', l10n.duplicateNote, AppIcons.duplicate),
+        ],
+        sections: [
+          MenuSection(l10n.menuSectionOrganize, [
+            MenuAction('pin', l10n.pin, Icons.push_pin_outlined),
+            MenuAction('unpin', l10n.unpin, Icons.push_pin),
+            MenuAction('star', l10n.star, Icons.star_outline),
+            MenuAction('unstar', l10n.unstar, Icons.star),
+            MenuAction('color', l10n.backgroundColor, AppIcons.color),
+            MenuAction('frame', l10n.frameColor, Icons.border_color_outlined),
+          ]),
+        ],
+      ),
+    );
+    if (action == null || !mounted) return;
+    switch (action) {
+      case 'pin':
+        _setPinnedSelected(selectedIds, true);
+      case 'unpin':
+        _setPinnedSelected(selectedIds, false);
+      case 'star':
+        _setStarredSelected(selectedIds, true);
+      case 'unstar':
+        _setStarredSelected(selectedIds, false);
+      case 'share':
+        await _shareSelected(selectedIds);
+      case 'folder':
+        await _moveSelectedToFolder(selectedIds);
+      case 'duplicate':
+        await _duplicateSelected(selectedIds);
+      case 'color':
+        await _colorSelected(selectedIds, frame: false);
+      case 'frame':
+        await _colorSelected(selectedIds, frame: true);
+    }
+  }
 }
