@@ -8114,6 +8114,12 @@ abstract class AppLocalizations {
   /// **'{from} → {to}'**
   String viewModeChanged(String from, String to);
 
+  /// No description provided for @videoRotate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görüntüyü döndür'**
+  String get videoRotate;
+
   /// No description provided for @viewModeTitle.
   ///
   /// In tr, this message translates to:

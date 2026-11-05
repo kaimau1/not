@@ -128,6 +128,17 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
   Object? _error;
   bool _pipSupported = false;
 
+  /// Görüntü dönüşü (çeyrek tur; F40.5, kutudaki denetimle aynı iş).
+  int _turns = 0;
+
+  double _ratioOf(VideoPlayerController c) {
+    final r = c.value.aspectRatio == 0 ? 16 / 9 : c.value.aspectRatio;
+    return _turns.isOdd ? 1 / r : r;
+  }
+
+  Widget _surface(VideoPlayerController c) =>
+      RotatedBox(quarterTurns: _turns, child: VideoPlayer(c));
+
   /// Videonun en-boy oranı (PiP penceresi buna göre açılır).
   Size get _aspect {
     final size = _controller?.value.size;
@@ -237,10 +248,8 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
         color: Colors.black,
         child: Center(
           child: AspectRatio(
-            aspectRatio: controller.value.aspectRatio == 0
-                ? 16 / 9
-                : controller.value.aspectRatio,
-            child: VideoPlayer(controller),
+            aspectRatio: _ratioOf(controller),
+            child: _surface(controller),
           ),
         ),
       );
@@ -300,21 +309,20 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
                 children: [
                   Flexible(
                     child: AspectRatio(
-                      aspectRatio: controller.value.aspectRatio == 0
-                          ? 16 / 9
-                          : controller.value.aspectRatio,
+                      aspectRatio: _ratioOf(controller),
                       child: GestureDetector(
                         // Görüntüye dokunmak oynat/durdur — en sık istenen
                         // hareket için düğmeye uzanmak gerekmesin.
                         onTap: () => controller.value.isPlaying
                             ? controller.pause()
                             : controller.play(),
-                        child: VideoPlayer(controller),
+                        child: _surface(controller),
                       ),
                     ),
                   ),
                   _Controls(
                     controller: controller,
+                    onRotate: () => setState(() => _turns = (_turns + 1) % 4),
                     dragMs: _dragMs,
                     onDragChanged: (ms) => setState(() => _dragMs = ms),
                     onDragEnd: (ms) async {
@@ -356,8 +364,8 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
               onTap: () => setState(() => _controlsVisible = !_controlsVisible),
               child: Center(
                 child: AspectRatio(
-                  aspectRatio: aspect,
-                  child: VideoPlayer(controller),
+                  aspectRatio: _ratioOf(controller),
+                  child: _surface(controller),
                 ),
               ),
             ),
@@ -376,6 +384,7 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
                   ),
                   child: _Controls(
                     controller: controller,
+                    onRotate: () => setState(() => _turns = (_turns + 1) % 4),
                     dragMs: _dragMs,
                     onDragChanged: (ms) => setState(() => _dragMs = ms),
                     onDragEnd: (ms) async {
@@ -424,9 +433,11 @@ class _Controls extends StatelessWidget {
     required this.onDragChanged,
     required this.onDragEnd,
     required this.onSkip,
+    required this.onRotate,
   });
 
   final VideoPlayerController controller;
+  final VoidCallback onRotate;
   final double? dragMs;
   final ValueChanged<double> onDragChanged;
   final ValueChanged<double> onDragEnd;
@@ -502,6 +513,13 @@ class _Controls extends StatelessWidget {
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                     ),
+                  ),
+                  IconButton(
+                    key: const ValueKey('viewer-video-rotate'),
+                    tooltip: context.l10n.videoRotate,
+                    color: Colors.white70,
+                    icon: const Icon(Icons.rotate_90_degrees_cw_outlined),
+                    onPressed: onRotate,
                   ),
                   IconButton(
                     key: const ValueKey('viewer-video-back'),

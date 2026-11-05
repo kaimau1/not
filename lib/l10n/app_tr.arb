@@ -2098,6 +2098,7 @@
       "to": {"type": "String"}
     }
   },
+  "videoRotate": "Görüntüyü döndür",
   "viewModeTitle": "Görünüm",
   "viewModeEmbed": "Yazıya göm",
   "viewModeEmbedHint": "Bu eki nottaki bir yazıya göm — yazıya dokununca açılır",

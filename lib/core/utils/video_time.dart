@@ -167,6 +167,19 @@ class NoteVideoHub {
   /// buradan bulur (oynatıcı kutudan SONRA, kendi hazır olunca kaydolur).
   final revision = ValueNotifier<int>(0);
 
+  /// Video başına görüntü dönüşü (çeyrek tur). Oturumluk (F40.5, kullanıcı:
+  /// "videolarda sağa sola çevir"): yan çekilmiş videoyu izlemek için; dosya
+  /// değişmez, nota yazılmaz.
+  // ponytail: oturumluk; kalıcı istenirse Attachment'a alan + ileri uyum gerekir.
+  final _turns = <String, int>{};
+
+  int turnsOf(String videoId) => _turns[videoId] ?? 0;
+
+  void rotate(String videoId) {
+    _turns[videoId] = (turnsOf(videoId) + 1) % 4;
+    revision.value++;
+  }
+
   void register(VideoTimeSource source) {
     _sources.remove(source);
     _sources.add(source);

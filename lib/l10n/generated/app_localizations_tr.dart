@@ -4523,6 +4523,9 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get videoRotate => 'Görüntüyü döndür';
+
+  @override
   String get viewModeTitle => 'Görünüm';
 
   @override

@@ -1710,6 +1710,7 @@
       "to": {"type": "String"}
     }
   },
+  "videoRotate": "Rotate picture",
   "viewModeTitle": "View",
   "viewModeEmbed": "Embed in text",
   "viewModeEmbedHint": "Embed this attachment in a word of the note — tapping the word opens it",

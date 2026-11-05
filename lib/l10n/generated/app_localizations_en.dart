@@ -4540,6 +4540,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get videoRotate => 'Rotate picture';
+
+  @override
   String get viewModeTitle => 'View';
 
   @override

@@ -180,6 +180,22 @@ class VideoTransportControls extends StatelessWidget {
               ),
             ),
           ),
+        // DÖNDÜR (F40.5): yerel videoda; YouTube oynatıcısı kendi içinde.
+        if (showSpeed && source != null && !video.isWebVideo)
+          IconButton(
+            key: const ValueKey('video-rotate'),
+            tooltip: l10n.videoRotate,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: BoxConstraints.tightFor(
+              width: iconSize + 12,
+              height: iconSize + 16,
+            ),
+            iconSize: iconSize - 2,
+            color: color,
+            icon: const Icon(Icons.rotate_90_degrees_cw_outlined),
+            onPressed: () => hub.rotate(video.id),
+          ),
         if (showTime && position != null && prefs.shows(UiItem.videoTime))
           Padding(
             padding: const EdgeInsets.only(left: 4, right: 2),
