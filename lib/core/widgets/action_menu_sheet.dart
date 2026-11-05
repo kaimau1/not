@@ -12,7 +12,11 @@ class MenuAction {
     this.count = 0,
     this.highlight = false,
     this.neutral = false,
+    this.badge,
   });
+
+  /// Simgenin köşesindeki küçük işaret (misafirde hesap kilidi, F43.5).
+  final Widget? badge;
 
   /// Hızlı satırda GRİ (nötr) çizilsin mi — içerik değil uygulama işi olan
   /// düğme (Ayarlar) öbür kısayollardan renkle ayrışsın.
@@ -237,6 +241,8 @@ class _QuickButton extends StatelessWidget {
                       highlight: action.highlight,
                     ),
                   ),
+                if (action.badge != null)
+                  Positioned(right: -4, top: -4, child: action.badge!),
               ],
             ),
             const SizedBox(height: 6),

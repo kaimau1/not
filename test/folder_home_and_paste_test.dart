@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:notlar/core/utils/youtube.dart';
-import 'package:notlar/features/folders/presentation/folder_screen.dart';
+import 'package:notlar/features/folders/presentation/folder_nav.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
@@ -40,14 +40,12 @@ void main() {
         ),
       ),
     );
-    await FolderScreen.open(ctx, 'f1');
+    openFolder(ctx, 'f1');
     await tester.pump();
     expect(container.read(selectedFolderProvider), 'f1');
     // Klasör "sanki süzgeç": öbür süzgeçler bırakılır, klasör tek başına.
     expect(container.read(noteFilterProvider), NoteFilter.all);
     expect(container.read(selectedTagProvider), isNull);
-    // Ayrı klasör sayfası AÇILMAZ.
-    expect(find.byType(FolderScreen), findsNothing);
   });
 
   group('yapıştırılan YouTube bağlantısı', () {

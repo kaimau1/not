@@ -397,7 +397,7 @@ class PersonalizeModuleSwitches extends StatelessWidget {
       ),
       (
         UiModule.collaboration,
-        Icons.people_alt_outlined,
+        AppIcons.shared,
         l10n.moduleCollaboration,
         l10n.moduleCollaborationInfo,
       ),

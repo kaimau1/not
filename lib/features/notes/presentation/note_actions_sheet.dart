@@ -7,7 +7,6 @@ import '../../ai/presentation/listen_screen.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../folders/presentation/folder_sheets.dart';
-import '../../inbox/presentation/send_note_sheet.dart';
 import '../data/attachment_repository.dart';
 import '../data/note_shortcut.dart';
 import '../data/note_speech.dart';
@@ -91,12 +90,6 @@ Future<void> _runNoteAction(
       if (!await unlockIfNeeded()) return;
       if (!context.mounted) return;
       await showNoteShareSheet(context, ref, note);
-    case 'sendToFriend':
-      // Kilitli notun içeriği doğrulamasız GÖNDERİLMESİN: kopya karşı
-      // tarafta kilitsiz açılır (paylaş/kopyala ile aynı gerekçe).
-      if (!await unlockIfNeeded()) return;
-      if (!context.mounted) return;
-      await showSendNoteToFriendSheet(context, ref, note);
     case 'listen':
       // Okuma cihazın TTS'i ile yapılır (model çağrısı yok). Kilitli notun
       // içeriği sesli de okunmasın.

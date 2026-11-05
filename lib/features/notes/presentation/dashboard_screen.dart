@@ -41,8 +41,10 @@ import '../../folders/data/folder_order.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/data/folder_activity.dart';
 import '../../folders/domain/note_folder.dart';
+import '../../folders/presentation/folder_nav.dart';
 import '../../folders/presentation/folder_sheets.dart';
 import '../../folders/presentation/folder_tile.dart';
+import '../../folders/presentation/shared_folder_home.dart';
 import '../../auth/presentation/account_sheet.dart';
 import '../../auth/presentation/guest_backup_card.dart';
 import '../../friends/data/friends_repository.dart';
@@ -292,7 +294,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       !searchActive &&
       ref.read(noteFilterProvider) == NoteFilter.all &&
       ref.read(selectedTagProvider) == null &&
-      ref.read(selectedFolderProvider) == null;
+      ref.read(selectedFolderProvider) == null &&
+      ref.read(selectedSharedFolderProvider) == null;
 
   /// Ana ekran mikrofon widget'ının isteği varsa sesli not levhasını açar
   /// (tek seferlik — bayrak take ile tüketilir).
@@ -483,6 +486,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (stop == null) return;
     // Geçiş animasyonunun yönünü çekiş yönüne göre ayarla (madde 2).
     _swipeForward = direction > 0;
+    // Paylaşılan klasör de bir durak (K8), kendi klasör gibi.
+    final sharedStop = _sharedStopOf(stop.folderId);
+    if (sharedStop != null) {
+      openFolder(context, sharedStop.folderId, ownerId: sharedStop.ownerId);
+      HapticFeedback.selectionClick();
+      return;
+    }
+    ref.read(selectedSharedFolderProvider.notifier).set(null);
     if (stop.folderId == kSharedHubFolderId) {
       ref.read(sharedHubOnHomeProvider.notifier).set(false);
       showSharedHubOnHome(context);
@@ -496,12 +507,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     HapticFeedback.selectionClick();
   }
 
+  SharedFolderRef? _sharedStopOf(String? stopId) => stopId == null
+      ? null
+      : (ref.read(sharedFolderRefsProvider).value ?? const <SharedFolderRef>[])
+            .where((s) => sharedFolderStopId(s) == stopId)
+            .firstOrNull;
+
   /// Çekişin kenarında görünen sonraki durağın adı (F39.3); durak yoksa null.
   String? _swipeStopLabel(int direction) {
     final stop = _swipeStop(direction);
     if (stop == null) return null;
     final l10n = context.l10n;
     if (stop.folderId == kSharedHubFolderId) return l10n.sharedHubShort;
+    final sharedStop = _sharedStopOf(stop.folderId);
+    if (sharedStop != null) return sharedStop.name;
     if (ref.read(swipeModeProvider) == SwipeMode.filters) {
       return stop.tag != null
           ? '#${stop.tag}'
@@ -537,14 +556,33 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       ))
         f.id,
     ];
+    // Paylaşılanlar şeritteki sırayla: okunmamışı olan başta, kalanı sonda.
+    final shares =
+        ref.read(sharedFolderRefsProvider).value ?? const <SharedFolderRef>[];
+    bool hot(SharedFolderRef s) =>
+        ref.read(
+          folderUnreadProvider((ownerId: s.ownerId, folderId: s.folderId)),
+        ) >
+        0;
+    final selectedShared = ref.read(selectedSharedFolderProvider);
     return nextHomeSwipeStop(
       mode: mode,
       notes: notes,
       // GELEN de bir durak (2026-11-02), gizli değilse şeritteki yerinde.
-      folderIds: hub.hidden
-          ? folderIds
-          : withSharedHub(folderIds, kSharedHubFolderId, hub.order ?? 0),
-      folderId: ref.read(sharedHubOnHomeProvider) && mode != SwipeMode.filters
+      folderIds: [
+        for (final s in shares)
+          if (hot(s)) sharedFolderStopId(s),
+        ...hub.hidden
+            ? folderIds
+            : withSharedHub(folderIds, kSharedHubFolderId, hub.order ?? 0),
+        for (final s in shares)
+          if (!hot(s)) sharedFolderStopId(s),
+      ],
+      folderId: mode == SwipeMode.filters
+          ? ref.read(selectedFolderProvider)
+          : selectedShared != null
+          ? '${selectedShared.ownerId}/${selectedShared.folderId}'
+          : ref.read(sharedHubOnHomeProvider)
           ? kSharedHubFolderId
           : ref.read(selectedFolderProvider),
       filter: ref.read(noteFilterProvider),
@@ -897,8 +935,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // Geciktirilmiş sorgu: anlamsal arama her tuş vuruşunda ayrı bir
     // embedding HTTP isteği atmasın (bkz. debouncedSearchQueryProvider).
     final query = ref.watch(debouncedSearchQueryProvider);
+    // Paylaşılan klasör süzgeci (K8): ızgarayı o klasörün notları doldurur.
+    final sharedFolder = ref.watch(selectedSharedFolderProvider);
     final semanticActive =
-        ref.watch(semanticSearchEnabledProvider) && query.trim().length > 2;
+        sharedFolder == null &&
+        ref.watch(semanticSearchEnabledProvider) &&
+        query.trim().length > 2;
     // Anlamsal sonuçlara da uygulanmış süzgeçler (klasör/etiket/durum) uygulanır:
     // eskiden "İş" klasörü seçiliyken anlam modu TÜM klasörlerden not getiriyor,
     // üstteki çip ise hâlâ "İş" diyordu — metin/anlam modları sessizce farklı
@@ -951,6 +993,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         !searchActive &&
         ref.watch(noteFilterProvider) == NoteFilter.all &&
         ref.watch(selectedFolderProvider) == null &&
+        sharedFolder == null &&
         !ref.watch(showAllNotesProvider) &&
         !ref.watch(sharedHubOnHomeProvider) &&
         ref.watch(selectedTagProvider) == null;
@@ -967,6 +1010,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
     ref.listen(selectedFolderProvider, (_, next) {
       if (next != null) closeHub();
+    });
+    // Paylaşım kaldırıldıysa ya da klasör silindiyse süzgeç kendiliğinden
+    // kalkar: ekran ulaşılamayan klasörde boş durmasın.
+    ref.listen(sharedFolderRefsProvider, (_, next) {
+      final shares = next.value;
+      final open = ref.read(selectedSharedFolderProvider);
+      if (shares == null || open == null) return;
+      if (!shares.any(
+        (s) => s.folderId == open.folderId && s.ownerId == open.ownerId,
+      )) {
+        ref.read(selectedSharedFolderProvider.notifier).set(null);
+      }
     });
     ref.listen(showAllNotesProvider, (_, next) {
       if (next) closeHub();
@@ -1001,8 +1056,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
     final page = CallbackShortcuts(
       bindings: {
-        const SingleActivator(LogicalKeyboardKey.keyN, control: true): () =>
-            createNote(NoteType.text),
+        const SingleActivator(LogicalKeyboardKey.keyN, control: true): () {
+          final folder = ref.read(selectedSharedFolderProvider);
+          if (folder == null) {
+            unawaited(createNote(NoteType.text));
+            return;
+          }
+          final role =
+              (ref.read(sharedFolderRefsProvider).value ??
+                      const <SharedFolderRef>[])
+                  .where((s) => s.folderId == folder.folderId)
+                  .firstOrNull
+                  ?.role ??
+              FolderRole.both;
+          unawaited(createInSharedFolder(context, ref, folder, role));
+        },
       },
       child: Focus(
         autofocus: true,
@@ -1053,6 +1121,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     final segmentKey =
                         '${ref.watch(noteFilterProvider)}'
                         '|${ref.watch(selectedFolderProvider) ?? ''}'
+                        '|${sharedFolder?.folderId ?? ''}'
                         '|${ref.watch(selectedTagProvider) ?? ''}'
                         '|${hubActive ? 'hub' : ''}';
                     _segmentKey = segmentKey;
@@ -1446,6 +1515,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                             selectedFolderProvider,
                                           ),
                                           hubSelected: hubActive,
+                                          sharedFolder: sharedFolder,
                                         ),
                                       // BENİMLE PAYLAŞILANLAR (seçenek,
                                       // varsayılan kapalı — bkz.
@@ -1455,6 +1525,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           !reorderActive &&
                                           !selectionActive &&
                                           !hubActive &&
+                                          sharedFolder == null &&
                                           !sharedAtBottom &&
                                           ref.watch(homeShowSharedProvider) &&
                                           ref.watch(noteFilterProvider) ==
@@ -1467,7 +1538,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           columns: columns,
                                           cellWidth: cellWidth,
                                         ),
-                                      if (hubActive)
+                                      if (sharedFolder != null)
+                                        ...sharedFolderSlivers(
+                                          context,
+                                          ref,
+                                          folder: sharedFolder,
+                                          columns: columns,
+                                          cellWidth: cellWidth,
+                                          query: query,
+                                        )
+                                      else if (hubActive)
                                         ..._hubSlivers(
                                           context,
                                           columns,
@@ -1550,6 +1630,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           !reorderActive &&
                                           !selectionActive &&
                                           !hubActive &&
+                                          sharedFolder == null &&
                                           sharedAtBottom &&
                                           ref.watch(homeShowSharedProvider) &&
                                           ref.watch(noteFilterProvider) ==
@@ -1648,6 +1729,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       // MİKROFON "+"nın SOLUNDA, aynı satırda (B2): sütun
                       // eskiden iki düğme boyu yükseliyor ve sağ sütunun
                       // son kartını örtüyordu; tek satır 56 dp.
+                      if (sharedFolder != null)
+                        SharedFolderFab(folder: sharedFolder)
+                      else
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -1704,6 +1788,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // tuşu önce klasörden çıkar (eski klasör sayfasındaki gibi).
     final inFolder =
         ref.watch(selectedFolderProvider) != null ||
+        sharedFolder != null ||
         ref.watch(sharedHubOnHomeProvider);
     return PopScope(
       canPop: !selectionActive && !reorderActive && !inFolder,
@@ -1720,6 +1805,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         } else if (inFolder) {
           _swipeForward = false;
           ref.read(selectedFolderProvider.notifier).set(null);
+          ref.read(selectedSharedFolderProvider.notifier).set(null);
           ref.read(sharedHubOnHomeProvider.notifier).set(false);
         }
       },

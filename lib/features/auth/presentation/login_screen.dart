@@ -1,3 +1,4 @@
+import '../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -278,7 +279,7 @@ class _Showcase extends StatelessWidget {
         l10n.loginFeatureAiBody,
       ),
       (
-        Icons.people_alt_outlined,
+        AppIcons.shared,
         l10n.loginFeatureShareTitle,
         l10n.loginFeatureShareBody,
       ),

@@ -63,7 +63,6 @@ import '../../../../core/widgets/scale_settle.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/attachment_save.dart';
 import '../../data/note_shortcut.dart';
-import '../../../inbox/presentation/send_note_sheet.dart';
 import '../../../ai/data/ai_gate.dart';
 import '../../../auth/presentation/account_required.dart';
 import '../../../ai/data/gemini_service.dart';

@@ -122,7 +122,7 @@ List<Widget> sharedHubSlivers(
   final sharedTag = HubSourceTag(
     key: const ValueKey('hub-tag-shared'),
     label: l10n.sharedHubTagShared,
-    icon: Icons.people_alt_outlined,
+    icon: AppIcons.shared,
     color: scheme.primary,
   );
   return [
@@ -157,7 +157,7 @@ List<Widget> sharedHubSlivers(
 }
 
 /// Ana ekranı "Gelen" süzgecine alır (klasör çipiyle aynı davranış — bkz.
-/// `FolderScreen.showFolderOnHome`): öteki süzgeçler bırakılır, ana ekran
+/// `openFolder`): öteki süzgeçler bırakılır, ana ekran
 /// dışındaysa ana ekrana dönülür. Zaten açıksa kapatır ("Tümü" gibi).
 void showSharedHubOnHome(BuildContext context) {
   final container = ProviderScope.containerOf(context, listen: false);
@@ -168,6 +168,7 @@ void showSharedHubOnHome(BuildContext context) {
   container.read(noteFilterProvider.notifier).set(NoteFilter.all);
   container.read(selectedTagProvider.notifier).set(null);
   container.read(selectedFolderProvider.notifier).set(null);
+  container.read(selectedSharedFolderProvider.notifier).set(null);
   if (container.read(showAllNotesProvider)) {
     container.read(showAllNotesProvider.notifier).set(false);
   }

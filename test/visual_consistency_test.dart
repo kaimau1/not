@@ -50,6 +50,16 @@ void main() {
       );
     });
 
+    test('F43.3 ortak not / paylaşılan klasör tek simge', () {
+      expect(
+        offenders(
+          RegExp(r'Icons\.people_alt(_outlined|_rounded|_sharp)?\b'),
+          allow: {'lib/core/app_icons.dart'},
+        ),
+        isEmpty,
+      );
+    });
+
     test('F42.1 ses kapıları sözlükten (K7)', () {
       expect(
         offenders(
@@ -95,6 +105,7 @@ void main() {
         'fullscreen': AppIcons.fullscreen,
         'restore': AppIcons.restore,
         'friends': AppIcons.friends,
+        'shared': AppIcons.shared,
       };
       final byCode = <int, List<String>>{};
       for (final e in meanings.entries) {

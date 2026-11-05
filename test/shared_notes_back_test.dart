@@ -14,6 +14,8 @@ import 'package:notlar/features/notes/data/upload_queue.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
+import 'package:notlar/features/inbox/data/inbox_repository.dart';
+import 'package:notlar/features/inbox/presentation/shared_hub_screen.dart';
 import 'package:notlar/features/notes/presentation/shared_notes_screen.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
@@ -26,7 +28,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   group('Geri tuşu: paylaşılanlar sayfasından dönüş', () {
     /// Uygulamanın yönlendirici ŞEKLİ: dış kabuk (AppFrame) → iç kabuk
-    /// (SplitShell) → `/`; kabuk dışı not yolu dış kabukta. "Benimle
+    /// (SplitShell) → `/`; kabuk dışı not yolu dış kabukta. "Gelen ve
     /// paylaşılanlar" iç Navigator'a SAYFASIZ rota olarak açılır.
     GoRouter buildRouter() => GoRouter(
       routes: [
@@ -231,6 +233,7 @@ void main() {
           sharedPreferencesProvider.overrideWithValue(prefs),
           currentUidProvider.overrideWithValue('ben'),
           sharedNotesWithMeProvider.overrideWith((ref) => shares.stream),
+          inboxNotesProvider.overrideWith((ref) => Stream.value(const <InboxNote>[])),
           ownedNoteStreamProvider.overrideWith(
             (ref, key) => Stream.value(
               Note(
@@ -328,7 +331,7 @@ void main() {
     });
   });
 
-  testWidgets('Benimle paylaşılanlar: yeni not başta ve "Yeni" etiketli', (
+  testWidgets('Gelen: yeni ortak not başta ve "Yeni" etiketli', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({
@@ -355,6 +358,7 @@ void main() {
           sharedPreferencesProvider.overrideWithValue(prefs),
           currentUidProvider.overrideWithValue('ben'),
           sharedNotesWithMeProvider.overrideWith((ref) => Stream.value(shares)),
+          inboxNotesProvider.overrideWith((ref) => Stream.value(const <InboxNote>[])),
           ownedNoteStreamProvider.overrideWith(
             (ref, key) => Stream.value(
               Note(
@@ -374,7 +378,7 @@ void main() {
           locale: Locale('tr'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: SharedNotesScreen(),
+          home: SharedHubScreen(),
         ),
       ),
     );

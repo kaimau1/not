@@ -3595,13 +3595,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only the note\'s owner can change collaborators.';
 
   @override
-  String get sharedWithMe => 'Shared with me';
-
-  @override
-  String get sharedWithMeEmpty =>
-      'No notes have been shared with you yet. They appear here when someone adds you to a note.';
-
-  @override
   String sharedByName(Object name) {
     return 'Shared by $name';
   }
@@ -3705,7 +3698,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get foldersMine => 'My folders';
 
   @override
-  String get foldersSharedSection => 'Folders shared with me';
+  String get foldersSharedSection => 'Shared folders';
 
   @override
   String trashDaysShort(int count) {
@@ -5050,7 +5043,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attachmentSaveAsFailed => 'Couldn\'t save the file';
 
   @override
-  String get sharedHubTitle => 'Received & shared';
+  String get sharedHubTitle => 'Inbox & shared';
 
   @override
   String get sharedHubInbox => 'Received';
@@ -5789,7 +5782,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeShowSharedInfo =>
-      'Also show notes shared with me in a separate section at the top of the home screen';
+      'Also show notes shared with you in a separate section on the home screen';
 
   @override
   String get homeShowSharedShort => 'Show shared notes';
@@ -5805,7 +5798,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSharedAtBottomShort => 'Shared notes at bottom';
 
   @override
-  String get homeSharedSection => 'Shared with me';
+  String get homeSharedSection => 'Shared';
 
   @override
   String get copyAttachment => 'Copy attachment';
@@ -6227,10 +6220,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareIncludeBubbles => 'Bubbles';
 
   @override
-  String get shareSendSection => 'Send';
+  String sharedFolderBar(String role) {
+    return 'Shared folder · $role';
+  }
 
   @override
-  String get shareInAppSection => 'To a Not user';
+  String get shareSendSection => 'Send out';
+
+  @override
+  String get shareInAppSection => 'With people';
 
   @override
   String get shareTextHint =>
@@ -6272,7 +6270,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bubbleFormat => 'Format';
 
   @override
-  String get sharedHubTagInbox => 'Received';
+  String get sharedHubTagInbox => 'Inbox';
 
   @override
   String get sharedHubTagShared => 'Shared';

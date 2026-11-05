@@ -26,13 +26,7 @@ import '../../../core/a11y/min_tap_target.dart';
 ///
 /// ŞİMDİ: tek "Süz" düğmesi, tek levha, dört bölüm. Ana ekranda yalnız
 /// UYGULANMIŞ süzgeçler kaldırılabilir çip olarak görünür.
-///
-/// [folderId] verilirse levha o KLASÖRÜN içini süzer (kullanıcı isteği
-/// 2026-10-28: "klasörler içinde filtreleme yok, dashboard'da ne varsa orası
-/// da aynı olmalı"): durum ve etiket klasöre özgü ([folderFilterProvider]),
-/// görünüm ve sıralama ana ekranla ortak. Klasörde anlamsız olanlar
-/// (klasöre göre grupla, paylaşılanlar, elle sıralama, "Diğer") çizilmez.
-Future<void> showFilterSheet(BuildContext context, {String? folderId}) =>
+Future<void> showFilterSheet(BuildContext context) =>
     showAppSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -44,7 +38,7 @@ Future<void> showFilterSheet(BuildContext context, {String? folderId}) =>
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.76,
       ),
-      builder: (_) => _FilterSheet(folderId: folderId),
+      builder: (_) => const _FilterSheet(),
     );
 
 /// Ana ekranda bir süzgeç uygulanmış mı? "Süz" düğmesinin vurgusu ve
@@ -53,6 +47,7 @@ int appliedFilterCount(WidgetRef ref) {
   var count = 0;
   if (ref.watch(noteFilterProvider) != NoteFilter.all) count++;
   if (ref.watch(selectedFolderProvider) != null) count++;
+  if (ref.watch(selectedSharedFolderProvider) != null) count++;
   if (ref.watch(selectedTagProvider) != null) count++;
   // Sıralama sayıya KATILMAZ: her zaman bir sıralama seçilidir, "süzgeç
   // uygulandı" balonunda göstermek yanıltıcı olurdu.
@@ -62,6 +57,7 @@ int appliedFilterCount(WidgetRef ref) {
 void resetFilters(WidgetRef ref) {
   ref.read(noteFilterProvider.notifier).set(NoteFilter.all);
   ref.read(selectedFolderProvider.notifier).set(null);
+  ref.read(selectedSharedFolderProvider.notifier).set(null);
   ref.read(selectedTagProvider.notifier).set(null);
 }
 
@@ -71,7 +67,14 @@ List<String> appliedFilterLabels(BuildContext context, WidgetRef ref) {
   final filter = ref.watch(noteFilterProvider);
   final folderId = ref.watch(selectedFolderProvider);
   final tag = ref.watch(selectedTagProvider);
-  final folderName = folderId == null
+  final shared = ref.watch(selectedSharedFolderProvider);
+  final folderName = shared != null
+      ? (ref.watch(sharedFolderRefsProvider).value ??
+                const <SharedFolderRef>[])
+            .where((s) => s.folderId == shared.folderId)
+            .map((s) => s.name)
+            .firstOrNull
+      : folderId == null
       ? null
       : (ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[])
             .where((f) => f.id == folderId)
@@ -255,9 +258,7 @@ class DashboardFilterRow extends ConsumerWidget {
 /// görünümündeydi — hangisinin tekli seçim, hangisinin aç-kapa olduğu
 /// anlaşılmıyordu.
 class _ViewModeSection extends ConsumerWidget {
-  const _ViewModeSection({this.inFolder = false});
-
-  final bool inFolder;
+  const _ViewModeSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -295,7 +296,7 @@ class _ViewModeSection extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           // "Tümü" açıkken: klasör başlıkları altında grupla (D4).
-          if (!inFolder && ref.watch(showAllNotesProvider))
+          if (ref.watch(showAllNotesProvider))
             _SwitchRow(
               label: l10n.groupByFolder,
               icon: Icons.folder_copy_outlined,
@@ -317,15 +318,14 @@ class _ViewModeSection extends ConsumerWidget {
             value: ref.watch(cardShowFilesProvider),
             onChanged: (_) => ref.read(cardShowFilesProvider.notifier).toggle(),
           ),
-          if (!inFolder)
-            _SwitchRow(
-              label: l10n.homeShowSharedShort,
-              icon: Icons.people_alt_outlined,
-              value: ref.watch(homeShowSharedProvider),
-              onChanged: (_) =>
-                  ref.read(homeShowSharedProvider.notifier).toggle(),
-            ),
-          if (!inFolder && ref.watch(homeShowSharedProvider))
+          _SwitchRow(
+            label: l10n.homeShowSharedShort,
+            icon: AppIcons.shared,
+            value: ref.watch(homeShowSharedProvider),
+            onChanged: (_) =>
+                ref.read(homeShowSharedProvider.notifier).toggle(),
+          ),
+          if (ref.watch(homeShowSharedProvider))
             _SwitchRow(
               label: l10n.homeSharedAtBottomShort,
               icon: Icons.vertical_align_bottom,
@@ -394,10 +394,7 @@ const _typeFilters = [
 ];
 
 class _FilterSheet extends ConsumerWidget {
-  const _FilterSheet({this.folderId});
-
-  /// Doluysa levha bu klasörün içini süzer (bkz. [showFilterSheet]).
-  final String? folderId;
+  const _FilterSheet();
 
   /// Süzgeç türlerinin simgeleri: salt metin çipleri birbirine karışıyordu,
   /// simge göz gezdirirken tutamak veriyor ("0'dan tasarım" isteği).
@@ -426,43 +423,14 @@ class _FilterSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final folderId = this.folderId;
-    final inFolder = folderId != null;
-    final folderFilter = inFolder
-        ? ref.watch(folderFilterProvider.select((m) => m[folderId])) ??
-              kNoFolderFilter
-        : kNoFolderFilter;
-    final filter = inFolder
-        ? folderFilter.filter
-        : ref.watch(noteFilterProvider);
-    final tag = inFolder ? folderFilter.tag : ref.watch(selectedTagProvider);
+    final filter = ref.watch(noteFilterProvider);
+    final tag = ref.watch(selectedTagProvider);
     final sort = ref.watch(noteSortProvider);
-    final tags = inFolder
-        ? ({
-            for (final n
-                in ref.watch(folderNotesProvider(folderId)).value ??
-                    const <Note>[])
-              ...n.tags,
-          }.toList()..sort())
-        : ref.watch(allTagsProvider);
-    final appliedCount = inFolder
-        ? (filter != NoteFilter.all ? 1 : 0) + (tag != null ? 1 : 0)
-        : appliedFilterCount(ref);
-    void setFilter(NoteFilter f) => inFolder
-        ? ref.read(folderFilterProvider.notifier).set(folderId, (
-            filter: f,
-            tag: tag,
-          ))
-        : ref.read(noteFilterProvider.notifier).set(f);
-    void setTag(String? t) => inFolder
-        ? ref.read(folderFilterProvider.notifier).set(folderId, (
-            filter: filter,
-            tag: t,
-          ))
-        : ref.read(selectedTagProvider.notifier).set(t);
-    void reset() => inFolder
-        ? ref.read(folderFilterProvider.notifier).set(folderId, kNoFolderFilter)
-        : resetFilters(ref);
+    final tags = ref.watch(allTagsProvider);
+    final appliedCount = appliedFilterCount(ref);
+    void setFilter(NoteFilter f) => ref.read(noteFilterProvider.notifier).set(f);
+    void setTag(String? t) => ref.read(selectedTagProvider.notifier).set(t);
+    void reset() => resetFilters(ref);
 
     return SingleChildScrollView(
       // Alt boşluk sistem gezinme çubuğunu (geri/ana sayfa) hesaba katar:
@@ -514,7 +482,7 @@ class _FilterSheet extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
 
-          _ViewModeSection(inFolder: inFolder),
+          const _ViewModeSection(),
 
           // TÜR ve DURUM AYRI (F11.4): eskiden "DURUM" başlığı altında
           // Metin/Liste/Sıralı (notun yapısı) ile Sabitli/Yıldızlı/Alarmlı
@@ -540,9 +508,7 @@ class _FilterSheet extends ConsumerWidget {
             child: _OptionWrap(
               children: [
                 for (final f in NoteFilter.values)
-                  // "Diğer" = klasörsüz ve etiketsiz: klasörün içinde boş.
-                  if (!_typeFilters.contains(f) &&
-                      (!inFolder || f != NoteFilter.others))
+                  if (!_typeFilters.contains(f))
                     _Option(
                       label: filterLabel(l10n, f),
                       icon: _filterIcon(f),
@@ -588,7 +554,7 @@ class _FilterSheet extends ConsumerWidget {
             // (alt kümede sıra bozulur), o yüzden koşullu.
             // ✥ simgesi yerine METİNLİ düğme (F11.4): "Notları sırala"
             // simgesi açıklamasızdı.
-            trailing: appliedCount == 0 && !inFolder
+            trailing: appliedCount == 0
                 ? TextButton.icon(
                     key: const ValueKey('filter-manual-reorder'),
                     style: TextButton.styleFrom(

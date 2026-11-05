@@ -62,6 +62,18 @@ void main() {
     );
   });
 
+  test('F43.1: tek yüz "Gelen" / "Paylaşılan", eski adlar yok', () {
+    expect(
+      offenders(RegExp('Benimle|Notlar kullanıcısına', caseSensitive: false)),
+      isEmpty,
+    );
+    expect(texts['sharedHubShort'], 'Gelen');
+    expect(texts['sharedHubTitle'], 'Gelen ve paylaşılanlar');
+    expect(texts['sharedHubTagInbox'], 'Gelen');
+    expect(texts['sharedHubTagShared'], 'Paylaşılan');
+    expect(texts['homeSharedSection'], 'Paylaşılan');
+  });
+
   test('F42.3: lib/ içinde sabit Türkçe kullanıcı metni yok', () {
     // Bilinçli istisna: setup_required_screen Firebase'siz derlemede geliştirici
     // ekranı, l10n'dan önce ve son kullanıcıya hiç görünmez.

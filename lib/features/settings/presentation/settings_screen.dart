@@ -455,7 +455,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _SettingRow(
             _PrefSwitch(
               provider: homeShowSharedProvider,
-              icon: Icons.people_alt_outlined,
+              icon: AppIcons.shared,
               title: l10n.homeShowShared,
               subtitle: l10n.homeShowSharedInfo,
             ),

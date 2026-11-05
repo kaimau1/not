@@ -16,6 +16,10 @@ abstract final class AppIcons {
   static const inbox = Icons.mail_outline;
   static const inboxSelected = Icons.mail;
 
+  /// Ortak not / paylaşılan klasör: kart, editör, şerit aynı simge (F43.3).
+  /// Kişiler ([friends]) ile karışmaz.
+  static const shared = Icons.people_alt_outlined;
+
   /// Defter (sayfalı görünüm, defter kâğıdı).
   static const notebook = Icons.menu_book_outlined;
 

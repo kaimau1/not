@@ -204,6 +204,7 @@ extension _DashSlivers on _DashboardScreenState {
         !searchActive &&
         ref.read(noteFilterProvider) == NoteFilter.all &&
         ref.read(selectedFolderProvider) == null &&
+        ref.read(selectedSharedFolderProvider) == null &&
         !ref.read(showAllNotesProvider) &&
         ref.read(selectedTagProvider) == null;
 
