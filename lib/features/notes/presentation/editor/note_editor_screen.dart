@@ -3522,13 +3522,11 @@ maxWidth: readingColumn ? kReadingWidth : double.infinity,
 child: ClipRRect(
 // Sütunda sayfanın üstünde kart: köşesiz kutu kopuk duruyordu.
 // Dar ekranda kenardan kenara, köşe yok.
-borderRadius: BorderRadius.vertical(
-top: Radius.circular(
+clipBehavior:
 readingColumn && MediaQuery.sizeOf(context).width > kReadingWidth
-? 16
-: 0,
-),
-),
+? Clip.antiAlias
+: Clip.none,
+borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
 child: FormatBar(
                               target: _formatTarget,
                               onFormat: _applyFormat,
