@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart' show ValueNotifier, visibleForTesting;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfrx/pdfrx.dart';
 
@@ -44,6 +44,23 @@ class PdfPageOcr {
   /// gezilirken kutular sınırsız birikmesin.
   static const _cacheCap = 24;
 
+  /// Önbelleğe bir sonuç girdiğinde artar. **ÇİP TAKILMASININ KÖK NEDENİ**
+  /// (kullanıcı bulgusu 2026-11-05: "basılı tutunca 'Metin tanınıyor'
+  /// dönüp duruyor; nottan çıkıp girince metin tanınmış oluyor"): katman
+  /// yalnız KENDİ beklediği geleceğe bakıyordu. İş zaman aşımına düşüp
+  /// (ilk açılışta model ısınırken) arka planda bitince ya da katman o arada
+  /// yeniden kurulunca sonuç önbelleğe giriyor ama ekrandaki katman bunu hiç
+  /// duymuyordu — çip, yeniden girilene dek dönüyordu. Katmanlar bunu
+  /// dinleyip [peek] ile kendi sayfasının sonucunu alır.
+  static final completed = ValueNotifier<int>(0);
+
+  /// [page] için önbellekteki sonuç: `found` false ise henüz yok.
+  static ({bool found, OcrPageText? text}) peek(PdfPage page) {
+    final key = _key(page);
+    if (!_cache.containsKey(key)) return (found: false, text: null);
+    return (found: true, text: _cache[key]);
+  }
+
   static String _key(PdfPage page) =>
       '${page.document.sourceName}#${page.pageNumber}';
 
@@ -58,10 +75,17 @@ class PdfPageOcr {
       _cache[key] = value;
       return Future.value(value);
     }
-    return _inFlight[key] ??= _queued(
-      page,
-      key,
-    ).whenComplete(() => _inFlight.remove(key));
+    // KÖK NEDEN (kullanıcı bulgusu 2026-11-05: "'Metin tanınıyor' dönüp
+    // duruyor, nottan çıkıp girince metin tanınmış oluyor"): eskiden
+    // `whenComplete(() => _inFlight.remove(key))` idi. Ok gövdesi `remove`un
+    // DÖNÜŞÜNÜ — yani haritadaki bu geleceğin KENDİSİNİ — döndürüyordu;
+    // `whenComplete` geri çağrının döndürdüğü geleceği bekler → gelecek
+    // kendini bekleyip HİÇ bitmiyordu. İş biter, sonuç önbelleğe yazılırdı
+    // (yeniden girişte görünen buydu) ama bekleyen katman hep dönerdi. Gövde
+    // blok: hiçbir şey döndürmez.
+    return _inFlight[key] ??= _queued(page, key).whenComplete(() {
+      _inFlight.remove(key);
+    });
   }
 
   /// OCR işleri SIRAYLA koşar (kullanıcı bulgusu 2026-11-03: "metin tanınıyor
@@ -124,6 +148,7 @@ class PdfPageOcr {
     }
     _cache[key] = result;
     if (_cache.length > _cacheCap) _cache.remove(_cache.keys.first);
+    completed.value++;
     return result;
   }
 

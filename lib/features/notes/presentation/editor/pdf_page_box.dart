@@ -63,6 +63,8 @@ class PdfPageBox extends StatefulWidget {
     this.controls = true,
     this.swipeToTurn = true,
     this.showBubbles = false,
+    this.editBubbles = false,
+    this.addingBubbles,
     this.onNoteFromSelection,
     this.fitWidth = false,
   });
@@ -87,6 +89,21 @@ class PdfPageBox extends StatefulWidget {
   /// ([Attachment.bubblesHidden]). Sayfadaki yüzen kutuda kapalı (orada
   /// dokunuş kutuyu seçer/taşır).
   final bool showBubbles;
+
+  /// **SABİT BÖLMEDE BALONLAR HEP DÜZENLENEBİLİR** (kullanıcı bulgusu
+  /// 2026-11-05: "balonlar taşınamıyor, düzenlenemiyor, silinemiyor; uzun
+  /// basış metin tanıma yapıyor"). Balonlar eskiden yalnız şeritteki
+  /// "Balon ekle" kipi açıkken yazılabiliyordu — şerit 2,5 sn'de söndüğü
+  /// için kip görünmüyor, balon salt okunur kalıyordu. Artık ([showBubbles]
+  /// ile birlikte) tutamaç basılı tutulup taşınır, okuma kartında Düzenle
+  /// çıkar, sayfanın boş yerine basılı tutmak oraya balon bırakır; metin
+  /// seçimi ÇİFT DOKUNUŞA geçer (yazı yoksa çift dokunuş yakınlaştırır).
+  final bool editBubbles;
+
+  /// Dışarıdaki "Balon ekle" düğmesiyle (sabit bölmenin çubuğu) paylaşılan
+  /// bırakma kipi: true → dokunarak balon bırakma açık. İki yönlü: araç
+  /// kartındaki "Bitti" değeri false'a çeker.
+  final ValueNotifier<bool>? addingBubbles;
 
   final Attachment attachment;
 
@@ -147,6 +164,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     super.initState();
     _attachDocument();
     _zoom.addListener(_onZoom);
+    widget.addingBubbles?.addListener(_onExternalAdding);
     if (widget.fitWidth) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _flashBar());
     }
@@ -206,6 +224,10 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   @override
   void didUpdateWidget(PdfPageBox old) {
     super.didUpdateWidget(old);
+    if (!identical(old.addingBubbles, widget.addingBubbles)) {
+      old.addingBubbles?.removeListener(_onExternalAdding);
+      widget.addingBubbles?.addListener(_onExternalAdding);
+    }
     // DIŞARIDAN gelen sayfa değişimi (tam ekrandan dönüş, başka cihaz):
     // kutu oraya gider. Kendi yazdığımız değer geri geldiğinde hiçbir şey
     // olmaz — yoksa parmakla çevirirken sayfa geri sıçrardı (aynı tuzak
@@ -234,6 +256,9 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     _autoPlay?.cancel();
     _detachDocument();
     _pager?.dispose();
+    widget.addingBubbles?.removeListener(_onExternalAdding);
+    _bubbles?.addingListenable.removeListener(_onAddingChanged);
+    _bubbles?.save();
     _bubbles?.dispose();
     _selection.dispose();
     _zoom.dispose();
@@ -313,13 +338,30 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   /// "sabitleme ekranında da balon ekleme olsun, bir buton yardımı ile").
   /// Açıkken balon katmanı düzenlenebilir, sayfaya dokunmak balon bırakır;
   /// yazma kartı kutunun dibinde.
-  bool _bubbleEdit = false;
+  ///
+  /// Kip denetleyicinin `adding` değerinden okunur: araç kartındaki "Bitti"
+  /// de kipi kapatır (ayrı bayrak tutulunca düğme "açık" kalıyordu).
+  bool get _bubbleEdit => _bubbles?.adding ?? false;
+
+  bool get _bubblesWritable => widget.showBubbles && widget.editBubbles;
 
   void _toggleBubbleEdit() {
     final controller = _bubbleController();
-    setState(() => _bubbleEdit = !_bubbleEdit);
-    controller.setAdding(_bubbleEdit);
-    if (!_bubbleEdit) controller.save();
+    controller.setAdding(!controller.adding);
+    _flashBar();
+  }
+
+  void _onExternalAdding() {
+    final want = widget.addingBubbles?.value ?? false;
+    if (want == _bubbleEdit || !mounted) return;
+    _bubbleController().setAdding(want);
+  }
+
+  void _onAddingChanged() {
+    if (!mounted) return;
+    widget.addingBubbles?.value = _bubbleEdit;
+    if (!_bubbleEdit) _bubbles?.save();
+    setState(() {});
     _flashBar();
   }
 
@@ -442,7 +484,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
           bubbles: _bubbles?.bubbles ?? widget.attachment.bubbles,
         ),
       ),
-    );
+    )..addingListenable.addListener(_onAddingChanged);
   }
 
   /// Çevirici, kutunun gösterdiği sayfadan ayrı düştüyse (dışarıdan gelen
@@ -691,7 +733,11 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     final a = widget.attachment;
     final pager = _pager ??= PageController(initialPage: _page - 1);
     final swipe = widget.controls && widget.swipeToTurn;
-    final bubbles = widget.showBubbles && (a.bubbles.isNotEmpty || _bubbleEdit)
+    // Yazılabilir bölmede denetleyici HEP kurulur: balonsuz belgede de
+    // basılı tutunca balon bırakılabilsin.
+    final bubbles =
+        widget.showBubbles &&
+            (a.bubbles.isNotEmpty || _bubbleEdit || _bubblesWritable)
         ? _bubbleController()
         : null;
     final locked = _selecting || _zoomed;
@@ -751,7 +797,15 @@ class _PdfPageBoxState extends State<PdfPageBox> {
           GestureDetector(
             onTap: _toggleBar,
             onDoubleTapDown: (d) => _doubleTapAt = d.localPosition,
-            onDoubleTap: () => _toggleZoomAt(_doubleTapAt),
+            // Çift dokunuş yazının üstündeyse kelimeyi SEÇER (seçim katmanı
+            // ikinci dokunuş inerken seçti): o zaman yakınlaştırma yok.
+            onDoubleTap: () {
+              if (_bubblesWritable &&
+                  _selection.text.value.trim().isNotEmpty) {
+                return;
+              }
+              _toggleZoomAt(_doubleTapAt);
+            },
             // Fare tekerleği sayfayı kaydırır, zoom Ctrl+tekerlekle.
             child: WheelScrollViewer(
               controller: _zoom,
@@ -796,7 +850,10 @@ class _PdfPageBoxState extends State<PdfPageBox> {
               ),
             ),
           ),
-        if (_bubbleEdit && bubbles != null) ...[
+        // Yazma kartı kendini yalnız bir balon düzenlenirken çizer; balon
+        // kip dışında da (okuma kartında "Düzenle") düzenlenebilsin diye
+        // yazılabilir bölmede hep ağaçta.
+        if (bubbles != null && (_bubbleEdit || _bubblesWritable)) ...[
           Positioned(
             left: 0,
             right: 0,
@@ -859,6 +916,8 @@ class _PdfPageBoxState extends State<PdfPageBox> {
                     page: document.pages[pageNumber - 1],
                     pageSize: box.biggest,
                     activeSelectionPage: active,
+                    // Basılı tutmak balon bırakır; seçim çift dokunuşla.
+                    longPressSelects: !_bubblesWritable,
                     onSelected: (text, rects, page, fromOcr) =>
                         _onSelected(document, text, rects, page, fromOcr),
                     onSelectingChanged: _setSelecting,
@@ -870,8 +929,8 @@ class _PdfPageBoxState extends State<PdfPageBox> {
             BubblePageLayer(
               controller: bubbles,
               page: pageNumber,
-              readOnly: !_bubbleEdit,
-              longPressAdd: false,
+              readOnly: !(_bubbleEdit || _bubblesWritable),
+              longPressAdd: _bubblesWritable,
             ),
         ],
       ),

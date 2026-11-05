@@ -336,9 +336,25 @@ maddeyi GÜNCELLE.
   vardı; sabit görselde de var (balonlar görselin KENDİ ekinde, page 1 —
   ilk düzenlemede türetilmiş belgenin balonları görsele taşınır). Salt
   okunur ortak notta eski balonlu görünüm hâlâ çizilir (yazılamaz).
+- **SABİT KİP TEK DAVRANIŞ** (2026-11-05, "balonlar taşınamıyor, uzun
+  basış metin tanıyor"): yazılabilir sabit PDF/görselde balonlar HEP
+  düzenlenebilir (`PdfPageBox.editBubbles`): basılı tut = balon bırak,
+  tutamaç basılı tutulup taşınır, okuma kartında Düzenle + Sil; seçim çift
+  dokunuşla (yazı yoksa çift dokunuş zoom); görselde iki parmak zoom
+  (`WheelScrollViewer`, balonlar içinde). "Balon ekle" (dokunarak bırakma)
+  bölme çubuğunda, PDF'e `addingBubbles` ile bağlı; kip denetleyicinin
+  `adding`i (ayrı bayrak tutma: "Bitti" düğmesi kapatmıyordu). Görselde
+  dokunuş açık kartı kapatır, görüntüleyiciyi açmaz (durum `Listener`
+  ile parmak İNERKEN okunur).
 - Görsele çizim + açık metin (`PageBubble.plain`) dışa aktarmada/paylaşımda
   görselin üstüne BASILIR (`image_annotations.dart`, PNG; F18.13).
 
+- **OCR çipi sonsuz dönüyordu — KÖK NEDEN** (2026-11-05): `forPage`ta
+  `whenComplete(() => _inFlight.remove(key))` ok gövdesi haritadaki
+  geleceğin KENDİSİNİ döndürüyor, `whenComplete` onu bekliyor → gelecek
+  kendini bekler, hiç bitmez (sonuç önbelleğe yine yazılır: yeniden girişte
+  "tanınmış"). TUZAK: `whenComplete`/`then` içinde `remove` ok gövdesiyle
+  döndürme, blok yaz. Ek savunma `PdfPageOcr.completed` + `peek`.
 - Taranmış PDF OCR (2026-11-03): işler TEK KUYRUKTA + 40 sn zaman aşımı
   (eşzamanlı çizim+ML Kit ilk açılışta takılıyordu); disk önbellek anahtarı
   `v2`, damga yalnız dosya BOYU (mtime yeniden indirmede değişip her açılışta

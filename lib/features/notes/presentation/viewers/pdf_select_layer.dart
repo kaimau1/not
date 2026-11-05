@@ -211,6 +211,7 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
   @override
   void initState() {
     super.initState();
+    PdfPageOcr.completed.addListener(_onOcrCompleted);
     widget.page
         .loadStructuredText()
         .then((t) {
@@ -254,6 +255,7 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
     _pressTimer?.cancel();
     _ocrEmptyTimer?.cancel();
     _autoOcrTimer?.cancel();
+    PdfPageOcr.completed.removeListener(_onOcrCompleted);
     if (_notifiedSelecting || _dragAtActive) {
       // Katman aktif seçim ortasında sökülürse pan kilidi / kenar kaydırması
       // üstte asılı kalmasın. dispose içinde üst setState çağrılamaz → kare
@@ -562,8 +564,33 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
     });
   }
 
+  /// Önbelleğe bir OCR sonucu girdi (bkz. [PdfPageOcr.completed]): bu
+  /// sayfanınsa ve katman hâlâ bekliyorsa ya da daha önce boş döndüyse
+  /// sonucu hemen benimse.
+  void _onOcrCompleted() {
+    if (!mounted || _fromOcr || !_textLoaded || !_textThin) return;
+    final hit = PdfPageOcr.peek(widget.page);
+    if (!hit.found) return;
+    if (_ocrRunning) {
+      _finishOcr(hit.text);
+    } else if (hit.text != null) {
+      setState(() {
+        _ocrTried = true;
+        _text = hit.text;
+        _fromOcr = true;
+      });
+    }
+  }
+
   Future<void> _startOcr() async {
     if (_ocrRunning || _ocrTried || !PdfPageOcr.isSupported) return;
+    // Önbellekte varsa (başka katman/eski iş bitirdi) beklemeden kullan.
+    final hit = PdfPageOcr.peek(widget.page);
+    if (hit.found) {
+      _ocrRunning = true;
+      _finishOcr(hit.text);
+      return;
+    }
     setState(() => _ocrRunning = true);
     OcrPageText? recognized;
     try {
@@ -571,7 +598,20 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
     } catch (_) {
       // Tanınamadı: aşağıda "metin yok" gösterilir.
     }
-    if (!mounted) return;
+    if (!mounted || !_ocrRunning) return;
+    // Bu iş boş/zaman aşımıyla döndü ama arka planda biten bir iş sonucu
+    // önbelleğe yazmış olabilir.
+    if (recognized == null) {
+      final hit = PdfPageOcr.peek(widget.page);
+      if (hit.found) recognized = hit.text;
+    }
+    _finishOcr(recognized);
+  }
+
+  /// OCR bekleyişini bitirir (kendi işinden ya da önbellek bildiriminden —
+  /// hangisi önce gelirse; ikincisi `_ocrRunning` false olduğu için düşer).
+  void _finishOcr(OcrPageText? recognized) {
+    if (!mounted || !_ocrRunning) return;
     final at = _ocrPendingSelect;
     final pointer = _ocrPendingPointer;
     _ocrPendingSelect = null;

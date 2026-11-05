@@ -223,7 +223,10 @@ class _BubbleReadCard extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(6, 2, 4, 2),
-            child: Row(
+            // Dar kartta (sabit bölmedeki küçük görsel) "Düzenle" yazısı
+            // düşer, simge kalır — Sil de eklenince satır taşıyordu.
+            child: LayoutBuilder(
+              builder: (context, row) => Row(
               children: [
                 // Ok yalnız VURGULU balonda var: serbest balonun bağlanacağı
                 // bir metin yok, düğme de anlamsız olurdu.
@@ -255,7 +258,25 @@ class _BubbleReadCard extends StatelessWidget {
                         ..showMessage(l10n.copied);
                     },
                   ),
+                // SİL (kullanıcı bulgusu 2026-11-05: "balonlar silinemiyor"):
+                // eskiden yalnız yazma kartında vardı.
                 if (!readOnly)
+                  _action(
+                    key: const ValueKey('bubble-read-delete'),
+                    icon: Icons.delete_outline,
+                    tooltip: l10n.delete,
+                    color: muted,
+                    onPressed: () => controller.remove(bubble.id),
+                  ),
+                if (!readOnly && row.maxWidth < 250)
+                  _action(
+                    key: const ValueKey('bubble-read-edit'),
+                    icon: Icons.edit_outlined,
+                    tooltip: l10n.bubbleEditShort,
+                    color: scheme.primary,
+                    onPressed: controller.beginEdit,
+                  )
+                else if (!readOnly)
                   TextButton.icon(
                     key: const ValueKey('bubble-read-edit'),
                     onPressed: controller.beginEdit,
@@ -278,6 +299,7 @@ class _BubbleReadCard extends StatelessWidget {
                   onPressed: controller.collapseAll,
                 ),
               ],
+            ),
             ),
           ),
         ],
