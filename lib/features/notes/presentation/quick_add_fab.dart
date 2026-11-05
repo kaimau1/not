@@ -546,15 +546,11 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
                   for (final section in sections) ...[
                     Padding(
                       padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
-                      child: Text(
+                      // Tek bölüm başlığı (F39.6): her grup kendi renginde
+                      // değil; renk yalnız simgelerde.
+                      child: SectionLabel(
                         _groupTitle(l10n, section.group),
                         key: ValueKey('quick-section-${section.group.name}'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: sectionLabelStyle(
-                          context,
-                          color: _doorColor(scheme, section.group),
-                        ),
                       ),
                     ),
                     // En çok iki seçenekli bölüm (Dosya ekle · YouTube) satırı

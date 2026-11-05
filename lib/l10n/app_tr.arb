@@ -21,7 +21,10 @@
   "unstar": "Yıldızı kaldır",
   "sectionOthers": "Diğerleri",
   "emptyNotes": "Henüz not yok",
-  "emptyNotesHint": "İlk notunu eklemek için + düğmesine dokun",
+  "emptyFilter": "Bu süzgeçle not yok",
+  "clearFilter": "Süzgeci kaldır",
+  "emptyFolderTitle": "Bu klasör boş",
+  "newNoteAction": "Not ekle",
   "emptySearch": "Sonuç bulunamadı",
   "newTextNote": "Metin notu",
   "newChecklist": "Liste",
@@ -819,7 +822,6 @@
       }
     }
   },
-  "emptySearchSemanticHint": "Anlam sekmesini dene",
   "quickCaptureHint": "Yeni not…",
   "quickCaptureSave": "Kaydet",
   "viewToggle": "Görünüm",

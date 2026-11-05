@@ -54,7 +54,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emptyNotes => 'No notes yet';
 
   @override
-  String get emptyNotesHint => 'Tap + to add your first note';
+  String get emptyFilter => 'No notes match this filter';
+
+  @override
+  String get clearFilter => 'Clear filter';
+
+  @override
+  String get emptyFolderTitle => 'This folder is empty';
+
+  @override
+  String get newNoteAction => 'Add note';
 
   @override
   String get emptySearch => 'No results found';
@@ -1711,9 +1720,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String sectionNoteCount(int count) {
     return '$count notes';
   }
-
-  @override
-  String get emptySearchSemanticHint => 'Try the Meaning tab';
 
   @override
   String get quickCaptureHint => 'New note…';

@@ -14,7 +14,10 @@
   "unstar": "Remove star",
   "sectionOthers": "Others",
   "emptyNotes": "No notes yet",
-  "emptyNotesHint": "Tap + to add your first note",
+  "emptyFilter": "No notes match this filter",
+  "clearFilter": "Clear filter",
+  "emptyFolderTitle": "This folder is empty",
+  "newNoteAction": "Add note",
   "emptySearch": "No results found",
   "newTextNote": "Text note",
   "newChecklist": "List",
@@ -597,7 +600,6 @@
       }
     }
   },
-  "emptySearchSemanticHint": "Try the Meaning tab",
   "quickCaptureHint": "New note…",
   "quickCaptureSave": "Save",
   "viewToggle": "View",

@@ -158,10 +158,16 @@ extension _DashShelf on _DashboardScreenState {
             Expanded(
               child: ListView(
                 scrollDirection: Axis.horizontal,
+                // Ekran dışındaki seçili çip kurulu olmalı, yoksa ortalanamaz
+                // (F39.3). Çipler ucuz.
+                scrollCacheExtent: const ScrollCacheExtent.pixels(3000),
                 padding: const EdgeInsets.fromLTRB(kGridInset, 8, 4, 8),
                 children: [
                   // "Tümü" en başta (kullanıcı isteği 2026-10-20).
-                  const AllNotesChip(),
+                  _EnsureVisible(
+                    active: selectedFolderId == null && !hubOn,
+                    child: const AllNotesChip(),
+                  ),
                   const SizedBox(width: 5),
                   for (final share in hotShared) ...[
                     SharedFolderChip(
