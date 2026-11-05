@@ -468,6 +468,19 @@ void main() {
     });
   });
 
+  testWidgets('aramada geri aramayı kapatır, uygulamadan çıkmaz', (
+    tester,
+  ) async {
+    await pump(tester, const Size(392, 850));
+    container.read(searchQueryProvider.notifier).set('yumurta');
+    await tester.pump(const Duration(milliseconds: 100));
+    final handled = await tester.binding.handlePopRoute();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(handled, isTrue);
+    expect(container.read(searchQueryProvider), '');
+    await end(tester);
+  });
+
   group('F44.3 okuma sütunu', () {
     Future<void> at(WidgetTester tester, Size size) async {
       SharedPreferences.setMockInitialValues({});
