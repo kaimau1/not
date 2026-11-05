@@ -1,3 +1,4 @@
+import 'editor/attachment_status.dart';
 import '../../../app/theme/fixed_colors.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -712,6 +713,11 @@ class CardMediaTile extends StatelessWidget {
           errorBuilder: (_, _, _) => const _MissingTile(icon: Icons.image),
         ),
       );
+    }
+    // Tek durum dili (F40.4); kartta dokunuş notu açar, açıklama notun içinde.
+    final status = attachmentStatusOf(a, hasLocal: false);
+    if (status != AttachmentStatus.none) {
+      return AttachmentStatusPlaceholder(status: status, interactive: false);
     }
     return const _MissingTile(icon: Icons.image_outlined);
   }

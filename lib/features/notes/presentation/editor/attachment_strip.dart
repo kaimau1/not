@@ -22,6 +22,7 @@ import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
 import '../viewers/video_viewer.dart';
 import 'attachment_actions.dart';
+import 'attachment_status.dart';
 import 'view_mode_switch.dart';
 import '../../data/drive_store.dart';
 import '../drive_ui.dart';
@@ -514,15 +515,12 @@ class _AttachmentTile extends ConsumerWidget {
     // atlıyor); "Yükleniyor" çarkı burada kalıcı bir yalan oluyordu. Onun
     // yerine bulut-kapalı rozeti ve ayarın kendi açıklaması gösterilir.
     final limitMb = ref.watch(syncLimitMbProvider);
-    final overSyncLimit =
-        limitMb > 0 && attachment.sizeBytes > limitMb * 1024 * 1024;
     // Kalıcı hata: çark burada da yalan söylüyordu (kural reddi/bozuk dosya
     // hiç düzelmez, kuyruk 6 saatlik beklemeye kadar sessizce tırmanır).
     // Eşik 3 deneme ≈ 1+2+4 dk: geçici bağlantı kesintisi buraya gelmeden
     // düzelir, kalıcı hata gelir.
     final failedAttempts =
         ref.watch(uploadFailuresProvider)[attachment.id] ?? 0;
-    final uploadFailed = !overSyncLimit && failedAttempts >= 3;
     // Süren yükleme: oran (0..1) ya da bilinmiyor (<0). Yoksa ek SIRADA.
     final uploading = ref.watch(
       uploadProgressProvider.select((m) => m[attachment.id]),
@@ -624,30 +622,35 @@ class _AttachmentTile extends ConsumerWidget {
         ),
       );
     } else {
-      content = Container(
+      // Tek durum dili (F40.4). Dosya bu cihazda yok ve buluttan da gelmiyorsa.
+      final missing = attachmentStatusOf(
+        attachment,
+        hasLocal: false,
+        foreign: foreign,
+      );
+      content = AttachmentStatusPlaceholder(
         width: 140,
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.cloud_off_outlined,
-              size: 22,
-              color: scheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              foreign
-                  ? context.l10n.attachmentWaitingOwner
-                  : context.l10n.attachmentNotSynced,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-          ],
-        ),
+        showText: true,
+        // Drive'da duran ek: dokunuş döşemenin, iner (bkz. [_open]).
+        interactive: missing != AttachmentStatus.none,
+        status: missing == AttachmentStatus.none
+            ? AttachmentStatus.notSynced
+            : missing,
       );
     }
 
+    final status = _hasLocal
+        ? attachmentStatusOf(
+            attachment,
+            hasLocal: true,
+            uploading: uploading != null,
+            failedAttempts: failedAttempts,
+            limitMb: limitMb,
+            textOnly:
+                ref.watch(attachmentSyncModeProvider) ==
+                AttachmentSyncMode.textOnly,
+          )
+        : AttachmentStatus.none;
     final views = availableViews(attachment);
     final current = view;
     final showSwitch =
@@ -668,56 +671,24 @@ class _AttachmentTile extends ConsumerWidget {
             child: SizedBox(height: previewHeight, child: content),
           ),
         ),
-        // Yükleme sürüyor göstergesi. Görüntülü not buluta HİÇ yüklenmediği
-        // için burada asla dönmemeli: sürekli dönen çark "senkron edilmeye
-        // çalışılıyor" izlenimi veriyordu.
-        // Bulutta (Storage ya da Drive) kopyası olmayan ek; misafir hesapta
-        // ekler buluta hiç gitmez — orada çark yalan olurdu.
-        if (!attachment.isSynced &&
-            _hasLocal &&
-            attachment.kind != AttachmentKind.video &&
-            ref.watch(attachmentSyncModeProvider) !=
-                AttachmentSyncMode.textOnly)
+        // Tek ek durum rozeti (F40.4): dokununca aynı açıklama levhası.
+        if (status != AttachmentStatus.none)
           PositionedDirectional(
             start: 6,
             top: 6,
-            child: Tooltip(
-              message: overSyncLimit
-                  ? context.l10n.syncLimitInfo
-                  : uploadFailed
-                  ? context.l10n.attachmentUploadFailed
-                  : uploading == null
-                  ? context.l10n.attachmentUploadQueued
-                  : context.l10n.attachmentUploading,
-              child: Material(
-                color: uploadFailed ? scheme.error : Colors.black54,
-                borderRadius: BorderRadius.circular(6),
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  // Yalnız hata rozeti dokunulabilir: çark ve sınır rozeti
-                  // bilgilendirme, elle tetiklenecek bir şey yok.
-                  onTap: uploadFailed
-                      ? () {
-                          ref.read(uploadQueueProvider).retryNow(attachment.id);
-                          ScaffoldMessenger.of(context)
-                            ..hideCurrentSnackBar()
-                            ..showMessage(context.l10n.attachmentUploading);
-                        }
-                      : null,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: overSyncLimit
-                        ? const Icon(
-                            Icons.cloud_off_outlined,
-                            size: 12,
-                            color: Colors.white,
-                          )
-                        : uploadFailed
-                        ? Icon(Icons.refresh, size: 12, color: scheme.onError)
-                        : _UploadBadge(fraction: uploading),
-                  ),
-                ),
-              ),
+            child: AttachmentStatusBadge(
+              status: status,
+              progress:
+                  status == AttachmentStatus.uploading ||
+                      status == AttachmentStatus.queued
+                  ? _UploadBadge(fraction: uploading)
+                  : null,
+              onRetry: () {
+                ref.read(uploadQueueProvider).retryNow(attachment.id);
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showMessage(context.l10n.attachmentUploading);
+              },
             ),
           ),
         PositionedDirectional(

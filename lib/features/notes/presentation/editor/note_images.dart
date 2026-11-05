@@ -39,6 +39,7 @@ import 'text_wrap.dart';
 import 'video_hub_scope.dart';
 import 'video_transport.dart';
 import 'attachment_actions.dart';
+import 'attachment_status.dart';
 import 'view_mode_switch.dart';
 import '../../../../core/widgets/smooth_routes.dart';
 
