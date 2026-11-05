@@ -16,7 +16,6 @@ void main() {
               Flexible(
                 child: EditorBarTags(
                   tags: const ['iş', 'alışveriş', 'çok-uzun-bir-etiket'],
-                  color: Colors.grey,
                   removeLabel: 'Etiketi kaldır',
                   onRemove: removed.add,
                 ),

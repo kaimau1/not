@@ -3294,5 +3294,8 @@
   "itemMenuToHeader": "Başlık yap",
   "itemMenuToItem": "Maddeye çevir",
   "pinnedMediaFit": "Sığdır",
-  "tagRemove": "Etiketi kaldır"
+  "tagRemove": "Etiketi kaldır",
+  "itemAlignStart": "Sola hizala",
+  "itemAlignCenter": "Ortala",
+  "itemAlignEnd": "Sağa hizala"
 }

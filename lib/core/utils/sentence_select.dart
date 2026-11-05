@@ -212,6 +212,24 @@ void attachSentenceSelection(TextEditingController controller) {
   controller.addListener(expander.onChanged);
 }
 
+/// [action] içindeki PROGRAMLI seçim değişiklikleri genişletilmez.
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-11-05: "kelime seçili iken boyut
+/// değiştir dediğimde ya tüm satırın boyutu değişiyor ya da rastgele başka
+/// kelimeye atlıyor"): biçim panelinin "Kelime" kapsamı biçimi uygularken
+/// kelimeyi GEÇİCİ olarak seçiyor; bu seçim çift dokunuşla gelmiş tek
+/// kelimelik seçime benzediği için genişletici onu CÜMLEYE (çoğu zaman tüm
+/// satıra) büyütüyordu. İkinci basışta biçim işaretleri araya girdiğinden
+/// cümle sınırı kayıyor, boyut komşu kelimeye uygulanıyordu.
+void withoutSentenceExpansion(VoidCallback action) {
+  _SentenceExpander._suppressed++;
+  try {
+    action();
+  } finally {
+    _SentenceExpander._suppressed--;
+  }
+}
+
 class _SentenceExpander {
   _SentenceExpander(this.controller);
 
@@ -238,8 +256,19 @@ class _SentenceExpander {
     _busy = false;
   }
 
+  /// [withoutSentenceExpansion] derinliği.
+  static int _suppressed = 0;
+
   void onChanged() {
     if (_busy) return;
+    if (_suppressed > 0) {
+      // Programlı seçim: yalnız durum izlenir, genişletme yok.
+      _previous = controller.selection;
+      _previousText = controller.text;
+      _cycleWord = null;
+      _cycleExpanded = null;
+      return;
+    }
     final selection = controller.selection;
     final previous = _previous;
     _previous = selection;

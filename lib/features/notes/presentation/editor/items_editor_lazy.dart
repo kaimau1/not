@@ -59,6 +59,7 @@ class _LazyItemField extends StatefulWidget {
     required this.maxLines,
     required this.eager,
     required this.field,
+    this.textAlign = TextAlign.start,
   });
 
   final WrapTextController controller;
@@ -71,6 +72,10 @@ class _LazyItemField extends StatefulWidget {
   /// Düz çizimin karşılayamadığı satır: hemen gerçek alan.
   final bool eager;
   final Widget field;
+
+  /// Ara başlık hizası (bkz. [NoteItem.align]); gerçek alanla aynı olmalı,
+  /// yoksa odaklanınca yazı yer değiştirir.
+  final TextAlign textAlign;
 
   @override
   State<_LazyItemField> createState() => _LazyItemFieldState();
@@ -184,8 +189,15 @@ class _LazyItemFieldState extends State<_LazyItemField> {
             ),
             child: ListenableBuilder(
               listenable: widget.controller,
-              builder: (context, _) => RichText(
+              // Ortalı/sağa hizalı başlıkta paragraf satırı doldursun:
+              // RichText yazı kadar daralırsa hiza görünmez.
+              builder: (context, _) => SizedBox(
+                width: widget.textAlign == TextAlign.start
+                    ? null
+                    : double.infinity,
+                child: RichText(
                 key: _paragraph,
+                textAlign: widget.textAlign,
                 text: widget.controller.buildTextSpan(
                   context: context,
                   style: merged,
@@ -196,6 +208,7 @@ class _LazyItemFieldState extends State<_LazyItemField> {
                 softWrap: !oneLine,
                 overflow: oneLine ? TextOverflow.clip : TextOverflow.visible,
                 textScaler: MediaQuery.textScalerOf(context),
+              ),
               ),
             ),
           ),

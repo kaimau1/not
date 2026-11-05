@@ -679,7 +679,8 @@ class ItemsEditorState extends State<ItemsEditor>
           a[i].text != b[i].text ||
           a[i].checked != b[i].checked ||
           a[i].divider != b[i].divider ||
-          a[i].header != b[i].header) {
+          a[i].header != b[i].header ||
+          a[i].align != b[i].align) {
         return false;
       }
     }
@@ -745,6 +746,7 @@ class ItemsEditorState extends State<ItemsEditor>
       if (!mounted) return;
       final controller = _controllerFor(item);
       if (node.hasFocus) {
+        _lastFocusedItemId = item.id;
         widget.onFieldFocused?.call(
           controller,
           node,
@@ -1459,25 +1461,53 @@ class ItemsEditorState extends State<ItemsEditor>
     });
   }
 
-  /// İşaretsizlerin sonuna boş bir ARA BAŞLIK açar ve odaklar (bkz.
-  /// [NoteItem.header]). Sonda zaten boş bir başlık varsa yenisi açılmaz.
+  /// Boş bir ARA BAŞLIK açar ve odaklar (bkz. [NoteItem.header]).
+  ///
+  /// KONUM (kullanıcı isteği 2026-11-05: "ara başlığı en alta ekliyor,
+  /// imlecin olduğu satırın altına yerleştirmeli"): odaktaki — düğmeye
+  /// basılınca odak kaybolduysa EN SON odaklanan — işaretsiz maddenin
+  /// hemen ALTINA girer; hiç odak olmadıysa işaretsizlerin sonuna. Hedef
+  /// konumda zaten boş bir başlık varsa yenisi açılmaz.
   @visibleForTesting
   void addHeader() {
-    final open = [
-      for (final i in _items)
-        if (!i.checked) i,
-    ];
-    final last = open.lastOrNull;
-    if (last != null && last.header && last.text.trim().isEmpty) {
-      _focusFor(last).requestFocus();
-      return;
+    final anchorId = focusedItemId ?? _lastFocusedItemId;
+    var anchor = anchorId == null
+        ? -1
+        : _items.indexWhere((i) => i.id == anchorId && !i.checked);
+    final int insertAt;
+    if (anchor >= 0) {
+      insertAt = anchor + 1;
+    } else {
+      insertAt = _uncheckedInsertIndex(_uncheckedCount);
+      anchor = insertAt - 1;
+    }
+    // Komşu boş başlık (düğmeye iki kez basma) → ona odaklan.
+    for (final i in [anchor, insertAt]) {
+      if (i < 0 || i >= _items.length) continue;
+      final near = _items[i];
+      if (near.header && !near.checked && near.text.trim().isEmpty) {
+        _focusFor(near).requestFocus();
+        return;
+      }
     }
     final item = NoteItem(id: _uuid.v4(), text: '', header: true);
-    setState(() => _items.insert(_uncheckedInsertIndex(_uncheckedCount), item));
+    setState(() => _items.insert(insertAt, item));
     _commit();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusFor(item).requestFocus();
     });
+  }
+
+  /// En son odaklanan maddenin kimliği ([addHeader] hedefi; düğmeye basmak
+  /// odağı alabilir).
+  String? _lastFocusedItemId;
+
+  /// Ara başlığın hizasını değiştirir (bkz. [NoteItem.align]).
+  void _setHeaderAlign(NoteItem target, String align) {
+    final index = _items.indexWhere((i) => i.id == target.id);
+    if (index < 0 || _items[index].align == align) return;
+    _update(() => _items[index] = _items[index].copyWith(align: align));
+    _commit();
   }
 
   /// Maddeyi ara başlığa çevirir ya da geri alır. Başlık işaretlenmez:
@@ -1643,6 +1673,7 @@ class ItemsEditorState extends State<ItemsEditor>
       // kurunca beliriyordu.
       item.divider,
       item.header,
+      item.align,
       reorderIndex,
       orderNumber,
       _selected.contains(item.id),

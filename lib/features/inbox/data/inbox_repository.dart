@@ -198,6 +198,8 @@ class InboxRepository {
             checked: item.checked,
             starred: item.starred,
             divider: item.divider,
+            header: item.header,
+            align: item.align,
           ),
       ],
       tags: inbox.tags,

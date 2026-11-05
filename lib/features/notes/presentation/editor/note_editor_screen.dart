@@ -255,6 +255,7 @@ bool sameItemsVisually(List<NoteItem> a, List<NoteItem> b) {
         x.divider != y.divider ||
         // Ara başlık kutucuksuz, kalın çizilir.
         x.header != y.header ||
+        x.align != y.align ||
         isBlankText(x.text) != isBlankText(y.text)) {
       return false;
     }
@@ -2777,12 +2778,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           onPressed: _pickReminder,
           onDeleted: _clearReminder,
         ),
-      // GERİ BAĞLANTILAR (F18.16): bu nota bağlanan notlar.
-      BacklinksChip(
-        noteId: note.id,
-        notes: ref.watch(notesStreamProvider).value ?? const <Note>[],
-        labelStyle: chipLabelStyle,
-      ),
+      // GERİ BAĞLANTILAR (F18.16): bu nota bağlanan notlar. YALNIZ varken
+      // listeye girer — KÖK NEDEN (kullanıcı bulgusu 2026-11-05: "etiket
+      // satırından kalan kısım boşluk olarak kalmış"): çip boşken kendini
+      // `SizedBox.shrink` çiziyordu ama listede durduğu için şerit hiç boş
+      // sayılmıyor, etiketler üst çubuğa taşındıktan sonra başlığın altında
+      // 36 dp'lik boş bir bant kalıyordu.
+      if (backlinksTo(
+        note.id,
+        ref.watch(notesStreamProvider).value ?? const <Note>[],
+      ).isNotEmpty)
+        BacklinksChip(
+          noteId: note.id,
+          notes: ref.watch(notesStreamProvider).value ?? const <Note>[],
+          labelStyle: chipLabelStyle,
+        ),
       // Klasör çipi yalnız notun klasörü VARSA; seçmek "+" menüsünden.
       if (noteFolder != null)
         InputChip(
@@ -4154,8 +4164,7 @@ child: NoteFindBar(
                             padding: const EdgeInsetsDirectional.only(end: 8),
                             child: EditorBarTags(
                               tags: note.tags,
-                              color: noteAccent ??
-                                  _themeOf(context).colorScheme.onSurfaceVariant,
+                              accent: noteAccent,
                               removeLabel: l10n.tagRemove,
                               onRemove: _removeTag,
                             ),

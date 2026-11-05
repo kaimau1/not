@@ -2529,5 +2529,8 @@
   "itemMenuToHeader": "Make heading",
   "itemMenuToItem": "Make item",
   "pinnedMediaFit": "Fit",
-  "tagRemove": "Remove tag"
+  "tagRemove": "Remove tag",
+  "itemAlignStart": "Align left",
+  "itemAlignCenter": "Center",
+  "itemAlignEnd": "Align right"
 }

@@ -12139,6 +12139,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Etiketi kaldır'**
   String get tagRemove;
+
+  /// No description provided for @itemAlignStart.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sola hizala'**
+  String get itemAlignStart;
+
+  /// No description provided for @itemAlignCenter.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ortala'**
+  String get itemAlignCenter;
+
+  /// No description provided for @itemAlignEnd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağa hizala'**
+  String get itemAlignEnd;
 }
 
 class _AppLocalizationsDelegate

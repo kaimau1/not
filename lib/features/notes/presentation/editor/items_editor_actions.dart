@@ -89,6 +89,7 @@ extension _ItemsActions on ItemsEditorState {
           starred: item.starred,
           canMove: widget.onMoveToPage != null,
           header: item.header,
+          align: item.align,
         ),
       ],
     );
@@ -101,6 +102,12 @@ extension _ItemsActions on ItemsEditorState {
         _toggleStar(item);
       case _ItemAction.header:
         _toggleHeader(item);
+      case _ItemAction.alignStart:
+        _setHeaderAlign(item, '');
+      case _ItemAction.alignCenter:
+        _setHeaderAlign(item, NoteItem.alignCenter);
+      case _ItemAction.alignEnd:
+        _setHeaderAlign(item, NoteItem.alignEnd);
       case _ItemAction.select:
         _toggleSelection(item);
       case _ItemAction.delete:

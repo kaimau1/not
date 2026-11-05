@@ -6827,4 +6827,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tagRemove => 'Remove tag';
+
+  @override
+  String get itemAlignStart => 'Align left';
+
+  @override
+  String get itemAlignCenter => 'Center';
+
+  @override
+  String get itemAlignEnd => 'Align right';
 }

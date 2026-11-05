@@ -6805,4 +6805,13 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tagRemove => 'Etiketi kaldır';
+
+  @override
+  String get itemAlignStart => 'Sola hizala';
+
+  @override
+  String get itemAlignCenter => 'Ortala';
+
+  @override
+  String get itemAlignEnd => 'Sağa hizala';
 }
