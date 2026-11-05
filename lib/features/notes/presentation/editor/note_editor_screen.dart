@@ -98,6 +98,7 @@ import '../../domain/list_convert.dart';
 import '../../domain/note_item.dart';
 import '../../domain/note_type.dart';
 import '../../domain/page_notes.dart';
+import '../../domain/bubble_view_retire.dart';
 import '../collaborators_sheet.dart';
 import '../../../../core/widgets/action_menu_sheet.dart';
 import '../color_picker_sheet.dart';
@@ -440,6 +441,17 @@ const double kReadingWidth = 760;
 /// Üst çubuk başlığının boşluğu (F38.2): tarih sayfa metninin sol kenarında.
 /// Geri oku yokken 16 dp (derin bağlantı, web yenileme); geniş bölmede okuma
 /// sütununa hizalı. [hasLeading]: solda 56 dp düğme var.
+/// Üst çubuktaki düzenleme tarihi, KISA (kullanıcı isteği 2026-11-05: "üst
+/// alanda sadeleşme" — "5 Kas 2026 13:…" dar çubukta kesiliyordu): bugün
+/// yalnız saat, bu yıl gün + ay + saat, daha eskisi gün + ay + yıl.
+String editorBarDate(DateTime at, DateTime now) {
+  if (at.year == now.year && at.month == now.month && at.day == now.day) {
+    return DateFormat('HH:mm').format(at);
+  }
+  if (at.year == now.year) return DateFormat('d MMM HH:mm').format(at);
+  return DateFormat('d MMM y').format(at);
+}
+
 double editorTitleSpacing(double paneWidth, {required bool hasLeading}) {
   final textLeft = readingMargin(paneWidth) + 16;
   return hasLeading ? math.max(0, textLeft - kToolbarHeight) : textLeft;
@@ -2080,6 +2092,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Bu açılışta ipucuna bakıldı mı (bkz. [_maybeShowTip]).
   bool _tipChecked = false;
 
+  /// Balonlu görünümden sabite göç bir kez bakıldı mı (bkz. [_retireBubbleView]).
+  bool _bubbleRetireChecked = false;
+
   void _setImmersiveBubble(bool value) {
     if (_immersiveBubble == value || !mounted) return;
     setState(() => _immersiveBubble = value);
@@ -2405,6 +2420,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (!_tipChecked && note != null) {
       _tipChecked = true;
       WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTip());
+    }
+    // BALONLU GÖRÜNÜM KALKTI (2026-11-05): eski belge notu sabit görünüme
+    // geçer. Ağır alanlar (balonlar) gelmeden yazılmaz; açılış geçişinin
+    // ortasında yeniden çizim olmasın diye geçiş sonrasına.
+    if (!_bubbleRetireChecked &&
+        note != null &&
+        !note.heavyMissing &&
+        !_readOnly) {
+      _bubbleRetireChecked = true;
+      if (note.type.isPageNoteType || note.hasPageNotes) {
+        Timer(const Duration(milliseconds: 500), () {
+          if (mounted) _retireBubbleView();
+        });
+      }
     }
     // Alt çubuğun iki yeni düğmesi için: sayfada YÜZMEYEN ekler (şerit) ve
     // notun belge notu olup olmadığı (kalem düğmesi yalnız orada anlamlı).
@@ -4111,7 +4140,7 @@ child: NoteFindBar(
                     children: [
                       Flexible(
                         child: Text(
-                          DateFormat('d MMM y HH:mm').format(note.updatedAt!),
+                          editorBarDate(note.updatedAt!, DateTime.now()),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -4236,6 +4265,12 @@ child: NoteFindBar(
               // "geri al gibi geri getir de olsun"): eskiden yalnız
               // kullanılabilirken beliriyordu, kullanıcı varlığını bilmiyordu.
               // İkisi tek kişiselleştirme öğesi; boşken ikisi de soluk.
+              // ÜST ALANDA SADELEŞME (kullanıcı isteği 2026-11-05): geri al /
+              // yinele yalnız bu oturumda geri alınacak bir şey olunca
+              // belirir (ikisi birlikte — yinele hâlâ geri alın yanında
+              // görünür); not yalnız açılıp okunurken çubukta iki soluk
+              // düğme durmaz.
+              if (_canUndo || _canRedo)
               Customizable(
                 id: UiItem.topUndo,
                 child: Row(
@@ -4265,15 +4300,9 @@ child: NoteFindBar(
               // düğmesi; biçim panelinden ve Ekle levhasından da açılır.
               // Başlık üst çubuktayken görünüm ve sabitle ⋮ / biçim
               // panelinde (başlığa yer kalsın).
-              if (!_readOnly && _barTitle == null)
-                Customizable(
-                  id: UiItem.topTheme,
-                  child: IconButton(
-                    tooltip: l10n.noteAppearance,
-                    icon: const Icon(AppIcons.appearance),
-                    onPressed: () => unawaited(_showColorSheet()),
-                  ),
-                ),
+              // Görünüm (palet) 2026-11-05'te çubuktan ⋮ menüsüne indi (üst
+              // alanda sadeleşme); biçim panelinden ve Ekle levhasından da
+              // açılır.
               if (_barTitle == null)
               Customizable(
                 id: UiItem.topPin,

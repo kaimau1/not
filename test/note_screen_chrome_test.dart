@@ -79,23 +79,33 @@ final _dated = Note(
 );
 
 void main() {
-  testWidgets('üst çubuk sırası: geri al · yinele · görünüm · sabitle · ⋮', (
+  testWidgets('üst çubuk sade: düzenleme yokken geri al/yinele/palet yok', (
     tester,
   ) async {
+    // Kullanıcı isteği 2026-11-05 "üst alanda sadeleşme": açılışta çubukta
+    // yalnız tarih · senkron · sabitle · ⋮ (palet ⋮ menüsünde).
     await _pump(tester, _dated);
-    final x = [
-      for (final icon in [
-        Icons.undo,
-        Icons.redo,
-        Icons.palette_outlined,
-        Icons.push_pin_outlined,
-        Icons.more_vert,
-      ])
-        find.descendant(of: find.byType(AppBar), matching: find.byIcon(icon)),
-    ].where((f) => f.evaluate().isNotEmpty).map((f) => tester.getCenter(f).dx);
-    expect(x.length, greaterThanOrEqualTo(4));
-    expect(x.toList(), [...x]..sort());
+    Finder inBar(IconData icon) =>
+        find.descendant(of: find.byType(AppBar), matching: find.byIcon(icon));
+    expect(inBar(Icons.undo), findsNothing);
+    expect(inBar(Icons.redo), findsNothing);
+    expect(inBar(Icons.palette_outlined), findsNothing);
+    expect(
+      tester.getCenter(inBar(Icons.push_pin_outlined)).dx,
+      lessThan(tester.getCenter(inBar(Icons.more_vert)).dx),
+    );
     await _end(tester);
+  });
+
+  test('üst çubuk tarihi kısa', () {
+    final now = DateTime(2026, 11, 5, 15);
+    expect(editorBarDate(DateTime(2026, 11, 5, 13, 7), now), '13:07');
+    expect(editorBarDate(DateTime(2026, 3, 2, 9, 5), now), contains('09:05'));
+    expect(editorBarDate(DateTime(2025, 3, 2, 9, 5), now), contains('2025'));
+    expect(
+      editorBarDate(DateTime(2025, 3, 2, 9, 5), now),
+      isNot(contains('09:05')),
+    );
   });
 
   testWidgets('geri yokken tarih kenara yapışmaz (F38.2)', (tester) async {

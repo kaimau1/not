@@ -4,8 +4,8 @@ import 'package:notlar/core/utils/rich_text.dart';
 import 'package:notlar/features/notes/presentation/editor/format_bar.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
-/// Biçim paneli (2026-10-28 ikinci kez sıfırdan): üç sabit sıra — stil,
-/// renk, yazı — sık işler tek dokunuş; yalnız yazı tipi ince ayarı tepside.
+/// Biçim paneli (2026-11-05): iki sıra; stil, renk, kapsam, çizgi ve yazı
+/// tipi panelin üstünde açılan tepside.
 /// Kullanıcı bulgusu: "renk paletine basılamıyor, çok kenarda kaldığı için"
 /// — dar ekranda her düğme görünür ve basılabilir olmalı.
 void main() {
@@ -68,24 +68,17 @@ void main() {
     tester.hitTestOnBinding(center);
   }
 
-  testWidgets('dar ekranda üç sıranın her düğmesi görünür ve çalışır', (
-    tester,
-  ) async {
+  testWidgets('iki sıra: dar ekranda her düğme görünür; stil ve renk '
+      'tepsilerde', (tester) async {
     await pumpNarrow(tester);
     expect(tester.takeException(), isNull);
     for (final key in [
-      'format-heading-normal',
-      'format-heading-h1',
-      'format-heading-h2',
+      'format-style-menu',
       'format-bold',
       'format-italic',
       'format-underline',
-      'format-mode-text',
-      'format-mode-highlight',
-      'format-color-1',
-      'format-color-5',
-      'format-color-palette',
-      'format-color-remove',
+      'format-color-menu',
+      'format-scope-menu',
       'format-font',
       'format-size-down',
       'format-size-up',
@@ -94,6 +87,35 @@ void main() {
     ]) {
       expectTappable(tester, find.byKey(ValueKey(key)));
     }
+    // Tepsideki öğeler kapalıyken yer kaplamaz (kullanıcı isteği
+    // 2026-11-05: "çok satır var, çok yer kaplıyor").
+    expect(find.byKey(const ValueKey('format-heading-h1')), findsNothing);
+    expect(find.byKey(const ValueKey('format-color-1')), findsNothing);
+    expect(find.byKey(const ValueKey('format-scope-line')), findsNothing);
+    expect(tester.getSize(find.byType(FormatBar)).height, lessThan(110));
+
+    await tester.tap(find.byKey(const ValueKey('format-style-menu')));
+    await tester.pumpAndSettle();
+    for (final key in [
+      'format-heading-normal',
+      'format-heading-h1',
+      'format-heading-h2',
+    ]) {
+      expectTappable(tester, find.byKey(ValueKey(key)));
+    }
+    await tester.tap(find.byKey(const ValueKey('format-color-menu')));
+    await tester.pumpAndSettle();
+    for (final key in [
+      'format-mode-text',
+      'format-mode-highlight',
+      'format-color-1',
+      'format-color-5',
+      'format-color-palette',
+      'format-color-remove',
+    ]) {
+      expectTappable(tester, find.byKey(ValueKey(key)));
+    }
+    expect(tester.takeException(), isNull);
     await tester.tap(find.byKey(const ValueKey('format-bold')));
     await tester.tap(find.byKey(const ValueKey('format-close')));
     expect(formats, [(RichFormat.bold, null)]);
@@ -103,6 +125,8 @@ void main() {
   testWidgets('renk tek dokunuş; anahtar vurguya geçirir; TAM PALET '
       'basılabilir', (tester) async {
     await pumpNarrow(tester);
+    await tester.tap(find.byKey(const ValueKey('format-color-menu')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('format-color-2')));
     await tester.tap(find.byKey(const ValueKey('format-mode-highlight')));
     await tester.pumpAndSettle();
@@ -124,8 +148,13 @@ void main() {
   testWidgets('başlık hapı tek dokunuş; boyut − / + adım uygular; yazı '
       'tipi tepsisi ikinci dokunuşla kapanır', (tester) async {
     await pumpNarrow(tester);
+    await tester.tap(find.byKey(const ValueKey('format-style-menu')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('format-heading-h1')));
     expect(headings, [RichHeading.h1]);
+    // Stil seçilince tepsi kapanır.
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('format-heading-h1')), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('format-size-up')));
     await tester.pump();

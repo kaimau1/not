@@ -210,6 +210,58 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     );
   }
 
+  /// SABİT GÖRSELE BALON (kullanıcı isteği 2026-11-05: "sabitleme ile
+  /// balonlu modu birleştir, tek mod sabitleme olsun, orada balon ekleme
+  /// olabilir"). Balonlu görünüm kalktı; görselin balonları görselin KENDİ
+  /// ekinde (`page: 1`, görüntüleyicideki "görsel üstüne metin"le aynı veri)
+  /// yaşar. İlk düzenlemede görselden türetilmiş eski belgenin balonları
+  /// görselin uzayına taşınıp ([_mappedBubbles]) görsele yazılır.
+  bool _bubbleEdit = false;
+  BubbleController? _ownBubbles;
+
+  bool get _canEditBubbles =>
+      widget.media.kind == AttachmentKind.image && widget.onChanged != null;
+
+  BubbleController _ownController() => _ownBubbles ??= BubbleController(
+    initial: widget.media.bubbles.isNotEmpty
+        ? widget.media.bubbles
+        : (widget.bubbleDoc == null
+              ? const []
+              : _mappedBubbles(widget.bubbleDoc!)),
+    hidden: widget.media.bubblesHidden,
+    onChanged: (list) => widget.onChanged?.call(
+      widget.media.copyWith(
+        bubbles: list,
+        bubblesHidden: _ownBubbles?.hidden ?? widget.media.bubblesHidden,
+      ),
+    ),
+    onHiddenChanged: (hidden) => widget.onChanged?.call(
+      widget.media.copyWith(
+        bubblesHidden: hidden,
+        bubbles: _ownBubbles?.bubbles ?? widget.media.bubbles,
+      ),
+    ),
+  );
+
+  void _toggleBubbleEdit() {
+    final controller = _ownController();
+    setState(() => _bubbleEdit = !_bubbleEdit);
+    controller.setAdding(_bubbleEdit);
+    // İlk kez açılınca eski belgenin balonları da görsele yazılsın.
+    if (!_bubbleEdit || widget.media.bubbles.isEmpty) controller.save();
+  }
+
+  /// Görselin üstündeki katman: kendi balonları (ya da düzenleme kipi)
+  /// varsa düzenlenebilir denetleyici, yoksa eski türetilmiş belgenin
+  /// salt okunur balonları.
+  BubbleController? _layerBubbles() {
+    if (_canEditBubbles &&
+        (_bubbleEdit || widget.media.bubbles.isNotEmpty)) {
+      return _ownController();
+    }
+    return _bubblesFor(widget.bubbleDoc);
+  }
+
   @override
   void didUpdateWidget(PinnedMediaPane old) {
     super.didUpdateWidget(old);
@@ -219,10 +271,21 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         ?..replace(_mappedBubbles(doc))
         ..syncHidden(doc.bubblesHidden);
     }
+    if (old.media.id != widget.media.id) {
+      _ownBubbles?.dispose();
+      _ownBubbles = null;
+      _bubbleEdit = false;
+    } else if (!_bubbleEdit && widget.media.bubbles.isNotEmpty) {
+      _ownBubbles
+        ?..replace(widget.media.bubbles)
+        ..syncHidden(widget.media.bubblesHidden);
+    }
   }
 
   @override
   void dispose() {
+    _ownBubbles?.save();
+    _ownBubbles?.dispose();
     _imageBubbles?.dispose();
     super.dispose();
   }
@@ -501,8 +564,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                                 ),
                               ),
                             if (!isVideo && !_pulling)
-                              if (_bubblesFor(widget.bubbleDoc)
-                                  case final bubbles?)
+                              if (_layerBubbles() case final bubbles?)
                                 LayoutBuilder(
                                   builder: (context, box) {
                                     final rect = _imageRect(box.biggest);
@@ -517,7 +579,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                                           child: BubblePageLayer(
                                             controller: bubbles,
                                             page: 1,
-                                            readOnly: true,
+                                            readOnly: !(_bubbleEdit &&
+                                                identical(
+                                                  bubbles,
+                                                  _ownBubbles,
+                                                )),
                                             longPressAdd: false,
                                           ),
                                         ),
@@ -525,6 +591,26 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                                     );
                                   },
                                 ),
+                            if (_bubbleEdit && _ownBubbles != null) ...[
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                child: BubbleDock(controller: _ownBubbles!),
+                              ),
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                child: ValueListenableBuilder<bool>(
+                                  valueListenable:
+                                      _ownBubbles!.addingListenable,
+                                  builder: (context, adding, _) => adding
+                                      ? BubbleToolbar(controller: _ownBubbles!)
+                                      : const SizedBox.shrink(),
+                                ),
+                              ),
+                            ],
                             if (_unpinArmed)
                               _UnpinHint(label: l10n.unpinMediaRelease),
                           ],
@@ -676,9 +762,25 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                     onPressed: widget.onNoteAt,
                   ),
           ),
-        // Görselden türetilmiş belgenin balonları: göster/gizle.
+        // BALON EKLE (sabit görsel): kipi aç/kapa — PDF'te aynı düğme
+        // sayfanın kendi çubuğunda (bkz. PdfPageBox).
+        if (_canEditBubbles)
+          IconButton(
+            key: const ValueKey('pinned-add-bubble'),
+            tooltip: _bubbleEdit ? l10n.bubbleAddDone : l10n.bubbleAdd,
+            visualDensity: VisualDensity.compact,
+            iconSize: 20,
+            color: _bubbleEdit ? scheme.primary : null,
+            icon: Icon(_bubbleEdit ? Icons.check : Icons.add_comment_outlined),
+            onPressed: _toggleBubbleEdit,
+          ),
+        // Görselden türetilmiş belgenin balonları: göster/gizle (görselin
+        // kendi balonu yoksa — varsa onlar belgeninkinin yerini aldı).
         if (widget.bubbleDoc case final doc?
-            when doc.bubbles.isNotEmpty && !isVideo)
+            when doc.bubbles.isNotEmpty &&
+                !isVideo &&
+                widget.media.bubbles.isEmpty &&
+                !_bubbleEdit)
           IconButton(
             key: const ValueKey('pinned-bubbles-toggle'),
             tooltip: doc.bubblesHidden ? l10n.bubblesShow : l10n.bubblesHide,

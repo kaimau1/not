@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../auth/presentation/auth_providers.dart';
+
 import '../../../core/l10n_ext.dart';
 import '../../../core/app_icons.dart';
 import '../../../core/widgets/sheet_header.dart';
@@ -118,8 +120,11 @@ class SharedNoteCell extends StatelessWidget {
 /// aynı listeyi okur.
 List<({Note note, NoteShare share})> sharedNoteEntries(WidgetRef ref) {
   final shares = ref.watch(sharedNotesWithMeProvider).value ?? const [];
+  final me = ref.watch(currentUidProvider);
   final entries = <({Note note, NoteShare share})>[];
   for (final share in shares) {
+    // Kendi notumun aynası (bkz. sharedNotesVisibleCountProvider).
+    if (me != null && share.ownerId == me) continue;
     final note = ref
         .watch(
           ownedNoteStreamProvider((

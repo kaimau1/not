@@ -522,11 +522,6 @@ class _EditorSection extends StatelessWidget {
                 label: l10n.collaborators,
               ),
               (
-                id: UiItem.topTheme,
-                icon: AppIcons.appearance,
-                label: l10n.noteAppearance,
-              ),
-              (
                 id: UiItem.topPin,
                 icon: Icons.push_pin_outlined,
                 label: l10n.pin,

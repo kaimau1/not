@@ -10742,6 +10742,24 @@ abstract class AppLocalizations {
   /// **'Tümü'**
   String get formatScopeAll;
 
+  /// No description provided for @formatScopeSelection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçim'**
+  String get formatScopeSelection;
+
+  /// No description provided for @formatScopeHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Biçim neye uygulansın: imleç, kelime, satır ya da tümü'**
+  String get formatScopeHint;
+
+  /// No description provided for @formatStyleMenu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paragraf stili'**
+  String get formatStyleMenu;
+
   /// No description provided for @colorNameCoral.
   ///
   /// In tr, this message translates to:

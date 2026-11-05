@@ -515,7 +515,6 @@ extension _EditorFlowX on _NoteEditorScreenState {
       NoteType.checklist || NoteType.ordered
           when note.items.isNotEmpty && ref.read(itemGesturesProvider) =>
         (TipOnce.listGestures, l10n.tipListGestures),
-      NoteType.pdf || NoteType.slides => (TipOnce.pdfBubble, l10n.tipPdfBubble),
       _
           when note.attachments.any(
             (a) => a.kind == AttachmentKind.pdf && a.isPinnedTop,

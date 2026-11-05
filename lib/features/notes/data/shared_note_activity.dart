@@ -138,3 +138,31 @@ final sharedNoteUnreadProvider = Provider<Set<String>>((ref) {
   }
   return out;
 });
+
+/// "Gelen" çipinin sayısındaki ORTAK not sayısı — listede GERÇEKTEN çizilen
+/// notlar (bkz. `sharedNoteEntries`).
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-11-05: "gelen klasöründe dosya olmasa
+/// da 1 görünüyor"): çip ham paylaşım aynalarını (`sharedNotesWithMeProvider`)
+/// sayıyordu; liste ise sahibi çöpe attığı, kalıcı sildiği ya da erişimi
+/// kalkmış (yetim ayna) notları atlıyor. Sayı listeyle aynı süzgeçten geçer;
+/// kendi notumun aynası da sayılmaz (o not zaten kendi notlarımda).
+final sharedNotesVisibleCountProvider = Provider<int>((ref) {
+  final me = ref.watch(currentUidProvider);
+  var count = 0;
+  for (final share
+      in ref.watch(sharedNotesWithMeProvider).value ?? const <NoteShare>[]) {
+    if (me != null && share.ownerId == me) continue;
+    final note = ref
+        .watch(
+          ownedNoteStreamProvider((
+            ownerId: share.ownerId,
+            noteId: share.noteId,
+          )),
+        )
+        .value;
+    if (note == null || note.deletedAt != null) continue;
+    count++;
+  }
+  return count;
+});

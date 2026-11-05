@@ -292,6 +292,50 @@ extension _EditorMediaView on _NoteEditorScreenState {
     if (announce) _showSnack(context.l10n.docViewSwitchedClassic);
   }
 
+  /// BALONLU → SABİT göçü (kullanıcı isteği 2026-11-05: "balonlu modu
+  /// tamamen kaldır, tek mod sabitleme"). Belge notu klasiğe döner ve
+  /// belgesi (görselden türetilmişse görselin kendisi) tepeye sabitlenir;
+  /// sayfa notları gövdeye `📖 s.N` satırları olarak iner (bkz.
+  /// [movePageNotesToBody]). Balonlar ekte kalır: sabit PDF çizer, sabit
+  /// görsel ilk düzenlemede kendine taşır.
+  void _retireBubbleView() {
+    final note = _note;
+    if (note == null || _readOnly) return;
+    final wasDocument = note.type.isPageNoteType;
+    if (!wasDocument && !note.hasPageNotes) return;
+    Attachment? target;
+    if (wasDocument) {
+      final kind = note.type == NoteType.slides
+          ? AttachmentKind.slide
+          : AttachmentKind.pdf;
+      final doc = note.attachments.where((a) => a.kind == kind).firstOrNull;
+      if (doc != null) {
+        target = doc.sourceId.isEmpty
+            ? doc
+            : note.attachments.where((a) => a.id == doc.sourceId).firstOrNull ??
+                  doc;
+      }
+    }
+    if (note.hasPageNotes) {
+      final moved = movePageNotesToBody(
+        note,
+        turkish: Localizations.localeOf(context).languageCode == 'tr',
+      );
+      if (moved.body != note.body) _bodyController.text = moved.body;
+      _mutate(
+        (n) => n.copyWith(body: moved.body, pageNotes: moved.pageNotes),
+        immediate: true,
+      );
+    }
+    if (!wasDocument) return;
+    _switchToClassic(announce: false);
+    final id = target?.id;
+    final latest = id == null
+        ? null
+        : _note?.attachments.where((a) => a.id == id).firstOrNull;
+    if (latest != null && !latest.isPinnedTop) _pinMediaTop(latest);
+  }
+
   /// Görseli/videoyu notun üstündeki sabit bölmeye alır. Bölmede TEK medya
   /// olur: önceden sabitlenmiş olan sayfaya geri döner. Daha önce
   /// sabitlenmişse bölme ESKİ yüksekliğiyle açılır.

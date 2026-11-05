@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
-import '../../notes/data/note_shares_repository.dart';
+import '../../notes/data/shared_note_activity.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../../inbox/data/inbox_repository.dart';
 import '../../inbox/presentation/shared_hub_screen.dart';
@@ -442,9 +442,8 @@ class SharedHubChip extends ConsumerWidget {
     final inbox = ref.watch(
       inboxNotesProvider.select((s) => s.value?.length ?? 0),
     );
-    final shared = ref.watch(
-      sharedNotesWithMeProvider.select((s) => s.value?.length ?? 0),
-    );
+    // Listede çizilen ortak notlar (yetim/çöpteki aynalar sayılmaz).
+    final shared = ref.watch(sharedNotesVisibleCountProvider);
     final unread = ref.watch(sharedHubBadgeProvider);
     final selected = ref.watch(sharedHubOnHomeProvider);
     final scheme = Theme.of(context).colorScheme;

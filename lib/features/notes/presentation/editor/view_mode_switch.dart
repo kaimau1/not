@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -50,15 +49,11 @@ enum AttachmentView {
 Set<AttachmentView> availableViews(Attachment a) => switch (a.kind) {
   // Bu sürümün tanımadığı tür (F1.5): görünümü DEĞİŞTİRİLMEZ.
   AttachmentKind.unknown => const {},
-  AttachmentKind.image || AttachmentKind.text when kIsWeb => const {
-    AttachmentView.pinned,
-    AttachmentView.floating,
-    AttachmentView.attached,
-  },
+  // BALONLU GÖRÜNÜM KALKTI (2026-11-05): balonlar sabit görünümde
+  // ("Balon ekle") — anahtarda yalnız Sabit · Yüzen · Ek.
   AttachmentKind.image || AttachmentKind.pdf || AttachmentKind.text => const {
     AttachmentView.pinned,
     AttachmentView.floating,
-    AttachmentView.bubbles,
     AttachmentView.attached,
   },
   AttachmentKind.video when a.webUrl.isNotEmpty => const {
@@ -74,7 +69,6 @@ Set<AttachmentView> availableViews(Attachment a) => switch (a.kind) {
   AttachmentKind.slide => const {
     AttachmentView.pinned,
     AttachmentView.floating,
-    AttachmentView.bubbles,
     AttachmentView.attached,
   },
 };
