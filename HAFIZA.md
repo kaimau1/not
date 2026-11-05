@@ -275,6 +275,29 @@ maddeyi GÜNCELLE.
   her başlıktan sonra 1'den (`itemOrderNumber`). "Yeni madde" satırında
   "Ara başlık" + uzun basış menüsünde "Başlık yap / Maddeye çevir". Madde
   kopyalayan yer (`duplicateNote`) alanı da taşısın.
+- Ara başlık KONUMU (2026-11-05 gece): "Ara başlık" odaktaki ya da SON
+  odaklanan (`_lastFocusedItemId`; düğme odağı alabilir) işaretsiz maddenin
+  ALTINA girer. HİZA `NoteItem.align` ('' / center / end, yalnız doluyken
+  yazılır): başlığa basılı tut → menüde üçlü düğme; kartta `Align`. Yeni
+  madde alanı → karşılaştırmalar (`_sameItems`, `sameItemsVisually`,
+  `_sameItem`), satır önbelleği anahtarı, kopyalayanlar (`duplicateNote`,
+  sayfa kopyası, Gelen) — hepsine eklendi.
+- **CÜMLE GENİŞLETİCİ TUZAĞI** (2026-11-05 gece, "kelime kapsamında boyut
+  tüm satıra / başka kelimeye gidiyor"): `attachSentenceSelection` her
+  PROGRAMLI tek kelimelik seçimi çift dokunuş sanıp cümleye büyütür.
+  Kodla kelime seçen yer `withoutSentenceExpansion(() => c.selection = …)`
+  ile sarmalı (biçim panelinin geçici kapsamı böyle).
+- Geri bağlantı çipi yalnız varken çip listesine girer: boş `SizedBox`
+  çip bile şeridi "dolu" saydırıp başlığın altında 36 dp boşluk bırakıyordu.
+  Etiket hapı tek yerden (`core/widgets/tag_pill.dart`): renksizde temanın
+  `secondaryContainer`ı, renkli notta vurgu %14.
+- **Şablon favorileri** (2026-11-05 gece): `favoriteTemplatesProvider`
+  (`favorite_templates`, en çok 4, anahtar `b:`/`u:`; hiç seçilmediyse
+  `b:shopping` = eski sabit karo). "+" menüsünde Şablon bölümünün başında
+  (`favoriteTemplateOptions`), galeride "Favoriler" bölümü + kart yıldızı;
+  kartlar dikey/küçük (3–4 sütun). `NoteTemplateContent.columns` = "İki
+  sütun" (`createNote(listColumns:)`, tek yazım). Öneriler grup içinde
+  `sortedForLocale` (Türkçe harf sırası).
 - Etiketler üst çubukta tarihin SOLUNDA (`EditorBarTags`, dokun = kaldır);
   başlık çubuktayken (`titleInBar`) çip şeridinde. Sabit ekte tutamağa
   dokunmak = sığdır (`_fitRatio`: video/sunum 16:9 yedek, görsel, PDF ilk
@@ -387,6 +410,18 @@ maddeyi GÜNCELLE.
   `v2`, damga yalnız dosya BOYU (mtime yeniden indirmede değişip her açılışta
   baştan tanıtıyordu).
 
+- **Balon yazma kartı geri tuşu** (2026-11-05 gece): `BubbleDock` açıkken
+  kendi `PopScope(canPop: false)`ı var, geri = "Bitti". Kart `_DockEntrance`
+  ile 200 ms alttan süzülür (yalnız boyama). Bölmenin açılış/kapanış
+  geçişi bilerek ANLIK: pencereyi canlandırmak klavye oturmasıyla çakışıp
+  sütunu birkaç kare taşırıyor.
+- **PDF kaydırma kasması** (2026-11-05 gece): `PdfSelectLayer` sayfa
+  metnini `initState`te değil ~500 ms görünür kalınca ya da parmak değince
+  yükler (`_loadText`) — kaydırırken her sayfa pdfium işçisine metin işi
+  ekleyip görüntüleri geciktiriyordu. Metin gelmeden uzun basış OCR'a
+  DÜŞMEZ, yüklenince seçer. Sabit PDF'te sayfa `RepaintBoundary`, ilerlemeli
+  yükleme olayları 150 ms'de bir `setState`.
+
 ## Ses ve yapay zekâ
 - Seslendirme tek kapı `SpeechService`; Antalia ONNX isteğe bağlı, yalnız
   Android + tr.
@@ -420,8 +455,9 @@ maddeyi GÜNCELLE.
   `attachment_text_<uid>.json`.
 
 ## Arayüz kararları
-- **Tema (TEMA_PLANI, 2026-11-04):** üç aile `ThemeFamily` (Adaçayı
-  varsayılan, Porselen, Kil) × açık/koyu, renkler `app_palette.dart`,
+- **Tema (TEMA_PLANI, 2026-11-04):** beş aile `ThemeFamily` (Adaçayı
+  varsayılan, Porselen, Kil; 2026-11-05 gece + Lavanta, Zeytin) × açık/koyu
+  (Sistem ve Koyu yine Adaçayı koyusu; seçici dar ekranda 4+3), renkler `app_palette.dart`,
   şemada olmayanlar `AppTokens` (kart, kart çizgisi, gölge, köşe 16).
   "Masa ve kâğıt": açık temada kart zeminden AÇIK — `surfaceContainerLow`
   zeminden açık (levha), High/Highest koyu; renksiz not kartı
