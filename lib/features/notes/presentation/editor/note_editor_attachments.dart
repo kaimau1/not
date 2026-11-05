@@ -1083,18 +1083,6 @@ extension _EditorAttachments on _NoteEditorScreenState {
     }
   }
 
-  /// Görseli sayfa ile ek şeridi arasında taşır (madde: "resimleri ek olarak
-  /// yükleme seçeneği"). Sayfaya dönerken imlecin satırına yerleşir.
-  void _setImageAsFile(Attachment image, bool asFile) {
-    final note = _note;
-    if (note == null) return;
-    // PDF'in sayfada olup olmadığını `asFile` DEĞİL `onPage` söyler: eski
-    // PDF eklerinin hepsinde `asFile: false` yazılı, anlamını değiştirmek
-    // onları bir anda sayfanın ortasına taşırdı (bkz. Attachment.onPage).
-    final moved = image.placedOnPage(!asFile);
-    _updateAttachment(asFile ? moved : _placeNewImage(moved, note));
-  }
-
   /// Yeni eklenen PDF'in yeri: klasik metin notunda SAYFAYA yerleşir (görsel
   /// gibi — kullanıcı isteği 2026-09-06), belge notunda ise notun kendi
   /// belgesidir ve şeritte/bölmede kalır.

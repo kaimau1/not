@@ -579,8 +579,8 @@ extension _EditorActions on _NoteEditorScreenState {
 
   /// Sayfada YÜZEN bütün görselleri ek şeridine indirir (tek işlemde).
   ///
-  /// Görselin kendi menüsündeki "Ek yap" ([_setImageAsFile]) aynı işi tek
-  /// görsel için yapıyor; buradaki toplu sürüm kullanıcı isteği 2026-08-16
+  /// Görselin görünüm anahtarındaki "Ek" aynı işi tek görsel için yapıyor;
+  /// buradaki toplu sürüm kullanıcı isteği 2026-08-16
   /// ("metin içi görselleri eke dönüştürme butonu"). Tek `_mutate` çağrısı:
   /// görsel başına ayrı yazım hem Firestore'a on ayrı güncelleme gönderir
   /// hem de geri alma yığınını on adımla doldururdu.

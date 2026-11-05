@@ -1930,7 +1930,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onExtractText: _ocrImage,
       onCopy: _copyAttachment,
       onCopyMany: _copyAttachments,
-      onDetach: (a) => _setImageAsFile(a, true),
       onVideoToNote: _videoToNote,
       onTranscribe: _openTranscript,
       onSaveAs: (a) => unawaited(AttachmentSaveAs.run(context, ref, a)),

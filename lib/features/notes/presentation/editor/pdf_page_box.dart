@@ -62,7 +62,6 @@ class PdfPageBox extends StatefulWidget {
     required this.onChanged,
     this.controls = true,
     this.swipeToTurn = true,
-    this.onDetach,
     this.showBubbles = false,
     this.onNoteFromSelection,
     this.fitWidth = false,
@@ -102,9 +101,6 @@ class PdfPageBox extends StatefulWidget {
   /// KAPALI: oradaki yatay kaydırma nottaki DİĞER EKE geçiyor, iki jest
   /// aynı parmağı paylaşamaz (çubuğun okları orada da çalışıyor).
   final bool swipeToTurn;
-
-  /// Kutuyu sayfadan alıp ek şeridine taşır; null ise menüde görünmez.
-  final VoidCallback? onDetach;
 
   @override
   State<PdfPageBox> createState() => _PdfPageBoxState();
@@ -1120,8 +1116,6 @@ class _PdfPageBoxState extends State<PdfPageBox> {
               _capturePage(document);
             case 'play':
               _toggleAutoPlay();
-            case 'detach':
-              widget.onDetach?.call();
           }
         },
         itemBuilder: (context) => [
@@ -1145,12 +1139,6 @@ class _PdfPageBoxState extends State<PdfPageBox> {
           _menuItem('text', Icons.text_snippet_outlined, l10n.pdfCopyPageText),
           _menuItem('capture', Icons.auto_awesome, l10n.pdfCapturePage),
           _menuItem('full', Icons.fullscreen, l10n.pdfFullScreen),
-          if (widget.onDetach != null)
-            _menuItem(
-              'detach',
-              Icons.attachment_outlined,
-              l10n.moveImageToAttachments,
-            ),
         ],
       ),
     );

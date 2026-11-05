@@ -1,5 +1,4 @@
 import '../../../../app/theme/fixed_colors.dart';
-import '../../../../core/app_icons.dart';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -22,6 +21,7 @@ import '../viewers/image_viewer.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
 import '../viewers/video_viewer.dart';
+import 'attachment_actions.dart';
 import 'view_mode_switch.dart';
 import '../../data/drive_store.dart';
 import '../drive_ui.dart';
@@ -822,16 +822,6 @@ class _AttachmentTile extends ConsumerWidget {
       useSafeArea: true,
       builder: (sheetContext) {
         final scheme = Theme.of(sheetContext).colorScheme;
-        Widget tile(String id, IconData icon, String label, {Color? color}) =>
-            ListTile(
-              key: ValueKey('strip-action-$id'),
-              leading: Icon(icon, color: color),
-              title: Text(
-                label,
-                style: color == null ? null : TextStyle(color: color),
-              ),
-              onTap: () => Navigator.of(sheetContext).pop(id),
-            );
         return SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -850,12 +840,13 @@ class _AttachmentTile extends ConsumerWidget {
                 ),
                 if (onSetView != null && current != null && views.length >= 2)
                   Padding(
+                    key: const ValueKey('strip-view-row'),
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l10n.attachmentViewTitle,
+                          l10n.viewModeTitle,
                           style: Theme.of(sheetContext).textTheme.labelLarge
                               ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
@@ -879,39 +870,22 @@ class _AttachmentTile extends ConsumerWidget {
                     ),
                   ),
                 const Divider(height: 16),
-                if (attachment.kind != AttachmentKind.audio)
-                  tile('open', Icons.open_in_new_rounded, l10n.attachmentOpen),
-                if (onInsertTag != null)
-                  tile(
-                    'tag',
-                    Icons.text_snippet_outlined,
-                    l10n.attachmentTagInsert,
+                ...attachmentSheetTiles(
+                  sheetContext,
+                  attachmentActionsFor(
+                    attachment,
+                    AttachmentSurface.strip,
+                    AttachmentCaps(
+                      transcribe: onTranscribe != null && _canTranscribe,
+                      videoToNote: onVideoToNote != null,
+                      copy: onCopy != null,
+                      saveAs: true,
+                      copyLink: onCopy != null,
+                      remove: true,
+                    ),
                   ),
-                if (onCopy != null)
-                  tile('copy', AppIcons.copy, l10n.copy),
-                tile('share', Icons.share_outlined, l10n.share),
-                // EKİ FARKLI KAYDET (2026-10-17): kullanıcının seçtiği yere.
-                if (!attachment.isWebVideo)
-                  tile(
-                    'saveAs',
-                    Icons.save_alt_outlined,
-                    l10n.attachmentSaveAs,
-                  ),
-                if (onTranscribe != null && _canTranscribe)
-                  tile(
-                    'transcribe',
-                    transcribed ? Icons.subtitles : Icons.subtitles_outlined,
-                    l10n.transcriptAction,
-                  ),
-                if (onVideoToNote != null &&
-                    attachment.kind == AttachmentKind.video &&
-                    !attachment.isWebVideo)
-                  tile('ai', Icons.auto_awesome, l10n.videoToNote),
-                tile(
-                  'remove',
-                  Icons.delete_outline,
-                  l10n.removeAttachment,
-                  color: scheme.error,
+                  transcribed: transcribed,
+                  onTap: (a) => Navigator.of(sheetContext).pop(a.name),
                 ),
               ],
             ),
@@ -926,23 +900,27 @@ class _AttachmentTile extends ConsumerWidget {
       onSetView?.call(attachment, v);
       return;
     }
-    switch (action) {
-      case 'open':
+    if (action == 'tag') {
+      onInsertTag?.call(attachment);
+      return;
+    }
+    switch (AttachmentAction.values.byName(action)) {
+      case AttachmentAction.open:
         _open(context, ref);
-      case 'tag':
-        onInsertTag?.call(attachment);
-      case 'copy':
+      case AttachmentAction.copy || AttachmentAction.copyLink:
         onCopy?.call(attachment);
-      case 'share':
+      case AttachmentAction.share:
         await shareAttachment(context, ref, attachment);
-      case 'saveAs':
+      case AttachmentAction.saveAs:
         await AttachmentSaveAs.run(context, ref, attachment);
-      case 'transcribe':
+      case AttachmentAction.transcribe:
         onTranscribe?.call(attachment);
-      case 'ai':
+      case AttachmentAction.videoToNote:
         await onVideoToNote?.call(attachment);
-      case 'remove':
+      case AttachmentAction.remove:
         onRemove();
+      case _:
+        break;
     }
   }
 }

@@ -238,27 +238,25 @@ extension _EditorEmbed on _NoteEditorScreenState {
       onShare: () => unawaited(shareAttachment(context, ref, attachment)),
       onReplace: () => unawaited(_replaceEmbed(label)),
       onUnlink: () => _unlinkEmbed(label),
-      onImport: _canImportEmbed(attachment)
-          ? () => unawaited(_importEmbed(attachment, label))
-          : null,
+      viewSwitch: _embedViewSwitch(attachment),
     );
   }
 
-  /// Ek sayfaya (yüzen) alınabilir mi ve henüz orada değil mi?
-  bool _canImportEmbed(Attachment attachment) {
+  /// Önizlemedeki görünüm anahtarı: seçince levha kapanır, ek yeni yerine geçer
+  /// (bağ durur; çözmek ayrı iş, "Gömmeyi kaldır").
+  Widget? _embedViewSwitch(Attachment attachment) {
     final note = _note;
-    if (note == null || _readOnly) return false;
-    return availableViews(attachment).contains(AttachmentView.floating) &&
-        _viewOf(note, attachment) != AttachmentView.floating;
-  }
-
-  /// GÖMÜLÜ EKİ NOTA AKTAR: bağ çözülür (yazı kalır), ek sayfaya yüzen
-  /// olarak girer — balonlu/sabit/şeritten fark etmez (görünüm anahtarının
-  /// "Yüzen" yolu).
-  Future<void> _importEmbed(Attachment attachment, String label) async {
-    _unlinkEmbed(label, announce: false);
-    await _setAttachmentView(attachment, AttachmentView.floating);
-    if (mounted) _showSnack(context.l10n.embedImported);
+    if (note == null || _readOnly) return null;
+    final available = availableViews(attachment);
+    if (available.length < 2) return null;
+    return AttachmentViewSwitch(
+      current: _viewOf(note, attachment),
+      available: available,
+      onChanged: (view) {
+        Navigator.pop(context);
+        unawaited(_setAttachmentView(attachment, view));
+      },
+    );
   }
 
   /// Gömülü yazının bağladığı eki DEĞİŞTİRİR (yazı aynı kalır).

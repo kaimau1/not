@@ -109,7 +109,7 @@ You can link a **PDF, image, video, YouTube video** or any attachment of the not
 - **Tap the chip** (its last letter too) to open a preview card: videos and YouTube play in the card, PDF pages turn in the card. The card has **Full screen** and **Edit**, with **Replace** and **Remove embed** below.
 - Removing an embed keeps the text and only unlinks it.
 - It also works the other way round: pick the attachment first (link button on the attachment strip), then select the text and tap **Link here**. Or tap **✍ (circle)** on the strip and **circle** the text with your finger.
-- **Move into note** on the preview card puts the attachment onto the note's page and unlinks the word.
+- The **View** switch on the preview card makes the attachment Pinned, Floating, Bubbles or Attachment; **Remove embed** unlinks the word.
 - When an attachment is deleted, the chips of words linked to it go away too (the text stays).
 
 ## PDFs and slides {#documents}

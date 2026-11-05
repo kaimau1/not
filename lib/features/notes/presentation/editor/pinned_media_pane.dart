@@ -14,6 +14,7 @@ import '../drive_ui.dart';
 import '../viewers/bubble_layer.dart';
 import '../viewers/pdf_read_style.dart';
 import 'note_images.dart';
+import 'attachment_actions.dart';
 import 'audio_card_box.dart';
 import 'pdf_page_box.dart';
 import 'slide_page_box.dart';
@@ -102,10 +103,10 @@ class PinnedMediaPane extends StatefulWidget {
     this.onCopyLink,
     this.onChanged,
     this.viewSwitch,
+    this.onShowViews,
     this.onNoteAt,
     this.bubbleDoc,
     this.onRemove,
-    this.onDetach,
     this.onSaveAs,
     this.onShare,
     this.onTranscribe,
@@ -127,9 +128,6 @@ class PinnedMediaPane extends StatefulWidget {
   /// anahtarı vardı; silmek için önce sayfaya almak, sonra seçip panelden
   /// silmek gerekiyordu. Menü YAZILI: Sayfaya göm · Alta ek olarak · Kaldır.
   final VoidCallback? onRemove;
-
-  /// Eki sabit bölmeden alıp alttaki ek şeridine DOSYA olarak koyar.
-  final VoidCallback? onDetach;
 
   /// EKİ FARKLI KAYDET (2026-10-17). null ise menüde yok.
   final VoidCallback? onSaveAs;
@@ -167,6 +165,9 @@ class PinnedMediaPane extends StatefulWidget {
   /// Ayraç çubuğunun sağındaki görünüm anahtarı (Sabit / Yüzen / Balonlu —
   /// bkz. `AttachmentViewSwitch`). null ise eski "sayfaya geri koy" düğmesi.
   final Widget? viewSwitch;
+
+  /// Dar çubukta anahtar sığmayınca ⋮ → Görünüm bunu açar.
+  final VoidCallback? onShowViews;
 
   /// "Bu ana not al" (yalnız video): ayraç çubuğunda yazılı düğme.
   final VoidCallback? onNoteAt;
@@ -669,8 +670,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             icon: Icons.link,
             onPressed: widget.onCopyLink!,
           ),
-        // Dar çubukta (< 340 dp) ⋮ menüsü varken anahtar düşer: menüdeki
-        // "Sayfaya göm" aynı işi yazılı olarak yapar.
+        // Dar çubukta (< 340 dp) ⋮ menüsü varken anahtar düşer: menüde
+        // "Görünüm" satırı aynı anahtarı açar.
         if (widget.viewSwitch case final viewSwitch?
             when width >= 340 || !hasMenu)
           Padding(
@@ -679,11 +680,12 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
           )
         else if (!hasMenu)
           _BarButton(
-            tooltip: l10n.unpinMedia,
+            tooltip: l10n.viewModeFloatingHint,
             icon: Icons.vertical_align_bottom,
             onPressed: widget.onUnpin,
           ),
-        if (hasMenu) _menu(context),
+        if (hasMenu)
+          _menu(context, viewRow: widget.viewSwitch != null && width < 340),
       ],
     );
   }
@@ -691,86 +693,51 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   /// Çubuğun ⋮ menüsü verilmiş mi (salt okunurda kaldır/ek yok).
   bool get hasMenu =>
       widget.onRemove != null ||
-      widget.onDetach != null ||
       widget.onTranscribe != null ||
       widget.onSaveAs != null ||
       widget.onShare != null;
 
-  /// YAZILI işlemler: sayfaya göm (yüzen), alta ek olarak, bağlantı, kaldır.
-  Widget _menu(BuildContext context) {
+  /// Tek ek menüsü (bkz. [attachmentActionsFor]); dar çubukta anahtar buraya
+  /// satır olarak iner.
+  Widget _menu(BuildContext context, {required bool viewRow}) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    Widget item(IconData icon, String label, {Color? color}) => ListTile(
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: color),
-      title: Text(label, style: color == null ? null : TextStyle(color: color)),
-    );
-    return PopupMenuButton<String>(
+    return PopupMenuButton<AttachmentAction>(
       key: const ValueKey('pinned-media-menu'),
       tooltip: l10n.more,
       icon: const Icon(Icons.more_vert, size: 20),
       onSelected: (action) {
         switch (action) {
-          case 'float':
-            widget.onUnpin();
-          case 'detach':
-            widget.onDetach?.call();
-          case 'link':
+          case AttachmentAction.view:
+            widget.onShowViews?.call();
+          case AttachmentAction.copyLink:
             widget.onCopyLink?.call();
-          case 'transcribe':
+          case AttachmentAction.transcribe:
             widget.onTranscribe?.call();
-          case 'share':
+          case AttachmentAction.share:
             widget.onShare?.call();
-          case 'saveAs':
+          case AttachmentAction.saveAs:
             widget.onSaveAs?.call();
-          case 'remove':
+          case AttachmentAction.remove:
             widget.onRemove?.call();
+          case _:
+            break;
         }
       },
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 'float',
-          child: item(Icons.wrap_text_rounded, l10n.pinnedEmbedOnPage),
+      itemBuilder: (context) => attachmentPopupItems(
+        context,
+        attachmentActionsFor(
+          widget.media,
+          AttachmentSurface.pinned,
+          AttachmentCaps(
+            viewRow: viewRow && widget.onShowViews != null,
+            transcribe: widget.onTranscribe != null,
+            share: widget.onShare != null,
+            saveAs: widget.onSaveAs != null,
+            copyLink: widget.onCopyLink != null,
+            remove: widget.onRemove != null,
+          ),
         ),
-        if (widget.onDetach != null)
-          PopupMenuItem(
-            value: 'detach',
-            child: item(Icons.attachment_outlined, l10n.moveImageToAttachments),
-          ),
-        if (widget.onCopyLink != null && widget.media.isWebVideo)
-          PopupMenuItem(
-            value: 'link',
-            child: item(Icons.link, l10n.copyVideoLink),
-          ),
-        if (widget.onTranscribe != null)
-          PopupMenuItem(
-            value: 'transcribe',
-            child: item(Icons.subtitles_outlined, l10n.transcriptAction),
-          ),
-        // Paylaş + Farklı kaydet: şerit ve yüzen görsel menüsüyle aynı sıra.
-        if (widget.onShare != null)
-          PopupMenuItem(
-            value: 'share',
-            child: item(Icons.share_outlined, l10n.share),
-          ),
-        if (widget.onSaveAs != null && !widget.media.isWebVideo)
-          PopupMenuItem(
-            value: 'saveAs',
-            child: item(Icons.save_alt_outlined, l10n.attachmentSaveAs),
-          ),
-        if (widget.onRemove != null) ...[
-          const PopupMenuDivider(),
-          PopupMenuItem(
-            value: 'remove',
-            child: item(
-              Icons.delete_outline,
-              l10n.removeAttachment,
-              color: scheme.error,
-            ),
-          ),
-        ],
-      ],
+      ),
     );
   }
 }

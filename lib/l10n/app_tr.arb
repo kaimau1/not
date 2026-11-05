@@ -736,7 +736,6 @@
   "addImageOnPageSubtitle": "Sayfaya yerleşir, yazı etrafından akar",
   "addImageAsFile": "Görseli ek olarak yükle",
   "addImageAsFileSubtitle": "Sayfaya girmez, alttaki ek şeridinde durur",
-  "moveImageToAttachments": "Ek olarak taşı",
   "attachmentCopied": "Ek kopyalandı",
   "pasteAttachment": "Kopyalanan eki yapıştır",
   "fullscreen": "Tam ekran",
@@ -1303,7 +1302,6 @@
       }
     }
   },
-  "attachmentTagInsert": "Metne ekle",
   "attachmentTagInserted": "Ek etiketi metne eklendi.",
   "attachmentTagPreview": "Eki önizle",
   "attachmentTagEdit": "Eki düzenle",
@@ -1949,8 +1947,7 @@
   "youTubeOpenExternal": "YouTube'da aç",
   "pictureInPicture": "Resim içinde resim",
   "pinMediaRelease": "Bırak: üste sabitle (altta not)",
-  "unpinMedia": "Sayfaya geri koy",
-  "unpinMediaRelease": "Bırak: sayfaya geri koy",
+  "unpinMediaRelease": "Bırak: Yüzen",
   "pinnedMediaResize": "Bölme yüksekliği — sürükleyerek değiştir",
   "pageOf": "Sayfa {current} / {total}",
   "@pageOf": {
@@ -2094,6 +2091,13 @@
   "bubbleEditShort": "Düzenle",
   "bubblePlainModeShort": "Metin",
   "pageBarMore": "Sayfa ve not seçenekleri",
+  "viewModeChanged": "{from} → {to}",
+  "@viewModeChanged": {
+    "placeholders": {
+      "from": {"type": "String"},
+      "to": {"type": "String"}
+    }
+  },
   "viewModeTitle": "Görünüm",
   "viewModeEmbed": "Yazıya göm",
   "viewModeEmbedHint": "Bu eki nottaki bir yazıya göm — yazıya dokununca açılır",
@@ -2103,7 +2107,6 @@
   "viewModePinnedHint": "Üste sabitle — ek tepede durur, not altında kayar",
   "viewModeFloatingHint": "Sayfada yüzer — yazı etrafından akar",
   "viewModeBubblesHint": "Balonlu görünüm — sayfanın üstüne balon, vurgu ve kalem",
-  "viewModeSwitchedFloating": "Ek sayfaya döndü",
   "videoNoteAtTime": "Bu ana not al",
   "videoNoteAtTimeShort": "Not al",
   "videoTimeUnknown": "Videonun anı okunamadı — önce videoyu oynat.",
@@ -2132,7 +2135,6 @@
   "shareQuickPreparing": "Hazırlanıyor…",
   "shareAttachmentFilesNone": "Bu cihazda paylaşılacak ek dosyası yok.",
   "attachmentRemoved": "Ek kaldırıldı",
-  "pinnedEmbedOnPage": "Sayfaya göm (yüzen)",
   "customizeHideItem": "Gizle",
   "customizeShowItem": "Göster",
   "customizeModeTitle": "Düzenleme modu",
@@ -2310,7 +2312,6 @@
   "textToBubblesPreparing": "Metin belgeye diziliyor…",
   "attachmentActions": "Ek işlemleri",
   "attachmentOpen": "Aç",
-  "attachmentViewTitle": "Nerede dursun?",
   "attachmentUploadQueued": "Yüklenmeyi bekliyor",
   "attachmentWaitingOwner": "Ekleyenin cihazından yüklenmesi bekleniyor",
   "attachmentsUploadingCount": "{count} ek yükleniyor",
@@ -2953,8 +2954,6 @@
   "gestureNothingToFix": "Düzeltilecek yazım hatası yok",
   "gestureFixed": "Yazım düzeltildi",
   "gestureFixNeedsAi": "Daire jesti yazımı yapay zekâyla düzeltir; yapay zekâ şu an kullanılamıyor (Ayarlar → Yapay zekâ).",
-  "embedImportToNote": "Nota aktar",
-  "embedImported": "Ek notun içine alındı",
   "itemGesturesSetting": "Madde jestleri",
   "itemGesturesSettingInfo": "Maddenin üstüne parmakla ya da kalemle çiz: üstünü çiz / ✓ işaretler, karalamak siler, daire yazımı düzeltir",
   "pdfEditWorking": "PDF işleniyor…",

@@ -109,7 +109,7 @@ Bir kelimeye ya da cümleye **PDF, görsel, video, YouTube** ya da nottaki herha
 - **Çipe dokununca** (son harfi dahil) önizleme kartı açılır: video ve YouTube kartta oynar, PDF sayfaları kartta çevrilir. Kartta **Tam ekran** ve **Düzenle**; altta **Değiştir** ve **Gömmeyi kaldır** var.
 - Gömmeyi kaldırınca yazı kalır, yalnız bağ çözülür.
 - Ters yön de çalışır: önce eki seç (ek şeridindeki bağla düğmesi), sonra yazıyı seçip **Buraya bağla**. Seçmek istemezsen şeritteki **✍ (daire çiz)** düğmesine bas ve bağlanacak yazıyı parmağınla **daire içine al**.
-- Önizleme kartındaki **Nota aktar** eki notun sayfasına (yazının arasına) alır, kelimedeki bağı çözer.
+- Önizleme kartındaki **Görünüm** anahtarı eki Sabit, Yüzen, Balonlu ya da Ek yapar; yazıdaki bağı **Gömmeyi kaldır** çözer.
 - Ek silinirse ona bağlı kelimelerin çipi de kalkar (yazı kalır).
 
 ## PDF ve sunumlar {#documents}

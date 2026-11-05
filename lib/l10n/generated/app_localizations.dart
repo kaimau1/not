@@ -2954,12 +2954,6 @@ abstract class AppLocalizations {
   /// **'Sayfaya girmez, alttaki ek şeridinde durur'**
   String get addImageAsFileSubtitle;
 
-  /// No description provided for @moveImageToAttachments.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ek olarak taşı'**
-  String get moveImageToAttachments;
-
   /// No description provided for @attachmentCopied.
   ///
   /// In tr, this message translates to:
@@ -5155,12 +5149,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} dosya deftere toplandı.'**
   String archiveCopied(int count);
-
-  /// No description provided for @attachmentTagInsert.
-  ///
-  /// In tr, this message translates to:
-  /// **'Metne ekle'**
-  String get attachmentTagInsert;
 
   /// No description provided for @attachmentTagInserted.
   ///
@@ -7712,16 +7700,10 @@ abstract class AppLocalizations {
   /// **'Bırak: üste sabitle (altta not)'**
   String get pinMediaRelease;
 
-  /// No description provided for @unpinMedia.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sayfaya geri koy'**
-  String get unpinMedia;
-
   /// No description provided for @unpinMediaRelease.
   ///
   /// In tr, this message translates to:
-  /// **'Bırak: sayfaya geri koy'**
+  /// **'Bırak: Yüzen'**
   String get unpinMediaRelease;
 
   /// No description provided for @pinnedMediaResize.
@@ -8126,6 +8108,12 @@ abstract class AppLocalizations {
   /// **'Sayfa ve not seçenekleri'**
   String get pageBarMore;
 
+  /// No description provided for @viewModeChanged.
+  ///
+  /// In tr, this message translates to:
+  /// **'{from} → {to}'**
+  String viewModeChanged(String from, String to);
+
   /// No description provided for @viewModeTitle.
   ///
   /// In tr, this message translates to:
@@ -8179,12 +8167,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Balonlu görünüm — sayfanın üstüne balon, vurgu ve kalem'**
   String get viewModeBubblesHint;
-
-  /// No description provided for @viewModeSwitchedFloating.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ek sayfaya döndü'**
-  String get viewModeSwitchedFloating;
 
   /// No description provided for @videoNoteAtTime.
   ///
@@ -8311,12 +8293,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Ek kaldırıldı'**
   String get attachmentRemoved;
-
-  /// No description provided for @pinnedEmbedOnPage.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sayfaya göm (yüzen)'**
-  String get pinnedEmbedOnPage;
 
   /// No description provided for @customizeHideItem.
   ///
@@ -8959,12 +8935,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Aç'**
   String get attachmentOpen;
-
-  /// No description provided for @attachmentViewTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Nerede dursun?'**
-  String get attachmentViewTitle;
 
   /// No description provided for @attachmentUploadQueued.
   ///
@@ -10963,18 +10933,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Daire jesti yazımı yapay zekâyla düzeltir; yapay zekâ şu an kullanılamıyor (Ayarlar → Yapay zekâ).'**
   String get gestureFixNeedsAi;
-
-  /// No description provided for @embedImportToNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Nota aktar'**
-  String get embedImportToNote;
-
-  /// No description provided for @embedImported.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ek notun içine alındı'**
-  String get embedImported;
 
   /// No description provided for @itemGesturesSetting.
   ///

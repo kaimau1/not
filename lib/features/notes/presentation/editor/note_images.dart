@@ -38,6 +38,7 @@ import 'text_page_box.dart';
 import 'text_wrap.dart';
 import 'video_hub_scope.dart';
 import 'video_transport.dart';
+import 'attachment_actions.dart';
 import 'view_mode_switch.dart';
 import '../../../../core/widgets/smooth_routes.dart';
 
@@ -224,7 +225,6 @@ class NotePageCanvas extends StatefulWidget {
     this.onCopy,
     this.onCopyMany,
     this.onChangedMany,
-    this.onDetach,
     this.onVideoToNote,
     this.onTranscribe,
     this.onSaveAs,
@@ -312,9 +312,6 @@ class NotePageCanvas extends StatefulWidget {
   /// 2026-08-09: "görsellerde çoklu seçim ve kopyalama"). null ise çoklu
   /// seçim girişi hiç gösterilmez.
   final ValueChanged<List<Attachment>>? onCopyMany;
-
-  /// Görseli sayfadan alıp ek şeridine taşır; null ise menüde görünmez.
-  final ValueChanged<Attachment>? onDetach;
 
   /// Videodan AI ile not çıkarır; yalnız video ekinin menüsünde görünür.
   final ValueChanged<Attachment>? onVideoToNote;
@@ -1097,12 +1094,6 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
           // açılıyor) ama YATAY KAYDIRMA orada nottaki diğer eke geçiyor;
           // sayfa yalnız çubuğun oklarıyla değişir.
           swipeToTurn: fit == BoxFit.cover,
-          onDetach: widget.onDetach == null
-              ? null
-              : () {
-                  _deselect();
-                  widget.onDetach!(a);
-                },
         ),
       );
     }
@@ -1951,6 +1942,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     bool isPlain,
   ) {
     return _ImageTools(
+      attachment: img,
       key: _toolbarKey,
       placementHint: _hintId == img.id,
       wFrac: wFrac,
@@ -1975,7 +1967,6 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       onCopy: widget.onCopy == null || (isVideo && !img.isWebVideo)
           ? null
           : () => widget.onCopy!(img),
-      copyIsLink: img.isWebVideo,
       onOpenExternal: img.isWebVideo
           ? () => launchUrl(
               Uri.parse(img.webUrl),
@@ -2017,12 +2008,6 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
           ? null
           : () => widget.onSaveAs!(img),
       onShare: widget.onShare == null ? null : () => widget.onShare!(img),
-      onDetach: widget.onDetach == null
-          ? null
-          : () {
-              _deselect();
-              widget.onDetach!(img);
-            },
       onFullscreen: img.kind == AttachmentKind.audio
           ? null
           : () => _openViewer(img),

@@ -1581,9 +1581,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Sayfaya girmez, alttaki ek şeridinde durur';
 
   @override
-  String get moveImageToAttachments => 'Ek olarak taşı';
-
-  @override
   String get attachmentCopied => 'Ek kopyalandı';
 
   @override
@@ -2783,9 +2780,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String archiveCopied(int count) {
     return '$count dosya deftere toplandı.';
   }
-
-  @override
-  String get attachmentTagInsert => 'Metne ekle';
 
   @override
   String get attachmentTagInserted => 'Ek etiketi metne eklendi.';
@@ -4278,10 +4272,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pinMediaRelease => 'Bırak: üste sabitle (altta not)';
 
   @override
-  String get unpinMedia => 'Sayfaya geri koy';
-
-  @override
-  String get unpinMediaRelease => 'Bırak: sayfaya geri koy';
+  String get unpinMediaRelease => 'Bırak: Yüzen';
 
   @override
   String get pinnedMediaResize => 'Bölme yüksekliği — sürükleyerek değiştir';
@@ -4527,6 +4518,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pageBarMore => 'Sayfa ve not seçenekleri';
 
   @override
+  String viewModeChanged(String from, String to) {
+    return '$from → $to';
+  }
+
+  @override
   String get viewModeTitle => 'Görünüm';
 
   @override
@@ -4555,9 +4551,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get viewModeBubblesHint =>
       'Balonlu görünüm — sayfanın üstüne balon, vurgu ve kalem';
-
-  @override
-  String get viewModeSwitchedFloating => 'Ek sayfaya döndü';
 
   @override
   String get videoNoteAtTime => 'Bu ana not al';
@@ -4624,9 +4617,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get attachmentRemoved => 'Ek kaldırıldı';
-
-  @override
-  String get pinnedEmbedOnPage => 'Sayfaya göm (yüzen)';
 
   @override
   String get customizeHideItem => 'Gizle';
@@ -4993,9 +4983,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get attachmentOpen => 'Aç';
-
-  @override
-  String get attachmentViewTitle => 'Nerede dursun?';
 
   @override
   String get attachmentUploadQueued => 'Yüklenmeyi bekliyor';
@@ -6124,12 +6111,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get gestureFixNeedsAi =>
       'Daire jesti yazımı yapay zekâyla düzeltir; yapay zekâ şu an kullanılamıyor (Ayarlar → Yapay zekâ).';
-
-  @override
-  String get embedImportToNote => 'Nota aktar';
-
-  @override
-  String get embedImported => 'Ek notun içine alındı';
 
   @override
   String get itemGesturesSetting => 'Madde jestleri';
