@@ -113,6 +113,8 @@ void main() {
     // Yapıştırılacak ekin adı karoda görünür.
     expect(find.text('rapor.pdf'), findsOneWidget);
     // Kalemin uzun adları iki geniş karoya sığar (taşma testi kırardı).
+    final long = tester.widget<Text>(find.text('Sayfaya yaz (kalem)'));
+    expect(long.maxLines, 2, reason: 'telefonda kesilmesin');
     await tester.tap(find.text('Ayrı çizim (görsel)'));
     await tester.pumpAndSettle();
     expect(picked, 'drawing');
