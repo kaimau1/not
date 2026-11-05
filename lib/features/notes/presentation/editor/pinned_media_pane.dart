@@ -9,6 +9,7 @@ import '../../../../core/personalize.dart';
 import '../../../../core/widgets/after_route_transition.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/widgets/customizable.dart';
+import '../../../../core/widgets/wheel_scroll_viewer.dart';
 import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
 import '../drive_ui.dart';
@@ -216,11 +217,28 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   /// ekinde (`page: 1`, görüntüleyicideki "görsel üstüne metin"le aynı veri)
   /// yaşar. İlk düzenlemede görselden türetilmiş eski belgenin balonları
   /// görselin uzayına taşınıp ([_mappedBubbles]) görsele yazılır.
-  bool _bubbleEdit = false;
+  ///
+  /// SABİT KİPİN TEK DAVRANIŞI (kullanıcı bulgusu 2026-11-05: "balonlar
+  /// taşınamıyor, düzenlenemiyor; uzun basış metin tanıma yapıyor"):
+  /// yazılabilir notta balonlar HEP düzenlenebilir — tutamaç basılı tutulup
+  /// taşınır, okuma kartında Düzenle çıkar, görselin boş yerine basılı
+  /// tutmak oraya balon bırakır; iki parmak yakınlaştırır. Çubuktaki
+  /// "Balon ekle" dokunarak bırakma kipini açar (araç kartı + renk).
   BubbleController? _ownBubbles;
+
+  /// Dokunarak bırakma kipi (denetleyicinin `adding` değeri — araç
+  /// kartındaki "Bitti" de kapatır).
+  bool get _bubbleEdit => _ownBubbles?.adding ?? false;
 
   bool get _canEditBubbles =>
       widget.media.kind == AttachmentKind.image && widget.onChanged != null;
+
+  /// Sabit PDF'in "Balon ekle" kipi: düğme bu çubukta, kip belge kutusunda
+  /// (bkz. [PdfPageBox.addingBubbles]).
+  final _pdfAdding = ValueNotifier<bool>(false);
+
+  bool get _canEditPdfBubbles =>
+      widget.media.kind == AttachmentKind.pdf && widget.onChanged != null;
 
   BubbleController _ownController() => _ownBubbles ??= BubbleController(
     initial: widget.media.bubbles.isNotEmpty
@@ -228,7 +246,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         : (widget.bubbleDoc == null
               ? const []
               : _mappedBubbles(widget.bubbleDoc!)),
-    hidden: widget.media.bubblesHidden,
+    hidden: widget.media.bubbles.isNotEmpty
+        ? widget.media.bubblesHidden
+        : (widget.bubbleDoc?.bubblesHidden ?? widget.media.bubblesHidden),
     onChanged: (list) => widget.onChanged?.call(
       widget.media.copyWith(
         bubbles: list,
@@ -241,25 +261,57 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         bubbles: _ownBubbles?.bubbles ?? widget.media.bubbles,
       ),
     ),
-  );
+  )..addListener(_onOwnBubbles);
+
+  /// Kip/gizlilik/balon sayısı çubuktaki düğmeleri değiştirir.
+  bool? _lastAdding;
+  (bool, bool)? _lastBar;
+  void _onOwnBubbles() {
+    final own = _ownBubbles;
+    if (own == null || !mounted) return;
+    final adding = own.adding;
+    final bar = (own.hidden, own.bubbles.isEmpty);
+    if (adding == _lastAdding && bar == _lastBar) return;
+    final closed = _lastAdding == true && !adding;
+    _lastAdding = adding;
+    _lastBar = bar;
+    if (closed) own.save();
+    setState(() {});
+  }
 
   void _toggleBubbleEdit() {
     final controller = _ownController();
-    setState(() => _bubbleEdit = !_bubbleEdit);
-    controller.setAdding(_bubbleEdit);
-    // İlk kez açılınca eski belgenin balonları da görsele yazılsın.
-    if (!_bubbleEdit || widget.media.bubbles.isEmpty) controller.save();
+    controller.setAdding(!controller.adding);
   }
 
-  /// Görselin üstündeki katman: kendi balonları (ya da düzenleme kipi)
-  /// varsa düzenlenebilir denetleyici, yoksa eski türetilmiş belgenin
-  /// salt okunur balonları.
+  /// Görselin üstündeki katman: yazılabilir notta görselin KENDİ
+  /// (düzenlenebilir) denetleyicisi, salt okunurda eski türetilmiş belgenin
+  /// balonları.
   BubbleController? _layerBubbles() {
-    if (_canEditBubbles &&
-        (_bubbleEdit || widget.media.bubbles.isNotEmpty)) {
-      return _ownController();
-    }
+    if (_canEditBubbles) return _ownController();
     return _bubblesFor(widget.bubbleDoc);
+  }
+
+  /// Sabit görselde iki parmakla yakınlaştırma; balonlar görselle birlikte
+  /// büyür (katman dönüşümün içinde).
+  final _imageZoom = TransformationController();
+  bool _imageZoomed = false;
+
+  void _onImageZoom() {
+    final zoomed = _imageZoom.value.getMaxScaleOnAxis() > 1.01;
+    if (zoomed != _imageZoomed && mounted) {
+      setState(() => _imageZoomed = zoomed);
+    }
+  }
+
+  /// Dokunuş başladığında açık balon / bırakma kipi var mıydı? Varsa
+  /// dokunuş onu kapatır, tam ekran görüntüleyiciyi AÇMAZ.
+  bool _tapBusy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _imageZoom.addListener(_onImageZoom);
   }
 
   @override
@@ -272,9 +324,13 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         ..syncHidden(doc.bubblesHidden);
     }
     if (old.media.id != widget.media.id) {
+      _ownBubbles?.save();
       _ownBubbles?.dispose();
       _ownBubbles = null;
-      _bubbleEdit = false;
+      _lastAdding = null;
+      _lastBar = null;
+      _pdfAdding.value = false;
+      _imageZoom.value = Matrix4.identity();
     } else if (!_bubbleEdit && widget.media.bubbles.isNotEmpty) {
       _ownBubbles
         ?..replace(widget.media.bubbles)
@@ -287,6 +343,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     _ownBubbles?.save();
     _ownBubbles?.dispose();
     _imageBubbles?.dispose();
+    _pdfAdding.dispose();
+    _imageZoom.dispose();
     super.dispose();
   }
 
@@ -302,6 +360,39 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     final dw = w * scale;
     final dh = h * scale;
     return Rect.fromLTWH((box.width - dw) / 2, (box.height - dh) / 2, dw, dh);
+  }
+
+  /// Görselin üstündeki balon katmanı (görselin `contain` dikdörtgeninde).
+  Widget _imageBubbleLayer(BubbleController bubbles) => LayoutBuilder(
+    builder: (context, box) {
+      final rect = _imageRect(box.biggest);
+      if (rect == null) return const SizedBox.shrink();
+      final own = identical(bubbles, _ownBubbles);
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fromRect(
+            rect: rect,
+            child: BubblePageLayer(
+              controller: bubbles,
+              page: 1,
+              readOnly: !own,
+              longPressAdd: own,
+            ),
+          ),
+        ],
+      );
+    },
+  );
+
+  /// Görsel + balonlar iki parmakla yakınlaşır; yakınken tek parmak gezdirir.
+  Widget _zoomable({required bool enabled, required Widget child}) {
+    if (!enabled) return child;
+    return WheelScrollViewer(
+      controller: _imageZoom,
+      panEnabled: _imageZoomed,
+      child: child,
+    );
   }
 
   /// Ayraç sürüklenirken canlı yükseklik (ham — sınırlanmamış).
@@ -395,6 +486,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     final isText = widget.media.kind == AttachmentKind.text;
     final isAudio = widget.media.kind == AttachmentKind.audio;
     final isSlide = widget.media.kind == AttachmentKind.slide;
+    final isImage = widget.media.kind == AttachmentKind.image;
     // Zamanlı medya: denetim çubuğu ve ilerleme çizgisi (video + ses).
     final timed = isVideo || isAudio;
     final layout = LayoutBuilder(
@@ -494,23 +586,50 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                             // Balonludan sabite alınan belge balonlarıyla
                             // görünür; çubukta göster/gizle.
                             showBubbles: true,
+                            editBubbles: widget.onChanged != null,
+                            addingBubbles: _pdfAdding,
                             fitWidth: true,
                             onNoteFromSelection: widget.onPdfNote,
                           ),
                         ),
                       )
                     : GestureDetector(
-                        onTap: isVideo ? null : widget.onOpen,
-                        onLongPressStart: (_) {
+                        onTap: isVideo
+                            ? null
+                            : () {
+                                // Tutamaca dokunuş balonu açtıysa (kart şimdi
+                                // açık) görüntüleyici açılmaz.
+                                if (_ownBubbles?.openBubble != null &&
+                                    !_tapBusy) {
+                                  return;
+                                }
+                                if (_tapBusy) {
+                                  // Görselin dışındaki boşluk da açık kartı
+                                  // kapatır (katmanınki yalnız görselde).
+                                  final own = _ownBubbles;
+                                  if (own != null && !own.adding) {
+                                    own.collapseAll();
+                                  }
+                                  return;
+                                }
+                                widget.onOpen();
+                              },
+                        // Yazılabilir görselde basılı tutmak BALON bırakır
+                        // (aşağı çekip sayfaya geri koymak ayraçtan / görünüm
+                        // anahtarından).
+                        onLongPressStart: _canEditBubbles ? null : (_) {
                           HapticFeedback.selectionClick();
                           setState(() {
                             _pulling = true;
                             _pullDown = 0;
                           });
                         },
-                        onLongPressMoveUpdate: (d) =>
-                            setState(() => _pullDown = d.offsetFromOrigin.dy),
-                        onLongPressEnd: (_) {
+                        onLongPressMoveUpdate: _canEditBubbles
+                            ? null
+                            : (d) => setState(
+                                () => _pullDown = d.offsetFromOrigin.dy,
+                              ),
+                        onLongPressEnd: _canEditBubbles ? null : (_) {
                           final unpin = _unpinArmed;
                           setState(() {
                             _pulling = false;
@@ -518,41 +637,67 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                           });
                           if (unpin) widget.onUnpin();
                         },
-                        onLongPressCancel: () => setState(() {
-                          _pulling = false;
-                          _pullDown = 0;
-                        }),
+                        onLongPressCancel: _canEditBubbles
+                            ? null
+                            : () => setState(() {
+                                _pulling = false;
+                                _pullDown = 0;
+                              }),
                         onSecondaryTapUp: (d) =>
                             unawaited(_showContextMenu(d.globalPosition)),
-                        child: Stack(
+                        // Durum parmak İNERKEN okunur: tutamaca dokunuş balonu
+                        // parmak kalkınca açar, `onTapDown` ise ondan SONRA
+                        // gelebiliyor (kartı hemen kapatırdı).
+                        child: Listener(
+                          onPointerDown: (_) {
+                            final own = _ownBubbles;
+                            _tapBusy =
+                                own != null &&
+                                (own.adding || own.openBubble != null);
+                          },
+                          child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            ColoredBox(
-                              color: isVideo
-                                  ? Colors.black
-                                  : scheme.surfaceContainerHigh,
-                              child: Transform.translate(
-                                offset: Offset(
-                                  0,
-                                  _pulling ? _pullDown.clamp(0, 140) : 0,
-                                ),
-                                child: Opacity(
-                                  opacity: _pulling ? 0.6 : 1,
-                                  child: NoteMediaBox(
-                                    // Ek değişince (başka medya sabitlenince)
-                                    // oynatıcı da yenilensin.
-                                    key: ValueKey(widget.media.id),
-                                    attachment: widget.media,
-                                    fit: BoxFit.contain,
-                                    inlineWebVideo: true,
-                                    showWebTitle: true,
-                                    // Denetim bölmenin çubuğunda.
-                                    videoControls: false,
+                            _zoomable(
+                              enabled: isImage,
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  ColoredBox(
+                                    color: isVideo
+                                        ? Colors.black
+                                        : scheme.surfaceContainerHigh,
+                                    child: Transform.translate(
+                                      offset: Offset(
+                                        0,
+                                        _pulling ? _pullDown.clamp(0, 140) : 0,
+                                      ),
+                                      child: Opacity(
+                                        opacity: _pulling ? 0.6 : 1,
+                                        child: NoteMediaBox(
+                                          // Ek değişince (başka medya
+                                          // sabitlenince) oynatıcı da
+                                          // yenilensin.
+                                          key: ValueKey(widget.media.id),
+                                          attachment: widget.media,
+                                          fit: BoxFit.contain,
+                                          inlineWebVideo: true,
+                                          showWebTitle: true,
+                                          // Denetim bölmenin çubuğunda.
+                                          videoControls: false,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  if (!isVideo && !_pulling)
+                                    if (_layerBubbles() case final bubbles?)
+                                      _imageBubbleLayer(bubbles),
+                                ],
                               ),
                             ),
-                            if (widget.media.caption.isNotEmpty && !_pulling)
+                            if (widget.media.caption.isNotEmpty &&
+                                !_pulling &&
+                                !_imageZoomed)
                               Align(
                                 alignment: Alignment.bottomCenter,
                                 child: ColoredBox(
@@ -563,35 +708,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                                   ),
                                 ),
                               ),
-                            if (!isVideo && !_pulling)
-                              if (_layerBubbles() case final bubbles?)
-                                LayoutBuilder(
-                                  builder: (context, box) {
-                                    final rect = _imageRect(box.biggest);
-                                    if (rect == null) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    return Stack(
-                                      clipBehavior: Clip.none,
-                                      children: [
-                                        Positioned.fromRect(
-                                          rect: rect,
-                                          child: BubblePageLayer(
-                                            controller: bubbles,
-                                            page: 1,
-                                            readOnly: !(_bubbleEdit &&
-                                                identical(
-                                                  bubbles,
-                                                  _ownBubbles,
-                                                )),
-                                            longPressAdd: false,
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                            if (_bubbleEdit && _ownBubbles != null) ...[
+                            // Yazma kartı kendini yalnız bir balon
+                            // düzenlenirken çizer (okuma kartında "Düzenle").
+                            if (_canEditBubbles && _ownBubbles != null) ...[
                               Positioned(
                                 left: 0,
                                 right: 0,
@@ -614,6 +733,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                             if (_unpinArmed)
                               _UnpinHint(label: l10n.unpinMediaRelease),
                           ],
+                        ),
                         ),
                       ),
               ),
@@ -762,25 +882,43 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                     onPressed: widget.onNoteAt,
                   ),
           ),
-        // BALON EKLE (sabit görsel): kipi aç/kapa — PDF'te aynı düğme
-        // sayfanın kendi çubuğunda (bkz. PdfPageBox).
+        // BALON EKLE: dokunarak bırakma kipini aç/kapa. Görselde kip burada,
+        // PDF'te belge kutusunda (düğme her ikisinde de bu çubukta — sayfa
+        // şeridi kendiliğinden söndüğü için orada görünmüyordu).
         if (_canEditBubbles)
-          IconButton(
-            key: const ValueKey('pinned-add-bubble'),
-            tooltip: _bubbleEdit ? l10n.bubbleAddDone : l10n.bubbleAdd,
-            visualDensity: VisualDensity.compact,
-            iconSize: 20,
-            color: _bubbleEdit ? scheme.primary : null,
-            icon: Icon(_bubbleEdit ? Icons.check : Icons.add_comment_outlined),
-            onPressed: _toggleBubbleEdit,
+          _addBubbleButton(context, active: _bubbleEdit, onPressed: _toggleBubbleEdit)
+        else if (_canEditPdfBubbles)
+          ValueListenableBuilder<bool>(
+            valueListenable: _pdfAdding,
+            builder: (context, adding, _) => _addBubbleButton(
+              context,
+              active: adding,
+              onPressed: () => _pdfAdding.value = !adding,
+            ),
           ),
-        // Görselden türetilmiş belgenin balonları: göster/gizle (görselin
-        // kendi balonu yoksa — varsa onlar belgeninkinin yerini aldı).
+        // Balonları göster/gizle (görselde balon varken; PDF'te kutunun
+        // şeridinde).
+        if (_canEditBubbles && !isVideo)
+          if (_ownController() case final own when own.bubbles.isNotEmpty)
+            IconButton(
+              key: const ValueKey('pinned-bubbles-toggle'),
+              tooltip: own.hidden ? l10n.bubblesShow : l10n.bubblesHide,
+              visualDensity: VisualDensity.compact,
+              iconSize: 20,
+              isSelected: own.hidden,
+              icon: Icon(
+                own.hidden
+                    ? Icons.speaker_notes_off_outlined
+                    : Icons.chat_bubble_outline,
+              ),
+              onPressed: () => own.setHidden(!own.hidden),
+            ),
+        // Salt okunurda görselden türetilmiş belgenin balonları.
         if (widget.bubbleDoc case final doc?
             when doc.bubbles.isNotEmpty &&
                 !isVideo &&
-                widget.media.bubbles.isEmpty &&
-                !_bubbleEdit)
+                !_canEditBubbles &&
+                widget.onChanged != null)
           IconButton(
             key: const ValueKey('pinned-bubbles-toggle'),
             tooltip: doc.bubblesHidden ? l10n.bubblesShow : l10n.bubblesHide,
@@ -822,6 +960,23 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         if (hasMenu)
           _menu(context, viewRow: widget.viewSwitch != null && width < 340),
       ],
+    );
+  }
+
+  Widget _addBubbleButton(
+    BuildContext context, {
+    required bool active,
+    required VoidCallback onPressed,
+  }) {
+    final l10n = context.l10n;
+    return IconButton(
+      key: const ValueKey('pinned-add-bubble'),
+      tooltip: active ? l10n.bubbleAddDone : l10n.bubbleAdd,
+      visualDensity: VisualDensity.compact,
+      iconSize: 20,
+      color: active ? Theme.of(context).colorScheme.primary : null,
+      icon: Icon(active ? Icons.check : Icons.add_comment_outlined),
+      onPressed: onPressed,
     );
   }
 
