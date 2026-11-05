@@ -1,3 +1,4 @@
+import 'package:notlar/features/notes/presentation/notes_providers.dart' show sharedFolderNotesProvider;
 // EKRAN TURU (TUTARLILIK_PLANI F36.1): gerçek ana ekran ve not ekranı,
 // Firebase'siz sahte verilerle, telefon / tablet / masaüstü boyutlarında
 // çizilir ve PNG olarak yazılır. CI'da KOŞMAZ (test/ dışında); elle:
@@ -30,7 +31,6 @@ import 'package:notlar/core/app_update.dart';
 import 'package:notlar/core/tips.dart';
 import 'package:notlar/features/auth/data/auth_repository.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
-import 'package:notlar/features/folders/data/folders_repository.dart';
 import 'package:notlar/features/folders/domain/note_folder.dart';
 import 'package:notlar/features/notes/data/attachment_repository.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
