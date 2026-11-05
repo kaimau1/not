@@ -1387,9 +1387,11 @@ class _CardItemRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = _cardThemeOf(context).colorScheme;
-    final struck = checkbox && item.checked;
+    final struck = checkbox && item.checked && !item.header;
     Widget? leading;
-    if (checkbox) {
+    if (item.header) {
+      // Ara başlık: kutucuk/numara yok, kalın (bkz. [NoteItem.header]).
+    } else if (checkbox) {
       // Kutucuk EDİTÖRLE AYNI kural (bkz. [NoteCheckColors]): işaretli kutu
       // notun vurgusuyla dolu ve soluk, boş kutu çerçeve — renkli kartta
       // notun koyu tonu, renksizde temanın vurgusu.
@@ -1442,7 +1444,9 @@ class _CardItemRow extends StatelessWidget {
             // çizim yalnız işaretsiz maddede.
             rich: rich && !struck,
             maxLines: 1,
-            style: struck
+            style: item.header
+                ? style.copyWith(fontWeight: FontWeight.w700)
+                : struck
                 ? style.copyWith(
                     decoration: TextDecoration.lineThrough,
                     color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
@@ -1502,8 +1506,8 @@ class _ChecklistProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = items.length;
-    final done = items.where((i) => i.checked).length;
+    final total = items.where((i) => !i.header).length;
+    final done = items.where((i) => i.checked && !i.header).length;
     if (total < 4 || done == 0) return const SizedBox.shrink();
     final scheme = _cardThemeOf(context).colorScheme;
     final accent = NoteAccent.maybeOf(context)?.accent;
@@ -1824,7 +1828,9 @@ class _NotePreview extends StatelessWidget {
                 query: highlightQuery,
                 rich: rich,
                 checkbox: note.type == NoteType.checklist,
-                number: note.type == NoteType.ordered ? i + 1 : null,
+                number: note.type == NoteType.ordered
+                    ? itemOrderNumber(shown, i)
+                    : null,
                 onToggle: onToggle,
               ),
             if (showMoreCount && remaining > 0)

@@ -259,12 +259,26 @@ maddeyi GÜNCELLE.
   genişleyerek açılır (`NoteOpenPage`, geçiş ağacı her karede AYNI yapı;
   `SnapshotWidget` yalnız açılışta bir kez).
 - Biçim paneli İKİ SIRA (2026-11-05, kullanıcı: "çok yer kaplıyor, açılır
-  pencere olsun"): Stil▾ · B I U · Renk▾ / Kapsam▾ · Aa · A− % A+ · temizle ·
-  (çizgi) · kapat. Stil, renk, kapsam, çizgi, yazı tipi panelin ÜSTÜNDEKİ
-  tepside — menü ROTASI YOK (odak/klavye gider). Kapsam `FormatScope` seçimi
+  pencere olsun"): Stil⇅ · B I U · Renk▾ / Kapsam⇅ · Aa · A− % A+ · temizle ·
+  (çizgi) · kapat. Stil ve Kapsam hapı TEPSİ AÇMAZ, basınca SIRAYLA geçer
+  (Metin→Başlık→Alt başlık; İmleç→Kelime→Satır→Tümü; elle seçimde ilk basış
+  seçimi bırakır). Kapsam ekranda soluk zeminle önizlenir
+  (`WrapTextController.setScopePreview`, yalnız çizim; temizliği bir kare
+  sonra — dispose'ta bildirim ağacı kilitliyken alanı kurdururdu). Boş
+  satırda başlık = bekleyen boy+kalın (`setPendingFormats`). Renk, çizgi,
+  yazı tipi panelin ÜSTÜNDEKİ tepside — menü ROTASI YOK (odak/klavye gider). Kapsam `FormatScope` seçimi
   GEÇİCİ: yalnız biçim uygulanırken imleçten açılır, sonra imleç döner
   (kalıcı seçim yazınca kelimeyi siliyor, "elle seçim" sanılıp kapsamı
   kilitliyordu). Panel açıkken geri paneli kapatır.
+- **Ara başlık** (2026-11-05): `NoteItem.header` (yalnız true yazılır):
+  kutucuksuz, kalın, işaretlenmez, ilerlemeye girmez; sıralı listede numara
+  her başlıktan sonra 1'den (`itemOrderNumber`). "Yeni madde" satırında
+  "Ara başlık" + uzun basış menüsünde "Başlık yap / Maddeye çevir". Madde
+  kopyalayan yer (`duplicateNote`) alanı da taşısın.
+- Etiketler üst çubukta tarihin SOLUNDA (`EditorBarTags`, dokun = kaldır);
+  başlık çubuktayken (`titleInBar`) çip şeridinde. Sabit ekte tutamağa
+  dokunmak = sığdır (`_fitRatio`: video/sunum 16:9 yedek, görsel, PDF ilk
+  sayfa); görsel/sunum da video gibi doğal boyunu AŞMAZ (PDF aşar, kayar).
 - ItemsEditor: işaretli blok da `_cachedItemRow`'dan; soluk hâl renk
   alfasıyla (kalıcı Opacity katmanı YOK). Madde Enter'ı `_enterAt` (böler),
   başta Backspace üst maddeye birleşir. Jestler kipsiz (`classifyInkGesture`).

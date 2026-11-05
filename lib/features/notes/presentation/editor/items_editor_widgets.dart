@@ -180,15 +180,22 @@ class _FloatRowState extends State<_FloatRow> {
 }
 
 /// Satır menüsünün ([ItemsEditorState._showItemMenu]) seçenekleri.
-enum _ItemAction { star, select, delete, moveToPage }
+enum _ItemAction { star, header, select, delete, moveToPage }
 
 /// Madde menüsünün tek parçalık gövdesi: iş düğmeleri (alt çizgi
 /// 2026-10-30'dan beri biçim panelinde — bkz. [ItemsEditorState._showItemMenu]).
 class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
-  const _ItemMenuPanel({required this.starred, required this.canMove});
+  const _ItemMenuPanel({
+    required this.starred,
+    required this.canMove,
+    this.header = false,
+  });
 
   final bool starred;
   final bool canMove;
+
+  /// Satır ara başlık mı (düğme "Maddeye çevir" der).
+  final bool header;
 
   @override
   double get height => 84;
@@ -248,6 +255,11 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
                   _ItemAction.star,
                   widget.starred ? Icons.star : Icons.star_outline,
                   widget.starred ? l10n.itemMenuUnstar : l10n.star,
+                ),
+                _action(
+                  _ItemAction.header,
+                  widget.header ? Icons.format_list_bulleted : Icons.title,
+                  widget.header ? l10n.itemMenuToItem : l10n.itemMenuToHeader,
                 ),
                 _action(_ItemAction.select, Icons.checklist, l10n.select),
                 if (widget.canMove)

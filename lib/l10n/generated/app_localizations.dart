@@ -12103,6 +12103,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Açık metin'**
   String get bubbleAddPlainTitle;
+
+  /// No description provided for @itemAddHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ara başlık'**
+  String get itemAddHeader;
+
+  /// No description provided for @itemHeaderHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ara başlık yaz'**
+  String get itemHeaderHint;
+
+  /// No description provided for @itemMenuToHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık yap'**
+  String get itemMenuToHeader;
+
+  /// No description provided for @itemMenuToItem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maddeye çevir'**
+  String get itemMenuToItem;
+
+  /// No description provided for @pinnedMediaFit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sığdır'**
+  String get pinnedMediaFit;
+
+  /// No description provided for @tagRemove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etiketi kaldır'**
+  String get tagRemove;
 }
 
 class _AppLocalizationsDelegate

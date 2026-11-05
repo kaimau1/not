@@ -9,6 +9,7 @@ class NoteItem {
     this.title = '',
     this.attachmentId = '',
     this.divider = '',
+    this.header = false,
     this.extras = const {},
   });
 
@@ -25,6 +26,7 @@ class NoteItem {
     'title',
     'attachmentId',
     'divider',
+    'header',
   };
 
   /// Madde ALTI ayırıcı çizgi türleri (bkz. [divider]).
@@ -77,6 +79,13 @@ class NoteItem {
   /// düz çizgi gibi çizilir. Yalnız doluyken kayda yazılır.
   final String divider;
 
+  /// **ARA BAŞLIK** (kullanıcı isteği 2026-11-05: "madde modunda ara başlık
+  /// ekleyebilme"): satır madde değil, altındaki maddeleri gruplayan başlık —
+  /// kutucuğu/numarası yok, işaretlenmez, kalın ve büyük çizilir, ilerleme
+  /// sayısına girmez. Yalnız TRUE iken kayda yazılır; alanı tanımayan eski
+  /// sürüm satırı düz madde olarak görür ve `extras`ta aynen geri yazar.
+  final bool header;
+
   NoteItem copyWith({
     String? text,
     bool? checked,
@@ -85,6 +94,7 @@ class NoteItem {
     String? title,
     String? attachmentId,
     String? divider,
+    bool? header,
   }) => NoteItem(
     id: id,
     text: text ?? this.text,
@@ -94,6 +104,7 @@ class NoteItem {
     title: title ?? this.title,
     attachmentId: attachmentId ?? this.attachmentId,
     divider: divider ?? this.divider,
+    header: header ?? this.header,
     extras: extras,
   );
 
@@ -106,6 +117,7 @@ class NoteItem {
     title: map['title'] as String? ?? '',
     attachmentId: map['attachmentId'] as String? ?? '',
     divider: map['divider'] as String? ?? '',
+    header: map['header'] as bool? ?? false,
     extras: {
       for (final e in map.entries)
         if (!knownKeys.contains(e.key)) e.key: e.value,
@@ -122,7 +134,21 @@ class NoteItem {
     if (title.isNotEmpty) 'title': title,
     if (attachmentId.isNotEmpty) 'attachmentId': attachmentId,
     if (divider.isNotEmpty) 'divider': divider,
+    if (header) 'header': true,
   };
+}
+
+/// Sıralı listede [index]teki maddenin numarası: ara başlıklar sayılmaz ve
+/// her başlıktan sonra numara 1'den başlar (bölüm bölüm liste). Başlığın
+/// kendisi için null.
+int? itemOrderNumber(List<NoteItem> items, int index) {
+  if (items[index].header) return null;
+  var n = 1;
+  for (var i = index - 1; i >= 0; i--) {
+    if (items[i].header) break;
+    n++;
+  }
+  return n;
 }
 
 /// Madde altı ayırıcının BİÇİMİ: tür + isteğe bağlı renk ve kalınlık

@@ -563,6 +563,36 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     return w > 0 && h > 0 ? h / w : 9 / 16;
   }
 
+  /// **HER EK VİDEO GİBİ OTURUR** (kullanıcı isteği 2026-11-05: "tüm
+  /// eklerde YouTube videoları gibi kolay oto sığdırma, sabitlendiğinde"):
+  /// medyanın bölme genişliğindeki doğal boyu için oran (yükseklik /
+  /// genişlik). Video ve sunum ölçüsüz de 16:9; görsel ölçüsü biliniyorsa;
+  /// PDF ilk sayfanın oranı (döndürme dahil). Metin ve seste null (doğal
+  /// boy yok).
+  static double? _fitRatio(Attachment media) {
+    final w = (media.width ?? 0).toDouble();
+    final h = (media.height ?? 0).toDouble();
+    final known = w > 0 && h > 0;
+    return switch (media.kind) {
+      AttachmentKind.video => _videoRatio(media),
+      AttachmentKind.slide => known ? h / w : 9 / 16,
+      AttachmentKind.image => known ? h / w : null,
+      AttachmentKind.pdf =>
+        known ? 1 / pdfBoxAspect(w, h, media.pdfTurns) : null,
+      _ => null,
+    };
+  }
+
+  /// Ayraçtaki tutamağa dokunuş: bölme medyanın doğal boyuna oturur
+  /// (sınırı aşarsa sınıra). Son çizimde [_fitTarget] hesaplanır.
+  double? _fitTarget;
+
+  void _fit() {
+    final target = _fitTarget;
+    if (target == null) return;
+    widget.onHeightChanged(target);
+  }
+
   bool get _unpinArmed =>
       (_live != null && _live! < kPinnedUnpinHeight) ||
       (_pulling && _pullDown > 96);
@@ -595,9 +625,17 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         // alanında sağda solda boşluk kalmayacak şekilde"): bölme videonun
         // genişlikteki doğal boyunu AŞMAZ — saklı yükseklik ondan büyükse
         // (eski sabitleme, başka ekran) yanlarda kara pay kalıyordu.
-        final natural = isVideo
-            ? constraints.maxWidth * _videoRatio(widget.media)
+        // 2026-11-05: görsel ve sunum da aynı kuralla — yanlarda boş pay
+        // kalmaz. PDF bölmede genişliğe oturup dikeyde kaydığından sınır
+        // değil, yalnız "Sığdır" hedefi (bir sayfa boyu).
+        final ratio = _fitRatio(widget.media);
+        final capped = ratio != null && !isPdf;
+        final natural = capped
+            ? constraints.maxWidth * ratio
             : double.infinity;
+        _fitTarget = ratio == null
+            ? null
+            : _clamp(constraints.maxWidth * ratio, layoutMax);
         // Sürüklerken bölme sınırın altına da iner (geri bırakma hissi);
         // bırakınca sınıra oturur ya da sayfaya döner.
         final height = live != null
@@ -959,8 +997,18 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         Expanded(
           child: Semantics(
             label: l10n.pinnedMediaResize,
-            child: Center(
-              child: Container(
+            onTap: _fitTarget == null ? null : _fit,
+            // TUTAMAĞA DOKUN = SIĞDIR: bölme medyanın doğal boyuna oturur
+            // (sürükleme ayrı jest, çubuğun kendisinde). Yalnız boş orta
+            // alan — düğmelerin dokunuşu gecikmez.
+            child: GestureDetector(
+              key: const ValueKey('pinned-media-fit'),
+              behavior: HitTestBehavior.opaque,
+              onTap: _fitTarget == null ? null : _fit,
+              child: Tooltip(
+                message: _fitTarget == null ? '' : l10n.pinnedMediaFit,
+                child: Center(
+                  child: Container(
                 width: 36,
                 height: 5,
                 decoration: BoxDecoration(
@@ -969,6 +1017,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                       : scheme.onSurfaceVariant.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(3),
                 ),
+              ),
+            ),
               ),
             ),
           ),

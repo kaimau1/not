@@ -138,13 +138,25 @@ bool applyRichHeading(WrapTextController controller, RichHeading heading) {
   final logical = stripWrapAnchors(display);
   final start = wrapToLogicalOffset(display, selection.start);
   final end = wrapToLogicalOffset(display, selection.end);
-  return _write(
-    controller,
-    logical,
-    start,
-    end,
-    setLineHeading(logical, start, end, heading),
-  );
+  final result = setLineHeading(logical, start, end, heading);
+  // BOŞ SATIRDA BAŞLIK BEKLER (kullanıcı isteği 2026-11-05: "başlık / alt
+  // başlık düğmeye basarak sırayla geçsin"): yeni satıra geçip "Başlık"a
+  // basan kullanıcı başlığı YAZMAK ister — eskiden boş satırda hiçbir şey
+  // olmuyordu, düğme de "Metin"de kalıyordu. Boy + kalın bekleyen biçim olur,
+  // yazılan metin başlık çıkar (bkz. [WrapTextController.setPendingFormats]).
+  final lineStart = start == 0 ? 0 : logical.lastIndexOf('\n', start - 1) + 1;
+  final lineBreak = logical.indexOf('\n', start);
+  final emptyLine =
+      (lineBreak < 0 ? logical.length : lineBreak) <= lineStart;
+  if (emptyLine && selection.isCollapsed) {
+    controller.setPendingFormats(
+      heading.sizeStep == null
+          ? const {}
+          : {RichFormat.size: heading.sizeStep, RichFormat.bold: null},
+    );
+    return false;
+  }
+  return _write(controller, logical, start, end, result);
 }
 
 /// İmlecin satırının başlık düzeyi (biçim çubuğundaki vurgu).
@@ -152,10 +164,21 @@ RichHeading activeRichHeading(WrapTextController controller) {
   final selection = controller.selection;
   if (!selection.isValid) return RichHeading.normal;
   final display = controller.text;
-  return lineHeadingAt(
+  final heading = lineHeadingAt(
     stripWrapAnchors(display),
     wrapToLogicalOffset(display, selection.start),
   );
+  if (heading != RichHeading.normal || !controller.hasPendingFormat) {
+    return heading;
+  }
+  // Boş satırda bekleyen başlık (bkz. [applyRichHeading]).
+  final pending = controller.pendingFormats;
+  if (!pending.containsKey(RichFormat.bold)) return heading;
+  final size = pending[RichFormat.size];
+  for (final h in RichHeading.values) {
+    if (h.sizeStep != null && h.sizeStep == size) return h;
+  }
+  return heading;
 }
 
 /// Seçimden (ya da imlecin bulunduğu biçimli parçadan) **tek bir biçmi**

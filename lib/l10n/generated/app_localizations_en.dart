@@ -6809,4 +6809,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bubbleAddPlainTitle => 'Plain text';
+
+  @override
+  String get itemAddHeader => 'Subheading';
+
+  @override
+  String get itemHeaderHint => 'Write a subheading';
+
+  @override
+  String get itemMenuToHeader => 'Make heading';
+
+  @override
+  String get itemMenuToItem => 'Make item';
+
+  @override
+  String get pinnedMediaFit => 'Fit';
+
+  @override
+  String get tagRemove => 'Remove tag';
 }

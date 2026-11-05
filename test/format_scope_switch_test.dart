@@ -35,9 +35,8 @@ void main() {
                   focusNode: focus,
                   commit: () {},
                 ),
-                onFormat: (_, {colorIndex}) => seen.add(
-                  controller.selection.textInside(controller.text),
-                ),
+                onFormat: (_, {colorIndex}) =>
+                    seen.add(controller.selection.textInside(controller.text)),
                 onClearFormat: () {},
                 onRemoveFormat: (_) {},
                 fontFamily: null,
@@ -56,19 +55,33 @@ void main() {
         ),
       ),
     );
+    // Kapsam hapı TEPSİ AÇMAZ, sırayla geçer (kullanıcı isteği 2026-11-05):
+    // İmleç → Kelime → Satır → Tümü → İmleç.
+    const labels = {
+      'caret': 'İmleç',
+      'word': 'Kelime',
+      'line': 'Satır',
+      'all': 'Tümü',
+    };
     Future<void> scope(String name) async {
-      await tester.tap(find.byKey(const ValueKey('format-scope-menu')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(ValueKey('format-scope-$name')));
-      await tester.pumpAndSettle();
+      for (
+        var i = 0;
+        i < 4 && find.text(labels[name]!).evaluate().isEmpty;
+        i++
+      ) {
+        await tester.tap(find.byKey(const ValueKey('format-scope-menu')));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text(labels[name]!), findsOneWidget);
     }
 
     // Kapsam seçmek SEÇİM AÇMAZ (kullanıcı bulgusu 2026-11-05: seçili
-    // kalan kelime yazmaya devam edince siliniyordu); tepsi kapanır.
-    await scope('word');
+    // kalan kelime yazmaya devam edince siliniyordu).
+    await tester.tap(find.byKey(const ValueKey('format-scope-menu')));
+    await tester.pumpAndSettle();
+    expect(find.text('Kelime'), findsOneWidget);
     expect(controller.selection, const TextSelection.collapsed(offset: 5));
     expect(find.byKey(const ValueKey('format-scope-line')), findsNothing);
-    expect(find.text('Kelime'), findsOneWidget);
     // Biçim uygulanırken kapsam imleçten açılır, iş bitince imleç döner.
     Future<String> boldScope() async {
       await tester.tap(find.byKey(const ValueKey('format-bold')));
@@ -96,8 +109,88 @@ void main() {
       controller.selection,
       const TextSelection(baseOffset: 0, extentOffset: 2),
     );
-    controller.selection = const TextSelection.collapsed(offset: 1);
+    // Elle seçimde hapa basmak seçimi bırakır (imleç ucunda), son kapsam
+    // geri gelir — "Seçim"de kilitli kalmaz.
+    await tester.tap(find.byKey(const ValueKey('format-scope-menu')));
     await tester.pumpAndSettle();
+    expect(controller.selection, const TextSelection.collapsed(offset: 2));
     expect(find.text('İmleç'), findsOneWidget);
+  });
+
+  testWidgets('kapsam önizlemesi: kelime/satır soluk zeminle görünür', (
+    tester,
+  ) async {
+    final controller = WrapTextController(text: 'abc def\nghi');
+    final focus = FocusNode();
+    addTearDown(focus.dispose);
+    controller.selection = const TextSelection.collapsed(offset: 5);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('tr'),
+        home: Scaffold(
+          body: Column(
+            children: [
+              TextField(controller: controller, focusNode: focus),
+              FormatBar(
+                target: FormatTarget(
+                  controller: controller,
+                  focusNode: focus,
+                  commit: () {},
+                ),
+                onFormat: (_, {colorIndex}) {},
+                onClearFormat: () {},
+                onRemoveFormat: (_) {},
+                fontFamily: null,
+                fontScale: 1,
+                textOpacity: 1,
+                hasSelection: () => false,
+                onFontChanged: (_) {},
+                onScaleChanged: (_) {},
+                onScaleEnd: (_) {},
+                onOpacityChanged: (_) {},
+                onOpacityEnd: (_) {},
+                onClose: () {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    List<String> shaded() {
+      final context = tester.element(find.byType(TextField));
+      final span = controller.buildTextSpan(
+        context: context,
+        withComposing: false,
+      );
+      final out = <String>[];
+      span.visitChildren((s) {
+        if (s is TextSpan &&
+            s.text != null &&
+            s.style?.backgroundColor != null) {
+          out.add(s.text!);
+        }
+        return true;
+      });
+      if (span.text != null && span.style?.backgroundColor != null) {
+        out.add(span.text!);
+      }
+      return out;
+    }
+
+    // İmleç kipinde önizleme yok; hapa basınca Kelime görünür.
+    expect(shaded(), isEmpty);
+    await tester.tap(find.byKey(const ValueKey('format-scope-menu')));
+    await tester.pumpAndSettle();
+    expect(shaded().join(), 'def');
+    await tester.tap(find.byKey(const ValueKey('format-scope-menu')));
+    await tester.pumpAndSettle();
+    expect(shaded().join(), 'abc def');
+    // İmleç taşınınca önizleme izler.
+    controller.selection = const TextSelection.collapsed(offset: 10);
+    await tester.pumpAndSettle();
+    expect(shaded().join(), 'ghi');
   });
 }

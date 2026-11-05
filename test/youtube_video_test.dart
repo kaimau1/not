@@ -98,9 +98,8 @@ void main() {
     });
 
     test('alanlar senkron kaydında ve not paketinde korunur', () {
-      final a = webVideoAttachment(
-        'https://youtu.be/dQw4w9WgXcQ',
-      )!.copyWith(pinHeight: 220);
+      final a = webVideoAttachment('https://youtu.be/dQw4w9WgXcQ')!
+          .copyWith(pinHeight: 220);
       final map = a.toMap();
       expect(map['webUrl'], a.webUrl);
       expect(map['pinHeight'], 220);
@@ -222,10 +221,10 @@ void main() {
       final body = tester.getTopLeft(find.text('not gövdesi'));
       expect(body.dy, greaterThanOrEqualTo(200));
 
-      // Ayraç tutamacını 60 dp aşağı çek: yükseklik kaydedilir.
+      // Ayraç tutamacını 80 dp aşağı çek: yükseklik kaydedilir.
       await tester.dragFrom(
         tester.getCenter(find.byKey(const ValueKey('pinned-media-bar'))),
-        const Offset(0, 60),
+        const Offset(0, 80),
       );
       await tester.pumpAndSettle();
       expect(saved, isNotNull);
@@ -239,6 +238,45 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(unpinned, isTrue);
+    });
+
+    // Kullanıcı isteği 2026-11-05: "tüm eklerde YouTube videoları gibi kolay
+    // oto sığdırma, sabitlendiğinde" — görsel de doğal boyunu aşmaz,
+    // tutamağa dokunmak bölmeyi medyaya oturtur.
+    testWidgets('görsel doğal boyunu aşmaz; tutamağa dokunmak sığdırır', (
+      tester,
+    ) async {
+      double? saved;
+      Future<void> pump(double pinHeight) => tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('tr'),
+          home: Scaffold(
+            body: PinnedMediaPane(
+              media: image.copyWith(pinHeight: pinHeight),
+              onHeightChanged: (h) => saved = h,
+              onUnpin: () {},
+              onOpen: () {},
+              child: const Text('not gövdesi'),
+            ),
+          ),
+        ),
+      );
+      // 800 dp genişlikte 2:1 görselin doğal boyu 400.
+      final width =
+          tester.view.physicalSize.width / tester.view.devicePixelRatio;
+      final natural = width * 0.5;
+      await pump(natural + 150);
+      final body = tester.getTopLeft(find.text('not gövdesi'));
+      expect(body.dy, lessThanOrEqualTo(natural + 41));
+
+      await pump(120);
+      await tester.tap(find.byKey(const ValueKey('pinned-media-fit')));
+      await tester.pumpAndSettle();
+      expect(saved, isNotNull);
+      expect(saved!, greaterThan(120));
+      expect(saved!, lessThanOrEqualTo(natural));
     });
   });
 }
