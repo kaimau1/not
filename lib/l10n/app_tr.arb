@@ -2052,6 +2052,8 @@
   "docViewSwitchedClassic": "Klasik görünüm: belge sayfada bir ek. Balonlar ve sayfa notları saklandı.",
   "docViewTextKept": "Notun yazısı klasik görünümde duruyor.",
   "captureModeChangeLater": "Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.",
+  "attachmentSyncV2Title": "Ekleri Drive'daki Notlar klasörüne de yükle (deneme)",
+  "attachmentSyncV2Info": "Yeni senkron. Hiçbir kayıt silinmez, eski yol da çalışır.",
   "attachmentSyncTitle": "Ek senkronu",
   "driveSectionTitle": "Ekler Google Drive'ında",
   "driveConnectTitle": "Ekleri Google Drive'ında sakla",

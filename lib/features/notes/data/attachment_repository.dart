@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import '../domain/attachment_sync.dart';
+import 'attachment_sync_service.dart';
+import 'drive_files_api.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,6 +41,7 @@ final attachmentRepositoryProvider = Provider<AttachmentRepository?>((ref) {
     uid,
     maxBytes,
     drive: ref.watch(driveStoreProvider),
+    driveFiles: ref.watch(attachmentDriveSessionProvider)?.api,
     quotaBytes: !firebaseBound
         ? 0
         : premium
@@ -178,7 +182,11 @@ class AttachmentRepository {
     this.quotaBytes = 0,
     this.usedBytes,
     this.drive,
+    this.driveFiles,
   });
+
+  /// Yeni ek senkronu (F28.2): bayrak açık + Google hesabı; değilse null.
+  final DriveFilesApi? driveFiles;
 
   final FirebaseStorage _storage;
   final String uid;
@@ -913,6 +921,15 @@ class AttachmentRepository {
   /// Drive'daki eki bu cihazın yerel kopyasına indirir (yoksa). İndirildiyse
   /// true; Drive yoksa/ek Drive'da değilse false.
   Future<bool> fetchFromDrive(Attachment attachment) async {
+    final v2 = driveFiles;
+    final v2Id = attachmentDriveFileId(attachment);
+    if (v2 != null && v2Id.isNotEmpty && attachment.localPath.isNotEmpty) {
+      final target = File(attachment.localPath);
+      if (await target.exists()) return false;
+      await target.parent.create(recursive: true);
+      await target.writeAsBytes(await v2.download(v2Id), flush: true);
+      return true;
+    }
     final store = drive;
     if (store == null || !attachment.isInDrive) return false;
     if (attachment.localPath.isEmpty) return false;
@@ -923,6 +940,16 @@ class AttachmentRepository {
   }
 
   Future<void> deleteFromStorage(Attachment attachment) async {
+    // Yeni yapı: Drive dosyası ÇÖPE (kullanıcı geri alabilir), önizleme silinir.
+    final v2Id = attachmentDriveFileId(attachment);
+    if (v2Id.isNotEmpty) {
+      await driveFiles?.trash(v2Id);
+      try {
+        await _storage.ref(thumbStoragePath(uid, attachment.id)).delete();
+      } on FirebaseException catch (e) {
+        if (e.code != 'object-not-found') rethrow;
+      }
+    }
     // Drive kopyası da gider (bağlı değilse dosya Drive'da kalır — yalnız
     // yer kaplar, veri riski yok).
     if (attachment.isInDrive) {
@@ -937,6 +964,13 @@ class AttachmentRepository {
     }
   }
 
+  /// Yalnız bu cihazdaki kopya (yeni senkron yükleyicisi): ağa çıkmaz.
+  Future<Uint8List?> readLocalBytes(Attachment attachment) async {
+    if (attachment.localPath.isEmpty) return null;
+    final file = File(attachment.localPath);
+    return await file.exists() ? file.readAsBytes() : null;
+  }
+
   /// PDF baytlarını getirir: önce yerel kopya, yoksa Drive'dan (bağlıysa
   /// indirip yerel kopyaya da yazarak), o da yoksa Storage'dan.
   Future<Uint8List?> readBytes(Attachment attachment) async {
@@ -948,6 +982,14 @@ class AttachmentRepository {
     if (attachment.localPath.isNotEmpty) {
       final file = File(attachment.localPath);
       if (await file.exists()) return file.readAsBytes();
+    }
+    final v2Id = attachmentDriveFileId(attachment);
+    if (v2Id.isNotEmpty && driveFiles != null) {
+      if (kIsWeb || attachment.localPath.isEmpty) {
+        return driveFiles!.download(v2Id);
+      }
+      await fetchFromDrive(attachment);
+      return File(attachment.localPath).readAsBytes();
     }
     if (attachment.isInDrive && drive != null) {
       if (!kIsWeb && attachment.localPath.isNotEmpty) {

@@ -1688,6 +1688,8 @@
   "docViewSwitchedClassic": "Classic view: the document is an attachment on the page. Bubbles and page notes are kept.",
   "docViewTextKept": "The note's text stays in classic view.",
   "captureModeChangeLater": "You can switch later with the Bubbles / Classic chip in the note.",
+  "attachmentSyncV2Title": "Also upload attachments to the Notes folder in Drive (trial)",
+  "attachmentSyncV2Info": "New sync. No record is deleted, the old path keeps working.",
   "attachmentSyncTitle": "Attachment sync",
   "driveSectionTitle": "Attachments in your Google Drive",
   "driveConnectTitle": "Keep attachments in your Google Drive",

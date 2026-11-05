@@ -8018,6 +8018,18 @@ abstract class AppLocalizations {
   /// **'Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.'**
   String get captureModeChangeLater;
 
+  /// No description provided for @attachmentSyncV2Title.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekleri Drive\'daki Notlar klasörüne de yükle (deneme)'**
+  String get attachmentSyncV2Title;
+
+  /// No description provided for @attachmentSyncV2Info.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni senkron. Hiçbir kayıt silinmez, eski yol da çalışır.'**
+  String get attachmentSyncV2Info;
+
   /// No description provided for @attachmentSyncTitle.
   ///
   /// In tr, this message translates to:

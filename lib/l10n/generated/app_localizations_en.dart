@@ -4469,6 +4469,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'You can switch later with the Bubbles / Classic chip in the note.';
 
   @override
+  String get attachmentSyncV2Title =>
+      'Also upload attachments to the Notes folder in Drive (trial)';
+
+  @override
+  String get attachmentSyncV2Info =>
+      'New sync. No record is deleted, the old path keeps working.';
+
+  @override
   String get attachmentSyncTitle => 'Attachment sync';
 
   @override
