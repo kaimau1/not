@@ -7,7 +7,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # Sürüm: ANA.ARA burada (1.1); CI `--build-name=1.1.<koşu>` ve
 # `--build-number=<koşu>` geçer (Android versionName/versionCode). Yerel
 # APK'da `--build-number` ZORUNLU (bkz. CLAUDE.md).
-version: 1.1.0+1
+version: 1.2.0+1
 
 environment:
   sdk: ^3.13.0
