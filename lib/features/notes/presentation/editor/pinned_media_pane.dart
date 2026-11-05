@@ -20,6 +20,7 @@ import 'audio_card_box.dart';
 import 'pdf_page_box.dart';
 import 'slide_page_box.dart';
 import 'text_page_box.dart';
+import 'video_hub_scope.dart';
 import 'video_transport.dart';
 
 /// Sabit bölmenin yüksekliği bu sınırlar arasında kalır (dp / oran).
