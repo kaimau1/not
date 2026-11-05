@@ -436,6 +436,7 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
   telefonunda tekrarlanmadı**; görselli notta ilk açılış 33 ms, sonrakiler 66–149 ms: bu
   fark yoruma açık, sabah bakılacak (KALANLAR §2 #69). Test `note_screen_chrome_test`
   (20 tur kurulum sayısı sabit) + `perf_test` `keyboard_cycle`.
+  Son durum v1.1.680: uzun listede 8 tur, takılan kare açılış 6–15, kapanış 8–14, bellek 252–253 MB: artış yok.
 
 ## FAZ 39 — Ana ekran: başlık, çipler, bölümler, jestler
 
