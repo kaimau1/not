@@ -21,6 +21,9 @@ testlerle korunuyor; burada alan başına 1–2 adım. F18.8 akış testleri
 testleri otomatik doğrulananları kapsıyor. Sorun görünce madde numarasıyla
 bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 
+**Cihaz turu notu (2026-11-05, v1.1.699, YARIM — kullanım sınırı):** telefon yerel hesapta (Google yok). Denenen: #1, #2, #3, #5'in toplu kopyası, #6'nın bir kısmı, #71'in bir kısmı. #3 geçti, silindi. Düzeltilenlerin (#1 çevirme, klavye arkası bildirim, biçimli madde bölme, kutucuk etiketi) yeni APK'da telefonda yeniden bakılmadı. #9 açıldı: yedek paylaşım seçicisine kadar geldi, dosya kaydedilmedi. #6: MIUI, otomatik başlatma izni yokken `BOOT_COMPLETED`'ı engelliyor (`Unable to launch app`), plan uygulama açılınca kuruluyor; çalma + "Tamam" denenmedi, reboot sonrası yol MIUI'de çalışmıyor (sabah bakılacak: Xiaomi'de izin ipucu). #1: nota dokunma açılıyor, kart geçişi gözle bakılmadı. Geri kalan maddeler denenmedi: süre.
+Bulgu (düzeltilmedi, sabah bakılacak): yeni metin notunda klavye kendiliğinden açılmıyor; sabit görsel ⋮'te Kopyala ve Metni çıkar yok (yüzende var); iki ayrı hatırlatıcı akışı (not "+": tarih seçici, Hatırlatıcılar: "Ne zaman" levhası). Tarif eskimiş: İlgili notlar artık başlık "+" levhasında, Tam yedek Ayarlar → Senkronizasyon'da.
+
 **Telefon (v1.1.N, Google hesabı; ~7 dk)**
 1. [ ] Açılış + ana ekran: 100+ notla hızlı kaydır, nota dokun → karttan
    genişleyerek açılır, geri → karta küçülür. Telefonu çevir → liste aynı
@@ -28,8 +31,6 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 2. [ ] Metin notu: yaz, Biçim → kalın + renk, ☑ ile satırı maddeye çevir;
    `[[` yaz → not seç → bağlantı; dokun → o not açılır; hedef notta
    "1 bağlantı" çipi (F18.16). ⋮ → İlgili notlar → Bağla (F18.17).
-3. [ ] Liste notu: işaretle, madde ortasında Enter + başta Backspace,
-   "İşaretlileri sil".
 4. [ ] Görsel ekle → üstüne kalemle çiz + açık metin → Paylaş → Ekler / PDF:
    çizim ve yazı görselde (F18.13).
 5. [ ] + → Dosya → PDF → Belge gibi not al → basılı tut → balon → Paylaş:

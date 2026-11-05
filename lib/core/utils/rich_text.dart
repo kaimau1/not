@@ -350,6 +350,38 @@ String plainSelection(String text, int start, int end) {
       .replaceAll(_emptyBoxPattern, '');
 }
 
+/// İşaretli metni [start]–[end] arasını atarak ikiye böler; iki parça da kendi
+/// biçimini taşır. Düz `substring` işareti ortadan keser, ham `**%%` metne
+/// dökülürdü (cihaz turu 2026-11-05, biçimli maddede Enter).
+({String before, String after}) splitRichText(
+  String marked,
+  int start,
+  int end,
+) {
+  if (!_hasMarker(marked)) {
+    return (before: marked.substring(0, start), after: marked.substring(end));
+  }
+  final leaves = _parse(marked);
+  final ps = _toPlain(leaves, start);
+  final pe = _toPlain(leaves, end);
+  final left = <RichSegment>[];
+  final right = <RichSegment>[];
+  var at = 0;
+  for (final leaf in leaves) {
+    final next = at + leaf.text.length;
+    if (at < ps) {
+      left.add(
+        RichSegment(leaf.text.substring(0, (ps < next ? ps : next) - at), leaf.mark),
+      );
+    }
+    if (next > pe) {
+      right.add(RichSegment(leaf.text.substring((pe > at ? pe : at) - at), leaf.mark));
+    }
+    at = next;
+  }
+  return (before: _serialize(left).text, after: _serialize(right).text);
+}
+
 bool _hasMarker(String text) =>
     text.contains('**') ||
     text.contains('==') ||

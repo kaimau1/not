@@ -54,6 +54,28 @@ void main() {
     expect(second.controller!.selection.baseOffset, 0);
   });
 
+  testWidgets('biçimli madde bölününce iki parça da biçimli, ham işaret yok', (
+    tester,
+  ) async {
+    // Cihaz turu 2026-11-05: `%%1:**iki` / `nci satir**%%` dökülüyordu.
+    final latest = await _enterAt(
+      tester,
+      text: '%%1:**ikinci satir**%%',
+      caret: 9,
+    );
+    expect(latest!.map((i) => i.text).toList(), [
+      '%%1:**iki**%%',
+      '%%1:**nci satir**%%',
+    ]);
+  });
+
+  testWidgets('imleç kapanış işaretinin içindeyse maddenin sonu sayılır', (
+    tester,
+  ) async {
+    final latest = await _enterAt(tester, text: '**ekmek**', caret: 8);
+    expect(latest!.map((i) => i.text).toList(), ['**ekmek**', '']);
+  });
+
   testWidgets('sonda Enter: altına boş madde açar', (tester) async {
     final latest = await _enterAt(tester, text: 'ekmek', caret: 5);
     expect(latest!.map((i) => i.text).toList(), ['ekmek', '']);
