@@ -3297,5 +3297,7 @@
   "tagRemove": "Etiketi kaldır",
   "itemAlignStart": "Sola hizala",
   "itemAlignCenter": "Ortala",
-  "itemAlignEnd": "Sağa hizala"
+  "itemAlignEnd": "Sağa hizala",
+  "themeLavender": "Lavanta",
+  "themeOlive": "Zeytin"
 }

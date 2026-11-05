@@ -25,6 +25,13 @@ enum ThemeFamily {
 
   /// C · Kil: gül kurusu taş, erik, petrol yeşili (sıcak ama sarı değil).
   clay,
+
+  /// D · Lavanta (2026-11-05, kullanıcı isteği "yeni 2 tema"): leylak
+  /// grisi masa, mürdüm mor, deniz yeşili.
+  lavender,
+
+  /// E · Zeytin (2026-11-05): zeytin taşı masa, zeytin yeşili, gül kurusu.
+  olive,
 }
 
 /// Bir ailenin tek parlaklıktaki ham belirteçleri.
@@ -110,6 +117,8 @@ abstract final class FamilyPalettes {
       ThemeFamily.sage => dark ? _sageDark : _sageLight,
       ThemeFamily.porcelain => dark ? _porcelainDark : _porcelainLight,
       ThemeFamily.clay => dark ? _clayDark : _clayLight,
+      ThemeFamily.lavender => dark ? _lavenderDark : _lavenderLight,
+      ThemeFamily.olive => dark ? _oliveDark : _oliveLight,
     };
   }
 
@@ -288,5 +297,123 @@ abstract final class FamilyPalettes {
     inverse: Color(0xFFEDE4E2),
     onInverse: Color(0xFF291F1D),
     inversePrimary: Color(0xFF77465E),
+  );
+
+  // ── D · Lavanta ─────────────────────────────────────────────────────────
+  static const _lavenderLight = FamilyTokens(
+    ground: Color(0xFFEDEBF3),
+    lowest: Color(0xFFFCFBFE),
+    card: Color(0xFFFCFBFE),
+    sheet: Color(0xFFF7F5FB),
+    field: Color(0xFFF1EFF6),
+    high: Color(0xFFE2DFEA),
+    highest: Color(0xFFD9D6E2),
+    hair: Color(0xFFD4D1DD),
+    outline: Color(0xFF7E7A8A),
+    ink: Color(0xFF211F2A),
+    muted: Color(0xFF55525F),
+    primary: Color(0xFF5B4B8A),
+    onPrimary: Color(0xFFFFFFFF),
+    primaryContainer: Color(0xFFE5DEFA),
+    onPrimaryContainer: Color(0xFF231A40),
+    secondary: Color(0xFF2F7466),
+    onSecondary: Color(0xFFFFFFFF),
+    secondaryContainer: Color(0xFFCDEEE6),
+    onSecondaryContainer: Color(0xFF00352C),
+    tertiary: Color(0xFF975A44),
+    onTertiary: Color(0xFFFFFFFF),
+    tertiaryContainer: Color(0xFFF8E0D6),
+    onTertiaryContainer: Color(0xFF3D1E12),
+    inverse: Color(0xFF2E2C36),
+    onInverse: Color(0xFFF1EFF6),
+    inversePrimary: Color(0xFFC6B8F4),
+  );
+
+  static const _lavenderDark = FamilyTokens(
+    ground: Color(0xFF16151B),
+    lowest: Color(0xFF100F14),
+    card: Color(0xFF1F1D26),
+    sheet: Color(0xFF24222B),
+    field: Color(0xFF24222B),
+    high: Color(0xFF2D2B35),
+    highest: Color(0xFF36343E),
+    hair: Color(0xFF3C3A45),
+    outline: Color(0xFF928F9C),
+    ink: Color(0xFFE7E4EF),
+    muted: Color(0xFFB8B5C2),
+    primary: Color(0xFFC6B8F4),
+    onPrimary: Color(0xFF2C2152),
+    primaryContainer: Color(0xFF433669),
+    onPrimaryContainer: Color(0xFFE5DEFA),
+    secondary: Color(0xFF7DD3C2),
+    onSecondary: Color(0xFF00382F),
+    secondaryContainer: Color(0xFF0D4E43),
+    onSecondaryContainer: Color(0xFFCDEEE6),
+    tertiary: Color(0xFFE9B6A2),
+    onTertiary: Color(0xFF3D1E12),
+    tertiaryContainer: Color(0xFF5A3A2D),
+    onTertiaryContainer: Color(0xFFF8E0D6),
+    inverse: Color(0xFFE7E4EF),
+    onInverse: Color(0xFF211F2A),
+    inversePrimary: Color(0xFF5B4B8A),
+  );
+
+  // ── E · Zeytin ──────────────────────────────────────────────────────────
+  static const _oliveLight = FamilyTokens(
+    ground: Color(0xFFEDEEE6),
+    lowest: Color(0xFFFBFCF8),
+    card: Color(0xFFFBFCF8),
+    sheet: Color(0xFFF6F7F1),
+    field: Color(0xFFF0F1EA),
+    high: Color(0xFFE2E4DA),
+    highest: Color(0xFFD9DBD0),
+    hair: Color(0xFFD4D6CB),
+    outline: Color(0xFF7D8075),
+    ink: Color(0xFF1F221B),
+    muted: Color(0xFF52564B),
+    primary: Color(0xFF4F6A2A),
+    onPrimary: Color(0xFFFFFFFF),
+    primaryContainer: Color(0xFFD9EBC0),
+    onPrimaryContainer: Color(0xFF162404),
+    secondary: Color(0xFF8C4A5F),
+    onSecondary: Color(0xFFFFFFFF),
+    secondaryContainer: Color(0xFFF7DCE4),
+    onSecondaryContainer: Color(0xFF3A1421),
+    tertiary: Color(0xFF2F6378),
+    onTertiary: Color(0xFFFFFFFF),
+    tertiaryContainer: Color(0xFFD3E8F2),
+    onTertiaryContainer: Color(0xFF032D3C),
+    inverse: Color(0xFF2E312A),
+    onInverse: Color(0xFFF0F1EA),
+    inversePrimary: Color(0xFFB2D18A),
+  );
+
+  static const _oliveDark = FamilyTokens(
+    ground: Color(0xFF161813),
+    lowest: Color(0xFF10120D),
+    card: Color(0xFF1F221B),
+    sheet: Color(0xFF242720),
+    field: Color(0xFF242720),
+    high: Color(0xFF2D3028),
+    highest: Color(0xFF363931),
+    hair: Color(0xFF3C3F37),
+    outline: Color(0xFF91948A),
+    ink: Color(0xFFE4E6DD),
+    muted: Color(0xFFB6B9AE),
+    primary: Color(0xFFB2D18A),
+    onPrimary: Color(0xFF203606),
+    primaryContainer: Color(0xFF384F18),
+    onPrimaryContainer: Color(0xFFD9EBC0),
+    secondary: Color(0xFFEDB0C3),
+    onSecondary: Color(0xFF4F1F31),
+    secondaryContainer: Color(0xFF6B3547),
+    onSecondaryContainer: Color(0xFFF7DCE4),
+    tertiary: Color(0xFF9BCCE2),
+    onTertiary: Color(0xFF003548),
+    tertiaryContainer: Color(0xFF154B5F),
+    onTertiaryContainer: Color(0xFFD3E8F2),
+    inverse: Color(0xFFE4E6DD),
+    onInverse: Color(0xFF1F221B),
+    inversePrimary: Color(0xFF4F6A2A),
   );
 }

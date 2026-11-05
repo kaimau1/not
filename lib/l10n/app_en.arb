@@ -2532,5 +2532,7 @@
   "tagRemove": "Remove tag",
   "itemAlignStart": "Align left",
   "itemAlignCenter": "Center",
-  "itemAlignEnd": "Align right"
+  "itemAlignEnd": "Align right",
+  "themeLavender": "Lavender",
+  "themeOlive": "Olive"
 }

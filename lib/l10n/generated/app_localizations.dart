@@ -12157,6 +12157,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sağa hizala'**
   String get itemAlignEnd;
+
+  /// No description provided for @themeLavender.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lavanta'**
+  String get themeLavender;
+
+  /// No description provided for @themeOlive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zeytin'**
+  String get themeOlive;
 }
 
 class _AppLocalizationsDelegate

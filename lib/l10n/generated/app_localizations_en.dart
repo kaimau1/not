@@ -6836,4 +6836,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemAlignEnd => 'Align right';
+
+  @override
+  String get themeLavender => 'Lavender';
+
+  @override
+  String get themeOlive => 'Olive';
 }

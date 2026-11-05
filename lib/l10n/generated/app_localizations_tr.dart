@@ -6814,4 +6814,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get itemAlignEnd => 'Sağa hizala';
+
+  @override
+  String get themeLavender => 'Lavanta';
+
+  @override
+  String get themeOlive => 'Zeytin';
 }

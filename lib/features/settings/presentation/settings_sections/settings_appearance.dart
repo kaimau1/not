@@ -284,23 +284,44 @@ class _ThemeSelector extends ConsumerWidget {
         l10n.themeClay,
         [of(ThemeFamily.clay, Brightness.light)],
       ),
+      (
+        AppThemeChoice.lavender,
+        l10n.themeLavender,
+        [of(ThemeFamily.lavender, Brightness.light)],
+      ),
+      (
+        AppThemeChoice.olive,
+        l10n.themeOlive,
+        [of(ThemeFamily.olive, Brightness.light)],
+      ),
       (AppThemeChoice.dark, l10n.themeDark, [dark]),
     ];
-    return Row(
-      children: [
-        for (var i = 0; i < options.length; i++) ...[
-          if (i > 0) const SizedBox(width: 8),
-          Expanded(
-            child: _ThemeCard(
-              label: options[i].$2,
-              themes: options[i].$3,
-              selected: choice == options[i].$1,
-              onTap: () =>
-                  ref.read(themeChoiceProvider.notifier).set(options[i].$1),
-            ),
-          ),
-        ],
-      ],
+    // Yedi seçenek telefon genişliğinde tek sıraya sığmaz (adlar düşerdi):
+    // dar ekranda iki sıra (4 + 3), genişte tek sıra.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = 8.0;
+        final perRow = constraints.maxWidth < 560 ? 4 : options.length;
+        final width =
+            (constraints.maxWidth - gap * (perRow - 1)) / perRow;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final option in options)
+              SizedBox(
+                width: width,
+                child: _ThemeCard(
+                  label: option.$2,
+                  themes: option.$3,
+                  selected: choice == option.$1,
+                  onTap: () =>
+                      ref.read(themeChoiceProvider.notifier).set(option.$1),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

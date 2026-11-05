@@ -76,12 +76,16 @@ enum AppThemeChoice {
   sage,
   porcelain,
   clay,
+  lavender,
+  olive,
   dark;
 
   /// Bu seçimin tema ailesi (Sistem ve Koyu varsayılan aileyi kullanır).
   ThemeFamily get family => switch (this) {
     AppThemeChoice.porcelain => ThemeFamily.porcelain,
     AppThemeChoice.clay => ThemeFamily.clay,
+    AppThemeChoice.lavender => ThemeFamily.lavender,
+    AppThemeChoice.olive => ThemeFamily.olive,
     _ => ThemeFamily.sage,
   };
 
@@ -876,7 +880,9 @@ final effectiveThemeModeProvider = Provider.autoDispose<ThemeMode>((ref) {
     AppThemeChoice.system => ThemeMode.system,
     AppThemeChoice.sage ||
     AppThemeChoice.porcelain ||
-    AppThemeChoice.clay => ThemeMode.light,
+    AppThemeChoice.clay ||
+    AppThemeChoice.lavender ||
+    AppThemeChoice.olive => ThemeMode.light,
     AppThemeChoice.dark => ThemeMode.dark,
   };
 });
