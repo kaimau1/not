@@ -4,14 +4,13 @@ import 'package:notlar/core/personalize.dart';
 import 'package:notlar/core/widgets/customizable.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/presentation/editor/attachment_actions.dart';
-import 'package:notlar/features/notes/presentation/editor/attach_sheet.dart';
 import 'package:notlar/features/notes/presentation/editor/editor_bar_layout.dart';
 import 'package:notlar/features/notes/presentation/editor/note_images.dart';
 import 'package:notlar/features/notes/presentation/editor/pinned_media_pane.dart';
 import 'package:notlar/features/notes/presentation/editor/video_hub_scope.dart';
 import 'package:notlar/features/notes/presentation/editor/video_transport.dart';
 import 'package:notlar/features/notes/presentation/editor/view_mode_switch.dart';
-import 'package:notlar/features/notes/presentation/quick_add_fab.dart';
+import 'package:notlar/features/notes/presentation/add_catalog.dart';
 import 'package:notlar/features/notes/presentation/viewers/bubble_layer.dart';
 import 'package:notlar/core/utils/video_time.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
@@ -269,10 +268,14 @@ void main() {
 
     test('+ menüsü ve Ekle levhası kimlikleri tekil', () async {
       final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
-      final quick = [for (final m in quickAddCatalog(l10n)) m.key];
+      final quick = [
+        for (final m in addCatalog(l10n, AddContext.newNote)) m.id,
+      ];
       expect(quick.toSet().length, quick.length);
       expect(quick, containsAll(['text', 'checklist', 'youtube', 'archive']));
-      final attach = [for (final e in attachSheetCatalog(l10n)) e.id];
+      final attach = [
+        for (final e in addCatalog(l10n, AddContext.inNote)) e.id,
+      ];
       expect(attach.toSet().length, attach.length);
       // Eklentilerin saydığı her öğe gerçekten bir yerde var.
       final known = {

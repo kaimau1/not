@@ -198,6 +198,13 @@ extension _EditorAttachments on _NoteEditorScreenState {
       ),
       chooserTitle: l10n.quickAddFile,
     );
+    await _attachFiles(files);
+  }
+
+  /// Seçilen ya da açık nota bırakılan dosyalar (F41.4): tür tanınır, gerekirse
+  /// ortak levha ([showFileUseSheet]) sorar.
+  Future<void> _attachFiles(List<XFile> files) async {
+    final l10n = context.l10n;
     if (files.isEmpty || !mounted) return;
     String nameOf(XFile f) => f.name.isEmpty ? f.path : f.name;
     final kind = PickedFileKind.of(nameOf(files.first));
@@ -230,14 +237,14 @@ extension _EditorAttachments on _NoteEditorScreenState {
         }
         // Ek levhası sadeleşti (2026-10-20): "Görseli ek olarak yükle" ayrı
         // giriş değil, burada sorulur.
-        final use = await _askFileUse(kind);
+        final use = await _askFileUse(kind, same);
         if (use == null || !mounted) return;
         for (final f in same) {
           if (!mounted) return;
           await _addImageBytes(
             await f.readAsBytes(),
             nameOf(f).split(RegExp(r'[\\/]')).last,
-            asFile: use == _FileUse.attach,
+            asFile: use == FileUse.imageFile,
           );
         }
       case PickedFileKind.pdf:
@@ -248,11 +255,11 @@ extension _EditorAttachments on _NoteEditorScreenState {
       case PickedFileKind.audio:
         // "Ses dosyası ekle", "Galeriden video" ve "Dosyayı metne dök" ayrı
         // girişler değil: tür tanınır, ne yapılacağı sorulur.
-        final use = await _askFileUse(kind);
+        final use = await _askFileUse(kind, same);
         if (use == null || !mounted) return;
         await handOff(
           [same.first],
-          use == _FileUse.transcribe
+          use == FileUse.transcribe
               ? _transcribeFile
               : kind == PickedFileKind.video
               ? _addVideoFromGallery
@@ -263,60 +270,16 @@ extension _EditorAttachments on _NoteEditorScreenState {
 
   /// "Dosya ekle"de seçilen dosyayla ne yapılacağı (görsel: sayfaya / ek
   /// olarak; ses-video: ek olarak / metne dök). İptalde null.
-  Future<_FileUse?> _askFileUse(PickedFileKind kind) {
-    final l10n = context.l10n;
-    final image = kind == PickedFileKind.image;
-    final options = <(_FileUse, IconData, String, String)>[
-      if (image) ...[
-        (
-          _FileUse.page,
-          Icons.image_outlined,
-          l10n.addImage,
-          l10n.addImageOnPageSubtitle,
-        ),
-        (
-          _FileUse.attach,
-          Icons.attachment_outlined,
-          l10n.addImageAsFile,
-          l10n.addImageAsFileSubtitle,
-        ),
-      ] else ...[
-        (
-          _FileUse.attach,
-          kind == PickedFileKind.video
-              ? Icons.video_library_outlined
-              : Icons.library_music_outlined,
-          kind == PickedFileKind.video
-              ? l10n.addVideoFromGallery
-              : l10n.addAudioFile,
-          l10n.fileUseAttachInfo,
-        ),
-        (
-          _FileUse.transcribe,
-          Icons.subtitles_outlined,
-          l10n.transcribeFile,
-          l10n.transcribeFileSubtitle,
-        ),
+  Future<FileUse?> _askFileUse(PickedFileKind kind, List<XFile> files) async {
+    final choice = await showFileUseSheet(
+      context,
+      kind: kind,
+      inNote: true,
+      names: [
+        for (final f in files) (f.name.isEmpty ? f.path : f.name).split(RegExp(r'[\\/]')).last,
       ],
-    ];
-    return showAppSheet<_FileUse>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final (use, icon, title, info) in options)
-              ListTile(
-                leading: Icon(icon),
-                title: Text(title),
-                subtitle: Text(info),
-                onTap: () => Navigator.pop(sheetContext, use),
-              ),
-          ],
-        ),
-      ),
     );
+    return choice?.use;
   }
 
   /// "Foto çek not al": kamerayla fotoğraf çekip nota gömer. Çekilen fotoğraf
@@ -1321,5 +1284,3 @@ extension _EditorAttachments on _NoteEditorScreenState {
 
 }
 
-/// "Dosya ekle"de seçilen dosyanın kullanımı (bkz. `_askFileUse`).
-enum _FileUse { page, attach, transcribe }

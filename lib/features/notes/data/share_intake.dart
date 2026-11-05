@@ -325,7 +325,9 @@ final shareIntakeProvider = Provider<void>((ref) {
     // Aynı içerik uygulama tekrar öne gelince yeniden işlenmesin.
     unawaited(ReceiveSharingIntent.instance.reset());
     try {
-      unawaited(router.pushNote(noteRoutePath(id)));
+      unawaited(
+        router.pushNote(noteRoutePath(id, query: sharePlacementQuery(prepared))),
+      );
     } catch (e) {
       ErrorLog.record('share-intake-open', e);
     }
@@ -537,10 +539,21 @@ Future<void> _addToExistingNote(
   }
 
   try {
-    unawaited(ref.read(routerProvider).pushNote(noteRoutePath(noteId)));
+    unawaited(
+      ref
+          .read(routerProvider)
+          .pushNote(noteRoutePath(noteId, query: sharePlacementQuery(prepared))),
+    );
   } catch (e) {
     ErrorLog.record('share-intake-open', e);
   }
+}
+
+/// Paylaşımla gelen ek de uygulama içinden eklenen gibi "Yeni ek nerede
+/// dursun?" ipucuyla açılır (F41.4): sayfada yüzen SON ek. Yoksa boş.
+String sharePlacementQuery(List<Attachment> prepared) {
+  final id = prepared.where((a) => a.floatsOnPage).lastOrNull?.id;
+  return id == null ? '' : '?place=${Uri.encodeQueryComponent(id)}';
 }
 
 const _uuid = Uuid();

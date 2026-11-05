@@ -5,10 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
 import '../../../core/widgets/undo_snackbar.dart';
-import '../../notes/presentation/editor/attach_sheet.dart'
-    show attachSheetCatalog;
 import '../../notes/presentation/editor/video_transport.dart' show SeekIcon;
-import '../../notes/presentation/quick_add_fab.dart' show quickAddCatalog;
+import '../../notes/presentation/add_catalog.dart';
 import '../../notes/presentation/viewers/bubble_layer.dart' show BubbleLook;
 import '../settings_providers.dart';
 import '../../../core/a11y/chip_roles.dart';
@@ -561,8 +559,8 @@ class _QuickAddSection extends StatelessWidget {
       info: l10n.personalizeChipsInfo,
       child: _VisibilityChips(
         items: [
-          for (final m in quickAddCatalog(l10n))
-            (id: UiItem.quickAdd(m.key), icon: m.icon, label: m.label),
+          for (final m in addCatalog(l10n, AddContext.newNote))
+            (id: UiItem.quickAdd(m.id), icon: m.icon, label: m.label),
         ],
       ),
     );
@@ -581,7 +579,7 @@ class _AttachSection extends StatelessWidget {
       info: l10n.personalizeChipsInfo,
       child: _VisibilityChips(
         items: [
-          for (final e in attachSheetCatalog(l10n))
+          for (final e in addCatalog(l10n, AddContext.inNote))
             (id: UiItem.attach(e.id), icon: e.icon, label: e.label),
         ],
       ),

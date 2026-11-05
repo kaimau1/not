@@ -233,7 +233,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   @override
   void initState() {
     super.initState();
-    _stopFileDrops = listenFileDrops((files) => unawaited(useFiles(files)));
+    _stopFileDrops = addFileDropHandler((files) => unawaited(useFiles(files)));
     // KÖK NEDEN (kasma): burada `_searchFocus.addListener(() => setState(...))`
     // vardı — arama alanına her dokunuş EKRANIN TAMAMINI (ve önbellek
     // payındaki ~130 kartı) yeniden kuruyordu. Odak artık yalnız arama

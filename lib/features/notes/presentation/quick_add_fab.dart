@@ -8,11 +8,10 @@ import 'package:flutter/services.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
 import '../../../core/widgets/customizable.dart';
-import '../data/document_scan.dart';
 import '../domain/note_templates.dart';
 import '../domain/note_type.dart';
+import 'add_catalog.dart';
 import 'quick_add_actions.dart';
-import 'qr_scan_screen.dart';
 import '../../../core/widgets/press_scale.dart';
 
 /// "+" düğmesi: dokununca tek panel açılır — bütün seçenekler gruplu ve TEK
@@ -141,11 +140,9 @@ class _QuickAddFabState extends State<QuickAddFab> {
     setState(() {});
   }
 
-  /// Menüdeki BÜTÜN seçenekler, kapılarıyla. Anahtar kişiselleştirmenin
-  /// (`UiItem.quickAdd`) kalıcı kimliğidir. Ad/simge/kapı TEK listeden
-  /// ([quickAddCatalog]) gelir — Kişiselleştir ekranı da onu okur.
+  /// Menüdeki BÜTÜN seçenekler. Anahtar kişiselleştirmenin (`UiItem.quickAdd`)
+  /// kalıcı kimliğidir. Ad/simge/grup TEK listeden ([addCatalog]) gelir.
   List<QuickAddOption> _options(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final a = widget.actions;
     final actions = <String, VoidCallback?>{
       'text': () => a.createNote(NoteType.text),
@@ -159,21 +156,15 @@ class _QuickAddFabState extends State<QuickAddFab> {
       'youtube': a.createYouTubeNote,
       'ordered': () => a.createNote(NoteType.ordered),
       'draw': a.createHandwritingNote,
+      'drawing': a.createDrawingNote,
       'shopping': () => a.createFromTemplate(NoteTemplate.shopping),
       'template': a.createFromTemplate,
       'archive': a.createNotebook,
     };
     return [
-      for (final m in quickAddCatalog(context.l10n))
-        if (actions[m.key] case final action?)
-          QuickAddOption(
-            m.key,
-            m.group,
-            m.icon,
-            m.label,
-            action,
-            _doorColor(scheme, m.group),
-          ),
+      for (final m in addCatalog(context.l10n, AddContext.newNote))
+        if (actions[m.id] case final action?)
+          QuickAddOption(m.id, m.group, m.icon, m.label, m.info, action),
     ];
   }
 
@@ -257,27 +248,6 @@ class _BlurBarrier extends StatelessWidget {
   }
 }
 
-/// Menü seçeneğinin GRUBU (panelde başlıklı bölüm; F3.2'de "kapı"ydı).
-enum QuickAddGroup {
-  /// Metin / liste (klasörde sesli not) — doğrudan, FAB'ın hemen üstünde.
-  primary,
-
-  /// Kamera: fotoğraf, video, belge tarama, QR.
-  capture,
-
-  /// Dosya ekle: tek seçici (tür dosyadan), YouTube bağlantısı.
-  files,
-
-  /// Şablon: şablonlar, alışveriş listesi, sıralı liste, el yazısı, defter.
-  more,
-}
-
-Color _doorColor(ColorScheme scheme, QuickAddGroup group) => switch (group) {
-  QuickAddGroup.capture => scheme.tertiary,
-  QuickAddGroup.files => scheme.secondary,
-  QuickAddGroup.primary || QuickAddGroup.more => scheme.primary,
-};
-
 /// Menüdeki tek seçenek. [key] kalıcı kimlik (kişiselleştirme).
 @immutable
 class QuickAddOption {
@@ -286,131 +256,17 @@ class QuickAddOption {
     this.group,
     this.icon,
     this.label,
+    this.info,
     this.action,
-    this.color,
   );
 
   final String key;
-  final QuickAddGroup group;
+  final AddGroup group;
   final IconData icon;
   final String label;
+  final String? info;
   final VoidCallback action;
-  final Color color;
 }
-
-/// Menü seçeneğinin eylemsiz tanımı (bkz. [quickAddCatalog]).
-typedef QuickAddMeta = ({
-  String key,
-  QuickAddGroup group,
-  IconData icon,
-  String label,
-});
-
-/// "+" menüsünün BÜTÜN seçenekleri, kapı ve sıra hâlinde (platformda
-/// olmayanlar — belge tarama, QR — hariç). Panel eylemleri bu kimliklere
-/// bağlar; Kişiselleştir ekranı aynı listeden gizle/göster seçicisi kurar.
-List<QuickAddMeta> quickAddCatalog(AppLocalizations l10n) => [
-  (
-    key: 'text',
-    group: QuickAddGroup.primary,
-    icon: Icons.notes,
-    label: l10n.newTextNote,
-  ),
-  (
-    key: 'checklist',
-    group: QuickAddGroup.primary,
-    icon: Icons.check_box_outlined,
-    label: l10n.newChecklist,
-  ),
-  // SIRALI LİSTE birincil satırda (2026-10-20): Metin · Liste · Sıralı —
-  // üçü de not TÜRÜ; "Diğer" dört hücreye iner, tek satıra sığar.
-  (
-    key: 'ordered',
-    group: QuickAddGroup.primary,
-    icon: Icons.format_list_numbered_rounded,
-    label: l10n.newOrderedList,
-  ),
-  (
-    key: 'voice',
-    group: QuickAddGroup.primary,
-    icon: Icons.graphic_eq,
-    label: l10n.newVoiceCapture,
-  ),
-  (
-    key: 'photo',
-    group: QuickAddGroup.capture,
-    icon: Icons.photo_camera_outlined,
-    label: l10n.newPhotoNote,
-  ),
-  (
-    key: 'video',
-    group: QuickAddGroup.capture,
-    icon: Icons.videocam_outlined,
-    label: l10n.newVideoNote,
-  ),
-  if (DocumentScan.available)
-    (
-      key: 'scan',
-      group: QuickAddGroup.capture,
-      icon: Icons.document_scanner_outlined,
-      label: l10n.newScanNote,
-    ),
-  if (qrScanSupported)
-    (
-      key: 'qr',
-      group: QuickAddGroup.capture,
-      icon: Icons.qr_code_scanner,
-      label: l10n.qrScanTitle,
-    ),
-  (
-    key: 'file',
-    group: QuickAddGroup.files,
-    icon: Icons.upload_file_outlined,
-    label: l10n.quickAddFile,
-  ),
-  (
-    key: 'youtube',
-    group: QuickAddGroup.files,
-    icon: Icons.smart_display_outlined,
-    label: l10n.quickAddYouTube,
-  ),
-  (
-    key: 'template',
-    group: QuickAddGroup.more,
-    icon: Icons.dashboard_customize_outlined,
-    label: l10n.fromTemplate,
-  ),
-  (
-    key: 'shopping',
-    group: QuickAddGroup.more,
-    icon: Icons.shopping_cart_outlined,
-    label: l10n.tplShoppingName,
-  ),
-  (
-    key: 'draw',
-    group: QuickAddGroup.more,
-    icon: Icons.draw_outlined,
-    label: l10n.newHandwriting,
-  ),
-  (
-    key: 'archive',
-    group: QuickAddGroup.more,
-    icon: Icons.book_outlined,
-    label: l10n.archiveNotebook,
-  ),
-];
-
-/// Grubun paneldeki başlığı.
-String _groupTitle(AppLocalizations l10n, QuickAddGroup group) =>
-    switch (group) {
-      // Grup başlığı ilk düğmeyle aynı adı taşımaz (F11.6): "DOSYA EKLE"
-      // başlığının altındaki ilk düğme yine "Dosya ekle"ydi; "Diğer" ne
-      // olduğunu söylemiyordu.
-      QuickAddGroup.capture => l10n.quickAddCamera,
-      QuickAddGroup.files => l10n.quickAddSectionFiles,
-      QuickAddGroup.more => l10n.quickAddSectionMore,
-      QuickAddGroup.primary => '',
-    };
 
 /// Yeni not paneli — TEK PANEL, TEK DOKUNUŞ (kullanıcı isteği 2026-10-20:
 /// "artı menüsü düzeni").
@@ -420,10 +276,9 @@ String _groupTitle(AppLocalizations l10n, QuickAddGroup group) =>
 /// gerekiyordu ve levhada ne olduğu panelden görünmüyordu. Şimdi bütün
 /// seçenekler panelde, başlıklı gruplar hâlinde, dört sütunlu ızgarada.
 /// Aşağıdan yukarı, başparmağın olduğu yerden okunur:
-///  1. En altta, FAB'ın hemen üstünde büyük düğmeler: Metin · Liste.
-///  2. Üstünde KAMERA (fotoğraf, video, tarama, QR) ve DOSYA EKLE (dosya,
-///     YouTube) — en sık kullanılanlar başparmağa yakın.
-///  3. En üstte DİĞER (şablon, alışveriş, sıralı liste, çizim, defter).
+///  1. En altta, FAB'ın hemen üstünde büyük düğmeler: Metin · Liste · Sıralı.
+///  2. Yukarı doğru not içi Ekle levhasıyla AYNI sıra (F41.2): Kalem · Kamera ·
+///     Dosya ve bağlantı · Ses · Şablon.
 /// Gizlenen seçenek yer kaplamaz; boş kalan grup başlığıyla birlikte düşer.
 /// "+" panelinin ekrana sığan ölçüsü: [dx] panelin sağa kayması, düğmenin
 /// sağ kenarı panele yetmiyorsa. Kenarda 12 dp boşluk kalır.
@@ -486,8 +341,6 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final width = widget.fit.width;
-    const gap = 6.0;
-    const columns = 4;
 
     // Gizlenen seçenek panelde yer kaplamaz; DÜZENLEME MODUNDA hepsi
     // görünür (gizliler soluk) ve dokunmak gizle/göster yapar.
@@ -495,30 +348,25 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
     final prefs = Personalize.current;
     bool shown(QuickAddOption o) =>
         editing || prefs.shows(UiItem.quickAdd(o.key));
-    List<QuickAddOption> of(QuickAddGroup g) => [
+    List<QuickAddOption> of(AddGroup g) => [
       for (final o in widget.options)
         if (o.group == g && shown(o)) o,
     ];
-    final primary = of(QuickAddGroup.primary);
-    // Üstten alta: diğer → kamera → dosya (başparmağa en yakın, birincilin
-    // hemen üstünde, geniş düğmelerle).
+    final primary = of(AddGroup.write);
+    // Panel başparmaktan yukarı okunur: grup sırası tersten yazılır.
     final sections = [
-      for (final g in const [
-        QuickAddGroup.more,
-        QuickAddGroup.capture,
-        QuickAddGroup.files,
-      ])
-        if (of(g).isNotEmpty) (group: g, options: of(g)),
+      for (final g in AddGroup.values.reversed)
+        if (g != AddGroup.write && of(g).isNotEmpty) (group: g, options: of(g)),
     ];
 
     Widget cell(QuickAddOption o, {bool wide = false}) => Customizable(
       id: UiItem.quickAdd(o.key),
       badgeInset: 6,
-      child: _PanelButton(
+      child: AddTile(
         key: ValueKey('quick-add-${o.key}'),
         icon: o.icon,
         label: o.label,
-        accent: o.color,
+        tooltip: o.info,
         wide: wide,
         onTap: () => widget.onSelected(o.action),
       ),
@@ -535,80 +383,47 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
         child: SingleChildScrollView(
           reverse: true,
           padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final cellWidth =
-                  (constraints.maxWidth - gap * (columns - 1)) / columns;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final section in sections) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
+                  // Tek bölüm başlığı (F39.6): renk yalnız simgelerde.
+                  child: SectionLabel(
+                    addGroupTitle(l10n, section.group),
+                    key: ValueKey('quick-section-${section.group.name}'),
+                  ),
+                ),
+                AddTileGrid(
+                  count: section.options.length,
+                  tile: (i, wide) => cell(section.options[i], wide: wide),
+                ),
+                const SizedBox(height: 6),
+              ],
+              if (sections.isNotEmpty && primary.isNotEmpty)
+                const SizedBox(height: 4),
+              // BİRİNCİL: büyük, dolgulu, FAB'ın hemen üstünde.
+              Row(
                 children: [
-                  for (final section in sections) ...[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
-                      // Tek bölüm başlığı (F39.6): her grup kendi renginde
-                      // değil; renk yalnız simgelerde.
-                      child: SectionLabel(
-                        _groupTitle(l10n, section.group),
-                        key: ValueKey('quick-section-${section.group.name}'),
+                  for (var i = 0; i < primary.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 6),
+                    Expanded(
+                      child: Customizable(
+                        id: UiItem.quickAdd(primary[i].key),
+                        badgeInset: 6,
+                        child: _PrimaryButton(
+                          key: ValueKey('quick-add-${primary[i].key}'),
+                          option: primary[i],
+                          onTap: () => widget.onSelected(primary[i].action),
+                        ),
                       ),
                     ),
-                    // En çok iki seçenekli bölüm (Dosya ekle · YouTube) satırı
-                    // GENİŞ düğmelerle doldurur: yarısı boş bir satır
-                    // dağınık duruyordu.
-                    if (section.options.length <= 2)
-                      Row(
-                        children: [
-                          for (var i = 0; i < section.options.length; i++) ...[
-                            if (i > 0) const SizedBox(width: gap),
-                            Expanded(
-                              child: SizedBox(
-                                height: 52,
-                                child: cell(section.options[i], wide: true),
-                              ),
-                            ),
-                          ],
-                        ],
-                      )
-                    else
-                      Wrap(
-                        spacing: gap,
-                        runSpacing: gap,
-                        children: [
-                          for (final o in section.options)
-                            SizedBox(
-                              width: cellWidth,
-                              height: 76,
-                              child: cell(o),
-                            ),
-                        ],
-                      ),
-                    const SizedBox(height: 6),
                   ],
-                  if (sections.isNotEmpty && primary.isNotEmpty)
-                    const SizedBox(height: 4),
-                  // BİRİNCİL: büyük, dolgulu, FAB'ın hemen üstünde.
-                  Row(
-                    children: [
-                      for (var i = 0; i < primary.length; i++) ...[
-                        if (i > 0) const SizedBox(width: gap),
-                        Expanded(
-                          child: Customizable(
-                            id: UiItem.quickAdd(primary[i].key),
-                            badgeInset: 6,
-                            child: _PrimaryButton(
-                              key: ValueKey('quick-add-${primary[i].key}'),
-                              option: primary[i],
-                              onTap: () => widget.onSelected(primary[i].action),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
                 ],
-              );
-            },
+              ),
+            ],
           ),
         ),
       ),
@@ -681,117 +496,6 @@ class _PrimaryButton extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Panel hücresi: üstte simge, altında etiket. Tonal zemin dokunulabilir
-/// olduğunu belli eder (düz metin düğmeler "başlık" gibi okunuyordu).
-class _PanelButton extends StatelessWidget {
-  const _PanelButton({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.accent,
-    this.wide = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  /// Geniş hücre: simge solda, ad sağında tek satır.
-  final bool wide;
-
-  /// Simge yuvarlağının rengi (bölümün rengi).
-  final Color? accent;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final circle = Container(
-      width: 30,
-      height: 30,
-      decoration: BoxDecoration(
-        color: (accent ?? scheme.onSurfaceVariant).withValues(alpha: 0.14),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, size: 18, color: accent ?? scheme.onSurfaceVariant),
-    );
-    if (wide) {
-      return Material(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Row(
-              children: [
-                circle,
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: scheme.onSecondaryContainer,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-    return Material(
-      color: scheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(12),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 6),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  color: (accent ?? scheme.onSurfaceVariant).withValues(
-                    alpha: 0.14,
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  size: 18,
-                  color: accent ?? scheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Flexible(
-                child: Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: scheme.onSecondaryContainer,
-                    height: 1.1,
-                  ),
-                ),
-              ),
-            ],
           ),
         ),
       ),

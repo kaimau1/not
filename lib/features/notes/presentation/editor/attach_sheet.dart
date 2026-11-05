@@ -1,39 +1,18 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
 import '../../../../core/widgets/sheet_header.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
 import '../../../../core/widgets/customizable.dart';
-import '../../data/document_scan.dart';
-import '../qr_scan_screen.dart';
+import '../add_catalog.dart';
 import '../../../../core/widgets/app_sheet.dart';
 
-/// Not editörünün "Ekle" levhası: TEK sayfada, İKİ SÜTUNLU ızgara.
+/// Not editörünün "Ekle" levhası: tek dokunuş → tek levha → her seçenek görünür.
 ///
-/// ESKİDEN iki katmandı: alt çubuktaki "Ekle" küçük bir açılır menü açıyor
-/// (madde/görsel/PDF/renk), onun son satırı da tüm ekleri listeleyen ayrı bir
-/// levhayı açıyordu. Aynı seçenek iki yerde görünüyor, hangisinin nerede
-/// olduğu akılda kalmıyor ve "ekle" adı üç kez geçiyordu (kullanıcı: "ekle
-/// alanı tamamen yenilenmeli, tek sayfada hepsi görülmeli").
-///
-/// ŞİMDİ: tek dokunuş → tek levha → her seçenek görünür. İki sütun, iri
-/// dokunma hedefleri; simge + etiket.
-///
-/// **2026-10-11 YENİDEN DÜZENLENDİ** (kullanıcı isteği: "menüler yeniden
-/// dizayn edilip toparlanmalı"): iki sütunlu, açıklamalı satırlar levhayı
-/// ekranın tamamına yayıyor, "Görüntülü not" ve PDF'e ulaşmak kaydırma
-/// istiyordu. Artık ÜÇ (geniş ekranda daha çok) sütunlu SİMGE ızgarası:
-/// yuvarlak simge + kısa ad; açıklama uzun basınca ipucunda. "Yeni sayfa"
-/// başlığın yanındaki "+" menüsüne taşındı (notun yapısı, içeriği değil);
-/// görsel bölümünün başlığı "YAKALA — İÇERİKTEN NOT OLUŞTURUR" idi (ana
-/// ekrandaki "+" panelinden ödünç, burada yanlış) → "Görsel ve çizim".
-///
-/// "Metin ekle" / "Liste maddesi ekle" de BURADA (en üstteki bölüm): eskiden
-/// alt çubukta kendi segmentleri vardı, çubuk üç segmentle kalabalıktı ve
-/// "ekleme" işi iki ayrı yere bölünmüştü. Artık eklenen her şey tek kapıdan
-/// geçiyor, çubukta yalnız "Biçim" ve "Ekle" kaldı. İkisi de not tipinden
-/// BAĞIMSIZ görünür (bkz. build).
+/// Seçenekler, adlar ve gruplar "+" paneliyle aynı katalogdan ([addCatalog],
+/// F41.1); karo da aynı ([AddTile]). Levhanın döndürdüğü değer seçeneğin
+/// kimliğidir (`_showAttachMenu`).
 Future<String?> showAttachSheet(
   BuildContext context, {
   bool pageNote = false,
@@ -57,42 +36,6 @@ Future<String?> showAttachSheet(
   ),
 );
 
-/// Izgaranın tek hücresi: (id, simge, etiket, açıklama).
-typedef _Entry = (String, IconData, String, String?);
-
-/// "Ekle" levhasının KİŞİSELLEŞTİRİLEBİLİR seçenekleri (ayarlardaki seçici
-/// için): kimlik, simge, ad. Kimlikler levhanın döndürdüğü değerlerle aynı.
-/// İçeriğe göre çıkan "Eki yapıştır" listede yok.
-List<({String id, IconData icon, String label})> attachSheetCatalog(
-  AppLocalizations l10n,
-) => [
-  (id: 'text-block', icon: Icons.notes, label: l10n.addTextBlock),
-  (id: 'list-item', icon: Icons.checklist, label: l10n.editorToolList),
-  (id: 'embed-attachment', icon: Icons.link, label: l10n.attachmentTagEmbed),
-  (id: 'image', icon: Icons.image_outlined, label: l10n.addImage),
-  if (!kIsWeb)
-    (id: 'camera', icon: Icons.photo_camera_outlined, label: l10n.takePhoto),
-  if (DocumentScan.available)
-    (
-      id: 'scan',
-      icon: Icons.document_scanner_outlined,
-      label: l10n.scanDocument,
-    ),
-  (id: 'drawing', icon: Icons.brush_outlined, label: l10n.addDrawing),
-  (id: 'handwriting', icon: Icons.draw_outlined, label: l10n.addHandwriting),
-  (id: 'any-file', icon: Icons.upload_file_outlined, label: l10n.quickAddFile),
-  if (!kIsWeb) (id: 'audio', icon: Icons.mic_none, label: l10n.recordAudio),
-  if (!kIsWeb)
-    (id: 'video', icon: Icons.videocam_outlined, label: l10n.newVideoNote),
-  (
-    id: 'youtube',
-    icon: Icons.smart_display_outlined,
-    label: l10n.addYouTubeVideo,
-  ),
-  if (qrScanSupported)
-    (id: 'qr', icon: Icons.qr_code_scanner, label: l10n.qrScanTitle),
-];
-
 class _AttachSheet extends StatelessWidget {
   const _AttachSheet({
     required this.pageNote,
@@ -100,14 +43,12 @@ class _AttachSheet extends StatelessWidget {
     this.copiedAttachmentName,
   });
 
-  /// Belge (PDF/sunum) notu mu? Öyleyse "not içeriği" bölümü HİÇ gösterilmez:
-  /// o ekranda gövde metni de madde listesi de çizilmiyor (içerik sayfa
-  /// başına tutulan notlarda), seçenek gösterip hiçbir şey olmaması
-  /// kullanıcıyı yanıltırdı.
+  /// Belge (PDF/sunum) notu mu? Öyleyse "Yaz" grubu HİÇ gösterilmez: o ekranda
+  /// gövde metni de madde listesi de çizilmiyor (içerik sayfa başına tutulan
+  /// notlarda), seçenek gösterip hiçbir şey olmaması kullanıcıyı yanıltırdı.
   final bool pageNote;
 
-  /// Notta gömülebilecek EK var mı? "Yazıya ek göm" yalnız o zaman
-  /// gösterilir — eki olmayan notta madde ölü durur.
+  /// Gömme seçicisi açılabilir mi?
   final bool canEmbed;
 
   final String? copiedAttachmentName;
@@ -115,132 +56,26 @@ class _AttachSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
     final copied = copiedAttachmentName;
-
-    // Notun KENDİ içeriğine eklenenler (ek dosya değil): en üstte.
-    //
-    // İKİSİ DE HER ZAMAN görünür (kullanıcı bulgusu: "liste ekle seçeneği
-    // yok"). Eskiden not tipine göre yalnız biri gösteriliyordu — metin
-    // notunda "Liste maddesi", liste/belge notunda "Metin". Oysa not tipleri
-    // KARIŞIK içerik taşıyabiliyor: metin notunun altına madde listesi,
-    // liste notunun başına serbest metin girebiliyor. Tek seçenek göstermek
-    // var olan bir yeteneği ekranda yokmuş gibi gösteriyordu; artık kullanıcı
-    // hangi nottayken ne eklemek isterse onu seçiyor.
-    final content = <_Entry>[
-      if (!pageNote) ...[
-        ('text-block', Icons.notes, l10n.addTextBlock, null),
-        ('list-item', Icons.checklist, l10n.editorToolList, null),
-        // YAZIYA EK GÖM (kullanıcı bulgusu 2026-08-16: "ek gömmeyi
-        // bulamadım"). İki giriş noktası vardı ve ikisi de saklıydı: ek
-        // şeridindeki 16 piksellik simge ve metin seçim menüsü — Android o
-        // menüde fazla maddeleri "⋮" taşmasına atıyor, yani madde çoğu zaman
-        // hiç görünmüyordu. Dosya eklemek için zaten buraya gelindiği için
-        // asıl yeri burası.
-        if (canEmbed)
-          (
-            'embed-attachment',
-            Icons.link,
-            l10n.attachmentTagEmbed,
-            l10n.attachmentTagEmbedInfo,
-          ),
-      ],
-    ];
-
-    // ÜÇ BÖLÜM (2026-10-20, "ek menüsünü de düzenle"): Not içeriği · Dosya
-    // ve bağlantı (var olan bir şeyi getir) · Kamera ve kayıt (şimdi yakala).
-    // Eskiden "Görsel ve çizim" ile "Ekler" ayrımı türe göreydi ve aynı iş
-    // (dosya seçmek) altı ayrı düğmeye bölünmüştü.
-    final visual = <_Entry>[
-      // TEK "DOSYA EKLE" (kullanıcı isteği 2026-10-20: "dosya ekle yeterli;
-      // PDF, slayt vs. ayrı olmasına gerek yok"): tür uzantıdan tanınır —
-      // görsel sayfaya ya da ek olarak, PDF/sunum belge olarak, ses ve video
-      // ek olarak ya da metne dökülerek (dosya seçildikten sonra sorulur).
-      // Eskiden yanında PDF, Slayt, Ses dosyası, Galeriden video, Görseli ek
-      // olarak yükle ve Dosyayı metne dök ayrı düğmelerdi.
-      (
-        'any-file',
-        Icons.upload_file_outlined,
-        l10n.quickAddFile,
-        l10n.attachAnyFileInfo,
-      ),
-      // Galeri ayrı kalır: telefonda en sık yol ve sistem fotoğraf
-      // seçicisini açar (dosya yöneticisini değil).
-      (
-        'image',
-        Icons.image_outlined,
-        l10n.addImage,
-        l10n.addImageOnPageSubtitle,
-      ),
-      (
-        'youtube',
-        Icons.smart_display_outlined,
-        l10n.addYouTubeVideo,
-        l10n.addYouTubeVideoSubtitle,
-      ),
-      // ÇİZİM = ayrı bir çizim GÖRSELİ (kullanıcı isteği 2026-11-02: "kalem
-      // modu olsa bile eski çizim ekle ayrı bir çizim görseli ekleyip nota
-      // gömülmesi için açılsın"); sayfanın kendisine yazmak ayrı satır.
-      (
-        'drawing',
-        Icons.brush_outlined,
-        l10n.addDrawing,
-        l10n.addDrawingSubtitle,
-      ),
-      (
-        'handwriting',
-        Icons.draw_outlined,
-        l10n.addHandwriting,
-        l10n.addHandwritingSubtitle,
-      ),
+    // Gizlenen seçenek yer kaplamaz; düzenleme modunda hepsi görünür, dokunmak
+    // gizle/göster yapar (bkz. Customizable). Yapıştır içeriğe göre çıkar,
+    // gizlenmez.
+    final entries = [
+      for (final e in addCatalog(l10n, AddContext.inNote))
+        if (!(pageNote && e.group == AddGroup.write) &&
+            (e.id != 'embed-attachment' || canEmbed) &&
+            (Personalize.editing ||
+                Personalize.current.shows(UiItem.attach(e.id))))
+          e,
       if (copied != null)
         (
-          'paste-attachment',
-          Icons.content_paste_go,
-          l10n.pasteAttachment,
-          copied,
+          id: 'paste-attachment',
+          group: AddGroup.files,
+          icon: Icons.content_paste_go,
+          label: l10n.pasteAttachment,
+          info: copied,
         ),
     ];
-
-    final other = <_Entry>[
-      if (!kIsWeb)
-        ('camera', Icons.photo_camera_outlined, l10n.takePhoto, null),
-      if (DocumentScan.available)
-        (
-          'scan',
-          Icons.document_scanner_outlined,
-          l10n.scanDocument,
-          l10n.scanDocumentSubtitle,
-        ),
-      if (!kIsWeb) ('audio', Icons.mic_none, l10n.recordAudio, null),
-      if (!kIsWeb)
-        (
-          'video',
-          Icons.videocam_outlined,
-          l10n.newVideoNote,
-          l10n.videoLocalOnly,
-        ),
-      if (qrScanSupported)
-        ('qr', Icons.qr_code_scanner, l10n.qrScanTitle, l10n.qrScanSubtitle),
-      // "Renk" BURADAN KALKTI (kullanıcı isteği 2026-08-10): sayfa görünümü
-      // alt çubuktaki "Biçim" şeridinin palet düğmesinde.
-    ];
-
-    // KİŞİSELLEŞTİRME (kullanıcı isteği 2026-10-16): gizlenen seçenekler
-    // levhada yer kaplamaz; düzenleme modunda hepsi görünür, dokunmak
-    // gizle/göster yapar (bkz. Customizable). Yapıştır, içeriğe göre
-    // kendiliğinden çıkan bir seçenek — gizlenmez.
-    List<_Entry> visibleOf(List<_Entry> entries) => Personalize.editing
-        ? entries
-        : [
-            for (final e in entries)
-              if (e.$1 == 'paste-attachment' ||
-                  Personalize.current.shows(UiItem.attach(e.$1)))
-                e,
-          ];
-    final contentShown = visibleOf(content);
-    final visualShown = visibleOf(visual);
-    final otherShown = visibleOf(other);
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
@@ -257,152 +92,57 @@ class _AttachSheet extends StatelessWidget {
             title: l10n.addAttachment,
             padding: const EdgeInsets.fromLTRB(2, 0, 0, 0),
           ),
-          if (contentShown.isNotEmpty) ...[
-            _SectionLabel(l10n.attachNoteContent),
-            _Grid(entries: contentShown, scheme: scheme),
-          ],
-          if (visualShown.isNotEmpty) ...[
-            _SectionLabel(l10n.attachSectionFiles),
-            _Grid(entries: visualShown, scheme: scheme),
-          ],
-          if (otherShown.isNotEmpty) ...[
-            _SectionLabel(l10n.attachSectionCapture),
-            _Grid(entries: otherShown, scheme: scheme),
-          ],
+          for (final group in AddGroup.values)
+            if (entries.any((e) => e.group == group))
+              _Section(
+                title: addGroupTitle(l10n, group),
+                entries: [
+                  for (final e in entries)
+                    if (e.group == group) e,
+                ],
+              ),
         ],
       ),
     );
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
+class _Section extends StatelessWidget {
+  const _Section({required this.title, required this.entries});
 
-  final String text;
-
-  @override
-  // Uygulamanın tek bölüm başlığı (TUTARLILIK F36.7).
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(2, 6, 2, 4),
-    child: SectionLabel(text),
-  );
-}
-
-/// Simge ızgarası: sütun sayısı genişlikten (telefonda 4, genişte 5–8).
-/// Hücre: yuvarlak simge + en çok iki satırlık ad. Açıklama ([_Entry]'nin
-/// dördüncü alanı) ipucuna gider; yalnız "Kopyalanan eki yapıştır"ın dosya
-/// adı hücrede de yazılır — neyin yapıştırılacağı görünmeden basılmaz.
-class _Grid extends StatelessWidget {
-  const _Grid({required this.entries, required this.scheme});
-
-  final List<_Entry> entries;
-  final ColorScheme scheme;
+  final String title;
+  final List<AddEntry> entries;
 
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const spacing = 4.0;
-        // KOMPAKT (kullanıcı isteği 2026-10-20: "ekle menüsü kompaktlaşsın,
-        // kaydırmaya gerek olmasın"): telefonda DÖRT sütun (eskiden üç,
-        // levha on sekiz seçenekle ekranı aşıyordu).
-        final columns = (constraints.maxWidth / 80).floor().clamp(4, 8);
-        final cellWidth =
-            (constraints.maxWidth - spacing * (columns - 1)) / columns;
-        return Wrap(
-          spacing: spacing,
-          runSpacing: spacing,
-          children: [
-            for (final (id, icon, label, info) in entries)
-              SizedBox(
-                width: cellWidth,
-                child: Customizable(
-                  id: UiItem.attach(id),
-                  badgeInset: 6,
-                  child: _Cell(
-                    id: id,
-                    icon: icon,
-                    label: label,
-                    info: info,
-                    scheme: scheme,
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _Cell extends StatelessWidget {
-  const _Cell({
-    required this.id,
-    required this.icon,
-    required this.label,
-    required this.info,
-    required this.scheme,
-  });
-
-  final String id;
-  final IconData icon;
-  final String label;
-  final String? info;
-  final ColorScheme scheme;
-
-  @override
-  Widget build(BuildContext context) {
-    final showInfo = id == 'paste-attachment' && info != null;
-    // Zeminsiz hücre: satırdaki adlar bir ya da iki satır olabildiğinden
-    // hücre boyları farklı; kutu çizilseydi aynı satırda eşitsiz dururdu.
-    final cell = Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(14),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => Navigator.pop(context, id),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(3, 7, 3, 6),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: scheme.primaryContainer.withValues(alpha: 0.7),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 19, color: scheme.onPrimaryContainer),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  height: 1.15,
-                ),
-              ),
-              if (showInfo)
-                Text(
-                  info!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-            ],
-          ),
-        ),
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(2, 10, 2, 6),
+        child: SectionLabel(title),
       ),
-    );
-    return info == null ? cell : Tooltip(message: info, child: cell);
-  }
+      AddTileGrid(
+        count: entries.length,
+        tile: (i, wide) {
+          final e = entries[i];
+          // Yapıştırılacak ekin adı karoda yazılır: neyin yapıştırılacağı
+          // görünmeden basılmaz.
+          final paste = e.id == 'paste-attachment';
+          return Customizable(
+            id: UiItem.attach(e.id),
+            badgeInset: 6,
+            child: AddTile(
+              icon: e.icon,
+              label: wide && paste ? '${e.label} · ${e.info}' : e.label,
+              subtitle: !wide && paste ? e.info : null,
+              tooltip: e.info,
+              wide: wide,
+              onTap: () => Navigator.pop(context, e.id),
+            ),
+          );
+        },
+      ),
+    ],
+  );
 }

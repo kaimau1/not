@@ -213,6 +213,7 @@ class UiModule {
 
   static const drawing = UiModule('drawing', [
     'quickadd.draw',
+    'quickadd.drawing',
     'attach.drawing',
   ]);
 

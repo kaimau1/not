@@ -416,7 +416,25 @@ class AppLocalizationsTr extends AppLocalizations {
       'Ayrı tuvalde çiz, görsel olarak nota gömülsün';
 
   @override
-  String get addHandwriting => 'Sayfaya el yazısı';
+  String get addGroupWrite => 'Yaz';
+
+  @override
+  String get addGroupPen => 'Kalem';
+
+  @override
+  String get addGroupFiles => 'Dosya ve bağlantı';
+
+  @override
+  String get addGroupSound => 'Ses';
+
+  @override
+  String get addGroupTemplate => 'Şablon';
+
+  @override
+  String get addSeparateDrawing => 'Ayrı çizim (görsel)';
+
+  @override
+  String get addHandwriting => 'Sayfaya yaz (kalem)';
 
   @override
   String get addHandwritingSubtitle =>
@@ -953,9 +971,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceChipFix => 'Düzelt';
 
   @override
-  String get editorToolList => 'Liste';
-
-  @override
   String get permissionsTitle => 'İzinler';
 
   @override
@@ -1010,9 +1025,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get permOpenSettings => 'Ayarları aç';
-
-  @override
-  String get newHandwriting => 'El yazısı';
 
   @override
   String get newVoiceCapture => 'AI sesli not';
@@ -1860,9 +1872,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get addTextBlock => 'Metin ekle';
-
-  @override
-  String get attachNoteContent => 'Not içeriği';
 
   @override
   String get noteBackgroundImage => 'Zemin görseli';
@@ -5439,9 +5448,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get quickAddSectionMore => 'Şablon ve çizim';
-
-  @override
   String get attachAnyFileInfo =>
       'Her tür dosya: görsel, PDF, sunum, ses, video — tür kendiliğinden tanınır, gerekirse ne yapılacağı sorulur';
 
@@ -5482,12 +5488,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get itemDividerRemove => 'Çizgiyi kaldır';
-
-  @override
-  String get attachSectionFiles => 'Dosya ve bağlantı';
-
-  @override
-  String get attachSectionCapture => 'Kamera ve kayıt';
 
   @override
   String get fileUseAttachInfo => 'Nota ek olarak girer; oynatılabilir';
@@ -6200,9 +6200,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reorderNotesManually => 'Elle sırala';
-
-  @override
-  String get quickAddSectionFiles => 'Dosya ve bağlantı';
 
   @override
   String get shareIncludeBubbles => 'Balonlar';

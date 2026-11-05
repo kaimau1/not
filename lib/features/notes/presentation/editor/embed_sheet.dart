@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
+import '../add_catalog.dart';
 import 'note_images.dart';
 import 'pdf_page_box.dart';
 import 'tag_chips.dart';
@@ -233,21 +234,19 @@ class _EmbedPicker extends StatelessWidget {
             const SizedBox(height: 18),
             _SectionLabel(l10n.embedSectionNew),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                for (final (id, icon, text, color) in creates) ...[
-                  if (id != creates.first.$1) const SizedBox(width: 8),
-                  Expanded(
-                    child: _CreateTile(
-                      key: ValueKey('embed-new-$id'),
-                      icon: icon,
-                      label: text,
-                      color: color,
-                      onTap: () => Navigator.pop(context, EmbedPick.create(id)),
-                    ),
-                  ),
-                ],
-              ],
+            AddTileGrid(
+              count: creates.length,
+              tile: (i, wide) {
+                final (id, icon, text, color) = creates[i];
+                return AddTile(
+                  key: ValueKey('embed-new-$id'),
+                  icon: icon,
+                  label: text,
+                  accent: color,
+                  wide: wide,
+                  onTap: () => Navigator.pop(context, EmbedPick.create(id)),
+                );
+              },
             ),
           ],
         ],
@@ -263,56 +262,6 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SectionLabel(text);
-}
-
-/// "Yeni ekle" kutusu: türün renginde simge, altında adı.
-class _CreateTile extends StatelessWidget {
-  const _CreateTile({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: Color.alphaBlend(
-        color.withValues(alpha: 0.10),
-        scheme.surfaceContainerLow,
-      ),
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: color, size: 26),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// Nottaki bir ek: küçük resim (görsel/video kendi karesiyle, diğerleri
