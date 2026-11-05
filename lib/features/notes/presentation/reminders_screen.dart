@@ -3,6 +3,9 @@ import 'reminder_repeat_ui.dart';
 import '../domain/reminder_repeat.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/sheet_header.dart';
+
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -15,6 +18,8 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
+import '../../settings/data/permissions_service.dart';
+import '../../settings/settings_providers.dart' show sharedPreferencesProvider;
 import 'note_card.dart';
 import 'notes_providers.dart';
 import '../../../core/widgets/app_sheet.dart';
@@ -23,6 +28,147 @@ import '../../../core/widgets/app_sheet.dart';
 /// seçici İKİ ayrı diyalog demek (önce takvim, sonra saat); "yarın sabah"
 /// gibi olağan bir istek için altı dokunuş gerekiyordu.
 enum _QuickWhen { tonight, tomorrow, nextWeek, custom }
+
+/// **NE ZAMAN LEVHASI** — uygulamadaki TEK hatırlatıcı seçici (kullanıcı
+/// kararı 2026-11-06: not "+" ile Hatırlatıcılar ekranı aynı akış). Hızlı
+/// seçenekler → seçilen zaman; `custom` takvimi açar; geçmiş saat uyarılır.
+Future<DateTime?> pickReminderWhen(
+  BuildContext context,
+  DateTime initial,
+) async {
+  final picked = await _pickReminderWhen(context, initial);
+  if (picked != null && context.mounted) {
+    unawaited(_maybeAutoStartHint(context));
+  }
+  return picked;
+}
+
+/// MIUI'de bir kez: "Otomatik başlatma" yoksa telefon yeniden başlayınca
+/// hatırlatıcılar uygulama açılana dek kurulmaz (izin durumu okunamıyor,
+/// bu yüzden ilk hatırlatıcıda bir kez söylenir; Ayarlar → İzinler'de kalıcı).
+Future<void> _maybeAutoStartHint(BuildContext context) async {
+  const key = 'miui_autostart_hint_shown';
+  final container = ProviderScope.containerOf(context, listen: false);
+  final prefs = container.read(sharedPreferencesProvider);
+  if (prefs.getBool(key) ?? false) return;
+  final service = container.read(permissionsServiceProvider);
+  if (!await service.isXiaomi() || !context.mounted) return;
+  await prefs.setBool(key, true);
+  if (!context.mounted) return;
+  final l10n = context.l10n;
+  ScaffoldMessenger.of(context).showMessage(
+    l10n.autoStartHint,
+    duration: const Duration(seconds: 8),
+    action: SnackBarAction(
+      label: l10n.autoStartHintAction,
+      onPressed: () => unawaited(service.openAutoStartSettings()),
+    ),
+  );
+}
+
+Future<DateTime?> _pickReminderWhen(
+  BuildContext context,
+  DateTime initial,
+) async {
+  final l10n = context.l10n;
+  final choice = await showAppSheet<_QuickWhen>(
+    context: context,
+    showDragHandle: true,
+    builder: (sheetContext) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                l10n.reminderQuickTitle,
+                style: Theme.of(sheetContext).textTheme.titleMedium,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.wb_twilight_outlined),
+            title: Text(l10n.reminderQuickTonight),
+            onTap: () => Navigator.pop(sheetContext, _QuickWhen.tonight),
+          ),
+          ListTile(
+            leading: const Icon(Icons.wb_sunny_outlined),
+            title: Text(l10n.reminderQuickTomorrow),
+            onTap: () => Navigator.pop(sheetContext, _QuickWhen.tomorrow),
+          ),
+          ListTile(
+            leading: const Icon(Icons.next_week_outlined),
+            title: Text(l10n.reminderQuickNextWeek),
+            onTap: () => Navigator.pop(sheetContext, _QuickWhen.nextWeek),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.event_outlined),
+            title: Text(l10n.reminderQuickCustom),
+            onTap: () => Navigator.pop(sheetContext, _QuickWhen.custom),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    ),
+  );
+  if (choice == null || !context.mounted) return null;
+  final now = DateTime.now();
+  switch (choice) {
+    case _QuickWhen.tonight:
+      final tonight = DateTime(now.year, now.month, now.day, 18);
+      // Saat 18'i geçtiysek "bu akşam" bir saat sonrasıdır; geçmişe
+      // hatırlatıcı kurulamaz (aşağıdaki denetim onu zaten reddederdi).
+      return tonight.isAfter(now) ? tonight : now.add(const Duration(hours: 1));
+    case _QuickWhen.tomorrow:
+      final tomorrow = now.add(const Duration(days: 1));
+      return DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9);
+    case _QuickWhen.nextWeek:
+      final next = now.add(const Duration(days: 7));
+      return DateTime(next.year, next.month, next.day, 9);
+    case _QuickWhen.custom:
+      return _pickDateTime(context, initial);
+  }
+}
+
+Future<DateTime?> _pickDateTime(BuildContext context, DateTime initial) async {
+  final now = DateTime.now();
+  final date = await showDatePicker(
+    context: context,
+    initialDate: initial.isAfter(now) ? initial : now,
+    // Geçmiş TARİH seçilemez: geçmişe kurulan hatırlatıcı hiç planlanmıyor
+    // (reminder_service gelecek olmayanı atlar), kullanıcı "kurdum" sanıp
+    // hiçbir bildirim almıyordu.
+    firstDate: DateTime(now.year, now.month, now.day),
+    lastDate: now.add(const Duration(days: 365 * 5)),
+  );
+  if (date == null || !context.mounted) return null;
+  final time = await showTimePicker(
+    context: context,
+    initialTime: TimeOfDay.fromDateTime(initial),
+  );
+  if (time == null) return null;
+  final picked = DateTime(
+    date.year,
+    date.month,
+    date.day,
+    time.hour,
+    time.minute,
+  );
+  // Bugünün geçmiş bir SAATİ de seçilebiliyor; sessizce "Geçmiş" bölümüne
+  // düşürmek yerine uyar ve hiç kurma.
+  if (!picked.isAfter(DateTime.now())) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showMessage(context.l10n.reminderInPast);
+    }
+    return null;
+  }
+  return picked;
+}
 
 /// Tüm hatırlatıcıların tek yerden görüldüğü ekran: yaklaşan ve geçmiş
 /// hatırlatıcılar listelenir; buradan düzenlenir, ertelenir, kaldırılır veya
@@ -46,120 +192,12 @@ class RemindersScreen extends ConsumerWidget {
     () => DateFormat('d MMMM y, EEEE HH:mm'),
   );
 
-  /// Hızlı seçenekler levhası → seçilen zaman. `custom` takvimi açar.
-  static Future<DateTime?> _pickWhen(
-    BuildContext context,
-    DateTime initial,
-  ) async {
-    final l10n = context.l10n;
-    final choice = await showAppSheet<_QuickWhen>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Text(
-                  l10n.reminderQuickTitle,
-                  style: Theme.of(sheetContext).textTheme.titleMedium,
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.wb_twilight_outlined),
-              title: Text(l10n.reminderQuickTonight),
-              onTap: () => Navigator.pop(sheetContext, _QuickWhen.tonight),
-            ),
-            ListTile(
-              leading: const Icon(Icons.wb_sunny_outlined),
-              title: Text(l10n.reminderQuickTomorrow),
-              onTap: () => Navigator.pop(sheetContext, _QuickWhen.tomorrow),
-            ),
-            ListTile(
-              leading: const Icon(Icons.next_week_outlined),
-              title: Text(l10n.reminderQuickNextWeek),
-              onTap: () => Navigator.pop(sheetContext, _QuickWhen.nextWeek),
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.event_outlined),
-              title: Text(l10n.reminderQuickCustom),
-              onTap: () => Navigator.pop(sheetContext, _QuickWhen.custom),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-    if (choice == null || !context.mounted) return null;
-    final now = DateTime.now();
-    switch (choice) {
-      case _QuickWhen.tonight:
-        final tonight = DateTime(now.year, now.month, now.day, 18);
-        // Saat 18'i geçtiysek "bu akşam" bir saat sonrasıdır; geçmişe
-        // hatırlatıcı kurulamaz (aşağıdaki denetim onu zaten reddederdi).
-        return tonight.isAfter(now) ? tonight : now.add(const Duration(hours: 1));
-      case _QuickWhen.tomorrow:
-        final tomorrow = now.add(const Duration(days: 1));
-        return DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9);
-      case _QuickWhen.nextWeek:
-        final next = now.add(const Duration(days: 7));
-        return DateTime(next.year, next.month, next.day, 9);
-      case _QuickWhen.custom:
-        return _pickDateTime(context, initial);
-    }
-  }
-
-  static Future<DateTime?> _pickDateTime(
-    BuildContext context,
-    DateTime initial,
-  ) async {
-    final now = DateTime.now();
-    final date = await showDatePicker(
-      context: context,
-      initialDate: initial.isAfter(now) ? initial : now,
-      // Geçmiş TARİH seçilemez: geçmişe kurulan hatırlatıcı hiç planlanmıyor
-      // (reminder_service gelecek olmayanı atlar), kullanıcı "kurdum" sanıp
-      // hiçbir bildirim almıyordu.
-      firstDate: DateTime(now.year, now.month, now.day),
-      lastDate: now.add(const Duration(days: 365 * 5)),
-    );
-    if (date == null || !context.mounted) return null;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(initial),
-    );
-    if (time == null) return null;
-    final picked = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
-    // Bugünün geçmiş bir SAATİ de seçilebiliyor; sessizce "Geçmiş" bölümüne
-    // düşürmek yerine uyar ve hiç kurma.
-    if (!picked.isAfter(DateTime.now())) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showMessage(context.l10n.reminderInPast);
-      }
-      return null;
-    }
-    return picked;
-  }
-
   Future<void> _editReminder(
     BuildContext context,
     WidgetRef ref,
     Note note,
   ) async {
-    final picked = await _pickWhen(
+    final picked = await pickReminderWhen(
       context,
       note.reminderAt ?? DateTime.now().add(const Duration(hours: 1)),
     );
@@ -179,7 +217,7 @@ class RemindersScreen extends ConsumerWidget {
   Future<void> _addReminder(BuildContext context, WidgetRef ref) async {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    final picked = await _pickWhen(
+    final picked = await pickReminderWhen(
       context,
       DateTime.now().add(const Duration(hours: 1)),
     );
@@ -196,31 +234,34 @@ class RemindersScreen extends ConsumerWidget {
     final notesAsync = ref.watch(notesStreamProvider);
 
     return Scaffold(
-      appBar: HomeInBar(appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.remindersTitle),
-            // Kaç hatırlatıcı var: listeyi kaydırmadan görünsün.
-            Consumer(
-              builder: (context, ref, _) {
-                final count = (ref.watch(notesStreamProvider).value ?? const [])
-                    .where((n) => n.reminderAt != null)
-                    .length;
-                if (count == 0) return const SizedBox.shrink();
-                return Text(
-                  l10n.reminderCountLabel(count),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                );
-              },
-            ),
-          ],
+      appBar: HomeInBar(
+        appBar: AppBar(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.remindersTitle),
+              // Kaç hatırlatıcı var: listeyi kaydırmadan görünsün.
+              Consumer(
+                builder: (context, ref, _) {
+                  final count =
+                      (ref.watch(notesStreamProvider).value ?? const [])
+                          .where((n) => n.reminderAt != null)
+                          .length;
+                  if (count == 0) return const SizedBox.shrink();
+                  return Text(
+                    l10n.reminderCountLabel(count),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
-      )),
+      ),
       // BOŞKEN YÜZEN DÜĞME YOK (F11.7): boş durumun ortasında aynı
       // "Yeni hatırlatıcı" düğmesi var; ikisi birden "hangisi?" dedirtiyordu.
       floatingActionButton: _visibleReminders(ref, notesAsync.value).isEmpty

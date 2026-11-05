@@ -994,6 +994,20 @@ class AppLocalizationsTr extends AppLocalizations {
       'Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut';
 
   @override
+  String get permAutoStart => 'Otomatik başlatma (Xiaomi)';
+
+  @override
+  String get permAutoStartInfo =>
+      'Telefon yeniden başlayınca hatırlatıcılar uygulamayı açmadan da kurulsun: Notlar için “Otomatik başlatma”yı aç';
+
+  @override
+  String get autoStartHint =>
+      'Xiaomi: telefon yeniden başlayınca da çalması için Notlar’a “Otomatik başlatma” izni ver';
+
+  @override
+  String get autoStartHintAction => 'Aç';
+
+  @override
   String videoTooBigForAi(int mb) {
     return 'Video yapay zekâya göndermek için çok büyük ($mb MB). Daha kısa çek.';
   }

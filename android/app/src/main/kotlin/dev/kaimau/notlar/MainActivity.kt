@@ -555,6 +555,28 @@ class MainActivity : FlutterFragmentActivity() {
                             )
                         }
                     }
+                    // MIUI (Xiaomi/Redmi/POCO): "Otomatik başlatma" izni yoksa
+                    // telefon yeniden başlayınca hatırlatıcılar uygulama açılana
+                    // dek kurulmaz (2026-11-06 kullanıcı kararı: ipucu ver).
+                    "isXiaomi" -> {
+                        val m = Build.MANUFACTURER.lowercase()
+                        result.success(m == "xiaomi" || m == "redmi" || m == "poco")
+                    }
+                    "openAutoStartSettings" -> {
+                        try {
+                            startActivity(
+                                Intent().setComponent(
+                                    android.content.ComponentName(
+                                        "com.miui.securitycenter",
+                                        "com.miui.permcenter.autostart.AutoStartManagementActivity",
+                                    )
+                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        } catch (_: Exception) {
+                            startActivity(appDetailsIntent())
+                        }
+                        result.success(true)
+                    }
                     "openBatterySettings" -> {
                         try {
                             startActivity(

@@ -118,4 +118,24 @@ class PermissionsService {
       ErrorLog.record('open-battery-settings', e);
     }
   }
+
+  /// Xiaomi/Redmi/POCO (MIUI) mi — "Otomatik başlatma" ipucu için.
+  Future<bool> isXiaomi() async {
+    if (!_isAndroid) return false;
+    try {
+      return await _channel.invokeMethod<bool>('isXiaomi') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// MIUI "Otomatik başlatma" ekranını açar (yoksa uygulama ayarları).
+  Future<void> openAutoStartSettings() async {
+    if (!_isAndroid) return;
+    try {
+      await _channel.invokeMethod<void>('openAutoStartSettings');
+    } catch (e) {
+      ErrorLog.record('open-autostart-settings', e);
+    }
+  }
 }

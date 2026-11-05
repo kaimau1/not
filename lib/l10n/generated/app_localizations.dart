@@ -1880,6 +1880,30 @@ abstract class AppLocalizations {
   /// **'Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut'**
   String get permBatteryInfo;
 
+  /// No description provided for @permAutoStart.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik başlatma (Xiaomi)'**
+  String get permAutoStart;
+
+  /// No description provided for @permAutoStartInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon yeniden başlayınca hatırlatıcılar uygulamayı açmadan da kurulsun: Notlar için “Otomatik başlatma”yı aç'**
+  String get permAutoStartInfo;
+
+  /// No description provided for @autoStartHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Xiaomi: telefon yeniden başlayınca da çalması için Notlar’a “Otomatik başlatma” izni ver'**
+  String get autoStartHint;
+
+  /// No description provided for @autoStartHintAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aç'**
+  String get autoStartHintAction;
+
   /// No description provided for @videoTooBigForAi.
   ///
   /// In tr, this message translates to:

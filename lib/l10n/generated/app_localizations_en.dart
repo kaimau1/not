@@ -997,6 +997,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Exempt the app from battery restrictions so reminders arrive on time';
 
   @override
+  String get permAutoStart => 'Autostart (Xiaomi)';
+
+  @override
+  String get permAutoStartInfo =>
+      'So reminders are set again after a reboot without opening the app: turn on “Autostart” for Notlar';
+
+  @override
+  String get autoStartHint =>
+      'Xiaomi: allow “Autostart” for Notlar so reminders still fire after a reboot';
+
+  @override
+  String get autoStartHintAction => 'Open';
+
+  @override
   String videoTooBigForAi(int mb) {
     return 'The video is too large to send to AI ($mb MB). Record a shorter one.';
   }

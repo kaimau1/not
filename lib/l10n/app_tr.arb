@@ -442,6 +442,10 @@
   "permNotificationsInfo": "Hatırlatıcılar ve günlük brifing için gerekli",
   "permBattery": "Pil optimizasyonu",
   "permBatteryInfo": "Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut",
+  "permAutoStart": "Otomatik başlatma (Xiaomi)",
+  "permAutoStartInfo": "Telefon yeniden başlayınca hatırlatıcılar uygulamayı açmadan da kurulsun: Notlar için “Otomatik başlatma”yı aç",
+  "autoStartHint": "Xiaomi: telefon yeniden başlayınca da çalması için Notlar’a “Otomatik başlatma” izni ver",
+  "autoStartHintAction": "Aç",
   "videoTooBigForAi": "Video yapay zekâya göndermek için çok büyük ({mb} MB). Daha kısa çek.",
   "@videoTooBigForAi": {
     "placeholders": {
