@@ -859,6 +859,7 @@ int pinchTargetColumns(int base, double ratio) {
 /// bildirimi. Ham [Listener]: jest yarışına girmez, tek parmak etkilenmez.
 class PinchColumns extends StatefulWidget {
   const PinchColumns({
+    super.key,
     required this.child,
     required this.columns,
     required this.onCommit,
@@ -1042,6 +1043,7 @@ class _ColumnsGlyph extends StatelessWidget {
 /// kurmak kaydırma bütçesini (AKICILIK) aşar; adı yeter.
 class FolderSwipe extends StatefulWidget {
   const FolderSwipe({
+    super.key,
     required this.enabled,
     required this.nextLabel,
     required this.onCommit,
@@ -1071,6 +1073,7 @@ class _FolderSwipeState extends State<FolderSwipe>
   String? _label;
   double _raw = 0;
   bool _past = false;
+  double _labelMax = 140;
 
   @override
   void dispose() {
@@ -1092,6 +1095,7 @@ class _FolderSwipeState extends State<FolderSwipe>
     final direction = _directionOf(_raw);
     if (direction != _direction) {
       _direction = direction;
+      _labelMax = _width * 0.36;
       setState(() => _label = widget.nextLabel(direction));
     }
     final limit = _width * 0.4;
@@ -1159,7 +1163,7 @@ class _FolderSwipeState extends State<FolderSwipe>
               child: IgnorePointer(
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: _width * 0.36),
+                    constraints: BoxConstraints(maxWidth: _labelMax),
                     child: DecoratedBox(
                       key: const ValueKey('swipe-next-label'),
                       decoration: BoxDecoration(

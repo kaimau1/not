@@ -23,7 +23,8 @@ class HomeSectionHeader extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: kSectionHeaderMaxWidth),
           child: Row(
             children: [
-              Flexible(child: SectionLabel(text)),
+              // Flexible OLMAZ: boş alan Expanded çizgiyle yarı yarıya bölünür.
+              SectionLabel(text),
               const SizedBox(width: 6),
               Text(
                 '· $count',

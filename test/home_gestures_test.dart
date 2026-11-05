@@ -137,8 +137,11 @@ void main() {
         ),
       );
       final (a, b) = await down(tester);
-      await a.moveBy(const Offset(0, -40));
-      await b.moveBy(const Offset(0, -40));
+      // Gerçek parmaklar neredeyse birlikte hareket eder: küçük adımlar.
+      for (var i = 0; i < 8; i++) {
+        await a.moveBy(const Offset(0, -5));
+        await b.moveBy(const Offset(0, -5));
+      }
       await tester.pump();
       expect(scaleOf(tester), 1);
       await a.up();
@@ -186,7 +189,10 @@ void main() {
         enabled: enabled,
         nextLabel: label ?? (d) => d > 0 ? 'Genel' : 'Tümü',
         onCommit: commits.add,
-        child: const SizedBox.expand(key: ValueKey('grid')),
+        child: const SizedBox.expand(
+          key: ValueKey('grid'),
+          child: ColoredBox(color: Colors.white),
+        ),
       ),
       dir: dir,
     );
