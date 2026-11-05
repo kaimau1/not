@@ -12,7 +12,9 @@ Widget _app(Widget child) => MaterialApp(
 );
 
 /// Sabit kipin tek davranışı (kullanıcı bulgusu 2026-11-05: "balonlar
-/// taşınamıyor, düzenlenemiyor; uzun basış metin tanıma yapıyor").
+/// taşınamıyor, düzenlenemiyor") ve jest kuralı (kullanıcı kararı
+/// 2026-11-05): basılı tut = metin seçimi, çift dokunuş = yakınlaştırma,
+/// balon YALNIZ "Balon ekle" düğmesiyle; yazarken alttaki not gizlenir.
 void main() {
   const image = Attachment(
     id: 'g',
@@ -28,6 +30,8 @@ void main() {
     WidgetTester tester,
     Attachment media, {
     VoidCallback? onOpen,
+    VoidCallback? onExtractText,
+    ValueChanged<bool>? onImmersive,
   }) async {
     tester.view.physicalSize = const Size(400, 800);
     tester.view.devicePixelRatio = 1;
@@ -42,6 +46,8 @@ void main() {
             onHeightChanged: (_) {},
             onUnpin: () {},
             onOpen: onOpen ?? () {},
+            onExtractText: onExtractText,
+            onImmersiveChanged: onImmersive,
             onChanged: (a) {
               saved.add(a);
               setState(() => current = a);
@@ -55,19 +61,102 @@ void main() {
     return saved;
   }
 
-  testWidgets('basılı tutmak görsele balon bırakır (kip açmadan)', (
+  Offset imageCenter(WidgetTester tester) =>
+      tester.getCenter(find.byType(PinnedMediaPane)) - const Offset(0, 250);
+
+  testWidgets('basılı tutmak balon BIRAKMAZ, metin seçimini açar', (
+    tester,
+  ) async {
+    var extracted = 0;
+    final saved = await pump(tester, image, onExtractText: () => extracted++);
+    final gesture = await tester.startGesture(imageCenter(tester));
+    await tester.pump(const Duration(milliseconds: 700));
+    await gesture.up();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(saved.where((a) => a.bubbles.isNotEmpty), isEmpty);
+    expect(extracted, 1);
+  });
+
+  Future<void> startAdding(WidgetTester tester, {required bool plain}) async {
+    await tester.tap(find.byKey(const ValueKey('pinned-add-bubble')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(
+        ValueKey(plain ? 'pinned-add-bubble-plain' : 'pinned-add-bubble-note'),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('Balon ekle → Balon: dokunulan yere balon, yazma kartı açılır', (
     tester,
   ) async {
     final saved = await pump(tester, image);
-    final center =
-        tester.getCenter(find.byType(PinnedMediaPane)) - const Offset(0, 250);
-    final gesture = await tester.startGesture(center);
-    await tester.pump(const Duration(milliseconds: 600));
-    await gesture.up();
-    await tester.pump();
-    expect(saved, isNotEmpty);
+    await startAdding(tester, plain: false);
+    // Bırakma kipinin araç kartı görünür.
+    expect(find.byKey(const ValueKey('bubble-toolbar-done')), findsOneWidget);
+    await tester.tapAt(imageCenter(tester));
+    await tester.pump(const Duration(milliseconds: 400));
     expect(saved.last.bubbles, hasLength(1));
-    expect(saved.last.bubbles.single.page, 1);
+    expect(saved.last.bubbles.single.plain, isFalse);
+    expect(find.byKey(const ValueKey('bubble-dock-text')), findsOneWidget);
+  });
+
+  testWidgets('Balon ekle → Açık metin: sayfaya doğrudan yazı bırakır', (
+    tester,
+  ) async {
+    final saved = await pump(tester, image);
+    await startAdding(tester, plain: true);
+    await tester.tapAt(imageCenter(tester));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(saved.last.bubbles.single.plain, isTrue);
+  });
+
+  testWidgets('balon yazılırken alttaki not ve çubuk gizlenir, Bitti geri '
+      'getirir', (tester) async {
+    final immersive = <bool>[];
+    await pump(tester, image, onImmersive: immersive.add);
+    await startAdding(tester, plain: false);
+    await tester.tapAt(imageCenter(tester));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump();
+    expect(find.text('not gövdesi'), findsNothing);
+    expect(find.byKey(const ValueKey('pinned-media-bar')), findsNothing);
+    expect(immersive, [true]);
+    // Not ağaçta kalır (durumu korunur), yalnız görünmez.
+    expect(find.text('not gövdesi', skipOffstage: false), findsOneWidget);
+    // Kart bölmenin dibinde (klavyenin üstü) — ekranın alt yarısında.
+    final dock = tester.getRect(find.byKey(const ValueKey('bubble-dock-text')));
+    expect(dock.center.dy, greaterThan(400));
+    await tester.tap(find.byKey(const ValueKey('bubble-dock-done')));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump();
+    expect(find.text('not gövdesi'), findsOneWidget);
+    expect(find.byKey(const ValueKey('pinned-media-bar')), findsOneWidget);
+    expect(immersive, [true, false]);
+  });
+
+  testWidgets('çift dokunuş görseli yakınlaştırır, ikincisi geri sığdırır', (
+    tester,
+  ) async {
+    await pump(tester, image);
+    double scale() => tester
+        .widget<InteractiveViewer>(find.byType(InteractiveViewer))
+        .transformationController!
+        .value
+        .getMaxScaleOnAxis();
+    expect(scale(), closeTo(1, 0.01));
+    Future<void> doubleTap() async {
+      await tester.tapAt(imageCenter(tester));
+      await tester.pump(const Duration(milliseconds: 80));
+      await tester.tapAt(imageCenter(tester));
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    await doubleTap();
+    expect(scale(), greaterThan(2));
+    await doubleTap();
+    expect(scale(), closeTo(1, 0.01));
   });
 
   testWidgets('var olan balon basılı tutulup taşınır', (tester) async {

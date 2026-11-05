@@ -6778,4 +6778,13 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get itemGesturesFingerAllInfo =>
       'Kapalıyken parmak yalnız işaretler; karalama (siler) ve daire (yazımı düzeltir) kalemle çalışır.';
+
+  @override
+  String get bubbleAddNoteHint => 'Tutamaçlı not; dokununca açılır';
+
+  @override
+  String get bubbleAddPlainHint => 'Sayfanın üstüne doğrudan yazı';
+
+  @override
+  String get bubbleAddPlainTitle => 'Açık metin';
 }

@@ -3285,5 +3285,8 @@
   "dictationFixAction": "AI ile düzelt",
   "tipHomeMicHold": "İpucu: mikrofona basılı tutarsan AI sesli not açılır.",
   "itemGesturesFingerAll": "Sil ve düzelt jestleri parmakla da",
-  "itemGesturesFingerAllInfo": "Kapalıyken parmak yalnız işaretler; karalama (siler) ve daire (yazımı düzeltir) kalemle çalışır."
+  "itemGesturesFingerAllInfo": "Kapalıyken parmak yalnız işaretler; karalama (siler) ve daire (yazımı düzeltir) kalemle çalışır.",
+  "bubbleAddNoteHint": "Tutamaçlı not; dokununca açılır",
+  "bubbleAddPlainHint": "Sayfanın üstüne doğrudan yazı",
+  "bubbleAddPlainTitle": "Açık metin"
 }

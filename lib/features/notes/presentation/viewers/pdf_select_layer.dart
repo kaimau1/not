@@ -64,6 +64,7 @@ class PdfSelectLayer extends StatefulWidget {
     this.onDragAt,
     this.activeSelectionPage = 0,
     this.longPressSelects = true,
+    this.doubleTapSelects = true,
   });
 
   final PdfPage page;
@@ -75,6 +76,14 @@ class PdfSelectLayer extends StatefulWidget {
   /// DOKUNUŞLA başlar; ikinci dokunuşta parmak kalkmadan sürüklenirse seçim
   /// kelime kelime büyür (uzun basıştaki davranışın aynısı).
   final bool longPressSelects;
+
+  /// Çift dokunuş kelime seçsin mi? **HAYIR** okuma bölmesinde ve tam ekran
+  /// görüntüleyicide (kullanıcı kararı 2026-11-05: "basılı tutmak metin
+  /// seçimini açsın, çift tık oto zoom yapsın"): çift dokunuş orada
+  /// YAKINLAŞTIRIR, seçim yalnız basılı tutmakla başlar. Aynı jest iki işi
+  /// birden yapınca (kelime seçilir + sayfa büyür) hangisinin olacağı
+  /// kestirilemiyordu.
+  final bool doubleTapSelects;
 
   /// Sayfanın ekrandaki (ölçekli) boyutu — katman tam sayfayı kaplar.
   final Size pageSize;
@@ -414,6 +423,9 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
         (at - _lastTapPos).distance < 30;
     if (isDoubleTap) {
       _lastTapAt = null;
+      // Çift dokunuş yakınlaştırmanındır (bkz. [doubleTapSelects]); açık
+      // seçim varsa ilk dokunuş onu zaten temizledi.
+      if (!widget.doubleTapSelects) return;
       if (!_selectWordAt(at) &&
           _textThin &&
           !_ocrTried &&

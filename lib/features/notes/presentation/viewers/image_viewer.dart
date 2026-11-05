@@ -761,11 +761,9 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
                     child: BubblePageLayer(
                       controller: _bubbles,
                       page: 1,
+                      // Basılı tutmak bir şey bırakmaz (varsayılan): balon
+                      // yalnız düğmeyle.
                       readOnly: widget.onChanged == null,
-                      // Görsel görüntüleyicide basılı tutmak bir şey
-                      // bırakmaz: yakınlaştırıp gezerken parmağı
-                      // dinlendirmek sürpriz metin alanı açmasın.
-                      longPressAdd: false,
                     ),
                   ),
                 ],

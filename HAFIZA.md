@@ -336,7 +336,20 @@ maddeyi GÜNCELLE.
   vardı; sabit görselde de var (balonlar görselin KENDİ ekinde, page 1 —
   ilk düzenlemede türetilmiş belgenin balonları görsele taşınır). Salt
   okunur ortak notta eski balonlu görünüm hâlâ çizilir (yazılamaz).
-- **SABİT KİP TEK DAVRANIŞ** (2026-11-05, "balonlar taşınamıyor, uzun
+- **JEST KURALI — GEÇERLİ** (2026-11-05 akşam, kullanıcı kararı; aşağıdaki
+  "basılı tut = balon"un YERİNE): her yüzeyde (sabit PDF/görsel, tam ekran
+  PDF, slayt) **basılı tut = metin seçimi** (görselde OCR seçim ekranı,
+  `onExtractText`), **çift dokunuş = yakınlaştır** (`PdfSelectLayer.
+  doubleTapSelects: false`, tam ekranda `pdfDoubleTapZoom`), **balon yalnız
+  düğmeyle**: bölme çubuğundaki "Balon ekle" menüsü Balon · Açık metin
+  (`addingPlain`) → bırakma kipi, dokunarak. `BubblePageLayer.longPressAdd`
+  varsayılanı false, hiçbir yüzey açmıyor. Balon yazılırken sabit bölme
+  çubuğu ve alttaki notu gizler (`Offstage`, yer kaplamaz), medya tüm
+  bölmeyi alır, editör alt çubuğu `_setImmersiveBubble` ile gizlenir; kart
+  kompakt (yazı 1→4 satır, başlık şeridi ~34 dp). TUZAK: yazma bitince
+  `KeyboardClipWindow` canlandırılırsa tam boydan iner, çubuk+not bir kare
+  taşar → `_snapWindow` ile atlar.
+- (ESKİ, yerine yukarıdaki) **SABİT KİP TEK DAVRANIŞ** (2026-11-05, "balonlar taşınamıyor, uzun
   basış metin tanıyor"): yazılabilir sabit PDF/görselde balonlar HEP
   düzenlenebilir (`PdfPageBox.editBubbles`): basılı tut = balon bırak,
   tutamaç basılı tutulup taşınır, okuma kartında Düzenle + Sil; seçim çift

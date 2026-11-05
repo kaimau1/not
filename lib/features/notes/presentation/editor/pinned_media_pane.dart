@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
@@ -117,7 +118,13 @@ class PinnedMediaPane extends StatefulWidget {
     this.onShare,
     this.onTranscribe,
     this.onPdfNote,
+    this.onImmersiveChanged,
   });
+
+  /// Balon yazma kartı açıldı/kapandı: editör kendi alt çubuğunu gizler
+  /// (bölme de alttaki notu gizleyip medyayı klavyeye kadar uzatır — bkz.
+  /// [_PinnedMediaPaneState._writing]).
+  final ValueChanged<bool>? onImmersiveChanged;
 
   /// Sabit PDF'te SEÇİLEN YAZIDAN NOT (kullanıcı isteği 2026-11-03): basılı
   /// tutup seçilen yazı "Not al" ile sayfa + satır + alıntı olarak nota
@@ -221,9 +228,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   /// SABİT KİPİN TEK DAVRANIŞI (kullanıcı bulgusu 2026-11-05: "balonlar
   /// taşınamıyor, düzenlenemiyor; uzun basış metin tanıma yapıyor"):
   /// yazılabilir notta balonlar HEP düzenlenebilir — tutamaç basılı tutulup
-  /// taşınır, okuma kartında Düzenle çıkar, görselin boş yerine basılı
-  /// tutmak oraya balon bırakır; iki parmak yakınlaştırır. Çubuktaki
-  /// "Balon ekle" dokunarak bırakma kipini açar (araç kartı + renk).
+  /// taşınır, okuma kartında Düzenle çıkar; iki parmak ya da çift dokunuş
+  /// yakınlaştırır. Yeni balon YALNIZ çubuktaki "Balon ekle" menüsünden
+  /// (Balon / Açık metin) açılan bırakma kipinde dokunarak eklenir;
+  /// basılı tutmak görseldeki yazıyı seçmeye açar (kullanıcı kararı
+  /// 2026-11-05).
   BubbleController? _ownBubbles;
 
   /// Dokunarak bırakma kipi (denetleyicinin `adding` değeri — araç
@@ -236,6 +245,47 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   /// Sabit PDF'in "Balon ekle" kipi: düğme bu çubukta, kip belge kutusunda
   /// (bkz. [PdfPageBox.addingBubbles]).
   final _pdfAdding = ValueNotifier<bool>(false);
+
+  /// Sabit PDF'in bırakma kipinde açık metin mi (bkz. [PdfPageBox.addingPlain]).
+  final _pdfPlain = ValueNotifier<bool>(false);
+
+  /// **BALON YAZILIYOR** (kullanıcı bulgusu 2026-11-05: "balon yazarken
+  /// sayfa aşırı daralıyor; alttaki not alanı gizlensin, balon yazı alanı
+  /// klavyenin üzerine yerleşsin"): yazma kartı açıkken ayraç çubuğu ve
+  /// alttaki not ağaçta kalır ama GÖRÜNMEZ ve yer kaplamaz; medya bölmenin
+  /// tamamını alır, kart onun dibinde — klavyenin hemen üstünde.
+  bool _writing = false;
+
+  /// Bir kare canlandırmasız (bkz. [_setWriting]).
+  bool _snapWindow = false;
+
+  bool _takeSnap() {
+    if (!_snapWindow) return false;
+    _snapWindow = false;
+    return true;
+  }
+
+  void _setWriting(bool value) {
+    if (_writing == value) return;
+    void apply() {
+      if (!mounted || _writing == value) return;
+      // Yazma bitince pencere yerine ATLAR: tam boydan canlandırılırsa
+      // geri gelen çubuk + not bir an taşardı.
+      _snapWindow = !value;
+      setState(() => _writing = value);
+      widget.onImmersiveChanged?.call(value);
+    }
+
+    // Yazma kartı bunu kare SONUNDA bildirir (bkz. BubbleDock._setDockOpen):
+    // o an doğrudan uygulanır. Kurulum sırasında gelirse kare sonuna.
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => apply());
+      WidgetsBinding.instance.ensureVisualUpdate();
+    } else {
+      apply();
+    }
+  }
 
   bool get _canEditPdfBubbles =>
       widget.media.kind == AttachmentKind.pdf && widget.onChanged != null;
@@ -261,7 +311,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         bubbles: _ownBubbles?.bubbles ?? widget.media.bubbles,
       ),
     ),
-  )..addListener(_onOwnBubbles);
+  )
+    ..addListener(_onOwnBubbles)
+    ..onEditingChanged = _setWriting;
 
   /// Kip/gizlilik/balon sayısı çubuktaki düğmeleri değiştirir.
   bool? _lastAdding;
@@ -279,9 +331,41 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     setState(() {});
   }
 
-  void _toggleBubbleEdit() {
-    final controller = _ownController();
-    controller.setAdding(!controller.adding);
+  /// "Balon ekle" menüsünden seçilen tür ([plain]: açık metin) ile bırakma
+  /// kipini açar; kip açıkken düğme kipi kapatır.
+  void _startAdding({required bool plain}) {
+    if (_canEditBubbles) {
+      _ownController()
+        ..setPlainMode(plain)
+        ..setAdding(true);
+    } else if (_canEditPdfBubbles) {
+      _pdfPlain.value = plain;
+      _pdfAdding.value = true;
+    }
+  }
+
+  void _stopAdding() {
+    if (_canEditBubbles) {
+      _ownBubbles?.setAdding(false);
+    } else {
+      _pdfAdding.value = false;
+    }
+  }
+
+  /// Sabit görselde çift dokunuş: sığdırılmışken dokunulan yer 2,5 kat
+  /// büyür, yakınken geri sığar (PDF kutusuyla aynı).
+  Offset? _doubleTapAt;
+  void _toggleImageZoom() {
+    if (_imageZoomed) {
+      _imageZoom.value = Matrix4.identity();
+      return;
+    }
+    final at = _doubleTapAt;
+    if (at == null) return;
+    const scale = 2.5;
+    _imageZoom.value = Matrix4.identity()
+      ..translateByDouble(-at.dx * (scale - 1), -at.dy * (scale - 1), 0, 1)
+      ..scaleByDouble(scale, scale, 1, 1);
   }
 
   /// Görselin üstündeki katman: yazılabilir notta görselin KENDİ
@@ -331,6 +415,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
       _lastBar = null;
       _pdfAdding.value = false;
       _imageZoom.value = Matrix4.identity();
+      _setWriting(false);
     } else if (!_bubbleEdit && widget.media.bubbles.isNotEmpty) {
       _ownBubbles
         ?..replace(widget.media.bubbles)
@@ -344,6 +429,12 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     _ownBubbles?.dispose();
     _imageBubbles?.dispose();
     _pdfAdding.dispose();
+    _pdfPlain.dispose();
+    // Ağaç kilitliyken üst ekranın setState'i çağrılmaz: kare sonuna.
+    final immersive = widget.onImmersiveChanged;
+    if (_writing && immersive != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => immersive(false));
+    }
     _imageZoom.dispose();
     super.dispose();
   }
@@ -377,7 +468,6 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
               controller: bubbles,
               page: 1,
               readOnly: !own,
-              longPressAdd: own,
             ),
           ),
         ],
@@ -521,12 +611,14 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                 available: constraints.maxHeight,
                 stable: stable,
               );
+        // Balon yazılırken medya bölmenin TAMAMI (bkz. [_writing]).
+        final writing = _writing && constraints.maxHeight.isFinite;
         return Column(
           children: [
             KeyboardClipWindow(
-              full: height,
-              visible: visible,
-              animate: live == null,
+              full: writing ? constraints.maxHeight : height,
+              visible: writing ? constraints.maxHeight : visible,
+              animate: live == null && !writing && !_takeSnap(),
               // Görsel/video/sunum klavye açılınca KIRPILMAZ, küçülür
               // (kullanıcı isteği 2026-10-20); metin, belge ve ses kartı
               // okunur kalsın diye kırpılır.
@@ -588,6 +680,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                             showBubbles: true,
                             editBubbles: widget.onChanged != null,
                             addingBubbles: _pdfAdding,
+                            addingPlain: _pdfPlain,
+                            onBubbleWriting: _setWriting,
                             fitWidth: true,
                             onNoteFromSelection: widget.onPdfNote,
                           ),
@@ -614,30 +708,50 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                                 }
                                 widget.onOpen();
                               },
-                        // Yazılabilir görselde basılı tutmak BALON bırakır
-                        // (aşağı çekip sayfaya geri koymak ayraçtan / görünüm
-                        // anahtarından).
-                        onLongPressStart: _canEditBubbles ? null : (_) {
-                          HapticFeedback.selectionClick();
-                          setState(() {
-                            _pulling = true;
-                            _pullDown = 0;
-                          });
-                        },
-                        onLongPressMoveUpdate: _canEditBubbles
+                        // ÇİFT DOKUNUŞ = YAKINLAŞTIR (kullanıcı kararı
+                        // 2026-11-05; PDF kutusu ve görüntüleyiciyle aynı).
+                        onDoubleTapDown: isImage
+                            ? (d) => _doubleTapAt = d.localPosition
+                            : null,
+                        onDoubleTap: isImage ? _toggleImageZoom : null,
+                        // BASILI TUT = METİN SEÇİMİ (kullanıcı kararı
+                        // 2026-11-05: "basılı tutmak metin seçimini açsın,
+                        // balon sadece butonla eklensin"): yazılabilir
+                        // görselde görseldeki yazı tanınıp seçilebilir
+                        // ekranda açılır. Salt okunurda eski jest: aşağı
+                        // çekip bırakınca sayfaya geri koyar.
+                        onLongPress: widget.onExtractText == null
+                            ? null
+                            : () {
+                                if (_bubbleEdit) return;
+                                HapticFeedback.selectionClick();
+                                widget.onExtractText!();
+                              },
+                        onLongPressStart: widget.onExtractText != null
+                            ? null
+                            : (_) {
+                                HapticFeedback.selectionClick();
+                                setState(() {
+                                  _pulling = true;
+                                  _pullDown = 0;
+                                });
+                              },
+                        onLongPressMoveUpdate: widget.onExtractText != null
                             ? null
                             : (d) => setState(
                                 () => _pullDown = d.offsetFromOrigin.dy,
                               ),
-                        onLongPressEnd: _canEditBubbles ? null : (_) {
-                          final unpin = _unpinArmed;
-                          setState(() {
-                            _pulling = false;
-                            _pullDown = 0;
-                          });
-                          if (unpin) widget.onUnpin();
-                        },
-                        onLongPressCancel: _canEditBubbles
+                        onLongPressEnd: widget.onExtractText != null
+                            ? null
+                            : (_) {
+                                final unpin = _unpinArmed;
+                                setState(() {
+                                  _pulling = false;
+                                  _pullDown = 0;
+                                });
+                                if (unpin) widget.onUnpin();
+                              },
+                        onLongPressCancel: widget.onExtractText != null
                             ? null
                             : () => setState(() {
                                 _pulling = false;
@@ -742,6 +856,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             // BURADA (kullanıcı bulgusu 2026-10-11: medyanın üstüne konan
             // düğmeler YouTube oynatıcısının kendi sağ üst düğmeleriyle üst
             // üste geliyordu). Çubuk medyanın DIŞINDA, hiçbir şeyi örtmez.
+            if (!writing)
             GestureDetector(
               key: const ValueKey('pinned-media-bar'),
               behavior: HitTestBehavior.opaque,
@@ -786,7 +901,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                 ),
               ),
             ),
-            Expanded(child: widget.child),
+            // Yazarken not AĞAÇTA kalır (durumu, imleci korunur) ama yer
+            // kaplamaz ve çizilmez.
+            Expanded(
+              child: Offstage(offstage: writing, child: widget.child),
+            ),
           ],
         );
       },
@@ -886,15 +1005,12 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         // PDF'te belge kutusunda (düğme her ikisinde de bu çubukta — sayfa
         // şeridi kendiliğinden söndüğü için orada görünmüyordu).
         if (_canEditBubbles)
-          _addBubbleButton(context, active: _bubbleEdit, onPressed: _toggleBubbleEdit)
+          _addBubbleButton(context, active: _bubbleEdit)
         else if (_canEditPdfBubbles)
           ValueListenableBuilder<bool>(
             valueListenable: _pdfAdding,
-            builder: (context, adding, _) => _addBubbleButton(
-              context,
-              active: adding,
-              onPressed: () => _pdfAdding.value = !adding,
-            ),
+            builder: (context, adding, _) =>
+                _addBubbleButton(context, active: adding),
           ),
         // Balonları göster/gizle (görselde balon varken; PDF'te kutunun
         // şeridinde).
@@ -963,20 +1079,54 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     );
   }
 
-  Widget _addBubbleButton(
-    BuildContext context, {
-    required bool active,
-    required VoidCallback onPressed,
-  }) {
+  /// **BALON EKLE MENÜSÜ** (kullanıcı bulgusu 2026-11-05: "açık metin
+  /// yazma kısmını bulamadım"): tür seçimi eskiden yalnız bırakma kipinin
+  /// araç kartındaydı ve kip basılı tutmakla atlanınca kart hiç
+  /// görünmüyordu. Artık düğme iki YAZILI seçenek açar — **Balon** (tutamaçlı
+  /// not) · **Açık metin** (sayfanın üstüne doğrudan yazı) —, seçilen türle
+  /// bırakma kipi açılır; kip açıkken düğme ✓ olur ve kipi kapatır.
+  Widget _addBubbleButton(BuildContext context, {required bool active}) {
     final l10n = context.l10n;
-    return IconButton(
+    if (active) {
+      return IconButton(
+        key: const ValueKey('pinned-add-bubble'),
+        tooltip: l10n.bubbleAddDone,
+        visualDensity: VisualDensity.compact,
+        iconSize: 20,
+        color: Theme.of(context).colorScheme.primary,
+        icon: const Icon(Icons.check),
+        onPressed: _stopAdding,
+      );
+    }
+    return PopupMenuButton<bool>(
       key: const ValueKey('pinned-add-bubble'),
-      tooltip: active ? l10n.bubbleAddDone : l10n.bubbleAdd,
-      visualDensity: VisualDensity.compact,
-      iconSize: 20,
-      color: active ? Theme.of(context).colorScheme.primary : null,
-      icon: Icon(active ? Icons.check : Icons.add_comment_outlined),
-      onPressed: onPressed,
+      tooltip: l10n.bubbleAdd,
+      icon: const Icon(Icons.add_comment_outlined, size: 20),
+      onSelected: (plain) => _startAdding(plain: plain),
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          key: const ValueKey('pinned-add-bubble-note'),
+          value: false,
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.chat_bubble_outline),
+            title: Text(l10n.bubbleModeBubble),
+            subtitle: Text(l10n.bubbleAddNoteHint),
+          ),
+        ),
+        PopupMenuItem(
+          key: const ValueKey('pinned-add-bubble-plain'),
+          value: true,
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.text_fields),
+            title: Text(l10n.bubbleAddPlainTitle),
+            subtitle: Text(l10n.bubbleAddPlainHint),
+          ),
+        ),
+      ],
     );
   }
 

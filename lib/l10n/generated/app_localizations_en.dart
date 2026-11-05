@@ -6800,4 +6800,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get itemGesturesFingerAllInfo =>
       'When off, a finger only checks; scribble (deletes) and circle (fixes spelling) need a pen.';
+
+  @override
+  String get bubbleAddNoteHint => 'A pinned note that opens on tap';
+
+  @override
+  String get bubbleAddPlainHint => 'Text written straight on the page';
+
+  @override
+  String get bubbleAddPlainTitle => 'Plain text';
 }
