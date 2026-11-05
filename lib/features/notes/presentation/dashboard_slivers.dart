@@ -1,6 +1,101 @@
 part of 'dashboard_screen.dart';
 
 /// Not ızgarasının dilimleri: bölümler, boş durum, sürükleyerek sıralama (C1).
+/// Bölüm başlığının çizgisi en çok okuma genişliğine uzanır (F39.1).
+const double kSectionHeaderMaxWidth = 760;
+
+/// Bölüm başlığı: sayı başlığın yanında, çizgi sonra (F39.1). Masaüstünde sayı
+/// başlıktan ~1800 px uzağa düşüyordu.
+class HomeSectionHeader extends StatelessWidget {
+  const HomeSectionHeader({super.key, required this.text, required this.count});
+
+  final String text;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: kSectionHeaderMaxWidth),
+          child: Row(
+            children: [
+              // Flexible OLMAZ: boş alan Expanded çizgiyle yarı yarıya bölünür.
+              SectionLabel(text),
+              const SizedBox(width: 6),
+              Text(
+                '· $count',
+                semanticsLabel: context.l10n.sectionNoteCount(count),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Divider(height: 1, color: scheme.outlineVariant),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Ana ekran boşken tek satır + tek eylem (F39.5): neden boş, ne yapılır.
+class HomeEmptyNotes extends ConsumerWidget {
+  const HomeEmptyNotes({
+    super.key,
+    required this.searchActive,
+    required this.onClearSearch,
+    required this.onNewNote,
+  });
+
+  final bool searchActive;
+  final VoidCallback onClearSearch;
+  final VoidCallback onNewNote;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    if (searchActive) {
+      return EmptyState(
+        icon: Icons.search_off,
+        title: l10n.emptySearch,
+        actionLabel: l10n.clearSearch,
+        actionIcon: Icons.close,
+        onAction: onClearSearch,
+      );
+    }
+    if (ref.watch(noteFilterProvider) != NoteFilter.all ||
+        ref.watch(selectedTagProvider) != null) {
+      return EmptyState(
+        icon: Icons.filter_alt_off_outlined,
+        title: l10n.emptyFilter,
+        actionLabel: l10n.clearFilter,
+        actionIcon: Icons.close,
+        onAction: () {
+          ref.read(noteFilterProvider.notifier).set(NoteFilter.all);
+          ref.read(selectedTagProvider.notifier).set(null);
+        },
+      );
+    }
+    return EmptyState(
+      icon: Icons.sticky_note_2_outlined,
+      title: ref.watch(selectedFolderProvider) != null
+          ? l10n.emptyFolderTitle
+          : l10n.emptyNotes,
+      actionLabel: l10n.newNoteAction,
+      onAction: onNewNote,
+    );
+  }
+}
+
 extension _DashSlivers on _DashboardScreenState {
   /// "Gelen" süzgeci açıkken (bkz. [sharedHubOnHomeProvider]) not ızgarasının
   /// yerine gelen kopyalar + benimle paylaşılan notlar. Ayrı ekranla aynı
@@ -48,21 +143,14 @@ extension _DashSlivers on _DashboardScreenState {
       return [
         SliverFillRemaining(
           hasScrollBody: false,
-          child: searchActive
-              ? EmptyState(
-                  icon: Icons.search_off,
-                  title: l10n.emptySearch,
-                  // Aramada sonuç yoksa anlamsal aramayı hatırlat: kelimesi
-                  // geçmeyen ama konusu tutan not orada bulunuyor.
-                  subtitle: ref.read(semanticSearchEnabledProvider)
-                      ? null
-                      : l10n.emptySearchSemanticHint,
-                )
-              : EmptyState(
-                  icon: Icons.sticky_note_2_outlined,
-                  title: l10n.emptyNotes,
-                  subtitle: l10n.emptyNotesHint,
-                ),
+          child: HomeEmptyNotes(
+            searchActive: searchActive,
+            onClearSearch: () {
+              _searchController.clear();
+              ref.read(searchQueryProvider.notifier).set('');
+            },
+            onNewNote: () => unawaited(createNote(NoteType.text)),
+          ),
         ),
       ];
     }
@@ -326,30 +414,7 @@ extension _DashSlivers on _DashboardScreenState {
     // levhalardaki "Düzenle", "Not içeriği" başlıklarından ayrı bir dil
     // konuşuyordu (TERİMLER: "bölüm başlığı cümle düzeninde").
     Widget header(String text, int count) => SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
-        child: Row(
-          children: [
-            SectionLabel(text),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Divider(
-                height: 1,
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              l10n.sectionNoteCount(count),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: HomeSectionHeader(text: text, count: count),
     );
 
     const gridPadding = EdgeInsets.symmetric(horizontal: kGridInset);

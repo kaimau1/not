@@ -176,6 +176,7 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 67. [ ] (F38.3) Başlıktaki "+" levha açar (Etiket, Hatırlatıcı, Kişiler, Klasör); uzun başlık daha geniş; paylaşılmış notta "+"nın yanında kişi sayısı, dokununca ortak çalışanlar. Medya sabit notta başlık üst çubuktayken de aynı.
 68. [ ] (F38.4) 12+ işaretli maddeli listede "İşaretliler (N) · Sil" kaydırmadan bulunuyor, silme Geri al veriyor; görsel yanındayken satır görselin altına iniyor.
 69. [ ] (F38.7) Klavye açılırken alt çubuk: telefonda ölçümde birikim çıkmadı (15 tur). Kendi notlarında hâlâ "her açılışta artıyor" görüyorsan hangi notta (ekli mi, uzun mu) söyle: sabah bakılacak. Görselli notta ilk açılış 33 ms, sonrakiler 66–149 ms farkı açık.
+70. [ ] (F39.2, F39.3) Gerçek parmakla: ana ekranda iki parmak aç/kapa ızgarayı ölçekler, köşede sütun simgesi, bırakınca oturur; yana çek: ızgara parmağı izler, kenarda sonraki klasörün adı, kısa çekişte geri döner, seçili çip ortalanır. Dikey kaydırmayla yarışmıyor mu bak.
 
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 

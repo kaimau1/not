@@ -54,7 +54,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get emptyNotes => 'Henüz not yok';
 
   @override
-  String get emptyNotesHint => 'İlk notunu eklemek için + düğmesine dokun';
+  String get emptyFilter => 'Bu süzgeçle not yok';
+
+  @override
+  String get clearFilter => 'Süzgeci kaldır';
+
+  @override
+  String get emptyFolderTitle => 'Bu klasör boş';
+
+  @override
+  String get newNoteAction => 'Not ekle';
 
   @override
   String get emptySearch => 'Sonuç bulunamadı';
@@ -1706,9 +1715,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String sectionNoteCount(int count) {
     return '$count not';
   }
-
-  @override
-  String get emptySearchSemanticHint => 'Anlam sekmesini dene';
 
   @override
   String get quickCaptureHint => 'Yeni not…';

@@ -840,84 +840,391 @@ class _QuickCaptureIcon extends StatelessWidget {
   );
 }
 
-/// İki parmak "sıkıştırma" hareketini ARENAYA GİRMEDEN ölçen sarmalayıcı.
-///
-/// KÖK NEDEN (kullanıcı 2026-08-08: ana ekranda iki parmakla sütun değişimi
-/// çalışmıyordu): eskiden bir `GestureDetector.onScaleUpdate` kullanılıyordu.
-/// O tanıyıcı, altındaki kaydırma görünümünün dikey sürükleme tanıyıcısıyla
-/// AYNI jest arenasında yarışır ve sürükleme İLK parmakta kabul edildiği için
-/// çoğu zaman önce kazanır — ikinci parmak indiğinde iş işten geçmiş olur.
-///
-/// `Listener` arenaya hiç girmez: işaretçileri sessizce dinler, kaydırmayı
-/// bozmaz ve iki parmak arasındaki uzaklık yeterince değişince haber verir.
-/// (Aynı çözüm PDF metin seçim katmanında da kullanılıyor.)
-class _PinchColumns extends StatefulWidget {
-  const _PinchColumns({
+/// İki parmak oranından hedef sütun (F39.2): parmaklar açılınca (oran > 1)
+/// kartlar büyür, sütun AZALIR. Her adım için parmak arası en az %25 değişir;
+/// tek jestte 1 ↔ 4 arası gezilebilir.
+int pinchTargetColumns(int base, double ratio) {
+  if (ratio <= 0) return base;
+  final steps = (math.log(ratio) / math.log(1.25)).truncate();
+  return (base - steps).clamp(
+    GridColumnsNotifier.minColumns,
+    GridColumnsNotifier.maxColumns,
+  );
+}
+
+/// **İKİ PARMAK ZOOM** (F39.2): jest boyunca ızgara yalnız ölçeklenir (tek
+/// `Transform`, `RepaintBoundary` içinde, yerleşim YOK); hedef sütun köşede
+/// küçük simgeyle görünür, bırakınca sütun TEK kez değişir + kısa oturma.
+/// Ölçüm (v1.1.680): eskiden her adım tam yerleşim, kare 116–247 ms + "N sütun"
+/// bildirimi. Ham [Listener]: jest yarışına girmez, tek parmak etkilenmez.
+class PinchColumns extends StatefulWidget {
+  const PinchColumns({
+    super.key,
     required this.child,
-    required this.onStart,
-    required this.onScale,
+    required this.columns,
+    required this.onCommit,
   });
 
   final Widget child;
-
-  /// İkinci parmak indi: çağıran o anki sütun sayısını taban alır.
-  final VoidCallback onStart;
-
-  /// Taban uzaklığa göre O ANKİ oran (>1 = parmaklar açılıyor).
-  /// **true dönerse bir adım atıldı** ve taban uzaklık şimdiki değere
-  /// çekilir; yoksa oran eşiğin üstünde kaldığı sürece her karede bir adım
-  /// daha atılır ve tek jestte en uca fırlanırdı.
-  final bool Function(double scale) onScale;
+  final int columns;
+  final ValueChanged<int> onCommit;
 
   @override
-  State<_PinchColumns> createState() => _PinchColumnsState();
+  State<PinchColumns> createState() => _PinchColumnsState();
 }
 
-class _PinchColumnsState extends State<_PinchColumns> {
+class _PinchColumnsState extends State<PinchColumns>
+    with SingleTickerProviderStateMixin {
   final _points = <int, Offset>{};
-
-  /// İki parmak indiği andaki uzaklık; oran buna göre ölçülür. Çağıran bir
-  /// adım attığında sıfırlanır ki aynı jestle 1 → 4 arası gezilebilsin.
+  final _target = ValueNotifier<int?>(null);
+  late final AnimationController _scale = AnimationController.unbounded(
+    vsync: this,
+    value: 1,
+  );
   double _base = 0;
+  int _baseColumns = 2;
+  Offset _focal = Offset.zero;
+  Timer? _hide;
 
-  void _recompute() {
-    if (_points.length != 2) {
-      _base = 0;
-      return;
-    }
+  @override
+  void dispose() {
+    _hide?.cancel();
+    _target.dispose();
+    _scale.dispose();
+    super.dispose();
+  }
+
+  void _move() {
+    if (_points.length != 2) return;
     final values = _points.values.toList();
     final distance = (values[0] - values[1]).distance;
     if (_base == 0) {
-      if (distance < 24) return; // parmaklar üst üste: ölçüm anlamsız
+      if (distance < 24) return; // parmaklar üst üste: oran anlamsız
       _base = distance;
-      widget.onStart();
+      _baseColumns = widget.columns;
+      _focal = (values[0] + values[1]) / 2;
+      _hide?.cancel();
       return;
     }
-    if (widget.onScale(distance / _base)) _base = distance;
+    final ratio = distance / _base;
+    // İki parmakla düz kaydırma ızgarayı titretmesin.
+    if (motionOf(context) && (ratio - 1).abs() > 0.03) {
+      _scale.value = ratio.clamp(0.85, 1.15);
+    }
+    final target = pinchTargetColumns(_baseColumns, ratio);
+    final shown = target == _baseColumns ? null : target;
+    if (shown != _target.value) {
+      _target.value = shown;
+      unawaited(HapticFeedback.selectionClick());
+    }
+  }
+
+  void _end({required bool commit}) {
+    if (_base == 0) return;
+    _base = 0;
+    final target = _target.value;
+    final changed = commit && target != null && target != widget.columns;
+    if (changed) widget.onCommit(target);
+    if (!changed) _target.value = null;
+    _hide?.cancel();
+    _hide = Timer(const Duration(milliseconds: 700), () {
+      _target.value = null;
+    });
+    if (!motionOf(context)) {
+      _scale.value = 1;
+      return;
+    }
+    // Yeni sütunlarla hafif küçük/büyük başlar, yerine oturur.
+    if (changed) _scale.value = target < _baseColumns ? 0.97 : 1.03;
+    unawaited(
+      _scale.animateTo(1, duration: AppMotion.short, curve: AppMotion.standard),
+    );
   }
 
   @override
   Widget build(BuildContext context) => Listener(
     behavior: HitTestBehavior.translucent,
     onPointerDown: (e) {
-      _points[e.pointer] = e.position;
-      _recompute();
+      _points[e.pointer] = e.localPosition;
+      _move();
     },
     onPointerMove: (e) {
       if (!_points.containsKey(e.pointer)) return;
-      _points[e.pointer] = e.position;
-      _recompute();
+      _points[e.pointer] = e.localPosition;
+      _move();
     },
     onPointerUp: (e) {
       _points.remove(e.pointer);
-      _base = 0;
+      _end(commit: true);
     },
     onPointerCancel: (e) {
       _points.remove(e.pointer);
-      _base = 0;
+      _end(commit: false);
     },
-    child: widget.child,
+    child: Stack(
+      fit: StackFit.passthrough,
+      children: [
+        ClipRect(
+          child: AnimatedBuilder(
+            animation: _scale,
+            builder: (context, child) => Transform(
+              transform: Matrix4.diagonal3Values(_scale.value, _scale.value, 1),
+              origin: _focal,
+              child: child,
+            ),
+            child: RepaintBoundary(child: widget.child),
+          ),
+        ),
+        PositionedDirectional(
+          top: 10,
+          end: 10,
+          child: IgnorePointer(
+            child: ValueListenableBuilder<int?>(
+              valueListenable: _target,
+              builder: (context, count, _) => count == null
+                  ? const SizedBox.shrink()
+                  : _ColumnsGlyph(count: count),
+            ),
+          ),
+        ),
+      ],
+    ),
   );
+}
+
+/// Köşedeki kısa sütun simgesi: yazısız, N küçük dikey çubuk.
+class _ColumnsGlyph extends StatelessWidget {
+  const _ColumnsGlyph({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      liveRegion: true,
+      label: context.l10n.gridColumnsCount(count),
+      child: DecoratedBox(
+        key: ValueKey('pinch-columns-$count'),
+        decoration: BoxDecoration(
+          color: tokens.card,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: tokens.hairline),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < count; i++) ...[
+                if (i > 0) const SizedBox(width: 3),
+                Container(
+                  width: 6,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// **YANA KAYDIRARAK KLASÖR GEÇİŞİ** (F39.3): ızgara parmağı izler (tek
+/// `Transform`, yeni kurulum yok), açılan kenarda sonraki durağın adı; eşik
+/// (%22 genişlik ya da hızlı fiske) aşılınca geçer, aşılmazsa yerine döner.
+/// Sonraki klasörün kartları BİLEREK çizilmez: jest sırasında ikinci ızgara
+/// kurmak kaydırma bütçesini (AKICILIK) aşar; adı yeter.
+class FolderSwipe extends StatefulWidget {
+  const FolderSwipe({
+    super.key,
+    required this.enabled,
+    required this.nextLabel,
+    required this.onCommit,
+    required this.child,
+  });
+
+  final bool enabled;
+
+  /// Yön (+1 sonraki, -1 önceki) için durağın adı; yoksa null.
+  final String? Function(int direction) nextLabel;
+  final ValueChanged<int> onCommit;
+  final Widget child;
+
+  @visibleForTesting
+  static const commitFraction = 0.22;
+
+  @override
+  State<FolderSwipe> createState() => _FolderSwipeState();
+}
+
+class _FolderSwipeState extends State<FolderSwipe>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _dx = AnimationController.unbounded(
+    vsync: this,
+  );
+  int _direction = 0;
+  String? _label;
+  double _raw = 0;
+  bool _past = false;
+  double _labelMax = 140;
+
+  @override
+  void dispose() {
+    _dx.dispose();
+    super.dispose();
+  }
+
+  double get _width => (context.size?.width ?? 1).clamp(1, double.infinity);
+
+  /// Fiziksel çekiş → yön (sağdan sola dillerde ters).
+  int _directionOf(double dx) {
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    return (rtl ? dx > 0 : dx < 0) ? 1 : -1;
+  }
+
+  void _update(DragUpdateDetails d) {
+    _raw += d.primaryDelta ?? 0;
+    if (_raw == 0) return;
+    final direction = _directionOf(_raw);
+    if (direction != _direction) {
+      _direction = direction;
+      _labelMax = _width * 0.36;
+      setState(() => _label = widget.nextLabel(direction));
+    }
+    final limit = _width * 0.4;
+    // Durak yoksa lastik: kısa ve dirençli.
+    final follow = _label == null ? _raw * 0.25 : _raw;
+    if (motionOf(context)) _dx.value = follow.clamp(-limit, limit);
+    final past =
+        _label != null && _raw.abs() >= _width * FolderSwipe.commitFraction;
+    if (past != _past) {
+      setState(() => _past = past);
+      if (past) unawaited(HapticFeedback.selectionClick());
+    }
+  }
+
+  void _finish(double velocity) {
+    final fling = velocity.abs() >= 300 && velocity.sign == _raw.sign;
+    final commit = _label != null && (_past || fling);
+    final direction = _direction;
+    setState(() {
+      _label = null;
+      _past = false;
+      _direction = 0;
+    });
+    _raw = 0;
+    if (commit) widget.onCommit(direction);
+    if (_dx.value != 0) {
+      unawaited(
+        _dx.animateTo(0, duration: AppMotion.short, curve: AppMotion.standard),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final label = _label;
+    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
+    final forwardEdge = _direction > 0;
+    return GestureDetector(
+      // Yatay çekişle filtreler/klasörler arasında gezin; dikey kaydırma
+      // CustomScrollView'de kalır, eksenler farklı olduğundan yarışmaz.
+      onHorizontalDragStart: widget.enabled ? (_) => _raw = 0 : null,
+      onHorizontalDragUpdate: widget.enabled ? _update : null,
+      onHorizontalDragEnd: widget.enabled
+          ? (d) => _finish(d.primaryVelocity ?? 0)
+          : null,
+      onHorizontalDragCancel: widget.enabled ? () => _finish(0) : null,
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: [
+          AnimatedBuilder(
+            animation: _dx,
+            builder: (context, child) => Transform.translate(
+              offset: Offset(_dx.value, 0),
+              child: child,
+            ),
+            child: widget.child,
+          ),
+          if (label != null)
+            PositionedDirectional(
+              top: 0,
+              bottom: 0,
+              start: forwardEdge ? null : 12,
+              end: forwardEdge ? 12 : null,
+              child: IgnorePointer(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: _labelMax),
+                    child: DecoratedBox(
+                      key: const ValueKey('swipe-next-label'),
+                      decoration: BoxDecoration(
+                        color: _past ? scheme.primaryContainer : tokens.card,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: tokens.hairline),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (!forwardEdge)
+                              Icon(
+                                Icons.arrow_back,
+                                size: 16,
+                                color: _past
+                                    ? scheme.onPrimaryContainer
+                                    : scheme.onSurface,
+                              ),
+                            Flexible(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                child: Text(
+                                  label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.labelLarge
+                                      ?.copyWith(
+                                        color: _past
+                                            ? scheme.onPrimaryContainer
+                                            : scheme.onSurface,
+                                      ),
+                                ),
+                              ),
+                            ),
+                            if (forwardEdge)
+                              Icon(
+                                Icons.arrow_forward,
+                                size: 16,
+                                color: _past
+                                    ? scheme.onPrimaryContainer
+                                    : scheme.onSurface,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 /// Ana ekranın sağ alt sütunundaki mikrofon düğmesi: dokunuş doğrudan

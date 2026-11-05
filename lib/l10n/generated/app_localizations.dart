@@ -182,11 +182,29 @@ abstract class AppLocalizations {
   /// **'Henüz not yok'**
   String get emptyNotes;
 
-  /// No description provided for @emptyNotesHint.
+  /// No description provided for @emptyFilter.
   ///
   /// In tr, this message translates to:
-  /// **'İlk notunu eklemek için + düğmesine dokun'**
-  String get emptyNotesHint;
+  /// **'Bu süzgeçle not yok'**
+  String get emptyFilter;
+
+  /// No description provided for @clearFilter.
+  ///
+  /// In tr, this message translates to:
+  /// **'Süzgeci kaldır'**
+  String get clearFilter;
+
+  /// No description provided for @emptyFolderTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu klasör boş'**
+  String get emptyFolderTitle;
+
+  /// No description provided for @newNoteAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not ekle'**
+  String get newNoteAction;
 
   /// No description provided for @emptySearch.
   ///
@@ -3181,12 +3199,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} not'**
   String sectionNoteCount(int count);
-
-  /// No description provided for @emptySearchSemanticHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Anlam sekmesini dene'**
-  String get emptySearchSemanticHint;
 
   /// No description provided for @quickCaptureHint.
   ///

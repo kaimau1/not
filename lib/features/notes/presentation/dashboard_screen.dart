@@ -224,49 +224,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     return const [];
   }
 
-  /// İki parmak zoom başlangıcındaki sütun sayısı. Hedef sütun bu değere göre
-  /// hesaplanır; canlı değere bakmak hareketi katlardı (parmak sabit dururken
-  /// sütunlar kaymaya devam ederdi).
-  int _zoomBaseColumns = 2;
-
-  /// İki parmakla açma/kapama hareketini sütun sayısına çevirir: parmaklar
-  /// açılınca (scale > 1) kartlar büyür → sütun AZALIR, kapanınca artar.
-  /// 1 ↔ 2 ↔ 3 ↔ 4 sütun arasında gezilir.
-  ///
-  /// Eşik neden 1.25: her karede oran biraz oynadığından ham yuvarlama sütunu
-  /// ileri geri titretiyordu. Bir adım için parmak arasının en az %25
-  /// değişmesi istenir; adım atıldıktan sonra taban güncellenir ki aynı jestle
-  /// 1 → 4 arası gezilebilsin.
-  bool _applyZoom(double scale, int columns) {
-    const threshold = 1.25;
-    if (scale <= 0) return false;
-    final int target;
-    if (scale >= threshold) {
-      target = _zoomBaseColumns - 1;
-    } else if (scale <= 1 / threshold) {
-      target = _zoomBaseColumns + 1;
-    } else {
-      return false;
-    }
-    final clamped = target.clamp(
-      GridColumnsNotifier.minColumns,
-      GridColumnsNotifier.maxColumns,
-    );
-    _zoomBaseColumns = clamped;
-    if (clamped == columns) return true;
-    ref.read(gridColumnsProvider.notifier).set(clamped);
-    HapticFeedback.selectionClick();
-    // Yeni düzen kaç sütun oldu — kısa bir bildirim, jest "bir şey yaptı" mı
-    // sorusunu bırakmaz.
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showMessage(
-        context.l10n.gridColumnsCount(clamped),
-        duration: const Duration(milliseconds: 900),
-      );
-    return true;
-  }
-
   /// Izgara kaydırma ipucuna bu açılışta bakıldı mı (bkz. dashboard_shelf).
   bool _gridTipChecked = false;
 
@@ -517,6 +474,45 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// varsayılan: klasörler). Sıra, kullanıcının klasör sırasıdır (bkz.
   /// `visibleOrderedFoldersProvider`).
   void _cycleFilterFolder(int direction) {
+    final stop = _swipeStop(direction);
+    if (stop == null) return;
+    // Geçiş animasyonunun yönünü çekiş yönüne göre ayarla (madde 2).
+    _swipeForward = direction > 0;
+    if (stop.folderId == kSharedHubFolderId) {
+      ref.read(sharedHubOnHomeProvider.notifier).set(false);
+      showSharedHubOnHome(context);
+      HapticFeedback.selectionClick();
+      return;
+    }
+    ref.read(sharedHubOnHomeProvider.notifier).set(false);
+    ref.read(selectedFolderProvider.notifier).set(stop.folderId);
+    ref.read(noteFilterProvider.notifier).set(stop.filter);
+    ref.read(selectedTagProvider.notifier).set(stop.tag);
+    HapticFeedback.selectionClick();
+  }
+
+  /// Çekişin kenarında görünen sonraki durağın adı (F39.3); durak yoksa null.
+  String? _swipeStopLabel(int direction) {
+    final stop = _swipeStop(direction);
+    if (stop == null) return null;
+    final l10n = context.l10n;
+    if (stop.folderId == kSharedHubFolderId) return l10n.sharedHubShort;
+    if (ref.read(swipeModeProvider) == SwipeMode.filters) {
+      return stop.tag != null
+          ? '#${stop.tag}'
+          : stop.filter == NoteFilter.all
+          ? l10n.allNotesChip
+          : filterLabel(l10n, stop.filter);
+    }
+    final id = stop.folderId;
+    if (id == null) return l10n.allNotesChip;
+    for (final f in ref.read(visibleOrderedFoldersProvider)) {
+      if (f.id == id) return f.name;
+    }
+    return null;
+  }
+
+  HomeSwipeStop? _swipeStop(int direction) {
     final suppressed = ref.read(suppressedFolderIdsProvider);
     final notes = [
       for (final n in ref.read(notesStreamProvider).value ?? const <Note>[])
@@ -536,7 +532,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       ))
         f.id,
     ];
-    final stop = nextHomeSwipeStop(
+    return nextHomeSwipeStop(
       mode: mode,
       notes: notes,
       // GELEN de bir durak (2026-11-02), gizli değilse şeritteki yerinde.
@@ -550,20 +546,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       tag: ref.read(selectedTagProvider),
       direction: direction,
     );
-    if (stop == null) return;
-    // Geçiş animasyonunun yönünü çekiş yönüne göre ayarla (madde 2).
-    _swipeForward = direction > 0;
-    if (stop.folderId == kSharedHubFolderId) {
-      ref.read(sharedHubOnHomeProvider.notifier).set(false);
-      showSharedHubOnHome(context);
-      HapticFeedback.selectionClick();
-      return;
-    }
-    ref.read(sharedHubOnHomeProvider.notifier).set(false);
-    ref.read(selectedFolderProvider.notifier).set(stop.folderId);
-    ref.read(noteFilterProvider.notifier).set(stop.filter);
-    ref.read(selectedTagProvider.notifier).set(stop.tag);
-    HapticFeedback.selectionClick();
   }
 
   /// Bir bölümde (sabitliler / diğerleri) notu basılı tutup sürükleyince
@@ -1304,12 +1286,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           // geçiş. Ölçek jesti tek parmakta hiç tepki vermez
                           // (pointerCount kontrolü), böylece içteki yatay
                           // çekiş ve dikey kaydırma olduğu gibi çalışır.
-                          child: _PinchColumns(
-                            onStart: () => _zoomBaseColumns = columns,
-                            onScale: (scale) => _applyZoom(scale, columns),
+                          child: PinchColumns(
+                            columns: columns,
+                            onCommit: ref
+                                .read(gridColumnsProvider.notifier)
+                                .set,
                             child: NotificationListener<ScrollNotification>(
                               onNotification: _onGridScroll,
-                              child: GestureDetector(
+                              child: FolderSwipe(
                                 // Yatay çekişle filtreler/klasörler arasında
                                 // gezin. Dikey kaydırma CustomScrollView'de
                                 // kalır; eksenler farklı olduğundan çakışmaz.
@@ -1321,27 +1305,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                 // sürüklenirken (sıralama yalnız süzgeçsiz
                                 // görünümde geçerli; çekiş modu sessizce
                                 // kapatıyordu).
-                                onHorizontalDragEnd:
-                                    selectionActive ||
-                                        reorderActive ||
-                                        _dragNoteId != null ||
-                                        ref.watch(swipeModeProvider) ==
-                                            SwipeMode.off
-                                    ? null
-                                    : (details) {
-                                        final velocity =
-                                            details.primaryVelocity ?? 0;
-                                        if (velocity.abs() < 300) return;
-                                        // Sağdan sola yazılan dillerde "sonraki"
-                                        // sağa çekiştir (sayfa yönü ters).
-                                        final rtl =
-                                            Directionality.of(context) ==
-                                            TextDirection.rtl;
-                                        final forward = rtl
-                                            ? velocity > 0
-                                            : velocity < 0;
-                                        _cycleFilterFolder(forward ? 1 : -1);
-                                      },
+                                enabled:
+                                    !selectionActive &&
+                                    !reorderActive &&
+                                    _dragNoteId == null &&
+                                    ref.watch(swipeModeProvider) !=
+                                        SwipeMode.off,
+                                nextLabel: _swipeStopLabel,
+                                onCommit: _cycleFilterFolder,
                                 child: AnimatedSwitcher(
                                   duration: AppMotion.of(
                                     context,

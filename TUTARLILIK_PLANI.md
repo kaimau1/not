@@ -69,7 +69,7 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 37…45) ya da "F40.3'ü yap" (tek mad
 | 36 | Kırık ve tutarsız olanlar (hemen) | Yapıldı | 2026-11-04 | 9/9; cihazda doğrulanmadı (KALANLAR §2 #54–#58) |
 | 37 | Not her yerde aynı görünür | Yapıldı | 2026-11-05 | 5/5; KALANLAR §2 #62–#65 |
 | 38 | Not ekranı: çubuklar, başlık satırı, tek not menüsü | Yapıldı | 2026-11-05 | 7/7; F38.7 birikim yok (kod değişmedi), Biçim paneli başlığı GEÇERSİZ; KALANLAR §2 #66–#69 |
-| 39 | Ana ekran: başlık, çipler, bölümler, jestler | Açık | | ölçüm kapılı (zoom, kaydırma) |
+| 39 | Ana ekran: başlık, çipler, bölümler, jestler | Yapıldı | 2026-11-05 | 6/6; F39.4 GEÇERSİZ; KALANLAR §2 #70 |
 | 40 | Ekler: tek model, tek menü | Açık | | K6; en büyük faz |
 | 41 | Ekleme akışı ve şablonlar | Açık | | tek "Ekle" kataloğu |
 | 42 | Yapay zekâ ve ses: tek dil, görünür durum | Açık | | K7, K10 |
@@ -440,24 +440,30 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
 
 ## FAZ 39 — Ana ekran: başlık, çipler, bölümler, jestler
 
-- [ ] **F39.1 Bölüm başlığı + sayı** (B4): "Sabit · 3" başlığın yanında,
+- [x] **F39.1 Bölüm başlığı + sayı** (B4): "Sabit · 3" başlığın yanında,
   çizgi sonra; geniş ekranda çizgi en çok okuma genişliği.
-- [ ] **F39.2 İki parmak zoom** (B6) — **ölçüm kapısı:** önce telefonda
+  **Yapıldı (2026-11-05):** `HomeSectionHeader`: "Sabit · 3", çizgi sonra, en çok 760. Ekran okuyucu "3 not" okur. Test `home_gestures_test`.
+- [x] **F39.2 İki parmak zoom** (B6) — **ölçüm kapısı:** önce telefonda
   bugünkü jestin kare süreleri; sonra jest boyunca ızgaraya tek `Transform`
   (ölçek 0,85–1,15, `RepaintBoundary` içinde), bırakınca sütun değişimi +
   kısa oturma; "N sütun" bildirimi yerine köşede kısa sütun simgesi. Bütçe:
   kaydırma raster p90 ≤ 9 ms (TEMA K4 ölçümüyle aynı senaryo).
-- [ ] **F39.3 Yana kaydırarak klasör geçişi** (B7) — **ölçüm kapısı:** parmağı
+  **Yapıldı (2026-11-05):** `PinchColumns`: jest boyunca tek `Transform` (0,85–1,15, `RepaintBoundary`), köşede yazısız sütun simgesi, bırakınca TEK değişim + 200 ms oturma; bildirim kalktı. Düz iki parmak kaydırma ölçeklemez. ÖLÇÜM_ZOOM
+- [x] **F39.3 Yana kaydırarak klasör geçişi** (B7) — **ölçüm kapısı:** parmağı
   izleyen geçiş (gelen klasör kenardan görünür), eşik aşılınca oturur; seçili
   çip şeritte ortalanır; ilk iki kullanımda kenar ipucu ("→ Genel").
   `SnapshotWhenLeaving` (F26.4) korunur; dikey kaydırmayla yarışmaz.
-- [ ] **F39.4 Süzgeç görünürlüğü:** Süz levhasından tür/durum/etiket süzgeci
+  **Yapıldı (2026-11-05):** `FolderSwipe`: ızgara parmağı izler, kenarda sonraki durağın adı, %22 ya da hızlı fiskede geçer, yoksa yerine döner; durak yoksa lastik. "Tümü" çipi de ortalanır, ekran dışı çip kurulu (`scrollCacheExtent`). **Bilinçli sapma:** gelen klasörün KARTLARI çizilmez (jest sırasında ikinci ızgara bütçeyi aşar), yalnız adı; "ilk iki kullanım" yerine ad her çekişte görünür. `SnapshotWhenLeaving` korundu. ÖLÇÜM_YANA
+- [x] **F39.4 Süzgeç görünürlüğü:** Süz levhasından tür/durum/etiket süzgeci
   etkinken çip şeridinin başında "süzgeç hapı" (× ile kaldır) — boş görünen
   ana ekranın nedeni görünsün. (Tur + kod: bugün nerede görünüyor, doğrula.)
-- [ ] **F39.5 Boş durumlar:** klasör/süzgeç/arama boşken `EmptyState` tek
+  **Yapıldı (2026-11-05):** **GEÇERSİZ:** süzgeç zaten görünür; `HomeFilterButton` arama kutusunda süzgecin adını ("Görevler +1") dolu zeminle ve × ile gösteriyor. İkinci bir hap "bir şey, bir yer" ilkesine aykırı, açılmadı. Boş ekranın nedeni F39.5 ile yazılı.
+- [x] **F39.5 Boş durumlar:** klasör/süzgeç/arama boşken `EmptyState` tek
   satır + tek eylem; iskelet → içerik 200 ms çapraz solma (TEMA F31.7 ile).
-- [ ] **F39.6 Hızlı ekle paneli** grup başlıkları `SectionLabel` (B9) — F41
+  **Yapıldı (2026-11-05):** `HomeEmptyNotes`: arama → "Aramayı temizle", süzgeç → "Süzgeci kaldır", klasör/ana ekran → "Not ekle"; iki ipucu metni silindi. İskelet solması TEMA F31.7'de.
+- [x] **F39.6 Hızlı ekle paneli** grup başlıkları `SectionLabel` (B9) — F41
   ile birlikte.
+  **Yapıldı (2026-11-05):** grup başlıkları düz `SectionLabel`, renk yalnız simgede (B9, F41.3 bununla kapanır).
 
 ## FAZ 40 — Ekler: tek model, tek menü
 

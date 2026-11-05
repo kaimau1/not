@@ -17,6 +17,7 @@
 | `prof_save.py` | kayıt başına Firestore olayı + Dart bloğu (F22.1) |
 | `prof_a11y.py` | erişilebilirlik istemcisi açıkken SEMANTICS maliyeti (F27.2) |
 | `video.py` | ekran videosu, kare farkıyla flaş/zıplama (F26.1, ffmpeg) |
+| `jest.py`, `Pinch.java` | iki parmak zoom + yana kaydırma kareleri (F39); `Pinch` `app_process` ile gerçek çoklu dokunuş enjekte eder |
 | `make_dataset.py` | Keep Takeout zip'leri: 240 not + 4 adlı stres notu (`OLCUM …`) |
 
 ## Hazırlık
