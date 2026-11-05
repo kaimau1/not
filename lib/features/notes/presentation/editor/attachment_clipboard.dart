@@ -155,25 +155,39 @@ Future<void> shareAttachment(
   WidgetRef ref,
   Attachment a,
 ) async {
-  final l10n = context.l10n;
-  final messenger = ScaffoldMessenger.of(context);
   if (a.isWebVideo) {
     await SharePlus.instance.share(
       ShareParams(text: a.webUrl, subject: a.fileName),
     );
     return;
   }
+  await shareAttachmentFiles(context, ref, [a], subject: a.fileName);
+}
+
+/// Eklerin dosyalarını gönderir: not levhasındaki "Ekler" ile ek menüsündeki
+/// "Paylaş" aynı yol (F43.4); basılı PNG, buluttan okuma ve hata metni tek yerde.
+Future<void> shareAttachmentFiles(
+  BuildContext context,
+  WidgetRef ref,
+  List<Attachment> list, {
+  required String subject,
+}) async {
+  final l10n = context.l10n;
+  final messenger = ScaffoldMessenger.of(context);
+  messenger
+    ..hideCurrentSnackBar()
+    ..showMessage(l10n.shareQuickPreparing);
   try {
-    final files = await NoteQuickExport.filesOf([
-      a,
-    ], attachments: ref.read(attachmentRepositoryProvider));
+    final files = await NoteQuickExport.filesOf(
+      list,
+      attachments: ref.read(attachmentRepositoryProvider),
+    );
+    messenger.hideCurrentSnackBar();
     if (files.isEmpty) {
       messenger.showMessage(l10n.shareAttachmentFilesNone);
       return;
     }
-    await SharePlus.instance.share(
-      ShareParams(files: files, subject: a.fileName),
-    );
+    await SharePlus.instance.share(ShareParams(files: files, subject: subject));
   } catch (e) {
     messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
   }

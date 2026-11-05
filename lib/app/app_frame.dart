@@ -1,3 +1,5 @@
+import '../features/auth/presentation/account_required.dart';
+import '../features/auth/presentation/auth_providers.dart';
 import 'dart:async';
 import 'dart:ui' show DisplayFeature;
 
@@ -647,6 +649,7 @@ class _AppRail extends ConsumerWidget {
                             extended: extended,
                             icon: AppIcons.friends,
                             label: l10n.friendsTitle,
+                            locked: ref.watch(isAnonymousProvider),
                             onPressed: () => go(
                               () => openFriendsScreenOrExplain(context, ref),
                             ),
@@ -693,8 +696,11 @@ class _RailAction extends StatelessWidget {
     required this.onPressed,
     this.shortcut,
     this.selected = false,
+    this.locked = false,
   });
 
+  /// Misafirde hesap ister (F43.5): simgede kilit.
+  final bool locked;
   final bool extended;
   final IconData icon;
   final String label;
@@ -706,6 +712,19 @@ class _RailAction extends StatelessWidget {
   Widget build(BuildContext context) {
     final tooltip = shortcut == null ? label : '$label ($shortcut)';
     final scheme = Theme.of(context).colorScheme;
+    final glyph = locked
+        ? Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(icon),
+              const Positioned(
+                right: -6,
+                top: -4,
+                child: AccountLockBadge(size: 14),
+              ),
+            ],
+          )
+        : Icon(icon);
     if (!extended) {
       return SizedBox(
         width: kRailWidth,
@@ -713,7 +732,7 @@ class _RailAction extends StatelessWidget {
           child: IconButton(
             tooltip: tooltip,
             isSelected: selected,
-            icon: Icon(icon),
+            icon: glyph,
             onPressed: onPressed,
           ),
         ),
@@ -734,7 +753,7 @@ class _RailAction extends StatelessWidget {
                   : scheme.onSurfaceVariant,
             ),
             onPressed: onPressed,
-            icon: Icon(icon),
+            icon: glyph,
             label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
         ),

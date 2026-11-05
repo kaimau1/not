@@ -12,14 +12,19 @@ extension _DashShelf on _DashboardScreenState {
     int columns, {
     String? selectedFolderId,
     bool hubSelected = false,
+    SharedFolderKey? sharedFolder,
   }) {
     // Kullanıcının KLASÖR SIRASI (Ayarlar → Notlar → Klasör sırası; bkz.
     // FolderSort). Gizli klasörler yalnız açığa çıkarıldıysa.
     final folders = ref.watch(visibleOrderedFoldersProvider);
     // "Gelen" seçiliyken de şerit (klasör seçiliyken olduğu gibi): çip
     // vurgulu görünsün, karo rafı notların yerini kaplamasın.
-    if (selectedFolderId != null || hubSelected) {
-      return _folderStrip(folders, selectedFolderId: selectedFolderId);
+    if (selectedFolderId != null || hubSelected || sharedFolder != null) {
+      return _folderStrip(
+        folders,
+        selectedFolderId: selectedFolderId,
+        sharedFolder: sharedFolder,
+      );
     }
     // **YER SORUNU** (kullanıcı isteği 2026-08-18: "klasörler ana ekranda çok
     // fazla yer kaplıyor, farklı bir çözüm bulalım"): karo rafı üç klasörde
@@ -105,7 +110,11 @@ extension _DashShelf on _DashboardScreenState {
 
   /// Klasör rafının KOMPAKT (varsayılan) hâli: tek satır, yatay kaydırılan
   /// çipler. Yükseklik klasör sayısından BAĞIMSIZ — asıl kazanç bu.
-  Widget _folderStrip(List<NoteFolder> folders, {String? selectedFolderId}) {
+  Widget _folderStrip(
+    List<NoteFolder> folders, {
+    String? selectedFolderId,
+    SharedFolderKey? sharedFolder,
+  }) {
     _maybeGridSwipeTip(folders);
     final shared = ref.watch(sharedFolderRefsProvider).value ?? const [];
     // YENİ HAREKET ÖNE (kullanıcı bulgusu 2026-10-17: "paylaşılanlarda yeni
@@ -148,6 +157,17 @@ extension _DashShelf on _DashboardScreenState {
     });
     final hub = ref.watch(sharedHubFolderProvider);
     final hubOn = ref.watch(sharedHubOnHomeProvider);
+    Widget sharedChip(SharedFolderRef share) {
+      final selected =
+          sharedFolder?.folderId == share.folderId &&
+          sharedFolder?.ownerId == share.ownerId;
+      return _EnsureVisible(
+        key: ValueKey('shared-chip-${share.folderId}'),
+        active: selected,
+        child: SharedFolderChip(share: share, selected: selected),
+      );
+    }
+
     return SliverToBoxAdapter(
       child: SizedBox(
         // 48 dp: sondaki "Tüm klasörler" düğmesi tam dokunma yüksekliği
@@ -165,15 +185,15 @@ extension _DashShelf on _DashboardScreenState {
                 children: [
                   // "Tümü" en başta (kullanıcı isteği 2026-10-20).
                   _EnsureVisible(
-                    active: selectedFolderId == null && !hubOn,
+                    active:
+                        selectedFolderId == null &&
+                        !hubOn &&
+                        sharedFolder == null,
                     child: const AllNotesChip(),
                   ),
                   const SizedBox(width: 5),
                   for (final share in hotShared) ...[
-                    SharedFolderChip(
-                      key: ValueKey('shared-chip-${share.folderId}'),
-                      share: share,
-                    ),
+                    sharedChip(share),
                     const SizedBox(width: 5),
                   ],
                   // GELEN varsayılan olarak Tümü'nün yanında (2026-10-31); yeri
@@ -201,10 +221,7 @@ extension _DashShelf on _DashboardScreenState {
                       const SizedBox(width: 5),
                     ],
                   for (final share in calmShared) ...[
-                    SharedFolderChip(
-                      key: ValueKey('shared-chip-${share.folderId}'),
-                      share: share,
-                    ),
+                    sharedChip(share),
                     const SizedBox(width: 5),
                   ],
                   const NewFolderChip(),

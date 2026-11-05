@@ -6446,18 +6446,6 @@ abstract class AppLocalizations {
   /// **'Ortak çalışanları yalnız notun sahibi değiştirebilir.'**
   String get collaboratorsOnlyOwner;
 
-  /// No description provided for @sharedWithMe.
-  ///
-  /// In tr, this message translates to:
-  /// **'Benimle paylaşılanlar'**
-  String get sharedWithMe;
-
-  /// No description provided for @sharedWithMeEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Henüz seninle paylaşılan bir not yok. Biri seni bir notuna eklediğinde burada görünür.'**
-  String get sharedWithMeEmpty;
-
   /// No description provided for @sharedByName.
   ///
   /// In tr, this message translates to:
@@ -6653,7 +6641,7 @@ abstract class AppLocalizations {
   /// No description provided for @foldersSharedSection.
   ///
   /// In tr, this message translates to:
-  /// **'Benimle paylaşılan klasörler'**
+  /// **'Paylaşılan klasörler'**
   String get foldersSharedSection;
 
   /// No description provided for @trashDaysShort.
@@ -10283,7 +10271,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeShowSharedInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Benimle paylaşılan ortak notlar ana ekranın üstünde ayrı bir bölümde de görünsün'**
+  /// **'Seninle paylaşılan ortak notlar ana ekranda ayrı bir bölümde de görünsün'**
   String get homeShowSharedInfo;
 
   /// No description provided for @homeShowSharedShort.
@@ -10313,7 +10301,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeSharedSection.
   ///
   /// In tr, this message translates to:
-  /// **'Benimle paylaşılanlar'**
+  /// **'Paylaşılan'**
   String get homeSharedSection;
 
   /// No description provided for @copyAttachment.
@@ -11102,16 +11090,22 @@ abstract class AppLocalizations {
   /// **'Balonlar'**
   String get shareIncludeBubbles;
 
+  /// No description provided for @sharedFolderBar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşılan klasör · {role}'**
+  String sharedFolderBar(String role);
+
   /// No description provided for @shareSendSection.
   ///
   /// In tr, this message translates to:
-  /// **'Gönder'**
+  /// **'Dışarı gönder'**
   String get shareSendSection;
 
   /// No description provided for @shareInAppSection.
   ///
   /// In tr, this message translates to:
-  /// **'Notlar kullanıcısına'**
+  /// **'Kişilerle'**
   String get shareInAppSection;
 
   /// No description provided for @shareTextHint.

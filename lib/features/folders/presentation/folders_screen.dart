@@ -1,3 +1,4 @@
+import '../../../core/app_icons.dart';
 import '../../../core/widgets/sheet_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +10,7 @@ import '../data/folder_activity.dart';
 import '../data/folder_order.dart';
 import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
-import 'folder_screen.dart';
+import 'folder_nav.dart';
 import 'folder_sheets.dart';
 import 'folder_tile.dart';
 
@@ -62,7 +63,7 @@ class FoldersScreen extends ConsumerWidget {
               onPressed: () async {
                 final id = await showFolderEditorDialog(context, ref);
                 if (id != null && context.mounted) {
-                  await FolderScreen.open(context, id);
+                  openFolder(context, id);
                 }
               },
               icon: const Icon(Icons.create_new_folder_outlined, size: 18),
@@ -84,8 +85,6 @@ class FoldersScreen extends ConsumerWidget {
                     children: [
                       // Gizlenen Gelen buradan geri açılır (basılı tut).
                       SharedHubChip(showHidden: true),
-                      SizedBox(width: 6),
-                      SharedNotesChip(),
                     ],
                   ),
                 ),
@@ -203,7 +202,7 @@ class _OwnFolderCard extends ConsumerWidget {
       shared: folder.isShared,
       hidden: folder.hidden,
       unread: unread,
-      onTap: () => FolderScreen.open(context, folder.id),
+      onTap: () => openFolder(context, folder.id),
       onMenu: () => showFolderActionsSheet(context, ref, folder),
     );
   }
@@ -240,7 +239,7 @@ class _SharedFolderCard extends ConsumerWidget {
       shared: true,
       unread: unread,
       onTap: () =>
-          FolderScreen.open(context, share.folderId, ownerId: share.ownerId),
+          openFolder(context, share.folderId, ownerId: share.ownerId),
     );
   }
 }
@@ -328,7 +327,7 @@ class FolderCard extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Icon(
-                            Icons.people_alt_outlined,
+                            AppIcons.shared,
                             size: 18,
                             color: scheme.onSurfaceVariant,
                           ),

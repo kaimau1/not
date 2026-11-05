@@ -5,16 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../notes/data/note_shares_repository.dart';
-import '../../notes/data/shared_note_activity.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../../inbox/data/inbox_repository.dart';
 import '../../inbox/presentation/shared_hub_screen.dart';
-import '../../notes/presentation/shared_notes_screen.dart';
 import '../data/folder_activity.dart';
 import '../data/folder_order.dart';
 import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
-import 'folder_screen.dart';
+import 'folder_nav.dart';
 import 'folder_sheets.dart';
 
 /// **ANA EKRANDAKİ KLASÖR KAROSU.**
@@ -28,7 +26,7 @@ import 'folder_sheets.dart';
 /// TANITAN renkli bir simge kutusu (bkz. [NoteFolder.accent]) — renk ve
 /// simge bakışta ayırt ettiriyor, zemin notların arasında bağırmıyor.
 ///
-/// Dokunmak klasörün kendi sayfasını açar ([FolderScreen]); uzun basmak
+/// Dokunmak ana ekranı bu klasöre süzer ([openFolder]); uzun basmak
 /// yönetim levhasını (yeniden adlandır / renk / gizle / sil).
 class FolderTile extends ConsumerWidget {
   const FolderTile({super.key, required this.folder});
@@ -65,7 +63,7 @@ class FolderTile extends ConsumerWidget {
       unread: unread,
       hidden: folder.hidden,
       shared: folder.isShared,
-      onTap: () => FolderScreen.open(context, folder.id),
+      onTap: () => openFolder(context, folder.id),
       onLongPress: () => showFolderActionsSheet(context, ref, folder),
     );
   }
@@ -100,7 +98,7 @@ class SharedFolderTile extends ConsumerWidget {
       unread: unread,
       shared: true,
       onTap: () =>
-          FolderScreen.open(context, share.folderId, ownerId: share.ownerId),
+          openFolder(context, share.folderId, ownerId: share.ownerId),
     );
   }
 }
@@ -180,7 +178,7 @@ class _FolderTileBody extends StatelessWidget {
                               if (shared) ...[
                                 const SizedBox(width: 6),
                                 Icon(
-                                  Icons.people_alt_outlined,
+                                  AppIcons.shared,
                                   size: 13,
                                   color: scheme.onSurfaceVariant,
                                 ),
@@ -266,7 +264,7 @@ class NewFolderTile extends ConsumerWidget {
             final id = await showFolderEditorDialog(context, ref);
             // Yeni klasör hemen açılır: kullanıcı "oluştu mu" diye aramasın.
             if (id != null && context.mounted) {
-              await FolderScreen.open(context, id);
+              openFolder(context, id);
             }
           },
           child: Center(
@@ -347,7 +345,7 @@ class FolderChip extends ConsumerWidget {
       dimmed: count == 0 && unread == 0 && !selected,
       selected: selected,
       trailingIcon: folder.hidden ? Icons.visibility_off_outlined : null,
-      onTap: () => FolderScreen.open(context, folder.id),
+      onTap: () => openFolder(context, folder.id),
       onLongPress: () => showFolderActionsSheet(context, ref, folder),
     );
   }
@@ -355,9 +353,16 @@ class FolderChip extends ConsumerWidget {
 
 /// Paylaşılan klasörün çipi — [SharedFolderTile]'ın şerit hâli.
 class SharedFolderChip extends ConsumerWidget {
-  const SharedFolderChip({super.key, required this.share});
+  const SharedFolderChip({
+    super.key,
+    required this.share,
+    this.selected = false,
+  });
 
   final SharedFolderRef share;
+
+  /// Ana ekran bu klasörün notlarını gösteriyor (K8).
+  final bool selected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -382,38 +387,10 @@ class SharedFolderChip extends ConsumerWidget {
       icon: share.iconData,
       label: share.name,
       count: count,
-      trailingIcon: Icons.people_alt_outlined,
+      selected: selected,
+      trailingIcon: AppIcons.shared,
       onTap: () =>
-          FolderScreen.open(context, share.folderId, ownerId: share.ownerId),
-    );
-  }
-}
-
-/// **BENİMLE PAYLAŞILAN NOTLAR** çipi — ortak notlar (bkz. [NoteShare])
-/// klasör değil ama aynı rafta durur: "başkasının bana açtığı şeyler" tek
-/// yerde toplansın. Paylaşılan not yoksa hiç çizilmez; şeritte ölü bir çip
-/// kalmasın.
-class SharedNotesChip extends ConsumerWidget {
-  const SharedNotesChip({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(
-      sharedNotesWithMeProvider.select((s) => s.value?.length ?? 0),
-    );
-    if (count == 0) return const SizedBox.shrink();
-    final unread = ref.watch(sharedNoteUnreadProvider.select((s) => s.length));
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(end: 6),
-      child: _ChipShell(
-        accent: scheme.primary,
-        icon: Icons.people_alt_outlined,
-        label: context.l10n.sharedWithMe,
-        count: count,
-        unread: unread,
-        onTap: () => SharedNotesScreen.open(context),
-      ),
+          openFolder(context, share.folderId, ownerId: share.ownerId),
     );
   }
 }
@@ -438,6 +415,7 @@ class AllNotesChip extends ConsumerWidget {
       onTap: () {
         // Yana çekişle bir klasöre geçilmişse "Tümü" oradan da çıkarır.
         ref.read(selectedFolderProvider.notifier).set(null);
+        ref.read(selectedSharedFolderProvider.notifier).set(null);
         ref.read(sharedHubOnHomeProvider.notifier).set(false);
         ref.read(showAllNotesProvider.notifier).set(!selected);
       },
@@ -500,7 +478,7 @@ class NewFolderChip extends ConsumerWidget {
       onTap: () async {
         final id = await showFolderEditorDialog(context, ref);
         if (id != null && context.mounted) {
-          await FolderScreen.open(context, id);
+          openFolder(context, id);
         }
       },
     );

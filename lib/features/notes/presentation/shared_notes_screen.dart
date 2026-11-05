@@ -3,40 +3,15 @@ import '../../../app/theme/app_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
-import '../../../core/widgets/empty_state.dart';
+import '../../../core/app_icons.dart';
+import '../../../core/widgets/sheet_header.dart';
 import '../data/note_shares_repository.dart';
 import '../data/notes_repository.dart';
 import '../data/shared_note_activity.dart';
 import '../domain/note.dart';
 import 'note_card.dart';
 import 'note_grid.dart';
-import '../../inbox/presentation/shared_hub_screen.dart';
-
-/// **BENİMLE PAYLAŞILAN NOTLAR** — ortak notun (bkz. [NoteShare]) alıcı
-/// tarafı. Notlar sahiplerinin koleksiyonundan TEK TEK canlı okunur; kart
-/// sahibini editöre taşır (`?owner=`), yani burada açılan not sahibinin
-/// notunun kendisidir, kopyası değil.
-class SharedNotesScreen extends ConsumerWidget {
-  const SharedNotesScreen({super.key});
-
-  /// "Gelen ve paylaşılanlar" ekranının Paylaşılanlar sekmesi açılır
-  /// (kullanıcı isteği 2026-10-17: "gelen ve paylaşılan notları birleştir,
-  /// tek alandan yönetilsin").
-  static Future<void> open(BuildContext context) =>
-      SharedHubScreen.open(context);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.sharedWithMe),
-        actions: const [SharedMarkAllReadButton()],
-      ),
-      body: const SharedNotesBody(),
-    );
-  }
-}
+import '../../inbox/presentation/shared_hub_screen.dart' show showSharedHubOnHome;
 
 /// "Tümünü okundu say" — yalnız okunmamış ortak not varken.
 class SharedMarkAllReadButton extends ConsumerWidget {
@@ -56,41 +31,6 @@ class SharedMarkAllReadButton extends ConsumerWidget {
         }
       },
     );
-  }
-}
-
-/// Benimle paylaşılan notların ızgarası (ayrı ekranda ve birleşik
-/// "Gelen ve paylaşılanlar" ekranının sekmesinde aynı gövde).
-class SharedNotesBody extends ConsumerWidget {
-  const SharedNotesBody({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final entries = sharedNoteEntries(ref);
-    final unread = ref.watch(sharedNoteUnreadProvider);
-    return entries.isEmpty
-        ? EmptyState(
-            icon: Icons.people_alt_outlined,
-            title: l10n.sharedWithMe,
-            subtitle: l10n.sharedWithMeEmpty,
-          )
-        : LayoutBuilder(
-            builder: (context, constraints) {
-              final columns = (constraints.maxWidth / 220).floor().clamp(2, 6);
-              return NoteBalancedGrid(
-                notes: [for (final e in entries) e.note],
-                columns: columns,
-                itemBuilder: (context, index) {
-                  final entry = entries[index];
-                  return SharedNoteCell(
-                    entry: entry,
-                    isNew: unread.contains(entry.share.id),
-                  );
-                },
-              );
-            },
-          );
   }
 }
 
@@ -173,9 +113,9 @@ class SharedNoteCell extends StatelessWidget {
   }
 }
 
-/// Benimle paylaşılan notlar (sahibinden canlı), okunmamışlar üstte, kalanı
-/// son değişikliğe göre. Ayrı ekran, birleşik ekranın sekmesi ve ana ekran
-/// bölümü ([SharedNotesHomeSection]) aynı listeyi okur.
+/// Ortak notlar (sahibinden canlı), okunmamışlar üstte, kalanı son
+/// değişikliğe göre. "Gelen" ve ana ekran bölümü ([SharedNotesHomeSection])
+/// aynı listeyi okur.
 List<({Note note, NoteShare share})> sharedNoteEntries(WidgetRef ref) {
   final shares = ref.watch(sharedNotesWithMeProvider).value ?? const [];
   final entries = <({Note note, NoteShare share})>[];
@@ -240,26 +180,18 @@ class SharedNotesHomeSection extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(
-                  Icons.people_alt_outlined,
+                  AppIcons.shared,
                   size: 15,
                   color: scheme.primary,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  l10n.homeSharedSection,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.4,
-                    color: scheme.primary,
-                  ),
-                ),
+                SectionLabel(l10n.homeSharedSection, color: scheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Divider(height: 1, color: scheme.outlineVariant),
                 ),
                 TextButton(
-                  onPressed: () => SharedNotesScreen.open(context),
+                  onPressed: () => showSharedHubOnHome(context),
                   child: Text(l10n.sectionNoteCount(entries.length)),
                 ),
               ],

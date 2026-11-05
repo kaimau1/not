@@ -73,7 +73,7 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 37…45) ya da "F40.3'ü yap" (tek mad
 | 40 | Ekler: tek model, tek menü | Yapıldı | 2026-11-05 | 9/9; Android tablette sürükle-bırak yok (motor), videoda dönüş oturumluk, tur F45.1'e; KALANLAR §2 #71–#74 |
 | 41 | Ekleme akışı ve şablonlar | Yapıldı | 2026-11-05 | 4/4; paylaşım hedef levhası korundu; KALANLAR §2 #75–#76 |
 | 42 | Yapay zekâ ve ses: tek dil, görünür durum | Yapıldı | 2026-11-05 | 6/6; cihazda elle doğrulanmadı, KALANLAR §2 #77–#80 |
-| 43 | Paylaşım, Gelen, benimle paylaşılanlar | Açık | | K8 |
+| 43 | Paylaşım, Gelen, benimle paylaşılanlar | Yapıldı | 2026-11-05 | 5/5; K8 uygulandı, FolderScreen silindi; ikinci hesap gerekir, cihazda doğrulanmadı, KALANLAR §2 #81–#83 |
 | 44 | Web ve geniş ekran (tablet, masaüstü) | Açık | | K3, K4, K5 |
 | 45 | Ölçüm, tur, kural testleri, cihaz turu | Açık | | tur aracı genişler |
 
@@ -549,18 +549,23 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
 
 ## FAZ 43 — Paylaşım, Gelen, benimle paylaşılanlar
 
-- [ ] **F43.1 Kavram haritası ve adlar** (G1, G2): Gelen (bana gönderilen
+- [x] **F43.1 Kavram haritası ve adlar** (G1, G2): Gelen (bana gönderilen
   kopyalar) · Paylaşılan (birlikte düzenlediğim notlar/klasörler) → tek yüz
   "Gelen" (çip + ekran başlığı "Gelen ve paylaşılanlar" TERİMLER'deki gibi);
   ana ekranın "Benimle paylaşılanlar" bölümü ve `SharedNotesChip` bu yüze
   bağlanır ya da kalkar (karar fazda); paylaş levhası bölüm adları TERİMLER.
-- [ ] **F43.2 Paylaşılan klasör = süzgeçli ana ekran** (B8, G4, K8).
-- [ ] **F43.3 Ortak not göstergesi** (G3): `AppIcons.shared`, kart/editör/
+  **Yapıldı (2026-11-05):** `SharedNotesChip`, `SharedNotesScreen` ve "Benimle paylaşılanlar" metni kalktı. Ana ekran bölümü kaldı (kullanıcı isteği 2026-10-23, seçenek) ama adı "Paylaşılan", sayı düğmesi "Gelen" süzgecini açar. Levha: **Dışarı gönder** · **Kişilerle**; "Not paketi" dosya olduğu için dışarı gönder bölümüne geçti. İngilizcede "Inbox" tek ad. `terminology_test` eski adları yakalar.
+- [x] **F43.2 Paylaşılan klasör = süzgeçli ana ekran** (B8, G4, K8).
+  **Yapıldı (2026-11-05):** `selectedSharedFolderProvider` + `sharedFolderSlivers`: şerit çipi seçili, Süz düğmesinde ad ve ×, arama ve Süz çalışır, geri tuşu kaldırır, yana kaydırmada durak. Yetki şeridi (salt okunurda kilit) + sohbet. Yeni not sahibin koleksiyonuna: salt okunurda düğme yok, yalnız yazmada tek seferlik pencere. Paylaşım kalkınca süzgeç kendiliğinden kapanır. `folder_screen.dart` ve ölü klasör içi süzgeç (`folderFilterProvider`, `showFilterSheet(folderId:)`) silindi. **Bilinçli sınır:** burada liste görünümü yok, ızgara çizilir (Gelen ile aynı; `NoteListRow` sahibi taşımıyor, eski ekranda liste görünümünde not açılmıyordu). Mikrofon ve "+" paneli yerine tek "Yeni not" düğmesi (eski ekran da öyleydi). **Sabah bakılacak:** geniş ekranda raydaki kalem ve dosya bırakma paylaşılan klasördeyken notu kendi koleksiyona açar; ray düzeni F44/K3'te değişeceği için dokunulmadı.
+- [x] **F43.3 Ortak not göstergesi** (G3): `AppIcons.shared`, kart/editör/
   liste aynı simge ve renk; editörde ortak çalışan sayısı.
-- [ ] **F43.4 Ek paylaşımı:** not paylaşırken "ekleri de gönder" ile ek
+  **Yapıldı (2026-11-05):** `AppIcons.shared`, doğrudan `Icons.people_alt*` yasak (test). Kart ve editör aynı renk (`NoteAccent`, yoksa temanın vurgusu). Bana paylaşılan notta da sayı görünür; paylaşılan klasördeki notta ortak not kaydı yok, yalnız simge. Liste satırında da aynı simge.
+- [x] **F43.4 Ek paylaşımı:** not paylaşırken "ekleri de gönder" ile ek
   menüsündeki Paylaş aynı işlev (`NoteQuickExport.filesOf`).
-- [ ] **F43.5 Misafir:** paylaşım kapıları görünür ama `AccountLockBadge`'li,
+  **Yapıldı (2026-11-05):** ikisi de `shareAttachmentFiles`: aynı "hazırlanıyor", boş ve hata metni.
+- [x] **F43.5 Misafir:** paylaşım kapıları görünür ama `AccountLockBadge`'li,
   her yerde aynı.
+  **Yapıldı (2026-11-05):** eksik kalan üç kapı eklendi: not "+" levhasında Ortak çalışanlar (`MenuAction.badge`), avatar levhasında ve rayda Kişiler. Paylaş levhası, klasör levhası, Ayarlar zaten kilitliydi. Ölü `sendToFriend` dalları silindi (hiçbir menü üretmiyordu). Gelen çipi kilitlenmedi: gönderme kapısı değil, boş durumda kendini anlatır.
 
 ## FAZ 44 — Web ve geniş ekran (tablet, masaüstü)
 

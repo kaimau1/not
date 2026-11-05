@@ -1,3 +1,4 @@
+import '../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -649,7 +650,8 @@ class NoteCard extends ConsumerWidget {
           Icon(Icons.auto_awesome, size: 13, color: scheme.primary),
         // ORTAK NOT: başkalarıyla paylaşılan (ya da bana paylaşılmış) not
         // kartında da belli olsun — Keep'teki ortak çalışan simgesi gibi.
-        if (shared) Icon(Icons.people_alt, size: 13, color: scheme.primary),
+        if (shared)
+          Icon(AppIcons.shared, size: 13, color: accent ?? scheme.primary),
         // YALNIZ BU CİHAZDA (senkron kapalı) — kart bakışta söylesin.
         if (note.localOnly)
           Icon(Icons.cloud_off_outlined, size: 13, color: scheme.tertiary),
@@ -1911,6 +1913,9 @@ class NoteListRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final shared = ref.watch(
+      _cardEnvProvider.select((e) => e.shares?.containsKey(note.id) ?? false),
+    );
     // Satır notun küçük kopyası (F37.3): zemin, okunurluk teması ve vurgu kartla
     // aynı kaynaktan. Seçiliyken zemin seçim rengi, içerik temanın.
     final outer = Theme.of(context);
@@ -2014,6 +2019,12 @@ class NoteListRow extends ConsumerWidget {
                         Icons.star,
                         size: 13,
                         color: accent ?? scheme.secondary,
+                      ),
+                    if (shared)
+                      Icon(
+                        AppIcons.shared,
+                        size: 13,
+                        color: accent ?? scheme.primary,
                       ),
                     if (note.reminderAt != null)
                       Icon(

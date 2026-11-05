@@ -66,14 +66,17 @@ Future<void> showAccountRequiredSheet(BuildContext context, WidgetRef ref) {
 /// Misafirde kilitli girişin sonundaki küçük kilit (ekran okuyucu "Google
 /// hesabı gerekir" der).
 class AccountLockBadge extends StatelessWidget {
-  const AccountLockBadge({super.key});
+  const AccountLockBadge({super.key, this.size = 18});
+
+  /// Simge köşesinde (ray, hızlı satır) 14.
+  final double size;
 
   @override
   Widget build(BuildContext context) => Tooltip(
     message: context.l10n.accountRequiredBadge,
     child: Icon(
       Icons.lock_outline,
-      size: 18,
+      size: size,
       semanticLabel: context.l10n.accountRequiredBadge,
       color: Theme.of(context).colorScheme.onSurfaceVariant,
     ),

@@ -18,6 +18,7 @@ import '../data/attachment_repository.dart';
 import '../data/note_pdf.dart';
 import '../data/note_quick_export.dart';
 import '../data/note_share.dart';
+import 'editor/attachment_clipboard.dart' show shareAttachmentFiles;
 import '../data/notes_repository.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
@@ -247,11 +248,9 @@ class _ShareSheetState extends State<_ShareSheet> {
                 ],
               ),
             ),
-          // **İKİ BÖLÜM** (F13.4, 2026-10-31): GÖNDER = dışarıya (herhangi
-          // bir uygulamaya metin/dosya), NOTLAR KULLANICISINA = uygulama içi
-          // (arkadaşın gelen kutusuna kopya, birlikte düzenleme, not paketi).
-          // Eskiden "KOPYA GÖNDER" başlığının altında yine "Kopya gönder"
-          // satırı vardı; dışarıya ve içeriye kopya aynı başlıktaydı.
+          // **İKİ BÖLÜM** (F13.4, F43.1): Dışarı gönder = herhangi bir
+          // uygulamaya metin/dosya (not paketi de dosyadır), Kişilerle =
+          // uygulama içi (arkadaşa kopya, birlikte düzenleme).
           section(l10n.shareSendSection),
           // TEK DOKUNUŞLUK IZGARA: dışarıya kopya (metin, PDF, görsel…).
           // Uzun basınca kısa açıklama (ne gönderildiği).
@@ -333,6 +332,14 @@ class _ShareSheetState extends State<_ShareSheet> {
               title: l10n.sharePdfWithBubbles,
               subtitle: l10n.sharePdfWithBubblesInfo,
             ),
+          _tile(
+            context,
+            key: const ValueKey('share-package'),
+            onTap: () => _pop('package'),
+            icon: AppIcons.notePackage,
+            title: l10n.shareAsNoteShort,
+            subtitle: l10n.shareAsNoteInfo,
+          ),
           section(l10n.shareInAppSection),
           _tile(
             context,
@@ -361,14 +368,6 @@ class _ShareSheetState extends State<_ShareSheet> {
                 locked: widget.guest,
               ),
           ],
-          _tile(
-            context,
-            key: const ValueKey('share-package'),
-            onTap: () => _pop('package'),
-            icon: AppIcons.notePackage,
-            title: l10n.shareAsNoteShort,
-            subtitle: l10n.shareAsNoteInfo,
-          ),
         ],
       ),
     );
@@ -744,22 +743,12 @@ Future<void> runNoteShare(
         snack(l10n.genericError(friendlyError(l10n, e)));
       }
     case 'files':
-      snack(l10n.shareQuickPreparing);
-      try {
-        final files = await NoteQuickExport.attachmentFiles(
-          note,
-          attachments: ref.read(attachmentRepositoryProvider),
-        );
-        if (files.isEmpty) {
-          snack(l10n.shareAttachmentFilesNone);
-          return;
-        }
-        await SharePlus.instance.share(
-          ShareParams(files: files, subject: subject),
-        );
-      } catch (e) {
-        snack(l10n.genericError(friendlyError(l10n, e)));
-      }
+      await shareAttachmentFiles(
+        context,
+        ref,
+        shareableAttachments(note),
+        subject: subject,
+      );
     case 'pdf':
       if (countStampablePdfs(note) == 0) {
         snack(l10n.sharePdfWithBubblesNone);

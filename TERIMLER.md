@@ -19,7 +19,8 @@ Arayüz metni yazarken bu tablo geçerli. `test/terminology_test.dart`
 | Arkadaşın gelen kutusuna kopya | **Gönder** / "Arkadaşa gönder" | Kopya gönder |
 | Ekleri bir deftere taşı | **Deftere topla** · **defter** | Arşiv defteri, Arşiv defterine kopyala |
 | Sıralama | **Son güncellenen** | Son düzenlenen |
-| Gelen kopyalar + ortak notlar | **Gelen** (şerit çipi) · ekran: "Gelen ve paylaşılanlar"; liste etiketleri **Gelen** / **Paylaşılan** | — |
+| Gelen kopyalar + ortak notlar | **Gelen** (şerit çipi) · ekran: "Gelen ve paylaşılanlar"; liste etiketleri ve ana ekran bölümü **Gelen** / **Paylaşılan** | Benimle paylaşılanlar |
+| Paylaş levhası bölümleri | **Dışarı gönder** (her uygulamaya) · **Kişilerle** (Arkadaşa gönder, Birlikte düzenle) | Notlar kullanıcısına |
 
 ## Simgeler — tek simge, tek anlam (F16.1, 2026-10-31)
 
@@ -46,7 +47,8 @@ Kaynak: `lib/core/app_icons.dart` (`AppIcons`). Tabloda olan bir iş için
 | Ses kaydı, ses eki | `voiceRecord` | graphic_eq | — |
 | Sesli dinle | `listen` | headphones_outlined | — |
 | Sesli komut (sohbet) | `voiceCommand` | settings_voice_outlined | — |
-| Kişiler | `friends` | people_outline | Paylaşılan (people_alt) |
+| Kişiler | `friends` | people_outline | Paylaşılan |
+| Ortak not, paylaşılan klasör (kart, editör, şerit, etiket) | `shared` | people_alt_outlined | Kişiler |
 
 Levhalar: başlık solda + ✕ sağda (`SheetHeader`); bölüm başlığı cümle
 düzeninde (`SectionLabel`, BÜYÜK HARF yok). Sabit renkler

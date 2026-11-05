@@ -1,3 +1,4 @@
+import 'account_required.dart';
 import '../../../core/app_icons.dart';
 
 import 'package:flutter/material.dart';
@@ -155,7 +156,9 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
               ListTile(
                 leading: const Icon(AppIcons.friends),
                 title: Text(l10n.friendsTitle),
-                trailing: _Badge(count: requests),
+                trailing: anonymous
+                    ? const AccountLockBadge()
+                    : _Badge(count: requests),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   openFriendsScreenOrExplain(context, ref);

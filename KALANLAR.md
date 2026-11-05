@@ -190,6 +190,11 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 79. [ ] (F42.4) Notta dikte bitir (uzun cümle) → bildirimde "AI ile düzelt" → aralık düzeliyor, Geri al çalışıyor; bu arada metni değiştirdiysen dokunmuyor. Anahtarsız misafirde öneri çıkmıyor.
 80. [ ] (F42.6) Parmakla maddeyi çiz → işaretlenir; parmakla karala/daire → hiçbir şey olmaz; Ayarlar → Görünüm'den açınca çalışır. Kalemli cihazda "Kalemi otomatik algıla" kapalıyken kalemle karala/daire çalışıyor.
 
+**2026-11-05 — paylaşım ve Gelen (TUTARLILIK_PLANI Faz 43, yazıldı, cihazda doğrulanmadı: ikinci hesap ister, gerçek kişiye davet gönderilmedi)**
+81. [ ] (F43.2) İkinci hesapla klasör paylaş, çipine dokun: ayrı sayfa açılmıyor, ana ekran süzülüyor, çip vurgulu, Süz düğmesinde ad ve ×, arama çalışıyor, geri tuşu kaldırıyor, yana kaydırmada durak. Üç yetkiyi dene: Okuma (kilit, düğme yok, not salt okunur), Okuma + yazma (yeni not sahibin klasöründe), Yazma (notlar yok, tek seferlik pencere). Sohbet şeritten açılıyor. Sahip paylaşımı kaldırınca süzgeç kapanıyor.
+82. [ ] (F43.3) Ortak not: kart, liste satırı ve editörde aynı simge ve renk; editörde sayı (sahipte ve alıcıda). Renkli notta simge notun koyu tonunda.
+83. [ ] (F43.4, F43.5) Levhada Ekler ile ek menüsünde Paylaş aynı dosyayı gönderiyor (işaretli görsel PNG basılı). Misafirde: not "+" levhasında Ortak çalışanlar, avatar levhasında ve rayda Kişiler kilitli; dokununca aynı giriş levhası.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)

@@ -13,14 +13,31 @@ extension _EditorActions on _NoteEditorScreenState {
     return Consumer(
       builder: (context, ref, _) {
         final owner = widget.ownerId;
+        // Benim dışımdaki kişi sayısı. Bana paylaşılan notta da aynı sayı
+        // (sharedWith beni içerir, sahip sayılmaz). Paylaşılan klasördeki
+        // notta ortak not kaydı yok: yalnız simge.
         final count = owner == null
             ? ref.watch(
                 myNoteSharesProvider.select(
                   (m) => m.value?[widget.noteId]?.sharedWith.length ?? 0,
                 ),
               )
-            : 1;
-        if (count == 0) return const SizedBox.shrink();
+            : ref.watch(
+                sharedNotesWithMeProvider.select(
+                  (s) =>
+                      s.value
+                          ?.where(
+                            (e) =>
+                                e.ownerId == owner &&
+                                e.noteId == widget.noteId,
+                          )
+                          .firstOrNull
+                          ?.sharedWith
+                          .length ??
+                      0,
+                ),
+              );
+        if (owner == null && count == 0) return const SizedBox.shrink();
         final accent =
             NoteAccent.maybeOf(context)?.accent ?? theme.colorScheme.primary;
         return Tooltip(
@@ -34,8 +51,8 @@ extension _EditorActions on _NoteEditorScreenState {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.people_alt, size: 15, color: accent),
-                  if (owner == null) ...[
+                  Icon(AppIcons.shared, size: 15, color: accent),
+                  if (count > 0) ...[
                     const SizedBox(width: 2),
                     Text(
                       '$count',
@@ -85,6 +102,9 @@ extension _EditorActions on _NoteEditorScreenState {
               'collaborators',
               l10n.collaborators,
               Icons.person_add_alt_1_outlined,
+              badge: ref.read(isAnonymousProvider)
+                  ? const AccountLockBadge(size: 14)
+                  : null,
             ),
           MenuAction(
             'folder',
@@ -483,12 +503,6 @@ extension _EditorActions on _NoteEditorScreenState {
         Personalize.startEditing();
       case 'calculator':
         unawaited(_openCalculator());
-      case 'sendToFriend':
-        _flushPending(_titleController);
-        _flushPending(_bodyController);
-        if (mounted) {
-          await showSendNoteToFriendSheet(context, ref, _note ?? note);
-        }
       case 'duplicate':
         await _duplicateNote();
       case 'delete':

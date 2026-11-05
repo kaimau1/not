@@ -3591,13 +3591,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Ortak çalışanları yalnız notun sahibi değiştirebilir.';
 
   @override
-  String get sharedWithMe => 'Benimle paylaşılanlar';
-
-  @override
-  String get sharedWithMeEmpty =>
-      'Henüz seninle paylaşılan bir not yok. Biri seni bir notuna eklediğinde burada görünür.';
-
-  @override
   String sharedByName(Object name) {
     return '$name paylaştı';
   }
@@ -3701,7 +3694,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get foldersMine => 'Klasörlerim';
 
   @override
-  String get foldersSharedSection => 'Benimle paylaşılan klasörler';
+  String get foldersSharedSection => 'Paylaşılan klasörler';
 
   @override
   String trashDaysShort(int count) {
@@ -5766,7 +5759,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeShowSharedInfo =>
-      'Benimle paylaşılan ortak notlar ana ekranın üstünde ayrı bir bölümde de görünsün';
+      'Seninle paylaşılan ortak notlar ana ekranda ayrı bir bölümde de görünsün';
 
   @override
   String get homeShowSharedShort => 'Paylaşılan notları göster';
@@ -5782,7 +5775,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get homeSharedAtBottomShort => 'Paylaşılanlar altta';
 
   @override
-  String get homeSharedSection => 'Benimle paylaşılanlar';
+  String get homeSharedSection => 'Paylaşılan';
 
   @override
   String get copyAttachment => 'Eki kopyala';
@@ -6205,10 +6198,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shareIncludeBubbles => 'Balonlar';
 
   @override
-  String get shareSendSection => 'Gönder';
+  String sharedFolderBar(String role) {
+    return 'Paylaşılan klasör · $role';
+  }
 
   @override
-  String get shareInAppSection => 'Notlar kullanıcısına';
+  String get shareSendSection => 'Dışarı gönder';
+
+  @override
+  String get shareInAppSection => 'Kişilerle';
 
   @override
   String get shareTextHint =>
