@@ -279,8 +279,8 @@ maddeyi GÜNCELLE.
   kart. Mürekkep katmanında fare imleci `precise` (metnin I imleci kalınca
   çizgi "tıkladığım yerin üstünde" görünüyordu; koordinat doğru, testli). Belge/görsel/çizim ekranları eski şerit/sütunu kullanır
   (`PenTray.useRail` = PENCERE ≥ 600 dp). Tam ekran `noteFullscreenProvider`.
-  "+ → Çizim ekle" = ayrı `DrawingScreen` → PNG görsel eki; "Sayfaya el
-  yazısı" (`handwriting`) = kalem kipi.
+  "Ekle → Ayrı çizim (görsel)" = ayrı `DrawingScreen` → PNG görsel eki;
+  "Sayfaya yaz (kalem)" (`handwriting`, "+"ta `draw`) = kalem kipi.
 - Gömme: `_applyEmbed` (ek ya da `noteId`), `_startPendingEmbed` bağlama kipi.
 - **Liste maddesi + görsel iki katmanlı sarma** (2026-11-02): görsel maddenin
   İLK satırına değiyorsa `_FloatRow` satırı bütün kaydırır; maddenin içinde
@@ -433,6 +433,7 @@ maddeyi GÜNCELLE.
 - Arayüz dilleri tr + en. Kılavuz `assets/guide/guide_<dil>.md`
   (`guide_screen_test` eskimiş ifade listesi).
 - Kişiselleştirme `UiItem` kimlikleri kalıcı anahtar — değiştirme.
+- **Tek Ekle kataloğu (F41, 2026-11-05):** "+" paneli ve Ekle levhası `addCatalog` + `AddTile`; yeni seçenek oraya yazılır (kimlikler `UiItem.quickAdd`/`attach`, değiştirme). Web dosya bırakma/yapıştırma `addFileDropHandler`: en son açılan yüzey alır (not > ana ekran). Paylaşımdan gelen ek `?place=<id>` ile ipucuyla açılır.
 - Misafir: hesap isteyen giriş gizlenmez (`AccountLockBadge`); dahili AI
   misafire kapalı (`aiGuestLockedProvider`).
 - "Yeni sürüm var" (F18.21, yalnız Android): `config/app.latestBuild` >

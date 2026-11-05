@@ -26,7 +26,9 @@ Future<String?> showAttachSheet(
   shape: const RoundedRectangleBorder(
     borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
   ),
+  // Geniş ekranda karolar yayılmasın (paylaşım hedefi levhasıyla aynı genişlik).
   constraints: BoxConstraints(
+    maxWidth: 640,
     maxHeight: MediaQuery.sizeOf(context).height * 0.92,
   ),
   builder: (sheetContext) => _AttachSheet(

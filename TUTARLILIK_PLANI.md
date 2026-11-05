@@ -71,7 +71,7 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 37…45) ya da "F40.3'ü yap" (tek mad
 | 38 | Not ekranı: çubuklar, başlık satırı, tek not menüsü | Yapıldı | 2026-11-05 | 7/7; F38.7 birikim yok (kod değişmedi), Biçim paneli başlığı GEÇERSİZ; KALANLAR §2 #66–#69 |
 | 39 | Ana ekran: başlık, çipler, bölümler, jestler | Yapıldı | 2026-11-05 | 6/6; F39.4 GEÇERSİZ; KALANLAR §2 #70 |
 | 40 | Ekler: tek model, tek menü | Yapıldı | 2026-11-05 | 9/9; Android tablette sürükle-bırak yok (motor), videoda dönüş oturumluk, tur F45.1'e; KALANLAR §2 #71–#74 |
-| 41 | Ekleme akışı ve şablonlar | Açık | | tek "Ekle" kataloğu |
+| 41 | Ekleme akışı ve şablonlar | Yapıldı | 2026-11-05 | 4/4; paylaşım hedef levhası korundu; KALANLAR §2 #75–#76 |
 | 42 | Yapay zekâ ve ses: tek dil, görünür durum | Açık | | K7, K10 |
 | 43 | Paylaşım, Gelen, benimle paylaşılanlar | Açık | | K8 |
 | 44 | Web ve geniş ekran (tablet, masaüstü) | Açık | | K3, K4, K5 |
@@ -505,17 +505,21 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
 
 ## FAZ 41 — Ekleme akışı ve şablonlar
 
-- [ ] **F41.1 Tek "Ekle" kataloğu** (E1): FAB hızlı ekle (yeni not) ve editör
+- [x] **F41.1 Tek "Ekle" kataloğu** (E1): FAB hızlı ekle (yeni not) ve editör
   "+" (nota ekle) aynı adlar/simgeler/gruplar; bağlama göre alt küme (yeni
   notta "Metin notu/Liste/Sıralı liste" büyük düğmeleri kalır).
-- [ ] **F41.2 Gruplar ve adlar** (E2, E3): Yaz · Kalem (el yazısı, çizim) ·
+  **Yapıldı (2026-11-05):** `add_catalog.dart` (`addCatalog(l10n, AddContext)`): "+" paneli, Ekle levhası, Kişiselleştir aynı satırları okur; `quickAddCatalog`, `attachSheetCatalog`, `QuickAddGroup` silindi. `UiItem` kimlikleri korundu. Test `add_catalog_test`.
+- [x] **F41.2 Gruplar ve adlar** (E2, E3): Yaz · Kalem (el yazısı, çizim) ·
   Kamera (fotoğraf, video, tara, QR) · Dosya ve bağlantı (dosya, görsel, PDF,
   YouTube) · Ses (ses kaydı, dikte, AI sesli not) · Şablon. "El yazısı" /
   "Sayfaya el yazısı" / "Çizim ekle" farkı adında ("Sayfaya yaz (kalem)",
   "Ayrı çizim (görsel)").
-- [ ] **F41.3 Tek karo dili ve tek başlık rengi** (B9).
-- [ ] **F41.4 Dışarıdan gelen** (paylaşım menüsü, web sürükle-bırak, pano)
+  **Yapıldı (2026-11-05):** altı grup, iki yüzeyde aynı sıra (panel başparmaktan yukarı okur). "+" panelinde de Ayrı çizim var (`?drawing=1`). **Bilinçli sapmalar:** PDF ayrı satır değil, "Dosya ekle"de (kullanıcı kararı 2026-10-20); Görsel ve Ses kaydı yalnız not içinde; Dikte ve AI sesli not Ekle'ye girmedi, alt çubuk kapsülünde kalır (K2, kapı modeli F42.1). Kılavuz güncellendi; eski "ilk seferde iki kip sorulur" cümlesi de düzeltildi.
+- [x] **F41.3 Tek karo dili ve tek başlık rengi** (B9).
+  **Yapıldı (2026-11-05):** `AddTile` + `AddTileGrid` tek karo ve dizilim: panel, levha, gömme seçicisi. Renk yalnız simgede, grup başına renk kalktı; gömmede ek türünün rengi korundu. Levha geniş ekranda 640 dp (paylaşım levhasıyla aynı). Başlık rengi F39.6'da kapanmıştı. Tur: telefon, tablet, masaüstü bakıldı.
+- [x] **F41.4 Dışarıdan gelen** (paylaşım menüsü, web sürükle-bırak, pano)
   aynı dosya akışı levhası; "nerede dursun?" aynı anahtar.
+  **Yapıldı (2026-11-05):** not içi "Dosya ekle" ayrı levhasını bıraktı, `showFileUseSheet(inNote: true)`. Web'de bırakılan ya da yapıştırılan dosya açık nota girer, açık not yoksa yeni not (`addFileDropHandler`, en son açılan yüzey alır; salt okunur not almaz). Metin taşıyan pano dosya sayılmaz (Word/Excel). Paylaşımla gelen yüzen ek "Yeni ek nerede dursun?" ipucuyla açılır (`?place=`, `sharePlacementQuery`). **Bilinçli sapma:** paylaşım menüsü hedef levhasını korur (yeni not / var olan not); üstüne kullanım levhası eklenmedi, iki soru art arda olurdu. Klavyeden görsel zaten aynı `_mutate` ipucundan geçiyor. Web'de ses dosyası boş levha yerine "desteklenmiyor" der. Cihaz: KALANLAR §2 #75–#76.
 
 ## FAZ 42 — Yapay zekâ ve ses: tek dil, görünür durum
 

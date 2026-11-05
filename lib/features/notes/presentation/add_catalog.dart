@@ -231,8 +231,9 @@ class AddTile extends StatelessWidget {
       child: Icon(icon, size: 18, color: color),
     );
     final sub = subtitle;
+    // Levha zemini surfaceContainerLow: karo onda da, panelde de seçilsin.
     final tile = Material(
-      color: scheme.surfaceContainerLow,
+      color: scheme.surfaceContainer,
       borderRadius: BorderRadius.circular(12),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
