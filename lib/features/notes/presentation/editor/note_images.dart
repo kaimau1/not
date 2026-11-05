@@ -38,6 +38,8 @@ import 'text_page_box.dart';
 import 'text_wrap.dart';
 import 'video_hub_scope.dart';
 import 'video_transport.dart';
+import 'attachment_actions.dart';
+import 'attachment_status.dart';
 import 'view_mode_switch.dart';
 import '../../../../core/widgets/smooth_routes.dart';
 
@@ -224,7 +226,6 @@ class NotePageCanvas extends StatefulWidget {
     this.onCopy,
     this.onCopyMany,
     this.onChangedMany,
-    this.onDetach,
     this.onVideoToNote,
     this.onTranscribe,
     this.onSaveAs,
@@ -312,9 +313,6 @@ class NotePageCanvas extends StatefulWidget {
   /// 2026-08-09: "görsellerde çoklu seçim ve kopyalama"). null ise çoklu
   /// seçim girişi hiç gösterilmez.
   final ValueChanged<List<Attachment>>? onCopyMany;
-
-  /// Görseli sayfadan alıp ek şeridine taşır; null ise menüde görünmez.
-  final ValueChanged<Attachment>? onDetach;
 
   /// Videodan AI ile not çıkarır; yalnız video ekinin menüsünde görünür.
   final ValueChanged<Attachment>? onVideoToNote;
@@ -539,6 +537,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   // ── AÇIKLAMA ────────────────────────────────────────────────────────────
   /// Açıklaması yerinde düzenlenen görsel (null = yok) ve yazılan taslak:
   /// taslak satır atladıkça bant uzar, metin aşağı akar.
+  String? _hoverId;
   String? _captionEditId;
   String _captionDraft = '';
   final _captionMeasures = <String, _CaptionMeasure>{};
@@ -1019,6 +1018,92 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   List<FloatBox>? _lastFloats;
   Timer? _floatTimer;
 
+  /// Fareyle üstüne gelince köşede ⋮ (masaüstü, F40.8): seçmeden aynı menü.
+  Widget _hoverMenu(Attachment img, bool selected, Widget box) => MouseRegion(
+    onEnter: (_) {
+      if (_hoverId != img.id) setState(() => _hoverId = img.id);
+    },
+    onExit: (_) {
+      if (_hoverId == img.id) setState(() => _hoverId = null);
+    },
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        box,
+        if (_hoverId == img.id && !selected && !_multiMode)
+          PositionedDirectional(
+            end: 4,
+            top: 4,
+            child: Builder(
+              builder: (context) => IconButton.filledTonal(
+                key: const ValueKey('page-image-hover-menu'),
+                tooltip: context.l10n.attachmentActions,
+                visualDensity: VisualDensity.compact,
+                iconSize: 18,
+                icon: const Icon(Icons.more_vert),
+                onPressed: () {
+                  final at = (context.findRenderObject()! as RenderBox)
+                      .localToGlobal(Offset.zero);
+                  unawaited(_contextMenu(img, at));
+                },
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
+
+  Future<void> _contextMenu(Attachment img, Offset global) async {
+    final web = img.isWebVideo;
+    final action = await showAttachmentContextMenu(
+      context,
+      global,
+      attachmentActionsFor(
+        img,
+        AttachmentSurface.contextMenu,
+        AttachmentCaps(
+          open: img.kind != AttachmentKind.audio,
+          caption: true,
+          transcribe:
+              widget.onTranscribe != null &&
+              (img.kind == AttachmentKind.audio ||
+                  img.kind == AttachmentKind.video ||
+                  img.kind == AttachmentKind.image),
+          extractText: widget.onExtractText != null,
+          videoToNote: widget.onVideoToNote != null,
+          copy: widget.onCopy != null,
+          share: widget.onShare != null,
+          saveAs: widget.onSaveAs != null && !web,
+          remove: true,
+        ),
+      ),
+    );
+    if (action == null || !mounted) return;
+    switch (action) {
+      case AttachmentAction.open:
+        _openViewer(img);
+      case AttachmentAction.caption:
+        _startCaption(img);
+      case AttachmentAction.transcribe:
+        widget.onTranscribe?.call(img);
+      case AttachmentAction.extractText:
+        final ocr = widget.onExtractText?.call(img);
+        if (ocr != null) unawaited(ocr);
+      case AttachmentAction.videoToNote:
+        widget.onVideoToNote?.call(img);
+      case AttachmentAction.copy || AttachmentAction.copyLink:
+        widget.onCopy?.call(img);
+      case AttachmentAction.share:
+        widget.onShare?.call(img);
+      case AttachmentAction.saveAs:
+        widget.onSaveAs?.call(img);
+      case AttachmentAction.remove:
+        widget.onRemove(img);
+      case _:
+        break;
+    }
+  }
+
   void _openViewer(Attachment img) {
     // Metnin "tam ekranı" okuma ekranıdır; sesin ayrı ekranı yok (kart
     // kendisi oynatıcı).
@@ -1097,12 +1182,6 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
           // açılıyor) ama YATAY KAYDIRMA orada nottaki diğer eke geçiyor;
           // sayfa yalnız çubuğun oklarıyla değişir.
           swipeToTurn: fit == BoxFit.cover,
-          onDetach: widget.onDetach == null
-              ? null
-              : () {
-                  _deselect();
-                  widget.onDetach!(a);
-                },
         ),
       );
     }
@@ -1693,7 +1772,13 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       top: r.top,
       width: r.w,
       height: r.h,
-      child: GestureDetector(
+      child: _hoverMenu(
+        img,
+        editing,
+        GestureDetector(
+        // Eke sağ tık (masaüstü, F40.8): tek ek menüsü, imlecin yanında.
+        onSecondaryTapUp: (d) =>
+            unawaited(_contextMenu(img, d.globalPosition)),
         onTap: () => _multiMode ? _toggleMulti(img.id) : _select(img.id),
         // ÇİFT DOKUNUŞ = büyük önizleme, ama YALNIZ görsel SEÇİLİYKEN.
         //
@@ -1907,6 +1992,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
           ],
         ),
       ),
+      ),
     );
   }
 
@@ -1951,6 +2037,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     bool isPlain,
   ) {
     return _ImageTools(
+      attachment: img,
       key: _toolbarKey,
       placementHint: _hintId == img.id,
       wFrac: wFrac,
@@ -1975,7 +2062,6 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       onCopy: widget.onCopy == null || (isVideo && !img.isWebVideo)
           ? null
           : () => widget.onCopy!(img),
-      copyIsLink: img.isWebVideo,
       onOpenExternal: img.isWebVideo
           ? () => launchUrl(
               Uri.parse(img.webUrl),
@@ -2017,12 +2103,6 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
           ? null
           : () => widget.onSaveAs!(img),
       onShare: widget.onShare == null ? null : () => widget.onShare!(img),
-      onDetach: widget.onDetach == null
-          ? null
-          : () {
-              _deselect();
-              widget.onDetach!(img);
-            },
       onFullscreen: img.kind == AttachmentKind.audio
           ? null
           : () => _openViewer(img),

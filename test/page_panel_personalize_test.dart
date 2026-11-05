@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/personalize.dart';
 import 'package:notlar/core/widgets/customizable.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
+import 'package:notlar/features/notes/presentation/editor/attachment_actions.dart';
 import 'package:notlar/features/notes/presentation/editor/attach_sheet.dart';
 import 'package:notlar/features/notes/presentation/editor/editor_bar_layout.dart';
 import 'package:notlar/features/notes/presentation/editor/note_images.dart';
@@ -86,7 +87,7 @@ void main() {
       // ⋮ menüsü açılır.
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
-      expect(find.byType(PopupMenuItem<String>), findsWidgets);
+      expect(find.byType(PopupMenuItem<AttachmentAction>), findsWidgets);
       await tester.tapAt(const Offset(5, 5));
       await tester.pumpAndSettle();
 
@@ -116,7 +117,7 @@ void main() {
             onUnpin: () => calls.add('unpin'),
             onOpen: () {},
             onRemove: () => calls.add('remove'),
-            onDetach: () => calls.add('detach'),
+            onShare: () => calls.add('share'),
             viewSwitch: AttachmentViewSwitch(
               current: AttachmentView.pinned,
               available: availableViews(video),
@@ -130,12 +131,13 @@ void main() {
       return calls;
     }
 
-    testWidgets('Sayfaya göm · Ek olarak taşı · Kaldır yazılı', (tester) async {
+    testWidgets('tek katalog: Paylaş · Kaldır; K6 eşanlamlıları yok', (
+      tester,
+    ) async {
       final calls = await pump(tester);
       final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
       for (final (label, call) in [
-        (l10n.pinnedEmbedOnPage, 'unpin'),
-        (l10n.moveImageToAttachments, 'detach'),
+        (l10n.share, 'share'),
         (l10n.removeAttachment, 'remove'),
       ]) {
         await tester.tap(find.byKey(const ValueKey('pinned-media-menu')));

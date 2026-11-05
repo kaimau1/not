@@ -321,16 +321,6 @@ extension _EditorMediaView on _NoteEditorScreenState {
     HapticFeedback.mediumImpact();
   }
 
-  /// Sabit medyayı sayfaya geri koyar: sayfadaki ESKİ yeri ve genişliği
-  /// sabitlerken silinmediği için olduğu gibi döner; bölme yüksekliği de bir
-  /// sonraki sabitleme için saklanır (işaret negatife çevrilir).
-  void _unpinMedia(Attachment media) {
-    final current = _note?.attachments.where((a) => a.id == media.id);
-    final latest = current == null || current.isEmpty ? media : current.first;
-    if (latest.pinHeight <= 0) return;
-    _updateAttachment(latest.copyWith(pinHeight: -latest.pinHeight));
-  }
-
   /// Ek üstteki sabit bölmede mi çiziliyor (o zaman şeritte gösterilmez).
   /// Belge notunda bölme yok — sabitli ek orada şeritte görünmeye devam eder.
   /// İki cihazda aynı anda sabitlenmiş (çakışan) ikinci medya bölmede
@@ -391,11 +381,94 @@ extension _EditorMediaView on _NoteEditorScreenState {
     );
   }
 
-  /// Anahtardan gelen geçiş.
-  Future<void> _setAttachmentView(Attachment a, AttachmentView view) async {
+  /// Görsel açıklaması, yerinde düzenlenemeyen görünümlerde levhada (F40.7).
+  Future<void> _editCaption(Attachment a) async {
+    final text = await showCaptionSheet(context, a.caption);
+    if (text == null || !mounted) return;
+    final latest = _note?.attachments.where((x) => x.id == a.id).firstOrNull ?? a;
+    if (latest.caption != text) _updateAttachment(latest.copyWith(caption: text));
+  }
+
+  /// Çubukta anahtarın sığmadığı yerde (⋮ → Görünüm) aynı anahtar levhada.
+  void _showViewSheet(Attachment a) {
+    final note = _note;
+    if (note == null) return;
+    unawaited(
+      showAppSheet<void>(
+        context: context,
+        showDragHandle: true,
+        useSafeArea: true,
+        builder: (sheet) => Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                sheet.l10n.viewModeTitle,
+                style: Theme.of(sheet).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: AttachmentViewSwitch(
+                  current: _viewOf(note, a),
+                  available: availableViews(a),
+                  onChanged: (view) {
+                    Navigator.pop(sheet);
+                    unawaited(_setAttachmentView(a, view));
+                  },
+                  onEmbed: note.type.isPageNoteType
+                      ? null
+                      : () {
+                          Navigator.pop(sheet);
+                          _startPendingEmbed(a);
+                        },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// GEÇİŞ GERİ ALINABİLİR (F40.3): her geçiş tek bildirim "Sabit → Yüzen ·
+  /// Geri al"; geri alma da aynı yoldan ve sessiz.
+  Future<void> _setAttachmentView(
+    Attachment a,
+    AttachmentView view, {
+    bool announce = true,
+  }) async {
     final note = _note;
     if (note == null || _readOnly) return;
-    if (_viewOf(note, a) == view) return;
+    final from = _viewOf(note, a);
+    if (from == view) return;
+    await _applyAttachmentView(note, a, view);
+    if (!announce || !mounted) return;
+    final l10n = context.l10n;
+    final fromLabel = AttachmentViewSwitch.labelOf(context, from);
+    final toLabel = AttachmentViewSwitch.labelOf(context, view);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        timedSnackBar(
+          content: Text(l10n.viewModeChanged(fromLabel, toLabel)),
+          action: SnackBarAction(
+            label: l10n.undo,
+            onPressed: () => unawaited(
+              _setAttachmentView(a, from, announce: false),
+            ),
+          ),
+        ),
+      );
+  }
+
+  Future<void> _applyAttachmentView(
+    Note note,
+    Attachment a,
+    AttachmentView view,
+  ) async {
     switch (view) {
       case AttachmentView.attached:
         // → ALT ŞERİT: balonluysa önce klasik; sabitse bölmeden iner;
@@ -442,7 +515,6 @@ extension _EditorMediaView on _NoteEditorScreenState {
               ? null
               : _note?.attachments.where((x) => x.id == a.sourceId).firstOrNull;
           _floatOnPage(source ?? a);
-          _showSnack(context.l10n.viewModeSwitchedFloating);
           return;
         }
         _floatOnPage(a);
@@ -888,6 +960,10 @@ extension _EditorMediaView on _NoteEditorScreenState {
             onCopyLink: () => _copyAttachment(pinned),
             onChanged: _updateAttachment,
             viewSwitch: _viewSwitchFor(note, pinned, dense: true),
+            onShowViews: () => _showViewSheet(pinned),
+            onCaption: _readOnly || pinned.kind != AttachmentKind.image
+                ? null
+                : () => unawaited(_editCaption(pinned)),
             onNoteAt: _readOnly
                 ? null
                 : (pinned.kind == AttachmentKind.video ||
@@ -929,17 +1005,6 @@ extension _EditorMediaView on _NoteEditorScreenState {
                 ? null
                 : () => unawaited(AttachmentSaveAs.run(context, ref, pinned)),
             onShare: () => unawaited(shareAttachment(context, ref, pinned)),
-            onDetach: _readOnly || pinned.isWebVideo
-                ? null
-                : () {
-                    _unpinMedia(pinned);
-                    final latest =
-                        _note?.attachments
-                            .where((a) => a.id == pinned.id)
-                            .firstOrNull ??
-                        pinned;
-                    _setImageAsFile(latest, true);
-                  },
             // Görsel balonlu görünümden sabite alındıysa balonları onun
             // türetilmiş belgesinde (bkz. Attachment.sourceId).
             bubbleDoc: pinned.kind == AttachmentKind.image

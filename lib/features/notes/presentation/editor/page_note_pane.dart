@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../viewers/pdf_read_style.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
@@ -521,13 +522,8 @@ class _PageNotePaneState extends State<PageNotePane> {
     final actions = widget.barActions;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: scheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.7),
-            width: 0.7,
-          ),
-        ),
+        color: PdfReadStyle.barColor(scheme),
+        border: Border(top: PdfReadStyle.barLine(scheme)),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(6, 4, 2, 4),

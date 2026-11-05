@@ -141,8 +141,9 @@ class ViewerCommonActions extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      ShareAttachmentButton(attachment: attachment),
+      // Sıra tek ek menüsüyle aynı (bkz. attachmentActionsFor): Kopyala, Paylaş.
       CopyAttachmentButton(attachment: attachment),
+      ShareAttachmentButton(attachment: attachment),
     ],
   );
 }

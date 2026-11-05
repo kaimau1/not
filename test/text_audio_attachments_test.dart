@@ -299,7 +299,7 @@ void main() {
       // ⋯ → büyük anahtarlı levha; "Yüzen" sayfaya gömer.
       await tester.tap(find.byKey(const ValueKey('strip-more')).last);
       await tester.pumpAndSettle();
-      expect(find.text('Nerede dursun?'), findsOneWidget);
+      expect(find.text('Görünüm'), findsOneWidget);
       await tester.tap(find.text('Yüzen'));
       await tester.pumpAndSettle();
       expect(changes.last, ('a', AttachmentView.floating));

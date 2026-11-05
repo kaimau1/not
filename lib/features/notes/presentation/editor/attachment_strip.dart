@@ -1,5 +1,4 @@
 import '../../../../app/theme/fixed_colors.dart';
-import '../../../../core/app_icons.dart';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -22,6 +21,8 @@ import '../viewers/image_viewer.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
 import '../viewers/video_viewer.dart';
+import 'attachment_actions.dart';
+import 'attachment_status.dart';
 import 'view_mode_switch.dart';
 import '../../data/drive_store.dart';
 import '../drive_ui.dart';
@@ -514,15 +515,12 @@ class _AttachmentTile extends ConsumerWidget {
     // atlıyor); "Yükleniyor" çarkı burada kalıcı bir yalan oluyordu. Onun
     // yerine bulut-kapalı rozeti ve ayarın kendi açıklaması gösterilir.
     final limitMb = ref.watch(syncLimitMbProvider);
-    final overSyncLimit =
-        limitMb > 0 && attachment.sizeBytes > limitMb * 1024 * 1024;
     // Kalıcı hata: çark burada da yalan söylüyordu (kural reddi/bozuk dosya
     // hiç düzelmez, kuyruk 6 saatlik beklemeye kadar sessizce tırmanır).
     // Eşik 3 deneme ≈ 1+2+4 dk: geçici bağlantı kesintisi buraya gelmeden
     // düzelir, kalıcı hata gelir.
     final failedAttempts =
         ref.watch(uploadFailuresProvider)[attachment.id] ?? 0;
-    final uploadFailed = !overSyncLimit && failedAttempts >= 3;
     // Süren yükleme: oran (0..1) ya da bilinmiyor (<0). Yoksa ek SIRADA.
     final uploading = ref.watch(
       uploadProgressProvider.select((m) => m[attachment.id]),
@@ -624,30 +622,35 @@ class _AttachmentTile extends ConsumerWidget {
         ),
       );
     } else {
-      content = Container(
+      // Tek durum dili (F40.4). Dosya bu cihazda yok ve buluttan da gelmiyorsa.
+      final missing = attachmentStatusOf(
+        attachment,
+        hasLocal: false,
+        foreign: foreign,
+      );
+      content = AttachmentStatusPlaceholder(
         width: 140,
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.cloud_off_outlined,
-              size: 22,
-              color: scheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              foreign
-                  ? context.l10n.attachmentWaitingOwner
-                  : context.l10n.attachmentNotSynced,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-          ],
-        ),
+        showText: true,
+        // Drive'da duran ek: dokunuş döşemenin, iner (bkz. [_open]).
+        interactive: missing != AttachmentStatus.none,
+        status: missing == AttachmentStatus.none
+            ? AttachmentStatus.notSynced
+            : missing,
       );
     }
 
+    final status = _hasLocal
+        ? attachmentStatusOf(
+            attachment,
+            hasLocal: true,
+            uploading: uploading != null,
+            failedAttempts: failedAttempts,
+            limitMb: limitMb,
+            textOnly:
+                ref.watch(attachmentSyncModeProvider) ==
+                AttachmentSyncMode.textOnly,
+          )
+        : AttachmentStatus.none;
     final views = availableViews(attachment);
     final current = view;
     final showSwitch =
@@ -660,6 +663,8 @@ class _AttachmentTile extends ConsumerWidget {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () => _open(context, ref),
+            // Sağ tık (masaüstü, F40.8): aynı liste.
+            onSecondaryTap: () => _showActions(context, ref),
             // Basılı tutmak da işlem levhasını açar (⋯ ile aynı).
             onLongPress: () {
               HapticFeedback.mediumImpact();
@@ -668,56 +673,24 @@ class _AttachmentTile extends ConsumerWidget {
             child: SizedBox(height: previewHeight, child: content),
           ),
         ),
-        // Yükleme sürüyor göstergesi. Görüntülü not buluta HİÇ yüklenmediği
-        // için burada asla dönmemeli: sürekli dönen çark "senkron edilmeye
-        // çalışılıyor" izlenimi veriyordu.
-        // Bulutta (Storage ya da Drive) kopyası olmayan ek; misafir hesapta
-        // ekler buluta hiç gitmez — orada çark yalan olurdu.
-        if (!attachment.isSynced &&
-            _hasLocal &&
-            attachment.kind != AttachmentKind.video &&
-            ref.watch(attachmentSyncModeProvider) !=
-                AttachmentSyncMode.textOnly)
+        // Tek ek durum rozeti (F40.4): dokununca aynı açıklama levhası.
+        if (status != AttachmentStatus.none)
           PositionedDirectional(
             start: 6,
             top: 6,
-            child: Tooltip(
-              message: overSyncLimit
-                  ? context.l10n.syncLimitInfo
-                  : uploadFailed
-                  ? context.l10n.attachmentUploadFailed
-                  : uploading == null
-                  ? context.l10n.attachmentUploadQueued
-                  : context.l10n.attachmentUploading,
-              child: Material(
-                color: uploadFailed ? scheme.error : Colors.black54,
-                borderRadius: BorderRadius.circular(6),
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  // Yalnız hata rozeti dokunulabilir: çark ve sınır rozeti
-                  // bilgilendirme, elle tetiklenecek bir şey yok.
-                  onTap: uploadFailed
-                      ? () {
-                          ref.read(uploadQueueProvider).retryNow(attachment.id);
-                          ScaffoldMessenger.of(context)
-                            ..hideCurrentSnackBar()
-                            ..showMessage(context.l10n.attachmentUploading);
-                        }
-                      : null,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: overSyncLimit
-                        ? const Icon(
-                            Icons.cloud_off_outlined,
-                            size: 12,
-                            color: Colors.white,
-                          )
-                        : uploadFailed
-                        ? Icon(Icons.refresh, size: 12, color: scheme.onError)
-                        : _UploadBadge(fraction: uploading),
-                  ),
-                ),
-              ),
+            child: AttachmentStatusBadge(
+              status: status,
+              progress:
+                  status == AttachmentStatus.uploading ||
+                      status == AttachmentStatus.queued
+                  ? _UploadBadge(fraction: uploading)
+                  : null,
+              onRetry: () {
+                ref.read(uploadQueueProvider).retryNow(attachment.id);
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showMessage(context.l10n.attachmentUploading);
+              },
             ),
           ),
         PositionedDirectional(
@@ -822,16 +795,6 @@ class _AttachmentTile extends ConsumerWidget {
       useSafeArea: true,
       builder: (sheetContext) {
         final scheme = Theme.of(sheetContext).colorScheme;
-        Widget tile(String id, IconData icon, String label, {Color? color}) =>
-            ListTile(
-              key: ValueKey('strip-action-$id'),
-              leading: Icon(icon, color: color),
-              title: Text(
-                label,
-                style: color == null ? null : TextStyle(color: color),
-              ),
-              onTap: () => Navigator.of(sheetContext).pop(id),
-            );
         return SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -850,12 +813,13 @@ class _AttachmentTile extends ConsumerWidget {
                 ),
                 if (onSetView != null && current != null && views.length >= 2)
                   Padding(
+                    key: const ValueKey('strip-view-row'),
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l10n.attachmentViewTitle,
+                          l10n.viewModeTitle,
                           style: Theme.of(sheetContext).textTheme.labelLarge
                               ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
@@ -879,39 +843,22 @@ class _AttachmentTile extends ConsumerWidget {
                     ),
                   ),
                 const Divider(height: 16),
-                if (attachment.kind != AttachmentKind.audio)
-                  tile('open', Icons.open_in_new_rounded, l10n.attachmentOpen),
-                if (onInsertTag != null)
-                  tile(
-                    'tag',
-                    Icons.text_snippet_outlined,
-                    l10n.attachmentTagInsert,
+                ...attachmentSheetTiles(
+                  sheetContext,
+                  attachmentActionsFor(
+                    attachment,
+                    AttachmentSurface.strip,
+                    AttachmentCaps(
+                      transcribe: onTranscribe != null && _canTranscribe,
+                      videoToNote: onVideoToNote != null,
+                      copy: onCopy != null,
+                      saveAs: true,
+                      copyLink: onCopy != null,
+                      remove: true,
+                    ),
                   ),
-                if (onCopy != null)
-                  tile('copy', AppIcons.copy, l10n.copy),
-                tile('share', Icons.share_outlined, l10n.share),
-                // EKİ FARKLI KAYDET (2026-10-17): kullanıcının seçtiği yere.
-                if (!attachment.isWebVideo)
-                  tile(
-                    'saveAs',
-                    Icons.save_alt_outlined,
-                    l10n.attachmentSaveAs,
-                  ),
-                if (onTranscribe != null && _canTranscribe)
-                  tile(
-                    'transcribe',
-                    transcribed ? Icons.subtitles : Icons.subtitles_outlined,
-                    l10n.transcriptAction,
-                  ),
-                if (onVideoToNote != null &&
-                    attachment.kind == AttachmentKind.video &&
-                    !attachment.isWebVideo)
-                  tile('ai', Icons.auto_awesome, l10n.videoToNote),
-                tile(
-                  'remove',
-                  Icons.delete_outline,
-                  l10n.removeAttachment,
-                  color: scheme.error,
+                  transcribed: transcribed,
+                  onTap: (a) => Navigator.of(sheetContext).pop(a.name),
                 ),
               ],
             ),
@@ -926,23 +873,27 @@ class _AttachmentTile extends ConsumerWidget {
       onSetView?.call(attachment, v);
       return;
     }
-    switch (action) {
-      case 'open':
+    if (action == 'tag') {
+      onInsertTag?.call(attachment);
+      return;
+    }
+    switch (AttachmentAction.values.byName(action)) {
+      case AttachmentAction.open:
         _open(context, ref);
-      case 'tag':
-        onInsertTag?.call(attachment);
-      case 'copy':
+      case AttachmentAction.copy || AttachmentAction.copyLink:
         onCopy?.call(attachment);
-      case 'share':
+      case AttachmentAction.share:
         await shareAttachment(context, ref, attachment);
-      case 'saveAs':
+      case AttachmentAction.saveAs:
         await AttachmentSaveAs.run(context, ref, attachment);
-      case 'transcribe':
+      case AttachmentAction.transcribe:
         onTranscribe?.call(attachment);
-      case 'ai':
+      case AttachmentAction.videoToNote:
         await onVideoToNote?.call(attachment);
-      case 'remove':
+      case AttachmentAction.remove:
         onRemove();
+      case _:
+        break;
     }
   }
 }

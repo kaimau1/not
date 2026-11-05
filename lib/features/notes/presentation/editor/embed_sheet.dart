@@ -416,7 +416,7 @@ Future<void> showEmbedPreview(
   required VoidCallback onReplace,
   required VoidCallback onUnlink,
   VoidCallback? onEdit,
-  VoidCallback? onImport,
+  Widget? viewSwitch,
   VoidCallback? onCopy,
   VoidCallback? onShare,
   ValueChanged<Attachment>? onChanged,
@@ -506,6 +506,15 @@ Future<void> showEmbedPreview(
               child: SizedBox(height: height, child: preview),
             ),
             const SizedBox(height: 12),
+            // K6: ekin nerede durduğu her yüzeyde aynı anahtar ("Nota aktar"
+            // ayrı iş değil, Yüzen seçmektir).
+            if (viewSwitch != null) ...[
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: viewSwitch,
+              ),
+              const SizedBox(height: 8),
+            ],
             // Asıl işler geniş ve yan yana; seyrek işler (değiştir, kaldır)
             // altta yazılı düğmeler — eskiden dördü aynı boyda bir yığındı.
             Row(
@@ -554,15 +563,6 @@ Future<void> showEmbedPreview(
                     tooltip: l10n.share,
                     onPressed: () => then(onShare),
                     icon: const Icon(Icons.share_outlined),
-                  ),
-                // NOTA AKTAR (kullanıcı isteği 2026-10-30): gömülü ek notun
-                // SAYFASINA (yazının arasına) alınır, yazıdaki bağ çözülür.
-                if (onImport != null)
-                  TextButton.icon(
-                    key: const ValueKey('embed-import'),
-                    onPressed: () => then(onImport),
-                    icon: const Icon(Icons.move_down),
-                    label: Text(l10n.embedImportToNote),
                   ),
                 const Spacer(),
                 TextButton.icon(

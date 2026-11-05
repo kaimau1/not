@@ -461,6 +461,12 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       ),
       chooserTitle: l10n.quickAddFromDevice,
     );
+    await useFiles(files);
+  }
+
+  /// Seçilen ya da sürüklenip bırakılan dosyalar: aynı levha (F40.8).
+  Future<void> useFiles(List<XFile> files) async {
+    final l10n = context.l10n;
     if (files.isEmpty || !mounted) return;
     String nameOf(XFile f) => f.name.isEmpty ? f.path : f.name;
     final kind = PickedFileKind.of(nameOf(files.first));

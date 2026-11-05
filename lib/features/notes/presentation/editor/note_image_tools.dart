@@ -14,11 +14,10 @@ class _ImageTools extends StatelessWidget {
     this.onExtractText,
     this.onCopy,
     this.onSelectMany,
-    this.onDetach,
     this.onVideoToNote,
     this.onTranscribe,
     this.viewSwitch,
-    this.copyIsLink = false,
+    required this.attachment,
     this.onOpenExternal,
     this.onSaveAs,
     this.onShare,
@@ -59,18 +58,14 @@ class _ImageTools extends StatelessWidget {
   /// Sayfada tek görsel varsa gösterilmez — seçecek ikinci bir şey yok.
   final VoidCallback? onSelectMany;
 
-  /// Görseli sayfadan alıp alt şeritte DOSYA eki yapar.
-  final VoidCallback? onDetach;
-
   /// Videodan (görüntü + ses) AI ile not çıkarır — yalnız video ekinde dolu.
   final VoidCallback? onVideoToNote;
 
   /// Görselin/videonun TRANSKRİPTİ (metne dök / kayıtlıysa aç).
   final VoidCallback? onTranscribe;
 
-  /// [onCopy] BAĞLANTI kopyalar (YouTube eki — dosyası yok, kopyalanacak şey
-  /// adresi). Menüde "Bağlantıyı kopyala" olarak ÜSTTE görünür.
-  final bool copyIsLink;
+  /// Menüdeki işler ekin türüne göre (bkz. [attachmentActionsFor]).
+  final Attachment attachment;
 
   /// YouTube ekini YouTube uygulamasında/tarayıcıda açar.
   final VoidCallback? onOpenExternal;
@@ -79,6 +74,20 @@ class _ImageTools extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
+    final menuActions = attachmentActionsFor(
+      attachment,
+      AttachmentSurface.floating,
+      AttachmentCaps(
+        transcribe: onTranscribe != null,
+        extractText: onExtractText != null,
+        videoToNote: onVideoToNote != null,
+        copy: onCopy != null,
+        selectMany: onSelectMany != null,
+        share: onShare != null,
+        saveAs: onSaveAs != null,
+        openExternal: onOpenExternal != null,
+      ),
+    );
     final tools = Row(
       children: [
         Icon(Icons.photo_size_select_large, size: 18, color: scheme.primary),
@@ -114,142 +123,34 @@ class _ImageTools extends StatelessWidget {
         // Seyrek kullanılan işlemler menüde: hepsi ayrı düğme olsaydı
         // çubuk dar ekranda kaydırıcıya yer bırakmazdı. Hiçbiri
         // verilmemişse düğme de çizilmez (boş menü açılışta patlar).
-        if (onExtractText != null ||
-            onCopy != null ||
-            onSelectMany != null ||
-            onDetach != null ||
-            onVideoToNote != null ||
-            onTranscribe != null ||
-            onOpenExternal != null ||
-            onSaveAs != null ||
-            onShare != null)
-          PopupMenuButton<String>(
+        if (menuActions.isNotEmpty)
+          PopupMenuButton<AttachmentAction>(
             tooltip: l10n.more,
             icon: const Icon(Icons.more_vert, size: 20),
             onSelected: (action) {
               switch (action) {
-                case 'ocr':
+                case AttachmentAction.extractText:
                   onExtractText?.call();
-                case 'copy':
+                case AttachmentAction.copy || AttachmentAction.copyLink:
                   onCopy?.call();
-                case 'selectMany':
+                case AttachmentAction.selectMany:
                   onSelectMany?.call();
-                case 'detach':
-                  onDetach?.call();
-                case 'videoToNote':
+                case AttachmentAction.videoToNote:
                   onVideoToNote?.call();
-                case 'transcribe':
+                case AttachmentAction.transcribe:
                   onTranscribe?.call();
-                case 'openExternal':
+                case AttachmentAction.openExternal:
                   onOpenExternal?.call();
-                case 'saveAs':
+                case AttachmentAction.saveAs:
                   onSaveAs?.call();
-                case 'share':
+                case AttachmentAction.share:
                   onShare?.call();
+                case _:
+                  break;
               }
             },
-            itemBuilder: (context) => [
-              if (onCopy != null && copyIsLink)
-                PopupMenuItem(
-                  value: 'copy',
-                  child: ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.link),
-                    title: Text(l10n.copyVideoLink),
-                  ),
-                ),
-              if (onOpenExternal != null)
-                PopupMenuItem(
-                  value: 'openExternal',
-                  child: ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.open_in_new),
-                    title: Text(l10n.youTubeOpenExternal),
-                  ),
-                ),
-              if (onVideoToNote != null)
-                PopupMenuItem(
-                  value: 'videoToNote',
-                  child: ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.auto_awesome_outlined),
-                    title: Text(l10n.videoToNote),
-                  ),
-                ),
-              if (onTranscribe != null)
-                PopupMenuItem(
-                  value: 'transcribe',
-                  child: ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.subtitles_outlined),
-                    title: Text(l10n.transcriptAction),
-                  ),
-                ),
-              if (onExtractText != null)
-                PopupMenuItem(
-                  value: 'ocr',
-                  child: ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.document_scanner_outlined),
-                    title: Text(l10n.extractText),
-                  ),
-                ),
-              if (onCopy != null && !copyIsLink)
-                PopupMenuItem(
-                  value: 'copy',
-                  child: ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(AppIcons.copy),
-                    title: Text(l10n.copy),
-                  ),
-                ),
-              if (onSelectMany != null)
-                PopupMenuItem(
-                  value: 'selectMany',
-                  child: ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.checklist),
-                    title: Text(l10n.selectImages),
-                  ),
-                ),
-              if (onShare != null)
-                PopupMenuItem(
-                  value: 'share',
-                  child: ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.share_outlined),
-                    title: Text(l10n.share),
-                  ),
-                ),
-              if (onSaveAs != null)
-                PopupMenuItem(
-                  value: 'saveAs',
-                  child: ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.save_alt_outlined),
-                    title: Text(l10n.attachmentSaveAs),
-                  ),
-                ),
-              if (onDetach != null)
-                PopupMenuItem(
-                  value: 'detach',
-                  child: ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.attachment_outlined),
-                    title: Text(l10n.moveImageToAttachments),
-                  ),
-                ),
-            ],
+            itemBuilder: (context) =>
+                attachmentPopupItems(context, menuActions),
           ),
       ],
     );

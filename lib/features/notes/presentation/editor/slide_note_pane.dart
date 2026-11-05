@@ -1,3 +1,4 @@
+import '../viewers/pdf_read_style.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -446,7 +447,8 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
     _listPen = widget.penMode;
     _listZoomed = _zoomed;
     return _list = ColoredBox(
-      color: Colors.black,
+      // Sabit bölmeyle aynı zemin (F28.4 kararı: sabit doğru; F40.6).
+      color: PdfReadStyle.of(context).background,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final metrics = SlideStripMetrics.forWidth([

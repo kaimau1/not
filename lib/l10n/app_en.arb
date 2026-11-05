@@ -528,7 +528,6 @@
   "addImageOnPageSubtitle": "Sits on the page, text flows around it",
   "addImageAsFile": "Add image as a file",
   "addImageAsFileSubtitle": "Stays out of the page, in the attachment strip",
-  "moveImageToAttachments": "Move to attachments",
   "attachmentCopied": "Attachment copied",
   "pasteAttachment": "Paste copied attachment",
   "fullscreen": "Full screen",
@@ -1026,7 +1025,6 @@
       }
     }
   },
-  "attachmentTagInsert": "Insert into the text",
   "attachmentTagInserted": "The attachment tag was inserted.",
   "attachmentTagPreview": "Preview attachment",
   "attachmentTagEdit": "Edit attachment",
@@ -1637,8 +1635,7 @@
   "youTubeOpenExternal": "Open in YouTube",
   "pictureInPicture": "Picture-in-picture",
   "pinMediaRelease": "Release: pin to top (note below)",
-  "unpinMedia": "Put back on page",
-  "unpinMediaRelease": "Release: put back on page",
+  "unpinMediaRelease": "Release: Floating",
   "pinnedMediaResize": "Pane height — drag to change",
   "pageOf": "Page {current} / {total}",
   "pageAdded": "Page {page} added",
@@ -1706,6 +1703,14 @@
   "bubbleEditShort": "Edit",
   "bubblePlainModeShort": "Text",
   "pageBarMore": "Page and note options",
+  "viewModeChanged": "{from} → {to}",
+  "@viewModeChanged": {
+    "placeholders": {
+      "from": {"type": "String"},
+      "to": {"type": "String"}
+    }
+  },
+  "videoRotate": "Rotate picture",
   "viewModeTitle": "View",
   "viewModeEmbed": "Embed in text",
   "viewModeEmbedHint": "Embed this attachment in a word of the note — tapping the word opens it",
@@ -1715,7 +1720,6 @@
   "viewModePinnedHint": "Pin to top — stays above, the note scrolls below",
   "viewModeFloatingHint": "Float on the page — text wraps around it",
   "viewModeBubblesHint": "Bubbles view — bubbles, highlights and pen on the page",
-  "viewModeSwitchedFloating": "Back on the page",
   "videoNoteAtTime": "Note at this moment",
   "videoNoteAtTimeShort": "Note",
   "videoTimeUnknown": "Couldn't read the video time — play the video first.",
@@ -1744,7 +1748,6 @@
   "shareQuickPreparing": "Preparing…",
   "shareAttachmentFilesNone": "No attachment files on this device to share.",
   "attachmentRemoved": "Attachment removed",
-  "pinnedEmbedOnPage": "Embed on page (floating)",
   "customizeHideItem": "Hide",
   "customizeShowItem": "Show",
   "customizeModeTitle": "Edit mode",
@@ -1852,7 +1855,6 @@
   "textToBubblesPreparing": "Laying out the text as a document…",
   "attachmentActions": "Attachment actions",
   "attachmentOpen": "Open",
-  "attachmentViewTitle": "Where should it go?",
   "attachmentUploadQueued": "Waiting to upload",
   "attachmentWaitingOwner": "Waiting for the person who added it to upload it",
   "attachmentsUploadingCount": "Uploading {count} attachments",
@@ -2300,8 +2302,6 @@
   "gestureNothingToFix": "No spelling mistakes to fix",
   "gestureFixed": "Spelling fixed",
   "gestureFixNeedsAi": "Circling an item fixes its spelling with AI; AI isn't available right now (Settings → AI).",
-  "embedImportToNote": "Move into note",
-  "embedImported": "Attachment moved into the note",
   "itemGesturesSetting": "Item gestures",
   "itemGesturesSettingInfo": "Draw over an item with a finger or pen: strike / ✓ checks, scribble deletes, circle fixes spelling",
   "pdfEditWorking": "Processing PDF…",

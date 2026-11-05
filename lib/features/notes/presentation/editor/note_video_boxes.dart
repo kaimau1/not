@@ -194,6 +194,9 @@ class _WebVideoBoxState extends State<_WebVideoBox> {
 /// çubuğundaki düğmede). Dosya yoksa (video buluta çıkmaz — başka cihazda
 /// yalnız yer tutucu olur) ya da oynatıcı desteklenmiyorsa (masaüstü) kamera
 /// simgeli yer tutucu çizilir; kutu taşınıp boyutlandırılabilir kalır.
+/// Video merkezi olmayan kutuda (kart önizlemesi) dönüş hep 0.
+final _noRevision = ValueNotifier<int>(0);
+
 class _VideoBox extends StatefulWidget {
   const _VideoBox({
     required this.video,
@@ -224,7 +227,7 @@ class _VideoBox extends StatefulWidget {
   State<_VideoBox> createState() => _VideoBoxState();
 }
 
-class _VideoBoxState extends State<_VideoBox> {
+class _VideoBoxState extends State<_VideoBox> with WidgetsBindingObserver {
   VideoPlayerController? _controller;
   bool _failed = false;
   bool _playing = false;
@@ -253,6 +256,7 @@ class _VideoBoxState extends State<_VideoBox> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (!_lazy) _init();
   }
 
@@ -260,6 +264,7 @@ class _VideoBoxState extends State<_VideoBox> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_lazy && _controller == null && _source == null) _registerDeferred();
+    if (!TickerMode.valuesOf(context).enabled) _pauseIfPlaying();
   }
 
   /// Oynatıcı kurulmadan zaman damgası dokunuşu da çalışsın: kayıt, ilk
@@ -360,10 +365,31 @@ class _VideoBoxState extends State<_VideoBox> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _unregister();
     _controller?.removeListener(_onTick);
     _controller?.dispose();
     super.dispose();
+  }
+
+  /// ÖRTÜLÜNCE/ARKA PLANDA DUR (F40.5, kullanıcı: "kapatınca arka planda
+  /// oynamasın"): rota örtülünce `TickerMode` kapanır, uygulama arkaya geçince
+  /// yaşam döngüsü söyler. Kendiliğinden yeniden başlamaz.
+  void _pauseIfPlaying() {
+    final controller = _controller;
+    if (controller != null &&
+        controller.value.isInitialized &&
+        controller.value.isPlaying) {
+      unawaited(controller.pause());
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _pauseIfPlaying();
+    }
   }
 
   Future<void> _toggle() async {
@@ -469,10 +495,16 @@ class _VideoBoxState extends State<_VideoBox> {
           child: FittedBox(
             fit: widget.fit,
             clipBehavior: Clip.hardEdge,
-            child: SizedBox(
-              width: size.width,
-              height: size.height,
-              child: VideoPlayer(controller),
+            child: ValueListenableBuilder<int>(
+              valueListenable: _hub?.revision ?? _noRevision,
+              builder: (context, _, _) => RotatedBox(
+                quarterTurns: _hub?.turnsOf(widget.video.id) ?? 0,
+                child: SizedBox(
+                  width: size.width,
+                  height: size.height,
+                  child: VideoPlayer(controller),
+                ),
+              ),
             ),
           ),
         ),

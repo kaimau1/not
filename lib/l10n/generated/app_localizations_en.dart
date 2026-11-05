@@ -1586,9 +1586,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Stays out of the page, in the attachment strip';
 
   @override
-  String get moveImageToAttachments => 'Move to attachments';
-
-  @override
   String get attachmentCopied => 'Attachment copied';
 
   @override
@@ -2790,9 +2787,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String archiveCopied(int count) {
     return '$count files collected into the notebook.';
   }
-
-  @override
-  String get attachmentTagInsert => 'Insert into the text';
 
   @override
   String get attachmentTagInserted => 'The attachment tag was inserted.';
@@ -4285,10 +4279,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinMediaRelease => 'Release: pin to top (note below)';
 
   @override
-  String get unpinMedia => 'Put back on page';
-
-  @override
-  String get unpinMediaRelease => 'Release: put back on page';
+  String get unpinMediaRelease => 'Release: Floating';
 
   @override
   String get pinnedMediaResize => 'Pane height — drag to change';
@@ -4544,6 +4535,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pageBarMore => 'Page and note options';
 
   @override
+  String viewModeChanged(String from, String to) {
+    return '$from → $to';
+  }
+
+  @override
+  String get videoRotate => 'Rotate picture';
+
+  @override
   String get viewModeTitle => 'View';
 
   @override
@@ -4572,9 +4571,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get viewModeBubblesHint =>
       'Bubbles view — bubbles, highlights and pen on the page';
-
-  @override
-  String get viewModeSwitchedFloating => 'Back on the page';
 
   @override
   String get videoNoteAtTime => 'Note at this moment';
@@ -4642,9 +4638,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachmentRemoved => 'Attachment removed';
-
-  @override
-  String get pinnedEmbedOnPage => 'Embed on page (floating)';
 
   @override
   String get customizeHideItem => 'Hide';
@@ -5012,9 +5005,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachmentOpen => 'Open';
-
-  @override
-  String get attachmentViewTitle => 'Where should it go?';
 
   @override
   String get attachmentUploadQueued => 'Waiting to upload';
@@ -6148,12 +6138,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get gestureFixNeedsAi =>
       'Circling an item fixes its spelling with AI; AI isn\'t available right now (Settings → AI).';
-
-  @override
-  String get embedImportToNote => 'Move into note';
-
-  @override
-  String get embedImported => 'Attachment moved into the note';
 
   @override
   String get itemGesturesSetting => 'Item gestures';
