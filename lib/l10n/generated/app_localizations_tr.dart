@@ -6006,6 +6006,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get formatScopeAll => 'Tümü';
 
   @override
+  String get formatScopeSelection => 'Seçim';
+
+  @override
+  String get formatScopeHint =>
+      'Biçim neye uygulansın: imleç, kelime, satır ya da tümü';
+
+  @override
+  String get formatStyleMenu => 'Paragraf stili';
+
+  @override
   String get colorNameCoral => 'Mercan';
 
   @override

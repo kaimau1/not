@@ -6030,6 +6030,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formatScopeAll => 'All';
 
   @override
+  String get formatScopeSelection => 'Selection';
+
+  @override
+  String get formatScopeHint =>
+      'What formatting applies to: cursor, word, line or all';
+
+  @override
+  String get formatStyleMenu => 'Paragraph style';
+
+  @override
   String get colorNameCoral => 'Coral';
 
   @override

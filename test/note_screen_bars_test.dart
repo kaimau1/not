@@ -41,6 +41,8 @@ void main() {
         ),
       ),
     );
+    await tester.tap(find.byKey(const ValueKey('format-color-menu')));
+    await tester.pumpAndSettle();
     final tips = [
       for (var i = 1; i <= 5; i++)
         tester

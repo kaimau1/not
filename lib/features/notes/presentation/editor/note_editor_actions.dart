@@ -398,7 +398,6 @@ extension _EditorActions on _NoteEditorScreenState {
         // raptiye ve görünüm çubuktan düşer, menüye gelir.
         visibleElsewhere: {
           if (_barTitle == null && Customizable.shows(UiItem.topPin)) 'pin',
-          if (_barTitle == null && Customizable.shows(UiItem.topTheme)) 'color',
           if (_barHasSearch) 'search',
           if (_barHasShare) 'share',
         },

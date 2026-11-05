@@ -115,8 +115,9 @@ class FormatBar extends StatefulWidget {
   State<FormatBar> createState() => _FormatBarState();
 }
 
-/// Açık duran ince ayar tepsisi (yalnız yazı tipi + kaydırıcılar).
-enum _Tray { none, font }
+/// Panelin ÜSTÜNDE açılan tepsi (2026-11-05: kapsam, stil, renk ve çizgi de
+/// tepside — panel iki sıraya indi).
+enum _Tray { none, font, scope, style, color, divider }
 
 /// Renk satırının yazdığı biçim: yazı rengi mi, vurgu mu.
 enum _ColorMode { text, highlight }
@@ -199,8 +200,8 @@ class _FormatBarState extends State<FormatBar> {
   /// İmlecin satırının başlık düzeyi.
   RichHeading _heading = RichHeading.normal;
 
-  /// Kullanıcı ELLE metin seçti mi (kapsamın açtığı seçim sayılmaz). Seçim
-  /// varken kapsam sırası gizlenir: seçim zaten kapsamdır (F12.5).
+  /// Kullanıcı ELLE metin seçti mi (kapsamın GEÇİCİ seçimi sayılmaz). Seçim
+  /// varken kapsam düğmesi "Seçim" der: seçim zaten kapsamdır (F12.5).
   bool _manualSelection = false;
 
   bool _computeManualSelection() {
@@ -208,7 +209,7 @@ class _FormatBarState extends State<FormatBar> {
     if (selection == null || !selection.isValid || selection.isCollapsed) {
       return false;
     }
-    return selection != _scopedSelection;
+    return _scopedSelection == null;
   }
 
   @override
@@ -276,87 +277,79 @@ class _FormatBarState extends State<FormatBar> {
     }
   }
 
-  /// Kapsamın KENDİ açtığı seçim ve o anki imleç. KÖK NEDEN (kullanıcı
-  /// bulgusu 2026-10-30 ikinci tur: "imleç kelime satır tümü hepsi aynı şeyi
-  /// yapıyor, tüm maddeyi seçiyor"): ilk kapsam seçimi açınca seçim DOLU
-  /// kalıyor, [scopeSelection] dolu seçimi ellemediği için sonraki her
-  /// kapsam (İmleç dahil) aynı seçimde takılıyordu. Seçim hâlâ kapsamın
-  /// açtığıysa yeni kapsam imleçten yeniden hesaplanır; kullanıcı elle
-  /// seçtiyse dokunulmaz.
+  /// **KAPSAM SEÇİMİ GEÇİCİ** (kullanıcı bulgusu 2026-11-05: "imleç kelime
+  /// satır doğru çalışmıyor"). KÖK NEDEN: kapsam seçildiği anda kelime/satır
+  /// SEÇİLİ kalıyordu; biçim işaretleri seçimi kaydırınca seçim "elle
+  /// seçim" sanılıyor (kapsam sırası gizlenip panel zıplıyor, sonraki
+  /// kapsamlar o seçime takılıyor), yazmaya devam eden kullanıcı da seçili
+  /// kelimeyi SİLİYORDU. Artık kapsam yalnız biçim UYGULANIRKEN imleçten
+  /// açılır, iş bitince imleç aynı göreli yere döner: seçim hiç kalmaz.
+  /// [_scopedSelection] o an açık geçici seçim (kaydırıcı sürüklenirken
+  /// sürer), [_scopeCaret] dönülecek imleç.
   TextSelection? _scopedSelection;
   int? _scopeCaret;
 
-  /// İmleç boşsa seçimi kapsama genişletir (bkz. [FormatScope]).
-  void _applyScope() {
+  /// İmleç boşsa seçimi kapsama genişletir; açtığı (ya da hâlâ açık olan)
+  /// geçici seçimi döndürür — elle seçimde ve İmleç kapsamında null.
+  TextSelection? _applyScopeTracked() {
     final controller = widget.target?.controller;
-    if (controller == null) return;
-    var selection = controller.selection;
-    final caret = _scopeCaret;
-    if (caret != null &&
-        selection == _scopedSelection &&
-        caret <= controller.text.length) {
-      selection = TextSelection.collapsed(offset: caret);
-    } else if (selection.isValid && selection.isCollapsed) {
-      _scopeCaret = selection.baseOffset;
-    } else {
-      // Elle yapılmış seçim: olduğu gibi.
+    if (controller == null) return null;
+    final open = _scopedSelection;
+    if (open != null) {
+      if (controller.selection == open) return open;
+      // Başka bir şey seçimi değiştirdi: geçici seçim bitti.
       _scopedSelection = null;
       _scopeCaret = null;
-      return;
     }
-    final next =
-        scopeSelection(controller.text, selection, _scope) ?? selection;
-    _scopedSelection = next.isCollapsed ? null : next;
-    if (next.isCollapsed) _scopeCaret = null;
-    if (controller.selection != next) controller.selection = next;
-    _syncManual();
+    final selection = controller.selection;
+    if (!selection.isValid || !selection.isCollapsed) return null;
+    final next = scopeSelection(controller.text, selection, _scope);
+    if (next == null) return null;
+    _scopeCaret = selection.baseOffset;
+    _scopedSelection = next;
+    controller.selection = next;
+    return next;
   }
 
-  /// Kapsamın açtığı seçim kayıt altına alındıktan SONRA elle seçim bayrağını
-  /// tazeler: denetleyicinin bildirimi kayıttan önce gelir ve kapsam seçimini
-  /// elle seçim sanıp sırayı gizlerdi.
-  void _syncManual() {
-    final manual = _computeManualSelection();
-    if (manual != _manualSelection && mounted) {
-      setState(() => _manualSelection = manual);
+  void _applyScope() => _applyScopeTracked();
+
+  /// İş bitti: geçici seçim imlece döner. Biçim işaretleri seçimi
+  /// kaydırdıysa imleç yeni aralıkta aynı göreli yere konur.
+  void _releaseScope(TextSelection? before) {
+    final controller = widget.target?.controller;
+    final caret = _scopeCaret;
+    _scopedSelection = null;
+    _scopeCaret = null;
+    if (controller == null || before == null || caret == null) return;
+    final after = controller.selection;
+    var offset = caret;
+    if (after.isValid && !after.isCollapsed) {
+      final relative = (caret - before.start).clamp(
+        0,
+        before.end - before.start,
+      );
+      offset = (after.start + relative).clamp(after.start, after.end);
+    } else if (after.isValid) {
+      offset = after.baseOffset;
     }
+    controller.selection = TextSelection.collapsed(
+      offset: offset.clamp(0, controller.text.length),
+    );
   }
 
-  /// Kapsamlı biçim işi: önce seçim genişler, sonra iş koşar; işaretler
-  /// metne girince kayan seçim kapsamın seçimi olarak kalır.
+  /// Kapsamlı biçim işi: seçim geçici olarak genişler, iş koşar, imleç
+  /// geri döner.
   void _scoped(VoidCallback action) {
     final before = _applyScopeTracked();
     action();
-    _rebaseScope(before);
-  }
-
-  /// [_applyScope] + kapsamın açtığı seçim (yoksa null).
-  TextSelection? _applyScopeTracked() {
-    _applyScope();
-    final selection = widget.target?.controller.selection;
-    return selection != null && selection == _scopedSelection
-        ? selection
-        : null;
-  }
-
-  /// Biçim uygulandı: işaretler seçimi kaydırdı. Yeni seçim hâlâ kapsamın
-  /// seçimi sayılır, imleç de onun içinde aynı göreli yere taşınır.
-  void _rebaseScope(TextSelection? before) {
-    final caret = _scopeCaret;
-    final after = widget.target?.controller.selection;
-    if (before == null || caret == null || after == null) return;
-    if (!after.isValid || after.isCollapsed) return;
-    final relative = (caret - before.start).clamp(0, before.end - before.start);
-    _scopeCaret = (after.start + relative).clamp(after.start, after.end);
-    _scopedSelection = after;
-    _syncManual();
+    _releaseScope(before);
   }
 
   void _setScope(FormatScope scope) {
-    setState(() => _scope = _lastScope = scope);
-    // Seçim yoksa kapsam HEMEN görünür olsun: kullanıcı neyin boyanacağını
-    // basmadan görür.
-    _applyScope();
+    setState(() {
+      _scope = _lastScope = scope;
+      _tray = _Tray.none;
+    });
   }
 
   void _toggleTray(_Tray tray) =>
@@ -414,7 +407,7 @@ class _FormatBarState extends State<FormatBar> {
     } else {
       widget.onOpacityEnd(value);
     }
-    _rebaseScope(scoped);
+    _releaseScope(scoped);
   }
 
   /// − / + düğmesi: boyutu bir adım değiştirip HEMEN uygular (seçim varsa
@@ -433,7 +426,7 @@ class _FormatBarState extends State<FormatBar> {
       final value = kRichSizeSteps[next - 1];
       setState(() => _drag[_Slide.size] = value);
       widget.onScaleEnd(value);
-      _rebaseScope(scoped);
+      _releaseScope(scoped);
       return;
     }
     final current = _value(_Slide.size);
@@ -453,11 +446,117 @@ class _FormatBarState extends State<FormatBar> {
     return palette[index - 1];
   }
 
+  String _scopeLabel(AppLocalizations l10n) => _manualSelection
+      ? l10n.formatScopeSelection
+      : switch (_scope) {
+          FormatScope.caret => l10n.formatScopeCaret,
+          FormatScope.word => l10n.formatScopeWord,
+          FormatScope.line => l10n.formatScopeLine,
+          FormatScope.all => l10n.formatScopeAll,
+        };
+
+  String _headingLabel(AppLocalizations l10n) => switch (_heading) {
+    RichHeading.h1 => l10n.formatStyleH1,
+    RichHeading.h2 => l10n.formatStyleH2,
+    _ => l10n.formatStyleText,
+  };
+
+  /// Açık tepsinin içeriği (panelin ÜSTÜNDE).
+  Widget _trayContent(BuildContext context) {
+    final l10n = context.l10n;
+    final highlightMode = _colorMode == _ColorMode.highlight;
+    return switch (_tray) {
+      _Tray.none => const SizedBox(width: double.infinity),
+      _Tray.font => _FontTray(
+        family: widget.fontFamily,
+        onFont: widget.onFontChanged,
+        size: _value(_Slide.size),
+        opacity: _value(_Slide.opacity),
+        onSlide: _onSlide,
+        onSlideEnd: _onSlideEnd,
+      ),
+      _Tray.scope => _ScopeRow(scope: _scope, onChanged: _setScope),
+      // PARAGRAF STİLİ: seçince tepsi kapanır (tek iş).
+      _Tray.style => _PanelRow(
+        children: [
+          for (final (h, label, weight) in [
+            (RichHeading.normal, l10n.formatStyleText, FontWeight.w400),
+            (RichHeading.h1, l10n.formatStyleH1, FontWeight.w800),
+            (RichHeading.h2, l10n.formatStyleH2, FontWeight.w700),
+          ])
+            Expanded(
+              child: _Chip(
+                key: ValueKey('format-heading-${h.name}'),
+                selected: _heading == h,
+                onTap: () {
+                  widget.onHeading?.call(h);
+                  setState(() => _tray = _Tray.none);
+                },
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 13, fontWeight: weight),
+                ),
+              ),
+            ),
+        ],
+      ),
+      // RENK: soldaki anahtar neyin boyanacağını seçer (yazı / vurgu); tepsi
+      // açık kalır — art arda renk denenebilir.
+      _Tray.color => _PanelRow(
+        children: [
+          _ModeSwitch(
+            mode: _colorMode,
+            textColor: _resolve(_active.color),
+            highlightColor: _resolve(_active.highlight),
+            onChanged: (mode) => setState(() => _colorMode = mode),
+          ),
+          const _Gap(),
+          Expanded(
+            child: _ColorRow(
+              key: ValueKey('format-colors-$_colorMode'),
+              keyPrefix: highlightMode ? 'format-highlight' : 'format-color',
+              label: highlightMode
+                  ? l10n.formatHighlight
+                  : l10n.formatTextColor,
+              activeIndex: highlightMode ? _active.highlight : _active.color,
+              filled: highlightMode,
+              onPick: (i) => _scoped(
+                () => widget.onFormat(
+                  highlightMode ? RichFormat.highlight : RichFormat.color,
+                  colorIndex: i,
+                ),
+              ),
+              onRemove: () => _scoped(
+                () => widget.onRemoveFormat(
+                  highlightMode ? RichFormat.highlight : RichFormat.color,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      _Tray.divider => _DividerRow(
+        kind: widget.dividerKind ?? '',
+        onPick: (k) => widget.onDivider?.call(k),
+        onStyle: widget.onDividerStyle,
+      ),
+    };
+  }
+
+  /// **İKİ SIRA + AÇILIR TEPSİLER** (kullanıcı isteği 2026-11-05: "biçim
+  /// panelinde küçülme, açılır pencereler olsun; çok satır var çok yer
+  /// kaplıyor"). Eskiden kapsam + (çizgi) + stil + renk + yazı = dört-beş
+  /// sıra (~180 dp) klavyenin üstünde notu örtüyordu. Şimdi:
+  ///  1. Stil ▾ · B · I · U · Renk ▾
+  ///  2. Kapsam ▾ · Aa · A− · %100 · A+ · temizle · (çizgi) · kapat
+  /// Stil, renk, kapsam, çizgi ve yazı tipi panelin ÜSTÜNDE açılan tepside
+  /// (menü rotası yok — odak ve klavye yerinde kalır, bkz. sınıf belgesi).
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
-    final highlightMode = _colorMode == _ColorMode.highlight;
     final size = _value(_Slide.size);
     final divider = Divider(
       height: 1,
@@ -476,77 +575,48 @@ class _FormatBarState extends State<FormatBar> {
                 height: 1,
                 color: scheme.outlineVariant.withValues(alpha: 0.5),
               ),
-              // İNCE AYAR TEPSİSİ panelin ÜSTÜNDE: göz yazıdan çok
-              // uzaklaşmaz, alttaki sıralar parmağın altında oynamaz.
+              // TEPSİ panelin ÜSTÜNDE: göz yazıdan çok uzaklaşmaz, alttaki
+              // sıralar parmağın altında oynamaz.
               AnimatedSize(
-                duration: const Duration(milliseconds: 240),
+                duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.bottomCenter,
-                child: switch (_tray) {
-                  _Tray.none => const SizedBox(width: double.infinity),
-                  _Tray.font => _FontTray(
-                    family: widget.fontFamily,
-                    onFont: widget.onFontChanged,
-                    size: size,
-                    opacity: _value(_Slide.opacity),
-                    onSlide: _onSlide,
-                    onSlideEnd: _onSlideEnd,
-                  ),
-                },
-              ),
-              // 0. SIRA — KAPSAM: imleç boşken biçim neye işler. Elle seçim
-              // varken GİZLİ (seçim zaten kapsam); panel o kadar alçalır.
-              AnimatedSize(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOutCubic,
-                alignment: Alignment.bottomCenter,
-                child: _manualSelection
+                child: _tray == _Tray.none
                     ? const SizedBox(width: double.infinity)
-                    : _ScopeRow(scope: _scope, onChanged: _setScope),
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [_trayContent(context), divider],
+                      ),
               ),
-              if (widget.dividerKind != null) ...[
-                divider,
-                _DividerRow(
-                  kind: widget.dividerKind!,
-                  onPick: (k) => widget.onDivider?.call(k),
-                  onStyle: widget.onDividerStyle,
-                ),
-              ],
-              divider,
-              // 1. SIRA — PARAGRAF + YAZI STİLİ: Metin · Başlık · Alt başlık
-              // hapları doğrudan (eskiden "Başlık" tepsisinin içindeydi, iki
-              // dokunuş) ve B · I · U.
+              // 1. SIRA — STİL ▾ · B · I · U · RENK ▾
               _PanelRow(
                 children: [
                   if (widget.onHeading != null) ...[
-                    for (final (h, label, weight) in [
-                      (
-                        RichHeading.normal,
-                        l10n.formatStyleText,
-                        FontWeight.w400,
-                      ),
-                      (RichHeading.h1, l10n.formatStyleH1, FontWeight.w800),
-                      (RichHeading.h2, l10n.formatStyleH2, FontWeight.w700),
-                    ])
-                      Expanded(
-                        flex: h == RichHeading.h2 ? 6 : 5,
-                        child: _Chip(
-                          key: ValueKey('format-heading-${h.name}'),
-                          selected: _heading == h,
-                          onTap: () => widget.onHeading?.call(h),
-                          child: Text(
-                            label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 13, fontWeight: weight),
+                    Expanded(
+                      flex: 5,
+                      child: _MenuChip(
+                        key: const ValueKey('format-style-menu'),
+                        open: _tray == _Tray.style,
+                        tooltip: l10n.formatStyleMenu,
+                        onTap: () => _toggleTray(_Tray.style),
+                        child: Text(
+                          _headingLabel(l10n),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: _heading == RichHeading.normal
+                                ? FontWeight.w500
+                                : FontWeight.w800,
                           ),
                         ),
                       ),
+                    ),
                     const _Gap(),
                   ],
                   _Btn(
                     key: const ValueKey('format-bold'),
-                    flex: widget.onHeading == null ? 1 : 3,
+                    flex: 3,
                     icon: Icons.format_bold,
                     tooltip: l10n.formatBold,
                     active: _active.bold,
@@ -554,7 +624,7 @@ class _FormatBarState extends State<FormatBar> {
                   ),
                   _Btn(
                     key: const ValueKey('format-italic'),
-                    flex: widget.onHeading == null ? 1 : 3,
+                    flex: 3,
                     icon: Icons.format_italic,
                     tooltip: l10n.formatItalic,
                     active: _active.italic,
@@ -562,65 +632,51 @@ class _FormatBarState extends State<FormatBar> {
                   ),
                   _Btn(
                     key: const ValueKey('format-underline'),
-                    flex: widget.onHeading == null ? 1 : 3,
+                    flex: 3,
                     icon: Icons.format_underlined,
                     tooltip: l10n.formatUnderline,
                     active: _active.underline,
                     onTap: () =>
                         _scoped(() => widget.onFormat(RichFormat.underline)),
                   ),
-                ],
-              ),
-              divider,
-              // 2. SIRA — RENK, TEK DOKUNUŞ: soldaki anahtar satırın neyi
-              // boyadığını seçer (yazı / vurgu, her biri etkin rengini
-              // şeritte gösterir); tonlar, palet ve kaldır hep görünür.
-              _PanelRow(
-                children: [
-                  _ModeSwitch(
-                    mode: _colorMode,
-                    textColor: _resolve(_active.color),
-                    highlightColor: _resolve(_active.highlight),
-                    onChanged: (mode) => setState(() => _colorMode = mode),
-                  ),
                   const _Gap(),
                   Expanded(
-                    child: _ColorRow(
-                      key: ValueKey('format-colors-$_colorMode'),
-                      keyPrefix: highlightMode
-                          ? 'format-highlight'
-                          : 'format-color',
-                      label: highlightMode
-                          ? l10n.formatHighlight
-                          : l10n.formatTextColor,
-                      activeIndex: highlightMode
-                          ? _active.highlight
-                          : _active.color,
-                      filled: highlightMode,
-                      onPick: (i) => _scoped(
-                        () => widget.onFormat(
-                          highlightMode
-                              ? RichFormat.highlight
-                              : RichFormat.color,
-                          colorIndex: i,
-                        ),
-                      ),
-                      onRemove: () => _scoped(
-                        () => widget.onRemoveFormat(
-                          highlightMode
-                              ? RichFormat.highlight
-                              : RichFormat.color,
-                        ),
+                    flex: 4,
+                    child: _MenuChip(
+                      key: const ValueKey('format-color-menu'),
+                      open: _tray == _Tray.color,
+                      tooltip: l10n.formatTextColor,
+                      onTap: () => _toggleTray(_Tray.color),
+                      child: _ColorGlyph(
+                        text: _resolve(_active.color),
+                        highlight: _resolve(_active.highlight),
                       ),
                     ),
                   ),
                 ],
               ),
               divider,
-              // 3. SIRA — YAZI: yazı tipi tepsisi, boyut − / + (tek dokunuş,
-              // ayrıntısı tepside kaydırıcıyla), temizle, sayfa, kapat.
+              // 2. SIRA — KAPSAM ▾ · yazı tipi · boyut − / + · temizle ·
+              // (çizgi) · kapat.
               _PanelRow(
                 children: [
+                  Expanded(
+                    flex: 2,
+                    child: _MenuChip(
+                      key: const ValueKey('format-scope-menu'),
+                      open: _tray == _Tray.scope,
+                      tooltip: l10n.formatScopeHint,
+                      onTap: _manualSelection
+                          ? null
+                          : () => _toggleTray(_Tray.scope),
+                      child: Text(
+                        _scopeLabel(l10n),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12.5),
+                      ),
+                    ),
+                  ),
                   _Btn(
                     key: const ValueKey('format-font'),
                     icon: Icons.text_fields,
@@ -642,7 +698,7 @@ class _FormatBarState extends State<FormatBar> {
                     label: l10n.formatSizeValue((size * 100).round()),
                     excludeSemantics: true,
                     child: SizedBox(
-                      width: 48,
+                      width: 44,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -685,6 +741,16 @@ class _FormatBarState extends State<FormatBar> {
                         ? null
                         : () => _scoped(widget.onClearFormat),
                   ),
+                  // Maddenin ALT ÇİZGİSİ (yalnız madde hedefinde).
+                  if (widget.dividerKind != null)
+                    _Btn(
+                      key: const ValueKey('format-divider-menu'),
+                      icon: Icons.horizontal_rule,
+                      tooltip: l10n.itemMenuLine,
+                      active: widget.dividerKind!.isNotEmpty,
+                      open: _tray == _Tray.divider,
+                      onTap: () => _toggleTray(_Tray.divider),
+                    ),
                   SizedBox(
                     height: 26,
                     child: VerticalDivider(
@@ -705,6 +771,118 @@ class _FormatBarState extends State<FormatBar> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Tepsi açan hap: yazı + ▾ (açıkken ▴ ve kenarlık). Odak istemez.
+class _MenuChip extends StatelessWidget {
+  const _MenuChip({
+    super.key,
+    required this.open,
+    required this.tooltip,
+    required this.onTap,
+    required this.child,
+  });
+
+  final bool open;
+  final String tooltip;
+  final VoidCallback? onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final enabled = onTap != null;
+    return Tooltip(
+      message: tooltip,
+      child: Semantics(
+        button: true,
+        expanded: open,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: Material(
+            color: open ? scheme.primaryContainer : scheme.surfaceContainer,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: open ? scheme.primary : scheme.outlineVariant,
+              ),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onTap,
+              child: Container(
+                height: 36,
+                padding: const EdgeInsetsDirectional.only(start: 8, end: 2),
+                child: DefaultTextStyle.merge(
+                  style: TextStyle(
+                    color: enabled
+                        ? (open ? scheme.onPrimaryContainer : scheme.onSurface)
+                        : scheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(child: Center(child: child)),
+                      if (enabled)
+                        Icon(
+                          open
+                              ? Icons.arrow_drop_up_rounded
+                              : Icons.arrow_drop_down_rounded,
+                          size: 20,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Renk hapının simgesi: "A" altında etkin yazı rengi, yanında vurgu
+/// kalemi altında etkin vurgu — hangi rengin işlediği tek bakışta.
+class _ColorGlyph extends StatelessWidget {
+  const _ColorGlyph({required this.text, required this.highlight});
+
+  final Color? text;
+  final Color? highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    Widget stripe(Color? color) => Container(
+      width: 16,
+      height: 3,
+      margin: const EdgeInsets.only(top: 1),
+      decoration: BoxDecoration(
+        color: color ?? scheme.outlineVariant,
+        borderRadius: BorderRadius.circular(2),
+      ),
+    );
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.format_color_text, size: 17),
+            stripe(text),
+          ],
+        ),
+        const SizedBox(width: 6),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.border_color_outlined, size: 16),
+            stripe(highlight),
+          ],
+        ),
+      ],
     );
   }
 }

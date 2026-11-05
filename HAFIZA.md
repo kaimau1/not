@@ -243,6 +243,8 @@ maddeyi GÜNCELLE.
   statik `_NoteEditorScreenState._x`, YENİ ALAN sınıfa. Dashboard ve
   ItemsEditor de aynı desen.
 - Yeni GÖRÜNÜR not alanı → `sameRenderedNote` VE `_sameVisual`.
+- Üst çubuk sade (2026-11-05): palet ⋮ menüsünde; geri al/yinele yalnız
+  `_canUndo || _canRedo` iken; tarih kısa (`editorBarDate`: bugün saat).
 - **Başlık üst çubukta** (2026-11-03) medya sabitken ya da balonlu belgede
   (`_titleInBar`; tarih yerine, 18 pt, meta çip tek simge; sabitle/tema
   gizli, yinele yalnız doluyken); balonluda görünüm
@@ -256,8 +258,13 @@ maddeyi GÜNCELLE.
   sonra (`_setStateAfterOpening`; `ModalRoute.of` kullanma). Not karttan
   genişleyerek açılır (`NoteOpenPage`, geçiş ağacı her karede AYNI yapı;
   `SnapshotWidget` yalnız açılışta bir kez).
-- Biçim paneli üç sabit sıra (Stil · Renk · Yazı), açılır menü YOK; kapsam
-  `FormatScope` (İmleç/Kelime/Satır/Tümü). Panel açıkken geri paneli kapatır.
+- Biçim paneli İKİ SIRA (2026-11-05, kullanıcı: "çok yer kaplıyor, açılır
+  pencere olsun"): Stil▾ · B I U · Renk▾ / Kapsam▾ · Aa · A− % A+ · temizle ·
+  (çizgi) · kapat. Stil, renk, kapsam, çizgi, yazı tipi panelin ÜSTÜNDEKİ
+  tepside — menü ROTASI YOK (odak/klavye gider). Kapsam `FormatScope` seçimi
+  GEÇİCİ: yalnız biçim uygulanırken imleçten açılır, sonra imleç döner
+  (kalıcı seçim yazınca kelimeyi siliyor, "elle seçim" sanılıp kapsamı
+  kilitliyordu). Panel açıkken geri paneli kapatır.
 - ItemsEditor: işaretli blok da `_cachedItemRow`'dan; soluk hâl renk
   alfasıyla (kalıcı Opacity katmanı YOK). Madde Enter'ı `_enterAt` (böler),
   başta Backspace üst maddeye birleşir. Jestler kipsiz (`classifyInkGesture`).
@@ -320,6 +327,15 @@ maddeyi GÜNCELLE.
   tekerlek zoom'u bilerek kalıyor. `scaleFactor`'ı büyütme: pinch ataleti bozulur.
 - Balonlu/klasik BAŞLANGIÇ sorusu yok (2026-11-03): içerikten not hep
   klasik; "BALONLU PDF" kart rozeti ve ayardaki kip satırı kalktı.
+- **BALONLU GÖRÜNÜM KALKTI** (2026-11-05, kullanıcı: "tek mod sabitleme,
+  balon ekleme orada"): anahtar Sabit · Yüzen · Ek. Eski belge notu
+  (`NoteType.pdf/slides`) editörde açılınca (ağır alanlar gelince, salt
+  okunur değilse) `_retireBubbleView`: klasiğe döner, belge (görselden
+  türetilmişse görsel) sabitlenir, sayfa notları gövdeye `📖 s.N` satırı
+  (`movePageNotesToBody`, harita boş dizgiyle). Sabit PDF'te "Balon ekle"
+  vardı; sabit görselde de var (balonlar görselin KENDİ ekinde, page 1 —
+  ilk düzenlemede türetilmiş belgenin balonları görsele taşınır). Salt
+  okunur ortak notta eski balonlu görünüm hâlâ çizilir (yazılamaz).
 - Görsele çizim + açık metin (`PageBubble.plain`) dışa aktarmada/paylaşımda
   görselin üstüne BASILIR (`image_annotations.dart`, PNG; F18.13).
 
@@ -411,6 +427,8 @@ maddeyi GÜNCELLE.
   `showFileUseSheet`; HEIC → PNG.
 - "Tümü" çipi kalıcı; kendi klasörüm = süzgeçli ana ekran; "Gelen" çipi ana
   ekranı süzer (`sharedHubOnHomeProvider`), "Gelen" klasörü cihaz tercihi.
+  Çip sayısı listeyle AYNI süzgeç (`sharedNotesVisibleCountProvider`: çöpteki/
+  silinmiş/kendi aynası sayılmaz — 2026-11-05 "boşken 1 görünüyor").
   Paylaşılanlar ayrı bölüm (`home_show_shared`, yer
   `homeSharedAtBottomProvider`).
 - Süz düğmesi arama kutusunun içinde; varsayılan sıralama "Son güncellenen"
