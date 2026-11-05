@@ -778,12 +778,7 @@ class _Section extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.4,
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  style: sectionLabelStyle(context),
                 ),
               ),
               ?trailing,

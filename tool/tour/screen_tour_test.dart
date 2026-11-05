@@ -1,16 +1,25 @@
-import 'package:notlar/features/notes/presentation/notes_providers.dart' show sharedFolderNotesProvider;
+import 'package:notlar/features/notes/presentation/notes_providers.dart'
+    show sharedFolderNotesProvider;
 // EKRAN TURU (TUTARLILIK_PLANI F36.1): gerçek ana ekran ve not ekranı,
 // Firebase'siz sahte verilerle, telefon / tablet / masaüstü boyutlarında
 // çizilir ve PNG olarak yazılır. CI'da KOŞMAZ (test/ dışında); elle:
 //
 //   flutter test tool/tour/screen_tour_test.dart
 //   (çıktı: build/tour/*.png — TOUR_OUT ile değiştirilebilir)
+//   TOUR_ONLY=ana,n1  süz · TOUR_DARK=1  koyu · TOUR_WEB=1  dar web
+//   TOUR_COMPARE=<eski klasör>  önce/sonra: her PNG için değişen piksel yüzdesi
+//   basılır (`TOUR_FARK ad %x`), özet `<çıktı>/_fark.txt`.
+//
+// Ekli sahneler (F45.1) görseli gerçek PNG ile çizer. PDF ve videoda test
+// ortamında pdfium/oynatıcı yok: kabuk (çubuk, anahtar, menü) gerçek, sayfa
+// yerinde hata/yer tutucu görünür.
 //
 // Canlı sitede misafir hesap açmadan web/tablet düzenini görmenin yolu.
 // Gerçek cihazın yerine geçmez: yazı tipleri ve simgeler gerçek, gölgeler
 // yazılım çiziminde; klavye, sistem çubukları, kamera yok.
 import 'package:notlar/features/folders/data/folder_activity.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
+
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -33,7 +42,15 @@ import 'package:notlar/core/tips.dart';
 import 'package:notlar/features/auth/data/auth_repository.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/folders/domain/note_folder.dart';
+import 'package:notlar/features/ai/presentation/ai_hub_screen.dart';
+import 'package:notlar/features/folders/presentation/folders_screen.dart';
+import 'package:notlar/features/inbox/data/inbox_repository.dart';
+import 'package:notlar/features/inbox/presentation/shared_hub_screen.dart';
 import 'package:notlar/features/notes/data/attachment_repository.dart';
+import 'package:notlar/features/notes/domain/attachment.dart';
+import 'package:notlar/features/notes/presentation/archive_screen.dart';
+import 'package:notlar/features/notes/presentation/trash_screen.dart';
+import 'package:notlar/features/settings/presentation/settings_screen.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
@@ -139,6 +156,121 @@ final _notes = <Note>[
     color: NoteColor.blue,
     updatedAt: _now.subtract(const Duration(days: 4)),
   ),
+  Note(
+    id: 'n7',
+    type: NoteType.text,
+    title: 'Arşivdeki not',
+    body: 'Geçen yılın planı',
+    archivedAt: _now.subtract(const Duration(days: 30)),
+    updatedAt: _now.subtract(const Duration(days: 30)),
+  ),
+];
+
+final _trash = [
+  Note(
+    id: 't1',
+    type: NoteType.text,
+    title: 'Silinen not',
+    body: 'Çöp kutusundaki örnek',
+    deletedAt: _now.subtract(const Duration(days: 2)),
+    updatedAt: _now.subtract(const Duration(days: 2)),
+  ),
+];
+
+const _inbox = [
+  InboxNote(
+    id: 'g1',
+    fromUid: 'ayse',
+    fromName: 'Ayşe',
+    fromEmail: 'ayse@example.com',
+    title: 'Toplantı özeti',
+    body: 'Perşembeye kadar bak.',
+    items: [],
+    type: NoteType.text,
+    tags: [],
+    color: NoteColor.none,
+  ),
+];
+
+// Sahte ek dosyaları (F45.1): dört görünüm × üç tür, `_attachmentNotes`.
+late final String _pngPath;
+late final String _pdfPath;
+late final String _videoPath;
+
+Future<void> _writeFakeFiles() async {
+  final dir = Directory.systemTemp.createTempSync('tour_ek');
+  final recorder = ui.PictureRecorder();
+  final canvas = Canvas(recorder);
+  canvas.drawRect(
+    const Rect.fromLTWH(0, 0, 800, 500),
+    Paint()
+      ..shader = ui.Gradient.linear(Offset.zero, const Offset(800, 500), const [
+        Color(0xFF4F7A6B),
+        Color(0xFFE9C46A),
+      ]),
+  );
+  final image = await recorder.endRecording().toImage(800, 500);
+  final png = await image.toByteData(format: ui.ImageByteFormat.png);
+  _pngPath = (File(
+    '${dir.path}/ornek.png',
+  )..writeAsBytesSync(png!.buffer.asUint8List())).path;
+  _pdfPath = (File(
+    '${dir.path}/ornek.pdf',
+  )..writeAsStringSync('%PDF-1.4\n%%EOF\n')).path;
+  _videoPath = (File(
+    '${dir.path}/ornek.mp4',
+  )..writeAsBytesSync([0, 0, 0])).path;
+}
+
+Attachment _att(AttachmentKind kind, String view) {
+  final (name, mime, path) = switch (kind) {
+    AttachmentKind.pdf => ('rapor.pdf', 'application/pdf', _pdfPath),
+    AttachmentKind.video => ('klip.mp4', 'video/mp4', _videoPath),
+    _ => ('fotograf.png', 'image/png', _pngPath),
+  };
+  return Attachment(
+    id: 'a-${kind.name}-$view',
+    kind: kind,
+    fileName: name,
+    mimeType: mime,
+    localPath: path,
+    width: 800,
+    height: 500,
+    pinHeight: view == 'sabit' ? 240 : 0,
+    onPage: view == 'yuzen' || view == 'balonlu',
+    asFile: view == 'ek',
+    x: view == 'yuzen' ? 0.2 : null,
+    pageY: view == 'yuzen' ? 90 : null,
+    displayWidth: view == 'yuzen' ? 0.6 : null,
+    caption: kind == AttachmentKind.image ? 'Örnek açıklama' : '',
+  );
+}
+
+/// Dört görünüm: sabit, yüzen, ek (şerit), balonlu (yalnız PDF: balonlu görsel
+/// önce PDF'e çevrilir; video balonlu olamaz). Üst düzey `final` tembel:
+/// dosya yolları `setUpAll`dan sonra okunur.
+final _attachmentNotes = <Note>[
+  for (final kind in const [
+    AttachmentKind.image,
+    AttachmentKind.pdf,
+    AttachmentKind.video,
+  ])
+    for (final view in const ['sabit', 'yuzen', 'ek'])
+      Note(
+        id: 'e-${kind.name}-$view',
+        type: NoteType.text,
+        title: '${kind.name} · $view',
+        body: 'Ekin yanında yazılan not metni.\nİkinci satır.',
+        attachments: [_att(kind, view)],
+        updatedAt: _now,
+      ),
+  Note(
+    id: 'e-pdf-balonlu',
+    type: NoteType.pdf,
+    title: 'pdf · balonlu',
+    attachments: [_att(AttachmentKind.pdf, 'balonlu')],
+    updatedAt: _now,
+  ),
 ];
 
 const _folders = [
@@ -191,7 +323,47 @@ Future<void> _shot(WidgetTester tester, GlobalKey key, String name) async {
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     final file = File('$out/$name.png')..createSync(recursive: true);
     file.writeAsBytesSync(bytes!.buffer.asUint8List());
+    await _compare(name, file, out);
   });
+}
+
+/// TOUR_COMPARE: eski turla piksel farkı. Küçük kenar yumuşatma oynamaları
+/// (kanal farkı ≤ 8) sayılmaz.
+Future<void> _compare(String name, File current, String out) async {
+  final dir = Platform.environment['TOUR_COMPARE'];
+  if (dir == null || dir.isEmpty) return;
+  final old = File('$dir/$name.png');
+  String line;
+  if (!old.existsSync()) {
+    line = 'yeni';
+  } else {
+    Future<(ui.Image, ByteData)> decode(File f) async {
+      final codec = await ui.instantiateImageCodec(f.readAsBytesSync());
+      final image = (await codec.getNextFrame()).image;
+      return (image, (await image.toByteData())!);
+    }
+
+    final (a, ab) = await decode(old);
+    final (b, bb) = await decode(current);
+    if (a.width != b.width || a.height != b.height) {
+      line = 'boyut değişti';
+    } else {
+      var changed = 0;
+      for (var i = 0; i < ab.lengthInBytes; i += 4) {
+        for (var c = 0; c < 3; c++) {
+          if ((ab.getUint8(i + c) - bb.getUint8(i + c)).abs() > 8) {
+            changed++;
+            break;
+          }
+        }
+      }
+      line = '%${(changed * 400 / ab.lengthInBytes).toStringAsFixed(2)}';
+    }
+  }
+  // ignore: avoid_print
+  print('TOUR_FARK $name $line');
+  File('$out/_fark.txt')
+      .writeAsStringSync('$name $line\n', mode: FileMode.append);
 }
 
 Future<void> _settle(WidgetTester tester) async {
@@ -202,6 +374,13 @@ Future<void> _settle(WidgetTester tester) async {
     await GoogleFonts.pendingFonts();
     await Future<void>.delayed(const Duration(milliseconds: 50));
   });
+  // Ek görseli gerçek dosyadan: okuma + çözme gerçek zamanda ilerler.
+  for (var i = 0; i < 6; i++) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await tester.pump(const Duration(milliseconds: 150));
+  }
   for (var i = 0; i < 6; i++) {
     await tester.pump(const Duration(milliseconds: 150));
   }
@@ -257,6 +436,15 @@ Future<void> _pumpApp(
               ),
             ],
           ),
+          for (final (path, screen) in const <(String, Widget)>[
+            ('/settings', SettingsScreen()),
+            ('/folders', FoldersScreen()),
+            ('/ai', AiHubScreen()),
+            ('/archive', ArchiveScreen()),
+            ('/trash', TrashScreen()),
+            ('/inbox', SharedHubScreen()),
+          ])
+            GoRoute(path: path, builder: (c, s) => screen),
         ],
       ),
     ],
@@ -272,9 +460,13 @@ Future<void> _pumpApp(
       notesRepositoryProvider.overrideWithValue(null),
       attachmentRepositoryProvider.overrideWithValue(null),
       foldersRepositoryProvider.overrideWithValue(null),
-      notesStreamProvider.overrideWith((ref) => Stream.value(_notes)),
+      notesStreamProvider.overrideWith(
+        (ref) => Stream.value([..._notes, ..._attachmentNotes]),
+      ),
+      trashStreamProvider.overrideWith((ref) => Stream.value(_trash)),
+      inboxNotesProvider.overrideWith((ref) => Stream.value(_inbox)),
       foldersStreamProvider.overrideWith((ref) => Stream.value(_folders)),
-      for (final n in _notes)
+      for (final n in [..._notes, ..._attachmentNotes])
         noteStreamProvider(n.id).overrideWith((ref) => Stream.value(n)),
       // Paylaşılan klasör (F43.2): salt okunur şeritle çizilir.
       sharedFolderRefsProvider.overrideWith(
@@ -325,14 +517,24 @@ Future<void> _pumpApp(
 }
 
 Future<void> _end(WidgetTester tester) async {
+  // pdfrx'in kendi hata kutusu (testte pdfium yok): turu düşürmesin.
+  tester.takeException();
   await tester.pumpWidget(const SizedBox());
   await tester.pump(const Duration(seconds: 30));
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
     GoogleFonts.config.allowRuntimeFetching = false;
     await _loadFonts();
+    await _writeFakeFiles();
+    // pdfrx açılışta önbellek klasörü ister (testte eklenti yok).
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (call) async => Directory.systemTemp.path,
+        );
   });
 
   // Dar web (K5): telefon boyu + üst çubukta ev (TOUR_WEB=1).
@@ -363,11 +565,18 @@ void main() {
     ('ana-menu', '/', () => find.byTooltip('Diğer').first),
     ('ana-kart-menu', '/', () => find.byIcon(Icons.more_vert).at(1)),
     ('ana-hizli', '/', () => find.byTooltip('Yeni not — tip seç')),
-    (
-      'paylasilan',
-      '/',
-      () => find.byKey(const ValueKey('shared-chip-sf1')),
-    ),
+    ('paylasilan', '/', () => find.byKey(const ValueKey('shared-chip-sf1'))),
+    ('n4-paylas', '/note/n4', () => find.byTooltip('Paylaş').first),
+    ('ayarlar', '/settings', null),
+    ('klasorler', '/folders', null),
+    ('yapay-zeka', '/ai', null),
+    ('arsiv', '/archive', null),
+    ('cop', '/trash', null),
+    ('gelen', '/inbox', null),
+    for (final kind in const ['image', 'pdf', 'video'])
+      for (final view in const ['sabit', 'yuzen', 'ek'])
+        ('e-$kind-$view', '/note/e-$kind-$view', null),
+    ('e-pdf-balonlu', '/note/e-pdf-balonlu', null),
   ];
   for (final size in _sizes) {
     for (final (id, location, tap) in scenes) {

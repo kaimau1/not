@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../friends/data/friends_repository.dart';
@@ -183,10 +184,7 @@ class _OwnerViewState extends ConsumerState<_OwnerView> {
                 padding: const EdgeInsets.only(top: 8, bottom: 4),
                 child: Text(
                   l10n.collaboratorsFriendsTitle,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    letterSpacing: 0.8,
-                  ),
+                  style: sectionLabelStyle(context),
                 ),
               ),
               Flexible(

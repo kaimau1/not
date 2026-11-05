@@ -477,7 +477,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get signOutAnonymousWarning =>
-      'Yerel hesaptasın: çıkış yaparsan bu hesaba ve TÜM notlarına bir daha ERİŞİLEMEZ — yedeğin yoksa geri getirilemezler. Notlarını korumak için önce Google hesabı bağla. Yine de çıkış yapılsın mı?';
+      'Yerel hesaptasın: çıkış yaparsan bu hesaba ve tüm notlarına bir daha erişilemez — yedeğin yoksa geri getirilemezler. Notlarını korumak için önce Google hesabı bağla. Yine de çıkış yapılsın mı?';
 
   @override
   String get deleteAccount => 'Hesabımı ve verilerimi sil';
@@ -1785,7 +1785,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get filterSheetSortHint =>
-      'Tarih grupları (BUGÜN, BU HAFTA…) yalnız “Son güncellenen” sıralamasında gösterilir.';
+      'Tarih grupları (Bugün, Bu hafta…) yalnız “Son güncellenen” sıralamasında gösterilir.';
 
   @override
   String get formatTitle => 'Biçim';
@@ -2058,11 +2058,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get discoverScanBody =>
-      'Kamerayla taranan sayfalar kenar bulma ve netleştirmeyle düzelir, tek dokunuşla ARANABİLİR PDF olur — metin katmanı cihazda, ücretsiz üretilir.';
+      'Kamerayla taranan sayfalar kenar bulma ve netleştirmeyle düzelir, tek dokunuşla aranabilir PDF olur — metin katmanı cihazda, ücretsiz üretilir.';
 
   @override
   String get discoverSemanticBody =>
-      'Arama kutusundaki \"Akıllı\" sekmesi kelime değil ANLAM arar: \"uçak saatleri\" yazınca seyahat notun çıkar.';
+      'Arama kutusundaki \"Akıllı\" sekmesi kelime değil anlam arar: \"uçak saatleri\" yazınca seyahat notun çıkar.';
 
   @override
   String get discoverAssistantBody =>
@@ -4764,16 +4764,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get moduleMixed => 'kısmen açık';
 
   @override
-  String get personalizeEditorBar => 'NOT EKRANI · ALT ÇUBUK';
+  String get personalizeEditorBar => 'Not ekranı · alt çubuk';
 
   @override
-  String get personalizeEditorTop => 'NOT EKRANI · ÜST ÇUBUK VE ALANLAR';
+  String get personalizeEditorTop => 'Not ekranı · üst çubuk ve alanlar';
 
   @override
-  String get personalizeQuickAdd => 'YENİ NOT MENÜSÜ (+)';
+  String get personalizeQuickAdd => 'Yeni not menüsü (+)';
 
   @override
-  String get personalizeAttachSheet => 'EKLE LEVHASI (NOTUN İÇİNDE +)';
+  String get personalizeAttachSheet => 'Ekle levhası (notun içinde +)';
 
   @override
   String get personalizeVideo => 'Video';

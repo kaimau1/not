@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/domain/attachment.dart';
@@ -677,12 +678,7 @@ class _OutlineBar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
               context.l10n.brainstormOutlineTitle,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.3,
-                color: scheme.onSurfaceVariant,
-              ),
+              style: sectionLabelStyle(context),
             ),
           ),
           const SizedBox(height: 6),

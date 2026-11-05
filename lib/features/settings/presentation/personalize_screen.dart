@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
+import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/presentation/editor/video_transport.dart' show SeekIcon;
 import '../../notes/presentation/add_catalog.dart';
@@ -250,12 +251,7 @@ class _Section extends StatelessWidget {
                   Expanded(
                     child: Text(
                       title,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.6,
-                        color: scheme.primary,
-                      ),
+                      style: sectionLabelStyle(context),
                     ),
                   ),
                 ],
