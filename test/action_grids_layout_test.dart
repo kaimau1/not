@@ -80,20 +80,22 @@ void main() {
     expect(fab.top - text.bottom, lessThan(60));
     // Ana ekranda sesli not menüde yok (tek mikrofon, F3.1).
     expect(find.text('AI sesli not'), findsNothing);
-    // Gruplar başlıklı; dosya birincilin hemen üstünde, sonra kamera,
-    // "Diğer" en üstte. Sıralı liste birincil satırda.
+    // Gruplar başlıklı; başparmaktan yukarı Ekle levhasıyla aynı sıra: Kalem,
+    // Kamera, Dosya, Şablon. Sıralı liste birincil satırda.
+    final pen = tester.getRect(find.byKey(const ValueKey('quick-section-pen')));
     final camera = tester.getRect(
-      find.byKey(const ValueKey('quick-section-capture')),
+      find.byKey(const ValueKey('quick-section-camera')),
     );
     final files = tester.getRect(
       find.byKey(const ValueKey('quick-section-files')),
     );
-    final more = tester.getRect(
-      find.byKey(const ValueKey('quick-section-more')),
+    final template = tester.getRect(
+      find.byKey(const ValueKey('quick-section-template')),
     );
-    expect(files.center.dy, lessThan(text.center.dy));
-    expect(camera.center.dy, lessThan(files.center.dy));
-    expect(more.center.dy, lessThan(camera.center.dy));
+    expect(pen.center.dy, lessThan(text.center.dy));
+    expect(camera.center.dy, lessThan(pen.center.dy));
+    expect(files.center.dy, lessThan(camera.center.dy));
+    expect(template.center.dy, lessThan(files.center.dy));
     expect(
       tester.getRect(find.text('Sıralı liste')).center.dy,
       closeTo(text.center.dy, 1),

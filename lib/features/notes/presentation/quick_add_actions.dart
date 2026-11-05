@@ -148,6 +148,11 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     await openNewNote(id, query: '?draw=1');
   }
 
+  /// "Ayrı çizim": boş not açılır, çizim ekranı gelir, çizim görsel olarak
+  /// nota girer. Vazgeçilirse boş not çıkışta kendiliğinden silinir.
+  Future<void> createDrawingNote() =>
+      _openBlankNote(NoteType.text, query: '?drawing=1');
+
   /// Sesli not (klasör ekranı): not oluşturulur, editör açılır açılmaz
   /// ortak sesli yakalama levhası gelir. Ana ekran aynı levhayı not açmadan
   /// kendisi gösterir (dashboard `_captureVoiceNote`).
@@ -470,7 +475,8 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     if (files.isEmpty || !mounted) return;
     String nameOf(XFile f) => f.name.isEmpty ? f.path : f.name;
     final kind = PickedFileKind.of(nameOf(files.first));
-    if (kind == null) {
+    // Türün bu platformda hiç kullanımı yoksa (web'de ses) boş levha açılmaz.
+    if (kind == null || fileUsesFor(kind).isEmpty) {
       showQuickAddSnack(l10n.quickAddFileUnsupported);
       return;
     }
@@ -527,7 +533,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
         await run(first, () => createGalleryVideoNote(title: choice.title));
       case FileUse.audio:
         await run(first, () => createAudioFileNote(title: choice.title));
-      case FileUse.bubbles || FileUse.classic:
+      case FileUse.bubbles || FileUse.classic || FileUse.imageFile:
         switch (kind) {
           case PickedFileKind.image:
             await run(same, () => createImageNote(preset: preset));

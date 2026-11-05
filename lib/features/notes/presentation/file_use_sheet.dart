@@ -90,6 +90,9 @@ enum FileUse {
   /// Klasik: düz not, dosya notun içinde (görsel/PDF/sunum).
   classic,
 
+  /// Yalnız not içinde: görsel sayfaya değil ek şeridine.
+  imageFile,
+
   /// Videoyla not: video üstte oynar, not altında.
   video,
 
@@ -119,12 +122,21 @@ CaptureChoice? captureChoiceOf(FileUseChoice choice) => switch (choice.use) {
 
 /// Türün sunduğu seçenekler, sırayla. Varsayılan kip ([preferred]) belge
 /// türlerinde başa alınır. Web'de metne dökme ve ses/video eki yok.
-@visibleForTesting
 List<FileUse> fileUsesFor(
   PickedFileKind kind, {
   CaptureMode? preferred,
   bool web = kIsWeb,
+  bool inNote = false,
 }) {
+  // Açık nota eklenirken (F41.4): başlık yok, kip yok.
+  if (inNote) {
+    return switch (kind) {
+      PickedFileKind.image => const [FileUse.classic, FileUse.imageFile],
+      PickedFileKind.pdf || PickedFileKind.slides => const [FileUse.classic],
+      PickedFileKind.video => const [FileUse.video, FileUse.transcribe],
+      PickedFileKind.audio => const [FileUse.audio, FileUse.transcribe],
+    };
+  }
   // BALONLU/KLASİK SEÇİMİ KALKTI (kullanıcı isteği 2026-11-03: "not
   // başlatırken balonlu-balonsuz seçimi kalksın, kişi içeride seçer"): not
   // hep klasik açılır; görünüm (Sabit / Yüzen / Balonlu / Ek) notun içinde,
@@ -157,8 +169,9 @@ Future<FileUseChoice?> showFileUseSheet(
   required PickedFileKind kind,
   required List<String> names,
   CaptureMode? preferred,
+  bool inNote = false,
 }) {
-  final uses = fileUsesFor(kind, preferred: preferred);
+  final uses = fileUsesFor(kind, preferred: preferred, inNote: inNote);
   // Tek seçenek (PDF/sunum): sorulacak bir şey yok, doğrudan nota.
   if (uses.length == 1) {
     return Future.value((use: uses.single, title: ''));
@@ -177,6 +190,7 @@ Future<FileUseChoice?> showFileUseSheet(
         names: names,
         uses: uses,
         preferred: preferred,
+        inNote: inNote,
       ),
     ),
   );
@@ -188,12 +202,16 @@ class _FileUseSheet extends StatefulWidget {
     required this.names,
     required this.uses,
     required this.preferred,
+    required this.inNote,
   });
 
   final PickedFileKind kind;
   final List<String> names;
   final List<FileUse> uses;
   final CaptureMode? preferred;
+
+  /// Açık nota ekleniyor: başlık alanı yok, seçenek adları ek diliyle.
+  final bool inNote;
 
   @override
   State<_FileUseSheet> createState() => _FileUseSheetState();
@@ -220,6 +238,31 @@ class _FileUseSheetState extends State<_FileUseSheet> {
     AppLocalizations l10n,
     FileUse use,
   ) => switch (use) {
+    FileUse.classic when widget.inNote => (
+      icon: Icons.image_outlined,
+      title: l10n.addImage,
+      info: l10n.addImageOnPageSubtitle,
+    ),
+    FileUse.imageFile => (
+      icon: Icons.attachment_outlined,
+      title: l10n.addImageAsFile,
+      info: l10n.addImageAsFileSubtitle,
+    ),
+    FileUse.video when widget.inNote => (
+      icon: Icons.video_library_outlined,
+      title: l10n.addVideoFromGallery,
+      info: l10n.fileUseAttachInfo,
+    ),
+    FileUse.audio when widget.inNote => (
+      icon: Icons.library_music_outlined,
+      title: l10n.addAudioFile,
+      info: l10n.fileUseAttachInfo,
+    ),
+    FileUse.transcribe when widget.inNote => (
+      icon: Icons.subtitles_outlined,
+      title: l10n.transcribeFile,
+      info: l10n.transcribeFileSubtitle,
+    ),
     FileUse.bubbles => (
       icon: Icons.chat_bubble_outline_rounded,
       title: l10n.fileUseBubbles,
@@ -322,19 +365,21 @@ class _FileUseSheetState extends State<_FileUseSheet> {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              key: const ValueKey('file-use-title'),
-              controller: _title,
-              textInputAction: TextInputAction.done,
-              decoration: InputDecoration(
-                labelText: l10n.captureNoteTitle,
-                isDense: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+            if (!widget.inNote) ...[
+              const SizedBox(height: 12),
+              TextField(
+                key: const ValueKey('file-use-title'),
+                controller: _title,
+                textInputAction: TextInputAction.done,
+                decoration: InputDecoration(
+                  labelText: l10n.captureNoteTitle,
+                  isDense: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
-            ),
+            ],
             const SizedBox(height: 12),
             for (final use in widget.uses) ...[
               _UseTile(

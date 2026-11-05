@@ -38,6 +38,7 @@ import '../../../../app/theme/note_colors.dart';
 import '../../../../app/theme/note_themes.dart';
 import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/web_file_drop.dart';
 import '../../../../core/personalize.dart';
 import '../../../../core/tips.dart';
 import '../../../../core/utils/debouncer.dart';
@@ -452,6 +453,8 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     this.ownerId,
     this.readOnly = false,
     this.startDrawing = false,
+    this.startSeparateDrawing = false,
+    this.placementHintAttachmentId,
     this.startVoiceCapture = false,
     this.startDictation = false,
     this.startVideo = false,
@@ -496,6 +499,12 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   /// El yazısı modu: editör açılır açılmaz çizim tuvali gösterilir,
   /// kaydedilen çizim nota görsel eki olarak girer.
   final bool startDrawing;
+
+  /// "Ayrı çizim": açılır açılmaz çizim ekranı (sonuç görsel eki olur).
+  final bool startSeparateDrawing;
+
+  /// Dışarıdan (paylaşım) gelen ek: not "Yeni ek nerede dursun?" ipucuyla açılır.
+  final String? placementHintAttachmentId;
 
   /// Keep tarzı sesli not modu: editör açılır açılmaz ses kaydı + canlı
   /// döküm başlar; bitişte ses m4a eki olur, döküm notta kalır.
@@ -678,6 +687,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// (+) menüsünden gelen ve not yüklenmeden çalıştırılamayan açılış
   /// niyetleri; not gelir gelmez bir kez çalıştırılır.
   bool _pendingDraw = false;
+  bool _pendingSeparateDrawing = false;
   bool _pendingVoice = false;
   bool _pendingDictation = false;
   bool _pendingVideo = false;
@@ -721,6 +731,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// görünüm anahtarını ipucuyla gösterir (bkz.
   /// [NotePageCanvas.placementHintId]); gösterilince temizlenir.
   String? _placementHintId;
+
+  void Function() _stopFileDrops = () {};
 
   /// Üst çubuğun başlığı: başlık alanı oraya taşındıysa (bkz.
   /// [_titleInBar]) dolu, değilse null (tarih gösterilir). `build` içinde
@@ -1110,6 +1122,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     });
     _videoHub.onNoteAt = _noteAtVideoTime;
     _pendingDraw = widget.startDrawing;
+    _pendingSeparateDrawing = widget.startSeparateDrawing;
+    _placementHintId = widget.placementHintAttachmentId;
+    // Web: not açıkken bırakılan/yapıştırılan dosya BU nota girer (F41.4).
+    if (!_readOnly) {
+      _stopFileDrops = addFileDropHandler(
+        (files) => unawaited(_attachFiles(files)),
+      );
+    }
     _pendingVoice = widget.startVoiceCapture;
     _pendingDictation = widget.startDictation;
     _pendingVideo = widget.startVideo;
@@ -1378,6 +1398,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   @override
   void dispose() {
+    _stopFileDrops();
     WidgetsBinding.instance.removeObserver(this);
     noteRouteClosing.removeListener(_holdSaveWhileClosing);
     openEditorNoteIds.remove(widget.noteId);

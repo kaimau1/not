@@ -417,7 +417,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Draw on a separate canvas, embedded as an image';
 
   @override
-  String get addHandwriting => 'Handwrite on page';
+  String get addGroupWrite => 'Write';
+
+  @override
+  String get addGroupPen => 'Pen';
+
+  @override
+  String get addGroupFiles => 'Files and links';
+
+  @override
+  String get addGroupSound => 'Sound';
+
+  @override
+  String get addGroupTemplate => 'Templates';
+
+  @override
+  String get addSeparateDrawing => 'Separate drawing (image)';
+
+  @override
+  String get addHandwriting => 'Write on page (pen)';
 
   @override
   String get addHandwritingSubtitle =>
@@ -955,9 +973,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceChipFix => 'Clean up';
 
   @override
-  String get editorToolList => 'List';
-
-  @override
   String get permissionsTitle => 'Permissions';
 
   @override
@@ -1013,9 +1028,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get permOpenSettings => 'Open settings';
-
-  @override
-  String get newHandwriting => 'Handwriting';
 
   @override
   String get newVoiceCapture => 'AI voice note';
@@ -1866,9 +1878,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addTextBlock => 'Add text';
-
-  @override
-  String get attachNoteContent => 'Note content';
 
   @override
   String get noteBackgroundImage => 'Background image';
@@ -5460,9 +5469,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get quickAddSectionMore => 'Templates and drawing';
-
-  @override
   String get attachAnyFileInfo =>
       'Any file: image, PDF, slides, audio, video — the type is detected, you\'re asked what to do when it matters';
 
@@ -5503,12 +5509,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemDividerRemove => 'Remove line';
-
-  @override
-  String get attachSectionFiles => 'Files and links';
-
-  @override
-  String get attachSectionCapture => 'Camera and recording';
 
   @override
   String get fileUseAttachInfo => 'Added to the note as a playable attachment';
@@ -6222,9 +6222,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reorderNotesManually => 'Reorder manually';
-
-  @override
-  String get quickAddSectionFiles => 'Files and links';
 
   @override
   String get shareIncludeBubbles => 'Bubbles';

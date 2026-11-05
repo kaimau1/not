@@ -28,17 +28,17 @@ Notların kart olarak, **BUGÜN / BU HAFTA / DAHA ÖNCE** gruplarıyla dizilir; 
 
 ## Yeni not oluşturma {#create}
 Sağ alttaki **+** düğmesi kısa bir panel açar — başparmağının olduğu yerden yukarı doğru:
-- **En altta, düğmenin hemen üstünde:** büyük **Metin notu · Liste** düğmeleri.
-- Üstünde üç grup: **Kamera** (fotoğraf, video, belge tara, QR), **Dosya ve bağlantı** — **Dosya ekle** (tek seçici: görsel, PDF, sunum, video ya da ses seç — not dosyanın türüne göre açılır; görsel ve videoda "Metne dök" de sorulur; ayrıca **YouTube videosu**) ve **Şablon ve çizim** (şablondan, alışveriş listesi, el yazısı, **defter**). Video ile açılan not "üstte video, altta not" düzeninde başlar.
+- **En altta, düğmenin hemen üstünde:** büyük **Metin notu · Liste · Sıralı liste** düğmeleri.
+- Yukarı doğru gruplar, not içindeki **Ekle** ile aynı adlar ve sıra: **Kalem** (**Sayfaya yaz (kalem)**: notun sayfasına doğrudan yazarsın; **Ayrı çizim (görsel)**: ayrı tuvalde çizersin, görsel olarak nota girer), **Kamera** (fotoğraf, video, belge tara, QR), **Dosya ve bağlantı** (**Dosya ekle**: tek seçici, görsel, PDF, sunum, video ya da ses; görsel ve videoda "Metne dök" de sorulur; ayrıca **YouTube videosu**) ve **Şablon** (şablondan, alışveriş listesi, **defter**). Video ile açılan not "üstte video, altta not" düzeninde başlar.
 - **Ana ekranın mikrofonu tek:** dokunmak **Dikte** açar (konuştukça yeni nota yazılır, kota harcamaz); **basılı tutmak AI sesli not** açar (yapay zekâ başlığı, maddeleri ve hatırlatıcıyı çıkarıp notu kurar). Düğmenin köşesindeki küçük ✨ bu ikinci yüzü hatırlatır.
-PDF, görsel ve sunum için ilk seferde iki kip sorulur: **Balonlu** (belge notun kendisi olur, üzerine balon/kalem) ya da **Klasik** (belge ek olur). Seçimin varsayılan olur; Ayarlar → Notlar ve klasörler → **İçerikten not açılışı**'ndan değişir. Kip not içinden de değişir: bkz. **Balonlu ↔ klasik geçiş**.
+Not hep klasik açılır; dosya eklenince çıkan **Yeni ek nerede dursun?** ipucundan görünümü seçersin (bkz. **Balonlu ↔ klasik geçiş**). Paylaş menüsünden gelen dosya da aynı ipucuyla açılır. Web'de sayfaya dosya bırakabilir ya da görsel yapıştırabilirsin: açık bir not varsa o nota, yoksa yeni nota girer.
 
 ## Not düzenleme {#editor}
 Alt çubuk soldan sağa:
 - **Aa — Biçim:** kalın, italik, altı çizili, yazı rengi, renkli vurgu, büyük başlık / alt başlık; notun yazı tipi, boyutu ve şeffaflığı. Sayfa rengi, kenar vurgusu ve zemin görseli üst çubuktaki **palette** (tek yer). Seçili yazıya uygulanır; seçim yoksa yazacağın kelimeye.
   - Panelin üst sırası **kapsam**: **İmleç · Kelime · Satır · Tümü**. "Satır"ı seçip imleci bir satıra koy, sonra B / renk / boyut **+ −** — o satırın tamamı değişir, elle seçmek gerekmez. Seçim oturum boyu hatırlanır. Kendin metin seçtiğinde bu sıra gizlenir — seçim zaten kapsamdır; **Tümü** her biçimi alanın tamamına uygular.
   - Maddede panelde **Alt çizgi** sırası: düz, kesikli, noktalı çizgi (aynısına basmak kaldırır) ve ayar düğmesi.
-- **+ — Ekle:** simge ızgarası — **Not içeriği** (metin bloğu, liste, seçili yazıya ek gömme), **Dosya ve bağlantı** (**Dosya ekle** — tek seçici: görsel, PDF, sunum, video ya da ses —, görsel, YouTube videosu, çizim) ve **Kamera ve kayıt** (fotoğraf çek, belge tara, ses kaydı, video çek, QR). Bir simgeye basılı tutunca ne yaptığı yazar.
+- **+ — Ekle:** + panelindeki gruplar, aynı adlarla: **Yaz** (metin bloğu, liste, seçili yazıya ek gömme), **Kalem** (sayfaya yaz, ayrı çizim), **Kamera** (fotoğraf çek, video çek, belge tara, QR), **Dosya ve bağlantı** (**Dosya ekle** — tek seçici: görsel, PDF, sunum, video ya da ses —, görsel, YouTube videosu) ve **Ses** (ses kaydı). Bir simgeye basılı tutunca ne yaptığı yazar.
 - **🔍 — Notta ara:** eşleşmeler yazarken vurgulanır.
 - **Paylaş.**
 - Sağdaki renkli kapsül: **✦ Yapay zekâ** (levhanın en üstünde **AI sesli not**; bkz. Yapay zekâ bölümü), **Ses kaydı** ve **Dikte** mikrofonu. Kişiselleştir'den gizlenebilirler.
@@ -231,6 +231,6 @@ En üstte iki kart: **Kullanım kılavuzu** ve **Kişiselleştir** (hangi düğm
 - Bekleyen ekler ana ekranda "buluta yükleniyor" çubuğunda görünür; ekler bu cihazda güvendedir.
 - Kopyaladığın bir eki başka bir nota **+ Ekle → Kopyalanan eki yapıştır** ile koyabilirsin.
 - Gizli jestler ilk kez mümkün olduğunda **bir kez** tek satırla tanıtılır (liste notu, ilk PDF, ilk görsel, ızgarada klasörler); bir oturumda en fazla bir ipucu. Yeniden görmek için Ayarlar → Eklentiler ve hızlı not → **İpuçlarını yeniden göster**.
-- **Kalemle yazma:** kalem notun sayfasına değince yazı doğrudan sayfaya işlenir, araçlar açılır (tablette solda, telefonda altta). Parmakla dokunup klavyeyle aynı notta devam edersin; ✓ araçları kapatır. **Ekle → El yazısı** aynı kipi açar. İstemezsen kalem ayarlarında **Kalemi otomatik algıla**'yı kapat. Metin sonradan akarsa çizim birlikte kaymaz.
+- **Kalemle yazma:** kalem notun sayfasına değince yazı doğrudan sayfaya işlenir, araçlar açılır (tablette solda, telefonda altta). Parmakla dokunup klavyeyle aynı notta devam edersin; ✓ araçları kapatır. **Ekle → Sayfaya yaz (kalem)** aynı kipi açar. İstemezsen kalem ayarlarında **Kalemi otomatik algıla**'yı kapat. Metin sonradan akarsa çizim birlikte kaymaz.
 - **Tam ekran (tablet, web):** not üst çubuğundaki düğme ray ve listeyi gizler.
 - Bu kılavuza her zaman ⋮ menüsünden ya da Ayarlar'dan ulaşırsın.

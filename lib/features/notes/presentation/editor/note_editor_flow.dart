@@ -8,6 +8,10 @@ extension _EditorFlowX on _NoteEditorScreenState {
       _pendingDraw = false;
       _openPen();
     }
+    if (_pendingSeparateDrawing) {
+      _pendingSeparateDrawing = false;
+      unawaited(_addDrawing());
+    }
     if (_pendingVoice) {
       _pendingVoice = false;
       // Sesli not, uygulamanın her yerinde AYNI levhayla (bkz. _captureVoice).

@@ -124,11 +124,12 @@ void main() {
 
       expect(find.text('Yeni sayfa'), findsNothing);
       expect(find.text('YAKALA — İÇERİKTEN NOT OLUŞTURUR'), findsNothing);
-      // 2026-10-20: üç bölüm (Not içeriği · Dosya ve bağlantı · Kamera ve
-      // kayıt); PDF/Slayt/Ses dosyası/Galeriden video/Görseli ek olarak/
-      // Dosyayı metne dök tek "Dosya ekle"de.
-      expect(find.text('Dosya ve bağlantı'), findsOneWidget);
-      expect(find.text('Kamera ve kayıt'), findsOneWidget);
+      // F41.2: gruplar + paneliyle aynı; PDF/Slayt/Ses dosyası/Galeriden video/
+      // Görseli ek olarak/Dosyayı metne dök tek "Dosya ekle"de.
+      for (final group in ['Yaz', 'Kalem', 'Dosya ve bağlantı', 'Ses']) {
+        expect(find.text(group), findsOneWidget, reason: group);
+      }
+      expect(find.text('Kamera ve kayıt'), findsNothing);
       for (final gone in [
         'PDF ekle',
         'Slayt ekle',

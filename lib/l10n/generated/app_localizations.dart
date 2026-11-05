@@ -836,10 +836,46 @@ abstract class AppLocalizations {
   /// **'Ayrı tuvalde çiz, görsel olarak nota gömülsün'**
   String get addDrawingSubtitle;
 
+  /// No description provided for @addGroupWrite.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yaz'**
+  String get addGroupWrite;
+
+  /// No description provided for @addGroupPen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem'**
+  String get addGroupPen;
+
+  /// No description provided for @addGroupFiles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya ve bağlantı'**
+  String get addGroupFiles;
+
+  /// No description provided for @addGroupSound.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses'**
+  String get addGroupSound;
+
+  /// No description provided for @addGroupTemplate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablon'**
+  String get addGroupTemplate;
+
+  /// No description provided for @addSeparateDrawing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayrı çizim (görsel)'**
+  String get addSeparateDrawing;
+
   /// No description provided for @addHandwriting.
   ///
   /// In tr, this message translates to:
-  /// **'Sayfaya el yazısı'**
+  /// **'Sayfaya yaz (kalem)'**
   String get addHandwriting;
 
   /// No description provided for @addHandwritingSubtitle.
@@ -1802,12 +1838,6 @@ abstract class AppLocalizations {
   /// **'Düzelt'**
   String get voiceChipFix;
 
-  /// No description provided for @editorToolList.
-  ///
-  /// In tr, this message translates to:
-  /// **'Liste'**
-  String get editorToolList;
-
   /// No description provided for @permissionsTitle.
   ///
   /// In tr, this message translates to:
@@ -1909,12 +1939,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Ayarları aç'**
   String get permOpenSettings;
-
-  /// No description provided for @newHandwriting.
-  ///
-  /// In tr, this message translates to:
-  /// **'El yazısı'**
-  String get newHandwriting;
 
   /// No description provided for @newVoiceCapture.
   ///
@@ -3481,12 +3505,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Metin ekle'**
   String get addTextBlock;
-
-  /// No description provided for @attachNoteContent.
-  ///
-  /// In tr, this message translates to:
-  /// **'Not içeriği'**
-  String get attachNoteContent;
 
   /// No description provided for @noteBackgroundImage.
   ///
@@ -9740,12 +9758,6 @@ abstract class AppLocalizations {
   /// **'+{count} dosya daha'**
   String fileUseMore(int count);
 
-  /// No description provided for @quickAddSectionMore.
-  ///
-  /// In tr, this message translates to:
-  /// **'Şablon ve çizim'**
-  String get quickAddSectionMore;
-
   /// No description provided for @attachAnyFileInfo.
   ///
   /// In tr, this message translates to:
@@ -9823,18 +9835,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Çizgiyi kaldır'**
   String get itemDividerRemove;
-
-  /// No description provided for @attachSectionFiles.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dosya ve bağlantı'**
-  String get attachSectionFiles;
-
-  /// No description provided for @attachSectionCapture.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kamera ve kayıt'**
-  String get attachSectionCapture;
 
   /// No description provided for @fileUseAttachInfo.
   ///
@@ -11095,12 +11095,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Elle sırala'**
   String get reorderNotesManually;
-
-  /// No description provided for @quickAddSectionFiles.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dosya ve bağlantı'**
-  String get quickAddSectionFiles;
 
   /// No description provided for @shareIncludeBubbles.
   ///

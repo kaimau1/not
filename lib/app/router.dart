@@ -371,6 +371,10 @@ Widget _noteBuilder(BuildContext context, GoRouterState state) =>
       readOnly: state.uri.queryParameters['ro'] == '1',
       // ?draw=1: el yazısı modu — editör çizim tuvaliyle açılır.
       startDrawing: state.uri.queryParameters['draw'] == '1',
+      // ?drawing=1: ayrı çizim — çizim ekranı açılır, sonuç görsel eki olur.
+      startSeparateDrawing: state.uri.queryParameters['drawing'] == '1',
+      // ?place=<ek>: paylaşımla gelen ek — yerleşim ipucuyla açılır.
+      placementHintAttachmentId: state.uri.queryParameters['place'],
       // ?voice=1: sesli not — ortak sesli yakalama levhası açılır.
       startVoiceCapture: state.uri.queryParameters['voice'] == '1',
       // ?dictate=1: SESLE YAZ — mikrofon açılır, konuşulan söz

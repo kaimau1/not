@@ -28,17 +28,17 @@ Your notes appear as cards grouped by **TODAY / THIS WEEK / EARLIER**; pinned no
 
 ## Creating notes {#create}
 The **+** button at the bottom right opens a short panel, read from your thumb upwards:
-- **At the bottom, right above the button:** large **Text note · List** buttons.
-- Above them three groups: **Camera** (photo, video, scan, QR), **Files and links** — **Add file** (one picker: choose an image, PDF, slides, video or audio — the note opens according to the file type; images and videos also offer "Transcribe"; plus **YouTube video**) and **Templates and drawing** (from template, shopping list, handwriting, **notebook**). A note started from a video opens with the video pinned on top and the note below.
+- **At the bottom, right above the button:** large **Text note · List · Ordered list** buttons.
+- Going up, the groups use the same names and order as **Add** inside a note: **Pen** (**Write on page (pen)**: write directly on the note page; **Separate drawing (image)**: draw on a separate canvas, added to the note as an image), **Camera** (photo, video, scan, QR), **Files and links** (**Add file**: one picker for images, PDF, slides, video or audio; images and videos also offer "Transcribe"; plus **YouTube video**) and **Templates** (from template, shopping list, **notebook**). A note started from a video opens with the video pinned on top and the note below.
 - **The home screen has one microphone:** a tap starts **Dictate** (your words are typed into a new note, no quota); a **long-press starts an AI voice note** (AI builds the note — title, items and reminders). The small ✨ on its corner is the reminder of that second face.
-For PDFs, images and slides you choose a mode the first time: **Bubbles** (the document becomes the note itself, with bubbles and pen on top) or **Classic** (the document becomes an attachment). Your choice becomes the default; change it in Settings → Notes and folders → **Notes from content**. You can switch inside a note too: see **Bubbles ↔ classic**.
+A note always opens classic; when you add a file, the **Where should the attachment go?** tip lets you pick the view (see **Bubbles ↔ classic**). Files from the share menu open with the same tip. On the web you can drop a file on the page or paste an image: it goes into the open note, otherwise into a new note.
 
 ## Editing a note {#editor}
 Bottom bar, left to right:
 - **Aa — Format:** bold, italic, underline, text colour, highlight, heading / subheading; the note's font, size and transparency. Page colour, border highlight and background image live in the **palette** on the top bar (one place). Applies to the selection, or to the word you type next.
   - The panel's top row is the **scope**: **Cursor · Word · Line · All**. Pick "Line", put the cursor on a line, then B / colour / size **+ −** — the whole line changes, no manual selection. The choice is remembered for the session. When you select text yourself this row hides — the selection is the scope; **All** applies every format to the whole field.
   - On an item the panel has a **Line below** row: solid, dashed, dotted (tap the same one to remove) and a settings button.
-- **+ — Add:** an icon grid — **Note content** (text block, list, embed attachment in selection), **Files and links** (**Add file** — one picker: image, PDF, slides, video or audio —, image, YouTube video, drawing) and **Camera and recording** (take photo, scan document, voice recording, record video, QR). Long-press an icon to see what it does.
+- **+ — Add:** the groups of the + panel, with the same names: **Write** (text block, list, embed attachment in selection), **Pen** (write on page, separate drawing), **Camera** (take photo, record video, scan document, QR), **Files and links** (**Add file** — one picker: image, PDF, slides, video or audio —, image, YouTube video) and **Sound** (voice recording). Long-press an icon to see what it does.
 - **🔍 — Search in note:** matches are highlighted as you type.
 - **Share.**
 - The coloured capsule on the right: **✦ AI** (with **AI voice note** at the top of its sheet; see the AI section), **Audio recording** and the **Dictate** microphone. Hide them from Personalise.
@@ -232,6 +232,6 @@ At the top are two cards: **User guide** and **Personalise** (which buttons and 
 - Attachments waiting to upload show in the "uploading to the cloud" bar on the home screen; they are safe on this device.
 - Put a copied attachment into another note with **+ Add → Paste copied attachment**.
 - Hidden gestures are introduced **once**, with a single line, the first time they become possible (list note, first PDF, first image, folders in the grid); at most one tip per session. To see them again: Settings → Modules & quick note → **Show tips again**.
-- **Writing with a pen:** touching the note page with a pen writes directly on it and opens the tools (left on tablets, bottom on phones). Tap with a finger to keep typing in the same note; ✓ closes the tools. **Add → Handwriting** opens the same mode. To stop it, turn off **Detect pen automatically** in the pen settings. Handwriting doesn't move if text reflows later.
+- **Writing with a pen:** touching the note page with a pen writes directly on it and opens the tools (left on tablets, bottom on phones). Tap with a finger to keep typing in the same note; ✓ closes the tools. **Add → Write on page (pen)** opens the same mode. To stop it, turn off **Detect pen automatically** in the pen settings. Handwriting doesn't move if text reflows later.
 - **Full screen (tablet, web):** the button in the note's top bar hides the rail and list.
 - This guide is always available from the ⋮ menu and from Settings.
