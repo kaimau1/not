@@ -592,7 +592,12 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     );
   }
 
+  /// Son çizilen çubuk genişliği: döndür düğmesi çubukta mı menüde mi.
+  double _barWidth = 0;
+  bool get _rotateInMenu => _barWidth < 430;
+
   Widget _barRow(BuildContext context, double width) {
+    _barWidth = width;
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final isVideo = widget.media.kind == AttachmentKind.video;
@@ -621,9 +626,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             video: widget.media,
             showTime: width >= 500,
             showSpeed: width >= 400,
-            // Dik çekilmiş videoyu asıl telefonda döndürmek gerekir; 392 dp
-            // telefonda hız sığmaz ama bu düğme sığar (cihaz turu 2026-11-05).
-            showRotate: width >= 380,
+            // Çubukta < 430 dp'de sığmaz (⋮ taşıyordu): orada menüde
+            // (bkz. [_rotateInMenu]; cihaz turu 2026-11-05).
+            showRotate: width >= 430,
           ),
         Expanded(
           child: Semantics(
@@ -730,6 +735,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         widget.onShowViews?.call();
       case AttachmentAction.open:
         widget.onOpen();
+      case AttachmentAction.rotate:
+        VideoHubScope.maybeOf(context)?.rotate(widget.media.id);
       case AttachmentAction.caption:
         widget.onCaption?.call();
       case AttachmentAction.copyLink:
@@ -759,6 +766,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     surface,
     AttachmentCaps(
       viewRow: viewRow && widget.onShowViews != null,
+      rotate: _rotateInMenu,
       caption: widget.onCaption != null,
       transcribe: widget.onTranscribe != null,
       extractText: widget.onExtractText != null,

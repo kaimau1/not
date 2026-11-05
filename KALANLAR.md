@@ -149,7 +149,7 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 **2026-11-05 — not ekranı (TUTARLILIK_PLANI Faz 38, yazıldı, cihazda elle doğrulanmadı)**
 69. [ ] (F38.7) Klavye açılırken alt çubuk: telefonda ölçümde birikim çıkmadı (15 tur). Kendi notlarında hâlâ "her açılışta artıyor" görüyorsan hangi notta (ekli mi, uzun mu) söyle: sabah bakılacak. Görselli notta ilk açılış 33 ms, sonrakiler 66–149 ms farkı açık.
 70. [ ] (F39.2, F39.3) Gerçek parmakla: ana ekranda iki parmak aç/kapa ızgarayı ölçekler, köşede sütun simgesi, bırakınca oturur; yana çek: ızgara parmağı izler, kenarda sonraki klasörün adı, kısa çekişte geri döner, seçili çip ortalanır. Dikey kaydırmayla yarışmıyor mu bak.
-72. [ ] (F40.5) v1.1.704 üstü: sabit videoda döndür düğmesi görünüyor (telefonda gizliydi, düzeltildi) ve görüntüyü çeviriyor, tam ekranda da. Arka plana çıkınca durma ve kendi başlamama geçti.
+72. [ ] (F40.5) v1.1.704 üstü: sabit videoda telefonda ⋮ → Görüntüyü döndür (çubuğa sığmıyor), geniş çubukta düğme; tam ekranda da. Arka plana çıkınca durma ve kendi başlamama geçti.
 73. [ ] (F40.6/F40.7) Aynı görsel sabit ↔ balonlu: çubuk rengi ve açıklama aynı; açıklama sabitte görselin altında, dokununca düzenleniyor. Sunum balonluda zemin artık siyah değil.
 75. [ ] (F41.4) Başka uygulamadan görsel paylaş → not "Yeni ek nerede dursun?" ipucuyla açılır. Panel, Ayrı çizim (parmak; "Yalnız kalem" kapalıyken), vazgeçince boş not kalmaması, not içi dosya levhası geçti.
 76. [ ] (F41.4 web) Not açıkken dosyayı sayfaya bırak ya da görsel yapıştır → o nota girer; not kapalıyken yeni not; Word'den metin+resim yapıştır → yalnız metin yazılır.

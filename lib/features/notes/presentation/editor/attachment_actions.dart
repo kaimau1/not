@@ -17,6 +17,7 @@ enum AttachmentAction {
   open,
   view,
   edit,
+  rotate,
   caption,
   transcribe,
   extractText,
@@ -41,6 +42,7 @@ class AttachmentCaps {
     this.open = true,
     this.viewRow = false,
     this.edit = false,
+    this.rotate = false,
     this.caption = false,
     this.transcribe = false,
     this.extractText = false,
@@ -59,6 +61,9 @@ class AttachmentCaps {
   /// Anahtar yüzeyde sığmıyor: "Görünüm" satırı levhayı açar.
   final bool viewRow;
   final bool edit;
+
+  /// Video döndürme oynatma çubuğuna sığmıyor: menüde.
+  final bool rotate;
 
   /// Görsele açıklama (yüzende çubukta ayrı düğme).
   final bool caption;
@@ -92,6 +97,7 @@ List<AttachmentAction> attachmentActionsFor(
       AttachmentAction.open,
     if (caps.viewRow) AttachmentAction.view,
     if (caps.edit) AttachmentAction.edit,
+    if (caps.rotate && video && !web) AttachmentAction.rotate,
     if (caps.caption &&
         a.kind == AttachmentKind.image &&
         surface != AttachmentSurface.floating)
@@ -127,6 +133,10 @@ List<AttachmentAction> attachmentActionsFor(
     AttachmentAction.edit => (
       label: l10n.attachmentTagEdit,
       icon: Icons.edit_outlined,
+    ),
+    AttachmentAction.rotate => (
+      label: l10n.videoRotate,
+      icon: Icons.rotate_90_degrees_cw_outlined,
     ),
     AttachmentAction.caption => (
       label: l10n.imageCaptionAdd,
