@@ -380,8 +380,11 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
   × {renksiz, hazır, koyu özel, açık özel} × {kart, editör, liste satırı}: kutucuk,
   etiket, raptiye, başlık aile/ağırlık/aralık eşit. Yakaladığı gerçek hata: renksiz
   notta etiket kartta soluk, editörde tam ton (editör hapları `onSurfaceVariant`).
-- Kabul: değişenin testleri ve tam takım oturumda, CI'da yeşil; cihaz adımları
-  `KALANLAR.md` §2 #62–#65.
+- Kabul: tam takım oturumda (2087) ve CI'da yeşil; v1.1.677 telefonda kuruldu, açılış
+  ve ölçüm senaryoları kilitlenmesiz; kaydırma tabandan iyi (%0,4 / 32,8 ms), uzun
+  metinde yazma en uzun blok 179 ms (taban 148, izleniyor, AKICILIK Ek B). Tur
+  sırasında bulunan: tarih sağa yaslı değildi (eski kusur), düzeltildi. Görsel
+  ayrıntılar cihazda elle doğrulanmadı: `KALANLAR.md` §2 #62–#65.
 
 ## FAZ 38 — Not ekranı: çubuklar, başlık satırı, tek not menüsü
 
