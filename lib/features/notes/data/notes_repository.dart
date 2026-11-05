@@ -1381,6 +1381,33 @@ class NotesRepository {
       });
   }
 
+  /// Yeni ek senkronunun sonucunu (`sync`) ekin kaydına yazar; başka alana
+  /// dokunmaz (F28.2). Çağrıldığında ağ vardır: yükleme yeni bitti.
+  Future<void> patchAttachmentSync(
+    String noteId,
+    String attachmentId,
+    Map<String, dynamic> sync,
+  ) async {
+    List<Map<String, dynamic>> merged(Note note) => [
+      for (final a in note.attachments)
+        a.id == attachmentId ? {...a.toMap(), 'sync': sync} : a.toMap(),
+    ];
+    if (isLocal(noteId)) {
+      final note = local!.note(noteId);
+      if (note != null) local!.merge(noteId, {'attachments': merged(note)});
+      return;
+    }
+    await _firestore.runTransaction((tx) async {
+      final ref = _notes.doc(noteId);
+      final snapshot = await tx.get(ref);
+      if (!snapshot.exists) return;
+      tx.update(ref, {
+        'attachments': merged(Note.fromDoc(snapshot)),
+        'updatedBy': editorUid,
+      });
+    });
+  }
+
   /// Nota ek EKLER (var olanlara dokunmadan). Bulutta `arrayUnion` —
   /// eklemeyle aynı anda yazılan başka bir değişikliği geri almaz; yerel
   /// notta mevcut listenin sonuna.

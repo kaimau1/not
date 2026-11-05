@@ -4455,6 +4455,14 @@ class AppLocalizationsTr extends AppLocalizations {
       'Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.';
 
   @override
+  String get attachmentSyncV2Title =>
+      'Ekleri Drive\'daki Notlar klasörüne de yükle (deneme)';
+
+  @override
+  String get attachmentSyncV2Info =>
+      'Yeni senkron. Hiçbir kayıt silinmez, eski yol da çalışır.';
+
+  @override
   String get attachmentSyncTitle => 'Ek senkronu';
 
   @override

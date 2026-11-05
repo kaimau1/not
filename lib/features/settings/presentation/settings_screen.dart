@@ -1,3 +1,6 @@
+import '../../auth/data/google_scope_auth.dart';
+import '../../notes/data/attachment_sync_service.dart';
+import '../../notes/data/drive_files_api.dart' show kDriveFileScope;
 import '../../../app/app_frame.dart';
 import '../../../core/app_icons.dart';
 
@@ -569,6 +572,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords: 'google drive ek gorsel pdf senkron bagla kota',
           ),
           _SettingRow(
+            const _AttachmentSyncV2Tile(),
+            title: l10n.attachmentSyncV2Title,
+            keywords: 'drive notlar klasor deneme yeni senkron',
+          ),
+          _SettingRow(
             const _StorageUsage(),
             title: l10n.storageUsage,
             keywords: 'depolama alan kota gb mb dolu',
@@ -960,5 +968,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ? l10n.voiceModeHold
         : l10n.voiceModeTap;
     return '${l10n.listen}: $engine · ${l10n.liveDictation}: $mode';
+  }
+}
+
+/// F28.2 deneme anahtarı: yalnız Google hesabında. Açarken Drive izni istenir;
+/// izin verilmezse kapalı kalır.
+class _AttachmentSyncV2Tile extends ConsumerWidget {
+  const _AttachmentSyncV2Tile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!isGoogleUser(ref.watch(authStateProvider).value)) {
+      return const SizedBox.shrink();
+    }
+    final l10n = context.l10n;
+    final on = ref.watch(attachmentSyncV2Provider);
+    return SwitchListTile(
+      key: const ValueKey('attachment-sync-v2'),
+      title: Text(l10n.attachmentSyncV2Title),
+      subtitle: Text(l10n.attachmentSyncV2Info),
+      value: on,
+      onChanged: (value) async {
+        final flag = ref.read(attachmentSyncV2Provider.notifier);
+        if (!value) return flag.set(false);
+        final granted = await googleScopeAuth(
+          kDriveFileScope,
+          'notlar_drive_file_token',
+        ).connect().catchError((Object _) => null);
+        if (granted != null) flag.set(true);
+      },
+    );
   }
 }
