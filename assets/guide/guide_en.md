@@ -187,21 +187,23 @@ The **AI** screen (⋮, or the rail on the left on wide screens):
 - The **Today** widget shows today's reminders with their times on your home screen.
 
 ## Sharing and working together {#share}
-The **Share** button on the note screen: a preview of the text at the top with content chips (title, completed items, **bubbles**, tags, **video links** — your choice is remembered next time). Below are two sections; press and hold a button to see what it sends. **SEND** (to any app):
+The **Share** button on the note screen: a preview of the text at the top with content chips (title, completed items, **bubbles**, tags, **video links** — your choice is remembered next time). Below are two sections; press and hold a button to see what it sends. **Send out** (to any app):
 - **Share / Copy:** send the text to any app or copy it.
 - **PDF:** send the note as a PDF in one tap (images at the end).
 - **Image:** send the note as pictures (PNG pages) — previews nicely in chats.
 - **Files:** send the note's photos, PDFs and videos as files.
 - **Custom PDF / Word…** (title, image position/size) and **PDF with bubbles** (bubbles and drawings printed into the PDF).
 
-**TO A NOT USER:** **Send to a friend** (an independent copy lands in their Inbox), **Edit together** (shared note or the note's folder) and **Note package** (one file with attachments, pages, drawings and bubbles; the other person opens it exactly the same in Notes).
+**Note package** also goes out here: one file with attachments, pages, drawings and bubbles; the other person opens it exactly the same in Notes.
+
+**With people:** **Send to a friend** (an independent copy lands in their Inbox) and **Edit together** (shared note or the note's folder). As a guest these show a lock; tapping offers Google sign-in.
 
 An attachment you've opened (image, PDF, slides, video, YouTube) can be sent straight from **Share** in the full-screen viewer's top bar, or copied into another note with **Copy attachment**.
 Working together:
 - **Contacts:** add friends from the avatar at the top right → Contacts.
 - **Send to a friend** (in the Share sheet): an independent copy of the note lands in your friend's **Inbox** on the home screen; once accepted it becomes their own note.
 - **Shared note:** **chip** next to the title → **Collaborators**; you both edit the same note at the same time.
-- **Folder sharing:** with read / write permission; a shared folder has its own chat.
+- **Folder sharing:** with read / write permission. Tapping a shared folder's chip filters the home screen to it, just like your own folder; the bar on top shows your permission (a lock and no new-note button when read-only) and opens the folder's chat. Back removes the filter; swiping stops there too.
 From other apps: choose **Share → Notes** anywhere (text, link, image, PDF, slides, video). You choose whether to make a new note or add to an existing one.
 
 ## Widgets and shortcuts {#widgets}

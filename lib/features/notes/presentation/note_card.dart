@@ -1913,6 +1913,9 @@ class NoteListRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final shared = ref.watch(
+      _cardEnvProvider.select((e) => e.shares?.containsKey(note.id) ?? false),
+    );
     // Satır notun küçük kopyası (F37.3): zemin, okunurluk teması ve vurgu kartla
     // aynı kaynaktan. Seçiliyken zemin seçim rengi, içerik temanın.
     final outer = Theme.of(context);
@@ -2016,6 +2019,12 @@ class NoteListRow extends ConsumerWidget {
                         Icons.star,
                         size: 13,
                         color: accent ?? scheme.secondary,
+                      ),
+                    if (shared)
+                      Icon(
+                        AppIcons.shared,
+                        size: 13,
+                        color: accent ?? scheme.primary,
                       ),
                     if (note.reminderAt != null)
                       Icon(

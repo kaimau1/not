@@ -187,21 +187,22 @@ Ana ekrandaki **Yapay zekâ** ekranı (⋮ ya da geniş ekranda soldaki ray):
 - **Bugün** widget'ı günün hatırlatıcılarını saatleriyle ana ekranında gösterir.
 
 ## Paylaşım ve birlikte çalışma {#share}
-Not ekranındaki **Paylaş** düğmesi: üstte gönderilecek metnin önizlemesi ve içerik çipleri (başlık, tamamlananlar, **balonlar**, etiketler, **video bağlantıları** — seçimin bir sonraki paylaşımda da hatırlanır). Altında iki bölüm; düğmeye basılı tutunca ne gönderdiği yazar. **GÖNDER** (her uygulamaya):
+Not ekranındaki **Paylaş** düğmesi: üstte gönderilecek metnin önizlemesi ve içerik çipleri (başlık, tamamlananlar, **balonlar**, etiketler, **video bağlantıları** — seçimin bir sonraki paylaşımda da hatırlanır). Altında iki bölüm; düğmeye basılı tutunca ne gönderdiği yazar. **Dışarı gönder** (her uygulamaya):
 - **Paylaş / Kopyala:** metni her uygulamaya gönderir ya da panoya alır.
 - **PDF:** notu tek dokunuşta PDF olarak gönderir (görseller sonda).
 - **Görsel:** notu resim (PNG sayfalar) olarak gönderir — mesajlaşmada önizlenir.
 - **Ekler:** nottaki fotoğrafları, PDF'leri, videoları dosya olarak gönderir.
 - **Ayarlı PDF / Word…** (başlık, görsellerin yeri/boyu) ve **Balonlu PDF** (balonlar ve çizimler PDF'in içine basılır).
+- **Not paketi:** ekleri, sayfaları, çizimleri ve balonlarıyla tek dosya; karşı taraf Notlar'da aynen açar.
 
-**NOTLAR KULLANICISINA:** **Arkadaşa gönder** (bağımsız bir kopya arkadaşının Gelen'ine düşer), **Birlikte düzenle** (ortak not ya da notun klasörü) ve **Not paketi** (ekleri, sayfaları, çizimleri ve balonlarıyla tek dosya; karşı taraf Notlar'da aynen açar).
+**Kişilerle:** **Arkadaşa gönder** (bağımsız bir kopya arkadaşının Gelen'ine düşer) ve **Birlikte düzenle** (ortak not ya da notun klasörü). Misafirken bunlar kilitli görünür; dokununca Google ile giriş önerilir.
 
 Açtığın bir eki (görsel, PDF, sunum, video, YouTube) tam ekran görüntüleyicinin üst çubuğundaki **Paylaş** ile doğrudan gönderebilir, **Eki kopyala** ile başka nota yapıştırabilirsin.
 Birlikte çalışma:
 - **Kişiler:** sağ üstteki avatar → Kişiler'den arkadaş ekle.
 - **Arkadaşa gönder** (Paylaş levhasında): notun bağımsız bir kopyası arkadaşının ana ekranındaki **Gelen**'e düşer; o kabul edince kendi notu olur.
 - **Ortak not:** başlığın sağındaki **çip** → **Ortak çalışanlar**; ikiniz aynı notu aynı anda düzenlersiniz.
-- **Klasör paylaşımı:** okuma / yazma yetkisiyle; paylaşılan klasörün kendi sohbeti var.
+- **Klasör paylaşımı:** okuma / yazma yetkisiyle. Paylaşılan klasörün çipine dokununca kendi klasörün gibi ana ekran ona süzülür; üstteki şerit yetkini söyler (salt okunurda kilit, yeni not düğmesi yok) ve klasörün sohbetini açar. Geri tuşu süzgeci kaldırır, yana kaydırmada da durak.
 Başka uygulamalardan: herhangi bir uygulamada **Paylaş → Notlar** de (metin, bağlantı, görsel, PDF, sunum, video). Yeni not mu, var olan bir nota mı ekleneceğini seçersin.
 
 ## Widget'lar ve kısayollar {#widgets}

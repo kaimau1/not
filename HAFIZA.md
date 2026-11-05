@@ -397,6 +397,7 @@ maddeyi GÜNCELLE.
 - **AI durumu (F42.2, 2026-11-05):** tek kaynak `aiAvailabilityProvider`; yeni AI düğmesi `ensureAiReady(context, ref)` ile başlar, simgesi `AiIcon`. Arka plan işi çağırmaz, sessiz geçer. AI'sız yola düşen kapı (AI sesli not, anlamsal arama) kilitlenmez. Kota kilidi yalnız yenilenme saati biliniyorsa (son söz sunucu sayacında). Web'de "dahili kapalı" istekten öğrenilir (`aiBuiltInOffProvider`, 24 saat); site anahtarı yokluğu kapalı demek DEĞİL.
 - **Ses simgeleri (F42.1, K7):** `AppIcons.dictation/aiVoiceNote/voiceRecord/listen/voiceCommand`, `IconData` alan satır `AppIcons.glyph` ile çizer (AI sesli not bileşik). Jest: parmak yalnız işaretler, `inkGestureAllowed` (K10). TUZAK: Bash heredoc'una yazılan Python betiğinde ters bölüler yarıya iniyor (`\\b` → backspace): betiği Write ile yaz.
 - **Ek tek model (F40, 2026-11-05):** menü sırası yalnız `attachmentActionsFor`; yeni ek işi oraya + `AttachmentAction`. Görünüm geçişi menü maddesi değil anahtar (K6; "Sayfaya göm/Ek olarak taşı/Nota aktar" YOK), her geçiş `_setAttachmentView` → "A → B · Geri al". Durum tek dil `attachmentStatusOf` + rozet; ek kutusuna tıklanabilir yer tutucu koyma (yüzende dokunuş seçer, kartta notu açar; `interactive: false` + köşe rozeti). Araç satırı zemini `PdfReadStyle.barColor`. Video dönüşü oturumluk (`NoteVideoHub.rotate`). Web dosya bırakma `listenFileDrops` → `useFiles`.
+- **Paylaşılan klasör = süzgeç (K8, F43.2, 2026-11-05):** `openFolder` (`folder_nav.dart`) tek kapı; `selectedSharedFolderProvider` açıkken `selectedFolderProvider` null. Izgara `sharedFolderSlivers`, kart `ownerId` taşır (seçim yok). TUZAK: ana ekranda not oluşturan yol kendi koleksiyona yazar, bu yüzden açıkken mikrofon ve "+" yerine `SharedFolderFab`; yeni kapı eklersen bak. Yana çekiş durağı `sharedFolderStopId` (`sahip/klasör`). `NoteListRow` sahibi taşımaz: paylaşılan yüzeyde liste görünümü kullanma. Ek paylaşımı tek `shareAttachmentFiles`; misafir kilidi `AccountLockBadge` (`MenuAction.badge`, ray `locked`).
 - **Bölüm başlığı (F36.7):** tek `SectionLabel`, cümle düzeni (büyük harf
   yalnız rozet: BALONLU PDF, SUNUM, VİDEO, YENİ); Başlık Düzeni ad yok
   ("Çöp kutusu"). Sayı 0 → rozet çizilmez; boş klasör solması renkte
@@ -516,7 +517,7 @@ maddeyi GÜNCELLE.
 - Ayar alanları `ExpandReveal` (+ `_StaggeredRows`, `_followIntoView`);
   arama + ✨ AI kipi (`matchSettings`, yalnız ayar adları).
 - Paylaşım iki kavram: Birlikte düzenle / Kopya gönder. Paylaş levhası
-  GÖNDER / NOTLAR KULLANICISINA; web'de "Görsel" `pngPages`.
+  Dışarı gönder / Kişilerle (F43.1); web'de "Görsel" `pngPages`.
 - Ana ekrana yerleştir: `NoteShortcut.pin` → `NotKisayolu.kt` →
   `notlar://note/<id>`.
 - Web YouTube iframe `enablejsapi=1`; sekme gizlenince/rota örtülünce

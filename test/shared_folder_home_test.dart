@@ -1,3 +1,7 @@
+import 'package:notlar/features/friends/data/friends_repository.dart';
+import 'package:notlar/features/inbox/data/inbox_repository.dart';
+import 'package:notlar/features/notes/data/notes_repository.dart';
+import 'package:notlar/features/notes/presentation/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -230,6 +234,88 @@ void main() {
       expect(find.text('Elma'), findsOneWidget);
       expect(find.text('Armut'), findsNothing);
     });
+  });
+
+  testWidgets('ana ekran: çip süzer, kendi notlarım ve mikrofon çekilir, geri kaldırır', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final container = ProviderContainer(
+      retry: (_, _) => null,
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        currentUidProvider.overrideWithValue('ben'),
+        notesRepositoryProvider.overrideWithValue(null),
+        foldersRepositoryProvider.overrideWithValue(null),
+        friendsRepositoryProvider.overrideWithValue(null),
+        notesStreamProvider.overrideWith(
+          (ref) => Stream.value([
+            const Note(id: 'k', type: NoteType.text, title: 'Kendi notum'),
+          ]),
+        ),
+        foldersStreamProvider.overrideWith(
+          (ref) => Stream.value(const <NoteFolder>[]),
+        ),
+        sharedFolderRefsProvider.overrideWith(
+          (ref) => Stream.value([refOf(FolderRole.read)]),
+        ),
+        sharedFolderNotesProvider.overrideWith(
+          (ref, key) => Stream.value([note('a', 'Ortak not')]),
+        ),
+        folderUnreadProvider.overrideWith((ref, key) => 0),
+        myNoteSharesProvider.overrideWith((ref) => Stream.value(const {})),
+        sharedNotesWithMeProvider.overrideWith(
+          (ref) => Stream.value(const <NoteShare>[]),
+        ),
+        inboxNotesProvider.overrideWith(
+          (ref) => Stream.value(const <InboxNote>[]),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const DashboardScreen(),
+        ),
+      ),
+    );
+    Future<void> settle() async {
+      for (var i = 0; i < 12; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+
+    await settle();
+    expect(find.text('Kendi notum'), findsOneWidget);
+    expect(find.byKey(const ValueKey('home-mic')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('shared-chip-f1')));
+    await settle();
+    expect(container.read(selectedSharedFolderProvider), folder);
+    expect(find.text('Ortak not'), findsOneWidget);
+    expect(find.text('Kendi notum'), findsNothing);
+    expect(find.byType(SharedFolderBar), findsOneWidget);
+    // Süz düğmesinde klasörün adı (kendi klasördeki gibi).
+    expect(find.text('Ortak'), findsWidgets);
+    // Salt okunur: mikrofon ve "+" notu kendi koleksiyonuma açardı, ikisi de yok.
+    expect(find.byKey(const ValueKey('home-mic')), findsNothing);
+    expect(find.byKey(const ValueKey('shared-folder-add')), findsNothing);
+
+    await tester.binding.handlePopRoute();
+    await settle();
+    expect(container.read(selectedSharedFolderProvider), isNull);
+    expect(find.text('Kendi notum'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 30));
   });
 
   test('yana çekiş durağı kendi klasör kimliğiyle çakışmaz', () {

@@ -8,6 +8,8 @@
 // Canlı sitede misafir hesap açmadan web/tablet düzenini görmenin yolu.
 // Gerçek cihazın yerine geçmez: yazı tipleri ve simgeler gerçek, gölgeler
 // yazılım çiziminde; klavye, sistem çubukları, kamera yok.
+import 'package:notlar/features/folders/data/folder_activity.dart';
+import 'package:notlar/features/folders/data/folders_repository.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -273,6 +275,22 @@ Future<void> _pumpApp(
       foldersStreamProvider.overrideWith((ref) => Stream.value(_folders)),
       for (final n in _notes)
         noteStreamProvider(n.id).overrideWith((ref) => Stream.value(n)),
+      // Paylaşılan klasör (F43.2): salt okunur şeritle çizilir.
+      sharedFolderRefsProvider.overrideWith(
+        (ref) => Stream.value(const [
+          SharedFolderRef(
+            folderId: 'sf1',
+            ownerId: 'ayse',
+            name: 'Ortak işler',
+            icon: NoteFolder.defaultIcon,
+            role: FolderRole.read,
+          ),
+        ]),
+      ),
+      sharedFolderNotesProvider.overrideWith(
+        (ref, key) => Stream.value(_notes.take(3).toList()),
+      ),
+      folderUnreadProvider.overrideWith((ref, key) => 0),
     ],
   );
   addTearDown(container.dispose);
@@ -342,6 +360,11 @@ void main() {
     ('ana-menu', '/', () => find.byTooltip('Diğer').first),
     ('ana-kart-menu', '/', () => find.byIcon(Icons.more_vert).at(1)),
     ('ana-hizli', '/', () => find.byTooltip('Yeni not — tip seç')),
+    (
+      'paylasilan',
+      '/',
+      () => find.byKey(const ValueKey('shared-chip-sf1')),
+    ),
   ];
   for (final size in _sizes) {
     for (final (id, location, tap) in scenes) {
