@@ -9,6 +9,7 @@ import '../../ai/data/ai_gate.dart';
 import '../../ai/data/api_key_store.dart';
 import '../../auth/presentation/auth_providers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/app_icons.dart';
 
 /// Premium sayfası: mevcut durum + ücretsiz/premium karşılaştırması + gözden
 /// kaçan özelliklerin vitrini.
@@ -154,7 +155,7 @@ class PremiumScreen extends ConsumerWidget {
             body: l10n.discoverSemanticBody,
           ),
           _DiscoverTile(
-            icon: Icons.mic_outlined,
+            icon: AppIcons.aiVoiceNote,
             title: l10n.newVoiceCapture,
             body: l10n.discoverAssistantBody,
           ),
@@ -209,7 +210,7 @@ class _PerkRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Card(
       child: ListTile(
-        leading: Icon(icon),
+        leading: AppIcons.glyph(icon),
         title: Text(title),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -251,7 +252,7 @@ class _DiscoverTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        leading: Icon(icon),
+        leading: AppIcons.glyph(icon),
         title: Text(title),
         subtitle: Text(body),
       ),

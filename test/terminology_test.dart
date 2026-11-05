@@ -48,6 +48,45 @@ void main() {
     );
   });
 
+  test('F42.5: cümlede "yapay zekâ", "AI" yalnız kısa yerde', () {
+    // "AI sesli not" terimin adı (TERİMLER), cümlede de öyle kalır.
+    final ai = RegExp(r'(?<!\p{L})AI(?!\p{L})', unicode: true);
+    expect(
+      [
+        for (final e in texts.entries)
+          if (e.value.length >= 60 &&
+              ai.hasMatch(e.value.replaceAll('AI sesli not', '')))
+            '${e.key}: ${e.value}',
+      ],
+      isEmpty,
+    );
+  });
+
+  test('F42.3: lib/ içinde sabit Türkçe kullanıcı metni yok', () {
+    // Bilinçli istisna: setup_required_screen Firebase'siz derlemede geliştirici
+    // ekranı, l10n'dan önce ve son kullanıcıya hiç görünmez.
+    final hardcoded = RegExp(
+      r'''(?:\bText\(\s*|\b(?:label|tooltip|title|hintText|labelText|subtitle|'''
+      r'''helperText|message|semanticLabel)\s*:\s*|showMessage\(\s*|'''
+      r'''_showSnack\(\s*|_snack\(\s*|GeminiException\(\s*)(?:const\s+)?'''
+      r'''(['"])(?:(?!\1).)*[çğıöşüÇĞİÖŞÜ](?:(?!\1).)*\1''',
+    );
+    final found = <String>[];
+    for (final f in Directory('lib').listSync(recursive: true)) {
+      final path = f.path.replaceAll('\\', '/');
+      if (f is! File ||
+          !path.endsWith('.dart') ||
+          path.contains('l10n/generated') ||
+          path.endsWith('setup_required_screen.dart')) {
+        continue;
+      }
+      for (final m in hardcoded.allMatches(f.readAsStringSync())) {
+        found.add('$path: ${m[0]}');
+      }
+    }
+    expect(found, isEmpty);
+  });
+
   test('ses ve kopya ailesi tek adla; eski "arşiv defteri" yok', () {
     expect(
       offenders(

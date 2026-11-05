@@ -18,6 +18,8 @@ import '../data/antalia/antalia_speech.dart';
 import '../data/speech_service.dart';
 import '../data/gemini_service.dart';
 import '../../../core/friendly_error.dart';
+import '../../../core/app_icons.dart';
+import '../../auth/presentation/account_required.dart';
 
 /// Bir belgeyi sesli dinleme ekranı. Üç mod var:
 ///
@@ -103,9 +105,13 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     }
     await service.speak(
       text,
-      onAiFailed: (message) {
+      onAiFailed: (error) {
         if (!mounted) return;
-        showAppMessage(context, context.l10n.listenAiVoiceFailed(message));
+        final l10n = context.l10n;
+        showAppMessage(
+          context,
+          l10n.listenAiVoiceFailed(aiErrorText(l10n, error)),
+        );
         setState(() {});
       },
     );
@@ -148,6 +154,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     required bool summarize,
     bool force = false,
   }) async {
+    if (!ensureAiReady(context, ref)) return;
     final source = _original;
     if (source == null) return;
     await ref.read(speechProvider.notifier).stop();
@@ -192,7 +199,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     } on GeminiException catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.message;
+        _error = aiErrorText(context.l10n, e);
         _generating = false;
       });
     } catch (e) {
@@ -287,7 +294,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     } on GeminiException catch (e) {
       if (!mounted) return;
       setState(() => _rendering = false);
-      _snack(e.message);
+      _snack(aiErrorText(context.l10n, e));
     } catch (e) {
       if (!mounted) return;
       setState(() => _rendering = false);
@@ -526,7 +533,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
                                 icon: Icon(switch (speech.state) {
                                   SpeechState.speaking => Icons.pause,
                                   SpeechState.paused => Icons.play_arrow,
-                                  SpeechState.idle => Icons.headphones,
+                                  SpeechState.idle => AppIcons.listen,
                                 }),
                                 label: Text(switch (speech.state) {
                                   SpeechState.speaking => l10n.speechPause,

@@ -707,7 +707,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 : '${l10n.noteTitleLabel}: ${result.title}\n${result.text}',
             nothingHeardText: l10n.voiceNothingHeard,
             savedText: l10n.voiceNoteSaved,
-            noApiKeyText: l10n.aiNoApiKey,
+            describeError: (e) => aiErrorText(l10n, e),
             genericErrorText: l10n.assistantGenericError,
             historyLabel: l10n.aiHistoryVoiceNote,
           );
@@ -737,7 +737,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         if (mounted) {
           showQuickAddSnack(
             e is GeminiException
-                ? (e.isAuthError ? l10n.aiNoApiKey : e.message)
+                ? aiErrorText(l10n, e)
                 : l10n.assistantGenericError,
           );
         }
@@ -777,7 +777,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   }
 
   /// Ana ekran mikrofonunun dokunuşu: doğrudan yazdır (boş not, söz nota).
-  Future<void> _dictateNote() => createDictationNote();
+  Future<void> _dictateNote() {
+    TipOnce.show(
+      context,
+      ref.read(sharedPreferencesProvider),
+      TipOnce.homeMicHold,
+      context.l10n.tipHomeMicHold,
+    );
+    return createDictationNote();
+  }
 
   /// Sesli yakalamadan dönen ses kaydını yeni nota ek olarak bağlar.
   Future<void> _attachVoiceAudio(
@@ -1658,7 +1666,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                               child: _DashVoiceButton(
                                 key: const ValueKey('home-mic'),
                                 tooltip: l10n.voiceMicTooltipDictate,
-                                icon: Icons.mic,
+                                icon: AppIcons.dictation,
                                 onTap: _dictateNote,
                                 onLongPress: _captureVoiceNote,
                               ),

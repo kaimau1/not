@@ -9,6 +9,7 @@ import 'package:record/record.dart';
 import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/app_sheet.dart';
+import '../../../../core/app_icons.dart';
 
 /// Ses kaydı alt sayfası. Kayıt biterse (path, süre) döner; iptalde null.
 Future<({String path, Duration duration})?> showAudioRecorderSheet(
@@ -144,7 +145,7 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.mic, color: scheme.error),
+                  Icon(AppIcons.voiceRecord, color: scheme.error),
                   const SizedBox(width: 8),
                   Text(
                     _format(_elapsed),

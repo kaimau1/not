@@ -103,7 +103,7 @@ extension _EditorVoice on _NoteEditorScreenState {
       // metin zaten notta.
       onEnd: (_) => unawaited(_stopDictation()),
       onError: (message) {
-        unawaited(_stopDictation());
+        unawaited(_stopDictation(offerFix: false));
         if (mounted) _showSnack(message);
       },
     );
@@ -115,9 +115,10 @@ extension _EditorVoice on _NoteEditorScreenState {
   }
 
   /// Dikteyi bitirir: akış kapatılır, şerit iner, metin olduğu gibi kalır.
-  Future<void> _stopDictation() async {
+  Future<void> _stopDictation({bool offerFix = true}) async {
     final sub = _dictation;
     if (sub == null) return;
+    if (offerFix) _offerDictationFix();
     _dictation = null;
     _dictationTarget = null;
     _dictationLength = 0;
@@ -129,6 +130,86 @@ extension _EditorVoice on _NoteEditorScreenState {
     // denetleyici ile not arasındaki farkı yazan hazır yol.
     unawaited(_saveNow());
     if (mounted) _update(() {});
+  }
+
+  /// Dikte bitti: yazılan aralık için tek dokunuşla "AI ile düzelt" (F42.4).
+  /// AI hazır değilse hiç önerilmez (dikte AI'sız bir kapı, K7). Talimat AI
+  /// sesli notun "düzelt"iyle aynı.
+  void _offerDictationFix() {
+    final target = _dictationTarget;
+    final controller = target?.controller ?? _bodyController;
+    final at = _dictationAt;
+    final logical = controller.logicalText;
+    final end = at + _dictationLength;
+    if (!mounted || end > logical.length) return;
+    final spoken = logical.substring(at, end);
+    if (spoken.trim().length < 12) return;
+    if (ref.read(aiAvailabilityProvider) != AiAvailability.ready) return;
+    final l10n = context.l10n;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        timedSnackBar(
+          content: Text(l10n.dictationFixOffer),
+          action: SnackBarAction(
+            label: l10n.dictationFixAction,
+            onPressed: () =>
+                unawaited(_fixDictation(target, controller, at, spoken)),
+          ),
+        ),
+      );
+  }
+
+  Future<void> _fixDictation(
+    FormatTarget? target,
+    WrapTextController controller,
+    int at,
+    String spoken,
+  ) async {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    await _runAi(l10n.gestureFixing, () async {
+      final fixed = await ref
+          .read(geminiServiceProvider)
+          .rewriteText(spoken, voiceCaptureInstruction(VoiceCaptureAction.fix)!);
+      if (!mounted) return;
+      // Madde bu arada silindiyse denetleyici de gitmiştir.
+      if (target != null &&
+          !identical(controller, _bodyController) &&
+          !identical(controller, _titleController) &&
+          _itemsEditorKey.currentState?.itemIdForController(controller) ==
+              null) {
+        return;
+      }
+      final result = dictationFixed(
+        controller.logicalText,
+        at,
+        spoken,
+        stripMarkdown(fixed).trim(),
+      );
+      if (result == null) {
+        _showSnack(l10n.gestureNothingToFix);
+        return;
+      }
+      controller.setLogical(result.text, result.caret);
+      _commitDictation(target, controller, result.text);
+      _showSnack(l10n.gestureFixed);
+    });
+  }
+
+  /// Dikte yazımını kaydeder (aşağıdaki gecikme gerekçesine bak).
+  void _commitDictation(
+    FormatTarget? target,
+    WrapTextController controller,
+    String text,
+  ) {
+    if (identical(controller, _bodyController)) {
+      _mutate((n) => n.copyWith(body: text));
+    } else if (identical(controller, _titleController)) {
+      _mutate((n) => n.copyWith(title: text));
+    } else {
+      target?.commit();
+    }
   }
 
   /// Tanınan TAM metni hedef alandaki dikte aralığına yazar.
@@ -186,13 +267,7 @@ extension _EditorVoice on _NoteEditorScreenState {
     // izlenen yol da bu değil: `TextField.onChanged` gecikmeli `_mutate`
     // çağırıyor. Madde satırı ise zaten kendi gecikmeli yolundan geçer
     // (ItemsEditor.onChanged), o yüzden orada alanın `commit`i kullanılır.
-    if (identical(controller, _bodyController)) {
-      _mutate((n) => n.copyWith(body: text));
-    } else if (identical(controller, _titleController)) {
-      _mutate((n) => n.copyWith(title: text));
-    } else {
-      target?.commit();
-    }
+    _commitDictation(target, controller, text);
   }
 
   /// Sesle yakalama: ortak levhayı açar, dönen metni seçilen eyleme göre işler.
@@ -242,7 +317,7 @@ extension _EditorVoice on _NoteEditorScreenState {
       if (!mounted) return;
       _insertTextAtCaret(text.trim().isEmpty ? result.text : text.trim());
     } on GeminiException catch (e) {
-      if (mounted) _showSnack(e.isAuthError ? l10n.aiNoApiKey : e.message);
+      if (mounted) _showSnack(aiErrorText(l10n, e));
     } catch (e) {
       if (mounted) _showSnack(aiErrorText(l10n, e));
     } finally {

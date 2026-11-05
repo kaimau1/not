@@ -11,6 +11,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/utils/doc_picker.dart';
 import '../../../core/widgets/app_sheet.dart';
 import 'capture_mode_sheet.dart';
+import '../../../core/app_icons.dart';
 
 /// "+ → Dosya"da seçilen dosyanın TÜRÜ (uzantıdan).
 enum PickedFileKind {
@@ -281,7 +282,7 @@ class _FileUseSheetState extends State<_FileUseSheet> {
       info: l10n.fileUseVideoInfo,
     ),
     FileUse.audio => (
-      icon: Icons.graphic_eq,
+      icon: AppIcons.voiceRecord,
       title: l10n.fileUseAudio,
       info: l10n.fileUseAudioInfo,
     ),

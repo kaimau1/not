@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../settings/presentation/settings_screen.dart';
+import '../../ai/data/ai_gate.dart';
 
 /// **MİSAFİRDE HESAP GEREKTİREN İŞLER** (F10.5, 2026-10-31).
 ///
@@ -77,17 +80,50 @@ class AccountLockBadge extends StatelessWidget {
   );
 }
 
-/// Misafirde (kendi anahtarı yokken) AI ekranlarının puan çubuğu yerine
-/// duran kart: neden kapalı + iki çıkış yolu.
-class GuestAiCard extends ConsumerWidget {
-  const GuestAiCard({super.key});
+/// Yapay zekâ neden kullanılamıyor + çözümü (F10.5 misafir kartından büyüdü,
+/// F42.2): AI ekranlarında ve [showAiStatusSheet]te aynı kart.
+class AiStatusCard extends ConsumerWidget {
+  const AiStatusCard({super.key, this.onResolved});
+
+  /// "Tekrar dene"den sonra (levha kendini kapatsın diye).
+  final VoidCallback? onResolved;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    final status = ref.watch(aiAvailabilityProvider);
+    final renews = status == AiAvailability.quotaOut
+        ? ref.watch(aiQuotaRenewsAtProvider)
+        : null;
+    final (title, body) = switch (status) {
+      AiAvailability.ready => ('', ''),
+      AiAvailability.guest => (l10n.guestAiTitle, l10n.guestAiBody),
+      AiAvailability.needsKey => (
+        l10n.aiStatusBuiltInOffTitle,
+        l10n.aiErrBuiltInOff,
+      ),
+      AiAvailability.webBuiltInOff => (
+        l10n.aiStatusWebOffTitle,
+        l10n.aiStatusWebOffBody,
+      ),
+      AiAvailability.quotaOut => (
+        l10n.aiStatusQuotaTitle,
+        l10n.aiStatusQuotaBody(
+          renews == null
+              ? ''
+              : MaterialLocalizations.of(context).formatTimeOfDay(
+                  TimeOfDay.fromDateTime(renews),
+                  alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(
+                    context,
+                  ),
+                ),
+        ),
+      ),
+    };
+    if (status == AiAvailability.ready) return const SizedBox.shrink();
     return Card(
-      key: const ValueKey('guest-ai-card'),
+      key: const ValueKey('ai-status-card'),
       margin: EdgeInsets.zero,
       color: scheme.secondaryContainer,
       child: Padding(
@@ -101,7 +137,7 @@ class GuestAiCard extends ConsumerWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    l10n.guestAiTitle,
+                    title,
                     style: Theme.of(context).textTheme.titleSmall
                         ?.copyWith(color: scheme.onSecondaryContainer),
                   ),
@@ -109,20 +145,27 @@ class GuestAiCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 6),
-            Text(
-              l10n.guestAiBody,
-              style: TextStyle(color: scheme.onSecondaryContainer),
-            ),
+            Text(body, style: TextStyle(color: scheme.onSecondaryContainer)),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                FilledButton.icon(
-                  icon: const Icon(Icons.login),
-                  label: Text(l10n.signInWithGoogle),
-                  onPressed: () => linkGuestAccount(context, ref),
-                ),
+                if (status == AiAvailability.guest)
+                  FilledButton.icon(
+                    icon: const Icon(Icons.login),
+                    label: Text(l10n.signInWithGoogle),
+                    onPressed: () => linkGuestAccount(context, ref),
+                  ),
+                if (status == AiAvailability.needsKey ||
+                    status == AiAvailability.webBuiltInOff)
+                  FilledButton.tonal(
+                    onPressed: () {
+                      ref.read(aiBuiltInOffProvider.notifier).set(false);
+                      onResolved?.call();
+                    },
+                    child: Text(l10n.retry),
+                  ),
                 OutlinedButton.icon(
                   icon: const Icon(Icons.key_outlined),
                   label: Text(l10n.guestAiAddKey),
@@ -137,10 +180,50 @@ class GuestAiCard extends ConsumerWidget {
   }
 }
 
-/// Misafirde AI araçlarını soluk ve dokunulamaz gösterir (açıklama
-/// [GuestAiCard]da).
-class GuestAiDim extends StatelessWidget {
-  const GuestAiDim({super.key, required this.locked, required this.child});
+/// Tek açıklama levhası (F42.2).
+Future<void> showAiStatusSheet(BuildContext context) =>
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AiStatusCard(onResolved: () => Navigator.pop(sheetContext)),
+          ],
+        ),
+      ),
+    );
+
+/// AI düğmesinin ilk satırı: hazır değilse açıklama levhası + false. Arka plan
+/// işleri bunu ÇAĞIRMAZ (bildirim basmaz, sessizce geçer).
+bool ensureAiReady(BuildContext context, WidgetRef ref) {
+  if (ref.read(aiAvailabilityProvider) == AiAvailability.ready) return true;
+  unawaited(showAiStatusSheet(context));
+  return false;
+}
+
+/// AI düğmesi simgesi: hazırsa ✨, değilse kilit (durum basmadan görünür).
+class AiIcon extends ConsumerWidget {
+  const AiIcon({super.key, this.size});
+
+  final double? size;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => Icon(
+    ref.watch(aiAvailabilityProvider) == AiAvailability.ready
+        ? Icons.auto_awesome
+        : Icons.lock_outline,
+    size: size,
+  );
+}
+
+/// Yapay zekâ kapalıyken araçları soluk ve dokunulamaz gösterir (açıklama
+/// [AiStatusCard]da).
+class AiStatusDim extends StatelessWidget {
+  const AiStatusDim({super.key, required this.locked, required this.child});
 
   final bool locked;
   final Widget child;

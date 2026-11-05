@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../auth/presentation/account_required.dart';
 
 /// Ücretsiz kullanıcıya, günlük AI içeriği (e-posta/öneri/brifing) otomatik
 /// üretilmediğinde gösterilen "elle oluştur" istemi: kotayı boşa harcamamak
 /// için içerik yalnızca bu düğmeyle, günde bir kez üretilir.
-class AiGeneratePrompt extends StatelessWidget {
+class AiGeneratePrompt extends ConsumerWidget {
   const AiGeneratePrompt({
     super.key,
     required this.icon,
@@ -18,7 +20,7 @@ class AiGeneratePrompt extends StatelessWidget {
   final VoidCallback onGenerate;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return Center(
@@ -40,8 +42,10 @@ class AiGeneratePrompt extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               FilledButton.icon(
-                onPressed: onGenerate,
-                icon: const Icon(Icons.auto_awesome, size: 18),
+                onPressed: () {
+                  if (ensureAiReady(context, ref)) onGenerate();
+                },
+                icon: const AiIcon(size: 18),
                 label: Text(buttonLabel),
               ),
             ],

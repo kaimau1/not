@@ -558,7 +558,7 @@ class _TrashCard extends ConsumerWidget {
                   _MetaChip(
                     icon: switch (f.kind) {
                       AttachmentKind.pdf => Icons.picture_as_pdf_outlined,
-                      AttachmentKind.audio => Icons.mic_none,
+                      AttachmentKind.audio => AppIcons.voiceRecord,
                       AttachmentKind.slide => Icons.slideshow_outlined,
                       AttachmentKind.text => Icons.subject,
                       _ => Icons.attach_file,

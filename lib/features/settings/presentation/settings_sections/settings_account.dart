@@ -268,7 +268,7 @@ class _PermissionsSectionState extends ConsumerState<_PermissionsSection>
     return Column(
       children: [
         _PermissionTile(
-          icon: Icons.mic_none,
+          icon: AppIcons.dictation,
           title: l10n.permMic,
           subtitle: l10n.permMicInfo,
           granted: _mic,

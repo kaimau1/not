@@ -978,6 +978,25 @@ String dictationMerge(String shown, String spoken) {
   return next;
 }
 
+/// Dikte aralığını AI düzeltmesiyle değiştirir (F42.4). Aralıktaki metin bu
+/// arada değiştiyse (yazıldı, silindi) ya da düzeltme aynıysa null: kullanıcının
+/// yazdığının üstüne yazılmaz.
+({String text, int caret})? dictationFixed(
+  String logical,
+  int at,
+  String spoken,
+  String fixed,
+) {
+  final end = at + spoken.length;
+  if (at < 0 || end > logical.length) return null;
+  if (logical.substring(at, end) != spoken) return null;
+  if (fixed.isEmpty || fixed == spoken) return null;
+  return (
+    text: logical.replaceRange(at, end, fixed),
+    caret: at + fixed.length,
+  );
+}
+
 ({String text, int caret, int length}) dictationReplace(
   String logical,
   int at,

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/ai/data/ai_provider.dart';
+import 'package:notlar/features/ai/data/gemini_service.dart';
 import 'package:notlar/features/ai/data/provider_chat.dart';
 
 /// İç istek biçimi (Gemini `contents`) her sağlayıcının teline doğru
@@ -135,9 +136,9 @@ void main() {
         ),
         throwsA(
           isA<UnsupportedContentException>().having(
-            (e) => e.message,
-            'message',
-            allOf(contains('Ses'), contains('Gemini')),
+            (e) => e.kind,
+            'kind',
+            GeminiErrorKind.audioNeedsGemini,
           ),
         ),
       );

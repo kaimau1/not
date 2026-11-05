@@ -80,7 +80,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
     String text, {
     required String nothingHeardText,
     required String savedText,
-    required String noApiKeyText,
+    required String Function(Object error) describeError,
     required String genericErrorText,
     String? historyLabel,
   }) async {
@@ -141,7 +141,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
         // eksikse aşağıdaki güvenlik ağı zaten dökümle dolduruyor.
         if (resultNoteId == null) {
           final failure = e is GeminiException
-              ? (e.isAuthError ? noApiKeyText : e.message)
+              ? describeError(e)
               : genericErrorText;
           final repo = ref.read(notesRepositoryProvider);
           if (repo == null) {
@@ -207,7 +207,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
     } on GeminiException catch (e) {
       state = VoiceAssistantState(
         phase: VoiceAssistantPhase.error,
-        message: e.isAuthError ? noApiKeyText : e.message,
+        message: describeError(e),
       );
     } on StateError catch (e) {
       // Bilinçli fırlatılan Türkçe mesajlar ("konuşma algılanmadı" vb.).

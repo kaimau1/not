@@ -7,7 +7,6 @@ import '../../settings/settings_providers.dart';
 import 'ai_speech.dart';
 import 'antalia/antalia_engine.dart';
 import 'antalia/antalia_speech.dart';
-import 'gemini_service.dart';
 
 /// **TEK SESLENDİRME KAPISI** (F3.9): uygulamadaki her "sesli oku" bunu
 /// çağırır; motor (cihaz TTS'i, yapay zekâ sesi ya da cihazdaki Antalia
@@ -64,7 +63,7 @@ class SpeechService extends Notifier<SpeechOutputState> {
   /// [text]'i okur; zaten okuyorsa önce durdurur. [ai] verilmezse ayar
   /// geçerlidir (true: yapay zekâ sesi istenir, false: cihaz sesi). Seçilen
   /// ses başarısız olursa (kota, anahtar, ağ; Antalia'da model hatası)
-  /// [onAiFailed] hata metniyle çağrılır ve okuma CİHAZ sesiyle sürer —
+  /// [onAiFailed] hatayla çağrılır ve okuma CİHAZ sesiyle sürer —
   /// sessizce hiçbir şey olmaması en kötü sonuç olurdu.
   ///
   /// Antalia yalnız Türkçe okur: [languageCode] Türkçe dışıysa cihaz sesi.
@@ -72,7 +71,7 @@ class SpeechService extends Notifier<SpeechOutputState> {
     String text, {
     bool? ai,
     String? languageCode,
-    void Function(String message)? onAiFailed,
+    void Function(Object error)? onAiFailed,
   }) async {
     await stop();
     if (ref.read(ttsEngineProvider) == TtsEngine.antalia) {
@@ -102,7 +101,7 @@ class SpeechService extends Notifier<SpeechOutputState> {
     } catch (e) {
       _active = TtsEngine.device;
       state = ref.read(speechOutputProvider);
-      onAiFailed?.call(e is GeminiException ? e.message : '$e');
+      onAiFailed?.call(e);
       await device.speak(text, languageCode: languageCode);
     }
   }

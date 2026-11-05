@@ -62,7 +62,7 @@ ActionMenu noteMenuModel(
       ),
       MenuAction('folder', l10n.moveToFolder, AppIcons.moveToFolder),
       if (editor) MenuAction('history', l10n.versionHistory, Icons.history),
-      MenuAction('listen', l10n.listenToNote, Icons.headphones_outlined),
+      MenuAction('listen', l10n.listenToNote, AppIcons.listen),
       if (shows('share')) MenuAction('share', l10n.share, Icons.share_outlined),
     ],
     sections: [

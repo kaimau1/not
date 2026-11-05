@@ -6144,7 +6144,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemGesturesSettingInfo =>
-      'Draw over an item with a finger or pen: strike / ✓ checks, scribble deletes, circle fixes spelling';
+      'Draw over an item: strike or ✓ checks. With a pen, scribble deletes and circle fixes spelling.';
 
   @override
   String get pdfEditWorking => 'Processing PDF…';
@@ -6323,7 +6323,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tipListGestures =>
-      'Tip: strike an item through with your finger → it is checked; scribble → it is deleted.';
+      'Tip: strike an item through with your finger → it is checked.';
 
   @override
   String get tipPdfBubble => 'Tip: long-press the page → drop a bubble there.';
@@ -6644,4 +6644,125 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gmailNoteCreated => 'Note created';
+
+  @override
+  String get aiErrInvalidKey =>
+      'That API key is not valid. Check it in Settings → AI.';
+
+  @override
+  String get aiErrModelNotFound =>
+      'AI model not found. Update the app; if it persists, tell the developer.';
+
+  @override
+  String get aiErrRateLimited => 'Too many requests; try again in a moment.';
+
+  @override
+  String get aiErrConnection =>
+      'Couldn\'t reach the AI. Check your connection and try again.';
+
+  @override
+  String get aiErrEmptyResponse =>
+      'The model returned an empty reply; try again.';
+
+  @override
+  String get aiErrUnexpected =>
+      'The model sent an unexpected reply; try again.';
+
+  @override
+  String get aiErrNotCompleted => 'Couldn\'t finish that; try again.';
+
+  @override
+  String get aiErrBuiltInOff =>
+      'Built-in AI isn\'t available right now. Enter your own Gemini key in Settings to use it straight away.';
+
+  @override
+  String get aiErrQuotaFree =>
+      'Your free AI points are used up. They renew within 24 hours; you can also enter your own key in Settings or go Premium.';
+
+  @override
+  String aiErrQuotaPremium(Object limit) {
+    return 'Your Premium AI points ($limit) are used up. They renew within 24 hours; with your own key in Settings you have no limit.';
+  }
+
+  @override
+  String get aiErrUnavailable =>
+      'The AI can\'t answer right now; try again in a moment.';
+
+  @override
+  String aiErrModelList(Object provider) {
+    return 'Couldn\'t load the $provider model list. You can pick a model by hand in Settings → AI → Model.';
+  }
+
+  @override
+  String aiErrNeedsGemini(Object feature) {
+    return '$feature only works with Google Gemini for now. Switch the provider to Gemini in Settings → AI, or remove the key to use built-in AI.';
+  }
+
+  @override
+  String aiErrKindNeedsGemini(Object kind, Object provider) {
+    return '$kind can\'t be sent with $provider. Switch the provider to Gemini in Settings → AI, or remove the key to use built-in AI.';
+  }
+
+  @override
+  String get aiErrFeatureTts => 'AI narration';
+
+  @override
+  String get aiErrFeatureSemantic => 'Semantic search';
+
+  @override
+  String get aiErrKindAudio => 'An audio file';
+
+  @override
+  String get aiErrKindVideo => 'A video';
+
+  @override
+  String get aiErrKindFile => 'This file type';
+
+  @override
+  String get aiErrUpload => 'Couldn\'t upload the recording; try again.';
+
+  @override
+  String get aiErrSpeech => 'The narration model returned no audio; try again.';
+
+  @override
+  String get aiErrNoSpeechText => 'There is no text to narrate.';
+
+  @override
+  String get aiErrNoContent => 'There is nothing to make a voice note from.';
+
+  @override
+  String get aiStatusBuiltInOffTitle => 'Built-in AI is off right now';
+
+  @override
+  String get aiStatusWebOffTitle => 'Built-in AI is off on the web';
+
+  @override
+  String get aiStatusWebOffBody =>
+      'It works in the phone app. Here, your own Gemini key unlocks every tool.';
+
+  @override
+  String get aiStatusQuotaTitle => 'Your AI points are used up';
+
+  @override
+  String aiStatusQuotaBody(Object time) {
+    return 'Points renew around $time. With your own Gemini key you can carry on without waiting.';
+  }
+
+  @override
+  String get dictationFixOffer => 'Dictation finished';
+
+  @override
+  String get dictationFixAction => 'Fix with AI';
+
+  @override
+  String get tipHomeMicHold =>
+      'Tip: long-press the microphone for an AI voice note.';
+
+  @override
+  String get itemGesturesFingerAll =>
+      'Delete and fix gestures with a finger too';
+
+  @override
+  String get itemGesturesFingerAllInfo =>
+      'When off, a finger only checks; scribble (deletes) and circle (fixes spelling) need a pen.';
 }

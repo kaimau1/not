@@ -37,6 +37,9 @@ abstract final class TipOnce {
   /// Arama kutusundaki "Anlam" anahtarı ilk kez göründü (F14.4).
   static const semanticSearch = 'semantic_search';
 
+  /// Ana ekran mikrofonu: basılı tut → AI sesli not (K7, rozet kalktı).
+  static const homeMicHold = 'home_mic_hold';
+
   static bool _sessionUsed = false;
 
   /// Bu ipucu gösterilmeli mi? (Gösterilmemiş ve — sınırlıysa — bu

@@ -30,7 +30,7 @@ Notların kart olarak, **BUGÜN / BU HAFTA / DAHA ÖNCE** gruplarıyla dizilir; 
 Sağ alttaki **+** düğmesi kısa bir panel açar — başparmağının olduğu yerden yukarı doğru:
 - **En altta, düğmenin hemen üstünde:** büyük **Metin notu · Liste · Sıralı liste** düğmeleri.
 - Yukarı doğru gruplar, not içindeki **Ekle** ile aynı adlar ve sıra: **Kalem** (**Sayfaya yaz (kalem)**: notun sayfasına doğrudan yazarsın; **Ayrı çizim (görsel)**: ayrı tuvalde çizersin, görsel olarak nota girer), **Kamera** (fotoğraf, video, belge tara, QR), **Dosya ve bağlantı** (**Dosya ekle**: tek seçici, görsel, PDF, sunum, video ya da ses; görsel ve videoda "Metne dök" de sorulur; ayrıca **YouTube videosu**) ve **Şablon** (şablondan, alışveriş listesi, **defter**). Video ile açılan not "üstte video, altta not" düzeninde başlar.
-- **Ana ekranın mikrofonu tek:** dokunmak **Dikte** açar (konuştukça yeni nota yazılır, kota harcamaz); **basılı tutmak AI sesli not** açar (yapay zekâ başlığı, maddeleri ve hatırlatıcıyı çıkarıp notu kurar). Düğmenin köşesindeki küçük ✨ bu ikinci yüzü hatırlatır.
+- **Ana ekranın mikrofonu tek:** dokunmak **Dikte** açar (konuştukça yeni nota yazılır, kota harcamaz); **basılı tutmak AI sesli not** açar (yapay zekâ başlığı, maddeleri ve hatırlatıcıyı çıkarıp notu kurar).
 Not hep klasik açılır; dosya eklenince çıkan **Yeni ek nerede dursun?** ipucundan görünümü seçersin (bkz. **Balonlu ↔ klasik geçiş**). Paylaş menüsünden gelen dosya da aynı ipucuyla açılır. Web'de sayfaya dosya bırakabilir ya da görsel yapıştırabilirsin: açık bir not varsa o nota, yoksa yeni nota girer.
 
 ## Not düzenleme {#editor}
@@ -48,10 +48,11 @@ Alt çubuk soldan sağa:
 - Yazdığın maddenin sağında küçük **×** silme düğmesi durur (satırın genişliği değişmez); madde menüsü (sol bölgeye basılı tut) ve karalama jesti de siler.
 
 ## Madde jestleri {#gestures}
-Maddenin üstüne **parmakla ya da kalemle** çiz:
-- **Üstünü çiz** (yatay çizgi) ya da **✓** at → madde işaretlenir (işaretliyse işaret kalkar).
-- **Karala** (zikzak) → madde silinir; **Geri al** ile geri gelir.
-- **Daire içine al** → maddenin yazımı düzeltilir (yapay zekâ; yalnız imla ve noktalama).
+Maddenin üstüne çiz:
+- **Üstünü çiz** (yatay çizgi) ya da **✓** at → madde işaretlenir (işaretliyse işaret kalkar). Parmakla da, kalemle de.
+- **Karala** (zikzak) → madde silinir; **Geri al** ile geri gelir. Yalnız kalemle.
+- **Daire içine al** → maddenin yazımı düzeltilir (yapay zekâ; yalnız imla ve noktalama). Yalnız kalemle.
+- Karalama ve daire kaydırırken kazara çalışmasın diye parmakta kapalı; **Ayarlar → Görünüm → Sil ve düzelt jestleri parmakla da** ile açarsın.
 - Ayrıca açman gerekmez: maddenin üstünde başlayan çizgi doğrudan jesttir. Kaydırma, uzun basış ve metin seçimi jest sayılmaz.
 - Kalem (S Pen vb.) sayfaya yazar, jest yapmaz. **Kalemi otomatik algıla** kapalıyken jestler kalemle de çalışır.
 - İstemezsen **Ayarlar → Görünüm → Madde jestleri** ile kapat.
@@ -144,7 +145,7 @@ Dört ayrı iş, dört ayrı ad:
 
 ## Transkript (metne dök) {#transcript}
 - Ses kaydı, video (YouTube dahil) ya da görselin ek döşemesindeki **altyazı simgesine** (ya da sayfadaki görselin/videonun ⋮ → **Metne dök**) dokun. Konuşma zaman damgalarıyla yazıya dökülür; görseldeki yazı cihazda (internetsiz) okunur.
-- Döküm nota **metin eki (.txt)** olarak kaydedilir: şeritte kâğıt rengi "TXT" döşemesi olarak durur, dokununca okunur. Bir daha AI puanı harcanmaz; simge dolu görünür.
+- Döküm nota **metin eki (.txt)** olarak kaydedilir: şeritte kâğıt rengi "TXT" döşemesi olarak durur, dokununca okunur. Bir daha yapay zekâ puanı harcanmaz; simge dolu görünür.
 - Okurken metni parmakla seç → **Seçimi nota ekle** ya da **Yeni not**. Seçim yoksa alttaki düğme **Tümünü nota ekle** olur; zaman damgaları nota "1:23" olarak girer ve videoyu oraya sarar.
 - ⋮ menüsü: **Düzenle** (yanlış duyulan sözcüğü düzelt), **AI ile yeniden dök** / görselde **AI ile oku (el yazısı)**, zaman damgalarını gizle, transkripti sil. Üstteki düğmelerle kopyala ya da **.txt dosyası olarak paylaş**.
 - **Dosyayı metne dök** (+ menüsü ya da + Ekle): ses, video veya görsel seç; dosya nota girer ve yazısı doğrudan notun gövdesine yazılır.

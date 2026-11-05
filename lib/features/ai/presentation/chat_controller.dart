@@ -48,10 +48,8 @@ class ChatController extends Notifier<ChatState> {
   /// model kandırılsa bile silme onaysız gerçekleşmez.
   Future<void> send(
     String text, {
-    required String noApiKeyText,
-    required String Function(String) errorText,
-    // Ham istisnayı okunur metne çevirir (F10.4); verilmezse ham metin.
-    String Function(Object error)? describeError,
+    // Hatayı arayüz dilinde okunur metne çevirir (`aiErrorText`).
+    required String Function(Object error) describeError,
     String? historyLabel,
     Future<bool> Function(String noteTitle)? confirmDelete,
   }) async {
@@ -109,10 +107,8 @@ class ChatController extends Notifier<ChatState> {
       if (historyLabel != null) {
         ref.read(aiHistoryProvider.notifier).record(historyLabel);
       }
-    } on GeminiException catch (e) {
-      _addReply(e.isAuthError ? noApiKeyText : errorText(e.message));
     } catch (e) {
-      _addReply(errorText(describeError?.call(e) ?? '$e'));
+      _addReply(describeError(e));
     } finally {
       state = state.copyWith(busy: false);
     }

@@ -361,7 +361,7 @@ class PersonalizeModuleSwitches extends StatelessWidget {
       (UiModule.ai, Icons.auto_awesome, l10n.moduleAi, l10n.moduleAiInfo),
       (
         UiModule.voice,
-        Icons.mic_none_rounded,
+        AppIcons.dictation,
         l10n.moduleVoice,
         l10n.moduleVoiceInfo,
       ),
@@ -492,12 +492,12 @@ class _EditorSection extends StatelessWidget {
               (id: UiItem.barAi, icon: Icons.auto_awesome, label: l10n.aiTitle),
               (
                 id: UiItem.barDictation,
-                icon: Icons.mic,
+                icon: AppIcons.dictation,
                 label: l10n.liveDictation,
               ),
               (
                 id: UiItem.barVoiceRecord,
-                icon: Icons.graphic_eq_rounded,
+                icon: AppIcons.voiceRecord,
                 label: l10n.recordAudio,
               ),
             ],
@@ -728,8 +728,8 @@ class _HomeSection extends ConsumerWidget {
               ),
               (
                 id: UiItem.homeMic,
-                icon: Icons.mic_none,
-                label: l10n.voiceAssistantTitle,
+                icon: AppIcons.dictation,
+                label: l10n.liveDictation,
               ),
             ],
           ),

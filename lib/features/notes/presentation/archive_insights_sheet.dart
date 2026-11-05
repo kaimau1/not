@@ -10,6 +10,7 @@ import '../../folders/data/folders_repository.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../../../core/friendly_error.dart';
+import '../../auth/presentation/account_required.dart';
 import '../domain/trash_analysis.dart' show trashDigest;
 import 'note_card.dart' show formatNoteDate, openNoteRoute;
 
@@ -91,6 +92,7 @@ class _ArchiveInsightsSheetState extends ConsumerState<_ArchiveInsightsSheet> {
   List<({String id, String reason})> _aiStale = const [];
 
   Future<void> _runAi() async {
+    if (!ensureAiReady(context, ref)) return;
     final l10n = context.l10n;
     final (:digest, :ids) = trashDigest(widget.notes, limit: 80);
     if (ids.isEmpty) {
@@ -123,9 +125,7 @@ class _ArchiveInsightsSheetState extends ConsumerState<_ArchiveInsightsSheet> {
     } on GeminiException catch (e) {
       if (mounted) {
         setState(
-          () => _aiError = e.isAuthError
-              ? l10n.aiNoApiKey
-              : l10n.aiError(e.message),
+          () => _aiError = aiErrorText(l10n, e),
         );
       }
     } catch (e) {
@@ -252,7 +252,7 @@ class _ArchiveInsightsSheetState extends ConsumerState<_ArchiveInsightsSheet> {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.auto_awesome),
+                  : const AiIcon(),
               label: Text(l10n.archiveInsightsAi),
             ),
           if (_aiError != null)

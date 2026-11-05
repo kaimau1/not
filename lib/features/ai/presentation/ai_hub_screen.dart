@@ -19,6 +19,7 @@ import 'chat_controller.dart';
 import 'read_document.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
+import '../../../core/app_icons.dart';
 
 /// Tüm yapay zekâ özelliklerinin tek giriş noktası.
 ///
@@ -53,9 +54,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
         .read(chatProvider.notifier)
         .send(
           text,
-          noApiKeyText: l10n.aiNoApiKey,
-          errorText: l10n.aiError,
-          describeError: (e) => friendlyError(l10n, e),
+          describeError: (e) => aiErrorText(l10n, e),
           historyLabel: l10n.aiHistoryQuestion,
           confirmDelete: (title) => confirmAssistantDelete(context, title),
         );
@@ -119,7 +118,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
     // kurulur.
     final voiceCard = _ToolCard(
       key: const ValueKey('ai-hub-voice-note'),
-      icon: Icons.mic_none_rounded,
+      icon: AppIcons.aiVoiceNote,
       accent: _AiAccent.indigo,
       title: l10n.aiVoiceRowTitle,
       subtitle: l10n.aiVoiceRowInfoHub,
@@ -151,7 +150,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
         onTap: () => context.push('/cards'),
       ),
       _ToolCard(
-        icon: Icons.headphones_outlined,
+        icon: AppIcons.listen,
         accent: _AiAccent.blue,
         title: l10n.readDocument,
         subtitle: l10n.hubReadInfo,
@@ -225,14 +224,15 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
 
     // Misafir, anahtarsız (F10.5): puan yerine açıklama kartı, AI araçları
     // soluk. Kopyalar (sondaki kart) AI'sız — açık kalır.
-    final locked = ref.watch(aiGuestLockedProvider);
-    Widget dim(Widget w) => GuestAiDim(locked: locked, child: w);
+    final locked =
+        ref.watch(aiAvailabilityProvider) != AiAvailability.ready;
+    Widget dim(Widget w) => AiStatusDim(locked: locked, child: w);
     final shownTasks = [
       for (var i = 0; i < tasks.length; i++)
         i < tasks.length - 1 ? dim(tasks[i]) : tasks[i],
     ];
     final guestCard = [
-      if (locked) ...[const SizedBox(height: 12), const GuestAiCard()],
+      if (locked) ...[const SizedBox(height: 12), const AiStatusCard()],
     ];
 
     return Scaffold(
@@ -990,7 +990,7 @@ class _ToolCard extends StatelessWidget {
                     color: accent.withValues(alpha: dark ? 0.28 : 0.16),
                     borderRadius: BorderRadius.circular(13),
                   ),
-                  child: Icon(icon, size: 22, color: accent),
+                  child: AppIcons.glyph(icon, size: 22, color: accent),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

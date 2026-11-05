@@ -65,6 +65,7 @@ import '../../data/attachment_save.dart';
 import '../../data/note_shortcut.dart';
 import '../../../inbox/presentation/send_note_sheet.dart';
 import '../../../ai/data/ai_gate.dart';
+import '../../../auth/presentation/account_required.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../../ai/presentation/ai_sheet.dart';
 import '../../../ai/presentation/listen_screen.dart';
@@ -3844,10 +3845,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                 if (showAi)
                                   Customizable(
                                     id: UiItem.barAi,
-                                    child: _voiceButton(
+                                    child: Consumer(
+                                      builder: (context, ref, _) => _voiceButton(
                                       size: plan.button,
                                       tooltip: l10n.aiTitle,
                                       icon: Icons.auto_awesome,
+                                      badge:
+                                          ref.watch(aiAvailabilityProvider) ==
+                                              AiAvailability.ready
+                                          ? null
+                                          : Icons.lock_outline,
                                       onTap: () => showAiSheet(
                                         context,
                                         note,
@@ -3858,6 +3865,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                         onVoiceNote: _captureVoice,
                                       ),
                                     ),
+                                    ),
                                   ),
                                 if (showVoiceRecord)
                                   Customizable(
@@ -3867,7 +3875,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                       tooltip: _voiceRecorder == null
                                           ? l10n.recordAudio
                                           : l10n.stopAndSave,
-                                      icon: Icons.graphic_eq_rounded,
+                                      icon: AppIcons.voiceRecord,
                                       active: _voiceRecorder != null,
                                       onTap: () => unawaited(
                                         _voiceRecorder == null
@@ -3884,7 +3892,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                       tooltip: l10n.liveDictation,
                                       icon: _dictating
                                           ? Icons.stop
-                                          : Icons.mic,
+                                          : AppIcons.dictation,
                                       active: _dictating,
                                       onTap: () =>
                                           unawaited(_toggleDictation()),

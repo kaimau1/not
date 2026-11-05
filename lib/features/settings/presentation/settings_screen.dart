@@ -337,6 +337,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: l10n.itemGesturesSetting,
             keywords: '${l10n.itemGesturesSettingInfo} jest cizim karala',
           ),
+          _SettingRow(
+            const _ItemGesturesFingerSwitch(),
+            title: l10n.itemGesturesFingerAll,
+            keywords: '${l10n.itemGesturesFingerAllInfo} jest parmak karala daire',
+          ),
           // KARTTA GÖRÜNENLER TEK SATIR (F14.2, 2026-10-31): 11 anahtar
           // alt alta Görünüm'ü okunmaz yapıyordu ve sonucu ancak ana ekranda
           // görülüyordu. Artık canlı kart örnekli bir alt levhada; satırın
@@ -870,6 +875,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   /// AI kipinde cümleyi ayar kataloğuyla eşler.
   Future<void> _runAiSearch() async {
+    if (!ensureAiReady(context, ref)) return;
     final text = _query.trim();
     if (text.isEmpty || _aiBusy) return;
     FocusScope.of(context).unfocus();
@@ -886,7 +892,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       setState(() => _aiKeys = {for (final i in hits) keys[i]});
     } on GeminiException catch (e) {
       messenger.showMessage(
-        e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
+        aiErrorText(l10n, e),
       );
     } catch (e) {
       messenger.showMessage(aiErrorText(l10n, e));

@@ -115,4 +115,30 @@ void main() {
     expect(text, 'söylediklerim buraya yaz');
     expect(text.contains('\n'), isFalse);
   });
+
+  group('F42.4 dikteyi AI ile düzelt', () {
+    test('aralık aynıysa düzeltme yazılır, imleç sonunda', () {
+      final result = dictationFixed(
+        'önce merhba dunya sonra',
+        5,
+        'merhba dunya',
+        'Merhaba dünya.',
+      );
+      expect(result?.text, 'önce Merhaba dünya. sonra');
+      expect(result?.caret, 5 + 'Merhaba dünya.'.length);
+    });
+
+    test('kullanıcı bu arada yazdıysa dokunulmaz', () {
+      expect(
+        dictationFixed('önce başka metin', 5, 'merhba', 'Merhaba'),
+        isNull,
+      );
+      expect(dictationFixed('kısa', 2, 'uzun metin', 'Uzun metin'), isNull);
+    });
+
+    test('düzeltme aynı ya da boşsa null', () {
+      expect(dictationFixed('merhaba', 0, 'merhaba', 'merhaba'), isNull);
+      expect(dictationFixed('merhaba', 0, 'merhaba', ''), isNull);
+    });
+  });
 }

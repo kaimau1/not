@@ -30,7 +30,7 @@ Your notes appear as cards grouped by **TODAY / THIS WEEK / EARLIER**; pinned no
 The **+** button at the bottom right opens a short panel, read from your thumb upwards:
 - **At the bottom, right above the button:** large **Text note · List · Ordered list** buttons.
 - Going up, the groups use the same names and order as **Add** inside a note: **Pen** (**Write on page (pen)**: write directly on the note page; **Separate drawing (image)**: draw on a separate canvas, added to the note as an image), **Camera** (photo, video, scan, QR), **Files and links** (**Add file**: one picker for images, PDF, slides, video or audio; images and videos also offer "Transcribe"; plus **YouTube video**) and **Templates** (from template, shopping list, **notebook**). A note started from a video opens with the video pinned on top and the note below.
-- **The home screen has one microphone:** a tap starts **Dictate** (your words are typed into a new note, no quota); a **long-press starts an AI voice note** (AI builds the note — title, items and reminders). The small ✨ on its corner is the reminder of that second face.
+- **The home screen has one microphone:** a tap starts **Dictate** (your words are typed into a new note, no quota); a **long-press starts an AI voice note** (AI builds the note — title, items and reminders).
 A note always opens classic; when you add a file, the **Where should the attachment go?** tip lets you pick the view (see **Bubbles ↔ classic**). Files from the share menu open with the same tip. On the web you can drop a file on the page or paste an image: it goes into the open note, otherwise into a new note.
 
 ## Editing a note {#editor}
@@ -48,10 +48,11 @@ Top bar: **undo / redo** (always side by side), palette, pin and the ⋮ menu. T
 - The item you're editing shows a small **×** delete button on the right (the line width doesn't change); the item menu (long-press its left area) and the scribble gesture delete too.
 
 ## Item gestures {#gestures}
-Draw over an item **with your finger or a pen**:
-- **Strike through** (horizontal line) or a **✓** → the item is checked (or unchecked).
-- **Scribble** (zigzag) → the item is deleted; **Undo** brings it back.
-- **Circle** → the item's spelling is fixed (AI; spelling and punctuation only).
+Draw over an item:
+- **Strike through** (horizontal line) or a **✓** → the item is checked (or unchecked). Finger or pen.
+- **Scribble** (zigzag) → the item is deleted; **Undo** brings it back. Pen only.
+- **Circle** → the item's spelling is fixed (AI; spelling and punctuation only). Pen only.
+- Scribble and circle are off for fingers so scrolling can't trigger them; turn them on in **Settings → Appearance → Delete and fix gestures with a finger too**.
 - Nothing to turn on: a stroke that starts over an item is a gesture. Scrolling, long-presses and text selection don't count.
 - A pen (S Pen etc.) writes on the page instead of making gestures. With **Detect pen automatically** off, gestures work with the pen too.
 - Turn it off in **Settings → Appearance → Item gestures**.

@@ -177,9 +177,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     } on GeminiException catch (e) {
       if (mounted) {
         setState(
-          () => _error = e.isAuthError
-              ? context.l10n.aiNoApiKey
-              : context.l10n.aiError(e.message),
+          () => _error = aiErrorText(context.l10n, e),
         );
       }
     } catch (e) {
@@ -686,10 +684,10 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                   // bilgi veriyordu (bkz. ai_hub_screen.dart).
                   // Misafir, anahtarsız (F10.5): puan yerine açıklama kartı,
                   // araçlar soluk ve dokunulamaz.
-                  if (ref.watch(aiGuestLockedProvider))
+                  if (ref.watch(aiAvailabilityProvider) != AiAvailability.ready)
                     const Padding(
                       padding: EdgeInsets.fromLTRB(16, 4, 16, 14),
-                      child: GuestAiCard(),
+                      child: AiStatusCard(),
                     )
                   else if (!ref.watch(aiUnlimitedProvider))
                     Padding(
@@ -699,8 +697,10 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         limit: ref.watch(aiDailyLimitProvider),
                       ),
                     ),
-                  GuestAiDim(
-                    locked: ref.watch(aiGuestLockedProvider),
+                  AiStatusDim(
+                    locked:
+                        ref.watch(aiAvailabilityProvider) !=
+                        AiAvailability.ready,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -710,7 +710,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                       child: _AiRow(
                         key: const ValueKey('ai-sheet-voice-note'),
-                        icon: Icons.mic_none_rounded,
+                        icon: AppIcons.aiVoiceNote,
                         title: l10n.aiVoiceRowTitle,
                         subtitle: l10n.aiVoiceRowInfoEditor,
                         onTap: () {
@@ -834,7 +834,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         // Sesli dinleme: metin çıkarma ve okuma cihazda yapılır,
                         // model yalnız "podcast'e dönüştür" denirse çağrılır.
                         ListTile(
-                          leading: const Icon(Icons.headphones_outlined),
+                          leading: const Icon(AppIcons.listen),
                           title: Text(l10n.listen),
                           onTap: () {
                             Navigator.pop(context);
@@ -896,7 +896,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                           },
                         ),
                         ListTile(
-                          leading: const Icon(Icons.headphones_outlined),
+                          leading: const Icon(AppIcons.listen),
                           title: Text(l10n.listen),
                           onTap: () {
                             Navigator.pop(context);
@@ -936,7 +936,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                     ),
                   for (final audio in audios)
                     ListTile(
-                      leading: const Icon(Icons.graphic_eq),
+                      leading: const Icon(AppIcons.voiceRecord),
                       title: Text(
                         audio.fileName,
                         maxLines: 1,
@@ -1044,7 +1044,7 @@ class _AiRow extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: scheme.primary),
+                AppIcons.glyph(icon, size: 20, color: scheme.primary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -1117,7 +1117,7 @@ class _AiTileGrid extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, size: 20, color: scheme.primary),
+                  AppIcons.glyph(icon, size: 20, color: scheme.primary),
                   const SizedBox(height: 8),
                   Text(
                     title,

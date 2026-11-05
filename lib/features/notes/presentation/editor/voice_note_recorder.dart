@@ -13,6 +13,7 @@ import '../../../../core/error_log.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../../../../core/friendly_error.dart';
+import '../../../../core/app_icons.dart';
 
 /// Kaydedicinin evresi.
 enum VoiceRecordPhase { starting, recording, paused, finishing }
@@ -314,7 +315,7 @@ class VoiceRecordPanel extends StatelessWidget {
                     tooltip: paused ? l10n.voiceRecordResume : l10n.mediaPause,
                     onPressed: busy ? null : recorder.togglePause,
                     icon: Icon(
-                      paused ? Icons.mic_rounded : Icons.pause_rounded,
+                      paused ? AppIcons.voiceRecord : Icons.pause_rounded,
                       color: paused ? red : scheme.onSurfaceVariant,
                     ),
                   ),
