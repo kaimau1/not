@@ -166,6 +166,16 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 82. [ ] (F43.3) Ortak not: kart, liste satırı ve editörde aynı simge ve renk; editörde sayı (sahipte ve alıcıda). Renkli notta simge notun koyu tonunda.
 83. [ ] (F43.4, F43.5) Levhada Ekler ile ek menüsünde Paylaş aynı dosyayı gönderiyor (işaretli görsel PNG basılı). Misafirde: not "+" levhasında Ortak çalışanlar, avatar levhasında ve rayda Kişiler kilitli; dokununca aynı giriş levhası.
 
+**2026-11-05 gece — kullanıcı listesi (10 madde; yazıldı, cihazda doğrulanmadı)**
+87. [ ] Ara başlık: maddede imleç varken "Ara başlık" → başlık o maddenin ALTINDA; başlığa basılı tut → menüde sola/ortaya/sağa, kartta da hizalı.
+88. [ ] Biçim → Kapsam "Kelime" → imleci bir kelimeye koy → A+ iki kez: yalnız o kelime büyüyor, satır ya da komşu kelime değil (gövdede ve maddede).
+89. [ ] Etiketli notta başlığın altında boş bant yok; kartta ve üst çubukta etiket temanın renginde dolu hap (Adaçayı, Lavanta, Zeytin).
+90. [ ] Ayarlar → Görünüm: Lavanta ve Zeytin; telefonda tema kartları iki sıra, adlar okunuyor.
+91. [ ] Şablonlar: yıldızla 4 favori (5.si uyarı), "+" menüsünde Şablon bölümü favorilerle diziliyor; kartlar küçük; alışverişte "İki sütun" → not iki sütunlu açılıyor; öneri çipleri grup içinde A→Z.
+92. [ ] Sabit PDF/görselde balon yaz → geri: önce klavye, sonra kart kapanır, not açık kalır; üçüncü geri not. Kart alttan süzülerek açılıyor.
+93. [ ] Uzun PDF'i (sabit bölme ve tam ekran) hızlı kaydır: takılma azaldı mı; basılı tutunca metin seçimi hâlâ ilk denemede geliyor (metin artık gecikmeli yükleniyor).
+94. [ ] Ara başlıklı listede klavye aç/kapa kasması: widget testinde yeniden üretilemedi (satır kuruluşu ve kare süresi başlıklı/başlıksız aynı, odakta satır boyu değişmiyor). Hâlâ kasıyorsa hangi notta (madde sayısı, başlık odakta mı) söyle — sabah bakılacak.
+
 **2026-11-05 — web ve geniş ekran (TUTARLILIK_PLANI Faz 44, yazıldı, tarayıcı ve tablette elle doğrulanmadı; tur aracı ve testlerle görüldü)**
 84. [ ] (F44.5 web) Ctrl+tekerlek sütun değiştiriyor, tarayıcı sayfası YAKINLAŞMIYOR; dokunmatik yüzeyde kıstırma sütun, iki parmak yatay kaydırma klasör geçiyor, atalet ikinci klasöre atlamıyor. Alt+←/→ klasör geçiyor, tarayıcı geri gitmiyor; arama kutusundayken geçmiyor. Fareyle kartın üstüne gelince ⋮; seçimde Ctrl+A ve Delete. Maddede sağ tık menüsü.
 85. [ ] (F44.1, F44.2) Rayda kalem, mikrofon ve "+" (panel sağa açılıyor, Esc kapatıyor); Ayarlar'dayken "+" → Metin notu notu açıyor; rayda "Notlar" açık notu kapatıp ana sayfaya dönüyor. Dar pencerede Ayarlar ve notta 🏠 çubukta, şerit yok.

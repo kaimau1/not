@@ -6805,4 +6805,210 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tagRemove => 'Etiketi kaldır';
+
+  @override
+  String get itemAlignStart => 'Sola hizala';
+
+  @override
+  String get itemAlignCenter => 'Ortala';
+
+  @override
+  String get itemAlignEnd => 'Sağa hizala';
+
+  @override
+  String get themeLavender => 'Lavanta';
+
+  @override
+  String get themeOlive => 'Zeytin';
+
+  @override
+  String get tplShopMeat => 'Et, tavuk ve balık';
+
+  @override
+  String get tplShopMeatItems =>
+      'Kıyma, Tavuk göğsü, Tavuk but, Kuşbaşı et, Balık, Sucuk, Hindi füme, Köfte';
+
+  @override
+  String get tplShopDrinks => 'İçecek';
+
+  @override
+  String get tplShopDrinksItems =>
+      'Su, Maden suyu, Meyve suyu, Ayran, Gazoz, Soğuk çay, Süt';
+
+  @override
+  String get tplShopSnacks => 'Atıştırmalık';
+
+  @override
+  String get tplShopSnacksItems =>
+      'Bisküvi, Çikolata, Cips, Kuruyemiş, Kraker, Gofret, Kuru meyve';
+
+  @override
+  String get tplShopFrozen => 'Dondurulmuş';
+
+  @override
+  String get tplShopFrozenItems =>
+      'Dondurma, Bezelye, Patates kızartması, Mantı, Pizza, Börek';
+
+  @override
+  String get tplShopBaby => 'Bebek';
+
+  @override
+  String get tplShopBabyItems =>
+      'Bez, Islak mendil, Mama, Bebek şampuanı, Pişik kremi';
+
+  @override
+  String get tplShopPet => 'Evcil hayvan';
+
+  @override
+  String get tplShopPetItems =>
+      'Kedi maması, Köpek maması, Kum, Ödül maması, Tüy toplayıcı';
+
+  @override
+  String get tplTravelHealth => 'Sağlık';
+
+  @override
+  String get tplTravelHealthItems =>
+      'Ağrı kesici, Yara bandı, Mide ilacı, Reçeteli ilaçlar, Sivrisinek kovucu, Maske';
+
+  @override
+  String get tplTravelBeforeGo => 'Çıkmadan önce';
+
+  @override
+  String get tplTravelBeforeGoItems =>
+      'Ocağı kontrol et, Pencereleri kapat, Çöpü at, Bitkileri sula, Fişleri çek, Anahtarları al';
+
+  @override
+  String get tplCleanKitchen => 'Mutfak';
+
+  @override
+  String get tplCleanKitchenItems =>
+      'Bulaşık, Tezgâh, Ocak, Fırın içi, Buzdolabı, Lavabo, Mikrodalga';
+
+  @override
+  String get tplCleanBath => 'Banyo';
+
+  @override
+  String get tplCleanBathItems =>
+      'Klozet, Lavabo, Duş, Ayna, Fayans derzleri, Havluları değiştir';
+
+  @override
+  String get tplCleanRooms => 'Odalar';
+
+  @override
+  String get tplCleanRoomsItems =>
+      'Toz al, Süpür, Paspas, Yatakları topla, Camları sil, Halıları silkele';
+
+  @override
+  String get tplCleanMonthly => 'Aylık';
+
+  @override
+  String get tplCleanMonthlyItems =>
+      'Perdeler, Klima filtresi, Dolap içleri, Çamaşır makinesi bakımı, Davlumbaz filtresi';
+
+  @override
+  String get tplMoveBefore => 'Taşınmadan önce';
+
+  @override
+  String get tplMoveBeforeItems =>
+      'Nakliyeci ayarla, Koli ve bant al, Eşyaları ayıkla, Kolileri etiketle, Abonelikleri bildir, Adres değişikliği';
+
+  @override
+  String get tplMoveDay => 'Taşınma günü';
+
+  @override
+  String get tplMoveDayItems =>
+      'Sayaçların fotoğrafı, Anahtar teslimi, Değerli eşyaları yanına al, Son kontrol, İlk gece çantası';
+
+  @override
+  String get tplMoveAfter => 'Taşındıktan sonra';
+
+  @override
+  String get tplMoveAfterItems =>
+      'İnternet kurulumu, Muhtarlık kaydı, Kilitleri değiştir, Banka adresini güncelle, Komşularla tanış';
+
+  @override
+  String get tplHabitHealth => 'Sağlık';
+
+  @override
+  String get tplHabitHealthItems =>
+      '8 bardak su, 30 dakika yürüyüş, Erken yat, Şekersiz gün, Vitamin al, Esneme';
+
+  @override
+  String get tplHabitMind => 'Zihin';
+
+  @override
+  String get tplHabitMindItems =>
+      '20 sayfa kitap, Meditasyon, Günlük yaz, Ekransız bir saat, Yeni kelime öğren';
+
+  @override
+  String get tplHabitHome => 'Ev ve düzen';
+
+  @override
+  String get tplHabitHomeItems =>
+      'Bulaşığı bitir, 10 dakika toparlan, Bitkileri sula, Yarını planla';
+
+  @override
+  String get tplWorkoutUpper => 'Üst vücut';
+
+  @override
+  String get tplWorkoutUpperItems =>
+      'Şınav 3×10, Barfiks 3×6, Omuz pres 3×10, Biceps curl 3×12, Triceps dips 3×10, Plank 3×45 sn';
+
+  @override
+  String get tplWorkoutLower => 'Alt vücut';
+
+  @override
+  String get tplWorkoutLowerItems =>
+      'Squat 3×12, Lunge 3×10, Köprü 3×15, Baldır 3×20, Duvar oturuşu 3×40 sn';
+
+  @override
+  String get tplWorkoutCardio => 'Kardiyo';
+
+  @override
+  String get tplWorkoutCardioItems =>
+      'Koşu 20 dk, İp atlama 5 dk, Bisiklet 30 dk, Jumping jack 3×30, Burpee 3×10';
+
+  @override
+  String get tplGiftPeople => 'Kişiler';
+
+  @override
+  String get tplGiftPeopleItems =>
+      'Anne, Baba, Kardeş, Eş, Arkadaş, Öğretmen, İş arkadaşı, Çocuk';
+
+  @override
+  String get tplGiftIdeas => 'Fikirler';
+
+  @override
+  String get tplGiftIdeasItems =>
+      'Kitap, Çiçek, Parfüm, Saat, Deneyim hediyesi, El yapımı, Kupa, Hediye çeki';
+
+  @override
+  String get tplTodoHome => 'Ev';
+
+  @override
+  String get tplTodoHomeItems =>
+      'Faturaları öde, Çamaşır, Market, Tamir işleri, Randevu al';
+
+  @override
+  String get tplTodoErrands => 'Dışarıda';
+
+  @override
+  String get tplTodoErrandsItems =>
+      'Bankaya uğra, Kargo gönder, Eczane, Kuru temizleme, Postane';
+
+  @override
+  String get templateTwoColumns => 'İki sütun';
+
+  @override
+  String get templateFavorite => 'Favorilere ekle';
+
+  @override
+  String get templateUnfavorite => 'Favorilerden çıkar';
+
+  @override
+  String get templatesFavorites => 'Favoriler';
+
+  @override
+  String get templateFavoritesFull =>
+      'En çok 4 favori seçilebilir — önce birini çıkar';
 }

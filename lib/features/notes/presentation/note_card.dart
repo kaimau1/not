@@ -1,4 +1,5 @@
 import '../../../core/app_icons.dart';
+import '../../../core/widgets/tag_pill.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -849,16 +850,7 @@ class NoteCard extends ConsumerWidget {
                       if (showTag)
                         Flexible(
                           flex: 3,
-                          child: Text(
-                            '#${note.tags.first}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: accent ?? scheme.onSurfaceVariant,
-                            ),
-                          ),
+                          child: TagPill(tag: note.tags.first, accent: accent),
                         ),
                     ],
                   ),
@@ -1433,7 +1425,16 @@ class _CardItemRow extends StatelessWidget {
       children: [
         ?leading,
         Expanded(
-          child: noteBodyText(
+          // Ara başlık hizası kartta da (bkz. [NoteItem.align]).
+          child: Align(
+            alignment: !item.header
+                ? AlignmentDirectional.centerStart
+                : switch (item.align) {
+                    NoteItem.alignCenter => AlignmentDirectional.center,
+                    NoteItem.alignEnd => AlignmentDirectional.centerEnd,
+                    _ => AlignmentDirectional.centerStart,
+                  },
+            child: noteBodyText(
             context,
             // Ham biçim işaretleri (**kalın**, %%2:renk%%) HİÇBİR durumda
             // görünmez: ayar kapalıyken sökülür, açıkken görünmez çizilip
@@ -1452,6 +1453,7 @@ class _CardItemRow extends StatelessWidget {
                     color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
                   )
                 : style,
+          ),
           ),
         ),
       ],
@@ -2069,20 +2071,12 @@ class NoteListRow extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (display.tag && note.tags.isNotEmpty)
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 72),
-                      child: Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 4),
-                        child: Text(
-                          '#${note.tags.first}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: accent ?? scheme.onSurfaceVariant,
-                          ),
-                        ),
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 4),
+                      child: TagPill(
+                        tag: note.tags.first,
+                        accent: accent,
+                        maxWidth: 72,
                       ),
                     ),
                   if (display.statusIcons) ...[

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/utils/rich_text.dart';
+import 'package:notlar/core/utils/sentence_select.dart';
 import 'package:notlar/features/notes/presentation/editor/format_bar.dart';
+import 'package:notlar/features/notes/presentation/editor/format_menu.dart';
 import 'package:notlar/features/notes/presentation/editor/text_wrap.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
@@ -193,4 +196,75 @@ void main() {
     await tester.pumpAndSettle();
     expect(shaded().join(), 'ghi');
   });
+
+  testWidgets(
+    'Kelime kapsamında boyut: cümle genişletici kelimeyi satıra büyütmez',
+    (tester) async {
+      // Kullanıcı bulgusu 2026-11-05: "kelime seçiliyor ama boyut
+      // değiştirince ya tüm satır değişiyor ya başka kelimeye atlıyor".
+      final controller = WrapTextController(text: 'abc def ghi\njkl');
+      attachSentenceSelection(controller);
+      final focus = FocusNode();
+      addTearDown(focus.dispose);
+      controller.selection = const TextSelection.collapsed(offset: 5);
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('tr'),
+          home: Scaffold(
+            body: Column(
+              children: [
+                TextField(
+                  controller: controller,
+                  focusNode: focus,
+                  maxLines: null,
+                ),
+                FormatBar(
+                  target: FormatTarget(
+                    controller: controller,
+                    focusNode: focus,
+                    commit: () {},
+                  ),
+                  onFormat: (_, {colorIndex}) {},
+                  onClearFormat: () {},
+                  onRemoveFormat: (_) {},
+                  fontFamily: null,
+                  fontScale: 1,
+                  textOpacity: 1,
+                  hasSelection: () => !controller.selection.isCollapsed,
+                  onFontChanged: (_) {},
+                  onScaleChanged: (_) {},
+                  onScaleEnd: (v) => applyRichStep(
+                    controller,
+                    RichFormat.size,
+                    richStepIndex(kRichSizeSteps, v),
+                  ),
+                  onOpacityChanged: (_) {},
+                  onOpacityEnd: (_) {},
+                  onClose: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      for (
+        var i = 0;
+        i < 4 && find.text('Kelime').evaluate().isEmpty;
+        i++
+      ) {
+        await tester.tap(find.byKey(const ValueKey('format-scope-menu')));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('Kelime'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('format-size-up')));
+      await tester.pumpAndSettle();
+      expect(controller.text, startsWith('abc ##5:def## ghi'));
+      await tester.tap(find.byKey(const ValueKey('format-size-up')));
+      await tester.pumpAndSettle();
+      expect(controller.text, startsWith('abc ##6:def## ghi'));
+      expect(controller.selection.isCollapsed, isTrue);
+    },
+  );
 }

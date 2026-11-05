@@ -11,6 +11,7 @@ import '../../../../core/a11y/color_names.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/note_fonts.dart';
 import '../../../../core/utils/rich_text.dart';
+import '../../../../core/utils/sentence_select.dart';
 import '../../../../core/widgets/color_palette.dart';
 import 'format_menu.dart';
 import 'text_wrap.dart';
@@ -342,7 +343,9 @@ class _FormatBarState extends State<FormatBar> {
     if (next == null) return null;
     _scopeCaret = selection.baseOffset;
     _scopedSelection = next;
-    controller.selection = next;
+    // Geçici seçim çift dokunuş sanılıp cümleye büyütülmesin (bkz.
+    // [withoutSentenceExpansion]).
+    withoutSentenceExpansion(() => controller.selection = next);
     return next;
   }
 

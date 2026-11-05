@@ -6827,4 +6827,209 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tagRemove => 'Remove tag';
+
+  @override
+  String get itemAlignStart => 'Align left';
+
+  @override
+  String get itemAlignCenter => 'Center';
+
+  @override
+  String get itemAlignEnd => 'Align right';
+
+  @override
+  String get themeLavender => 'Lavender';
+
+  @override
+  String get themeOlive => 'Olive';
+
+  @override
+  String get tplShopMeat => 'Meat, poultry & fish';
+
+  @override
+  String get tplShopMeatItems =>
+      'Minced meat, Chicken breast, Chicken thighs, Beef cubes, Fish, Sausages, Smoked turkey, Meatballs';
+
+  @override
+  String get tplShopDrinks => 'Drinks';
+
+  @override
+  String get tplShopDrinksItems =>
+      'Water, Sparkling water, Juice, Buttermilk, Soda, Iced tea, Milk';
+
+  @override
+  String get tplShopSnacks => 'Snacks';
+
+  @override
+  String get tplShopSnacksItems =>
+      'Biscuits, Chocolate, Crisps, Nuts, Crackers, Wafers, Dried fruit';
+
+  @override
+  String get tplShopFrozen => 'Frozen';
+
+  @override
+  String get tplShopFrozenItems =>
+      'Ice cream, Peas, Fries, Dumplings, Pizza, Pastry';
+
+  @override
+  String get tplShopBaby => 'Baby';
+
+  @override
+  String get tplShopBabyItems =>
+      'Diapers, Wet wipes, Formula, Baby shampoo, Nappy cream';
+
+  @override
+  String get tplShopPet => 'Pets';
+
+  @override
+  String get tplShopPetItems =>
+      'Cat food, Dog food, Litter, Treats, Lint roller';
+
+  @override
+  String get tplTravelHealth => 'Health';
+
+  @override
+  String get tplTravelHealthItems =>
+      'Painkillers, Plasters, Stomach medicine, Prescriptions, Mosquito repellent, Face mask';
+
+  @override
+  String get tplTravelBeforeGo => 'Before leaving';
+
+  @override
+  String get tplTravelBeforeGoItems =>
+      'Check the stove, Close the windows, Take out the trash, Water the plants, Unplug devices, Take the keys';
+
+  @override
+  String get tplCleanKitchen => 'Kitchen';
+
+  @override
+  String get tplCleanKitchenItems =>
+      'Dishes, Counter, Stove, Oven, Fridge, Sink, Microwave';
+
+  @override
+  String get tplCleanBath => 'Bathroom';
+
+  @override
+  String get tplCleanBathItems =>
+      'Toilet, Sink, Shower, Mirror, Tile grout, Change towels';
+
+  @override
+  String get tplCleanRooms => 'Rooms';
+
+  @override
+  String get tplCleanRoomsItems =>
+      'Dust, Vacuum, Mop, Make the beds, Clean windows, Shake out rugs';
+
+  @override
+  String get tplCleanMonthly => 'Monthly';
+
+  @override
+  String get tplCleanMonthlyItems =>
+      'Curtains, AC filter, Inside cupboards, Washing machine care, Hood filter';
+
+  @override
+  String get tplMoveBefore => 'Before the move';
+
+  @override
+  String get tplMoveBeforeItems =>
+      'Book movers, Buy boxes and tape, Declutter, Label boxes, Notify utilities, Change address';
+
+  @override
+  String get tplMoveDay => 'Moving day';
+
+  @override
+  String get tplMoveDayItems =>
+      'Photograph meters, Hand over keys, Keep valuables with you, Final walkthrough, First-night bag';
+
+  @override
+  String get tplMoveAfter => 'After the move';
+
+  @override
+  String get tplMoveAfterItems =>
+      'Set up internet, Register address, Change the locks, Update bank address, Meet the neighbours';
+
+  @override
+  String get tplHabitHealth => 'Health';
+
+  @override
+  String get tplHabitHealthItems =>
+      '8 glasses of water, 30-minute walk, Early bedtime, Sugar-free day, Take vitamins, Stretching';
+
+  @override
+  String get tplHabitMind => 'Mind';
+
+  @override
+  String get tplHabitMindItems =>
+      'Read 20 pages, Meditate, Journal, One screen-free hour, Learn a new word';
+
+  @override
+  String get tplHabitHome => 'Home';
+
+  @override
+  String get tplHabitHomeItems =>
+      'Finish the dishes, 10-minute tidy, Water the plants, Plan tomorrow';
+
+  @override
+  String get tplWorkoutUpper => 'Upper body';
+
+  @override
+  String get tplWorkoutUpperItems =>
+      'Push-ups 3×10, Pull-ups 3×6, Shoulder press 3×10, Biceps curl 3×12, Triceps dips 3×10, Plank 3×45 s';
+
+  @override
+  String get tplWorkoutLower => 'Lower body';
+
+  @override
+  String get tplWorkoutLowerItems =>
+      'Squats 3×12, Lunges 3×10, Glute bridge 3×15, Calf raises 3×20, Wall sit 3×40 s';
+
+  @override
+  String get tplWorkoutCardio => 'Cardio';
+
+  @override
+  String get tplWorkoutCardioItems =>
+      'Run 20 min, Jump rope 5 min, Cycling 30 min, Jumping jacks 3×30, Burpees 3×10';
+
+  @override
+  String get tplGiftPeople => 'People';
+
+  @override
+  String get tplGiftPeopleItems =>
+      'Mum, Dad, Sibling, Partner, Friend, Teacher, Colleague, Child';
+
+  @override
+  String get tplGiftIdeas => 'Ideas';
+
+  @override
+  String get tplGiftIdeasItems =>
+      'Book, Flowers, Perfume, Watch, Experience gift, Handmade, Mug, Gift card';
+
+  @override
+  String get tplTodoHome => 'Home';
+
+  @override
+  String get tplTodoHomeItems =>
+      'Pay bills, Laundry, Groceries, Repairs, Book an appointment';
+
+  @override
+  String get tplTodoErrands => 'Errands';
+
+  @override
+  String get tplTodoErrandsItems =>
+      'Go to the bank, Send a parcel, Pharmacy, Dry cleaning, Post office';
+
+  @override
+  String get templateTwoColumns => 'Two columns';
+
+  @override
+  String get templateFavorite => 'Add to favourites';
+
+  @override
+  String get templateUnfavorite => 'Remove from favourites';
+
+  @override
+  String get templatesFavorites => 'Favourites';
+
+  @override
+  String get templateFavoritesFull => 'Up to 4 favourites — remove one first';
 }

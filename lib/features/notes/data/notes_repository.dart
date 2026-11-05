@@ -528,6 +528,7 @@ class NotesRepository {
     List<String>? items,
     String? folderId,
     DateTime? reminderAt,
+    int listColumns = 1,
   }) async {
     final doc = _notes.doc();
     // [items]: ŞABLONDAN doğan listenin maddeleri (bkz. note_templates) —
@@ -540,6 +541,7 @@ class NotesRepository {
       body: body,
       folderId: folderId,
       reminderAt: reminderAt,
+      listColumns: listColumns == 2 ? 2 : 1,
       items: items != null && items.isNotEmpty
           ? [for (final t in items) NoteItem(id: _uuid.v4(), text: t)]
           : type == NoteType.text
@@ -594,6 +596,7 @@ class NotesRepository {
             title: item.title,
             divider: item.divider,
             header: item.header,
+            align: item.align,
           ),
       ],
       tags: List<String>.from(note.tags),
@@ -627,6 +630,7 @@ class NotesRepository {
                   title: item.title,
                   divider: item.divider,
                   header: item.header,
+                  align: item.align,
                 ),
             ],
           ),

@@ -221,7 +221,25 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
   void initState() {
     super.initState();
     PdfPageOcr.completed.addListener(_onOcrCompleted);
-    widget.page
+    // **METİN GECİKMELİ YÜKLENİR** (kullanıcı bulgusu 2026-11-05: "PDF'lerde
+    // kaydırırken kasma"). KÖK NEDEN: katman kurulur kurulmaz sayfanın
+    // metnini ayrıştırıyordu — kaydırırken önbellek payına giren HER sayfa,
+    // sayfa görüntüsünü çizen AYNI pdfium işçisine bir metin işi daha
+    // ekliyor, görüntüler geç geliyor ve kaydırma takılıyordu (pdfrx'in
+    // kendi seçimi aynı sebeple kapatılmıştı). Artık sayfa ~0,5 sn görünür
+    // kalınca ya da parmak sayfaya değince yüklenir; hızla geçilen sayfa hiç
+    // ayrıştırılmaz.
+    _textTimer = Timer(const Duration(milliseconds: 500), _loadText);
+  }
+
+  Timer? _textTimer;
+  Future<void>? _textLoad;
+
+  /// Sayfa metnini (bir kez) yükler.
+  Future<void> _loadText() {
+    _textTimer?.cancel();
+    _textTimer = null;
+    return _textLoad ??= widget.page
         .loadStructuredText()
         .then((t) {
           if (!mounted) return;
@@ -264,6 +282,7 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
     _pressTimer?.cancel();
     _ocrEmptyTimer?.cancel();
     _autoOcrTimer?.cancel();
+    _textTimer?.cancel();
     PdfPageOcr.completed.removeListener(_onOcrCompleted);
     if (_notifiedSelecting || _dragAtActive) {
       // Katman aktif seçim ortasında sökülürse pan kilidi / kenar kaydırması
@@ -300,6 +319,8 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
   // ═══ Dokunma (parmak/kalem) ══════════════════════════════════════════════
 
   void _onPointerDown(PointerDownEvent event) {
+    // Parmak/fare sayfaya değdi: metin hemen gelsin (uzun basış ~0,5 sn).
+    if (!_textLoaded) unawaited(_loadText());
     if (event.kind == PointerDeviceKind.mouse) {
       _onMouseDown(event);
       return;
@@ -344,6 +365,18 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
   /// Metin yoksa (taranmış sayfa) OCR'ı bekle/tetikle; OCR bitmiş ve yine
   /// metin yoksa kullanıcıya söyle.
   void _beginTouchSelection(Offset at, int pointer) {
+    if (!_textLoaded) {
+      // Metin hâlâ yükleniyor: "metin yok" sanılıp OCR'a düşülmesin; yükleme
+      // bitince parmak hâlâ yerdeyse seçim başlar.
+      unawaited(
+        _loadText().then((_) {
+          if (mounted && _textLoaded && _pressPointer == pointer) {
+            _beginTouchSelection(at, pointer);
+          }
+        }),
+      );
+      return;
+    }
     if (_selectWordAt(at)) {
       _dragAnchorStart = _selStart;
       _dragAnchorEnd = _selEnd;

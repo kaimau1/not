@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/tag_pill.dart';
+
 /// Üst çubukta, düzenleme tarihinin SOLUNDA duran etiketler (kullanıcı
 /// isteği 2026-11-05: "etiketlerin üst satırdaki tarih saatin solunda
 /// görülmesi"). Gövdedeki çip şeridi yalnız etiket için bir satır
@@ -9,15 +11,15 @@ class EditorBarTags extends StatelessWidget {
   const EditorBarTags({
     super.key,
     required this.tags,
-    required this.color,
+    this.accent,
     required this.removeLabel,
     required this.onRemove,
   });
 
   final List<String> tags;
 
-  /// Yazı ve çerçeve rengi (renkli notta notun koyu tonu).
-  final Color color;
+  /// Renkli notta notun koyu tonu; null = temanın etiket hapı.
+  final Color? accent;
   final String removeLabel;
   final ValueChanged<String> onRemove;
 
@@ -72,25 +74,8 @@ class EditorBarTags extends StatelessWidget {
                     key: ValueKey('editor-bar-tag-$tag'),
                     borderRadius: BorderRadius.circular(10),
                     onTap: () => _menu(pillContext, tag),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: color.withValues(alpha: 0.4)),
-                      ),
-                      child: Text(
-                        '#$tag',
-                        maxLines: 1,
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w500,
-                          color: color,
-                        ),
-                      ),
-                    ),
+                    // Kartla aynı dolu hap (bkz. [tagPillColors]).
+                    child: TagPill(tag: tag, accent: accent, fontSize: 11.5),
                   ),
                 ),
               ),

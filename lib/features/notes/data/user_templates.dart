@@ -277,3 +277,47 @@ class RecentTemplatesNotifier extends Notifier<List<String>> {
     ref.read(sharedPreferencesProvider).setStringList(_key, next);
   }
 }
+
+/// **FAVORİ ŞABLONLAR** (kullanıcı isteği 2026-11-05: "favori şablonlar
+/// seçebilme, ekle menüsünde görünür, en çok 4 tane"). Anahtarlar son
+/// kullanılanlarla aynı biçimde (`b:<ad>` / `u:<kimlik>`). Hiç seçim
+/// yapılmadıysa eski "Alışveriş listesi" kısayolu favori sayılır — "+"
+/// menüsü güncellemeden sonra da aynı görünür.
+final favoriteTemplatesProvider =
+    NotifierProvider<FavoriteTemplatesNotifier, List<String>>(
+      FavoriteTemplatesNotifier.new,
+    );
+
+class FavoriteTemplatesNotifier extends Notifier<List<String>> {
+  static const _key = 'favorite_templates';
+  static const maxEntries = 4;
+  static const defaults = ['b:shopping'];
+
+  @override
+  List<String> build() =>
+      ref.watch(sharedPreferencesProvider).getStringList(_key) ?? defaults;
+
+  bool isFavorite(String key) => state.contains(key);
+
+  /// Favoriyi açar/kapatır. Sınır doluyken eklenemez: false döner.
+  bool toggle(String key) {
+    final List<String> next;
+    if (state.contains(key)) {
+      next = [
+        for (final k in state)
+          if (k != key) k,
+      ];
+    } else {
+      if (state.length >= maxEntries) return false;
+      next = [...state, key];
+    }
+    state = next;
+    ref.read(sharedPreferencesProvider).setStringList(_key, next);
+    return true;
+  }
+
+  void forget(String key) {
+    if (!state.contains(key)) return;
+    toggle(key);
+  }
+}

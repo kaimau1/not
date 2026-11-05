@@ -180,7 +180,16 @@ class _FloatRowState extends State<_FloatRow> {
 }
 
 /// Satır menüsünün ([ItemsEditorState._showItemMenu]) seçenekleri.
-enum _ItemAction { star, header, select, delete, moveToPage }
+enum _ItemAction {
+  star,
+  header,
+  select,
+  delete,
+  moveToPage,
+  alignStart,
+  alignCenter,
+  alignEnd,
+}
 
 /// Madde menüsünün tek parçalık gövdesi: iş düğmeleri (alt çizgi
 /// 2026-10-30'dan beri biçim panelinde — bkz. [ItemsEditorState._showItemMenu]).
@@ -189,16 +198,20 @@ class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
     required this.starred,
     required this.canMove,
     this.header = false,
+    this.align = '',
   });
 
   final bool starred;
+
+  /// Ara başlığın şimdiki hizası (bkz. [NoteItem.align]).
+  final String align;
   final bool canMove;
 
   /// Satır ara başlık mı (düğme "Maddeye çevir" der).
   final bool header;
 
   @override
-  double get height => 84;
+  double get height => header ? 132 : 84;
 
   @override
   bool represents(_ItemAction? value) => false;
@@ -275,6 +288,45 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
                 ),
               ],
             ),
+            // ARA BAŞLIK HİZASI (kullanıcı isteği 2026-11-05): basılı tutunca
+            // sola · ortaya · sağa.
+            if (widget.header)
+              Padding(
+                padding: const EdgeInsets.only(top: 2, bottom: 4),
+                child: SegmentedButton<_ItemAction>(
+                  key: const ValueKey('item-menu-align'),
+                  showSelectedIcon: false,
+                  style: const ButtonStyle(
+                    visualDensity: VisualDensity.compact,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  segments: [
+                    ButtonSegment(
+                      value: _ItemAction.alignStart,
+                      icon: const Icon(Icons.format_align_left, size: 20),
+                      tooltip: l10n.itemAlignStart,
+                    ),
+                    ButtonSegment(
+                      value: _ItemAction.alignCenter,
+                      icon: const Icon(Icons.format_align_center, size: 20),
+                      tooltip: l10n.itemAlignCenter,
+                    ),
+                    ButtonSegment(
+                      value: _ItemAction.alignEnd,
+                      icon: const Icon(Icons.format_align_right, size: 20),
+                      tooltip: l10n.itemAlignEnd,
+                    ),
+                  ],
+                  selected: {
+                    switch (widget.align) {
+                      NoteItem.alignCenter => _ItemAction.alignCenter,
+                      NoteItem.alignEnd => _ItemAction.alignEnd,
+                      _ => _ItemAction.alignStart,
+                    },
+                  },
+                  onSelectionChanged: (v) => _pick(v.first),
+                ),
+              ),
           ],
         ),
       ),

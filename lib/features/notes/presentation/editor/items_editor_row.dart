@@ -98,6 +98,13 @@ extension _ItemsRow on ItemsEditorState {
           )
         : plainStyle;
     final checked = widget.showCheckboxes && item.checked && !item.header;
+    final textAlign = !item.header
+        ? TextAlign.start
+        : switch (item.align) {
+            NoteItem.alignCenter => TextAlign.center,
+            NoteItem.alignEnd => TextAlign.end,
+            _ => TextAlign.start,
+          };
     final selected = _selected.contains(item.id);
     // Odak durumu SATIRIN KENDİ dinleyicisinden gelir (bkz. [_focusFlags]).
     _focusFor(item);
@@ -438,6 +445,7 @@ extension _ItemsRow on ItemsEditorState {
                               controller: controller,
                               focusNode: _focusFor(item),
                               style: fieldStyle,
+                              textAlign: textAlign,
                               strut: wrapStrutStyle(fieldStyle),
                               verticalPad: fieldPad,
                               maxLines: widget.expandItems || focused
@@ -484,6 +492,7 @@ extension _ItemsRow on ItemsEditorState {
                                   // varsayılanına bırakılırsa ölçüm ile çizim ayrışır ve
                                   // satırlar yanlış kırılır (M3 varsayılanı bodyLarge).
                                   style: fieldStyle,
+                                  textAlign: textAlign,
                                   // Satır yüksekliği çıpası gövdeyle aynı yerden
                                   // gelir (bkz. [wrapStrutStyle]): ölçüm ile çizim
                                   // ayrışmasın.

@@ -51,6 +51,7 @@ typedef NoteTemplateContent = ({
   String title,
   String body,
   List<String> items,
+  int columns,
 });
 
 extension NoteTemplateInfo on NoteTemplate {
@@ -166,22 +167,96 @@ typedef TemplateSuggestionGroup = ({String label, List<String> items});
 List<TemplateSuggestionGroup> templateSuggestions(
   NoteTemplate template,
   AppLocalizations l10n,
-) => switch (template) {
-  NoteTemplate.shopping => [
-    (label: l10n.tplShopProduce, items: _split(l10n.tplShopProduceItems)),
-    (label: l10n.tplShopBreakfast, items: _split(l10n.tplShopBreakfastItems)),
-    (label: l10n.tplShopPantry, items: _split(l10n.tplShopPantryItems)),
-    (label: l10n.tplShopCleaning, items: _split(l10n.tplShopCleaningItems)),
-    (label: l10n.tplShopPersonal, items: _split(l10n.tplShopPersonalItems)),
-  ],
-  NoteTemplate.travel => [
-    (label: l10n.tplTravelDocs, items: _split(l10n.tplTravelDocsItems)),
-    (label: l10n.tplTravelClothes, items: _split(l10n.tplTravelClothesItems)),
-    (label: l10n.tplTravelCare, items: _split(l10n.tplTravelCareItems)),
-    (label: l10n.tplTravelTech, items: _split(l10n.tplTravelTechItems)),
-  ],
-  _ => const [],
-};
+) {
+  // **GRUP İÇİ ALFABETİK** (kullanıcı isteği 2026-11-05: "hızlı eklenebilir
+  // maddeler kendi kategorisinde alfabetik olmalı ve daha fazla seçenek
+  // olmalı"). Gruplar anlamlı sırada kalır (reyon sırası), çipler A→Z.
+  TemplateSuggestionGroup g(String label, String csv) =>
+      (label: label, items: sortedForLocale(_split(csv), l10n.localeName));
+  return switch (template) {
+    NoteTemplate.shopping => [
+      g(l10n.tplShopProduce, l10n.tplShopProduceItems),
+      g(l10n.tplShopBreakfast, l10n.tplShopBreakfastItems),
+      g(l10n.tplShopMeat, l10n.tplShopMeatItems),
+      g(l10n.tplShopPantry, l10n.tplShopPantryItems),
+      g(l10n.tplShopDrinks, l10n.tplShopDrinksItems),
+      g(l10n.tplShopSnacks, l10n.tplShopSnacksItems),
+      g(l10n.tplShopFrozen, l10n.tplShopFrozenItems),
+      g(l10n.tplShopCleaning, l10n.tplShopCleaningItems),
+      g(l10n.tplShopPersonal, l10n.tplShopPersonalItems),
+      g(l10n.tplShopBaby, l10n.tplShopBabyItems),
+      g(l10n.tplShopPet, l10n.tplShopPetItems),
+    ],
+    NoteTemplate.travel => [
+      g(l10n.tplTravelDocs, l10n.tplTravelDocsItems),
+      g(l10n.tplTravelClothes, l10n.tplTravelClothesItems),
+      g(l10n.tplTravelCare, l10n.tplTravelCareItems),
+      g(l10n.tplTravelTech, l10n.tplTravelTechItems),
+      g(l10n.tplTravelHealth, l10n.tplTravelHealthItems),
+      g(l10n.tplTravelBeforeGo, l10n.tplTravelBeforeGoItems),
+    ],
+    NoteTemplate.cleaning => [
+      g(l10n.tplCleanKitchen, l10n.tplCleanKitchenItems),
+      g(l10n.tplCleanBath, l10n.tplCleanBathItems),
+      g(l10n.tplCleanRooms, l10n.tplCleanRoomsItems),
+      g(l10n.tplCleanMonthly, l10n.tplCleanMonthlyItems),
+    ],
+    NoteTemplate.moving => [
+      g(l10n.tplMoveBefore, l10n.tplMoveBeforeItems),
+      g(l10n.tplMoveDay, l10n.tplMoveDayItems),
+      g(l10n.tplMoveAfter, l10n.tplMoveAfterItems),
+    ],
+    NoteTemplate.habits => [
+      g(l10n.tplHabitHealth, l10n.tplHabitHealthItems),
+      g(l10n.tplHabitMind, l10n.tplHabitMindItems),
+      g(l10n.tplHabitHome, l10n.tplHabitHomeItems),
+    ],
+    NoteTemplate.workout => [
+      g(l10n.tplWorkoutUpper, l10n.tplWorkoutUpperItems),
+      g(l10n.tplWorkoutLower, l10n.tplWorkoutLowerItems),
+      g(l10n.tplWorkoutCardio, l10n.tplWorkoutCardioItems),
+    ],
+    NoteTemplate.gifts => [
+      g(l10n.tplGiftPeople, l10n.tplGiftPeopleItems),
+      g(l10n.tplGiftIdeas, l10n.tplGiftIdeasItems),
+    ],
+    NoteTemplate.todo => [
+      g(l10n.tplTodoHome, l10n.tplTodoHomeItems),
+      g(l10n.tplTodoErrands, l10n.tplTodoErrandsItems),
+    ],
+    _ => const [],
+  };
+}
+
+/// Dilin alfabesine göre sıralar (Türkçede ç/ğ/ı/ö/ş/ü kendi yerinde).
+List<String> sortedForLocale(List<String> items, String locale) {
+  final tr = locale.startsWith('tr');
+  String key(String s) {
+    var t = tr
+        ? s.replaceAll('İ', 'i').replaceAll('I', 'ı').toLowerCase()
+        : s.toLowerCase();
+    if (tr) {
+      // Türkçe harfleri sıralamada yerlerine koymak için ara değerlere
+      // eşlenir: c < ç < d, g < ğ < h, ı < i, o < ö < p, s < ş < t, u < ü < v.
+      const map = {
+        'ç': 'c~',
+        'ğ': 'g~',
+        'ı': 'h~',
+        'ö': 'o~',
+        'ş': 's~',
+        'ü': 'u~',
+      };
+      final b = StringBuffer();
+      for (final ch in t.split('')) {
+        b.write(map[ch] ?? ch);
+      }
+      t = b.toString();
+    }
+    return t;
+  }
+
+  return [...items]..sort((a, b) => key(a).compareTo(key(b)));
+}
 
 /// Virgülle ayrılmış çeviri listesini maddelere böler.
 List<String> _split(String csv) => [
@@ -206,12 +281,14 @@ NoteTemplateContent buildNoteTemplate(
     title: title,
     body: buildTemplateText(lines),
     items: const [],
+    columns: 1,
   );
   NoteTemplateContent list(String title, List<String> items) => (
     type: NoteType.checklist,
     title: title,
     body: '',
     items: items,
+    columns: 1,
   );
   return switch (template) {
     NoteTemplate.shopping => list(

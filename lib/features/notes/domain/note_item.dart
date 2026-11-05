@@ -10,6 +10,7 @@ class NoteItem {
     this.attachmentId = '',
     this.divider = '',
     this.header = false,
+    this.align = '',
     this.extras = const {},
   });
 
@@ -27,7 +28,12 @@ class NoteItem {
     'attachmentId',
     'divider',
     'header',
+    'align',
   };
+
+  /// Ara başlık hizası (bkz. [align]).
+  static const alignCenter = 'center';
+  static const alignEnd = 'end';
 
   /// Madde ALTI ayırıcı çizgi türleri (bkz. [divider]).
   static const dividerSolid = 'solid';
@@ -86,6 +92,12 @@ class NoteItem {
   /// sürüm satırı düz madde olarak görür ve `extras`ta aynen geri yazar.
   final bool header;
 
+  /// Ara başlığın HİZASI (kullanıcı isteği 2026-11-05: "ara başlığa basılı
+  /// tutarak sola, ortaya, sağa hizalayabilelim"): '' = sola (varsayılan),
+  /// [alignCenter] / [alignEnd]. Yalnız doluyken kayda yazılır; alanı
+  /// tanımayan eski sürüm sola hizalı çizer.
+  final String align;
+
   NoteItem copyWith({
     String? text,
     bool? checked,
@@ -95,6 +107,7 @@ class NoteItem {
     String? attachmentId,
     String? divider,
     bool? header,
+    String? align,
   }) => NoteItem(
     id: id,
     text: text ?? this.text,
@@ -105,6 +118,7 @@ class NoteItem {
     attachmentId: attachmentId ?? this.attachmentId,
     divider: divider ?? this.divider,
     header: header ?? this.header,
+    align: align ?? this.align,
     extras: extras,
   );
 
@@ -118,6 +132,7 @@ class NoteItem {
     attachmentId: map['attachmentId'] as String? ?? '',
     divider: map['divider'] as String? ?? '',
     header: map['header'] as bool? ?? false,
+    align: map['align'] as String? ?? '',
     extras: {
       for (final e in map.entries)
         if (!knownKeys.contains(e.key)) e.key: e.value,
@@ -135,6 +150,7 @@ class NoteItem {
     if (attachmentId.isNotEmpty) 'attachmentId': attachmentId,
     if (divider.isNotEmpty) 'divider': divider,
     if (header) 'header': true,
+    if (align.isNotEmpty) 'align': align,
   };
 }
 

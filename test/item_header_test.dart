@@ -97,4 +97,67 @@ void main() {
     expect(latest!.first.header, isFalse);
     expect(find.byType(Checkbox), findsNWidgets(2));
   });
+
+  test('hiza yalnız doluyken yazılır, geri okunur', () {
+    const item = NoteItem(
+      id: 'a',
+      text: 'Sebze',
+      header: true,
+      align: NoteItem.alignCenter,
+    );
+    expect(NoteItem.fromMap(item.toMap()).align, NoteItem.alignCenter);
+    expect(NoteItem.fromMap(item.toMap()).extras, isEmpty);
+    expect(
+      const NoteItem(id: 'b', text: 'x').toMap().containsKey('align'),
+      isFalse,
+    );
+  });
+
+  testWidgets('ara başlık odaktaki maddenin ALTINA girer', (tester) async {
+    List<NoteItem>? latest;
+    await tester.pumpWidget(
+      _wrap(
+        ItemsEditor(
+          items: const [
+            NoteItem(id: 'a', text: 'Bir'),
+            NoteItem(id: 'b', text: 'İki'),
+            NoteItem(id: 'c', text: 'Üç'),
+          ],
+          onChanged: (updated) => latest = updated,
+          showCheckboxes: true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bir'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('items-add-header')));
+    await tester.pumpAndSettle();
+    expect([for (final i in latest!) i.header], [false, true, false, false]);
+    expect(latest![0].id, 'a');
+  });
+
+  testWidgets('başlığa basılı tutunca hiza seçilir', (tester) async {
+    List<NoteItem>? latest;
+    await tester.pumpWidget(
+      _wrap(
+        ItemsEditor(
+          items: const [
+            NoteItem(id: 'h', text: 'Bölüm', header: true),
+            NoteItem(id: 'b', text: 'Elma'),
+          ],
+          onChanged: (updated) => latest = updated,
+          showCheckboxes: true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.longPress(find.byKey(const ValueKey('item-header-h')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('item-menu-align')), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.format_align_center));
+    await tester.pumpAndSettle();
+    expect(latest!.first.align, NoteItem.alignCenter);
+    expect(tester.takeException(), isNull);
+  });
 }

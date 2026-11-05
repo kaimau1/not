@@ -20,6 +20,7 @@ import '../data/note_share.dart';
 import '../data/notes_repository.dart';
 import '../data/scan/scan_pdf.dart';
 import '../data/scan/scan_title.dart';
+import '../data/user_templates.dart';
 import '../data/video_frame.dart';
 import '../domain/note.dart';
 import '../domain/note_templates.dart';
@@ -75,8 +76,15 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// galeri atlanır, doğrudan o şablonun önizlemesi gelir (2026-09-29:
   /// maddeler not oluşmadan seçilir/eklenir). Not başlığı ve içeriğiyle TEK
   /// yazımda doğar, o anki klasöre düşer.
-  Future<void> createFromTemplate([NoteTemplate? template]) async {
-    final content = await showNoteTemplateSheet(context, initial: template);
+  Future<void> createFromTemplate([
+    NoteTemplate? template,
+    UserTemplate? userTemplate,
+  ]) async {
+    final content = await showNoteTemplateSheet(
+      context,
+      initial: template,
+      initialUser: userTemplate,
+    );
     if (content == null || !mounted) return;
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
@@ -86,6 +94,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       body: content.body,
       items: content.items,
       folderId: quickAddFolderId,
+      listColumns: content.columns,
     );
     await openNewNote(id, type: content.type);
   }
