@@ -5,7 +5,7 @@ Arayüz metni yazarken bu tablo geçerli. `test/terminology_test.dart`
 
 | Kavram | Kullan | Kullanma |
 |---|---|---|
-| AI | **Yapay zekâ** (cümle düzeni, şapkalı); kısa yerde **AI** | Yapay Zeka, yapay zeka, Yapay Zekâ |
+| AI | **Yapay zekâ** (cümle düzeni, şapkalı); kısa yerde **AI** (≥ 60 karakterlik cümlede AI yok; "AI sesli not" terimin adı) | Yapay Zeka, yapay zeka, Yapay Zekâ |
 | Liste satırı | **madde** ("Yeni madde", "+3 madde daha") | öğe |
 | Arayüz parçası | **düğme**, **alan** | öğe |
 | Hitap | **sen** ("dokun", "seç", "yazabilirsin") | siz, "dokunun", "seçin", "Lütfen" |
@@ -41,6 +41,11 @@ Kaynak: `lib/core/app_icons.dart` (`AppIcons`). Tabloda olan bir iş için
 | Ara / Notta ara | `search` | search | — (derin arama manage_search ayrı iş) |
 | Tam ekran | `fullscreen` | fullscreen | — |
 | Çöpten geri yükle | `restore` | restore_from_trash_outlined | — |
+| Dikte (AI'sız; ana ekran mikrofonu rozetsiz) | `dictation` | mic | AI sesli not |
+| AI sesli not (✨ mikrofon, `AppIcons.glyph` çizer) | `aiVoiceNote` | mic_none_rounded + auto_awesome | Dikte |
+| Ses kaydı, ses eki | `voiceRecord` | graphic_eq | — |
+| Sesli dinle | `listen` | headphones_outlined | — |
+| Sesli komut (sohbet) | `voiceCommand` | settings_voice_outlined | — |
 | Kişiler | `friends` | people_outline | Paylaşılan (people_alt) |
 
 Levhalar: başlık solda + ✕ sağda (`SheetHeader`); bölüm başlığı cümle

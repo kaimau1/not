@@ -72,7 +72,7 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 37…45) ya da "F40.3'ü yap" (tek mad
 | 39 | Ana ekran: başlık, çipler, bölümler, jestler | Yapıldı | 2026-11-05 | 6/6; F39.4 GEÇERSİZ; KALANLAR §2 #70 |
 | 40 | Ekler: tek model, tek menü | Yapıldı | 2026-11-05 | 9/9; Android tablette sürükle-bırak yok (motor), videoda dönüş oturumluk, tur F45.1'e; KALANLAR §2 #71–#74 |
 | 41 | Ekleme akışı ve şablonlar | Yapıldı | 2026-11-05 | 4/4; paylaşım hedef levhası korundu; KALANLAR §2 #75–#76 |
-| 42 | Yapay zekâ ve ses: tek dil, görünür durum | Açık | | K7, K10 |
+| 42 | Yapay zekâ ve ses: tek dil, görünür durum | Yapıldı | 2026-11-05 | 6/6; cihazda elle doğrulanmadı, KALANLAR §2 #77–#80 |
 | 43 | Paylaşım, Gelen, benimle paylaşılanlar | Açık | | K8 |
 | 44 | Web ve geniş ekran (tablet, masaüstü) | Açık | | K3, K4, K5 |
 | 45 | Ölçüm, tur, kural testleri, cihaz turu | Açık | | tur aracı genişler |
@@ -523,23 +523,29 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
 
 ## FAZ 42 — Yapay zekâ ve ses: tek dil, görünür durum
 
-- [ ] **F42.1 Ses kapı modeli** (F6, B5, E4, K7): ses simgeleri `AppIcons`'a
+- [x] **F42.1 Ses kapı modeli** (F6, B5, E4, K7): ses simgeleri `AppIcons`'a
   (dikte, AI sesli not, ses kaydı, canlı dinleme, sesli komut); her kapı aynı
   ad + simge; `visual_consistency_test` doğrudan `Icons.mic/graphic_eq`
   kullanımını yakalar.
-- [ ] **F42.2 AI durumu tek kaynak** (F5, I2): `aiAvailabilityProvider`
+  **Yapıldı (2026-11-05):** `AppIcons.dictation/aiVoiceNote/voiceRecord/listen/voiceCommand`; ✨ mikrofon bileşik olduğu için `AppIcons.glyph` çizer, satır API'leri `IconData` kaldı. Ana ekran mikrofonu rozetsiz, basılı tutma ipucu ilk dokunuşta bir kez (`TipOnce.homeMicHold`). Ekle kataloğunda AI sesli not ile Ses kaydının simgeleri TERSTİ, düzeldi. Kişiselleştir'de mikrofonun adı "Dikte". **Not:** plandaki "Canlı dinleme" adı arayüzde yok; kulaklık "Sesli dinle"ye verildi.
+- [x] **F42.2 AI durumu tek kaynak** (F5, I2): `aiAvailabilityProvider`
   (hazır · anahtar gerekli · misafir · web'de dahili kapalı · kota bitti →
   yenilenme saati). AI düğmeleri durumu gösterir; dokununca tek açıklama
   levhası (anahtar gir / giriş yap / yarın). Arka plan AI hiç bildirim basmaz.
-- [ ] **F42.3 AI hata metinleri l10n'da** (F4): veri katmanı hata TÜRÜ döner
+  **Yapıldı (2026-11-05):** `aiGuestLockedProvider` kalktı. `AiStatusCard` (hub, AI levhası, `showAiStatusSheet`), `ensureAiReady` (düğme başı), `AiIcon` (✨ → kilit), editör ✨ rozeti + ipucu. Dahili yolun kapalı olduğu istekten öğrenilir, 24 saat hatırlanır (`aiBuiltInOffProvider`), "Tekrar dene" ya da başarılı istek siler. Puan bittiğinde sunucu reddi yerel sayaca da yazılır, yenilenme saatinde kilit kendiliğinden açılır. Arka plan yolları denetlendi (otomatik başlık/etiket, video dökümü): bildirim yok, değişmedi. **Bilinçli sapmalar:** editör ✨ yine AI levhasını açar, kart levhanın başında (levhada cihazda çalışan işler de var); AI sesli not ve aramanın ✨ anahtarı kilitlenmez, AI'sız düz yola düşerler. Web'de ilk açılışta durum ilk istekten sonra görünür (site anahtarı yokluğu kapalı demek değil).
+- [x] **F42.3 AI hata metinleri l10n'da** (F4): veri katmanı hata TÜRÜ döner
   (`GeminiErrorKind`), metin arayüzde; "yapay zekâ" yazımı; `terminology_test`
   `lib/**/*.dart` içindeki sabit Türkçe kullanıcı metnini de tarar.
-- [ ] **F42.4 AI'lı / AI'sız dikte:** dikte bitince tek dokunuşla "AI ile
+  **Yapıldı (2026-11-05):** `GeminiException.of(kind)` + `localized(l10n)`; bütün çağrı yerleri tek `aiErrorText`. Ham sağlayıcı metni artık kullanıcıya gitmez, günlükte kalır. Eski "yetki hatasında genel anahtar metni" dalları kalktı: kapalı dahili yol kendi cümlesini söyler. Tarama `Text`/`label`/`tooltip`/`showMessage`/`GeminiException` kalıplarına bakar; istisna `setup_required_screen` (Firebase'siz geliştirici ekranı).
+- [x] **F42.4 AI'lı / AI'sız dikte:** dikte bitince tek dokunuşla "AI ile
   düzelt" önerisi (anahtar/kota varsa); AI sesli not ile aynı talimat.
-- [ ] **F42.5 "AI" ↔ "Yapay zekâ"** kullanım denetimi (TERİMLER: kısa yerde AI).
-- [ ] **F42.6 Jest güvenliği** (F7, K10 — onaylandı 2026-11-04): parmakta yalnız
+  **Yapıldı (2026-11-05):** dikte bitince bildirimde "AI ile düzelt" (AI hazırsa, ≥ 12 karakter; hatada ve kayda geçerken önerilmez). Talimat `voiceCaptureInstruction(fix)`. Aralık bu arada değiştiyse yazmaz (`dictationFixed`). Yalnız canlı dikte; web'de dikte levhaya düşer, orada "düzelt" zaten var.
+- [x] **F42.5 "AI" ↔ "Yapay zekâ"** kullanım denetimi (TERİMLER: kısa yerde AI).
+  **Yapıldı (2026-11-05):** cümle içi 7 metin "yapay zekâ", "AI Özeti" → "AI özeti". `terminology_test`: ≥ 60 karakterde AI yok ("AI sesli not" hariç).
+- [x] **F42.6 Jest güvenliği** (F7, K10 — onaylandı 2026-11-04): parmakta yalnız
   "üstünü çiz / ✓ = işaretle"; "karala = sil" ve "daire = AI ile düzelt"
   kalemde, parmakta Ayarlar'dan açılırsa; tek açıklama + geri al (F36.5) korunur.
+  **Yapıldı (2026-11-05):** `inkGestureAllowed`, ayar `item_gestures_finger_all` (varsayılan kapalı, Görünüm). Fare parmak sayılır (metin seçerken sürükler). **Sabah bakılacak:** "Kalemi otomatik algıla" açıkken (varsayılan) kalem sayfaya yazar, jest yapmaz; o durumda karalama ve daire ancak ayar açılınca çalışır. Kalem kullanmayan biri için bu iki jest fiilen kapalıdır.
 
 ## FAZ 43 — Paylaşım, Gelen, benimle paylaşılanlar
 

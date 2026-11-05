@@ -184,6 +184,12 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 76. [ ] (F41.4 web) Not açıkken dosyayı sayfaya bırak ya da görsel yapıştır → o nota girer; not kapalıyken yeni not; Word'den metin+resim yapıştır → yalnız metin yazılır.
 74. [ ] (F40.8) Web: görsele sağ tık menüsü, üstüne gelince ⋮, masaüstünden dosyayı sayfaya sürükle-bırak → "dosya" levhası. Android tablette sürükle-bırak yok (bilerek).
 
+**2026-11-05 — yapay zekâ ve ses (TUTARLILIK_PLANI Faz 42, yazıldı, cihazda elle doğrulanmadı)**
+77. [ ] (F42.1) Ana ekran mikrofonu rozetsiz; ilk dokunuşta "basılı tutarsan AI sesli not" ipucu bir kez; basılı tutunca AI sesli not açılıyor. AI levhasında AI sesli not satırı ✨ mikrofon; "+" panelinde dalga Ses kaydında.
+78. [ ] (F42.2) Misafirde ya da puan bitince: editör ✨ üstünde kilit, AI levhasında tek kart, Çöp analizi/Sohbet gibi düğmelerde dokununca aynı kart; kotada yenilenme saati doğru. Web'de dahili kapalıysa ilk istekten sonra kart, "Tekrar dene" kapatıyor.
+79. [ ] (F42.4) Notta dikte bitir (uzun cümle) → bildirimde "AI ile düzelt" → aralık düzeliyor, Geri al çalışıyor; bu arada metni değiştirdiysen dokunmuyor. Anahtarsız misafirde öneri çıkmıyor.
+80. [ ] (F42.6) Parmakla maddeyi çiz → işaretlenir; parmakla karala/daire → hiçbir şey olmaz; Ayarlar → Görünüm'den açınca çalışır. Kalemli cihazda "Kalemi otomatik algıla" kapalıyken kalemle karala/daire çalışıyor.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)

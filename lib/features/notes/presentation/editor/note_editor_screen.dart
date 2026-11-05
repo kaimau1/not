@@ -3848,7 +3848,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                     child: Consumer(
                                       builder: (context, ref, _) => _voiceButton(
                                       size: plan.button,
-                                      tooltip: l10n.aiTitle,
+                                      // Rozet görünmeyen için de durum.
+                                      tooltip: aiStatusTitle(
+                                        l10n,
+                                        ref.watch(aiAvailabilityProvider),
+                                      ),
                                       icon: Icons.auto_awesome,
                                       badge:
                                           ref.watch(aiAvailabilityProvider) ==

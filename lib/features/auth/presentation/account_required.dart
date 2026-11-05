@@ -96,29 +96,21 @@ class AiStatusCard extends ConsumerWidget {
     final renews = status == AiAvailability.quotaOut
         ? ref.watch(aiQuotaRenewsAtProvider)
         : null;
-    final (title, body) = switch (status) {
-      AiAvailability.ready => ('', ''),
-      AiAvailability.guest => (l10n.guestAiTitle, l10n.guestAiBody),
-      AiAvailability.needsKey => (
-        l10n.aiStatusBuiltInOffTitle,
-        l10n.aiErrBuiltInOff,
-      ),
-      AiAvailability.webBuiltInOff => (
-        l10n.aiStatusWebOffTitle,
-        l10n.aiStatusWebOffBody,
-      ),
-      AiAvailability.quotaOut => (
-        l10n.aiStatusQuotaTitle,
-        l10n.aiStatusQuotaBody(
-          renews == null
-              ? ''
-              : MaterialLocalizations.of(context).formatTimeOfDay(
-                  TimeOfDay.fromDateTime(renews),
-                  alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(
-                    context,
-                  ),
+    final title = aiStatusTitle(l10n, status);
+    final body = switch (status) {
+      AiAvailability.ready => '',
+      AiAvailability.guest => l10n.guestAiBody,
+      AiAvailability.needsKey => l10n.aiErrBuiltInOff,
+      AiAvailability.webBuiltInOff => l10n.aiStatusWebOffBody,
+      AiAvailability.quotaOut => l10n.aiStatusQuotaBody(
+        renews == null
+            ? ''
+            : MaterialLocalizations.of(context).formatTimeOfDay(
+                TimeOfDay.fromDateTime(renews),
+                alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(
+                  context,
                 ),
-        ),
+              ),
       ),
     };
     if (status == AiAvailability.ready) return const SizedBox.shrink();
@@ -179,6 +171,16 @@ class AiStatusCard extends ConsumerWidget {
     );
   }
 }
+
+/// Durumun tek satırlık adı: kart başlığı ve düğme ipucu aynı metin.
+String aiStatusTitle(AppLocalizations l10n, AiAvailability status) =>
+    switch (status) {
+      AiAvailability.ready => l10n.aiTitle,
+      AiAvailability.guest => l10n.guestAiTitle,
+      AiAvailability.needsKey => l10n.aiStatusBuiltInOffTitle,
+      AiAvailability.webBuiltInOff => l10n.aiStatusWebOffTitle,
+      AiAvailability.quotaOut => l10n.aiStatusQuotaTitle,
+    };
 
 /// Tek açıklama levhası (F42.2).
 Future<void> showAiStatusSheet(BuildContext context) =>

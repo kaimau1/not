@@ -393,10 +393,9 @@ maddeyi GÜNCELLE.
 - **Başlık sığdırma ölçümü (F36.2 kök neden):** `TextField` M3'te stilini
   `bodyLarge`ın ÜSTÜNE birleştirir (harf aralığı 0,5 miras) → ölçüm
   `fieldMergedStyle(bodyLarge, stil)` ile; yoksa uzun başlık çipin altına taşar.
-- **AI hata metni (F36.5):** `aiErrorText(l10n, e)` — `aiError(friendlyError())`
-  YAZMA (okunur `GeminiException` çift başlık alıyordu). Daire jesti AI yoksa
-  bir kez `gestureFixNeedsAi`, sonra oturum boyu sessiz; karalama silmesi
-  bildirimde Geri al.
+- **AI hata metni (F36.5, F42.3):** tek kapı `aiErrorText(l10n, e)`; `e.message` ya da `aiError(friendlyError())` YAZMA. Veri katmanı metin yazmaz: `GeminiException.of(kind)`, metin ARB'de (`localized`). `GeminiException('…')` yalnız zaten yerelleşmiş metinle (test tarar). Daire jesti AI yoksa bir kez `gestureFixNeedsAi`, sonra oturum boyu sessiz; karalama silmesi bildirimde Geri al.
+- **AI durumu (F42.2, 2026-11-05):** tek kaynak `aiAvailabilityProvider`; yeni AI düğmesi `ensureAiReady(context, ref)` ile başlar, simgesi `AiIcon`. Arka plan işi çağırmaz, sessiz geçer. AI'sız yola düşen kapı (AI sesli not, anlamsal arama) kilitlenmez. Kota kilidi yalnız yenilenme saati biliniyorsa (son söz sunucu sayacında). Web'de "dahili kapalı" istekten öğrenilir (`aiBuiltInOffProvider`, 24 saat); site anahtarı yokluğu kapalı demek DEĞİL.
+- **Ses simgeleri (F42.1, K7):** `AppIcons.dictation/aiVoiceNote/voiceRecord/listen/voiceCommand`, `IconData` alan satır `AppIcons.glyph` ile çizer (AI sesli not bileşik). Jest: parmak yalnız işaretler, `inkGestureAllowed` (K10). TUZAK: Bash heredoc'una yazılan Python betiğinde ters bölüler yarıya iniyor (`\\b` → backspace): betiği Write ile yaz.
 - **Ek tek model (F40, 2026-11-05):** menü sırası yalnız `attachmentActionsFor`; yeni ek işi oraya + `AttachmentAction`. Görünüm geçişi menü maddesi değil anahtar (K6; "Sayfaya göm/Ek olarak taşı/Nota aktar" YOK), her geçiş `_setAttachmentView` → "A → B · Geri al". Durum tek dil `attachmentStatusOf` + rozet; ek kutusuna tıklanabilir yer tutucu koyma (yüzende dokunuş seçer, kartta notu açar; `interactive: false` + köşe rozeti). Araç satırı zemini `PdfReadStyle.barColor`. Video dönüşü oturumluk (`NoteVideoHub.rotate`). Web dosya bırakma `listenFileDrops` → `useFiles`.
 - **Bölüm başlığı (F36.7):** tek `SectionLabel`, cümle düzeni (büyük harf
   yalnız rozet: BALONLU PDF, SUNUM, VİDEO, YENİ); Başlık Düzeni ad yok
@@ -435,7 +434,7 @@ maddeyi GÜNCELLE.
 - Kişiselleştirme `UiItem` kimlikleri kalıcı anahtar — değiştirme.
 - **Tek Ekle kataloğu (F41, 2026-11-05):** "+" paneli ve Ekle levhası `addCatalog` + `AddTile`; yeni seçenek oraya yazılır (kimlikler `UiItem.quickAdd`/`attach`, değiştirme). Web dosya bırakma/yapıştırma `addFileDropHandler`: en son açılan yüzey alır (not > ana ekran). Paylaşımdan gelen ek `?place=<id>` ile ipucuyla açılır.
 - Misafir: hesap isteyen giriş gizlenmez (`AccountLockBadge`); dahili AI
-  misafire kapalı (`aiGuestLockedProvider`).
+  misafire kapalı (`aiAvailabilityProvider`).
 - "Yeni sürüm var" (F18.21, yalnız Android): `config/app.latestBuild` >
   kurulu derleme (yerel 1 sayılmaz) → sürüm başına bir kez bildirim
   (`update_notice_shown_for`) + Ayarlar → Hakkında satırı.
