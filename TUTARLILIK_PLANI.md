@@ -75,7 +75,7 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 37…45) ya da "F40.3'ü yap" (tek mad
 | 42 | Yapay zekâ ve ses: tek dil, görünür durum | Yapıldı | 2026-11-05 | 6/6; cihazda elle doğrulanmadı, KALANLAR §2 #77–#80 |
 | 43 | Paylaşım, Gelen, benimle paylaşılanlar | Yapıldı | 2026-11-05 | 5/5; K8 uygulandı, FolderScreen silindi; ikinci hesap gerekir, cihazda doğrulanmadı, KALANLAR §2 #81–#83 |
 | 44 | Web ve geniş ekran (tablet, masaüstü) | Yapıldı | 2026-11-05 | 8/8; K3, K4, K5 uygulandı; tarayıcı ve tablette elle doğrulanmadı, KALANLAR §2 #84–#86 |
-| 45 | Ölçüm, tur, kural testleri, cihaz turu | Yapıldı | 2026-11-05 | 4/4; 8 hata düzeltildi; hesap/ses/web/tablet isteyenler KALANLAR §2'de |
+| 45 | Ölçüm, tur, kural testleri, cihaz turu | Yapıldı | 2026-11-05 | 4/4; 9 hata düzeltildi; hesap/ses/web/tablet isteyenler KALANLAR §2'de |
 
 ## İlkeler — "bir şey, bir görünüş, bir ad, bir yer"
 
@@ -613,4 +613,4 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
 - [x] **F45.4 Test telefonu turu** (KALANLAR §2 #54–): her faz sonrası 10 dk;
   yerel oturum ölçüm uygulamasıyla (`dev.kaimau.notlar.olcum`, 244 not) —
   varsayılan kimlikle `flutter run/drive` o telefonda ASLA (HAFIZA).
-  **Yapıldı (2026-11-05):** v1.1.701–704 release ile; 8 gerçek hata bulundu, düzeltildi, testle sabitlendi. Geçenler silindi; hesap, ikinci hesap, ses, web, tablet isteyenler KALANLAR §2'de nedeniyle duruyor. C6: "İşaretliler · Sil" bloğun başında, sürtünme kalktı.
+  **Yapıldı (2026-11-05):** v1.1.701–704 release ile; 9 gerçek hata bulundu, düzeltildi, testle sabitlendi. Geçenler silindi; hesap, ikinci hesap, ses, web, tablet isteyenler KALANLAR §2'de nedeniyle duruyor. C6: "İşaretliler · Sil" bloğun başında, sürtünme kalktı.
