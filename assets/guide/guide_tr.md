@@ -235,4 +235,6 @@ En üstte iki kart: **Kullanım kılavuzu** ve **Kişiselleştir** (hangi düğm
 - Gizli jestler ilk kez mümkün olduğunda **bir kez** tek satırla tanıtılır (liste notu, ilk PDF, ilk görsel, ızgarada klasörler); bir oturumda en fazla bir ipucu. Yeniden görmek için Ayarlar → Eklentiler ve hızlı not → **İpuçlarını yeniden göster**.
 - **Kalemle yazma:** kalem notun sayfasına değince yazı doğrudan sayfaya işlenir, araçlar açılır (tablette solda, telefonda altta). Parmakla dokunup klavyeyle aynı notta devam edersin; ✓ araçları kapatır. **Ekle → Sayfaya yaz (kalem)** aynı kipi açar. İstemezsen kalem ayarlarında **Kalemi otomatik algıla**'yı kapat. Metin sonradan akarsa çizim birlikte kaymaz.
 - **Tam ekran (tablet, web):** not üst çubuğundaki düğme ray ve listeyi gizler.
+- **Geniş ekranda yeni not:** kalem, mikrofon ve **+** soldaki rayda; raydaki **Notlar** her yerden ana sayfaya döner. Dikey tablette not açılınca liste kenara çekilir, ☰ geri getirir.
+- **Fare ve dokunmatik yüzey:** Ctrl+tekerlek ya da kıstırma sütun sayısını değiştirir, Alt+←/→ ya da yatay kaydırma klasör geçer. Kartın ⋮ düğmesi fareyle üstüne gelince görünür; kartta ve maddede sağ tık menü açar. Seçimdeyken Ctrl+A hepsini seçer, Delete çöp kutusuna atar.
 - Bu kılavuza her zaman ⋮ menüsünden ya da Ayarlar'dan ulaşırsın.

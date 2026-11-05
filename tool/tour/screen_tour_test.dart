@@ -23,6 +23,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:notlar/app/app.dart';
+import 'package:notlar/app/app_commands.dart' show homeBarOnNarrow;
 import 'package:notlar/app/app_frame.dart';
 import 'package:notlar/app/split_shell.dart';
 import 'package:notlar/app/theme/app_palette.dart';
@@ -334,6 +335,8 @@ void main() {
     await _loadFonts();
   });
 
+  // Dar web (K5): telefon boyu + üst çubukta ev (TOUR_WEB=1).
+  homeBarOnNarrow = Platform.environment['TOUR_WEB'] == '1';
   // Hangi ekranlar çekilsin: TOUR_ONLY=ana,n1 gibi süzülebilir.
   final only = (Platform.environment['TOUR_ONLY'] ?? '')
       .split(',')

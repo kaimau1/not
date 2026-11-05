@@ -239,9 +239,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// döndürme, pencere boyutlandırma) ekran BAŞKA bir DashboardScreen
   /// instance'ına geçiyor; kutu boş başlasaydı liste görünmez bir sorguyla
   /// süzülü kalırdı (searchQueryProvider global, kutu ise State'te).
-  late final _searchController = TextEditingController(
-    text: ref.read(searchQueryProvider),
-  );
+  ///
+  /// TEMBEL OLAMAZ (F44.8 kök nedeni): gizli listede sayfa hiç kurulmaz
+  /// ([FreezeWhenHidden]), ilk erişim `dispose`a kalır ve `ref` orada patlar:
+  /// not açıkken pencere daralınca istisna.
+  late final TextEditingController _searchController;
   final _searchFocus = FocusNode();
 
   /// "+" menüsünün demirlendiği nokta: "+" düğmesi (mikrofon solunda).
@@ -270,6 +272,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   @override
   void initState() {
     super.initState();
+    _searchController = TextEditingController(
+      text: ref.read(searchQueryProvider),
+    );
     homeDoors = this;
     _stopFileDrops = addFileDropHandler((files) {
       // Paylaşılan klasörde dosya akışı notu KENDİ koleksiyonuma açardı (F43.2).

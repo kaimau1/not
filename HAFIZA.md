@@ -560,6 +560,7 @@ maddeyi GÜNCELLE.
   `popRoute` (PopScope'a uyar), derin bağlantıda `go('/')`. TUZAK: tarayıcı
   Ctrl+W/Ctrl+N'yi sayfaya vermez (sekmeyi kapatır) — yalnız Android/kurulu
   PWA'da çalışır. Ayraca çift tık = o kipin varsayılan genişliği.
+- **Geniş ekran kapıları (F44, 2026-11-05):** yeni not kapıları rayda (K3), ana ekran FAB'ları `AppRailScope.visible` ise çizilmez; iş ana ekranda, ray ve kısayol `homeDoors` (`HomeDoors`) ile çağırır (dar↔geniş geçişinde yeni örnek önce kurulur, `dispose` yalnız kendisiyse siler). "Notlar" = `goHome` (K4). Dar web 🏠 `HomeInBar`: yeni çubuklu bölüm ekranı sarılır + `kHomeInBarLocations` (K5). Sütun `readingColumn`/`readingMargin`: sabit medyada ve belgede çubuklar bölmeyi doldurur. Dikey < 960 dp not açılınca liste çekilir (`listAutoHidesFor`, `listPeekLocationProvider`); editör `SplitScope.listHidden` okur, sağlayıcı değil. TUZAK: kökteki `AppShortcuts` metin alanının kısayollarından ÖNCE yakalar (`DefaultTextEditingShortcuts` daha yukarıda): Ctrl+A/Delete gibi metinde de anlamlı tuşu koşulsuz bağlama. TUZAK: `DashboardScreen` gizli listede hiç kurulmayabilir (`FreezeWhenHidden`): `ref` okuyan tembel alan `dispose`ta patlar, `initState`te kur. Web'de Ctrl+tekerlek ve kıstırma `PointerScaleEvent` gelir (`exp(-dy/200)`), yatay kaydırma tekerlek olayı (bırakma yok, sessizlikle biter).
 - Misafir kartı "Sonra" → şerit; 5/20 notta bir kez tam kart.
 - `CustomizeModeHost` alanın kendi boyunu `MediaQuery.size` verir (alt çubuk
   ekran dışına itiliyordu).

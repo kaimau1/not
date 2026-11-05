@@ -3514,7 +3514,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         ? const SizedBox.shrink()
                         : RevealUp(
                           child: SingleChildScrollView(
-                            child: FormatBar(
+                            child: Center(
+child: ConstrainedBox(
+constraints: BoxConstraints(
+maxWidth: readingColumn ? kReadingWidth : double.infinity,
+),
+child: FormatBar(
                               target: _formatTarget,
                               onFormat: _applyFormat,
                               onClearFormat: _clearFormat,
@@ -3594,6 +3599,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                     ?.editDividerStyleOf(_formatItemId ?? ''),
                               ),
                             ),
+),
+),
                           ),
                         ),
                   ),
@@ -3606,7 +3613,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 if (_findOpen)
                   ListenableBuilder(
                     listenable: _find,
-                    builder: (context, _) => NoteFindBar(
+                    builder: (context, _) => Center(
+child: ConstrainedBox(
+constraints: BoxConstraints(
+maxWidth: readingColumn ? kReadingWidth : double.infinity,
+),
+child: NoteFindBar(
                       controller: _find.query,
                       focusNode: _find.focus,
                       count: _find.hits.length,
@@ -3618,6 +3630,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       onList: () => unawaited(_openFindList()),
                       onClose: _closeFind,
                     ),
+),
+),
                   )
                 // BİÇİM PANELİ AÇIKKEN alt çubuk GİZLİ (kullanıcı isteği
                 // 2026-10-20: "biçim paneli açılınca alttaki ses, ek vb.

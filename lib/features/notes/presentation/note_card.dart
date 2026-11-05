@@ -1228,7 +1228,11 @@ class _RevealOnCardHover extends StatelessWidget {
         ?.hovered;
     if (hovered == null) return child;
     return ListenableBuilder(
-      listenable: hovered,
+      // Fare bağlanınca bir kez (dokunmatik cihazda hiç) tetiklenir.
+      listenable: Listenable.merge([
+        hovered,
+        RendererBinding.instance.mouseTracker,
+      ]),
       // Yer ve ekran okuyucu düğümü kalır, yalnız çizilmez.
       builder: (context, shown) => Visibility.maintain(
         visible:

@@ -334,7 +334,10 @@ extension _ItemsRow on ItemsEditorState {
                 // Builder: menü satırın KENDİ kutusunu bulsun (F12.7 —
                 // hedef madde vurgulanır, menü maddenin altında açılır).
                 Builder(
-                  builder: (leadContext) => GestureDetector(
+                  builder: (leadContext) => _itemRightClick(
+ item,
+ anchor: leadContext,
+ child: GestureDetector(
                     behavior: _selectionMode
                         ? HitTestBehavior.opaque
                         : HitTestBehavior.deferToChild,
@@ -349,14 +352,6 @@ extension _ItemsRow on ItemsEditorState {
                         );
                       }
                     },
-                    // Sağ tık = uzun basış (F44.5).
-                    onSecondaryTapUp: _selectionMode
-                        ? null
-                        : (details) => _showItemMenu(
-                            item,
-                            details.globalPosition,
-                            anchor: leadContext,
-                          ),
                     onTap: _selectionMode
                         ? () => _toggleSelection(item)
                         : null,
@@ -365,17 +360,14 @@ extension _ItemsRow on ItemsEditorState {
                       child: leading,
                     ),
                   ),
+),
                 ),
                 Expanded(
                   // Seçim modunda metne dokunmak düzenlemeye değil seçime gider.
-                  child: GestureDetector(
+                  child: _itemRightClick(
+ item,
+ child: GestureDetector(
                     onTap: _selectionMode ? () => _toggleSelection(item) : null,
-                    // Düz çizilen satır (F24.3) sağ tıkta menü açar; odaklı
-                    // alanın sağ tıkı metin menüsü, alan önce kazanır.
-                    onSecondaryTapUp: _selectionMode
-                        ? null
-                        : (details) =>
-                              _showItemMenu(item, details.globalPosition),
                     child: AbsorbPointer(
                       absorbing: _selectionMode,
                       child: _wrapped(
@@ -554,6 +546,7 @@ extension _ItemsRow on ItemsEditorState {
                       ),
                     ),
                   ),
+),
                 ),
                 // YILDIZ ARTIK DÜĞME DEĞİL, İŞARET (kullanıcı isteği 2026-08-30:
                 // "yıldızla tuşu maddeler için yerleşimi kötü, basılı tutunca

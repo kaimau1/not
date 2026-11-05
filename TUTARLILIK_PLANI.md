@@ -74,7 +74,7 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 37…45) ya da "F40.3'ü yap" (tek mad
 | 41 | Ekleme akışı ve şablonlar | Yapıldı | 2026-11-05 | 4/4; paylaşım hedef levhası korundu; KALANLAR §2 #75–#76 |
 | 42 | Yapay zekâ ve ses: tek dil, görünür durum | Yapıldı | 2026-11-05 | 6/6; cihazda elle doğrulanmadı, KALANLAR §2 #77–#80 |
 | 43 | Paylaşım, Gelen, benimle paylaşılanlar | Yapıldı | 2026-11-05 | 5/5; K8 uygulandı, FolderScreen silindi; ikinci hesap gerekir, cihazda doğrulanmadı, KALANLAR §2 #81–#83 |
-| 44 | Web ve geniş ekran (tablet, masaüstü) | Açık | | K3, K4, K5 |
+| 44 | Web ve geniş ekran (tablet, masaüstü) | Yapıldı | 2026-11-05 | 8/8; K3, K4, K5 uygulandı; tarayıcı ve tablette elle doğrulanmadı, KALANLAR §2 #84–#86 |
 | 45 | Ölçüm, tur, kural testleri, cihaz turu | Açık | | tur aracı genişler |
 
 ## İlkeler — "bir şey, bir görünüş, bir ad, bir yer"
@@ -569,24 +569,32 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
 
 ## FAZ 44 — Web ve geniş ekran (tablet, masaüstü)
 
-- [ ] **F44.1 Ray** (J1, J2, K3, K4): 🏠 ile "Notlar" birleşir; yeni not
+- [x] **F44.1 Ray** (J1, J2, K3, K4): 🏠 ile "Notlar" birleşir; yeni not
   kapıları tek yerde; ray altındaki eylemler (liste aç/kapa, kişiler,
   kısayollar, genişlet) gruplu.
-- [ ] **F44.2 Dar web "Ana sayfaya dön"** (I1, K5).
-- [ ] **F44.3 Okuma sütunu hizası** (C3, J4): editör üst çubuğu, başlık
+  **Yapıldı (2026-11-05):** 🏠 kalktı, "Notlar" `goHome` (açık notu da kapatır, Alt+Home ile aynı). Rayda kalem, altında mikrofon ve "+"; ray görünürken ana ekranın sağ altındaki düğmeler çizilmez. "+" paneli düğmenin sağında tepeden açılır, Esc ve geri kapatır; bölümdeyken önce notlara döner. İş ana ekranda kalır, ray `homeDoors` ile çağırır. **Bilinçli sınır:** not açıkken ray çekmece, mikrofon ve "+" liste panelinin altında kalır (çekmecede yalnız kalem); kısa pencerede ray yoksa ana ekranda. Alt grup: Kişiler · Kısayollar | liste aç/kapa · genişlet. F43.2'nin "sabah bakılacak"ı kapandı: paylaşılan klasördeyken kalem ve Ctrl+N notu sahibin koleksiyonuna açar, salt okunurda kalem yok, dosya bırakma notu kendi koleksiyona açmak yerine açıklama verir.
+- [x] **F44.2 Dar web "Ana sayfaya dön"** (I1, K5).
+  **Yapıldı (2026-11-05):** `HomeInBar` çubuğun soluna 🏠 koyar, geri oku yanında kalır; listelenen konumlarda (`kHomeInBarLocations`, 18 konum) şerit yok, başka yerde şerit kalır. Test liste ile ekranların ayrışmasını yakalar. Görüntüleyici gibi not üstüne açılan alt sayfalarda 🏠 yok: geri oku yeter.
+- [x] **F44.3 Okuma sütunu hizası** (C3, J4): editör üst çubuğu, başlık
   satırı, alt çubuklar `kReadingWidth` (760) sütunuyla hizalı; kalem tepsisi
   zaten ortada (≥ 640 dp).
-- [ ] **F44.4 Arama kutusu** en çok ~720 dp (I5); bölüm sayısı F39.1.
-- [ ] **F44.5 Fare/klavye/dokunmatik yüzey karşılıkları** (I3, I4):
+  **Yapıldı (2026-11-05):** üst çubuk düğmeleri (`actionsPadding`), alt çubuk, Biçim paneli ve not içi arama çubuğu sütunda; çubukların zemini tam genişlik. Sabit medyalı ve belge notunda sayfa bölmeyi doldurduğu için çubuklar da doldurur (`readingColumn`). Ek şeridi tam genişlikte kaldı (kaydırılan bir şerit, sütuna sıkışırsa az ek görünür).
+- [x] **F44.4 Arama kutusu** en çok ~720 dp (I5); bölüm sayısı F39.1.
+  **Yapıldı (2026-11-05):** kutu 720 dp, avatar ve ⋮ sağ kenarda kalır. Bölüm sayısı F39.1'de yapılmıştı.
+- [x] **F44.5 Fare/klavye/dokunmatik yüzey karşılıkları** (I3, I4):
   Ctrl+tekerlek ve dokunmatik yüzey kıstırması = sütun; Alt+←/→ ve yatay
   dokunmatik yüzey kaydırması = klasör geçişi; maddelerde ve eklerde sağ tık;
   üstüne gelince kart ⋮; seçimde Delete = çöpe, Ctrl+A = hepsi.
   `app_commands.dart` kısayol listesi + Ctrl+/ yardım güncellenir.
-- [ ] **F44.6 Web'de AI durumu** görünür (F42.2'ye bağlı).
-- [ ] **F44.7 Dikey tablet bölmesi** (J3): not açıkken liste çekmeceye ya da
+  **Yapıldı (2026-11-05):** Ctrl+tekerlek çentik başına bir sütun; web'de kıstırma ölçek olayı olarak birikir, Android/masaüstünde `PointerPanZoom`; görsel geri bildirim F39.2 ile aynı (yalnız `Transform`). Yatay kaydırma çekişle aynı yol, atalet ikinci geçiş sayılmaz. Alt+←/→ yazarken geçmez. Madde sağ tık = uzun basış menüsü (odaklı satırda metin menüsü kazanır); eklerde sağ tık F40'tan beri vardı. ⋮ fare bağlıyken yalnız üstüne gelince, dokunmatikte hep görünür. Ctrl+A ve Delete yalnız seçim varken bağlanır (yoksa metin alanındaki Ctrl+A yutulurdu). Yardım penceresi kısa ekranda kayar. Web: gerçek tarayıcıda doğrulanmadı, KALANLAR §2 #84.
+- [x] **F44.6 Web'de AI durumu** görünür (F42.2'ye bağlı).
+  **Yapıldı (2026-11-05):** editör ✨ rozeti ve AI levhası F42.2'den geliyordu; eksik kalan ray hedefi AI kapalıyken kilit gösterir.
+- [x] **F44.7 Dikey tablet bölmesi** (J3): not açıkken liste çekmeceye ya da
   40/60; `SplitScope` tek liste örneği kuralı korunur (liste iki kez kurulmaz).
-- [ ] **F44.8 Pencere boyu değişimi** (tarayıcı daraltma/genişletme): kaydırma,
+  **Yapıldı (2026-11-05):** 40/60 bugünkü hâlin aynısıydı (320/464), not kenara çekilen liste seçildi: < 960 dp ve dikey pencerede not açılınca liste çekilir, ☰ yalnız o not için geri getirir (`listPeekLocationProvider`), başka nota geçince yine çekilir, ☰ yerindeki ikon kapatır, Ctrl+\ aynı. Liste ağaçtan çıkmaz, genişliği sıfıra iner. Gerçek çekmece değil, açılınca not daralır: tek liste örneği için bilerek. Menteşeli katlanabilir eskisi gibi yan yana.
+- [x] **F44.8 Pencere boyu değişimi** (tarayıcı daraltma/genişletme): kaydırma,
   açık not, seçim korunur (`DashboardScrollMemory`) — tur + test.
+  **Yapıldı (2026-11-05):** test ray, bölme ve dikey kesme noktalarından geçer: açık not yeniden kurulmaz, seçim kalır, kaydırma mevcut testte. **Test gerçek hata yakaladı:** not açıkken daralınca istisna, liste hiç çizilmemişse `_searchController` tembel olarak ilk kez `dispose`ta kuruluyordu; artık `initState`te.
 
 ## FAZ 45 — Ölçüm, tur, kural testleri, cihaz turu
 
