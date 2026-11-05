@@ -264,7 +264,7 @@ class _VideoBoxState extends State<_VideoBox> with WidgetsBindingObserver {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_lazy && _controller == null && _source == null) _registerDeferred();
-    if (!TickerMode.of(context)) _pauseIfPlaying();
+    if (!TickerMode.valuesOf(context).enabled) _pauseIfPlaying();
   }
 
   /// Oynatıcı kurulmadan zaman damgası dokunuşu da çalışsın: kayıt, ilk

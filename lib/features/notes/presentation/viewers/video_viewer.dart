@@ -346,9 +346,6 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
     BuildContext context,
     VideoPlayerController controller,
   ) {
-    final aspect = controller.value.aspectRatio == 0
-        ? 16 / 9
-        : controller.value.aspectRatio;
     return PopScope(
       canPop: widget.fullscreen,
       onPopInvokedWithResult: (didPop, _) {

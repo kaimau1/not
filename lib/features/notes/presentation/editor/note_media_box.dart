@@ -240,8 +240,18 @@ class _ImageBox extends StatelessWidget {
           );
         }
         // Dosya bu cihazda yok, buluttan da gelmiyor: tek durum dili (F40.4).
-        return AttachmentStatusPlaceholder(
-          status: attachmentStatusOf(img, hasLocal: false),
+        // Kutuya dokunuş kutunun (seçer); açıklama köşedeki rozette.
+        final status = attachmentStatusOf(img, hasLocal: false);
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            AttachmentStatusPlaceholder(status: status, interactive: false),
+            PositionedDirectional(
+              start: 6,
+              top: 6,
+              child: AttachmentStatusBadge(status: status),
+            ),
+          ],
         );
       },
     );
