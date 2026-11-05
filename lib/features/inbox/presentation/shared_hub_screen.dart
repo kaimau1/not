@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/app_icons.dart';
@@ -47,10 +48,10 @@ class SharedHubScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(
+      appBar: HomeInBar(appBar: AppBar(
         title: Text(l10n.sharedHubTitle),
         actions: const [SharedMarkAllReadButton()],
-      ),
+      )),
       body: const SharedHubBody(),
     );
   }

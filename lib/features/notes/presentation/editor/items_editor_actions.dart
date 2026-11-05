@@ -2,6 +2,23 @@ part of 'items_editor.dart';
 
 /// Madde işleri: uzun basış menüsü, ayırıcı, yıldız, çoklu seçim, kopyala/sil, sırala (C1).
 extension _ItemsActions on ItemsEditorState {
+  /// Sağ tık = uzun basış menüsü (F44.5). Düz çizilen satırda geçerli; odaklı
+  /// alanın kendi sağ tıkı (metin menüsü) önce kazanır. Ayrı ve semantikten
+  /// muaf: sağ tık dokunmatikte yok, ekran okuyucuya etiketsiz düğüm açmasın.
+  Widget _itemRightClick(
+    NoteItem item, {
+    BuildContext? anchor,
+    required Widget child,
+  }) => GestureDetector(
+    excludeFromSemantics: true,
+    behavior: HitTestBehavior.deferToChild,
+    onSecondaryTapUp: _selectionMode
+        ? null
+        : (details) =>
+              _showItemMenu(item, details.globalPosition, anchor: anchor),
+    child: child,
+  );
+
   /// Satıra UZUN BASINCA açılan menü: yıldızla, seç, taşı, sil + alt çizgi.
   ///
   /// KULLANICI İSTEĞİ 2026-08-30 ("yıldızla tuşu maddeler için yerleşimi kötü,

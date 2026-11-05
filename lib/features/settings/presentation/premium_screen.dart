@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -32,7 +33,7 @@ class PremiumScreen extends ConsumerWidget {
     final until = ref.watch(_premiumUntilProvider).value;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.premiumTitle)),
+      appBar: HomeInBar(appBar: AppBar(title: Text(l10n.premiumTitle))),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
           16,

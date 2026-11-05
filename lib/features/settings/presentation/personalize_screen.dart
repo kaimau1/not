@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import '../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,7 +33,7 @@ class PersonalizeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(
+      appBar: HomeInBar(appBar: AppBar(
         title: Text(l10n.personalizeTitle),
         actions: [
           IconButton(
@@ -42,7 +43,7 @@ class PersonalizeScreen extends StatelessWidget {
             onPressed: () => _confirmReset(context),
           ),
         ],
-      ),
+      )),
       // KÖK NEDEN (kullanıcı bulgusu 2026-10-16: "kişiselleştirme ayarlar
       // kısmında aç kapa yapılamıyor"; "kapatıyorum, girip çıkınca başka
       // şeyler kapanmış oluyor"): bölümler burada `const` idi ve kaydı

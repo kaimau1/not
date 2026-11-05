@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/presentation/dashboard_screen.dart';
@@ -123,6 +125,106 @@ void main() {
       expect(find.byKey(const ValueKey('pinch-columns-1')), findsNothing);
     });
 
+    group('F44.5 fare ve dokunmatik yüzey', () {
+      Future<List<int>> zoomHost(WidgetTester tester, int columns) async {
+        final commits = <int>[];
+        await tester.pumpWidget(
+          host(
+            PinchColumns(
+              columns: columns,
+              onCommit: commits.add,
+              child: const SizedBox.expand(),
+            ),
+          ),
+        );
+        return commits;
+      }
+
+      const at = Offset(200, 400);
+
+      testWidgets('Ctrl+tekerlek: çentik başına bir sütun, yukarı = az sütun', (
+        tester,
+      ) async {
+        final commits = await zoomHost(tester, 3);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendEventToBinding(
+          const PointerScrollEvent(
+            position: at,
+            scrollDelta: Offset(0, -100),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 50));
+        expect(commits, isEmpty, reason: 'jest sürüyor');
+        await tester.pump(const Duration(milliseconds: 200));
+        expect(commits, [2]);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pumpAndSettle(const Duration(seconds: 1));
+      });
+
+      testWidgets('Ctrl+tekerlek iki çentik aşağı: iki sütun artar', (
+        tester,
+      ) async {
+        final commits = await zoomHost(tester, 2);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        for (var i = 0; i < 2; i++) {
+          await tester.sendEventToBinding(
+            const PointerScrollEvent(position: at, scrollDelta: Offset(0, 100)),
+          );
+          await tester.pump(const Duration(milliseconds: 50));
+        }
+        await tester.pump(const Duration(milliseconds: 200));
+        expect(commits, [4]);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pumpAndSettle(const Duration(seconds: 1));
+      });
+
+      testWidgets('Ctrl yokken tekerlek ızgarayı kaydırır, sütun değişmez', (
+        tester,
+      ) async {
+        final commits = await zoomHost(tester, 3);
+        await tester.sendEventToBinding(
+          const PointerScrollEvent(
+            position: at,
+            scrollDelta: Offset(0, -100),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(commits, isEmpty);
+      });
+
+      testWidgets('web kıstırması (ölçek olayı) ince adımlarla birikir', (
+        tester,
+      ) async {
+        final commits = await zoomHost(tester, 3);
+        for (var i = 0; i < 4; i++) {
+          await tester.sendEventToBinding(
+            const PointerScaleEvent(position: at, scale: 1.08),
+          );
+          await tester.pump(const Duration(milliseconds: 30));
+        }
+        await tester.pump(const Duration(milliseconds: 200));
+        expect(commits, [2]);
+        await tester.pumpAndSettle(const Duration(seconds: 1));
+      });
+
+      testWidgets('dokunmatik yüzey kıstırması: bırakınca bir kez', (
+        tester,
+      ) async {
+        final commits = await zoomHost(tester, 3);
+        final g = await tester.createGesture(
+          kind: PointerDeviceKind.trackpad,
+        );
+        await g.panZoomStart(at);
+        await g.panZoomUpdate(at, scale: 1.4);
+        await tester.pump();
+        expect(commits, isEmpty);
+        await g.panZoomEnd();
+        await tester.pump();
+        expect(commits, [2]);
+        await tester.pumpAndSettle(const Duration(seconds: 1));
+      });
+    });
+
     testWidgets('iki parmakla düz kaydırma ölçeklemez, sütun değişmez', (
       tester,
     ) async {
@@ -196,6 +298,42 @@ void main() {
       ),
       dir: dir,
     );
+
+    testWidgets('F44.5 yatay dokunmatik yüzey kaydırması geçer, atalet geçmez', (
+      tester,
+    ) async {
+      await tester.pumpWidget(swipe());
+      const at = Offset(200, 400);
+      Future<void> wheel(double dx, [double dy = 0]) =>
+          tester.sendEventToBinding(
+            PointerScrollEvent(position: at, scrollDelta: Offset(dx, dy)),
+          );
+
+      // Kısa: eşiğe varmaz.
+      await wheel(30);
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(commits, isEmpty);
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Dikey ağırlıklı: geçiş değil.
+      await wheel(100, 300);
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(commits, isEmpty);
+
+      // Sağa kaydırma = sonraki durak (parmakla sola çekiş gibi).
+      await wheel(110);
+      await tester.pump(const Duration(milliseconds: 20));
+      expect(find.byKey(const ValueKey('swipe-next-label')), findsOneWidget);
+      await wheel(110);
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(commits, [1]);
+
+      // Atalet: hemen ardından gelen olay ikinci geçiş sayılmaz.
+      await wheel(200);
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(commits, [1]);
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+    });
 
     Future<TestGesture> dragTo(WidgetTester t, double dx) async {
       final g = await t.startGesture(const Offset(200, 400));

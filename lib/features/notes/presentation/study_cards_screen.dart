@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -57,7 +58,7 @@ class _StudyCardsScreenState extends ConsumerState<StudyCardsScreen> {
     final due = dueCards(notes, DateTime.now());
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.studyCardsTitle)),
+      appBar: HomeInBar(appBar: AppBar(title: Text(l10n.studyCardsTitle))),
       body: due.isEmpty
           ? EmptyState(
               icon: Icons.style_outlined,

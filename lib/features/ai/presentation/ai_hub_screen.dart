@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import '../../../core/widgets/sheet_header.dart';
 
 import 'package:flutter/material.dart';
@@ -236,7 +237,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
     ];
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: HomeInBar(appBar: AppBar(
         title: Text(l10n.aiHubTitle),
         actions: [
           // Ad işi söyler (F14.3): eskiden ipucu yalnız "Yapay zekâ"ydı ve
@@ -249,7 +250,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
           ),
           const SizedBox(width: 4),
         ],
-      ),
+      )),
       body: LayoutBuilder(
         builder: (context, box) {
           final wide = box.maxWidth >= 920;

@@ -165,10 +165,12 @@ void main() {
     final router = await _pump(tester, const Size(1024, 600));
     expect(find.byType(NavigationRail), findsOneWidget);
     expect(tester.takeException(), isNull);
-    await tester.tap(find.text('Klasörler'));
+    await tester.ensureVisible(find.byTooltip('Klasörler').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Klasörler').first);
     await tester.pumpAndSettle();
     expect(currentLocation(router), '/folders');
-    // Ray kayar (ana sayfa düğmesi eklendi, F28.3): önce görünür kıl.
+    // Ray kayar (yeni not kapıları rayda, K3): önce görünür kıl.
     await tester.ensureVisible(find.byTooltip('Arşiv').first);
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Arşiv').first);

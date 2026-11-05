@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import '../../../core/app_icons.dart';
 import '../../../core/widgets/sheet_header.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +50,7 @@ class FoldersScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: HomeInBar(appBar: AppBar(
         title: Text(l10n.foldersTitle),
         actions: [
           IconButton(
@@ -71,7 +72,7 @@ class FoldersScreen extends ConsumerWidget {
             ),
           ),
         ],
-      ),
+      )),
       body: CustomScrollView(
         slivers: [
           const SliverPadding(

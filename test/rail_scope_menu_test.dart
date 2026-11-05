@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,6 +40,14 @@ class _Probe extends StatelessWidget {
 }
 
 const _paths = ['/settings', '/ai', '/archive', '/trash', '/guide'];
+const _l10nGoHome = 'Ana sayfaya dön';
+
+/// Üst çubuğu olan sahte ekran: gerçek ekranlar gibi çubuğunu [HomeInBar] sarar.
+Widget _page(String path) => hasHomeInBar(path)
+    ? Scaffold(
+        appBar: HomeInBar(appBar: AppBar(title: Text('PAGE $path'))),
+      )
+    : Text('PAGE $path');
 
 Future<GoRouter> _pump(WidgetTester tester, Size size) async {
   SharedPreferences.setMockInitialValues({});
@@ -52,8 +61,8 @@ Future<GoRouter> _pump(WidgetTester tester, Size size) async {
         builder: (c, s, child) => AppFrame(child: child),
         routes: [
           GoRoute(path: '/', builder: (c, s) => const Text('HOME')),
-          for (final p in _paths)
-            GoRoute(path: p, builder: (c, s) => Text('PAGE $p')),
+          for (final p in [..._paths, '/x'])
+            GoRoute(path: p, builder: (c, s) => _page(p)),
         ],
       ),
     ],
@@ -100,29 +109,77 @@ void main() {
     for (final p in _paths) {
       unawaited(router.push(p));
       await tester.pump(const Duration(seconds: 1));
-      await tester.tap(find.byKey(const ValueKey('rail-home')));
+      // K4: ayrı 🏠 yok, "Notlar" hedefi ana sayfa.
+      expect(find.byIcon(Icons.home_outlined), findsNothing);
+      await tester.tap(find.byIcon(Icons.sticky_note_2_outlined));
       await tester.pump(const Duration(seconds: 1));
       expect(router.state.uri.path, '/');
     }
     await _end(tester);
   });
 
-  testWidgets('dar web: üst çubuk ana sayfaya döner, ana sayfada yok', (
+  testWidgets('dar web, üst çubuğu olmayan ekran: şerit ana sayfaya döner', (
     tester,
   ) async {
     homeBarOnNarrow = true;
     addTearDown(() => homeBarOnNarrow = false);
     final router = await _pump(tester, const Size(420, 800));
     expect(find.byKey(const ValueKey('narrow-home')), findsNothing);
-    for (final p in _paths) {
-      unawaited(router.push(p));
-      await tester.pump(const Duration(seconds: 1));
-      await tester.tap(find.byKey(const ValueKey('narrow-home')));
-      await tester.pump(const Duration(seconds: 1));
-      expect(router.state.uri.path, '/');
-      expect(find.byKey(const ValueKey('narrow-home')), findsNothing);
-    }
+    // '/x' çubuksuz sayılır (kHomeInBarLocations dışında).
+    unawaited(router.push('/x'));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text(_l10nGoHome), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('narrow-home')));
+    await tester.pump(const Duration(seconds: 1));
+    expect(router.state.uri.path, '/');
+    expect(find.byKey(const ValueKey('narrow-home')), findsNothing);
     await _end(tester);
+  });
+
+  testWidgets('dar web, üst çubuklu ekran: 🏠 çubukta, şerit yok (K5)', (
+    tester,
+  ) async {
+    homeBarOnNarrow = true;
+    addTearDown(() => homeBarOnNarrow = false);
+    final router = await _pump(tester, const Size(420, 800));
+    unawaited(router.push('/settings'));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text(_l10nGoHome), findsNothing);
+    expect(find.byKey(const ValueKey('narrow-home')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('narrow-home')));
+    await tester.pump(const Duration(seconds: 1));
+    expect(router.state.uri.path, '/');
+    await _end(tester);
+  });
+
+  test('çubuğu 🏠 taşıyan her konumun ekranı HomeInBar kullanır', () {
+    // Liste ile ekranlar ayrışırsa dar web'de ev düğmesi kaybolur.
+    const screens = {
+      '/settings': 'settings/presentation/settings_screen.dart',
+      '/personalize': 'settings/presentation/personalize_screen.dart',
+      '/privacy': 'settings/presentation/privacy_screen.dart',
+      '/guide': 'settings/presentation/guide_screen.dart',
+      '/gmail': 'gmail/presentation/gmail_screen.dart',
+      '/premium': 'settings/presentation/premium_screen.dart',
+      '/ai': 'ai/presentation/ai_hub_screen.dart',
+      '/chat': 'ai/presentation/ai_chat_screen.dart',
+      '/briefing': 'ai/presentation/briefing_screen.dart',
+      '/cards': 'notes/presentation/study_cards_screen.dart',
+      '/reminders': 'notes/presentation/reminders_screen.dart',
+      '/archive': 'notes/presentation/archive_screen.dart',
+      '/trash': 'notes/presentation/trash_screen.dart',
+      '/folders': 'folders/presentation/folders_screen.dart',
+      '/inbox': 'inbox/presentation/shared_hub_screen.dart',
+      '/note/': 'notes/presentation/editor/note_editor_screen.dart',
+      '/notebook/': 'notes/presentation/editor/note_editor_screen.dart',
+      '/open/': 'notes/presentation/editor/note_editor_screen.dart',
+    };
+    expect(kHomeInBarLocations.toSet(), screens.keys.toSet());
+    for (final path in screens.values.toSet()) {
+      final source = File('lib/features/$path').readAsStringSync();
+      expect(source.contains('HomeInBar(appBar:'), isTrue, reason: path);
+    }
   });
 
   testWidgets('telefon (web değil): çubuk yok', (tester) async {

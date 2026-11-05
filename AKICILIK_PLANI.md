@@ -489,3 +489,4 @@ Ayrıntı ve komutlar: `tool/perf/README.md`. Özet:
 | 2026-11-05 | 41964906709 (TUTARLILIK Faz 41) | dashboard_scroll / typing / 30kb / search, en kötü build | 5,3 / 0,5 / 3,4 / 6,2 (bütçe içi) | — |
 | 2026-11-05 | 41972904441 (TUTARLILIK Faz 42) | dashboard_scroll / typing / 30kb / search, en kötü build | 6,4 / 0,6 / 2,9 / 13,7 (bütçe içi; aramada tek kare yüksek, ana ekran arama koduna dokunulmadı, emülatör gürültüsü tahmin) | — |
 | 2026-11-05 | 41978816583 (TUTARLILIK Faz 43) | dashboard_scroll / typing / 30kb / search, en kötü build | 7,3 / 3,6 / 0,4 / 7,9 (bütçe içi) | — |
+| 2026-11-05 | 41986634442 (TUTARLILIK Faz 44, 2. deneme) | dashboard_scroll / typing / 30kb / search, en kötü build | 2,86 / 3,7 / 2,6 / 5,9 (bütçe içi; 1. denemede aramada tek kare 22,7, yeniden koşuda yok: emülatör gürültüsü) | — |

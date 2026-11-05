@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import '../../../core/app_icons.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/sheet_header.dart';
@@ -154,7 +155,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
         });
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: HomeInBar(appBar: AppBar(
         title: _search.open
             ? ScreenSearchField(search: _search)
             : Text(l10n.trashTitle),
@@ -202,7 +203,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
             },
           ),
         ],
-      ),
+      )),
       body: trash.when(
         loading: () => const NoteListSkeleton(),
         error: (e, _) => ErrorState(

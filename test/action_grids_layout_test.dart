@@ -153,7 +153,7 @@ class _FabHostState extends ConsumerState<_FabHost>
       alignment: Alignment.bottomRight,
       child: CompositedTransformTarget(
         link: _link,
-        child: QuickAddFab(anchor: _link, actions: this),
+        child: QuickAddFab(anchor: _link, actions: () => this),
       ),
     ),
   );

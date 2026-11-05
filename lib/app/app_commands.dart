@@ -7,11 +7,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/l10n_ext.dart';
+import '../features/folders/domain/note_folder.dart';
+import '../features/folders/presentation/shared_folder_home.dart';
 import '../features/notes/data/notes_repository.dart';
 import '../features/notes/domain/note_type.dart';
 import '../features/notes/presentation/notes_providers.dart';
+import '../features/notes/presentation/quick_add_actions.dart';
 import 'router.dart';
-import 'split_shell.dart' show isNoteLocation, noteFullscreenProvider;
+import 'split_shell.dart'
+    show isNoteLocation, noteFullscreenProvider, splitActiveFor;
 
 /// **UYGULAMA KOMUTLARI** — gezinme rayı, klavye kısayolları ve boş sağ
 /// panel aynı işleri (yeni not, arama, bölüm değiştirme) yapıyor; üç yerde
@@ -141,14 +145,37 @@ void goHome(WidgetRef ref, GoRouter router) {
 /// Testte değiştirilebilir.
 bool homeBarOnNarrow = kIsWeb;
 
-/// Yeni not oluşturup AÇ — rayın "+" düğmesi, Ctrl+N ve boş sağ panelin
-/// düğmeleri. Ana ekranda seçili klasör varsa not oraya doğar (hızlı ekle
-/// menüsüyle aynı kural).
+/// **Ana ekranın dışarıdan çağrılan kapıları** (K3, F44.5): oluşturma akışları,
+/// süzgeç ve seçim ana ekranın State'inde; ray ve kısayollar onun üstünde.
+abstract interface class HomeDoors {
+  QuickAddActions get quickAddActions;
+  void dictateNote();
+  void captureVoiceNote();
+
+  /// Yana çekişle aynı durak sırası (+1 sonraki, -1 önceki).
+  void cycleFolder(int direction);
+  void selectAllVisible();
+  void deleteSelection();
+}
+
+/// Kurulu ana ekran; dar↔geniş geçişinde yenisi bindirir (bkz. dispose'u).
+HomeDoors? homeDoors;
+
+/// Yeni not oluşturup AÇ — rayın kalemi ve Ctrl+N. Ana ekranda seçili klasör
+/// varsa not oraya doğar (hızlı ekle menüsüyle aynı kural); paylaşılan klasör
+/// açıksa SAHİBİN koleksiyonuna (F43.2).
 Future<void> createAndOpenNote(
+  BuildContext context,
   WidgetRef ref,
   GoRouter router, {
   NoteType type = NoteType.text,
 }) async {
+  final shared = ref.read(selectedSharedFolderProvider);
+  if (shared != null) {
+    openSection(router, AppSection.notes);
+    final role = sharedFolderRefOf(ref, shared)?.role ?? FolderRole.both;
+    return createInSharedFolder(context, ref, shared, role);
+  }
   final repo = ref.read(notesRepositoryProvider);
   if (repo == null) return;
   final id = await repo.createNote(
@@ -208,6 +235,10 @@ List<({String keys, String label})> shortcutHelpRows(BuildContext context) {
     (keys: 'Ctrl + Shift + F', label: l10n.shortcutFullscreen),
     (keys: 'Esc', label: l10n.shortcutEscape),
     (keys: 'Alt + ↑ / ↓', label: l10n.shortcutAdjacentNote),
+    (keys: 'Alt + ← / →', label: l10n.shortcutSwitchFolder),
+    (keys: 'Ctrl + ${l10n.shortcutMouseWheel}', label: l10n.shortcutGridColumns),
+    (keys: 'Ctrl + A', label: l10n.shortcutSelectAll),
+    (keys: 'Delete', label: l10n.shortcutDeleteSelected),
     // Web'de Ctrl+W tarayıcı sekmesini kapatır; sayfaya hiç ulaşmaz.
     if (!kIsWeb) (keys: 'Ctrl + W', label: l10n.shortcutCloseNote),
     (keys: 'Ctrl + /', label: l10n.shortcutHelp),
@@ -224,37 +255,40 @@ Future<void> showShortcutsHelp(BuildContext context) => showDialog<void>(
       title: Text(dialogContext.l10n.keyboardShortcuts),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final row in shortcutHelpRows(dialogContext))
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    Expanded(child: Text(row.label)),
-                    const SizedBox(width: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: scheme.outlineVariant),
-                      ),
-                      child: Text(
-                        row.keys,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          fontFeatures: const [FontFeature.tabularFigures()],
+        // Liste uzadı (F44.5): kısa pencerede kaydırılır, taşmaz.
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final row in shortcutHelpRows(dialogContext))
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text(row.label)),
+                      const SizedBox(width: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: scheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: scheme.outlineVariant),
+                        ),
+                        child: Text(
+                          row.keys,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
       actions: [
@@ -285,10 +319,21 @@ class AppShortcuts extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = GoRouter.of(context);
+    // Seçim yokken bağlanmaz: metin alanının kısayolları kökte, Ctrl+A ve
+    // Delete burada yutulursa yazarken çalışmaz.
+    final selecting = ref.watch(
+      selectedNoteIdsProvider.select((ids) => ids.isNotEmpty),
+    );
     return CallbackShortcuts(
       bindings: {
+        if (selecting) ...{
+          const SingleActivator(LogicalKeyboardKey.keyA, control: true): () =>
+              homeDoors?.selectAllVisible(),
+          const SingleActivator(LogicalKeyboardKey.delete): () =>
+              homeDoors?.deleteSelection(),
+        },
         const SingleActivator(LogicalKeyboardKey.keyN, control: true): () =>
-            createAndOpenNote(ref, router),
+            createAndOpenNote(context, ref, router),
         const SingleActivator(LogicalKeyboardKey.keyK, control: true): () {
           openSection(router, AppSection.notes);
           ref.read(searchFocusRequestProvider.notifier).request();
@@ -311,8 +356,45 @@ class AppShortcuts extends ConsumerWidget {
           SingleActivator(_digitKeys[i], alt: true): () =>
               openSection(router, section),
       },
-      child: child,
+      child: Focus(
+        canRequestFocus: false,
+        skipTraversal: true,
+        onKeyEvent: (_, event) => _folderKey(event, router, context),
+        child: child,
+      ),
     );
+  }
+
+  /// Alt+←/→ klasör geçişi (F44.5). Yazarken GEÇMEZ (Option+ok macOS'ta kelime
+  /// atlar), liste görünmüyorsa olay tarayıcıya kalır (Alt+← geri).
+  KeyEventResult _folderKey(
+    KeyEvent event,
+    GoRouter router,
+    BuildContext context,
+  ) {
+    if (event is! KeyDownEvent || !HardwareKeyboard.instance.isAltPressed) {
+      return KeyEventResult.ignored;
+    }
+    final step = switch (event.logicalKey) {
+      LogicalKeyboardKey.arrowLeft => -1,
+      LogicalKeyboardKey.arrowRight => 1,
+      _ => 0,
+    };
+    final location = currentLocation(router);
+    final listVisible =
+        location == '/' ||
+        (isNoteLocation(location) &&
+            splitActiveFor(MediaQuery.sizeOf(context).width));
+    final doors = homeDoors;
+    final typing =
+        FocusManager.instance.primaryFocus?.context
+            ?.findAncestorWidgetOfExactType<EditableText>() !=
+        null;
+    if (step == 0 || !listVisible || doors == null || typing) {
+      return KeyEventResult.ignored;
+    }
+    doors.cycleFolder(step);
+    return KeyEventResult.handled;
   }
 }
 

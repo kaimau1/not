@@ -6542,6 +6542,42 @@ abstract class AppLocalizations {
   /// **'Not listesini göster'**
   String get showNoteList;
 
+  /// No description provided for @shortcutSwitchFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörler arasında geç'**
+  String get shortcutSwitchFolder;
+
+  /// No description provided for @shortcutMouseWheel.
+  ///
+  /// In tr, this message translates to:
+  /// **'tekerlek'**
+  String get shortcutMouseWheel;
+
+  /// No description provided for @shortcutGridColumns.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sütun sayısı'**
+  String get shortcutGridColumns;
+
+  /// No description provided for @shortcutSelectAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçimdeyken hepsini seç'**
+  String get shortcutSelectAll;
+
+  /// No description provided for @shortcutDeleteSelected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilenleri çöp kutusuna at'**
+  String get shortcutDeleteSelected;
+
+  /// No description provided for @sharedFolderNoFileDrop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşılan klasöre dosya bırakılamaz. Önce not aç, dosyayı onun içine bırak.'**
+  String get sharedFolderNoFileDrop;
+
   /// No description provided for @shortcutAdjacentNote.
   ///
   /// In tr, this message translates to:

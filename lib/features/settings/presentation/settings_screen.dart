@@ -1,3 +1,4 @@
+import '../../../app/app_frame.dart';
 import '../../../core/app_icons.dart';
 
 import 'dart:convert';
@@ -637,7 +638,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final searching = query.isNotEmpty || aiKeys != null;
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: HomeInBar(appBar: AppBar(
         title: Text(l10n.settings),
         // AYAR ARA EN ÜSTTE, SABİT (kullanıcı isteği 2026-10-20: "ayar ara
         // üstte olmalı"): profil ve kısayol kartlarının altında kalıyordu;
@@ -654,7 +655,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
         ),
-      ),
+      )),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),

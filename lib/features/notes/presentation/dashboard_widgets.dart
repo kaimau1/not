@@ -885,13 +885,23 @@ class _PinchColumnsState extends State<PinchColumns>
   int _baseColumns = 2;
   Offset _focal = Offset.zero;
   Timer? _hide;
+  Timer? _wheelEnd;
+  double _wheelRatio = 1;
 
   @override
   void dispose() {
     _hide?.cancel();
+    _wheelEnd?.cancel();
     _target.dispose();
     _scale.dispose();
     super.dispose();
+  }
+
+  void _begin(double base, Offset focal) {
+    _base = base;
+    _baseColumns = widget.columns;
+    _focal = focal;
+    _hide?.cancel();
   }
 
   void _move() {
@@ -900,13 +910,47 @@ class _PinchColumnsState extends State<PinchColumns>
     final distance = (values[0] - values[1]).distance;
     if (_base == 0) {
       if (distance < 24) return; // parmaklar üst üste: oran anlamsız
-      _base = distance;
-      _baseColumns = widget.columns;
-      _focal = (values[0] + values[1]) / 2;
-      _hide?.cancel();
+      _begin(distance, (values[0] + values[1]) / 2);
       return;
     }
-    final ratio = distance / _base;
+    _applyRatio(distance / _base);
+  }
+
+  /// Ctrl+tekerlek ve web'de dokunmatik yüzey kıstırması (F44.5). Bir tekerlek
+  /// çentiği tek sütun: oran kıstırılır (web `exp(-dy/200)` verir, çentik 2
+  /// adım sayılırdı); ince dokunmatik yüzey adımları birikir. Bırakma olayı
+  /// olmadığı için kısa sessizlikte biter.
+  void _zoomBy(double scale, Offset focal) {
+    if (_base == 0) {
+      _begin(1, focal);
+      _wheelRatio = 1;
+    }
+    _wheelRatio *= scale.clamp(0.79, 1.27);
+    _applyRatio(_wheelRatio);
+    _wheelEnd?.cancel();
+    _wheelEnd = Timer(const Duration(milliseconds: 180), () {
+      if (mounted) _end(commit: true);
+    });
+  }
+
+  void _onSignal(PointerSignalEvent event) {
+    final double scale;
+    if (event is PointerScaleEvent) {
+      scale = event.scale;
+    } else if (event is PointerScrollEvent &&
+        HardwareKeyboard.instance.isControlPressed) {
+      scale = math.exp(-event.scrollDelta.dy / 200);
+    } else {
+      return;
+    }
+    // Resolver: Ctrl+tekerlek aynı anda ızgarayı kaydırmasın.
+    GestureBinding.instance.pointerSignalResolver.register(
+      event,
+      (_) => _zoomBy(scale, event.localPosition),
+    );
+  }
+
+  void _applyRatio(double ratio) {
     // İki parmakla düz kaydırma ızgarayı titretmesin.
     if (motionOf(context) && (ratio - 1).abs() > 0.03) {
       _scale.value = ratio.clamp(0.85, 1.15);
@@ -961,6 +1005,11 @@ class _PinchColumnsState extends State<PinchColumns>
       _points.remove(e.pointer);
       _end(commit: false);
     },
+    // Dokunmatik yüzey kıstırması (Android/masaüstü), iki parmakla aynı yol.
+    onPointerPanZoomStart: (e) => _begin(1, e.localPosition),
+    onPointerPanZoomUpdate: (e) => _applyRatio(e.scale),
+    onPointerPanZoomEnd: (_) => _end(commit: true),
+    onPointerSignal: _onSignal,
     child: Stack(
       fit: StackFit.passthrough,
       children: [
@@ -1074,11 +1123,44 @@ class _FolderSwipeState extends State<FolderSwipe>
   double _raw = 0;
   bool _past = false;
   double _labelMax = 140;
+  Timer? _wheelEnd;
+
+  /// Geçişten sonra süren dokunmatik yüzey ataleti ikinci geçiş sayılmasın.
+  bool _wheelQuiet = false;
 
   @override
   void dispose() {
+    _wheelEnd?.cancel();
     _dx.dispose();
     super.dispose();
+  }
+
+  /// Yatay dokunmatik yüzey kaydırması (F44.5): web'de tekerlek olayı gelir,
+  /// bırakma yok; çekişle aynı yol, kısa sessizlikte biter.
+  void _onSignal(PointerSignalEvent event) {
+    if (!widget.enabled || event is! PointerScrollEvent) return;
+    final delta = event.scrollDelta;
+    if (delta.dx.abs() <= delta.dy.abs() ||
+        HardwareKeyboard.instance.isControlPressed) {
+      return;
+    }
+    // Resolver: içteki yatay şerit (klasör çipleri) kaydırırsa o kazanır.
+    GestureBinding.instance.pointerSignalResolver.register(event, (_) {
+      _wheelEnd?.cancel();
+      _wheelEnd = Timer(const Duration(milliseconds: 160), () {
+        if (!mounted) return;
+        if (_wheelQuiet) {
+          _wheelQuiet = false;
+          return;
+        }
+        _finish(0);
+        _wheelQuiet = true;
+        _wheelEnd = Timer(const Duration(milliseconds: 240), () {
+          _wheelQuiet = false;
+        });
+      });
+      if (!_wheelQuiet) _follow(-delta.dx);
+    });
   }
 
   double get _width => (context.size?.width ?? 1).clamp(1, double.infinity);
@@ -1089,8 +1171,10 @@ class _FolderSwipeState extends State<FolderSwipe>
     return (rtl ? dx > 0 : dx < 0) ? 1 : -1;
   }
 
-  void _update(DragUpdateDetails d) {
-    _raw += d.primaryDelta ?? 0;
+  void _update(DragUpdateDetails d) => _follow(d.primaryDelta ?? 0);
+
+  void _follow(double delta) {
+    _raw += delta;
     if (_raw == 0) return;
     final direction = _directionOf(_raw);
     if (direction != _direction) {
@@ -1134,7 +1218,9 @@ class _FolderSwipeState extends State<FolderSwipe>
     final scheme = Theme.of(context).colorScheme;
     final tokens = AppTokens.of(context);
     final forwardEdge = _direction > 0;
-    return GestureDetector(
+    return Listener(
+      onPointerSignal: _onSignal,
+      child: GestureDetector(
       // Yatay çekişle filtreler/klasörler arasında gezin; dikey kaydırma
       // CustomScrollView'de kalır, eksenler farklı olduğundan yarışmaz.
       onHorizontalDragStart: widget.enabled ? (_) => _raw = 0 : null,
@@ -1222,6 +1308,7 @@ class _FolderSwipeState extends State<FolderSwipe>
               ),
             ),
         ],
+      ),
       ),
     );
   }

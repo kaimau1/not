@@ -195,6 +195,11 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 82. [ ] (F43.3) Ortak not: kart, liste satırı ve editörde aynı simge ve renk; editörde sayı (sahipte ve alıcıda). Renkli notta simge notun koyu tonunda.
 83. [ ] (F43.4, F43.5) Levhada Ekler ile ek menüsünde Paylaş aynı dosyayı gönderiyor (işaretli görsel PNG basılı). Misafirde: not "+" levhasında Ortak çalışanlar, avatar levhasında ve rayda Kişiler kilitli; dokununca aynı giriş levhası.
 
+**2026-11-05 — web ve geniş ekran (TUTARLILIK_PLANI Faz 44, yazıldı, tarayıcı ve tablette elle doğrulanmadı; tur aracı ve testlerle görüldü)**
+84. [ ] (F44.5 web) Ctrl+tekerlek sütun değiştiriyor, tarayıcı sayfası YAKINLAŞMIYOR; dokunmatik yüzeyde kıstırma sütun, iki parmak yatay kaydırma klasör geçiyor, atalet ikinci klasöre atlamıyor. Alt+←/→ klasör geçiyor, tarayıcı geri gitmiyor; arama kutusundayken geçmiyor. Fareyle kartın üstüne gelince ⋮; seçimde Ctrl+A ve Delete. Maddede sağ tık menüsü.
+85. [ ] (F44.1, F44.2) Rayda kalem, mikrofon ve "+" (panel sağa açılıyor, Esc kapatıyor); Ayarlar'dayken "+" → Metin notu notu açıyor; rayda "Notlar" açık notu kapatıp ana sayfaya dönüyor. Dar pencerede Ayarlar ve notta 🏠 çubukta, şerit yok.
+86. [ ] (F44.7, F44.8) Tablet dikey: nota girince liste çekiliyor, ☰ geri getiriyor, başka karta dokununca yine çekiliyor, kart açılış geçişi garip durmuyor. Tarayıcıyı daraltıp genişlet: açık not, seçim ve liste konumu yerinde.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)

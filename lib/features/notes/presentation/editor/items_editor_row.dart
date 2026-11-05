@@ -334,7 +334,10 @@ extension _ItemsRow on ItemsEditorState {
                 // Builder: menü satırın KENDİ kutusunu bulsun (F12.7 —
                 // hedef madde vurgulanır, menü maddenin altında açılır).
                 Builder(
-                  builder: (leadContext) => GestureDetector(
+                  builder: (leadContext) => _itemRightClick(
+ item,
+ anchor: leadContext,
+ child: GestureDetector(
                     behavior: _selectionMode
                         ? HitTestBehavior.opaque
                         : HitTestBehavior.deferToChild,
@@ -357,10 +360,13 @@ extension _ItemsRow on ItemsEditorState {
                       child: leading,
                     ),
                   ),
+),
                 ),
                 Expanded(
                   // Seçim modunda metne dokunmak düzenlemeye değil seçime gider.
-                  child: GestureDetector(
+                  child: _itemRightClick(
+ item,
+ child: GestureDetector(
                     onTap: _selectionMode ? () => _toggleSelection(item) : null,
                     child: AbsorbPointer(
                       absorbing: _selectionMode,
@@ -540,6 +546,7 @@ extension _ItemsRow on ItemsEditorState {
                       ),
                     ),
                   ),
+),
                 ),
                 // YILDIZ ARTIK DÜĞME DEĞİL, İŞARET (kullanıcı isteği 2026-08-30:
                 // "yıldızla tuşu maddeler için yerleşimi kötü, basılı tutunca

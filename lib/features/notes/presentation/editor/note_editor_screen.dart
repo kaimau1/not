@@ -121,8 +121,8 @@ import 'calculator_sheet.dart';
 import '../../data/place_reminders.dart';
 import '../../data/drive_store.dart' show localFilesRevisionProvider;
 import '../drive_ui.dart';
-import '../../../../app/app_commands.dart' show goHome;
-import '../../../../app/app_frame.dart' show kRailBreakpoint;
+import '../../../../app/app_commands.dart' show currentLocation, goHome;
+import '../../../../app/app_frame.dart' show HomeInBar, kRailBreakpoint;
 import '../../../../app/split_shell.dart';
 import 'page_ink_layer.dart';
 import '../place_reminder_sheet.dart';
@@ -441,10 +441,13 @@ const double kReadingWidth = 760;
 /// Geri oku yokken 16 dp (derin bağlantı, web yenileme); geniş bölmede okuma
 /// sütununa hizalı. [hasLeading]: solda 56 dp düğme var.
 double editorTitleSpacing(double paneWidth, {required bool hasLeading}) {
-  final margin = paneWidth > kReadingWidth ? (paneWidth - kReadingWidth) / 2 : 0.0;
-  final textLeft = margin + 16;
+  final textLeft = readingMargin(paneWidth) + 16;
   return hasLeading ? math.max(0, textLeft - kToolbarHeight) : textLeft;
 }
+
+/// Okuma sütununun bölme içindeki kenar boşluğu; dar ekranda 0.
+double readingMargin(double paneWidth) =>
+    paneWidth > kReadingWidth ? (paneWidth - kReadingWidth) / 2 : 0.0;
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
   const NoteEditorScreen({
@@ -2033,14 +2036,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Geniş ekranda not listesi şu an gizli mi (tam ekran ya da odak modu)?
   bool _listHidden(BuildContext context) =>
-      SplitScope.activeOf(context) &&
-      (ref.watch(noteFullscreenProvider) ||
-          ref.watch(listPaneCollapsedProvider));
+      SplitScope.maybeOf(context)?.listHidden ?? false;
 
   /// Tam ekrandan ve odak modundan çıkar: solda tek sütunluk liste görünür.
   void _showNoteList() {
     ref.read(noteFullscreenProvider.notifier).set(false);
     ref.read(listPaneCollapsedProvider.notifier).set(false);
+    if (SplitScope.maybeOf(context)?.listAutoHides ?? false) {
+      ref
+          .read(listPeekLocationProvider.notifier)
+          .set(currentLocation(GoRouter.of(context)));
+    }
   }
 
   /// ☰ — gizli listeyi geri getirir (bkz. [_listHidden]).
@@ -2050,6 +2056,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     icon: const Icon(Icons.menu_rounded),
     onPressed: _showNoteList,
   );
+
+  /// Çubuğun sol yuvası: gizli liste ☰; dikey tablette açılmış liste kapanır.
+  Widget? _listLeading(AppLocalizations l10n) {
+    if (_listHidden(context)) return _showListButton(l10n);
+    if (!(SplitScope.maybeOf(context)?.listAutoHides ?? false)) return null;
+    return IconButton(
+      key: const ValueKey('note-hide-list'),
+      tooltip: l10n.listPaneHide,
+      icon: const Icon(Icons.menu_open_rounded),
+      onPressed: () => ref.read(listPeekLocationProvider.notifier).set(null),
+    );
+  }
 
   /// Kalem kipinin kapatma düğmesi (tepsi/sütun sonunda).
   Widget _penDoneButton(AppLocalizations l10n) => IconButton(
@@ -3328,6 +3346,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // de kalemler ALTTA, sayfanın üstünde yüzen bir çekmecede (bkz.
     // PenTray.dock). Sayfa yerleşimi kalem kipinde değişmez; çubuk yer
     // kaplamaz.
+    // Sayfa ortada okuma sütununda mı (bkz. [_buildCanvas]): sabit medya ve
+    // belge notunda sayfa bölmeyi doldurur, çubuklar da.
+    final readingColumn = !note.type.isPageNoteType && !_titleInBar(note);
     final Widget? bottomBar = _immersiveBubble || _pagePen
         ? null
         : RepaintBoundary(
@@ -3493,7 +3514,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         ? const SizedBox.shrink()
                         : RevealUp(
                           child: SingleChildScrollView(
-                            child: FormatBar(
+                            child: Center(
+child: ConstrainedBox(
+constraints: BoxConstraints(
+maxWidth: readingColumn ? kReadingWidth : double.infinity,
+),
+child: ClipRRect(
+// Sütunda sayfanın üstünde kart: köşesiz kutu kopuk duruyordu.
+// Dar ekranda kenardan kenara, köşe yok.
+clipBehavior:
+readingColumn && MediaQuery.sizeOf(context).width > kReadingWidth
+? Clip.antiAlias
+: Clip.none,
+borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+child: FormatBar(
                               target: _formatTarget,
                               onFormat: _applyFormat,
                               onClearFormat: _clearFormat,
@@ -3573,6 +3607,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                     ?.editDividerStyleOf(_formatItemId ?? ''),
                               ),
                             ),
+),
+),
+),
                           ),
                         ),
                   ),
@@ -3585,7 +3622,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 if (_findOpen)
                   ListenableBuilder(
                     listenable: _find,
-                    builder: (context, _) => NoteFindBar(
+                    builder: (context, _) => Center(
+child: ConstrainedBox(
+constraints: BoxConstraints(
+maxWidth: readingColumn ? kReadingWidth : double.infinity,
+),
+child: NoteFindBar(
                       controller: _find.query,
                       focusNode: _find.focus,
                       count: _find.hits.length,
@@ -3597,6 +3639,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       onList: () => unawaited(_openFindList()),
                       onClose: _closeFind,
                     ),
+),
+),
                   )
                 // BİÇİM PANELİ AÇIKKEN alt çubuk GİZLİ (kullanıcı isteği
                 // 2026-10-20: "biçim paneli açılınca alttaki ses, ek vb.
@@ -3635,7 +3679,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   // düğme gizlenebilir; düzenleme modunda hepsi çerçeveli
                   // görünür ve dokunmak gizle/göster yapar (bkz.
                   // Customizable). Çubuk yalnız bu tercihleri dinler.
-                  child: ListenableBuilder(
+                  // Okuma sütunuyla hizalı (F44.3); çubuğun zemini tam genişlik.
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: readingColumn
+                            ? kReadingWidth - 24
+                            : double.infinity,
+                      ),
+                      child: ListenableBuilder(
                     listenable: Personalize.listenable,
                     builder: (context, _) => LayoutBuilder(
                     builder: (context, constraints) {
@@ -3908,6 +3960,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     },
                   ),
                   ),
+                    ),
+                  ),
                 ),
                 ],
                 ),
@@ -4015,7 +4069,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // Kalem + tam ekran: üst de sayfa olur (çıkış sütunda).
           appBar: _pagePen && ref.watch(noteFullscreenProvider)
               ? null
-              : PreferredSize(
+              : HomeInBar(appBar: PreferredSize(
                   preferredSize: const Size.fromHeight(_kEditorToolbarHeight),
                   // Bölmenin genişliği: tarih okuma sütunuyla hizalı (F38.2).
                   // `_`: `_themeOf` ekranın kendi bağlamından okur.
@@ -4028,8 +4082,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             // Liste gizliyken (tam ekran / odak modu) geri okunun yerinde ☰:
             // tek dokunuşla liste geri gelir (kullanıcı isteği 2026-11-02:
             // "tam ekrandan çıkmak çok zor").
-            leading: _listHidden(context) ? _showListButton(l10n) : null,
+            leading: _listLeading(l10n),
             backgroundColor: Colors.transparent,
+            // Düğmeler okuma sütununun sağ kenarında biter (F44.3).
+            actionsPadding: EdgeInsetsDirectional.only(
+              end: readingColumn ? readingMargin(box.maxWidth) : 0,
+            ),
             // Saydam çubukta Flutter simge rengini zeminden çıkaramaz (çizilmiş
             // temalı notta beyaz simge kalıyordu): sayfanın rengine göre (F30.6).
             systemOverlayStyle: _statusBarFor(background),
@@ -4039,9 +4097,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             // Sabitlenmiş/yıldızlı göstergesi tarihin yanında — düğmeler ⋯
             // menüsüne taşındığı için durum bir yerde görünmeliydi.
             titleSpacing: editorTitleSpacing(
-              box.maxWidth,
+              readingColumn ? box.maxWidth : 0,
               hasLeading:
-                  _listHidden(context) ||
+                  _listLeading(l10n) != null ||
                   (Navigator.maybeOf(context)?.canPop() ?? false),
             ),
             title: _barTitle ??
@@ -4252,7 +4310,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             ],
           ),
                   ),
-                ),
+                )),
           // Renkli çerçeve: seçiliyse editör içeriğini saran ince renkli kenarlık.
           //
           // ALT ÇUBUK GÖVDENİN İÇİNDE (bkz. aşağıdaki `_bottomBar` yorumu):

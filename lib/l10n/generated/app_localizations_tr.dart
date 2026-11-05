@@ -3641,6 +3641,25 @@ class AppLocalizationsTr extends AppLocalizations {
   String get showNoteList => 'Not listesini göster';
 
   @override
+  String get shortcutSwitchFolder => 'Klasörler arasında geç';
+
+  @override
+  String get shortcutMouseWheel => 'tekerlek';
+
+  @override
+  String get shortcutGridColumns => 'Sütun sayısı';
+
+  @override
+  String get shortcutSelectAll => 'Seçimdeyken hepsini seç';
+
+  @override
+  String get shortcutDeleteSelected => 'Seçilenleri çöp kutusuna at';
+
+  @override
+  String get sharedFolderNoFileDrop =>
+      'Paylaşılan klasöre dosya bırakılamaz. Önce not aç, dosyayı onun içine bırak.';
+
+  @override
   String get shortcutAdjacentNote => 'Listede önceki / sonraki not';
 
   @override
