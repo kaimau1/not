@@ -1,4 +1,5 @@
 import '../../gmail/data/gmail_auth.dart';
+import '../../../core/utils/web_file_drop.dart';
 import '../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:io';
@@ -227,9 +228,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Izgara kaydırma ipucuna bu açılışta bakıldı mı (bkz. dashboard_shelf).
   bool _gridTipChecked = false;
 
+  void Function() _stopFileDrops = () {};
+
   @override
   void initState() {
     super.initState();
+    _stopFileDrops = listenFileDrops((files) => unawaited(useFiles(files)));
     // KÖK NEDEN (kasma): burada `_searchFocus.addListener(() => setState(...))`
     // vardı — arama alanına her dokunuş EKRANIN TAMAMINI (ve önbellek
     // payındaki ~130 kartı) yeniden kuruyordu. Odak artık yalnız arama
@@ -426,6 +430,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   @override
   void dispose() {
+    _stopFileDrops();
     WidgetsBinding.instance.removeObserver(this);
     _liveQuery.dispose();
     _searchController.dispose();

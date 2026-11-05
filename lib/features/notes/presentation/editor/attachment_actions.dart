@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/app_icons.dart';
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/app_sheet.dart';
 import '../../domain/attachment.dart';
+import 'note_images.dart' show captionTextStyle;
 
 /// **TEK EK MENÜSÜ (TUTARLILIK F40.1).** Aynı ekin menüsü görünüme göre başka
 /// ad, başka sıra ve başka alt kümeydi (şerit levhası, yüzen ⋮, sabit ⋮, gömülü
@@ -15,6 +17,7 @@ enum AttachmentAction {
   open,
   view,
   edit,
+  caption,
   transcribe,
   extractText,
   videoToNote,
@@ -29,7 +32,7 @@ enum AttachmentAction {
 
 /// Eki gösteren yüzey. Yüzeyin kendi çubuğunda ZATEN görünen iş menüde
 /// tekrarlanmaz (K2 kuralı); kalan her şey aynı sırada.
-enum AttachmentSurface { strip, floating, pinned, embedded }
+enum AttachmentSurface { strip, floating, pinned, embedded, contextMenu }
 
 /// Çağıranın verebildiği işler (salt okunur not, web, callback yok...).
 @immutable
@@ -38,6 +41,7 @@ class AttachmentCaps {
     this.open = true,
     this.viewRow = false,
     this.edit = false,
+    this.caption = false,
     this.transcribe = false,
     this.extractText = false,
     this.videoToNote = false,
@@ -55,6 +59,9 @@ class AttachmentCaps {
   /// Anahtar yüzeyde sığmıyor: "Görünüm" satırı levhayı açar.
   final bool viewRow;
   final bool edit;
+
+  /// Görsele açıklama (yüzende çubukta ayrı düğme).
+  final bool caption;
   final bool transcribe;
   final bool extractText;
   final bool videoToNote;
@@ -85,6 +92,10 @@ List<AttachmentAction> attachmentActionsFor(
       AttachmentAction.open,
     if (caps.viewRow) AttachmentAction.view,
     if (caps.edit) AttachmentAction.edit,
+    if (caps.caption &&
+        a.kind == AttachmentKind.image &&
+        surface != AttachmentSurface.floating)
+      AttachmentAction.caption,
     if (caps.transcribe) AttachmentAction.transcribe,
     if (caps.extractText && a.kind == AttachmentKind.image)
       AttachmentAction.extractText,
@@ -116,6 +127,10 @@ List<AttachmentAction> attachmentActionsFor(
     AttachmentAction.edit => (
       label: l10n.attachmentTagEdit,
       icon: Icons.edit_outlined,
+    ),
+    AttachmentAction.caption => (
+      label: l10n.imageCaptionAdd,
+      icon: Icons.short_text_rounded,
     ),
     AttachmentAction.transcribe => (
       label: l10n.transcriptAction,
@@ -230,5 +245,68 @@ Future<AttachmentAction?> showAttachmentContextMenu(
       Offset.zero & overlay.size,
     ),
     items: attachmentPopupItems(context, actions),
+  );
+}
+
+/// Görsel açıklamasını yazma levhası. Boş dönerse açıklama kalkar; null = vazgeçti.
+Future<String?> showCaptionSheet(BuildContext context, String initial) {
+  final controller = TextEditingController(text: initial);
+  return showAppSheet<String>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    useSafeArea: true,
+    builder: (sheet) => Padding(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        0,
+        20,
+        16 + MediaQuery.viewInsetsOf(sheet).bottom,
+      ),
+      child: TextField(
+        key: const ValueKey('caption-sheet-field'),
+        controller: controller,
+        autofocus: true,
+        maxLength: Attachment.maxCaptionChars,
+        maxLines: 3,
+        minLines: 1,
+        textInputAction: TextInputAction.done,
+        decoration: InputDecoration(
+          hintText: sheet.l10n.imageCaptionHint,
+          suffixIcon: IconButton(
+            key: const ValueKey('caption-sheet-done'),
+            tooltip: MaterialLocalizations.of(sheet).okButtonLabel,
+            icon: const Icon(Icons.check),
+            onPressed: () => Navigator.pop(sheet, controller.text.trim()),
+          ),
+        ),
+        onSubmitted: (v) => Navigator.pop(sheet, v.trim()),
+      ),
+    ),
+  ).whenComplete(controller.dispose);
+}
+
+/// Görselin altındaki açıklama, her görünümde aynı stil (F40.7).
+class AttachmentCaptionBand extends StatelessWidget {
+  const AttachmentCaptionBand({super.key, required this.text, this.onTap});
+
+  final String text;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    key: const ValueKey('attachment-caption-band'),
+    behavior: HitTestBehavior.opaque,
+    onTap: onTap,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+      child: Text(
+        text,
+        maxLines: 3,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: captionTextStyle(Theme.of(context).colorScheme),
+      ),
+    ),
   );
 }

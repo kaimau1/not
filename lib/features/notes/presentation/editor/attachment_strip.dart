@@ -663,6 +663,8 @@ class _AttachmentTile extends ConsumerWidget {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () => _open(context, ref),
+            // Sağ tık (masaüstü, F40.8): aynı liste.
+            onSecondaryTap: () => _showActions(context, ref),
             // Basılı tutmak da işlem levhasını açar (⋯ ile aynı).
             onLongPress: () {
               HapticFeedback.mediumImpact();

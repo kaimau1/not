@@ -72,6 +72,34 @@ void main() {
     ]);
   });
 
+  test('açıklama yalnız görselde; yüzende çubukta, sağ tıkta menüde', () {
+    const caps = AttachmentCaps(caption: true);
+    expect(
+      attachmentActionsFor(video, AttachmentSurface.pinned, caps),
+      isNot(contains(AttachmentAction.caption)),
+    );
+    expect(
+      attachmentActionsFor(image, AttachmentSurface.pinned, caps),
+      contains(AttachmentAction.caption),
+    );
+    expect(
+      attachmentActionsFor(image, AttachmentSurface.floating, caps),
+      isNot(contains(AttachmentAction.caption)),
+    );
+    expect(
+      attachmentActionsFor(image, AttachmentSurface.contextMenu, caps),
+      contains(AttachmentAction.caption),
+    );
+    expect(
+      attachmentActionsFor(
+        image,
+        AttachmentSurface.contextMenu,
+        const AttachmentCaps(remove: true),
+      ),
+      contains(AttachmentAction.remove),
+    );
+  });
+
   test('çubukta görünen menüde tekrarlanmaz', () {
     final floating = attachmentActionsFor(
       image,

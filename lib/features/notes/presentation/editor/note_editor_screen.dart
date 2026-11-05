@@ -169,6 +169,7 @@ import 'windowed_body.dart';
 import 'video_hub_scope.dart';
 import 'audio_card_box.dart' show kAudioBoxWidth, kAudioBoxHeight;
 import 'text_page_box.dart' show kTextBoxWidth, kTextBoxHeight;
+import 'attachment_actions.dart';
 import 'view_mode_switch.dart';
 import 'page_swipe.dart';
 import 'title_fit.dart';
@@ -2811,6 +2812,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final bubbleSwitch = bubbleDocument == null
         ? null
         : _viewSwitchFor(note, bubbleDocument, dense: true);
+    final bubbleCaptionOwner = bubbleDocument == null
+        ? null
+        : note.attachments
+              .where(
+                (a) => a.id == bubbleDocument.sourceId && a.caption.isNotEmpty,
+              )
+              .firstOrNull;
     final titleRow = titleInBar
         // Başlık ve "+" üst çubukta; gövdede yalnız balonlu belgenin görünüm
         // anahtarı kalır (çip satırının sağında — ayrı satır harcamaz).
@@ -2904,6 +2912,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           )
         else
           metaChips,
+        // Görselden üretilmiş belgede açıklama görselindir (F40.7).
+        if (bubbleCaptionOwner != null)
+          Center(
+            child: AttachmentCaptionBand(
+              text: bubbleCaptionOwner.caption,
+              onTap: _readOnly
+                  ? null
+                  : () => unawaited(_editCaption(bubbleCaptionOwner)),
+            ),
+          ),
         if ((note.textPages.isNotEmpty || note.paged) &&
             !note.type.isPageNoteType)
           _pageBar(note),

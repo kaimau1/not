@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -104,6 +105,7 @@ class PinnedMediaPane extends StatefulWidget {
     this.onChanged,
     this.viewSwitch,
     this.onShowViews,
+    this.onCaption,
     this.onNoteAt,
     this.bubbleDoc,
     this.onRemove,
@@ -168,6 +170,9 @@ class PinnedMediaPane extends StatefulWidget {
 
   /// Dar çubukta anahtar sığmayınca ⋮ → Görünüm bunu açar.
   final VoidCallback? onShowViews;
+
+  /// Görsel açıklamasını yazar (⋮, bant).
+  final VoidCallback? onCaption;
 
   /// "Bu ana not al" (yalnız video): ayraç çubuğunda yazılı düğme.
   final VoidCallback? onNoteAt;
@@ -445,6 +450,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                           _pulling = false;
                           _pullDown = 0;
                         }),
+                        onSecondaryTapUp: (d) =>
+                            unawaited(_showContextMenu(d.globalPosition)),
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
@@ -473,6 +480,17 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                                 ),
                               ),
                             ),
+                            if (widget.media.caption.isNotEmpty && !_pulling)
+                              Align(
+                                alignment: Alignment.bottomCenter,
+                                child: ColoredBox(
+                                  color: scheme.surfaceContainerHigh,
+                                  child: AttachmentCaptionBand(
+                                    text: widget.media.caption,
+                                    onTap: widget.onCaption,
+                                  ),
+                                ),
+                              ),
                             if (!isVideo && !_pulling)
                               if (_bubblesFor(widget.bubbleDoc)
                                   case final bubbles?)
@@ -697,49 +715,69 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
       widget.onSaveAs != null ||
       widget.onShare != null;
 
+  void _run(AttachmentAction action) {
+    switch (action) {
+      case AttachmentAction.view:
+        widget.onShowViews?.call();
+      case AttachmentAction.open:
+        widget.onOpen();
+      case AttachmentAction.caption:
+        widget.onCaption?.call();
+      case AttachmentAction.copyLink:
+        widget.onCopyLink?.call();
+      case AttachmentAction.transcribe:
+        widget.onTranscribe?.call();
+      case AttachmentAction.share:
+        widget.onShare?.call();
+      case AttachmentAction.saveAs:
+        widget.onSaveAs?.call();
+      case AttachmentAction.remove:
+        widget.onRemove?.call();
+      case _:
+        break;
+    }
+  }
+
+  List<AttachmentAction> _actions(
+    AttachmentSurface surface, {
+    bool viewRow = false,
+  }) => attachmentActionsFor(
+    widget.media,
+    surface,
+    AttachmentCaps(
+      viewRow: viewRow && widget.onShowViews != null,
+      caption: widget.onCaption != null,
+      transcribe: widget.onTranscribe != null,
+      share: widget.onShare != null,
+      saveAs: widget.onSaveAs != null,
+      copyLink: widget.onCopyLink != null,
+      remove: widget.onRemove != null,
+    ),
+  );
+
+  /// Eke sağ tık (masaüstü, F40.8): aynı liste, imlecin yanında.
+  Future<void> _showContextMenu(Offset global) async {
+    final action = await showAttachmentContextMenu(
+      context,
+      global,
+      _actions(AttachmentSurface.contextMenu),
+    );
+    if (action != null && mounted) _run(action);
+  }
+
   /// Tek ek menüsü (bkz. [attachmentActionsFor]); dar çubukta anahtar buraya
   /// satır olarak iner.
-  Widget _menu(BuildContext context, {required bool viewRow}) {
-    final l10n = context.l10n;
-    return PopupMenuButton<AttachmentAction>(
-      key: const ValueKey('pinned-media-menu'),
-      tooltip: l10n.more,
-      icon: const Icon(Icons.more_vert, size: 20),
-      onSelected: (action) {
-        switch (action) {
-          case AttachmentAction.view:
-            widget.onShowViews?.call();
-          case AttachmentAction.copyLink:
-            widget.onCopyLink?.call();
-          case AttachmentAction.transcribe:
-            widget.onTranscribe?.call();
-          case AttachmentAction.share:
-            widget.onShare?.call();
-          case AttachmentAction.saveAs:
-            widget.onSaveAs?.call();
-          case AttachmentAction.remove:
-            widget.onRemove?.call();
-          case _:
-            break;
-        }
-      },
-      itemBuilder: (context) => attachmentPopupItems(
-        context,
-        attachmentActionsFor(
-          widget.media,
-          AttachmentSurface.pinned,
-          AttachmentCaps(
-            viewRow: viewRow && widget.onShowViews != null,
-            transcribe: widget.onTranscribe != null,
-            share: widget.onShare != null,
-            saveAs: widget.onSaveAs != null,
-            copyLink: widget.onCopyLink != null,
-            remove: widget.onRemove != null,
-          ),
+  Widget _menu(BuildContext context, {required bool viewRow}) =>
+      PopupMenuButton<AttachmentAction>(
+        key: const ValueKey('pinned-media-menu'),
+        tooltip: context.l10n.more,
+        icon: const Icon(Icons.more_vert, size: 20),
+        onSelected: _run,
+        itemBuilder: (context) => attachmentPopupItems(
+          context,
+          _actions(AttachmentSurface.pinned, viewRow: viewRow),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class _BarButton extends StatelessWidget {

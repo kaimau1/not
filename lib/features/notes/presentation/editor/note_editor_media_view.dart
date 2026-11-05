@@ -381,6 +381,14 @@ extension _EditorMediaView on _NoteEditorScreenState {
     );
   }
 
+  /// Görsel açıklaması, yerinde düzenlenemeyen görünümlerde levhada (F40.7).
+  Future<void> _editCaption(Attachment a) async {
+    final text = await showCaptionSheet(context, a.caption);
+    if (text == null || !mounted) return;
+    final latest = _note?.attachments.where((x) => x.id == a.id).firstOrNull ?? a;
+    if (latest.caption != text) _updateAttachment(latest.copyWith(caption: text));
+  }
+
   /// Çubukta anahtarın sığmadığı yerde (⋮ → Görünüm) aynı anahtar levhada.
   void _showViewSheet(Attachment a) {
     final note = _note;
@@ -953,6 +961,9 @@ extension _EditorMediaView on _NoteEditorScreenState {
             onChanged: _updateAttachment,
             viewSwitch: _viewSwitchFor(note, pinned, dense: true),
             onShowViews: () => _showViewSheet(pinned),
+            onCaption: _readOnly || pinned.kind != AttachmentKind.image
+                ? null
+                : () => unawaited(_editCaption(pinned)),
             onNoteAt: _readOnly
                 ? null
                 : (pinned.kind == AttachmentKind.video ||
