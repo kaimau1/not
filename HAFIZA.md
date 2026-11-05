@@ -32,6 +32,12 @@ maddeyi GÜNCELLE.
 - graphify grafiği elle (`graphify update .`; bulutta `pip install graphifyy` ile venv'e); satır bilgisini koddan doğrula.
 
 ## CI (`.github/workflows/build.yml`)
+- **Test seçimi (2026-11-05, kullanıcı kararı):** dalda yalnız etkilenen testler
+  (`tool/etkilenen_testler.py`: import grafiği + test kaynağındaki yol dizeleri;
+  taban = main'le ortak ata, son push DEĞİL — iptal edilen koşunun değişikliği
+  kaçmasın). main'de ağaç yeşil dal başıyla aynıysa `atla` (adımlar koşmaz, iş
+  yeşil biter — `needs.test` bekleyenler bozulmasın). `[tam]` başlığı tam takım.
+  `hooks/pre-push` (yerel tam takım) kaldırıldı. Aynı betikler dosya-okuyucu'da.
 - APK yalnız main'de, commit **BAŞLIĞINDA** `[apk]`; dalda derlenmez.
   TUZAK (2026-11-03): main'e ARDINDAN etiketsiz commit itmek koşan `[apk]`
   koşusunu İPTAL eder (concurrency) → Release çıkmaz. Hafıza/ek düzeltme
