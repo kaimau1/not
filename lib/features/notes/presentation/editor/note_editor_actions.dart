@@ -6,14 +6,12 @@ part of 'note_editor_screen.dart';
 extension _EditorActions on _NoteEditorScreenState {
   // ---- Diğer eylemler -------------------------------------------------
 
-  /// Etiket/hatırlatıcı çipindeki ORTAK ÇALIŞAN işareti (2026-11-01):
-  /// paylaşılmışsa dolu kişi simgesi + kişi sayısı, değilse soluk "kişi
-  /// ekle". Abonelik yalnız bu küçük parçada — paylaşım akışı editörün
-  /// tamamını yeniden kurmasın.
+  /// "+" düğmesinin yanındaki PAYLAŞIM durumu: yalnız paylaşılmış notta kişi
+  /// simgesi + sayı; dokununca ortak çalışanlar. Abonelik yalnız bu küçük
+  /// parçada — paylaşım akışı editörün tamamını yeniden kurmasın.
   Widget _collabMarker(ThemeData theme) {
     return Consumer(
       builder: (context, ref, _) {
-        final scheme = theme.colorScheme;
         final owner = widget.ownerId;
         final count = owner == null
             ? ref.watch(
@@ -22,32 +20,147 @@ extension _EditorActions on _NoteEditorScreenState {
                 ),
               )
             : 1;
-        final shared = count > 0;
-        final color = shared ? scheme.primary : scheme.onSurfaceVariant;
-        return Row(
-          key: const ValueKey('note-meta-collab'),
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(width: 4),
-            Icon(
-              shared ? Icons.people_alt : Icons.person_add_alt_1_outlined,
-              size: 15,
-              color: color,
-            ),
-            if (owner == null && shared) ...[
-              const SizedBox(width: 2),
-              Text(
-                '$count',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w700,
-                ),
+        if (count == 0) return const SizedBox.shrink();
+        final accent =
+            NoteAccent.maybeOf(context)?.accent ?? theme.colorScheme.primary;
+        return Tooltip(
+          message: context.l10n.collaborators,
+          child: InkWell(
+            key: const ValueKey('note-meta-collab'),
+            borderRadius: BorderRadius.circular(12),
+            onTap: _openCollaborators,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.people_alt, size: 15, color: accent),
+                  if (owner == null) ...[
+                    const SizedBox(width: 2),
+                    Text(
+                      '$count',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: accent,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ],
               ),
-            ],
-          ],
+            ),
+          ),
         );
       },
     );
+  }
+
+  void _openCollaborators() => unawaited(
+    showCollaboratorsSheet(
+      context,
+      ref,
+      noteId: widget.noteId,
+      ownerId: widget.ownerId,
+    ),
+  );
+
+  /// Başlıktaki "+": notun kendisine dair ekleme ve öneriler (F38.3). Çok
+  /// işlemli olduğu için levha (F38.6 kuralı).
+  Future<void> _openMetaMenu(
+    Note note,
+    IconData? folderIcon, {
+    required bool canCollab,
+  }) async {
+    final l10n = context.l10n;
+    _dismissKeyboard();
+    final canAi = !note.isEmpty && !note.locked && !_readOnly;
+    final action = await showActionMenuSheet(
+      context,
+      ActionMenu(
+        title: note.displayTitle,
+        quick: [
+          MenuAction('add-tag', l10n.addTag, Icons.new_label_outlined),
+          MenuAction('reminder', l10n.addReminder, Icons.alarm_add_outlined),
+          if (canCollab)
+            MenuAction(
+              'collaborators',
+              l10n.collaborators,
+              Icons.person_add_alt_1_outlined,
+            ),
+          MenuAction(
+            'folder',
+            l10n.folder,
+            folderIcon ?? Icons.create_new_folder_outlined,
+          ),
+        ],
+        sections: [
+          MenuSection(l10n.menuSectionOrganize, [
+            // Sayfa notun İÇERİĞİ değil YAPISI (kullanıcı isteği 2026-10-11).
+            if (!note.type.isPageNoteType)
+              MenuAction(
+                'new-page',
+                l10n.archiveNewPage,
+                Icons.note_add_outlined,
+              ),
+            if (PlaceReminderService.supported)
+              MenuAction(
+                'place-reminder',
+                l10n.placeReminder,
+                Icons.add_location_alt_outlined,
+              ),
+          ]),
+          MenuSection(l10n.menuSectionTools, [
+            if (!note.isEmpty && note.title.trim().isEmpty)
+              MenuAction('suggest-title', l10n.suggestTitle, Icons.title),
+            if (!note.isEmpty)
+              MenuAction('suggest-tags', l10n.suggestTags, Icons.auto_awesome),
+            // F18.19 nottan kartlar, F18.17 ilgili notlar: kilitli notta yok.
+            if (canAi) ...[
+              MenuAction(
+                'study-cards',
+                note.cards.isEmpty
+                    ? l10n.studyCardsMake
+                    : l10n.studyCardsMakeMore(note.cards.length),
+                Icons.style_outlined,
+              ),
+              MenuAction(
+                'related-notes',
+                l10n.relatedNotesTitle,
+                Icons.hub_outlined,
+              ),
+            ],
+          ]),
+        ],
+      ),
+    );
+    if (action == null || !mounted) return;
+    switch (action) {
+      case 'new-page':
+        _addPage();
+      case 'reminder':
+        await _pickReminder();
+      case 'place-reminder':
+        unawaited(showPlaceReminderSheet(context, ref, note));
+      case 'folder':
+        await _pickFolder();
+      case 'collaborators':
+        _openCollaborators();
+      case 'add-tag':
+        await _addTag();
+      case 'suggest-tags':
+        await _suggestTags();
+      case 'suggest-title':
+        await _suggestTitle();
+      case 'study-cards':
+        unawaited(generateCardsForNote(context, ref, note));
+      case 'related-notes':
+        unawaited(
+          showRelatedNotesSheet(
+            context,
+            noteId: note.id,
+            onLink: _linkNoteAtEnd,
+          ),
+        );
+    }
   }
 
   Future<void> _pickReminder() async {
@@ -247,73 +360,54 @@ extension _EditorActions on _NoteEditorScreenState {
     if (mounted) _showSnack(context.l10n.copied);
   }
 
-  /// Notu başlatıcıya kısayol olarak koyar (bkz. [NoteShortcut]). Simge
-  /// notun AÇIK temadaki rengini taşır (başlatıcı her zaman açık zeminli
-  /// simge bekler); başlık yoksa gövdenin ilk satırı ad olur.
-  Future<void> _pinToHome(Note note) async {
-    final l10n = context.l10n;
-    final theme = NoteThemes.byId(note.theme);
-    final color =
-        theme?.light.top.toARGB32() ??
-        note.customColor ??
-        (note.color == NoteColor.none
-            ? 0xFFFFE08A
-            : NoteColors.swatch(note.color).toARGB32());
-    var title = note.title.trim();
-    if (title.isEmpty) {
-      title = stripRichMarkers(note.body)
-          .split('\n')
-          .map((l) => l.trim())
-          .firstWhere((l) => l.isNotEmpty, orElse: () => l10n.untitledNote);
-    }
-    final ok = await NoteShortcut.pin(
-      id: note.id,
-      title: title,
-      body: note.body,
-      color: color,
-    );
-    if (!mounted) return;
-    _showSnack(ok ? l10n.pinToHomeSent : l10n.pinToHomeUnsupported);
-  }
-
-  /// Üst bardaki ⋮ — iki sütunlu levha (bkz. note_menu_sheet.dart).
+  /// Üst bardaki ⋮: kart ⋮ ile tek katalog (bkz. [noteMenuModel]).
   Future<void> _openNoteMenu() async {
     final note = _note;
     if (note == null) return;
     // Levha metin alanı taşımıyor; klavye açık kalırsa levhanın yarısını
     // örter (alt bardaki diğer levhalarla aynı kural).
     _dismissKeyboard();
-    final action = await showNoteEditorMenu(
+    final action = await showActionMenuSheet(
       context,
-      pinned: note.pinned,
-      starred: note.starred,
-      paged: note.paged,
-      notebookAvailable: !note.type.isPageNoteType || note.paged,
-      locked: note.locked,
-      archived: note.archivedAt != null,
-      isList: note.type == NoteType.checklist || note.type == NoteType.ordered,
-      twoColumns: note.listColumns == 2,
-      hasFloatingImages: note.attachments.any((a) => a.floatsOnPage),
-      hasAttachments: note.attachments.isNotEmpty,
-      bubbleView:
-          _readOnly || _NoteEditorScreenState._switchableDocument(note) == null
-          ? null
-          : note.type.isPageNoteType,
-      canTemplate: canSaveAsTemplate(note),
-      canRemoveParts: !_readOnly && _hasBothParts(note),
-      canPinHome: NoteShortcut.supported && widget.ownerId == null,
-      searchInBar: _barHasSearch,
-      shareInBar: _barHasShare,
-      // Yalnız KENDİ notum (başkasının notu yerel yapılamaz) ve özellik
-      // destekleniyorsa (web'de yok).
-      localOnly: widget.ownerId == null && localOnlySupported(ref)
-          ? ref.read(notesRepositoryProvider)?.isLocal(note.id) ?? false
-          : null,
+      noteMenuModel(
+        context.l10n,
+        note,
+        surface: NoteMenuSurface.editor,
+        readOnly: _readOnly,
+        // Bu ekranda başka yerde AÇIKÇA duranlar; başlık üst çubuğa çıkınca
+        // raptiye ve görünüm çubuktan düşer, menüye gelir.
+        visibleElsewhere: {
+          if (_barTitle == null && Customizable.shows(UiItem.topPin)) 'pin',
+          if (_barTitle == null && Customizable.shows(UiItem.topTheme)) 'color',
+          if (_barHasSearch) 'search',
+          if (_barHasShare) 'share',
+        },
+        bubbleView:
+            _readOnly ||
+                _NoteEditorScreenState._switchableDocument(note) == null
+            ? null
+            : note.type.isPageNoteType,
+        canRemoveParts: !_readOnly && _hasBothParts(note),
+        canPinHome: NoteShortcut.supported && widget.ownerId == null,
+        // Yalnız KENDİ notum (başkasının notu yerel yapılamaz) ve özellik
+        // destekleniyorsa (web'de yok).
+        localOnlyAvailable: widget.ownerId == null && localOnlySupported(ref),
+        localOnly: ref.read(notesRepositoryProvider)?.isLocal(note.id) ?? false,
+      ),
     );
     if (action == null || !mounted) return;
     switch (action) {
       case 'pinHome':
-        await _pinToHome(note);
+        await pinNoteToHome(context, note);
+      case 'color':
+        await _showColorSheet();
+      case 'frame':
+        await _pickNoteColor(frame: true);
+      case 'cardMedia':
+        _mutate(
+          (n) => n.copyWith(cardMediaHidden: !n.cardMediaHidden),
+          immediate: true,
+        );
       case 'docView':
         _toggleDocumentView();
       case 'pin':

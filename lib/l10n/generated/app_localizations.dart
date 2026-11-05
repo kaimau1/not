@@ -1994,6 +1994,12 @@ abstract class AppLocalizations {
   /// **'Ekler bu cihazda güvende. Bağlantı olduğunda kendiliğinden yüklenir; o zamana kadar öbür cihazlarınızda görünmez.'**
   String get pendingUploadsInfo;
 
+  /// No description provided for @checkedHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşaretliler ({count})'**
+  String checkedHeader(int count);
+
   /// No description provided for @deleteChecked.
   ///
   /// In tr, this message translates to:
@@ -7885,12 +7891,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Hesap ve kişiler'**
   String get menuSectionPeople;
-
-  /// No description provided for @menuSectionHome.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ana ekran'**
-  String get menuSectionHome;
 
   /// No description provided for @menuSectionApp.
   ///

@@ -253,27 +253,9 @@ class _AttachSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Başlık satırı ALÇAK (kompakt levha, 2026-10-20): kapatma yazılı
-          // düğme değil simge — levha kaydırmadan sığsın.
-          Row(
-            children: [
-              const SizedBox(width: 2),
-              Expanded(
-                child: Text(
-                  l10n.addAttachment,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: l10n.close,
-                visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.close, size: 20),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
+          SheetHeader(
+            title: l10n.addAttachment,
+            padding: const EdgeInsets.fromLTRB(2, 0, 0, 0),
           ),
           if (contentShown.isNotEmpty) ...[
             _SectionLabel(l10n.attachNoteContent),

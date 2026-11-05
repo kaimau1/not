@@ -171,6 +171,12 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 64. [ ] (F37.3) Liste görünümünde renkli not kendi renginde; koyu özel renkte yazı okunur; çöpte kutucuk notun tonunda; seçince seçim rengi.
 65. [ ] (F37.4) Renkli, siyah özel renkli ve renksiz liste notunu Paylaş → PDF ve Görsel: sayfa notun renginde (renksiz beyaz), kutucuk notun tonunda, yazı okunur, çok sayfalıda her sayfa boyalı. Koyu sayfa baskıda rahatsız ediyorsa söyle (sabah bakılacak).
 
+**2026-11-05 — not ekranı (TUTARLILIK_PLANI Faz 38, yazıldı, cihazda elle doğrulanmadı)**
+66. [ ] (F38.1) Kart ⋮ ve not ⋮ yan yana: aynı işler aynı grupta, aynı sırada; notta Çerçeve ve Görsel önizlemesi çalışıyor, kartta Ana ekrana yerleştir kısayol koyuyor.
+67. [ ] (F38.3) Başlıktaki "+" levha açar (Etiket, Hatırlatıcı, Kişiler, Klasör); uzun başlık daha geniş; paylaşılmış notta "+"nın yanında kişi sayısı, dokununca ortak çalışanlar. Medya sabit notta başlık üst çubuktayken de aynı.
+68. [ ] (F38.4) 12+ işaretli maddeli listede "İşaretliler (N) · Sil" kaydırmadan bulunuyor, silme Geri al veriyor; görsel yanındayken satır görselin altına iniyor.
+69. [ ] (F38.7) Klavye açılırken alt çubuk: telefonda ölçümde birikim çıkmadı (15 tur). Kendi notlarında hâlâ "her açılışta artıyor" görüyorsan hangi notta (ekli mi, uzun mu) söyle: sabah bakılacak. Görselli notta ilk açılış 33 ms, sonrakiler 66–149 ms farkı açık.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)

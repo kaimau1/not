@@ -83,8 +83,13 @@ Future<String?> showActionMenuSheet(BuildContext context, ActionMenu menu) =>
           SafeArea(child: SingleChildScrollView(child: menu)),
     );
 
-/// Not menülerinin ORTAK levha düzeni (ana ekranda nota basılı tutma ve
-/// editörün ⋮ menüsü).
+/// Çok işlemli menülerin ORTAK levha düzeni (kart ⋮, not ⋮, not "+", ana ekran
+/// ⋮, çoklu seçim ⋮).
+///
+/// **MENÜ BİÇİMİ KURALI (TUTARLILIK F38.6, H1):** nota/eke ait çok işlemli menü
+/// bu levha; tek seçimli ya da en çok dört maddelik araç listesi (sıralama,
+/// görüntüleyici ⋮, kalem ayarı) açılır menü (`PopupMenuButton`). Ek menüleri
+/// F40.1'de aynı kurala geçer.
 ///
 /// KÖK NEDEN (kullanıcı isteği 2026-10-11: "görsellerdeki menüler yeniden
 /// dizayn edilip toparlanmalı"): iki menü de 18–20 eşit ağırlıklı, iri
@@ -103,7 +108,6 @@ class ActionMenu extends StatelessWidget {
     required this.quick,
     required this.sections,
     this.danger,
-    this.wideSections = false,
     this.footer = const [],
   });
 
@@ -111,13 +115,6 @@ class ActionMenu extends StatelessWidget {
   /// uygulamanın işi olan maddeler (Ekranı düzenle, Ayarlar — F12.1).
   /// Araçların arasında durunca not işi sanılıyordu.
   final List<MenuAction> footer;
-
-  /// Gruplar yuvarlak simge ızgarası yerine İKİ SÜTUNLU geniş satırlarla
-  /// (simge + yanında ad) çizilsin mi. Ana ekranın ⋮ menüsü (kullanıcı
-  /// bulgusu 2026-10-20: "üstte 5 buton, altta 2'şerli sola yaslanmış, iyi
-  /// değil"): ikişer maddelik gruplar üç sütunlu ızgarada sola yığılıp
-  /// sağda boşluk bırakıyordu. Geniş satır ekranı tam doldurur.
-  final bool wideSections;
 
   final String? title;
   final List<MenuAction> quick;
@@ -156,10 +153,7 @@ class ActionMenu extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
                 child: SectionLabel(section.title),
               ),
-              if (wideSections)
-                _TileColumns(actions: section.actions, scheme: scheme)
-              else
-                _TileGrid(actions: section.actions, scheme: scheme),
+              _TileGrid(actions: section.actions, scheme: scheme),
             ],
           if (danger != null) ...[
             const SizedBox(height: 10),
@@ -290,48 +284,6 @@ class _TileGrid extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-}
-
-/// Geniş grup düzeni: iki sütun [_Tile]; tek kalan son madde tam genişlik.
-class _TileColumns extends StatelessWidget {
-  const _TileColumns({required this.actions, required this.scheme});
-
-  final List<MenuAction> actions;
-  final ColorScheme scheme;
-
-  @override
-  Widget build(BuildContext context) {
-    const gap = 8.0;
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Column(
-        children: [
-          for (var i = 0; i < actions.length; i += 2)
-            Padding(
-              padding: EdgeInsets.only(
-                bottom: i + 2 < actions.length ? gap : 0,
-              ),
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: _Tile(action: actions[i], scheme: scheme),
-                    ),
-                    if (i + 1 < actions.length) ...[
-                      const SizedBox(width: gap),
-                      Expanded(
-                        child: _Tile(action: actions[i + 1], scheme: scheme),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
     );
   }
 }

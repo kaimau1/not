@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -1749,6 +1750,38 @@ class ItemsEditorState extends State<ItemsEditor>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         addButton,
+        // SİL BLOĞUN BAŞINDA (F38.4): en altta "İşaretlileri göster"in de
+        // altındaydı; 10 satır + ek şeridi kaydırmadan ulaşılmıyordu.
+        if (checkedItems.isNotEmpty)
+          _floatRow(
+            reserved: _kButtonRowWidth,
+            pushOnly: true,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 8, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SectionLabel(
+                      l10n.checkedHeader(checkedCount),
+                      color: NoteAccent.maybeOf(context)?.accent,
+                    ),
+                  ),
+                  Tooltip(
+                    message: l10n.deleteChecked(checkedCount),
+                    child: TextButton.icon(
+                      key: const ValueKey('items-delete-checked'),
+                      onPressed: _deleteChecked,
+                      icon: const Icon(Icons.delete_sweep_outlined, size: 20),
+                      label: Text(l10n.delete),
+                      style: TextButton.styleFrom(
+                        foregroundColor: scheme.error,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         // ÖNBELLEKTEN (kullanıcı bulgusu 2026-10-28: "maddeleri okundu
         // işaretleyince donma kasma"): işaretli blok `_itemRow` ile her
         // kurulumda BAŞTAN kuruluyordu — çok işaretli maddeli notta her tuş,
@@ -1778,20 +1811,6 @@ class ItemsEditorState extends State<ItemsEditor>
                     label: Text(l10n.hideMoreChecked),
                   ),
               ],
-            ),
-          ),
-        if (checkedItems.isNotEmpty)
-          _floatRow(
-            reserved: _kButtonRowWidth,
-            pushOnly: true,
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-              child: TextButton.icon(
-                onPressed: _deleteChecked,
-                icon: const Icon(Icons.delete_sweep_outlined, size: 20),
-                label: Text(l10n.deleteChecked(checkedCount)),
-                style: TextButton.styleFrom(foregroundColor: scheme.error),
-              ),
             ),
           ),
         if (widget.footer != null) widget.footer!,

@@ -68,7 +68,7 @@ Kullanıcı "Faz N'i yap" dediğinde (N = 37…45) ya da "F40.3'ü yap" (tek mad
 |---|---|---|---|---|
 | 36 | Kırık ve tutarsız olanlar (hemen) | Yapıldı | 2026-11-04 | 9/9; cihazda doğrulanmadı (KALANLAR §2 #54–#58) |
 | 37 | Not her yerde aynı görünür | Yapıldı | 2026-11-05 | 5/5; KALANLAR §2 #62–#65 |
-| 38 | Not ekranı: çubuklar, başlık satırı, tek not menüsü | Açık | | K2; F38.7 klavye kasması (ölçüm kapılı) |
+| 38 | Not ekranı: çubuklar, başlık satırı, tek not menüsü | Yapıldı | 2026-11-05 | 7/7; F38.7 birikim yok (kod değişmedi), Biçim paneli başlığı GEÇERSİZ; KALANLAR §2 #66–#69 |
 | 39 | Ana ekran: başlık, çipler, bölümler, jestler | Açık | | ölçüm kapılı (zoom, kaydırma) |
 | 40 | Ekler: tek model, tek menü | Açık | | K6; en büyük faz |
 | 41 | Ekleme akışı ve şablonlar | Açık | | tek "Ekle" kataloğu |
@@ -388,43 +388,54 @@ Her biri cihazda adım adım sayılacak (Faz 45, C). Bugünkü sürtünme koddan
 
 ## FAZ 38 — Not ekranı: çubuklar, başlık satırı, tek not menüsü
 
-- [ ] **F38.1 Tek not menüsü modeli** (A6, K2): `noteMenuModel(note, surface:
-  card|editor, visibleElsewhere: {...})` → `ActionMenu`. Gruplar ve sıra AYNI
-  (Düzenle · Kopyala · Araçlar · Koruma), hızlı satır bağlama göre ama kuralı
-  yazılı ("bu ekranda başka yerde görünen düşer"). Test: iki yüzeyde aynı
-  işlerin grubu ve sırası eşit.
-- [ ] **F38.2 Üst çubuk** (C1): geri yokken `titleSpacing` 16; geniş ekranda
-  tarih/senkron okuma sütununun sol kenarıyla hizalı; araç sırası tek yerde
-  (geri al · yinele · görünüm · sabitle · ⋮).
-- [ ] **F38.3 Başlık satırındaki meta çip** (C2): tek "+" düğmesi (Etiket ·
-  Hatırlatıcı · Kişiler · Başlık öner) — durum çip şeridinde zaten görünüyor;
-  başlık alanı genişler. `UiItem` kimliği korunur.
-- [ ] **F38.4 "İşaretlileri sil" ve işaretli blok** (C6): cihazda akış ölçülür
-  (uzun listede alttaki düğmeye ulaşma); gerekiyorsa işaretli blok başlığına
-  taşınır ("İşaretliler (7) · Sil").
-- [ ] **F38.5 Biçim paneli, Ekle, Yapay zekâ levhası** aynı başlık kuralı
-  (`SheetHeader`: başlık solda, ✕ sağda) (C4).
-- [ ] **F38.6 Menü biçimi kuralı** (H1, B10): nota/eke ait çok işlemli menü =
-  `ActionMenu` levhası; tek seçimli kısa liste (sütun sayısı, sıralama) =
-  açılır menü. Ana ekran ⋮'deki geniş satırlar ızgara diline (ya da tersi —
-  tek dil). `PopupMenuButton`/`MenuAnchor` listesi gözden geçirilir.
+- [x] **F38.1 Tek not menüsü modeli** (A6, K2).
+  **Yapıldı:** `noteMenuModel(l10n, note, surface:, visibleElsewhere:)`
+  (`note_menu_model.dart`), kart ⋮ ve not ⋮ tek katalog; `note_menu_sheet.dart` ve
+  `_ActionsGrid` silindi. Kural dosyada yazılı: ortak iş aynı grup ve sırada; ekranda
+  açıkça duran düşer, çubuktan düşen geri gelir; yalnız açık notun içeriğine dokunan
+  `editor`, çoklu seçim `card`. Sesli dinle iki yerde hızlı satırda; Çerçeve, Görsel
+  önizlemesi notta, Ana ekrana yerleştir kartta da. Yan kazanç: başlık üst çubuktayken
+  raptiye hiçbir yerde yoktu, artık menüde. Hızlı satır 6'ya çıkınca dar ekranda ad
+  kesiliyordu: "Seç" Düzenle grubuna indi. Test `note_menu_model_test` (ölü düğme de).
+- [x] **F38.2 Üst çubuk** (C1).
+  **Yapıldı:** `editorTitleSpacing`: geri yokken 16; geniş bölmede okuma sütununa
+  hizalı (`PreferredSize` + `LayoutBuilder`, bölme genişliği). Araç sırası zaten geri
+  al · yinele · görünüm · sabitle · ⋮, testle sabit. `ModalRoute.of` yok (HAFIZA).
+- [x] **F38.3 Başlık satırındaki meta çip** (C2).
+  **Yapıldı:** tek "+" (40 dp), anahtar `note-meta-chip` korunur, başlık alanı genişler.
+  Açılır menü levhaya döndü (`_openMetaMenu`, 10 madde, F38.6 kuralı): Etiket ·
+  Hatırlatıcı · Kişiler · Klasör, altında Düzenle ve Araçlar (Başlık öner…).
+  **Sapma:** paylaşım durumu çip şeridinde yoktu (planın varsayımı tutmadı): paylaşılmış
+  notta "+"nın yanında kişi simgesi + sayı (`_collabMarker`), yoksa hiçbir şey çizilmez.
+- [x] **F38.4 "İşaretlileri sil"** (C6).
+  **Yapıldı:** blok başlığına taşındı: "İşaretliler (7) · Sil" (ipucu tam ad). Telefonda
+  ölçülmedi, yapıdan karar: düğme 10 satırın ve "göster"in altındaydı. Başlık notun
+  tonunda (F36.1). Cihaz adımı KALANLAR §2 #68.
+- [x] **F38.5 Levha başlık kuralı** (C4).
+  **Yapıldı:** Ekle `SheetHeader`e geçti; Yapay zekâ zaten öyle; not ⋮ artık notun adı
+  + ✕ (kart ⋮ gibi). **GEÇERSİZ (Biçim paneli):** levha değil, klavyenin üstünde gövde
+  paneli; başlık satırı yazı alanından 40 dp alırdı, "Aa" ve geri tuşu kapatıyor.
+- [x] **F38.6 Menü biçimi kuralı** (H1, B10).
+  **Yapıldı:** kural `action_menu_sheet.dart`: çok işlemli = levha; tek seçimli ya da
+  en çok dört maddelik araç listesi = açılır menü. Çoklu seçim ⋮ (9 madde) ve başlık "+"
+  levhaya döndü. Ana ekran ⋮ tek ızgara dili: `wideSections`, `_TileColumns` silindi,
+  iki küçük grup tek "Uygulama" grubu (ikişerli sola yığılma kullanıcı bulgusuydu).
+  **Gözden geçirilen, kalan:** görüntüleyici ⋮ (`image_viewer`, `pdf_viewer_screen`,
+  `slide_viewer_screen`, `transcript_screen`, `listen_screen`, `drawing_screen`,
+  `folder_screen`, `page_note_pane`): 2–4 madde, kurala uyuyor. Ek menüleri F40.1'de.
 
-- [ ] **F38.7 Klavye açılırken alt çubuk kasması** (kullanıcı bildirimi
-  2026-11-04, telefonda): klavye açılırken alttaki ek/mikrofon vb. araç çubuğu
-  alanı KASARAK açılıyor — ilk açılışta çok az, sonraki her açılışta artarak
-  sürüyor (birikim belirtisi: dinleyici/animasyon/ağaç yeniden kurulumu
-  sızıyor olabilir). **Ölçüm kapısı:** önce telefonda (`tool/perf/`) klavye
-  açma/kapama × 10 tekrar için kare süreleri ve her turda artış (bellek,
-  `AnimationController`/dinleyici sayısı, yeniden kurulum sayacı); kök nedeni
-  bul (aday: klavye yüksekliğiyle her karede yeniden düzen — `viewInsets`
-  değişince tüm editör ağacının yeniden kurulması, alt çubuğun her açılışta
-  yeni controller/`StreamSubscription` bırakması, `AnimatedPadding`/
-  `Scaffold.resizeToAvoidBottomInset` ile çift düzen). Düzeltme: alt çubuk
-  `viewInsets`'e yalnız kendi `RepaintBoundary`'si içinde bağlanır, editör
-  gövdesi klavye animasyonunda yeniden kurulmaz, eski abonelik/controller
-  `dispose` edilir. Test: tekrarlı açma/kapamada dinleyici/controller sayısı
-  sabit (widget testi) + `perf_test` klavye senaryosu; Faz 38 kabulüne dahil.
-  Cihazda doğrulanmadı (KALANLAR §2'ye adım).
+- [x] **F38.7 Klavye açılırken alt çubuk kasması** (kullanıcı bildirimi 2026-11-04).
+  **Ölçüm kapısı (v1.1.677, `tool/perf/klavye.py`, telefon):** kısa notta 15, görselli
+  notta 8 tur: BİRİKİM YOK; kısa notta tur başına takılan kare (açılış 6–9, kapanış
+  8–10) ve bellek (255–258 MB) sabit. atrace (görselli): ana iş parçacığı kare başına
+  en çok 15 ms, raster 10 ms; kapanış sonundaki 33 ms ×4–5 ve açılış başındaki aralıklarda
+  uygulama meşgul değil (tahmin: Android klavye animasyonu, ilk aralık boşta bekleme de
+  sayar). Kare başına yalnız `Scaffold` kabuğu kurulur (~42 widget), editör gövdesi
+  kurulmaz. **Sonuç: KOD DÜZELTMESİ YOK**, aday kök nedenlerin (sızan abonelik, gövde
+  yeniden kurulumu) ikisi de ölçümle elendi. **Kullanıcının bildirdiği artış test
+  telefonunda tekrarlanmadı**; görselli notta ilk açılış 33 ms, sonrakiler 66–149 ms: bu
+  fark yoruma açık, sabah bakılacak (KALANLAR §2 #69). Test `note_screen_chrome_test`
+  (20 tur kurulum sayısı sabit) + `perf_test` `keyboard_cycle`.
 
 ## FAZ 39 — Ana ekran: başlık, çipler, bölümler, jestler
 

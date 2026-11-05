@@ -1061,6 +1061,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'Ekler bu cihazda güvende. Bağlantı olduğunda kendiliğinden yüklenir; o zamana kadar öbür cihazlarınızda görünmez.';
 
   @override
+  String checkedHeader(int count) {
+    return 'İşaretliler ($count)';
+  }
+
+  @override
   String deleteChecked(int count) {
     return 'İşaretlileri sil ($count)';
   }
@@ -4370,9 +4375,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get menuSectionPeople => 'Hesap ve kişiler';
-
-  @override
-  String get menuSectionHome => 'Ana ekran';
 
   @override
   String get menuSectionApp => 'Uygulama';

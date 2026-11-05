@@ -87,7 +87,6 @@ import '../../data/pdf_edit.dart';
 import '../../data/scan/scan_ocr.dart';
 import '../../data/scan/scan_pdf.dart';
 import '../../data/scan/scan_title.dart';
-import '../../data/user_templates.dart';
 import '../../data/video_frame.dart';
 import '../../data/web_video.dart';
 import '../../domain/text_merge.dart';
@@ -99,7 +98,9 @@ import '../../domain/note_item.dart';
 import '../../domain/note_type.dart';
 import '../../domain/page_notes.dart';
 import '../collaborators_sheet.dart';
+import '../../../../core/widgets/action_menu_sheet.dart';
 import '../color_picker_sheet.dart';
+import '../note_menu_model.dart';
 import '../note_theme_sheet.dart';
 import '../note_stats_sheet.dart';
 import '../note_template_sheet.dart';
@@ -143,7 +144,6 @@ import 'notebook_paper.dart';
 import '../file_use_sheet.dart';
 import 'note_history_sheet.dart';
 import 'note_presence.dart';
-import 'note_menu_sheet.dart';
 import 'in_note_find.dart';
 import 'note_find_controller.dart';
 import 'note_search_sheet.dart';
@@ -434,6 +434,15 @@ bool _sameInts(List<int> a, List<int> b) {
 /// Not sayfasının en geniş hâli (bkz. `_buildCanvas`) — geniş ekranda
 /// satırlar okunur uzunlukta kalsın.
 const double kReadingWidth = 760;
+
+/// Üst çubuk başlığının boşluğu (F38.2): tarih sayfa metninin sol kenarında.
+/// Geri oku yokken 16 dp (derin bağlantı, web yenileme); geniş bölmede okuma
+/// sütununa hizalı. [hasLeading]: solda 56 dp düğme var.
+double editorTitleSpacing(double paneWidth, {required bool hasLeading}) {
+  final margin = paneWidth > kReadingWidth ? (paneWidth - kReadingWidth) / 2 : 0.0;
+  final textLeft = margin + 16;
+  return hasLeading ? math.max(0, textLeft - kToolbarHeight) : textLeft;
+}
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
   const NoteEditorScreen({
@@ -2628,241 +2637,34 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         (widget.ownerId != null ||
             !(ref.read(notesRepositoryProvider)?.isLocal(widget.noteId) ??
                 false));
-    final actionEntries = <PopupMenuEntry<String>>[
-      // YENİ SAYFA BURADA (kullanıcı isteği 2026-10-11: "yeni sayfa ekleyi
-      // üst alana koyabilir miyiz"). "Ekle" levhasının en üst bölümündeydi;
-      // ama sayfa notun İÇERİĞİ değil YAPISI — başlığın yanındaki bu menü
-      // (hatırlatıcı, klasör, etiket: notun kendisine dair olanlar) onun
-      // doğal yeri. Sayfalar arası geçiş de hemen altındaki çubukta.
-      if (!note.type.isPageNoteType) ...[
-        PopupMenuItem(
-          value: 'new-page',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.note_add_outlined),
-            title: Text(l10n.archiveNewPage),
-          ),
-        ),
-        const PopupMenuDivider(height: 8),
-      ],
-      PopupMenuItem(
-        value: 'reminder',
-        child: ListTile(
-          dense: true,
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.alarm_add_outlined),
-          title: Text(l10n.addReminder),
-        ),
-      ),
-      if (PlaceReminderService.supported)
-        PopupMenuItem(
-          value: 'place-reminder',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.add_location_alt_outlined),
-            title: Text(l10n.placeReminder),
-          ),
-        ),
-      // **ORTAK ÇALIŞANLAR BU MENÜDE** (kullanıcı isteği 2026-11-01:
-      // "ortak çalışanlar simgesini etiket ve hatırlatıcı içerisine koy,
-      // işaretine çıksın"). Üst çubuktaki ayrı düğme kalktı; durum çipteki
-      // kişi simgesinde (bkz. [_collabMarker]).
-      if (canCollab)
-        PopupMenuItem(
-          value: 'collaborators',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.person_add_alt_1_outlined),
-            title: Text(l10n.collaborators),
-          ),
-        ),
-      PopupMenuItem(
-        value: 'folder',
-        child: ListTile(
-          dense: true,
-          contentPadding: EdgeInsets.zero,
-          leading: Icon(
-            noteFolder?.iconData ?? Icons.create_new_folder_outlined,
-          ),
-          title: Text(l10n.folder),
-        ),
-      ),
-      PopupMenuItem(
-        value: 'add-tag',
-        child: ListTile(
-          dense: true,
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.new_label_outlined),
-          title: Text(l10n.addTag),
-        ),
-      ),
-      if (!note.isEmpty)
-        PopupMenuItem(
-          value: 'suggest-tags',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.auto_awesome),
-            title: Text(l10n.suggestTags),
-          ),
-        ),
-      // KART ÜRET (F18.19): nottan aralıklı tekrar kartları (AI).
-      if (!note.isEmpty && !note.locked && !_readOnly)
-        PopupMenuItem(
-          value: 'study-cards',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.style_outlined),
-            title: Text(
-              note.cards.isEmpty
-                  ? l10n.studyCardsMake
-                  : l10n.studyCardsMakeMore(note.cards.length),
-            ),
-          ),
-        ),
-      // İLGİLİ NOTLAR (F18.17): dokununca hesaplanır; kilitli notta yok.
-      if (!note.isEmpty && !note.locked && !_readOnly)
-        PopupMenuItem(
-          value: 'related-notes',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.hub_outlined),
-            title: Text(l10n.relatedNotesTitle),
-          ),
-        ),
-      if (!note.isEmpty && note.title.trim().isEmpty)
-        PopupMenuItem(
-          value: 'suggest-title',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.title),
-            title: Text(l10n.suggestTitle),
-          ),
-        ),
-    ];
-
-    // Tek "+" düğmesi: ekleme/öneri eylemlerinin tamamı burada.
-    final actionsMenu = PopupMenuButton<String>(
-      tooltip: l10n.noteMetaMenu,
-      onSelected: (action) {
-        switch (action) {
-          case 'new-page':
-            _addPage();
-          case 'reminder':
-            _pickReminder();
-          case 'place-reminder':
-            unawaited(showPlaceReminderSheet(context, ref, note));
-          case 'folder':
-            _pickFolder();
-          case 'collaborators':
-            unawaited(
-              showCollaboratorsSheet(
-                context,
-                ref,
-                noteId: widget.noteId,
-                ownerId: widget.ownerId,
-              ),
-            );
-          case 'add-tag':
-            _addTag();
-          case 'suggest-tags':
-            _suggestTags();
-          case 'suggest-title':
-            _suggestTitle();
-          case 'study-cards':
-            unawaited(generateCardsForNote(context, ref, note));
-          case 'related-notes':
-            unawaited(
-              showRelatedNotesSheet(
-                context,
-                noteId: note.id,
-                onLink: _linkNoteAtEnd,
-              ),
-            );
-        }
-      },
-      itemBuilder: (context) => actionEntries,
-      // F12.4: çıplak "+" alt çubuktaki "+ Ekle" ile aynı simgeydi, ne
-      // açacağı belli değildi. Artık ETİKET + ALARM simgeli küçük çip: hem
-      // ne açtığını söyler hem DURUMU gösterir (Ö6) — etiket varsa dolu
-      // etiket simgesi ve sayısı, hatırlatıcı kuruluysa dolu ve vurgulu
-      // alarm.
-      // ÜST ÇUBUKTA (başlık oradayken) tek simge: üç simgeli çip başlığı
-      // 40 dp'ye sıkıştırıp üstüne biniyordu (kullanıcı bulgusu 2026-11-03,
-      // ekran görüntüsü "Lüt[çip]").
-      child: titleInBar
-          ? Padding(
-              key: const ValueKey('note-meta-chip'),
-              padding: const EdgeInsets.all(6),
-              child: Icon(
-                note.tags.isNotEmpty || note.reminderAt != null
-                    ? Icons.label
-                    : Icons.new_label_outlined,
-                size: 20,
-                color: note.tags.isNotEmpty || note.reminderAt != null
-                    ? (noteAccent ?? theme.colorScheme.primary)
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-            )
-          : Chip(
-        key: const ValueKey('note-meta-chip'),
-        label: ValueListenableBuilder<bool>(
-          valueListenable: _titleGeneratingN,
-          builder: (context, generating, _) {
-            if (generating) {
-              return const SizedBox(
-                width: 12,
-                height: 12,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              );
-            }
-            final scheme = theme.colorScheme;
-            final tagged = note.tags.isNotEmpty;
-            final alarmed = note.reminderAt != null;
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  tagged ? Icons.label : Icons.new_label_outlined,
-                  size: 15,
-                  color: tagged
-                      ? (noteAccent ?? scheme.primary)
-                      : scheme.onSurfaceVariant,
-                ),
-                if (tagged) ...[
-                  const SizedBox(width: 2),
-                  Text(
-                    '${note.tags.length}',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: noteAccent ?? scheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
+    // TEK "+" (F38.3): ne dolu olduğu çip şeridinde; paylaşım durumu yanında
+    // (paylaşılmışsa). Levha [_openMetaMenu]; `note-meta-chip` anahtarı korunur.
+    final actionsMenu = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (canCollab) _collabMarker(theme),
+        IconButton(
+          key: const ValueKey('note-meta-chip'),
+          tooltip: l10n.noteMetaMenu,
+          visualDensity: VisualDensity.compact,
+          icon: ValueListenableBuilder<bool>(
+            valueListenable: _titleGeneratingN,
+            builder: (context, generating, _) => generating
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    Icons.add,
+                    size: 22,
+                    color: noteAccent ?? theme.colorScheme.onSurfaceVariant,
                   ),
-                ],
-                const SizedBox(width: 4),
-                Icon(
-                  alarmed ? Icons.alarm : Icons.alarm_add_outlined,
-                  size: 15,
-                  color: alarmed
-                      ? (noteAccent ?? scheme.primary)
-                      : scheme.onSurfaceVariant,
-                ),
-                if (canCollab) _collabMarker(theme),
-              ],
-            );
-          },
+          ),
+          onPressed: () =>
+              _openMetaMenu(note, noteFolder?.iconData, canCollab: canCollab),
         ),
-        labelPadding: EdgeInsets.zero,
-        padding: _kChipPadding,
-        visualDensity: _kChipDensity,
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
+      ],
     );
 
     // Çip yazısı: gövdeyle aynı aileden ama küçük — satır üst bar ile başlık
@@ -4164,7 +3966,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // Kalem + tam ekran: üst de sayfa olur (çıkış sütunda).
           appBar: _pagePen && ref.watch(noteFullscreenProvider)
               ? null
-              : AppBar(
+              : PreferredSize(
+                  preferredSize: const Size.fromHeight(_kEditorToolbarHeight),
+                  // Bölmenin genişliği: tarih okuma sütunuyla hizalı (F38.2).
+                  // `_`: `_themeOf` ekranın kendi bağlamından okur.
+                  child: LayoutBuilder(
+                    builder: (_, box) => AppBar(
             // SIKI ÜST ÇUBUK (kullanıcı isteği 2026-11-03): 56 → 48 dp —
             // durum çubuğu ile düğmeler arasındaki boşluk yer harcıyordu;
             // simge düğmeleri 48 dp dokunma alanını korur.
@@ -4182,7 +3989,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             // en üstünde duruyor, üst barda ikinci kez göstermek yer harcıyordu.
             // Sabitlenmiş/yıldızlı göstergesi tarihin yanında — düğmeler ⋯
             // menüsüne taşındığı için durum bir yerde görünmeliydi.
-            titleSpacing: 0,
+            titleSpacing: editorTitleSpacing(
+              box.maxWidth,
+              hasLeading:
+                  _listHidden(context) ||
+                  (Navigator.maybeOf(context)?.canPop() ?? false),
+            ),
             title: _barTitle ??
                 (note.updatedAt == null
                 ? null
@@ -4381,7 +4193,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               // Yıldız ve sabitleme düğmeleri ⋯ menüsüne taşındı; durumları üst
               // barın başlık alanındaki göstergelerden okunuyor.
               // ⋮ artık açılır menü değil, iki sütunlu levha açar
-              // (bkz. note_menu_sheet.dart — kullanıcı isteği 2026-08-09).
+              // (bkz. [noteMenuModel] — kullanıcı isteği 2026-08-09).
               if (PenTray.useRail(context)) _fullscreenButton(l10n),
               IconButton(
                 tooltip: l10n.noteMenu,
@@ -4390,6 +4202,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               ),
             ],
           ),
+                  ),
+                ),
           // Renkli çerçeve: seçiliyse editör içeriğini saran ince renkli kenarlık.
           //
           // ALT ÇUBUK GÖVDENİN İÇİNDE (bkz. aşağıdaki `_bottomBar` yorumu):

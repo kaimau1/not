@@ -1064,6 +1064,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Attachments are safe on this device. They upload automatically when you are online; until then they do not appear on your other devices.';
 
   @override
+  String checkedHeader(int count) {
+    return 'Checked ($count)';
+  }
+
+  @override
   String deleteChecked(int count) {
     return 'Delete ticked ($count)';
   }
@@ -4378,9 +4383,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get menuSectionPeople => 'Account and people';
-
-  @override
-  String get menuSectionHome => 'Home screen';
 
   @override
   String get menuSectionApp => 'App';

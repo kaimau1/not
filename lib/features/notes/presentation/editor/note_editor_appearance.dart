@@ -57,7 +57,14 @@ extension _EditorAppearance on _NoteEditorScreenState {
       await _showBackgroundSheet();
       return;
     }
-    final frame = target == 'frame';
+    await _pickNoteColor(frame: target == 'frame');
+  }
+
+  /// Zemin ya da çerçeve rengi seçici. Not ⋮ → Çerçeve de buraya gelir.
+  Future<void> _pickNoteColor({required bool frame}) async {
+    final note = _note;
+    if (note == null) return;
+    _dismissKeyboard();
     // Editörde şerit CANLI çalışır: dokunulan renk anında uygulanır ve şerit
     // açık kalır (Keep davranışı). Çerçeve editörde çizilmediği için onun
     // sonucu ana ekrana dönünce kartta görünür.

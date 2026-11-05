@@ -489,6 +489,14 @@
     }
   },
   "pendingUploadsInfo": "Ekler bu cihazda güvende. Bağlantı olduğunda kendiliğinden yüklenir; o zamana kadar öbür cihazlarınızda görünmez.",
+  "checkedHeader": "İşaretliler ({count})",
+  "@checkedHeader": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "deleteChecked": "İşaretlileri sil ({count})",
   "@deleteChecked": {
     "placeholders": {
@@ -2002,7 +2010,6 @@
   "menuSectionProtect": "Koruma ve depolama",
   "menuSectionContent": "İçerik",
   "menuSectionPeople": "Hesap ve kişiler",
-  "menuSectionHome": "Ana ekran",
   "menuSectionApp": "Uygulama",
   "cardMoreFiles": "+{count} dosya daha",
   "@cardMoreFiles": {
