@@ -29,11 +29,19 @@ jobs:
   marker:
     name: Derleme işareti
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: read
+      pull-requests: read
     outputs:
       apk: ${{ steps.marker.outputs.apk }}
       perf: ${{ steps.marker.outputs.perf }}
+      test_mod: ${{ steps.secim.outputs.mod }}
+      test_liste: ${{ steps.secim.outputs.liste }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # İşaret yalnız ilk satırda (commit BAŞLIĞI) aranır: gövdede işaretten
       # söz eden bir cümle derlemeyi istemeden tetikliyordu.
@@ -56,40 +64,71 @@ jobs:
             echo "perf=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # TEST SEÇİMİ (2026-11-05, kullanıcı kararı): dalda yalnız etkilenen
+      # testler; main'de dal başında yeşil olan aynı ağaç tekrar test edilmez
+      # (tool/ci_test_secimi.sh). Tam takım: başlıkta [tam] ya da elle tetik.
+      - name: Test seçimi
+        id: secim
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash tool/ci_test_secimi.sh 'Analiz + Test'
+
   # TEST 3 PARÇADA PARALEL (2026-11-03): tek iş ~5 dk sürüyordu (testler
   # 3,5 dk). Dosyalar sıralanıp parçalara dağıtılır (her parça yalnız kendi
   # dosyalarını derler — package:test'in --total-shards'ı her dosyayı her
   # parçada yükler, Flutter'da derleme baskın olduğu için o kazandırmaz).
   # Analiz 0. parçada: `needs.test.result` eskisi gibi analiz + testin
   # toplamı (release/perf/deploy aynı anlamda bekler).
+  # Seçim (marker işi): tam → bütün dosyalar; secili → yalnız liste; atla →
+  # hiçbir adım koşmaz, iş saniyede YEŞİL biter (release/deploy beklemesin).
+  # Kırmızı parça: Actions'ta "Re-run failed jobs" yalnız onu yeniden koşar.
   test:
     name: Analiz + Test (${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
+    needs: marker
     strategy:
       fail-fast: false
       matrix:
         shard: [0, 1, 2]
+    env:
+      MOD: ${{ needs.marker.outputs.test_mod }}
     steps:
+      - name: Atlandı (aynı ağaç dal başında yeşil)
+        if: env.MOD == 'atla'
+        run: echo "main ağacı, birleştirilen dal başıyla aynı ve orada yeşil — test atlandı."
+
       - uses: actions/checkout@v4
+        if: env.MOD != 'atla'
 
       - uses: subosito/flutter-action@v2
+        if: env.MOD != 'atla'
         with:
           channel: stable
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Bağımlılıkları indir
+        if: env.MOD != 'atla'
         run: flutter pub get
 
       - name: Analiz
-        if: matrix.shard == 0
+        if: env.MOD != 'atla' && matrix.shard == 0
         run: flutter analyze
 
       # -j 4: package:test varsayılanı çekirdeklerin YARISI (4 vCPU'da 2).
       - name: Testler
+        if: env.MOD != 'atla'
+        env:
+          LISTE: ${{ needs.marker.outputs.test_liste }}
         run: |
-          mapfile -t files < <(find test -name '*_test.dart' | sort | awk -v n=3 -v i=${{ matrix.shard }} '(NR-1) % n == i')
-          echo "Bu parçada ${#files[@]} test dosyası."
+          if [ "$MOD" = secili ]; then
+            printf '%s\n' "$LISTE" | sed '/^$/d' | while read -r f; do [ -f "$f" ] && echo "$f"; done | sort > /tmp/tum.txt
+          else
+            find test -name '*_test.dart' | sort > /tmp/tum.txt
+          fi
+          mapfile -t files < <(awk -v n=3 -v i=${{ matrix.shard }} '(NR-1) % n == i' /tmp/tum.txt)
+          echo "Seçim: $MOD — toplam $(wc -l < /tmp/tum.txt), bu parçada ${#files[@]} test dosyası."
+          if [ ${#files[@]} -eq 0 ]; then echo "Bu parçaya test düşmedi."; exit 0; fi
           flutter test -j 4 "${files[@]}"
 
   # GÜVENLİK KURALLARI (F4.9): Firestore emülatörüne karşı rules-test/ ve
