@@ -815,45 +815,51 @@ class NoteCard extends ConsumerWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                for (final icon in statusIcons)
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(end: 4),
-                    child: icon,
-                  ),
-                // Oranlar: boşluğu Spacer'la eşit bölüşen etiket yer varken
-                // "bugün 1…" diye kesiliyordu (tur, F37.2).
-                if (reminderLabel != null)
-                  Flexible(
-                    flex: 8,
-                    child: Padding(
-                      padding: const EdgeInsetsDirectional.only(end: 6),
-                      child: Text(
-                        reminderLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: accent ?? scheme.onSurfaceVariant,
+                // Sol grup Expanded: tarih hep sağa yaslı. Spacer + Flexible
+                // boşluğu oranla böler, kullanılmayan pay boş kalıp tarihi
+                // ortaya bırakıyordu; saat de yer varken kesiliyordu (F37.2).
+                Expanded(
+                  child: Row(
+                    children: [
+                      for (final icon in statusIcons)
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(end: 4),
+                          child: icon,
                         ),
-                      ),
-                    ),
+                      if (reminderLabel != null)
+                        Flexible(
+                          flex: 8,
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.only(end: 6),
+                            child: Text(
+                              reminderLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: accent ?? scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (showTag)
+                        Flexible(
+                          flex: 3,
+                          child: Text(
+                            '#${note.tags.first}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: accent ?? scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                if (showTag)
-                  Flexible(
-                    flex: 3,
-                    child: Text(
-                      '#${note.tags.first}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: accent ?? scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                const Spacer(),
+                ),
                 if (showDate)
                   Text(
                     formatNoteDate(note.updatedAt!),

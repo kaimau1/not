@@ -260,6 +260,26 @@ void main() {
       await _end(tester);
     });
 
+    testWidgets('tarih hep sağa yaslı, kısa etikette de', (tester) async {
+      final note = Note(
+        id: 'n',
+        type: NoteType.text,
+        title: 'Başlık',
+        body: 'gövde',
+        tags: const ['a'],
+        updatedAt: DateTime(2026, 3, 3),
+      );
+      await _pump(
+        tester,
+        AppTheme.of(ThemeFamily.sage, Brightness.light),
+        _card(note),
+      );
+      final date = tester.getRect(find.text(formatNoteDate(note.updatedAt!)));
+      final card = tester.getRect(find.byType(NoteCard));
+      expect(card.right - date.right, lessThanOrEqualTo(14));
+      await _end(tester);
+    });
+
     testWidgets('kartta ve satırda görünür, dar kartta taşmaz', (tester) async {
       final note = _note().copyWith(
         reminderAt: DateTime.now().add(const Duration(hours: 1)),
