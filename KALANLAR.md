@@ -24,6 +24,12 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 **Cihaz turu sonucu (2026-11-05, v1.1.701–704, Mi Note 10 Lite, yerel hesap):** geçenler silindi, kalanlar kısaltıldı. Bulunan ve düzeltilen hatalar HAFIZA "Cihaz turu kök nedenleri". Denenmedi, nedenleri: Google hesabı/AI gerekir (#7, #8, #31, #79, Gelen ve Kişiler); ikinci hesap (#81, #82, #83); ses (#7, #47 dikte); şifre girişi otomasyonda yapılmadı (#10, #11 kilit); web (#16–19, #27, #29, #30, #33, #57, #74, #76, #84, #85); tablet/kalem (#20, #22–24, #28, #86); Vulkan ya da temiz Android 12 cihazı (#59, #60 beyaz açılış); kişisel köprü APK'sı (#14).
 **Açık ölçüm:** yazma ana bloğu `taban.py`'de 148 → 229 ms, >16 ms 42 → 51 blok (v1.1.671 → v1.1.701, tek koşu, `adb` tuşu; CI bütçesi temiz; profil ile nedenine bakılmalı).
 
+**Ek senkronu (2026-11-06, v1.2.2, Mi Note 10 Lite, Google hesabı) — GEÇTİ:** görsel eklendi →
+izin bir kez kendiliğinden soruldu → Drive'daki "Notlar" klasörüne yüklendi (`driveId`) + önizleme
+(25 KB, izinsiz açılıyor); dosyası telefonda olmayan kayıt (başka cihaz benzetimi) Drive'dan indi,
+kartta çizildi. Yeni metin notunda klavye açık; not "+" → Hatırlat aynı "Ne zaman" levhası; Ayarlar →
+İzinler'de Xiaomi "Otomatik başlatma" satırı MIUI ekranını açıyor.
+
 **Telefon (v1.1.N, Google hesabı; ~7 dk)**
 2. [ ] ⋮ yerine başlık "+" levhası → Araçlar → İlgili notlar → Bağla (F18.17). Biçim, `[[` bağlantısı ve "1 bağlantı" çipi telefonda geçti.
 4. [ ] Görsel: üstüne kalemle çiz + açık metin → Paylaş → Ekler / PDF: çizim ve yazı görselde (F18.13). Çıkan dosyaya telefonda bakılmadı; test `image_annotations_export`.
@@ -38,7 +44,7 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 10. [ ] Ayarlar → Hesap → Uygulama kilidi aç → uygulamayı arka plana al,
    1 dk sonra dön → kilit; widget'tan / bildirimden açınca da kilit;
    "Son uygulamalarda gizle" → son uygulamalar boş (F18.6).
-11. [ ] Not kilidi (şifre) + sürüm geçmişi "Bu sürüme dön".
+11. [ ] Not kilidi (şifre). Sürüm geçmişi "Bu sürüme dön" + Geri al telefonda geçti (2026-11-06).
 12. [ ] Başka uygulamadan PDF paylaş → yeni not / var olan not; Not paketi gönder-aç. Metin paylaşımı (iki hedef) geçti.
 13. [ ] TalkBack'te kart tek seferde okunuyor (F19.C2). Yazı ölçeği 1,3 + "Sistem yazı boyutunu izle" taşmadı.
 14. [ ] Kişisel köprü: Harita "not al" (uygulama kapalı), Kanallarım "Not al" (F19.C4).
@@ -74,9 +80,12 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
    üstündeki satırlar tam genişlik, yalnız hizadaki satırlar sağa kayar.
 26. [ ] Kalem kipindeyken + → Çizim ekle → ayrı tuval → Nota ekle → görsel
    olarak nota gömülür; "Sayfaya el yazısı" kalem kipini açar.
-27. [ ] Web'de Drive ekli not: üstte "N ek Google Drive'ında · Göster" →
-   tek dokunuşla hepsi iner; sayfayı yenile → yeniden izin istemez (~55 dk).
-   Telefondan çıkmamış ek için "telefonda Drive'ı bağla" uyarısı.
+27. [ ] Web'de Drive ekli not (2026-11-06 sonrası): telefondan eklenen GÖRSEL kartta
+   izinsiz hemen görünür (küçük önizleme); not içinde üstte "N ek Google
+   Drive'ında · Göster" → tek izinle (Drive dosyaları + eski gizli klasör) hepsi
+   tam boy iner; sayfayı yenile → yeniden izin istemez (~55 dk). Web'den eklenen
+   ek telefonda açılıyor. (Telefon tarafı geçti; web'de Google oturumu olmadığı
+   için denenmedi — tahmin: drive.file erişimi Cloud projesi düzeyinde.)
 28. [ ] Tablette not açıkken liste/not ayracını sola zorla → "Tam ekran için
    çek" → biraz daha → "Bırak: tam ekran" → bırak: tam ekran. Sol kenardan
    sağa çek → tam ekrandan çıkar.
@@ -91,12 +100,10 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
    iner (yalnız tutamak + renk noktası); telefonda "⋯" → yinele/ayarlar.
 
 **2026-11-04 gece görevi (Faz 28 — yazıldı, cihazda doğrulanmadı)**
-31. [ ] (F28.1, önce F19.B9 konsol adımı) ⋮ → Gmail → "Gmail'e bağlan" → izin → gelen
-   kutusu listeleniyor; aramada `from:…` çalışıyor; bir e-posta → "Nota kaydet"
-   (PDF/görsel ekiyle) → not açılır, sonda kaynak satırı + Gmail bağlantısı;
-   "AI özetiyle not" ve "Görev listesi çıkar" (liste notu). Gmail'de hiçbir şey
-   değişmemiş olmalı (okundu işareti dahil). Web'de sayfayı yenile → yeniden
-   bağlan istemiyor (≤ 55 dk).
+31. [ ] (F28.1) Telefonda geçti (2026-11-06): bağlan + izin, gelen kutusu, "Nota kaydet"
+   (sonda Gmail bağlantısı). Kalan: aramada `from:…`; ekli (PDF/görsel) e-posta;
+   "AI özetiyle not" ve "Görev listesi çıkar"; web'de yenileyince yeniden bağlan
+   istemiyor (≤ 55 dk).
 32. [ ] (F28.4) Aynı PDF'i sabit ve balonlu modda aç → zemin, sayfa arası boşluk,
    gölge aynı.
 33. [ ] (F28.3/F28.5) Web'de ⋮ → Ayarlar/Arşiv/Çöp açılıyor; tablette ray tepesindeki
