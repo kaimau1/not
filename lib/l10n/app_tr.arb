@@ -3559,7 +3559,7 @@
   "gmailNoSubject": "(konu yok)",
   "gmailConnectTitle": "E-postalarını nota çevir",
   "gmailConnectPointRead": "Gelen kutunu gör, Gmail arama sözdizimiyle ara.",
-  "gmailConnectPointNote": "Bir e-postayı tek dokunuşla not, AI özeti ya da görev listesi yap.",
+  "gmailConnectPointNote": "Bir e-postayı tek dokunuşla not, yapay zekâ özeti ya da görev listesi yap.",
   "gmailOpenInGmail": "Gmail'de aç",
   "friendsEmptyTitle": "Henüz kişi yok",
   "friendsFilterHint": "Kişilerde ara",
@@ -3573,5 +3573,13 @@
   "friendsWantsToConnect": "Seni kişilerine eklemek istiyor",
   "friendsSendToEmail": "Bu adrese istek gönder",
   "friendsSent": "Gönderildi",
-  "friendsAlreadyShort": "Kişilerinde"
+  "friendsAlreadyShort": "Kişilerinde",
+  "settingsGroupAccount": "Hesap",
+  "settingsGroupApp": "Uygulama",
+  "settingsGroupData": "Veri ve gizlilik",
+  "settingsGroupOther": "Diğer",
+  "friendsCountSummary": "{count, plural, =0{Henüz kişi yok} other{{count} kişi}}",
+  "@friendsCountSummary": {"placeholders": {"count": {"type": "int"}}},
+  "friendsRequestsSummary": "{count} istek bekliyor",
+  "@friendsRequestsSummary": {"placeholders": {"count": {"type": "int"}}}
 }

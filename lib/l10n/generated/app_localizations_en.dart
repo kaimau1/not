@@ -7615,4 +7615,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get friendsAlreadyShort => 'In contacts';
+
+  @override
+  String get settingsGroupAccount => 'Account';
+
+  @override
+  String get settingsGroupApp => 'App';
+
+  @override
+  String get settingsGroupData => 'Data and privacy';
+
+  @override
+  String get settingsGroupOther => 'Other';
+
+  @override
+  String friendsCountSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count contacts',
+      one: '1 contact',
+      zero: 'No contacts yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String friendsRequestsSummary(int count) {
+    return '$count pending';
+  }
 }

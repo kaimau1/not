@@ -37,7 +37,7 @@ void main() {
     expect(gmailDayOf(DateTime(2026, 11, 6, 1), now), GmailDay.today);
     expect(gmailDayOf(DateTime(2026, 11, 5, 23), now), GmailDay.yesterday);
     expect(gmailDayOf(DateTime(2026, 11, 2), now), GmailDay.thisWeek);
-    expect(gmailDayOf(DateTime(2026, 10, 1), now), GmailDay.older);
+    expect(gmailDayOf(DateTime(2026, 10, 2), now), GmailDay.older);
     expect(gmailDayOf(null, now), GmailDay.older);
     expect(senderInitial('"ilker A" <i@x.com>'), 'İ');
     expect(senderInitial('<"ayse@x.com">'), 'A');

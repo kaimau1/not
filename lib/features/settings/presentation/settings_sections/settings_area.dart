@@ -71,152 +71,292 @@ class _Area {
       query.isEmpty || matches(query) || rows.any((r) => r.matches(query));
 }
 
-/// Akordeon alan: kapaliyken baslik + DURUM OZETI, acikken icerik.
-///
-/// Ozet satiri tasarimin asil fikri: kullanici alani acmadan "tema kagit,
-/// yazi %100" gibi guncel durumu okuyabiliyor.
-class _SettingsArea extends StatelessWidget {
-  const _SettingsArea({
-    required this.area,
-    required this.rows,
-    required this.open,
+/// Bu genişlikten itibaren ayarlar iki bölmeli: solda kategoriler, sağda
+/// seçili alan (tablet / web).
+const double _kSettingsWide = 900;
+
+/// Alanın simge rengi (tema rolünden; sabit renk yok). Kategoriler göz
+/// ucuyla ayırt edilsin diye her alan kendi rengini taşır.
+({Color bg, Color fg}) _areaColors(ColorScheme s, String id) => switch (id) {
+  'account' || 'sync' => (bg: s.primaryContainer, fg: s.onPrimaryContainer),
+  'friends' || 'notes' => (bg: s.tertiaryContainer, fg: s.onTertiaryContainer),
+  'ai' => (bg: s.primary, fg: s.onPrimary),
+  'appearance' ||
+  'permissions' => (bg: s.secondaryContainer, fg: s.onSecondaryContainer),
+  _ => (bg: s.surfaceContainerHighest, fg: s.onSurfaceVariant),
+};
+
+class _AreaIcon extends StatelessWidget {
+  const _AreaIcon({required this.area, this.size = 40});
+  final _Area area;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = _areaColors(Theme.of(context).colorScheme, area.id);
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: c.bg,
+        borderRadius: BorderRadius.circular(size * 0.3),
+      ),
+      child: Icon(area.icon, size: size * 0.52, color: c.fg),
+    );
+  }
+}
+
+/// Kök sayfadaki tek kart içinde ayraçlı kategori satırları.
+class _CategoryGroup extends StatelessWidget {
+  const _CategoryGroup({
+    required this.areas,
     required this.onTap,
+    this.selectedId,
   });
 
-  final _Area area;
+  final List<_Area> areas;
+  final ValueChanged<String> onTap;
 
-  /// Cizilecek satirlar — aramada suzulmus olabilir (bkz. [_Area.visibleRows]).
-  final List<Widget> rows;
-
-  final bool open;
-  final VoidCallback onTap;
+  /// İki bölmeli düzende seçili alan (vurgulu); dar ekranda null.
+  final String? selectedId;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        decoration: BoxDecoration(
-          color: open ? scheme.surfaceContainerLow : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: scheme.outlineVariant),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            InkWell(
-              borderRadius: BorderRadius.circular(16),
-              // AÇILAN ALANA ODAK (kullanıcı bulgusu 2026-10-20: "ayarlarda
-              // basılan menüye odaklanmalı, ekran sabit kalıyor"): üstteki
-              // açık alan kapanınca dokunulan başlık ekranın tepesine
-              // kaçıyor ya da açılan içerik ekranın altında kalıyordu.
-              //
-              // GECİKME (kullanıcı bulgusu 2026-10-20, ikinci tur: "odak biraz
-              // geç yapılıyor"): kaydırma eskiden açılış/kapanış animasyonu
-              // BİTİNCE (340 ms) başlıyordu. Artık dokunuşun ardından gelen
-              // ilk karede başlar ve animasyon sürerken başlığı kare kare
-              // izler (bkz. [_followIntoView]).
-              onTap: () {
-                final opening = !open;
-                onTap();
-                if (opening) _followIntoView(context);
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                child: Row(
+    return Material(
+      color: scheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (var i = 0; i < areas.length; i++) ...[
+            if (i > 0)
+              Divider(
+                height: 1,
+                indent: 68,
+                color: scheme.outlineVariant.withValues(alpha: 0.6),
+              ),
+            _CategoryTile(
+              area: areas[i],
+              selected: areas[i].id == selectedId,
+              onTap: () => onTap(areas[i].id),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Kategori satırı: renkli simge, ad, DURUM ÖZETİ (alanı açmadan "Adaçayı ·
+/// Orta · Inter" gibi güncel durum okunur), ok.
+class _CategoryTile extends StatelessWidget {
+  const _CategoryTile({
+    required this.area,
+    required this.onTap,
+    this.selected = false,
+    this.compact = false,
+  });
+
+  final _Area area;
+  final VoidCallback onTap;
+  final bool selected;
+
+  /// Arama sonuçlarındaki küçük başlık hâli.
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Material(
+      color: selected ? scheme.secondaryContainer : Colors.transparent,
+      child: InkWell(
+        key: ValueKey('settings-cat-${area.id}'),
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 4 : 14,
+            vertical: compact ? 8 : 12,
+          ),
+          child: Row(
+            children: [
+              _AreaIcon(area: area, size: compact ? 30 : 40),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Alan simgesi renkli karede (2026-10-16 görsel
-                    // yenileme): başlıklar göz ucuyla ayırt edilsin.
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: (open ? scheme.primary : scheme.onSurfaceVariant)
-                            .withValues(alpha: open ? 0.16 : 0.08),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        area.icon,
-                        size: 19,
-                        color: open ? scheme.primary : scheme.onSurfaceVariant,
-                      ),
+                    Text(
+                      area.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style:
+                          (compact
+                                  ? theme.textTheme.titleSmall
+                                  : theme.textTheme.titleMedium)
+                              ?.copyWith(fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            area.title,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
+                    if (area.summary.isNotEmpty && !compact)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          area.summary,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
                           ),
-                          if (area.summary.isNotEmpty)
-                            Text(
-                              area.summary,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
-                    ),
-                    AnimatedRotation(
-                      turns: open ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 160),
-                      child: Icon(
-                        Icons.expand_more,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
                   ],
                 ),
               ),
-            ),
-            // AÇILIŞ/KAPANIŞ YUMUŞAK ve HER ALANDA AYNI (kullanıcı bulgusu
-            // 2026-10-20: "bazı menüler aşağı doğru animasyonla açılırken
-            // bazılarında yok gibi"): ağır alanın ilk karesi animasyonu
-            // yutuyordu — bkz. [ExpandReveal] kök neden notu. Kapalıyken
-            // içerik ağaçta YOK (ayar satırlarının hepsini boşuna kurmasın).
-            ExpandReveal(
-              open: open,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-                // DERLİ TOPLU SATIRLAR (kullanıcı isteği 2026-09-26: ekran
-                // görüntüsündeki alanlar "görsel ve işlevsel olarak
-                // geliştirilsin"). Anahtar satırlarının başlığı gövde
-                // metninden BÜYÜK, açıklaması başlık kadar iriydi; uzun
-                // açıklamalı beş satır ekranı dolduruyordu. Başlık 14/w600,
-                // açıklama küçük ve soluk — göz önce başlığı tarar.
-                child: ListTileTheme.merge(
-                  dense: true,
-                  titleTextStyle: Theme.of(context).textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
-                  subtitleTextStyle: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurfaceVariant,
-                        height: 1.3,
-                      ),
-                  child: _StaggeredRows(rows: rows),
+              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Ayar satırlarını tek kart içinde, derli toplu (başlık 14/w600, açıklama
+/// küçük ve soluk) çizer.
+class _RowsCard extends StatelessWidget {
+  const _RowsCard({required this.rows, this.stagger = false});
+
+  final List<Widget> rows;
+
+  /// İlk açılışta satırları karelere yay (bkz. [_StaggeredRows]).
+  final bool stagger;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Material(
+      color: scheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+        child: ListTileTheme.merge(
+          dense: true,
+          titleTextStyle: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          subtitleTextStyle: theme.textTheme.bodySmall?.copyWith(
+            color: scheme.onSurfaceVariant,
+            height: 1.3,
+          ),
+          child: stagger
+              ? _StaggeredRows(rows: rows)
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: rows,
                 ),
-              ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bir alanın kendi sayfası: (iki bölmeli düzende) büyük başlık + özet,
+/// altında satırlar tek kartta.
+class _AreaPage extends StatelessWidget {
+  const _AreaPage({
+    super.key,
+    required this.area,
+    required this.rows,
+    required this.showHeader,
+  });
+
+  final _Area area;
+  final List<Widget> rows;
+
+  /// Dar ekranda başlık zaten üst çubukta; geniş ekranda sayfanın tepesinde.
+  final bool showHeader;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListView(
+      key: PageStorageKey('settings-page-${area.id}'),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        12,
+        16,
+        24 + MediaQuery.paddingOf(context).bottom,
+      ),
+      children: [
+        if (showHeader || area.summary.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 4, 4, 16),
+            child: Row(
+              children: [
+                _AreaIcon(area: area, size: showHeader ? 48 : 36),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (showHeader)
+                        Text(area.title, style: theme.textTheme.headlineSmall),
+                      if (area.summary.isNotEmpty)
+                        Text(
+                          area.summary,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
+        _RowsCard(rows: rows, stagger: true),
+      ],
+    );
+  }
+}
+
+/// Kök sayfanın dibinde uygulama adı ve sürümü.
+class _VersionFooter extends StatefulWidget {
+  const _VersionFooter();
+
+  @override
+  State<_VersionFooter> createState() => _VersionFooterState();
+}
+
+class _VersionFooterState extends State<_VersionFooter> {
+  String? _version;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(
+      PackageInfo.fromPlatform()
+          .then((i) {
+            if (mounted) setState(() => _version = i.version);
+          })
+          .catchError((Object _) {}),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.only(top: 28),
+      child: Text(
+        _version == null ? l10n.appName : '${l10n.appName} · v$_version',
+        key: const ValueKey('settings-version-footer'),
+        textAlign: TextAlign.center,
+        style: theme.textTheme.labelMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
         ),
       ),
     );
@@ -275,8 +415,7 @@ class _StaggeredRowsState extends State<_StaggeredRows> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      for (var i = 0; i < _count && i < widget.rows.length; i++)
-        widget.rows[i],
+      for (var i = 0; i < _count && i < widget.rows.length; i++) widget.rows[i],
     ],
   );
 }
@@ -461,44 +600,4 @@ class _ShortcutTile extends StatelessWidget {
       ),
     );
   }
-}
-
-// _SettingsGroup (basliksiz kart grubu) kaldirildi: yerini akordeon
-// _SettingsArea aldi, dokuz grup alti alana indi.
-
-/// Açılan alanın başlığını görünür alanın tepesine KARE KARE taşır.
-///
-/// Neden tek bir `Scrollable.ensureVisible` değil: üstteki açık alan aynı
-/// anda kapanıyor, alttaki içerik açılıyor — hedef konum animasyon boyunca
-/// kayar. Başta hesaplanan hedef sonunda yanlış olur; animasyon bitene dek
-/// beklemek de gecikme demekti. Burada her karede hedef yeniden ölçülür ve
-/// kalan yolun bir kısmı alınır; süre dolunca tam hedefe oturur. Kullanıcı
-/// bu arada kaydırırsa izleme bırakılır.
-void _followIntoView(BuildContext context) {
-  const total = Duration(milliseconds: 360);
-  final clock = Stopwatch()..start();
-  void step(Duration _) {
-    if (!context.mounted) return;
-    final box = context.findRenderObject();
-    final scrollable = Scrollable.maybeOf(context);
-    if (box == null || !box.attached || scrollable == null) return;
-    final position = scrollable.position;
-    // Parmak listeyi tuttuysa kullanıcıya bırak.
-    if (position.isScrollingNotifier.value) return;
-    final viewport = RenderAbstractViewport.maybeOf(box);
-    if (viewport == null || !position.hasContentDimensions) return;
-    final target = viewport
-        .getOffsetToReveal(box, 0.02)
-        .offset
-        .clamp(position.minScrollExtent, position.maxScrollExtent);
-    final t = clock.elapsedMilliseconds / total.inMilliseconds;
-    final done = t >= 1;
-    final share = done ? 1.0 : 0.18 + 0.5 * Curves.easeOut.transform(t);
-    final next = position.pixels + (target - position.pixels) * share;
-    if ((next - position.pixels).abs() > 0.5) position.jumpTo(next);
-    if (!done) SchedulerBinding.instance.scheduleFrameCallback(step);
-  }
-
-  SchedulerBinding.instance.scheduleFrameCallback(step);
-  SchedulerBinding.instance.ensureVisualUpdate();
 }

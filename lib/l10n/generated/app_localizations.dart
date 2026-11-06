@@ -13487,7 +13487,7 @@ abstract class AppLocalizations {
   /// No description provided for @gmailConnectPointNote.
   ///
   /// In tr, this message translates to:
-  /// **'Bir e-postayı tek dokunuşla not, AI özeti ya da görev listesi yap.'**
+  /// **'Bir e-postayı tek dokunuşla not, yapay zekâ özeti ya da görev listesi yap.'**
   String get gmailConnectPointNote;
 
   /// No description provided for @gmailOpenInGmail.
@@ -13567,6 +13567,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kişilerinde'**
   String get friendsAlreadyShort;
+
+  /// No description provided for @settingsGroupAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap'**
+  String get settingsGroupAccount;
+
+  /// No description provided for @settingsGroupApp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama'**
+  String get settingsGroupApp;
+
+  /// No description provided for @settingsGroupData.
+  ///
+  /// In tr, this message translates to:
+  /// **'Veri ve gizlilik'**
+  String get settingsGroupData;
+
+  /// No description provided for @settingsGroupOther.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer'**
+  String get settingsGroupOther;
+
+  /// No description provided for @friendsCountSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =0{Henüz kişi yok} other{{count} kişi}}'**
+  String friendsCountSummary(int count);
+
+  /// No description provided for @friendsRequestsSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} istek bekliyor'**
+  String friendsRequestsSummary(int count);
 }
 
 class _AppLocalizationsDelegate

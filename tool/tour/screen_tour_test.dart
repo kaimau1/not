@@ -568,6 +568,11 @@ void main() {
     ('paylasilan', '/', () => find.byKey(const ValueKey('shared-chip-sf1'))),
     ('n4-paylas', '/note/n4', () => find.byTooltip('Paylaş').first),
     ('ayarlar', '/settings', null),
+    (
+      'ayarlar-gorunum',
+      '/settings',
+      () => find.byKey(const ValueKey('settings-cat-appearance')),
+    ),
     ('klasorler', '/folders', null),
     ('yapay-zeka', '/ai', null),
     ('arsiv', '/archive', null),

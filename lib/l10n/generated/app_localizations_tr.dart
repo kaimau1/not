@@ -7552,7 +7552,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gmailConnectPointNote =>
-      'Bir e-postayı tek dokunuşla not, AI özeti ya da görev listesi yap.';
+      'Bir e-postayı tek dokunuşla not, yapay zekâ özeti ya da görev listesi yap.';
 
   @override
   String get gmailOpenInGmail => 'Gmail\'de aç';
@@ -7594,4 +7594,32 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get friendsAlreadyShort => 'Kişilerinde';
+
+  @override
+  String get settingsGroupAccount => 'Hesap';
+
+  @override
+  String get settingsGroupApp => 'Uygulama';
+
+  @override
+  String get settingsGroupData => 'Veri ve gizlilik';
+
+  @override
+  String get settingsGroupOther => 'Diğer';
+
+  @override
+  String friendsCountSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count kişi',
+      zero: 'Henüz kişi yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String friendsRequestsSummary(int count) {
+    return '$count istek bekliyor';
+  }
 }

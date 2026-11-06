@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/app_icons.dart';
 import '../../../core/friendly_error.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
@@ -352,7 +353,7 @@ class _FriendCard extends ConsumerWidget {
                       ScaffoldMessenger.of(context)
                           .showMessage(l10n.friendsEmailCopied);
                     },
-                    icon: const Icon(Icons.copy_outlined, size: 18),
+                    icon: const Icon(AppIcons.copy, size: 18),
                     label: Text(l10n.friendsCopyEmail),
                   ),
                 ),
