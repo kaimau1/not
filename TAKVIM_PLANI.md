@@ -233,12 +233,12 @@ Faz 53'te.
 - [x] F46.4 Kural testi (`rules-test`): dört koleksiyon yalnız sahibine (genel `users/{uid}/{c}/**` kuralı yetiyor, kural değişmedi).
 
 ### Faz 47 — Takvim ekranı (yerel)
-- [ ] F47.1 `/calendar` rota + giriş kapıları (menü, ray, kısayol).
-- [ ] F47.2 Ajanda görünümü + ay şeridi; boş durum; tema belirteçleri.
-- [ ] F47.3 Ay ızgarası, Gün/Hafta saat ızgarası (tablet/web yan yana).
-- [ ] F47.4 Etkinlik oluştur/düzenle levhası (tek seçici: `pickReminderWhen` kalıbı), sil → çöp, geri al.
-- [ ] F47.5 Not hatırlatıcıları takvimde (salt gösterim + sürükleyerek taşıma).
-- [ ] F47.6 Etkinlik hatırlatmaları `ReminderService` üstünden (yeni yük öneki, `note:` ile BAŞLAMAZ — HAFIZA kuralı).
+- [x] F47.1 `/calendar` rota; rayda **Hatırlatıcılar'ın yerini aldı** (`AppSection.calendar`, Alt+5; `/reminders` da takvim bölümü sayılır), ana ekran ⋮ hızlı satırı "Takvim"; Hatırlatıcılar listesi takvim çubuğundaki ⏰ düğmesinden (K5 ilk adım).
+- [x] F47.2 Ajanda (`_AgendaList`, seçili günden 60 gün, "Daha ileri" uzatır, seçili gün boşsa "plan yok"), boş durum, telefonda başlıktan açılır ay ızgarası.
+- [~] F47.3 Ay ızgarası (`month_grid.dart`, yerel haftabaşı, nokta, yatay kaydırma) + geniş (≥ 720 dp) düzende solda sabit ızgara. **Gün/Hafta saat ızgarası AÇIK.**
+- [x] F47.4 Etkinlik levhası (`event_editor.dart`): başlık, tüm gün, başlangıç/bitiş (bitiş başlangıçla kayar), tekrar (`pickReminderRepeat` — `every/until` arayüzde yok), tek hatırlatma, konum, açıklama; sil → çöp + geri al; tekrarlıda "yalnız bu / tümü" (`exdates`). Düzenleme serinin tamamına uygulanır.
+- [~] F47.5 Not hatırlatıcıları ajandada ve ızgarada (tekrarlılar açılır, gizli klasör bastırılır, dokununca not). **Sürükleyerek taşıma AÇIK.**
+- [x] F47.6 `ReminderService` takvim bildirimleri: `calendarAlarms` (14 gün ufuk, en çok 60), yük `cal:event:<id>` / `cal:task:<id>` (dokununca `/calendar`), ilk eşitlemede `cal:` önekli yetimler iptal, kanal `calendar`. Yalnız cihazda (web'de dinleyici yok). **Cihazda doğrulanmadı** → KALANLAR §2.
 - [ ] F47.7 Ekran turu (`tool/tour`) telefon/tablet/masaüstü görüntüleri; akıcılık ölçümü (`tool/perf`).
 
 ### Faz 48 — Google Takvim (salt okuma)
@@ -312,7 +312,7 @@ Faz 53'te.
 | Faz | Durum |
 |---|---|
 | 46 Model | ✅ (F46.5 yedek açık) |
-| 47 Takvim ekranı | — |
+| 47 Takvim ekranı | 🟡 çekirdek bitti; gün/hafta ızgarası, sürükleme, tur açık |
 | 48 Google Takvim okuma | — |
 | 49 Not ↔ takvim | — |
 | 50 Görevler | — |

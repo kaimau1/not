@@ -21,6 +21,7 @@ import '../features/notes/presentation/dashboard_screen.dart';
 import '../features/notes/presentation/notes_providers.dart';
 import '../features/notes/presentation/editor/note_editor_screen.dart';
 import '../features/notes/presentation/reminders_screen.dart';
+import '../features/calendar/presentation/calendar_screen.dart';
 import '../features/notes/presentation/trash_screen.dart';
 import '../features/settings/presentation/premium_screen.dart';
 import '../features/settings/presentation/privacy_screen.dart';
@@ -230,6 +231,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/cards',
             builder: (context, state) => const StudyCardsScreen(),
+          ),
+          GoRoute(
+            path: '/calendar',
+            builder: (context, state) => const CalendarScreen(),
           ),
           GoRoute(
             path: '/reminders',

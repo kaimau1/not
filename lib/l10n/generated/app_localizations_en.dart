@@ -7038,4 +7038,119 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get templateFavoritesFull => 'Up to 4 favourites — remove one first';
+
+  @override
+  String get calendarTitle => 'Calendar';
+
+  @override
+  String get calendarToday => 'Today';
+
+  @override
+  String get calendarViewAgenda => 'Agenda';
+
+  @override
+  String get calendarViewMonth => 'Month';
+
+  @override
+  String get calendarNewEvent => 'New event';
+
+  @override
+  String get calendarEmpty => 'Your calendar is empty';
+
+  @override
+  String get calendarEmptyHint =>
+      'Add an event; notes with reminders show up here too.';
+
+  @override
+  String get calendarNothingThisDay => 'Nothing planned for this day';
+
+  @override
+  String get calendarReminderTag => 'Reminder';
+
+  @override
+  String get calendarShowMonth => 'Show month';
+
+  @override
+  String get calendarHideMonth => 'Hide month';
+
+  @override
+  String get calendarPrevMonth => 'Previous month';
+
+  @override
+  String get calendarNextMonth => 'Next month';
+
+  @override
+  String get calendarMoreDays => 'Further ahead';
+
+  @override
+  String get eventEditTitle => 'Edit event';
+
+  @override
+  String get eventTitleHint => 'Add title';
+
+  @override
+  String get eventUntitled => '(No title)';
+
+  @override
+  String get eventAllDay => 'All day';
+
+  @override
+  String get eventStarts => 'Starts';
+
+  @override
+  String get eventEnds => 'Ends';
+
+  @override
+  String get eventReminder => 'Reminder';
+
+  @override
+  String get eventReminderNone => 'No reminder';
+
+  @override
+  String get eventReminderAtStart => 'At start time';
+
+  @override
+  String get eventReminderAllDayMorning => 'On the day at 09:00';
+
+  @override
+  String eventReminderMinutes(int count) {
+    return '$count minutes before';
+  }
+
+  @override
+  String eventReminderHours(int count) {
+    return '$count hours before';
+  }
+
+  @override
+  String eventReminderDays(int count) {
+    return '$count days before';
+  }
+
+  @override
+  String get eventLocation => 'Location';
+
+  @override
+  String get eventDescription => 'Description';
+
+  @override
+  String get eventSave => 'Save';
+
+  @override
+  String get eventDelete => 'Delete event';
+
+  @override
+  String get eventDeleted => 'Event deleted';
+
+  @override
+  String get eventDeleteRepeatingTitle => 'Repeating event';
+
+  @override
+  String get eventDeleteThis => 'This event only';
+
+  @override
+  String get eventDeleteAll => 'All occurrences';
+
+  @override
+  String get eventNotificationAllDay => 'Today · all day';
 }

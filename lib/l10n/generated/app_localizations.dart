@@ -12511,6 +12511,222 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'En çok 4 favori seçilebilir — önce birini çıkar'**
   String get templateFavoritesFull;
+
+  /// No description provided for @calendarTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim'**
+  String get calendarTitle;
+
+  /// No description provided for @calendarToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün'**
+  String get calendarToday;
+
+  /// No description provided for @calendarViewAgenda.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ajanda'**
+  String get calendarViewAgenda;
+
+  /// No description provided for @calendarViewMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ay'**
+  String get calendarViewMonth;
+
+  /// No description provided for @calendarNewEvent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni etkinlik'**
+  String get calendarNewEvent;
+
+  /// No description provided for @calendarEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim boş'**
+  String get calendarEmpty;
+
+  /// No description provided for @calendarEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkinlik ekleyin; hatırlatıcılı notlar da burada görünür.'**
+  String get calendarEmptyHint;
+
+  /// No description provided for @calendarNothingThisDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu gün için plan yok'**
+  String get calendarNothingThisDay;
+
+  /// No description provided for @calendarReminderTag.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcı'**
+  String get calendarReminderTag;
+
+  /// No description provided for @calendarShowMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayı göster'**
+  String get calendarShowMonth;
+
+  /// No description provided for @calendarHideMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayı gizle'**
+  String get calendarHideMonth;
+
+  /// No description provided for @calendarPrevMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki ay'**
+  String get calendarPrevMonth;
+
+  /// No description provided for @calendarNextMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki ay'**
+  String get calendarNextMonth;
+
+  /// No description provided for @calendarMoreDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha ileri'**
+  String get calendarMoreDays;
+
+  /// No description provided for @eventEditTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkinliği düzenle'**
+  String get eventEditTitle;
+
+  /// No description provided for @eventTitleHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık ekleyin'**
+  String get eventTitleHint;
+
+  /// No description provided for @eventUntitled.
+  ///
+  /// In tr, this message translates to:
+  /// **'(Başlıksız)'**
+  String get eventUntitled;
+
+  /// No description provided for @eventAllDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm gün'**
+  String get eventAllDay;
+
+  /// No description provided for @eventStarts.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlangıç'**
+  String get eventStarts;
+
+  /// No description provided for @eventEnds.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bitiş'**
+  String get eventEnds;
+
+  /// No description provided for @eventReminder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatma'**
+  String get eventReminder;
+
+  /// No description provided for @eventReminderNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatma yok'**
+  String get eventReminderNone;
+
+  /// No description provided for @eventReminderAtStart.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başladığında'**
+  String get eventReminderAtStart;
+
+  /// No description provided for @eventReminderAllDayMorning.
+  ///
+  /// In tr, this message translates to:
+  /// **'O gün 09:00\'da'**
+  String get eventReminderAllDayMorning;
+
+  /// No description provided for @eventReminderMinutes.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} dakika önce'**
+  String eventReminderMinutes(int count);
+
+  /// No description provided for @eventReminderHours.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} saat önce'**
+  String eventReminderHours(int count);
+
+  /// No description provided for @eventReminderDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} gün önce'**
+  String eventReminderDays(int count);
+
+  /// No description provided for @eventLocation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konum'**
+  String get eventLocation;
+
+  /// No description provided for @eventDescription.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıklama'**
+  String get eventDescription;
+
+  /// No description provided for @eventSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydet'**
+  String get eventSave;
+
+  /// No description provided for @eventDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkinliği sil'**
+  String get eventDelete;
+
+  /// No description provided for @eventDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkinlik silindi'**
+  String get eventDeleted;
+
+  /// No description provided for @eventDeleteRepeatingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrarlayan etkinlik'**
+  String get eventDeleteRepeatingTitle;
+
+  /// No description provided for @eventDeleteThis.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız bu etkinlik'**
+  String get eventDeleteThis;
+
+  /// No description provided for @eventDeleteAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm tekrarlar'**
+  String get eventDeleteAll;
+
+  /// No description provided for @eventNotificationAllDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün · tüm gün'**
+  String get eventNotificationAllDay;
 }
 
 class _AppLocalizationsDelegate

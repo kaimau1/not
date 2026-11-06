@@ -3356,5 +3356,62 @@
   "templateFavorite": "Favorilere ekle",
   "templateUnfavorite": "Favorilerden çıkar",
   "templatesFavorites": "Favoriler",
-  "templateFavoritesFull": "En çok 4 favori seçilebilir — önce birini çıkar"
+  "templateFavoritesFull": "En çok 4 favori seçilebilir — önce birini çıkar",
+  "calendarTitle": "Takvim",
+  "calendarToday": "Bugün",
+  "calendarViewAgenda": "Ajanda",
+  "calendarViewMonth": "Ay",
+  "calendarNewEvent": "Yeni etkinlik",
+  "calendarEmpty": "Takvim boş",
+  "calendarEmptyHint": "Etkinlik ekleyin; hatırlatıcılı notlar da burada görünür.",
+  "calendarNothingThisDay": "Bu gün için plan yok",
+  "calendarReminderTag": "Hatırlatıcı",
+  "calendarShowMonth": "Ayı göster",
+  "calendarHideMonth": "Ayı gizle",
+  "calendarPrevMonth": "Önceki ay",
+  "calendarNextMonth": "Sonraki ay",
+  "calendarMoreDays": "Daha ileri",
+  "eventEditTitle": "Etkinliği düzenle",
+  "eventTitleHint": "Başlık ekleyin",
+  "eventUntitled": "(Başlıksız)",
+  "eventAllDay": "Tüm gün",
+  "eventStarts": "Başlangıç",
+  "eventEnds": "Bitiş",
+  "eventReminder": "Hatırlatma",
+  "eventReminderNone": "Hatırlatma yok",
+  "eventReminderAtStart": "Başladığında",
+  "eventReminderAllDayMorning": "O gün 09:00'da",
+  "eventReminderMinutes": "{count} dakika önce",
+  "@eventReminderMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventReminderHours": "{count} saat önce",
+  "@eventReminderHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventReminderDays": "{count} gün önce",
+  "@eventReminderDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventLocation": "Konum",
+  "eventDescription": "Açıklama",
+  "eventSave": "Kaydet",
+  "eventDelete": "Etkinliği sil",
+  "eventDeleted": "Etkinlik silindi",
+  "eventDeleteRepeatingTitle": "Tekrarlayan etkinlik",
+  "eventDeleteThis": "Yalnız bu etkinlik",
+  "eventDeleteAll": "Tüm tekrarlar",
+  "eventNotificationAllDay": "Bugün · tüm gün"
 }

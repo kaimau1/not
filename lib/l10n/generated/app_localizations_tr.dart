@@ -7017,4 +7017,119 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get templateFavoritesFull =>
       'En çok 4 favori seçilebilir — önce birini çıkar';
+
+  @override
+  String get calendarTitle => 'Takvim';
+
+  @override
+  String get calendarToday => 'Bugün';
+
+  @override
+  String get calendarViewAgenda => 'Ajanda';
+
+  @override
+  String get calendarViewMonth => 'Ay';
+
+  @override
+  String get calendarNewEvent => 'Yeni etkinlik';
+
+  @override
+  String get calendarEmpty => 'Takvim boş';
+
+  @override
+  String get calendarEmptyHint =>
+      'Etkinlik ekleyin; hatırlatıcılı notlar da burada görünür.';
+
+  @override
+  String get calendarNothingThisDay => 'Bu gün için plan yok';
+
+  @override
+  String get calendarReminderTag => 'Hatırlatıcı';
+
+  @override
+  String get calendarShowMonth => 'Ayı göster';
+
+  @override
+  String get calendarHideMonth => 'Ayı gizle';
+
+  @override
+  String get calendarPrevMonth => 'Önceki ay';
+
+  @override
+  String get calendarNextMonth => 'Sonraki ay';
+
+  @override
+  String get calendarMoreDays => 'Daha ileri';
+
+  @override
+  String get eventEditTitle => 'Etkinliği düzenle';
+
+  @override
+  String get eventTitleHint => 'Başlık ekleyin';
+
+  @override
+  String get eventUntitled => '(Başlıksız)';
+
+  @override
+  String get eventAllDay => 'Tüm gün';
+
+  @override
+  String get eventStarts => 'Başlangıç';
+
+  @override
+  String get eventEnds => 'Bitiş';
+
+  @override
+  String get eventReminder => 'Hatırlatma';
+
+  @override
+  String get eventReminderNone => 'Hatırlatma yok';
+
+  @override
+  String get eventReminderAtStart => 'Başladığında';
+
+  @override
+  String get eventReminderAllDayMorning => 'O gün 09:00\'da';
+
+  @override
+  String eventReminderMinutes(int count) {
+    return '$count dakika önce';
+  }
+
+  @override
+  String eventReminderHours(int count) {
+    return '$count saat önce';
+  }
+
+  @override
+  String eventReminderDays(int count) {
+    return '$count gün önce';
+  }
+
+  @override
+  String get eventLocation => 'Konum';
+
+  @override
+  String get eventDescription => 'Açıklama';
+
+  @override
+  String get eventSave => 'Kaydet';
+
+  @override
+  String get eventDelete => 'Etkinliği sil';
+
+  @override
+  String get eventDeleted => 'Etkinlik silindi';
+
+  @override
+  String get eventDeleteRepeatingTitle => 'Tekrarlayan etkinlik';
+
+  @override
+  String get eventDeleteThis => 'Yalnız bu etkinlik';
+
+  @override
+  String get eventDeleteAll => 'Tüm tekrarlar';
+
+  @override
+  String get eventNotificationAllDay => 'Bugün · tüm gün';
 }

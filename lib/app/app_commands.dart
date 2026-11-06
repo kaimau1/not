@@ -47,7 +47,9 @@ enum AppSection {
   folders('/folders', Icons.folder_outlined, Icons.folder),
   inbox('/inbox', AppIcons.inbox, AppIcons.inboxSelected),
   ai('/ai', Icons.auto_awesome_outlined, Icons.auto_awesome),
-  reminders('/reminders', Icons.alarm_outlined, Icons.alarm),
+  // Takvim, Hatırlatıcılar'ın yerine (TAKVIM_PLANI K5): hatırlatıcılar
+  // takvimde görünür, liste takvimin çubuğundan açılır.
+  calendar('/calendar', Icons.calendar_month_outlined, Icons.calendar_month),
   archive('/archive', AppIcons.archive, AppIcons.archiveSelected),
   trash('/trash', Icons.delete_outline, Icons.delete),
   settings('/settings', Icons.settings_outlined, Icons.settings);
@@ -65,7 +67,7 @@ enum AppSection {
       AppSection.folders => l10n.foldersTitle,
       AppSection.inbox => l10n.sharedHubTitle,
       AppSection.ai => l10n.aiHubTitle,
-      AppSection.reminders => l10n.remindersTitle,
+      AppSection.calendar => l10n.calendarTitle,
       AppSection.archive => l10n.archiveTitle,
       AppSection.trash => l10n.trashTitle,
       AppSection.settings => l10n.settings,
@@ -85,6 +87,7 @@ enum AppSection {
         location.startsWith('/briefing')) {
       return AppSection.ai;
     }
+    if (location.startsWith('/reminders')) return AppSection.calendar;
     if (location.startsWith('/settings') ||
         location.startsWith('/privacy') ||
         location.startsWith('/premium')) {
