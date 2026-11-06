@@ -15,6 +15,7 @@ import '../data/calendar_repository.dart';
 import '../domain/calendar_event.dart';
 import '../domain/day_key.dart';
 import '../domain/recurrence.dart';
+import 'google_calendar_ui.dart';
 
 /// Hatırlatma seçenekleri (dakika). Google Takvim'in olağan değerleri.
 const kTimedReminderChoices = [0, 10, 30, 60, 1440];
@@ -53,6 +54,8 @@ Future<void> showEventEditor(
   DateTime? day,
   DateTime? start,
   DateTime? occurrenceStart,
+  String? linkNoteId,
+  String? initialTitle,
 }) => showAppSheet<void>(
   context: context,
   isScrollControlled: true,
@@ -63,6 +66,8 @@ Future<void> showEventEditor(
     day: day ?? start ?? DateTime.now(),
     start: start,
     occurrenceStart: occurrenceStart,
+    linkNoteId: linkNoteId,
+    initialTitle: initialTitle,
   ),
 );
 
@@ -73,7 +78,14 @@ class EventEditorSheet extends ConsumerStatefulWidget {
     required this.day,
     this.start,
     this.occurrenceStart,
+    this.linkNoteId,
+    this.initialTitle,
   });
+
+  /// Nottan açılan YENİ etkinlik (F49.1 "Takvime bağla → yeni etkinlik"):
+  /// kaydedilince bu not etkinliğe bağlanır.
+  final String? linkNoteId;
+  final String? initialTitle;
 
   final CalendarEvent? existing;
   final DateTime day;
@@ -87,7 +99,9 @@ class EventEditorSheet extends ConsumerStatefulWidget {
 }
 
 class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
-  late final _title = TextEditingController(text: widget.existing?.title);
+  late final _title = TextEditingController(
+    text: widget.existing?.title ?? widget.initialTitle,
+  );
   late final _location = TextEditingController(text: widget.existing?.location);
   late final _description = TextEditingController(
     text: widget.existing?.description,
@@ -273,6 +287,9 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
         end: _end.isAfter(_start) ? _end : _fallbackEnd(),
         repeat: _repeat.encode(),
         reminders: _reminder == null ? const [] : [_reminder!],
+        noteIds: widget.existing == null && widget.linkNoteId != null
+            ? [widget.linkNoteId!]
+            : null,
       ),
     );
     final messengerContext = Navigator.of(context).context;
@@ -436,6 +453,42 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
                       border: InputBorder.none,
                     ),
                   ),
+                  // Bağlı notlar + toplantı notu (F49.1): kayıtlı etkinlikte.
+                  if (widget.existing case final existing?) ...[
+                    const SizedBox(height: 8),
+                    LinkedNotesList(
+                      noteIds:
+                          ref
+                              .watch(eventsStreamProvider)
+                              .value
+                              ?.where((e) => e.id == existing.id)
+                              .firstOrNull
+                              ?.noteIds ??
+                          existing.noteIds,
+                      onUnlink: (id) => ref
+                          .read(calendarRepositoryProvider)
+                          ?.unlinkNoteFromEvent(existing.id, id),
+                    ),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton.icon(
+                        key: const ValueKey('event-meeting-note'),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          unawaited(
+                            openMeetingNote(
+                              context,
+                              ref,
+                              existing,
+                              widget.occurrenceStart ?? existing.start,
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.note_add_outlined),
+                        label: Text(l10n.calendarMeetingNote),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   FilledButton(
                     key: const ValueKey('event-save'),

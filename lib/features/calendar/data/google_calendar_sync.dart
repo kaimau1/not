@@ -155,8 +155,10 @@ class GoogleCalendarController extends Notifier<GoogleCalendarState> {
   @override
   GoogleCalendarState build() {
     _uid = ref.watch(currentUidProvider);
+    // Kimliksizken (misafir öncesi, testler) Firebase'e hiç dokunulmaz.
     final available =
-        authOverride != null || ref.watch(googleCalendarAvailableProvider);
+        _uid != null &&
+        (authOverride != null || ref.watch(googleCalendarAvailableProvider));
     _cache.clear();
     _api = null;
     _tokens = null;

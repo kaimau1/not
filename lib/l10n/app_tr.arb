@@ -3475,5 +3475,13 @@
   "calendarLinkedNotes": "Bağlı notlar",
   "calendarUnlinkNote": "Bağı kaldır",
   "gcalSyncedAt": "Son eşitleme {time}",
-  "@gcalSyncedAt": {"placeholders": {"time": {"type": "String"}}}
+  "@gcalSyncedAt": {"placeholders": {"time": {"type": "String"}}},
+  "calendarLinked": "Takvime bağlandı",
+  "calendarLinkNote": "Takvime bağla",
+  "calendarLinkToDay": "Bir güne bağla",
+  "calendarLinkNewEvent": "Yeni etkinlik oluştur ve bağla",
+  "calendarLinkToEvent": "Bir etkinliğe bağla",
+  "calendarDayNote": "Bu güne not",
+  "calendarDayWrittenNotes": "O gün yazılan notlar ({count})",
+  "@calendarDayWrittenNotes": {"placeholders": {"count": {"type": "int"}}}
 }

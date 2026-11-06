@@ -16,6 +16,7 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../../settings/settings_providers.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
+import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../data/calendar_repository.dart';
 import '../data/google_calendar_sync.dart';
@@ -26,6 +27,7 @@ import '../domain/task_item.dart';
 import 'calendar_views.dart';
 import 'event_editor.dart';
 import 'google_calendar_ui.dart';
+import 'note_calendar_links.dart';
 import 'month_grid.dart';
 import 'pinch_zoom.dart';
 import 'task_editor.dart';
@@ -57,7 +59,10 @@ const _kPinchHintPref = 'calendar_pinch_hint_v1';
 /// altındaki ay/hafta açılır), uzaklaştırma tersi; geçiş o noktadan büyüyerek
 /// olur. Dönemler arası yatay kaydırma. Seçilen görünüm hatırlanır.
 class CalendarScreen extends ConsumerStatefulWidget {
-  const CalendarScreen({super.key, this.now});
+  const CalendarScreen({super.key, this.now, this.initialDay});
+
+  /// Açılınca seçili gün (`/calendar?day=YYYY-MM-DD`, notun bağ hapından).
+  final DateTime? initialDay;
 
   /// Test için "şimdi".
   final DateTime? now;
@@ -68,14 +73,16 @@ class CalendarScreen extends ConsumerStatefulWidget {
 
 class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   late DateTime _today = startOfDay(widget.now ?? DateTime.now());
-  late DateTime _selected = _today;
+  late DateTime _selected = widget.initialDay == null
+      ? _today
+      : startOfDay(widget.initialDay!);
 
   /// Görünen dönemin içindeki bir gün (ay/hafta/yıl sayfası bundan).
-  late DateTime _focus = _today;
+  late DateTime _focus = _selected;
   late CalendarView _view = _storedView();
 
   // Ajanda görünümü.
-  late DateTime _month = monthOf(_today);
+  late DateTime _month = monthOf(_selected);
   bool _monthOpen = false;
   int _windowDays = _kAgendaWindowDays;
 
@@ -779,7 +786,7 @@ class _PagedViewState extends State<_PagedView> {
 
 /// Ay/hafta görünümünde güne dokununca: o günün kayıtları + yeni etkinlik /
 /// görev.
-class _DaySheet extends StatelessWidget {
+class _DaySheet extends ConsumerWidget {
   const _DaySheet({
     required this.day,
     required this.today,
@@ -794,9 +801,47 @@ class _DaySheet extends StatelessWidget {
   final VoidCallback onNewEvent;
   final VoidCallback onNewTask;
 
+  /// "Bu güne not" (F49.1): güne bağlı, başlığı günün adı olan not varsa
+  /// açar; yoksa oluşturur ve güne bağlar.
+  Future<void> _dayNote(BuildContext context, WidgetRef ref) async {
+    final notes = ref.read(notesRepositoryProvider);
+    final calendar = ref.read(calendarRepositoryProvider);
+    if (notes == null || calendar == null) return;
+    final key = dayKey(day);
+    final title = dayNoteTitle(day);
+    final linked = ref.read(dayLinksStreamProvider).value?[key] ?? const [];
+    final all = ref.read(notesStreamProvider).value ?? const <Note>[];
+    final existing = all
+        .where(
+          (n) =>
+              linked.contains(n.id) &&
+              n.deletedAt == null &&
+              n.title.trim() == title,
+        )
+        .firstOrNull;
+    final router = GoRouter.of(context);
+    Navigator.pop(context);
+    final id =
+        existing?.id ?? await notes.createNote(NoteType.text, title: title);
+    if (existing == null) calendar.linkNoteToDay(key, id);
+    unawaited(router.push(noteRoutePath(id)));
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final key = dayKey(day);
+    final linked = ref.watch(dayLinksStreamProvider).value?[key] ?? const [];
+    // O gün yazılan/düzenlenen notlar (F49.3) — açılır bölüm.
+    final written = [
+      for (final n in ref.watch(notesStreamProvider).value ?? const <Note>[])
+        if (n.deletedAt == null &&
+            n.archivedAt == null &&
+            !linked.contains(n.id) &&
+            n.updatedAt != null &&
+            startOfDay(n.updatedAt!) == day)
+          n,
+    ];
     final entries =
         data.range(day, DateTime(day.year, day.month, day.day + 1))[dayKey(
           day,
@@ -837,6 +882,36 @@ class _DaySheet extends StatelessWidget {
                     ),
             ),
             Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: LinkedNotesList(
+                noteIds: linked,
+                onUnlink: (id) => ref
+                    .read(calendarRepositoryProvider)
+                    ?.unlinkNoteFromDay(key, id),
+              ),
+            ),
+            if (written.isNotEmpty)
+              ExpansionTile(
+                key: const ValueKey('day-written-notes'),
+                tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+                title: Text(l10n.calendarDayWrittenNotes(written.length)),
+                children: [
+                  for (final n in written.take(30))
+                    ListTile(
+                      dense: true,
+                      leading: const Icon(Icons.sticky_note_2_outlined),
+                      title: Text(
+                        n.displayTitle.trim().isEmpty
+                            ? l10n.untitledNote
+                            : n.displayTitle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onTap: () =>
+                          unawaited(context.pushNote(noteRoutePath(n.id))),
+                    ),
+                ],
+              ),
+            Padding(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
               child: Row(
                 children: [
@@ -856,6 +931,15 @@ class _DaySheet extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: OutlinedButton.icon(
+                key: const ValueKey('day-note'),
+                onPressed: () => unawaited(_dayNote(context, ref)),
+                icon: const Icon(Icons.edit_note),
+                label: Text(l10n.calendarDayNote),
               ),
             ),
           ],

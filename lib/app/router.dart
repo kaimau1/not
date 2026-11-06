@@ -21,6 +21,7 @@ import '../features/notes/presentation/dashboard_screen.dart';
 import '../features/notes/presentation/notes_providers.dart';
 import '../features/notes/presentation/editor/note_editor_screen.dart';
 import '../features/notes/presentation/reminders_screen.dart';
+import '../features/calendar/domain/day_key.dart';
 import '../features/calendar/presentation/calendar_screen.dart';
 import '../features/calendar/presentation/tasks_screen.dart';
 import '../features/notes/presentation/trash_screen.dart';
@@ -235,7 +236,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/calendar',
-            builder: (context, state) => const CalendarScreen(),
+            builder: (context, state) => CalendarScreen(
+              initialDay: parseDayKey(state.uri.queryParameters['day']),
+            ),
           ),
           GoRoute(
             path: '/tasks',

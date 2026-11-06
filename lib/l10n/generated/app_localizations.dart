@@ -13045,6 +13045,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Son eşitleme {time}'**
   String gcalSyncedAt(String time);
+
+  /// No description provided for @calendarLinked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvime bağlandı'**
+  String get calendarLinked;
+
+  /// No description provided for @calendarLinkNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvime bağla'**
+  String get calendarLinkNote;
+
+  /// No description provided for @calendarLinkToDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir güne bağla'**
+  String get calendarLinkToDay;
+
+  /// No description provided for @calendarLinkNewEvent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni etkinlik oluştur ve bağla'**
+  String get calendarLinkNewEvent;
+
+  /// No description provided for @calendarLinkToEvent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir etkinliğe bağla'**
+  String get calendarLinkToEvent;
+
+  /// No description provided for @calendarDayNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu güne not'**
+  String get calendarDayNote;
+
+  /// No description provided for @calendarDayWrittenNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'O gün yazılan notlar ({count})'**
+  String calendarDayWrittenNotes(int count);
 }
 
 class _AppLocalizationsDelegate

@@ -248,9 +248,9 @@ Faz 53'te.
 - [x] F48.4 `eventLinks` (`linkNoteToGoogleEvent`, hesap silme listesinde); levhada "Toplantı notu" (`openMeetingNote`: başlık + zaman/konum/açıklama, bağlanır, açılır) ve "Bağlı notlar" (bağı kaldır). Testler `google_calendar_test` (yalnız GET, artımlı/410, önbellek, gizli takvim). Gerçek Google'a karşı denenmedi → KALANLAR §2 #101.
 
 ### Faz 49 — Not ↔ takvim
-- [ ] F49.1 Günün notu, etkinlikten toplantı notu, not ⋮ "Takvime bağla".
-- [ ] F49.2 Notta bağ hapı; takvimde güne/etkinliğe atlama.
-- [ ] F49.3 Ajandada "o gün yazılan notlar" (isteğe bağlı).
+- [x] F49.1 Gün levhasında "Bu güne not" (başlık `dayNoteTitle` "6 Kasım Cuma"; güne bağlı aynı başlıklı not varsa açar, yoksa oluşturup `dayLinks`e bağlar); etkinlik düzenleyicide "Toplantı notu" + "Bağlı notlar" (yerel ve Google, `openMeetingNote`); not ⋮ (kart + editör, `note_menu_model` Düzenle grubu) → "Takvime bağla" levhası: güne (tarih seçici) / yaklaşan etkinliğe (yerel + Google) / yeni etkinlik (`showEventEditor(linkNoteId, initialTitle)`), mevcut bağlar kaldırılabilir.
+- [x] F49.2 `NoteCalendarPills` başlık/çip satırının altında (bağ yoksa yer kaplamaz; en çok 4): "6 Kas · Toplantı" → `/calendar?day=YYYY-MM-DD` (CalendarScreen `initialDay`). Bağlar not belgesinde değil, ters hesap `calendarLinksForNote` (`noteCalendarLinksProvider`, yalnız açık not).
+- [x] F49.3 Gün levhasında güne bağlı notlar + açılır "O gün yazılan notlar (n)" (`updatedAt` o gün; ajanda listesine girmedi — gün levhası yeterli, kalabalık yapmasın). Testler `note_calendar_links_test`. Cihazda doğrulanmadı → KALANLAR §2 #102.
 
 ### Faz 50 — Görevler (yerel + Google Görevler iki yönlü)
 - [x] F50.1 Görevler ekranı `/tasks` (takvim çubuğunda ✓; rayda Takvim bölümü): liste çipleri + yeni liste / yeniden adlandır / sil, alt görev (tek seviye, girintili), sıralama `compareTasks`, katlanır tamamlananlar + temizle, son tarih + saat, "zamanı gelince hatırlat", tekrar (tamamlayınca ilerler), yıldız. Elle sürükleyerek sıralama AÇIK.
@@ -314,7 +314,7 @@ Faz 53'te.
 | 46 Model | ✅ |
 | 47 Takvim ekranı | ✅ 2026-11-06 (sürükleyerek taşıma ayda; telefonda akıcılık ölçümü KALANLAR §2 #87) — ek: ana ekranda sola kaydırınca takvim, takvim zemini |
 | 48 Google Takvim okuma | ✅ 2026-11-06 (gerçek hesapta denenmedi: F19.B10 + KALANLAR §2 #101) |
-| 49 Not ↔ takvim | — |
+| 49 Not ↔ takvim | ✅ 2026-11-06 (cihazda doğrulanmadı, KALANLAR §2 #102) |
 | 50 Görevler | 🟡 yerel bitti (50.1–50.2); madde→görev (50.3), Google senkronu (50.4) açık |
 | 51 Google'a yazma | — |
 | 52 Akıllı bağlar | — |

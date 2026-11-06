@@ -7325,4 +7325,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String gcalSyncedAt(String time) {
     return 'Last synced $time';
   }
+
+  @override
+  String get calendarLinked => 'Linked to calendar';
+
+  @override
+  String get calendarLinkNote => 'Link to calendar';
+
+  @override
+  String get calendarLinkToDay => 'Link to a day';
+
+  @override
+  String get calendarLinkNewEvent => 'Create an event and link';
+
+  @override
+  String get calendarLinkToEvent => 'Link to an event';
+
+  @override
+  String get calendarDayNote => 'Note for this day';
+
+  @override
+  String calendarDayWrittenNotes(int count) {
+    return 'Notes written that day ($count)';
+  }
 }

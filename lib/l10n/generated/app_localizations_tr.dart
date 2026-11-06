@@ -7305,4 +7305,27 @@ class AppLocalizationsTr extends AppLocalizations {
   String gcalSyncedAt(String time) {
     return 'Son eşitleme $time';
   }
+
+  @override
+  String get calendarLinked => 'Takvime bağlandı';
+
+  @override
+  String get calendarLinkNote => 'Takvime bağla';
+
+  @override
+  String get calendarLinkToDay => 'Bir güne bağla';
+
+  @override
+  String get calendarLinkNewEvent => 'Yeni etkinlik oluştur ve bağla';
+
+  @override
+  String get calendarLinkToEvent => 'Bir etkinliğe bağla';
+
+  @override
+  String get calendarDayNote => 'Bu güne not';
+
+  @override
+  String calendarDayWrittenNotes(int count) {
+    return 'O gün yazılan notlar ($count)';
+  }
 }

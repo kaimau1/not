@@ -75,6 +75,7 @@ import '../../../folders/domain/note_folder.dart';
 import '../../../folders/presentation/folder_sheets.dart';
 import '../../../settings/data/permissions_service.dart';
 import '../../../settings/settings_providers.dart';
+import '../../../calendar/presentation/note_calendar_links.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/device_speech.dart';
 import '../../data/voice_listen_session.dart';
@@ -3001,6 +3002,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           )
         else
           metaChips,
+        // Takvim bağı hapı (TAKVIM F49.2): bağ yoksa yer kaplamaz.
+        Padding(
+          padding: const EdgeInsetsDirectional.symmetric(horizontal: 16),
+          child: NoteCalendarPills(noteId: note.id),
+        ),
         // Görselden üretilmiş belgede açıklama görselindir (F40.7).
         if (bubbleCaptionOwner != null)
           Center(

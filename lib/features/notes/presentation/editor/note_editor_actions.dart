@@ -416,6 +416,8 @@ extension _EditorActions on _NoteEditorScreenState {
         await _openNoteSearch();
       case 'folder':
         await _pickFolder();
+      case 'calendar':
+        await showLinkNoteToCalendarSheet(context, _note ?? note);
       case 'history':
         await _openHistory();
       case 'stats':
