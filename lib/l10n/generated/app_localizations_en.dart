@@ -7253,4 +7253,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarNext => 'Next';
+
+  @override
+  String get themeWhite => 'White';
+
+  @override
+  String get themeStraw => 'Straw';
+
+  @override
+  String get dashboardBackgroundCalendar => 'Calendar background';
+
+  @override
+  String get dashboardBackgroundCalendarInfo =>
+      'This month’s calendar behind your notes; card titles stay clear, the rest turns see-through';
 }

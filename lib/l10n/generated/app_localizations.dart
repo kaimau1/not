@@ -12919,6 +12919,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sonraki'**
   String get calendarNext;
+
+  /// No description provided for @themeWhite.
+  ///
+  /// In tr, this message translates to:
+  /// **'Beyaz'**
+  String get themeWhite;
+
+  /// No description provided for @themeStraw.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saman'**
+  String get themeStraw;
+
+  /// No description provided for @dashboardBackgroundCalendar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim zemini'**
+  String get dashboardBackgroundCalendar;
+
+  /// No description provided for @dashboardBackgroundCalendarInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam'**
+  String get dashboardBackgroundCalendarInfo;
 }
 
 class _AppLocalizationsDelegate

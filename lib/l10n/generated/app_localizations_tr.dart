@@ -7233,4 +7233,17 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get calendarNext => 'Sonraki';
+
+  @override
+  String get themeWhite => 'Beyaz';
+
+  @override
+  String get themeStraw => 'Saman';
+
+  @override
+  String get dashboardBackgroundCalendar => 'Takvim zemini';
+
+  @override
+  String get dashboardBackgroundCalendarInfo =>
+      'Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam';
 }

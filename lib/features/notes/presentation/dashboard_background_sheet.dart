@@ -93,7 +93,22 @@ class _DashboardBackgroundSheet extends ConsumerWidget {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
+            // TAKVİM ZEMİNİ (2026-11-06): ayın takvimi zeminde, kartlarda
+            // başlık net, gerisi saydam. Açıkken renk/desen/görsel gizli.
+            SwitchListTile(
+              key: const ValueKey('dashboard-bg-calendar'),
+              contentPadding: EdgeInsets.zero,
+              secondary: const Icon(Icons.calendar_month_outlined),
+              title: Text(l10n.dashboardBackgroundCalendar),
+              subtitle: Text(l10n.dashboardBackgroundCalendarInfo),
+              value: background.calendar,
+              onChanged: (v) => ref
+                  .read(dashboardBackgroundProvider.notifier)
+                  .setCalendar(v),
+            ),
+            if (!background.calendar) ...[
+            const SizedBox(height: 8),
             // ZEMİN RENGİ. İlk daire "renk yok" (temanın kendi yüzeyi).
             Text(
               l10n.dashboardBackgroundColor,
@@ -225,9 +240,11 @@ class _DashboardBackgroundSheet extends ConsumerWidget {
                 icon: const Icon(Icons.hide_image_outlined),
                 label: Text(l10n.removeBackgroundImage),
               ),
+            ],
             // Üç ayarı birden varsayılana döndürür: tek tek geri almak
             // (renk yok + desen düz + görseli kaldır) üç ayrı adımdı.
             if (hasImage ||
+                background.calendar ||
                 background.color != null ||
                 background.pattern != DashboardPattern.none)
               TextButton.icon(

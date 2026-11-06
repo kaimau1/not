@@ -486,9 +486,15 @@ extension _EditorMediaView on _NoteEditorScreenState {
   }) async {
     final note = _note;
     if (note == null || _readOnly) return;
-    final from = _viewOf(note, a);
+    // KÖK NEDEN (kullanıcı bulgusu 2026-11-06: "sabitten yüzene geçişte
+    // altta çıkan Geri al'a dokununca geri almıyor"): Geri al, geçişten
+    // ÖNCEKİ ek kopyasıyla çağrılıyordu; o kopya hâlâ "sabit" göründüğü
+    // için `from == view` sanılıp hiçbir şey yapılmıyordu. Ekin GÜNCEL hâli
+    // nottan id ile alınır.
+    final cur = note.attachments.where((x) => x.id == a.id).firstOrNull ?? a;
+    final from = _viewOf(note, cur);
     if (from == view) return;
-    await _applyAttachmentView(note, a, view);
+    await _applyAttachmentView(note, cur, view);
     if (!announce || !mounted) return;
     final l10n = context.l10n;
     final fromLabel = AttachmentViewSwitch.labelOf(context, from);
@@ -501,7 +507,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
           action: SnackBarAction(
             label: l10n.undo,
             onPressed: () => unawaited(
-              _setAttachmentView(a, from, announce: false),
+              _setAttachmentView(cur, from, announce: false),
             ),
           ),
         ),

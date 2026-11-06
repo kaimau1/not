@@ -294,14 +294,25 @@ class _ThemeSelector extends ConsumerWidget {
         l10n.themeOlive,
         [of(ThemeFamily.olive, Brightness.light)],
       ),
+      (
+        AppThemeChoice.white,
+        l10n.themeWhite,
+        [of(ThemeFamily.white, Brightness.light)],
+      ),
+      (
+        AppThemeChoice.straw,
+        l10n.themeStraw,
+        [of(ThemeFamily.straw, Brightness.light)],
+      ),
       (AppThemeChoice.dark, l10n.themeDark, [dark]),
     ];
-    // Yedi seçenek telefon genişliğinde tek sıraya sığmaz (adlar düşerdi):
-    // dar ekranda iki sıra (4 + 3), genişte tek sıra.
+    // Dokuz seçenek telefon genişliğinde tek sıraya sığmaz (adlar düşerdi):
+    // dar ekranda üç sıra (3 × 3), ortada iki sıra (5 + 4), genişte tek sıra.
     return LayoutBuilder(
       builder: (context, constraints) {
         const gap = 8.0;
-        final perRow = constraints.maxWidth < 560 ? 4 : options.length;
+        final w = constraints.maxWidth;
+        final perRow = w < 440 ? 3 : (w < 760 ? 5 : options.length);
         final width =
             (constraints.maxWidth - gap * (perRow - 1)) / perRow;
         return Wrap(

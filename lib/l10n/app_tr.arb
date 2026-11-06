@@ -3452,5 +3452,9 @@
   "calendarView": "Görünüm",
   "calendarPinchHint": "İki parmakla yıl, ay ve hafta arasında geçebilirsin",
   "calendarPrevious": "Önceki",
-  "calendarNext": "Sonraki"
+  "calendarNext": "Sonraki",
+  "themeWhite": "Beyaz",
+  "themeStraw": "Saman",
+  "dashboardBackgroundCalendar": "Takvim zemini",
+  "dashboardBackgroundCalendarInfo": "Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam"
 }
