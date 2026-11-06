@@ -130,6 +130,8 @@ void main() {
           'takvim-${size.width < 600 ? 'telefon' : 'tablet'}-$view'
           '${dark ? '-koyu' : ''}';
       testWidgets(name, (tester) async {
+        // Araç bir TEST dosyası (flutter test ile koşar) ama test/ dışında.
+        // ignore: invalid_use_of_visible_for_testing_member
         SharedPreferences.setMockInitialValues({
           'calendar_view': view,
           'calendar_pinch_hint_v1': true,
