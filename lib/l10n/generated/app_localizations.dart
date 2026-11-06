@@ -5519,7 +5519,7 @@ abstract class AppLocalizations {
   /// No description provided for @friendsSearchTooShort.
   ///
   /// In tr, this message translates to:
-  /// **'Aramak için en az 2 karakter yaz'**
+  /// **'Aramak için en az 3 harf ya da tam bir e-posta yaz'**
   String get friendsSearchTooShort;
 
   /// No description provided for @friendsSearchAdd.
@@ -13399,6 +13399,210 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{api} izni verilmedi. Bağlanırken izin kutusunu işaretleyin.'**
   String googleScopeMissing(String api);
+
+  /// No description provided for @gmailRefresh.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yenile'**
+  String get gmailRefresh;
+
+  /// No description provided for @gmailNoResults.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aramaya uyan e-posta yok'**
+  String get gmailNoResults;
+
+  /// No description provided for @gmailFilterInbox.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelen kutusu'**
+  String get gmailFilterInbox;
+
+  /// No description provided for @gmailFilterUnread.
+  ///
+  /// In tr, this message translates to:
+  /// **'Okunmamış'**
+  String get gmailFilterUnread;
+
+  /// No description provided for @gmailFilterStarred.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıldızlı'**
+  String get gmailFilterStarred;
+
+  /// No description provided for @gmailFilterAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekli'**
+  String get gmailFilterAttachments;
+
+  /// No description provided for @gmailFilterToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün'**
+  String get gmailFilterToday;
+
+  /// No description provided for @gmailDayToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün'**
+  String get gmailDayToday;
+
+  /// No description provided for @gmailDayYesterday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dün'**
+  String get gmailDayYesterday;
+
+  /// No description provided for @gmailDayThisWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu hafta'**
+  String get gmailDayThisWeek;
+
+  /// No description provided for @gmailDayOlder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha eski'**
+  String get gmailDayOlder;
+
+  /// No description provided for @gmailNoSubject.
+  ///
+  /// In tr, this message translates to:
+  /// **'(konu yok)'**
+  String get gmailNoSubject;
+
+  /// No description provided for @gmailConnectTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-postalarını nota çevir'**
+  String get gmailConnectTitle;
+
+  /// No description provided for @gmailConnectPointRead.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelen kutunu gör, Gmail arama sözdizimiyle ara.'**
+  String get gmailConnectPointRead;
+
+  /// No description provided for @gmailConnectPointNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir e-postayı tek dokunuşla not, yapay zekâ özeti ya da görev listesi yap.'**
+  String get gmailConnectPointNote;
+
+  /// No description provided for @gmailOpenInGmail.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gmail\'de aç'**
+  String get gmailOpenInGmail;
+
+  /// No description provided for @friendsEmptyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz kişi yok'**
+  String get friendsEmptyTitle;
+
+  /// No description provided for @friendsFilterHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişilerde ara'**
+  String get friendsFilterHint;
+
+  /// No description provided for @friendsNoName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ad yok'**
+  String get friendsNoName;
+
+  /// No description provided for @friendsSharedFolders.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşılan klasörler'**
+  String get friendsSharedFolders;
+
+  /// No description provided for @friendsNoSharedFolders.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu kişiyle henüz klasör paylaşmadın.'**
+  String get friendsNoSharedFolders;
+
+  /// No description provided for @friendsSince.
+  ///
+  /// In tr, this message translates to:
+  /// **'{date} tarihinden beri kişilerinde'**
+  String friendsSince(String date);
+
+  /// No description provided for @friendsCopyEmail.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-postayı kopyala'**
+  String get friendsCopyEmail;
+
+  /// No description provided for @friendsEmailCopied.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta kopyalandı'**
+  String get friendsEmailCopied;
+
+  /// No description provided for @friendsWantsToConnect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seni kişilerine eklemek istiyor'**
+  String get friendsWantsToConnect;
+
+  /// No description provided for @friendsSendToEmail.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu adrese istek gönder'**
+  String get friendsSendToEmail;
+
+  /// No description provided for @friendsSent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gönderildi'**
+  String get friendsSent;
+
+  /// No description provided for @friendsAlreadyShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişilerinde'**
+  String get friendsAlreadyShort;
+
+  /// No description provided for @settingsGroupAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap'**
+  String get settingsGroupAccount;
+
+  /// No description provided for @settingsGroupApp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama'**
+  String get settingsGroupApp;
+
+  /// No description provided for @settingsGroupData.
+  ///
+  /// In tr, this message translates to:
+  /// **'Veri ve gizlilik'**
+  String get settingsGroupData;
+
+  /// No description provided for @settingsGroupOther.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer'**
+  String get settingsGroupOther;
+
+  /// No description provided for @friendsCountSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =0{Henüz kişi yok} other{{count} kişi}}'**
+  String friendsCountSummary(int count);
+
+  /// No description provided for @friendsRequestsSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} istek bekliyor'**
+  String friendsRequestsSummary(int count);
 }
 
 class _AppLocalizationsDelegate

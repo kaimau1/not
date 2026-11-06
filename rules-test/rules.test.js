@@ -121,6 +121,20 @@ test("kullanıcı dizini taranamaz, yalnız kendi kaydı yazılır (F1.1)", asyn
   );
 });
 
+test("klasör aynası: sahip siler, var olmayanı da (klasör silme, 2026-11-06)", async () => {
+  await seed(async (db) => {
+    await setDoc(doc(db, "users/a/folders/f1"), { name: "İş" });
+    await setDoc(doc(db, "folderShares/f1"), {
+      ownerId: "a", name: "İş", icon: "folder", sharedWith: ["b"], pending: [], roles: {},
+    });
+  });
+  await assertFails(deleteDoc(doc(as("b"), "folderShares/f1")));
+  await assertSucceeds(deleteDoc(doc(as("a"), "folderShares/f1")));
+  // Hiç paylaşılmamış klasörün aynası yok: silme yine geçer.
+  await assertSucceeds(deleteDoc(doc(as("a"), "folderShares/f2")));
+  await assertSucceeds(deleteDoc(doc(as("a"), "users/a/folders/f1")));
+});
+
 test("config okunur, yazılamaz; rateLimits kapalı", async () => {
   await assertSucceeds(getDoc(doc(anon(), "config/app")));
   await assertFails(setDoc(doc(as("a"), "config/app"), { minClient: 1 }));

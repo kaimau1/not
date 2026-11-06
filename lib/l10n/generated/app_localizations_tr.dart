@@ -2982,7 +2982,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get friendsSearchEmpty => 'Sonuç yok';
 
   @override
-  String get friendsSearchTooShort => 'Aramak için en az 2 karakter yaz';
+  String get friendsSearchTooShort =>
+      'Aramak için en az 3 harf ya da tam bir e-posta yaz';
 
   @override
   String get friendsSearchAdd => 'Ekle';
@@ -7504,5 +7505,121 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String googleScopeMissing(String api) {
     return '$api izni verilmedi. Bağlanırken izin kutusunu işaretleyin.';
+  }
+
+  @override
+  String get gmailRefresh => 'Yenile';
+
+  @override
+  String get gmailNoResults => 'Aramaya uyan e-posta yok';
+
+  @override
+  String get gmailFilterInbox => 'Gelen kutusu';
+
+  @override
+  String get gmailFilterUnread => 'Okunmamış';
+
+  @override
+  String get gmailFilterStarred => 'Yıldızlı';
+
+  @override
+  String get gmailFilterAttachments => 'Ekli';
+
+  @override
+  String get gmailFilterToday => 'Bugün';
+
+  @override
+  String get gmailDayToday => 'Bugün';
+
+  @override
+  String get gmailDayYesterday => 'Dün';
+
+  @override
+  String get gmailDayThisWeek => 'Bu hafta';
+
+  @override
+  String get gmailDayOlder => 'Daha eski';
+
+  @override
+  String get gmailNoSubject => '(konu yok)';
+
+  @override
+  String get gmailConnectTitle => 'E-postalarını nota çevir';
+
+  @override
+  String get gmailConnectPointRead =>
+      'Gelen kutunu gör, Gmail arama sözdizimiyle ara.';
+
+  @override
+  String get gmailConnectPointNote =>
+      'Bir e-postayı tek dokunuşla not, yapay zekâ özeti ya da görev listesi yap.';
+
+  @override
+  String get gmailOpenInGmail => 'Gmail\'de aç';
+
+  @override
+  String get friendsEmptyTitle => 'Henüz kişi yok';
+
+  @override
+  String get friendsFilterHint => 'Kişilerde ara';
+
+  @override
+  String get friendsNoName => 'Ad yok';
+
+  @override
+  String get friendsSharedFolders => 'Paylaşılan klasörler';
+
+  @override
+  String get friendsNoSharedFolders => 'Bu kişiyle henüz klasör paylaşmadın.';
+
+  @override
+  String friendsSince(String date) {
+    return '$date tarihinden beri kişilerinde';
+  }
+
+  @override
+  String get friendsCopyEmail => 'E-postayı kopyala';
+
+  @override
+  String get friendsEmailCopied => 'E-posta kopyalandı';
+
+  @override
+  String get friendsWantsToConnect => 'Seni kişilerine eklemek istiyor';
+
+  @override
+  String get friendsSendToEmail => 'Bu adrese istek gönder';
+
+  @override
+  String get friendsSent => 'Gönderildi';
+
+  @override
+  String get friendsAlreadyShort => 'Kişilerinde';
+
+  @override
+  String get settingsGroupAccount => 'Hesap';
+
+  @override
+  String get settingsGroupApp => 'Uygulama';
+
+  @override
+  String get settingsGroupData => 'Veri ve gizlilik';
+
+  @override
+  String get settingsGroupOther => 'Diğer';
+
+  @override
+  String friendsCountSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count kişi',
+      zero: 'Henüz kişi yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String friendsRequestsSummary(int count) {
+    return '$count istek bekliyor';
   }
 }

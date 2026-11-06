@@ -10,9 +10,9 @@ import 'package:firebase_auth/firebase_auth.dart'
     show AuthCredential, FirebaseAuth, FirebaseAuthException;
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
+
 import '../../../core/widgets/sheet_header.dart';
-import 'package:flutter/rendering.dart' show RenderAbstractViewport;
-import 'package:flutter/scheduler.dart' show SchedulerBinding;
+
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -174,7 +174,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         id: 'account',
         icon: Icons.manage_accounts_outlined,
         title: l10n.account,
-        summary: '',
+        summary: _accountSummary(l10n),
         keywords: 'cikis hesap sil e-posta',
         rows: [
           _SettingRow(
@@ -201,7 +201,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         id: 'friends',
         icon: AppIcons.friends,
         title: l10n.friendsTitle,
-        summary: '',
+        summary: _friendsSummary(l10n),
         keywords: 'arkadas kisi paylas klasor ortak gelen not',
         rows: [
           _SettingRow(
@@ -344,7 +344,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _SettingRow(
             const _ItemGesturesFingerSwitch(),
             title: l10n.itemGesturesFingerAll,
-            keywords: '${l10n.itemGesturesFingerAllInfo} jest parmak karala daire',
+            keywords:
+                '${l10n.itemGesturesFingerAllInfo} jest parmak karala daire',
           ),
           // KARTTA GÖRÜNENLER TEK SATIR (F14.2, 2026-10-31): 11 anahtar
           // alt alta Görünüm'ü okunmaz yapıyordu ve sonucu ancak ana ekranda
@@ -644,127 +645,271 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           (area: a, rows: a.visibleRows(query)),
     ]..removeWhere((e) => e.rows.isEmpty);
     final searching = query.isNotEmpty || aiKeys != null;
+    final byId = {for (final a in areas) a.id: a};
+    final wide = MediaQuery.sizeOf(context).width >= _kSettingsWide;
+    // Geniş ekranda sağ bölme hiç boş kalmasın: ilk alan seçili gelir.
+    final openId = byId.containsKey(_open)
+        ? _open
+        : (wide ? areas.first.id : '');
+    final openArea = byId[openId];
+    // Dar ekranda alan sayfası açıkken çubuk o alanın adını taşır, arama
+    // kutusu gizlenir (sayfa içinde arama yok — kökteki arama her yere bakar).
+    final inArea = !wide && openArea != null && !searching;
 
-    return Scaffold(
-      appBar: HomeInBar(appBar: AppBar(
-        title: Text(l10n.settings),
-        // AYAR ARA EN ÜSTTE, SABİT (kullanıcı isteği 2026-10-20: "ayar ara
-        // üstte olmalı"): profil ve kısayol kartlarının altında kalıyordu;
-        // aşağı kaydırınca da kayboluyordu.
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(_aiBusy ? 58 : 54),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 612),
-                child: _searchBar(context),
+    void openAreaId(String id) {
+      FocusScope.of(context).unfocus();
+      setState(() => _open = id);
+    }
+
+    final groups = _settingsGroups(l10n, byId);
+
+    Widget root() => ListView(
+      key: const PageStorageKey('settings-root'),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        12,
+        16,
+        16 + MediaQuery.paddingOf(context).bottom + 48,
+      ),
+      children: [
+        if (searching)
+          ..._searchResults(context, visible, aiKeys != null, openAreaId)
+        else ...[
+          const _ProfileCard(),
+          const SizedBox(height: 12),
+          // KISAYOLLAR: Kılavuz (ayar arayan çoğu zaman bir özelliğin nasıl
+          // kullanıldığını arıyor) ve Kişiselleştir yan yana.
+          _ShortcutTiles(
+            tiles: [
+              _ShortcutTile(
+                key: const ValueKey('settings-guide'),
+                icon: AppIcons.guide,
+                title: l10n.guideTitle,
+                subtitle: l10n.guideMenuInfo,
+                color: scheme.secondary,
+                onTap: () => context.push('/guide'),
               ),
-            ),
+              _ShortcutTile(
+                key: const ValueKey('settings-personalize'),
+                icon: Icons.tune_rounded,
+                title: l10n.personalizeTitle,
+                subtitle: l10n.personalizeInfo,
+                color: scheme.primary,
+                onTap: () async {
+                  final result = await context.push<String>('/personalize');
+                  // Kişiselleştir'den düzenleme modu başlatıldıysa ayarlar
+                  // da kapanır: kullanıcı düzenleyeceği ekrana iner.
+                  if (result == 'edit' && context.mounted) context.pop();
+                },
+              ),
+            ],
           ),
-        ),
-      )),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 640),
-          child: ListView(
-            padding: EdgeInsets.fromLTRB(
-              14,
-              12,
-              14,
-              16 + MediaQuery.paddingOf(context).bottom + 48,
+          for (final g in groups) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
+              child: SectionLabel(g.title),
             ),
-            children: [
-              const _ProfileCard(),
-              const SizedBox(height: 8),
-              // KISAYOL KARTLARI (kullanıcı isteği 2026-10-16: "ayarların
-              // toparlanması, görsel ve özellik olarak geliştirilmesi"):
-              // KULLANIM KILAVUZU (ayar arayan çoğu zaman bir özelliğin
-              // nasıl kullanıldığını arıyor), KİŞİSELLEŞTİR (hangi alan ve
-              // düğme görünsün — eklentiler) ve DÜZENLEME MODU (ekranların
-              // kendisinde gizle/göster) en üstte, yan yana.
-              _ShortcutTiles(
-                tiles: [
-                  _ShortcutTile(
-                    key: const ValueKey('settings-guide'),
-                    icon: AppIcons.guide,
-                    title: l10n.guideTitle,
-                    subtitle: l10n.guideMenuInfo,
-                    color: scheme.secondary,
-                    onTap: () => context.push('/guide'),
-                  ),
-                  _ShortcutTile(
-                    key: const ValueKey('settings-personalize'),
-                    icon: Icons.tune_rounded,
-                    title: l10n.personalizeTitle,
-                    subtitle: l10n.personalizeInfo,
-                    color: scheme.primary,
-                    onTap: () async {
-                      final result = await context.push<String>('/personalize');
-                      // Kişiselleştir'den düzenleme modu başlatıldıysa
-                      // ayarlar da kapanır: kullanıcı düzenleyeceği ekrana
-                      // iner.
-                      if (result == 'edit' && context.mounted) context.pop();
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (aiKeys != null && visible.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-                  child: Row(
-                    children: [
-                      Icon(Icons.auto_awesome, size: 16, color: scheme.primary),
-                      const SizedBox(width: 6),
-                      Text(
-                        l10n.settingsAiSearchFound,
-                        style: Theme.of(context).textTheme.labelLarge
-                            ?.copyWith(color: scheme.primary),
-                      ),
-                    ],
-                  ),
-                ),
-              if (visible.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.search_off,
-                        size: 42,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        aiKeys != null
-                            ? l10n.settingsAiSearchEmpty
-                            : l10n.settingsSearchEmpty(_query.trim()),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                )
-              else
-                for (final entry in visible)
-                  _SettingsArea(
-                    area: entry.area,
-                    // Arama sirasinda yalnizca ESLESEN satirlar cizilir;
-                    // "hiz" arayan kullanici Ses alaninin tamamini degil iki
-                    // hiz kaydiricisini gorur.
-                    rows: entry.rows,
-                    // Arama sirasinda eslesen alanlar acik gelir: kullanici
-                    // buldugu seyi bir de elle acmak zorunda kalmasin.
-                    open: searching || _open == entry.area.id,
-                    onTap: () => setState(
-                      () => _open = _open == entry.area.id ? '' : entry.area.id,
+            _CategoryGroup(
+              areas: g.areas,
+              selectedId: wide ? openId : null,
+              onTap: openAreaId,
+            ),
+          ],
+          const _VersionFooter(),
+        ],
+      ],
+    );
+
+    Widget areaPage(_Area a) => _AreaPage(
+      key: ValueKey('settings-area-${a.id}'),
+      area: a,
+      rows: [for (final r in a.rows) r.child],
+      showHeader: wide,
+    );
+
+    final Widget body;
+    if (wide) {
+      body = Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(width: 380, child: root()),
+          VerticalDivider(width: 1, color: scheme.outlineVariant),
+          Expanded(
+            child: searching || openArea == null
+                ? const SizedBox.shrink()
+                : Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 720),
+                      child: areaPage(openArea),
                     ),
                   ),
+          ),
+        ],
+      );
+    } else {
+      body = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: AnimatedSwitcher(
+            duration: AppMotion.of(context, const Duration(milliseconds: 200)),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, anim) => FadeTransition(
+              opacity: anim,
+              child: SlideTransition(
+                position: Tween(
+                  begin: Offset(
+                    child.key == const ValueKey('root') ? -0.06 : 0.06,
+                    0,
+                  ),
+                  end: Offset.zero,
+                ).animate(anim),
+                child: child,
+              ),
+            ),
+            child: inArea
+                ? KeyedSubtree(
+                    key: ValueKey(openArea.id),
+                    child: areaPage(openArea),
+                  )
+                : KeyedSubtree(key: const ValueKey('root'), child: root()),
+          ),
+        ),
+      );
+    }
+
+    return PopScope(
+      // Dar ekranda alan sayfasından geri → ayarların köküne (ekrandan değil).
+      canPop: !inArea,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && inArea) setState(() => _open = '');
+      },
+      child: Scaffold(
+        appBar: HomeInBar(
+          appBar: AppBar(
+            leading: inArea
+                ? BackButton(
+                    key: const ValueKey('settings-area-back'),
+                    onPressed: () => setState(() => _open = ''),
+                  )
+                : null,
+            title: Text(inArea ? openArea.title : l10n.settings),
+            // AYAR ARA EN ÜSTTE, SABİT (kullanıcı isteği 2026-10-20).
+            bottom: inArea
+                ? null
+                : PreferredSize(
+                    preferredSize: Size.fromHeight(_aiBusy ? 58 : 54),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 612),
+                          child: _searchBar(context),
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
+        ),
+        body: body,
+      ),
+    );
+  }
+
+  /// Arama sonuçları: her eşleşen alan bir başlık (dokun → alan sayfası) ve
+  /// altında YALNIZ eşleşen satırlar.
+  List<Widget> _searchResults(
+    BuildContext context,
+    List<({_Area area, List<Widget> rows})> visible,
+    bool ai,
+    ValueChanged<String> onOpen,
+  ) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    if (visible.isEmpty) {
+      return [
+        Padding(
+          key: const ValueKey('settings-search-empty'),
+          padding: const EdgeInsets.symmetric(vertical: 40),
+          child: Column(
+            children: [
+              Icon(Icons.search_off, size: 42, color: scheme.onSurfaceVariant),
+              const SizedBox(height: 12),
+              Text(
+                ai
+                    ? l10n.settingsAiSearchEmpty
+                    : l10n.settingsSearchEmpty(_query.trim()),
+                textAlign: TextAlign.center,
+              ),
             ],
           ),
         ),
+      ];
+    }
+    return [
+      if (ai)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+          child: Row(
+            children: [
+              Icon(Icons.auto_awesome, size: 16, color: scheme.primary),
+              const SizedBox(width: 6),
+              Text(
+                l10n.settingsAiSearchFound,
+                style: Theme.of(context).textTheme.labelLarge
+                    ?.copyWith(color: scheme.primary),
+              ),
+            ],
+          ),
+        ),
+      for (final e in visible) ...[
+        _CategoryTile(
+          area: e.area,
+          compact: true,
+          onTap: () {
+            _searchController.clear();
+            setState(() {
+              _query = '';
+              _aiKeys = null;
+            });
+            onOpen(e.area.id);
+          },
+        ),
+        _RowsCard(rows: e.rows),
+        const SizedBox(height: 12),
+      ],
+    ];
+  }
+
+  /// Kök sayfadaki gruplar: Hesap · Uygulama · Veri ve gizlilik.
+  List<({String title, List<_Area> areas})> _settingsGroups(
+    AppLocalizations l10n,
+    Map<String, _Area> byId,
+  ) {
+    List<_Area> pick(List<String> ids) => [
+      for (final id in ids)
+        if (byId[id] != null) byId[id]!,
+    ];
+    final groups = [
+      (title: l10n.settingsGroupAccount, areas: pick(['account', 'friends'])),
+      (
+        title: l10n.settingsGroupApp,
+        areas: pick(['appearance', 'personalize', 'notes', 'sound', 'ai']),
       ),
-    );
+      (title: l10n.settingsGroupData, areas: pick(['sync', 'permissions'])),
+    ];
+    // Gruplara girmeyen yeni bir alan kaybolmasın: son gruba eklenir.
+    final listed = {for (final g in groups) ...g.areas.map((a) => a.id)};
+    final rest = [
+      for (final a in byId.values)
+        if (!listed.contains(a.id)) a,
+    ];
+    return [
+      for (final g in groups)
+        if (g.areas.isNotEmpty) g,
+      if (rest.isNotEmpty) (title: l10n.settingsGroupOther, areas: rest),
+    ];
   }
 
   /// Tepedeki sabit arama kutusu: metin araması ya da (✨ açıkken) AI kipi.
@@ -900,14 +1045,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (!mounted) return;
       setState(() => _aiKeys = {for (final i in hits) keys[i]});
     } on GeminiException catch (e) {
-      messenger.showMessage(
-        aiErrorText(l10n, e),
-      );
+      messenger.showMessage(aiErrorText(l10n, e));
     } catch (e) {
       messenger.showMessage(aiErrorText(l10n, e));
     } finally {
       if (mounted) setState(() => _aiBusy = false);
     }
+  }
+
+  /// Hesap özeti: e-posta ya da "Yerel hesap".
+  String _accountSummary(AppLocalizations l10n) {
+    if (ref.watch(isAnonymousProvider)) return l10n.localAccountBadge;
+    return ref.watch(authStateProvider).value?.email ?? '';
+  }
+
+  /// Kişiler özeti: kişi sayısı ve bekleyen istek.
+  String _friendsSummary(AppLocalizations l10n) {
+    if (ref.watch(isAnonymousProvider)) return '';
+    final n = ref.watch(friendsStreamProvider).value?.length ?? 0;
+    final r = ref.watch(incomingFriendRequestsProvider).value?.length ?? 0;
+    return [
+      l10n.friendsCountSummary(n),
+      if (r > 0) l10n.friendsRequestsSummary(r),
+    ].join(' · ');
   }
 
   /// Kaç eklenti açık ("8/9 açık"); kısmen açık eklenti açık sayılmaz.
@@ -977,4 +1137,3 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return '${l10n.listen}: $engine · ${l10n.liveDictation}: $mode';
   }
 }
-

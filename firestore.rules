@@ -346,8 +346,11 @@ service cloud.firestore {
       // (kabul); rolünü kendisi seçemez, sahibin verdiği rol neyse odur.
       allow update: if request.auth != null
         && answersOwnInvite(request.auth.uid);
+      // Var OLMAYAN aynanın silinmesi (hiç paylaşılmamış klasör silinirken)
+      // de serbest: `resource` null'ken `resource.data` hata verip silmeyi
+      // reddediyordu ("bazı klasörler silinmiyor", 2026-11-06).
       allow delete: if request.auth != null
-        && request.auth.uid == resource.data.ownerId;
+        && (resource == null || request.auth.uid == resource.data.ownerId);
     }
 
     // **ORTAK NOT AYNASI** — `noteShares/{sahip}_{notId}`. Klasör aynasının

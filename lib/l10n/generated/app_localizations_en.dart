@@ -2989,7 +2989,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get friendsSearchEmpty => 'No results';
 
   @override
-  String get friendsSearchTooShort => 'Type at least 2 characters to search';
+  String get friendsSearchTooShort =>
+      'Type at least 3 letters or a full email to search';
 
   @override
   String get friendsSearchAdd => 'Add';
@@ -7524,5 +7525,123 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String googleScopeMissing(String api) {
     return '$api permission wasn\'t granted. Tick the permission box when connecting.';
+  }
+
+  @override
+  String get gmailRefresh => 'Refresh';
+
+  @override
+  String get gmailNoResults => 'No emails match your search';
+
+  @override
+  String get gmailFilterInbox => 'Inbox';
+
+  @override
+  String get gmailFilterUnread => 'Unread';
+
+  @override
+  String get gmailFilterStarred => 'Starred';
+
+  @override
+  String get gmailFilterAttachments => 'With attachments';
+
+  @override
+  String get gmailFilterToday => 'Today';
+
+  @override
+  String get gmailDayToday => 'Today';
+
+  @override
+  String get gmailDayYesterday => 'Yesterday';
+
+  @override
+  String get gmailDayThisWeek => 'This week';
+
+  @override
+  String get gmailDayOlder => 'Older';
+
+  @override
+  String get gmailNoSubject => '(no subject)';
+
+  @override
+  String get gmailConnectTitle => 'Turn your emails into notes';
+
+  @override
+  String get gmailConnectPointRead =>
+      'See your inbox and search with Gmail search syntax.';
+
+  @override
+  String get gmailConnectPointNote =>
+      'Turn an email into a note, an AI summary or a task list in one tap.';
+
+  @override
+  String get gmailOpenInGmail => 'Open in Gmail';
+
+  @override
+  String get friendsEmptyTitle => 'No contacts yet';
+
+  @override
+  String get friendsFilterHint => 'Search contacts';
+
+  @override
+  String get friendsNoName => 'No name';
+
+  @override
+  String get friendsSharedFolders => 'Shared folders';
+
+  @override
+  String get friendsNoSharedFolders =>
+      'You haven\'t shared a folder with this person yet.';
+
+  @override
+  String friendsSince(String date) {
+    return 'In your contacts since $date';
+  }
+
+  @override
+  String get friendsCopyEmail => 'Copy email';
+
+  @override
+  String get friendsEmailCopied => 'Email copied';
+
+  @override
+  String get friendsWantsToConnect => 'Wants to add you as a contact';
+
+  @override
+  String get friendsSendToEmail => 'Send a request to this address';
+
+  @override
+  String get friendsSent => 'Sent';
+
+  @override
+  String get friendsAlreadyShort => 'In contacts';
+
+  @override
+  String get settingsGroupAccount => 'Account';
+
+  @override
+  String get settingsGroupApp => 'App';
+
+  @override
+  String get settingsGroupData => 'Data and privacy';
+
+  @override
+  String get settingsGroupOther => 'Other';
+
+  @override
+  String friendsCountSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count contacts',
+      one: '1 contact',
+      zero: 'No contacts yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String friendsRequestsSummary(int count) {
+    return '$count pending';
   }
 }

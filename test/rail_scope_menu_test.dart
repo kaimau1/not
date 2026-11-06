@@ -180,7 +180,12 @@ void main() {
     expect(kHomeInBarLocations.toSet(), screens.keys.toSet());
     for (final path in screens.values.toSet()) {
       final source = File('lib/features/$path').readAsStringSync();
-      expect(source.contains('HomeInBar(appBar:'), isTrue, reason: path);
+      // Biçimlendirici `appBar:`ı alt satıra alabilir.
+      expect(
+        RegExp(r'HomeInBar\(\s*appBar:').hasMatch(source),
+        isTrue,
+        reason: path,
+      );
     }
   });
 
