@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -32,9 +32,6 @@ class FolderStop {
 /// sıraya geçmek zor, tek sıraya sığsın"): bütün duraklar aynı halkada; çok
 /// klasör olunca halka büyür, dilim incelir — seçim yalnız YÖNLE.
 List<int> radialRings(int count) => count <= 0 ? const [] : [count];
-
-/// Basılı tutma süresi — varsayılan 500 ms "çok geç" bulundu (2026-11-06).
-const kFolderHoldDelay = Duration(milliseconds: 220);
 
 /// Tek halkanın yarıçapı (dp): duraklar yan yana sığsın diye sayıyla büyür.
 double radialRadius(int count) => math.max(104, count * 76 / (2 * math.pi));
@@ -78,17 +75,10 @@ int? radialFolderIndex(
   return offset + slot;
 }
 
-/// **KLASÖR DÜĞMESİ** (kullanıcı isteği 2026-11-06, ikinci tur: "tutunca
-/// yuvarlak bir menü açsın ekranın ortasında; tutarken ufak hareketlerle
-/// klasörler arası geçiş olmalı, bırakınca hangi klasör üzerindeyse ona
-/// geçiş").
-///
-/// Dokun → [onOpen] (Klasörler ekranı). Basılı tut → ekranın ortasında
-/// klasörler halka hâlinde açılır (simgesi, rengi, not sayısı); parmağı
-/// hangi YÖNE biraz kaydırırsan o klasör seçilir (her değişimde hafif
-/// titreşim), daha uzağa kaydırmak dış halkaya geçer. Bırakınca [onSelect]
-/// o klasörü açar; ortada bırakmak vazgeçer. Üstteki klasör şeridi ve
-/// yatay kaydırma ayrıca çalışmaya devam eder.
+/// **KLASÖR DÜĞMESİ** (kullanıcı isteği 2026-11-06, 4. tur): DOKUN → ekranın
+/// ortasında klasörler tek halkada açılır (simge, renk, not sayısı); bir
+/// klasöre dokun → [onSelect]; ortadaki "Klasörler" dairesi → [onOpen];
+/// boşluk / geri → vazgeç. Basılı tutup sürükleme kaldırıldı.
 class FolderHoldButton extends StatefulWidget {
   const FolderHoldButton({
     super.key,
@@ -109,55 +99,41 @@ class FolderHoldButton extends StatefulWidget {
 }
 
 class _FolderHoldButtonState extends State<FolderHoldButton> {
-  OverlayEntry? _entry;
-  final _selected = ValueNotifier<int?>(null);
-
-  @override
-  void dispose() {
-    _close();
-    _selected.dispose();
-    super.dispose();
-  }
-
-  void _close() {
-    _entry?.remove();
-    _entry = null;
-  }
-
-  void _begin(LongPressStartDetails _) {
-    HapticFeedback.mediumImpact();
-    _selected.value = null;
-    final overlay = Overlay.of(context);
-    _entry = OverlayEntry(
-      builder: (_) => _RadialFolderMenu(
-        stops: widget.stops,
-        currentId: widget.currentId,
-        selected: _selected,
+  /// DOKUN → HALKA (kullanıcı isteği 2026-11-06, dördüncü tur: "basılı
+  /// tutarak değil basılınca açılsın ve tıklansın; basılı tutup sürükleme
+  /// kaldırılsın"). Halkada klasöre dokun = o klasör; ortadaki daire =
+  /// Klasörler ekranı; boşluğa dokun / geri = vazgeç.
+  Future<void> _openMenu() async {
+    if (widget.stops.length <= 1) {
+      widget.onOpen();
+      return;
+    }
+    unawaited(HapticFeedback.selectionClick());
+    final picked = await showGeneralDialog<int>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: context.l10n.close,
+      barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.42),
+      transitionDuration: const Duration(milliseconds: 160),
+      pageBuilder: (_, _, _) =>
+          _RadialFolderMenu(stops: widget.stops, currentId: widget.currentId),
+      transitionBuilder: (_, anim, _, child) => FadeTransition(
+        opacity: anim,
+        child: ScaleTransition(
+          scale: CurvedAnimation(
+            parent: anim,
+            curve: Curves.easeOutBack,
+          ).drive(Tween(begin: 0.85, end: 1)),
+          child: child,
+        ),
       ),
     );
-    overlay.insert(_entry!);
-  }
-
-  void _move(LongPressMoveUpdateDetails d) {
-    final next = radialFolderIndex(d.offsetFromOrigin, widget.stops.length);
-    if (next != _selected.value) {
-      if (next != null) HapticFeedback.selectionClick();
-      _selected.value = next;
+    if (!mounted || picked == null) return;
+    if (picked < 0) {
+      widget.onOpen();
+    } else if (widget.stops[picked].id != widget.currentId) {
+      widget.onSelect(widget.stops[picked].id);
     }
-  }
-
-  void _end(LongPressEndDetails _) {
-    final i = _selected.value;
-    _selected.value = null;
-    _close();
-    if (i != null && widget.stops[i].id != widget.currentId) {
-      widget.onSelect(widget.stops[i].id);
-    }
-  }
-
-  void _cancel() {
-    _selected.value = null;
-    _close();
   }
 
   @override
@@ -166,168 +142,110 @@ class _FolderHoldButtonState extends State<FolderHoldButton> {
     final current = widget.stops
         .where((s) => s.id == widget.currentId)
         .firstOrNull;
-    final enabled = widget.stops.length > 1;
     return Semantics(
       button: true,
       label: current == null || current.id == null
           ? l10n.allFolders
           : current.name,
-      hint: l10n.folderHoldHint,
-      child: RawGestureDetector(
+      child: FloatingActionButton.small(
         key: const ValueKey('folder-hold-button'),
-        gestures: {
-          if (enabled)
-            LongPressGestureRecognizer:
-                GestureRecognizerFactoryWithHandlers<
-                  LongPressGestureRecognizer
-                >(
-                  () => LongPressGestureRecognizer(
-                    duration: kFolderHoldDelay,
-                    debugOwner: this,
-                  ),
-                  (r) => r
-                    ..onLongPressStart = _begin
-                    ..onLongPressMoveUpdate = _move
-                    ..onLongPressEnd = _end
-                    ..onLongPressCancel = _cancel,
-                ),
-        },
-        child: FloatingActionButton.small(
-          heroTag: 'folderHold',
-          // İpucu YOK: Tooltip basılı tutmayı kendisi yakalar, kaydırarak
-          // klasör seçme hiç başlamazdı (ad Semantics'te).
-          onPressed: widget.onOpen,
-          child: Icon(
-            current?.id == null ? Icons.folder_outlined : current!.icon,
-          ),
+        heroTag: 'folderHold',
+        onPressed: _openMenu,
+        child: Icon(
+          current?.id == null ? Icons.folder_outlined : current!.icon,
         ),
       ),
     );
   }
 }
 
-/// Ekranın ortasında açılan halka. Dokunuşları YUTMAZ (IgnorePointer):
-/// jest düğmede sürer, halka yalnız gösterir.
-class _RadialFolderMenu extends StatefulWidget {
-  const _RadialFolderMenu({
-    required this.stops,
-    required this.currentId,
-    required this.selected,
-  });
+/// Ekranın ortasında açılan halka; duraklar dokunulur. Seçim `pop(i)` ile
+/// döner; ortadaki daire `pop(-1)` = Klasörler ekranı.
+class _RadialFolderMenu extends StatelessWidget {
+  const _RadialFolderMenu({required this.stops, required this.currentId});
 
   final List<FolderStop> stops;
   final String? currentId;
-  final ValueListenable<int?> selected;
-
-  @override
-  State<_RadialFolderMenu> createState() => _RadialFolderMenuState();
-}
-
-class _RadialFolderMenuState extends State<_RadialFolderMenu>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _open = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 180),
-  )..forward();
-
-  @override
-  void dispose() {
-    _open.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final size = MediaQuery.sizeOf(context);
-    final rings = radialRings(widget.stops.length);
-    // Tek halka; ekrana sığmazsa küçülür.
-    final ringR = radialRadius(widget.stops.length);
+    final n = stops.length;
+    final ringR = radialRadius(n);
     final outer = ringR + 44;
     final fit = math.min(size.width, size.height) / 2 - 8;
     final scale = outer > fit ? fit / outer : 1.0;
-    return IgnorePointer(
-      child: FadeTransition(
-        opacity: _open,
-        child: Material(
-          key: const ValueKey('folder-radial-menu'),
-          color: scheme.scrim.withValues(alpha: 0.42),
-          child: Center(
-            child: ScaleTransition(
-              scale: CurvedAnimation(
-                parent: _open,
-                curve: Curves.easeOutBack,
-              ).drive(Tween(begin: 0.85, end: 1)),
-              child: ValueListenableBuilder<int?>(
-                valueListenable: widget.selected,
-                builder: (context, sel, _) {
-                  final children = <Widget>[];
-                  var i = 0;
-                  for (var r = 0; r < rings.length; r++) {
-                    final radius = ringR * scale;
-                    for (var s = 0; s < rings[r]; s++, i++) {
-                      final a = radialAngle(r, s, rings[r]);
-                      children.add(
-                        Transform.translate(
-                          offset: Offset(
-                            math.cos(a) * radius,
-                            math.sin(a) * radius,
-                          ),
-                          child: _RadialChip(
-                            stop: widget.stops[i],
-                            selected: sel == i,
-                            current: widget.stops[i].id == widget.currentId,
-                          ),
-                        ),
-                      );
-                    }
-                  }
-                  final picked = sel == null ? null : widget.stops[sel];
-                  return SizedBox(
-                    width: outer * 2 * scale,
-                    height: outer * 2 * scale,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      clipBehavior: Clip.none,
-                      children: [
-                        // Ortadaki daire: seçili klasörün adı; seçim yoksa
-                        // "bırak = vazgeç" ipucu.
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 120),
-                          width: 96 * scale + 8,
-                          height: 96 * scale + 8,
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: picked == null
-                                ? scheme.surfaceContainerHighest
-                                : (picked.color ?? scheme.primary),
-                            boxShadow: const [
-                              BoxShadow(blurRadius: 12, color: Colors.black26),
-                            ],
-                          ),
-                          child: Text(
-                            picked?.name ?? context.l10n.folderRadialCancel,
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: picked == null
-                                  ? scheme.onSurfaceVariant
-                                  : _onColor(picked.color ?? scheme.primary),
-                            ),
+    final radius = ringR * scale;
+    return Center(
+      child: Material(
+        key: const ValueKey('folder-radial-menu'),
+        type: MaterialType.transparency,
+        child: SizedBox(
+          width: outer * 2 * scale,
+          height: outer * 2 * scale,
+          child: Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
+            children: [
+              // Ortadaki daire: Klasörler ekranı.
+              InkWell(
+                key: const ValueKey('folder-radial-all'),
+                customBorder: const CircleBorder(),
+                onTap: () => Navigator.of(context).pop(-1),
+                child: Ink(
+                  width: 96 * scale + 8,
+                  height: 96 * scale + 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: scheme.surfaceContainerHighest,
+                    boxShadow: const [
+                      BoxShadow(blurRadius: 12, color: Colors.black26),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.folder_copy_outlined, color: scheme.primary),
+                      const SizedBox(height: 4),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          context.l10n.foldersTitle,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: scheme.onSurfaceVariant,
                           ),
                         ),
-                        ...children,
-                      ],
-                    ),
-                  );
-                },
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+              for (var i = 0; i < n; i++)
+                Transform.translate(
+                  offset: Offset(
+                    math.cos(radialAngle(0, i, n)) * radius,
+                    math.sin(radialAngle(0, i, n)) * radius,
+                  ),
+                  child: GestureDetector(
+                    key: ValueKey('folder-radial-$i'),
+                    onTap: () {
+                      unawaited(HapticFeedback.selectionClick());
+                      Navigator.of(context).pop(i);
+                    },
+                    child: _RadialChip(
+                      stop: stops[i],
+                      selected: stops[i].id == currentId,
+                      current: stops[i].id == currentId,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

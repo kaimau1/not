@@ -1373,7 +1373,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     // rozetinde (F11.1).
                                     trailing: searchExpanded
                                         ? [
-                                            IconButton(
+                                            // TextFieldTapRegion: basış
+                                            // "alan dışı" sayılırsa odak
+                                            // pointer-down'da düşer, düğme
+                                            // kaybolur, dokunuş kutuya geçip
+                                            // klavyeyi GERİ açardı (bulgu
+                                            // 2026-11-06).
+                                            TextFieldTapRegion(
+                                            child: IconButton(
                                               key: const ValueKey(
                                                 'search-done',
                                               ),
@@ -1384,6 +1391,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                                 Icons.keyboard_hide_outlined,
                                               ),
                                               onPressed: _searchFocus.unfocus,
+                                            ),
                                             ),
                                           ]
                                         : [

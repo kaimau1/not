@@ -47,14 +47,14 @@ class AccountAvatarButton extends ConsumerWidget {
           borderRadius: BorderRadius.circular(24),
           onTap: () => showAccountSheet(context),
           child: SizedBox(
-            width: 48,
-            height: 48,
+            width: 42,
+            height: 42,
             child: Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.center,
               children: [
                 CircleAvatar(
-                  radius: 16,
+                  radius: 15,
                   backgroundColor: anonymous
                       ? scheme.surfaceContainerHighest
                       : scheme.primaryContainer,
