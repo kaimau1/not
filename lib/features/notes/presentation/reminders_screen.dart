@@ -46,12 +46,21 @@ Future<DateTime?> pickReminderWhen(
 /// hatırlatıcılar uygulama açılana dek kurulmaz (izin durumu okunamıyor,
 /// bu yüzden ilk hatırlatıcıda bir kez söylenir; Ayarlar → İzinler'de kalıcı).
 Future<void> _maybeAutoStartHint(BuildContext context) async {
-  const key = 'miui_autostart_hint_shown';
+  const key = 'miui_autostart_hint_v2'; // v1: levha arkasında kaldı
   final container = ProviderScope.containerOf(context, listen: false);
   final prefs = container.read(sharedPreferencesProvider);
   if (prefs.getBool(key) ?? false) return;
   final service = container.read(permissionsServiceProvider);
   if (!await service.isXiaomi() || !context.mounted) return;
+  // Ardından "Tekrar" levhası açılıyor: bildirim onun ARKASINDA kalıp
+  // görülmüyordu (2026-11-06 cihazda). Ekran yeniden öne gelene dek bekle.
+  await Future<void>.delayed(const Duration(milliseconds: 500));
+  for (var i = 0; i < 200; i++) {
+    if (!context.mounted) return;
+    if (ModalRoute.of(context)?.isCurrent ?? true) break;
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+  }
+  if (!context.mounted) return;
   await prefs.setBool(key, true);
   if (!context.mounted) return;
   final l10n = context.l10n;
