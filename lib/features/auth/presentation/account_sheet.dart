@@ -13,6 +13,7 @@ import '../../friends/presentation/friends_screen.dart';
 import 'auth_providers.dart';
 import 'sign_out_actions.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **ANA EKRANIN HESAP SİMGESİ** — kullanıcı isteği 2026-08-18: "giriş
 /// yapıldıysa üst alanda profil simgesi görülsün, yapılmadıysa yerel hesap
@@ -91,23 +92,25 @@ final accountPendingCountProvider = Provider<int>((ref) {
   );
 });
 
-/// Hesap levhası: kimlik kartı + Kişiler / Premium / Hesap ayarları.
-///
-/// Kullanıcı isteği 2026-08-18: "hesap seçeneklerini ana sayfadaki sağ
-/// üstteki 3 noktaya da koy, profil bilgileri vs." Ayarların HESAP alanının
-/// kısayolu: sık gereken yollar + oturum (hesap değiştir, oturumu kapat —
-/// ikisi de onaylı). Hesap SİLME Ayarlar'da kalır ki yanlışlıkla dokunulmasın.
+/// **PROFİL LEVHASI** — baştan yazıldı (kullanıcı isteği 2026-11-06: "profil
+/// menüsü yeni temaya, yeni stile uyumlu olsun"). "Masa ve kâğıt" teması:
+/// kimlik kâğıt renginde ince çizgili bir kartta (büyük avatar, ad, e-posta,
+/// senkron/yerel hapı); altında iki kare kısayol (Kişiler, Premium); sonra
+/// tek kartta gruplanmış satırlar (Hesap ayarları, Hesap değiştir); en altta
+/// ayrı duran "Oturumu kapat". Hesap SİLME Ayarlar'da kalır. Değiştir ve
+/// çıkış onay ister; misafirde çıkış kırmızıdır (veri kaybı).
 Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
   context: context,
   showDragHandle: true,
-  // İçeriğe göre boylanır, sığmazsa kayar: varsayılan levha ekranın 9/16'sıyla
-  // sınırlı ve alçak pencerede (yatay telefon, küçük web penceresi) son satır
-  // "Hesap ayarları" kesiliyordu.
+  // İçeriğe göre boylanır, sığmazsa kayar (alçak pencerede son satır
+  // kesiliyordu).
   isScrollControlled: true,
   builder: (sheetContext) => Consumer(
     builder: (sheetContext, ref, _) {
       final l10n = sheetContext.l10n;
-      final scheme = Theme.of(sheetContext).colorScheme;
+      final theme = Theme.of(sheetContext);
+      final scheme = theme.colorScheme;
+      final tokens = AppTokens.of(sheetContext);
       final user = ref.watch(authStateProvider).value;
       final anonymous = ref.watch(isAnonymousProvider);
       final requests =
@@ -119,105 +122,161 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
           : email.isNotEmpty
           ? email
           : l10n.localAccountBadge;
-      // Kullanıcı bulgusu 2026-08-29: "hesap bilgisi yetersiz". Levha yalnız
-      // adı ve tek satırlık bir durumu gösteriyordu; hangi e-postayla giriş
-      // yapıldığı ve planın ne olduğu hiçbir yerde görünmüyordu. E-posta
-      // ADIN ALTINDA yazılır (ad zaten e-posta ise tekrarlanmaz).
-      final details = [
-        if (email.isNotEmpty && email != name) email,
-        anonymous ? l10n.accountSheetLocalInfo : l10n.synced,
-      ].join('\n');
+      final photo = user?.photoURL;
+
+      void go(VoidCallback action) {
+        Navigator.pop(sheetContext);
+        action();
+      }
+
+      BoxDecoration paper() => BoxDecoration(
+        color: tokens.card,
+        borderRadius: BorderRadius.circular(tokens.cardRadius),
+        border: Border.all(color: tokens.hairline),
+        boxShadow: tokens.cardShadow,
+      );
+
       return SafeArea(
         child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ListTile(
-                leading: CircleAvatar(
-                  radius: 22,
-                  backgroundColor: anonymous
-                      ? scheme.surfaceContainerHighest
-                      : scheme.primaryContainer,
-                  foregroundColor: anonymous
-                      ? scheme.onSurfaceVariant
-                      : scheme.onPrimaryContainer,
-                  backgroundImage: user?.photoURL != null
-                      ? NetworkImage(user!.photoURL!)
-                      : null,
-                  child: user?.photoURL != null
-                      ? null
-                      : const Icon(Icons.person_outline),
+              // KİMLİK KARTI
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: paper(),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundColor: anonymous
+                          ? scheme.surfaceContainerHighest
+                          : scheme.primaryContainer,
+                      foregroundColor: anonymous
+                          ? scheme.onSurfaceVariant
+                          : scheme.onPrimaryContainer,
+                      backgroundImage: photo != null
+                          ? NetworkImage(photo)
+                          : null,
+                      child: photo != null
+                          ? null
+                          : const Icon(Icons.person_outline, size: 28),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if (email.isNotEmpty && email != name)
+                            Text(
+                              email,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          const SizedBox(height: 6),
+                          _StatusPill(
+                            icon: anonymous
+                                ? Icons.phone_android_outlined
+                                : Icons.cloud_done_outlined,
+                            label: anonymous
+                                ? l10n.accountSheetLocalInfo
+                                : l10n.synced,
+                            color: anonymous ? scheme.tertiary : scheme.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                title: Text(name),
-                subtitle: Text(details),
-                isThreeLine: details.contains('\n'),
               ),
-              const Divider(height: 8),
-              ListTile(
-                leading: const Icon(AppIcons.friends),
-                title: Text(l10n.friendsTitle),
-                trailing: anonymous
-                    ? const AccountLockBadge()
-                    : _Badge(count: requests),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  openFriendsScreenOrExplain(context, ref);
-                },
+              const SizedBox(height: 12),
+              // KARE KISAYOLLAR
+              Row(
+                children: [
+                  Expanded(
+                    child: _Tile(
+                      decoration: paper(),
+                      icon: AppIcons.friends,
+                      label: l10n.friendsTitle,
+                      trailing: anonymous
+                          ? const AccountLockBadge()
+                          : (requests > 0 ? _Badge(count: requests) : null),
+                      onTap: () =>
+                          go(() => openFriendsScreenOrExplain(context, ref)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _Tile(
+                      decoration: paper(),
+                      icon: Icons.workspace_premium_outlined,
+                      label: l10n.premiumTitle,
+                      caption: premium ? null : l10n.premiumStatusFree,
+                      onTap: () => go(() => context.push('/premium')),
+                    ),
+                  ),
+                ],
               ),
-              // Plan da hesabın bir parçası: hangi sürümde olduğunu görmek için
-              // Ayarlar'ın dibine inmek gerekiyordu.
-              ListTile(
-                leading: const Icon(Icons.workspace_premium_outlined),
-                title: Text(l10n.premiumTitle),
-                subtitle: premium ? null : Text(l10n.premiumStatusFree),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  context.push('/premium');
-                },
+              const SizedBox(height: 12),
+              // GRUPLU SATIRLAR
+              Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: paper(),
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.manage_accounts_outlined),
+                        title: Text(l10n.accountSettings),
+                        trailing: const Icon(Icons.chevron_right),
+                        // `?area=account`: Ayarlar hesap alanı açık gelsin.
+                        onTap: () =>
+                            go(() => context.push('/settings?area=account')),
+                      ),
+                      Divider(height: 1, color: tokens.hairline),
+                      ListTile(
+                        key: const ValueKey('account-switch'),
+                        leading: const Icon(Icons.switch_account_outlined),
+                        title: Text(l10n.switchAccount),
+                        onTap: () => go(() => confirmAndSwitchAccount(context)),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              ListTile(
-                leading: const Icon(Icons.manage_accounts_outlined),
-                title: Text(l10n.accountSettings),
-                trailing: const Icon(Icons.chevron_right),
-                // `?area=account` OLMADAN Ayarlar "Görünüm" açık geliyordu ve
-                // "Hesap ayarları"na basan kullanıcı kapalı bir hesap kartıyla
-                // karşılaşıyordu (kullanıcı bulgusu 2026-08-29: "hesap
-                // ayarlarına ulaşmak zor ve anlaşılır değil").
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  context.push('/settings?area=account');
-                },
-              ),
-              // OTURUM (kullanıcı isteği 2026-11-02): hesap değiştirmek ve
-              // çıkmak için Ayarlar'ın dibine inmek gerekiyordu. İkisi de
-              // onay ister; misafirde uyarı kırmızıdır (veri kaybı).
-              const Divider(height: 8),
-              ListTile(
-                key: const ValueKey('account-switch'),
-                leading: const Icon(Icons.switch_account_outlined),
-                title: Text(l10n.switchAccount),
-                onTap: () async {
-                  Navigator.pop(sheetContext);
-                  await confirmAndSwitchAccount(context);
-                },
-              ),
-              ListTile(
+              const SizedBox(height: 12),
+              // ÇIKIŞ — ayrı, kenarlı (FilledButton DEĞİL: onay iletişim
+              // kutusunun düğmesiyle karışmasın).
+              OutlinedButton.icon(
                 key: const ValueKey('account-sign-out'),
-                leading: Icon(
-                  Icons.logout,
-                  color: anonymous ? scheme.error : null,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  foregroundColor: anonymous ? scheme.error : null,
+                  side: BorderSide(
+                    color: anonymous ? scheme.error : tokens.hairline,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(tokens.cardRadius),
+                  ),
                 ),
-                title: Text(
-                  l10n.signOut,
-                  style: anonymous ? TextStyle(color: scheme.error) : null,
-                ),
-                onTap: () async {
-                  Navigator.pop(sheetContext);
-                  await confirmAndSignOut(context);
-                },
+                icon: const Icon(Icons.logout),
+                label: Text(l10n.signOut),
+                onPressed: () => go(() => confirmAndSignOut(context)),
               ),
-              const SizedBox(height: 8),
             ],
           ),
         ),
@@ -225,6 +284,114 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
     },
   ),
 );
+
+/// Kimlik kartındaki durum hapı (Senkron / yalnız bu cihazda).
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Kare kısayol kutusu.
+class _Tile extends StatelessWidget {
+  const _Tile({
+    required this.decoration,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.caption,
+    this.trailing,
+  });
+
+  final BoxDecoration decoration;
+  final IconData icon;
+  final String label;
+  final String? caption;
+  final Widget? trailing;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: decoration,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(icon, color: scheme.primary),
+                    const Spacer(),
+                    ?trailing,
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  caption ?? ' ',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// Sayı rozeti; sıfırsa oku (chevron) gösterir — boş bir "0" rozeti kullanıcıya
 /// bir şey bekliyormuş gibi görünüyordu.

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -27,20 +28,16 @@ class FolderStop {
   final int? count;
 }
 
-/// Bir halkada en çok kaç durak (sekiz yön — parmağın küçük hareketiyle
-/// ayırt edilebilecek en ince dilim 45°).
-const kRadialPerRing = 8;
+/// **TEK HALKA** (kullanıcı isteği 2026-11-06, üçüncü tur: "ikinci uzak
+/// sıraya geçmek zor, tek sıraya sığsın"): bütün duraklar aynı halkada; çok
+/// klasör olunca halka büyür, dilim incelir — seçim yalnız YÖNLE.
+List<int> radialRings(int count) => count <= 0 ? const [] : [count];
 
-/// Durakların halkalara dağılımı: dolu halkalar [kRadialPerRing]'er, kalan
-/// son halkada. Örn. 11 → [8, 3]; ama son halka çok seyrek kalmasın diye
-/// eşit bölünür: 11 → [6, 5].
-List<int> radialRings(int count) {
-  if (count <= 0) return const [];
-  final rings = (count / kRadialPerRing).ceil();
-  final base = count ~/ rings;
-  final extra = count % rings;
-  return [for (var r = 0; r < rings; r++) base + (r < extra ? 1 : 0)];
-}
+/// Basılı tutma süresi — varsayılan 500 ms "çok geç" bulundu (2026-11-06).
+const kFolderHoldDelay = Duration(milliseconds: 220);
+
+/// Tek halkanın yarıçapı (dp): duraklar yan yana sığsın diye sayıyla büyür.
+double radialRadius(int count) => math.max(104, count * 76 / (2 * math.pi));
 
 /// Halka [ring]'deki [slot]. durağın açısı (radyan): ilki tepede (−90°),
 /// saat yönünde. Dış halkalar yarım dilim kaydırılır — iç halkadaki
@@ -176,12 +173,25 @@ class _FolderHoldButtonState extends State<FolderHoldButton> {
           ? l10n.allFolders
           : current.name,
       hint: l10n.folderHoldHint,
-      child: GestureDetector(
+      child: RawGestureDetector(
         key: const ValueKey('folder-hold-button'),
-        onLongPressStart: enabled ? _begin : null,
-        onLongPressMoveUpdate: enabled ? _move : null,
-        onLongPressEnd: enabled ? _end : null,
-        onLongPressCancel: enabled ? _cancel : null,
+        gestures: {
+          if (enabled)
+            LongPressGestureRecognizer:
+                GestureRecognizerFactoryWithHandlers<
+                  LongPressGestureRecognizer
+                >(
+                  () => LongPressGestureRecognizer(
+                    duration: kFolderHoldDelay,
+                    debugOwner: this,
+                  ),
+                  (r) => r
+                    ..onLongPressStart = _begin
+                    ..onLongPressMoveUpdate = _move
+                    ..onLongPressEnd = _end
+                    ..onLongPressCancel = _cancel,
+                ),
+        },
         child: FloatingActionButton.small(
           heroTag: 'folderHold',
           // İpucu YOK: Tooltip basılı tutmayı kendisi yakalar, kaydırarak
@@ -232,8 +242,9 @@ class _RadialFolderMenuState extends State<_RadialFolderMenu>
     final scheme = theme.colorScheme;
     final size = MediaQuery.sizeOf(context);
     final rings = radialRings(widget.stops.length);
-    // İç halka 104 dp, her dış halka +76; ekrana sığmazsa küçülür.
-    final outer = 104.0 + 76 * (rings.length - 1) + 44;
+    // Tek halka; ekrana sığmazsa küçülür.
+    final ringR = radialRadius(widget.stops.length);
+    final outer = ringR + 44;
     final fit = math.min(size.width, size.height) / 2 - 8;
     final scale = outer > fit ? fit / outer : 1.0;
     return IgnorePointer(
@@ -254,7 +265,7 @@ class _RadialFolderMenuState extends State<_RadialFolderMenu>
                   final children = <Widget>[];
                   var i = 0;
                   for (var r = 0; r < rings.length; r++) {
-                    final radius = (104.0 + 76 * r) * scale;
+                    final radius = ringR * scale;
                     for (var s = 0; s < rings[r]; s++, i++) {
                       final a = radialAngle(r, s, rings[r]);
                       children.add(

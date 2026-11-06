@@ -67,7 +67,7 @@ void main() {
   test('yuvarlak menü: halkalar ve yönle seçim', () {
     expect(radialRings(3), [3]);
     expect(radialRings(8), [8]);
-    expect(radialRings(11), [6, 5]);
+    expect(radialRings(11), [11]);
     expect(radialRings(0), isEmpty);
     // Ölü bölge: seçim yok (bırakmak vazgeçer).
     expect(radialFolderIndex(const Offset(5, 5), 4), isNull);
@@ -76,10 +76,9 @@ void main() {
     expect(radialFolderIndex(const Offset(20, 0), 4), 1);
     expect(radialFolderIndex(const Offset(0, 20), 4), 2);
     expect(radialFolderIndex(const Offset(-20, 0), 4), 3);
-    // İki halka (11 → 6 + 5): uzak kayma dış halkaya.
+    // Tek halka: uzaklık fark etmez, yalnız yön.
     expect(radialFolderIndex(const Offset(0, -20), 11), 0);
-    final outer = radialFolderIndex(const Offset(0, -120), 11)!;
-    expect(outer, greaterThanOrEqualTo(6));
+    expect(radialFolderIndex(const Offset(0, -120), 11), 0);
   });
 
   testWidgets('klasör düğmesi: dokun açar, basılı tut + kaydır seçer', (
@@ -107,7 +106,8 @@ void main() {
     final g = await tester.startGesture(
       tester.getCenter(find.byKey(const ValueKey('folder-hold-button'))),
     );
-    await tester.pump(const Duration(milliseconds: 600));
+    // Hızlı açılır (2026-11-06): 300 ms yeter.
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.byKey(const ValueKey('folder-radial-menu')), findsOneWidget);
     expect(find.text('Bırak = vazgeç'), findsOneWidget);
     // 3 durak: tepe Tümü, sağ-alt İş, sol-alt Ev → sola-aşağı kaydır.
