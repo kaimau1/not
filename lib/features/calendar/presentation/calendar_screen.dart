@@ -273,6 +273,42 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     }
   }
 
+  /// Sürükle-bırak ile güne taşıma (F47.5); "Geri al" eski hâli yazar.
+  void _moveEntry(AgendaEntry entry, DateTime day) {
+    final moved = movedToDay(entry, day);
+    if (moved == null) return;
+    final calendar = ref.read(calendarRepositoryProvider);
+    final notes = ref.read(notesRepositoryProvider);
+    final VoidCallback undo;
+    switch (moved) {
+      case CalendarEvent():
+        if (calendar == null) return;
+        final before = (entry as EventOccurrence).event;
+        calendar.saveEvent(moved);
+        undo = () => calendar.saveEvent(before);
+      case TaskItem():
+        if (calendar == null) return;
+        final before = (entry as TaskEntry).task;
+        calendar.saveTask(moved);
+        undo = () => calendar.saveTask(before);
+      case Note():
+        if (notes == null) return;
+        final before = (entry as ReminderEntry).note;
+        notes.setReminder(moved.id, moved.reminderAt);
+        undo = () => notes.setReminder(before.id, before.reminderAt);
+      default:
+        return;
+    }
+    HapticFeedback.selectionClick();
+    final l10n = context.l10n;
+    showUndoSnackBar(
+      context,
+      message: l10n.calendarMoved(DateFormat.MMMEd().format(day)),
+      undoLabel: l10n.undo,
+      onUndo: undo,
+    );
+  }
+
   Future<void> _showDay(DateTime day, CalendarData data) {
     setState(() => _selected = startOfDay(day));
     return showAppSheet<void>(
@@ -498,6 +534,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             firstDow: _firstDow,
             targets: _targets,
             onDayTap: (d) => unawaited(_showDay(d, data)),
+            onEntryMove: _moveEntry,
             onDayLongPress: (d) {
               setState(() => _selected = d);
               unawaited(showEventEditor(context, day: d));

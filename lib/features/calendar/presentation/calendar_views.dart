@@ -108,7 +108,11 @@ class MonthPage extends StatelessWidget {
     required this.targets,
     required this.onDayTap,
     required this.onDayLongPress,
+    this.onEntryMove,
   });
+
+  /// Kayıt başka güne SÜRÜKLENİP bırakıldı (F47.5); null = taşıma yok.
+  final void Function(AgendaEntry entry, DateTime day)? onEntryMove;
 
   final DateTime month;
   final CalendarData data;
@@ -185,6 +189,7 @@ class MonthPage extends StatelessWidget {
                             line: line,
                             onTap: onDayTap,
                             onLongPress: onDayLongPress,
+                            onEntryMove: onEntryMove,
                           ),
                         ),
                     ],
@@ -208,8 +213,10 @@ class _MonthCell extends StatelessWidget {
     required this.line,
     required this.onTap,
     required this.onLongPress,
+    this.onEntryMove,
   });
 
+  final void Function(AgendaEntry entry, DateTime day)? onEntryMove;
   final DateTime day;
   final DateTime month;
   final DateTime today;
@@ -226,6 +233,53 @@ class _MonthCell extends StatelessWidget {
     final inMonth = day.month == month.month;
     final isToday = day == today;
     final isSelected = day == selected && !isToday;
+    final move = onEntryMove;
+    if (move == null) {
+      return _cell(context, isToday, isSelected, inMonth, l10n, scheme, false);
+    }
+    return DragTarget<AgendaEntry>(
+      onWillAcceptWithDetails: (d) => movedToDay(d.data, day) != null,
+      onAcceptWithDetails: (d) => move(d.data, day),
+      builder: (context, candidates, _) => _cell(
+        context,
+        isToday,
+        isSelected,
+        inMonth,
+        l10n,
+        scheme,
+        candidates.isNotEmpty,
+      ),
+    );
+  }
+
+  /// Kayıt şeridi uzun basınca sürüklenir (taşınabiliyorsa).
+  Widget _draggableChip(
+    BuildContext context,
+    AgendaEntry e,
+    Widget chip,
+    double width,
+  ) {
+    if (onEntryMove == null || !canMoveEntry(e)) return chip;
+    return LongPressDraggable<AgendaEntry>(
+      data: e,
+      feedback: Material(
+        color: Colors.transparent,
+        child: SizedBox(width: math.max(width, 72), child: chip),
+      ),
+      childWhenDragging: Opacity(opacity: 0.3, child: chip),
+      child: chip,
+    );
+  }
+
+  Widget _cell(
+    BuildContext context,
+    bool isToday,
+    bool isSelected,
+    bool inMonth,
+    AppLocalizations l10n,
+    ColorScheme scheme,
+    bool hovering,
+  ) {
     return Semantics(
       button: true,
       label: DateFormat.yMMMMEEEEd().format(day),
@@ -234,7 +288,9 @@ class _MonthCell extends StatelessWidget {
         onLongPress: () => onLongPress(day),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: isSelected
+            color: hovering
+                ? scheme.primaryContainer.withValues(alpha: 0.6)
+                : isSelected
                 ? scheme.primaryContainer.withValues(alpha: 0.35)
                 : null,
             border: Border(
@@ -287,7 +343,12 @@ class _MonthCell extends StatelessWidget {
                     ),
                   ),
                   for (final e in entries.take(shown))
-                    _MonthChip(entry: e, height: chipH, dim: !inMonth),
+                    _draggableChip(
+                      context,
+                      e,
+                      _MonthChip(entry: e, height: chipH, dim: !inMonth),
+                      c.maxWidth,
+                    ),
                   if (!fits && entries.length > shown)
                     SizedBox(
                       height: chipH,

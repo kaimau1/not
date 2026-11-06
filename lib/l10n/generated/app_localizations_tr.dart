@@ -7253,4 +7253,9 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get swipeLeftCalendarInfo =>
       'Tümü görünümünde ekranı sola kaydırınca takvim açılır';
+
+  @override
+  String calendarMoved(String day) {
+    return '$day gününe taşındı';
+  }
 }

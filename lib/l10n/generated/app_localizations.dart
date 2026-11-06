@@ -12955,6 +12955,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tümü görünümünde ekranı sola kaydırınca takvim açılır'**
   String get swipeLeftCalendarInfo;
+
+  /// No description provided for @calendarMoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'{day} gününe taşındı'**
+  String calendarMoved(String day);
 }
 
 class _AppLocalizationsDelegate

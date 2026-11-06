@@ -2665,5 +2665,7 @@
   "dashboardBackgroundCalendar": "Calendar background",
   "dashboardBackgroundCalendarInfo": "This month\u2019s calendar behind your notes; card titles stay clear, the rest turns see-through",
   "swipeLeftCalendar": "Swipe left for calendar",
-  "swipeLeftCalendarInfo": "In the All view, swiping left opens the calendar"
+  "swipeLeftCalendarInfo": "In the All view, swiping left opens the calendar",
+  "calendarMoved": "Moved to {day}",
+  "@calendarMoved": {"placeholders": {"day": {"type": "String"}}}
 }

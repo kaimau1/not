@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../calendar/data/calendar_backup.dart';
+import '../../calendar/data/calendar_repository.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
 import '../domain/attachment.dart';
@@ -33,9 +35,17 @@ import 'notes_repository.dart';
 /// Arayüzden BAĞIMSIZ (F18.5): misafir notlarını Google hesabına taşıma da
 /// aynı dışa/içe aktarmayı kullanır.
 class BackupService {
-  BackupService({required this.notes, required this.attachments, this.folders});
+  BackupService({
+    required this.notes,
+    required this.attachments,
+    this.folders,
+    this.calendar,
+  });
 
   final NotesRepository notes;
+
+  /// Takvim/görev geri yüklemesi için (F46.5); null = takvim atlanır.
+  final CalendarRepository? calendar;
   final AttachmentRepository? attachments;
   final FoldersRepository? folders;
 
@@ -57,6 +67,7 @@ class BackupService {
     BackupSink sink, {
     required List<Note> allNotes,
     List<NoteFolder> folderList = const [],
+    CalendarSnapshot calendarData = const CalendarSnapshot(),
     void Function(int done, int total)? onProgress,
     bool Function()? cancelled,
   }) async {
@@ -97,6 +108,8 @@ class BackupService {
         'exportedAt': DateTime.now().toIso8601String(),
         'folders': [for (final f in folderList) _encodeFolder(f)],
         'notes': entries,
+        if (!calendarData.isEmpty)
+          'calendar': encodeCalendarBackup(calendarData),
       }),
     );
     sink.add(_jsonEntry, json);
@@ -111,6 +124,7 @@ class BackupService {
     Archive archive, {
     required List<Note> existing,
     List<NoteFolder> existingFolders = const [],
+    CalendarSnapshot existingCalendar = const CalendarSnapshot(),
     void Function(int done, int total)? onProgress,
     bool Function()? cancelled,
     bool allowLocalOnly = true,
@@ -165,6 +179,17 @@ class BackupService {
       for (final n in existing)
         if (n.extras['restoredFrom'] is String) n.extras['restoredFrom'],
     };
+    // Takvim bağları için eski → yeni not kimliği (F46.5): atlanan not da
+    // var olan karşılığına eşlenir.
+    final noteIdMap = <String, String>{};
+    final byRestoredFrom = {
+      for (final n in existing)
+        if (n.extras['restoredFrom'] case final String src) src: n.id,
+    };
+    final byDigest = {
+      for (final n in existing)
+        if (n.deletedAt == null && !n.heavyMissing) noteDigest(n): n.id,
+    };
 
     final raws = decoded['notes'] as List? ?? const [];
     var restored = 0;
@@ -183,6 +208,10 @@ class BackupService {
       if (ids.contains(sourceId) ||
           restoredFrom.contains(sourceId) ||
           (digest.isNotEmpty && digests.contains(digest))) {
+        final match = ids.contains(sourceId)
+            ? sourceId
+            : byRestoredFrom[sourceId] ?? byDigest[digest];
+        if (sourceId.isNotEmpty && match != null) noteIdMap[sourceId] = match;
         skipped++;
         onProgress?.call(i + 1, raws.length);
         continue;
@@ -229,10 +258,23 @@ class BackupService {
         );
       }
       ids.add(id);
+      if (sourceId.isNotEmpty) noteIdMap[sourceId] = id;
       if (digest.isNotEmpty) digests.add(digest);
       if (sourceId.isNotEmpty) restoredFrom.add(sourceId);
       restored++;
       onProgress?.call(i + 1, raws.length);
+    }
+    final rawCalendar = decoded['calendar'];
+    final cal = calendar;
+    if (cal != null && rawCalendar is Map) {
+      restoreCalendarSnapshot(
+        cal,
+        decodeCalendarBackup(
+          Map<String, dynamic>.from(rawCalendar),
+          noteIdMap,
+        ),
+        existing: existingCalendar,
+      );
     }
     return RestoreResult(restored: restored, skipped: skipped);
   }

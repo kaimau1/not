@@ -1,4 +1,6 @@
 import 'dart:convert';
+import '../../calendar/data/calendar_backup.dart';
+import '../../calendar/data/calendar_repository.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -36,8 +38,17 @@ BackupService? backupServiceOf(WidgetRef ref) {
     notes: notes,
     attachments: ref.read(attachmentRepositoryProvider),
     folders: ref.read(foldersRepositoryProvider),
+    calendar: ref.read(calendarRepositoryProvider),
   );
 }
+
+/// Takvim/görev/gün bağlarının o anki hâli (yedeğe girer, F46.5).
+CalendarSnapshot calendarSnapshotOf(WidgetRef ref) => CalendarSnapshot(
+  events: ref.read(eventsStreamProvider).value ?? const [],
+  tasks: ref.read(tasksStreamProvider).value ?? const [],
+  lists: ref.read(taskListsStreamProvider).value ?? const [],
+  dayLinks: ref.read(dayLinksStreamProvider).value ?? const {},
+);
 
 String backupFileName([DateTime? now]) {
   final t = now ?? DateTime.now();
@@ -71,6 +82,7 @@ Future<void> exportFullBackup(BuildContext context, WidgetRef ref) async {
           sink,
           allNotes: notes,
           folderList: folders,
+          calendarData: calendarSnapshotOf(ref),
           onProgress: progress.update,
           cancelled: () => progress.cancelled,
         );
@@ -86,6 +98,7 @@ Future<void> exportFullBackup(BuildContext context, WidgetRef ref) async {
           FileBackupSink(path),
           allNotes: notes,
           folderList: folders,
+          calendarData: calendarSnapshotOf(ref),
           onProgress: progress.update,
           cancelled: () => progress.cancelled,
         );
@@ -153,6 +166,7 @@ Future<void> restoreBackup(BuildContext context, WidgetRef ref) async {
           archive,
           existing: existing,
           existingFolders: folders,
+          existingCalendar: calendarSnapshotOf(ref),
           onProgress: progress.update,
           cancelled: () => progress.cancelled,
           allowLocalOnly: !kIsWeb,

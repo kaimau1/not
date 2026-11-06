@@ -229,7 +229,7 @@ Faz 53'te.
 - [x] F46.1 `features/calendar/domain`: `CalendarEvent` (saatli `start/end` zaman damgası, tüm gün `startDay/endDay` dizesi, bitiş HARİÇ), `TaskItem`, `TaskList`, `GoogleLink`, `day_key.dart`; `extras` koruması; `test/calendar_model_test.dart`. Not tarafı `dayLinks` (yukarıda §3).
 - [x] F46.2 `Recurrence` (`recurrence.dart`): `<reminderRepeat>;every=N;until=GÜN;count=N`, `between()` / `nextAfter()`, `exdates`; tekrarlı görevi tamamlama `completeTask` (geçmiş kopyası + sonraki oluşa ilerleme, gecikmişi bugüne atlatır).
 - [x] F46.3 `CalendarRepository` (etkinlik/görev/liste/gün bağı CRUD + akış sağlayıcıları, yangın-ve-unut yazım), `account_service` silme listesi.
-- [ ] F46.5 Yedek (`backup_service`): takvim/görev/gün bağı dışa+içe aktarma — geri yüklemede not kimlikleri yeniden eşlenmeli (`NoteShare.import` yeni kimlik verir). Faz 47'de ayarlarla birlikte.
+- [x] F46.5 Yedek (`backup_service`): takvim/görev/gün bağı dışa+içe aktarma — geri yüklemede not kimlikleri yeniden eşlenmeli (`NoteShare.import` yeni kimlik verir). Faz 47'de ayarlarla birlikte. **Yapıldı (2026-11-06):** `calendar_backup.dart` — `yedek.json` `calendar` alanı (Timestamp → `{"$ts": ISO}`), geri yüklemede eski → yeni not kimliği eşlemesi (atlanan not da karşılığına), eşlenemeyen bağ düşer, aynı kimlikli kayıt atlanır. Misafir → Google taşıması (`prepareMigration`) takvimi TAŞIMAZ (sabah bakılacak). `test/calendar_move_backup_test.dart`.
 - [x] F46.4 Kural testi (`rules-test`): dört koleksiyon yalnız sahibine (genel `users/{uid}/{c}/**` kuralı yetiyor, kural değişmedi).
 
 ### Faz 47 — Takvim ekranı (yerel)
@@ -237,9 +237,9 @@ Faz 53'te.
 - [x] F47.2 Ajanda (`_AgendaList`, seçili günden 60 gün, "Daha ileri" uzatır, seçili gün boşsa "plan yok"), boş durum, telefonda başlıktan açılır ay ızgarası.
 - [x] F47.3 **Görünümler (kullanıcı isteği 2026-11-06: "ay, hafta, yıl görünümü hoş olmalı, geçişler rahat; 2 parmak zoom ile geçiş, neresi zoom yapılırsa o hafta/ay açılmalı")**: `calendar_views.dart` — YIL (12 küçük ay, dolu gün vurgulu; hatırlatıcılar sayılmaz), AY (ekranı dolduran 6 hafta, hücrede sığdığı kadar şerit + "+n", güne dokun → gün levhası, uzun bas → yeni etkinlik), HAFTA (tüm gün şeridi + 24 saat ızgara, çakışanlar yan yana `layoutTimedBlocks`, kırmızı "şimdi" çizgisi, boş saate dokun → o saate etkinlik), AJANDA (önceki ekran). Dönemler arası yatay kaydırma (`PageView`), genişte ‹ › okları. **İki parmak** (`pinch_zoom.dart`, hareket yarışmasına girmeyen `Listener`): yakınlaştır yıl → ay → hafta, uzaklaştır tersi; hedef parmakların altındaki ay karosu / hafta satırı (`ZoomTargets`); geçiş o noktadan büyüyerek (`AnimatedSwitcher` + ölçek/solma, "hareketi azalt"a uyar), eşiğe dek canlı ölçek (yalnız `Transform` yeniden çizilir). Web: Ctrl+tekerlek ve dokunmatik yüzey kıstırması aynı eşik. Seçilen görünüm hatırlanır, ilk açılışta bir kez ipucu. Görsel tur: `flutter test tool/tour/calendar_tour_test.dart`. Gün görünümü YOK (hafta ızgarası + gün levhası yetiyor).
 - [x] F47.4 Etkinlik levhası (`event_editor.dart`): başlık, tüm gün, başlangıç/bitiş (bitiş başlangıçla kayar), tekrar (`pickReminderRepeat` — `every/until` arayüzde yok), tek hatırlatma, konum, açıklama; sil → çöp + geri al; tekrarlıda "yalnız bu / tümü" (`exdates`). Düzenleme serinin tamamına uygulanır.
-- [~] F47.5 Not hatırlatıcıları ajandada ve ızgarada (tekrarlılar açılır, gizli klasör bastırılır, dokununca not). **Sürükleyerek taşıma AÇIK.**
+- [x] F47.5 Not hatırlatıcıları ajandada ve ızgarada (tekrarlılar açılır, gizli klasör bastırılır, dokununca not). **Sürükleyerek taşıma (2026-11-06):** AY görünümünde şeride basılı tut → başka güne bırak (`movedToDay`/`canMoveEntry`, saat korunur, "Geri al"); tekrarlı ETKİNLİK taşınmaz (serinin tamamı kayardı), tekrarlı hatırlatıcı/görevde serinin başı kayar. Haftanın saat ızgarasında saat değiştirerek sürükleme YOK. Cihazda doğrulanmadı → KALANLAR §2 #99.
 - [x] F47.6 `ReminderService` takvim bildirimleri: `calendarAlarms` (14 gün ufuk, en çok 60), yük `cal:event:<id>` / `cal:task:<id>` (dokununca `/calendar`), ilk eşitlemede `cal:` önekli yetimler iptal, kanal `calendar`. Yalnız cihazda (web'de dinleyici yok). **Cihazda doğrulanmadı** → KALANLAR §2.
-- [~] F47.7 Ekran turu `tool/tour/calendar_tour_test.dart` (telefon/tablet × 4 görünüm, koyu `TOUR_DARK=1`) ✓. Akıcılık ölçümü (`tool/perf`, telefonda kıstırma/kaydırma) AÇIK → KALANLAR §2.
+- [x] F47.7 Ekran turu `tool/tour/calendar_tour_test.dart` (telefon/tablet × 4 görünüm, koyu `TOUR_DARK=1`) ✓. Akıcılık ölçümü (`tool/perf`, telefonda kıstırma/kaydırma) telefon gerektirir → yazıldı, cihazda ölçülmedi; KALANLAR §2 #87.
 
 ### Faz 48 — Google Takvim (salt okuma)
 - [ ] F48.1 `calendar_api.dart` (Gmail kalıbı, yalnız GET), `calendarAuthProvider`, Ayarlar → Bağlantılar'da "Google Takvim".
@@ -311,8 +311,8 @@ Faz 53'te.
 
 | Faz | Durum |
 |---|---|
-| 46 Model | ✅ (F46.5 yedek açık) |
-| 47 Takvim ekranı | 🟡 yıl/ay/hafta/ajanda + iki parmak bitti; sürükleyerek taşıma, telefonda akıcılık ölçümü açık |
+| 46 Model | ✅ |
+| 47 Takvim ekranı | ✅ 2026-11-06 (sürükleyerek taşıma ayda; telefonda akıcılık ölçümü KALANLAR §2 #87) — ek: ana ekranda sola kaydırınca takvim, takvim zemini |
 | 48 Google Takvim okuma | — |
 | 49 Not ↔ takvim | — |
 | 50 Görevler | 🟡 yerel bitti (50.1–50.2); madde→görev (50.3), Google senkronu (50.4) açık |

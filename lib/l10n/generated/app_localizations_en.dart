@@ -7273,4 +7273,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get swipeLeftCalendarInfo =>
       'In the All view, swiping left opens the calendar';
+
+  @override
+  String calendarMoved(String day) {
+    return 'Moved to $day';
+  }
 }
