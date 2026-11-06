@@ -3460,5 +3460,20 @@
   "swipeLeftCalendar": "Sola kaydırınca takvim",
   "swipeLeftCalendarInfo": "Tümü görünümünde ekranı sola kaydırınca takvim açılır",
   "calendarMoved": "{day} gününe taşındı",
-  "@calendarMoved": {"placeholders": {"day": {"type": "String"}}}
+  "@calendarMoved": {"placeholders": {"day": {"type": "String"}}},
+  "gcalTitle": "Google Takvim",
+  "gcalInfo": "Google Takvim'indeki etkinlikler takvimde görünür (yalnız okunur). Etkinliğe not bağlayabilirsin; Google'a bir şey yazılmaz.",
+  "gcalConnect": "Google Takvim'i bağla",
+  "gcalConnectFailed": "Google Takvim bağlanamadı",
+  "gcalCalendars": "Gösterilen takvimler",
+  "gcalRefresh": "Yenile",
+  "gcalDisconnect": "Bağlantıyı kaldır",
+  "gcalError": "Google Takvim'e şu an ulaşılamadı; önbellekteki etkinlikler gösteriliyor.",
+  "gcalReadOnly": "Google Takvim etkinliği · düzenlemek için Google Takvim'de aç",
+  "gcalOpenInGoogle": "Google Takvim'de aç",
+  "calendarMeetingNote": "Toplantı notu",
+  "calendarLinkedNotes": "Bağlı notlar",
+  "calendarUnlinkNote": "Bağı kaldır",
+  "gcalSyncedAt": "Son eşitleme {time}",
+  "@gcalSyncedAt": {"placeholders": {"time": {"type": "String"}}}
 }

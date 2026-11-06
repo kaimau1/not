@@ -126,6 +126,10 @@ class CalendarEvent {
   static const allDayReminderHour = 9;
 
   Duration get duration => end.difference(start);
+  /// Google Takvim'den GÖSTERİLEN etkinlik (Faz 48): bizde salt okunur —
+  /// sürüklenmez, düzenlenmez, yedeğe girmez. Kimliği `g:<takvim>/<id>`.
+  bool get fromGoogle => id.startsWith('g:');
+
   Recurrence get recurrence => Recurrence.parse(repeat);
   bool get repeats => !recurrence.isNone;
 

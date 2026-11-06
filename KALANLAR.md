@@ -197,6 +197,7 @@ kartta çizildi. Yeni metin notunda klavye açık; not "+" → Hatırlat aynı "
 98. [ ] Ana ekranda Tümü görünümünde sola kaydır → kenarda "Takvim" → takvim açılıyor; klasördeyken sola kaydırma klasör geziyor; Ayarlar → Notlar'dan kapatılınca sola kaydırma eskisi gibi.
 99. [ ] (TAKVIM F47.5) Ay görünümünde etkinlik/görev/hatırlatıcı şeridine basılı tut → başka güne sürükle → taşındı + "Geri al"; tekrarlı etkinlik sürüklenmiyor.
 100. [ ] (TAKVIM F46.5) Tam yedek al → yeni hesapta geri yükle: etkinlikler, görevler, listeler ve güne bağlı notlar geliyor; ikinci yükleme çoğaltmıyor.
+101. [ ] (TAKVIM Faz 48, önce F19.B10) Takvim → ☁ → Google Takvim'i bağla: takvimler renkleriyle, birini kapatınca etkinlikleri kayboluyor; Google etkinliği ayda çerçeveli şerit, ajandada ☁; dokununca salt okunur levha → "Google Takvim'de aç" Google'da açıyor, "Toplantı notu" not açıp bağlıyor (levhada "Bağlı notlar"). Uygulamayı kapat-aç: etkinlikler ağsız da önbellekten geliyor. Web'de 55 dk sonra yeniden bağlan istemesi beklenir.
 
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 

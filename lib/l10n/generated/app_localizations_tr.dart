@@ -7258,4 +7258,51 @@ class AppLocalizationsTr extends AppLocalizations {
   String calendarMoved(String day) {
     return '$day gününe taşındı';
   }
+
+  @override
+  String get gcalTitle => 'Google Takvim';
+
+  @override
+  String get gcalInfo =>
+      'Google Takvim\'indeki etkinlikler takvimde görünür (yalnız okunur). Etkinliğe not bağlayabilirsin; Google\'a bir şey yazılmaz.';
+
+  @override
+  String get gcalConnect => 'Google Takvim\'i bağla';
+
+  @override
+  String get gcalConnectFailed => 'Google Takvim bağlanamadı';
+
+  @override
+  String get gcalCalendars => 'Gösterilen takvimler';
+
+  @override
+  String get gcalRefresh => 'Yenile';
+
+  @override
+  String get gcalDisconnect => 'Bağlantıyı kaldır';
+
+  @override
+  String get gcalError =>
+      'Google Takvim\'e şu an ulaşılamadı; önbellekteki etkinlikler gösteriliyor.';
+
+  @override
+  String get gcalReadOnly =>
+      'Google Takvim etkinliği · düzenlemek için Google Takvim\'de aç';
+
+  @override
+  String get gcalOpenInGoogle => 'Google Takvim\'de aç';
+
+  @override
+  String get calendarMeetingNote => 'Toplantı notu';
+
+  @override
+  String get calendarLinkedNotes => 'Bağlı notlar';
+
+  @override
+  String get calendarUnlinkNote => 'Bağı kaldır';
+
+  @override
+  String gcalSyncedAt(String time) {
+    return 'Son eşitleme $time';
+  }
 }

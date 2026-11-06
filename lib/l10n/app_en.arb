@@ -2667,5 +2667,20 @@
   "swipeLeftCalendar": "Swipe left for calendar",
   "swipeLeftCalendarInfo": "In the All view, swiping left opens the calendar",
   "calendarMoved": "Moved to {day}",
-  "@calendarMoved": {"placeholders": {"day": {"type": "String"}}}
+  "@calendarMoved": {"placeholders": {"day": {"type": "String"}}},
+  "gcalTitle": "Google Calendar",
+  "gcalInfo": "Events from your Google Calendar show up here (read-only). You can link notes to them; nothing is written to Google.",
+  "gcalConnect": "Connect Google Calendar",
+  "gcalConnectFailed": "Couldn't connect Google Calendar",
+  "gcalCalendars": "Calendars shown",
+  "gcalRefresh": "Refresh",
+  "gcalDisconnect": "Disconnect",
+  "gcalError": "Google Calendar is unreachable right now; showing cached events.",
+  "gcalReadOnly": "Google Calendar event · open it in Google Calendar to edit",
+  "gcalOpenInGoogle": "Open in Google Calendar",
+  "calendarMeetingNote": "Meeting note",
+  "calendarLinkedNotes": "Linked notes",
+  "calendarUnlinkNote": "Unlink",
+  "gcalSyncedAt": "Last synced {time}",
+  "@gcalSyncedAt": {"placeholders": {"time": {"type": "String"}}}
 }

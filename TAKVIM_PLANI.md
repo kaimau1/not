@@ -242,10 +242,10 @@ Faz 53'te.
 - [x] F47.7 Ekran turu `tool/tour/calendar_tour_test.dart` (telefon/tablet × 4 görünüm, koyu `TOUR_DARK=1`) ✓. Akıcılık ölçümü (`tool/perf`, telefonda kıstırma/kaydırma) telefon gerektirir → yazıldı, cihazda ölçülmedi; KALANLAR §2 #87.
 
 ### Faz 48 — Google Takvim (salt okuma)
-- [ ] F48.1 `calendar_api.dart` (Gmail kalıbı, yalnız GET), `calendarAuthProvider`, Ayarlar → Bağlantılar'da "Google Takvim".
-- [ ] F48.2 Takvim listesi + hangi takvimler gösterilsin (renkleriyle), cihazda önbellek, `syncToken`.
-- [ ] F48.3 Google etkinlikleri ızgarada/ajandada (farklı kenarlık), ayrıntıda "Google Takvim'de aç".
-- [ ] F48.4 Google etkinliğine not bağlama (bağ `users/{uid}/eventLinks/{googleEventId}` — Google'a yazılmaz).
+- [x] F48.1 `google_calendar_api.dart` (Gmail kalıbı, yalnız GET, UTF-8), kapsam `calendar.readonly` ayrı (`googleScopeAuth`, web jetonu sekmede `notlar_gcal_token`). Bağlantı yeri: Ayarlar'da "Bağlantılar" bölümü YOK — takvim çubuğundaki ☁ düğmesi (`showGoogleCalendarSheet`: bağla / takvimler / yenile / kaldır); ayarlara taşımak sabah bakılacak. Konsol: **F19.B10**.
+- [x] F48.2 `google_calendar_sync.dart` (`GoogleCalendarController`): takvim listesi + seçim (varsayılan Google'daki "göster"; `shown` kümesi), renk `backgroundColor`; cihazda önbellek (`gcal_cache_<uid>`, SharedPreferences) — açılışta ağsız; ilk çekiş ±60 gün `singleEvents`, sonra takvim başına `syncToken` artımlı, 410 → tam; takvim ekranına girişte + açıkken 15 dk'da bir (K8). Firestore'a yazılmaz.
+- [x] F48.3 Google etkinlikleri (`g:<takvim>/<id>`, `CalendarEvent.fromGoogle`) ay/hafta/ajanda/yıl + takvim zemininde; ayda çerçeveli şerit, ajandada ☁; sürüklenmez/düzenlenmez; dokununca salt okunur levha (`showGoogleEventSheet`) + "Google Takvim'de aç" (`htmlLink`).
+- [x] F48.4 `eventLinks` (`linkNoteToGoogleEvent`, hesap silme listesinde); levhada "Toplantı notu" (`openMeetingNote`: başlık + zaman/konum/açıklama, bağlanır, açılır) ve "Bağlı notlar" (bağı kaldır). Testler `google_calendar_test` (yalnız GET, artımlı/410, önbellek, gizli takvim). Gerçek Google'a karşı denenmedi → KALANLAR §2 #101.
 
 ### Faz 49 — Not ↔ takvim
 - [ ] F49.1 Günün notu, etkinlikten toplantı notu, not ⋮ "Takvime bağla".
@@ -313,7 +313,7 @@ Faz 53'te.
 |---|---|
 | 46 Model | ✅ |
 | 47 Takvim ekranı | ✅ 2026-11-06 (sürükleyerek taşıma ayda; telefonda akıcılık ölçümü KALANLAR §2 #87) — ek: ana ekranda sola kaydırınca takvim, takvim zemini |
-| 48 Google Takvim okuma | — |
+| 48 Google Takvim okuma | ✅ 2026-11-06 (gerçek hesapta denenmedi: F19.B10 + KALANLAR §2 #101) |
 | 49 Not ↔ takvim | — |
 | 50 Görevler | 🟡 yerel bitti (50.1–50.2); madde→görev (50.3), Google senkronu (50.4) açık |
 | 51 Google'a yazma | — |

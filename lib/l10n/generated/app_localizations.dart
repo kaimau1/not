@@ -12961,6 +12961,90 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{day} gününe taşındı'**
   String calendarMoved(String day);
+
+  /// No description provided for @gcalTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim'**
+  String get gcalTitle;
+
+  /// No description provided for @gcalInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim\'indeki etkinlikler takvimde görünür (yalnız okunur). Etkinliğe not bağlayabilirsin; Google\'a bir şey yazılmaz.'**
+  String get gcalInfo;
+
+  /// No description provided for @gcalConnect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim\'i bağla'**
+  String get gcalConnect;
+
+  /// No description provided for @gcalConnectFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim bağlanamadı'**
+  String get gcalConnectFailed;
+
+  /// No description provided for @gcalCalendars.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gösterilen takvimler'**
+  String get gcalCalendars;
+
+  /// No description provided for @gcalRefresh.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yenile'**
+  String get gcalRefresh;
+
+  /// No description provided for @gcalDisconnect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantıyı kaldır'**
+  String get gcalDisconnect;
+
+  /// No description provided for @gcalError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim\'e şu an ulaşılamadı; önbellekteki etkinlikler gösteriliyor.'**
+  String get gcalError;
+
+  /// No description provided for @gcalReadOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim etkinliği · düzenlemek için Google Takvim\'de aç'**
+  String get gcalReadOnly;
+
+  /// No description provided for @gcalOpenInGoogle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim\'de aç'**
+  String get gcalOpenInGoogle;
+
+  /// No description provided for @calendarMeetingNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplantı notu'**
+  String get calendarMeetingNote;
+
+  /// No description provided for @calendarLinkedNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlı notlar'**
+  String get calendarLinkedNotes;
+
+  /// No description provided for @calendarUnlinkNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağı kaldır'**
+  String get calendarUnlinkNote;
+
+  /// No description provided for @gcalSyncedAt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son eşitleme {time}'**
+  String gcalSyncedAt(String time);
 }
 
 class _AppLocalizationsDelegate

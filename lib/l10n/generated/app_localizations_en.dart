@@ -7278,4 +7278,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String calendarMoved(String day) {
     return 'Moved to $day';
   }
+
+  @override
+  String get gcalTitle => 'Google Calendar';
+
+  @override
+  String get gcalInfo =>
+      'Events from your Google Calendar show up here (read-only). You can link notes to them; nothing is written to Google.';
+
+  @override
+  String get gcalConnect => 'Connect Google Calendar';
+
+  @override
+  String get gcalConnectFailed => 'Couldn\'t connect Google Calendar';
+
+  @override
+  String get gcalCalendars => 'Calendars shown';
+
+  @override
+  String get gcalRefresh => 'Refresh';
+
+  @override
+  String get gcalDisconnect => 'Disconnect';
+
+  @override
+  String get gcalError =>
+      'Google Calendar is unreachable right now; showing cached events.';
+
+  @override
+  String get gcalReadOnly =>
+      'Google Calendar event · open it in Google Calendar to edit';
+
+  @override
+  String get gcalOpenInGoogle => 'Open in Google Calendar';
+
+  @override
+  String get calendarMeetingNote => 'Meeting note';
+
+  @override
+  String get calendarLinkedNotes => 'Linked notes';
+
+  @override
+  String get calendarUnlinkNote => 'Unlink';
+
+  @override
+  String gcalSyncedAt(String time) {
+    return 'Last synced $time';
+  }
 }

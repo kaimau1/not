@@ -18,12 +18,14 @@ import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../data/calendar_repository.dart';
+import '../data/google_calendar_sync.dart';
 import '../domain/agenda.dart';
 import '../domain/calendar_event.dart';
 import '../domain/day_key.dart';
 import '../domain/task_item.dart';
 import 'calendar_views.dart';
 import 'event_editor.dart';
+import 'google_calendar_ui.dart';
 import 'month_grid.dart';
 import 'pinch_zoom.dart';
 import 'task_editor.dart';
@@ -102,10 +104,25 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     }
   }
 
+  /// Ekran açıkken Google Takvim 15 dk'da bir tazelenir (K8).
+  Timer? _googleTimer;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybePinchHint());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybePinchHint();
+      _refreshGoogle();
+    });
+    _googleTimer = Timer.periodic(
+      GoogleCalendarController.refreshEvery,
+      (_) => _refreshGoogle(),
+    );
+  }
+
+  void _refreshGoogle() {
+    if (!mounted) return;
+    unawaited(ref.read(googleCalendarProvider.notifier).refresh());
   }
 
   void _maybePinchHint() {
@@ -123,6 +140,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   @override
   void dispose() {
+    _googleTimer?.cancel();
     _preview.dispose();
     super.dispose();
   }
@@ -262,6 +280,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   void _openEntry(AgendaEntry e) {
     switch (e) {
+      case EventOccurrence(:final event, :final start) when event.fromGoogle:
+        unawaited(showGoogleEventSheet(context, event, start));
       case EventOccurrence(:final event, :final start):
         unawaited(
           showEventEditor(context, existing: event, occurrenceStart: start),
@@ -362,7 +382,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final events = ref.watch(eventsStreamProvider);
     final tasks = ref.watch(tasksStreamProvider).value ?? const <TaskItem>[];
     final reminders = ref.watch(calendarReminderNotesProvider);
-    final eventList = events.value ?? const <CalendarEvent>[];
+    final google = ref.watch(googleCalendarEventsProvider);
+    final eventList = [
+      ...?events.value,
+      ...google,
+    ];
     final data = CalendarData(
       events: eventList,
       tasks: tasks,
@@ -477,6 +501,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           icon: const Icon(Icons.alarm_outlined),
           onPressed: () => unawaited(context.push('/reminders')),
         ),
+        if (ref.watch(googleCalendarAvailableProvider))
+          IconButton(
+            key: const ValueKey('calendar-google'),
+            tooltip: l10n.gcalTitle,
+            icon: Icon(
+              ref.watch(googleCalendarProvider.select((s) => s.connected))
+                  ? Icons.cloud_done_outlined
+                  : Icons.cloud_outlined,
+            ),
+            onPressed: () => unawaited(showGoogleCalendarSheet(context)),
+          ),
       ],
     );
 
@@ -1002,11 +1037,13 @@ class _EventTile extends StatelessWidget {
     final sub = [when, if (e.location.isNotEmpty) e.location].join(' · ');
     return _EntryShell(
       accent: e.color != null ? Color(e.color!) : scheme.primary,
-      onTap: () => showEventEditor(
-        context,
-        existing: e,
-        occurrenceStart: occurrence.start,
-      ),
+      onTap: () => e.fromGoogle
+          ? showGoogleEventSheet(context, e, occurrence.start)
+          : showEventEditor(
+              context,
+              existing: e,
+              occurrenceStart: occurrence.start,
+            ),
       child: Row(
         children: [
           Expanded(
@@ -1032,6 +1069,23 @@ class _EventTile extends StatelessWidget {
               ],
             ),
           ),
+          // Google Takvim etkinliği (F48.3): bulut simgesi, bağlı not ataç.
+          if (e.fromGoogle)
+            Icon(
+              Icons.cloud_outlined,
+              size: 16,
+              color: scheme.onSurfaceVariant,
+              semanticLabel: l10n.gcalTitle,
+            ),
+          if (e.noteIds.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Icon(
+                Icons.sticky_note_2_outlined,
+                size: 16,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
           if (e.repeats)
             Icon(Icons.repeat, size: 16, color: scheme.onSurfaceVariant),
           if (e.reminders.isNotEmpty)

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../data/calendar_repository.dart';
+import '../data/google_calendar_sync.dart';
 import '../domain/agenda.dart';
 import '../domain/day_key.dart';
 import '../domain/task_item.dart';
@@ -32,7 +33,10 @@ class CalendarBackdrop extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final data = CalendarData(
-      events: ref.watch(eventsStreamProvider).value ?? const [],
+      events: [
+        ...?ref.watch(eventsStreamProvider).value,
+        ...ref.watch(googleCalendarEventsProvider),
+      ],
       tasks: ref.watch(tasksStreamProvider).value ?? const <TaskItem>[],
       reminders: ref.watch(calendarReminderNotesProvider),
     );

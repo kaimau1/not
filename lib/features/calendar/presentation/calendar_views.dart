@@ -389,6 +389,8 @@ class _MonthChip extends StatelessWidget {
     final color = entryColor(entry, scheme);
     final solid = entry is EventOccurrence && entry.allDay;
     final done = entry is TaskEntry && (entry as TaskEntry).task.completed;
+    final google =
+        entry is EventOccurrence && (entry as EventOccurrence).event.fromGoogle;
     return Opacity(
       opacity: dim ? 0.5 : 1,
       child: Container(
@@ -399,6 +401,10 @@ class _MonthChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: solid ? color : color.withValues(alpha: 0.16),
           borderRadius: BorderRadius.circular(4),
+          // Google Takvim etkinliği farklı kenarlıkla (F48.3).
+          border: google
+              ? Border.all(color: color.withValues(alpha: 0.8), width: 0.8)
+              : null,
         ),
         child: Text(
           entryTitle(entry, context.l10n),
