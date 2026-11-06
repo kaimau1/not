@@ -7328,4 +7328,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String calendarDayWrittenNotes(int count) {
     return 'O gün yazılan notlar ($count)';
   }
+
+  @override
+  String get itemMenuTask => 'Görev yap';
 }

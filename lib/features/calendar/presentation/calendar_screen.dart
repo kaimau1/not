@@ -19,6 +19,7 @@ import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../data/calendar_repository.dart';
+import '../data/task_note_sync.dart';
 import '../data/google_calendar_sync.dart';
 import '../domain/agenda.dart';
 import '../domain/calendar_event.dart';
@@ -1205,9 +1206,7 @@ class _TaskTile extends ConsumerWidget {
             value: task.completed,
             onChanged: repo == null
                 ? null
-                : (v) => v == true
-                      ? repo.completeTaskNow(task)
-                      : repo.uncompleteTask(task),
+                : (v) => setTaskCompleted(ref, task, v == true),
           ),
           Expanded(
             child: Text(

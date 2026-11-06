@@ -2690,5 +2690,6 @@
   "calendarLinkToEvent": "Link to an event",
   "calendarDayNote": "Note for this day",
   "calendarDayWrittenNotes": "Notes written that day ({count})",
-  "@calendarDayWrittenNotes": {"placeholders": {"count": {"type": "int"}}}
+  "@calendarDayWrittenNotes": {"placeholders": {"count": {"type": "int"}}},
+  "itemMenuTask": "Make task"
 }

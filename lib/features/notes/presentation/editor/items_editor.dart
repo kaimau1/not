@@ -161,6 +161,8 @@ class ItemsEditor extends StatefulWidget {
     this.addRowTrailing,
     this.paperLines = false,
     this.onMoveToPage,
+    this.onMakeTask,
+    this.onItemChecked,
   });
 
   /// DEFTER (çizgili kâğıt) görünümü: satırlar defter çizgilerine oturacak
@@ -171,6 +173,12 @@ class ItemsEditor extends StatefulWidget {
   /// Madde menüsündeki "Başka sayfaya taşı" (notun birden çok sayfası
   /// varken). null = seçenek yok.
   final ValueChanged<NoteItem>? onMoveToPage;
+
+  /// Madde menüsündeki "Görev yap" (TAKVIM F50.3); null = seçenek yok.
+  final ValueChanged<NoteItem>? onMakeTask;
+
+  /// Kullanıcı maddeyi işaretledi/kaldırdı (bağlı görev eşlemesi).
+  final void Function(NoteItem item, bool checked)? onItemChecked;
 
   /// "+ Yeni öğe" satırının SAĞ ucundaki ek düğme (editörde: notta hem metin
   /// hem liste varken "bölümler" menüsü — listeyi ya da metni kaldır).
@@ -1122,6 +1130,7 @@ class ItemsEditorState extends State<ItemsEditor>
       _settling[target.id] = wasChecked;
     });
     _commit();
+    if (wasChecked != nowChecked) widget.onItemChecked?.call(target, nowChecked);
     Future<void>.delayed(_settleDuration, () {
       if (!mounted) return;
       setState(() {

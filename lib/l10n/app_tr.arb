@@ -3483,5 +3483,6 @@
   "calendarLinkToEvent": "Bir etkinliğe bağla",
   "calendarDayNote": "Bu güne not",
   "calendarDayWrittenNotes": "O gün yazılan notlar ({count})",
-  "@calendarDayWrittenNotes": {"placeholders": {"count": {"type": "int"}}}
+  "@calendarDayWrittenNotes": {"placeholders": {"count": {"type": "int"}}},
+  "itemMenuTask": "Görev yap"
 }

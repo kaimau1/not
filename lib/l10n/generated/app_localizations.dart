@@ -13087,6 +13087,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'O gün yazılan notlar ({count})'**
   String calendarDayWrittenNotes(int count);
+
+  /// No description provided for @itemMenuTask.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görev yap'**
+  String get itemMenuTask;
 }
 
 class _AppLocalizationsDelegate

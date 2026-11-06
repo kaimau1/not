@@ -1,4 +1,5 @@
 import '../../../core/app_icons.dart';
+import '../../calendar/data/task_note_sync.dart';
 import '../../../core/widgets/tag_pill.dart';
 import 'dart:async';
 import 'dart:io';
@@ -1335,6 +1336,8 @@ void toggleCardItem(WidgetRef ref, Note note, NoteItem target) {
         (i.id == target.id ? i.copyWith(checked: !i.checked) : i).toMap(),
     ],
   });
+  // Maddeden üretilmiş görev de tamamlanır (TAKVIM F50.3).
+  syncItemToTasks(ref, note.id, target.id, !target.checked);
 }
 
 /// Parola notunun kartında içerik yerine duran satır (B1). [onLock] null

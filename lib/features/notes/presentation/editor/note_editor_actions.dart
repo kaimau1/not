@@ -1148,4 +1148,19 @@ extension _EditorActions on _NoteEditorScreenState {
       }, immediate: true);
     }
   }
+
+  /// Liste maddesinden görev (TAKVIM F50.3): görev levhası maddenin metniyle
+  /// açılır, tamamlanma iki yönlü eşlenir.
+  void _makeTask(Note note, NoteItem item) {
+    final text = item.text.trim();
+    if (text.isEmpty) return;
+    unawaited(
+      showTaskEditor(
+        context,
+        initialTitle: text,
+        noteId: note.id,
+        noteItemId: item.id,
+      ),
+    );
+  }
 }

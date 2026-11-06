@@ -7348,4 +7348,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String calendarDayWrittenNotes(int count) {
     return 'Notes written that day ($count)';
   }
+
+  @override
+  String get itemMenuTask => 'Make task';
 }

@@ -75,7 +75,9 @@ import '../../../folders/domain/note_folder.dart';
 import '../../../folders/presentation/folder_sheets.dart';
 import '../../../settings/data/permissions_service.dart';
 import '../../../settings/settings_providers.dart';
+import '../../../calendar/data/task_note_sync.dart';
 import '../../../calendar/presentation/note_calendar_links.dart';
+import '../../../calendar/presentation/task_editor.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/device_speech.dart';
 import '../../data/voice_listen_session.dart';
@@ -3253,6 +3255,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         onMoveToPage: textPagePosition(note).count > 1
             ? _moveItemToPage
             : null,
+        onMakeTask: _readOnly ? null : (item) => _makeTask(note, item),
+        onItemChecked: (item, checked) =>
+            syncItemToTasks(ref, note.id, item.id, checked),
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
         wholeNoteText: () => _note == null
             ? ''
@@ -3301,6 +3306,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         onMoveToPage: textPagePosition(note).count > 1
             ? _moveItemToPage
             : null,
+        onMakeTask: _readOnly ? null : (item) => _makeTask(note, item),
+        onItemChecked: (item, checked) =>
+            syncItemToTasks(ref, note.id, item.id, checked),
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
         wholeNoteText: () => _note == null
             ? ''

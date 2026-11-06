@@ -6,6 +6,7 @@ import '../../../app/app_frame.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../data/calendar_repository.dart';
+import '../data/task_note_sync.dart';
 import '../domain/day_key.dart';
 import '../domain/task_item.dart';
 import 'task_editor.dart';
@@ -270,9 +271,7 @@ class _TaskRow extends ConsumerWidget {
         value: task.completed,
         onChanged: repo == null
             ? null
-            : (v) => v == true
-                  ? repo.completeTaskNow(task)
-                  : repo.uncompleteTask(task),
+            : (v) => setTaskCompleted(ref, task, v == true),
       ),
       title: Text(
         task.title,
