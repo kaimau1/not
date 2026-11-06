@@ -50,7 +50,15 @@ class GoogleCalendarState {
     this.loading = false,
     this.error,
     this.syncedAt,
+    this.canWrite = false,
+    this.pending = 0,
   });
+
+  /// Google'a yazma izni verildi (`calendar.events`, Faz 51).
+  final bool canWrite;
+
+  /// Gönderilemeyip kuyrukta bekleyen yazım sayısı (F51.3).
+  final int pending;
 
   /// Bir kez bağlandı (önbellekte takvim listesi var).
   final bool connected;
@@ -77,7 +85,11 @@ class GoogleCalendarState {
     Object? error,
     bool clearError = false,
     DateTime? syncedAt,
+    bool? canWrite,
+    int? pending,
   }) => GoogleCalendarState(
+    canWrite: canWrite ?? this.canWrite,
+    pending: pending ?? this.pending,
     connected: connected ?? this.connected,
     calendars: calendars ?? this.calendars,
     shown: shown ?? this.shown,
@@ -100,6 +112,7 @@ Map<String, dynamic> encodeGoogleEvent(CalendarEvent e) => {
   'c': ?e.color,
   if (e.google case final g?) ...{'gc': g.container, 'gi': g.id, 'ge': g.etag},
   if (e.extras['htmlLink'] case final String link) 'u': link,
+  if (e.extras['recurringEventId'] case final String r) 'r': r,
 };
 
 CalendarEvent? decodeGoogleEvent(Object? raw) {
@@ -124,7 +137,10 @@ CalendarEvent? decodeGoogleEvent(Object? raw) {
             id: gi,
             etag: raw['ge'] as String? ?? '',
           ),
-    extras: {'htmlLink': ?raw['u'] as String?},
+    extras: {
+      'htmlLink': ?raw['u'] as String?,
+      'recurringEventId': ?raw['r'] as String?,
+    },
   );
 }
 
@@ -144,6 +160,16 @@ class GoogleCalendarController extends Notifier<GoogleCalendarState> {
   static const window = Duration(days: 60);
 
   final Map<String, _CalendarCache> _cache = {};
+
+  /// Gönderilemeyen yazımlar (F51.3): `{op, cal, id?, tmp?, body?}`.
+  final List<Map<String, dynamic>> _queue = [];
+  GoogleScopeAuth? _writeAuth;
+  ScopeTokenCache? _writeTokens;
+  GoogleCalendarWriteApi? _writeApi;
+
+  /// Testte yazma kapsamının sahtesi.
+  @visibleForTesting
+  static GoogleScopeAuth Function()? writeAuthOverride;
   GoogleScopeAuth? _auth;
   ScopeTokenCache? _tokens;
   GoogleCalendarApi? _api;
@@ -202,8 +228,15 @@ class GoogleCalendarController extends Notifier<GoogleCalendarState> {
               }
             : null,
         syncedAt: at == null ? null : DateTime.fromMillisecondsSinceEpoch(at),
+        canWrite: j['write'] == true,
       );
-      return base.copyWith(events: _visible(base));
+      _queue
+        ..clear()
+        ..addAll([
+          for (final q in j['queue'] as List? ?? const [])
+            if (q is Map) Map<String, dynamic>.from(q),
+        ]);
+      return base.copyWith(events: _visible(base), pending: _queue.length);
     } catch (e) {
       ErrorLog.record('gcal-cache', e);
       return const GoogleCalendarState();
@@ -218,6 +251,8 @@ class GoogleCalendarController extends Notifier<GoogleCalendarState> {
         'calendars': [for (final c in state.calendars) c.toJson()],
         'shown': state.shown?.toList(),
         'at': state.syncedAt?.millisecondsSinceEpoch,
+        'write': state.canWrite,
+        'queue': _queue,
         'per': {
           for (final e in _cache.entries)
             e.key: {
@@ -275,6 +310,7 @@ class GoogleCalendarController extends Notifier<GoogleCalendarState> {
     final api = _api!;
     state = state.copyWith(loading: true, clearError: true);
     try {
+      await _flush();
       final calendars = await api.calendars();
       final next = state.copyWith(calendars: calendars, connected: true);
       for (final c in calendars) {
@@ -358,10 +394,171 @@ class GoogleCalendarController extends Notifier<GoogleCalendarState> {
     if (shown && _cache[calendarId] == null) await refresh(force: true);
   }
 
+  // ------------------------------------------------ Google'a yazma (Faz 51)
+
+  void _ensureWriteClient() {
+    if (_writeApi != null) return;
+    final auth = _writeAuth ??=
+        writeAuthOverride?.call() ??
+        googleScopeAuth(kCalendarEventsScope, 'notlar_gcal_write');
+    final tokens = _writeTokens ??= ScopeTokenCache(silentRefresh: auth.silent);
+    final client = _client ??= clientOverride?.call() ?? http.Client();
+    _writeApi = GoogleCalendarWriteApi(client: client, tokens: tokens);
+  }
+
+  /// Yazma iznini ister (`calendar.events`, ayrı onay). Verilmezse false.
+  Future<bool> connectWrite() async {
+    _ensureWriteClient();
+    try {
+      final r = await _writeAuth!.connect();
+      if (r == null) return false;
+      _writeTokens!.put(r.token, r.expiry);
+    } catch (e) {
+      ErrorLog.record('gcal-write-connect', e);
+      return false;
+    }
+    state = state.copyWith(canWrite: true);
+    await _save();
+    return true;
+  }
+
+  /// Yeni etkinliğin yazılacağı takvim: birincil (yoksa ilk gösterilen).
+  GoogleCalendarInfo? get writeTarget =>
+      state.calendars.where((c) => c.primary).firstOrNull ??
+      state.calendars.where(state.isShown).firstOrNull;
+
+  /// Önbelleğe iyimser yazım: etkinlik ağ beklemeden takvimde görünür.
+  void _putLocal(String cal, CalendarEvent e) {
+    final cached = _cache[cal] ?? const _CalendarCache();
+    _cache[cal] = _CalendarCache(
+      syncToken: cached.syncToken,
+      events: {...cached.events, e.id: e},
+    );
+    state = state.copyWith(events: _visible(state));
+  }
+
+  void _removeLocal(String cal, String id) {
+    final cached = _cache[cal];
+    if (cached == null) return;
+    _cache[cal] = _CalendarCache(
+      syncToken: cached.syncToken,
+      events: {...cached.events}..remove(id),
+    );
+    state = state.copyWith(events: _visible(state));
+  }
+
+  /// [event]'i Google'a yazar: kimliği `g:` ile başlıyorsa düzenleme, değilse
+  /// birincil takvime yeni. Ağ yoksa kuyruğa girer, takvimde hemen görünür.
+  Future<void> saveToGoogle(CalendarEvent event) async {
+    final g = event.google;
+    final editing = event.fromGoogle && g != null;
+    final cal = editing ? g.container : writeTarget?.id;
+    if (cal == null) return;
+    final body = googleEventBody(event);
+    if (editing) {
+      _putLocal(cal, event);
+      _queue.add({'op': 'patch', 'cal': cal, 'id': g.id, 'body': body});
+    } else {
+      final tmp = 'tmp-${DateTime.now().microsecondsSinceEpoch}';
+      _putLocal(
+        cal,
+        event.copyWith(
+          id: '$kGoogleEventPrefix$cal/$tmp',
+          color: writeTarget?.color,
+          google: GoogleLink(container: cal, id: tmp),
+        ),
+      );
+      _queue.add({'op': 'insert', 'cal': cal, 'tmp': tmp, 'body': body});
+    }
+    state = state.copyWith(pending: _queue.length);
+    await _save();
+    await _flush();
+  }
+
+  /// Google etkinliğini siler (iyimser; kuyruklu).
+  Future<void> deleteFromGoogle(CalendarEvent event) async {
+    final g = event.google;
+    if (!event.fromGoogle || g == null) return;
+    _removeLocal(g.container, event.id);
+    _queue.add({'op': 'delete', 'cal': g.container, 'id': g.id});
+    state = state.copyWith(pending: _queue.length);
+    await _save();
+    await _flush();
+  }
+
+  bool _flushing = false;
+
+  /// Kuyruğu sırayla gönderir. Ağ/sunucu hatasında durur (sonra yeniden);
+  /// kalıcı istemci hatasında (4xx) yazım düşer ve hata gösterilir.
+  Future<void> _flush() async {
+    if (_queue.isEmpty || _flushing || !state.canWrite) return;
+    _flushing = true;
+    _ensureWriteClient();
+    final api = _writeApi!;
+    try {
+      while (_queue.isNotEmpty) {
+        final q = _queue.first;
+        final cal = q['cal'] as String;
+        final body = (q['body'] as Map?)?.cast<String, dynamic>();
+        try {
+          switch (q['op']) {
+            case 'insert':
+              final j = await api.insert(cal, body!);
+              final tmp = q['tmp'] as String;
+              _removeLocal(cal, '$kGoogleEventPrefix$cal/$tmp');
+              final created = googleEventFromJson(
+                j,
+                calendarId: cal,
+                color: state.calendars
+                    .where((c) => c.id == cal)
+                    .firstOrNull
+                    ?.color,
+              );
+              if (created != null) _putLocal(cal, created);
+              // Kuyrukta bu geçici kimliğe yazılmış düzenleme/silme varsa
+              // gerçek kimliğe çevrilir.
+              for (final later in _queue.skip(1)) {
+                if (later['id'] == tmp) later['id'] = j['id'];
+              }
+            case 'patch':
+              final j = await api.patch(cal, q['id'] as String, body!);
+              final updated = googleEventFromJson(
+                j,
+                calendarId: cal,
+                color: state.calendars
+                    .where((c) => c.id == cal)
+                    .firstOrNull
+                    ?.color,
+              );
+              if (updated != null) _putLocal(cal, updated);
+            case 'delete':
+              await api.delete(cal, q['id'] as String);
+          }
+          _queue.removeAt(0);
+        } on GoogleCalendarException catch (e) {
+          if (e.status >= 500 || e.status == 429 || e.unauthorized) rethrow;
+          // Kalıcı hata (ör. 400): bu yazım düşer, sıradakine geçilir.
+          ErrorLog.record('gcal-write', e);
+          _queue.removeAt(0);
+          state = state.copyWith(error: e);
+        }
+      }
+    } catch (e) {
+      // Ağ yok / sunucu: kuyruk kalır, sonraki tazelemede yeniden.
+      ErrorLog.record('gcal-write-queue', e);
+    } finally {
+      _flushing = false;
+      state = state.copyWith(pending: _queue.length);
+      await _save();
+    }
+  }
+
   /// Bağlantıyı unutur (önbellek silinir; Google'daki izin kalır).
   Future<void> disconnect() async {
     _cache.clear();
+    _queue.clear();
     _tokens?.invalidate();
+    _writeTokens?.invalidate();
     state = const GoogleCalendarState();
     await ref.read(sharedPreferencesProvider).remove(_key);
   }

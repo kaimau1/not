@@ -15,6 +15,7 @@ import '../data/calendar_repository.dart';
 import '../domain/calendar_event.dart';
 import '../domain/day_key.dart';
 import '../domain/recurrence.dart';
+import '../data/google_calendar_sync.dart';
 import 'google_calendar_ui.dart';
 
 /// Hatırlatma seçenekleri (dakika). Google Takvim'in olağan değerleri.
@@ -111,6 +112,13 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
   late DateTime _end;
   late Recurrence _repeat = Recurrence.parse(widget.existing?.repeat);
   late int? _reminder;
+
+  /// Yeni etkinlik nereye kaydedilsin (Faz 51, K2): Google bağlıysa
+  /// varsayılan Google; nottan bağlanırken bu cihaz (bağ yerel etkinliğe).
+  late bool _toGoogle =
+      widget.existing?.fromGoogle ??
+      (widget.linkNoteId == null &&
+          ref.read(googleCalendarProvider).connected);
 
   @override
   void initState() {
@@ -272,11 +280,50 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
     setState(() => _reminder = picked < 0 ? null : picked);
   }
 
-  void _save() {
+  /// Etkinliğe bağlı notlar (Google'da `eventLinks`, yerelde `noteIds`).
+  List<String> _linkedNoteIds(CalendarEvent existing) {
+    if (existing.fromGoogle) {
+      final links = ref.watch(eventLinksStreamProvider).value;
+      return links?[existing.google?.id] ?? const [];
+    }
+    final events = ref.watch(eventsStreamProvider).value;
+    final live = events?.where((e) => e.id == existing.id).firstOrNull;
+    return live?.noteIds ?? existing.noteIds;
+  }
+
+  /// Düzenleyicideki alanlarla [base]'in yeni hâli (Google yolu).
+  CalendarEvent _edited(CalendarEvent base) => base.copyWith(
+    title: _title.text.trim(),
+    location: _location.text.trim(),
+    description: _description.text.trim(),
+    allDay: _allDay,
+    start: _start,
+    end: _end.isAfter(_start) ? _end : _fallbackEnd(),
+    repeat: _repeat.encode(),
+    reminders: _reminder == null ? const [] : [_reminder!],
+  );
+
+  Future<void> _save() async {
     final repo = ref.read(calendarRepositoryProvider);
     if (repo == null) return;
     final base =
         widget.existing ?? CalendarEvent(id: '', start: _start, end: _end);
+    if (_toGoogle) {
+      final google = ref.read(googleCalendarProvider.notifier);
+      if (!ref.read(googleCalendarProvider).canWrite &&
+          !await google.connectWrite()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showMessage(
+            context.l10n.gcalWriteDenied,
+          );
+        }
+        return;
+      }
+      if (!mounted) return;
+      unawaited(google.saveToGoogle(_edited(base)));
+      Navigator.pop(context);
+      return;
+    }
     repo.saveEvent(
       base.copyWith(
         title: _title.text.trim(),
@@ -304,6 +351,32 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
     final repo = ref.read(calendarRepositoryProvider);
     if (event == null || repo == null) return;
     final l10n = context.l10n;
+    if (event.fromGoogle) {
+      // Google'dan silme geri alınamaz (yeniden eklemek yeni kimlik verir):
+      // önce sorulur.
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          content: Text(l10n.gcalDeleteConfirm),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.eventDelete),
+            ),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
+      unawaited(
+        ref.read(googleCalendarProvider.notifier).deleteFromGoogle(event),
+      );
+      Navigator.pop(context);
+      return;
+    }
     var onlyThis = false;
     if (event.repeats && widget.occurrenceStart != null) {
       final choice = await showDialog<bool>(
@@ -404,8 +477,34 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
                       hintText: l10n.eventTitleHint,
                       border: InputBorder.none,
                     ),
-                    onSubmitted: (_) => _save(),
+                    onSubmitted: (_) => unawaited(_save()),
                   ),
+                  // Nereye kaydedilsin (Faz 51): yalnız yeni etkinlikte ve
+                  // Google Takvim bağlıyken.
+                  if (widget.existing == null &&
+                      ref.watch(googleCalendarProvider).connected)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: SegmentedButton<bool>(
+                        key: const ValueKey('event-target'),
+                        showSelectedIcon: false,
+                        segments: [
+                          ButtonSegment(
+                            value: false,
+                            icon: const Icon(Icons.smartphone, size: 18),
+                            label: Text(l10n.eventSaveLocal),
+                          ),
+                          ButtonSegment(
+                            value: true,
+                            icon: const Icon(Icons.cloud_outlined, size: 18),
+                            label: Text(l10n.gcalTitle),
+                          ),
+                        ],
+                        selected: {_toGoogle},
+                        onSelectionChanged: (v) =>
+                            setState(() => _toGoogle = v.first),
+                      ),
+                    ),
                   const Divider(),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
@@ -457,17 +556,14 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
                   if (widget.existing case final existing?) ...[
                     const SizedBox(height: 8),
                     LinkedNotesList(
-                      noteIds:
-                          ref
-                              .watch(eventsStreamProvider)
-                              .value
-                              ?.where((e) => e.id == existing.id)
-                              .firstOrNull
-                              ?.noteIds ??
-                          existing.noteIds,
-                      onUnlink: (id) => ref
-                          .read(calendarRepositoryProvider)
-                          ?.unlinkNoteFromEvent(existing.id, id),
+                      noteIds: _linkedNoteIds(existing),
+                      onUnlink: (id) {
+                        final repo = ref.read(calendarRepositoryProvider);
+                        final g = existing.google;
+                        existing.fromGoogle && g != null
+                            ? repo?.unlinkNoteFromGoogleEvent(g.id, id)
+                            : repo?.unlinkNoteFromEvent(existing.id, id);
+                      },
                     ),
                     Align(
                       alignment: AlignmentDirectional.centerStart,
@@ -492,7 +588,7 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
                   const SizedBox(height: 12),
                   FilledButton(
                     key: const ValueKey('event-save'),
-                    onPressed: _save,
+                    onPressed: () => unawaited(_save()),
                     child: Text(l10n.eventSave),
                   ),
                   const SizedBox(height: 16),

@@ -10,6 +10,8 @@ import 'package:notlar/features/calendar/data/calendar_repository.dart';
 import 'package:notlar/features/calendar/data/google_calendar_api.dart';
 import 'package:notlar/features/calendar/data/google_calendar_sync.dart';
 import 'package:notlar/features/calendar/domain/agenda.dart';
+import 'package:notlar/features/calendar/domain/calendar_event.dart';
+import 'package:notlar/features/calendar/domain/recurrence.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -254,5 +256,106 @@ void main() {
       expect(container.read(googleCalendarProvider).events, isEmpty);
       expect(container.read(googleCalendarEventsProvider), isEmpty);
     });
+  });
+
+  group('Google\'a yazma (Faz 51)', () {
+    test('tekrar RRULE\'a, etkinlik gövdeye çevrilir', () {
+      expect(rruleOf(Recurrence.parse('daily')), 'RRULE:FREQ=DAILY');
+      expect(
+        rruleOf(Recurrence.parse('weekly:1,3;every=2;count=5')),
+        'RRULE:FREQ=WEEKLY;BYDAY=MO,WE;INTERVAL=2;COUNT=5',
+      );
+      expect(
+        rruleOf(Recurrence.parse('monthly;until=2026-12-31')),
+        'RRULE:FREQ=MONTHLY;UNTIL=20261231T235959Z',
+      );
+      expect(rruleOf(Recurrence.none), isNull);
+      final body = googleEventBody(
+        CalendarEvent(
+          id: '',
+          title: 'Plan',
+          allDay: true,
+          start: DateTime(2026, 11, 6),
+          end: DateTime(2026, 11, 7),
+          reminders: const [30],
+        ),
+      );
+      expect(body['start'], {'date': '2026-11-06', 'dateTime': null});
+      expect(body['recurrence'], isEmpty);
+      expect((body['reminders'] as Map)['overrides'], [
+        {'method': 'popup', 'minutes': 30},
+      ]);
+    });
+
+    test(
+      'kaydet: anında görünür; ağ yoksa kuyrukta, sonra gönderilir',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        var down = true;
+        final posts = <Map<String, dynamic>>[];
+        GoogleCalendarController.authOverride = _FakeAuth.new;
+        GoogleCalendarController.writeAuthOverride = _FakeAuth.new;
+        GoogleCalendarController.clientOverride = () => MockClient((req) async {
+          if (req.url.path.endsWith('/calendarList')) {
+            return _json({
+              'items': [
+                {'id': 'k', 'summary': 'Kişisel', 'primary': true},
+              ],
+            });
+          }
+          if (req.method == 'GET') {
+            return _json({'items': [], 'nextSyncToken': 'S'});
+          }
+          if (down) return http.Response('yok', 503);
+          final body =
+              jsonDecode(utf8.decode(req.bodyBytes)) as Map<String, dynamic>;
+          posts.add(body);
+          return _json({
+            ...body,
+            'id': 'yeni',
+            'status': 'confirmed',
+            'start': {'dateTime': '2026-11-06T14:00:00Z'},
+            'end': {'dateTime': '2026-11-06T15:00:00Z'},
+          });
+        });
+        addTearDown(() {
+          GoogleCalendarController.authOverride = null;
+          GoogleCalendarController.writeAuthOverride = null;
+          GoogleCalendarController.clientOverride = null;
+        });
+        final c = ProviderContainer(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            currentUidProvider.overrideWithValue('u1'),
+            eventLinksStreamProvider.overrideWith((ref) => Stream.value({})),
+          ],
+        );
+        addTearDown(c.dispose);
+        final ctrl = c.read(googleCalendarProvider.notifier);
+        await ctrl.connect();
+        expect(await ctrl.connectWrite(), isTrue);
+
+        await ctrl.saveToGoogle(
+          CalendarEvent(
+            id: '',
+            title: 'Diş',
+            start: DateTime(2026, 11, 6, 17),
+            end: DateTime(2026, 11, 6, 18),
+          ),
+        );
+        var s = c.read(googleCalendarProvider);
+        expect(s.events.single.title, 'Diş');
+        expect(s.events.single.fromGoogle, isTrue);
+        expect(s.pending, 1);
+
+        down = false;
+        await ctrl.refresh(force: true);
+        s = c.read(googleCalendarProvider);
+        expect(s.pending, 0);
+        expect(posts.single['summary'], 'Diş');
+        expect(s.events.single.google!.id, 'yeni');
+      },
+    );
   });
 }

@@ -154,6 +154,7 @@ class CalendarEvent {
   }
 
   CalendarEvent copyWith({
+    String? id,
     String? title,
     String? description,
     String? location,
@@ -171,7 +172,7 @@ class CalendarEvent {
     DateTime? deletedAt,
     bool clearDeletedAt = false,
   }) => CalendarEvent(
-    id: id,
+    id: id ?? this.id,
     title: title ?? this.title,
     description: description ?? this.description,
     location: location ?? this.location,

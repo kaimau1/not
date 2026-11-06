@@ -3469,7 +3469,7 @@
   "gcalRefresh": "Yenile",
   "gcalDisconnect": "Bağlantıyı kaldır",
   "gcalError": "Google Takvim'e şu an ulaşılamadı; önbellekteki etkinlikler gösteriliyor.",
-  "gcalReadOnly": "Google Takvim etkinliği · düzenlemek için Google Takvim'de aç",
+  "gcalReadOnly": "Google Takvim etkinliği · tekrarlı olanlar Google Takvim'de düzenlenir",
   "gcalOpenInGoogle": "Google Takvim'de aç",
   "calendarMeetingNote": "Toplantı notu",
   "calendarLinkedNotes": "Bağlı notlar",
@@ -3489,5 +3489,11 @@
   "gtasksConnected": "Google Görevler bağlandı, görevler eşlendi",
   "gtasksFailed": "Google Görevler ile eşlenemedi",
   "gtasksSyncNow": "Şimdi eşle",
-  "gtasksSynced": "Görevler eşlendi"
+  "gtasksSynced": "Görevler eşlendi",
+  "eventSaveLocal": "Bu cihaz",
+  "gcalWriteDenied": "Google Takvim'e yazma izni verilmedi",
+  "gcalDeleteConfirm": "Etkinlik Google Takvim'den silinsin mi? Bu geri alınamaz.",
+  "gcalEdit": "Düzenle",
+  "gcalPending": "Google'a gönderilmeyi bekleyen {count} değişiklik",
+  "@gcalPending": {"placeholders": {"count": {"type": "int"}}}
 }

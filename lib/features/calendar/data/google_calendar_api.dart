@@ -4,7 +4,9 @@ import 'package:http/http.dart' as http;
 
 import '../../auth/data/google_scope_auth.dart' show ScopeTokenCache;
 import '../domain/calendar_event.dart';
+import '../../notes/domain/reminder_repeat.dart';
 import '../domain/day_key.dart';
+import '../domain/recurrence.dart';
 
 /// **GOOGLE TAKVİM — YALNIZ OKUMA** (TAKVIM_PLANI Faz 48).
 ///
@@ -128,7 +130,11 @@ CalendarEvent? googleEventFromJson(
       etag: j['etag'] as String? ?? '',
       updated: updated,
     ),
-    extras: {'htmlLink': ?link},
+    extras: {
+      'htmlLink': ?link,
+      // Tekrarlı serinin oluşu: "yalnız bu / tümü" Google'a bırakılır (K3).
+      'recurringEventId': ?j['recurringEventId'] as String?,
+    },
   );
 }
 
@@ -244,5 +250,120 @@ class GoogleCalendarApi {
       cancelled: cancelled,
       syncToken: next,
     );
+  }
+}
+
+/// **GOOGLE TAKVİM'E YAZMA** (TAKVIM_PLANI Faz 51). Kapsam `calendar.events`
+/// (yalnız etkinlik; takvim oluşturma/silme yok) okuma kapsamından AYRI ve
+/// kullanıcı Google'a ilk kez kaydederken istenir.
+const kCalendarEventsScope = 'https://www.googleapis.com/auth/calendar.events';
+
+const _weekdayCodes = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
+
+/// Bizim tekrar dizemiz → Google `RRULE` (desteklenmeyen: null).
+String? rruleOf(Recurrence r) {
+  if (r.isNone) return null;
+  final b = r.base;
+  final parts = <String>[
+    switch (b.kind) {
+      RepeatKind.daily => 'FREQ=DAILY',
+      RepeatKind.weekdays => 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR',
+      RepeatKind.weekly =>
+        'FREQ=WEEKLY;BYDAY=${[for (final d in b.days) _weekdayCodes[d - 1]].join(',')}',
+      RepeatKind.monthly => 'FREQ=MONTHLY',
+      RepeatKind.yearly => 'FREQ=YEARLY',
+      RepeatKind.none => '',
+    },
+    if (r.every > 1) 'INTERVAL=${r.every}',
+    if (r.count > 0) 'COUNT=${r.count}',
+    if (r.count == 0 && r.until.isNotEmpty)
+      'UNTIL=${r.until.replaceAll('-', '')}T235959Z',
+  ];
+  if (parts.first.isEmpty) return null;
+  return 'RRULE:${parts.join(';')}';
+}
+
+/// Yerel düzenleyicinin etkinliği → Google etkinlik gövdesi.
+Map<String, dynamic> googleEventBody(CalendarEvent e) {
+  Map<String, dynamic> at(DateTime d) => e.allDay
+      ? {'date': dayKey(d), 'dateTime': null}
+      : {'dateTime': d.toUtc().toIso8601String(), 'date': null};
+  final rule = rruleOf(e.recurrence);
+  return {
+    'summary': e.title,
+    'description': e.description,
+    'location': e.location,
+    'start': at(e.start),
+    'end': at(e.end),
+    'recurrence': [?rule],
+    'reminders': {
+      'useDefault': false,
+      'overrides': [
+        for (final m in e.reminders) {'method': 'popup', 'minutes': m},
+      ],
+    },
+  };
+}
+
+/// Yazma uç noktaları (okuma istemcisi [GoogleCalendarApi] yalnız GET kalır).
+class GoogleCalendarWriteApi {
+  GoogleCalendarWriteApi({required this._client, required this._tokens});
+
+  final http.Client _client;
+  final ScopeTokenCache _tokens;
+
+  Future<Map<String, dynamic>> _send(
+    String method,
+    Uri uri, [
+    Map<String, dynamic>? body,
+  ]) async {
+    Future<http.Response> once() async {
+      final token = await _tokens.get();
+      if (token == null) throw GoogleCalendarException(401, 'jeton yok');
+      final req = http.Request(method, uri)
+        ..headers['Authorization'] = 'Bearer $token';
+      if (body != null) {
+        req.headers['Content-Type'] = 'application/json; charset=utf-8';
+        req.bodyBytes = utf8.encode(jsonEncode(body));
+      }
+      return http.Response.fromStream(await _client.send(req));
+    }
+
+    var res = await once();
+    if (res.statusCode == 401) {
+      _tokens.invalidate();
+      res = await once();
+    }
+    if (res.statusCode >= 300) {
+      throw GoogleCalendarException(res.statusCode, res.body);
+    }
+    if (res.bodyBytes.isEmpty) return const {};
+    return jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+  }
+
+  Uri _events(String calendarId, [String? id]) => Uri.parse(
+    '$_api/calendars/${Uri.encodeComponent(calendarId)}/events'
+    '${id == null ? '' : '/${Uri.encodeComponent(id)}'}',
+  );
+
+  /// [body] [googleEventBody] çıktısı (kuyrukta saklanabilsin diye ham).
+  Future<Map<String, dynamic>> insert(
+    String calendarId,
+    Map<String, dynamic> body,
+  ) => _send('POST', _events(calendarId), body);
+
+  Future<Map<String, dynamic>> patch(
+    String calendarId,
+    String id,
+    Map<String, dynamic> body,
+  ) => _send('PATCH', _events(calendarId, id), body);
+
+  Future<void> delete(String calendarId, String id) async {
+    try {
+      await _send('DELETE', _events(calendarId, id));
+    } on GoogleCalendarException catch (e) {
+      // Zaten silinmiş (410/404): amaç gerçekleşmiş.
+      if (e.status != 404 && e.status != 410) rethrow;
+    }
   }
 }

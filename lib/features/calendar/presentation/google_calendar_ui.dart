@@ -15,6 +15,7 @@ import '../../notes/domain/note_type.dart';
 import '../data/calendar_repository.dart';
 import '../data/google_calendar_sync.dart';
 import '../domain/calendar_event.dart';
+import 'event_editor.dart';
 
 /// Google Takvim bağlantısı: bağla, gösterilen takvimler, yenile, kaldır
 /// (TAKVIM_PLANI F48.1/F48.2).
@@ -106,6 +107,11 @@ class _GoogleCalendarSheet extends ConsumerWidget {
                   ),
               ],
             ),
+            if (state.pending > 0)
+              Text(
+                l10n.gcalPending(state.pending),
+                style: theme.textTheme.bodySmall,
+              ),
             if (state.error != null)
               Text(
                 l10n.gcalError,
@@ -294,6 +300,25 @@ class _GoogleEventSheet extends ConsumerWidget {
                 icon: const Icon(Icons.note_add_outlined),
                 label: Text(l10n.calendarMeetingNote),
               ),
+              // Tekrarlı serinin oluşu Google'da düzenlenir (K3: "yalnız bu /
+              // tümü" Google'ın işi); tekil etkinlik burada (Faz 51).
+              if (event.extras['recurringEventId'] == null)
+                TextButton.icon(
+                  key: const ValueKey('gcal-edit'),
+                  onPressed: () {
+                    final root = Navigator.of(context).context;
+                    Navigator.pop(context);
+                    unawaited(
+                      showEventEditor(
+                        root,
+                        existing: event,
+                        occurrenceStart: start,
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.edit_outlined),
+                  label: Text(l10n.gcalEdit),
+                ),
               if (link is String)
                 TextButton.icon(
                   onPressed: () => unawaited(

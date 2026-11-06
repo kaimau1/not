@@ -259,9 +259,9 @@ Faz 53'te.
 - [x] F50.4 `google_tasks_api.dart` (kapsam `tasks`, ayrı), saf plan `task_sync_plan.dart` (`planTaskSync`: eşsiz → karşıya aç; yalnız bir taraf değiştiyse o yöne; ikisi de değiştiyse `updated` yeni olan; silme iki yöne; Google'da silinmiş ama yerelde sonradan düzenlenmiş → yeniden açılır; içerik aynıysa yazım YOK — ping-pong yok). Saat/tekrar/yıldız/not bağı yalnız yerelde, korunur. `GoogleTasksController`: listeler eşlenir (varsayılan ↔ Google'daki ilk liste, eşsizler iki yönde açılır), alt görev üstüyle; görevler ekranında ☁ (bağla / şimdi eşle / kaldır), görevler + takvim ekranına girişte ve açıkken 15 dk'da bir. Silinmişler dahil okuma `fetchAllTasks`. Testler `google_tasks_test` (plan + sahte Google/Firestore uçtan uca). Gerçek hesapta denenmedi → F19.B10, KALANLAR §2 #103.
 
 ### Faz 51 — Google Takvim'e yazma
-- [ ] F51.1 `calendar.events` kapsamı; yeni etkinlikte "Kaydet: Bu cihaz / Google Takvim (X)" seçimi (K2).
-- [ ] F51.2 Düzenleme/silme Google'a; tekrarlayan Google etkinliğinde "yalnız bu / tümü" Google'a bırakılır.
-- [ ] F51.3 Hata/çevrimdışı kuyruğu (`UploadQueue` kalıbı).
+- [x] F51.1 `calendar.events` AYRI kapsam, ilk Google kaydında istenir (`connectWrite`; okuma kapsamı genişlemez). Yeni etkinlikte "Bu cihaz | Google Takvim" (Google bağlıysa varsayılan Google — K2; nottan bağlanırken bu cihaz, bağ yerel etkinliğe). Birincil takvime yazılır (`writeTarget`). Tekrar `rruleOf` ile RRULE (günlük/hafta içi/haftalık günler/aylık/yıllık + INTERVAL/COUNT/UNTIL), hatırlatma `popup` override.
+- [x] F51.2 Google etkinlik levhasında "Düzenle" → aynı düzenleyici, kaydet PATCH; sil onaylı (geri alınamaz) DELETE. Tekrarlı serinin oluşu (`recurringEventId`) burada düzenlenmez → "Google Takvim'de aç" (K3).
+- [x] F51.3 Kuyruk denetleyicide (`_queue`, önbellek JSON'unda kalıcı): yazım İYİMSER (takvimde hemen; yeni etkinlik geçici `tmp-` kimlikle), sırayla gönderilir; ağ/5xx/429/401'de durur, sonraki tazelemede yeniden; kalıcı 4xx düşer + hata. Geçici kimliğe sonradan yazılan düzenleme/silme gerçek kimliğe çevrilir. Levhada "n değişiklik bekliyor". Testler `google_calendar_test` (RRULE, gövde, kuyruk). Gerçek hesapta denenmedi → F19.B10 (+ `calendar.events` kapsamı), KALANLAR §2 #104.
 
 ### Faz 52 — Akıllı bağlar (AI + mevcut özellikler)
 - [ ] F52.1 Brifing: bugünün etkinlikleri + görevleri + (Faz 53'ten sonra) rutinler.
@@ -316,6 +316,6 @@ Faz 53'te.
 | 48 Google Takvim okuma | ✅ 2026-11-06 (gerçek hesapta denenmedi: F19.B10 + KALANLAR §2 #101) |
 | 49 Not ↔ takvim | ✅ 2026-11-06 (cihazda doğrulanmadı, KALANLAR §2 #102) |
 | 50 Görevler | ✅ 2026-11-06 (Google Görevler gerçek hesapta denenmedi: F19.B10, KALANLAR §2 #103; elle sürükleyerek sıralama yok) |
-| 51 Google'a yazma | — |
+| 51 Google'a yazma | ✅ 2026-11-06 (gerçek hesapta denenmedi: F19.B10, KALANLAR §2 #104) |
 | 52 Akıllı bağlar | — |
 | 53 Rutinler | — |

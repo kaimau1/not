@@ -7287,7 +7287,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gcalReadOnly =>
-      'Google Takvim etkinliği · düzenlemek için Google Takvim\'de aç';
+      'Google Takvim etkinliği · tekrarlı olanlar Google Takvim\'de düzenlenir';
 
   @override
   String get gcalOpenInGoogle => 'Google Takvim\'de aç';
@@ -7346,4 +7346,22 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gtasksSynced => 'Görevler eşlendi';
+
+  @override
+  String get eventSaveLocal => 'Bu cihaz';
+
+  @override
+  String get gcalWriteDenied => 'Google Takvim\'e yazma izni verilmedi';
+
+  @override
+  String get gcalDeleteConfirm =>
+      'Etkinlik Google Takvim\'den silinsin mi? Bu geri alınamaz.';
+
+  @override
+  String get gcalEdit => 'Düzenle';
+
+  @override
+  String gcalPending(int count) {
+    return 'Google\'a gönderilmeyi bekleyen $count değişiklik';
+  }
 }

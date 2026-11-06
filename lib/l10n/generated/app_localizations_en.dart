@@ -7307,7 +7307,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gcalReadOnly =>
-      'Google Calendar event · open it in Google Calendar to edit';
+      'Google Calendar event · edit repeating ones in Google Calendar';
 
   @override
   String get gcalOpenInGoogle => 'Open in Google Calendar';
@@ -7366,4 +7366,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gtasksSynced => 'Tasks synced';
+
+  @override
+  String get eventSaveLocal => 'This device';
+
+  @override
+  String get gcalWriteDenied =>
+      'Permission to write to Google Calendar wasn\'t granted';
+
+  @override
+  String get gcalDeleteConfirm =>
+      'Delete this event from Google Calendar? This can\'t be undone.';
+
+  @override
+  String get gcalEdit => 'Edit';
+
+  @override
+  String gcalPending(int count) {
+    return '$count changes waiting to be sent to Google';
+  }
 }

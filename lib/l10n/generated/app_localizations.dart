@@ -13013,7 +13013,7 @@ abstract class AppLocalizations {
   /// No description provided for @gcalReadOnly.
   ///
   /// In tr, this message translates to:
-  /// **'Google Takvim etkinliği · düzenlemek için Google Takvim\'de aç'**
+  /// **'Google Takvim etkinliği · tekrarlı olanlar Google Takvim\'de düzenlenir'**
   String get gcalReadOnly;
 
   /// No description provided for @gcalOpenInGoogle.
@@ -13123,6 +13123,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Görevler eşlendi'**
   String get gtasksSynced;
+
+  /// No description provided for @eventSaveLocal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cihaz'**
+  String get eventSaveLocal;
+
+  /// No description provided for @gcalWriteDenied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim\'e yazma izni verilmedi'**
+  String get gcalWriteDenied;
+
+  /// No description provided for @gcalDeleteConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkinlik Google Takvim\'den silinsin mi? Bu geri alınamaz.'**
+  String get gcalDeleteConfirm;
+
+  /// No description provided for @gcalEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenle'**
+  String get gcalEdit;
+
+  /// No description provided for @gcalPending.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google\'a gönderilmeyi bekleyen {count} değişiklik'**
+  String gcalPending(int count);
 }
 
 class _AppLocalizationsDelegate
