@@ -32,6 +32,17 @@ enum ThemeFamily {
 
   /// E · Zeytin (2026-11-05): zeytin taşı masa, zeytin yeşili, gül kurusu.
   olive,
+
+  /// F · Klasik beyaz (2026-11-06, kullanıcı isteği "klasik bir beyaz tema
+  /// ve saman kağıdı teması da olsun, yeni stile uyumlu"): açık gri masa,
+  /// bembeyaz kâğıt, mavi vurgu. Eski parlak beyazdan farkı: zemin beyaz
+  /// DEĞİL (masa ve kâğıt ilkesi), vurgu tohumdan değil elle seçili.
+  white,
+
+  /// G · Saman kâğıdı (2026-11-06): saman masa, krem kâğıt, sepya vurgu,
+  /// kiremit. Eski "kağıt" temasından farkı: kâğıt zeminden AÇIK, yazı sepya
+  /// mürekkep; sarılık zeminde kalır, okunan yüzey kremdir.
+  straw,
 }
 
 /// Bir ailenin tek parlaklıktaki ham belirteçleri.
@@ -119,6 +130,8 @@ abstract final class FamilyPalettes {
       ThemeFamily.clay => dark ? _clayDark : _clayLight,
       ThemeFamily.lavender => dark ? _lavenderDark : _lavenderLight,
       ThemeFamily.olive => dark ? _oliveDark : _oliveLight,
+      ThemeFamily.white => dark ? _whiteDark : _whiteLight,
+      ThemeFamily.straw => dark ? _strawDark : _strawLight,
     };
   }
 
@@ -415,5 +428,123 @@ abstract final class FamilyPalettes {
     inverse: Color(0xFFE4E6DD),
     onInverse: Color(0xFF1F221B),
     inversePrimary: Color(0xFF4F6A2A),
+  );
+
+  // ── F · Klasik beyaz ────────────────────────────────────────────────────
+  static const _whiteLight = FamilyTokens(
+    ground: Color(0xFFF3F4F6),
+    lowest: Color(0xFFFFFFFF),
+    card: Color(0xFFFFFFFF),
+    sheet: Color(0xFFFAFAFB),
+    field: Color(0xFFF1F2F4),
+    high: Color(0xFFE4E6EA),
+    highest: Color(0xFFDADDE2),
+    hair: Color(0xFFD6D9DE),
+    outline: Color(0xFF74787F),
+    ink: Color(0xFF1A1C1F),
+    muted: Color(0xFF4A4E55),
+    primary: Color(0xFF1F5FBF),
+    onPrimary: Color(0xFFFFFFFF),
+    primaryContainer: Color(0xFFD8E4FA),
+    onPrimaryContainer: Color(0xFF0B2A5C),
+    secondary: Color(0xFFA44F0C),
+    onSecondary: Color(0xFFFFFFFF),
+    secondaryContainer: Color(0xFFFCE3CF),
+    onSecondaryContainer: Color(0xFF3F1F05),
+    tertiary: Color(0xFF6B4A9A),
+    onTertiary: Color(0xFFFFFFFF),
+    tertiaryContainer: Color(0xFFECE0FA),
+    onTertiaryContainer: Color(0xFF2C1A47),
+    inverse: Color(0xFF2D2F33),
+    onInverse: Color(0xFFF1F2F4),
+    inversePrimary: Color(0xFFA8C5F5),
+  );
+
+  static const _whiteDark = FamilyTokens(
+    ground: Color(0xFF121314),
+    lowest: Color(0xFF0C0D0E),
+    card: Color(0xFF1C1D1F),
+    sheet: Color(0xFF212224),
+    field: Color(0xFF212224),
+    high: Color(0xFF2A2B2E),
+    highest: Color(0xFF333438),
+    hair: Color(0xFF3A3B3F),
+    outline: Color(0xFF909299),
+    ink: Color(0xFFE6E7EA),
+    muted: Color(0xFFB7B9BE),
+    primary: Color(0xFFA8C5F5),
+    onPrimary: Color(0xFF0B2A5C),
+    primaryContainer: Color(0xFF22437A),
+    onPrimaryContainer: Color(0xFFD8E4FA),
+    secondary: Color(0xFFF2B07E),
+    onSecondary: Color(0xFF3F1F05),
+    secondaryContainer: Color(0xFF5A3311),
+    onSecondaryContainer: Color(0xFFFCE3CF),
+    tertiary: Color(0xFFCDB6F0),
+    onTertiary: Color(0xFF2C1A47),
+    tertiaryContainer: Color(0xFF463263),
+    onTertiaryContainer: Color(0xFFECE0FA),
+    inverse: Color(0xFFE6E7EA),
+    onInverse: Color(0xFF1A1C1F),
+    inversePrimary: Color(0xFF1F5FBF),
+  );
+
+  // ── G · Saman kâğıdı ────────────────────────────────────────────────────
+  static const _strawLight = FamilyTokens(
+    ground: Color(0xFFEDE3C8),
+    lowest: Color(0xFFFCF8EC),
+    card: Color(0xFFFCF8EC),
+    sheet: Color(0xFFF8F2E1),
+    field: Color(0xFFF3EBD6),
+    high: Color(0xFFE3D8BB),
+    highest: Color(0xFFDACEAF),
+    hair: Color(0xFFD6CAAB),
+    outline: Color(0xFF7D7259),
+    ink: Color(0xFF2A2216),
+    muted: Color(0xFF574C38),
+    primary: Color(0xFF7A4A1E),
+    onPrimary: Color(0xFFFFFFFF),
+    primaryContainer: Color(0xFFF2DCC0),
+    onPrimaryContainer: Color(0xFF34200A),
+    secondary: Color(0xFF9C3A2C),
+    onSecondary: Color(0xFFFFFFFF),
+    secondaryContainer: Color(0xFFF8D9D2),
+    onSecondaryContainer: Color(0xFF3E130C),
+    tertiary: Color(0xFF3B6158),
+    onTertiary: Color(0xFFFFFFFF),
+    tertiaryContainer: Color(0xFFD2E8E1),
+    onTertiaryContainer: Color(0xFF0E2C25),
+    inverse: Color(0xFF352D20),
+    onInverse: Color(0xFFF6EFDD),
+    inversePrimary: Color(0xFFE5B98A),
+  );
+
+  static const _strawDark = FamilyTokens(
+    ground: Color(0xFF1A1711),
+    lowest: Color(0xFF13110C),
+    card: Color(0xFF24201A),
+    sheet: Color(0xFF29251E),
+    field: Color(0xFF29251E),
+    high: Color(0xFF322D25),
+    highest: Color(0xFF3B362D),
+    hair: Color(0xFF423C32),
+    outline: Color(0xFF9A9180),
+    ink: Color(0xFFEDE5D3),
+    muted: Color(0xFFC0B6A2),
+    primary: Color(0xFFE5B98A),
+    onPrimary: Color(0xFF452A0D),
+    primaryContainer: Color(0xFF5E3E1C),
+    onPrimaryContainer: Color(0xFFF2DCC0),
+    secondary: Color(0xFFF0A898),
+    onSecondary: Color(0xFF4E1A11),
+    secondaryContainer: Color(0xFF6E2C22),
+    onSecondaryContainer: Color(0xFFF8D9D2),
+    tertiary: Color(0xFF9FCFC3),
+    onTertiary: Color(0xFF0E2C25),
+    tertiaryContainer: Color(0xFF25483F),
+    onTertiaryContainer: Color(0xFFD2E8E1),
+    inverse: Color(0xFFEDE5D3),
+    onInverse: Color(0xFF2A2216),
+    inversePrimary: Color(0xFF7A4A1E),
   );
 }

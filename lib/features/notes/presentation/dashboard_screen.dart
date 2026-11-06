@@ -51,6 +51,7 @@ import '../../auth/presentation/guest_backup_card.dart';
 import '../../friends/data/friends_repository.dart';
 import '../../friends/presentation/home_invites.dart';
 import '../../settings/settings_providers.dart';
+import '../../calendar/presentation/calendar_backdrop.dart';
 import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
 import '../data/upload_queue.dart';
@@ -907,6 +908,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// üste binebilirler — bkz. `dashboard_background_sheet.dart`).
   List<Widget> _dashboardBackground(WidgetRef ref) {
     final background = ref.watch(dashboardBackgroundProvider);
+    // Takvim zemini öbür katmanların yerini alır (kendi yüzeyini çizer).
+    if (background.calendar) {
+      return const [Positioned.fill(child: CalendarBackdrop())];
+    }
     final layers = <Widget>[];
     final color = background.color;
     if (color != null) {
@@ -1145,7 +1150,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 // ızgarasının arkasında durur; görünürlük ayarı okunurluğu
                 // korumak için varsayılan olarak düşüktür.
                 ..._dashboardBackground(ref),
-                LayoutBuilder(
+                // Takvim zemininde kartlar saydamlaşır, başlık net kalır.
+                CardSeeThrough(
+                  enabled: ref.watch(
+                    dashboardBackgroundProvider.select((b) => b.calendar),
+                  ),
+                  child: LayoutBuilder(
                   builder: (context, constraints) {
                     // Sütun sayısı: kullanıcı iki parmakla zoom yaptıysa onun
                     // seçimi (1–4), yoksa ekran genişliğinden otomatik.
@@ -1718,6 +1728,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       ],
                     );
                   },
+                ),
                 ),
                 // Sesli asistan paneli düğmelerin ÜSTÜnde sabit konumda yüzer.
                 // Düğmeler floatingActionButton'da kaldığından panel açılıp

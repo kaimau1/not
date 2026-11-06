@@ -308,7 +308,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords:
                 'tema ${l10n.themeSystem} ${l10n.themeSage} '
                 '${l10n.themePorcelain} ${l10n.themeClay} ${l10n.themeLavender} '
-                '${l10n.themeOlive} ${l10n.themeDark}',
+                '${l10n.themeOlive} ${l10n.themeWhite} ${l10n.themeStraw} '
+                '${l10n.themeDark}',
           ),
           // Yazı tipi + yazı boyutu TEK satırda: ikisi de "yazı nasıl
           // görünsün" işidir ve ayrı kartlarda dururken (üstelik biri
@@ -936,6 +937,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       AppThemeChoice.clay => l10n.themeClay,
       AppThemeChoice.lavender => l10n.themeLavender,
       AppThemeChoice.olive => l10n.themeOlive,
+      AppThemeChoice.white => l10n.themeWhite,
+      AppThemeChoice.straw => l10n.themeStraw,
       AppThemeChoice.dark => l10n.themeDark,
     };
     // Yüzde yerine KADEME ADI: ayar artık dört adlı seçenekten ibaret,

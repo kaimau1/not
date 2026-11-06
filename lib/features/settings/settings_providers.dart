@@ -78,6 +78,8 @@ enum AppThemeChoice {
   clay,
   lavender,
   olive,
+  white,
+  straw,
   dark;
 
   /// Bu seçimin tema ailesi (Sistem ve Koyu varsayılan aileyi kullanır).
@@ -86,6 +88,8 @@ enum AppThemeChoice {
     AppThemeChoice.clay => ThemeFamily.clay,
     AppThemeChoice.lavender => ThemeFamily.lavender,
     AppThemeChoice.olive => ThemeFamily.olive,
+    AppThemeChoice.white => ThemeFamily.white,
+    AppThemeChoice.straw => ThemeFamily.straw,
     _ => ThemeFamily.sage,
   };
 
@@ -882,7 +886,9 @@ final effectiveThemeModeProvider = Provider.autoDispose<ThemeMode>((ref) {
     AppThemeChoice.porcelain ||
     AppThemeChoice.clay ||
     AppThemeChoice.lavender ||
-    AppThemeChoice.olive => ThemeMode.light,
+    AppThemeChoice.olive ||
+    AppThemeChoice.white ||
+    AppThemeChoice.straw => ThemeMode.light,
     AppThemeChoice.dark => ThemeMode.dark,
   };
 });
@@ -932,6 +938,7 @@ class DashboardBackground {
     this.opacity = 0.25,
     this.color,
     this.pattern = DashboardPattern.none,
+    this.calendar = false,
   });
 
   /// Cihazdaki kopyanın yolu; null = zemin görseli yok.
@@ -947,6 +954,11 @@ class DashboardBackground {
   /// Zemin deseni; [DashboardPattern.none] = desen yok.
   final DashboardPattern pattern;
 
+  /// TAKVİM ZEMİNİ (2026-11-06): kart ızgarasının arkasında bu ayın takvimi;
+  /// kartlarda başlık net, gerisi saydam (bkz. `CalendarBackdrop`). Açıkken
+  /// renk/desen/görsel katmanlarının yerini alır.
+  final bool calendar;
+
   DashboardBackground copyWith({
     String? path,
     bool clearPath = false,
@@ -954,11 +966,13 @@ class DashboardBackground {
     int? color,
     bool clearColor = false,
     DashboardPattern? pattern,
+    bool? calendar,
   }) => DashboardBackground(
     path: clearPath ? null : (path ?? this.path),
     opacity: opacity ?? this.opacity,
     color: clearColor ? null : (color ?? this.color),
     pattern: pattern ?? this.pattern,
+    calendar: calendar ?? this.calendar,
   );
 }
 
@@ -972,6 +986,7 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
   static const _opacityKey = 'dashboard_bg_opacity';
   static const _colorKey = 'dashboard_bg_color';
   static const _patternKey = 'dashboard_bg_pattern';
+  static const _calendarKey = 'dashboard_bg_calendar';
 
   @override
   DashboardBackground build() {
@@ -981,6 +996,7 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
       opacity: prefs.getDouble(_opacityKey) ?? 0.25,
       color: prefs.getInt(_colorKey),
       pattern: DashboardPattern.fromId(prefs.getString(_patternKey)),
+      calendar: prefs.getBool(_calendarKey) ?? false,
     );
   }
 
@@ -1014,13 +1030,19 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
     ref.read(sharedPreferencesProvider).setString(_patternKey, pattern.id);
   }
 
-  /// Renk + desen + görseli birlikte varsayılana döndürür.
+  void setCalendar(bool value) {
+    state = state.copyWith(calendar: value);
+    ref.read(sharedPreferencesProvider).setBool(_calendarKey, value);
+  }
+
+  /// Renk + desen + görseli (ve takvim zeminini) varsayılana döndürür.
   void reset() {
     state = const DashboardBackground();
     ref.read(sharedPreferencesProvider)
       ..remove(_pathKey)
       ..remove(_opacityKey)
       ..remove(_colorKey)
-      ..remove(_patternKey);
+      ..remove(_patternKey)
+      ..remove(_calendarKey);
   }
 }
