@@ -42,7 +42,7 @@ GoRouter _router() => GoRouter(
           '/folders',
           '/inbox',
           '/ai',
-          '/reminders',
+          '/calendar',
           '/archive',
           '/trash',
           '/settings',
@@ -221,7 +221,9 @@ void main() {
     expect(AppSection.of('/chat'), AppSection.ai);
     expect(AppSection.of('/briefing'), AppSection.ai);
     expect(AppSection.of('/privacy'), AppSection.settings);
-    expect(AppSection.of('/reminders'), AppSection.reminders);
+    expect(AppSection.of('/reminders'), AppSection.calendar);
+    expect(AppSection.of('/calendar'), AppSection.calendar);
+    expect(AppSection.of('/tasks'), AppSection.calendar);
     expect(AppSection.of('/trash'), AppSection.trash);
     expect(AppSection.of('/login'), isNull);
   });

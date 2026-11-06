@@ -3356,5 +3356,101 @@
   "templateFavorite": "Favorilere ekle",
   "templateUnfavorite": "Favorilerden çıkar",
   "templatesFavorites": "Favoriler",
-  "templateFavoritesFull": "En çok 4 favori seçilebilir — önce birini çıkar"
+  "templateFavoritesFull": "En çok 4 favori seçilebilir — önce birini çıkar",
+  "calendarTitle": "Takvim",
+  "calendarToday": "Bugün",
+  "calendarViewAgenda": "Ajanda",
+  "calendarViewMonth": "Ay",
+  "calendarNewEvent": "Yeni etkinlik",
+  "calendarEmpty": "Takvim boş",
+  "calendarEmptyHint": "Etkinlik ekle; hatırlatıcılı notlar da burada görünür.",
+  "calendarNothingThisDay": "Bu gün için plan yok",
+  "calendarReminderTag": "Hatırlatıcı",
+  "calendarShowMonth": "Ayı göster",
+  "calendarHideMonth": "Ayı gizle",
+  "calendarPrevMonth": "Önceki ay",
+  "calendarNextMonth": "Sonraki ay",
+  "calendarMoreDays": "Daha ileri",
+  "eventEditTitle": "Etkinliği düzenle",
+  "eventTitleHint": "Başlık ekle",
+  "eventUntitled": "(Başlıksız)",
+  "eventAllDay": "Tüm gün",
+  "eventStarts": "Başlangıç",
+  "eventEnds": "Bitiş",
+  "eventReminder": "Hatırlatma",
+  "eventReminderNone": "Hatırlatma yok",
+  "eventReminderAtStart": "Başladığında",
+  "eventReminderAllDayMorning": "O gün 09:00'da",
+  "eventReminderMinutes": "{count} dakika önce",
+  "@eventReminderMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventReminderHours": "{count} saat önce",
+  "@eventReminderHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventReminderDays": "{count} gün önce",
+  "@eventReminderDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventLocation": "Konum",
+  "eventDescription": "Açıklama",
+  "eventSave": "Kaydet",
+  "eventDelete": "Etkinliği sil",
+  "eventDeleted": "Etkinlik silindi",
+  "eventDeleteRepeatingTitle": "Tekrarlayan etkinlik",
+  "eventDeleteThis": "Yalnız bu etkinlik",
+  "eventDeleteAll": "Tüm tekrarlar",
+  "eventNotificationAllDay": "Bugün · tüm gün",
+  "tasksTitle": "Görevler",
+  "tasksDefaultList": "Görevlerim",
+  "tasksNewTask": "Yeni görev",
+  "tasksNewList": "Yeni liste",
+  "tasksListNameHint": "Liste adı",
+  "tasksRenameList": "Listeyi yeniden adlandır",
+  "tasksDeleteList": "Listeyi sil",
+  "tasksDeleteListConfirm": "Liste ve içindeki görevler silinsin mi?",
+  "tasksEmpty": "Görev yok",
+  "tasksEmptyHint": "Yapılacakları ekle; son tarihli görevler takvimde de görünür.",
+  "tasksCompleted": "Tamamlananlar ({count})",
+  "@tasksCompleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tasksClearCompleted": "Tamamlananları sil",
+  "taskEditTitle": "Görevi düzenle",
+  "taskTitleHint": "Ne yapılacak?",
+  "taskNotesHint": "Ayrıntı ekle",
+  "taskDue": "Son tarih",
+  "taskNoDue": "Tarih yok",
+  "taskTime": "Saat",
+  "taskNoTime": "Saat yok",
+  "taskReminderAtDue": "Zamanı gelince hatırlat",
+  "taskList": "Liste",
+  "taskStar": "Yıldızla",
+  "taskDelete": "Görevi sil",
+  "taskDeleted": "Görev silindi",
+  "taskAddSubtask": "Alt görev ekle",
+  "taskOverdue": "Gecikti",
+  "calendarViewYear": "Yıl",
+  "calendarViewWeek": "Hafta",
+  "calendarView": "Görünüm",
+  "calendarPinchHint": "İki parmakla yıl, ay ve hafta arasında geçebilirsin",
+  "calendarPrevious": "Önceki",
+  "calendarNext": "Sonraki"
 }

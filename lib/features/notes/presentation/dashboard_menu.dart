@@ -39,9 +39,9 @@ extension _DashMenu on _DashboardScreenState {
             if (Personalize.current.shows(UiItem.homeAi))
               MenuAction('ai', l10n.aiHubTitle, Icons.auto_awesome),
             MenuAction(
-              'reminders',
-              l10n.remindersTitle,
-              Icons.alarm_outlined,
+              'calendar',
+              l10n.calendarTitle,
+              Icons.calendar_month_outlined,
               count: _upcomingReminderCount(),
             ),
             MenuAction(
@@ -117,8 +117,8 @@ extension _DashMenu on _DashboardScreenState {
         unawaited(showAccountSheet(context));
       case 'hidden':
         unawaited(_toggleHiddenFolders());
-      case 'reminders':
-        unawaited(context.push('/reminders'));
+      case 'calendar':
+        unawaited(context.push('/calendar'));
       case 'archive':
         unawaited(context.push('/archive'));
       case 'background':

@@ -48,6 +48,11 @@ class AccountService {
     'meta',
     // İtme bildirimi jetonları (F4.6).
     'fcmTokens',
+    // Takvim ve görevler (TAKVIM_PLANI F46.3).
+    AppConstants.eventsCollection,
+    AppConstants.tasksCollection,
+    AppConstants.taskListsCollection,
+    AppConstants.dayLinksCollection,
   ];
 
   /// Her notun altında boşaltılan alt koleksiyonlar (F3.13 ağır belge).

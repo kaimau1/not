@@ -7017,4 +7017,220 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get templateFavoritesFull =>
       'En çok 4 favori seçilebilir — önce birini çıkar';
+
+  @override
+  String get calendarTitle => 'Takvim';
+
+  @override
+  String get calendarToday => 'Bugün';
+
+  @override
+  String get calendarViewAgenda => 'Ajanda';
+
+  @override
+  String get calendarViewMonth => 'Ay';
+
+  @override
+  String get calendarNewEvent => 'Yeni etkinlik';
+
+  @override
+  String get calendarEmpty => 'Takvim boş';
+
+  @override
+  String get calendarEmptyHint =>
+      'Etkinlik ekle; hatırlatıcılı notlar da burada görünür.';
+
+  @override
+  String get calendarNothingThisDay => 'Bu gün için plan yok';
+
+  @override
+  String get calendarReminderTag => 'Hatırlatıcı';
+
+  @override
+  String get calendarShowMonth => 'Ayı göster';
+
+  @override
+  String get calendarHideMonth => 'Ayı gizle';
+
+  @override
+  String get calendarPrevMonth => 'Önceki ay';
+
+  @override
+  String get calendarNextMonth => 'Sonraki ay';
+
+  @override
+  String get calendarMoreDays => 'Daha ileri';
+
+  @override
+  String get eventEditTitle => 'Etkinliği düzenle';
+
+  @override
+  String get eventTitleHint => 'Başlık ekle';
+
+  @override
+  String get eventUntitled => '(Başlıksız)';
+
+  @override
+  String get eventAllDay => 'Tüm gün';
+
+  @override
+  String get eventStarts => 'Başlangıç';
+
+  @override
+  String get eventEnds => 'Bitiş';
+
+  @override
+  String get eventReminder => 'Hatırlatma';
+
+  @override
+  String get eventReminderNone => 'Hatırlatma yok';
+
+  @override
+  String get eventReminderAtStart => 'Başladığında';
+
+  @override
+  String get eventReminderAllDayMorning => 'O gün 09:00\'da';
+
+  @override
+  String eventReminderMinutes(int count) {
+    return '$count dakika önce';
+  }
+
+  @override
+  String eventReminderHours(int count) {
+    return '$count saat önce';
+  }
+
+  @override
+  String eventReminderDays(int count) {
+    return '$count gün önce';
+  }
+
+  @override
+  String get eventLocation => 'Konum';
+
+  @override
+  String get eventDescription => 'Açıklama';
+
+  @override
+  String get eventSave => 'Kaydet';
+
+  @override
+  String get eventDelete => 'Etkinliği sil';
+
+  @override
+  String get eventDeleted => 'Etkinlik silindi';
+
+  @override
+  String get eventDeleteRepeatingTitle => 'Tekrarlayan etkinlik';
+
+  @override
+  String get eventDeleteThis => 'Yalnız bu etkinlik';
+
+  @override
+  String get eventDeleteAll => 'Tüm tekrarlar';
+
+  @override
+  String get eventNotificationAllDay => 'Bugün · tüm gün';
+
+  @override
+  String get tasksTitle => 'Görevler';
+
+  @override
+  String get tasksDefaultList => 'Görevlerim';
+
+  @override
+  String get tasksNewTask => 'Yeni görev';
+
+  @override
+  String get tasksNewList => 'Yeni liste';
+
+  @override
+  String get tasksListNameHint => 'Liste adı';
+
+  @override
+  String get tasksRenameList => 'Listeyi yeniden adlandır';
+
+  @override
+  String get tasksDeleteList => 'Listeyi sil';
+
+  @override
+  String get tasksDeleteListConfirm =>
+      'Liste ve içindeki görevler silinsin mi?';
+
+  @override
+  String get tasksEmpty => 'Görev yok';
+
+  @override
+  String get tasksEmptyHint =>
+      'Yapılacakları ekle; son tarihli görevler takvimde de görünür.';
+
+  @override
+  String tasksCompleted(int count) {
+    return 'Tamamlananlar ($count)';
+  }
+
+  @override
+  String get tasksClearCompleted => 'Tamamlananları sil';
+
+  @override
+  String get taskEditTitle => 'Görevi düzenle';
+
+  @override
+  String get taskTitleHint => 'Ne yapılacak?';
+
+  @override
+  String get taskNotesHint => 'Ayrıntı ekle';
+
+  @override
+  String get taskDue => 'Son tarih';
+
+  @override
+  String get taskNoDue => 'Tarih yok';
+
+  @override
+  String get taskTime => 'Saat';
+
+  @override
+  String get taskNoTime => 'Saat yok';
+
+  @override
+  String get taskReminderAtDue => 'Zamanı gelince hatırlat';
+
+  @override
+  String get taskList => 'Liste';
+
+  @override
+  String get taskStar => 'Yıldızla';
+
+  @override
+  String get taskDelete => 'Görevi sil';
+
+  @override
+  String get taskDeleted => 'Görev silindi';
+
+  @override
+  String get taskAddSubtask => 'Alt görev ekle';
+
+  @override
+  String get taskOverdue => 'Gecikti';
+
+  @override
+  String get calendarViewYear => 'Yıl';
+
+  @override
+  String get calendarViewWeek => 'Hafta';
+
+  @override
+  String get calendarView => 'Görünüm';
+
+  @override
+  String get calendarPinchHint =>
+      'İki parmakla yıl, ay ve hafta arasında geçebilirsin';
+
+  @override
+  String get calendarPrevious => 'Önceki';
+
+  @override
+  String get calendarNext => 'Sonraki';
 }

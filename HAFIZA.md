@@ -134,6 +134,22 @@ maddeyi GÜNCELLE.
   `#snooze` bildirimi (reminderAt'i kaydırmak saati kaydırırdı).
   `orphanReminderIds` not başına kimlik KÜMESİ alır. Yeni planlı bildirim
   türünün yükü `note:` ile BAŞLAMAZ. Eski istemci yalnız ilk çalmayı bilir.
+- **Takvim + görevler** (TAKVIM_PLANI, 2026-11-06, K1–K10 hepsi önerilen):
+  `lib/features/calendar/`. Koleksiyonlar `events`, `tasks`, `taskLists`,
+  `dayLinks/{YYYY-MM-DD}` (genel `users/{uid}/**` kuralı yeter; silme listesinde).
+  `Note`'a alan EKLENMEDİ: bağ kayıt tarafında (`noteIds`, `noteId`, `dayLinks`).
+  Tüm gün = gün dizesi, bitiş HARİÇ; tekrar `Recurrence` = `reminderRepeat`
+  dizesi + `;every=;until=;count=` (notlara YAZILMAZ). Tekrarlı görevi
+  tamamlamak ilerletir + geçmiş kopyası (`completeTask`). Veri küçük: dört
+  koleksiyon tek dinleyici, aralık bellekte (`buildAgenda`). Takvim bildirimi
+  `ReminderService`te, yük `cal:` (yalnız cihazda). Rayda Hatırlatıcılar'ın
+  yerine Takvim (`/reminders` takvim bölümü sayılır).
+  Görünümler yıl/ay/hafta/ajanda; iki parmak `PinchZoomDetector` = `Listener`
+  (yarışmaya girmez, kaydırma bozulmaz; iki parmak inince `PageView`
+  kilitlenir). Hedef `ZoomTargets` (GlobalKey → tarih). TUZAK: aynı görünümü
+  yeniden açmak (aynı tür iki sayfa geçişte birlikte) GlobalKey çakıştırır —
+  aynı görünüme geçiş engelli; eski görünümün `itemBuilder`ı `_view`i değil
+  yerel kopyayı okur.
 - **Aralıklı tekrar kartları** (F18.19, kullanıcı: basit sürüm): `Note.cards`
   (`StudyCard`, SM-2 `reviewCard`), yeni koleksiyon yok (hesap silme/kural
   değişmedi). Editör ⋮ "Kart üret" (AI), `/cards` "Bugünün kartları".

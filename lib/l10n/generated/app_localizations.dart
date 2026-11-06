@@ -12511,6 +12511,414 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'En çok 4 favori seçilebilir — önce birini çıkar'**
   String get templateFavoritesFull;
+
+  /// No description provided for @calendarTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim'**
+  String get calendarTitle;
+
+  /// No description provided for @calendarToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün'**
+  String get calendarToday;
+
+  /// No description provided for @calendarViewAgenda.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ajanda'**
+  String get calendarViewAgenda;
+
+  /// No description provided for @calendarViewMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ay'**
+  String get calendarViewMonth;
+
+  /// No description provided for @calendarNewEvent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni etkinlik'**
+  String get calendarNewEvent;
+
+  /// No description provided for @calendarEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim boş'**
+  String get calendarEmpty;
+
+  /// No description provided for @calendarEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkinlik ekle; hatırlatıcılı notlar da burada görünür.'**
+  String get calendarEmptyHint;
+
+  /// No description provided for @calendarNothingThisDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu gün için plan yok'**
+  String get calendarNothingThisDay;
+
+  /// No description provided for @calendarReminderTag.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcı'**
+  String get calendarReminderTag;
+
+  /// No description provided for @calendarShowMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayı göster'**
+  String get calendarShowMonth;
+
+  /// No description provided for @calendarHideMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayı gizle'**
+  String get calendarHideMonth;
+
+  /// No description provided for @calendarPrevMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki ay'**
+  String get calendarPrevMonth;
+
+  /// No description provided for @calendarNextMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki ay'**
+  String get calendarNextMonth;
+
+  /// No description provided for @calendarMoreDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha ileri'**
+  String get calendarMoreDays;
+
+  /// No description provided for @eventEditTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkinliği düzenle'**
+  String get eventEditTitle;
+
+  /// No description provided for @eventTitleHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık ekle'**
+  String get eventTitleHint;
+
+  /// No description provided for @eventUntitled.
+  ///
+  /// In tr, this message translates to:
+  /// **'(Başlıksız)'**
+  String get eventUntitled;
+
+  /// No description provided for @eventAllDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm gün'**
+  String get eventAllDay;
+
+  /// No description provided for @eventStarts.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlangıç'**
+  String get eventStarts;
+
+  /// No description provided for @eventEnds.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bitiş'**
+  String get eventEnds;
+
+  /// No description provided for @eventReminder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatma'**
+  String get eventReminder;
+
+  /// No description provided for @eventReminderNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatma yok'**
+  String get eventReminderNone;
+
+  /// No description provided for @eventReminderAtStart.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başladığında'**
+  String get eventReminderAtStart;
+
+  /// No description provided for @eventReminderAllDayMorning.
+  ///
+  /// In tr, this message translates to:
+  /// **'O gün 09:00\'da'**
+  String get eventReminderAllDayMorning;
+
+  /// No description provided for @eventReminderMinutes.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} dakika önce'**
+  String eventReminderMinutes(int count);
+
+  /// No description provided for @eventReminderHours.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} saat önce'**
+  String eventReminderHours(int count);
+
+  /// No description provided for @eventReminderDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} gün önce'**
+  String eventReminderDays(int count);
+
+  /// No description provided for @eventLocation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konum'**
+  String get eventLocation;
+
+  /// No description provided for @eventDescription.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıklama'**
+  String get eventDescription;
+
+  /// No description provided for @eventSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydet'**
+  String get eventSave;
+
+  /// No description provided for @eventDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkinliği sil'**
+  String get eventDelete;
+
+  /// No description provided for @eventDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkinlik silindi'**
+  String get eventDeleted;
+
+  /// No description provided for @eventDeleteRepeatingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrarlayan etkinlik'**
+  String get eventDeleteRepeatingTitle;
+
+  /// No description provided for @eventDeleteThis.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız bu etkinlik'**
+  String get eventDeleteThis;
+
+  /// No description provided for @eventDeleteAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm tekrarlar'**
+  String get eventDeleteAll;
+
+  /// No description provided for @eventNotificationAllDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün · tüm gün'**
+  String get eventNotificationAllDay;
+
+  /// No description provided for @tasksTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görevler'**
+  String get tasksTitle;
+
+  /// No description provided for @tasksDefaultList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görevlerim'**
+  String get tasksDefaultList;
+
+  /// No description provided for @tasksNewTask.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni görev'**
+  String get tasksNewTask;
+
+  /// No description provided for @tasksNewList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni liste'**
+  String get tasksNewList;
+
+  /// No description provided for @tasksListNameHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste adı'**
+  String get tasksListNameHint;
+
+  /// No description provided for @tasksRenameList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeyi yeniden adlandır'**
+  String get tasksRenameList;
+
+  /// No description provided for @tasksDeleteList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeyi sil'**
+  String get tasksDeleteList;
+
+  /// No description provided for @tasksDeleteListConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste ve içindeki görevler silinsin mi?'**
+  String get tasksDeleteListConfirm;
+
+  /// No description provided for @tasksEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görev yok'**
+  String get tasksEmpty;
+
+  /// No description provided for @tasksEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapılacakları ekle; son tarihli görevler takvimde de görünür.'**
+  String get tasksEmptyHint;
+
+  /// No description provided for @tasksCompleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamamlananlar ({count})'**
+  String tasksCompleted(int count);
+
+  /// No description provided for @tasksClearCompleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamamlananları sil'**
+  String get tasksClearCompleted;
+
+  /// No description provided for @taskEditTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görevi düzenle'**
+  String get taskEditTitle;
+
+  /// No description provided for @taskTitleHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ne yapılacak?'**
+  String get taskTitleHint;
+
+  /// No description provided for @taskNotesHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayrıntı ekle'**
+  String get taskNotesHint;
+
+  /// No description provided for @taskDue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son tarih'**
+  String get taskDue;
+
+  /// No description provided for @taskNoDue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih yok'**
+  String get taskNoDue;
+
+  /// No description provided for @taskTime.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saat'**
+  String get taskTime;
+
+  /// No description provided for @taskNoTime.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saat yok'**
+  String get taskNoTime;
+
+  /// No description provided for @taskReminderAtDue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zamanı gelince hatırlat'**
+  String get taskReminderAtDue;
+
+  /// No description provided for @taskList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste'**
+  String get taskList;
+
+  /// No description provided for @taskStar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıldızla'**
+  String get taskStar;
+
+  /// No description provided for @taskDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görevi sil'**
+  String get taskDelete;
+
+  /// No description provided for @taskDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görev silindi'**
+  String get taskDeleted;
+
+  /// No description provided for @taskAddSubtask.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt görev ekle'**
+  String get taskAddSubtask;
+
+  /// No description provided for @taskOverdue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gecikti'**
+  String get taskOverdue;
+
+  /// No description provided for @calendarViewYear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıl'**
+  String get calendarViewYear;
+
+  /// No description provided for @calendarViewWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta'**
+  String get calendarViewWeek;
+
+  /// No description provided for @calendarView.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünüm'**
+  String get calendarView;
+
+  /// No description provided for @calendarPinchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'İki parmakla yıl, ay ve hafta arasında geçebilirsin'**
+  String get calendarPinchHint;
+
+  /// No description provided for @calendarPrevious.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki'**
+  String get calendarPrevious;
+
+  /// No description provided for @calendarNext.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki'**
+  String get calendarNext;
 }
 
 class _AppLocalizationsDelegate

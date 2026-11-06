@@ -24,6 +24,10 @@ import '../domain/note.dart';
 import '../../../core/utils/run_heavy.dart';
 import '../domain/trash_analysis.dart' show trashReminderPlan;
 import 'notes_repository.dart';
+import '../../calendar/data/calendar_repository.dart';
+import '../../calendar/domain/calendar_alarms.dart';
+import '../../calendar/domain/calendar_event.dart';
+import '../../calendar/domain/task_item.dart';
 
 const _monthsTr = [
   'Oca',
@@ -153,6 +157,15 @@ void handleNotificationResponse(Ref ref, NotificationResponse response) {
       ref
           .read(routerProvider)
           .pushNote(noteRoutePath(noteId, query: '?owner=$ownerId'));
+    } catch (e) {
+      ErrorLog.record('notification-tap', e);
+    }
+    return;
+  }
+  // Takvim etkinliği / görev (TAKVIM_PLANI F47.6): takvimi aç.
+  if (payload.startsWith(kCalendarPayloadPrefix)) {
+    try {
+      ref.read(routerProvider).push('/calendar');
     } catch (e) {
       ErrorLog.record('notification-tap', e);
     }
@@ -409,6 +422,21 @@ class ReminderService {
       );
     }, fireImmediately: true);
 
+    // Takvim etkinlikleri ve görevler (F47.6) — yalnız cihazda (web'de
+    // yerel bildirim yok; dinleyici açılışta boşuna Firestore okumasın).
+    if (!kIsWeb) {
+      _calEventsSub = _ref.listen(
+        eventsStreamProvider,
+        (_, _) => _scheduleCalendarSync(),
+        fireImmediately: true,
+      );
+      _calTasksSub = _ref.listen(
+        tasksStreamProvider,
+        (_, _) => _scheduleCalendarSync(),
+        fireImmediately: true,
+      );
+    }
+
     // Günlük brifing ayarını izle ve bildirimi buna göre planla/iptal et.
     _briefingSub = _ref.listen(briefingSettingsProvider, (previous, next) {
       _syncBriefing(next);
@@ -416,6 +444,121 @@ class ReminderService {
   }
 
   ProviderSubscription<BriefingSettings>? _briefingSub;
+
+  ProviderSubscription<AsyncValue<List<CalendarEvent>>>? _calEventsSub;
+  ProviderSubscription<AsyncValue<List<TaskItem>>>? _calTasksSub;
+  Timer? _calDebounce;
+
+  /// Kurulu takvim bildirimleri: kimlik → imza.
+  final Map<int, String> _calScheduled = {};
+  bool _calReconciled = false;
+
+  void _scheduleCalendarSync() {
+    _calDebounce?.cancel();
+    _calDebounce = Timer(const Duration(seconds: 3), () {
+      final events = _ref.read(eventsStreamProvider).value;
+      final tasks = _ref.read(tasksStreamProvider).value;
+      if (events == null || tasks == null) return;
+      unawaited(_syncCalendar(events, tasks));
+    });
+  }
+
+  Future<void> _syncCalendar(
+    List<CalendarEvent> events,
+    List<TaskItem> tasks,
+  ) async {
+    try {
+      await _ensureInitialized();
+      final alarms = calendarAlarms(
+        events: events,
+        tasks: tasks,
+        now: DateTime.now(),
+      );
+      final wanted = {for (final a in alarms) a.notificationId: a};
+      if (wanted.isNotEmpty) await _askPermissionOnce();
+      // Uygulama kapalıyken silinen/değişen kayıtların eski bildirimleri.
+      if (!_calReconciled) {
+        _calReconciled = true;
+        final pending = await _plugin.pendingNotificationRequests();
+        for (final r in pending) {
+          if ((r.payload ?? '').startsWith(kCalendarPayloadPrefix) &&
+              !wanted.containsKey(r.id)) {
+            await _plugin.cancel(id: r.id);
+          }
+        }
+      }
+      for (final id in _calScheduled.keys.toList()) {
+        if (!wanted.containsKey(id)) {
+          await _plugin.cancel(id: id);
+          _calScheduled.remove(id);
+        }
+      }
+      if (wanted.isEmpty) return;
+      final l10n = await loadNotificationL10n(_ref.read(localeProvider));
+      for (final a in wanted.values) {
+        if (_calScheduled[a.notificationId] == a.signature) continue;
+        try {
+          await _scheduleCalendarAlarm(a, l10n);
+          _calScheduled[a.notificationId] = a.signature;
+        } catch (e) {
+          debugPrint('Takvim bildirimi kurulamadı: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('Takvim bildirimleri planlanamadı: $e');
+    }
+  }
+
+  Future<void> _scheduleCalendarAlarm(
+    CalendarAlarm a,
+    AppLocalizations l10n,
+  ) async {
+    final title = a.title.trim().isEmpty ? l10n.eventUntitled : a.title.trim();
+    // intl tarih biçimi YOK: arka planda yerel ayar verisi yüklü olmayabilir
+    // (bkz. [reminderTimePrefix]).
+    final dayDiff = DateTime(a.start.year, a.start.month, a.start.day)
+        .difference(DateTime(a.at.year, a.at.month, a.at.day))
+        .inDays;
+    final body = !a.allDay
+        ? reminderTimePrefix(a.start, now: a.at, l10n: l10n)
+        : dayDiff == 0
+        ? l10n.eventNotificationAllDay
+        : dayDiff == 1
+        ? '${l10n.dateTomorrow} · ${l10n.eventAllDay}'
+        : l10n.eventAllDay;
+    final details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'calendar',
+        l10n.calendarTitle,
+        channelDescription: l10n.calendarTitle,
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+    );
+    final when = tz.TZDateTime.from(a.at, tz.local);
+    try {
+      await _plugin.zonedSchedule(
+        id: a.notificationId,
+        title: title,
+        body: body,
+        scheduledDate: when,
+        notificationDetails: details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: a.payload,
+      );
+    } on PlatformException catch (e) {
+      if (e.code != 'exact_alarms_not_permitted') rethrow;
+      await _plugin.zonedSchedule(
+        id: a.notificationId,
+        title: title,
+        body: body,
+        scheduledDate: when,
+        notificationDetails: details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: a.payload,
+      );
+    }
+  }
 
   Future<void> _syncBriefing(BriefingSettings settings) async {
     try {
@@ -622,5 +765,8 @@ class ReminderService {
     _sub?.close();
     _trashSub?.close();
     _briefingSub?.close();
+    _calDebounce?.cancel();
+    _calEventsSub?.close();
+    _calTasksSub?.close();
   }
 }

@@ -97,6 +97,16 @@ test("ayar senkronu ve itme jetonu yalnız sahibinde (F4.5, F4.6)", async () => 
   await assertFails(setDoc(doc(as("b"), "users/a/fcmTokens/t2"), { platform: "android" }));
 });
 
+test("takvim ve görevler yalnız sahibinde (TAKVIM_PLANI F46.4)", async () => {
+  for (const c of ["events", "tasks", "taskLists", "dayLinks"]) {
+    await assertSucceeds(setDoc(doc(as("a"), `users/a/${c}/x`), { title: "t" }));
+    await assertSucceeds(getDoc(doc(as("a"), `users/a/${c}/x`)));
+    await assertFails(getDoc(doc(as("b"), `users/a/${c}/x`)));
+    await assertFails(setDoc(doc(as("b"), `users/a/${c}/y`), { title: "t" }));
+    await assertFails(getDoc(doc(anon(), `users/a/${c}/x`)));
+  }
+});
+
 test("kullanıcı dizini taranamaz, yalnız kendi kaydı yazılır (F1.1)", async () => {
   await assertSucceeds(
     setDoc(doc(as("a"), "userSearch/a"), {
