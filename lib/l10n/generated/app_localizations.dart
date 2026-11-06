@@ -12551,7 +12551,7 @@ abstract class AppLocalizations {
   /// No description provided for @calendarEmptyHint.
   ///
   /// In tr, this message translates to:
-  /// **'Etkinlik ekleyin; hatırlatıcılı notlar da burada görünür.'**
+  /// **'Etkinlik ekle; hatırlatıcılı notlar da burada görünür.'**
   String get calendarEmptyHint;
 
   /// No description provided for @calendarNothingThisDay.
@@ -12605,7 +12605,7 @@ abstract class AppLocalizations {
   /// No description provided for @eventTitleHint.
   ///
   /// In tr, this message translates to:
-  /// **'Başlık ekleyin'**
+  /// **'Başlık ekle'**
   String get eventTitleHint;
 
   /// No description provided for @eventUntitled.
@@ -12785,7 +12785,7 @@ abstract class AppLocalizations {
   /// No description provided for @tasksEmptyHint.
   ///
   /// In tr, this message translates to:
-  /// **'Yapılacakları ekleyin; son tarihli görevler takvimde de görünür.'**
+  /// **'Yapılacakları ekle; son tarihli görevler takvimde de görünür.'**
   String get tasksEmptyHint;
 
   /// No description provided for @tasksCompleted.
@@ -12815,7 +12815,7 @@ abstract class AppLocalizations {
   /// No description provided for @taskNotesHint.
   ///
   /// In tr, this message translates to:
-  /// **'Ayrıntı ekleyin'**
+  /// **'Ayrıntı ekle'**
   String get taskNotesHint;
 
   /// No description provided for @taskDue.

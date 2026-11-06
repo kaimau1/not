@@ -7038,7 +7038,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get calendarEmptyHint =>
-      'Etkinlik ekleyin; hatırlatıcılı notlar da burada görünür.';
+      'Etkinlik ekle; hatırlatıcılı notlar da burada görünür.';
 
   @override
   String get calendarNothingThisDay => 'Bu gün için plan yok';
@@ -7065,7 +7065,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get eventEditTitle => 'Etkinliği düzenle';
 
   @override
-  String get eventTitleHint => 'Başlık ekleyin';
+  String get eventTitleHint => 'Başlık ekle';
 
   @override
   String get eventUntitled => '(Başlıksız)';
@@ -7163,7 +7163,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tasksEmptyHint =>
-      'Yapılacakları ekleyin; son tarihli görevler takvimde de görünür.';
+      'Yapılacakları ekle; son tarihli görevler takvimde de görünür.';
 
   @override
   String tasksCompleted(int count) {
@@ -7180,7 +7180,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get taskTitleHint => 'Ne yapılacak?';
 
   @override
-  String get taskNotesHint => 'Ayrıntı ekleyin';
+  String get taskNotesHint => 'Ayrıntı ekle';
 
   @override
   String get taskDue => 'Son tarih';
