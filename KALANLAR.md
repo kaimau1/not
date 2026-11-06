@@ -190,6 +190,14 @@ kartta çizildi. Yeni metin notunda klavye açık; not "+" → Hatırlat aynı "
 87. [ ] (TAKVIM F47.3) İki parmakla: yılda bir ayın üstünde aç → o ay; ayda bir haftanın üstünde aç → o hafta; kapat → ay → yıl. Geçiş parmak noktasından büyüyor, kasma yok; tek parmakla yatay kaydırma dönem değiştiriyor, haftada dikey kaydırma çalışıyor. Web'de Ctrl+tekerlek aynı.
 88. [ ] (TAKVIM F47) Ana ekran ⋮ → Takvim: ajanda, başlıktan ay ızgarası, güne dokunma. Yeni etkinlik (10 dk önce hatırlatma) → bildirim zamanında geliyor, dokununca takvim açılıyor; tüm gün etkinliği (o gün 09:00); tekrarlı etkinlikte "yalnız bu" silme. Hatırlatıcılı not ajandada. Web/tablette ay solda. Takvim → ✓ Görevler: görev, alt görev, yeni liste; tarihli görev ajandada; tekrarlı görev tikleyince sonraki güne geçiyor; "zamanı gelince hatırlat" bildirimi.
 
+**2026-11-06 — tema, ana ekran, takvim (yazıldı, cihazda doğrulanmadı)**
+95. [ ] Sabit görseli yüzene al → alttaki "Geri al" → görsel yine sabit (yüzen → sabit, ek → yüzen için de).
+96. [ ] Ayarlar → Görünüm: Beyaz ve Saman; telefonda tema kartları 3 × 3, adlar okunuyor; Saman'da kart kremi masadan açık.
+97. [ ] Ana ekran ⋮ → Zemin → "Takvim zemini": ayın takvimi zeminde (bugün vurgulu, etkinlik adları), kartlarda başlık net, gövde soluk; kaydırma kasıyor mu (Opacity katmanı)?
+98. [ ] Ana ekranda Tümü görünümünde sola kaydır → kenarda "Takvim" → takvim açılıyor; klasördeyken sola kaydırma klasör geziyor; Ayarlar → Notlar'dan kapatılınca sola kaydırma eskisi gibi.
+99. [ ] (TAKVIM F47.5) Ay görünümünde etkinlik/görev/hatırlatıcı şeridine basılı tut → başka güne sürükle → taşındı + "Geri al"; tekrarlı etkinlik sürüklenmiyor.
+100. [ ] (TAKVIM F46.5) Tam yedek al → yeni hesapta geri yükle: etkinlikler, görevler, listeler ve güne bağlı notlar geliyor; ikinci yükleme çoğaltmıyor.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)

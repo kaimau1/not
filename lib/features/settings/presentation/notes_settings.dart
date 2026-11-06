@@ -98,6 +98,24 @@ class SwipeModeSetting extends ConsumerWidget {
   }
 }
 
+/// Tümü görünümünde sola kaydırınca takvim (bkz. [swipeLeftCalendarProvider]).
+class SwipeCalendarSetting extends ConsumerWidget {
+  const SwipeCalendarSetting({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      key: const ValueKey('swipe-left-calendar'),
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.swipeLeftCalendar),
+      subtitle: Text(l10n.swipeLeftCalendarInfo),
+      value: ref.watch(swipeLeftCalendarProvider),
+      onChanged: ref.read(swipeLeftCalendarProvider.notifier).set,
+    );
+  }
+}
+
 String swipeModeLabel(BuildContext context, SwipeMode mode) {
   final l10n = context.l10n;
   return switch (mode) {

@@ -437,6 +437,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'yana cek',
           ),
           _SettingRow(
+            const SwipeCalendarSetting(),
+            title: l10n.swipeLeftCalendar,
+            keywords: 'takvim sola kaydir yana cek',
+          ),
+          _SettingRow(
             const FolderOrderSetting(),
             title: l10n.folderOrderTitle,
             keywords:

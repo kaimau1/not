@@ -3456,5 +3456,9 @@
   "themeWhite": "Beyaz",
   "themeStraw": "Saman",
   "dashboardBackgroundCalendar": "Takvim zemini",
-  "dashboardBackgroundCalendarInfo": "Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam"
+  "dashboardBackgroundCalendarInfo": "Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam",
+  "swipeLeftCalendar": "Sola kaydırınca takvim",
+  "swipeLeftCalendarInfo": "Tümü görünümünde ekranı sola kaydırınca takvim açılır",
+  "calendarMoved": "{day} gününe taşındı",
+  "@calendarMoved": {"placeholders": {"day": {"type": "String"}}}
 }

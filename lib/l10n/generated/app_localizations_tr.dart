@@ -7246,4 +7246,16 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get dashboardBackgroundCalendarInfo =>
       'Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam';
+
+  @override
+  String get swipeLeftCalendar => 'Sola kaydırınca takvim';
+
+  @override
+  String get swipeLeftCalendarInfo =>
+      'Tümü görünümünde ekranı sola kaydırınca takvim açılır';
+
+  @override
+  String calendarMoved(String day) {
+    return '$day gününe taşındı';
+  }
 }

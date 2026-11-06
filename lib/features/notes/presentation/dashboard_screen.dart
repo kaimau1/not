@@ -533,7 +533,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// neyin gezileceği artık Ayarlar → Notlar'da seçiliyor (bkz. [SwipeMode],
   /// varsayılan: klasörler). Sıra, kullanıcının klasör sırasıdır (bkz.
   /// `visibleOrderedFoldersProvider`).
+  /// Tümü görünümünde sola çekiş (ileri yön) takvimi açar (2026-11-06).
+  bool _swipeOpensCalendar(int direction) => swipeOpensCalendar(
+    enabled: ref.read(swipeLeftCalendarProvider),
+    direction: direction,
+    atAllNotes:
+        ref.read(selectedFolderProvider) == null &&
+        ref.read(selectedSharedFolderProvider) == null &&
+        !ref.read(sharedHubOnHomeProvider) &&
+        ref.read(selectedTagProvider) == null &&
+        ref.read(noteFilterProvider) == NoteFilter.all,
+  );
+
   void _cycleFilterFolder(int direction) {
+    if (_swipeOpensCalendar(direction)) {
+      HapticFeedback.selectionClick();
+      unawaited(context.push('/calendar'));
+      return;
+    }
     final stop = _swipeStop(direction);
     if (stop == null) return;
     // Geçiş animasyonunun yönünü çekiş yönüne göre ayarla (madde 2).
@@ -567,6 +584,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   /// Çekişin kenarında görünen sonraki durağın adı (F39.3); durak yoksa null.
   String? _swipeStopLabel(int direction) {
+    if (_swipeOpensCalendar(direction)) return context.l10n.calendarTitle;
     final stop = _swipeStop(direction);
     if (stop == null) return null;
     final l10n = context.l10n;
@@ -1458,8 +1476,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     !selectionActive &&
                                     !reorderActive &&
                                     _dragNoteId == null &&
-                                    ref.watch(swipeModeProvider) !=
-                                        SwipeMode.off,
+                                    (ref.watch(swipeModeProvider) !=
+                                            SwipeMode.off ||
+                                        ref.watch(swipeLeftCalendarProvider)),
                                 nextLabel: _swipeStopLabel,
                                 onCommit: _cycleFilterFolder,
                                 child: AnimatedSwitcher(

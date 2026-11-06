@@ -7266,4 +7266,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get dashboardBackgroundCalendarInfo =>
       'This month’s calendar behind your notes; card titles stay clear, the rest turns see-through';
+
+  @override
+  String get swipeLeftCalendar => 'Swipe left for calendar';
+
+  @override
+  String get swipeLeftCalendarInfo =>
+      'In the All view, swiping left opens the calendar';
+
+  @override
+  String calendarMoved(String day) {
+    return 'Moved to $day';
+  }
 }

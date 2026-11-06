@@ -128,3 +128,49 @@ Map<String, List<AgendaEntry>> buildAgenda({
   final keys = out.keys.toList()..sort();
   return {for (final k in keys) k: out[k]!..sort(_compareEntries)};
 }
+
+/// Kayıt sürüklenip başka güne taşınabilir mi (bkz. [movedToDay]).
+bool canMoveEntry(AgendaEntry entry) => switch (entry) {
+  EventOccurrence(:final event) => !event.repeats,
+  TaskEntry(:final task) => !task.completed,
+  ReminderEntry(:final note) => note.reminderAt != null,
+};
+
+/// **SÜRÜKLEYEREK TAŞIMA** (F47.5): kaydın [target] güne taşınmış hâli.
+/// Saat korunur, yalnız gün değişir. Dönüş: güncellenmiş [CalendarEvent],
+/// [TaskItem] ya da [Note]; taşınamıyorsa (aynı gün, tekrarlı etkinlik,
+/// tamamlanmış görev) null.
+///
+/// Tekrarlı ETKİNLİK taşınmaz: sürüklenen tek oluş ama kayıt serinin
+/// tamamı — bütün seriyi kaydırmak sürpriz olurdu (yalnız bu oluş için
+/// "istisna + kopya" Google'da da yok, K3). Tekrarlı not hatırlatıcısı ve
+/// görev ise serinin ilk anı kayar (editördeki tarih değişimiyle aynı).
+Object? movedToDay(AgendaEntry entry, DateTime target) {
+  final day = startOfDay(target);
+  switch (entry) {
+    case EventOccurrence(:final event, :final start):
+      if (event.repeats) return null;
+      final delta = daysBetween(startOfDay(start), day);
+      if (delta == 0) return null;
+      DateTime shift(DateTime d) =>
+          DateTime(d.year, d.month, d.day + delta, d.hour, d.minute);
+      return event.copyWith(start: shift(event.start), end: shift(event.end));
+    case TaskEntry(:final task):
+      if (task.completed || task.dueDay == day) return null;
+      return task.copyWith(due: dayKey(day));
+    case ReminderEntry(:final note, :final at):
+      final from = note.reminderAt;
+      if (from == null) return null;
+      final delta = daysBetween(startOfDay(at), day);
+      if (delta == 0) return null;
+      return note.copyWith(
+        reminderAt: DateTime(
+          from.year,
+          from.month,
+          from.day + delta,
+          from.hour,
+          from.minute,
+        ),
+      );
+  }
+}
