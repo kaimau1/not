@@ -27,13 +27,12 @@ import '../../ai/data/attachment_text_index.dart';
 import '../../../core/crash_reporting.dart';
 import '../../../core/error_log.dart';
 import '../../../core/constants.dart';
-import '../../../app/theme/app_theme.dart';
-import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
 import '../../../core/tips.dart';
 import 'personalize_screen.dart' show PersonalizeModuleSwitches;
+import 'theme_picker.dart';
 import '../../../core/utils/channel_counter.dart';
 import '../../../core/utils/diagnostics.dart';
 import '../../../core/utils/doc_picker.dart';
@@ -310,6 +309,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '${l10n.themePorcelain} ${l10n.themeClay} ${l10n.themeLavender} '
                 '${l10n.themeOlive} ${l10n.themeWhite} ${l10n.themeStraw} '
                 '${l10n.themeCream} ${l10n.themePeach} ${l10n.themeMint} '
+                '${l10n.themeOcean} ${l10n.themeRose} ${l10n.themeTangerine} '
+                '${l10n.themeEmerald} ${l10n.themeAmethyst} '
                 '${l10n.themeDark}',
           ),
           // Yazı tipi + yazı boyutu TEK satırda: ikisi de "yazı nasıl
@@ -1108,6 +1109,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       AppThemeChoice.cream => l10n.themeCream,
       AppThemeChoice.peach => l10n.themePeach,
       AppThemeChoice.mint => l10n.themeMint,
+      AppThemeChoice.ocean => l10n.themeOcean,
+      AppThemeChoice.rose => l10n.themeRose,
+      AppThemeChoice.tangerine => l10n.themeTangerine,
+      AppThemeChoice.emerald => l10n.themeEmerald,
+      AppThemeChoice.amethyst => l10n.themeAmethyst,
       AppThemeChoice.dark => l10n.themeDark,
     };
     // Yüzde yerine KADEME ADI: ayar artık dört adlı seçenekten ibaret,

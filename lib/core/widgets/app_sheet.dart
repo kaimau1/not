@@ -53,7 +53,17 @@ Future<T?> showAppSheet<T>({
   bool? requestFocus,
 }) => showModalBottomSheet<T>(
   context: context,
-  builder: builder,
+  // ALT GÜVENLİ ALAN HER LEVHADA (kullanıcı bulgusu 2026-11-06: "alt tarafta
+  // telefon düğmelerinin altına giriyor"): kenardan kenara Android'de levha
+  // gövdesi gezinme çubuğunun arkasına uzanıyordu; düğmeler çubuğun altında
+  // kalıyordu. Zemin yine en alta iner, içerik çubuğun üstünde biter. Kendi
+  // SafeArea'sı olan levhada çift dolgu olmaz (SafeArea dolguyu tüketir).
+  builder: (context) => SafeArea(
+    top: false,
+    left: false,
+    right: false,
+    child: Builder(builder: builder),
+  ),
   backgroundColor: backgroundColor,
   barrierLabel: barrierLabel,
   elevation: elevation,

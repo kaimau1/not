@@ -7500,6 +7500,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeMint => 'Mint';
 
   @override
+  String get themeOcean => 'Ocean';
+
+  @override
+  String get themeRose => 'Rose';
+
+  @override
+  String get themeTangerine => 'Tangerine';
+
+  @override
+  String get themeEmerald => 'Emerald';
+
+  @override
+  String get themeAmethyst => 'Amethyst';
+
+  @override
+  String get themePickerTitle => 'Theme';
+
+  @override
+  String get reminderQuickInHour => 'In 1 hour';
+
+  @override
+  String get reminderSheetTitle => 'Reminder';
+
+  @override
+  String get reminderSheetRemove => 'Remove';
+
+  @override
+  String get reminderSheetSave => 'Save';
+
+  @override
   String get folderHoldHint => 'Hold and slide left or right to switch folders';
 
   @override

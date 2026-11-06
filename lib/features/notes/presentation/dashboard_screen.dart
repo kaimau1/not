@@ -52,6 +52,7 @@ import '../../auth/presentation/guest_backup_card.dart';
 import '../../friends/data/friends_repository.dart';
 import '../../friends/presentation/home_invites.dart';
 import '../../settings/settings_providers.dart';
+import '../../settings/presentation/theme_picker.dart' show showThemePickerSheet;
 import '../../calendar/presentation/calendar_backdrop.dart';
 import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
@@ -477,22 +478,43 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Klasör düğmesindeki ve aşağı çekişteki duraklar (ilki "Tümü").
   List<FolderStop> _folderStops(WidgetRef ref) {
     final counts = ref.watch(folderNoteCountsProvider);
+    final folders = ref.watch(visibleOrderedFoldersProvider);
+    final hub = ref.watch(sharedHubFolderProvider);
     return [
       FolderStop(
         id: null,
         name: context.l10n.allNotesChip,
         icon: Icons.dashboard_outlined,
       ),
-      for (final f in ref.watch(visibleOrderedFoldersProvider))
-        FolderStop(
-          id: f.id,
-          name: f.name,
-          icon: f.iconData,
-          color: f.accent,
-          count: counts[f.id],
-        ),
+      // GELEN de menüde (kullanıcı bulgusu 2026-11-06: "Gelen klasörü üst
+      // alanda görülmüyor") — şeritteki yerinde, gizliyse yok.
+      for (final f in hub.hidden
+          ? folders
+          : withSharedHub(folders, hub, hub.order ?? 0))
+        if (f.id == kSharedHubFolderId)
+          FolderStop(
+            id: kSharedHubFolderId,
+            name: f.name.isEmpty ? context.l10n.sharedHubShort : f.name,
+            icon: f.icon.isEmpty ? AppIcons.inbox : f.iconData,
+            color: f.color == null
+                ? Theme.of(context).colorScheme.tertiary
+                : f.accent,
+          )
+        else
+          FolderStop(
+            id: f.id,
+            name: f.name,
+            icon: f.iconData,
+            color: f.accent,
+            count: counts[f.id],
+          ),
     ];
   }
+
+  /// Menüde seçili durak: Gelen açıksa onun kimliği.
+  String? _currentStopId(WidgetRef ref) => ref.watch(sharedHubOnHomeProvider)
+      ? kSharedHubFolderId
+      : ref.watch(selectedFolderProvider);
 
   void _openFolderMenu() {
     if (!mounted || !_folderPullAllowed()) return;
@@ -500,7 +522,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       openFolderMenu(
         context,
         stops: _folderStops(ref),
-        currentId: ref.read(selectedFolderProvider),
+        currentId: _currentStopId(ref),
         onOpen: () => unawaited(context.push('/folders')),
         onSelect: _selectFolderFromHold,
       ),
@@ -691,6 +713,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Klasör düğmesinden seçim: süzgeçsiz o klasör (Tümü = null).
   void _selectFolderFromHold(String? folderId) {
     _swipeForward = true;
+    if (folderId == kSharedHubFolderId) {
+      if (!ref.read(sharedHubOnHomeProvider)) showSharedHubOnHome(context);
+      HapticFeedback.selectionClick();
+      return;
+    }
     ref.read(selectedSharedFolderProvider.notifier).set(null);
     ref.read(sharedHubOnHomeProvider.notifier).set(false);
     ref.read(selectedFolderProvider.notifier).set(folderId);
@@ -1754,9 +1781,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                               null &&
                                           // Gizlenebilir (2026-11-06): satır
                                           // hiç çizilmez, notlar yukarı çıkar.
-                                          !ref.watch(
-                                            homeFolderStripHiddenProvider,
-                                          ))
+                                          // Bir klasörün İÇİNDEYKEN hep
+                                          // görünür (kullanıcı isteği
+                                          // 2026-11-06: "klasörlerde üstte
+                                          // diğer klasörler görülsün, ana
+                                          // sayfaya dön düğmesi olsun").
+                                          (!ref.watch(
+                                                homeFolderStripHiddenProvider,
+                                              ) ||
+                                              hubActive ||
+                                              sharedFolder != null ||
+                                              ref.watch(
+                                                    selectedFolderProvider,
+                                                  ) !=
+                                                  null))
                                         _folderShelf(
                                           columns,
                                           selectedFolderId: ref.watch(
@@ -1951,7 +1989,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       builder: (context, ref, _) =>
                       FolderHoldButton(
                         stops: _folderStops(ref),
-                        currentId: ref.watch(selectedFolderProvider),
+                        currentId: _currentStopId(ref),
                         onOpen: () => unawaited(context.push('/folders')),
                         onSelect: _selectFolderFromHold,
                       ),

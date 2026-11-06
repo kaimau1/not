@@ -168,13 +168,35 @@ extension _DashShelf on _DashboardScreenState {
       );
     }
 
+    // Bir klasörün içinde miyiz (kendi, Gelen ya da paylaşılan)?
+    final inFolder =
+        selectedFolderId != null || hubOn || sharedFolder != null;
     return SliverToBoxAdapter(
       child: SizedBox(
-        // 48 dp: sondaki "Tüm klasörler" düğmesi tam dokunma yüksekliği
-        // alsın; çiplerin kendisi yine 32 dp (dikey dolgu 8 + 8).
+        // 48 dp: baştaki "Ana sayfa" düğmesi tam dokunma yüksekliği alsın;
+        // çiplerin kendisi yine 32 dp (dikey dolgu 8 + 8).
         height: FolderChip.stripHeight + 8,
         child: Row(
           children: [
+            // ANA SAYFAYA DÖN (kullanıcı isteği 2026-11-06: "klasörlerde ana
+            // menüye dön düğmesi olmalı, kaydırmayı bilmeyen ne yapacak"):
+            // klasör içindeyken şeridin başında SABİT — kaydırılınca
+            // kaybolmasın.
+            if (inFolder)
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: 8),
+                child: IconButton.filledTonal(
+                  key: const ValueKey('home-strip-go-home'),
+                  tooltip: context.l10n.goHome,
+                  icon: const Icon(Icons.home_outlined, size: 20),
+                  onPressed: () {
+                    ref.read(selectedFolderProvider.notifier).set(null);
+                    ref.read(selectedSharedFolderProvider.notifier).set(null);
+                    ref.read(sharedHubOnHomeProvider.notifier).set(false);
+                    unawaited(HapticFeedback.selectionClick());
+                  },
+                ),
+              ),
             Expanded(
               child: ListView(
                 scrollDirection: Axis.horizontal,
@@ -228,16 +250,8 @@ extension _DashShelf on _DashboardScreenState {
                 ],
               ),
             ),
-            // TÜM KLASÖRLER (F11.5): yalnız SİMGE (kullanıcı isteği
-            // 2026-10-31: "sağdaki 'Tüm klasörler' yazısı olmasın, yerine bir
-            // simge koy") — yazı şeritten yer çalıyordu. Ad ipucu ve ekran
-            // okuyucu etiketi olarak kalır. Klasör ekranı sırayı da taşır.
-            IconButton(
-              key: const ValueKey('home-all-folders'),
-              tooltip: context.l10n.allFolders,
-              icon: const Icon(Icons.folder_copy_outlined, size: 21),
-              onPressed: () => unawaited(context.push('/folders')),
-            ),
+            // TÜM KLASÖRLER düğmesi kalktı (2026-11-06): baştaki "Tümü"
+            // çipi artık Klasörler ekranını açıyor (kullanıcı isteği).
           ],
         ),
       ),

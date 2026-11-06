@@ -6,7 +6,8 @@ import '../note_card.dart' show openNoteRoute;
 import '../../domain/note_links.dart';
 import '../reminder_repeat_ui.dart';
 import '../reminders_screen.dart'
-    show maybeShowAutoStartHint, pickReminderWhen;
+    show maybeShowAutoStartHint;
+import '../reminder_sheet.dart';
 import '../../domain/reminder_repeat.dart';
 import '../../../../core/app_icons.dart';
 import 'dart:async';
