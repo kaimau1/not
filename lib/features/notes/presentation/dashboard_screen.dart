@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../../../core/widgets/back_closes.dart';
 import '../../../core/widgets/sheet_header.dart';
 // ScrollCacheExtent (ızgara önbellek payı) yalnız rendering katmanında.
 import 'package:flutter/rendering.dart';
@@ -220,6 +221,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Kullanıcı bu kadar aşağıdaysa "başa dön" düğmesi görünür. Bir ekran
   /// yüksekliğinden fazlası: kısa bir kaydırmada düğme çıkıp kaybolmasın.
   static const _kBackToTopAfter = 800.0;
+
+  /// Klasör menüsünü açan aşağı çekiş mesafesi (dp, parmak hareketi).
+  static const _kFolderPullDistance = 80.0;
   bool _showBackToTop = false;
 
   // ---- Yüzen "+" düğmesinin kancaları (bkz. QuickAddActions) -------------
@@ -254,6 +258,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Filtreler arası geçiş yönü (madde 2): sola çekiş → sonraki (sağdan girer),
   /// sağa çekiş → önceki (soldan girer). Geçiş animasyonu bu yönü kullanır.
   bool _swipeForward = true;
+
+  /// Yana çekişle ayrılan görünüm (bölüm anahtarı) ve parmağın bıraktığı
+  /// konum (genişlik oranı): ayrılan ızgara oradan devam eder
+  /// ([FolderSwipe.continuesInPlace]). Geçiş bitince temizlenir.
+  String? _leavingKey;
+  double _leavingFrom = 0;
+  Timer? _leavingClear;
+
+  bool _continueSwipe(int direction, double releaseFraction) {
+    if (_swipeOpensCalendar(direction) || _swipeStop(direction) == null) {
+      return false;
+    }
+    _leavingKey = _segmentKey;
+    _leavingFrom = releaseFraction;
+    _leavingClear?.cancel();
+    _leavingClear = Timer(AppMotion.medium * 2, () {
+      _leavingKey = null;
+      _leavingFrom = 0;
+    });
+    return true;
+  }
 
   /// İskelet görünürken true: ilk içerik solarak gelir, sonra hep anında (F31.7).
   bool _skeletonShown = false;
@@ -373,10 +398,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// ince çizgiyi yeniden çizsin (ızgara önbelleğinde ~130 kart var).
   final _gridScrolled = ValueNotifier(false);
 
+  /// **YUKARIDAN ÇEK → KLASÖR MENÜSÜ** (kullanıcı isteği 2026-11-06, 5. tur):
+  /// liste tepedeyken aşağı çekilen mesafe (dp). Eşik [_kFolderPullDistance]
+  /// aşılıp bırakılınca sol alttaki klasör düğmesiyle AYNI menü açılır.
+  /// `ValueNotifier`: göstergeyi çizer, ekranı yeniden kurmaz.
+  final _folderPull = ValueNotifier<double>(0);
+
   /// Kaydırma bildirimini ayırıcıya bağlar; `false` dönerek bildirimi
   /// yukarıya (iç içe kaydırıcılara) geçirmeye devam eder.
   bool _onGridScroll(ScrollNotification notification) {
     if (notification.metrics.axis != Axis.vertical) return false;
+    if (notification.depth == 0) _trackFolderPull(notification);
     final pixels = notification.metrics.pixels;
     // Kesme noktası geçişinde (F18.11) liste başka bir yerde YENİDEN kurulur
     // (dar: rota sayfası, geniş: sol panel) → konum hafızada taşınır.
@@ -396,6 +428,83 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       setState(() => _showBackToTop = showTop);
     }
     return false;
+  }
+
+  /// Aşağı çekişi izler: Android'de (sıkıştırma fiziği) tepede çekiş
+  /// `OverscrollNotification`, iOS'ta (yaylı) eksi konum olarak gelir.
+  /// Yalnız PARMAKLA çekiş sayılır (fırlatmanın tepeye çarpması değil).
+  void _trackFolderPull(ScrollNotification n) {
+    final m = n.metrics;
+    var pull = _folderPull.value;
+    if (n is OverscrollNotification) {
+      if (n.dragDetails != null && n.overscroll < 0 && _folderPullAllowed()) {
+        pull -= n.overscroll;
+      }
+    } else if (n is ScrollUpdateNotification) {
+      if (n.dragDetails == null) {
+        pull = 0;
+      } else if (m.pixels < m.minScrollExtent) {
+        pull = _folderPullAllowed() ? m.minScrollExtent - m.pixels : 0;
+      } else if (pull > 0) {
+        // Çekip geri itti: mesafe azalır.
+        pull = (pull - (n.scrollDelta ?? 0)).clamp(0, double.infinity);
+      }
+    } else if (n is ScrollEndNotification) {
+      final open = pull >= _kFolderPullDistance;
+      _setFolderPull(0);
+      if (open) _openFolderMenu();
+      return;
+    }
+    _setFolderPull(pull);
+  }
+
+  void _setFolderPull(double pull) {
+    final before = _folderPull.value >= _kFolderPullDistance;
+    final after = pull >= _kFolderPullDistance;
+    if (after && !before) unawaited(HapticFeedback.selectionClick());
+    if (_folderPull.value != pull) _folderPull.value = pull;
+  }
+
+  /// Klasör düğmesinin görünmediği kiplerde (seçim, paylaşılan klasör,
+  /// arama, sıralama, kart sürükleme) çekiş menü açmaz.
+  bool _folderPullAllowed() =>
+      ref.read(selectedNoteIdsProvider).isEmpty &&
+      !ref.read(reorderModeProvider) &&
+      _dragNoteId == null &&
+      ref.read(selectedSharedFolderProvider) == null &&
+      ref.read(searchQueryProvider).trim().isEmpty;
+
+  /// Klasör düğmesindeki ve aşağı çekişteki duraklar (ilki "Tümü").
+  List<FolderStop> _folderStops(WidgetRef ref) {
+    final counts = ref.watch(folderNoteCountsProvider);
+    return [
+      FolderStop(
+        id: null,
+        name: context.l10n.allNotesChip,
+        icon: Icons.dashboard_outlined,
+      ),
+      for (final f in ref.watch(visibleOrderedFoldersProvider))
+        FolderStop(
+          id: f.id,
+          name: f.name,
+          icon: f.iconData,
+          color: f.accent,
+          count: counts[f.id],
+        ),
+    ];
+  }
+
+  void _openFolderMenu() {
+    if (!mounted || !_folderPullAllowed()) return;
+    unawaited(
+      openFolderMenu(
+        context,
+        stops: _folderStops(ref),
+        currentId: ref.read(selectedFolderProvider),
+        onOpen: () => unawaited(context.push('/folders')),
+        onSelect: _selectFolderFromHold,
+      ),
+    );
   }
 
   /// Telefon ↔ geniş ekran geçişinde (F18.11) önceki örneğin kaldığı yere
@@ -492,6 +601,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     _searchController.dispose();
     _searchFocus.dispose();
     _gridScrolled.dispose();
+    _folderPull.dispose();
+    _leavingClear?.cancel();
     _gridScroll.dispose();
     super.dispose();
   }
@@ -1470,6 +1581,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           // geçiş. Ölçek jesti tek parmakta hiç tepki vermez
                           // (pointerCount kontrolü), böylece içteki yatay
                           // çekiş ve dikey kaydırma olduğu gibi çalışır.
+                          child: FolderPullIndicator(
+                          progress: _folderPull,
+                          distance: _kFolderPullDistance,
                           child: PinchColumns(
                             columns: columns,
                             onCommit: ref
@@ -1498,6 +1612,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         ref.watch(swipeLeftCalendarProvider)),
                                 nextLabel: _swipeStopLabel,
                                 onCommit: _cycleFilterFolder,
+                                continuesInPlace: _continueSwipe,
                                 child: AnimatedSwitcher(
                                   duration: AppMotion.of(
                                     context,
@@ -1533,18 +1648,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     final rtl =
                                         Directionality.of(context) ==
                                         TextDirection.rtl;
-                                    final begin = Offset(
-                                      (incoming ? 0.12 : -0.12) *
-                                          dir *
-                                          (rtl ? -1 : 1),
-                                      0,
-                                    );
+                                    // Ekranda hareket yönü (sola = -1).
+                                    final move = -dir * (rtl ? -1 : 1);
+                                    // Çekişle ayrılan görünüm parmağın
+                                    // bıraktığı yerden AYNI yönde sürer;
+                                    // gelen de o yönde, daha uzaktan girer
+                                    // (sayfa çevirme hissi). Düğme/çip
+                                    // geçişinde eski kısa kayma.
+                                    final from =
+                                        !incoming &&
+                                            child.key == ValueKey(_leavingKey)
+                                        ? _leavingFrom
+                                        : null;
+                                    final Offset begin;
+                                    final Offset end;
+                                    if (from != null) {
+                                      begin = Offset(from + move * 0.35, 0);
+                                      end = Offset(from, 0);
+                                    } else {
+                                      final swiped =
+                                          incoming && _leavingKey != null;
+                                      begin = Offset(
+                                        (incoming ? -move : move) *
+                                            (swiped ? 0.3 : 0.12),
+                                        0,
+                                      );
+                                      end = Offset.zero;
+                                    }
                                     return FadeTransition(
                                       opacity: animation,
                                       child: SlideTransition(
                                         position: Tween(
                                           begin: begin,
-                                          end: Offset.zero,
+                                          end: end,
                                         ).animate(animation),
                                         // F26.4: ayrılan ızgara donmuş
                                         // görüntü (her karede rasterleşmez).
@@ -1565,6 +1701,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                       ),
                                   child: CustomScrollView(
                                     key: ValueKey(segmentKey),
+                                    // Az notta da tepeden aşağı çekilebilsin
+                                    // (klasör menüsü — [_trackFolderPull]).
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
                                     // "Başa dön" düğmesi buradan tepeye döner.
                                     controller: _gridScroll,
                                     // KÖK NEDEN (aşağı kaydırırken liste yukarı
@@ -1765,6 +1905,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                               ),
                             ),
                           ),
+                          ),
                         ),
                       ],
                     );
@@ -1797,7 +1938,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 // sağda bırakıyor, asistan paneli ise (end: 88) SOLDA yer
                 // ayırıyordu — panel düğmelerin üstüne biniyordu.
                 // KLASÖR DÜĞMESİ (kullanıcı isteği 2026-11-06): sol altta;
-                // dokun → Klasörler, basılı tut + kaydır → klasör değiştir.
+                // dokun → klasör menüsü (liste tepedeyken aşağı çekiş de
+                // aynı menüyü açar).
                 if (!AppRailScope.visible(context) &&
                     !selectionActive &&
                     sharedFolder == null)
@@ -1808,21 +1950,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     child: Consumer(
                       builder: (context, ref, _) =>
                       FolderHoldButton(
-                        stops: [
-                          FolderStop(
-                            id: null,
-                            name: l10n.allNotesChip,
-                            icon: Icons.dashboard_outlined,
-                          ),
-                          for (final f in ref.watch(visibleOrderedFoldersProvider))
-                            FolderStop(
-                              id: f.id,
-                              name: f.name,
-                              icon: f.iconData,
-                              color: f.accent,
-                              count: ref.watch(folderNoteCountsProvider)[f.id],
-                            ),
-                        ],
+                        stops: _folderStops(ref),
                         currentId: ref.watch(selectedFolderProvider),
                         onOpen: () => unawaited(context.push('/folders')),
                         onSelect: _selectFolderFromHold,
@@ -1947,6 +2075,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       canPop: !selectionActive && !reorderActive && !inFolder && !searching,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
+        if (BackCloses.handling(context)) return;
         // "+" paneli açıksa geri tuşu ONUN: Flutter aynı rotadaki tüm
         // PopScope geri çağrılarını çalıştırıyor, yoksa tek geri hem paneli
         // hem seçim modunu birden kapatırdı.

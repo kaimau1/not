@@ -1,4 +1,5 @@
 import '../note_link_ui.dart';
+import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/widgets/color_fade.dart';
 import '../study_cards_screen.dart' show generateCardsForNote;
 import '../note_card.dart' show openNoteRoute;
@@ -627,6 +628,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// notlarına metin notu ekleme seçeneği lazım.") Notun gövdesi doluysa alan
   /// zaten görünür; bu bayrak, gövde BOŞKEN alanı açık tutar.
   bool _listBodyOpen = false;
+
+  /// Ek şeridi BU ekranda açıldı mı (alt çubuktaki ataç / şeridin başlığı)?
+  /// Öyleyse geri önce şeridi kapatır ([BackCloses]). Kalıcı tercihle zaten
+  /// açık gelen şerit geri tuşunu yakalamaz — her not çıkışı iki geri
+  /// istemesin.
+  bool _stripOpenedHere = false;
 
   /// Not makul bir sürede gelmedi (bkz. initState'teki koruma).
   bool _loadFailed = false;
@@ -2495,6 +2502,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // içindir (klavye animasyonunun kareleri). Editör yeniden kurulduğunda
     // bayat kalmasın diye burada, her şeyden önce düşürülür.
     _canvasCache = null;
+    ref.listen<bool>(attachmentsExpandedProvider, (prev, next) {
+      final opened = next && prev == false;
+      if (opened != _stripOpenedHere) {
+        setState(() => _stripOpenedHere = opened);
+      }
+    });
     final l10n = context.l10n;
     final note = _note;
     // Okunurluk teması aşağıda, not zemini hesaplanınca kurulur; o ana dek
@@ -3504,7 +3517,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 // (ses oynatıcısı dahil) dispose ediliyor ve klavye
                 // kapanınca sıfırdan kuruluyordu — şeridin kaydırma
                 // konumu sıfırlanıyor, ÇALAN SES sessizce duruyordu.
-                AttachmentStrip(
+                // Sayfa üstüne yazma kipi de geri tuşuyla biter (önce kip,
+                // sonra not).
+                BackCloses(
+                  open: _penMode,
+                  onClose: () => _update(() => _penMode = false),
+                  child: const SizedBox.shrink(),
+                ),
+                BackCloses(
+                  open:
+                      _stripOpenedHere &&
+                      ref.watch(attachmentsExpandedProvider),
+                  onClose: () {
+                    _stripOpenedHere = false;
+                    ref.read(attachmentsExpandedProvider.notifier).toggle();
+                  },
+                  child: AttachmentStrip(
                   attachments: [
                     for (final a in note.attachments)
                       if (!a.floatsOnPage &&
@@ -3544,6 +3572,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   // yolu hiç kaybolmasın.
                   collapsedHandle: !Personalize.current.shows(
                     UiItem.barAttachments,
+                  ),
                   ),
                 ),
                 // BAĞLAMA KİPİ şeridi: hangi dosyanın bağlanmayı
@@ -4149,6 +4178,9 @@ child: NoteFindBar(
               !ref.watch(noteFullscreenProvider),
           onPopInvokedWithResult: (didPop, _) {
             if (didPop) return;
+            // Açık bir alt panel (ek şeridi, kalem/biçim tepsisi…) varsa geri
+            // ONUN — ekranın kendi kipleri sonra.
+            if (BackCloses.handling(context)) return;
             if (ref.read(noteFullscreenProvider)) {
               _showNoteList();
               return;

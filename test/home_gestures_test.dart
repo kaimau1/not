@@ -365,6 +365,36 @@ void main() {
       expect(find.text('Genel'), findsNothing);
     });
 
+    testWidgets('yerinde geçişte ızgara geri sekmez, bırakılan yer bildirilir', (
+      tester,
+    ) async {
+      final released = <double>[];
+      await tester.pumpWidget(
+        host(
+          FolderSwipe(
+            enabled: true,
+            nextLabel: (d) => 'Genel',
+            onCommit: commits.add,
+            continuesInPlace: (d, at) {
+              released.add(at);
+              return true;
+            },
+            child: const SizedBox.expand(
+              key: ValueKey('grid'),
+              child: ColoredBox(color: Colors.white),
+            ),
+          ),
+        ),
+      );
+      final g = await dragTo(tester, -150);
+      await g.up();
+      // Aynı karede: geri dönüş animasyonu yok, görünüm çağırana devredildi.
+      await tester.pump();
+      expect(commits, [1]);
+      expect(released.single, lessThan(-0.2));
+      expect(offsetOf(tester), 0);
+    });
+
     testWidgets('eşik aşılmazsa yerine döner', (tester) async {
       await tester.pumpWidget(swipe());
       final g = await dragTo(tester, -20);

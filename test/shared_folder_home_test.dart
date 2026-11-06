@@ -318,6 +318,95 @@ void main() {
     await tester.pump(const Duration(seconds: 30));
   });
 
+  testWidgets('ana ekran: tepeden aşağı çekiş klasör menüsünü açar', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final container = ProviderContainer(
+      retry: (_, _) => null,
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        currentUidProvider.overrideWithValue('ben'),
+        notesRepositoryProvider.overrideWithValue(null),
+        foldersRepositoryProvider.overrideWithValue(null),
+        friendsRepositoryProvider.overrideWithValue(null),
+        notesStreamProvider.overrideWith(
+          (ref) => Stream.value([
+            const Note(id: 'k', type: NoteType.text, title: 'Kendi notum'),
+          ]),
+        ),
+        foldersStreamProvider.overrideWith(
+          (ref) => Stream.value(const [
+            NoteFolder(id: 'f9', name: 'İş', ownerId: 'ben'),
+          ]),
+        ),
+        sharedFolderRefsProvider.overrideWith(
+          (ref) => Stream.value(const <SharedFolderRef>[]),
+        ),
+        folderUnreadProvider.overrideWith((ref, key) => 0),
+        myNoteSharesProvider.overrideWith((ref) => Stream.value(const {})),
+        sharedNotesWithMeProvider.overrideWith(
+          (ref) => Stream.value(const <NoteShare>[]),
+        ),
+        inboxNotesProvider.overrideWith(
+          (ref) => Stream.value(const <InboxNote>[]),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const DashboardScreen(),
+        ),
+      ),
+    );
+    Future<void> settle() async {
+      for (var i = 0; i < 12; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+
+    await settle();
+    expect(find.text('Kendi notum'), findsOneWidget);
+    // Kısa çekiş: menü yok.
+    final short = await tester.startGesture(
+      tester.getCenter(find.text('Kendi notum')),
+    );
+    for (var i = 0; i < 4; i++) {
+      await short.moveBy(const Offset(0, 10));
+      await tester.pump();
+    }
+    await short.up();
+    await settle();
+    expect(find.byKey(const ValueKey('folder-radial-menu')), findsNothing);
+    // Uzun çekiş: gösterge, bırakınca menü.
+    final g = await tester.startGesture(
+      tester.getCenter(find.text('Kendi notum')),
+    );
+    for (var i = 0; i < 14; i++) {
+      await g.moveBy(const Offset(0, 12));
+      await tester.pump();
+    }
+    expect(find.byKey(const ValueKey('folder-pull-indicator')), findsOneWidget);
+    await g.up();
+    await settle();
+    expect(find.byKey(const ValueKey('folder-radial-menu')), findsOneWidget);
+    await tester.tap(find.text('İş').last);
+    await settle();
+    expect(container.read(selectedFolderProvider), 'f9');
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 30));
+  });
+
   test('yana çekiş durağı kendi klasör kimliğiyle çakışmaz', () {
     expect(sharedFolderStopId(refOf(FolderRole.both)), 'ayse/f1');
   });
