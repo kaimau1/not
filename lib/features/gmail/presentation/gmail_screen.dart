@@ -1,4 +1,5 @@
 import '../../../app/app_frame.dart';
+import '../../calendar/presentation/task_editor.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -443,6 +444,20 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
                             onPressed: () => _save(_SaveMode.tasks),
                             icon: const Icon(Icons.checklist),
                             label: Text(l10n.gmailAiTasks),
+                          ),
+                          // E-postadan görev (TAKVIM F52.3): başlık konu,
+                          // ayrıntıda iletinin Gmail bağlantısı.
+                          OutlinedButton.icon(
+                            key: const ValueKey('gmail-task'),
+                            onPressed: () => unawaited(
+                              showTaskEditor(
+                                context,
+                                initialTitle: m.subject.trim(),
+                                initialNotes: m.webUrl,
+                              ),
+                            ),
+                            icon: const Icon(Icons.add_task),
+                            label: Text(l10n.itemMenuTask),
                           ),
                         ],
                       ),

@@ -1,4 +1,7 @@
 import '../../../../core/app_icons.dart';
+import '../../../../core/utils/spoken_datetime.dart';
+import '../../../calendar/domain/agenda.dart';
+import '../../../calendar/presentation/event_editor.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -141,6 +144,18 @@ class _TextRecognizeScreenState extends State<TextRecognizeScreen> {
       ..showMessage(context.l10n.copied);
   }
 
+  void _toEvent() {
+    final draft = eventDraftFromText(_effectiveText, parseSpokenDateTimeNow);
+    unawaited(
+      showEventEditor(
+        context,
+        start: draft.start,
+        initialTitle: draft.title,
+        initialDescription: draft.description,
+      ),
+    );
+  }
+
   void _insert() {
     final text = _effectiveText.trim();
     if (text.isEmpty) return;
@@ -167,6 +182,14 @@ class _TextRecognizeScreenState extends State<TextRecognizeScreen> {
           style: const TextStyle(fontSize: 15),
         ),
         actions: [
+          // Afiş/davetiye fotoğrafından etkinlik (TAKVIM F52.3).
+          if (!_busy && _text.text.trim().isNotEmpty)
+            IconButton(
+              key: const ValueKey('ocr-to-event'),
+              tooltip: l10n.ocrToEvent,
+              icon: const Icon(Icons.event_available_outlined),
+              onPressed: _toEvent,
+            ),
           // Tanınan metnin aydınlık vurgusu açık/kapalı: fotoğrafın kendisini
           // net görmek gerektiğinde kapatılabilsin.
           IconButton(

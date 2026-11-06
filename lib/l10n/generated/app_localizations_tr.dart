@@ -7364,4 +7364,26 @@ class AppLocalizationsTr extends AppLocalizations {
   String gcalPending(int count) {
     return 'Google\'a gönderilmeyi bekleyen $count değişiklik';
   }
+
+  @override
+  String get ocrToEvent => 'Takvime etkinlik olarak ekle';
+
+  @override
+  String get calendarSuggestAction => 'Takvime ekle';
+
+  @override
+  String calendarSuggest(String when) {
+    return 'Notta $when geçiyor';
+  }
+
+  @override
+  String get calendarIcsExport => 'Takvimi dışa aktar (.ics)';
+
+  @override
+  String get calendarIcsImport => 'Takvim dosyası içe aktar (.ics)';
+
+  @override
+  String calendarIcsImported(int count, int skipped) {
+    return '$count etkinlik eklendi, $skipped zaten vardı';
+  }
 }

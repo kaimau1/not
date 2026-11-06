@@ -13153,6 +13153,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Google\'a gönderilmeyi bekleyen {count} değişiklik'**
   String gcalPending(int count);
+
+  /// No description provided for @ocrToEvent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvime etkinlik olarak ekle'**
+  String get ocrToEvent;
+
+  /// No description provided for @calendarSuggestAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvime ekle'**
+  String get calendarSuggestAction;
+
+  /// No description provided for @calendarSuggest.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notta {when} geçiyor'**
+  String calendarSuggest(String when);
+
+  /// No description provided for @calendarIcsExport.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvimi dışa aktar (.ics)'**
+  String get calendarIcsExport;
+
+  /// No description provided for @calendarIcsImport.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim dosyası içe aktar (.ics)'**
+  String get calendarIcsImport;
+
+  /// No description provided for @calendarIcsImported.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} etkinlik eklendi, {skipped} zaten vardı'**
+  String calendarIcsImported(int count, int skipped);
 }
 
 class _AppLocalizationsDelegate

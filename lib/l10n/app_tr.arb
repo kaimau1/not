@@ -3495,5 +3495,13 @@
   "gcalDeleteConfirm": "Etkinlik Google Takvim'den silinsin mi? Bu geri alınamaz.",
   "gcalEdit": "Düzenle",
   "gcalPending": "Google'a gönderilmeyi bekleyen {count} değişiklik",
-  "@gcalPending": {"placeholders": {"count": {"type": "int"}}}
+  "@gcalPending": {"placeholders": {"count": {"type": "int"}}},
+  "ocrToEvent": "Takvime etkinlik olarak ekle",
+  "calendarSuggestAction": "Takvime ekle",
+  "calendarSuggest": "Notta {when} geçiyor",
+  "@calendarSuggest": {"placeholders": {"when": {"type": "String"}}},
+  "calendarIcsExport": "Takvimi dışa aktar (.ics)",
+  "calendarIcsImport": "Takvim dosyası içe aktar (.ics)",
+  "calendarIcsImported": "{count} etkinlik eklendi, {skipped} zaten vardı",
+  "@calendarIcsImported": {"placeholders": {"count": {"type": "int"}, "skipped": {"type": "int"}}}
 }

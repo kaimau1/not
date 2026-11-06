@@ -225,3 +225,44 @@ List<String> calendarBriefingLines({
   }
   return out;
 }
+
+/// **METİNDEN ETKİNLİK TASLAĞI** (F52.3, fotoğraftan etkinlik): ilk dolu
+/// satır başlık (en çok 80 harf), kalanı açıklama; zaman [parse] ile metnin
+/// tamamından (yerel ayrıştırıcı — AI gerekmez). Zaman bulunamazsa null
+/// başlangıç (düzenleyici varsayılanı kullanır).
+({String title, String description, DateTime? start}) eventDraftFromText(
+  String text,
+  DateTime? Function(String) parse,
+) {
+  final lines = [
+    for (final l in text.split('\n'))
+      if (l.trim().isNotEmpty) l.trim(),
+  ];
+  if (lines.isEmpty) return (title: '', description: '', start: null);
+  var title = lines.first;
+  if (title.length > 80) title = '${title.substring(0, 80).trim()}…';
+  return (
+    title: title,
+    description: lines.skip(1).join('\n'),
+    start: parse(lines.join(' ')),
+  );
+}
+
+/// **NOTTA TARİH İFADESİ** (F52.3): notun son satırlarında (sondan en çok 5
+/// dolu satır) bir zaman ifadesi ("yarın 15:00", "cuma akşam") varsa o satır
+/// ve zaman. Yoksa null. Yalnız öneri — not değişmez.
+({String line, DateTime at})? noteDateSuggestion(
+  String text,
+  DateTime? Function(String) parse,
+) {
+  final lines = [
+    for (final l in text.split('\n'))
+      if (l.trim().isNotEmpty) l.trim(),
+  ];
+  for (final line in lines.reversed.take(5)) {
+    final at = parse(line);
+    if (at != null) return (line: line, at: at);
+  }
+  return null;
+}
+

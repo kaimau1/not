@@ -7385,4 +7385,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String gcalPending(int count) {
     return '$count changes waiting to be sent to Google';
   }
+
+  @override
+  String get ocrToEvent => 'Add to calendar as an event';
+
+  @override
+  String get calendarSuggestAction => 'Add to calendar';
+
+  @override
+  String calendarSuggest(String when) {
+    return 'Your note mentions $when';
+  }
+
+  @override
+  String get calendarIcsExport => 'Export calendar (.ics)';
+
+  @override
+  String get calendarIcsImport => 'Import calendar file (.ics)';
+
+  @override
+  String calendarIcsImported(int count, int skipped) {
+    return '$count events added, $skipped already existed';
+  }
 }

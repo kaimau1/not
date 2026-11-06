@@ -27,6 +27,7 @@ import '../domain/calendar_event.dart';
 import '../domain/day_key.dart';
 import '../domain/task_item.dart';
 import 'calendar_views.dart';
+import 'calendar_ics_ui.dart';
 import 'event_editor.dart';
 import 'google_calendar_ui.dart';
 import 'note_calendar_links.dart';
@@ -523,6 +524,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
             onPressed: () => unawaited(showGoogleCalendarSheet(context)),
           ),
+        PopupMenuButton<String>(
+          key: const ValueKey('calendar-more'),
+          onSelected: (v) => unawaited(
+            v == 'export'
+                ? exportCalendarIcs(context, ref)
+                : importCalendarIcs(context, ref),
+          ),
+          itemBuilder: (_) => [
+            PopupMenuItem(value: 'export', child: Text(l10n.calendarIcsExport)),
+            PopupMenuItem(value: 'import', child: Text(l10n.calendarIcsImport)),
+          ],
+        ),
       ],
     );
 

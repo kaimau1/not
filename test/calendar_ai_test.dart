@@ -92,4 +92,21 @@ void main() {
       ['Dişçi', 'Raporu bitir'],
     );
   });
+
+  test('metinden etkinlik taslağı ve notta tarih önerisi', () {
+    DateTime? parse(String t) =>
+        t.contains('yarın 15:00') ? DateTime(2026, 11, 7, 15) : null;
+    final draft = eventDraftFromText(
+      '  Konser\n\nKültür merkezi\nyarın 15:00  ',
+      parse,
+    );
+    expect(draft.title, 'Konser');
+    expect(draft.description, 'Kültür merkezi\nyarın 15:00');
+    expect(draft.start, DateTime(2026, 11, 7, 15));
+    expect(eventDraftFromText('  ', parse).title, '');
+
+    final hit = noteDateSuggestion('alışveriş\nyarın 15:00 dişçi\nsüt', parse);
+    expect(hit?.line, 'yarın 15:00 dişçi');
+    expect(noteDateSuggestion('tarih yok', parse), isNull);
+  });
 }

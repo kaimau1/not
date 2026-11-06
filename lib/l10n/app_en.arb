@@ -2702,5 +2702,13 @@
   "gcalDeleteConfirm": "Delete this event from Google Calendar? This can't be undone.",
   "gcalEdit": "Edit",
   "gcalPending": "{count} changes waiting to be sent to Google",
-  "@gcalPending": {"placeholders": {"count": {"type": "int"}}}
+  "@gcalPending": {"placeholders": {"count": {"type": "int"}}},
+  "ocrToEvent": "Add to calendar as an event",
+  "calendarSuggestAction": "Add to calendar",
+  "calendarSuggest": "Your note mentions {when}",
+  "@calendarSuggest": {"placeholders": {"when": {"type": "String"}}},
+  "calendarIcsExport": "Export calendar (.ics)",
+  "calendarIcsImport": "Import calendar file (.ics)",
+  "calendarIcsImported": "{count} events added, {skipped} already existed",
+  "@calendarIcsImported": {"placeholders": {"count": {"type": "int"}, "skipped": {"type": "int"}}}
 }
