@@ -7480,4 +7480,23 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get folderHoldHint =>
       'Basılı tutup sağa sola kaydırarak klasör değiştir';
+
+  @override
+  String get homeViewMenu => 'Görünüm ve süz';
+
+  @override
+  String get folderRadialCancel => 'Bırak = vazgeç';
+
+  @override
+  String googleApiDisabled(String api) {
+    return '$api bu uygulamanın Google Cloud projesinde kapalı. Konsolda etkinleştirip yeniden bağlanın.';
+  }
+
+  @override
+  String get googleApiEnable => 'Etkinleştir';
+
+  @override
+  String googleScopeMissing(String api) {
+    return '$api izni verilmedi. Bağlanırken izin kutusunu işaretleyin.';
+  }
 }

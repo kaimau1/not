@@ -377,6 +377,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     CalendarView.agenda => DateFormat.yMMMM().format(_month),
   };
 
+  PopupMenuItem<String> _menuItem(String value, IconData icon, String text) =>
+      PopupMenuItem(
+        value: value,
+        child: Row(
+          children: [
+            Icon(icon, size: 20),
+            const SizedBox(width: 12),
+            Flexible(child: Text(text)),
+          ],
+        ),
+      );
+
   IconData _viewIcon(CalendarView v) => switch (v) {
     CalendarView.year => Icons.calendar_view_month_outlined,
     CalendarView.month => Icons.calendar_month_outlined,
@@ -398,10 +410,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final tasks = ref.watch(tasksStreamProvider).value ?? const <TaskItem>[];
     final reminders = ref.watch(calendarReminderNotesProvider);
     final google = ref.watch(googleCalendarEventsProvider);
-    final eventList = [
-      ...?events.value,
-      ...google,
-    ];
+    final eventList = [...?events.value, ...google];
     final data = CalendarData(
       events: eventList,
       tasks: tasks,
@@ -507,44 +516,71 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               ),
           ],
         ),
-        IconButton(
-          key: const ValueKey('calendar-tasks'),
-          tooltip: l10n.tasksTitle,
-          icon: const Icon(Icons.task_alt),
-          onPressed: () => unawaited(context.push('/tasks')),
-        ),
-        IconButton(
-          tooltip: l10n.remindersTitle,
-          icon: const Icon(Icons.alarm_outlined),
-          onPressed: () => unawaited(context.push('/reminders')),
-        ),
-        IconButton(
-          key: const ValueKey('calendar-routines'),
-          tooltip: l10n.routinesTitle,
-          icon: const Icon(Icons.self_improvement_outlined),
-          onPressed: () => unawaited(context.push('/routines')),
-        ),
-        if (ref.watch(googleCalendarAvailableProvider))
+        // AY BAŞLIĞI GÖRÜNMÜYORDU (kullanıcı bulgusu 2026-11-06: "takvimde
+        // hangi ay olduğu görülmüyor"): telefonda yedi simge başlığı sıfıra
+        // sıkıştırıyordu. Dar ekranda görevler/hatırlatıcılar/rutinler/
+        // Google/.ics tek ⋮ menüde; başlığa yer kalıyor.
+        if (wide) ...[
           IconButton(
-            key: const ValueKey('calendar-google'),
-            tooltip: l10n.gcalTitle,
-            icon: Icon(
-              ref.watch(googleCalendarProvider.select((s) => s.connected))
-                  ? Icons.cloud_done_outlined
-                  : Icons.cloud_outlined,
-            ),
-            onPressed: () => unawaited(showGoogleCalendarSheet(context)),
+            key: const ValueKey('calendar-tasks'),
+            tooltip: l10n.tasksTitle,
+            icon: const Icon(Icons.task_alt),
+            onPressed: () => unawaited(context.push('/tasks')),
           ),
+          IconButton(
+            tooltip: l10n.remindersTitle,
+            icon: const Icon(Icons.alarm_outlined),
+            onPressed: () => unawaited(context.push('/reminders')),
+          ),
+          IconButton(
+            key: const ValueKey('calendar-routines'),
+            tooltip: l10n.routinesTitle,
+            icon: const Icon(kRoutineIcon),
+            onPressed: () => unawaited(context.push('/routines')),
+          ),
+          if (ref.watch(googleCalendarAvailableProvider))
+            IconButton(
+              key: const ValueKey('calendar-google'),
+              tooltip: l10n.gcalTitle,
+              icon: Icon(
+                ref.watch(googleCalendarProvider.select((s) => s.connected))
+                    ? Icons.cloud_done_outlined
+                    : Icons.cloud_outlined,
+              ),
+              onPressed: () => unawaited(showGoogleCalendarSheet(context)),
+            ),
+        ],
         PopupMenuButton<String>(
           key: const ValueKey('calendar-more'),
-          onSelected: (v) => unawaited(
-            v == 'export'
-                ? exportCalendarIcs(context, ref)
-                : importCalendarIcs(context, ref),
-          ),
+          onSelected: (v) => unawaited(switch (v) {
+            'tasks' => context.push('/tasks'),
+            'reminders' => context.push('/reminders'),
+            'routines' => context.push('/routines'),
+            'google' => showGoogleCalendarSheet(context),
+            'export' => exportCalendarIcs(context, ref),
+            _ => importCalendarIcs(context, ref),
+          }),
           itemBuilder: (_) => [
-            PopupMenuItem(value: 'export', child: Text(l10n.calendarIcsExport)),
-            PopupMenuItem(value: 'import', child: Text(l10n.calendarIcsImport)),
+            if (!wide) ...[
+              _menuItem('tasks', Icons.task_alt, l10n.tasksTitle),
+              _menuItem('reminders', Icons.alarm_outlined, l10n.remindersTitle),
+              _menuItem('routines', kRoutineIcon, l10n.routinesTitle),
+              if (ref.read(googleCalendarAvailableProvider))
+                _menuItem(
+                  'google',
+                  ref.read(googleCalendarProvider).connected
+                      ? Icons.cloud_done_outlined
+                      : Icons.cloud_outlined,
+                  l10n.gcalTitle,
+                ),
+              const PopupMenuDivider(),
+            ],
+            _menuItem('export', Icons.ios_share, l10n.calendarIcsExport),
+            _menuItem(
+              'import',
+              Icons.file_open_outlined,
+              l10n.calendarIcsImport,
+            ),
           ],
         ),
       ],
@@ -659,6 +695,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
 
     return Scaffold(
+      // Takvimde yazı alanı yok; klavye yalnız üstteki levhalarda açılır.
+      // Boyut değişseydi ay ızgarası/sayfalar klavyenin HER KARESİNDE yeniden
+      // yerleşirdi (yeni etkinlik kasması, 2026-11-06).
+      resizeToAvoidBottomInset: false,
       appBar: HomeInBar(appBar: bar),
       floatingActionButton: FloatingActionButton(
         key: const ValueKey('calendar-new-event'),
@@ -1320,9 +1360,7 @@ class _RoutineTile extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            entry.log.completed
-                ? Icons.check_circle
-                : Icons.self_improvement_outlined,
+            entry.log.completed ? Icons.check_circle : kRoutineIcon,
             size: 18,
             color: color,
           ),

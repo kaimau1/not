@@ -274,10 +274,19 @@ class _ReorderableNoteCell extends StatelessWidget {
 }
 
 class _SearchField extends ConsumerWidget {
-  const _SearchField({required this.controller, this.focusNode});
+  const _SearchField({
+    required this.controller,
+    this.focusNode,
+    this.trailing = const [],
+  });
 
   final TextEditingController controller;
   final FocusNode? focusNode;
+
+  /// Kutunun İÇİNDE, sağda duran düğmeler (hesap, ⋮). Kullanıcı isteği
+  /// 2026-11-06: "üst arama çubuğu profil ve 3 noktayı da kapsasın, güzel
+  /// bir alan olsun" — üç ayrı parça yerine tek hap.
+  final List<Widget> trailing;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -300,15 +309,22 @@ class _SearchField extends ConsumerWidget {
       // Arama kutusu kâğıt renginde, ince çizgili (TEMA_PLANI F31.5):
       // zeminin üstünde kart gibi durur.
       child: Container(
-        height: 44,
+        height: 50,
         decoration: BoxDecoration(
           color: AppTokens.of(context).card,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(25),
           border: Border.all(color: AppTokens.of(context).hairline),
+          boxShadow: [
+            BoxShadow(
+              color: scheme.shadow.withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            const SizedBox(width: 10),
+            const SizedBox(width: 14),
             Icon(Icons.search, size: 19, color: scheme.onSurfaceVariant),
             const SizedBox(width: 8),
             Expanded(
@@ -340,7 +356,7 @@ class _SearchField extends ConsumerWidget {
                   border: InputBorder.none,
                   isDense: true,
                   // Dikey dolgu alanı 44 px'lik kutu boyunca dokunulur kılar.
-                  contentPadding: const EdgeInsets.symmetric(vertical: 13),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 15),
                 ),
               ),
             ),
@@ -387,6 +403,7 @@ class _SearchField extends ConsumerWidget {
                 child: HomeFilterButton(),
               ),
             ),
+            ...trailing,
             const SizedBox(width: 4),
           ],
         ),

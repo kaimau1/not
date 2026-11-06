@@ -2742,5 +2742,10 @@
   "themeCream": "Cream",
   "themePeach": "Peach",
   "themeMint": "Mint",
-  "folderHoldHint": "Hold and slide left or right to switch folders"
+  "folderHoldHint": "Hold and slide left or right to switch folders",
+  "homeViewMenu": "View & filter",
+  "folderRadialCancel": "Release = cancel",
+  "googleApiDisabled": "{api} is disabled in this app's Google Cloud project. Enable it in the console and connect again.",
+  "googleApiEnable": "Enable",
+  "googleScopeMissing": "{api} permission wasn't granted. Tick the permission box when connecting."
 }

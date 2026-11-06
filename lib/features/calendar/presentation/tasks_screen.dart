@@ -15,6 +15,7 @@ import '../data/task_note_sync.dart';
 import '../domain/day_key.dart';
 import '../domain/task_item.dart';
 import 'task_editor.dart';
+import 'google_failure.dart';
 
 /// **GÖREVLER** (TAKVIM_PLANI F50.1, Google Görevler benzeri): listeler
 /// arası çip, açık görevler (alt görevler girintili), katlanır
@@ -63,7 +64,18 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     final ctrl = ref.read(googleTasksProvider.notifier);
     if (!ref.read(googleTasksProvider).connected) {
       final ok = await ctrl.connect();
-      messenger.showMessage(ok ? l10n.gtasksConnected : l10n.gtasksFailed);
+      if (ok) {
+        messenger.showMessage(l10n.gtasksConnected);
+      } else {
+        showGoogleConnectFailure(
+          messenger,
+          l10n,
+          ref.read(googleTasksProvider).error,
+          fallback: l10n.gtasksFailed,
+          apiName: 'Google Tasks API',
+          apiHost: 'tasks.googleapis.com',
+        );
+      }
       return;
     }
     if (!mounted) return;

@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/sheet_header.dart';
+import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/presentation/reminder_repeat_ui.dart';
 import '../../notes/presentation/reminders_screen.dart'
@@ -106,6 +107,8 @@ class EventEditorSheet extends ConsumerStatefulWidget {
 }
 
 class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
+  final _titleFocus = FocusNode();
+
   late final _title = TextEditingController(
     text: widget.existing?.title ?? widget.initialTitle,
   );
@@ -123,12 +126,13 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
   /// varsayılan Google; nottan bağlanırken bu cihaz (bağ yerel etkinliğe).
   late bool _toGoogle =
       widget.existing?.fromGoogle ??
-      (widget.linkNoteId == null &&
-          ref.read(googleCalendarProvider).connected);
+      (widget.linkNoteId == null && ref.read(googleCalendarProvider).connected);
 
   @override
   void initState() {
     super.initState();
+    // Klavye levha açıldıktan SONRA (bkz. [focusAfterRouteOpens]).
+    if (widget.existing == null) focusAfterRouteOpens(this, _titleFocus);
     final e = widget.existing;
     if (e != null) {
       _start = e.start;
@@ -144,6 +148,7 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
   @override
   void dispose() {
     _title.dispose();
+    _titleFocus.dispose();
     _location.dispose();
     _description.dispose();
     super.dispose();
@@ -319,9 +324,8 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
       if (!ref.read(googleCalendarProvider).canWrite &&
           !await google.connectWrite()) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showMessage(
-            context.l10n.gcalWriteDenied,
-          );
+          ScaffoldMessenger.of(context)
+              .showMessage(context.l10n.gcalWriteDenied);
         }
         return;
       }
@@ -428,7 +432,6 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
     final l10n = context.l10n;
     final dateFmt = DateFormat.yMMMEd();
     final timeFmt = DateFormat.Hm();
-    final insets = MediaQuery.viewInsetsOf(context).bottom;
 
     Widget dateRow(String label, DateTime value, {required bool start}) => Row(
       children: [
@@ -448,8 +451,8 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
       ],
     );
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: insets),
+    // Klavye payı ayrı, ince widget'ta (bkz. [SheetInsetPadding]).
+    return SheetInsetPadding(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -476,7 +479,7 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
                   TextField(
                     key: const ValueKey('event-title'),
                     controller: _title,
-                    autofocus: widget.existing == null,
+                    focusNode: _titleFocus,
                     textCapitalization: TextCapitalization.sentences,
                     style: Theme.of(context).textTheme.titleLarge,
                     decoration: InputDecoration(
