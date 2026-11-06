@@ -10,6 +10,7 @@ import 'package:notlar/features/calendar/domain/calendar_alarms.dart';
 import 'package:notlar/features/calendar/domain/calendar_event.dart';
 import 'package:notlar/features/calendar/domain/task_item.dart';
 import 'package:notlar/features/calendar/presentation/calendar_screen.dart';
+import 'package:notlar/features/calendar/presentation/calendar_views.dart';
 import 'package:notlar/features/calendar/presentation/event_editor.dart';
 import 'package:notlar/features/calendar/presentation/month_grid.dart';
 import 'package:notlar/features/notes/domain/note.dart';
@@ -150,9 +151,16 @@ void main() {
     late SharedPreferences prefs;
     late FakeFirebaseFirestore db;
 
-    setUp(() async {
-      SharedPreferences.setMockInitialValues({});
+    Future<void> usePrefs(Map<String, Object> values) async {
+      SharedPreferences.setMockInitialValues({
+        'calendar_pinch_hint_v1': true,
+        ...values,
+      });
       prefs = await SharedPreferences.getInstance();
+    }
+
+    setUp(() async {
+      await usePrefs({'calendar_view': 'agenda'});
       db = FakeFirebaseFirestore();
     });
 
@@ -192,7 +200,6 @@ void main() {
       await tester.pumpWidget(app());
       await tester.pumpAndSettle();
       expect(find.text('Takvim boş'), findsOneWidget);
-      expect(find.byType(FloatingActionButton), findsNothing);
       await tester.tap(find.text('Yeni etkinlik'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('event-title')), findsOneWidget);
@@ -247,7 +254,124 @@ void main() {
       await tester.pumpWidget(app(events: [meeting]));
       await tester.pumpAndSettle();
       expect(find.byType(MonthGrid), findsOneWidget);
+      expect(find.text('Kasım 2026'), findsWidgets);
+    });
+
+    /// İki parmağı [center] çevresinde açar (yakınlaştır) ya da kapatır.
+    Future<void> pinch(
+      WidgetTester tester,
+      Offset center, {
+      required bool zoomIn,
+    }) async {
+      final from = zoomIn ? 20.0 : 90.0;
+      final to = zoomIn ? 90.0 : 20.0;
+      final a = await tester.startGesture(center - Offset(from, 0));
+      final b = await tester.startGesture(center + Offset(from, 0));
+      for (var i = 1; i <= 6; i++) {
+        final d = from + (to - from) * i / 6;
+        await a.moveTo(center - Offset(d, 0));
+        await b.moveTo(center + Offset(d, 0));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await a.up();
+      await b.up();
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('varsayılan ay görünümü: etkinlik hücrede', (tester) async {
+      await usePrefs({});
+      phone(tester);
+      await tester.pumpWidget(app(events: [meeting, trip]));
+      await tester.pumpAndSettle();
+      expect(find.byType(MonthPage), findsOneWidget);
       expect(find.text('Kasım 2026'), findsOneWidget);
+      expect(find.text('Toplantı'), findsOneWidget);
+      expect(find.text('Gezi'), findsNWidgets(2));
+    });
+
+    testWidgets('iki parmakla: dokunulan hafta açılır, geri ay ve yıl', (
+      tester,
+    ) async {
+      await usePrefs({});
+      phone(tester);
+      await tester.pumpWidget(app(events: [meeting]));
+      await tester.pumpAndSettle();
+
+      // 18 Kasım'ın satırında yakınlaştır → 16–22 Kasım haftası.
+      await pinch(tester, tester.getCenter(find.text('18')), zoomIn: true);
+      expect(find.byType(MonthPage), findsNothing);
+      final week = tester.widget<WeekPage>(find.byType(WeekPage));
+      expect(week.weekStart, DateTime(2026, 11, 16));
+      expect(prefs.getString('calendar_view'), 'week');
+
+      // Uzaklaştır → Kasım; bir daha → 2026 yılı.
+      await pinch(tester, const Offset(206, 500), zoomIn: false);
+      expect(
+        tester.widget<MonthPage>(find.byType(MonthPage)).month,
+        DateTime(2026, 11),
+      );
+      await pinch(tester, const Offset(206, 500), zoomIn: false);
+      expect(find.byType(YearPage), findsOneWidget);
+      expect(find.text('2026'), findsOneWidget);
+
+      // Yılda Mart'ın üstünde yakınlaştır → Mart ayı.
+      await pinch(tester, tester.getCenter(find.text('Mart')), zoomIn: true);
+      expect(
+        tester.widget<MonthPage>(find.byType(MonthPage)).month,
+        DateTime(2026, 3),
+      );
+      expect(find.text('Mart 2026'), findsOneWidget);
+    });
+
+    testWidgets('hafta: etkinlik bloğu, boş saate dokununca yeni etkinlik', (
+      tester,
+    ) async {
+      await usePrefs({'calendar_view': 'week'});
+      phone(tester);
+      await tester.pumpWidget(app(events: [meeting]));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<WeekPage>(find.byType(WeekPage)).weekStart,
+        DateTime(2026, 11, 2),
+      );
+      expect(find.text('Toplantı'), findsOneWidget);
+      await tester.tap(find.text('Toplantı'));
+      await tester.pumpAndSettle();
+      expect(find.text('Etkinliği düzenle'), findsOneWidget);
+    });
+
+    testWidgets('yılda aya dokunmak o ayı açar; görünüm menüsü', (
+      tester,
+    ) async {
+      await usePrefs({'calendar_view': 'year'});
+      phone(tester);
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      expect(find.byType(YearPage), findsOneWidget);
+      await tester.tap(find.text('Haziran'));
+      await tester.pumpAndSettle();
+      expect(find.text('Haziran 2026'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('calendar-view-menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ajanda').last);
+      await tester.pumpAndSettle();
+      expect(find.byType(MonthPage), findsNothing);
+      expect(find.text('Takvim boş'), findsOneWidget);
+    });
+
+    test('çakışan bloklar yan yana', () {
+      DateTime t(int h, [int m = 0]) => DateTime(2026, 11, 6, h, m);
+      final blocks = layoutTimedBlocks([
+        TimedBlock(EventOccurrence(meeting, t(9)), t(9), t(10)),
+        TimedBlock(EventOccurrence(meeting, t(9, 30)), t(9, 30), t(11)),
+        TimedBlock(EventOccurrence(meeting, t(10)), t(10), t(10, 30)),
+        TimedBlock(EventOccurrence(meeting, t(12)), t(12), t(13)),
+      ]);
+      expect(
+        [for (final b in blocks) (b.column, b.columns)],
+        [(0, 2), (1, 2), (0, 2), (0, 1)],
+      );
     });
   });
 }

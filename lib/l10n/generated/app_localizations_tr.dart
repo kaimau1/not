@@ -7214,4 +7214,23 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get taskOverdue => 'Gecikti';
+
+  @override
+  String get calendarViewYear => 'Yıl';
+
+  @override
+  String get calendarViewWeek => 'Hafta';
+
+  @override
+  String get calendarView => 'Görünüm';
+
+  @override
+  String get calendarPinchHint =>
+      'İki parmakla yıl, ay ve hafta arasında geçebilirsin';
+
+  @override
+  String get calendarPrevious => 'Önceki';
+
+  @override
+  String get calendarNext => 'Sonraki';
 }

@@ -12883,6 +12883,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gecikti'**
   String get taskOverdue;
+
+  /// No description provided for @calendarViewYear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıl'**
+  String get calendarViewYear;
+
+  /// No description provided for @calendarViewWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta'**
+  String get calendarViewWeek;
+
+  /// No description provided for @calendarView.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünüm'**
+  String get calendarView;
+
+  /// No description provided for @calendarPinchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'İki parmakla yıl, ay ve hafta arasında geçebilirsin'**
+  String get calendarPinchHint;
+
+  /// No description provided for @calendarPrevious.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki'**
+  String get calendarPrevious;
+
+  /// No description provided for @calendarNext.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki'**
+  String get calendarNext;
 }
 
 class _AppLocalizationsDelegate

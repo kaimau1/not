@@ -144,6 +144,12 @@ maddeyi GÜNCELLE.
   koleksiyon tek dinleyici, aralık bellekte (`buildAgenda`). Takvim bildirimi
   `ReminderService`te, yük `cal:` (yalnız cihazda). Rayda Hatırlatıcılar'ın
   yerine Takvim (`/reminders` takvim bölümü sayılır).
+  Görünümler yıl/ay/hafta/ajanda; iki parmak `PinchZoomDetector` = `Listener`
+  (yarışmaya girmez, kaydırma bozulmaz; iki parmak inince `PageView`
+  kilitlenir). Hedef `ZoomTargets` (GlobalKey → tarih). TUZAK: aynı görünümü
+  yeniden açmak (aynı tür iki sayfa geçişte birlikte) GlobalKey çakıştırır —
+  aynı görünüme geçiş engelli; eski görünümün `itemBuilder`ı `_view`i değil
+  yerel kopyayı okur.
 - **Aralıklı tekrar kartları** (F18.19, kullanıcı: basit sürüm): `Note.cards`
   (`StudyCard`, SM-2 `reviewCard`), yeni koleksiyon yok (hesap silme/kural
   değişmedi). Editör ⋮ "Kart üret" (AI), `/cards` "Bugünün kartları".

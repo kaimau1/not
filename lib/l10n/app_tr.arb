@@ -3446,5 +3446,11 @@
   "taskDelete": "Görevi sil",
   "taskDeleted": "Görev silindi",
   "taskAddSubtask": "Alt görev ekle",
-  "taskOverdue": "Gecikti"
+  "taskOverdue": "Gecikti",
+  "calendarViewYear": "Yıl",
+  "calendarViewWeek": "Hafta",
+  "calendarView": "Görünüm",
+  "calendarPinchHint": "İki parmakla yıl, ay ve hafta arasında geçebilirsin",
+  "calendarPrevious": "Önceki",
+  "calendarNext": "Sonraki"
 }

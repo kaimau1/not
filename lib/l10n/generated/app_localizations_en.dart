@@ -7234,4 +7234,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taskOverdue => 'Overdue';
+
+  @override
+  String get calendarViewYear => 'Year';
+
+  @override
+  String get calendarViewWeek => 'Week';
+
+  @override
+  String get calendarView => 'View';
+
+  @override
+  String get calendarPinchHint =>
+      'Pinch with two fingers to move between year, month and week';
+
+  @override
+  String get calendarPrevious => 'Previous';
+
+  @override
+  String get calendarNext => 'Next';
 }

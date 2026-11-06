@@ -51,6 +51,7 @@ Future<void> showEventEditor(
   BuildContext context, {
   CalendarEvent? existing,
   DateTime? day,
+  DateTime? start,
   DateTime? occurrenceStart,
 }) => showAppSheet<void>(
   context: context,
@@ -59,7 +60,8 @@ Future<void> showEventEditor(
   showDragHandle: true,
   builder: (_) => EventEditorSheet(
     existing: existing,
-    day: day ?? DateTime.now(),
+    day: day ?? start ?? DateTime.now(),
+    start: start,
     occurrenceStart: occurrenceStart,
   ),
 );
@@ -69,11 +71,15 @@ class EventEditorSheet extends ConsumerStatefulWidget {
     super.key,
     this.existing,
     required this.day,
+    this.start,
     this.occurrenceStart,
   });
 
   final CalendarEvent? existing;
   final DateTime day;
+
+  /// Hafta ızgarasında dokunulan saat (yeni etkinliğin tam başı).
+  final DateTime? start;
   final DateTime? occurrenceStart;
 
   @override
@@ -101,7 +107,7 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
       _end = e.end;
       _reminder = e.reminders.isEmpty ? null : e.reminders.first;
     } else {
-      _start = defaultEventStart(widget.day, DateTime.now());
+      _start = widget.start ?? defaultEventStart(widget.day, DateTime.now());
       _end = _start.add(const Duration(hours: 1));
       _reminder = 10;
     }

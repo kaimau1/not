@@ -2653,5 +2653,11 @@
   "taskDelete": "Delete task",
   "taskDeleted": "Task deleted",
   "taskAddSubtask": "Add subtask",
-  "taskOverdue": "Overdue"
+  "taskOverdue": "Overdue",
+  "calendarViewYear": "Year",
+  "calendarViewWeek": "Week",
+  "calendarView": "View",
+  "calendarPinchHint": "Pinch with two fingers to move between year, month and week",
+  "calendarPrevious": "Previous",
+  "calendarNext": "Next"
 }
