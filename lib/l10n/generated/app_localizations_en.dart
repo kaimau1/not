@@ -7268,11 +7268,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This month’s calendar behind your notes; card titles stay clear, the rest turns see-through';
 
   @override
-  String get swipeLeftCalendar => 'Swipe left for calendar';
+  String get swipeLeftCalendar => 'Swipe right for calendar';
 
   @override
   String get swipeLeftCalendarInfo =>
-      'In the All view, swiping left opens the calendar';
+      'In the All view, swiping right opens the calendar';
 
   @override
   String calendarMoved(String day) {
@@ -7385,4 +7385,119 @@ class AppLocalizationsEn extends AppLocalizations {
   String gcalPending(int count) {
     return '$count changes waiting to be sent to Google';
   }
+
+  @override
+  String get ocrToEvent => 'Add to calendar as an event';
+
+  @override
+  String get calendarSuggestAction => 'Add to calendar';
+
+  @override
+  String calendarSuggest(String when) {
+    return 'Your note mentions $when';
+  }
+
+  @override
+  String get calendarIcsExport => 'Export calendar (.ics)';
+
+  @override
+  String get calendarIcsImport => 'Import calendar file (.ics)';
+
+  @override
+  String calendarIcsImported(int count, int skipped) {
+    return '$count events added, $skipped already existed';
+  }
+
+  @override
+  String get routinesTitle => 'Routines';
+
+  @override
+  String get routineNew => 'New routine';
+
+  @override
+  String get routineEdit => 'Edit routine';
+
+  @override
+  String get routinesEmpty => 'No routines yet';
+
+  @override
+  String get routinesEmptyHint =>
+      'Set up a repeating plan like a morning routine: tick its steps and watch your streak.';
+
+  @override
+  String get routineDoneToday => 'Done today';
+
+  @override
+  String get routineStartToday => 'Check off today';
+
+  @override
+  String get routineDone => 'Done';
+
+  @override
+  String get routineTitleHint => 'Routine name';
+
+  @override
+  String get routineTime => 'Time';
+
+  @override
+  String get routineRemind => 'Remind me when it\'s time';
+
+  @override
+  String get routineSteps => 'Steps';
+
+  @override
+  String get routineStepHint => 'Step';
+
+  @override
+  String get routineAddStep => 'Add step';
+
+  @override
+  String get routineDeleted => 'Routine deleted';
+
+  @override
+  String routineStreak(int count) {
+    return '🔥 $count days';
+  }
+
+  @override
+  String routineStepCount(int count) {
+    return '$count steps';
+  }
+
+  @override
+  String routineProgress(int done, int total) {
+    return '$done/$total steps';
+  }
+
+  @override
+  String get menuEdit => 'Edit menu';
+
+  @override
+  String get menuSectionOther => 'Other';
+
+  @override
+  String get menuQuickRow => 'Put in quick row';
+
+  @override
+  String get menuShowHide => 'Show/hide';
+
+  @override
+  String get menuReset => 'Default';
+
+  @override
+  String menuEditHint(int count) {
+    return 'Drag to reorder, tap the eye to hide; starred actions sit in the quick row on top (up to $count).';
+  }
+
+  @override
+  String get themeCream => 'Cream';
+
+  @override
+  String get themePeach => 'Peach';
+
+  @override
+  String get themeMint => 'Mint';
+
+  @override
+  String get folderHoldHint => 'Hold and slide left or right to switch folders';
 }

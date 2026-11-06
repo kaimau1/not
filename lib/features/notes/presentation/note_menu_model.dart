@@ -45,6 +45,7 @@ ActionMenu noteMenuModel(
       note.type == NoteType.checklist || note.type == NoteType.ordered;
   bool shows(String id) => !visibleElsewhere.contains(id);
   return ActionMenu(
+    menuId: editor ? 'note.editor' : 'note.card',
     title: note.displayTitle,
     quick: [
       if (shows('pin'))

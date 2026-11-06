@@ -1261,7 +1261,9 @@ class GeminiService {
       'text':
           'Aşağıdaki ham verilerden kısa, samimi bir Türkçe "günlük '
           'brifing" yaz. Yapı: 1-2 cümlelik selamlama ve günün özeti; '
-          '"Bugün" başlığı altında hatırlatıcılar ve yapılacaklar; varsa '
+          '"Bugün" başlığı altında etkinlikler (saat sırasıyla), görevler, '
+          'hatırlatıcılar ve yapılacaklar; gecikmiş görev varsa nazikçe '
+          'hatırlat; yarının önemli kayıtlarını tek cümlede an; varsa '
           '"E-postalar" başlığı altında önemli e-postalar; kapanışta tek '
           'cümlelik öneri. Kısa tut; veri yoksa o bölümü atla. Markdown '
           'kullanma: yıldız, kalın işareti veya # koyma, düz metin yaz.'
@@ -2121,8 +2123,72 @@ class GeminiService {
         'required': ['noteId'],
       },
     },
+    // TAKVİM (TAKVIM_PLANI F52.2).
+    {
+      'name': 'create_event',
+      'description': _kCreateEventDescription,
+      'parameters': {
+        'type': 'OBJECT',
+        'properties': {
+          'title': {'type': 'STRING'},
+          'start': {'type': 'STRING', 'description': 'ISO 8601 başlangıç'},
+          'end': {
+            'type': 'STRING',
+            'description': 'ISO 8601 bitiş; yoksa 1 saat sonrası',
+          },
+          'allDay': {'type': 'BOOLEAN'},
+          'location': {'type': 'STRING'},
+          'reminderMinutes': {
+            'type': 'INTEGER',
+            'description': 'Kaç dakika önce hatırlatılsın',
+          },
+        },
+        'required': ['title', 'start'],
+      },
+    },
+    {
+      'name': 'create_task',
+      'description': _kCreateTaskDescription,
+      'parameters': {
+        'type': 'OBJECT',
+        'properties': {
+          'title': {'type': 'STRING'},
+          'due': {'type': 'STRING', 'description': 'Son gün YYYY-MM-DD'},
+          'dueTime': {'type': 'STRING', 'description': 'HH:mm (isteğe bağlı)'},
+          'notes': {'type': 'STRING'},
+        },
+        'required': ['title'],
+      },
+    },
+    {
+      'name': 'list_agenda',
+      'description': _kListAgendaDescription,
+      'parameters': {
+        'type': 'OBJECT',
+        'properties': {
+          'from': {'type': 'STRING', 'description': 'İlk gün YYYY-MM-DD'},
+          'days': {'type': 'INTEGER', 'description': 'Kaç gün (1-31)'},
+        },
+        'required': ['from'],
+      },
+    },
   ];
 }
+
+/// Takvim araçlarının açıklamaları (F52.2) — iki istemcide ortak.
+const kCreateEventDescription = _kCreateEventDescription;
+const kCreateTaskDescription = _kCreateTaskDescription;
+const kListAgendaDescription = _kListAgendaDescription;
+const _kCreateEventDescription =
+    'Takvime ETKİNLİK ekler (toplantı, randevu, doğum günü gibi belirli bir '
+    'zamanda olan şey). Yapılacak bir iş için create_task; yalnız hatırlatma '
+    'için notun reminderAt alanı.';
+const _kCreateTaskDescription =
+    'GÖREV ekler (yapılacak iş, isteğe bağlı son günüyle). "Yarına kadar '
+    'raporu bitir", "faturayı öde" gibi.';
+const _kListAgendaDescription =
+    'Takvimdeki etkinlik, görev ve hatırlatıcıları getirir. "Yarın neler '
+    'var?", "bu hafta ne var?" sorularında önce bunu çağır.';
 
 /// Hatırlatıcı tekrarı argümanının açıklaması (F18.14).
 const _kRepeatDescription =

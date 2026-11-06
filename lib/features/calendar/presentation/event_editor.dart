@@ -57,6 +57,7 @@ Future<void> showEventEditor(
   DateTime? occurrenceStart,
   String? linkNoteId,
   String? initialTitle,
+  String? initialDescription,
 }) => showAppSheet<void>(
   context: context,
   isScrollControlled: true,
@@ -69,6 +70,7 @@ Future<void> showEventEditor(
     occurrenceStart: occurrenceStart,
     linkNoteId: linkNoteId,
     initialTitle: initialTitle,
+    initialDescription: initialDescription,
   ),
 );
 
@@ -81,7 +83,11 @@ class EventEditorSheet extends ConsumerStatefulWidget {
     this.occurrenceStart,
     this.linkNoteId,
     this.initialTitle,
+    this.initialDescription,
   });
+
+  /// Fotoğraftan/metinden etkinlik taslağının açıklaması (F52.3).
+  final String? initialDescription;
 
   /// Nottan açılan YENİ etkinlik (F49.1 "Takvime bağla → yeni etkinlik"):
   /// kaydedilince bu not etkinliğe bağlanır.
@@ -105,7 +111,7 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
   );
   late final _location = TextEditingController(text: widget.existing?.location);
   late final _description = TextEditingController(
-    text: widget.existing?.description,
+    text: widget.existing?.description ?? widget.initialDescription,
   );
   late bool _allDay = widget.existing?.allDay ?? false;
   late DateTime _start;

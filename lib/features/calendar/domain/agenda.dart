@@ -2,6 +2,7 @@ import '../../notes/domain/note.dart';
 import '../../notes/domain/reminder_repeat.dart';
 import 'calendar_event.dart';
 import 'day_key.dart';
+import 'routine.dart';
 import 'task_item.dart';
 
 /// Ajandada bir satır (TAKVIM_PLANI §2.7: etkinlik, görev ve not
@@ -52,6 +53,26 @@ class ReminderEntry extends AgendaEntry {
   bool get allDay => false;
 }
 
+/// Rutinin bir günkü oluşu (Faz 53); [log] o günün kaydı (yoksa boş).
+class RoutineEntry extends AgendaEntry {
+  const RoutineEntry(this.routine, this.day, this.log);
+
+  final Routine routine;
+  final DateTime day;
+  final RoutineLog log;
+
+  @override
+  DateTime get at {
+    final hm = parseHm(routine.time);
+    return hm == null
+        ? day
+        : DateTime(day.year, day.month, day.day, hm.hour, hm.minute);
+  }
+
+  @override
+  bool get allDay => parseHm(routine.time) == null;
+}
+
 int _compareEntries(AgendaEntry a, AgendaEntry b) {
   if (a.allDay != b.allDay) return a.allDay ? -1 : 1;
   final c = a.at.compareTo(b.at);
@@ -61,6 +82,7 @@ int _compareEntries(AgendaEntry a, AgendaEntry b) {
     EventOccurrence() => 0,
     TaskEntry() => 1,
     ReminderEntry() => 2,
+    RoutineEntry() => 3,
   };
   return rank(a) - rank(b);
 }
@@ -74,6 +96,8 @@ Map<String, List<AgendaEntry>> buildAgenda({
   Iterable<CalendarEvent> events = const [],
   Iterable<TaskItem> tasks = const [],
   Iterable<Note> reminderNotes = const [],
+  Iterable<Routine> routines = const [],
+  Map<String, Map<String, RoutineLog>> routineLogs = const {},
   bool includeCompleted = true,
 }) {
   final out = <String, List<AgendaEntry>>{};
@@ -125,6 +149,17 @@ Map<String, List<AgendaEntry>> buildAgenda({
     }
   }
 
+  for (final r in routines) {
+    if (r.deletedAt != null) continue;
+    for (final d in r.daysBetween(first, to)) {
+      final key = dayKey(d);
+      final log =
+          routineLogs[r.id]?[key] ?? RoutineLog(routineId: r.id, day: key);
+      if (log.completed && !includeCompleted) continue;
+      add(d, RoutineEntry(r, d, log));
+    }
+  }
+
   final keys = out.keys.toList()..sort();
   return {for (final k in keys) k: out[k]!..sort(_compareEntries)};
 }
@@ -134,6 +169,7 @@ bool canMoveEntry(AgendaEntry entry) => switch (entry) {
   EventOccurrence(:final event) => !event.repeats && !event.fromGoogle,
   TaskEntry(:final task) => !task.completed,
   ReminderEntry(:final note) => note.reminderAt != null,
+  RoutineEntry() => false,
 };
 
 /// **SÜRÜKLEYEREK TAŞIMA** (F47.5): kaydın [target] güne taşınmış hâli.
@@ -172,5 +208,110 @@ Object? movedToDay(AgendaEntry entry, DateTime target) {
           from.minute,
         ),
       );
+    case RoutineEntry():
+      return null;
   }
 }
+
+/// **BRİFİNG SATIRLARI** (TAKVIM_PLANI F52.1): bugün ve yarının etkinlik +
+/// görevleri, ayrıca gecikmiş açık görevler — AI istemine giden düz metin.
+/// Hatırlatıcılar brifingin kendi bölümünde (burada tekrar edilmez).
+List<String> calendarBriefingLines({
+  required DateTime now,
+  Iterable<CalendarEvent> events = const [],
+  Iterable<TaskItem> tasks = const [],
+  Iterable<Routine> routines = const [],
+  Map<String, Map<String, RoutineLog>> routineLogs = const {},
+}) {
+  final today = startOfDay(now);
+  final agenda = buildAgenda(
+    from: today,
+    to: DateTime(today.year, today.month, today.day + 2),
+    events: events,
+    tasks: tasks,
+    routines: routines,
+    routineLogs: routineLogs,
+    includeCompleted: false,
+  );
+  String two(int v) => v.toString().padLeft(2, '0');
+  final out = <String>[];
+  for (final entry in agenda.entries) {
+    final day = parseDayKey(entry.key)!;
+    final label = day == today ? 'Bugün' : 'Yarın';
+    for (final e in entry.value) {
+      final time = e.allDay
+          ? 'gün boyu'
+          : '${two(e.at.hour)}:${two(e.at.minute)}';
+      switch (e) {
+        case EventOccurrence(:final event):
+          final t = event.title.trim().isEmpty
+              ? '(başlıksız)'
+              : event.title.trim();
+          out.add(
+            '- $label $time · etkinlik: $t'
+            '${event.location.trim().isEmpty ? '' : ' (${event.location.trim()})'}',
+          );
+        case TaskEntry(:final task):
+          out.add('- $label $time · görev: ${task.title.trim()}');
+        case ReminderEntry():
+          break;
+        case RoutineEntry(:final routine, :final log):
+          if (day == today) {
+            out.add(
+              '- $label $time · rutin: ${routine.title.trim()}'
+              '${log.completed ? ' (tamamlandı)' : ''}',
+            );
+          }
+      }
+    }
+  }
+  for (final t in tasks) {
+    final d = t.dueDay;
+    if (t.deletedAt != null || t.completed || d == null || !d.isBefore(today)) {
+      continue;
+    }
+    out.add('- GECİKMİŞ (${dayKey(d)}) görev: ${t.title.trim()}');
+  }
+  return out;
+}
+
+/// **METİNDEN ETKİNLİK TASLAĞI** (F52.3, fotoğraftan etkinlik): ilk dolu
+/// satır başlık (en çok 80 harf), kalanı açıklama; zaman [parse] ile metnin
+/// tamamından (yerel ayrıştırıcı — AI gerekmez). Zaman bulunamazsa null
+/// başlangıç (düzenleyici varsayılanı kullanır).
+({String title, String description, DateTime? start}) eventDraftFromText(
+  String text,
+  DateTime? Function(String) parse,
+) {
+  final lines = [
+    for (final l in text.split('\n'))
+      if (l.trim().isNotEmpty) l.trim(),
+  ];
+  if (lines.isEmpty) return (title: '', description: '', start: null);
+  var title = lines.first;
+  if (title.length > 80) title = '${title.substring(0, 80).trim()}…';
+  return (
+    title: title,
+    description: lines.skip(1).join('\n'),
+    start: parse(lines.join(' ')),
+  );
+}
+
+/// **NOTTA TARİH İFADESİ** (F52.3): notun son satırlarında (sondan en çok 5
+/// dolu satır) bir zaman ifadesi ("yarın 15:00", "cuma akşam") varsa o satır
+/// ve zaman. Yoksa null. Yalnız öneri — not değişmez.
+({String line, DateTime at})? noteDateSuggestion(
+  String text,
+  DateTime? Function(String) parse,
+) {
+  final lines = [
+    for (final l in text.split('\n'))
+      if (l.trim().isNotEmpty) l.trim(),
+  ];
+  for (final line in lines.reversed.take(5)) {
+    final at = parse(line);
+    if (at != null) return (line: line, at: at);
+  }
+  return null;
+}
+

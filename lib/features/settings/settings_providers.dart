@@ -80,6 +80,9 @@ enum AppThemeChoice {
   olive,
   white,
   straw,
+  cream,
+  peach,
+  mint,
   dark;
 
   /// Bu seçimin tema ailesi (Sistem ve Koyu varsayılan aileyi kullanır).
@@ -90,6 +93,9 @@ enum AppThemeChoice {
     AppThemeChoice.olive => ThemeFamily.olive,
     AppThemeChoice.white => ThemeFamily.white,
     AppThemeChoice.straw => ThemeFamily.straw,
+    AppThemeChoice.cream => ThemeFamily.cream,
+    AppThemeChoice.peach => ThemeFamily.peach,
+    AppThemeChoice.mint => ThemeFamily.mint,
     _ => ThemeFamily.sage,
   };
 
@@ -888,7 +894,10 @@ final effectiveThemeModeProvider = Provider.autoDispose<ThemeMode>((ref) {
     AppThemeChoice.lavender ||
     AppThemeChoice.olive ||
     AppThemeChoice.white ||
-    AppThemeChoice.straw => ThemeMode.light,
+    AppThemeChoice.straw ||
+    AppThemeChoice.cream ||
+    AppThemeChoice.peach ||
+    AppThemeChoice.mint => ThemeMode.light,
     AppThemeChoice.dark => ThemeMode.dark,
   };
 });
@@ -900,10 +909,10 @@ final effectiveThemeModeProvider = Provider.autoDispose<ThemeMode>((ref) {
 /// değişir — ikisi AYNI değeri okur, biri açıkken diğeri kapalı görünmez.
 final assistantVoiceProvider = boolPref('assistant_voice', defaultValue: true);
 
-/// Ana ekranda (Tümü görünümünde) SOLA kaydırınca takvim açılsın mı
-/// (kullanıcı isteği 2026-11-06: "sola kaydırınca takvim açılsın"). Açıkken
-/// Tümü'den sola çekiş klasöre değil takvime gider; klasörler sağa çekişle ve
-/// klasör içinden sola çekişle gezilmeye devam eder.
+/// Ana ekranda (Tümü görünümünde) SAĞA kaydırınca takvim açılsın mı
+/// (kullanıcı isteği 2026-11-06; ilk sürümde sola idi, aynı gün sağa
+/// çevrildi — anahtar adı eski kaldı). Açıkken Tümü'den sağa çekiş takvime
+/// gider; klasörler sola çekişle gezilmeye devam eder.
 final swipeLeftCalendarProvider = boolPref(
   'swipe_left_calendar',
   defaultValue: true,

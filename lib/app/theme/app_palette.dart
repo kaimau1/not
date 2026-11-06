@@ -43,6 +43,22 @@ enum ThemeFamily {
   /// kiremit. Eski "kağıt" temasından farkı: kâğıt zeminden AÇIK, yazı sepya
   /// mürekkep; sarılık zeminde kalır, okunan yüzey kremdir.
   straw,
+
+  /// H · Krem (2026-11-06, kullanıcı isteği "saman kağıdı ama daha açık"):
+  /// açık krem masa, beyaza yakın fildişi kâğıt, kehribar vurgu.
+  cream,
+
+  /// I · Şeftali (2026-11-06, "not uygulaması için bilimsel olarak iyi
+  /// renkler"): okuma rahatlığı araştırmalarında (görsel stres, disleksi —
+  /// İngiliz Disleksi Derneği'nin krem/pastel zemin önerisi) parlak beyaz
+  /// yerine önerilen sıcak, düşük doygunluklu pastel zemin; mürekkep saf
+  /// siyah değil (aşırı kontrast "titreşimi" yok), metin kontrastı ≥ 7:1.
+  peach,
+
+  /// J · Nane (2026-11-06): yeşil-mavi, gözün en duyarlı olduğu (≈ 500–
+  /// 555 nm) bölgede düşük parlaklık — uzun okumada göz yorgunluğu düşük,
+  /// sakin ve odak dostu kabul edilen ton; vurgu koyu deniz yeşili.
+  mint,
 }
 
 /// Bir ailenin tek parlaklıktaki ham belirteçleri.
@@ -132,6 +148,9 @@ abstract final class FamilyPalettes {
       ThemeFamily.olive => dark ? _oliveDark : _oliveLight,
       ThemeFamily.white => dark ? _whiteDark : _whiteLight,
       ThemeFamily.straw => dark ? _strawDark : _strawLight,
+      ThemeFamily.cream => dark ? _creamDark : _creamLight,
+      ThemeFamily.peach => dark ? _peachDark : _peachLight,
+      ThemeFamily.mint => dark ? _mintDark : _mintLight,
     };
   }
 
@@ -546,5 +565,182 @@ abstract final class FamilyPalettes {
     inverse: Color(0xFFEDE5D3),
     onInverse: Color(0xFF2A2216),
     inversePrimary: Color(0xFF7A4A1E),
+  );
+
+  // ── H · Krem ──
+  static const _creamLight = FamilyTokens(
+    ground: Color(0xFFF6F0DE),
+    lowest: Color(0xFFFFFDF6),
+    card: Color(0xFFFFFDF6),
+    sheet: Color(0xFFFBF7EC),
+    field: Color(0xFFF7F1E2),
+    high: Color(0xFFEDE5CF),
+    highest: Color(0xFFE5DCC3),
+    hair: Color(0xFFE1D8BF),
+    outline: Color(0xFF7E7660),
+    ink: Color(0xFF2B261C),
+    muted: Color(0xFF5A5241),
+    primary: Color(0xFF8A5A22),
+    onPrimary: Color(0xFFFFFFFF),
+    primaryContainer: Color(0xFFF6E3C4),
+    onPrimaryContainer: Color(0xFF3A2408),
+    secondary: Color(0xFF3E6E4F),
+    onSecondary: Color(0xFFFFFFFF),
+    secondaryContainer: Color(0xFFDCEBDF),
+    onSecondaryContainer: Color(0xFF14261A),
+    tertiary: Color(0xFF7A4B6E),
+    onTertiary: Color(0xFFFFFFFF),
+    tertiaryContainer: Color(0xFFF1DDEB),
+    onTertiaryContainer: Color(0xFF33182D),
+    inverse: Color(0xFF37322A),
+    onInverse: Color(0xFFF8F2E2),
+    inversePrimary: Color(0xFFE8BE87),
+  );
+
+  static const _creamDark = FamilyTokens(
+    ground: Color(0xFF1B1914),
+    lowest: Color(0xFF141210),
+    card: Color(0xFF25221C),
+    sheet: Color(0xFF2A2721),
+    field: Color(0xFF2A2721),
+    high: Color(0xFF333029),
+    highest: Color(0xFF3C3931),
+    hair: Color(0xFF433F36),
+    outline: Color(0xFF9C9584),
+    ink: Color(0xFFEEE8D8),
+    muted: Color(0xFFC2BAA7),
+    primary: Color(0xFFE8BE87),
+    onPrimary: Color(0xFF47290A),
+    primaryContainer: Color(0xFF63431D),
+    onPrimaryContainer: Color(0xFFF6E3C4),
+    secondary: Color(0xFFA9C9B1),
+    onSecondary: Color(0xFF1F3326),
+    secondaryContainer: Color(0xFF344B3B),
+    onSecondaryContainer: Color(0xFFDCEBDF),
+    tertiary: Color(0xFFDDB4D2),
+    onTertiary: Color(0xFF3D1F37),
+    tertiaryContainer: Color(0xFF563550),
+    onTertiaryContainer: Color(0xFFF1DDEB),
+    inverse: Color(0xFFEEE8D8),
+    onInverse: Color(0xFF2B261C),
+    inversePrimary: Color(0xFF8A5A22),
+  );
+
+  // ── I · Şeftali ──
+  static const _peachLight = FamilyTokens(
+    ground: Color(0xFFF7EAE2),
+    lowest: Color(0xFFFFF9F5),
+    card: Color(0xFFFFF9F5),
+    sheet: Color(0xFFFCF2EC),
+    field: Color(0xFFF8EDE6),
+    high: Color(0xFFEEDDD3),
+    highest: Color(0xFFE6D3C8),
+    hair: Color(0xFFE2CFC3),
+    outline: Color(0xFF80706A),
+    ink: Color(0xFF2B211D),
+    muted: Color(0xFF5C4D46),
+    primary: Color(0xFFA3432C),
+    onPrimary: Color(0xFFFFFFFF),
+    primaryContainer: Color(0xFFFBDCD2),
+    onPrimaryContainer: Color(0xFF3D1308),
+    secondary: Color(0xFF3F6A78),
+    onSecondary: Color(0xFFFFFFFF),
+    secondaryContainer: Color(0xFFD4E8EF),
+    onSecondaryContainer: Color(0xFF0A2A35),
+    tertiary: Color(0xFF6C5A1F),
+    onTertiary: Color(0xFFFFFFFF),
+    tertiaryContainer: Color(0xFFF2E6C0),
+    onTertiaryContainer: Color(0xFF2B2306),
+    inverse: Color(0xFF3A2F2A),
+    onInverse: Color(0xFFFBEEE7),
+    inversePrimary: Color(0xFFF4B39F),
+  );
+
+  static const _peachDark = FamilyTokens(
+    ground: Color(0xFF1C1715),
+    lowest: Color(0xFF151110),
+    card: Color(0xFF27201D),
+    sheet: Color(0xFF2C2522),
+    field: Color(0xFF2C2522),
+    high: Color(0xFF352D29),
+    highest: Color(0xFF3E3531),
+    hair: Color(0xFF453B37),
+    outline: Color(0xFF9E918B),
+    ink: Color(0xFFF0E5E0),
+    muted: Color(0xFFC6B8B1),
+    primary: Color(0xFFF4B39F),
+    onPrimary: Color(0xFF561D0D),
+    primaryContainer: Color(0xFF77311F),
+    onPrimaryContainer: Color(0xFFFBDCD2),
+    secondary: Color(0xFF9ACCDB),
+    onSecondary: Color(0xFF033441),
+    secondaryContainer: Color(0xFF1F4C59),
+    onSecondaryContainer: Color(0xFFD4E8EF),
+    tertiary: Color(0xFFD9C78A),
+    onTertiary: Color(0xFF3A2F00),
+    tertiaryContainer: Color(0xFF54471A),
+    onTertiaryContainer: Color(0xFFF2E6C0),
+    inverse: Color(0xFFF0E5E0),
+    onInverse: Color(0xFF2B211D),
+    inversePrimary: Color(0xFFA3432C),
+  );
+
+  // ── J · Nane ──
+  static const _mintLight = FamilyTokens(
+    ground: Color(0xFFE5F2EE),
+    lowest: Color(0xFFF9FDFB),
+    card: Color(0xFFF9FDFB),
+    sheet: Color(0xFFF2FAF7),
+    field: Color(0xFFECF6F2),
+    high: Color(0xFFD9E8E3),
+    highest: Color(0xFFD0E0DA),
+    hair: Color(0xFFCCDCD6),
+    outline: Color(0xFF728580),
+    ink: Color(0xFF182623),
+    muted: Color(0xFF475A55),
+    primary: Color(0xFF0E6B5C),
+    onPrimary: Color(0xFFFFFFFF),
+    primaryContainer: Color(0xFFC3EDE3),
+    onPrimaryContainer: Color(0xFF00302A),
+    secondary: Color(0xFF8A4F7D),
+    onSecondary: Color(0xFFFFFFFF),
+    secondaryContainer: Color(0xFFF6DBEF),
+    onSecondaryContainer: Color(0xFF381330),
+    tertiary: Color(0xFF3B5BA0),
+    onTertiary: Color(0xFFFFFFFF),
+    tertiaryContainer: Color(0xFFDBE3FA),
+    onTertiaryContainer: Color(0xFF0F1E45),
+    inverse: Color(0xFF26332F),
+    onInverse: Color(0xFFECF5F1),
+    inversePrimary: Color(0xFF7FD6C3),
+  );
+
+  static const _mintDark = FamilyTokens(
+    ground: Color(0xFF111A18),
+    lowest: Color(0xFF0B1210),
+    card: Color(0xFF1A2421),
+    sheet: Color(0xFF1F2A26),
+    field: Color(0xFF1F2A26),
+    high: Color(0xFF28332F),
+    highest: Color(0xFF313C38),
+    hair: Color(0xFF37433E),
+    outline: Color(0xFF8A9A95),
+    ink: Color(0xFFDFEDE8),
+    muted: Color(0xFFAEC0BA),
+    primary: Color(0xFF7FD6C3),
+    onPrimary: Color(0xFF00382F),
+    primaryContainer: Color(0xFF0B5146),
+    onPrimaryContainer: Color(0xFFC3EDE3),
+    secondary: Color(0xFFE6B0D8),
+    onSecondary: Color(0xFF4A1A40),
+    secondaryContainer: Color(0xFF662E5A),
+    onSecondaryContainer: Color(0xFFF6DBEF),
+    tertiary: Color(0xFFB3C5F5),
+    onTertiary: Color(0xFF152A5C),
+    tertiaryContainer: Color(0xFF2E4479),
+    onTertiaryContainer: Color(0xFFDBE3FA),
+    inverse: Color(0xFFDFEDE8),
+    onInverse: Color(0xFF182623),
+    inversePrimary: Color(0xFF0E6B5C),
   );
 }

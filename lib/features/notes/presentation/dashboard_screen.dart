@@ -63,6 +63,7 @@ import 'dashboard_background_sheet.dart';
 import 'dashboard_pattern.dart';
 import 'filter_sheet.dart';
 import 'home_snapshot.dart';
+import 'folder_hold_button.dart';
 import 'note_card.dart';
 import 'note_grid.dart';
 import 'shared_notes_screen.dart';
@@ -533,7 +534,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// neyin gezileceği artık Ayarlar → Notlar'da seçiliyor (bkz. [SwipeMode],
   /// varsayılan: klasörler). Sıra, kullanıcının klasör sırasıdır (bkz.
   /// `visibleOrderedFoldersProvider`).
-  /// Tümü görünümünde sola çekiş (ileri yön) takvimi açar (2026-11-06).
+  /// Tümü görünümünde sağa çekiş (geri yön) takvimi açar (2026-11-06).
   bool _swipeOpensCalendar(int direction) => swipeOpensCalendar(
     enabled: ref.read(swipeLeftCalendarProvider),
     direction: direction,
@@ -573,6 +574,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     ref.read(selectedFolderProvider.notifier).set(stop.folderId);
     ref.read(noteFilterProvider.notifier).set(stop.filter);
     ref.read(selectedTagProvider.notifier).set(stop.tag);
+    HapticFeedback.selectionClick();
+  }
+
+  /// Klasör düğmesinden seçim: süzgeçsiz o klasör (Tümü = null).
+  void _selectFolderFromHold(String? folderId) {
+    _swipeForward = true;
+    ref.read(selectedSharedFolderProvider.notifier).set(null);
+    ref.read(sharedHubOnHomeProvider.notifier).set(false);
+    ref.read(selectedFolderProvider.notifier).set(folderId);
+    ref.read(noteFilterProvider.notifier).set(NoteFilter.all);
+    ref.read(selectedTagProvider.notifier).set(null);
     HapticFeedback.selectionClick();
   }
 
@@ -1774,6 +1786,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 // YÖNE BAĞLI: sabit `right` sağdan sola dillerde düğmeleri
                 // sağda bırakıyor, asistan paneli ise (end: 88) SOLDA yer
                 // ayırıyordu — panel düğmelerin üstüne biniyordu.
+                // KLASÖR DÜĞMESİ (kullanıcı isteği 2026-11-06): sol altta;
+                // dokun → Klasörler, basılı tut + kaydır → klasör değiştir.
+                if (!AppRailScope.visible(context) &&
+                    !selectionActive &&
+                    sharedFolder == null)
+                  PositionedDirectional(
+                    start: 16,
+                    bottom: 16,
+                    child: FolderHoldButton(
+                      stops: [
+                        (null, l10n.allNotesChip),
+                        for (final f in ref.watch(visibleOrderedFoldersProvider))
+                          (f.id, f.name),
+                      ],
+                      currentId: ref.watch(selectedFolderProvider),
+                      onOpen: () => unawaited(context.push('/folders')),
+                      onSelect: _selectFolderFromHold,
+                    ),
+                  ),
                 PositionedDirectional(
                   end: 16,
                   bottom: 16,

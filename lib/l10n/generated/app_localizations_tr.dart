@@ -7248,11 +7248,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam';
 
   @override
-  String get swipeLeftCalendar => 'Sola kaydırınca takvim';
+  String get swipeLeftCalendar => 'Sağa kaydırınca takvim';
 
   @override
   String get swipeLeftCalendarInfo =>
-      'Tümü görünümünde ekranı sola kaydırınca takvim açılır';
+      'Tümü görünümünde ekranı sağa kaydırınca takvim açılır';
 
   @override
   String calendarMoved(String day) {
@@ -7364,4 +7364,120 @@ class AppLocalizationsTr extends AppLocalizations {
   String gcalPending(int count) {
     return 'Google\'a gönderilmeyi bekleyen $count değişiklik';
   }
+
+  @override
+  String get ocrToEvent => 'Takvime etkinlik olarak ekle';
+
+  @override
+  String get calendarSuggestAction => 'Takvime ekle';
+
+  @override
+  String calendarSuggest(String when) {
+    return 'Notta $when geçiyor';
+  }
+
+  @override
+  String get calendarIcsExport => 'Takvimi dışa aktar (.ics)';
+
+  @override
+  String get calendarIcsImport => 'Takvim dosyası içe aktar (.ics)';
+
+  @override
+  String calendarIcsImported(int count, int skipped) {
+    return '$count etkinlik eklendi, $skipped zaten vardı';
+  }
+
+  @override
+  String get routinesTitle => 'Rutinler';
+
+  @override
+  String get routineNew => 'Yeni rutin';
+
+  @override
+  String get routineEdit => 'Rutini düzenle';
+
+  @override
+  String get routinesEmpty => 'Henüz rutin yok';
+
+  @override
+  String get routinesEmptyHint =>
+      'Sabah rutini gibi tekrarlayan bir plan kur: adımlarını tikle, serini gör.';
+
+  @override
+  String get routineDoneToday => 'Bugün tamamlandı';
+
+  @override
+  String get routineStartToday => 'Bugünü işaretle';
+
+  @override
+  String get routineDone => 'Tamamlandı';
+
+  @override
+  String get routineTitleHint => 'Rutinin adı';
+
+  @override
+  String get routineTime => 'Saat';
+
+  @override
+  String get routineRemind => 'Zamanı gelince hatırlat';
+
+  @override
+  String get routineSteps => 'Adımlar';
+
+  @override
+  String get routineStepHint => 'Adım';
+
+  @override
+  String get routineAddStep => 'Adım ekle';
+
+  @override
+  String get routineDeleted => 'Rutin silindi';
+
+  @override
+  String routineStreak(int count) {
+    return '🔥 $count gün';
+  }
+
+  @override
+  String routineStepCount(int count) {
+    return '$count adım';
+  }
+
+  @override
+  String routineProgress(int done, int total) {
+    return '$done/$total adım';
+  }
+
+  @override
+  String get menuEdit => 'Menüyü düzenle';
+
+  @override
+  String get menuSectionOther => 'Diğer';
+
+  @override
+  String get menuQuickRow => 'Hızlı satıra al';
+
+  @override
+  String get menuShowHide => 'Göster/gizle';
+
+  @override
+  String get menuReset => 'Varsayılan';
+
+  @override
+  String menuEditHint(int count) {
+    return 'Sürükleyerek sırala, göz ile gizle; yıldızlı işlemler üstteki hızlı satırda durur (en çok $count).';
+  }
+
+  @override
+  String get themeCream => 'Krem';
+
+  @override
+  String get themePeach => 'Şeftali';
+
+  @override
+  String get themeMint => 'Nane';
+
+  @override
+  String get folderHoldHint =>
+      'Basılı tutup sağa sola kaydırarak klasör değiştir';
 }

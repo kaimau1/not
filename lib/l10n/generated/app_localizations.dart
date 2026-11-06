@@ -12947,13 +12947,13 @@ abstract class AppLocalizations {
   /// No description provided for @swipeLeftCalendar.
   ///
   /// In tr, this message translates to:
-  /// **'Sola kaydırınca takvim'**
+  /// **'Sağa kaydırınca takvim'**
   String get swipeLeftCalendar;
 
   /// No description provided for @swipeLeftCalendarInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Tümü görünümünde ekranı sola kaydırınca takvim açılır'**
+  /// **'Tümü görünümünde ekranı sağa kaydırınca takvim açılır'**
   String get swipeLeftCalendarInfo;
 
   /// No description provided for @calendarMoved.
@@ -13153,6 +13153,210 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Google\'a gönderilmeyi bekleyen {count} değişiklik'**
   String gcalPending(int count);
+
+  /// No description provided for @ocrToEvent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvime etkinlik olarak ekle'**
+  String get ocrToEvent;
+
+  /// No description provided for @calendarSuggestAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvime ekle'**
+  String get calendarSuggestAction;
+
+  /// No description provided for @calendarSuggest.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notta {when} geçiyor'**
+  String calendarSuggest(String when);
+
+  /// No description provided for @calendarIcsExport.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvimi dışa aktar (.ics)'**
+  String get calendarIcsExport;
+
+  /// No description provided for @calendarIcsImport.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim dosyası içe aktar (.ics)'**
+  String get calendarIcsImport;
+
+  /// No description provided for @calendarIcsImported.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} etkinlik eklendi, {skipped} zaten vardı'**
+  String calendarIcsImported(int count, int skipped);
+
+  /// No description provided for @routinesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rutinler'**
+  String get routinesTitle;
+
+  /// No description provided for @routineNew.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni rutin'**
+  String get routineNew;
+
+  /// No description provided for @routineEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rutini düzenle'**
+  String get routineEdit;
+
+  /// No description provided for @routinesEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz rutin yok'**
+  String get routinesEmpty;
+
+  /// No description provided for @routinesEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sabah rutini gibi tekrarlayan bir plan kur: adımlarını tikle, serini gör.'**
+  String get routinesEmptyHint;
+
+  /// No description provided for @routineDoneToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün tamamlandı'**
+  String get routineDoneToday;
+
+  /// No description provided for @routineStartToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugünü işaretle'**
+  String get routineStartToday;
+
+  /// No description provided for @routineDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamamlandı'**
+  String get routineDone;
+
+  /// No description provided for @routineTitleHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rutinin adı'**
+  String get routineTitleHint;
+
+  /// No description provided for @routineTime.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saat'**
+  String get routineTime;
+
+  /// No description provided for @routineRemind.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zamanı gelince hatırlat'**
+  String get routineRemind;
+
+  /// No description provided for @routineSteps.
+  ///
+  /// In tr, this message translates to:
+  /// **'Adımlar'**
+  String get routineSteps;
+
+  /// No description provided for @routineStepHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Adım'**
+  String get routineStepHint;
+
+  /// No description provided for @routineAddStep.
+  ///
+  /// In tr, this message translates to:
+  /// **'Adım ekle'**
+  String get routineAddStep;
+
+  /// No description provided for @routineDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rutin silindi'**
+  String get routineDeleted;
+
+  /// No description provided for @routineStreak.
+  ///
+  /// In tr, this message translates to:
+  /// **'🔥 {count} gün'**
+  String routineStreak(int count);
+
+  /// No description provided for @routineStepCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} adım'**
+  String routineStepCount(int count);
+
+  /// No description provided for @routineProgress.
+  ///
+  /// In tr, this message translates to:
+  /// **'{done}/{total} adım'**
+  String routineProgress(int done, int total);
+
+  /// No description provided for @menuEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Menüyü düzenle'**
+  String get menuEdit;
+
+  /// No description provided for @menuSectionOther.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer'**
+  String get menuSectionOther;
+
+  /// No description provided for @menuQuickRow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı satıra al'**
+  String get menuQuickRow;
+
+  /// No description provided for @menuShowHide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Göster/gizle'**
+  String get menuShowHide;
+
+  /// No description provided for @menuReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varsayılan'**
+  String get menuReset;
+
+  /// No description provided for @menuEditHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sürükleyerek sırala, göz ile gizle; yıldızlı işlemler üstteki hızlı satırda durur (en çok {count}).'**
+  String menuEditHint(int count);
+
+  /// No description provided for @themeCream.
+  ///
+  /// In tr, this message translates to:
+  /// **'Krem'**
+  String get themeCream;
+
+  /// No description provided for @themePeach.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şeftali'**
+  String get themePeach;
+
+  /// No description provided for @themeMint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nane'**
+  String get themeMint;
+
+  /// No description provided for @folderHoldHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Basılı tutup sağa sola kaydırarak klasör değiştir'**
+  String get folderHoldHint;
 }
 
 class _AppLocalizationsDelegate

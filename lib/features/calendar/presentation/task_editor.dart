@@ -32,6 +32,7 @@ Future<void> showTaskEditor(
   String parentId = '',
   String listId = TaskList.defaultId,
   String? initialTitle,
+  String? initialNotes,
   String noteId = '',
   String noteItemId = '',
 }) => showAppSheet<void>(
@@ -45,6 +46,7 @@ Future<void> showTaskEditor(
     parentId: parentId,
     listId: listId,
     initialTitle: initialTitle,
+    initialNotes: initialNotes,
     noteId: noteId,
     noteItemId: noteItemId,
   ),
@@ -58,6 +60,7 @@ class TaskEditorSheet extends ConsumerStatefulWidget {
     this.parentId = '',
     this.listId = TaskList.defaultId,
     this.initialTitle,
+    this.initialNotes,
     this.noteId = '',
     this.noteItemId = '',
   });
@@ -65,6 +68,9 @@ class TaskEditorSheet extends ConsumerStatefulWidget {
   /// Liste maddesinden görev (TAKVIM F50.3, K6): başlık maddenin metni,
   /// tamamlanma madde ile iki yönlü eşlenir ([noteId]/[noteItemId]).
   final String? initialTitle;
+
+  /// Yeni görevin ayrıntısı (Gmail'den: iletinin bağlantısı, F52.3).
+  final String? initialNotes;
   final String noteId;
   final String noteItemId;
 
@@ -81,7 +87,9 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
   late final _title = TextEditingController(
     text: widget.existing?.title ?? widget.initialTitle,
   );
-  late final _notes = TextEditingController(text: widget.existing?.notes);
+  late final _notes = TextEditingController(
+    text: widget.existing?.notes ?? widget.initialNotes,
+  );
   late DateTime? _due =
       widget.existing?.dueDay ??
       (widget.due == null ? null : startOfDay(widget.due!));

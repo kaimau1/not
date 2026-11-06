@@ -264,16 +264,16 @@ Faz 53'te.
 - [x] F51.3 Kuyruk denetleyicide (`_queue`, önbellek JSON'unda kalıcı): yazım İYİMSER (takvimde hemen; yeni etkinlik geçici `tmp-` kimlikle), sırayla gönderilir; ağ/5xx/429/401'de durur, sonraki tazelemede yeniden; kalıcı 4xx düşer + hata. Geçici kimliğe sonradan yazılan düzenleme/silme gerçek kimliğe çevrilir. Levhada "n değişiklik bekliyor". Testler `google_calendar_test` (RRULE, gövde, kuyruk). Gerçek hesapta denenmedi → F19.B10 (+ `calendar.events` kapsamı), KALANLAR §2 #104.
 
 ### Faz 52 — Akıllı bağlar (AI + mevcut özellikler)
-- [ ] F52.1 Brifing: bugünün etkinlikleri + görevleri + (Faz 53'ten sonra) rutinler.
-- [ ] F52.2 Asistan/sesli komut araçları: etkinlik ekle, görev ekle, "yarın neler var?".
-- [ ] F52.3 Notta tarih ifadesi önerisi; fotoğraftan etkinlik; Gmail iletisinden görev.
-- [ ] F52.4 `.ics` dışa/içe aktarma (isteğe bağlı).
+- [x] F52.1 Brifinge "TAKVİM VE GÖREVLER" bölümü (`calendarBriefingLines`: bugün/yarın etkinlik + görev saat sırasıyla, gecikmiş açık görevler; Google etkinlikleri önbellekten), istem etkinlik/görev/gecikme der. Rutinler Faz 53'te eklenir.
+- [x] F52.2 Asistana üç araç (REST ve Firebase AI istemcisinde aynı sözleşme, açıklamalar ortak sabit): `create_event` (ISO başlangıç/bitiş, tüm gün, konum, dakika önce hatırlatma), `create_task` (gün + saat), `list_agenda` (gün + kaç gün → etkinlik/görev/hatırlatıcı; kilitli not girmez). Takvim araçları not deposu olmadan çalışır. Testler `calendar_ai_test`.
+- [x] F52.3 (a) Notta tarih: yazarken HİÇBİR ŞEY çalışmaz (akıcılık); az önce düzenlenmiş, hatırlatıcısız notu kapatınca son 5 dolu satırda zaman ifadesi varsa tek bildirim "Notta … geçiyor · Takvime ekle" → etkinlik levhası (not bağlı, başlık notun). Aynı (not, zaman) oturumda bir kez (`noteDateSuggestion`, yerel `parseSpokenDateTimeNow`). (b) Metin tanıma ekranında "Takvime etkinlik olarak ekle" (`eventDraftFromText`: ilk satır başlık, kalanı açıklama, zaman yerel ayrıştırıcıdan — AI yok). (c) Gmail iletisinde "Görev yap" (başlık konu, ayrıntı ileti bağlantısı).
+- [x] F52.4 `ics.dart` (RFC 5545 gündelik alt küme: saatli/tüm gün, konum, açıklama kaçışlı, satır katlama, basit RRULE ↔ tekrar; TZID yerel sayılır) + takvim ⋮ → dışa aktar (paylaş) / içe aktar (aynı UID ya da başlık+başlangıç atlanır). Google etkinlikleri dışa gitmez. Testler `ics_test`.
 
 ### Faz 53 — Rutinler (Aşama 2)
-- [ ] F53.1 `Routine` modeli (ad, adımlar, tekrar, saat, renk) + `routineLogs`.
-- [ ] F53.2 Rutin günün görevlerine düşer; adım tikleri; hatırlatma.
-- [ ] F53.3 Seri + 30 günlük şerit; brifing ve asistan entegrasyonu.
-- [ ] F53.4 Ana sayfa widget'ı "Bugün" (sıradaki etkinlik/görev/rutin).
+- [x] F53.1 `routine.dart`: `Routine` (ad, adımlar, tekrar — `Recurrence`, varsayılan günlük, çıpa `startDay`; saat, renk, hatırlat) `users/{uid}/routines`; `RoutineLog` `routineLogs/{rutin}_{gün}` (tiklenen adımlar + tamam). Hesap silme listesinde.
+- [x] F53.2 Ajandada `RoutineEntry` (ay/hafta/ajanda/gün levhası/zemin; sürüklenmez); dokununca gün levhası: adımlar tiklenir (adımsızsa tek "Tamamlandı"). Hatırlatma `calendarAlarms(routines)` → `cal:routine:` (her oluş, rutinin saatinde). Görev listesine ayrı kopya YAZILMAZ (çift kayıt olmasın) — ajanda ve rutin kartı yeter.
+- [x] F53.3 `/routines` (takvim çubuğunda 🧘): kart başına 🔥 seri (`routineStreak`: bugün yapılmadıysa dünden), son 30 gün şeridi (`routineStrip`), "Bugünü işaretle". Brifing (bugünün rutinleri) ve asistan `list_agenda` rutinleri de getirir. Testler `routine_test`.
+- [x] F53.4 Var olan "Bugün" widget'ı (`todayWidgetPayload`) artık 7 günlük etkinlik (📅), görev (☐) ve rutinleri (🔁) de taşır; takvim akışları değişince güncellenir. Yeni Android widget'ı YAZILMADI (mevcut olan genişletildi). Cihazda doğrulanmadı → KALANLAR §2 #106.
 
 ---
 
@@ -317,5 +317,5 @@ Faz 53'te.
 | 49 Not ↔ takvim | ✅ 2026-11-06 (cihazda doğrulanmadı, KALANLAR §2 #102) |
 | 50 Görevler | ✅ 2026-11-06 (Google Görevler gerçek hesapta denenmedi: F19.B10, KALANLAR §2 #103; elle sürükleyerek sıralama yok) |
 | 51 Google'a yazma | ✅ 2026-11-06 (gerçek hesapta denenmedi: F19.B10, KALANLAR §2 #104) |
-| 52 Akıllı bağlar | — |
-| 53 Rutinler | — |
+| 52 Akıllı bağlar | ✅ 2026-11-06 (cihazda doğrulanmadı, KALANLAR §2 #105) |
+| 53 Rutinler | ✅ 2026-11-06 (cihazda doğrulanmadı, KALANLAR §2 #106) |

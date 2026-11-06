@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../l10n_ext.dart';
+import '../menu_layout.dart';
 import 'app_sheet.dart';
 import 'sheet_header.dart';
 
@@ -113,7 +116,12 @@ class ActionMenu extends StatelessWidget {
     required this.sections,
     this.danger,
     this.footer = const [],
+    this.menuId,
   });
+
+  /// Kullanıcının düzenleyebildiği menünün kimliği ([MenuLayouts]); verilince
+  /// başlıkta "Düzenle" düğmesi çıkar (gizle/göster, sırala, hızlı satır).
+  final String? menuId;
 
   /// En altta, Sil'in ALTINDA ince metin satırı: notun değil ekranın/
   /// uygulamanın işi olan maddeler (Ekranı düzenle, Ayarlar — F12.1).
@@ -125,10 +133,79 @@ class ActionMenu extends StatelessWidget {
   final List<MenuSection> sections;
   final MenuAction? danger;
 
+  /// Düzenin uygulanmış hâli: (hızlı satır, gruplar).
+  (List<MenuAction>, List<MenuSection>) _arranged(
+    MenuLayout layout,
+    String otherTitle,
+  ) {
+    final all = <String, MenuAction>{
+      for (final a in quick) a.id: a,
+      for (final sec in sections)
+        for (final a in sec.actions) a.id: a,
+    };
+    final quickIds = layout.quick ?? [for (final a in quick) a.id];
+    final quickOut = [
+      for (final id in quickIds)
+        if (all[id] case final a? when !layout.hidden.contains(id)) a,
+    ].take(MenuLayout.maxQuick).toList();
+    final inQuick = {for (final a in quickOut) a.id};
+    final sectionsOut = [
+      for (final sec in sections)
+        MenuSection(
+          sec.title,
+          layout.sorted([
+            for (final a in sec.actions)
+              if (!inQuick.contains(a.id) && !layout.hidden.contains(a.id)) a,
+          ], (a) => a.id),
+        ),
+    ];
+    // Varsayılan hızlı satırdan çıkarılanlar bir grupta kalır (kaybolmaz).
+    final orphans = layout.sorted([
+      for (final a in quick)
+        if (!inQuick.contains(a.id) && !layout.hidden.contains(a.id)) a,
+    ], (a) => a.id);
+    if (orphans.isNotEmpty) sectionsOut.add(MenuSection(otherTitle, orphans));
+    return (quickOut, sectionsOut);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final id = menuId;
+    if (id == null) return _body(context, quick, sections);
+    return ValueListenableBuilder<Map<String, MenuLayout>>(
+      valueListenable: MenuLayouts.layouts,
+      builder: (context, _, _) {
+        final (q, secs) = _arranged(
+          MenuLayouts.of(id),
+          context.l10n.menuSectionOther,
+        );
+        return _body(context, q, secs);
+      },
+    );
+  }
+
+  Future<void> _edit(BuildContext context) => showAppSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (_) => _MenuLayoutEditor(menu: this),
+  );
+
+  Widget _body(
+    BuildContext context,
+    List<MenuAction> quick,
+    List<MenuSection> sections,
+  ) {
     final scheme = Theme.of(context).colorScheme;
     final heading = title?.trim() ?? '';
+    final editButton = menuId == null
+        ? null
+        : IconButton(
+            key: const ValueKey('menu-edit'),
+            tooltip: context.l10n.menuEdit,
+            icon: const Icon(Icons.tune),
+            onPressed: () => _edit(context),
+          );
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: Column(
@@ -139,8 +216,11 @@ class ActionMenu extends StatelessWidget {
           if (heading.isNotEmpty)
             SheetHeader(
               title: heading,
+              actions: [?editButton],
               padding: const EdgeInsets.fromLTRB(4, 0, 0, 4),
-            ),
+            )
+          else if (editButton != null)
+            Align(alignment: AlignmentDirectional.centerEnd, child: editButton),
           if (quick.isNotEmpty)
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -439,3 +519,179 @@ class _Tile extends StatelessWidget {
     );
   }
 }
+
+/// **MENÜYÜ DÜZENLE**: işlemleri sürükleyerek sırala, göz ile gizle/göster,
+/// yıldız ile hızlı satıra al (en çok [MenuLayout.maxQuick]). Kaydet anında
+/// menüye yansır; "Varsayılan" kaydı siler.
+class _MenuLayoutEditor extends StatefulWidget {
+  const _MenuLayoutEditor({required this.menu});
+
+  final ActionMenu menu;
+
+  @override
+  State<_MenuLayoutEditor> createState() => _MenuLayoutEditorState();
+}
+
+class _MenuLayoutEditorState extends State<_MenuLayoutEditor> {
+  late final MenuLayout _start = MenuLayouts.of(widget.menu.menuId!);
+  late final Map<String, MenuAction> _all = {
+    for (final a in widget.menu.quick) a.id: a,
+    for (final s in widget.menu.sections)
+      for (final a in s.actions) a.id: a,
+  };
+  late final Set<String> _hidden = {..._start.hidden};
+  late final List<String> _quick = [
+    ...?_start.quick?.where(_all.containsKey),
+    if (_start.quick == null) for (final a in widget.menu.quick) a.id,
+  ];
+  late final List<String> _order = _start.sorted(
+    [
+      for (final s in widget.menu.sections)
+        for (final a in s.actions) a.id,
+      for (final a in widget.menu.quick)
+        if (!widget.menu.sections.any((s) => s.actions.any((x) => x.id == a.id)))
+          a.id,
+    ],
+    (id) => id,
+  );
+
+  void _save() {
+    MenuLayouts.set(
+      widget.menu.menuId!,
+      MenuLayout(
+        hidden: _hidden,
+        quick: _quick,
+        order: _order,
+      ),
+    );
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.8,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SheetHeader(title: l10n.menuEdit),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(
+                l10n.menuEditHint(MenuLayout.maxQuick),
+                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
+              ),
+            ),
+            Flexible(
+              child: ReorderableListView(
+                shrinkWrap: true,
+                buildDefaultDragHandles: false,
+                onReorderItem: (from, to) => setState(() {
+                  _order.insert(to, _order.removeAt(from));
+                }),
+                children: [
+                  for (var i = 0; i < _order.length; i++)
+                    if (_all[_order[i]] case final a?)
+                      ListTile(
+                        key: ValueKey('menu-edit-${a.id}'),
+                        leading: ReorderableDragStartListener(
+                          index: i,
+                          child: const Icon(Icons.drag_handle),
+                        ),
+                        title: Row(
+                          children: [
+                            Icon(a.icon, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                a.label,
+                                style: TextStyle(
+                                  color: _hidden.contains(a.id)
+                                      ? scheme.onSurfaceVariant.withValues(
+                                          alpha: 0.5,
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              key: ValueKey('menu-quick-${a.id}'),
+                              tooltip: l10n.menuQuickRow,
+                              isSelected: _quick.contains(a.id),
+                              icon: const Icon(Icons.star_outline),
+                              selectedIcon: Icon(
+                                Icons.star,
+                                color: scheme.primary,
+                              ),
+                              onPressed: () => setState(() {
+                                if (_quick.contains(a.id)) {
+                                  _quick.remove(a.id);
+                                } else if (_quick.length < MenuLayout.maxQuick) {
+                                  _quick.add(a.id);
+                                  _hidden.remove(a.id);
+                                }
+                              }),
+                            ),
+                            IconButton(
+                              key: ValueKey('menu-visible-${a.id}'),
+                              tooltip: l10n.menuShowHide,
+                              icon: Icon(
+                                _hidden.contains(a.id)
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                              ),
+                              onPressed: () => setState(() {
+                                if (!_hidden.remove(a.id)) {
+                                  _hidden.add(a.id);
+                                  _quick.remove(a.id);
+                                }
+                              }),
+                            ),
+                          ],
+                        ),
+                      ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: Row(
+                children: [
+                  TextButton(
+                    key: const ValueKey('menu-edit-reset'),
+                    onPressed: () {
+                      MenuLayouts.set(
+                        widget.menu.menuId!,
+                        const MenuLayout(),
+                      );
+                      Navigator.pop(context);
+                    },
+                    child: Text(l10n.menuReset),
+                  ),
+                  const Spacer(),
+                  FilledButton(
+                    key: const ValueKey('menu-edit-save'),
+                    onPressed: _save,
+                    child: Text(l10n.eventSave),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

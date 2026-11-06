@@ -24,6 +24,7 @@ import '../domain/note.dart';
 import '../../../core/utils/run_heavy.dart';
 import '../domain/trash_analysis.dart' show trashReminderPlan;
 import 'notes_repository.dart';
+import '../../calendar/domain/routine.dart';
 import '../../calendar/data/calendar_repository.dart';
 import '../../calendar/domain/calendar_alarms.dart';
 import '../../calendar/domain/calendar_event.dart';
@@ -435,6 +436,10 @@ class ReminderService {
         (_, _) => _scheduleCalendarSync(),
         fireImmediately: true,
       );
+      _calRoutinesSub = _ref.listen(
+        routinesStreamProvider,
+        (_, _) => _scheduleCalendarSync(),
+      );
     }
 
     // Günlük brifing ayarını izle ve bildirimi buna göre planla/iptal et.
@@ -447,6 +452,7 @@ class ReminderService {
 
   ProviderSubscription<AsyncValue<List<CalendarEvent>>>? _calEventsSub;
   ProviderSubscription<AsyncValue<List<TaskItem>>>? _calTasksSub;
+  ProviderSubscription<AsyncValue<List<Routine>>>? _calRoutinesSub;
   Timer? _calDebounce;
 
   /// Kurulu takvim bildirimleri: kimlik → imza.
@@ -459,19 +465,22 @@ class ReminderService {
       final events = _ref.read(eventsStreamProvider).value;
       final tasks = _ref.read(tasksStreamProvider).value;
       if (events == null || tasks == null) return;
-      unawaited(_syncCalendar(events, tasks));
+      final routines = _ref.read(routinesStreamProvider).value ?? const [];
+      unawaited(_syncCalendar(events, tasks, routines));
     });
   }
 
   Future<void> _syncCalendar(
     List<CalendarEvent> events,
-    List<TaskItem> tasks,
-  ) async {
+    List<TaskItem> tasks, [
+    List<Routine> routines = const [],
+  ]) async {
     try {
       await _ensureInitialized();
       final alarms = calendarAlarms(
         events: events,
         tasks: tasks,
+        routines: routines,
         now: DateTime.now(),
       );
       final wanted = {for (final a in alarms) a.notificationId: a};
@@ -768,5 +777,6 @@ class ReminderService {
     _calDebounce?.cancel();
     _calEventsSub?.close();
     _calTasksSub?.close();
+    _calRoutinesSub?.close();
   }
 }

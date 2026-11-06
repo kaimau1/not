@@ -900,13 +900,14 @@ typedef HomeSwipeStop = ({String? folderId, NoteFilter filter, String? tag});
 ///   notlarından (2026-09-23 kuralı, bkz. [nextSwipeStop]).
 /// * [SwipeMode.both]: tek halka — Tümü, klasörler, süzgeçler, etiketler.
 /// Ana ekranda yana çekiş takvimi mi açar (2026-11-06, kullanıcı isteği
-/// "sola kaydırınca takvim açılsın"): yalnız İLERİ yön (sola çekiş) ve
-/// yalnız süzgeçsiz "Tümü" görünümünde; klasörde/süzgeçte çekiş durak gezer.
+/// "takvim SAĞA kaydırılarak açılsın" — önce sola idi): yalnız GERİ yön
+/// (parmak sağa, takvim soldan gelir) ve yalnız süzgeçsiz "Tümü"
+/// görünümünde; klasörde/süzgeçte çekiş durak gezer.
 bool swipeOpensCalendar({
   required bool enabled,
   required int direction,
   required bool atAllNotes,
-}) => enabled && direction > 0 && atAllNotes;
+}) => enabled && direction < 0 && atAllNotes;
 
 HomeSwipeStop? nextHomeSwipeStop({
   required SwipeMode mode,

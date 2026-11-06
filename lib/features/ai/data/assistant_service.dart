@@ -5,6 +5,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../calendar/data/calendar_repository.dart';
+import '../../calendar/data/google_calendar_sync.dart';
+import '../../calendar/domain/agenda.dart';
+import '../../calendar/domain/calendar_event.dart';
+import '../../calendar/domain/day_key.dart';
+import '../../calendar/domain/task_item.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_item.dart';
@@ -103,6 +109,15 @@ class AssistantService {
     String name,
     Map<String, dynamic> args,
   ) async {
+    // Takvim araçları not deposuna ihtiyaç duymaz (F52.2).
+    switch (name) {
+      case 'create_event':
+        return _createEvent(args);
+      case 'create_task':
+        return _createTask(args);
+      case 'list_agenda':
+        return _listAgenda(args);
+    }
     final repo = _ref.read(notesRepositoryProvider);
     if (repo == null) {
       return {'status': 'error', 'message': 'Oturum bulunamadı'};
@@ -122,6 +137,124 @@ class AssistantService {
       default:
         return {'status': 'error', 'message': 'Bilinmeyen araç: $name'};
     }
+  }
+
+  // ---------------------------------------------------- takvim (F52.2)
+
+  Map<String, dynamic> _createEvent(Map<String, dynamic> args) {
+    final calendar = _ref.read(calendarRepositoryProvider);
+    if (calendar == null) {
+      return {'status': 'error', 'message': 'Oturum bulunamadı'};
+    }
+    final start = DateTime.tryParse(args['start'] as String? ?? '')?.toLocal();
+    if (start == null) {
+      return {'status': 'error', 'message': 'start ISO 8601 olmalı'};
+    }
+    final allDay = args['allDay'] == true;
+    final s = allDay ? DateTime(start.year, start.month, start.day) : start;
+    var end = DateTime.tryParse(args['end'] as String? ?? '')?.toLocal();
+    if (allDay) {
+      final last = end ?? s;
+      end = DateTime(last.year, last.month, last.day + (end == null ? 1 : 0));
+      if (!end.isAfter(s)) end = DateTime(s.year, s.month, s.day + 1);
+    } else if (end == null || !end.isAfter(s)) {
+      end = s.add(const Duration(hours: 1));
+    }
+    final minutes = (args['reminderMinutes'] as num?)?.toInt();
+    final saved = calendar.saveEvent(
+      CalendarEvent(
+        id: '',
+        title: (args['title'] as String? ?? '').trim(),
+        location: (args['location'] as String? ?? '').trim(),
+        allDay: allDay,
+        start: s,
+        end: end,
+        reminders: [if (minutes != null && minutes >= 0) minutes],
+      ),
+    );
+    return {'status': 'ok', 'eventId': saved.id, 'message': 'Etkinlik eklendi'};
+  }
+
+  Map<String, dynamic> _createTask(Map<String, dynamic> args) {
+    final calendar = _ref.read(calendarRepositoryProvider);
+    if (calendar == null) {
+      return {'status': 'error', 'message': 'Oturum bulunamadı'};
+    }
+    final title = (args['title'] as String? ?? '').trim();
+    if (title.isEmpty) return {'status': 'error', 'message': 'title gerekli'};
+    final due = parseDayKey((args['due'] as String? ?? '').split('T').first);
+    final time = parseHm(args['dueTime'] as String? ?? '');
+    final saved = calendar.saveTask(
+      TaskItem(
+        id: '',
+        title: title,
+        notes: (args['notes'] as String? ?? '').trim(),
+        due: due == null ? '' : dayKey(due),
+        dueTime: due == null || time == null ? '' : args['dueTime'] as String,
+      ),
+    );
+    return {'status': 'ok', 'taskId': saved.id, 'message': 'Görev eklendi'};
+  }
+
+  Future<Map<String, dynamic>> _listAgenda(Map<String, dynamic> args) async {
+    final calendar = _ref.read(calendarRepositoryProvider);
+    final from =
+        parseDayKey((args['from'] as String? ?? '').split('T').first) ??
+        startOfDay(DateTime.now());
+    final days = ((args['days'] as num?)?.toInt() ?? 1).clamp(1, 31);
+    final to = DateTime(from.year, from.month, from.day + days);
+    // Akış otomatik atılan sağlayıcı: okurken canlı tutulur.
+    final keep = _ref.listen(notesStreamProvider, (_, _) {});
+    final List<Note> notes;
+    try {
+      notes = await _ref.read(notesStreamProvider.future);
+    } finally {
+      keep.close();
+    }
+    final agenda = buildAgenda(
+      from: from,
+      to: to,
+      events: [
+        ...?(calendar == null ? null : await calendar.watchEvents().first),
+        ..._ref.read(googleCalendarEventsProvider),
+      ],
+      tasks: calendar == null ? const [] : await calendar.watchTasks().first,
+      routines: calendar == null
+          ? const []
+          : await calendar.watchRoutines().first,
+      routineLogs: calendar == null
+          ? const {}
+          : await calendar.watchRoutineLogs().first,
+      reminderNotes: [
+        for (final n in notes)
+          if (n.reminderAt != null && !n.locked) n,
+      ],
+      includeCompleted: false,
+    );
+    String two(int v) => v.toString().padLeft(2, '0');
+    return {
+      'status': 'ok',
+      'items': [
+        for (final day in agenda.entries)
+          for (final e in day.value)
+            {
+              'day': day.key,
+              'time': e.allDay ? 'gün boyu' : '${two(e.at.hour)}:${two(e.at.minute)}',
+              'kind': switch (e) {
+                EventOccurrence() => 'etkinlik',
+                TaskEntry() => 'görev',
+                ReminderEntry() => 'hatırlatıcı',
+                RoutineEntry() => 'rutin',
+              },
+              'title': switch (e) {
+                EventOccurrence(:final event) => event.title,
+                TaskEntry(:final task) => task.title,
+                ReminderEntry(:final note) => note.displayTitle,
+                RoutineEntry(:final routine) => routine.title,
+              },
+            },
+      ],
+    };
   }
 
   List<String> _stringList(dynamic value) => [

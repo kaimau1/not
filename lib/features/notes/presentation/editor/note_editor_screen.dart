@@ -78,6 +78,9 @@ import '../../../settings/settings_providers.dart';
 import '../../../calendar/data/task_note_sync.dart';
 import '../../../calendar/presentation/note_calendar_links.dart';
 import '../../../calendar/presentation/task_editor.dart';
+import '../../../calendar/presentation/event_editor.dart';
+import '../../../calendar/domain/agenda.dart' show noteDateSuggestion;
+import '../../../../core/utils/spoken_datetime.dart' show parseSpokenDateTimeNow;
 import '../../data/attachment_repository.dart';
 import '../../data/device_speech.dart';
 import '../../data/voice_listen_session.dart';
@@ -1048,6 +1051,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   @override
   void initState() {
     super.initState();
+    // Kök gezgin: kapanış önerisi (F52.3) editör atıldıktan sonra açılır.
+    _rootNavigator = Navigator.maybeOf(context, rootNavigator: true);
     // Uygulama arka plana alınırken/kapatılırken bekleyen kaydı zorlamak için
     // (bkz. [_saveNow] — "kapatınca not kayboluyor" kök nedeni).
     WidgetsBinding.instance.addObserver(this);
@@ -1423,6 +1428,72 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// F26.3 (bkz. [sortHeldNoteIdsProvider]); dispose'da `ref` yok.
   SortHeldNoteIdsNotifier? _sortHold;
 
+  NavigatorState? _rootNavigator;
+
+  /// Bu oturumda önerilmiş (not, zaman) çiftleri — aynı öneri yinelenmez.
+  static final _suggested = <String>{};
+
+  /// **NOTTA TARİH ÖNERİSİ** (TAKVIM F52.3): az önce düzenlenmiş notun son
+  /// satırlarında zaman ifadesi varsa ve notun hatırlatıcısı yoksa, kapanışta
+  /// tek bildirim: "Takvime ekle?". Yazarken hiçbir şey çalışmaz (tuş
+  /// başına iş yok — akıcılık bütçesi); yalnız çıkışta bir kez ayrıştırılır.
+  void _suggestCalendar() {
+    final note = _note;
+    // `_readOnly` değil: ref atılırken okunamaz.
+    if (note == null ||
+        widget.readOnly ||
+        note.locked ||
+        note.reminderAt != null) {
+      return;
+    }
+    final edited = note.updatedAt;
+    if (edited == null ||
+        DateTime.now().difference(edited) > const Duration(minutes: 3)) {
+      return;
+    }
+    final text = note.toPlainText();
+    final hit = noteDateSuggestion(
+      text.length > 2000 ? text.substring(text.length - 2000) : text,
+      parseSpokenDateTimeNow,
+    );
+    if (hit == null || !_suggested.add('${note.id}|${hit.at}')) return;
+    final messenger = rootScaffoldMessengerKey.currentState;
+    final navigator = _rootNavigator;
+    if (messenger == null || navigator == null || !navigator.mounted) return;
+    final navContext = navigator.context;
+    final l10n = AppLocalizations.of(navContext);
+    final title = note.displayTitle.trim().isEmpty
+        ? hit.line
+        : note.displayTitle.trim();
+    final noteId = note.id;
+    unawaited(
+      Future.microtask(
+        () => messenger.showSnackBar(
+          timedSnackBar(
+            duration: const Duration(seconds: 6),
+            content: Text(
+              l10n.calendarSuggest(DateFormat.MMMEd().add_Hm().format(hit.at)),
+            ),
+            action: SnackBarAction(
+              label: l10n.calendarSuggestAction,
+              onPressed: () {
+                if (!navigator.mounted) return;
+                unawaited(
+                  showEventEditor(
+                    navigator.context,
+                    start: hit.at,
+                    linkNoteId: noteId,
+                    initialTitle: title,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _stopFileDrops();
@@ -1465,6 +1536,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // yazmazdı — _saveNow aynı drift ağını çıkış yolunda da kurar.
     _saveNow();
     _stampServerTimeOnExit();
+    _suggestCalendar();
     // Silinen eklerin baytları burada gider: "Geri al" ile geri gelenler
     // dosyalarını korur (bkz. _flushAttachmentDeletes).
     _flushAttachmentDeletes();

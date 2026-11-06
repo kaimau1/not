@@ -93,10 +93,19 @@ extension _EditorActions on _NoteEditorScreenState {
     final action = await showActionMenuSheet(
       context,
       ActionMenu(
+        menuId: 'note.add',
         title: note.displayTitle,
         quick: [
           MenuAction('add-tag', l10n.addTag, Icons.new_label_outlined),
           MenuAction('reminder', l10n.addReminder, Icons.alarm_add_outlined),
+          // Takvime ekle (kullanıcı isteği 2026-11-06): gün + saat seçilir,
+          // not bağlı etkinlik açılır.
+          if (!_readOnly)
+            MenuAction(
+              'calendar-add',
+              l10n.calendarSuggestAction,
+              Icons.event_available_outlined,
+            ),
           if (canCollab)
             MenuAction(
               'collaborators',
@@ -158,6 +167,8 @@ extension _EditorActions on _NoteEditorScreenState {
         _addPage();
       case 'reminder':
         await _pickReminder();
+      case 'calendar-add':
+        await _addToCalendar(note);
       case 'place-reminder':
         unawaited(showPlaceReminderSheet(context, ref, note));
       case 'folder':
@@ -1160,6 +1171,35 @@ extension _EditorActions on _NoteEditorScreenState {
         initialTitle: text,
         noteId: note.id,
         noteItemId: item.id,
+      ),
+    );
+  }
+
+  /// "+" → Takvime ekle: önce gün, sonra saat (vazgeçilirse tüm gün), sonra
+  /// nota bağlı etkinlik levhası — başlık notun, ayrıntılar orada değişir.
+  Future<void> _addToCalendar(Note note) async {
+    final now = DateTime.now();
+    final day = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(now.year - 5),
+      lastDate: DateTime(now.year + 10),
+    );
+    if (day == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: (now.hour + 1) % 24, minute: 0),
+    );
+    if (!mounted) return;
+    unawaited(
+      showEventEditor(
+        context,
+        day: day,
+        start: time == null
+            ? null
+            : DateTime(day.year, day.month, day.day, time.hour, time.minute),
+        linkNoteId: note.id,
+        initialTitle: note.displayTitle.trim(),
       ),
     );
   }
