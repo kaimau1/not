@@ -3536,6 +3536,8 @@
   "themePeach": "Şeftali",
   "themeMint": "Nane",
   "folderHoldHint": "Basılı tutup sağa sola kaydırarak klasör değiştir",
+  "homeFolderStripHide": "Klasör satırını gizle",
+  "homeFolderStripShow": "Klasör satırını göster",
   "homeViewMenu": "Görünüm ve süz",
   "folderRadialCancel": "Bırak = vazgeç",
   "googleApiDisabled": "{api} bu uygulamanın Google Cloud projesinde kapalı. Konsolda etkinleştirip yeniden bağlanın.",

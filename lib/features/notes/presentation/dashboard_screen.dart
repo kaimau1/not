@@ -1349,15 +1349,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                   MediaQuery.viewInsetsOf(context).bottom > 0 &&
                                   MediaQuery.sizeOf(context).width < 600;
                               return AppBar(
-                                titleSpacing: searchExpanded ? 0 : 12,
-                                // Genişkenken geri oku: odağı bırakır, bar daralır.
-                                leading: searchExpanded
-                                    ? IconButton(
-                                        tooltip: l10n.close,
-                                        icon: const Icon(Icons.arrow_back),
-                                        onPressed: _searchFocus.unfocus,
-                                      )
-                                    : null,
+                                // SOLDA GERİ OKU YOK (kullanıcı bulgusu
+                                // 2026-11-06: kutu bir sağa bir sola
+                                // kayıyordu). Sol kenar sabit; aramayı
+                                // bırakma düğmesi sağda, hesap + ⋮'nin yerinde.
+                                titleSpacing: 12,
                                 automaticallyImplyLeading: false,
                                 // Masaüstünde ekran boyu olmasın (F44.4).
                                 title: ConstrainedBox(
@@ -1376,7 +1372,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     // Gelen/paylaşılan sayısı avatar
                                     // rozetinde (F11.1).
                                     trailing: searchExpanded
-                                        ? const []
+                                        ? [
+                                            IconButton(
+                                              key: const ValueKey(
+                                                'search-done',
+                                              ),
+                                              tooltip: l10n.close,
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              icon: const Icon(
+                                                Icons.keyboard_hide_outlined,
+                                              ),
+                                              onPressed: _searchFocus.unfocus,
+                                            ),
+                                          ]
                                         : [
                                             const Customizable(
                                               id: UiItem.homeAccount,
@@ -1594,7 +1603,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           ref.watch(noteFilterProvider) ==
                                               NoteFilter.all &&
                                           ref.watch(selectedTagProvider) ==
-                                              null)
+                                              null &&
+                                          // Gizlenebilir (2026-11-06): satır
+                                          // hiç çizilmez, notlar yukarı çıkar.
+                                          !ref.watch(
+                                            homeFolderStripHiddenProvider,
+                                          ))
                                         _folderShelf(
                                           columns,
                                           selectedFolderId: ref.watch(

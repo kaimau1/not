@@ -82,6 +82,19 @@ extension _DashMenu on _DashboardScreenState {
             // menüsü ana menüdeki 3 nokta içinde de olsun"): arama
             // kutusundaki ayar düğmesiyle aynı levha.
             MenuAction('view', l10n.homeViewMenu, Icons.view_quilt_outlined),
+            // KLASÖR SATIRINI GİZLE/GÖSTER (2026-11-06).
+            if (ref.read(homeFolderStripHiddenProvider))
+              MenuAction(
+                'folderStrip',
+                l10n.homeFolderStripShow,
+                Icons.folder_open_outlined,
+              )
+            else
+              MenuAction(
+                'folderStrip',
+                l10n.homeFolderStripHide,
+                Icons.folder_off_outlined,
+              ),
             if (!Personalize.current.shows(UiItem.homeAccount))
               MenuAction(
                 'account',
@@ -120,6 +133,8 @@ extension _DashMenu on _DashboardScreenState {
         unawaited(context.push('/ai'));
       case 'view':
         unawaited(showFilterSheet(context));
+      case 'folderStrip':
+        ref.read(homeFolderStripHiddenProvider.notifier).toggle();
       case 'account':
         unawaited(showAccountSheet(context));
       case 'hidden':

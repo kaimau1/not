@@ -573,7 +573,14 @@ void main() {
         const Size(1400, 900),
         extra: [aiAvailabilityProvider.overrideWithValue(AiAvailability.ready)],
       );
-      expect(find.byIcon(Icons.auto_awesome_outlined), findsOneWidget);
+      // Rayda ✨ (arama kutusundaki AI anahtarı da hep görünür — 2026-11-06).
+      expect(
+        find.descendant(
+          of: find.byType(NavigationRail),
+          matching: find.byIcon(Icons.auto_awesome_outlined),
+        ),
+        findsOneWidget,
+      );
       expect(find.byIcon(Icons.lock_outline), findsNothing);
       await end(tester);
       await pump(
@@ -585,7 +592,13 @@ void main() {
           ),
         ],
       );
-      expect(find.byIcon(Icons.auto_awesome_outlined), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(NavigationRail),
+          matching: find.byIcon(Icons.auto_awesome_outlined),
+        ),
+        findsNothing,
+      );
       expect(find.byIcon(Icons.lock_outline), findsOneWidget);
       await end(tester);
     });

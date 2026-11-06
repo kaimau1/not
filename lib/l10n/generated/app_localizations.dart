@@ -13358,6 +13358,18 @@ abstract class AppLocalizations {
   /// **'Basılı tutup sağa sola kaydırarak klasör değiştir'**
   String get folderHoldHint;
 
+  /// No description provided for @homeFolderStripHide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasör satırını gizle'**
+  String get homeFolderStripHide;
+
+  /// No description provided for @homeFolderStripShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasör satırını göster'**
+  String get homeFolderStripShow;
+
   /// No description provided for @homeViewMenu.
   ///
   /// In tr, this message translates to:
