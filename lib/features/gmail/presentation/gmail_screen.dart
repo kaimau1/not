@@ -1,15 +1,21 @@
-import '../../../app/app_frame.dart';
-import '../../calendar/presentation/task_editor.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../app/app_frame.dart';
 import '../../../app/router.dart';
 import '../../../core/error_log.dart';
 import '../../../core/friendly_error.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/sheet_header.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/gemini_service.dart';
+import '../../auth/presentation/account_required.dart';
+import '../../calendar/presentation/task_editor.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/attachment.dart';
@@ -17,10 +23,13 @@ import '../../notes/domain/note_type.dart';
 import '../data/gmail_api.dart';
 import '../data/gmail_auth.dart';
 import '../domain/gmail_note.dart';
-import '../../auth/presentation/account_required.dart';
 
-/// **GMAIL** (F28.1): gelen kutusu + arama, e-postayı nota kaydet, AI ile
-/// özet / görev listesi. YALNIZ OKUMA — Gmail'de hiçbir şey değişmez.
+/// **GMAIL** (F28.1; ekran BAŞTAN yazıldı 2026-11-06, kullanıcı isteği
+/// "Gmail ekranının yeniden yazılması"): üstte arama + hızlı süzgeç çipleri
+/// (Gelen, Okunmamış, Yıldızlı, Ekli, Bugün), liste tarih kümeleriyle
+/// (Bugün / Dün / Bu hafta / Daha eski), satırda gönderen avatarı, okunmamış
+/// kalın + nokta, sonda otomatik sayfa yükleme. YALNIZ OKUMA — Gmail'de
+/// hiçbir şey değişmez (okundu işareti bile).
 class GmailScreen extends ConsumerStatefulWidget {
   const GmailScreen({super.key});
 
@@ -30,28 +39,44 @@ class GmailScreen extends ConsumerStatefulWidget {
 
 class _GmailScreenState extends ConsumerState<GmailScreen> {
   final _search = TextEditingController();
+  final _scroll = ScrollController();
   final _items = <GmailSummary>[];
   String? _next;
   bool _loading = false;
   bool _needsConnect = false;
+  bool _loadedOnce = false;
   Object? _error;
-  String _query = '';
+  GmailFilter _filter = GmailFilter.inbox;
+
+  /// Yarışan isteklerde yalnız sonuncusu listeyi yazar (süzgeç hızlı
+  /// değiştirilince eski sayfa yenisinin üstüne eklenmesin).
+  int _generation = 0;
 
   @override
   void initState() {
     super.initState();
+    _scroll.addListener(_maybeLoadMore);
     WidgetsBinding.instance.addPostFrameCallback((_) => _load(reset: true));
   }
 
   @override
   void dispose() {
     _search.dispose();
+    _scroll.dispose();
     super.dispose();
+  }
+
+  void _maybeLoadMore() {
+    if (_loading || _next == null || _error != null) return;
+    final p = _scroll.position;
+    if (p.pixels > p.maxScrollExtent - 600) unawaited(_load());
   }
 
   Future<void> _load({bool reset = false}) async {
     final session = ref.read(gmailSessionProvider);
-    if (session == null || _loading) return;
+    if (session == null) return;
+    if (_loading && !reset) return;
+    final gen = ++_generation;
     setState(() {
       _loading = true;
       _error = null;
@@ -63,27 +88,34 @@ class _GmailScreenState extends ConsumerState<GmailScreen> {
     try {
       // Jeton yoksa (hiç bağlanmamış) liste isteği atılmaz: "Bağlan" kartı.
       if (await session.tokens.get() == null) {
-        if (mounted) setState(() => _needsConnect = true);
+        if (mounted && gen == _generation) {
+          setState(() => _needsConnect = true);
+        }
         return;
       }
       final page = await session.api.list(
-        query: _query,
+        query: gmailQuery(_filter, _search.text),
         pageToken: reset ? null : _next,
       );
-      if (!mounted) return;
+      if (!mounted || gen != _generation) return;
       setState(() {
         _needsConnect = false;
         _items.addAll(page.items);
         _next = page.next;
       });
     } on GmailApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted || gen != _generation) return;
       setState(() => e.unauthorized ? _needsConnect = true : _error = e);
     } catch (e) {
       ErrorLog.record('gmail-list', e);
-      if (mounted) setState(() => _error = e);
+      if (mounted && gen == _generation) setState(() => _error = e);
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && gen == _generation) {
+        setState(() {
+          _loading = false;
+          _loadedOnce = true;
+        });
+      }
     }
   }
 
@@ -101,145 +133,485 @@ class _GmailScreenState extends ConsumerState<GmailScreen> {
     }
   }
 
+  void _setFilter(GmailFilter f) {
+    if (f == _filter) return;
+    setState(() => _filter = f);
+    unawaited(_load(reset: true));
+  }
+
+  void _open(GmailSummary m) => unawaited(
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => GmailMessageScreen(id: m.id, summary: m),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final available = ref.watch(gmailAvailableProvider);
     return Scaffold(
-      appBar: HomeInBar(appBar: AppBar(title: Text(l10n.gmailTitle))),
+      appBar: HomeInBar(
+        appBar: AppBar(
+          title: Text(l10n.gmailTitle),
+          actions: [
+            if (available && !_needsConnect)
+              IconButton(
+                key: const ValueKey('gmail-refresh'),
+                tooltip: l10n.gmailRefresh,
+                onPressed: _loading ? null : () => _load(reset: true),
+                icon: const Icon(Icons.refresh),
+              ),
+          ],
+        ),
+      ),
       body: !available
-          ? _Message(icon: Icons.mail_lock_outlined, text: l10n.gmailGoogleOnly)
+          ? EmptyState(
+              icon: Icons.mail_lock_outlined,
+              title: l10n.gmailGoogleOnly,
+            )
           : _needsConnect
-          ? _ConnectCard(onConnect: _connect)
+          ? _ConnectView(onConnect: _connect, error: _error)
           : Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                  child: SearchBar(
-                    controller: _search,
-                    hintText: l10n.gmailSearchHint,
-                    leading: const Icon(Icons.search),
-                    onSubmitted: (q) {
-                      _query = q;
-                      unawaited(_load(reset: true));
-                    },
-                  ),
+                _SearchHeader(
+                  controller: _search,
+                  filter: _filter,
+                  onSubmit: () => _load(reset: true),
+                  onFilter: _setFilter,
                 ),
-                if (_error != null)
-                  ListTile(
-                    leading: const Icon(Icons.error_outline),
-                    title: Text(l10n.gmailError),
-                    subtitle: Text(friendlyError(l10n, _error!)),
-                    trailing: TextButton(
-                      onPressed: () => _load(reset: _items.isEmpty),
-                      child: Text(l10n.retry),
-                    ),
-                  ),
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: () => _load(reset: true),
-                    child: _items.isEmpty && !_loading && _error == null
-                        ? ListView(
-                            children: [
-                              const SizedBox(height: 80),
-                              _Message(
-                                icon: Icons.inbox_outlined,
-                                text: l10n.gmailEmpty,
-                              ),
-                            ],
-                          )
-                        : ListView.builder(
-                            itemCount:
-                                _items.length +
-                                (_loading || _next != null ? 1 : 0),
-                            itemBuilder: (context, i) {
-                              if (i == _items.length) {
-                                return Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Center(
-                                    child: _loading
-                                        ? const CircularProgressIndicator()
-                                        : TextButton(
-                                            onPressed: _load,
-                                            child: Text(l10n.gmailLoadMore),
-                                          ),
-                                  ),
-                                );
-                              }
-                              final m = _items[i];
-                              return ListTile(
-                                title: Text(
-                                  m.subject.isEmpty ? '—' : m.subject,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: Text(
-                                  '${m.from} · ${m.snippet}',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                trailing: m.hasAttachments
-                                    ? const Icon(Icons.attach_file, size: 18)
-                                    : null,
-                                onTap: () => Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) =>
-                                        GmailMessageScreen(id: m.id),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ),
+                Expanded(child: _list(context)),
               ],
             ),
     );
   }
-}
 
-class _Message extends StatelessWidget {
-  const _Message({required this.icon, required this.text});
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 48),
-          const SizedBox(height: 12),
-          Text(text, textAlign: TextAlign.center),
-        ],
+  Widget _list(BuildContext context) {
+    final l10n = context.l10n;
+    if (_items.isEmpty) {
+      if (_error != null) {
+        return ErrorState(error: _error!, onRetry: () => _load(reset: true));
+      }
+      if (_loading || !_loadedOnce) return const _InboxSkeleton();
+      return RefreshIndicator(
+        onRefresh: () => _load(reset: true),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            const SizedBox(height: 64),
+            EmptyState(
+              key: const ValueKey('gmail-empty'),
+              icon: Icons.inbox_outlined,
+              title: _search.text.trim().isEmpty
+                  ? l10n.gmailEmpty
+                  : l10n.gmailNoResults,
+            ),
+          ],
+        ),
+      );
+    }
+    // Satırlar + tarih kümesi başlıkları tek düz listede.
+    final now = DateTime.now();
+    final rows = <Object>[];
+    GmailDay? last;
+    for (final m in _items) {
+      final day = gmailDayOf(m.date, now);
+      if (day != last) {
+        rows.add(day);
+        last = day;
+      }
+      rows.add(m);
+    }
+    final footer = _loading || _next != null || _error != null;
+    return RefreshIndicator(
+      onRefresh: () => _load(reset: true),
+      child: ListView.builder(
+        key: const ValueKey('gmail-list'),
+        controller: _scroll,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 24),
+        itemCount: rows.length + (footer ? 1 : 0),
+        itemBuilder: (context, i) {
+          if (i == rows.length) {
+            return _ListFooter(
+              loading: _loading,
+              error: _error,
+              onMore: _load,
+            );
+          }
+          final row = rows[i];
+          if (row is GmailDay) return _DayHeader(day: row);
+          final m = row as GmailSummary;
+          return _MailRow(mail: m, onTap: () => _open(m));
+        },
       ),
-    ),
-  );
+    );
+  }
 }
 
-class _ConnectCard extends StatelessWidget {
-  const _ConnectCard({required this.onConnect});
-  final VoidCallback onConnect;
+/// Arama kutusu + süzgeç çipleri.
+class _SearchHeader extends StatelessWidget {
+  const _SearchHeader({
+    required this.controller,
+    required this.filter,
+    required this.onSubmit,
+    required this.onFilter,
+  });
+
+  final TextEditingController controller;
+  final GmailFilter filter;
+  final VoidCallback onSubmit;
+  final ValueChanged<GmailFilter> onFilter;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    String label(GmailFilter f) => switch (f) {
+      GmailFilter.inbox => l10n.gmailFilterInbox,
+      GmailFilter.unread => l10n.gmailFilterUnread,
+      GmailFilter.starred => l10n.gmailFilterStarred,
+      GmailFilter.attachments => l10n.gmailFilterAttachments,
+      GmailFilter.today => l10n.gmailFilterToday,
+    };
+    IconData icon(GmailFilter f) => switch (f) {
+      GmailFilter.inbox => Icons.inbox_outlined,
+      GmailFilter.unread => Icons.mark_email_unread_outlined,
+      GmailFilter.starred => Icons.star_outline,
+      GmailFilter.attachments => Icons.attach_file,
+      GmailFilter.today => Icons.today_outlined,
+    };
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: controller,
+            builder: (context, value, _) => SearchBar(
+              key: const ValueKey('gmail-search'),
+              controller: controller,
+              hintText: l10n.gmailSearchHint,
+              elevation: const WidgetStatePropertyAll(0),
+              leading: const Icon(Icons.search),
+              textInputAction: TextInputAction.search,
+              trailing: [
+                if (value.text.isNotEmpty)
+                  IconButton(
+                    tooltip: l10n.clear,
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      controller.clear();
+                      onSubmit();
+                    },
+                  ),
+              ],
+              onSubmitted: (_) => onSubmit(),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 44,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: [
+              for (final f in GmailFilter.values)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 8),
+                  child: FilterChip(
+                    key: ValueKey('gmail-filter-${f.name}'),
+                    avatar: Icon(icon(f), size: 18),
+                    showCheckmark: false,
+                    label: Text(label(f)),
+                    selected: filter == f,
+                    onSelected: (_) => onFilter(f),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+      ],
+    );
+  }
+}
+
+class _DayHeader extends StatelessWidget {
+  const _DayHeader({required this.day});
+  final GmailDay day;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = switch (day) {
+      GmailDay.today => l10n.gmailDayToday,
+      GmailDay.yesterday => l10n.gmailDayYesterday,
+      GmailDay.thisWeek => l10n.gmailDayThisWeek,
+      GmailDay.older => l10n.gmailDayOlder,
+    };
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
+      child: SectionLabel(text),
+    );
+  }
+}
+
+/// Gönderen adından kararlı bir avatar rengi (temanın kap renklerinden).
+Color _avatarColor(ColorScheme s, String from) {
+  final palette = [
+    s.primaryContainer,
+    s.secondaryContainer,
+    s.tertiaryContainer,
+    s.surfaceContainerHighest,
+  ];
+  return palette[from.hashCode.abs() % palette.length];
+}
+
+Color _onAvatar(ColorScheme s, Color bg) {
+  if (bg == s.primaryContainer) return s.onPrimaryContainer;
+  if (bg == s.secondaryContainer) return s.onSecondaryContainer;
+  if (bg == s.tertiaryContainer) return s.onTertiaryContainer;
+  return s.onSurface;
+}
+
+class _SenderAvatar extends StatelessWidget {
+  const _SenderAvatar({required this.from, this.size = 40});
+  final String from;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = Theme.of(context).colorScheme;
+    final bg = _avatarColor(s, from);
+    return ExcludeSemantics(
+      child: CircleAvatar(
+        radius: size / 2,
+        backgroundColor: bg,
+        child: Text(
+          senderInitial(from),
+          style: TextStyle(
+            fontSize: size * 0.42,
+            fontWeight: FontWeight.w600,
+            color: _onAvatar(s, bg),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Listede saat (bugün), gün + ay (bu yıl) ya da tam tarih.
+String _shortDate(BuildContext context, DateTime? d) {
+  if (d == null) return '';
+  final locale = Localizations.localeOf(context).toLanguageTag();
+  final now = DateTime.now();
+  if (gmailDayOf(d, now) == GmailDay.today) {
+    return DateFormat.Hm(locale).format(d);
+  }
+  if (d.year == now.year) return DateFormat.MMMd(locale).format(d);
+  return DateFormat.yMd(locale).format(d);
+}
+
+class _MailRow extends StatelessWidget {
+  const _MailRow({required this.mail, required this.onTap});
+  final GmailSummary mail;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final s = theme.colorScheme;
+    final l10n = context.l10n;
+    final strong = mail.unread ? FontWeight.w700 : FontWeight.w500;
+    final subject = mail.subject.trim().isEmpty
+        ? l10n.gmailNoSubject
+        : mail.subject.trim();
+    final date = _shortDate(context, mail.date);
+    return Semantics(
+      button: true,
+      label: [
+        if (mail.unread) l10n.gmailFilterUnread,
+        displayFrom(mail.from),
+        subject,
+        date,
+      ].join(', '),
+      excludeSemantics: true,
+      child: InkWell(
+        key: ValueKey('gmail-row-${mail.id}'),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SenderAvatar(from: mail.from),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            displayFrom(mail.from),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: strong,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          date,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: mail.unread ? s.primary : s.onSurfaceVariant,
+                            fontWeight: mail.unread ? FontWeight.w700 : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subject,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: strong,
+                        color: s.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            mail.snippet,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: s.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        if (mail.hasAttachments) ...[
+                          const SizedBox(width: 6),
+                          Icon(
+                            Icons.attach_file,
+                            size: 16,
+                            color: s.onSurfaceVariant,
+                          ),
+                        ],
+                        if (mail.starred) ...[
+                          const SizedBox(width: 4),
+                          Icon(Icons.star, size: 16, color: s.tertiary),
+                        ],
+                        if (mail.unread) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: s.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ListFooter extends StatelessWidget {
+  const _ListFooter({
+    required this.loading,
+    required this.error,
+    required this.onMore,
+  });
+
+  final bool loading;
+  final Object? error;
+  final VoidCallback onMore;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Center(
+        child: loading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              )
+            : error != null
+            ? Column(
+                children: [
+                  Text(
+                    friendlyError(l10n, error!),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  FilledButton.tonalIcon(
+                    onPressed: onMore,
+                    icon: const Icon(Icons.refresh),
+                    label: Text(l10n.retry),
+                  ),
+                ],
+              )
+            : TextButton(onPressed: onMore, child: Text(l10n.gmailLoadMore)),
+      ),
+    );
+  }
+}
+
+/// İlk yüklemede satır biçiminde iskelet (boş beyaz ekran yerine).
+class _InboxSkeleton extends StatelessWidget {
+  const _InboxSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).colorScheme.surfaceContainerHighest;
+    Widget bar(double w, double h) => Container(
+      width: w,
+      height: h,
+      decoration: BoxDecoration(
+        color: c,
+        borderRadius: BorderRadius.circular(6),
+      ),
+    );
+    return ListView.builder(
+      key: const ValueKey('gmail-skeleton'),
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 8,
+      itemBuilder: (_, i) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.mail_outline, size: 48),
-            const SizedBox(height: 12),
-            Text(l10n.gmailReadOnlyHint, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: onConnect,
-              icon: const Icon(Icons.link),
-              label: Text(l10n.gmailConnect),
+            CircleAvatar(radius: 20, backgroundColor: c),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  bar(120 + (i % 3) * 30, 12),
+                  const SizedBox(height: 8),
+                  bar(double.infinity, 10),
+                  const SizedBox(height: 6),
+                  bar(180, 10),
+                ],
+              ),
             ),
           ],
         ),
@@ -248,10 +620,93 @@ class _ConnectCard extends StatelessWidget {
   }
 }
 
-/// Tek e-posta: gövde + "Nota kaydet" / "AI özetiyle not" / "Görev listesi".
+/// Bağlan ekranı: ne yapılır, ne YAPILMAZ (yalnız okuma) ve tek düğme.
+class _ConnectView extends StatelessWidget {
+  const _ConnectView({required this.onConnect, this.error});
+  final VoidCallback onConnect;
+  final Object? error;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final s = theme.colorScheme;
+    Widget point(IconData icon, String text) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: s.primary),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: theme.textTheme.bodyMedium)),
+        ],
+      ),
+    );
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  color: s.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.mail_outline,
+                  size: 44,
+                  color: s.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                l10n.gmailConnectTitle,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 20),
+              point(Icons.search, l10n.gmailConnectPointRead),
+              point(Icons.note_add_outlined, l10n.gmailConnectPointNote),
+              point(Icons.lock_outline, l10n.gmailReadOnlyHint),
+              if (error != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  friendlyError(l10n, error!),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(color: s.error),
+                ),
+              ],
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  key: const ValueKey('gmail-connect'),
+                  onPressed: onConnect,
+                  icon: const Icon(Icons.link),
+                  label: Text(l10n.gmailConnect),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Tek e-posta: üstte konu + gönderen kartı, ekler çip olarak, gövde
+/// seçilebilir; altta eylem çubuğu (Nota kaydet · AI özet · Görev listesi ·
+/// Görev).
 class GmailMessageScreen extends ConsumerStatefulWidget {
-  const GmailMessageScreen({super.key, required this.id});
+  const GmailMessageScreen({super.key, required this.id, this.summary});
   final String id;
+
+  /// Listeden gelen özet: gövde inerken başlık hemen görünsün.
+  final GmailSummary? summary;
 
   @override
   ConsumerState<GmailMessageScreen> createState() => _GmailMessageScreenState();
@@ -262,7 +717,7 @@ enum _SaveMode { plain, summary, tasks }
 class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
   GmailMessage? _message;
   Object? _error;
-  bool _busy = false;
+  _SaveMode? _busy;
   bool _withAttachments = true;
 
   @override
@@ -274,6 +729,7 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
   Future<void> _open() async {
     final session = ref.read(gmailSessionProvider);
     if (session == null) return;
+    setState(() => _error = null);
     try {
       final m = await session.api.message(widget.id);
       if (mounted) setState(() => _message = m);
@@ -287,12 +743,12 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
     final m = _message;
     final repo = ref.read(notesRepositoryProvider);
     final session = ref.read(gmailSessionProvider);
-    if (m == null || repo == null || session == null || _busy) return;
+    if (m == null || repo == null || session == null || _busy != null) return;
     if (mode != _SaveMode.plain && !ensureAiReady(context, ref)) return;
     final l10n = context.l10n;
     final router = ref.read(routerProvider);
     final messenger = ScaffoldMessenger.of(context);
-    setState(() => _busy = true);
+    setState(() => _busy = mode);
     try {
       String id;
       if (mode == _SaveMode.plain) {
@@ -323,15 +779,15 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
         }
       }
       if (_withAttachments) await _attach(id, m, session.api, repo);
-      messenger.showSnackBar(SnackBar(content: Text(l10n.gmailNoteCreated)));
+      messenger.showMessage(l10n.gmailNoteCreated);
       unawaited(router.pushNote(noteRoutePath(id)));
     } on GeminiException catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(aiErrorText(l10n, e))));
+      messenger.showMessage(aiErrorText(l10n, e));
     } catch (e) {
       ErrorLog.record('gmail-save', e);
-      messenger.showSnackBar(SnackBar(content: Text(friendlyError(l10n, e))));
+      messenger.showMessage(friendlyError(l10n, e));
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) setState(() => _busy = null);
     }
   }
 
@@ -379,90 +835,218 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final s = theme.colorScheme;
     final m = _message;
+    final subject = (m?.subject ?? widget.summary?.subject ?? '').trim();
+    final from = m?.from ?? widget.summary?.from ?? '';
+    final date = m?.date ?? widget.summary?.date;
     return Scaffold(
-      appBar: HomeInBar(appBar: AppBar(
-        title: Text(
-          m?.subject ?? '',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      )),
-      body: _error != null
-          ? _Message(
-              icon: Icons.error_outline,
-              text: friendlyError(l10n, _error!),
-            )
-          : m == null
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text(m.from, style: Theme.of(context).textTheme.labelLarge),
-                const SizedBox(height: 12),
-                SelectableText(m.body),
-                if (m.attachments.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  for (final a in m.attachments)
-                    ListTile(
-                      dense: true,
-                      leading: const Icon(Icons.attach_file),
-                      title: Text(a.fileName),
-                    ),
-                  SwitchListTile(
-                    value: _withAttachments,
-                    onChanged: (v) => setState(() => _withAttachments = v),
-                    title: Text(l10n.gmailWithAttachments),
+      appBar: HomeInBar(
+        appBar: AppBar(
+          actions: [
+            if (m != null)
+              IconButton(
+                key: const ValueKey('gmail-open-web'),
+                tooltip: l10n.gmailOpenInGmail,
+                icon: const Icon(Icons.open_in_new),
+                onPressed: () => unawaited(
+                  launchUrl(
+                    Uri.parse(m.webUrl),
+                    mode: LaunchMode.externalApplication,
                   ),
+                ),
+              ),
+          ],
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+        children: [
+          SelectableText(
+            subject.isEmpty ? l10n.gmailNoSubject : subject,
+            style: theme.textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _SenderAvatar(from: from, size: 44),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayFrom(from),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall,
+                    ),
+                    if (date != null)
+                      Text(
+                        DateFormat.yMMMMd(
+                          Localizations.localeOf(context).toLanguageTag(),
+                        ).add_Hm().format(date),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: s.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_error != null)
+            ErrorState(error: _error!, onRetry: _open)
+          else if (m == null)
+            const Padding(
+              padding: EdgeInsets.only(top: 48),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else ...[
+            if (m.attachments.isNotEmpty) ...[
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final a in m.attachments)
+                    Chip(
+                      avatar: Icon(
+                        a.mimeType == 'application/pdf'
+                            ? Icons.picture_as_pdf_outlined
+                            : a.mimeType.startsWith('image/')
+                            ? Icons.image_outlined
+                            : Icons.attach_file,
+                        size: 18,
+                      ),
+                      label: Text(
+                        a.fileName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                 ],
-                const SizedBox(height: 80),
+              ),
+              const SizedBox(height: 4),
+              SwitchListTile(
+                key: const ValueKey('gmail-with-attachments'),
+                contentPadding: EdgeInsets.zero,
+                value: _withAttachments,
+                onChanged: (v) => setState(() => _withAttachments = v),
+                title: Text(l10n.gmailWithAttachments),
+              ),
+              const Divider(),
+            ],
+            const SizedBox(height: 8),
+            SelectableText(
+              m.body,
+              style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+            ),
+          ],
+        ],
+      ),
+      bottomNavigationBar: m == null ? null : _actions(context, m),
+    );
+  }
+
+  Widget _actions(BuildContext context, GmailMessage m) {
+    final l10n = context.l10n;
+    final s = Theme.of(context).colorScheme;
+    Widget action({
+      required Key key,
+      required Widget icon,
+      required String label,
+      required VoidCallback onTap,
+      _SaveMode? mode,
+    }) {
+      final busy = mode != null && _busy == mode;
+      return Expanded(
+        child: InkWell(
+          key: key,
+          borderRadius: BorderRadius.circular(16),
+          onTap: _busy != null ? null : onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 24,
+                  child: busy
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : IconTheme(
+                          data: IconThemeData(color: s.onSurface),
+                          child: icon,
+                        ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
               ],
             ),
-      bottomNavigationBar: m == null
-          ? null
-          : SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: _busy
-                    ? const LinearProgressIndicator()
-                    : Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: [
-                          FilledButton.icon(
-                            onPressed: () => _save(_SaveMode.plain),
-                            icon: const Icon(Icons.note_add_outlined),
-                            label: Text(l10n.gmailSaveNote),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: () => _save(_SaveMode.summary),
-                            icon: const AiIcon(),
-                            label: Text(l10n.gmailAiSummary),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: () => _save(_SaveMode.tasks),
-                            icon: const Icon(Icons.checklist),
-                            label: Text(l10n.gmailAiTasks),
-                          ),
-                          // E-postadan görev (TAKVIM F52.3): başlık konu,
-                          // ayrıntıda iletinin Gmail bağlantısı.
-                          OutlinedButton.icon(
-                            key: const ValueKey('gmail-task'),
-                            onPressed: () => unawaited(
-                              showTaskEditor(
-                                context,
-                                initialTitle: m.subject.trim(),
-                                initialNotes: m.webUrl,
-                              ),
-                            ),
-                            icon: const Icon(Icons.add_task),
-                            label: Text(l10n.itemMenuTask),
-                          ),
-                        ],
-                      ),
+          ),
+        ),
+      );
+    }
+
+    return Material(
+      color: s.surfaceContainer,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              action(
+                key: const ValueKey('gmail-save'),
+                icon: const Icon(Icons.note_add_outlined),
+                label: l10n.gmailSaveNote,
+                mode: _SaveMode.plain,
+                onTap: () => _save(_SaveMode.plain),
               ),
-            ),
+              action(
+                key: const ValueKey('gmail-ai-summary'),
+                icon: const AiIcon(),
+                label: l10n.gmailAiSummary,
+                mode: _SaveMode.summary,
+                onTap: () => _save(_SaveMode.summary),
+              ),
+              action(
+                key: const ValueKey('gmail-ai-tasks'),
+                icon: const Icon(Icons.checklist),
+                label: l10n.gmailAiTasks,
+                mode: _SaveMode.tasks,
+                onTap: () => _save(_SaveMode.tasks),
+              ),
+              // E-postadan görev (TAKVIM F52.3): başlık konu, ayrıntıda
+              // iletinin Gmail bağlantısı.
+              action(
+                key: const ValueKey('gmail-task'),
+                icon: const Icon(Icons.add_task),
+                label: l10n.itemMenuTask,
+                onTap: () => unawaited(
+                  showTaskEditor(
+                    context,
+                    initialTitle: m.subject.trim(),
+                    initialNotes: m.webUrl,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

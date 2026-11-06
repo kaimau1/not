@@ -36,6 +36,8 @@ class GmailSummary {
     required this.snippet,
     this.date,
     this.hasAttachments = false,
+    this.unread = false,
+    this.starred = false,
   });
   final String id;
   final String subject;
@@ -43,6 +45,11 @@ class GmailSummary {
   final String snippet;
   final DateTime? date;
   final bool hasAttachments;
+
+  /// Gmail etiketlerinden (`UNREAD`, `STARRED`) — YALNIZ GÖSTERİM; okundu
+  /// işareti hiçbir zaman yazılmaz (gmail.readonly).
+  final bool unread;
+  final bool starred;
 }
 
 class GmailAttachmentRef {
@@ -211,6 +218,7 @@ void _walk(
 
 GmailSummary parseSummary(Map<String, dynamic> j) {
   final payload = Map<String, dynamic>.from((j['payload'] as Map?) ?? {});
+  final labels = {for (final l in (j['labelIds'] as List?) ?? const []) '$l'};
   var hasAttachments = false;
   _walk(payload, (p) {
     if (((p['filename'] as String?) ?? '').isNotEmpty) hasAttachments = true;
@@ -222,6 +230,8 @@ GmailSummary parseSummary(Map<String, dynamic> j) {
     snippet: htmlToText((j['snippet'] as String?) ?? ''),
     date: _date(j),
     hasAttachments: hasAttachments,
+    unread: labels.contains('UNREAD'),
+    starred: labels.contains('STARRED'),
   );
 }
 

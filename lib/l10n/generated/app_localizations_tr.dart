@@ -7505,4 +7505,54 @@ class AppLocalizationsTr extends AppLocalizations {
   String googleScopeMissing(String api) {
     return '$api izni verilmedi. Bağlanırken izin kutusunu işaretleyin.';
   }
+
+  @override
+  String get gmailRefresh => 'Yenile';
+
+  @override
+  String get gmailNoResults => 'Aramaya uyan e-posta yok';
+
+  @override
+  String get gmailFilterInbox => 'Gelen kutusu';
+
+  @override
+  String get gmailFilterUnread => 'Okunmamış';
+
+  @override
+  String get gmailFilterStarred => 'Yıldızlı';
+
+  @override
+  String get gmailFilterAttachments => 'Ekli';
+
+  @override
+  String get gmailFilterToday => 'Bugün';
+
+  @override
+  String get gmailDayToday => 'Bugün';
+
+  @override
+  String get gmailDayYesterday => 'Dün';
+
+  @override
+  String get gmailDayThisWeek => 'Bu hafta';
+
+  @override
+  String get gmailDayOlder => 'Daha eski';
+
+  @override
+  String get gmailNoSubject => '(konu yok)';
+
+  @override
+  String get gmailConnectTitle => 'E-postalarını nota çevir';
+
+  @override
+  String get gmailConnectPointRead =>
+      'Gelen kutunu gör, Gmail arama sözdizimiyle ara.';
+
+  @override
+  String get gmailConnectPointNote =>
+      'Bir e-postayı tek dokunuşla not, AI özeti ya da görev listesi yap.';
+
+  @override
+  String get gmailOpenInGmail => 'Gmail\'de aç';
 }

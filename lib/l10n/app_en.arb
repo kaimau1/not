@@ -2749,5 +2749,21 @@
   "folderRadialCancel": "Release = cancel",
   "googleApiDisabled": "{api} is disabled in this app's Google Cloud project. Enable it in the console and connect again.",
   "googleApiEnable": "Enable",
-  "googleScopeMissing": "{api} permission wasn't granted. Tick the permission box when connecting."
+  "googleScopeMissing": "{api} permission wasn't granted. Tick the permission box when connecting.",
+  "gmailRefresh": "Refresh",
+  "gmailNoResults": "No emails match your search",
+  "gmailFilterInbox": "Inbox",
+  "gmailFilterUnread": "Unread",
+  "gmailFilterStarred": "Starred",
+  "gmailFilterAttachments": "With attachments",
+  "gmailFilterToday": "Today",
+  "gmailDayToday": "Today",
+  "gmailDayYesterday": "Yesterday",
+  "gmailDayThisWeek": "This week",
+  "gmailDayOlder": "Older",
+  "gmailNoSubject": "(no subject)",
+  "gmailConnectTitle": "Turn your emails into notes",
+  "gmailConnectPointRead": "See your inbox and search with Gmail search syntax.",
+  "gmailConnectPointNote": "Turn an email into a note, an AI summary or a task list in one tap.",
+  "gmailOpenInGmail": "Open in Gmail"
 }

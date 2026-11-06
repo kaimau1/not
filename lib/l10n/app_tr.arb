@@ -3544,5 +3544,21 @@
   "@googleApiDisabled": {"placeholders": {"api": {"type": "String"}}},
   "googleApiEnable": "Etkinleştir",
   "googleScopeMissing": "{api} izni verilmedi. Bağlanırken izin kutusunu işaretleyin.",
-  "@googleScopeMissing": {"placeholders": {"api": {"type": "String"}}}
+  "@googleScopeMissing": {"placeholders": {"api": {"type": "String"}}},
+  "gmailRefresh": "Yenile",
+  "gmailNoResults": "Aramaya uyan e-posta yok",
+  "gmailFilterInbox": "Gelen kutusu",
+  "gmailFilterUnread": "Okunmamış",
+  "gmailFilterStarred": "Yıldızlı",
+  "gmailFilterAttachments": "Ekli",
+  "gmailFilterToday": "Bugün",
+  "gmailDayToday": "Bugün",
+  "gmailDayYesterday": "Dün",
+  "gmailDayThisWeek": "Bu hafta",
+  "gmailDayOlder": "Daha eski",
+  "gmailNoSubject": "(konu yok)",
+  "gmailConnectTitle": "E-postalarını nota çevir",
+  "gmailConnectPointRead": "Gelen kutunu gör, Gmail arama sözdizimiyle ara.",
+  "gmailConnectPointNote": "Bir e-postayı tek dokunuşla not, AI özeti ya da görev listesi yap.",
+  "gmailOpenInGmail": "Gmail'de aç"
 }

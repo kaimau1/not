@@ -7525,4 +7525,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String googleScopeMissing(String api) {
     return '$api permission wasn\'t granted. Tick the permission box when connecting.';
   }
+
+  @override
+  String get gmailRefresh => 'Refresh';
+
+  @override
+  String get gmailNoResults => 'No emails match your search';
+
+  @override
+  String get gmailFilterInbox => 'Inbox';
+
+  @override
+  String get gmailFilterUnread => 'Unread';
+
+  @override
+  String get gmailFilterStarred => 'Starred';
+
+  @override
+  String get gmailFilterAttachments => 'With attachments';
+
+  @override
+  String get gmailFilterToday => 'Today';
+
+  @override
+  String get gmailDayToday => 'Today';
+
+  @override
+  String get gmailDayYesterday => 'Yesterday';
+
+  @override
+  String get gmailDayThisWeek => 'This week';
+
+  @override
+  String get gmailDayOlder => 'Older';
+
+  @override
+  String get gmailNoSubject => '(no subject)';
+
+  @override
+  String get gmailConnectTitle => 'Turn your emails into notes';
+
+  @override
+  String get gmailConnectPointRead =>
+      'See your inbox and search with Gmail search syntax.';
+
+  @override
+  String get gmailConnectPointNote =>
+      'Turn an email into a note, an AI summary or a task list in one tap.';
+
+  @override
+  String get gmailOpenInGmail => 'Open in Gmail';
 }

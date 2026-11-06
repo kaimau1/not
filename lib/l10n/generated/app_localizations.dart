@@ -13399,6 +13399,102 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{api} izni verilmedi. Bağlanırken izin kutusunu işaretleyin.'**
   String googleScopeMissing(String api);
+
+  /// No description provided for @gmailRefresh.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yenile'**
+  String get gmailRefresh;
+
+  /// No description provided for @gmailNoResults.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aramaya uyan e-posta yok'**
+  String get gmailNoResults;
+
+  /// No description provided for @gmailFilterInbox.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelen kutusu'**
+  String get gmailFilterInbox;
+
+  /// No description provided for @gmailFilterUnread.
+  ///
+  /// In tr, this message translates to:
+  /// **'Okunmamış'**
+  String get gmailFilterUnread;
+
+  /// No description provided for @gmailFilterStarred.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıldızlı'**
+  String get gmailFilterStarred;
+
+  /// No description provided for @gmailFilterAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekli'**
+  String get gmailFilterAttachments;
+
+  /// No description provided for @gmailFilterToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün'**
+  String get gmailFilterToday;
+
+  /// No description provided for @gmailDayToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün'**
+  String get gmailDayToday;
+
+  /// No description provided for @gmailDayYesterday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dün'**
+  String get gmailDayYesterday;
+
+  /// No description provided for @gmailDayThisWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu hafta'**
+  String get gmailDayThisWeek;
+
+  /// No description provided for @gmailDayOlder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha eski'**
+  String get gmailDayOlder;
+
+  /// No description provided for @gmailNoSubject.
+  ///
+  /// In tr, this message translates to:
+  /// **'(konu yok)'**
+  String get gmailNoSubject;
+
+  /// No description provided for @gmailConnectTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-postalarını nota çevir'**
+  String get gmailConnectTitle;
+
+  /// No description provided for @gmailConnectPointRead.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelen kutunu gör, Gmail arama sözdizimiyle ara.'**
+  String get gmailConnectPointRead;
+
+  /// No description provided for @gmailConnectPointNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir e-postayı tek dokunuşla not, AI özeti ya da görev listesi yap.'**
+  String get gmailConnectPointNote;
+
+  /// No description provided for @gmailOpenInGmail.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gmail\'de aç'**
+  String get gmailOpenInGmail;
 }
 
 class _AppLocalizationsDelegate
