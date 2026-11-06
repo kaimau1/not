@@ -376,10 +376,18 @@ class FoldersRepository {
       }
     }
     batch.delete(_folders.doc(folderId));
+    unawaited(batch.commit());
     // Paylaşım aynası da silinir — yoksa arkadaşın rafında var olmayan bir
     // klasöre giden ölü bir kart kalırdı.
-    batch.delete(_shares.doc(folderId));
-    unawaited(batch.commit());
+    //
+    // **KÖK NEDEN "bazı klasörler silinmiyor" (2026-11-06):** ayna silmesi
+    // eskiden AYNI batch'teydi. Hiç paylaşılmamış (ya da paylaşımı
+    // kaldırılmış) klasörün aynası YOK; kural `resource.data.ownerId`
+    // okurken null belgede hata verip silmeyi reddediyordu → batch bütünüyle
+    // geri alınıyor, klasör yerelde kaybolup sunucudan geri geliyordu.
+    // Ayna artık ayrı ve en iyi çabayla silinir; kural da var olmayan
+    // aynanın silinmesine izin verir (firestore.rules).
+    unawaited(_shares.doc(folderId).delete().catchError((Object _) {}));
   }
 
   /// Klasörün sohbetini siler. Alt koleksiyonlar Firestore'da üst doküman

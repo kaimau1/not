@@ -136,4 +136,105 @@ void main() {
     expect(picked, 'yok');
     expect(opened, 1);
   });
+
+  // Kullanıcı ekran görüntüsü 2026-11-06: 13 durak telefonda üst üste
+  // biniyordu. Artık ya çakışmasız halka ya ızgara; hiçbir çip ötekine binmez.
+  Future<void> openWith(WidgetTester tester, List<FolderStop> stops) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      _app(
+        FolderHoldButton(
+          stops: stops,
+          currentId: null,
+          onOpen: () {},
+          onSelect: (_) {},
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('folder-hold-button')));
+    await tester.pumpAndSettle();
+  }
+
+  void expectNoOverlap(WidgetTester tester, int n) {
+    final rects = [
+      for (var i = 0; i < n; i++)
+        tester.getRect(find.byKey(ValueKey('folder-radial-$i'))),
+    ];
+    final screen = Offset.zero & const Size(360, 780);
+    for (var i = 0; i < n; i++) {
+      expect(screen.contains(rects[i].topLeft), isTrue, reason: 'durak $i');
+      expect(screen.contains(rects[i].bottomRight), isTrue, reason: 'durak $i');
+      for (var j = i + 1; j < n; j++) {
+        expect(
+          rects[i].overlaps(rects[j]),
+          isFalse,
+          reason: 'durak $i ile $j üst üste',
+        );
+      }
+    }
+  }
+
+  const names = [
+    'Tümü',
+    'YouTube',
+    'Dualar',
+    'Borç',
+    'Oyunlar',
+    'Tıp',
+    'Yazılım',
+    'Araba',
+    'Asistan',
+    'Haritalar',
+    'Kanallarım',
+    'Bütçem',
+    'Klinik',
+  ];
+
+  testWidgets('13 klasör telefonda: ızgara, çakışma yok, dokununca seçer', (
+    tester,
+  ) async {
+    await openWith(tester, [
+      for (var i = 0; i < names.length; i++)
+        FolderStop(id: i == 0 ? null : 'f$i', name: names[i], count: i),
+    ]);
+    expect(find.byKey(const ValueKey('folder-grid-menu')), findsOneWidget);
+    expectNoOverlap(tester, names.length);
+  });
+
+  testWidgets('az klasör: halka, çakışma yok, orta daireye binmez', (
+    tester,
+  ) async {
+    await openWith(tester, [
+      for (var i = 0; i < 5; i++)
+        FolderStop(id: i == 0 ? null : 'f$i', name: names[i], count: i),
+    ]);
+    expect(find.byKey(const ValueKey('folder-ring-menu')), findsOneWidget);
+    expectNoOverlap(tester, 5);
+    final disc = tester.getRect(
+      find.byKey(const ValueKey('folder-radial-all')),
+    );
+    for (var i = 0; i < 5; i++) {
+      final r = tester.getRect(find.byKey(ValueKey('folder-radial-$i')));
+      final c = disc.center;
+      final near = Offset(
+        c.dx.clamp(r.left, r.right),
+        c.dy.clamp(r.top, r.bottom),
+      );
+      expect(
+        (near - c).distance,
+        greaterThanOrEqualTo(disc.width / 2),
+        reason: 'durak $i orta daireye biniyor',
+      );
+    }
+  });
+
+  test('radialLayoutFits: küçük yarıçapta geniş çipler sığmaz', () {
+    final chips = List.filled(12, const Size(110, 34));
+    expect(radialLayoutFits(chips, 120), isFalse);
+    expect(radialRadiiFor(chips, const Size(360, 780)), isNull);
+    final few = List.filled(4, const Size(90, 34));
+    expect(radialRadiiFor(few, const Size(360, 780)), isNotNull);
+  });
 }

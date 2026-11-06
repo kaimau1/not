@@ -159,94 +159,291 @@ class _FolderHoldButtonState extends State<FolderHoldButton> {
   }
 }
 
-/// Ekranın ortasında açılan halka; duraklar dokunulur. Seçim `pop(i)` ile
-/// döner; ortadaki daire `pop(-1)` = Klasörler ekranı.
+/// Orta dairenin çapı (dp).
+const double _kCenterDiameter = 104;
+
+/// Durak çipinin en geniş hâli halkada (dp); ızgarada daha geniş.
+const double _kRingChipMax = 120;
+const double _kGridChipMax = 220;
+
+/// **SIĞIYOR MU** (kullanıcı isteği 2026-11-06: "klasörlerde sığmıyor, üst
+/// üste geliyor"). Eskiden halka ekrana sığsın diye YARIÇAP küçültülüyor ama
+/// çipler aynı boyda kalıyordu → 10+ klasörde çipler birbirinin ve orta
+/// dairenin üstüne biniyordu. Artık [chips] boyutlarındaki duraklar [radius]
+/// yarıçaplı halkada yerleştirildiğinde HİÇBİR çip ötekine ya da orta daireye
+/// ([centerRadius]) [gap] dp'den yakın değilse true; değilse menü ızgaraya
+/// geçer.
+bool radialLayoutFits(
+  List<Size> chips,
+  double radius, {
+  double? radiusY,
+  double centerRadius = _kCenterDiameter / 2,
+  double gap = 6,
+}) {
+  final n = chips.length;
+  final ry = radiusY ?? radius;
+  final rects = [
+    for (var i = 0; i < n; i++)
+      Rect.fromCenter(
+        center: Offset(
+          math.cos(radialAngle(0, i, n)) * radius,
+          math.sin(radialAngle(0, i, n)) * ry,
+        ),
+        width: chips[i].width + gap,
+        height: chips[i].height + gap,
+      ),
+  ];
+  for (var i = 0; i < n; i++) {
+    // Orta daireye en yakın nokta.
+    final r = rects[i];
+    final cx = 0.0.clamp(r.left, r.right);
+    final cy = 0.0.clamp(r.top, r.bottom);
+    if (Offset(cx, cy).distance < centerRadius + gap / 2) return false;
+    for (var j = i + 1; j < n; j++) {
+      if (r.overlaps(rects[j])) return false;
+    }
+  }
+  return true;
+}
+
+/// Ekrana sığan ve çakışmayan en küçük halka: `width` yatay, `height`
+/// dikey yarıçap (dar telefonda dikey OVAL — çipler geniş, ekran uzun).
+/// Sığmıyorsa null (ızgara).
+Size? radialRadiiFor(List<Size> chips, Size screen) {
+  if (chips.isEmpty) return null;
+  final maxW = chips.map((c) => c.width).reduce(math.max);
+  final maxH = chips.map((c) => c.height).reduce(math.max);
+  final limitX = screen.width / 2 - maxW / 2 - 12;
+  final limitY = math.min(screen.height / 2 - maxH / 2 - 12, 260.0);
+  final start = _kCenterDiameter / 2 + maxH;
+  Size? best;
+  for (var rx = start; rx <= limitX; rx += 6) {
+    for (var ry = rx; ry <= limitY; ry += 6) {
+      if (best != null && rx + ry >= best.width + best.height) break;
+      if (radialLayoutFits(chips, rx, radiusY: ry)) {
+        best = Size(rx, ry);
+        break;
+      }
+    }
+  }
+  return best;
+}
+
+/// Halka ya da ızgara: duraklar dokunulur. Seçim `pop(i)` ile döner;
+/// "Klasörler" (orta daire / başlık) `pop(-1)` = Klasörler ekranı.
 class _RadialFolderMenu extends StatelessWidget {
   const _RadialFolderMenu({required this.stops, required this.currentId});
 
   final List<FolderStop> stops;
   final String? currentId;
 
+  /// Çipin gerçekte çizileceği boyut (seçili çip 1,18 büyür).
+  Size _chipSize(BuildContext context, FolderStop stop, double maxWidth) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final selected = stop.id == currentId;
+    TextPainter measure(String text, TextStyle style) => TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    final name = measure(
+      stop.name,
+      TextStyle(
+        fontSize: 12.5,
+        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+      ),
+    );
+    var w = 20.0 + 4 + 16 + 5 + name.width;
+    if (stop.count != null && stop.count! > 0) {
+      w += 4 + measure('${stop.count}', const TextStyle(fontSize: 11)).width;
+    }
+    final double h = 18 + math.max(16, name.height);
+    final size = Size(math.min(w, maxWidth).toDouble(), h);
+    return selected ? size * 1.18 : size;
+  }
+
+  void _pick(BuildContext context, int i) {
+    unawaited(HapticFeedback.selectionClick());
+    Navigator.of(context).pop(i);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final chips = [for (final s in stops) _chipSize(context, s, _kRingChipMax)];
+    final radii = radialRadiiFor(chips, size);
+    return Material(
+      key: const ValueKey('folder-radial-menu'),
+      type: MaterialType.transparency,
+      child: radii == null
+          ? _grid(context, size)
+          : _ring(context, chips, radii),
+    );
+  }
+
+  Widget _ring(BuildContext context, List<Size> chips, Size radii) {
+    final n = stops.length;
+    final maxW = chips.map((c) => c.width).reduce(math.max);
+    final maxH = chips.map((c) => c.height).reduce(math.max);
+    return Center(
+      child: SizedBox(
+        key: const ValueKey('folder-ring-menu'),
+        width: radii.width * 2 + maxW + 8,
+        height: radii.height * 2 + maxH + 8,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            _CenterDisc(onTap: () => Navigator.of(context).pop(-1)),
+            for (var i = 0; i < n; i++)
+              Transform.translate(
+                offset: Offset(
+                  math.cos(radialAngle(0, i, n)) * radii.width,
+                  math.sin(radialAngle(0, i, n)) * radii.height,
+                ),
+                child: GestureDetector(
+                  key: ValueKey('folder-radial-$i'),
+                  onTap: () => _pick(context, i),
+                  child: _RadialChip(
+                    stop: stops[i],
+                    selected: stops[i].id == currentId,
+                    current: stops[i].id == currentId,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// **IZGARA** — halkaya sığmayan kalabalık klasör listesi: ortada bir
+  /// levha, başlıkta "Klasörler" (dokun → ekran), altında satır satır
+  /// sarılan çipler; çok uzunsa kayar. Hiçbir çip ötekinin üstüne binmez.
+  Widget _grid(BuildContext context, Size size) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final l10n = context.l10n;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 440,
+            maxHeight: size.height * 0.75,
+          ),
+          child: Material(
+            key: const ValueKey('folder-grid-menu'),
+            color: scheme.surfaceContainerLow,
+            elevation: 6,
+            shadowColor: Colors.black45,
+            borderRadius: BorderRadius.circular(28),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                InkWell(
+                  key: const ValueKey('folder-radial-all'),
+                  onTap: () => Navigator.of(context).pop(-1),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 12, 12),
+                    child: Row(
+                      children: [
+                        Icon(Icons.folder_copy_outlined, color: scheme.primary),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            l10n.foldersTitle,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Divider(height: 1, color: scheme.outlineVariant),
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 10,
+                      children: [
+                        for (var i = 0; i < stops.length; i++)
+                          GestureDetector(
+                            key: ValueKey('folder-radial-$i'),
+                            onTap: () => _pick(context, i),
+                            child: _RadialChip(
+                              stop: stops[i],
+                              // Izgarada büyütme yok: komşusuna taşmasın.
+                              selected: false,
+                              current: stops[i].id == currentId,
+                              maxWidth: _kGridChipMax,
+                              large: true,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Halkanın ortasındaki "Klasörler" dairesi.
+class _CenterDisc extends StatelessWidget {
+  const _CenterDisc({required this.onTap});
+
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final size = MediaQuery.sizeOf(context);
-    final n = stops.length;
-    final ringR = radialRadius(n);
-    final outer = ringR + 44;
-    final fit = math.min(size.width, size.height) / 2 - 8;
-    final scale = outer > fit ? fit / outer : 1.0;
-    final radius = ringR * scale;
-    return Center(
-      child: Material(
-        key: const ValueKey('folder-radial-menu'),
-        type: MaterialType.transparency,
-        child: SizedBox(
-          width: outer * 2 * scale,
-          height: outer * 2 * scale,
-          child: Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.none,
-            children: [
-              // Ortadaki daire: Klasörler ekranı.
-              InkWell(
-                key: const ValueKey('folder-radial-all'),
-                customBorder: const CircleBorder(),
-                onTap: () => Navigator.of(context).pop(-1),
-                child: Ink(
-                  width: 96 * scale + 8,
-                  height: 96 * scale + 8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: scheme.surfaceContainerHighest,
-                    boxShadow: const [
-                      BoxShadow(blurRadius: 12, color: Colors.black26),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.folder_copy_outlined, color: scheme.primary),
-                      const SizedBox(height: 4),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Text(
-                          context.l10n.foldersTitle,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+    return InkWell(
+      key: const ValueKey('folder-radial-all'),
+      customBorder: const CircleBorder(),
+      onTap: onTap,
+      child: Ink(
+        width: _kCenterDiameter,
+        height: _kCenterDiameter,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: scheme.surfaceContainerHighest,
+          boxShadow: const [BoxShadow(blurRadius: 12, color: Colors.black26)],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.folder_copy_outlined, color: scheme.primary),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                context.l10n.foldersTitle,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: scheme.onSurfaceVariant,
                 ),
               ),
-              for (var i = 0; i < n; i++)
-                Transform.translate(
-                  offset: Offset(
-                    math.cos(radialAngle(0, i, n)) * radius,
-                    math.sin(radialAngle(0, i, n)) * radius,
-                  ),
-                  child: GestureDetector(
-                    key: ValueKey('folder-radial-$i'),
-                    onTap: () {
-                      unawaited(HapticFeedback.selectionClick());
-                      Navigator.of(context).pop(i);
-                    },
-                    child: _RadialChip(
-                      stop: stops[i],
-                      selected: stops[i].id == currentId,
-                      current: stops[i].id == currentId,
-                    ),
-                  ),
-                ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -263,11 +460,17 @@ class _RadialChip extends StatelessWidget {
     required this.stop,
     required this.selected,
     required this.current,
+    this.maxWidth = _kRingChipMax,
+    this.large = false,
   });
 
   final FolderStop stop;
   final bool selected;
   final bool current;
+  final double maxWidth;
+
+  /// Izgarada daha iri (dokunma hedefi ≥ 40 dp).
+  final bool large;
 
   @override
   Widget build(BuildContext context) {
@@ -279,8 +482,11 @@ class _RadialChip extends StatelessWidget {
       scale: selected ? 1.18 : 1,
       duration: const Duration(milliseconds: 120),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 104),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        padding: EdgeInsets.symmetric(
+          horizontal: large ? 14 : 10,
+          vertical: large ? 10 : 7,
+        ),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(18),
@@ -288,12 +494,18 @@ class _RadialChip extends StatelessWidget {
             color: current ? accent : Colors.transparent,
             width: 2,
           ),
-          boxShadow: const [BoxShadow(blurRadius: 6, color: Colors.black26)],
+          boxShadow: large
+              ? null
+              : const [BoxShadow(blurRadius: 6, color: Colors.black26)],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(stop.icon, size: 16, color: selected ? fg : accent),
+            Icon(
+              stop.icon,
+              size: large ? 18 : 16,
+              color: selected ? fg : accent,
+            ),
             const SizedBox(width: 5),
             Flexible(
               child: Text(
@@ -301,8 +513,10 @@ class _RadialChip extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: large ? 14 : 12.5,
+                  fontWeight: selected || (large && current)
+                      ? FontWeight.w700
+                      : FontWeight.w500,
                   color: fg,
                 ),
               ),
