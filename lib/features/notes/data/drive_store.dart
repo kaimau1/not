@@ -383,11 +383,22 @@ class DriveStore {
     Future<http.BaseRequest> Function(String token) build,
   ) async {
     for (var attempt = 0; attempt < 2; attempt++) {
-      final token = await _auth.accessToken();
+      // ZAMAN AŞIMI (2026-11-06 cihazda: yükleme hatasız ASILI kaldı, ek
+      // sonsuza dek "yükleniyor" dedi): her adım adıyla düşer, kuyruk
+      // yeniden dener ve hata günlüğü hangi adımın takıldığını söyler.
+      final token = await _auth.accessToken().timeout(
+        const Duration(seconds: 45),
+        onTimeout: () => throw TimeoutException('drive-token'),
+      );
       if (token == null) {
         throw const DriveUnavailableException('no-token');
       }
-      final response = await _client.send(await build(token));
+      final response = await _client
+          .send(await build(token))
+          .timeout(
+            const Duration(seconds: 60),
+            onTimeout: () => throw TimeoutException('drive-request'),
+          );
       if (response.statusCode == 401 && attempt == 0) {
         await response.stream.drain<void>();
         await _auth.invalidate(token);
@@ -459,8 +470,17 @@ class DriveStore {
         await put.sink.close();
       }
     }());
-    final response = await _client.send(put);
-    final body = await response.stream.bytesToString();
+    // Gövde akarken de bekleme sınırlı: 25 MB yavaş bağlantıda ~dakikalar.
+    final response = await _client
+        .send(put)
+        .timeout(
+          const Duration(minutes: 10),
+          onTimeout: () => throw TimeoutException('drive-put'),
+        );
+    final body = await response.stream.bytesToString().timeout(
+      const Duration(minutes: 2),
+      onTimeout: () => throw TimeoutException('drive-put-body'),
+    );
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw HttpException('Drive ${response.statusCode}: $body');
     }

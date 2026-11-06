@@ -5,6 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/error_log.dart';
 import '../../../core/utils/local_file.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../folders/data/folders_repository.dart';
@@ -309,6 +310,23 @@ class UploadQueue {
   static const _baseRetryDelay = Duration(minutes: 1);
   static const _maxRetryDelay = Duration(hours: 6);
 
+  /// Bekleme dolunca kuyruğu yeniden kuran tek zamanlayıcı. KÖK NEDEN
+  /// (2026-11-06, "ek sürekli bekliyor"): başarısız yükleme yalnız bir
+  /// SONRAKİ tetikte (not değişikliği, bağlantı) yeniden deneniyordu; hiçbir
+  /// şey olmazsa ek sonsuza dek cihazda kalıyordu.
+  Timer? _retryTimer;
+
+  void _scheduleRetry(Duration delay) {
+    final timer = _retryTimer;
+    if (timer != null && timer.isActive) return;
+    _retryTimer = Timer(delay + const Duration(seconds: 1), () {
+      _retryTimer = null;
+      final notes = _ref.read(notesStreamProvider).value;
+      if (notes != null) unawaited(_process(notes));
+      unawaited(_processForeign(_ref.read(foreignEditableNotesProvider)));
+    });
+  }
+
   Duration _retryDelayFor(int attempts) {
     final scaled = _baseRetryDelay * (1 << (attempts - 1).clamp(0, 12));
     return scaled > _maxRetryDelay ? _maxRetryDelay : scaled;
@@ -355,6 +373,10 @@ class UploadQueue {
     // ekleri insin.
     _driveSub = _ref.listen(driveStoreProvider, (previous, next) {
       if (next == null) return;
+      // Yeni yetki: izinsizken düşen denemelerin beklemesi sıfırlanır
+      // (2026-11-06 cihazda: izin verildi ama ek 1 dk bekleme yüzünden
+      // atlandı ve bir sonraki not değişikliğine dek hiç denenmedi).
+      _lastFailure.clear();
       final notes = _ref.read(notesStreamProvider).value;
       if (notes != null) _process(notes);
     });
@@ -435,6 +457,7 @@ class UploadQueue {
         } catch (e) {
           final attempts = (lastFailure?.attempts ?? 0) + 1;
           _lastFailure[key] = (at: DateTime.now(), attempts: attempts);
+          _scheduleRetry(_retryDelayFor(attempts));
           // Şerit döşemesinin "yüklenemedi — dokun" rozeti paylaşılan notta
           // da çıksın (eskiden yalnız kendi notlarımda kaydediliyordu; çark
           // sonsuza dek dönüyordu).
@@ -442,6 +465,7 @@ class UploadQueue {
               .read(uploadFailuresProvider.notifier)
               .fail(attachment.id, attempts);
           debugPrint('Paylaşılan notun eki yüklenemedi ($key): $e');
+          ErrorLog.record('upload-shared', e);
         } finally {
           _inFlight.remove(key);
           progress.done(attachment.id);
@@ -570,8 +594,10 @@ class UploadQueue {
         // (üstel bekleme dolduysa) yeniden denenir.
         final attempts = (lastFailure?.attempts ?? 0) + 1;
         _lastFailure[key] = (at: DateTime.now(), attempts: attempts);
+        _scheduleRetry(_retryDelayFor(attempts));
         _ref.read(uploadFailuresProvider.notifier).fail(attachment.id, attempts);
         debugPrint('Ek yüklenemedi ($key): $e');
+        ErrorLog.record('upload', e);
       } finally {
         _inFlight.remove(key);
         progress.done(attachment.id);
@@ -619,7 +645,9 @@ class UploadQueue {
       } catch (e) {
         final attempts = (lastFailure?.attempts ?? 0) + 1;
         _lastFailure[key] = (at: DateTime.now(), attempts: attempts);
+        _scheduleRetry(_retryDelayFor(attempts));
         debugPrint('Drive eki indirilemedi ($key): $e');
+        ErrorLog.record('drive-download', e);
       } finally {
         _inFlight.remove(key);
       }
@@ -657,6 +685,7 @@ class UploadQueue {
 
   void dispose() {
     _processDebounce?.cancel();
+    _retryTimer?.cancel();
     _notesSub?.close();
     _foreignSub?.close();
     _foreignDebounce?.cancel();
