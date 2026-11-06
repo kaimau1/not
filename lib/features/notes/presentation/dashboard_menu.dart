@@ -31,6 +31,7 @@ extension _DashMenu on _DashboardScreenState {
     final action = await showActionMenuSheet(
       context,
       ActionMenu(
+        menuId: 'home.menu',
         quick: [
           // Rayın yanında (geniş ekran) bu beşi rayda: tekrarlanmaz.
           if (!rail) ...[
@@ -144,6 +145,7 @@ extension _DashMenu on _DashboardScreenState {
     final action = await showActionMenuSheet(
       context,
       ActionMenu(
+        menuId: 'home.selection',
         quick: [
           MenuAction('folder', l10n.moveToFolder, AppIcons.moveToFolder),
           MenuAction('share', l10n.share, Icons.share_outlined),

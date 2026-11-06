@@ -7268,11 +7268,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This month’s calendar behind your notes; card titles stay clear, the rest turns see-through';
 
   @override
-  String get swipeLeftCalendar => 'Swipe left for calendar';
+  String get swipeLeftCalendar => 'Swipe right for calendar';
 
   @override
   String get swipeLeftCalendarInfo =>
-      'In the All view, swiping left opens the calendar';
+      'In the All view, swiping right opens the calendar';
 
   @override
   String calendarMoved(String day) {
@@ -7468,4 +7468,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String routineProgress(int done, int total) {
     return '$done/$total steps';
   }
+
+  @override
+  String get menuEdit => 'Edit menu';
+
+  @override
+  String get menuSectionOther => 'Other';
+
+  @override
+  String get menuQuickRow => 'Put in quick row';
+
+  @override
+  String get menuShowHide => 'Show/hide';
+
+  @override
+  String get menuReset => 'Default';
+
+  @override
+  String menuEditHint(int count) {
+    return 'Drag to reorder, tap the eye to hide; starred actions sit in the quick row on top (up to $count).';
+  }
+
+  @override
+  String get themeCream => 'Cream';
+
+  @override
+  String get themePeach => 'Peach';
+
+  @override
+  String get themeMint => 'Mint';
+
+  @override
+  String get folderHoldHint => 'Hold and slide left or right to switch folders';
 }

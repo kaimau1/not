@@ -203,6 +203,11 @@ kartta çizildi. Yeni metin notunda klavye açık; not "+" → Hatırlat aynı "
 104. [ ] (TAKVIM Faz 51, önce F19.B10) Yeni etkinlik → "Google Takvim" seçili → kaydet → ilk kez yazma izni soruluyor → etkinlik hemen görünüyor, Google Takvim'de de var (tekrar/hatırlatmasıyla). Uçak kipinde kaydet → levhada "1 değişiklik bekliyor" → bağlantı gelince gidiyor. Google etkinliğinde Düzenle/Sil; tekrarlı oluşta yalnız "Google Takvim'de aç".
 105. [ ] (TAKVIM Faz 52) Brifingi yenile: bugünün etkinlik/görevleri ve gecikmiş görev anılıyor. Asistana "yarın 15:00 dişçi ekle", "cumaya kadar raporu bitir görevi", "yarın neler var?" → takvimde/görevlerde görünüyor, cevap doğru. Notun sonuna "yarın 15:00 toplantı" yazıp çık → "Takvime ekle" bildirimi. Afiş fotoğrafında metin tanı → takvim simgesi → etkinlik taslağı. Gmail iletisinde "Görev yap". Takvim ⋮ → .ics dışa aktar, Google Takvim'e içe aktar; Google'dan alınan .ics'i buraya içe aktar, ikinci kez çoğaltmıyor.
 106. [ ] (TAKVIM Faz 53) Takvim → 🧘 Rutinler → "Sabah" (3 adım, 07:30, hatırlat) → ajandada her gün; 07:30'da bildirim; gün levhasında adımları tikle → tamam, kartta 🔥 seri ve şerit dolu. Ana ekran "Bugün" widget'ında etkinlik/görev/rutin satırları.
+107. [ ] Not ⋮, kart ⋮, not "+", ana ekran ⋮, çoklu seçim ⋮ → sağ üstte ⚙ → bir işlemi gizle, birini yıldızla hızlı satıra al, sürükleyerek sırala → kaydet → menü öyle; "Varsayılan" geri getiriyor.
+108. [ ] Ana ekran Tümü'de SAĞA kaydır → takvim (sola kaydırma klasör geziyor).
+109. [ ] Sol alttaki klasör düğmesi: dokun → Klasörler; basılı tut → üstte ad şeridi, sağa/sola hafif kaydır → titreşimle kayıyor, bırak → o klasör açılıyor.
+110. [ ] Ayarlar → Görünüm: Krem, Şeftali, Nane (telefonda 3'lü sıralar); okunurluk.
+111. [ ] Notta "+" → "Takvime ekle" → gün, saat → etkinlik levhası not bağlı açılıyor.
 
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 

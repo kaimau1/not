@@ -51,23 +51,23 @@ void main() {
     });
   });
 
-  test('sola çekiş yalnız Tümü görünümünde ve ayar açıkken takvimi açar', () {
-    expect(
-      swipeOpensCalendar(enabled: true, direction: 1, atAllNotes: true),
-      isTrue,
-    );
-    // Sağa çekiş durak gezer.
+  test('sağa çekiş yalnız Tümü görünümünde ve ayar açıkken takvimi açar', () {
     expect(
       swipeOpensCalendar(enabled: true, direction: -1, atAllNotes: true),
+      isTrue,
+    );
+    // Sola çekiş durak gezer.
+    expect(
+      swipeOpensCalendar(enabled: true, direction: 1, atAllNotes: true),
       isFalse,
     );
-    // Klasör/süzgeç içinde sola çekiş sonraki durağa gider.
+    // Klasör/süzgeç içinde sağa çekiş önceki durağa gider.
     expect(
-      swipeOpensCalendar(enabled: true, direction: 1, atAllNotes: false),
+      swipeOpensCalendar(enabled: true, direction: -1, atAllNotes: false),
       isFalse,
     );
     expect(
-      swipeOpensCalendar(enabled: false, direction: 1, atAllNotes: true),
+      swipeOpensCalendar(enabled: false, direction: -1, atAllNotes: true),
       isFalse,
     );
   });

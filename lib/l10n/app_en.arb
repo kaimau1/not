@@ -2664,8 +2664,8 @@
   "themeStraw": "Straw",
   "dashboardBackgroundCalendar": "Calendar background",
   "dashboardBackgroundCalendarInfo": "This month\u2019s calendar behind your notes; card titles stay clear, the rest turns see-through",
-  "swipeLeftCalendar": "Swipe left for calendar",
-  "swipeLeftCalendarInfo": "In the All view, swiping left opens the calendar",
+  "swipeLeftCalendar": "Swipe right for calendar",
+  "swipeLeftCalendarInfo": "In the All view, swiping right opens the calendar",
   "calendarMoved": "Moved to {day}",
   "@calendarMoved": {"placeholders": {"day": {"type": "String"}}},
   "gcalTitle": "Google Calendar",
@@ -2731,5 +2731,16 @@
   "routineStepCount": "{count} steps",
   "@routineStepCount": {"placeholders": {"count": {"type": "int"}}},
   "routineProgress": "{done}/{total} steps",
-  "@routineProgress": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}}
+  "@routineProgress": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "menuEdit": "Edit menu",
+  "menuSectionOther": "Other",
+  "menuQuickRow": "Put in quick row",
+  "menuShowHide": "Show/hide",
+  "menuReset": "Default",
+  "menuEditHint": "Drag to reorder, tap the eye to hide; starred actions sit in the quick row on top (up to {count}).",
+  "@menuEditHint": {"placeholders": {"count": {"type": "int"}}},
+  "themeCream": "Cream",
+  "themePeach": "Peach",
+  "themeMint": "Mint",
+  "folderHoldHint": "Hold and slide left or right to switch folders"
 }

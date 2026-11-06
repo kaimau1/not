@@ -31,6 +31,7 @@ import 'features/notes/data/local_notes_store.dart';
 import 'features/notes/presentation/note_card_media.dart' show CardThumbs;
 import 'features/ai/data/antalia/antalia_engine.dart' show registerAntaliaLicense;
 import 'features/settings/settings_providers.dart';
+import 'core/menu_layout.dart';
 import 'core/personalize.dart';
 import 'features/notes/presentation/viewers/bubble_layer.dart' show BubbleLook;
 import 'features/notes/presentation/viewers/ink_tools.dart' show InkToolMemory;
@@ -146,6 +147,7 @@ Future<void> main() async {
   BubbleLook.attach(prefs);
   // Kişiselleştirme: gizlenen alanlar, sarma süreleri (bkz. Personalize).
   Personalize.attach(prefs);
+  MenuLayouts.attach(prefs);
   // Son kullanılan kalem, "yalnız kalemle yaz" (bkz. InkToolMemory).
   InkToolMemory.attach(prefs);
 

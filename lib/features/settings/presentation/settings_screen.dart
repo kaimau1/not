@@ -309,6 +309,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'tema ${l10n.themeSystem} ${l10n.themeSage} '
                 '${l10n.themePorcelain} ${l10n.themeClay} ${l10n.themeLavender} '
                 '${l10n.themeOlive} ${l10n.themeWhite} ${l10n.themeStraw} '
+                '${l10n.themeCream} ${l10n.themePeach} ${l10n.themeMint} '
                 '${l10n.themeDark}',
           ),
           // Yazı tipi + yazı boyutu TEK satırda: ikisi de "yazı nasıl
@@ -944,6 +945,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       AppThemeChoice.olive => l10n.themeOlive,
       AppThemeChoice.white => l10n.themeWhite,
       AppThemeChoice.straw => l10n.themeStraw,
+      AppThemeChoice.cream => l10n.themeCream,
+      AppThemeChoice.peach => l10n.themePeach,
+      AppThemeChoice.mint => l10n.themeMint,
       AppThemeChoice.dark => l10n.themeDark,
     };
     // Yüzde yerine KADEME ADI: ayar artık dört adlı seçenekten ibaret,

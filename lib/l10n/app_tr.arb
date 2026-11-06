@@ -3457,8 +3457,8 @@
   "themeStraw": "Saman",
   "dashboardBackgroundCalendar": "Takvim zemini",
   "dashboardBackgroundCalendarInfo": "Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam",
-  "swipeLeftCalendar": "Sola kaydırınca takvim",
-  "swipeLeftCalendarInfo": "Tümü görünümünde ekranı sola kaydırınca takvim açılır",
+  "swipeLeftCalendar": "Sağa kaydırınca takvim",
+  "swipeLeftCalendarInfo": "Tümü görünümünde ekranı sağa kaydırınca takvim açılır",
   "calendarMoved": "{day} gününe taşındı",
   "@calendarMoved": {"placeholders": {"day": {"type": "String"}}},
   "gcalTitle": "Google Takvim",
@@ -3524,5 +3524,16 @@
   "routineStepCount": "{count} adım",
   "@routineStepCount": {"placeholders": {"count": {"type": "int"}}},
   "routineProgress": "{done}/{total} adım",
-  "@routineProgress": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}}
+  "@routineProgress": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "menuEdit": "Menüyü düzenle",
+  "menuSectionOther": "Diğer",
+  "menuQuickRow": "Hızlı satıra al",
+  "menuShowHide": "Göster/gizle",
+  "menuReset": "Varsayılan",
+  "menuEditHint": "Sürükleyerek sırala, göz ile gizle; yıldızlı işlemler üstteki hızlı satırda durur (en çok {count}).",
+  "@menuEditHint": {"placeholders": {"count": {"type": "int"}}},
+  "themeCream": "Krem",
+  "themePeach": "Şeftali",
+  "themeMint": "Nane",
+  "folderHoldHint": "Basılı tutup sağa sola kaydırarak klasör değiştir"
 }

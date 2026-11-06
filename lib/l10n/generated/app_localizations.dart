@@ -12947,13 +12947,13 @@ abstract class AppLocalizations {
   /// No description provided for @swipeLeftCalendar.
   ///
   /// In tr, this message translates to:
-  /// **'Sola kaydırınca takvim'**
+  /// **'Sağa kaydırınca takvim'**
   String get swipeLeftCalendar;
 
   /// No description provided for @swipeLeftCalendarInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Tümü görünümünde ekranı sola kaydırınca takvim açılır'**
+  /// **'Tümü görünümünde ekranı sağa kaydırınca takvim açılır'**
   String get swipeLeftCalendarInfo;
 
   /// No description provided for @calendarMoved.
@@ -13297,6 +13297,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{done}/{total} adım'**
   String routineProgress(int done, int total);
+
+  /// No description provided for @menuEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Menüyü düzenle'**
+  String get menuEdit;
+
+  /// No description provided for @menuSectionOther.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer'**
+  String get menuSectionOther;
+
+  /// No description provided for @menuQuickRow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı satıra al'**
+  String get menuQuickRow;
+
+  /// No description provided for @menuShowHide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Göster/gizle'**
+  String get menuShowHide;
+
+  /// No description provided for @menuReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varsayılan'**
+  String get menuReset;
+
+  /// No description provided for @menuEditHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sürükleyerek sırala, göz ile gizle; yıldızlı işlemler üstteki hızlı satırda durur (en çok {count}).'**
+  String menuEditHint(int count);
+
+  /// No description provided for @themeCream.
+  ///
+  /// In tr, this message translates to:
+  /// **'Krem'**
+  String get themeCream;
+
+  /// No description provided for @themePeach.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şeftali'**
+  String get themePeach;
+
+  /// No description provided for @themeMint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nane'**
+  String get themeMint;
+
+  /// No description provided for @folderHoldHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Basılı tutup sağa sola kaydırarak klasör değiştir'**
+  String get folderHoldHint;
 }
 
 class _AppLocalizationsDelegate

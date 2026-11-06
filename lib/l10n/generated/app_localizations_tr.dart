@@ -7248,11 +7248,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam';
 
   @override
-  String get swipeLeftCalendar => 'Sola kaydırınca takvim';
+  String get swipeLeftCalendar => 'Sağa kaydırınca takvim';
 
   @override
   String get swipeLeftCalendarInfo =>
-      'Tümü görünümünde ekranı sola kaydırınca takvim açılır';
+      'Tümü görünümünde ekranı sağa kaydırınca takvim açılır';
 
   @override
   String calendarMoved(String day) {
@@ -7447,4 +7447,37 @@ class AppLocalizationsTr extends AppLocalizations {
   String routineProgress(int done, int total) {
     return '$done/$total adım';
   }
+
+  @override
+  String get menuEdit => 'Menüyü düzenle';
+
+  @override
+  String get menuSectionOther => 'Diğer';
+
+  @override
+  String get menuQuickRow => 'Hızlı satıra al';
+
+  @override
+  String get menuShowHide => 'Göster/gizle';
+
+  @override
+  String get menuReset => 'Varsayılan';
+
+  @override
+  String menuEditHint(int count) {
+    return 'Sürükleyerek sırala, göz ile gizle; yıldızlı işlemler üstteki hızlı satırda durur (en çok $count).';
+  }
+
+  @override
+  String get themeCream => 'Krem';
+
+  @override
+  String get themePeach => 'Şeftali';
+
+  @override
+  String get themeMint => 'Nane';
+
+  @override
+  String get folderHoldHint =>
+      'Basılı tutup sağa sola kaydırarak klasör değiştir';
 }
