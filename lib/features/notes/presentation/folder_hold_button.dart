@@ -1,23 +1,97 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/l10n_ext.dart';
 
-/// Basılı tutarken yatay kaymanın seçtiği durak: her [step] dp bir klasör,
-/// uçlarda durur (sarmaz — parmağın neredeyse orada olduğu tahmin edilsin).
-int folderIndexForDrag(int start, double dx, int count, {double step = 36}) {
-  if (count <= 0) return 0;
-  return (start + (dx / step).truncate()).clamp(0, count - 1);
+/// Yuvarlak klasör menüsündeki bir durak. [id] `null` = "Tümü".
+class FolderStop {
+  const FolderStop({
+    required this.id,
+    required this.name,
+    this.icon = Icons.folder_outlined,
+    this.color,
+    this.count,
+  });
+
+  final String? id;
+  final String name;
+  final IconData icon;
+
+  /// Klasörün vurgu rengi (null = tema rengi).
+  final Color? color;
+
+  /// İçindeki not sayısı (null = gösterilmez).
+  final int? count;
 }
 
-/// **KLASÖR DÜĞMESİ** (kullanıcı isteği 2026-11-06: "klasörler için alta bir
-/// klasör butonu; basınca klasörler sayfası açılır, basılı tutarken hafif
-/// kaydırarak klasörler arası geçiş").
+/// Bir halkada en çok kaç durak (sekiz yön — parmağın küçük hareketiyle
+/// ayırt edilebilecek en ince dilim 45°).
+const kRadialPerRing = 8;
+
+/// Durakların halkalara dağılımı: dolu halkalar [kRadialPerRing]'er, kalan
+/// son halkada. Örn. 11 → [8, 3]; ama son halka çok seyrek kalmasın diye
+/// eşit bölünür: 11 → [6, 5].
+List<int> radialRings(int count) {
+  if (count <= 0) return const [];
+  final rings = (count / kRadialPerRing).ceil();
+  final base = count ~/ rings;
+  final extra = count % rings;
+  return [for (var r = 0; r < rings; r++) base + (r < extra ? 1 : 0)];
+}
+
+/// Halka [ring]'deki [slot]. durağın açısı (radyan): ilki tepede (−90°),
+/// saat yönünde. Dış halkalar yarım dilim kaydırılır — iç halkadaki
+/// komşusunun tam arkasına düşmesin.
+double radialAngle(int ring, int slot, int ringCount) {
+  final step = 2 * math.pi / ringCount;
+  final shift = ring.isOdd ? step / 2 : 0.0;
+  return -math.pi / 2 + slot * step + shift;
+}
+
+/// **KÜÇÜK HAREKETLE SEÇİM**: parmağın başladığı yerden [delta] kadar
+/// kaydığında hangi durak seçili. Yön dilimi seçer (yarıçap değil — ufak bir
+/// kayma yeter), uzaklık halkayı: [dead] dp içinde seçim YOK (bırakmak
+/// vazgeçer), sonra her [ringStep] dp bir dış halka. Döndürülen değer düz
+/// dizideki sıradır; ölü bölgede null.
+int? radialFolderIndex(
+  Offset delta,
+  int count, {
+  double dead = 14,
+  double ringStep = 56,
+}) {
+  if (count <= 0) return null;
+  final dist = delta.distance;
+  if (dist < dead) return null;
+  final rings = radialRings(count);
+  final ring = ((dist - dead) / ringStep).floor().clamp(0, rings.length - 1);
+  final n = rings[ring];
+  final step = 2 * math.pi / n;
+  final shift = ring.isOdd ? step / 2 : 0.0;
+  // Tepeden (−90°) saat yönünde açı, [0, 2π).
+  var a = math.atan2(delta.dy, delta.dx) + math.pi / 2 - shift;
+  a %= 2 * math.pi;
+  final slot = ((a + step / 2) / step).floor() % n;
+  var offset = 0;
+  for (var r = 0; r < ring; r++) {
+    offset += rings[r];
+  }
+  return offset + slot;
+}
+
+/// **KLASÖR DÜĞMESİ** (kullanıcı isteği 2026-11-06, ikinci tur: "tutunca
+/// yuvarlak bir menü açsın ekranın ortasında; tutarken ufak hareketlerle
+/// klasörler arası geçiş olmalı, bırakınca hangi klasör üzerindeyse ona
+/// geçiş").
 ///
-/// Dokun → [onOpen] (Klasörler ekranı). Basılı tut → düğmenin üstünde
-/// klasör adları şeridi belirir; parmağı sağa/sola kaydırdıkça seçim kayar
-/// (her adımda hafif titreşim), bırakınca [onSelect] o klasörü açar.
-/// Durak 0 = "Tümü" (`null`).
+/// Dokun → [onOpen] (Klasörler ekranı). Basılı tut → ekranın ortasında
+/// klasörler halka hâlinde açılır (simgesi, rengi, not sayısı); parmağı
+/// hangi YÖNE biraz kaydırırsan o klasör seçilir (her değişimde hafif
+/// titreşim), daha uzağa kaydırmak dış halkaya geçer. Bırakınca [onSelect]
+/// o klasörü açar; ortada bırakmak vazgeçer. Üstteki klasör şeridi ve
+/// yatay kaydırma ayrıca çalışmaya devam eder.
 class FolderHoldButton extends StatefulWidget {
   const FolderHoldButton({
     super.key,
@@ -27,8 +101,8 @@ class FolderHoldButton extends StatefulWidget {
     required this.onSelect,
   });
 
-  /// (kimlik, ad); ilki `(null, "Tümü")`.
-  final List<(String?, String)> stops;
+  /// İlki "Tümü" (`id == null`).
+  final List<FolderStop> stops;
   final String? currentId;
   final VoidCallback onOpen;
   final ValueChanged<String?> onSelect;
@@ -38,116 +112,285 @@ class FolderHoldButton extends StatefulWidget {
 }
 
 class _FolderHoldButtonState extends State<FolderHoldButton> {
-  int? _index;
-  int _start = 0;
+  OverlayEntry? _entry;
+  final _selected = ValueNotifier<int?>(null);
 
-  int get _currentIndex {
-    final i = widget.stops.indexWhere((s) => s.$1 == widget.currentId);
-    return i < 0 ? 0 : i;
+  @override
+  void dispose() {
+    _close();
+    _selected.dispose();
+    super.dispose();
+  }
+
+  void _close() {
+    _entry?.remove();
+    _entry = null;
   }
 
   void _begin(LongPressStartDetails _) {
     HapticFeedback.mediumImpact();
-    setState(() {
-      _start = _currentIndex;
-      _index = _start;
-    });
+    _selected.value = null;
+    final overlay = Overlay.of(context);
+    _entry = OverlayEntry(
+      builder: (_) => _RadialFolderMenu(
+        stops: widget.stops,
+        currentId: widget.currentId,
+        selected: _selected,
+      ),
+    );
+    overlay.insert(_entry!);
   }
 
   void _move(LongPressMoveUpdateDetails d) {
-    final next = folderIndexForDrag(
-      _start,
-      d.offsetFromOrigin.dx,
-      widget.stops.length,
-    );
-    if (next != _index) {
-      HapticFeedback.selectionClick();
-      setState(() => _index = next);
+    final next = radialFolderIndex(d.offsetFromOrigin, widget.stops.length);
+    if (next != _selected.value) {
+      if (next != null) HapticFeedback.selectionClick();
+      _selected.value = next;
     }
   }
 
   void _end(LongPressEndDetails _) {
-    final i = _index;
-    setState(() => _index = null);
-    if (i != null && i != _currentIndex) widget.onSelect(widget.stops[i].$1);
+    final i = _selected.value;
+    _selected.value = null;
+    _close();
+    if (i != null && widget.stops[i].id != widget.currentId) {
+      widget.onSelect(widget.stops[i].id);
+    }
+  }
+
+  void _cancel() {
+    _selected.value = null;
+    _close();
   }
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
-    final index = _index;
-    final current = widget.stops.isEmpty ? null : widget.stops[_currentIndex];
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (index != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Material(
-              key: const ValueKey('folder-hold-strip'),
-              elevation: 3,
-              color: scheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(16),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var i = 0; i < widget.stops.length; i++)
-                      if ((i - index).abs() <= 2)
+    final current = widget.stops
+        .where((s) => s.id == widget.currentId)
+        .firstOrNull;
+    final enabled = widget.stops.length > 1;
+    return Semantics(
+      button: true,
+      label: current == null || current.id == null
+          ? l10n.allFolders
+          : current.name,
+      hint: l10n.folderHoldHint,
+      child: GestureDetector(
+        key: const ValueKey('folder-hold-button'),
+        onLongPressStart: enabled ? _begin : null,
+        onLongPressMoveUpdate: enabled ? _move : null,
+        onLongPressEnd: enabled ? _end : null,
+        onLongPressCancel: enabled ? _cancel : null,
+        child: FloatingActionButton.small(
+          heroTag: 'folderHold',
+          // İpucu YOK: Tooltip basılı tutmayı kendisi yakalar, kaydırarak
+          // klasör seçme hiç başlamazdı (ad Semantics'te).
+          onPressed: widget.onOpen,
+          child: Icon(
+            current?.id == null ? Icons.folder_outlined : current!.icon,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Ekranın ortasında açılan halka. Dokunuşları YUTMAZ (IgnorePointer):
+/// jest düğmede sürer, halka yalnız gösterir.
+class _RadialFolderMenu extends StatefulWidget {
+  const _RadialFolderMenu({
+    required this.stops,
+    required this.currentId,
+    required this.selected,
+  });
+
+  final List<FolderStop> stops;
+  final String? currentId;
+  final ValueListenable<int?> selected;
+
+  @override
+  State<_RadialFolderMenu> createState() => _RadialFolderMenuState();
+}
+
+class _RadialFolderMenuState extends State<_RadialFolderMenu>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _open = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 180),
+  )..forward();
+
+  @override
+  void dispose() {
+    _open.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final size = MediaQuery.sizeOf(context);
+    final rings = radialRings(widget.stops.length);
+    // İç halka 104 dp, her dış halka +76; ekrana sığmazsa küçülür.
+    final outer = 104.0 + 76 * (rings.length - 1) + 44;
+    final fit = math.min(size.width, size.height) / 2 - 8;
+    final scale = outer > fit ? fit / outer : 1.0;
+    return IgnorePointer(
+      child: FadeTransition(
+        opacity: _open,
+        child: Material(
+          key: const ValueKey('folder-radial-menu'),
+          color: scheme.scrim.withValues(alpha: 0.42),
+          child: Center(
+            child: ScaleTransition(
+              scale: CurvedAnimation(
+                parent: _open,
+                curve: Curves.easeOutBack,
+              ).drive(Tween(begin: 0.85, end: 1)),
+              child: ValueListenableBuilder<int?>(
+                valueListenable: widget.selected,
+                builder: (context, sel, _) {
+                  final children = <Widget>[];
+                  var i = 0;
+                  for (var r = 0; r < rings.length; r++) {
+                    final radius = (104.0 + 76 * r) * scale;
+                    for (var s = 0; s < rings[r]; s++, i++) {
+                      final a = radialAngle(r, s, rings[r]);
+                      children.add(
+                        Transform.translate(
+                          offset: Offset(
+                            math.cos(a) * radius,
+                            math.sin(a) * radius,
+                          ),
+                          child: _RadialChip(
+                            stop: widget.stops[i],
+                            selected: sel == i,
+                            current: widget.stops[i].id == widget.currentId,
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                  final picked = sel == null ? null : widget.stops[sel];
+                  return SizedBox(
+                    width: outer * 2 * scale,
+                    height: outer * 2 * scale,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      clipBehavior: Clip.none,
+                      children: [
+                        // Ortadaki daire: seçili klasörün adı; seçim yoksa
+                        // "bırak = vazgeç" ipucu.
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 120),
-                          margin: const EdgeInsets.symmetric(horizontal: 2),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
+                          width: 96 * scale + 8,
+                          height: 96 * scale + 8,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: i == index
-                                ? scheme.primaryContainer
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
+                            shape: BoxShape.circle,
+                            color: picked == null
+                                ? scheme.surfaceContainerHighest
+                                : (picked.color ?? scheme.primary),
+                            boxShadow: const [
+                              BoxShadow(blurRadius: 12, color: Colors.black26),
+                            ],
                           ),
                           child: Text(
-                            widget.stops[i].$2,
-                            style: TextStyle(
-                              fontWeight: i == index
-                                  ? FontWeight.w700
-                                  : FontWeight.w400,
-                              color: i == index
-                                  ? scheme.onPrimaryContainer
-                                  : scheme.onSurfaceVariant,
+                            picked?.name ?? context.l10n.folderRadialCancel,
+                            textAlign: TextAlign.center,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: picked == null
+                                  ? scheme.onSurfaceVariant
+                                  : _onColor(picked.color ?? scheme.primary),
                             ),
                           ),
                         ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        Semantics(
-          button: true,
-          label: l10n.allFolders,
-          hint: l10n.folderHoldHint,
-          child: GestureDetector(
-            key: const ValueKey('folder-hold-button'),
-            onLongPressStart: widget.stops.length > 1 ? _begin : null,
-            onLongPressMoveUpdate: widget.stops.length > 1 ? _move : null,
-            onLongPressEnd: widget.stops.length > 1 ? _end : null,
-            child: FloatingActionButton.small(
-              heroTag: 'folderHold',
-              // İpucu YOK: Tooltip basılı tutmayı kendisi yakalar, kaydırarak
-              // klasör seçme hiç başlamazdı (ad Semantics'te).
-              onPressed: widget.onOpen,
-              child: Icon(
-                current?.$1 == null ? Icons.folder_outlined : Icons.folder,
+                        ...children,
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           ),
         ),
-      ],
+      ),
+    );
+  }
+}
+
+Color _onColor(Color c) =>
+    ThemeData.estimateBrightnessForColor(c) == Brightness.dark
+    ? Colors.white
+    : Colors.black87;
+
+class _RadialChip extends StatelessWidget {
+  const _RadialChip({
+    required this.stop,
+    required this.selected,
+    required this.current,
+  });
+
+  final FolderStop stop;
+  final bool selected;
+  final bool current;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final accent = stop.color ?? scheme.primary;
+    final bg = selected ? accent : scheme.surfaceContainerHigh;
+    final fg = selected ? _onColor(accent) : scheme.onSurface;
+    return AnimatedScale(
+      scale: selected ? 1.18 : 1,
+      duration: const Duration(milliseconds: 120),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 104),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: current ? accent : Colors.transparent,
+            width: 2,
+          ),
+          boxShadow: const [BoxShadow(blurRadius: 6, color: Colors.black26)],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(stop.icon, size: 16, color: selected ? fg : accent),
+            const SizedBox(width: 5),
+            Flexible(
+              child: Text(
+                stop.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: fg,
+                ),
+              ),
+            ),
+            if (stop.count != null && stop.count! > 0) ...[
+              const SizedBox(width: 4),
+              Text(
+                '${stop.count}',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: fg.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

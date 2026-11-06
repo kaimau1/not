@@ -7500,4 +7500,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get folderHoldHint => 'Hold and slide left or right to switch folders';
+
+  @override
+  String get homeViewMenu => 'View & filter';
+
+  @override
+  String get folderRadialCancel => 'Release = cancel';
+
+  @override
+  String googleApiDisabled(String api) {
+    return '$api is disabled in this app\'s Google Cloud project. Enable it in the console and connect again.';
+  }
+
+  @override
+  String get googleApiEnable => 'Enable';
+
+  @override
+  String googleScopeMissing(String api) {
+    return '$api permission wasn\'t granted. Tick the permission box when connecting.';
+  }
 }

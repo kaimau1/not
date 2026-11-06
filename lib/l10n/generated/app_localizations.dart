@@ -13357,6 +13357,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Basılı tutup sağa sola kaydırarak klasör değiştir'**
   String get folderHoldHint;
+
+  /// No description provided for @homeViewMenu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünüm ve süz'**
+  String get homeViewMenu;
+
+  /// No description provided for @folderRadialCancel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bırak = vazgeç'**
+  String get folderRadialCancel;
+
+  /// No description provided for @googleApiDisabled.
+  ///
+  /// In tr, this message translates to:
+  /// **'{api} bu uygulamanın Google Cloud projesinde kapalı. Konsolda etkinleştirip yeniden bağlanın.'**
+  String googleApiDisabled(String api);
+
+  /// No description provided for @googleApiEnable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkinleştir'**
+  String get googleApiEnable;
+
+  /// No description provided for @googleScopeMissing.
+  ///
+  /// In tr, this message translates to:
+  /// **'{api} izni verilmedi. Bağlanırken izin kutusunu işaretleyin.'**
+  String googleScopeMissing(String api);
 }
 
 class _AppLocalizationsDelegate

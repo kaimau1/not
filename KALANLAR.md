@@ -31,6 +31,7 @@ kartta çizildi. Yeni metin notunda klavye açık; not "+" → Hatırlat aynı "
 İzinler'de Xiaomi "Otomatik başlatma" satırı MIUI ekranını açıyor; ilk hatırlatıcı kaydedilince ipucu + "Aç" çıkıyor (v1.2.5). Gmail bağlan + Nota kaydet, sürüm geçmişi, tam yedek kaydet/geri yükle de geçti.
 
 **Telefon (v1.1.N, Google hesabı; ~7 dk)**
+1. [ ] (2026-11-06, yazıldı, cihazda doğrulanmadı) Klasör düğmesine basılı tut → ortada halka; parmağı hafif bir yöne kaydır → klasör vurgulanır, bırak → geçer; ortada bırak → vazgeç. Takvim → + : levha akıcı açılıyor, klavye sonra geliyor; ay başlığı görünür. Google Takvim bağla: API kapalıysa "Etkinleştir" çıkıyor (F19.B10).
 2. [ ] ⋮ yerine başlık "+" levhası → Araçlar → İlgili notlar → Bağla (F18.17). Biçim, `[[` bağlantısı ve "1 bağlantı" çipi telefonda geçti.
 4. [ ] Görsel: üstüne kalemle çiz + açık metin → Paylaş → Ekler / PDF: çizim ve yazı görselde (F18.13). Çıkan dosyaya telefonda bakılmadı; test `image_annotations_export`.
 5. [ ] PDF balonlu notta basılı tut → balon → Paylaş: "Sayfa N — …" satırı. Toplu Kopyala balon satırını veriyor (görsel balonda geçti).

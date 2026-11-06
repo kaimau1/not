@@ -289,6 +289,49 @@ void main() {
       expect(find.text('Gezi'), findsNWidgets(2));
     });
 
+    // Kullanıcı bulgusu 2026-11-06: "takvimde hangi ay olduğu görülmüyor" —
+    // yedi simge telefonda başlığı sıfıra sıkıştırıyordu.
+    testWidgets('telefonda ay başlığı okunur genişlikte; ikincil işler ⋮te', (
+      tester,
+    ) async {
+      await usePrefs({});
+      phone(tester);
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      final title = find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text('Kasım 2026'),
+      );
+      expect(title, findsOneWidget);
+      expect(tester.getSize(title).width, greaterThan(90));
+      expect(find.byKey(const ValueKey('calendar-routines')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('calendar-more')));
+      await tester.pumpAndSettle();
+      expect(find.text('Rutinler'), findsOneWidget);
+      expect(find.text('Görevler'), findsOneWidget);
+    });
+
+    // "Yeni etkinlik açılırken ciddi kasma": klavye levha açıldıktan SONRA.
+    testWidgets('yeni etkinlik: başlık odağı açılış animasyonu bitince', (
+      tester,
+    ) async {
+      phone(tester);
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('calendar-new-event')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      EditableText field() => tester.widget<EditableText>(
+        find.descendant(
+          of: find.byKey(const ValueKey('event-title')),
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(field().focusNode.hasFocus, isFalse);
+      await tester.pumpAndSettle();
+      expect(field().focusNode.hasFocus, isTrue);
+    });
+
     testWidgets('iki parmakla: dokunulan hafta açılır, geri ay ve yıl', (
       tester,
     ) async {

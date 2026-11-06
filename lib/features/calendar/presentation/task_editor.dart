@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/sheet_header.dart';
+import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/presentation/reminder_repeat_ui.dart';
 import '../../notes/presentation/reminders_screen.dart'
@@ -84,6 +85,8 @@ class TaskEditorSheet extends ConsumerStatefulWidget {
 }
 
 class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
+  final _titleFocus = FocusNode();
+
   late final _title = TextEditingController(
     text: widget.existing?.title ?? widget.initialTitle,
   );
@@ -100,8 +103,16 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
   late String _listId = widget.existing?.listId ?? widget.listId;
 
   @override
+  void initState() {
+    super.initState();
+    // Klavye levha açıldıktan SONRA (bkz. [focusAfterRouteOpens]).
+    if (widget.existing == null) focusAfterRouteOpens(this, _titleFocus);
+  }
+
+  @override
   void dispose() {
     _title.dispose();
+    _titleFocus.dispose();
     _notes.dispose();
     super.dispose();
   }
@@ -209,15 +220,14 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final lists = ref.watch(taskListsStreamProvider).value ?? const [];
-    final insets = MediaQuery.viewInsetsOf(context).bottom;
     final allLists = [
       const TaskList(id: TaskList.defaultId),
       for (final l in lists)
         if (!l.isDefault) l,
     ];
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: insets),
+    // Klavye payı ayrı, ince widget'ta (bkz. [SheetInsetPadding]).
+    return SheetInsetPadding(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -251,7 +261,7 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
                   TextField(
                     key: const ValueKey('task-title'),
                     controller: _title,
-                    autofocus: widget.existing == null,
+                    focusNode: _titleFocus,
                     textCapitalization: TextCapitalization.sentences,
                     style: Theme.of(context).textTheme.titleLarge,
                     decoration: InputDecoration(

@@ -129,6 +129,14 @@ class GoogleTasksController extends Notifier<GoogleTasksState> {
     }
     state = state.copyWith(connected: true);
     await sync(force: true);
+    // API konsolda kapalıysa "bağlandı" demek yanıltır (F19.B10): bağlantı
+    // geri alınır, hata arayüzde nedeniyle gösterilir.
+    final err = state.error;
+    if (err is GoogleTasksException && err.serviceDisabled) {
+      _tokens?.invalidate();
+      state = GoogleTasksState(error: err);
+      return false;
+    }
     return true;
   }
 

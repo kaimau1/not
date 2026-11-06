@@ -8,7 +8,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
-import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
@@ -16,6 +15,7 @@ import '../data/calendar_repository.dart';
 import '../data/google_calendar_sync.dart';
 import '../domain/calendar_event.dart';
 import 'event_editor.dart';
+import 'google_failure.dart';
 
 /// Google Takvim bağlantısı: bağla, gösterilen takvimler, yenile, kaldır
 /// (TAKVIM_PLANI F48.1/F48.2).
@@ -60,13 +60,39 @@ class _GoogleCalendarSheet extends ConsumerWidget {
                   ? null
                   : () async {
                       final messenger = ScaffoldMessenger.of(context);
+                      // Levha kapanmış olabilir: kabın kendisinden oku.
+                      final container = ProviderScope.containerOf(
+                        context,
+                        listen: false,
+                      );
                       final ok = await controller.connect();
-                      if (!ok) messenger.showMessage(l10n.gcalConnectFailed);
+                      if (!ok) {
+                        showGoogleConnectFailure(
+                          messenger,
+                          l10n,
+                          container.read(googleCalendarProvider).error,
+                          fallback: l10n.gcalConnectFailed,
+                          apiName: 'Google Calendar API',
+                          apiHost: 'calendar-json.googleapis.com',
+                        );
+                      }
                     },
               icon: const Icon(Icons.link),
               label: Text(l10n.gcalConnect),
-            )
-          else ...[
+            ),
+          // Konsolda API kapalıysa kalıcı açıklama (bildirim kaybolup
+          // gidiyordu; F19.B10 adımı kullanıcının işi).
+          if (!state.connected && googleErrorIsServiceDisabled(state.error))
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                l10n.googleApiDisabled('Google Calendar API'),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
+          if (state.connected) ...[
             Text(l10n.gcalCalendars, style: theme.textTheme.labelLarge),
             for (final c in state.calendars)
               CheckboxListTile(

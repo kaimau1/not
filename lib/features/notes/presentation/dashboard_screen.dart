@@ -1367,53 +1367,41 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                   child: _SearchField(
                                     controller: _searchController,
                                     focusNode: _searchFocus,
+                                    // HESAP SİMGESİ ve ⋮ ARTIK KUTUNUN İÇİNDE
+                                    // (kullanıcı isteği 2026-11-06: "üst
+                                    // arama çubuğu profil ve 3 noktayı da
+                                    // kapsasın"). Hesap kişiselleştirmede
+                                    // gizlenebilir (Customizable); ⋮ alt
+                                    // levhayı açar (bkz. [ActionMenu]).
+                                    // Gelen/paylaşılan sayısı avatar
+                                    // rozetinde (F11.1).
+                                    trailing: searchExpanded
+                                        ? const []
+                                        : [
+                                            const Customizable(
+                                              id: UiItem.homeAccount,
+                                              child: AccountAvatarButton(),
+                                            ),
+                                            IconButton(
+                                              tooltip: l10n.more,
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              icon: const Icon(
+                                                Icons.more_vert,
+                                              ),
+                                              onPressed: () => unawaited(
+                                                _openHomeMenu(
+                                                  hasHiddenFolders:
+                                                      hasHiddenFolders,
+                                                  hiddenRevealed:
+                                                      hiddenRevealed,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                   ),
                                 ),
-                                actions: searchExpanded
-                                    ? const [SizedBox(width: 4)]
-                                    : [
-                                        // **HESAP SİMGESİ** (kullanıcı isteği
-                                        // 2026-08-18: "giriş yapıldıysa üst
-                                        // alanda profil simgesi görülsün,
-                                        // yapılmadıysa yerel hesap simgesi
-                                        // olsun"). Hangi hesapla çalışıldığı
-                                        // ayarlara girmeden görünsün.
-                                        // ANA EKRAN KİŞİSELLEŞTİRİLİR
-                                        // (kullanıcı bulgusu 2026-10-16:
-                                        // "ana ekran kişiselleştirilemiyor"):
-                                        // hesap, Yapay zekâ, Süz, görünüm ve
-                                        // iki mikrofon gizlenebilir; düzenleme
-                                        // modunda dokunarak (bkz.
-                                        // Customizable).
-                                        const Customizable(
-                                          id: UiItem.homeAccount,
-                                          child: AccountAvatarButton(),
-                                        ),
-                                        // GELEN VE PAYLAŞILANLAR düğmesi
-                                        // AVATARA katıldı (F11.1, kullanıcı
-                                        // kararı 2026-10-31): sayısı avatar
-                                        // rozetinde, kendisi hesap levhasında.
-                                        const SizedBox(width: 2),
-                                        // ⋮ ARTIK ALT LEVHA (kullanıcı isteği
-                                        // 2026-10-11: "menüler yeniden dizayn
-                                        // edilmeli"). On bir maddelik açılır
-                                        // menü ekranın %55'inde kesiliyor,
-                                        // "Kullanım kılavuzu" kaydırmadan
-                                        // görünmüyordu. Levha not menüleriyle
-                                        // aynı dili konuşur (bkz. [ActionMenu]).
-                                        IconButton(
-                                          tooltip: l10n.more,
-                                          icon: const Icon(Icons.more_vert),
-                                          onPressed: () => unawaited(
-                                            _openHomeMenu(
-                                              hasHiddenFolders:
-                                                  hasHiddenFolders,
-                                              hiddenRevealed: hiddenRevealed,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                      ],
+                                actions: const [SizedBox(width: 12)],
                               );
                             },
                           ),
@@ -1794,15 +1782,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   PositionedDirectional(
                     start: 16,
                     bottom: 16,
-                    child: FolderHoldButton(
-                      stops: [
-                        (null, l10n.allNotesChip),
-                        for (final f in ref.watch(visibleOrderedFoldersProvider))
-                          (f.id, f.name),
-                      ],
-                      currentId: ref.watch(selectedFolderProvider),
-                      onOpen: () => unawaited(context.push('/folders')),
-                      onSelect: _selectFolderFromHold,
+                    // Sayaçlar yalnız düğmeyi yeniden kurar (ana build değil).
+                    child: Consumer(
+                      builder: (context, ref, _) =>
+                      FolderHoldButton(
+                        stops: [
+                          FolderStop(
+                            id: null,
+                            name: l10n.allNotesChip,
+                            icon: Icons.dashboard_outlined,
+                          ),
+                          for (final f in ref.watch(visibleOrderedFoldersProvider))
+                            FolderStop(
+                              id: f.id,
+                              name: f.name,
+                              icon: f.iconData,
+                              color: f.accent,
+                              count: ref.watch(folderNoteCountsProvider)[f.id],
+                            ),
+                        ],
+                        currentId: ref.watch(selectedFolderProvider),
+                        onOpen: () => unawaited(context.push('/folders')),
+                        onSelect: _selectFolderFromHold,
+                      ),
                     ),
                   ),
                 PositionedDirectional(

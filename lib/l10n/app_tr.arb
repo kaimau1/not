@@ -3535,5 +3535,12 @@
   "themeCream": "Krem",
   "themePeach": "Şeftali",
   "themeMint": "Nane",
-  "folderHoldHint": "Basılı tutup sağa sola kaydırarak klasör değiştir"
+  "folderHoldHint": "Basılı tutup sağa sola kaydırarak klasör değiştir",
+  "homeViewMenu": "Görünüm ve süz",
+  "folderRadialCancel": "Bırak = vazgeç",
+  "googleApiDisabled": "{api} bu uygulamanın Google Cloud projesinde kapalı. Konsolda etkinleştirip yeniden bağlanın.",
+  "@googleApiDisabled": {"placeholders": {"api": {"type": "String"}}},
+  "googleApiEnable": "Etkinleştir",
+  "googleScopeMissing": "{api} izni verilmedi. Bağlanırken izin kutusunu işaretleyin.",
+  "@googleScopeMissing": {"placeholders": {"api": {"type": "String"}}}
 }

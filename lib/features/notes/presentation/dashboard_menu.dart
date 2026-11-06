@@ -78,6 +78,10 @@ extension _DashMenu on _DashboardScreenState {
           // TEK GRUP, not menüleriyle aynı ızgara (F38.6): ikişer maddelik iki
           // grup üç sütunda sola yığılıyordu (kullanıcı bulgusu 2026-10-20).
           MenuSection(l10n.menuSectionApp, [
+            // GÖRÜNÜM VE SÜZ (kullanıcı isteği 2026-11-06: "görünüm ayar
+            // menüsü ana menüdeki 3 nokta içinde de olsun"): arama
+            // kutusundaki ayar düğmesiyle aynı levha.
+            MenuAction('view', l10n.homeViewMenu, Icons.view_quilt_outlined),
             if (!Personalize.current.shows(UiItem.homeAccount))
               MenuAction(
                 'account',
@@ -114,6 +118,8 @@ extension _DashMenu on _DashboardScreenState {
     switch (action) {
       case 'ai':
         unawaited(context.push('/ai'));
+      case 'view':
+        unawaited(showFilterSheet(context));
       case 'account':
         unawaited(showAccountSheet(context));
       case 'hidden':

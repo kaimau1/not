@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../auth/data/google_scope_auth.dart' show ScopeTokenCache;
+import 'google_api_problem.dart';
 import '../domain/calendar_event.dart';
 import '../../notes/domain/reminder_repeat.dart';
 import '../domain/day_key.dart';
@@ -27,7 +28,13 @@ class GoogleCalendarException implements Exception {
   GoogleCalendarException(this.status, this.body);
   final int status;
   final String body;
-  bool get unauthorized => status == 401 || status == 403;
+  bool get unauthorized => status == 401 || (status == 403 && !serviceDisabled);
+
+  /// Google Cloud'da Calendar API etkin değil (F19.B10) — izin istemek çözmez.
+  bool get serviceDisabled => googleServiceDisabled(status, body);
+
+  /// Jetonun kapsamı yetmiyor.
+  bool get scopeInsufficient => googleScopeInsufficient(status, body);
 
   /// `syncToken` geçersiz: tam çekiş gerekir.
   bool get gone => status == 410;

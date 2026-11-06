@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../auth/data/google_scope_auth.dart' show ScopeTokenCache;
+import 'google_api_problem.dart';
 import '../domain/day_key.dart';
 import '../domain/task_item.dart';
 import '../domain/task_sync_plan.dart';
@@ -18,7 +19,10 @@ class GoogleTasksException implements Exception {
   GoogleTasksException(this.status, this.body);
   final int status;
   final String body;
-  bool get unauthorized => status == 401 || status == 403;
+  bool get unauthorized => status == 401 || (status == 403 && !serviceDisabled);
+
+  /// Google Cloud'da Tasks API etkin değil (F19.B10).
+  bool get serviceDisabled => googleServiceDisabled(status, body);
   bool get notFound => status == 404 || status == 410;
   @override
   String toString() => 'GoogleTasksException($status)';

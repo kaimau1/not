@@ -8,6 +8,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/sheet_header.dart';
+import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/presentation/reminder_repeat_ui.dart';
 import '../data/calendar_repository.dart';
@@ -17,6 +18,11 @@ import '../domain/routine.dart';
 
 /// **RUTİNLER** (TAKVIM_PLANI Faz 53, K9): liste + seri + son 30 gün şeridi.
 /// Rutin, zamanı gelen gün ajandada görünür; adımları gün levhasında tiklenir.
+/// Rutinlerin simgesi (kullanıcı isteği 2026-11-06: "rutin simgesini
+/// değiştir" — eski meditasyon yapan kişi rutini anlatmıyordu). Takvim
+/// çubuğu, ⋮ menüsü, ajanda satırı ve boş ekran hep bunu kullanır.
+const IconData kRoutineIcon = Icons.event_repeat_outlined;
+
 class RoutinesScreen extends ConsumerWidget {
   const RoutinesScreen({super.key, this.now});
 
@@ -39,7 +45,7 @@ class RoutinesScreen extends ConsumerWidget {
       ),
       body: routines.isEmpty
           ? EmptyState(
-              icon: Icons.self_improvement_outlined,
+              icon: kRoutineIcon,
               title: l10n.routinesEmpty,
               subtitle: l10n.routinesEmptyHint,
               actionLabel: l10n.routineNew,
@@ -257,6 +263,8 @@ class _RoutineEditor extends ConsumerStatefulWidget {
 }
 
 class _RoutineEditorState extends ConsumerState<_RoutineEditor> {
+  final _titleFocus = FocusNode();
+
   late final _title = TextEditingController(text: widget.existing?.title);
   late final List<TextEditingController> _steps = [
     for (final s in widget.existing?.steps ?? const <RoutineStep>[])
@@ -271,8 +279,16 @@ class _RoutineEditorState extends ConsumerState<_RoutineEditor> {
   late bool _remind = widget.existing?.remind ?? false;
 
   @override
+  void initState() {
+    super.initState();
+    // Klavye levha açıldıktan SONRA (bkz. [focusAfterRouteOpens]).
+    if (widget.existing == null) focusAfterRouteOpens(this, _titleFocus);
+  }
+
+  @override
   void dispose() {
     _title.dispose();
+    _titleFocus.dispose();
     for (final c in _steps) {
       c.dispose();
     }
@@ -354,8 +370,8 @@ class _RoutineEditorState extends ConsumerState<_RoutineEditor> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+    // Klavye payı ayrı, ince widget'ta (bkz. [SheetInsetPadding]).
+    return SheetInsetPadding(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -382,7 +398,7 @@ class _RoutineEditorState extends ConsumerState<_RoutineEditor> {
                   TextField(
                     key: const ValueKey('routine-title'),
                     controller: _title,
-                    autofocus: widget.existing == null,
+                    focusNode: _titleFocus,
                     style: Theme.of(context).textTheme.titleLarge,
                     decoration: InputDecoration(
                       hintText: l10n.routineTitleHint,
