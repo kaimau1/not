@@ -206,6 +206,21 @@ class ActionMenu extends StatelessWidget {
             icon: const Icon(Icons.tune),
             onPressed: () => _edit(context),
           );
+    final visibleSections = [
+      for (final section in sections)
+        if (section.actions.isNotEmpty) section,
+    ];
+    final inlineEdit = heading.isNotEmpty || menuId == null
+        ? null
+        : IconButton(
+            key: const ValueKey('menu-edit'),
+            tooltip: context.l10n.menuEdit,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            iconSize: 20,
+            icon: Icon(Icons.tune, color: scheme.onSurfaceVariant),
+            onPressed: () => _edit(context),
+          );
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: Column(
@@ -218,9 +233,7 @@ class ActionMenu extends StatelessWidget {
               title: heading,
               actions: [?editButton],
               padding: const EdgeInsets.fromLTRB(4, 0, 0, 4),
-            )
-          else if (editButton != null)
-            Align(alignment: AlignmentDirectional.centerEnd, child: editButton),
+            ),
           if (quick.isNotEmpty)
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,14 +244,32 @@ class ActionMenu extends StatelessWidget {
                   ),
               ],
             ),
-          for (final section in sections)
-            if (section.actions.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
-                child: SectionLabel(section.title),
-              ),
-              _TileGrid(actions: section.actions, scheme: scheme),
-            ],
+          for (final (i, section) in visibleSections.indexed) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
+              // Başlıksız menüde ⚙ kendi satırını kaplamasın (kullanıcı
+              // bulgusu 2026-11-06: "düzenleme simgesi üstte boşa bir satır
+              // kaplıyor"): ilk bölüm başlığının sağında durur.
+              child: i == 0 && inlineEdit != null
+                  ? SizedBox(
+                      height: 32,
+                      child: Row(
+                        children: [
+                          Expanded(child: SectionLabel(section.title)),
+                          inlineEdit,
+                        ],
+                      ),
+                    )
+                  : SectionLabel(section.title),
+            ),
+            _TileGrid(actions: section.actions, scheme: scheme),
+          ],
+          // Bölüm yoksa ⚙ en altta, küçük.
+          if (visibleSections.isEmpty && inlineEdit != null)
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: inlineEdit,
+            ),
           if (danger != null) ...[
             const SizedBox(height: 10),
             _Tile(action: danger!, scheme: scheme, danger: true),

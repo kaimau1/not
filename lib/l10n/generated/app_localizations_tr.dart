@@ -7479,6 +7479,36 @@ class AppLocalizationsTr extends AppLocalizations {
   String get themeMint => 'Nane';
 
   @override
+  String get themeOcean => 'Okyanus';
+
+  @override
+  String get themeRose => 'Gül';
+
+  @override
+  String get themeTangerine => 'Mandalina';
+
+  @override
+  String get themeEmerald => 'Zümrüt';
+
+  @override
+  String get themeAmethyst => 'Ametist';
+
+  @override
+  String get themePickerTitle => 'Tema';
+
+  @override
+  String get reminderQuickInHour => '1 saat sonra';
+
+  @override
+  String get reminderSheetTitle => 'Hatırlatıcı';
+
+  @override
+  String get reminderSheetRemove => 'Kaldır';
+
+  @override
+  String get reminderSheetSave => 'Kaydet';
+
+  @override
   String get folderHoldHint =>
       'Basılı tutup sağa sola kaydırarak klasör değiştir';
 

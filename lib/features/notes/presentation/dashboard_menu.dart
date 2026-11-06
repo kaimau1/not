@@ -82,6 +82,9 @@ extension _DashMenu on _DashboardScreenState {
             // menüsü ana menüdeki 3 nokta içinde de olsun"): arama
             // kutusundaki ayar düğmesiyle aynı levha.
             MenuAction('view', l10n.homeViewMenu, Icons.view_quilt_outlined),
+            // TEMA (kullanıcı isteği 2026-11-06): alçak levha, ana ekran
+            // üstte canlı değişir.
+            MenuAction('theme', l10n.themePickerTitle, AppIcons.appearance),
             // KLASÖR SATIRINI GİZLE/GÖSTER (2026-11-06).
             if (ref.read(homeFolderStripHiddenProvider))
               MenuAction(
@@ -133,6 +136,8 @@ extension _DashMenu on _DashboardScreenState {
         unawaited(context.push('/ai'));
       case 'view':
         unawaited(showFilterSheet(context));
+      case 'theme':
+        unawaited(showThemePickerSheet(context));
       case 'folderStrip':
         ref.read(homeFolderStripHiddenProvider.notifier).toggle();
       case 'account':

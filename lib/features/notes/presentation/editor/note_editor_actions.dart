@@ -194,29 +194,31 @@ extension _EditorActions on _NoteEditorScreenState {
     }
   }
 
+  /// TEK LEVHA (2026-11-06): zaman, tekrar ve kaldırma aynı yerde.
   Future<void> _pickReminder() async {
     final note = _note;
     if (note == null) return;
-    final now = DateTime.now();
-    final initial = note.reminderAt ?? now.add(const Duration(hours: 1));
-    // Hatırlatıcılar ekranıyla AYNI levha (bu akşam / yarın / gelecek hafta /
-    // tarih seç); geçmiş saat orada uyarılır.
-    final reminder = await pickReminderWhen(context, initial);
-    if (reminder == null) return;
-    if (!mounted) return;
-    // Tekrar (F18.14): vazgeçilirse var olan tekrar korunur.
-    final repeat = await pickReminderRepeat(
+    final choice = await showReminderSheet(
       context,
-      current: ReminderRepeat.parse(note.reminderRepeat),
-      anchor: reminder,
+      current: note.reminderAt,
+      repeat: note.reminderRepeat,
     );
-    _mutate(
-      (n) => n.copyWith(
-        reminderAt: reminder,
-        reminderRepeat: repeat?.encode() ?? n.reminderRepeat,
+    if (choice == null || !mounted) return;
+    applyReminderChoice(
+      context,
+      choice: choice,
+      previousAt: note.reminderAt,
+      previousRepeat: note.reminderRepeat,
+      write: (at, repeat) => _mutate(
+        (n) => at == null
+            ? n.copyWith(clearReminderAt: true)
+            : n.copyWith(reminderAt: at, reminderRepeat: repeat),
+        immediate: true,
       ),
-      immediate: true,
-    );    if (mounted) unawaited(maybeShowAutoStartHint(context));
+    );
+    if (choice.at != null && mounted) {
+      unawaited(maybeShowAutoStartHint(context));
+    }
   }
 
   void _clearReminder() =>

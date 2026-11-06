@@ -83,6 +83,11 @@ enum AppThemeChoice {
   cream,
   peach,
   mint,
+  ocean,
+  rose,
+  tangerine,
+  emerald,
+  amethyst,
   dark;
 
   /// Bu seçimin tema ailesi (Sistem ve Koyu varsayılan aileyi kullanır).
@@ -96,6 +101,11 @@ enum AppThemeChoice {
     AppThemeChoice.cream => ThemeFamily.cream,
     AppThemeChoice.peach => ThemeFamily.peach,
     AppThemeChoice.mint => ThemeFamily.mint,
+    AppThemeChoice.ocean => ThemeFamily.ocean,
+    AppThemeChoice.rose => ThemeFamily.rose,
+    AppThemeChoice.tangerine => ThemeFamily.tangerine,
+    AppThemeChoice.emerald => ThemeFamily.emerald,
+    AppThemeChoice.amethyst => ThemeFamily.amethyst,
     _ => ThemeFamily.sage,
   };
 
@@ -897,7 +907,12 @@ final effectiveThemeModeProvider = Provider.autoDispose<ThemeMode>((ref) {
     AppThemeChoice.straw ||
     AppThemeChoice.cream ||
     AppThemeChoice.peach ||
-    AppThemeChoice.mint => ThemeMode.light,
+    AppThemeChoice.mint ||
+    AppThemeChoice.ocean ||
+    AppThemeChoice.rose ||
+    AppThemeChoice.tangerine ||
+    AppThemeChoice.emerald ||
+    AppThemeChoice.amethyst => ThemeMode.light,
     AppThemeChoice.dark => ThemeMode.dark,
   };
 });

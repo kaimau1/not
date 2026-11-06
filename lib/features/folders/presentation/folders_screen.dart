@@ -32,7 +32,9 @@ class FoldersScreen extends ConsumerWidget {
   const FoldersScreen({super.key});
 
   /// Kartın sabit yüksekliği — ızgara düzgün satırlar kursun.
-  static const double cardHeight = 204;
+  /// 2026-11-06 (kullanıcı: "klasörlerin büyük kartları biraz küçülsün"):
+  /// 204 → 128; simge adın yanında, önizleme iki satır.
+  static const double cardHeight = 128;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,9 +45,9 @@ class FoldersScreen extends ConsumerWidget {
     final shared = ref.watch(sharedFolderRefsProvider).value ?? const [];
 
     SliverGridDelegate grid() => const SliverGridDelegateWithMaxCrossAxisExtent(
-      maxCrossAxisExtent: 320,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
+      maxCrossAxisExtent: 260,
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
       mainAxisExtent: cardHeight,
     );
 
@@ -292,7 +294,7 @@ class FolderCard extends StatelessWidget {
             (b.updatedAt ?? DateTime(0)).compareTo(a.updatedAt ?? DateTime(0)),
       );
     final preview = [
-      for (final n in recent.take(3)) previewTitle(context, n),
+      for (final n in recent.take(2)) previewTitle(context, n),
     ].where((t) => t.isNotEmpty).toList();
 
     return Material(
@@ -316,29 +318,51 @@ class FolderCard extends StatelessWidget {
               child: Container(height: 4, color: accent),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 8, 14),
+              padding: const EdgeInsetsDirectional.fromSTEB(12, 12, 4, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      FolderIconBox(accent: accent, icon: icon),
-                      const Spacer(),
+                      FolderIconBox(accent: accent, icon: icon, size: 34),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              l10n.folderNoteCount(notes.length),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       if (shared)
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
                           child: Icon(
                             AppIcons.shared,
-                            size: 18,
+                            size: 16,
                             color: scheme.onSurfaceVariant,
                           ),
                         ),
                       if (hidden)
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
                           child: Icon(
                             Icons.visibility_off_outlined,
-                            size: 18,
+                            size: 16,
                             color: scheme.onSurfaceVariant,
                           ),
                         ),
@@ -357,25 +381,7 @@ class FolderCard extends StatelessWidget {
                         const SizedBox(width: 8),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(end: 8),
-                    child: Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    l10n.folderNoteCount(notes.length),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   if (preview.isEmpty)
                     Text(
                       l10n.folderEmpty,
@@ -389,7 +395,7 @@ class FolderCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsetsDirectional.only(
                           end: 8,
-                          bottom: 3,
+                          bottom: 2,
                         ),
                         child: Row(
                           children: [

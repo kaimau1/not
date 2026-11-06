@@ -1,5 +1,6 @@
 import '../../../app/app_frame.dart';
 import 'reminder_repeat_ui.dart';
+import 'reminder_sheet.dart';
 import '../domain/reminder_repeat.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/sheet_header.dart';
@@ -185,40 +186,46 @@ class RemindersScreen extends ConsumerWidget {
     () => DateFormat('d MMMM y, EEEE HH:mm'),
   );
 
+  /// Düzenle ve kaldır TEK levhada (2026-11-06, [showReminderSheet]).
   Future<void> _editReminder(
     BuildContext context,
     WidgetRef ref,
     Note note,
   ) async {
-    final picked = await pickReminderWhen(
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final choice = await showReminderSheet(
       context,
-      note.reminderAt ?? DateTime.now().add(const Duration(hours: 1)),
+      current: note.reminderAt,
+      repeat: note.reminderRepeat,
     );
-    if (picked == null || !context.mounted) return;
-    final repeat = await pickReminderRepeat(
+    if (choice == null || !context.mounted) return;
+    applyReminderChoice(
       context,
-      current: ReminderRepeat.parse(note.reminderRepeat),
-      anchor: picked,
+      choice: choice,
+      previousAt: note.reminderAt,
+      previousRepeat: note.reminderRepeat,
+      write: (at, repeat) => repo.setReminder(note.id, at, repeat: repeat),
     );
-    ref
-        .read(notesRepositoryProvider)
-        ?.setReminder(note.id, picked, repeat: repeat?.encode());
-    if (context.mounted) unawaited(maybeShowAutoStartHint(context));
+    if (choice.at != null && context.mounted) {
+      unawaited(maybeShowAutoStartHint(context));
+    }
   }
 
-  /// Yeni hatırlatıcı: önce zaman seçilir, ardından o zamana kurulu boş bir
-  /// not oluşturulup editör açılır.
+  /// Yeni hatırlatıcı: önce zaman (ve tekrar) seçilir, ardından o zamana
+  /// kurulu boş bir not oluşturulup editör açılır.
   Future<void> _addReminder(BuildContext context, WidgetRef ref) async {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    final picked = await pickReminderWhen(
-      context,
-      DateTime.now().add(const Duration(hours: 1)),
-    );
+    final choice = await showReminderSheet(context);
+    final picked = choice?.at;
     if (picked == null || !context.mounted) return;
     // Hatırlatıcı TEK yazımda: createNote + ayrı setReminder arasında doküman
     // bir an hatırlatıcısız kalıyordu (boş-doküman penceresi kuralı).
     final id = await repo.createNote(NoteType.text, reminderAt: picked);
+    if (choice!.repeat.isNotEmpty) {
+      repo.setReminder(id, picked, repeat: choice.repeat);
+    }
     if (!context.mounted) return;
     unawaited(maybeShowAutoStartHint(context));
     await context.pushNote(noteRoutePath(id));

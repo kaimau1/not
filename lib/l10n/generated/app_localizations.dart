@@ -13352,6 +13352,66 @@ abstract class AppLocalizations {
   /// **'Nane'**
   String get themeMint;
 
+  /// No description provided for @themeOcean.
+  ///
+  /// In tr, this message translates to:
+  /// **'Okyanus'**
+  String get themeOcean;
+
+  /// No description provided for @themeRose.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gül'**
+  String get themeRose;
+
+  /// No description provided for @themeTangerine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mandalina'**
+  String get themeTangerine;
+
+  /// No description provided for @themeEmerald.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zümrüt'**
+  String get themeEmerald;
+
+  /// No description provided for @themeAmethyst.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ametist'**
+  String get themeAmethyst;
+
+  /// No description provided for @themePickerTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tema'**
+  String get themePickerTitle;
+
+  /// No description provided for @reminderQuickInHour.
+  ///
+  /// In tr, this message translates to:
+  /// **'1 saat sonra'**
+  String get reminderQuickInHour;
+
+  /// No description provided for @reminderSheetTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcı'**
+  String get reminderSheetTitle;
+
+  /// No description provided for @reminderSheetRemove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaldır'**
+  String get reminderSheetRemove;
+
+  /// No description provided for @reminderSheetSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydet'**
+  String get reminderSheetSave;
+
   /// No description provided for @folderHoldHint.
   ///
   /// In tr, this message translates to:

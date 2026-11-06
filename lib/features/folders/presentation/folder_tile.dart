@@ -1,6 +1,9 @@
 import '../../../core/app_icons.dart';
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
@@ -406,14 +409,18 @@ class AllNotesChip extends ConsumerWidget {
     final selected = ref.watch(showAllNotesProvider);
     final count = ref.watch(allNotesCountProvider);
     final scheme = Theme.of(context).colorScheme;
+    // 2026-11-06 (kullanıcı isteği: "Tümü düğmesi klasörler sayfasını
+    // açsın"): dokunuş Klasörler ekranını açar; klasördekiler dahil bütün
+    // notları gösterme seçimi UZUN BASIŞTA kaldı.
     return _ChipShell(
+      key: const ValueKey('all-notes-chip'),
       accent: scheme.primary,
-      icon: Icons.select_all,
+      icon: Icons.folder_copy_outlined,
       label: context.l10n.allNotesChip,
       count: count,
       selected: selected,
-      onTap: () {
-        // Yana çekişle bir klasöre geçilmişse "Tümü" oradan da çıkarır.
+      onTap: () => unawaited(context.push('/folders')),
+      onLongPress: () {
         ref.read(selectedFolderProvider.notifier).set(null);
         ref.read(selectedSharedFolderProvider.notifier).set(null);
         ref.read(sharedHubOnHomeProvider.notifier).set(false);
