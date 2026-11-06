@@ -28,7 +28,7 @@ bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 izin bir kez kendiliğinden soruldu → Drive'daki "Notlar" klasörüne yüklendi (`driveId`) + önizleme
 (25 KB, izinsiz açılıyor); dosyası telefonda olmayan kayıt (başka cihaz benzetimi) Drive'dan indi,
 kartta çizildi. Yeni metin notunda klavye açık; not "+" → Hatırlat aynı "Ne zaman" levhası; Ayarlar →
-İzinler'de Xiaomi "Otomatik başlatma" satırı MIUI ekranını açıyor.
+İzinler'de Xiaomi "Otomatik başlatma" satırı MIUI ekranını açıyor; ilk hatırlatıcı kaydedilince ipucu + "Aç" çıkıyor (v1.2.5). Gmail bağlan + Nota kaydet, sürüm geçmişi, tam yedek kaydet/geri yükle de geçti.
 
 **Telefon (v1.1.N, Google hesabı; ~7 dk)**
 2. [ ] ⋮ yerine başlık "+" levhası → Araçlar → İlgili notlar → Bağla (F18.17). Biçim, `[[` bağlantısı ve "1 bağlantı" çipi telefonda geçti.
@@ -45,7 +45,7 @@ kartta çizildi. Yeni metin notunda klavye açık; not "+" → Hatırlat aynı "
    1 dk sonra dön → kilit; widget'tan / bildirimden açınca da kilit;
    "Son uygulamalarda gizle" → son uygulamalar boş (F18.6).
 11. [ ] Not kilidi (şifre). Sürüm geçmişi "Bu sürüme dön" + Geri al telefonda geçti (2026-11-06).
-12. [ ] Başka uygulamadan PDF paylaş → yeni not / var olan not; Not paketi gönder-aç. Metin paylaşımı (iki hedef) geçti.
+12. [ ] Not paketi gönder-aç; PDF → var olan not. Dosyalar'dan PDF paylaş → yeni PDF notu + Drive'a yükleme telefonda geçti (2026-11-06). Metin paylaşımı (iki hedef) geçti.
 13. [ ] TalkBack'te kart tek seferde okunuyor (F19.C2). Yazı ölçeği 1,3 + "Sistem yazı boyutunu izle" taşmadı.
 14. [ ] Kişisel köprü: Harita "not al" (uygulama kapalı), Kanallarım "Not al" (F19.C4).
 15. [ ] Yeni sürüm çıkınca açılışta bir kez "Yeni sürüm var" + Ayarlar →
