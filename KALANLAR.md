@@ -40,7 +40,7 @@ kartta çizildi. Yeni metin notunda klavye açık; not "+" → Hatırlat aynı "
 8. [ ] Yapay zekâ: Tüm notlar sohbetine eski bir nottaki bilgiyi sor →
    cevap + kaynak not çipi (F18.18). Bir notta ⋮ → Kart üret → kaydet →
    Yapay zekâ → Bugünün kartları → Cevabı göster → İyi (F18.19).
-9. [ ] Tam yedek (Ayarlar → Senkronizasyon): seçicide dosyayı kaydet → geri yükle → görsel/çizim/balon/sayfa/klasör geliyor; ikinci yükleme "N atlandı" (F18.4 = F19.A4). Keep Takeout zip (F18.15).
+9. [ ] Tam yedek — telefonda geçti (2026-11-06, v1.2.4): "Tam yedek al" → sistemin Kaydet penceresi → İndirilenler (görsel içinde); geri yükle → "0 not geri yüklendi, 2 atlandı (zaten var)". Kalan: boş hesaba/yeni cihaza geri yükleyince görsel/çizim/balon/sayfa/klasör geliyor mu; Keep Takeout zip (F18.15). Not: Dosya Okuyucu seçicisi yeni kaydedilen `.notyedek`i listelemedi ("Diğer" → sistem seçicisi buluyor) — dosya-okuyucu deposunun dizinleme işi.
 10. [ ] Ayarlar → Hesap → Uygulama kilidi aç → uygulamayı arka plana al,
    1 dk sonra dön → kilit; widget'tan / bildirimden açınca da kilit;
    "Son uygulamalarda gizle" → son uygulamalar boş (F18.6).
