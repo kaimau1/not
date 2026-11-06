@@ -34,7 +34,7 @@ void main() {
         id: '5',
         noteId: 'n',
         noteItemId: 'a',
-        deletedAt: DateTime(2026, 11, 1),
+        deletedAt: DateTime(2026, 11, 2),
       ),
     ];
     expect(tasksToSync(tasks, 'n', 'a', true).map((t) => t.id), ['1']);
