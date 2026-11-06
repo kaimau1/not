@@ -56,6 +56,20 @@ abstract final class AppConstants {
   /// kabul edersem gerçek bir nota dönüşür (bkz. InboxRepository).
   static const String inboxNotesCollection = 'inboxNotes';
 
+  /// **TAKVİM** (TAKVIM_PLANI Faz 46) — `users/{uid}/events/{id}`: kendi
+  /// etkinliklerim. Google etkinlikleri buraya YAZILMAZ (cihazda önbellek).
+  static const String eventsCollection = 'events';
+
+  /// Görevler (Google Görevler benzeri) — `users/{uid}/tasks/{id}`.
+  static const String tasksCollection = 'tasks';
+
+  /// Görev listeleri — `users/{uid}/taskLists/{id}`.
+  static const String taskListsCollection = 'taskLists';
+
+  /// Güne bağlı notlar — `users/{uid}/dayLinks/{YYYY-MM-DD}` → `noteIds`.
+  /// Not belgesine alan EKLENMEZ (sık yazılan büyük belge; bkz. plan §3).
+  static const String dayLinksCollection = 'dayLinks';
+
   // Gemini
   static const String geminiBaseUrl =
       'https://generativelanguage.googleapis.com/v1beta';

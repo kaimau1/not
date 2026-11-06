@@ -9,8 +9,9 @@ Kaynak: 2026-11-06 kullanıcı isteği:
 > olabilir. İyi mi olur, kötü mü olur, uygulama için fazla mı olur; tüm
 > detaylarıyla önce planlayalım."*
 
-Numara `TUTARLILIK_PLANI.md` (Faz 36–45) sonrasından başlar. **Durum: TASLAK —
-kararlar (K1–K10) AÇIK.** Kod yazılmadı; kararlar verilince Faz 46'dan başlanır.
+Numara `TUTARLILIK_PLANI.md` (Faz 36–45) sonrasından başlar. **Durum: kararlar
+VERİLDİ — K1–K10 hepsi önerilen (kullanıcı, 2026-11-06: "önerilerin güzel,
+yapalım").** Sıra K10: 46 → 47 → 50 → 48 → 49 → 50.4 → 51 → 52 → 53.
 
 ## Bu dosya nasıl kullanılır
 
@@ -128,12 +129,14 @@ createdAt, updatedAt, deletedAt, extras
 ```
 Listeler: `users/{uid}/taskLists/{id}` (`title`, `google.taskListId`).
 
-### Not tarafı
-`Note`'a **tek** yeni alan: `day: 'YYYY-MM-DD'?` ("bu not şu güne ait" — günlük
-not / toplantı notu). Etkinlik/görev bağı KAYIT tarafında (`noteIds`, `noteId`)
-tutulur; notta gösterim `array-contains` sorgusuyla (dizin `firestore.indexes.json`).
-Gerekçe: not belgesi zaten büyük ve sık yazılıyor (`notes_repository`), her bağ
-değişikliğinde notu yeniden yazmak senkron trafiğini artırır (AKICILIK Faz 22).
+### Not tarafı (F46'da değişti: `Note`'a alan EKLENMEDİ)
+Gün bağı `users/{uid}/dayLinks/{YYYY-MM-DD}` → `noteIds` (gün başına bir belge).
+Etkinlik/görev bağı KAYIT tarafında (`noteIds`, `noteId`). Takvim verisi küçük
+olduğu için dört koleksiyon tek dinleyiciyle belleğe alınır; notun "hangi güne/
+etkinliğe bağlı" sorusu bellekte çözülür — dizin gerekmez. Gerekçe: not belgesi
+büyük ve sık yazılıyor (`notes_repository`, ağır belge, sürümler); bağ için notu
+yeniden yazmak senkron trafiğini artırırdı (AKICILIK Faz 22) ve `Note` modeline
+dokunmak forward-compat/yedek/paket yollarını da etkilerdi.
 
 ---
 
@@ -223,10 +226,11 @@ Faz 53'te.
 ## 8. Fazlar
 
 ### Faz 46 — Temel model ve depo (görünmez)
-- [ ] F46.1 `features/calendar/domain`: `CalendarEvent`, `TaskItem`, `TaskList`, `day` alanı (`Note`), `extras` koruması, `fromMap/toMap` testleri.
-- [ ] F46.2 Tekrar: `reminder_repeat` biçimini etkinlik/göreve genişlet (K4) — "aralıktaki çalmaları üret" saf fonksiyonu + testleri (yaz saati, 31 Şubat, artık yıl).
-- [ ] F46.3 `CalendarRepository`/`TasksRepository` (Firestore, aralık sorgusu), dizinler, `account_service` silme listesi, yedekleme (`backup_service`) + geri yükleme.
-- [ ] F46.4 Kural testi (`rules-test`): yeni koleksiyonlar yalnız sahibine.
+- [x] F46.1 `features/calendar/domain`: `CalendarEvent` (saatli `start/end` zaman damgası, tüm gün `startDay/endDay` dizesi, bitiş HARİÇ), `TaskItem`, `TaskList`, `GoogleLink`, `day_key.dart`; `extras` koruması; `test/calendar_model_test.dart`. Not tarafı `dayLinks` (yukarıda §3).
+- [x] F46.2 `Recurrence` (`recurrence.dart`): `<reminderRepeat>;every=N;until=GÜN;count=N`, `between()` / `nextAfter()`, `exdates`; tekrarlı görevi tamamlama `completeTask` (geçmiş kopyası + sonraki oluşa ilerleme, gecikmişi bugüne atlatır).
+- [x] F46.3 `CalendarRepository` (etkinlik/görev/liste/gün bağı CRUD + akış sağlayıcıları, yangın-ve-unut yazım), `account_service` silme listesi.
+- [ ] F46.5 Yedek (`backup_service`): takvim/görev/gün bağı dışa+içe aktarma — geri yüklemede not kimlikleri yeniden eşlenmeli (`NoteShare.import` yeni kimlik verir). Faz 47'de ayarlarla birlikte.
+- [x] F46.4 Kural testi (`rules-test`): dört koleksiyon yalnız sahibine (genel `users/{uid}/{c}/**` kuralı yetiyor, kural değişmedi).
 
 ### Faz 47 — Takvim ekranı (yerel)
 - [ ] F47.1 `/calendar` rota + giriş kapıları (menü, ray, kısayol).
@@ -273,7 +277,7 @@ Faz 53'te.
 
 ---
 
-## 9. Kararlar (AÇIK — önerilen ilk sırada)
+## 9. Kararlar (VERİLDİ 2026-11-06 — hepsi önerilen (a))
 
 - **K1 — Görevlerin kaynağı.** (a) **Önerilen:** görevler Firestore'da (misafir de
   kullanır, web+telefon aynı), Google bağlıysa Google Görevler ile iki yönlü
@@ -307,7 +311,7 @@ Faz 53'te.
 
 | Faz | Durum |
 |---|---|
-| 46 Model | ⏳ kararlar bekleniyor |
+| 46 Model | ✅ (F46.5 yedek açık) |
 | 47 Takvim ekranı | — |
 | 48 Google Takvim okuma | — |
 | 49 Not ↔ takvim | — |
