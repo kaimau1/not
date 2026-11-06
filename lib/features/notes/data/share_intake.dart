@@ -150,7 +150,10 @@ final shareIntakeProvider = Provider<void>((ref) {
       // yazmak okunamaz bir çöp not üretirdi.
       final lower = f.path.toLowerCase();
       if (lower.endsWith('.zip') ||
-          lower.endsWith(NotePackage.fileExtension)) {
+          lower.endsWith(NotePackage.fileExtension) ||
+          (safeToRead(f.path) && looksLikeZip(f.path))) {
+        // İmzaya da bakılır (2026-11-06 cihazda: `.notyedek` tam yedeği
+        // uzantı listesinde yoktu, "PK..." gövdeli not oluştu).
         continue;
       }
       // Metin girdisi iki şey olabilir: paylaşılan yazının KENDİSİ ya da bir
@@ -602,5 +605,26 @@ Map<String, Object> appendSharedText(
     case NoteType.slides:
       final current = note.body.trimRight();
       return {'body': current.isEmpty ? clean : '$current\n\n$clean'};
+  }
+}
+
+/// Dosya ZIP arşivi mi (ilk 4 bayt `PK\x03\x04`): ikili arşiv metin notu
+/// olmasın. Okunamazsa false.
+@visibleForTesting
+bool looksLikeZip(String path) {
+  try {
+    final raf = File(path).openSync();
+    try {
+      final head = raf.readSync(4);
+      return head.length == 4 &&
+          head[0] == 0x50 &&
+          head[1] == 0x4B &&
+          head[2] == 0x03 &&
+          head[3] == 0x04;
+    } finally {
+      raf.closeSync();
+    }
+  } catch (_) {
+    return false;
   }
 }

@@ -6,6 +6,7 @@ import 'package:archive/archive.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -25,6 +26,8 @@ import '../../notes/data/notes_repository.dart';
 /// Ayarlar → Hesap → "Tam yedek" ve "Yedekten geri yükle" akışları (F18.4).
 /// Hizmet ([BackupService]) arayüzden bağımsız; burada yalnız dosya seçimi,
 /// kimlik kapısı, ilerleme + iptal ve sonuç mesajı var.
+
+const _systemChannel = MethodChannel('dev.kaimau.notlar/system');
 
 BackupService? backupServiceOf(WidgetRef ref) {
   final notes = ref.read(notesRepositoryProvider);
@@ -91,6 +94,19 @@ Future<void> exportFullBackup(BuildContext context, WidgetRef ref) async {
     } finally {
       progress.finish();
       await dialog;
+    }
+    // Android: sistemin "kaydet" penceresi (İndirilenler, Drive…). Paylaşım
+    // levhası yedeği kolayca Notlar'a "metin" olarak yolluyordu (2026-11-06
+    // cihazda: zip baytları "PK..." notu oldu) ve dosya hiçbir yere kalmıyordu.
+    if (!kIsWeb && Platform.isAndroid) {
+      final saved = await _systemChannel.invokeMethod<bool>('saveDocument', {
+        'path': file.path,
+        'name': name,
+        // octet-stream: zip türünde sistem uzantıyı .zip'e çevirebiliyor.
+        'mimeType': 'application/octet-stream',
+      });
+      if (saved ?? false) messenger.showMessage(l10n.attachmentSavedAs(name));
+      return;
     }
     await SharePlus.instance.share(
       ShareParams(files: [file], subject: l10n.backupShareSubject),
