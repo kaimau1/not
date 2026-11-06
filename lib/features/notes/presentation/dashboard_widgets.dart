@@ -386,6 +386,14 @@ class _SearchField extends ConsumerWidget {
                     ref.read(semanticSearchEnabledProvider.notifier).toggle(),
               ),
             ),
+            // AYIRAÇ: AI anahtarı ile düz simgeler (süz, hesap, ⋮) arası
+            // (kullanıcı örneği 2026-11-06).
+            Container(
+              width: 1,
+              height: 22,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              color: AppTokens.of(context).hairline,
+            ),
             // SÜZ arama kutusunun sağında (bkz. [HomeFilterButton]);
             // kişiselleştirmede gizlenebilir.
             const Customizable(
@@ -526,11 +534,12 @@ class _SemanticToggleState extends ConsumerState<_SemanticToggle> {
             key: const ValueKey('search-ai-toggle'),
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
-            width: 34,
-            height: 34,
+            // HAP (kullanıcı örneği 2026-11-06): ince çerçeveli, alçak.
+            width: 42,
+            height: 30,
             decoration: BoxDecoration(
-              color: on ? scheme.primary : scheme.surface,
-              borderRadius: BorderRadius.circular(9),
+              color: on ? scheme.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(15),
               border: Border.all(
                 color: on ? scheme.primary : scheme.outlineVariant,
               ),
@@ -538,11 +547,11 @@ class _SemanticToggleState extends ConsumerState<_SemanticToggle> {
             child: Material(
               type: MaterialType.transparency,
               child: InkWell(
-                borderRadius: BorderRadius.circular(9),
+                borderRadius: BorderRadius.circular(15),
                 onTap: onTap,
                 child: Icon(
                   on ? Icons.auto_awesome : Icons.auto_awesome_outlined,
-                  size: 18,
+                  size: 17,
                   color: on ? scheme.onPrimary : scheme.onSurfaceVariant,
                 ),
               ),

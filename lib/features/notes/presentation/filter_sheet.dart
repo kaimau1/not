@@ -146,14 +146,15 @@ class HomeFilterButton extends ConsumerWidget {
                   minWidth: 34,
                   maxWidth: active ? 118 : 34,
                 ),
-                decoration: BoxDecoration(
-                  color: active ? scheme.secondaryContainer : scheme.surface,
-                  borderRadius: BorderRadius.circular(9),
-                  border: Border.all(
-                    color: active ? scheme.primary : scheme.outlineVariant,
-                    width: active ? 1.5 : 1,
-                  ),
-                ),
+                // Pasifken DÜZ simge (kutusuz, 2026-11-06); süzgeç varken
+                // vurgulu hap.
+                decoration: active
+                    ? BoxDecoration(
+                        color: scheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(9),
+                        border: Border.all(color: scheme.primary, width: 1.5),
+                      )
+                    : null,
                 child: Material(
                   type: MaterialType.transparency,
                   child: InkWell(

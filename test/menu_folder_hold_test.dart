@@ -81,68 +81,59 @@ void main() {
     expect(radialFolderIndex(const Offset(0, -120), 11), 0);
   });
 
-  testWidgets('klasör düğmesi: dokun açar, basılı tut + kaydır seçer', (
+  Widget button({
+    required void Function() onOpen,
+    required void Function(String?) onSelect,
+  }) => _app(
+    FolderHoldButton(
+      stops: const [
+        FolderStop(id: null, name: 'Tümü'),
+        FolderStop(id: 'f1', name: 'İş', count: 3),
+        FolderStop(id: 'f2', name: 'Ev'),
+      ],
+      currentId: null,
+      onOpen: onOpen,
+      onSelect: onSelect,
+    ),
+  );
+
+  testWidgets('klasör düğmesi: dokun halkayı açar, klasöre dokun seçer', (
     tester,
   ) async {
     var opened = 0;
     String? picked = 'yok';
     await tester.pumpWidget(
-      _app(
-        FolderHoldButton(
-          stops: const [
-            FolderStop(id: null, name: 'Tümü'),
-            FolderStop(id: 'f1', name: 'İş', count: 3),
-            FolderStop(id: 'f2', name: 'Ev'),
-          ],
-          currentId: null,
-          onOpen: () => opened++,
-          onSelect: (id) => picked = id,
-        ),
-      ),
+      button(onOpen: () => opened++, onSelect: (id) => picked = id),
     );
     await tester.tap(find.byKey(const ValueKey('folder-hold-button')));
-    expect(opened, 1);
-
-    final g = await tester.startGesture(
-      tester.getCenter(find.byKey(const ValueKey('folder-hold-button'))),
-    );
-    // Hızlı açılır (2026-11-06): 300 ms yeter.
-    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('folder-radial-menu')), findsOneWidget);
-    expect(find.text('Bırak = vazgeç'), findsOneWidget);
-    // 3 durak: tepe Tümü, sağ-alt İş, sol-alt Ev → sola-aşağı kaydır.
-    await g.moveBy(const Offset(-20, 12));
-    await tester.pump();
-    await g.up();
+    await tester.tap(find.text('Ev'));
     await tester.pumpAndSettle();
     expect(picked, 'f2');
-    expect(opened, 1);
+    expect(opened, 0);
     expect(find.byKey(const ValueKey('folder-radial-menu')), findsNothing);
   });
 
-  testWidgets('klasör düğmesi: ortada bırakmak vazgeçer', (tester) async {
+  testWidgets('klasör düğmesi: orta daire Klasörler, boşluk vazgeçer', (
+    tester,
+  ) async {
+    var opened = 0;
     String? picked = 'yok';
     await tester.pumpWidget(
-      _app(
-        FolderHoldButton(
-          stops: const [
-            FolderStop(id: null, name: 'Tümü'),
-            FolderStop(id: 'f1', name: 'İş'),
-          ],
-          currentId: null,
-          onOpen: () {},
-          onSelect: (id) => picked = id,
-        ),
-      ),
+      button(onOpen: () => opened++, onSelect: (id) => picked = id),
     );
-    final g = await tester.startGesture(
-      tester.getCenter(find.byKey(const ValueKey('folder-hold-button'))),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-    await g.moveBy(const Offset(4, 3));
-    await tester.pump();
-    await g.up();
+    await tester.tap(find.byKey(const ValueKey('folder-hold-button')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('folder-radial-all')));
+    await tester.pumpAndSettle();
+    expect(opened, 1);
+    await tester.tap(find.byKey(const ValueKey('folder-hold-button')));
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(5, 5));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('folder-radial-menu')), findsNothing);
     expect(picked, 'yok');
+    expect(opened, 1);
   });
 }
