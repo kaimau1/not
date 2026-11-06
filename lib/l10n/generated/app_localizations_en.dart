@@ -7502,6 +7502,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get folderHoldHint => 'Hold and slide left or right to switch folders';
 
   @override
+  String get homeFolderStripHide => 'Hide folder row';
+
+  @override
+  String get homeFolderStripShow => 'Show folder row';
+
+  @override
   String get homeViewMenu => 'View & filter';
 
   @override

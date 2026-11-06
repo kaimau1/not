@@ -377,22 +377,14 @@ class _SearchField extends ConsumerWidget {
             //
             // YALNIZ ARAMA SIRASINDA (F11.1): odak yokken ve kutu boşken
             // gizli — üst çubukta yer aramaya kalsın, ipucu kesilmesin.
-            ListenableBuilder(
-              listenable: focusNode ?? const AlwaysStoppedAnimation(0),
-              builder: (context, _) =>
-                  (focusNode?.hasFocus ?? true) || query.isNotEmpty
-                  // TextFieldTapRegion: anahtara dokunmak "alan dışı" sayılıp
-                  // odağı düşürmesin — düşürse anahtar dokunuş bitmeden
-                  // kaybolurdu.
-                  ? TextFieldTapRegion(
-                      child: _SemanticToggle(
-                        on: semantic,
-                        onTap: () => ref
-                            .read(semanticSearchEnabledProvider.notifier)
-                            .toggle(),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
+            // HEP GÖRÜNÜR (kullanıcı bulgusu 2026-11-06: "boştayken AI tuşu
+            // görünmüyor"). TextFieldTapRegion: dokunuş odağı düşürmesin.
+            TextFieldTapRegion(
+              child: _SemanticToggle(
+                on: semantic,
+                onTap: () =>
+                    ref.read(semanticSearchEnabledProvider.notifier).toggle(),
+              ),
             ),
             // SÜZ arama kutusunun sağında (bkz. [HomeFilterButton]);
             // kişiselleştirmede gizlenebilir.

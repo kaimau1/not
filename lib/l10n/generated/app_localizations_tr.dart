@@ -7482,6 +7482,12 @@ class AppLocalizationsTr extends AppLocalizations {
       'Basılı tutup sağa sola kaydırarak klasör değiştir';
 
   @override
+  String get homeFolderStripHide => 'Klasör satırını gizle';
+
+  @override
+  String get homeFolderStripShow => 'Klasör satırını göster';
+
+  @override
   String get homeViewMenu => 'Görünüm ve süz';
 
   @override

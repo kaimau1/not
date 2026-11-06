@@ -228,6 +228,10 @@ List<(NoteBucket, List<Note>)> dateBuckets(List<Note> notes, DateTime now) {
 /// kullanıcı tek dokunuşla ona geçer ve tercihi hatırlanır.
 final folderShelfExpandedProvider = boolPref('folder_shelf_expanded', defaultValue: false);
 
+/// Ana ekranın KLASÖR SATIRI gizli mi (kullanıcı isteği 2026-11-06). Gizliyken
+/// klasörlere sol alttaki klasör düğmesiyle (dokun / basılı tut) gidilir.
+final homeFolderStripHiddenProvider = boolPref('home_folder_strip_hidden', defaultValue: false);
+
 /// **"TÜMÜ"** (kalıcı) — kullanıcı isteği 2026-10-20: "klasör seçeneklerinin
 /// başına Tümü seçeneği koy; tüm notları göstersin, klasörde olan olmayan
 /// hepsi, arşiv hariç". Kapalıyken (varsayılan) ana ekran yalnız klasörsüz
