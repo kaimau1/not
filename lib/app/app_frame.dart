@@ -152,6 +152,7 @@ const kHomeInBarLocations = [
   '/briefing',
   '/cards',
   '/calendar',
+  '/tasks',
   '/reminders',
   '/archive',
   '/trash',

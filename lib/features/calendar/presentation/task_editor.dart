@@ -1,0 +1,331 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+
+import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/sheet_header.dart';
+import '../../../core/widgets/undo_snackbar.dart';
+import '../../notes/presentation/reminder_repeat_ui.dart';
+import '../../notes/presentation/reminders_screen.dart'
+    show maybeShowAutoStartHint;
+import '../data/calendar_repository.dart';
+import '../domain/day_key.dart';
+import '../domain/recurrence.dart';
+import '../domain/task_item.dart';
+
+/// Listenin görünen adı (varsayılan liste yerelleştirilir).
+String taskListTitle(AppLocalizations l10n, TaskList list) =>
+    list.isDefault || list.title.trim().isEmpty
+    ? l10n.tasksDefaultList
+    : list.title.trim();
+
+/// Görev oluştur/düzenle levhası (TAKVIM_PLANI F50.1). [existing] null ise
+/// yeni; [due] yeni görevin son günü (takvimden açılınca seçili gün),
+/// [parentId] alt görev, [listId] hangi listeye.
+Future<void> showTaskEditor(
+  BuildContext context, {
+  TaskItem? existing,
+  DateTime? due,
+  String parentId = '',
+  String listId = TaskList.defaultId,
+}) => showAppSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  useSafeArea: true,
+  showDragHandle: true,
+  builder: (_) => TaskEditorSheet(
+    existing: existing,
+    due: due,
+    parentId: parentId,
+    listId: listId,
+  ),
+);
+
+class TaskEditorSheet extends ConsumerStatefulWidget {
+  const TaskEditorSheet({
+    super.key,
+    this.existing,
+    this.due,
+    this.parentId = '',
+    this.listId = TaskList.defaultId,
+  });
+
+  final TaskItem? existing;
+  final DateTime? due;
+  final String parentId;
+  final String listId;
+
+  @override
+  ConsumerState<TaskEditorSheet> createState() => _TaskEditorSheetState();
+}
+
+class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
+  late final _title = TextEditingController(text: widget.existing?.title);
+  late final _notes = TextEditingController(text: widget.existing?.notes);
+  late DateTime? _due =
+      widget.existing?.dueDay ??
+      (widget.due == null ? null : startOfDay(widget.due!));
+  late String _time = widget.existing?.dueTime ?? '';
+  late Recurrence _repeat = Recurrence.parse(widget.existing?.repeat);
+  late bool _remind = widget.existing?.reminders.isNotEmpty ?? false;
+  late bool _starred = widget.existing?.starred ?? false;
+  late String _listId = widget.existing?.listId ?? widget.listId;
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _notes.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDue() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _due ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _due = startOfDay(picked));
+  }
+
+  Future<void> _pickTime() async {
+    final hm = parseHm(_time);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: hm == null
+          ? const TimeOfDay(hour: TaskItem.defaultDueHour, minute: 0)
+          : TimeOfDay(hour: hm.hour, minute: hm.minute),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _time = formatHm(picked.hour, picked.minute));
+  }
+
+  Future<void> _pickRepeat() async {
+    final anchor = _due ?? startOfDay(DateTime.now());
+    final picked = await pickReminderRepeat(
+      context,
+      current: _repeat.base,
+      anchor: anchor,
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _due ??= anchor;
+      _repeat = picked.isNone
+          ? Recurrence.none
+          : _repeat.copyWith(base: picked).anchoredTo(anchor);
+    });
+  }
+
+  void _save() {
+    final repo = ref.read(calendarRepositoryProvider);
+    final title = _title.text.trim();
+    if (repo == null) return;
+    if (title.isEmpty && widget.existing == null) {
+      Navigator.pop(context);
+      return;
+    }
+    final base = widget.existing ?? TaskItem(id: '', parentId: widget.parentId);
+    final due = _due == null ? '' : dayKey(_due!);
+    repo.saveTask(
+      base.copyWith(
+        title: title,
+        notes: _notes.text.trim(),
+        due: due,
+        dueTime: due.isEmpty ? '' : _time,
+        repeat: due.isEmpty ? '' : _repeat.encode(),
+        reminders: _remind && due.isNotEmpty ? const [0] : const [],
+        starred: _starred,
+        listId: _listId,
+      ),
+    );
+    final outer = Navigator.of(context).context;
+    Navigator.pop(context);
+    if (_remind && due.isNotEmpty && outer.mounted) {
+      unawaited(maybeShowAutoStartHint(outer));
+    }
+  }
+
+  void _delete() {
+    final task = widget.existing;
+    final repo = ref.read(calendarRepositoryProvider);
+    if (task == null || repo == null) return;
+    final l10n = context.l10n;
+    final all = ref.read(tasksStreamProvider).value ?? const <TaskItem>[];
+    repo.trashTask(task, all);
+    final outer = Navigator.of(context).context;
+    Navigator.pop(context);
+    if (outer.mounted) {
+      showUndoSnackBar(
+        outer,
+        message: l10n.taskDeleted,
+        undoLabel: l10n.undo,
+        onUndo: () {
+          repo.restoreTask(task.id);
+          for (final t in all) {
+            if (t.parentId == task.id) repo.restoreTask(t.id);
+          }
+        },
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final lists = ref.watch(taskListsStreamProvider).value ?? const [];
+    final insets = MediaQuery.viewInsetsOf(context).bottom;
+    final allLists = [
+      const TaskList(id: TaskList.defaultId),
+      for (final l in lists)
+        if (!l.isDefault) l,
+    ];
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: insets),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SheetHeader(
+              title: widget.existing == null
+                  ? l10n.tasksNewTask
+                  : l10n.taskEditTitle,
+              actions: [
+                IconButton(
+                  tooltip: l10n.taskStar,
+                  isSelected: _starred,
+                  icon: const Icon(Icons.star_outline),
+                  selectedIcon: const Icon(Icons.star),
+                  onPressed: () => setState(() => _starred = !_starred),
+                ),
+                if (widget.existing != null)
+                  IconButton(
+                    tooltip: l10n.taskDelete,
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: _delete,
+                  ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    key: const ValueKey('task-title'),
+                    controller: _title,
+                    autofocus: widget.existing == null,
+                    textCapitalization: TextCapitalization.sentences,
+                    style: Theme.of(context).textTheme.titleLarge,
+                    decoration: InputDecoration(
+                      hintText: l10n.taskTitleHint,
+                      border: InputBorder.none,
+                    ),
+                    onSubmitted: (_) => _save(),
+                  ),
+                  TextField(
+                    controller: _notes,
+                    minLines: 1,
+                    maxLines: 5,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: InputDecoration(
+                      icon: const Icon(Icons.notes_outlined),
+                      hintText: l10n.taskNotesHint,
+                      border: InputBorder.none,
+                    ),
+                  ),
+                  const Divider(),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.event_outlined),
+                    title: Text(l10n.taskDue),
+                    subtitle: Text(
+                      _due == null
+                          ? l10n.taskNoDue
+                          : DateFormat.yMMMEd().format(_due!),
+                    ),
+                    trailing: _due == null
+                        ? null
+                        : IconButton(
+                            tooltip: l10n.taskNoDue,
+                            icon: const Icon(Icons.close),
+                            onPressed: () => setState(() {
+                              _due = null;
+                              _time = '';
+                              _repeat = Recurrence.none;
+                            }),
+                          ),
+                    onTap: _pickDue,
+                  ),
+                  if (_due != null) ...[
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.schedule_outlined),
+                      title: Text(l10n.taskTime),
+                      subtitle: Text(_time.isEmpty ? l10n.taskNoTime : _time),
+                      trailing: _time.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: l10n.taskNoTime,
+                              icon: const Icon(Icons.close),
+                              onPressed: () => setState(() => _time = ''),
+                            ),
+                      onTap: _pickTime,
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.repeat),
+                      title: Text(l10n.repeatTitle),
+                      subtitle: Text(reminderRepeatLabel(l10n, _repeat.base)),
+                      onTap: _pickRepeat,
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      secondary: const Icon(Icons.notifications_none_outlined),
+                      title: Text(l10n.taskReminderAtDue),
+                      value: _remind,
+                      onChanged: (v) => setState(() => _remind = v),
+                    ),
+                  ],
+                  if (allLists.length > 1 && widget.parentId.isEmpty)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.list_alt_outlined),
+                      title: Text(l10n.taskList),
+                      trailing: DropdownButton<String>(
+                        value: allLists.any((l) => l.id == _listId)
+                            ? _listId
+                            : TaskList.defaultId,
+                        underline: const SizedBox.shrink(),
+                        items: [
+                          for (final l in allLists)
+                            DropdownMenuItem(
+                              value: l.id,
+                              child: Text(taskListTitle(l10n, l)),
+                            ),
+                        ],
+                        onChanged: (v) =>
+                            setState(() => _listId = v ?? TaskList.defaultId),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    key: const ValueKey('task-save'),
+                    onPressed: _save,
+                    child: Text(l10n.eventSave),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -87,7 +87,9 @@ enum AppSection {
         location.startsWith('/briefing')) {
       return AppSection.ai;
     }
-    if (location.startsWith('/reminders')) return AppSection.calendar;
+    if (location.startsWith('/reminders') || location.startsWith('/tasks')) {
+      return AppSection.calendar;
+    }
     if (location.startsWith('/settings') ||
         location.startsWith('/privacy') ||
         location.startsWith('/premium')) {

@@ -7153,4 +7153,85 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get eventNotificationAllDay => 'Today · all day';
+
+  @override
+  String get tasksTitle => 'Tasks';
+
+  @override
+  String get tasksDefaultList => 'My tasks';
+
+  @override
+  String get tasksNewTask => 'New task';
+
+  @override
+  String get tasksNewList => 'New list';
+
+  @override
+  String get tasksListNameHint => 'List name';
+
+  @override
+  String get tasksRenameList => 'Rename list';
+
+  @override
+  String get tasksDeleteList => 'Delete list';
+
+  @override
+  String get tasksDeleteListConfirm => 'Delete the list and its tasks?';
+
+  @override
+  String get tasksEmpty => 'No tasks';
+
+  @override
+  String get tasksEmptyHint =>
+      'Add things to do; tasks with a due date also show up in the calendar.';
+
+  @override
+  String tasksCompleted(int count) {
+    return 'Completed ($count)';
+  }
+
+  @override
+  String get tasksClearCompleted => 'Delete completed';
+
+  @override
+  String get taskEditTitle => 'Edit task';
+
+  @override
+  String get taskTitleHint => 'What needs doing?';
+
+  @override
+  String get taskNotesHint => 'Add details';
+
+  @override
+  String get taskDue => 'Due date';
+
+  @override
+  String get taskNoDue => 'No date';
+
+  @override
+  String get taskTime => 'Time';
+
+  @override
+  String get taskNoTime => 'No time';
+
+  @override
+  String get taskReminderAtDue => 'Remind me when it\'s due';
+
+  @override
+  String get taskList => 'List';
+
+  @override
+  String get taskStar => 'Star';
+
+  @override
+  String get taskDelete => 'Delete task';
+
+  @override
+  String get taskDeleted => 'Task deleted';
+
+  @override
+  String get taskAddSubtask => 'Add subtask';
+
+  @override
+  String get taskOverdue => 'Overdue';
 }

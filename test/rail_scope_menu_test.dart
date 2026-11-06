@@ -167,6 +167,7 @@ void main() {
       '/briefing': 'ai/presentation/briefing_screen.dart',
       '/cards': 'notes/presentation/study_cards_screen.dart',
       '/calendar': 'calendar/presentation/calendar_screen.dart',
+      '/tasks': 'calendar/presentation/tasks_screen.dart',
       '/reminders': 'notes/presentation/reminders_screen.dart',
       '/archive': 'notes/presentation/archive_screen.dart',
       '/trash': 'notes/presentation/trash_screen.dart',

@@ -12727,6 +12727,162 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bugün · tüm gün'**
   String get eventNotificationAllDay;
+
+  /// No description provided for @tasksTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görevler'**
+  String get tasksTitle;
+
+  /// No description provided for @tasksDefaultList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görevlerim'**
+  String get tasksDefaultList;
+
+  /// No description provided for @tasksNewTask.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni görev'**
+  String get tasksNewTask;
+
+  /// No description provided for @tasksNewList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni liste'**
+  String get tasksNewList;
+
+  /// No description provided for @tasksListNameHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste adı'**
+  String get tasksListNameHint;
+
+  /// No description provided for @tasksRenameList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeyi yeniden adlandır'**
+  String get tasksRenameList;
+
+  /// No description provided for @tasksDeleteList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeyi sil'**
+  String get tasksDeleteList;
+
+  /// No description provided for @tasksDeleteListConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste ve içindeki görevler silinsin mi?'**
+  String get tasksDeleteListConfirm;
+
+  /// No description provided for @tasksEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görev yok'**
+  String get tasksEmpty;
+
+  /// No description provided for @tasksEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapılacakları ekleyin; son tarihli görevler takvimde de görünür.'**
+  String get tasksEmptyHint;
+
+  /// No description provided for @tasksCompleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamamlananlar ({count})'**
+  String tasksCompleted(int count);
+
+  /// No description provided for @tasksClearCompleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamamlananları sil'**
+  String get tasksClearCompleted;
+
+  /// No description provided for @taskEditTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görevi düzenle'**
+  String get taskEditTitle;
+
+  /// No description provided for @taskTitleHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ne yapılacak?'**
+  String get taskTitleHint;
+
+  /// No description provided for @taskNotesHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayrıntı ekleyin'**
+  String get taskNotesHint;
+
+  /// No description provided for @taskDue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son tarih'**
+  String get taskDue;
+
+  /// No description provided for @taskNoDue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih yok'**
+  String get taskNoDue;
+
+  /// No description provided for @taskTime.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saat'**
+  String get taskTime;
+
+  /// No description provided for @taskNoTime.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saat yok'**
+  String get taskNoTime;
+
+  /// No description provided for @taskReminderAtDue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zamanı gelince hatırlat'**
+  String get taskReminderAtDue;
+
+  /// No description provided for @taskList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste'**
+  String get taskList;
+
+  /// No description provided for @taskStar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıldızla'**
+  String get taskStar;
+
+  /// No description provided for @taskDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görevi sil'**
+  String get taskDelete;
+
+  /// No description provided for @taskDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görev silindi'**
+  String get taskDeleted;
+
+  /// No description provided for @taskAddSubtask.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt görev ekle'**
+  String get taskAddSubtask;
+
+  /// No description provided for @taskOverdue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gecikti'**
+  String get taskOverdue;
 }
 
 class _AppLocalizationsDelegate

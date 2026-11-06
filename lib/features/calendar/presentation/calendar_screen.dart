@@ -19,6 +19,7 @@ import '../domain/day_key.dart';
 import '../domain/task_item.dart';
 import 'event_editor.dart';
 import 'month_grid.dart';
+import 'task_editor.dart';
 
 /// Hatırlatıcılı notlar (gizli klasör bastırması Hatırlatıcılar ekranıyla
 /// aynı kural).
@@ -169,6 +170,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           tooltip: l10n.calendarToday,
           icon: const Icon(Icons.today_outlined),
           onPressed: _goToday,
+        ),
+        IconButton(
+          key: const ValueKey('calendar-tasks'),
+          tooltip: l10n.tasksTitle,
+          icon: const Icon(Icons.task_alt),
+          onPressed: () => unawaited(context.push('/tasks')),
         ),
         IconButton(
           tooltip: l10n.remindersTitle,
@@ -445,6 +452,7 @@ class _TaskTile extends ConsumerWidget {
     final repo = ref.read(calendarRepositoryProvider);
     return _EntryShell(
       accent: scheme.tertiary,
+      onTap: () => showTaskEditor(context, existing: task),
       child: Row(
         children: [
           Checkbox(

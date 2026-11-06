@@ -253,8 +253,8 @@ Faz 53'te.
 - [ ] F49.3 Ajandada "o gün yazılan notlar" (isteğe bağlı).
 
 ### Faz 50 — Görevler (yerel + Google Görevler iki yönlü)
-- [ ] F50.1 Görevler sekmesi: listeler, alt görev, sıralama, tamamlananlar, son tarih + saat, hatırlatma, tekrar.
-- [ ] F50.2 Görevler takvimde/ajandada (son tarih gününde, tikli).
+- [x] F50.1 Görevler ekranı `/tasks` (takvim çubuğunda ✓; rayda Takvim bölümü): liste çipleri + yeni liste / yeniden adlandır / sil, alt görev (tek seviye, girintili), sıralama `compareTasks`, katlanır tamamlananlar + temizle, son tarih + saat, "zamanı gelince hatırlat", tekrar (tamamlayınca ilerler), yıldız. Elle sürükleyerek sıralama AÇIK.
+- [x] F50.2 Görevler takvimde/ajandada (son tarih gününde, tikli; dokununca görev levhası; ızgarada nokta).
 - [ ] F50.3 Liste notunda madde → görev (K6), tamamlanma eşlemesi.
 - [ ] F50.4 Google Tasks API iki yönlü senkron (`tasks` kapsamı), çakışma kuralı, testler (sahte HTTP).
 
@@ -315,7 +315,7 @@ Faz 53'te.
 | 47 Takvim ekranı | 🟡 çekirdek bitti; gün/hafta ızgarası, sürükleme, tur açık |
 | 48 Google Takvim okuma | — |
 | 49 Not ↔ takvim | — |
-| 50 Görevler | — |
+| 50 Görevler | 🟡 yerel bitti (50.1–50.2); madde→görev (50.3), Google senkronu (50.4) açık |
 | 51 Google'a yazma | — |
 | 52 Akıllı bağlar | — |
 | 53 Rutinler | — |

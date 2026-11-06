@@ -3413,5 +3413,38 @@
   "eventDeleteRepeatingTitle": "Tekrarlayan etkinlik",
   "eventDeleteThis": "Yalnız bu etkinlik",
   "eventDeleteAll": "Tüm tekrarlar",
-  "eventNotificationAllDay": "Bugün · tüm gün"
+  "eventNotificationAllDay": "Bugün · tüm gün",
+  "tasksTitle": "Görevler",
+  "tasksDefaultList": "Görevlerim",
+  "tasksNewTask": "Yeni görev",
+  "tasksNewList": "Yeni liste",
+  "tasksListNameHint": "Liste adı",
+  "tasksRenameList": "Listeyi yeniden adlandır",
+  "tasksDeleteList": "Listeyi sil",
+  "tasksDeleteListConfirm": "Liste ve içindeki görevler silinsin mi?",
+  "tasksEmpty": "Görev yok",
+  "tasksEmptyHint": "Yapılacakları ekleyin; son tarihli görevler takvimde de görünür.",
+  "tasksCompleted": "Tamamlananlar ({count})",
+  "@tasksCompleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tasksClearCompleted": "Tamamlananları sil",
+  "taskEditTitle": "Görevi düzenle",
+  "taskTitleHint": "Ne yapılacak?",
+  "taskNotesHint": "Ayrıntı ekleyin",
+  "taskDue": "Son tarih",
+  "taskNoDue": "Tarih yok",
+  "taskTime": "Saat",
+  "taskNoTime": "Saat yok",
+  "taskReminderAtDue": "Zamanı gelince hatırlat",
+  "taskList": "Liste",
+  "taskStar": "Yıldızla",
+  "taskDelete": "Görevi sil",
+  "taskDeleted": "Görev silindi",
+  "taskAddSubtask": "Alt görev ekle",
+  "taskOverdue": "Gecikti"
 }

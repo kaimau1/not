@@ -7132,4 +7132,86 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get eventNotificationAllDay => 'Bugün · tüm gün';
+
+  @override
+  String get tasksTitle => 'Görevler';
+
+  @override
+  String get tasksDefaultList => 'Görevlerim';
+
+  @override
+  String get tasksNewTask => 'Yeni görev';
+
+  @override
+  String get tasksNewList => 'Yeni liste';
+
+  @override
+  String get tasksListNameHint => 'Liste adı';
+
+  @override
+  String get tasksRenameList => 'Listeyi yeniden adlandır';
+
+  @override
+  String get tasksDeleteList => 'Listeyi sil';
+
+  @override
+  String get tasksDeleteListConfirm =>
+      'Liste ve içindeki görevler silinsin mi?';
+
+  @override
+  String get tasksEmpty => 'Görev yok';
+
+  @override
+  String get tasksEmptyHint =>
+      'Yapılacakları ekleyin; son tarihli görevler takvimde de görünür.';
+
+  @override
+  String tasksCompleted(int count) {
+    return 'Tamamlananlar ($count)';
+  }
+
+  @override
+  String get tasksClearCompleted => 'Tamamlananları sil';
+
+  @override
+  String get taskEditTitle => 'Görevi düzenle';
+
+  @override
+  String get taskTitleHint => 'Ne yapılacak?';
+
+  @override
+  String get taskNotesHint => 'Ayrıntı ekleyin';
+
+  @override
+  String get taskDue => 'Son tarih';
+
+  @override
+  String get taskNoDue => 'Tarih yok';
+
+  @override
+  String get taskTime => 'Saat';
+
+  @override
+  String get taskNoTime => 'Saat yok';
+
+  @override
+  String get taskReminderAtDue => 'Zamanı gelince hatırlat';
+
+  @override
+  String get taskList => 'Liste';
+
+  @override
+  String get taskStar => 'Yıldızla';
+
+  @override
+  String get taskDelete => 'Görevi sil';
+
+  @override
+  String get taskDeleted => 'Görev silindi';
+
+  @override
+  String get taskAddSubtask => 'Alt görev ekle';
+
+  @override
+  String get taskOverdue => 'Gecikti';
 }

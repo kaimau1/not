@@ -223,6 +223,7 @@ void main() {
     expect(AppSection.of('/privacy'), AppSection.settings);
     expect(AppSection.of('/reminders'), AppSection.calendar);
     expect(AppSection.of('/calendar'), AppSection.calendar);
+    expect(AppSection.of('/tasks'), AppSection.calendar);
     expect(AppSection.of('/trash'), AppSection.trash);
     expect(AppSection.of('/login'), isNull);
   });
