@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../calendar/presentation/note_calendar_links.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -189,6 +190,8 @@ Future<void> _runNoteAction(
         return;
       }
       repo.updateFields(note.id, {'locked': !note.locked});
+    case 'calendar':
+      await showLinkNoteToCalendarSheet(context, note);
     case 'folder':
       final picked = await showFolderPickSheet(
         context,

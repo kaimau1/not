@@ -517,6 +517,7 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
 - [x] **F19.B9** (← F28.1, F28.2-B) **Yapıldı (2026-11-06):** kullanıcı Drive/test kullanıcısını açtı; telefonda Gmail bağlandı, gelen kutusu + "Nota kaydet" çalıştı (Gmail API etkin). Google Cloud (notlar-kaimau): **Gmail API** etkin; OAuth onay
   ekranına `gmail.readonly` (kısıtlı — "Testing"te kişisel kullanım sorunsuz) ve `drive.file`
   kapsamları. Sonra telefonda + web'de ⋮ → Gmail → Bağlan → bir e-postayı "Nota kaydet" (ekiyle).
+- [ ] **F19.B10** (← TAKVIM Faz 48, 2026-11-06) Google Cloud (notlar-kaimau): **Google Calendar API**'yi etkinleştir; OAuth onay ekranına `calendar.readonly` kapsamını ekle (hassas sınıf — "Testing"te kişisel kullanım sorunsuz). Aynı yerde **Google Tasks API**'yi etkinleştir ve `tasks` kapsamını ekle (F50.4). Onay ekranına `calendar.events` kapsamını da ekle (Faz 51, Google'a yazma). Sonra Takvim → ☁ → "Google Takvim'i bağla" → takvimler listeleniyor, etkinlikler ayda/ajandada çerçeveli görünüyor.
 
 ### C. Cihaz doğrulama
 

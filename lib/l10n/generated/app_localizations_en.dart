@@ -7278,4 +7278,111 @@ class AppLocalizationsEn extends AppLocalizations {
   String calendarMoved(String day) {
     return 'Moved to $day';
   }
+
+  @override
+  String get gcalTitle => 'Google Calendar';
+
+  @override
+  String get gcalInfo =>
+      'Events from your Google Calendar show up here (read-only). You can link notes to them; nothing is written to Google.';
+
+  @override
+  String get gcalConnect => 'Connect Google Calendar';
+
+  @override
+  String get gcalConnectFailed => 'Couldn\'t connect Google Calendar';
+
+  @override
+  String get gcalCalendars => 'Calendars shown';
+
+  @override
+  String get gcalRefresh => 'Refresh';
+
+  @override
+  String get gcalDisconnect => 'Disconnect';
+
+  @override
+  String get gcalError =>
+      'Google Calendar is unreachable right now; showing cached events.';
+
+  @override
+  String get gcalReadOnly =>
+      'Google Calendar event · edit repeating ones in Google Calendar';
+
+  @override
+  String get gcalOpenInGoogle => 'Open in Google Calendar';
+
+  @override
+  String get calendarMeetingNote => 'Meeting note';
+
+  @override
+  String get calendarLinkedNotes => 'Linked notes';
+
+  @override
+  String get calendarUnlinkNote => 'Unlink';
+
+  @override
+  String gcalSyncedAt(String time) {
+    return 'Last synced $time';
+  }
+
+  @override
+  String get calendarLinked => 'Linked to calendar';
+
+  @override
+  String get calendarLinkNote => 'Link to calendar';
+
+  @override
+  String get calendarLinkToDay => 'Link to a day';
+
+  @override
+  String get calendarLinkNewEvent => 'Create an event and link';
+
+  @override
+  String get calendarLinkToEvent => 'Link to an event';
+
+  @override
+  String get calendarDayNote => 'Note for this day';
+
+  @override
+  String calendarDayWrittenNotes(int count) {
+    return 'Notes written that day ($count)';
+  }
+
+  @override
+  String get itemMenuTask => 'Make task';
+
+  @override
+  String get gtasksTitle => 'Google Tasks';
+
+  @override
+  String get gtasksConnected => 'Google Tasks connected and synced';
+
+  @override
+  String get gtasksFailed => 'Couldn\'t sync with Google Tasks';
+
+  @override
+  String get gtasksSyncNow => 'Sync now';
+
+  @override
+  String get gtasksSynced => 'Tasks synced';
+
+  @override
+  String get eventSaveLocal => 'This device';
+
+  @override
+  String get gcalWriteDenied =>
+      'Permission to write to Google Calendar wasn\'t granted';
+
+  @override
+  String get gcalDeleteConfirm =>
+      'Delete this event from Google Calendar? This can\'t be undone.';
+
+  @override
+  String get gcalEdit => 'Edit';
+
+  @override
+  String gcalPending(int count) {
+    return '$count changes waiting to be sent to Google';
+  }
 }

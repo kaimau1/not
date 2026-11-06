@@ -88,6 +88,10 @@ extension _ItemsActions on ItemsEditorState {
         _ItemMenuPanel(
           starred: item.starred,
           canMove: widget.onMoveToPage != null,
+          canTask:
+              widget.onMakeTask != null &&
+              !item.header &&
+              item.text.trim().isNotEmpty,
           header: item.header,
           align: item.align,
         ),
@@ -112,6 +116,11 @@ extension _ItemsActions on ItemsEditorState {
         _toggleSelection(item);
       case _ItemAction.delete:
         _removeItem(item);
+      case _ItemAction.task:
+        _commit();
+        widget.onMakeTask?.call(
+          _items.where((i) => i.id == item.id).firstOrNull ?? item,
+        );
       case _ItemAction.moveToPage:
         // Önce satırdaki yazı nota işlensin: taşınan madde son hâliyle gitsin.
         _commit();

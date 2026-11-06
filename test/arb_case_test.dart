@@ -21,6 +21,9 @@ void main() {
     'tplGiftsItems',
     'unpinMediaRelease',
     'driveSectionTitle',
+    // Google ürün adları (TAKVIM Faz 48/50).
+    'gcalTitle',
+    'gtasksTitle',
   };
 
   Map<String, String> arb(String lang) => {

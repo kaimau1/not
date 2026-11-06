@@ -131,7 +131,7 @@ Map<String, List<AgendaEntry>> buildAgenda({
 
 /// Kayıt sürüklenip başka güne taşınabilir mi (bkz. [movedToDay]).
 bool canMoveEntry(AgendaEntry entry) => switch (entry) {
-  EventOccurrence(:final event) => !event.repeats,
+  EventOccurrence(:final event) => !event.repeats && !event.fromGoogle,
   TaskEntry(:final task) => !task.completed,
   ReminderEntry(:final note) => note.reminderAt != null,
 };
@@ -149,7 +149,7 @@ Object? movedToDay(AgendaEntry entry, DateTime target) {
   final day = startOfDay(target);
   switch (entry) {
     case EventOccurrence(:final event, :final start):
-      if (event.repeats) return null;
+      if (event.repeats || event.fromGoogle) return null;
       final delta = daysBetween(startOfDay(start), day);
       if (delta == 0) return null;
       DateTime shift(DateTime d) =>

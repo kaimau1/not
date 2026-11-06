@@ -7258,4 +7258,110 @@ class AppLocalizationsTr extends AppLocalizations {
   String calendarMoved(String day) {
     return '$day gününe taşındı';
   }
+
+  @override
+  String get gcalTitle => 'Google Takvim';
+
+  @override
+  String get gcalInfo =>
+      'Google Takvim\'indeki etkinlikler takvimde görünür (yalnız okunur). Etkinliğe not bağlayabilirsin; Google\'a bir şey yazılmaz.';
+
+  @override
+  String get gcalConnect => 'Google Takvim\'i bağla';
+
+  @override
+  String get gcalConnectFailed => 'Google Takvim bağlanamadı';
+
+  @override
+  String get gcalCalendars => 'Gösterilen takvimler';
+
+  @override
+  String get gcalRefresh => 'Yenile';
+
+  @override
+  String get gcalDisconnect => 'Bağlantıyı kaldır';
+
+  @override
+  String get gcalError =>
+      'Google Takvim\'e şu an ulaşılamadı; önbellekteki etkinlikler gösteriliyor.';
+
+  @override
+  String get gcalReadOnly =>
+      'Google Takvim etkinliği · tekrarlı olanlar Google Takvim\'de düzenlenir';
+
+  @override
+  String get gcalOpenInGoogle => 'Google Takvim\'de aç';
+
+  @override
+  String get calendarMeetingNote => 'Toplantı notu';
+
+  @override
+  String get calendarLinkedNotes => 'Bağlı notlar';
+
+  @override
+  String get calendarUnlinkNote => 'Bağı kaldır';
+
+  @override
+  String gcalSyncedAt(String time) {
+    return 'Son eşitleme $time';
+  }
+
+  @override
+  String get calendarLinked => 'Takvime bağlandı';
+
+  @override
+  String get calendarLinkNote => 'Takvime bağla';
+
+  @override
+  String get calendarLinkToDay => 'Bir güne bağla';
+
+  @override
+  String get calendarLinkNewEvent => 'Yeni etkinlik oluştur ve bağla';
+
+  @override
+  String get calendarLinkToEvent => 'Bir etkinliğe bağla';
+
+  @override
+  String get calendarDayNote => 'Bu güne not';
+
+  @override
+  String calendarDayWrittenNotes(int count) {
+    return 'O gün yazılan notlar ($count)';
+  }
+
+  @override
+  String get itemMenuTask => 'Görev yap';
+
+  @override
+  String get gtasksTitle => 'Google Görevler';
+
+  @override
+  String get gtasksConnected => 'Google Görevler bağlandı, görevler eşlendi';
+
+  @override
+  String get gtasksFailed => 'Google Görevler ile eşlenemedi';
+
+  @override
+  String get gtasksSyncNow => 'Şimdi eşle';
+
+  @override
+  String get gtasksSynced => 'Görevler eşlendi';
+
+  @override
+  String get eventSaveLocal => 'Bu cihaz';
+
+  @override
+  String get gcalWriteDenied => 'Google Takvim\'e yazma izni verilmedi';
+
+  @override
+  String get gcalDeleteConfirm =>
+      'Etkinlik Google Takvim\'den silinsin mi? Bu geri alınamaz.';
+
+  @override
+  String get gcalEdit => 'Düzenle';
+
+  @override
+  String gcalPending(int count) {
+    return 'Google\'a gönderilmeyi bekleyen $count değişiklik';
+  }
 }

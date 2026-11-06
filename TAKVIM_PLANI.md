@@ -242,26 +242,26 @@ Faz 53'te.
 - [x] F47.7 Ekran turu `tool/tour/calendar_tour_test.dart` (telefon/tablet × 4 görünüm, koyu `TOUR_DARK=1`) ✓. Akıcılık ölçümü (`tool/perf`, telefonda kıstırma/kaydırma) telefon gerektirir → yazıldı, cihazda ölçülmedi; KALANLAR §2 #87.
 
 ### Faz 48 — Google Takvim (salt okuma)
-- [ ] F48.1 `calendar_api.dart` (Gmail kalıbı, yalnız GET), `calendarAuthProvider`, Ayarlar → Bağlantılar'da "Google Takvim".
-- [ ] F48.2 Takvim listesi + hangi takvimler gösterilsin (renkleriyle), cihazda önbellek, `syncToken`.
-- [ ] F48.3 Google etkinlikleri ızgarada/ajandada (farklı kenarlık), ayrıntıda "Google Takvim'de aç".
-- [ ] F48.4 Google etkinliğine not bağlama (bağ `users/{uid}/eventLinks/{googleEventId}` — Google'a yazılmaz).
+- [x] F48.1 `google_calendar_api.dart` (Gmail kalıbı, yalnız GET, UTF-8), kapsam `calendar.readonly` ayrı (`googleScopeAuth`, web jetonu sekmede `notlar_gcal_token`). Bağlantı yeri: Ayarlar'da "Bağlantılar" bölümü YOK — takvim çubuğundaki ☁ düğmesi (`showGoogleCalendarSheet`: bağla / takvimler / yenile / kaldır); ayarlara taşımak sabah bakılacak. Konsol: **F19.B10**.
+- [x] F48.2 `google_calendar_sync.dart` (`GoogleCalendarController`): takvim listesi + seçim (varsayılan Google'daki "göster"; `shown` kümesi), renk `backgroundColor`; cihazda önbellek (`gcal_cache_<uid>`, SharedPreferences) — açılışta ağsız; ilk çekiş ±60 gün `singleEvents`, sonra takvim başına `syncToken` artımlı, 410 → tam; takvim ekranına girişte + açıkken 15 dk'da bir (K8). Firestore'a yazılmaz.
+- [x] F48.3 Google etkinlikleri (`g:<takvim>/<id>`, `CalendarEvent.fromGoogle`) ay/hafta/ajanda/yıl + takvim zemininde; ayda çerçeveli şerit, ajandada ☁; sürüklenmez/düzenlenmez; dokununca salt okunur levha (`showGoogleEventSheet`) + "Google Takvim'de aç" (`htmlLink`).
+- [x] F48.4 `eventLinks` (`linkNoteToGoogleEvent`, hesap silme listesinde); levhada "Toplantı notu" (`openMeetingNote`: başlık + zaman/konum/açıklama, bağlanır, açılır) ve "Bağlı notlar" (bağı kaldır). Testler `google_calendar_test` (yalnız GET, artımlı/410, önbellek, gizli takvim). Gerçek Google'a karşı denenmedi → KALANLAR §2 #101.
 
 ### Faz 49 — Not ↔ takvim
-- [ ] F49.1 Günün notu, etkinlikten toplantı notu, not ⋮ "Takvime bağla".
-- [ ] F49.2 Notta bağ hapı; takvimde güne/etkinliğe atlama.
-- [ ] F49.3 Ajandada "o gün yazılan notlar" (isteğe bağlı).
+- [x] F49.1 Gün levhasında "Bu güne not" (başlık `dayNoteTitle` "6 Kasım Cuma"; güne bağlı aynı başlıklı not varsa açar, yoksa oluşturup `dayLinks`e bağlar); etkinlik düzenleyicide "Toplantı notu" + "Bağlı notlar" (yerel ve Google, `openMeetingNote`); not ⋮ (kart + editör, `note_menu_model` Düzenle grubu) → "Takvime bağla" levhası: güne (tarih seçici) / yaklaşan etkinliğe (yerel + Google) / yeni etkinlik (`showEventEditor(linkNoteId, initialTitle)`), mevcut bağlar kaldırılabilir.
+- [x] F49.2 `NoteCalendarPills` başlık/çip satırının altında (bağ yoksa yer kaplamaz; en çok 4): "6 Kas · Toplantı" → `/calendar?day=YYYY-MM-DD` (CalendarScreen `initialDay`). Bağlar not belgesinde değil, ters hesap `calendarLinksForNote` (`noteCalendarLinksProvider`, yalnız açık not).
+- [x] F49.3 Gün levhasında güne bağlı notlar + açılır "O gün yazılan notlar (n)" (`updatedAt` o gün; ajanda listesine girmedi — gün levhası yeterli, kalabalık yapmasın). Testler `note_calendar_links_test`. Cihazda doğrulanmadı → KALANLAR §2 #102.
 
 ### Faz 50 — Görevler (yerel + Google Görevler iki yönlü)
 - [x] F50.1 Görevler ekranı `/tasks` (takvim çubuğunda ✓; rayda Takvim bölümü): liste çipleri + yeni liste / yeniden adlandır / sil, alt görev (tek seviye, girintili), sıralama `compareTasks`, katlanır tamamlananlar + temizle, son tarih + saat, "zamanı gelince hatırlat", tekrar (tamamlayınca ilerler), yıldız. Elle sürükleyerek sıralama AÇIK.
 - [x] F50.2 Görevler takvimde/ajandada (son tarih gününde, tikli; dokununca görev levhası; ızgarada nokta).
-- [ ] F50.3 Liste notunda madde → görev (K6), tamamlanma eşlemesi.
-- [ ] F50.4 Google Tasks API iki yönlü senkron (`tasks` kapsamı), çakışma kuralı, testler (sahte HTTP).
+- [x] F50.3 Madde menüsünde (basılı tut) "Görev yap" → görev levhası maddenin metniyle (`noteId`/`noteItemId`); tamamlanma iki yönlü (`task_note_sync.dart`): görev tiklenince madde (görevler ekranı + ajanda), madde tiklenince görev (kart + editör `onItemChecked`). Tekrarlı görev eşlenmez (tamamlanınca ilerler). Testler `task_note_sync_test`.
+- [x] F50.4 `google_tasks_api.dart` (kapsam `tasks`, ayrı), saf plan `task_sync_plan.dart` (`planTaskSync`: eşsiz → karşıya aç; yalnız bir taraf değiştiyse o yöne; ikisi de değiştiyse `updated` yeni olan; silme iki yöne; Google'da silinmiş ama yerelde sonradan düzenlenmiş → yeniden açılır; içerik aynıysa yazım YOK — ping-pong yok). Saat/tekrar/yıldız/not bağı yalnız yerelde, korunur. `GoogleTasksController`: listeler eşlenir (varsayılan ↔ Google'daki ilk liste, eşsizler iki yönde açılır), alt görev üstüyle; görevler ekranında ☁ (bağla / şimdi eşle / kaldır), görevler + takvim ekranına girişte ve açıkken 15 dk'da bir. Silinmişler dahil okuma `fetchAllTasks`. Testler `google_tasks_test` (plan + sahte Google/Firestore uçtan uca). Gerçek hesapta denenmedi → F19.B10, KALANLAR §2 #103.
 
 ### Faz 51 — Google Takvim'e yazma
-- [ ] F51.1 `calendar.events` kapsamı; yeni etkinlikte "Kaydet: Bu cihaz / Google Takvim (X)" seçimi (K2).
-- [ ] F51.2 Düzenleme/silme Google'a; tekrarlayan Google etkinliğinde "yalnız bu / tümü" Google'a bırakılır.
-- [ ] F51.3 Hata/çevrimdışı kuyruğu (`UploadQueue` kalıbı).
+- [x] F51.1 `calendar.events` AYRI kapsam, ilk Google kaydında istenir (`connectWrite`; okuma kapsamı genişlemez). Yeni etkinlikte "Bu cihaz | Google Takvim" (Google bağlıysa varsayılan Google — K2; nottan bağlanırken bu cihaz, bağ yerel etkinliğe). Birincil takvime yazılır (`writeTarget`). Tekrar `rruleOf` ile RRULE (günlük/hafta içi/haftalık günler/aylık/yıllık + INTERVAL/COUNT/UNTIL), hatırlatma `popup` override.
+- [x] F51.2 Google etkinlik levhasında "Düzenle" → aynı düzenleyici, kaydet PATCH; sil onaylı (geri alınamaz) DELETE. Tekrarlı serinin oluşu (`recurringEventId`) burada düzenlenmez → "Google Takvim'de aç" (K3).
+- [x] F51.3 Kuyruk denetleyicide (`_queue`, önbellek JSON'unda kalıcı): yazım İYİMSER (takvimde hemen; yeni etkinlik geçici `tmp-` kimlikle), sırayla gönderilir; ağ/5xx/429/401'de durur, sonraki tazelemede yeniden; kalıcı 4xx düşer + hata. Geçici kimliğe sonradan yazılan düzenleme/silme gerçek kimliğe çevrilir. Levhada "n değişiklik bekliyor". Testler `google_calendar_test` (RRULE, gövde, kuyruk). Gerçek hesapta denenmedi → F19.B10 (+ `calendar.events` kapsamı), KALANLAR §2 #104.
 
 ### Faz 52 — Akıllı bağlar (AI + mevcut özellikler)
 - [ ] F52.1 Brifing: bugünün etkinlikleri + görevleri + (Faz 53'ten sonra) rutinler.
@@ -313,9 +313,9 @@ Faz 53'te.
 |---|---|
 | 46 Model | ✅ |
 | 47 Takvim ekranı | ✅ 2026-11-06 (sürükleyerek taşıma ayda; telefonda akıcılık ölçümü KALANLAR §2 #87) — ek: ana ekranda sola kaydırınca takvim, takvim zemini |
-| 48 Google Takvim okuma | — |
-| 49 Not ↔ takvim | — |
-| 50 Görevler | 🟡 yerel bitti (50.1–50.2); madde→görev (50.3), Google senkronu (50.4) açık |
-| 51 Google'a yazma | — |
+| 48 Google Takvim okuma | ✅ 2026-11-06 (gerçek hesapta denenmedi: F19.B10 + KALANLAR §2 #101) |
+| 49 Not ↔ takvim | ✅ 2026-11-06 (cihazda doğrulanmadı, KALANLAR §2 #102) |
+| 50 Görevler | ✅ 2026-11-06 (Google Görevler gerçek hesapta denenmedi: F19.B10, KALANLAR §2 #103; elle sürükleyerek sıralama yok) |
+| 51 Google'a yazma | ✅ 2026-11-06 (gerçek hesapta denenmedi: F19.B10, KALANLAR §2 #104) |
 | 52 Akıllı bağlar | — |
 | 53 Rutinler | — |

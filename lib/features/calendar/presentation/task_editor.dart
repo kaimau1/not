@@ -31,6 +31,9 @@ Future<void> showTaskEditor(
   DateTime? due,
   String parentId = '',
   String listId = TaskList.defaultId,
+  String? initialTitle,
+  String noteId = '',
+  String noteItemId = '',
 }) => showAppSheet<void>(
   context: context,
   isScrollControlled: true,
@@ -41,6 +44,9 @@ Future<void> showTaskEditor(
     due: due,
     parentId: parentId,
     listId: listId,
+    initialTitle: initialTitle,
+    noteId: noteId,
+    noteItemId: noteItemId,
   ),
 );
 
@@ -51,7 +57,16 @@ class TaskEditorSheet extends ConsumerStatefulWidget {
     this.due,
     this.parentId = '',
     this.listId = TaskList.defaultId,
+    this.initialTitle,
+    this.noteId = '',
+    this.noteItemId = '',
   });
+
+  /// Liste maddesinden görev (TAKVIM F50.3, K6): başlık maddenin metni,
+  /// tamamlanma madde ile iki yönlü eşlenir ([noteId]/[noteItemId]).
+  final String? initialTitle;
+  final String noteId;
+  final String noteItemId;
 
   final TaskItem? existing;
   final DateTime? due;
@@ -63,7 +78,9 @@ class TaskEditorSheet extends ConsumerStatefulWidget {
 }
 
 class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
-  late final _title = TextEditingController(text: widget.existing?.title);
+  late final _title = TextEditingController(
+    text: widget.existing?.title ?? widget.initialTitle,
+  );
   late final _notes = TextEditingController(text: widget.existing?.notes);
   late DateTime? _due =
       widget.existing?.dueDay ??
@@ -128,7 +145,14 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
       Navigator.pop(context);
       return;
     }
-    final base = widget.existing ?? TaskItem(id: '', parentId: widget.parentId);
+    final base =
+        widget.existing ??
+        TaskItem(
+          id: '',
+          parentId: widget.parentId,
+          noteId: widget.noteId,
+          noteItemId: widget.noteItemId,
+        );
     final due = _due == null ? '' : dayKey(_due!);
     repo.saveTask(
       base.copyWith(

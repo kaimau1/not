@@ -12961,6 +12961,198 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{day} gününe taşındı'**
   String calendarMoved(String day);
+
+  /// No description provided for @gcalTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim'**
+  String get gcalTitle;
+
+  /// No description provided for @gcalInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim\'indeki etkinlikler takvimde görünür (yalnız okunur). Etkinliğe not bağlayabilirsin; Google\'a bir şey yazılmaz.'**
+  String get gcalInfo;
+
+  /// No description provided for @gcalConnect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim\'i bağla'**
+  String get gcalConnect;
+
+  /// No description provided for @gcalConnectFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim bağlanamadı'**
+  String get gcalConnectFailed;
+
+  /// No description provided for @gcalCalendars.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gösterilen takvimler'**
+  String get gcalCalendars;
+
+  /// No description provided for @gcalRefresh.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yenile'**
+  String get gcalRefresh;
+
+  /// No description provided for @gcalDisconnect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantıyı kaldır'**
+  String get gcalDisconnect;
+
+  /// No description provided for @gcalError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim\'e şu an ulaşılamadı; önbellekteki etkinlikler gösteriliyor.'**
+  String get gcalError;
+
+  /// No description provided for @gcalReadOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim etkinliği · tekrarlı olanlar Google Takvim\'de düzenlenir'**
+  String get gcalReadOnly;
+
+  /// No description provided for @gcalOpenInGoogle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim\'de aç'**
+  String get gcalOpenInGoogle;
+
+  /// No description provided for @calendarMeetingNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplantı notu'**
+  String get calendarMeetingNote;
+
+  /// No description provided for @calendarLinkedNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlı notlar'**
+  String get calendarLinkedNotes;
+
+  /// No description provided for @calendarUnlinkNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağı kaldır'**
+  String get calendarUnlinkNote;
+
+  /// No description provided for @gcalSyncedAt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son eşitleme {time}'**
+  String gcalSyncedAt(String time);
+
+  /// No description provided for @calendarLinked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvime bağlandı'**
+  String get calendarLinked;
+
+  /// No description provided for @calendarLinkNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvime bağla'**
+  String get calendarLinkNote;
+
+  /// No description provided for @calendarLinkToDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir güne bağla'**
+  String get calendarLinkToDay;
+
+  /// No description provided for @calendarLinkNewEvent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni etkinlik oluştur ve bağla'**
+  String get calendarLinkNewEvent;
+
+  /// No description provided for @calendarLinkToEvent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir etkinliğe bağla'**
+  String get calendarLinkToEvent;
+
+  /// No description provided for @calendarDayNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu güne not'**
+  String get calendarDayNote;
+
+  /// No description provided for @calendarDayWrittenNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'O gün yazılan notlar ({count})'**
+  String calendarDayWrittenNotes(int count);
+
+  /// No description provided for @itemMenuTask.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görev yap'**
+  String get itemMenuTask;
+
+  /// No description provided for @gtasksTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Görevler'**
+  String get gtasksTitle;
+
+  /// No description provided for @gtasksConnected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Görevler bağlandı, görevler eşlendi'**
+  String get gtasksConnected;
+
+  /// No description provided for @gtasksFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Görevler ile eşlenemedi'**
+  String get gtasksFailed;
+
+  /// No description provided for @gtasksSyncNow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdi eşle'**
+  String get gtasksSyncNow;
+
+  /// No description provided for @gtasksSynced.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görevler eşlendi'**
+  String get gtasksSynced;
+
+  /// No description provided for @eventSaveLocal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cihaz'**
+  String get eventSaveLocal;
+
+  /// No description provided for @gcalWriteDenied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Takvim\'e yazma izni verilmedi'**
+  String get gcalWriteDenied;
+
+  /// No description provided for @gcalDeleteConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkinlik Google Takvim\'den silinsin mi? Bu geri alınamaz.'**
+  String get gcalDeleteConfirm;
+
+  /// No description provided for @gcalEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenle'**
+  String get gcalEdit;
+
+  /// No description provided for @gcalPending.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google\'a gönderilmeyi bekleyen {count} değişiklik'**
+  String gcalPending(int count);
 }
 
 class _AppLocalizationsDelegate

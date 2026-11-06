@@ -69,6 +69,7 @@ abstract final class AppConstants {
   /// Güne bağlı notlar — `users/{uid}/dayLinks/{YYYY-MM-DD}` → `noteIds`.
   /// Not belgesine alan EKLENMEZ (sık yazılan büyük belge; bkz. plan §3).
   static const String dayLinksCollection = 'dayLinks';
+  static const String eventLinksCollection = 'eventLinks';
 
   // Gemini
   static const String geminiBaseUrl =

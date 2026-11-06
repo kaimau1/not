@@ -186,6 +186,7 @@ enum _ItemAction {
   select,
   delete,
   moveToPage,
+  task,
   alignStart,
   alignCenter,
   alignEnd,
@@ -197,6 +198,7 @@ class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
   const _ItemMenuPanel({
     required this.starred,
     required this.canMove,
+    this.canTask = false,
     this.header = false,
     this.align = '',
   });
@@ -206,6 +208,9 @@ class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
   /// Ara başlığın şimdiki hizası (bkz. [NoteItem.align]).
   final String align;
   final bool canMove;
+
+  /// "Görev yap" (TAKVIM F50.3).
+  final bool canTask;
 
   /// Satır ara başlık mı (düğme "Maddeye çevir" der).
   final bool header;
@@ -256,7 +261,7 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 248, maxWidth: 320),
+      constraints: const BoxConstraints(minWidth: 248, maxWidth: 360),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6),
         child: Column(
@@ -275,6 +280,12 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
                   widget.header ? l10n.itemMenuToItem : l10n.itemMenuToHeader,
                 ),
                 _action(_ItemAction.select, Icons.checklist, l10n.select),
+                if (widget.canTask)
+                  _action(
+                    _ItemAction.task,
+                    Icons.add_task,
+                    l10n.itemMenuTask,
+                  ),
                 if (widget.canMove)
                   _action(
                     _ItemAction.moveToPage,

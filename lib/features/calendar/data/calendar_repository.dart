@@ -39,6 +39,15 @@ final taskListsStreamProvider = StreamProvider<List<TaskList>>((ref) {
   return repo.watchTaskLists();
 });
 
+/// Google etkinliği → bağlı not kimlikleri (`eventLinks`, F48.4).
+final eventLinksStreamProvider = StreamProvider<Map<String, List<String>>>((
+  ref,
+) {
+  final repo = ref.watch(calendarRepositoryProvider);
+  if (repo == null) return const Stream.empty();
+  return repo.watchEventLinks();
+});
+
 /// Gün → bağlı not kimlikleri (`dayLinks`).
 final dayLinksStreamProvider = StreamProvider<Map<String, List<String>>>((ref) {
   final repo = ref.watch(calendarRepositoryProvider);
@@ -63,6 +72,11 @@ class CalendarRepository {
       _user.collection(AppConstants.tasksCollection);
   CollectionReference<Map<String, dynamic>> get _lists =>
       _user.collection(AppConstants.taskListsCollection);
+  /// Google etkinliğine bağlı notlar (F48.4) — Google'a YAZILMAZ; belge
+  /// kimliği Google etkinlik kimliği.
+  CollectionReference<Map<String, dynamic>> get _eventLinks =>
+      _user.collection(AppConstants.eventLinksCollection);
+
   CollectionReference<Map<String, dynamic>> get _dayLinks =>
       _user.collection(AppConstants.dayLinksCollection);
 
@@ -162,6 +176,12 @@ class CalendarRepository {
         if (d.data()['deletedAt'] == null) TaskItem.fromMap(d.id, d.data()),
     ]..sort(compareTasks),
   );
+
+  /// Silinmişler DAHİL bütün görevler (Google Görevler eşlemesi, F50.4:
+  /// yerelde silinen Google'dan da silinsin).
+  Future<List<TaskItem>> fetchAllTasks() async => [
+    for (final d in (await _tasks.get()).docs) TaskItem.fromMap(d.id, d.data()),
+  ];
 
   TaskItem saveTask(TaskItem task, {DateTime? now}) {
     final at = now ?? DateTime.now();
@@ -294,4 +314,31 @@ class CalendarRepository {
       'noteIds': FieldValue.arrayRemove([noteId]),
     }, SetOptions(merge: true)),
   );
+
+  // ------------------------------------------------- Google etkinlik bağı
+
+  /// Google etkinlik kimliği → bağlı not kimlikleri.
+  Stream<Map<String, List<String>>> watchEventLinks() =>
+      _eventLinks.snapshots().map(
+        (s) => {
+          for (final d in s.docs)
+            d.id: [
+              for (final n in d.data()['noteIds'] as List? ?? const [])
+                if (n is String && n.isNotEmpty) n,
+            ],
+        },
+      );
+
+  void linkNoteToGoogleEvent(String googleEventId, String noteId) => unawaited(
+    _eventLinks.doc(googleEventId).set({
+      'noteIds': FieldValue.arrayUnion([noteId]),
+    }, SetOptions(merge: true)),
+  );
+
+  void unlinkNoteFromGoogleEvent(String googleEventId, String noteId) =>
+      unawaited(
+        _eventLinks.doc(googleEventId).set({
+          'noteIds': FieldValue.arrayRemove([noteId]),
+        }, SetOptions(merge: true)),
+      );
 }

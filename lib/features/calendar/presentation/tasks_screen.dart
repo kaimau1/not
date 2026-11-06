@@ -1,11 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/app_frame.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../data/google_calendar_sync.dart' show googleCalendarAvailableProvider;
+import '../data/google_tasks_sync.dart';
 import '../data/calendar_repository.dart';
+import '../data/task_note_sync.dart';
 import '../domain/day_key.dart';
 import '../domain/task_item.dart';
 import 'task_editor.dart';
@@ -26,6 +32,72 @@ class TasksScreen extends ConsumerStatefulWidget {
 class _TasksScreenState extends ConsumerState<TasksScreen> {
   String _listId = TaskList.defaultId;
   bool _showCompleted = false;
+
+  /// Ekran açıkken Google Görevler 15 dk'da bir eşlenir (F50.4, K8).
+  Timer? _googleTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncGoogle());
+    _googleTimer = Timer.periodic(
+      GoogleTasksController.refreshEvery,
+      (_) => _syncGoogle(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _googleTimer?.cancel();
+    super.dispose();
+  }
+
+  void _syncGoogle() {
+    if (!mounted) return;
+    unawaited(ref.read(googleTasksProvider.notifier).sync());
+  }
+
+  Future<void> _googleMenu() async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final ctrl = ref.read(googleTasksProvider.notifier);
+    if (!ref.read(googleTasksProvider).connected) {
+      final ok = await ctrl.connect();
+      messenger.showMessage(ok ? l10n.gtasksConnected : l10n.gtasksFailed);
+      return;
+    }
+    if (!mounted) return;
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.sync),
+              title: Text(l10n.gtasksSyncNow),
+              onTap: () => Navigator.pop(ctx, 'sync'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.link_off),
+              title: Text(l10n.gcalDisconnect),
+              onTap: () => Navigator.pop(ctx, 'off'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (choice == 'sync') {
+      await ctrl.sync(force: true);
+      final error = ref.read(googleTasksProvider).error;
+      messenger.showMessage(
+        error == null ? l10n.gtasksSynced : l10n.gtasksFailed,
+      );
+    } else if (choice == 'off') {
+      await ctrl.disconnect();
+    }
+  }
 
   Future<String?> _askListName({String initial = ''}) => showDialog<String>(
     context: context,
@@ -154,9 +226,27 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
         for (final t in completed) _TaskRow(task: t, now: now, listId: _listId),
     ];
 
+    final google = ref.watch(googleTasksProvider);
     final bar = AppBar(
       title: Text(l10n.tasksTitle),
       actions: [
+        if (ref.watch(googleCalendarAvailableProvider))
+          IconButton(
+            key: const ValueKey('tasks-google'),
+            tooltip: l10n.gtasksTitle,
+            onPressed: google.loading ? null : () => unawaited(_googleMenu()),
+            icon: google.loading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    google.connected
+                        ? Icons.cloud_done_outlined
+                        : Icons.cloud_outlined,
+                  ),
+          ),
         PopupMenuButton<String>(
           onSelected: (v) => _listMenu(v, current, all),
           itemBuilder: (_) => [
@@ -270,9 +360,7 @@ class _TaskRow extends ConsumerWidget {
         value: task.completed,
         onChanged: repo == null
             ? null
-            : (v) => v == true
-                  ? repo.completeTaskNow(task)
-                  : repo.uncompleteTask(task),
+            : (v) => setTaskCompleted(ref, task, v == true),
       ),
       title: Text(
         task.title,

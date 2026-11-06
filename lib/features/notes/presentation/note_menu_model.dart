@@ -82,6 +82,8 @@ ActionMenu noteMenuModel(
                   ? Icons.image_outlined
                   : Icons.hide_image_outlined,
             ),
+          // Not ↔ takvim (TAKVIM F49.1): güne / etkinliğe bağla.
+          MenuAction('calendar', l10n.calendarLinkNote, Icons.event_outlined),
         ],
         if (editor) ...[
           // Belge notunun sayfa tuvali yok: defter yalnız zaten açıksa görünür.
