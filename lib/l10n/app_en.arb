@@ -2691,5 +2691,10 @@
   "calendarDayNote": "Note for this day",
   "calendarDayWrittenNotes": "Notes written that day ({count})",
   "@calendarDayWrittenNotes": {"placeholders": {"count": {"type": "int"}}},
-  "itemMenuTask": "Make task"
+  "itemMenuTask": "Make task",
+  "gtasksTitle": "Google Tasks",
+  "gtasksConnected": "Google Tasks connected and synced",
+  "gtasksFailed": "Couldn't sync with Google Tasks",
+  "gtasksSyncNow": "Sync now",
+  "gtasksSynced": "Tasks synced"
 }

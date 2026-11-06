@@ -3484,5 +3484,10 @@
   "calendarDayNote": "Bu güne not",
   "calendarDayWrittenNotes": "O gün yazılan notlar ({count})",
   "@calendarDayWrittenNotes": {"placeholders": {"count": {"type": "int"}}},
-  "itemMenuTask": "Görev yap"
+  "itemMenuTask": "Görev yap",
+  "gtasksTitle": "Google Görevler",
+  "gtasksConnected": "Google Görevler bağlandı, görevler eşlendi",
+  "gtasksFailed": "Google Görevler ile eşlenemedi",
+  "gtasksSyncNow": "Şimdi eşle",
+  "gtasksSynced": "Görevler eşlendi"
 }

@@ -7331,4 +7331,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get itemMenuTask => 'Görev yap';
+
+  @override
+  String get gtasksTitle => 'Google Görevler';
+
+  @override
+  String get gtasksConnected => 'Google Görevler bağlandı, görevler eşlendi';
+
+  @override
+  String get gtasksFailed => 'Google Görevler ile eşlenemedi';
+
+  @override
+  String get gtasksSyncNow => 'Şimdi eşle';
+
+  @override
+  String get gtasksSynced => 'Görevler eşlendi';
 }

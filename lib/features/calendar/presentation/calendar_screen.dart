@@ -21,6 +21,7 @@ import '../../notes/presentation/notes_providers.dart';
 import '../data/calendar_repository.dart';
 import '../data/task_note_sync.dart';
 import '../data/google_calendar_sync.dart';
+import '../data/google_tasks_sync.dart';
 import '../domain/agenda.dart';
 import '../domain/calendar_event.dart';
 import '../domain/day_key.dart';
@@ -131,6 +132,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   void _refreshGoogle() {
     if (!mounted) return;
     unawaited(ref.read(googleCalendarProvider.notifier).refresh());
+    // Görevler ajandada da görünür (F50.4).
+    unawaited(ref.read(googleTasksProvider.notifier).sync());
   }
 
   void _maybePinchHint() {

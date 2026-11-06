@@ -13093,6 +13093,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Görev yap'**
   String get itemMenuTask;
+
+  /// No description provided for @gtasksTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Görevler'**
+  String get gtasksTitle;
+
+  /// No description provided for @gtasksConnected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Görevler bağlandı, görevler eşlendi'**
+  String get gtasksConnected;
+
+  /// No description provided for @gtasksFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Görevler ile eşlenemedi'**
+  String get gtasksFailed;
+
+  /// No description provided for @gtasksSyncNow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdi eşle'**
+  String get gtasksSyncNow;
+
+  /// No description provided for @gtasksSynced.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görevler eşlendi'**
+  String get gtasksSynced;
 }
 
 class _AppLocalizationsDelegate

@@ -7351,4 +7351,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemMenuTask => 'Make task';
+
+  @override
+  String get gtasksTitle => 'Google Tasks';
+
+  @override
+  String get gtasksConnected => 'Google Tasks connected and synced';
+
+  @override
+  String get gtasksFailed => 'Couldn\'t sync with Google Tasks';
+
+  @override
+  String get gtasksSyncNow => 'Sync now';
+
+  @override
+  String get gtasksSynced => 'Tasks synced';
 }
