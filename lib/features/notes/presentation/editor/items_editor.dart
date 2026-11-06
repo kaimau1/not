@@ -1,3 +1,4 @@
+import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/app_icons.dart';
 import 'dart:async';
@@ -1982,7 +1983,7 @@ class ItemsEditorState extends State<ItemsEditor>
       return PopScope(
         canPop: !_selectionMode,
         onPopInvokedWithResult: (didPop, _) {
-          if (!didPop) _exitSelection();
+          if (!didPop && !BackCloses.handling(context)) _exitSelection();
         },
         child: OverlayPortal(
           controller: _barController,
@@ -2046,7 +2047,7 @@ class ItemsEditorState extends State<ItemsEditor>
     return PopScope(
       canPop: !_selectionMode,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _exitSelection();
+        if (!didPop && !BackCloses.handling(context)) _exitSelection();
       },
       child: OverlayPortal(
         controller: _barController,

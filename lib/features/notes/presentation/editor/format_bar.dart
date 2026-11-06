@@ -1,3 +1,4 @@
+import '../../../../core/widgets/back_closes.dart';
 import '../../../../app/theme/fixed_colors.dart';
 import '../../../../core/app_icons.dart';
 import 'dart:async';
@@ -604,7 +605,10 @@ class _FormatBarState extends State<FormatBar> {
       height: 1,
       color: scheme.outlineVariant.withValues(alpha: 0.4),
     );
-    return TextFieldTapRegion(
+    return BackCloses(
+      open: _tray != _Tray.none,
+      onClose: () => setState(() => _tray = _Tray.none),
+      child: TextFieldTapRegion(
       child: Focus(
         canRequestFocus: false,
         descendantsAreFocusable: false,
@@ -813,6 +817,7 @@ class _FormatBarState extends State<FormatBar> {
           ),
         ),
       ),
+    ),
     );
   }
 }

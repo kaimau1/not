@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/app_frame.dart';
+import '../../../core/widgets/back_closes.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
@@ -777,6 +778,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           child: _monthOpen ? grid : const SizedBox(width: double.infinity),
         ),
         if (_monthOpen) const Divider(height: 1),
+        // Açık ay paneli geri tuşuyla önce kapanır (bkz. [BackCloses]).
+        BackCloses(
+          open: _monthOpen,
+          onClose: () => setState(() => _monthOpen = false),
+          child: const SizedBox.shrink(),
+        ),
         Expanded(child: list),
       ],
     );

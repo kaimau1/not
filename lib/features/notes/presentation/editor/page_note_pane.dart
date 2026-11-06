@@ -1,3 +1,4 @@
+import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/app_icons.dart';
 import 'dart:math' as math;
 
@@ -390,7 +391,10 @@ class _PageNotePaneState extends State<PageNotePane> {
     );
     // Balon yazılırken not alanı zorla kapanır; kullanıcının açtığı alan
     // kaybolmasın diye kip bitince eski hâline döner (bkz. suppressNotes).
-    return KeyboardPhaseListener(
+    return BackCloses(
+      open: _notesOpen,
+      onClose: _toggleNotes,
+      child: KeyboardPhaseListener(
       onChanged: _onKeyboard,
       child: ValueListenableBuilder<bool>(
         valueListenable: widget.suppressNotes ?? _neverSuppressed,
@@ -490,6 +494,7 @@ class _PageNotePaneState extends State<PageNotePane> {
           );
         },
       ),
+    ),
     );
   }
 

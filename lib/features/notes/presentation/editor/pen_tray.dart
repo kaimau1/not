@@ -1,3 +1,4 @@
+import '../../../../core/widgets/back_closes.dart';
 import 'dart:async';
 
 import 'dart:math' as math;
@@ -239,13 +240,17 @@ class _PenTrayState extends State<PenTray> {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
+    return BackCloses(
+      open: _panel,
+      onClose: () => setState(() => _panel = false),
+      child: ListenableBuilder(
       listenable: _ink,
       builder: (context, _) => widget.rail
           ? _buildRail(context)
           : widget.dock
           ? _buildDock(context)
           : _build(context),
+    ),
     );
   }
 

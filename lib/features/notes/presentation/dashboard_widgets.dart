@@ -1103,6 +1103,93 @@ class _ColumnsGlyph extends StatelessWidget {
   }
 }
 
+/// Tepeden aşağı çekişin göstergesi: ızgaranın üstünde, çekildikçe inen ve
+/// dolan küçük klasör dairesi; eşik aşılınca vurgu rengine döner ("bırak →
+/// klasörler"). [progress] dp cinsinden çekiş; 0 iken hiç çizilmez.
+class FolderPullIndicator extends StatelessWidget {
+  const FolderPullIndicator({
+    super.key,
+    required this.progress,
+    required this.distance,
+    required this.child,
+  });
+
+  final ValueNotifier<double> progress;
+  final double distance;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: IgnorePointer(
+            child: ValueListenableBuilder<double>(
+              valueListenable: progress,
+              builder: (context, pull, _) {
+                if (pull <= 0) return const SizedBox.shrink();
+                final t = (pull / distance).clamp(0.0, 1.0);
+                final ready = pull >= distance;
+                final scheme = Theme.of(context).colorScheme;
+                return Align(
+                  alignment: Alignment.topCenter,
+                  child: Transform.translate(
+                    offset: Offset(0, 4 + 28 * t),
+                    child: Opacity(
+                      opacity: (t * 1.6).clamp(0.0, 1.0),
+                      child: AnimatedContainer(
+                        key: const ValueKey('folder-pull-indicator'),
+                        duration: const Duration(milliseconds: 120),
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: ready
+                              ? scheme.primary
+                              : scheme.surfaceContainerHighest,
+                          boxShadow: const [
+                            BoxShadow(blurRadius: 6, color: Colors.black26),
+                          ],
+                        ),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            SizedBox(
+                              width: 34,
+                              height: 34,
+                              child: CircularProgressIndicator(
+                                value: t,
+                                strokeWidth: 2.5,
+                                color: ready
+                                    ? scheme.onPrimary
+                                    : scheme.primary,
+                                backgroundColor: Colors.transparent,
+                              ),
+                            ),
+                            Icon(
+                              Icons.folder_outlined,
+                              size: 18,
+                              color: ready ? scheme.onPrimary : scheme.primary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// **YANA KAYDIRARAK KLASÖR GEÇİŞİ** (F39.3): ızgara parmağı izler (tek
 /// `Transform`, yeni kurulum yok), açılan kenarda sonraki durağın adı; eşik
 /// (%22 genişlik ya da hızlı fiske) aşılınca geçer, aşılmazsa yerine döner.
@@ -1115,9 +1202,22 @@ class FolderSwipe extends StatefulWidget {
     required this.nextLabel,
     required this.onCommit,
     required this.child,
+    this.continuesInPlace,
   });
 
   final bool enabled;
+
+  /// **AKAN GEÇİŞ** (kullanıcı isteği 2026-11-06: "hızlı geçerken takılma
+  /// animasyonu güzel his vermiyor"). Geçiş içerik değiştirerek YERİNDE
+  /// olacaksa (takvim açmıyorsa) çağrılır, bırakılan konumu genişlik oranı
+  /// olarak (fiziksel, işaretli) alır ve true döner: ızgara geri SEKMEZ,
+  /// ayrılan görünümü çağıran bu konumdan devam ettirir. KÖK NEDEN: eskiden
+  /// ızgara parmağın bıraktığı yerden merkeze geri dönerken AYNI anda yeni
+  /// içerik ters yönden geliyordu — gelen liste parmağın tersine kayıyor,
+  /// hızlı fiskede "takılıp geri gelme" hissi veriyordu. null / false = eski
+  /// davranış (yerine dön).
+  final bool Function(int direction, double releaseFraction)?
+  continuesInPlace;
 
   /// Yön (+1 sonraki, -1 önceki) için durağın adı; yoksa null.
   final String? Function(int direction) nextLabel;
@@ -1222,6 +1322,14 @@ class _FolderSwipeState extends State<FolderSwipe>
       _direction = 0;
     });
     _raw = 0;
+    if (commit &&
+        (widget.continuesInPlace?.call(direction, _dx.value / _width) ??
+            false)) {
+      _dx.stop();
+      _dx.value = 0;
+      widget.onCommit(direction);
+      return;
+    }
     if (commit) widget.onCommit(direction);
     if (_dx.value != 0) {
       unawaited(
