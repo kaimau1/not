@@ -17,6 +17,7 @@ import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/note_card.dart';
+import 'package:notlar/features/notes/presentation/notes_providers.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -48,6 +49,27 @@ void main() {
       final hue = HSLColor.fromColor(straw.colorScheme.surface).hue;
       expect(hue, inInclusiveRange(35, 55));
     });
+  });
+
+  test('sola çekiş yalnız Tümü görünümünde ve ayar açıkken takvimi açar', () {
+    expect(
+      swipeOpensCalendar(enabled: true, direction: 1, atAllNotes: true),
+      isTrue,
+    );
+    // Sağa çekiş durak gezer.
+    expect(
+      swipeOpensCalendar(enabled: true, direction: -1, atAllNotes: true),
+      isFalse,
+    );
+    // Klasör/süzgeç içinde sola çekiş sonraki durağa gider.
+    expect(
+      swipeOpensCalendar(enabled: true, direction: 1, atAllNotes: false),
+      isFalse,
+    );
+    expect(
+      swipeOpensCalendar(enabled: false, direction: 1, atAllNotes: true),
+      isFalse,
+    );
   });
 
   group('Takvim zemini', () {

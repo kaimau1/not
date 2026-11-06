@@ -900,6 +900,15 @@ final effectiveThemeModeProvider = Provider.autoDispose<ThemeMode>((ref) {
 /// değişir — ikisi AYNI değeri okur, biri açıkken diğeri kapalı görünmez.
 final assistantVoiceProvider = boolPref('assistant_voice', defaultValue: true);
 
+/// Ana ekranda (Tümü görünümünde) SOLA kaydırınca takvim açılsın mı
+/// (kullanıcı isteği 2026-11-06: "sola kaydırınca takvim açılsın"). Açıkken
+/// Tümü'den sola çekiş klasöre değil takvime gider; klasörler sağa çekişle ve
+/// klasör içinden sola çekişle gezilmeye devam eder.
+final swipeLeftCalendarProvider = boolPref(
+  'swipe_left_calendar',
+  defaultValue: true,
+);
+
 /// Ana ekranın (dashboard) ZEMİNİ: **renk + desen + görsel**.
 ///
 /// Nota özel zeminden farkı: bu ayar cihaza aittir, buluta yazılmaz. Seçilen
