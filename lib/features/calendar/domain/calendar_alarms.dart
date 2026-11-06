@@ -1,5 +1,6 @@
 import 'calendar_event.dart';
 import 'day_key.dart';
+import 'routine.dart';
 import 'task_item.dart';
 
 /// Planlanacak bir takvim bildirimi (TAKVIM_PLANI F47.6). Bildirim motoru
@@ -43,6 +44,7 @@ const kCalendarPayloadPrefix = 'cal:';
 List<CalendarAlarm> calendarAlarms({
   required Iterable<CalendarEvent> events,
   required Iterable<TaskItem> tasks,
+  Iterable<Routine> routines = const [],
   required DateTime now,
   Duration horizon = const Duration(days: 14),
   int max = 60,
@@ -94,6 +96,25 @@ List<CalendarAlarm> calendarAlarms({
           start: due,
           allDay: !t.hasTime,
           payload: '${kCalendarPayloadPrefix}task:${t.id}',
+        ),
+      );
+    }
+  }
+  // Rutin (Faz 53): saati ve "hatırlat"ı olanın her oluşu, o saatte.
+  for (final r in routines) {
+    final hm = parseHm(r.time);
+    if (r.deletedAt != null || !r.remind || hm == null) continue;
+    for (final d in r.daysBetween(startOfDay(now), until)) {
+      final at = DateTime(d.year, d.month, d.day, hm.hour, hm.minute);
+      if (!at.isAfter(now) || !at.isBefore(until)) continue;
+      out.add(
+        CalendarAlarm(
+          key: 'routine:${r.id}@${dayKey(d)}',
+          at: at,
+          title: r.title,
+          start: at,
+          allDay: false,
+          payload: '${kCalendarPayloadPrefix}routine:${r.id}',
         ),
       );
     }

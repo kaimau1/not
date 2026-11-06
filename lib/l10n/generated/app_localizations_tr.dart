@@ -7386,4 +7386,65 @@ class AppLocalizationsTr extends AppLocalizations {
   String calendarIcsImported(int count, int skipped) {
     return '$count etkinlik eklendi, $skipped zaten vardı';
   }
+
+  @override
+  String get routinesTitle => 'Rutinler';
+
+  @override
+  String get routineNew => 'Yeni rutin';
+
+  @override
+  String get routineEdit => 'Rutini düzenle';
+
+  @override
+  String get routinesEmpty => 'Henüz rutin yok';
+
+  @override
+  String get routinesEmptyHint =>
+      'Sabah rutini gibi tekrarlayan bir plan kur: adımlarını tikle, serini gör.';
+
+  @override
+  String get routineDoneToday => 'Bugün tamamlandı';
+
+  @override
+  String get routineStartToday => 'Bugünü işaretle';
+
+  @override
+  String get routineDone => 'Tamamlandı';
+
+  @override
+  String get routineTitleHint => 'Rutinin adı';
+
+  @override
+  String get routineTime => 'Saat';
+
+  @override
+  String get routineRemind => 'Zamanı gelince hatırlat';
+
+  @override
+  String get routineSteps => 'Adımlar';
+
+  @override
+  String get routineStepHint => 'Adım';
+
+  @override
+  String get routineAddStep => 'Adım ekle';
+
+  @override
+  String get routineDeleted => 'Rutin silindi';
+
+  @override
+  String routineStreak(int count) {
+    return '🔥 $count gün';
+  }
+
+  @override
+  String routineStepCount(int count) {
+    return '$count adım';
+  }
+
+  @override
+  String routineProgress(int done, int total) {
+    return '$done/$total adım';
+  }
 }

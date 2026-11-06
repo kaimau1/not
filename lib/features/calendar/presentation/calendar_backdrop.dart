@@ -39,6 +39,8 @@ class CalendarBackdrop extends ConsumerWidget {
       ],
       tasks: ref.watch(tasksStreamProvider).value ?? const <TaskItem>[],
       reminders: ref.watch(calendarReminderNotesProvider),
+      routines: ref.watch(routinesStreamProvider).value ?? const [],
+      routineLogs: ref.watch(routineLogsStreamProvider).value ?? const {},
     );
     return IgnorePointer(
       child: RepaintBoundary(

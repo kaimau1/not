@@ -29,6 +29,7 @@ import '../domain/task_item.dart';
 import 'calendar_views.dart';
 import 'calendar_ics_ui.dart';
 import 'event_editor.dart';
+import 'routines_screen.dart';
 import 'google_calendar_ui.dart';
 import 'note_calendar_links.dart';
 import 'month_grid.dart';
@@ -300,6 +301,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         );
       case TaskEntry(:final task):
         unawaited(showTaskEditor(context, existing: task));
+      case RoutineEntry(:final routine, :final day):
+        unawaited(showRoutineDaySheet(context, routine, day));
       case ReminderEntry(:final note):
         unawaited(context.pushNote(noteRoutePath(note.id)));
     }
@@ -403,6 +406,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       events: eventList,
       tasks: tasks,
       reminders: reminders,
+      routines: ref.watch(routinesStreamProvider).value ?? const [],
+      routineLogs: ref.watch(routineLogsStreamProvider).value ?? const {},
     );
     final wide = MediaQuery.sizeOf(context).width >= _kWideCalendar;
     final paged = _view != CalendarView.agenda;
@@ -512,6 +517,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           tooltip: l10n.remindersTitle,
           icon: const Icon(Icons.alarm_outlined),
           onPressed: () => unawaited(context.push('/reminders')),
+        ),
+        IconButton(
+          key: const ValueKey('calendar-routines'),
+          tooltip: l10n.routinesTitle,
+          icon: const Icon(Icons.self_improvement_outlined),
+          onPressed: () => unawaited(context.push('/routines')),
         ),
         if (ref.watch(googleCalendarAvailableProvider))
           IconButton(
@@ -894,6 +905,7 @@ class _DaySheet extends ConsumerWidget {
                             EventOccurrence occ => _EventTile(occurrence: occ),
                             TaskEntry t => _TaskTile(task: t.task),
                             ReminderEntry r => _ReminderTile(entry: r),
+                            RoutineEntry r => _RoutineTile(entry: r),
                           },
                       ],
                     ),
@@ -1277,6 +1289,58 @@ class _ReminderTile extends StatelessWidget {
                 ),
                 Text(
                   '${DateFormat.Hm().format(entry.at)} · ${l10n.calendarReminderTag}',
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoutineTile extends StatelessWidget {
+  const _RoutineTile({required this.entry});
+
+  final RoutineEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final r = entry.routine;
+    final color = r.color == null ? scheme.primary : Color(r.color!);
+    return _EntryShell(
+      accent: color,
+      onTap: () => unawaited(showRoutineDaySheet(context, r, entry.day)),
+      child: Row(
+        children: [
+          Icon(
+            entry.log.completed
+                ? Icons.check_circle
+                : Icons.self_improvement_outlined,
+            size: 18,
+            color: color,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  r.title.trim().isEmpty ? l10n.eventUntitled : r.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  [
+                    if (!entry.allDay) DateFormat.Hm().format(entry.at),
+                    routineProgressLabel(l10n, r, entry.log),
+                  ].join(' · '),
                   style: TextStyle(
                     color: scheme.onSurfaceVariant,
                     fontSize: 13,

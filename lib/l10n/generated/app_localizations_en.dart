@@ -7407,4 +7407,65 @@ class AppLocalizationsEn extends AppLocalizations {
   String calendarIcsImported(int count, int skipped) {
     return '$count events added, $skipped already existed';
   }
+
+  @override
+  String get routinesTitle => 'Routines';
+
+  @override
+  String get routineNew => 'New routine';
+
+  @override
+  String get routineEdit => 'Edit routine';
+
+  @override
+  String get routinesEmpty => 'No routines yet';
+
+  @override
+  String get routinesEmptyHint =>
+      'Set up a repeating plan like a morning routine: tick its steps and watch your streak.';
+
+  @override
+  String get routineDoneToday => 'Done today';
+
+  @override
+  String get routineStartToday => 'Check off today';
+
+  @override
+  String get routineDone => 'Done';
+
+  @override
+  String get routineTitleHint => 'Routine name';
+
+  @override
+  String get routineTime => 'Time';
+
+  @override
+  String get routineRemind => 'Remind me when it\'s time';
+
+  @override
+  String get routineSteps => 'Steps';
+
+  @override
+  String get routineStepHint => 'Step';
+
+  @override
+  String get routineAddStep => 'Add step';
+
+  @override
+  String get routineDeleted => 'Routine deleted';
+
+  @override
+  String routineStreak(int count) {
+    return '🔥 $count days';
+  }
+
+  @override
+  String routineStepCount(int count) {
+    return '$count steps';
+  }
+
+  @override
+  String routineProgress(int done, int total) {
+    return '$done/$total steps';
+  }
 }

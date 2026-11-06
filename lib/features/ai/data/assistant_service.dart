@@ -219,6 +219,12 @@ class AssistantService {
         ..._ref.read(googleCalendarEventsProvider),
       ],
       tasks: calendar == null ? const [] : await calendar.watchTasks().first,
+      routines: calendar == null
+          ? const []
+          : await calendar.watchRoutines().first,
+      routineLogs: calendar == null
+          ? const {}
+          : await calendar.watchRoutineLogs().first,
       reminderNotes: [
         for (final n in notes)
           if (n.reminderAt != null && !n.locked) n,
@@ -238,11 +244,13 @@ class AssistantService {
                 EventOccurrence() => 'etkinlik',
                 TaskEntry() => 'görev',
                 ReminderEntry() => 'hatırlatıcı',
+                RoutineEntry() => 'rutin',
               },
               'title': switch (e) {
                 EventOccurrence(:final event) => event.title,
                 TaskEntry(:final task) => task.title,
                 ReminderEntry(:final note) => note.displayTitle,
+                RoutineEntry(:final routine) => routine.title,
               },
             },
       ],

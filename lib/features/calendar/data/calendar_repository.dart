@@ -8,6 +8,7 @@ import '../../../core/constants.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/calendar_event.dart';
 import '../domain/day_key.dart';
+import '../domain/routine.dart';
 import '../domain/task_item.dart';
 
 final calendarRepositoryProvider = Provider<CalendarRepository?>((ref) {
@@ -38,6 +39,19 @@ final taskListsStreamProvider = StreamProvider<List<TaskList>>((ref) {
   if (repo == null) return const Stream.empty();
   return repo.watchTaskLists();
 });
+
+final routinesStreamProvider = StreamProvider<List<Routine>>((ref) {
+  final repo = ref.watch(calendarRepositoryProvider);
+  if (repo == null) return const Stream.empty();
+  return repo.watchRoutines();
+});
+
+final routineLogsStreamProvider =
+    StreamProvider<Map<String, Map<String, RoutineLog>>>((ref) {
+      final repo = ref.watch(calendarRepositoryProvider);
+      if (repo == null) return const Stream.empty();
+      return repo.watchRoutineLogs();
+    });
 
 /// Google etkinliği → bağlı not kimlikleri (`eventLinks`, F48.4).
 final eventLinksStreamProvider = StreamProvider<Map<String, List<String>>>((
@@ -72,6 +86,11 @@ class CalendarRepository {
       _user.collection(AppConstants.tasksCollection);
   CollectionReference<Map<String, dynamic>> get _lists =>
       _user.collection(AppConstants.taskListsCollection);
+  CollectionReference<Map<String, dynamic>> get _routines =>
+      _user.collection(AppConstants.routinesCollection);
+  CollectionReference<Map<String, dynamic>> get _routineLogs =>
+      _user.collection(AppConstants.routineLogsCollection);
+
   /// Google etkinliğine bağlı notlar (F48.4) — Google'a YAZILMAZ; belge
   /// kimliği Google etkinlik kimliği.
   CollectionReference<Map<String, dynamic>> get _eventLinks =>
@@ -341,4 +360,47 @@ class CalendarRepository {
           'noteIds': FieldValue.arrayRemove([noteId]),
         }, SetOptions(merge: true)),
       );
+
+  // ------------------------------------------------------- rutin (Faz 53)
+
+  Stream<List<Routine>> watchRoutines() => _routines.snapshots().map(
+    (s) => [
+      for (final d in s.docs)
+        if (d.data()['deletedAt'] == null) Routine.fromMap(d.id, d.data()),
+    ]..sort((a, b) => a.time.compareTo(b.time)),
+  );
+
+  Routine saveRoutine(Routine routine, {DateTime? now}) {
+    final at = now ?? DateTime.now();
+    final saved = routine.copyWith(
+      id: routine.id.isEmpty ? newId() : routine.id,
+      createdAt: routine.createdAt ?? at,
+      startDay: routine.startDay.isEmpty ? dayKey(at) : routine.startDay,
+    );
+    unawaited(_routines.doc(saved.id).set(saved.toMap()));
+    return saved;
+  }
+
+  void trashRoutine(String id) => unawaited(
+    _routines.doc(id).update({'deletedAt': FieldValue.serverTimestamp()}),
+  );
+
+  void restoreRoutine(String id) =>
+      unawaited(_routines.doc(id).update({'deletedAt': null}));
+
+  /// Rutin → gün → kayıt.
+  Stream<Map<String, Map<String, RoutineLog>>> watchRoutineLogs() =>
+      _routineLogs.snapshots().map((s) {
+        final out = <String, Map<String, RoutineLog>>{};
+        for (final d in s.docs) {
+          final log = RoutineLog.fromMap(d.data());
+          if (log.routineId.isEmpty) continue;
+          (out[log.routineId] ??= {})[log.day] = log;
+        }
+        return out;
+      });
+
+  void setRoutineLog(RoutineLog log) => unawaited(
+    _routineLogs.doc(RoutineLog.docId(log.routineId, log.day)).set(log.toMap()),
+  );
 }

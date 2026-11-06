@@ -71,6 +71,11 @@ abstract final class AppConstants {
   static const String dayLinksCollection = 'dayLinks';
   static const String eventLinksCollection = 'eventLinks';
 
+  /// Rutinler (TAKVIM Faz 53) — `users/{uid}/routines/{id}`; günlük kayıt
+  /// `users/{uid}/routineLogs/{rutin}_{gün}`.
+  static const String routinesCollection = 'routines';
+  static const String routineLogsCollection = 'routineLogs';
+
   // Gemini
   static const String geminiBaseUrl =
       'https://generativelanguage.googleapis.com/v1beta';

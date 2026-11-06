@@ -2,6 +2,7 @@ import '../../notes/domain/note.dart';
 import '../../notes/domain/reminder_repeat.dart';
 import 'calendar_event.dart';
 import 'day_key.dart';
+import 'routine.dart';
 import 'task_item.dart';
 
 /// Ajandada bir satır (TAKVIM_PLANI §2.7: etkinlik, görev ve not
@@ -52,6 +53,26 @@ class ReminderEntry extends AgendaEntry {
   bool get allDay => false;
 }
 
+/// Rutinin bir günkü oluşu (Faz 53); [log] o günün kaydı (yoksa boş).
+class RoutineEntry extends AgendaEntry {
+  const RoutineEntry(this.routine, this.day, this.log);
+
+  final Routine routine;
+  final DateTime day;
+  final RoutineLog log;
+
+  @override
+  DateTime get at {
+    final hm = parseHm(routine.time);
+    return hm == null
+        ? day
+        : DateTime(day.year, day.month, day.day, hm.hour, hm.minute);
+  }
+
+  @override
+  bool get allDay => parseHm(routine.time) == null;
+}
+
 int _compareEntries(AgendaEntry a, AgendaEntry b) {
   if (a.allDay != b.allDay) return a.allDay ? -1 : 1;
   final c = a.at.compareTo(b.at);
@@ -61,6 +82,7 @@ int _compareEntries(AgendaEntry a, AgendaEntry b) {
     EventOccurrence() => 0,
     TaskEntry() => 1,
     ReminderEntry() => 2,
+    RoutineEntry() => 3,
   };
   return rank(a) - rank(b);
 }
@@ -74,6 +96,8 @@ Map<String, List<AgendaEntry>> buildAgenda({
   Iterable<CalendarEvent> events = const [],
   Iterable<TaskItem> tasks = const [],
   Iterable<Note> reminderNotes = const [],
+  Iterable<Routine> routines = const [],
+  Map<String, Map<String, RoutineLog>> routineLogs = const {},
   bool includeCompleted = true,
 }) {
   final out = <String, List<AgendaEntry>>{};
@@ -125,6 +149,17 @@ Map<String, List<AgendaEntry>> buildAgenda({
     }
   }
 
+  for (final r in routines) {
+    if (r.deletedAt != null) continue;
+    for (final d in r.daysBetween(first, to)) {
+      final key = dayKey(d);
+      final log =
+          routineLogs[r.id]?[key] ?? RoutineLog(routineId: r.id, day: key);
+      if (log.completed && !includeCompleted) continue;
+      add(d, RoutineEntry(r, d, log));
+    }
+  }
+
   final keys = out.keys.toList()..sort();
   return {for (final k in keys) k: out[k]!..sort(_compareEntries)};
 }
@@ -134,6 +169,7 @@ bool canMoveEntry(AgendaEntry entry) => switch (entry) {
   EventOccurrence(:final event) => !event.repeats && !event.fromGoogle,
   TaskEntry(:final task) => !task.completed,
   ReminderEntry(:final note) => note.reminderAt != null,
+  RoutineEntry() => false,
 };
 
 /// **SÜRÜKLEYEREK TAŞIMA** (F47.5): kaydın [target] güne taşınmış hâli.
@@ -172,6 +208,8 @@ Object? movedToDay(AgendaEntry entry, DateTime target) {
           from.minute,
         ),
       );
+    case RoutineEntry():
+      return null;
   }
 }
 
@@ -182,6 +220,8 @@ List<String> calendarBriefingLines({
   required DateTime now,
   Iterable<CalendarEvent> events = const [],
   Iterable<TaskItem> tasks = const [],
+  Iterable<Routine> routines = const [],
+  Map<String, Map<String, RoutineLog>> routineLogs = const {},
 }) {
   final today = startOfDay(now);
   final agenda = buildAgenda(
@@ -189,6 +229,8 @@ List<String> calendarBriefingLines({
     to: DateTime(today.year, today.month, today.day + 2),
     events: events,
     tasks: tasks,
+    routines: routines,
+    routineLogs: routineLogs,
     includeCompleted: false,
   );
   String two(int v) => v.toString().padLeft(2, '0');
@@ -213,6 +255,13 @@ List<String> calendarBriefingLines({
           out.add('- $label $time · görev: ${task.title.trim()}');
         case ReminderEntry():
           break;
+        case RoutineEntry(:final routine, :final log):
+          if (day == today) {
+            out.add(
+              '- $label $time · rutin: ${routine.title.trim()}'
+              '${log.completed ? ' (tamamlandı)' : ''}',
+            );
+          }
       }
     }
   }

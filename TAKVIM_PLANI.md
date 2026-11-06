@@ -270,10 +270,10 @@ Faz 53'te.
 - [x] F52.4 `ics.dart` (RFC 5545 gündelik alt küme: saatli/tüm gün, konum, açıklama kaçışlı, satır katlama, basit RRULE ↔ tekrar; TZID yerel sayılır) + takvim ⋮ → dışa aktar (paylaş) / içe aktar (aynı UID ya da başlık+başlangıç atlanır). Google etkinlikleri dışa gitmez. Testler `ics_test`.
 
 ### Faz 53 — Rutinler (Aşama 2)
-- [ ] F53.1 `Routine` modeli (ad, adımlar, tekrar, saat, renk) + `routineLogs`.
-- [ ] F53.2 Rutin günün görevlerine düşer; adım tikleri; hatırlatma.
-- [ ] F53.3 Seri + 30 günlük şerit; brifing ve asistan entegrasyonu.
-- [ ] F53.4 Ana sayfa widget'ı "Bugün" (sıradaki etkinlik/görev/rutin).
+- [x] F53.1 `routine.dart`: `Routine` (ad, adımlar, tekrar — `Recurrence`, varsayılan günlük, çıpa `startDay`; saat, renk, hatırlat) `users/{uid}/routines`; `RoutineLog` `routineLogs/{rutin}_{gün}` (tiklenen adımlar + tamam). Hesap silme listesinde.
+- [x] F53.2 Ajandada `RoutineEntry` (ay/hafta/ajanda/gün levhası/zemin; sürüklenmez); dokununca gün levhası: adımlar tiklenir (adımsızsa tek "Tamamlandı"). Hatırlatma `calendarAlarms(routines)` → `cal:routine:` (her oluş, rutinin saatinde). Görev listesine ayrı kopya YAZILMAZ (çift kayıt olmasın) — ajanda ve rutin kartı yeter.
+- [x] F53.3 `/routines` (takvim çubuğunda 🧘): kart başına 🔥 seri (`routineStreak`: bugün yapılmadıysa dünden), son 30 gün şeridi (`routineStrip`), "Bugünü işaretle". Brifing (bugünün rutinleri) ve asistan `list_agenda` rutinleri de getirir. Testler `routine_test`.
+- [x] F53.4 Var olan "Bugün" widget'ı (`todayWidgetPayload`) artık 7 günlük etkinlik (📅), görev (☐) ve rutinleri (🔁) de taşır; takvim akışları değişince güncellenir. Yeni Android widget'ı YAZILMADI (mevcut olan genişletildi). Cihazda doğrulanmadı → KALANLAR §2 #106.
 
 ---
 
@@ -318,4 +318,4 @@ Faz 53'te.
 | 50 Görevler | ✅ 2026-11-06 (Google Görevler gerçek hesapta denenmedi: F19.B10, KALANLAR §2 #103; elle sürükleyerek sıralama yok) |
 | 51 Google'a yazma | ✅ 2026-11-06 (gerçek hesapta denenmedi: F19.B10, KALANLAR §2 #104) |
 | 52 Akıllı bağlar | ✅ 2026-11-06 (cihazda doğrulanmadı, KALANLAR §2 #105) |
-| 53 Rutinler | — |
+| 53 Rutinler | ✅ 2026-11-06 (cihazda doğrulanmadı, KALANLAR §2 #106) |

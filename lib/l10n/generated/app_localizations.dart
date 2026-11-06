@@ -13189,6 +13189,114 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} etkinlik eklendi, {skipped} zaten vardı'**
   String calendarIcsImported(int count, int skipped);
+
+  /// No description provided for @routinesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rutinler'**
+  String get routinesTitle;
+
+  /// No description provided for @routineNew.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni rutin'**
+  String get routineNew;
+
+  /// No description provided for @routineEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rutini düzenle'**
+  String get routineEdit;
+
+  /// No description provided for @routinesEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz rutin yok'**
+  String get routinesEmpty;
+
+  /// No description provided for @routinesEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sabah rutini gibi tekrarlayan bir plan kur: adımlarını tikle, serini gör.'**
+  String get routinesEmptyHint;
+
+  /// No description provided for @routineDoneToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün tamamlandı'**
+  String get routineDoneToday;
+
+  /// No description provided for @routineStartToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugünü işaretle'**
+  String get routineStartToday;
+
+  /// No description provided for @routineDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamamlandı'**
+  String get routineDone;
+
+  /// No description provided for @routineTitleHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rutinin adı'**
+  String get routineTitleHint;
+
+  /// No description provided for @routineTime.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saat'**
+  String get routineTime;
+
+  /// No description provided for @routineRemind.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zamanı gelince hatırlat'**
+  String get routineRemind;
+
+  /// No description provided for @routineSteps.
+  ///
+  /// In tr, this message translates to:
+  /// **'Adımlar'**
+  String get routineSteps;
+
+  /// No description provided for @routineStepHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Adım'**
+  String get routineStepHint;
+
+  /// No description provided for @routineAddStep.
+  ///
+  /// In tr, this message translates to:
+  /// **'Adım ekle'**
+  String get routineAddStep;
+
+  /// No description provided for @routineDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rutin silindi'**
+  String get routineDeleted;
+
+  /// No description provided for @routineStreak.
+  ///
+  /// In tr, this message translates to:
+  /// **'🔥 {count} gün'**
+  String routineStreak(int count);
+
+  /// No description provided for @routineStepCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} adım'**
+  String routineStepCount(int count);
+
+  /// No description provided for @routineProgress.
+  ///
+  /// In tr, this message translates to:
+  /// **'{done}/{total} adım'**
+  String routineProgress(int done, int total);
 }
 
 class _AppLocalizationsDelegate

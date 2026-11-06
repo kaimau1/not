@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import '../../calendar/data/calendar_repository.dart';
+import '../../calendar/domain/agenda.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,13 +42,28 @@ class WidgetService {
 
   /// Son yazılan içerik; aynıysa widget hiç uyandırılmaz (pil tasarrufu).
   String? _lastPayload;
+  List<Note>? _lastNotes;
 
   void start() {
     if (kIsWeb || !Platform.isAndroid) return;
     _sub = _ref.listen(notesStreamProvider, (previous, next) {
       final notes = next.value;
-      if (notes != null) _debouncer(() => _update(notes));
+      if (notes != null) {
+        _lastNotes = notes;
+        _debouncer(() => _update(notes));
+      }
     }, fireImmediately: true);
+    // Takvim kayıtları da "Bugün" widget'ında (Faz 53.4).
+    void calendarChanged(Object? _, Object? _) {
+      final notes = _lastNotes;
+      if (notes != null) _debouncer(() => _update(notes));
+    }
+
+    _themeSubs
+      ..add(_ref.listen(eventsStreamProvider, calendarChanged))
+      ..add(_ref.listen(tasksStreamProvider, calendarChanged))
+      ..add(_ref.listen(routinesStreamProvider, calendarChanged))
+      ..add(_ref.listen(routineLogsStreamProvider, calendarChanged));
     // Temayı ETKİLEYEN iki ayar. `effectiveThemeModeProvider` autoDispose
     // olduğundan buradan izlenemez (autoDispose olmayan sağlayıcı onu
     // dinleyemez); kaynaklarını dinleyip değeri okuma anında hesaplıyoruz.
@@ -126,10 +143,12 @@ class WidgetService {
       }
       final text = lines.join('\n');
       final count = '${active.length} not';
+      final now = DateTime.now();
       final today = todayWidgetPayload(
         notes,
-        DateTime.now(),
+        now,
         hiddenFolders: hidden,
+        calendar: _calendarItems(now),
       );
       final payload = '$count\n$text\n\u0000$today';
       if (payload == _lastPayload) return;
@@ -142,6 +161,32 @@ class WidgetService {
     } catch (e) {
       debugPrint('Widget güncellenemedi: $e');
     }
+  }
+
+  /// Ana ekran "Bugün" widget'ına giden takvim kayıtları (7 gün).
+  List<({DateTime at, String title})> _calendarItems(DateTime now) {
+    final from = DateTime(now.year, now.month, now.day);
+    final agenda = buildAgenda(
+      from: from,
+      to: from.add(const Duration(days: 7)),
+      events: _ref.read(eventsStreamProvider).value ?? const [],
+      tasks: _ref.read(tasksStreamProvider).value ?? const [],
+      routines: _ref.read(routinesStreamProvider).value ?? const [],
+      routineLogs: _ref.read(routineLogsStreamProvider).value ?? const {},
+      includeCompleted: false,
+    );
+    return [
+      for (final day in agenda.values)
+        for (final e in day)
+          if (switch (e) {
+            EventOccurrence(:final event) => '📅 ${event.title.trim()}',
+            TaskEntry(:final task) => '☐ ${task.title.trim()}',
+            RoutineEntry(:final routine) => '🔁 ${routine.title.trim()}',
+            ReminderEntry() => null,
+          }
+              case final title?)
+            (at: e.at, title: title),
+    ];
   }
 
   void dispose() {
@@ -170,6 +215,7 @@ String todayWidgetPayload(
   DateTime now, {
   String lockedLabel = '🔒',
   Set<String> hiddenFolders = const {},
+  Iterable<({DateTime at, String title})> calendar = const [],
 }) {
   final from = DateTime(now.year, now.month, now.day);
   final to = from.add(const Duration(days: 7));
@@ -188,6 +234,13 @@ String todayWidgetPayload(
     title = title.replaceAll(RegExp(r'[\t\n\r]'), ' ');
     if (title.length > 48) title = '${title.substring(0, 48)}…';
     items.add((at: at, title: title));
+  }
+  // Takvim (Faz 53.4): etkinlik, görev, rutin — işaretli başlıkla.
+  for (final c in calendar) {
+    if (c.at.isBefore(from) || !c.at.isBefore(to)) continue;
+    var title = c.title.replaceAll(RegExp(r'[\t\n\r]'), ' ');
+    if (title.length > 48) title = '${title.substring(0, 48)}…';
+    items.add((at: c.at, title: title));
   }
   items.sort((a, b) => a.at.compareTo(b.at));
   return [

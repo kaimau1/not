@@ -54,6 +54,8 @@ class AccountService {
     AppConstants.taskListsCollection,
     AppConstants.dayLinksCollection,
     AppConstants.eventLinksCollection,
+    AppConstants.routinesCollection,
+    AppConstants.routineLogsCollection,
   ];
 
   /// Her notun altında boşaltılan alt koleksiyonlar (F3.13 ağır belge).

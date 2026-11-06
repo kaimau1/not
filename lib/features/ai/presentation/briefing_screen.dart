@@ -69,6 +69,12 @@ class BriefingNotifier extends StringDailyCache {
         ...ref.read(googleCalendarEventsProvider),
       ],
       tasks: calendar == null ? const [] : await calendar.watchTasks().first,
+      routines: calendar == null
+          ? const []
+          : await calendar.watchRoutines().first,
+      routineLogs: calendar == null
+          ? const {}
+          : await calendar.watchRoutineLogs().first,
     );
     buffer.writeln('\nTAKVİM VE GÖREVLER:');
     if (lines.isEmpty) buffer.writeln('- (yok)');

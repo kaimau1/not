@@ -8,6 +8,7 @@ import '../../notes/domain/note.dart';
 import '../domain/agenda.dart';
 import '../domain/calendar_event.dart';
 import '../domain/day_key.dart';
+import '../domain/routine.dart';
 import '../domain/task_item.dart';
 import 'month_grid.dart' show gridStartFor;
 import 'pinch_zoom.dart';
@@ -22,11 +23,17 @@ class CalendarData {
     this.events = const [],
     this.tasks = const [],
     this.reminders = const [],
+    this.routines = const [],
+    this.routineLogs = const {},
   });
 
   final List<CalendarEvent> events;
   final List<TaskItem> tasks;
   final List<Note> reminders;
+
+  /// Rutinler ve günlük kayıtları (Faz 53).
+  final List<Routine> routines;
+  final Map<String, Map<String, RoutineLog>> routineLogs;
 
   Map<String, List<AgendaEntry>> range(DateTime from, DateTime to) =>
       buildAgenda(
@@ -35,6 +42,8 @@ class CalendarData {
         events: events,
         tasks: tasks,
         reminderNotes: reminders,
+        routines: routines,
+        routineLogs: routineLogs,
       );
 }
 
@@ -74,6 +83,8 @@ Color entryColor(AgendaEntry e, ColorScheme scheme) => switch (e) {
     event.color != null ? Color(event.color!) : scheme.primary,
   TaskEntry() => scheme.tertiary,
   ReminderEntry() => scheme.secondary,
+  RoutineEntry(:final routine) =>
+    routine.color != null ? Color(routine.color!) : scheme.primary,
 };
 
 String entryTitle(AgendaEntry e, AppLocalizations l10n) {
@@ -86,7 +97,8 @@ String entryTitle(AgendaEntry e, AppLocalizations l10n) {
           : note.locked
           ? ''
           : note.toPlainText().split('\n').first,
-  };
+    RoutineEntry(:final routine) => routine.title,
+};
   final t = raw.trim();
   if (t.isNotEmpty) return t;
   return e is ReminderEntry ? l10n.remindersUntitled : l10n.eventUntitled;
@@ -483,6 +495,7 @@ List<TimedBlock> timedBlocksFor(DateTime day, List<AgendaEntry> entries) {
       EventOccurrence occ => (occ.start, occ.end),
       TaskEntry t => (t.at, t.at.add(const Duration(minutes: 30))),
       ReminderEntry r => (r.at, r.at.add(const Duration(minutes: 20))),
+      RoutineEntry r => (r.at, r.at.add(const Duration(minutes: 30))),
     };
     final start = s.isBefore(dayStart) ? dayStart : s;
     var end = en.isAfter(dayEnd) ? dayEnd : en;
