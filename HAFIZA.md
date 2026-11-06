@@ -707,6 +707,8 @@ maddeyi GÜNCELLE.
 - **Takvim taşıma + yedek (F47.5/F46.5):** `movedToDay`/`canMoveEntry` (agenda.dart) — tekrarlı ve Google etkinliği taşınmaz. Yedek `yedek.json` `calendar` alanı (`calendar_backup.dart`, Timestamp → `{"$ts"}`), geri yüklemede not kimliği eşlemesi (atlanan not da karşılığına).
 - **Google Takvim (Faz 48):** Firestore'a YAZILMAZ; önbellek SharedPreferences `gcal_cache_<uid>`; kimlik `g:<takvim>/<id>` (`fromGoogle`); bağlı notlar `eventLinks/{googleEventId}`. Testte `GoogleCalendarController.authOverride/clientOverride`. TUZAK: `googleCalendarAvailableProvider` Firebase `authStateProvider` okur — testte override yoksa denetleyici boş durum döner (sorun değil).
 - **CI deploy:** Cloudflare Pages "Unknown internal error" (2026-11-06, koşu 748) kodla ilgisiz; sonraki main push yeniden yayınlar. Main'e APK işi sürerken push ETME: `cancel-in-progress` APK'yı iptal eder.
+- **Push öncesi `flutter analyze` (tam, ~11 sn)**: CI analizi `info` düzeyinde de kırmızı (avoid_redundant_argument_values) — yalnız değişen dosyayı analiz etmek yetmedi (2026-11-06, iki kırmızı koşu). arb_case_test: özel adlar (Google Takvim) `titleCaseOk`'a.
+- **Google yazma/eşleme (F50.4/Faz 51):** Görevler `planTaskSync` saf (içerik aynıysa yazım yok — ping-pong önlemi; "değişti" = `updatedAt` > son eşleme / Google `updated` > bağdaki `updated`). Takvim yazımı ayrı kapsam `calendar.events` (`connectWrite`), iyimser + kalıcı kuyruk (`gcal_cache_<uid>` içinde `queue`), geçici kimlik `tmp-…`.
 
 ## Merkezi asistan bırakıldı (2026-11-02)
 - Kullanıcı: asistan (`com.ses.asistan`) çok pil yiyordu; ses her uygulamanın içinde. Kişisel alıcıdan

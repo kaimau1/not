@@ -4,7 +4,13 @@ import 'package:firebase_ai/firebase_ai.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import '../../../core/constants.dart';
-import 'gemini_service.dart' show GeminiErrorKind, GeminiException;
+import 'gemini_service.dart'
+    show
+        GeminiErrorKind,
+        GeminiException,
+        kCreateEventDescription,
+        kCreateTaskDescription,
+        kListAgendaDescription;
 
 /// Dahili AI'ın son ham hatalarını tutar. [FirebaseAiClient.mapError]
 /// kullanıcıya sade ileti döndürdüğü için ham metin (hangi model,
@@ -414,6 +420,44 @@ class FirebaseAiClient {
         'delete_note',
         'Bir notu çöp kutusuna taşır (geri alınabilir).',
         parameters: {'noteId': Schema.string()},
+      ),
+      // TAKVİM (F52.2).
+      FunctionDeclaration(
+        'create_event',
+        kCreateEventDescription,
+        parameters: {
+          'title': Schema.string(),
+          'start': Schema.string(description: 'ISO 8601 başlangıç'),
+          'end': Schema.string(
+            description: 'ISO 8601 bitiş; yoksa 1 saat sonrası',
+          ),
+          'allDay': Schema.boolean(),
+          'location': Schema.string(),
+          'reminderMinutes': Schema.integer(
+            description: 'Kaç dakika önce hatırlatılsın',
+          ),
+        },
+        optionalParameters: ['end', 'allDay', 'location', 'reminderMinutes'],
+      ),
+      FunctionDeclaration(
+        'create_task',
+        kCreateTaskDescription,
+        parameters: {
+          'title': Schema.string(),
+          'due': Schema.string(description: 'Son gün YYYY-MM-DD'),
+          'dueTime': Schema.string(description: 'HH:mm (isteğe bağlı)'),
+          'notes': Schema.string(),
+        },
+        optionalParameters: ['due', 'dueTime', 'notes'],
+      ),
+      FunctionDeclaration(
+        'list_agenda',
+        kListAgendaDescription,
+        parameters: {
+          'from': Schema.string(description: 'İlk gün YYYY-MM-DD'),
+          'days': Schema.integer(description: 'Kaç gün (1-31)'),
+        },
+        optionalParameters: ['days'],
       ),
     ]),
   ];

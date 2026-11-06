@@ -174,3 +174,54 @@ Object? movedToDay(AgendaEntry entry, DateTime target) {
       );
   }
 }
+
+/// **BRİFİNG SATIRLARI** (TAKVIM_PLANI F52.1): bugün ve yarının etkinlik +
+/// görevleri, ayrıca gecikmiş açık görevler — AI istemine giden düz metin.
+/// Hatırlatıcılar brifingin kendi bölümünde (burada tekrar edilmez).
+List<String> calendarBriefingLines({
+  required DateTime now,
+  Iterable<CalendarEvent> events = const [],
+  Iterable<TaskItem> tasks = const [],
+}) {
+  final today = startOfDay(now);
+  final agenda = buildAgenda(
+    from: today,
+    to: DateTime(today.year, today.month, today.day + 2),
+    events: events,
+    tasks: tasks,
+    includeCompleted: false,
+  );
+  String two(int v) => v.toString().padLeft(2, '0');
+  final out = <String>[];
+  for (final entry in agenda.entries) {
+    final day = parseDayKey(entry.key)!;
+    final label = day == today ? 'Bugün' : 'Yarın';
+    for (final e in entry.value) {
+      final time = e.allDay
+          ? 'gün boyu'
+          : '${two(e.at.hour)}:${two(e.at.minute)}';
+      switch (e) {
+        case EventOccurrence(:final event):
+          final t = event.title.trim().isEmpty
+              ? '(başlıksız)'
+              : event.title.trim();
+          out.add(
+            '- $label $time · etkinlik: $t'
+            '${event.location.trim().isEmpty ? '' : ' (${event.location.trim()})'}',
+          );
+        case TaskEntry(:final task):
+          out.add('- $label $time · görev: ${task.title.trim()}');
+        case ReminderEntry():
+          break;
+      }
+    }
+  }
+  for (final t in tasks) {
+    final d = t.dueDay;
+    if (t.deletedAt != null || t.completed || d == null || !d.isBefore(today)) {
+      continue;
+    }
+    out.add('- GECİKMİŞ (${dayKey(d)}) görev: ${t.title.trim()}');
+  }
+  return out;
+}

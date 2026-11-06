@@ -5,6 +5,9 @@ import 'package:intl/intl.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/undo_snackbar.dart';
+import '../../calendar/data/calendar_repository.dart';
+import '../../calendar/data/google_calendar_sync.dart';
+import '../../calendar/domain/agenda.dart';
 import '../../notes/data/notes_repository.dart';
 import '../data/ai_gate.dart';
 import '../data/daily_cache.dart';
@@ -55,6 +58,23 @@ class BriefingNotifier extends StringDailyCache {
       );
     }
     if (!hasReminder) buffer.writeln('- (yok)');
+
+    // Takvim ve görevler (TAKVIM F52.1): bugün, yarın, gecikmiş görevler.
+    // Google etkinlikleri önbellekten (ağ beklenmez).
+    final calendar = ref.read(calendarRepositoryProvider);
+    final lines = calendarBriefingLines(
+      now: now,
+      events: [
+        ...?(calendar == null ? null : await calendar.watchEvents().first),
+        ...ref.read(googleCalendarEventsProvider),
+      ],
+      tasks: calendar == null ? const [] : await calendar.watchTasks().first,
+    );
+    buffer.writeln('\nTAKVİM VE GÖREVLER:');
+    if (lines.isEmpty) buffer.writeln('- (yok)');
+    for (final l in lines.take(30)) {
+      buffer.writeln(l);
+    }
 
     // Son 3 günün notları
     buffer.writeln('\nSON NOTLAR:');
