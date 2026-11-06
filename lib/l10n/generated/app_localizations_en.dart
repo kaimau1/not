@@ -2989,7 +2989,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get friendsSearchEmpty => 'No results';
 
   @override
-  String get friendsSearchTooShort => 'Type at least 2 characters to search';
+  String get friendsSearchTooShort =>
+      'Type at least 3 letters or a full email to search';
 
   @override
   String get friendsSearchAdd => 'Add';
@@ -7575,4 +7576,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gmailOpenInGmail => 'Open in Gmail';
+
+  @override
+  String get friendsEmptyTitle => 'No contacts yet';
+
+  @override
+  String get friendsFilterHint => 'Search contacts';
+
+  @override
+  String get friendsNoName => 'No name';
+
+  @override
+  String get friendsSharedFolders => 'Shared folders';
+
+  @override
+  String get friendsNoSharedFolders =>
+      'You haven\'t shared a folder with this person yet.';
+
+  @override
+  String friendsSince(String date) {
+    return 'In your contacts since $date';
+  }
+
+  @override
+  String get friendsCopyEmail => 'Copy email';
+
+  @override
+  String get friendsEmailCopied => 'Email copied';
+
+  @override
+  String get friendsWantsToConnect => 'Wants to add you as a contact';
+
+  @override
+  String get friendsSendToEmail => 'Send a request to this address';
+
+  @override
+  String get friendsSent => 'Sent';
+
+  @override
+  String get friendsAlreadyShort => 'In contacts';
 }

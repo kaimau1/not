@@ -5519,7 +5519,7 @@ abstract class AppLocalizations {
   /// No description provided for @friendsSearchTooShort.
   ///
   /// In tr, this message translates to:
-  /// **'Aramak için en az 2 karakter yaz'**
+  /// **'Aramak için en az 3 harf ya da tam bir e-posta yaz'**
   String get friendsSearchTooShort;
 
   /// No description provided for @friendsSearchAdd.
@@ -13495,6 +13495,78 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gmail\'de aç'**
   String get gmailOpenInGmail;
+
+  /// No description provided for @friendsEmptyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz kişi yok'**
+  String get friendsEmptyTitle;
+
+  /// No description provided for @friendsFilterHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişilerde ara'**
+  String get friendsFilterHint;
+
+  /// No description provided for @friendsNoName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ad yok'**
+  String get friendsNoName;
+
+  /// No description provided for @friendsSharedFolders.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşılan klasörler'**
+  String get friendsSharedFolders;
+
+  /// No description provided for @friendsNoSharedFolders.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu kişiyle henüz klasör paylaşmadın.'**
+  String get friendsNoSharedFolders;
+
+  /// No description provided for @friendsSince.
+  ///
+  /// In tr, this message translates to:
+  /// **'{date} tarihinden beri kişilerinde'**
+  String friendsSince(String date);
+
+  /// No description provided for @friendsCopyEmail.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-postayı kopyala'**
+  String get friendsCopyEmail;
+
+  /// No description provided for @friendsEmailCopied.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta kopyalandı'**
+  String get friendsEmailCopied;
+
+  /// No description provided for @friendsWantsToConnect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seni kişilerine eklemek istiyor'**
+  String get friendsWantsToConnect;
+
+  /// No description provided for @friendsSendToEmail.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu adrese istek gönder'**
+  String get friendsSendToEmail;
+
+  /// No description provided for @friendsSent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gönderildi'**
+  String get friendsSent;
+
+  /// No description provided for @friendsAlreadyShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişilerinde'**
+  String get friendsAlreadyShort;
 }
 
 class _AppLocalizationsDelegate

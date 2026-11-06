@@ -149,11 +149,12 @@ class FriendsRepository {
     if (targetUid == uid) throw const SelfFriendException();
     final already = await _myFriends.doc(targetUid).get();
     if (already.exists) throw const AlreadyFriendException();
-    await _userDoc(
-      targetUid,
-    ).collection(AppConstants.friendRequestsCollection).doc(uid).set(
-      FriendRequest(fromUid: uid, fromEmail: email, fromName: name).toMap(),
-    );
+    await _userDoc(targetUid)
+        .collection(AppConstants.friendRequestsCollection)
+        .doc(uid)
+        .set(
+          FriendRequest(fromUid: uid, fromEmail: email, fromName: name).toMap(),
+        );
   }
 
   Future<String?> _lookupUidByEmail(String targetEmail) async {
@@ -167,10 +168,9 @@ class FriendsRepository {
     return list;
   });
 
-  Stream<List<FriendRequest>> watchIncomingRequests() =>
-      _myRequests.snapshots().map(
-        (snap) => [for (final doc in snap.docs) FriendRequest.fromDoc(doc)],
-      );
+  Stream<List<FriendRequest>> watchIncomingRequests() => _myRequests
+      .snapshots()
+      .map((snap) => [for (final doc in snap.docs) FriendRequest.fromDoc(doc)]);
 
   /// [targetEmail] sahibine istek gönderir. Kayıtlı değilse (uygulamayı hiç
   /// açmamış/e-postasını hiç senkronlamamış) [FriendNotFoundException],
@@ -182,11 +182,12 @@ class FriendsRepository {
     if (targetUid == uid) throw const SelfFriendException();
     final already = await _myFriends.doc(targetUid).get();
     if (already.exists) throw const AlreadyFriendException();
-    await _userDoc(
-      targetUid,
-    ).collection(AppConstants.friendRequestsCollection).doc(uid).set(
-      FriendRequest(fromUid: uid, fromEmail: email, fromName: name).toMap(),
-    );
+    await _userDoc(targetUid)
+        .collection(AppConstants.friendRequestsCollection)
+        .doc(uid)
+        .set(
+          FriendRequest(fromUid: uid, fromEmail: email, fromName: name).toMap(),
+        );
   }
 
   /// [request] i kabul eder: KARŞILIKLI iki `friends` dokümanı yazılır, istek
@@ -196,17 +197,20 @@ class FriendsRepository {
   /// kaybolmasın).
   Future<void> acceptRequest(FriendRequest request) async {
     final now = DateTime.now();
-    await _userDoc(request.fromUid).collection(AppConstants.friendsCollection).doc(uid).set(
-      Friend(uid: uid, email: email, name: name, since: now).toMap(),
-    );
-    await _myFriends.doc(request.fromUid).set(
-      Friend(
-        uid: request.fromUid,
-        email: request.fromEmail,
-        name: request.fromName,
-        since: now,
-      ).toMap(),
-    );
+    await _userDoc(request.fromUid)
+        .collection(AppConstants.friendsCollection)
+        .doc(uid)
+        .set(Friend(uid: uid, email: email, name: name, since: now).toMap());
+    await _myFriends
+        .doc(request.fromUid)
+        .set(
+          Friend(
+            uid: request.fromUid,
+            email: request.fromEmail,
+            name: request.fromName,
+            since: now,
+          ).toMap(),
+        );
     await _myRequests.doc(request.fromUid).delete();
   }
 
@@ -219,11 +223,11 @@ class FriendsRepository {
   /// bir sonraki senkronda ya da karşı tarafın kendi kaldırmasında temizlenir.
   Future<void> removeFriend(String friendUid) async {
     await _myFriends.doc(friendUid).delete();
-    await _userDoc(
-      friendUid,
-    ).collection(AppConstants.friendsCollection).doc(uid).delete().catchError(
-      (_) {},
-    );
+    await _userDoc(friendUid)
+        .collection(AppConstants.friendsCollection)
+        .doc(uid)
+        .delete()
+        .catchError((_) {});
   }
 }
 

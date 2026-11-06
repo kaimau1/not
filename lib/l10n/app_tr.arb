@@ -1387,7 +1387,7 @@
   "friendsSearchTab": "Ara",
   "friendsSearchEmailTab": "E-posta ile",
   "friendsSearchEmpty": "Sonuç yok",
-  "friendsSearchTooShort": "Aramak için en az 2 karakter yaz",
+  "friendsSearchTooShort": "Aramak için en az 3 harf ya da tam bir e-posta yaz",
   "friendsSearchAdd": "Ekle",
   "folderShare": "Birlikte düzenle",
   "folderShareCount": "{count, plural, one{1 kişiyle paylaşıldı} other{{count} kişiyle paylaşıldı}}",
@@ -3560,5 +3560,18 @@
   "gmailConnectTitle": "E-postalarını nota çevir",
   "gmailConnectPointRead": "Gelen kutunu gör, Gmail arama sözdizimiyle ara.",
   "gmailConnectPointNote": "Bir e-postayı tek dokunuşla not, AI özeti ya da görev listesi yap.",
-  "gmailOpenInGmail": "Gmail'de aç"
+  "gmailOpenInGmail": "Gmail'de aç",
+  "friendsEmptyTitle": "Henüz kişi yok",
+  "friendsFilterHint": "Kişilerde ara",
+  "friendsNoName": "Ad yok",
+  "friendsSharedFolders": "Paylaşılan klasörler",
+  "friendsNoSharedFolders": "Bu kişiyle henüz klasör paylaşmadın.",
+  "friendsSince": "{date} tarihinden beri kişilerinde",
+  "@friendsSince": {"placeholders": {"date": {"type": "String"}}},
+  "friendsCopyEmail": "E-postayı kopyala",
+  "friendsEmailCopied": "E-posta kopyalandı",
+  "friendsWantsToConnect": "Seni kişilerine eklemek istiyor",
+  "friendsSendToEmail": "Bu adrese istek gönder",
+  "friendsSent": "Gönderildi",
+  "friendsAlreadyShort": "Kişilerinde"
 }

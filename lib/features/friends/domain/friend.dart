@@ -29,7 +29,9 @@ class Friend {
   Map<String, dynamic> toMap() => {
     'email': email,
     'name': name,
-    'since': since != null ? Timestamp.fromDate(since!) : FieldValue.serverTimestamp(),
+    'since': since != null
+        ? Timestamp.fromDate(since!)
+        : FieldValue.serverTimestamp(),
   };
 }
 

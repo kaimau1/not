@@ -1110,7 +1110,7 @@
   "friendsSearchTab": "Search",
   "friendsSearchEmailTab": "By email",
   "friendsSearchEmpty": "No results",
-  "friendsSearchTooShort": "Type at least 2 characters to search",
+  "friendsSearchTooShort": "Type at least 3 letters or a full email to search",
   "friendsSearchAdd": "Add",
   "folderShare": "Edit together",
   "folderShareCount": "{count, plural, one{Shared with 1 person} other{Shared with {count} people}}",
@@ -2765,5 +2765,18 @@
   "gmailConnectTitle": "Turn your emails into notes",
   "gmailConnectPointRead": "See your inbox and search with Gmail search syntax.",
   "gmailConnectPointNote": "Turn an email into a note, an AI summary or a task list in one tap.",
-  "gmailOpenInGmail": "Open in Gmail"
+  "gmailOpenInGmail": "Open in Gmail",
+  "friendsEmptyTitle": "No contacts yet",
+  "friendsFilterHint": "Search contacts",
+  "friendsNoName": "No name",
+  "friendsSharedFolders": "Shared folders",
+  "friendsNoSharedFolders": "You haven't shared a folder with this person yet.",
+  "friendsSince": "In your contacts since {date}",
+  "@friendsSince": {"placeholders": {"date": {"type": "String"}}},
+  "friendsCopyEmail": "Copy email",
+  "friendsEmailCopied": "Email copied",
+  "friendsWantsToConnect": "Wants to add you as a contact",
+  "friendsSendToEmail": "Send a request to this address",
+  "friendsSent": "Sent",
+  "friendsAlreadyShort": "In contacts"
 }

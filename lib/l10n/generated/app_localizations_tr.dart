@@ -2982,7 +2982,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get friendsSearchEmpty => 'Sonuç yok';
 
   @override
-  String get friendsSearchTooShort => 'Aramak için en az 2 karakter yaz';
+  String get friendsSearchTooShort =>
+      'Aramak için en az 3 harf ya da tam bir e-posta yaz';
 
   @override
   String get friendsSearchAdd => 'Ekle';
@@ -7555,4 +7556,42 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gmailOpenInGmail => 'Gmail\'de aç';
+
+  @override
+  String get friendsEmptyTitle => 'Henüz kişi yok';
+
+  @override
+  String get friendsFilterHint => 'Kişilerde ara';
+
+  @override
+  String get friendsNoName => 'Ad yok';
+
+  @override
+  String get friendsSharedFolders => 'Paylaşılan klasörler';
+
+  @override
+  String get friendsNoSharedFolders => 'Bu kişiyle henüz klasör paylaşmadın.';
+
+  @override
+  String friendsSince(String date) {
+    return '$date tarihinden beri kişilerinde';
+  }
+
+  @override
+  String get friendsCopyEmail => 'E-postayı kopyala';
+
+  @override
+  String get friendsEmailCopied => 'E-posta kopyalandı';
+
+  @override
+  String get friendsWantsToConnect => 'Seni kişilerine eklemek istiyor';
+
+  @override
+  String get friendsSendToEmail => 'Bu adrese istek gönder';
+
+  @override
+  String get friendsSent => 'Gönderildi';
+
+  @override
+  String get friendsAlreadyShort => 'Kişilerinde';
 }
