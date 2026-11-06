@@ -28,39 +28,18 @@ import '../../../core/widgets/app_sheet.dart';
 /// gibi olağan bir istek için altı dokunuş gerekiyordu.
 enum _QuickWhen { tonight, tomorrow, nextWeek, custom }
 
-/// **NE ZAMAN LEVHASI** — uygulamadaki TEK hatırlatıcı seçici (kullanıcı
-/// kararı 2026-11-06: not "+" ile Hatırlatıcılar ekranı aynı akış). Hızlı
-/// seçenekler → seçilen zaman; `custom` takvimi açar; geçmiş saat uyarılır.
-Future<DateTime?> pickReminderWhen(
-  BuildContext context,
-  DateTime initial,
-) async {
-  final picked = await _pickReminderWhen(context, initial);
-  if (picked != null && context.mounted) {
-    unawaited(_maybeAutoStartHint(context));
-  }
-  return picked;
-}
-
 /// MIUI'de bir kez: "Otomatik başlatma" yoksa telefon yeniden başlayınca
 /// hatırlatıcılar uygulama açılana dek kurulmaz (izin durumu okunamıyor,
 /// bu yüzden ilk hatırlatıcıda bir kez söylenir; Ayarlar → İzinler'de kalıcı).
-Future<void> _maybeAutoStartHint(BuildContext context) async {
-  const key = 'miui_autostart_hint_v2'; // v1: levha arkasında kaldı
+/// Hatırlatıcı KAYDEDİLDİKTEN sonra çağrılır: levhalar açıkken gösterilen
+/// bildirim onların arkasında kalıp görülmüyordu (2026-11-06 cihazda).
+Future<void> maybeShowAutoStartHint(BuildContext context) async {
+  const key = 'miui_autostart_hint_v3'; // v1/v2: levha arkasında kaldı
   final container = ProviderScope.containerOf(context, listen: false);
   final prefs = container.read(sharedPreferencesProvider);
   if (prefs.getBool(key) ?? false) return;
   final service = container.read(permissionsServiceProvider);
   if (!await service.isXiaomi() || !context.mounted) return;
-  // Ardından "Tekrar" levhası açılıyor: bildirim onun ARKASINDA kalıp
-  // görülmüyordu (2026-11-06 cihazda). Ekran yeniden öne gelene dek bekle.
-  await Future<void>.delayed(const Duration(milliseconds: 500));
-  for (var i = 0; i < 200; i++) {
-    if (!context.mounted) return;
-    if (ModalRoute.of(context)?.isCurrent ?? true) break;
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-  }
-  if (!context.mounted) return;
   await prefs.setBool(key, true);
   if (!context.mounted) return;
   final l10n = context.l10n;
@@ -74,7 +53,10 @@ Future<void> _maybeAutoStartHint(BuildContext context) async {
   );
 }
 
-Future<DateTime?> _pickReminderWhen(
+/// **NE ZAMAN LEVHASI** — uygulamadaki TEK hatırlatıcı seçici (kullanıcı
+/// kararı 2026-11-06: not "+" ile Hatırlatıcılar ekranı aynı akış). Hızlı
+/// seçenekler → seçilen zaman; `custom` takvimi açar; geçmiş saat uyarılır.
+Future<DateTime?> pickReminderWhen(
   BuildContext context,
   DateTime initial,
 ) async {
@@ -221,6 +203,7 @@ class RemindersScreen extends ConsumerWidget {
     ref
         .read(notesRepositoryProvider)
         ?.setReminder(note.id, picked, repeat: repeat?.encode());
+    if (context.mounted) unawaited(maybeShowAutoStartHint(context));
   }
 
   /// Yeni hatırlatıcı: önce zaman seçilir, ardından o zamana kurulu boş bir
@@ -236,7 +219,9 @@ class RemindersScreen extends ConsumerWidget {
     // Hatırlatıcı TEK yazımda: createNote + ayrı setReminder arasında doküman
     // bir an hatırlatıcısız kalıyordu (boş-doküman penceresi kuralı).
     final id = await repo.createNote(NoteType.text, reminderAt: picked);
-    if (context.mounted) await context.pushNote(noteRoutePath(id));
+    if (!context.mounted) return;
+    unawaited(maybeShowAutoStartHint(context));
+    await context.pushNote(noteRoutePath(id));
   }
 
   @override

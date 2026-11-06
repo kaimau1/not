@@ -414,7 +414,7 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
   **KARAR (kullanıcı, 2026-11-03):** **SABİT MOD DOĞRU** — balonlu mod sabit moda benzetilir (sormadan uygula; farkları maddeye yaz).
   Test: iki modda aynı stil değerleri (golden ya da stil karşılaştırma).
   **Yapıldı (2026-11-04) — PDF için; ekran görüntüsüyle DOĞRULANMADI (bulutta PDF notu açılamıyor, Storage 400):** Koddan bulunan farklar — balonlu (pdfrx `PdfViewer`, `pdfLayerParams`): gri zemin (`Colors.grey` varsayılanı), 8 dp kenar/sayfa boşluğu, sayfa gölgesi; sabit (`PdfPageBox fitWidth`): `surfaceContainerHigh` zemin, boşluksuz, gölgesiz. Tek kaynak `viewers/pdf_read_style.dart` (`PdfReadStyle`): zemin = sabitin zemini, boşluk 2 dp ayraç, gölge yok; ikisi de buradan okur. Test `pdf_read_style_test`. Cihazda görsel karşılaştırma `KALANLAR.md` §2'ye. Görsel/metin/slayt balonlu sayfaları ayrı çizim yolları — karşılaştırılmadı.
-- [ ] **F28.2 Ek senkronunu baştan yaz; bugünkü yapı silinsin (büyük).**
+- [x] **F28.2 Ek senkronunu baştan yaz; bugünkü yapı silinsin (büyük).** → 2026-11-06 F19.E1'de bitti.
   **KARAR (kullanıcı, 2026-11-03):** (1) **Kod + buluttaki ek KAYITLARI sıfırlanır**; ekler cihazlardan
   yeniden yüklenir — hiçbir cihazda olmayan ek kaybolur (kullanıcı kabul etti).
   Kullanıcının Drive'ındaki dosyalar SİLİNMEZ (yalnız kayıtlar); sıfırlamadan
@@ -514,7 +514,7 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
 - [x] **F19.B7** (← F18.25 bulutta yapılamazsa) Windows'ta `graphify update .`.
   **Yapıldı (2026-11-01):** 18 980 düğüm; CLAUDE.md'deki "bayat" notu güncellendi.
 
-- [ ] **F19.B9** (← F28.1, F28.2-B) Google Cloud (notlar-kaimau): **Gmail API** etkin; OAuth onay
+- [x] **F19.B9** (← F28.1, F28.2-B) **Yapıldı (2026-11-06):** kullanıcı Drive/test kullanıcısını açtı; telefonda Gmail bağlandı, gelen kutusu + "Nota kaydet" çalıştı (Gmail API etkin). Google Cloud (notlar-kaimau): **Gmail API** etkin; OAuth onay
   ekranına `gmail.readonly` (kısıtlı — "Testing"te kişisel kullanım sorunsuz) ve `drive.file`
   kapsamları. Sonra telefonda + web'de ⋮ → Gmail → Bağlan → bir e-postayı "Nota kaydet" (ekiyle).
 
@@ -554,7 +554,8 @@ Konsol/cihaz adımı çıkarsa Faz 19'a yazılır.
 
 ### E. Ek senkronu (F28.2) — sabah bakılacak
 
-- [ ] **F19.E1** (← F28.2 A+B) Yeni ek senkronunun BAĞLANMASI ve göçü için onay + cihaz doğrulaması.
+- [x] **F19.E1** (← F28.2 A+B) Yeni ek senkronunun BAĞLANMASI ve göçü için onay + cihaz doğrulaması.
+  **Yapıldı (2026-11-06, kullanıcı kararı "herkese aç + eskiyi sil"):** tek yol — `UploadQueue` + `DriveStore` `drive.file` ile görünür "Notlar" klasörüne; eski `drive.appdata` ekleri aynı jetonla okunuyor, kayıt SIFIRLANMADI (C gereksiz kaldı: göç yok, eski ekler yerinde okunur). Bayraklı ikinci motor + sıfırlama kodu silindi (D). Kök neden: Google hesabında ekler elle "Bağla" denmeden hiç yüklenmiyordu + başarısız deneme zamanlayıcısız kalıyordu. Telefonda yükleme, önizleme ve cihazlar arası indirme geçti; web tarafı denenmedi (KALANLAR #27).
   Sıra: (1) sen "F19.E1 bağla" deyince bulut oturumu `AttachmentSyncService`'i bayrak arkasında bağlar (eski `UploadQueue`
   kapalı değil); (2) sen telefonda + web'de yeni ek ekle → Drive'da görünür "Notlar" klasörüne
   düştü mü, öbür cihazda önizleme + indirme geliyor mu; (3) ancak o zaman C: önce yerel tam yedek

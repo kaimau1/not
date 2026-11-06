@@ -4,7 +4,8 @@ import '../study_cards_screen.dart' show generateCardsForNote;
 import '../note_card.dart' show openNoteRoute;
 import '../../domain/note_links.dart';
 import '../reminder_repeat_ui.dart';
-import '../reminders_screen.dart' show pickReminderWhen;
+import '../reminders_screen.dart'
+    show maybeShowAutoStartHint, pickReminderWhen;
 import '../../domain/reminder_repeat.dart';
 import '../../../../core/app_icons.dart';
 import 'dart:async';
