@@ -205,7 +205,7 @@ extension _EditorActions on _NoteEditorScreenState {
         reminderRepeat: repeat?.encode() ?? n.reminderRepeat,
       ),
       immediate: true,
-    );
+    );    if (mounted) unawaited(maybeShowAutoStartHint(context));
   }
 
   void _clearReminder() =>
