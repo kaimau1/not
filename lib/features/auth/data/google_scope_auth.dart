@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 
@@ -68,17 +69,13 @@ Future<({String token, DateTime expiry})?> browserScopeToken(
 ) async {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) return null;
-  final provider = GoogleAuthProvider();
-  for (final scope in scopes) {
-    provider.addScope(scope);
-  }
-  final email = user.email;
-  if (email != null) provider.setCustomParameters({'login_hint': email});
-  final result = await browserFlow(
-    () => user.reauthenticateWithProvider(provider),
-  );
-  final credential = result.credential;
-  final token = credential is OAuthCredential ? credential.accessToken : null;
+  // Yerel tarafta (MainActivity.googleScopeToken): FlutterFire'ın
+  // reauthenticateWithProvider'ı Google'da jetonu hep null veriyor.
+  final token = await const MethodChannel('dev.kaimau.notlar/system')
+      .invokeMethod<String>('googleScopeToken', {
+        'scopes': scopes,
+        'email': user.email,
+      });
   if (token == null) return null;
   final expiry = DateTime.now().add(const Duration(minutes: 55));
   try {
