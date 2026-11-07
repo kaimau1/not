@@ -1265,6 +1265,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         !searchActive &&
         !selectionActive &&
         ref.watch(selectedFolderProvider) == null;
+    // **KLASÖR RAFI görünür mü / şerit mi** (2026-11-07). Kural eskisiyle
+    // aynı: yalnız kök süzgeçte, aramasız, sıralama dışı; gizlenebilir ama
+    // bir klasörün İÇİNDEYKEN hep görünür (kullanıcı isteği 2026-11-06).
+    final inFolderView =
+        hubActive ||
+        sharedFolder != null ||
+        ref.watch(selectedFolderProvider) != null;
+    final showShelf =
+        !searchActive &&
+        !reorderActive &&
+        ref.watch(noteFilterProvider) == NoteFilter.all &&
+        ref.watch(selectedTagProvider) == null &&
+        (!ref.watch(homeFolderStripHiddenProvider) || inFolderView);
+    // Şerit, yana kaydırılan ızgaranın DIŞINDA tek bir örnek (kullanıcı
+    // 2026-11-07: "sağa sola kaydırıp klasör geçişinde üst klasör satırı çok
+    // hareket ediyor"). KÖK NEDEN: şerit ızgaranın (segmentKey'li
+    // CustomScrollView) bir sliver'ıydı → çekişte parmakla birlikte kayıyor,
+    // geçişte ızgarayla solup öbür yandan giriyor, yeni örneğin yatay
+    // konumu 0'dan başlayıp seçili çipe doğru yeniden kayıyordu (üç ayrı
+    // hareket). Artık şerit yerinde durur; yalnız vurgu değişir ve çip
+    // görünür alanda değilse en kısa yoldan kaydırılır.
+    final shelfAsStrip =
+        showShelf &&
+        (inFolderView || !ref.watch(folderShelfExpandedProvider));
     // Dar ekranda arama odaklıyken sağdaki butonlar gizlenir; arama alanı
     // tüm genişliği kullanır. Klavye kapatılınca (sistem geri tuşu dahil)
     // odak sürse bile bar kendiliğinden daralır — viewInsets bunu izler.
@@ -1605,6 +1629,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           ),
                         // Sabit başlık ile kayan ızgara arasındaki SINIR
                         // (bkz. [_gridScrolled]).
+                        if (shelfAsStrip)
+                          _folderStrip(
+                            ref.watch(visibleOrderedFoldersProvider),
+                            selectedFolderId: ref.watch(selectedFolderProvider),
+                            sharedFolder: sharedFolder,
+                          ),
                         _HeaderSeparator(scrolled: _gridScrolled),
                         Expanded(
                           // İki parmakla zoom: 1 → 2 → 3 → 4 sütun arasında
@@ -1776,28 +1806,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                       // o klasörün çipi vurgulanır: kullanıcı
                                       // klasörler arasında nerede olduğunu
                                       // görsün (2026-09-26).
-                                      if (!searchActive &&
-                                          !reorderActive &&
-                                          ref.watch(noteFilterProvider) ==
-                                              NoteFilter.all &&
-                                          ref.watch(selectedTagProvider) ==
-                                              null &&
-                                          // Gizlenebilir (2026-11-06): satır
-                                          // hiç çizilmez, notlar yukarı çıkar.
-                                          // Bir klasörün İÇİNDEYKEN hep
-                                          // görünür (kullanıcı isteği
-                                          // 2026-11-06: "klasörlerde üstte
-                                          // diğer klasörler görülsün, ana
-                                          // sayfaya dön düğmesi olsun").
-                                          (!ref.watch(
-                                                homeFolderStripHiddenProvider,
-                                              ) ||
-                                              hubActive ||
-                                              sharedFolder != null ||
-                                              ref.watch(
-                                                    selectedFolderProvider,
-                                                  ) !=
-                                                  null))
+                                      //
+                                      // 2026-11-07: ŞERİT hâli artık burada
+                                      // DEĞİL, ızgaranın üstünde sabit (bkz.
+                                      // [shelfAsStrip]); burada yalnız kök
+                                      // görünümün KARO rafı kalır.
+                                      if (showShelf && !shelfAsStrip)
                                         _folderShelf(
                                           columns,
                                           selectedFolderId: ref.watch(

@@ -55,8 +55,53 @@ import '../../../../core/widgets/app_sheet.dart';
 ///     alınır ve ekte saklanır (kare varsayımıyla ezilmiş PDF yok).
 /// 13. **İlk/son sayfaya atlama**.
 /// 14. **Şeride geri alma** — kutu menüsünden, görseldeki gibi.
+/// **DIŞ ÇUBUK KÖPRÜSÜ** (kullanıcı isteği 2026-11-07: sabit bölmede
+/// belgenin üstündeki gri sayfa şeridi "kaldır, özellikleri bir alt
+/// satırla birleştir"). Verilirse [PdfPageBox] kendi yüzen şeridini
+/// ÇİZMEZ; sayfa gezinme · yer imi · balon göster/gizle · belge menüsü
+/// [buildControls] ile sabit bölmenin çubuğunda çizilir. Kutu durumu
+/// değişince (sayfa, sayfa sayısı, yer imi…) dinleyiciler uyarılır —
+/// yalnız çubuk yeniden kurulur, belge değil.
+class PdfBoxBar extends ChangeNotifier {
+  _PdfPageBoxState? _box;
+  Object? _signature;
+
+  /// Belge açıldı mı (çubukta denetim var mı)?
+  bool get ready => _box?._doc != null;
+
+  /// Sabit bölme çubuğuna konan denetimler ([width] çubuğun genişliği).
+  List<Widget> buildControls(BuildContext context, double width) =>
+      _box?._externalControls(context, width) ?? const [];
+
+  void _attach(_PdfPageBoxState box) {
+    _box = box;
+    _signature = null;
+  }
+
+  void _detach(_PdfPageBoxState box) {
+    if (identical(_box, box)) _box = null;
+  }
+
+  bool _disposed = false;
+
+  void _update(Object signature) {
+    if (signature == _signature) return;
+    _signature = signature;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_disposed) notifyListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+}
+
 class PdfPageBox extends StatefulWidget {
   const PdfPageBox({
+    this.externalBar,
     super.key,
     required this.attachment,
     required this.onChanged,
@@ -134,6 +179,9 @@ class PdfPageBox extends StatefulWidget {
   /// aynı parmağı paylaşamaz (çubuğun okları orada da çalışıyor).
   final bool swipeToTurn;
 
+  /// Verilirse kutunun kendi şeridi çizilmez (bkz. [PdfBoxBar]).
+  final PdfBoxBar? externalBar;
+
   @override
   State<PdfPageBox> createState() => _PdfPageBoxState();
 }
@@ -181,7 +229,8 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     _zoom.addListener(_onZoom);
     widget.addingBubbles?.addListener(_onExternalAdding);
     widget.addingPlain?.addListener(_onExternalPlain);
-    if (widget.fitWidth) {
+    widget.externalBar?._attach(this);
+    if (widget.fitWidth && widget.externalBar == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _flashBar());
     }
   }
@@ -256,6 +305,10 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   @override
   void didUpdateWidget(PdfPageBox old) {
     super.didUpdateWidget(old);
+    if (!identical(old.externalBar, widget.externalBar)) {
+      old.externalBar?._detach(this);
+      widget.externalBar?._attach(this);
+    }
     if (!identical(old.addingBubbles, widget.addingBubbles)) {
       old.addingBubbles?.removeListener(_onExternalAdding);
       widget.addingBubbles?.addListener(_onExternalAdding);
@@ -289,6 +342,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
 
   @override
   void dispose() {
+    widget.externalBar?._detach(this);
     _autoPlay?.cancel();
     _refreshTimer?.cancel();
     _detachDocument();
@@ -353,7 +407,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   Timer? _barHide;
 
   void _flashBar() {
-    if (!widget.fitWidth) return;
+    if (!widget.fitWidth || widget.externalBar != null) return;
     _barHide?.cancel();
     if (!_barShown && mounted) setState(() => _barShown = true);
     _barHide = Timer(const Duration(milliseconds: 2500), () {
@@ -363,7 +417,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   }
 
   void _toggleBar() {
-    if (!widget.fitWidth) return;
+    if (!widget.fitWidth || widget.externalBar != null) return;
     if (_barShown) {
       _barHide?.cancel();
       setState(() => _barShown = false);
@@ -511,27 +565,30 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   /// `didUpdateWidget`te benimsenir.
   BubbleController _bubbleController() {
     final a = widget.attachment;
-    return _bubbles ??= BubbleController(
-      initial: a.bubbles,
-      hidden: a.bubblesHidden,
-      // İki yazım da İKİ alanın canlı değerini taşır: aynı karede gelen
-      // "göster" + "yeni balon" yazımı birbirini bayat ekle ezmesin (bkz.
-      // PdfNotePane._live).
-      onChanged: (list) => widget.onChanged(
-        widget.attachment.copyWith(
-          bubbles: list,
-          bubblesHidden: _bubbles?.hidden ?? widget.attachment.bubblesHidden,
-        ),
-      ),
-      onHiddenChanged: (hidden) => widget.onChanged(
-        widget.attachment.copyWith(
-          bubblesHidden: hidden,
-          bubbles: _bubbles?.bubbles ?? widget.attachment.bubbles,
-        ),
-      ),
-    )
-      ..addingListenable.addListener(_onAddingChanged)
-      ..onEditingChanged = (writing) => widget.onBubbleWriting?.call(writing);
+    return _bubbles ??=
+        BubbleController(
+            initial: a.bubbles,
+            hidden: a.bubblesHidden,
+            // İki yazım da İKİ alanın canlı değerini taşır: aynı karede gelen
+            // "göster" + "yeni balon" yazımı birbirini bayat ekle ezmesin (bkz.
+            // PdfNotePane._live).
+            onChanged: (list) => widget.onChanged(
+              widget.attachment.copyWith(
+                bubbles: list,
+                bubblesHidden:
+                    _bubbles?.hidden ?? widget.attachment.bubblesHidden,
+              ),
+            ),
+            onHiddenChanged: (hidden) => widget.onChanged(
+              widget.attachment.copyWith(
+                bubblesHidden: hidden,
+                bubbles: _bubbles?.bubbles ?? widget.attachment.bubbles,
+              ),
+            ),
+          )
+          ..addingListenable.addListener(_onAddingChanged)
+          ..onEditingChanged = (writing) =>
+              widget.onBubbleWriting?.call(writing);
   }
 
   /// Çevirici, kutunun gösterdiği sayfadan ayrı düştüyse (dışarıdan gelen
@@ -704,9 +761,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     if (!mounted) return;
     setState(() => _busy = false);
     if (png == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showMessage(context.l10n.areaCaptureFailed);
+      ScaffoldMessenger.of(context).showMessage(context.l10n.areaCaptureFailed);
       return;
     }
     await showAreaActions(context, png);
@@ -732,6 +787,17 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   @override
   Widget build(BuildContext context) {
     final listenable = _doc;
+    final a = widget.attachment;
+    widget.externalBar?._update((
+      listenable != null,
+      _page,
+      _count,
+      a.pdfMarks.contains(_page),
+      a.bubbles.length,
+      a.bubblesHidden,
+      _busy,
+      _autoPlay != null,
+    ));
     if (listenable == null) return _placeholder(context);
     return _document(context, listenable.document);
   }
@@ -789,50 +855,50 @@ class _PdfPageBoxState extends State<PdfPageBox> {
         : null;
     final locked = _selecting || _zoomed;
     final pages = ColoredBox(
-          color: Colors.white,
-          child: PageView.builder(
-            controller: pager,
-            // Seçim sürerken / yakınken sayfa çevrilmez.
-            physics: swipe && !locked
-                ? const PageScrollPhysics()
-                : const NeverScrollableScrollPhysics(),
-            allowImplicitScrolling: true,
-            itemCount: _count,
-            onPageChanged: _onPagerChanged,
-            itemBuilder: (context, i) {
-              final page = RotatedBox(
-                quarterTurns: a.pdfTurns,
-                // Kendi çizicimiz: pdfrx'in PdfPageView'ı aynı boydaki
-                // sayfalarda görüntüyü yenilemiyordu (bkz. PdfPageImage).
-                child: PdfPageImage(
-                  document: document,
-                  pageNumber: i + 1,
-                  overlay: _pageOverlay(document, i + 1, bubbles),
-                ),
-              );
-              if (!widget.fitWidth) return page;
-              // GENİŞLİĞE OTURAN sayfa: boyu taşarsa dikeyde kayar. Şerit
-              // kendiliğinden söndüğü için küçük bir dip payı yeter.
-              final p = document.pages[i];
-              final aspect = p.height <= 0 || p.width <= 0
-                  ? 1 / 1.41
-                  : (a.pdfTurns.isOdd ? p.height / p.width : p.width / p.height);
-              // `RepaintBoundary`: kaydırırken sayfa görüntüsü ve katmanları
-              // (balon, mürekkep, seçim) her karede YENİDEN ÇİZİLMESİN —
-              // kaydırıcı yalnız hazır katmanı kaydırır (SingleChildScrollView
-              // listelerin aksine çocuğuna kendiliğinden sınır koymuyor).
-              return SingleChildScrollView(
-                physics: locked
-                    ? const NeverScrollableScrollPhysics()
-                    : const ClampingScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 24),
-                child: RepaintBoundary(
-                  child: AspectRatio(aspectRatio: aspect, child: page),
-                ),
-              );
-            },
-          ),
-        );
+      color: Colors.white,
+      child: PageView.builder(
+        controller: pager,
+        // Seçim sürerken / yakınken sayfa çevrilmez.
+        physics: swipe && !locked
+            ? const PageScrollPhysics()
+            : const NeverScrollableScrollPhysics(),
+        allowImplicitScrolling: true,
+        itemCount: _count,
+        onPageChanged: _onPagerChanged,
+        itemBuilder: (context, i) {
+          final page = RotatedBox(
+            quarterTurns: a.pdfTurns,
+            // Kendi çizicimiz: pdfrx'in PdfPageView'ı aynı boydaki
+            // sayfalarda görüntüyü yenilemiyordu (bkz. PdfPageImage).
+            child: PdfPageImage(
+              document: document,
+              pageNumber: i + 1,
+              overlay: _pageOverlay(document, i + 1, bubbles),
+            ),
+          );
+          if (!widget.fitWidth) return page;
+          // GENİŞLİĞE OTURAN sayfa: boyu taşarsa dikeyde kayar. Şerit
+          // kendiliğinden söndüğü için küçük bir dip payı yeter.
+          final p = document.pages[i];
+          final aspect = p.height <= 0 || p.width <= 0
+              ? 1 / 1.41
+              : (a.pdfTurns.isOdd ? p.height / p.width : p.width / p.height);
+          // `RepaintBoundary`: kaydırırken sayfa görüntüsü ve katmanları
+          // (balon, mürekkep, seçim) her karede YENİDEN ÇİZİLMESİN —
+          // kaydırıcı yalnız hazır katmanı kaydırır (SingleChildScrollView
+          // listelerin aksine çocuğuna kendiliğinden sınır koymuyor).
+          return SingleChildScrollView(
+            physics: locked
+                ? const NeverScrollableScrollPhysics()
+                : const ClampingScrollPhysics(),
+            padding: const EdgeInsets.only(bottom: 24),
+            child: RepaintBoundary(
+              child: AspectRatio(aspectRatio: aspect, child: page),
+            ),
+          );
+        },
+      ),
+    );
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -880,7 +946,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
         // yazdığı koyu gri şerit çok kötü görünüyor; şeffaf olsun, açılıp
         // kapansın, sayfa değiştikçe görülsün"): yüzen saydam hap, sayfa
         // değişince ya da sayfaya dokununca belirir, sonra söner.
-        if (widget.controls && widget.fitWidth)
+        if (widget.controls && widget.fitWidth && widget.externalBar == null)
           Positioned(
             left: 8,
             right: 8,
@@ -1169,6 +1235,104 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     );
   }
 
+  /// Sabit bölme çubuğundaki denetimler ([PdfBoxBar]): ‹ n/N › (çok
+  /// sayfada) · balon göster/gizle (balon varsa) · yer imi (yer varsa) ·
+  /// belge menüsü. Balon EKLE bölme çubuğunda zaten var (yinelenmez).
+  List<Widget> _externalControls(BuildContext context, double width) {
+    final document = _doc?.document;
+    if (document == null) return const [];
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final a = widget.attachment;
+    final marked = a.pdfMarks.contains(_page);
+    final multi = _count > 1;
+    Widget button({
+      required Key key,
+      required IconData icon,
+      required String tooltip,
+      required VoidCallback? onPressed,
+      bool selected = false,
+    }) => IconButton(
+      key: key,
+      tooltip: tooltip,
+      visualDensity: VisualDensity.compact,
+      iconSize: 20,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 34, minHeight: 40),
+      color: selected ? scheme.primary : null,
+      icon: Icon(icon),
+      onPressed: _busy ? null : onPressed,
+    );
+    return [
+      if (multi) ...[
+        if (width >= 340)
+          button(
+            key: const ValueKey('pinned-pdf-prev'),
+            icon: Icons.chevron_left,
+            tooltip: l10n.pdfPreviousPage,
+            onPressed: _page > 1 ? () => _goTo(_page - 1) : null,
+          ),
+        InkWell(
+          key: const ValueKey('pinned-pdf-page'),
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => _openJumpSheet(document),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 40),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Center(
+                child: Text(
+                  '$_page/$_count',
+                  maxLines: 1,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: marked ? scheme.primary : null,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (width >= 340)
+          button(
+            key: const ValueKey('pinned-pdf-next'),
+            icon: Icons.chevron_right,
+            tooltip: l10n.pdfNextPage,
+            onPressed: _page < _count ? () => _goTo(_page + 1) : null,
+          ),
+      ],
+      if (widget.showBubbles && a.bubbles.isNotEmpty)
+        button(
+          key: const ValueKey('pinned-pdf-bubbles'),
+          icon: a.bubblesHidden
+              ? Icons.speaker_notes_off_outlined
+              : Icons.chat_bubble_outline,
+          tooltip: a.bubblesHidden ? l10n.bubblesShow : l10n.bubblesHide,
+          selected: a.bubblesHidden,
+          onPressed: () =>
+              widget.onChanged(a.copyWith(bubblesHidden: !a.bubblesHidden)),
+        ),
+      if (width >= 400)
+        button(
+          key: const ValueKey('pinned-pdf-mark'),
+          icon: marked ? Icons.bookmark : Icons.bookmark_border,
+          tooltip: marked ? l10n.pdfBookmarkRemove : l10n.pdfBookmarkAdd,
+          selected: marked,
+          onPressed: _toggleMark,
+        ),
+      // Belge menüsü (küçük resimler, yer imleri, döndür, slayt gösterisi,
+      // sayfa metni, AI yakala, tam ekran) — eski şeridin ⋮'ı.
+      _menu(
+        context,
+        document,
+        big: true,
+        size: 40,
+        key: const ValueKey('pinned-pdf-menu'),
+        icon: Icon(Icons.auto_stories_outlined, color: scheme.onSurfaceVariant),
+      ),
+    ];
+  }
+
   Widget _barButton({
     required IconData icon,
     required String tooltip,
@@ -1192,18 +1356,26 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     onPressed: _busy ? null : onPressed,
   );
 
-  Widget _menu(BuildContext context, PdfDocument document, {bool big = false}) {
+  Widget _menu(
+    BuildContext context,
+    PdfDocument document, {
+    bool big = false,
+    Widget? icon,
+    double? size,
+    Key? key,
+  }) {
     final l10n = context.l10n;
     final playing = _autoPlay != null;
     return SizedBox(
-      width: big ? 32 : 26,
-      height: big ? 32 : 26,
+      key: key,
+      width: size ?? (big ? 32 : 26),
+      height: size ?? (big ? 32 : 26),
       child: PopupMenuButton<String>(
-        tooltip: l10n.more,
+        tooltip: icon == null ? l10n.more : l10n.pdfThumbnails,
         iconSize: big ? 20 : 16,
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints(minWidth: 200),
-        icon: const Icon(Icons.more_vert, color: Colors.white),
+        icon: icon ?? const Icon(Icons.more_vert, color: Colors.white),
         onSelected: (action) {
           switch (action) {
             case 'pages':
@@ -1353,13 +1525,12 @@ class _PdfJumpSheetState extends State<_PdfJumpSheet> {
             SizedBox(
               height: 260,
               child: GridView.builder(
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      childAspectRatio: 0.72,
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                    ),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  childAspectRatio: 0.72,
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                ),
                 itemCount: _count,
                 itemBuilder: (context, i) {
                   final number = i + 1;
@@ -1374,9 +1545,9 @@ class _PdfJumpSheetState extends State<_PdfJumpSheet> {
                               border: Border.all(
                                 color: selected
                                     ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(
-                                        context,
-                                      ).colorScheme.outlineVariant,
+                                    : Theme.of(context)
+                                          .colorScheme
+                                          .outlineVariant,
                                 width: selected ? 2 : 1,
                               ),
                             ),
@@ -1396,7 +1567,10 @@ class _PdfJumpSheetState extends State<_PdfJumpSheet> {
                                 size: 11,
                                 color: Colors.amber,
                               ),
-                            Text('$number', style: const TextStyle(fontSize: 11)),
+                            Text(
+                              '$number',
+                              style: const TextStyle(fontSize: 11),
+                            ),
                           ],
                         ),
                       ],
