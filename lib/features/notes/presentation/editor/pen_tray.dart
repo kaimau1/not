@@ -421,7 +421,7 @@ class _PenTrayState extends State<PenTray> {
       child: _DockSlide(
         tucked: _tucked && !_panel,
         peek: _kDockHandle,
-        bottomGap: 8 + bottomInset,
+        bottomInset: bottomInset,
         onExpand: _touched,
         onCollapse: () => _setTucked(true),
         child: Listener(
@@ -650,6 +650,9 @@ class _PenTrayState extends State<PenTray> {
 /// Çekmece tutamağının yüksekliği; aşağıdayken görünen pay da bu kadar.
 const double _kDockHandle = 24;
 
+/// Tepsi ile ekranın alt kenarı (gezinme çubuğunun üstü) arası.
+const double _kDockGap = 8;
+
 /// Kalem şeridinin çekmecedeki yüksekliği.
 const double _kDockTools = 56;
 
@@ -660,7 +663,7 @@ class _DockSlide extends StatefulWidget {
   const _DockSlide({
     required this.tucked,
     required this.peek,
-    required this.bottomGap,
+    required this.bottomInset,
     required this.onExpand,
     required this.onCollapse,
     required this.child,
@@ -668,7 +671,11 @@ class _DockSlide extends StatefulWidget {
 
   final bool tucked;
   final double peek;
-  final double bottomGap;
+
+  /// Sistem gezinme çubuğu: aşağıdayken tutamak bunun ÜSTÜNDE kalır
+  /// (tablet bulgusu 2026-11-07: tutamak çubuğun içine iniyordu, dokunuş
+  /// sisteme gidiyor, tepsi açılmıyordu).
+  final double bottomInset;
   final VoidCallback onExpand;
   final VoidCallback onCollapse;
   final Widget child;
@@ -692,7 +699,7 @@ class _DockSlideState extends State<_DockSlide> {
         if (v < -150) widget.onExpand();
       },
       child: TweenAnimationBuilder<double>(
-        tween: Tween(end: widget.tucked ? hidden + widget.bottomGap : 0),
+        tween: Tween(end: widget.tucked ? hidden + _kDockGap : 0),
         duration: reduceMotion
             ? Duration.zero
             : const Duration(milliseconds: 280),
@@ -702,7 +709,12 @@ class _DockSlideState extends State<_DockSlide> {
           child: child,
         ),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(10, 0, 10, widget.bottomGap),
+          padding: EdgeInsets.fromLTRB(
+            10,
+            0,
+            10,
+            _kDockGap + widget.bottomInset,
+          ),
           child: _MeasureHeight(
             onHeight: (h) {
               if ((h - _height).abs() > 0.5) setState(() => _height = h);

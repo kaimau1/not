@@ -5,6 +5,7 @@ import 'dart:ui' show DisplayFeature;
 
 import '../core/app_icons.dart';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -688,6 +689,9 @@ class _AppRail extends ConsumerWidget {
                               () => openFriendsScreenOrExplain(context, ref),
                             ),
                           ),
+                          // Dokunmatik Android'de kalabalık (tablet 2026-11-07);
+                          // fiziksel klavyede Ctrl+/ yine açar.
+                          if (kIsWeb)
                           _RailAction(
                             extended: extended,
                             icon: Icons.keyboard_outlined,

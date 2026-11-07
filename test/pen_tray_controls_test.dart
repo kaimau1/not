@@ -84,6 +84,40 @@ void main() {
     await tester.pump(const Duration(seconds: 7));
   });
 
+  // Tablet bulgusu 2026-11-07 (MatePad 11): aşağıdaki tutamak sistem gezinme
+  // çubuğunun içine iniyordu; dokunuş sisteme gidiyor, tepsi açılmıyordu.
+  testWidgets('aşağıdaki tutamak gezinme çubuğunun üstünde kalır', (
+    tester,
+  ) async {
+    final ink = InkController(initial: const [], onChanged: (_) {});
+    addTearDown(ink.dispose);
+    ink.setEditing(true);
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(
+          size: Size(1024, 640),
+          padding: EdgeInsets.only(bottom: 16),
+          viewPadding: EdgeInsets.only(bottom: 16),
+        ),
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          locale: const Locale('tr'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Stack(children: [PenTray(controller: ink, dock: true)]),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    ink.pointerDown(1, const Offset(10, 10), const Size(400, 400));
+    ink.pointerUp();
+    await tester.pumpAndSettle();
+    final peek = tester.getRect(find.byKey(const ValueKey('pen-dock-peek')));
+    final screen = tester.getSize(find.byType(Stack).first).height;
+    expect(peek.bottom, lessThanOrEqualTo(screen - 16));
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 7));
+  });
+
   // Kullanıcı bulgusu 2026-11-02: "fareyle tıkladığım yerin biraz üzerine
   // yazıyor". Çizgi tam tıklanan noktada başlar; imleç artıdır.
   testWidgets('fareyle çizgi tıklanan noktada başlar, imleç artı', (

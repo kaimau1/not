@@ -253,7 +253,8 @@ class FontScaleNotifier extends Notifier<double> {
   @override
   double build() {
     final prefs = watchPrefs(ref);
-    final stored = prefs.getDouble(_key);
+    // num: eski sürüm buluttan gelen 1.0'ı int yazmış olabilir.
+    final stored = (prefs.get(_key) as num?)?.toDouble();
     if (stored != null) return stored;
     // İLK AÇILIŞ (F4.7): sistemin yazı ölçeğinden başlanır (en yakın
     // kademe) ve kaydedilir; bundan sonra uygulama ayarı tek söz sahibi.

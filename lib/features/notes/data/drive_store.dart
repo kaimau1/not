@@ -8,9 +8,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../core/utils/gms.dart';
 import '../../../core/utils/local_file.dart';
 import '../../../core/utils/web_session.dart';
 import '../../auth/data/android_google_auth.dart';
+import '../../auth/data/google_scope_auth.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
 
@@ -185,8 +187,15 @@ class AndroidDriveAuth implements DriveAuth {
     return data?.accessToken;
   }
 
+  /// GMS'siz cihazda tarayıcı jetonunun saklandığı anahtar (bkz.
+  /// [browserScopeToken]).
+  static const _browserKey = 'notlar_drive_token_v2';
+
   @override
   Future<String?> accessToken() async {
+    if (!await gmsInstalled()) {
+      return (await storedBrowserToken(_browserKey))?.token;
+    }
     try {
       return await _authorize(prompt: false);
     } catch (e) {
@@ -196,10 +205,13 @@ class AndroidDriveAuth implements DriveAuth {
   }
 
   @override
-  Future<bool> connect() async => (await _authorize(prompt: true)) != null;
+  Future<bool> connect() async => await gmsInstalled()
+      ? (await _authorize(prompt: true)) != null
+      : (await browserScopeToken(kDriveScopes, _browserKey)) != null;
 
   @override
   Future<void> invalidate(String token) async {
+    if (!await gmsInstalled()) return forgetBrowserToken(_browserKey);
     try {
       await AndroidGoogleAuth.ensureInitialized();
       await GoogleSignInPlatform.instance.clearAuthorizationToken(

@@ -65,9 +65,8 @@ kartta çizildi. Yeni metin notunda klavye açık; not "+" → Hatırlat aynı "
   metni boşaldı ("Boş madde"); 3 denemede yeniden üretilemedi. Tekrar
   görülürse tam adımları yaz; tahminle yama yapılmadı.
 
-**Tablet / S Pen (varsa)**
-20. [ ] Kalem sayfaya yazar, parmak metne gider; kalemler ALTTAKİ çekmecede
-   (çizince iner, dokununca çıkar), tam ekran.
+**Tablet / S Pen (varsa)** — 2026-11-07 MatePad 11'de adb ile denendi (tepsi, silgi, ek+Drive, dikey/yatay); gerçek kalem enjekte edilemedi:
+20. [ ] GERÇEK M-Pencil ile: yazı basınçla kalınlaşıyor; avuç ekrandayken iz kalmıyor (ilk kalem dokunuşu "yalnız kalem"i açar); yan düğme silgi; kalem havadayken uç önizlemesi; parmak metne/kaydırmaya gider.
 
 **2026-11-02 kullanıcı listesi (bu sürümde yapıldı, cihazda bak)**
 22. [ ] Tablette Google ile giriş: seçici açılmazsa tarayıcı penceresiyle

@@ -413,6 +413,36 @@ class MainActivity : FlutterFragmentActivity() {
                     // "Dosyaları Dosya Okuyucu ile seç" satırı yalnız o zaman
                     // görünür.
                     "fileAppInstalled" -> result.success(fileAppResolves())
+                    // Tarayıcıdaki Google girişi/izni bitti: uygulamayı öne al.
+                    // Huawei tarayıcısı özel sekmeyi AYRI görevde açıyor;
+                    // Firebase dönüşü onu kapatmıyor, kullanıcı boş
+                    // "about:blank" sayfasında kalıyordu (tablet 2026-11-07).
+                    // Etkinlik az önce bittiği için arka plandan öne alma izni
+                    // (10 sn) geçerli.
+                    "bringToFront" -> {
+                        bringToFront()
+                        result.success(null)
+                    }
+                    // GMS'SİZ KAPSAM JETONU (Huawei, 2026-11-07): Firebase'in
+                    // tarayıcı akışıyla kapsamlı yeniden doğrulama. FlutterFire
+                    // jetonu yalnız OAuthCredential'dan okuyor; Google akışı
+                    // GoogleAuthCredential döndürdüğü için Dart'a hep null
+                    // geliyordu — jeton burada çıkarılır.
+                    "googleScopeToken" -> googleScopeToken(
+                        call.argument<List<String>>("scopes").orEmpty(),
+                        call.argument<String>("email"),
+                        result,
+                    )
+                    // Google Play Hizmetleri kurulu mu (Huawei/HarmonyOS'ta
+                    // yok): yoksa Google yetkileri doğrudan tarayıcıdan alınır.
+                    "gmsInstalled" -> result.success(
+                        try {
+                            packageManager.getPackageInfo("com.google.android.gms", 0)
+                            true
+                        } catch (e: Exception) {
+                            false
+                        }
+                    )
                     // EKİ FARKLI KAYDET (kullanıcı isteği 2026-10-17): kullanıcı
                     // yeri ve adı sistemin kaydet penceresinde seçer; dosya
                     // oraya kopyalanır. true = kaydedildi, false = iptal.
@@ -750,6 +780,59 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     /// Dosya Okuyucu niyeti karşılayabiliyor mu (kurulu + seçici kipi var).
+    private fun googleScopeToken(
+        scopes: List<String>,
+        email: String?,
+        result: MethodChannel.Result,
+    ) {
+        val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            result.success(null)
+            return
+        }
+        val provider = com.google.firebase.auth.OAuthProvider.newBuilder("google.com")
+            .setScopes(scopes)
+        if (email != null) provider.addCustomParameter("login_hint", email)
+        user.startActivityForReauthenticateWithProvider(this, provider.build())
+            .addOnSuccessListener { auth ->
+                bringToFront()
+                result.success(auth.credential?.let(::accessTokenOf))
+            }
+            .addOnFailureListener { e ->
+                bringToFront()
+                result.error("scope-token", e.message, null)
+            }
+    }
+
+    /**
+     * Kimlik bilgisindeki OAuth erişim jetonu. GoogleAuthCredential jetonu
+     * herkese açık bir alanla vermiyor; Parcel'ında UTF-16 dize olarak durur
+     * ve Google erişim jetonları hep "ya29." ile başlar.
+     */
+    private fun accessTokenOf(cred: com.google.firebase.auth.AuthCredential): String? {
+        (cred as? com.google.firebase.auth.OAuthCredential)?.accessToken?.let { return it }
+        val parcel = android.os.Parcel.obtain()
+        return try {
+            cred.writeToParcel(parcel, 0)
+            val text = String(parcel.marshall(), Charsets.UTF_16LE)
+            Regex("""ya29\.[A-Za-z0-9_.\-]+""").find(text)?.value
+        } catch (e: Exception) {
+            Log.w("MainActivity", "Jeton okunamadı: ${e.javaClass.simpleName}")
+            null
+        } finally {
+            parcel.recycle()
+        }
+    }
+
+    private fun bringToFront() {
+        try {
+            (getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager)
+                .moveTaskToFront(taskId, 0)
+        } catch (e: Exception) {
+            Log.w("MainActivity", "Öne alınamadı: ${e.javaClass.simpleName}")
+        }
+    }
+
     private fun fileAppResolves(): Boolean = try {
         val probe = Intent(Intent.ACTION_GET_CONTENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)

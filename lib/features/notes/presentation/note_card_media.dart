@@ -772,22 +772,35 @@ class CardPageInk extends StatelessWidget {
     }
     return LayoutBuilder(
       builder: (context, box) {
+        var top = double.infinity;
         var bottom = 0.0;
         for (final s in note.pageInk) {
           if (s.page != 1) continue;
           for (var i = 1; i < s.points.length; i += 2) {
+            top = math.min(top, s.points[i]);
             bottom = math.max(bottom, s.points[i]);
           }
         }
+        // Çizimin üstündeki boş sayfa kartta gösterilmez (yazının altında
+        // ayrıca boşluk kalıyordu); çizim kutunun tepesinden başlar.
+        final w = box.maxWidth;
+        final lift = top.isFinite ? math.max(0.0, top * w - 4) : 0.0;
         return ClipRect(
           child: SizedBox(
-            width: box.maxWidth,
-            height: math.min(_maxHeight, bottom * box.maxWidth + 4),
-            child: Align(
+            width: w,
+            height: math.min(_maxHeight, bottom * w + 4 - lift),
+            // Kare tuval kutudan TAŞAR (kırpılır): Align'la kutunun ≤ 120
+            // boyuna sıkışıyor, y genişlik yerine 120'yle ölçeklenip çizim
+            // kartta basık görünüyordu (tablet bulgusu 2026-11-07).
+            child: OverflowBox(
               alignment: Alignment.topLeft,
-              child: CustomPaint(
-                size: Size.square(box.maxWidth),
-                painter: InkPainter(note.pageInk, 1),
+              minWidth: w,
+              maxWidth: w,
+              minHeight: w,
+              maxHeight: w,
+              child: Transform.translate(
+                offset: Offset(0, -lift),
+                child: CustomPaint(painter: InkPainter(note.pageInk, 1)),
               ),
             ),
           ),

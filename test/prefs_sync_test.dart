@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/settings/data/prefs_sync.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   group('ayar senkronu planı (F4.5)', () {
@@ -56,5 +57,16 @@ void main() {
       expect(plan.apply, isEmpty);
       expect(plan.snapshot.containsKey('model_tts'), isFalse);
     });
+  });
+
+  // Tablet bulgusu 2026-11-07: web'in yazdığı 1.0 buluttan int geliyordu;
+  // setInt'le kaydedilince getDouble çöküyor, Ayarlar gri ekran.
+  test('ondalık tercih buluttan int gelse de double yazılır', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    await writeLocalPref(prefs, 'font_scale', 1);
+    expect(prefs.getDouble('font_scale'), 1.0);
+    await writeLocalPref(prefs, 'briefing_minutes', 480);
+    expect(prefs.getInt('briefing_minutes'), 480);
   });
 }
