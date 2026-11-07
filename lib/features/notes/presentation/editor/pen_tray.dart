@@ -1,4 +1,5 @@
 import '../../../../core/widgets/back_closes.dart';
+
 import 'dart:async';
 
 import 'dart:math' as math;
@@ -6,6 +7,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../app/theme/fixed_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/widgets/color_palette.dart';
@@ -244,13 +246,13 @@ class _PenTrayState extends State<PenTray> {
       open: _panel,
       onClose: () => setState(() => _panel = false),
       child: ListenableBuilder(
-      listenable: _ink,
-      builder: (context, _) => widget.rail
-          ? _buildRail(context)
-          : widget.dock
-          ? _buildDock(context)
-          : _build(context),
-    ),
+        listenable: _ink,
+        builder: (context, _) => widget.rail
+            ? _buildRail(context)
+            : widget.dock
+            ? _buildDock(context)
+            : _build(context),
+      ),
     );
   }
 
@@ -299,195 +301,358 @@ class _PenTrayState extends State<PenTray> {
     );
   }
 
-
   /// Çekmece tepsisi — TEK SATIR (kullanıcı bulgusu 2026-11-02: "çok
   /// yükseliyor ve dar"): ince tutamak, altında kalemler · renk · geri al ·
   /// (geniş ekranda) yinele/yalnız kalem/ayarlar · [actions]. Dar ekranda
   /// seyrek düğmeler "⋯" menüsünde. Renk/kalınlık paneli tepsiyi
   /// yükseltmez, üstünde ayrı kart olarak açılır. Aşağıdayken yalnız
   /// tutamak + seçili rengin noktası görünür.
+  /// **KALEM KAPSÜLÜ** (sıfırdan tasarım 2026-11-07, kullanıcı isteği:
+  /// "alt kalem menüsünü baştan yaz; ekranda daha az yer, görsel premium
+  /// olsun"). Yazarken sayfanın dibinde yalnız küçük bir HAP kalır (seçili
+  /// kalem + renk) — eski çekmecenin yarım görünen 80 dp'lik şeridi yerine
+  /// 44 dp. Dokununca ya da yukarı çekince ortada yüzen tek satırlık KAPSÜL
+  /// açılır: kalemler · hızlı renkler · geri al · ⋯ · eylemler. Seçili
+  /// kaleme ya da palet düğmesine dokunmak ayar kartını kapsülün üstünde
+  /// açar. Çizim başlayınca / 6 sn dokunulmayınca yine hapa döner.
   Widget _buildDock(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final current = _current;
     final labels = _labels(l10n);
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
     final wide = MediaQuery.sizeOf(context).width >= 640;
-    Widget tool(PenTrayTool t) => _TrayTool(
+    final bottom = MediaQuery.paddingOf(context).bottom + _kDockGap;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final open = !_tucked || _panel;
+    final inkDot = _ink.eraser ? scheme.primary : _ink.color;
+
+    final shape = StadiumBorder(
+      side: BorderSide(
+        color: scheme.outlineVariant.withValues(alpha: 0.5),
+        width: 0.8,
+      ),
+    );
+    Widget surface(Widget child, {ShapeBorder? border}) => DecoratedBox(
+      decoration: ShapeDecoration(
+        shape: border ?? shape,
+        // İki katlı yumuşak gölge: yakın (keskin) + uzak (dağınık).
+        shadows: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.10),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Material(
+        color: scheme.surfaceContainerHigh,
+        shape: border ?? shape,
+        clipBehavior: Clip.antiAlias,
+        child: child,
+      ),
+    );
+
+    final mini = Semantics(
+      button: true,
+      label: l10n.penTrayShow,
+      child: GestureDetector(
+        key: const ValueKey('pen-dock-peek'),
+        behavior: HitTestBehavior.opaque,
+        onTap: _touched,
+        child: surface(
+          SizedBox(
+            height: 44, // en küçük dokunma hedefi
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 8, 0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Seçili kalem çapraz yatık, ucu rengiyle.
+                  SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: Transform.rotate(
+                      angle: math.pi / 4,
+                      child: FittedBox(
+                        child: SizedBox(
+                          width: 44,
+                          height: 96,
+                          child: CustomPaint(
+                            painter: _ToolPainter(
+                              tool: current,
+                              ink: _ink.color,
+                              dark: scheme.brightness == Brightness.dark,
+                              lifted: false,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  _Swatch(color: inkDot, size: 14, selected: false),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.keyboard_arrow_up_rounded,
+                    size: 20,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final divider = Container(
+      width: 1,
+      height: 24,
+      margin: const EdgeInsets.symmetric(horizontal: 6),
+      color: scheme.outlineVariant.withValues(alpha: 0.6),
+    );
+    Widget tool(PenTrayTool t) => _DockTool(
       key: ValueKey('pen-tray-${t.name}'),
       tool: t,
       label: labels[t]!,
       selected: t == current,
       ink: _ink.color,
       onTap: () => _tap(t),
-      tipUp: true,
     );
-    final buttons = _controlButtons(l10n);
-    final row = SizedBox(
-      height: _kDockTools,
-      child: Row(
-        mainAxisSize: wide ? MainAxisSize.min : MainAxisSize.max,
-        children: [
-          const SizedBox(width: 6),
-          for (final t in PenTrayTool.values)
-            wide
-                ? SizedBox(width: 52, child: tool(t))
-                : Expanded(child: tool(t)),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: _colorDot(scheme, l10n),
-          ),
-          SizedBox(
-            height: 28,
-            child: VerticalDivider(
-              width: 10,
-              color: scheme.outlineVariant.withValues(alpha: 0.6),
-            ),
-          ),
-          if (wide) ...buttons else ...[buttons.first, _moreMenu(l10n)],
-          ...widget.actions,
-          const SizedBox(width: 4),
-        ],
-      ),
-    );
-    final handle = Semantics(
-      button: true,
-      label: _tucked ? l10n.penTrayShow : l10n.penTrayHide,
-      child: GestureDetector(
-        key: const ValueKey('pen-dock-handle'),
-        behavior: HitTestBehavior.opaque,
-        onTap: () => _setTucked(!_tucked),
-        child: SizedBox(
-          height: _kDockHandle,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(2),
-                ),
+    final colors = wide
+        ? [
+            for (final c in _quickColors())
+              _Swatch(
+                color: c,
+                size: 26,
+                selected: !_ink.eraser && c.toARGB32() == _ink.color.toARGB32(),
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  _touched();
+                  if (c.toARGB32() == _ink.color.toARGB32()) {
+                    _togglePanel();
+                  } else {
+                    _ink.setColor(c);
+                  }
+                },
               ),
-              // Aşağıdayken hangi renkle yazıldığı bir bakışta görülür.
-              AnimatedOpacity(
-                duration: const Duration(milliseconds: 200),
-                opacity: _tucked ? 1 : 0,
-                child: Container(
-                  width: 10,
-                  height: 10,
-                  margin: const EdgeInsets.only(left: 8),
-                  decoration: BoxDecoration(
-                    color: _ink.eraser ? scheme.primary : _ink.color,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: scheme.outlineVariant),
+            // Tüm renkler + kalınlık: uygulamanın "özel renk" gökkuşağı
+            // halkası (simge sözlüğünde palet = görünüm).
+            Tooltip(
+              message: l10n.inkColor,
+              child: InkResponse(
+                key: const ValueKey('pen-tray-color'),
+                radius: 22,
+                onTap: _togglePanel,
+                child: SizedBox(
+                  width: 40,
+                  height: 48,
+                  child: Center(
+                    child: Container(
+                      width: 26,
+                      height: 26,
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: FixedColors.rainbowSweep,
+                        boxShadow: _panel
+                            ? [
+                                BoxShadow(
+                                  color: scheme.primary,
+                                  spreadRadius: 2,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: scheme.surfaceContainerHigh,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
+            ),
+          ]
+        : [
+            _Swatch(
+              key: const ValueKey('pen-tray-color'),
+              color: inkDot,
+              size: 26,
+              selected: _panel,
+              tooltip: l10n.inkColor,
+              onTap: _togglePanel,
+            ),
+          ];
+    final capsule = surface(
+      SizedBox(
+        height: 52,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            mainAxisSize: wide ? MainAxisSize.min : MainAxisSize.max,
+            children: [
+              for (final t in PenTrayTool.values)
+                wide ? tool(t) : Expanded(child: tool(t)),
+              divider,
+              ...colors,
+              divider,
+              IconButton(
+                key: const ValueKey('pen-tray-undo'),
+                tooltip: l10n.undo,
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.undo_rounded),
+                onPressed: _ink.canUndo ? _ink.undo : null,
+              ),
+              if (wide)
+                IconButton(
+                  tooltip: l10n.redo,
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.redo_rounded),
+                  onPressed: _ink.canRedo ? _ink.redo : null,
+                ),
+              _moreMenu(l10n, redo: !wide),
+              ...widget.actions,
             ],
           ),
         ),
       ),
     );
-    final tray = Material(
-      color: scheme.surfaceContainerHigh.withValues(alpha: 0.97),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(22),
-        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.55)),
-      ),
-      elevation: 3,
-      shadowColor: Colors.black.withValues(alpha: 0.25),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [handle, row],
+    final panel = surface(
+      _Options(controller: _ink, tool: current),
+      border: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(
+          color: scheme.outlineVariant.withValues(alpha: 0.5),
+          width: 0.8,
+        ),
       ),
     );
-    final panel = Material(
-      color: scheme.surfaceContainerHigh,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.55)),
-      ),
-      elevation: 3,
-      shadowColor: Colors.black.withValues(alpha: 0.25),
-      clipBehavior: Clip.antiAlias,
-      child: _Options(controller: _ink, tool: current),
-    );
+    final duration = reduceMotion
+        ? Duration.zero
+        : const Duration(milliseconds: 240);
     return Align(
       alignment: Alignment.bottomCenter,
-      child: _DockSlide(
-        tucked: _tucked && !_panel,
-        peek: _kDockHandle,
-        bottomInset: bottomInset,
-        onExpand: _touched,
-        onCollapse: () => _setTucked(true),
-        child: Listener(
-          onPointerDown: (_) => _armIdle(),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: wide
-                ? CrossAxisAlignment.center
-                : CrossAxisAlignment.stretch,
-            children: [
-              AnimatedSize(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                alignment: Alignment.bottomCenter,
-                child: _panel
-                    ? Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 440),
-                          child: panel,
+      child: GestureDetector(
+        behavior: HitTestBehavior.deferToChild,
+        onVerticalDragEnd: (d) {
+          final v = d.primaryVelocity ?? 0;
+          if (v > 150) _setTucked(true);
+          if (v < -150) _touched();
+        },
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(10, 0, 10, bottom),
+          child: Listener(
+            onPointerDown: (_) => _armIdle(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedSize(
+                  duration: duration,
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.bottomCenter,
+                  child: _panel
+                      ? Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 440),
+                            child: panel,
+                          ),
+                        )
+                      : const SizedBox(width: 0, height: 0),
+                ),
+                // Hap ↔ kapsül: alttan büyüyerek/küçülerek yer değiştirir.
+                AnimatedSwitcher(
+                  duration: duration,
+                  reverseDuration: reduceMotion
+                      ? Duration.zero
+                      : const Duration(milliseconds: 160),
+                  switchInCurve: Curves.easeOutBack,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(
+                      alignment: Alignment.bottomCenter,
+                      scale: Tween(begin: 0.85, end: 1.0).animate(animation),
+                      child: child,
+                    ),
+                  ),
+                  layoutBuilder: (current, previous) => Stack(
+                    alignment: Alignment.bottomCenter,
+                    children: [...previous, ?current],
+                  ),
+                  child: open
+                      ? KeyedSubtree(
+                          key: const ValueKey('pen-dock-open'),
+                          child: capsule,
+                        )
+                      : KeyedSubtree(
+                          key: const ValueKey('pen-dock-closed'),
+                          child: mini,
                         ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-              // Geniş ekranda tepsi içeriği kadar, ortada.
-              if (wide) IntrinsicWidth(child: tray) else tray,
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  /// Kapsüldeki hızlı renkler: sabit sıra (dokununca yer değiştirmesin);
+  /// seçili renk listede yoksa son yuvaya o gelir.
+  List<Color> _quickColors() {
+    // Siyah, mavi, kırmızı, yeşil (ortak kalem paleti).
+    final base = [
+      for (final i in const [0, 5, 2, 4]) kInkPalette[i],
+    ];
+    final current = _ink.color.toARGB32();
+    if (base.any((c) => c.toARGB32() == current)) return base;
+    return [...base.take(3), Color(current)];
+  }
+
   /// Dar ekranda seyrek kullanılan denetimler: yinele, yalnız kalem, ayarlar.
-  Widget _moreMenu(AppLocalizations l10n) => PopupMenuButton<int>(
-    key: const ValueKey('pen-tray-more'),
-    tooltip: l10n.more,
-    icon: const Icon(Icons.more_horiz_rounded),
-    onSelected: (v) => switch (v) {
-      0 => _ink.redo(),
-      1 => _ink.setPenOnly(!_ink.penOnly),
-      _ => showInkSettings(context, _ink),
-    },
-    itemBuilder: (_) => [
-      PopupMenuItem(
-        value: 0,
-        enabled: _ink.canRedo,
-        child: ListTile(
-          leading: const Icon(Icons.redo_rounded),
-          title: Text(l10n.redo),
-        ),
-      ),
-      CheckedPopupMenuItem(
-        value: 1,
-        checked: _ink.penOnly,
-        child: Text(_ink.penOnly ? l10n.inkPenOnlyOn : l10n.inkPenOnlyOff),
-      ),
-      PopupMenuItem(
-        value: 2,
-        child: ListTile(
-          leading: const Icon(Icons.tune_rounded),
-          title: Text(l10n.inkSettings),
-        ),
-      ),
-    ],
-  );
+  Widget _moreMenu(AppLocalizations l10n, {bool redo = true}) =>
+      PopupMenuButton<int>(
+        key: const ValueKey('pen-tray-more'),
+        tooltip: l10n.more,
+        icon: const Icon(Icons.more_horiz_rounded),
+        onSelected: (v) => switch (v) {
+          0 => _ink.redo(),
+          1 => _ink.setPenOnly(!_ink.penOnly),
+          _ => showInkSettings(context, _ink),
+        },
+        itemBuilder: (_) => [
+          if (redo)
+            PopupMenuItem(
+              value: 0,
+              enabled: _ink.canRedo,
+              child: ListTile(
+                leading: const Icon(Icons.redo_rounded),
+                title: Text(l10n.redo),
+              ),
+            ),
+          CheckedPopupMenuItem(
+            value: 1,
+            checked: _ink.penOnly,
+            child: Text(_ink.penOnly ? l10n.inkPenOnlyOn : l10n.inkPenOnlyOff),
+          ),
+          PopupMenuItem(
+            value: 2,
+            child: ListTile(
+              leading: const Icon(Icons.tune_rounded),
+              title: Text(l10n.inkSettings),
+            ),
+          ),
+        ],
+      );
 
   Map<PenTrayTool, String> _labels(AppLocalizations l10n) => {
     PenTrayTool.lasso: l10n.inkLasso,
@@ -647,95 +812,72 @@ class _PenTrayState extends State<PenTray> {
   }
 }
 
-/// Çekmece tutamağının yüksekliği; aşağıdayken görünen pay da bu kadar.
-const double _kDockHandle = 24;
+/// Kapsül/hap ile ekranın alt kenarı (gezinme çubuğunun üstü) arası.
+const double _kDockGap = 10;
 
-/// Tepsi ile ekranın alt kenarı (gezinme çubuğunun üstü) arası.
-const double _kDockGap = 8;
-
-/// Kalem şeridinin çekmecedeki yüksekliği.
-const double _kDockTools = 56;
-
-/// Çekmeceyi aşağı/yukarı kaydırır. Aşağıdayken yalnız [peek] kadarı görünür
-/// ve TAMAMI tek dokunuşluk "aç" hedefidir (kalemlere yanlışlıkla basılıp
-/// araç değişmesin). Dikey sürükleme de açar/kapar.
-class _DockSlide extends StatefulWidget {
-  const _DockSlide({
-    required this.tucked,
-    required this.peek,
-    required this.bottomInset,
-    required this.onExpand,
-    required this.onCollapse,
-    required this.child,
+/// Kapsüldeki tek kalem: dik durur, yalnız üst kısmı görünür; seçili kalem
+/// yaylı biçimde yukarı kalkar, ucu çizilen renktedir.
+class _DockTool extends StatelessWidget {
+  const _DockTool({
+    super.key,
+    required this.tool,
+    required this.label,
+    required this.selected,
+    required this.ink,
+    required this.onTap,
   });
 
-  final bool tucked;
-  final double peek;
-
-  /// Sistem gezinme çubuğu: aşağıdayken tutamak bunun ÜSTÜNDE kalır
-  /// (tablet bulgusu 2026-11-07: tutamak çubuğun içine iniyordu, dokunuş
-  /// sisteme gidiyor, tepsi açılmıyordu).
-  final double bottomInset;
-  final VoidCallback onExpand;
-  final VoidCallback onCollapse;
-  final Widget child;
-
-  @override
-  State<_DockSlide> createState() => _DockSlideState();
-}
-
-class _DockSlideState extends State<_DockSlide> {
-  double _height = 0;
+  final PenTrayTool tool;
+  final String label;
+  final bool selected;
+  final Color ink;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final hidden = math.max(0.0, _height - widget.peek);
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    return GestureDetector(
-      behavior: HitTestBehavior.deferToChild,
-      onVerticalDragEnd: (d) {
-        final v = d.primaryVelocity ?? 0;
-        if (v > 150) widget.onCollapse();
-        if (v < -150) widget.onExpand();
-      },
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(end: widget.tucked ? hidden + _kDockGap : 0),
-        duration: reduceMotion
-            ? Duration.zero
-            : const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-        builder: (context, dy, child) => Transform.translate(
-          offset: Offset(0, dy),
-          child: child,
-        ),
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            10,
-            0,
-            10,
-            _kDockGap + widget.bottomInset,
-          ),
-          child: _MeasureHeight(
-            onHeight: (h) {
-              if ((h - _height).abs() > 0.5) setState(() => _height = h);
-            },
-            child: Stack(
-              children: [
-                AbsorbPointer(absorbing: widget.tucked, child: widget.child),
-                if (widget.tucked)
-                  // Yalnız GÖRÜNEN pay (tutamak + kalem uçları).
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    height: widget.peek,
-                    child: GestureDetector(
-                      key: const ValueKey('pen-dock-peek'),
-                      behavior: HitTestBehavior.opaque,
-                      onTap: widget.onExpand,
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: Tooltip(
+        message: label,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: SizedBox(
+            width: 44,
+            height: 52,
+            child: ClipRect(
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.topCenter,
+                children: [
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 300),
+                    curve: selected ? Curves.easeOutBack : Curves.easeOutCubic,
+                    top: selected ? 3 : 15,
+                    child: SizedBox(
+                      width: 31,
+                      height: 68,
+                      child: FittedBox(
+                        child: SizedBox(
+                          width: 44,
+                          height: 96,
+                          child: CustomPaint(
+                            painter: _ToolPainter(
+                              tool: tool,
+                              ink: ink,
+                              dark: dark,
+                              lifted: selected,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -744,26 +886,70 @@ class _DockSlideState extends State<_DockSlide> {
   }
 }
 
-/// Çocuğun yüksekliğini kare sonunda bildirir (panel açılınca değişir).
-class _MeasureHeight extends StatefulWidget {
-  const _MeasureHeight({required this.onHeight, required this.child});
+/// Renk yuvarlağı: seçiliyse arada boşluk bırakan ince halka (renk
+/// kenarına yapışık kalın çerçeve yerine).
+class _Swatch extends StatelessWidget {
+  const _Swatch({
+    super.key,
+    required this.color,
+    required this.size,
+    required this.selected,
+    this.onTap,
+    this.tooltip,
+  });
 
-  final ValueChanged<double> onHeight;
-  final Widget child;
+  final Color color;
+  final double size;
+  final bool selected;
+  final VoidCallback? onTap;
+  final String? tooltip;
 
-  @override
-  State<_MeasureHeight> createState() => _MeasureHeightState();
-}
-
-class _MeasureHeightState extends State<_MeasureHeight> {
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final box = context.findRenderObject();
-      if (box is RenderBox && box.hasSize) widget.onHeight(box.size.height);
-    });
-    return widget.child;
+    final scheme = Theme.of(context).colorScheme;
+    final dot = AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      width: size + 8,
+      height: size + 8,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: selected ? scheme.primary : Colors.transparent,
+          width: 2,
+        ),
+      ),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: scheme.onSurface.withValues(alpha: 0.18),
+            width: 0.8,
+          ),
+        ),
+      ),
+    );
+    if (onTap == null) return dot;
+    final button = InkResponse(
+      radius: size,
+      onTap: onTap,
+      child: SizedBox(
+        width: math.max(size + 14, 40),
+        height: 48,
+        child: Center(child: dot),
+      ),
+    );
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: tooltip,
+      child: tooltip == null
+          ? button
+          : Tooltip(message: tooltip, child: button),
+    );
   }
 }
 
@@ -777,12 +963,7 @@ class _TrayTool extends StatelessWidget {
     required this.selected,
     required this.ink,
     required this.onTap,
-    this.tipUp = false,
   });
-
-  /// Kalemin UCU kutunun üstüne hizalanır (alçak çekmece şeridi: kutu
-  /// kalemden kısa, alttan hizalanınca uçlar kırpılıyordu).
-  final bool tipUp;
 
   final PenTrayTool tool;
   final String label;
@@ -805,7 +986,7 @@ class _TrayTool extends StatelessWidget {
           onTap: onTap,
           child: ClipRect(
             child: Stack(
-              alignment: tipUp ? Alignment.topCenter : Alignment.bottomCenter,
+              alignment: Alignment.bottomCenter,
               children: [
                 AnimatedSlide(
                   duration: const Duration(milliseconds: 320),
@@ -828,21 +1009,23 @@ class _TrayTool extends StatelessWidget {
                 Positioned(
                   bottom: 0,
                   child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 200),
-                  opacity: selected ? 1 : 0,
-                  child: Container(
-                    width: 22,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 4),
-                    decoration: BoxDecoration(
-                      color: tool == PenTrayTool.eraser ? scheme.primary : ink,
-                      borderRadius: BorderRadius.circular(2),
-                      border: Border.all(
-                        color: scheme.outlineVariant.withValues(alpha: 0.6),
-                        width: 0.5,
+                    duration: const Duration(milliseconds: 200),
+                    opacity: selected ? 1 : 0,
+                    child: Container(
+                      width: 22,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 4),
+                      decoration: BoxDecoration(
+                        color: tool == PenTrayTool.eraser
+                            ? scheme.primary
+                            : ink,
+                        borderRadius: BorderRadius.circular(2),
+                        border: Border.all(
+                          color: scheme.outlineVariant.withValues(alpha: 0.6),
+                          width: 0.5,
+                        ),
                       ),
                     ),
-                  ),
                   ),
                 ),
               ],

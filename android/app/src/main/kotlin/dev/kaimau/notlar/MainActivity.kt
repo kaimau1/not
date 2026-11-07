@@ -7,6 +7,8 @@ import android.app.PictureInPictureParams
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.hardware.input.InputManager
+import android.view.InputDevice
 import android.media.AudioManager
 import android.location.Geocoder
 import android.location.Location
@@ -144,6 +146,51 @@ class MainActivity : FlutterFragmentActivity() {
     // küçük pencereye geçer. Pencere değişimi Dart'a "pipChanged" ile
     // bildirilir — oynatıcı o sırada çubukları gizleyip yalnız videoyu çizer.
     private var systemChannel: MethodChannel? = null
+
+    // FİZİKSEL KLAVYE (tablet bulgusu 2026-11-07): takılı harf klavyesi
+    // varken Dart sanal klavyeyi açmaz, notta "⌨" düğmesi çıkar. Yalnız HARF
+    // klavyesi sayılır — M-Pencil ve ses/güç tuşları da kendini "klavye"
+    // diye tanıtır. Kapak arkaya katlanınca (hardKeyboardHidden) yok sayılır.
+    private var keyboardChannel: MethodChannel? = null
+    private var keyboardListener: InputManager.InputDeviceListener? = null
+
+    private fun hasHardKeyboard(): Boolean {
+        if (resources.configuration.hardKeyboardHidden ==
+            Configuration.HARDKEYBOARDHIDDEN_YES) return false
+        val im = getSystemService(INPUT_SERVICE) as InputManager
+        return im.inputDeviceIds.any { id ->
+            val d = im.getInputDevice(id) ?: return@any false
+            !d.isVirtual &&
+                d.keyboardType == InputDevice.KEYBOARD_TYPE_ALPHABETIC &&
+                (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || d.isExternal)
+        }
+    }
+
+    private fun sendKeyboard() {
+        keyboardChannel?.invokeMethod("changed", hasHardKeyboard())
+    }
+
+    private fun configureKeyboardChannel(flutterEngine: FlutterEngine) {
+        val ch = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "dev.kaimau.notlar/keyboard")
+        keyboardChannel = ch
+        ch.setMethodCallHandler { call, result ->
+            if (call.method == "present") result.success(hasHardKeyboard()) else result.notImplemented()
+        }
+        val im = getSystemService(INPUT_SERVICE) as InputManager
+        keyboardListener?.let { im.unregisterInputDeviceListener(it) }
+        val listener = object : InputManager.InputDeviceListener {
+            override fun onInputDeviceAdded(deviceId: Int) = sendKeyboard()
+            override fun onInputDeviceRemoved(deviceId: Int) = sendKeyboard()
+            override fun onInputDeviceChanged(deviceId: Int) = sendKeyboard()
+        }
+        im.registerInputDeviceListener(listener, Handler(Looper.getMainLooper()))
+        keyboardListener = listener
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        sendKeyboard()
+    }
     private var autoPip = false
     private var pipRatio = Rational(16, 9)
 
@@ -250,6 +297,7 @@ class MainActivity : FlutterFragmentActivity() {
         KisiselKopru.basla(this)
         restoreBeepsFromPrefs()
         configureSpeechChannel(flutterEngine)
+        configureKeyboardChannel(flutterEngine)
         val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
         systemChannel = channel
         channel
@@ -1315,6 +1363,10 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     override fun onDestroy() {
+        keyboardListener?.let {
+            (getSystemService(INPUT_SERVICE) as InputManager).unregisterInputDeviceListener(it)
+        }
+        keyboardListener = null
         restoreBeeps()
         super.onDestroy()
     }

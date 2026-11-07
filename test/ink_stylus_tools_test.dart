@@ -216,4 +216,67 @@ void main() {
       expect(next.widthPx, 15);
     });
   });
+
+  // Tablet bulgusu 2026-11-07: "kalemle yazarken elle de yazabiliyor, kalem
+  // algılanmıyor" — avuç, "yalnız kalem" KAPALIYKEN de kalemi bozmamalı.
+  group('avuç reddi', () {
+    const stylus = PointerDeviceKind.stylus;
+
+    test('kalem yazarken değen avuç çizmez, kalemin çizgisini iptal etmez', () {
+      final c = controller()..setPenOnly(false);
+      c
+        ..pointerDown(1, const Offset(10, 10), size, pointer: 1, kind: stylus)
+        ..pointerDown(1, const Offset(150, 300), size, pointer: 2)
+        ..pointerMove(1, const Offset(150, 320), size, pointer: 2)
+        ..pointerMove(1, const Offset(60, 80), size, pointer: 1)
+        ..pointerUp(pointer: 2)
+        ..pointerUp(pointer: 1, kind: stylus);
+      expect(c.ink, hasLength(1));
+      expect(c.ink.single.points, hasLength(4));
+      expect(
+        c.claims(PointerDeviceKind.touch),
+        isTrue,
+        reason: 'kalem az önce kalktı: parmak yutulur, metne gitmez',
+      );
+    });
+
+    test('avuç kalemden önce değdiyse çizgisi silinir, kalem yazar', () {
+      final c = controller()..setPenOnly(false);
+      c
+        ..pointerDown(1, const Offset(150, 300), size, pointer: 1)
+        ..pointerMove(1, const Offset(160, 330), size, pointer: 1)
+        ..pointerDown(1, const Offset(10, 10), size, pointer: 2, kind: stylus)
+        ..pointerMove(1, const Offset(60, 80), size, pointer: 2)
+        ..pointerMove(1, const Offset(170, 340), size, pointer: 1)
+        ..pointerUp(pointer: 2, kind: stylus)
+        ..pointerUp(pointer: 1);
+      expect(c.ink, hasLength(1));
+      expect(c.ink.single.points.first, closeTo(10 / size.width, 1e-9));
+    });
+
+    test('sistemin iptal ettiği dokunuş çizgi bırakmaz', () {
+      final c = controller()..setPenOnly(false);
+      c
+        ..pointerDown(1, const Offset(10, 10), size, pointer: 1)
+        ..pointerMove(1, const Offset(60, 80), size, pointer: 1)
+        ..pointerCancel(pointer: 1);
+      expect(c.ink, isEmpty);
+    });
+
+    test('kalem kipi kapalıyken tek başına kalem tıkı çizmez, yazı arası nokta çizer', () {
+      final c = controller()..passStylusTaps = true;
+      c
+        ..pointerDown(1, const Offset(10, 10), size, pointer: 1, kind: stylus)
+        ..pointerUp(pointer: 1, kind: stylus);
+      expect(c.ink, isEmpty, reason: 'tık alttaki metne gider');
+      c
+        ..pointerDown(1, const Offset(10, 10), size, pointer: 2, kind: stylus)
+        ..pointerMove(1, const Offset(40, 40), size, pointer: 2)
+        ..pointerUp(pointer: 2, kind: stylus)
+        // Hemen ardından konan nokta (i'nin noktası) yazının parçası.
+        ..pointerDown(1, const Offset(50, 5), size, pointer: 3, kind: stylus)
+        ..pointerUp(pointer: 3, kind: stylus);
+      expect(c.ink, hasLength(2));
+    });
+  });
 }

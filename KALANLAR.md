@@ -218,3 +218,7 @@ kartta çizildi. Yeni metin notunda klavye açık; not "+" → Hatırlat aynı "
 
 - [ ] **Akıcılık Faz 20–27** → `AKICILIK_PLANI.md` (telefonda ölçülmüş kök nedenler; önerilen sıra 20 → 27, KARAR maddeleri F22.2–F22.4, F24.2, F25.1, F26.2) (2026-11-03)
 - [ ] **Faz 21 kabulü sağlanmadı** (2 tur sonra kaydırma %3,4–4,2 / 33–50 ms, arama 139 ms): kalan engel raster+kart kurulumu birlikte (Faz 23.4/26) ve arama için KARAR (önbellek payı ya da vurgu katmanı) — `AKICILIK_PLANI.md` Faz 21 notu (2026-11-03)
+
+## Yarım kalan
+- [ ] Tablette elle kontrol (v801 kurulu): kalemle yazarken avuç, kalemle tek tık kutucuk/metne gidiyor mu, yeni kalem kapsülü, not üst çubuğunda ⌨ düğmesi — klavye algılama doğrulandı, gerisi kullanım sınırı yüzünden yarım (2026-11-07)
+- [ ] `tablet-kalem-klavye` dalı CI yeşil, main'e birleştirilmedi (2026-11-07)

@@ -91,27 +91,25 @@ void main() {
     expect(find.byType(PageInkStack), findsOneWidget);
     expect(find.byKey(const ValueKey('pen-tray-pen')), findsNothing);
     await _write(tester, tester.getCenter(find.byType(PageInkStack)));
-    final tool = find.byKey(const ValueKey('pen-tray-pen'));
-    expect(tool, findsOneWidget);
-    // Kullanıcı isteği 2026-11-02: tablette de kalemler ALTTA (sol sütun
-    // kalktı); çizim başlayınca çekmece iner, yalnız uçlar görünür.
+    // Kalem kapsülü (yeniden tasarım 2026-11-07): çizim başlayınca yalnız
+    // küçük hap kalır, kalemler gizlenir.
     await tester.pump(const Duration(milliseconds: 400));
     final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
-    expect(tester.getRect(tool).top, greaterThan(screen.height - 60));
-    expect(find.byKey(const ValueKey('pen-dock-peek')), findsOneWidget);
-    // Dokununca yukarı gelir (önce ilk seferki ipucu kalksın).
+    final peek = find.byKey(const ValueKey('pen-dock-peek'));
+    expect(peek, findsOneWidget);
+    expect(tester.getRect(peek).height, lessThanOrEqualTo(44));
+    expect(tester.getRect(peek).bottom, greaterThan(screen.height - 60));
+    expect(find.byKey(const ValueKey('pen-tray-pen')), findsNothing);
+    // Dokununca kapsül açılır (önce ilk seferki ipucu kalksın).
     await tester.pump(const Duration(seconds: 6));
     await tester.pump(const Duration(seconds: 1));
-    await tester.tap(find.byKey(const ValueKey('pen-dock-peek')));
+    await tester.tap(peek);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.byKey(const ValueKey('pen-dock-peek')), findsNothing);
-    // Tek satırlık alçak tepsi (2026-11-02): kalemler dipte, ama görünür.
-    expect(tester.getRect(tool).top, lessThan(screen.height - 60));
-    expect(
-      tester.getRect(find.byKey(const ValueKey('pen-dock-handle'))).top,
-      greaterThan(screen.height - 100),
-    );
+    expect(peek, findsNothing);
+    final tool = find.byKey(const ValueKey('pen-tray-pen'));
+    expect(tool, findsOneWidget);
+    expect(tester.getRect(tool).top, greaterThan(screen.height - 100));
     // İlk çizgi kaybolmadı, alt çubuk yok: alt da sayfa.
     final ink = tester.widget<InkPageLayer>(find.byType(InkPageLayer));
     expect(ink.controller.ink, hasLength(1));
@@ -126,6 +124,10 @@ void main() {
     final body = find.widgetWithText(TextField, 'yazı').first;
     final at = tester.getCenter(body);
     await _write(tester, at);
+    // Kalem kalktıktan hemen sonraki dokunuş avuç sayılır (avuç reddi).
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 450)),
+    );
     await tester.tapAt(at);
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.testTextInput.isVisible, isTrue);

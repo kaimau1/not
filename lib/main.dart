@@ -22,6 +22,7 @@ import 'core/crash_reporting.dart';
 import 'core/error_log.dart';
 import 'core/utils/device_storage.dart';
 import 'core/utils/display_rate.dart';
+import 'core/utils/hard_keyboard.dart';
 import 'core/utils/image_cache_budget.dart';
 import 'core/utils/local_file.dart';
 import 'core/utils/note_fonts.dart';
@@ -185,6 +186,7 @@ Future<void> main() async {
       _activateAppCheck,
       DisplayRate.apply,
       ImageCacheBudget.apply,
+      HardKeyboard.init,
     ]),
   );
   // Eski geçici dosyalar (paylaşım/dışa aktarma/tarama/ses artıkları): açılışı

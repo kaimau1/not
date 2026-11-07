@@ -176,7 +176,49 @@ class InkController extends ChangeNotifier {
 
   /// Çizime kabul edilen parmak/kalem kimlikleri: "yalnız kalem"de parmak
   /// sayılmaz, kalkışı da sayacı düşürmez.
-  final Set<int> _accepted = {};
+  final Map<int, PointerDeviceKind> _accepted = {};
+
+  /// AVUÇ REDDİ (tablet bulgusu 2026-11-07: "kalemle yazarken elle de
+  /// yazabiliyor, kalem algılanmıyor"): kalem ekrandayken ya da az önce
+  /// (havada yaklaşırken / kalkalı [_palmWindow]) gelen parmak dokunuşu avuç
+  /// içidir — çizmez, metne de gitmez. Eskiden avuç "ikinci parmak" sayılıp
+  /// KALEMİN çizgisini iptal ediyordu.
+  DateTime _stylusAt = DateTime(0);
+  static const _palmWindow = Duration(milliseconds: 400);
+
+  /// Kalem havada görüldü/dokundu/kalktı.
+  void noteStylus() => _stylusAt = DateTime.now();
+
+  /// Bu dokunuş avuç içi mi (bkz. [_stylusAt]).
+  bool isPalm(PointerDeviceKind kind) =>
+      kind == PointerDeviceKind.touch &&
+      (_stylusDown > 0 ||
+          DateTime.now().difference(_stylusAt) < _palmWindow);
+
+  /// Sayfa katmanı bu dokunuşu üstlenir mi: çizen girdi ya da (kalem
+  /// yazabiliyorken) yutulacak avuç.
+  bool claims(PointerDeviceKind kind) =>
+      accepts(kind) || (isPalm(kind) && accepts(PointerDeviceKind.stylus));
+
+  /// Kalem kipi KAPALIYKEN kalemin tek başına dokunuşu (yazının arasında
+  /// değil, [_isolatedTap] sessizlikten sonra, kıpırdamadan) çizmez —
+  /// alttaki kutucuğa/bağlantıya/metne tıklar. Yazarken konan nokta (i, ö)
+  /// yazının arasında kaldığı için çizilir.
+  bool passStylusTaps = false;
+  DateTime _lastStrokeEnd = DateTime(0);
+  static const _isolatedTap = Duration(milliseconds: 1200);
+
+  /// Kalem dokunuşunun "tık" sayıldığı en çok kayma (dp).
+  static const stylusTapSlop = 4.0;
+  Offset? _tapStart;
+
+  bool stylusTapMayPass(PointerDeviceKind kind) =>
+      passStylusTaps &&
+      !eraser &&
+      !lasso &&
+      (kind == PointerDeviceKind.stylus ||
+          kind == PointerDeviceKind.invertedStylus) &&
+      DateTime.now().difference(_lastStrokeEnd) > _isolatedTap;
 
   /// Kalemin yan düğmesi basılıyken ya da kalem TERS çevrilmişken (silgi
   /// ucu) bu çizgi boyunca silgi — araç değiştirmeden sil.
@@ -206,9 +248,7 @@ class InkController extends ChangeNotifier {
   /// boşluğuna — düşse bile çizgi başlamaz/uzamaz).
   bool _nav = false;
 
-  /// Kalem (stylus) şu an ekrana değiyor mu — [InkNavLayer] bu sırada
-  /// parmakları (avuç içi) yok sayar.
-  bool get stylusDown => _stylusDown > 0;
+  /// Ekrana değen kalem sayısı (bkz. [isPalm]).
   int _stylusDown = 0;
 
   /// Silginin çizgiye "değmiş" sayıldığı yarıçap (sayfa oranı).
@@ -549,6 +589,8 @@ class InkController extends ChangeNotifier {
     if (stylus) {
       _stylusDown++;
       stylusSeen = true;
+      noteStylus();
+      _dropPalms();
       // İlk kalem dokunuşu: kullanıcı seçmediyse "yalnız kalem" açılır —
       // kalemle yazarken avuç içi/parmak çizgi bırakmasın.
       if (!penOnly && !InkToolMemory.penOnlyChosen) {
@@ -556,9 +598,10 @@ class InkController extends ChangeNotifier {
       }
     }
     if (pointer != null) {
-      if (!accepts(kind)) return;
-      _accepted.add(pointer);
+      if (!accepts(kind) || isPalm(kind)) return;
+      _accepted[pointer] = kind;
     }
+    _tapStart = _pointers == 0 && stylusTapMayPass(kind) ? local : null;
     _pointers++;
     if (_nav) return;
     if (_pointers > 1) {
@@ -679,8 +722,12 @@ class InkController extends ChangeNotifier {
     int? pointer,
     double? pressure,
   }) {
-    if (pointer != null && !_accepted.contains(pointer)) return;
+    if (pointer != null && !_accepted.containsKey(pointer)) return;
     if (_nav || _pointers != 1) return;
+    final tap = _tapStart;
+    if (tap != null && (local - tap).distance > stylusTapSlop) {
+      _tapStart = null;
+    }
     if (lasso && !_tempEraser) {
       final x = local.dx / size.width;
       final y = local.dy / size.height;
@@ -782,19 +829,70 @@ class InkController extends ChangeNotifier {
     if (picked.isNotEmpty) HapticFeedback.selectionClick();
   }
 
+  /// Avuç kalemden ÖNCE değdiyse başlattığı her şey (çizgi, silgi, kement)
+  /// geri alınır; kalem temiz başlar.
+  void _dropPalms() {
+    if (_nav) return;
+    final palms = [
+      for (final e in _accepted.entries)
+        if (e.value == PointerDeviceKind.touch) e.key,
+    ];
+    if (palms.isEmpty) return;
+    palms.forEach(_accepted.remove);
+    _pointers = math.max(0, _pointers - palms.length);
+    final base = _gestureBase;
+    if (base != null) _ink = base;
+    _gestureBase = null;
+    _active = null;
+    _holdTimer?.cancel();
+    _lassoPath = null;
+    _moving = false;
+  }
+
+  /// Sistem dokunuşu iptal etti (Android avuç içini böyle bildirir): parmağın
+  /// çizdiği çizgi kalmaz.
+  void pointerCancel({
+    int? pointer,
+    PointerDeviceKind kind = PointerDeviceKind.touch,
+  }) {
+    if (kind == PointerDeviceKind.touch &&
+        _pointers == 1 &&
+        pointer != null &&
+        _accepted.containsKey(pointer)) {
+      final base = _gestureBase;
+      if (base != null) _ink = base;
+      _gestureBase = null;
+      _active = null;
+    }
+    pointerUp(pointer: pointer, kind: kind);
+  }
+
   void pointerUp({
     int? pointer,
     PointerDeviceKind kind = PointerDeviceKind.touch,
   }) {
-    if (kind == PointerDeviceKind.stylus ||
-        kind == PointerDeviceKind.invertedStylus) {
+    final stylus =
+        kind == PointerDeviceKind.stylus ||
+        kind == PointerDeviceKind.invertedStylus;
+    if (stylus) {
       _stylusDown = math.max(0, _stylusDown - 1);
+      noteStylus();
     }
-    if (pointer != null && !_accepted.remove(pointer)) return;
+    if (pointer != null && _accepted.remove(pointer) == null) return;
     _pointers = math.max(0, _pointers - 1);
     if (_pointers > 0) {
       notifyListeners();
       return;
+    }
+    if (_tapStart != null) {
+      // Tek başına kalem tıkı: alttaki metne/kutucuğa gitti, nokta çizilmez.
+      _tapStart = null;
+      final base = _gestureBase;
+      if (base != null) _ink = base;
+      _gestureBase = null;
+      _active = null;
+    } else if (stylus) {
+      _lastStrokeEnd = DateTime.now();
     }
     _tempEraser = false;
     _holdTimer?.cancel();
@@ -1005,6 +1103,7 @@ class InkPageLayer extends StatelessWidget {
                 e.kind != PointerDeviceKind.invertedStylus) {
               return;
             }
+            controller.noteStylus();
             controller.hover.value = (page, e.localPosition);
           }
 
@@ -1045,7 +1144,7 @@ class InkPageLayer extends StatelessWidget {
               onPointerUp: (e) =>
                   controller.pointerUp(pointer: e.pointer, kind: e.kind),
               onPointerCancel: (e) =>
-                  controller.pointerUp(pointer: e.pointer, kind: e.kind),
+                  controller.pointerCancel(pointer: e.pointer, kind: e.kind),
               // Yalnız çizgiler değişince yeniden boyanır; görüntüleyici (PDF/slayt)
               // yeniden kurulmaz — bu yüzden çizim sırasında jest bozulmaz.
               // RepaintBoundary: tek bir çizgi uzarken üstteki PDF/slayt
@@ -1506,7 +1605,7 @@ class _InkNavLayerState extends State<InkNavLayer> {
       e.kind == PointerDeviceKind.stylus ||
       e.kind == PointerDeviceKind.invertedStylus ||
       e.kind == PointerDeviceKind.mouse ||
-      widget.controller.stylusDown;
+      widget.controller.isPalm(e.kind);
 
   void _down(PointerDownEvent e) {
     if (!widget.enabled || _ignored(e)) return;

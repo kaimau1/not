@@ -1433,6 +1433,8 @@
   "sharedFolderNoFileDrop": "Files can't be dropped on a shared folder. Open a note and drop the file there.",
   "shortcutAdjacentNote": "Previous / next note in list",
   "shortcutCloseNote": "Close note",
+  "softKeyboardShow": "Show on-screen keyboard (hardware keyboard connected)",
+  "softKeyboardHide": "Hide on-screen keyboard",
   "goHome": "Back to home",
   "loginFeatureSyncTitle": "Same notes on every device",
   "loginFeatureSyncBody": "Instant sync across phone, tablet, computer and web.",

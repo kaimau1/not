@@ -1717,6 +1717,8 @@
   "sharedFolderNoFileDrop": "Paylaşılan klasöre dosya bırakılamaz. Önce not aç, dosyayı onun içine bırak.",
   "shortcutAdjacentNote": "Listede önceki / sonraki not",
   "shortcutCloseNote": "Notu kapat",
+  "softKeyboardShow": "Sanal klavyeyi aç (fiziksel klavye takılı)",
+  "softKeyboardHide": "Sanal klavyeyi kapat",
   "goHome": "Ana sayfaya dön",
   "loginFeatureSyncTitle": "Her cihazda aynı notlar",
   "loginFeatureSyncBody": "Telefon, tablet, bilgisayar ve web arasında anında senkron.",

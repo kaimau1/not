@@ -8,14 +8,59 @@ import '../viewers/ink_layer.dart';
 /// Kalem/izinli girdiyi daha parmak inerken kazanır: altındaki metin alanı,
 /// kaydırma ve sayfa çekişi bu dokunuşu hiç görmez. İzinsiz girdi (kalem
 /// kipinde parmak) yarışa girmez, yani yazıya dokunup klavyeyle yazılır.
-class _InkClaimRecognizer extends EagerGestureRecognizer {
+/// Kalem yazarken değen avuç da üstlenilir (yutulur, bkz.
+/// [InkController.claims]). Kalem kipi kapalıyken kalemin TEK BAŞINA tıkı
+/// ([InkController.stylusTapMayPass]) kıpırdamazsa bırakılır: alttaki
+/// kutucuk/metin tıklanır; kayarsa çizgi olur.
+class _InkClaimRecognizer extends OneSequenceGestureRecognizer {
   _InkClaimRecognizer(this.ink);
 
   final InkController ink;
+  final Map<int, Offset> _taps = {};
 
   @override
   bool isPointerAllowed(PointerDownEvent event) =>
-      ink.accepts(event.kind) && super.isPointerAllowed(event);
+      ink.claims(event.kind) && super.isPointerAllowed(event);
+
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    super.addAllowedPointer(event);
+    if (ink.stylusTapMayPass(event.kind)) {
+      _taps[event.pointer] = event.position;
+      return;
+    }
+    _settle(event.pointer, GestureDisposition.accepted);
+  }
+
+  void _settle(int pointer, GestureDisposition disposition) {
+    _taps.remove(pointer);
+    resolvePointer(pointer, disposition);
+    stopTrackingPointer(pointer);
+  }
+
+  @override
+  void handleEvent(PointerEvent event) {
+    final start = _taps[event.pointer];
+    if (start == null) return;
+    if (event is PointerMoveEvent &&
+        (event.position - start).distance > InkController.stylusTapSlop) {
+      _settle(event.pointer, GestureDisposition.accepted);
+    } else if (event is PointerUpEvent || event is PointerCancelEvent) {
+      _settle(event.pointer, GestureDisposition.rejected);
+    }
+  }
+
+  @override
+  void rejectGesture(int pointer) {
+    _taps.remove(pointer);
+    stopTrackingPointer(pointer);
+  }
+
+  @override
+  void didStopTrackingLastPointer(int pointer) {}
+
+  @override
+  String get debugDescription => 'ink claim';
 }
 
 /// **SAYFANIN ÜSTÜNDEKİ EL YAZISI** (kullanıcı isteği 2026-11-02: "kalemle
@@ -124,6 +169,7 @@ class _PageInkStackState extends State<PageInkStack> {
   @override
   Widget build(BuildContext context) {
     final viewport = MediaQuery.sizeOf(context).height;
+    widget.ink.passStylusTaps = !widget.penActive;
     return LayoutBuilder(
       builder: (context, box) => Stack(
         children: [
