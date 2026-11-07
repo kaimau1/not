@@ -339,14 +339,11 @@ maddeyi GÜNCELLE.
 - Sayfa üstü el yazısı `Note.pageInk` (sahte `_page_ink` eki; `isEmpty`
   ona bakar). `InkPageLayer(uniform: true)` → y de genişliğe bölünür.
   Kalem `EagerGestureRecognizer` altsınıfıyla arenayı kazanır, parmak metne.
-  **Not editöründe kalemler ALTTA çekmecede** (`PenTray(dock: true)`, kullanıcı
-  isteği 2026-11-02 — tablet sol sütunu kalktı): sayfanın ÜSTÜNDE yüzer
-  (yerleşim değişmez), çizim başlayınca/6 sn dokunulmayınca iner (açık renk
-  paneli de kapanır — panel açıkken inmiyordu), yalnız tutamak + seçili renk
-  noktası görünür; tek dokunuşla açar. 2026-11-02 yeniden tasarım: TEK SATIR
-  (tutamak 24 + şerit 56), dar ekranda yinele/yalnız kalem/ayarlar "⋯"
-  menüsünde, ≥640 dp'de içerik kadar ortada; panel tepsinin ÜSTÜNDE ayrı
-  kart. Mürekkep katmanında fare imleci `precise` (metnin I imleci kalınca
+  **Not editöründe kalemler ALTTA KAPSÜLDE** (`PenTray(dock: true)`, 2026-11-07 sıfırdan:
+  yazarken 44 dp hap = seçili kalem + renk; dokununca/yukarı çekince tek satır yüzen
+  kapsül: kalemler · 4 hızlı renk + gökkuşağı halkası (geniş) · geri al · ⋯; dar ekranda
+  tek renk noktası; çizim başlayınca/6 sn sonra hapa döner; ayar kartı kapsülün üstünde).
+  Simge sözlüğü: palet simgesi = görünüm, kalem rengi için kullanılamaz. Mürekkep katmanında fare imleci `precise` (metnin I imleci kalınca
   çizgi "tıkladığım yerin üstünde" görünüyordu; koordinat doğru, testli). Belge/görsel/çizim ekranları eski şerit/sütunu kullanır
   (`PenTray.useRail` = PENCERE ≥ 600 dp). Tam ekran `noteFullscreenProvider`.
   "Ekle → Ayrı çizim (görsel)" = ayrı `DrawingScreen` → PNG görsel eki;
@@ -754,6 +751,12 @@ maddeyi GÜNCELLE.
 - **Ayarlar/uygulama gri ekran:** web'de JS `1.0`'ı Firestore'a TAMSAYI yazıyor; ayar senkronu `setInt` → `getDouble('font_scale')` çöküyordu (senkron gelir gelmez bütün uygulama). `writeLocalPref` `kDoublePrefKeys`'te double yazar, `FontScaleNotifier` num okur. Yeni ondalık senkron tercih eklenirse `kDoublePrefKeys`'e ekle.
 - **GMS'siz Android (Huawei/HarmonyOS; GBox uygulamaya GMS vermez):** `gmsInstalled()` (yerel `gmsInstalled`, manifestte `<queries>` gms). Yoksa giriş doğrudan tarayıcı; Drive/Gmail/Takvim jetonu `browserScopeToken` → yerel `googleScopeToken` (Firebase `startActivityForReauthenticateWithProvider`, kapsamlı). TUZAK: FlutterFire Google'da `credential.accessToken`'ı HEP null verir (GoogleAuthCredential, OAuthCredential değil) → jeton Kotlin'de Parcel'dan `ya29.` dizesi olarak çıkarılır. Jeton ~55 dk şifreli depoda (uid'e bağlı); dolunca "bağla" yeniden ister (yenileme anahtarı yok). FCM/App Check GMS'siz çalışmaz (yakalanıyor).
 - **Huawei tarayıcısı özel sekmeyi AYRI görevde açar:** Firebase dönüşü sekmeyi kapatmıyor, kullanıcı boş "about:blank"ta kalıyordu. Tarayıcı akışları `browserFlow()` / yerel `bringToFront` (`moveTaskToFront`, REORDER_TASKS; etkinlik az önce bittiği için 10 sn arka plan izni) ile uygulamayı öne alır.
-- **Kalem tepsisi tutamağı** aşağıdayken gezinme çubuğunun (alt 16 dp) İÇİNE iniyordu → dokunuş sisteme gidiyor, açılmıyordu. `_DockSlide` aşağıdayken yalnız `_kDockGap` kadar iner, `bottomInset` korunur.
+- **Kalem tepsisi tutamağı** aşağıdayken gezinme çubuğunun İÇİNE iniyordu (dokunuş sisteme gidiyordu). Kapsül tasarımında (aşağıda) hap/kapsül hep `bottomInset + _kDockGap` üstünde durur.
 - Bölünmüş görünümde not klavyesi listeyi daraltmaz (`MediaQuery.removeViewInsets`, sarma hep var — ağaç şekli sabit). Rayda klavye kısayolları yalnız web'de (M-Pencil kendini "klavye" diye tanıtıyor).
 - Cihaz notları: MatePad 11 = 1600×2560, 400 dpi (yatay 1024×640 dp); Huawei `adb install` iki onay penceresi ister ("Devam et" → "Yükle"); `input stylus` Android 12'de kalem türü üretmez, `/dev/input` SELinux'la kapalı → gerçek kalem davranışı elle denenmeli. Avast mağaza dışı APK'yı "şüpheli" bildiriyor (sezgisel).
+
+## 2026-11-07 — Tablet: avuç, kalem tıkı, fiziksel klavye
+- **Avuç reddi `InkController`'da (ortak):** kalem ekrandayken ya da son kalem olayından (havada yaklaşma dahil) 400 ms içinde gelen parmak = avuç: çizmez, metne/madde jestine de gitmez (`claims`). Avuç kalemden ÖNCE değdiyse kalem inince avucun işi geri alınır (`_dropPalms`). Sistemin iptal ettiği dokunuş (`pointerCancel`) çizgi bırakmaz. KÖK NEDEN: avuç "ikinci parmak" sayılıp kalemin çizgisini iptal ediyordu ("kalem algılanmıyor"). Testlerde kalemden hemen sonra parmak dokunuşu için ≥ 400 ms gerçek bekleme gerekir (`tester.runAsync`).
+- **Kalem kipi kapalıyken kalemin tek başına tıkı** (son çizgiden ≥ 1,2 sn sonra, ≤ 4 dp kayma) çizmez, alttaki metne/kutucuğa gider (`stylusTapMayPass`, `_InkClaimRecognizer` artık eager değil: kayınca kazanır, kalkınca bırakır). Yazı arasındaki i/ö noktası çizilir. Tabletteki notta kalem tıklarından kalmış başıboş noktalar görüldü.
+- **Fiziksel klavye:** `HardKeyboard` (kanal `dev.kaimau.notlar/keyboard`). Yalnız HARİCİ HARF klavyesi sayılır (M-Pencil, ses/güç tuşları da "klavye"); kapak arkaya katlıyken (`hardKeyboardHidden`) yok. Takılıyken `TextInput.setInputControl(boş denetim)`: alan bağlı kalır, giriş türü `none` gider, sanal klavye açılmaz; not üst çubuğunda ⌨ düğmesi (`editor-soft-keyboard`) açar/kapar (odak bir kare bırakılıp geri alınır ki alan yeni türle bağlansın). Sistem kanalının Dart işleyicisi PiP'te: yeni olay için AYRI kanal aç.
+- Play yorum analizi ve sonraki fazlar: `YORUM_ANALIZI_PLANI.md`.
