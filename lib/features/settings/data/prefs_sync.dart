@@ -77,6 +77,9 @@ List<String> get syncedPrefKeys => [
   for (final task in AiTask.values) task.prefsKey,
 ];
 
+/// Eşitlenen tercihlerden ondalık olanlar (bkz. [writeLocalPref]).
+const kDoublePrefKeys = {'font_scale'};
+
 const _snapshotKey = 'prefs_sync_snapshot';
 
 /// Eşitleme planı (saf, test edilir).
@@ -150,6 +153,11 @@ Future<void> writeLocalPref(
   switch (value) {
     case final bool v:
       await prefs.setBool(key, v);
+    // Web'de JS sayısı 1.0'ı Firestore'a TAMSAYI yazar; ondalık tercih
+    // int kaydedilirse getDouble çöker (tablet bulgusu 2026-11-07: Ayarlar
+    // gri ekran).
+    case final int v when kDoublePrefKeys.contains(key):
+      await prefs.setDouble(key, v.toDouble());
     case final int v:
       await prefs.setInt(key, v);
     case final double v:
