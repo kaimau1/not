@@ -219,10 +219,10 @@ class _Worker {
       tx.update(ref, {
         'body': body,
         if (addFull)
-          'attachments': [
-            for (final a in current.attachments) a.toMap(),
-            full.toMap(),
-          ],
+          'attachments': current.attachmentsField([
+            ...current.attachments,
+            full,
+          ]),
         if (handled.isNotEmpty) 'ytPending': FieldValue.arrayRemove(handled),
         if (d.containsKey('ytTranscript') && (done || !failed))
           'ytTranscript': FieldValue.delete(),

@@ -100,4 +100,38 @@ void main() {
         .get();
     expect(heavy.exists, isTrue);
   });
+
+  // Tablet bulgusu 2026-11-07: görsel Drive'a yüklenince patchAttachment ek
+  // listesini note.attachments'tan (el yazısı kaydı ayıklanmış) yeniden
+  // yazıyor, notun BÜTÜN sayfa üstü el yazısı siliniyordu.
+  test('ek yüklemesi bitince sayfa üstü el yazısı korunur', () async {
+    final id = await repo.createNote(NoteType.text, body: 'metin');
+    const ink = InkStroke(
+      page: 1,
+      color: 0xFF000000,
+      width: 0.01,
+      points: [0.1, 0.2, 0.3, 0.4],
+    );
+    // createdAt: sahte Firestore dizi içi serverTimestamp'ı çözmüyor.
+    final image = Attachment(
+      id: 'img',
+      kind: AttachmentKind.image,
+      fileName: 'a.png',
+      mimeType: 'image/png',
+      createdAt: DateTime(2026, 11, 7),
+    );
+    final note = await noteNow(id);
+    await repo.updateNote(
+      note.copyWith(pageInk: const [ink], attachments: [image]),
+    );
+    await repo
+        .watchNote(id)
+        .firstWhere((n) => n != null && n.pageInk.isNotEmpty);
+    await repo.patchAttachment(id, image.copyWith(driveId: 'drv1'));
+    await repo.patchAttachmentSync(id, 'img', {'state': 'done'});
+    final after = await repo
+        .watchNote(id)
+        .firstWhere((n) => n != null && n.attachments.single.isInDrive);
+    expect(after!.pageInk, hasLength(1));
+  });
 }

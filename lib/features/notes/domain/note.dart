@@ -1037,6 +1037,21 @@ class Note {
     );
   }
 
+  /// Belgedeki `attachments` alanı: ekler + sayfa üstü el yazısının sahte
+  /// kaydı ([kPageInkId]). Ek listesini yeniden yazan HER yol bunu kullanmalı:
+  /// [attachments] el yazısı kaydını içermez, listeyi ondan kurup yazmak el
+  /// yazısını siler (tablet bulgusu 2026-11-07: görsel Drive'a yüklenince
+  /// `patchAttachment` notun bütün el yazısını götürüyordu).
+  List<Map<String, dynamic>> attachmentsField([List<Attachment>? list]) => [
+    for (final a in list ?? attachments) a.toMap(),
+    if (pageInk.isNotEmpty || (hasPageInk && heavyMissing))
+      {
+        'id': kPageInkId,
+        'kind': 'pageInk',
+        if (pageInk.isNotEmpty) 'ink': [for (final s in pageInk) s.toMap()],
+      },
+  ];
+
   Map<String, dynamic> toMap() => {
     // ÖNCE tanınmayan alanlar: bilinen anahtarlar her zaman üstüne yazar.
     ...extras,
@@ -1049,15 +1064,7 @@ class Note {
     // oluşmaz. Dolduğunda anahtarlar tek tek birleşir — merge derin
     // birleştirdiği için başka cihazın yazdığı BAŞKA sayfanın notu ezilmez.
     if (pageNotes.isNotEmpty) 'pageNotes': pageNotes,
-    'attachments': [
-      for (final a in attachments) a.toMap(),
-      if (pageInk.isNotEmpty || (hasPageInk && heavyMissing))
-        {
-          'id': kPageInkId,
-          'kind': 'pageInk',
-          if (pageInk.isNotEmpty) 'ink': [for (final s in pageInk) s.toMap()],
-        },
-    ],
+    'attachments': attachmentsField(),
     'tags': tags,
     'folderId': folderId,
     'color': color.id,

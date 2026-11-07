@@ -1365,10 +1365,10 @@ class NotesRepository {
       final note = local!.note(noteId);
       if (note == null) return;
       local!.merge(noteId, {
-        'attachments': [
+        'attachments': note.attachmentsField([
           for (final a in note.attachments)
-            (a.id == updated.id ? a.withUploadOf(updated) : a).toMap(),
-        ],
+            a.id == updated.id ? a.withUploadOf(updated) : a,
+        ]),
       });
       return;
     }
@@ -1382,7 +1382,7 @@ class NotesRepository {
             a.id == updated.id ? a.withUploadOf(updated) : a,
         ];
         tx.update(ref, {
-          'attachments': [for (final a in attachments) a.toMap()],
+          'attachments': note.attachmentsField(attachments),
         'updatedBy': editorUid,
         });
       });
@@ -1396,8 +1396,8 @@ class NotesRepository {
     Map<String, dynamic> sync,
   ) async {
     List<Map<String, dynamic>> merged(Note note) => [
-      for (final a in note.attachments)
-        a.id == attachmentId ? {...a.toMap(), 'sync': sync} : a.toMap(),
+      for (final m in note.attachmentsField())
+        m['id'] == attachmentId ? {...m, 'sync': sync} : m,
     ];
     if (isLocal(noteId)) {
       final note = local!.note(noteId);
@@ -1425,11 +1425,11 @@ class NotesRepository {
       if (note == null) return Future.value();
       final ids = {for (final a in note.attachments) a.id};
       local!.merge(noteId, {
-        'attachments': [
-          for (final a in note.attachments) a.toMap(),
+        'attachments': note.attachmentsField([
+          ...note.attachments,
           for (final a in added)
-            if (!ids.contains(a.id)) a.toMap(),
-        ],
+            if (!ids.contains(a.id)) a,
+        ]),
         'updatedAt': FieldValue.serverTimestamp(),
       });
       return Future.value();
