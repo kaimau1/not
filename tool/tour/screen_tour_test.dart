@@ -409,8 +409,7 @@ Future<void> _pumpApp(
       TipOnce.homeMicHold,
     ],
     // TOUR_COLUMNS=3|4: dar sütunlu ana ekran (kart sıkışması).
-    if (int.tryParse(Platform.environment['TOUR_COLUMNS'] ?? '') case final c?)
-      'grid_columns': c,
+    'grid_columns': ?int.tryParse(Platform.environment['TOUR_COLUMNS'] ?? ''),
   });
   final sp = await SharedPreferences.getInstance();
   tester.view.physicalSize = Size(size.width, size.height);
