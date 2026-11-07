@@ -1076,8 +1076,19 @@ class InkPageLayer extends StatelessWidget {
                           ? null
                           : context.l10n.inkSemantics(painter.strokes.length),
                       // Kare kutudan taşan çizgi de boyanır (kırpılmaz).
+                      // OverflowBox: Align'la tuval katmanın boyuna
+                      // sıkışıyordu — kalem kipi kapanınca (sayfa altı boşluğu
+                      // gidince) çizim dikeyde basılıp yukarı kayıyordu
+                      // (tablet bulgusu 2026-11-07).
                       child: uniform
-                          ? Align(alignment: Alignment.topLeft, child: paint)
+                          ? OverflowBox(
+                              alignment: Alignment.topLeft,
+                              minWidth: size.width,
+                              maxWidth: size.width,
+                              minHeight: size.height,
+                              maxHeight: size.height,
+                              child: paint,
+                            )
                           : paint,
                     );
                   },
