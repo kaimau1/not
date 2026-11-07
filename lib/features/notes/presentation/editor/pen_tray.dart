@@ -7,6 +7,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../app/theme/fixed_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/widgets/color_palette.dart';
@@ -440,14 +441,44 @@ class _PenTrayState extends State<PenTray> {
                   }
                 },
               ),
-            IconButton(
-              key: const ValueKey('pen-tray-color'),
-              tooltip: l10n.inkColor,
-              isSelected: _panel,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.palette_outlined),
-              selectedIcon: const Icon(Icons.palette_rounded),
-              onPressed: _togglePanel,
+            // Tüm renkler + kalınlık: uygulamanın "özel renk" gökkuşağı
+            // halkası (simge sözlüğünde palet = görünüm).
+            Tooltip(
+              message: l10n.inkColor,
+              child: InkResponse(
+                key: const ValueKey('pen-tray-color'),
+                radius: 22,
+                onTap: _togglePanel,
+                child: SizedBox(
+                  width: 40,
+                  height: 48,
+                  child: Center(
+                    child: Container(
+                      width: 26,
+                      height: 26,
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: FixedColors.rainbowSweep,
+                        boxShadow: _panel
+                            ? [
+                                BoxShadow(
+                                  color: scheme.primary,
+                                  spreadRadius: 2,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: scheme.surfaceContainerHigh,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ]
         : [
@@ -578,11 +609,9 @@ class _PenTrayState extends State<PenTray> {
   /// Kapsüldeki hızlı renkler: sabit sıra (dokununca yer değiştirmesin);
   /// seçili renk listede yoksa son yuvaya o gelir.
   List<Color> _quickColors() {
-    const base = [
-      Colors.black,
-      Color(0xFF1E88E5),
-      Color(0xFFE53935),
-      Color(0xFF43A047),
+    // Siyah, mavi, kırmızı, yeşil (ortak kalem paleti).
+    final base = [
+      for (final i in const [0, 5, 2, 4]) kInkPalette[i],
     ];
     final current = _ink.color.toARGB32();
     if (base.any((c) => c.toARGB32() == current)) return base;
