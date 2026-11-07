@@ -783,12 +783,16 @@ class CardPageInk extends StatelessWidget {
           child: SizedBox(
             width: box.maxWidth,
             height: math.min(_maxHeight, bottom * box.maxWidth + 4),
-            child: Align(
+            // Kare tuval kutudan TAŞAR (kırpılır): Align'la kutunun ≤ 120
+            // boyuna sıkışıyor, y genişlik yerine 120'yle ölçeklenip çizim
+            // kartta basık görünüyordu (tablet bulgusu 2026-11-07).
+            child: OverflowBox(
               alignment: Alignment.topLeft,
-              child: CustomPaint(
-                size: Size.square(box.maxWidth),
-                painter: InkPainter(note.pageInk, 1),
-              ),
+              minWidth: box.maxWidth,
+              maxWidth: box.maxWidth,
+              minHeight: box.maxWidth,
+              maxHeight: box.maxWidth,
+              child: CustomPaint(painter: InkPainter(note.pageInk, 1)),
             ),
           ),
         );
