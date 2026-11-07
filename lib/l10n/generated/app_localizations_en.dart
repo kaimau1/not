@@ -7343,6 +7343,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarLinkToEvent => 'Link to an event';
 
   @override
+  String get calendarHolidays => 'Public holidays (Türkiye)';
+
+  @override
+  String get calendarHolidayEstimated => 'estimated';
+
+  @override
   String get calendarDayNote => 'Note for this day';
 
   @override

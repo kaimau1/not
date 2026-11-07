@@ -7323,6 +7323,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get calendarLinkToEvent => 'Bir etkinliğe bağla';
 
   @override
+  String get calendarHolidays => 'Resmî ve dinî tatiller';
+
+  @override
+  String get calendarHolidayEstimated => 'tahmini';
+
+  @override
   String get calendarDayNote => 'Bu güne not';
 
   @override

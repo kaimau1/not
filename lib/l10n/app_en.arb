@@ -2688,6 +2688,8 @@
   "calendarLinkToDay": "Link to a day",
   "calendarLinkNewEvent": "Create an event and link",
   "calendarLinkToEvent": "Link to an event",
+  "calendarHolidays": "Public holidays (Türkiye)",
+  "calendarHolidayEstimated": "estimated",
   "calendarDayNote": "Note for this day",
   "calendarDayWrittenNotes": "Notes written that day ({count})",
   "@calendarDayWrittenNotes": {"placeholders": {"count": {"type": "int"}}},

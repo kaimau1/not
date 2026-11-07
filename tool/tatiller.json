@@ -1,0 +1,6 @@
+{
+  "_aciklama": "Takvim tatil düzeltmeleri → Firestore config/holidays (CI deploy işi her main push'ta yazar, APK gerekmez). religious: yılın bayram İLK günleri (yazılan yıl kesin sayılır, 'tahmini' kalkar). extra: sonradan açıklanan uzatma / idari izin günleri (YYYY-MM-DD → ad). removed: yerleşik tablodan çıkarılacak günler. Yerleşik tablo: lib/features/calendar/domain/holidays.dart",
+  "religious": {},
+  "extra": {},
+  "removed": []
+}

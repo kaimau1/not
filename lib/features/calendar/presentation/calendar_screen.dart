@@ -20,12 +20,14 @@ import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../data/calendar_repository.dart';
+import '../data/holiday_source.dart';
 import '../data/task_note_sync.dart';
 import '../data/google_calendar_sync.dart';
 import '../data/google_tasks_sync.dart';
 import '../domain/agenda.dart';
 import '../domain/calendar_event.dart';
 import '../domain/day_key.dart';
+import '../domain/holidays.dart';
 import '../domain/task_item.dart';
 import 'calendar_views.dart';
 import 'calendar_ics_ui.dart';
@@ -61,6 +63,7 @@ final calendarDataProvider = Provider<CalendarData>((ref) {
     reminders: ref.watch(calendarReminderNotesProvider),
     routines: ref.watch(routinesStreamProvider).value ?? const [],
     routineLogs: ref.watch(routineLogsStreamProvider).value ?? const {},
+    holidays: ref.watch(holidayCalendarProvider),
   );
 });
 
@@ -405,7 +408,15 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     CalendarView.week => () {
       final s = weekStartOf(_focus, _firstDow);
       final e = DateTime(s.year, s.month, s.day + 6);
-      return '${DateFormat.MMMd().format(s)} – ${DateFormat.yMMMd().format(e)}';
+      // Kısa başlık: "16 Kas – 22 Kas 2026" telefonda "…" ile kesiliyordu.
+      // Aynı ay "16–22 Kasım", ay aşımı "30 Kas – 6 Ara"; yıl yalnız bu
+      // yıl değilse.
+      final year = e.year != _today.year ? ' ${e.year}' : '';
+      if (s.month == e.month) {
+        return '${s.day}–${e.day} ${DateFormat.MMMM().format(e)}$year';
+      }
+      return '${DateFormat.MMMd().format(s)} – ${DateFormat.MMMd().format(e)}'
+          '$year';
     }(),
     CalendarView.agenda => DateFormat.yMMMM().format(_month),
   };
@@ -598,6 +609,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             'routines' => context.push('/routines'),
             'google' => showGoogleCalendarSheet(context),
             'export' => exportCalendarIcs(context, ref),
+            'holidays' => Future(
+              () => ref.read(showHolidaysProvider.notifier).toggle(),
+            ),
             _ => importCalendarIcs(context, ref),
           }),
           itemBuilder: (_) => [
@@ -615,6 +629,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ),
               const PopupMenuDivider(),
             ],
+            CheckedPopupMenuItem(
+              key: const ValueKey('calendar-holidays-toggle'),
+              value: 'holidays',
+              checked: ref.read(showHolidaysProvider),
+              child: Text(l10n.calendarHolidays),
+            ),
+            const PopupMenuDivider(),
             _menuItem('export', Icons.ios_share, l10n.calendarIcsExport),
             _menuItem(
               'import',
@@ -670,7 +691,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             now: now,
             onSlotTap: (t) => unawaited(showEventEditor(context, start: t)),
             onEntryTap: _openEntry,
-            onDayTap: (d) => unawaited(_showDay(d, data)),
+            // Üstteki güne dokununca o günün sayfası (kullanıcı isteği
+            // 2026-11-07; önceden alttan levha açılıyordu).
+            onDayTap: _openDayPage,
           ),
           _ => MonthPage(
             month: monthAtIndex(i),
@@ -989,6 +1012,19 @@ class _DaySheet extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _DayHeader(day: day, today: today),
+            if (data.holidays.on(day) case final h?)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: HolidayChip(
+                    holiday: h,
+                    full: true,
+                    height: 22,
+                    estimatedLabel: l10n.calendarHolidayEstimated,
+                  ),
+                ),
+              ),
             Flexible(
               child: entries.isEmpty
                   ? Padding(
@@ -1116,16 +1152,28 @@ class _AgendaList extends ConsumerWidget {
       tasks: tasks,
       reminderNotes: reminders,
     );
+    final holidays = ref.watch(holidayCalendarProvider);
+    // Kaydı olmayan tatil günleri de ajandada başlık olarak görünür.
+    final keys = {...agenda.keys};
+    if (holidays.enabled) {
+      for (var y = from.year; y <= to.year; y++) {
+        for (final k in holidays.year(y).keys) {
+          if (k.compareTo(dayKey(from)) >= 0 && k.compareTo(dayKey(to)) < 0) {
+            keys.add(k);
+          }
+        }
+      }
+    }
     final rows = <Object>[];
     final selectedKey = dayKey(from);
-    if (!agenda.containsKey(selectedKey)) {
+    if (!keys.contains(selectedKey)) {
       rows
         ..add(from)
         ..add(l10n.calendarNothingThisDay);
     }
-    for (final e in agenda.entries) {
-      rows.add(parseDayKey(e.key)!);
-      rows.addAll(e.value);
+    for (final k in keys.toList()..sort()) {
+      rows.add(parseDayKey(k)!);
+      rows.addAll(agenda[k] ?? const <AgendaEntry>[]);
     }
     rows.add(#more);
 
@@ -1141,7 +1189,11 @@ class _AgendaList extends ConsumerWidget {
       itemBuilder: (context, i) {
         final row = rows[i];
         return switch (row) {
-          DateTime day => _DayHeader(day: day, today: today),
+          DateTime day => _DayHeader(
+            day: day,
+            today: today,
+            holiday: holidays.on(day),
+          ),
           String text => Padding(
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
             child: Text(
@@ -1171,18 +1223,22 @@ class _AgendaList extends ConsumerWidget {
 }
 
 class _DayHeader extends StatelessWidget {
-  const _DayHeader({required this.day, required this.today});
+  const _DayHeader({required this.day, required this.today, this.holiday});
 
   final DateTime day;
   final DateTime today;
+
+  /// Ajandada günün tatili başlığın yanında.
+  final Holiday? holiday;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isToday = day == today;
-    final text = isToday
+    final base = isToday
         ? '${context.l10n.calendarToday} · ${DateFormat.MMMMEEEEd().format(day)}'
         : DateFormat.MMMMEEEEd().format(day);
+    final text = holiday == null ? base : '$base · ${holiday!.name}';
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 6),
       child: Semantics(
