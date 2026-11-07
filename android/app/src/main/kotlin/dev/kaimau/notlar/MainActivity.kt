@@ -413,6 +413,16 @@ class MainActivity : FlutterFragmentActivity() {
                     // "Dosyaları Dosya Okuyucu ile seç" satırı yalnız o zaman
                     // görünür.
                     "fileAppInstalled" -> result.success(fileAppResolves())
+                    // Google Play Hizmetleri kurulu mu (Huawei/HarmonyOS'ta
+                    // yok): yoksa Google yetkileri doğrudan tarayıcıdan alınır.
+                    "gmsInstalled" -> result.success(
+                        try {
+                            packageManager.getPackageInfo("com.google.android.gms", 0)
+                            true
+                        } catch (e: Exception) {
+                            false
+                        }
+                    )
                     // EKİ FARKLI KAYDET (kullanıcı isteği 2026-10-17): kullanıcı
                     // yeri ve adı sistemin kaydet penceresinde seçer; dosya
                     // oraya kopyalanır. true = kaydedildi, false = iptal.

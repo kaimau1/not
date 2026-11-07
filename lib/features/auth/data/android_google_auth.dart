@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/utils/gms.dart';
 import 'auth_repository.dart';
 
 /// Android: google_sign_in eklentisi ile yerel Google girişi.
@@ -72,6 +73,8 @@ class AndroidGoogleAuth implements AuthRepository {
   /// seçici açıldıysa kapatılması insan hızında olur (≥ [_instantCancel]);
   /// anında gelen iptal, seçicinin hiç görünmediği demektir.
   Future<AuthCredential> _googleCredential() async {
+    // GMS yok (Huawei): yerel seçici hiç açılmaz, doğrudan tarayıcı.
+    if (!await gmsInstalled()) throw const _UseBrowserFlow();
     await _ensureInitialized();
     final started = DateTime.now();
     try {
@@ -106,8 +109,10 @@ class AndroidGoogleAuth implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    await _ensureInitialized();
-    await GoogleSignIn.instance.signOut();
+    if (await gmsInstalled()) {
+      await _ensureInitialized();
+      await GoogleSignIn.instance.signOut();
+    }
     await _auth.signOut();
   }
 }
