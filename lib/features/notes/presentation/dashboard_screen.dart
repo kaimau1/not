@@ -1358,7 +1358,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     // görünümünün DIŞINDA sabit durur: liste kayarken çipler
                     // yerinde kalır; filtre değişim animasyonu yalnız not
                     // listesine uygulanır (arama barı artık birlikte kaymaz).
-                    return Column(
+                    // Dar sütunda kart kompakt (bkz. [NoteCardWidth]).
+                    return NoteCardWidth(
+                      width: cellWidth,
+                      child: Column(
                       children: [
                         // Sıralama modu: kartlar sürüklenebilir. Moddan
                         // çıkmadan başka iş yapılamayacağı için üstte kalıcı
@@ -1946,7 +1949,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           ),
                         ),
                       ],
-                    );
+                    ));
                   },
                 ),
                 ),

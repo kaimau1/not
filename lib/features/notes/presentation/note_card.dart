@@ -393,6 +393,42 @@ final _cardInk = Expando<ThemeData>('cardInk');
 ThemeData _cardThemeOf(BuildContext context) =>
     _cardInk[context] ?? Theme.of(context);
 
+/// Izgara hücresinin genişliği (ana ekran verir); kart dar sütunda
+/// sıkışır (bkz. [noteCardSqueeze]). Yoksa kart normal çizilir.
+class NoteCardWidth extends InheritedWidget {
+  const NoteCardWidth({super.key, required this.width, required super.child});
+
+  final double width;
+
+  static double? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<NoteCardWidth>()?.width;
+
+  @override
+  bool updateShouldNotify(NoteCardWidth old) =>
+      noteCardSqueezeFor(old.width) != noteCardSqueezeFor(width);
+}
+
+/// 0 normal, 1 dar (telefonda 3 sütun ≈128 dp), 2 çok dar (4 sütun ≈94 dp).
+int noteCardSqueezeFor(double? width) => width == null
+    ? 0
+    : width < 112
+    ? 2
+    : width < 150
+    ? 1
+    : 0;
+
+int noteCardSqueeze(BuildContext context) =>
+    noteCardSqueezeFor(NoteCardWidth.of(context));
+
+/// Kart başlığı boyu sıkışıklığa göre.
+const _kCardTitleSize = [16.0, 14.5, 13.0];
+
+/// "+N madde daha" — dar kartta yalnız "+N" (üç satıra yayılıyordu).
+String _moreItemsLabel(BuildContext context, int count) =>
+    noteCardSqueeze(context) > 0
+    ? '+$count'
+    : context.l10n.moreItemsCount(count);
+
 class NoteCard extends ConsumerWidget {
   const NoteCard({
     super.key,
@@ -705,6 +741,10 @@ class NoteCard extends ConsumerWidget {
     // Üst satır yalnızca başlık varsa çizilir. Başlıksız notta (madde 5) boş
     // bir üst bant bırakılmaz; içerik doğrudan tepeden başlar.
     final showTopRow = hasTitle;
+    // DAR SÜTUN (kullanıcı bulgusu 2026-11-07: "3 ve 4 sütun görünümü iyi
+    // değil"): başlık sözcük ortasından bölünüyor ("Harit-a"), alt satırda
+    // etiket hapı boş lekeye dönüyor, simgeler tarihin üstüne biniyordu.
+    final squeeze = noteCardSqueeze(context);
     // Kilitli notta içerik (ekler dahil) kartta gösterilmez; ekler ayardan
     // da kapatılabilir.
     final media =
@@ -748,9 +788,9 @@ class NoteCard extends ConsumerWidget {
       // köşedeki üç nokta düğmesinin altına girmesin (kapak varsa düğme
       // kapağın üstünde durur, pay gerekmez).
       padding: EdgeInsetsDirectional.fromSTEB(
-        12,
+        squeeze >= 2 ? 8 : 12,
         hasCover ? 8 : 10,
-        showTopRow || hasCover ? 12 : 20,
+        showTopRow || hasCover ? (squeeze >= 2 ? 8 : 12) : 20,
         10,
       ),
       child: Column(
@@ -761,7 +801,10 @@ class NoteCard extends ConsumerWidget {
             Padding(
               // Sağdaki 22px köşedeki üç nokta / seçim kutusuna yer açar; uzun
               // başlık düğmenin altına girmeden kısalır (…).
-              padding: const EdgeInsetsDirectional.only(bottom: 6, end: 22),
+              padding: EdgeInsetsDirectional.only(
+                bottom: 6,
+                end: squeeze >= 2 ? 16 : 22,
+              ),
               child: noteBodyText(
                 context,
                 // Biçimli başlık kartta da biçimli görünür; ayar kapalıyken
@@ -776,7 +819,9 @@ class NoteCard extends ConsumerWidget {
                 style: noteTitleStyle(
                   _cardThemeOf(context),
                   note,
-                  fontSize: 16 * note.titleFontScale.clamp(0.8, 1.4),
+                  fontSize:
+                      _kCardTitleSize[squeeze] *
+                      note.titleFontScale.clamp(0.8, 1.4),
                 ),
               ),
             ),
@@ -857,12 +902,14 @@ class NoteCard extends ConsumerWidget {
                 Expanded(
                   child: Row(
                     children: [
-                      for (final icon in statusIcons)
+                      for (final icon in squeeze >= 2
+                          ? statusIcons.take(1)
+                          : statusIcons)
                         Padding(
                           padding: const EdgeInsetsDirectional.only(end: 4),
                           child: icon,
                         ),
-                      if (reminderLabel != null)
+                      if (reminderLabel != null && squeeze == 0)
                         Flexible(
                           flex: 8,
                           child: Padding(
@@ -879,7 +926,9 @@ class NoteCard extends ConsumerWidget {
                             ),
                           ),
                         ),
-                      if (showTag)
+                      // Dar kartta etiket hapı sıfıra sıkışıp boş bir
+                      // mavi leke kalıyordu (kullanıcı bulgusu 2026-11-07).
+                      if (showTag && squeeze == 0)
                         Flexible(
                           flex: 3,
                           child: TagPill(tag: note.tags.first, accent: accent),
@@ -890,8 +939,9 @@ class NoteCard extends ConsumerWidget {
                 if (showDate)
                   Text(
                     formatNoteDate(note.updatedAt!),
+                    maxLines: 1,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: squeeze >= 2 ? 10.5 : 12,
                       fontWeight: FontWeight.w600,
                       color: scheme.onSurfaceVariant,
                     ),
@@ -1829,7 +1879,7 @@ class _NotePreview extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
-                    context.l10n.moreItemsCount(items.length - maxItems),
+                    _moreItemsLabel(context, items.length - maxItems),
                     style: _cardThemeOf(context).textTheme.labelSmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -1879,7 +1929,7 @@ class _NotePreview extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
-                  context.l10n.moreItemsCount(remaining),
+                  _moreItemsLabel(context, remaining),
                   style: _cardThemeOf(context).textTheme.labelSmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -1937,7 +1987,7 @@ class _NotePreview extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
-                  context.l10n.moreItemsCount(morePages),
+                  _moreItemsLabel(context, morePages),
                   style: _cardThemeOf(context).textTheme.labelSmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),

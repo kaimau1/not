@@ -58,7 +58,7 @@ void main() {
   });
 
   test('kapalı takvim hiçbir şey döndürmez; açık takvim önbellekli', () {
-    expect(const HolidayCalendar.off().on(DateTime(2026, 1, 1)), isNull);
+    expect(const HolidayCalendar.off().on(DateTime(2026, 4, 23)), isNull);
     final c = HolidayCalendar();
     expect(c.on(DateTime(2026, 10, 29))!.short, '29 Ekim Bayramı');
     expect(identical(c.year(2026), c.year(2026)), isTrue);

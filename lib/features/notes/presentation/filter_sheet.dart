@@ -8,6 +8,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/attachment_text_index.dart';
 import '../../settings/settings_providers.dart';
+import '../../folders/data/folder_order.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
 import '../data/notes_repository.dart';
@@ -59,6 +60,7 @@ void resetFilters(WidgetRef ref) {
   ref.read(selectedFolderProvider.notifier).set(null);
   ref.read(selectedSharedFolderProvider.notifier).set(null);
   ref.read(selectedTagProvider.notifier).set(null);
+  ref.read(sharedHubOnHomeProvider.notifier).set(false);
 }
 
 /// Uygulanmış süzgeçlerin ekranda okunacak adları (tür, klasör, #etiket).
@@ -68,7 +70,17 @@ List<String> appliedFilterLabels(BuildContext context, WidgetRef ref) {
   final folderId = ref.watch(selectedFolderProvider);
   final tag = ref.watch(selectedTagProvider);
   final shared = ref.watch(selectedSharedFolderProvider);
-  final folderName = shared != null
+  // GELEN ADI (kullanıcı bulgusu 2026-11-07: "Gelen klasörü üstte filtre
+  // ismi olarak görülmüyor"): Gelen `selectedFolderProvider` değil ayrı
+  // bayrak (`sharedHubOnHomeProvider`); başka klasörlerin adı Süz düğmesinde
+  // görünürken Gelen'inki görünmüyordu.
+  final hubOn = ref.watch(sharedHubOnHomeProvider);
+  final hubName = hubOn
+      ? ref.watch(sharedHubFolderProvider.select((f) => f.name))
+      : null;
+  final folderName = hubOn
+      ? (hubName == null || hubName.isEmpty ? l10n.sharedHubShort : hubName)
+      : shared != null
       ? (ref.watch(sharedFolderRefsProvider).value ??
                 const <SharedFolderRef>[])
             .where((s) => s.folderId == shared.folderId)
