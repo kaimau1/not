@@ -8,6 +8,7 @@ import '../../notes/domain/note.dart';
 import '../domain/agenda.dart';
 import '../domain/calendar_event.dart';
 import '../domain/day_key.dart';
+import '../domain/holidays.dart';
 import '../domain/routine.dart';
 import '../domain/task_item.dart';
 import 'month_grid.dart' show gridStartFor;
@@ -25,7 +26,11 @@ class CalendarData {
     this.reminders = const [],
     this.routines = const [],
     this.routineLogs = const {},
+    this.holidays = const HolidayCalendar.off(),
   });
+
+  /// Resmî ve dinî tatiller (kayıt değil; hücrede ayrı şerit).
+  final HolidayCalendar holidays;
 
   final List<CalendarEvent> events;
   final List<TaskItem> tasks;
@@ -207,6 +212,13 @@ class MonthPage extends StatelessWidget {
                                     ),
                                   )] ??
                                   const [],
+                              holiday: data.holidays.on(
+                                DateTime(
+                                  start.year,
+                                  start.month,
+                                  start.day + w * 7 + d,
+                                ),
+                              ),
                               line: line,
                               onTap: onDayTap,
                               onLongPress: onDayLongPress,
@@ -236,6 +248,7 @@ class _MonthCell extends StatelessWidget {
     required this.line,
     required this.onTap,
     required this.onLongPress,
+    this.holiday,
     this.onDoubleTap,
     this.onEntryMove,
   });
@@ -247,6 +260,7 @@ class _MonthCell extends StatelessWidget {
   final DateTime today;
   final DateTime selected;
   final List<AgendaEntry> entries;
+  final Holiday? holiday;
   final Color line;
   final ValueChanged<DateTime> onTap;
   final ValueChanged<DateTime> onLongPress;
@@ -311,6 +325,7 @@ class _MonthCell extends StatelessWidget {
     // sönük, bugün vurgu kenarlı. Gölge YOK (42 hücre × her kare — akıcılık
     // bütçesi); hücre kendi `Material`ı: dokunma dalgası zeminin üstünde.
     final weekend = day.weekday >= DateTime.saturday;
+    final off = holiday?.isOff ?? false;
     final radius = BorderRadius.circular(8);
     final Color fill;
     if (hovering) {
@@ -319,6 +334,11 @@ class _MonthCell extends StatelessWidget {
       fill = scheme.primaryContainer.withValues(alpha: 0.55);
     } else if (!inMonth) {
       fill = scheme.surfaceContainerLow.withValues(alpha: 0.3);
+    } else if (off) {
+      fill = Color.alphaBlend(
+        scheme.error.withValues(alpha: 0.07),
+        scheme.surfaceContainerLowest.withValues(alpha: 0.85),
+      );
     } else if (weekend) {
       fill = scheme.surfaceContainerHigh.withValues(alpha: 0.85);
     } else {
@@ -329,9 +349,36 @@ class _MonthCell extends StatelessWidget {
         : isSelected
         ? BorderSide(color: scheme.primary.withValues(alpha: 0.6))
         : BorderSide(color: line, width: 0.8);
+    final dayColor = isToday
+        ? scheme.onPrimary
+        : !inMonth
+        ? scheme.onSurfaceVariant.withValues(alpha: 0.5)
+        : off
+        ? scheme.error
+        : scheme.onSurface;
+    final h = holiday;
+    final chips = <Widget Function(int lines, double height, double width)>[
+      if (h != null)
+        (lines, height, _) => HolidayChip(
+          holiday: h,
+          height: height,
+          lines: lines,
+          dim: !inMonth,
+        ),
+      for (final e in entries)
+        (lines, height, width) => _draggableChip(
+          context,
+          e,
+          _MonthChip(entry: e, height: height, lines: lines, dim: !inMonth),
+          width,
+        ),
+    ];
     return Semantics(
       button: true,
-      label: DateFormat.yMMMMEEEEd().format(day),
+      label: [
+        DateFormat.yMMMMEEEEd().format(day),
+        if (h != null) h.name,
+      ].join(', '),
       child: Padding(
         padding: const EdgeInsets.all(1.5),
         child: Material(
@@ -344,13 +391,17 @@ class _MonthCell extends StatelessWidget {
             onLongPress: () => onLongPress(day),
             child: LayoutBuilder(
               builder: (context, c) {
-                const chipH = 16.0;
-                final room = math.max(
-                  0,
-                  ((c.maxHeight - 24) / (chipH + 1)).floor(),
-                );
-                final fits = entries.length <= room;
-                final shown = fits ? entries.length : math.max(0, room - 1);
+                // YAZI SIĞSIN (kullanıcı isteği 2026-11-07: "yazıları biraz
+                // küçült, günlere sığsın, gerekirse 2 satır"): yer varsa
+                // şeritler İKİ satır, yoksa tek satır; sığmayan "+n".
+                final avail = c.maxHeight - 26;
+                final twoLines =
+                    chips.isNotEmpty &&
+                    chips.length * (kMonthChipTwoLine + 1) <= avail;
+                final chipH = twoLines ? kMonthChipTwoLine : kMonthChipOneLine;
+                final room = math.max(0, (avail / (chipH + 1)).floor());
+                final fits = chips.length <= room;
+                final shown = fits ? chips.length : math.max(0, room - 1);
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -363,7 +414,7 @@ class _MonthCell extends StatelessWidget {
                           alignment: Alignment.center,
                           decoration: isToday
                               ? BoxDecoration(
-                                  color: scheme.primary,
+                                  color: off ? scheme.error : scheme.primary,
                                   shape: BoxShape.circle,
                                 )
                               : null,
@@ -371,33 +422,22 @@ class _MonthCell extends StatelessWidget {
                             '${day.day}',
                             style: TextStyle(
                               fontSize: 11.5,
-                              fontWeight: isToday
+                              fontWeight: isToday || off
                                   ? FontWeight.w700
                                   : FontWeight.w500,
-                              color: isToday
-                                  ? scheme.onPrimary
-                                  : inMonth
-                                  ? scheme.onSurface
-                                  : scheme.onSurfaceVariant.withValues(
-                                      alpha: 0.5,
-                                    ),
+                              color: dayColor,
                             ),
                           ),
                         ),
                       ),
                     ),
-                    for (final e in entries.take(shown))
-                      _draggableChip(
-                        context,
-                        e,
-                        _MonthChip(entry: e, height: chipH, dim: !inMonth),
-                        c.maxWidth,
-                      ),
-                    if (!fits && entries.length > shown)
+                    for (final chip in chips.take(shown))
+                      chip(twoLines ? 2 : 1, chipH, c.maxWidth),
+                    if (!fits && chips.length > shown)
                       SizedBox(
-                        height: chipH,
+                        height: kMonthChipOneLine,
                         child: Text(
-                          '+${entries.length - shown}',
+                          '+${chips.length - shown}',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 10,
@@ -417,16 +457,61 @@ class _MonthCell extends StatelessWidget {
   }
 }
 
+/// Ay şeridinin yüksekliği: tek satır / iki satır (yazı 9,5 pt).
+const kMonthChipOneLine = 14.0;
+const kMonthChipTwoLine = 25.0;
+
+/// Şerit kutusu: kayıt ve tatil şeridi aynı biçimde.
+Widget _chipBox({
+  required String text,
+  required double height,
+  required int lines,
+  required Color background,
+  required Color foreground,
+  Border? border,
+  bool strike = false,
+  bool dim = false,
+}) => Opacity(
+  opacity: dim ? 0.5 : 1,
+  child: Container(
+    height: height,
+    margin: const EdgeInsets.fromLTRB(2, 0, 2, 1),
+    padding: const EdgeInsets.symmetric(horizontal: 3),
+    alignment: Alignment.centerLeft,
+    decoration: BoxDecoration(
+      color: background,
+      borderRadius: BorderRadius.circular(4),
+      border: border,
+    ),
+    child: Text(
+      text,
+      maxLines: lines,
+      // Tek satırda harf harf kırpılır (daha çok harf görünür); iki satırda
+      // sözcükten kırılır, taşan "…".
+      overflow: lines > 1 ? TextOverflow.ellipsis : TextOverflow.clip,
+      softWrap: lines > 1,
+      style: TextStyle(
+        fontSize: 9.5,
+        height: 1.1,
+        color: foreground,
+        decoration: strike ? TextDecoration.lineThrough : null,
+      ),
+    ),
+  ),
+);
+
 class _MonthChip extends StatelessWidget {
   const _MonthChip({
     required this.entry,
     required this.height,
     required this.dim,
+    this.lines = 1,
   });
 
   final AgendaEntry entry;
   final double height;
   final bool dim;
+  final int lines;
 
   @override
   Widget build(BuildContext context) {
@@ -436,33 +521,70 @@ class _MonthChip extends StatelessWidget {
     final done = entry is TaskEntry && (entry as TaskEntry).task.completed;
     final google =
         entry is EventOccurrence && (entry as EventOccurrence).event.fromGoogle;
-    return Opacity(
-      opacity: dim ? 0.5 : 1,
-      child: Container(
+    return _chipBox(
+      text: entryTitle(entry, context.l10n),
+      height: height,
+      lines: lines,
+      dim: dim,
+      strike: done,
+      background: solid ? color : color.withValues(alpha: 0.16),
+      foreground: solid ? scheme.onPrimary : scheme.onSurface,
+      // Google Takvim etkinliği farklı kenarlıkla (F48.3).
+      border: google
+          ? Border.all(color: color.withValues(alpha: 0.8), width: 0.8)
+          : null,
+    );
+  }
+}
+
+/// Resmî/dinî tatil şeridi: tam gün dolu kırmızı, arife (yarım gün) kenarlı.
+class HolidayChip extends StatelessWidget {
+  const HolidayChip({
+    super.key,
+    required this.holiday,
+    this.height = kMonthChipOneLine,
+    this.lines = 1,
+    this.dim = false,
+    this.full = false,
+    this.estimatedLabel,
+  });
+
+  /// Tahmini tarihte ada eklenir ("tahmini"); null = eklenmez.
+  final String? estimatedLabel;
+
+  final Holiday holiday;
+  final double height;
+  final int lines;
+  final bool dim;
+
+  /// Uzun ad (hafta/gün sayfası); ay hücresinde kısa ad.
+  final bool full;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final off = holiday.isOff;
+    return Semantics(
+      label: holiday.name,
+      excludeSemantics: true,
+      child: _chipBox(
+        text: [
+          full ? holiday.name : holiday.short,
+          if (holiday.estimated && estimatedLabel != null) '($estimatedLabel)',
+        ].join(' '),
         height: height,
-        margin: const EdgeInsets.fromLTRB(2, 0, 2, 1),
-        padding: const EdgeInsets.symmetric(horizontal: 3),
-        alignment: Alignment.centerLeft,
-        decoration: BoxDecoration(
-          color: solid ? color : color.withValues(alpha: 0.16),
-          borderRadius: BorderRadius.circular(4),
-          // Google Takvim etkinliği farklı kenarlıkla (F48.3).
-          border: google
-              ? Border.all(color: color.withValues(alpha: 0.8), width: 0.8)
-              : null,
-        ),
-        child: Text(
-          entryTitle(entry, context.l10n),
-          maxLines: 1,
-          overflow: TextOverflow.clip,
-          softWrap: false,
-          style: TextStyle(
-            fontSize: 10.5,
-            height: 1.1,
-            color: solid ? scheme.onPrimary : scheme.onSurface,
-            decoration: done ? TextDecoration.lineThrough : null,
-          ),
-        ),
+        lines: lines,
+        dim: dim,
+        background: off
+            ? scheme.error.withValues(alpha: 0.85)
+            : scheme.error.withValues(alpha: 0.1),
+        foreground: off ? scheme.onError : scheme.error,
+        border: off
+            ? null
+            : Border.all(
+                color: scheme.error.withValues(alpha: 0.6),
+                width: 0.8,
+              ),
       ),
     );
   }
@@ -575,7 +697,11 @@ class WeekPage extends StatefulWidget {
 
 class _WeekPageState extends State<WeekPage> {
   late final ScrollController _scroll = ScrollController(
-    initialScrollOffset: widget.hourHeight * math.max(0, _firstHour() - 1),
+    // −10: en üstteki saat etiketi yarıdan kesilmesin ("02:00" yarım).
+    initialScrollOffset: math.max(
+      0,
+      widget.hourHeight * math.max(0, _firstHour() - 1) - 10,
+    ),
   );
 
   /// Haftanın ilk saatli kaydı (yoksa bugünse şimdi, değilse 08:00).
@@ -619,7 +745,9 @@ class _WeekPageState extends State<WeekPage> {
           widget.weekStart.day + i,
         ),
     ];
+    final single = widget.dayCount == 1;
     final agenda = widget.data.range(widget.weekStart, _weekEnd);
+    final holidays = [for (final d in days) widget.data.holidays.on(d)];
     final allDay = [
       for (final d in days)
         [
@@ -628,89 +756,104 @@ class _WeekPageState extends State<WeekPage> {
         ],
     ];
     final allDayRows = allDay.fold<int>(0, (m, l) => math.max(m, l.length));
-    final line = scheme.outlineVariant.withValues(alpha: 0.45);
+    final hasHoliday = holidays.any((x) => x != null);
+    final line = scheme.outlineVariant.withValues(alpha: 0.7);
     final labelStyle = Theme.of(context).textTheme.labelSmall
         ?.copyWith(color: scheme.onSurfaceVariant);
+    // GÖRSEL (kullanıcı bulgusu 2026-11-07: hafta "düz, boş"): başlık kâğıt
+    // şerit; hafta sonu ve bugün sütunları hafif tonlu; tatil günü kırmızı.
+    Color? columnTint(int i) {
+      final d = days[i];
+      if (d == widget.today) {
+        return scheme.primaryContainer.withValues(alpha: 0.22);
+      }
+      if (holidays[i]?.isOff ?? false) {
+        return scheme.error.withValues(alpha: 0.05);
+      }
+      if (!single && d.weekday >= DateTime.saturday) {
+        return scheme.surfaceContainerHigh.withValues(alpha: 0.45);
+      }
+      return null;
+    }
 
     return Column(
       children: [
-        // Gün başlıkları.
-        Row(
-          children: [
-            const SizedBox(width: _kHourLabelWidth),
-            for (final d in days)
-              Expanded(
-                child: InkWell(
-                  onTap: () => widget.onDayTap(d),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Column(
-                      children: [
-                        Text(DateFormat.E().format(d), style: labelStyle),
-                        const SizedBox(height: 2),
-                        Container(
-                          width: 28,
-                          height: 28,
-                          alignment: Alignment.center,
-                          decoration: d == widget.today
-                              ? BoxDecoration(
-                                  color: scheme.primary,
-                                  shape: BoxShape.circle,
-                                )
-                              : null,
+        // Gün başlıkları + tüm gün şeritleri: tek kâğıt şerit.
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerLow.withValues(alpha: 0.7),
+            border: Border(bottom: BorderSide(color: line)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  const SizedBox(width: _kHourLabelWidth),
+                  for (var i = 0; i < days.length; i++)
+                    Expanded(
+                      child: _WeekDayHeader(
+                        day: days[i],
+                        today: widget.today,
+                        holiday: holidays[i],
+                        // Gün sayfasında başlık zaten o gün: dokunuş yok.
+                        onTap: single ? null : () => widget.onDayTap(days[i]),
+                      ),
+                    ),
+                ],
+              ),
+              if (allDayRows > 0 || hasHoliday)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: _kHourLabelWidth,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 2, right: 4),
                           child: Text(
-                            '${d.day}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: d == widget.today
-                                  ? scheme.onPrimary
-                                  : scheme.onSurface,
-                            ),
+                            l10n.eventAllDay,
+                            style: labelStyle?.copyWith(fontSize: 9),
+                            textAlign: TextAlign.right,
+                            maxLines: 2,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-        if (allDayRows > 0)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: _kHourLabelWidth,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 2, right: 4),
-                    child: Text(
-                      l10n.eventAllDay,
-                      style: labelStyle?.copyWith(fontSize: 9),
-                      textAlign: TextAlign.right,
-                      maxLines: 2,
-                    ),
-                  ),
-                ),
-                for (final list in allDay)
-                  Expanded(
-                    child: Column(
-                      children: [
-                        for (final e in list.take(3))
-                          GestureDetector(
-                            onTap: () => widget.onEntryTap(e),
-                            child: _MonthChip(entry: e, height: 18, dim: false),
+                      ),
+                      for (var i = 0; i < days.length; i++)
+                        Expanded(
+                          child: Column(
+                            children: [
+                              if (holidays[i] != null)
+                                HolidayChip(
+                                  holiday: holidays[i]!,
+                                  full: single,
+                                  height: single ? 20 : kMonthChipTwoLine,
+                                  lines: single ? 1 : 2,
+                                ),
+                              for (final e in allDay[i].take(3))
+                                GestureDetector(
+                                  onTap: () => widget.onEntryTap(e),
+                                  child: _MonthChip(
+                                    entry: e,
+                                    height: single ? 20 : kMonthChipTwoLine,
+                                    lines: single ? 1 : 2,
+                                    dim: false,
+                                  ),
+                                ),
+                              if (allDay[i].length > 3)
+                                Text(
+                                  '+${allDay[i].length - 3}',
+                                  style: labelStyle,
+                                ),
+                            ],
                           ),
-                        if (list.length > 3)
-                          Text('+${list.length - 3}', style: labelStyle),
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
-        Divider(height: 1, color: line),
+        ),
         Expanded(
           child: SingleChildScrollView(
             controller: _scroll,
@@ -741,16 +884,19 @@ class _WeekPageState extends State<WeekPage> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          for (final d in days)
+                          for (var i = 0; i < days.length; i++)
                             Expanded(
                               child: _WeekDayColumn(
-                                day: d,
+                                day: days[i],
+                                tint: columnTint(i),
                                 blocks: timedBlocksFor(
-                                  d,
-                                  agenda[dayKey(d)] ?? const [],
+                                  days[i],
+                                  agenda[dayKey(days[i])] ?? const [],
                                 ),
                                 hourHeight: h,
-                                now: d == widget.today ? widget.now : null,
+                                now: days[i] == widget.today
+                                    ? widget.now
+                                    : null,
                                 line: line,
                                 onSlotTap: widget.onSlotTap,
                                 onEntryTap: widget.onEntryTap,
@@ -766,6 +912,78 @@ class _WeekPageState extends State<WeekPage> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Hafta başlığında bir gün: kısa ad + numara (bugün dolu daire, tatil
+/// kırmızı). Dokununca o günün sayfası (kullanıcı isteği 2026-11-07).
+class _WeekDayHeader extends StatelessWidget {
+  const _WeekDayHeader({
+    required this.day,
+    required this.today,
+    required this.holiday,
+    required this.onTap,
+  });
+
+  final DateTime day;
+  final DateTime today;
+  final Holiday? holiday;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isToday = day == today;
+    final off = holiday?.isOff ?? false;
+    final weekend = day.weekday >= DateTime.saturday;
+    final accent = off ? scheme.error : scheme.primary;
+    return Semantics(
+      button: onTap != null,
+      label: [
+        DateFormat.yMMMMEEEEd().format(day),
+        if (holiday != null) holiday!.name,
+      ].join(', '),
+      excludeSemantics: true,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
+            children: [
+              Text(
+                DateFormat.E().format(day),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: off || weekend ? accent : scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Container(
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: isToday
+                    ? BoxDecoration(color: accent, shape: BoxShape.circle)
+                    : null,
+                child: Text(
+                  '${day.day}',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: isToday
+                        ? (off ? scheme.onError : scheme.onPrimary)
+                        : off
+                        ? scheme.error
+                        : scheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -795,6 +1013,7 @@ class _HourLinesPainter extends CustomPainter {
 class _WeekDayColumn extends StatelessWidget {
   const _WeekDayColumn({
     required this.day,
+    this.tint,
     required this.blocks,
     required this.hourHeight,
     required this.now,
@@ -804,6 +1023,7 @@ class _WeekDayColumn extends StatelessWidget {
   });
 
   final DateTime day;
+  final Color? tint;
   final List<TimedBlock> blocks;
   final double hourHeight;
   final DateTime? now;
@@ -821,6 +1041,7 @@ class _WeekDayColumn extends StatelessWidget {
     final l10n = context.l10n;
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: tint,
         border: Border(left: BorderSide(color: line, width: 0.5)),
       ),
       child: LayoutBuilder(
@@ -934,6 +1155,7 @@ class YearPage extends StatelessWidget {
       events: data.events,
       tasks: data.tasks,
     ).range(DateTime(year), DateTime(year + 1)).keys.toSet();
+    final holidays = data.holidays.year(year);
     return LayoutBuilder(
       builder: (context, c) {
         final cols = c.maxWidth < 520
@@ -967,6 +1189,7 @@ class YearPage extends StatelessWidget {
                                   ), DateTime(year, r * cols + col + 1)),
                                   month: DateTime(year, r * cols + col + 1),
                                   busy: busy,
+                                  holidays: holidays,
                                   today: today,
                                   firstDow: firstDow,
                                   onTap: onMonthTap,
@@ -992,10 +1215,12 @@ class _MiniMonth extends StatelessWidget {
     required this.today,
     required this.firstDow,
     required this.onTap,
+    this.holidays = const {},
   });
 
   final DateTime month;
   final Set<String> busy;
+  final Map<String, Holiday> holidays;
   final DateTime today;
   final int firstDow;
   final void Function(DateTime month, Offset globalPosition) onTap;
@@ -1006,60 +1231,86 @@ class _MiniMonth extends StatelessWidget {
     final material = MaterialLocalizations.of(context);
     final start = gridStartFor(month, firstDow);
     final current = today.year == month.year && today.month == month.month;
-    const cell = TextStyle(fontSize: 9.5, height: 1.0);
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapUp: (d) => onTap(month, d.globalPosition),
-      child: Semantics(
-        button: true,
-        label: DateFormat.yMMMM().format(month),
-        excludeSemantics: true,
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 2, bottom: 4),
-                child: Text(
-                  DateFormat.MMMM().format(month),
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: current ? scheme.primary : scheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              Row(
+    const cell = TextStyle(fontSize: 10, height: 1.0);
+    // GÖRSEL (kullanıcı bulgusu 2026-11-07: yıl "düz"): her ay ayrı kâğıt
+    // kart; bu ay vurgu kenarlı. Hafta sonu sütunu tonlu, tatil kırmızı,
+    // kayıtlı gün altında nokta.
+    return Padding(
+      padding: const EdgeInsets.all(3),
+      child: Material(
+        color: scheme.surfaceContainerLowest.withValues(alpha: 0.85),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: current
+                ? scheme.primary.withValues(alpha: 0.8)
+                : scheme.outlineVariant.withValues(alpha: 0.7),
+            width: current ? 1.4 : 0.8,
+          ),
+        ),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (d) => onTap(month, d.globalPosition),
+          child: Semantics(
+            button: true,
+            label: DateFormat.yMMMM().format(month),
+            excludeSemantics: true,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(4, 6, 4, 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (var i = 0; i < 7; i++)
-                    Expanded(
-                      child: Text(
-                        material.narrowWeekdays[(firstDow + i) % 7],
-                        textAlign: TextAlign.center,
-                        style: cell.copyWith(color: scheme.onSurfaceVariant),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4, bottom: 4),
+                    child: Text(
+                      DateFormat.MMMM().format(month),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: current ? scheme.primary : scheme.onSurface,
+                        fontWeight: FontWeight.w700,
                       ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      for (var i = 0; i < 7; i++)
+                        Expanded(
+                          child: Text(
+                            material.narrowWeekdays[(firstDow + i) % 7],
+                            textAlign: TextAlign.center,
+                            style: cell.copyWith(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              color:
+                                  (firstDow + i) % 7 == 0 ||
+                                      (firstDow + i) % 7 == 6
+                                  ? scheme.primary
+                                  : scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  for (var w = 0; w < 6; w++)
+                    Row(
+                      children: [
+                        for (var d = 0; d < 7; d++)
+                          Expanded(
+                            child: _miniDay(
+                              DateTime(
+                                start.year,
+                                start.month,
+                                start.day + w * 7 + d,
+                              ),
+                              scheme,
+                              cell,
+                            ),
+                          ),
+                      ],
                     ),
                 ],
               ),
-              const SizedBox(height: 3),
-              for (var w = 0; w < 6; w++)
-                Row(
-                  children: [
-                    for (var d = 0; d < 7; d++)
-                      Expanded(
-                        child: _miniDay(
-                          DateTime(
-                            start.year,
-                            start.month,
-                            start.day + w * 7 + d,
-                          ),
-                          scheme,
-                          cell,
-                        ),
-                      ),
-                  ],
-                ),
-            ],
+            ),
           ),
         ),
       ),
@@ -1067,32 +1318,59 @@ class _MiniMonth extends StatelessWidget {
   }
 
   Widget _miniDay(DateTime day, ColorScheme scheme, TextStyle style) {
-    if (day.month != month.month) return const SizedBox(height: 17);
+    if (day.month != month.month) return const SizedBox(height: 18);
     final isToday = day == today;
-    final has = busy.contains(dayKey(day));
+    final key = dayKey(day);
+    final has = busy.contains(key);
+    final holiday = holidays[key];
+    final off = holiday?.isOff ?? false;
+    final weekend = day.weekday >= DateTime.saturday;
     return SizedBox(
-      height: 17,
-      child: Center(
-        child: Container(
-          width: 16,
-          height: 16,
-          alignment: Alignment.center,
-          decoration: isToday
-              ? BoxDecoration(color: scheme.primary, shape: BoxShape.circle)
-              : has
-              ? BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.14),
-                  shape: BoxShape.circle,
-                )
-              : null,
-          child: Text(
-            '${day.day}',
-            style: style.copyWith(
-              color: isToday ? scheme.onPrimary : scheme.onSurface,
-              fontWeight: has || isToday ? FontWeight.w700 : FontWeight.w400,
+      height: 18,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 16,
+            height: 14,
+            alignment: Alignment.center,
+            decoration: isToday
+                ? BoxDecoration(
+                    color: off ? scheme.error : scheme.primary,
+                    borderRadius: BorderRadius.circular(7),
+                  )
+                : holiday != null
+                ? BoxDecoration(
+                    color: scheme.error.withValues(alpha: off ? 0.14 : 0.07),
+                    borderRadius: BorderRadius.circular(7),
+                  )
+                : null,
+            child: Text(
+              '${day.day}',
+              style: style.copyWith(
+                color: isToday
+                    ? (off ? scheme.onError : scheme.onPrimary)
+                    : holiday != null
+                    ? scheme.error
+                    : weekend
+                    ? scheme.onSurfaceVariant
+                    : scheme.onSurface,
+                fontWeight: has || isToday || off
+                    ? FontWeight.w700
+                    : FontWeight.w400,
+              ),
             ),
           ),
-        ),
+          Container(
+            width: 3,
+            height: 3,
+            margin: const EdgeInsets.only(top: 1),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: has ? scheme.primary : Colors.transparent,
+            ),
+          ),
+        ],
       ),
     );
   }

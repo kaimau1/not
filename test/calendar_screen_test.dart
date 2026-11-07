@@ -349,6 +349,53 @@ void main() {
       );
     });
 
+    // Kullanıcı isteği 2026-11-07: tatiller görünür; haftada üstteki güne
+    // dokununca gün sayfası; kısa hafta başlığı.
+    testWidgets('tatil ay hücresinde; hafta başlığı gün sayfasını açar', (
+      tester,
+    ) async {
+      await usePrefs({});
+      phone(tester);
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('calendar-step-left')));
+      await tester.pumpAndSettle();
+      expect(find.text('29 Ekim Bayramı'), findsOneWidget);
+      expect(find.text('Arife'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('calendar-view-menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Hafta').last);
+      await tester.pumpAndSettle();
+      expect(find.byType(WeekPage), findsOneWidget);
+      expect(find.textContaining('–'), findsWidgets);
+      await tester.tap(
+        find
+            .descendant(
+              of: find.byType(WeekPage),
+              matching: find.byType(InkWell),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(CalendarDayScreen), findsOneWidget);
+    });
+
+    testWidgets('tatiller ⋮ menüsünden kapanır', (tester) async {
+      await usePrefs({});
+      phone(tester);
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('calendar-step-left')));
+      await tester.pumpAndSettle();
+      expect(find.text('29 Ekim Bayramı'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('calendar-more')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('calendar-holidays-toggle')));
+      await tester.pumpAndSettle();
+      expect(find.text('29 Ekim Bayramı'), findsNothing);
+    });
+
     // "Yeni etkinlik açılırken ciddi kasma": klavye levha açıldıktan SONRA.
     testWidgets('yeni etkinlik: başlık odağı açılış animasyonu bitince', (
       tester,

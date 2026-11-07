@@ -7,6 +7,7 @@ import 'package:notlar/features/notes/presentation/notes_providers.dart'
 //   flutter test tool/tour/screen_tour_test.dart
 //   (çıktı: build/tour/*.png — TOUR_OUT ile değiştirilebilir)
 //   TOUR_ONLY=ana,n1  süz · TOUR_DARK=1  koyu · TOUR_WEB=1  dar web
+//   TOUR_COLUMNS=3  ana ekran sütun sayısı
 //   TOUR_COMPARE=<eski klasör>  önce/sonra: her PNG için değişen piksel yüzdesi
 //   basılır (`TOUR_FARK ad %x`), özet `<çıktı>/_fark.txt`.
 //
@@ -407,6 +408,8 @@ Future<void> _pumpApp(
       TipOnce.semanticSearch,
       TipOnce.homeMicHold,
     ],
+    // TOUR_COLUMNS=3|4: dar sütunlu ana ekran (kart sıkışması).
+    'grid_columns': ?int.tryParse(Platform.environment['TOUR_COLUMNS'] ?? ''),
   });
   final sp = await SharedPreferences.getInstance();
   tester.view.physicalSize = Size(size.width, size.height);

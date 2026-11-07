@@ -577,6 +577,19 @@ jobs:
       - name: Cloud Functions bağımlılıklarını indir
         run: npm install --prefix functions
 
+      # Takvim tatil düzeltmeleri (2026-11-07): bayram uzatması / idari izin
+      # açıklanınca `tool/tatiller.json` düzenlenip main'e push edilir;
+      # uygulama `config/holidays`'i canlı okur (APK gerekmez). Değişmediyse
+      # betik yazmaz. Yazılamazsa yayın sürer (yerleşik tablo yedek).
+      - name: Tatil düzeltmelerini config/holidays'e yaz
+        continue-on-error: true
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-sa.json
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$GOOGLE_APPLICATION_CREDENTIALS"
+          node tool/set_holidays.js
+          rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
+
       # Kurallardan AYRI adım: Cloud Functions Blaze (ücretli) plan ister.
       # Proje henüz Blaze'e yükseltilmediyse bu adım başarısız olur ama
       # `continue-on-error` sayesinde geri kalan yayın (kurallar + web)

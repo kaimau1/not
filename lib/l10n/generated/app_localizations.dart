@@ -13076,6 +13076,18 @@ abstract class AppLocalizations {
   /// **'Bir etkinliğe bağla'**
   String get calendarLinkToEvent;
 
+  /// No description provided for @calendarHolidays.
+  ///
+  /// In tr, this message translates to:
+  /// **'Resmî ve dinî tatiller'**
+  String get calendarHolidays;
+
+  /// No description provided for @calendarHolidayEstimated.
+  ///
+  /// In tr, this message translates to:
+  /// **'tahmini'**
+  String get calendarHolidayEstimated;
+
   /// No description provided for @calendarDayNote.
   ///
   /// In tr, this message translates to:

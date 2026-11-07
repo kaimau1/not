@@ -18,6 +18,7 @@ import '../../../core/utils/youtube.dart';
 import '../data/pdf/pdf_page_render.dart';
 import '../data/video_frame.dart';
 import '../domain/attachment.dart';
+import 'note_card.dart' show noteCardSqueeze;
 import 'drive_ui.dart';
 import 'viewers/ink_layer.dart';
 import '../domain/note.dart';
@@ -449,6 +450,9 @@ class _DocumentCard extends StatelessWidget {
               ],
             ),
           ),
+          // Çok dar kartta (4 sütun) ad sığmıyor, harf harf kesiliyordu:
+          // yalnız kâğıt kalır.
+          if (noteCardSqueeze(context) < 2) ...[
           const SizedBox(width: 8),
           Expanded(
             child: Align(
@@ -465,6 +469,7 @@ class _DocumentCard extends StatelessWidget {
               ),
             ),
           ),
+          ],
         ],
       ),
     );
