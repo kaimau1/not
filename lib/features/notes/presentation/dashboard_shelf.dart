@@ -20,10 +20,12 @@ extension _DashShelf on _DashboardScreenState {
     // "Gelen" seçiliyken de şerit (klasör seçiliyken olduğu gibi): çip
     // vurgulu görünsün, karo rafı notların yerini kaplamasın.
     if (selectedFolderId != null || hubSelected || sharedFolder != null) {
-      return _folderStrip(
-        folders,
-        selectedFolderId: selectedFolderId,
-        sharedFolder: sharedFolder,
+      return SliverToBoxAdapter(
+        child: _folderStrip(
+          folders,
+          selectedFolderId: selectedFolderId,
+          sharedFolder: sharedFolder,
+        ),
       );
     }
     // **YER SORUNU** (kullanıcı isteği 2026-08-18: "klasörler ana ekranda çok
@@ -33,7 +35,7 @@ extension _DashShelf on _DashboardScreenState {
     // karo görünümü tek dokunuşla geri gelir ve tercih hatırlanır (bkz.
     // [folderShelfExpandedProvider]).
     if (!ref.watch(folderShelfExpandedProvider)) {
-      return _folderStrip(folders);
+      return SliverToBoxAdapter(child: _folderStrip(folders));
     }
     // **PAYLAŞILAN klasörler AYNI RAFTA** (kullanıcı isteği 2026-08-18:
     // "ortak notlar klasörü kişiler bağlanır notları ortak görür"). Kendi
@@ -171,7 +173,8 @@ extension _DashShelf on _DashboardScreenState {
     // Bir klasörün içinde miyiz (kendi, Gelen ya da paylaşılan)?
     final inFolder =
         selectedFolderId != null || hubOn || sharedFolder != null;
-    return SliverToBoxAdapter(
+    return KeyedSubtree(
+      key: const ValueKey('home-folder-strip'),
       child: SizedBox(
         // 48 dp: baştaki "Ana sayfa" düğmesi tam dokunma yüksekliği alsın;
         // çiplerin kendisi yine 32 dp (dikey dolgu 8 + 8).
@@ -182,21 +185,34 @@ extension _DashShelf on _DashboardScreenState {
             // menüye dön düğmesi olmalı, kaydırmayı bilmeyen ne yapacak"):
             // klasör içindeyken şeridin başında SABİT — kaydırılınca
             // kaybolmasın.
-            if (inFolder)
-              Padding(
-                padding: const EdgeInsetsDirectional.only(start: 8),
-                child: IconButton.filledTonal(
-                  key: const ValueKey('home-strip-go-home'),
-                  tooltip: context.l10n.goHome,
-                  icon: const Icon(Icons.home_outlined, size: 20),
-                  onPressed: () {
-                    ref.read(selectedFolderProvider.notifier).set(null);
-                    ref.read(selectedSharedFolderProvider.notifier).set(null);
-                    ref.read(sharedHubOnHomeProvider.notifier).set(false);
-                    unawaited(HapticFeedback.selectionClick());
-                  },
-                ),
-              ),
+            //
+            // 2026-11-07: ana sayfada da YERİNDE (dolu = "buradasın"):
+            // yalnız klasör içindeyken çizilince her giriş/çıkışta bütün
+            // şerit 56 dp sağa-sola sıçrıyordu.
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 8),
+              child: inFolder
+                  ? IconButton.filledTonal(
+                      key: const ValueKey('home-strip-go-home'),
+                      tooltip: context.l10n.goHome,
+                      icon: const Icon(Icons.home_outlined, size: 20),
+                      onPressed: () {
+                        ref.read(selectedFolderProvider.notifier).set(null);
+                        ref
+                            .read(selectedSharedFolderProvider.notifier)
+                            .set(null);
+                        ref.read(sharedHubOnHomeProvider.notifier).set(false);
+                        unawaited(HapticFeedback.selectionClick());
+                      },
+                    )
+                  : IconButton.filled(
+                      key: const ValueKey('home-strip-at-home'),
+                      tooltip: context.l10n.goHome,
+                      isSelected: true,
+                      icon: const Icon(Icons.home, size: 20),
+                      onPressed: _backToTop,
+                    ),
+            ),
             Expanded(
               child: ListView(
                 scrollDirection: Axis.horizontal,

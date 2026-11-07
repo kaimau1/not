@@ -1707,14 +1707,44 @@ class _EnsureVisibleState extends State<_EnsureVisible> {
     if (widget.active && !oldWidget.active) _reveal();
   }
 
+  /// EN KISA kaydırma (2026-11-07): çip zaten tümüyle görünüyorsa şerit
+  /// KIPIRDAMAZ; taşıyorsa yalnız kenara (+24 dp pay) gelecek kadar kayar.
+  /// Eskiden her seçimde ortalanıyordu (`alignment: 0.5`) — yana çekişin her
+  /// adımında bütün şerit kayıyordu.
   void _reveal() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      Scrollable.ensureVisible(
-        context,
-        alignment: 0.5,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
+      final box = context.findRenderObject();
+      final position = Scrollable.maybeOf(context)?.position;
+      if (box == null || position == null || !position.hasPixels) return;
+      final viewport = RenderAbstractViewport.maybeOf(box);
+      if (viewport == null) return;
+      const margin = 24.0;
+      final atStart = viewport.getOffsetToReveal(box, 0).offset - margin;
+      final atEnd = viewport.getOffsetToReveal(box, 1).offset + margin;
+      final double target;
+      if (position.pixels > atStart) {
+        target = atStart;
+      } else if (position.pixels < atEnd) {
+        target = atEnd;
+      } else {
+        return; // tümüyle görünüyor
+      }
+      final to = target.clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      );
+      if ((to - position.pixels).abs() < 1) return;
+      if (!motionOf(context)) {
+        position.jumpTo(to);
+        return;
+      }
+      unawaited(
+        position.animateTo(
+          to,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+        ),
       );
     });
   }

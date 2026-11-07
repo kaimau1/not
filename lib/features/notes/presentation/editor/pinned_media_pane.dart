@@ -246,6 +246,10 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   /// (bkz. [PdfPageBox.addingBubbles]).
   final _pdfAdding = ValueNotifier<bool>(false);
 
+  /// Belge kutusunun denetimleri bu çubukta (2026-11-07: kutunun üstündeki
+  /// gri sayfa şeridi kaldırıldı — bkz. [PdfBoxBar]).
+  final _pdfBar = PdfBoxBar();
+
   /// Sabit PDF'in bırakma kipinde açık metin mi (bkz. [PdfPageBox.addingPlain]).
   final _pdfPlain = ValueNotifier<bool>(false);
 
@@ -429,6 +433,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     _ownBubbles?.dispose();
     _imageBubbles?.dispose();
     _pdfAdding.dispose();
+    _pdfBar.dispose();
     _pdfPlain.dispose();
     // Ağaç kilitliyken üst ekranın setState'i çağrılmaz: kare sonuna.
     final immersive = widget.onImmersiveChanged;
@@ -721,6 +726,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                             addingPlain: _pdfPlain,
                             onBubbleWriting: _setWriting,
                             fitWidth: true,
+                            externalBar: _pdfBar,
                             onNoteFromSelection: widget.onPdfNote,
                           ),
                         ),
@@ -968,7 +974,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     final isAudio = widget.media.kind == AttachmentKind.audio;
     final isPdf = widget.media.kind == AttachmentKind.pdf;
     final timed = isVideo || isAudio;
-    final noteAtLabel = !timed || width >= 430;
+    // PDF'te sayfa denetimleri de bu çubukta: dar ekranda "Not al" yazısı
+    // düşer (simge kalır).
+    final noteAtLabel = isPdf ? width >= 420 : (!timed || width >= 430);
     // PDF'te "Not al" o anki SAYFAYA not açar (zamanlı medyada o ANA).
     final noteAtIcon = isPdf ? Icons.edit_note : Icons.more_time;
     final noteAtTooltip = isPdf ? l10n.pdfNoteAtPage : l10n.videoNoteAtTime;
@@ -993,6 +1001,16 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             // Çubukta < 430 dp'de sığmaz (⋮ taşıyordu): orada menüde
             // (bkz. [_rotateInMenu]; cihaz turu 2026-11-05).
             showRotate: width >= 430,
+          ),
+        // BELGE DENETİMLERİ (eski yüzen şeritten): ‹ n/N › · balonlar ·
+        // yer imi · belge menüsü.
+        if (isPdf)
+          ListenableBuilder(
+            listenable: _pdfBar,
+            builder: (context, _) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: _pdfBar.buildControls(context, width),
+            ),
           ),
         Expanded(
           child: Semantics(

@@ -320,14 +320,8 @@ extension _EditorAttachments on _NoteEditorScreenState {
     final l10n = context.l10n;
     List<String>? pages;
     if (DocumentScan.supported) {
-      // Manifest'te CAMERA bildirildiği için Android çekim niyetini izin
-      // olmadan REDDEDER (bkz. _takePhoto).
-      final perms = ref.read(permissionsServiceProvider);
-      if (!await perms.cameraGranted() && !await perms.requestCamera()) {
-        if (mounted) _showSnack(l10n.permCameraInfo);
-        return;
-      }
-      if (!mounted) return;
+      // Kamera izni SORULMAZ: Google tarayıcısı izinsiz çalışır; gerekirse
+      // (Play Hizmetleri yoksa) DocumentScan.scanPages kendisi ister.
       try {
         pages = await DocumentScan.scanPages();
       } catch (e) {

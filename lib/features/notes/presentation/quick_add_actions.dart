@@ -218,12 +218,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       return;
     }
     final l10n = context.l10n;
-    final perms = ref.read(permissionsServiceProvider);
-    if (!await perms.cameraGranted() && !await perms.requestCamera()) {
-      if (mounted) showQuickAddSnack(l10n.permCameraInfo);
-      return;
-    }
-    if (!mounted) return;
+    // Kamera izni SORULMAZ (bkz. DocumentScan.scanPages).
     final picked = await ImagePicker().pickVideo(source: ImageSource.camera);
     if (picked == null || !mounted) return;
     // Kare çıkarmak (uzun videoda birkaç saniye) sessiz beklemesin.
@@ -266,12 +261,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       return;
     }
     final l10n = context.l10n;
-    final perms = ref.read(permissionsServiceProvider);
-    if (!await perms.cameraGranted() && !await perms.requestCamera()) {
-      if (mounted) showQuickAddSnack(l10n.permCameraInfo);
-      return;
-    }
-    if (!mounted) return;
+    // Kamera izni SORULMAZ (bkz. DocumentScan.scanPages).
     final picked = await ImagePicker().pickImage(
       source: ImageSource.camera,
       maxWidth: 2400,
@@ -311,12 +301,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       return;
     }
     final l10n = context.l10n;
-    final perms = ref.read(permissionsServiceProvider);
-    if (!await perms.cameraGranted() && !await perms.requestCamera()) {
-      if (mounted) showQuickAddSnack(l10n.permCameraInfo);
-      return;
-    }
-    if (!mounted) return;
+    // Kamera izni SORULMAZ (bkz. DocumentScan.scanPages).
     List<String>? pages;
     try {
       pages = await DocumentScan.scanPages();
