@@ -368,7 +368,14 @@ class _SplitShellState extends ConsumerState<SplitShell> {
                   child: DashboardPaneScope(
                     singleColumn: noteOpen,
                     anchorNoteId: _lastNoteId,
-                    child: const DashboardScreen(),
+                    // Not açıkken klavye NOTUN: liste daralıp düğmeleri
+                    // kartların üstüne itmesin (tablet bulgusu 2026-11-07).
+                    // Sarma HEP var (ağaç şekli sabit, liste State'i korunur).
+                    child: MediaQuery.removeViewInsets(
+                      context: context,
+                      removeBottom: noteOpen,
+                      child: const DashboardScreen(),
+                    ),
                   ),
                 ),
                 builder: (context, open, pane) => ClipRect(
