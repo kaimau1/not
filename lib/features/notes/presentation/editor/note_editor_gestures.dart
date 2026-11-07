@@ -176,7 +176,7 @@ extension _EditorGestures on _NoteEditorScreenState {
     if (_readOnly || _gestureMode != _GestureMode.off) return false;
     if (!ref.read(itemGesturesProvider)) return false;
     // Kalem sayfaya yazıyor (bkz. PageInkStack): maddede de jest değil yazı.
-    if (_pageInkCtl?.accepts(event.kind) ?? false) return false;
+    if (_pageInkCtl?.claims(event.kind) ?? false) return false;
     final items = _itemsEditorKey.currentState;
     if (items == null || items.isSelecting) return false;
     if (items.itemIdAt(event.position) == null) return false;

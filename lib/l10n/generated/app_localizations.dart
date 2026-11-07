@@ -6614,6 +6614,18 @@ abstract class AppLocalizations {
   /// **'Notu kapat'**
   String get shortcutCloseNote;
 
+  /// No description provided for @softKeyboardShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sanal klavyeyi aç (fiziksel klavye takılı)'**
+  String get softKeyboardShow;
+
+  /// No description provided for @softKeyboardHide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sanal klavyeyi kapat'**
+  String get softKeyboardHide;
+
   /// No description provided for @goHome.
   ///
   /// In tr, this message translates to:

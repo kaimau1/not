@@ -48,6 +48,7 @@ import '../../../../core/tips.dart';
 import '../../../../core/utils/debouncer.dart';
 import '../../../../core/utils/doc_picker.dart';
 import '../../../../core/utils/format_bytes.dart';
+import '../../../../core/utils/hard_keyboard.dart';
 import '../../../../core/utils/voice_commands.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/attachment_tag.dart';
@@ -4341,6 +4342,27 @@ child: NoteFindBar(
                   icon: const Icon(Icons.home_outlined),
                   onPressed: () => goHome(ref, GoRouter.of(context)),
                 ),
+              // ⌨ SANAL KLAVYE: yalnız fiziksel klavye takılıyken (tablet
+              // bulgusu 2026-11-07); o sırada sanal klavye kendiliğinden
+              // açılmaz (bkz. [HardKeyboard]).
+              ValueListenableBuilder<bool>(
+                valueListenable: HardKeyboard.present,
+                builder: (context, present, _) => !present
+                    ? const SizedBox.shrink()
+                    : ValueListenableBuilder<bool>(
+                        valueListenable: HardKeyboard.softWanted,
+                        builder: (context, soft, _) => IconButton(
+                          key: const ValueKey('editor-soft-keyboard'),
+                          tooltip: soft
+                              ? l10n.softKeyboardHide
+                              : l10n.softKeyboardShow,
+                          isSelected: soft,
+                          icon: const Icon(Icons.keyboard_outlined),
+                          selectedIcon: const Icon(Icons.keyboard_hide_outlined),
+                          onPressed: HardKeyboard.toggleSoft,
+                        ),
+                      ),
+              ),
               // Ortak notta başka biri düzenliyorsa (F4.1).
               NotePresenceIndicator(
                 noteId: widget.noteId,

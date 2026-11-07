@@ -3681,6 +3681,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shortcutCloseNote => 'Notu kapat';
 
   @override
+  String get softKeyboardShow => 'Sanal klavyeyi aç (fiziksel klavye takılı)';
+
+  @override
+  String get softKeyboardHide => 'Sanal klavyeyi kapat';
+
+  @override
   String get goHome => 'Ana sayfaya dön';
 
   @override

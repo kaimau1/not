@@ -121,6 +121,20 @@ void main() {
       expect(t.focus.hasFocus, isFalse);
     });
 
+    testWidgets('kalem kipi kapalıyken tek başına kalem tıkı metne gider', (
+      tester,
+    ) async {
+      final t = await _pump(tester);
+      t.ink.passStylusTaps = true;
+      await tester.tapAt(
+        tester.getCenter(find.byType(TextField)),
+        kind: PointerDeviceKind.stylus,
+      );
+      await tester.pumpAndSettle();
+      expect(t.ink.ink, isEmpty);
+      expect(t.focus.hasFocus, isTrue);
+    });
+
     testWidgets('kalemden sonra parmakla dokununca klavyeyle yazılır '
         '(yazı çizimin altında kalmaz)', (tester) async {
       final t = await _pump(tester);
@@ -129,6 +143,10 @@ void main() {
       await pen.moveBy(const Offset(60, 0));
       await pen.up();
       await tester.pumpAndSettle();
+      // Kalem kalktıktan hemen sonraki dokunuş avuç sayılır (avuç reddi).
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 450)),
+      );
       await tester.tapAt(at);
       await tester.pumpAndSettle();
       expect(t.focus.hasFocus, isTrue);

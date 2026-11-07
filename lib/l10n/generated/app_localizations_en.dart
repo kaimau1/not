@@ -3685,6 +3685,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutCloseNote => 'Close note';
 
   @override
+  String get softKeyboardShow =>
+      'Show on-screen keyboard (hardware keyboard connected)';
+
+  @override
+  String get softKeyboardHide => 'Hide on-screen keyboard';
+
+  @override
   String get goHome => 'Back to home';
 
   @override
