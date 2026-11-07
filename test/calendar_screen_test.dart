@@ -311,6 +311,44 @@ void main() {
       expect(find.text('Görevler'), findsOneWidget);
     });
 
+    // Kullanıcı isteği 2026-11-07: telefonda da ileri/geri; güne çift
+    // dokununca yalnız o günün sayfası.
+    testWidgets('telefonda ileri/geri ay; çift dokunuş gün sayfası', (
+      tester,
+    ) async {
+      await usePrefs({});
+      phone(tester);
+      await tester.pumpWidget(app(events: [meeting]));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('calendar-step-right')));
+      await tester.pumpAndSettle();
+      expect(find.text('Aralık 2026'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('calendar-step-left')));
+      await tester.pumpAndSettle();
+      expect(find.text('Kasım 2026'), findsOneWidget);
+
+      final cell = find.descendant(
+        of: find.byType(MonthPage),
+        matching: find.text('12'),
+      );
+      await tester.tap(cell);
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(cell);
+      await tester.pumpAndSettle();
+      expect(find.byType(CalendarDayScreen), findsOneWidget);
+      final dayTitle = DateFormat.yMMMMEEEEd();
+      expect(
+        find.text(dayTitle.format(DateTime(2026, 11, 12))),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('day-page-next')));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(dayTitle.format(DateTime(2026, 11, 13))),
+        findsOneWidget,
+      );
+    });
+
     // "Yeni etkinlik açılırken ciddi kasma": klavye levha açıldıktan SONRA.
     testWidgets('yeni etkinlik: başlık odağı açılış animasyonu bitince', (
       tester,
