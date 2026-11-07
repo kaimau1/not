@@ -41,7 +41,7 @@ class AndroidGoogleAuth implements AuthRepository {
     try {
       credential = await _googleCredential();
     } on _UseBrowserFlow {
-      return _auth.signInWithProvider(_browserProvider());
+      return browserFlow(() => _auth.signInWithProvider(_browserProvider()));
     }
     return _auth.signInWithCredential(credential);
   }
@@ -57,7 +57,7 @@ class AndroidGoogleAuth implements AuthRepository {
     try {
       credential = await _googleCredential();
     } on _UseBrowserFlow {
-      return user.linkWithProvider(_browserProvider());
+      return browserFlow(() => user.linkWithProvider(_browserProvider()));
     }
     return user.linkWithCredential(credential);
   }

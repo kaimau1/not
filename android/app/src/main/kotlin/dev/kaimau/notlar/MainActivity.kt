@@ -413,6 +413,21 @@ class MainActivity : FlutterFragmentActivity() {
                     // "Dosyaları Dosya Okuyucu ile seç" satırı yalnız o zaman
                     // görünür.
                     "fileAppInstalled" -> result.success(fileAppResolves())
+                    // Tarayıcıdaki Google girişi/izni bitti: uygulamayı öne al.
+                    // Huawei tarayıcısı özel sekmeyi AYRI görevde açıyor;
+                    // Firebase dönüşü onu kapatmıyor, kullanıcı boş
+                    // "about:blank" sayfasında kalıyordu (tablet 2026-11-07).
+                    // Etkinlik az önce bittiği için arka plandan öne alma izni
+                    // (10 sn) geçerli.
+                    "bringToFront" -> {
+                        try {
+                            (getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager)
+                                .moveTaskToFront(taskId, 0)
+                        } catch (e: Exception) {
+                            Log.w("MainActivity", "Öne alınamadı: ${e.javaClass.simpleName}")
+                        }
+                        result.success(null)
+                    }
                     // Google Play Hizmetleri kurulu mu (Huawei/HarmonyOS'ta
                     // yok): yoksa Google yetkileri doğrudan tarayıcıdan alınır.
                     "gmsInstalled" -> result.success(

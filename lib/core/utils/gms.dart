@@ -24,3 +24,20 @@ Future<bool> _probe() async {
     return true;
   }
 }
+
+/// Firebase'in tarayıcı (Custom Tabs) akışını çalıştırır, bitince uygulamayı
+/// öne alır: Huawei tarayıcısı sekmeyi ayrı görevde açıyor, dönüşte
+/// kullanıcı boş "about:blank" sayfasında kalıyordu (tablet 2026-11-07).
+Future<T> browserFlow<T>(Future<T> Function() run) async {
+  try {
+    return await run();
+  } finally {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      try {
+        await const MethodChannel(
+          'dev.kaimau.notlar/system',
+        ).invokeMethod<void>('bringToFront');
+      } catch (_) {}
+    }
+  }
+}

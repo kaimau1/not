@@ -74,7 +74,9 @@ Future<({String token, DateTime expiry})?> browserScopeToken(
   }
   final email = user.email;
   if (email != null) provider.setCustomParameters({'login_hint': email});
-  final result = await user.reauthenticateWithProvider(provider);
+  final result = await browserFlow(
+    () => user.reauthenticateWithProvider(provider),
+  );
   final credential = result.credential;
   final token = credential is OAuthCredential ? credential.accessToken : null;
   if (token == null) return null;
