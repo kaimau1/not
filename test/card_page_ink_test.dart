@@ -35,7 +35,7 @@ void main() {
       matching: find.byType(CustomPaint),
     );
     expect(tester.getSize(paint), const Size(300, 300));
-    // Görünen pay çizginin altına kadar (0.5 × 300 + 4), en çok 120.
-    expect(tester.getSize(find.byType(ClipRect)).height, 120);
+    // Görünen pay çizginin üstünden altına: (0.5 − 0.3) × 300 + 8 = 68.
+    expect(tester.getSize(find.byType(ClipRect)).height, 68);
   });
 }
