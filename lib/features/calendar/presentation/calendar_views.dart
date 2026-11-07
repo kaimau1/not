@@ -98,7 +98,7 @@ String entryTitle(AgendaEntry e, AppLocalizations l10n) {
           ? ''
           : note.toPlainText().split('\n').first,
     RoutineEntry(:final routine) => routine.title,
-};
+  };
   final t = raw.trim();
   if (t.isNotEmpty) return t;
   return e is ReminderEntry ? l10n.remindersUntitled : l10n.eventUntitled;
@@ -120,8 +120,12 @@ class MonthPage extends StatelessWidget {
     required this.targets,
     required this.onDayTap,
     required this.onDayLongPress,
+    this.onDayDoubleTap,
     this.onEntryMove,
   });
+
+  /// Güne çift dokunuş: yalnız o günün sayfası açılır.
+  final ValueChanged<DateTime>? onDayDoubleTap;
 
   /// Kayıt başka güne SÜRÜKLENİP bırakıldı (F47.5); null = taşıma yok.
   final void Function(AgendaEntry entry, DateTime day)? onEntryMove;
@@ -143,7 +147,7 @@ class MonthPage extends StatelessWidget {
       start,
       DateTime(start.year, start.month, start.day + 42),
     );
-    final line = scheme.outlineVariant.withValues(alpha: 0.45);
+    final line = scheme.outlineVariant.withValues(alpha: 0.7);
     return Column(
       children: [
         Row(
@@ -157,57 +161,64 @@ class MonthPage extends StatelessWidget {
                     DateFormat.E().dateSymbols.SHORTWEEKDAYS[(firstDow + i) %
                         7],
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.labelSmall
-                        ?.copyWith(color: scheme.onSurfaceVariant),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: (firstDow + i) % 7 == 0 || (firstDow + i) % 7 == 6
+                          ? scheme.primary
+                          : scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
           ],
         ),
-        Divider(height: 1, color: line),
         Expanded(
-          child: Column(
-            children: [
-              for (var w = 0; w < 6; w++)
-                Expanded(
-                  child: Row(
-                    key: targets.keyFor((
-                      'week-row',
-                      monthIndexOf(month),
-                      w,
-                    ), DateTime(start.year, start.month, start.day + w * 7)),
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (var d = 0; d < 7; d++)
-                        Expanded(
-                          child: _MonthCell(
-                            day: DateTime(
-                              start.year,
-                              start.month,
-                              start.day + w * 7 + d,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(3, 0, 3, 3),
+            child: Column(
+              children: [
+                for (var w = 0; w < 6; w++)
+                  Expanded(
+                    child: Row(
+                      key: targets.keyFor((
+                        'week-row',
+                        monthIndexOf(month),
+                        w,
+                      ), DateTime(start.year, start.month, start.day + w * 7)),
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (var d = 0; d < 7; d++)
+                          Expanded(
+                            child: _MonthCell(
+                              day: DateTime(
+                                start.year,
+                                start.month,
+                                start.day + w * 7 + d,
+                              ),
+                              month: month,
+                              today: today,
+                              selected: selected,
+                              entries:
+                                  agenda[dayKey(
+                                    DateTime(
+                                      start.year,
+                                      start.month,
+                                      start.day + w * 7 + d,
+                                    ),
+                                  )] ??
+                                  const [],
+                              line: line,
+                              onTap: onDayTap,
+                              onLongPress: onDayLongPress,
+                              onDoubleTap: onDayDoubleTap,
+                              onEntryMove: onEntryMove,
                             ),
-                            month: month,
-                            today: today,
-                            selected: selected,
-                            entries:
-                                agenda[dayKey(
-                                  DateTime(
-                                    start.year,
-                                    start.month,
-                                    start.day + w * 7 + d,
-                                  ),
-                                )] ??
-                                const [],
-                            line: line,
-                            onTap: onDayTap,
-                            onLongPress: onDayLongPress,
-                            onEntryMove: onEntryMove,
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
@@ -225,10 +236,12 @@ class _MonthCell extends StatelessWidget {
     required this.line,
     required this.onTap,
     required this.onLongPress,
+    this.onDoubleTap,
     this.onEntryMove,
   });
 
   final void Function(AgendaEntry entry, DateTime day)? onEntryMove;
+  final ValueChanged<DateTime>? onDoubleTap;
   final DateTime day;
   final DateTime month;
   final DateTime today;
@@ -292,91 +305,111 @@ class _MonthCell extends StatelessWidget {
     ColorScheme scheme,
     bool hovering,
   ) {
+    // KÂĞIT HÜCRELER (kullanıcı bulgusu 2026-11-07: "çok düz, günler
+    // arasında belli belirsiz çizgi var"): her gün masanın üstünde ayrı,
+    // köşesi yuvarlak bir kâğıt; hafta sonu hafif koyu, ay dışı günler
+    // sönük, bugün vurgu kenarlı. Gölge YOK (42 hücre × her kare — akıcılık
+    // bütçesi); hücre kendi `Material`ı: dokunma dalgası zeminin üstünde.
+    final weekend = day.weekday >= DateTime.saturday;
+    final radius = BorderRadius.circular(8);
+    final Color fill;
+    if (hovering) {
+      fill = scheme.primaryContainer.withValues(alpha: 0.7);
+    } else if (isSelected) {
+      fill = scheme.primaryContainer.withValues(alpha: 0.55);
+    } else if (!inMonth) {
+      fill = scheme.surfaceContainerLow.withValues(alpha: 0.3);
+    } else if (weekend) {
+      fill = scheme.surfaceContainerHigh.withValues(alpha: 0.85);
+    } else {
+      fill = scheme.surfaceContainerLowest.withValues(alpha: 0.85);
+    }
+    final side = isToday
+        ? BorderSide(color: scheme.primary, width: 1.5)
+        : isSelected
+        ? BorderSide(color: scheme.primary.withValues(alpha: 0.6))
+        : BorderSide(color: line, width: 0.8);
     return Semantics(
       button: true,
       label: DateFormat.yMMMMEEEEd().format(day),
-      child: InkWell(
-        onTap: () => onTap(day),
-        onLongPress: () => onLongPress(day),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: hovering
-                ? scheme.primaryContainer.withValues(alpha: 0.6)
-                : isSelected
-                ? scheme.primaryContainer.withValues(alpha: 0.35)
-                : null,
-            border: Border(
-              right: BorderSide(color: line, width: 0.5),
-              bottom: BorderSide(color: line, width: 0.5),
-            ),
-          ),
-          child: LayoutBuilder(
-            builder: (context, c) {
-              const chipH = 16.0;
-              final room = math.max(
-                0,
-                ((c.maxHeight - 24) / (chipH + 1)).floor(),
-              );
-              final fits = entries.length <= room;
-              final shown = fits ? entries.length : math.max(0, room - 1);
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 3, bottom: 2),
-                    child: Center(
-                      child: Container(
-                        width: 20,
-                        height: 20,
-                        alignment: Alignment.center,
-                        decoration: isToday
-                            ? BoxDecoration(
-                                color: scheme.primary,
-                                shape: BoxShape.circle,
-                              )
-                            : null,
-                        child: Text(
-                          '${day.day}',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: isToday
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: isToday
-                                ? scheme.onPrimary
-                                : inMonth
-                                ? scheme.onSurface
-                                : scheme.onSurfaceVariant.withValues(
-                                    alpha: 0.5,
-                                  ),
+      child: Padding(
+        padding: const EdgeInsets.all(1.5),
+        child: Material(
+          color: fill,
+          shape: RoundedRectangleBorder(borderRadius: radius, side: side),
+          child: InkWell(
+            borderRadius: radius,
+            onTap: () => onTap(day),
+            onDoubleTap: onDoubleTap == null ? null : () => onDoubleTap!(day),
+            onLongPress: () => onLongPress(day),
+            child: LayoutBuilder(
+              builder: (context, c) {
+                const chipH = 16.0;
+                final room = math.max(
+                  0,
+                  ((c.maxHeight - 24) / (chipH + 1)).floor(),
+                );
+                final fits = entries.length <= room;
+                final shown = fits ? entries.length : math.max(0, room - 1);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3, bottom: 2),
+                      child: Center(
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          alignment: Alignment.center,
+                          decoration: isToday
+                              ? BoxDecoration(
+                                  color: scheme.primary,
+                                  shape: BoxShape.circle,
+                                )
+                              : null,
+                          child: Text(
+                            '${day.day}',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: isToday
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: isToday
+                                  ? scheme.onPrimary
+                                  : inMonth
+                                  ? scheme.onSurface
+                                  : scheme.onSurfaceVariant.withValues(
+                                      alpha: 0.5,
+                                    ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  for (final e in entries.take(shown))
-                    _draggableChip(
-                      context,
-                      e,
-                      _MonthChip(entry: e, height: chipH, dim: !inMonth),
-                      c.maxWidth,
-                    ),
-                  if (!fits && entries.length > shown)
-                    SizedBox(
-                      height: chipH,
-                      child: Text(
-                        '+${entries.length - shown}',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                        semanticsLabel: l10n.calendarMoreDays,
+                    for (final e in entries.take(shown))
+                      _draggableChip(
+                        context,
+                        e,
+                        _MonthChip(entry: e, height: chipH, dim: !inMonth),
+                        c.maxWidth,
                       ),
-                    ),
-                ],
-              );
-            },
+                    if (!fits && entries.length > shown)
+                      SizedBox(
+                        height: chipH,
+                        child: Text(
+                          '+${entries.length - shown}',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                          semanticsLabel: l10n.calendarMoreDays,
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -521,7 +554,11 @@ class WeekPage extends StatefulWidget {
     required this.onEntryTap,
     required this.onDayTap,
     this.hourHeight = 52,
+    this.dayCount = 7,
   });
+
+  /// Gösterilen gün sayısı: hafta 7, gün sayfası 1.
+  final int dayCount;
 
   final DateTime weekStart;
   final CalendarData data;
@@ -560,7 +597,7 @@ class _WeekPageState extends State<WeekPage> {
   DateTime get _weekEnd => DateTime(
     widget.weekStart.year,
     widget.weekStart.month,
-    widget.weekStart.day + 7,
+    widget.weekStart.day + widget.dayCount,
   );
 
   @override
@@ -575,7 +612,7 @@ class _WeekPageState extends State<WeekPage> {
     final l10n = context.l10n;
     final h = widget.hourHeight;
     final days = [
-      for (var i = 0; i < 7; i++)
+      for (var i = 0; i < widget.dayCount; i++)
         DateTime(
           widget.weekStart.year,
           widget.weekStart.month,

@@ -50,6 +50,20 @@ final calendarReminderNotesProvider = Provider<List<Note>>((ref) {
   ];
 });
 
+/// Takvim görünümlerinin ortak verisi (ay/hafta ekranı ve gün sayfası aynı
+/// kaynaktan okur).
+final calendarDataProvider = Provider<CalendarData>((ref) {
+  final events = ref.watch(eventsStreamProvider);
+  final google = ref.watch(googleCalendarEventsProvider);
+  return CalendarData(
+    events: [...?events.value, ...google],
+    tasks: ref.watch(tasksStreamProvider).value ?? const <TaskItem>[],
+    reminders: ref.watch(calendarReminderNotesProvider),
+    routines: ref.watch(routinesStreamProvider).value ?? const [],
+    routineLogs: ref.watch(routineLogsStreamProvider).value ?? const {},
+  );
+});
+
 /// Geniş düzen eşiği: ajandada ay ızgarası solda sabit.
 const _kWideCalendar = 720.0;
 
@@ -367,6 +381,24 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
   }
 
+  /// Güne çift dokunuş (kullanıcı isteği 2026-11-07): yalnız o günün
+  /// sayfası — tek günlük saat çizelgesi, ileri/geri gün.
+  void _openDayPage(DateTime day) {
+    setState(() => _selected = startOfDay(day));
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => CalendarDayScreen(
+            day: startOfDay(day),
+            today: _today,
+            now: widget.now,
+            onEntryTap: _openEntry,
+          ),
+        ),
+      ),
+    );
+  }
+
   String _title(AppLocalizations l10n) => switch (_view) {
     CalendarView.year => '${_focus.year}',
     CalendarView.month => DateFormat.yMMMM().format(_focus),
@@ -407,18 +439,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final events = ref.watch(eventsStreamProvider);
-    final tasks = ref.watch(tasksStreamProvider).value ?? const <TaskItem>[];
-    final reminders = ref.watch(calendarReminderNotesProvider);
-    final google = ref.watch(googleCalendarEventsProvider);
-    final eventList = [...?events.value, ...google];
-    final data = CalendarData(
-      events: eventList,
-      tasks: tasks,
-      reminders: reminders,
-      routines: ref.watch(routinesStreamProvider).value ?? const [],
-      routineLogs: ref.watch(routineLogsStreamProvider).value ?? const {},
-    );
+    final data = ref.watch(calendarDataProvider);
     final wide = MediaQuery.sizeOf(context).width >= _kWideCalendar;
     final paged = _view != CalendarView.agenda;
 
@@ -449,9 +470,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           : Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (paged && wide)
+                // İLERİ/GERİ (kullanıcı isteği 2026-11-07): dar ekranda da
+                // var; yalnız kaydırma bilinmiyordu. Sıkı düğme — ay başlığına
+                // yer kalsın (bkz. aşağıdaki "AY BAŞLIĞI GÖRÜNMÜYORDU").
+                if (paged)
                   IconButton(
+                    key: const ValueKey('calendar-step-left'),
                     tooltip: l10n.calendarPrevious,
+                    visualDensity: wide ? null : VisualDensity.compact,
+                    constraints: wide
+                        ? null
+                        : const BoxConstraints(minWidth: 36, minHeight: 40),
+                    padding: wide ? null : EdgeInsets.zero,
                     icon: const Icon(Icons.chevron_left),
                     onPressed: () => _step(-1),
                   ),
@@ -464,9 +494,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     ),
                   ),
                 ),
-                if (paged && wide)
+                // İLERİ/GERİ (kullanıcı isteği 2026-11-07): dar ekranda da
+                // var; yalnız kaydırma bilinmiyordu. Sıkı düğme — ay başlığına
+                // yer kalsın (bkz. aşağıdaki "AY BAŞLIĞI GÖRÜNMÜYORDU").
+                if (paged)
                   IconButton(
+                    key: const ValueKey('calendar-step-right'),
                     tooltip: l10n.calendarNext,
+                    visualDensity: wide ? null : VisualDensity.compact,
+                    constraints: wide
+                        ? null
+                        : const BoxConstraints(minWidth: 36, minHeight: 40),
+                    padding: wide ? null : EdgeInsets.zero,
                     icon: const Icon(Icons.chevron_right),
                     onPressed: () => _step(1),
                   ),
@@ -642,6 +681,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             targets: _targets,
             onDayTap: (d) => unawaited(_showDay(d, data)),
             onEntryMove: _moveEntry,
+            onDayDoubleTap: _openDayPage,
             onDayLongPress: (d) {
               setState(() => _selected = d);
               unawaited(showEventEditor(context, day: d));
@@ -859,6 +899,49 @@ class _PagedViewState extends State<_PagedView> {
   );
 }
 
+/// "Bu güne not" (F49.1): güne bağlı, başlığı günün adı olan not varsa
+/// açar; yoksa oluşturur ve güne bağlar.
+///
+/// SİYAH EKRAN (kullanıcı bulgusu 2026-11-07): not ham `/note/:id` yoluyla
+/// push ediliyordu; takvim SplitShell kabuğunun DIŞINDA olduğundan ikinci
+/// bir kabuk kuruluyordu (bkz. [notePushPath]). Yol konuma göre seçilir.
+Future<void> openDayNote(
+  BuildContext context,
+  WidgetRef ref,
+  DateTime day, {
+  bool popFirst = false,
+}) async {
+  final notes = ref.read(notesRepositoryProvider);
+  final calendar = ref.read(calendarRepositoryProvider);
+  if (notes == null || calendar == null) return;
+  final key = dayKey(day);
+  final title = dayNoteTitle(day);
+  final linked = ref.read(dayLinksStreamProvider).value?[key] ?? const [];
+  final all = ref.read(notesStreamProvider).value ?? const <Note>[];
+  final existing = all
+      .where(
+        (n) =>
+            linked.contains(n.id) &&
+            n.deletedAt == null &&
+            n.title.trim() == title,
+      )
+      .firstOrNull;
+  // Sayfasız rota (gün sayfası) bilgisi pop'tan ÖNCE alınır.
+  final router = GoRouter.of(context);
+  final route = ModalRoute.of(context);
+  final pageless = !popFirst && route != null && route.settings is! Page;
+  if (popFirst) Navigator.pop(context);
+  final id =
+      existing?.id ?? await notes.createNote(NoteType.text, title: title);
+  if (existing == null) calendar.linkNoteToDay(key, id);
+  final path = noteRoutePath(id);
+  unawaited(
+    pageless
+        ? router.push('$kOutsideShellNotePrefix$path')
+        : router.pushNote(path),
+  );
+}
+
 /// Ay/hafta görünümünde güne dokununca: o günün kayıtları + yeni etkinlik /
 /// görev.
 class _DaySheet extends ConsumerWidget {
@@ -875,32 +958,6 @@ class _DaySheet extends ConsumerWidget {
   final CalendarData data;
   final VoidCallback onNewEvent;
   final VoidCallback onNewTask;
-
-  /// "Bu güne not" (F49.1): güne bağlı, başlığı günün adı olan not varsa
-  /// açar; yoksa oluşturur ve güne bağlar.
-  Future<void> _dayNote(BuildContext context, WidgetRef ref) async {
-    final notes = ref.read(notesRepositoryProvider);
-    final calendar = ref.read(calendarRepositoryProvider);
-    if (notes == null || calendar == null) return;
-    final key = dayKey(day);
-    final title = dayNoteTitle(day);
-    final linked = ref.read(dayLinksStreamProvider).value?[key] ?? const [];
-    final all = ref.read(notesStreamProvider).value ?? const <Note>[];
-    final existing = all
-        .where(
-          (n) =>
-              linked.contains(n.id) &&
-              n.deletedAt == null &&
-              n.title.trim() == title,
-        )
-        .firstOrNull;
-    final router = GoRouter.of(context);
-    Navigator.pop(context);
-    final id =
-        existing?.id ?? await notes.createNote(NoteType.text, title: title);
-    if (existing == null) calendar.linkNoteToDay(key, id);
-    unawaited(router.push(noteRoutePath(id)));
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1013,7 +1070,8 @@ class _DaySheet extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: OutlinedButton.icon(
                 key: const ValueKey('day-note'),
-                onPressed: () => unawaited(_dayNote(context, ref)),
+                onPressed: () =>
+                    unawaited(openDayNote(context, ref, day, popFirst: true)),
                 icon: const Icon(Icons.edit_note),
                 label: Text(l10n.calendarDayNote),
               ),
@@ -1392,6 +1450,163 @@ class _RoutineTile extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// **GÜN SAYFASI** (kullanıcı isteği 2026-11-07: "günlerin üzerine çift
+/// tıklayınca sadece o günün sayfası açılsın"): ay görünümünde güne çift
+/// dokununca açılır. Tek günlük saat çizelgesi (hafta görünümünün tek
+/// sütunlu hâli), yatay kaydırma ya da oklarla önceki/sonraki gün.
+class CalendarDayScreen extends ConsumerStatefulWidget {
+  const CalendarDayScreen({
+    super.key,
+    required this.day,
+    required this.today,
+    required this.onEntryTap,
+    this.now,
+  });
+
+  final DateTime day;
+  final DateTime today;
+  final ValueChanged<AgendaEntry> onEntryTap;
+
+  /// Test için "şimdi".
+  final DateTime? now;
+
+  @override
+  ConsumerState<CalendarDayScreen> createState() => _CalendarDayScreenState();
+}
+
+class _CalendarDayScreenState extends ConsumerState<CalendarDayScreen> {
+  /// Sayfa 0 = 2000-01-01 değil; başlangıç günü ortada (±10 yıl).
+  static const _kCenter = 3650;
+  late final PageController _controller = PageController(initialPage: _kCenter);
+  late DateTime _day = widget.day;
+
+  DateTime _dayAt(int i) => DateTime(
+    widget.day.year,
+    widget.day.month,
+    widget.day.day + i - _kCenter,
+  );
+
+  void _step(int delta) {
+    if (!_controller.hasClients) return;
+    unawaited(
+      _controller.animateToPage(
+        (_controller.page?.round() ?? _kCenter) + delta,
+        duration: AppMotion.of(context, AppMotion.medium),
+        curve: Curves.easeOutCubic,
+      ),
+    );
+  }
+
+  void _goToday() {
+    if (!_controller.hasClients) return;
+    final i = _kCenter + widget.today.difference(widget.day).inDays;
+    _controller.jumpToPage(i.clamp(0, 2 * _kCenter));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final data = ref.watch(calendarDataProvider);
+    final now = widget.now ?? DateTime.now();
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        titleSpacing: 0,
+        title: Text(
+          DateFormat.yMMMMEEEEd().format(_day),
+          overflow: TextOverflow.ellipsis,
+        ),
+        actions: [
+          IconButton(
+            key: const ValueKey('day-page-prev'),
+            tooltip: l10n.calendarPrevious,
+            icon: const Icon(Icons.chevron_left),
+            onPressed: () => _step(-1),
+          ),
+          IconButton(
+            key: const ValueKey('day-page-next'),
+            tooltip: l10n.calendarNext,
+            icon: const Icon(Icons.chevron_right),
+            onPressed: () => _step(1),
+          ),
+          IconButton(
+            tooltip: l10n.calendarToday,
+            icon: const Icon(Icons.today_outlined),
+            onPressed: _goToday,
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        tooltip: l10n.calendarNewEvent,
+        onPressed: () => unawaited(showEventEditor(context, day: _day)),
+        child: const Icon(Icons.add),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: PageView.builder(
+              controller: _controller,
+              itemCount: 2 * _kCenter + 1,
+              onPageChanged: (i) => setState(() => _day = _dayAt(i)),
+              itemBuilder: (context, i) => WeekPage(
+                key: ValueKey('day-${dayKey(_dayAt(i))}'),
+                weekStart: _dayAt(i),
+                dayCount: 1,
+                data: data,
+                today: widget.today,
+                now: now,
+                onSlotTap: (t) => unawaited(showEventEditor(context, start: t)),
+                onEntryTap: widget.onEntryTap,
+                onDayTap: (_) {},
+              ),
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 88, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.tonalIcon(
+                      onPressed: () =>
+                          unawaited(showTaskEditor(context, due: _day)),
+                      icon: const Icon(Icons.add_task),
+                      label: Text(
+                        l10n.tasksNewTask,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      key: const ValueKey('day-page-note'),
+                      onPressed: () =>
+                          unawaited(openDayNote(context, ref, _day)),
+                      icon: const Icon(Icons.edit_note),
+                      label: Text(
+                        l10n.calendarDayNote,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
