@@ -166,6 +166,11 @@ abstract final class UiItem {
   /// Ana ekrandaki "+" menüsünün seçeneği ([key] = `QuickAddOption.key`).
   static String quickAdd(String key) => 'quickadd.$key';
 
+  /// Yazarken üstteki hızlı erişim satırının düğmesi ([key] =
+  /// `EditorQuickRow` düğme kimliği; 2026-11-08 — düzenleme modunda
+  /// gizlenip gösterilir).
+  static String quickRow(String key) => 'editor.quick.$key';
+
   /// Not ekranındaki "Ekle" levhasının seçeneği ([key] = levhanın kimliği).
   static String attach(String key) => 'attach.$key';
 }

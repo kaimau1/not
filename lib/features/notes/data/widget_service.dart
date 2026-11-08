@@ -135,8 +135,10 @@ class WidgetService {
       // (bkz. NotlarWidgetProvider). Widget dört satır gösteriyor.
       final lines = <String>[];
       for (final note in active.take(4)) {
-        final title = note.title.trim().isNotEmpty
-            ? note.title.trim()
+        // displayTitle: renkli/biçimli başlığın işaretleri (kodlar) widget'ta
+        // görünmesin (kullanıcı bildirimi 2026-11-08).
+        final title = note.displayTitle.trim().isNotEmpty
+            ? note.displayTitle.trim()
             : note.toPlainText().split('\n').first;
         if (title.trim().isEmpty) continue;
         lines.add(title.length > 40 ? '${title.substring(0, 40)}…' : title);
@@ -226,8 +228,8 @@ String todayWidgetPayload(
     if (at.isBefore(from) || !at.isBefore(to)) continue;
     var title = n.locked || hiddenFolders.contains(n.folderId)
         ? lockedLabel
-        : (n.title.trim().isNotEmpty
-              ? n.title.trim()
+        : (n.displayTitle.trim().isNotEmpty
+              ? n.displayTitle.trim()
               : n.toPlainText().split('\n').first.trim());
     if (title.isEmpty) title = '…';
     // Satır ayırıcıları başlığın içinde olamaz (Android tarafı böler).

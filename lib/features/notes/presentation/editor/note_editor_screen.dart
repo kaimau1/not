@@ -913,7 +913,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       }
     }
     _typingTimer?.cancel();
-    _typingTimer = Timer(const Duration(milliseconds: 650), () {
+    // 1,6 sn duraklama: 650 ms'de çubuk her nefeste gidip geliyordu
+    // (kullanıcı bildirimi 2026-11-08).
+    _typingTimer = Timer(const Duration(milliseconds: 1600), () {
       _typingN.value = false;
     });
   }
@@ -2242,9 +2244,24 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               ? () => showInkSettings(context, _pageInkOf(note))
               : null,
           onReminder: () => unawaited(_pickReminder()),
+          // Nota her girişte bir kez (durum örneği nota bağlı); setState
+          // YOK — yalnız bir sonraki açılışta vurgulanmasın diye.
+          hint: !_quickRowHinted,
+          onHinted: () => _quickRowHinted = true,
       ),
     );
   }
+
+  /// Bu not girişinde hızlı satır vurgusu gösterildi mi (bkz. [EditorQuickRow]).
+  bool _quickRowHinted = false;
+
+  /// Yazarken (klavye açık) üst çubukta yalnız hızlı satır + geri al/yinele
+  /// kalır (kullanıcı isteği 2026-11-08): öbür düğmeler klavye açıkken
+  /// gizlenir. Yaprak düzeyde ([KeyboardSwitch]) — ekran yeniden kurulmaz.
+  Widget _hideWhileTyping(Note note, Widget child) =>
+      _readOnly || note.type.isPageNoteType
+      ? child
+      : KeyboardSwitch(open: const SizedBox.shrink(), closed: child);
 
   /// Kalem kipinin sonu (tepsi/sütun sonunda): × kalemi kapatır (çizim
   /// kalır), ✓ bitirir — "Sayfaya yaz" ile açılan hızlı el yazısı notunda
@@ -4467,11 +4484,14 @@ child: NoteFindBar(
               // ANA SAYFAYA DÖN (F28.3): geniş ekranda/web'de ray bu sırada
               // çekmece ya da gizli; tek dokunuşla `/`. Telefonda yok.
               if (MediaQuery.sizeOf(context).width >= kRailBreakpoint)
-                IconButton(
-                  key: const ValueKey('editor-home'),
-                  tooltip: '${l10n.goHome} (Alt+Home)',
-                  icon: const Icon(Icons.home_outlined),
-                  onPressed: () => goHome(ref, GoRouter.of(context)),
+                _hideWhileTyping(
+                  note,
+                  IconButton(
+                    key: const ValueKey('editor-home'),
+                    tooltip: '${l10n.goHome} (Alt+Home)',
+                    icon: const Icon(Icons.home_outlined),
+                    onPressed: () => goHome(ref, GoRouter.of(context)),
+                  ),
                 ),
               // ⌨ SANAL KLAVYE: yalnız fiziksel klavye takılıyken (tablet
               // bulgusu 2026-11-07); o sırada sanal klavye kendiliğinden
@@ -4583,8 +4603,11 @@ child: NoteFindBar(
               // belirir (ikisi birlikte — yinele hâlâ geri alın yanında
               // görünür); not yalnız açılıp okunurken çubukta iki soluk
               // düğme durmaz.
-              if (_canUndo || _canRedo)
-              Customizable(
+              // Yazarken geri al / yinele HEP görünür (2026-11-08); okurken
+              // yalnız geri alınacak bir şey varken.
+              Builder(
+                builder: (context) {
+                  final undo = Customizable(
                 id: UiItem.topUndo,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -4605,6 +4628,12 @@ child: NoteFindBar(
                       ),
                   ],
                 ),
+              );
+                  return KeyboardSwitch(
+                    open: undo,
+                    closed: (_canUndo || _canRedo) ? undo : null,
+                  );
+                },
               ),
               // ORTAK ÇALIŞAN düğmesi buradaydı; 2026-11-01'den beri
               // başlığın yanındaki etiket/hatırlatıcı çipinde (bkz.
@@ -4617,6 +4646,8 @@ child: NoteFindBar(
               // alanda sadeleşme); biçim panelinden ve Ekle levhasından da
               // açılır.
               if (_barTitle == null)
+              _hideWhileTyping(
+                note,
               Customizable(
                 id: UiItem.topPin,
                 child: IconButton(
@@ -4636,6 +4667,7 @@ child: NoteFindBar(
                   ),
                 ),
               ),
+              ),
               // HESAP MAKİNESİ ⋮ menüsünün hızlı satırında (2026-10-11):
               // üst çubuk notun DURUMUNA ayrıldı — geri al/yinele, sabitle,
               // ortak çalışan. Araçlar ⋮'te ve alt çubukta.
@@ -4643,11 +4675,15 @@ child: NoteFindBar(
               // barın başlık alanındaki göstergelerden okunuyor.
               // ⋮ artık açılır menü değil, iki sütunlu levha açar
               // (bkz. [noteMenuModel] — kullanıcı isteği 2026-08-09).
-              if (PenTray.useRail(context)) _fullscreenButton(l10n),
-              IconButton(
-                tooltip: l10n.noteMenu,
-                icon: const Icon(Icons.more_vert),
-                onPressed: _openNoteMenu,
+              if (PenTray.useRail(context))
+                _hideWhileTyping(note, _fullscreenButton(l10n)),
+              _hideWhileTyping(
+                note,
+                IconButton(
+                  tooltip: l10n.noteMenu,
+                  icon: const Icon(Icons.more_vert),
+                  onPressed: _openNoteMenu,
+                ),
               ),
             ],
           ),
