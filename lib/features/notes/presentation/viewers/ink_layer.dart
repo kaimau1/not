@@ -1470,6 +1470,7 @@ class InkFixMarker extends StatelessWidget {
     return Semantics(
       button: true,
       label: context.l10n.inkFixApply,
+      onTap: onApply,
       child: Tooltip(
         message: context.l10n.inkFixApply,
         child: Material(
@@ -1477,15 +1478,23 @@ class InkFixMarker extends StatelessWidget {
           color: scheme.primaryContainer,
           shape: const CircleBorder(),
           elevation: 3,
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onApply,
-            child: SizedBox.square(
-              dimension: 36,
-              child: Icon(
-                iconOf(suggestion.kind),
-                size: 20,
-                color: scheme.onPrimaryContainer,
+          // Ham işaretçi (Listener): kalemle basış InkWell'in jest
+          // yarışmasında üst katmanlara (kaydırma/çizim) kaybediliyordu —
+          // kalem modunda tik/onay düğmesi "basmayı algılamıyordu"
+          // (kullanıcı bildirimi 2026-11-08). Parmak, kalem, fare aynı yol.
+          child: Listener(
+            behavior: HitTestBehavior.opaque,
+            onPointerUp: (_) => onApply(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () {},
+              child: SizedBox.square(
+                dimension: 36,
+                child: Icon(
+                  iconOf(suggestion.kind),
+                  size: 20,
+                  color: scheme.onPrimaryContainer,
+                ),
               ),
             ),
           ),

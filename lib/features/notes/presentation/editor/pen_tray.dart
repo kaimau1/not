@@ -1302,6 +1302,50 @@ class _Options extends StatelessWidget {
                     onChanged: controller.setWidth,
                   ),
                 ),
+                SizedBox(
+                  width: 30,
+                  child: Text(
+                    controller.widthPx.toStringAsFixed(0),
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                ),
+              ],
+            ),
+            // Şeffaflık da tepsinin kendi panelinde (kullanıcı isteği
+            // 2026-11-08): ayrı ayar sayfasına gitmeden. Fosforlu sabit %40.
+            Row(
+              key: const ValueKey('pen-tray-opacity'),
+              children: [
+                SizedBox(
+                  width: 48,
+                  height: 40,
+                  child: Tooltip(
+                    message: l10n.inkOpacity,
+                    child: Icon(
+                      Icons.opacity_rounded,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Slider(
+                    value: pen == InkPen.highlighter ? 0.4 : controller.opacity,
+                    min: 0.1,
+                    divisions: 9,
+                    label:
+                        '%${((pen == InkPen.highlighter ? 0.4 : controller.opacity) * 100).round()}',
+                    onChanged: pen == InkPen.highlighter
+                        ? null
+                        : controller.setOpacity,
+                  ),
+                ),
+                SizedBox(
+                  width: 30,
+                  child: Text(
+                    '%${((pen == InkPen.highlighter ? 0.4 : controller.opacity) * 100).round()}',
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                ),
               ],
             ),
           ],

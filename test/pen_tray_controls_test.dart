@@ -74,7 +74,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('pen-tray-color')));
     await tester.pumpAndSettle();
-    expect(find.byType(Slider), findsOneWidget);
+    expect(find.byType(Slider), findsNWidgets(2));
     ink.pointerDown(1, const Offset(10, 10), const Size(400, 400));
     await tester.pumpAndSettle();
     expect(find.byType(Slider), findsNothing);

@@ -311,10 +311,12 @@ class _AiBanner extends StatelessWidget {
 }
 
 
-/// **YAZARKEN ALT ÇUBUK İNER** (2026-11-08). [hidden] true iken çocuk
-/// küçülüp solar; yalnız bu ağaç ValueListenableBuilder ile yeniden kurulur
-/// (çocuk dışarıdan verilir, ekran setState görmez). Girişte 160 ms, geri
-/// dönüşte 110 ms: bırakınca çubuk hemen gelsin.
+/// **YAZARKEN ALT ÇUBUK ÇEKMECEYE İNER** (2026-11-08). [hidden] true iken
+/// çubuk tamamen kaybolmaz: üst şeridi ([_peek]) soluk görünür kalır —
+/// "orada olduğu belli". Yavaş ve yumuşak (girişte 420 ms, dönüşte 320 ms):
+/// hızlı gidip gelmesi yazarken dikkat dağıtıyordu (kullanıcı bildirimi
+/// 2026-11-08). Görünen şeride dokunmak çubuğu hemen geri getirir. Yalnız bu
+/// ağaç ValueListenableBuilder ile kurulur (ekran setState görmez).
 class _TypingHide extends StatelessWidget {
   const _TypingHide({
     required this.hidden,
@@ -322,28 +324,42 @@ class _TypingHide extends StatelessWidget {
     required this.child,
   });
 
-  final ValueListenable<bool> hidden;
+  final ValueNotifier<bool> hidden;
   final bool enabled;
   final Widget child;
+
+  /// Çekmecede görünen pay (yükseklik oranı) ve saydamlığı.
+  static const _peek = 0.3;
+  static const _peekOpacity = 0.45;
 
   @override
   Widget build(BuildContext context) {
     if (!enabled) return child;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return ValueListenableBuilder<bool>(
       valueListenable: hidden,
       child: child,
       builder: (context, hide, child) => TweenAnimationBuilder<double>(
         tween: Tween(end: hide ? 0.0 : 1.0),
-        duration: Duration(milliseconds: hide ? 160 : 110),
-        curve: Curves.easeOutCubic,
+        duration: reduceMotion
+            ? Duration.zero
+            : Duration(milliseconds: hide ? 420 : 320),
+        curve: Curves.easeInOutCubic,
         child: child,
         builder: (context, t, child) => t == 1
             ? child!
-            : ClipRect(
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  heightFactor: t,
-                  child: Opacity(opacity: t, child: child),
+            : Listener(
+                behavior: HitTestBehavior.translucent,
+                onPointerDown: (_) => hidden.value = false,
+                child: ClipRect(
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    heightFactor: _peek + (1 - _peek) * t,
+                    child: Opacity(
+                      opacity: _peekOpacity + (1 - _peekOpacity) * t,
+                      child: child,
+                    ),
+                  ),
                 ),
               ),
       ),
