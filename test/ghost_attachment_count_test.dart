@@ -6,6 +6,7 @@ import 'package:notlar/features/notes/domain/note_type.dart';
 /// Hayalet ek sayacı: zemin görseli ek sayılmaz (kart/dışa aktarma gibi);
 /// editörün ataç rozeti ve şeridi aynı kuralı kullanır.
 void main() {
+  ghostRemoval();
   const image = Attachment(
     id: 'bg',
     kind: AttachmentKind.image,
@@ -39,5 +40,30 @@ void main() {
       backgroundImageId: 'bg',
     );
     expect(mixed.attachmentsWithoutBackground, [file]);
+  });
+}
+
+void ghostRemoval() {
+  const image = Attachment(
+    id: 'img',
+    kind: AttachmentKind.image,
+    fileName: 'a.jpg',
+    mimeType: 'image/jpeg',
+  );
+  const derived = Attachment(
+    id: 'doc',
+    kind: AttachmentKind.pdf,
+    fileName: 'a.pdf',
+    mimeType: 'application/pdf',
+    sourceId: 'img',
+  );
+  test('sil → ek yok: türetilmiş belge hayalet olarak kalmaz', () {
+    final note = Note(
+      id: 'n',
+      type: NoteType.text,
+      attachments: const [image, derived],
+    );
+    expect(note.attachmentsWithout('img'), isEmpty);
+    expect(note.attachmentsWithout('doc'), [image]);
   });
 }

@@ -574,6 +574,15 @@ class Note {
             if (a.id != backgroundImageId) a,
         ];
 
+  /// [id] ekini ve ondan TÜRETİLMİŞ belgeleri (`sourceId == id`) çıkarır.
+  /// Türetilmiş belge kaynak görselin arkasında gizliydi; görsel silinince
+  /// gizlilik kalkıp sayılan ama kimsenin eklemediği "hayalet" bir ek olarak
+  /// kalıyordu (ataç rozeti "1", 2026-11-08).
+  List<Attachment> attachmentsWithout(String id) => [
+    for (final a in attachments)
+      if (a.id != id && a.sourceId != id) a,
+  ];
+
   /// [a] bir görselden BALONLU görünüm için üretilmiş belge mi ve şu an
   /// GİZLİ mi (bkz. `Attachment.sourceId`): not klasik görünümdeyken ve
   /// kaynak görsel hâlâ notta dururken belge ne sayfada ne şeritte ne kartta
