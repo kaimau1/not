@@ -54,7 +54,7 @@ import '../../friends/data/friends_repository.dart';
 import '../../friends/presentation/home_invites.dart';
 import '../../settings/settings_providers.dart';
 import '../../settings/presentation/theme_picker.dart' show showThemePickerSheet;
-import '../../calendar/presentation/calendar_backdrop.dart';
+import '../../calendar/presentation/home_calendar_strip.dart';
 import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
 import '../data/upload_queue.dart';
@@ -1077,10 +1077,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// üste binebilirler — bkz. `dashboard_background_sheet.dart`).
   List<Widget> _dashboardBackground(WidgetRef ref) {
     final background = ref.watch(dashboardBackgroundProvider);
-    // Takvim zemini öbür katmanların yerini alır (kendi yüzeyini çizer).
-    if (background.calendar) {
-      return const [Positioned.fill(child: CalendarBackdrop())];
-    }
     final layers = <Widget>[];
     final color = background.color;
     if (color != null) {
@@ -1343,12 +1339,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 // ızgarasının arkasında durur; görünürlük ayarı okunurluğu
                 // korumak için varsayılan olarak düşüktür.
                 ..._dashboardBackground(ref),
-                // Takvim zemininde kartlar saydamlaşır, başlık net kalır.
-                CardSeeThrough(
-                  enabled: ref.watch(
-                    dashboardBackgroundProvider.select((b) => b.calendar),
-                  ),
-                  child: LayoutBuilder(
+                LayoutBuilder(
                   builder: (context, constraints) {
                     // Sütun sayısı: kullanıcı iki parmakla zoom yaptıysa onun
                     // seçimi (1–4), yoksa ekran genişliğinden otomatik.
@@ -1597,6 +1588,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         // "klasör paylaşıldığında kabul et veya reddet
                         // seçeneği olsun"). Bir şey beklemiyorsa hiç
                         // çizilmez — boşken sıfır yer kaplar.
+                        // TAKVİM ŞERİDİ (2026-11-08, takvim zemininin yerine):
+                        // bugünden itibaren 10 gün; kapalıyken tek ince satır.
+                        const HomeCalendarStrip(),
                         // Zamanı gelen hatırlatıcı/görev şeridi (2026-11-08).
                         const DueBanner(),
                         const HomeInvites(),
@@ -1968,7 +1962,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       ],
                     ));
                   },
-                ),
                 ),
                 // Sesli asistan paneli düğmelerin ÜSTÜnde sabit konumda yüzer.
                 // Düğmeler floatingActionButton'da kaldığından panel açılıp

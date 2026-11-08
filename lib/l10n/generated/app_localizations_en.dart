@@ -7970,4 +7970,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inkShapeTable => 'Table';
+
+  @override
+  String get homeCalendarStrip => 'Calendar strip on top';
+
+  @override
+  String get homeCalendarStripInfo =>
+      'The next 10 days at the top of the home screen: events, tasks, holidays. Tap a day = entries (edit/delete), long-press = calendar';
+
+  @override
+  String get homeCalendarStripExpand => 'Expand calendar strip';
+
+  @override
+  String get homeCalendarStripCollapse => 'Collapse calendar strip';
 }

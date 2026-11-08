@@ -14197,6 +14197,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tablo'**
   String get inkShapeTable;
+
+  /// No description provided for @homeCalendarStrip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üstte takvim şeridi'**
+  String get homeCalendarStrip;
+
+  /// No description provided for @homeCalendarStripInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekranın tepesinde bugünden itibaren 10 gün: etkinlik, görev, tatil. Güne dokun = kayıtlar (düzenle/sil), basılı tut = takvim'**
+  String get homeCalendarStripInfo;
+
+  /// No description provided for @homeCalendarStripExpand.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim şeridini aç'**
+  String get homeCalendarStripExpand;
+
+  /// No description provided for @homeCalendarStripCollapse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim şeridini daralt'**
+  String get homeCalendarStripCollapse;
 }
 
 class _AppLocalizationsDelegate

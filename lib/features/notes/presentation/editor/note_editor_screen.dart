@@ -902,9 +902,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   final _typingN = ValueNotifier<bool>(false);
   Timer? _typingTimer;
 
+  /// Duraklamasız art arda yazılan değişiklik sayısı (bkz. [_noteTyping]).
+  int _typedBurst = 0;
+
   /// Klavye açıkken her metin değişiminde çağrılır; durunca çubuk geri gelir.
   void _noteTyping() {
     if (_keyboardInset <= 0 || !ref.read(hideBarWhileTypingProvider)) return;
+    // ÜÇ HARF KURALI (kullanıcı isteği 2026-11-08 üçüncü tur): çubuk tek
+    // harflik düzeltmede / tek dokunuşta gitmesin; ancak duraklamasız art
+    // arda 3 değişiklikten sonra (gerçekten yazılıyorsa) gizlenir. Sayaç,
+    // duraklama zamanlayıcısı dolunca ([_showBarNow]) sıfırlanır.
+    _typedBurst++;
+    if (!_typingN.value && _typedBurst < 3) {
+      _typingTimer?.cancel();
+      _typingTimer = Timer(const Duration(milliseconds: 1100), _showBarNow);
+      return;
+    }
     if (!_typingN.value) {
       _typingN.value = true;
       final prefs = ref.read(sharedPreferencesProvider);
@@ -929,6 +942,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _showBarNow() {
     _typingTimer?.cancel();
     _typingTimer = null;
+    _typedBurst = 0;
     if (_typingN.value) _typingN.value = false;
   }
 
@@ -4087,10 +4101,12 @@ child: NoteFindBar(
                 // butonları ile kendi butonlarımız arasında boşluk çok,
                 // satır aralığını daraltırsak yer açılır"): 64 → 56 dp,
                 // dikey dolgu 8 → 4 (düğmeler 48 dp dokunma alanında kalır).
+                // %10 daha alçak (kullanıcı isteği 2026-11-08): 56 → 50 dp,
+                // dikey dolgu 4 → 1 — en büyük düğme (48 dp) hâlâ sığar.
                 BottomAppBar(
                   color: background,
-                  height: 56,
-                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+                  height: 50,
+                  padding: const EdgeInsets.fromLTRB(12, 1, 12, 1),
                   // KİŞİSELLEŞTİRME (kullanıcı isteği 2026-10-16): her
                   // düğme gizlenebilir; düzenleme modunda hepsi çerçeveli
                   // görünür ve dokunmak gizle/göster yapar (bkz.
@@ -4717,9 +4733,17 @@ child: NoteFindBar(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // SIKI İKİLİ (kullanıcı isteği 2026-11-08: "geri al
+                    // ileri al çok yer kaplıyor, arası boş"): 48 → 36 dp
+                    // genişlik, aralarında boşluk yok; yükseklik 48 kalır.
                     IconButton(
                       tooltip: l10n.undo,
                       icon: const Icon(Icons.undo),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 48,
+                      ),
                       onPressed: _canUndo ? _undo : null,
                     ),
                     // Başlık üst çubuktayken yer dar: yinele yalnız
@@ -4729,6 +4753,11 @@ child: NoteFindBar(
                         key: const ValueKey('editor-redo'),
                         tooltip: l10n.redo,
                         icon: const Icon(Icons.redo),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 48,
+                        ),
                         onPressed: _canRedo ? _redo : null,
                       ),
                   ],

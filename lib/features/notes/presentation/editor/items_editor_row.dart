@@ -722,7 +722,13 @@ extension _ItemsRow on ItemsEditorState {
         elevation: 6,
         borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
-        child: Padding(
+        // Sıkı düğmeler: "Pakete al" eklenince 360 dp telefonda yedi düğme
+        // + sayaç sığsın diye (48 → 40 dp).
+        child: IconButtonTheme(
+          data: IconButtonThemeData(
+            style: IconButton.styleFrom(visualDensity: VisualDensity.compact),
+          ),
+          child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
           child: Row(
             children: [
@@ -774,6 +780,17 @@ extension _ItemsRow on ItemsEditorState {
                   icon: const Icon(Icons.library_add_check_outlined, size: 20),
                   onPressed: hasSelection ? _copyAndCheckSelected : null,
                 ),
+              // NOT PAKETİ (kullanıcı isteği 2026-11-08): birden fazla maddeyi
+              // tek dokunuşla pakete al; hepsi zaten paketliyse paketi çözer.
+              IconButton(
+                key: const ValueKey('items-package'),
+                tooltip: selectedItems.isNotEmpty &&
+                        selectedItems.every((i) => i.package.isNotEmpty)
+                    ? l10n.notePackageUnpack
+                    : l10n.quickRowPackage,
+                icon: const Icon(Icons.inventory_2_outlined, size: 20),
+                onPressed: hasSelection ? togglePackage : null,
+              ),
               IconButton(
                 tooltip: l10n.delete,
                 icon: const Icon(Icons.delete_outline, size: 20),
@@ -782,6 +799,7 @@ extension _ItemsRow on ItemsEditorState {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

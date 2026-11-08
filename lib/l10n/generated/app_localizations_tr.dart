@@ -7948,4 +7948,17 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get inkShapeTable => 'Tablo';
+
+  @override
+  String get homeCalendarStrip => 'Üstte takvim şeridi';
+
+  @override
+  String get homeCalendarStripInfo =>
+      'Ana ekranın tepesinde bugünden itibaren 10 gün: etkinlik, görev, tatil. Güne dokun = kayıtlar (düzenle/sil), basılı tut = takvim';
+
+  @override
+  String get homeCalendarStripExpand => 'Takvim şeridini aç';
+
+  @override
+  String get homeCalendarStripCollapse => 'Takvim şeridini daralt';
 }

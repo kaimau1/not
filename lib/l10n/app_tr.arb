@@ -3686,5 +3686,9 @@
   "lineTaskDetails": "Ayrıntılar (düzey, tekrar, kişi)",
   "lineTaskDelete": "Hatırlatıcıyı sil",
   "inkShapeTriangle": "Üçgen",
-  "inkShapeTable": "Tablo"
+  "inkShapeTable": "Tablo",
+  "homeCalendarStrip": "Üstte takvim şeridi",
+  "homeCalendarStripInfo": "Ana ekranın tepesinde bugünden itibaren 10 gün: etkinlik, görev, tatil. Güne dokun = kayıtlar (düzenle/sil), basılı tut = takvim",
+  "homeCalendarStripExpand": "Takvim şeridini aç",
+  "homeCalendarStripCollapse": "Takvim şeridini daralt"
 }

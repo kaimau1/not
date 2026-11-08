@@ -29,6 +29,7 @@ import '../domain/calendar_event.dart';
 import '../domain/day_key.dart';
 import '../domain/holidays.dart';
 import '../domain/task_item.dart';
+import 'calendar_entry_delete.dart';
 import 'calendar_views.dart';
 import 'calendar_ics_ui.dart';
 import 'event_editor.dart';
@@ -317,7 +318,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   void _step(int delta) => _pagerKey.currentState?.step(delta);
 
-  Future<void> _newEvent() => showEventEditor(context, day: _selected);
+  Future<void> _newEvent() => showEventEditor(
+    context,
+    day:
+        _view != CalendarView.month ||
+            (_selected.year == _focus.year && _selected.month == _focus.month)
+        ? _selected
+        : (_focus.year == _today.year && _focus.month == _today.month
+              ? _today
+              : DateTime(_focus.year, _focus.month)),
+  );
 
   void _openEntry(AgendaEntry e) {
     switch (e) {
@@ -674,15 +684,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         locked: _pinching,
         onPageChanged: (i) => setState(() {
           if (view != _view) return;
+          // Sayfa çevirince seçim DEĞİŞMEZ (kullanıcı isteği 2026-11-08):
+          // eskiden her ayın 1'i kendiliğinden çerçeveye alınıyordu. "Yeni"
+          // gibi seçili güne bakan işler görünen ayda seçim yoksa ayın
+          // ilk gününü kullanır (bkz. [_newEvent]).
           _focus = _dateOfPage(i);
-          if (_view == CalendarView.month &&
-              (_selected.year != _focus.year ||
-                  _selected.month != _focus.month)) {
-            _selected =
-                _focus.year == _today.year && _focus.month == _today.month
-                ? _today
-                : _focus;
-          }
         }),
         itemBuilder: (context, i) => switch (view) {
           CalendarView.year => YearPage(
@@ -981,6 +987,45 @@ Future<void> openDayNote(
 
 /// Ay/hafta görünümünde güne dokununca: o günün kayıtları + yeni etkinlik /
 /// görev.
+/// Bir günün levhası (kayıtlar + sil + yeni etkinlik/görev) — takvim
+/// ekranının dışından da (ana ekrandaki 10 günlük şerit) açılır.
+Future<void> showCalendarDaySheet(
+  BuildContext context,
+  WidgetRef ref,
+  DateTime day,
+) {
+  final d = startOfDay(day);
+  return showAppSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (ctx) => _DaySheet(
+      day: d,
+      today: startOfDay(DateTime.now()),
+      data: ref.read(calendarDataProvider),
+      onNewEvent: () {
+        Navigator.pop(ctx);
+        unawaited(showEventEditor(context, day: d));
+      },
+      onNewTask: () {
+        Navigator.pop(ctx);
+        unawaited(showTaskEditor(context, due: d));
+      },
+    ),
+  );
+}
+
+/// Gün levhası/ajanda satırı + sağda tek dokunuşla sil (bkz.
+/// [quickDeleteEntry]).
+Widget _withQuickDelete(AgendaEntry e, Widget tile) => !canQuickDelete(e)
+    ? tile
+    : Row(
+        children: [
+          Expanded(child: tile),
+          QuickDeleteButton(entry: e),
+        ],
+      );
+
 class _DaySheet extends ConsumerWidget {
   const _DaySheet({
     required this.day,
@@ -1011,8 +1056,11 @@ class _DaySheet extends ConsumerWidget {
             startOfDay(n.updatedAt!) == day)
           n,
     ];
+    // CANLI veri (açılıştaki anlık görüntü değil): levhadan silinen ya da
+    // düzenlenen kayıt hemen kaybolsun/güncellensin.
+    final source = ref.watch(calendarDataProvider);
     final entries =
-        data.range(day, DateTime(day.year, day.month, day.day + 1))[dayKey(
+        source.range(day, DateTime(day.year, day.month, day.day + 1))[dayKey(
           day,
         )] ??
         const <AgendaEntry>[];
@@ -1055,12 +1103,16 @@ class _DaySheet extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       children: [
                         for (final e in entries)
-                          switch (e) {
-                            EventOccurrence occ => _EventTile(occurrence: occ),
-                            TaskEntry t => _TaskTile(task: t.task),
-                            ReminderEntry r => _ReminderTile(entry: r),
-                            RoutineEntry r => _RoutineTile(entry: r),
-                          },
+                          _withQuickDelete(
+                            e,
+                            switch (e) {
+                              EventOccurrence occ =>
+                                _EventTile(occurrence: occ),
+                              TaskEntry t => _TaskTile(task: t.task),
+                              ReminderEntry r => _ReminderTile(entry: r),
+                              RoutineEntry r => _RoutineTile(entry: r),
+                            },
+                          ),
                       ],
                     ),
             ),
@@ -1235,9 +1287,10 @@ class _AgendaList extends ConsumerWidget {
               ),
             ),
           ),
-          EventOccurrence occ => _EventTile(occurrence: occ),
-          TaskEntry t => _TaskTile(task: t.task),
-          ReminderEntry r => _ReminderTile(entry: r),
+          EventOccurrence occ =>
+            _withQuickDelete(occ, _EventTile(occurrence: occ)),
+          TaskEntry t => _withQuickDelete(t, _TaskTile(task: t.task)),
+          ReminderEntry r => _withQuickDelete(r, _ReminderTile(entry: r)),
           _ => Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
