@@ -8040,4 +8040,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get spellLearnedKept => 'Words left alone (you undid the fix)';
+
+  @override
+  String get inkEraserOffer => 'Pick eraser';
 }

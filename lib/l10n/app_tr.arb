@@ -3709,5 +3709,6 @@
   "spellLearnedEmpty": "Henüz öğrenilen düzeltme yok.",
   "spellLearnedSeen": "{count} kez",
   "@spellLearnedSeen": {"placeholders": {"count": {"type": "int"}}},
-  "spellLearnedKept": "Dokunulmayan kelimeler (düzeltmeyi geri aldıkların)"
+  "spellLearnedKept": "Dokunulmayan kelimeler (düzeltmeyi geri aldıkların)",
+  "inkEraserOffer": "Silgiyi seç"
 }

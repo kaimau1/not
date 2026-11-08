@@ -2215,6 +2215,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Metin/liste notunda kalem kipi mi (belge notunun kalemi kendi bölmesinde).
   bool get _pagePen => _penMode && !(_note?.type.isPageNoteType ?? false);
 
+  /// Hızlı satırdaki kalem: AÇ / KAPA (kullanıcı isteği 2026-11-08: "kalem
+  /// butonuna tekrar basınca kalem modu kapansın").
+  void _togglePen() => _update(() => _penMode = !_penMode);
+
   void _openPen() => _update(() => _penMode = true);
 
   /// Tablette tam ekran düğmesi.
@@ -2288,7 +2292,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             unawaited(_pickImage());
           },
           onFile: () => unawaited(_attachAnyFile()),
-          onPen: pen ? _openPen : null,
+          onPen: pen ? _togglePen : null,
+          penOn: _penMode,
           onPenSettings: pen
               ? () => showInkSettings(context, _pageInkOf(note))
               : null,

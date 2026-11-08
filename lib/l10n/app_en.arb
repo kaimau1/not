@@ -2911,5 +2911,6 @@
   "spellLearnedAdd": "Add",
   "spellLearnedEmpty": "No learned fixes yet.",
   "spellLearnedSeen": "{count} times",
-  "spellLearnedKept": "Words left alone (you undid the fix)"
+  "spellLearnedKept": "Words left alone (you undid the fix)",
+  "inkEraserOffer": "Pick eraser"
 }

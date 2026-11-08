@@ -14329,6 +14329,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Dokunulmayan kelimeler (düzeltmeyi geri aldıkların)'**
   String get spellLearnedKept;
+
+  /// No description provided for @inkEraserOffer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silgiyi seç'**
+  String get inkEraserOffer;
 }
 
 class _AppLocalizationsDelegate

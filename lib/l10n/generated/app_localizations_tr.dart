@@ -8020,4 +8020,7 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get spellLearnedKept =>
       'Dokunulmayan kelimeler (düzeltmeyi geri aldıkların)';
+
+  @override
+  String get inkEraserOffer => 'Silgiyi seç';
 }
