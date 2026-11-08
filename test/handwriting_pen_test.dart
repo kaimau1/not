@@ -90,7 +90,7 @@ void main() {
     expect(find.byType(Slider), findsNothing);
     await tester.tap(find.byKey(const ValueKey('pen-tray-color')));
     await tester.pumpAndSettle();
-    expect(find.byType(Slider), findsOneWidget);
+    expect(find.byType(Slider), findsNWidgets(2));
   });
 
   testWidgets('çizim PNG olarak döner', (tester) async {
@@ -133,14 +133,14 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('pen-tray-pen')));
     await tester.pumpAndSettle();
     expect(
-      tester.widget<Slider>(find.byType(Slider)).value,
+      tester.widget<Slider>(find.byType(Slider).first).value,
       InkPen.pen.defaultWidth,
     );
     await tester.tap(find.byKey(const ValueKey('pen-tray-highlighter')));
     await tester.pumpAndSettle();
     // Fosforlu 3 px'te kalsaydı vurgulama işe yaramazdı.
     expect(
-      tester.widget<Slider>(find.byType(Slider)).value,
+      tester.widget<Slider>(find.byType(Slider).first).value,
       InkPen.highlighter.defaultWidth,
     );
   });
