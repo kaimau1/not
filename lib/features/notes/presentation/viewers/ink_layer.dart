@@ -67,6 +67,13 @@ class InkController extends ChangeNotifier {
 
   void dismissSuggestion() => suggestion.value = null;
 
+  /// Katmanın üstündeki bir düğme (düzeltme işaretçisi) bu dokunuşu aldı:
+  /// çizim ona hiç başlamaz. KÖK NEDEN (kullanıcı bildirimi 2026-11-08,
+  /// "kalemle oto düzelt onayına basılamıyor"): kalemin inişi önce çizimi
+  /// başlatıp öneriyi siliyordu, işaretçi kalkışı hiç görmüyordu.
+  void claimPointer(int pointer) => _claimed.add(pointer);
+  final Set<int> _claimed = {};
+
   static List<Offset> _pixels(InkStroke s, Size size) => [
     for (var i = 0; i + 1 < s.points.length; i += 2)
       Offset(s.points[i] * size.width, s.points[i + 1] * size.height),
@@ -152,7 +159,8 @@ class InkController extends ChangeNotifier {
       ...kept.sublist(insertAt),
     ];
     _lastFree = null;
-    _selected = const [];
+    _selected = [...s.replacements];
+    _fixEdit = !lasso;
     _dirty = true;
     save();
     HapticFeedback.selectionClick();
@@ -251,6 +259,48 @@ class InkController extends ChangeNotifier {
   }
 
   bool _moving = false;
+
+  /// Seçim köşesinden BOYUTLANDIRILIYOR (kement seçimi ve düzeltilmiş şekil).
+  bool _resizing = false;
+
+  /// Düzeltme önerisi uygulandı: temiz şekil SEÇİLİ kalır — kalem aracındayken
+  /// de kutusundan sürüklenip taşınır, sağ alt tutamaktan boyutlanır; kutunun
+  /// dışına inen ilk dokunuş seçimi bırakıp normal çizer (kullanıcı isteği
+  /// 2026-11-08: "x ve tik bir şekil olsun, yeri boyutu ayarlanabilsin").
+  bool _fixEdit = false;
+
+  /// Boyut tutamağının dokunma yarıçapı (piksel).
+  static const _handleRadius = 24.0;
+
+  /// [local] (piksel) seçimin sağ alt tutamağında mı.
+  bool _onHandle(Offset local, Size size) {
+    final b = selectionBounds;
+    if (b == null) return false;
+    final corner = Offset(b.right * size.width + 8, b.bottom * size.height + 8);
+    return (local - corner).distance <= _handleRadius;
+  }
+
+  /// Seçimi sol üst köşesi sabit kalarak [x],[y]'ye (sağ alt) ölçekler.
+  void _scaleSelectionTo(double x, double y) {
+    final b = selectionBounds;
+    if (b == null) return;
+    final sx = b.width < 1e-4 ? 1.0 : math.max(0.01, x - b.left) / b.width;
+    final sy = b.height < 1e-4 ? 1.0 : math.max(0.01, y - b.top) / b.height;
+    final map = <InkStroke, InkStroke>{
+      for (final st in _selected)
+        st: st.copyWith(
+          points: [
+            for (var i = 0; i < st.points.length; i++)
+              i.isEven
+                  ? b.left + (st.points[i] - b.left) * sx
+                  : b.top + (st.points[i] - b.top) * sy,
+          ],
+        ),
+    };
+    _ink = [for (final st in _ink) map[st] ?? st];
+    _selected = [for (final st in _selected) map[st]!];
+    _dirty = true;
+  }
   double _moveX = 0, _moveY = 0;
 
   /// Kalemin HAVADAKİ yeri (S Pen gibi yaklaşmayı bildiren kalemler): sayfa
@@ -407,6 +457,8 @@ class InkController extends ChangeNotifier {
     _lassoPage = null;
     _selected = const [];
     _moving = false;
+    _resizing = false;
+    _fixEdit = false;
   }
 
   /// Seçimi bırakır (araç kement kalır).
@@ -737,6 +789,9 @@ class InkController extends ChangeNotifier {
       }
     }
     if (pointer != null) {
+      // Düzeltme işaretçisine basan dokunuş çizgi başlatmaz (bkz.
+      // [claimPointer]); kalemin sayacı yukarıda zaten işlendi.
+      if (_claimed.remove(pointer)) return;
       if (!accepts(kind) || isPalm(kind)) return;
       _accepted[pointer] = kind;
     }
@@ -758,6 +813,28 @@ class InkController extends ChangeNotifier {
     if (suggestion.value != null) dismissSuggestion();
     _gestureBase = _ink;
     _tempEraser = stylusEraser;
+    // Seçim tutamağı / düzeltilmiş şeklin kutusu: taşı ya da boyutlandır.
+    if ((lasso || _fixEdit) && !_tempEraser && selectionPage == page) {
+      final x = local.dx / size.width;
+      final y = local.dy / size.height;
+      final bounds = selectionBounds;
+      final onHandle = _onHandle(local, size);
+      final inside =
+          bounds != null && bounds.inflate(0.03).contains(Offset(x, y));
+      if (onHandle || (_fixEdit && inside)) {
+        _pushHistory(_ink);
+        _resizing = onHandle;
+        _moving = !onHandle;
+        _moveX = x;
+        _moveY = y;
+        notifyListeners();
+        return;
+      }
+    }
+    if (_fixEdit) {
+      _fixEdit = false;
+      _selected = const [];
+    }
     if (lasso && !_tempEraser) {
       final x = local.dx / size.width;
       final y = local.dy / size.height;
@@ -868,6 +945,19 @@ class InkController extends ChangeNotifier {
     final tap = _tapStart;
     if (tap != null && (local - tap).distance > stylusTapSlop) {
       _tapStart = null;
+    }
+    if (_resizing || (_fixEdit && _moving)) {
+      final x = local.dx / size.width;
+      final y = local.dy / size.height;
+      if (_resizing) {
+        _scaleSelectionTo(x, y);
+      } else {
+        _translateSelection(x - _moveX, y - _moveY);
+      }
+      _moveX = x;
+      _moveY = y;
+      notifyListeners();
+      return;
     }
     if (lasso && !_tempEraser) {
       final x = local.dx / size.width;
@@ -1019,6 +1109,7 @@ class InkController extends ChangeNotifier {
       _stylusDown = math.max(0, _stylusDown - 1);
       noteStylus();
     }
+    if (pointer != null) _claimed.remove(pointer);
     if (pointer != null && _accepted.remove(pointer) == null) return;
     _pointers = math.max(0, _pointers - 1);
     if (_pointers > 0) {
@@ -1040,7 +1131,11 @@ class InkController extends ChangeNotifier {
     _tempEraser = false;
     _holdTimer?.cancel();
     _snapped = false;
-    if (lasso) {
+    if (_resizing || (_fixEdit && _moving)) {
+      _resizing = false;
+      _moving = false;
+      save();
+    } else if (lasso) {
       if (_moving) {
         _moving = false;
       } else {
@@ -1397,6 +1492,7 @@ class InkPageLayer extends StatelessWidget {
                     top: top,
                     child: InkFixMarker(
                       suggestion: s,
+                      onClaim: controller.claimPointer,
                       onApply: () => _applyWithConsent(context, s),
                     ),
                   );
@@ -1449,10 +1545,12 @@ class InkFixMarker extends StatelessWidget {
     super.key,
     required this.suggestion,
     required this.onApply,
+    this.onClaim,
   });
 
   final InkSuggestion suggestion;
   final VoidCallback onApply;
+  final ValueChanged<int>? onClaim;
 
   static IconData iconOf(InkFixKind kind) => switch (kind) {
     InkFixKind.line => Icons.horizontal_rule_rounded,
@@ -1484,7 +1582,12 @@ class InkFixMarker extends StatelessWidget {
           // (kullanıcı bildirimi 2026-11-08). Parmak, kalem, fare aynı yol.
           child: Listener(
             behavior: HitTestBehavior.opaque,
-            onPointerUp: (_) => onApply(),
+            // İNİŞTE uygula: işaretçi en derinde, olayı çizim katmanından
+            // ÖNCE alır; [onClaim] o dokunuşun çizgi başlatmasını engeller.
+            onPointerDown: (e) {
+              onClaim?.call(e.pointer);
+              onApply();
+            },
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: () {},
@@ -1570,6 +1673,13 @@ class _InkOverlayPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = 1.5
             ..color = accent,
+        )
+        // Boyut tutamağı (sağ alt).
+        ..drawCircle(rect.bottomRight, 7, Paint()..color = accent)
+        ..drawCircle(
+          rect.bottomRight,
+          4,
+          Paint()..color = const Color(0xFFFFFFFF),
         );
     }
     final at = hover.position;

@@ -11,8 +11,14 @@ class NoteItem {
     this.divider = '',
     this.header = false,
     this.align = '',
+    this.package = '',
     this.extras = const {},
   });
+
+  /// **NOT PAKETİ** (kullanıcı isteği 2026-11-08): aynı kimliği taşıyan ardışık
+  /// maddeler (ya da tek uzun madde) kapalıyken tek bir çerçeveli satırda
+  /// toplanır; dokununca açılır, dışarı dokununca daralır. '' = paket yok.
+  final String package;
 
   /// Bu sürümün TANIMADIĞI anahtarlar — [toMap] AYNEN geri yazar, eski
   /// istemci yeni sürümün madde alanlarını silemez (F1.5).
@@ -29,6 +35,7 @@ class NoteItem {
     'divider',
     'header',
     'align',
+    'package',
   };
 
   /// Ara başlık hizası (bkz. [align]).
@@ -108,6 +115,7 @@ class NoteItem {
     String? divider,
     bool? header,
     String? align,
+    String? package,
   }) => NoteItem(
     id: id,
     text: text ?? this.text,
@@ -119,6 +127,7 @@ class NoteItem {
     divider: divider ?? this.divider,
     header: header ?? this.header,
     align: align ?? this.align,
+    package: package ?? this.package,
     extras: extras,
   );
 
@@ -133,6 +142,7 @@ class NoteItem {
     divider: map['divider'] as String? ?? '',
     header: map['header'] as bool? ?? false,
     align: map['align'] as String? ?? '',
+    package: map['package'] as String? ?? '',
     extras: {
       for (final e in map.entries)
         if (!knownKeys.contains(e.key)) e.key: e.value,
@@ -151,6 +161,7 @@ class NoteItem {
     if (divider.isNotEmpty) 'divider': divider,
     if (header) 'header': true,
     if (align.isNotEmpty) 'align': align,
+    if (package.isNotEmpty) 'package': package,
   };
 }
 

@@ -13999,6 +13999,102 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Nottan rutin oluştur'**
   String get routineFromNote;
+
+  /// No description provided for @gmailAddAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başka hesap ekle'**
+  String get gmailAddAccount;
+
+  /// No description provided for @gmailRemoveAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesabı kaldır'**
+  String get gmailRemoveAccount;
+
+  /// No description provided for @quickRowSubheading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ara başlık'**
+  String get quickRowSubheading;
+
+  /// No description provided for @quickRowItalic.
+  ///
+  /// In tr, this message translates to:
+  /// **'İtalik'**
+  String get quickRowItalic;
+
+  /// No description provided for @quickRowUnderline.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altı çizili'**
+  String get quickRowUnderline;
+
+  /// No description provided for @quickRowHighlight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vurgula'**
+  String get quickRowHighlight;
+
+  /// No description provided for @quickRowSpellOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazım düzelt: açık (her kelime otomatik düzeltilir)'**
+  String get quickRowSpellOn;
+
+  /// No description provided for @quickRowSpellOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazım düzelt: kapalı'**
+  String get quickRowSpellOff;
+
+  /// No description provided for @quickRowPackage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pakete al'**
+  String get quickRowPackage;
+
+  /// No description provided for @notePackageHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uzun yazı — pakete alıp sadeleştir'**
+  String get notePackageHint;
+
+  /// No description provided for @quickRowDictation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesle yaz'**
+  String get quickRowDictation;
+
+  /// No description provided for @quickRowCustomize.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı menüyü düzenle (düğme ekle/çıkar)'**
+  String get quickRowCustomize;
+
+  /// No description provided for @notePackageSelectFirst.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pakete almak için yazıyı seç (ya da uzun bir paragrafa dokun)'**
+  String get notePackageSelectFirst;
+
+  /// No description provided for @notePackageCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} madde'**
+  String notePackageCount(int count);
+
+  /// No description provided for @notePackageUnpack.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paketi çöz (nota geri koy)'**
+  String get notePackageUnpack;
+
+  /// No description provided for @pinnedPenWrite.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üzerine kalemle yaz'**
+  String get pinnedPenWrite;
 }
 
 class _AppLocalizationsDelegate

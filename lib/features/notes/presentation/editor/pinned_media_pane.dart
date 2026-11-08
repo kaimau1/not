@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -15,6 +16,7 @@ import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
 import '../drive_ui.dart';
 import '../viewers/bubble_layer.dart';
+import '../viewers/ink_layer.dart';
 import '../viewers/pdf_read_style.dart';
 import 'note_images.dart';
 import 'attachment_actions.dart';
@@ -119,7 +121,13 @@ class PinnedMediaPane extends StatefulWidget {
     this.onTranscribe,
     this.onPdfNote,
     this.onImmersiveChanged,
+    this.penActive = false,
   });
+
+  /// Editörün kalem kipi açık: sabit PDF'in üstüne doğrudan yazılır
+  /// (kullanıcı isteği 2026-11-08). Kapalıyken bölmenin çubuğundaki kalem
+  /// düğmesi aynı katmanı yalnız bu bölme için açar.
+  final bool penActive;
 
   /// Balon yazma kartı açıldı/kapandı: editör kendi alt çubuğunu gizler
   /// (bölme de alttaki notu gizleyip medyayı klavyeye kadar uzatır — bkz.
@@ -249,6 +257,26 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   /// Belge kutusunun denetimleri bu çubukta (2026-11-07: kutunun üstündeki
   /// gri sayfa şeridi kaldırıldı — bkz. [PdfBoxBar]).
   final _pdfBar = PdfBoxBar();
+
+  /// Bölmenin kendi kalem düğmesi (editörün kalem kipi kapalıyken).
+  bool _ownPen = false;
+  InkController? _ink;
+
+  bool get _penOn =>
+      widget.onChanged != null &&
+      widget.media.kind == AttachmentKind.pdf &&
+      (widget.penActive || _ownPen);
+
+  /// Çizim denetleyicisi ekle bağlı; ek değişince yenilenir.
+  InkController _inkFor(Attachment a) {
+    final c = _ink;
+    if (c != null) return c;
+    return _ink = InkController(
+      initial: a.ink,
+      onChanged: (strokes) =>
+          widget.onChanged?.call(widget.media.copyWith(ink: strokes)),
+    );
+  }
 
   /// Sabit PDF'in bırakma kipinde açık metin mi (bkz. [PdfPageBox.addingPlain]).
   final _pdfPlain = ValueNotifier<bool>(false);
@@ -405,6 +433,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   @override
   void didUpdateWidget(PinnedMediaPane old) {
     super.didUpdateWidget(old);
+    if (old.media.id != widget.media.id) {
+      _ink?.dispose();
+      _ink = null;
+      _ownPen = false;
+    }
     final doc = widget.bubbleDoc;
     if (doc != null) {
       _imageBubbles
@@ -429,6 +462,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
 
   @override
   void dispose() {
+    _ink?.dispose();
     _ownBubbles?.save();
     _ownBubbles?.dispose();
     _imageBubbles?.dispose();
@@ -714,7 +748,21 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                         color: PdfReadStyle.of(context).background,
                         child: WebDriveGate(
                           attachment: widget.media,
-                          builder: (_, shown) => PdfPageBox(
+                          // KALEMLE YAZARKEN kalem sayfayı kaydırmaz (çizer);
+                          // parmak kaydırır ("yalnız kalem" açıksa).
+                          builder: (_, shown) => ScrollConfiguration(
+                            behavior: ScrollConfiguration.of(context).copyWith(
+                              dragDevices: _penOn
+                                  ? {
+                                      PointerDeviceKind.mouse,
+                                      PointerDeviceKind.trackpad,
+                                      if (_inkFor(shown).penOnly)
+                                        PointerDeviceKind.touch,
+                                    }
+                                  : null,
+                            ),
+                            child: PdfPageBox(
+                            ink: _penOn ? _inkFor(shown) : null,
                             key: ValueKey('pinned-pdf-${widget.media.id}'),
                             attachment: shown,
                             onChanged: widget.onChanged ?? (_) {},
@@ -728,6 +776,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                             fitWidth: true,
                             externalBar: _pdfBar,
                             onNoteFromSelection: widget.onPdfNote,
+                          ),
                           ),
                         ),
                       )
@@ -1004,6 +1053,15 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
           ),
         // BELGE DENETİMLERİ (eski yüzen şeritten): ‹ n/N › · balonlar ·
         // yer imi · belge menüsü.
+        // ÜZERİNE YAZ (kullanıcı isteği 2026-11-08): editörün kalemi
+        // kapalıyken de sabit belgeye doğrudan kalemle yazılır.
+        if (isPdf && widget.onChanged != null && !widget.penActive)
+          _BarButton(
+            key: const ValueKey('pinned-pen'),
+            tooltip: l10n.pinnedPenWrite,
+            icon: _ownPen ? Icons.draw : Icons.draw_outlined,
+            onPressed: () => setState(() => _ownPen = !_ownPen),
+          ),
         if (isPdf)
           ListenableBuilder(
             listenable: _pdfBar,
@@ -1281,6 +1339,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
 
 class _BarButton extends StatelessWidget {
   const _BarButton({
+    super.key,
     required this.tooltip,
     required this.icon,
     required this.onPressed,

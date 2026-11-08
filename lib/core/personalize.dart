@@ -52,12 +52,20 @@ class UiPrefs {
   /// Ayarda seçilebilen sarma süreleri (sn).
   static const seekChoices = <int>[3, 5, 10, 15, 20, 30, 60];
 
-  bool shows(String id) => !hidden.contains(id);
+  /// [UiItem.optIn] öğeleri varsayılan GİZLİ: açılınca kümede `+kimlik`
+  /// tutulur (kayıt biçimi aynı kalsın diye tek küme).
+  bool shows(String id) => UiItem.optIn.contains(id)
+      ? hidden.contains('+$id')
+      : !hidden.contains(id);
 
   UiPrefs withVisible(String id, bool visible) {
     if (shows(id) == visible) return this;
     final next = {...hidden};
-    visible ? next.remove(id) : next.add(id);
+    if (UiItem.optIn.contains(id)) {
+      visible ? next.add('+$id') : next.remove('+$id');
+    } else {
+      visible ? next.remove(id) : next.add(id);
+    }
     return copyWith(hidden: next);
   }
 
@@ -170,6 +178,19 @@ abstract final class UiItem {
   /// `EditorQuickRow` düğme kimliği; 2026-11-08 — düzenleme modunda
   /// gizlenip gösterilir).
   static String quickRow(String key) => 'editor.quick.$key';
+
+  /// HIZLI SATIRA SONRADAN EKLENEBİLEN düğmeler (kullanıcı isteği
+  /// 2026-11-08: "hızlı menüye istediğimizi ekleyebilelim") — varsayılan
+  /// gizli; düzenleme modunda (satırın sonundaki ⚙) dokununca eklenir.
+  static final optIn = <String>{
+    for (final k in const [
+      'italic',
+      'underline',
+      'highlight',
+      'dictation',
+    ])
+      quickRow(k),
+  };
 
   /// Not ekranındaki "Ekle" levhasının seçeneği ([key] = levhanın kimliği).
   static String attach(String key) => 'attach.$key';

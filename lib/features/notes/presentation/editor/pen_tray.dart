@@ -174,15 +174,17 @@ class _PenTrayState extends State<PenTray> {
 
   InkController get _ink => widget.controller;
 
+  static PenTrayTool _penToolOf(InkPen p) => switch (p) {
+    InkPen.pen => PenTrayTool.pen,
+    InkPen.marker => PenTrayTool.marker,
+    InkPen.highlighter => PenTrayTool.highlighter,
+  };
+
   PenTrayTool get _current {
     if (_ink.lasso) return PenTrayTool.lasso;
     if (_ink.eraser) return PenTrayTool.eraser;
     if (_ink.arrow || _ink.shape != null) return PenTrayTool.shapes;
-    return switch (_ink.pen) {
-      InkPen.pen => PenTrayTool.pen,
-      InkPen.marker => PenTrayTool.marker,
-      InkPen.highlighter => PenTrayTool.highlighter,
-    };
+    return _penToolOf(_ink.pen);
   }
 
   void _tap(PenTrayTool tool) {
@@ -410,7 +412,31 @@ class _PenTrayState extends State<PenTray> {
                   ),
                   const SizedBox(width: 6),
                   _Swatch(color: inkDot, size: 14, selected: false),
-                  const SizedBox(width: 4),
+                  // HIZLI SİLGİ (kullanıcı isteği 2026-11-08): küçük panelde
+                  // hep silgi; silgi seçiliyken yerinde SON kalem — tek
+                  // dokunuşla gidip gelinir. `_ink.pen` silgide de korunur.
+                  Tooltip(
+                    message: _ink.eraser ? labels[_penToolOf(_ink.pen)]! : l10n.eraser,
+                    child: InkResponse(
+                      key: const ValueKey('pen-dock-quick-eraser'),
+                      radius: 20,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        _ink.eraser ? _ink.setPen(_ink.pen) : _ink.setEraser(true);
+                      },
+                      child: SizedBox(
+                        width: 36,
+                        height: 44,
+                        child: Icon(
+                          _ink.eraser
+                              ? Icons.edit_outlined
+                              : Icons.auto_fix_normal_outlined,
+                          size: 20,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
                   Icon(
                     Icons.keyboard_arrow_up_rounded,
                     size: 20,

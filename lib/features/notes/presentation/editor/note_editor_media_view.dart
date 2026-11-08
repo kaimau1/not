@@ -998,6 +998,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
         ? body
         : PinnedMediaPane(
             media: pinned,
+            penActive: _pagePen,
             onHeightChanged: (h) =>
                 _updateAttachment(pinned.copyWith(pinHeight: h)),
             // Bölmeden çıkış (ayracı tepeye çekmek, ⋮ → Sayfaya göm) eki

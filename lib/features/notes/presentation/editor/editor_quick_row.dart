@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
 import '../../../../core/widgets/customizable.dart';
+import 'auto_spell.dart';
 
 /// **YAZARKEN ÜSTTE HIZLI İŞLEV SATIRI** (kullanıcı isteği 2026-11-08):
 /// klavye açıkken üst çubukta tarih/etiket satırının yerinde — biçim (kalın,
@@ -32,7 +33,32 @@ class EditorQuickRow extends StatefulWidget {
     required this.onReminder,
     this.hint = false,
     this.onHinted,
+    this.onSubheading,
+    this.onSpell,
+    this.onPackage,
+    this.packageHint = false,
+    this.onItalic,
+    this.onUnderline,
+    this.onHighlight,
+    this.onDictation,
   });
+
+  /// Ara başlık: satırı alt başlık yapar (metin modu; 2026-11-08).
+  final VoidCallback? onSubheading;
+
+  /// Yazım düzelt aç/kapa; durum [AutoSpell.enabled]'dan okunur.
+  final VoidCallback? onSpell;
+
+  /// Seçimi / uzun yazıyı NOT PAKETİNE al; [packageHint] = uzun yazı var,
+  /// düğme ipucuyla vurgulanır.
+  final VoidCallback? onPackage;
+  final bool packageHint;
+
+  // Sonradan eklenebilenler ([UiItem.optIn]).
+  final VoidCallback? onItalic;
+  final VoidCallback? onUnderline;
+  final VoidCallback? onHighlight;
+  final VoidCallback? onDictation;
 
   /// true = ilk görünüşte vurgula; vurgu başlayınca [onHinted] çağrılır.
   final bool hint;
@@ -183,6 +209,96 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
               l10n.quickRowHeading,
               widget.onHeading,
             ),
+            if (widget.onSubheading != null)
+              button(
+                'subheading',
+                Icons.short_text_rounded,
+                l10n.quickRowSubheading,
+                widget.onSubheading,
+              ),
+            if (widget.onItalic != null)
+              button(
+                'italic',
+                Icons.format_italic_rounded,
+                l10n.quickRowItalic,
+                widget.onItalic,
+              ),
+            if (widget.onUnderline != null)
+              button(
+                'underline',
+                Icons.format_underlined_rounded,
+                l10n.quickRowUnderline,
+                widget.onUnderline,
+              ),
+            if (widget.onHighlight != null)
+              button(
+                'highlight',
+                Icons.border_color_outlined,
+                l10n.quickRowHighlight,
+                widget.onHighlight,
+              ),
+            if (widget.onSpell != null)
+              ValueListenableBuilder<bool>(
+                valueListenable: AutoSpell.enabled,
+                builder: (context, on, _) => Customizable(
+                  id: UiItem.quickRow('spell'),
+                  child: Tooltip(
+                    message: on ? l10n.quickRowSpellOn : l10n.quickRowSpellOff,
+                    child: InkResponse(
+                      key: const ValueKey('quick-row-spell'),
+                      radius: 20,
+                      onTap: widget.onSpell,
+                      child: Container(
+                        height: 32,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: on ? scheme.secondaryContainer : null,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          Icons.spellcheck_rounded,
+                          size: 20,
+                          color: on
+                              ? scheme.onSecondaryContainer
+                              : scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (widget.onPackage != null)
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  button(
+                    'package',
+                    Icons.inventory_2_outlined,
+                    widget.packageHint
+                        ? l10n.notePackageHint
+                        : l10n.quickRowPackage,
+                    widget.onPackage,
+                  ),
+                  // UZUN YAZIDA İPUCU: küçük nokta (kullanıcı isteği).
+                  if (widget.packageHint)
+                    PositionedDirectional(
+                      top: 8,
+                      end: 6,
+                      child: IgnorePointer(
+                        child: Container(
+                          key: const ValueKey('quick-row-package-hint'),
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: scheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             divider,
             button(
               'photo',
@@ -202,6 +318,32 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
               Icons.alarm_add_outlined,
               l10n.quickRowReminder,
               widget.onReminder,
+            ),
+            if (widget.onDictation != null)
+              button(
+                'dictation',
+                Icons.mic_none_rounded,
+                l10n.quickRowDictation,
+                widget.onDictation,
+              ),
+            // SATIRI DÜZENLE: düzenleme modunu açar — gizli/eklenebilir
+            // düğmeler çerçeveli görünür, dokununca eklenir/çıkar.
+            Tooltip(
+              message: l10n.quickRowCustomize,
+              child: InkResponse(
+                key: const ValueKey('quick-row-customize'),
+                radius: 20,
+                onTap: Personalize.startEditing,
+                child: SizedBox(
+                  width: 36,
+                  height: 40,
+                  child: Icon(
+                    Icons.tune_rounded,
+                    size: 18,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
             ),
           ],
         ),

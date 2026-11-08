@@ -114,7 +114,12 @@ class PdfPageBox extends StatefulWidget {
     this.onBubbleWriting,
     this.onNoteFromSelection,
     this.fitWidth = false,
+    this.ink,
   });
+
+  /// Verilirse sayfanın üstüne KALEMLE YAZILIR (sabit bölme, 2026-11-08):
+  /// çizim katmanı etkileşimli; yoksa var olan çizim yalnız gösterilir.
+  final InkController? ink;
 
   /// **OKUMA NOTU** (kullanıcı isteği 2026-11-03): verilirse sayfadaki yazı
   /// BASILI TUTARAK seçilir (Chrome'daki gibi kelime kelime büyür) ve
@@ -1009,16 +1014,19 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     BubbleController? bubbles,
   ) {
     final a = widget.attachment;
-    final inkHere = widget.fitWidth && a.ink.isNotEmpty;
+    final pen = widget.ink;
+    final inkHere = widget.fitWidth && (a.ink.isNotEmpty || pen != null);
     if (bubbles == null && !inkHere && !_selectable) return null;
     return LayoutBuilder(
       builder: (context, box) => Stack(
         fit: StackFit.expand,
         children: [
           if (inkHere)
-            IgnorePointer(
-              child: CustomPaint(painter: InkPainter(a.ink, pageNumber)),
-            ),
+            pen != null
+                ? InkPageLayer(controller: pen, page: pageNumber)
+                : IgnorePointer(
+                    child: CustomPaint(painter: InkPainter(a.ink, pageNumber)),
+                  ),
           if (_selectable)
             ValueListenableBuilder<int>(
               valueListenable: _selection.page,

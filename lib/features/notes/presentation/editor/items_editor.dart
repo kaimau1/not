@@ -20,6 +20,7 @@ import '../../domain/note_item.dart';
 import '../../domain/note_share_text.dart';
 import '../item_divider_style.dart';
 import 'format_menu.dart';
+import 'note_package.dart';
 import 'tag_chips.dart';
 import 'tag_tap.dart';
 import 'text_wrap.dart';
@@ -748,7 +749,16 @@ class ItemsEditorState extends State<ItemsEditor>
       if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
         return KeyEventResult.ignored;
       }
-      if (event.logicalKey != LogicalKeyboardKey.backspace) {
+      // OK TUŞLARI (kullanıcı isteği 2026-11-08): satırın ilk/son satırında
+      // ↑/↓ bir önceki/sonraki maddeye geçer.
+      final key = event.logicalKey;
+      if (key == LogicalKeyboardKey.arrowUp ||
+          key == LogicalKeyboardKey.arrowDown) {
+        return moveFocusVertically(id, up: key == LogicalKeyboardKey.arrowUp)
+            ? KeyEventResult.handled
+            : KeyEventResult.ignored;
+      }
+      if (key != LogicalKeyboardKey.backspace) {
         return KeyEventResult.ignored;
       }
       return mergeIntoPrevious(id)
@@ -1555,6 +1565,118 @@ class ItemsEditorState extends State<ItemsEditor>
   /// Enter'ın [_enterAt] ile böldüğü maddeyi geri birleştirmenin yolu.
   /// İlk maddede ya da işaretli/işaretsiz sınırında hiçbir şey yapmaz
   /// (false döner; tuş klavyenin kendisine kalır).
+  /// ↑ ilk satırdaysa önceki maddenin sonuna, ↓ son satırdaysa sonrakinin
+  /// başına geçer. ponytail: yalnız mantıksal satıra (`\n`) bakılır; sarılmış
+  /// uzun maddede görsel satırlar atlanır — gerekirse TextPainter ile ölç.
+  bool moveFocusVertically(String id, {required bool up}) {
+    final index = _items.indexWhere((i) => i.id == id);
+    final target = index + (up ? -1 : 1);
+    if (index < 0 || target < 0 || target >= _items.length) return false;
+    final c = _controllers[id];
+    if (c == null || !c.selection.isValid) return false;
+    final caret = c.selection.extentOffset;
+    final text = c.text;
+    final onEdge = up
+        ? !text.substring(0, caret.clamp(0, text.length)).contains('\n')
+        : !text.substring(caret.clamp(0, text.length)).contains('\n');
+    if (!onEdge) return false;
+    final next = _items[target];
+    _focusFor(next).requestFocus();
+    final nc = _controllerFor(next);
+    nc.selection = TextSelection.collapsed(
+      offset: up ? nc.text.length : 0,
+    );
+    return true;
+  }
+
+  /// Şu an AÇIK not paketi (bkz. [NoteItem.package]); null = hepsi kapalı.
+  String? _openPackage;
+
+  /// Seçili maddeler (seçim modunda) ya da odaktaki madde paket olur;
+  /// dağınık seçim ilk seçilenin yerinde toplanır. Zaten paketse çözülür.
+  /// false = paketlenecek madde yok.
+  bool togglePackage() {
+    final ids = _selected.isNotEmpty
+        ? {..._selected}
+        : {?_lastFocusedItemId};
+    final group = [
+      for (final i in _items)
+        if (ids.contains(i.id) && !i.header) i,
+    ];
+    if (group.isEmpty) return false;
+    final unpack = group.every((i) => i.package.isNotEmpty);
+    final pkg = unpack ? '' : const Uuid().v4().substring(0, 8);
+    final changed = {
+      for (final i in group) i.id: i.copyWith(package: unpack ? '' : pkg),
+    };
+    setState(() {
+      if (unpack) {
+        for (var k = 0; k < _items.length; k++) {
+          final c = changed[_items[k].id];
+          if (c != null) _items[k] = c;
+        }
+      } else {
+        // Ardışık olsun: hepsi ilk maddenin yerine.
+        final at = _items.indexWhere((i) => i.id == group.first.id);
+        _items.removeWhere((i) => changed.containsKey(i.id));
+        _items.insertAll(at, [for (final i in group) changed[i.id]!]);
+      }
+      _selected.clear();
+      _selectMode = false;
+      _openPackage = null;
+      _rowCache.clear();
+    });
+    _commit();
+    return true;
+  }
+
+  void _setOpenPackage(String? pkg) {
+    if (_openPackage == pkg || !mounted) return;
+    setState(() => _openPackage = pkg);
+  }
+
+  /// Sürüklenebilir listede [index]teki satır: paketsiz madde AYNEN; kapalı
+  /// paketin ilk maddesi çerçeveli özet, kalanları sıfır yükseklik (dizinler
+  /// sürüklemeyle örtüşsün diye satır yerinde kalır); açık paketin
+  /// maddeleri ince kenarlı ve dışarı dokununca paket daralır.
+  Widget _packagedRow(List<NoteItem> list, int index, Widget row) {
+    final item = list[index];
+    final pkg = item.package;
+    if (pkg.isEmpty) return row;
+    final first = index == 0 || list[index - 1].package != pkg;
+    if (_openPackage != pkg) {
+      if (!first) return SizedBox.shrink(key: ValueKey('pkg-${item.id}'));
+      final members = [
+        for (var k = index; k < list.length && list[k].package == pkg; k++)
+          list[k],
+      ];
+      return KeyedSubtree(
+        key: ValueKey('pkg-${item.id}'),
+        child: NotePackagePill(
+          text: members.map((m) => stripRichMarkers(m.text)).join('  ·  '),
+          count: members.length,
+          onTap: () => _setOpenPackage(pkg),
+        ),
+      );
+    }
+    final scheme = Theme.of(context).colorScheme;
+    return KeyedSubtree(
+      key: ValueKey('pkg-${item.id}'),
+      child: TapRegion(
+        groupId: 'note-package-$pkg',
+        onTapOutside: (_) => _setOpenPackage(null),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: BorderDirectional(
+              start: BorderSide(color: scheme.primary, width: 2),
+            ),
+          ),
+          child: row,
+        ),
+      ),
+    );
+  }
+
   @visibleForTesting
   bool mergeIntoPrevious(String id) {
     final index = _items.indexWhere((i) => i.id == id);
@@ -1692,6 +1814,7 @@ class ItemsEditorState extends State<ItemsEditor>
       item.divider,
       item.header,
       item.align,
+      item.package,
       reorderIndex,
       orderNumber,
       _selected.contains(item.id),
@@ -2028,10 +2151,14 @@ class ItemsEditorState extends State<ItemsEditor>
           _adoptIncomingItems();
         }
       },
-      itemBuilder: (context, index) => _cachedItemRow(
-        listItems[index],
-        reorderIndex: index,
-        orderNumber: itemOrderNumber(listItems, index),
+      itemBuilder: (context, index) => _packagedRow(
+        listItems,
+        index,
+        _cachedItemRow(
+          listItems[index],
+          reorderIndex: index,
+          orderNumber: itemOrderNumber(listItems, index),
+        ),
       ),
     );
 

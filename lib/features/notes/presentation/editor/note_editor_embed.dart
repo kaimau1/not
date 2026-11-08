@@ -35,6 +35,11 @@ extension _EditorEmbed on _NoteEditorScreenState {
       showUnsupportedAttachmentDialog(context);
       return;
     }
+    // NOT PAKETİ: önizlemede okunur/yazılır/çizilir (2026-11-08).
+    if (isNotePackage(attachment)) {
+      _openPackage(attachment);
+      return;
+    }
     // Metin eki (transkript) dosyasız: okuma ekranında açılır.
     if (attachment.kind == AttachmentKind.text) {
       unawaited(_openTranscript(attachment));

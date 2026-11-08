@@ -235,6 +235,16 @@ A12. [ ] Not kapanışı (yazdıktan sonra geri, karta küçülme): kasma azald�
 - B10. [ ] Takvim: gün levhası / etkinlik / Google etkinliği → "Mevcut notu bağla"; ajandada bağlı-not simgesine dokun → not açılıyor.
 - B11. [ ] Rutinler → ✓ (nottan rutin) → seçilen notun maddeleri adım olmuş rutin düzenleyicide.
 
+### C1–C8 (2026-11-08 oturum C — yazıldı, cihazda doğrulanmadı)
+- C1 Gmail: seçili yazı → altta "Nota ekle" düğmesi; bağlantılar tıklanır; e-postadaki görseller altta; sağ üst harf → hesap seç / "Başka hesap ekle" (Android hesap seçicisi), yeni hesapta "Bağlan" çıkar.
+- C2 Hızlı satır: en sağda ⋮; ⚙ ile düzenleme modu → İtalik/Altı çizili/Vurgula/Sesle yaz eklenebiliyor mu.
+- C3 Yazım düzelt (✓abc): "herşey " → "Her şey "; Enter'da satır sonu nokta; Gboard/Samsung önerisiyle "kalmel" → "kalem".
+- C4 Not paketi: metinde yazı seç → 📦 → etiket; dokun → önizleme (yaz, kalemle çiz, çöz). Listede maddeleri seç → 📦 → çerçeveli özet; dokun aç, dışarı dokun kapan.
+- C5 Kalemle tik/kare çiz → işaretçiye KALEMLE bas → düzelir, seçili kalır; taşı + sağ alt tutamaktan boyutla.
+- C6 Sabit PDF: kalem kipinde üstüne yaz, parmakla kaydır; kalem kapalıyken bölme çubuğundaki ✏.
+- C7 Balon yazma alanına kalemle yaz → ~1 sn sonra metin.
+- C8 Kalem küçük paneli: silgi ⇄ son kalem tek dokunuş; liste maddelerinde ↑/↓ (fiziksel klavye).
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)

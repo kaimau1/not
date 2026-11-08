@@ -82,6 +82,8 @@ import '../../../calendar/data/task_note_sync.dart';
 import '../../../calendar/presentation/note_calendar_links.dart';
 import '../../../calendar/presentation/task_editor.dart';
 import '../../../calendar/presentation/line_task_chip.dart';
+import 'auto_spell.dart';
+import 'note_package.dart';
 import 'editor_quick_row.dart';
 import '../../../calendar/presentation/event_editor.dart';
 import '../../../calendar/domain/agenda.dart' show noteDateSuggestion;
@@ -195,6 +197,7 @@ import '../../../../core/friendly_error.dart';
 import '../../../../core/a11y/chip_roles.dart';
 
 part 'note_editor_actions.dart';
+part 'note_editor_package.dart';
 part 'note_editor_ai.dart';
 part 'note_editor_appearance.dart';
 part 'note_editor_attachments.dart';
@@ -941,6 +944,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool get _titleIsTarget => _formatTarget?.controller == _titleController;
 
   void _clearFormatTargetFor(WrapTextController controller) {
+    AutoSpell.detach(controller);
     // Alan yok oluyor: hem dinleyicisi hem de ondan hatırlanan seçim düşer,
     // yoksa [_finishPendingEmbed] ölü bir denetleyiciye yazmayı denerdi.
     controller.removeListener(_rememberTargetSelection);
@@ -986,6 +990,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       focusNode: focusNode,
       commit: commit,
     );
+    // Yazım düzelt (hızlı satır): başlık hariç her alan.
+    if (controller != _titleController) AutoSpell.attach(controller, commit);
     if (changed) _formatTargetN.value = _formatTarget;
     // Alan yeni odaklandı: imleci klavyenin üstüne al. Bu kapanış gövde,
     // başlık ve madde satırlarının HEPSİNDEN geçtiği için tek yer yeter.
@@ -1091,6 +1097,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   @override
   void initState() {
     super.initState();
+    unawaited(AutoSpell.load());
     // Kök gezgin: kapanış önerisi (F52.3) editör atıldıktan sonra açılır.
     _rootNavigator = Navigator.maybeOf(context, rootNavigator: true);
     // Uygulama arka plana alınırken/kapatılırken bekleyen kaydı zorlamak için
@@ -2244,6 +2251,25 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               ? () => showInkSettings(context, _pageInkOf(note))
               : null,
           onReminder: () => unawaited(_pickReminder()),
+          // Ara başlık: satırı doğrudan alt başlık yapar (metin modu).
+          onSubheading: note.type == NoteType.text
+              ? () => _runOnTarget(
+                  (c) => applyRichHeading(
+                    c,
+                    activeRichHeading(c) == RichHeading.h2
+                        ? RichHeading.normal
+                        : RichHeading.h2,
+                  ),
+                )
+              : null,
+          onSpell: AutoSpell.toggle,
+          onPackage: () => _packageFromQuickRow(note),
+          packageHint:
+              note.type == NoteType.text && suggestsPackage(note.body),
+          onItalic: () => _applyFormat(RichFormat.italic),
+          onUnderline: () => _applyFormat(RichFormat.underline),
+          onHighlight: () => _applyFormat(RichFormat.highlight),
+          onDictation: () => unawaited(_toggleDictation()),
           // Nota her girişte bir kez (durum örneği nota bağlı); setState
           // YOK — yalnız bir sonraki açılışta vurgulanmasın diye.
           hint: !_quickRowHinted,
@@ -4677,13 +4703,13 @@ child: NoteFindBar(
               // (bkz. [noteMenuModel] — kullanıcı isteği 2026-08-09).
               if (PenTray.useRail(context))
                 _hideWhileTyping(note, _fullscreenButton(l10n)),
-              _hideWhileTyping(
-                note,
-                IconButton(
-                  tooltip: l10n.noteMenu,
-                  icon: const Icon(Icons.more_vert),
-                  onPressed: _openNoteMenu,
-                ),
+              // ⋮ yazarken de görünür: hızlı satırın en sağında (kullanıcı
+              // isteği 2026-11-08 — "3 nokta geri gelsin").
+              IconButton(
+                key: const ValueKey('editor-more'),
+                tooltip: l10n.noteMenu,
+                icon: const Icon(Icons.more_vert),
+                onPressed: _openNoteMenu,
               ),
             ],
           ),

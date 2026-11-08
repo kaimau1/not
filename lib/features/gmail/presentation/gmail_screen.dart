@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:typed_data';
+
+import 'package:flutter/gestures.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,7 +18,9 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/gemini_service.dart';
+import '../../auth/data/google_scope_auth.dart' show chooseGoogleAccount;
 import '../../auth/presentation/account_required.dart';
+import '../../auth/presentation/auth_providers.dart';
 import '../../calendar/presentation/event_editor.dart';
 import '../../calendar/presentation/task_editor.dart';
 import '../../notes/data/attachment_repository.dart';
@@ -162,6 +167,8 @@ class _GmailScreenState extends ConsumerState<GmailScreen> {
         appBar: AppBar(
           title: Text(l10n.gmailTitle),
           actions: [
+            if (available && gmailMultiAccount)
+              _AccountButton(onChanged: () => _load(reset: true)),
             if (available && !_needsConnect)
               IconButton(
                 key: const ValueKey('gmail-refresh'),
@@ -786,6 +793,15 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
   _SaveMode? _busy;
   bool _withAttachments = true;
 
+  /// Gövdede seçili yazı (boş = seçim yok).
+  final _selected = ValueNotifier<String>('');
+
+  @override
+  void dispose() {
+    _selected.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -1126,34 +1142,79 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
             const SizedBox(height: 8),
             // Metin seçilebilir; seçim menüsünde "Nota ekle" ile seçilen
             // kısım nota aktarılır (bkz. [showNoteTargetPicker]).
-            SelectableText(
-              m.body,
-              style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
-              contextMenuBuilder: (context, state) {
-                final value = state.textEditingValue;
-                final selected = value.selection.isCollapsed
-                    ? ''
-                    : value.selection.textInside(value.text);
-                return AdaptiveTextSelectionToolbar.buttonItems(
-                  anchors: state.contextMenuAnchors,
-                  buttonItems: [
-                    ...state.contextMenuButtonItems,
-                    if (selected.trim().isNotEmpty)
-                      ContextMenuButtonItem(
-                        label: l10n.gmailAddSelectionToNote,
-                        onPressed: () {
-                          state.hideToolbar();
-                          unawaited(_addTextToNote(selected));
-                        },
+            // BAĞLANTILAR TIKLANIR (kullanıcı isteği 2026-11-08): seçim
+            // [SelectionArea] ile — `Text.rich` dokunma tanıyıcıları orada
+            // çalışır; seçilen yazı alttaki "Nota ekle" düğmesini açar.
+            SelectionArea(
+              onSelectionChanged: (c) =>
+                  _selected.value = c?.plainText.trim() ?? '',
+              contextMenuBuilder: (context, state) =>
+                  AdaptiveTextSelectionToolbar.buttonItems(
+                    anchors: state.contextMenuAnchors,
+                    buttonItems: [
+                      ...state.contextMenuButtonItems,
+                      if (_selected.value.isNotEmpty)
+                        ContextMenuButtonItem(
+                          label: l10n.gmailAddSelectionToNote,
+                          onPressed: () {
+                            state.hideToolbar();
+                            unawaited(_addTextToNote(_selected.value));
+                          },
+                        ),
+                    ],
+                  ),
+              child: Text.rich(
+                TextSpan(
+                  children: linkifyMail(
+                    m.body,
+                    m.links,
+                    linkStyle: TextStyle(
+                      color: s.primary,
+                      decoration: TextDecoration.underline,
+                    ),
+                    onOpen: (url) => unawaited(
+                      launchUrl(
+                        Uri.parse(url),
+                        mode: LaunchMode.externalApplication,
                       ),
-                  ],
-                );
-              },
+                    ),
+                  ),
+                ),
+                style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+              ),
             ),
+            // GÖRSELLER (2026-11-08): HTML'deki uzak görseller + resim ekleri;
+            // dokununca tam ekran.
+            _MailImages(message: m, api: ref.read(gmailSessionProvider)?.api),
           ],
         ],
       ),
-      bottomNavigationBar: m == null ? null : _actions(context, m),
+      bottomNavigationBar: m == null
+          ? null
+          : ValueListenableBuilder<String>(
+              valueListenable: _selected,
+              builder: (context, sel, actions) => sel.isEmpty
+                  ? actions!
+                  // SEÇİLİ YAZIYI NOTA EKLE altta düğme (kullanıcı isteği
+                  // 2026-11-08): seçim menüsünü aramaya gerek kalmasın.
+                  : Material(
+                      color: s.surfaceContainer,
+                      child: SafeArea(
+                        top: false,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                          child: FilledButton.icon(
+                            key: const ValueKey('gmail-add-selection'),
+                            icon: const Icon(Icons.note_add_outlined),
+                            label: Text(l10n.gmailAddSelectionToNote),
+                            onPressed: () =>
+                                unawaited(_addTextToNote(sel)),
+                          ),
+                        ),
+                      ),
+                    ),
+              child: _actions(context, m),
+            ),
     );
   }
 
@@ -1251,6 +1312,213 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Gövdeyi bağlantılı parçalara böler: çıplak `http(s)://` adresleri ve
+/// HTML'den gelen `<a>` yazıları ([links]) tıklanır olur.
+///
+/// ponytail: her yazının ilk geçtiği yer bağlanır (aynı yazı iki farklı
+/// adrese gidiyorsa ilki kazanır).
+@visibleForTesting
+List<InlineSpan> linkifyMail(
+  String body,
+  List<({String label, String url})> links, {
+  required TextStyle linkStyle,
+  required void Function(String url) onOpen,
+}) {
+  final marks = <({int start, int end, String url})>[];
+  for (final m in RegExp(r'https?://[^\s<>()"]+').allMatches(body)) {
+    var end = m.end;
+    while (end > m.start && '.,;:!?'.contains(body[end - 1])) {
+      end--;
+    }
+    marks.add((start: m.start, end: end, url: body.substring(m.start, end)));
+  }
+  bool overlaps(int a, int b) => marks.any((k) => a < k.end && b > k.start);
+  for (final l in links) {
+    final i = body.indexOf(l.label);
+    if (i >= 0 && !overlaps(i, i + l.label.length)) {
+      marks.add((start: i, end: i + l.label.length, url: l.url));
+    }
+  }
+  marks.sort((a, b) => a.start.compareTo(b.start));
+  final spans = <InlineSpan>[];
+  var at = 0;
+  for (final k in marks) {
+    if (k.start < at) continue;
+    if (k.start > at) spans.add(TextSpan(text: body.substring(at, k.start)));
+    spans.add(
+      TextSpan(
+        text: body.substring(k.start, k.end),
+        style: linkStyle,
+        recognizer: TapGestureRecognizer()..onTap = () => onOpen(k.url),
+      ),
+    );
+    at = k.end;
+  }
+  if (at < body.length) spans.add(TextSpan(text: body.substring(at)));
+  return spans;
+}
+
+/// ponytail: oturum boyu sınırsız; çok e-posta açılırsa LRU'ya çevir.
+final _imageCache = <String, Future<Uint8List>>{};
+
+/// E-postanın görselleri: HTML'deki uzak adresler + resim ekleri (indirilir).
+class _MailImages extends StatelessWidget {
+  const _MailImages({required this.message, required this.api});
+
+  final GmailMessage message;
+  final GmailApi? api;
+
+  void _open(BuildContext context, ImageProvider image) => unawaited(
+    showDialog<void>(
+      context: context,
+      builder: (c) => GestureDetector(
+        onTap: () => Navigator.pop(c),
+        child: InteractiveViewer(child: Image(image: image)),
+      ),
+    ),
+  );
+
+  Widget _thumb(BuildContext context, ImageProvider image) => Padding(
+    padding: const EdgeInsets.only(right: 8),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: () => _open(context, image),
+        child: Image(
+          image: image,
+          height: 160,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => const SizedBox.shrink(),
+        ),
+      ),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final api = this.api;
+    final files = [
+      if (api != null)
+        for (final a in message.attachments)
+          if (a.mimeType.startsWith('image/') && a.size < 8 * 1024 * 1024) a,
+    ];
+    if (_imageCache.length > 24) _imageCache.clear();
+    if (message.imageUrls.isEmpty && files.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: SizedBox(
+        height: 160,
+        child: ListView(
+          key: const ValueKey('gmail-images'),
+          scrollDirection: Axis.horizontal,
+          children: [
+            for (final f in files)
+              FutureBuilder<Uint8List>(
+                future: _imageCache.putIfAbsent(
+                  f.attachmentId,
+                  () => api!.attachment(message.id, f.attachmentId),
+                ),
+                builder: (context, snap) => snap.hasData
+                    ? _thumb(context, MemoryImage(snap.data!))
+                    : const SizedBox(
+                        width: 120,
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+              ),
+            for (final url in message.imageUrls)
+              _thumb(context, NetworkImage(url)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Sağ üstte etkin hesabın baş harfi; dokununca Google'ın hesap menüsü gibi
+/// levha: hesaplar (seçili ✓), "Başka hesap ekle", ek hesabı kaldır.
+class _AccountButton extends ConsumerWidget {
+  const _AccountButton({required this.onChanged});
+
+  final VoidCallback onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final primary = ref.watch(authStateProvider).value?.email;
+    final accounts = ref.watch(gmailAccountsProvider);
+    final active = accounts.active ?? primary ?? '?';
+    final notifier = ref.read(gmailAccountsProvider.notifier);
+    void done(VoidCallback change) {
+      change();
+      onChanged();
+    }
+
+    Widget avatar(String email, {double r = 16}) => CircleAvatar(
+      radius: r,
+      child: Text(
+        email.isEmpty ? '?' : email[0].toUpperCase(),
+        style: TextStyle(fontSize: r),
+      ),
+    );
+
+    return IconButton(
+      key: const ValueKey('gmail-account'),
+      tooltip: active,
+      icon: avatar(active, r: 14),
+      onPressed: () => unawaited(
+        showModalBottomSheet<void>(
+          context: context,
+          showDragHandle: true,
+          builder: (sheet) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final email in [?primary, ...accounts.extra])
+                  ListTile(
+                    leading: avatar(email),
+                    title: Text(email),
+                    trailing: email == active
+                        ? const Icon(Icons.check_rounded)
+                        : email == primary
+                        ? null
+                        : IconButton(
+                            tooltip: l10n.gmailRemoveAccount,
+                            icon: const Icon(Icons.close_rounded),
+                            onPressed: () {
+                              Navigator.pop(sheet);
+                              done(() => notifier.remove(email));
+                            },
+                          ),
+                    onTap: () {
+                      Navigator.pop(sheet);
+                      if (email != active) {
+                        done(() => notifier.select(email == primary ? null : email));
+                      }
+                    },
+                  ),
+                ListTile(
+                  key: const ValueKey('gmail-add-account'),
+                  leading: const Icon(Icons.person_add_alt_outlined),
+                  title: Text(l10n.gmailAddAccount),
+                  onTap: () async {
+                    Navigator.pop(sheet);
+                    final email = await chooseGoogleAccount();
+                    if (email != null) {
+                      done(() => notifier.add(email, primary: primary));
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
