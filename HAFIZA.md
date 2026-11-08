@@ -760,3 +760,15 @@ maddeyi GÜNCELLE.
 - **Kalem kipi kapalıyken kalemin tek başına tıkı** (son çizgiden ≥ 1,2 sn sonra, ≤ 4 dp kayma) çizmez, alttaki metne/kutucuğa gider (`stylusTapMayPass`, `_InkClaimRecognizer` artık eager değil: kayınca kazanır, kalkınca bırakır). Yazı arasındaki i/ö noktası çizilir. Tabletteki notta kalem tıklarından kalmış başıboş noktalar görüldü.
 - **Fiziksel klavye:** `HardKeyboard` (kanal `dev.kaimau.notlar/keyboard`). Yalnız HARİCİ HARF klavyesi sayılır (M-Pencil, ses/güç tuşları da "klavye"); kapak arkaya katlıyken (`hardKeyboardHidden`) yok. Takılıyken `TextInput.setInputControl(boş denetim)`: alan bağlı kalır, giriş türü `none` gider, sanal klavye açılmaz; not üst çubuğunda ⌨ düğmesi (`editor-soft-keyboard`) açar/kapar (odak bir kare bırakılıp geri alınır ki alan yeni türle bağlansın). Sistem kanalının Dart işleyicisi PiP'te: yeni olay için AYRI kanal aç.
 - Play yorum analizi ve sonraki fazlar: `YORUM_ANALIZI_PLANI.md`.
+
+## 2026-11-08 — Oturum B (arama, yazı tipi, Gmail, takvim pratikliği)
+- **Arama çubuğu:** tüm hap tek `GestureDetector` iken sağdaki düğmelerin boşluğu da aramayı başlatıyordu; odak jesti yalnız sol kısımda (`_SearchField`).
+- **Yazı tipi seçici = tema levhası** (`_showAppFontSheet`: perdesiz alçak levha, `_FontChoiceCard` "Aa", anında uygula, Vazgeç).
+- **Seçim modu + geri:** tek seçim modu ana ekranda (`selectedNoteIdsProvider`; PopScope VAR) ve madde seçimi; PDF sayfa düzenleyicisine PopScope eklendi. Klavye açıkken ilk geri klavyeyi kapatır (sistem), ikincisi seçimi.
+- **Hayalet ek sayacı:** editör ataç rozeti/şeridi zemin görselini (`backgroundImageId`) ek sayıyordu; kart/dışa aktarma saymıyordu → `Note.attachmentsWithoutBackground` ortak kural. TUZAK: yeni "ek" sayan yer bunu kullanmalı.
+- **Dikte:** `_writeDictationAtCaret` sonunda `_revealCaretSoon()`; panel açılışında da.
+- **Alt çubuk yazarken gizli:** `_typingN` ValueNotifier + `_TypingHide` (boy/opaklık, setState YOK); `_mutate(immediate:false)` + klavye açıkken tetikler, 650 ms sessizlikte döner. Ayar `hideBarWhileTypingProvider` (varsayılan açık), ipucu `TipOnce.typingBarHide`.
+- **Takvim tekerlek:** `PinchZoomDetector.wheelZoom` yalnız yıl/ay görünümünde; `PointerSignalResolver` sayesinde kaydırılabilir alan tekeri önce alır. Hafta görünümünde yakınlaştırma artık gün (ajanda) açar.
+- **Not seçici** `NoteTargetPicker`/`showNoteTargetPicker` (note_target_picker.dart): yeniden kullanılabilir; Gmail "Nota ekle", takvim "Mevcut notu bağla", nottan rutin bunu kullanır.
+- **Gmail:** `gmail_smart.dart` (tarih/saat ayıklama, gönderen); iletiden oluşan not = gövdesinde ileti `webUrl`i olan not (ilgili not çipi bununla bulur).
+

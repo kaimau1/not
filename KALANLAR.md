@@ -209,6 +209,19 @@ kartta çizildi. Yeni metin notunda klavye açık; not "+" → Hatırlat aynı "
 110. [ ] Ayarlar → Görünüm: Krem, Şeftali, Nane (telefonda 3'lü sıralar); okunurluk.
 111. [ ] Notta "+" → "Takvime ekle" → gün, saat → etkinlik levhası not bağlı açılıyor.
 
+**Oturum B (2026-11-08) — yazıldı, cihazda doğrulanmadı:**
+- B1. [ ] Ana ekran arama çubuğu: sağdaki ⋮/profil düğmesinin kenarına/boşluğuna basınca arama BAŞLAMIYOR; yalnız büyüteç ve metin alanından başlıyor.
+- B2. [ ] Ayarlar → Görünüm → Yazı tipi: alçak levha, her kart kendi yazı tipiyle "Aa"; dokununca üstteki ekran anında değişiyor; Vazgeç açılıştaki tipe dönüyor.
+- B3. [ ] PDF sayfa düzenleyicide sayfa seçiliyken geri tuşu önce seçimi kapatıyor. (Ana ekranda seçim modu + geri: kodda PopScope zaten var; kullanıcı "illa ×" dedi — telefonda yeniden dene, hâlâ çıkıyorsa kök neden başka.)
+- B4. [ ] Zemin görseli olan, eki olmayan notta alt çubukta ataç rozeti artık çıkmıyor (kök neden varsayımı: zemin görseli ek sayılıyordu; kullanıcının notunda başka bir neden olabilir).
+- B5. [ ] Dikte: uzun notta konuşurken yazılan satır ekranın içinde kalıyor (panel/klavye altında kalmıyor).
+- B6. [ ] Yazarken alt çubuk iniyor, durunca ~0,65 sn sonra hemen geliyor; ilk seferde ipucu; Ayarlar → Kartlar'dan kapanıyor; kasma yok.
+- B7. [ ] Takvim (web): yıl/ay görünümünde tekerlek yukarı = yakınlaş (imlecin ayı/haftası), aşağı = uzaklaş; Ctrl+tekerlek haftada gün açıyor.
+- B8. [ ] Gmail: kart satırları tema renginde, etiket çipleri; iletide tarih çipi → etkinlik levhası, kişi çipi → "Nota ekle", ilgili not çipi.
+- B9. [ ] Gmail iletisinde metin seç → menüde "Nota ekle" → seçici (üstte yeni not, altında küçük kartlar) → not açılıyor, metin + kaynak satırı ekli.
+- B10. [ ] Takvim: gün levhası / etkinlik / Google etkinliği → "Mevcut notu bağla"; ajandada bağlı-not simgesine dokun → not açılıyor.
+- B11. [ ] Rutinler → ✓ (nottan rutin) → seçilen notun maddeleri adım olmuş rutin düzenleyicide.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)
