@@ -61,6 +61,7 @@ import '../../friends/data/friends_repository.dart';
 import '../../inbox/data/inbox_repository.dart';
 import '../../inbox/presentation/inbox_screen.dart';
 import '../../friends/presentation/friends_screen.dart';
+import '../../notes/presentation/editor/spell_learned_screen.dart';
 import '../../notes/presentation/lock/note_lock_ui.dart';
 import '../../notes/presentation/note_card_media.dart' show CardThumbs;
 import '../../notes/data/notes_repository.dart';
@@ -345,6 +346,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _HideBarWhileTypingSwitch(),
             title: l10n.hideBarWhileTyping,
             keywords: '${l10n.hideBarWhileTypingInfo} alt cubuk yazarken',
+          ),
+          _SettingRow(
+            ListTile(
+              key: const ValueKey('settings-spell-learned'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.spellLearnedTitle),
+              subtitle: Text(l10n.spellLearnedSettingInfo),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => SpellLearnedScreen.open(context),
+            ),
+            title: l10n.spellLearnedTitle,
+            keywords: 'yazım düzelt öğren otomatik kelime sözlük',
           ),
           _SettingRow(
             const _ItemGesturesSwitch(),

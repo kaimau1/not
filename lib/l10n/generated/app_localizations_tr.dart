@@ -7988,4 +7988,36 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get themeLedger => 'Klasik yeşil';
+
+  @override
+  String get spellLearnedTitle => 'Öğrenilen yazımlar';
+
+  @override
+  String get spellLearnedInfo =>
+      'Yazıp sonra kendin düzelttiğin ya da klavye önerisinden seçtiğin kelimeler burada. Elle de ekleyebilirsin: yanlış → doğru (ilk görüşte uygulanır).';
+
+  @override
+  String get spellLearnedSettingInfo =>
+      'Öğrenilen düzeltmeleri gör, elle ekle, sil';
+
+  @override
+  String get spellLearnedWrong => 'Yanlış';
+
+  @override
+  String get spellLearnedRight => 'Doğrusu';
+
+  @override
+  String get spellLearnedAdd => 'Ekle';
+
+  @override
+  String get spellLearnedEmpty => 'Henüz öğrenilen düzeltme yok.';
+
+  @override
+  String spellLearnedSeen(int count) {
+    return '$count kez';
+  }
+
+  @override
+  String get spellLearnedKept =>
+      'Dokunulmayan kelimeler (düzeltmeyi geri aldıkların)';
 }

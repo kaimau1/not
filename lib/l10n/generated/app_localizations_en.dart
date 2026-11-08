@@ -8010,4 +8010,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeLedger => 'Ledger';
+
+  @override
+  String get spellLearnedTitle => 'Learned spellings';
+
+  @override
+  String get spellLearnedInfo =>
+      'Words you typed and then fixed yourself, or picked from the keyboard\'s suggestions. You can add your own: wrong → right (applied right away).';
+
+  @override
+  String get spellLearnedSettingInfo => 'See learned fixes, add or delete';
+
+  @override
+  String get spellLearnedWrong => 'Wrong';
+
+  @override
+  String get spellLearnedRight => 'Right';
+
+  @override
+  String get spellLearnedAdd => 'Add';
+
+  @override
+  String get spellLearnedEmpty => 'No learned fixes yet.';
+
+  @override
+  String spellLearnedSeen(int count) {
+    return '$count times';
+  }
+
+  @override
+  String get spellLearnedKept => 'Words left alone (you undid the fix)';
 }

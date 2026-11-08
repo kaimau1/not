@@ -3699,5 +3699,15 @@
   "themeNewsprint": "Gazete",
   "themeNotebook": "Defter",
   "themeGraphite": "Kurşun kalem",
-  "themeLedger": "Klasik yeşil"
+  "themeLedger": "Klasik yeşil",
+  "spellLearnedTitle": "Öğrenilen yazımlar",
+  "spellLearnedInfo": "Yazıp sonra kendin düzelttiğin ya da klavye önerisinden seçtiğin kelimeler burada. Elle de ekleyebilirsin: yanlış → doğru (ilk görüşte uygulanır).",
+  "spellLearnedSettingInfo": "Öğrenilen düzeltmeleri gör, elle ekle, sil",
+  "spellLearnedWrong": "Yanlış",
+  "spellLearnedRight": "Doğrusu",
+  "spellLearnedAdd": "Ekle",
+  "spellLearnedEmpty": "Henüz öğrenilen düzeltme yok.",
+  "spellLearnedSeen": "{count} kez",
+  "@spellLearnedSeen": {"placeholders": {"count": {"type": "int"}}},
+  "spellLearnedKept": "Dokunulmayan kelimeler (düzeltmeyi geri aldıkların)"
 }

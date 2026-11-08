@@ -57,7 +57,9 @@ const _diacritic = {
 };
 
 /// Boşluk çubuğunun hemen üstündeki tuşlar ("boşluk yerine n").
-const _nearSpace = 'cvbnm';
+/// Kullanıcı 2026-11-08: "boşluk yerine yanlışlıkla v, b, n, m, ö" — Türkçe
+/// Q'da ö, m'nin hemen sağında.
+const _nearSpace = 'cvbnmö';
 
 /// [a] yerine [b] basmanın bedeli (0–1). Komşu tuş ≈ 0,45, şapka 0,3.
 double keyCost(String a, String b) {
@@ -182,6 +184,42 @@ class SpellMemory {
       addWord(w);
     }
     if (!isCjk(f)) _learnLetters(f, trLower(t));
+  }
+
+  /// ELLE EKLENEN düzeltme (Ayarlar → Öğrenilen yazımlar): ilk görüşte
+  /// uygulanır (iki kez görülmüş sayılır).
+  void addManualFix(String from, String to) {
+    final f = trLower(from.trim());
+    final t = to.trim();
+    if (f.isEmpty || t.isEmpty || f == trLower(t)) return;
+    rejected.remove(f);
+    final m = fixes.putIfAbsent(f, () => {});
+    m[t] = math.max(m[t] ?? 0, 2) + 1;
+    for (final w in t.split(' ')) {
+      addWord(w, 3);
+    }
+  }
+
+  /// Düzeltmeyi unutur (Ayarlar listesinden silme).
+  void removeFix(String from) => fixes.remove(trLower(from));
+
+  /// "Dokunulmayan" kelimeyi yeniden düzeltmeye açar.
+  void unreject(String word) => rejected.remove(trLower(word));
+
+  /// Ayarlar listesi: her yanlış yazım için en güçlü doğrusu, sık olan önce.
+  List<({String from, String to, int count})> fixList() {
+    final out = [
+      for (final e in fixes.entries)
+        if (e.value.isNotEmpty)
+          () {
+            final best = e.value.entries.reduce(
+              (a, b) => a.value >= b.value ? a : b,
+            );
+            return (from: e.key, to: best.key, count: best.value);
+          }(),
+    ];
+    out.sort((a, b) => b.count.compareTo(a.count));
+    return out;
   }
 
   /// Kullanıcı otomatik düzeltmeyi geri aldı: [word] bir daha düzeltilmez.

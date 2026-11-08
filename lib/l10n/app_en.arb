@@ -2902,5 +2902,14 @@
   "themeNewsprint": "Newsprint",
   "themeNotebook": "Notebook",
   "themeGraphite": "Graphite",
-  "themeLedger": "Ledger"
+  "themeLedger": "Ledger",
+  "spellLearnedTitle": "Learned spellings",
+  "spellLearnedInfo": "Words you typed and then fixed yourself, or picked from the keyboard's suggestions. You can add your own: wrong → right (applied right away).",
+  "spellLearnedSettingInfo": "See learned fixes, add or delete",
+  "spellLearnedWrong": "Wrong",
+  "spellLearnedRight": "Right",
+  "spellLearnedAdd": "Add",
+  "spellLearnedEmpty": "No learned fixes yet.",
+  "spellLearnedSeen": "{count} times",
+  "spellLearnedKept": "Words left alone (you undid the fix)"
 }

@@ -14275,6 +14275,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Klasik yeşil'**
   String get themeLedger;
+
+  /// No description provided for @spellLearnedTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öğrenilen yazımlar'**
+  String get spellLearnedTitle;
+
+  /// No description provided for @spellLearnedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazıp sonra kendin düzelttiğin ya da klavye önerisinden seçtiğin kelimeler burada. Elle de ekleyebilirsin: yanlış → doğru (ilk görüşte uygulanır).'**
+  String get spellLearnedInfo;
+
+  /// No description provided for @spellLearnedSettingInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öğrenilen düzeltmeleri gör, elle ekle, sil'**
+  String get spellLearnedSettingInfo;
+
+  /// No description provided for @spellLearnedWrong.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yanlış'**
+  String get spellLearnedWrong;
+
+  /// No description provided for @spellLearnedRight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrusu'**
+  String get spellLearnedRight;
+
+  /// No description provided for @spellLearnedAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekle'**
+  String get spellLearnedAdd;
+
+  /// No description provided for @spellLearnedEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz öğrenilen düzeltme yok.'**
+  String get spellLearnedEmpty;
+
+  /// No description provided for @spellLearnedSeen.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kez'**
+  String spellLearnedSeen(int count);
+
+  /// No description provided for @spellLearnedKept.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dokunulmayan kelimeler (düzeltmeyi geri aldıkların)'**
+  String get spellLearnedKept;
 }
 
 class _AppLocalizationsDelegate
