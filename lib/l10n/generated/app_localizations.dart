@@ -13849,6 +13849,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bekleyenler (simge rozeti)'**
   String get dueBadgeChannel;
+
+  /// No description provided for @quickRowBold.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalın'**
+  String get quickRowBold;
+
+  /// No description provided for @quickRowBullet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Madde imi'**
+  String get quickRowBullet;
+
+  /// No description provided for @quickRowHeading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık (sırayla)'**
+  String get quickRowHeading;
+
+  /// No description provided for @quickRowPhoto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fotoğraf ekle'**
+  String get quickRowPhoto;
+
+  /// No description provided for @quickRowFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya ekle'**
+  String get quickRowFile;
+
+  /// No description provided for @quickRowPen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalemle yaz · basılı tut: kalem ayarları'**
+  String get quickRowPen;
+
+  /// No description provided for @quickRowReminder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcı'**
+  String get quickRowReminder;
 }
 
 class _AppLocalizationsDelegate

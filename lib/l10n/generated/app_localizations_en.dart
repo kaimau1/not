@@ -7780,4 +7780,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dueBadgeChannel => 'Waiting (icon badge)';
+
+  @override
+  String get quickRowBold => 'Bold';
+
+  @override
+  String get quickRowBullet => 'Bullet';
+
+  @override
+  String get quickRowHeading => 'Heading (cycles)';
+
+  @override
+  String get quickRowPhoto => 'Add photo';
+
+  @override
+  String get quickRowFile => 'Attach file';
+
+  @override
+  String get quickRowPen => 'Write with pen · hold: pen settings';
+
+  @override
+  String get quickRowReminder => 'Reminder';
 }

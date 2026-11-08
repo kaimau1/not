@@ -3623,5 +3623,12 @@
   "dueBadgeTitle": "{count, plural, =1{1 hatırlatıcı/görev bekliyor} other{{count} hatırlatıcı/görev bekliyor}}",
   "@dueBadgeTitle": {"placeholders": {"count": {"type": "int"}}},
   "dueBadgeBody": "Zamanı gelenler ve bugünün görevleri — ana ekranda",
-  "dueBadgeChannel": "Bekleyenler (simge rozeti)"
+  "dueBadgeChannel": "Bekleyenler (simge rozeti)",
+  "quickRowBold": "Kalın",
+  "quickRowBullet": "Madde imi",
+  "quickRowHeading": "Başlık (sırayla)",
+  "quickRowPhoto": "Fotoğraf ekle",
+  "quickRowFile": "Dosya ekle",
+  "quickRowPen": "Kalemle yaz · basılı tut: kalem ayarları",
+  "quickRowReminder": "Hatırlatıcı"
 }

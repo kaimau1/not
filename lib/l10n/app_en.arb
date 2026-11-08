@@ -2827,5 +2827,12 @@
   "taskGmailHint": "Gmail link",
   "dueBadgeTitle": "{count, plural, =1{1 reminder/task waiting} other{{count} reminders/tasks waiting}}",
   "dueBadgeBody": "Due now and today's tasks — on the home screen",
-  "dueBadgeChannel": "Waiting (icon badge)"
+  "dueBadgeChannel": "Waiting (icon badge)",
+  "quickRowBold": "Bold",
+  "quickRowBullet": "Bullet",
+  "quickRowHeading": "Heading (cycles)",
+  "quickRowPhoto": "Add photo",
+  "quickRowFile": "Attach file",
+  "quickRowPen": "Write with pen · hold: pen settings",
+  "quickRowReminder": "Reminder"
 }

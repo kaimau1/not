@@ -7758,4 +7758,25 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get dueBadgeChannel => 'Bekleyenler (simge rozeti)';
+
+  @override
+  String get quickRowBold => 'Kalın';
+
+  @override
+  String get quickRowBullet => 'Madde imi';
+
+  @override
+  String get quickRowHeading => 'Başlık (sırayla)';
+
+  @override
+  String get quickRowPhoto => 'Fotoğraf ekle';
+
+  @override
+  String get quickRowFile => 'Dosya ekle';
+
+  @override
+  String get quickRowPen => 'Kalemle yaz · basılı tut: kalem ayarları';
+
+  @override
+  String get quickRowReminder => 'Hatırlatıcı';
 }

@@ -159,6 +159,48 @@ bool applyRichHeading(WrapTextController controller, RichHeading heading) {
   return _write(controller, logical, start, end, result);
 }
 
+/// Satır(lar)ın başına madde imi ("• ") koyar; hepsinde varsa kaldırır
+/// (yazarken üst hızlı satır, 2026-11-08). Saf: mantıksal metin üstünde.
+({String text, int start, int end}) toggleLineBullet(
+  String text,
+  int start,
+  int end,
+) {
+  const mark = '• ';
+  final lineStart = start == 0 ? 0 : text.lastIndexOf('\n', start - 1) + 1;
+  var lineEnd = text.indexOf('\n', end);
+  if (lineEnd < 0) lineEnd = text.length;
+  final lines = text.substring(lineStart, lineEnd).split('\n');
+  final remove = lines.every((l) => l.startsWith(mark));
+  final out = [
+    for (final l in lines)
+      remove
+          ? l.substring(mark.length)
+          : (l.startsWith(mark) ? l : '$mark$l'),
+  ];
+  final firstShift = remove
+      ? -mark.length
+      : (lines.first.startsWith(mark) ? 0 : mark.length);
+  final total = out.join('\n').length - (lineEnd - lineStart);
+  final newStart = (start + firstShift).clamp(lineStart, text.length + total);
+  return (
+    text: text.replaceRange(lineStart, lineEnd, out.join('\n')),
+    start: newStart,
+    end: (end + total).clamp(newStart, text.length + total),
+  );
+}
+
+/// [toggleLineBullet]ı denetleyicinin imlecine/seçimine uygular.
+bool applyLineBullet(WrapTextController controller) {
+  final selection = controller.selection;
+  if (!selection.isValid) return false;
+  final display = controller.text;
+  final logical = stripWrapAnchors(display);
+  final start = wrapToLogicalOffset(display, selection.start);
+  final end = wrapToLogicalOffset(display, selection.end);
+  return _write(controller, logical, start, end, toggleLineBullet(logical, start, end));
+}
+
 /// İmlecin satırının başlık düzeyi (biçim çubuğundaki vurgu).
 RichHeading activeRichHeading(WrapTextController controller) {
   final selection = controller.selection;

@@ -82,6 +82,7 @@ import '../../../calendar/data/task_note_sync.dart';
 import '../../../calendar/presentation/note_calendar_links.dart';
 import '../../../calendar/presentation/task_editor.dart';
 import '../../../calendar/presentation/line_task_chip.dart';
+import 'editor_quick_row.dart';
 import '../../../calendar/presentation/event_editor.dart';
 import '../../../calendar/domain/agenda.dart' show noteDateSuggestion;
 import '../../../../core/utils/spoken_datetime.dart' show parseSpokenDateTimeNow;
@@ -2172,6 +2173,39 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       tooltip: l10n.listPaneHide,
       icon: const Icon(Icons.menu_open_rounded),
       onPressed: () => ref.read(listPeekLocationProvider.notifier).set(null),
+    );
+  }
+
+  /// Klavye açıkken üst çubuğun başlık yuvası: hızlı işlev satırı
+  /// (2026-11-08); kapalıyken [idle] (tarih + etiketler).
+  Widget? _typingTitle(Note note, Widget? idle) {
+    if (_readOnly || note.type.isPageNoteType) return idle;
+    final pen = !note.type.isPageNoteType;
+    return KeyboardSwitch(
+      closed: idle,
+      open: EditorQuickRow(
+          onBold: () => _applyFormat(RichFormat.bold),
+          onBullet: () => _runOnTarget(applyLineBullet),
+          onCheckbox: note.type == NoteType.text ? _toggleChecklistLine : null,
+          onHeading: () => _runOnTarget((c) {
+            final next = switch (activeRichHeading(c)) {
+              RichHeading.normal => RichHeading.h1,
+              RichHeading.h1 => RichHeading.h2,
+              RichHeading.h2 => RichHeading.normal,
+            };
+            return applyRichHeading(c, next);
+          }),
+          onPhoto: () {
+            _rememberCaret();
+            unawaited(_pickImage());
+          },
+          onFile: () => unawaited(_attachAnyFile()),
+          onPen: pen ? _openPen : null,
+          onPenSettings: pen
+              ? () => showInkSettings(context, _pageInkOf(note))
+              : null,
+          onReminder: () => unawaited(_pickReminder()),
+      ),
     );
   }
 
@@ -4325,7 +4359,9 @@ child: NoteFindBar(
                   (Navigator.maybeOf(context)?.canPop() ?? false),
             ),
             title: _barTitle ??
-                (note.updatedAt == null && note.tags.isEmpty
+                _typingTitle(
+                  note,
+                  note.updatedAt == null && note.tags.isEmpty
                 ? null
                 : Customizable(
                     id: UiItem.editorDate,
@@ -4383,7 +4419,8 @@ child: NoteFindBar(
                         ),
                     ],
                   ),
-                  )),
+                  ),
+                ),
             actions: [
               // ANA SAYFAYA DÖN (F28.3): geniş ekranda/web'de ray bu sırada
               // çekmece ya da gizli; tek dokunuşla `/`. Telefonda yok.
