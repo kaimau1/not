@@ -3598,5 +3598,21 @@
   "@friendsRequestsSummary": {"placeholders": {"count": {"type": "int"}}},
   "hideBarWhileTyping": "Yazarken alt çubuğu gizle",
   "hideBarWhileTypingInfo": "Yazmaya başlayınca alt çubuk iner, bırakınca hemen geri gelir.",
-  "tipHideBarTyping": "Yazarken alt çubuk gizlenir, durunca geri gelir. Ayarlar → Kartlar bölümünden kapatılabilir."
+  "tipHideBarTyping": "Yazarken alt çubuk gizlenir, durunca geri gelir. Ayarlar → Kartlar bölümünden kapatılabilir.",
+  "addToNoteTitle": "Nota ekle",
+  "addToNewNote": "Yeni not",
+  "addToNoteEmpty": "Henüz başka not yok",
+  "gmailAddSelectionToNote": "Nota ekle",
+  "gmailTagPromotions": "Promosyon",
+  "gmailTagSocial": "Sosyal",
+  "gmailTagUpdates": "Güncelleme",
+  "gmailTagForums": "Forum",
+  "gmailTagImportant": "Önemli",
+  "gmailSmartAddToCalendar": "Takvime ekle: {when}",
+  "@gmailSmartAddToCalendar": {"placeholders": {"when": {"type": "String"}}},
+  "gmailSmartLinkPerson": "{name} → nota bağla",
+  "@gmailSmartLinkPerson": {"placeholders": {"name": {"type": "String"}}},
+  "gmailSmartRelatedNote": "İlgili not: {title}",
+  "@gmailSmartRelatedNote": {"placeholders": {"title": {"type": "String"}}},
+  "gmailAddedToNote": "Seçili metin nota eklendi"
 }

@@ -2803,5 +2803,21 @@
   "@friendsRequestsSummary": {"placeholders": {"count": {"type": "int"}}},
   "hideBarWhileTyping": "Hide bottom bar while typing",
   "hideBarWhileTypingInfo": "The bottom bar slides away as you type and returns right when you stop.",
-  "tipHideBarTyping": "The bottom bar hides while you type and returns when you pause. You can turn this off in Settings."
+  "tipHideBarTyping": "The bottom bar hides while you type and returns when you pause. You can turn this off in Settings.",
+  "addToNoteTitle": "Add to note",
+  "addToNewNote": "New note",
+  "addToNoteEmpty": "No other notes yet",
+  "gmailAddSelectionToNote": "Add to note",
+  "gmailTagPromotions": "Promotions",
+  "gmailTagSocial": "Social",
+  "gmailTagUpdates": "Updates",
+  "gmailTagForums": "Forums",
+  "gmailTagImportant": "Important",
+  "gmailSmartAddToCalendar": "Add to calendar: {when}",
+  "@gmailSmartAddToCalendar": {"placeholders": {"when": {"type": "String"}}},
+  "gmailSmartLinkPerson": "Link {name} to a note",
+  "@gmailSmartLinkPerson": {"placeholders": {"name": {"type": "String"}}},
+  "gmailSmartRelatedNote": "Related note: {title}",
+  "@gmailSmartRelatedNote": {"placeholders": {"title": {"type": "String"}}},
+  "gmailAddedToNote": "Selected text added to the note"
 }

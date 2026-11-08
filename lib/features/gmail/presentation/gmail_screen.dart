@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/app_frame.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../app/router.dart';
 import '../../../core/error_log.dart';
 import '../../../core/friendly_error.dart';
@@ -15,14 +16,19 @@ import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../auth/presentation/account_required.dart';
+import '../../calendar/presentation/event_editor.dart';
 import '../../calendar/presentation/task_editor.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/attachment.dart';
+import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
+import '../../notes/presentation/note_link_ui.dart' show noteLinkLabel;
+import '../../notes/presentation/note_target_picker.dart';
 import '../data/gmail_api.dart';
 import '../data/gmail_auth.dart';
 import '../domain/gmail_note.dart';
+import '../domain/gmail_smart.dart';
 
 /// **GMAIL** (F28.1; ekran BAŞTAN yazıldı 2026-11-06, kullanıcı isteği
 /// "Gmail ekranının yeniden yazılması"): üstte arama + hızlı süzgeç çipleri
@@ -436,11 +442,26 @@ class _MailRow extends StatelessWidget {
         date,
       ].join(', '),
       excludeSemantics: true,
-      child: InkWell(
+      // Tema belirteçleriyle kâğıt kart (TEMA_PLANI): okunmamış satırın
+      // çerçevesi vurgu renginde, okunmuş sönük.
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 3, 12, 3),
+        child: Material(
+          color: AppTokens.of(context).card,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTokens.of(context).cardRadius),
+            side: BorderSide(
+              color: mail.unread
+                  ? s.primary.withValues(alpha: 0.45)
+                  : AppTokens.of(context).hairline,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
         key: ValueKey('gmail-row-${mail.id}'),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -520,11 +541,56 @@ class _MailRow extends StatelessWidget {
                         ],
                       ],
                     ),
+                    if (mail.tags.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          for (final t in mail.tags) _TagChip(tag: t),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
             ],
           ),
+        ),
+      ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Gmail kategori/önem etiketi çipi (liste satırında).
+class _TagChip extends StatelessWidget {
+  const _TagChip({required this.tag});
+  final String tag;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final s = Theme.of(context).colorScheme;
+    final label = switch (tag) {
+      'important' => l10n.gmailTagImportant,
+      'promotions' => l10n.gmailTagPromotions,
+      'social' => l10n.gmailTagSocial,
+      'updates' => l10n.gmailTagUpdates,
+      _ => l10n.gmailTagForums,
+    };
+    final important = tag == 'important';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: important ? s.tertiaryContainer : s.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: important ? s.onTertiaryContainer : s.onSurfaceVariant,
         ),
       ),
     );
@@ -832,6 +898,124 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
     }
   }
 
+  /// Seçili metni (ya da akıllı bağlantının satırını) "Nota ekle" ekranıyla
+  /// seçilen nota — ya da yeni nota — yazar, sonra notu açar. Metne kaynak
+  /// satırı (kimden, tarih, Gmail bağlantısı) eşlik eder: mail ↔ not bağı.
+  Future<void> _addTextToNote(String text) async {
+    final m = _message;
+    final repo = ref.read(notesRepositoryProvider);
+    if (m == null || repo == null || text.trim().isEmpty) return;
+    final target = await showNoteTargetPicker(context, preview: text);
+    if (target == null || !mounted) return;
+    final l10n = context.l10n;
+    final router = ref.read(routerProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final draft = noteDraftFromEmail(m, replacementBody: text.trim());
+      final String id;
+      final picked = target.note;
+      if (picked == null) {
+        id = await repo.createNote(
+          NoteType.text,
+          title: draft.title,
+          body: draft.body,
+        );
+      } else {
+        final note = await hydrateNote(ref, picked);
+        final old = note.body.trimRight();
+        await repo.updateNote(
+          note.copyWith(
+            body: old.isEmpty ? draft.body : '$old\n\n${draft.body}',
+          ),
+        );
+        id = note.id;
+      }
+      messenger.showMessage(l10n.gmailAddedToNote);
+      unawaited(router.pushNote(noteRoutePath(id)));
+    } catch (e) {
+      ErrorLog.record('gmail-add-to-note', e);
+      messenger.showMessage(friendlyError(l10n, e));
+    }
+  }
+
+  /// Bu iletiden oluşmuş notlar: gövdelerinde iletinin Gmail bağlantısı var.
+  List<Note> _relatedNotes(GmailMessage m) => [
+    for (final n in ref.watch(notesStreamProvider).value ?? const <Note>[])
+      if (n.deletedAt == null && n.body.contains(m.webUrl)) n,
+  ];
+
+  /// AKILLI BAĞLANTILAR: gövdedeki tarih/saat → takvime ekle; gönderen →
+  /// bir nota bağla; iletiden oluşmuş not → aç.
+  Widget _smartLinks(BuildContext context, GmailMessage m) {
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final dates = findSmartDates(m.body, m.date ?? DateTime.now());
+    final sender = parseSender(m.from);
+    final related = _relatedNotes(m);
+    if (dates.isEmpty && sender == null && related.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    Widget chip(Key key, IconData icon, String label, VoidCallback onTap) =>
+        ActionChip(
+          key: key,
+          avatar: Icon(icon, size: 18),
+          label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          onPressed: onTap,
+        );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        children: [
+          for (final n in related)
+            chip(
+              ValueKey('gmail-related-${n.id}'),
+              Icons.sticky_note_2_outlined,
+              l10n.gmailSmartRelatedNote(
+                noteLinkLabel(n, l10n.remindersUntitled),
+              ),
+              () => unawaited(
+                ref.read(routerProvider).pushNote(noteRoutePath(n.id)),
+              ),
+            ),
+          for (final d in dates)
+            chip(
+              ValueKey('gmail-date-${d.when.toIso8601String()}'),
+              Icons.event_outlined,
+              l10n.gmailSmartAddToCalendar(
+                d.hasTime
+                    ? DateFormat.MMMd(locale).add_Hm().format(d.when)
+                    : DateFormat.MMMd(locale).format(d.when),
+              ),
+              () => unawaited(
+                showEventEditor(
+                  context,
+                  day: d.when,
+                  start: d.hasTime ? d.when : null,
+                  initialTitle: m.subject.trim(),
+                  initialDescription: m.webUrl,
+                ),
+              ),
+            ),
+          if (sender != null)
+            chip(
+              const ValueKey('gmail-link-person'),
+              Icons.person_add_alt_outlined,
+              l10n.gmailSmartLinkPerson(
+                sender.name.isEmpty ? sender.email : sender.name,
+              ),
+              () => unawaited(
+                _addTextToNote(
+                  '👤 ${sender.name.isEmpty ? sender.email : '${sender.name} <${sender.email}>'}',
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -938,10 +1122,33 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
               ),
               const Divider(),
             ],
+            _smartLinks(context, m),
             const SizedBox(height: 8),
+            // Metin seçilebilir; seçim menüsünde "Nota ekle" ile seçilen
+            // kısım nota aktarılır (bkz. [showNoteTargetPicker]).
             SelectableText(
               m.body,
               style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+              contextMenuBuilder: (context, state) {
+                final value = state.textEditingValue;
+                final selected = value.selection.isCollapsed
+                    ? ''
+                    : value.selection.textInside(value.text);
+                return AdaptiveTextSelectionToolbar.buttonItems(
+                  anchors: state.contextMenuAnchors,
+                  buttonItems: [
+                    ...state.contextMenuButtonItems,
+                    if (selected.trim().isNotEmpty)
+                      ContextMenuButtonItem(
+                        label: l10n.gmailAddSelectionToNote,
+                        onPressed: () {
+                          state.hideToolbar();
+                          unawaited(_addTextToNote(selected));
+                        },
+                      ),
+                  ],
+                );
+              },
             ),
           ],
         ],

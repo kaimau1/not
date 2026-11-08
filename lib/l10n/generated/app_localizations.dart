@@ -13705,6 +13705,84 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yazarken alt çubuk gizlenir, durunca geri gelir. Ayarlar → Kartlar bölümünden kapatılabilir.'**
   String get tipHideBarTyping;
+
+  /// No description provided for @addToNoteTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota ekle'**
+  String get addToNoteTitle;
+
+  /// No description provided for @addToNewNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni not'**
+  String get addToNewNote;
+
+  /// No description provided for @addToNoteEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz başka not yok'**
+  String get addToNoteEmpty;
+
+  /// No description provided for @gmailAddSelectionToNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota ekle'**
+  String get gmailAddSelectionToNote;
+
+  /// No description provided for @gmailTagPromotions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Promosyon'**
+  String get gmailTagPromotions;
+
+  /// No description provided for @gmailTagSocial.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sosyal'**
+  String get gmailTagSocial;
+
+  /// No description provided for @gmailTagUpdates.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncelleme'**
+  String get gmailTagUpdates;
+
+  /// No description provided for @gmailTagForums.
+  ///
+  /// In tr, this message translates to:
+  /// **'Forum'**
+  String get gmailTagForums;
+
+  /// No description provided for @gmailTagImportant.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önemli'**
+  String get gmailTagImportant;
+
+  /// No description provided for @gmailSmartAddToCalendar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvime ekle: {when}'**
+  String gmailSmartAddToCalendar(String when);
+
+  /// No description provided for @gmailSmartLinkPerson.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} → nota bağla'**
+  String gmailSmartLinkPerson(String name);
+
+  /// No description provided for @gmailSmartRelatedNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlgili not: {title}'**
+  String gmailSmartRelatedNote(String title);
+
+  /// No description provided for @gmailAddedToNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçili metin nota eklendi'**
+  String get gmailAddedToNote;
 }
 
 class _AppLocalizationsDelegate
