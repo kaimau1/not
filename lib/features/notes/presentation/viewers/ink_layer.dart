@@ -50,8 +50,8 @@ class InkController extends ChangeNotifier {
 
   /// Son çizginin düzeltme önerisi: katman sağ altına küçük işaretçi koyar;
   /// dokununca [applySuggestion]. Ayrı bildirici: çizgileri yeniden boyatmaz.
+  /// Zamanlayıcısız: bir sonraki dokunuşta / geri alda kalkar.
   final suggestion = ValueNotifier<InkSuggestion?>(null);
-  Timer? _suggestTimer;
 
   /// Çarpının ilk kolu / okun gövdesi için bir önceki serbest çizgi.
   InkStroke? _lastFree;
@@ -65,10 +65,7 @@ class InkController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void dismissSuggestion() {
-    _suggestTimer?.cancel();
-    suggestion.value = null;
-  }
+  void dismissSuggestion() => suggestion.value = null;
 
   static List<Offset> _pixels(InkStroke s, Size size) => [
     for (var i = 0; i + 1 < s.points.length; i += 2)
@@ -122,7 +119,6 @@ class InkController extends ChangeNotifier {
         bottom = math.max(bottom, r.points[i + 1]);
       }
     }
-    _suggestTimer?.cancel();
     suggestion.value = InkSuggestion(
       kind: fix.kind,
       page: stroke.page,
@@ -131,7 +127,6 @@ class InkController extends ChangeNotifier {
       replacements: replacements,
       needsConsent: fix.isMark && InkToolMemory.markFix == null,
     );
-    _suggestTimer = Timer(const Duration(seconds: 6), dismissSuggestion);
   }
 
   /// Öneriyi uygular: özgün çizgi(ler) temiz hâliyle değişir; geri al eski
@@ -856,7 +851,6 @@ class InkController extends ChangeNotifier {
   @override
   void dispose() {
     _holdTimer?.cancel();
-    _suggestTimer?.cancel();
     hover.dispose();
     suggestion.dispose();
     super.dispose();
