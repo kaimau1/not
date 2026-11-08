@@ -563,6 +563,17 @@ class Note {
       !hasPageInk &&
       reminderAt == null;
 
+  /// Kullanıcının EK saydığı dosyalar: zemin görseli ek DEĞİL (notun arkasında
+  /// duvar kâğıdı olarak durur). Kart, dışa aktarma ve PDF zaten böyle
+  /// sayıyordu; editörün ataç rozeti ve şeridi saymıyordu — zemin ayarlanmış
+  /// notta ek yokken rozet "1" gösteriyordu (hayalet ek sayacı, 2026-11-08).
+  List<Attachment> get attachmentsWithoutBackground => backgroundImageId == null
+      ? attachments
+      : [
+          for (final a in attachments)
+            if (a.id != backgroundImageId) a,
+        ];
+
   /// [a] bir görselden BALONLU görünüm için üretilmiş belge mi ve şu an
   /// GİZLİ mi (bkz. `Attachment.sourceId`): not klasik görünümdeyken ve
   /// kaynak görsel hâlâ notta dururken belge ne sayfada ne şeritte ne kartta

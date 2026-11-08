@@ -140,7 +140,7 @@ class _ReorderTile extends StatelessWidget {
                   color: scheme.onSurfaceVariant,
                 ),
                 const Spacer(),
-                if (note.attachments.isNotEmpty)
+                if (note.attachmentsWithoutBackground.isNotEmpty)
                   Icon(
                     Icons.attach_file,
                     size: 13,

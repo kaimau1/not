@@ -2567,7 +2567,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Alt çubuğun iki yeni düğmesi için: sayfada YÜZMEYEN ekler (şerit) ve
     // notun belge notu olup olmadığı (kalem düğmesi yalnız orada anlamlı).
     final fileAttachments = [
-      for (final a in (note?.attachments ?? const <Attachment>[]))
+      for (final a in (note?.attachmentsWithoutBackground ??
+          const <Attachment>[]))
         if (!a.floatsOnPage &&
             !_inPinnedPane(note!, a) &&
             !note.hidesDerivedDocument(a))
@@ -3566,7 +3567,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   },
                   child: AttachmentStrip(
                   attachments: [
-                    for (final a in note.attachments)
+                    for (final a in note.attachmentsWithoutBackground)
                       if (!a.floatsOnPage &&
                           !_inPinnedPane(note, a) &&
                           !note.hidesDerivedDocument(a))
