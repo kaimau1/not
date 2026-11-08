@@ -18,7 +18,7 @@ void main() {
 
   test('ISO, yinelenen tek; geçersiz tarih atlanır', () {
     final r = findSmartDates('2026-12-01 ve 01.12.2026 ve 31.02.2026', now);
-    expect(r.map((e) => e.when), [DateTime(2026, 12, 1)]);
+    expect(r.map((e) => e.when), [DateTime(2026, 12)]);
   });
 
   test('geride kalan yılsız tarih gelecek yıla kayar', () {
