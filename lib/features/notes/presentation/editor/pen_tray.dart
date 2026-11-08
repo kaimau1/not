@@ -12,6 +12,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/widgets/color_palette.dart';
 import '../viewers/ink_layer.dart';
+import 'pen_icons.dart';
 import '../viewers/ink_pen.dart';
 import '../viewers/ink_tools.dart';
 import '../../../../core/a11y/chip_roles.dart';
@@ -383,7 +384,7 @@ class _PenTrayState extends State<PenTray> {
                           width: 44,
                           height: 96,
                           child: CustomPaint(
-                            painter: _ToolPainter(
+                            painter: PenToolPainter(
                               tool: current,
                               ink: _ink.color,
                               dark: scheme.brightness == Brightness.dark,
@@ -865,7 +866,7 @@ class _DockTool extends StatelessWidget {
                           width: 44,
                           height: 96,
                           child: CustomPaint(
-                            painter: _ToolPainter(
+                            painter: PenToolPainter(
                               tool: tool,
                               ink: ink,
                               dark: dark,
@@ -996,7 +997,7 @@ class _TrayTool extends StatelessWidget {
                     width: 44,
                     height: 96,
                     child: CustomPaint(
-                      painter: _ToolPainter(
+                      painter: PenToolPainter(
                         tool: tool,
                         ink: ink,
                         dark: dark,
@@ -1035,274 +1036,6 @@ class _TrayTool extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Kalemleri çizer: gövde (soldan ışık alan silindir), konik uç ve renkli
-/// uç. Hepsi 44 × 96'lık kutuda, ucu yukarıda.
-class _ToolPainter extends CustomPainter {
-  const _ToolPainter({
-    required this.tool,
-    required this.ink,
-    required this.dark,
-    required this.lifted,
-  });
-
-  final PenTrayTool tool;
-  final Color ink;
-  final bool dark;
-  final bool lifted;
-
-  Color get _body => dark ? const Color(0xFF4A4A4F) : const Color(0xFFF4F2EF);
-  Color get _bodyShade =>
-      dark ? const Color(0xFF2E2E33) : const Color(0xFFD9D5CF);
-  Color get _wood => dark ? const Color(0xFFB59A78) : const Color(0xFFEBD3B0);
-
-  Paint _cylinder(Rect r, [Color? base, Color? shade]) =>
-      Paint()
-        ..shader = LinearGradient(
-          colors: [
-            Color.lerp(base ?? _body, Colors.white, dark ? 0.08 : 0.5)!,
-            base ?? _body,
-            shade ?? _bodyShade,
-          ],
-          stops: const [0, 0.45, 1],
-        ).createShader(r);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    // Kalkmış aracın gölgesi tepsiye düşer.
-    if (lifted) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(cx - 12, 30, 24, size.height),
-          const Radius.circular(8),
-        ),
-        Paint()
-          ..color = Colors.black.withValues(alpha: dark ? 0.35 : 0.12)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-      );
-    }
-    switch (tool) {
-      case PenTrayTool.pen:
-        _ballpoint(canvas, size, cx);
-      case PenTrayTool.marker:
-        _marker(canvas, size, cx);
-      case PenTrayTool.highlighter:
-        _highlighter(canvas, size, cx);
-      case PenTrayTool.eraser:
-        _eraser(canvas, size, cx);
-      case PenTrayTool.shapes:
-        _setSquare(canvas, size, cx);
-      case PenTrayTool.lasso:
-        _lasso(canvas, size, cx);
-    }
-  }
-
-  /// Kement: kesik çizgili ilmek ve sapı.
-  void _lasso(Canvas c, Size s, double cx) {
-    final handle = Rect.fromLTRB(cx - 5, 46, cx + 5, s.height + 4);
-    c.drawRRect(
-      RRect.fromRectAndCorners(
-        handle,
-        topLeft: const Radius.circular(3),
-        topRight: const Radius.circular(3),
-      ),
-      _cylinder(handle),
-    );
-    final loop = Paint()
-      ..color = ink.withAlpha(255)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.2
-      ..strokeCap = StrokeCap.round;
-    const dashes = 12;
-    final rect = Rect.fromCenter(center: Offset(cx, 26), width: 32, height: 24);
-    for (var i = 0; i < dashes; i++) {
-      final start = 2 * math.pi * i / dashes;
-      c.drawArc(rect, start, math.pi / dashes, false, loop);
-    }
-    c.drawLine(Offset(cx, 38), Offset(cx, 47), loop);
-  }
-
-  void _ballpoint(Canvas c, Size s, double cx) {
-    const half = 8.0;
-    final body = Rect.fromLTRB(cx - half, 34, cx + half, s.height + 4);
-    c.drawRRect(
-      RRect.fromRectAndCorners(
-        body,
-        topLeft: const Radius.circular(3),
-        topRight: const Radius.circular(3),
-      ),
-      _cylinder(body),
-    );
-    // Konik uç (ahşap/metal) + renkli bilye.
-    final cone = Path()
-      ..moveTo(cx - half, 35)
-      ..lineTo(cx - 2.6, 13)
-      ..lineTo(cx + 2.6, 13)
-      ..lineTo(cx + half, 35)
-      ..close();
-    c.drawPath(
-      cone,
-      _cylinder(body, _wood, Color.lerp(_wood, Colors.black, 0.25)),
-    );
-    final nib = Path()
-      ..moveTo(cx - 2.6, 13.5)
-      ..lineTo(cx, 5)
-      ..lineTo(cx + 2.6, 13.5)
-      ..close();
-    c.drawPath(nib, Paint()..color = ink.withAlpha(255));
-    // Gövdede rengi gösteren halka.
-    c.drawRect(
-      Rect.fromLTRB(cx - half, 44, cx + half, 50),
-      Paint()..color = ink.withAlpha(235),
-    );
-  }
-
-  void _marker(Canvas c, Size s, double cx) {
-    const half = 11.0;
-    final body = Rect.fromLTRB(cx - half, 36, cx + half, s.height + 4);
-    c.drawRRect(
-      RRect.fromRectAndCorners(
-        body,
-        topLeft: const Radius.circular(5),
-        topRight: const Radius.circular(5),
-      ),
-      _cylinder(body),
-    );
-    final collar = Path()
-      ..moveTo(cx - half + 1, 37)
-      ..lineTo(cx - 6, 22)
-      ..lineTo(cx + 6, 22)
-      ..lineTo(cx + half - 1, 37)
-      ..close();
-    c.drawPath(
-      collar,
-      _cylinder(body, _bodyShade, Color.lerp(_bodyShade, Colors.black, 0.2)),
-    );
-    // Yuvarlak keçe uç.
-    c.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTRB(cx - 4.5, 9, cx + 4.5, 23),
-        const Radius.circular(4.5),
-      ),
-      Paint()..color = ink.withAlpha(255),
-    );
-    c.drawRect(
-      Rect.fromLTRB(cx - half, 48, cx + half, 58),
-      Paint()..color = ink.withAlpha(220),
-    );
-  }
-
-  void _highlighter(Canvas c, Size s, double cx) {
-    const half = 13.0;
-    final body = Rect.fromLTRB(cx - half, 38, cx + half, s.height + 4);
-    final tone = Color.lerp(_body, ink.withAlpha(255), 0.18)!;
-    c.drawRRect(
-      RRect.fromRectAndCorners(
-        body,
-        topLeft: const Radius.circular(6),
-        topRight: const Radius.circular(6),
-      ),
-      _cylinder(body, tone),
-    );
-    final collar = Path()
-      ..moveTo(cx - half + 2, 39)
-      ..lineTo(cx - 8, 24)
-      ..lineTo(cx + 8, 24)
-      ..lineTo(cx + half - 2, 39)
-      ..close();
-    c.drawPath(
-      collar,
-      _cylinder(body, _bodyShade, Color.lerp(_bodyShade, Colors.black, 0.2)),
-    );
-    // Eğik kesik (keski) uç, yarı saydam renkte.
-    final chisel = Path()
-      ..moveTo(cx - 7, 25)
-      ..lineTo(cx - 7, 15)
-      ..lineTo(cx + 7, 9)
-      ..lineTo(cx + 7, 25)
-      ..close();
-    c.drawPath(chisel, Paint()..color = ink.withAlpha(200));
-  }
-
-  void _eraser(Canvas c, Size s, double cx) {
-    const half = 13.0;
-    final top = Rect.fromLTRB(cx - half, 14, cx + half, 46);
-    final rubber = dark ? const Color(0xFFC98A98) : const Color(0xFFF7B6C3);
-    c.drawRRect(
-      RRect.fromRectAndCorners(
-        top,
-        topLeft: const Radius.circular(7),
-        topRight: const Radius.circular(7),
-      ),
-      _cylinder(top, rubber, Color.lerp(rubber, Colors.black, 0.18)),
-    );
-    final sleeve = Rect.fromLTRB(
-      cx - half - 1,
-      44,
-      cx + half + 1,
-      s.height + 4,
-    );
-    final blue = dark ? const Color(0xFF3F6A9A) : const Color(0xFF6FA4DA);
-    c.drawRRect(
-      RRect.fromRectAndCorners(
-        sleeve,
-        topLeft: const Radius.circular(2),
-        topRight: const Radius.circular(2),
-      ),
-      _cylinder(sleeve, blue, Color.lerp(blue, Colors.black, 0.25)),
-    );
-    final stripe = Paint()..color = Colors.white.withValues(alpha: 0.7);
-    c.drawRect(Rect.fromLTRB(cx - half - 1, 54, cx + half + 1, 57), stripe);
-  }
-
-  void _setSquare(Canvas c, Size s, double cx) {
-    // Gönye: yarı saydam üçgen cetvel, kenarında ölçü çizgileri.
-    final tint = dark ? const Color(0x9988B8E8) : const Color(0xB3A9D2F5);
-    final edge = dark ? const Color(0xFF9CC6EE) : const Color(0xFF5E9BD6);
-    final tri = Path()
-      ..moveTo(cx - 14, 10)
-      ..lineTo(cx - 14, s.height + 4)
-      ..lineTo(cx + 16, s.height + 4)
-      ..close();
-    c.drawPath(tri, Paint()..color = tint);
-    c.drawPath(
-      tri,
-      Paint()
-        ..color = edge
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2,
-    );
-    final hole = Path()
-      ..moveTo(cx - 8, 44)
-      ..lineTo(cx - 8, s.height - 6)
-      ..lineTo(cx + 4, s.height - 6)
-      ..close();
-    c.drawPath(
-      hole,
-      Paint()
-        ..color = edge.withValues(alpha: 0.7)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1,
-    );
-    final tick = Paint()
-      ..color = edge
-      ..strokeWidth = 1;
-    for (var y = 18.0; y < s.height; y += 6) {
-      final long = ((y - 18) / 6).round() % 3 == 0;
-      c.drawLine(Offset(cx - 14, y), Offset(cx - (long ? 9 : 11), y), tick);
-    }
-    // Şeklin seçili rengi küçük bir noktada.
-    c.drawCircle(Offset(cx - 6, 22), 3, Paint()..color = ink.withAlpha(255));
-  }
-
-  @override
-  bool shouldRepaint(_ToolPainter old) =>
-      old.tool != tool ||
-      old.ink != ink ||
-      old.dark != dark ||
-      old.lifted != lifted;
 }
 
 /// Tepsinin üstünde açılan ayar paneli: renkler, kalınlık/önizleme, araca
