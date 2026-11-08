@@ -36,4 +36,16 @@
             android:targetPackage="dev.kaimau.notlar"
             android:targetClass="dev.kaimau.notlar.MainActivity" />
     </shortcut>
+    <!-- router.dart › notlar://new?type=draw: boş not "Sayfaya yaz (kalem)" kipinde -->
+    <shortcut
+        android:shortcutId="new_pen"
+        android:enabled="true"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:shortcutShortLabel="@string/shortcut_pen_short">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="notlar://new?type=draw"
+            android:targetPackage="dev.kaimau.notlar"
+            android:targetClass="dev.kaimau.notlar.MainActivity" />
+    </shortcut>
 </shortcuts>
