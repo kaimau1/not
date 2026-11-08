@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/app_icons.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../viewers/ink_layer.dart';
@@ -98,7 +99,7 @@ class NotePackagePill extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             child: Row(
               children: [
-                Icon(Icons.inventory_2_outlined, size: 18, color: scheme.primary),
+                Icon(Icons.view_agenda_outlined, size: 18, color: scheme.primary),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -213,7 +214,7 @@ class _NotePackageScreenState extends State<NotePackageScreen> {
                 IconButton(
                   key: const ValueKey('package-unpack'),
                   tooltip: l10n.notePackageUnpack,
-                  icon: const Icon(Icons.unarchive_outlined),
+                  icon: const Icon(AppIcons.unarchive),
                   onPressed: () {
                     final unpack = widget.onUnpack!;
                     final current = _current;

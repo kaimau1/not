@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../../core/app_icons.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
 import '../../../../core/widgets/customizable.dart';
@@ -274,7 +275,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
                 children: [
                   button(
                     'package',
-                    Icons.inventory_2_outlined,
+                    Icons.view_agenda_outlined,
                     widget.packageHint
                         ? l10n.notePackageHint
                         : l10n.quickRowPackage,
@@ -322,7 +323,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
             if (widget.onDictation != null)
               button(
                 'dictation',
-                Icons.mic_none_rounded,
+                AppIcons.dictation,
                 l10n.quickRowDictation,
                 widget.onDictation,
               ),
