@@ -13789,6 +13789,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Mevcut notu bağla'**
   String get calendarLinkExistingNote;
+
+  /// No description provided for @routineFromNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nottan rutin oluştur'**
+  String get routineFromNote;
 }
 
 class _AppLocalizationsDelegate

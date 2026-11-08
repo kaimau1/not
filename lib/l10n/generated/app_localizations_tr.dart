@@ -7723,4 +7723,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get calendarLinkExistingNote => 'Mevcut notu bağla';
+
+  @override
+  String get routineFromNote => 'Nottan rutin oluştur';
 }

@@ -7746,4 +7746,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarLinkExistingNote => 'Link an existing note';
+
+  @override
+  String get routineFromNote => 'Create routine from a note';
 }

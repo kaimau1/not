@@ -3615,5 +3615,6 @@
   "gmailSmartRelatedNote": "İlgili not: {title}",
   "@gmailSmartRelatedNote": {"placeholders": {"title": {"type": "String"}}},
   "gmailAddedToNote": "Seçili metin nota eklendi",
-  "calendarLinkExistingNote": "Mevcut notu bağla"
+  "calendarLinkExistingNote": "Mevcut notu bağla",
+  "routineFromNote": "Nottan rutin oluştur"
 }
