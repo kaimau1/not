@@ -303,12 +303,10 @@ class _SearchField extends ConsumerWidget {
     // yalnız yazı satırı kadar (~18 px) yüksekti; 44 px'lik kutunun üstü,
     // altı ve büyüteç ölü alandı. Artık alan kutuyu dikeyde doldurur ve
     // kutunun kalanına (büyüteç, kenarlar) dokunmak da odağı verir.
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => focusNode?.requestFocus(),
-      // Arama kutusu kâğıt renginde, ince çizgili (TEMA_PLANI F31.5):
-      // zeminin üstünde kart gibi durur.
-      child: Container(
+    // 2026-11-08: ESKİDEN tüm hap tek GestureDetector'dı; sağdaki düğmelerin
+    // kenar/boşluklarına basmak da aramayı başlatıyordu. Artık yalnız sol
+    // kısım (kenar + büyüteç) odak verir; TextField kendi alanını zaten alır.
+    return Container(
         height: 50,
         decoration: BoxDecoration(
           color: AppTokens.of(context).card,
@@ -324,9 +322,20 @@ class _SearchField extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            const SizedBox(width: 14),
-            Icon(Icons.search, size: 19, color: scheme.onSurfaceVariant),
-            const SizedBox(width: 8),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => focusNode?.requestFocus(),
+              child: SizedBox(
+                height: 50,
+                child: Row(
+                  children: [
+                    const SizedBox(width: 14),
+                    Icon(Icons.search, size: 19, color: scheme.onSurfaceVariant),
+                    const SizedBox(width: 8),
+                  ],
+                ),
+              ),
+            ),
             Expanded(
               child: TextField(
                 textAlignVertical: TextAlignVertical.center,
@@ -407,7 +416,6 @@ class _SearchField extends ConsumerWidget {
             const SizedBox(width: 4),
           ],
         ),
-      ),
     );
   }
 }
