@@ -8,7 +8,7 @@ hâl) — ikisi de dondurulmuş, `grep` ile ara. Kural değişince buradaki
 maddeyi GÜNCELLE.
 
 ## Ortam ve araçlar
-- Flutter **3.47.7** (CI ile aynı). Bulutta SDK yok: linux arşivini
+- Flutter **3.47.9** (CI ile aynı). Bulutta SDK yok: linux arşivini
   scratchpad'e indir (CLAUDE.md). Windows'ta `C:\src\flutter\bin\flutter.bat`.
   pdfrx 2.6 Flutter ≥ 3.47 ister.
 - **`dart format` yalnız değiştirdiğin/yeni dosyaya** (`lib/l10n/generated`
