@@ -266,7 +266,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           );
         }
       case CalendarView.week:
-        if (zoomIn) return;
+        if (zoomIn) {
+          // Hafta → gün: odaktaki gün (haftanın içindeyse seçili gün).
+          final day = _targets.at(global) ?? _selected;
+          final end = _focus.add(const Duration(days: 7));
+          _setView(
+            CalendarView.agenda,
+            focus: !day.isBefore(_focus) && day.isBefore(end) ? day : _focus,
+            from: global,
+          );
+          return;
+        }
         // Haftanın ortası hangi aydaysa o ay.
         final mid = DateTime(_focus.year, _focus.month, _focus.day + 3);
         _setView(
@@ -717,6 +727,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final duration = AppMotion.of(context, AppMotion.medium);
     final zoomIn = _lastZoom == ZoomDirection.zoomIn;
     final body = PinchZoomDetector(
+      // Yıl ve ay görünümünde dikey kaydırma yok: düz tekerlek geçiş yapar.
+      // Hafta/gün görünümü tekerlekle kayar; orada Ctrl + tekerlek geçer.
+      wheelZoom:
+          _view == CalendarView.year || _view == CalendarView.month,
       onZoom: _onZoom,
       onPreview: _onPreview,
       onPinchingChanged: (v) => setState(() => _pinching = v),
