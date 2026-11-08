@@ -476,6 +476,20 @@ class MainActivity : FlutterFragmentActivity() {
                     // jetonu yalnız OAuthCredential'dan okuyor; Google akışı
                     // GoogleAuthCredential döndürdüğü için Dart'a hep null
                     // geliyordu — jeton burada çıkarılır.
+                    // GMAIL ÇOKLU HESAP (2026-11-08): sistemin Google hesap
+                    // seçicisi; içinde "Hesap ekle" de var.
+                    "chooseGoogleAccount" -> {
+                        if (accountResult != null) {
+                            result.error("busy", "Hesap seçici zaten açık", null)
+                        } else {
+                            accountResult = result
+                            @Suppress("DEPRECATION")
+                            val intent = android.accounts.AccountManager.newChooseAccountIntent(
+                                null, null, arrayOf("com.google"), null, null, null, null,
+                            )
+                            startActivityForResult(intent, accountRequestCode)
+                        }
+                    }
                     "googleScopeToken" -> googleScopeToken(
                         call.argument<List<String>>("scopes").orEmpty(),
                         call.argument<String>("email"),
@@ -738,6 +752,8 @@ class MainActivity : FlutterFragmentActivity() {
     private var saveResult: MethodChannel.Result? = null
     private var saveSource: String? = null
     private val saveRequestCode = 4714
+    private var accountResult: MethodChannel.Result? = null
+    private val accountRequestCode = 4715
 
     /// Açık seçimin taban niyeti ve başlığı ("Diğer kaynaklar" dönüşünde
     /// aynı istekle sistem seçicisi açılsın diye saklanır).
@@ -760,6 +776,17 @@ class MainActivity : FlutterFragmentActivity() {
         }
         if (requestCode == saveRequestCode) {
             onSaveResult(resultCode, data)
+            return
+        }
+        if (requestCode == accountRequestCode) {
+            accountResult?.success(
+                if (resultCode == RESULT_OK) {
+                    data?.getStringExtra(android.accounts.AccountManager.KEY_ACCOUNT_NAME)
+                } else {
+                    null
+                },
+            )
+            accountResult = null
             return
         }
     }

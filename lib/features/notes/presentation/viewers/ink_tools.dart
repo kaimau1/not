@@ -93,7 +93,10 @@ List<double> inkShapePoints(
   // KAPALI şekiller: uçlar birbirine yakın olmalı.
   final box = Rect.fromLTRB(left, top, right, bottom);
   if (box.width < 16 || box.height < 16) return null;
-  if (chord > length * 0.22) return null;
+  // Elle çizilen kare/çember çoğu zaman tam kapanmaz ya da başlangıcı aşar
+  // (kullanıcı bildirimi 2026-11-08: "kare çember algılanmıyor") — eşikler
+  // gevşetildi: açıklık çevrenin %30'u, elips %14, dikdörtgen %9 sapma.
+  if (chord > length * 0.3) return null;
   final cx = box.center.dx, cy = box.center.dy;
   final rx = box.width / 2, ry = box.height / 2;
   var ellipseError = 0.0;
@@ -113,10 +116,10 @@ List<double> inkShapePoints(
   rectError /= points.length;
   // Daire köşegenlerde kutunun kenarından uzaklaşır (dikdörtgen hatası
   // büyür); kare köşelerinde elipsin dışına taşar (elips hatası büyür).
-  if (ellipseError < 0.09 && ellipseError <= rectError * 1.6) {
+  if (ellipseError < 0.14 && ellipseError <= rectError * 1.6) {
     return (shape: InkShape.ellipse, a: box.topLeft, b: box.bottomRight);
   }
-  if (rectError < 0.06) {
+  if (rectError < 0.09) {
     return (shape: InkShape.rectangle, a: box.topLeft, b: box.bottomRight);
   }
   return null;

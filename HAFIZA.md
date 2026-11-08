@@ -781,3 +781,13 @@ maddeyi GÜNCELLE.
 - **Not seçici** `NoteTargetPicker`/`showNoteTargetPicker` (note_target_picker.dart): yeniden kullanılabilir; Gmail "Nota ekle", takvim "Mevcut notu bağla", nottan rutin bunu kullanır.
 - **Gmail:** `gmail_smart.dart` (tarih/saat ayıklama, gönderen); iletiden oluşan not = gövdesinde ileti `webUrl`i olan not (ilgili not çipi bununla bulur).
 
+
+## 2026-11-08 — Oturum C (12 maddelik istek listesi)
+- **Kalem işaretçisi kök neden:** kalemin İNİŞİ önce çizimi başlatıp öneriyi siliyordu (`pointerDown` → `dismissSuggestion`), işaretçinin `onPointerUp`'ı hiç gelmiyordu. Çözüm: işaretçi inişte uygular + `InkController.claimPointer` o dokunuşu çizime vermez.
+- Düzeltilmiş şekil (tik/çarpı/kare…) SEÇİLİ kalır (`_fixEdit`): kutusundan taşınır, sağ alt tutamaktan boyutlanır; tutamak kement seçiminde de var. Kare/çember eşikleri gevşetildi (açıklık %30, elips %14, dikdörtgen %9).
+- Hızlı satıra "sonradan eklenen" düğmeler: `UiItem.optIn` varsayılan GİZLİ, açılınca `hidden` kümesinde `+kimlik` (kayıt biçimi aynı). Satır sonundaki ⚙ = `Personalize.startEditing`.
+- Yazım düzelt: `core/utils/spell_fix.dart` (saf kurallar, testli) + `auto_spell.dart` (aktif alana `_setFormatTarget`'tan bağlanır, başlık hariç; Android'de `DefaultSpellCheckService` ilk önerisi, Levenshtein ≤2). Tek karakter yazımında çalışır; yapıştırma/dikte dokunulmaz.
+- Not paketi: metinde `AttachmentKind.text` + `extras.package` (etiketi `📎 ad`, ADLA eşleşir → `packageName` çakışmada numaralar); listede `NoteItem.package` (kapalı paket: ilk satır özet, kalanlar SIFIR yükseklik — sürükleme dizinleri bozulmasın diye satır kaldırılmaz; açıkken `TapRegion` dışarı dokununca daraltır).
+- Gmail çoklu hesap yalnız Android: `AccountManager.newChooseAccountIntent` → e-posta → `googleScopeAuth(account:)`; uygulamanın giriş hesabı değişmez. Jeton anahtarı hesaba göre.
+- Balon el yazısı: `HandwriteField` kalemi alır (parmak alana gider), 0,9 sn sonra çizgiyi PNG'ye basıp mevcut ML Kit OCR'ından geçirir — yeni bağımlılık yok; bitişik yazıda zayıf (yükseltme: ML Kit Digital Ink).
+- Sabit PDF'e kalem: `PdfPageBox.ink` verilince sayfa katmanı etkileşimli; kalem kaydırmaz (`ScrollConfiguration.dragDevices`), parmak "yalnız kalem"de kaydırır. Görsel için YOK (BoxFit.contain koordinatı) — sonra.

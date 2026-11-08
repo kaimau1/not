@@ -3651,5 +3651,22 @@
   "@gmailSmartRelatedNote": {"placeholders": {"title": {"type": "String"}}},
   "gmailAddedToNote": "Seçili metin nota eklendi",
   "calendarLinkExistingNote": "Mevcut notu bağla",
-  "routineFromNote": "Nottan rutin oluştur"
+  "routineFromNote": "Nottan rutin oluştur",
+  "gmailAddAccount": "Başka hesap ekle",
+  "gmailRemoveAccount": "Hesabı kaldır",
+  "quickRowSubheading": "Ara başlık",
+  "quickRowItalic": "İtalik",
+  "quickRowUnderline": "Altı çizili",
+  "quickRowHighlight": "Vurgula",
+  "quickRowSpellOn": "Yazım düzelt: açık (her kelime otomatik düzeltilir)",
+  "quickRowSpellOff": "Yazım düzelt: kapalı",
+  "quickRowPackage": "Pakete al",
+  "notePackageHint": "Uzun yazı — pakete alıp sadeleştir",
+  "quickRowDictation": "Sesle yaz",
+  "quickRowCustomize": "Hızlı menüyü düzenle (düğme ekle/çıkar)",
+  "notePackageSelectFirst": "Pakete almak için yazıyı seç (ya da uzun bir paragrafa dokun)",
+  "notePackageCount": "{count} madde",
+  "@notePackageCount": {"placeholders": {"count": {"type": "int"}}},
+  "notePackageUnpack": "Paketi çöz (nota geri koy)",
+  "pinnedPenWrite": "Üzerine kalemle yaz"
 }

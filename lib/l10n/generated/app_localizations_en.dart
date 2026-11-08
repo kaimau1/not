@@ -7863,4 +7863,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get routineFromNote => 'Create routine from a note';
+
+  @override
+  String get gmailAddAccount => 'Add another account';
+
+  @override
+  String get gmailRemoveAccount => 'Remove account';
+
+  @override
+  String get quickRowSubheading => 'Subheading';
+
+  @override
+  String get quickRowItalic => 'Italic';
+
+  @override
+  String get quickRowUnderline => 'Underline';
+
+  @override
+  String get quickRowHighlight => 'Highlight';
+
+  @override
+  String get quickRowSpellOn =>
+      'Spell fix: on (every word is corrected automatically)';
+
+  @override
+  String get quickRowSpellOff => 'Spell fix: off';
+
+  @override
+  String get quickRowPackage => 'Pack';
+
+  @override
+  String get notePackageHint => 'Long text — pack it to tidy up';
+
+  @override
+  String get quickRowDictation => 'Dictate';
+
+  @override
+  String get quickRowCustomize => 'Edit quick menu (add/remove buttons)';
+
+  @override
+  String get notePackageSelectFirst =>
+      'Select text to pack (or tap a long paragraph)';
+
+  @override
+  String notePackageCount(int count) {
+    return '$count items';
+  }
+
+  @override
+  String get notePackageUnpack => 'Unpack (put back into the note)';
+
+  @override
+  String get pinnedPenWrite => 'Write on it with the pen';
 }

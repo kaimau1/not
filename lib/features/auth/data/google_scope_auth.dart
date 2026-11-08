@@ -96,12 +96,16 @@ Future<void> forgetBrowserToken(String key) async {
 }
 
 class _AndroidScopeAuth implements GoogleScopeAuth {
-  _AndroidScopeAuth(this.scope, this._key);
+  _AndroidScopeAuth(this.scope, this._key, [this._account]);
+
+  /// Başka bir cihaz hesabı (Gmail çoklu hesap, 2026-11-08); null = giriş hesabı.
+  final String? _account;
 
   final String scope;
   final String _key;
 
   String? get _email {
+    if (_account != null) return _account;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return null;
     for (final p in user.providerData) {
@@ -190,10 +194,20 @@ class _WebScopeAuth implements GoogleScopeAuth {
 
 /// [sessionKey]: web'de jetonun sekmede, GMS'siz Android'de şifreli depoda
 /// saklandığı anahtar.
-GoogleScopeAuth googleScopeAuth(String scope, String sessionKey) =>
-    kIsWeb
+/// [account]: yalnız Android'de başka cihaz hesabı (web giriş hesabında kalır).
+GoogleScopeAuth googleScopeAuth(
+  String scope,
+  String sessionKey, {
+  String? account,
+}) => kIsWeb
     ? _WebScopeAuth(scope, sessionKey)
-    : _AndroidScopeAuth(scope, sessionKey);
+    : _AndroidScopeAuth(scope, sessionKey, account);
+
+/// Android'in hesap seçicisi (içinde "Hesap ekle" var): seçilen e-posta, iptal
+/// null.
+Future<String?> chooseGoogleAccount() => const MethodChannel(
+  'dev.kaimau.notlar/system',
+).invokeMethod<String>('chooseGoogleAccount');
 
 /// Kapsam jetonunun önbelleği: süresi [refreshMargin] içinde dolacaksa
 /// [silentRefresh] ile pencere açmadan yenilenir; eşzamanlı istekler tek

@@ -199,6 +199,7 @@ class InboxRepository {
             starred: item.starred,
             divider: item.divider,
             header: item.header,
+            package: item.package,
             align: item.align,
           ),
       ],

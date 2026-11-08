@@ -2855,5 +2855,22 @@
   "@gmailSmartRelatedNote": {"placeholders": {"title": {"type": "String"}}},
   "gmailAddedToNote": "Selected text added to the note",
   "calendarLinkExistingNote": "Link an existing note",
-  "routineFromNote": "Create routine from a note"
+  "routineFromNote": "Create routine from a note",
+  "gmailAddAccount": "Add another account",
+  "gmailRemoveAccount": "Remove account",
+  "quickRowSubheading": "Subheading",
+  "quickRowItalic": "Italic",
+  "quickRowUnderline": "Underline",
+  "quickRowHighlight": "Highlight",
+  "quickRowSpellOn": "Spell fix: on (every word is corrected automatically)",
+  "quickRowSpellOff": "Spell fix: off",
+  "quickRowPackage": "Pack",
+  "notePackageHint": "Long text — pack it to tidy up",
+  "quickRowDictation": "Dictate",
+  "quickRowCustomize": "Edit quick menu (add/remove buttons)",
+  "notePackageSelectFirst": "Select text to pack (or tap a long paragraph)",
+  "notePackageCount": "{count} items",
+  "@notePackageCount": {"placeholders": {"count": {"type": "int"}}},
+  "notePackageUnpack": "Unpack (put back into the note)",
+  "pinnedPenWrite": "Write on it with the pen"
 }

@@ -211,8 +211,13 @@ void main() {
     expect(find.byKey(const ValueKey('editor-quick-row')), findsOneWidget);
     expect(find.byKey(const ValueKey('quick-row-bold')), findsOneWidget);
     expect(find.byKey(const ValueKey('quick-row-pen')), findsOneWidget);
-    // Yazarken üst çubuk yalnız hızlı satır + geri al/yinele (2026-11-08).
-    expect(find.byIcon(Icons.more_vert), findsNothing);
+    // Yazarken üst çubuk: hızlı satır + geri al/yinele + en sağda ⋮
+    // (kullanıcı isteği 2026-11-08: "3 nokta geri gelsin").
+    expect(find.byIcon(Icons.more_vert), findsOneWidget);
+    expect(find.byKey(const ValueKey('quick-row-spell')), findsOneWidget);
+    expect(find.byKey(const ValueKey('quick-row-customize')), findsOneWidget);
+    // Sonradan eklenen düğme varsayılan gizli.
+    expect(find.byKey(const ValueKey('quick-row-italic')), findsNothing);
     expect(find.byIcon(Icons.undo), findsOneWidget);
     tester.view.viewInsets = FakeViewPadding.zero;
     await tester.pump(const Duration(milliseconds: 16));

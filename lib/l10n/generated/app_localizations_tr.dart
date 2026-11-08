@@ -7841,4 +7841,56 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get routineFromNote => 'Nottan rutin oluştur';
+
+  @override
+  String get gmailAddAccount => 'Başka hesap ekle';
+
+  @override
+  String get gmailRemoveAccount => 'Hesabı kaldır';
+
+  @override
+  String get quickRowSubheading => 'Ara başlık';
+
+  @override
+  String get quickRowItalic => 'İtalik';
+
+  @override
+  String get quickRowUnderline => 'Altı çizili';
+
+  @override
+  String get quickRowHighlight => 'Vurgula';
+
+  @override
+  String get quickRowSpellOn =>
+      'Yazım düzelt: açık (her kelime otomatik düzeltilir)';
+
+  @override
+  String get quickRowSpellOff => 'Yazım düzelt: kapalı';
+
+  @override
+  String get quickRowPackage => 'Pakete al';
+
+  @override
+  String get notePackageHint => 'Uzun yazı — pakete alıp sadeleştir';
+
+  @override
+  String get quickRowDictation => 'Sesle yaz';
+
+  @override
+  String get quickRowCustomize => 'Hızlı menüyü düzenle (düğme ekle/çıkar)';
+
+  @override
+  String get notePackageSelectFirst =>
+      'Pakete almak için yazıyı seç (ya da uzun bir paragrafa dokun)';
+
+  @override
+  String notePackageCount(int count) {
+    return '$count madde';
+  }
+
+  @override
+  String get notePackageUnpack => 'Paketi çöz (nota geri koy)';
+
+  @override
+  String get pinnedPenWrite => 'Üzerine kalemle yaz';
 }

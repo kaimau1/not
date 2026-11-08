@@ -79,6 +79,8 @@ class GmailMessage {
     required this.body,
     this.date,
     this.attachments = const [],
+    this.imageUrls = const [],
+    this.links = const [],
   });
   final String id;
   final String subject;
@@ -86,6 +88,13 @@ class GmailMessage {
   final String body;
   final DateTime? date;
   final List<GmailAttachmentRef> attachments;
+
+  /// HTML gövdedeki uzak görseller (http/https; 1×1 izleme pikselleri hariç).
+  final List<String> imageUrls;
+
+  /// HTML'deki `<a>` bağlantıları: görünen yazı → adres (düz metne
+  /// çevrilirken adres kaybolur; ekranda yazı tıklanır kılınır).
+  final List<({String label, String url})> links;
 
   /// Gmail web'de bu e-postanın adresi (nota kaynak bağlantısı).
   String get webUrl => 'https://mail.google.com/mail/u/0/#all/$id';
@@ -279,7 +288,43 @@ GmailMessage parseMessage(Map<String, dynamic> j) {
     body: (plain ?? (html == null ? '' : htmlToText(html!))).trim(),
     date: _date(j),
     attachments: attachments,
+    imageUrls: html == null ? const [] : htmlImageUrls(html!),
+    links: html == null ? const [] : htmlLinks(html!),
   );
+}
+
+/// `<img src="http…">` adresleri; genişliği/yüksekliği ≤2 olanlar (izleme
+/// pikseli) atlanır, aynı adres bir kez.
+List<String> htmlImageUrls(String html) {
+  final out = <String>{};
+  for (final m in RegExp(r'<img\b[^>]*>', caseSensitive: false).allMatches(html)) {
+    final tag = m.group(0)!;
+    final src = RegExp(r'''src\s*=\s*["']([^"']+)["']''', caseSensitive: false)
+        .firstMatch(tag)
+        ?.group(1);
+    if (src == null || !RegExp(r'^https?://').hasMatch(src)) continue;
+    final tiny = RegExp(r'''(width|height)\s*=\s*["']?([0-2])(px)?["'\s>/]''',
+        caseSensitive: false).hasMatch(tag);
+    if (tiny) continue;
+    out.add(src.replaceAll('&amp;', '&'));
+  }
+  return out.toList();
+}
+
+/// `<a href="http…">yazı</a>` çiftleri (yazı düz metne çevrilmiş, boş değil).
+List<({String label, String url})> htmlLinks(String html) {
+  final out = <({String label, String url})>[];
+  final re = RegExp(
+    r'''<a\b[^>]*href\s*=\s*["'](https?://[^"']+)["'][^>]*>(.*?)</a>''',
+    caseSensitive: false,
+    dotAll: true,
+  );
+  for (final m in re.allMatches(html)) {
+    final label = htmlToText(m.group(2)!).replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (label.length < 2) continue;
+    out.add((label: label, url: m.group(1)!.replaceAll('&amp;', '&')));
+  }
+  return out;
 }
 
 /// Kaba ama güvenli HTML → düz metin (yalnız e-posta gövdesi için; DOM
