@@ -92,7 +92,13 @@ void main() {
     expect(find.byIcon(Icons.drag_indicator), findsNWidgets(2));
   });
 
-  testWidgets('seçim kipi kapalıyken tutamaç hiç yok', (tester) async {
+  testWidgets('seçim kipi kapalıyken (telefonda) tutamaç hiç yok', (
+    tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(400, 800)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -112,5 +118,33 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.drag_indicator), findsNothing);
+  });
+
+  // Kullanıcı isteği 2026-11-08: "webte ve tablette madde sürükleme sürekli
+  // görünsün, solda boşluk var yeterince".
+  testWidgets('tablette tutamaç seçim kipi dışında da görünür', (tester) async {
+    tester.view
+      ..physicalSize = const Size(1024, 700)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        locale: const Locale('tr'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: ItemsEditor(
+            items: const [
+              NoteItem(id: 'a', text: 'bir'),
+              NoteItem(id: 'b', text: 'iki'),
+            ],
+            onChanged: (_) {},
+            showCheckboxes: true,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.drag_indicator), findsNWidgets(2));
   });
 }

@@ -127,7 +127,7 @@ extension _ItemsRow on ItemsEditorState {
     // sürüklenmiyor. Tutamacı olmayan satırın seçim yuvarlağı 22 dp solda
     // kalıyor, aynı ekranda iki farklı sol kenar oluyordu. Artık seçim
     // kipinde yuva HER satırda ayrılır; sürüklenemeyen satırda boş kalır.
-    final Widget? dragHandle = !_selectionMode
+    final Widget? dragHandle = !_showHandles
         ? null
         : SizedBox(
             width: ItemsEditorState._kHandleWidth,
@@ -333,7 +333,12 @@ extension _ItemsRow on ItemsEditorState {
           color: selected
               ? scheme.primaryContainer.withValues(alpha: 0.4)
               : null,
-          padding: const EdgeInsetsDirectional.only(start: 12, end: 2),
+          // Tutamak hep görünürken (web/tablet) soldaki 12 dp boşluğa
+          // yerleşir: yazı neredeyse yerinde kalır.
+          padding: EdgeInsetsDirectional.only(
+            start: _pinHandles && !_selectionMode ? 2 : 12,
+            end: 2,
+          ),
           // İşaretli satırın soluk hâli KATMANSIZ: yazı, kutucuk ve yıldız
           // kendi renklerinde soluk çizilir (bkz. [_kCheckedDim]).
           //
@@ -591,8 +596,16 @@ extension _ItemsRow on ItemsEditorState {
                 // yazarken satır her odakta yatayda oynuyordu. Yıldızlama sol
                 // bölgeye uzun basınca açılan menüde ([_showItemMenu]); burada
                 // yalnız YILDIZLI satırın işareti durur (dokununca kalkar).
+                // Hatırlatıcı çipi İLK YAZI SATIRININ ORTASINA hizalı
+                // (kullanıcı isteği 2026-11-08: "satırdaki yazıyla tam hizalı
+                // olmalı" — satırın tepesine yapışıyordu). Çip sabit 22 dp.
                 if (!_selectionMode && widget.lineTrailing != null)
-                  widget.lineTrailing!(item),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: math.max(0.0, firstLineCenter - 11),
+                    ),
+                    child: widget.lineTrailing!(item),
+                  ),
                 if (!_selectionMode && item.starred)
                   IconButton(
                     tooltip: l10n.unstar,
@@ -662,7 +675,8 @@ extension _ItemsRow on ItemsEditorState {
           // verilmeli (bkz. _FloatRow.reserved).
           reserved:
               ItemsEditorState._kRowPadding +
-              (_selectionMode ? ItemsEditorState._kHandleWidth : 0) +
+              (_showHandles ? ItemsEditorState._kHandleWidth : 0) -
+              (_pinHandles && !_selectionMode ? 10 : 0) +
               ItemsEditorState._kLeadingWidth +
               ItemsEditorState._kTrailingWidth,
           // Odak DEĞİŞİMİ yalnız bu satırı yeniden çizer (bkz. [_focusFlags]).

@@ -1017,17 +1017,21 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     final pen = widget.ink;
     final inkHere = widget.fitWidth && (a.ink.isNotEmpty || pen != null);
     if (bubbles == null && !inkHere && !_selectable) return null;
+    // KÖK NEDEN (kullanıcı bulgusu 2026-11-08: "sabit moddayken PDF üzerine
+    // kalemle yazamıyorum, yalnız tam ekranda yazılıyor"): kalem katmanı
+    // seçim ve balon katmanlarının ALTINDAYDI — kalemin dokunuşunu üstteki
+    // seçim katmanı (basılı tut = seç) alıyordu. Kalem açıkken mürekkep EN
+    // ÜSTTE ve seçim katmanı yok (yazarken seçim gerekmez).
+    final penOn = inkHere && pen != null;
     return LayoutBuilder(
       builder: (context, box) => Stack(
         fit: StackFit.expand,
         children: [
-          if (inkHere)
-            pen != null
-                ? InkPageLayer(controller: pen, page: pageNumber)
-                : IgnorePointer(
-                    child: CustomPaint(painter: InkPainter(a.ink, pageNumber)),
-                  ),
-          if (_selectable)
+          if (inkHere && !penOn)
+            IgnorePointer(
+              child: CustomPaint(painter: InkPainter(a.ink, pageNumber)),
+            ),
+          if (_selectable && !penOn)
             ValueListenableBuilder<int>(
               valueListenable: _selection.page,
               builder: (context, active, _) => Stack(
@@ -1051,8 +1055,9 @@ class _PdfPageBoxState extends State<PdfPageBox> {
             BubblePageLayer(
               controller: bubbles,
               page: pageNumber,
-              readOnly: !(_bubbleEdit || _bubblesWritable),
+              readOnly: penOn || !(_bubbleEdit || _bubblesWritable),
             ),
+          if (penOn) InkPageLayer(controller: pen, page: pageNumber),
         ],
       ),
     );

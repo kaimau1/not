@@ -4,6 +4,7 @@ import '../../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderFlex, RenderParagraph;
 import 'package:flutter/services.dart';
@@ -369,6 +370,12 @@ class ItemsEditorState extends State<ItemsEditor>
 
   bool get _selectionMode => _selectMode || _selected.isNotEmpty;
 
+  /// Geniş ekranda (web, tablet) tutamak seçim kipi dışında da görünür.
+  bool _pinHandles = false;
+
+  /// Satırda sürükleme tutamağı yuvası var mı.
+  bool get _showHandles => _selectionMode || _pinHandles;
+
   /// Seçim çubuğunu ekranın DİBİNE demirleyen katman denetleyicisi.
   ///
   /// Çubuk eskiden listenin header'ındaydı ve listeyle birlikte kayıyordu:
@@ -698,7 +705,8 @@ class ItemsEditorState extends State<ItemsEditor>
           a[i].checked != b[i].checked ||
           a[i].divider != b[i].divider ||
           a[i].header != b[i].header ||
-          a[i].align != b[i].align) {
+          a[i].align != b[i].align ||
+          a[i].package != b[i].package) {
         return false;
       }
     }
@@ -1206,6 +1214,21 @@ class ItemsEditorState extends State<ItemsEditor>
       controller.selection.end,
     ).clamp(start, logical.length);
     final (:before, :after) = splitRichText(logical, start, end);
+    // Paketin SON maddesi boşken Enter: paketten çıkar (listelerdeki gibi);
+    // yeni madde açılmaz.
+    if (logical.trim().isEmpty && target.package.isNotEmpty) {
+      final nextIsSame =
+          index + 1 < _items.length &&
+          _items[index + 1].package == target.package;
+      if (!nextIsSame) {
+        setState(() {
+          _items[index] = _items[index].copyWith(package: '');
+          _rowCache.remove(target.id);
+        });
+        _commit();
+        return;
+      }
+    }
     if (after.isEmpty) {
       if (end != start) {
         // Sona kadar seçili metin Enter'la silinir (yazılan Enter gibi).
@@ -1224,7 +1247,12 @@ class ItemsEditorState extends State<ItemsEditor>
       return;
     }
     final current = _items[index];
-    final next = NoteItem(id: _uuid.v4(), text: after.trimLeft());
+    // Paketin içinden bölünen parça pakette kalır.
+    final next = NoteItem(
+      id: _uuid.v4(),
+      text: after.trimLeft(),
+      package: current.checked ? '' : current.package,
+    );
     setState(() {
       _items[index] = current.copyWith(text: before.trimRight());
       // İşaretli maddeden bölünen parça işaretsizlerin sonuna girer
@@ -1247,7 +1275,14 @@ class ItemsEditorState extends State<ItemsEditor>
   void _insertAfter(NoteItem after) {
     final index = _items.indexWhere((i) => i.id == after.id);
     if (index < 0) return;
-    final item = NoteItem(id: _uuid.v4(), text: '');
+    // NOT PAKETİ AÇIKKEN Enter / yeni madde paketin içinde kalır (kullanıcı
+    // bulgusu 2026-11-08: "yeni madde ekleyince paket iptal oluyor" — yeni
+    // satır paketsiz açılıp paketi ikiye bölüyor, odak dışarı kaçıyordu).
+    final item = NoteItem(
+      id: _uuid.v4(),
+      text: '',
+      package: after.checked ? '' : after.package,
+    );
     // İşaretli maddeden (footer bloğu) Enter: yeni İŞARETSİZ öğe işaretli
     // bloğun ortasına giremez — "işaretsizler _items'ın başında" değişmezi
     // bozulur ve sürükle-sırala görünenden BAŞKA öğeyi taşırdı. Yeni öğe
@@ -1834,7 +1869,11 @@ class ItemsEditorState extends State<ItemsEditor>
   /// Liste düzeyi bir girdi değiştiyse önbelleği tümden düşürür; silinen
   /// maddelerin bayat girdilerini de ayıklar.
   void _syncRowCache(ThemeData theme, AppLocalizations l10n) {
+    // WEB VE TABLETTE sürükleme tutamağı HEP görünür (kullanıcı isteği
+    // 2026-11-08: "solda boşluk var yeterince"); telefonda yalnız Seç'te.
+    _pinHandles = kIsWeb || MediaQuery.sizeOf(context).shortestSide >= 600;
     final env = (
+      _pinHandles,
       theme.colorScheme,
       // Notun vurgusu (rengi değişince kutucuklar yeniden çizilsin).
       _accent?.accent,

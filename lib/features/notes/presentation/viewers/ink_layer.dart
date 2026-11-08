@@ -902,15 +902,27 @@ class InkController extends ChangeNotifier {
           active.points[i + 1] * size.height,
         ),
     ];
-    final found = recognizeInkShape(px);
-    if (found == null) return;
-    final points = inkShapePoints(
-      found.shape,
-      found.a.dx / size.width,
-      found.a.dy / size.height,
-      found.b.dx / size.width,
-      found.b.dy / size.height,
-    );
+    // Kapalı şekil önce (kare/daire düzgün, zorlanınca serbest — bkz.
+    // [recognizeClosedShape]); yoksa düz çizgi.
+    final closed = recognizeClosedShape(px);
+    final found = closed == null ? recognizeInkShape(px) : null;
+    if (closed == null && (found == null || found.shape != InkShape.line)) {
+      return;
+    }
+    final points = closed != null
+        ? [
+            for (final p in closed.outline) ...[
+              p.dx / size.width,
+              p.dy / size.height,
+            ],
+          ]
+        : inkShapePoints(
+            found!.shape,
+            found.a.dx / size.width,
+            found.a.dy / size.height,
+            found.b.dx / size.width,
+            found.b.dy / size.height,
+          );
     // Basınç noktaya bağlı; şekil düzgün kalınlıkla çizilir.
     final snapped = InkStroke(
       page: active.page,
@@ -1558,6 +1570,7 @@ class InkFixMarker extends StatelessWidget {
     InkFixKind.rectangle => Icons.crop_square_rounded,
     InkFixKind.ellipse => Icons.circle_outlined,
     InkFixKind.triangle => Icons.change_history_rounded,
+    InkFixKind.quad => Icons.crop_din_rounded,
     InkFixKind.tick => Icons.check_rounded,
     InkFixKind.cross => Icons.close_rounded,
   };

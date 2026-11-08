@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -171,6 +173,16 @@ class NotlarApp extends ConsumerWidget {
           ? null
           : router.backButtonDispatcher,
       onNavigationNotification: kIsWeb ? null : alwaysHandleBack,
+      // ESC = GERİ (kullanıcı isteği 2026-11-08, web ve tablet): kapatılabilir
+      // açılır pencere/levha/menü rotası kapanır, sayfada sistem geri
+      // tuşunun yolu ([EscBackAction]). DismissIntent'e bağlanmadı: metin
+      // alanı odaktayken EditableText onu sayfa rotasının devre dışı
+      // eyleminde durduruyordu (Esc hiçbir şey yapmıyordu).
+      shortcuts: {
+        ...WidgetsApp.defaultShortcuts,
+        const SingleActivator(LogicalKeyboardKey.escape): const EscBackIntent(),
+      },
+      actions: {...WidgetsApp.defaultActions, EscBackIntent: EscBackAction()},
       // Koyu kip (Koyu seçimi, sistem ya da gece zamanlaması) seçili ailenin
       // KENDİ koyu hâlini kullanır.
       theme: AppTheme.of(choice.family, Brightness.light, font: font),
@@ -244,5 +256,34 @@ class NotlarApp extends ConsumerWidget {
         );
       },
     );
+  }
+}
+
+/// Esc tuşu (bkz. [EscBackAction]).
+class EscBackIntent extends Intent {
+  const EscBackIntent();
+}
+
+/// Esc'in en üst düzey karşılığı: açılır rota (diyalog, levha, menü) varsa
+/// onu kapatır; yoksa geri tuşu gibi davranır — kök yönlendiricinin geri
+/// dağıtıcısı (PopScope, BackButtonListener, iç içe gezginler sırasıyla);
+/// yönlendirici yoksa en yakın gezgin.
+class EscBackAction extends ContextAction<EscBackIntent> {
+  @override
+  Object? invoke(EscBackIntent intent, [BuildContext? context]) {
+    final ctx = context ?? primaryFocus?.context;
+    if (ctx == null || !ctx.mounted) return null;
+    final route = ModalRoute.of(ctx);
+    if (route is PopupRoute) {
+      unawaited(Navigator.of(ctx).maybePop());
+      return null;
+    }
+    final dispatcher = Router.maybeOf(ctx)?.backButtonDispatcher;
+    if (dispatcher != null) {
+      unawaited(dispatcher.invokeCallback(Future<bool>.value(false)));
+    } else {
+      unawaited(Navigator.maybeOf(ctx)?.maybePop());
+    }
+    return null;
   }
 }

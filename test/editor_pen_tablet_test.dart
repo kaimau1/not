@@ -99,7 +99,8 @@ void main() {
     final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
     final peek = find.byKey(const ValueKey('pen-dock-peek'));
     expect(peek, findsOneWidget);
-    expect(tester.getRect(peek).height, lessThanOrEqualTo(44));
+    // 48 dp (2026-11-08: "azıcık genişlemeli, basınca karışıyor").
+    expect(tester.getRect(peek).height, lessThanOrEqualTo(48));
     expect(tester.getRect(peek).bottom, greaterThan(screen.height - 60));
     expect(find.byKey(const ValueKey('pen-tray-pen')), findsNothing);
     // Dokununca kapsül açılır (önce ilk seferki ipucu kalksın).

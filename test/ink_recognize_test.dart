@@ -143,4 +143,87 @@ void main() {
     ];
     expect(recognizeInkFix(scribble, marks: false), isNull);
   });
+
+  group('kapalı şekil (2026-11-08)', () {
+    test('köşeleri yuvarlak elle çizilmiş kare → KARE (çember değil)', () {
+      // Köşeleri 12 dp yuvarlatılmış 140'lık kare + titreme.
+      final pts = <Offset>[];
+      const r = 14.0, s0 = 100.0, s1 = 240.0;
+      void arc(Offset c, double from) {
+        for (var i = 0; i <= 6; i++) {
+          final a = from + (math.pi / 2) * i / 6;
+          pts.add(c + Offset(r * math.cos(a), r * math.sin(a)));
+        }
+      }
+      pts.addAll(seg(const Offset(s0 + r, s0), const Offset(s1 - r, s0), wobble: 1.5));
+      arc(const Offset(s1 - r, s0 + r), -math.pi / 2);
+      pts.addAll(seg(const Offset(s1, s0 + r), const Offset(s1, s1 - r), wobble: 1.5));
+      arc(const Offset(s1 - r, s1 - r), 0);
+      pts.addAll(seg(const Offset(s1 - r, s1), const Offset(s0 + r, s1), wobble: 1.5));
+      arc(const Offset(s0 + r, s1 - r), math.pi / 2);
+      pts.addAll(seg(const Offset(s0, s1 - r), const Offset(s0, s0 + r), wobble: 1.5));
+      arc(const Offset(s0 + r, s0 + r), math.pi);
+      final shape = recognizeClosedShape(pts);
+      expect(shape?.kind, InkFixKind.rectangle);
+      expect(shape!.regular, isTrue, reason: 'en/boy ≈ 1 → kare');
+    });
+
+    test('eğik dikdörtgen tanınır, eğimi korunur', () {
+      Offset rot(Offset p) {
+        const a = 0.5; // ~29°
+        final c = math.cos(a), s = math.sin(a);
+        final q = p - const Offset(200, 200);
+        return const Offset(200, 200) +
+            Offset(q.dx * c - q.dy * s, q.dx * s + q.dy * c);
+      }
+      final pts = poly([
+        rot(const Offset(100, 150)),
+        rot(const Offset(300, 150)),
+        rot(const Offset(300, 250)),
+        rot(const Offset(100, 250)),
+        rot(const Offset(100, 151)),
+      ], wobble: 1.5);
+      final shape = recognizeClosedShape(pts);
+      expect(shape?.kind, InkFixKind.rectangle);
+      expect(shape!.regular, isFalse);
+    });
+
+    test('kabaca daire → düzgün daire; belirgin elips → elips', () {
+      final circle = recognizeClosedShape(
+        ellipse(const Offset(200, 200), 60, 54, wobble: 2),
+      );
+      expect(circle?.kind, InkFixKind.ellipse);
+      expect(circle!.regular, isTrue);
+      final oval = recognizeClosedShape(
+        ellipse(const Offset(200, 200), 100, 50, wobble: 2),
+      );
+      expect(oval?.kind, InkFixKind.ellipse);
+      expect(oval!.regular, isFalse);
+    });
+
+    test('yamuk → serbest dörtgen', () {
+      final shape = recognizeClosedShape(
+        poly(const [
+          Offset(140, 100),
+          Offset(260, 100),
+          Offset(320, 220),
+          Offset(80, 220),
+          Offset(140, 101),
+        ], wobble: 1),
+      );
+      expect(shape?.kind, InkFixKind.quad);
+    });
+
+    test('üçgen', () {
+      final shape = recognizeClosedShape(
+        poly(const [
+          Offset(150, 60),
+          Offset(250, 230),
+          Offset(50, 228),
+          Offset(150, 62),
+        ], wobble: 1.5),
+      );
+      expect(shape?.kind, InkFixKind.triangle);
+    });
+  });
 }

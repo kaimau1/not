@@ -83,6 +83,7 @@ import '../../../calendar/presentation/note_calendar_links.dart';
 import '../../../calendar/presentation/task_editor.dart';
 import '../../../calendar/presentation/line_task_chip.dart';
 import 'auto_spell.dart';
+import 'spell_settings_sheet.dart';
 import 'note_package.dart';
 import 'editor_quick_row.dart';
 import '../../../calendar/presentation/event_editor.dart';
@@ -272,6 +273,8 @@ bool sameItemsVisually(List<NoteItem> a, List<NoteItem> b) {
         // Ara başlık kutucuksuz, kalın çizilir.
         x.header != y.header ||
         x.align != y.align ||
+        // Paket satırları özet hapına toplar (bkz. NoteItem.package).
+        x.package != y.package ||
         isBlankText(x.text) != isBlankText(y.text)) {
       return false;
     }
@@ -916,11 +919,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       }
     }
     _typingTimer?.cancel();
-    // 1,6 sn duraklama: 650 ms'de çubuk her nefeste gidip geliyordu
-    // (kullanıcı bildirimi 2026-11-08).
-    _typingTimer = Timer(const Duration(milliseconds: 1600), () {
-      _typingN.value = false;
-    });
+    // 1,1 sn duraklama (kullanıcı isteği 2026-11-08 ikinci tur; 650 ms'de
+    // çubuk her nefeste gidip geliyordu, 1,6 sn ise geç geliyordu).
+    _typingTimer = Timer(const Duration(milliseconds: 1100), _showBarNow);
+  }
+
+  /// Alt çubuk HEMEN geri gelir: yeni maddeye/alana geçince ve klavye
+  /// kapanınca (kullanıcı isteği 2026-11-08) — 1,1 sn beklemeden.
+  void _showBarNow() {
+    _typingTimer?.cancel();
+    _typingTimer = null;
+    if (_typingN.value) _typingN.value = false;
   }
 
   /// Alt çubukta son karede "Notta ara" / "Paylaş" görünüyor muydu (F12.1):
@@ -990,9 +999,24 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       focusNode: focusNode,
       commit: commit,
     );
-    // Yazım düzelt (hızlı satır): başlık hariç her alan.
-    if (controller != _titleController) AutoSpell.attach(controller, commit);
-    if (changed) _formatTargetN.value = _formatTarget;
+    // Yazım düzelt (hızlı satır): her alan; başlıkta kelime başları büyür
+    // (2026-11-08).
+    AutoSpell.attach(
+      controller,
+      commit,
+      title: controller == _titleController,
+    );
+    if (changed) {
+      _formatTargetN.value = _formatTarget;
+      // Yeni maddeye/alana geçildi: gizlenmiş alt çubuk hemen gelir. Bildirim
+      // odak dinleyicisinden (build dışı) geliyor; yine de kareye ertelenir.
+      if (_typingN.value) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _showBarNow();
+        });
+      }
+    }
+    _onAnyFocusChange();
     // Alan yeni odaklandı: imleci klavyenin üstüne al. Bu kapanış gövde,
     // başlık ve madde satırlarının HEPSİNDEN geçtiği için tek yer yeter.
     _revealCaretSoon();
@@ -1097,7 +1121,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   @override
   void initState() {
     super.initState();
-    unawaited(AutoSpell.load());
+    unawaited(AutoSpell.load().then((_) => _seedSpell()));
+    FocusManager.instance.addListener(_onAnyFocusChange);
     // Kök gezgin: kapanış önerisi (F52.3) editör atıldıktan sonra açılır.
     _rootNavigator = Navigator.maybeOf(context, rootNavigator: true);
     // Uygulama arka plana alınırken/kapatılırken bekleyen kaydı zorlamak için
@@ -1550,6 +1575,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _stopFileDrops();
     _typingTimer?.cancel();
     _typingN.dispose();
+    FocusManager.instance.removeListener(_onAnyFocusChange);
+    _fieldFocusedN.dispose();
     WidgetsBinding.instance.removeObserver(this);
     noteRouteClosing.removeListener(_holdSaveWhileClosing);
     openEditorNoteIds.remove(widget.noteId);
@@ -2229,6 +2256,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final pen = !note.type.isPageNoteType;
     return KeyboardSwitch(
       closed: idle,
+      editing: _fieldFocusedN,
       open: EditorQuickRow(
           onBold: () => _applyFormat(RichFormat.bold),
           onBullet: () => _runOnTarget(applyLineBullet),
@@ -2262,7 +2290,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   ),
                 )
               : null,
-          onSpell: AutoSpell.toggle,
+          onSpell: () {
+            AutoSpell.toggle();
+            unawaited(_seedSpell());
+          },
+          onSpellSettings: () => showSpellSettings(context),
           onPackage: () => _packageFromQuickRow(note),
           packageHint:
               note.type == NoteType.text && suggestsPackage(note.body),
@@ -2270,12 +2302,55 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           onUnderline: () => _applyFormat(RichFormat.underline),
           onHighlight: () => _applyFormat(RichFormat.highlight),
           onDictation: () => unawaited(_toggleDictation()),
+          onCamera: kIsWeb
+              ? null
+              : () {
+                  _rememberCaret();
+                  unawaited(_takePhoto());
+                },
+          onScan: kIsWeb ? null : () => unawaited(_scanDocument()),
+          onDate: () => _insertTextAtCaret(
+            DateFormat.yMMMMd(
+              Localizations.localeOf(context).toLanguageTag(),
+            ).add_Hm().format(DateTime.now()),
+          ),
           // Nota her girişte bir kez (durum örneği nota bağlı); setState
           // YOK — yalnız bir sonraki açılışta vurgulanmasın diye.
           hint: !_quickRowHinted,
           onHinted: () => _quickRowHinted = true,
       ),
     );
+  }
+
+  /// Öğrenen yazım düzeltmenin kişisel sözlüğü: notların metni (arka
+  /// planda, oturumda bir kez; yazım düzelt kapalıyken hiç).
+  Future<void> _seedSpell() async {
+    if (!mounted || !AutoSpell.enabled.value) return;
+    final notes = ref.read(notesStreamProvider).value ?? const <Note>[];
+    await AutoSpell.seedFrom(
+      () => [
+        for (final n in notes.take(600)) ...[
+          n.title,
+          n.body,
+          for (final i in n.items) i.text,
+        ],
+      ],
+    );
+  }
+
+  /// Notun bir metin alanı (gövde, madde, başlık) odakta mı — tablette
+  /// klavye boşluğu olmadan da hızlı satırı göstermek için
+  /// ([KeyboardSwitch.editing]). Yalnız odak değişince güncellenir.
+  final _fieldFocusedN = ValueNotifier<bool>(false);
+
+  void _onAnyFocusChange() {
+    if (!mounted) return;
+    final node = _formatTarget?.focusNode;
+    final on =
+        node != null &&
+        node.hasFocus &&
+        _formatTarget?.controller != _titleController;
+    if (_fieldFocusedN.value != on) _fieldFocusedN.value = on;
   }
 
   /// Bu not girişinde hızlı satır vurgusu gösterildi mi (bkz. [EditorQuickRow]).
@@ -2894,6 +2969,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // boyda da sığmazsa alanın içinde yatay kayar.
         // ignore: avoid_redundant_argument_values
         maxLines: 1,
+        // Başlıkta kelime başları büyük (kullanıcı isteği 2026-11-08): sanal
+        // klavye kendisi büyütür; fiziksel klavye/web için yazım düzelt
+        // açıkken [AutoSpell] (title kipi) aynı kuralı uygular.
+        textCapitalization: TextCapitalization.words,
         textInputAction: TextInputAction.next,
         // Varsayılan `next` odak sırasındaki bir SONRAKİ öğeye gider — metin
         // olmayan bir öğeye düşerse klavye kapanıyordu. "İleri" doğrudan
@@ -4739,7 +4818,15 @@ child: NoteFindBar(
               // görünür); tutmadıysa farkı burada kapatır.
               _revealCaret();
             },
-            builder: (context, keyboardInset) => Padding(
+            builder: (context, keyboardInset) {
+              // Klavye KAPANDI (onSettled kapanışta gelmez, bkz. HAFIZA):
+              // yazarken gizlenen alt çubuk hemen gelsin.
+              if (keyboardInset <= 0 && _typingN.value) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) _showBarNow();
+                });
+              }
+              return Padding(
               padding: EdgeInsets.only(bottom: keyboardInset),
               child: Column(
                 children: [
@@ -4858,7 +4945,8 @@ child: NoteFindBar(
                     KeyboardSlide(inset: keyboardInset, child: bottomBar),
                 ],
               ),
-            ),
+            );
+            },
           ),
         ))),
         ),

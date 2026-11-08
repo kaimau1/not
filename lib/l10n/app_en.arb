@@ -2872,5 +2872,22 @@
   "notePackageCount": "{count} items",
   "@notePackageCount": {"placeholders": {"count": {"type": "int"}}},
   "notePackageUnpack": "Unpack (put back into the note)",
-  "pinnedPenWrite": "Write on it with the pen"
+  "pinnedPenWrite": "Write on it with the pen",
+  "quickRowCamera": "Take photo",
+  "quickRowScan": "Scan document",
+  "quickRowDate": "Insert date and time",
+  "spellAutoTitle": "Auto-correct",
+  "spellAutoSubtitle": "Every finished word is corrected without asking; title words are capitalized.",
+  "spellLearnTitle": "Learning correction",
+  "spellLearnSubtitle": "Learns the words you correct yourself and the keys you often mix up (Turkish, English, Chinese). Kept only on this device.",
+  "spellLearnedCount": "{count} learned corrections",
+  "spellForget": "Forget what was learned",
+  "spellForgotten": "Learned corrections removed",
+  "lineTaskRetime": "Change time",
+  "lineTaskDone": "Done",
+  "lineTaskUndone": "Mark not done",
+  "lineTaskDetails": "Details (level, repeat, contact)",
+  "lineTaskDelete": "Delete reminder",
+  "inkShapeTriangle": "Triangle",
+  "inkShapeTable": "Table"
 }

@@ -150,4 +150,9 @@ bool _sameItem(NoteItem a, NoteItem b) =>
     a.title == b.title &&
     a.divider == b.divider &&
     a.header == b.header &&
-    a.align == b.align;
+    a.align == b.align &&
+    // NOT PAKETİ de içerik (kullanıcı bulgusu 2026-11-08: "paket yeni madde
+    // ekleyince kendi kendine iptal oluyor"): yoksa paketleme "yerelde
+    // değişmedi" sayılıp uzaktaki paketsiz kopya üstüne yazıyordu.
+    a.package == b.package &&
+    a.starred == b.starred;

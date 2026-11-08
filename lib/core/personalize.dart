@@ -188,6 +188,7 @@ abstract final class UiItem {
       'underline',
       'highlight',
       'dictation',
+      'scan',
     ])
       quickRow(k),
   };

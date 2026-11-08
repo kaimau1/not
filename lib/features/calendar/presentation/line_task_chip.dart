@@ -77,6 +77,9 @@ Future<void> addLineReminder(
   );
 }
 
+/// Çipin sabit boyu (satırın ilk yazı satırına ortalanır).
+const double kLineTaskChipHeight = 22;
+
 /// Satırın sonundaki hatırlatıcı/görev çipi: zil (düzeyin simgesi) + zaman.
 /// Zamana dokun = tarih/saat seçici; basılı tut = görev levhası (düzey,
 /// kişi, Gmail, tekrar, silme).
@@ -124,6 +127,96 @@ class LineTaskChip extends ConsumerWidget {
           );
     }
 
+    // DOKUN = küçük menü (kullanıcı isteği 2026-11-08: "üzerine basınca
+    // çıkan düzenleme alanında sil tuşu olmalı"): zamanı değiştir,
+    // ayrıntılar, tamamlandı, SİL.
+    Future<void> actions() async {
+      final choice = await showModalBottomSheet<String>(
+        context: context,
+        showDragHandle: true,
+        builder: (sheet) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text(
+                  task.title.isEmpty ? l10n.taskDue : task.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(label),
+                leading: Icon(icon, color: fg),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                key: const ValueKey('line-task-retime'),
+                leading: const Icon(Icons.schedule_rounded),
+                title: Text(l10n.lineTaskRetime),
+                onTap: () => Navigator.pop(sheet, 'retime'),
+              ),
+              ListTile(
+                key: const ValueKey('line-task-done'),
+                leading: Icon(
+                  task.completed
+                      ? Icons.undo_rounded
+                      : Icons.check_circle_outline_rounded,
+                ),
+                title: Text(
+                  task.completed ? l10n.lineTaskUndone : l10n.lineTaskDone,
+                ),
+                onTap: () => Navigator.pop(sheet, 'done'),
+              ),
+              ListTile(
+                key: const ValueKey('line-task-details'),
+                leading: const Icon(Icons.tune_rounded),
+                title: Text(l10n.lineTaskDetails),
+                onTap: () => Navigator.pop(sheet, 'details'),
+              ),
+              ListTile(
+                key: const ValueKey('line-task-delete'),
+                leading: Icon(Icons.delete_outline, color: scheme.error),
+                title: Text(
+                  l10n.lineTaskDelete,
+                  style: TextStyle(color: scheme.error),
+                ),
+                onTap: () => Navigator.pop(sheet, 'delete'),
+              ),
+            ],
+          ),
+        ),
+      );
+      if (!context.mounted) return;
+      final repo = ref.read(calendarRepositoryProvider);
+      switch (choice) {
+        case 'retime':
+          await retime();
+        case 'done':
+          repo?.saveTask(
+            task.copyWith(
+              completed: !task.completed,
+              completedAt: task.completed ? null : DateTime.now(),
+              clearCompletedAt: task.completed,
+            ),
+          );
+        case 'details':
+          await showTaskEditor(context, existing: task);
+        case 'delete':
+          final all = ref.read(tasksStreamProvider).value ?? const <TaskItem>[];
+          repo?.trashTask(task, all);
+          ScaffoldMessenger.maybeOf(context)
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(l10n.taskDeleted),
+                action: SnackBarAction(
+                  label: l10n.undo,
+                  onPressed: () => repo?.restoreTask(task.id),
+                ),
+              ),
+            );
+      }
+    }
+
     return Padding(
       padding: const EdgeInsetsDirectional.only(start: 4),
       child: Semantics(
@@ -137,11 +230,15 @@ class LineTaskChip extends ConsumerWidget {
           ),
           child: InkWell(
             customBorder: const StadiumBorder(),
-            onTap: () => unawaited(retime()),
+            onTap: () => unawaited(actions()),
             onLongPress: () =>
                 unawaited(showTaskEditor(context, existing: task)),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(6, 3, 8, 3),
+            // SABİT 22 dp boy: satır ilk yazı satırının ortasına hizalar
+            // (bkz. ItemsEditor `lineTrailing`, kChipHeight).
+            child: Container(
+              height: kLineTaskChipHeight,
+              padding: const EdgeInsets.fromLTRB(6, 0, 8, 0),
+              alignment: Alignment.center,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

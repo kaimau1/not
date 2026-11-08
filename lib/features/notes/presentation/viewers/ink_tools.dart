@@ -19,6 +19,13 @@ enum InkShape {
 
   /// Elips (daire): çevreleyen kutudan.
   ellipse,
+
+  /// Üçgen: kutunun tabanı ve üst ortası (2026-11-08).
+  triangle,
+
+  /// Tablo: kutuya 3×3 ızgara (kullanıcı isteği 2026-11-08: "tablo
+  /// eklemede olsun"). Tek çizgi: iç çizgilere kenar üstünden geçilir.
+  table,
 }
 
 /// Şeklin nokta listesi ([x1, y1, x2, y2, ...], oranlı) — [a] başlangıç,
@@ -35,6 +42,19 @@ List<double> inkShapePoints(
       return [ax, ay, bx, by];
     case InkShape.rectangle:
       return [ax, ay, bx, ay, bx, by, ax, by, ax, ay];
+    case InkShape.triangle:
+      final mx = (ax + bx) / 2;
+      return [mx, ay, bx, by, ax, by, mx, ay];
+    case InkShape.table:
+      final l = math.min(ax, bx), r = math.max(ax, bx);
+      final t = math.min(ay, by), b = math.max(ay, by);
+      final y1 = t + (b - t) / 3, y2 = t + 2 * (b - t) / 3;
+      final x1 = l + (r - l) / 3, x2 = l + 2 * (r - l) / 3;
+      return [
+        l, t, r, t, r, b, l, b, l, t, // dış kenar
+        l, y1, r, y1, r, y2, l, y2, // iki yatay (kenardan geçerek)
+        l, b, x1, b, x1, t, x2, t, x2, b, // iki dikey
+      ];
     case InkShape.ellipse:
       const steps = 48;
       final cx = (ax + bx) / 2;

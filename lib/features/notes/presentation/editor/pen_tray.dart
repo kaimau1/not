@@ -381,10 +381,13 @@ class _PenTrayState extends State<PenTray> {
         behavior: HitTestBehavior.opaque,
         onTap: _touched,
         child: surface(
+          // AZICIK GENİŞ (kullanıcı isteği 2026-11-08: "basınca karışıyor
+          // bazen"): 48 dp boy, kalem/renk bölümü ile silgi arasında ayraç
+          // ve 48 dp silgi hedefi — hap açma ile hızlı silgi karışmasın.
           SizedBox(
-            height: 44, // en küçük dokunma hedefi
+            height: 48,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 0, 8, 0),
+              padding: const EdgeInsets.fromLTRB(16, 0, 10, 0),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -410,8 +413,15 @@ class _PenTrayState extends State<PenTray> {
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  _Swatch(color: inkDot, size: 16, selected: false),
                   const SizedBox(width: 6),
-                  _Swatch(color: inkDot, size: 14, selected: false),
+                  Container(
+                    width: 1,
+                    height: 22,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    color: scheme.outlineVariant.withValues(alpha: 0.6),
+                  ),
                   // HIZLI SİLGİ (kullanıcı isteği 2026-11-08): küçük panelde
                   // hep silgi; silgi seçiliyken yerinde SON kalem — tek
                   // dokunuşla gidip gelinir. `_ink.pen` silgide de korunur.
@@ -425,8 +435,8 @@ class _PenTrayState extends State<PenTray> {
                         _ink.eraser ? _ink.setPen(_ink.pen) : _ink.setEraser(true);
                       },
                       child: SizedBox(
-                        width: 36,
-                        height: 44,
+                        width: 48,
+                        height: 48,
                         child: Icon(
                           _ink.eraser
                               ? Icons.edit_outlined
@@ -1196,11 +1206,15 @@ class _Options extends StatelessWidget {
       InkShape.line => l10n.inkShapeLine,
       InkShape.rectangle => l10n.inkShapeRectangle,
       InkShape.ellipse => l10n.inkShapeEllipse,
+      InkShape.triangle => l10n.inkShapeTriangle,
+      InkShape.table => l10n.inkShapeTable,
     };
     IconData shapeIcon(InkShape s) => switch (s) {
       InkShape.line => Icons.horizontal_rule_rounded,
       InkShape.rectangle => Icons.crop_square_rounded,
       InkShape.ellipse => Icons.circle_outlined,
+      InkShape.triangle => Icons.change_history_rounded,
+      InkShape.table => Icons.table_chart_outlined,
     };
 
     return Padding(
