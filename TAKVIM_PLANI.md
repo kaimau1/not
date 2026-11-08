@@ -307,6 +307,27 @@ Faz 53'te.
   51 → 52 → 53. Gerekçe: Google'sız da işe yarayan çekirdek önce; Google görev
   senkronu takvim yazmasından daha kolay ve daha faydalı.
 
+## 10. Not içi hatırlatıcı ve görev satırları (2026-11-08)
+
+**Karar:** ayrı kayıt YOK — satır görevi takvimin `tasks` kaydıdır (`noteId` +
+`noteItemId`, F50.3'ün iki yönlü tamamlanma eşlemesi aynen). Böylece görevler
+ekranı, ajanda, Google Görevler senkronu, yedek ve bildirim tek yerden çalışır.
+
+| Parça | Nasıl |
+|---|---|
+| Satıra hatırlatıcı | Madde menüsü → "Hatırlat" → gün + saat → `TaskItem(due, dueTime, reminders: [0])`; başlık satırın metni |
+| Satır çipi | `LineTaskChip` (satır sonu): düzey simgesi + "Bugün 14:30"; saate dokun = seçici, basılı tut = görev levhası; geciken kırmızı, biten soluk/üstü çizili |
+| Yeni alanlar | `level` (az/orta/sık/acil, '' = sık), `contact` (kişi), `gmailLink` — boşken kayda yazılmaz; Google Tasks'a gitmez (yalnız bizde) |
+| Bildirim | `ReminderService` → `calendarAlarms` → sistem alarmı (`exactAllowWhileIdle`, izin yoksa inexact). Zamanlayıcı/yoklama YOK. Düzey = Android kanalı (`ReminderLevel`) |
+| Dokununca | Görev nota bağlıysa not açılır (yoksa takvim) |
+| Ana ekran | Zamanı gelenler şeridi + simge rozeti (`due_items.dart`): "şimdi" yalnız bir sonraki ana kurulan tek seferlik zamanlayıcı ve öne gelişte ilerler |
+
+**Sonraya (KALANLAR "Yarım kalan"):** düz metin satırında çip (satır kimliği
+gerekir — gövde pencereli, satır içi widget pahalı; öneri: satır sonunda görünmez
+işaret `⟦t:id⟧` + `SearchHighlight` gibi boya katmanında çip), şeritten satıra
+kaydırma, kişi alanına rehberden seçim, Gmail bağlantısını uygulama içi Gmail
+ekranında açma.
+
 ## Durum
 
 | Faz | Durum |
@@ -319,3 +340,4 @@ Faz 53'te.
 | 51 Google'a yazma | ✅ 2026-11-06 (gerçek hesapta denenmedi: F19.B10, KALANLAR §2 #104) |
 | 52 Akıllı bağlar | ✅ 2026-11-06 (cihazda doğrulanmadı, KALANLAR §2 #105) |
 | 53 Rutinler | ✅ 2026-11-06 (cihazda doğrulanmadı, KALANLAR §2 #106) |
+| §10 Not içi görev satırı | ✅ 2026-11-08 ilk sürüm (liste maddeleri; cihazda doğrulanmadı, KALANLAR §2 A7–A10) |

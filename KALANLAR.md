@@ -209,6 +209,20 @@ kartta çizildi. Yeni metin notunda klavye açık; not "+" → Hatırlat aynı "
 110. [ ] Ayarlar → Görünüm: Krem, Şeftali, Nane (telefonda 3'lü sıralar); okunurluk.
 111. [ ] Notta "+" → "Takvime ekle" → gün, saat → etkinlik levhası not bağlı açılıyor.
 
+**2026-11-08 — kalem, satır hatırlatıcısı, bildirim (dal `claude/a-kalem-bildirim-44cf8b`; yazıldı, cihazda doğrulanmadı)** — numaralar "A" önekli (paralel oturumla çakışmasın).
+A1. [ ] Kalem kapsülü: yeni kalem görselleri (tükenmez, keçeli, fosforlu, silgi, gönye, kement) açık/koyu temada güzel mi; beyaz/siyah mürekkepte uç görünüyor mu.
+A2. [ ] Kapsül ⋯ → "Bu kalemi sabitle" (2-3 farklı kalem/renk/kalınlık) → kapsülün üstünde sabit kalem şeridi; dokununca o kalem seçiliyor; basılı tutunca kalkıyor; uygulamayı kapat-aç → duruyor. Tablette (ray) aynı.
+A3. [ ] "Sayfaya yaz (kalem)": ayar kartı açıkken geri → kart kapanır; kapsül açıkken geri → hapa iner; sonra geri → kalem kipi kapanır, NOT AÇIK; bir geri daha → ana ekran. × kalemi kapatıyor; ✓ (hızlı el yazısı notunda) notu kapatıp ana ekrana dönüyor.
+A4. [ ] Uygulama simgesine basılı tut → "Kalemle yaz" → boş not kalem kipinde açılıyor.
+A5. [ ] Kalemle kabaca daire, dikdörtgen, üçgen, düz çizgi, ok (tek çizgi ya da gövde + "^") çiz → sağ altta küçük düğme → dokununca düzgün şekil; geri al eski çizimi getiriyor. Yazı yazarken (harfler) düğme çıkmıyor mu / rahatsız ediyor mu? Ayarlar (kalem ⚙) → "Şekli tanı…" kapatınca çıkmıyor.
+A6. [ ] Tik (✓) ve çarpı (✗) çiz → ilk seferde düğme → dokun → "Otomatik düzeltme açılsın mı?" → Aç → temiz tik/çarpı; sonrakilerde düğme doğrudan düzeltir; "Hayır" denince bir daha çıkmıyor; kalem ayarlarından açılıp kapanıyor. PDF/slayt üstünde de.
+A7. [ ] Liste notunda maddeye basılı tut → "Hatırlat" → gün + saat → satırın sonunda ⏰ çip (saat yazılı); saate dokun → seçici → yeni saat; basılı tut → görev levhası (düzey, kişi, Gmail). Zamanında bildirim geliyor; dokununca NOT açılıyor. Görevler ekranında da görünüyor.
+A8. [ ] Hatırlatıcı levhasında Bildirim: Az (sessiz, yalnız perdede), Orta (ses, açılır pencere yok), Sık (sesli + üstte açılır — eskisi), Acil (kişisel APK'da kilit ekranında tam ekran/alarm sesi; izin yoksa en yüksek öncelik). Ayarlar → Bildirimler'de dört ayrı kanal görünüyor.
+A9. [ ] Ana ekran üstünde zamanı gelen hatırlatıcı/görev şeridi (+N); dokun → not açılıyor ve şerit maddesi gidiyor; ✕ hepsini kapatıyor; yeni hatırlatıcı zamanı gelince (uygulama açıkken) şerit kendiliğinden beliriyor.
+A10. [ ] Uygulama simgesi rozeti: zamanı gelmiş açılmamış hatırlatıcı + bugünün tamamlanmamış görevleri sayısı (MIUI'de sayı, Pixel'de nokta); perdede tek sessiz "N hatırlatıcı/görev bekliyor" özeti — rahatsız ediyorsa söyle (kanal kapatılabilir). Huawei tablette rozet yok (GMS'siz başlatıcı; sabah bakılacak).
+A11. [ ] Not yazarken (klavye açık) üst çubukta hızlı satır: kalın, madde imi, ☑, başlık (sırayla), fotoğraf, dosya, kalem (basılı tut = kalem ayarları), hatırlatıcı; yana kayıyor; klavye kapanınca tarih/etiket geri geliyor; klavye açılıp kapanırken titreme yok.
+A12. [ ] Not kapanışı (yazdıktan sonra geri, karta küçülme): kasma azaldı mı? 4 not türünde (kısa, uzun, listeli, görselli) — `tool/perf/` ile ölçülürse kapanış karesi < 33 ms hedefi.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)
@@ -220,5 +234,9 @@ kartta çizildi. Yeni metin notunda klavye açık; not "+" → Hatırlat aynı "
 - [ ] **Faz 21 kabulü sağlanmadı** (2 tur sonra kaydırma %3,4–4,2 / 33–50 ms, arama 139 ms): kalan engel raster+kart kurulumu birlikte (Faz 23.4/26) ve arama için KARAR (önbellek payı ya da vurgu katmanı) — `AKICILIK_PLANI.md` Faz 21 notu (2026-11-03)
 
 ## Yarım kalan
+- [ ] Not içi hatırlatıcı/görev çipi şimdilik yalnız LİSTE maddelerinde; düz metin satırında çip yok (satır kimliği yok, pencereli gövdeye satır içi çip pahalı) — tasarım TAKVIM_PLANI §10 (2026-11-08)
+- [ ] Ana ekran şeridinden satır görevine dokununca not açılıyor ama o satıra kaydırılmıyor (2026-11-08)
+- [ ] Kalem şekil önerisi yalnız `InkController` çizimlerinde (sayfa üstü, PDF/slayt, görsel, ayrı çizim); madde jest katmanı (`InkGestureLayer`) kendi ✓ jestini kullanıyor (2026-11-08)
+- [ ] Görev levhasında kişi alanı serbest metin; rehberden seçme ve Gmail iletisini uygulama içinde açma yok (2026-11-08)
 - [ ] Tablette elle kontrol (v801 kurulu): kalemle yazarken avuç, kalemle tek tık kutucuk/metne gidiyor mu, yeni kalem kapsülü, not üst çubuğunda ⌨ düğmesi — klavye algılama doğrulandı, gerisi kullanım sınırı yüzünden yarım (2026-11-07)
 - [ ] `tablet-kalem-klavye` dalı CI yeşil, main'e birleştirilmedi (2026-11-07)
