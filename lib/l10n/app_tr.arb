@@ -3710,5 +3710,8 @@
   "spellLearnedSeen": "{count} kez",
   "@spellLearnedSeen": {"placeholders": {"count": {"type": "int"}}},
   "spellLearnedKept": "Dokunulmayan kelimeler (düzeltmeyi geri aldıkların)",
-  "inkEraserOffer": "Silgiyi seç"
+  "inkEraserOffer": "Silgiyi seç",
+  "tipPenToggle": "Kalem kipi açık. Kapatmak için kalem düğmesine tekrar bas (ya da geri). Basılı tut = kalem ayarları.",
+  "tipPenShapeHold": "Çizginin sonunda parmağını/kalemini bir an beklet: çizgi, kare, daire düzgün şekle oturur.",
+  "tipPenEraserHold": "Silmek için bir çizginin üstüne basılı tut → çıkan silgi düğmesine dokun. İki parmak = kaydır/yakınlaştır."
 }

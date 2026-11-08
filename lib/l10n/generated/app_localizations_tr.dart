@@ -8023,4 +8023,16 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get inkEraserOffer => 'Silgiyi seç';
+
+  @override
+  String get tipPenToggle =>
+      'Kalem kipi açık. Kapatmak için kalem düğmesine tekrar bas (ya da geri). Basılı tut = kalem ayarları.';
+
+  @override
+  String get tipPenShapeHold =>
+      'Çizginin sonunda parmağını/kalemini bir an beklet: çizgi, kare, daire düzgün şekle oturur.';
+
+  @override
+  String get tipPenEraserHold =>
+      'Silmek için bir çizginin üstüne basılı tut → çıkan silgi düğmesine dokun. İki parmak = kaydır/yakınlaştır.';
 }

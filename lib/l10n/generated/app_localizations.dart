@@ -14335,6 +14335,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Silgiyi seç'**
   String get inkEraserOffer;
+
+  /// No description provided for @tipPenToggle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem kipi açık. Kapatmak için kalem düğmesine tekrar bas (ya da geri). Basılı tut = kalem ayarları.'**
+  String get tipPenToggle;
+
+  /// No description provided for @tipPenShapeHold.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizginin sonunda parmağını/kalemini bir an beklet: çizgi, kare, daire düzgün şekle oturur.'**
+  String get tipPenShapeHold;
+
+  /// No description provided for @tipPenEraserHold.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silmek için bir çizginin üstüne basılı tut → çıkan silgi düğmesine dokun. İki parmak = kaydır/yakınlaştır.'**
+  String get tipPenEraserHold;
 }
 
 class _AppLocalizationsDelegate

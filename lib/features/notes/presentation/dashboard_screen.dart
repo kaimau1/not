@@ -843,11 +843,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// O an ÖNİZLENEN bölüm sırası — ızgara bunu çizer.
   List<Note>? _dragOrder;
 
+  /// Sürükleme başındaki sıra: hiç yer değişmediyse kayıt yapılmaz.
+  List<String>? _dragOriginal;
+
+  /// Sürüklemede parmağın aldığı yol (dp): ~0 = yalnız basılı tutuldu.
+  double _dragTravel = 0;
+
   void _startCardDrag(String id, List<Note> section) {
     setState(() {
       _dragNoteId = id;
       _dragOrder = List.of(section);
+      _dragOriginal = [for (final n in section) n.id];
     });
+    _dragTravel = 0;
   }
 
   /// Parmak [toIndex] hücresinin üzerinde: notu oraya taşıyıp yeniden çiz.
@@ -866,14 +874,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   /// Parmak kalktı: GÖRÜNEN sıra kaydedilir. Bırakma bir kartın üstünde
   /// olmasa bile önizlenen sıra korunur — kullanıcı zaten onu görüyordu.
-  void _endCardDrag() {
+  ///
+  /// [onNoMove]: sürükleme başladı ama kart yerinden oynamadı (yalnız basılı
+  /// tutuldu) — o zaman sıra kaydedilmez (ölçüt "elle"ye dönmez) ve uzun
+  /// basışın olağan işi (seçim) yapılır.
+  void _endCardDrag([VoidCallback? onNoMove]) {
     final order = _dragOrder;
     final id = _dragNoteId;
+    final original = _dragOriginal;
     setState(() {
       _dragNoteId = null;
       _dragOrder = null;
+      _dragOriginal = null;
     });
     if (order == null || id == null) return;
+    final unchanged =
+        original != null &&
+        original.length == order.length &&
+        [for (var i = 0; i < order.length; i++) order[i].id == original[i]]
+            .every((same) => same);
+    if (unchanged) {
+      if (_dragTravel < 12) onNoMove?.call();
+      return;
+    }
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
     if (ref.read(noteSortProvider) != NoteSort.manual) {

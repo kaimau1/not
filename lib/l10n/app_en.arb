@@ -2912,5 +2912,8 @@
   "spellLearnedEmpty": "No learned fixes yet.",
   "spellLearnedSeen": "{count} times",
   "spellLearnedKept": "Words left alone (you undid the fix)",
-  "inkEraserOffer": "Pick eraser"
+  "inkEraserOffer": "Pick eraser",
+  "tipPenToggle": "Pen mode is on. Tap the pen button again (or back) to turn it off. Long-press = pen settings.",
+  "tipPenShapeHold": "Hold still at the end of a stroke: lines, squares and circles snap to clean shapes.",
+  "tipPenEraserHold": "To erase, long-press a stroke → tap the eraser button. Two fingers = scroll/zoom."
 }

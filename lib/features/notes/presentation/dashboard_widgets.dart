@@ -178,7 +178,11 @@ class _ReorderableNoteCell extends StatelessWidget {
     required this.child,
     this.draggable = true,
     this.onLongPress,
+    this.onDragUpdate,
   });
+
+  /// Sürüklenen parmağın her adımı (yol ölçümü: hiç oynamadı mı?).
+  final DragUpdateCallback? onDragUpdate;
 
   final String noteId;
   final double cellWidth;
@@ -235,6 +239,7 @@ class _ReorderableNoteCell extends StatelessWidget {
         return LongPressDraggable<String>(
           data: noteId,
           onDragStarted: onDragStart,
+          onDragUpdate: onDragUpdate,
           // Nereye bırakılırsa bırakılsın (kartın üstü, boşluk, ekran dışı)
           // önizlenen sıra kaydedilir; kullanıcı zaten onu görüyordu.
           onDragEnd: (_) => onDragEnd(),

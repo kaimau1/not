@@ -1,5 +1,6 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'widgets/undo_snackbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// **BİR KEZ ÇIKAN İPUÇLARI** (F14.6, 2026-10-31; plandaki öneri uygulandı:
@@ -44,6 +45,12 @@ abstract final class TipOnce {
   /// Yazarken alt çubuk ilk kez gizlendi (2026-11-08).
   static const typingBarHide = 'typing_bar_hide';
 
+  /// KALEM İPUÇLARI (kullanıcı isteği 2026-11-08: "kalem özellikleri için
+  /// ipuçları eklensin"): kip açılınca, ilk çizgilerden sonra sırayla.
+  static const penToggle = 'pen_toggle';
+  static const penShapeHold = 'pen_shape_hold';
+  static const penEraserHold = 'pen_eraser_hold';
+
   static bool _sessionUsed = false;
 
   /// Bu ipucu gösterilmeli mi? (Gösterilmemiş ve — sınırlıysa — bu
@@ -75,30 +82,38 @@ abstract final class TipOnce {
     Duration duration = const Duration(seconds: 5),
   }) {
     if (!due(prefs, id, sessionLimit: sessionLimit)) return false;
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) return false;
+    // ÜSTTE, DOKUNUŞ GEÇİRGEN (kullanıcı bulgusu 2026-11-08: "bazı ipuçları
+    // tıklanabilir butonları kapatıyor — gömülü eklerin menüsünde"): eskiden
+    // alttaki SnackBar ekin menüsünü/alt çubuğu 5 sn örtüyor, dokunuşu da
+    // yutuyordu. Artık ekranın tepesinde, IgnorePointer: alttaki düğmeye
+    // dokunuş geçer; ilk dokunuşta ipucu kalkar.
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    if (overlay == null) return false;
     markShown(prefs, id);
-    final scheme = Theme.of(context).colorScheme;
-    messenger.showSnackBar(
-      SnackBar(
+    _current?.remove();
+    late final OverlayEntry entry;
+    var removed = false;
+    void remove() {
+      if (removed) return;
+      removed = true;
+      if (identical(_current, entry)) _current = null;
+      entry.remove();
+    }
+
+    entry = OverlayEntry(
+      builder: (context) => _TipBanner(
         key: ValueKey('tip-$id'),
+        text: text,
         duration: duration,
-        margin: snackBarMarginOverKeyboard(),
-        content: Row(
-          children: [
-            Icon(
-              Icons.lightbulb_outline,
-              size: 18,
-              color: scheme.inversePrimary,
-            ),
-            const SizedBox(width: 10),
-            Expanded(child: Text(text)),
-          ],
-        ),
+        onDone: remove,
       ),
     );
+    _current = entry;
+    overlay.insert(entry);
     return true;
   }
+
+  static OverlayEntry? _current;
 
   /// Ayarlar → "İpuçlarını yeniden göster".
   static Future<void> resetAll(SharedPreferences prefs) async {
@@ -109,4 +124,105 @@ abstract final class TipOnce {
   /// Testler arası oturum sınırını sıfırlar.
   @visibleForTesting
   static void resetSession() => _sessionUsed = false;
+}
+
+/// Üstteki ipucu şeridi: belirir, [duration] sonra ya da ilk dokunuşta
+/// kalkar. Dokunuşu ENGELLEMEZ (Listener translucent + IgnorePointer).
+class _TipBanner extends StatefulWidget {
+  const _TipBanner({
+    super.key,
+    required this.text,
+    required this.duration,
+    required this.onDone,
+  });
+
+  final String text;
+  final Duration duration;
+  final VoidCallback onDone;
+
+  @override
+  State<_TipBanner> createState() => _TipBannerState();
+}
+
+class _TipBannerState extends State<_TipBanner> {
+  bool _visible = false;
+  bool _closing = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _visible = true);
+    });
+    _timer = Timer(widget.duration, _close);
+  }
+
+  @override
+  void dispose() {
+    // Zamanlayıcı ağaçla gider (testlerde bekleyen zamanlayıcı kalmasın).
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _close() {
+    if (!mounted || _closing) return;
+    _closing = true;
+    setState(() => _visible = false);
+    _timer?.cancel();
+    _timer = Timer(const Duration(milliseconds: 220), widget.onDone);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final top = MediaQuery.paddingOf(context).top;
+    return Positioned(
+      left: 12,
+      right: 12,
+      top: top + 8,
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) => _close(),
+        child: IgnorePointer(
+          child: AnimatedOpacity(
+            opacity: _visible ? 1 : 0,
+            duration: const Duration(milliseconds: 200),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: Material(
+                  color: scheme.inverseSurface,
+                  elevation: 4,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.lightbulb_outline,
+                          size: 18,
+                          color: scheme.inversePrimary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            widget.text,
+                            style: TextStyle(color: scheme.onInverseSurface),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

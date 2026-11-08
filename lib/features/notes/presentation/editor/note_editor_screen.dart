@@ -2217,7 +2217,40 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Hızlı satırdaki kalem: AÇ / KAPA (kullanıcı isteği 2026-11-08: "kalem
   /// butonuna tekrar basınca kalem modu kapansın").
-  void _togglePen() => _update(() => _penMode = !_penMode);
+  void _togglePen() {
+    _update(() => _penMode = !_penMode);
+    if (_penMode) {
+      TipOnce.show(
+        context,
+        ref.read(sharedPreferencesProvider),
+        TipOnce.penToggle,
+        context.l10n.tipPenToggle,
+        sessionLimit: false,
+      );
+    }
+  }
+
+  /// Bu oturumda sayfaya çizilen çizgi sayısı (kalem ipuçlarının sırası).
+  int _penStrokes = 0;
+
+  /// Sayfa çizimi değişti: 2. çizgide "bekletince şekle oturur", 5.de
+  /// "çizgiye basılı tut = silgi" (her biri cihazda bir kez).
+  void _penTipAfterStroke() {
+    _penStrokes++;
+    final (String, String)? tip = switch (_penStrokes) {
+      2 => (TipOnce.penShapeHold, context.l10n.tipPenShapeHold),
+      5 => (TipOnce.penEraserHold, context.l10n.tipPenEraserHold),
+      _ => null,
+    };
+    if (tip == null || !mounted) return;
+    TipOnce.show(
+      context,
+      ref.read(sharedPreferencesProvider),
+      tip.$1,
+      tip.$2,
+      sessionLimit: false,
+    );
+  }
 
   void _openPen() => _update(() => _penMode = true);
 

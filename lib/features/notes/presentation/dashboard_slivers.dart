@@ -341,11 +341,33 @@ extension _DashSlivers on _DashboardScreenState {
         // kapalı: alt kümede taşımak asıl sırayı bozar (⋮ menüsündeki
         // sıralama maddesi de aynı gerekçeyle o hâlde gizleniyor).
         if (!reorderEnabled) {
-          // Seçim KAPALIYKEN sade davranış: uzun basış seçer.
-          if (!selectionActive || !manualReorderAllowed) {
+          // Süzgeç/arama açıkken: uzun basış yalnız seçer (alt kümede taşımak
+          // asıl sırayı bozar).
+          if (!manualReorderAllowed) {
             return KeyedSubtree(
               key: ValueKey(note.id),
               child: GestureDetector(onLongPress: select, child: card),
+            );
+          }
+          // BASILI TUT = DOĞRUDAN SÜRÜKLE (kullanıcı isteği 2026-11-08:
+          // "dashboarda not üstüne basılı tutunca direkt sürükleyebilmeli ve
+          // yerini değiştirebilmeliyim"). Kart oynamadan bırakılırsa uzun
+          // basışın eski işi (seçim) yapılır; sıra kaydedilmez.
+          if (!selectionActive) {
+            return _ReorderableNoteCell(
+              key: ValueKey(note.id),
+              noteId: note.id,
+              cellWidth: cellWidth,
+              inSection: (id) => items.any((n) => n.id == id),
+              onDragStart: () => _startCardDrag(note.id, items),
+              onHover: () => _previewCardDrop(index),
+              onDragEnd: () => _endCardDrag(select),
+              onDragUpdate: (d) => _dragTravel += d.delta.distance,
+              feedback: SizedBox(
+                width: cellWidth,
+                child: NoteCard(note: note, highlightQuery: query),
+              ),
+              child: card,
             );
           }
           // Seçim AÇIKKEN her hücre bir BIRAKMA HEDEFİ olur; sürüklemeyi
