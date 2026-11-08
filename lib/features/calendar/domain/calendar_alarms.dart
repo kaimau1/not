@@ -15,7 +15,11 @@ class CalendarAlarm {
     required this.start,
     required this.allDay,
     required this.payload,
+    this.level = '',
   });
+
+  /// Bildirim önem düzeyi (yalnız görevlerde; bkz. `ReminderLevel`).
+  final String level;
 
   /// Oluş + hatırlatma başına kararlı anahtar (bildirim kimliği bundan).
   final String key;
@@ -30,7 +34,8 @@ class CalendarAlarm {
   final String payload;
 
   /// Değişince yeniden kurulur.
-  String get signature => '${at.millisecondsSinceEpoch}|$title|$allDay';
+  String get signature =>
+      '${at.millisecondsSinceEpoch}|$title|$allDay|$level';
 
   int get notificationId => key.hashCode & 0x7fffffff;
 }
@@ -96,6 +101,7 @@ List<CalendarAlarm> calendarAlarms({
           start: due,
           allDay: !t.hasTime,
           payload: '${kCalendarPayloadPrefix}task:${t.id}',
+          level: t.level,
         ),
       );
     }

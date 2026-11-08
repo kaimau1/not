@@ -25,6 +25,9 @@ class TaskItem {
     this.reminders = const [],
     this.noteId = '',
     this.noteItemId = '',
+    this.level = '',
+    this.contact = '',
+    this.gmailLink = '',
     this.google,
     this.createdAt,
     this.updatedAt,
@@ -70,6 +73,15 @@ class TaskItem {
   /// iki yönlü eşlenir; not [noteId]).
   final String noteItemId;
 
+  /// Bildirim önem düzeyi ([ReminderLevel.id]; '' = sık, eski davranış).
+  final String level;
+
+  /// Kişi / alıcı (ad ya da e-posta; not içi görev satırı, 2026-11-08).
+  final String contact;
+
+  /// Gmail bağlantısı (ileti/konu adresi) — görevden e-postaya dönüş.
+  final String gmailLink;
+
   final GoogleLink? google;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -91,6 +103,9 @@ class TaskItem {
     'reminders',
     'noteId',
     'noteItemId',
+    'level',
+    'contact',
+    'gmailLink',
     'google',
     'createdAt',
     'updatedAt',
@@ -144,6 +159,9 @@ class TaskItem {
     List<int>? reminders,
     String? noteId,
     String? noteItemId,
+    String? level,
+    String? contact,
+    String? gmailLink,
     GoogleLink? google,
     bool clearGoogle = false,
     DateTime? createdAt,
@@ -166,6 +184,9 @@ class TaskItem {
     reminders: reminders ?? this.reminders,
     noteId: noteId ?? this.noteId,
     noteItemId: noteItemId ?? this.noteItemId,
+    level: level ?? this.level,
+    contact: contact ?? this.contact,
+    gmailLink: gmailLink ?? this.gmailLink,
     google: clearGoogle ? null : (google ?? this.google),
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -196,6 +217,9 @@ class TaskItem {
       ],
       noteId: map['noteId'] as String? ?? '',
       noteItemId: map['noteItemId'] as String? ?? '',
+      level: map['level'] as String? ?? '',
+      contact: map['contact'] as String? ?? '',
+      gmailLink: map['gmailLink'] as String? ?? '',
       google: GoogleLink.fromMap(map['google']),
       createdAt: ts('createdAt'),
       updatedAt: ts('updatedAt'),
@@ -222,6 +246,10 @@ class TaskItem {
       'reminders': reminders,
       'noteId': noteId,
       'noteItemId': noteItemId,
+      // Boşsa yazılmaz: eski kayıtlar ve yedekler şişmesin.
+      if (level.isNotEmpty) 'level': level,
+      if (contact.isNotEmpty) 'contact': contact,
+      if (gmailLink.isNotEmpty) 'gmailLink': gmailLink,
       if (google != null) 'google': google!.toMap(),
       'createdAt': ts(createdAt),
       'updatedAt': ts(updatedAt),

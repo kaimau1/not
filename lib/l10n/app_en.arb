@@ -2812,5 +2812,17 @@
   "inkMarkFixAskNo": "No",
   "inkPinPen": "Pin this pen",
   "inkPinnedPen": "Pinned pen · hold to remove",
-  "penModeFinish": "Done"
+  "penModeFinish": "Done",
+  "reminderLevelTitle": "Notification",
+  "reminderLevelLow": "Low",
+  "reminderLevelNormal": "Normal",
+  "reminderLevelHigh": "High",
+  "reminderLevelUrgent": "Urgent",
+  "reminderLevelLowInfo": "Silent; only in the notification shade",
+  "reminderLevelNormalInfo": "Normal sound, no pop-up",
+  "reminderLevelHighInfo": "Sound and pop-up on top of the screen",
+  "reminderLevelUrgentInfo": "Full screen, highest priority (like an alarm)",
+  "itemMenuRemind": "Remind",
+  "taskContactHint": "Person (to / from)",
+  "taskGmailHint": "Gmail link"
 }

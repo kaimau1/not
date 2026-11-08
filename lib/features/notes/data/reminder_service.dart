@@ -1,3 +1,4 @@
+import '../domain/reminder_level.dart';
 import '../domain/reminder_repeat.dart';
 
 import 'dart:async';
@@ -54,7 +55,6 @@ const _monthsTr = [
 /// Ay adları elle yazılı: `intl`'in Türkçe adları için uygulama başında
 /// `initializeDateFormatting` çağrılması gerekir, bildirim planlaması ise
 /// arka planda da koşuyor — 12 sabit dizgi bu bağımlılıktan ucuz.
-@visibleForTesting
 String reminderTimePrefix(
   DateTime when, {
   DateTime? now,
@@ -163,8 +163,24 @@ void handleNotificationResponse(Ref ref, NotificationResponse response) {
     }
     return;
   }
-  // Takvim etkinliği / görev (TAKVIM_PLANI F47.6): takvimi aç.
+  // Takvim etkinliği / görev (TAKVIM_PLANI F47.6): takvimi aç. Nota bağlı
+  // görev (not içi görev satırı, 2026-11-08) notu açar.
   if (payload.startsWith(kCalendarPayloadPrefix)) {
+    const taskPrefix = '${kCalendarPayloadPrefix}task:';
+    if (payload.startsWith(taskPrefix)) {
+      final id = payload.substring(taskPrefix.length);
+      final task = (ref.read(tasksStreamProvider).value ?? const <TaskItem>[])
+          .where((t) => t.id == id)
+          .firstOrNull;
+      if (task != null && task.noteId.isNotEmpty) {
+        try {
+          ref.read(routerProvider).pushNote(noteRoutePath(task.noteId));
+        } catch (e) {
+          ErrorLog.record('notification-tap', e);
+        }
+        return;
+      }
+    }
     try {
       ref.read(routerProvider).push('/calendar');
     } catch (e) {
@@ -251,6 +267,52 @@ List<DateTime> reminderFireTimes(Note note, DateTime now, {int count = 7}) {
   return [first, ...repeat.upcoming(at, first, count - 1)];
 }
 
+/// Düzeyin bildirim ayrıntısı: her düzey ayrı kanal (bkz. [ReminderLevel]).
+/// Acil: tam ekran isteği + alarm kategorisi; tam ekran izni yalnız kişisel
+/// derlemede (`src/kisisel` manifesti) — izinsiz Android en yüksek öncelikli
+/// açılır bildirim gösterir.
+AndroidNotificationDetails reminderLevelDetails(
+  ReminderLevel level,
+  AppLocalizations l10n, {
+  List<AndroidNotificationAction>? actions,
+}) => switch (level) {
+  ReminderLevel.low => AndroidNotificationDetails(
+    level.channelId,
+    '${l10n.remindersTitle} · ${l10n.reminderLevelLow}',
+    channelDescription: l10n.reminderLevelLowInfo,
+    importance: Importance.low,
+    priority: Priority.low,
+    playSound: false,
+    enableVibration: false,
+    actions: actions,
+  ),
+  ReminderLevel.normal => AndroidNotificationDetails(
+    level.channelId,
+    '${l10n.remindersTitle} · ${l10n.reminderLevelNormal}',
+    channelDescription: l10n.reminderLevelNormalInfo,
+    actions: actions,
+  ),
+  ReminderLevel.high => AndroidNotificationDetails(
+    level.channelId,
+    l10n.remindersTitle,
+    channelDescription: l10n.remindersTitle,
+    importance: Importance.high,
+    priority: Priority.high,
+    actions: actions,
+  ),
+  ReminderLevel.urgent => AndroidNotificationDetails(
+    level.channelId,
+    '${l10n.remindersTitle} · ${l10n.reminderLevelUrgent}',
+    channelDescription: l10n.reminderLevelUrgentInfo,
+    importance: Importance.max,
+    priority: Priority.max,
+    fullScreenIntent: true,
+    category: AndroidNotificationCategory.alarm,
+    audioAttributesUsage: AudioAttributesUsage.alarm,
+    actions: actions,
+  ),
+};
+
 class ReminderService {
   ReminderService(this._ref);
 
@@ -276,7 +338,8 @@ class ReminderService {
   };
 
   static String _signature(Note n) =>
-      '${n.reminderAt?.millisecondsSinceEpoch}|${n.reminderRepeat}';
+      '${n.reminderAt?.millisecondsSinceEpoch}|${n.reminderRepeat}|'
+      '${n.reminderLevel}';
 
   Future<void> _cancelAll(String noteId) async {
     for (var k = 0; k < _repeatAhead; k++) {
@@ -535,14 +598,18 @@ class ReminderService {
         : dayDiff == 1
         ? '${l10n.dateTomorrow} · ${l10n.eventAllDay}'
         : l10n.eventAllDay;
+    // Görevin düzeyi seçildiyse onun kanalı (not içi görev satırı); yoksa
+    // takvim kanalı.
     final details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        'calendar',
-        l10n.calendarTitle,
-        channelDescription: l10n.calendarTitle,
-        importance: Importance.high,
-        priority: Priority.high,
-      ),
+      android: a.level.isEmpty
+          ? AndroidNotificationDetails(
+              'calendar',
+              l10n.calendarTitle,
+              channelDescription: l10n.calendarTitle,
+              importance: Importance.high,
+              priority: Priority.high,
+            )
+          : reminderLevelDetails(ReminderLevel.parse(a.level), l10n),
     );
     final when = tz.TZDateTime.from(a.at, tz.local);
     try {
@@ -718,12 +785,9 @@ class ReminderService {
     // hatırlatıcı çaldığında hâlâ "Yarın 09:00" yazıyordu.
     final prefix = reminderTimePrefix(when, now: when, l10n: l10n);
     final details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        'reminders',
-        l10n.remindersTitle,
-        channelDescription: l10n.remindersTitle,
-        importance: Importance.high,
-        priority: Priority.high,
+      android: reminderLevelDetails(
+        ReminderLevel.parse(note.reminderLevel),
+        l10n,
         // Uygulamayı açmadan hızlı işlem; showsUserInterface uygulamayı
         // öne getirir ki işlem güvenilir biçimde ana izolatta yapılsın.
         actions: <AndroidNotificationAction>[

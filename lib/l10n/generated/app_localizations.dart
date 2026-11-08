@@ -13759,6 +13759,78 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bitir'**
   String get penModeFinish;
+
+  /// No description provided for @reminderLevelTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirim'**
+  String get reminderLevelTitle;
+
+  /// No description provided for @reminderLevelLow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Az'**
+  String get reminderLevelLow;
+
+  /// No description provided for @reminderLevelNormal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Orta'**
+  String get reminderLevelNormal;
+
+  /// No description provided for @reminderLevelHigh.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sık'**
+  String get reminderLevelHigh;
+
+  /// No description provided for @reminderLevelUrgent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Acil'**
+  String get reminderLevelUrgent;
+
+  /// No description provided for @reminderLevelLowInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sessiz; yalnız bildirim alanında görünür'**
+  String get reminderLevelLowInfo;
+
+  /// No description provided for @reminderLevelNormalInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Normal ses, ekranın üstünde açılmaz'**
+  String get reminderLevelNormalInfo;
+
+  /// No description provided for @reminderLevelHighInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli, ekranın üstünde öne çıkar'**
+  String get reminderLevelHighInfo;
+
+  /// No description provided for @reminderLevelUrgentInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekran, en yüksek öncelik (alarm gibi)'**
+  String get reminderLevelUrgentInfo;
+
+  /// No description provided for @itemMenuRemind.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlat'**
+  String get itemMenuRemind;
+
+  /// No description provided for @taskContactHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişi (kime / kimden)'**
+  String get taskContactHint;
+
+  /// No description provided for @taskGmailHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gmail bağlantısı'**
+  String get taskGmailHint;
 }
 
 class _AppLocalizationsDelegate

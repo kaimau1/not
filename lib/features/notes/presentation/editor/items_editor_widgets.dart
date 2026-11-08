@@ -187,6 +187,7 @@ enum _ItemAction {
   delete,
   moveToPage,
   task,
+  reminder,
   alignStart,
   alignCenter,
   alignEnd,
@@ -199,6 +200,7 @@ class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
     required this.starred,
     required this.canMove,
     this.canTask = false,
+    this.canRemind = false,
     this.header = false,
     this.align = '',
   });
@@ -211,6 +213,9 @@ class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
 
   /// "Görev yap" (TAKVIM F50.3).
   final bool canTask;
+
+  /// "Hatırlat" (satıra hatırlatıcı).
+  final bool canRemind;
 
   /// Satır ara başlık mı (düğme "Maddeye çevir" der).
   final bool header;
@@ -280,6 +285,12 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
                   widget.header ? l10n.itemMenuToItem : l10n.itemMenuToHeader,
                 ),
                 _action(_ItemAction.select, Icons.checklist, l10n.select),
+                if (widget.canRemind)
+                  _action(
+                    _ItemAction.reminder,
+                    Icons.alarm_add_outlined,
+                    l10n.itemMenuRemind,
+                  ),
                 if (widget.canTask)
                   _action(
                     _ItemAction.task,

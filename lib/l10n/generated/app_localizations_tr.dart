@@ -7703,4 +7703,41 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get penModeFinish => 'Bitir';
+
+  @override
+  String get reminderLevelTitle => 'Bildirim';
+
+  @override
+  String get reminderLevelLow => 'Az';
+
+  @override
+  String get reminderLevelNormal => 'Orta';
+
+  @override
+  String get reminderLevelHigh => 'Sık';
+
+  @override
+  String get reminderLevelUrgent => 'Acil';
+
+  @override
+  String get reminderLevelLowInfo => 'Sessiz; yalnız bildirim alanında görünür';
+
+  @override
+  String get reminderLevelNormalInfo => 'Normal ses, ekranın üstünde açılmaz';
+
+  @override
+  String get reminderLevelHighInfo => 'Sesli, ekranın üstünde öne çıkar';
+
+  @override
+  String get reminderLevelUrgentInfo =>
+      'Tam ekran, en yüksek öncelik (alarm gibi)';
+
+  @override
+  String get itemMenuRemind => 'Hatırlat';
+
+  @override
+  String get taskContactHint => 'Kişi (kime / kimden)';
+
+  @override
+  String get taskGmailHint => 'Gmail bağlantısı';
 }

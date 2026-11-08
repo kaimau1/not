@@ -81,6 +81,7 @@ import '../../../settings/settings_providers.dart';
 import '../../../calendar/data/task_note_sync.dart';
 import '../../../calendar/presentation/note_calendar_links.dart';
 import '../../../calendar/presentation/task_editor.dart';
+import '../../../calendar/presentation/line_task_chip.dart';
 import '../../../calendar/presentation/event_editor.dart';
 import '../../../calendar/domain/agenda.dart' show noteDateSuggestion;
 import '../../../../core/utils/spoken_datetime.dart' show parseSpokenDateTimeNow;
@@ -3370,6 +3371,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             ? _moveItemToPage
             : null,
         onMakeTask: _readOnly ? null : (item) => _makeTask(note, item),
+        onLineReminder: _readOnly
+            ? null
+            : (item) => unawaited(
+                addLineReminder(
+                  context,
+                  ref,
+                  noteId: note.id,
+                  itemId: item.id,
+                  text: item.text,
+                ),
+              ),
+        lineTrailing: (item) => LineTaskChip(noteId: note.id, itemId: item.id),
         onItemChecked: (item, checked) =>
             syncItemToTasks(ref, note.id, item.id, checked),
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
@@ -3421,6 +3434,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             ? _moveItemToPage
             : null,
         onMakeTask: _readOnly ? null : (item) => _makeTask(note, item),
+        onLineReminder: _readOnly
+            ? null
+            : (item) => unawaited(
+                addLineReminder(
+                  context,
+                  ref,
+                  noteId: note.id,
+                  itemId: item.id,
+                  text: item.text,
+                ),
+              ),
+        lineTrailing: (item) => LineTaskChip(noteId: note.id, itemId: item.id),
         onItemChecked: (item, checked) =>
             syncItemToTasks(ref, note.id, item.id, checked),
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).

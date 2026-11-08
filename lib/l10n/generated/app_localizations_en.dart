@@ -7726,4 +7726,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get penModeFinish => 'Done';
+
+  @override
+  String get reminderLevelTitle => 'Notification';
+
+  @override
+  String get reminderLevelLow => 'Low';
+
+  @override
+  String get reminderLevelNormal => 'Normal';
+
+  @override
+  String get reminderLevelHigh => 'High';
+
+  @override
+  String get reminderLevelUrgent => 'Urgent';
+
+  @override
+  String get reminderLevelLowInfo => 'Silent; only in the notification shade';
+
+  @override
+  String get reminderLevelNormalInfo => 'Normal sound, no pop-up';
+
+  @override
+  String get reminderLevelHighInfo => 'Sound and pop-up on top of the screen';
+
+  @override
+  String get reminderLevelUrgentInfo =>
+      'Full screen, highest priority (like an alarm)';
+
+  @override
+  String get itemMenuRemind => 'Remind';
+
+  @override
+  String get taskContactHint => 'Person (to / from)';
+
+  @override
+  String get taskGmailHint => 'Gmail link';
 }

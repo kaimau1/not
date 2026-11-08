@@ -9,6 +9,7 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
+import '../../notes/presentation/reminder_level_ui.dart';
 import '../../notes/presentation/reminder_repeat_ui.dart';
 import '../../notes/presentation/reminders_screen.dart'
     show maybeShowAutoStartHint;
@@ -101,6 +102,13 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
   late bool _remind = widget.existing?.reminders.isNotEmpty ?? false;
   late bool _starred = widget.existing?.starred ?? false;
   late String _listId = widget.existing?.listId ?? widget.listId;
+  late String _level = widget.existing?.level ?? '';
+  late final _contact = TextEditingController(
+    text: widget.existing?.contact ?? '',
+  );
+  late final _gmail = TextEditingController(
+    text: widget.existing?.gmailLink ?? '',
+  );
 
   @override
   void initState() {
@@ -114,6 +122,8 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
     _title.dispose();
     _titleFocus.dispose();
     _notes.dispose();
+    _contact.dispose();
+    _gmail.dispose();
     super.dispose();
   }
 
@@ -183,6 +193,9 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
         reminders: _remind && due.isNotEmpty ? const [0] : const [],
         starred: _starred,
         listId: _listId,
+        level: _level,
+        contact: _contact.text.trim(),
+        gmailLink: _gmail.text.trim(),
       ),
     );
     final outer = Navigator.of(context).context;
@@ -333,7 +346,37 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
                       value: _remind,
                       onChanged: (v) => setState(() => _remind = v),
                     ),
+                    if (_remind)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: ReminderLevelPicker(
+                          value: _level,
+                          onChanged: (v) => setState(() => _level = v),
+                        ),
+                      ),
                   ],
+                  // Kişi ve Gmail bağlantısı (not içi görev satırı,
+                  // 2026-11-08): kime / hangi iletiyle ilgili.
+                  TextField(
+                    key: const ValueKey('task-contact'),
+                    controller: _contact,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: InputDecoration(
+                      icon: const Icon(Icons.person_outline),
+                      hintText: l10n.taskContactHint,
+                      border: InputBorder.none,
+                    ),
+                  ),
+                  TextField(
+                    key: const ValueKey('task-gmail'),
+                    controller: _gmail,
+                    keyboardType: TextInputType.url,
+                    decoration: InputDecoration(
+                      icon: const Icon(Icons.mail_outline),
+                      hintText: l10n.taskGmailHint,
+                      border: InputBorder.none,
+                    ),
+                  ),
                   if (allLists.length > 1 && widget.parentId.isEmpty)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
