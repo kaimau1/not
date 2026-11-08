@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../core/app_icons.dart';
 import 'dart:math' as math;
 
@@ -673,6 +675,34 @@ class _FolderOrderPanelState extends ConsumerState<FolderOrderPanel> {
     ref.read(foldersRepositoryProvider)?.reorderFolders(ids);
   }
 
+  Future<void> _confirmDelete(NoteFolder folder) async {
+    final l10n = context.l10n;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.deleteFolder),
+        content: Text(l10n.deleteFolderConfirm(folder.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    if (ref.read(selectedFolderProvider) == folder.id) {
+      ref.read(selectedFolderProvider.notifier).set(null);
+    }
+    await ref
+        .read(foldersRepositoryProvider)
+        ?.deleteFolder(folder.id, shared: folder.isShared);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -770,6 +800,16 @@ class _FolderOrderPanelState extends ConsumerState<FolderOrderPanel> {
                                       .set(false);
                                 }
                               },
+                            ),
+                          // SİL (kullanıcı isteği 2026-11-08: klasör menüsünden
+                          // açılan bu levhada sıralama ve silme bir arada).
+                          if (!isHub)
+                            IconButton(
+                              key: ValueKey('order-delete-${folder.id}'),
+                              tooltip: l10n.deleteFolder,
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () =>
+                                  unawaited(_confirmDelete(folder)),
                             ),
                           ReorderableDragStartListener(
                             index: index,

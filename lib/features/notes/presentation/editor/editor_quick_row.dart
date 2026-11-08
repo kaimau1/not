@@ -31,6 +31,7 @@ class EditorQuickRow extends StatefulWidget {
     required this.onPhoto,
     required this.onFile,
     required this.onPen,
+    this.penOn = false,
     required this.onPenSettings,
     required this.onReminder,
     this.hint = false,
@@ -88,6 +89,10 @@ class EditorQuickRow extends StatefulWidget {
   final VoidCallback onPhoto;
   final VoidCallback onFile;
   final VoidCallback? onPen;
+
+  /// Kalem kipi açık: düğme dolgulu; tekrar basınca kip KAPANIR (kullanıcı
+  /// isteği 2026-11-08).
+  final bool penOn;
   final VoidCallback? onPenSettings;
   final VoidCallback onReminder;
 
@@ -127,6 +132,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
       VoidCallback? onTap, {
       VoidCallback? onLong,
       String? label,
+      bool on = false,
     }) => Customizable(
       id: UiItem.quickRow(key),
       child: Tooltip(
@@ -136,14 +142,26 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
           radius: 20,
           onTap: onTap,
           onLongPress: onLong,
-          child: SizedBox(
+          child: Container(
             height: 40,
+            decoration: on
+                ? BoxDecoration(
+                    color: scheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(20),
+                  )
+                : null,
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: label == null ? 10 : 8),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(icon, size: 20, color: scheme.onSurfaceVariant),
+                  Icon(
+                    icon,
+                    size: 20,
+                    color: on
+                        ? scheme.onPrimaryContainer
+                        : scheme.onSurfaceVariant,
+                  ),
                   if (label != null) ...[
                     const SizedBox(width: 4),
                     Text(
@@ -197,6 +215,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
                 l10n.quickRowPen,
                 widget.onPen,
                 onLong: widget.onPenSettings,
+                on: widget.penOn,
               ),
               divider,
             ],

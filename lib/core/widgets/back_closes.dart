@@ -85,11 +85,16 @@ class _BackClosesState extends State<BackCloses> {
 
   void _onPop(bool didPop, Object? _) {
     if (didPop || BackCloses._consumed) return;
-    // Bu rotadaki en son açılan panel (başka rotanınki değil).
-    final top = BackCloses._stack.lastWhere(
-      (e) => e.route == route,
-      orElse: () => this,
-    );
+    // Bu rotadaki en son açılan panel (başka rotanınki değil). KÖK NEDEN
+    // (kullanıcı bulgusu 2026-11-08, "madde seçerken geri tuşu işe
+    // yaramıyor"): Flutter rotadaki BÜTÜN PopScope'ları çağırır; KAPALI bir
+    // BackCloses da (ör. kalem kipi kapalıyken) eskiden `orElse: this` ile
+    // kendini "kapatıp" olayı tüketiyordu → ekranın asıl geri işi (madde
+    // seçimini bitirmek) `handling` true gördüğü için hiç çalışmıyordu.
+    // Açık panel yoksa olay bu rotanın kendi işine kalır.
+    final open = BackCloses._stack.where((e) => e.route == route);
+    if (open.isEmpty) return;
+    final top = open.last;
     BackCloses._consumed = true;
     scheduleMicrotask(() => BackCloses._consumed = false);
     BackCloses._stack.remove(top);

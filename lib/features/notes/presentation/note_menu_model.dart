@@ -209,7 +209,9 @@ Future<void> pinNoteToHome(BuildContext context, Note note) async {
       (note.color == NoteColor.none
           ? 0xFFFFE08A
           : NoteColors.swatch(note.color).toARGB32());
-  var title = note.title.trim();
+  // Başlıktaki biçim işaretleri (`%%3:`, `##3:`, `**`) kısayol adına
+  // sızıyordu (kullanıcı bulgusu 2026-11-08: "%%3:##3:**…").
+  var title = stripRichMarkers(note.title).trim();
   if (title.isEmpty) {
     title = stripRichMarkers(note.body)
         .split('\n')

@@ -7948,4 +7948,91 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get inkShapeTable => 'Tablo';
+
+  @override
+  String get homeCalendarStrip => 'Üstte takvim şeridi';
+
+  @override
+  String get homeCalendarStripInfo =>
+      'Ana ekranın tepesinde bugünden itibaren 10 gün: etkinlik, görev, tatil. Güne dokun = kayıtlar (düzenle/sil), basılı tut = takvim';
+
+  @override
+  String get homeCalendarStripExpand => 'Takvim şeridini aç';
+
+  @override
+  String get homeCalendarStripCollapse => 'Takvim şeridini daralt';
+
+  @override
+  String get gmailTranslate => 'İletiyi çevir';
+
+  @override
+  String get gmailShowOriginal => 'Orijinali göster';
+
+  @override
+  String get gmailTranslated => 'Çevrildi';
+
+  @override
+  String get folderMenuEdit => 'Sırala · sil';
+
+  @override
+  String get themeClassic => 'Klasik';
+
+  @override
+  String get themeNewsprint => 'Gazete';
+
+  @override
+  String get themeNotebook => 'Defter';
+
+  @override
+  String get themeGraphite => 'Kurşun kalem';
+
+  @override
+  String get themeLedger => 'Klasik yeşil';
+
+  @override
+  String get spellLearnedTitle => 'Öğrenilen yazımlar';
+
+  @override
+  String get spellLearnedInfo =>
+      'Yazıp sonra kendin düzelttiğin ya da klavye önerisinden seçtiğin kelimeler burada. Elle de ekleyebilirsin: yanlış → doğru (ilk görüşte uygulanır).';
+
+  @override
+  String get spellLearnedSettingInfo =>
+      'Öğrenilen düzeltmeleri gör, elle ekle, sil';
+
+  @override
+  String get spellLearnedWrong => 'Yanlış';
+
+  @override
+  String get spellLearnedRight => 'Doğrusu';
+
+  @override
+  String get spellLearnedAdd => 'Ekle';
+
+  @override
+  String get spellLearnedEmpty => 'Henüz öğrenilen düzeltme yok.';
+
+  @override
+  String spellLearnedSeen(int count) {
+    return '$count kez';
+  }
+
+  @override
+  String get spellLearnedKept =>
+      'Dokunulmayan kelimeler (düzeltmeyi geri aldıkların)';
+
+  @override
+  String get inkEraserOffer => 'Silgiyi seç';
+
+  @override
+  String get tipPenToggle =>
+      'Kalem kipi açık. Kapatmak için kalem düğmesine tekrar bas (ya da geri). Basılı tut = kalem ayarları.';
+
+  @override
+  String get tipPenShapeHold =>
+      'Çizginin sonunda parmağını/kalemini bir an beklet: çizgi, kare, daire düzgün şekle oturur.';
+
+  @override
+  String get tipPenEraserHold =>
+      'Silmek için bir çizginin üstüne basılı tut → çıkan silgi düğmesine dokun. İki parmak = kaydır/yakınlaştır.';
 }

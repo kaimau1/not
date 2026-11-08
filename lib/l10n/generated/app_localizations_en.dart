@@ -7970,4 +7970,89 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inkShapeTable => 'Table';
+
+  @override
+  String get homeCalendarStrip => 'Calendar strip on top';
+
+  @override
+  String get homeCalendarStripInfo =>
+      'The next 10 days at the top of the home screen: events, tasks, holidays. Tap a day = entries (edit/delete), long-press = calendar';
+
+  @override
+  String get homeCalendarStripExpand => 'Expand calendar strip';
+
+  @override
+  String get homeCalendarStripCollapse => 'Collapse calendar strip';
+
+  @override
+  String get gmailTranslate => 'Translate message';
+
+  @override
+  String get gmailShowOriginal => 'Show original';
+
+  @override
+  String get gmailTranslated => 'Translated';
+
+  @override
+  String get folderMenuEdit => 'Reorder · delete';
+
+  @override
+  String get themeClassic => 'Classic';
+
+  @override
+  String get themeNewsprint => 'Newsprint';
+
+  @override
+  String get themeNotebook => 'Notebook';
+
+  @override
+  String get themeGraphite => 'Graphite';
+
+  @override
+  String get themeLedger => 'Ledger';
+
+  @override
+  String get spellLearnedTitle => 'Learned spellings';
+
+  @override
+  String get spellLearnedInfo =>
+      'Words you typed and then fixed yourself, or picked from the keyboard\'s suggestions. You can add your own: wrong → right (applied right away).';
+
+  @override
+  String get spellLearnedSettingInfo => 'See learned fixes, add or delete';
+
+  @override
+  String get spellLearnedWrong => 'Wrong';
+
+  @override
+  String get spellLearnedRight => 'Right';
+
+  @override
+  String get spellLearnedAdd => 'Add';
+
+  @override
+  String get spellLearnedEmpty => 'No learned fixes yet.';
+
+  @override
+  String spellLearnedSeen(int count) {
+    return '$count times';
+  }
+
+  @override
+  String get spellLearnedKept => 'Words left alone (you undid the fix)';
+
+  @override
+  String get inkEraserOffer => 'Pick eraser';
+
+  @override
+  String get tipPenToggle =>
+      'Pen mode is on. Tap the pen button again (or back) to turn it off. Long-press = pen settings.';
+
+  @override
+  String get tipPenShapeHold =>
+      'Hold still at the end of a stroke: lines, squares and circles snap to clean shapes.';
+
+  @override
+  String get tipPenEraserHold =>
+      'To erase, long-press a stroke → tap the eraser button. Two fingers = scroll/zoom.';
 }

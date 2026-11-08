@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' show StringCharacters;
 
 import '../../../core/error_log.dart';
+import '../../../core/utils/rich_text.dart';
 
 /// **ANA EKRANA YERLEŞTİR** (kullanıcı isteği 2026-10-28, örnek uygulamanın
 /// not menüsündeki "Ana ekrana yerleştir"): notu telefonun başlatıcısına
@@ -19,7 +20,7 @@ abstract final class NoteShortcut {
   @visibleForTesting
   static String glyphOf(String title, String body) {
     for (final source in [title, body]) {
-      final trimmed = source.replaceAll(RegExp(r'[*_~=#%&\s]'), '');
+      final trimmed = stripRichMarkers(source).replaceAll(RegExp(r'[*_~=#%&\s]'), '');
       if (trimmed.isEmpty) continue;
       return trimmed.characters.first.toUpperCase();
     }
@@ -38,7 +39,7 @@ abstract final class NoteShortcut {
     try {
       return await _channel.invokeMethod<bool>('pinNoteShortcut', {
             'id': id,
-            'label': title.trim(),
+            'label': stripRichMarkers(title).trim(),
             'color': color,
             'glyph': glyphOf(title, body),
           }) ??

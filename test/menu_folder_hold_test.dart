@@ -237,4 +237,43 @@ void main() {
     final few = List.filled(4, const Size(90, 34));
     expect(radialRadiiFor(few, const Size(360, 780)), isNotNull);
   });
+
+  testWidgets('çekiş menüsü: Yeni klasör ve Sırala · sil düğmeleri', (
+    tester,
+  ) async {
+    var created = 0;
+    var edited = 0;
+    await tester.pumpWidget(
+      _app(
+        Builder(
+          builder: (context) => TextButton(
+            onPressed: () => openFolderMenu(
+              context,
+              stops: const [
+                FolderStop(id: null, name: 'Tümü'),
+                FolderStop(id: 'f1', name: 'İş'),
+              ],
+              currentId: null,
+              onOpen: () {},
+              onSelect: (_) {},
+              onNewFolder: () => created++,
+              onEditFolders: () => edited++,
+            ),
+            child: const Text('aç'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('aç'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('folder-menu-new')));
+    await tester.pumpAndSettle();
+    expect(created, 1);
+    await tester.tap(find.text('aç'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('folder-menu-edit')));
+    await tester.pumpAndSettle();
+    expect(edited, 1);
+    expect(find.byKey(const ValueKey('folder-radial-menu')), findsNothing);
+  });
 }

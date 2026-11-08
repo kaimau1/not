@@ -9,7 +9,7 @@ import 'package:notlar/app/theme/app_tokens.dart';
 import 'package:notlar/core/app_update.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/calendar/domain/calendar_event.dart';
-import 'package:notlar/features/calendar/presentation/calendar_backdrop.dart';
+import 'package:notlar/features/calendar/presentation/home_calendar_strip.dart';
 import 'package:notlar/features/calendar/presentation/calendar_views.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
 import 'package:notlar/features/notes/data/attachment_repository.dart';
@@ -72,21 +72,23 @@ void main() {
     );
   });
 
-  group('Takvim zemini', () {
-    testWidgets('ayın ızgarası: gün, bugün ve kayıt adı çizilir', (
+  group('Takvim şeridi / saydam kart', () {
+    testWidgets('ana ekran şeridi: 10 gün, kayıt adı, dokununca gün', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(412, 800);
+      tester.view.physicalSize = const Size(1000, 800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
+      DateTime? tapped;
       await tester.pumpWidget(
         MaterialApp(
           locale: const Locale('tr'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
-            body: CalendarBackdropGrid(
+            body: HomeCalendarStripView(
               today: DateTime(2026, 11, 6),
+              onDayTap: (d) => tapped = d,
               data: CalendarData(
                 events: [
                   CalendarEvent(
@@ -101,9 +103,46 @@ void main() {
           ),
         ),
       );
-      expect(find.text('Kasım 2026'), findsOneWidget);
       expect(find.text('Diş hekimi'), findsOneWidget);
-      expect(find.text('6'), findsWidgets);
+      // 6–15 Kasım: 10 gün; 16 yok.
+      expect(find.textContaining('15'), findsOneWidget);
+      expect(find.textContaining('16'), findsNothing);
+      await tester.tap(find.text('Diş hekimi'));
+      expect(tapped, DateTime(2026, 11, 12));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('dar telefonda (360 dp) taşma yok, kayıt nokta olur', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: HomeCalendarStripView(
+              today: DateTime(2026, 11, 6),
+              onDayTap: (_) {},
+              onCollapse: () {},
+              data: CalendarData(
+                events: [
+                  CalendarEvent(
+                    id: 'e',
+                    title: 'Diş hekimi',
+                    start: DateTime(2026, 11, 12, 14),
+                    end: DateTime(2026, 11, 12, 15),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Diş hekimi'), findsNothing);
       expect(tester.takeException(), isNull);
     });
 

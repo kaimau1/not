@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/utils/spell_fix.dart';
 import 'package:notlar/core/utils/spell_learn.dart';
+import 'package:notlar/features/notes/presentation/editor/auto_spell.dart';
 
 void main() {
   group('klavye mesafesi', () {
@@ -121,6 +122,35 @@ void main() {
     test('kısaltma ve zaten büyük kelime değişmez', () {
       expect(titleFixAt('TOGG ', 5), isNull);
       expect(titleFixAt('Bakım ', 6), isNull);
+    });
+  });
+
+  group('oturum E (2026-11-08)', () {
+    test('elle eklenen düzeltme ilk görüşte uygulanır, silinince unutulur', () {
+      final m = SpellMemory()..addManualFix('yanlız', 'yalnız');
+      expect(m.suggest('yanlız'), 'yalnız');
+      expect(m.fixList().single.to, 'yalnız');
+      m.removeFix('yanlız');
+      expect(m.fixes, isEmpty);
+    });
+
+    test('boşluk yerine ö: iki bilinen kelime ayrılır', () {
+      final m = SpellMemory()
+        ..seed(seedCounts(['kalem defter kalem defter kalem defter']));
+      expect(m.splitMissedSpace('kalemödefter'), 'kalem defter');
+    });
+
+    test('klavye önerisiyle değişen kelime yakalanır; tamamlama değil', () {
+      expect(
+        AutoSpell.replacedWord('bu yaoıyor ', 'bu yapıyor '),
+        (from: 'yaoıyor', to: 'yapıyor'),
+      );
+      // Tamamlama ("yap" → "yapıyor") ve harf yazımı öğrenme sayılmaz.
+      expect(AutoSpell.replacedWord('bu yap', 'bu yapıyor'), isNull);
+      expect(AutoSpell.replacedWord('bu yap', 'bu yapı'), isNull);
+      expect(AutoSpell.replacedWord('bu yapı', 'bu yap'), isNull);
+      // İlgisiz kelime (yakın değil) öğrenilmez.
+      expect(AutoSpell.replacedWord('bu kalem ', 'bu masa '), isNull);
     });
   });
 }

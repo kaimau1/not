@@ -2153,7 +2153,7 @@ class ItemsEditorState extends State<ItemsEditor>
       return PopScope(
         canPop: !_selectionMode,
         onPopInvokedWithResult: (didPop, _) {
-          if (!didPop && !BackCloses.handling(context)) _exitSelection();
+        if (!didPop && !BackCloses.handling(context)) _exitSelection();
         },
         child: OverlayPortal(
           controller: _barController,

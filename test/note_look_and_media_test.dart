@@ -180,6 +180,8 @@ void main() {
     expect(NoteShortcut.glyphOf('alışveriş', ''), 'A');
     expect(NoteShortcut.glyphOf('  ', '**ılık** süt'), 'I');
     expect(NoteShortcut.glyphOf('', ''), 'N');
+    // Renk/vurgu işaretli başlık: simge "3" değil ilk gerçek harf.
+    expect(NoteShortcut.glyphOf('%%3:##3:**Market**##%%', ''), 'M');
   });
 
   testWidgets('yazı ölçeği değişince içerik yumuşakça oturur', (tester) async {

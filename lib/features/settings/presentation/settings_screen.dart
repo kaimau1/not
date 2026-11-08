@@ -61,6 +61,7 @@ import '../../friends/data/friends_repository.dart';
 import '../../inbox/data/inbox_repository.dart';
 import '../../inbox/presentation/inbox_screen.dart';
 import '../../friends/presentation/friends_screen.dart';
+import '../../notes/presentation/editor/spell_learned_screen.dart';
 import '../../notes/presentation/lock/note_lock_ui.dart';
 import '../../notes/presentation/note_card_media.dart' show CardThumbs;
 import '../../notes/data/notes_repository.dart';
@@ -312,6 +313,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '${l10n.themeCream} ${l10n.themePeach} ${l10n.themeMint} '
                 '${l10n.themeOcean} ${l10n.themeRose} ${l10n.themeTangerine} '
                 '${l10n.themeEmerald} ${l10n.themeAmethyst} '
+                '${l10n.themeClassic} ${l10n.themeNewsprint} '
+                '${l10n.themeNotebook} ${l10n.themeGraphite} '
+                '${l10n.themeLedger} '
                 '${l10n.themeDark}',
           ),
           // Yazı tipi + yazı boyutu TEK satırda: ikisi de "yazı nasıl
@@ -342,6 +346,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _HideBarWhileTypingSwitch(),
             title: l10n.hideBarWhileTyping,
             keywords: '${l10n.hideBarWhileTypingInfo} alt cubuk yazarken',
+          ),
+          _SettingRow(
+            ListTile(
+              key: const ValueKey('settings-spell-learned'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.spellLearnedTitle),
+              subtitle: Text(l10n.spellLearnedSettingInfo),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => SpellLearnedScreen.open(context),
+            ),
+            title: l10n.spellLearnedTitle,
+            keywords: 'yazım düzelt öğren otomatik kelime sözlük',
           ),
           _SettingRow(
             const _ItemGesturesSwitch(),
@@ -1120,6 +1136,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       AppThemeChoice.tangerine => l10n.themeTangerine,
       AppThemeChoice.emerald => l10n.themeEmerald,
       AppThemeChoice.amethyst => l10n.themeAmethyst,
+      AppThemeChoice.classic => l10n.themeClassic,
+      AppThemeChoice.newsprint => l10n.themeNewsprint,
+      AppThemeChoice.notebook => l10n.themeNotebook,
+      AppThemeChoice.graphite => l10n.themeGraphite,
+      AppThemeChoice.ledger => l10n.themeLedger,
       AppThemeChoice.dark => l10n.themeDark,
     };
     // Yüzde yerine KADEME ADI: ayar artık dört adlı seçenekten ibaret,

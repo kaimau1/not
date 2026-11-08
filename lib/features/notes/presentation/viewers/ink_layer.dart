@@ -67,6 +67,51 @@ class InkController extends ChangeNotifier {
 
   void dismissSuggestion() => suggestion.value = null;
 
+  /// **BASILI TUT = SİLGİ** (kullanıcı isteği 2026-11-08: "parmakla yapılan
+  /// kalem yazılarının üzerine basılı tutunca silgi butonu çıksın, silgi
+  /// seçilsin"). Parmak var olan bir çizginin üstünde kıpırdamadan 550 ms
+  /// durunca o noktada küçük silgi düğmesi belirir; dokununca silgi aracı
+  /// seçilir. O basışın bıraktığı nokta silinir. Ayrı bildirici: çizgileri
+  /// yeniden boyatmaz. Bedel: yalnız parmak İNİŞİNDE o sayfanın çizgilerine
+  /// tek yakınlık taraması (çizim karesinde iş yok).
+  final eraserOffer = ValueNotifier<({int page, Offset at})?>(null);
+  Timer? _eraserHold;
+  Offset? _eraserHoldAt;
+
+  /// Silgi önerisini kabul et: silgi seçilir, öneri kalkar.
+  void acceptEraserOffer() {
+    eraserOffer.value = null;
+    setEraser(true);
+  }
+
+  bool _inkNear(int page, double x, double y) {
+    const r = _eraseRadius * 1.5;
+    for (final s in _ink) {
+      if (s.page != page) continue;
+      final samples = _sampled(s);
+      for (var i = 0; i + 1 < samples.length; i += 2) {
+        if ((samples[i] - x).abs() < r && (samples[i + 1] - y).abs() < r) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  void _offerEraser(int page) {
+    final at = _eraserHoldAt;
+    _eraserHold = null;
+    if (at == null || _pointers != 1 || _active == null) return;
+    // Basışın bıraktığı nokta gider; parmak kalkana dek çizim sürmez.
+    final base = _gestureBase;
+    if (base != null) _ink = base;
+    _active = null;
+    _snapped = true;
+    eraserOffer.value = (page: page, at: at);
+    HapticFeedback.selectionClick();
+    notifyListeners();
+  }
+
   /// Katmanın üstündeki bir düğme (düzeltme işaretçisi) bu dokunuşu aldı:
   /// çizim ona hiç başlamaz. KÖK NEDEN (kullanıcı bildirimi 2026-11-08,
   /// "kalemle oto düzelt onayına basılamıyor"): kalemin inişi önce çizimi
@@ -811,6 +856,7 @@ class InkController extends ChangeNotifier {
     }
     hover.value = null;
     if (suggestion.value != null) dismissSuggestion();
+    if (eraserOffer.value != null) eraserOffer.value = null;
     _gestureBase = _ink;
     _tempEraser = stylusEraser;
     // Seçim tutamağı / düzeltilmiş şeklin kutusu: taşı ya da boyutlandır.
@@ -884,7 +930,22 @@ class InkController extends ChangeNotifier {
     _snapped = false;
     _holdX = x;
     _holdY = y;
+    // Yakınlık, yeni noktanın KENDİSİ eklenmeden önce ölçülür.
+    final onInk =
+        kind == PointerDeviceKind.touch &&
+        !arrow &&
+        shape == null &&
+        _inkNear(page, x, y);
     _ink = [..._ink, stroke];
+    _eraserHold?.cancel();
+    _eraserHold = null;
+    if (onInk) {
+      _eraserHoldAt = Offset(x, y);
+      _eraserHold = Timer(
+        const Duration(milliseconds: 550),
+        () => _offerEraser(page),
+      );
+    }
     notifyListeners();
   }
 
@@ -940,8 +1001,10 @@ class InkController extends ChangeNotifier {
   @override
   void dispose() {
     _holdTimer?.cancel();
+    _eraserHold?.cancel();
     hover.dispose();
     suggestion.dispose();
+    eraserOffer.dispose();
     super.dispose();
   }
 
@@ -993,6 +1056,13 @@ class InkController extends ChangeNotifier {
     if (active == null || _snapped) return;
     final x = local.dx / size.width;
     final y = local.dy / size.height;
+    final holdAt = _eraserHoldAt;
+    if (_eraserHold != null &&
+        holdAt != null &&
+        math.max((x - holdAt.dx).abs(), (y - holdAt.dy).abs()) > 0.01) {
+      _eraserHold?.cancel();
+      _eraserHold = null;
+    }
     // OK: nokta EKLENMEZ, ucu taşınır — parmak nereye giderse ok oraya bakar.
     if (active.arrow) {
       active.points[2] = x;
@@ -1142,6 +1212,8 @@ class InkController extends ChangeNotifier {
     final wasSnapped = _snapped;
     _tempEraser = false;
     _holdTimer?.cancel();
+    _eraserHold?.cancel();
+    _eraserHold = null;
     _snapped = false;
     if (_resizing || (_fixEdit && _moving)) {
       _resizing = false;
@@ -1484,6 +1556,29 @@ class InkPageLayer extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               layer,
+              ValueListenableBuilder<({int page, Offset at})?>(
+                valueListenable: controller.eraserOffer,
+                builder: (context, o, _) {
+                  if (o == null || o.page != page) {
+                    return const SizedBox.shrink();
+                  }
+                  const box = 44.0;
+                  var left = o.at.dx * size.width - box / 2;
+                  var top = o.at.dy * size.height - box - 16;
+                  if (constraints.maxWidth.isFinite) {
+                    left = left.clamp(0.0, constraints.maxWidth - box);
+                  }
+                  if (top < 0) top = o.at.dy * size.height + 16;
+                  return Positioned(
+                    left: left,
+                    top: top,
+                    child: _EraserOfferButton(
+                      onClaim: controller.claimPointer,
+                      onAccept: controller.acceptEraserOffer,
+                    ),
+                  );
+                },
+              ),
               ValueListenableBuilder<InkSuggestion?>(
                 valueListenable: controller.suggestion,
                 builder: (context, s, _) {
@@ -1548,6 +1643,51 @@ class InkPageLayer extends StatelessWidget {
     } else {
       controller.dismissSuggestion();
     }
+  }
+}
+
+/// Basılı tutulan çizginin üstünde beliren silgi düğmesi (bkz.
+/// [InkController.eraserOffer]). İnişte kabul eder — düzeltme işaretçisiyle
+/// aynı neden (kalem/parmak inişi çizim katmanına kaçmasın).
+class _EraserOfferButton extends StatelessWidget {
+  const _EraserOfferButton({required this.onClaim, required this.onAccept});
+
+  final ValueChanged<int> onClaim;
+  final VoidCallback onAccept;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final label = context.l10n.inkEraserOffer;
+    return Semantics(
+      button: true,
+      label: label,
+      onTap: onAccept,
+      child: Tooltip(
+        message: label,
+        child: Material(
+          key: const ValueKey('ink-eraser-offer'),
+          color: scheme.tertiaryContainer,
+          shape: const CircleBorder(),
+          elevation: 4,
+          child: Listener(
+            behavior: HitTestBehavior.opaque,
+            onPointerDown: (e) {
+              onClaim(e.pointer);
+              onAccept();
+            },
+            child: SizedBox.square(
+              dimension: 44,
+              child: Icon(
+                Icons.auto_fix_normal_outlined,
+                size: 22,
+                color: scheme.onTertiaryContainer,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

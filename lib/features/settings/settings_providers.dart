@@ -88,6 +88,11 @@ enum AppThemeChoice {
   tangerine,
   emerald,
   amethyst,
+  classic,
+  newsprint,
+  notebook,
+  graphite,
+  ledger,
   dark;
 
   /// Bu seçimin tema ailesi (Sistem ve Koyu varsayılan aileyi kullanır).
@@ -106,6 +111,11 @@ enum AppThemeChoice {
     AppThemeChoice.tangerine => ThemeFamily.tangerine,
     AppThemeChoice.emerald => ThemeFamily.emerald,
     AppThemeChoice.amethyst => ThemeFamily.amethyst,
+    AppThemeChoice.classic => ThemeFamily.classic,
+    AppThemeChoice.newsprint => ThemeFamily.newsprint,
+    AppThemeChoice.notebook => ThemeFamily.notebook,
+    AppThemeChoice.graphite => ThemeFamily.graphite,
+    AppThemeChoice.ledger => ThemeFamily.ledger,
     _ => ThemeFamily.sage,
   };
 
@@ -246,6 +256,20 @@ final followSystemTextScaleProvider = boolPref(
 /// çubuğu iner, yazma durunca hemen geri gelir (bkz. `_TypingHide`).
 final hideBarWhileTypingProvider = boolPref(
   'hide_bar_while_typing',
+  defaultValue: true,
+);
+
+/// **ANA EKRAN TAKVİM ŞERİDİ** (kullanıcı isteği 2026-11-08; eski "takvim
+/// zemini"nin yerine): ekranın tepesinde bugünden itibaren 10 gün ve
+/// kayıtları. Ayar şeridi tümden gizler; şerit kendi içinde daralır.
+final homeCalendarStripProvider = boolPref(
+  'home_calendar_strip',
+  defaultValue: true,
+);
+
+/// Şerit açık mı (açık = gün hücreleri, kapalı = tek ince satır).
+final homeCalendarStripOpenProvider = boolPref(
+  'home_calendar_strip_open',
   defaultValue: true,
 );
 
@@ -920,7 +944,12 @@ final effectiveThemeModeProvider = Provider.autoDispose<ThemeMode>((ref) {
     AppThemeChoice.rose ||
     AppThemeChoice.tangerine ||
     AppThemeChoice.emerald ||
-    AppThemeChoice.amethyst => ThemeMode.light,
+    AppThemeChoice.amethyst ||
+    AppThemeChoice.classic ||
+    AppThemeChoice.newsprint ||
+    AppThemeChoice.notebook ||
+    AppThemeChoice.graphite ||
+    AppThemeChoice.ledger => ThemeMode.light,
     AppThemeChoice.dark => ThemeMode.dark,
   };
 });
@@ -979,7 +1008,6 @@ class DashboardBackground {
     this.opacity = 0.25,
     this.color,
     this.pattern = DashboardPattern.none,
-    this.calendar = false,
   });
 
   /// Cihazdaki kopyanın yolu; null = zemin görseli yok.
@@ -995,11 +1023,6 @@ class DashboardBackground {
   /// Zemin deseni; [DashboardPattern.none] = desen yok.
   final DashboardPattern pattern;
 
-  /// TAKVİM ZEMİNİ (2026-11-06): kart ızgarasının arkasında bu ayın takvimi;
-  /// kartlarda başlık net, gerisi saydam (bkz. `CalendarBackdrop`). Açıkken
-  /// renk/desen/görsel katmanlarının yerini alır.
-  final bool calendar;
-
   DashboardBackground copyWith({
     String? path,
     bool clearPath = false,
@@ -1007,13 +1030,11 @@ class DashboardBackground {
     int? color,
     bool clearColor = false,
     DashboardPattern? pattern,
-    bool? calendar,
   }) => DashboardBackground(
     path: clearPath ? null : (path ?? this.path),
     opacity: opacity ?? this.opacity,
     color: clearColor ? null : (color ?? this.color),
     pattern: pattern ?? this.pattern,
-    calendar: calendar ?? this.calendar,
   );
 }
 
@@ -1027,7 +1048,6 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
   static const _opacityKey = 'dashboard_bg_opacity';
   static const _colorKey = 'dashboard_bg_color';
   static const _patternKey = 'dashboard_bg_pattern';
-  static const _calendarKey = 'dashboard_bg_calendar';
 
   @override
   DashboardBackground build() {
@@ -1037,7 +1057,6 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
       opacity: prefs.getDouble(_opacityKey) ?? 0.25,
       color: prefs.getInt(_colorKey),
       pattern: DashboardPattern.fromId(prefs.getString(_patternKey)),
-      calendar: prefs.getBool(_calendarKey) ?? false,
     );
   }
 
@@ -1071,19 +1090,13 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
     ref.read(sharedPreferencesProvider).setString(_patternKey, pattern.id);
   }
 
-  void setCalendar(bool value) {
-    state = state.copyWith(calendar: value);
-    ref.read(sharedPreferencesProvider).setBool(_calendarKey, value);
-  }
-
-  /// Renk + desen + görseli (ve takvim zeminini) varsayılana döndürür.
+  /// Renk + desen + görseli varsayılana döndürür.
   void reset() {
     state = const DashboardBackground();
     ref.read(sharedPreferencesProvider)
       ..remove(_pathKey)
       ..remove(_opacityKey)
       ..remove(_colorKey)
-      ..remove(_patternKey)
-      ..remove(_calendarKey);
+      ..remove(_patternKey);
   }
 }

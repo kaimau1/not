@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
 import 'auto_spell.dart';
+import 'spell_learned_screen.dart';
 
 /// Hızlı satırdaki yazım düzelt düğmesine BASILI TUT: otomatik düzelt ve
 /// ÖĞRENEN düzeltme anahtarları, öğrenilenleri silme (2026-11-08).
@@ -43,6 +44,15 @@ Future<void> showSpellSettings(
                 value: on,
                 onChanged: AutoSpell.setLearning,
               ),
+            ),
+            ListTile(
+              key: const ValueKey('spell-open-learned'),
+              leading: const Icon(Icons.list_alt_outlined),
+              title: Text(l10n.spellLearnedTitle),
+              onTap: () {
+                Navigator.pop(sheet);
+                SpellLearnedScreen.open(context);
+              },
             ),
             ListTile(
               key: const ValueKey('spell-forget'),

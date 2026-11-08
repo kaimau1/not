@@ -14197,6 +14197,162 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tablo'**
   String get inkShapeTable;
+
+  /// No description provided for @homeCalendarStrip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üstte takvim şeridi'**
+  String get homeCalendarStrip;
+
+  /// No description provided for @homeCalendarStripInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekranın tepesinde bugünden itibaren 10 gün: etkinlik, görev, tatil. Güne dokun = kayıtlar (düzenle/sil), basılı tut = takvim'**
+  String get homeCalendarStripInfo;
+
+  /// No description provided for @homeCalendarStripExpand.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim şeridini aç'**
+  String get homeCalendarStripExpand;
+
+  /// No description provided for @homeCalendarStripCollapse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim şeridini daralt'**
+  String get homeCalendarStripCollapse;
+
+  /// No description provided for @gmailTranslate.
+  ///
+  /// In tr, this message translates to:
+  /// **'İletiyi çevir'**
+  String get gmailTranslate;
+
+  /// No description provided for @gmailShowOriginal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Orijinali göster'**
+  String get gmailShowOriginal;
+
+  /// No description provided for @gmailTranslated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çevrildi'**
+  String get gmailTranslated;
+
+  /// No description provided for @folderMenuEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sırala · sil'**
+  String get folderMenuEdit;
+
+  /// No description provided for @themeClassic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasik'**
+  String get themeClassic;
+
+  /// No description provided for @themeNewsprint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gazete'**
+  String get themeNewsprint;
+
+  /// No description provided for @themeNotebook.
+  ///
+  /// In tr, this message translates to:
+  /// **'Defter'**
+  String get themeNotebook;
+
+  /// No description provided for @themeGraphite.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kurşun kalem'**
+  String get themeGraphite;
+
+  /// No description provided for @themeLedger.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasik yeşil'**
+  String get themeLedger;
+
+  /// No description provided for @spellLearnedTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öğrenilen yazımlar'**
+  String get spellLearnedTitle;
+
+  /// No description provided for @spellLearnedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazıp sonra kendin düzelttiğin ya da klavye önerisinden seçtiğin kelimeler burada. Elle de ekleyebilirsin: yanlış → doğru (ilk görüşte uygulanır).'**
+  String get spellLearnedInfo;
+
+  /// No description provided for @spellLearnedSettingInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öğrenilen düzeltmeleri gör, elle ekle, sil'**
+  String get spellLearnedSettingInfo;
+
+  /// No description provided for @spellLearnedWrong.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yanlış'**
+  String get spellLearnedWrong;
+
+  /// No description provided for @spellLearnedRight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrusu'**
+  String get spellLearnedRight;
+
+  /// No description provided for @spellLearnedAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekle'**
+  String get spellLearnedAdd;
+
+  /// No description provided for @spellLearnedEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz öğrenilen düzeltme yok.'**
+  String get spellLearnedEmpty;
+
+  /// No description provided for @spellLearnedSeen.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kez'**
+  String spellLearnedSeen(int count);
+
+  /// No description provided for @spellLearnedKept.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dokunulmayan kelimeler (düzeltmeyi geri aldıkların)'**
+  String get spellLearnedKept;
+
+  /// No description provided for @inkEraserOffer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silgiyi seç'**
+  String get inkEraserOffer;
+
+  /// No description provided for @tipPenToggle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem kipi açık. Kapatmak için kalem düğmesine tekrar bas (ya da geri). Basılı tut = kalem ayarları.'**
+  String get tipPenToggle;
+
+  /// No description provided for @tipPenShapeHold.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizginin sonunda parmağını/kalemini bir an beklet: çizgi, kare, daire düzgün şekle oturur.'**
+  String get tipPenShapeHold;
+
+  /// No description provided for @tipPenEraserHold.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silmek için bir çizginin üstüne basılı tut → çıkan silgi düğmesine dokun. İki parmak = kaydır/yakınlaştır.'**
+  String get tipPenEraserHold;
 }
 
 class _AppLocalizationsDelegate

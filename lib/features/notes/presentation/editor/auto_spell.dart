@@ -103,6 +103,9 @@ class AutoSpell {
     );
   }
 
+  /// Ayarlar ekranındaki elle değişiklikten sonra kaydet.
+  static void changed() => _scheduleSave();
+
   /// Öğrenilenleri siler.
   static void forget() {
     memory = SpellMemory()..seed(memory.seeded);
@@ -221,6 +224,7 @@ class AutoSpell {
     if (!sel.isValid || !sel.isCollapsed) return;
     final caret = wrapToLogicalOffset(c.text, sel.baseOffset);
     _trackEdit(prev, text, caret);
+    if (learning.value && _learnFromReplace(prev, text)) _scheduleSave();
     // Yalnız TEK karakter yazılınca (yapıştırma, sesli yazma vb. değil).
     if (text.length != prev.length + 1) return;
     if (caret < 1 || caret > text.length) return;
@@ -284,6 +288,69 @@ class AutoSpell {
     if (typed != '\n' && autoFrom == null && !learnedNow && !_title) {
       unawaited(_native(c, next, nextCaret));
     }
+  }
+
+  /// KLAVYE ÖNERİSİ / YERİNDE DEĞİŞTİRME (kullanıcı isteği 2026-11-08:
+  /// "Android klavyesinin önerilerinden seçti, orası düzeldi — öğrenilmeli"):
+  /// tek adımda bir kelimenin YERİNE başka bir kelime geldiyse (öneri
+  /// çubuğundan seçim, kelimeye dokunup düzeltme) `eski → yeni` öğrenilir.
+  /// Tamamlama ("yap" → "yapıyor") ve ilgisiz değişim (uzak mesafe)
+  /// sayılmaz. Bedel: değişim başına iki uçtan ortak ön/son ek taraması.
+  @visibleForTesting
+  static ({String from, String to})? replacedWord(String prev, String text) {
+    if (prev == text || (prev.length - text.length).abs() > 12) return null;
+    var p = 0;
+    final minLen = prev.length < text.length ? prev.length : text.length;
+    while (p < minLen && prev[p] == text[p]) {
+      p++;
+    }
+    var sfx = 0;
+    while (sfx < minLen - p &&
+        prev[prev.length - 1 - sfx] == text[text.length - 1 - sfx]) {
+      sfx++;
+    }
+    final removedEnd = prev.length - sfx;
+    final insertedEnd = text.length - sfx;
+    // Saf ekleme (yazma) ya da saf silme: değiştirme değil.
+    if (removedEnd <= p || insertedEnd <= p) return null;
+    var start = p;
+    while (start > 0 && _isLetter(prev[start - 1])) {
+      start--;
+    }
+    var endOld = removedEnd;
+    while (endOld < prev.length && _isLetter(prev[endOld])) {
+      endOld++;
+    }
+    var endNew = insertedEnd;
+    while (endNew < text.length && _isLetter(text[endNew])) {
+      endNew++;
+    }
+    final from = prev.substring(start, endOld);
+    final to = text.substring(start, endNew).trimRight();
+    if (from.length < 3 || to.length < 2) return null;
+    if (!from.split("").every(_isLetter)) return null;
+    if (to.contains('\n') || to.split(' ').length > 2) return null;
+    final lf = trLower(from);
+    final lt = trLower(to);
+    if (lf == lt || lt.startsWith(lf)) return null;
+    final limit = SpellMemory.limitFor(lf.length) + 1.2;
+    if (memory.distance(lf, lt.replaceAll(' ', ''), limit: limit) > limit &&
+        memory.distance(lf, lt, limit: limit) > limit) {
+      return null;
+    }
+    return (from: from, to: to);
+  }
+
+  static bool _learnFromReplace(String prev, String text) {
+    final r = replacedWord(prev, text);
+    if (r == null) return false;
+    final last = _last;
+    // Otomatik düzeltmeyi geri alma kendi yolunda ([_learnFromEdit]).
+    if (last?.autoFrom != null && trLower(r.to) == trLower(last!.autoFrom!)) {
+      return false;
+    }
+    memory.learnFix(r.from, r.to);
+    return true;
   }
 
   /// Silme biten kelimenin içine/sonuna değiyorsa kelime "elle düzeltiliyor".

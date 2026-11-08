@@ -54,7 +54,7 @@ import '../../friends/data/friends_repository.dart';
 import '../../friends/presentation/home_invites.dart';
 import '../../settings/settings_providers.dart';
 import '../../settings/presentation/theme_picker.dart' show showThemePickerSheet;
-import '../../calendar/presentation/calendar_backdrop.dart';
+import '../../calendar/presentation/home_calendar_strip.dart';
 import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
 import '../data/upload_queue.dart';
@@ -526,6 +526,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         currentId: _currentStopId(ref),
         onOpen: () => unawaited(context.push('/folders')),
         onSelect: _selectFolderFromHold,
+        // Ekle / sırala · sil menünün içinden; iş bitince menü yeniden açılır
+        // (kullanıcı o ekranda kalır, yeni sıra/klasör hemen görünür).
+        onNewFolder: () => unawaited(
+          showFolderEditorDialog(context, ref).then((_) => _openFolderMenu()),
+        ),
+        onEditFolders: () => unawaited(
+          showFolderOrderSheet(context).then((_) => _openFolderMenu()),
+        ),
       ),
     );
   }
@@ -835,11 +843,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// O an ÖNİZLENEN bölüm sırası — ızgara bunu çizer.
   List<Note>? _dragOrder;
 
+  /// Sürükleme başındaki sıra: hiç yer değişmediyse kayıt yapılmaz.
+  List<String>? _dragOriginal;
+
+  /// Sürüklemede parmağın aldığı yol (dp): ~0 = yalnız basılı tutuldu.
+  double _dragTravel = 0;
+
   void _startCardDrag(String id, List<Note> section) {
     setState(() {
       _dragNoteId = id;
       _dragOrder = List.of(section);
+      _dragOriginal = [for (final n in section) n.id];
     });
+    _dragTravel = 0;
   }
 
   /// Parmak [toIndex] hücresinin üzerinde: notu oraya taşıyıp yeniden çiz.
@@ -858,14 +874,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   /// Parmak kalktı: GÖRÜNEN sıra kaydedilir. Bırakma bir kartın üstünde
   /// olmasa bile önizlenen sıra korunur — kullanıcı zaten onu görüyordu.
-  void _endCardDrag() {
+  ///
+  /// [onNoMove]: sürükleme başladı ama kart yerinden oynamadı (yalnız basılı
+  /// tutuldu) — o zaman sıra kaydedilmez (ölçüt "elle"ye dönmez) ve uzun
+  /// basışın olağan işi (seçim) yapılır.
+  void _endCardDrag([VoidCallback? onNoMove]) {
     final order = _dragOrder;
     final id = _dragNoteId;
+    final original = _dragOriginal;
     setState(() {
       _dragNoteId = null;
       _dragOrder = null;
+      _dragOriginal = null;
     });
     if (order == null || id == null) return;
+    final unchanged =
+        original != null &&
+        original.length == order.length &&
+        [for (var i = 0; i < order.length; i++) order[i].id == original[i]]
+            .every((same) => same);
+    if (unchanged) {
+      if (_dragTravel < 12) onNoMove?.call();
+      return;
+    }
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
     if (ref.read(noteSortProvider) != NoteSort.manual) {
@@ -1077,10 +1108,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// üste binebilirler — bkz. `dashboard_background_sheet.dart`).
   List<Widget> _dashboardBackground(WidgetRef ref) {
     final background = ref.watch(dashboardBackgroundProvider);
-    // Takvim zemini öbür katmanların yerini alır (kendi yüzeyini çizer).
-    if (background.calendar) {
-      return const [Positioned.fill(child: CalendarBackdrop())];
-    }
     final layers = <Widget>[];
     final color = background.color;
     if (color != null) {
@@ -1343,12 +1370,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 // ızgarasının arkasında durur; görünürlük ayarı okunurluğu
                 // korumak için varsayılan olarak düşüktür.
                 ..._dashboardBackground(ref),
-                // Takvim zemininde kartlar saydamlaşır, başlık net kalır.
-                CardSeeThrough(
-                  enabled: ref.watch(
-                    dashboardBackgroundProvider.select((b) => b.calendar),
-                  ),
-                  child: LayoutBuilder(
+                LayoutBuilder(
                   builder: (context, constraints) {
                     // Sütun sayısı: kullanıcı iki parmakla zoom yaptıysa onun
                     // seçimi (1–4), yoksa ekran genişliğinden otomatik.
@@ -1597,6 +1619,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         // "klasör paylaşıldığında kabul et veya reddet
                         // seçeneği olsun"). Bir şey beklemiyorsa hiç
                         // çizilmez — boşken sıfır yer kaplar.
+                        // TAKVİM ŞERİDİ (2026-11-08, takvim zemininin yerine):
+                        // bugünden itibaren 10 gün; kapalıyken tek ince satır.
+                        const HomeCalendarStrip(),
                         // Zamanı gelen hatırlatıcı/görev şeridi (2026-11-08).
                         const DueBanner(),
                         const HomeInvites(),
@@ -1968,7 +1993,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       ],
                     ));
                   },
-                ),
                 ),
                 // Sesli asistan paneli düğmelerin ÜSTÜnde sabit konumda yüzer.
                 // Düğmeler floatingActionButton'da kaldığından panel açılıp

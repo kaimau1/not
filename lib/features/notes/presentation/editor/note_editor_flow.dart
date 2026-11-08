@@ -550,7 +550,11 @@ extension _EditorFlowX on _NoteEditorScreenState {
     }
     final created = InkController(
       initial: note.pageInk,
-      onChanged: (strokes) => _mutate((n) => n.copyWith(pageInk: strokes)),
+      onChanged: (strokes) {
+        final before = _note?.pageInk.length ?? 0;
+        _mutate((n) => n.copyWith(pageInk: strokes));
+        if (strokes.length > before) _penTipAfterStroke();
+      },
     )..setEditing(!_readOnly);
     _pageInkCtl = created;
     _syncPageInkKinds(created);
