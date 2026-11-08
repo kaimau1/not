@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import '../../../app/app_frame.dart';
 import '../../../core/app_icons.dart';
 
@@ -336,6 +337,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _ExpandListItemsSwitch(),
             title: l10n.expandListItems,
             keywords: l10n.expandListItemsInfo,
+          ),
+          _SettingRow(
+            const _HideBarWhileTypingSwitch(),
+            title: l10n.hideBarWhileTyping,
+            keywords: '${l10n.hideBarWhileTypingInfo} alt cubuk yazarken',
           ),
           _SettingRow(
             const _ItemGesturesSwitch(),

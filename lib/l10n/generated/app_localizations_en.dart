@@ -7801,4 +7801,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickRowReminder => 'Reminder';
+
+  @override
+  String get hideBarWhileTyping => 'Hide bottom bar while typing';
+
+  @override
+  String get hideBarWhileTypingInfo =>
+      'The bottom bar slides away as you type and returns right when you stop.';
+
+  @override
+  String get tipHideBarTyping =>
+      'The bottom bar hides while you type and returns when you pause. You can turn this off in Settings.';
+
+  @override
+  String get addToNoteTitle => 'Add to note';
+
+  @override
+  String get addToNewNote => 'New note';
+
+  @override
+  String get addToNoteEmpty => 'No other notes yet';
+
+  @override
+  String get gmailAddSelectionToNote => 'Add to note';
+
+  @override
+  String get gmailTagPromotions => 'Promotions';
+
+  @override
+  String get gmailTagSocial => 'Social';
+
+  @override
+  String get gmailTagUpdates => 'Updates';
+
+  @override
+  String get gmailTagForums => 'Forums';
+
+  @override
+  String get gmailTagImportant => 'Important';
+
+  @override
+  String gmailSmartAddToCalendar(String when) {
+    return 'Add to calendar: $when';
+  }
+
+  @override
+  String gmailSmartLinkPerson(String name) {
+    return 'Link $name to a note';
+  }
+
+  @override
+  String gmailSmartRelatedNote(String title) {
+    return 'Related note: $title';
+  }
+
+  @override
+  String get gmailAddedToNote => 'Selected text added to the note';
+
+  @override
+  String get calendarLinkExistingNote => 'Link an existing note';
+
+  @override
+  String get routineFromNote => 'Create routine from a note';
 }

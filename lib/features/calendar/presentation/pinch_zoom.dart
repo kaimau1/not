@@ -26,6 +26,7 @@ class PinchZoomDetector extends StatefulWidget {
     required this.onZoom,
     this.onPreview,
     this.onPinchingChanged,
+    this.wheelZoom = false,
     this.zoomInAt = 1.22,
     this.zoomOutAt = 0.82,
   });
@@ -39,6 +40,13 @@ class PinchZoomDetector extends StatefulWidget {
   /// İki parmak inince true, kalkınca false (sayfa kaydırmasını kilitlemek
   /// için).
   final ValueChanged<bool>? onPinchingChanged;
+
+  /// DÜZ fare tekerleği (Ctrl'siz) de geçiş yapsın mı: yukarı = yakınlaş,
+  /// aşağı = uzaklaş (2026-11-08). Altta kaydırılabilir bir alan tekeri
+  /// kendisi alırsa ([PointerSignalResolver] ilk kayıtçıyı seçer) geçiş
+  /// OLMAZ; yalnız kaydırılacak yer yokken devreye girer. Çağıran, dikey
+  /// kaydırması olan görünümlerde (hafta/gün) kapalı tutar.
+  final bool wheelZoom;
   final double zoomInAt;
   final double zoomOutAt;
 
@@ -116,8 +124,14 @@ class _PinchZoomDetectorState extends State<PinchZoomDetector> {
   }
 
   void _signal(PointerSignalEvent e) {
-    if (e is! PointerScaleEvent) return;
-    _accumulate(e.scale, e.position);
+    if (e is PointerScaleEvent) {
+      _accumulate(e.scale, e.position);
+    } else if (e is PointerScrollEvent && widget.wheelZoom) {
+      GestureBinding.instance.pointerSignalResolver.register(
+        e,
+        (_) => _accumulate(e.scrollDelta.dy < 0 ? 1.3 : 1 / 1.3, e.position),
+      );
+    }
   }
 
   void _accumulate(double factor, Offset focal) {

@@ -15,6 +15,8 @@ import '../data/calendar_repository.dart';
 import '../domain/day_key.dart';
 import '../domain/recurrence.dart';
 import '../domain/routine.dart';
+import '../domain/routine_from_note.dart';
+import '../../notes/presentation/note_target_picker.dart';
 
 /// **RUTİNLER** (TAKVIM_PLANI Faz 53, K9): liste + seri + son 30 gün şeridi.
 /// Rutin, zamanı gelen gün ajandada görünür; adımları gün levhasında tiklenir.
@@ -36,7 +38,17 @@ class RoutinesScreen extends ConsumerWidget {
     final logs = ref.watch(routineLogsStreamProvider).value ?? const {};
     final today = startOfDay(now ?? DateTime.now());
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.routinesTitle)),
+      appBar: AppBar(
+        title: Text(l10n.routinesTitle),
+        actions: [
+          IconButton(
+            key: const ValueKey('routine-from-note'),
+            tooltip: l10n.routineFromNote,
+            icon: const Icon(Icons.playlist_add_check),
+            onPressed: () => unawaited(_fromNote(context, ref)),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         key: const ValueKey('routine-new'),
         tooltip: l10n.routineNew,
@@ -64,6 +76,19 @@ class RoutinesScreen extends ConsumerWidget {
             ),
     );
   }
+}
+
+/// Bir notun maddelerinden rutin kurar ve düzenleyicide açar.
+Future<void> _fromNote(BuildContext context, WidgetRef ref) async {
+  final repo = ref.read(calendarRepositoryProvider);
+  final target = await showNoteTargetPicker(context);
+  final note = target?.note;
+  if (repo == null || note == null || !context.mounted) return;
+  final draft = routineFromNote(note);
+  final saved = repo.saveRoutine(
+    Routine(id: '', title: draft.title, steps: draft.steps),
+  );
+  unawaited(showRoutineEditor(context, existing: saved));
 }
 
 class _RoutineCard extends StatelessWidget {

@@ -252,6 +252,13 @@ Faz 53'te.
 - [x] F49.2 `NoteCalendarPills` başlık/çip satırının altında (bağ yoksa yer kaplamaz; en çok 4): "6 Kas · Toplantı" → `/calendar?day=YYYY-MM-DD` (CalendarScreen `initialDay`). Bağlar not belgesinde değil, ters hesap `calendarLinksForNote` (`noteCalendarLinksProvider`, yalnız açık not).
 - [x] F49.3 Gün levhasında güne bağlı notlar + açılır "O gün yazılan notlar (n)" (`updatedAt` o gün; ajanda listesine girmedi — gün levhası yeterli, kalabalık yapmasın). Testler `note_calendar_links_test`. Cihazda doğrulanmadı → KALANLAR §2 #102.
 
+### Faz 49b — Not ↔ takvim pratikliği (2026-11-08, oturum B)
+- [x] F49b.1 **Mevcut notu bağla**: gün levhasında, yerel etkinlik düzenleyicisinde ve Google etkinlik levhasında "Mevcut notu bağla" → yeniden kullanılabilir not seçici (`note_target_picker.dart`: üstte boş yeni not, altında tüm notların küçültülmüş kartları). `linkExistingNote` (google_calendar_ui.dart).
+- [x] F49b.2 **Etkinlikten nota tek dokunuş**: ajandada bağlı-not simgesi tek bağlı notta doğrudan o notu açar (birden çoksa etkinlik levhası).
+- [x] F49b.3 **Hafta → gün**: kıstırma / Ctrl+tekerlek yakınlaştırınca hafta görünümü imlecin altındaki günün ajandasını açar; düz fare tekerleği yıl ↔ ay arasında geçiş yapar (hafta/günde tekerlek kayar — çakışma kararı).
+- [ ] Haftanın saat ızgarasında sürükleyerek saat değiştirme, görevlerde elle sürükle-sırala: yapılmadı (cihazda doğrulama gerektirir; ayrı faz).
+- [x] F53b **Nottan rutin**: Rutinler → ✓ düğmesi → not seç → maddeler/satırlar adım olur, düzenleyicide açılır (`routine_from_note.dart`). Rutin modeline ve `tasks`a alan EKLENMEDİ.
+
 ### Faz 50 — Görevler (yerel + Google Görevler iki yönlü)
 - [x] F50.1 Görevler ekranı `/tasks` (takvim çubuğunda ✓; rayda Takvim bölümü): liste çipleri + yeni liste / yeniden adlandır / sil, alt görev (tek seviye, girintili), sıralama `compareTasks`, katlanır tamamlananlar + temizle, son tarih + saat, "zamanı gelince hatırlat", tekrar (tamamlayınca ilerler), yıldız. Elle sürükleyerek sıralama AÇIK.
 - [x] F50.2 Görevler takvimde/ajandada (son tarih gününde, tikli; dokununca görev levhası; ızgarada nokta).
@@ -341,3 +348,4 @@ ekranında açma.
 | 52 Akıllı bağlar | ✅ 2026-11-06 (cihazda doğrulanmadı, KALANLAR §2 #105) |
 | 53 Rutinler | ✅ 2026-11-06 (cihazda doğrulanmadı, KALANLAR §2 #106) |
 | §10 Not içi görev satırı | ✅ 2026-11-08 ilk sürüm (liste maddeleri; cihazda doğrulanmadı, KALANLAR §2 A7–A10) |
+| 49b/53b Pratiklik | ✅ 2026-11-08 (mevcut notu bağla, tek dokunuşla nota, hafta→gün, nottan rutin; cihazda doğrulanmadı, KALANLAR §2 B-maddeleri) |

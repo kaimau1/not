@@ -7779,4 +7779,66 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quickRowReminder => 'Hatırlatıcı';
+
+  @override
+  String get hideBarWhileTyping => 'Yazarken alt çubuğu gizle';
+
+  @override
+  String get hideBarWhileTypingInfo =>
+      'Yazmaya başlayınca alt çubuk iner, bırakınca hemen geri gelir.';
+
+  @override
+  String get tipHideBarTyping =>
+      'Yazarken alt çubuk gizlenir, durunca geri gelir. Ayarlar → Kartlar bölümünden kapatılabilir.';
+
+  @override
+  String get addToNoteTitle => 'Nota ekle';
+
+  @override
+  String get addToNewNote => 'Yeni not';
+
+  @override
+  String get addToNoteEmpty => 'Henüz başka not yok';
+
+  @override
+  String get gmailAddSelectionToNote => 'Nota ekle';
+
+  @override
+  String get gmailTagPromotions => 'Promosyon';
+
+  @override
+  String get gmailTagSocial => 'Sosyal';
+
+  @override
+  String get gmailTagUpdates => 'Güncelleme';
+
+  @override
+  String get gmailTagForums => 'Forum';
+
+  @override
+  String get gmailTagImportant => 'Önemli';
+
+  @override
+  String gmailSmartAddToCalendar(String when) {
+    return 'Takvime ekle: $when';
+  }
+
+  @override
+  String gmailSmartLinkPerson(String name) {
+    return '$name → nota bağla';
+  }
+
+  @override
+  String gmailSmartRelatedNote(String title) {
+    return 'İlgili not: $title';
+  }
+
+  @override
+  String get gmailAddedToNote => 'Seçili metin nota eklendi';
+
+  @override
+  String get calendarLinkExistingNote => 'Mevcut notu bağla';
+
+  @override
+  String get routineFromNote => 'Nottan rutin oluştur';
 }

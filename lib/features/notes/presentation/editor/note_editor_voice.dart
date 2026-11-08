@@ -111,6 +111,8 @@ extension _EditorVoice on _NoteEditorScreenState {
       _dictation = session;
       _dictationStart = DateTime.now();
     });
+    // Panel belirince görünür alan küçülür: imleç panelin altında kalmasın.
+    _revealCaretSoon();
     session.start();
   }
 
@@ -268,6 +270,9 @@ extension _EditorVoice on _NoteEditorScreenState {
     // çağırıyor. Madde satırı ise zaten kendi gecikmeli yolundan geçer
     // (ItemsEditor.onChanged), o yüzden orada alanın `commit`i kullanılır.
     _commitDictation(target, controller, text);
+    // Konuşurken imleç hep görünür kalsın: dikte paneli ve klavye altı örter,
+    // uzayan metin ekranın dışına taşıyordu (cihaz bulgusu 2026-11-08).
+    _revealCaretSoon();
   }
 
   /// Sesle yakalama: ortak levhayı açar, dönen metni seçilen eyleme göre işler.

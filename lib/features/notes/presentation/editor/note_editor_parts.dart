@@ -309,3 +309,44 @@ class _AiBanner extends StatelessWidget {
     );
   }
 }
+
+
+/// **YAZARKEN ALT ÇUBUK İNER** (2026-11-08). [hidden] true iken çocuk
+/// küçülüp solar; yalnız bu ağaç ValueListenableBuilder ile yeniden kurulur
+/// (çocuk dışarıdan verilir, ekran setState görmez). Girişte 160 ms, geri
+/// dönüşte 110 ms: bırakınca çubuk hemen gelsin.
+class _TypingHide extends StatelessWidget {
+  const _TypingHide({
+    required this.hidden,
+    required this.enabled,
+    required this.child,
+  });
+
+  final ValueListenable<bool> hidden;
+  final bool enabled;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) return child;
+    return ValueListenableBuilder<bool>(
+      valueListenable: hidden,
+      child: child,
+      builder: (context, hide, child) => TweenAnimationBuilder<double>(
+        tween: Tween(end: hide ? 0.0 : 1.0),
+        duration: Duration(milliseconds: hide ? 160 : 110),
+        curve: Curves.easeOutCubic,
+        child: child,
+        builder: (context, t, child) => t == 1
+            ? child!
+            : ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: t,
+                  child: Opacity(opacity: t, child: child),
+                ),
+              ),
+      ),
+    );
+  }
+}

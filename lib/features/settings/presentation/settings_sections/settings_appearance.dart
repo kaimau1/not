@@ -539,78 +539,155 @@ class _TypographySection extends ConsumerWidget {
   }
 }
 
-/// Yazı tipi seçme levhası: katalog ÖBEKLENMİŞ (sade / kitap / daktilo /
-/// el yazısı) ve her satır kendi yazı tipiyle yazılıyor.
+/// Yazı tipi seçme levhası — TEMA LEVHASI gibi (bkz. `showThemePickerSheet`):
+/// alçak, perdesiz; her seçenek KENDİ yazı tipiyle "Aa" önizlemesi gösterir,
+/// dokunulan tip anında uygulanır, üstteki ekran canlı değişir. "Vazgeç"
+/// açılıştaki tipe döner.
 Future<void> _showAppFontSheet(BuildContext context, WidgetRef ref) {
-  final l10n = context.l10n;
   preloadRemainingNoteFonts();
-  String groupLabel(NoteFontGroup group) => switch (group) {
-    NoteFontGroup.sans => l10n.fontGroupSans,
-    NoteFontGroup.serif => l10n.fontGroupSerif,
-    NoteFontGroup.mono => l10n.fontGroupMono,
-    NoteFontGroup.hand => l10n.fontGroupHand,
-  };
+  final before = ref.read(appFontProvider);
+  final scroll = ScrollController(
+    initialScrollOffset: math.max(
+      0,
+      (kCatalogFonts.indexWhere((f) => f.id == before) - 1) * 88.0,
+    ),
+  );
   return showAppSheet<void>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
+    barrierColor: Colors.transparent,
     showDragHandle: true,
     builder: (sheetContext) {
-      final scheme = Theme.of(sheetContext).colorScheme;
+      final l10n = sheetContext.l10n;
       return Consumer(
         builder: (context, ref, _) {
           final current = ref.watch(appFontProvider);
-          return ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                child: Text(
-                  l10n.appFontSetting,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              for (final group in NoteFontGroup.values) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
-                  child: Text(
-                    groupLabel(group),
-                    style: sectionLabelStyle(context),
+          return SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 8, 4),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.appFontSetting,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        if (current != before)
+                          TextButton(
+                            key: const ValueKey('font-sheet-revert'),
+                            onPressed: () {
+                              ref.read(appFontProvider.notifier).set(before);
+                              Navigator.pop(context);
+                            },
+                            child: Text(l10n.cancel),
+                          ),
+                        FilledButton.tonal(
+                          key: const ValueKey('font-sheet-done'),
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(l10n.ok),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                for (final font in kCatalogFonts)
-                  if (font.group == group)
-                    ListTile(
-                      dense: true,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      selected: font.id == current,
-                      title: Text(
-                        font.id == kAppDefaultFont
-                            ? '${font.label} · ${l10n.appFontDefaultSuffix}'
-                            : font.label,
-                        // Satır aynı zamanda ÖRNEK: seçmeden önce nasıl
-                        // duracağı görünür.
-                        style: applyNoteFont(
-                          const TextStyle(fontSize: 16),
-                          font.id,
+                  SizedBox(
+                    height: 104,
+                    child: ListView.separated(
+                      key: const ValueKey('font-sheet-list'),
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      controller: scroll,
+                      itemCount: kCatalogFonts.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
+                      itemBuilder: (context, i) => SizedBox(
+                        width: 80,
+                        child: _FontChoiceCard(
+                          key: ValueKey('font-sheet-${kCatalogFonts[i].id}'),
+                          font: kCatalogFonts[i],
+                          selected: kCatalogFonts[i].id == current,
+                          onTap: () => ref
+                              .read(appFontProvider.notifier)
+                              .set(kCatalogFonts[i].id!),
                         ),
                       ),
-                      trailing: font.id == current
-                          ? Icon(Icons.check, size: 20, color: scheme.primary)
-                          : null,
-                      onTap: () =>
-                          ref.read(appFontProvider.notifier).set(font.id!),
                     ),
-              ],
-            ],
+                  ),
+                ],
+              ),
+            ),
           );
         },
       );
     },
-  );
+  ).whenComplete(scroll.dispose);
+}
+
+/// Tek yazı tipi seçeneği: kendi yazı tipiyle "Aa" + ad ([ThemeChoiceCard]'ın
+/// çerçevesiyle aynı).
+class _FontChoiceCard extends StatelessWidget {
+  const _FontChoiceCard({
+    super.key,
+    required this.font,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final NoteFontOption font;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: font.label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Column(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              height: 62,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: selected ? scheme.primary : scheme.outlineVariant,
+                  width: selected ? 2.5 : 1,
+                ),
+              ),
+              child: Text(
+                'Aa',
+                style: applyNoteFont(
+                  TextStyle(fontSize: 26, color: scheme.onSurface),
+                  font.id,
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              font.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? scheme.primary : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// Yazı boyutu kademelerinin görünen adları.

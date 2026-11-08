@@ -917,14 +917,17 @@ extension _EditorAttachments on _NoteEditorScreenState {
           for (final l in n.tagLinks)
             if (l.attachmentId != attachment.id) l,
         ],
-        attachments: [
-          for (final a in n.attachments)
-            if (a.id != attachment.id) a,
-        ],
+        attachments: n.attachmentsWithout(attachment.id),
       ),
       immediate: true,
     );
     _pendingAttachmentDeletes.add(attachment);
+    // Türetilmiş belgelerin baytları da (kaynakla birlikte gider).
+    if (note != null) {
+      _pendingAttachmentDeletes.addAll(
+        note.attachments.where((a) => a.sourceId == attachment.id),
+      );
+    }
   }
 
   /// Editör kapanırken: nota geri dönmemiş eklerin baytlarını siler.
