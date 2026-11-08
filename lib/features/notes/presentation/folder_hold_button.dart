@@ -84,8 +84,10 @@ Future<void> openFolderMenu(
   required String? currentId,
   required VoidCallback onOpen,
   required ValueChanged<String?> onSelect,
+  VoidCallback? onNewFolder,
+  VoidCallback? onEditFolders,
 }) async {
-  if (stops.length <= 1) {
+  if (stops.length <= 1 && onNewFolder == null) {
     onOpen();
     return;
   }
@@ -96,8 +98,12 @@ Future<void> openFolderMenu(
     barrierLabel: context.l10n.close,
     barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.42),
     transitionDuration: const Duration(milliseconds: 150),
-    pageBuilder: (_, _, _) =>
-        _RadialFolderMenu(stops: stops, currentId: currentId),
+    pageBuilder: (_, _, _) => _RadialFolderMenu(
+      stops: stops,
+      currentId: currentId,
+      actions: onNewFolder != null || onEditFolders != null,
+      canEdit: onEditFolders != null && stops.length > 1,
+    ),
     transitionBuilder: (_, anim, _, child) => FadeTransition(
       opacity: anim,
       child: ScaleTransition(
@@ -110,7 +116,11 @@ Future<void> openFolderMenu(
     ),
   );
   if (picked == null) return;
-  if (picked < 0) {
+  if (picked == _kNewFolder) {
+    onNewFolder?.call();
+  } else if (picked == _kEditFolders) {
+    onEditFolders?.call();
+  } else if (picked < 0) {
     onOpen();
   } else if (stops[picked].id != currentId) {
     onSelect(stops[picked].id);
@@ -253,11 +263,29 @@ Size? radialRadiiFor(List<Size> chips, Size screen) {
 
 /// Halka ya da ızgara: duraklar dokunulur. Seçim `pop(i)` ile döner;
 /// "Klasörler" (orta daire / başlık) `pop(-1)` = Klasörler ekranı.
+/// Menüden dönen özel değerler (duraklar 0.., "Klasörler" ekranı -1).
+const _kNewFolder = -2;
+const _kEditFolders = -3;
+
+/// Menünün altındaki eylem satırının payı (dp).
+const double _kActionsBar = 72;
+
 class _RadialFolderMenu extends StatelessWidget {
-  const _RadialFolderMenu({required this.stops, required this.currentId});
+  const _RadialFolderMenu({
+    required this.stops,
+    required this.currentId,
+    this.actions = false,
+    this.canEdit = false,
+  });
 
   final List<FolderStop> stops;
   final String? currentId;
+
+  /// Altta "Yeni klasör" / "Sırala · sil" satırı (kullanıcı isteği
+  /// 2026-11-08: "yukarıdan çekilen klasörler ekranında klasör ekle,
+  /// sıralama ve silme o ekranda olsun").
+  final bool actions;
+  final bool canEdit;
 
   void _pick(BuildContext context, int i) {
     unawaited(HapticFeedback.selectionClick());
@@ -274,13 +302,75 @@ class _RadialFolderMenu extends StatelessWidget {
       _kTile.height + (scaler.scale(12) - 12).clamp(0, 12),
     );
     final chips = List.filled(stops.length, tile);
-    final radii = radialRadiiFor(chips, size);
+    final body = actions
+        ? Size(size.width, size.height - _kActionsBar)
+        : size;
+    final radii = radialRadiiFor(chips, body);
+    final menu = radii == null
+        ? _grid(context, body, tile)
+        : _ring(context, tile, radii);
+    if (!actions) {
+      return Material(
+        key: const ValueKey('folder-radial-menu'),
+        type: MaterialType.transparency,
+        child: menu,
+      );
+    }
+    final l10n = context.l10n;
+    final bottom = MediaQuery.paddingOf(context).bottom;
     return Material(
       key: const ValueKey('folder-radial-menu'),
       type: MaterialType.transparency,
-      child: radii == null
-          ? _grid(context, size, tile)
-          : _ring(context, tile, radii),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            bottom: _kActionsBar,
+            child: MediaQuery.removePadding(
+              context: context,
+              removeBottom: true,
+              child: menu,
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16 + bottom,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: FilledButton.tonalIcon(
+                    key: const ValueKey('folder-menu-new'),
+                    onPressed: () => Navigator.of(context).pop(_kNewFolder),
+                    icon: const Icon(Icons.create_new_folder_outlined),
+                    label: Text(
+                      l10n.newFolder,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+                if (canEdit) ...[
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: FilledButton.tonalIcon(
+                      key: const ValueKey('folder-menu-edit'),
+                      onPressed: () =>
+                          Navigator.of(context).pop(_kEditFolders),
+                      icon: const Icon(Icons.swap_vert),
+                      label: Text(
+                        l10n.folderMenuEdit,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

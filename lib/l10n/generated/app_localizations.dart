@@ -14221,6 +14221,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Takvim şeridini daralt'**
   String get homeCalendarStripCollapse;
+
+  /// No description provided for @gmailTranslate.
+  ///
+  /// In tr, this message translates to:
+  /// **'İletiyi çevir'**
+  String get gmailTranslate;
+
+  /// No description provided for @gmailShowOriginal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Orijinali göster'**
+  String get gmailShowOriginal;
+
+  /// No description provided for @gmailTranslated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çevrildi'**
+  String get gmailTranslated;
+
+  /// No description provided for @folderMenuEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sırala · sil'**
+  String get folderMenuEdit;
+
+  /// No description provided for @themeClassic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasik'**
+  String get themeClassic;
+
+  /// No description provided for @themeNewsprint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gazete'**
+  String get themeNewsprint;
+
+  /// No description provided for @themeNotebook.
+  ///
+  /// In tr, this message translates to:
+  /// **'Defter'**
+  String get themeNotebook;
+
+  /// No description provided for @themeGraphite.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kurşun kalem'**
+  String get themeGraphite;
+
+  /// No description provided for @themeLedger.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasik yeşil'**
+  String get themeLedger;
 }
 
 class _AppLocalizationsDelegate

@@ -312,6 +312,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '${l10n.themeCream} ${l10n.themePeach} ${l10n.themeMint} '
                 '${l10n.themeOcean} ${l10n.themeRose} ${l10n.themeTangerine} '
                 '${l10n.themeEmerald} ${l10n.themeAmethyst} '
+                '${l10n.themeClassic} ${l10n.themeNewsprint} '
+                '${l10n.themeNotebook} ${l10n.themeGraphite} '
+                '${l10n.themeLedger} '
                 '${l10n.themeDark}',
           ),
           // Yazı tipi + yazı boyutu TEK satırda: ikisi de "yazı nasıl
@@ -1120,6 +1123,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       AppThemeChoice.tangerine => l10n.themeTangerine,
       AppThemeChoice.emerald => l10n.themeEmerald,
       AppThemeChoice.amethyst => l10n.themeAmethyst,
+      AppThemeChoice.classic => l10n.themeClassic,
+      AppThemeChoice.newsprint => l10n.themeNewsprint,
+      AppThemeChoice.notebook => l10n.themeNotebook,
+      AppThemeChoice.graphite => l10n.themeGraphite,
+      AppThemeChoice.ledger => l10n.themeLedger,
       AppThemeChoice.dark => l10n.themeDark,
     };
     // Yüzde yerine KADEME ADI: ayar artık dört adlı seçenekten ibaret,

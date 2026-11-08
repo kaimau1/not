@@ -526,6 +526,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         currentId: _currentStopId(ref),
         onOpen: () => unawaited(context.push('/folders')),
         onSelect: _selectFolderFromHold,
+        // Ekle / sırala · sil menünün içinden; iş bitince menü yeniden açılır
+        // (kullanıcı o ekranda kalır, yeni sıra/klasör hemen görünür).
+        onNewFolder: () => unawaited(
+          showFolderEditorDialog(context, ref).then((_) => _openFolderMenu()),
+        ),
+        onEditFolders: () => unawaited(
+          showFolderOrderSheet(context).then((_) => _openFolderMenu()),
+        ),
       ),
     );
   }

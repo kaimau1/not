@@ -7961,4 +7961,31 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeCalendarStripCollapse => 'Takvim şeridini daralt';
+
+  @override
+  String get gmailTranslate => 'İletiyi çevir';
+
+  @override
+  String get gmailShowOriginal => 'Orijinali göster';
+
+  @override
+  String get gmailTranslated => 'Çevrildi';
+
+  @override
+  String get folderMenuEdit => 'Sırala · sil';
+
+  @override
+  String get themeClassic => 'Klasik';
+
+  @override
+  String get themeNewsprint => 'Gazete';
+
+  @override
+  String get themeNotebook => 'Defter';
+
+  @override
+  String get themeGraphite => 'Kurşun kalem';
+
+  @override
+  String get themeLedger => 'Klasik yeşil';
 }

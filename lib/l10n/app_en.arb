@@ -2893,5 +2893,14 @@
   "homeCalendarStrip": "Calendar strip on top",
   "homeCalendarStripInfo": "The next 10 days at the top of the home screen: events, tasks, holidays. Tap a day = entries (edit/delete), long-press = calendar",
   "homeCalendarStripExpand": "Expand calendar strip",
-  "homeCalendarStripCollapse": "Collapse calendar strip"
+  "homeCalendarStripCollapse": "Collapse calendar strip",
+  "gmailTranslate": "Translate message",
+  "gmailShowOriginal": "Show original",
+  "gmailTranslated": "Translated",
+  "folderMenuEdit": "Reorder · delete",
+  "themeClassic": "Classic",
+  "themeNewsprint": "Newsprint",
+  "themeNotebook": "Notebook",
+  "themeGraphite": "Graphite",
+  "themeLedger": "Ledger"
 }

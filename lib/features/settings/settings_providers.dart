@@ -88,6 +88,11 @@ enum AppThemeChoice {
   tangerine,
   emerald,
   amethyst,
+  classic,
+  newsprint,
+  notebook,
+  graphite,
+  ledger,
   dark;
 
   /// Bu seçimin tema ailesi (Sistem ve Koyu varsayılan aileyi kullanır).
@@ -106,6 +111,11 @@ enum AppThemeChoice {
     AppThemeChoice.tangerine => ThemeFamily.tangerine,
     AppThemeChoice.emerald => ThemeFamily.emerald,
     AppThemeChoice.amethyst => ThemeFamily.amethyst,
+    AppThemeChoice.classic => ThemeFamily.classic,
+    AppThemeChoice.newsprint => ThemeFamily.newsprint,
+    AppThemeChoice.notebook => ThemeFamily.notebook,
+    AppThemeChoice.graphite => ThemeFamily.graphite,
+    AppThemeChoice.ledger => ThemeFamily.ledger,
     _ => ThemeFamily.sage,
   };
 
@@ -934,7 +944,12 @@ final effectiveThemeModeProvider = Provider.autoDispose<ThemeMode>((ref) {
     AppThemeChoice.rose ||
     AppThemeChoice.tangerine ||
     AppThemeChoice.emerald ||
-    AppThemeChoice.amethyst => ThemeMode.light,
+    AppThemeChoice.amethyst ||
+    AppThemeChoice.classic ||
+    AppThemeChoice.newsprint ||
+    AppThemeChoice.notebook ||
+    AppThemeChoice.graphite ||
+    AppThemeChoice.ledger => ThemeMode.light,
     AppThemeChoice.dark => ThemeMode.dark,
   };
 });

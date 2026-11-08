@@ -3690,5 +3690,14 @@
   "homeCalendarStrip": "Üstte takvim şeridi",
   "homeCalendarStripInfo": "Ana ekranın tepesinde bugünden itibaren 10 gün: etkinlik, görev, tatil. Güne dokun = kayıtlar (düzenle/sil), basılı tut = takvim",
   "homeCalendarStripExpand": "Takvim şeridini aç",
-  "homeCalendarStripCollapse": "Takvim şeridini daralt"
+  "homeCalendarStripCollapse": "Takvim şeridini daralt",
+  "gmailTranslate": "İletiyi çevir",
+  "gmailShowOriginal": "Orijinali göster",
+  "gmailTranslated": "Çevrildi",
+  "folderMenuEdit": "Sırala · sil",
+  "themeClassic": "Klasik",
+  "themeNewsprint": "Gazete",
+  "themeNotebook": "Defter",
+  "themeGraphite": "Kurşun kalem",
+  "themeLedger": "Klasik yeşil"
 }

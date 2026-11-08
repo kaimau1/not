@@ -796,6 +796,46 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
   /// Gövdede seçili yazı (boş = seçim yok).
   final _selected = ValueNotifier<String>('');
 
+  /// ÇEVİRİ (kullanıcı isteği 2026-11-08: "Gmail'deki çeviri"): Gmail'in
+  /// "İletiyi çevir / Orijinali göster" davranışı — çeviri bir kez yapılır,
+  /// iki görünüm arasında geçilir. null = çevrilmedi.
+  String? _translated;
+  bool _showTranslated = false;
+  bool _translating = false;
+
+  Future<void> _toggleTranslate() async {
+    final m = _message;
+    if (m == null || _translating) return;
+    if (_translated != null) {
+      setState(() => _showTranslated = !_showTranslated);
+      return;
+    }
+    if (!ensureAiReady(context, ref)) return;
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final language = Localizations.localeOf(context).languageCode == 'tr'
+        ? 'Türkçe'
+        : 'English';
+    setState(() => _translating = true);
+    try {
+      final out = await ref
+          .read(geminiServiceProvider)
+          .translateText(m.body, language);
+      if (!mounted) return;
+      setState(() {
+        _translated = out.trim();
+        _showTranslated = true;
+      });
+    } catch (e) {
+      ErrorLog.record('gmail-translate', e);
+      messenger.showSnackBar(
+        SnackBar(content: Text(friendlyError(l10n, e))),
+      );
+    } finally {
+      if (mounted) setState(() => _translating = false);
+    }
+  }
+
   @override
   void dispose() {
     _selected.dispose();
@@ -1045,6 +1085,22 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
       appBar: HomeInBar(
         appBar: AppBar(
           actions: [
+            if (m != null && m.body.trim().isNotEmpty)
+              IconButton(
+                key: const ValueKey('gmail-translate'),
+                tooltip: _showTranslated
+                    ? l10n.gmailShowOriginal
+                    : l10n.gmailTranslate,
+                isSelected: _showTranslated,
+                icon: _translating
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.translate),
+                onPressed: () => unawaited(_toggleTranslate()),
+              ),
             if (m != null)
               IconButton(
                 key: const ValueKey('gmail-open-web'),
@@ -1145,6 +1201,27 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
             // BAĞLANTILAR TIKLANIR (kullanıcı isteği 2026-11-08): seçim
             // [SelectionArea] ile — `Text.rich` dokunma tanıyıcıları orada
             // çalışır; seçilen yazı alttaki "Nota ekle" düğmesini açar.
+            if (_showTranslated && _translated != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.translate, size: 16, color: s.primary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        l10n.gmailTranslated,
+                        style: theme.textTheme.labelMedium,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          setState(() => _showTranslated = false),
+                      child: Text(l10n.gmailShowOriginal),
+                    ),
+                  ],
+                ),
+              ),
             SelectionArea(
               onSelectionChanged: (c) =>
                   _selected.value = c?.plainText.trim() ?? '',
@@ -1165,7 +1242,9 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
                   ),
               child: Text.rich(
                 TextSpan(
-                  children: linkifyMail(
+                  children: _showTranslated && _translated != null
+                      ? [TextSpan(text: _translated)]
+                      : linkifyMail(
                     m.body,
                     m.links,
                     linkStyle: TextStyle(

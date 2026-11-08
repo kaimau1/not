@@ -56,6 +56,24 @@ List<(AppThemeChoice, String, List<ThemeData>)> themeChoiceOptions(
       l10n.themeAmethyst,
       [light(ThemeFamily.amethyst)],
     ),
+    // SADE KLASİK TEMALAR (2026-11-08).
+    (AppThemeChoice.classic, l10n.themeClassic, [light(ThemeFamily.classic)]),
+    (
+      AppThemeChoice.newsprint,
+      l10n.themeNewsprint,
+      [light(ThemeFamily.newsprint)],
+    ),
+    (
+      AppThemeChoice.notebook,
+      l10n.themeNotebook,
+      [light(ThemeFamily.notebook)],
+    ),
+    (
+      AppThemeChoice.graphite,
+      l10n.themeGraphite,
+      [light(ThemeFamily.graphite)],
+    ),
+    (AppThemeChoice.ledger, l10n.themeLedger, [light(ThemeFamily.ledger)]),
     (AppThemeChoice.dark, l10n.themeDark, [dark]),
   ];
 }

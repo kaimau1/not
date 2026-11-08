@@ -7983,4 +7983,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeCalendarStripCollapse => 'Collapse calendar strip';
+
+  @override
+  String get gmailTranslate => 'Translate message';
+
+  @override
+  String get gmailShowOriginal => 'Show original';
+
+  @override
+  String get gmailTranslated => 'Translated';
+
+  @override
+  String get folderMenuEdit => 'Reorder · delete';
+
+  @override
+  String get themeClassic => 'Classic';
+
+  @override
+  String get themeNewsprint => 'Newsprint';
+
+  @override
+  String get themeNotebook => 'Notebook';
+
+  @override
+  String get themeGraphite => 'Graphite';
+
+  @override
+  String get themeLedger => 'Ledger';
 }
