@@ -3595,5 +3595,14 @@
   "friendsCountSummary": "{count, plural, =0{Henüz kişi yok} other{{count} kişi}}",
   "@friendsCountSummary": {"placeholders": {"count": {"type": "int"}}},
   "friendsRequestsSummary": "{count} istek bekliyor",
-  "@friendsRequestsSummary": {"placeholders": {"count": {"type": "int"}}}
+  "@friendsRequestsSummary": {"placeholders": {"count": {"type": "int"}}},
+  "inkFixApply": "Düzgün şekle getir",
+  "inkShapeSuggestTitle": "Şekli tanı ve düzeltmeyi öner",
+  "inkShapeSuggestInfo": "Kabaca daire, dikdörtgen, üçgen, çizgi ya da ok çizince sağ altta küçük düğme çıkar; dokununca düzgün olur, geri al eski hâline döndürür.",
+  "inkMarkFixTitle": "Tik ve çarpıyı düzelt",
+  "inkMarkFixInfo": "Elle çizilen ✓ ve ✗ işaretleri için düzeltme düğmesi çıkar.",
+  "inkMarkFixAskTitle": "Otomatik düzeltme açılsın mı?",
+  "inkMarkFixAskBody": "Elle çizdiğin tik ve çarpılar temiz hâle getirilebilir. Her seferinde yanındaki küçük düğmeyle onaylarsın; kalem ayarlarından kapatabilirsin.",
+  "inkMarkFixAskYes": "Aç",
+  "inkMarkFixAskNo": "Hayır"
 }

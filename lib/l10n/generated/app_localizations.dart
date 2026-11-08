@@ -13687,6 +13687,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} istek bekliyor'**
   String friendsRequestsSummary(int count);
+
+  /// No description provided for @inkFixApply.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzgün şekle getir'**
+  String get inkFixApply;
+
+  /// No description provided for @inkShapeSuggestTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şekli tanı ve düzeltmeyi öner'**
+  String get inkShapeSuggestTitle;
+
+  /// No description provided for @inkShapeSuggestInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kabaca daire, dikdörtgen, üçgen, çizgi ya da ok çizince sağ altta küçük düğme çıkar; dokununca düzgün olur, geri al eski hâline döndürür.'**
+  String get inkShapeSuggestInfo;
+
+  /// No description provided for @inkMarkFixTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tik ve çarpıyı düzelt'**
+  String get inkMarkFixTitle;
+
+  /// No description provided for @inkMarkFixInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elle çizilen ✓ ve ✗ işaretleri için düzeltme düğmesi çıkar.'**
+  String get inkMarkFixInfo;
+
+  /// No description provided for @inkMarkFixAskTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik düzeltme açılsın mı?'**
+  String get inkMarkFixAskTitle;
+
+  /// No description provided for @inkMarkFixAskBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elle çizdiğin tik ve çarpılar temiz hâle getirilebilir. Her seferinde yanındaki küçük düğmeyle onaylarsın; kalem ayarlarından kapatabilirsin.'**
+  String get inkMarkFixAskBody;
+
+  /// No description provided for @inkMarkFixAskYes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aç'**
+  String get inkMarkFixAskYes;
+
+  /// No description provided for @inkMarkFixAskNo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hayır'**
+  String get inkMarkFixAskNo;
 }
 
 class _AppLocalizationsDelegate

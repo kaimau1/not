@@ -9,6 +9,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../domain/arrow.dart';
 import '../../domain/attachment.dart';
 import 'ink_pen.dart';
+import 'ink_recognize.dart';
 import 'ink_tools.dart';
 
 /// PDF ve slayt görüntüleyicilerinin ortak elle-yazma katmanı. Çizim dosyaya
@@ -40,6 +41,127 @@ class InkController extends ChangeNotifier {
     pressure = InkToolMemory.pressure;
     shapeSnap = InkToolMemory.shapeSnap;
     partialEraser = InkToolMemory.partialEraser;
+    shapeSuggest = InkToolMemory.shapeSuggest;
+  }
+
+  /// Çizgi bitince tanınan şekil için düzeltme işaretçisi (bkz.
+  /// [suggestion]).
+  bool shapeSuggest = true;
+
+  /// Son çizginin düzeltme önerisi: katman sağ altına küçük işaretçi koyar;
+  /// dokununca [applySuggestion]. Ayrı bildirici: çizgileri yeniden boyatmaz.
+  final suggestion = ValueNotifier<InkSuggestion?>(null);
+  Timer? _suggestTimer;
+
+  /// Çarpının ilk kolu / okun gövdesi için bir önceki serbest çizgi.
+  InkStroke? _lastFree;
+  DateTime _lastFreeAt = DateTime(0);
+  Size _lastFreeSize = Size.zero;
+
+  void setShapeSuggest(bool value) {
+    shapeSuggest = value;
+    InkToolMemory.saveShapeSuggest(value);
+    if (!value) dismissSuggestion();
+    notifyListeners();
+  }
+
+  void dismissSuggestion() {
+    _suggestTimer?.cancel();
+    suggestion.value = null;
+  }
+
+  static List<Offset> _pixels(InkStroke s, Size size) => [
+    for (var i = 0; i + 1 < s.points.length; i += 2)
+      Offset(s.points[i] * size.width, s.points[i + 1] * size.height),
+  ];
+
+  /// Biten serbest çizgiye öneri arar (saf geometri, `ink_recognize.dart`).
+  void _suggestFor(InkStroke stroke, Size size) {
+    if (size.isEmpty) return;
+    final marks = InkToolMemory.markFix != false && pen != InkPen.highlighter;
+    if (!shapeSuggest && !marks) return;
+    final prevStroke = _lastFree;
+    final prev =
+        prevStroke != null &&
+            prevStroke.page == stroke.page &&
+            _lastFreeSize == size &&
+            DateTime.now().difference(_lastFreeAt) <
+                const Duration(milliseconds: 2500) &&
+            _ink.any((s) => identical(s, prevStroke))
+        ? prevStroke
+        : null;
+    _lastFree = stroke;
+    _lastFreeAt = DateTime.now();
+    _lastFreeSize = size;
+    final fix = recognizeInkFix(
+      _pixels(stroke, size),
+      previous: prev == null ? null : _pixels(prev, size),
+      shapes: shapeSuggest,
+      marks: marks,
+    );
+    if (fix == null) return;
+    final replacements = [
+      for (final f in fix.strokes)
+        InkStroke(
+          page: stroke.page,
+          color: stroke.color,
+          width: stroke.width,
+          arrow: f.arrow,
+          points: [
+            for (final p in f.points) ...[
+              p.dx / size.width,
+              p.dy / size.height,
+            ],
+          ],
+        ),
+    ];
+    var right = 0.0, bottom = 0.0;
+    for (final r in replacements) {
+      for (var i = 0; i + 1 < r.points.length; i += 2) {
+        right = math.max(right, r.points[i]);
+        bottom = math.max(bottom, r.points[i + 1]);
+      }
+    }
+    _suggestTimer?.cancel();
+    suggestion.value = InkSuggestion(
+      kind: fix.kind,
+      page: stroke.page,
+      anchor: Offset(right, bottom),
+      originals: [?(fix.usesPrevious ? prev : null), stroke],
+      replacements: replacements,
+      needsConsent: fix.isMark && InkToolMemory.markFix == null,
+    );
+    _suggestTimer = Timer(const Duration(seconds: 6), dismissSuggestion);
+  }
+
+  /// Öneriyi uygular: özgün çizgi(ler) temiz hâliyle değişir; geri al eski
+  /// hâline döndürür.
+  void applySuggestion() {
+    final s = suggestion.value;
+    dismissSuggestion();
+    if (s == null) return;
+    bool isOriginal(InkStroke x) => s.originals.any((o) => identical(o, x));
+    final at = _ink.indexWhere(isOriginal);
+    if (at < 0 || s.originals.any((o) => !_ink.any((x) => identical(x, o)))) {
+      return;
+    }
+    _pushHistory(_ink);
+    final kept = [
+      for (final x in _ink)
+        if (!isOriginal(x)) x,
+    ];
+    final insertAt = math.min(at, kept.length);
+    _ink = [
+      ...kept.sublist(0, insertAt),
+      ...s.replacements,
+      ...kept.sublist(insertAt),
+    ];
+    _lastFree = null;
+    _selected = const [];
+    _dirty = true;
+    save();
+    HapticFeedback.selectionClick();
+    notifyListeners();
   }
 
   /// Çizim değişince güncel çizgi listesiyle çağrılır (kaydetme).
@@ -192,8 +314,7 @@ class InkController extends ChangeNotifier {
   /// Bu dokunuş avuç içi mi (bkz. [_stylusAt]).
   bool isPalm(PointerDeviceKind kind) =>
       kind == PointerDeviceKind.touch &&
-      (_stylusDown > 0 ||
-          DateTime.now().difference(_stylusAt) < _palmWindow);
+      (_stylusDown > 0 || DateTime.now().difference(_stylusAt) < _palmWindow);
 
   /// Sayfa katmanı bu dokunuşu üstlenir mi: çizen girdi ya da (kalem
   /// yazabiliyorken) yutulacak avuç.
@@ -446,6 +567,7 @@ class InkController extends ChangeNotifier {
   }
 
   void undo() {
+    dismissSuggestion();
     _selected = const [];
     if (_history.isNotEmpty) {
       _future.add(_ink);
@@ -463,6 +585,7 @@ class InkController extends ChangeNotifier {
   }
 
   void redo() {
+    dismissSuggestion();
     _selected = const [];
     if (_future.isEmpty) return;
     _history.add(_ink);
@@ -473,6 +596,7 @@ class InkController extends ChangeNotifier {
   }
 
   void clear() {
+    dismissSuggestion();
     if (_ink.isEmpty) return;
     _pushHistory(_ink);
     _dirty = true;
@@ -494,6 +618,7 @@ class InkController extends ChangeNotifier {
     // Firestore yankısında (kendi yazımımızınki dahil) katman boşuna
     // tazeleniyordu.
     if (_sameStrokes(_ink, strokes)) return;
+    dismissSuggestion();
     _dirty = false;
     _ink = [...strokes];
     _selected = const [];
@@ -616,6 +741,7 @@ class InkController extends ChangeNotifier {
       return;
     }
     hover.value = null;
+    if (suggestion.value != null) dismissSuggestion();
     _gestureBase = _ink;
     _tempEraser = stylusEraser;
     if (lasso && !_tempEraser) {
@@ -711,7 +837,9 @@ class InkController extends ChangeNotifier {
   @override
   void dispose() {
     _holdTimer?.cancel();
+    _suggestTimer?.cancel();
     hover.dispose();
+    suggestion.dispose();
     super.dispose();
   }
 
@@ -894,6 +1022,8 @@ class InkController extends ChangeNotifier {
     } else if (stylus) {
       _lastStrokeEnd = DateTime.now();
     }
+    final wasErasing = _erasing;
+    final wasSnapped = _snapped;
     _tempEraser = false;
     _holdTimer?.cancel();
     _snapped = false;
@@ -925,6 +1055,17 @@ class InkController extends ChangeNotifier {
     _gestureBase = null;
     if (base != null && !_sameInstances(base, _ink)) _pushHistory(base);
     save();
+    // Serbest çizgi bitti: şekil / tik / çarpı önerisi (tutup oturtulmuşsa
+    // zaten şekil).
+    if (active != null &&
+        !active.arrow &&
+        shape == null &&
+        !wasErasing &&
+        !wasSnapped &&
+        !lasso &&
+        _ink.any((s) => identical(s, active))) {
+      _suggestFor(active, _activeSize);
+    }
     notifyListeners();
   }
 
@@ -1057,6 +1198,29 @@ class InkController extends ChangeNotifier {
 
 /// Bir sayfanın/slaytın üstüne serilen dokunma + çizim katmanı. İçeren
 /// widget'ın tüm alanını kaplar (sayfa boyutu [LayoutBuilder]'dan alınır).
+/// Bekleyen çizim düzeltmesi (bkz. [InkController.suggestion]).
+class InkSuggestion {
+  const InkSuggestion({
+    required this.kind,
+    required this.page,
+    required this.anchor,
+    required this.originals,
+    required this.replacements,
+    this.needsConsent = false,
+  });
+
+  final InkFixKind kind;
+  final int page;
+
+  /// Temiz şeklin sağ alt köşesi (oranlı).
+  final Offset anchor;
+  final List<InkStroke> originals;
+  final List<InkStroke> replacements;
+
+  /// Tik/çarpı ilk kez: önce "otomatik düzeltme açılsın mı" sorulur.
+  final bool needsConsent;
+}
+
 class InkPageLayer extends StatelessWidget {
   const InkPageLayer({
     super.key,
@@ -1113,7 +1277,7 @@ class InkPageLayer extends StatelessWidget {
             }
           }
 
-          return MouseRegion(
+          final layer = MouseRegion(
             opaque: false,
             // Artı imleç: alttaki metnin "I" imleci kalırsa göz ucuna bakar,
             // tıklama ise ortasından olur — çizgi "biraz yukarıda" çıkıyordu
@@ -1195,7 +1359,124 @@ class InkPageLayer extends StatelessWidget {
               ),
             ),
           );
+          // Düzeltme işaretçisi Listener'ın ÜSTÜNDE: dokunuşu çizime gitmez.
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              layer,
+              ValueListenableBuilder<InkSuggestion?>(
+                valueListenable: controller.suggestion,
+                builder: (context, s, _) {
+                  if (s == null || s.page != page) {
+                    return const SizedBox.shrink();
+                  }
+                  const box = 36.0;
+                  var left = s.anchor.dx * size.width + 2;
+                  var top = s.anchor.dy * size.height + 2;
+                  if (constraints.maxWidth.isFinite) {
+                    left = left.clamp(0.0, constraints.maxWidth - box);
+                  }
+                  if (constraints.maxHeight.isFinite) {
+                    top = top.clamp(0.0, constraints.maxHeight - box);
+                  }
+                  return Positioned(
+                    left: left,
+                    top: top,
+                    child: InkFixMarker(
+                      suggestion: s,
+                      onApply: () => _applyWithConsent(context, s),
+                    ),
+                  );
+                },
+              ),
+            ],
+          );
         },
+      ),
+    );
+  }
+
+  /// Tik/çarpı ilk kez: "otomatik düzeltme açılsın mı" (varsayılan kapalı).
+  Future<void> _applyWithConsent(BuildContext context, InkSuggestion s) async {
+    if (!s.needsConsent) {
+      controller.applySuggestion();
+      return;
+    }
+    final l10n = context.l10n;
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.inkMarkFixAskTitle),
+        content: Text(l10n.inkMarkFixAskBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.inkMarkFixAskNo),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.inkMarkFixAskYes),
+          ),
+        ],
+      ),
+    );
+    if (yes == null) return;
+    InkToolMemory.saveMarkFix(yes);
+    if (yes && identical(controller.suggestion.value, s)) {
+      controller.applySuggestion();
+    } else {
+      controller.dismissSuggestion();
+    }
+  }
+}
+
+/// Çizginin sağ altındaki küçük düzeltme düğmesi: önerilen şeklin simgesi.
+class InkFixMarker extends StatelessWidget {
+  const InkFixMarker({
+    super.key,
+    required this.suggestion,
+    required this.onApply,
+  });
+
+  final InkSuggestion suggestion;
+  final VoidCallback onApply;
+
+  static IconData iconOf(InkFixKind kind) => switch (kind) {
+    InkFixKind.line => Icons.horizontal_rule_rounded,
+    InkFixKind.arrow => Icons.north_east_rounded,
+    InkFixKind.rectangle => Icons.crop_square_rounded,
+    InkFixKind.ellipse => Icons.circle_outlined,
+    InkFixKind.triangle => Icons.change_history_rounded,
+    InkFixKind.tick => Icons.check_rounded,
+    InkFixKind.cross => Icons.close_rounded,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      label: context.l10n.inkFixApply,
+      child: Tooltip(
+        message: context.l10n.inkFixApply,
+        child: Material(
+          key: const ValueKey('ink-fix-marker'),
+          color: scheme.primaryContainer,
+          shape: const CircleBorder(),
+          elevation: 3,
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onApply,
+            child: SizedBox.square(
+              dimension: 36,
+              child: Icon(
+                iconOf(suggestion.kind),
+                size: 20,
+                color: scheme.onPrimaryContainer,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1471,6 +1752,26 @@ class InkSettingsSheet extends StatelessWidget {
               subtitle: Text(l10n.inkShapeSnapInfo),
               value: controller.shapeSnap,
               onChanged: controller.setShapeSnap,
+            ),
+            SwitchListTile(
+              key: const ValueKey('ink-shape-suggest'),
+              contentPadding: EdgeInsets.zero,
+              secondary: const Icon(Icons.auto_fix_high_rounded),
+              title: Text(l10n.inkShapeSuggestTitle),
+              subtitle: Text(l10n.inkShapeSuggestInfo),
+              value: controller.shapeSuggest,
+              onChanged: controller.setShapeSuggest,
+            ),
+            StatefulBuilder(
+              builder: (context, setLocal) => SwitchListTile(
+                key: const ValueKey('ink-mark-fix'),
+                contentPadding: EdgeInsets.zero,
+                secondary: const Icon(Icons.rule_rounded),
+                title: Text(l10n.inkMarkFixTitle),
+                subtitle: Text(l10n.inkMarkFixInfo),
+                value: InkToolMemory.markFix ?? false,
+                onChanged: (v) => setLocal(() => InkToolMemory.saveMarkFix(v)),
+              ),
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
@@ -1842,8 +2143,7 @@ class _AutoStylusSwitchState extends State<_AutoStylusSwitch> {
       title: Text(l10n.inkAutoStylusTitle),
       subtitle: Text(l10n.inkAutoStylusInfo),
       value: InkToolMemory.autoStylus,
-      onChanged: (value) =>
-          setState(() => InkToolMemory.saveAutoStylus(value)),
+      onChanged: (value) => setState(() => InkToolMemory.saveAutoStylus(value)),
     );
   }
 }

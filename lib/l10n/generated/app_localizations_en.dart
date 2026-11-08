@@ -7687,4 +7687,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String friendsRequestsSummary(int count) {
     return '$count pending';
   }
+
+  @override
+  String get inkFixApply => 'Tidy up shape';
+
+  @override
+  String get inkShapeSuggestTitle => 'Recognize shapes';
+
+  @override
+  String get inkShapeSuggestInfo =>
+      'After a rough circle, rectangle, triangle, line or arrow a small button appears; tap it to tidy the shape (undo restores it).';
+
+  @override
+  String get inkMarkFixTitle => 'Tidy ticks and crosses';
+
+  @override
+  String get inkMarkFixInfo =>
+      'Shows a tidy-up button for hand-drawn ✓ and ✗ marks.';
+
+  @override
+  String get inkMarkFixAskTitle => 'Turn on tick and cross tidy-up?';
+
+  @override
+  String get inkMarkFixAskBody =>
+      'Hand-drawn ticks and crosses can be tidied. You confirm each one with the small button next to it; you can turn this off in pen settings.';
+
+  @override
+  String get inkMarkFixAskYes => 'Turn on';
+
+  @override
+  String get inkMarkFixAskNo => 'No';
 }

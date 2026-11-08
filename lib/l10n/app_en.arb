@@ -2800,5 +2800,14 @@
   "friendsCountSummary": "{count, plural, =0{No contacts yet} =1{1 contact} other{{count} contacts}}",
   "@friendsCountSummary": {"placeholders": {"count": {"type": "int"}}},
   "friendsRequestsSummary": "{count} pending",
-  "@friendsRequestsSummary": {"placeholders": {"count": {"type": "int"}}}
+  "@friendsRequestsSummary": {"placeholders": {"count": {"type": "int"}}},
+  "inkFixApply": "Tidy up shape",
+  "inkShapeSuggestTitle": "Recognize shapes",
+  "inkShapeSuggestInfo": "After a rough circle, rectangle, triangle, line or arrow a small button appears; tap it to tidy the shape (undo restores it).",
+  "inkMarkFixTitle": "Tidy ticks and crosses",
+  "inkMarkFixInfo": "Shows a tidy-up button for hand-drawn ✓ and ✗ marks.",
+  "inkMarkFixAskTitle": "Turn on tick and cross tidy-up?",
+  "inkMarkFixAskBody": "Hand-drawn ticks and crosses can be tidied. You confirm each one with the small button next to it; you can turn this off in pen settings.",
+  "inkMarkFixAskYes": "Turn on",
+  "inkMarkFixAskNo": "No"
 }

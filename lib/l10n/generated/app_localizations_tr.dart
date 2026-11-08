@@ -7664,4 +7664,34 @@ class AppLocalizationsTr extends AppLocalizations {
   String friendsRequestsSummary(int count) {
     return '$count istek bekliyor';
   }
+
+  @override
+  String get inkFixApply => 'Düzgün şekle getir';
+
+  @override
+  String get inkShapeSuggestTitle => 'Şekli tanı ve düzeltmeyi öner';
+
+  @override
+  String get inkShapeSuggestInfo =>
+      'Kabaca daire, dikdörtgen, üçgen, çizgi ya da ok çizince sağ altta küçük düğme çıkar; dokununca düzgün olur, geri al eski hâline döndürür.';
+
+  @override
+  String get inkMarkFixTitle => 'Tik ve çarpıyı düzelt';
+
+  @override
+  String get inkMarkFixInfo =>
+      'Elle çizilen ✓ ve ✗ işaretleri için düzeltme düğmesi çıkar.';
+
+  @override
+  String get inkMarkFixAskTitle => 'Otomatik düzeltme açılsın mı?';
+
+  @override
+  String get inkMarkFixAskBody =>
+      'Elle çizdiğin tik ve çarpılar temiz hâle getirilebilir. Her seferinde yanındaki küçük düğmeyle onaylarsın; kalem ayarlarından kapatabilirsin.';
+
+  @override
+  String get inkMarkFixAskYes => 'Aç';
+
+  @override
+  String get inkMarkFixAskNo => 'Hayır';
 }
