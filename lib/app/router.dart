@@ -311,11 +311,15 @@ final deepLinkHandlerProvider = Provider<void>((ref) {
     if (uri.host == 'new') {
       final repo = ref.read(notesRepositoryProvider);
       if (repo == null) return; // Oturum yoksa sessizce geç.
+      // type=draw: "Kalemle yaz" kısayolu — boş metin notu kalem kipinde.
+      final draw = uri.queryParameters['type'] == 'draw';
       Future(() async {
         final id = await repo.createNote(
-          NoteType.fromId(uri.queryParameters['type']),
+          draw ? NoteType.text : NoteType.fromId(uri.queryParameters['type']),
         );
-        unawaited(router.pushNote(noteRoutePath(id)));
+        unawaited(
+          router.pushNote(noteRoutePath(id, query: draw ? '?draw=1' : '')),
+        );
       });
     }
   }

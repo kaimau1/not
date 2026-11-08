@@ -5,9 +5,10 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../domain/reminder_repeat.dart';
+import 'reminder_level_ui.dart';
 
 /// Hatırlatıcı levhasının sonucu: [at] null ise hatırlatıcı KALDIRILDI.
-typedef ReminderChoice = ({DateTime? at, String repeat});
+typedef ReminderChoice = ({DateTime? at, String repeat, String level});
 
 /// **TEK HATIRLATICI LEVHASI** (kullanıcı isteği 2026-11-06: "hatırlatmaları
 /// ayarlamak, düzenlemek, silmek çok zor; ekrana uymuyor, alt tarafta telefon
@@ -28,19 +29,28 @@ Future<ReminderChoice?> showReminderSheet(
   BuildContext context, {
   DateTime? current,
   String repeat = '',
+  String level = '',
 }) => showAppSheet<ReminderChoice>(
   context: context,
   showDragHandle: true,
   isScrollControlled: true,
-  builder: (_) => ReminderSheet(current: current, repeat: repeat),
+  builder: (_) => ReminderSheet(current: current, repeat: repeat, level: level),
 );
 
 @visibleForTesting
 class ReminderSheet extends StatefulWidget {
-  const ReminderSheet({super.key, this.current, this.repeat = ''});
+  const ReminderSheet({
+    super.key,
+    this.current,
+    this.repeat = '',
+    this.level = '',
+  });
 
   final DateTime? current;
   final String repeat;
+
+  /// Bildirim önem düzeyi (`ReminderLevel.id`).
+  final String level;
 
   @override
   State<ReminderSheet> createState() => _ReminderSheetState();
@@ -49,6 +59,7 @@ class ReminderSheet extends StatefulWidget {
 class _ReminderSheetState extends State<ReminderSheet> {
   late DateTime _at = _initial();
   late RepeatKind _kind = ReminderRepeat.parse(widget.repeat).kind;
+  late String _level = widget.level;
   late final Set<int> _days = {
     ...(ReminderRepeat.parse(widget.repeat).kind == RepeatKind.weekly
         ? ReminderRepeat.parse(widget.repeat).days
@@ -138,6 +149,7 @@ class _ReminderSheetState extends State<ReminderSheet> {
     Navigator.pop<ReminderChoice>(context, (
       at: _at,
       repeat: _repeat().encode(),
+      level: _level,
     ));
   }
 
@@ -164,174 +176,193 @@ class _ReminderSheetState extends State<ReminderSheet> {
     return Padding(
       // Klavye yok; yine de yatay ekranda taşmasın diye kaydırılır.
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(l10n.reminderSheetTitle, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 12),
-            // SEÇİLİ ZAMAN — büyük, tek bakışta.
-            Container(
-              key: const ValueKey('reminder-sheet-summary'),
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              decoration: BoxDecoration(
-                color: _past ? scheme.errorContainer : scheme.primaryContainer,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
+      // Kaydet/Kaldır satırı SABİT (kaydırılan içerikte değil): önem
+      // düzeyi seçicisi levhayı uzattı, düğme ekranın altına iniyordu.
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    _kind == RepeatKind.none ? Icons.alarm : Icons.repeat,
-                    color: _past
-                        ? scheme.onErrorContainer
-                        : scheme.onPrimaryContainer,
+                  Text(
+                    l10n.reminderSheetTitle,
+                    style: theme.textTheme.titleMedium,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 12),
+                  // SEÇİLİ ZAMAN — büyük, tek bakışta.
+                  Container(
+                    key: const ValueKey('reminder-sheet-summary'),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                    decoration: BoxDecoration(
+                      color: _past
+                          ? scheme.errorContainer
+                          : scheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
                       children: [
-                        Text(
-                          timeLabel,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: _past
-                                ? scheme.onErrorContainer
-                                : scheme.onPrimaryContainer,
-                          ),
+                        Icon(
+                          _kind == RepeatKind.none ? Icons.alarm : Icons.repeat,
+                          color: _past
+                              ? scheme.onErrorContainer
+                              : scheme.onPrimaryContainer,
                         ),
-                        Text(
-                          _past ? l10n.reminderInPast : dayLabel,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: _past
-                                ? scheme.onErrorContainer
-                                : scheme.onPrimaryContainer,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                timeLabel,
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: _past
+                                      ? scheme.onErrorContainer
+                                      : scheme.onPrimaryContainer,
+                                ),
+                              ),
+                              Text(
+                                _past ? l10n.reminderInPast : dayLabel,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: _past
+                                      ? scheme.onErrorContainer
+                                      : scheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final (label, at) in quick)
+                        ChoiceChip(
+                          label: Text(label),
+                          selected: at == _at,
+                          onSelected: (_) => setState(() => _at = at),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          key: const ValueKey('reminder-sheet-date'),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                          ),
+                          onPressed: _pickDate,
+                          icon: const Icon(Icons.event_outlined, size: 18),
+                          label: Text(
+                            DateFormat('d MMM EEE', locale).format(_at),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          key: const ValueKey('reminder-sheet-time'),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                          ),
+                          onPressed: _pickTime,
+                          icon: const Icon(Icons.schedule, size: 18),
+                          label: Text(timeLabel),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.repeatTitle,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      for (final k in RepeatKind.values)
+                        ChoiceChip(
+                          key: ValueKey('reminder-repeat-${k.name}'),
+                          label: Text(kindLabel(k)),
+                          selected: _kind == k,
+                          onSelected: (_) => setState(() => _kind = k),
+                        ),
+                    ],
+                  ),
+                  if (_kind == RepeatKind.weekly) ...[
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        for (var d = 1; d <= 7; d++)
+                          FilterChip(
+                            label: Text(names[d % 7]),
+                            selected: _days.contains(d),
+                            onSelected: (on) => setState(() {
+                              if (on) {
+                                _days.add(d);
+                              } else if (_days.length > 1) {
+                                _days.remove(d);
+                              }
+                            }),
+                          ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  ReminderLevelPicker(
+                    value: _level,
+                    onChanged: (v) => setState(() => _level = v),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final (label, at) in quick)
-                  ChoiceChip(
-                    label: Text(label),
-                    selected: at == _at,
-                    onSelected: (_) => setState(() => _at = at),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              if (hasExisting)
+                TextButton.icon(
+                  key: const ValueKey('reminder-sheet-remove'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: scheme.error,
+                    minimumSize: const Size(48, 48),
                   ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    key: const ValueKey('reminder-sheet-date'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(48),
-                    ),
-                    onPressed: _pickDate,
-                    icon: const Icon(Icons.event_outlined, size: 18),
-                    label: Text(
-                      DateFormat('d MMM EEE', locale).format(_at),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+                  onPressed: () => Navigator.pop<ReminderChoice>(context, (
+                    at: null,
+                    repeat: '',
+                    level: '',
+                  )),
+                  icon: const Icon(Icons.alarm_off_outlined),
+                  label: Text(l10n.reminderSheetRemove),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    key: const ValueKey('reminder-sheet-time'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(48),
-                    ),
-                    onPressed: _pickTime,
-                    icon: const Icon(Icons.schedule, size: 18),
-                    label: Text(timeLabel),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.repeatTitle,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final k in RepeatKind.values)
-                  ChoiceChip(
-                    key: ValueKey('reminder-repeat-${k.name}'),
-                    label: Text(kindLabel(k)),
-                    selected: _kind == k,
-                    onSelected: (_) => setState(() => _kind = k),
-                  ),
-              ],
-            ),
-            if (_kind == RepeatKind.weekly) ...[
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: [
-                  for (var d = 1; d <= 7; d++)
-                    FilterChip(
-                      label: Text(names[d % 7]),
-                      selected: _days.contains(d),
-                      onSelected: (on) => setState(() {
-                        if (on) {
-                          _days.add(d);
-                        } else if (_days.length > 1) {
-                          _days.remove(d);
-                        }
-                      }),
-                    ),
-                ],
+              const Spacer(),
+              FilledButton(
+                key: const ValueKey('reminder-sheet-save'),
+                style: FilledButton.styleFrom(minimumSize: const Size(96, 48)),
+                onPressed: _past ? null : _save,
+                child: Text(l10n.reminderSheetSave),
               ),
             ],
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                if (hasExisting)
-                  TextButton.icon(
-                    key: const ValueKey('reminder-sheet-remove'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: scheme.error,
-                      minimumSize: const Size(48, 48),
-                    ),
-                    onPressed: () => Navigator.pop<ReminderChoice>(context, (
-                      at: null,
-                      repeat: '',
-                    )),
-                    icon: const Icon(Icons.alarm_off_outlined),
-                    label: Text(l10n.reminderSheetRemove),
-                  ),
-                const Spacer(),
-                FilledButton(
-                  key: const ValueKey('reminder-sheet-save'),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size(96, 48),
-                  ),
-                  onPressed: _past ? null : _save,
-                  child: Text(l10n.reminderSheetSave),
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -345,15 +376,16 @@ void applyReminderChoice(
   required ReminderChoice choice,
   required DateTime? previousAt,
   required String previousRepeat,
-  required void Function(DateTime? at, String repeat) write,
+  String previousLevel = '',
+  required void Function(DateTime? at, String repeat, String level) write,
 }) {
-  write(choice.at, choice.repeat);
+  write(choice.at, choice.repeat, choice.level);
   if (choice.at == null && previousAt != null && context.mounted) {
     showUndoSnackBar(
       context,
       message: context.l10n.reminderRemoved,
       undoLabel: context.l10n.undo,
-      onUndo: () => write(previousAt, previousRepeat),
+      onUndo: () => write(previousAt, previousRepeat, previousLevel),
     );
   }
 }

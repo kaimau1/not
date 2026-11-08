@@ -8,6 +8,10 @@
         android:protectionLevel="signature|knownSigner"
         android:knownCerts="@array/kopru_sertifikalari" />
 
+    <!-- Acil hatırlatıcı tam ekran (ReminderLevel.urgent). Play'de beyan ister:
+         yalnız kişisel derlemede. -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
     <application>
         <receiver android:name=".HaritaNotAlici"
             android:exported="true"

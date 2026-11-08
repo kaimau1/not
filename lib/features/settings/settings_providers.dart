@@ -242,6 +242,13 @@ final followSystemTextScaleProvider = boolPref(
   defaultValue: false,
 );
 
+/// **YAZARKEN ALT ÇUBUK GİZLENİR** (2026-11-08): yazma sürerken editörün alt
+/// çubuğu iner, yazma durunca hemen geri gelir (bkz. `_TypingHide`).
+final hideBarWhileTypingProvider = boolPref(
+  'hide_bar_while_typing',
+  defaultValue: true,
+);
+
 /// Yazı boyutu çarpanı. Sistem ayarının YERİNE geçer (bkz. `fixedTypography`).
 final fontScaleProvider = NotifierProvider<FontScaleNotifier, double>(
   FontScaleNotifier.new,

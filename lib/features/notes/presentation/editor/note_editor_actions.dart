@@ -202,6 +202,7 @@ extension _EditorActions on _NoteEditorScreenState {
       context,
       current: note.reminderAt,
       repeat: note.reminderRepeat,
+      level: note.reminderLevel,
     );
     if (choice == null || !mounted) return;
     applyReminderChoice(
@@ -209,10 +210,15 @@ extension _EditorActions on _NoteEditorScreenState {
       choice: choice,
       previousAt: note.reminderAt,
       previousRepeat: note.reminderRepeat,
-      write: (at, repeat) => _mutate(
+      previousLevel: note.reminderLevel,
+      write: (at, repeat, level) => _mutate(
         (n) => at == null
             ? n.copyWith(clearReminderAt: true)
-            : n.copyWith(reminderAt: at, reminderRepeat: repeat),
+            : n.copyWith(
+                reminderAt: at,
+                reminderRepeat: repeat,
+                reminderLevel: level,
+              ),
         immediate: true,
       ),
     );

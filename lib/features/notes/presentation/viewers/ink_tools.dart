@@ -58,9 +58,7 @@ List<double> inkShapePoints(
 /// [points] EKRAN (piksel) uzayında olmalı — oranlı uzayda sayfanın eni ve
 /// boyu ayrı ölçeklendiği için daire elips, kare dikdörtgen görünürdü.
 /// Tanınmazsa null.
-({InkShape shape, Offset a, Offset b})? recognizeInkShape(
-  List<Offset> points,
-) {
+({InkShape shape, Offset a, Offset b})? recognizeInkShape(List<Offset> points) {
   if (points.length < 6) return null;
   var length = 0.0;
   var left = double.infinity, top = double.infinity;
@@ -132,8 +130,7 @@ bool inkPointInPolygon(double x, double y, List<double> polygon) {
   for (var i = 0, j = n - 1; i < n; j = i++) {
     final xi = polygon[2 * i], yi = polygon[2 * i + 1];
     final xj = polygon[2 * j], yj = polygon[2 * j + 1];
-    if ((yi > y) != (yj > y) &&
-        x < (xj - xi) * (y - yi) / (yj - yi) + xi) {
+    if ((yi > y) != (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) {
       inside = !inside;
     }
   }
@@ -162,9 +159,25 @@ class InkToolMemory {
   static const _kShapeSnap = 'ink_shape_snap';
   static const _kPartialEraser = 'ink_partial_eraser';
   static const _kAutoStylus = 'ink_auto_stylus';
+  static const _kShapeSuggest = 'ink_shape_suggest';
+  static const _kMarkFix = 'ink_mark_fix';
+  static const _kPresets = 'ink_presets';
 
   /// Basılı tutunca şekle dönüştür ([recognizeInkShape]).
   static bool shapeSnap = true;
+
+  /// Çizgi bitince tanınan şekil için sağ altta düzeltme işaretçisi
+  /// (`ink_recognize.dart`).
+  static bool shapeSuggest = true;
+
+  /// Tik/çarpı düzeltmesi: null = hiç sorulmadı (ilk algılamada sorulur),
+  /// varsayılan KAPALI (kullanıcı isteği 2026-11-08).
+  static bool? markFix;
+
+  /// Kapsüle SABİTLENEN kalemler (kullanıcı isteği 2026-11-08): tür + renk +
+  /// kalınlık, en çok [maxPresets]. Cihaz tercihi.
+  static List<InkPreset> presets = [];
+  static const maxPresets = 5;
 
   /// Silgi çizginin YALNIZ değdiği kısmını siler (kapalıyken bütün çizgi).
   static bool partialEraser = false;
@@ -205,6 +218,12 @@ class InkToolMemory {
     shapeSnap = prefs.getBool(_kShapeSnap) ?? true;
     partialEraser = prefs.getBool(_kPartialEraser) ?? false;
     autoStylus = prefs.getBool(_kAutoStylus) ?? true;
+    shapeSuggest = prefs.getBool(_kShapeSuggest) ?? true;
+    markFix = prefs.getBool(_kMarkFix);
+    presets = [
+      for (final s in prefs.getStringList(_kPresets) ?? const <String>[])
+        ?InkPreset.decode(s),
+    ];
     recentColors = [
       for (final s in prefs.getStringList(_kRecent) ?? const <String>[])
         ?int.tryParse(s),
@@ -226,6 +245,21 @@ class InkToolMemory {
   static void savePartialEraser(bool value) {
     partialEraser = value;
     _prefs?.setBool(_kPartialEraser, value);
+  }
+
+  static void saveShapeSuggest(bool value) {
+    shapeSuggest = value;
+    _prefs?.setBool(_kShapeSuggest, value);
+  }
+
+  static void saveMarkFix(bool value) {
+    markFix = value;
+    _prefs?.setBool(_kMarkFix, value);
+  }
+
+  static void savePresets(List<InkPreset> value) {
+    presets = value.take(maxPresets).toList();
+    _prefs?.setStringList(_kPresets, [for (final p in presets) p.encode()]);
   }
 
   static void saveAutoStylus(bool value) {
@@ -279,5 +313,44 @@ class InkToolMemory {
     shapeSnap = true;
     partialEraser = false;
     autoStylus = true;
+    shapeSuggest = true;
+    markFix = null;
+    presets = [];
   }
+}
+
+/// Sabitlenmiş kalem: tür ([InkPen] sırası), renk (ARGB, saydamlıksız
+/// seçilen renk) ve kalınlık (px). Kayıt biçimi `tür|renk|kalınlık`.
+class InkPreset {
+  const InkPreset({
+    required this.pen,
+    required this.color,
+    required this.width,
+  });
+
+  final int pen;
+  final int color;
+  final double width;
+
+  String encode() => '$pen|$color|${width.toStringAsFixed(1)}';
+
+  static InkPreset? decode(String s) {
+    final parts = s.split('|');
+    if (parts.length != 3) return null;
+    final pen = int.tryParse(parts[0]);
+    final color = int.tryParse(parts[1]);
+    final width = double.tryParse(parts[2]);
+    if (pen == null || color == null || width == null || pen < 0) return null;
+    return InkPreset(pen: pen, color: color, width: width);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is InkPreset &&
+      other.pen == pen &&
+      other.color == color &&
+      (other.width - width).abs() < 0.05;
+
+  @override
+  int get hashCode => Object.hash(pen, color, width.round());
 }

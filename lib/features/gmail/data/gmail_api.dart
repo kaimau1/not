@@ -38,11 +38,16 @@ class GmailSummary {
     this.hasAttachments = false,
     this.unread = false,
     this.starred = false,
+    this.tags = const [],
   });
   final String id;
   final String subject;
   final String from;
   final String snippet;
+
+  /// Liste çipleri: Gmail kategori/önem etiketlerinden (`promotions`,
+  /// `social`, `updates`, `forums`, `important`). YALNIZ GÖSTERİM.
+  final List<String> tags;
   final DateTime? date;
   final bool hasAttachments;
 
@@ -232,6 +237,13 @@ GmailSummary parseSummary(Map<String, dynamic> j) {
     hasAttachments: hasAttachments,
     unread: labels.contains('UNREAD'),
     starred: labels.contains('STARRED'),
+    tags: [
+      if (labels.contains('IMPORTANT')) 'important',
+      if (labels.contains('CATEGORY_PROMOTIONS')) 'promotions',
+      if (labels.contains('CATEGORY_SOCIAL')) 'social',
+      if (labels.contains('CATEGORY_UPDATES')) 'updates',
+      if (labels.contains('CATEGORY_FORUMS')) 'forums',
+    ],
   );
 }
 

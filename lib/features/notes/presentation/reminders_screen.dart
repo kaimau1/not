@@ -198,6 +198,7 @@ class RemindersScreen extends ConsumerWidget {
       context,
       current: note.reminderAt,
       repeat: note.reminderRepeat,
+      level: note.reminderLevel,
     );
     if (choice == null || !context.mounted) return;
     applyReminderChoice(
@@ -205,7 +206,9 @@ class RemindersScreen extends ConsumerWidget {
       choice: choice,
       previousAt: note.reminderAt,
       previousRepeat: note.reminderRepeat,
-      write: (at, repeat) => repo.setReminder(note.id, at, repeat: repeat),
+      previousLevel: note.reminderLevel,
+      write: (at, repeat, level) =>
+          repo.setReminder(note.id, at, repeat: repeat, level: level),
     );
     if (choice.at != null && context.mounted) {
       unawaited(maybeShowAutoStartHint(context));
@@ -223,8 +226,8 @@ class RemindersScreen extends ConsumerWidget {
     // Hatırlatıcı TEK yazımda: createNote + ayrı setReminder arasında doküman
     // bir an hatırlatıcısız kalıyordu (boş-doküman penceresi kuralı).
     final id = await repo.createNote(NoteType.text, reminderAt: picked);
-    if (choice!.repeat.isNotEmpty) {
-      repo.setReminder(id, picked, repeat: choice.repeat);
+    if (choice!.repeat.isNotEmpty || choice.level.isNotEmpty) {
+      repo.setReminder(id, picked, repeat: choice.repeat, level: choice.level);
     }
     if (!context.mounted) return;
     unawaited(maybeShowAutoStartHint(context));

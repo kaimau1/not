@@ -81,6 +81,8 @@ import '../../../settings/settings_providers.dart';
 import '../../../calendar/data/task_note_sync.dart';
 import '../../../calendar/presentation/note_calendar_links.dart';
 import '../../../calendar/presentation/task_editor.dart';
+import '../../../calendar/presentation/line_task_chip.dart';
+import 'editor_quick_row.dart';
 import '../../../calendar/presentation/event_editor.dart';
 import '../../../calendar/domain/agenda.dart' show noteDateSuggestion;
 import '../../../../core/utils/spoken_datetime.dart' show parseSpokenDateTimeNow;
@@ -889,6 +891,33 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Biçim çubuğu açık mı (alt çubuktaki "Aa" düğmesi açıp kapatır).
   bool _formatBarOpen = false;
 
+  /// Yazma sürüyor mu (alt çubuk gizleme, bkz. [_TypingHide]). Yalnız bu
+  /// bildirici değişir: ekran setState ile yeniden kurulmaz.
+  final _typingN = ValueNotifier<bool>(false);
+  Timer? _typingTimer;
+
+  /// Klavye açıkken her metin değişiminde çağrılır; durunca çubuk geri gelir.
+  void _noteTyping() {
+    if (_keyboardInset <= 0 || !ref.read(hideBarWhileTypingProvider)) return;
+    if (!_typingN.value) {
+      _typingN.value = true;
+      final prefs = ref.read(sharedPreferencesProvider);
+      if (TipOnce.due(prefs, TipOnce.typingBarHide, sessionLimit: false)) {
+        TipOnce.show(
+          context,
+          prefs,
+          TipOnce.typingBarHide,
+          context.l10n.tipHideBarTyping,
+          sessionLimit: false,
+        );
+      }
+    }
+    _typingTimer?.cancel();
+    _typingTimer = Timer(const Duration(milliseconds: 650), () {
+      _typingN.value = false;
+    });
+  }
+
   /// Alt çubukta son karede "Notta ara" / "Paylaş" görünüyor muydu (F12.1):
   /// ⋮ menüsü çubukta duranı tekrar etmez, düşeni Araçlar'da gösterir.
   /// Kurulum sırasında yazılır (setState yok — yalnız menü açılınca okunur).
@@ -1421,16 +1450,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// kodlaması (K3) kapanış karelerine binmesin. Kayıt kaybolmaz: rota
   /// kalkınca [dispose] içindeki [_saveNow] yazar; geri çekme jesti
   /// vazgeçilirse zamanlayıcı yeniden kurulur.
+  ///
+  /// **KAPANIŞ KASMASI (2026-11-08):** sıralama tutması burada BIRAKILMAZ —
+  /// eskiden kapanışın ilk karesinde (mikro görev) bırakılıyordu: o karede
+  /// zaten panonun duraklatılmış abonelikleri sürüp `filteredNotesProvider`
+  /// yeniden hesaplanıyor (F23.2 ölçümü ~3-4 ms) ve tutma bırakılınca İKİNCİ
+  /// kez hesaplanıp pano ekranı yeniden kuruluyordu. Görünür faydası da yoktu:
+  /// pano kapanış boyunca `FreezeWhenHidden` ile DONUK, küçülen not kartın
+  /// donuk (eski) yerine iner. Bırakma rota kalkınca ([dispose]); yeni sıra
+  /// panonun kapanış sonrası yetişmesine (+120 ms) katılır.
   void _holdSaveWhileClosing() {
-    final id = widget.noteId;
-    final hold = _sortHold;
     if (noteRouteClosing.value) {
       _debouncer.pause();
-      // Pano görünmeden ÖNCE yerine otursun: küçülen not yeni yerine iner.
-      unawaited(Future.microtask(() => hold?.release(id)));
     } else {
       _debouncer.resume();
-      unawaited(Future.microtask(() => hold?.hold(id)));
     }
   }
 
@@ -1446,11 +1479,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// satırlarında zaman ifadesi varsa ve notun hatırlatıcısı yoksa, kapanışta
   /// tek bildirim: "Takvime ekle?". Yazarken hiçbir şey çalışmaz (tuş
   /// başına iş yok — akıcılık bütçesi); yalnız çıkışta bir kez ayrıştırılır.
-  void _suggestCalendar() {
+  void _suggestCalendar(bool readOnly) {
     final note = _note;
     // `_readOnly` değil: ref atılırken okunamaz.
     if (note == null ||
-        widget.readOnly ||
+        readOnly ||
         note.locked ||
         note.reminderAt != null) {
       return;
@@ -1506,6 +1539,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   @override
   void dispose() {
     _stopFileDrops();
+    _typingTimer?.cancel();
+    _typingN.dispose();
     WidgetsBinding.instance.removeObserver(this);
     noteRouteClosing.removeListener(_holdSaveWhileClosing);
     openEditorNoteIds.remove(widget.noteId);
@@ -1545,7 +1580,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // yazmazdı — _saveNow aynı drift ağını çıkış yolunda da kurar.
     _saveNow();
     _stampServerTimeOnExit();
-    _suggestCalendar();
+    // Tarih ayrıştırma (2000 karakter, düzenli ifadeler) rota kalkış karesine
+    // binmesin: panonun yetişmesinden (+120 ms) de sonra.
+    final readOnly = widget.readOnly;
+    Timer(const Duration(milliseconds: 700), () => _suggestCalendar(readOnly));
     // Silinen eklerin baytları burada gider: "Geri al" ile geri gelenler
     // dosyalarını korur (bkz. _flushAttachmentDeletes).
     _flushAttachmentDeletes();
@@ -1720,6 +1758,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _mutate(Note Function(Note) transform, {bool immediate = false}) {
     final note = _note;
     if (note == null) return;
+    if (!immediate) _noteTyping();
     final wasUndo = _undoStack.canUndo;
     final wasRedo = _undoStack.canRedo;
     // Tek boğaz noktası: sarma çapaları düzenleme tamponunda yaşar, nota
@@ -2174,13 +2213,73 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
-  /// Kalem kipinin kapatma düğmesi (tepsi/sütun sonunda).
-  Widget _penDoneButton(AppLocalizations l10n) => IconButton(
-    key: const ValueKey('pen-done'),
-    tooltip: l10n.penModeDone,
-    icon: const Icon(Icons.check_rounded),
-    onPressed: () => _update(() => _penMode = false),
-  );
+  /// Klavye açıkken üst çubuğun başlık yuvası: hızlı işlev satırı
+  /// (2026-11-08); kapalıyken [idle] (tarih + etiketler).
+  Widget? _typingTitle(Note note, Widget? idle) {
+    if (_readOnly || note.type.isPageNoteType) return idle;
+    final pen = !note.type.isPageNoteType;
+    return KeyboardSwitch(
+      closed: idle,
+      open: EditorQuickRow(
+          onBold: () => _applyFormat(RichFormat.bold),
+          onBullet: () => _runOnTarget(applyLineBullet),
+          onCheckbox: note.type == NoteType.text ? _toggleChecklistLine : null,
+          onHeading: () => _runOnTarget((c) {
+            final next = switch (activeRichHeading(c)) {
+              RichHeading.normal => RichHeading.h1,
+              RichHeading.h1 => RichHeading.h2,
+              RichHeading.h2 => RichHeading.normal,
+            };
+            return applyRichHeading(c, next);
+          }),
+          onPhoto: () {
+            _rememberCaret();
+            unawaited(_pickImage());
+          },
+          onFile: () => unawaited(_attachAnyFile()),
+          onPen: pen ? _openPen : null,
+          onPenSettings: pen
+              ? () => showInkSettings(context, _pageInkOf(note))
+              : null,
+          onReminder: () => unawaited(_pickReminder()),
+      ),
+    );
+  }
+
+  /// Kalem kipinin sonu (tepsi/sütun sonunda): × kalemi kapatır (çizim
+  /// kalır), ✓ bitirir — "Sayfaya yaz" ile açılan hızlı el yazısı notunda
+  /// notu da kapatıp ana ekrana döner (kullanıcı isteği 2026-11-08).
+  List<Widget> _penEndButtons(AppLocalizations l10n) {
+    final scheme = _themeOf(context).colorScheme;
+    return [
+      IconButton.filledTonal(
+        key: const ValueKey('pen-close'),
+        tooltip: l10n.penModeDone,
+        visualDensity: VisualDensity.compact,
+        style: IconButton.styleFrom(
+          backgroundColor: scheme.surfaceContainerHighest,
+          foregroundColor: scheme.onSurfaceVariant,
+        ),
+        icon: const Icon(Icons.close_rounded, size: 20),
+        onPressed: () => _update(() => _penMode = false),
+      ),
+      const SizedBox(width: 4),
+      IconButton.filled(
+        key: const ValueKey('pen-done'),
+        tooltip: l10n.penModeFinish,
+        visualDensity: VisualDensity.compact,
+        icon: const Icon(Icons.check_rounded, size: 20),
+        onPressed: () {
+          _pageInkCtl?.save();
+          _update(() => _penMode = false);
+          if (!widget.startDrawing) return;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) unawaited(Navigator.of(context).maybePop());
+          });
+        },
+      ),
+    ];
+  }
 
   /// Bu açılışta ipucuna bakıldı mı (bkz. [_maybeShowTip]).
   bool _tipChecked = false;
@@ -2537,7 +2636,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Alt çubuğun iki yeni düğmesi için: sayfada YÜZMEYEN ekler (şerit) ve
     // notun belge notu olup olmadığı (kalem düğmesi yalnız orada anlamlı).
     final fileAttachments = [
-      for (final a in (note?.attachments ?? const <Attachment>[]))
+      for (final a in (note?.attachmentsWithoutBackground ??
+          const <Attachment>[]))
         if (!a.floatsOnPage &&
             !_inPinnedPane(note!, a) &&
             !note.hidesDerivedDocument(a))
@@ -3343,6 +3443,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             ? _moveItemToPage
             : null,
         onMakeTask: _readOnly ? null : (item) => _makeTask(note, item),
+        onLineReminder: _readOnly
+            ? null
+            : (item) => unawaited(
+                addLineReminder(
+                  context,
+                  ref,
+                  noteId: note.id,
+                  itemId: item.id,
+                  text: item.text,
+                ),
+              ),
+        lineTrailing: (item) => LineTaskChip(noteId: note.id, itemId: item.id),
         onItemChecked: (item, checked) =>
             syncItemToTasks(ref, note.id, item.id, checked),
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
@@ -3394,6 +3506,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             ? _moveItemToPage
             : null,
         onMakeTask: _readOnly ? null : (item) => _makeTask(note, item),
+        onLineReminder: _readOnly
+            ? null
+            : (item) => unawaited(
+                addLineReminder(
+                  context,
+                  ref,
+                  noteId: note.id,
+                  itemId: item.id,
+                  text: item.text,
+                ),
+              ),
+        lineTrailing: (item) => LineTaskChip(noteId: note.id, itemId: item.id),
         onItemChecked: (item, checked) =>
             syncItemToTasks(ref, note.id, item.id, checked),
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
@@ -3536,7 +3660,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   },
                   child: AttachmentStrip(
                   attachments: [
-                    for (final a in note.attachments)
+                    for (final a in note.attachmentsWithoutBackground)
                       if (!a.floatsOnPage &&
                           !_inPinnedPane(note, a) &&
                           !note.hidesDerivedDocument(a))
@@ -3820,7 +3944,10 @@ child: NoteFindBar(
                   alignment: Alignment.topCenter,
                   child: _formatBarOpen
                       ? const SizedBox(width: double.infinity)
-                      : Column(
+                      : _TypingHide(
+                  hidden: _typingN,
+                  enabled: ref.watch(hideBarWhileTypingProvider),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                 // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen
@@ -4133,6 +4260,7 @@ child: NoteFindBar(
                 ],
                 ),
                 ),
+                ),
               ],
             ),
           );
@@ -4273,7 +4401,9 @@ child: NoteFindBar(
                   (Navigator.maybeOf(context)?.canPop() ?? false),
             ),
             title: _barTitle ??
-                (note.updatedAt == null && note.tags.isEmpty
+                _typingTitle(
+                  note,
+                  note.updatedAt == null && note.tags.isEmpty
                 ? null
                 : Customizable(
                     id: UiItem.editorDate,
@@ -4331,7 +4461,8 @@ child: NoteFindBar(
                         ),
                     ],
                   ),
-                  )),
+                  ),
+                ),
             actions: [
               // ANA SAYFAYA DÖN (F28.3): geniş ekranda/web'de ray bu sırada
               // çekmece ya da gizli; tek dokunuşla `/`. Telefonda yok.
@@ -4613,7 +4744,14 @@ child: NoteFindBar(
                               left: 0,
                               right: 0,
                               bottom: 0,
-                              child: PenTray(
+                              // Kalem kipi geri tuşuyla kapanır — tepsinin
+                              // kendi panelleri önce (LIFO). Eskiden bu kayıt
+                              // alt çubuktaydı; kalem kipinde alt çubuk yok,
+                              // geri doğrudan ana ekrana atlıyordu.
+                              child: BackCloses(
+                                open: true,
+                                onClose: () => _update(() => _penMode = false),
+                                child: PenTray(
                                 key: const ValueKey('page-pen-dock'),
                                 controller: _pageInkOf(note),
                                 dock: true,
@@ -4624,8 +4762,9 @@ child: NoteFindBar(
                                     _showListButton(l10n),
                                   if (PenTray.useRail(context))
                                     _fullscreenButton(l10n),
-                                  _penDoneButton(l10n),
+                                  ..._penEndButtons(l10n),
                                 ],
+                              ),
                               ),
                             ),
                         ],

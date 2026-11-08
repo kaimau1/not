@@ -92,6 +92,10 @@ extension _ItemsActions on ItemsEditorState {
               widget.onMakeTask != null &&
               !item.header &&
               item.text.trim().isNotEmpty,
+          canRemind:
+              widget.onLineReminder != null &&
+              !item.header &&
+              item.text.trim().isNotEmpty,
           header: item.header,
           align: item.align,
         ),
@@ -116,6 +120,11 @@ extension _ItemsActions on ItemsEditorState {
         _toggleSelection(item);
       case _ItemAction.delete:
         _removeItem(item);
+      case _ItemAction.reminder:
+        _commit();
+        widget.onLineReminder?.call(
+          _items.where((i) => i.id == item.id).firstOrNull ?? item,
+        );
       case _ItemAction.task:
         _commit();
         widget.onMakeTask?.call(

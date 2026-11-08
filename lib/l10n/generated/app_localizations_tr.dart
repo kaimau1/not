@@ -7664,4 +7664,181 @@ class AppLocalizationsTr extends AppLocalizations {
   String friendsRequestsSummary(int count) {
     return '$count istek bekliyor';
   }
+
+  @override
+  String get inkFixApply => 'Düzgün şekle getir';
+
+  @override
+  String get inkShapeSuggestTitle => 'Şekli tanı ve düzeltmeyi öner';
+
+  @override
+  String get inkShapeSuggestInfo =>
+      'Kabaca daire, dikdörtgen, üçgen, çizgi ya da ok çizince sağ altta küçük düğme çıkar; dokununca düzgün olur, geri al eski hâline döndürür.';
+
+  @override
+  String get inkMarkFixTitle => 'Tik ve çarpıyı düzelt';
+
+  @override
+  String get inkMarkFixInfo =>
+      'Elle çizilen ✓ ve ✗ işaretleri için düzeltme düğmesi çıkar.';
+
+  @override
+  String get inkMarkFixAskTitle => 'Otomatik düzeltme açılsın mı?';
+
+  @override
+  String get inkMarkFixAskBody =>
+      'Elle çizdiğin tik ve çarpılar temiz hâle getirilebilir. Her seferinde yanındaki küçük düğmeyle onaylarsın; kalem ayarlarından kapatabilirsin.';
+
+  @override
+  String get inkMarkFixAskYes => 'Aç';
+
+  @override
+  String get inkMarkFixAskNo => 'Hayır';
+
+  @override
+  String get inkPinPen => 'Bu kalemi sabitle';
+
+  @override
+  String get inkPinnedPen => 'Sabit kalem · basılı tut: kaldır';
+
+  @override
+  String get penModeFinish => 'Bitir';
+
+  @override
+  String get reminderLevelTitle => 'Bildirim';
+
+  @override
+  String get reminderLevelLow => 'Az';
+
+  @override
+  String get reminderLevelNormal => 'Orta';
+
+  @override
+  String get reminderLevelHigh => 'Sık';
+
+  @override
+  String get reminderLevelUrgent => 'Acil';
+
+  @override
+  String get reminderLevelLowInfo => 'Sessiz; yalnız bildirim alanında görünür';
+
+  @override
+  String get reminderLevelNormalInfo => 'Normal ses, ekranın üstünde açılmaz';
+
+  @override
+  String get reminderLevelHighInfo => 'Sesli, ekranın üstünde öne çıkar';
+
+  @override
+  String get reminderLevelUrgentInfo =>
+      'Tam ekran, en yüksek öncelik (alarm gibi)';
+
+  @override
+  String get itemMenuRemind => 'Hatırlat';
+
+  @override
+  String get taskContactHint => 'Kişi (kime / kimden)';
+
+  @override
+  String get taskGmailHint => 'Gmail bağlantısı';
+
+  @override
+  String dueBadgeTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hatırlatıcı/görev bekliyor',
+      one: '1 hatırlatıcı/görev bekliyor',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dueBadgeBody =>
+      'Zamanı gelenler ve bugünün görevleri — ana ekranda';
+
+  @override
+  String get dueBadgeChannel => 'Bekleyenler (simge rozeti)';
+
+  @override
+  String get quickRowBold => 'Kalın';
+
+  @override
+  String get quickRowBullet => 'Madde imi';
+
+  @override
+  String get quickRowHeading => 'Başlık (sırayla)';
+
+  @override
+  String get quickRowPhoto => 'Fotoğraf ekle';
+
+  @override
+  String get quickRowFile => 'Dosya ekle';
+
+  @override
+  String get quickRowPen => 'Kalemle yaz · basılı tut: kalem ayarları';
+
+  @override
+  String get quickRowReminder => 'Hatırlatıcı';
+
+  @override
+  String get hideBarWhileTyping => 'Yazarken alt çubuğu gizle';
+
+  @override
+  String get hideBarWhileTypingInfo =>
+      'Yazmaya başlayınca alt çubuk iner, bırakınca hemen geri gelir.';
+
+  @override
+  String get tipHideBarTyping =>
+      'Yazarken alt çubuk gizlenir, durunca geri gelir. Ayarlar → Kartlar bölümünden kapatılabilir.';
+
+  @override
+  String get addToNoteTitle => 'Nota ekle';
+
+  @override
+  String get addToNewNote => 'Yeni not';
+
+  @override
+  String get addToNoteEmpty => 'Henüz başka not yok';
+
+  @override
+  String get gmailAddSelectionToNote => 'Nota ekle';
+
+  @override
+  String get gmailTagPromotions => 'Promosyon';
+
+  @override
+  String get gmailTagSocial => 'Sosyal';
+
+  @override
+  String get gmailTagUpdates => 'Güncelleme';
+
+  @override
+  String get gmailTagForums => 'Forum';
+
+  @override
+  String get gmailTagImportant => 'Önemli';
+
+  @override
+  String gmailSmartAddToCalendar(String when) {
+    return 'Takvime ekle: $when';
+  }
+
+  @override
+  String gmailSmartLinkPerson(String name) {
+    return '$name → nota bağla';
+  }
+
+  @override
+  String gmailSmartRelatedNote(String title) {
+    return 'İlgili not: $title';
+  }
+
+  @override
+  String get gmailAddedToNote => 'Seçili metin nota eklendi';
+
+  @override
+  String get calendarLinkExistingNote => 'Mevcut notu bağla';
+
+  @override
+  String get routineFromNote => 'Nottan rutin oluştur';
 }

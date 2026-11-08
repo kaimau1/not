@@ -209,6 +209,7 @@ class Note {
     this.archivedAt,
     this.reminderAt,
     this.reminderRepeat = '',
+    this.reminderLevel = '',
     this.cards = const [],
     this.aiSummary,
     this.localOnly = false,
@@ -240,7 +241,7 @@ class Note {
     'tagLinks',
     'textPages',
     'activePage', 'orderIndex', 'createdAt', 'updatedAt', 'deletedAt',
-    'archivedAt', 'reminderAt', 'reminderRepeat', 'cards', 'aiSummary',
+    'archivedAt', 'reminderAt', 'reminderRepeat', 'reminderLevel', 'cards', 'aiSummary',
     'schema',
     // Depo katmanının her yazımda kendisi koyduğu alan — notla taşınmaz.
     // (`createdBy` BİLEREK burada değil: [extras] olarak AYNEN geri yazılır;
@@ -528,6 +529,10 @@ class Note {
   /// [reminderAt] hep SONRAKİ çalmadır.
   final String reminderRepeat;
 
+  /// Hatırlatıcının bildirim önem düzeyi (`ReminderLevel.id`; '' = sık,
+  /// eski davranış). Eski istemci tanımadığı alanı extras olarak geri yazar.
+  final String reminderLevel;
+
   /// Aralıklı tekrar kartları (F18.19).
   final List<StudyCard> cards;
   final AiSummary? aiSummary;
@@ -562,6 +567,26 @@ class Note {
       pageInk.isEmpty &&
       !hasPageInk &&
       reminderAt == null;
+
+  /// Kullanıcının EK saydığı dosyalar: zemin görseli ek DEĞİL (notun arkasında
+  /// duvar kâğıdı olarak durur). Kart, dışa aktarma ve PDF zaten böyle
+  /// sayıyordu; editörün ataç rozeti ve şeridi saymıyordu — zemin ayarlanmış
+  /// notta ek yokken rozet "1" gösteriyordu (hayalet ek sayacı, 2026-11-08).
+  List<Attachment> get attachmentsWithoutBackground => backgroundImageId == null
+      ? attachments
+      : [
+          for (final a in attachments)
+            if (a.id != backgroundImageId) a,
+        ];
+
+  /// [id] ekini ve ondan TÜRETİLMİŞ belgeleri (`sourceId == id`) çıkarır.
+  /// Türetilmiş belge kaynak görselin arkasında gizliydi; görsel silinince
+  /// gizlilik kalkıp sayılan ama kimsenin eklemediği "hayalet" bir ek olarak
+  /// kalıyordu (ataç rozeti "1", 2026-11-08).
+  List<Attachment> attachmentsWithout(String id) => [
+    for (final a in attachments)
+      if (a.id != id && a.sourceId != id) a,
+  ];
 
   /// [a] bir görselden BALONLU görünüm için üretilmiş belge mi ve şu an
   /// GİZLİ mi (bkz. `Attachment.sourceId`): not klasik görünümdeyken ve
@@ -803,6 +828,7 @@ class Note {
     DateTime? reminderAt,
     bool clearReminderAt = false,
     String? reminderRepeat,
+    String? reminderLevel,
     List<StudyCard>? cards,
     AiSummary? aiSummary,
     bool? localOnly,
@@ -862,6 +888,9 @@ class Note {
     reminderRepeat: clearReminderAt
         ? ''
         : (reminderRepeat ?? this.reminderRepeat),
+    reminderLevel: clearReminderAt
+        ? ''
+        : (reminderLevel ?? this.reminderLevel),
     cards: cards ?? this.cards,
     aiSummary: aiSummary ?? this.aiSummary,
     localOnly: localOnly ?? this.localOnly,
@@ -1021,6 +1050,7 @@ class Note {
       archivedAt: (map['archivedAt'] as Timestamp?)?.toDate(),
       reminderAt: (map['reminderAt'] as Timestamp?)?.toDate(),
       reminderRepeat: map['reminderRepeat'] as String? ?? '',
+      reminderLevel: map['reminderLevel'] as String? ?? '',
       cards: [
         for (final raw in (map['cards'] as List? ?? const []))
           if (raw is Map) StudyCard.fromMap(Map<String, dynamic>.from(raw)),
@@ -1139,6 +1169,7 @@ class Note {
     // KOŞULSUZ (kaldırılabilir alan, merge tuzağı): tekrar kapatılınca ''
     // yazılmalı, yoksa sunucudaki eski tekrar kalırdı.
     'reminderRepeat': reminderRepeat,
+    'reminderLevel': reminderLevel,
     // Kartlar da koşulsuz (son kart silinince alan boşalmalı).
     'cards': [for (final c in cards) c.toMap()],
     'aiSummary': aiSummary?.toMap(),

@@ -591,6 +591,8 @@ extension _ItemsRow on ItemsEditorState {
                 // yazarken satır her odakta yatayda oynuyordu. Yıldızlama sol
                 // bölgeye uzun basınca açılan menüde ([_showItemMenu]); burada
                 // yalnız YILDIZLI satırın işareti durur (dokununca kalkar).
+                if (!_selectionMode && widget.lineTrailing != null)
+                  widget.lineTrailing!(item),
                 if (!_selectionMode && item.starred)
                   IconButton(
                     tooltip: l10n.unstar,

@@ -12,7 +12,7 @@
 # Hiçbir adım oturumu düşürmez: hata olursa uyarı yazar, sürer.
 # Deneme: KURULUM_DENEME=1 bash ortak_kurulum.sh → yalnız ne yapacağını yazar.
 
-VARSAYILAN_FLUTTER="3.47.7"
+VARSAYILAN_FLUTTER="3.47.9"
 DENEME="${KURULUM_DENEME:-0}"
 
 yap() { echo "+ $*"; [ "$DENEME" = 1 ] || "$@"; }

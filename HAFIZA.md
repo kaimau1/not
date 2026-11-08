@@ -8,7 +8,7 @@ hâl) — ikisi de dondurulmuş, `grep` ile ara. Kural değişince buradaki
 maddeyi GÜNCELLE.
 
 ## Ortam ve araçlar
-- Flutter **3.47.7** (CI ile aynı). Bulutta SDK yok: linux arşivini
+- Flutter **3.47.9** (CI ile aynı). Bulutta SDK yok: linux arşivini
   scratchpad'e indir (CLAUDE.md). Windows'ta `C:\src\flutter\bin\flutter.bat`.
   pdfrx 2.6 Flutter ≥ 3.47 ister.
 - **`dart format` yalnız değiştirdiğin/yeni dosyaya** (`lib/l10n/generated`
@@ -760,3 +760,24 @@ maddeyi GÜNCELLE.
 - **Kalem kipi kapalıyken kalemin tek başına tıkı** (son çizgiden ≥ 1,2 sn sonra, ≤ 4 dp kayma) çizmez, alttaki metne/kutucuğa gider (`stylusTapMayPass`, `_InkClaimRecognizer` artık eager değil: kayınca kazanır, kalkınca bırakır). Yazı arasındaki i/ö noktası çizilir. Tabletteki notta kalem tıklarından kalmış başıboş noktalar görüldü.
 - **Fiziksel klavye:** `HardKeyboard` (kanal `dev.kaimau.notlar/keyboard`). Yalnız HARİCİ HARF klavyesi sayılır (M-Pencil, ses/güç tuşları da "klavye"); kapak arkaya katlıyken (`hardKeyboardHidden`) yok. Takılıyken `TextInput.setInputControl(boş denetim)`: alan bağlı kalır, giriş türü `none` gider, sanal klavye açılmaz; not üst çubuğunda ⌨ düğmesi (`editor-soft-keyboard`) açar/kapar (odak bir kare bırakılıp geri alınır ki alan yeni türle bağlansın). Sistem kanalının Dart işleyicisi PiP'te: yeni olay için AYRI kanal aç.
 - Play yorum analizi ve sonraki fazlar: `YORUM_ANALIZI_PLANI.md`.
+
+## 2026-11-08 — Kalem, satır hatırlatıcısı, bildirim düzeyi, kapanış kasması
+- **Kalem kipinde geri ana ekrana atlıyordu — kök neden:** kalem kipinin `BackCloses` kaydı ALT ÇUBUKTAYDI; kalem kipinde (`_pagePen`) alt çubuk hiç kurulmuyor → kayıt yok → geri notu kapatıyordu. Kayıt artık kalem tepsisinin çevresinde; tepsinin kendi kaydı (ayar kartı, açık kapsül) içte → LIFO sıra doğru. Bekçi `editor_pen_tablet_test`.
+- **Şekil/tik/çarpı önerisi** `viewers/ink_recognize.dart` (saf geometri: RDP köşe, `recognizeInkShape` uyum hatası). Öneri `InkController.suggestion` (ayrı `ValueNotifier`, çizgileri yeniden boyatmaz); işaretçi katmanda Listener'ın ÜSTÜNDE (dokunuşu çizime gitmez). ZAMANLAYICI YOK: sonraki dokunuşta/geri alda kalkar (6 sn'lik Timer testleri "pending timer" ile düşürdü). Tik/çarpı `InkToolMemory.markFix` üç durumlu: null = ilk algılamada sor, varsayılan kapalı. Harf boyu (< 36 dp) şekil sayılmaz; artı (+) çarpı sayılmaz (kollar yataya 20–70°).
+- **Sabit kalemler** `InkToolMemory.presets` (`tür|renk|kalınlık`, en çok 5, cihaz tercihi `ink_presets`).
+- **Bildirim önem düzeyi = kanal** (`domain/reminder_level.dart`): Android kanalının önemi kurulduktan sonra DEĞİŞMEZ, o yüzden düzey başına ayrı kanal. '' = `high` = eski `reminders` kanalı (eski hatırlatıcılar değişmeden çalar; "Sık" etiketi). Acil = `Importance.max` + `fullScreenIntent` + alarm; `USE_FULL_SCREEN_INTENT` YALNIZ `src/kisisel` manifestinde (Play beyanı ister). `showWhenLocked` BİLEREK yok (kilitli notlar kilit ekranında açılmasın). Not alanı `reminderLevel` (gerçek alan, `toMap` koşulsuz).
+- **Satır hatırlatıcısı = `tasks` kaydı** (TAKVIM_PLANI §10); `TaskItem.level/contact/gmailLink` boşken yazılmaz. `reminderTimePrefix` artık `@visibleForTesting` değil (çip ve şerit kullanıyor).
+- **Ana ekran şeridi + rozet** (`data/due_state.dart`, `domain/due_items.dart`): "şimdi" (`dueClockProvider`) yalnız sonraki hatırlatıcı anına kurulan tek seferlik Timer ve `AppLifecycleListener.onResume` ile ilerler. Rozet için YENİ BAĞIMLILIK YOK: başlatıcılar rozeti bildirimden çizer → sessiz düşük önemli tek özet bildirimi (`badge` kanalı, `number`, yük `due` — `note:` değil, mutabakat dokunmasın). Bedel: sayı > 0 iken perdede bir satır. Web'de şerit `tasksStreamProvider`ı da dinler (eskiden web'de görev dinleyicisi yoktu).
+- **Yazarken üst hızlı satır** (`editor_quick_row.dart`): `KeyboardSwitch` yaprağı yalnız `MediaQuery.viewInsetsOf`'a bağlı; hazır verilen alt ağaçlar aynı örnek → klavye karelerinde alt ağaç kurulmaz (F38.7 bekçisi yeşil). TUZAK: `KeyboardSnap.onSettled` klavye KAPANIRKEN çağrılmaz (inset canlıya hemen iner) — kapalı/açık durumu ona bağlama.
+- **Not kapanış kasması — kök neden:** sıralama tutması (`sortHeldNoteIds`) kapanışın İLK karesinde bırakılıyordu → abonelikler sürerken zaten yeniden hesaplanan `filteredNotesProvider` ikinci kez hesaplanıp pano ekranı kuruluyordu; pano o sırada `FreezeWhenHidden` ile donuk olduğundan görünür faydası yoktu. Bırakma `dispose`ta; kapanıştaki tarih önerisi ayrıştırması +700 ms. Cihazda ölçülmedi (KALANLAR §2 A12).
+## 2026-11-08 — Oturum B (arama, yazı tipi, Gmail, takvim pratikliği)
+- **Arama çubuğu:** tüm hap tek `GestureDetector` iken sağdaki düğmelerin boşluğu da aramayı başlatıyordu; odak jesti yalnız sol kısımda (`_SearchField`).
+- **Yazı tipi seçici = tema levhası** (`_showAppFontSheet`: perdesiz alçak levha, `_FontChoiceCard` "Aa", anında uygula, Vazgeç).
+- **Seçim modu + geri:** tek seçim modu ana ekranda (`selectedNoteIdsProvider`; PopScope VAR) ve madde seçimi; PDF sayfa düzenleyicisine PopScope eklendi. Klavye açıkken ilk geri klavyeyi kapatır (sistem), ikincisi seçimi.
+- **Hayalet ek sayacı:** editör ataç rozeti/şeridi zemin görselini (`backgroundImageId`) ek sayıyordu; kart/dışa aktarma saymıyordu → `Note.attachmentsWithoutBackground` ortak kural. TUZAK: yeni "ek" sayan yer bunu kullanmalı.
+- **Dikte:** `_writeDictationAtCaret` sonunda `_revealCaretSoon()`; panel açılışında da.
+- **Alt çubuk yazarken gizli:** `_typingN` ValueNotifier + `_TypingHide` (boy/opaklık, setState YOK); `_mutate(immediate:false)` + klavye açıkken tetikler, 650 ms sessizlikte döner. Ayar `hideBarWhileTypingProvider` (varsayılan açık), ipucu `TipOnce.typingBarHide`.
+- **Takvim tekerlek:** `PinchZoomDetector.wheelZoom` yalnız yıl/ay görünümünde; `PointerSignalResolver` sayesinde kaydırılabilir alan tekeri önce alır. Hafta görünümünde yakınlaştırma artık gün (ajanda) açar.
+- **Not seçici** `NoteTargetPicker`/`showNoteTargetPicker` (note_target_picker.dart): yeniden kullanılabilir; Gmail "Nota ekle", takvim "Mevcut notu bağla", nottan rutin bunu kullanır.
+- **Gmail:** `gmail_smart.dart` (tarih/saat ayıklama, gönderen); iletiden oluşan not = gövdesinde ileti `webUrl`i olan not (ilgili not çipi bununla bulur).
+

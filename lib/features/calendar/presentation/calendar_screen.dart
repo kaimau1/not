@@ -266,7 +266,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           );
         }
       case CalendarView.week:
-        if (zoomIn) return;
+        if (zoomIn) {
+          // Hafta → gün: odaktaki gün (haftanın içindeyse seçili gün).
+          final day = _targets.at(global) ?? _selected;
+          final end = _focus.add(const Duration(days: 7));
+          _setView(
+            CalendarView.agenda,
+            focus: !day.isBefore(_focus) && day.isBefore(end) ? day : _focus,
+            from: global,
+          );
+          return;
+        }
         // Haftanın ortası hangi aydaysa o ay.
         final mid = DateTime(_focus.year, _focus.month, _focus.day + 3);
         _setView(
@@ -717,6 +727,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final duration = AppMotion.of(context, AppMotion.medium);
     final zoomIn = _lastZoom == ZoomDirection.zoomIn;
     final body = PinchZoomDetector(
+      // Yıl ve ay görünümünde dikey kaydırma yok: düz tekerlek geçiş yapar.
+      // Hafta/gün görünümü tekerlekle kayar; orada Ctrl + tekerlek geçer.
+      wheelZoom:
+          _view == CalendarView.year || _view == CalendarView.month,
       onZoom: _onZoom,
       onPreview: _onPreview,
       onPinchingChanged: (v) => setState(() => _pinching = v),
@@ -1104,12 +1118,30 @@ class _DaySheet extends ConsumerWidget {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: OutlinedButton.icon(
-                key: const ValueKey('day-note'),
-                onPressed: () =>
-                    unawaited(openDayNote(context, ref, day, popFirst: true)),
-                icon: const Icon(Icons.edit_note),
-                label: Text(l10n.calendarDayNote),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      key: const ValueKey('day-note'),
+                      onPressed: () => unawaited(
+                        openDayNote(context, ref, day, popFirst: true),
+                      ),
+                      icon: const Icon(Icons.edit_note),
+                      label: Text(l10n.calendarDayNote),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      key: const ValueKey('day-link-note'),
+                      onPressed: () => unawaited(
+                        linkExistingNote(context, ref, dayKey: key),
+                      ),
+                      icon: const Icon(Icons.link),
+                      label: Text(l10n.calendarLinkExistingNote),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -1351,13 +1383,30 @@ class _EventTile extends StatelessWidget {
               color: scheme.onSurfaceVariant,
               semanticLabel: l10n.gcalTitle,
             ),
+          // Bağlı not simgesi: tek bağlı not varsa DOKUNUNCA doğrudan o not
+          // açılır (etkinlikten nota tek dokunuş, 2026-11-08).
           if (e.noteIds.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(left: 4),
-              child: Icon(
-                Icons.sticky_note_2_outlined,
-                size: 16,
-                color: scheme.onSurfaceVariant,
+            InkResponse(
+              key: ValueKey('event-note-${e.id}'),
+              radius: 18,
+              onTap: e.noteIds.length == 1
+                  ? () => unawaited(
+                      context.pushNote(noteRoutePath(e.noteIds.first)),
+                    )
+                  : () => e.fromGoogle
+                        ? showGoogleEventSheet(context, e, occurrence.start)
+                        : showEventEditor(
+                            context,
+                            existing: e,
+                            occurrenceStart: occurrence.start,
+                          ),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Icon(
+                  Icons.sticky_note_2_outlined,
+                  size: 16,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
           if (e.repeats)

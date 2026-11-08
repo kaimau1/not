@@ -7687,4 +7687,180 @@ class AppLocalizationsEn extends AppLocalizations {
   String friendsRequestsSummary(int count) {
     return '$count pending';
   }
+
+  @override
+  String get inkFixApply => 'Tidy up shape';
+
+  @override
+  String get inkShapeSuggestTitle => 'Recognize shapes';
+
+  @override
+  String get inkShapeSuggestInfo =>
+      'After a rough circle, rectangle, triangle, line or arrow a small button appears; tap it to tidy the shape (undo restores it).';
+
+  @override
+  String get inkMarkFixTitle => 'Tidy ticks and crosses';
+
+  @override
+  String get inkMarkFixInfo =>
+      'Shows a tidy-up button for hand-drawn ✓ and ✗ marks.';
+
+  @override
+  String get inkMarkFixAskTitle => 'Turn on tick and cross tidy-up?';
+
+  @override
+  String get inkMarkFixAskBody =>
+      'Hand-drawn ticks and crosses can be tidied. You confirm each one with the small button next to it; you can turn this off in pen settings.';
+
+  @override
+  String get inkMarkFixAskYes => 'Turn on';
+
+  @override
+  String get inkMarkFixAskNo => 'No';
+
+  @override
+  String get inkPinPen => 'Pin this pen';
+
+  @override
+  String get inkPinnedPen => 'Pinned pen · hold to remove';
+
+  @override
+  String get penModeFinish => 'Done';
+
+  @override
+  String get reminderLevelTitle => 'Notification';
+
+  @override
+  String get reminderLevelLow => 'Low';
+
+  @override
+  String get reminderLevelNormal => 'Normal';
+
+  @override
+  String get reminderLevelHigh => 'High';
+
+  @override
+  String get reminderLevelUrgent => 'Urgent';
+
+  @override
+  String get reminderLevelLowInfo => 'Silent; only in the notification shade';
+
+  @override
+  String get reminderLevelNormalInfo => 'Normal sound, no pop-up';
+
+  @override
+  String get reminderLevelHighInfo => 'Sound and pop-up on top of the screen';
+
+  @override
+  String get reminderLevelUrgentInfo =>
+      'Full screen, highest priority (like an alarm)';
+
+  @override
+  String get itemMenuRemind => 'Remind';
+
+  @override
+  String get taskContactHint => 'Person (to / from)';
+
+  @override
+  String get taskGmailHint => 'Gmail link';
+
+  @override
+  String dueBadgeTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reminders/tasks waiting',
+      one: '1 reminder/task waiting',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dueBadgeBody => 'Due now and today\'s tasks — on the home screen';
+
+  @override
+  String get dueBadgeChannel => 'Waiting (icon badge)';
+
+  @override
+  String get quickRowBold => 'Bold';
+
+  @override
+  String get quickRowBullet => 'Bullet';
+
+  @override
+  String get quickRowHeading => 'Heading (cycles)';
+
+  @override
+  String get quickRowPhoto => 'Add photo';
+
+  @override
+  String get quickRowFile => 'Attach file';
+
+  @override
+  String get quickRowPen => 'Write with pen · hold: pen settings';
+
+  @override
+  String get quickRowReminder => 'Reminder';
+
+  @override
+  String get hideBarWhileTyping => 'Hide bottom bar while typing';
+
+  @override
+  String get hideBarWhileTypingInfo =>
+      'The bottom bar slides away as you type and returns right when you stop.';
+
+  @override
+  String get tipHideBarTyping =>
+      'The bottom bar hides while you type and returns when you pause. You can turn this off in Settings.';
+
+  @override
+  String get addToNoteTitle => 'Add to note';
+
+  @override
+  String get addToNewNote => 'New note';
+
+  @override
+  String get addToNoteEmpty => 'No other notes yet';
+
+  @override
+  String get gmailAddSelectionToNote => 'Add to note';
+
+  @override
+  String get gmailTagPromotions => 'Promotions';
+
+  @override
+  String get gmailTagSocial => 'Social';
+
+  @override
+  String get gmailTagUpdates => 'Updates';
+
+  @override
+  String get gmailTagForums => 'Forums';
+
+  @override
+  String get gmailTagImportant => 'Important';
+
+  @override
+  String gmailSmartAddToCalendar(String when) {
+    return 'Add to calendar: $when';
+  }
+
+  @override
+  String gmailSmartLinkPerson(String name) {
+    return 'Link $name to a note';
+  }
+
+  @override
+  String gmailSmartRelatedNote(String title) {
+    return 'Related note: $title';
+  }
+
+  @override
+  String get gmailAddedToNote => 'Selected text added to the note';
+
+  @override
+  String get calendarLinkExistingNote => 'Link an existing note';
+
+  @override
+  String get routineFromNote => 'Create routine from a note';
 }

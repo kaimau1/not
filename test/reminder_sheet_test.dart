@@ -66,11 +66,18 @@ void main() {
     await tester.tap(find.text('Yarın 09:00'));
     await tester.tap(find.byKey(const ValueKey('reminder-repeat-daily')));
     await tester.pump();
+    // Önem düzeyi (2026-11-08): acil.
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('reminder-level-urgent')),
+    );
+    await tester.tap(find.byKey(const ValueKey('reminder-level-urgent')));
+    await tester.pump();
     await tester.tap(find.byKey(const ValueKey('reminder-sheet-save')));
     await tester.pumpAndSettle();
     expect(result, isNotNull);
     expect(result!.at!.hour, 9);
     expect(result!.repeat, 'daily');
+    expect(result!.level, 'urgent');
   });
 
   testWidgets('var olan: Kaldır → zaman null', (tester) async {

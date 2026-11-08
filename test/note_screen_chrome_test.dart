@@ -198,4 +198,24 @@ void main() {
     expect(tester.binding.transientCallbackCount, 0);
     await _end(tester);
   });
+
+  testWidgets('klavye açıkken üstte hızlı işlev satırı, kapanınca tarih', (
+    tester,
+  ) async {
+    await _pump(tester, _dated);
+    expect(find.byKey(const ValueKey('editor-quick-row')), findsNothing);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('editor-quick-row')), findsOneWidget);
+    expect(find.byKey(const ValueKey('quick-row-bold')), findsOneWidget);
+    expect(find.byKey(const ValueKey('quick-row-pen')), findsOneWidget);
+    tester.view.viewInsets = FakeViewPadding.zero;
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('editor-quick-row')), findsNothing);
+    await _end(tester);
+  });
 }

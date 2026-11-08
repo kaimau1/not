@@ -41,6 +41,9 @@ abstract final class TipOnce {
   /// Ana ekran mikrofonu: basılı tut → AI sesli not (K7, rozet kalktı).
   static const homeMicHold = 'home_mic_hold';
 
+  /// Yazarken alt çubuk ilk kez gizlendi (2026-11-08).
+  static const typingBarHide = 'typing_bar_hide';
+
   static bool _sessionUsed = false;
 
   /// Bu ipucu gösterilmeli mi? (Gösterilmemiş ve — sınırlıysa — bu

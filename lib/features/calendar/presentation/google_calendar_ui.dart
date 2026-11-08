@@ -13,6 +13,7 @@ import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
 import '../data/calendar_repository.dart';
 import '../data/google_calendar_sync.dart';
+import '../../notes/presentation/note_target_picker.dart';
 import '../domain/calendar_event.dart';
 import 'event_editor.dart';
 import 'google_failure.dart';
@@ -200,6 +201,38 @@ Future<void> openMeetingNote(
   if (context.mounted) unawaited(context.pushNote(noteRoutePath(id)));
 }
 
+/// Var olan bir notu güne ([dayKey]) ya da etkinliğe ([event]) bağlar:
+/// "Nota ekle" seçicisiyle (bkz. [showNoteTargetPicker]) not seçilir; üstteki
+/// boş "Yeni not" kartı da seçilebilir — o durumda başlıksız yeni not açılıp
+/// bağlanır. Tek dokunuşla bağlama (2026-11-08).
+Future<void> linkExistingNote(
+  BuildContext context,
+  WidgetRef ref, {
+  String? dayKey,
+  CalendarEvent? event,
+}) async {
+  final notes = ref.read(notesRepositoryProvider);
+  final calendar = ref.read(calendarRepositoryProvider);
+  if (notes == null || calendar == null) return;
+  final target = await showNoteTargetPicker(context);
+  if (target == null) return;
+  final picked = target.note;
+  final id = picked?.id ?? await notes.createNote(NoteType.text);
+  if (dayKey != null) {
+    calendar.linkNoteToDay(dayKey, id);
+  } else if (event != null) {
+    final google = event.google;
+    if (event.fromGoogle && google != null) {
+      calendar.linkNoteToGoogleEvent(google.id, id);
+    } else {
+      calendar.linkNoteToEvent(event.id, id);
+    }
+  }
+  if (picked == null && context.mounted) {
+    unawaited(context.pushNote(noteRoutePath(id)));
+  }
+}
+
 /// Etkinliğe bağlı notların satırları (dokununca not açılır).
 class LinkedNotesList extends ConsumerWidget {
   const LinkedNotesList({super.key, required this.noteIds, this.onUnlink});
@@ -325,6 +358,13 @@ class _GoogleEventSheet extends ConsumerWidget {
                 },
                 icon: const Icon(Icons.note_add_outlined),
                 label: Text(l10n.calendarMeetingNote),
+              ),
+              TextButton.icon(
+                key: const ValueKey('gcal-link-note'),
+                onPressed: () =>
+                    unawaited(linkExistingNote(context, ref, event: event)),
+                icon: const Icon(Icons.link),
+                label: Text(l10n.calendarLinkExistingNote),
               ),
               // Tekrarlı serinin oluşu Google'da düzenlenir (K3: "yalnız bu /
               // tümü" Google'ın işi); tekil etkinlik burada (Faz 51).

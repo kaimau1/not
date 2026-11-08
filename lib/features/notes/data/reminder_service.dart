@@ -1,3 +1,5 @@
+import '../domain/reminder_level.dart';
+import 'due_state.dart';
 import '../domain/reminder_repeat.dart';
 
 import 'dart:async';
@@ -54,7 +56,6 @@ const _monthsTr = [
 /// Ay adları elle yazılı: `intl`'in Türkçe adları için uygulama başında
 /// `initializeDateFormatting` çağrılması gerekir, bildirim planlaması ise
 /// arka planda da koşuyor — 12 sabit dizgi bu bağımlılıktan ucuz.
-@visibleForTesting
 String reminderTimePrefix(
   DateTime when, {
   DateTime? now,
@@ -111,6 +112,15 @@ final reminderServiceProvider = Provider<ReminderService>((ref) {
 /// sessizce ölüyordu. İki servis de bu işlevi verir.
 void handleNotificationResponse(Ref ref, NotificationResponse response) {
   final payload = response.payload ?? '';
+  // Rozet özeti (zamanı gelenler): ana ekran — şerit orada.
+  if (payload == 'due') {
+    try {
+      ref.read(routerProvider).go('/');
+    } catch (e) {
+      ErrorLog.record('notification-tap', e);
+    }
+    return;
+  }
   // Brifing bildirimine dokununca ilgili ekranı aç.
   if (payload == 'briefing') {
     try {
@@ -163,8 +173,24 @@ void handleNotificationResponse(Ref ref, NotificationResponse response) {
     }
     return;
   }
-  // Takvim etkinliği / görev (TAKVIM_PLANI F47.6): takvimi aç.
+  // Takvim etkinliği / görev (TAKVIM_PLANI F47.6): takvimi aç. Nota bağlı
+  // görev (not içi görev satırı, 2026-11-08) notu açar.
   if (payload.startsWith(kCalendarPayloadPrefix)) {
+    const taskPrefix = '${kCalendarPayloadPrefix}task:';
+    if (payload.startsWith(taskPrefix)) {
+      final id = payload.substring(taskPrefix.length);
+      final task = (ref.read(tasksStreamProvider).value ?? const <TaskItem>[])
+          .where((t) => t.id == id)
+          .firstOrNull;
+      if (task != null && task.noteId.isNotEmpty) {
+        try {
+          ref.read(routerProvider).pushNote(noteRoutePath(task.noteId));
+        } catch (e) {
+          ErrorLog.record('notification-tap', e);
+        }
+        return;
+      }
+    }
     try {
       ref.read(routerProvider).push('/calendar');
     } catch (e) {
@@ -251,6 +277,52 @@ List<DateTime> reminderFireTimes(Note note, DateTime now, {int count = 7}) {
   return [first, ...repeat.upcoming(at, first, count - 1)];
 }
 
+/// Düzeyin bildirim ayrıntısı: her düzey ayrı kanal (bkz. [ReminderLevel]).
+/// Acil: tam ekran isteği + alarm kategorisi; tam ekran izni yalnız kişisel
+/// derlemede (`src/kisisel` manifesti) — izinsiz Android en yüksek öncelikli
+/// açılır bildirim gösterir.
+AndroidNotificationDetails reminderLevelDetails(
+  ReminderLevel level,
+  AppLocalizations l10n, {
+  List<AndroidNotificationAction>? actions,
+}) => switch (level) {
+  ReminderLevel.low => AndroidNotificationDetails(
+    level.channelId,
+    '${l10n.remindersTitle} · ${l10n.reminderLevelLow}',
+    channelDescription: l10n.reminderLevelLowInfo,
+    importance: Importance.low,
+    priority: Priority.low,
+    playSound: false,
+    enableVibration: false,
+    actions: actions,
+  ),
+  ReminderLevel.normal => AndroidNotificationDetails(
+    level.channelId,
+    '${l10n.remindersTitle} · ${l10n.reminderLevelNormal}',
+    channelDescription: l10n.reminderLevelNormalInfo,
+    actions: actions,
+  ),
+  ReminderLevel.high => AndroidNotificationDetails(
+    level.channelId,
+    l10n.remindersTitle,
+    channelDescription: l10n.remindersTitle,
+    importance: Importance.high,
+    priority: Priority.high,
+    actions: actions,
+  ),
+  ReminderLevel.urgent => AndroidNotificationDetails(
+    level.channelId,
+    '${l10n.remindersTitle} · ${l10n.reminderLevelUrgent}',
+    channelDescription: l10n.reminderLevelUrgentInfo,
+    importance: Importance.max,
+    priority: Priority.max,
+    fullScreenIntent: true,
+    category: AndroidNotificationCategory.alarm,
+    audioAttributesUsage: AudioAttributesUsage.alarm,
+    actions: actions,
+  ),
+};
+
 class ReminderService {
   ReminderService(this._ref);
 
@@ -276,7 +348,8 @@ class ReminderService {
   };
 
   static String _signature(Note n) =>
-      '${n.reminderAt?.millisecondsSinceEpoch}|${n.reminderRepeat}';
+      '${n.reminderAt?.millisecondsSinceEpoch}|${n.reminderRepeat}|'
+      '${n.reminderLevel}';
 
   Future<void> _cancelAll(String noteId) async {
     for (var k = 0; k < _repeatAhead; k++) {
@@ -442,6 +515,23 @@ class ReminderService {
       );
     }
 
+    // Ana ekran şeridinin "şimdi"si bir sonraki hatırlatıcıya kurulur ve
+    // uygulama simgesi rozeti (yalnız cihazda) güncellenir (2026-11-08).
+    _dueNextSub = _ref.listen<DateTime?>(
+      dueNextProvider,
+      (_, next) => _ref.read(dueClockProvider.notifier).armFor(next),
+      fireImmediately: true,
+    );
+    if (!kIsWeb) {
+      _badgeSub = _ref.listen<int>(dueBadgeProvider, (_, n) {
+        _badgeDebounce?.cancel();
+        _badgeDebounce = Timer(
+          const Duration(seconds: 2),
+          () => unawaited(_syncBadge(n)),
+        );
+      }, fireImmediately: true);
+    }
+
     // Günlük brifing ayarını izle ve bildirimi buna göre planla/iptal et.
     _briefingSub = _ref.listen(briefingSettingsProvider, (previous, next) {
       _syncBriefing(next);
@@ -449,6 +539,51 @@ class ReminderService {
   }
 
   ProviderSubscription<BriefingSettings>? _briefingSub;
+  ProviderSubscription<DateTime?>? _dueNextSub;
+  ProviderSubscription<int>? _badgeSub;
+  Timer? _badgeDebounce;
+  int? _badgeShown;
+  static const _badgeNotificationId = 999003;
+
+  /// **UYGULAMA SİMGESİ ROZETİ** (2026-11-08): Android'de rozeti başlatıcı
+  /// bildirimlerden çizer (Samsung/MIUI sayıyı `number`dan, Pixel nokta).
+  /// Ek paket yok: sessiz, düşük önemli TEK özet bildirimi (`badge` kanalı)
+  /// sayıyla güncellenir, sayı 0 olunca kalkar. Yük `due` (`note:` değil —
+  /// hatırlatıcı mutabakatı dokunmasın).
+  Future<void> _syncBadge(int count) async {
+    if (count == _badgeShown) return;
+    try {
+      await _ensureInitialized();
+      if (count == 0) {
+        await _plugin.cancel(id: _badgeNotificationId);
+        _badgeShown = 0;
+        return;
+      }
+      final l10n = await loadNotificationL10n(_ref.read(localeProvider));
+      await _plugin.show(
+        id: _badgeNotificationId,
+        title: l10n.dueBadgeTitle(count),
+        body: l10n.dueBadgeBody,
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            'badge',
+            l10n.dueBadgeChannel,
+            channelDescription: l10n.dueBadgeBody,
+            importance: Importance.low,
+            priority: Priority.low,
+            playSound: false,
+            enableVibration: false,
+            onlyAlertOnce: true,
+            number: count,
+          ),
+        ),
+        payload: 'due',
+      );
+      _badgeShown = count;
+    } catch (e) {
+      debugPrint('Rozet güncellenemedi: $e');
+    }
+  }
 
   ProviderSubscription<AsyncValue<List<CalendarEvent>>>? _calEventsSub;
   ProviderSubscription<AsyncValue<List<TaskItem>>>? _calTasksSub;
@@ -535,14 +670,18 @@ class ReminderService {
         : dayDiff == 1
         ? '${l10n.dateTomorrow} · ${l10n.eventAllDay}'
         : l10n.eventAllDay;
+    // Görevin düzeyi seçildiyse onun kanalı (not içi görev satırı); yoksa
+    // takvim kanalı.
     final details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        'calendar',
-        l10n.calendarTitle,
-        channelDescription: l10n.calendarTitle,
-        importance: Importance.high,
-        priority: Priority.high,
-      ),
+      android: a.level.isEmpty
+          ? AndroidNotificationDetails(
+              'calendar',
+              l10n.calendarTitle,
+              channelDescription: l10n.calendarTitle,
+              importance: Importance.high,
+              priority: Priority.high,
+            )
+          : reminderLevelDetails(ReminderLevel.parse(a.level), l10n),
     );
     final when = tz.TZDateTime.from(a.at, tz.local);
     try {
@@ -718,12 +857,9 @@ class ReminderService {
     // hatırlatıcı çaldığında hâlâ "Yarın 09:00" yazıyordu.
     final prefix = reminderTimePrefix(when, now: when, l10n: l10n);
     final details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        'reminders',
-        l10n.remindersTitle,
-        channelDescription: l10n.remindersTitle,
-        importance: Importance.high,
-        priority: Priority.high,
+      android: reminderLevelDetails(
+        ReminderLevel.parse(note.reminderLevel),
+        l10n,
         // Uygulamayı açmadan hızlı işlem; showsUserInterface uygulamayı
         // öne getirir ki işlem güvenilir biçimde ana izolatta yapılsın.
         actions: <AndroidNotificationAction>[
@@ -770,6 +906,9 @@ class ReminderService {
 
   void dispose() {
     _syncDebounce?.cancel();
+    _badgeDebounce?.cancel();
+    _badgeSub?.close();
+    _dueNextSub?.close();
     _trashDebounce?.cancel();
     _sub?.close();
     _trashSub?.close();
