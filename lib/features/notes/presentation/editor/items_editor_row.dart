@@ -788,7 +788,7 @@ extension _ItemsRow on ItemsEditorState {
                         selectedItems.every((i) => i.package.isNotEmpty)
                     ? l10n.notePackageUnpack
                     : l10n.quickRowPackage,
-                icon: const Icon(Icons.inventory_2_outlined, size: 20),
+                icon: const Icon(AppIcons.notePackage, size: 20),
                 onPressed: hasSelection ? togglePackage : null,
               ),
               IconButton(
