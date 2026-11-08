@@ -48,27 +48,6 @@ class BubbleDock extends StatefulWidget {
 }
 
 class _BubbleDockState extends State<BubbleDock> {
-  /// El yazısından tanınan [t] imlecin yerine (gerekirse boşlukla) yazılır.
-  void _insertHandwriting(PageBubble bubble, String t) {
-    final v = _text.value;
-    final sel = v.selection.isValid
-        ? v.selection
-        : TextSelection.collapsed(offset: v.text.length);
-    final before = v.text.substring(0, sel.start);
-    final glue =
-        before.isEmpty || before.endsWith(' ') || before.endsWith('\n')
-        ? ''
-        : ' ';
-    final next = before + glue + t + v.text.substring(sel.end);
-    _text.value = TextEditingValue(
-      text: next,
-      selection: TextSelection.collapsed(
-        offset: before.length + glue.length + t.length,
-      ),
-    );
-    widget.controller.updateText(bubble.id, next);
-  }
-
   final _title = TextEditingController();
   final _text = TextEditingController();
   final _titleFocus = FocusNode();
@@ -397,10 +376,9 @@ class _BubbleDockState extends State<BubbleDock> {
                             ),
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
-                              // KALEMLE YAZ → METİN (2026-11-08).
-                              child: HandwriteField(
-                                onText: (t) => _insertHandwriting(bubble, t),
-                                child: TextField(
+                              // Kalemle yaz → metin KALDIRILDI (kullanıcı
+                              // isteği 2026-11-08 ikinci tur).
+                              child: TextField(
                                 key: const ValueKey('bubble-dock-text'),
                                 controller: _text,
                                 focusNode: _textFocus,
@@ -429,7 +407,6 @@ class _BubbleDockState extends State<BubbleDock> {
                                 ),
                                 onChanged: (value) => widget.controller
                                     .updateText(bubble.id, value),
-                              ),
                               ),
                             ),
                           ),

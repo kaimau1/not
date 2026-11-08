@@ -7915,4 +7915,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinnedPenWrite => 'Write on it with the pen';
+
+  @override
+  String get quickRowCamera => 'Take photo';
+
+  @override
+  String get quickRowScan => 'Scan document';
+
+  @override
+  String get quickRowDate => 'Insert date and time';
+
+  @override
+  String get spellAutoTitle => 'Auto-correct';
+
+  @override
+  String get spellAutoSubtitle =>
+      'Every finished word is corrected without asking; title words are capitalized.';
+
+  @override
+  String get spellLearnTitle => 'Learning correction';
+
+  @override
+  String get spellLearnSubtitle =>
+      'Learns the words you correct yourself and the keys you often mix up (Turkish, English, Chinese). Kept only on this device.';
+
+  @override
+  String spellLearnedCount(int count) {
+    return '$count learned corrections';
+  }
+
+  @override
+  String get spellForget => 'Forget what was learned';
+
+  @override
+  String get spellForgotten => 'Learned corrections removed';
+
+  @override
+  String get lineTaskRetime => 'Change time';
+
+  @override
+  String get lineTaskDone => 'Done';
+
+  @override
+  String get lineTaskUndone => 'Mark not done';
+
+  @override
+  String get lineTaskDetails => 'Details (level, repeat, contact)';
+
+  @override
+  String get lineTaskDelete => 'Delete reminder';
+
+  @override
+  String get inkShapeTriangle => 'Triangle';
+
+  @override
+  String get inkShapeTable => 'Table';
 }

@@ -11,7 +11,18 @@ import 'ink_tools.dart';
 /// Saf geometri (ML yok): uzunluk/kiriş oranı, Ramer–Douglas–Peucker ile
 /// köşe bulma ve [recognizeInkShape]'in elips/dikdörtgen uyum hatası. Tüm
 /// noktalar EKRAN (piksel) uzayında — oranlı uzayda daire elips görünür.
-enum InkFixKind { line, arrow, rectangle, ellipse, triangle, tick, cross }
+enum InkFixKind {
+  line,
+  arrow,
+  rectangle,
+  ellipse,
+  triangle,
+  tick,
+  cross,
+
+  /// Dik açılı olmayan dörtgen (yamuk, paralelkenar).
+  quad,
+}
 
 /// Önerilen temiz çizgi (piksel): noktalar + ok başlığı.
 typedef InkFixStroke = ({List<Offset> points, bool arrow});
@@ -70,12 +81,20 @@ InkFix? recognizeInkFix(
   final arrow = _hookArrow(points);
   if (arrow != null) return arrow;
 
+  // KAPALI ŞEKİLLER (2026-11-08 yeniden: "kare algılanmıyor, bazen çember
+  // sanılıyor, dikdörtgen/üçgen de olmuyor"): bkz. [recognizeClosedShape].
+  final closed = recognizeClosedShape(points);
+  if (closed != null) {
+    return InkFix(closed.kind, [(points: closed.outline, arrow: false)]);
+  }
   final found = recognizeInkShape(points);
-  if (found != null) {
+  if (found != null && found.shape == InkShape.line) {
     final kind = switch (found.shape) {
       InkShape.line => InkFixKind.line,
       InkShape.rectangle => InkFixKind.rectangle,
       InkShape.ellipse => InkFixKind.ellipse,
+      InkShape.triangle => InkFixKind.triangle,
+      InkShape.table => InkFixKind.rectangle,
     };
     final flat = inkShapePoints(
       found.shape,
@@ -323,4 +342,318 @@ InkFix? _triangle(List<Offset> pts) {
   return InkFix(InkFixKind.triangle, [
     (points: [c[0], c[1], c[2], c[0]], arrow: false),
   ]);
+}
+
+
+// ── Kapalı şekil tanıyıcı (2026-11-08) ────────────────────────────────
+
+/// Tanınan kapalı şekil: tür + temiz dış çizgi (kapalı, ilk nokta sonda da).
+/// [regular] = kare/daire/eşkenar düzeltmesi yapıldı.
+typedef ClosedInkShape = ({
+  InkFixKind kind,
+  List<Offset> outline,
+  bool regular,
+});
+
+/// **KAPALI ŞEKİL** (kullanıcı bulgusu 2026-11-08: "otomatik kare
+/// algılanmıyor, hatta bazen kareler çember algılanıyor; dikdörtgen ve
+/// üçgen de"). KÖK NEDEN: eski tanıyıcı yalnız EKSENE HİZALI kutuya göre
+/// elips/dikdörtgen hatası ölçüyordu — köşeleri yuvarlak elle çizilmiş kare
+/// elips hatasında daha düşük kalıyor (çember sanılıyor), biraz eğik
+/// dikdörtgenin hatası eşiği aşıyor (hiç tanınmıyor).
+///
+/// Şimdi dört aday aynı ölçüyle (noktaların aday dış çizgiye ortalama
+/// uzaklığı / köşegen) yarışır:
+/// * elips — en küçük DÖNDÜRÜLMÜŞ kutunun iç elipsi,
+/// * dikdörtgen — en küçük döndürülmüş kutu,
+/// * dörtgen — dışbükey zarftaki en büyük alanlı dört köşe,
+/// * üçgen — dışbükey zarftaki en büyük alanlı üç köşe.
+///
+/// **ÖNCE DÜZGÜN, ZORLANINCA SERBEST** (kullanıcı isteği 2026-11-08): en/boy
+/// oranı 1'e yakınsa (≤ 1,18) KARE / DAİRE olur; belirgin uzunsa dikdörtgen
+/// / elips; köşeler dik değilse serbest dörtgen. Eksene 10°'den yakın eğim
+/// düzeltilir.
+ClosedInkShape? recognizeClosedShape(List<Offset> pts) {
+  if (pts.length < 8) return null;
+  final len = _length(pts);
+  final box = _bounds(pts);
+  final diag = math.sqrt(box.width * box.width + box.height * box.height);
+  if (diag < 16 || len < diag * 1.6) return null;
+  // Kapanış: açıklık çevrenin %30'undan az (elle çizim tam kapanmaz).
+  if ((pts.last - pts.first).distance > len * 0.3) return null;
+  final hull = _convexHull(pts);
+  if (hull.length < 3) return null;
+  final hullArea = _polyArea(hull);
+  // İnce uzun "döngü" (gidip gelen çizgi) şekil değil.
+  if (hullArea < diag * diag * 0.04) return null;
+
+  final mb = _minBox(hull);
+  final rect = _rectOutline(mb.center, mb.w, mb.h, mb.angle);
+  var reduced = _simplify([...hull, hull.first], diag * 0.02)..removeLast();
+  // Köşe araması n⁴: zarf kısa tutulur (pil/kare bütçesi).
+  if (reduced.length > 32) {
+    reduced = _simplify([...hull, hull.first], diag * 0.05)..removeLast();
+  }
+  final tri = reduced.length >= 3 ? _maxAreaPolygon(reduced, 3) : null;
+  final quad = reduced.length >= 4 ? _maxAreaPolygon(reduced, 4) : null;
+
+  final eEll = _ellipseError(pts, mb) / diag;
+  final eRect = _outlineError(pts, rect) / diag;
+  final eTri = tri == null ? 9.0 : _outlineError(pts, [...tri, tri.first]) / diag;
+  final eQuad = quad == null
+      ? 9.0
+      : _outlineError(pts, [...quad, quad.first]) / diag;
+
+  // Daha çok serbestlik = küçük ceza (dörtgen her şeye biraz uyar).
+  final scores = <InkFixKind, double>{
+    InkFixKind.ellipse: eEll,
+    InkFixKind.rectangle: eRect,
+    InkFixKind.quad: eQuad * 1.25,
+    InkFixKind.triangle: eTri * 0.95,
+  };
+  final best = scores.entries.reduce((a, b) => a.value <= b.value ? a : b);
+  if (best.value > 0.05) return null;
+
+  switch (best.key) {
+    case InkFixKind.ellipse:
+      final ratio = math.max(mb.w, mb.h) / math.max(1, math.min(mb.w, mb.h));
+      if (ratio <= 1.18) {
+        final r = (mb.w + mb.h) / 4;
+        return (
+          kind: InkFixKind.ellipse,
+          outline: _ellipseOutline(mb.center, r, r, 0),
+          regular: true,
+        );
+      }
+      return (
+        kind: InkFixKind.ellipse,
+        outline: _ellipseOutline(
+          mb.center,
+          mb.w / 2,
+          mb.h / 2,
+          _snapAngle(mb.angle),
+        ),
+        regular: false,
+      );
+    case InkFixKind.rectangle:
+    case InkFixKind.quad:
+      // Dörtgen kazandıysa ama köşeleri dik açıya yakınsa dikdörtgendir.
+      final q = quad;
+      final rightAngles =
+          q != null &&
+          [
+            for (var i = 0; i < 4; i++)
+              _angle(q[(i + 3) % 4] - q[i], q[(i + 1) % 4] - q[i]),
+          ].every((a) => (a - 90).abs() <= 16);
+      if (best.key == InkFixKind.quad && !rightAngles && eQuad < eRect * 0.7) {
+        return (
+          kind: InkFixKind.quad,
+          outline: [...q!, q.first],
+          regular: false,
+        );
+      }
+      final ratio = math.max(mb.w, mb.h) / math.max(1, math.min(mb.w, mb.h));
+      final angle = _snapAngle(mb.angle);
+      if (ratio <= 1.15) {
+        final side = (mb.w + mb.h) / 2;
+        return (
+          kind: InkFixKind.rectangle,
+          outline: _rectOutline(mb.center, side, side, angle),
+          regular: true,
+        );
+      }
+      return (
+        kind: InkFixKind.rectangle,
+        outline: _rectOutline(mb.center, mb.w, mb.h, angle),
+        regular: false,
+      );
+    case InkFixKind.triangle:
+      final t = tri!;
+      return (
+        kind: InkFixKind.triangle,
+        outline: [...t, t.first],
+        regular: false,
+      );
+    default:
+      return null;
+  }
+}
+
+/// Eksene 10°'den yakın eğim sıfırlanır (dik kenarlar).
+double _snapAngle(double a) {
+  final deg = a * 180 / math.pi;
+  final m = ((deg % 90) + 90) % 90;
+  if (m <= 10) return (deg - m) * math.pi / 180;
+  if (m >= 80) return (deg + (90 - m)) * math.pi / 180;
+  return a;
+}
+
+/// Andrew'un monoton zinciri (saat yönünün tersine).
+List<Offset> _convexHull(List<Offset> input) {
+  final pts = [...input]
+    ..sort((a, b) => a.dx != b.dx ? a.dx.compareTo(b.dx) : a.dy.compareTo(b.dy));
+  if (pts.length < 3) return pts;
+  double cross(Offset o, Offset a, Offset b) => _cross2(a - o, b - o);
+  final lower = <Offset>[];
+  for (final p in pts) {
+    while (lower.length >= 2 &&
+        cross(lower[lower.length - 2], lower.last, p) <= 0) {
+      lower.removeLast();
+    }
+    lower.add(p);
+  }
+  final upper = <Offset>[];
+  for (final p in pts.reversed) {
+    while (upper.length >= 2 &&
+        cross(upper[upper.length - 2], upper.last, p) <= 0) {
+      upper.removeLast();
+    }
+    upper.add(p);
+  }
+  return [...lower..removeLast(), ...upper..removeLast()];
+}
+
+double _polyArea(List<Offset> poly) {
+  var a = 0.0;
+  for (var i = 0; i < poly.length; i++) {
+    a += _cross2(poly[i], poly[(i + 1) % poly.length]);
+  }
+  return a.abs() / 2;
+}
+
+/// En küçük alanlı döndürülmüş kutu (zarfın kenar yönleri denenir).
+({Offset center, double w, double h, double angle}) _minBox(
+  List<Offset> hull,
+) {
+  var best = (center: Offset.zero, w: 0.0, h: 0.0, angle: 0.0);
+  var bestArea = double.infinity;
+  for (var i = 0; i < hull.length; i++) {
+    final e = hull[(i + 1) % hull.length] - hull[i];
+    if (e.distance < 1e-6) continue;
+    final ang = math.atan2(e.dy, e.dx);
+    final c = math.cos(-ang), s = math.sin(-ang);
+    var minX = double.infinity, minY = double.infinity;
+    var maxX = -double.infinity, maxY = -double.infinity;
+    for (final p in hull) {
+      final x = p.dx * c - p.dy * s;
+      final y = p.dx * s + p.dy * c;
+      minX = math.min(minX, x);
+      maxX = math.max(maxX, x);
+      minY = math.min(minY, y);
+      maxY = math.max(maxY, y);
+    }
+    final area = (maxX - minX) * (maxY - minY);
+    if (area < bestArea) {
+      bestArea = area;
+      final cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+      // Merkezi geri döndür.
+      final cc = math.cos(ang), ss = math.sin(ang);
+      best = (
+        center: Offset(cx * cc - cy * ss, cx * ss + cy * cc),
+        w: maxX - minX,
+        h: maxY - minY,
+        angle: ang,
+      );
+    }
+  }
+  return best;
+}
+
+Offset _rot(Offset v, double a) {
+  final c = math.cos(a), s = math.sin(a);
+  return Offset(v.dx * c - v.dy * s, v.dx * s + v.dy * c);
+}
+
+List<Offset> _rectOutline(Offset c, double w, double h, double a) {
+  final corners = [
+    Offset(-w / 2, -h / 2),
+    Offset(w / 2, -h / 2),
+    Offset(w / 2, h / 2),
+    Offset(-w / 2, h / 2),
+  ].map((v) => c + _rot(v, a)).toList();
+  return [...corners, corners.first];
+}
+
+List<Offset> _ellipseOutline(Offset c, double rx, double ry, double a) {
+  const steps = 48;
+  return [
+    for (var i = 0; i <= steps; i++)
+      c +
+          _rot(
+            Offset(
+              rx * math.cos(2 * math.pi * i / steps),
+              ry * math.sin(2 * math.pi * i / steps),
+            ),
+            a,
+          ),
+  ];
+}
+
+/// Noktaların kapalı çokgen dış çizgisine ortalama uzaklığı.
+double _outlineError(List<Offset> pts, List<Offset> outline) {
+  var sum = 0.0;
+  for (final p in pts) {
+    var d = double.infinity;
+    for (var i = 0; i + 1 < outline.length; i++) {
+      d = math.min(d, _segDistance(p, outline[i], outline[i + 1]));
+    }
+    sum += d;
+  }
+  return sum / pts.length;
+}
+
+/// Noktaların [mb] kutusunun iç elipsine yaklaşık ortalama uzaklığı.
+double _ellipseError(
+  List<Offset> pts,
+  ({Offset center, double w, double h, double angle}) mb,
+) {
+  final a = math.max(1.0, mb.w / 2), b = math.max(1.0, mb.h / 2);
+  var sum = 0.0;
+  for (final p in pts) {
+    final q = _rot(p - mb.center, -mb.angle);
+    final r = math.sqrt(math.pow(q.dx / a, 2) + math.pow(q.dy / b, 2));
+    if (r < 1e-9) {
+      sum += math.min(a, b);
+      continue;
+    }
+    // Işın üstündeki elips noktasına uzaklık.
+    sum += (q.distance - q.distance / r).abs();
+  }
+  return sum / pts.length;
+}
+
+/// Sadeleşmiş zarftan en büyük alanlı [k] köşe (k = 3 ya da 4), zarf
+/// sırasıyla.
+List<Offset> _maxAreaPolygon(List<Offset> hull, int k) {
+  final n = hull.length;
+  var best = <Offset>[];
+  var bestArea = -1.0;
+  if (k == 3) {
+    for (var i = 0; i < n; i++) {
+      for (var j = i + 1; j < n; j++) {
+        for (var l = j + 1; l < n; l++) {
+          final a = _polyArea([hull[i], hull[j], hull[l]]);
+          if (a > bestArea) {
+            bestArea = a;
+            best = [hull[i], hull[j], hull[l]];
+          }
+        }
+      }
+    }
+    return best;
+  }
+  for (var i = 0; i < n; i++) {
+    for (var j = i + 1; j < n; j++) {
+      for (var l = j + 1; l < n; l++) {
+        for (var m = l + 1; m < n; m++) {
+          final a = _polyArea([hull[i], hull[j], hull[l], hull[m]]);
+          if (a > bestArea) {
+            bestArea = a;
+            best = [hull[i], hull[j], hull[l], hull[m]];
+          }
+        }
+      }
+    }
+  }
+  return best;
 }

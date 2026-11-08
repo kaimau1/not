@@ -161,3 +161,42 @@ String finalizeLine(String line) {
   }
   return out + line.substring(t.length);
 }
+
+/// BAŞLIK düzeltmesi (kullanıcı isteği 2026-11-08: "başlıklarda AI'sız oto
+/// düzeltme — kelimelerin ilk harfi büyür"): [spellFixAt] kuralları + biten
+/// kelimenin baş harfi büyük (Türkçe i → İ). Tamamı büyük kelime (kısaltma)
+/// ve bağlantı/e-posta parçası olduğu gibi kalır.
+({int start, int end, String text})? titleFixAt(String text, int caret) {
+  final base = spellFixAt(text, caret);
+  var t = text;
+  var c = caret;
+  if (base != null) {
+    t = text.replaceRange(base.start, base.end, base.text);
+    c = base.start + base.text.length;
+  }
+  if (c < 2) return base;
+  final boundary = t[c - 1];
+  if (!' \n.,;:!?'.contains(boundary)) return base;
+  var i = c - 1;
+  if (',.;:!?'.contains(boundary) && i > 0 && t[i - 1] == ' ') i--;
+  final end = i;
+  final letter = RegExp(r'\p{L}', unicode: true);
+  while (i > 0 && letter.hasMatch(t[i - 1])) {
+    i--;
+  }
+  if (i == end) return base;
+  final before = i == 0 ? ' ' : t[i - 1];
+  if (!' \n("\'«“*_~='.contains(before)) return base;
+  final first = t[i];
+  final up = trUpper(first);
+  if (up == first) return base;
+  final from = base?.start ?? i;
+  final out = t.replaceRange(i, i + 1, up);
+  final start = from < i ? from : i;
+  final endOut = c;
+  return (
+    start: start,
+    end: start + (text.length - out.length) + (endOut - start),
+    text: out.substring(start, endOut),
+  );
+}

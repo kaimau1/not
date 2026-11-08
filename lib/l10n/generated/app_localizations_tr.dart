@@ -7893,4 +7893,59 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinnedPenWrite => 'Üzerine kalemle yaz';
+
+  @override
+  String get quickRowCamera => 'Fotoğraf çek';
+
+  @override
+  String get quickRowScan => 'Belge tara';
+
+  @override
+  String get quickRowDate => 'Tarih ve saat ekle';
+
+  @override
+  String get spellAutoTitle => 'Otomatik düzelt';
+
+  @override
+  String get spellAutoSubtitle =>
+      'Biten her kelime sormadan düzeltilir; başlıkta kelime başları büyür.';
+
+  @override
+  String get spellLearnTitle => 'Öğrenen düzeltme';
+
+  @override
+  String get spellLearnSubtitle =>
+      'Kendi düzelttiğin kelimeleri ve sık karıştırdığın tuşları öğrenir (Türkçe, İngilizce, Çince). Yalnız bu cihazda tutulur.';
+
+  @override
+  String spellLearnedCount(int count) {
+    return '$count öğrenilmiş düzeltme';
+  }
+
+  @override
+  String get spellForget => 'Öğrenilenleri sil';
+
+  @override
+  String get spellForgotten => 'Öğrenilenler silindi';
+
+  @override
+  String get lineTaskRetime => 'Zamanı değiştir';
+
+  @override
+  String get lineTaskDone => 'Tamamlandı';
+
+  @override
+  String get lineTaskUndone => 'Tamamlanmadı yap';
+
+  @override
+  String get lineTaskDetails => 'Ayrıntılar (düzey, tekrar, kişi)';
+
+  @override
+  String get lineTaskDelete => 'Hatırlatıcıyı sil';
+
+  @override
+  String get inkShapeTriangle => 'Üçgen';
+
+  @override
+  String get inkShapeTable => 'Tablo';
 }

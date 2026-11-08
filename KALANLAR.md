@@ -242,8 +242,20 @@ A12. [ ] Not kapanışı (yazdıktan sonra geri, karta küçülme): kasma azald�
 - C4 Not paketi: metinde yazı seç → 📦 → etiket; dokun → önizleme (yaz, kalemle çiz, çöz). Listede maddeleri seç → 📦 → çerçeveli özet; dokun aç, dışarı dokun kapan.
 - C5 Kalemle tik/kare çiz → işaretçiye KALEMLE bas → düzelir, seçili kalır; taşı + sağ alt tutamaktan boyutla.
 - C6 Sabit PDF: kalem kipinde üstüne yaz, parmakla kaydır; kalem kapalıyken bölme çubuğundaki ✏.
-- C7 Balon yazma alanına kalemle yaz → ~1 sn sonra metin.
+- ~~C7 Balon el yazısı~~ kaldırıldı (2026-11-08 ikinci tur).
 - C8 Kalem küçük paneli: silgi ⇄ son kalem tek dokunuş; liste maddelerinde ↑/↓ (fiziksel klavye).
+
+### D1–D10 (2026-11-08 oturum D — yazıldı, cihazda doğrulanmadı)
+- D1 Yazım düzelt açık: "yaoçoılıyor " → "yapılıyor "; "eksiknyapılıyor " → "eksik yapılıyor "; otomatik düzeltmeyi geri al (sil + eskisini yaz) → bir daha düzeltmiyor mu; kendi düzelttiğin kelime iki kez sonra kendiliğinden düzeliyor mu. Yazım düğmesine basılı tut → levha (öğrenme, sil).
+- D2 Başlıkta "bakım togg" → "Bakım Togg".
+- D3 Hızlı satır: kalem yalnız simge; 📷 ve 📅 düğmeleri; tablette (yüzen klavye / fiziksel klavye) alan odaktayken hızlı satır görünüyor mu.
+- D4 Web ve tablette madde tutamağı hep görünür, sürükleyerek sıralama; Esc: levha/diyalog kapanır, sayfada geri gider.
+- D5 Satır hatırlatıcı çipi yazıyla aynı hizada; dokun → menü → Sil (geri al çalışıyor mu).
+- D6 Yazarken alt çubuk 1,1 sn sonra geliyor; yeni maddeye geçince / klavye kapanınca hemen.
+- D7 Not paketi açıkken "Yeni madde" / Enter → paket bozulmuyor, yeni madde pakette; boş son maddede Enter paketten çıkarıyor; uygulamayı kapatıp açınca paket duruyor.
+- D8 Kalem kipinde küçük hap: daha geniş, silgi ile hap açma karışmıyor.
+- D9 Sabit (üstte) PDF: tam ekran yapmadan kalemle yazılıyor mu.
+- D10 Kare/dikdörtgen/üçgen/çember: kabaca çiz → işaretçi doğru şekli öneriyor mu; kareye yakın → tam kare, belirgin uzun → dikdörtgen, eğik/yamuk → serbest dörtgen. Şekil aracında Üçgen ve Tablo.
 
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 

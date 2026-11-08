@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/app_icons.dart';
@@ -42,7 +43,20 @@ class EditorQuickRow extends StatefulWidget {
     this.onUnderline,
     this.onHighlight,
     this.onDictation,
+    this.onSpellSettings,
+    this.onCamera,
+    this.onDate,
+    this.onScan,
   });
+
+  /// Yazım düzelt düğmesine basılı tut: ayarlar (öğrenme, sıfırla).
+  final VoidCallback? onSpellSettings;
+
+  /// Kamera ile fotoğraf, bugünün tarihi/saati, belge tarama (2026-11-08:
+  /// "hızlı menüye daha işe yarar şeyler koy").
+  final VoidCallback? onCamera;
+  final VoidCallback? onDate;
+  final VoidCallback? onScan;
 
   /// Ara başlık: satırı alt başlık yapar (metin modu; 2026-11-08).
   final VoidCallback? onSubheading;
@@ -172,8 +186,10 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // SAYFAYA KALEMLE YAZ başta ve yazılı (kullanıcı isteği
-            // 2026-11-08); basılı tut = kalem ayarları.
+            // SAYFAYA KALEMLE YAZ başta; YALNIZ SİMGE (kullanıcı isteği
+            // 2026-11-08 ikinci tur: "uzun yazı, sadece kalem işareti
+            // olmalı" — yazı bütün satırı kaplıyordu). Açıklama ipucunda;
+            // basılı tut = kalem ayarları.
             if (widget.onPen != null) ...[
               button(
                 'pen',
@@ -181,7 +197,6 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
                 l10n.quickRowPen,
                 widget.onPen,
                 onLong: widget.onPenSettings,
-                label: l10n.quickRowPen,
               ),
               divider,
             ],
@@ -249,6 +264,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
                       key: const ValueKey('quick-row-spell'),
                       radius: 20,
                       onTap: widget.onSpell,
+                      onLongPress: widget.onSpellSettings,
                       child: Container(
                         height: 32,
                         margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -307,12 +323,26 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
               l10n.quickRowPhoto,
               widget.onPhoto,
             ),
+            if (widget.onCamera != null)
+              button(
+                'camera',
+                Icons.photo_camera_outlined,
+                l10n.quickRowCamera,
+                widget.onCamera,
+              ),
             button(
               'file',
               Icons.attach_file_rounded,
               l10n.quickRowFile,
               widget.onFile,
             ),
+            if (widget.onScan != null)
+              button(
+                'scan',
+                Icons.document_scanner_outlined,
+                l10n.quickRowScan,
+                widget.onScan,
+              ),
             divider,
             button(
               'reminder',
@@ -320,6 +350,13 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
               l10n.quickRowReminder,
               widget.onReminder,
             ),
+            if (widget.onDate != null)
+              button(
+                'date',
+                Icons.today_outlined,
+                l10n.quickRowDate,
+                widget.onDate,
+              ),
             if (widget.onDictation != null)
               button(
                 'dictation',
@@ -357,15 +394,34 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
 /// Klavye açıkken [open], kapalıyken [closed]. Yalnız bu yaprak klavye
 /// boşluğuna bağlı (MediaQuery bölümü); hazır verilen alt ağaçlar aynı örnek
 /// olduğundan animasyon karelerinde alt ağaç yeniden kurulmaz.
+///
+/// [editing] verilirse TABLETTE (en kısa kenar ≥ 600 dp, web değil) klavye
+/// boşluğu 0 iken de alan odaktaysa [open] gösterilir (kullanıcı bulgusu
+/// 2026-11-08: "tablette üst hızlı menü gelmiyor" — yüzen/ayrık sanal klavye
+/// ve fiziksel klavye ekranın altını kaplamaz, inset hep 0 kalıyordu).
 class KeyboardSwitch extends StatelessWidget {
-  const KeyboardSwitch({super.key, required this.open, this.closed});
+  const KeyboardSwitch({
+    super.key,
+    required this.open,
+    this.closed,
+    this.editing,
+  });
 
   final Widget open;
   final Widget? closed;
+  final ValueListenable<bool>? editing;
 
   @override
-  Widget build(BuildContext context) =>
-      MediaQuery.viewInsetsOf(context).bottom > 0
-      ? open
-      : (closed ?? const SizedBox.shrink());
+  Widget build(BuildContext context) {
+    final idle = closed ?? const SizedBox.shrink();
+    if (MediaQuery.viewInsetsOf(context).bottom > 0) return open;
+    final e = editing;
+    if (e == null || kIsWeb || MediaQuery.sizeOf(context).shortestSide < 600) {
+      return idle;
+    }
+    return ValueListenableBuilder<bool>(
+      valueListenable: e,
+      builder: (_, on, _) => on ? open : idle,
+    );
+  }
 }

@@ -37,7 +37,10 @@ void main() {
     );
   });
 
-  testWidgets('Sürükleme tutamacı yalnız Seç modunda görünür', (tester) async {
+  testWidgets('Sürükleme tutamacı (telefonda) yalnız Seç modunda görünür', (
+    tester,
+  ) async {
+    _phone(tester);
     final items = [
       NoteItem(id: 'a', text: 'Süt'),
       NoteItem(id: 'b', text: 'Ekmek'),
@@ -65,6 +68,7 @@ void main() {
   testWidgets('sıralı listede de aynı seçim/sıralama/kopyalama vardır', (
     tester,
   ) async {
+    _phone(tester);
     // Checklist ve sıralı liste AYNI düzenleyiciyi kullanır; parite burada
     // doğrulanır ki sıralı liste sessizce geride kalmasın.
     final copied = <String>[];
@@ -107,4 +111,12 @@ void main() {
     // Tek madde yalnız METNİYLE kopyalanır (2026-09-26, bkz. itemsCopyText).
     expect(copied.single, 'Şeker');
   });
+}
+
+/// Telefon boyu: geniş ekranda (web/tablet) tutamak hep görünür (2026-11-08).
+void _phone(WidgetTester tester) {
+  tester.view
+    ..physicalSize = const Size(400, 800)
+    ..devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
 }

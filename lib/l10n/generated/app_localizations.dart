@@ -14095,6 +14095,108 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Üzerine kalemle yaz'**
   String get pinnedPenWrite;
+
+  /// No description provided for @quickRowCamera.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fotoğraf çek'**
+  String get quickRowCamera;
+
+  /// No description provided for @quickRowScan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belge tara'**
+  String get quickRowScan;
+
+  /// No description provided for @quickRowDate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih ve saat ekle'**
+  String get quickRowDate;
+
+  /// No description provided for @spellAutoTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik düzelt'**
+  String get spellAutoTitle;
+
+  /// No description provided for @spellAutoSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Biten her kelime sormadan düzeltilir; başlıkta kelime başları büyür.'**
+  String get spellAutoSubtitle;
+
+  /// No description provided for @spellLearnTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öğrenen düzeltme'**
+  String get spellLearnTitle;
+
+  /// No description provided for @spellLearnSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi düzelttiğin kelimeleri ve sık karıştırdığın tuşları öğrenir (Türkçe, İngilizce, Çince). Yalnız bu cihazda tutulur.'**
+  String get spellLearnSubtitle;
+
+  /// No description provided for @spellLearnedCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} öğrenilmiş düzeltme'**
+  String spellLearnedCount(int count);
+
+  /// No description provided for @spellForget.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öğrenilenleri sil'**
+  String get spellForget;
+
+  /// No description provided for @spellForgotten.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öğrenilenler silindi'**
+  String get spellForgotten;
+
+  /// No description provided for @lineTaskRetime.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zamanı değiştir'**
+  String get lineTaskRetime;
+
+  /// No description provided for @lineTaskDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamamlandı'**
+  String get lineTaskDone;
+
+  /// No description provided for @lineTaskUndone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamamlanmadı yap'**
+  String get lineTaskUndone;
+
+  /// No description provided for @lineTaskDetails.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayrıntılar (düzey, tekrar, kişi)'**
+  String get lineTaskDetails;
+
+  /// No description provided for @lineTaskDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcıyı sil'**
+  String get lineTaskDelete;
+
+  /// No description provided for @inkShapeTriangle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üçgen'**
+  String get inkShapeTriangle;
+
+  /// No description provided for @inkShapeTable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tablo'**
+  String get inkShapeTable;
 }
 
 class _AppLocalizationsDelegate
