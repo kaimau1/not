@@ -3595,5 +3595,8 @@
   "friendsCountSummary": "{count, plural, =0{Henüz kişi yok} other{{count} kişi}}",
   "@friendsCountSummary": {"placeholders": {"count": {"type": "int"}}},
   "friendsRequestsSummary": "{count} istek bekliyor",
-  "@friendsRequestsSummary": {"placeholders": {"count": {"type": "int"}}}
+  "@friendsRequestsSummary": {"placeholders": {"count": {"type": "int"}}},
+  "hideBarWhileTyping": "Yazarken alt çubuğu gizle",
+  "hideBarWhileTypingInfo": "Yazmaya başlayınca alt çubuk iner, bırakınca hemen geri gelir.",
+  "tipHideBarTyping": "Yazarken alt çubuk gizlenir, durunca geri gelir. Ayarlar → Kartlar bölümünden kapatılabilir."
 }

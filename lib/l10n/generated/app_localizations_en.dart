@@ -7687,4 +7687,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String friendsRequestsSummary(int count) {
     return '$count pending';
   }
+
+  @override
+  String get hideBarWhileTyping => 'Hide bottom bar while typing';
+
+  @override
+  String get hideBarWhileTypingInfo =>
+      'The bottom bar slides away as you type and returns right when you stop.';
+
+  @override
+  String get tipHideBarTyping =>
+      'The bottom bar hides while you type and returns when you pause. You can turn this off in Settings.';
 }

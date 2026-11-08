@@ -339,6 +339,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords: l10n.expandListItemsInfo,
           ),
           _SettingRow(
+            const _HideBarWhileTypingSwitch(),
+            title: l10n.hideBarWhileTyping,
+            keywords: '${l10n.hideBarWhileTypingInfo} alt cubuk yazarken',
+          ),
+          _SettingRow(
             const _ItemGesturesSwitch(),
             title: l10n.itemGesturesSetting,
             keywords: '${l10n.itemGesturesSettingInfo} jest cizim karala',

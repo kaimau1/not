@@ -889,6 +889,33 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Biçim çubuğu açık mı (alt çubuktaki "Aa" düğmesi açıp kapatır).
   bool _formatBarOpen = false;
 
+  /// Yazma sürüyor mu (alt çubuk gizleme, bkz. [_TypingHide]). Yalnız bu
+  /// bildirici değişir: ekran setState ile yeniden kurulmaz.
+  final _typingN = ValueNotifier<bool>(false);
+  Timer? _typingTimer;
+
+  /// Klavye açıkken her metin değişiminde çağrılır; durunca çubuk geri gelir.
+  void _noteTyping() {
+    if (_keyboardInset <= 0 || !ref.read(hideBarWhileTypingProvider)) return;
+    if (!_typingN.value) {
+      _typingN.value = true;
+      final prefs = ref.read(sharedPreferencesProvider);
+      if (TipOnce.due(prefs, TipOnce.typingBarHide, sessionLimit: false)) {
+        TipOnce.show(
+          context,
+          prefs,
+          TipOnce.typingBarHide,
+          context.l10n.tipHideBarTyping,
+          sessionLimit: false,
+        );
+      }
+    }
+    _typingTimer?.cancel();
+    _typingTimer = Timer(const Duration(milliseconds: 650), () {
+      _typingN.value = false;
+    });
+  }
+
   /// Alt çubukta son karede "Notta ara" / "Paylaş" görünüyor muydu (F12.1):
   /// ⋮ menüsü çubukta duranı tekrar etmez, düşeni Araçlar'da gösterir.
   /// Kurulum sırasında yazılır (setState yok — yalnız menü açılınca okunur).
@@ -1506,6 +1533,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   @override
   void dispose() {
     _stopFileDrops();
+    _typingTimer?.cancel();
+    _typingN.dispose();
     WidgetsBinding.instance.removeObserver(this);
     noteRouteClosing.removeListener(_holdSaveWhileClosing);
     openEditorNoteIds.remove(widget.noteId);
@@ -1720,6 +1749,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _mutate(Note Function(Note) transform, {bool immediate = false}) {
     final note = _note;
     if (note == null) return;
+    if (!immediate) _noteTyping();
     final wasUndo = _undoStack.canUndo;
     final wasRedo = _undoStack.canRedo;
     // Tek boğaz noktası: sarma çapaları düzenleme tamponunda yaşar, nota
@@ -3820,7 +3850,10 @@ child: NoteFindBar(
                   alignment: Alignment.topCenter,
                   child: _formatBarOpen
                       ? const SizedBox(width: double.infinity)
-                      : Column(
+                      : _TypingHide(
+                  hidden: _typingN,
+                  enabled: ref.watch(hideBarWhileTypingProvider),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                 // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen
@@ -4131,6 +4164,7 @@ child: NoteFindBar(
                   ),
                 ),
                 ],
+                ),
                 ),
                 ),
               ],

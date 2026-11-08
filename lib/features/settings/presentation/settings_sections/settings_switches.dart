@@ -17,6 +17,25 @@ class _ExpandListItemsSwitch extends ConsumerWidget {
   }
 }
 
+/// Yazarken alt çubuğu gizle (bkz. [hideBarWhileTypingProvider]).
+class _HideBarWhileTypingSwitch extends ConsumerWidget {
+  const _HideBarWhileTypingSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      key: const ValueKey('hide-bar-typing-switch'),
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.hideBarWhileTyping),
+      subtitle: Text(l10n.hideBarWhileTypingInfo),
+      value: ref.watch(hideBarWhileTypingProvider),
+      onChanged: (value) =>
+          ref.read(hideBarWhileTypingProvider.notifier).set(value),
+    );
+  }
+}
+
 /// Madde jestleri (bkz. [itemGesturesProvider]).
 class _ItemGesturesSwitch extends ConsumerWidget {
   const _ItemGesturesSwitch();

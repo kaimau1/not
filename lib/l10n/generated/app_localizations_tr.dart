@@ -7664,4 +7664,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String friendsRequestsSummary(int count) {
     return '$count istek bekliyor';
   }
+
+  @override
+  String get hideBarWhileTyping => 'Yazarken alt çubuğu gizle';
+
+  @override
+  String get hideBarWhileTypingInfo =>
+      'Yazmaya başlayınca alt çubuk iner, bırakınca hemen geri gelir.';
+
+  @override
+  String get tipHideBarTyping =>
+      'Yazarken alt çubuk gizlenir, durunca geri gelir. Ayarlar → Kartlar bölümünden kapatılabilir.';
 }

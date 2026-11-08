@@ -13687,6 +13687,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} istek bekliyor'**
   String friendsRequestsSummary(int count);
+
+  /// No description provided for @hideBarWhileTyping.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazarken alt çubuğu gizle'**
+  String get hideBarWhileTyping;
+
+  /// No description provided for @hideBarWhileTypingInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazmaya başlayınca alt çubuk iner, bırakınca hemen geri gelir.'**
+  String get hideBarWhileTypingInfo;
+
+  /// No description provided for @tipHideBarTyping.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazarken alt çubuk gizlenir, durunca geri gelir. Ayarlar → Kartlar bölümünden kapatılabilir.'**
+  String get tipHideBarTyping;
 }
 
 class _AppLocalizationsDelegate
