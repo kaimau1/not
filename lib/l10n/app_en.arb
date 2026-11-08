@@ -2824,5 +2824,8 @@
   "reminderLevelUrgentInfo": "Full screen, highest priority (like an alarm)",
   "itemMenuRemind": "Remind",
   "taskContactHint": "Person (to / from)",
-  "taskGmailHint": "Gmail link"
+  "taskGmailHint": "Gmail link",
+  "dueBadgeTitle": "{count, plural, =1{1 reminder/task waiting} other{{count} reminders/tasks waiting}}",
+  "dueBadgeBody": "Due now and today's tasks — on the home screen",
+  "dueBadgeChannel": "Waiting (icon badge)"
 }

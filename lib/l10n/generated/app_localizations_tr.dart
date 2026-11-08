@@ -7740,4 +7740,22 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get taskGmailHint => 'Gmail bağlantısı';
+
+  @override
+  String dueBadgeTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hatırlatıcı/görev bekliyor',
+      one: '1 hatırlatıcı/görev bekliyor',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dueBadgeBody =>
+      'Zamanı gelenler ve bugünün görevleri — ana ekranda';
+
+  @override
+  String get dueBadgeChannel => 'Bekleyenler (simge rozeti)';
 }

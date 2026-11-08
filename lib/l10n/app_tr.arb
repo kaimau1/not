@@ -3619,5 +3619,9 @@
   "reminderLevelUrgentInfo": "Tam ekran, en yüksek öncelik (alarm gibi)",
   "itemMenuRemind": "Hatırlat",
   "taskContactHint": "Kişi (kime / kimden)",
-  "taskGmailHint": "Gmail bağlantısı"
+  "taskGmailHint": "Gmail bağlantısı",
+  "dueBadgeTitle": "{count, plural, =1{1 hatırlatıcı/görev bekliyor} other{{count} hatırlatıcı/görev bekliyor}}",
+  "@dueBadgeTitle": {"placeholders": {"count": {"type": "int"}}},
+  "dueBadgeBody": "Zamanı gelenler ve bugünün görevleri — ana ekranda",
+  "dueBadgeChannel": "Bekleyenler (simge rozeti)"
 }

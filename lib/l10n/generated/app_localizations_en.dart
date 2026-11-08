@@ -7763,4 +7763,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taskGmailHint => 'Gmail link';
+
+  @override
+  String dueBadgeTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reminders/tasks waiting',
+      one: '1 reminder/task waiting',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dueBadgeBody => 'Due now and today\'s tasks — on the home screen';
+
+  @override
+  String get dueBadgeChannel => 'Waiting (icon badge)';
 }

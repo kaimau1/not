@@ -1,4 +1,5 @@
 import '../domain/reminder_level.dart';
+import 'due_state.dart';
 import '../domain/reminder_repeat.dart';
 
 import 'dart:async';
@@ -111,6 +112,15 @@ final reminderServiceProvider = Provider<ReminderService>((ref) {
 /// sessizce ölüyordu. İki servis de bu işlevi verir.
 void handleNotificationResponse(Ref ref, NotificationResponse response) {
   final payload = response.payload ?? '';
+  // Rozet özeti (zamanı gelenler): ana ekran — şerit orada.
+  if (payload == 'due') {
+    try {
+      ref.read(routerProvider).go('/');
+    } catch (e) {
+      ErrorLog.record('notification-tap', e);
+    }
+    return;
+  }
   // Brifing bildirimine dokununca ilgili ekranı aç.
   if (payload == 'briefing') {
     try {
@@ -505,6 +515,23 @@ class ReminderService {
       );
     }
 
+    // Ana ekran şeridinin "şimdi"si bir sonraki hatırlatıcıya kurulur ve
+    // uygulama simgesi rozeti (yalnız cihazda) güncellenir (2026-11-08).
+    _dueNextSub = _ref.listen<DateTime?>(
+      dueNextProvider,
+      (_, next) => _ref.read(dueClockProvider.notifier).armFor(next),
+      fireImmediately: true,
+    );
+    if (!kIsWeb) {
+      _badgeSub = _ref.listen<int>(dueBadgeProvider, (_, n) {
+        _badgeDebounce?.cancel();
+        _badgeDebounce = Timer(
+          const Duration(seconds: 2),
+          () => unawaited(_syncBadge(n)),
+        );
+      }, fireImmediately: true);
+    }
+
     // Günlük brifing ayarını izle ve bildirimi buna göre planla/iptal et.
     _briefingSub = _ref.listen(briefingSettingsProvider, (previous, next) {
       _syncBriefing(next);
@@ -512,6 +539,51 @@ class ReminderService {
   }
 
   ProviderSubscription<BriefingSettings>? _briefingSub;
+  ProviderSubscription<DateTime?>? _dueNextSub;
+  ProviderSubscription<int>? _badgeSub;
+  Timer? _badgeDebounce;
+  int? _badgeShown;
+  static const _badgeNotificationId = 999003;
+
+  /// **UYGULAMA SİMGESİ ROZETİ** (2026-11-08): Android'de rozeti başlatıcı
+  /// bildirimlerden çizer (Samsung/MIUI sayıyı `number`dan, Pixel nokta).
+  /// Ek paket yok: sessiz, düşük önemli TEK özet bildirimi (`badge` kanalı)
+  /// sayıyla güncellenir, sayı 0 olunca kalkar. Yük `due` (`note:` değil —
+  /// hatırlatıcı mutabakatı dokunmasın).
+  Future<void> _syncBadge(int count) async {
+    if (count == _badgeShown) return;
+    try {
+      await _ensureInitialized();
+      if (count == 0) {
+        await _plugin.cancel(id: _badgeNotificationId);
+        _badgeShown = 0;
+        return;
+      }
+      final l10n = await loadNotificationL10n(_ref.read(localeProvider));
+      await _plugin.show(
+        id: _badgeNotificationId,
+        title: l10n.dueBadgeTitle(count),
+        body: l10n.dueBadgeBody,
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            'badge',
+            l10n.dueBadgeChannel,
+            channelDescription: l10n.dueBadgeBody,
+            importance: Importance.low,
+            priority: Priority.low,
+            playSound: false,
+            enableVibration: false,
+            onlyAlertOnce: true,
+            number: count,
+          ),
+        ),
+        payload: 'due',
+      );
+      _badgeShown = count;
+    } catch (e) {
+      debugPrint('Rozet güncellenemedi: $e');
+    }
+  }
 
   ProviderSubscription<AsyncValue<List<CalendarEvent>>>? _calEventsSub;
   ProviderSubscription<AsyncValue<List<TaskItem>>>? _calTasksSub;
@@ -834,6 +906,9 @@ class ReminderService {
 
   void dispose() {
     _syncDebounce?.cancel();
+    _badgeDebounce?.cancel();
+    _badgeSub?.close();
+    _dueNextSub?.close();
     _trashDebounce?.cancel();
     _sub?.close();
     _trashSub?.close();

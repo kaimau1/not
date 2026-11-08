@@ -17,6 +17,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../app/app_commands.dart';
+import 'due_banner.dart';
 import '../../../app/app_frame.dart';
 import '../../../app/router.dart';
 import '../../../app/split_shell.dart';
@@ -1596,6 +1597,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         // "klasör paylaşıldığında kabul et veya reddet
                         // seçeneği olsun"). Bir şey beklemiyorsa hiç
                         // çizilmez — boşken sıfır yer kaplar.
+                        // Zamanı gelen hatırlatıcı/görev şeridi (2026-11-08).
+                        const DueBanner(),
                         const HomeInvites(),
                         const DashboardFilterRow(),
                         // Buluta yüklenmeyi bekleyen ekler — yoksa sıfır yer.

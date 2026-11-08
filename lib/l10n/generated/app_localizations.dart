@@ -13831,6 +13831,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gmail bağlantısı'**
   String get taskGmailHint;
+
+  /// No description provided for @dueBadgeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 hatırlatıcı/görev bekliyor} other{{count} hatırlatıcı/görev bekliyor}}'**
+  String dueBadgeTitle(int count);
+
+  /// No description provided for @dueBadgeBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zamanı gelenler ve bugünün görevleri — ana ekranda'**
+  String get dueBadgeBody;
+
+  /// No description provided for @dueBadgeChannel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bekleyenler (simge rozeti)'**
+  String get dueBadgeChannel;
 }
 
 class _AppLocalizationsDelegate
