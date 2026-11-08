@@ -3604,5 +3604,8 @@
   "inkMarkFixAskTitle": "Otomatik düzeltme açılsın mı?",
   "inkMarkFixAskBody": "Elle çizdiğin tik ve çarpılar temiz hâle getirilebilir. Her seferinde yanındaki küçük düğmeyle onaylarsın; kalem ayarlarından kapatabilirsin.",
   "inkMarkFixAskYes": "Aç",
-  "inkMarkFixAskNo": "Hayır"
+  "inkMarkFixAskNo": "Hayır",
+  "inkPinPen": "Bu kalemi sabitle",
+  "inkPinnedPen": "Sabit kalem · basılı tut: kaldır",
+  "penModeFinish": "Bitir"
 }

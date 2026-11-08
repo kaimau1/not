@@ -7717,4 +7717,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inkMarkFixAskNo => 'No';
+
+  @override
+  String get inkPinPen => 'Pin this pen';
+
+  @override
+  String get inkPinnedPen => 'Pinned pen · hold to remove';
+
+  @override
+  String get penModeFinish => 'Done';
 }

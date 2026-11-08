@@ -7694,4 +7694,13 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get inkMarkFixAskNo => 'Hayır';
+
+  @override
+  String get inkPinPen => 'Bu kalemi sabitle';
+
+  @override
+  String get inkPinnedPen => 'Sabit kalem · basılı tut: kaldır';
+
+  @override
+  String get penModeFinish => 'Bitir';
 }

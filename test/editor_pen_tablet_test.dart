@@ -172,6 +172,59 @@ void main() {
     await _end(tester);
   });
 
+  testWidgets(
+    'kalem kipinde geri: önce açık kapsül, sonra kip; not açık kalır',
+    (tester) async {
+      await _pump(tester, size: const Size(400, 800));
+      await _write(tester, tester.getCenter(find.byType(PageInkStack)));
+      await tester.pump(const Duration(seconds: 6));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.tap(find.byKey(const ValueKey('pen-dock-peek')));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byKey(const ValueKey('pen-dock-open')), findsOneWidget);
+      // 1. geri: kapsül hapa iner.
+      await tester.binding.handlePopRoute();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byKey(const ValueKey('pen-dock-closed')), findsOneWidget);
+      // 2. geri: kalem kipi kapanır, not ekranı yerinde.
+      await tester.binding.handlePopRoute();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(PenTray), findsNothing);
+      expect(find.byType(NoteEditorScreen), findsOneWidget);
+      await _end(tester);
+    },
+  );
+
+  testWidgets('kalem sabitlenir, kapsülden tek dokunuşla seçilir', (
+    tester,
+  ) async {
+    InkToolMemory.presets = [];
+    await _pump(tester, size: const Size(400, 800));
+    await _write(tester, tester.getCenter(find.byType(PageInkStack)));
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.byKey(const ValueKey('pen-dock-peek')));
+    await tester.pump(const Duration(milliseconds: 400));
+    final ink = tester.widget<PenTray>(find.byType(PenTray)).controller
+      ..setColor(const Color(0xFFE53935));
+    await tester.tap(find.byKey(const ValueKey('pen-tray-more')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('pen-tray-pin')));
+    await tester.pumpAndSettle();
+    expect(InkToolMemory.presets, hasLength(1));
+    ink.setColor(const Color(0xFF1E88E5));
+    await tester.pump();
+    await tester.tap(
+      find.byKey(
+        ValueKey('pen-preset-${InkToolMemory.presets.single.encode()}'),
+      ),
+    );
+    await tester.pump();
+    expect(ink.color.toARGB32(), 0xFFE53935);
+    InkToolMemory.presets = [];
+    await _end(tester);
+  });
+
   testWidgets('kayıtlı el yazısı açılışta görünür', (tester) async {
     await _pump(
       tester,

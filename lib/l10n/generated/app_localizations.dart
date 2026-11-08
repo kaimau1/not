@@ -13741,6 +13741,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Hayır'**
   String get inkMarkFixAskNo;
+
+  /// No description provided for @inkPinPen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu kalemi sabitle'**
+  String get inkPinPen;
+
+  /// No description provided for @inkPinnedPen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sabit kalem · basılı tut: kaldır'**
+  String get inkPinnedPen;
+
+  /// No description provided for @penModeFinish.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bitir'**
+  String get penModeFinish;
 }
 
 class _AppLocalizationsDelegate

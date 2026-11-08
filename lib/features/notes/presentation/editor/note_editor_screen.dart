@@ -2174,13 +2174,40 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
-  /// Kalem kipinin kapatma düğmesi (tepsi/sütun sonunda).
-  Widget _penDoneButton(AppLocalizations l10n) => IconButton(
-    key: const ValueKey('pen-done'),
-    tooltip: l10n.penModeDone,
-    icon: const Icon(Icons.check_rounded),
-    onPressed: () => _update(() => _penMode = false),
-  );
+  /// Kalem kipinin sonu (tepsi/sütun sonunda): × kalemi kapatır (çizim
+  /// kalır), ✓ bitirir — "Sayfaya yaz" ile açılan hızlı el yazısı notunda
+  /// notu da kapatıp ana ekrana döner (kullanıcı isteği 2026-11-08).
+  List<Widget> _penEndButtons(AppLocalizations l10n) {
+    final scheme = _themeOf(context).colorScheme;
+    return [
+      IconButton.filledTonal(
+        key: const ValueKey('pen-close'),
+        tooltip: l10n.penModeDone,
+        visualDensity: VisualDensity.compact,
+        style: IconButton.styleFrom(
+          backgroundColor: scheme.surfaceContainerHighest,
+          foregroundColor: scheme.onSurfaceVariant,
+        ),
+        icon: const Icon(Icons.close_rounded, size: 20),
+        onPressed: () => _update(() => _penMode = false),
+      ),
+      const SizedBox(width: 4),
+      IconButton.filled(
+        key: const ValueKey('pen-done'),
+        tooltip: l10n.penModeFinish,
+        visualDensity: VisualDensity.compact,
+        icon: const Icon(Icons.check_rounded, size: 20),
+        onPressed: () {
+          _pageInkCtl?.save();
+          _update(() => _penMode = false);
+          if (!widget.startDrawing) return;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) unawaited(Navigator.of(context).maybePop());
+          });
+        },
+      ),
+    ];
+  }
 
   /// Bu açılışta ipucuna bakıldı mı (bkz. [_maybeShowTip]).
   bool _tipChecked = false;
@@ -4613,7 +4640,14 @@ child: NoteFindBar(
                               left: 0,
                               right: 0,
                               bottom: 0,
-                              child: PenTray(
+                              // Kalem kipi geri tuşuyla kapanır — tepsinin
+                              // kendi panelleri önce (LIFO). Eskiden bu kayıt
+                              // alt çubuktaydı; kalem kipinde alt çubuk yok,
+                              // geri doğrudan ana ekrana atlıyordu.
+                              child: BackCloses(
+                                open: true,
+                                onClose: () => _update(() => _penMode = false),
+                                child: PenTray(
                                 key: const ValueKey('page-pen-dock'),
                                 controller: _pageInkOf(note),
                                 dock: true,
@@ -4624,8 +4658,9 @@ child: NoteFindBar(
                                     _showListButton(l10n),
                                   if (PenTray.useRail(context))
                                     _fullscreenButton(l10n),
-                                  _penDoneButton(l10n),
+                                  ..._penEndButtons(l10n),
                                 ],
+                              ),
                               ),
                             ),
                         ],

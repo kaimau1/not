@@ -2809,5 +2809,8 @@
   "inkMarkFixAskTitle": "Turn on tick and cross tidy-up?",
   "inkMarkFixAskBody": "Hand-drawn ticks and crosses can be tidied. You confirm each one with the small button next to it; you can turn this off in pen settings.",
   "inkMarkFixAskYes": "Turn on",
-  "inkMarkFixAskNo": "No"
+  "inkMarkFixAskNo": "No",
+  "inkPinPen": "Pin this pen",
+  "inkPinnedPen": "Pinned pen · hold to remove",
+  "penModeFinish": "Done"
 }

@@ -521,6 +521,25 @@ class InkController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Sabitlenebilir şu anki kalem (bkz. [InkToolMemory.presets]).
+  InkPreset get currentPreset =>
+      InkPreset(pen: pen.index, color: color.toARGB32(), width: widthPx);
+
+  /// Sabitlenmiş kalemi tek dokunuşla seçer: tür, renk, kalınlık.
+  void applyPreset(InkPreset p) {
+    if (p.pen < 0 || p.pen >= InkPen.values.length) return;
+    final value = InkPen.values[p.pen];
+    pen = value;
+    eraser = false;
+    arrow = false;
+    shape = null;
+    _leaveLasso();
+    color = Color(p.color);
+    widthPx = value.clampWidth(p.width);
+    _remember();
+    notifyListeners();
+  }
+
   void setWidth(double value) {
     widthPx = pen.clampWidth(value);
     _remember();
