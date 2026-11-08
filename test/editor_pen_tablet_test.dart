@@ -16,6 +16,8 @@ import 'package:notlar/features/notes/presentation/editor/page_ink_layer.dart';
 import 'package:notlar/features/notes/presentation/editor/pen_tray.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_layer.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
+import 'package:notlar/core/widgets/note_route_closing.dart';
+import 'package:notlar/features/notes/presentation/notes_providers.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -222,6 +224,23 @@ void main() {
     await tester.pump();
     expect(ink.color.toARGB32(), 0xFFE53935);
     InkToolMemory.presets = [];
+    await _end(tester);
+  });
+
+  testWidgets('kapanış animasyonunda sıralama tutması bırakılmaz (kasma)', (
+    tester,
+  ) async {
+    final container = await _pump(tester, size: const Size(400, 800));
+    expect(container.read(sortHeldNoteIdsProvider), contains('n'));
+    noteRouteClosing.value = true;
+    await tester.pump();
+    await tester.pump();
+    // Pano donuk: tutma kapanış boyunca sürer (ikinci hesap/kurulum yok).
+    expect(container.read(sortHeldNoteIdsProvider), contains('n'));
+    noteRouteClosing.value = false;
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+    expect(container.read(sortHeldNoteIdsProvider), isNot(contains('n')));
     await _end(tester);
   });
 

@@ -1423,16 +1423,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// kodlaması (K3) kapanış karelerine binmesin. Kayıt kaybolmaz: rota
   /// kalkınca [dispose] içindeki [_saveNow] yazar; geri çekme jesti
   /// vazgeçilirse zamanlayıcı yeniden kurulur.
+  ///
+  /// **KAPANIŞ KASMASI (2026-11-08):** sıralama tutması burada BIRAKILMAZ —
+  /// eskiden kapanışın ilk karesinde (mikro görev) bırakılıyordu: o karede
+  /// zaten panonun duraklatılmış abonelikleri sürüp `filteredNotesProvider`
+  /// yeniden hesaplanıyor (F23.2 ölçümü ~3-4 ms) ve tutma bırakılınca İKİNCİ
+  /// kez hesaplanıp pano ekranı yeniden kuruluyordu. Görünür faydası da yoktu:
+  /// pano kapanış boyunca `FreezeWhenHidden` ile DONUK, küçülen not kartın
+  /// donuk (eski) yerine iner. Bırakma rota kalkınca ([dispose]); yeni sıra
+  /// panonun kapanış sonrası yetişmesine (+120 ms) katılır.
   void _holdSaveWhileClosing() {
-    final id = widget.noteId;
-    final hold = _sortHold;
     if (noteRouteClosing.value) {
       _debouncer.pause();
-      // Pano görünmeden ÖNCE yerine otursun: küçülen not yeni yerine iner.
-      unawaited(Future.microtask(() => hold?.release(id)));
     } else {
       _debouncer.resume();
-      unawaited(Future.microtask(() => hold?.hold(id)));
     }
   }
 
@@ -1448,11 +1452,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// satırlarında zaman ifadesi varsa ve notun hatırlatıcısı yoksa, kapanışta
   /// tek bildirim: "Takvime ekle?". Yazarken hiçbir şey çalışmaz (tuş
   /// başına iş yok — akıcılık bütçesi); yalnız çıkışta bir kez ayrıştırılır.
-  void _suggestCalendar() {
+  void _suggestCalendar(bool readOnly) {
     final note = _note;
     // `_readOnly` değil: ref atılırken okunamaz.
     if (note == null ||
-        widget.readOnly ||
+        readOnly ||
         note.locked ||
         note.reminderAt != null) {
       return;
@@ -1547,7 +1551,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // yazmazdı — _saveNow aynı drift ağını çıkış yolunda da kurar.
     _saveNow();
     _stampServerTimeOnExit();
-    _suggestCalendar();
+    // Tarih ayrıştırma (2000 karakter, düzenli ifadeler) rota kalkış karesine
+    // binmesin: panonun yetişmesinden (+120 ms) de sonra.
+    final readOnly = widget.readOnly;
+    Timer(const Duration(milliseconds: 700), () => _suggestCalendar(readOnly));
     // Silinen eklerin baytları burada gider: "Geri al" ile geri gelenler
     // dosyalarını korur (bkz. _flushAttachmentDeletes).
     _flushAttachmentDeletes();
