@@ -3614,5 +3614,6 @@
   "@gmailSmartLinkPerson": {"placeholders": {"name": {"type": "String"}}},
   "gmailSmartRelatedNote": "İlgili not: {title}",
   "@gmailSmartRelatedNote": {"placeholders": {"title": {"type": "String"}}},
-  "gmailAddedToNote": "Seçili metin nota eklendi"
+  "gmailAddedToNote": "Seçili metin nota eklendi",
+  "calendarLinkExistingNote": "Mevcut notu bağla"
 }

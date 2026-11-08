@@ -7743,4 +7743,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gmailAddedToNote => 'Selected text added to the note';
+
+  @override
+  String get calendarLinkExistingNote => 'Link an existing note';
 }

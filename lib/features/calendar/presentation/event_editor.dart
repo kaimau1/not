@@ -593,6 +593,17 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
                         label: Text(l10n.calendarMeetingNote),
                       ),
                     ),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton.icon(
+                        key: const ValueKey('event-link-note'),
+                        onPressed: () => unawaited(
+                          linkExistingNote(context, ref, event: existing),
+                        ),
+                        icon: const Icon(Icons.link),
+                        label: Text(l10n.calendarLinkExistingNote),
+                      ),
+                    ),
                   ],
                   const SizedBox(height: 12),
                   FilledButton(

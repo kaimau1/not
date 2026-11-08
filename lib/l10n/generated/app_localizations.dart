@@ -13783,6 +13783,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Seçili metin nota eklendi'**
   String get gmailAddedToNote;
+
+  /// No description provided for @calendarLinkExistingNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mevcut notu bağla'**
+  String get calendarLinkExistingNote;
 }
 
 class _AppLocalizationsDelegate

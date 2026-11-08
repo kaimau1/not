@@ -7720,4 +7720,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gmailAddedToNote => 'Seçili metin nota eklendi';
+
+  @override
+  String get calendarLinkExistingNote => 'Mevcut notu bağla';
 }
