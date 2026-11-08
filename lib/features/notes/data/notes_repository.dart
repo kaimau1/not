@@ -1149,11 +1149,16 @@ class NotesRepository {
 
   /// [repeat] verilmezse tekrar alanına dokunulmaz (ertele/ilerlet); hatırlatıcı
   /// kaldırılınca (null) tekrar da silinir (F18.14).
-  void setReminder(String noteId, DateTime? reminderAt, {String? repeat}) =>
-      updateFields(noteId, {
-        'reminderAt': reminderAt != null ? Timestamp.fromDate(reminderAt) : null,
-        if (reminderAt == null) 'reminderRepeat': '' else 'reminderRepeat': ?repeat,
-      });
+  void setReminder(
+    String noteId,
+    DateTime? reminderAt, {
+    String? repeat,
+    String? level,
+  }) => updateFields(noteId, {
+    'reminderAt': reminderAt != null ? Timestamp.fromDate(reminderAt) : null,
+    if (reminderAt == null) 'reminderRepeat': '' else 'reminderRepeat': ?repeat,
+    if (reminderAt == null) 'reminderLevel': '' else 'reminderLevel': ?level,
+  });
 
   /// Boş notlar editörden çıkarken tamamen silinir.
   /// Bir etiketi TÜM notlarda yeniden adlandırır. Aynı ada sahip bir etiket

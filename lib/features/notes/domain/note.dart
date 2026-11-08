@@ -209,6 +209,7 @@ class Note {
     this.archivedAt,
     this.reminderAt,
     this.reminderRepeat = '',
+    this.reminderLevel = '',
     this.cards = const [],
     this.aiSummary,
     this.localOnly = false,
@@ -240,7 +241,7 @@ class Note {
     'tagLinks',
     'textPages',
     'activePage', 'orderIndex', 'createdAt', 'updatedAt', 'deletedAt',
-    'archivedAt', 'reminderAt', 'reminderRepeat', 'cards', 'aiSummary',
+    'archivedAt', 'reminderAt', 'reminderRepeat', 'reminderLevel', 'cards', 'aiSummary',
     'schema',
     // Depo katmanının her yazımda kendisi koyduğu alan — notla taşınmaz.
     // (`createdBy` BİLEREK burada değil: [extras] olarak AYNEN geri yazılır;
@@ -528,6 +529,10 @@ class Note {
   /// [reminderAt] hep SONRAKİ çalmadır.
   final String reminderRepeat;
 
+  /// Hatırlatıcının bildirim önem düzeyi (`ReminderLevel.id`; '' = sık,
+  /// eski davranış). Eski istemci tanımadığı alanı extras olarak geri yazar.
+  final String reminderLevel;
+
   /// Aralıklı tekrar kartları (F18.19).
   final List<StudyCard> cards;
   final AiSummary? aiSummary;
@@ -803,6 +808,7 @@ class Note {
     DateTime? reminderAt,
     bool clearReminderAt = false,
     String? reminderRepeat,
+    String? reminderLevel,
     List<StudyCard>? cards,
     AiSummary? aiSummary,
     bool? localOnly,
@@ -862,6 +868,9 @@ class Note {
     reminderRepeat: clearReminderAt
         ? ''
         : (reminderRepeat ?? this.reminderRepeat),
+    reminderLevel: clearReminderAt
+        ? ''
+        : (reminderLevel ?? this.reminderLevel),
     cards: cards ?? this.cards,
     aiSummary: aiSummary ?? this.aiSummary,
     localOnly: localOnly ?? this.localOnly,
@@ -1021,6 +1030,7 @@ class Note {
       archivedAt: (map['archivedAt'] as Timestamp?)?.toDate(),
       reminderAt: (map['reminderAt'] as Timestamp?)?.toDate(),
       reminderRepeat: map['reminderRepeat'] as String? ?? '',
+      reminderLevel: map['reminderLevel'] as String? ?? '',
       cards: [
         for (final raw in (map['cards'] as List? ?? const []))
           if (raw is Map) StudyCard.fromMap(Map<String, dynamic>.from(raw)),
@@ -1139,6 +1149,7 @@ class Note {
     // KOŞULSUZ (kaldırılabilir alan, merge tuzağı): tekrar kapatılınca ''
     // yazılmalı, yoksa sunucudaki eski tekrar kalırdı.
     'reminderRepeat': reminderRepeat,
+    'reminderLevel': reminderLevel,
     // Kartlar da koşulsuz (son kart silinince alan boşalmalı).
     'cards': [for (final c in cards) c.toMap()],
     'aiSummary': aiSummary?.toMap(),

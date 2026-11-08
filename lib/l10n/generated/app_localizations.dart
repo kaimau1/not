@@ -13687,6 +13687,210 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} istek bekliyor'**
   String friendsRequestsSummary(int count);
+
+  /// No description provided for @inkFixApply.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzgün şekle getir'**
+  String get inkFixApply;
+
+  /// No description provided for @inkShapeSuggestTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şekli tanı ve düzeltmeyi öner'**
+  String get inkShapeSuggestTitle;
+
+  /// No description provided for @inkShapeSuggestInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kabaca daire, dikdörtgen, üçgen, çizgi ya da ok çizince sağ altta küçük düğme çıkar; dokununca düzgün olur, geri al eski hâline döndürür.'**
+  String get inkShapeSuggestInfo;
+
+  /// No description provided for @inkMarkFixTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tik ve çarpıyı düzelt'**
+  String get inkMarkFixTitle;
+
+  /// No description provided for @inkMarkFixInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elle çizilen ✓ ve ✗ işaretleri için düzeltme düğmesi çıkar.'**
+  String get inkMarkFixInfo;
+
+  /// No description provided for @inkMarkFixAskTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik düzeltme açılsın mı?'**
+  String get inkMarkFixAskTitle;
+
+  /// No description provided for @inkMarkFixAskBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elle çizdiğin tik ve çarpılar temiz hâle getirilebilir. Her seferinde yanındaki küçük düğmeyle onaylarsın; kalem ayarlarından kapatabilirsin.'**
+  String get inkMarkFixAskBody;
+
+  /// No description provided for @inkMarkFixAskYes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aç'**
+  String get inkMarkFixAskYes;
+
+  /// No description provided for @inkMarkFixAskNo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hayır'**
+  String get inkMarkFixAskNo;
+
+  /// No description provided for @inkPinPen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu kalemi sabitle'**
+  String get inkPinPen;
+
+  /// No description provided for @inkPinnedPen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sabit kalem · basılı tut: kaldır'**
+  String get inkPinnedPen;
+
+  /// No description provided for @penModeFinish.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bitir'**
+  String get penModeFinish;
+
+  /// No description provided for @reminderLevelTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirim'**
+  String get reminderLevelTitle;
+
+  /// No description provided for @reminderLevelLow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Az'**
+  String get reminderLevelLow;
+
+  /// No description provided for @reminderLevelNormal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Orta'**
+  String get reminderLevelNormal;
+
+  /// No description provided for @reminderLevelHigh.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sık'**
+  String get reminderLevelHigh;
+
+  /// No description provided for @reminderLevelUrgent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Acil'**
+  String get reminderLevelUrgent;
+
+  /// No description provided for @reminderLevelLowInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sessiz; yalnız bildirim alanında görünür'**
+  String get reminderLevelLowInfo;
+
+  /// No description provided for @reminderLevelNormalInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Normal ses, ekranın üstünde açılmaz'**
+  String get reminderLevelNormalInfo;
+
+  /// No description provided for @reminderLevelHighInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli, ekranın üstünde öne çıkar'**
+  String get reminderLevelHighInfo;
+
+  /// No description provided for @reminderLevelUrgentInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekran, en yüksek öncelik (alarm gibi)'**
+  String get reminderLevelUrgentInfo;
+
+  /// No description provided for @itemMenuRemind.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlat'**
+  String get itemMenuRemind;
+
+  /// No description provided for @taskContactHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişi (kime / kimden)'**
+  String get taskContactHint;
+
+  /// No description provided for @taskGmailHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gmail bağlantısı'**
+  String get taskGmailHint;
+
+  /// No description provided for @dueBadgeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 hatırlatıcı/görev bekliyor} other{{count} hatırlatıcı/görev bekliyor}}'**
+  String dueBadgeTitle(int count);
+
+  /// No description provided for @dueBadgeBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zamanı gelenler ve bugünün görevleri — ana ekranda'**
+  String get dueBadgeBody;
+
+  /// No description provided for @dueBadgeChannel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bekleyenler (simge rozeti)'**
+  String get dueBadgeChannel;
+
+  /// No description provided for @quickRowBold.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalın'**
+  String get quickRowBold;
+
+  /// No description provided for @quickRowBullet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Madde imi'**
+  String get quickRowBullet;
+
+  /// No description provided for @quickRowHeading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık (sırayla)'**
+  String get quickRowHeading;
+
+  /// No description provided for @quickRowPhoto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fotoğraf ekle'**
+  String get quickRowPhoto;
+
+  /// No description provided for @quickRowFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya ekle'**
+  String get quickRowFile;
+
+  /// No description provided for @quickRowPen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalemle yaz · basılı tut: kalem ayarları'**
+  String get quickRowPen;
+
+  /// No description provided for @quickRowReminder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcı'**
+  String get quickRowReminder;
 }
 
 class _AppLocalizationsDelegate

@@ -163,6 +163,8 @@ class ItemsEditor extends StatefulWidget {
     this.paperLines = false,
     this.onMoveToPage,
     this.onMakeTask,
+    this.onLineReminder,
+    this.lineTrailing,
     this.onItemChecked,
   });
 
@@ -177,6 +179,12 @@ class ItemsEditor extends StatefulWidget {
 
   /// Madde menüsündeki "Görev yap" (TAKVIM F50.3); null = seçenek yok.
   final ValueChanged<NoteItem>? onMakeTask;
+
+  /// Madde menüsündeki "Hatırlat": satıra bağlı hatırlatıcı (2026-11-08).
+  final ValueChanged<NoteItem>? onLineReminder;
+
+  /// Satırın sonunda (yıldızın solunda) bağlı görev/hatırlatıcı çipi.
+  final Widget Function(NoteItem item)? lineTrailing;
 
   /// Kullanıcı maddeyi işaretledi/kaldırdı (bağlı görev eşlemesi).
   final void Function(NoteItem item, bool checked)? onItemChecked;
