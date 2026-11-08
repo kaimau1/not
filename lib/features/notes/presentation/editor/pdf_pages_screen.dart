@@ -148,7 +148,13 @@ class _PdfPagesScreenState extends State<PdfPagesScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final hasInk = widget.attachment.ink.isNotEmpty;
-    return Scaffold(
+    // Seçim varken geri önce seçimi kapatır (ekrandan çıkmaz).
+    return PopScope(
+      canPop: _selected.isEmpty,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(_selected.clear);
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text(l10n.pdfEditPages),
         actions: [
@@ -239,6 +245,7 @@ class _PdfPagesScreenState extends State<PdfPagesScreen> {
           onPressed: (_busy || !_dirty) ? null : _apply,
           child: Text(l10n.pdfApplyChanges),
         ),
+      ),
       ),
     );
   }
