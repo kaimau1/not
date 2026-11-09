@@ -164,4 +164,15 @@ void main() {
         .map((r) => r.cursor);
     expect(cursors, contains(SystemMouseCursors.precise));
   });
+
+  testWidgets('renk/kalınlık kartı dışarı dokununca kapanır', (tester) async {
+    await pump(tester, controls: false);
+    // Seçili kaleme yeniden dokunmak kartı açar.
+    await tester.tap(find.byKey(const ValueKey('pen-tray-pen')));
+    await tester.pumpAndSettle();
+    expect(find.byType(Slider), findsWidgets);
+    await tester.tapAt(const Offset(200, 40));
+    await tester.pumpAndSettle();
+    expect(find.byType(Slider), findsNothing);
+  });
 }
