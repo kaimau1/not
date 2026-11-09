@@ -22,6 +22,10 @@ enum InkFixKind {
 
   /// Dik açılı olmayan dörtgen (yamuk, paralelkenar).
   quad,
+
+  /// Düzgün çokgen, 5–7 köşe (F55.3, 2026-11-09; sekizgen elle çizilmiş
+  /// daireden güvenle ayrılmıyor — daire kalır).
+  polygon,
 }
 
 /// Önerilen temiz çizgi (piksel): noktalar + ok başlığı.
@@ -412,6 +416,23 @@ ClosedInkShape? recognizeClosedShape(List<Offset> pts) {
     InkFixKind.triangle: eTri * 0.95,
   };
   final best = scores.entries.reduce((a, b) => a.value <= b.value ? a : b);
+
+  // ÇOKGEN (F55.3, 2026-11-09): 5–7 köşeli düzgün çokgen eskiden daire
+  // sanılıyordu (elips hatası dörtgen/üçgenden düşük kalıyor). Yalnız
+  // elipsten AÇIKÇA iyi uyuyorsa (≤ %60) ve kazanan elipsse ya da hiçbiri
+  // tutmadıysa denenir — elle çizilmiş daire sekizgene de az çok uyar.
+  if (best.key == InkFixKind.ellipse || best.value > 0.05) {
+    final ratio = math.max(mb.w, mb.h) / math.max(1, math.min(mb.w, mb.h));
+    if (ratio <= 1.35) {
+      final pg = _regularPolygonFit(pts, hull, diag);
+      if (pg != null &&
+          pg.error <= 0.05 &&
+          pg.error < eEll * 0.6 &&
+          pg.error < math.min(eRect, math.min(eQuad, eTri))) {
+        return (kind: InkFixKind.polygon, outline: pg.outline, regular: true);
+      }
+    }
+  }
   if (best.value > 0.05) return null;
 
   switch (best.key) {
@@ -656,4 +677,70 @@ List<Offset> _maxAreaPolygon(List<Offset> hull, int k) {
     }
   }
   return best;
+}
+
+/// Düzgün [k]-gen (k = 5…7) uydurma: merkez zarfın alan merkezi, yarıçap
+/// noktaların merkeze ortalama uzaklığı (köşe ile kenar ortası arası), dönüş
+/// 24 adımda aranır. En düşük hata (/ köşegen) veren k kazanır.
+({List<Offset> outline, double error})? _regularPolygonFit(
+  List<Offset> pts,
+  List<Offset> hull,
+  double diag,
+) {
+  final center = _centroid(hull);
+  // Hata ölçümü için en çok 64 nokta (pil/kare bütçesi).
+  final step = math.max(1, pts.length ~/ 64);
+  final sample = [for (var i = 0; i < pts.length; i += step) pts[i]];
+  var meanR = 0.0;
+  for (final p in sample) {
+    meanR += (p - center).distance;
+  }
+  meanR /= sample.length;
+  if (meanR < 1) return null;
+  List<Offset>? bestOutline;
+  var bestErr = double.infinity;
+  // 8: elle çizilmiş daireyle ayrılmıyor (ölçüldü: hata oranı 0,62 / 0,6).
+  for (var k = 5; k <= 7; k++) {
+    // Çevre noktalarının ortalama uzaklığı ≈ köşe yarıçapının bu oranı.
+    final r = meanR / ((1 + math.cos(math.pi / k)) / 2);
+    const steps = 24;
+    for (var j = 0; j < steps; j++) {
+      final rot = (2 * math.pi / k) * j / steps - math.pi / 2;
+      final outline = [
+        for (var i = 0; i <= k; i++)
+          center +
+              Offset(
+                r * math.cos(rot + 2 * math.pi * i / k),
+                r * math.sin(rot + 2 * math.pi * i / k),
+              ),
+      ];
+      final e = _outlineError(sample, outline) / diag;
+      if (e < bestErr) {
+        bestErr = e;
+        bestOutline = outline;
+      }
+    }
+  }
+  if (bestOutline == null) return null;
+  return (outline: bestOutline, error: bestErr);
+}
+
+/// Kapalı çokgenin alan merkezi (dejenere ise köşe ortalaması).
+Offset _centroid(List<Offset> poly) {
+  var a = 0.0, cx = 0.0, cy = 0.0;
+  for (var i = 0; i < poly.length; i++) {
+    final p = poly[i], q = poly[(i + 1) % poly.length];
+    final c = _cross2(p, q);
+    a += c;
+    cx += (p.dx + q.dx) * c;
+    cy += (p.dy + q.dy) * c;
+  }
+  if (a.abs() < 1e-9) {
+    var s = Offset.zero;
+    for (final p in poly) {
+      s += p;
+    }
+    return s / poly.length.toDouble();
+  }
+  return Offset(cx / (3 * a), cy / (3 * a));
 }

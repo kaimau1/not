@@ -411,6 +411,10 @@ class InkController extends ChangeNotifier {
   /// Etkin çizgi şekle oturdu: kalkana dek uzamaz.
   bool _snapped = false;
 
+  /// Oturan şekil DÜZ ÇİZGİYSE sabit ucu (oranlı): kalem kalkana dek öbür
+  /// uç kalemi izler (F55.2, 2026-11-09 — Squid/Notein övgüsü). Değilse null.
+  Offset? _snapLineFrom;
+
   /// Çizgiye yazılan renk: seçilen renk + kalemin saydamlığı (+ şeffaflık).
   Color get penColor => pen == InkPen.highlighter
       ? pen.apply(color)
@@ -979,6 +983,7 @@ class InkController extends ChangeNotifier {
     _active = stroke;
     _activeSize = size;
     _snapped = false;
+    _snapLineFrom = null;
     _holdX = x;
     _holdY = y;
     // Yakınlık, yeni noktanın KENDİSİ eklenmeden önce ölçülür.
@@ -1044,6 +1049,15 @@ class InkController extends ChangeNotifier {
     _ink = [for (final s in _ink) identical(s, active) ? snapped : s];
     _active = snapped;
     _snapped = true;
+    // Düz çizgide kaleme uzak uç sabit kalır, yakın uç kalemle taşınır.
+    if (closed == null && points.length == 4) {
+      final pen = Offset(_holdX, _holdY);
+      final a = Offset(points[0], points[1]);
+      final b = Offset(points[2], points[3]);
+      _snapLineFrom = (a - pen).distance >= (b - pen).distance ? a : b;
+    } else {
+      _snapLineFrom = null;
+    }
     HapticFeedback.selectionClick();
     notifyListeners();
   }
@@ -1105,6 +1119,25 @@ class InkController extends ChangeNotifier {
       return;
     }
     final active = _active;
+    final lineFrom = _snapLineFrom;
+    if (active != null && _snapped && lineFrom != null) {
+      // Oturmuş düz çizginin ucu kalemle gider (F55.2).
+      final moved = InkStroke(
+        page: active.page,
+        color: active.color,
+        width: active.width,
+        points: [
+          lineFrom.dx,
+          lineFrom.dy,
+          local.dx / size.width,
+          local.dy / size.height,
+        ],
+      );
+      _ink = [for (final s in _ink) identical(s, active) ? moved : s];
+      _active = moved;
+      notifyListeners();
+      return;
+    }
     if (active == null || _snapped) return;
     final x = local.dx / size.width;
     final y = local.dy / size.height;
@@ -1266,6 +1299,7 @@ class InkController extends ChangeNotifier {
     }
     final wasErasing = _erasing;
     final wasSnapped = _snapped;
+    _snapLineFrom = null;
     _tempEraser = false;
     _holdTimer?.cancel();
     _clearHold();
@@ -1793,6 +1827,7 @@ class InkFixMarker extends StatelessWidget {
     InkFixKind.ellipse => Icons.circle_outlined,
     InkFixKind.triangle => Icons.change_history_rounded,
     InkFixKind.quad => Icons.crop_din_rounded,
+    InkFixKind.polygon => Icons.pentagon_outlined,
     InkFixKind.tick => Icons.check_rounded,
     InkFixKind.cross => Icons.close_rounded,
   };

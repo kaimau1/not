@@ -225,5 +225,43 @@ void main() {
       );
       expect(shape?.kind, InkFixKind.triangle);
     });
+
+    // F55.3 (2026-11-09): 5–7 köşe düzgün çokgen daire sanılmamalı.
+    List<Offset> ngon(int k, double r, {double rot = 0, double wobble = 1.5}) {
+      const c = Offset(200, 200);
+      final corners = [
+        for (var i = 0; i <= k; i++)
+          c +
+              Offset(
+                r * math.cos(rot + 2 * math.pi * i / k),
+                r * math.sin(rot + 2 * math.pi * i / k),
+              ),
+      ];
+      return poly(corners, wobble: wobble);
+    }
+
+    for (final k in [5, 6, 7]) {
+      test('$k köşe düzgün çokgen → çokgen ($k köşe)', () {
+        final shape = recognizeClosedShape(ngon(k, 90, rot: 0.2));
+        expect(shape?.kind, InkFixKind.polygon, reason: '$k-gen');
+        expect(shape!.outline, hasLength(k + 1));
+      });
+    }
+
+    test('daire çokgen sanılmaz; kare ve üçgen bozulmaz', () {
+      for (final w in [1.0, 2.0, 4.0]) {
+        expect(
+          recognizeClosedShape(
+            ellipse(const Offset(200, 200), 80, 76, wobble: w),
+          )?.kind,
+          InkFixKind.ellipse,
+          reason: 'titreme $w',
+        );
+      }
+      expect(recognizeClosedShape(ngon(4, 90, rot: 0.785))?.kind,
+          InkFixKind.rectangle);
+      expect(recognizeClosedShape(ngon(3, 90, rot: -1.57))?.kind,
+          InkFixKind.triangle);
+    });
   });
 }

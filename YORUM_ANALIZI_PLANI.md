@@ -52,9 +52,9 @@ Okunan yorumlar Play'in "en alakalı" sıralamasıydı, yıldıza göre süzülm
 
 ## Faz 55 — Tablet ve kalem (bu oturumun devamı)
 
-- [ ] **F55.1 Parmağa araç ata** (Squid övgüsü): "Parmak: kaydır / sil / çiz" seçeneği, "yalnız kalem"in yanında.
-- [ ] **F55.2 Düz çizgi ucunu taşı:** Bekleyip düzleşen çizgide kalem kalkmadan uç sürüklenebilsin. Şekil tanıma zaten var, yalnız uç serbest kalacak.
-- [ ] **F55.3 Çokgen tanıma:** 5–8 köşe düzgün çokgen (bugün daire sayılıyor olabilir, test et).
+- [ ] **F55.1 Parmağa araç ata** — 2026-11-09: bilerek ERTELENDİ (parmak silgi avuç içiyle çizgi siler, tek parmak kaydırmayla çakışır; tablette denenmeden yazılmaz). (Squid övgüsü): "Parmak: kaydır / sil / çiz" seçeneği, "yalnız kalem"in yanında.
+- [x] **F55.2 Düz çizgi ucunu taşı** (2026-11-09, `_snapLineFrom`, test `ink_line_endpoint_test`; cihazda doğrulanmadı): Bekleyip düzleşen çizgide kalem kalkmadan uç sürüklenebilsin. Şekil tanıma zaten var, yalnız uç serbest kalacak.
+- [x] **F55.3 Çokgen tanıma** (2026-11-09: 5–7 köşe; sekizgen daireden ayrılmıyor, daire kalır — ölçüm HAFIZA): 5–8 köşe düzgün çokgen (bugün daire sayılıyor olabilir, test et).
 - [ ] **F55.4 Dolma kalem (basınca duyarlı, uçtan inceltme):** i/ö/ü noktası basınç 0'da da görünmeli. Notein'deki hataya düşmemek için en ince çizgiye taban konur.
 - [ ] **F55.5 Kalem kapsülü cihaz turu:** Yeni kapsül tablette ve telefonda elle denenir. Hızlı renkler ve hap ↔ kapsül geçişi kontrol edilir.
 
@@ -62,12 +62,12 @@ Okunan yorumlar Play'in "en alakalı" sıralamasıydı, yıldıza göre süzülm
 
 - [x] **F56.1 Arama sonucundan kelimeye git:** Arama sonucundaki nota basınca o kelimeye kaydırılsın ve vurgulansın. Notta ara özelliğinin var olan parçaları yeniden kullanılır. — Yapıldı 2026-11-09: kart `?find=` ile açar, çubuk açık + ilk eşleşmeye kaydırılmış, klavye açılmaz; eşleşme yoksa çubuk kapanır (bekçi `editor_open_at_test`). Cihazda doğrulanmadı.
 - [ ] **F56.2 Hatırlatıcı güvenilirliği:** Pil iyileştirme ve tam zamanlı alarm izni yoksa uyarı çıksın. Telefonda kanıtla.
-- [ ] **F56.3 Son kullanılan yazı boyutu/biçimi hatırlansın** (Keep şikâyeti: her seferinde baştan ayarlanıyor).
+- [x] **F56.3 Son kullanılan yazı boyutu/biçimi hatırlansın** (2026-11-09, `NoteFormatMemory`: gövde boyutu + tipi yeni notlara) (Keep şikâyeti: her seferinde baştan ayarlanıyor).
 
 ## Faz 57 — Değişikliği nazik yap (güncelleme alışkanlığı bozmasın)
 
-- [ ] **F57.1 Kaldırılan ya da taşınan her düğme için bir sürümlük ipucu:** "X artık şurada" diye. Kural olarak `HAFIZA.md`'ye yazılır.
-- [ ] **F57.2 Sürüm notu uygulama içinde:** Yalnız kullanıcıya görünen değişiklikler, Türkçe, en çok 3 madde.
+- [ ] **F57.1** (2026-11-09: tek kullanıcıda gereksiz, ertelendi) **Kaldırılan ya da taşınan her düğme için bir sürümlük ipucu:** "X artık şurada" diye. Kural olarak `HAFIZA.md`'ye yazılır.
+- [ ] **F57.2** (2026-11-09: aynı nedenle ertelendi) **Sürüm notu uygulama içinde:** Yalnız kullanıcıya görünen değişiklikler, Türkçe, en çok 3 madde.
 
 ## İsteğe bağlı (talep çok ama bizde öncelik düşük)
 

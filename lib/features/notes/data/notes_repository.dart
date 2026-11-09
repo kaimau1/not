@@ -27,6 +27,7 @@ import '../domain/note_type.dart';
 import 'attachment_repository.dart';
 import 'drive_store.dart' show driveFileDeleter;
 import 'local_notes_store.dart';
+import 'note_format_memory.dart';
 
 /// Şu an bir editörde AÇIK olan notların id'leri; `cleanupEmptyNotes` bunlara
 /// dokunmaz. Editör açılırken ekler, kapanırken çıkarır. Provider değil düz
@@ -542,6 +543,9 @@ class NotesRepository {
       folderId: folderId,
       reminderAt: reminderAt,
       listColumns: listColumns == 2 ? 2 : 1,
+      // Son kullanılan gövde yazı boyutu/tipi (F56.3, [NoteFormatMemory]).
+      fontScale: NoteFormatMemory.fontScale,
+      fontFamily: NoteFormatMemory.fontFamily,
       items: items != null && items.isNotEmpty
           ? [for (final t in items) NoteItem(id: _uuid.v4(), text: t)]
           : type == NoteType.text

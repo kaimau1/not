@@ -29,6 +29,7 @@ import 'core/utils/note_fonts.dart';
 import 'core/utils/prefs_footprint.dart';
 import 'core/widgets/setup_required_screen.dart';
 import 'features/notes/data/local_notes_store.dart';
+import 'features/notes/data/note_format_memory.dart';
 import 'features/notes/presentation/note_card_media.dart' show CardThumbs;
 import 'features/ai/data/antalia/antalia_engine.dart' show registerAntaliaLicense;
 import 'features/settings/settings_providers.dart';
@@ -151,6 +152,8 @@ Future<void> main() async {
   MenuLayouts.attach(prefs);
   // Son kullanılan kalem, "yalnız kalemle yaz" (bkz. InkToolMemory).
   InkToolMemory.attach(prefs);
+  // Son kullanılan yazı boyutu/tipi yeni notlara (F56.3).
+  NoteFormatMemory.attach(prefs);
 
   // Ek dosyalarının kök klasörü: yerel yol artık Firestore'dan okunmuyor,
   // (noteId, ekId, dosyaAdı)ndan türetiliyor — taban BURADA bir kez çözülür

@@ -21,6 +21,15 @@ testlerle korunuyor; burada alan başına 1–2 adım. F18.8 akış testleri
 testleri otomatik doğrulananları kapsıyor. Sorun görünce madde numarasıyla
 bildir. Yapılamayanı "denenmedi" diye yaz, silme.
 
+**ÖNCELİKLİ TUR (2026-11-09) — önce bunlar, sırayla.** Liste 2026-11-02'den beri
+büyüdü (~110 madde); "~10 dk" artık geçerli değil. Aşağıdaki 24 madde günlük
+kullanımı ve veri güvenliğini kapsıyor; gerisi bunlardan sonra.
+- Veri: #9/#100 (tam yedek → boş hesaba geri yükle), #47 (uzun notta Gboard + dikte, kapat-aç), D7 (not paketi kapat-aç), "Açık kalan gözlem" (boşalan madde).
+- Günlük: #16 (web→telefon ≤ 20 sn), A7 + A9 + F2 (satır hatırlatıcısı, şerit), #6 (bildirimde "Tamam"), A11 + D3 + D6 (hızlı satır, alt çubuk 1,1 sn), D1 + D2 + C3 (yazım düzelt), F1 (aramadan kelimeye), #37 + A3 (geri zinciri), G2 + #109 (basılı tut halkası, klasör düğmesi), #7/#77 (ses).
+- Kalem: A5 + D10 + G1 + H1 + H2 (şekil tanıma, çokgen, çizgi ucu), A6, C5, G3 + D9, #20.
+- Takvim: #88, F3 + F6 + #102; #101/#103/#104 yalnız F19.B10 yapıldıysa.
+- Gmail C1 + B9 · görünüm #51, #60 · web #29, #84 · H3 (son yazı boyutu).
+
 **Cihaz turu sonucu (2026-11-05, v1.1.701–704, Mi Note 10 Lite, yerel hesap):** geçenler silindi, kalanlar kısaltıldı. Bulunan ve düzeltilen hatalar HAFIZA "Cihaz turu kök nedenleri". Denenmedi, nedenleri: Google hesabı/AI gerekir (#7, #8, #31, #79, Gelen ve Kişiler); ikinci hesap (#81, #82, #83); ses (#7, #47 dikte); şifre girişi otomasyonda yapılmadı (#10, #11 kilit); web (#16–19, #27, #29, #30, #33, #57, #74, #76, #84, #85); tablet/kalem (#20, #22–24, #28, #86); Vulkan ya da temiz Android 12 cihazı (#59, #60 beyaz açılış); kişisel köprü APK'sı (#14).
 **Açık ölçüm:** yazma ana bloğu `taban.py`'de 148 → 229 ms, >16 ms 42 → 51 blok (v1.1.671 → v1.1.701, tek koşu, `adb` tuşu; CI bütçesi temiz; profil ile nedenine bakılmalı).
 
@@ -271,6 +280,11 @@ A12. [ ] Not kapanışı (yazdıktan sonra geri, karta küçülme): kasma azald�
 - G2 Ana ekranda karta basılı tut → parmağın üstünde dolan halka, dolunca kart elde; yana çekişte etiketin altındaki çubuk doluyor, dolunca bırakınca geçiyor.
 - G3 Sabit görsel/PDF: çubukta "T" → dokunduğun yere yazı kutusu, klavye açık. Yüzen görselde araç çubuğunda "T", ek şeridi/sağ tık menüsünde "Üstüne yazı ekle" → tam ekran yazı kipinde açılıyor; PDF tam ekranda "T".
 - G4 Dar telefonda (≤ 360 dp) sabit PDF çubuğu taşmıyor mu (sürükleme tutamağı küçülüyor).
+
+### H1–H3 (2026-11-09 oturum G — yazıldı, cihazda doğrulanmadı)
+- H1 Kalemle kabaca beşgen / altıgen / yedigen çiz → işaretçi düzgün çokgen öneriyor mu; daire hâlâ daire mi (sekizgen bilerek daire sayılır).
+- H2 Kalemle düz çizgi çiz, uçta bekle → çizgiye oturunca kalemi KALDIRMADAN gezdir → uç kalemi izliyor, başlangıç yerinde.
+- H3 Bir notta Biçim → yazı boyutunu büyüt (seçim yokken) ve yazı tipini değiştir → yeni metin/liste notu aynı boyut ve tiple açılıyor mu; varsayılana döndürünce yeni notlar da varsayılan.
 
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
