@@ -131,7 +131,7 @@ List<_SettingRow> _writingRows(AppLocalizations l10n) => [
     Builder(
       builder: (context) => ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: const Icon(Icons.menu_book_outlined, size: 20),
+        leading: const Icon(AppIcons.notebook, size: 20),
         title: Text(l10n.spellLearnedTitle),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => unawaited(showSpellSettings(context)),
