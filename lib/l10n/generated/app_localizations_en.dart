@@ -8063,7 +8063,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupStatusGuest =>
-      'NO cloud backup: notes live only on this device. Link a Google account or make a full backup.';
+      'No cloud backup: notes live only on this device. Link a Google account or make a full backup.';
 
   @override
   String backupStatusLast(String date, int count) {

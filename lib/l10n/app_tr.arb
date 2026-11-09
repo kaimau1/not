@@ -3722,7 +3722,7 @@
       }
     }
   },
-  "backupStatusGuest": "Bulut yedeği YOK: notlar yalnız bu cihazda. Google hesabı bağla ya da tam yedek al.",
+  "backupStatusGuest": "Bulut yedeği yok: notlar yalnız bu cihazda. Google hesabı bağla ya da tam yedek al.",
   "backupStatusLast": "Son tam yedek: {date} · {count} not",
   "@backupStatusLast": {
     "placeholders": {

@@ -8043,7 +8043,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupStatusGuest =>
-      'Bulut yedeği YOK: notlar yalnız bu cihazda. Google hesabı bağla ya da tam yedek al.';
+      'Bulut yedeği yok: notlar yalnız bu cihazda. Google hesabı bağla ya da tam yedek al.';
 
   @override
   String backupStatusLast(String date, int count) {

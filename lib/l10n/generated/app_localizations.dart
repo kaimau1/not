@@ -14363,7 +14363,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupStatusGuest.
   ///
   /// In tr, this message translates to:
-  /// **'Bulut yedeği YOK: notlar yalnız bu cihazda. Google hesabı bağla ya da tam yedek al.'**
+  /// **'Bulut yedeği yok: notlar yalnız bu cihazda. Google hesabı bağla ya da tam yedek al.'**
   String get backupStatusGuest;
 
   /// No description provided for @backupStatusLast.
