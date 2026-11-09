@@ -13850,6 +13850,36 @@ abstract class AppLocalizations {
   /// **'Bekleyenler (simge rozeti)'**
   String get dueBadgeChannel;
 
+  /// No description provided for @quickRowAttach.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekle'**
+  String get quickRowAttach;
+
+  /// No description provided for @quickRowColor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazı rengi (basılı tut: favori rengi seç)'**
+  String get quickRowColor;
+
+  /// No description provided for @penModePenOnlyOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem kipi · Yalnız kalemle yaz: açık (parmak kaydırır)'**
+  String get penModePenOnlyOn;
+
+  /// No description provided for @penModePenOnlyOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem kipi · Yalnız kalemle yaz: kapalı (parmak da yazar)'**
+  String get penModePenOnlyOff;
+
+  /// No description provided for @penModeSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayarla'**
+  String get penModeSettings;
+
   /// No description provided for @quickRowBold.
   ///
   /// In tr, this message translates to:

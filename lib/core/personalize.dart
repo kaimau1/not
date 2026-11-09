@@ -183,7 +183,20 @@ abstract final class UiItem {
   /// 2026-11-08: "hızlı menüye istediğimizi ekleyebilelim") — varsayılan
   /// gizli; düzenleme modunda (satırın sonundaki ⚙) dokununca eklenir.
   static final optIn = <String>{
+    // SADE VARSAYILAN (kullanıcı isteği 2026-11-09: "hızlı panelin varsayılan
+    // hali sadeleşmeli — kalem kipi, yazım düzeltici, paket, ek ekle, kalın +
+    // favori renk; telefona sığsın, fazlasını kişiler düzenleme alanından
+    // ekler"). Görünenler: pen, spell, package, attach, bold, color.
     for (final k in const [
+      'bullet',
+      'checkbox',
+      'heading',
+      'subheading',
+      'photo',
+      'camera',
+      'file',
+      'reminder',
+      'date',
       'italic',
       'underline',
       'highlight',

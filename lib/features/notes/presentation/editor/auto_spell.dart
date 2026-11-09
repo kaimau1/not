@@ -383,6 +383,9 @@ class AutoSpell {
       // Otomatik düzeltme geri alındı: bir daha dokunma.
       memory.reject(word, wrongFix: last.word);
     } else {
+      // Otomatik düzeltmenin üstüne BAŞKA kelime yazıldı ("biraz silip geri
+      // yazıyor", 2026-11-09): yanlış eşleşme unutulur, doğrusu öğrenilir.
+      if (auto != null) memory.unlearnFix(auto, last.word);
       memory.learnFix(auto ?? last.word, word);
     }
     _scheduleSave();
@@ -487,6 +490,7 @@ class AutoSpell {
     if (a == b || b.isEmpty) return false;
     // İlk harf aynı ya da komşu tuş/şapka eşi.
     if (a[0] != b[0] && keyCost(a[0], b[0]) > 0.5) return false;
+    if (SpellMemory.changesTooMuch(a, b)) return false;
     final limit = SpellMemory.limitFor(a.length) + 0.4;
     return memory.distance(a, b, limit: limit) <= limit;
   }

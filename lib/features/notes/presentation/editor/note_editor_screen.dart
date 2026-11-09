@@ -56,6 +56,7 @@ import '../../../../core/utils/link_text.dart';
 import '../../../../core/utils/markdown.dart';
 import '../../../../core/utils/note_fonts.dart';
 import '../../../../core/utils/rich_text.dart';
+import '../../../../core/widgets/color_palette.dart';
 import '../../../../core/utils/note_guard.dart';
 import '../../../../core/utils/sentence_select.dart';
 import '../../../../core/utils/pdf_ref.dart';
@@ -2239,15 +2240,34 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// butonuna tekrar basınca kalem modu kapansın").
   void _togglePen() {
     _update(() => _penMode = !_penMode);
-    if (_penMode) {
-      TipOnce.show(
-        context,
-        ref.read(sharedPreferencesProvider),
-        TipOnce.penToggle,
-        context.l10n.tipPenToggle,
-        sessionLimit: false,
+    if (_penMode) _penModeOpened();
+  }
+
+  /// Kalem kipi açıldı (düğmeyle ya da kalem değince). Kullanıcı isteği
+  /// 2026-11-09: "kalem kipi açılınca 'sadece kalemle yaz açık/kapalı'
+  /// söylenmeli, ipucuna tıklayıp ayara gidilmeli, her seferinde"; "kalem
+  /// kipi ile yüzen kalem senkronu doğru çalışmalı" — kip açıkken yüzen
+  /// düğme "kalem dokunur"da kalırsa kalem yazmıyordu.
+  void _penModeOpened() {
+    if (!InkToolMemory.autoStylus) InkToolMemory.saveAutoStylus(true);
+    final note = _note;
+    if (note == null || !mounted) return;
+    final l10n = context.l10n;
+    final page = !note.type.isPageNoteType;
+    final ink = page ? _pageInkOf(note) : null;
+    final penOnly = ink?.penOnly ?? InkToolMemory.penOnly;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showMessage(
+        penOnly ? l10n.penModePenOnlyOn : l10n.penModePenOnlyOff,
+        duration: const Duration(seconds: 3),
+        action: ink == null
+            ? null
+            : SnackBarAction(
+                label: l10n.penModeSettings,
+                onPressed: () => showInkSettings(context, ink),
+              ),
       );
-    }
   }
 
   /// Bu oturumda sayfaya çizilen çizgi sayısı (kalem ipuçlarının sırası).
@@ -2272,7 +2292,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
-  void _openPen() => _update(() => _penMode = true);
+  void _openPen() {
+    _update(() => _penMode = true);
+    _penModeOpened();
+  }
 
   /// Tablette tam ekran düğmesi.
   Widget _fullscreenButton(AppLocalizations l10n) {
@@ -2386,12 +2409,43 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               Localizations.localeOf(context).toLanguageTag(),
             ).add_Hm().format(DateTime.now()),
           ),
+          onAttach: () => unawaited(_showAttachMenu()),
+          onColor: () => _applyFormat(
+            RichFormat.color,
+            colorIndex: NoteFormatMemory.favoriteColor,
+          ),
+          onColorPick: () => unawaited(_pickFavoriteColor()),
+          favoriteColor: _favoriteColorValue(),
           // Nota her girişte bir kez (durum örneği nota bağlı); setState
           // YOK — yalnız bir sonraki açılışta vurgulanmasın diye.
           hint: !_quickRowHinted,
           onHinted: () => _quickRowHinted = true,
       ),
     );
+  }
+
+  static Color _favoriteColorValue() {
+    final i = NoteFormatMemory.favoriteColor;
+    if (isCustomRichColor(i)) return Color(i);
+    final palette = NoteColors.richPalette;
+    return palette[(i - 1).clamp(0, palette.length - 1)];
+  }
+
+  /// Hızlı satırın Renk düğmesine basılı tut: renk seçilir, FAVORİ olur ve
+  /// hemen uygulanır (kullanıcı isteği 2026-11-09).
+  Future<void> _pickFavoriteColor() async {
+    final selection = _bodyController.selection;
+    final picked = await showColorPaletteSheet(
+      context,
+      title: context.l10n.formatTextColor,
+    );
+    if (picked == null || !mounted) return;
+    final index = picked.toARGB32() | 0xFF000000;
+    NoteFormatMemory.rememberFavoriteColor(index);
+    // Levha açılırken seçim daralmış olabilir: renk seçilen yazıya gitsin.
+    if (selection.isValid) _bodyController.selection = selection;
+    setState(() {});
+    _applyFormat(RichFormat.color, colorIndex: index);
   }
 
   /// Öğrenen yazım düzeltmenin kişisel sözlüğü: notların metni (arka
@@ -2754,6 +2808,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (ctl != null) _syncPageInkKinds(ctl);
     if (!InkToolMemory.autoStylus && _penMode) {
       _update(() => _penMode = false);
+    } else if (InkToolMemory.autoStylus &&
+        !_penMode &&
+        !_readOnly &&
+        _note != null &&
+        !_note!.type.isPageNoteType) {
+      // Yüzen düğme "kalem yazar"a döndü: kalem kipi de açılır (senkron).
+      _openPen();
     } else {
       setState(() {});
     }
@@ -2788,16 +2849,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
     if (_penMode) return;
     HapticFeedback.selectionClick();
+    // Neden açıldığı ve "yalnız kalem" durumu [_penModeOpened]'da söylenir.
     _openPen();
-    // İLK SEFERDE NEDEN (F14.4): araçlar kendiliğinden açıldı. Bir kez
-    // söylenir; az önce olanı açıkladığı için oturum sınırına takılmaz.
-    TipOnce.show(
-      context,
-      ref.read(sharedPreferencesProvider),
-      TipOnce.stylusCanvas,
-      context.l10n.tipPagePen,
-      sessionLimit: false,
-    );
   }
 
   @override

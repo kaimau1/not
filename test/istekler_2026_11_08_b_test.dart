@@ -139,7 +139,8 @@ void main() {
     final pen = find.byKey(const ValueKey('quick-row-pen'));
     expect(pen, findsOneWidget);
     expect(find.descendant(of: pen, matching: find.byType(Text)), findsNothing);
-    expect(find.byKey(const ValueKey('quick-row-date')), findsOneWidget);
+    // Tarih artık eklenebilir düğme (sade varsayılan, 2026-11-09).
+    expect(find.byKey(const ValueKey('quick-row-date')), findsNothing);
   });
 
   testWidgets('Esc = geri: üstteki sayfa kapanır', (tester) async {

@@ -33,6 +33,8 @@ final RegExp _invisibleChars = RegExp('[\u{FFFC}\u{2060}]', unicode: true);
 ///
 /// Boş satırlar atlanır: paragraflar arası boşluk boş maddelere dönseydi
 /// liste baştan sona delik deşik olurdu.
+final RegExp _box = RegExp(r'^(?:\[([ xX])\]|([☐☑☒]))\s*');
+
 List<NoteItem> itemsFromText(String text, {required String Function() newId}) {
   final items = <NoteItem>[];
   for (final rawLine in text.split('\n')) {
@@ -41,10 +43,11 @@ List<NoteItem> itemsFromText(String text, {required String Function() newId}) {
     var checked = false;
     // Madde işareti: "- ", "* ", "• ", "1. ", "1) "
     line = line.replaceFirst(RegExp(r'^([-*•]|\d+[.)])\s+'), '');
-    // Onay kutusu: "[ ] ", "[x] ", "[X] "
-    final box = RegExp(r'^\[([ xX])\]\s*').firstMatch(line);
-    if (box != null) {
-      checked = box.group(1)!.toLowerCase() == 'x';
+    // Onay kutusu: "[ ] ", "[x] ", "[X] " ya da paylaşım biçimi "☐ "/"☑ "
+    // (art arda birden çoğu da: kopyala-yapıştır turunda "☐ ☐" birikiyordu).
+    for (Match? box; (box = _box.firstMatch(line)) != null;) {
+      final mark = box!.group(1) ?? box.group(2)!;
+      checked = mark.toLowerCase() == 'x' || mark == '☑' || mark == '☒';
       line = line.substring(box.end);
     }
     line = line.trim();

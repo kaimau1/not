@@ -7760,6 +7760,23 @@ class AppLocalizationsTr extends AppLocalizations {
   String get dueBadgeChannel => 'Bekleyenler (simge rozeti)';
 
   @override
+  String get quickRowAttach => 'Ekle';
+
+  @override
+  String get quickRowColor => 'Yazı rengi (basılı tut: favori rengi seç)';
+
+  @override
+  String get penModePenOnlyOn =>
+      'Kalem kipi · Yalnız kalemle yaz: açık (parmak kaydırır)';
+
+  @override
+  String get penModePenOnlyOff =>
+      'Kalem kipi · Yalnız kalemle yaz: kapalı (parmak da yazar)';
+
+  @override
+  String get penModeSettings => 'Ayarla';
+
+  @override
   String get quickRowBold => 'Kalın';
 
   @override

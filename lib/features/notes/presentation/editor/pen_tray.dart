@@ -257,13 +257,21 @@ class _PenTrayState extends State<PenTray> {
           _setTucked(true);
         }
       },
-      child: ListenableBuilder(
-        listenable: _ink,
-        builder: (context, _) => widget.rail
-            ? _buildRail(context)
-            : widget.dock
-            ? _buildDock(context)
-            : _build(context),
+      // Renk/kalınlık kartı tepsinin DIŞINA dokununca kapanır (kullanıcı
+      // isteği 2026-11-09: "ekranda bir yere tıklayınca kapanmalı, şu an x'e
+      // basana kadar açık kalıyor"). Tepsinin kendi düğmeleri içeride sayılır.
+      child: TapRegion(
+        onTapOutside: (_) {
+          if (_panel) setState(() => _panel = false);
+        },
+        child: ListenableBuilder(
+          listenable: _ink,
+          builder: (context, _) => widget.rail
+              ? _buildRail(context)
+              : widget.dock
+              ? _buildDock(context)
+              : _build(context),
+        ),
       ),
     );
   }

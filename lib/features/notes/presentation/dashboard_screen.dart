@@ -1377,9 +1377,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     // seçimi (1–4), yoksa ekran genişliğinden otomatik.
                     final manualColumns = ref.watch(gridColumnsProvider);
                     // Not açıkken solda dar liste: TEK sütun (kullanıcı
-                    // isteği 2026-11-02, bkz. kNoteSplitBreakpoint).
+                    // isteği 2026-11-02, bkz. kNoteSplitBreakpoint); ayraç
+                    // sürüklenip genişletilince 2–3 sütun (tablet isteği
+                    // 2026-11-09).
                     final columns = DashboardPaneScope.singleColumnOf(context)
-                        ? 1
+                        ? (constraints.maxWidth / 220).floor().clamp(1, 3)
                         : manualColumns > 0
                         ? manualColumns
                         : (constraints.maxWidth / 220).floor().clamp(2, 6);
@@ -2020,26 +2022,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 // YÖNE BAĞLI: sabit `right` sağdan sola dillerde düğmeleri
                 // sağda bırakıyor, asistan paneli ise (end: 88) SOLDA yer
                 // ayırıyordu — panel düğmelerin üstüne biniyordu.
-                // KLASÖR DÜĞMESİ (kullanıcı isteği 2026-11-06): sol altta;
-                // dokun → klasör menüsü (liste tepedeyken aşağı çekiş de
-                // aynı menüyü açar).
-                if (!AppRailScope.visible(context) &&
-                    !selectionActive &&
-                    sharedFolder == null)
-                  PositionedDirectional(
-                    start: 16,
-                    bottom: 16,
-                    // Sayaçlar yalnız düğmeyi yeniden kurar (ana build değil).
-                    child: Consumer(
-                      builder: (context, ref, _) =>
-                      FolderHoldButton(
-                        stops: _folderStops(ref),
-                        currentId: _currentStopId(ref),
-                        onOpen: () => unawaited(context.push('/folders')),
-                        onSelect: _selectFolderFromHold,
-                      ),
-                    ),
-                  ),
+                // KLASÖR DÜĞMESİ KALKTI (kullanıcı isteği 2026-11-09: "sol
+                // alttaki klasörler butonunu kaldır"). Klasör menüsü liste
+                // tepedeyken aşağı çekişle ve yan çubuktan açılır.
                 PositionedDirectional(
                   end: 16,
                   bottom: 16,

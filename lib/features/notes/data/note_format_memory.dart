@@ -12,6 +12,12 @@ class NoteFormatMemory {
 
   static const _kScale = 'note_last_font_scale';
   static const _kFamily = 'note_last_font_family';
+  static const _kColor = 'note_favorite_text_color';
+
+  /// Hızlı satırın Renk düğmesinin FAVORİ yazı rengi (2026-11-09): palet
+  /// sırası (1 = kırmızı, varsayılan) ya da özel renk ARGB'si (bkz.
+  /// `isCustomRichColor`). Basılı tutup seçilen renk favori olur.
+  static int favoriteColor = 1;
 
   static SharedPreferences? _prefs;
 
@@ -26,6 +32,12 @@ class NoteFormatMemory {
     final s = prefs.getDouble(_kScale);
     fontScale = s != null && s > 0.4 && s < 4 ? s : 1;
     fontFamily = prefs.getString(_kFamily);
+    favoriteColor = prefs.getInt(_kColor) ?? 1;
+  }
+
+  static void rememberFavoriteColor(int index) {
+    favoriteColor = index;
+    _prefs?.setInt(_kColor, index);
   }
 
   static void rememberScale(double value) {
@@ -56,5 +68,6 @@ class NoteFormatMemory {
     _prefs = null;
     fontScale = 1;
     fontFamily = null;
+    favoriteColor = 1;
   }
 }

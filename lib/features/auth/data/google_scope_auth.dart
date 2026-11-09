@@ -7,6 +7,7 @@ import 'package:google_sign_in_platform_interface/google_sign_in_platform_interf
 import '../../../core/utils/gms.dart';
 import '../../../core/utils/web_session.dart';
 import 'android_google_auth.dart';
+import 'loopback_oauth.dart';
 
 /// Tek kapsamlı Google jeton kaynağı (Gmail F28.1, Drive F28.2). Kapsamlar AYRI
 /// istenir: biri ötekini genişletmez, kullanıcı ikisini ayrı onaylar.
@@ -43,10 +44,20 @@ Future<({String token, DateTime expiry})?> storedBrowserToken(
   } catch (_) {
     return null;
   }
-  return parseScopeToken(raw, uid, DateTime.now());
+  final live = parseScopeToken(raw, uid, DateTime.now());
+  if (live != null) return live;
+  // Süresi doldu: yenileme anahtarı varsa pencere açmadan yenilenir
+  // (Firebase sayfasız akış, bkz. loopback_oauth.dart).
+  final refresh = scopeRefreshToken(raw, uid);
+  if (refresh == null || !loopbackOAuthEnabled) return null;
+  final t = await loopbackRefresh(refresh);
+  if (t == null) return null;
+  await _storeToken(key, t.accessToken, t.expiry, uid, t.refreshToken);
+  return (token: t.accessToken, expiry: t.expiry);
 }
 
-/// `jeton|bitişMs|uid` — başka hesabın ya da süresi dolmuş jetonu null.
+/// `jeton|bitişMs|uid[|yenileme]` — başka hesabın ya da süresi dolmuş jetonu
+/// null.
 @visibleForTesting
 ({String token, DateTime expiry})? parseScopeToken(
   String? raw,
@@ -55,7 +66,7 @@ Future<({String token, DateTime expiry})?> storedBrowserToken(
 ) {
   if (raw == null) return null;
   final parts = raw.split('|');
-  if (parts.length != 3 || parts[2] != uid) return null;
+  if (parts.length < 3 || parts.length > 4 || parts[2] != uid) return null;
   final ms = int.tryParse(parts[1]);
   if (ms == null) return null;
   final expiry = DateTime.fromMillisecondsSinceEpoch(ms);
@@ -63,12 +74,59 @@ Future<({String token, DateTime expiry})?> storedBrowserToken(
   return (token: parts[0], expiry: expiry);
 }
 
+/// Saklı kaydın yenileme anahtarı (yalnız aynı hesabın); yoksa null.
+@visibleForTesting
+String? scopeRefreshToken(String? raw, String uid) {
+  final parts = raw?.split('|');
+  if (parts == null || parts.length != 4 || parts[2] != uid) return null;
+  return parts[3].isEmpty ? null : parts[3];
+}
+
+Future<void> _storeToken(
+  String key,
+  String token,
+  DateTime expiry,
+  String uid,
+  String? refresh,
+) async {
+  try {
+    await browserTokenStorage.write(
+      key: key,
+      value: '$token|${expiry.millisecondsSinceEpoch}|$uid|${refresh ?? ''}',
+    );
+  } catch (_) {
+    // Saklanamazsa bu oturumda yine kullanılır (önbellek bellekte).
+  }
+}
+
+// ponytail: kapsam pencereleri sırayla — Drive ve Gmail aynı anda "bağla"
+// isteyince Firebase "A headful operation is already in progress" veriyordu
+// (tablet 2026-11-09).
+Future<Object?> _scopeChain = Future.value();
+
 Future<({String token, DateTime expiry})?> browserScopeToken(
+  List<String> scopes,
+  String key,
+) {
+  final next = _scopeChain.then((_) => _browserScopeToken(scopes, key));
+  _scopeChain = next.catchError((_) => null);
+  return next;
+}
+
+Future<({String token, DateTime expiry})?> _browserScopeToken(
   List<String> scopes,
   String key,
 ) async {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) return null;
+  if (loopbackOAuthEnabled) {
+    final t = await browserFlow(
+      () => loopbackAuthorize(scopes, email: user.email),
+    );
+    if (t == null) return null;
+    await _storeToken(key, t.accessToken, t.expiry, user.uid, t.refreshToken);
+    return (token: t.accessToken, expiry: t.expiry);
+  }
   // Yerel tarafta (MainActivity.googleScopeToken): FlutterFire'ın
   // reauthenticateWithProvider'ı Google'da jetonu hep null veriyor.
   final token = await const MethodChannel('dev.kaimau.notlar/system')
@@ -78,14 +136,7 @@ Future<({String token, DateTime expiry})?> browserScopeToken(
       });
   if (token == null) return null;
   final expiry = DateTime.now().add(const Duration(minutes: 55));
-  try {
-    await browserTokenStorage.write(
-      key: key,
-      value: '$token|${expiry.millisecondsSinceEpoch}|${user.uid}',
-    );
-  } catch (_) {
-    // Saklanamazsa bu oturumda yine kullanılır (önbellek bellekte).
-  }
+  await _storeToken(key, token, expiry, user.uid, null);
   return (token: token, expiry: expiry);
 }
 

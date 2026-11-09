@@ -531,7 +531,9 @@ class _FullscreenPullHint extends StatelessWidget {
 
 /// Ayracın tutma genişliği. Çizgi ince görünür ama 16 px'lik alandan
 /// yakalanır — 1 px'lik çizgiyi fareyle tutmak zor olurdu.
-const double _dividerWidth = 16;
+// Parmakla tutulabilsin (tablet bulgusu 2026-11-09: "sol paneli parmakla
+// genişletebilmeliyim"): 16 dp'lik görünmez şerit parmağa dar geliyordu.
+const double _dividerWidth = 24;
 
 /// Sürüklenebilir ayraç. [onDrag] imlecin MUTLAK x konumunu verir (delta
 /// değil); nedeni SplitShell'deki nota bakılabilir.
@@ -577,12 +579,25 @@ class _PaneDividerState extends State<_PaneDivider> {
         },
         child: SizedBox(
           width: _dividerWidth,
-          child: Center(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
-              width: active ? 4 : 1,
-              color: active ? scheme.primary : scheme.outlineVariant,
-            ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 120),
+                width: active ? 4 : 1,
+                color: active ? scheme.primary : scheme.outlineVariant,
+              ),
+              // TUTAMAK: ayracın sürüklenebildiği görünsün (dokunmatik
+              // ekranda fare imleci değişimi yok).
+              Container(
+                width: 6,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: active ? scheme.primary : scheme.outline,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ],
           ),
         ),
       ),

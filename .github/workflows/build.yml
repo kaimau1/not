@@ -353,6 +353,8 @@ jobs:
           --build-name=${{ steps.version.outputs.name }}
           --build-number=${{ github.run_number }}
           --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+          --dart-define=GOOGLE_DESKTOP_CLIENT_ID=${{ secrets.GOOGLE_DESKTOP_CLIENT_ID }}
+          --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET=${{ secrets.GOOGLE_DESKTOP_CLIENT_SECRET }}
 
       - name: Gradle yapı önbelleğini kaydet
         continue-on-error: true
@@ -406,6 +408,8 @@ jobs:
           --build-name=${{ steps.version.outputs.name }}
           --build-number=${{ github.run_number }}
           --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+          --dart-define=GOOGLE_DESKTOP_CLIENT_ID=${{ secrets.GOOGLE_DESKTOP_CLIENT_ID }}
+          --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET=${{ secrets.GOOGLE_DESKTOP_CLIENT_SECRET }}
 
       - name: Genel AAB'de köprü yok (denetim)
         if: github.event_name == 'workflow_dispatch' && inputs.play

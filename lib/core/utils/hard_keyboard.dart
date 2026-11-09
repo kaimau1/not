@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -25,7 +26,7 @@ abstract final class HardKeyboard {
   static Future<void> init() async {
     if (kIsWeb || !Platform.isAndroid) return;
     _channel.setMethodCallHandler((call) async {
-      if (call.method == 'changed') _set(call.arguments == true);
+      if (call.method == 'changed') report(call.arguments == true);
       return null;
     });
     try {
@@ -35,6 +36,64 @@ abstract final class HardKeyboard {
     } on MissingPluginException {
       // Test/eski kabuk.
     }
+  }
+
+  /// Takılıyken gelen son tuş (sanal klavye kapalıyken tuş = fiziksel).
+  static DateTime? _lastKey;
+  static Timer? _recheck;
+  static bool _hooked = false;
+
+  /// Bu süre içinde tuşa basıldıysa "klavye çıktı" bildirimi yok sayılır.
+  @visibleForTesting
+  static const sleepGrace = Duration(minutes: 15);
+
+  @visibleForTesting
+  static DateTime Function() clock = DateTime.now;
+
+  static bool _onKey(KeyEvent event) {
+    if (present.value && !softWanted.value) _lastKey = clock();
+    return false;
+  }
+
+  /// Yerelden gelen durum. **UYKU KORUMASI** (tablet bulgusu 2026-11-09:
+  /// "fiziksel klavyeyle yazarken kaleme geçip parmakla metne basınca sanal
+  /// klavye açılıyor, sürekli tekrarlıyor"): Bluetooth klavye boşta uyuyunca
+  /// Android onu ÇIKARILDI bildiriyor, tuşa basınca yeniden takılıyor —
+  /// sanal klavye her seferinde açılıp kapanıyordu. Son tuştan beri
+  /// [sleepGrace] geçmeden gelen "çıktı" yok sayılır; süre dolunca yerel
+  /// durum yeniden sorulur.
+  @visibleForTesting
+  static void report(bool value) {
+    if (!_hooked) {
+      _hooked = true;
+      HardwareKeyboard.instance.addHandler(_onKey);
+    }
+    _recheck?.cancel();
+    final last = _lastKey;
+    if (!value && present.value && last != null) {
+      final left = sleepGrace - clock().difference(last);
+      if (left > Duration.zero) {
+        _recheck = Timer(left, () async {
+          _lastKey = null;
+          try {
+            report(await _channel.invokeMethod<bool>('present') ?? false);
+          } catch (_) {
+            report(false);
+          }
+        });
+        return;
+      }
+    }
+    _set(value);
+  }
+
+  @visibleForTesting
+  static void resetForTest() {
+    _recheck?.cancel();
+    _lastKey = null;
+    present.value = false;
+    softWanted.value = false;
+    clock = DateTime.now;
   }
 
   static void _set(bool value) {
