@@ -189,11 +189,16 @@ void main() {
     expect(first, isNot(contains('EditableText')));
     expect(first, isNot(contains('ItemsEditor')));
     // Kullanıcı bildirimi: "her açılışta artarak". 20. tur 1. turla aynı.
+    // Isınma 3 tur (2026-11-10): hızlı satır artık klavye kapanınca
+    // sökülmüyor; ilk açılıştaki tek seferlik parlama animasyonu (1,4 sn +
+    // 0,6 sn) 3. tura kadar sürüyor.
+    await cycle();
+    await cycle();
     await cycle();
     final baseline = await cycle();
-    for (var i = 0; i < 17; i++) {
+    for (var i = 0; i < 15; i++) {
       final later = await cycle();
-      expect(later, baseline, reason: 'tur ${i + 4}');
+      expect(later, baseline, reason: 'tur ${i + 6}');
     }
     expect(tester.binding.transientCallbackCount, 0);
     await _end(tester);

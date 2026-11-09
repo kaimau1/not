@@ -25,6 +25,9 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web he
 - APK: CI push'ta imzalı üretir (`.github/workflows/`)
 - Firestore/Storage kural değişince: önce `cd rules-test && npm ci && npm test` (emülatör, Java 11+ — CI `rules` işi de koşar), yayın main push'ta CI'da (elle: `firebase deploy`)
 
+## Sürüm notları (2026-11-10 kullanıcı isteği)
+Her `[apk]` birleştirmesinde `assets/guide/release_notes_tr.md` ve `_en.md`'ye günün bölümü (`## 10 Kasım 2026 {#2026-11-10}`, en yenisi üstte) ve kullanıcının anlayacağı dilde madde eklenir — commit başlığı değil, ne değişti. İki dosyada tarih kimlikleri aynı (`test/guide_screen_test.dart` bekçisi). Uygulamada Ayarlar → en alt → Sürüm notları.
+
 ## Gece / zamanlanmış görev kuralı (2026-11-03 kullanıcı kararı)
 - Plan dosyalarındaki KARAR maddelerinin hepsi 2026-11-03'te verildi (maddelerde **KARAR (kullanıcı, 2026-11-03)**) — zamanlanmış görev SORMADAN uygular; yeni bir karar çıkarsa en güvenli seçeneği uygula ve maddeye "sabah bakılacak" yaz.
 - Akış: kendi dalında çalış → değişenin testi → push → **CI yeşilse main'e birleştir, başlıkta `[apk]`** (kişisel APK; `NOTLAR_KISISEL=1` CI'da) → main CI'ını da izle; kırmızıysa düzelt ya da birleştirmeyi geri al (`git revert -m 1`). CI kırmızıyken main'e ASLA birleştirme.
@@ -38,6 +41,10 @@ Editöre/kart ızgarasına GÖRÜNÜR yeni alan, kip ya da sarmalayıcı eklerke
 3. Yerel UI durumu (aç/kapa, seçim, hover) için editörün KÖK `setState`'i değil, alt widget'ın kendi durumu ya da `ValueNotifier` + dar `ListenableBuilder`.
 4. Sarmalayıcı (Stack, KeyedSubtree, TapRegion) eklediysen ağaç ŞEKLİ koşula göre değişmesin (koşulda `SizedBox.shrink` tut) — şekil değişince alt ağaç ve metin alanları sıfırdan kurulur.
 5. Doğrula: `test/items_editor_row_cache_test.dart` kalıbıyla "girdisi değişmeyen satır `identical`" testi yaz; şüphede `tool/perf/` ile cihazda ölç. Ölçmeden "düzeldi" deme.
+6. **Editör gövdesiyle aynı Column/Row'daki bir şeyin BOYUNU animasyonla değiştirme** (yükseklik, `heightFactor`, `AnimatedSize`, `AnimatedContainer` boyu): gövde her karede yeniden dizilir. Boy TEK ADIMDA değişsin, hareket yalnız boyamada (`Transform`/`FractionalTranslation`/`Opacity`). 2026-11-10 regresyonu tam buydu ("yazarken alt çubuk gizlenir": yazarken UI işi ×3,3). Bekçi: `test/keyboard_jank_guard_test.dart`.
+7. Klavyeye bağlı gösterme/gizleme (`KeyboardSwitch`) alt ağacı SÖKMEZ: iki taraf da kurulu, `Offstage` ile değişir. `MediaQuery.of(context)` kök/kabuk bağlamında okunmaz (klavyenin her karesinde zinciri yeniden kurar) — `viewInsetsOf`/`sizeOf` ya da ayrı küçük öğe.
+
+**ÖLÇÜM KAPISI (2026-11-10 kullanıcı kararı: "güncellemelerden sonra yine kasma yaşamayalım"):** editör, klavye, alt/üst çubuk, ana ekran listesi ya da geçişe dokunan iş `[apk]`'ya girmeden önce cihazda A/B ölçülür: `tool/perf/ab_klavye.py` (klavye aç/kapa ×3, yazma ×4, not kapanışı; evre başına UI kare/ms/LAYOUT). Taban: önceki `[apk]` commit'inin profil derlemesi (`git worktree add ../not_ab <commit>` → `flutter build apk --profile`). Bir evrede UI ms ya da LAYOUT ms %20'den fazla artarsa birleştirme yok — önce kök neden. Telefon yoksa tablette telefon düzeni: `adb shell wm size 1080x2400; adb shell wm density 420` (iş bitince `wm size reset; wm density reset`). Tablette fiziksel klavye takılı: ⌨ ile sanal klavye; eski sürümlerde `settings put secure show_ime_with_hard_keyboard 1` (sonra 0).
 
 ## Hafıza (usta koordineli — 3 katman)
 - Kod yapısı        → graphify-out/     (oku: GRAPH_REPORT.md · güncelle: elle `graphify update .` — depoda otomatik kanca YOK; grafik son 2026-11-02 (bulutta, 19 810 düğüm) güncellendi; kod ilerledikçe bayatlar, satır/dosya bilgisini koddan doğrula)

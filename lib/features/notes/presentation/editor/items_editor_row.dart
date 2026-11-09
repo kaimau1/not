@@ -636,6 +636,11 @@ extension _ItemsRow on ItemsEditorState {
                 // 30×36 → 24×28 — yazının sonuna dokunurken madde kazara
                 // silinmesin.
                 top: math.max(0.0, firstLineCenter - 14),
+                // WEB'DE × İŞLEMİYORDU (kullanıcı bulgusu 2026-11-10): fare
+                // basışı "alan dışı" sayılıp odağı düşürüyor, × bırakmadan
+                // önce kayboluyordu (dokunmatikte alan dışı odağı bırakmaz).
+                // Bölge alanın parçası sayılır: basış odağı korur.
+                child: TextFieldTapRegion(
                 child: IconButton(
                   key: ValueKey('item-remove-${item.id}'),
                   tooltip: l10n.removeItem,
@@ -650,6 +655,7 @@ extension _ItemsRow on ItemsEditorState {
                   ),
                   color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
                   onPressed: () => _removeItem(item),
+                ),
                 ),
               ),
           ],

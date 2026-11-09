@@ -69,7 +69,13 @@ import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/notes_providers.dart'
-    show noteSortProvider, swipeModeProvider;
+    show
+        noteSortProvider,
+        swipeModeProvider,
+        homeFolderStripHiddenProvider,
+        showAllNotesProvider,
+        allNotesGroupByFolderProvider,
+        attachmentsExpandedProvider;
 import '../../notes/presentation/filter_sheet.dart' show sortLabel;
 import '../../notes/presentation/note_card.dart' show NoteCard;
 import '../../notes/domain/note_item.dart';
@@ -97,12 +103,20 @@ import '../../auth/presentation/account_required.dart';
 import '../../../core/a11y/chip_roles.dart';
 import '../../../core/a11y/min_tap_target.dart';
 
+import '../../notes/presentation/viewers/ink_tools.dart' show InkToolMemory;
+import '../../notes/presentation/editor/auto_spell.dart' show AutoSpell;
+import '../../notes/presentation/editor/spell_settings_sheet.dart'
+    show showSpellSettings;
+import '../../calendar/data/holiday_source.dart' show showHolidaysProvider;
+import '../../../app/split_shell.dart' show listPaneCollapsedProvider;
+
 part 'settings_sections/settings_area.dart';
 part 'settings_sections/settings_account.dart';
 part 'settings_sections/settings_appearance.dart';
 part 'settings_sections/settings_switches.dart';
 part 'settings_sections/settings_voice.dart';
 part 'settings_sections/settings_ai.dart';
+part 'settings_sections/settings_writing.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key, this.initialArea});
@@ -592,6 +606,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ],
         ),
+      // KALEM, YAZIM VE EKRAN (2026-11-10): eskiden yalnız kendi ekranından
+      // değişen ayarlar (bkz. settings_writing.dart).
+      _Area(
+        id: 'writing',
+        icon: Icons.draw_outlined,
+        title: l10n.settingsWritingTitle,
+        summary: l10n.settingsWritingSummary,
+        keywords:
+            'kalem yazim duzelt el yazisi stylus takvim serit tatil klasor '
+            'satiri tumu ek seridi odak',
+        rows: _writingRows(l10n),
+      ),
       _Area(
         id: 'sync',
         icon: Icons.cloud_sync_outlined,
@@ -928,7 +954,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       (title: l10n.settingsGroupAccount, areas: pick(['account', 'friends'])),
       (
         title: l10n.settingsGroupApp,
-        areas: pick(['appearance', 'personalize', 'notes', 'sound', 'ai']),
+        areas: pick([
+          'appearance',
+          'personalize',
+          'notes',
+          'writing',
+          'sound',
+          'ai',
+        ]),
       ),
       (title: l10n.settingsGroupData, areas: pick(['sync', 'permissions'])),
     ];

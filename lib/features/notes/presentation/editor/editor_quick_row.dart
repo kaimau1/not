@@ -578,7 +578,7 @@ class _QuickEntry {
 /// boşluğu 0 iken de alan odaktaysa [open] gösterilir (kullanıcı bulgusu
 /// 2026-11-08: "tablette üst hızlı menü gelmiyor" — yüzen/ayrık sanal klavye
 /// ve fiziksel klavye ekranın altını kaplamaz, inset hep 0 kalıyordu).
-class KeyboardSwitch extends StatelessWidget {
+class KeyboardSwitch extends StatefulWidget {
   const KeyboardSwitch({
     super.key,
     required this.open,
@@ -591,16 +591,45 @@ class KeyboardSwitch extends StatelessWidget {
   final ValueListenable<bool>? editing;
 
   @override
+  State<KeyboardSwitch> createState() => _KeyboardSwitchState();
+}
+
+/// **İKİ ALT AĞAÇ DA KURULU KALIR** (ölçüm 2026-11-10, "klavye açılıp
+/// kapanırken titriyor"): eskiden her klavye açılışında [open] (hızlı satır:
+/// ~20 düğme, ipucu, düzenleme çerçevesi) sıfırdan kuruluyor, kapanışta
+/// sökülüp [closed] yeniden kuruluyordu — ağaç şekli değişiyordu. Artık
+/// [open] İLK açılışta bir kez kurulur, sonra ikisi de yerinde durur; yalnız
+/// görünen değişir (Offstage). Kasma kontrol listesi madde 4.
+class _KeyboardSwitchState extends State<KeyboardSwitch> {
+  static final _never = ValueNotifier<bool>(false);
+  bool _built = false;
+
+  Widget _pick(bool showOpen) {
+    if (showOpen) _built = true;
+    return Stack(
+      children: [
+        Offstage(
+          offstage: !showOpen,
+          child: _built ? widget.open : const SizedBox.shrink(),
+        ),
+        Offstage(
+          offstage: showOpen,
+          child: widget.closed ?? const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final idle = closed ?? const SizedBox.shrink();
-    if (MediaQuery.viewInsetsOf(context).bottom > 0) return open;
-    final e = editing;
-    if (e == null || kIsWeb || MediaQuery.sizeOf(context).shortestSide < 600) {
-      return idle;
-    }
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final e = widget.editing;
+    final tablet =
+        e != null && !kIsWeb && MediaQuery.sizeOf(context).shortestSide >= 600;
+    // Ağaç şekli hep aynı: dinleyici her durumda var.
     return ValueListenableBuilder<bool>(
-      valueListenable: e,
-      builder: (_, on, _) => on ? open : idle,
+      valueListenable: tablet ? e : _never,
+      builder: (_, on, _) => _pick(keyboard || on),
     );
   }
 }

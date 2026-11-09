@@ -8105,5 +8105,45 @@ class AppLocalizationsTr extends AppLocalizations {
   String get updateCheckFailed => 'Denetlenemedi — bağlantıyı kontrol et';
 
   @override
+  String get releaseNotesTitle => 'Sürüm notları';
+
+  @override
+  String get releaseNotesInfo => 'Yapılan güncellemeler madde madde';
+
+  @override
+  String get settingsWritingTitle => 'Kalem, yazım ve ekran';
+
+  @override
+  String get settingsWritingSummary =>
+      'Kalem · Yazım düzelt · Ana ekran şeritleri';
+
+  @override
+  String get settingsPenSection => 'Kalem';
+
+  @override
+  String get settingsSpellSection => 'Yazım düzelt';
+
+  @override
+  String get settingsScreenSection => 'Ana ekran ve not ekranı';
+
+  @override
+  String get settingsShowAllNotes => 'Klasördeki notlar da ana ekranda';
+
+  @override
+  String get settingsShowAllNotesInfo =>
+      'Tümü açıkken klasöre konmuş notlar da ana ekranda görünür (arşiv ve gizli klasörler hariç).';
+
+  @override
+  String get settingsAttachmentsExpanded => 'Not ekranında ek şeridi açık';
+
+  @override
+  String get settingsListPaneCollapsed =>
+      'Geniş ekranda not listesi gizli (odak)';
+
+  @override
+  String get settingsListPaneCollapsedInfo =>
+      'Tablet ve web\'de not açıkken soldaki liste kapalı başlar; ☰ ile açılır.';
+
+  @override
   String get pinnedSideToggle => 'Yerleşim: üstte / solda / sağda';
 }

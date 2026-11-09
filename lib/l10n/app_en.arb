@@ -2953,5 +2953,17 @@
   "updateChecking": "Checking for updates…",
   "updateUpToDate": "You're on the latest version",
   "updateCheckFailed": "Couldn't check — check your connection",
+  "releaseNotesTitle": "Release notes",
+  "releaseNotesInfo": "What changed, item by item",
+  "settingsWritingTitle": "Pen, writing and screen",
+  "settingsWritingSummary": "Pen · Spell fix · Home strips",
+  "settingsPenSection": "Pen",
+  "settingsSpellSection": "Spell fix",
+  "settingsScreenSection": "Home and note screen",
+  "settingsShowAllNotes": "Notes in folders also on home",
+  "settingsShowAllNotesInfo": "With All on, notes filed in folders also show on home (except archive and hidden folders).",
+  "settingsAttachmentsExpanded": "Attachment strip open in notes",
+  "settingsListPaneCollapsed": "Hide the note list on wide screens (focus)",
+  "settingsListPaneCollapsedInfo": "On tablets and web the list starts closed while a note is open; ☰ opens it.",
   "pinnedSideToggle": "Placement: top / left / right"
 }

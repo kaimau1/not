@@ -3751,5 +3751,17 @@
   "updateChecking": "Güncelleme denetleniyor…",
   "updateUpToDate": "En son sürüm kullanılıyor",
   "updateCheckFailed": "Denetlenemedi — bağlantıyı kontrol et",
+  "releaseNotesTitle": "Sürüm notları",
+  "releaseNotesInfo": "Yapılan güncellemeler madde madde",
+  "settingsWritingTitle": "Kalem, yazım ve ekran",
+  "settingsWritingSummary": "Kalem · Yazım düzelt · Ana ekran şeritleri",
+  "settingsPenSection": "Kalem",
+  "settingsSpellSection": "Yazım düzelt",
+  "settingsScreenSection": "Ana ekran ve not ekranı",
+  "settingsShowAllNotes": "Klasördeki notlar da ana ekranda",
+  "settingsShowAllNotesInfo": "Tümü açıkken klasöre konmuş notlar da ana ekranda görünür (arşiv ve gizli klasörler hariç).",
+  "settingsAttachmentsExpanded": "Not ekranında ek şeridi açık",
+  "settingsListPaneCollapsed": "Geniş ekranda not listesi gizli (odak)",
+  "settingsListPaneCollapsedInfo": "Tablet ve web'de not açıkken soldaki liste kapalı başlar; ☰ ile açılır.",
   "pinnedSideToggle": "Yerleşim: üstte / solda / sağda"
 }
