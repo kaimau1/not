@@ -14419,6 +14419,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'İndirilemedi; GitHub sayfası açılıyor'**
   String get updateFailed;
+
+  /// No description provided for @pinnedSideToggle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yerleşim: üstte / solda / sağda'**
+  String get pinnedSideToggle;
 }
 
 class _AppLocalizationsDelegate

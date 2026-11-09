@@ -8094,4 +8094,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateFailed => 'Download failed; opening the GitHub page';
+
+  @override
+  String get pinnedSideToggle => 'Placement: top / left / right';
 }

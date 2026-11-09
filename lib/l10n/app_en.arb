@@ -2943,5 +2943,6 @@
   "updateInstall": "Update",
   "updateDownloading": "Downloading the new version…",
   "updateNeedsPermission": "Allow this app to install unknown apps, then tap Update again",
-  "updateFailed": "Download failed; opening the GitHub page"
+  "updateFailed": "Download failed; opening the GitHub page",
+  "pinnedSideToggle": "Placement: top / left / right"
 }

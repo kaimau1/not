@@ -3741,5 +3741,6 @@
   "updateInstall": "Güncelle",
   "updateDownloading": "Yeni sürüm indiriliyor…",
   "updateNeedsPermission": "Bu uygulamaya \"bilinmeyen uygulama yükleme\" izni ver, sonra yeniden Güncelle'ye dokun",
-  "updateFailed": "İndirilemedi; GitHub sayfası açılıyor"
+  "updateFailed": "İndirilemedi; GitHub sayfası açılıyor",
+  "pinnedSideToggle": "Yerleşim: üstte / solda / sağda"
 }

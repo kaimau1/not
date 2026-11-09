@@ -16,6 +16,7 @@ import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
 import '../drive_ui.dart';
 import '../viewers/ink_tools.dart' show InkToolMemory;
+import 'pinned_side.dart';
 import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/pdf_read_style.dart';
@@ -123,12 +124,25 @@ class PinnedMediaPane extends StatefulWidget {
     this.onPdfNote,
     this.onImmersiveChanged,
     this.penActive = false,
+    this.fill = false,
+    this.side = PinnedSide.top,
+    this.onCycleSide,
   });
 
   /// Editörün kalem kipi açık: sabit PDF'in üstüne doğrudan yazılır
   /// (kullanıcı isteği 2026-11-08). Kapalıyken bölmenin çubuğundaki kalem
   /// düğmesi aynı katmanı yalnız bu bölme için açar.
   final bool penActive;
+
+  /// YAN YERLEŞİM (2026-11-09): medya bölmenin TAMAMINI kaplar (not öbür
+  /// sütunda, [child] boş); çubuktan boy sürüklenmez.
+  final bool fill;
+
+  /// Şu anki yerleşim (çubuktaki düğmenin simgesi).
+  final PinnedSide side;
+
+  /// Üst → sol → sağ geçişi; null = düğme yok (dar ekran).
+  final VoidCallback? onCycleSide;
 
   /// Balon yazma kartı açıldı/kapandı: editör kendi alt çubuğunu gizler
   /// (bölme de alttaki notu gizleyip medyayı klavyeye kadar uzatır — bkz.
@@ -691,10 +705,20 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             : _clamp(constraints.maxWidth * ratio, layoutMax);
         // Sürüklerken bölme sınırın altına da iner (geri bırakma hissi);
         // bırakınca sınıra oturur ya da sayfaya döner.
-        final height = live != null
+        // Yanda: medya sütunun tamamı; klavye açılınca yeniden ölçülmez,
+        // yalnız pencere kırpılır (bkz. KeyboardClipWindow).
+        final fillFull = math.max(
+          0.0,
+          math.max(stable, constraints.maxHeight) - kPinnedBarHeight,
+        );
+        final height = widget.fill
+            ? fillFull
+            : live != null
             ? live.clamp(0.0, max < kPinnedMinHeight ? kPinnedMinHeight : max)
             : _clamp(math.min(widget.media.pinHeight, natural), layoutMax);
-        final visible = live != null
+        final visible = widget.fill
+            ? math.max(0.0, constraints.maxHeight - kPinnedBarHeight)
+            : live != null
             ? height
             : _visibleHeight(
                 context,
@@ -975,10 +999,14 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             GestureDetector(
               key: const ValueKey('pinned-media-bar'),
               behavior: HitTestBehavior.opaque,
-              onVerticalDragStart: (_) => setState(() => _live = height),
-              onVerticalDragUpdate: (d) =>
-                  setState(() => _live = (_live ?? height) + d.delta.dy),
-              onVerticalDragEnd: (_) {
+              onVerticalDragStart: widget.fill
+                  ? null
+                  : (_) => setState(() => _live = height),
+              onVerticalDragUpdate: widget.fill
+                  ? null
+                  : (d) =>
+                        setState(() => _live = (_live ?? height) + d.delta.dy),
+              onVerticalDragEnd: widget.fill ? null : (_) {
                 final raw = _live ?? height;
                 setState(() => _live = null);
                 if (raw < kPinnedUnpinHeight) {
@@ -1054,6 +1082,18 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     final showLink = !isVideo || width >= 360;
     return Row(
       children: [
+        // ÜST / SOL / SAĞ (geniş ekranda, 2026-11-09).
+        if (widget.onCycleSide != null)
+          _BarButton(
+            key: const ValueKey('pinned-side'),
+            tooltip: l10n.pinnedSideToggle,
+            icon: switch (widget.side) {
+              PinnedSide.top => Icons.vertical_split_outlined,
+              PinnedSide.left => Icons.vertical_split,
+              PinnedSide.right => Icons.horizontal_split_outlined,
+            },
+            onPressed: widget.onCycleSide!,
+          ),
         // Sesin tam ekranı yok (kart kendisi oynatıcı).
         if (!isAudio)
           _BarButton(

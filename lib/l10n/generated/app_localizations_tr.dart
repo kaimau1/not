@@ -8074,4 +8074,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get updateFailed => 'İndirilemedi; GitHub sayfası açılıyor';
+
+  @override
+  String get pinnedSideToggle => 'Yerleşim: üstte / solda / sağda';
 }

@@ -994,10 +994,58 @@ extension _EditorMediaView on _NoteEditorScreenState {
   Widget _withPinnedMedia(Note note, Widget body) {
     if (note.type.isPageNoteType) return body;
     final pinned = note.attachments.where((a) => a.isPinnedTop).firstOrNull;
-    final content = pinned == null
-        ? body
-        : PinnedMediaPane(
+    if (pinned == null) return _withPinTarget(body);
+    // YAN YERLEŞİM (2026-11-09): geniş alanda ek solda/sağda, not öbür
+    // sütunda; dar alanda tercih ne olursa olsun üstte.
+    return _withPinTarget(
+      ValueListenableBuilder<PinnedSide>(
+        valueListenable: PinnedSideMemory.side,
+        builder: (context, side, _) => LayoutBuilder(
+          builder: (context, box) {
+            final wide = box.maxWidth >= kPinnedSideMinWidth;
+            final effective = wide ? side : PinnedSide.top;
+            void cycle() =>
+                PinnedSideMemory.setSide(PinnedSideMemory.next(side));
+            if (effective == PinnedSide.top) {
+              return _pinnedPane(
+                note,
+                pinned,
+                body,
+                side: effective,
+                onCycleSide: wide ? cycle : null,
+              );
+            }
+            return PinnedSideLayout(
+              side: effective,
+              media: _pinnedPane(
+                note,
+                pinned,
+                const SizedBox.shrink(),
+                side: effective,
+                fill: true,
+                onCycleSide: cycle,
+              ),
+              body: body,
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _pinnedPane(
+    Note note,
+    Attachment pinned,
+    Widget body, {
+    required PinnedSide side,
+    bool fill = false,
+    VoidCallback? onCycleSide,
+  }) {
+    return PinnedMediaPane(
             media: pinned,
+            fill: fill,
+            side: side,
+            onCycleSide: onCycleSide,
             penActive: _pagePen,
             onHeightChanged: (h) =>
                 _updateAttachment(pinned.copyWith(pinHeight: h)),
@@ -1078,6 +1126,10 @@ extension _EditorMediaView on _NoteEditorScreenState {
                 : null,
             child: body,
           );
+  }
+
+  /// "Bırak: üste sabitle" hedef şeridi (taşıma sırasında).
+  Widget _withPinTarget(Widget content) {
     return Stack(
       children: [
         Positioned.fill(child: content),

@@ -31,6 +31,14 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web he
 - Telefon gerektiren ölçüm yapılamaz: maddeyi "yazıldı, cihazda doğrulanmadı" diye işaretle, `KALANLAR.md` §2'ye adım ekle.
 - Veri göçü / kayıt sıfırlama (F22.4, F28.2) içeren iş: önce yerel tam yedek, göç geri alınabilir, kural testleri (`rules-test`) yeşil.
 
+## Kasma kontrol listesi — "editör baştan kuruluyor" (2026-11-09 kullanıcı isteği: "her seferinde aynı sorunu yaşıyoruz")
+Editöre/kart ızgarasına GÖRÜNÜR yeni alan, kip ya da sarmalayıcı eklerken, push'tan ÖNCE:
+1. Yeni madde/not alanı → üç karşılaştırmaya da ekle: `sameItemsVisually` (note_editor_screen), `ItemsEditor._sameItems`, `text_merge._sameItem`. Eksikse Firestore yankısı her kayıtta "değişti" sayılır → bütün editör yeniden kurulur (not paketi 2026-11-08 kökü buydu).
+2. Satır önbelleği (`ItemsEditor._cachedItemRow`): satırı değiştiren alan anahtara girsin; liste düzeyi girdi `_syncRowCache` env'ine. Env'e HER BUILD'DE YENİ nesne (map, liste, kapanış) koyma — önbellek her karede boşalır.
+3. Yerel UI durumu (aç/kapa, seçim, hover) için editörün KÖK `setState`'i değil, alt widget'ın kendi durumu ya da `ValueNotifier` + dar `ListenableBuilder`.
+4. Sarmalayıcı (Stack, KeyedSubtree, TapRegion) eklediysen ağaç ŞEKLİ koşula göre değişmesin (koşulda `SizedBox.shrink` tut) — şekil değişince alt ağaç ve metin alanları sıfırdan kurulur.
+5. Doğrula: `test/items_editor_row_cache_test.dart` kalıbıyla "girdisi değişmeyen satır `identical`" testi yaz; şüphede `tool/perf/` ile cihazda ölç. Ölçmeden "düzeldi" deme.
+
 ## Hafıza (usta koordineli — 3 katman)
 - Kod yapısı        → graphify-out/     (oku: GRAPH_REPORT.md · güncelle: elle `graphify update .` — depoda otomatik kanca YOK; grafik son 2026-11-02 (bulutta, 19 810 düğüm) güncellendi; kod ilerledikçe bayatlar, satır/dosya bilgisini koddan doğrula)
 - Proje ne/niye     → HAFIZA.md         (≤30 KB, geçerli kararlar/tuzaklar — oku: iş başı · yaz: iş sonu, ilgili bölüme; değişen kuralı GÜNCELLE) · tarihçe `HAFIZA_ARSIV.md` (→ 2026-10-19) ve `HAFIZA_ARSIV_2.md` (→ 2026-11-02, sıkıştırma öncesi tam hâl) — ikisi de dondurulmuş, grep ile

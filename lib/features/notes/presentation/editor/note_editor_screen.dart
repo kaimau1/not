@@ -67,6 +67,7 @@ import '../../../../core/widgets/note_route_closing.dart';
 import '../../../../core/widgets/scale_settle.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import 'stylus_toggle.dart';
+import 'pinned_side.dart';
 import '../../data/note_format_memory.dart';
 import '../../data/attachment_save.dart';
 import '../../data/note_shortcut.dart';
