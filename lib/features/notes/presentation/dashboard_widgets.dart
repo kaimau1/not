@@ -234,7 +234,10 @@ class _ReorderableNoteCell extends StatelessWidget {
           child: child,
         );
         if (!draggable) {
-          return GestureDetector(onLongPress: onLongPress, child: framed);
+          return GestureDetector(
+            onLongPress: onLongPress,
+            child: HoldRingArea(icon: Icons.check_rounded, child: framed),
+          );
         }
         return LongPressDraggable<String>(
           data: noteId,

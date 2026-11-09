@@ -251,10 +251,13 @@ extension _DashSlivers on _DashboardScreenState {
                         onLongPress: () => cellRef
                             .read(selectedNoteIdsProvider.notifier)
                             .toggle(note.id),
-                        child: NoteListRow(
-                          note: note,
-                          selected: selected,
-                          selectionActive: selectionActive,
+                        child: HoldRingArea(
+                          icon: Icons.check_rounded,
+                          child: NoteListRow(
+                            note: note,
+                            selected: selected,
+                            selectionActive: selectionActive,
+                          ),
                         ),
                       ),
                     ),
@@ -348,7 +351,12 @@ extension _DashSlivers on _DashboardScreenState {
           if (!manualReorderAllowed) {
             return KeyedSubtree(
               key: ValueKey(note.id),
-              child: GestureDetector(onLongPress: select, child: card),
+              // Dolum halkası her uzun basışta (2026-11-09: "jestlerde dolum
+              // efekti yok" — yalnız elle sıralamada çiziliyordu).
+              child: GestureDetector(
+                onLongPress: select,
+                child: HoldRingArea(icon: Icons.check_rounded, child: card),
+              ),
             );
           }
           // BASILI TUT = DOĞRUDAN SÜRÜKLE (kullanıcı isteği 2026-11-08:
