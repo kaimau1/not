@@ -66,6 +66,7 @@ import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/widgets/note_route_closing.dart';
 import '../../../../core/widgets/scale_settle.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
+import '../../data/note_format_memory.dart';
 import '../../data/attachment_save.dart';
 import '../../data/note_shortcut.dart';
 import '../../../ai/data/ai_gate.dart';
@@ -4036,7 +4037,12 @@ child: FormatBar(
                                     ? n.copyWith(titleTextOpacity: value)
                                     : n.copyWith(textOpacity: value),
                               ),
-                              onFontChanged: (family) => _mutate(
+                              onFontChanged: (family) {
+                                // Gövdenin tipi yeni notlara da (F56.3).
+                                if (!_titleIsTarget) {
+                                  NoteFormatMemory.rememberFamily(family);
+                                }
+                                _mutate(
                                 (n) => _titleIsTarget
                                     ? (family == null
                                           ? n.copyWith(
@@ -4047,7 +4053,8 @@ child: FormatBar(
                                           ? n.copyWith(clearFontFamily: true)
                                           : n.copyWith(fontFamily: family)),
                                 immediate: true,
-                              ),
+                              );
+                              },
                               // Sürüklerken yalnız yerel durum + gecikmeli kayıt: her kare
                               // Firestore'a yazmak boşuna trafik olurdu.
                               onScaleChanged: (value) => _mutate(
@@ -4055,7 +4062,15 @@ child: FormatBar(
                                     ? n.copyWith(titleFontScale: value)
                                     : n.copyWith(fontScale: value),
                               ),
-                              onScaleEnd: (value) => _applyStepOrNote(
+                              onScaleEnd: (value) {
+                                // Notun tamamına uygulandıysa yeni notlara da
+                                // (F56.3); seçili aralık ve başlık hariç.
+                                if (!_titleIsTarget &&
+                                    !(_formatTarget != null &&
+                                        _hasSelection())) {
+                                  NoteFormatMemory.rememberScale(value);
+                                }
+                                _applyStepOrNote(
                                 RichFormat.size,
                                 kRichSizeSteps,
                                 kRichSizeDefault,
@@ -4063,7 +4078,8 @@ child: FormatBar(
                                 (n) => _titleIsTarget
                                     ? n.copyWith(titleFontScale: value)
                                     : n.copyWith(fontScale: value),
-                              ),
+                              );
+                              },
                               // Başlık yalnız GÖVDEDE ve maddelerde: notun
                               // başlık alanı zaten başlık.
                               onHeading: _titleIsTarget
