@@ -19,6 +19,7 @@ import '../viewers/ink_tools.dart' show InkToolMemory;
 import 'pinned_side.dart';
 import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
+import 'page_ink_layer.dart' show InkClaim;
 import '../viewers/pdf_read_style.dart';
 import 'note_images.dart';
 import 'attachment_actions.dart';
@@ -282,9 +283,16 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   /// ("Not al") parmakta çalışmaya devam eder; kalem düğmesiyle açılır.
   bool get _penOn =>
       widget.onChanged != null &&
-      widget.media.kind == AttachmentKind.pdf &&
+      _inkable &&
       (_explicitPen ||
           (InkToolMemory.autoStylus && InkToolMemory.stylusEver));
+
+  /// Üstüne yazılabilen sabit ek: PDF ve (K2, 2026-11-10) GÖRSEL. Görselin
+  /// çizgileri tam ekran görüntüleyiciyle aynı yerde: `Attachment.ink`,
+  /// sayfa 1, görselin kendi dikdörtgenine oranlı.
+  bool get _inkable =>
+      widget.media.kind == AttachmentKind.pdf ||
+      widget.media.kind == AttachmentKind.image;
 
   /// Kalem kipi (editörün ya da bölmenin): parmak da çizer. Değilse ve
   /// yüzen düğme "kalem yazar" diyorsa YALNIZ kalem çizer, parmak kaydırır
@@ -577,6 +585,36 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
               page: 1,
               readOnly: !own,
             ),
+          ),
+        ],
+      );
+    },
+  );
+
+  /// Görselin dikdörtgenine oturan çizim katmanı (bkz. [_imageRect]).
+  /// Hep [InkClaim] ile sarılı: çizen dokunuş (kalem; kalemsiz cihazda kalem
+  /// düğmesiyle parmak) ve yazarken değen avuç dokunup görüntüleyiciyi
+  /// açmaz, basılı tutma metin tanımaya gitmez.
+  /// [ink] null: kalem kipi kapalı — çizgiler (tam ekranda çizilenler de)
+  /// yalnız boyanır, dokunuş görsele gider.
+  Widget _imageInkLayer(InkController? ink) => LayoutBuilder(
+    builder: (context, box) {
+      final rect = _imageRect(box.biggest);
+      if (rect == null) return const SizedBox.shrink();
+      return Stack(
+        children: [
+          Positioned.fromRect(
+            rect: rect,
+            child: ink == null
+                ? IgnorePointer(
+                    child: CustomPaint(
+                      painter: InkPainter(widget.media.ink, 1),
+                    ),
+                  )
+                : InkClaim(
+                    ink: ink,
+                    child: InkPageLayer(controller: ink, page: 1),
+                  ),
           ),
         ],
       );
@@ -986,6 +1024,15 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                                   if (!isVideo && !_pulling)
                                     if (_layerBubbles() case final bubbles?)
                                       _imageBubbleLayer(bubbles),
+                                  // GÖRSELE KALEMLE YAZ (K2): balonların
+                                  // üstünde; kalem/parmak burada yakalanır
+                                  // (dokunuş görüntüleyiciyi açmaz).
+                                  if (isImage &&
+                                      !_pulling &&
+                                      (_penOn || widget.media.ink.isNotEmpty))
+                                    _imageInkLayer(
+                                      _penOn ? _inkFor(widget.media) : null,
+                                    ),
                                 ],
                               ),
                             ),
@@ -1113,6 +1160,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     final isVideo = widget.media.kind == AttachmentKind.video;
     final isAudio = widget.media.kind == AttachmentKind.audio;
     final isPdf = widget.media.kind == AttachmentKind.pdf;
+    final isImage = widget.media.kind == AttachmentKind.image;
     final timed = isVideo || isAudio;
     // PDF'te sayfa denetimleri de bu çubukta: dar ekranda "Not al" yazısı
     // düşer (simge kalır).
@@ -1158,7 +1206,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         // yer imi · belge menüsü.
         // ÜZERİNE YAZ (kullanıcı isteği 2026-11-08): editörün kalemi
         // kapalıyken de sabit belgeye doğrudan kalemle yazılır.
-        if (isPdf && widget.onChanged != null && !widget.penActive)
+        if ((isPdf || isImage) && widget.onChanged != null && !widget.penActive)
           _BarButton(
             key: const ValueKey('pinned-pen'),
             tooltip: l10n.pinnedPenWrite,

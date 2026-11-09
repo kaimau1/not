@@ -58,6 +58,7 @@ kalıyordu; sabit PDF'te avuç sayfayı kaydırıyordu; tam ekran `initialPage` 
 - [x] Not paketinde kalem düğmesi de aynı kökten çalışmıyordu → düzeltildi (bekçi `test/ink_editing_guard_test.dart`).
 
 ### K2 — Sabit GÖRSELE kalemle yazma
+- [~] Başlandı (2026-11-10, ana oturum, CİHAZDA DOĞRULANMADI): `pinned_media_pane.dart` `_inkable` (PDF + görsel), bölmenin kalem düğmesi görselde de, `_imageInkLayer` (`_imageRect`'e oturan `InkPageLayer`, hep `InkClaim` ile; kalem kapalıyken `InkPainter` ile salt boyama). Analiz temiz, test/cihaz yok.
 Sabit görselde mürekkep katmanı hiç yok (yalnız balon). Görselin üstüne `InkPageLayer`
 (`Attachment.ink`, sayfa 1, `uniform: false`), yakınlaştırmayla birlikte dönüşen koordinat;
 kurallar 1–4. Görüntüleyicide (tam ekran görsel) aynı katman.
