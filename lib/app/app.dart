@@ -65,21 +65,46 @@ Widget fixedTypography(
   Widget child,
   double fontScale, {
   bool followSystem = false,
-}) {
-  final system = MediaQuery.of(context);
-  final scale = followSystem
-      ? (fontScale * system.textScaler.scale(14) / 14).clamp(
-          0.5,
-          maxFollowedTextScale,
-        )
-      : fontScale;
-  return MediaQuery(
-    data: system.copyWith(
-      textScaler: TextScaler.linear(scale),
-      boldText: followSystem && system.boldText,
-    ),
-    child: child,
-  );
+}) => _FixedTypography(
+  fontScale: fontScale,
+  followSystem: followSystem,
+  child: child,
+);
+
+/// [fixedTypography]'nin kendi öğesi. **MediaQuery bağımlılığı BURADA**
+/// (ölçüm 2026-11-10): `MediaQuery.of` doğrudan MaterialApp.builder'ın
+/// bağlamında okunuyordu — klavye animasyonunun HER KARESİNDE (viewInsets
+/// değişir) builder yeniden koşup AppLockGate → … → AppServices zincirini
+/// baştan kuruyordu. Artık yalnız bu küçük öğe yeniden kurulur; [child]
+/// aynı örnek kalır.
+class _FixedTypography extends StatelessWidget {
+  const _FixedTypography({
+    required this.fontScale,
+    required this.followSystem,
+    required this.child,
+  });
+
+  final double fontScale;
+  final bool followSystem;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final system = MediaQuery.of(context);
+    final scale = followSystem
+        ? (fontScale * system.textScaler.scale(14) / 14).clamp(
+            0.5,
+            maxFollowedTextScale,
+          )
+        : fontScale;
+    return MediaQuery(
+      data: system.copyWith(
+        textScaler: TextScaler.linear(scale),
+        boldText: followSystem && system.boldText,
+      ),
+      child: child,
+    );
+  }
 }
 
 /// "Sistem yazı boyutunu izle" açıkken toplam yazı ölçeğinin üst sınırı.

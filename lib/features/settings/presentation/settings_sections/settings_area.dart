@@ -386,7 +386,28 @@ class _VersionFooterState extends State<_VersionFooter> {
     final muted = theme.colorScheme.onSurfaceVariant;
     return Padding(
       padding: const EdgeInsets.only(top: 28),
-      child: Center(
+      child: Column(
+        children: [
+          // SÜRÜM NOTLARI (2026-11-10): sürümün hemen üstünde.
+          TextButton.icon(
+            key: const ValueKey('settings-release-notes'),
+            onPressed: () => context.push('/guide?doc=notes'),
+            icon: const Icon(Icons.new_releases_outlined, size: 18),
+            label: Text(l10n.releaseNotesTitle),
+          ),
+          _versionTap(context, theme, l10n, muted),
+        ],
+      ),
+    );
+  }
+
+  Widget _versionTap(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+    Color muted,
+  ) {
+    return Center(
         child: InkWell(
           key: const ValueKey('settings-version-footer-tap'),
           borderRadius: BorderRadius.circular(12),
@@ -416,7 +437,6 @@ class _VersionFooterState extends State<_VersionFooter> {
             ),
           ),
         ),
-      ),
     );
   }
 }

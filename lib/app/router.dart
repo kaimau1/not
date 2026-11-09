@@ -220,6 +220,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/guide',
             builder: (context, state) => GuideScreen(
               initialSection: state.uri.queryParameters['section'],
+              releaseNotes: state.uri.queryParameters['doc'] == 'notes',
             ),
           ),
           // Gmail — yalnız okuma (F28.1).

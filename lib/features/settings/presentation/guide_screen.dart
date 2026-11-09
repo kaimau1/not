@@ -22,10 +22,15 @@ import '../../../core/app_icons.dart';
 /// düğmesinin gideceği yeri seçer (bkz. [guideSectionMeta]) — metin
 /// çevrilirken kimlik aynen kalır.
 class GuideScreen extends StatefulWidget {
-  const GuideScreen({super.key, this.initialSection});
+  const GuideScreen({super.key, this.initialSection, this.releaseNotes = false});
 
   /// Doğrudan açılacak bölüm (ör. `/guide?section=pages`).
   final String? initialSection;
+
+  /// **SÜRÜM NOTLARI** (kullanıcı isteği 2026-11-10: "yapılan güncellemeler
+  /// madde madde"): aynı ekran, `assets/guide/release_notes_<dil>.md`;
+  /// en yeni bölüm açık gelir. Her `[apk]` birleştirmesinde dosyaya eklenir.
+  final bool releaseNotes;
 
   @override
   State<GuideScreen> createState() => _GuideScreenState();
@@ -173,16 +178,20 @@ List<TextSpan> guideInlineSpans(String text, TextStyle? bold) {
   _ => (icon: Icons.article_outlined, route: null),
 };
 
-/// Dilin kılavuz dosyası; yoksa İngilizce.
-Future<String> loadGuideSource(String languageCode) async {
+/// Dilin kılavuz dosyası; yoksa İngilizce. [base]: `guide` ya da
+/// `release_notes`.
+Future<String> loadGuideSource(
+  String languageCode, {
+  String base = 'guide',
+}) async {
   // `cache: false`: kılavuz nadiren açılır, metni bellekte tutmaya değmez.
   try {
     return await rootBundle.loadString(
-      'assets/guide/guide_$languageCode.md',
+      'assets/guide/${base}_$languageCode.md',
       cache: false,
     );
   } catch (_) {
-    return rootBundle.loadString('assets/guide/guide_en.md', cache: false);
+    return rootBundle.loadString('assets/guide/${base}_en.md', cache: false);
   }
 }
 
@@ -202,7 +211,17 @@ class _GuideScreenState extends State<GuideScreen> {
     final lang = Localizations.localeOf(context).languageCode;
     if (lang != _lang) {
       _lang = lang;
-      _guide = loadGuideSource(lang).then(parseGuide);
+      _guide = loadGuideSource(
+        lang,
+        base: widget.releaseNotes ? 'release_notes' : 'guide',
+      ).then(parseGuide);
+      if (widget.releaseNotes) {
+        _guide!.then((g) {
+          if (mounted && g.sections.isNotEmpty) {
+            setState(() => _expanded.add(g.sections.first.id));
+          }
+        });
+      }
       final initial = widget.initialSection;
       if (initial != null) {
         _expanded.add(initial);
@@ -237,7 +256,13 @@ class _GuideScreenState extends State<GuideScreen> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Scaffold(
-      appBar: HomeInBar(appBar: AppBar(title: Text(l10n.guideTitle))),
+      appBar: HomeInBar(
+        appBar: AppBar(
+          title: Text(
+            widget.releaseNotes ? l10n.releaseNotesTitle : l10n.guideTitle,
+          ),
+        ),
+      ),
       body: FutureBuilder<ParsedGuide>(
         future: _guide,
         builder: (context, snapshot) {
@@ -272,7 +297,9 @@ class _GuideScreenState extends State<GuideScreen> {
                       onChanged: (v) => setState(() => _query = v),
                       decoration: InputDecoration(
                         prefixIcon: const Icon(Icons.search),
-                        hintText: l10n.guideSearchHint,
+                        hintText: widget.releaseNotes
+                            ? MaterialLocalizations.of(context).searchFieldLabel
+                            : l10n.guideSearchHint,
                         filled: true,
                         isDense: true,
                         border: OutlineInputBorder(

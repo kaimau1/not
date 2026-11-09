@@ -14474,6 +14474,78 @@ abstract class AppLocalizations {
   /// **'Denetlenemedi — bağlantıyı kontrol et'**
   String get updateCheckFailed;
 
+  /// No description provided for @releaseNotesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sürüm notları'**
+  String get releaseNotesTitle;
+
+  /// No description provided for @releaseNotesInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapılan güncellemeler madde madde'**
+  String get releaseNotesInfo;
+
+  /// No description provided for @settingsWritingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem, yazım ve ekran'**
+  String get settingsWritingTitle;
+
+  /// No description provided for @settingsWritingSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem · Yazım düzelt · Ana ekran şeritleri'**
+  String get settingsWritingSummary;
+
+  /// No description provided for @settingsPenSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem'**
+  String get settingsPenSection;
+
+  /// No description provided for @settingsSpellSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazım düzelt'**
+  String get settingsSpellSection;
+
+  /// No description provided for @settingsScreenSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekran ve not ekranı'**
+  String get settingsScreenSection;
+
+  /// No description provided for @settingsShowAllNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasördeki notlar da ana ekranda'**
+  String get settingsShowAllNotes;
+
+  /// No description provided for @settingsShowAllNotesInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü açıkken klasöre konmuş notlar da ana ekranda görünür (arşiv ve gizli klasörler hariç).'**
+  String get settingsShowAllNotesInfo;
+
+  /// No description provided for @settingsAttachmentsExpanded.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not ekranında ek şeridi açık'**
+  String get settingsAttachmentsExpanded;
+
+  /// No description provided for @settingsListPaneCollapsed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geniş ekranda not listesi gizli (odak)'**
+  String get settingsListPaneCollapsed;
+
+  /// No description provided for @settingsListPaneCollapsedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tablet ve web\'de not açıkken soldaki liste kapalı başlar; ☰ ile açılır.'**
+  String get settingsListPaneCollapsedInfo;
+
   /// No description provided for @pinnedSideToggle.
   ///
   /// In tr, this message translates to:

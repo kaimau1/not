@@ -8124,5 +8124,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateCheckFailed => 'Couldn\'t check — check your connection';
 
   @override
+  String get releaseNotesTitle => 'Release notes';
+
+  @override
+  String get releaseNotesInfo => 'What changed, item by item';
+
+  @override
+  String get settingsWritingTitle => 'Pen, writing and screen';
+
+  @override
+  String get settingsWritingSummary => 'Pen · Spell fix · Home strips';
+
+  @override
+  String get settingsPenSection => 'Pen';
+
+  @override
+  String get settingsSpellSection => 'Spell fix';
+
+  @override
+  String get settingsScreenSection => 'Home and note screen';
+
+  @override
+  String get settingsShowAllNotes => 'Notes in folders also on home';
+
+  @override
+  String get settingsShowAllNotesInfo =>
+      'With All on, notes filed in folders also show on home (except archive and hidden folders).';
+
+  @override
+  String get settingsAttachmentsExpanded => 'Attachment strip open in notes';
+
+  @override
+  String get settingsListPaneCollapsed =>
+      'Hide the note list on wide screens (focus)';
+
+  @override
+  String get settingsListPaneCollapsedInfo =>
+      'On tablets and web the list starts closed while a note is open; ☰ opens it.';
+
+  @override
   String get pinnedSideToggle => 'Placement: top / left / right';
 }

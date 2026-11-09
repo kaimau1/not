@@ -298,9 +298,6 @@ class _SplitShellState extends ConsumerState<SplitShell> {
         // ve kaydırma not açılıp kapanınca korunur.
         final double stored = ref.watch(notePaneWidthProvider);
         final double noteWidth = _dragWidth ?? hingeWidth ?? stored;
-        final paneWidth = noteOpen
-            ? noteWidth.clamp(_minListPaneWidth, maxPane)
-            : null;
         // Açık not yokken liste gizlenmez: gizli liste + boş sağ panel,
         // kullanıcıya hiçbir şey göstermeyen bir ekran olurdu.
         final autoHides = listAutoHidesFor(
@@ -313,6 +310,18 @@ class _SplitShellState extends ConsumerState<SplitShell> {
                 (autoHides &&
                     ref.watch(listPeekLocationProvider) != location)) &&
             noteOpen;
+        // **GİZLİ LİSTE KAPANIŞ DÜZENİNDE BEKLER** (ölçüm 2026-11-10, dikey
+        // tablet: not kapanışında 108 ms'lik kare — LAYOUT 85 ms). Liste not
+        // açıkken gizliyken de DAR ve tek sütun tutuluyordu; not kapanınca
+        // tam genişliğe, çok sütuna geçip bütün kartları yeniden kuruyordu.
+        // Kendiliğinden gizlenen (dikey tablet, animasyonsuz) liste gizliyken
+        // tam genişlikte kalır: kapanışta hiçbir şey yeniden dizilmez. ☰ ile
+        // açılınca daralır. Odak/tam ekran (yatay, 240 ms daralma) eskisi gibi
+        // dar kalır — daralırken tam genişlik kırpılmış görünmesin.
+        final listNarrow = noteOpen && !(collapsed && autoHides);
+        final paneWidth = listNarrow
+            ? noteWidth.clamp(_minListPaneWidth, maxPane)
+            : null;
         return SplitScope(
           active: true,
           singleColumn: noteOpen,
@@ -324,6 +333,7 @@ class _SplitShellState extends ConsumerState<SplitShell> {
             maxPane,
             collapsed,
             noteOpen,
+            listNarrow: listNarrow,
             animate: !autoHides,
           ),
         );
@@ -337,6 +347,7 @@ class _SplitShellState extends ConsumerState<SplitShell> {
     double maxPane,
     bool collapsed,
     bool noteOpen, {
+    required bool listNarrow,
     required bool animate,
   }) {
     return Scaffold(
@@ -374,7 +385,7 @@ class _SplitShellState extends ConsumerState<SplitShell> {
                 child: SizedBox(
                   width: paneWidth,
                   child: DashboardPaneScope(
-                    singleColumn: noteOpen,
+                    singleColumn: listNarrow,
                     anchorNoteId: _lastNoteId,
                     // Not açıkken klavye NOTUN: liste daralıp düğmeleri
                     // kartların üstüne itmesin (tablet bulgusu 2026-11-07).

@@ -253,7 +253,7 @@ final followSystemTextScaleProvider = boolPref(
 );
 
 /// **YAZARKEN ALT ÇUBUK GİZLENİR** (2026-11-08): yazma sürerken editörün alt
-/// çubuğu iner, yazma durunca hemen geri gelir (bkz. `_TypingHide`).
+/// çubuğu iner, yazma durunca hemen geri gelir (bkz. `TypingBarHide`).
 final hideBarWhileTypingProvider = boolPref(
   'hide_bar_while_typing',
   defaultValue: true,

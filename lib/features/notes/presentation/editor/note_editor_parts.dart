@@ -317,8 +317,9 @@ class _AiBanner extends StatelessWidget {
 /// hızlı gidip gelmesi yazarken dikkat dağıtıyordu (kullanıcı bildirimi
 /// 2026-11-08). Görünen şeride dokunmak çubuğu hemen geri getirir. Yalnız bu
 /// ağaç ValueListenableBuilder ile kurulur (ekran setState görmez).
-class _TypingHide extends StatelessWidget {
-  const _TypingHide({
+class TypingBarHide extends StatelessWidget {
+  @visibleForTesting
+  const TypingBarHide({
     required this.hidden,
     required this.enabled,
     required this.child,
@@ -346,22 +347,38 @@ class _TypingHide extends StatelessWidget {
             : Duration(milliseconds: hide ? 420 : 320),
         curve: Curves.easeInOutCubic,
         child: child,
-        builder: (context, t, child) => t == 1
-            ? child!
-            : Listener(
-                behavior: HitTestBehavior.translucent,
-                onPointerDown: (_) => hidden.value = false,
-                child: ClipRect(
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    heightFactor: _peek + (1 - _peek) * t,
-                    child: Opacity(
-                      opacity: _peekOpacity + (1 - _peekOpacity) * t,
-                      child: child,
-                    ),
+        // **YERLEŞİM TEK ADIMDA, HAREKET YALNIZ BOYAMADA** (ölçüm
+        // 2026-11-10, "klavye açılıp kapanırken titriyor, genel yavaşlık"):
+        // çubuk gövdeyle aynı Column'da; yükseklik her karede değişince
+        // BÜTÜN not gövdesi her yazma başlangıcında/duraksamasında ~25 kare
+        // boyunca yeniden diziliyordu, `t == 1` dalı da ağaç şeklini
+        // değiştirip çubuğu her seferinde sıfırdan kuruyordu. Artık ağaç hep
+        // aynı; yükseklik yalnız gizleme BİTİNCE pay boyuna iner, gösterme
+        // BAŞLARKEN tam boya çıkar (2 yerleşim); arada çubuk kayar ve solar.
+        builder: (context, t, child) {
+          final collapsed = hide && t == 0;
+          return Listener(
+            behavior: HitTestBehavior.translucent,
+            onPointerDown: (_) {
+              if (hidden.value) hidden.value = false;
+            },
+            child: ClipRect(
+              child: Align(
+                alignment: Alignment.topCenter,
+                heightFactor: collapsed ? _peek : 1,
+                child: FractionalTranslation(
+                  translation: Offset(0, collapsed ? 0 : (1 - t) * (1 - _peek)),
+                  child: Opacity(
+                    opacity: _peekOpacity + (1 - _peekOpacity) * t,
+                    // Çubuğun içi her karede yeniden BOYANMAZ: yalnız
+                    // katmanın yeri ve saydamlığı değişir.
+                    child: RepaintBoundary(child: child),
                   ),
                 ),
               ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -18,6 +18,9 @@
 | `prof_a11y.py` | erişilebilirlik istemcisi açıkken SEMANTICS maliyeti (F27.2) |
 | `video.py` | ekran videosu, kare farkıyla flaş/zıplama (F26.1, ffmpeg) |
 | `jest.py`, `Pinch.java` | iki parmak zoom + yana kaydırma kareleri (F39); `Pinch` `app_process` ile gerçek çoklu dokunuş enjekte eder |
+| `ab_klavye.py` | **A/B kapısı** (2026-11-10): klavye aç/kapa ×3, yazma ×4, not kapanışı — evre başına UI kare/ms/LAYOUT; taban = önceki `[apk]`'nın profil derlemesi (CLAUDE.md ÖLÇÜM KAPISI) |
+| `ab_liste.py` | ana ekran 8 fırlatma — UI kare/ms, BUILD/LAYOUT toplamı |
+| `prof_kb2.py` | klavye döngüsü + kapanış, SF kareleriyle; `w` = evre başına widget build dökümü |
 | `make_dataset.py` | Keep Takeout zip'leri: 240 not + 4 adlı stres notu (`OLCUM …`) |
 
 ## Hazırlık

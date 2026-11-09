@@ -40,7 +40,12 @@ Paragraf **kalın** yazı.
     final files = Directory('assets/guide')
         .listSync()
         .whereType<File>()
-        .where((f) => f.path.endsWith('.md'))
+        // Sürüm notları aynı klasörde ama kılavuz değil (ayrı test).
+        .where(
+          (f) =>
+              f.path.endsWith('.md') &&
+              f.uri.pathSegments.last.startsWith('guide_'),
+        )
         .toList();
     expect(files.length, greaterThanOrEqualTo(2));
     final reference = parseGuide(
@@ -159,5 +164,19 @@ Paragraf **kalın** yazı.
       find.textContaining('Gömmeyi kaldır', findRichText: true),
       findsWidgets,
     );
+  });
+
+  test('sürüm notları: iki dilde aynı tarihler, en yenisi üstte (2026-11-10)',
+      () {
+    List<String> ids(String lang) => parseGuide(
+      File('assets/guide/release_notes_$lang.md').readAsStringSync(),
+    ).sections.map((s) => s.id).toList();
+    final tr = ids('tr');
+    expect(tr, isNotEmpty);
+    expect(ids('en'), tr);
+    expect([...tr]..sort((a, b) => b.compareTo(a)), tr);
+    for (final id in tr) {
+      expect(RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(id), isTrue, reason: id);
+    }
   });
 }

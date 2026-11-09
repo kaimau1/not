@@ -914,7 +914,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Biçim çubuğu açık mı (alt çubuktaki "Aa" düğmesi açıp kapatır).
   bool _formatBarOpen = false;
 
-  /// Yazma sürüyor mu (alt çubuk gizleme, bkz. [_TypingHide]). Yalnız bu
+  /// Yazma sürüyor mu (alt çubuk gizleme, bkz. [TypingBarHide]). Yalnız bu
   /// bildirici değişir: ekran setState ile yeniden kurulmaz.
   final _typingN = ValueNotifier<bool>(false);
   Timer? _typingTimer;
@@ -4231,16 +4231,19 @@ child: NoteFindBar(
                 // kısımlar gizlensin, yazmaya yer kalmıyor"). Panel kendi
                 // kapat (⌄) düğmesiyle kapanır.
                 else
-                AnimatedSize(
+                // Yazarken gizleme DIŞTA (2026-11-10): içte olunca
+                // AnimatedSize onun tek adımlık boy değişimini de 260 ms'lik
+                // kare kare yerleşime çeviriyordu.
+                TypingBarHide(
+                  hidden: _typingN,
+                  enabled: ref.watch(hideBarWhileTypingProvider),
+                  child: AnimatedSize(
                   duration: _kBarSwap,
                   curve: Curves.easeOutCubic,
                   alignment: Alignment.topCenter,
                   child: _formatBarOpen
                       ? const SizedBox(width: double.infinity)
-                      : _TypingHide(
-                  hidden: _typingN,
-                  enabled: ref.watch(hideBarWhileTypingProvider),
-                  child: Column(
+                      : Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                 // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen

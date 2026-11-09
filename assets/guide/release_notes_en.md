@@ -1,0 +1,40 @@
+# Release notes
+
+What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
+
+## 10 November 2026 {#2026-11-10}
+- Fixed stutter and flicker while the keyboard opens/closes and while typing.
+- Less stutter when closing a note on a portrait tablet.
+- Web: the × that deletes an item works.
+- Settings → **Release notes**: every update, item by item.
+- Settings → **Pen, writing and screen**: settings that were only reachable from the note screen (pen, spell fix, home strips, holidays, attachment strip, focus mode) in one place.
+
+## 9 November 2026 {#2026-11-09}
+- Tap the version number at the bottom of Settings to check for updates; a newer version downloads and opens the installer.
+- Web: quick-action buttons always visible in the note; the rest in the ⋮ menu. "Customize" is in ⋮ everywhere.
+- Web: the search box fills the whole row.
+- Home 🏠 closes the open note on wide screens.
+- Privacy policy page on the web.
+- Tablet: Google sign-in and Drive work without the Firebase page; a sleeping Bluetooth keyboard no longer opens the on-screen keyboard.
+- Simpler quick row: pen, spell fix, package, add, bold, color.
+- Pen: writes/taps toggle, write on PDFs, floating pen button.
+- Pinned attachment on the left or right on tablets and web.
+- Shape recognition: triangle, quadrilateral, polygon.
+
+## 8 November 2026 {#2026-11-08}
+- Quick-action row in the top bar while typing.
+- Learning spell fix; note packages.
+- Reminder/task lines inside notes.
+- Gmail, calendar strip, due reminders strip.
+- Fixed the stutter when closing a note.
+
+## 7 November 2026 {#2026-11-07}
+- Tablet: palm rejection, physical keyboard support.
+- Public and religious holidays in the calendar.
+
+## 6 November 2026 {#2026-11-06}
+- Calendar and tasks, Google Calendar, note ↔ calendar links.
+- Attachment sync through a visible Drive "Notlar" folder.
+
+## 5 November 2026 {#2026-11-05}
+- Bubble mode merged into pinned mode; long press selects text, double tap zooms.
