@@ -8055,4 +8055,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tipPenEraserHold =>
       'To erase, long-press a stroke → tap the eraser button. Two fingers = scroll/zoom.';
+
+  @override
+  String backupStatusCloud(int count) {
+    return 'Cloud: $count notes in your Google account, changes sync automatically';
+  }
+
+  @override
+  String get backupStatusGuest =>
+      'NO cloud backup: notes live only on this device. Link a Google account or make a full backup.';
+
+  @override
+  String backupStatusLast(String date, int count) {
+    return 'Last full backup: $date · $count notes';
+  }
+
+  @override
+  String get backupStatusNever => 'No full backup made on this device yet';
 }

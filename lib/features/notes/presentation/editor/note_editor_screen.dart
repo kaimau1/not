@@ -504,6 +504,8 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     this.startYouTube = false,
     this.startTranscribe = false,
     this.startAudioFile = false,
+    this.revealItemId,
+    this.initialFind,
   });
 
   final String noteId;
@@ -563,6 +565,15 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   /// (+) menüsündeki "Belge tara not al": açılışta belge tarayıcı başlar,
   /// düzeltilmiş sayfalar nota girer ve istenirse yazıları tanınır.
   final bool startScan;
+
+  /// `?item=<madde kimliği>`: açılışta bu maddeye kaydırılır (ana ekranın
+  /// "zamanı gelenler" şeridinden satır görevine dokunulunca).
+  final String? revealItemId;
+
+  /// `?find=<sorgu>` (F56.1, Keep şikâyeti "arama sonucuna basınca kelimeye
+  /// gitmiyor"): ana ekran aramasından açılınca not içi arama bu sorguyla
+  /// açılır, ilk eşleşmeye kaydırılır ve vurgulanır. Klavye AÇILMAZ.
+  final String? initialFind;
 
   /// (+) menüsündeki "PDF ekle not al": açılışta dosya seçici açılır, seçilen
   /// PDF notun içine gömülür ve iki bölmeli sayfa-notu ekranı kurulur. Seçim
@@ -736,6 +747,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _pendingDictation = false;
   bool _pendingVideo = false;
   bool _pendingPhoto = false;
+  String? _pendingRevealItem;
+  String? _pendingFind;
   bool _pendingScan = false;
   bool _pendingPdf = false;
   bool _pendingSlides = false;
@@ -1259,6 +1272,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _pendingYouTube = widget.startYouTube;
     _pendingTranscribe = widget.startTranscribe;
     _pendingAudioFile = widget.startAudioFile;
+    _pendingRevealItem = widget.revealItemId;
+    _pendingFind = widget.initialFind;
     WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
     final owner = widget.ownerId;
     _sub = ref.listenManual(owner == null

@@ -3713,5 +3713,26 @@
   "inkEraserOffer": "Silgiyi seç",
   "tipPenToggle": "Kalem kipi açık. Kapatmak için kalem düğmesine tekrar bas (ya da geri). Basılı tut = kalem ayarları.",
   "tipPenShapeHold": "Çizginin sonunda parmağını/kalemini bir an beklet: çizgi, kare, daire düzgün şekle oturur.",
-  "tipPenEraserHold": "Silmek için bir çizginin üstüne basılı tut → çıkan silgi düğmesine dokun. İki parmak = kaydır/yakınlaştır."
+  "tipPenEraserHold": "Silmek için bir çizginin üstüne basılı tut → çıkan silgi düğmesine dokun. İki parmak = kaydır/yakınlaştır.",
+  "backupStatusCloud": "Bulut: {count} not Google hesabında, değişiklikler kendiliğinden eşitleniyor",
+  "@backupStatusCloud": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupStatusGuest": "Bulut yedeği YOK: notlar yalnız bu cihazda. Google hesabı bağla ya da tam yedek al.",
+  "backupStatusLast": "Son tam yedek: {date} · {count} not",
+  "@backupStatusLast": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupStatusNever": "Bu cihazda henüz tam yedek alınmadı"
 }

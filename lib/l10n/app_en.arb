@@ -2915,5 +2915,26 @@
   "inkEraserOffer": "Pick eraser",
   "tipPenToggle": "Pen mode is on. Tap the pen button again (or back) to turn it off. Long-press = pen settings.",
   "tipPenShapeHold": "Hold still at the end of a stroke: lines, squares and circles snap to clean shapes.",
-  "tipPenEraserHold": "To erase, long-press a stroke → tap the eraser button. Two fingers = scroll/zoom."
+  "tipPenEraserHold": "To erase, long-press a stroke → tap the eraser button. Two fingers = scroll/zoom.",
+  "backupStatusCloud": "Cloud: {count} notes in your Google account, changes sync automatically",
+  "@backupStatusCloud": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupStatusGuest": "NO cloud backup: notes live only on this device. Link a Google account or make a full backup.",
+  "backupStatusLast": "Last full backup: {date} · {count} notes",
+  "@backupStatusLast": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupStatusNever": "No full backup made on this device yet"
 }

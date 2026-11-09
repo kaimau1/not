@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../notes/data/due_state.dart' show dueClockProvider;
 import '../../settings/settings_providers.dart';
 import '../domain/agenda.dart';
 import '../domain/day_key.dart';
@@ -39,6 +40,10 @@ class HomeCalendarStrip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (!ref.watch(homeCalendarStripProvider)) return const SizedBox.shrink();
     final open = ref.watch(homeCalendarStripOpenProvider);
+    // GÜN DÖNÜMÜ (2026-11-09): uygulama gece arka planda kalıp sabah öne
+    // gelince şerit dünü "bugün" gösteriyordu (yeniden kurulmuyordu). Saat
+    // öne gelişte ilerler; yalnız GÜN değişince yeniden kurulur.
+    ref.watch(dueClockProvider.select(dayKey));
     final today = startOfDay(now ?? DateTime.now());
     void toggle() =>
         ref.read(homeCalendarStripOpenProvider.notifier).set(!open);
@@ -127,7 +132,9 @@ class HomeCalendarStripView extends StatelessWidget {
         DateTime(today.year, today.month, today.day + i),
     ];
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 2, 0, 4),
+      // SIKI (kullanıcı 2026-11-09: "takvim satırı fazla yer kaplıyor,
+      // boşluğu kapat"): alt dolgu yok, hücre 36 dp.
+      padding: const EdgeInsets.fromLTRB(8, 0, 0, 0),
       child: Row(
         children: [
           for (final d in days)
@@ -150,7 +157,12 @@ class HomeCalendarStripView extends StatelessWidget {
                 key: const ValueKey('home-calendar-collapse'),
                 tooltip: l10n.homeCalendarStripCollapse,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 44),
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 36),
+                // KÖK NEDEN (boşluk): varsayılan 48 dp dokunma alanı bütün
+                // şeridi 48 dp'ye çekiyordu (hücreler 36).
+                style: IconButton.styleFrom(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 iconSize: 18,
                 icon: const Icon(Icons.expand_less),
                 onPressed: onCollapse,
@@ -211,9 +223,9 @@ class _DayCell extends StatelessWidget {
         onTap: onTap,
         onLongPress: onLongPress,
         child: Container(
-          height: 44,
+          height: 36,
           margin: const EdgeInsets.symmetric(horizontal: 1),
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
           decoration: BoxDecoration(
             color: red
                 ? scheme.errorContainer.withValues(alpha: 0.35)
@@ -263,10 +275,9 @@ class _DayCell extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 2),
                   // 2. satır: kayıtlar.
                   SizedBox(
-                    height: 14,
+                    height: 13,
                     child: count == 0
                         ? (wide
                               ? const SizedBox.shrink()

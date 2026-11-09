@@ -29,6 +29,21 @@ extension _EditorFlowX on _NoteEditorScreenState {
       _pendingVideo = false;
       _addVideo();
     }
+    final find = _pendingFind?.trim();
+    if (find != null && find.isNotEmpty) {
+      _pendingFind = null;
+      _openFindWith(find);
+    }
+    final reveal = _pendingRevealItem;
+    if (reveal != null && reveal.isNotEmpty) {
+      _pendingRevealItem = null;
+      // Satırlar bir kare sonra yerinde (ilk kurulumda boyları yok).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          unawaited(_itemsEditorKey.currentState?.revealItem(reveal));
+        }
+      });
+    }
     if (_pendingPhoto) {
       _pendingPhoto = false;
       _takePhoto();

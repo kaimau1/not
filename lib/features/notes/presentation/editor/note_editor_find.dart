@@ -24,6 +24,26 @@ extension _EditorFind on _NoteEditorScreenState {
     });
   }
 
+  /// Aramadan açılan not (F56.1): arama çubuğu [query] ile açılır, ilk
+  /// eşleşmeye kaydırılır; alan ODAKLANMAZ (klavye açılmaz). Metinde eşleşme
+  /// yoksa (ekte ya da anlamsal eşleşme) çubuk kendiliğinden kapanır.
+  void _openFindWith(String query) {
+    if (_note == null || query.isEmpty) return;
+    _find.query.text = query;
+    _update(() {
+      _findOpen = true;
+      _formatBarOpen = false;
+    });
+    // İki kare: maddeler ve gövde ilk karede kurulur, boyları ikincide.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_findOpen) return;
+        _runFind();
+        if (_find.hits.isEmpty) _closeFind();
+      });
+    });
+  }
+
   void _closeFind() {
     _find.reset();
     _update(() => _findOpen = false);
@@ -89,7 +109,13 @@ extension _EditorFind on _NoteEditorScreenState {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final fieldContext = hit.focus.context;
-      if (fieldContext == null || !fieldContext.mounted) return;
+      if (fieldContext == null || !fieldContext.mounted) {
+        // Madde alanı henüz kurulmamış (tembel satır / düz çizim): satırın
+        // kendisine kaydır (2026-11-09 — uzun liste notunda arama
+        // eşleşmeye gitmiyordu).
+        _itemsEditorKey.currentState?.revealFocus(hit.focus);
+        return;
+      }
       final editable = _NoteEditorScreenState._findEditable(
         fieldContext.findRenderObject(),
       );

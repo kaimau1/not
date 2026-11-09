@@ -152,5 +152,17 @@ void main() {
       // İlgisiz kelime (yakın değil) öğrenilmez.
       expect(AutoSpell.replacedWord('bu kalem ', 'bu masa '), isNull);
     });
+
+    test('BİLİNEN kelimenin eki değişince öğrenilmez (kalemi → kalemde)', () {
+      final saved = AutoSpell.memory;
+      addTearDown(() => AutoSpell.memory = saved);
+      AutoSpell.memory = SpellMemory()..addWord('kalemi', 5);
+      expect(AutoSpell.replacedWord('bu kalemi ', 'bu kalemde '), isNull);
+      // Bilinmeyen (hatalı) kelime yine öğrenilir.
+      expect(
+        AutoSpell.replacedWord('bu kalmei ', 'bu kalemi '),
+        (from: 'kalmei', to: 'kalemi'),
+      );
+    });
   });
 }
