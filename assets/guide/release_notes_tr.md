@@ -3,6 +3,10 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 10 Kasım 2026 {#2026-11-10}
+- Sabit ve sayfadaki PDF'e kalemle yazılamıyordu (kalem kipi açılıyor, iz çıkmıyordu) — düzeltildi; not paketinde de.
+- Kalem görülmüş cihazda kalem kipindeyken parmak çizmez, kaydırır; kalemle yazarken değen avuç sayfayı kaydırmaz.
+- Sabit PDF'te sayfanın dibinde aşağı çekmeye devam edince sonraki sayfaya geçilir (yukarı çekince öncekine).
+- Sabit PDF'te tam ekran kaldığın sayfadan açılır; tam ekranda geçilen sayfa ve çizgiler sabite yansır.
 - Klavye açılıp kapanırken ve yazarken titreme/takılma giderildi (yazarken alt çubuğun gizlenmesi bütün notu her karede yeniden diziyordu).
 - Dikey tablette not kapanışındaki takılma azaldı (liste gizliyken de kapanış düzeninde bekler).
 - Web: madde silme × düğmesi çalışır.

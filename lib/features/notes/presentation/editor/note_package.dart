@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/app_icons.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../viewers/ink_layer.dart';
+import '../viewers/ink_tools.dart' show InkToolMemory;
 import 'page_ink_layer.dart';
 
 /// **NOT PAKETİ** (kullanıcı isteği 2026-11-08): uzun yazı nota açık hâlde
@@ -174,10 +176,13 @@ class _NotePackageScreenState extends State<NotePackageScreen> {
   late final _text = TextEditingController(text: widget.package.text);
   final _scroll = ScrollController();
   late List<InkStroke> _strokes = widget.package.ink;
+  // Düzenleme kipinde (2026-11-10): eksikken `InkPageLayer` her dokunuşu
+  // yok sayıyordu — paketteki kalem düğmesi hiçbir şey çizdirmiyordu
+  // (sabit/gömülü PDF'teki kökün aynısı).
   late final _ink = InkController(
     initial: widget.package.ink,
     onChanged: (s) => _strokes = s,
-  );
+  )..setEditing(widget.onSave != null);
   bool _pen = false;
 
   bool get _readOnly => widget.onSave == null;
@@ -205,6 +210,11 @@ class _NotePackageScreenState extends State<NotePackageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _ink
+      ..allowedKinds = _pen
+          ? null
+          : const {PointerDeviceKind.stylus, PointerDeviceKind.invertedStylus}
+      ..penOnly = InkToolMemory.penOnly;
     final l10n = context.l10n;
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
@@ -250,6 +260,9 @@ class _NotePackageScreenState extends State<NotePackageScreen> {
             ],
           ],
         ),
+        // Kalem kipi kapalıyken yalnız kalem çizer (parmak metne gider);
+        // açıkken parmak da — kalem görülmüş cihazda "yalnız kalem" parmağı
+        // yine durdurur.
         body: SingleChildScrollView(
           controller: _scroll,
           physics: _pen ? const NeverScrollableScrollPhysics() : null,

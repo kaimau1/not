@@ -389,7 +389,10 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   final Map<String, InkController> _docInk = {};
 
   InkController? _docInkFor(Attachment a) {
-    if (!InkToolMemory.autoStylus) return null;
+    // Kalemsiz cihazda katman yok: basılı tutup seçme parmakta kalır.
+    if (!InkToolMemory.autoStylus || !InkToolMemory.stylusEver) return null;
+    // setEditing(true) (2026-11-10, cihazda doğrulandı): eksikken katman
+    // `IgnorePointer` ile kalemi de yok sayıyordu — gömülü PDF'e yazılmıyordu.
     final c = _docInk[a.id] ??= InkController(
       initial: a.ink,
       onChanged: (strokes) {
@@ -397,7 +400,10 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         final live = widget.images.where((i) => i.id == a.id).firstOrNull;
         widget.onChanged((live ?? a).copyWith(ink: strokes));
       },
-    );
+    )..setEditing(true);
+    // Tam ekranda/geri alda değişen çizgiler (içerik aynıysa işlem yok).
+    if (!c.drawing) c.replace(a.ink);
+    c.penOnly = InkToolMemory.penOnly;
     c.allowedKinds = const {
       PointerDeviceKind.stylus,
       PointerDeviceKind.invertedStylus,

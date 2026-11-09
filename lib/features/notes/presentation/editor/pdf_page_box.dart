@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/services.dart';
 import 'package:pdfrx/pdfrx.dart';
 
@@ -17,6 +18,7 @@ import '../../domain/attachment.dart';
 import '../viewers/area_actions.dart';
 import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
+import 'page_ink_layer.dart' show InkClaim;
 import '../viewers/pdf_page_image.dart';
 import '../viewers/pdf_select_layer.dart';
 import '../viewers/pdf_selection_bar.dart' show PdfSelectionState;
@@ -352,6 +354,9 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     _refreshTimer?.cancel();
     _detachDocument();
     _pager?.dispose();
+    for (final c in _pageScrolls.values) {
+      c.dispose();
+    }
     widget.addingBubbles?.removeListener(_onExternalAdding);
     widget.addingPlain?.removeListener(_onExternalPlain);
     _bubbles?.addingListenable.removeListener(_onAddingChanged);
@@ -652,6 +657,56 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     widget.onChanged(widget.attachment.copyWith(pdfPage: next));
   }
 
+  /// **AŞAĞI KAYDIRARAK SAYFA GEÇİŞİ** (kullanıcı isteği 2026-11-10:
+  /// "sabit PDF'ler sayfa sayfa geçiliyor, aşağı doğru kaydırılabilmeli; illa
+  /// sağa sola kaydırmaya gerek yok"). Genişliğe oturan sayfanın DİBİNDE
+  /// parmak aşağı çekmeye devam edince sonraki sayfanın başına, TEPESİNDE
+  /// yukarı çekince önceki sayfanın dibine geçilir. Yalnız sürüklemede
+  /// (savrulmanın sonu sayfa çevirmez: dibi okumak isteyen sayfayı
+  /// kaçırmasın). Yana kaydırma da çalışmaya devam eder.
+  double _edgePull = 0;
+  static const _edgePullTurn = 72.0;
+  final _pageScrolls = <int, ScrollController>{};
+
+  ScrollController _pageScroll(int index) =>
+      _pageScrolls.putIfAbsent(index, ScrollController.new);
+
+  bool _onPageScroll(ScrollNotification n, int index) {
+    if (n is ScrollStartNotification || n is ScrollEndNotification) {
+      _edgePull = 0;
+      return false;
+    }
+    if (n is! OverscrollNotification || n.dragDetails == null) return false;
+    if (_selecting || _zoomed) return false;
+    _edgePull += n.overscroll;
+    final page = index + 1;
+    if (_edgePull > _edgePullTurn && page < _count) {
+      _edgePull = 0;
+      _turnVertically(page + 1, toEnd: false);
+    } else if (_edgePull < -_edgePullTurn && page > 1) {
+      _edgePull = 0;
+      _turnVertically(page - 1, toEnd: true);
+    }
+    return false;
+  }
+
+  /// Dikey geçiş: komşu sayfaya ATLANIR (yana kayma animasyonu dikey
+  /// harekete ters düşerdi); yeni sayfa başından (ya da geri gidişte
+  /// dibinden) açılır.
+  void _turnVertically(int page, {required bool toEnd}) {
+    HapticFeedback.selectionClick();
+    final pager = _pager;
+    setState(() => _page = page);
+    _flashBar();
+    if (pager != null && pager.hasClients) pager.jumpToPage(page - 1);
+    widget.onChanged(widget.attachment.copyWith(pdfPage: page));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final c = _pageScrolls[page - 1];
+      if (!mounted || c == null || !c.hasClients) return;
+      c.jumpTo(toEnd ? c.position.maxScrollExtent : 0);
+    });
+  }
+
   void _toggleAutoPlay() {
     setState(() {
       if (_autoPlay != null) {
@@ -892,13 +947,17 @@ class _PdfPageBoxState extends State<PdfPageBox> {
           // (balon, mürekkep, seçim) her karede YENİDEN ÇİZİLMESİN —
           // kaydırıcı yalnız hazır katmanı kaydırır (SingleChildScrollView
           // listelerin aksine çocuğuna kendiliğinden sınır koymuyor).
-          return SingleChildScrollView(
-            physics: locked
-                ? const NeverScrollableScrollPhysics()
-                : const ClampingScrollPhysics(),
-            padding: const EdgeInsets.only(bottom: 24),
-            child: RepaintBoundary(
-              child: AspectRatio(aspectRatio: aspect, child: page),
+          return NotificationListener<ScrollNotification>(
+            onNotification: (n) => _onPageScroll(n, i),
+            child: SingleChildScrollView(
+              controller: _pageScroll(i),
+              physics: locked
+                  ? const NeverScrollableScrollPhysics()
+                  : const ClampingScrollPhysics(),
+              padding: const EdgeInsets.only(bottom: 24),
+              child: RepaintBoundary(
+                child: AspectRatio(aspectRatio: aspect, child: page),
+              ),
             ),
           );
         },
@@ -1058,7 +1117,17 @@ class _PdfPageBoxState extends State<PdfPageBox> {
               page: pageNumber,
               readOnly: penOn || !(_bubbleEdit || _bubblesWritable),
             ),
-          if (penOn) InkPageLayer(controller: pen, page: pageNumber),
+          // Avuç ve kalem burada yakalanır: kalem yazarken değen avuç sayfayı
+          // kaydırmaz/çevirmez; parmak (izinsiz) kaydırmaya devam eder.
+          // Parmak çiziyorsa (kalemsiz cihazda kalem düğmesi) sarılmaz: iki
+          // parmak yakınlaştırma yutulmasın.
+          if (penOn)
+            pen.accepts(PointerDeviceKind.touch)
+                ? InkPageLayer(controller: pen, page: pageNumber)
+                : InkClaim(
+                    ink: pen,
+                    child: InkPageLayer(controller: pen, page: pageNumber),
+                  ),
         ],
       ),
     );

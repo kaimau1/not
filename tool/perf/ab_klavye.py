@@ -8,6 +8,10 @@ düğmesi (2026-11-07 sonrası sürümler). Evre başına UI kare sayısı, topl
 en uzun kare, 16 ms'yi aşan kare ve TOPLAM LAYOUT süresi (yeniden dizilme
 regresyonunun doğrudan ölçüsü) yazılır. Ölçüm penceresinde uiautomator
 dökümü yok (semantiği açar).
+
+TUZAK: yazma evresi her koşuda aynı maddeye ~56 karakter ekler — madde
+uzadıkça yazma/kapanış pahalılaşır. A ile B'yi ARKA ARKAYA ve aynı sayıda
+koşuyla karşılaştır; ilk koşu (⌨ + soğuk önbellek) gürültülü, ikinciyi al.
 """
 import sys, pickle
 from perf import *
