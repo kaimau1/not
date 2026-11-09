@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'dart:convert';
 import 'dart:io';
 
@@ -196,6 +197,41 @@ void main() {
       expect(requests, hasLength(4)); // ara + aç + oturum + dosya
       expect(await up(), 'drv9');
       expect(requests, hasLength(6), reason: 'klasör ikinci kez aranmaz');
+    });
+
+    test('uploadBytes (web yedek yolu): bellekteki baytlar aynı yoldan gider',
+        () async {
+      String? put;
+      final client = MockClient.streaming((request, body) async {
+        final bytes = await body.toBytes();
+        if (request.method == 'GET') {
+          return http.StreamedResponse(
+            Stream.value(utf8.encode('{"files":[{"id":"k"}]}')),
+            200,
+          );
+        }
+        if (request.method == 'POST') {
+          expect(request.headers['X-Upload-Content-Length'], '3');
+          return http.StreamedResponse(
+            const Stream.empty(),
+            200,
+            headers: {'location': 'https://upload.example/s'},
+          );
+        }
+        put = utf8.decode(bytes);
+        return http.StreamedResponse(
+          Stream.value(utf8.encode('{"id":"d1"}')),
+          200,
+        );
+      });
+      final store = DriveStore(_FakeAuth(['t1']), client: client);
+      final id = await store.uploadBytes(
+        Uint8List.fromList(utf8.encode('pdf')),
+        name: 'a.pdf',
+        mimeType: 'application/pdf',
+      );
+      expect(id, 'd1');
+      expect(put, 'pdf');
     });
 
     test('var olan "Notlar" klasörü yeniden açılmaz', () async {

@@ -435,8 +435,32 @@ class DriveStore {
     File file, {
     required String name,
     required String mimeType,
+  }) async => _uploadStream(
+    await file.length(),
+    file.openRead,
+    name: name,
+    mimeType: mimeType,
+  );
+
+  /// Bellekteki baytları yükler (WEB: dosya sistemi yok — Storage yüklemesi
+  /// düşünce yedek yol, 2026-11-09 "web'de PDF hiç eklenmiyor").
+  Future<String> uploadBytes(
+    Uint8List bytes, {
+    required String name,
+    required String mimeType,
+  }) => _uploadStream(
+    bytes.length,
+    () => Stream.value(bytes),
+    name: name,
+    mimeType: mimeType,
+  );
+
+  Future<String> _uploadStream(
+    int length,
+    Stream<List<int>> Function() open, {
+    required String name,
+    required String mimeType,
   }) async {
-    final length = await file.length();
     final folder = await ensureFolder();
     final session = await _send((token) async {
       final request =
@@ -473,7 +497,7 @@ class DriveStore {
     // kapanmaz ve istek sonsuza dek asılı kalır (test bunu yakaladı).
     unawaited(() async {
       try {
-        await for (final chunk in file.openRead()) {
+        await for (final chunk in open()) {
           put.sink.add(chunk);
         }
       } catch (e, st) {

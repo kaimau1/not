@@ -73,11 +73,15 @@ class NotePackagePill extends StatelessWidget {
     required this.text,
     required this.count,
     required this.onTap,
+    this.onUnpack,
   });
 
   final String text;
   final int count;
   final VoidCallback onTap;
+
+  /// Sağdaki × (kullanıcı isteği 2026-11-09: "paketten çıkarmak çok zor").
+  final VoidCallback? onUnpack;
 
   @override
   Widget build(BuildContext context) {
@@ -117,6 +121,8 @@ class NotePackagePill extends StatelessWidget {
                     ),
                   ),
                 ],
+                if (onUnpack != null)
+                  NotePackageUnpackButton(onPressed: onUnpack!),
               ],
             ),
           ),
@@ -124,6 +130,25 @@ class NotePackagePill extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Paketi çözen küçük × (hapta ve açık paketin ilk maddesinde).
+class NotePackageUnpackButton extends StatelessWidget {
+  const NotePackageUnpackButton({super.key, required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    key: const ValueKey('note-package-unpack'),
+    tooltip: context.l10n.notePackageUnpack,
+    visualDensity: VisualDensity.compact,
+    iconSize: 18,
+    constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+    padding: EdgeInsets.zero,
+    icon: const Icon(Icons.close_rounded),
+    onPressed: onPressed,
+  );
 }
 
 /// Paketin önizlemesi: okunur, yazılır, kalemle üstüne çizilir. Kapanınca

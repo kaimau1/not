@@ -1732,6 +1732,26 @@ class ItemsEditorState extends State<ItemsEditor>
     return true;
   }
 
+  @visibleForTesting
+  List<NoteItem> get debugItems => List.unmodifiable(_items);
+
+  /// Paketi çözer: maddeler yerinde kalır, paket işareti kalkar (×,
+  /// kullanıcı isteği 2026-11-09: "paketten çıkarmak çok zor").
+  @visibleForTesting
+  void unpackGroup(String pkg) {
+    if (pkg.isEmpty) return;
+    setState(() {
+      for (var k = 0; k < _items.length; k++) {
+        if (_items[k].package == pkg) {
+          _items[k] = _items[k].copyWith(package: '');
+        }
+      }
+      if (_openPackage == pkg) _openPackage = null;
+    });
+    unawaited(HapticFeedback.selectionClick());
+    _commit();
+  }
+
   void _setOpenPackage(String? pkg) {
     if (_openPackage == pkg || !mounted) return;
     setState(() => _openPackage = pkg);
@@ -1758,6 +1778,7 @@ class ItemsEditorState extends State<ItemsEditor>
           text: members.map((m) => stripRichMarkers(m.text)).join('  ·  '),
           count: members.length,
           onTap: () => _setOpenPackage(pkg),
+          onUnpack: () => unpackGroup(pkg),
         ),
       );
     }
@@ -1773,7 +1794,20 @@ class ItemsEditorState extends State<ItemsEditor>
               start: BorderSide(color: scheme.primary, width: 2),
             ),
           ),
-          child: row,
+          child: first
+              ? Stack(
+                  children: [
+                    row,
+                    PositionedDirectional(
+                      top: 0,
+                      end: 0,
+                      child: NotePackageUnpackButton(
+                        onPressed: () => unpackGroup(pkg),
+                      ),
+                    ),
+                  ],
+                )
+              : row,
         ),
       ),
     );
