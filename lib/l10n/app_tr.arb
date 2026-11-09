@@ -3747,5 +3747,9 @@
   "updateDownloading": "Yeni sürüm indiriliyor…",
   "updateNeedsPermission": "Bu uygulamaya \"bilinmeyen uygulama yükleme\" izni ver, sonra yeniden Güncelle'ye dokun",
   "updateFailed": "İndirilemedi; GitHub sayfası açılıyor",
+  "updateTapToCheck": "Dokun: güncellemeyi denetle",
+  "updateChecking": "Güncelleme denetleniyor…",
+  "updateUpToDate": "En son sürüm kullanılıyor",
+  "updateCheckFailed": "Denetlenemedi — bağlantıyı kontrol et",
   "pinnedSideToggle": "Yerleşim: üstte / solda / sağda"
 }

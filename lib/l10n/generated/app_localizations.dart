@@ -14450,6 +14450,30 @@ abstract class AppLocalizations {
   /// **'İndirilemedi; GitHub sayfası açılıyor'**
   String get updateFailed;
 
+  /// No description provided for @updateTapToCheck.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dokun: güncellemeyi denetle'**
+  String get updateTapToCheck;
+
+  /// No description provided for @updateChecking.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncelleme denetleniyor…'**
+  String get updateChecking;
+
+  /// No description provided for @updateUpToDate.
+  ///
+  /// In tr, this message translates to:
+  /// **'En son sürüm kullanılıyor'**
+  String get updateUpToDate;
+
+  /// No description provided for @updateCheckFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Denetlenemedi — bağlantıyı kontrol et'**
+  String get updateCheckFailed;
+
   /// No description provided for @pinnedSideToggle.
   ///
   /// In tr, this message translates to:

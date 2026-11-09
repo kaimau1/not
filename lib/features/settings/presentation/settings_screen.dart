@@ -9,7 +9,8 @@ import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart'
     show AuthCredential, FirebaseAuth, FirebaseAuthException;
-import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, visibleForTesting, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 
 import '../../../core/widgets/sheet_header.dart';
@@ -80,7 +81,11 @@ import 'notes_settings.dart';
 import 'backup_ui.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import '../../../core/app_update.dart'
-    show newVersionAvailableProvider, installAppUpdate;
+    show
+        newVersionAvailableProvider,
+        installAppUpdate,
+        fetchLatestReleaseName,
+        isNewerVersion;
 import 'app_lock.dart';
 import '../../notes/data/backup_service.dart';
 import '../../notes/data/attachment_repository.dart';

@@ -546,24 +546,28 @@ void main() {
   });
 
   group('F44.4 arama, F44.6 AI', () {
-    testWidgets('arama kutusu en çok 720 dp; telefonda tam genişlik', (
-      tester,
-    ) async {
+    // 2026-11-09: 720 dp tavanı kaldırıldı ("sağda ölü boşluk") — kutu
+    // satırı doldurur, iki kenarda da 12 dp.
+    testWidgets('arama kutusu satırı uçtan uca doldurur', (tester) async {
       await pump(tester, const Size(1440, 900));
-      expect(tester.getSize(find.byType(TextField).first).width, lessThan(720));
-      expect(
-        tester
-            .getRect(
-              find
-                  .ancestor(
-                    of: find.byType(TextField).first,
-                    matching: find.byType(Container),
-                  )
-                  .first,
+      final pill = tester.getRect(
+        find
+            .ancestor(
+              of: find.byType(TextField).first,
+              matching: find.byType(Container),
             )
-            .width,
-        720,
+            .first,
       );
+      final bar = tester.getRect(
+        find
+            .ancestor(
+              of: find.byType(TextField).first,
+              matching: find.byType(AppBar),
+            )
+            .first,
+      );
+      expect(pill.left - bar.left, closeTo(12, 1));
+      expect(bar.right - pill.right, closeTo(12, 1));
       await end(tester);
     });
 

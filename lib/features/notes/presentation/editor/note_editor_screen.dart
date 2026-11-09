@@ -2348,10 +2348,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   Widget? _typingTitle(Note note, Widget? idle) {
     if (_readOnly || note.type.isPageNoteType) return idle;
     final pen = !note.type.isPageNoteType;
-    return KeyboardSwitch(
-      closed: idle,
-      editing: _fieldFocusedN,
-      open: EditorQuickRow(
+    // GENİŞ WEB'DE HEP AÇIK (kullanıcı isteği 2026-11-09: "webte hızlı menü
+    // yok, kalemi açamıyorum"): web'de klavye boşluğu hiç oluşmadığından
+    // satır hiç görünmüyordu. Geniş alanda düğmeler tarihin yanında sürekli;
+    // sığmayanlar ⋮ menüsünde.
+    final wide =
+        kIsWeb && MediaQuery.sizeOf(context).width >= kRailBreakpoint;
+    final row = EditorQuickRow(
+          fit: wide,
           onBold: () => _applyFormat(RichFormat.bold),
           onBullet: () => _runOnTarget(applyLineBullet),
           onCheckbox: note.type == NoteType.text ? _toggleChecklistLine : null,
@@ -2420,8 +2424,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // YOK — yalnız bir sonraki açılışta vurgulanmasın diye.
           hint: !_quickRowHinted,
           onHinted: () => _quickRowHinted = true,
-      ),
     );
+    if (wide) {
+      return Row(
+        children: [
+          if (idle != null) Flexible(child: idle),
+          const SizedBox(width: 12),
+          Expanded(flex: 2, child: Align(alignment: AlignmentDirectional.centerStart, child: row)),
+        ],
+      );
+    }
+    return KeyboardSwitch(closed: idle, editing: _fieldFocusedN, open: row);
   }
 
   static Color _favoriteColorValue() {

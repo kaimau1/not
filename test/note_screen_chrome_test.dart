@@ -215,7 +215,9 @@ void main() {
     // (kullanıcı isteği 2026-11-08: "3 nokta geri gelsin").
     expect(find.byIcon(Icons.more_vert), findsOneWidget);
     expect(find.byKey(const ValueKey('quick-row-spell')), findsOneWidget);
-    expect(find.byKey(const ValueKey('quick-row-customize')), findsOneWidget);
+    // Düzenle artık hızlı satırın ⋮ menüsünde (2026-11-09).
+    expect(find.byKey(const ValueKey('quick-row-customize')), findsNothing);
+    expect(find.byKey(const ValueKey('quick-row-more')), findsOneWidget);
     // SADE VARSAYILAN (2026-11-09): kalem · yazım · paket · ekle · kalın ·
     // renk; gerisi düzenleme alanından eklenir.
     expect(find.byKey(const ValueKey('quick-row-package')), findsOneWidget);

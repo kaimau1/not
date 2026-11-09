@@ -2949,5 +2949,9 @@
   "updateDownloading": "Downloading the new version…",
   "updateNeedsPermission": "Allow this app to install unknown apps, then tap Update again",
   "updateFailed": "Download failed; opening the GitHub page",
+  "updateTapToCheck": "Tap to check for updates",
+  "updateChecking": "Checking for updates…",
+  "updateUpToDate": "You're on the latest version",
+  "updateCheckFailed": "Couldn't check — check your connection",
   "pinnedSideToggle": "Placement: top / left / right"
 }

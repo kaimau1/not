@@ -345,18 +345,76 @@ class _VersionFooterState extends State<_VersionFooter> {
     );
   }
 
+  /// Sürüm satırının altındaki durum bilgisi (null = "dokun: denetle").
+  String? _status;
+  bool _checking = false;
+
+  /// **SÜRÜME DOKUN → GÜNCELLE** (kullanıcı isteği 2026-11-09): GitHub'ın son
+  /// Release'i bu kurulumdan yeniyse doğrudan indirip kurulum penceresini açar
+  /// ([installAppUpdate]); değilse "en son sürüm". Web hep son sürümdür.
+  Future<void> _check() async {
+    final l10n = context.l10n;
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      setState(() => _status = l10n.updateUpToDate);
+      return;
+    }
+    if (_checking) return;
+    setState(() {
+      _checking = true;
+      _status = l10n.updateChecking;
+    });
+    final latest = await fetchLatestReleaseName();
+    if (!mounted) return;
+    final installed = _version;
+    final newer =
+        latest != null && installed != null && isNewerVersion(latest, installed);
+    setState(() {
+      _checking = false;
+      _status = latest == null
+          ? l10n.updateCheckFailed
+          : newer
+          ? l10n.updateAvailable(latest)
+          : l10n.updateUpToDate;
+    });
+    if (newer) await installAppUpdate(context, latest);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final muted = theme.colorScheme.onSurfaceVariant;
     return Padding(
       padding: const EdgeInsets.only(top: 28),
-      child: Text(
-        _version == null ? l10n.appName : '${l10n.appName} · v$_version',
-        key: const ValueKey('settings-version-footer'),
-        textAlign: TextAlign.center,
-        style: theme.textTheme.labelMedium?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
+      child: Center(
+        child: InkWell(
+          key: const ValueKey('settings-version-footer-tap'),
+          borderRadius: BorderRadius.circular(12),
+          onTap: _check,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _version == null
+                      ? l10n.appName
+                      : '${l10n.appName} · v$_version',
+                  key: const ValueKey('settings-version-footer'),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelMedium?.copyWith(color: muted),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _status ?? l10n.updateTapToCheck,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: _status == null ? muted : theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
