@@ -271,7 +271,8 @@ class _ReorderableNoteCell extends StatelessWidget {
           // Kart önizlemede zaten YENİ yerinde duruyor; burada soluk bir
           // hayalet bırakmak "gideceği yer" hissini tamamlıyor.
           childWhenDragging: Opacity(opacity: 0.25, child: child),
-          child: framed,
+          // Basılı tutarken dolan halka: dolunca kart elde (2026-11-09).
+          child: HoldRingArea(icon: Icons.open_with, child: framed),
         );
       },
     );
@@ -1254,6 +1255,11 @@ class _FolderSwipeState extends State<FolderSwipe>
   double _raw = 0;
   bool _past = false;
   double _labelMax = 140;
+
+  /// Geçiş eşiğine ne kadar gelindi (0–1) — etiketteki DOLUM ÇUBUĞU
+  /// (kullanıcı isteği 2026-11-09). Ayrı bildirici: her çekiş karesinde
+  /// yalnız çubuk boyanır.
+  final _progress = ValueNotifier<double>(0);
   Timer? _wheelEnd;
 
   /// Geçişten sonra süren dokunmatik yüzey ataleti ikinci geçiş sayılmasın.
@@ -1262,6 +1268,7 @@ class _FolderSwipeState extends State<FolderSwipe>
   @override
   void dispose() {
     _wheelEnd?.cancel();
+    _progress.dispose();
     _dx.dispose();
     super.dispose();
   }
@@ -1317,6 +1324,9 @@ class _FolderSwipeState extends State<FolderSwipe>
     // Durak yoksa lastik: kısa ve dirençli.
     final follow = _label == null ? _raw * 0.25 : _raw;
     if (motionOf(context)) _dx.value = follow.clamp(-limit, limit);
+    _progress.value = _label == null
+        ? 0
+        : (_raw.abs() / (_width * FolderSwipe.commitFraction)).clamp(0.0, 1.0);
     final past =
         _label != null && _raw.abs() >= _width * FolderSwipe.commitFraction;
     if (past != _past) {
@@ -1335,6 +1345,7 @@ class _FolderSwipeState extends State<FolderSwipe>
       _direction = 0;
     });
     _raw = 0;
+    _progress.value = 0;
     if (commit &&
         (widget.continuesInPlace?.call(direction, _dx.value / _width) ??
             false)) {
@@ -1401,7 +1412,12 @@ class _FolderSwipeState extends State<FolderSwipe>
                           horizontal: 10,
                           vertical: 8,
                         ),
-                        child: Row(
+                        child: IntrinsicWidth(
+                          child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                        Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (!forwardEdge)
@@ -1439,6 +1455,34 @@ class _FolderSwipeState extends State<FolderSwipe>
                                     : scheme.onSurface,
                               ),
                           ],
+                        ),
+                        const SizedBox(height: 5),
+                        // DOLUM ÇUBUĞU: dolunca bırakmak geçişi yapar.
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: SizedBox(
+                            height: 3,
+                            child: ValueListenableBuilder<double>(
+                              valueListenable: _progress,
+                              builder: (context, p, _) => Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  ColoredBox(color: tokens.hairline),
+                                  FractionallySizedBox(
+                                    key: const ValueKey('swipe-progress'),
+                                    alignment: forwardEdge
+                                        ? AlignmentDirectional.centerEnd
+                                        : AlignmentDirectional.centerStart,
+                                    widthFactor: p,
+                                    child: ColoredBox(color: scheme.primary),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                          ],
+                          ),
                         ),
                       ),
                     ),

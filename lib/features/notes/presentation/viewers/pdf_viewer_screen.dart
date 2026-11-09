@@ -48,9 +48,13 @@ class PdfViewerScreen extends StatefulWidget {
     this.onChanged,
     this.initialPage = 1,
     this.onPageChanged,
+    this.startText = false,
   });
 
   final Attachment attachment;
+
+  /// Açılışta AÇIK METİN bırakma kipi (bkz. `ImageViewerScreen.startText`).
+  final bool startText;
 
   /// Açılışta gidilecek sayfa (1 tabanlı). Sayfaya gömülü PDF kutusu
   /// buradan kaldığı sayfayı geçirir — tam ekran belgenin başına dönmez.
@@ -131,6 +135,11 @@ class _PdfViewerScreenState extends State<PdfViewerScreen>
       bubble: bubble,
       viewport: _viewportKey.currentContext ?? context,
     );
+    if (widget.startText && widget.onChanged != null) {
+      _bubbles
+        ..setPlainMode(true)
+        ..setAdding(true);
+    }
   }
 
   /// Açılan balonu görünür kılan (yerleşim oturunca, gerekirse) yardımcı.
@@ -326,9 +335,37 @@ class _PdfViewerScreenState extends State<PdfViewerScreen>
                   ),
                   onPressed: () {
                     if (!_bubbles.adding && _editing) _toggleEditing();
+                    // Balon düğmesi BALON bırakır (açık metin "T"de).
+                    if (!_bubbles.adding) _bubbles.setPlainMode(false);
                     _bubbles.setAdding(!_bubbles.adding);
                   },
                 ),
+              ),
+            // AÇIK METİN tek dokunuşla (kullanıcı isteği 2026-11-09: "PDF
+            // üzerine hızlı açık metin ekleme, tek buton") — görseldeki
+            // "T" aracının aynısı.
+            if (editable)
+              AnimatedBuilder(
+                animation: _bubbles,
+                builder: (context, _) {
+                  final on = _bubbles.adding && _bubbles.plainMode;
+                  return IconButton(
+                    key: const ValueKey('pdf-quick-text'),
+                    tooltip: on ? l10n.bubbleAddDone : l10n.bubblePlainMode,
+                    isSelected: on,
+                    icon: Icon(on ? Icons.check : Icons.title),
+                    onPressed: () {
+                      if (on) {
+                        _bubbles.setAdding(false);
+                        return;
+                      }
+                      if (_editing) _toggleEditing();
+                      _bubbles
+                        ..setPlainMode(true)
+                        ..setAdding(true);
+                    },
+                  );
+                },
               ),
             if (editable)
               IconButton(

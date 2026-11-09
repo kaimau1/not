@@ -14377,6 +14377,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu cihazda henüz tam yedek alınmadı'**
   String get backupStatusNever;
+
+  /// No description provided for @attachmentAddText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üstüne yazı ekle'**
+  String get attachmentAddText;
 }
 
 class _AppLocalizationsDelegate

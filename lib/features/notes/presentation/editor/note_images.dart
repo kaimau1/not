@@ -58,6 +58,7 @@ void openImageViewer(
   Future<void> Function(Attachment, Rect)? onCrop,
   Future<Attachment?> Function(Attachment, int)? onRotate,
   List<Attachment> gallery = const [],
+  bool startText = false,
 }) {
   final hasLocal = localFileExists(img.localPath);
   // Web: Drive'dan inmiş görsel kutuda görünüyor, görüntüleyici de açabilsin.
@@ -77,6 +78,7 @@ void openImageViewer(
         onChanged: onChanged,
         onCrop: onCrop,
         onRotate: onRotate,
+        startText: startText,
       ),
     ),
   );
@@ -1063,6 +1065,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         AttachmentSurface.contextMenu,
         AttachmentCaps(
           open: img.kind != AttachmentKind.audio,
+          addText: true,
           caption: true,
           transcribe:
               widget.onTranscribe != null &&
@@ -1082,6 +1085,8 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     switch (action) {
       case AttachmentAction.open:
         _openViewer(img);
+      case AttachmentAction.addText:
+        _openViewer(img, startText: true);
       case AttachmentAction.caption:
         _startCaption(img);
       case AttachmentAction.transcribe:
@@ -1104,7 +1109,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     }
   }
 
-  void _openViewer(Attachment img) {
+  void _openViewer(Attachment img, {bool startText = false}) {
     // Metnin "tam ekranı" okuma ekranıdır; sesin ayrı ekranı yok (kart
     // kendisi oynatıcı).
     if (img.kind == AttachmentKind.text) {
@@ -1120,6 +1125,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             initialPage: img.pdfPage,
             onPageChanged: (p) => widget.onChanged(img.copyWith(pdfPage: p)),
             onChanged: widget.onChanged,
+            startText: startText,
           ),
         ),
       );
@@ -1147,6 +1153,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       onCrop: widget.onCrop,
       onRotate: widget.onRotate,
       gallery: widget.images,
+      startText: startText,
     );
   }
 
@@ -2056,6 +2063,11 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       onExtractText: widget.onExtractText == null || isVideo || isPdf || isPlain
           ? null
           : () => widget.onExtractText!(img),
+      // ÜSTÜNE YAZI (2026-11-09): görsel ve PDF'te tek dokunuş.
+      onAddText:
+          img.kind == AttachmentKind.image || img.kind == AttachmentKind.pdf
+          ? () => _openViewer(img, startText: true)
+          : null,
       // YouTube ekinin kopyası BAĞLANTISIDIR (kullanıcı bulgusu
       // 2026-10-11: "videoların bağlantı adresi kopyalanmıyor" — menüde
       // video için kopyalama hiç yoktu).

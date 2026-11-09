@@ -451,7 +451,12 @@ class _AttachmentTile extends ConsumerWidget {
       attachment.kind == AttachmentKind.video ||
       attachment.kind == AttachmentKind.image;
 
-  void _open(BuildContext context, WidgetRef ref, [Attachment? resolved]) {
+  void _open(
+    BuildContext context,
+    WidgetRef ref, [
+    Attachment? resolved,
+    bool startText = false,
+  ]) {
     // Web'de Drive'dan indirilmiş kopya (bkz. resolveWebDriveAttachment).
     final attachment = resolved ?? this.attachment;
     // Ses eki için satır içi görüntüleyici yok (kompakt oynatıcıdan çalınır).
@@ -471,12 +476,12 @@ class _AttachmentTile extends ConsumerWidget {
     if (!_hasLocal && attachment.isInDrive && !attachment.isUploaded) {
       if (kIsWeb) {
         resolveWebDriveAttachment(context, ref, attachment).then((a) {
-          if (a != null && context.mounted) _open(context, ref, a);
+          if (a != null && context.mounted) _open(context, ref, a, startText);
         });
         return;
       }
       fetchAttachmentNow(context, ref, attachment).then((ok) {
-        if (ok && context.mounted) _open(context, ref);
+        if (ok && context.mounted) _open(context, ref, null, startText);
       });
       return;
     }
@@ -492,6 +497,7 @@ class _AttachmentTile extends ConsumerWidget {
           AttachmentKind.pdf => PdfViewerScreen(
             attachment: attachment,
             onChanged: onChanged,
+            startText: startText,
           ),
           AttachmentKind.slide => SlideViewerScreen(
             attachment: attachment,
@@ -502,6 +508,7 @@ class _AttachmentTile extends ConsumerWidget {
             attachment: attachment,
             gallery: gallery,
             onChanged: onChanged,
+            startText: startText,
           ),
         },
       ),
@@ -849,6 +856,7 @@ class _AttachmentTile extends ConsumerWidget {
                     attachment,
                     AttachmentSurface.strip,
                     AttachmentCaps(
+                      addText: onChanged != null,
                       transcribe: onTranscribe != null && _canTranscribe,
                       videoToNote: onVideoToNote != null,
                       copy: onCopy != null,
@@ -880,6 +888,8 @@ class _AttachmentTile extends ConsumerWidget {
     switch (AttachmentAction.values.byName(action)) {
       case AttachmentAction.open:
         _open(context, ref);
+      case AttachmentAction.addText:
+        _open(context, ref, null, true);
       case AttachmentAction.copy || AttachmentAction.copyLink:
         onCopy?.call(attachment);
       case AttachmentAction.share:

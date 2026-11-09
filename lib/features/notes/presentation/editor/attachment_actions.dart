@@ -17,6 +17,11 @@ enum AttachmentAction {
   open,
   view,
   edit,
+
+  /// ÜSTÜNE YAZI EKLE (kullanıcı isteği 2026-11-09: "görsel ve PDF üzerine
+  /// hızlı açık metin ekleme, tüm ek tiplerinde tek buton"): tam ekranı
+  /// açık metin bırakma kipinde açar. Sabit bölmede çubukta doğrudan "T".
+  addText,
   rotate,
   caption,
   transcribe,
@@ -42,6 +47,7 @@ class AttachmentCaps {
     this.open = true,
     this.viewRow = false,
     this.edit = false,
+    this.addText = false,
     this.rotate = false,
     this.caption = false,
     this.transcribe = false,
@@ -61,6 +67,9 @@ class AttachmentCaps {
   /// Anahtar yüzeyde sığmıyor: "Görünüm" satırı levhayı açar.
   final bool viewRow;
   final bool edit;
+
+  /// Görsel/PDF'e açık metin yazılabilir (yazılabilir not).
+  final bool addText;
 
   /// Video döndürme oynatma çubuğuna sığmıyor: menüde.
   final bool rotate;
@@ -97,6 +106,12 @@ List<AttachmentAction> attachmentActionsFor(
       AttachmentAction.open,
     if (caps.viewRow) AttachmentAction.view,
     if (caps.edit) AttachmentAction.edit,
+    // Yüzende ve sabitte çubuğun kendi "T" düğmesi.
+    if (caps.addText &&
+        (a.kind == AttachmentKind.image || a.kind == AttachmentKind.pdf) &&
+        surface != AttachmentSurface.floating &&
+        surface != AttachmentSurface.pinned)
+      AttachmentAction.addText,
     if (caps.rotate && video && !web) AttachmentAction.rotate,
     if (caps.caption &&
         a.kind == AttachmentKind.image &&
@@ -133,6 +148,10 @@ List<AttachmentAction> attachmentActionsFor(
     AttachmentAction.edit => (
       label: l10n.attachmentTagEdit,
       icon: Icons.edit_outlined,
+    ),
+    AttachmentAction.addText => (
+      label: l10n.attachmentAddText,
+      icon: Icons.title,
     ),
     AttachmentAction.rotate => (
       label: l10n.videoRotate,
