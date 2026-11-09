@@ -1,65 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:notlar/app/theme/app_palette.dart';
-import 'package:notlar/app/theme/app_theme.dart';
-import 'package:notlar/core/app_update.dart';
-import 'package:notlar/features/auth/presentation/auth_providers.dart';
-import 'package:notlar/features/folders/data/folders_repository.dart';
-import 'package:notlar/features/notes/data/attachment_repository.dart';
-import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
-import 'package:notlar/features/settings/settings_providers.dart';
-import 'package:notlar/l10n/generated/app_localizations.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import 'support/editor_harness.dart';
 
 /// Not ekranının kabuğu (TUTARLILIK Faz 38): üst çubuk, "+", işaretli blok,
-/// klavye turu.
-Future<void> _pump(WidgetTester tester, Note note) async {
-  tester.view.physicalSize = const Size(412, 915);
-  tester.view.devicePixelRatio = 1;
-  tester.view.padding = const FakeViewPadding(top: 30, bottom: 48);
-  tester.view.viewPadding = const FakeViewPadding(top: 30, bottom: 48);
-  addTearDown(tester.view.reset);
-  SharedPreferences.setMockInitialValues({});
-  final prefs = await SharedPreferences.getInstance();
-  final container = ProviderContainer(
-    retry: (_, _) => null,
-    overrides: [
-      sharedPreferencesProvider.overrideWithValue(prefs),
-      currentUidProvider.overrideWithValue(null),
-      updateRequiredProvider.overrideWithValue(false),
-      notesRepositoryProvider.overrideWithValue(null),
-      attachmentRepositoryProvider.overrideWithValue(null),
-      foldersRepositoryProvider.overrideWithValue(null),
-      noteStreamProvider('n').overrideWith((ref) => Stream.value(note)),
-    ],
-  );
-  addTearDown(container.dispose);
-  await tester.pumpWidget(
-    UncontrolledProviderScope(
-      container: container,
-      child: MaterialApp(
-        theme: AppTheme.of(ThemeFamily.sage, Brightness.light),
-        locale: const Locale('tr'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: const NoteEditorScreen(noteId: 'n'),
-      ),
-    ),
-  );
-  await tester.pump(const Duration(milliseconds: 500));
-  await tester.pump(const Duration(milliseconds: 500));
-}
-
-Future<void> _end(WidgetTester tester) async {
-  await tester.pumpWidget(const SizedBox());
-  await tester.pump(const Duration(seconds: 30));
-}
-
+/// klavye turu. Kurulum ortak düzenekte (`support/editor_harness.dart`).
 const _list = Note(
   id: 'n',
   type: NoteType.checklist,
@@ -84,7 +33,7 @@ void main() {
   ) async {
     // Kullanıcı isteği 2026-11-05 "üst alanda sadeleşme": açılışta çubukta
     // yalnız tarih · senkron · sabitle · ⋮ (palet ⋮ menüsünde).
-    await _pump(tester, _dated);
+    await pumpEditor(tester, _dated);
     Finder inBar(IconData icon) =>
         find.descendant(of: find.byType(AppBar), matching: find.byIcon(icon));
     expect(inBar(Icons.undo), findsNothing);
@@ -94,7 +43,7 @@ void main() {
       tester.getCenter(inBar(Icons.push_pin_outlined)).dx,
       lessThan(tester.getCenter(inBar(Icons.more_vert)).dx),
     );
-    await _end(tester);
+    await endEditor(tester);
   });
 
   test('üst çubuk tarihi kısa', () {
@@ -109,16 +58,16 @@ void main() {
   });
 
   testWidgets('geri yokken tarih kenara yapışmaz (F38.2)', (tester) async {
-    await _pump(tester, _dated);
+    await pumpEditor(tester, _dated);
     final bar = tester.widget<AppBar>(find.byType(AppBar));
     expect(bar.titleSpacing, 16);
-    await _end(tester);
+    await endEditor(tester);
   });
 
   testWidgets('başlıkta tek "+": levha açar, başlık alanı genişler (F38.3)', (
     tester,
   ) async {
-    await _pump(tester, _list);
+    await pumpEditor(tester, _list);
     final plus = find.byKey(const ValueKey('note-meta-chip'));
     expect(tester.widget(plus), isA<IconButton>());
     expect(tester.getSize(plus).width, lessThanOrEqualTo(48));
@@ -132,33 +81,30 @@ void main() {
       );
     }
     expect(find.byKey(const ValueKey('sheet-close')), findsOneWidget);
-    await _end(tester);
+    await endEditor(tester);
   });
 
   testWidgets('işaretlileri sil bloğun başında (F38.4)', (tester) async {
-    await _pump(tester, _list);
+    await pumpEditor(tester, _list);
     expect(find.text('İşaretliler (2)'), findsOneWidget);
     final delete = tester.getTopLeft(
       find.byKey(const ValueKey('items-delete-checked')),
     );
     final firstChecked = tester.getTopLeft(find.text('bitti bir'));
     expect(delete.dy, lessThan(firstChecked.dy));
-    await _end(tester);
+    await endEditor(tester);
   });
 
   testWidgets('klavye turları birikmez, editör gövdesi kurulmaz (F38.7)', (
     tester,
   ) async {
-    await _pump(
+    await pumpEditor(
       tester,
       _list.copyWith(body: List.generate(30, (i) => 'Satır $i').join('\n')),
     );
-    final counts = <String, int>{};
-    debugOnRebuildDirtyWidget = (e, _) {
-      final name = e.widget.runtimeType.toString();
-      counts[name] = (counts[name] ?? 0) + 1;
-    };
-    addTearDown(() => debugOnRebuildDirtyWidget = null);
+    final counter = BuildCounter()..start();
+    addTearDown(counter.stop);
+    final counts = counter.counts;
 
     Future<void> frame(double inset) async {
       tester.view.viewInsets = FakeViewPadding(bottom: inset);
@@ -201,13 +147,13 @@ void main() {
       expect(later, baseline, reason: 'tur ${i + 6}');
     }
     expect(tester.binding.transientCallbackCount, 0);
-    await _end(tester);
+    await endEditor(tester);
   });
 
   testWidgets('klavye açıkken üstte hızlı işlev satırı, kapanınca tarih', (
     tester,
   ) async {
-    await _pump(tester, _dated);
+    await pumpEditor(tester, _dated);
     expect(find.byKey(const ValueKey('editor-quick-row')), findsNothing);
     tester.view.viewInsets = const FakeViewPadding(bottom: 300);
     await tester.pump(const Duration(milliseconds: 16));
@@ -238,6 +184,6 @@ void main() {
     await tester.pump();
     expect(find.byKey(const ValueKey('editor-quick-row')), findsNothing);
     expect(find.byIcon(Icons.more_vert), findsWidgets);
-    await _end(tester);
+    await endEditor(tester);
   });
 }
