@@ -403,7 +403,39 @@ class SpellMemory {
         }
       }
     }
-    return best;
+    return best != null && changesTooMuch(w, best) ? null : best;
+  }
+
+  /// **TANINMAZ DÜZELTME KAPISI** (kullanıcı bulgusu 2026-11-09: "bazen o
+  /// kadar yanlış yazılıyor ki hiçbir tanıma yapılmıyor"): klavye ağırlıklı
+  /// mesafede komşu tuşlar ve şapkalar ucuz olduğu için uzun kelimede
+  /// harflerin yarısı değişebiliyordu. OTOMATİK (bulanık / cihaz önerisi)
+  /// düzeltme harflerin üçte birinden fazlasını değiştiremez; kullanıcının
+  /// öğrettiği düzeltmeler (kısaltmalar dahil) bu kapıya girmez.
+  static bool changesTooMuch(String a, String b) {
+    final x = trLower(a), y = trLower(b);
+    var prev = List<int>.generate(y.length + 1, (i) => i);
+    for (var i = 1; i <= x.length; i++) {
+      final cur = List<int>.filled(y.length + 1, 0)..[0] = i;
+      for (var j = 1; j <= y.length; j++) {
+        cur[j] = math.min(
+          math.min(prev[j] + 1, cur[j - 1] + 1),
+          prev[j - 1] + (x[i - 1] == y[j - 1] ? 0 : 1),
+        );
+      }
+      prev = cur;
+    }
+    return prev[y.length] > math.max(1, x.length ~/ 3);
+  }
+
+  /// Otomatik düzeltme yanlıştı, kullanıcı başka kelime yazdı: o eşleşme
+  /// unutulur (bir daha aynı yanlışa çekilmesin).
+  void unlearnFix(String from, String wrongTo) {
+    final f = trLower(from);
+    final m = fixes[f];
+    if (m == null) return;
+    m.removeWhere((k, _) => trLower(k) == trLower(wrongTo));
+    if (m.isEmpty) fixes.remove(f);
   }
 
   Map<String, Object?> toJson() => {

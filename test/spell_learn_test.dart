@@ -165,4 +165,22 @@ void main() {
       );
     });
   });
+
+  test('otomatik düzeltme harflerin üçte birinden fazlasını değiştiremez', () {
+    expect(SpellMemory.changesTooMuch('yapıyrum', 'yapıyorum'), isFalse);
+    expect(SpellMemory.changesTooMuch('kalmei', 'kalemi'), isFalse);
+    expect(SpellMemory.changesTooMuch('toplantı', 'tıpkıydı'), isTrue);
+    expect(SpellMemory.changesTooMuch('masa', 'kasa'), isFalse);
+  });
+
+  test('yanlış otomatik düzeltmenin üstüne başka kelime: eşleşme unutulur', () {
+    final m = SpellMemory()
+      ..learnFix('yapiyom', 'yapıyor')
+      ..learnFix('yapiyom', 'yapıyor');
+    expect(m.suggest('yapiyom'), 'yapıyor');
+    m
+      ..unlearnFix('yapiyom', 'yapıyor')
+      ..learnFix('yapiyom', 'yapıyorum');
+    expect(m.fixes['yapiyom']!.keys, ['yapıyorum']);
+  });
 }
