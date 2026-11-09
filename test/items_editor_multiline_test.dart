@@ -152,4 +152,27 @@ void main() {
     expect(latest![2].text, 'bitti-1');
     expect(latest![3].text, 'bitti-2');
   });
+
+  testWidgets('☐/☑ paylaşım işaretleri soyulur — "☐ ☐" birikmez', (
+    tester,
+  ) async {
+    List<NoteItem>? latest;
+    await tester.pumpWidget(
+      _wrap(
+        ItemsEditor(
+          items: [NoteItem(id: 'a', text: '')],
+          onChanged: (updated) => latest = updated,
+          showCheckboxes: true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byType(TextField).first,
+      '☐ ☐ ekmek\n☐ ☐ süt\n☑ yumurta',
+    );
+    await tester.pumpAndSettle();
+    expect([for (final i in latest!) i.text], ['ekmek', 'süt', 'yumurta']);
+    expect([for (final i in latest!) i.checked], [false, false, true]);
+  });
 }

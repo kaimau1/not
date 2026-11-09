@@ -92,4 +92,11 @@ void main() {
       'c',
     ]);
   });
+
+  test('☐/☑ işaretleri (art arda da) soyulur', () {
+    var n = 0;
+    final items = itemsFromText('☐ ☐ süt\n☑ ekmek', newId: () => '${n++}');
+    expect([for (final i in items) i.text], ['süt', 'ekmek']);
+    expect([for (final i in items) i.checked], [false, true]);
+  });
 }

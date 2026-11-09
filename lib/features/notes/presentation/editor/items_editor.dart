@@ -979,16 +979,29 @@ class ItemsEditorState extends State<ItemsEditor>
       _splitMultiline(target, index, text);
       return;
     }
+    // Boş maddeye tek satır "☐ süt" yapıştırıldı: paylaşım işareti metne
+    // girmesin (bkz. [_lineMarker]).
+    if (_items[index].text.isEmpty && RegExp(r'^\s*[☐☑☒]').hasMatch(text)) {
+      text = text.substring(_lineMarker.firstMatch(text)!.end);
+    }
     _items[index] = _items[index].copyWith(text: text);
     _commit();
   }
 
-  /// `- [x]`, `-`, `•`, `3.` gibi liste öneklerini soyar; checklist'te
-  /// işaret durumunu da okur.
+  /// `- [x]`, `-`, `•`, `3.`, `☐`/`☑` gibi liste öneklerini soyar;
+  /// checklist'te işaret durumunu da okur. ☐/☑ paylaşım biçimidir (bkz.
+  /// noteShareText): nottan Telegram'a kopyalayıp geri yapıştırınca işaret
+  /// metinde kalıyor, bir sonraki kopyada "☐ ☐" oluyordu (2026-11-09) —
+  /// art arda gelen işaretlerin HEPSİ soyulur.
   static final _lineMarker = RegExp(
     // `**` kalın işareti madde imi değil.
-    r'^\s*(?:(?:[-•]|\*(?!\*))\s*)?(?:\[([ xX])\]\s*)?(?:\d+[.)]\s+)?',
+    r'^\s*(?:(?:[-•]|\*(?!\*))\s*)?(?:(?:\[([ xX])\]|([☐☑☒]))\s*)*(?:\d+[.)]\s+)?',
   );
+
+  static bool _markerChecked(RegExpMatch? m) =>
+      m != null &&
+      ((m.group(1) ?? '').toLowerCase() == 'x' ||
+          (m.group(2) != null && m.group(2) != '☐'));
 
   void _splitMultiline(NoteItem target, int index, String text) {
     // Donanım Enter'ı: var olan metne tek satır sonu girdi. Biçim işareti
@@ -1022,10 +1035,7 @@ class ItemsEditorState extends State<ItemsEditor>
       final match = _lineMarker.firstMatch(lines[i]);
       final body = lines[i].substring(match?.end ?? 0);
       if (body.trim().isEmpty) continue;
-      final checked =
-          widget.showCheckboxes &&
-          match?.group(1) != null &&
-          match!.group(1)!.toLowerCase() == 'x';
+      final checked = widget.showCheckboxes && _markerChecked(match);
       (checked ? checkedRest : unchecked).add(
         NoteItem(id: _uuid.v4(), text: body, checked: checked),
       );
