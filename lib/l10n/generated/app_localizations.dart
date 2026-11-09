@@ -13862,6 +13862,24 @@ abstract class AppLocalizations {
   /// **'Yazı rengi (basılı tut: favori rengi seç)'**
   String get quickRowColor;
 
+  /// No description provided for @penModePenOnlyOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem kipi · Yalnız kalemle yaz: AÇIK (parmak kaydırır)'**
+  String get penModePenOnlyOn;
+
+  /// No description provided for @penModePenOnlyOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem kipi · Yalnız kalemle yaz: KAPALI (parmak da yazar)'**
+  String get penModePenOnlyOff;
+
+  /// No description provided for @penModeSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayarla'**
+  String get penModeSettings;
+
   /// No description provided for @quickRowBold.
   ///
   /// In tr, this message translates to:

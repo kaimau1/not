@@ -7766,6 +7766,17 @@ class AppLocalizationsTr extends AppLocalizations {
   String get quickRowColor => 'Yazı rengi (basılı tut: favori rengi seç)';
 
   @override
+  String get penModePenOnlyOn =>
+      'Kalem kipi · Yalnız kalemle yaz: AÇIK (parmak kaydırır)';
+
+  @override
+  String get penModePenOnlyOff =>
+      'Kalem kipi · Yalnız kalemle yaz: KAPALI (parmak da yazar)';
+
+  @override
+  String get penModeSettings => 'Ayarla';
+
+  @override
   String get quickRowBold => 'Kalın';
 
   @override
