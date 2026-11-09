@@ -926,7 +926,12 @@ class MainActivity : FlutterFragmentActivity() {
         val provider = com.google.firebase.auth.OAuthProvider.newBuilder("google.com")
             .setScopes(scopes)
         if (email != null) provider.addCustomParameter("login_hint", email)
-        user.startActivityForReauthenticateWithProvider(this, provider.build())
+        // Yarım kalmış akış (tarayıcıdan dönülmedi) varsa onu bekle; yenisini
+        // açmak "A headful operation is already in progress" veriyordu
+        // (tablet 2026-11-09).
+        val task = com.google.firebase.auth.FirebaseAuth.getInstance().pendingAuthResult
+            ?: user.startActivityForReauthenticateWithProvider(this, provider.build())
+        task
             .addOnSuccessListener { auth ->
                 bringToFront()
                 result.success(auth.credential?.let(::accessTokenOf))

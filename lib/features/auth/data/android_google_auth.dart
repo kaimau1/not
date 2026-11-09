@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/constants.dart';
 import '../../../core/utils/gms.dart';
 import 'auth_repository.dart';
+import 'loopback_oauth.dart';
 
 /// Android: google_sign_in eklentisi ile yerel Google girişi.
 class AndroidGoogleAuth implements AuthRepository {
@@ -41,6 +42,8 @@ class AndroidGoogleAuth implements AuthRepository {
     try {
       credential = await _googleCredential();
     } on _UseBrowserFlow {
+      final c = await _loopbackCredential();
+      if (c != null) return _auth.signInWithCredential(c);
       return browserFlow(() => _auth.signInWithProvider(_browserProvider()));
     }
     return _auth.signInWithCredential(credential);
@@ -57,9 +60,28 @@ class AndroidGoogleAuth implements AuthRepository {
     try {
       credential = await _googleCredential();
     } on _UseBrowserFlow {
+      final c = await _loopbackCredential();
+      if (c != null) return user.linkWithCredential(c);
       return browserFlow(() => user.linkWithProvider(_browserProvider()));
     }
     return user.linkWithCredential(credential);
+  }
+
+  /// GMS'siz cihazda Firebase sayfasız giriş (bkz. loopback_oauth.dart;
+  /// Huawei tarayıcısında "missing initial state"). Yapılandırılmamışsa null
+  /// → eski Firebase akışı. Kullanıcı iptal ederse hata.
+  Future<AuthCredential?> _loopbackCredential() async {
+    if (!loopbackOAuthEnabled) return null;
+    final t = await browserFlow(
+      () => loopbackAuthorize(const ['openid', 'email', 'profile']),
+    );
+    if (t == null) {
+      throw FirebaseAuthException(code: 'canceled', message: 'Giriş iptal');
+    }
+    return GoogleAuthProvider.credential(
+      idToken: t.idToken,
+      accessToken: t.accessToken,
+    );
   }
 
   /// **TABLETTE GİRİŞ** (kullanıcı bulgusu 2026-11-02: "tablette Google
