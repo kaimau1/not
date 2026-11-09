@@ -8055,4 +8055,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get attachmentAddText => 'Üstüne yazı ekle';
+
+  @override
+  String get stylusTogglesOn => 'Kalem yazar';
+
+  @override
+  String get stylusTogglesOff => 'Kalem dokunur (yazmaz)';
 }

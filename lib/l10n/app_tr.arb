@@ -3735,5 +3735,7 @@
     }
   },
   "backupStatusNever": "Bu cihazda henüz tam yedek alınmadı",
-  "attachmentAddText": "Üstüne yazı ekle"
+  "attachmentAddText": "Üstüne yazı ekle",
+  "stylusTogglesOn": "Kalem yazar",
+  "stylusTogglesOff": "Kalem dokunur (yazmaz)"
 }

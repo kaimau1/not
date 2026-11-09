@@ -1015,7 +1015,8 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   ) {
     final a = widget.attachment;
     final pen = widget.ink;
-    final inkHere = widget.fitWidth && (a.ink.isNotEmpty || pen != null);
+    // Gömülü (kapak) kutuda da kalem verilince yazılır (2026-11-09).
+    final inkHere = pen != null || (widget.fitWidth && a.ink.isNotEmpty);
     if (bubbles == null && !inkHere && !_selectable) return null;
     // KÖK NEDEN (kullanıcı bulgusu 2026-11-08: "sabit moddayken PDF üzerine
     // kalemle yazamıyorum, yalnız tam ekranda yazılıyor"): kalem katmanı

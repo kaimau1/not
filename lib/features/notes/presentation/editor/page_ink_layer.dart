@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show BoxHitTestResult, RenderProxyBox;
 
 import '../viewers/ink_layer.dart';
 
@@ -202,10 +203,12 @@ class _PageInkStackState extends State<PageInkStack> {
                         (_) {},
                       ),
                 },
-                child: InkPageLayer(
-                  controller: widget.ink,
-                  page: widget.page,
-                  uniform: true,
+                child: _SkipExclusions(
+                  child: InkPageLayer(
+                    controller: widget.ink,
+                    page: widget.page,
+                    uniform: true,
+                  ),
                 ),
               ),
             ),
@@ -213,5 +216,70 @@ class _PageInkStackState extends State<PageInkStack> {
         ],
       ),
     );
+  }
+}
+
+/// **SAYFA KALEMİNİN DOKUNMADIĞI KUTU** (2026-11-09: "gömülü PDF'e yazınca
+/// yazı sayfaya gidiyor"). Sayfa mürekkebi tüm sayfanın ÜSTÜNDE; bu bölgenin
+/// içine düşen dokunuş sayfa katmanına hiç ulaşmaz (isabet testi), alttaki
+/// kutu (kendi kalem katmanıyla) alır.
+class InkExclusionZone extends StatefulWidget {
+  const InkExclusionZone({super.key, required this.child, this.enabled = true});
+
+  final Widget child;
+  final bool enabled;
+
+  /// [global] bir bölgenin içinde mi.
+  static bool covers(Offset global) {
+    for (final s in _zones) {
+      if (!s.widget.enabled || !s.mounted) continue;
+      final box = s.context.findRenderObject();
+      if (box is! RenderBox || !box.hasSize || !box.attached) continue;
+      final local = box.globalToLocal(global);
+      if ((Offset.zero & box.size).contains(local)) return true;
+    }
+    return false;
+  }
+
+  static final Set<_InkExclusionZoneState> _zones = {};
+
+  @override
+  State<InkExclusionZone> createState() => _InkExclusionZoneState();
+}
+
+class _InkExclusionZoneState extends State<InkExclusionZone> {
+  @override
+  void initState() {
+    super.initState();
+    InkExclusionZone._zones.add(this);
+  }
+
+  @override
+  void dispose() {
+    InkExclusionZone._zones.remove(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
+/// [InkExclusionZone] içindeki noktada isabet vermez.
+class _SkipExclusions extends SingleChildRenderObjectWidget {
+  const _SkipExclusions({required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderSkipExclusions();
+}
+
+class _RenderSkipExclusions extends RenderProxyBox {
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    if (InkExclusionZone._zones.isNotEmpty &&
+        InkExclusionZone.covers(localToGlobal(position))) {
+      return false;
+    }
+    return super.hitTest(result, position: position);
   }
 }

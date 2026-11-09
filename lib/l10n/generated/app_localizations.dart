@@ -14383,6 +14383,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Üstüne yazı ekle'**
   String get attachmentAddText;
+
+  /// No description provided for @stylusTogglesOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem yazar'**
+  String get stylusTogglesOn;
+
+  /// No description provided for @stylusTogglesOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem dokunur (yazmaz)'**
+  String get stylusTogglesOff;
 }
 
 class _AppLocalizationsDelegate

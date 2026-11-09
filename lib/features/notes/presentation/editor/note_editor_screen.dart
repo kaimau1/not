@@ -66,6 +66,7 @@ import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/widgets/note_route_closing.dart';
 import '../../../../core/widgets/scale_settle.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
+import 'stylus_toggle.dart';
 import '../../data/note_format_memory.dart';
 import '../../data/attachment_save.dart';
 import '../../data/note_shortcut.dart';
@@ -1151,6 +1152,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     super.initState();
     unawaited(AutoSpell.load().then((_) => _seedSpell()));
     FocusManager.instance.addListener(_onAnyFocusChange);
+    InkToolMemory.autoStylusListenable.addListener(_onStylusToggle);
     // Kök gezgin: kapanış önerisi (F52.3) editör atıldıktan sonra açılır.
     _rootNavigator = Navigator.maybeOf(context, rootNavigator: true);
     // Uygulama arka plana alınırken/kapatılırken bekleyen kaydı zorlamak için
@@ -1606,6 +1608,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _typingTimer?.cancel();
     _typingN.dispose();
     FocusManager.instance.removeListener(_onAnyFocusChange);
+    InkToolMemory.autoStylusListenable.removeListener(_onStylusToggle);
     _fieldFocusedN.dispose();
     WidgetsBinding.instance.removeObserver(this);
     noteRouteClosing.removeListener(_holdSaveWhileClosing);
@@ -2742,6 +2745,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// sayfada kalem kipi (çizgi [PageInkStack]'te zaten başlamıştır). Ayar kalem ayarlarında ([InkToolMemory.autoStylus]); salt okunur
   /// notta, kalem kipi zaten açıkken ve yazma kartı açıkken çalışmaz. Kalemle
   /// araç çubuklarına dokunmak etkilenmez: dinleyici yalnız içerik alanında.
+  /// Yüzen "kalem yazar / dokunur" düğmesi değişti (bkz. [StylusToggleOverlay]):
+  /// kapanınca kalem kipi de kapanır, kalem metne/kaydırmaya gider.
+  void _onStylusToggle() {
+    if (!mounted) return;
+    final ctl = _pageInkCtl;
+    if (ctl != null) _syncPageInkKinds(ctl);
+    if (!InkToolMemory.autoStylus && _penMode) {
+      _update(() => _penMode = false);
+    } else {
+      setState(() {});
+    }
+  }
+
   void _onContentPointerDown(PointerDownEvent event) {
     // MADDE JESTLERİ her işaretçide izlenir; kalem maddede başladıysa el
     // yazısı tuvali açılmaz (bkz. note_editor_gestures.dart).
@@ -2749,6 +2765,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (event.kind != PointerDeviceKind.stylus &&
         event.kind != PointerDeviceKind.invertedStylus) {
       return;
+    }
+    // İlk kalem dokunuşunda yüzen düğme belirir (kalemsiz cihazda hiç yok).
+    if (!InkToolMemory.stylusEver) {
+      InkToolMemory.noteStylusEver();
+      setState(() {});
     }
     final note = _note;
     if (note == null || _readOnly || !InkToolMemory.autoStylus) return;
@@ -4492,9 +4513,12 @@ child: NoteFindBar(
             control: true,
             shift: true,
           ): _redo,
-          // Esc: önce tam ekrandan çık, sonra notu kapat (geri tuşu sırası).
-          const SingleActivator(LogicalKeyboardKey.escape): () =>
-              Navigator.of(context).maybePop(),
+          // Esc BURADA BAĞLANMAZ (tablet bulgusu 2026-11-09: "fiziksel
+          // klavyede Esc geri yapmıyor"). KÖK NEDEN: `Navigator.maybePop`
+          // bölünmüş ekranda kabuğun iç gezginine gidiyordu — tek sayfa,
+          // kapanacak bir şey yok — ama tuş "işlendi" sayıldığı için
+          // uygulamanın [EscBackAction]'ı (geri tuşu yolu: PopScope sırası →
+          // tam ekran, arama, not) hiç çalışmıyordu.
           if (PenTray.useRail(context))
             const SingleActivator(
               LogicalKeyboardKey.keyF,
@@ -4904,7 +4928,9 @@ child: NoteFindBar(
           // dolguyu zaten kaldırıyordu (çubuk aşağıda duruyordu); yuva
           // boşalınca dolgu geri gelir ve sayfa alanı sebepsiz kısalırdı.
           // Görünüm birebir korunur.
-          body: KeyboardSnap(
+          body: StylusToggleOverlay(
+            visible: !_readOnly && InkToolMemory.stylusEver,
+            child: KeyboardSnap(
             // Klavye durup gövde oturduktan sonra odaklı alanı görünür kıl —
             // gövde animasyon boyunca bilerek kısaltılmadığı için Flutter'ın
             // kendi imleç kaydırması bu işi yapamaz (bkz. [KeyboardSnap]).
@@ -5045,6 +5071,7 @@ child: NoteFindBar(
               ),
             );
             },
+          ),
           ),
         ))),
         ),

@@ -15,6 +15,7 @@ import '../../../../core/widgets/wheel_scroll_viewer.dart';
 import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
 import '../drive_ui.dart';
+import '../viewers/ink_tools.dart' show InkToolMemory;
 import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/pdf_read_style.dart';
@@ -265,17 +266,28 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   bool get _penOn =>
       widget.onChanged != null &&
       widget.media.kind == AttachmentKind.pdf &&
-      (widget.penActive || _ownPen);
+      (_explicitPen || InkToolMemory.autoStylus);
+
+  /// Kalem kipi (editörün ya da bölmenin): parmak da çizer. Değilse ve
+  /// yüzen düğme "kalem yazar" diyorsa YALNIZ kalem çizer, parmak kaydırır
+  /// (kullanıcı bulgusu 2026-11-09: "sabitken yazı yazamıyorum").
+  bool get _explicitPen => widget.penActive || _ownPen;
+
+  void _onStylusToggle() {
+    if (mounted) setState(() {});
+  }
 
   /// Çizim denetleyicisi ekle bağlı; ek değişince yenilenir.
   InkController _inkFor(Attachment a) {
-    final c = _ink;
-    if (c != null) return c;
-    return _ink = InkController(
+    final c = _ink ??= InkController(
       initial: a.ink,
       onChanged: (strokes) =>
           widget.onChanged?.call(widget.media.copyWith(ink: strokes)),
     );
+    c.allowedKinds = _explicitPen
+        ? null
+        : const {PointerDeviceKind.stylus, PointerDeviceKind.invertedStylus};
+    return c;
   }
 
   /// Sabit PDF'in bırakma kipinde açık metin mi (bkz. [PdfPageBox.addingPlain]).
@@ -428,6 +440,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   void initState() {
     super.initState();
     _imageZoom.addListener(_onImageZoom);
+    InkToolMemory.autoStylusListenable.addListener(_onStylusToggle);
   }
 
   @override
@@ -462,6 +475,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
 
   @override
   void dispose() {
+    InkToolMemory.autoStylusListenable.removeListener(_onStylusToggle);
     _ink?.dispose();
     _ownBubbles?.save();
     _ownBubbles?.dispose();
@@ -752,14 +766,22 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                           // parmak kaydırır ("yalnız kalem" açıksa).
                           builder: (_, shown) => ScrollConfiguration(
                             behavior: ScrollConfiguration.of(context).copyWith(
-                              dragDevices: _penOn
+                              dragDevices: !_penOn
+                                  ? null
+                                  : _explicitPen
                                   ? {
                                       PointerDeviceKind.mouse,
                                       PointerDeviceKind.trackpad,
                                       if (_inkFor(shown).penOnly)
                                         PointerDeviceKind.touch,
                                     }
-                                  : null,
+                                  // Yalnız kalem yazar: geri kalan her şey
+                                  // kaydırır.
+                                  : const {
+                                      PointerDeviceKind.mouse,
+                                      PointerDeviceKind.trackpad,
+                                      PointerDeviceKind.touch,
+                                    },
                             ),
                             child: PdfPageBox(
                             ink: _penOn ? _inkFor(shown) : null,

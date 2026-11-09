@@ -98,10 +98,22 @@ extension NoteContextPush on BuildContext {
     final router = GoRouter.of(this);
     final route = ModalRoute.of(this);
     final pageless = route != null && route.settings is! Page;
+    final current = router.state.uri.path;
+    // **GENİŞ EKRANDA NOT NOTUN YERİNE AÇILIR** (tablet bulgusu 2026-11-09:
+    // "geri dediğimde bir önceki not dönüyor, ana menüye en son dönüyor").
+    // Liste zaten solda: notlar üst üste yığılınca geri tuşu açılmış her
+    // notu tek tek geziyordu. Artık açık notun yerine geçer; geri = listeye.
+    // Telefonda (tek bölme) yığın kalır: geri, gelinen nota döner.
+    if (!pageless &&
+        isNoteLocation(current) &&
+        isSplitShellLocation(current) &&
+        splitActiveFor(MediaQuery.sizeOf(this).width)) {
+      return router.pushReplacement<T>(notePath);
+    }
     return router.push<T>(
       pageless
           ? '$kOutsideShellNotePrefix$notePath'
-          : notePushPath(router.state.uri.path, notePath),
+          : notePushPath(current, notePath),
     );
   }
 }

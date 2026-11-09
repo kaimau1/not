@@ -340,6 +340,14 @@ class _SplitShellState extends ConsumerState<SplitShell> {
     required bool animate,
   }) {
     return Scaffold(
+      // **KLAVYEDE KABUK KISALMAZ** (tablet bulgusu 2026-11-09, ekran
+      // görüntüsü: yazarken soldaki ev/klasör/mikrofon/+ düğmeleri listenin
+      // üstüne çıkıyordu). KÖK NEDEN: bu Scaffold gövdeyi klavye kadar
+      // kısaltıyordu — listenin `removeViewInsets` sarması boşa düşüyordu,
+      // çünkü kısalma ondan ÖNCE oluyordu. Klavye boşluğunu her bölme kendisi
+      // verir: editör [KeyboardSnap] ile, liste hiç (not açıkken klavye
+      // notun), defter kendi Scaffold'uyla.
+      resizeToAvoidBottomInset: false,
       // Not yokken liste kabuğun TAM genişliği (ray düşülmüş hâli; pencere
       // genişliği değil — LayoutBuilder).
       body: LayoutBuilder(

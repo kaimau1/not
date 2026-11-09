@@ -2937,5 +2937,7 @@
     }
   },
   "backupStatusNever": "No full backup made on this device yet",
-  "attachmentAddText": "Write on it"
+  "attachmentAddText": "Write on it",
+  "stylusTogglesOn": "Pen writes",
+  "stylusTogglesOff": "Pen taps (doesn't write)"
 }

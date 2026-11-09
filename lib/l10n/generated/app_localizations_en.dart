@@ -8075,4 +8075,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachmentAddText => 'Write on it';
+
+  @override
+  String get stylusTogglesOn => 'Pen writes';
+
+  @override
+  String get stylusTogglesOff => 'Pen taps (doesn\'t write)';
 }
