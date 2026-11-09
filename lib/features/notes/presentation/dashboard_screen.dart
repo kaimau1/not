@@ -614,6 +614,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   /// Izgarayı tepeye döndürür. `animateTo` birden çok konumla çalışır
   /// (bkz. [_gridScroll]).
+  /// Geniş ekranda sağda açık not varsa kapatıp `/`'a döner (🏠 şeridi).
+  bool _closeOpenNote() {
+    final router = GoRouter.of(context);
+    if (!isNoteLocation(currentLocation(router))) return false;
+    goHome(ref, router);
+    return true;
+  }
+
   void _backToTop() {
     if (!_gridScroll.hasClients) return;
     _gridScroll.animateTo(
@@ -1546,11 +1554,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                 // bırakma düğmesi sağda, hesap + ⋮'nin yerinde.
                                 titleSpacing: 12,
                                 automaticallyImplyLeading: false,
-                                // Masaüstünde ekran boyu olmasın (F44.4).
-                                title: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: 720,
-                                  ),
+                                // Satırı UÇTAN UCA doldurur (kullanıcı bulgusu
+                                // 2026-11-09: "webte arama alanının sağında
+                                // ölü boşluk"): F44.4'ün 720 dp tavanı ve
+                                // sağdaki fazladan 12 dp kaldırıldı — iki
+                                // kenar da titleSpacing (12).
+                                title: SizedBox(
+                                  width: double.infinity,
                                   child: _SearchField(
                                     controller: _searchController,
                                     focusNode: _searchFocus,
@@ -1609,7 +1619,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           ],
                                   ),
                                 ),
-                                actions: const [SizedBox(width: 12)],
                               );
                             },
                           ),

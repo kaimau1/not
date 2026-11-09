@@ -8112,5 +8112,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateFailed => 'Download failed; opening the GitHub page';
 
   @override
+  String get updateTapToCheck => 'Tap to check for updates';
+
+  @override
+  String get updateChecking => 'Checking for updates…';
+
+  @override
+  String get updateUpToDate => 'You\'re on the latest version';
+
+  @override
+  String get updateCheckFailed => 'Couldn\'t check — check your connection';
+
+  @override
   String get pinnedSideToggle => 'Placement: top / left / right';
 }

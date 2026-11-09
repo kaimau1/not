@@ -52,7 +52,12 @@ class EditorQuickRow extends StatefulWidget {
     this.onColor,
     this.onColorPick,
     this.favoriteColor,
+    this.fit = false,
   });
+
+  /// true = sığan düğmeler satırda, kalanı ⋮ menüsünde (geniş web);
+  /// false = hepsi yatay kayar, ⋮ yalnız Düzenle (telefon/tablet).
+  final bool fit;
 
   /// "Ekle" levhası (görsel, dosya, kamera… tek yerde).
   final VoidCallback? onAttach;
@@ -192,13 +197,236 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
         ),
       ),
     );
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    // Düğmeler TEK listede: dar ekranda yatay kayar, [fit] verilince sığan
+    // kadarı satırda, kalanı ⋮ menüsünde (kullanıcı isteği 2026-11-09:
+    // "webte alan geniş, hızlı menü değil direkt butonlar olsun; fazlası ve
+    // Düzenle 3 noktada"). null = ayraç (yalnız kayan satırda çizilir).
+    _QuickEntry plain(
+      String key,
+      IconData icon,
+      String tip,
+      VoidCallback? on,
+    ) => _QuickEntry(key, icon, tip, on, button(key, icon, tip, on));
+    final entries = <_QuickEntry?>[
+      if (widget.onPen != null) ...[
+        _QuickEntry(
+          'pen',
+          Icons.draw_outlined,
+          l10n.quickRowPen,
+          widget.onPen,
+          button(
+            'pen',
+            Icons.draw_outlined,
+            l10n.quickRowPen,
+            widget.onPen,
+            onLong: widget.onPenSettings,
+            on: widget.penOn,
+          ),
+        ),
+        null,
+      ],
+      plain(
+        'bullet',
+        Icons.format_list_bulleted_rounded,
+        l10n.quickRowBullet,
+        widget.onBullet,
+      ),
+      if (widget.onCheckbox != null)
+        plain(
+          'checkbox',
+          Icons.check_box_outlined,
+          l10n.checkboxToggle,
+          widget.onCheckbox,
+        ),
+      plain(
+        'heading',
+        Icons.title_rounded,
+        l10n.quickRowHeading,
+        widget.onHeading,
+      ),
+      if (widget.onSubheading != null)
+        plain(
+          'subheading',
+          Icons.short_text_rounded,
+          l10n.quickRowSubheading,
+          widget.onSubheading,
+        ),
+      if (widget.onItalic != null)
+        plain(
+          'italic',
+          Icons.format_italic_rounded,
+          l10n.quickRowItalic,
+          widget.onItalic,
+        ),
+      if (widget.onUnderline != null)
+        plain(
+          'underline',
+          Icons.format_underlined_rounded,
+          l10n.quickRowUnderline,
+          widget.onUnderline,
+        ),
+      if (widget.onHighlight != null)
+        plain(
+          'highlight',
+          Icons.border_color_outlined,
+          l10n.quickRowHighlight,
+          widget.onHighlight,
+        ),
+      if (widget.onSpell != null)
+        _QuickEntry(
+          'spell',
+          Icons.spellcheck_rounded,
+          AutoSpell.enabled.value
+              ? l10n.quickRowSpellOn
+              : l10n.quickRowSpellOff,
+          widget.onSpell,
+          _spellButton(l10n, scheme),
+        ),
+      if (widget.onPackage != null)
+        _QuickEntry(
+          'package',
+          Icons.view_agenda_outlined,
+          widget.packageHint ? l10n.notePackageHint : l10n.quickRowPackage,
+          widget.onPackage,
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              button(
+                'package',
+                Icons.view_agenda_outlined,
+                widget.packageHint
+                    ? l10n.notePackageHint
+                    : l10n.quickRowPackage,
+                widget.onPackage,
+              ),
+              // UZUN YAZIDA İPUCU: küçük nokta (kullanıcı isteği).
+              if (widget.packageHint)
+                PositionedDirectional(
+                  top: 8,
+                  end: 6,
+                  child: IgnorePointer(
+                    child: Container(
+                      key: const ValueKey('quick-row-package-hint'),
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      if (widget.onAttach != null)
+        plain(
+          'attach',
+          Icons.add_circle_outline_rounded,
+          l10n.quickRowAttach,
+          widget.onAttach,
+        ),
+      plain(
+        'bold',
+        Icons.format_bold_rounded,
+        l10n.quickRowBold,
+        widget.onBold,
+      ),
+      if (widget.onColor != null)
+        _QuickEntry(
+          'color',
+          Icons.format_color_text_rounded,
+          l10n.quickRowColor,
+          widget.onColor,
+          _colorButton(l10n, scheme),
+        ),
+      null,
+      plain(
+        'photo',
+        Icons.add_photo_alternate_outlined,
+        l10n.quickRowPhoto,
+        widget.onPhoto,
+      ),
+      if (widget.onCamera != null)
+        plain(
+          'camera',
+          Icons.photo_camera_outlined,
+          l10n.quickRowCamera,
+          widget.onCamera,
+        ),
+      plain(
+        'file',
+        Icons.attach_file_rounded,
+        l10n.quickRowFile,
+        widget.onFile,
+      ),
+      if (widget.onScan != null)
+        plain(
+          'scan',
+          Icons.document_scanner_outlined,
+          l10n.quickRowScan,
+          widget.onScan,
+        ),
+      null,
+      plain(
+        'reminder',
+        Icons.alarm_add_outlined,
+        l10n.quickRowReminder,
+        widget.onReminder,
+      ),
+      if (widget.onDate != null)
+        plain('date', Icons.today_outlined, l10n.quickRowDate, widget.onDate),
+      if (widget.onDictation != null)
+        plain(
+          'dictation',
+          AppIcons.dictation,
+          l10n.quickRowDictation,
+          widget.onDictation,
+        ),
+    ];
     final divider = Container(
       width: 1,
       height: 20,
       margin: const EdgeInsets.symmetric(horizontal: 4),
       color: scheme.outlineVariant,
     );
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    Widget more(List<_QuickEntry> overflow) => PopupMenuButton<VoidCallback>(
+      key: const ValueKey('quick-row-more'),
+      tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+      icon: Icon(
+        Icons.more_vert_rounded,
+        size: 20,
+        color: scheme.onSurfaceVariant,
+      ),
+      onSelected: (run) => run(),
+      itemBuilder: (_) => [
+        for (final e in overflow)
+          PopupMenuItem<VoidCallback>(
+            value: e.onTap,
+            enabled: e.onTap != null,
+            child: ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(e.icon, size: 20),
+              title: Text(e.tip),
+            ),
+          ),
+        if (overflow.isNotEmpty) const PopupMenuDivider(),
+        // SATIRI DÜZENLE (2026-11-09: ⋮ içinde): düzenleme modunu açar —
+        // gizli/eklenebilir düğmeler çerçeveli görünür.
+        PopupMenuItem<VoidCallback>(
+          key: const ValueKey('quick-row-customize'),
+          value: Personalize.startEditing,
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.tune_rounded, size: 20),
+            title: Text(l10n.quickRowCustomize),
+          ),
+        ),
+      ],
+    );
     return RepaintBoundary(
       child: AnimatedContainer(
         duration: reduceMotion
@@ -211,259 +439,135 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
               : scheme.primary.withValues(alpha: 0),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: SingleChildScrollView(
-        key: const ValueKey('editor-quick-row'),
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // SAYFAYA KALEMLE YAZ başta; YALNIZ SİMGE (kullanıcı isteği
-            // 2026-11-08 ikinci tur: "uzun yazı, sadece kalem işareti
-            // olmalı" — yazı bütün satırı kaplıyordu). Açıklama ipucunda;
-            // basılı tut = kalem ayarları.
-            if (widget.onPen != null) ...[
-              button(
-                'pen',
-                Icons.draw_outlined,
-                l10n.quickRowPen,
-                widget.onPen,
-                onLong: widget.onPenSettings,
-                on: widget.penOn,
-              ),
-              divider,
-            ],
-            button(
-              'bullet',
-              Icons.format_list_bulleted_rounded,
-              l10n.quickRowBullet,
-              widget.onBullet,
-            ),
-            if (widget.onCheckbox != null)
-              button(
-                'checkbox',
-                Icons.check_box_outlined,
-                l10n.checkboxToggle,
-                widget.onCheckbox,
-              ),
-            button(
-              'heading',
-              Icons.title_rounded,
-              l10n.quickRowHeading,
-              widget.onHeading,
-            ),
-            if (widget.onSubheading != null)
-              button(
-                'subheading',
-                Icons.short_text_rounded,
-                l10n.quickRowSubheading,
-                widget.onSubheading,
-              ),
-            if (widget.onItalic != null)
-              button(
-                'italic',
-                Icons.format_italic_rounded,
-                l10n.quickRowItalic,
-                widget.onItalic,
-              ),
-            if (widget.onUnderline != null)
-              button(
-                'underline',
-                Icons.format_underlined_rounded,
-                l10n.quickRowUnderline,
-                widget.onUnderline,
-              ),
-            if (widget.onHighlight != null)
-              button(
-                'highlight',
-                Icons.border_color_outlined,
-                l10n.quickRowHighlight,
-                widget.onHighlight,
-              ),
-            if (widget.onSpell != null)
-              ValueListenableBuilder<bool>(
-                valueListenable: AutoSpell.enabled,
-                builder: (context, on, _) => Customizable(
-                  id: UiItem.quickRow('spell'),
-                  child: Tooltip(
-                    message: on ? l10n.quickRowSpellOn : l10n.quickRowSpellOff,
-                    child: InkResponse(
-                      key: const ValueKey('quick-row-spell'),
-                      radius: 20,
-                      onTap: widget.onSpell,
-                      onLongPress: widget.onSpellSettings,
-                      child: Container(
-                        height: 32,
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                          color: on ? scheme.secondaryContainer : null,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          Icons.spellcheck_rounded,
-                          size: 20,
-                          color: on
-                              ? scheme.onSecondaryContainer
-                              : scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            if (widget.onPackage != null)
-              Stack(
-                clipBehavior: Clip.none,
+        child: ListenableBuilder(
+          listenable: Personalize.listenable,
+          builder: (context, _) {
+            // Düzenleme modunda gizliler de çerçeveli görünmeli: hepsi kayan
+            // satırda.
+            if (!widget.fit || Personalize.editing) {
+              return Row(
+                key: const ValueKey('editor-quick-row'),
                 children: [
-                  button(
-                    'package',
-                    Icons.view_agenda_outlined,
-                    widget.packageHint
-                        ? l10n.notePackageHint
-                        : l10n.quickRowPackage,
-                    widget.onPackage,
-                  ),
-                  // UZUN YAZIDA İPUCU: küçük nokta (kullanıcı isteği).
-                  if (widget.packageHint)
-                    PositionedDirectional(
-                      top: 8,
-                      end: 6,
-                      child: IgnorePointer(
-                        child: Container(
-                          key: const ValueKey('quick-row-package-hint'),
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: scheme.primary,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            if (widget.onAttach != null)
-              button(
-                'attach',
-                Icons.add_circle_outline_rounded,
-                l10n.quickRowAttach,
-                widget.onAttach,
-              ),
-            button(
-              'bold',
-              Icons.format_bold_rounded,
-              l10n.quickRowBold,
-              widget.onBold,
-            ),
-            if (widget.onColor != null)
-              Customizable(
-                id: UiItem.quickRow('color'),
-                child: Tooltip(
-                  message: l10n.quickRowColor,
-                  child: InkResponse(
-                    key: const ValueKey('quick-row-color'),
-                    radius: 20,
-                    onTap: widget.onColor,
-                    onLongPress: widget.onColorPick,
-                    child: SizedBox(
-                      height: 40,
-                      width: 40,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                  Flexible(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.format_color_text_rounded,
-                            size: 20,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                          Container(
-                            width: 18,
-                            height: 4,
-                            margin: const EdgeInsets.only(top: 1),
-                            decoration: BoxDecoration(
-                              color: widget.favoriteColor ?? scheme.error,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
+                          for (final e in entries) e?.widget ?? divider,
                         ],
                       ),
                     ),
                   ),
-                ),
-              ),
-            divider,
-            button(
-              'photo',
-              Icons.add_photo_alternate_outlined,
-              l10n.quickRowPhoto,
-              widget.onPhoto,
-            ),
-            if (widget.onCamera != null)
-              button(
-                'camera',
-                Icons.photo_camera_outlined,
-                l10n.quickRowCamera,
-                widget.onCamera,
-              ),
-            button(
-              'file',
-              Icons.attach_file_rounded,
-              l10n.quickRowFile,
-              widget.onFile,
-            ),
-            if (widget.onScan != null)
-              button(
-                'scan',
-                Icons.document_scanner_outlined,
-                l10n.quickRowScan,
-                widget.onScan,
-              ),
-            divider,
-            button(
-              'reminder',
-              Icons.alarm_add_outlined,
-              l10n.quickRowReminder,
-              widget.onReminder,
-            ),
-            if (widget.onDate != null)
-              button(
-                'date',
-                Icons.today_outlined,
-                l10n.quickRowDate,
-                widget.onDate,
-              ),
-            if (widget.onDictation != null)
-              button(
-                'dictation',
-                AppIcons.dictation,
-                l10n.quickRowDictation,
-                widget.onDictation,
-              ),
-            // SATIRI DÜZENLE: düzenleme modunu açar — gizli/eklenebilir
-            // düğmeler çerçeveli görünür, dokununca eklenir/çıkar.
-            Tooltip(
-              message: l10n.quickRowCustomize,
-              child: InkResponse(
-                key: const ValueKey('quick-row-customize'),
-                radius: 20,
-                onTap: Personalize.startEditing,
-                child: SizedBox(
-                  width: 36,
-                  height: 40,
-                  child: Icon(
-                    Icons.tune_rounded,
-                    size: 18,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-          ],
+                  more(const []),
+                ],
+              );
+            }
+            final shown = [
+              for (final e in entries)
+                if (e != null && Customizable.shows(UiItem.quickRow(e.key))) e,
+            ];
+            return LayoutBuilder(
+              builder: (context, box) {
+                // ponytail: düğme başına ~44 dp sabit pay (⋮ için 48 ayrılır);
+                // ölçüm yok — dar düğmeler biraz boşluk bırakır.
+                final room = ((box.maxWidth - 48) / 44).floor().clamp(0, 99);
+                return Row(
+                  key: const ValueKey('editor-quick-row'),
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final e in shown.take(room)) e.widget,
+                    more(shown.skip(room).toList()),
+                  ],
+                );
+              },
+            );
+          },
         ),
-      ),
       ),
     );
   }
+
+  Widget _spellButton(AppLocalizations l10n, ColorScheme scheme) =>
+      ValueListenableBuilder<bool>(
+        valueListenable: AutoSpell.enabled,
+        builder: (context, on, _) => Customizable(
+          id: UiItem.quickRow('spell'),
+          child: Tooltip(
+            message: on ? l10n.quickRowSpellOn : l10n.quickRowSpellOff,
+            child: InkResponse(
+              key: const ValueKey('quick-row-spell'),
+              radius: 20,
+              onTap: widget.onSpell,
+              onLongPress: widget.onSpellSettings,
+              child: Container(
+                height: 32,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  color: on ? scheme.secondaryContainer : null,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  Icons.spellcheck_rounded,
+                  size: 20,
+                  color: on
+                      ? scheme.onSecondaryContainer
+                      : scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+  Widget _colorButton(AppLocalizations l10n, ColorScheme scheme) =>
+      Customizable(
+        id: UiItem.quickRow('color'),
+        child: Tooltip(
+          message: l10n.quickRowColor,
+          child: InkResponse(
+            key: const ValueKey('quick-row-color'),
+            radius: 20,
+            onTap: widget.onColor,
+            onLongPress: widget.onColorPick,
+            child: SizedBox(
+              height: 40,
+              width: 40,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.format_color_text_rounded,
+                    size: 20,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  Container(
+                    width: 18,
+                    height: 4,
+                    margin: const EdgeInsets.only(top: 1),
+                    decoration: BoxDecoration(
+                      color: widget.favoriteColor ?? scheme.error,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+}
+
+/// Hızlı satırın bir düğmesi: satırdaki hâli ([widget]) ve ⋮ menüsündeki
+/// karşılığı (simge + açıklama).
+class _QuickEntry {
+  const _QuickEntry(this.key, this.icon, this.tip, this.onTap, this.widget);
+  final String key;
+  final IconData icon;
+  final String tip;
+  final VoidCallback? onTap;
+  final Widget widget;
 }
 
 /// Klavye açıkken [open], kapalıyken [closed]. Yalnız bu yaprak klavye

@@ -8093,5 +8093,17 @@ class AppLocalizationsTr extends AppLocalizations {
   String get updateFailed => 'İndirilemedi; GitHub sayfası açılıyor';
 
   @override
+  String get updateTapToCheck => 'Dokun: güncellemeyi denetle';
+
+  @override
+  String get updateChecking => 'Güncelleme denetleniyor…';
+
+  @override
+  String get updateUpToDate => 'En son sürüm kullanılıyor';
+
+  @override
+  String get updateCheckFailed => 'Denetlenemedi — bağlantıyı kontrol et';
+
+  @override
   String get pinnedSideToggle => 'Yerleşim: üstte / solda / sağda';
 }

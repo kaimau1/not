@@ -202,6 +202,7 @@ extension _DashShelf on _DashboardScreenState {
                             .read(selectedSharedFolderProvider.notifier)
                             .set(null);
                         ref.read(sharedHubOnHomeProvider.notifier).set(false);
+                        _closeOpenNote();
                         unawaited(HapticFeedback.selectionClick());
                       },
                     )
@@ -210,7 +211,12 @@ extension _DashShelf on _DashboardScreenState {
                       tooltip: context.l10n.goHome,
                       isSelected: true,
                       icon: const Icon(Icons.home, size: 20),
-                      onPressed: _backToTop,
+                      // Geniş ekranda sağda not açıkken 🏠 yalnız listeyi
+                      // kaydırıyordu — "ana sayfaya dön çalışmıyor"
+                      // (kullanıcı bulgusu 2026-11-09). Önce notu kapatır.
+                      onPressed: () {
+                        if (!_closeOpenNote()) _backToTop();
+                      },
                     ),
             ),
             Expanded(

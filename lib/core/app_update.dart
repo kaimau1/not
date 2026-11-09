@@ -141,6 +141,39 @@ final updateRequiredProvider = Provider<bool>((ref) {
 bool isUpdateRequired(int minClient, {int current = kClientDataVersion}) =>
     current < minClient;
 
+/// **ELLE DENETİM** (kullanıcı isteği 2026-11-09: "sürüm numarasına
+/// tıklayınca güncelleme kontrolü"): GitHub'ın son Release'inin adı
+/// (`v1.2.33` → `1.2.33`). Ağ/biçim hatasında null.
+/// ponytail: yalnız GitHub; Google Play'e geçince burası Play In-App Updates
+/// (`in_app_update`) ile değişir.
+Future<String?> fetchLatestReleaseName() async {
+  try {
+    final r = await http
+        .get(
+          Uri.parse('https://api.github.com/repos/kaimau1/not/releases/latest'),
+          headers: const {'Accept': 'application/vnd.github+json'},
+        )
+        .timeout(const Duration(seconds: 15));
+    if (r.statusCode != 200) return null;
+    final tag = RegExp(r'"tag_name"\s*:\s*"v?([0-9.]+)"').firstMatch(r.body);
+    return tag?.group(1);
+  } catch (_) {
+    return null;
+  }
+}
+
+/// `1.2.33` > `1.2.31`? Hane hane sayısal karşılaştırma.
+bool isNewerVersion(String latest, String installed) {
+  List<int> parts(String v) =>
+      v.split('.').map((p) => int.tryParse(p) ?? 0).toList();
+  final a = parts(latest), b = parts(installed);
+  for (var i = 0; i < a.length || i < b.length; i++) {
+    final x = i < a.length ? a[i] : 0, y = i < b.length ? b[i] : 0;
+    if (x != y) return x > y;
+  }
+  return false;
+}
+
 Future<void> openReleasesPage() =>
     launchUrl(Uri.parse(kReleasesUrl), mode: LaunchMode.externalApplication);
 
