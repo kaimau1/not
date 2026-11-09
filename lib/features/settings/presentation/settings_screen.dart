@@ -80,7 +80,7 @@ import 'notes_settings.dart';
 import 'backup_ui.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import '../../../core/app_update.dart'
-    show newVersionAvailableProvider, openReleasesPage;
+    show newVersionAvailableProvider, installAppUpdate;
 import 'app_lock.dart';
 import '../../notes/data/backup_service.dart';
 import '../../notes/data/attachment_repository.dart';

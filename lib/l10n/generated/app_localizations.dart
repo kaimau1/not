@@ -14395,6 +14395,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kalem dokunur (yazmaz)'**
   String get stylusTogglesOff;
+
+  /// No description provided for @updateInstall.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncelle'**
+  String get updateInstall;
+
+  /// No description provided for @updateDownloading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni sürüm indiriliyor…'**
+  String get updateDownloading;
+
+  /// No description provided for @updateNeedsPermission.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu uygulamaya \"bilinmeyen uygulama yükleme\" izni ver, sonra yeniden Güncelle\'ye dokun'**
+  String get updateNeedsPermission;
+
+  /// No description provided for @updateFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'İndirilemedi; GitHub sayfası açılıyor'**
+  String get updateFailed;
 }
 
 class _AppLocalizationsDelegate

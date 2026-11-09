@@ -916,9 +916,9 @@ class _AppVersionRowState extends State<_AppVersionRow> {
               key: const ValueKey('update-available-row'),
               icon: const Icon(Icons.system_update),
               label: Text(
-                '${l10n.updateAvailable(newer)} · ${l10n.updateDownload}',
+                '${l10n.updateAvailable(newer)} · ${l10n.updateInstall}',
               ),
-              onPressed: openReleasesPage,
+              onPressed: () => installAppUpdate(context, newer),
             ),
           ],
         );

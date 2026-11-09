@@ -3737,5 +3737,9 @@
   "backupStatusNever": "Bu cihazda henüz tam yedek alınmadı",
   "attachmentAddText": "Üstüne yazı ekle",
   "stylusTogglesOn": "Kalem yazar",
-  "stylusTogglesOff": "Kalem dokunur (yazmaz)"
+  "stylusTogglesOff": "Kalem dokunur (yazmaz)",
+  "updateInstall": "Güncelle",
+  "updateDownloading": "Yeni sürüm indiriliyor…",
+  "updateNeedsPermission": "Bu uygulamaya \"bilinmeyen uygulama yükleme\" izni ver, sonra yeniden Güncelle'ye dokun",
+  "updateFailed": "İndirilemedi; GitHub sayfası açılıyor"
 }

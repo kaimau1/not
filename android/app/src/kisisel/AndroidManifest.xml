@@ -12,6 +12,10 @@
          yalnız kişisel derlemede. -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
+    <!-- Uygulama içi güncelleme (2026-11-09): indirilen APK'yı sistemin kurulum
+         penceresine verir. Play'de kısıtlı izin: yalnız kişisel derlemede. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <application>
         <receiver android:name=".HaritaNotAlici"
             android:exported="true"

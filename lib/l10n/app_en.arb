@@ -2939,5 +2939,9 @@
   "backupStatusNever": "No full backup made on this device yet",
   "attachmentAddText": "Write on it",
   "stylusTogglesOn": "Pen writes",
-  "stylusTogglesOff": "Pen taps (doesn't write)"
+  "stylusTogglesOff": "Pen taps (doesn't write)",
+  "updateInstall": "Update",
+  "updateDownloading": "Downloading the new version…",
+  "updateNeedsPermission": "Allow this app to install unknown apps, then tap Update again",
+  "updateFailed": "Download failed; opening the GitHub page"
 }

@@ -8061,4 +8061,17 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get stylusTogglesOff => 'Kalem dokunur (yazmaz)';
+
+  @override
+  String get updateInstall => 'Güncelle';
+
+  @override
+  String get updateDownloading => 'Yeni sürüm indiriliyor…';
+
+  @override
+  String get updateNeedsPermission =>
+      'Bu uygulamaya \"bilinmeyen uygulama yükleme\" izni ver, sonra yeniden Güncelle\'ye dokun';
+
+  @override
+  String get updateFailed => 'İndirilemedi; GitHub sayfası açılıyor';
 }
