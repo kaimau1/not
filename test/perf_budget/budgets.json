@@ -1,0 +1,17 @@
+{
+  "_kural": "Mandal: bütçe yalnız DÜŞER. Yükseltmek için commit başlığında [butce] ve girdinin 'neden' alanı. Senaryolar OTURTMA_PLANI.md Ek A.",
+  "S6": {
+    "senaryo": "Sabit PDF'e 10 çizgi",
+    "kok_kurulum": 1,
+    "update_note": 1,
+    "bugun": "10 / 10 (2026-11-09, F60.1 öncesi)",
+    "neden": "F60.1 hedefi: ilk çizgide geri al düğmesi için 1 kök kurulum serbest, kayıt debounce'lu"
+  },
+  "S7": {
+    "senaryo": "Gömülü PDF'e 10 çizgi",
+    "kok_kurulum": 1,
+    "update_note": 1,
+    "bugun": "10 / 10 (2026-11-09, F60.1 öncesi)",
+    "neden": "F60.1 hedefi: S6 ile aynı"
+  }
+}

@@ -288,7 +288,9 @@ süre değil **sayı** (kurulum, çizim çağrısı, yazılan bayt): makineden b
 `debugOnRebuildDirtyWidget` kalıbı), `test/keyboard_jank_guard_test.dart`,
 `test/items_editor_row_cache_test.dart`, `test/editor_pen_tablet_test.dart`.
 
-- [ ] **F59.1 Ortak düzenek.** `test/support/editor_harness.dart`: `note_screen_chrome_test`
+- [x] **F59.1 Ortak düzenek.** *(2026-11-09: `pumpEditor`/`endEditor`/`BuildCounter`/
+  `CountingNotesRepository` (`updateNoteCalls`, `bytesWritten`, `lastSaved`); kabuk testi ona
+  taşındı, 8 test yeşil.)* `test/support/editor_harness.dart`: `note_screen_chrome_test`
   içindeki `_pump` ve sahte depo kurulumunu buraya TAŞI (kopyalama; eski test bunu
   kullansın). Ek olarak:
 
@@ -310,7 +312,8 @@ süre değil **sayı** (kurulum, çizim çağrısı, yazılan bayt): makineden b
 
   Depo yazımlarını saymak için sahte depoya `int updateNoteCalls` ve `int bytesWritten`
   (`estimateValueBytes` ile) sayaçları.
-- [ ] **F59.2 Bütçe testi.** `test/perf_budget_test.dart` + `test/perf_budget/budgets.json`.
+- [ ] **F59.2 Bütçe testi.** *(2026-11-09: dosyalar kuruldu, YALNIZ S6/S7 yazıldı — F60.1'in
+  kanıtı; kalan senaryolar aynı dosyalara eklenecek.)* `test/perf_budget_test.dart` + `test/perf_budget/budgets.json`.
   Ek A'daki S1–S16 senaryolarının her biri bir `testWidgets`; ölçülen sayı
   `budgets.json`'daki değerle `lessThanOrEqualTo` karşılaştırılır. İlk koşuda bugünkü sayı
   ölçülüp dosyaya **"bugün"** olarak yazılır; Ek A'daki **"hedef"** sütunu ilgili faz
@@ -344,7 +347,14 @@ süre değil **sayı** (kurulum, çizim çağrısı, yazılan bayt): makineden b
 **Önce oku:** her maddenin kendi dosyaları. Faz 59 düzeneği şart (F60.1, F60.2 onunla
 doğrulanır).
 
-- [ ] **F60.1 Eke çizgi = saf değişiklik (B5).**
+- [x] **F60.1 Eke çizgi = saf değişiklik (B5).** *(2026-11-09: S6/S7 kök kurulum 10 → 1,
+  `updateNote` 10 → 1 (`perf_budget_test`). **Cihazda doğrulanmadı — A/B yürütücüde.**
+  Plandan sapma: `_sameVisual` ek karşılaştırması genel değil, YALNIZ mürekkep yolundan
+  (`_mutate(inkOnly:)`) gevşer — yoksa geri al / tam ekrandan dönen mürekkep kökü kurmaz,
+  bölme bayat kalırdı. Ek tuzak bulundu ve kapatıldı: bayat kutudan gelen sayfa çevirme
+  eski çizgi listesini geri yazıyordu (`_withLiveInk`); gömülü belgeye `_docInkSeen`.
+  Not paketi çizgi başına bildirmiyor (yalnız kapanışta `onSave`) — dokunulmadı. Önizleme
+  levhası (`note_editor_embed.dart` `showEmbedPreview`) eski yolda kaldı.)*
   *Kanıt:* S6/S7 bugün çizgi başına 1 kök kurulum + 1 `updateNote`.
   *Düzeltme:* (1) `note_editor_attachments.dart`'a `_updateAttachmentInk(Attachment)`:
   `_updateAttachment` ile aynı dönüşüm ama `immediate` YOK (debounce'lu). (2) Mürekkep
@@ -1134,8 +1144,8 @@ düzeltme KARAR'dır; gözetimsiz oturumda yalnız rapor + kırmayan sıkılaşt
 | S3 | 30 maddeli liste, bir kutucuğu işaretle | kök kurulum / kurulan satır | ölç | ≤ 1 / ≤ 2 | 64 |
 | S4 | Maddede Enter (yeni madde) | kök kurulum / kurulan satır | ölç | ≤ 1 / ≤ 2 | 64 |
 | S5 | Kalem kipi, sayfaya 10 çizgi | kök kurulum / `updateNote` | ölç | ≤ 1 / ≤ 1 | — |
-| S6 | Sabit PDF'e 10 çizgi | kök kurulum / `updateNote` | ~10 / 10 | ≤ 1 / ≤ 1 | 60.1 |
-| S7 | Gömülü PDF'e 10 çizgi | aynı | ~10 / 10 | ≤ 1 / ≤ 1 | 60.1 |
+| S6 | Sabit PDF'e 10 çizgi | kök kurulum / `updateNote` | 10 / 10 → **1 / 1** (F60.1, 2026-11-09) | ≤ 1 / ≤ 1 | 60.1 |
+| S7 | Gömülü PDF'e 10 çizgi | aynı | 10 / 10 → **1 / 1** (F60.1, 2026-11-09) | ≤ 1 / ≤ 1 | 60.1 |
 | S8 | Klavye aç/kapa ×3 (inset kareleri) | gövde kurulumu | 0 | 0 | — |
 | S9 | Biçim panelini aç → kapat | tuval kurulumu | ölç | 0 | 64 |
 | S10 | Paketi aç → maddeye odaklan → Biçim'e dokun | paket açık mı / mount edilen `TextField` | ölç | açık / ≤ üye sayısı | 60.2 |

@@ -1058,7 +1058,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
   /// geri-al adımı üretiyordu.
   void _updateAttachments(List<Attachment> updated) {
     if (updated.isEmpty) return;
-    final byId = {for (final a in updated) a.id: a};
+    final byId = {for (final a in updated) a.id: _withLiveInk(a)};
     _mutate(
       (n) => n.copyWith(
         attachments: [for (final a in n.attachments) byId[a.id] ?? a],
@@ -1067,7 +1067,38 @@ extension _EditorAttachments on _NoteEditorScreenState {
     );
   }
 
+  /// **BAYAT MÜREKKEP KORUMASI** (OTURTMA F60.1): eke çizgi kökü kurmadığı
+  /// için bölme/kutu eski çizgi listeli eki tutar; oradan gelen mürekkep
+  /// DIŞI değişiklik (sayfa çevirme, balon, boy) o listeyi geri yazıp
+  /// çizgileri silmesin. Elindeki liste tam o bayat listeyse çağıranın
+  /// mürekkeple işi yoktur: güncel çizgiler korunur.
+  Attachment _withLiveInk(Attachment updated) {
+    final stale = _staleInk[updated.id];
+    if (stale == null || !identical(updated.ink, stale)) return updated;
+    final live = _note?.attachments
+        .where((a) => a.id == updated.id)
+        .firstOrNull;
+    return live == null ? updated : updated.copyWith(ink: live.ink);
+  }
+
+  /// Eke çizilen çizgi (sabit bölme, gömülü belge): SAF değişiklik — çizgi
+  /// kendi katmanında zaten ekranda, kök kurulmaz ve kayıt debounce'ludur
+  /// (çizgi başına tam editör kurulumu + anında tam kayıt B5'ti). Yalnız
+  /// mürekkep alınır; ekin diğer alanları nottaki güncel hâlinden.
+  void _updateAttachmentInk(Attachment updated) {
+    _mutate(
+      (n) => n.copyWith(
+        attachments: [
+          for (final a in n.attachments)
+            if (a.id == updated.id) a.copyWith(ink: updated.ink) else a,
+        ],
+      ),
+      inkOnly: true,
+    );
+  }
+
   void _updateAttachment(Attachment updated) {
+    updated = _withLiveInk(updated);
     _mutate(
       (n) => n.copyWith(
         attachments: [
