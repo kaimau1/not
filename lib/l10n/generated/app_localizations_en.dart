@@ -7788,11 +7788,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickRowColor => 'Text color (hold: pick favorite)';
 
   @override
-  String get penModePenOnlyOn => 'Pen mode · Stylus only: ON (finger scrolls)';
+  String get penModePenOnlyOn => 'Pen mode · Stylus only: on (finger scrolls)';
 
   @override
   String get penModePenOnlyOff =>
-      'Pen mode · Stylus only: OFF (finger draws too)';
+      'Pen mode · Stylus only: off (finger draws too)';
 
   @override
   String get penModeSettings => 'Settings';

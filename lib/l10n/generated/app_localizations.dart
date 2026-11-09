@@ -13865,13 +13865,13 @@ abstract class AppLocalizations {
   /// No description provided for @penModePenOnlyOn.
   ///
   /// In tr, this message translates to:
-  /// **'Kalem kipi · Yalnız kalemle yaz: AÇIK (parmak kaydırır)'**
+  /// **'Kalem kipi · Yalnız kalemle yaz: açık (parmak kaydırır)'**
   String get penModePenOnlyOn;
 
   /// No description provided for @penModePenOnlyOff.
   ///
   /// In tr, this message translates to:
-  /// **'Kalem kipi · Yalnız kalemle yaz: KAPALI (parmak da yazar)'**
+  /// **'Kalem kipi · Yalnız kalemle yaz: kapalı (parmak da yazar)'**
   String get penModePenOnlyOff;
 
   /// No description provided for @penModeSettings.

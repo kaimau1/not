@@ -76,7 +76,7 @@ class AndroidGoogleAuth implements AuthRepository {
       () => loopbackAuthorize(const ['openid', 'email', 'profile']),
     );
     if (t == null) {
-      throw FirebaseAuthException(code: 'canceled', message: 'Giriş iptal');
+      throw FirebaseAuthException(code: 'canceled');
     }
     return GoogleAuthProvider.credential(
       idToken: t.idToken,

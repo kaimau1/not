@@ -7767,11 +7767,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get penModePenOnlyOn =>
-      'Kalem kipi · Yalnız kalemle yaz: AÇIK (parmak kaydırır)';
+      'Kalem kipi · Yalnız kalemle yaz: açık (parmak kaydırır)';
 
   @override
   String get penModePenOnlyOff =>
-      'Kalem kipi · Yalnız kalemle yaz: KAPALI (parmak da yazar)';
+      'Kalem kipi · Yalnız kalemle yaz: kapalı (parmak da yazar)';
 
   @override
   String get penModeSettings => 'Ayarla';
