@@ -2255,7 +2255,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final l10n = context.l10n;
     final page = !note.type.isPageNoteType;
     final ink = page ? _pageInkOf(note) : null;
-    final penOnly = ink?.penOnly ?? InkToolMemory.penOnly;
+    // Kalem görülmüş ve kullanıcı seçmemişse "yalnız kalem" ilk kalem
+    // dokunuşunda KENDİLİĞİNDEN açılır (bkz. InkController.pointerDown) —
+    // ipucu o andan önce okununca "parmak da yazar" diyordu ama parmak
+    // yazmıyordu (cihazda görüldü 2026-11-10).
+    final penOnly =
+        (ink?.penOnly ?? InkToolMemory.penOnly) ||
+        (InkToolMemory.stylusEver && !InkToolMemory.penOnlyChosen);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showMessage(

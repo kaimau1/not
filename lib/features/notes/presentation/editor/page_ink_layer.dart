@@ -16,7 +16,7 @@ import '../viewers/ink_layer.dart';
 class _InkClaimRecognizer extends OneSequenceGestureRecognizer {
   _InkClaimRecognizer(this.ink);
 
-  final InkController ink;
+  InkController ink;
   final Map<int, Offset> _taps = {};
 
   @override
@@ -62,6 +62,31 @@ class _InkClaimRecognizer extends OneSequenceGestureRecognizer {
 
   @override
   String get debugDescription => 'ink claim';
+}
+
+/// Kalemi (izinli girdiyi) ve kalem yazarken değen AVUCU üstlenen sarmalayıcı
+/// (bkz. [_InkClaimRecognizer]). Sabit/gömülü PDF'in kalem katmanı da
+/// kullanır (2026-11-10: orada avuç sayfayı kaydırıp çeviriyordu; parmak
+/// yine kaydırır, çünkü izinsiz girdi yarışa girmez).
+class InkClaim extends StatelessWidget {
+  const InkClaim({super.key, required this.ink, required this.child});
+
+  final InkController ink;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => RawGestureDetector(
+    behavior: HitTestBehavior.translucent,
+    excludeFromSemantics: true,
+    gestures: {
+      _InkClaimRecognizer:
+          GestureRecognizerFactoryWithHandlers<_InkClaimRecognizer>(
+            () => _InkClaimRecognizer(ink),
+            (r) => r.ink = ink,
+          ),
+    },
+    child: child,
+  );
 }
 
 /// **SAYFANIN ÜSTÜNDEKİ EL YAZISI** (kullanıcı isteği 2026-11-02: "kalemle

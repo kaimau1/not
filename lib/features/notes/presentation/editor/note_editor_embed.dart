@@ -30,6 +30,15 @@ extension _EditorEmbed on _NoteEditorScreenState {
   /// kırpma, döndürme düğmeleri çizilmez). true ise DÜZENLEME: aynı ekranlar
   /// düzenleme geri çağrılarıyla açılır. Kullanıcının istediği ayrım tam
   /// olarak bu — "tıklayınca önizlemesi açılır, bir butonla da düzenleme".
+  /// Ekin nottaki GÜNCEL hâli (çağıranın elindeki kopya eski olabilir:
+  /// sayfa çevrildikçe `pdfPage` yazılır).
+  Attachment _currentAttachment(Attachment a) {
+    for (final x in _note?.attachments ?? const <Attachment>[]) {
+      if (x.id == a.id) return x;
+    }
+    return a;
+  }
+
   void _openAttachmentTag(Attachment attachment, {required bool editing}) {
     if (attachment.isUnsupported) {
       showUnsupportedAttachmentDialog(context);
@@ -89,8 +98,21 @@ extension _EditorEmbed on _NoteEditorScreenState {
     Navigator.of(context).push(
       MediaRoute<void>(
         builder: (_) => switch (attachment.kind) {
+          // TAM EKRAN KALDIĞI SAYFADAN (kullanıcı bulgusu 2026-11-10, cihazda
+          // doğrulandı: sabit PDF 13. sayfadayken ⛶ 1. sayfadan açılıyordu):
+          // kutu sayfayı `pdfPage`e yazıyor ama görüntüleyiciye verilmiyordu.
+          // Dönüşte tam ekranda gelinen sayfa sabite/kutuya yansır.
           AttachmentKind.pdf => PdfViewerScreen(
             attachment: attachment,
+            initialPage: _currentAttachment(attachment).pdfPage,
+            onPageChanged: editing
+                ? (page) {
+                    final now = _currentAttachment(attachment);
+                    if (now.pdfPage != page) {
+                      _updateAttachment(now.copyWith(pdfPage: page));
+                    }
+                  }
+                : null,
             onChanged: editing ? _updateAttachment : null,
           ),
           AttachmentKind.slide => SlideViewerScreen(

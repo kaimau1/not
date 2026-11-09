@@ -361,6 +361,7 @@ maddeyi GÜNCELLE.
   sınıfta kalır.
 
 ## PDF, balon, görüntüleyici
+- **SABİT/GÖMÜLÜ PDF'E KALEM YAZMIYORDU (2026-11-10, cihazda `adb shell input stylus swipe` ile doğrulandı):** `InkPageLayer` `IgnorePointer(ignoring: !controller.editing)`; sabit (`pinned_media_pane._inkFor`), gömülü (`note_images._docInkFor`) ve not paketi denetleyicisi `setEditing(true)` almıyordu → kalem kipi açılıyor, hiçbir girdi iz bırakmıyordu. Bekçi `test/ink_editing_guard_test.dart` (InkController kuran her dosya `setEditing(` çağırır). Aynı turda: `penOnly` her build'de `InkToolMemory`'den (kurulum kopyası bayattı), dışarıdan değişen çizgi (tam ekran/geri al) `replace` ile alınır (kimlik `_inkSeen` + içerik), yüzen düğme "dokunur" → `_ownPen=false`, kalemsiz cihazda otomatik kalem katmanı yok (basılı tut seçim parmakta kalsın: katman varken `pdf_page_box` seçim katmanını kaldırır), avuç reddi `InkClaim` (gövdedeki `_InkClaimRecognizer`), tam ekran `initialPage: pdfPage` + `onPageChanged` (⛶ yolu `note_editor_embed`; ⋮ yolu zaten veriyordu), sayfa dibinde/tepesinde dikey çekişle sayfa geçişi (`_onPageScroll`, yalnız sürüklemede). Plan ve kalan fazlar `KALEM_PLANI.md`. Tablette kalem: `input stylus …`, parmak: `input touchscreen …`.
 - PDF YAZMA yalnız Syncfusion (`pdf_edit.dart`, `NotePdf`), görüntüleme pdfrx;
   gömülü PT Sans şart. `PdfBitmap` yalnız JPEG/PNG.
 - pdfrx'in kendi metin seçimi KAPALI (seçim `PdfSelectLayer`);

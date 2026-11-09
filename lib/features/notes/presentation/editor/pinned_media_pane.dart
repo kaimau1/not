@@ -277,10 +277,14 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   bool _ownPen = false;
   InkController? _ink;
 
+  /// Kalem katmanı PDF'in üstünde mi. Kalemsiz cihazda (hiç kalem
+  /// görülmedi) otomatik algı katmanı kurulmaz: basılı tutup metin seçme
+  /// ("Not al") parmakta çalışmaya devam eder; kalem düğmesiyle açılır.
   bool get _penOn =>
       widget.onChanged != null &&
       widget.media.kind == AttachmentKind.pdf &&
-      (_explicitPen || InkToolMemory.autoStylus);
+      (_explicitPen ||
+          (InkToolMemory.autoStylus && InkToolMemory.stylusEver));
 
   /// Kalem kipi (editörün ya da bölmenin): parmak da çizer. Değilse ve
   /// yüzen düğme "kalem yazar" diyorsa YALNIZ kalem çizer, parmak kaydırır
@@ -288,16 +292,52 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   bool get _explicitPen => widget.penActive || _ownPen;
 
   void _onStylusToggle() {
+    // Yüzen düğme "kalem dokunur"a geçti: bölmenin kendi kalemi de kapanır
+    // (eskiden açık kalıyor, kalem yine yazıyordu).
+    if (!InkToolMemory.autoStylus) _ownPen = false;
     if (mounted) setState(() {});
   }
 
+  /// Denetleyiciye en son verilen/denetleyiciden en son gelen çizgi listesi
+  /// (kimlik): yalnız DIŞARIDAN gelen değişiklik işlenir.
+  List<InkStroke>? _inkSeen;
+  bool _inkPenOnly = false;
+
   /// Çizim denetleyicisi ekle bağlı; ek değişince yenilenir.
+  ///
+  /// **SABİT PDF'E YAZILMIYORDU** (cihazda doğrulandı 2026-11-10: kalem kipi
+  /// açılıyor ama ne kalem ne parmak iz bırakıyordu). KÖK: denetleyici hiç
+  /// düzenleme kipine alınmıyordu — `InkPageLayer` `IgnorePointer(ignoring:
+  /// !editing)` ile bütün dokunuşları yok sayıyordu. Ayrıca "yalnız kalem"
+  /// kurulumdaki kopyadan okunuyordu (kalem gövdede görülünce bölme habersiz:
+  /// parmak yazabiliyordu) ve tam ekranda/geri alda değişen çizgiler
+  /// alınmıyordu (bir sonraki çizgi eski listeyi kaydedip onları siliyordu).
   InkController _inkFor(Attachment a) {
-    final c = _ink ??= InkController(
-      initial: a.ink,
-      onChanged: (strokes) =>
-          widget.onChanged?.call(widget.media.copyWith(ink: strokes)),
-    );
+    var c = _ink;
+    if (c == null) {
+      c = _ink = InkController(
+        initial: a.ink,
+        onChanged: (strokes) {
+          _inkSeen = strokes;
+          widget.onChanged?.call(widget.media.copyWith(ink: strokes));
+        },
+      )..setEditing(true);
+      _inkSeen = a.ink;
+      _inkPenOnly = c.penOnly;
+      // İlk kalem dokunuşu "yalnız kalem"i açınca kaydırma kuralı da
+      // hemen değişsin (dragDevices bu bölmenin build'inde).
+      c.addListener(() {
+        if (c!.penOnly != _inkPenOnly && mounted) {
+          _inkPenOnly = c.penOnly;
+          setState(() {});
+        }
+      });
+    }
+    if (!identical(a.ink, _inkSeen)) {
+      _inkSeen = a.ink;
+      if (!c.drawing) c.replace(a.ink);
+    }
+    c.penOnly = InkToolMemory.penOnly;
     c.allowedKinds = _explicitPen
         ? null
         : const {PointerDeviceKind.stylus, PointerDeviceKind.invertedStylus};
@@ -463,6 +503,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     if (old.media.id != widget.media.id) {
       _ink?.dispose();
       _ink = null;
+      _inkSeen = null;
       _ownPen = false;
     }
     final doc = widget.bubbleDoc;
