@@ -155,13 +155,22 @@ void main() {
           pts.add(c + Offset(r * math.cos(a), r * math.sin(a)));
         }
       }
-      pts.addAll(seg(const Offset(s0 + r, s0), const Offset(s1 - r, s0), wobble: 1.5));
+
+      pts.addAll(
+        seg(const Offset(s0 + r, s0), const Offset(s1 - r, s0), wobble: 1.5),
+      );
       arc(const Offset(s1 - r, s0 + r), -math.pi / 2);
-      pts.addAll(seg(const Offset(s1, s0 + r), const Offset(s1, s1 - r), wobble: 1.5));
+      pts.addAll(
+        seg(const Offset(s1, s0 + r), const Offset(s1, s1 - r), wobble: 1.5),
+      );
       arc(const Offset(s1 - r, s1 - r), 0);
-      pts.addAll(seg(const Offset(s1 - r, s1), const Offset(s0 + r, s1), wobble: 1.5));
+      pts.addAll(
+        seg(const Offset(s1 - r, s1), const Offset(s0 + r, s1), wobble: 1.5),
+      );
       arc(const Offset(s0 + r, s1 - r), math.pi / 2);
-      pts.addAll(seg(const Offset(s0, s1 - r), const Offset(s0, s0 + r), wobble: 1.5));
+      pts.addAll(
+        seg(const Offset(s0, s1 - r), const Offset(s0, s0 + r), wobble: 1.5),
+      );
       arc(const Offset(s0 + r, s0 + r), math.pi);
       final shape = recognizeClosedShape(pts);
       expect(shape?.kind, InkFixKind.rectangle);
@@ -176,6 +185,7 @@ void main() {
         return const Offset(200, 200) +
             Offset(q.dx * c - q.dy * s, q.dx * s + q.dy * c);
       }
+
       final pts = poly([
         rot(const Offset(100, 150)),
         rot(const Offset(300, 150)),
@@ -258,10 +268,98 @@ void main() {
           reason: 'titreme $w',
         );
       }
-      expect(recognizeClosedShape(ngon(4, 90, rot: 0.785))?.kind,
-          InkFixKind.rectangle);
-      expect(recognizeClosedShape(ngon(3, 90, rot: -1.57))?.kind,
-          InkFixKind.triangle);
+      expect(
+        recognizeClosedShape(ngon(4, 90, rot: 0.785))?.kind,
+        InkFixKind.rectangle,
+      );
+      expect(
+        recognizeClosedShape(ngon(3, 90, rot: -1.57))?.kind,
+        InkFixKind.triangle,
+      );
+    });
+  });
+
+  // 2026-11-09 kullanıcı: "şekiller nasıl oluştuysa hafif açılı kalıyor,
+  // 25°'den az eğikse düzeltilmeli"; "X bazen tanınmıyor".
+  group('açı düzeltme ve çarpı (2026-11-09)', () {
+    Offset rot(Offset p, double deg) {
+      final a = deg * math.pi / 180;
+      const c = Offset(200, 200);
+      final q = p - c;
+      return c +
+          Offset(
+            q.dx * math.cos(a) - q.dy * math.sin(a),
+            q.dx * math.sin(a) + q.dy * math.cos(a),
+          );
+    }
+
+    double minEdgeTilt(List<Offset> outline) {
+      var best = 90.0;
+      for (var i = 0; i + 1 < outline.length; i++) {
+        final e = outline[i + 1] - outline[i];
+        if (e.distance < 1) continue;
+        var deg = math.atan2(e.dy, e.dx) * 180 / math.pi;
+        if (deg > 90) deg -= 180;
+        if (deg < -90) deg += 180;
+        best = math.min(best, deg.abs());
+      }
+      return best;
+    }
+
+    test('20° eğik dikdörtgen eksene oturur', () {
+      final shape = recognizeClosedShape(
+        poly([
+          for (final p in const [
+            Offset(100, 150),
+            Offset(300, 150),
+            Offset(300, 250),
+            Offset(100, 250),
+            Offset(100, 151),
+          ])
+            rot(p, 20),
+        ], wobble: 1.5),
+      );
+      expect(shape?.kind, InkFixKind.rectangle);
+      expect(minEdgeTilt(shape!.outline), lessThan(1));
+    });
+
+    test('15° eğik üçgenin tabanı düzleşir', () {
+      final shape = recognizeClosedShape(
+        poly([
+          for (final p in const [
+            Offset(150, 60),
+            Offset(250, 230),
+            Offset(50, 228),
+            Offset(150, 62),
+          ])
+            rot(p, 15),
+        ], wobble: 1.5),
+      );
+      expect(shape?.kind, InkFixKind.triangle);
+      expect(minEdgeTilt(shape!.outline), lessThan(1));
+    });
+
+    test('kavisli, eşit olmayan iki kollu çarpı tanınır', () {
+      final first = seg(
+        const Offset(100, 100),
+        const Offset(170, 175),
+        wobble: 3,
+      );
+      final second = seg(
+        const Offset(180, 95),
+        const Offset(95, 165),
+        wobble: 3,
+      );
+      expect(recognizeInkFix(second, previous: first)?.kind, InkFixKind.cross);
+    });
+
+    test('tek çizgide çarpı (kalem kalkmadan)', () {
+      final pts = [
+        ...seg(const Offset(100, 100), const Offset(170, 170)),
+        ...seg(const Offset(170, 170), const Offset(170, 100)).skip(1),
+        ...seg(const Offset(170, 100), const Offset(100, 170)).skip(1),
+      ];
+      expect(recognizeInkFix(pts)?.kind, InkFixKind.cross);
     });
   });
 }

@@ -182,6 +182,8 @@ class InkToolMemory {
   static const _kShapeSnap = 'ink_shape_snap';
   static const _kPartialEraser = 'ink_partial_eraser';
   static const _kAutoStylus = 'ink_auto_stylus';
+  static const _kStylusEver = 'ink_stylus_ever';
+  static const _kPenToggleAt = 'ink_pen_toggle_at';
   static const _kShapeSuggest = 'ink_shape_suggest';
   static const _kMarkFix = 'ink_mark_fix';
   static const _kPresets = 'ink_presets';
@@ -208,6 +210,16 @@ class InkToolMemory {
   /// **KALEMİ OTOMATİK ALGILA**: kalem (S Pen vb.) nota değince yazma kipi
   /// kendiliğinden açılır — PDF/slaytta kalem kipi, metin notunda el yazısı.
   static bool autoStylus = true;
+
+  /// [autoStylus]'un dinlenebilir kopyası: yüzen "kalem yazar / dokunur"
+  /// düğmesi (2026-11-09) değiştirince açık editör ve sabit bölme uyar.
+  static final autoStylusListenable = ValueNotifier<bool>(true);
+
+  /// Yüzen kalem düğmesinin yeri (ekranın oranı, 0–1); null = varsayılan.
+  static Offset? penToggleAt;
+
+  /// Bu cihazda hiç kalem görüldü mü (yüzen düğme ancak o zaman çıkar).
+  static bool stylusEver = false;
 
   /// "Yalnız kalemle yaz": parmak çizmez; kaydırır ve yakınlaştırır.
   static bool penOnly = false;
@@ -241,6 +253,12 @@ class InkToolMemory {
     shapeSnap = prefs.getBool(_kShapeSnap) ?? true;
     partialEraser = prefs.getBool(_kPartialEraser) ?? false;
     autoStylus = prefs.getBool(_kAutoStylus) ?? true;
+    autoStylusListenable.value = autoStylus;
+    stylusEver = prefs.getBool(_kStylusEver) ?? false;
+    final at = prefs.getStringList(_kPenToggleAt);
+    penToggleAt = at != null && at.length == 2
+        ? Offset(double.tryParse(at[0]) ?? 1, double.tryParse(at[1]) ?? 0.5)
+        : null;
     shapeSuggest = prefs.getBool(_kShapeSuggest) ?? true;
     markFix = prefs.getBool(_kMarkFix);
     presets = [
@@ -287,7 +305,19 @@ class InkToolMemory {
 
   static void saveAutoStylus(bool value) {
     autoStylus = value;
+    autoStylusListenable.value = value;
     _prefs?.setBool(_kAutoStylus, value);
+  }
+
+  static void notePenToggleAt(Offset at) {
+    penToggleAt = at;
+    _prefs?.setStringList(_kPenToggleAt, ['${at.dx}', '${at.dy}']);
+  }
+
+  static void noteStylusEver() {
+    if (stylusEver) return;
+    stylusEver = true;
+    _prefs?.setBool(_kStylusEver, true);
   }
 
   static void savePressure(bool value) {
@@ -336,6 +366,9 @@ class InkToolMemory {
     shapeSnap = true;
     partialEraser = false;
     autoStylus = true;
+    autoStylusListenable.value = true;
+    stylusEver = false;
+    penToggleAt = null;
     shapeSuggest = true;
     markFix = null;
     presets = [];

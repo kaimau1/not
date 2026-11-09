@@ -374,6 +374,88 @@ class InkController extends ChangeNotifier {
     return (local - corner).distance <= _handleRadius;
   }
 
+  /// **DÖNDÜRME** (kullanıcı isteği 2026-11-09: "şekilleri tanıdıktan sonra
+  /// döndüremiyorum"): seçim kutusunun üst ortasındaki tutamak. Dönüş PİKSEL
+  /// uzayında yapılır (oranlı uzayda en/boy farklı, şekil bozulurdu).
+  bool _rotating = false;
+  Offset _rotCenterPx = Offset.zero;
+  double _rotLast = 0;
+  Size _rotSize = Size.zero;
+
+  /// Döndürme tutamağının kutunun üstünden uzaklığı (piksel).
+  static const rotateHandleGap = 30.0;
+
+  bool _onRotateHandle(Offset local, Size size) {
+    final b = selectionBounds;
+    if (b == null) return false;
+    final at = Offset(
+      b.center.dx * size.width,
+      b.top * size.height - 8 - rotateHandleGap,
+    );
+    return (local - at).distance <= _handleRadius;
+  }
+
+  void _rotateSelectionBy(double radians) {
+    final w = _rotSize.width, h = _rotSize.height;
+    if (w <= 0 || h <= 0) return;
+    final c = math.cos(radians), sn = math.sin(radians);
+    final cx = _rotCenterPx.dx, cy = _rotCenterPx.dy;
+    final map = <InkStroke, InkStroke>{
+      for (final st in _selected)
+        st: st.copyWith(
+          points: [
+            for (var i = 0; i + 1 < st.points.length; i += 2) ...[
+              (cx +
+                      (st.points[i] * w - cx) * c -
+                      (st.points[i + 1] * h - cy) * sn) /
+                  w,
+              (cy +
+                      (st.points[i] * w - cx) * sn +
+                      (st.points[i + 1] * h - cy) * c) /
+                  h,
+            ],
+          ],
+        ),
+    };
+    _ink = [for (final st in _ink) map[st] ?? st];
+    _selected = [for (final st in _selected) map[st]!];
+    _dirty = true;
+  }
+
+  /// **ÇİFT DOKUNUŞLA YENİDEN SEÇ** (2026-11-09: "ilk tanıyınca hareket
+  /// ettirebiliyorum ama sonra sabitleniyor"): çizginin üstüne iki kez hızlı
+  /// dokununca o çizgi seçilir — taşı, boyutla, döndür. Dokunuşların
+  /// bıraktığı noktalar geri alınır.
+  ({DateTime at, int page, double x, double y, List<InkStroke> before})?
+  _lastTap;
+
+  InkStroke? _strokeNear(int page, double x, double y) {
+    const r = _eraseRadius * 1.5;
+    for (final s in _ink.reversed) {
+      if (s.page != page) continue;
+      final samples = _sampled(s);
+      for (var i = 0; i + 1 < samples.length; i += 2) {
+        if ((samples[i] - x).abs() < r && (samples[i + 1] - y).abs() < r) {
+          return s;
+        }
+      }
+    }
+    return null;
+  }
+
+  /// Dokunuşun bıraktığı nokta mı (kayma yok denecek kadar küçük).
+  static bool _isDot(InkStroke s) {
+    if (s.points.length < 2) return false;
+    var l = s.points[0], r = l, t = s.points[1], b = t;
+    for (var i = 0; i + 1 < s.points.length; i += 2) {
+      l = math.min(l, s.points[i]);
+      r = math.max(r, s.points[i]);
+      t = math.min(t, s.points[i + 1]);
+      b = math.max(b, s.points[i + 1]);
+    }
+    return r - l < 0.006 && b - t < 0.006;
+  }
+
   /// Seçimi sol üst köşesi sabit kalarak [x],[y]'ye (sağ alt) ölçekler.
   void _scaleSelectionTo(double x, double y) {
     final b = selectionBounds;
@@ -395,6 +477,7 @@ class InkController extends ChangeNotifier {
     _selected = [for (final st in _selected) map[st]!];
     _dirty = true;
   }
+
   double _moveX = 0, _moveY = 0;
 
   /// Kalemin HAVADAKİ yeri (S Pen gibi yaklaşmayı bildiren kalemler): sayfa
@@ -903,7 +986,7 @@ class InkController extends ChangeNotifier {
       if (_active != null) _ink = [..._ink]..remove(_active);
       _active = null;
       _holdTimer?.cancel();
-    _clearHold();
+      _clearHold();
       _lassoPath = null;
       _moving = false;
       notifyListeners();
@@ -919,6 +1002,21 @@ class InkController extends ChangeNotifier {
       final x = local.dx / size.width;
       final y = local.dy / size.height;
       final bounds = selectionBounds;
+      if (bounds != null && _onRotateHandle(local, size)) {
+        _pushHistory(_ink);
+        _rotating = true;
+        _rotSize = size;
+        _rotCenterPx = Offset(
+          bounds.center.dx * size.width,
+          bounds.center.dy * size.height,
+        );
+        _rotLast = math.atan2(
+          local.dy - _rotCenterPx.dy,
+          local.dx - _rotCenterPx.dx,
+        );
+        notifyListeners();
+        return;
+      }
       final onHandle = _onHandle(local, size);
       final inside =
           bounds != null && bounds.inflate(0.03).contains(Offset(x, y));
@@ -1087,6 +1185,16 @@ class InkController extends ChangeNotifier {
     if (tap != null && (local - tap).distance > stylusTapSlop) {
       _tapStart = null;
     }
+    if (_rotating) {
+      final a = math.atan2(
+        local.dy - _rotCenterPx.dy,
+        local.dx - _rotCenterPx.dx,
+      );
+      _rotateSelectionBy(a - _rotLast);
+      _rotLast = a;
+      notifyListeners();
+      return;
+    }
     if (_resizing || (_fixEdit && _moving)) {
       final x = local.dx / size.width;
       final y = local.dy / size.height;
@@ -1184,7 +1292,7 @@ class InkController extends ChangeNotifier {
       _holdX = x;
       _holdY = y;
       _holdTimer?.cancel();
-    _clearHold();
+      _clearHold();
       _holdTimer = Timer(kInkHoldDuration, _snapActive);
       _showHold(active.page, x, y, eraser: false);
     }
@@ -1306,7 +1414,8 @@ class InkController extends ChangeNotifier {
     _eraserHold?.cancel();
     _eraserHold = null;
     _snapped = false;
-    if (_resizing || (_fixEdit && _moving)) {
+    if (_rotating || _resizing || (_fixEdit && _moving)) {
+      _rotating = false;
       _resizing = false;
       _moving = false;
       save();
@@ -1336,6 +1445,39 @@ class InkController extends ChangeNotifier {
     _active = null;
     final base = _gestureBase;
     _gestureBase = null;
+    if (active != null &&
+        !wasErasing &&
+        !lasso &&
+        !active.arrow &&
+        shape == null &&
+        base != null &&
+        _isDot(active)) {
+      final x = active.points[0], y = active.points[1];
+      final prev = _lastTap;
+      final now = DateTime.now();
+      if (prev != null &&
+          prev.page == active.page &&
+          now.difference(prev.at) < const Duration(milliseconds: 400) &&
+          (prev.x - x).abs() < 0.03 &&
+          (prev.y - y).abs() < 0.03) {
+        _lastTap = null;
+        _ink = prev.before;
+        _dirty = true;
+        save();
+        final hit = _strokeNear(active.page, x, y);
+        if (hit != null) {
+          _selected = [hit];
+          _fixEdit = true;
+          HapticFeedback.selectionClick();
+          notifyListeners();
+          return;
+        }
+      } else {
+        _lastTap = (at: now, page: active.page, x: x, y: y, before: base);
+      }
+    } else {
+      _lastTap = null;
+    }
     if (base != null && !_sameInstances(base, _ink)) _pushHistory(base);
     save();
     // Serbest çizgi bitti: şekil / tik / çarpı önerisi (tutup oturtulmuşsa
@@ -1943,6 +2085,24 @@ class _InkOverlayPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = 1.5
             ..color = accent,
+        )
+        // Döndürme tutamağı (üst orta, 2026-11-09).
+        ..drawLine(
+          rect.topCenter,
+          rect.topCenter.translate(0, -InkController.rotateHandleGap + 7),
+          Paint()
+            ..strokeWidth = 1.5
+            ..color = accent,
+        )
+        ..drawCircle(
+          rect.topCenter.translate(0, -InkController.rotateHandleGap),
+          7,
+          Paint()..color = accent,
+        )
+        ..drawCircle(
+          rect.topCenter.translate(0, -InkController.rotateHandleGap),
+          4,
+          Paint()..color = const Color(0xFFFFFFFF),
         )
         // Boyut tutamağı (sağ alt).
         ..drawCircle(rect.bottomRight, 7, Paint()..color = accent)

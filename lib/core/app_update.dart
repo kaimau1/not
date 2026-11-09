@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data' show BytesBuilder;
+
 import '../features/settings/settings_providers.dart';
 
 import 'package:package_info_plus/package_info_plus.dart';
@@ -5,7 +8,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 
 import 'l10n_ext.dart';
 import 'widgets/undo_snackbar.dart' show rootScaffoldMessengerKey;
@@ -114,8 +121,8 @@ class _NewVersionNoticeState extends ConsumerState<NewVersionNotice> {
           content: Text(l10n.updateAvailable(next)),
           duration: const Duration(seconds: 8),
           action: SnackBarAction(
-            label: l10n.updateDownload,
-            onPressed: openReleasesPage,
+            label: l10n.updateInstall,
+            onPressed: () => installAppUpdate(context, next),
           ),
         ),
       );
@@ -136,6 +143,102 @@ bool isUpdateRequired(int minClient, {int current = kClientDataVersion}) =>
 
 Future<void> openReleasesPage() =>
     launchUrl(Uri.parse(kReleasesUrl), mode: LaunchMode.externalApplication);
+
+/// CI'ın Release'e koyduğu APK'nın adresi ([name] = `1.2.N`).
+@visibleForTesting
+String releaseApkUrl(String name) =>
+    'https://github.com/kaimau1/not/releases/download/v$name/notlar-v$name.apk';
+
+const _system = MethodChannel('dev.kaimau.notlar/system');
+
+/// **UYGULAMA İÇİNDEN GÜNCELLE** (kullanıcı isteği 2026-11-09: "her seferinde
+/// gir, indir, yükle çok zor; geldiği anda kendi kursun"). Android SESSİZ
+/// kurulumu yalnız sistem/cihaz yöneticisi uygulamaya verir: en kısa yol APK'yı
+/// uygulamanın kendisinin indirip sistemin "Güncelle" penceresini açması — tek
+/// dokunuş. İlk seferde Android "bilinmeyen uygulama yükleme" iznini sorar.
+/// Kurulum izni yalnız kişisel derlemede; değilse/olmazsa GitHub sayfası açılır.
+Future<void> installAppUpdate(BuildContext context, String name) async {
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+    return openReleasesPage();
+  }
+  final l10n = context.l10n;
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  final can =
+      await _system.invokeMethod<bool>('canSelfUpdate').catchError((_) => false);
+  if (can != true || !context.mounted) return openReleasesPage();
+  final progress = ValueNotifier<double?>(null);
+  var cancelled = false;
+  final dialog = showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => AlertDialog(
+      icon: const Icon(Icons.system_update),
+      title: Text(l10n.updateDownloading),
+      content: ValueListenableBuilder<double?>(
+        valueListenable: progress,
+        builder: (_, v, _) => LinearProgressIndicator(value: v),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            cancelled = true;
+            Navigator.of(ctx).pop();
+          },
+          child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
+        ),
+      ],
+    ),
+  );
+  String? path;
+  try {
+    final client = http.Client();
+    try {
+      final response = await client
+          .send(http.Request('GET', Uri.parse(releaseApkUrl(name))))
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode != 200) {
+        throw http.ClientException('APK ${response.statusCode}');
+      }
+      final total = response.contentLength ?? 0;
+      final bytes = BytesBuilder(copy: false);
+      await for (final chunk in response.stream) {
+        if (cancelled) return;
+        bytes.add(chunk);
+        if (total > 0) progress.value = bytes.length / total;
+      }
+      // Önbellek klasörü: FileProvider yalnız orayı paylaşır.
+      final dir = await getTemporaryDirectory();
+      path = '${dir.path}/notlar-guncelleme.apk';
+      await File(path).writeAsBytes(bytes.takeBytes(), flush: true);
+    } finally {
+      client.close();
+    }
+  } catch (_) {
+    path = null;
+  }
+  if (!cancelled && context.mounted) Navigator.of(context).pop();
+  await dialog;
+  progress.dispose();
+  if (cancelled) return;
+  if (path == null) {
+    messenger?.showSnackBar(SnackBar(content: Text(l10n.updateFailed)));
+    return openReleasesPage();
+  }
+  final outcome = await _system
+      .invokeMethod<String>('installApk', {'path': path})
+      .catchError((_) => 'error');
+  if (outcome == 'permission') {
+    messenger?.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 8),
+        content: Text(l10n.updateNeedsPermission),
+      ),
+    );
+  } else if (outcome != 'started') {
+    messenger?.showSnackBar(SnackBar(content: Text(l10n.updateFailed)));
+    await openReleasesPage();
+  }
+}
 
 /// Uygulamanın tepesindeki "güncelle" şeridi; kapı kapalıyken ağaca hiçbir
 /// şey eklemez.

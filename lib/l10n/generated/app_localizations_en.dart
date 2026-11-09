@@ -8075,4 +8075,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachmentAddText => 'Write on it';
+
+  @override
+  String get stylusTogglesOn => 'Pen writes';
+
+  @override
+  String get stylusTogglesOff => 'Pen taps (doesn\'t write)';
+
+  @override
+  String get updateInstall => 'Update';
+
+  @override
+  String get updateDownloading => 'Downloading the new version…';
+
+  @override
+  String get updateNeedsPermission =>
+      'Allow this app to install unknown apps, then tap Update again';
+
+  @override
+  String get updateFailed => 'Download failed; opening the GitHub page';
+
+  @override
+  String get pinnedSideToggle => 'Placement: top / left / right';
 }

@@ -25,6 +25,9 @@ import '../drive_ui.dart';
 import '../note_card_media.dart' show VideoPoster;
 import '../viewers/image_viewer.dart';
 import '../viewers/ink_layer.dart';
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
+import 'page_ink_layer.dart' show InkExclusionZone;
+import '../viewers/ink_tools.dart' show InkToolMemory;
 import '../viewers/pdf_viewer_screen.dart';
 import '../../../../core/utils/youtube.dart';
 import '../viewers/video_viewer.dart';
@@ -379,10 +382,38 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   /// Son işlenen ipucu kimliği — aynı ek için ikinci kez açılmasın.
   String? _hintHandled;
 
+  /// Gömülü belgelerin kalem katmanı (2026-11-09: "gömülüyken yazdıklarım
+  /// sayfaya gidiyor, PDF'e gitmiyor"). Yüzen düğme "kalem yazar" derken
+  /// kalem belgenin ÜSTÜNE yazar; sayfa katmanı o kutuya dokunmaz
+  /// ([InkExclusionZone]).
+  final Map<String, InkController> _docInk = {};
+
+  InkController? _docInkFor(Attachment a) {
+    if (!InkToolMemory.autoStylus) return null;
+    final c = _docInk[a.id] ??= InkController(
+      initial: a.ink,
+      onChanged: (strokes) {
+        // En güncel ek kaydı üzerine yazılır (sayfa çevrildi, balon eklendi).
+        final live = widget.images.where((i) => i.id == a.id).firstOrNull;
+        widget.onChanged((live ?? a).copyWith(ink: strokes));
+      },
+    );
+    c.allowedKinds = const {
+      PointerDeviceKind.stylus,
+      PointerDeviceKind.invertedStylus,
+    };
+    return c;
+  }
+
+  void _onStylusToggle() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
     _takePlacementHint();
+    InkToolMemory.autoStylusListenable.addListener(_onStylusToggle);
   }
 
   @override
@@ -763,6 +794,10 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
 
   @override
   void dispose() {
+    InkToolMemory.autoStylusListenable.removeListener(_onStylusToggle);
+    for (final c in _docInk.values) {
+      c.dispose();
+    }
     _previewPages?.dispose();
     _floatTimer?.cancel();
     super.dispose();
@@ -1182,13 +1217,17 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     if (a.kind == AttachmentKind.pdf) {
       return WebDriveGate(
         attachment: a,
-        builder: (_, shown) => PdfPageBox(
-          attachment: shown,
-          onChanged: widget.onChanged,
-          // Büyük önizlemede de sayfa çevrilebilir (önizleme okumak için
-          // açılıyor) ama YATAY KAYDIRMA orada nottaki diğer eke geçiyor;
-          // sayfa yalnız çubuğun oklarıyla değişir.
-          swipeToTurn: fit == BoxFit.cover,
+        builder: (_, shown) => InkExclusionZone(
+          enabled: InkToolMemory.autoStylus,
+          child: PdfPageBox(
+            attachment: shown,
+            onChanged: widget.onChanged,
+            // Büyük önizlemede de sayfa çevrilebilir (önizleme okumak için
+            // açılıyor) ama YATAY KAYDIRMA orada nottaki diğer eke geçiyor;
+            // sayfa yalnız çubuğun oklarıyla değişir.
+            swipeToTurn: fit == BoxFit.cover,
+            ink: _docInkFor(shown),
+          ),
         ),
       );
     }

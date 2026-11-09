@@ -317,13 +317,32 @@ class AttachmentRepository {
         ),
         (f) => directUploadProgress.value = f,
       );
+      return meta.copyWith(
+        storagePath: storagePath,
+        downloadUrl: await ref.getDownloadURL(),
+      );
+    } catch (storageError) {
+      // **WEB YEDEK YOL: DRIVE** (kullanıcı bulgusu 2026-11-09: "web'de PDF
+      // hiç eklenmiyor, üzerine not alamıyorum"). Storage reddederse
+      // (kural, kota, App Check, ağ) dosya kullanıcının Drive'ına gider;
+      // web ve telefon onu `driveId` ile okur. Drive da yoksa İKİ hata
+      // birlikte gösterilir — kök neden ekranda görünsün.
+      final store = drive;
+      if (store == null) rethrow;
+      try {
+        final driveId = await store.uploadBytes(
+          bytes,
+          name: p.basename(meta.fileName),
+          mimeType: meta.mimeType,
+        );
+        ErrorLog.record('web-storage-upload', storageError);
+        return meta.copyWith(driveId: driveId);
+      } catch (driveError) {
+        throw WebUploadException(storageError, driveError);
+      }
     } finally {
       directUploadProgress.value = null;
     }
-    return meta.copyWith(
-      storagePath: storagePath,
-      downloadUrl: await ref.getDownloadURL(),
-    );
   }
 
   /// Görseli küçültüp yerel kopyasını oluşturur; yükleme sonradan yapılır.
@@ -1040,4 +1059,15 @@ class StorageFullException extends FileTooLargeException {
 /// görsel çözülemedi.
 class AttachmentMissingException implements Exception {
   const AttachmentMissingException();
+}
+
+/// Web'de ek ne Storage'a ne Drive'a yüklenebildi: iki hata birlikte.
+class WebUploadException implements Exception {
+  const WebUploadException(this.storage, this.drive);
+
+  final Object storage;
+  final Object drive;
+
+  @override
+  String toString() => 'Storage: $storage · Drive: $drive';
 }

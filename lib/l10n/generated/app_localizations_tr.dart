@@ -8055,4 +8055,26 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get attachmentAddText => 'Üstüne yazı ekle';
+
+  @override
+  String get stylusTogglesOn => 'Kalem yazar';
+
+  @override
+  String get stylusTogglesOff => 'Kalem dokunur (yazmaz)';
+
+  @override
+  String get updateInstall => 'Güncelle';
+
+  @override
+  String get updateDownloading => 'Yeni sürüm indiriliyor…';
+
+  @override
+  String get updateNeedsPermission =>
+      'Bu uygulamaya \"bilinmeyen uygulama yükleme\" izni ver, sonra yeniden Güncelle\'ye dokun';
+
+  @override
+  String get updateFailed => 'İndirilemedi; GitHub sayfası açılıyor';
+
+  @override
+  String get pinnedSideToggle => 'Yerleşim: üstte / solda / sağda';
 }

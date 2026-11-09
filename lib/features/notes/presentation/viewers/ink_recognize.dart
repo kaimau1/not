@@ -79,6 +79,8 @@ InkFix? recognizeInkFix(
   if (marks && diag >= kInkFixMinMark) {
     final tick = _tick(points, diag);
     if (tick != null) return tick;
+    final cross = _singleStrokeCross(points, diag);
+    if (cross != null) return cross;
   }
   if (!shapes || diag < kInkFixMinShape) return null;
 
@@ -195,6 +197,42 @@ bool _straight(List<Offset> pts) {
   return dev <= math.max(4.0, chord * 0.08);
 }
 
+/// [_straight]'ın çarpı kolu için gevşek hâli (hafif kavis serbest).
+bool _roughlyStraight(List<Offset> pts) {
+  final chord = (pts.last - pts.first).distance;
+  if (chord <= 0) return false;
+  if (chord < _length(pts) * 0.8) return false;
+  final dir = (pts.last - pts.first) / chord;
+  var dev = 0.0;
+  for (final p in pts) {
+    dev = math.max(dev, _cross2(p - pts.first, dir).abs());
+  }
+  return dev <= math.max(5.0, chord * 0.14);
+}
+
+/// TEK ÇİZGİDE ÇARPI: "\" → kalkmadan yukarı → "/" (4 köşe; 1. ve 3.
+/// parça kesişir).
+InkFix? _singleStrokeCross(List<Offset> pts, double diag) {
+  final s = _dropCollinear(_simplify(pts, diag * 0.1));
+  if (s.length != 4) return null;
+  final fix = _cross([s[0], s[1]], [s[2], s[3]]);
+  // Tek çizgi: kaldırılacak önceki çizgi yok.
+  return fix == null ? null : InkFix(fix.kind, fix.strokes);
+}
+
+/// Sadeleşmiş çizgide neredeyse düz devam eden ara köşeleri atar (RDP eşit
+/// uzaklıkta bir kenarın ortasında fazladan nokta bırakabiliyor).
+List<Offset> _dropCollinear(List<Offset> s, {double maxTurn = 20}) {
+  if (s.length < 3) return s;
+  final out = <Offset>[s.first];
+  for (var i = 1; i + 1 < s.length; i++) {
+    final turn = _angle(s[i] - out.last, s[i + 1] - s[i]);
+    if (turn >= maxTurn) out.add(s[i]);
+  }
+  out.add(s.last);
+  return out;
+}
+
 /// İki vektör arasındaki açı (derece, 0–180).
 double _angle(Offset a, Offset b) {
   final la = a.distance, lb = b.distance;
@@ -208,15 +246,17 @@ double _angle(Offset a, Offset b) {
 /// ÇARPI: iki düz, çapraz (yataya 20–70°), ortalarına yakın kesişen ve boyu
 /// birbirine yakın çizgi. Artı (+) çapraz değildir: yazının artısı bozulmaz.
 InkFix? _cross(List<Offset> a, List<Offset> b) {
-  if (!_straight(a) || !_straight(b)) return null;
+  // 2026-11-09 ("X bazen tek çizgi sanılıyor, bazen tanınmıyor"): çabuk
+  // atılan çarpının kolları hafif kavisli ve eşit değil — eşikler gevşedi.
+  if (!_roughlyStraight(a) || !_roughlyStraight(b)) return null;
   final a0 = a.first, a1 = a.last, b0 = b.first, b1 = b.last;
   final la = (a1 - a0).distance, lb = (b1 - b0).distance;
   if (la < kInkFixMinMark || lb < kInkFixMinMark) return null;
   final ratio = la / lb;
-  if (ratio < 0.5 || ratio > 2) return null;
+  if (ratio < 0.4 || ratio > 2.5) return null;
   bool diagonal(Offset v) {
     final deg = math.atan2(v.dy.abs(), v.dx.abs()) * 180 / math.pi;
-    return deg >= 20 && deg <= 70;
+    return deg >= 15 && deg <= 75;
   }
 
   final da = a1 - a0, db = b1 - b0;
@@ -226,7 +266,7 @@ InkFix? _cross(List<Offset> a, List<Offset> b) {
   // Kesişim parametreleri: a0 + da·t = b0 + db·u.
   final t = _cross2(b0 - a0, db) / denom;
   final u = _cross2(b0 - a0, da) / denom;
-  if (t < 0.2 || t > 0.8 || u < 0.2 || u > 0.8) return null;
+  if (t < 0.15 || t > 0.85 || u < 0.15 || u > 0.85) return null;
   // İki kol zıt eğimli olmalı (biri "\", öbürü "/").
   if ((da.dx * da.dy).sign == (db.dx * db.dy).sign) return null;
   final box = _bounds([...a, ...b]);
@@ -429,7 +469,11 @@ ClosedInkShape? recognizeClosedShape(List<Offset> pts) {
           pg.error <= 0.05 &&
           pg.error < eEll * 0.6 &&
           pg.error < math.min(eRect, math.min(eQuad, eTri))) {
-        return (kind: InkFixKind.polygon, outline: pg.outline, regular: true);
+        return (
+          kind: InkFixKind.polygon,
+          outline: _levelOutline(pg.outline),
+          regular: true,
+        );
       }
     }
   }
@@ -469,7 +513,7 @@ ClosedInkShape? recognizeClosedShape(List<Offset> pts) {
       if (best.key == InkFixKind.quad && !rightAngles && eQuad < eRect * 0.7) {
         return (
           kind: InkFixKind.quad,
-          outline: [...q!, q.first],
+          outline: _levelOutline([...q!, q.first]),
           regular: false,
         );
       }
@@ -492,7 +536,7 @@ ClosedInkShape? recognizeClosedShape(List<Offset> pts) {
       final t = tri!;
       return (
         kind: InkFixKind.triangle,
-        outline: [...t, t.first],
+        outline: _levelOutline([...t, t.first]),
         regular: false,
       );
     default:
@@ -500,13 +544,41 @@ ClosedInkShape? recognizeClosedShape(List<Offset> pts) {
   }
 }
 
-/// Eksene 10°'den yakın eğim sıfırlanır (dik kenarlar).
+/// Eksene [kInkSnapDegrees]'den yakın eğim sıfırlanır (dik kenarlar).
+/// Kullanıcı isteği 2026-11-09: "çizim mükemmel değil ama açı düzeltilmeli,
+/// kişi 25 dereceden fazla eğik çizmediyse" (eskiden 10°).
 double _snapAngle(double a) {
   final deg = a * 180 / math.pi;
   final m = ((deg % 90) + 90) % 90;
-  if (m <= 10) return (deg - m) * math.pi / 180;
-  if (m >= 80) return (deg + (90 - m)) * math.pi / 180;
+  if (m <= kInkSnapDegrees) return (deg - m) * math.pi / 180;
+  if (m >= 90 - kInkSnapDegrees) return (deg + (90 - m)) * math.pi / 180;
   return a;
+}
+
+/// Şekil düzeltmesinde eksene oturtma eşiği (derece).
+const kInkSnapDegrees = 25.0;
+
+/// Çokgenin yataya en yakın kenarı [kInkSnapDegrees]'den az eğikse bütün
+/// şekil o kadar döndürülür (üçgenin tabanı, dörtgenin/çokgenin bir kenarı
+/// düz durur). Kapalı dış çizgi alır, kapalı döner.
+List<Offset> _levelOutline(List<Offset> closed) {
+  if (closed.length < 3) return closed;
+  var best = double.infinity;
+  for (var i = 0; i + 1 < closed.length; i++) {
+    final e = closed[i + 1] - closed[i];
+    if (e.distance < 1e-6) continue;
+    // Yataya göre −90…90.
+    var deg = math.atan2(e.dy, e.dx) * 180 / math.pi;
+    if (deg > 90) deg -= 180;
+    if (deg < -90) deg += 180;
+    if (deg.abs() < best.abs()) best = deg;
+  }
+  if (!best.isFinite || best.abs() < 0.5 || best.abs() > kInkSnapDegrees) {
+    return closed;
+  }
+  final c = _centroid(closed.sublist(0, closed.length - 1));
+  final a = -best * math.pi / 180;
+  return [for (final p in closed) c + _rot(p - c, a)];
 }
 
 /// Andrew'un monoton zinciri (saat yönünün tersine).

@@ -291,6 +291,51 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
+    private fun requestsInstallPackages(): Boolean = try {
+        @Suppress("DEPRECATION")
+        val info = packageManager.getPackageInfo(
+            packageName,
+            android.content.pm.PackageManager.GET_PERMISSIONS
+        )
+        info.requestedPermissions?.contains(
+            android.Manifest.permission.REQUEST_INSTALL_PACKAGES
+        ) == true
+    } catch (e: Exception) {
+        false
+    }
+
+    /** "permission" = önce "bilinmeyen uygulamalar" izni ekranı açıldı. */
+    private fun installApk(path: String): String {
+        if (!requestsInstallPackages()) return "unsupported"
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O &&
+            !packageManager.canRequestPackageInstalls()
+        ) {
+            startActivity(
+                Intent(
+                    android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                    android.net.Uri.parse("package:$packageName")
+                )
+            )
+            return "permission"
+        }
+        return try {
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                this,
+                "$packageName.provider",
+                java.io.File(path)
+            )
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+            "started"
+        } catch (e: Exception) {
+            "error"
+        }
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         // Kişisel köprü (yalnız kişisel derlemede; genelde boş): oturumsuzken sıraya alınan notlar
@@ -582,6 +627,19 @@ class MainActivity : FlutterFragmentActivity() {
                     "openAppSettings" -> {
                         startActivity(appDetailsIntent())
                         result.success(true)
+                    }
+                    // ── UYGULAMA İÇİ GÜNCELLEME (2026-11-09: "her seferinde gir
+                    // indir yükle çok zor"). Yalnız REQUEST_INSTALL_PACKAGES
+                    // isteyen (kişisel) derlemede. Sessiz kurulum Android'de
+                    // yok: sistemin "Güncelle" penceresi açılır, bir dokunuş.
+                    "canSelfUpdate" -> result.success(requestsInstallPackages())
+                    "installApk" -> {
+                        val path = call.argument<String>("path")
+                        if (path == null) {
+                            result.success("error")
+                        } else {
+                            result.success(installApk(path))
+                        }
                     }
                     // Pil optimizasyonu ekranı: hatırlatıcılar gecikmesin diye
                     // uygulama muaf tutulabilir. ACTION_IGNORE_BATTERY_

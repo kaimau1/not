@@ -15,6 +15,8 @@ import '../../../../core/widgets/wheel_scroll_viewer.dart';
 import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
 import '../drive_ui.dart';
+import '../viewers/ink_tools.dart' show InkToolMemory;
+import 'pinned_side.dart';
 import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/pdf_read_style.dart';
@@ -122,12 +124,25 @@ class PinnedMediaPane extends StatefulWidget {
     this.onPdfNote,
     this.onImmersiveChanged,
     this.penActive = false,
+    this.fill = false,
+    this.side = PinnedSide.top,
+    this.onCycleSide,
   });
 
   /// Editörün kalem kipi açık: sabit PDF'in üstüne doğrudan yazılır
   /// (kullanıcı isteği 2026-11-08). Kapalıyken bölmenin çubuğundaki kalem
   /// düğmesi aynı katmanı yalnız bu bölme için açar.
   final bool penActive;
+
+  /// YAN YERLEŞİM (2026-11-09): medya bölmenin TAMAMINI kaplar (not öbür
+  /// sütunda, [child] boş); çubuktan boy sürüklenmez.
+  final bool fill;
+
+  /// Şu anki yerleşim (çubuktaki düğmenin simgesi).
+  final PinnedSide side;
+
+  /// Üst → sol → sağ geçişi; null = düğme yok (dar ekran).
+  final VoidCallback? onCycleSide;
 
   /// Balon yazma kartı açıldı/kapandı: editör kendi alt çubuğunu gizler
   /// (bölme de alttaki notu gizleyip medyayı klavyeye kadar uzatır — bkz.
@@ -265,17 +280,28 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   bool get _penOn =>
       widget.onChanged != null &&
       widget.media.kind == AttachmentKind.pdf &&
-      (widget.penActive || _ownPen);
+      (_explicitPen || InkToolMemory.autoStylus);
+
+  /// Kalem kipi (editörün ya da bölmenin): parmak da çizer. Değilse ve
+  /// yüzen düğme "kalem yazar" diyorsa YALNIZ kalem çizer, parmak kaydırır
+  /// (kullanıcı bulgusu 2026-11-09: "sabitken yazı yazamıyorum").
+  bool get _explicitPen => widget.penActive || _ownPen;
+
+  void _onStylusToggle() {
+    if (mounted) setState(() {});
+  }
 
   /// Çizim denetleyicisi ekle bağlı; ek değişince yenilenir.
   InkController _inkFor(Attachment a) {
-    final c = _ink;
-    if (c != null) return c;
-    return _ink = InkController(
+    final c = _ink ??= InkController(
       initial: a.ink,
       onChanged: (strokes) =>
           widget.onChanged?.call(widget.media.copyWith(ink: strokes)),
     );
+    c.allowedKinds = _explicitPen
+        ? null
+        : const {PointerDeviceKind.stylus, PointerDeviceKind.invertedStylus};
+    return c;
   }
 
   /// Sabit PDF'in bırakma kipinde açık metin mi (bkz. [PdfPageBox.addingPlain]).
@@ -428,6 +454,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   void initState() {
     super.initState();
     _imageZoom.addListener(_onImageZoom);
+    InkToolMemory.autoStylusListenable.addListener(_onStylusToggle);
   }
 
   @override
@@ -462,6 +489,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
 
   @override
   void dispose() {
+    InkToolMemory.autoStylusListenable.removeListener(_onStylusToggle);
     _ink?.dispose();
     _ownBubbles?.save();
     _ownBubbles?.dispose();
@@ -677,10 +705,20 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             : _clamp(constraints.maxWidth * ratio, layoutMax);
         // Sürüklerken bölme sınırın altına da iner (geri bırakma hissi);
         // bırakınca sınıra oturur ya da sayfaya döner.
-        final height = live != null
+        // Yanda: medya sütunun tamamı; klavye açılınca yeniden ölçülmez,
+        // yalnız pencere kırpılır (bkz. KeyboardClipWindow).
+        final fillFull = math.max(
+          0.0,
+          math.max(stable, constraints.maxHeight) - kPinnedBarHeight,
+        );
+        final height = widget.fill
+            ? fillFull
+            : live != null
             ? live.clamp(0.0, max < kPinnedMinHeight ? kPinnedMinHeight : max)
             : _clamp(math.min(widget.media.pinHeight, natural), layoutMax);
-        final visible = live != null
+        final visible = widget.fill
+            ? math.max(0.0, constraints.maxHeight - kPinnedBarHeight)
+            : live != null
             ? height
             : _visibleHeight(
                 context,
@@ -752,14 +790,22 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                           // parmak kaydırır ("yalnız kalem" açıksa).
                           builder: (_, shown) => ScrollConfiguration(
                             behavior: ScrollConfiguration.of(context).copyWith(
-                              dragDevices: _penOn
+                              dragDevices: !_penOn
+                                  ? null
+                                  : _explicitPen
                                   ? {
                                       PointerDeviceKind.mouse,
                                       PointerDeviceKind.trackpad,
                                       if (_inkFor(shown).penOnly)
                                         PointerDeviceKind.touch,
                                     }
-                                  : null,
+                                  // Yalnız kalem yazar: geri kalan her şey
+                                  // kaydırır.
+                                  : const {
+                                      PointerDeviceKind.mouse,
+                                      PointerDeviceKind.trackpad,
+                                      PointerDeviceKind.touch,
+                                    },
                             ),
                             child: PdfPageBox(
                             ink: _penOn ? _inkFor(shown) : null,
@@ -953,10 +999,14 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             GestureDetector(
               key: const ValueKey('pinned-media-bar'),
               behavior: HitTestBehavior.opaque,
-              onVerticalDragStart: (_) => setState(() => _live = height),
-              onVerticalDragUpdate: (d) =>
-                  setState(() => _live = (_live ?? height) + d.delta.dy),
-              onVerticalDragEnd: (_) {
+              onVerticalDragStart: widget.fill
+                  ? null
+                  : (_) => setState(() => _live = height),
+              onVerticalDragUpdate: widget.fill
+                  ? null
+                  : (d) =>
+                        setState(() => _live = (_live ?? height) + d.delta.dy),
+              onVerticalDragEnd: widget.fill ? null : (_) {
                 final raw = _live ?? height;
                 setState(() => _live = null);
                 if (raw < kPinnedUnpinHeight) {
@@ -1032,6 +1082,18 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     final showLink = !isVideo || width >= 360;
     return Row(
       children: [
+        // ÜST / SOL / SAĞ (geniş ekranda, 2026-11-09).
+        if (widget.onCycleSide != null)
+          _BarButton(
+            key: const ValueKey('pinned-side'),
+            tooltip: l10n.pinnedSideToggle,
+            icon: switch (widget.side) {
+              PinnedSide.top => Icons.vertical_split_outlined,
+              PinnedSide.left => Icons.vertical_split,
+              PinnedSide.right => Icons.horizontal_split_outlined,
+            },
+            onPressed: widget.onCycleSide!,
+          ),
         // Sesin tam ekranı yok (kart kendisi oynatıcı).
         if (!isAudio)
           _BarButton(

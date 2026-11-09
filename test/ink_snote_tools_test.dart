@@ -147,6 +147,49 @@ void main() {
       expect(c.ink, [other]);
     });
 
+    // 2026-11-09: "şekilleri tanıdıktan sonra döndüremiyorum".
+    test('üst ortadaki tutamak seçimi döndürür, geri al geri getirir', () {
+      // Yatay çizgi: (80,120) → (120,120) piksel.
+      final s = stroke(0.2, 0.3, 0.3, 0.3);
+      final c = controller(initial: [s])..setLasso(true);
+      drawLasso(c, circle(const Offset(100, 120), 40));
+      expect(c.selected, [s]);
+      final b = c.selectionBounds!;
+      // Tutamak: kutunun üst ortası − 8 − aralık.
+      final handle = Offset(
+        b.center.dx * size.width,
+        b.top * size.height - 8 - InkController.rotateHandleGap,
+      );
+      final center = Offset(
+        b.center.dx * size.width,
+        b.center.dy * size.height,
+      );
+      // Tutamağı merkezin sağına çek: 90° saat yönü.
+      final r = (handle - center).distance;
+      c
+        ..pointerDown(1, handle, size)
+        ..pointerMove(1, center + Offset(r, 0), size)
+        ..pointerUp();
+      final pts = c.ink.single.points;
+      // Yatay çizgi dikey oldu: x'ler aynı, y'ler yayıldı.
+      expect((pts.first - pts[pts.length - 2]).abs(), lessThan(1e-6));
+      expect((pts[1] - pts.last).abs() * size.height, closeTo(40, 0.5));
+      c.undo();
+      expect(c.ink.single.points[1], closeTo(0.3, 1e-9));
+    });
+
+    test('çizgiye çift dokununca seçilir, noktalar kalmaz', () {
+      final s = stroke(0.2, 0.3, 0.3, 0.3);
+      final c = controller(initial: [s])..setEditing(true);
+      for (var i = 0; i < 2; i++) {
+        c
+          ..pointerDown(1, const Offset(100, 120), size)
+          ..pointerUp();
+      }
+      expect(c.ink, [s], reason: 'dokunuş noktaları geri alınmalı');
+      expect(c.selected, [s]);
+    });
+
     test('başka araca geçmek seçimi bırakır', () {
       final c = controller(initial: [stroke(0.2, 0.2, 0.3, 0.3)])
         ..setLasso(true);

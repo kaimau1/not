@@ -29,19 +29,25 @@ extension _EditorFlowX on _NoteEditorScreenState {
       _pendingVideo = false;
       _addVideo();
     }
+    // ARAMADAN / ŞERİTTEN GELİNCE KAYDIRMA GÖRÜNSÜN (tablet bulgusu
+    // 2026-11-09: "doğru yere kayıyor ama animasyonu yok, anında gidiyor").
+    // Kaydırma not açılış geçişiyle AYNI ANDA oluyordu — geçiş bitince sayfa
+    // zaten orada görünüyordu. Artık geçiş bitince başlar.
     final find = _pendingFind?.trim();
     if (find != null && find.isNotEmpty) {
       _pendingFind = null;
-      _openFindWith(find);
+      _afterOpenTransition(() => _openFindWith(find));
     }
     final reveal = _pendingRevealItem;
     if (reveal != null && reveal.isNotEmpty) {
       _pendingRevealItem = null;
-      // Satırlar bir kare sonra yerinde (ilk kurulumda boyları yok).
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          unawaited(_itemsEditorKey.currentState?.revealItem(reveal));
-        }
+      _afterOpenTransition(() {
+        // Satırlar bir kare sonra yerinde (ilk kurulumda boyları yok).
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            unawaited(_itemsEditorKey.currentState?.revealItem(reveal));
+          }
+        });
       });
     }
     if (_pendingPhoto) {
@@ -636,4 +642,22 @@ bool isFreshEmptyTextNote(Note note, {DateTime? now}) {
       !note.paged &&
       (now ?? DateTime.now()).difference(created).abs() <
           const Duration(seconds: 30);
+}
+
+extension _OpenTransition on _NoteEditorScreenState {
+  /// Notun açılış geçişi bitince [run] (geçiş yoksa hemen).
+  void _afterOpenTransition(VoidCallback run) {
+    final animation = ModalRoute.of(context)?.animation;
+    if (animation == null || animation.isCompleted) {
+      run();
+      return;
+    }
+    void listener(AnimationStatus status) {
+      if (status != AnimationStatus.completed) return;
+      animation.removeStatusListener(listener);
+      if (mounted) run();
+    }
+
+    animation.addStatusListener(listener);
+  }
 }

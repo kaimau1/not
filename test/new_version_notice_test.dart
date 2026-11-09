@@ -14,4 +14,11 @@ void main() {
     expect(isNewerBuild(600, null), isFalse);
     expect(isNewerBuild(600, 1), isFalse);
   });
+
+  test('Release APK adresi CI adlandırmasıyla aynı (2026-11-09)', () {
+    expect(
+      releaseApkUrl('1.2.29'),
+      'https://github.com/kaimau1/not/releases/download/v1.2.29/notlar-v1.2.29.apk',
+    );
+  });
 }

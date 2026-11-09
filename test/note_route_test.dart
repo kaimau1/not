@@ -126,4 +126,33 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('FOLDER').hitTestable(), findsOneWidget);
   });
+
+  // Tablet bulgusu 2026-11-09: genis ekranda geri, acilan notlari tek tek
+  // geziyordu. Not acikken baska not ACIK NOTUN YERINE gecer; geri = liste.
+  for (final wide in [true, false]) {
+    testWidgets(
+      'not acikken baska not: ${wide ? 'genis yerine' : 'telefon yigin'}',
+      (tester) async {
+        tester.view.physicalSize = Size(wide ? 1600 : 400, 900);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final router = buildRouter();
+        addTearDown(router.dispose);
+        await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+        unawaited(router.pushNote(noteRoutePath('a')));
+        await tester.pumpAndSettle();
+        unawaited(
+          tester.element(find.text('NOTE a')).pushNote(noteRoutePath('b')),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('NOTE b').hitTestable(), findsOneWidget);
+        router.pop();
+        await tester.pumpAndSettle();
+        expect(
+          find.text(wide ? 'HOME' : 'NOTE a').hitTestable(),
+          findsOneWidget,
+        );
+      },
+    );
+  }
 }

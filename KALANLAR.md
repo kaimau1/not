@@ -286,6 +286,22 @@ A12. [ ] Not kapanışı (yazdıktan sonra geri, karta küçülme): kasma azald�
 - H2 Kalemle düz çizgi çiz, uçta bekle → çizgiye oturunca kalemi KALDIRMADAN gezdir → uç kalemi izliyor, başlangıç yerinde.
 - H3 Bir notta Biçim → yazı boyutunu büyüt (seçim yokken) ve yazı tipini değiştir → yeni metin/liste notu aynı boyut ve tiple açılıyor mu; varsayılana döndürünce yeni notlar da varsayılan.
 
+### Tablet turu sonucu (2026-11-09, kullanıcı) — GEÇTİ
+Tam yedek geri yükleme + ikinci yükleme çoğaltmıyor; #47 Gboard; A2, A4, B5–B7, B13, C17, D18–D20, E, F, #6 bildirim. Yazım düzeltme (C3/D1/D2) kapatıldı ("zamanla anlaşılacak").
+
+### I1–I10 (2026-11-09 oturum H — yazıldı, cihazda doğrulanmadı)
+- I1 Not paketinde × (hapın sağı / açık paketin ilk maddesi) paketi çözüyor mu. **Kasma:** paketli notta tam olarak ne zaman kasıyor (açarken, yazarken, kapatırken)? Kod ölçümünde üretilemedi.
+- I2 Kalem görülen cihazda sağda küçük yuvarlak düğme: dokun → "Kalem dokunur": kalemle metne imleç konuyor, kaydırıyor; tekrar → "Kalem yazar". Sürükle → yeri kalıyor (uygulamayı kapat-aç).
+- I3 "Kalem yazar"da sabit PDF'e kalemle yazılıyor, parmak kaydırıyor; gömülü PDF'e yazınca çizgi PDF'te (sayfaya değil).
+- I4 Tablette not açıkken klavye açılınca soldaki ev/klasör/mikrofon/+ yukarı çıkmıyor (ekran görüntüsündeki karmaşa).
+- I5 Fiziksel klavyede Esc: tam ekran → not kapanır. Tablette not açıkken listeden başka nota geç → geri → doğrudan liste (önceki not değil).
+- I6 Şekil: 20° eğik kare/üçgen düz oturuyor; X tek çizgide ve iki çizgide; seçili şeklin üstündeki yuvarlak tutamakla döndür; eski bir şekle kalemle ÇİFT dokun → seçilir, taşı/boyutla/döndür.
+- I7 Süzgeç/arama açıkken ya da "Son güncellenen" sırasında karta basılı tut → dolum halkası çıkıyor.
+- I8 Aramadan nota girince sayfa açıldıktan SONRA kelimeye kayarak gidiyor.
+- I9 Yeni sürüm çıkınca bildirimde/Ayarlar → Hakkında'da "Güncelle" → indirme çubuğu → (ilk seferde izin ekranı) → sistemin güncelle penceresi.
+- I10 Tablet/web: sabit ekin çubuğunda sol baştaki yerleşim düğmesi → solda → sağda → üstte; aradaki ayraçla genişlik; web'de PDF ekle (olmazsa ekrandaki hata metnini yaz — Storage/Drive).
+- Açık hata (yeniden üretilemedi): PDF bölmesinde sayfa "Not al" → sabitten gömülüye geçince "📖 s.11" satırı silinemiyor — tam adım/ekran görüntüsü gerekli.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)
