@@ -46,7 +46,7 @@ Okunan yorumlar Play'in "en alakalı" sıralamasıydı, yıldıza göre süzülm
 ## Faz 54 — Güven (veri kaybı yaşanmasın)
 
 - [ ] **F54.1 Kalem gecikmesini ölç.** Tabletin kalemiyle dokunuştan ilk boyamaya kadar geçen süre (`tool/perf/`). Hedef: ≤ 1 kare (~16 ms) ek gecikme. Fazlaysa sonraki adım: Android'in düşük gecikmeli çizim yolu (`androidx.graphics:graphics-core`, ön tamponda çizim). **KARAR:** Yerel kod ekleneceği için önce ölçüm sonucu kullanıcıya gösterilir.
-- [ ] **F54.2 "Yedeğim gerçekten var mı?" göstergesi.** Ayarlar'da son başarılı senkron ve son yerel yedek tarihi, not sayısıyla birlikte. Rakiplerde en çok "yedek alındı sanıyordum" şikâyeti var.
+- [x] **F54.2 "Yedeğim gerçekten var mı?" göstergesi.** Ayarlar'da son başarılı senkron ve son yerel yedek tarihi, not sayısıyla birlikte. Rakiplerde en çok "yedek alındı sanıyordum" şikâyeti var. — Yapıldı 2026-11-09: Ayarlar → Depolama'da "Tam yedek al"ın üstünde bulut durumu (misafir = kırmızı uyarı) + son tam yedek tarihi/not sayısı (yalnız dosya gerçekten kaydedilince, `lastBackupProvider`). Cihazda doğrulanmadı.
 - [ ] **F54.3 Göç öncesi otomatik yerel yedek.** Şema değiştiren her sürüm açılışında bir kez çalışır ve geri yüklenebilir (F22.4 / F28.2 kuralıyla aynı).
 - [ ] **F54.4 Yeni cihaza geçiş denemesi.** Duman testi: girişten sonra bütün notların, el yazısının ve eklerin geldiği doğrulanır (`KALANLAR.md` §2'ye adım olarak).
 
@@ -60,7 +60,7 @@ Okunan yorumlar Play'in "en alakalı" sıralamasıydı, yıldıza göre süzülm
 
 ## Faz 56 — Bulma ve hatırlatma
 
-- [ ] **F56.1 Arama sonucundan kelimeye git:** Arama sonucundaki nota basınca o kelimeye kaydırılsın ve vurgulansın. Notta ara özelliğinin var olan parçaları yeniden kullanılır.
+- [x] **F56.1 Arama sonucundan kelimeye git:** Arama sonucundaki nota basınca o kelimeye kaydırılsın ve vurgulansın. Notta ara özelliğinin var olan parçaları yeniden kullanılır. — Yapıldı 2026-11-09: kart `?find=` ile açar, çubuk açık + ilk eşleşmeye kaydırılmış, klavye açılmaz; eşleşme yoksa çubuk kapanır (bekçi `editor_open_at_test`). Cihazda doğrulanmadı.
 - [ ] **F56.2 Hatırlatıcı güvenilirliği:** Pil iyileştirme ve tam zamanlı alarm izni yoksa uyarı çıksın. Telefonda kanıtla.
 - [ ] **F56.3 Son kullanılan yazı boyutu/biçimi hatırlansın** (Keep şikâyeti: her seferinde baştan ayarlanıyor).
 

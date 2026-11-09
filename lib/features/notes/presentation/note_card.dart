@@ -198,6 +198,7 @@ Future<void> openNoteRoute(
   Note note, {
   String? ownerId,
   bool readOnly = false,
+  String find = '',
 }) async {
   if (_openingNoteId == note.id) return;
   _openingNoteId = note.id;
@@ -210,6 +211,8 @@ Future<void> openNoteRoute(
       final params = [
         if (ownerId != null) 'owner=$ownerId',
         if (readOnly) 'ro=1',
+        // F56.1: aramadan açılan not o kelimeye kaydırılır ve vurgulanır.
+        if (find.isNotEmpty) 'find=${Uri.encodeQueryComponent(find)}',
       ];
       // Not KARTIN YERİNDEN genişleyerek açılır (bkz. NoteOpenOrigin).
       NoteOpenOrigin.register(
@@ -476,8 +479,14 @@ class NoteCard extends ConsumerWidget {
       liveQuery ??
       (highlightQuery.isEmpty ? FixedQuery.empty : FixedQuery(highlightQuery));
 
-  Future<void> _openNote(BuildContext context) =>
-      openNoteRoute(context, note, ownerId: ownerId, readOnly: readOnly);
+  Future<void> _openNote(BuildContext context) => openNoteRoute(
+    context,
+    note,
+    ownerId: ownerId,
+    readOnly: readOnly,
+    // Kilitli notun içeriği aranmaz (kartta da gizli) — sorgu taşınmaz.
+    find: note.locked ? '' : _query.value.trim(),
+  );
 
   void _delete(BuildContext context, WidgetRef ref) {
     final repo = ref.read(notesRepositoryProvider);

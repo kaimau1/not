@@ -24,6 +24,7 @@ import '../../notes/data/backup_files.dart';
 import '../../notes/data/backup_service.dart';
 import '../../notes/data/import_service.dart';
 import '../../notes/data/notes_repository.dart';
+import '../settings_providers.dart' show sharedPreferencesProvider;
 
 /// Ayarlar → Hesap → "Tam yedek" ve "Yedekten geri yükle" akışları (F18.4).
 /// Hizmet ([BackupService]) arayüzden bağımsız; burada yalnız dosya seçimi,
@@ -55,6 +56,37 @@ String backupFileName([DateTime? now]) {
   String two(int v) => v.toString().padLeft(2, '0');
   return 'notlar-yedek-${t.year}-${two(t.month)}-${two(t.day)}'
       '${BackupService.fileExtension}';
+}
+
+/// SON TAM YEDEK (F54.2, rakip yorumlarındaki "yedek alındı sanıyordum"
+/// şikâyeti): yedek dosyası GERÇEKTEN kaydedildiğinde (sistem Kaydet
+/// penceresi onaylandı / paylaşım tamamlandı) zamanı ve not sayısı cihaz
+/// tercihine yazılır; Ayarlar'daki gösterge bunu okur. null = hiç alınmadı.
+final lastBackupProvider =
+    NotifierProvider<LastBackup, ({DateTime at, int count})?>(LastBackup.new);
+
+class LastBackup extends Notifier<({DateTime at, int count})?> {
+  static const _atKey = 'last_full_backup_at';
+  static const _countKey = 'last_full_backup_count';
+
+  @override
+  ({DateTime at, int count})? build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final at = prefs.getInt(_atKey);
+    if (at == null) return null;
+    return (
+      at: DateTime.fromMillisecondsSinceEpoch(at),
+      count: prefs.getInt(_countKey) ?? 0,
+    );
+  }
+
+  void record(int count, {DateTime? at}) {
+    final when = at ?? DateTime.now();
+    final prefs = ref.read(sharedPreferencesProvider);
+    prefs.setInt(_atKey, when.millisecondsSinceEpoch);
+    prefs.setInt(_countKey, count);
+    state = (at: when, count: count);
+  }
 }
 
 Future<void> exportFullBackup(BuildContext context, WidgetRef ref) async {
@@ -118,12 +150,20 @@ Future<void> exportFullBackup(BuildContext context, WidgetRef ref) async {
         // octet-stream: zip türünde sistem uzantıyı .zip'e çevirebiliyor.
         'mimeType': 'application/octet-stream',
       });
-      if (saved ?? false) messenger.showMessage(l10n.attachmentSavedAs(name));
+      if (saved ?? false) {
+        ref.read(lastBackupProvider.notifier).record(notes.length);
+        messenger.showMessage(l10n.attachmentSavedAs(name));
+      }
       return;
     }
-    await SharePlus.instance.share(
+    final shared = await SharePlus.instance.share(
       ShareParams(files: [file], subject: l10n.backupShareSubject),
     );
+    // Web'de dosya indirilir (durum "unavailable" döner); vazgeçilen
+    // paylaşım yedek sayılmaz.
+    if (shared.status != ShareResultStatus.dismissed) {
+      ref.read(lastBackupProvider.notifier).record(notes.length);
+    }
   } on BackupCancelled {
     messenger.showMessage(l10n.backupCancelled);
   } catch (e) {

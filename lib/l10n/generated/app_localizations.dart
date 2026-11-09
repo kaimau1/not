@@ -14353,6 +14353,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Silmek için bir çizginin üstüne basılı tut → çıkan silgi düğmesine dokun. İki parmak = kaydır/yakınlaştır.'**
   String get tipPenEraserHold;
+
+  /// No description provided for @backupStatusCloud.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bulut: {count} not Google hesabında, değişiklikler kendiliğinden eşitleniyor'**
+  String backupStatusCloud(int count);
+
+  /// No description provided for @backupStatusGuest.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bulut yedeği yok: notlar yalnız bu cihazda. Google hesabı bağla ya da tam yedek al.'**
+  String get backupStatusGuest;
+
+  /// No description provided for @backupStatusLast.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son tam yedek: {date} · {count} not'**
+  String backupStatusLast(String date, int count);
+
+  /// No description provided for @backupStatusNever.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cihazda henüz tam yedek alınmadı'**
+  String get backupStatusNever;
 }
 
 class _AppLocalizationsDelegate

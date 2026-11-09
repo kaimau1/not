@@ -35,7 +35,16 @@ class _DueBannerState extends ConsumerState<DueBanner> {
   void _open(DueItem item) {
     ref.read(dueDismissedProvider.notifier).dismiss([item.key]);
     if (item.noteId.isNotEmpty) {
-      unawaited(context.pushNote(noteRoutePath(item.noteId)));
+      unawaited(
+        context.pushNote(
+          noteRoutePath(
+            item.noteId,
+            query: item.itemId.isEmpty
+                ? ''
+                : '?item=${Uri.encodeQueryComponent(item.itemId)}',
+          ),
+        ),
+      );
     } else {
       unawaited(context.push('/calendar'));
     }

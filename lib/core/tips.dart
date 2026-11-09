@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// **BİR KEZ ÇIKAN İPUÇLARI** (F14.6, 2026-10-31; plandaki öneri uygulandı:
@@ -156,10 +157,20 @@ class _TipBannerState extends State<_TipBanner> {
       if (mounted) setState(() => _visible = true);
     });
     _timer = Timer(widget.duration, _close);
+    // EKRANIN HERHANGİ BİR YERİNE ilk dokunuşta kalkar (2026-11-09 düzeltme:
+    // eskiden yalnız şeridin kendi kutusundaki dokunuş kaldırıyordu — şeridin
+    // Listener'ı yalnız kendi alanında isabet alır). Genel yol dokunuşu
+    // TÜKETMEZ; alttaki düğme yine çalışır.
+    GestureBinding.instance.pointerRouter.addGlobalRoute(_onPointer);
+  }
+
+  void _onPointer(PointerEvent event) {
+    if (event is PointerDownEvent) _close();
   }
 
   @override
   void dispose() {
+    GestureBinding.instance.pointerRouter.removeGlobalRoute(_onPointer);
     // Zamanlayıcı ağaçla gider (testlerde bekleyen zamanlayıcı kalmasın).
     _timer?.cancel();
     super.dispose();
@@ -181,10 +192,7 @@ class _TipBannerState extends State<_TipBanner> {
       left: 12,
       right: 12,
       top: top + 8,
-      child: Listener(
-        behavior: HitTestBehavior.translucent,
-        onPointerDown: (_) => _close(),
-        child: IgnorePointer(
+      child: IgnorePointer(
           child: AnimatedOpacity(
             opacity: _visible ? 1 : 0,
             duration: const Duration(milliseconds: 200),
@@ -222,7 +230,6 @@ class _TipBannerState extends State<_TipBanner> {
             ),
           ),
         ),
-      ),
     );
   }
 }

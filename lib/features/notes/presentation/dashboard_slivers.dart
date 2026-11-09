@@ -16,7 +16,9 @@ class HomeSectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+      // Üst 8 (2026-11-09, 14'tü): üstteki takvim/klasör şeridiyle arada
+      // boş bant kalıyordu.
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
       child: Align(
         alignment: AlignmentDirectional.centerStart,
         child: ConstrainedBox(

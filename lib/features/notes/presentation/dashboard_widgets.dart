@@ -20,7 +20,7 @@ class _HeaderSeparator extends StatelessWidget {
       builder: (context, on, _) => AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         height: 1,
-        margin: const EdgeInsets.only(top: 8),
+        margin: const EdgeInsets.only(top: 4),
         decoration: BoxDecoration(
           color: on ? scheme.outlineVariant : Colors.transparent,
           boxShadow: on

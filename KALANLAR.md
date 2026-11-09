@@ -257,6 +257,15 @@ A12. [ ] Not kapanışı (yazdıktan sonra geri, karta küçülme): kasma azald�
 - D9 Sabit (üstte) PDF: tam ekran yapmadan kalemle yazılıyor mu.
 - D10 Kare/dikdörtgen/üçgen/çember: kabaca çiz → işaretçi doğru şekli öneriyor mu; kareye yakın → tam kare, belirgin uzun → dikdörtgen, eğik/yamuk → serbest dörtgen. Şekil aracında Üçgen ve Tablo.
 
+### F1–F7 (2026-11-09 oturum F — yazıldı, cihazda doğrulanmadı)
+- F1 Ana ekranda ara → karta dokun → not, arama çubuğu açık ve kelimeye kaydırılmış geliyor mu (klavye açılmadan); uzun liste notunda da.
+- F2 Zamanı gelenler şeridinde satır görevine dokun → not o maddeye kayıyor mu.
+- F3 Takvim gün levhasında çöp → "Geri al" levhanın ÜSTÜNDE görünüyor ve çalışıyor mu.
+- F4 İpucu şeridi ekranın herhangi bir yerine dokununca kalkıyor mu.
+- F5 Ayarlar → Depolama: yedek durumu satırı; tam yedek kaydedince tarih/sayı güncelleniyor mu.
+- F6 Takvim şeridi daha ince (36 dp), altındaki boşluk kalktı mı; gece yarısından sonra uygulamaya dönünce "bugün" doğru mu.
+- F7 Klavye önerisinden kelimenin EKİNİ değiştirmek ("kalemi" → "kalemde") öğrenilmiyor mu.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)
@@ -269,8 +278,8 @@ A12. [ ] Not kapanışı (yazdıktan sonra geri, karta küçülme): kasma azald�
 
 ## Yarım kalan
 - [ ] Not içi hatırlatıcı/görev çipi şimdilik yalnız LİSTE maddelerinde; düz metin satırında çip yok (satır kimliği yok, pencereli gövdeye satır içi çip pahalı) — tasarım TAKVIM_PLANI §10 (2026-11-08)
-- [ ] Ana ekran şeridinden satır görevine dokununca not açılıyor ama o satıra kaydırılmıyor (2026-11-08)
+- [x] Ana ekran şeridinden satır görevine dokununca o satıra kaydırılıyor (`?item=`, 2026-11-09)
 - [ ] Kalem şekil önerisi yalnız `InkController` çizimlerinde (sayfa üstü, PDF/slayt, görsel, ayrı çizim); madde jest katmanı (`InkGestureLayer`) kendi ✓ jestini kullanıyor (2026-11-08)
 - [ ] Görev levhasında kişi alanı serbest metin; rehberden seçme ve Gmail iletisini uygulama içinde açma yok (2026-11-08)
 - [ ] Tablette elle kontrol (v801 kurulu): kalemle yazarken avuç, kalemle tek tık kutucuk/metne gidiyor mu, yeni kalem kapsülü, not üst çubuğunda ⌨ düğmesi — klavye algılama doğrulandı, gerisi kullanım sınırı yüzünden yarım (2026-11-07)
-- [ ] `tablet-kalem-klavye` dalı CI yeşil, main'e birleştirilmedi (2026-11-07)
+- [x] `tablet-kalem-klavye` dalı main'de (2026-11-09'da doğrulandı)

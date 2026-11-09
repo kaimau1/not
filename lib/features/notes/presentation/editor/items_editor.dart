@@ -403,13 +403,15 @@ class ItemsEditorState extends State<ItemsEditor>
   /// Alt çubuktaki "Seç" segmentinin girişi (bkz. note_editor_screen).
   /// Liste boşken seçilecek bir şey yok, kip açılmaz.
   /// NOT İÇİ ARAMANIN taradığı madde alanları, EKRANDAKİ sırayla
-  /// (işaretsizler önce — bkz. [_items] düzeni). Satırı henüz kurulmamış
-  /// (denetleyicisi olmayan) madde atlanır: ekranda değil, vurgulanamaz.
+  /// (işaretsizler önce — bkz. [_items] düzeni). Satırı henüz KURULMAMIŞ
+  /// madde de dahil (2026-11-09 düzeltme: uzun listede ekran dışındaki
+  /// maddeler aranmıyordu, sayaç eksik çıkıyordu): denetleyici şimdi
+  /// oluşturulur, satır kurulunca aynısını kullanır (vurgu üstünde hazır);
+  /// eşleşmeye gidiş [revealFocus] ile satırı kurdurur.
   List<({String id, WrapTextController controller, FocusNode focus})>
   searchFields() => [
     for (final item in _items)
-      if (_controllers[item.id] case final controller?)
-        (id: item.id, controller: controller, focus: _focusFor(item)),
+      (id: item.id, controller: _controllerFor(item), focus: _focusFor(item)),
   ];
 
   void startSelection() {
@@ -1452,6 +1454,71 @@ class ItemsEditorState extends State<ItemsEditor>
     controller.selection = TextSelection.collapsed(
       offset: controller.text.length,
     );
+  }
+
+  /// Maddeyi ODAKLAMADAN görünür yapar (klavye açılmaz) — ana ekran
+  /// şeridinden satır görevine gelince. Satır kurulmamışsa sessizce geçer.
+  ///
+  /// Liste TEMBEL kuruluyor: ekran dışındaki satırın bağlamı yok. O zaman
+  /// kaydırıcı satırın tahmini yerine atlatılır (sıra / madde sayısı), bir
+  /// kare beklenir ve satır kurulunca hizalanır — en çok 4 deneme.
+  Future<void> revealItem(String id) async {
+    for (var attempt = 0; attempt < 4; attempt++) {
+      if (!mounted) return;
+      final ctx = _focusNodes[id]?.rowContext;
+      if (ctx != null && ctx.mounted) {
+        await Scrollable.ensureVisible(
+          ctx,
+          alignment: 0.3,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        );
+        return;
+      }
+      final index = _items.indexWhere((i) => i.id == id);
+      if (index < 0) return;
+      ScrollPosition? position;
+      // En yakın GERÇEKTEN kayan ata: liste çoğu kipte sayfanın kaydırıcısı
+      // içinde kendisi kaymayan (uzunluğu 0) bir Scrollable.
+      for (final node in _focusNodes.values) {
+        final row = node.rowContext;
+        if (row == null || !row.mounted) continue;
+        var scrollable = Scrollable.maybeOf(row);
+        while (scrollable != null) {
+          final p = scrollable.position;
+          if (p.axis == Axis.vertical &&
+              p.hasContentDimensions &&
+              p.maxScrollExtent > p.minScrollExtent) {
+            position = p;
+            break;
+          }
+          scrollable = Scrollable.maybeOf(scrollable.context);
+        }
+        break;
+      }
+      if (position == null || !position.hasContentDimensions) return;
+      final fraction = index / math.max(1, _items.length - 1);
+      position.jumpTo(
+        (position.minScrollExtent +
+                (position.maxScrollExtent - position.minScrollExtent) *
+                    fraction)
+            .clamp(position.minScrollExtent, position.maxScrollExtent),
+      );
+      await WidgetsBinding.instance.endOfFrame;
+    }
+  }
+
+  /// Not içi aramanın eşleşmesi bir madde alanındaysa (bkz. [searchFields])
+  /// o maddeyi görünür yapar; düz çizimde alanın bağlamı olmadığı için
+  /// editörün kendi kaydırması boşa düşüyordu. Madde değilse false.
+  bool revealFocus(FocusNode focus) {
+    for (final e in _focusNodes.entries) {
+      if (identical(e.value, focus)) {
+        unawaited(revealItem(e.key));
+        return true;
+      }
+    }
+    return false;
   }
 
   /// **ONAY KUTUSUNU KALDIR**: maddeyi listeden çıkarır ve metnini döner

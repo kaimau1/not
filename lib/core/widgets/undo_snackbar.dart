@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -51,6 +53,26 @@ void showUndoSnackBar(
   required VoidCallback onUndo,
   Duration duration = const Duration(seconds: 4),
 }) {
+  // LEVHADAN/DİYALOGDAN SİLME (2026-11-09 düzeltme, bekçi
+  // `undo_over_sheet_test`): kök messenger bildirimi alttaki sayfanın
+  // Scaffold'unda çizer; açık levha (ör. takvimin gün levhası, hızlı sil)
+  // onu ÖRTÜYOR, "Geri al"a basılamıyordu. Açılır rotadan çağrılınca en
+  // üst katmanda gösterilir.
+  final route = context.mounted ? ModalRoute.of(context) : null;
+  if (route is PopupRoute && route.isActive) {
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    if (overlay != null) {
+      rootScaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      _OverlayUndo.show(
+        overlay,
+        message: message,
+        undoLabel: undoLabel,
+        onUndo: onUndo,
+        duration: duration,
+      );
+      return;
+    }
+  }
   final messenger =
       rootScaffoldMessengerKey.currentState ?? ScaffoldMessenger.of(context);
   messenger
@@ -199,3 +221,123 @@ void showAppMessage(
 }) =>
     ScaffoldMessenger.of(context)
         .showMessage(message, action: action, duration: duration);
+
+/// Açılır rotanın (levha/diyalog) ÜSTÜNDE duran "Geri al" bildirimi — bkz.
+/// [showUndoSnackBar]. Süre dolunca ya da düğmeye basılınca kalkar; levha
+/// kapansa da süresini doldurur.
+class _OverlayUndo extends StatefulWidget {
+  const _OverlayUndo({
+    required this.message,
+    required this.undoLabel,
+    required this.onUndo,
+    required this.duration,
+    required this.onDone,
+  });
+
+  final String message;
+  final String undoLabel;
+  final VoidCallback onUndo;
+  final Duration duration;
+  final VoidCallback onDone;
+
+  static OverlayEntry? _current;
+
+  static void show(
+    OverlayState overlay, {
+    required String message,
+    required String undoLabel,
+    required VoidCallback onUndo,
+    required Duration duration,
+  }) {
+    _current?.remove();
+    late final OverlayEntry entry;
+    var removed = false;
+    void done() {
+      if (removed) return;
+      removed = true;
+      if (identical(_current, entry)) _current = null;
+      entry.remove();
+    }
+
+    entry = OverlayEntry(
+      builder: (_) => _OverlayUndo(
+        message: message,
+        undoLabel: undoLabel,
+        onUndo: onUndo,
+        duration: duration,
+        onDone: done,
+      ),
+    );
+    _current = entry;
+    overlay.insert(entry);
+  }
+
+  @override
+  State<_OverlayUndo> createState() => _OverlayUndoState();
+}
+
+class _OverlayUndoState extends State<_OverlayUndo> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(widget.duration, widget.onDone);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final bottom =
+        MediaQuery.viewInsetsOf(context).bottom +
+        MediaQuery.paddingOf(context).bottom;
+    return Positioned(
+      left: 12,
+      right: 12,
+      bottom: bottom + 12,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Material(
+            key: const ValueKey('overlay-undo'),
+            color: scheme.inverseSurface,
+            elevation: 6,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(start: 16, end: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.message,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: scheme.onInverseSurface),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      _timer?.cancel();
+                      widget.onUndo();
+                      widget.onDone();
+                    },
+                    child: Text(
+                      widget.undoLabel,
+                      style: TextStyle(color: scheme.inversePrimary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

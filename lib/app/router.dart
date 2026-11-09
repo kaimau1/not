@@ -421,4 +421,9 @@ Widget _noteBuilder(BuildContext context, GoRouterState state) =>
       startTranscribe: state.uri.queryParameters['transcribe'] == '1',
       // ?afile=1: ses dosyası seçilir, nota çalınabilir ek olarak girer.
       startAudioFile: state.uri.queryParameters['afile'] == '1',
+      // ?item=<id>: açılışta o maddeye kaydırılır (zamanı gelenler şeridi).
+      revealItemId: state.uri.queryParameters['item'],
+      // ?find=<sorgu>: aramadan açıldı — not içi arama o kelimeyle açılır
+      // (F56.1).
+      initialFind: state.uri.queryParameters['find'],
     );

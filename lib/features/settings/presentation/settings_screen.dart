@@ -78,6 +78,7 @@ import '../data/permissions_service.dart';
 import '../settings_providers.dart';
 import 'notes_settings.dart';
 import 'backup_ui.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import '../../../core/app_update.dart'
     show newVersionAvailableProvider, openReleasesPage;
 import 'app_lock.dart';
@@ -616,6 +617,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _SyncLimitSelector(),
             title: l10n.syncLimitTitle,
             keywords: '${l10n.syncLimitInfo} sinir mb yukleme',
+          ),
+          _SettingRow(
+            const _BackupStatus(),
+            keywords: 'yedek durum son bulut eslitleme guvende',
           ),
           _SettingRow(
             const _BackupButton(),

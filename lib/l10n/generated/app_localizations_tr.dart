@@ -8035,4 +8035,21 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get tipPenEraserHold =>
       'Silmek için bir çizginin üstüne basılı tut → çıkan silgi düğmesine dokun. İki parmak = kaydır/yakınlaştır.';
+
+  @override
+  String backupStatusCloud(int count) {
+    return 'Bulut: $count not Google hesabında, değişiklikler kendiliğinden eşitleniyor';
+  }
+
+  @override
+  String get backupStatusGuest =>
+      'Bulut yedeği yok: notlar yalnız bu cihazda. Google hesabı bağla ya da tam yedek al.';
+
+  @override
+  String backupStatusLast(String date, int count) {
+    return 'Son tam yedek: $date · $count not';
+  }
+
+  @override
+  String get backupStatusNever => 'Bu cihazda henüz tam yedek alınmadı';
 }

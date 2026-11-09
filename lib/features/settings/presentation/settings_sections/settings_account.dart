@@ -405,6 +405,77 @@ class _BackupButton extends ConsumerWidget {
   }
 }
 
+/// "YEDEĞİM GERÇEKTEN VAR MI?" (F54.2): bulut durumu (Google hesabı mı,
+/// misafir mi) ve bu cihazdaki son tam yedeğin tarihi + not sayısı. Misafir
+/// ve hiç yedeği olmayan kullanıcı uyarı renginde görür.
+class _BackupStatus extends ConsumerWidget {
+  const _BackupStatus();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final guest =
+        ref.watch(currentUidProvider) == null ||
+        ref.watch(isAnonymousProvider);
+    final count = ref.watch(
+      notesStreamProvider.select((a) => a.value?.length ?? 0),
+    );
+    final last = ref.watch(lastBackupProvider);
+    final style = Theme.of(context).textTheme.bodySmall;
+    Widget line(IconData icon, String text, {bool warn = false}) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: warn ? scheme.error : scheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: style?.copyWith(color: warn ? scheme.error : null),
+            ),
+          ),
+        ],
+      ),
+    );
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    return Padding(
+      key: const ValueKey('backup-status'),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          guest
+              ? line(
+                  Icons.cloud_off_outlined,
+                  l10n.backupStatusGuest,
+                  warn: true,
+                )
+              : line(Icons.cloud_done_outlined, l10n.backupStatusCloud(count)),
+          last == null
+              ? line(
+                  Icons.history,
+                  l10n.backupStatusNever,
+                  warn: guest,
+                )
+              : line(
+                  Icons.history,
+                  l10n.backupStatusLast(
+                    DateFormat.yMMMd(locale).add_Hm().format(last.at),
+                    last.count,
+                  ),
+                ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Tam yedeği ya da eski JSON yedeği geri yükler; var olan notlar (kimlik ya
 /// da içerik özeti aynı) atlanır — iki kez yükleme çoğaltmaz.
 class _RestoreButton extends ConsumerWidget {

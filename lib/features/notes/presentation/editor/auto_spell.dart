@@ -333,6 +333,11 @@ class AutoSpell {
     final lf = trLower(from);
     final lt = trLower(to);
     if (lf == lt || lt.startsWith(lf)) return null;
+    // TÜRKÇE EK TUZAĞI (2026-11-09 düzeltme): BİLİNEN bir kelimenin yerine
+    // başka biri gelmesi ("kalemi" → "kalemde") yazım hatası değil, dilbilgisi
+    // seçimi. Öğrenilseydi iki seferden sonra her geçerli "kalemi" otomatik
+    // değişirdi (öğrenilmiş düzeltme bilinen kelimede de uygulanır).
+    if (memory.known(lf)) return null;
     final limit = SpellMemory.limitFor(lf.length) + 1.2;
     if (memory.distance(lf, lt.replaceAll(' ', ''), limit: limit) > limit &&
         memory.distance(lf, lt, limit: limit) > limit) {
