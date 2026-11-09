@@ -3734,5 +3734,6 @@
       }
     }
   },
-  "backupStatusNever": "Bu cihazda henüz tam yedek alınmadı"
+  "backupStatusNever": "Bu cihazda henüz tam yedek alınmadı",
+  "attachmentAddText": "Üstüne yazı ekle"
 }

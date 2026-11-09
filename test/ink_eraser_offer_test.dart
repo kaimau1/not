@@ -52,4 +52,21 @@ void main() {
     expect(c.ink, hasLength(3));
     c.dispose();
   });
+
+  testWidgets('dolum halkası: basılı tutarken var, iş yapılınca/kayınca yok', (
+    tester,
+  ) async {
+    final c = drawn();
+    c.pointerDown(1, const Offset(150, 100), size);
+    expect(c.holdProgress.value?.eraser, isTrue);
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(c.holdProgress.value, isNull, reason: 'öneri çıktı, halka kalkar');
+    c.pointerUp();
+    c.pointerDown(1, const Offset(150, 100), size);
+    c.pointerMove(1, const Offset(150, 160), size);
+    expect(c.holdProgress.value?.eraser, isNot(true));
+    c.pointerUp();
+    expect(c.holdProgress.value, isNull);
+    c.dispose();
+  });
 }

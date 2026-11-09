@@ -8052,4 +8052,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupStatusNever => 'Bu cihazda henüz tam yedek alınmadı';
+
+  @override
+  String get attachmentAddText => 'Üstüne yazı ekle';
 }

@@ -12,6 +12,7 @@ class _ImageTools extends StatelessWidget {
     required this.onFullscreen,
     required this.onRemove,
     this.onExtractText,
+    this.onAddText,
     this.onCopy,
     this.onSelectMany,
     this.onVideoToNote,
@@ -64,6 +65,9 @@ class _ImageTools extends StatelessWidget {
   /// Görselin/videonun TRANSKRİPTİ (metne dök / kayıtlıysa aç).
   final VoidCallback? onTranscribe;
 
+  /// Üstüne açık metin yaz (tam ekran yazı kipinde açılır).
+  final VoidCallback? onAddText;
+
   /// Menüdeki işler ekin türüne göre (bkz. [attachmentActionsFor]).
   final Attachment attachment;
 
@@ -99,6 +103,14 @@ class _ImageTools extends StatelessWidget {
             onChangeEnd: onWidthEnd,
           ),
         ),
+        if (onAddText != null)
+          IconButton(
+            key: const ValueKey('floating-add-text'),
+            tooltip: l10n.attachmentAddText,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.title, size: 20),
+            onPressed: onAddText,
+          ),
         if (onCaption != null)
           IconButton(
             tooltip: hasCaption ? l10n.imageCaptionEdit : l10n.imageCaptionAdd,

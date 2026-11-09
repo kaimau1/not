@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/hold_progress_ring.dart';
 import '../../domain/arrow.dart';
 import '../../domain/attachment.dart';
 import 'ink_pen.dart';
@@ -21,6 +22,31 @@ import 'ink_tools.dart';
 /// modunda görüntüleyicinin `panEnabled`'ı kapalı, `scaleEnabled`'ı açık
 /// bırakılır — tek parmak çizer, iki parmak yakınlaştırır. İkinci parmak inince
 /// başlamış çizgi iptal edilir ki iki parmak jesti çizime dönüşmesin.
+/// Basılı tutma jestlerinin (şekle oturt, silgi önerisi) bekleme süresi.
+const kInkHoldDuration = Duration(milliseconds: 550);
+
+/// Bekleyen basılı tutma jesti (bkz. [InkController.holdProgress]).
+@immutable
+class InkHoldProgress {
+  const InkHoldProgress({
+    required this.page,
+    required this.at,
+    required this.eraser,
+    required this.serial,
+    required this.duration,
+  });
+
+  final int page;
+
+  /// Oranlı (0–1) konum.
+  final Offset at;
+
+  /// true = silgi önerisi, false = şekle oturt.
+  final bool eraser;
+  final int serial;
+  final Duration duration;
+}
+
 class InkController extends ChangeNotifier {
   InkController({required List<InkStroke> initial, required this.onChanged})
     : _ink = [...initial] {
@@ -78,6 +104,28 @@ class InkController extends ChangeNotifier {
   Timer? _eraserHold;
   Offset? _eraserHoldAt;
 
+  /// **JEST DOLUM HALKASI** (kullanıcı isteği 2026-11-09: "jestler için ilk
+  /// algılanıp yapılana kadar dolum çubuğu olsun"): basılı tutma jesti
+  /// (şekle oturt / silgi önerisi) beklerken o noktada dolan halka. [serial]
+  /// her yeniden kurulumda artar — halka baştan dolar. null = bekleyen jest
+  /// yok. Ayrı bildirici: çizgileri yeniden boyatmaz.
+  final holdProgress = ValueNotifier<InkHoldProgress?>(null);
+  int _holdSerial = 0;
+
+  void _showHold(int page, double x, double y, {required bool eraser}) {
+    holdProgress.value = InkHoldProgress(
+      page: page,
+      at: Offset(x, y),
+      eraser: eraser,
+      serial: ++_holdSerial,
+      duration: kInkHoldDuration,
+    );
+  }
+
+  void _clearHold() {
+    if (holdProgress.value != null) holdProgress.value = null;
+  }
+
   /// Silgi önerisini kabul et: silgi seçilir, öneri kalkar.
   void acceptEraserOffer() {
     eraserOffer.value = null;
@@ -99,6 +147,7 @@ class InkController extends ChangeNotifier {
   }
 
   void _offerEraser(int page) {
+    _clearHold();
     final at = _eraserHoldAt;
     _eraserHold = null;
     if (at == null || _pointers != 1 || _active == null) return;
@@ -772,6 +821,7 @@ class InkController extends ChangeNotifier {
     if (_nav) return;
     _nav = true;
     _holdTimer?.cancel();
+    _clearHold();
     _lassoPath = null;
     _moving = false;
     if (_active != null) {
@@ -849,6 +899,7 @@ class InkController extends ChangeNotifier {
       if (_active != null) _ink = [..._ink]..remove(_active);
       _active = null;
       _holdTimer?.cancel();
+    _clearHold();
       _lassoPath = null;
       _moving = false;
       notifyListeners();
@@ -941,10 +992,8 @@ class InkController extends ChangeNotifier {
     _eraserHold = null;
     if (onInk) {
       _eraserHoldAt = Offset(x, y);
-      _eraserHold = Timer(
-        const Duration(milliseconds: 550),
-        () => _offerEraser(page),
-      );
+      _eraserHold = Timer(kInkHoldDuration, () => _offerEraser(page));
+      _showHold(page, x, y, eraser: true);
     }
     notifyListeners();
   }
@@ -952,6 +1001,7 @@ class InkController extends ChangeNotifier {
   /// Kalem/parmak çizginin sonunda kıpırdamadan durdu: çizgi tanınan şekle
   /// oturur (bkz. [recognizeInkShape]).
   void _snapActive() {
+    _clearHold();
     final active = _active;
     if (active == null || _pointers != 1 || _nav || active.arrow) return;
     final size = _activeSize;
@@ -1001,7 +1051,9 @@ class InkController extends ChangeNotifier {
   @override
   void dispose() {
     _holdTimer?.cancel();
+    _clearHold();
     _eraserHold?.cancel();
+    holdProgress.dispose();
     hover.dispose();
     suggestion.dispose();
     eraserOffer.dispose();
@@ -1062,6 +1114,7 @@ class InkController extends ChangeNotifier {
         math.max((x - holdAt.dx).abs(), (y - holdAt.dy).abs()) > 0.01) {
       _eraserHold?.cancel();
       _eraserHold = null;
+      _clearHold();
     }
     // OK: nokta EKLENMEZ, ucu taşınır — parmak nereye giderse ok oraya bakar.
     if (active.arrow) {
@@ -1098,7 +1151,9 @@ class InkController extends ChangeNotifier {
       _holdX = x;
       _holdY = y;
       _holdTimer?.cancel();
-      _holdTimer = Timer(const Duration(milliseconds: 550), _snapActive);
+    _clearHold();
+      _holdTimer = Timer(kInkHoldDuration, _snapActive);
+      _showHold(active.page, x, y, eraser: false);
     }
     notifyListeners();
   }
@@ -1158,6 +1213,7 @@ class InkController extends ChangeNotifier {
     _gestureBase = null;
     _active = null;
     _holdTimer?.cancel();
+    _clearHold();
     _lassoPath = null;
     _moving = false;
   }
@@ -1212,6 +1268,7 @@ class InkController extends ChangeNotifier {
     final wasSnapped = _snapped;
     _tempEraser = false;
     _holdTimer?.cancel();
+    _clearHold();
     _eraserHold?.cancel();
     _eraserHold = null;
     _snapped = false;
@@ -1556,6 +1613,31 @@ class InkPageLayer extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               layer,
+              ValueListenableBuilder<InkHoldProgress?>(
+                valueListenable: controller.holdProgress,
+                builder: (context, h, _) {
+                  if (h == null || h.page != page) {
+                    return const SizedBox.shrink();
+                  }
+                  const ring = 44.0;
+                  // Parmağın/kalemin ALTINDA kalmasın: noktanın üstünde
+                  // (yer yoksa altında).
+                  var top = h.at.dy * size.height - ring - 24;
+                  if (top < 0) top = h.at.dy * size.height + 24;
+                  return Positioned(
+                    left: h.at.dx * size.width - ring / 2,
+                    top: top,
+                    child: HoldProgressRing(
+                      restartKey: h.serial,
+                      duration: h.duration,
+                      size: ring,
+                      icon: h.eraser
+                          ? Icons.auto_fix_normal_outlined
+                          : Icons.category_outlined,
+                    ),
+                  );
+                },
+              ),
               ValueListenableBuilder<({int page, Offset at})?>(
                 valueListenable: controller.eraserOffer,
                 builder: (context, o, _) {

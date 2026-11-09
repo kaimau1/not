@@ -33,9 +33,14 @@ class ImageViewerScreen extends StatefulWidget {
     this.onChanged,
     this.onCrop,
     this.onRotate,
+    this.startText = false,
   });
 
   final Attachment attachment;
+
+  /// Açılışta AÇIK METİN bırakma kipiyle başla (ek menüsündeki "Üstüne yazı
+  /// ekle" — kullanıcı isteği 2026-11-09): görsele dokunulan yere yazı kutusu.
+  final bool startText;
 
   /// Tam ekranda YANA KAYDIRARAK geçilebilecek görseller (kullanıcı isteği
   /// 2026-09-05: "birden fazla görsel olduğunda tam ekran ve ön izlemede
@@ -111,6 +116,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
     if (_pages.length < 2) {
       return _ImageViewerPage(
         attachment: widget.attachment,
+        startText: widget.startText,
         onChanged: widget.onChanged,
         onCrop: widget.onCrop,
         onRotate: widget.onRotate,
@@ -133,6 +139,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
           // her görselin çizim/metin durumu kendi sayfasında kalsın.
           key: ValueKey(_pages[i].id),
           attachment: _pages[i],
+          startText: widget.startText && _pages[i].id == widget.attachment.id,
           // Değişen ek KABUĞUN listesine de yazılır: uzak bir sayfaya kayıp
           // geri dönüldüğünde sayfa bu listeden yeniden kurulur ve bayat bir
           // kopya (döndürmede takas olmuş en-boy, silinmiş bulut kopyası)
@@ -170,6 +177,7 @@ class _ImageViewerPage extends StatefulWidget {
     this.swipeLock,
     this.active = true,
     this.position,
+    this.startText = false,
   });
 
   final Attachment attachment;
@@ -180,6 +188,9 @@ class _ImageViewerPage extends StatefulWidget {
   /// Galeri kabuğunun kaydırma kilidi; yalnız [active] sayfa yazar.
   final ValueNotifier<bool>? swipeLock;
   final bool active;
+
+  /// Bkz. [ImageViewerScreen.startText].
+  final bool startText;
 
   /// Başlıkta gösterilen "3/6" konumu (tek görselde null).
   final String? position;
@@ -247,6 +258,11 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
     // ekranı yeniden kurmadan değişebiliyor, o yüzden dinlenir.
     _zoom.addListener(_syncSwipeLock);
     _bubbles.addListener(_syncSwipeLock);
+    if (widget.startText && widget.onChanged != null) {
+      _bubbles
+        ..setPlainMode(true)
+        ..setAdding(true);
+    }
     _zoomAnim.addListener(() {
       final tween = _zoomTween;
       if (tween != null) _zoom.value = tween.value;

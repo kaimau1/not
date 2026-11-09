@@ -1130,6 +1130,18 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         // BALON EKLE: dokunarak bırakma kipini aç/kapa. Görselde kip burada,
         // PDF'te belge kutusunda (düğme her ikisinde de bu çubukta — sayfa
         // şeridi kendiliğinden söndüğü için orada görünmüyordu).
+        // AÇIK METİN TEK DOKUNUŞ (kullanıcı isteği 2026-11-09): menüye
+        // girmeden "T" → görsele/PDF'e dokunulan yere yazı kutusu. Kip
+        // açıkken düğme ✓ (yanındaki balon düğmesi de) ve kipi kapatır.
+        if (_canEditBubbles && !_bubbleEdit)
+          _quickTextButton(context)
+        else if (_canEditPdfBubbles)
+          ValueListenableBuilder<bool>(
+            valueListenable: _pdfAdding,
+            builder: (context, adding, _) => adding
+                ? const SizedBox.shrink()
+                : _quickTextButton(context),
+          ),
         if (_canEditBubbles)
           _addBubbleButton(context, active: _bubbleEdit)
         else if (_canEditPdfBubbles)
@@ -1211,6 +1223,15 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   /// görünmüyordu. Artık düğme iki YAZILI seçenek açar — **Balon** (tutamaçlı
   /// not) · **Açık metin** (sayfanın üstüne doğrudan yazı) —, seçilen türle
   /// bırakma kipi açılır; kip açıkken düğme ✓ olur ve kipi kapatır.
+  Widget _quickTextButton(BuildContext context) => IconButton(
+    key: const ValueKey('pinned-quick-text'),
+    tooltip: context.l10n.attachmentAddText,
+    visualDensity: VisualDensity.compact,
+    iconSize: 20,
+    icon: const Icon(Icons.title),
+    onPressed: () => _startAdding(plain: true),
+  );
+
   Widget _addBubbleButton(BuildContext context, {required bool active}) {
     final l10n = context.l10n;
     if (active) {

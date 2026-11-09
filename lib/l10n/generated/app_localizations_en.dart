@@ -8072,4 +8072,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupStatusNever => 'No full backup made on this device yet';
+
+  @override
+  String get attachmentAddText => 'Write on it';
 }

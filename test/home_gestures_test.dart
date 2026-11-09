@@ -324,6 +324,11 @@ void main() {
       await wheel(110);
       await tester.pump(const Duration(milliseconds: 20));
       expect(find.byKey(const ValueKey('swipe-next-label')), findsOneWidget);
+      // Dolum çubuğu (2026-11-09): eşiğe doğru dolmaya başladı.
+      final bar = tester.widget<FractionallySizedBox>(
+        find.byKey(const ValueKey('swipe-progress')),
+      );
+      expect(bar.widthFactor, greaterThan(0));
       await wheel(110);
       await tester.pump(const Duration(milliseconds: 200));
       expect(commits, [1]);

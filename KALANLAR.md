@@ -266,6 +266,12 @@ A12. [ ] Not kapanışı (yazdıktan sonra geri, karta küçülme): kasma azald�
 - F6 Takvim şeridi daha ince (36 dp), altındaki boşluk kalktı mı; gece yarısından sonra uygulamaya dönünce "bugün" doğru mu.
 - F7 Klavye önerisinden kelimenin EKİNİ değiştirmek ("kalemi" → "kalemde") öğrenilmiyor mu.
 
+### G1–G4 (2026-11-09 oturum F, 2. tur — yazıldı, cihazda doğrulanmadı)
+- G1 Kalemle çizip uçta bekle → üstte dolan halka (şekil simgesi), dolunca şekle oturuyor; parmakla çizgiye basılı tut → silgi halkası → silgi düğmesi.
+- G2 Ana ekranda karta basılı tut → parmağın üstünde dolan halka, dolunca kart elde; yana çekişte etiketin altındaki çubuk doluyor, dolunca bırakınca geçiyor.
+- G3 Sabit görsel/PDF: çubukta "T" → dokunduğun yere yazı kutusu, klavye açık. Yüzen görselde araç çubuğunda "T", ek şeridi/sağ tık menüsünde "Üstüne yazı ekle" → tam ekran yazı kipinde açılıyor; PDF tam ekranda "T".
+- G4 Dar telefonda (≤ 360 dp) sabit PDF çubuğu taşmıyor mu (sürükleme tutamağı küçülüyor).
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)
