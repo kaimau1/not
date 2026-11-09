@@ -2828,6 +2828,8 @@
   "dueBadgeTitle": "{count, plural, =1{1 reminder/task waiting} other{{count} reminders/tasks waiting}}",
   "dueBadgeBody": "Due now and today's tasks — on the home screen",
   "dueBadgeChannel": "Waiting (icon badge)",
+  "quickRowAttach": "Add",
+  "quickRowColor": "Text color (hold: pick favorite)",
   "quickRowBold": "Bold",
   "quickRowBullet": "Bullet",
   "quickRowHeading": "Heading (cycles)",

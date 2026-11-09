@@ -48,7 +48,20 @@ class EditorQuickRow extends StatefulWidget {
     this.onCamera,
     this.onDate,
     this.onScan,
+    this.onAttach,
+    this.onColor,
+    this.onColorPick,
+    this.favoriteColor,
   });
+
+  /// "Ekle" levhası (görsel, dosya, kamera… tek yerde).
+  final VoidCallback? onAttach;
+
+  /// Renk: dokun = seçime/yazıya FAVORİ renk, basılı tut = renk seçici
+  /// (seçilen favori olur). [favoriteColor] düğmenin altındaki çizgi.
+  final VoidCallback? onColor;
+  final VoidCallback? onColorPick;
+  final Color? favoriteColor;
 
   /// Yazım düzelt düğmesine basılı tut: ayarlar (öğrenme, sıfırla).
   final VoidCallback? onSpellSettings;
@@ -220,12 +233,6 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
               divider,
             ],
             button(
-              'bold',
-              Icons.format_bold_rounded,
-              l10n.quickRowBold,
-              widget.onBold,
-            ),
-            button(
               'bullet',
               Icons.format_list_bulleted_rounded,
               l10n.quickRowBullet,
@@ -334,6 +341,55 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
                       ),
                     ),
                 ],
+              ),
+            if (widget.onAttach != null)
+              button(
+                'attach',
+                Icons.add_circle_outline_rounded,
+                l10n.quickRowAttach,
+                widget.onAttach,
+              ),
+            button(
+              'bold',
+              Icons.format_bold_rounded,
+              l10n.quickRowBold,
+              widget.onBold,
+            ),
+            if (widget.onColor != null)
+              Customizable(
+                id: UiItem.quickRow('color'),
+                child: Tooltip(
+                  message: l10n.quickRowColor,
+                  child: InkResponse(
+                    key: const ValueKey('quick-row-color'),
+                    radius: 20,
+                    onTap: widget.onColor,
+                    onLongPress: widget.onColorPick,
+                    child: SizedBox(
+                      height: 40,
+                      width: 40,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.format_color_text_rounded,
+                            size: 20,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                          Container(
+                            width: 18,
+                            height: 4,
+                            margin: const EdgeInsets.only(top: 1),
+                            decoration: BoxDecoration(
+                              color: widget.favoriteColor ?? scheme.error,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
             divider,
             button(

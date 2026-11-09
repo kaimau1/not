@@ -13850,6 +13850,18 @@ abstract class AppLocalizations {
   /// **'Bekleyenler (simge rozeti)'**
   String get dueBadgeChannel;
 
+  /// No description provided for @quickRowAttach.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekle'**
+  String get quickRowAttach;
+
+  /// No description provided for @quickRowColor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazı rengi (basılı tut: favori rengi seç)'**
+  String get quickRowColor;
+
   /// No description provided for @quickRowBold.
   ///
   /// In tr, this message translates to:

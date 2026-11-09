@@ -56,6 +56,7 @@ import '../../../../core/utils/link_text.dart';
 import '../../../../core/utils/markdown.dart';
 import '../../../../core/utils/note_fonts.dart';
 import '../../../../core/utils/rich_text.dart';
+import '../../../../core/widgets/color_palette.dart';
 import '../../../../core/utils/note_guard.dart';
 import '../../../../core/utils/sentence_select.dart';
 import '../../../../core/utils/pdf_ref.dart';
@@ -2386,12 +2387,43 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               Localizations.localeOf(context).toLanguageTag(),
             ).add_Hm().format(DateTime.now()),
           ),
+          onAttach: () => unawaited(_showAttachMenu()),
+          onColor: () => _applyFormat(
+            RichFormat.color,
+            colorIndex: NoteFormatMemory.favoriteColor,
+          ),
+          onColorPick: () => unawaited(_pickFavoriteColor()),
+          favoriteColor: _favoriteColorValue(),
           // Nota her girişte bir kez (durum örneği nota bağlı); setState
           // YOK — yalnız bir sonraki açılışta vurgulanmasın diye.
           hint: !_quickRowHinted,
           onHinted: () => _quickRowHinted = true,
       ),
     );
+  }
+
+  static Color _favoriteColorValue() {
+    final i = NoteFormatMemory.favoriteColor;
+    if (isCustomRichColor(i)) return Color(i);
+    final palette = NoteColors.richPalette;
+    return palette[(i - 1).clamp(0, palette.length - 1)];
+  }
+
+  /// Hızlı satırın Renk düğmesine basılı tut: renk seçilir, FAVORİ olur ve
+  /// hemen uygulanır (kullanıcı isteği 2026-11-09).
+  Future<void> _pickFavoriteColor() async {
+    final selection = _bodyController.selection;
+    final picked = await showColorPaletteSheet(
+      context,
+      title: context.l10n.formatTextColor,
+    );
+    if (picked == null || !mounted) return;
+    final index = picked.toARGB32() | 0xFF000000;
+    NoteFormatMemory.rememberFavoriteColor(index);
+    // Levha açılırken seçim daralmış olabilir: renk seçilen yazıya gitsin.
+    if (selection.isValid) _bodyController.selection = selection;
+    setState(() {});
+    _applyFormat(RichFormat.color, colorIndex: index);
   }
 
   /// Öğrenen yazım düzeltmenin kişisel sözlüğü: notların metni (arka

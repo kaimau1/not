@@ -216,8 +216,14 @@ void main() {
     expect(find.byIcon(Icons.more_vert), findsOneWidget);
     expect(find.byKey(const ValueKey('quick-row-spell')), findsOneWidget);
     expect(find.byKey(const ValueKey('quick-row-customize')), findsOneWidget);
-    // Sonradan eklenen düğme varsayılan gizli.
-    expect(find.byKey(const ValueKey('quick-row-italic')), findsNothing);
+    // SADE VARSAYILAN (2026-11-09): kalem · yazım · paket · ekle · kalın ·
+    // renk; gerisi düzenleme alanından eklenir.
+    expect(find.byKey(const ValueKey('quick-row-package')), findsOneWidget);
+    expect(find.byKey(const ValueKey('quick-row-attach')), findsOneWidget);
+    expect(find.byKey(const ValueKey('quick-row-color')), findsOneWidget);
+    for (final k in ['italic', 'bullet', 'photo', 'reminder', 'heading']) {
+      expect(find.byKey(ValueKey('quick-row-$k')), findsNothing, reason: k);
+    }
     expect(find.byIcon(Icons.undo), findsOneWidget);
     tester.view.viewInsets = FakeViewPadding.zero;
     await tester.pump(const Duration(milliseconds: 16));

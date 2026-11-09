@@ -7760,6 +7760,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get dueBadgeChannel => 'Bekleyenler (simge rozeti)';
 
   @override
+  String get quickRowAttach => 'Ekle';
+
+  @override
+  String get quickRowColor => 'Yazı rengi (basılı tut: favori rengi seç)';
+
+  @override
   String get quickRowBold => 'Kalın';
 
   @override

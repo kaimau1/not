@@ -7782,6 +7782,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dueBadgeChannel => 'Waiting (icon badge)';
 
   @override
+  String get quickRowAttach => 'Add';
+
+  @override
+  String get quickRowColor => 'Text color (hold: pick favorite)';
+
+  @override
   String get quickRowBold => 'Bold';
 
   @override
