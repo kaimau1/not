@@ -857,3 +857,8 @@ maddeyi GÜNCELLE.
 - **Yazım**: `SpellMemory.changesTooMuch` (düz Levenshtein > uzunluk/3) bulanık + cihaz önerisini keser (öğretilen düzeltmeler hariç); otomatik düzeltmenin üstüne başka kelime yazılınca `unlearnFix`.
 - Klasör düğmesi (sol alt) kalktı; liste ayracı 24 dp + tutamak, not açıkken sütun = genişlik/220 (1–3).
 
+## 2026-11-09 — Baştan sona inceleme → `OTURTMA_PLANI.md` (Faz 58–69)
+- **Koddan doğrulanan kökler (düzeltilmedi, plan maddesi):** (1) sabit/gömülü eke her çizgi `_updateAttachment` → `_mutate(immediate: true)` → `_sameVisual`'da `identical(attachments)` false → editörün TAMAMI kurulur + anında tam kayıt (F60.1). (2) Mürekkep `double` dizisi (nokta başına 16–24 bayt), notun tüm mürekkebi tek `heavy/data` belgesinde; her kayıt hepsini ana iş parçacığında gezer/kodlar; 1 MiB'e ~1–2 ekran yoğun el yazısında dayanır (hesap; F61.0 ölçer). (3) `InkPainter` her kalem hareketinde sayfanın bütün çizgilerini boyar; basınçlı çizgi nokta başına `drawLine` (Faz 62). (4) Paket: açık paketin `TapRegion` grubunda yalnız paket satırları var — araç çubuğuna dokunmak paketi kapatıyor olabilir (hipotez, F60.2). (5) Ana ekran tepesi telefonda sabit `Column` (~210 dp), kaydırınca çekilmiyor (F66.1).
+- **Ekran turu gerçek tableti çekmiyor:** tur 800×1280 / 1280×800; MatePad 11 = 640×1024 / 1024×640 dp (F67.2).
+- Bu dosya 109 KB (hedef 30): bölme işi F58.2; o yapılana dek buraya yalnız kök neden/tuzak, tek satır.
+

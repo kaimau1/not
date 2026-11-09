@@ -1,5 +1,9 @@
 # KALEM VE EKLERE YAZMA PLANI (2026-11-10)
 
+> **2026-11-09:** K2–K7 `OTURTMA_PLANI.md`'ye taşındı (K2 → F63.3, K3 → F63.4, K4 → F63.2,
+> K5 → F63.5, K6 → F65.1–F65.3, K7 → F65.6). "Kurallar 1–4" ve cihaz bulguları burada
+> geçerli kalır; kalemin depolama ve çizim maliyeti (yeni bulgu) orada Faz 61–62.
+
 Kullanıcı isteği (2026-11-10): "çok iyi bir kalem deneyimi, parmakla kalem
 karışmadan profesyonel, rahat, hatasız; eklere (PDF, görsel) rahatça yazılıp
 kaydedilebilmeli; telefonda da elle yazma düzgün olmalı; eklerin yerleşimi
