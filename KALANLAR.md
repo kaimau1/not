@@ -302,6 +302,18 @@ Tam yedek geri yükleme + ikinci yükleme çoğaltmıyor; #47 Gboard; A2, A4, B5
 - I10 Tablet/web: sabit ekin çubuğunda sol baştaki yerleşim düğmesi → solda → sağda → üstte; aradaki ayraçla genişlik; web'de PDF ekle (olmazsa ekrandaki hata metnini yaz — Storage/Drive).
 - Açık hata (yeniden üretilemedi): PDF bölmesinde sayfa "Not al" → sabitten gömülüye geçince "📖 s.11" satırı silinemiyor — tam adım/ekran görüntüsü gerekli.
 
+### J1–J9 (2026-11-09 oturum J — yazıldı, cihazda doğrulanmadı)
+- J0 **ÖNCE SEN (konsol):** Google Cloud Console → notlar-kaimau → API'ler ve Hizmetler → Kimlik bilgileri → "Kimlik bilgisi oluştur" → OAuth istemci kimliği → tür **Masaüstü uygulaması** → kimlik + sırrı GitHub → Settings → Secrets → Actions'a `GOOGLE_DESKTOP_CLIENT_ID` / `GOOGLE_DESKTOP_CLIENT_SECRET` olarak ekle (yerel derleme için `env.json`). Eklenmezse tablet eski Firebase akışında kalır (hata sürer).
+- J1 Tablet (GMS'siz): Ayarlar → Google ile giriş → tarayıcıda onay → "Tamam — Not uygulamasına dönebilirsin" → uygulamaya dön, girişli; notlar telefonla senkron. Drive "Bağla" ve Gmail aynı şekilde; 1 saat sonra yeniden "Bağla" İSTEMEMELİ.
+- J2 Tablet: Drive ve Gmail'e art arda bas → "headful operation" hatası yok (ikincisi birinciyi bekler).
+- J3 Fiziksel klavyeyle yaz → kaleme geç → bir süre bekle → parmakla metne dokun: sanal klavye AÇILMAMALI; başka maddeye geçince de.
+- J4 Hızlı satır (klavye açıkken üstte): kalem · yazım · paket · ekle · kalın · renk; telefonda kaydırmadan sığıyor mu. Renk: dokun → kırmızı; basılı tut → renk seç → o renk uygulanır ve bundan sonra dokununca o gelir. ⚙ ile eski düğmeler (madde imi, başlık, fotoğraf…) eklenebiliyor.
+- J5 Kalem kipini her açışta altta "Yalnız kalemle yaz: AÇIK/KAPALI" + "Ayarla" → kalem ayarları açılıyor. Kalem kipi açılınca yüzen kalem "kalem yazar"a geçiyor; yüzen kalemi "yazar"a alınca kalem kipi açılıyor.
+- J6 Kalem kapsülünde renk/kalınlık kartı açıkken sayfaya/metne dokun → kart kapanıyor.
+- J7 Ana ekranda sol altta klasör düğmesi yok (klasörler: listede aşağı çek).
+- J8 Tablette not açıkken liste ile not arasındaki tutamağı parmakla sürükle → genişledikçe 2, sonra 3 sütun.
+- J9 Nottan Telegram'a kopyala → Telegram'dan nota yapıştır → maddeler "☐ " olmadan, ☑ olanlar işaretli geliyor; tekrar kopyalayınca "☐ ☐" yok. Otomatik düzeltme harflerin çoğunu değiştiren öneri UYGULAMIYOR; yanlış düzeltmenin üstüne başka kelime yazınca bir dahaki sefere o kelime geliyor.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)
