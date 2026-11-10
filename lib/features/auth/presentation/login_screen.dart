@@ -1,3 +1,4 @@
+import '../../../app/window_class.dart';
 import '../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -118,7 +119,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // Sessiz giriş sürerken HTML açılışı kalır (tek katman, F10.6); düğmeler
     // çizilince kalkar. Giriş başarılıysa ilk anlamlı ekran notlardır.
     if (!_autoSigningIn) signalWebReady();
-    final wide = MediaQuery.sizeOf(context).width >= 840;
+    final wide = WindowClass.of(context).atLeast(WindowWidth.expanded);
     if (!wide) {
       return Scaffold(
         // Kaydırılabilir: hata satırı eklenince (ve küçük/yatay ekranlarda)

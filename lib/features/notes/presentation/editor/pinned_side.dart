@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+export '../../../../app/window_class.dart' show kPinnedSideMinWidth;
+
 /// **SABİT EK YANDA** (kullanıcı isteği 2026-11-09: "tablet ve web'de ekleri
 /// sağa veya sola sabitleme yapılabilmeli, PDF'i kişi yana koyar çalışır").
 ///
@@ -8,9 +10,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// genişlik oranı. Yan yerleşim yalnız geniş alanda ([kPinnedSideMinWidth])
 /// uygulanır — dar ekranda ek yine üstte durur.
 enum PinnedSide { top, left, right }
-
-/// Yan yerleşimin açıldığı en dar editör genişliği (dp).
-const kPinnedSideMinWidth = 840.0;
 
 class PinnedSideMemory {
   PinnedSideMemory._();

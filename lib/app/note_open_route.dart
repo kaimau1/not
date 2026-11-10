@@ -106,7 +106,7 @@ class NoteOpenPage<T> extends Page<T> {
     // Geniş ekranda not sağ bölmede açılır; soldaki karttan büyümesi bölme
     // sınırını aşan tuhaf bir hareket olurdu.
     // Not açıkken kabuk daha dar pencerede de yan yana çizer.
-    final narrow = MediaQuery.sizeOf(context).width < kNoteSplitBreakpoint;
+    final narrow = !splitActiveFor(MediaQuery.sizeOf(context));
     // Hareketi azalt (F15.5): karttan büyüme yerine kısa bir solma.
     final motion = motionOf(context);
     return _NoteOpenRoute<T>(

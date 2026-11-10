@@ -11,11 +11,20 @@ void main() {
   test('liste sol panelde: dikey tablet ve açık katlanabilir dahil', () {
     // Dikey tablet (~800) ve açık katlanabilir (~673): liste kabukta (not
     // yokken tam genişlik, açıkken yan yana).
-    expect(splitActiveFor(800), isTrue);
-    expect(splitActiveFor(673), isTrue);
-    expect(splitActiveFor(1024), isTrue);
+    expect(splitActiveFor(const Size(800, 1280), web: false), isTrue);
+    expect(splitActiveFor(const Size(673, 841), web: false), isTrue);
+    expect(splitActiveFor(const Size(1024, 640), web: false), isTrue);
+    // Test yüzeyi 800×600 tablet sayılır (davranış değişmedi).
+    expect(splitActiveFor(const Size(800, 600), web: false), isTrue);
     // Telefon / kapalı katlanabilir hiç bölünmez.
-    expect(splitActiveFor(412), isFalse);
+    expect(splitActiveFor(const Size(412, 915), web: false), isFalse);
+  });
+
+  test('telefon yatayda bölünmez (F66.7), web pencere genişliğiyle', () {
+    expect(splitActiveFor(const Size(851, 393), web: false), isFalse);
+    expect(splitActiveFor(const Size(915, 412), web: false), isFalse);
+    // Web'de alçak ama geniş tarayıcı penceresi eskisi gibi bölünür.
+    expect(splitActiveFor(const Size(851, 393), web: true), isTrue);
   });
 
   test('not konumu', () {

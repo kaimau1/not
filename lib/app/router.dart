@@ -107,7 +107,7 @@ extension NoteContextPush on BuildContext {
     if (!pageless &&
         isNoteLocation(current) &&
         isSplitShellLocation(current) &&
-        splitActiveFor(MediaQuery.sizeOf(this).width)) {
+        splitActiveFor(MediaQuery.sizeOf(this))) {
       return router.pushReplacement<T>(notePath);
     }
     return router.push<T>(
