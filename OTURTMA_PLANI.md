@@ -348,7 +348,10 @@ süre değil **sayı** (kurulum, çizim çağrısı, yazılan bayt): makineden b
 doğrulanır).
 
 - [x] **F60.1 Eke çizgi = saf değişiklik (B5).** *(2026-11-09: S6/S7 kök kurulum 10 → 1,
-  `updateNote` 10 → 1 (`perf_budget_test`). **Cihazda doğrulanmadı — A/B yürütücüde.**
+  `updateNote` 10 → 1 (`perf_budget_test`). **Cihaz A/B (2026-11-10, Mi Note 10 Lite, `ab_klavye.py`, taban 099eb689, 2. koşular):**
+  yazma 1037 → 1025 ms (LAYOUT 308 → 310), klavye aç 301 → 290, kapa 173 → 189 ms —
+  regresyon yok (not kapanışı iki sürümde de 27/67 kare arasında oynuyor: gürültü).
+  **PDF'e çizimin kendisi cihazda ölçülmedi** (`ab_kalem.py` F59.5'te gelecek).
   Plandan sapma: `_sameVisual` ek karşılaştırması genel değil, YALNIZ mürekkep yolundan
   (`_mutate(inkOnly:)`) gevşer — yoksa geri al / tam ekrandan dönen mürekkep kökü kurmaz,
   bölme bayat kalırdı. Ek tuzak bulundu ve kapatıldı: bayat kutudan gelen sayfa çevirme
