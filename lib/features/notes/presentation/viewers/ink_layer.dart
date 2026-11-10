@@ -50,29 +50,37 @@ class InkHoldProgress {
 class InkController extends ChangeNotifier {
   InkController({required List<InkStroke> initial, required this.onChanged})
     : _ink = [...initial] {
-    // Son kullanılan kalem ([InkToolMemory]): her çizim ekranı yeni
-    // denetleyici kurduğundan seçim her açılışta siyah tükenmeze dönüyordu.
-    final penIndex = InkToolMemory.pen;
-    if (penIndex != null && penIndex >= 0 && penIndex < InkPen.values.length) {
-      pen = InkPen.values[penIndex];
-    }
-    final rememberedColor = InkToolMemory.color;
-    if (rememberedColor != null) color = Color(rememberedColor);
-    final rememberedWidth = InkToolMemory.width;
-    widthPx = rememberedWidth == null
-        ? pen.defaultWidth
-        : pen.clampWidth(rememberedWidth);
-    opacity = InkToolMemory.opacity;
-    penOnly = InkToolMemory.penOnly;
-    pressure = InkToolMemory.pressure;
-    shapeSnap = InkToolMemory.shapeSnap;
-    partialEraser = InkToolMemory.partialEraser;
-    shapeSuggest = InkToolMemory.shapeSuggest;
+    // Araç KOPYALANMAZ (F63.2): aşağıdaki alanlar [InkToolMemory]'yi okur —
+    // tepside seçilen silgi/renk her yüzeyde aynı anda geçerli.
+    InkToolMemory.openSession();
+    InkToolMemory.toolRev.addListener(_onToolChanged);
   }
+
+  /// **ETKİN YÜZEY** (KALEM K4): son çizim dokunuşunu alan denetleyici.
+  /// Editörün tepsisi geri al / yineleyi buna yollar (bkz. `PenTray`).
+  /// Kapanan denetleyici kendini bırakır.
+  static InkController? active;
+
+  /// Araç başka bir yüzeyden değişti (ya da bu yüzeyden: tek yol).
+  void _onToolChanged() {
+    // Kement başka yerden bırakıldıysa buradaki seçim de bırakılır.
+    if (!lasso && !_fixEdit && (_selected.isNotEmpty || _lassoPath != null)) {
+      _selected = const [];
+      _lassoPath = null;
+      _lassoPage = null;
+      _moving = false;
+      _resizing = false;
+    }
+    notifyListeners();
+  }
+
+  /// Araç değişti: bütün açık denetleyiciler (bu dahil) dinleyicisine söyler.
+  void _toolChanged() => InkToolMemory.toolChanged();
 
   /// Çizgi bitince tanınan şekil için düzeltme işaretçisi (bkz.
   /// [suggestion]).
-  bool shapeSuggest = true;
+  bool get shapeSuggest => InkToolMemory.shapeSuggest;
+  set shapeSuggest(bool value) => InkToolMemory.shapeSuggest = value;
 
   /// Son çizginin düzeltme önerisi: katman sağ altına küçük işaretçi koyar;
   /// dokununca [applySuggestion]. Ayrı bildirici: çizgileri yeniden boyatmaz.
@@ -88,7 +96,7 @@ class InkController extends ChangeNotifier {
     shapeSuggest = value;
     InkToolMemory.saveShapeSuggest(value);
     if (!value) dismissSuggestion();
-    notifyListeners();
+    _toolChanged();
   }
 
   void dismissSuggestion() => suggestion.value = null;
@@ -268,48 +276,72 @@ class InkController extends ChangeNotifier {
   List<InkStroke> get ink => _ink;
 
   bool editing = false;
-  bool eraser = false;
+
+  // Araç alanları [InkToolMemory]'de durur (tek araç durumu, F63.2).
+  bool get eraser => InkToolMemory.eraser;
+  set eraser(bool value) => InkToolMemory.eraser = value;
 
   /// **OK** aracı seçili mi? Açıkken parmak serbest çizmez: bastığı yer okun
   /// KUYRUĞU, kaldırdığı yer UCU olur (kullanıcı isteği 2026-08-08: "bir de ok
   /// işareti çekme istiyorum"). Elle çizilen ok hiçbir zaman düz çıkmıyor.
-  bool arrow = false;
+  bool get arrow => InkToolMemory.arrow;
+  set arrow(bool value) => InkToolMemory.arrow = value;
 
   /// Seçili ŞEKİL (düz çizgi / dikdörtgen / elips); null = serbest çizim.
   /// Ok gibi bastığın yerden kaldırdığın yere çizilir, kayda sıradan çizgi
   /// olarak yazılır ([inkShapePoints]).
-  InkShape? shape;
+  InkShape? get shape => InkToolMemory.shape;
+  set shape(InkShape? value) => InkToolMemory.shape = value;
 
   /// Kullanıcının seçtiği renk — SAYDAMLIKSIZ hâli. Çizgiye yazılırken
   /// kalemin saydamlığı uygulanır ([penColor]).
-  Color color = kInkPalette.first;
+  Color get color =>
+      Color(InkToolMemory.color ?? kInkPalette.first.toARGB32());
+  set color(Color value) => InkToolMemory.color = value.toARGB32();
 
   /// Kalem türü (tükenmez / keçeli / fosforlu).
-  InkPen pen = InkPen.pen;
+  InkPen get pen {
+    final i = InkToolMemory.pen;
+    return i != null && i >= 0 && i < InkPen.values.length
+        ? InkPen.values[i]
+        : InkPen.pen;
+  }
+
+  set pen(InkPen value) => InkToolMemory.pen = value.index;
 
   /// Ekrandaki (ölçeklenmiş) sayfa üzerinde piksel kalınlık; kaydedilirken
   /// sayfa genişliğinin oranına çevrilir.
-  double widthPx = InkPen.pen.defaultWidth;
+  double get widthPx {
+    final w = InkToolMemory.width;
+    return w == null ? pen.defaultWidth : pen.clampWidth(w);
+  }
+
+  set widthPx(double value) => InkToolMemory.width = value;
 
   /// Tükenmez/keçeli ŞEFFAFLIĞI (0,1–1). Fosforlunun saydamlığı sabit:
   /// türü saydamlıktan okunuyor (bkz. ink_pen.dart).
-  double opacity = 1;
+  double get opacity => InkToolMemory.opacity;
+  set opacity(double value) => InkToolMemory.opacity = value;
 
   /// **YALNIZ KALEMLE YAZ** (kullanıcı isteği 2026-10-23: "parmakla basınca
   /// yazmayıp kalemle yazması, parmakla yakınlaştırma ve kaydırma"): açıkken
   /// parmak ÇİZMEZ — tek parmak kaydırır, iki parmak yakınlaştırır
   /// ([InkNavLayer]); kalem (ve fare) çizer. Avuç içi de böylece çizmez.
   /// İlk kalem dokunuşunda kendiliğinden açılır (kullanıcı elle seçmediyse).
-  bool penOnly = false;
+  bool get penOnly => InkToolMemory.penOnly;
+  set penOnly(bool value) => InkToolMemory.penOnly = value;
 
   /// Basınç algısı: kalemle çizilen çizginin kalınlığı bastırmaya göre değişir.
-  bool pressure = true;
+  bool get pressure => InkToolMemory.pressure;
+  set pressure(bool value) => InkToolMemory.pressure = value;
 
   /// Basılı tutunca şekle dönüştür (bkz. [recognizeInkShape]).
-  bool shapeSnap = true;
+  bool get shapeSnap => InkToolMemory.shapeSnap;
+  set shapeSnap(bool value) => InkToolMemory.shapeSnap = value;
 
   /// Kısmi silgi: yalnız silginin değdiği kısım silinir, çizgi bölünür.
-  bool partialEraser = false;
+  bool get partialEraser => InkToolMemory.partialEraser;
+  set partialEraser(bool value) => InkToolMemory.partialEraser = value;
 
   // ── KEMENT (seçim) ────────────────────────────────────────────────────
   // Kullanıcı isteği 2026-10-30: "Samsung Notes gibi özelliklerimiz olsun".
@@ -317,7 +349,8 @@ class InkController extends ChangeNotifier {
   // seçimin içinden sürüklemek onları TAŞIR, renk seçmek BOYAR, "Sil" atar.
 
   /// Kement aracı seçili mi.
-  bool lasso = false;
+  bool get lasso => InkToolMemory.lasso;
+  set lasso(bool value) => InkToolMemory.lasso = value;
 
   /// Çizilmekte olan kementin noktaları (oranlı) ve sayfası.
   List<double>? _lassoPath;
@@ -615,7 +648,7 @@ class InkController extends ChangeNotifier {
       shape = null;
       _leaveLasso();
     }
-    notifyListeners();
+    _toolChanged();
   }
 
   /// Kement aracını açar/kapatır; kapanınca seçim bırakılır.
@@ -629,7 +662,7 @@ class InkController extends ChangeNotifier {
     } else {
       _leaveLasso();
     }
-    notifyListeners();
+    _toolChanged();
   }
 
   void _leaveLasso() {
@@ -688,13 +721,13 @@ class InkController extends ChangeNotifier {
   void setShapeSnap(bool value) {
     shapeSnap = value;
     InkToolMemory.saveShapeSnap(value);
-    notifyListeners();
+    _toolChanged();
   }
 
   void setPartialEraser(bool value) {
     partialEraser = value;
     InkToolMemory.savePartialEraser(value);
-    notifyListeners();
+    _toolChanged();
   }
 
   /// Ok aracını açar/kapatır. Kalem türü ve renk AYNEN geçerli kalır: ok da
@@ -707,7 +740,7 @@ class InkController extends ChangeNotifier {
       shape = null;
       _leaveLasso();
     }
-    notifyListeners();
+    _toolChanged();
   }
 
   /// Şekil aracını seçer (null = serbest çizim). Kalem türü/renk geçerli.
@@ -718,7 +751,7 @@ class InkController extends ChangeNotifier {
       arrow = false;
       _leaveLasso();
     }
-    notifyListeners();
+    _toolChanged();
   }
 
   void setColor(Color value) {
@@ -731,7 +764,7 @@ class InkController extends ChangeNotifier {
       InkToolMemory.rememberColor(value.toARGB32());
     }
     _remember();
-    notifyListeners();
+    _toolChanged();
   }
 
   /// Kalem türünü değiştirir. Kalınlık türün kendi aralığına taşınır:
@@ -746,7 +779,7 @@ class InkController extends ChangeNotifier {
     _leaveLasso();
     widthPx = wasDefault ? value.defaultWidth : value.clampWidth(widthPx);
     _remember();
-    notifyListeners();
+    _toolChanged();
   }
 
   /// Sabitlenebilir şu anki kalem (bkz. [InkToolMemory.presets]).
@@ -765,19 +798,19 @@ class InkController extends ChangeNotifier {
     color = Color(p.color);
     widthPx = value.clampWidth(p.width);
     _remember();
-    notifyListeners();
+    _toolChanged();
   }
 
   void setWidth(double value) {
     widthPx = pen.clampWidth(value);
     _remember();
-    notifyListeners();
+    _toolChanged();
   }
 
   void setOpacity(double value) {
     opacity = value.clamp(0.1, 1.0).toDouble();
     _remember();
-    notifyListeners();
+    _toolChanged();
   }
 
   /// "Yalnız kalemle yaz"ı açar/kapatır. [chosen]: kullanıcının kendi
@@ -785,13 +818,13 @@ class InkController extends ChangeNotifier {
   void setPenOnly(bool value, {bool chosen = true}) {
     penOnly = value;
     InkToolMemory.savePenOnly(value, chosen: chosen);
-    notifyListeners();
+    _toolChanged();
   }
 
   void setPressure(bool value) {
     pressure = value;
     InkToolMemory.savePressure(value);
-    notifyListeners();
+    _toolChanged();
   }
 
   void _remember() => InkToolMemory.saveTool(
@@ -976,6 +1009,11 @@ class InkController extends ChangeNotifier {
       if (_claimed.remove(pointer)) return;
       if (!accepts(kind) || isPalm(kind)) return;
       _accepted[pointer] = kind;
+    }
+    if (!identical(active, this)) {
+      active = this;
+      // Tepsi geri al/yineleyi bu yüzeye bağlasın.
+      _toolChanged();
     }
     _tapStart = _pointers == 0 && stylusTapMayPass(kind) ? local : null;
     _pointers++;
@@ -1162,6 +1200,9 @@ class InkController extends ChangeNotifier {
 
   @override
   void dispose() {
+    InkToolMemory.toolRev.removeListener(_onToolChanged);
+    InkToolMemory.closeSession();
+    if (identical(active, this)) active = null;
     _holdTimer?.cancel();
     _clearHold();
     _eraserHold?.cancel();

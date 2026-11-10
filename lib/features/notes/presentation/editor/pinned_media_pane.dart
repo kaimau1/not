@@ -16,6 +16,7 @@ import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
 import '../drive_ui.dart';
 import '../viewers/ink_tools.dart' show InkToolMemory;
+import '../viewers/pen_policy.dart';
 import 'pinned_side.dart';
 import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
@@ -288,8 +289,16 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   bool get _penOn =>
       widget.onChanged != null &&
       widget.media.kind == AttachmentKind.pdf &&
-      (_explicitPen ||
-          (InkToolMemory.autoStylus && InkToolMemory.stylusEver));
+      _policy.layerActive;
+
+  /// Kalem kuralı tek yerde ([PenPolicy], F63.1).
+  PenPolicy get _policy => PenPolicy.resolve(
+    surface: PenSurface.pinnedDoc,
+    penMode: _explicitPen,
+    autoStylus: InkToolMemory.autoStylus,
+    stylusEver: InkToolMemory.stylusEver,
+    penOnly: InkToolMemory.penOnly,
+  );
 
   /// Kalem kipi (editörün ya da bölmenin): parmak da çizer. Değilse ve
   /// yüzen düğme "kalem yazar" diyorsa YALNIZ kalem çizer, parmak kaydırır
@@ -344,10 +353,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
       _inkSeen = a.ink;
       if (!c.drawing) c.replace(a.ink);
     }
-    c.penOnly = InkToolMemory.penOnly;
-    c.allowedKinds = _explicitPen
-        ? null
-        : const {PointerDeviceKind.stylus, PointerDeviceKind.invertedStylus};
+    c.allowedKinds = _policy.allowedKinds;
     return c;
   }
 
@@ -840,19 +846,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                             behavior: ScrollConfiguration.of(context).copyWith(
                               dragDevices: !_penOn
                                   ? null
-                                  : _explicitPen
-                                  ? {
+                                  : {
                                       PointerDeviceKind.mouse,
                                       PointerDeviceKind.trackpad,
-                                      if (_inkFor(shown).penOnly)
+                                      if (_policy.fingerScrolls)
                                         PointerDeviceKind.touch,
-                                    }
-                                  // Yalnız kalem yazar: geri kalan her şey
-                                  // kaydırır.
-                                  : const {
-                                      PointerDeviceKind.mouse,
-                                      PointerDeviceKind.trackpad,
-                                      PointerDeviceKind.touch,
                                     },
                             ),
                             child: PdfPageBox(

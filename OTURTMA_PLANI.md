@@ -495,7 +495,10 @@ doğrulanır).
   şeritteki HER çip için widget testi (ev düğmesi, Tümü, Gelen, kendi klasörüm,
   paylaşılan klasör): dokun → `filteredNotesProvider` beklenen küme, seçili çip vurgulu.
   `folder_strip_fixed_test` ve HAFIZA'daki 2026-11-06 maddesi güncellenir.
-- [ ] **F60.S4 [Fable] Ek gömülüyken silgi seçili olduğu hâlde kalem yazıyor.** Kök:
+- [x] **F60.S4 [Fable] Ek gömülüyken silgi seçili olduğu hâlde kalem yazıyor.** *(2026-11-10:
+  F63.2 ile düzeldi — `test/pen_single_tool_test.dart` düzeltmeden önce kırmızıydı (silgi seçili,
+  gömülü/sabit PDF'te çizgi 1 → 2), şimdi dokunulan çizgi siliniyor; paket önizlemesi aynı
+  denetleyici sınıfı, birim testiyle. Cihazda doğrulanmadı.)* Kök:
   gömülü/sabit ekin kendi `InkController`'ı tepsideki araç değişimini görmüyor (KALEM K4).
   Önce kırmızı test: tepside silgi seç → gömülü PDF'e kalem dokunuşu → çizgi sayısı
   ARTMAZ, dokunulan çizgi silinir (sabit PDF, not paketi önizlemesi için de). Düzeltme
@@ -707,7 +710,11 @@ gömülü `_docInkFor`, görüntüleyiciler) — B3/B4/B5 hataları buradan çı
 385–420, `editor/stylus_toggle.dart`, `editor/pen_tray.dart`, `viewers/ink_layer.dart`
 (`InkToolMemory`, `allowedKinds`, `penOnly`, `claims`).
 
-- [ ] **F63.1 `PenPolicy` (saf işlev, tek doğruluk tablosu).**
+- [x] **F63.1 `PenPolicy` (saf işlev, tek doğruluk tablosu).** *(2026-11-10: `viewers/pen_policy.dart`
+  + `test/pen_policy_test.dart` (6 yüzey × 16 girdi, bugünkü davranış + "yerel kopya yok" bekçisi).
+  Sayfa, sabit, gömülü, paket ve yüzen düğme görünürlüğü oradan okur; görüntüleyici/çizim ekranında
+  yerel kural yoktu (`allowedKinds` atanmıyor) — tabloda satırları var, F63.4 bağlar. Davranış
+  değişmedi; cihazda doğrulanmadı.)*
   `lib/features/notes/presentation/viewers/pen_policy.dart`:
 
   ```dart
@@ -732,7 +739,12 @@ gömülü `_docInkFor`, görüntüleyiciler) — B3/B4/B5 hataları buradan çı
   görülmüş/görülmemiş × kip açık/kapalı × yalnız kalem × yüzen düğme yazar/dokunur × 6
   yüzey). Sonra altı yüzey de `PenPolicy.resolve` çağırır; yerel kopyalar silinir.
   Davranış DEĞİŞMEZ (önce tablo bugünkü davranışla yazılır, sonra sapma varsa ayrı madde).
-- [ ] **F63.2 Tek araç durumu (KALEM K4).** `InkToolMemory` araç/renk/kalınlık/silgi için
+- [x] **F63.2 Tek araç durumu (KALEM K4).** *(2026-11-10: araç alanları `InkController`'da getter →
+  `InkToolMemory` (kopya yok); `InkToolMemory.toolRev` bütün açık denetleyicileri uyarır; etkin yüzey
+  `InkController.active` (döngüsel import olmasın diye orada), editör tepsisi `followActive` ile geri
+  al/yineleyi ona yollar. Geçici araç (silgi/ok/şekil/kement) açık denetleyici kalmayınca kaleme
+  döner. Kalan: kement seçiminin renk/sil işlemleri hâlâ tepsinin kendi (sayfa) denetleyicisinde.
+  `test/pen_single_tool_test.dart` 9 yeşil. Cihazda doğrulanmadı.)* `InkToolMemory` araç/renk/kalınlık/silgi için
   `ValueListenable` verir; her `InkController` `pointerDown`'da aracı oradan okur (kendi
   kopyası yok). "Etkin yüzey" = son kalem dokunuşunu alan denetleyici
   (`InkToolMemory.activeController`); `PenTray` geri al/yinele/silgiyi ona yollar. Test:

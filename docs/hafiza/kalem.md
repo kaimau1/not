@@ -48,3 +48,6 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 ## 2026-11-09 — Oturum J (tablet senkron + hızlı satır sadeleşmesi)
 - **Kalem kipi**: her açılışta `_penModeOpened` "yalnız kalem" durumunu + "Ayarla" söyler (eski tek seferlik `tipPenToggle`/`tipPagePen` yerine) ve `autoStylus`'u açar; yüzen kalem "yazar"a dönünce metin/liste notunda kip açılır.
 
+
+## 2026-11-10 — P05 (tek araç durumu, `PenPolicy`)
+- **Araç tek yerde (F63.2):** `InkController`'ın araç alanları (silgi/ok/şekil/kement/tür/renk/kalınlık/yalnız kalem…) alan DEĞİL, `InkToolMemory`'yi okuyan getter; değişiklik `_toolChanged()` → `InkToolMemory.toolRev` ile bütün açık denetleyicilere gider. KÖK NEDEN ("gömülüde silgi seçili, kalem yazıyor"): araç kurulumda kopyalanıyordu, tepsi yalnız sayfa denetleyicisini sürüyordu. TUZAK: araç artık testler arası da ortak — denetleyiciyi `dispose` etmeyen test `setUp(InkToolMemory.reset)` ister (geçici araç ancak açık denetleyici kalmayınca kaleme döner, `openSession`). Etkin yüzey `InkController.active`; kalem kuralı (`allowedKinds`, katman, parmak kaydırır mı) yalnız `viewers/pen_policy.dart`'tan (bekçi `pen_policy_test`).

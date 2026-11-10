@@ -181,6 +181,7 @@ import '../viewers/image_viewer.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
 import '../viewers/ink_tools.dart';
+import '../viewers/pen_policy.dart';
 import '../viewers/video_viewer.dart';
 import '../viewers/text_recognize_screen.dart';
 import '../viewers/transcript_screen.dart';
@@ -5043,7 +5044,9 @@ child: NoteFindBar(
           // boşalınca dolgu geri gelir ve sayfa alanı sebepsiz kısalırdı.
           // Görünüm birebir korunur.
           body: StylusToggleOverlay(
-            visible: !_readOnly && InkToolMemory.stylusEver,
+            visible:
+                !_readOnly &&
+                _penPolicy(PenSurface.page).showFloatingToggle,
             child: KeyboardSnap(
             // Klavye durup gövde oturduktan sonra odaklı alanı görünür kıl —
             // gövde animasyon boyunca bilerek kısaltılmadığı için Flutter'ın
@@ -5146,6 +5149,7 @@ child: NoteFindBar(
                                 key: const ValueKey('page-pen-dock'),
                                 controller: _pageInkOf(note),
                                 dock: true,
+                                followActive: true,
                                 actions: [
                                   // Kalem + tam ekranda üst çubuk yok: listeye
                                   // dönüş tepside.
