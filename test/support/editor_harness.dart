@@ -68,11 +68,14 @@ class CountingNotesRepository extends NotesRepository {
 
 /// Telefon penceresinde (varsayılan 412×915, üst 30 / alt 48 sistem payı)
 /// tam [NoteEditorScreen] kurar. [repo] verilirse editör ona kaydeder.
+/// [home] verilirse editör yerine o kurulur (editörü rota olarak açıp
+/// kapatan testler: `editor_leak_test.dart`).
 Future<ProviderContainer> pumpEditor(
   WidgetTester tester,
   Note note, {
   Size size = const Size(412, 915),
   NotesRepository? repo,
+  Widget? home,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -103,7 +106,7 @@ Future<ProviderContainer> pumpEditor(
         locale: const Locale('tr'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: NoteEditorScreen(noteId: note.id),
+        home: home ?? NoteEditorScreen(noteId: note.id),
       ),
     ),
   );

@@ -440,6 +440,30 @@ doğrulanır).
   `ab_klavye.py` klavye evresi; fark > %20 ise `prof_kb2.py` ile en pahalı 5 çerçeve.
   Kabul: 30 gir-çık sonrası klavye aç/kapa UI ms taze açılışın ≤ %110'u; bekçi yeşil;
   regresyon listesine satır.
+  **Durum (2026-11-10, P02) — cihazsız birikim ÜRETİLEMEDİ; madde AÇIK, cihaz ölçümü
+  bekliyor (sabah bakılacak).** *Sayım:* `lib/` genelinde genel (uygulama ömürlü)
+  kayıtların hepsinin karşılığı var — `FocusManager` (yalnız `note_editor_screen`
+  initState/dispose), `autoStylusListenable` (editör + `pinned_media_pane`),
+  `noteRouteClosing`, `addObserver` (editör, `note_video_boxes`), `addGlobalRoute`
+  (TipOnce), `listenManual` (`_sub.close`); `HardKeyboard` tek seferlik (`_hooked`).
+  Eşleşmeyen `addListener`'ların hepsi sınıfın KENDİ denetleyicisine (dispose'la gider).
+  *Bekçi* `test/editor_leak_test.dart` (2 sahne): (1) çıplak editör rota olarak 20
+  aç-kapa, (2) gerçek kabuk (AppFrame + SplitShell + ana ekran + `NoteOpenPage`, karta
+  dokunarak; liste / metin / sabit PDF / gömülü PDF / görsel / sayfalı not, kalemli
+  cihaz) 28 aç-kapa + her açılışta odak, yazma, klavye turu. Ölçülen: atılmamış nesne
+  (Flutter bellek olayları: State, ChangeNotifier, Ticker, Element, RenderObject…) tür
+  başına 6. → 18. kapanış ARTMIYOR; genel dinleyiciler açılış öncesiyle aynı; klavye
+  turunun tür başına kurulum sayıları 10. ve 28. açılışta BİREBİR aynı. Tek kırmızı:
+  `PageTurn`'ün `CurvedAnimation`'ı atılmıyordu (5 → 15; zararsız — üst denetleyici
+  atılınca dinleyicisi düşer; düzeltildi, `page_swipe.dart`). **Sonuç: "kapanan
+  editörden kalan dinleyici" varsayımı widget katmanında doğrulanmadı; kasma düzeltmesi
+  YAZILMADI.** Kalan şüpheliler (cihazsız görülemez): yazdıkça uzayan not/madde
+  (`ab_klavye.py` başındaki TUZAK notu — aynı maddeye her koşuda ~56 karakter), sınırsız
+  statik önbellekler (`note_card_media` `_cache`/`_sizes`, `TextPagination._cache`,
+  `pdf_page_ocr` `_cache`) → yığın/GC, raster tarafı, Firestore yankıları. *Yan bulgu
+  (birikim değil, kare başı sabit yük):* kabukta klavye hareketinin orta karesinde
+  ~28–50 widget kuruluyor; SABİT PDF'li notta ~180 (`PinnedMediaPane` ve bar
+  düğmeleri her karede) — cihazda fark çıkarsa ilk bakılacak yer.
 - [ ] **F60.S3 [Opus] "Tümü" çipi bütün notları göstermeli; klasör çipleri denetimi.**
   Bugün (2026-11-06 kararı) "Tümü" DOKUN → `/folders`, UZUN BAS → bütün notlar. Kullanıcı
   (2026-11-09): dokununca ana ekranda tüm notlar. Düzelt: dokun = bütün notlar
