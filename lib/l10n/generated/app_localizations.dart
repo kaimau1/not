@@ -347,7 +347,7 @@ abstract class AppLocalizations {
   /// No description provided for @attachmentDeviceFull.
   ///
   /// In tr, this message translates to:
-  /// **'Cihazda yer kalmadı; dosya kopyalanamadı. Biraz yer açıp yeniden deneyin.'**
+  /// **'Cihazda yer kalmadı; dosya kopyalanamadı. Biraz yer açıp yeniden dene.'**
   String get attachmentDeviceFull;
 
   /// No description provided for @webDriveTapToOpen.

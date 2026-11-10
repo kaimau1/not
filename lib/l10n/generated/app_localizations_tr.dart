@@ -147,7 +147,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get attachmentDeviceFull =>
-      'Cihazda yer kalmadı; dosya kopyalanamadı. Biraz yer açıp yeniden deneyin.';
+      'Cihazda yer kalmadı; dosya kopyalanamadı. Biraz yer açıp yeniden dene.';
 
   @override
   String get webDriveTapToOpen => 'Google Drive\'da · açmak için dokun';

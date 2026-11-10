@@ -76,7 +76,7 @@
   "attachmentNotSynced": "Dosya bu cihaza henüz senkronlanmadı",
   "attachmentDeviceOnly": "Büyük dosya: yalnız bu cihazda duruyor, buluta yedeklenmez",
   "attachmentOtherDevice": "Bu büyük dosya yalnız eklendiği cihazda; buraya indirilmez",
-  "attachmentDeviceFull": "Cihazda yer kalmadı; dosya kopyalanamadı. Biraz yer açıp yeniden deneyin.",
+  "attachmentDeviceFull": "Cihazda yer kalmadı; dosya kopyalanamadı. Biraz yer açıp yeniden dene.",
   "webDriveTapToOpen": "Google Drive'da · açmak için dokun",
   "noteFullscreen": "Tam ekran",
   "noteFullscreenExit": "Tam ekrandan çık",
