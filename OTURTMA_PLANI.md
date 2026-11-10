@@ -246,7 +246,7 @@ Hepsi koddan doğrulandı; "hesap" yazanlar ölçülmedi, ilgili fazın 0. madde
 - [ ] **F58.1 Dondurma kuralı (K-O1).** `CLAUDE.md`'ye "Yol haritası" bölümünün başına bu
   dosyanın işaretçisi ve "OTURTMA sürerken yeni özellik yok; istekler `ISTEK_KUTUSU.md`"
   satırı. `ISTEK_KUTUSU.md` oluştur (başlık + boş liste). Kullanıcı onayı şart.
-- [ ] **F58.2 HAFIZA ≤ 30 KB.** (a) `HAFIZA.md`'nin bugünkü hâlini `HAFIZA_ARSIV_3.md`
+- [x] **F58.2 HAFIZA ≤ 30 KB.** *(2026-11-10: HAFIZA.md 5 KB; eski hâl HAFIZA_ARSIV_3.md bayt aynı; 10 konu dosyası docs/hafiza/ — anahtar sözcükle girdi başına dağıtıldı, satır kaybı 0; bekçi test/hafiza_size_test.dart; CLAUDE.md güncel. "Her oturumda geçerli kurallar" 30 madde elle yazıldı — sabah gözden geçir, dağılım isabeti de.)* (a) `HAFIZA.md`'nin bugünkü hâlini `HAFIZA_ARSIV_3.md`
   olarak AYNEN kopyala (dondurulmuş). (b) `docs/hafiza/` altında konu dosyaları; bölümler
   CÜMLE DEĞİŞTİRMEDEN taşınır: `ortam_ci.md` (Ortam, CI, Test tuzakları, Android),
   `veri.md` (Veri modeli, Yedek, Ek senkronu), `akicilik.md` (Riverpod/performans + kasma
@@ -270,7 +270,7 @@ Hepsi koddan doğrulandı; "hesap" yazanlar ölçülmedi, ilgili fazın 0. madde
 - [ ] **F58.4 Oturum disiplini (CLAUDE.md'ye 4 satır).** Bir oturum = bir faz/konu; `[apk]`
   başına en çok 5 kullanıcıya görünür değişiklik; her `[apk]`'dan önce Faz 59 bütçe testleri
   yeşil; "yazıldı, cihazda doğrulanmadı" maddesi 40'ı geçerse yeni iş durur, tur yapılır.
-- [ ] **F58.5 Ölü kod süpürmesi.** Adayları `Grep` ile doğrula, başvuru yoksa sil:
+- [x] **F58.5 Ölü kod süpürmesi.** *(2026-11-10: pickReminderWhen + CardSeeThrough (+ kendi testi) silindi, ayrı commitler, analyze temiz. text_window.dart KALDI: windowed_body.dart kullanıyor. Balonlu yalnız-yazma yolları: aranmadı/silinmedi — şüpheli, sabah bakılacak.)* Adayları `Grep` ile doğrula, başvuru yoksa sil:
   `CardSeeThrough` (HAFIZA: "hiçbir yerde açılmıyor"), `pickReminderWhen` ("artık
   kullanılmıyor"), `text_window.dart` ("bağlı değil" — `windowed_body.dart` kullanıyorsa
   kalır), balonlu görünümden kalan yalnız-yazma yolları (salt okunur ortak notun çizimi

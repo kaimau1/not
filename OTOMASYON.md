@@ -114,7 +114,7 @@ Sıra önceliktir: önce kullanıcının bildirdiği hatalar, sonra kalem/perfor
 |---|---|---|---|---|---|---|
 | P01 | Ortak test düzeneği + eke çizgi saf değişiklik | fable | F59.1, F60.1 | A/B | | bitti (2026-11-10): eke 10 çizgide kök kurulum/kayıt 10 → 1; klavye/yazma A/B'de regresyon yok; PDF çizimi cihazda ölçülmedi (P11 aracı) |
 | P02 | Klavye/alt panel birikim kasması | fable | F60.S2 | A/B | evet | bitti (2026-11-10): ÜRETİLEMEDİ — cihazsız bekçi (`editor_leak_test`) ve cihazda taze ↔ 32 gir-çık ölçümünde birikim yok (klavye aç 299 → 293 ms); F60.S2 açık kaldı, kullanıcıdan senaryo gerek. Tek düzeltme: `PageTurn` animasyon sızıntısı. APK: P01+P02 |
-| P03 | HAFIZA'yı böl (≤ 30 KB), ölü kod | sonnet | F58.2, F58.5 | | | bekliyor |
+| P03 | HAFIZA'yı böl (≤ 30 KB), ölü kod | sonnet | F58.2, F58.5 | | | bitti (2026-11-10): HAFIZA 109 → 5 KB (`docs/hafiza/` 10 konu dosyası, `HAFIZA_ARSIV_3.md` bayt bayt eski hâl, boyut bekçisi); ölü `pickReminderWhen` + `CardSeeThrough` silindi. Balonlu yalnız-yazma yolları yapılmadı (sabah bakılacak); yeni 30 kural satırı gözden geçirilmeli |
 | P04 | "Tümü" çipi + klasör çipleri, paket kapanması, misafir etiketi | opus | F60.S3, F60.2, F60.4 | | | bekliyor |
 | P05 | Gömülüde silgi + `PenPolicy` + tek araç durumu | fable | F60.S4, F63.1, F63.2 | | | bekliyor |
 | P06 | Sabit PDF sürekli dikey kaydırma | opus | F65.8 | A/B | evet | bekliyor |

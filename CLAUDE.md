@@ -49,7 +49,7 @@ Editöre/kart ızgarasına GÖRÜNÜR yeni alan, kip ya da sarmalayıcı eklerke
 
 ## Hafıza (usta koordineli — 3 katman)
 - Kod yapısı        → graphify-out/     (oku: GRAPH_REPORT.md · güncelle: elle `graphify update .` — depoda otomatik kanca YOK; grafik son 2026-11-02 (bulutta, 19 810 düğüm) güncellendi; kod ilerledikçe bayatlar, satır/dosya bilgisini koddan doğrula)
-- Proje ne/niye     → HAFIZA.md         (≤30 KB, geçerli kararlar/tuzaklar — oku: iş başı · yaz: iş sonu, ilgili bölüme; değişen kuralı GÜNCELLE) · tarihçe `HAFIZA_ARSIV.md` (→ 2026-10-19) ve `HAFIZA_ARSIV_2.md` (→ 2026-11-02, sıkıştırma öncesi tam hâl) — ikisi de dondurulmuş, grep ile
+- Proje ne/niye     → HAFIZA.md         (≤30 KB, `test/hafiza_size_test.dart` bekçisi: ortam + her oturumda geçerli kurallar + konu dizini — oku: iş başı) → konu ayrıntısı `docs/hafiza/*.md` (ortam_ci, veri, akicilik, editor, kalem, ekler_pdf, arayuz, web, takvim_gmail, ai_ses; yaz: iş sonu, İLGİLİ konu dosyasına; değişen kuralı GÜNCELLE) · tarihçe `HAFIZA_ARSIV.md` (→ 2026-10-19), `HAFIZA_ARSIV_2.md` (→ 2026-11-02) ve `HAFIZA_ARSIV_3.md` (→ 2026-11-10, bölünmeden önceki tam hâl) — üçü de dondurulmuş, grep ile
 - Kullanıcı tercihi → .claude memory/   (otomatik, projeler-arası — proje bilgisi buraya YAZILMAZ)
 Yaz kuralı: usta rule 12 / YAZ — tetikleyici (kalıcı karar, bug kök nedeni, yanlış yol) oluştuysa iş bitmeden yaz. Sır/anahtar/kişisel veri hafızaya YAZILMAZ.
 
