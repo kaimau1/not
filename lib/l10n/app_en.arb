@@ -2795,6 +2795,7 @@
   "friendsAlreadyShort": "In contacts",
   "settingsGroupAccount": "Account",
   "settingsGroupApp": "App",
+  "settingsUpdatesTitle": "Updates and version",
   "settingsGroupData": "Data and privacy",
   "settingsGroupOther": "Other",
   "friendsCountSummary": "{count, plural, =0{No contacts yet} =1{1 contact} other{{count} contacts}}",

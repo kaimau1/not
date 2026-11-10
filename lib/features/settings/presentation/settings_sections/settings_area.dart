@@ -322,7 +322,64 @@ class _AreaPage extends StatelessWidget {
   }
 }
 
-/// Kök sayfanın dibinde uygulama adı ve sürümü.
+/// Kök sayfanın dibinde YALNIZ uygulama adı ve sürümü (2026-11-10: güncelleme,
+/// sürüm notları ve oto güncelleme dağınıktı → "Güncelleme ve sürüm" alanında
+/// toplandı; sürüm bilgisi yine doğrudan görünür, dokununca o alan açılır).
+class _VersionLine extends StatefulWidget {
+  const _VersionLine({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  State<_VersionLine> createState() => _VersionLineState();
+}
+
+class _VersionLineState extends State<_VersionLine> {
+  String? _version;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(
+      PackageInfo.fromPlatform()
+          .then((i) {
+            if (mounted) setState(() => _version = i.version);
+          })
+          .catchError((Object _) {}),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: Center(
+        child: InkWell(
+          key: const ValueKey('settings-version-line'),
+          borderRadius: BorderRadius.circular(12),
+          onTap: widget.onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Text(
+              _version == null
+                  ? l10n.appName
+                  : '${l10n.appName} · v$_version',
+              key: const ValueKey('settings-version-footer'),
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "Güncelleme ve sürüm" alanının içeriği: sürüm (dokun: denetle), sürüm
+/// notları, oto güncelleme, yeniden açılma izni.
 class _VersionFooter extends StatefulWidget {
   const _VersionFooter();
 
@@ -427,7 +484,7 @@ class _VersionFooterState extends State<_VersionFooter>
     final l10n = context.l10n;
     final muted = theme.colorScheme.onSurfaceVariant;
     return Padding(
-      padding: const EdgeInsets.only(top: 28),
+      padding: const EdgeInsets.only(top: 4),
       child: Column(
         children: [
           // SÜRÜM NOTLARI (2026-11-10): sürümün hemen üstünde.

@@ -7644,6 +7644,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsGroupApp => 'Uygulama';
 
   @override
+  String get settingsUpdatesTitle => 'Güncelleme ve sürüm';
+
+  @override
   String get settingsGroupData => 'Veri ve gizlilik';
 
   @override

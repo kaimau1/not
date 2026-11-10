@@ -7666,6 +7666,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsGroupApp => 'App';
 
   @override
+  String get settingsUpdatesTitle => 'Updates and version';
+
+  @override
   String get settingsGroupData => 'Data and privacy';
 
   @override
