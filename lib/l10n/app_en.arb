@@ -2961,6 +2961,8 @@
   "updateNeedsPermission": "Allow this app to install unknown apps, then tap Update again",
   "updateFailed": "Download failed; opening the GitHub page",
   "updateTapToCheck": "Tap to check for updates",
+  "updateReopenOn": "Reopens by itself after updating",
+  "updateReopenOff": "Reopen after updating: allow",
   "updateChecking": "Checking for updates…",
   "updateUpToDate": "You're on the latest version",
   "updateCheckFailed": "Couldn't check — check your connection",

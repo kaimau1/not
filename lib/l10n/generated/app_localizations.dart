@@ -14522,6 +14522,18 @@ abstract class AppLocalizations {
   /// **'Dokun: güncellemeyi denetle'**
   String get updateTapToCheck;
 
+  /// No description provided for @updateReopenOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncellemeden sonra kendiliğinden açılır'**
+  String get updateReopenOn;
+
+  /// No description provided for @updateReopenOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncellemeden sonra kendiliğinden açılsın: izin ver'**
+  String get updateReopenOff;
+
   /// No description provided for @updateChecking.
   ///
   /// In tr, this message translates to:

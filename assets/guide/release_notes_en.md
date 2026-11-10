@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 10 November 2026 {#2026-11-10}
+- **Reopen-after-update permission:** Notes now appears in the "Display over other apps" list. Tap "Reopen after updating: allow" at the bottom of Settings and turn it on; the app then opens by itself when an update finishes.
 - **What's new on Home:** after an update, a short notice on Home shows what changed in this version; "See all" opens the release notes.
 - **Updates visible in Settings:** tapping the version line now shows download percentage and a bar, then "installing"; cancellation or errors are shown there too.
 - **The app reopens after updating itself** instead of just closing. If the phone blocks opening from the background, a "Notes updated — tap to open" notification appears.

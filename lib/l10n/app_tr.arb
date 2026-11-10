@@ -3763,6 +3763,8 @@
   "updateNeedsPermission": "Bu uygulamaya \"bilinmeyen uygulama yükleme\" izni ver, sonra yeniden Güncelle'ye dokun",
   "updateFailed": "İndirilemedi; GitHub sayfası açılıyor",
   "updateTapToCheck": "Dokun: güncellemeyi denetle",
+  "updateReopenOn": "Güncellemeden sonra kendiliğinden açılır",
+  "updateReopenOff": "Güncellemeden sonra kendiliğinden açılsın: izin ver",
   "updateChecking": "Güncelleme denetleniyor…",
   "updateUpToDate": "En son sürüm kullanılıyor",
   "updateCheckFailed": "Denetlenemedi — bağlantıyı kontrol et",

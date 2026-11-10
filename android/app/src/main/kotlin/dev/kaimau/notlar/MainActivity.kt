@@ -634,6 +634,23 @@ class MainActivity : FlutterFragmentActivity() {
                     // isteyen (kişisel) derlemede. Sessiz kurulum Android'de
                     // yok: sistemin "Güncelle" penceresi açılır, bir dokunuş.
                     "canSelfUpdate" -> result.success(requestsInstallPackages())
+                    // 2026-11-10: güncellemeden sonra kendiliğinden açılma izni.
+                    "canDrawOverlays" -> result.success(
+                        Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this)
+                    )
+                    "openOverlaySettings" -> {
+                        try {
+                            startActivity(
+                                Intent(
+                                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                    Uri.parse("package:$packageName")
+                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                            result.success(true)
+                        } catch (e: Exception) {
+                            result.success(false)
+                        }
+                    }
                     "installApk" -> {
                         val path = call.argument<String>("path")
                         if (path == null) {

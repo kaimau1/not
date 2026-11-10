@@ -330,12 +330,37 @@ class _VersionFooter extends StatefulWidget {
   State<_VersionFooter> createState() => _VersionFooterState();
 }
 
-class _VersionFooterState extends State<_VersionFooter> {
+class _VersionFooterState extends State<_VersionFooter>
+    with WidgetsBindingObserver {
   String? _version;
+
+  /// Güncellemeden sonra kendiliğinden açılma izni (null = bilinmiyor ya da
+  /// bu derleme kendini güncelleyemiyor → satır yok). 2026-11-10.
+  bool? _overlay;
+
+  Future<void> _readOverlay() async {
+    if (!await AppUpdate.canSelfInstall()) return;
+    final v = await AppUpdate.canDrawOverlays();
+    if (mounted) setState(() => _overlay = v);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // İzin sayfasından dönünce durum tazelensin.
+    if (state == AppLifecycleState.resumed) unawaited(_readOverlay());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(_readOverlay());
     unawaited(
       PackageInfo.fromPlatform()
           .then((i) {
@@ -413,6 +438,18 @@ class _VersionFooterState extends State<_VersionFooter> {
             label: Text(l10n.releaseNotesTitle),
           ),
           _versionTap(context, theme, l10n, muted),
+          if (_overlay != null)
+            TextButton.icon(
+              key: const ValueKey('settings-update-reopen'),
+              onPressed: _overlay! ? null : AppUpdate.openOverlaySettings,
+              icon: Icon(
+                _overlay! ? Icons.check_circle_outline : Icons.open_in_new,
+                size: 18,
+              ),
+              label: Text(
+                _overlay! ? l10n.updateReopenOn : l10n.updateReopenOff,
+              ),
+            ),
           // OTO GÜNCELLEME (2026-11-10): açıkken yeni sürüm arka planda iner,
           // bir sonraki açılışta kurulur. Kapalıyken yalnız ana ekran şeridi.
           if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
