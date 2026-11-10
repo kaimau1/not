@@ -90,3 +90,47 @@ String derivedAttachmentPath({
     '${attachmentId}_${p.basename(fileName)}',
   );
 }
+
+/// [source]u [target]a AKIŞLA kopyalar — dosya belleğe ALINMAZ (OTURTMA
+/// F65.9: 1 GB'lık PDF `readAsBytes` ile RAM'e okunuyordu). `addStream` geri
+/// basıncı korur: yazma okumaya yetişmezse okuma bekler. [onProgress] yalnız
+/// yüzde değişince çağrılır (1 GB'ta 16 bin parça var; her parçada şerit
+/// yeniden çizilmesin). Hata olursa yarım hedef silinir.
+Future<void> copyFileStreamed(
+  File source,
+  File target, {
+  void Function(double fraction)? onProgress,
+}) async {
+  final total = await source.length();
+  var done = 0;
+  var lastPercent = -1;
+  final sink = target.openWrite();
+  try {
+    await sink.addStream(
+      source.openRead().map((chunk) {
+        done += chunk.length;
+        final percent = total == 0 ? 100 : done * 100 ~/ total;
+        if (percent != lastPercent) {
+          lastPercent = percent;
+          onProgress?.call(percent / 100);
+        }
+        return chunk;
+      }),
+    );
+    await sink.flush();
+    await sink.close();
+  } catch (_) {
+    try {
+      await sink.close();
+    } catch (_) {}
+    try {
+      await target.delete();
+    } catch (_) {}
+    rethrow;
+  }
+}
+
+/// Hata "cihazda yer kalmadı" mı (Linux/Android ENOSPC 28, Windows 112).
+bool isNoSpaceError(Object error) =>
+    error is FileSystemException &&
+    (error.osError?.errorCode == 28 || error.osError?.errorCode == 112);

@@ -20,6 +20,12 @@ enum AttachmentStatus {
 
   /// Web: dosya eklendiği telefondan hiç çıkmamış.
   onPhone,
+
+  /// Büyük dosya yalnız bu cihazda (F65.9): buluta hiç gitmez.
+  deviceOnly,
+
+  /// Büyük dosya başka cihazda kaldı (F65.9): indirme denenmez.
+  otherDevice,
 }
 
 /// Saf: görünümden bağımsız durum (test edilir).
@@ -33,6 +39,9 @@ AttachmentStatus attachmentStatusOf(
   int limitMb = 0,
   bool textOnly = false,
 }) {
+  if (a.localOnly) {
+    return hasLocal ? AttachmentStatus.deviceOnly : AttachmentStatus.otherDevice;
+  }
   if (a.isWebVideo || a.skipsUpload) return AttachmentStatus.none;
   if (hasLocal) {
     // Görüntülü not ve "yalnız metin" kipi buluta hiç gitmez: çark yalan olurdu.
@@ -59,6 +68,8 @@ IconData attachmentStatusIcon(AttachmentStatus status) => switch (status) {
   AttachmentStatus.waitingOwner => Icons.hourglass_empty,
   AttachmentStatus.notSynced => Icons.cloud_sync_outlined,
   AttachmentStatus.onPhone => Icons.phone_android_outlined,
+  AttachmentStatus.deviceOnly => Icons.phone_android_outlined,
+  AttachmentStatus.otherDevice => Icons.devices_other_outlined,
 };
 
 String attachmentStatusText(BuildContext context, AttachmentStatus status) {
@@ -72,6 +83,8 @@ String attachmentStatusText(BuildContext context, AttachmentStatus status) {
     AttachmentStatus.waitingOwner => l10n.attachmentWaitingOwner,
     AttachmentStatus.notSynced => l10n.attachmentNotSynced,
     AttachmentStatus.onPhone => l10n.webAttachmentsOnPhone(1),
+    AttachmentStatus.deviceOnly => l10n.attachmentDeviceOnly,
+    AttachmentStatus.otherDevice => l10n.attachmentOtherDevice,
   };
 }
 

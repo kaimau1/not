@@ -2,6 +2,9 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 11 Kasım 2026 {#2026-11-11}
+- **Büyük PDF'ler eklenebiliyor:** bulut sınırını aşan PDF'ler (ör. 1 GB) artık reddedilmiyor; belleğe yüklenmeden uygulamaya kopyalanır, yalnız bu cihazda tutulur ve buluta yedeklenmez.
+
 ## 10 Kasım 2026 {#2026-11-10}
 - **Kendiliğinden yeniden açılma izni:** Notlar artık "Diğer uygulamaların üzerinde göster" listesinde görünüyor. Ayarlar'ın en altındaki "Güncellemeden sonra kendiliğinden açılsın: izin ver"e dokunup izni açınca güncelleme bitince uygulama bildirim beklemeden açılır.
 - **Yenilikler ana ekranda:** uygulama güncellenince bu sürümde neyin değiştiği ana ekranda kısa bir bildirimle gösterilir; "Tümünü gör" sürüm notlarını açar.

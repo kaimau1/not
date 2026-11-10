@@ -332,6 +332,24 @@ abstract class AppLocalizations {
   /// **'Dosya bu cihaza henüz senkronlanmadı'**
   String get attachmentNotSynced;
 
+  /// No description provided for @attachmentDeviceOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Büyük dosya: yalnız bu cihazda duruyor, buluta yedeklenmez'**
+  String get attachmentDeviceOnly;
+
+  /// No description provided for @attachmentOtherDevice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu büyük dosya yalnız eklendiği cihazda; buraya indirilmez'**
+  String get attachmentOtherDevice;
+
+  /// No description provided for @attachmentDeviceFull.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihazda yer kalmadı; dosya kopyalanamadı. Biraz yer açıp yeniden dene.'**
+  String get attachmentDeviceFull;
+
   /// No description provided for @webDriveTapToOpen.
   ///
   /// In tr, this message translates to:

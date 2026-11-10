@@ -648,6 +648,15 @@ extension _EditorAttachments on _NoteEditorScreenState {
   /// [asFile] true ise PDF sayfaya konmaz, ek şeridinde durur (gömme
   /// akışı). Eklenen eki döner.
   Future<Attachment?> _addPdfFile(XFile file, {bool asFile = false}) async {
+    // BÜYÜK PDF (F65.9): bulut tavanını aşan dosya belleğe OKUNMAZ ve
+    // reddedilmez — yalnız bu cihazda tutulur (bkz. prepareLocalPdf).
+    final localRepo = _attachments;
+    if (!kIsWeb &&
+        localRepo != null &&
+        file.path.isNotEmpty &&
+        await file.length() > localRepo.maxBytes) {
+      return _addLocalPdfFile(localRepo, file, asFile: asFile);
+    }
     final bytes = await file.readAsBytes();
     // PDF sıkıştırılamaz (görsel ve ses küçültülüyor, bu küçültülemiyor) —
     // büyük dosya Firebase Storage kotasına doğrudan gider. Engellemek yerine
@@ -717,6 +726,42 @@ extension _EditorAttachments on _NoteEditorScreenState {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
       if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
+    }
+    return null;
+  }
+
+  /// [_addPdfFile]'ın büyük dosya kolu: akışla kopya, şeritte yüzde, sonunda
+  /// "yalnız bu cihazda" bilgisi. Paylaşılan balonlu PDF çözümü
+  /// (`readSharedPdf`) bütün baytı istediği için burada atlanır.
+  Future<Attachment?> _addLocalPdfFile(
+    AttachmentRepository repo,
+    XFile file, {
+    required bool asFile,
+  }) async {
+    final l10n = context.l10n;
+    try {
+      final stored = await _runBusy(l10n.attachmentCopying, () async {
+        try {
+          return await repo.prepareLocalPdf(
+            noteId: widget.noteId,
+            sourcePath: file.path,
+            fileName: _documentFileName(file.name, '.pdf'),
+            onProgress: (f) =>
+                AttachmentRepository.directUploadProgress.value = f,
+          );
+        } finally {
+          AttachmentRepository.directUploadProgress.value = null;
+        }
+      });
+      Attachment? added;
+      _mutate((n) {
+        added = asFile ? stored : _placePdf(stored, n);
+        return n.copyWith(attachments: [...n.attachments, added!]);
+      }, immediate: true);
+      if (mounted) _showSnack(l10n.attachmentDeviceOnly);
+      return added;
+    } catch (e) {
+      if (mounted) _showSnack(l10n.attachmentFailed(friendlyError(l10n, e)));
     }
     return null;
   }

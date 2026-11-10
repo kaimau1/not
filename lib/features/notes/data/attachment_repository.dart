@@ -12,7 +12,9 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/error_log.dart';
+import '../../../core/friendly_error.dart';
 import '../../../core/utils/local_file.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../ai/data/ai_gate.dart' show premiumProvider;
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/attachment.dart';
@@ -543,6 +545,57 @@ class AttachmentRepository {
     );
   }
 
+  /// **BÜYÜK PDF YALNIZ BU CİHAZDA** (OTURTMA F65.9, KARAR K-O15 "en güvenli":
+  /// uygulama deposuna akışla kopyala). Kullanıcı: "tabletimde radyoloji
+  /// PDF'lerim var, açamıyorum; sınır var deyip hiç açmıyor". Bulut tavanını
+  /// ([maxBytes]) aşan dosya artık REDDEDİLMEZ: dosya belleğe okunmadan
+  /// uygulama deposuna kopyalanır ve ek [Attachment.localOnly] olur — yükleme
+  /// kuyruğu onu hiç denemez, kota da sayılmaz (buluta gitmiyor).
+  ///
+  /// Kaynak seçicinin ÖNBELLEK kopyasıysa (Android seçicisi içeriği
+  /// `cacheDir/secim_*`e kopyalar) kopya bitince silinir: 1 GB önbellekte
+  /// ikinci kez durmasın. Kullanıcının kendi dosyasına dokunulmaz.
+  /// Yer yetmezse [DeviceFullException].
+  Future<Attachment> prepareLocalPdf({
+    required String noteId,
+    required String sourcePath,
+    required String fileName,
+    void Function(double fraction)? onProgress,
+  }) async {
+    if (kIsWeb) {
+      throw UnsupportedError('Tarayıcıda yalnız-cihaz eki desteklenmiyor.');
+    }
+    final source = File(sourcePath);
+    final sizeBytes = await source.length();
+    final id = _uuid.v4();
+    final safeName = p.basename(fileName);
+    final dir = await _attachmentsDir(noteId);
+    final target = File(p.join(dir.path, '${id}_$safeName'));
+    try {
+      await copyFileStreamed(source, target, onProgress: onProgress);
+    } catch (e) {
+      if (isNoSpaceError(e)) throw const DeviceFullException();
+      rethrow;
+    }
+    forgetLocalFile(target.path);
+    try {
+      final cache = (await getTemporaryDirectory()).path;
+      if (p.isWithin(cache, sourcePath)) await source.delete();
+    } catch (_) {
+      // Önbellek temizliği işi düşürmez.
+    }
+    return Attachment(
+      id: id,
+      kind: AttachmentKind.pdf,
+      fileName: safeName,
+      mimeType: 'application/pdf',
+      localPath: target.path,
+      sizeBytes: sizeBytes,
+      localOnly: true,
+      createdAt: DateTime.now(),
+    );
+  }
+
   /// VAR OLAN bir belgenin baytlarını yenisiyle değiştirir (PDF düzenleme:
   /// sayfa sil/döndür/sırala, çizimi belgeye gömme).
   ///
@@ -996,6 +1049,11 @@ class AttachmentRepository {
     if (attachment.kind == AttachmentKind.text) {
       return Uint8List.fromList(utf8.encode(attachment.text));
     }
+    // Yalnız-cihaz eki bulut tavanından BÜYÜK (F65.9, 500 MB–1 GB): bütün
+    // baytı isteyen yollar (AI özeti, paylaşım, kopya, dışa aktarma) onu
+    // belleğe alıp uygulamayı düşürmesin — "dosya çok büyük" desin. Görüntü,
+    // kalem ve sayfa metni dosya YOLUNDAN çalışır, buraya gelmez.
+    if (attachment.localOnly) throw const FileTooLargeException();
     if (attachment.localPath.isNotEmpty) {
       final file = File(attachment.localPath);
       if (await file.exists()) return file.readAsBytes();
@@ -1053,6 +1111,17 @@ class StorageFullException extends FileTooLargeException {
 
   /// Aşılan tavan (bayt).
   final int quotaBytes;
+}
+
+/// Cihazda yer kalmadı: büyük dosya kopyalanamadı (F65.9).
+class DeviceFullException implements UserFacingException {
+  const DeviceFullException();
+
+  @override
+  String? get message => null;
+
+  @override
+  String localized(AppLocalizations l10n) => l10n.attachmentDeviceFull;
 }
 
 /// Ekin baytlarına ulaşılamadı (yerel kopya silinmiş ve bulutta da yok) ya da
