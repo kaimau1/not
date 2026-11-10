@@ -1,0 +1,50 @@
+# Hafıza — Kalem, şekil, avuç
+
+HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski hâl: `HAFIZA_ARSIV_3.md`.
+
+## Kısa kurallar (sıkıştırmada tek satıra inenler)
+- Kalem: ayarlar cihazda `InkToolMemory`; "yalnız kalemle yaz", yan düğme =
+  geçici silgi; S Note araçları (şekil tanıma, kement, kısmi silgi, havada
+  önizleme); "Kalemi otomatik algıla" varsayılan açık. Tek tepsi `PenTray`.
+
+## 2026-11-07 — Tablet turu (HUAWEI MatePad 11, GMS'siz, M-Pencil) — kök nedenler
+- **Kare tuval `Align` içinde sıkışıyordu** (iki yerde, aynı kök): `InkPageLayer(uniform)` ve kart önizlemesi (`CardPageInk`) kare `CustomPaint`'i katmanın/kutunun boyuna sıkıştırıyordu → kalem kipi kapanınca (sayfa altı boşluğu gidince) çizim dikeyde basılıp kayıyor, kartta yassı. `OverflowBox` ile kare. Kart önizlemesi çizimin tepesinden başlar.
+- **Kalem tepsisi tutamağı** aşağıdayken gezinme çubuğunun İÇİNE iniyordu (dokunuş sisteme gidiyordu). Kapsül tasarımında (aşağıda) hap/kapsül hep `bottomInset + _kDockGap` üstünde durur.
+
+## 2026-11-07 — Tablet: avuç, kalem tıkı, fiziksel klavye
+- **Avuç reddi `InkController`'da (ortak):** kalem ekrandayken ya da son kalem olayından (havada yaklaşma dahil) 400 ms içinde gelen parmak = avuç: çizmez, metne/madde jestine de gitmez (`claims`). Avuç kalemden ÖNCE değdiyse kalem inince avucun işi geri alınır (`_dropPalms`). Sistemin iptal ettiği dokunuş (`pointerCancel`) çizgi bırakmaz. KÖK NEDEN: avuç "ikinci parmak" sayılıp kalemin çizgisini iptal ediyordu ("kalem algılanmıyor"). Testlerde kalemden hemen sonra parmak dokunuşu için ≥ 400 ms gerçek bekleme gerekir (`tester.runAsync`).
+- **Kalem kipi kapalıyken kalemin tek başına tıkı** (son çizgiden ≥ 1,2 sn sonra, ≤ 4 dp kayma) çizmez, alttaki metne/kutucuğa gider (`stylusTapMayPass`, `_InkClaimRecognizer` artık eager değil: kayınca kazanır, kalkınca bırakır). Yazı arasındaki i/ö noktası çizilir. Tabletteki notta kalem tıklarından kalmış başıboş noktalar görüldü.
+
+## 2026-11-08 — Kalem, satır hatırlatıcısı, bildirim düzeyi, kapanış kasması
+- **Kalem kipinde geri ana ekrana atlıyordu — kök neden:** kalem kipinin `BackCloses` kaydı ALT ÇUBUKTAYDI; kalem kipinde (`_pagePen`) alt çubuk hiç kurulmuyor → kayıt yok → geri notu kapatıyordu. Kayıt artık kalem tepsisinin çevresinde; tepsinin kendi kaydı (ayar kartı, açık kapsül) içte → LIFO sıra doğru. Bekçi `editor_pen_tablet_test`.
+- **Şekil/tik/çarpı önerisi** `viewers/ink_recognize.dart` (saf geometri: RDP köşe, `recognizeInkShape` uyum hatası). Öneri `InkController.suggestion` (ayrı `ValueNotifier`, çizgileri yeniden boyatmaz); işaretçi katmanda Listener'ın ÜSTÜNDE (dokunuşu çizime gitmez). ZAMANLAYICI YOK: sonraki dokunuşta/geri alda kalkar (6 sn'lik Timer testleri "pending timer" ile düşürdü). Tik/çarpı `InkToolMemory.markFix` üç durumlu: null = ilk algılamada sor, varsayılan kapalı. Harf boyu (< 36 dp) şekil sayılmaz; artı (+) çarpı sayılmaz (kollar yataya 20–70°).
+- **Eke çizgi = saf değişiklik (F60.1, 2026-11-09):** sabit/gömülü PDF'e çizgi `onInkChanged` → `_updateAttachmentInk` → `_mutate(inkOnly: true)`: kök kurulmaz, kayıt debounce'lu (eskiden çizgi başına tam editör kurulumu + anında kayıt). TUZAK: kök kurulmadığı için bölme/kutunun elindeki ek BAYAT mürekkepli; oradan gelen mürekkep dışı değişiklik (sayfa çevirme, balon) çizgileri silmesin diye `_updateAttachment` `_withLiveInk`'ten geçer (`_staleInk`, kök build'inde boşalır), denetleyiciler bayat `a.ink`'i kimlikle yutar (`_inkSeen`, `_docInkSeen`). Yeni mürekkep yüzeyi eklerken ikisini de kur. Bekçi `perf_budget_test` S6/S7.
+- **Sabit kalemler** `InkToolMemory.presets` (`tür|renk|kalınlık`, en çok 5, cihaz tercihi `ink_presets`).
+
+## 2026-11-08 — Oturum C (12 maddelik istek listesi)
+- **Kalem işaretçisi kök neden:** kalemin İNİŞİ önce çizimi başlatıp öneriyi siliyordu (`pointerDown` → `dismissSuggestion`), işaretçinin `onPointerUp`'ı hiç gelmiyordu. Çözüm: işaretçi inişte uygular + `InkController.claimPointer` o dokunuşu çizime vermez.
+- Düzeltilmiş şekil (tik/çarpı/kare…) SEÇİLİ kalır (`_fixEdit`): kutusundan taşınır, sağ alt tutamaktan boyutlanır; tutamak kement seçiminde de var. Kare/çember eşikleri gevşetildi (açıklık %30, elips %14, dikdörtgen %9).
+- Balon el yazısı: `HandwriteField` kalemi alır (parmak alana gider), 0,9 sn sonra çizgiyi PNG'ye basıp mevcut ML Kit OCR'ından geçirir — yeni bağımlılık yok; bitişik yazıda zayıf (yükseltme: ML Kit Digital Ink).
+- Sabit PDF'e kalem: `PdfPageBox.ink` verilince sayfa katmanı etkileşimli; kalem kaydırmaz (`ScrollConfiguration.dragDevices`), parmak "yalnız kalem"de kaydırır. Görsel için YOK (BoxFit.contain koordinatı) — sonra.
+
+## 2026-11-08 — Oturum D (18 maddelik ikinci tur)
+- **Sabit PDF'e kalem yazmıyordu — kök neden:** `PdfPageBox._pageOverlay`'de mürekkep katmanı seçim + balon katmanlarının ALTINDA; dokunuşu seçim katmanı alıyordu. Kalem açıkken mürekkep EN ÜSTTE, seçim katmanı yok, balonlar salt okunur.
+- Balondaki kalemle yaz → metin (`handwrite_field.dart`) kaldırıldı. Kalem hapı 48 dp + ayraç + 48 dp silgi hedefi. Hızlı satır: kalem yalnız simge; Fotoğraf çek, Tarih/saat ekle varsayılan; Belge tara sonradan eklenir. Satır hatırlatıcı çipi 22 dp sabit, ilk satıra ortalı; dokun = menü (zaman, tamamlandı, ayrıntı, SİL + geri al).
+
+## 2026-11-08 — Oturum E (15+2 maddelik üçüncü tur)
+- **Kalem:** hızlı satırdaki kalem aç/kapa (`_togglePen`, diğer yollar `_openPen` = aç). Parmak var olan çizgide 550 ms kıpırdamadan durursa `InkController.eraserOffer` → silgi düğmesi (inişte kabul + `claimPointer`); yakınlık yeni nokta eklenmeden ölçülür.
+
+## 2026-11-09 — Oturum G (yorum analizi: çokgen, çizgi ucu, son yazı biçimi)
+- **Çokgen (F55.3):** `recognizeClosedShape` elips kazanınca (ya da hiçbiri tutmayınca) düzgün 5–7-gen dener (`_regularPolygonFit`: alan merkezi, ortalama yarıçap, 24 dönüş adımı, ≤ 64 nokta). Kabul: hata ≤ 0,05 VE elipsin %60'ından az VE dikdörtgen/dörtgen/üçgenden iyi. **Sekizgen bilerek YOK:** ölçüldü, düzgün sekizgende oran 0,62 — eşiği gevşetmek elle çizilmiş daireyi çokgene çevirir. `InkFixKind.polygon` (simge `pentagon_outlined`).
+- **Düz çizgi ucu (F55.2):** uçta bekleyip çizgiye oturunca (`_snapActive`) kaleme uzak uç `_snapLineFrom`'da sabit, yakın uç `pointerMove`'da kalemi izler; kalkınca/yeni çizgide sıfırlanır. Kapalı şekillerde yok.
+- **Bilerek yapılmadı:** F55.1 parmağa silgi (avuç içi çizgi silebilir, tek parmak kaydırma ile çakışır — tablette denenmeden yazılmaz); F57.1/F57.2 sürüm notu/taşınan düğme ipucu (tek kullanıcı, her oturuma kalıcı yük — gereksiz); web tarayıcı geri tuşu tam ekranı kapatmıyor (go_router popstate + `HomeFirstHistory`'ye dokunur, getirisi düşük).
+
+## 2026-11-09 — Oturum H (tablet cihaz turu dönüşü)
+- **Kalem yazar/dokunur yüzen düğmesi** (`editor/stylus_toggle.dart`): `InkToolMemory.autoStylus` + `autoStylusListenable`; yer ekran oranı (`penToggleAt`), yalnız bir kez kalem görülen cihazda (`stylusEver`, editörün `_onContentPointerDown`'ı yazar). Kapanınca editör kalem kipi de kapanır. KÖK NEDEN ("kalemle metne dokunamıyorum"): `autoStylus` açıkken kalem, kalem kipi kapalı olsa da sayfaya çiziyordu (`_syncPageInkKinds`).
+- **Sabit PDF'e kalem**: `_penOn` artık `autoStylus` ile de açık; kip yokken `allowedKinds` yalnız kalem, `dragDevices` parmak/fare kaydırır.
+- **Gömülü PDF'e kalem**: `NotePageCanvas._docInk` (ek başına `InkController`, yalnız kalem) + `PdfPageBox` kapak kutusunda da `ink` alır. Sayfa mürekkebi üstte olduğu için `InkExclusionZone` (page_ink_layer): bölgedeki nokta `_SkipExclusions` isabet testinde sayfa katmanına HİÇ ulaşmaz. TUZAK: Listener sırası en derinden başlar — "üstteki katman sonra claim etsin" çalışmaz, isabet testinde kesilmeli.
+- **Şekil**: eksene oturtma 25° (`kInkSnapDegrees`, `_levelOutline` üçgen/dörtgen/çokgende en yatay kenar); çarpı gevşek (`_roughlyStraight`, 15–75°, kesişim 0,15–0,85, oran 0,4–2,5) + tek çizgili çarpı (`_dropCollinear` — RDP eşit uzaklıkta fazladan köşe bırakıyor). Seçimde ÜST ORTA döndürme tutamağı (piksel uzayında döner), çizgiye ÇİFT DOKUNUŞ yeniden seçer (dokunuş noktaları geri alınır).
+
+## 2026-11-09 — Oturum J (tablet senkron + hızlı satır sadeleşmesi)
+- **Kalem kipi**: her açılışta `_penModeOpened` "yalnız kalem" durumunu + "Ayarla" söyler (eski tek seferlik `tipPenToggle`/`tipPagePen` yerine) ve `autoStylus`'u açar; yüzen kalem "yazar"a dönünce metin/liste notunda kip açılır.
+
