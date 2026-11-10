@@ -97,7 +97,8 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 
 ## Açık sorular / bilinen
 - Misafir notunda üst çubuk "Senkronize", ana ekran "yalnız bu cihazda"
-  diyor — karara bağlanmadı (2026-11-01).
+  diyor — karara bağlanmadı (2026-11-01). **Kapandı (F60.4, 2026-11-10):** üst çubuk da
+  misafirde "Yalnız bu cihazda" (`isAnonymousProvider`).
 - **Kare ölçümü tabanı** (F18.7, koşu 41422268562, emülatör): ana ekran fırlatma build p90 4,12 / raster p90 6,33 ms; editör yazma build p90 0,26 / raster p90 6,28 ms; kaçan kare 0. Karşılaştırma koşudan koşuya (mutlak değer cihazda farklı). Ölçüm işi `NOTLAR_ALL_ABIS=1` + `--no-dds` ister.
 - Cihaz doğrulama listesi `KALANLAR.md` §2 (F18.31 duman testi).
 - **2026-11-06 cihaz turu tuzakları:** (1) Not ekranı İÇ İÇE gezginde: kök gezgine açılan levha varken `ModalRoute.of(context).isCurrent` yine true → "levha kapanınca göster" denetimi yanıltır; bildirimi akışın SONUNDA (kayıttan sonra) çağır (`maybeShowAutoStartHint`). (2) Paylaşım alıcısı ikili dosyayı uzantıyla eliyordu; `.notyedek` "PK..." metin notu oldu → `looksLikeZip` imza denetimi. (3) Tam yedek Android'de `saveDocument` (sistem Kaydet) ile; paylaşım levhası yalnız web. (4) adb'nin `am start SEND` ile verdiği media URI'sını uygulama okuyamaz (doğru eleniyor) — paylaşımı Dosyalar uygulamasından dene. (5) Bash aracında heredoc içindeki `\` rtk/kabukta teke iner: düzenli ifade içeren Python'u satır tabanlı yaz.

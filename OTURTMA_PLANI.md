@@ -406,7 +406,11 @@ doğrulanır).
   çapası (`stripWrapAnchors`) ya da gömülü kutu `InkExclusionZone`/yüzen kutu dokunuşu
   yutuyor. Widget testiyle üret; üretilemezse maddeye "üretilemedi" yaz, kullanıcıdan ekran
   kaydı iste.
-- [ ] **F60.4 Misafir notunda üst çubuk "Senkronize" diyor.** Misafir/yalnız-bu-cihaz
+- [x] **F60.4 Misafir notunda üst çubuk "Senkronize" diyor.**
+  *(2026-11-10: kanıt `test/editor_guest_sync_badge_test.dart` kırmızı (anonim hesapta
+  "Senkronize") → yeşil. Üst çubuk göstergesi `isAnonymousProvider` true iken yalnız-bu-cihaz
+  dalına girer (`cloud_off` + "Yalnız bu cihazda"); hesaplı kullanıcıda bulut aynen.
+  Düzenek `pumpEditor`'a `overrides` parametresi eklendi.)* Misafir/yalnız-bu-cihaz
   notunda bulut simgesi yerine "yalnız bu cihazda" simgesi + ipucu (ana ekranla aynı dil).
   `watchPendingWrites` zaten `isLocal` için false döner; gösterge bileşeninde misafir dalı.
 - [ ] **F60.5 Yazma ana bloğu 148 → 229 ms (v1.1.671 → v1.1.701).** `tool/perf/prof_type.py`

@@ -4870,11 +4870,15 @@ child: NoteFindBar(
                             .value ??
                         false;
                     // Yalnız bu cihazdaki not: bulut simgesi yerine telefon.
+                    // Misafir hesabın notu da (F60.4): ana ekran ve hesap
+                    // levhası "yalnız bu cihazda" diyor, burada
+                    // "Senkronize" yazıyordu.
                     if (owner == null &&
-                        (ref
-                                .read(notesRepositoryProvider)
-                                ?.isLocal(widget.noteId) ??
-                            false)) {
+                        (ref.watch(isAnonymousProvider) ||
+                            (ref
+                                    .read(notesRepositoryProvider)
+                                    ?.isLocal(widget.noteId) ??
+                                false))) {
                       return Tooltip(
                         message: l10n.localOnlyBadge,
                         child: Icon(
