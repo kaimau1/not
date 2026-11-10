@@ -14159,7 +14159,7 @@ abstract class AppLocalizations {
   /// No description provided for @spellAutoSubtitle.
   ///
   /// In tr, this message translates to:
-  /// **'Biten her kelime sormadan düzeltilir; başlıkta kelime başları büyür.'**
+  /// **'Biten kelime yalnız emin olunca düzeltilir; hemen ardından Backspace geri alır. Başlıkta kelime başları büyür.'**
   String get spellAutoSubtitle;
 
   /// No description provided for @spellLearnTitle.
@@ -14171,7 +14171,7 @@ abstract class AppLocalizations {
   /// No description provided for @spellLearnSubtitle.
   ///
   /// In tr, this message translates to:
-  /// **'Kendi düzelttiğin kelimeleri ve sık karıştırdığın tuşları öğrenir (Türkçe, İngilizce, Çince). Yalnız bu cihazda tutulur.'**
+  /// **'Kendi düzelttiğin ve klavye önerisinden seçtiğin kelimeleri öğrenir (Türkçe, İngilizce, Çince). Yalnız bu cihazda tutulur.'**
   String get spellLearnSubtitle;
 
   /// No description provided for @spellLearnedCount.
@@ -14377,6 +14377,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Dokunulmayan kelimeler (düzeltmeyi geri aldıkların)'**
   String get spellLearnedKept;
+
+  /// No description provided for @spellRulesOnlyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız kurallar'**
+  String get spellRulesOnlyTitle;
+
+  /// No description provided for @spellRulesOnlySubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız bilinen yazım hataları (herşey → her şey) ve senin öğrettiklerin düzeltilir; tahmin yok.'**
+  String get spellRulesOnlySubtitle;
+
+  /// No description provided for @spellRejectedTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir daha yapılmayacak düzeltmeler (geri aldıkların ya da değiştirdiklerin)'**
+  String get spellRejectedTitle;
 
   /// No description provided for @inkEraserOffer.
   ///

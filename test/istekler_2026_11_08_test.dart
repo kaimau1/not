@@ -5,7 +5,7 @@ import 'package:notlar/core/utils/spell_fix.dart';
 import 'package:notlar/features/gmail/data/gmail_api.dart';
 import 'package:notlar/features/gmail/presentation/gmail_screen.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
-import 'package:notlar/features/notes/presentation/editor/auto_spell.dart';
+import 'package:notlar/core/utils/spell_engine.dart';
 import 'package:notlar/features/notes/presentation/editor/note_package.dart';
 
 /// 2026-11-08 istek listesi: yazım düzelt, Gmail görsel/bağlantı, not paketi,
@@ -49,9 +49,9 @@ void main() {
     });
 
     test('cihaz önerisi yalnız yakınsa', () {
-      expect(AutoSpell.acceptSuggestion('kalmel', 'kalem'), isTrue);
-      expect(AutoSpell.acceptSuggestion('kalem', 'Kalem'), isFalse);
-      expect(AutoSpell.acceptSuggestion('kalem', 'masa'), isFalse);
+      expect(SpellEngine.acceptSuggestion('kalmel', 'kalem'), isTrue);
+      expect(SpellEngine.acceptSuggestion('kalem', 'Kalem'), isFalse);
+      expect(SpellEngine.acceptSuggestion('kalem', 'masa'), isFalse);
     });
   });
 

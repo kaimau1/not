@@ -1,88 +1,28 @@
-/// **ÖĞRENEN YAZIM DÜZELTME** (kullanıcı isteği 2026-11-08: "kişinin sık
-/// yaptığı ve kendi düzelttiği yazılar arka planda öğrenilip harf harf kelime
-/// kelime öğrenilip oto düzeltmede kullanılmalı — performans ve pil sorunu
-/// oluşturmamalı; Türkçe, İngilizce ve Çince").
+/// **KİŞİSEL YAZIM HAFIZASI v2** (Faz 70). Saf Dart; kararı
+/// `spell_engine.dart` verir, bu dosya yalnız VERİYİ tutar:
 ///
-/// Saf Dart, Flutter'sız (testli). Üç katman:
+/// * [SpellMemory.words]: kullanıcının yazdığı kelimeler (sıklık); notlardan
+///   gelen sözlük [SpellMemory.seeded] (kaydedilmez). Üç kez görülen kelime
+///   "bilinir" ve otomatik düzeltilmez.
+/// * [SpellMemory.fixes]: kullanıcının öğrettiği `yanlış → doğru`; iki kez
+///   görülünce (ya da elle eklenince / otomatik düzeltmenin yerine yazılınca)
+///   uygulanır.
+/// * [SpellMemory.rejected]: kullanıcının geri aldığı ya da değiştirdiği
+///   OTOMATİK düzeltme çiftleri (`yazılan>düzeltilen`) — bir daha uygulanmaz.
+/// * [SpellMemory.keep]: hiç düzeltilmeyecek kelimeler (v1'in "geri alınan"
+///   listesi buraya taşınır).
 ///
-/// 1. **Kişisel sözlük** ([SpellMemory.words]): kullanıcının yazdığı ve
-///    notlarında geçen kelimeler, sıklıklarıyla. "Bilinen" kelimeye
-///    dokunulmaz; bilinmeyen kelime en yakın sık kelimeye çekilir.
-/// 2. **Kelime düzeltmeleri** ([SpellMemory.fixes]): kullanıcı bir kelimeyi
-///    yazıp hemen geri dönüp düzelttiyse `yanlış → doğru` sayılır; iki kez
-///    görülen düzeltme bir daha sorulmadan uygulanır. Kullanıcı OTOMATİK
-///    düzeltmeyi geri aldıysa o kelime bir daha düzeltilmez
-///    ([SpellMemory.rejected]).
-/// 3. **Harf karışıklıkları** ([SpellMemory.confusions]): düzeltmeler harf
-///    harf hizalanır ("o yerine p", "boşluk yerine n") — mesafe hesabı
-///    kişinin sık karıştırdığı tuşları ucuz sayar.
-///
-/// Mesafe klavye düzenine göre ağırlıklıdır ([keyCost]): komşu tuş, şapkasız
-/// harf (ı/i, ö/o, ş/s…) ve fazladan basılan komşu tuş ucuzdur —
-/// "yaoçoılıyor" → "yapılıyor" yakındır, "kalem" → "kalın" uzaktır.
-///
-/// Çince (Han yazısı) için bulanık eşleştirme YOK — giriş yöntemi karakteri
-/// zaten seçiyor; yalnız kullanıcının açıkça düzelttiği kalıplar öğrenilir.
-///
-/// Bedel: hesap yalnız KELİME BİTİNCE ve yalnız bilinmeyen kelimede; sözlük
-/// uzunluğa göre kovalanır, yalnız ±2 uzunluktaki kelimeler taranır ve
-/// mesafe eşiği aşılınca satır erken kesilir.
+/// v1 dosyası ("c" harf karışıklıkları, sayaçlı düzeltmeler) [SpellMemory.decode]'da
+/// göçer; karışıklık ağırlıkları atılır.
 library;
 
 import 'dart:convert';
 import 'dart:math' as math;
 
-/// Türkçe Q klavyesinin harf sıraları (İngilizce QWERTY bunun alt kümesi;
-/// ı/ğ/ü/ş/i/ö/ç Türkçe konumlarında).
-const _rows = ['qwertyuıopğü', 'asdfghjklşi', 'zxcvbnmöç'];
-
-/// Sıraların yatay kayması (tuş genişliği cinsinden).
-const _rowShift = [0.0, 0.3, 0.8];
-
-final Map<String, (double, double)> _keyPos = () {
-  final out = <String, (double, double)>{};
-  for (var r = 0; r < _rows.length; r++) {
-    for (var i = 0; i < _rows[r].length; i++) {
-      out[_rows[r][i]] = (i + _rowShift[r], r.toDouble());
-    }
-  }
-  return out;
-}();
-
-/// Şapkalı/şapkasız eşler: klavye ayarı yanlış olunca ya da aceleyle en sık
-/// yapılan hata.
-const _diacritic = {
-  'ı': 'i', 'i': 'ı', 'ö': 'o', 'o': 'ö', 'ü': 'u', 'u': 'ü', //
-  'ş': 's', 's': 'ş', 'ç': 'c', 'c': 'ç', 'ğ': 'g', 'g': 'ğ',
-};
-
-/// Boşluk çubuğunun hemen üstündeki tuşlar ("boşluk yerine n").
-/// Kullanıcı 2026-11-08: "boşluk yerine yanlışlıkla v, b, n, m, ö" — Türkçe
-/// Q'da ö, m'nin hemen sağında.
-const _nearSpace = 'cvbnmö';
-
-/// [a] yerine [b] basmanın bedeli (0–1). Komşu tuş ≈ 0,45, şapka 0,3.
-double keyCost(String a, String b) {
-  if (a == b) return 0;
-  if (_diacritic[a] == b) return 0.3;
-  if (a == ' ' || b == ' ') {
-    final other = a == ' ' ? b : a;
-    return _nearSpace.contains(other) ? 0.5 : 1;
-  }
-  final pa = _keyPos[a];
-  final pb = _keyPos[b];
-  if (pa == null || pb == null) return 1;
-  final d = math.sqrt(math.pow(pa.$1 - pb.$1, 2) + math.pow(pa.$2 - pb.$2, 2));
-  if (d <= 1.15) return 0.45;
-  if (d <= 1.6) return 0.7;
-  return 1;
-}
-
 /// Kelime Han yazısı mı (Çince: bulanık düzeltme yok).
 bool isCjk(String w) => RegExp(r'\p{Script=Han}', unicode: true).hasMatch(w);
 
-/// Kelime İngilizce mi görünüyor (yalnız Latin ASCII ve Türkçeye yabancı
-/// harf kalıbı) — cihaz denetçisinin dili ve sözlük seçimi için.
+/// Kelime İngilizce mi görünüyor — cihaz denetçisinin dili için.
 bool looksEnglish(String w) {
   final l = w.toLowerCase();
   if (RegExp('[çğıöşü]').hasMatch(l)) return false;
@@ -95,36 +35,36 @@ bool looksEnglish(String w) {
 String trLower(String s) =>
     s.replaceAll('I', 'ı').replaceAll('İ', 'i').toLowerCase();
 
-/// Kişisel yazım hafızası. JSON'a yazılır ([toJson]); sınırlar
-/// ([maxWords], [maxFixes]) dosyayı küçük tutar.
 class SpellMemory {
   SpellMemory();
 
   static const maxWords = 5000;
   static const maxFixes = 600;
-  static const maxConfusions = 400;
 
   /// Kelime → görülme sayısı (küçük harf).
   final Map<String, int> words = {};
 
-  /// Yanlış → (doğru → sayı).
-  final Map<String, Map<String, int>> fixes = {};
+  /// Yanlış → (doğru, kaç kez).
+  final Map<String, (String, int)> fixes = {};
 
-  /// Otomatik düzeltmesi kullanıcı tarafından geri alınan kelimeler.
+  /// Reddedilen otomatik düzeltmeler: `yazılan>düzeltilen` (küçük harf).
   final Set<String> rejected = {};
 
-  /// "yazılan>kastedilen" harf çifti → sayı ("o>p", "n> ").
-  final Map<String, int> confusions = {};
+  /// Hiç düzeltilmeyecek kelimeler (küçük harf).
+  final Set<String> keep = {};
 
   /// Notlardan gelen sözlük (kaydedilmez, her açılışta yeniden kurulur).
   final Map<String, int> seeded = {};
 
-  /// Uzunluk → kelimeler (bulanık arama kovası); kelime değişince düşer.
+  /// v1 dosyasından göçtü mü (yükleyen eskisini `.v1` olarak saklar).
+  bool fromV1 = false;
+
   Map<int, List<String>>? _byLength;
 
-  bool get isEmpty => words.isEmpty && fixes.isEmpty && confusions.isEmpty;
+  bool get isEmpty =>
+      words.isEmpty && fixes.isEmpty && rejected.isEmpty && keep.isEmpty;
 
-  int get learnedCount => fixes.length + confusions.length;
+  int get learnedCount => fixes.length;
 
   /// Kelimenin toplam sıklığı (yazılan + notlardaki + yerleşik).
   int frequency(String w) {
@@ -134,9 +74,9 @@ class SpellMemory {
     return n;
   }
 
-  /// Bilinen kelime: dokunulmaz. Yalnız yazılmış (doğrulanmamış) kelime
-  /// üç kez görülünce bilinir — iki kez aynı yazım hatası sözlüğe girmesin.
-  bool known(String w) => frequency(w) >= 3 || rejected.contains(trLower(w));
+  /// Bilinen kelime: dokunulmaz. Yalnız yazılmış kelime üç kez görülünce
+  /// bilinir — iki kez aynı yazım hatası sözlüğe girmesin.
+  bool known(String w) => frequency(w) >= 3 || keep.contains(trLower(w));
 
   void addWord(String w, [int by = 1]) {
     final l = trLower(w);
@@ -148,7 +88,6 @@ class SpellMemory {
   }
 
   void _pruneWords() {
-    // En az görülenler gider (yarı yarıya), sayılar da yaşlanır.
     final sorted = words.entries.toList()
       ..sort((a, b) => a.value.compareTo(b.value));
     for (final e in sorted.take(words.length - maxWords * 3 ~/ 4)) {
@@ -157,7 +96,7 @@ class SpellMemory {
     _byLength = null;
   }
 
-  /// Notların metninden sözlük (ağır iş: [seedCounts] arka planda sayar).
+  /// Notların metninden sözlük ([seedCounts] arka planda sayar).
   void seed(Map<String, int> counts) {
     seeded
       ..clear()
@@ -165,351 +104,143 @@ class SpellMemory {
     _byLength = null;
   }
 
-  /// Kullanıcı [from] yazıp kendisi [to] yaptı.
-  void learnFix(String from, String to) {
-    final f = trLower(from);
-    final t = to.trim();
-    if (f.isEmpty || t.isEmpty || f == trLower(t)) return;
-    rejected.remove(f);
-    final m = fixes.putIfAbsent(f, () => {});
-    m[t] = (m[t] ?? 0) + 1;
-    if (fixes.length > maxFixes) {
-      // En az kullanılan düzeltme gider.
-      final weakest = fixes.entries.reduce(
-        (a, b) => _total(a.value) <= _total(b.value) ? a : b,
-      );
-      fixes.remove(weakest.key);
-    }
-    for (final w in t.split(' ')) {
-      addWord(w);
-    }
-    if (!isCjk(f)) _learnLetters(f, trLower(t));
-  }
-
-  /// ELLE EKLENEN düzeltme (Ayarlar → Öğrenilen yazımlar): ilk görüşte
-  /// uygulanır (iki kez görülmüş sayılır).
-  void addManualFix(String from, String to) {
-    final f = trLower(from.trim());
-    final t = to.trim();
-    if (f.isEmpty || t.isEmpty || f == trLower(t)) return;
-    rejected.remove(f);
-    final m = fixes.putIfAbsent(f, () => {});
-    m[t] = math.max(m[t] ?? 0, 2) + 1;
-    for (final w in t.split(' ')) {
-      addWord(w, 3);
-    }
-  }
-
-  /// Düzeltmeyi unutur (Ayarlar listesinden silme).
-  void removeFix(String from) => fixes.remove(trLower(from));
-
-  /// "Dokunulmayan" kelimeyi yeniden düzeltmeye açar.
-  void unreject(String word) => rejected.remove(trLower(word));
-
-  /// Ayarlar listesi: her yanlış yazım için en güçlü doğrusu, sık olan önce.
-  List<({String from, String to, int count})> fixList() {
-    final out = [
-      for (final e in fixes.entries)
-        if (e.value.isNotEmpty)
-          () {
-            final best = e.value.entries.reduce(
-              (a, b) => a.value >= b.value ? a : b,
-            );
-            return (from: e.key, to: best.key, count: best.value);
-          }(),
-    ];
-    out.sort((a, b) => b.count.compareTo(a.count));
-    return out;
-  }
-
-  /// Kullanıcı otomatik düzeltmeyi geri aldı: [word] bir daha düzeltilmez.
-  void reject(String word, {String? wrongFix}) {
-    final l = trLower(word);
-    rejected.add(l);
-    addWord(l, 2);
-    if (wrongFix != null) fixes[l]?.remove(wrongFix);
-    if (fixes[l]?.isEmpty ?? false) fixes.remove(l);
-    if (rejected.length > maxFixes) rejected.remove(rejected.first);
-  }
-
-  static int _total(Map<String, int> m) => m.values.fold(0, (a, b) => a + b);
-
-  /// Hizalama: düzeltmenin harf düzeyindeki yer değiştirmeleri sayılır.
-  void _learnLetters(String from, String to) {
-    for (final (a, b) in alignSubstitutions(from, to)) {
-      final k = '$a>$b';
-      confusions[k] = (confusions[k] ?? 0) + 1;
-    }
-    if (confusions.length > maxConfusions) {
-      final weakest = confusions.entries.reduce(
-        (a, b) => a.value <= b.value ? a : b,
-      );
-      confusions.remove(weakest.key);
-    }
-  }
-
-  /// Kişiye göre yer değiştirme bedeli: sık karıştırdığı çift ucuzlar.
-  double subCost(String typed, String meant) {
-    final base = keyCost(typed, meant);
-    final n = confusions['$typed>$meant'] ?? 0;
-    if (n == 0) return base;
-    return math.max(0.15, base / (1 + 0.5 * n));
-  }
-
-  /// Yazılan kelime → kastedilen (kişiye göre ağırlıklı Damerau–Levenshtein).
-  /// [limit] aşılınca erken kesilir (dönen değer > limit).
-  double distance(String typed, String meant, {double limit = 99}) {
-    final a = typed;
-    final b = meant;
-    if ((a.length - b.length).abs() > limit + 0.01) return limit + 1;
-    // Fazladan basılan tuş: komşusuna yakınsa ucuz.
-    double ins(int i) {
-      final c = a[i];
-      final prev = i > 0 ? a[i - 1] : null;
-      final next = i + 1 < a.length ? a[i + 1] : null;
-      var best = 0.95;
-      for (final o in [?prev, ?next]) {
-        if (o == c) best = math.min(best, 0.5);
-        if (keyCost(c, o) <= 0.45) best = math.min(best, 0.6);
-      }
-      return best;
-    }
-
-    var prev2 = <double>[];
-    var prev = List<double>.generate(b.length + 1, (j) => j.toDouble());
-    for (var i = 1; i <= a.length; i++) {
-      final cur = List<double>.filled(b.length + 1, 0);
-      cur[0] = prev[0] + ins(i - 1);
-      var rowMin = cur[0];
-      for (var j = 1; j <= b.length; j++) {
-        final ca = a[i - 1];
-        final cb = b[j - 1];
-        var v = math.min(
-          prev[j] + ins(i - 1), // yazılanda fazla harf
-          cur[j - 1] + 0.9, // yazılanda eksik harf
-        );
-        v = math.min(v, prev[j - 1] + (ca == cb ? 0 : subCost(ca, cb)));
-        if (i > 1 &&
-            j > 1 &&
-            ca == b[j - 2] &&
-            a[i - 2] == cb &&
-            prev2.isNotEmpty) {
-          v = math.min(v, prev2[j - 2] + 0.55); // yer değiştirmiş iki harf
-        }
-        cur[j] = v;
-        if (v < rowMin) rowMin = v;
-      }
-      if (rowMin > limit) return limit + 1;
-      prev2 = prev;
-      prev = cur;
-    }
-    return prev[b.length];
-  }
-
-  /// Uzunluğa göre izin verilen en büyük mesafe.
-  static double limitFor(int length) => length <= 3
-      ? 0
-      : length <= 5
-      ? 0.8
-      : length <= 8
-      ? 1.35
-      : 2.1;
-
-  List<String> _bucket(int len) {
+  /// Uzunluğu [len] olan bütün sözlük kelimeleri (bulanık arama kovası).
+  List<String> bucket(int len) {
     final byLen = _byLength ??= () {
       final m = <int, List<String>>{};
-      void add(String w) => m.putIfAbsent(w.length, () => []).add(w);
       final all = <String>{
         ...words.keys,
         ...seeded.keys,
         ...kCommonTurkish,
         ...kCommonEnglish,
       };
-      all.forEach(add);
+      for (final w in all) {
+        m.putIfAbsent(w.length, () => []).add(w);
+      }
       return m;
     }();
     return byLen[len] ?? const [];
   }
 
-  /// [word] (küçük harf, tek kelime) için öneri; yoksa null. Büyük harf ve
-  /// cümle başı çağıranın işi.
-  String? suggest(String word) {
-    final w = trLower(word);
-    if (w.length < 2 || rejected.contains(w)) return null;
-    // 1) Öğrenilmiş düzeltme: iki kez görüldüyse (ya da tek ve kelime hiç
-    // bilinmiyorsa) uygulanır.
-    final learned = fixes[w];
-    if (learned != null && learned.isNotEmpty) {
-      final best = learned.entries.reduce((a, b) => a.value >= b.value ? a : b);
-      if (best.value >= 2 || !known(w)) return best.key;
-    }
-    if (isCjk(w) || known(w)) return null;
-    // 2) Boşluk yerine "n" (ya da boşluk çubuğu komşusu): iki bilinen kelime.
-    final split = splitMissedSpace(w);
-    if (split != null) return split;
-    // 3) Bulanık: en yakın sık kelime.
-    return nearest(w);
+  /// Uygulanacak öğretilmiş düzeltme (iki kez görülen ya da onaylanan).
+  String? learned(String from) {
+    final f = fixes[trLower(from)];
+    return f != null && f.$2 >= 2 ? f.$1 : null;
   }
 
-  /// "eksiknyapılıyor" → "eksik yapılıyor": araya düşen boşluk komşusu
-  /// harfin iki yanı da bilinen kelimeyse.
-  String? splitMissedSpace(String w) {
-    String? best;
-    var bestScore = 0;
-    for (var i = 2; i < w.length - 2; i++) {
-      final c = w[i];
-      if (!_nearSpace.contains(c)) continue;
-      final left = w.substring(0, i);
-      final right = w.substring(i + 1);
-      final fl = frequency(left);
-      final fr = frequency(right);
-      if (fl < 3 || fr < 3) continue;
-      // Kişi "n> " karışıklığını daha önce yaptıysa eşik düşer.
-      final bias = confusions['$c> '] ?? 0;
-      final score = math.min(fl, fr) + bias * 2 + (c == 'n' ? 1 : 0);
-      if (score > bestScore) {
-        bestScore = score;
-        best = '$left $right';
-      }
+  /// Kullanıcı [from] yazıp kendisi [to] yaptı. [confirmed]: tek seferde
+  /// uygulanacak kadar açık (elle eklendi ya da otomatik düzeltmenin yerine
+  /// yazıldı). Başka bir doğru öğrenilirse eskisinin yerine geçer.
+  void learnFix(String from, String to, {bool confirmed = false}) {
+    final f = trLower(from.trim());
+    final t = to.trim();
+    if (f.isEmpty || t.isEmpty || f == trLower(t)) return;
+    rejected.remove('$f>${trLower(t)}');
+    keep.remove(f);
+    final old = fixes[f];
+    final n = old != null && old.$1 == t ? old.$2 + 1 : 1;
+    fixes[f] = (t, confirmed ? math.max(n, 2) : n);
+    if (fixes.length > maxFixes) {
+      final weakest = fixes.entries.reduce(
+        (a, b) => a.value.$2 <= b.value.$2 ? a : b,
+      );
+      fixes.remove(weakest.key);
     }
-    return best;
+    for (final w in t.split(' ')) {
+      addWord(w);
+    }
   }
 
-  /// Sözlükteki en yakın kelime (eşik [limitFor]); eşitlikte sık olan.
-  String? nearest(String w) {
-    final limit = limitFor(w.length);
-    if (limit <= 0) return null;
-    String? best;
-    var bestCost = limit + 0.0001;
-    var bestFreq = 0;
-    final first = w[0];
-    for (var len = w.length - 2; len <= w.length + 2; len++) {
-      for (final cand in _bucket(len)) {
-        if (cand == w) continue;
-        // TÜRKÇE EKLER: aday yazılanın kökü ya da uzantısıysa ("kalemi" ↔
-        // "kalem", "kale" ↔ "kalem") ikisi de büyük olasılıkla gerçek kelime.
-        if (cand.startsWith(w) || w.startsWith(cand)) continue;
-        // İlk harf aynı ya da komşu/şapka eşi olmalı (hızlı eleme).
-        if (cand[0] != first && keyCost(first, cand[0]) > 0.5) continue;
-        final freq = frequency(cand);
-        if (freq < 3) continue;
-        final cost = distance(w, cand, limit: bestCost);
-        if (cost < bestCost - 0.05 ||
-            (cost <= bestCost + 0.05 && freq > bestFreq)) {
-          if (cost > limit) continue;
-          best = cand;
-          bestCost = cost;
-          bestFreq = freq;
-        }
-      }
+  /// ELLE EKLENEN düzeltme (Ayarlar → Öğrenilen yazımlar): ilk görüşte
+  /// uygulanır.
+  void addManualFix(String from, String to) {
+    learnFix(from, to, confirmed: true);
+    for (final w in to.trim().split(' ')) {
+      addWord(w, 2);
     }
-    return best != null && changesTooMuch(w, best) ? null : best;
   }
 
-  /// **TANINMAZ DÜZELTME KAPISI** (kullanıcı bulgusu 2026-11-09: "bazen o
-  /// kadar yanlış yazılıyor ki hiçbir tanıma yapılmıyor"): klavye ağırlıklı
-  /// mesafede komşu tuşlar ve şapkalar ucuz olduğu için uzun kelimede
-  /// harflerin yarısı değişebiliyordu. OTOMATİK (bulanık / cihaz önerisi)
-  /// düzeltme harflerin üçte birinden fazlasını değiştiremez; kullanıcının
-  /// öğrettiği düzeltmeler (kısaltmalar dahil) bu kapıya girmez.
-  static bool changesTooMuch(String a, String b) {
-    final x = trLower(a), y = trLower(b);
-    var prev = List<int>.generate(y.length + 1, (i) => i);
-    for (var i = 1; i <= x.length; i++) {
-      final cur = List<int>.filled(y.length + 1, 0)..[0] = i;
-      for (var j = 1; j <= y.length; j++) {
-        cur[j] = math.min(
-          math.min(prev[j] + 1, cur[j - 1] + 1),
-          prev[j - 1] + (x[i - 1] == y[j - 1] ? 0 : 1),
-        );
-      }
-      prev = cur;
-    }
-    return prev[y.length] > math.max(1, x.length ~/ 3);
-  }
+  void removeFix(String from) => fixes.remove(trLower(from));
 
-  /// Otomatik düzeltme yanlıştı, kullanıcı başka kelime yazdı: o eşleşme
-  /// unutulur (bir daha aynı yanlışa çekilmesin).
-  void unlearnFix(String from, String wrongTo) {
+  /// Ayarlar listesi: sık olan önce.
+  List<({String from, String to, int count})> fixList() => [
+    for (final e in fixes.entries)
+      (from: e.key, to: e.value.$1, count: e.value.$2),
+  ]..sort((a, b) => b.count.compareTo(a.count));
+
+  /// Otomatik [from] → [to] düzeltmesi reddedildi (geri alındı ya da
+  /// kullanıcı değiştirdi): bir daha uygulanmaz.
+  void rejectPair(String from, String to) {
     final f = trLower(from);
-    final m = fixes[f];
-    if (m == null) return;
-    m.removeWhere((k, _) => trLower(k) == trLower(wrongTo));
-    if (m.isEmpty) fixes.remove(f);
+    final t = trLower(to);
+    rejected.add('$f>$t');
+    final fix = fixes[f];
+    if (fix != null && trLower(fix.$1) == t) fixes.remove(f);
+    if (rejected.length > maxFixes) rejected.remove(rejected.first);
+  }
+
+  bool isRejected(String from, String to) =>
+      rejected.contains('${trLower(from)}>${trLower(to)}');
+
+  /// Ayarlardan: reddedilen çifti (`a>b`) ya da dokunulmaz kelimeyi
+  /// yeniden açar.
+  void unreject(String key) {
+    rejected.remove(key);
+    keep.remove(key);
   }
 
   Map<String, Object?> toJson() => {
-    'v': 1,
+    'v': 2,
     'w': words,
-    'f': fixes,
+    'f': {
+      for (final e in fixes.entries) e.key: [e.value.$1, e.value.$2],
+    },
     'r': rejected.toList(),
-    'c': confusions,
+    'k': keep.toList(),
   };
 
   String encode() => jsonEncode(toJson());
 
+  /// v2 ya da v1 dosyası; bozuksa boş hafıza.
   static SpellMemory decode(String? raw) {
     final m = SpellMemory();
     if (raw == null || raw.isEmpty) return m;
     try {
       final j = jsonDecode(raw) as Map<String, dynamic>;
       (j['w'] as Map?)?.forEach((k, v) => m.words['$k'] = (v as num).toInt());
-      (j['f'] as Map?)?.forEach((k, v) {
-        m.fixes['$k'] = {
-          for (final e in (v as Map).entries)
-            '${e.key}': (e.value as num).toInt(),
-        };
-      });
-      for (final r in (j['r'] as List?) ?? const []) {
-        m.rejected.add('$r');
+      if (j['v'] == 2) {
+        (j['f'] as Map?)?.forEach((k, v) {
+          final l = v as List;
+          m.fixes['$k'] = ('${l[0]}', (l[1] as num).toInt());
+        });
+        for (final r in (j['r'] as List?) ?? const []) {
+          m.rejected.add('$r');
+        }
+        for (final r in (j['k'] as List?) ?? const []) {
+          m.keep.add('$r');
+        }
+      } else {
+        // v1: {yanlış: {doğru: sayı}} → en güçlü doğru; "r" (geri alınan
+        // kelimeler) → keep; "c" (harf karışıklıkları) atılır.
+        m.fromV1 = true;
+        (j['f'] as Map?)?.forEach((k, v) {
+          String? to;
+          var n = 0;
+          (v as Map).forEach((t, c) {
+            if ((c as num).toInt() > n) (to, n) = ('$t', c.toInt());
+          });
+          if (to != null) m.fixes['$k'] = (to!, n);
+        });
+        for (final r in (j['r'] as List?) ?? const []) {
+          m.keep.add('$r');
+        }
       }
-      (j['c'] as Map?)?.forEach(
-        (k, v) => m.confusions['$k'] = (v as num).toInt(),
-      );
     } catch (_) {
       // Bozuk dosya: boş hafızayla devam.
+      return SpellMemory();
     }
     return m;
   }
-}
-
-/// İki kelimenin harf düzeyinde hizalanmış YER DEĞİŞTİRMELERİ (yazılan,
-/// kastedilen). Fazla/eksik harf çift üretmez; boşluk dahil.
-List<(String, String)> alignSubstitutions(String from, String to) {
-  final n = from.length;
-  final m = to.length;
-  if (n * m > 2500) return const [];
-  final d = List.generate(n + 1, (_) => List<int>.filled(m + 1, 0));
-  for (var i = 0; i <= n; i++) {
-    d[i][0] = i;
-  }
-  for (var j = 0; j <= m; j++) {
-    d[0][j] = j;
-  }
-  for (var i = 1; i <= n; i++) {
-    for (var j = 1; j <= m; j++) {
-      d[i][j] = math.min(
-        math.min(d[i - 1][j] + 1, d[i][j - 1] + 1),
-        d[i - 1][j - 1] + (from[i - 1] == to[j - 1] ? 0 : 1),
-      );
-    }
-  }
-  final out = <(String, String)>[];
-  var i = n;
-  var j = m;
-  while (i > 0 && j > 0) {
-    final same = from[i - 1] == to[j - 1];
-    if (d[i][j] == d[i - 1][j - 1] + (same ? 0 : 1)) {
-      if (!same) out.add((from[i - 1], to[j - 1]));
-      i--;
-      j--;
-    } else if (d[i][j] == d[i - 1][j] + 1) {
-      i--;
-    } else {
-      j--;
-    }
-  }
-  return out;
 }
 
 /// Metinlerden kelime sayımı (notlardan sözlük). Arka planda (`compute`)
