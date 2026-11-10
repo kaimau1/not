@@ -14,10 +14,10 @@
   dispose etmeyen dosya `InkToolMemory.reset()` çağırmalı.
 
 ## Şu an
-- Belgeler: plan `[x]`, regresyon listesi, hafıza satırı.
+- Paket bitti: plan `[x]` (F60.S4, F63.1, F63.2), `docs/regresyon_listesi.md`, `docs/hafiza/kalem.md` yazıldı.
 
 ## Sıradaki
-- Plan `[x]`, `docs/regresyon_listesi.md`, `docs/hafiza/kalem.md` tek satır, tam `flutter analyze`.
+- Yürütücü: CI, cihazda A/B (kalem), sürüm notu, birleştirme. Cihazda doğrulanmadı.
 
 ## Komut
 `"C:/src/flutter/bin/flutter.bat" test test/pen_policy_test.dart test/pen_single_tool_test.dart --reporter failures-only`
