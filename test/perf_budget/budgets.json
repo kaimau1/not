@@ -1,5 +1,45 @@
 {
   "_kural": "Mandal: bütçe yalnız DÜŞER. Yükseltmek için commit başlığında [butce] ve girdinin 'neden' alanı. Senaryolar OTURTMA_PLANI.md Ek A.",
+  "S1": {
+    "senaryo": "Kısa metin notu, gövdeye 20 karakter (telefon)",
+    "kok_kurulum": 1,
+    "update_note": 1,
+    "bugun": "1 / 1 (2026-11-11)",
+    "hedef": "≤ 1 (geri al düğmesi)",
+    "neden": "İlk ölçüm = hedef: ilk tuşta geri al düğmesi için 1 kök kurulum, kayıt debounce'lu"
+  },
+  "S2": {
+    "senaryo": "30 maddeli liste, bir maddeye 20 karakter",
+    "items_editor": 5,
+    "satir": 15,
+    "bugun": "ItemsEditor 5 / satır 15 (2026-11-11)",
+    "hedef": "0 / 0",
+    "neden": "İlk ölçüm (bugünkü hâl); hedefin üstünde — düşürülecek, yükseltilmez"
+  },
+  "S3": {
+    "senaryo": "30 maddeli liste, bir kutucuğu işaretle",
+    "kok_kurulum": 1,
+    "satir": 13,
+    "bugun": "kök 1 / satır 13 — görünen bütün satırlar (2026-11-11)",
+    "hedef": "≤ 1 / ≤ 2 (Faz 64)",
+    "neden": "İlk ölçüm (bugünkü hâl); satır hedefi Faz 64'te işlenecek"
+  },
+  "S4": {
+    "senaryo": "Maddede Enter (yeni madde)",
+    "kok_kurulum": 1,
+    "satir": 14,
+    "bugun": "kök 1 / satır 14 (2026-11-11)",
+    "hedef": "≤ 1 / ≤ 2 (Faz 64)",
+    "neden": "İlk ölçüm (bugünkü hâl); satır hedefi Faz 64'te işlenecek"
+  },
+  "S5": {
+    "senaryo": "Kalem kipi açık, sayfaya 10 çizgi (ilk çizgi kipi açar, sayılmaz)",
+    "kok_kurulum": 0,
+    "update_note": 1,
+    "bugun": "0 / 1 (2026-11-11)",
+    "hedef": "≤ 1 / ≤ 1",
+    "neden": "İlk ölçüm hedefin altında: mandal buraya oturdu"
+  },
   "S6": {
     "senaryo": "Sabit PDF'e 10 çizgi",
     "kok_kurulum": 1,
@@ -14,6 +54,21 @@
     "bugun": "10 / 10 (2026-11-09, F60.1 öncesi)",
     "neden": "F60.1 hedefi: S6 ile aynı"
   },
+  "S8": {
+    "senaryo": "Klavye aç/kapa ×3, 30 maddeli + gövdeli not: inset karelerinde ve oturma karesinde NoteEditorScreen + NotePageCanvas + ItemsEditor + EditableText",
+    "govde_kurulum": 15,
+    "oturma_kurulum": 3,
+    "bugun": "hareket 15 / oturma 3 — hepsi İLK açılışta (ItemsEditor 5 karede 5 kez + 2'şer satır alanı), 2. ve 3. tur 0 (2026-11-11)",
+    "hedef": "0",
+    "neden": "İlk ölçüm (bugünkü hâl). Ek A 'bugün 0' diyordu: kısa notta doğru (note_screen_chrome_test), 30 maddede ilk açılış kuruyor — kök neden aranmadı"
+  },
+  "S9": {
+    "senaryo": "Biçim panelini aç → kapat",
+    "tuval_kurulum": 2,
+    "bugun": "2 (2026-11-11)",
+    "hedef": "0 (Faz 64)",
+    "neden": "İlk ölçüm (bugünkü hâl); hedef Faz 64'te işlenecek"
+  },
   "S10": {
     "senaryo": "30 maddeli notta 6 maddelik paketi aç, üyeye odaklan, Biçim'e dokun; tek üyeyi çöz/paketle (test/note_package_open_test.dart)",
     "acilis_textfield": 1,
@@ -21,5 +76,49 @@
     "paketle_coz_kurulan_satir": 6,
     "bugun": "Biçim paketi kapatıyordu; paketle/çöz 19/20 satır kuruyordu (2026-11-10, F60.2 öncesi)",
     "neden": "F60.2 hedefi: açılışta üyeler düz çizimle, paket dışı satır yeniden kurulmaz; paketle/çözde yalnız değişen madde ve hap çevresi"
+  },
+  "S11": {
+    "senaryo": "Kendi kaydının akış yankısı (gerçek NotesRepository + sahte Firestore)",
+    "kok_kurulum": 0,
+    "bugun": "0 (2026-11-11)",
+    "hedef": "0",
+    "neden": "İlk ölçüm = hedef"
+  },
+  "S12": {
+    "senaryo": "1280×800 bölünmüş: açık nota 20 karakter + kayıt (liste akışı kaydı yansıtır)",
+    "dashboard_kurulum": 1,
+    "note_card": 13,
+    "bugun": "DashboardScreen 1 / NoteCard 13 — bütün kartlar (2026-11-11)",
+    "hedef": "0 / ≤ 1 (F68.1)",
+    "neden": "İlk ölçüm (bugünkü hâl); hedef F68.1'de işlenecek"
+  },
+  "S13": {
+    "senaryo": "Ana ekran (telefon), 300 not, 3 ekran kaydır",
+    "note_card": 24,
+    "bugun": "24 (2026-11-11)",
+    "hedef": "≤ görünür + önbellek",
+    "neden": "İlk ölçüm: yalnız ekrana giren kartlar kuruluyor (300'ün 24'ü)"
+  },
+  "S14": {
+    "senaryo": "Yıldızla (⋮ levhasından; sabitle aynı _mutate yolu)",
+    "tuval_kurulum": 1,
+    "bugun": "1 (2026-11-11)",
+    "hedef": "0 (Faz 64)",
+    "neden": "İlk ölçüm (bugünkü hâl); hedef Faz 64'te işlenecek"
+  },
+  "S15": {
+    "senaryo": "2000 çizgi varken etkin çizgiye 1 nokta: InkPainter.paint çizim çağrısı",
+    "cizim_cagrisi": 2001,
+    "bugun": "2001 — O(N) (2026-11-11)",
+    "hedef": "≤ 8 (F62.1)",
+    "neden": "İlk ölçüm (bugünkü hâl); hedef Faz 62'de işlenecek"
+  },
+  "S16": {
+    "senaryo": "2000 çizgili (12'şer nokta) nota 1 çizgi ekle + kaydet: yazılan belge / bayt",
+    "belge": 2,
+    "bayt": 448925,
+    "bugun": "2 belge (not + heavy/data) / 448 925 bayt — bütün mürekkep (2026-11-11)",
+    "hedef": "1 bant belgesi / ≤ 64 KB (F61.6)",
+    "neden": "İlk ölçüm (bugünkü hâl); hedef Faz 61'de işlenecek"
   }
 }
