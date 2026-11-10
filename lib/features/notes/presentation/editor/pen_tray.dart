@@ -69,8 +69,15 @@ class PenTray extends StatefulWidget {
     this.trayHeight = 92,
     this.rail = false,
     this.dock = false,
+    this.followActive = false,
     this.actions = const [],
   });
+
+  /// **ETKİN YÜZEY** (OTURTMA F63.2, KALEM K4): geri al / yinele son
+  /// dokunulan yüzeye ([InkController.active]: sayfa, sabit ya da gömülü ek)
+  /// gider. Yalnız birden çok yüzeyi olan editörde açık; araç seçimi zaten
+  /// ortak (`InkToolMemory`).
+  final bool followActive;
 
   /// **ÇEKMECE KİPİ** (kullanıcı isteği 2026-11-02: "kalem modunda kalem
   /// paneli altta olsun, daha kibar olsun; kullanılmıyorken çekmece gibi
@@ -174,6 +181,10 @@ class _PenTrayState extends State<PenTray> {
 
   InkController get _ink => widget.controller;
 
+  /// Geri al / yinelenin hedefi (bkz. [PenTray.followActive]).
+  InkController get _hist =>
+      widget.followActive ? (InkController.active ?? _ink) : _ink;
+
   static PenTrayTool _penToolOf(InkPen p) => switch (p) {
     InkPen.pen => PenTrayTool.pen,
     InkPen.marker => PenTrayTool.marker,
@@ -264,13 +275,20 @@ class _PenTrayState extends State<PenTray> {
         onTapOutside: (_) {
           if (_panel) setState(() => _panel = false);
         },
-        child: ListenableBuilder(
-          listenable: _ink,
-          builder: (context, _) => widget.rail
-              ? _buildRail(context)
-              : widget.dock
-              ? _buildDock(context)
-              : _build(context),
+        // Etkin yüzey değişince (toolRev) onun çizgileri de dinlenir: geri
+        // al düğmesi o yüzeyin geçmişine göre açılır.
+        child: ValueListenableBuilder(
+          valueListenable: InkToolMemory.toolRev,
+          builder: (context, _, _) => ListenableBuilder(
+            listenable: identical(_hist, _ink)
+                ? _ink
+                : Listenable.merge([_ink, _hist]),
+            builder: (context, _) => widget.rail
+                ? _buildRail(context)
+                : widget.dock
+                ? _buildDock(context)
+                : _build(context),
+          ),
         ),
       ),
     );
@@ -567,14 +585,14 @@ class _PenTrayState extends State<PenTray> {
                 tooltip: l10n.undo,
                 visualDensity: VisualDensity.compact,
                 icon: const Icon(Icons.undo_rounded),
-                onPressed: _ink.canUndo ? _ink.undo : null,
+                onPressed: _hist.canUndo ? () => _hist.undo() : null,
               ),
               if (wide)
                 IconButton(
                   tooltip: l10n.redo,
                   visualDensity: VisualDensity.compact,
                   icon: const Icon(Icons.redo_rounded),
-                  onPressed: _ink.canRedo ? _ink.redo : null,
+                  onPressed: _hist.canRedo ? () => _hist.redo() : null,
                 ),
               _moreMenu(l10n, redo: !wide),
               ...widget.actions,
@@ -696,7 +714,7 @@ class _PenTrayState extends State<PenTray> {
         tooltip: l10n.more,
         icon: const Icon(Icons.more_horiz_rounded),
         onSelected: (v) => switch (v) {
-          0 => _ink.redo(),
+          0 => _hist.redo(),
           1 => _ink.setPenOnly(!_ink.penOnly),
           3 => _pinCurrent(),
           _ => showInkSettings(context, _ink),
@@ -705,7 +723,7 @@ class _PenTrayState extends State<PenTray> {
           if (redo)
             PopupMenuItem(
               value: 0,
-              enabled: _ink.canRedo,
+              enabled: _hist.canRedo,
               child: ListTile(
                 leading: const Icon(Icons.redo_rounded),
                 title: Text(l10n.redo),
@@ -827,13 +845,13 @@ class _PenTrayState extends State<PenTray> {
       tooltip: l10n.undo,
       visualDensity: VisualDensity.compact,
       icon: const Icon(Icons.undo_rounded),
-      onPressed: _ink.canUndo ? _ink.undo : null,
+      onPressed: _hist.canUndo ? () => _hist.undo() : null,
     ),
     IconButton(
       tooltip: l10n.redo,
       visualDensity: VisualDensity.compact,
       icon: const Icon(Icons.redo_rounded),
-      onPressed: _ink.canRedo ? _ink.redo : null,
+      onPressed: _hist.canRedo ? () => _hist.redo() : null,
     ),
     // YALNIZ KALEM: açıkken parmak kaydırır/yakınlaştırır.
     IconButton(

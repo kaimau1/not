@@ -5,12 +5,16 @@
   Sayfa (`note_editor_flow._penPolicy`), sabit (`pinned_media_pane._policy`), gömülü (`note_images._docInkFor`),
   paket (`note_package` build) oradan okur. Görüntüleyici/çizim `allowedKinds` hiç atamıyor (kopya yoktu; F63.4 bağlar).
 
+- F60.S4 + F63.2: araç alanları `InkController`'da getter → `InkToolMemory` (eraser/arrow/shape/lasso/pen/color/
+  width…); `InkToolMemory.toolRev` bütün açık denetleyicileri uyarır; `InkController.active` (son dokunulan yüzey);
+  editör tepsisi `followActive` ile geri al/yineleyi ona yollar. Test `test/pen_single_tool_test.dart` (9 yeşil;
+  düzeltmeden önce silgi/renk testleri kırmızıydı: çizgi 2, renk siyah).
+- Kök neden: denetleyici aracı KURULUMDA kopyalıyordu; tepsi yalnız sayfa denetleyicisini sürüyordu.
+- Geçici araç (silgi/ok/şekil/kement) açık denetleyici kalmayınca sıfırlanır (`openSession`); testte denetleyiciyi
+  dispose etmeyen dosya `InkToolMemory.reset()` çağırmalı.
+
 ## Şu an
-- F60.S4 kırmızı test (`test/pen_single_tool_test.dart`) → F63.2 tek araç durumu.
-- Kök neden: `InkController` (viewers/ink_layer.dart) araç alanlarını (eraser/pen/color/widthPx…) KURULUMDA
-  `InkToolMemory`'den kopyalıyor; tepsi yalnız sayfa denetleyicisini sürüyor (`PenTray(controller: _pageInkOf(note))`).
-- Tasarım: alanlar `InkToolMemory`'yi okuyan getter; `InkToolMemory.toolRev` bildirici; `InkController.active`
-  (son dokunulan yüzey), editör tepsisi geri al/yineleyi ona yollar.
+- Belgeler: plan `[x]`, regresyon listesi, hafıza satırı.
 
 ## Sıradaki
 - Plan `[x]`, `docs/regresyon_listesi.md`, `docs/hafiza/kalem.md` tek satır, tam `flutter analyze`.

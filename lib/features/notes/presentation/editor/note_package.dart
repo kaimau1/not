@@ -223,9 +223,7 @@ class _NotePackageScreenState extends State<NotePackageScreen> {
       stylusEver: InkToolMemory.stylusEver,
       penOnly: InkToolMemory.penOnly,
     );
-    _ink
-      ..allowedKinds = policy.allowedKinds
-      ..penOnly = InkToolMemory.penOnly;
+    _ink.allowedKinds = policy.allowedKinds;
     final l10n = context.l10n;
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {

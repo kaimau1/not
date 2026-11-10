@@ -236,6 +236,43 @@ class InkToolMemory {
   static double? width;
   static double opacity = 1;
 
+  // ── TEK ARAÇ DURUMU (OTURTMA F63.2, KALEM K4) ─────────────────────────
+  // Araç (kalem türü, renk, kalınlık, silgi, ok/şekil, kement) BURADA durur;
+  // `InkController` kopya tutmaz, her okuyuşta buraya bakar. Eskiden her
+  // denetleyici kurulumda kopyalıyordu: tepside seçilen silgiyi/rengi sabit
+  // ve gömülü ekin denetleyicisi hiç görmüyordu ("silgi seçili, kalem
+  // yazıyor" — F60.S4).
+
+  /// Geçici araçlar (kayda yazılmaz; yeni oturum kalemle başlar).
+  static bool eraser = false;
+  static bool arrow = false;
+  static InkShape? shape;
+  static bool lasso = false;
+
+  /// Araç ya da etkin yüzey değişince artar: bütün açık denetleyiciler
+  /// dinler (araç çubukları, imleç önizlemesi yenilensin).
+  static final toolRev = ValueNotifier<int>(0);
+
+  static void toolChanged() => toolRev.value++;
+
+  static int _sessions = 0;
+
+  /// Bir denetleyici açıldı. Açık başka denetleyici yoksa (yeni not, yeni
+  /// çizim ekranı) geçici araç sıfırlanır: görünmeyen bir silgiyle
+  /// başlanmaz. Not içindeki yüzeyler (sayfa, sabit, gömülü, paket, tam
+  /// ekran) aynı oturumdur.
+  static void openSession() {
+    if (_sessions++ > 0) return;
+    eraser = false;
+    arrow = false;
+    shape = null;
+    lasso = false;
+  }
+
+  static void closeSession() {
+    if (_sessions > 0) _sessions--;
+  }
+
   /// Son kullanılan özel renkler (en yeni başta, en çok [_recentMax]).
   static List<int> recentColors = [];
   static const _recentMax = 6;
@@ -355,6 +392,11 @@ class InkToolMemory {
   @visibleForTesting
   static void reset() {
     _prefs = null;
+    eraser = false;
+    arrow = false;
+    shape = null;
+    lasso = false;
+    _sessions = 0;
     penOnly = false;
     penOnlyChosen = false;
     pressure = true;

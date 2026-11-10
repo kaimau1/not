@@ -427,7 +427,6 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       _docInkSeen[a.id] = a.ink;
       if (!c.drawing) c.replace(a.ink);
     }
-    c.penOnly = InkToolMemory.penOnly;
     c.allowedKinds = policy.allowedKinds;
     return c;
   }

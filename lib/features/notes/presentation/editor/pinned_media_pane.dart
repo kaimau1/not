@@ -353,7 +353,6 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
       _inkSeen = a.ink;
       if (!c.drawing) c.replace(a.ink);
     }
-    c.penOnly = InkToolMemory.penOnly;
     c.allowedKinds = _policy.allowedKinds;
     return c;
   }

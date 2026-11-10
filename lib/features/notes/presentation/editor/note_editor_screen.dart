@@ -5149,6 +5149,7 @@ child: NoteFindBar(
                                 key: const ValueKey('page-pen-dock'),
                                 controller: _pageInkOf(note),
                                 dock: true,
+                                followActive: true,
                                 actions: [
                                   // Kalem + tam ekranda üst çubuk yok: listeye
                                   // dönüş tepside.
