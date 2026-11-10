@@ -337,7 +337,11 @@ class AutoSpell {
         nextCaret += done.length - line.length;
       }
     }
-    if (next != text) _apply(c, next, nextCaret);
+    if (next != text) {
+      // Arkadaki izlenen kelimeler düzeltmenin boy farkı kadar kayar.
+      if (wm != null) _shiftAfter(wm.start, next.length - text.length);
+      _apply(c, next, nextCaret);
+    }
     if (wm == null) return;
     // Büyük harf uzunluğu değiştirmez: son kelime düzeltilenin boyunda.
     final word = next.substring(
@@ -374,6 +378,13 @@ class AutoSpell {
         ),
       );
 
+  static void _shiftAfter(int start, int delta) {
+    if (delta == 0) return;
+    for (final t in _words) {
+      if (t.start > start) t.start += delta;
+    }
+  }
+
   static void _remember(_Tracked t) {
     _words.removeWhere((w) => w.start == t.start);
     _words.add(t);
@@ -392,6 +403,7 @@ class AutoSpell {
   static void _revert(WrapTextController c, _Undo u, String text, int caret) {
     final next = text.replaceRange(u.start, u.start + u.word.length, u.from);
     _words.removeWhere((w) => w.start == u.start);
+    _shiftAfter(u.start, u.from.length - u.word.length);
     _reject(u.from, u.word);
     _apply(c, next, caret + u.from.length - u.word.length);
   }
