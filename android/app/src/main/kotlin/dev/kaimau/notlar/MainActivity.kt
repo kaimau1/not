@@ -250,6 +250,7 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         dropUnreadableShare(intent)
         super.onCreate(savedInstanceState)
+        GuncellemeSonrasiAc.clear(this)
     }
 
     override fun onNewIntent(intent: Intent) {

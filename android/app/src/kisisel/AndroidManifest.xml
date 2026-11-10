@@ -17,6 +17,13 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application>
+        <!-- Kendi güncellememizden sonra uygulamayı yeniden aç (GuncellemeSonrasiAc). -->
+        <receiver android:name=".GuncellemeSonrasiAlici"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
         <receiver android:name=".HaritaNotAlici"
             android:exported="true"
             android:permission="dev.kaimau.notlar.izin.ASISTAN">

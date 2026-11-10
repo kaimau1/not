@@ -8207,4 +8207,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinnedSideToggle => 'Placement: top / left / right';
+
+  @override
+  String releaseNotesToastTitle(String version) {
+    return 'What\'s new · v$version';
+  }
+
+  @override
+  String releaseNotesToastMore(int count) {
+    return '+$count more';
+  }
+
+  @override
+  String get releaseNotesToastAll => 'See all';
+
+  @override
+  String get updateInstalling =>
+      'Downloaded — installing; the app will close and reopen';
+
+  @override
+  String get updateAborted => 'Installation cancelled — tap to try again';
+
+  @override
+  String get updateOpenedBrowser => 'Download page opened in the browser';
 }

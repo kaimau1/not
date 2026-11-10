@@ -372,16 +372,29 @@ class _VersionFooterState extends State<_VersionFooter> {
           : l10n.updateAvailable(info.version);
     });
     if (info == null) return;
+    // İNDİRME/KURULUM GÖRÜNSÜN (kullanıcı 2026-11-10: "ayarlardan denetleyince
+    // iniyor ama kişi anlamıyor"): indirme sürerken yüzde ve çubuk
+    // [AppUpdate.progress]'ten çizilir; bittiğinde bu satır "kuruluyor" der.
+    setState(() {
+      _installing = true;
+      _status = l10n.updateInstalling;
+    });
     final result = await AppUpdate.downloadAndInstall(info);
     if (!mounted) return;
-    if (result == 'download_failed') {
-      setState(() => _status = l10n.updateDownloadFailed);
-    } else if (result == 'need_permission') {
-      setState(() => _status = l10n.updateNeedsPermission);
-    } else if (result.startsWith('error')) {
-      setState(() => _status = l10n.updateInstallFailed);
-    }
+    setState(() {
+      _installing = false;
+      _status = switch (result) {
+        'download_failed' => l10n.updateDownloadFailed,
+        'need_permission' => l10n.updateNeedsPermission,
+        'aborted' => l10n.updateAborted,
+        'browser' => l10n.updateOpenedBrowser,
+        'done' || 'busy' => _status,
+        _ => l10n.updateInstallFailed,
+      };
+    });
   }
+
+  bool _installing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -430,7 +443,7 @@ class _VersionFooterState extends State<_VersionFooter> {
         child: InkWell(
           key: const ValueKey('settings-version-footer-tap'),
           borderRadius: BorderRadius.circular(12),
-          onTap: _check,
+          onTap: _installing ? null : _check,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Column(
@@ -445,12 +458,43 @@ class _VersionFooterState extends State<_VersionFooter> {
                   style: theme.textTheme.labelMedium?.copyWith(color: muted),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  _status ?? l10n.updateTapToCheck,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: _status == null ? muted : theme.colorScheme.primary,
-                  ),
+                // Ana ekran şeridiyle AYNI kaynak: indirme nereden başlarsa
+                // başlasın (şerit, oto güncelleme, bu satır) burada görünür.
+                ValueListenableBuilder<int?>(
+                  valueListenable: AppUpdate.progress,
+                  builder: (context, pct, _) {
+                    final version = AppUpdate.available.value?.version;
+                    final downloading = pct != null && version != null;
+                    final status = downloading
+                        ? l10n.updateBannerDownloading(version, pct)
+                        : _status;
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          status ?? l10n.updateTapToCheck,
+                          key: const ValueKey('settings-update-status'),
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: status == null
+                                ? muted
+                                : theme.colorScheme.primary,
+                          ),
+                        ),
+                        if (downloading)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: SizedBox(
+                              width: 180,
+                              child: LinearProgressIndicator(
+                                value: pct / 100,
+                                minHeight: 3,
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
