@@ -363,34 +363,6 @@ final _cardEnvProvider = Provider<_CardEnv>(
 /// (koyu özel renk açık temada, ya da tersi) kartın içi ZIT temayla çizilir.
 /// [NoteCard.build] kararı kendi bağlamına yazar; bu dosyada kart bağlamından
 /// tema okuyan her yer `Theme.of` yerine bunu kullanır.
-/// **TAKVİM ZEMİNİNDE SAYDAM KART** (kullanıcı isteği 2026-11-06: "arka
-/// plan takvim; başlıklar normal görünür ama not kartlarının geri kalanı
-/// yüksek oranda saydamlaşır"). Izgaranın üstüne bir kez konur; kart başına
-/// sağlayıcı/abonelik YOK (AKICILIK F21 bütçesi) — yalnız miras okuması.
-class CardSeeThrough extends InheritedWidget {
-  const CardSeeThrough({
-    super.key,
-    required this.enabled,
-    required super.child,
-  });
-
-  final bool enabled;
-
-  /// Kart zemininin saydam kipteki opaklığı.
-  static const surfaceAlpha = 0.22;
-
-  /// Başlık dışındaki içeriğin opaklığı.
-  static const bodyOpacity = 0.3;
-
-  static bool of(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<CardSeeThrough>()?.enabled ??
-      false;
-
-  @override
-  bool updateShouldNotify(CardSeeThrough oldWidget) =>
-      enabled != oldWidget.enabled;
-}
-
 final _cardInk = Expando<ThemeData>('cardInk');
 
 ThemeData _cardThemeOf(BuildContext context) =>
@@ -665,7 +637,6 @@ class NoteCard extends ConsumerWidget {
     _cardInk[context] = inkTheme;
     final accent = NoteColors.noteInk(context, note);
     final tokens = AppTokens.of(context);
-    final seeThrough = CardSeeThrough.of(context);
     final radius = tokens.cardRadius;
     final scheme = _cardThemeOf(context).colorScheme;
     final query = _query;
@@ -834,8 +805,7 @@ class NoteCard extends ConsumerWidget {
                 ),
               ),
             ),
-          // Takvim zemininde başlık dışı her şey soluk (tek katman).
-          ..._fadedWhen(seeThrough, [
+          ...[
           // Kilitli not: içerik kartta gösterilmez; yalnızca kilit satırı.
           if (note.locked)
             Row(
@@ -958,7 +928,7 @@ class NoteCard extends ConsumerWidget {
               ],
             ),
           ],
-          ]),
+          ],
         ],
       ),
     );
@@ -994,15 +964,12 @@ class NoteCard extends ConsumerWidget {
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(radius - borderWidth),
                 ),
-                child: Opacity(
-                  opacity: seeThrough ? CardSeeThrough.bodyOpacity : 1,
-                  child: hero != null
-                      ? CardHeroMedia(attachment: hero)
-                      : CardDocumentCover(
-                          document: cover!,
-                          bubbleCount: media!.bubbleCount,
-                        ),
-                ),
+                child: hero != null
+                    ? CardHeroMedia(attachment: hero)
+                    : CardDocumentCover(
+                        document: cover!,
+                        bubbleCount: media!.bubbleCount,
+                      ),
               ),
               paperBody,
             ],
@@ -1030,9 +997,7 @@ class NoteCard extends ConsumerWidget {
       color: background,
       identity: (note.id, tokens.family, Theme.of(context).brightness),
       builder: (context, color, child) => Material(
-        color: seeThrough
-            ? color.withValues(alpha: color.a * CardSeeThrough.surfaceAlpha)
-            : color,
+        color: color,
         borderRadius: BorderRadius.circular(radius),
         child: child,
       ),
@@ -1081,7 +1046,7 @@ class NoteCard extends ConsumerWidget {
     // KÂĞIT MASADAN AYRILIR (TEMA_PLANI F31.2, K4): bulanıksız 1 dp alt
     // kenar — bulanık gölge Adreno ≤ 650'de (GLES, AKICILIK K7) her karede
     // yeniden taranırdı. Yumuşak gölge telefonda ölçülünce (KALANLAR §2).
-    final shadowed = tokens.cardShadow.isEmpty || seeThrough
+    final shadowed = tokens.cardShadow.isEmpty
         ? card
         : DecoratedBox(
             decoration: BoxDecoration(
@@ -2263,20 +2228,4 @@ class _Leaving extends StatelessWidget {
       ),
     ),
   );
-}
-
-/// [children]'ı [fade] ise TEK bir soluk sütunda toplar (öğe başına ayrı
-/// opaklık katmanı açılmasın); değilse aynen döndürür.
-List<Widget> _fadedWhen(bool fade, List<Widget> children) {
-  if (!fade || children.isEmpty) return children;
-  return [
-    Opacity(
-      opacity: CardSeeThrough.bodyOpacity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: children,
-      ),
-    ),
-  ];
 }
