@@ -3778,5 +3778,13 @@
   "settingsAttachmentsExpanded": "Not ekranında ek şeridi açık",
   "settingsListPaneCollapsed": "Geniş ekranda not listesi gizli (odak)",
   "settingsListPaneCollapsedInfo": "Tablet ve web'de not açıkken soldaki liste kapalı başlar; ☰ ile açılır.",
-  "pinnedSideToggle": "Yerleşim: üstte / solda / sağda"
+  "pinnedSideToggle": "Yerleşim: üstte / solda / sağda",
+  "releaseNotesToastTitle": "Yenilikler · v{version}",
+  "@releaseNotesToastTitle": {"placeholders": {"version": {"type": "String"}}},
+  "releaseNotesToastMore": "+{count} yenilik daha",
+  "@releaseNotesToastMore": {"placeholders": {"count": {"type": "int"}}},
+  "releaseNotesToastAll": "Tümünü gör",
+  "updateInstalling": "İndirildi — kuruluyor; uygulama kapanıp yeniden açılacak",
+  "updateAborted": "Kurulum iptal edildi — yeniden denemek için dokun",
+  "updateOpenedBrowser": "İndirme sayfası tarayıcıda açıldı"
 }

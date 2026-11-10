@@ -14617,6 +14617,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yerleşim: üstte / solda / sağda'**
   String get pinnedSideToggle;
+
+  /// No description provided for @releaseNotesToastTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yenilikler · v{version}'**
+  String releaseNotesToastTitle(String version);
+
+  /// No description provided for @releaseNotesToastMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'+{count} yenilik daha'**
+  String releaseNotesToastMore(int count);
+
+  /// No description provided for @releaseNotesToastAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü gör'**
+  String get releaseNotesToastAll;
+
+  /// No description provided for @updateInstalling.
+  ///
+  /// In tr, this message translates to:
+  /// **'İndirildi — kuruluyor; uygulama kapanıp yeniden açılacak'**
+  String get updateInstalling;
+
+  /// No description provided for @updateAborted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kurulum iptal edildi — yeniden denemek için dokun'**
+  String get updateAborted;
+
+  /// No description provided for @updateOpenedBrowser.
+  ///
+  /// In tr, this message translates to:
+  /// **'İndirme sayfası tarayıcıda açıldı'**
+  String get updateOpenedBrowser;
 }
 
 class _AppLocalizationsDelegate

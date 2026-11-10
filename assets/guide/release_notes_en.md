@@ -3,6 +3,8 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 10 November 2026 {#2026-11-10}
+- **What's new on Home:** after an update, a short notice on Home shows what changed in this version; "See all" opens the release notes.
+- **Updates visible in Settings:** tapping the version line now shows download percentage and a bar, then "installing"; cancellation or errors are shown there too.
 - **The app reopens after updating itself** instead of just closing. If the phone blocks opening from the background, a "Notes updated — tap to open" notification appears.
 - **Voice typing:** fixed a sentence being written a second time (sometimes cut off) after a pause; when the recognizer re-transcribes the same sentence only one copy is kept.
 - **Updates rewritten:** when a new version is out, a persistent "New version available" strip appears at the top of Home; tap it to download (with progress) and install. With automatic updates on, the new version downloads in the background and installs the next time you open the app. On Android 12+, after the app has updated itself once, there's no confirmation dialog at all. You can turn automatic updates off at the bottom of Settings.

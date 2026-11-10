@@ -115,3 +115,11 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   durumda `unmark`); `GuncellemeSonrasiAlici` (yalnız kişisel manifest, `MY_PACKAGE_REPLACED`) işaret ≤15 dk ise
   `startActivity` dener + yüksek öncelikli "açmak için dokun" bildirimi (izin varsa tam ekran niyeti) — Android 10+
   arka plan başlatma engelinin yedeği. `MainActivity.onCreate` bildirimi kaldırır. Cihazda doğrulanmadı.
+
+## Yenilikler tostu + Ayarlar güncelleme durumu (2026-11-10)
+- `lib/app/release_notes_toast.dart` (`ReleaseNotesToast`, AppUpdateRunner altında, 2,5 sn sonra): kurulu sürüm
+  prefs'tekinden farklıysa sürüm notlarından GÖRÜLMEMİŞ maddeler (en yeni bölüm kimliği + o bölümde görülen
+  maddeler saklanır; aynı gün çok sürüm çıktığı için sürüm değil madde bazlı) ilk 3'ü kısaltılmış tost, "Tümünü gör"
+  → `/guide?doc=notes`. İlk kez: yalnız en yeni bölüm. Test `test/release_notes_toast_test.dart`.
+- Ayarlar sürüm satırı `AppUpdate.progress`'i dinler: indirme nereden başlarsa başlasın yüzde + çubuk; sonra
+  "kuruluyor", iptal/hata/tarayıcı sonucu yazılır.

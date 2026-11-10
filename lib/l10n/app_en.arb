@@ -2976,5 +2976,11 @@
   "settingsAttachmentsExpanded": "Attachment strip open in notes",
   "settingsListPaneCollapsed": "Hide the note list on wide screens (focus)",
   "settingsListPaneCollapsedInfo": "On tablets and web the list starts closed while a note is open; ☰ opens it.",
-  "pinnedSideToggle": "Placement: top / left / right"
+  "pinnedSideToggle": "Placement: top / left / right",
+  "releaseNotesToastTitle": "What's new · v{version}",
+  "releaseNotesToastMore": "+{count} more",
+  "releaseNotesToastAll": "See all",
+  "updateInstalling": "Downloaded — installing; the app will close and reopen",
+  "updateAborted": "Installation cancelled — tap to try again",
+  "updateOpenedBrowser": "Download page opened in the browser"
 }

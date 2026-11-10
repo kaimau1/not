@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../core/app_update.dart';
+import 'release_notes_toast.dart';
 import '../core/l10n_ext.dart';
 import '../core/widgets/customizable.dart';
 import '../core/widgets/undo_snackbar.dart';
@@ -269,7 +270,11 @@ class NotlarApp extends ConsumerWidget {
                 child: NoteWriteIssueListener(
                   // Oturum servisleri (F2.4) — ana ekranın build'inden çıktı.
                   child: AppUpdateRunner(
-                    child: AppServices(child: child ?? const SizedBox.shrink()),
+                    child: ReleaseNotesToast(
+                      child: AppServices(
+                        child: child ?? const SizedBox.shrink(),
+                      ),
+                    ),
                   ),
                 ),
               ),

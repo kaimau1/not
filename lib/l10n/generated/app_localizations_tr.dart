@@ -8189,4 +8189,28 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinnedSideToggle => 'Yerleşim: üstte / solda / sağda';
+
+  @override
+  String releaseNotesToastTitle(String version) {
+    return 'Yenilikler · v$version';
+  }
+
+  @override
+  String releaseNotesToastMore(int count) {
+    return '+$count yenilik daha';
+  }
+
+  @override
+  String get releaseNotesToastAll => 'Tümünü gör';
+
+  @override
+  String get updateInstalling =>
+      'İndirildi — kuruluyor; uygulama kapanıp yeniden açılacak';
+
+  @override
+  String get updateAborted =>
+      'Kurulum iptal edildi — yeniden denemek için dokun';
+
+  @override
+  String get updateOpenedBrowser => 'İndirme sayfası tarayıcıda açıldı';
 }
