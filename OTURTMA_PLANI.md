@@ -1057,12 +1057,8 @@ Numaralar ait oldukları fazı gösterir; o fazın "Önce oku" listesi geçerlid
   Kabul (tablette, 1 GB PDF): eklenir, ilk sayfa ≤ 10 sn'de görünür, RAM artışı < 300 MB,
   kalemle yazılır + "Not al" çalışır, uygulamayı kapat-aç sonrası yerinde; yükleme kuyruğu
   denemez. 1 GB'lık sentetik PDF'i test için betikle üret (kişisel dosya açma).
-<<<<<<< HEAD
   **2026-11-11 (P08, gözetimsiz):** K-O15 "en güvenli" uygulandı — **sabah bakılacak**. Kanıt: `preparePdf` `bytes.length > maxBytes`te `FileTooLargeException` atıyor, `_addPdfFile` önce `readAsBytes` (tüm dosya RAM'e). Düzeltme: tavanı aşan PDF `prepareLocalPdf` ile `copyFileStreamed` (akış, yüzde şeritte) → `Attachment.localOnly` (`skipsUpload` → kuyruk/yükleme atlar, kota sayılmaz); seçici önbellek kopyası silinir; yer yoksa `DeviceFullException`; `readBytes` localOnly'de `FileTooLargeException` (AI/paylaşım/kopya RAM'e almasın); durum `deviceOnly`/`otherDevice` (başka cihaz/web yer tutucu, indirme yok). Tam yedek zaten > 60 MB eki atlıyor (6 kendiliğinden). Bekçi `test/large_local_pdf_test.dart` + forward_compat + attachment_status. **Yapılmadı:** ek menüsünde "Buluta yedekle ⇄ Yalnız bu cihazda" geçişi, OCR/metin dizini tembelliği, tablette 1 GB kabul ölçümü (cihazda doğrulanmadı — KALANLAR §2).
-- [ ] **F66.7 [Opus] Telefon yatay: yerleşim bozuk.** Kullanıcı (ekran görüntülü): "yan
-=======
 - [x] **F66.7 [Opus] Telefon yatay: yerleşim bozuk.** Kullanıcı (ekran görüntülü): "yan
->>>>>>> origin/oto/P07-pencere-sinifi
   çevirince ekran yerleşimi yapılamamış, tamamen bozuk." Kök (B11): genişlik eşikleri
   yatay telefonu (≈ 851×393 dp) tablet sayıyor — `splitActiveFor(width ≥ 640)` 393 dp
   yükseklikte bölünmüş görünüm açıyor. Düzelt: F67.1 `WindowClass` CİHAZ sınıfını EN KISA
