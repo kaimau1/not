@@ -1009,7 +1009,7 @@ tur `telefon-*.png`.
 
 Numaralar ait oldukları fazı gösterir; o fazın "Önce oku" listesi geçerlidir.
 
-- [ ] **F65.8 [Opus] Sabit PDF: klasik sürekli dikey kaydırma.** Kullanıcı: "sayfa sayfa
+- [x] **F65.8 [Opus] Sabit PDF: klasik sürekli dikey kaydırma.** Kullanıcı: "sayfa sayfa
   değil; bütün sayfalar alt alta, yalnız kaydırıyoruz. Sağa-sola kaydırmayı kaldır. Alt
   paneldeki sayfa sayısı yazılarını kaldır; sayfanın sağ altında ufak yazsın, görsel
   dilimize uygun." Uygulama: sabit bölmede tek sayfalık `PdfPageBox` + dikey çekişle
@@ -1028,6 +1028,8 @@ Numaralar ait oldukları fazı gösterir; o fazın "Önce oku" listesi geçerlid
   kuralı aynı. KALEM_PLANI K1'deki "dipte çekince sonraki sayfa" bununla geçersiz olur
   (oraya not düş). Kabul: 300 sayfalık PDF'te fırlatma akıcı (> 33 ms kare < %2), bellek
   sabit; `ink_editing_guard_test` yeşil; tur görüntüsü önce/sonra.
+  **2026-11-10:** `PdfPageColumn` (tembel dikey liste, 300 sayfada canlı sayfa ≤ 5), ‹ n/N › → sağ alt `PdfPagePill`, `pdfPage` kaydırma durunca; yana/dipte çekişle çevirme kalktı (bekçi `test/pdf_page_column_test.dart`). Cihazda doğrulanmadı — A/B yürütücüde (tur görüntüsü de).
+  Cihaz A/B (2026-11-10, `ab_klavye.py`, taban 39fc2567, 3'er koşu, ölçüm Sonnet alt ajanında): klavye kapa ortanca 183 → 185 ms, aç 280 → 276 ms; yazma düşük kip 471–558 → 551–588 ms (gürültü bandında), yüksek kip 966 → 986 — regresyon yok. PDF kaydırma cihazda DENENMEDİ (ölçüm verisinde PDF'li not yok): 300 sayfa fırlatma/bellek kabulü cihaz turuna kaldı.
 - [ ] **F65.9 [Opus] Büyük dosyalar yerelde açılsın (500 MB–1 GB PDF).** Kullanıcı:
   "tabletimde radyoloji PDF'lerim var, açamıyorum; illa Drive'a yüklemek istiyor ya da
   sınır var deyip hiç açmıyor. Yedek zorunlu olmasın, ek menüsünden seçilsin; ama açılmalı,

@@ -56,7 +56,7 @@ kalıyordu; sabit PDF'te avuç sayfayı kaydırıyordu; tam ekran `initialPage` 
 - [x] Kalemsiz cihazda otomatik kalem katmanı yok → basılı tut + "Not al" parmakta çalışır.
 - [x] Sabit/gömülü PDF'te avuç reddi (`InkClaim`, gövdedeki yakalayıcının aynısı).
 - [x] Tam ekran kaldığı sayfadan açılır, dönüşte sayfa sabite yansır — B1.
-- [x] Sayfanın dibinde aşağı çekince sonraki sayfa, tepesinde yukarı çekince önceki sayfa — B2.
+- [x] Sayfanın dibinde aşağı çekince sonraki sayfa, tepesinde yukarı çekince önceki sayfa — B2. **Geçersiz (2026-11-10, OTURTMA F65.8):** sabit bölmede sayfalar artık sürekli dikey listede (`PdfPageColumn`); dikey çekişle geçiş kalktı.
 - [x] Kalem kipi ipucu "yalnız kalem"in gerçek durumunu söyler — B5.
 - [x] Cihazda doğrulandı (2026-11-10, profil uygulaması): kalem sabit PDF'e çizer, ipucu "yalnız kalem: açık"; parmak çizmez, kaydırır; dikey çekişle 6→7→8; tam ekran 8. sayfadan açılır, dönüş 8; tam ekranda çizilen çizgi sabite gelir, sabitte çizilen ikincisi ilkini silmez; yüzen düğme "dokunur"da kalem çizmez. Avuç reddi adb ile üretilemedi (tek dokunuş türü) — telefonda/tablette elle bakılacak.
 - [x] Not paketinde kalem düğmesi de aynı kökten çalışmıyordu → düzeltildi (bekçi `test/ink_editing_guard_test.dart`).

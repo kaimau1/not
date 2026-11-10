@@ -3,13 +3,15 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 10 Kasım 2026 {#2026-11-10}
+- Sabit PDF artık kesintisiz kayıyor: bütün sayfalar alt alta, sayfa sayfa çevirme ve yana kaydırma yok. Sayfa numarası PDF'in sağ altında küçük yazar; dokununca sayfaya atlanır.
+- Silgi seçiliyken nota eklenmiş (sabit ya da sayfadaki) PDF'in üzerinde de siler; artık yanlışlıkla çizmez. Kalem tepsisinde seçilen renk ve kalınlık PDF'e yazarken de geçerli.
+- Geri al, en son yazdığın yerdeki (sayfa ya da PDF) çizgiyi geri alır.
 - Ana ekranda **Tümü**'ye dokununca bütün notlar gösterilir (klasör ve süzgeç sıfırlanır); Klasörler ekranı için Tümü'ye uzun bas. Aynı anda yalnız bir çip vurgulu.
 - Liste paketi açıkken Biçim'e ya da alt çubuğa dokununca paket artık kapanmıyor; paketleme/çözme sonrası liste baştan kurulmuyor.
 - Misafir hesapta not ekranı artık "Senkronize" değil "Yalnız bu cihazda" diyor.
 - Sabit ya da sayfadaki PDF'e kalemle yazarken her çizgide yaşanan takılma giderildi (her çizgide bütün not yeniden kuruluyor ve kaydediliyordu).
 - Sabit ve sayfadaki PDF'e kalemle yazılamıyordu (kalem kipi açılıyor, iz çıkmıyordu) — düzeltildi; not paketinde de.
 - Kalem görülmüş cihazda kalem kipindeyken parmak çizmez, kaydırır; kalemle yazarken değen avuç sayfayı kaydırmaz.
-- Sabit PDF'te sayfanın dibinde aşağı çekmeye devam edince sonraki sayfaya geçilir (yukarı çekince öncekine).
 - Sabit PDF'te tam ekran kaldığın sayfadan açılır; tam ekranda geçilen sayfa ve çizgiler sabite yansır.
 - Klavye açılıp kapanırken ve yazarken titreme/takılma giderildi (yazarken alt çubuğun gizlenmesi bütün notu her karede yeniden diziyordu).
 - Dikey tablette not kapanışındaki takılma azaldı (liste gizliyken de kapanış düzeninde bekler).
