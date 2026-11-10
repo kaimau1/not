@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/utils/attachment_tag.dart';
 import '../../../../core/utils/link_text.dart';
+import '../../../../core/utils/speech_segments.dart';
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/video_time.dart';
 
@@ -974,7 +975,11 @@ String dictationMerge(String shown, String spoken) {
   if (current.isEmpty) return next;
   // Kısalma: tanıyıcı bir kelimeyi geri aldı. Kullanıcı onu SÖYLEDİ; silmek,
   // ekranda yazının kaybolup geri gelmesi demek.
-  if (current.startsWith(next)) return current;
+  // İstisna: kısalan kuyruk yeni metinde zaten varsa o kuyruk bir KLONDU
+  // (yerli taraf geri aldı) — kalırsa cümle iki kez yazılı kalır.
+  if (current.startsWith(next) && !droppedTailIsRepeat(current, next)) {
+    return current;
+  }
   return next;
 }
 

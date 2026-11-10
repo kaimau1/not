@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 10 Kasım 2026 {#2026-11-10}
+- **Sesle yazma:** duraklayınca cümlenin bir kez daha (bazen yarım) yazılması giderildi; tanıyıcı aynı cümleyi yeniden döktüğünde artık tek kopya kalır.
 - **Güncelleme baştan yazıldı:** yeni sürüm çıkınca ana ekranın tepesinde kalıcı "Yeni sürüm var" şeridi görünür; dokununca iner (yüzde gösterir) ve kurulur. Otomatik güncelleme açıkken yeni sürüm arka planda iner, uygulamayı bir sonraki açışında kurulur. Android 12 ve üstünde bir kez kendi kendini güncelledikten sonra onay penceresi bile çıkmaz. Ayarlar'ın en altından otomatik güncellemeyi kapatabilirsin.
 - **Görünüm ve süz** levhası sıkılaştı: üstteki boşluk kalktı, aç-kapa seçenekleri artık küçük işaretli çipler. **Klasör satırı** ve **Takvim şeridi**ni gizleme/gösterme de burada (⋮ menüsünden buraya taşındı).
 - Sabit PDF artık kesintisiz kayıyor: bütün sayfalar alt alta, sayfa sayfa çevirme ve yana kaydırma yok. Sayfa numarası PDF'in sağ altında küçük yazar; dokununca sayfaya atlanır.

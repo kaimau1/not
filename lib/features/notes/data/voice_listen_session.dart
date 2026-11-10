@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
+import '../../../core/utils/speech_segments.dart';
 import '../../../core/utils/voice_commands.dart';
 import 'device_speech.dart';
 
@@ -104,8 +105,12 @@ class VoiceListenSession {
             (event) {
               final level = event.level;
               if (level != null) _gate.onLevel(level, DateTime.now());
-              final text = event.text;
-              if (text == null || text == _last) return;
+              final raw = event.text;
+              if (raw == null) return;
+              // Tanıyıcının aynı cümleyi alt satırda yeniden yazması (klon)
+              // burada teke iner — levha da editör de aynı temiz metni alır.
+              final text = collapseRepeatedSegments(raw);
+              if (text == _last) return;
               _last = text;
               _gate.onSpeech(DateTime.now());
               onText(text);
