@@ -426,7 +426,7 @@ doğrulanır).
   sabit PDF kaydırma → F65.8 · büyük dosyalar → F65.9 · telefon yatay → F66.7 · "not
   menüsü sağa" → F67.9 · yazım düzeltici → Faz 70 · güvenlik → Faz 71 · performans
   denetimi → Faz 59 + F60.S2 · kalem akışı → Faz 61–63 · ek akışı → Faz 65.
-- [ ] **F60.S1 [Opus] Uygulama içi güncelleme ekranda takılı kalıyor.** Kullanıcının ekran
+- [x] **F60.S1 [Opus] Uygulama içi güncelleme ekranda takılı kalıyor.** *(2026-11-10: kullanıcı "çözüldü" dedi; güncelleme akışı 514082b9'da yeniden yazıldı. Aşağıdaki inceleme adımları yapılmayacak.)* Kullanıcının ekran
   görüntüsü notunda (bu oturumda görülmedi). İncele: `core/app_update.dart`
   `installAppUpdate` (indirme → `installApk` → FileProvider `cache-path`): ilerleme
   penceresi her yolda kapanıyor mu (`DialogRoute` + `removeRoute` kuralı), kurulum

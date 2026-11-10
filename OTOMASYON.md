@@ -124,7 +124,7 @@ Sıra önceliktir: önce kullanıcının bildirdiği hatalar, sonra kalem/perfor
 | P07 | Pencere sınıfı + telefon yatay + tur boyutları | opus | F67.1, F66.7, F67.2 | A/B | | bekliyor |
 | P08 | Büyük dosyalar yerelde | opus | F65.9 (K-O15 en güvenli: kopyala) | | evet | bekliyor |
 | P09 | Yazım düzeltici v2 | opus | Faz 70 | | | bekliyor |
-| P10 | Güncelleme ekranı takılması | opus | F60.S1 | cihaz | evet | bekliyor |
+| P10 | Güncelleme ekranı takılması | opus | F60.S1 | cihaz | evet | bitti (2026-11-10): kullanıcı çözüldüğünü bildirdi (güncelleme yolu 514082b9'da yeniden yazıldı: `ApkGuncelleme.kt`, `GuncellemeSonrasiAc.kt`, `app_update.dart`). Atla; widget testi ve cihaz doğrulaması ayrıca istenmiyor |
 | P11 | Bütçe testleri (kalan) + kalem A/B aracı | fable | F59.2–F59.6 | | | bekliyor |
 | P12 | Güvenlik denetimi + CI kapıları | fable | Faz 71 | | | bekliyor |
 | P13 | Mürekkep deposu v2 (yazma bayrağı KAPALI kalır) | fable | F61.0–F61.6 | ölçüm | | bekliyor |
