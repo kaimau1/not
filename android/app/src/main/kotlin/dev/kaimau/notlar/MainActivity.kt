@@ -1668,6 +1668,10 @@ class MainActivity : FlutterFragmentActivity() {
         // parçayı da kapsayabiliyor. O parçayı iki kez yazmamak için önceki
         // satır geri alınır (yoksa "abc" + "abc def" = "abc abc def").
         val lastLine = accumulated.substring(accumulated.lastIndexOf('\n') + 1)
+        // Tersi de olur: duraklamadan sonra tanıyıcı aynı cümleyi yeniden
+        // döküp KISA keser (2026-11-10 "cümle iki kez yazılıyor"). Önceki
+        // satırın baş kısmının tekrarı eklenmez.
+        if (lastLine.isNotEmpty() && lastLine.startsWith(part)) return
         if (lastLine.isNotEmpty() && part.startsWith(lastLine)) {
             accumulated.setLength(accumulated.length - lastLine.length)
         } else {

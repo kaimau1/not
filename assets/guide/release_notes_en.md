@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 10 November 2026 {#2026-11-10}
+- **Voice typing:** fixed a sentence being written a second time (sometimes cut off) after a pause; when the recognizer re-transcribes the same sentence only one copy is kept.
 - **Updates rewritten:** when a new version is out, a persistent "New version available" strip appears at the top of Home; tap it to download (with progress) and install. With automatic updates on, the new version downloads in the background and installs the next time you open the app. On Android 12+, after the app has updated itself once, there's no confirmation dialog at all. You can turn automatic updates off at the bottom of Settings.
 - The **View & filter** sheet is more compact: the empty space at the top is gone and on/off options are small check chips. Showing/hiding the **folder row** and **calendar strip** is here now (moved from the ⋮ menu).
 - Pinned PDFs now scroll continuously: all pages one under another, no page-by-page turning or sideways swipe. The page number sits small at the bottom right; tap it to jump to a page.

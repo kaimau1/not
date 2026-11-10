@@ -42,3 +42,13 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 ## 2026-11-08 — Oturum B (arama, yazı tipi, Gmail, takvim pratikliği)
 - **Dikte:** `_writeDictationAtCaret` sonunda `_revealCaretSoon()`; panel açılışında da.
 
+
+## Dikte klonu (2026-11-10)
+- Kök: tanıyıcı duraklamada `onEndOfSpeech` deyip AYNI sesi yeniden döküyor; MainActivity yeni segment sayıp
+  `X\nX'` yazıyordu. Final birebir aynıysa `commitPartial` geri alıyordu, kısa/farklıysa klon kalıyordu; Dart
+  `dictationMerge` kısalmayı yok saydığından geri alınan klon da ekranda kalıyordu.
+- Düzeltme: `core/utils/speech_segments.dart` `collapseRepeatedSegments` — `VoiceListenSession` her olayda
+  uygular (levha + editör): ardışık parça öbürünün baş tekrarıysa ya da kelimelerin ≥%75'i aynıysa uzun olan
+  kalır (önceki <3 kelimeyse dokunulmaz). `dictationMerge` kısalmayı, düşen kuyruk yeni metinde varsa kabul
+  eder (`droppedTailIsRepeat`). Kotlin `commitPartial` önceki satırın baş kısmı olan parçayı eklemez.
+  Test `test/speech_segments_test.dart`. Cihazda doğrulanmadı.
