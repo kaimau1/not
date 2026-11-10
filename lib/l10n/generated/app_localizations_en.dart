@@ -138,6 +138,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'This file hasn\'t synced to this device yet';
 
   @override
+  String get attachmentDeviceOnly =>
+      'Large file: kept only on this device, not backed up to the cloud';
+
+  @override
+  String get attachmentOtherDevice =>
+      'This large file is only on the device it was added on; it isn\'t downloaded here';
+
+  @override
+  String get attachmentDeviceFull =>
+      'Not enough space on the device to copy the file. Free up some space and try again.';
+
+  @override
   String get webDriveTapToOpen => 'In Google Drive · tap to open';
 
   @override

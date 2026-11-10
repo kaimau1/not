@@ -728,6 +728,7 @@ class Attachment {
     this.pinHeight = 0,
     this.sourceId = '',
     this.bubblesHidden = false,
+    this.localOnly = false,
     this.text = '',
     this.transcriptOf = '',
     this.sourceDigest = '',
@@ -781,6 +782,7 @@ class Attachment {
     'pinHeight',
     'sourceId',
     'bubblesHidden',
+    'localOnly',
     'text',
     'transcriptOf',
     'sourceDigest',
@@ -879,6 +881,7 @@ class Attachment {
   /// metin eki içeriğini kaydın kendisinde taşır ([text]) — yüklenecek dosya
   /// yok, kuyruk ikisini de atlar.
   bool get skipsUpload =>
+      localOnly ||
       kind == AttachmentKind.video ||
       kind == AttachmentKind.text ||
       kind == AttachmentKind.unknown;
@@ -889,6 +892,12 @@ class Attachment {
   /// silinmez, toplu listede ve paylaşımda durur. Belge başına saklanır
   /// (bir belgede gizlemek ötekileri etkilemez) ve senkronlanır.
   final bool bubblesHidden;
+
+  /// **YALNIZ BU CİHAZDA** (OTURTMA F65.9): bulut tavanını aşan büyük dosya
+  /// (500 MB–1 GB radyoloji PDF'i) eklenebilsin diye buluta HİÇ yüklenmez —
+  /// [skipsUpload] kuyruğu kapatır. Başka cihazda yer tutucu görünür.
+  /// Yalnız true iken yazılır.
+  final bool localOnly;
 
   final String id;
   final AttachmentKind kind;
@@ -1138,6 +1147,7 @@ class Attachment {
     pdfMarks: local.pdfMarks,
     pinHeight: local.pinHeight,
     bubblesHidden: local.bubblesHidden,
+    localOnly: local.localOnly,
     // Açıklama yazılırken gelen eski yankı harfleri geri almasın.
     caption: local.caption,
   );
@@ -1174,6 +1184,7 @@ class Attachment {
     double? pinHeight,
     String? sourceId,
     bool? bubblesHidden,
+    bool? localOnly,
     String? text,
     String? transcriptOf,
     String? sourceDigest,
@@ -1211,6 +1222,7 @@ class Attachment {
     pinHeight: pinHeight ?? this.pinHeight,
     sourceId: sourceId ?? this.sourceId,
     bubblesHidden: bubblesHidden ?? this.bubblesHidden,
+    localOnly: localOnly ?? this.localOnly,
     text: text ?? this.text,
     transcriptOf: transcriptOf ?? this.transcriptOf,
     sourceDigest: sourceDigest ?? this.sourceDigest,
@@ -1274,6 +1286,7 @@ class Attachment {
         pinHeight: (map['pinHeight'] as num?)?.toDouble() ?? 0,
         sourceId: map['sourceId'] as String? ?? '',
         bubblesHidden: map['bubblesHidden'] as bool? ?? false,
+        localOnly: map['localOnly'] as bool? ?? false,
         text: map['text'] as String? ?? '',
         transcriptOf: map['transcriptOf'] as String? ?? '',
         sourceDigest: map['sourceDigest'] as String? ?? '',
@@ -1357,6 +1370,7 @@ class Attachment {
     // Yalnız gizliyken yazılır (ekler dizi olarak TÜMDEN yazılır — gösterince
     // alanın düşmesi yeterli, merge tuzağı yok).
     if (bubblesHidden) 'bubblesHidden': true,
+    if (localOnly) 'localOnly': true,
     // Metin eki: içerik ve kaynağı yalnız doluyken (öbür türlerde alan yok).
     if (text.isNotEmpty) 'text': text,
     if (transcriptOf.isNotEmpty) 'transcriptOf': transcriptOf,

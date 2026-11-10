@@ -80,11 +80,32 @@ void main() {
       pinHeight: 1,
       sourceId: 's',
       bubblesHidden: true,
+      localOnly: true,
       text: 't',
       transcriptOf: 't',
       sourceDigest: 'd',
     );
     expect(Attachment.knownKeys.containsAll(a.toMap().keys), isTrue);
+  });
+
+  test('F65.9: yalnız-cihaz eki gidiş-dönüşte korunur ve yüklenmez', () {
+    final a = Attachment(
+      id: 'a',
+      kind: AttachmentKind.pdf,
+      fileName: 'mr.pdf',
+      mimeType: 'application/pdf',
+      localOnly: true,
+      createdAt: DateTime(2026),
+    );
+    expect(a.toMap()['localOnly'], isTrue);
+    final back = Attachment.fromMap(a.toMap());
+    expect(back.localOnly, isTrue);
+    expect(back.skipsUpload, isTrue);
+    expect(back.extras, isEmpty);
+    expect(
+      a.copyWith(localOnly: false).toMap().containsKey('localOnly'),
+      isFalse,
+    );
   });
 
   test('madde: bilinmeyen alan birebir geri yazılır', () {

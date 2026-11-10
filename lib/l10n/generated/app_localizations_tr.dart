@@ -138,6 +138,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get attachmentNotSynced => 'Dosya bu cihaza henüz senkronlanmadı';
 
   @override
+  String get attachmentDeviceOnly =>
+      'Büyük dosya: yalnız bu cihazda duruyor, buluta yedeklenmez';
+
+  @override
+  String get attachmentOtherDevice =>
+      'Bu büyük dosya yalnız eklendiği cihazda; buraya indirilmez';
+
+  @override
+  String get attachmentDeviceFull =>
+      'Cihazda yer kalmadı; dosya kopyalanamadı. Biraz yer açıp yeniden deneyin.';
+
+  @override
   String get webDriveTapToOpen => 'Google Drive\'da · açmak için dokun';
 
   @override

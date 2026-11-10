@@ -43,7 +43,12 @@ void main() {
       of(big, local: true, limit: 2, fails: 9),
       AttachmentStatus.overLimit,
     );
-    const video = Attachment(id: 'v', kind: AttachmentKind.video, fileName: 'v.mp4', mimeType: 'video/mp4');
+    const video = Attachment(
+      id: 'v',
+      kind: AttachmentKind.video,
+      fileName: 'v.mp4',
+      mimeType: 'video/mp4',
+    );
     expect(of(video, local: true), AttachmentStatus.none);
   });
 
@@ -53,6 +58,16 @@ void main() {
     expect(of(a, web: true), AttachmentStatus.onPhone);
     expect(of(a.copyWith(driveId: 'd')), AttachmentStatus.none);
     expect(of(a.copyWith(downloadUrl: 'https://x')), AttachmentStatus.none);
+  });
+
+  test('F65.9: yalnız-cihaz eki kuyruk/indirme durumuna düşmez', () {
+    final big = a.copyWith(localOnly: true, sizeBytes: 900 * 1024 * 1024);
+    expect(
+      of(big, local: true, limit: 50, fails: 9),
+      AttachmentStatus.deviceOnly,
+    );
+    expect(of(big), AttachmentStatus.otherDevice);
+    expect(of(big, web: true), AttachmentStatus.otherDevice);
   });
 
   testWidgets('rozete dokununca açıklama levhası + yeniden dene', (
