@@ -33,6 +33,8 @@ object GuncellemeSonrasiAc {
     private const val NOTIFICATION_ID = 0x6E07
     private const val FRESH_MS = 15 * 60_000L
 
+    // Senkron yazım bilerek: commit'ten hemen sonra kurulum süreci öldürür.
+    @SuppressLint("ApplySharedPref")
     fun mark(context: Context) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putLong(KEY, System.currentTimeMillis()).commit()
@@ -86,7 +88,11 @@ object GuncellemeSonrasiAc {
             context, NOTIFICATION_ID, open,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val canFullScreen = Build.VERSION.SDK_INT < 34 || manager.canUseFullScreenIntent()
+        val canFullScreen = if (Build.VERSION.SDK_INT >= 34) {
+            manager.canUseFullScreenIntent()
+        } else {
+            true
+        }
         val builder = NotificationCompat.Builder(context, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat_notlar)
             .setContentTitle(context.getString(R.string.update_done_title))
