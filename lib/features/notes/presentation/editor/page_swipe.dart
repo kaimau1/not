@@ -114,7 +114,7 @@ class _PageTurnState extends State<PageTurn>
     vsync: this,
     value: 1,
   );
-  late final Animation<double> _t = CurvedAnimation(
+  late final CurvedAnimation _t = CurvedAnimation(
     parent: _c,
     curve: AppMotion.enter,
   );
@@ -143,6 +143,7 @@ class _PageTurnState extends State<PageTurn>
   @override
   void dispose() {
     _pillTimer?.cancel();
+    _t.dispose();
     _c.dispose();
     super.dispose();
   }

@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 10 November 2026 {#2026-11-10}
+- Writing with the pen on a pinned or in-page PDF no longer stutters on every stroke (each stroke used to rebuild and save the whole note).
 - Writing with the pen on pinned and in-page PDFs works again (pen mode opened but left no ink); same fix for note packages.
 - On a device that has seen a pen, the finger scrolls instead of drawing in pen mode; a resting palm no longer scrolls the page.
 - Pinned PDF: keep pulling down at the bottom of a page to go to the next one (up for the previous).

@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 10 Kasım 2026 {#2026-11-10}
+- Sabit ya da sayfadaki PDF'e kalemle yazarken her çizgide yaşanan takılma giderildi (her çizgide bütün not yeniden kuruluyor ve kaydediliyordu).
 - Sabit ve sayfadaki PDF'e kalemle yazılamıyordu (kalem kipi açılıyor, iz çıkmıyordu) — düzeltildi; not paketinde de.
 - Kalem görülmüş cihazda kalem kipindeyken parmak çizmez, kaydırır; kalemle yazarken değen avuç sayfayı kaydırmaz.
 - Sabit PDF'te sayfanın dibinde aşağı çekmeye devam edince sonraki sayfaya geçilir (yukarı çekince öncekine).
