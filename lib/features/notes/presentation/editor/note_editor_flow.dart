@@ -582,6 +582,15 @@ extension _EditorFlowX on _NoteEditorScreenState {
     return created;
   }
 
+  /// Kalem kuralı tek yerde ([PenPolicy], F63.1).
+  PenPolicy _penPolicy(PenSurface surface) => PenPolicy.resolve(
+    surface: surface,
+    penMode: _penMode,
+    autoStylus: InkToolMemory.autoStylus,
+    stylusEver: InkToolMemory.stylusEver,
+    penOnly: InkToolMemory.penOnly,
+  );
+
   /// Kalem kipi kapalıyken yalnız kalem yazar (ayar açıksa); parmak ve fare
   /// metne, kaydırmaya gider.
   void _syncPageInkKinds(InkController ink) {
@@ -590,13 +599,7 @@ extension _EditorFlowX on _NoteEditorScreenState {
       ink.allowedKinds = const {};
       return;
     }
-    ink.allowedKinds = {
-      if (_penMode || InkToolMemory.autoStylus) ...const [
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.invertedStylus,
-      ],
-      if (_penMode) ...const [PointerDeviceKind.touch, PointerDeviceKind.mouse],
-    };
+    ink.allowedKinds = _penPolicy(PenSurface.page).allowedKinds;
   }
 
   /// **YENİ METİN NOTUNDA KLAVYE AÇIK** (kullanıcı kararı 2026-11-06): az önce

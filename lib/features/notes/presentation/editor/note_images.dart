@@ -25,9 +25,9 @@ import '../drive_ui.dart';
 import '../note_card_media.dart' show VideoPoster;
 import '../viewers/image_viewer.dart';
 import '../viewers/ink_layer.dart';
-import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'page_ink_layer.dart' show InkExclusionZone;
 import '../viewers/ink_tools.dart' show InkToolMemory;
+import '../viewers/pen_policy.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import '../../../../core/utils/youtube.dart';
 import '../viewers/video_viewer.dart';
@@ -401,7 +401,14 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
 
   InkController? _docInkFor(Attachment a) {
     // Kalemsiz cihazda katman yok: basılı tutup seçme parmakta kalır.
-    if (!InkToolMemory.autoStylus || !InkToolMemory.stylusEver) return null;
+    final policy = PenPolicy.resolve(
+      surface: PenSurface.embeddedDoc,
+      penMode: false,
+      autoStylus: InkToolMemory.autoStylus,
+      stylusEver: InkToolMemory.stylusEver,
+      penOnly: InkToolMemory.penOnly,
+    );
+    if (!policy.layerActive) return null;
     // setEditing(true) (2026-11-10, cihazda doğrulandı): eksikken katman
     // `IgnorePointer` ile kalemi de yok sayıyordu — gömülü PDF'e yazılmıyordu.
     final c = _docInk[a.id] ??= InkController(
@@ -421,10 +428,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       if (!c.drawing) c.replace(a.ink);
     }
     c.penOnly = InkToolMemory.penOnly;
-    c.allowedKinds = const {
-      PointerDeviceKind.stylus,
-      PointerDeviceKind.invertedStylus,
-    };
+    c.allowedKinds = policy.allowedKinds;
     return c;
   }
 

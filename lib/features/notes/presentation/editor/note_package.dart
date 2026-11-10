@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/app_icons.dart';
@@ -7,6 +6,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/ink_tools.dart' show InkToolMemory;
+import '../viewers/pen_policy.dart';
 import 'page_ink_layer.dart';
 
 /// **NOT PAKETİ** (kullanıcı isteği 2026-11-08): uzun yazı nota açık hâlde
@@ -216,10 +216,15 @@ class _NotePackageScreenState extends State<NotePackageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final policy = PenPolicy.resolve(
+      surface: PenSurface.package,
+      penMode: _pen,
+      autoStylus: InkToolMemory.autoStylus,
+      stylusEver: InkToolMemory.stylusEver,
+      penOnly: InkToolMemory.penOnly,
+    );
     _ink
-      ..allowedKinds = _pen
-          ? null
-          : const {PointerDeviceKind.stylus, PointerDeviceKind.invertedStylus}
+      ..allowedKinds = policy.allowedKinds
       ..penOnly = InkToolMemory.penOnly;
     final l10n = context.l10n;
     return PopScope(
