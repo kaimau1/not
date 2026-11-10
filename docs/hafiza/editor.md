@@ -148,6 +148,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **Tablet klavye karmaşası** KÖK NEDEN: `SplitShell._split` Scaffold'u gövdeyi klavyede kısaltıyordu → listenin `removeViewInsets` sarması boşa; `resizeToAvoidBottomInset: false` (editör `KeyboardSnap`, defter kendi Scaffold'u).
 - **Esc** KÖK NEDEN: editörün `CallbackShortcuts` Esc'i `Navigator.maybePop` ile yutuyordu (kabuk iç gezgini tek sayfa) → kaldırıldı, uygulama `EscBackAction` (geri dağıtıcı) çalışır.
 - **Paket**: × ile çöz (`unpackGroup`). Kasma izole ölçümde ÜRETİLEMEDİ (30 madde, açık/kapalı paket, yazarken fazladan satır kurulumu yok) — cihazda hangi adımda olduğu bekleniyor.
+- **Paket kapanması — kök neden (F60.2, 2026-11-10):** `TapRegion` grubu paket başına (`note-package-$pkg`) ve yalnız üyelerdi → editör çubuğuna (Biçim) dokunmak "dışarı" sayılıp paketi kapatıyordu. Grup TEK sabit `kNotePackageTapGroup`; alt çubuk, hızlı satır, biçim paneli, kalem tepsisi `TapRegion(groupId:)` ile HEP sarılı. Yeni editör çubuğu/paneli eklersen o gruba kat. `togglePackage`'da `_rowCache.clear()` yok (anahtar `package`+sıra içeriyor). Bekçi `note_package_open_test` (S10).
 
 ## 2026-11-09 — Oturum J (tablet senkron + hızlı satır sadeleşmesi)
 - **Fiziksel klavye + sanal klavye döngüsü** KÖK NEDEN: Bluetooth klavye boşta uyuyunca Android "çıkarıldı" bildiriyor → `HardKeyboard` platform girişine dönüp sanal klavyeyi açıyordu, tuşla uyanınca geri. `HardKeyboard.report`: son tuştan 15 dk içinde gelen "çıktı" yok sayılır, süre dolunca yerel durum yeniden sorulur.

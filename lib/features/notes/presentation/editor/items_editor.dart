@@ -1736,7 +1736,9 @@ class ItemsEditorState extends State<ItemsEditor>
       _selected.clear();
       _selectMode = false;
       _openPackage = null;
-      _rowCache.clear();
+      // Önbellek TEMİZLENMEZ (F60.2): satır anahtarı `item.package`'ı ve
+      // sırayı içerir, değişen üyeler kendiliğinden yenilenir; temizlemek
+      // görünen bütün satırları sıfırdan kuruyordu (30 maddede 20 satır).
     });
     _commit();
     return true;
@@ -1796,7 +1798,7 @@ class ItemsEditorState extends State<ItemsEditor>
     return KeyedSubtree(
       key: ValueKey('pkg-${item.id}'),
       child: TapRegion(
-        groupId: 'note-package-$pkg',
+        groupId: kNotePackageTapGroup,
         onTapOutside: (_) => _setOpenPackage(null),
         child: DecoratedBox(
           decoration: BoxDecoration(

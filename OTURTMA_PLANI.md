@@ -374,7 +374,15 @@ doğrulanır).
   Kart önizlemesi/dışa aktarma `_note`'tan okur (güncel).
   *Kabul:* S6/S7 kök kurulum 0 (ilk çizgide geri al düğmesi için 1 serbest), `updateNote`
   10 çizgide ≤ 1; `test/ink_editing_guard_test.dart` yeşil; cihazda `ab_kalem.py` PDF evresi.
-- [ ] **F60.2 Not paketi: kapanma ve ağaç şekli (B7).**
+- [x] **F60.2 Not paketi: kapanma ve ağaç şekli (B7).**
+  *(2026-11-10: S10 `test/note_package_open_test.dart` kırmızı (Biçim'e dokununca paket
+  kapanıyordu) → yeşil. (a) tek sabit `kNotePackageTapGroup` (`note_package.dart`); alt
+  çubuk, hızlı satır, biçim paneli, kalem tepsisi koşulsuz `TapRegion` ile gruba girdi;
+  dışarı (başka madde) dokunuş yine kapatır. (b) `togglePackage`'daki `_rowCache.clear()`
+  kalktı: tek üyeyi çöz/paketle 19/20 → 3/2 satır kurulumu. (c) ölçüldü, değişiklik
+  gerekmedi: aç'ta yeni `TextField` 0, var olan satırın yeniden kurulumu 0, kurulan 8 = 6
+  üye + kaydırmayla görünür olan 2 satır. Bütçe `budgets.json` S10. **Cihazda 30 maddeli
+  paketli notta aç → yaz → kalın yap → kapat akışı denenmedi; ölçüm kapısı (ab_klavye) koşulmadı.**)*
   *Önce test (S10):* 6 maddeli paket aç → bir maddeye odaklan → alt çubuktaki Biçim
   düğmesine `tester.tap` → beklenen: paket AÇIK, odak yerinde. Bugün kapanıyorsa hipotez
   doğrulandı.

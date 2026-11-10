@@ -2380,7 +2380,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // sığmayanlar ⋮ menüsünde.
     final wide =
         kIsWeb && MediaQuery.sizeOf(context).width >= kRailBreakpoint;
-    final row = EditorQuickRow(
+    // Paket grubu (F60.2): satıra dokunmak açık paketi kapatmaz.
+    final row = TapRegion(
+      groupId: kNotePackageTapGroup,
+      child: EditorQuickRow(
           fit: wide,
           onBold: () => _applyFormat(RichFormat.bold),
           onBullet: () => _runOnTarget(applyLineBullet),
@@ -2450,6 +2453,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // YOK — yalnız bir sonraki açılışta vurgulanmasın diye.
           hint: !_quickRowHinted,
           onHinted: () => _quickRowHinted = true,
+      ),
     );
     if (wide) {
       return Row(
@@ -4103,6 +4107,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 // küçülür — toplam boy sıçramaz), panelin içeriği hafifçe
                 // yukarı süzülerek belirir.
                 Flexible(
+                  // Paket grubu (F60.2): biçim paneli açık paketi kapatmaz.
+                  child: TapRegion(
+                  groupId: kNotePackageTapGroup,
                   child: AnimatedSize(
                     duration: _kBarSwap,
                     curve: Curves.easeOutCubic,
@@ -4225,6 +4232,7 @@ child: FormatBar(
                           ),
                         ),
                   ),
+                  ),
                 ),
                 // Alt bar: eskiden yedi ETİKETSİZ ikon yan yanaydı (palet, ataş,
                 // hesap, biçim, liste, mikrofon, AI) ve hangisinin ne yaptığı
@@ -4262,7 +4270,10 @@ child: NoteFindBar(
                 // Yazarken gizleme DIŞTA (2026-11-10): içte olunca
                 // AnimatedSize onun tek adımlık boy değişimini de 260 ms'lik
                 // kare kare yerleşime çeviriyordu.
-                TypingBarHide(
+                // Paket grubu (F60.2): alt çubuk açık paketi kapatmaz.
+                TapRegion(
+                groupId: kNotePackageTapGroup,
+                child: TypingBarHide(
                   hidden: _typingN,
                   enabled: ref.watch(hideBarWhileTypingProvider),
                   child: AnimatedSize(
@@ -4584,6 +4595,7 @@ child: NoteFindBar(
                   ),
                 ),
                 ],
+                ),
                 ),
                 ),
                 ),
@@ -5122,6 +5134,10 @@ child: NoteFindBar(
                               child: BackCloses(
                                 open: true,
                                 onClose: () => _update(() => _penMode = false),
+                                // Paket grubu (F60.2): tepsi açık paketi
+                                // kapatmaz.
+                                child: TapRegion(
+                                groupId: kNotePackageTapGroup,
                                 child: PenTray(
                                 key: const ValueKey('page-pen-dock'),
                                 controller: _pageInkOf(note),
@@ -5135,6 +5151,7 @@ child: NoteFindBar(
                                     _fullscreenButton(l10n),
                                   ..._penEndButtons(l10n),
                                 ],
+                              ),
                               ),
                               ),
                             ),
