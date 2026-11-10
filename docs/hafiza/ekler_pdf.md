@@ -121,7 +121,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **Hayalet ek sayacı:** editör ataç rozeti/şeridi zemin görselini (`backgroundImageId`) ek sayıyordu; kart/dışa aktarma saymıyordu → `Note.attachmentsWithoutBackground` ortak kural. TUZAK: yeni "ek" sayan yer bunu kullanmalı.
 
 ## 2026-11-08 — Oturum E (15+2 maddelik üçüncü tur)
-- **Yazım:** `AutoSpell.replacedWord` (tek adımda kelimenin yerine yakın başka kelime = klavye önerisi/yerinde düzeltme → `learnFix`; tamamlama sayılmaz). Ayarlar → Öğrenilen yazımlar (`SpellLearnedScreen`: liste, elle `addManualFix` ilk görüşte uygulanır, sil, dokunulmayanlar). Boşluk komşusu `cvbnmö`.
+- **Yazım:** `SpellEngine.replacedWord` (tek adımda kelimenin yerine yakın başka kelime = klavye önerisi/yerinde düzeltme → `learnFix`; tamamlama sayılmaz). Ayarlar → Öğrenilen yazımlar (`SpellLearnedScreen`: liste, elle `addManualFix` ilk görüşte uygulanır, sil, dokunulmayanlar). Boşluk komşusu `cvbnmö`.
 
 ## 2026-11-09 — Oturum H (tablet cihaz turu dönüşü)
 - **Uygulama içi güncelleme** (`installAppUpdate`): APK `releaseApkUrl` → önbellek → `installApk` (FileProvider `cache-path`), `REQUEST_INSTALL_PACKAGES` YALNIZ `src/kisisel` manifestinde; `canSelfUpdate` izni manifestten okur. Sessiz kurulum Android'de yok (tek dokunuş "Güncelle").

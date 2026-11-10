@@ -1101,28 +1101,28 @@ HAFIZA'da "Yazım" geçen maddeler (oturum C, D, E, F, J).
    ve dikteye dokunmama, Çince'de bulanık eşleşme yok — bugünkü kurallar motorun açık
    girdileri olarak korunur.
 
-- [ ] **F70.0 Israrı üret.** Bugünkü kodla kırmızı test: otomatik düzeltme A → B; kullanıcı
+- [x] **F70.0 Israrı üret.** Bugünkü kodla kırmızı test: otomatik düzeltme A → B; kullanıcı
   B'yi C yapar; sonra A yeniden yazılır → beklenen: B'ye DÖNMEZ. Hangi yol geri
   getiriyor (öğrenilmiş düzeltme `suggest`, cihaz denetçisi `_nativeSplit`/ilk öneri,
-  `replacedWord` öğrenmesi, bulanık eşleşme) maddeye yaz.
-- [ ] **F70.1 Sözleşme testleri.** `test/spell_engine_test.dart`: KALANLAR'daki bütün
+  `replacedWord` öğrenmesi, bulanık eşleşme) maddeye yaz. — **[x] 2026-11-11:** kırmızı üretildi (`test/spell_engine_test.dart` "F70.0 ısrar"). Geri getiren yol: bulanık `SpellMemory.nearest` ("kalen" → "kalem") her seferinde aynı aday; öğrenme yalnız SON biten kelimeyi ve yalnız silmeyle izliyordu — bir kelime sonra düzeltme ya da tek adımda (klavye önerisi) değiştirme reddi tetiklemiyordu, `replacedWord` bilinen kelimede null.
+- [x] **F70.1 Sözleşme testleri.** `test/spell_engine_test.dart`: KALANLAR'daki bütün
   örnekler (C3, D1, D2, F7, J9: "herşey ", "yaoçoılıyor ", "eksiknyapılıyor ", "kalemi"
   ↔ "kalemde", "bakım togg", ☐ yapıştırma) + ilke 1–3 senaryoları + "bilinen kelimeye
-  dokunma" + "3 kez görülmeden bilinen sayma". Testler önce yazılır.
-- [ ] **F70.2 Motor.** `lib/core/utils/spell_engine.dart` (saf): girdiler (kelime, önceki
+  dokunma" + "3 kez görülmeden bilinen sayma". Testler önce yazılır. — **[x] 2026-11-11:** `test/spell_engine_test.dart` (31 test: KALANLAR örnekleri, ilke 1–3, bilinen/3 kez, iki aday, kipler, göç, ayarlar ekranı) yeşil.
+- [x] **F70.2 Motor.** `lib/core/utils/spell_engine.dart` (saf): girdiler (kelime, önceki
   kelime, kip, dil, kişisel sözlük görünümü, öğrenilmişler, reddedilenler, bu notta
   dokunulmazlar). Mesafe işlevi `spell_learn.dart`'tan taşınır (klavye ağırlıklı
-  Damerau–Levenshtein — yeniden yazma). Güven eşiği tek yerde sabit.
-- [ ] **F70.3 Bağlama.** `auto_spell.dart` inceltilir: kelime bitişi algılama, kararı
+  Damerau–Levenshtein — yeniden yazma). Güven eşiği tek yerde sabit. — **[x] 2026-11-11:** `spell_engine.dart` (`SpellEngine.decide`, mesafe taşındı, eşik `confidenceMargin` = 0,3). "Öner" kararı yok (KARAR en güvenli, sabah bakılacak); "önceki kelime" girdisi kullanılmadı.
+- [x] **F70.3 Bağlama.** `auto_spell.dart` inceltilir: kelime bitişi algılama, kararı
   uygulama, Backspace-geri-al penceresi, "kullanıcı değiştirdi" algısı (düzeltmeden
   sonraki ilk düzenleme o kelimenin aralığına değerse). Editör kasma kuralları: kök
-  `setState` yok, satır önbelleği etkilenmez.
-- [ ] **F70.4 Hafıza göçü.** `spell_memory.json` v1 → v2: öğrenilmiş düzeltmeler ve
+  `setState` yok, satır önbelleği etkilenmez. — **[x] 2026-11-11:** `auto_spell.dart` yalnız bağlama: son 30 biten kelime izlenir (`_track/_settle`), değişen otomatik düzeltme ilk seferde reddedilir + o notta `_noteKeep` (`beginNote`), Backspace geri al (`_Undo`). Kök `setState` yok. Değiştirilen düzeltmenin yerine yazılan kelime onaylı öğrenilir (öbür notlarda uygulanır — sabah bakılacak).
+- [x] **F70.4 Hafıza göçü.** `spell_memory.json` v1 → v2: öğrenilmiş düzeltmeler ve
   reddedilenler taşınır; taşınamayan sezgisel kayıtlar (karışıklık ağırlıkları) atılır.
-  Eski dosya `.v1` adıyla bir sürüm boyunca saklanır.
-- [ ] **F70.5 Ayarlar.** "Öğrenilen yazımlar" ekranı v2 verisini gösterir: düzeltmeler,
-  reddedilenler (geri alınabilir), "otomatik düzelt" aç/kapa + "yalnız kurallar" kipi.
-- [ ] **F70.6 Eski kodu sil.** Kullanılmayan sezgiler ve testleri kalkar; `dart analyze` temiz.
+  Eski dosya `.v1` adıyla bir sürüm boyunca saklanır. — **[x] 2026-11-11:** `SpellMemory.decode` v1 → v2 (en güçlü doğru + sayı, "r" → `keep`, "c" atılır); dosya `spell_memory.json.v1` yedeklenir, web'de `spell_memory_v2` anahtarı. `.v1` yedeğini silen kod sonraki sürümde.
+- [x] **F70.5 Ayarlar.** "Öğrenilen yazımlar" ekranı v2 verisini gösterir: düzeltmeler,
+  reddedilenler (geri alınabilir), "otomatik düzelt" aç/kapa + "yalnız kurallar" kipi. — **[x] 2026-11-11:** Öğrenilen yazımlar: otomatik düzelt + "yalnız kurallar" anahtarları, düzeltmeler, reddedilen çiftler ve dokunulmaz kelimeler (çip silinince yeniden açılır).
+- [x] **F70.6 Eski kodu sil.** Kullanılmayan sezgiler ve testleri kalkar; `dart analyze` temiz. — **[x] 2026-11-11:** harf karışıklıkları, `alignSubstitutions`, `_nativeSplit`, v1 `suggest` ve `spell_learn_test.dart` silindi; tam `flutter analyze` temiz.
 - Kabul: F70.0 testi yeşil; sözleşme testlerinin tamamı yeşil; yazarken kök kurulum
   bütçesi (Ek A S1/S2) değişmedi; regresyon listesine "ısrar" satırı.
 

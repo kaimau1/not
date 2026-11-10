@@ -14,5 +14,5 @@
   başka kelimeyle değiştirilince yazılan çift onaylı öğrenilir (öbür notlarda uygulanır);
   motorun "önceki kelime" girdisi kullanılmadı (YAGNI); `.v1` yedeği silen kod yok (bir
   sürüm sonra elle).
-- Sıradaki: plan `[x]`, regresyon satırı, `docs/hafiza/editor.md`, push, CI.
+- Plan [x], regresyon satırı, docs/hafiza/editor.md yazıldı. Sıradaki: CI yeşil mi (gh run list -b oto/P09-yazim-v2 -L 1).
 - Test: `C:/src/flutter/bin/flutter.bat test test/spell_engine_test.dart test/istekler_2026_11_08_test.dart --reporter failures-only`
