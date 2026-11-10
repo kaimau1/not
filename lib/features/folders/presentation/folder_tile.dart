@@ -8,7 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../notes/data/shared_note_activity.dart';
+import '../../notes/presentation/filter_sheet.dart';
 import '../../notes/presentation/notes_providers.dart';
+import '../../../app/app_commands.dart';
 import '../../inbox/data/inbox_repository.dart';
 import '../../inbox/presentation/shared_hub_screen.dart';
 import '../data/folder_activity.dart';
@@ -399,19 +401,25 @@ class SharedFolderChip extends ConsumerWidget {
 }
 
 /// **"TÜMÜ" ÇİPİ** — şeridin BAŞINDA (kullanıcı isteği 2026-10-20). Seçiliyken
-/// ana ekran klasördekiler dahil bütün (arşiv dışı) notları gösterir;
-/// yeniden dokunmak klasörsüz notlara döner (bkz. [showAllNotesProvider]).
+/// ana ekran klasördekiler dahil bütün (arşiv dışı) notları gösterir
+/// (bkz. [showAllNotesProvider]).
 class AllNotesChip extends ConsumerWidget {
   const AllNotesChip({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(showAllNotesProvider);
+    // Vurgu YALNIZ ana ekran gerçekten bütün notları gösterirken: klasör
+    // içindeyken "Tümü" tercihi açık kalsa da çip söner (tek vurgu).
+    final selected =
+        ref.watch(showAllNotesProvider) &&
+        ref.watch(selectedFolderProvider) == null &&
+        ref.watch(selectedSharedFolderProvider) == null &&
+        !ref.watch(sharedHubOnHomeProvider);
     final count = ref.watch(allNotesCountProvider);
     final scheme = Theme.of(context).colorScheme;
-    // 2026-11-06 (kullanıcı isteği: "Tümü düğmesi klasörler sayfasını
-    // açsın"): dokunuş Klasörler ekranını açar; klasördekiler dahil bütün
-    // notları gösterme seçimi UZUN BASIŞTA kaldı.
+    // F60.S3 (kullanıcı 2026-11-09, 2026-11-06 kararının tersi): DOKUN =
+    // ana ekranda bütün notlar (klasör/süzgeç sıfırlanır), UZUN BAS =
+    // Klasörler ekranı.
     return _ChipShell(
       key: const ValueKey('all-notes-chip'),
       accent: scheme.primary,
@@ -419,13 +427,16 @@ class AllNotesChip extends ConsumerWidget {
       label: context.l10n.allNotesChip,
       count: count,
       selected: selected,
-      onTap: () => unawaited(context.push('/folders')),
-      onLongPress: () {
-        ref.read(selectedFolderProvider.notifier).set(null);
-        ref.read(selectedSharedFolderProvider.notifier).set(null);
-        ref.read(sharedHubOnHomeProvider.notifier).set(false);
-        ref.read(showAllNotesProvider.notifier).set(!selected);
+      onTap: () {
+        resetFilters(ref);
+        ref.read(showAllNotesProvider.notifier).set(true);
+        final router = GoRouter.maybeOf(context);
+        // Geniş ekranda sağda not açıksa kapanır (🏠 ile aynı).
+        if (router != null && router.state.uri.path != '/') {
+          goHome(ref, router);
+        }
       },
+      onLongPress: () => unawaited(context.push('/folders')),
     );
   }
 }

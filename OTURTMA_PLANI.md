@@ -469,7 +469,13 @@ doğrulanır).
   (birikim değil, kare başı sabit yük):* kabukta klavye hareketinin orta karesinde
   ~28–50 widget kuruluyor; SABİT PDF'li notta ~180 (`PinnedMediaPane` ve bar
   düğmeleri her karede) — cihazda fark çıkarsa ilk bakılacak yer.
-- [ ] **F60.S3 [Opus] "Tümü" çipi bütün notları göstermeli; klasör çipleri denetimi.**
+- [x] **F60.S3 [Opus] "Tümü" çipi bütün notları göstermeli; klasör çipleri denetimi.**
+  *(2026-11-10: kanıt `test/folder_strip_chips_test.dart` kırmızı (Tümü dokununca
+  `/folders`) → yeşil. `AllNotesChip` dokun = `resetFilters` + `showAllNotes` true (+ not
+  açıksa `goHome`), uzun bas = `/folders`; vurgu artık klasör/Gelen/paylaşılan içindeyken
+  söner (eskiden Tümü açıkken kendi klasörde iki çip vurguluydu). Test ev, Tümü, Gelen,
+  kendi, paylaşılan çipini sırayla dener. Süzgeç açıkken şerit gizli olduğundan süzgeç
+  sıfırlama yalnız kodda (arayüzden o anda Tümü'ye erişilmez). Kılavuz satırı güncellendi.)*
   Bugün (2026-11-06 kararı) "Tümü" DOKUN → `/folders`, UZUN BAS → bütün notlar. Kullanıcı
   (2026-11-09): dokununca ana ekranda tüm notlar. Düzelt: dokun = bütün notlar
   (klasör/süzgeç sıfırlanır, `resetFilters` + `goHome`), uzun bas = `/folders`. Ayrıca

@@ -272,8 +272,8 @@ extension _DashShelf on _DashboardScreenState {
                 ],
               ),
             ),
-            // TÜM KLASÖRLER düğmesi kalktı (2026-11-06): baştaki "Tümü"
-            // çipi artık Klasörler ekranını açıyor (kullanıcı isteği).
+            // TÜM KLASÖRLER düğmesi kalktı (2026-11-06): Klasörler ekranı
+            // baştaki "Tümü" çipine UZUN BASINCA açılır (F60.S3).
           ],
         ),
       ),
