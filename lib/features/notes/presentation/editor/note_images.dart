@@ -225,6 +225,7 @@ class NotePageCanvas extends StatefulWidget {
     required this.minHeight,
     required this.onRemove,
     required this.onChanged,
+    this.onInkChanged,
     this.onCrop,
     this.onRotate,
     this.onExtractText,
@@ -295,6 +296,10 @@ class NotePageCanvas extends StatefulWidget {
 
   final ValueChanged<Attachment> onRemove;
   final ValueChanged<Attachment> onChanged;
+
+  /// Gömülü belgenin üstüne çizilen çizgi (yalnız `ink` değişir). Ayrı:
+  /// editör bunu kök kurmadan, gecikmeli kaydeder. null ise [onChanged].
+  final ValueChanged<Attachment>? onInkChanged;
 
   /// Birden çok eki TEK yazımda günceller ("satıra sığdır", "boyutları
   /// eşitle"). null ise ekler tek tek [onChanged]'e verilir — o zaman her ek
@@ -388,6 +393,12 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   /// ([InkExclusionZone]).
   final Map<String, InkController> _docInk = {};
 
+  /// Denetleyiciye en son verilen / ondan en son gelen çizgi listesi
+  /// (kimlik): çizgi kökü kurmadığından (F60.1) `widget.images` bayat
+  /// kalabilir — yalnız DIŞARIDAN gelen yeni liste işlenir, yoksa tuvalin
+  /// kendi kurulumu (ör. yüzen kalem düğmesi) çizgileri geri alırdı.
+  final Map<String, List<InkStroke>> _docInkSeen = {};
+
   InkController? _docInkFor(Attachment a) {
     // Kalemsiz cihazda katman yok: basılı tutup seçme parmakta kalır.
     if (!InkToolMemory.autoStylus || !InkToolMemory.stylusEver) return null;
@@ -398,11 +409,17 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       onChanged: (strokes) {
         // En güncel ek kaydı üzerine yazılır (sayfa çevrildi, balon eklendi).
         final live = widget.images.where((i) => i.id == a.id).firstOrNull;
-        widget.onChanged((live ?? a).copyWith(ink: strokes));
+        _docInkSeen[a.id] = strokes;
+        (widget.onInkChanged ?? widget.onChanged)(
+          (live ?? a).copyWith(ink: strokes),
+        );
       },
     )..setEditing(true);
     // Tam ekranda/geri alda değişen çizgiler (içerik aynıysa işlem yok).
-    if (!c.drawing) c.replace(a.ink);
+    if (!identical(a.ink, _docInkSeen[a.id])) {
+      _docInkSeen[a.id] = a.ink;
+      if (!c.drawing) c.replace(a.ink);
+    }
     c.penOnly = InkToolMemory.penOnly;
     c.allowedKinds = const {
       PointerDeviceKind.stylus,

@@ -1064,6 +1064,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
                 ? null
                 : () => unawaited(_ocrImage(pinned)),
             onChanged: _updateAttachment,
+            onInkChanged: _updateAttachmentInk,
             // Balon yazılırken editörün alt çubuğu da gizlenir: kart
             // klavyenin hemen üstünde, belge ekranın geri kalanında.
             onImmersiveChanged: _setImmersiveBubble,

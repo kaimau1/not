@@ -112,6 +112,7 @@ class PinnedMediaPane extends StatefulWidget {
     this.onCopy,
     this.onExtractText,
     this.onChanged,
+    this.onInkChanged,
     this.viewSwitch,
     this.onShowViews,
     this.onCaption,
@@ -203,6 +204,10 @@ class PinnedMediaPane extends StatefulWidget {
   /// Sabitli PDF'in sayfa/yer imi/döndürme değişiklikleri (bkz.
   /// [PdfPageBox.onChanged]).
   final ValueChanged<Attachment>? onChanged;
+
+  /// Belgenin üstüne çizilen çizgi (yalnız `ink` değişir). Ayrı: editör bunu
+  /// kök kurmadan, gecikmeli kaydeder. null ise [onChanged]'e düşer.
+  final ValueChanged<Attachment>? onInkChanged;
 
   /// Ayraç çubuğunun sağındaki görünüm anahtarı (Sabit / Yüzen / Balonlu —
   /// bkz. `AttachmentViewSwitch`). null ise eski "sayfaya geri koy" düğmesi.
@@ -319,7 +324,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         initial: a.ink,
         onChanged: (strokes) {
           _inkSeen = strokes;
-          widget.onChanged?.call(widget.media.copyWith(ink: strokes));
+          (widget.onInkChanged ?? widget.onChanged)?.call(
+            widget.media.copyWith(ink: strokes),
+          );
         },
       )..setEditing(true);
       _inkSeen = a.ink;

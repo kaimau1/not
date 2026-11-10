@@ -1759,11 +1759,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   static bool _aiGestureUnavailable = false;
 
   /// Metin DIŞINDA görünür hiçbir şey değişmedi mi? (saf yazım tespiti)
-  static bool _sameVisual(Note a, Note b) =>
+  ///
+  /// [ignoreAttachments]: değişiklik YALNIZ bir ekin mürekkebi (bkz.
+  /// [_updateAttachmentInk]) — çizgi kendi katmanında zaten ekranda.
+  static bool _sameVisual(Note a, Note b, {bool ignoreAttachments = false}) =>
       sameItemsVisually(a.items, b.items) &&
       a.activePage == b.activePage &&
       identical(a.textPages, b.textPages) &&
-      identical(a.attachments, b.attachments) &&
+      (ignoreAttachments || identical(a.attachments, b.attachments)) &&
       identical(a.tags, b.tags) &&
       identical(a.aiSummary, b.aiSummary) &&
       a.type == b.type &&
@@ -1826,10 +1829,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     return _withoutOrphanDocumentMode(n);
   }
 
-  void _mutate(Note Function(Note) transform, {bool immediate = false}) {
+  /// Kök kurulmadan mürekkebi ilerleyen eklerin, widget ağacının ELİNDEKİ
+  /// (bayat) çizgi listesi — bkz. [_updateAttachmentInk], [_withLiveInk].
+  /// Kök her kurulduğunda ağaç tazelenir, kayıt boşalır.
+  final Map<String, List<InkStroke>> _staleInk = {};
+
+  /// [inkOnly]: [transform] yalnız bir ekin mürekkebini değiştirir (OTURTMA
+  /// F60.1) — kök kurulmaz, kayıt debounce'lu.
+  void _mutate(
+    Note Function(Note) transform, {
+    bool immediate = false,
+    bool inkOnly = false,
+  }) {
     final note = _note;
     if (note == null) return;
-    if (!immediate) _noteTyping();
+    if (!immediate && !inkOnly) _noteTyping();
     final wasUndo = _undoStack.canUndo;
     final wasRedo = _undoStack.canRedo;
     // Tek boğaz noktası: sarma çapaları düzenleme tamponunda yaşar, nota
@@ -1868,10 +1882,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // vuruşunda çalıştırmak "klavye açılırken kasıyor" şikayetinin başrolüydü
     // — denetleyici metni zaten ekranda, ekran geneli setState atlanır.
     final pureTyping =
-        _sameVisual(note, next) &&
+        _sameVisual(note, next, ignoreAttachments: inkOnly) &&
         _undoStack.canUndo == wasUndo &&
         _undoStack.canRedo == wasRedo;
     if (pureTyping) {
+      if (inkOnly) {
+        for (final a in note.attachments) {
+          _staleInk.putIfAbsent(a.id, () => a.ink);
+        }
+      }
       _note = next;
     } else {
       setState(() => _note = next);
@@ -2164,6 +2183,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       images: imageAttachments,
       onRemove: _removeAttachment,
       onChanged: _updateAttachment,
+      onInkChanged: _updateAttachmentInk,
       onChangedMany: _updateAttachments,
       onCrop: _cropImage,
       onRotate: _rotateImage,
@@ -2879,6 +2899,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     ref.watch(localFilesRevisionProvider);
     // dispose'un kullanacağı bağımlılıklar her karede tazelenir (bkz. yukarı).
     _cacheDeps();
+    // Ağaç bu kurulumla güncel eki alıyor: bayat mürekkep kaydı kalmaz.
+    _staleInk.clear();
     // Tuval önbelleği YALNIZ bu build içindeki `LayoutBuilder` tekrarları
     // içindir (klavye animasyonunun kareleri). Editör yeniden kurulduğunda
     // bayat kalmasın diye burada, her şeyden önce düşürülür.

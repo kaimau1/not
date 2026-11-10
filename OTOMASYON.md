@@ -56,7 +56,14 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
    (`gh run watch`). main kırmızıysa düzelt ya da `git revert -m 1`.
 9. **Regresyon turu** (protokol madde 8): her APK noktasından önce `docs/regresyon_listesi.md`
    baştan koşulur.
-10. **Devam.** Limit elverdikçe 3. adıma dön. Dur ve bitir: art arda 3 `takıldı`; main iki
+10. **Limit freni (%90, kullanıcı kararı 2026-11-09).** Her paketin BAŞINDA, alt ajan
+    döndüğünde ve her birleştirmeden önce `mcp__ccd_session_mgmt__get_usage` çağır
+    (ToolSearch ile yükle). "5-hour limit" `percentUsed` ≥ 90 ise: yeni paket/alt ajan
+    BAŞLATMA; çalışan alt ajana "commit + push yap ve dur" de; yarım iş dalda kalsın,
+    Kuyruk satırı `sürüyor` kalsın; kilidi sil; `resetsAt` saatini özetine yaz ve bitir.
+    ≥ 80 ise yeni paket başlatma, yalnız elindekini bitir. Araç `unavailable` dönerse
+    frensiz devam et (bunu özetine yaz). Tur başında ≥ 90 ise hiçbir şey yapmadan bitir.
+    **Devam.** Limit elverdikçe 3. adıma dön. Dur ve bitir: art arda 3 `takıldı`; main iki
     kez üst üste kırmızı; Kuyruk boş. Bitirirken kilidi sil, 5 satır özet yaz.
 
 ## İşçi kuralları (alt ajana aynen verilir)
@@ -67,6 +74,12 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
 - Dal: `oto/<no>-<kısa-ad>` (yeni çalışma ağacında önce `flutter pub get`; Flutter yolu
   `C:/src/flutter/bin/flutter.bat`). Küçük adımlarla commit + **her commit'ten sonra push**
   (limit oturumu her an kesebilir; yarım iş dalda kalsın). main'e push YOK.
+- **Devir notu (kullanıcı kararı 2026-11-09):** dalın kökünde `DEVIR.md` tut ve HER
+  push'tan önce güncelle (en çok 25 satır): yapılanlar (madde + commit) · şu an üstünde
+  çalışılan adım ve nerede kaldığı · bulunan kök neden/kanıt (dosya:satır) · denenip
+  işe yaramayanlar · sıradaki adım · açık test/ölçüm komutu. Devralan işçi ÖNCE bunu
+  okur, baştan keşfetmez. Yürütücü birleştirmeden önce `DEVIR.md`'yi daldan SİLER
+  (main'e girmez).
 - Doğrulama: değişenin testi `--reporter failures-only`; push'tan önce tam
   `flutter analyze` (CI info düzeyini de hata sayar). Tam test takımını yerelde koşma.
   `dart format lib` yok.
@@ -99,7 +112,7 @@ Sıra önceliktir: önce kullanıcının bildirdiği hatalar, sonra kalem/perfor
 
 | No | Paket | Model | Plan maddeleri | Cihaz | APK | Durum / sonuç |
 |---|---|---|---|---|---|---|
-| P01 | Ortak test düzeneği + eke çizgi saf değişiklik | fable | F59.1, F60.1 | A/B | | bekliyor |
+| P01 | Ortak test düzeneği + eke çizgi saf değişiklik | fable | F59.1, F60.1 | A/B | | bitti (2026-11-10): eke 10 çizgide kök kurulum/kayıt 10 → 1; klavye/yazma A/B'de regresyon yok; PDF çizimi cihazda ölçülmedi (P11 aracı) |
 | P02 | Klavye/alt panel birikim kasması | fable | F60.S2 | A/B | evet | bekliyor |
 | P03 | HAFIZA'yı böl (≤ 30 KB), ölü kod | sonnet | F58.2, F58.5 | | | bekliyor |
 | P04 | "Tümü" çipi + klasör çipleri, paket kapanması, misafir etiketi | opus | F60.S3, F60.2, F60.4 | | | bekliyor |
