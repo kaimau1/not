@@ -8,6 +8,8 @@ import 'package:notlar/features/notes/presentation/notes_providers.dart'
 //   (çıktı: build/tour/*.png — TOUR_OUT ile değiştirilebilir)
 //   TOUR_ONLY=ana,n1  süz · TOUR_DARK=1  koyu · TOUR_WEB=1  dar web
 //   TOUR_COLUMNS=3  ana ekran sütun sayısı
+//   TOUR_SIZES=telefon-yatay,matepad-yatay  yalnız bu boyutlar
+//   TOUR_KEYBOARD=300  klavyeli hâl (viewInsets.bottom dp; ada `-klavye`)
 //   TOUR_COMPARE=<eski klasör>  önce/sonra: her PNG için değişen piksel yüzdesi
 //   basılır (`TOUR_FARK ad %x`), özet `<çıktı>/_fark.txt`.
 //
@@ -313,6 +315,13 @@ const _sizes = [
   _Size('tablet-dikey', 800, 1280),
   _Size('tablet-yatay', 1280, 800),
   _Size('masaustu', 1440, 900),
+  // Gerçek cihazlar (F67.2, Ek C): MatePad 11 ve telefonlar; yatay telefon
+  // F66.7 (bölünme yok).
+  _Size('matepad-yatay', 1024, 640),
+  _Size('matepad-dikey', 640, 1024),
+  _Size('telefon-kucuk', 360, 640),
+  _Size('telefon-uzun', 393, 851),
+  _Size('telefon-yatay', 851, 393),
 ];
 
 Future<void> _shot(WidgetTester tester, GlobalKey key, String name) async {
@@ -414,6 +423,13 @@ Future<void> _pumpApp(
   final sp = await SharedPreferences.getInstance();
   tester.view.physicalSize = Size(size.width, size.height);
   tester.view.devicePixelRatio = 1;
+  // TOUR_KEYBOARD=300: klavyeli hâl (viewInsets.bottom, dp).
+  final keyboard = double.tryParse(
+    Platform.environment['TOUR_KEYBOARD'] ?? '',
+  );
+  if (keyboard != null) {
+    tester.view.viewInsets = FakeViewPadding(bottom: keyboard);
+  }
   addTearDown(tester.view.reset);
   final router = GoRouter(
     initialLocation: location,
@@ -586,7 +602,14 @@ void main() {
         ('e-$kind-$view', '/note/e-$kind-$view', null),
     ('e-pdf-balonlu', '/note/e-pdf-balonlu', null),
   ];
+  // TOUR_SIZES=telefon-yatay,matepad-yatay: yalnız bu boyutlar.
+  final sizesWanted = (Platform.environment['TOUR_SIZES'] ?? '')
+      .split(',')
+      .where((s) => s.isNotEmpty)
+      .toSet();
+  final kb = Platform.environment['TOUR_KEYBOARD'];
   for (final size in _sizes) {
+    if (sizesWanted.isNotEmpty && !sizesWanted.contains(size.name)) continue;
     for (final (id, location, tap) in scenes) {
       if (!wanted(id)) continue;
       testWidgets('${size.name} · $id', (tester) async {
@@ -609,7 +632,11 @@ void main() {
           await tester.tap(target, warnIfMissed: false);
           await _settle(tester);
         }
-        await _shot(tester, key, '${size.name}-$id${dark ? '-koyu' : ''}');
+        await _shot(
+          tester,
+          key,
+          '${size.name}-$id${dark ? '-koyu' : ''}${kb != null ? '-klavye' : ''}',
+        );
         await _end(tester);
       });
     }

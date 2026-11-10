@@ -1,10 +1,10 @@
+import '../../../../app/window_class.dart';
 import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderFlex, RenderParagraph;
 import 'package:flutter/services.dart';
@@ -1984,7 +1984,7 @@ class ItemsEditorState extends State<ItemsEditor>
   void _syncRowCache(ThemeData theme, AppLocalizations l10n) {
     // WEB VE TABLETTE sürükleme tutamağı HEP görünür (kullanıcı isteği
     // 2026-11-08: "solda boşluk var yeterince"); telefonda yalnız Seç'te.
-    _pinHandles = kIsWeb || MediaQuery.sizeOf(context).shortestSide >= 600;
+    _pinHandles = !WindowClass.of(context).compactDevice;
     final env = (
       _pinHandles,
       theme.colorScheme,

@@ -11,43 +11,18 @@ import '../core/utils/immersive.dart';
 import '../features/notes/presentation/dashboard_screen.dart';
 import '../features/settings/settings_providers.dart';
 import 'app_commands.dart';
+import 'window_class.dart';
 
-/// Ana-detay düzenine geçiş genişliği — İÇERİK alanının genişliği (geniş
-/// ekranda gezinme rayı düşülmüş hâli, bkz. AppFrame).
-///
-/// 900 → 840 (2026-09-22, geniş ekran tasarımı): Material 3'ün "geniş"
-/// pencere sınıfı. Ray eklenince 1024 dp'lik yatay tabletin içerik alanı
-/// ~940'a iniyor; 900 sınırı küçük tabletleri tek panele düşürme riskine
-/// çok yakındı. 840'ta liste (260–380) + editör (≥ 360) hâlâ sığıyor. Dikey
-/// tablet (~800) ve telefon tek panelde kalır.
-const double kSplitBreakpoint = 840;
-
-/// **NOT AÇIKKEN** ana-detay sınırı (kullanıcı isteği 2026-11-02: "tablet
-/// modunda not açılınca direkt ekranı kapladı; soldaki dashboard en soldaki
-/// menünün yerine gelsin, tek sütunluk olsun, menü gizlensin"). Not açıkken
-/// ray çekmeceye döner (bkz. AppFrame) ve liste tek sütuna iner; dikey tablet
-/// (~800 dp) ve açık katlanabilir (~670 dp) de listeyle notu yan yana
-/// gösterebilir: 260 dp liste + ≥ 380 dp not.
-const double kNoteSplitBreakpoint = 640;
+export 'window_class.dart'
+    show
+        kSplitBreakpoint,
+        kNoteSplitBreakpoint,
+        kPortraitListBreakpoint,
+        splitActiveFor;
 
 /// Konum bir not/defter ekranı mı (kabuğun içinden açılmış)?
 bool isNoteLocation(String path) =>
     path.startsWith('/note/') || path.startsWith('/notebook/');
-
-/// Liste kabuğun sol panelinde mi çizilecek? [width] kabuğun genişliği.
-///
-/// Not açık olsun olmasın aynı sınır (2026-11-02): not yokken sol panel tam
-/// genişliğe yayılır, not açılınca daralır. Liste hep AYNI örnek kalır —
-/// eskiden not yokken `/` rotası ikinci bir örnek kuruyordu, not açılıp
-/// kapanınca arama/kaydırma sıfırlanıyordu.
-bool splitActiveFor(double width) => width >= kNoteSplitBreakpoint;
-
-/// **Dikey tablette liste çekmece gibi** (J3, F44.7): 800 dp'de liste + not
-/// notu ~460 dp'ye indiriyordu. Bu genişliğin altında DİKEY pencerede not açılınca
-/// liste kenara çekilir; ☰ geri getirir, başka nota geçince yine çekilir. Tek
-/// liste örneği korunur (genişliği sıfıra iner, ağaçtan çıkmaz). Menteşeli
-/// katlanabilirde ayraç menteşede kalır.
-const double kPortraitListBreakpoint = 960;
 
 bool listAutoHidesFor(Size window, {required bool hasHinge}) =>
     !hasHinge &&
@@ -274,7 +249,7 @@ class _SplitShellState extends ConsumerState<SplitShell> {
         if (location.startsWith('/note/')) {
           _lastNoteId = location.substring('/note/'.length);
         }
-        if (!splitActiveFor(total)) {
+        if (!splitActiveFor(MediaQuery.sizeOf(context))) {
           return SplitScope(
             active: false,
             singleColumn: false,

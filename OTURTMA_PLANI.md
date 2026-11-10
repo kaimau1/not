@@ -899,7 +899,8 @@ tur `telefon-*.png`.
 **Önce oku:** `app/split_shell.dart`, `app/app_frame.dart`, `editor/pinned_side.dart`,
 `editor/editor_quick_row.dart` (`KeyboardSwitch`), tur `tablet-*.png`, HAFIZA "Geniş ekran".
 
-- [ ] **F67.1 Pencere sınıfı tek yerde (B11).** `lib/app/window_class.dart`:
+- [x] **F67.1 Pencere sınıfı tek yerde (B11).** `lib/app/window_class.dart`:
+  **Yapıldı (2026-11-11, P07):** `lib/app/window_class.dart` (`WindowClass`, `compactDevice` = dokunmatik + en kısa kenar < 600; 5 adlı sabit taşındı, eski dosyalar yeniden dışa veriyor). Çevrilen: editor_quick_row, items_editor, pen_tray.useRail, dashboard arama, share_target, login, note_open_route, `splitActiveFor(Size)`. Kutu ölçen `ai_hub` 920 / `calendar_views` 900 / pen_tray dok 640 dokunulmadı. Bekçi + denklik testi `test/window_class_guard_test.dart` (bekçi yalnız shortestSide KARŞILAŞTIRMASI; note_themes ölçek hesabı serbest).
 
   ```dart
   enum WindowWidth { compact /* <600 */, medium /* 600–839 */, expanded /* 840–1199 */, large /* ≥1200 */ }
@@ -923,10 +924,11 @@ tur `telefon-*.png`.
   içinde `shortestSide` yalnız `window_class.dart`'ta geçer.
   *Tuzak:* test yüzeyi 800×600 tablet sayılır; davranış değişmemeli — her çevirmede eski
   koşulla yeni koşulun aynı pencere kümesini verdiğini birim testiyle göster.
-- [ ] **F67.2 Tur gerçek cihaz boyutlarıyla (B12).** `tool/tour/screen_tour_test.dart`
+- [x] **F67.2 Tur gerçek cihaz boyutlarıyla (B12).** `tool/tour/screen_tour_test.dart`
   `_sizes`'a: `matepad-yatay 1024×640`, `matepad-dikey 640×1024`, `telefon-kucuk 360×640`,
   `telefon-uzun 393×851`. Klavyeli hâl: `TOUR_KEYBOARD=300` → `viewInsets.bottom`. Çıkan
   görüntülerde taşma/sıkışma madde olarak listelenir.
+  **Yapıldı (2026-11-11, P07):** 5 boyut (+`telefon-yatay 851×393`), `TOUR_KEYBOARD`, `TOUR_SIZES` süzgeci. ana/n1/n4/e-pdf-sabit 5 boyutta + telefon-yatay klavyeli (220): taşma istisnası YOK. Göze çarpan: telefon-yatay+klavye'de yazı alanı ~70 dp (üst çubuk + hızlı satır) → F67.4 kapsamı; telefon-yatay ana ekranda takvim + zamanı gelen şeridi ~130 dp yiyor.
 - [ ] **F67.3 Bölünmüş görünümde liste bölmesi (B15).** Liste bölmesi < 420 dp iken:
   takvim şeridi ve zamanı gelen şeridi çizilmez (tam ekran listede durur), arama hapı
   kısalır (AI hapı ve süz ⋮'e iner), "+"/mikrofon yüzen düğmeleri yerine liste başlığında
@@ -1055,8 +1057,12 @@ Numaralar ait oldukları fazı gösterir; o fazın "Önce oku" listesi geçerlid
   Kabul (tablette, 1 GB PDF): eklenir, ilk sayfa ≤ 10 sn'de görünür, RAM artışı < 300 MB,
   kalemle yazılır + "Not al" çalışır, uygulamayı kapat-aç sonrası yerinde; yükleme kuyruğu
   denemez. 1 GB'lık sentetik PDF'i test için betikle üret (kişisel dosya açma).
+<<<<<<< HEAD
   **2026-11-11 (P08, gözetimsiz):** K-O15 "en güvenli" uygulandı — **sabah bakılacak**. Kanıt: `preparePdf` `bytes.length > maxBytes`te `FileTooLargeException` atıyor, `_addPdfFile` önce `readAsBytes` (tüm dosya RAM'e). Düzeltme: tavanı aşan PDF `prepareLocalPdf` ile `copyFileStreamed` (akış, yüzde şeritte) → `Attachment.localOnly` (`skipsUpload` → kuyruk/yükleme atlar, kota sayılmaz); seçici önbellek kopyası silinir; yer yoksa `DeviceFullException`; `readBytes` localOnly'de `FileTooLargeException` (AI/paylaşım/kopya RAM'e almasın); durum `deviceOnly`/`otherDevice` (başka cihaz/web yer tutucu, indirme yok). Tam yedek zaten > 60 MB eki atlıyor (6 kendiliğinden). Bekçi `test/large_local_pdf_test.dart` + forward_compat + attachment_status. **Yapılmadı:** ek menüsünde "Buluta yedekle ⇄ Yalnız bu cihazda" geçişi, OCR/metin dizini tembelliği, tablette 1 GB kabul ölçümü (cihazda doğrulanmadı — KALANLAR §2).
 - [ ] **F66.7 [Opus] Telefon yatay: yerleşim bozuk.** Kullanıcı (ekran görüntülü): "yan
+=======
+- [x] **F66.7 [Opus] Telefon yatay: yerleşim bozuk.** Kullanıcı (ekran görüntülü): "yan
+>>>>>>> origin/oto/P07-pencere-sinifi
   çevirince ekran yerleşimi yapılamamış, tamamen bozuk." Kök (B11): genişlik eşikleri
   yatay telefonu (≈ 851×393 dp) tablet sayıyor — `splitActiveFor(width ≥ 640)` 393 dp
   yükseklikte bölünmüş görünüm açıyor. Düzelt: F67.1 `WindowClass` CİHAZ sınıfını EN KISA
@@ -1066,6 +1072,7 @@ Numaralar ait oldukları fazı gösterir; o fazın "Önce oku" listesi geçerlid
   zamanı gelen şeridi kapalı). Tur boyutu `telefon-yatay 851×393` (+ `TOUR_KEYBOARD=220`).
   Kabul: tur görüntülerinde taşma/üst üste binme yok; `wide_screen_*` testleri
   telefon-yatay için "bölünme yok" der; cihazda döndür → not aç → yaz → kapat.
+  **Kısmen (2026-11-11, P07):** kök düzeldi — telefon cihazı yatayda bölünmüyor (`splitActiveFor` + not açılış hareketi aynı kural), kalem tepsisi yatay telefonda sütun değil alt dok; ray zaten yükseklik < 500'de yoktu. Döndürmede aynı örnek kaldığı için sütun değişince kaydırma ORANI yeniden uygulanıyor (`wide_screen_doors` F18.11 testi bu yüzden kırmızıya düştü → yeşil). YAPILMADI (sabah bakılacak): kısa yükseklikte üst çubuk 40 dp, yazarken alt çubuk gizleme, sabit ek yanda, takvim/zamanı gelen şeridi kapalı (F67.4 ve K-O10 ile birlikte; kural 6/7 gereği cihaz A/B ister). Cihazda döndür→aç→yaz→kapat doğrulanmadı.
 - [ ] **F67.9 [Opus] "Not menüsü sağa alınabilsin (tablette)".** Anlam belirsiz. Gözetimsiz
   oturumda yalnız EN OLASI anlam yapılır: **not listesi bölmesi sağa alınabilsin**
   (`SplitShell`: cihaz tercihi `list_pane_side`; ayraçta uzun bas → "Listeyi sağa / sola

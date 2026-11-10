@@ -1,3 +1,4 @@
+import '../../../app/window_class.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -330,7 +331,9 @@ class _ShareTargetSheetState extends State<ShareTargetSheet> {
               : cardBuilder != null
               ? NoteBalancedGrid(
                   notes: candidates,
-                  columns: MediaQuery.sizeOf(context).width >= 600 ? 3 : 2,
+                  columns: WindowClass.of(context).atLeast(WindowWidth.medium)
+                      ? 3
+                      : 2,
                   padding: const EdgeInsets.only(bottom: 16),
                   itemBuilder: (context, i) => _PickableCard(
                     onTap: () => Navigator.pop(

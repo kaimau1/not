@@ -37,6 +37,9 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/app_update.dart';
 import '../../../../app/router.dart';
+import '../../../../app/window_class.dart';
+
+export '../../../../app/window_class.dart' show kReadingWidth;
 import '../../../auth/presentation/auth_providers.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../app/theme/note_themes.dart';
@@ -462,9 +465,6 @@ bool _sameInts(List<int> a, List<int> b) {
   return (text: s.trim(), checked: checked);
 }
 
-/// Not sayfasının en geniş hâli (bkz. `_buildCanvas`) — geniş ekranda
-/// satırlar okunur uzunlukta kalsın.
-const double kReadingWidth = 760;
 
 /// Üst çubuk başlığının boşluğu (F38.2): tarih sayfa metninin sol kenarında.
 /// Geri oku yokken 16 dp (derin bağlantı, web yenileme); geniş bölmede okuma

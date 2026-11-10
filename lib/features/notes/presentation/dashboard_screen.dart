@@ -1,3 +1,4 @@
+import '../../../app/window_class.dart';
 import '../../gmail/data/gmail_auth.dart';
 import '../../../core/utils/web_file_drop.dart';
 import '../../../core/app_icons.dart';
@@ -562,6 +563,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       );
     }
   }
+
+  /// Izgaranın son genişliği ve sütun sayısı (döndürmede oran geri yüklemesi).
+  (double, int)? _gridColumnsAt;
 
   /// Geniş ekranda sol panelin son sütun kipi (tek sütun = not açık).
   bool? _singleColumn;
@@ -1394,6 +1398,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         : manualColumns > 0
                         ? manualColumns
                         : (constraints.maxWidth / 220).floor().clamp(2, 6);
+                    // Telefon döndürülünce (F66.7'den beri yatayda da aynı
+                    // örnek kalır) sütun sayısı değişir; piksel konumu başka
+                    // kartlara denk gelir → ORAN yeniden uygulanır (F18.11).
+                    final lastCols = _gridColumnsAt;
+                    _gridColumnsAt = (constraints.maxWidth, columns);
+                    if (lastCols != null &&
+                        lastCols.$1 != constraints.maxWidth &&
+                        lastCols.$2 != columns) {
+                      WidgetsBinding.instance.addPostFrameCallback(
+                        (_) => _restoreScroll(),
+                      );
+                    }
                     // Masonry hücre genişliği: sürükle-sırala sırasında taşınan
                     // notun "hayalet" kopyası (feedback) bu genişlikte çizilir.
                     // Izgara payları `kGridInset` / `kGridGap`.
@@ -1547,7 +1563,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                               final searchExpanded =
                                   _searchFocus.hasFocus &&
                                   MediaQuery.viewInsetsOf(context).bottom > 0 &&
-                                  MediaQuery.sizeOf(context).width < 600;
+                                  WindowClass.of(context).width ==
+                                      WindowWidth.compact;
                               return AppBar(
                                 // SOLDA GERİ OKU YOK (kullanıcı bulgusu
                                 // 2026-11-06: kutu bir sağa bir sola

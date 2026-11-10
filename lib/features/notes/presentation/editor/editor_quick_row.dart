@@ -1,3 +1,4 @@
+import '../../../../app/window_class.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -624,8 +625,8 @@ class _KeyboardSwitchState extends State<KeyboardSwitch> {
   Widget build(BuildContext context) {
     final keyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
     final e = widget.editing;
-    final tablet =
-        e != null && !kIsWeb && MediaQuery.sizeOf(context).shortestSide >= 600;
+    final win = WindowClass.of(context);
+    final tablet = e != null && win.touchFirst && !win.compactDevice;
     // Ağaç şekli hep aynı: dinleyici her durumda var.
     return ValueListenableBuilder<bool>(
       valueListenable: tablet ? e : _never,

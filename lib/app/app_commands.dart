@@ -389,7 +389,7 @@ class AppShortcuts extends ConsumerWidget {
     final listVisible =
         location == '/' ||
         (isNoteLocation(location) &&
-            splitActiveFor(MediaQuery.sizeOf(context).width));
+            splitActiveFor(MediaQuery.sizeOf(context)));
     final doors = homeDoors;
     final typing =
         FocusManager.instance.primaryFocus?.context

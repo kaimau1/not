@@ -1,9 +1,11 @@
+import '../../../../app/window_class.dart';
 import '../../../../core/widgets/back_closes.dart';
 
 import 'dart:async';
 
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -91,8 +93,14 @@ class PenTray extends StatefulWidget {
   /// Tablet penceresi mi (ray + ana-detayda da pencerenin kendisi ölçülür):
   /// orada kalemler sayfanın SOLUNDA sütun olur (kullanıcı isteği 2026-11-02:
   /// "üst ve alt kısımlar tamamen not sayfası olsun").
-  static bool useRail(BuildContext context) =>
-      MediaQueryData.fromView(View.of(context)).size.width >= 600;
+  /// Telefon yatayda (851×393) sütun sığmaz: altta dok kalır (F66.7).
+  static bool useRail(BuildContext context) {
+    final win = WindowClass.fromSize(
+      MediaQueryData.fromView(View.of(context)).size,
+      web: kIsWeb,
+    );
+    return win.atLeast(WindowWidth.medium) && !win.compactDevice;
+  }
 
   /// Dikey sütun: araçlar, renk, geri al/yinele, ayarlar ve [actions].
   final bool rail;
