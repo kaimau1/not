@@ -641,6 +641,24 @@ class MainActivity : FlutterFragmentActivity() {
                             result.success(installApk(path))
                         }
                     }
+                    // 2026-11-10: PackageInstaller oturumu (bkz. ApkGuncelleme):
+                    // sonuç gerçekten döner; Android 12+'da onaysız kurulum.
+                    "installApkSession" -> {
+                        val path = call.argument<String>("path")
+                        if (path == null) {
+                            result.success("missing")
+                        } else if (!requestsInstallPackages()) {
+                            result.success("unsupported")
+                        } else {
+                            var sent = false
+                            ApkGuncelleme.install(this, path) { r ->
+                                if (!sent) {
+                                    sent = true
+                                    result.success(r)
+                                }
+                            }
+                        }
+                    }
                     // Pil optimizasyonu ekranı: hatırlatıcılar gecikmesin diye
                     // uygulama muaf tutulabilir. ACTION_IGNORE_BATTERY_
                     // OPTIMIZATION_SETTINGS özel izin gerektirmez (Play güvenli);

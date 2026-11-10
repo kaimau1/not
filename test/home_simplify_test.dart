@@ -83,7 +83,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('filter-view-mode')), findsOneWidget);
-    expect(find.byType(Switch), findsWidgets);
+    // Aç-kapa seçenekleri artık çip (2026-11-10 sıkılaştırma); klasör satırı
+    // ve takvim şeridi ⋮ menüsünden buraya taşındı.
+    expect(find.byType(Switch), findsNothing);
+    expect(
+      find.byKey(const ValueKey('view-toggle-folder-strip')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('view-toggle-calendar-strip')),
+      findsOneWidget,
+    );
     expect(find.text('Tür'), findsOneWidget);
     expect(find.text('Durum'), findsOneWidget);
     // "Metin" Tür'de, "Sabitlenmiş" Durum'da: Tür bölümü Durum'un üstünde.
