@@ -602,6 +602,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ],
         ),
+      // GÜNCELLEME VE SÜRÜM (2026-11-10, kullanıcı: "güncelleme vs ile ilgili
+      // şeyler çok dağıldı, bir başlık altında topla"): sürüm notları, denetle,
+      // oto güncelleme ve yeniden açılma izni tek alanda.
+      _Area(
+        id: 'updates',
+        icon: Icons.system_update_alt,
+        title: l10n.settingsUpdatesTitle,
+        summary: '',
+        keywords:
+            'guncelle guncelleme surum notlar yenilik otomatik indir kur '
+            'denetle versiyon yeniden ac izin',
+        rows: [
+          _SettingRow(
+            const _VersionFooter(),
+            title: l10n.settingsUpdatesTitle,
+            keywords:
+                '${l10n.releaseNotesTitle} ${l10n.autoUpdateTitle} '
+                '${l10n.updateTapToCheck} versiyon',
+          ),
+        ],
+      ),
       // KALEM, YAZIM VE EKRAN (2026-11-10): eskiden yalnız kendi ekranından
       // değişen ayarlar (bkz. settings_writing.dart).
       _Area(
@@ -770,7 +791,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onTap: openAreaId,
             ),
           ],
-          const _VersionFooter(),
+          _VersionLine(onTap: () => openAreaId('updates')),
         ],
       ],
     );
@@ -959,7 +980,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           'ai',
         ]),
       ),
-      (title: l10n.settingsGroupData, areas: pick(['sync', 'permissions'])),
+      (title: l10n.settingsGroupData, areas: pick(['sync', 'permissions', 'updates'])),
     ];
     // Gruplara girmeyen yeni bir alan kaybolmasın: son gruba eklenir.
     final listed = {for (final g in groups) ...g.areas.map((a) => a.id)};

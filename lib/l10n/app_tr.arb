@@ -3590,6 +3590,7 @@
   "friendsAlreadyShort": "Kişilerinde",
   "settingsGroupAccount": "Hesap",
   "settingsGroupApp": "Uygulama",
+  "settingsUpdatesTitle": "Güncelleme ve sürüm",
   "settingsGroupData": "Veri ve gizlilik",
   "settingsGroupOther": "Diğer",
   "friendsCountSummary": "{count, plural, =0{Henüz kişi yok} other{{count} kişi}}",

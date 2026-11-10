@@ -13664,6 +13664,12 @@ abstract class AppLocalizations {
   /// **'Uygulama'**
   String get settingsGroupApp;
 
+  /// No description provided for @settingsUpdatesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncelleme ve sürüm'**
+  String get settingsUpdatesTitle;
+
   /// No description provided for @settingsGroupData.
   ///
   /// In tr, this message translates to:
