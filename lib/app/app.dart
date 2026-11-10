@@ -268,7 +268,7 @@ class NotlarApp extends ConsumerWidget {
                 // Not yazım sorunları (F1.6: 1 MiB sınırı / sunucu reddi).
                 child: NoteWriteIssueListener(
                   // Oturum servisleri (F2.4) — ana ekranın build'inden çıktı.
-                  child: NewVersionNotice(
+                  child: AppUpdateRunner(
                     child: AppServices(child: child ?? const SizedBox.shrink()),
                   ),
                 ),

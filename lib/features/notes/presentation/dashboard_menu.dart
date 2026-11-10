@@ -85,19 +85,8 @@ extension _DashMenu on _DashboardScreenState {
             // TEMA (kullanıcı isteği 2026-11-06): alçak levha, ana ekran
             // üstte canlı değişir.
             MenuAction('theme', l10n.themePickerTitle, AppIcons.appearance),
-            // KLASÖR SATIRINI GİZLE/GÖSTER (2026-11-06).
-            if (ref.read(homeFolderStripHiddenProvider))
-              MenuAction(
-                'folderStrip',
-                l10n.homeFolderStripShow,
-                Icons.folder_open_outlined,
-              )
-            else
-              MenuAction(
-                'folderStrip',
-                l10n.homeFolderStripHide,
-                Icons.folder_off_outlined,
-              ),
+            // KLASÖR SATIRI / TAKVİM ŞERİDİ aç-kapa "Görünüm ve süz"
+            // levhasında (2026-11-10; ⋮'ten taşındı, tek kapı).
             if (!Personalize.current.shows(UiItem.homeAccount))
               MenuAction(
                 'account',
@@ -138,8 +127,6 @@ extension _DashMenu on _DashboardScreenState {
         unawaited(showFilterSheet(context));
       case 'theme':
         unawaited(showThemePickerSheet(context));
-      case 'folderStrip':
-        ref.read(homeFolderStripHiddenProvider.notifier).toggle();
       case 'account':
         unawaited(showAccountSheet(context));
       case 'hidden':

@@ -7988,6 +7988,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inkShapeTable => 'Table';
 
   @override
+  String get homeFolderStripShort => 'Folder row';
+
+  @override
+  String get homeCalendarStripShort => 'Calendar strip';
+
+  @override
   String get homeCalendarStrip => 'Calendar strip on top';
 
   @override
@@ -8097,6 +8103,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stylusTogglesOff => 'Pen taps (doesn\'t write)';
+
+  @override
+  String updateBanner(String version) {
+    return 'New version available: v$version — tap to download and install';
+  }
+
+  @override
+  String updateBannerReady(String version) {
+    return 'v$version downloaded — tap to install now';
+  }
+
+  @override
+  String updateBannerDownloading(String version, int percent) {
+    return 'Downloading v$version… $percent%';
+  }
+
+  @override
+  String updateReadyToInstall(String version) {
+    return 'v$version downloaded; it will be installed the next time you open the app';
+  }
+
+  @override
+  String get updateInstallNow => 'Install now';
+
+  @override
+  String get updateDownloadFailed =>
+      'Couldn\'t download the new version — check your connection and tap again';
+
+  @override
+  String get updateInstallFailed => 'Installation didn\'t finish — try again';
+
+  @override
+  String get autoUpdateTitle => 'Update automatically';
+
+  @override
+  String get autoUpdateInfo =>
+      'New versions download in the background and install the next time you open the app';
 
   @override
   String get updateInstall => 'Update';

@@ -363,20 +363,24 @@ class _VersionFooterState extends State<_VersionFooter> {
       _checking = true;
       _status = l10n.updateChecking;
     });
-    final latest = await fetchLatestReleaseName();
+    final info = await AppUpdate.detect(force: true);
     if (!mounted) return;
-    final installed = _version;
-    final newer =
-        latest != null && installed != null && isNewerVersion(latest, installed);
     setState(() {
       _checking = false;
-      _status = latest == null
-          ? l10n.updateCheckFailed
-          : newer
-          ? l10n.updateAvailable(latest)
-          : l10n.updateUpToDate;
+      _status = info == null
+          ? l10n.updateUpToDate
+          : l10n.updateAvailable(info.version);
     });
-    if (newer) await installAppUpdate(context, latest);
+    if (info == null) return;
+    final result = await AppUpdate.downloadAndInstall(info);
+    if (!mounted) return;
+    if (result == 'download_failed') {
+      setState(() => _status = l10n.updateDownloadFailed);
+    } else if (result == 'need_permission') {
+      setState(() => _status = l10n.updateNeedsPermission);
+    } else if (result.startsWith('error')) {
+      setState(() => _status = l10n.updateInstallFailed);
+    }
   }
 
   @override
@@ -396,6 +400,21 @@ class _VersionFooterState extends State<_VersionFooter> {
             label: Text(l10n.releaseNotesTitle),
           ),
           _versionTap(context, theme, l10n, muted),
+          // OTO GÜNCELLEME (2026-11-10): açıkken yeni sürüm arka planda iner,
+          // bir sonraki açılışta kurulur. Kapalıyken yalnız ana ekran şeridi.
+          if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
+            Consumer(
+              builder: (context, ref, _) => SwitchListTile(
+                key: const ValueKey('settings-auto-update'),
+                dense: true,
+                secondary: const Icon(Icons.system_update_alt, size: 20),
+                title: Text(l10n.autoUpdateTitle),
+                subtitle: Text(l10n.autoUpdateInfo),
+                value: ref.watch(autoUpdateProvider),
+                onChanged: (v) =>
+                    ref.read(autoUpdateProvider.notifier).set(v),
+              ),
+            ),
         ],
       ),
     );

@@ -7967,6 +7967,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get inkShapeTable => 'Tablo';
 
   @override
+  String get homeFolderStripShort => 'Klasör satırı';
+
+  @override
+  String get homeCalendarStripShort => 'Takvim şeridi';
+
+  @override
   String get homeCalendarStrip => 'Üstte takvim şeridi';
 
   @override
@@ -8078,6 +8084,43 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get stylusTogglesOff => 'Kalem dokunur (yazmaz)';
+
+  @override
+  String updateBanner(String version) {
+    return 'Yeni sürüm var: v$version — dokun, indir ve kur';
+  }
+
+  @override
+  String updateBannerReady(String version) {
+    return 'v$version indirildi — dokun, şimdi kur';
+  }
+
+  @override
+  String updateBannerDownloading(String version, int percent) {
+    return 'v$version indiriliyor… %$percent';
+  }
+
+  @override
+  String updateReadyToInstall(String version) {
+    return 'v$version indirildi; uygulamayı bir sonraki açışında kurulacak';
+  }
+
+  @override
+  String get updateInstallNow => 'Şimdi kur';
+
+  @override
+  String get updateDownloadFailed =>
+      'Yeni sürüm indirilemedi — bağlantıyı kontrol edip yeniden dokun';
+
+  @override
+  String get updateInstallFailed => 'Kurulum tamamlanamadı — yeniden dene';
+
+  @override
+  String get autoUpdateTitle => 'Otomatik güncelle';
+
+  @override
+  String get autoUpdateInfo =>
+      'Yeni sürüm arka planda iner, uygulamayı bir sonraki açışında kurulur';
 
   @override
   String get updateInstall => 'Güncelle';

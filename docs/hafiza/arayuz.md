@@ -205,3 +205,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **☐/☑**: paylaşım biçimi yapıştırmada (`ItemsEditor._lineMarker`, `itemsFromText`) art arda soyulur — Telegram turunda "☐ ☐" birikiyordu.
 - Klasör düğmesi (sol alt) kalktı; liste ayracı 24 dp + tutamak, not açıkken sütun = genişlik/220 (1–3).
 
+
+## Görünüm ve süz levhası (2026-11-10)
+- Başlık "Görünüm ve süz"; TUTAMAK YOK (`showDragHandle: false`) — M3 tutamağı üstte ~48 dp ölü şerit açıyordu. Aç-kapa seçenekleri `_Option(toggle: true)` çip (✓ simgesi, `Semantics.toggled`), 48 dp anahtar satırı DEĞİL. Klasör satırı (`homeFolderStripHiddenProvider`) ve takvim şeridi (`homeCalendarStripProvider`) aç-kapası burada; ⋮ menüsünden kaldırıldı. Tür + Durum tek "Süz" kartında, satır başında küçük ad.
+- TUZAK: `SegmentedButton`'a `VisualDensity.compact` verme — 40 dp'ye iner, `accessibility_test` 48 dp kuralı düşer. Görünür alana giren küçük `TextButton` (Elle sırala) `MinTapTarget` ister.

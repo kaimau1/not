@@ -903,11 +903,12 @@ class _AppVersionRowState extends State<_AppVersionRow> {
     if (version == null) return const SizedBox.shrink();
     final l10n = context.l10n;
     final versionRow = _versionButton(context, l10n, version);
-    // Yeni sürüm (F18.21, yalnız Android): CI'ın `config/app.latestBuild`ı.
-    final row = Consumer(
-      builder: (context, ref, _) {
-        final newer = ref.watch(newVersionAvailableProvider);
-        if (newer == null) return versionRow;
+    // Yeni sürüm (yalnız Android): GitHub'dan algılanan (bkz. AppUpdate).
+    final row = ValueListenableBuilder<AppUpdateInfo?>(
+      valueListenable: AppUpdate.available,
+      builder: (context, info, _) {
+        if (info == null) return versionRow;
+        final newer = info.version;
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -918,7 +919,7 @@ class _AppVersionRowState extends State<_AppVersionRow> {
               label: Text(
                 '${l10n.updateAvailable(newer)} · ${l10n.updateInstall}',
               ),
-              onPressed: () => installAppUpdate(context, newer),
+              onPressed: () => unawaited(AppUpdate.downloadAndInstall(info)),
             ),
           ],
         );

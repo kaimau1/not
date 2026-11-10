@@ -1,6 +1,7 @@
 import '../../gmail/data/gmail_auth.dart';
 import '../../../core/utils/web_file_drop.dart';
 import '../../../core/app_icons.dart';
+import '../../../core/app_update.dart' show UpdateBanner;
 import 'dart:async';
 import 'dart:io';
 
@@ -1633,6 +1634,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         // çizilmez — boşken sıfır yer kaplar.
                         // TAKVİM ŞERİDİ (2026-11-08, takvim zemininin yerine):
                         // bugünden itibaren 10 gün; kapalıyken tek ince satır.
+                        // YENİ SÜRÜM ŞERİDİ (2026-11-10): kalıcı, kapatılamaz;
+                        // yeni sürüm yokken sıfır yer.
+                        const UpdateBanner(),
                         const HomeCalendarStrip(),
                         // Zamanı gelen hatırlatıcı/görev şeridi (2026-11-08).
                         const DueBanner(),

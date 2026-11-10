@@ -14228,6 +14228,18 @@ abstract class AppLocalizations {
   /// **'Tablo'**
   String get inkShapeTable;
 
+  /// No description provided for @homeFolderStripShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasör satırı'**
+  String get homeFolderStripShort;
+
+  /// No description provided for @homeCalendarStripShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim şeridi'**
+  String get homeCalendarStripShort;
+
   /// No description provided for @homeCalendarStrip.
   ///
   /// In tr, this message translates to:
@@ -14425,6 +14437,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kalem dokunur (yazmaz)'**
   String get stylusTogglesOff;
+
+  /// No description provided for @updateBanner.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni sürüm var: v{version} — dokun, indir ve kur'**
+  String updateBanner(String version);
+
+  /// No description provided for @updateBannerReady.
+  ///
+  /// In tr, this message translates to:
+  /// **'v{version} indirildi — dokun, şimdi kur'**
+  String updateBannerReady(String version);
+
+  /// No description provided for @updateBannerDownloading.
+  ///
+  /// In tr, this message translates to:
+  /// **'v{version} indiriliyor… %{percent}'**
+  String updateBannerDownloading(String version, int percent);
+
+  /// No description provided for @updateReadyToInstall.
+  ///
+  /// In tr, this message translates to:
+  /// **'v{version} indirildi; uygulamayı bir sonraki açışında kurulacak'**
+  String updateReadyToInstall(String version);
+
+  /// No description provided for @updateInstallNow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdi kur'**
+  String get updateInstallNow;
+
+  /// No description provided for @updateDownloadFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni sürüm indirilemedi — bağlantıyı kontrol edip yeniden dokun'**
+  String get updateDownloadFailed;
+
+  /// No description provided for @updateInstallFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kurulum tamamlanamadı — yeniden dene'**
+  String get updateInstallFailed;
+
+  /// No description provided for @autoUpdateTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik güncelle'**
+  String get autoUpdateTitle;
+
+  /// No description provided for @autoUpdateInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni sürüm arka planda iner, uygulamayı bir sonraki açışında kurulur'**
+  String get autoUpdateInfo;
 
   /// No description provided for @updateInstall.
   ///
