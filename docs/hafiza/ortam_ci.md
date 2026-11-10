@@ -109,3 +109,9 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - Akış: `AppUpdateRunner` (app.dart kökü) açılıştan 4 sn sonra `runOnStartup`: önbellekte inmiş yeni APK varsa kurar (vazgeçilen sürüm `app_update_declined`, açılışta yeniden sorulmaz), yoksa denetler + arka planda dosyaya indirir. Kurulum not yazarken DEĞİL, sonraki açılışta ya da şeride dokununca. Ana ekranda kapatılamaz `UpdateBanner` (yalnız ValueNotifier; yoksa `SizedBox.shrink`). Ayar `app_update_auto` (Ayarlar en alt).
 - Kurulum izni yalnız kişisel derlemede (`canSelfUpdate`); değilse şerit GitHub sayfasını açar. Eski `installApk` (ACTION_VIEW) kanalda duruyor, Dart çağırmıyor.
 - Cihazda doğrulanmadı (2026-11-10): ilk geçişte sistem onayı beklenir (kurulum sahibi tarayıcı/dosya yöneticisi); sonrakilerde onaysız olmalı.
+
+## Güncellemeden sonra yeniden aç (2026-11-10)
+- Kurulum süreci öldürür. `ApkGuncelleme` commit öncesi `GuncellemeSonrasiAc.mark` (prefs zaman damgası; başarısız
+  durumda `unmark`); `GuncellemeSonrasiAlici` (yalnız kişisel manifest, `MY_PACKAGE_REPLACED`) işaret ≤15 dk ise
+  `startActivity` dener + yüksek öncelikli "açmak için dokun" bildirimi (izin varsa tam ekran niyeti) — Android 10+
+  arka plan başlatma engelinin yedeği. `MainActivity.onCreate` bildirimi kaldırır. Cihazda doğrulanmadı.

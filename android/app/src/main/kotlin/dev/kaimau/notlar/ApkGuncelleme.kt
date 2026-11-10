@@ -116,6 +116,8 @@ object ApkGuncelleme {
                     }
                     return
                 }
+                // Kurulum olmadıysa işaret kalmasın (sonraki elle kurulum açılmasın).
+                if (status != PackageInstaller.STATUS_SUCCESS) GuncellemeSonrasiAc.unmark(c)
                 val result = when (status) {
                     PackageInstaller.STATUS_SUCCESS -> "done"
                     PackageInstaller.STATUS_FAILURE_ABORTED -> "aborted"
@@ -139,6 +141,8 @@ object ApkGuncelleme {
             ctx, id, Intent(action).setPackage(ctx.packageName), flags
         )
         try {
+            // Kurulum süreci öldürür; yeni sürüm açılınca geri gelinsin.
+            GuncellemeSonrasiAc.mark(ctx)
             session.commit(pi.intentSender)
             session.close()
         } catch (e: Exception) {
