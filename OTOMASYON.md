@@ -42,7 +42,10 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
    alt ajana YALNIZ kırmızı işin kayıt kuyruğuyla geri ver (en çok 2 tur; sonra `takıldı`).
 6. **Cihaz kapısı** (Kuyruk'ta Cihaz = `A/B`): CLAUDE.md ÖLÇÜM KAPISI. Taban = son `[apk]`
    commit'i (`git worktree add ../not_ab <commit>` → profil derlemesi). Telefon kuralları
-   aşağıda. Bir evrede UI ms ya da LAYOUT ms %20'den fazla kötüyse birleştirme YOK:
+   aşağıda. **Ölçümü yürütücü KENDİ yapmaz (kullanıcı kararı 2026-11-10):** derlemeler
+   bitince `Agent` ile `model: "sonnet"` alt ajana verilir (istem: iki APK yolu, telefon
+   kuralları, `ab_klavye.py` A sonra B ikişer koşu, ikinci koşuların tablosu); kararı
+   yürütücü verir. Bir evrede UI ms ya da LAYOUT ms %20'den fazla kötüyse birleştirme YOK:
    satır `takıldı: ölçüm` + sayılar, sıradaki pakete geç. Telefon yoksa/ısınmışsa satır
    `cihaz bekliyor` olur, birleştirme `[apk]`'sız yapılır ve ilk APK noktası ertelenir.
 7. **Birleştir.** Dalda: Kuyruk satırını `bitti` + tek satır sonuç yap, `OTURTMA_PLANI.md`
@@ -115,7 +118,7 @@ Sıra önceliktir: önce kullanıcının bildirdiği hatalar, sonra kalem/perfor
 | P01 | Ortak test düzeneği + eke çizgi saf değişiklik | fable | F59.1, F60.1 | A/B | | bitti (2026-11-10): eke 10 çizgide kök kurulum/kayıt 10 → 1; klavye/yazma A/B'de regresyon yok; PDF çizimi cihazda ölçülmedi (P11 aracı) |
 | P02 | Klavye/alt panel birikim kasması | fable | F60.S2 | A/B | evet | bitti (2026-11-10): ÜRETİLEMEDİ — cihazsız bekçi (`editor_leak_test`) ve cihazda taze ↔ 32 gir-çık ölçümünde birikim yok (klavye aç 299 → 293 ms); F60.S2 açık kaldı, kullanıcıdan senaryo gerek. Tek düzeltme: `PageTurn` animasyon sızıntısı. APK: P01+P02 |
 | P03 | HAFIZA'yı böl (≤ 30 KB), ölü kod | sonnet | F58.2, F58.5 | | | bitti (2026-11-10): HAFIZA 109 → 5 KB (`docs/hafiza/` 10 konu dosyası, `HAFIZA_ARSIV_3.md` bayt bayt eski hâl, boyut bekçisi); ölü `pickReminderWhen` + `CardSeeThrough` silindi. Balonlu yalnız-yazma yolları yapılmadı (sabah bakılacak); yeni 30 kural satırı gözden geçirilmeli |
-| P04 | "Tümü" çipi + klasör çipleri, paket kapanması, misafir etiketi | opus | F60.S3, F60.2, F60.4 | | | bekliyor |
+| P04 | "Tümü" çipi + klasör çipleri, paket kapanması, misafir etiketi | opus | F60.S3, F60.2, F60.4 | | evet | bitti (2026-11-10): Tümü dokun = bütün notlar, uzun bas = Klasörler, tek vurgu; açık paket çubuklara dokununca kapanmıyor, paketle/çöz satır önbelleğini silmiyor (S10 bekçisi); misafirde "Yalnız bu cihazda". Klavye A/B'de regresyon yok (ölçüm Sonnet alt ajanında). Kullanıcıya görünen düzeltme olduğu için `[apk]` |
 | P05 | Gömülüde silgi + `PenPolicy` + tek araç durumu | fable | F60.S4, F63.1, F63.2 | | | bekliyor |
 | P06 | Sabit PDF sürekli dikey kaydırma | opus | F65.8 | A/B | evet | bekliyor |
 | P07 | Pencere sınıfı + telefon yatay + tur boyutları | opus | F67.1, F66.7, F67.2 | A/B | | bekliyor |

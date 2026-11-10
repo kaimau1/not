@@ -3,6 +3,9 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 10 November 2026 {#2026-11-10}
+- Home: tapping **All** shows every note (folder and filters reset); long-press All for the Folders screen. Only one chip is highlighted at a time.
+- An open list package no longer closes when you tap Format or the bottom bar; packing/unpacking no longer rebuilds the whole list.
+- In a guest account the note screen now says "Only on this device" instead of "Synced".
 - Writing with the pen on a pinned or in-page PDF no longer stutters on every stroke (each stroke used to rebuild and save the whole note).
 - Writing with the pen on pinned and in-page PDFs works again (pen mode opened but left no ink); same fix for note packages.
 - On a device that has seen a pen, the finger scrolls instead of drawing in pen mode; a resting palm no longer scrolls the page.

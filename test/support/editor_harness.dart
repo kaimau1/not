@@ -1,6 +1,7 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/app/theme/app_palette.dart';
 import 'package:notlar/app/theme/app_theme.dart';
@@ -69,13 +70,15 @@ class CountingNotesRepository extends NotesRepository {
 /// Telefon penceresinde (varsayılan 412×915, üst 30 / alt 48 sistem payı)
 /// tam [NoteEditorScreen] kurar. [repo] verilirse editör ona kaydeder.
 /// [home] verilirse editör yerine o kurulur (editörü rota olarak açıp
-/// kapatan testler: `editor_leak_test.dart`).
+/// kapatan testler: `editor_leak_test.dart`). [overrides] yukarıdakilere
+/// eklenir (onları yeniden geçersiz kılma).
 Future<ProviderContainer> pumpEditor(
   WidgetTester tester,
   Note note, {
   Size size = const Size(412, 915),
   NotesRepository? repo,
   Widget? home,
+  List<Override> overrides = const [],
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -95,6 +98,7 @@ Future<ProviderContainer> pumpEditor(
       attachmentRepositoryProvider.overrideWithValue(null),
       foldersRepositoryProvider.overrideWithValue(null),
       noteStreamProvider(note.id).overrideWith((ref) => Stream.value(note)),
+      ...overrides,
     ],
   );
   addTearDown(container.dispose);

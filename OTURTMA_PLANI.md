@@ -374,7 +374,15 @@ doğrulanır).
   Kart önizlemesi/dışa aktarma `_note`'tan okur (güncel).
   *Kabul:* S6/S7 kök kurulum 0 (ilk çizgide geri al düğmesi için 1 serbest), `updateNote`
   10 çizgide ≤ 1; `test/ink_editing_guard_test.dart` yeşil; cihazda `ab_kalem.py` PDF evresi.
-- [ ] **F60.2 Not paketi: kapanma ve ağaç şekli (B7).**
+- [x] **F60.2 Not paketi: kapanma ve ağaç şekli (B7).**
+  *(2026-11-10: S10 `test/note_package_open_test.dart` kırmızı (Biçim'e dokununca paket
+  kapanıyordu) → yeşil. (a) tek sabit `kNotePackageTapGroup` (`note_package.dart`); alt
+  çubuk, hızlı satır, biçim paneli, kalem tepsisi koşulsuz `TapRegion` ile gruba girdi;
+  dışarı (başka madde) dokunuş yine kapatır. (b) `togglePackage`'daki `_rowCache.clear()`
+  kalktı: tek üyeyi çöz/paketle 19/20 → 3/2 satır kurulumu. (c) ölçüldü, değişiklik
+  gerekmedi: aç'ta yeni `TextField` 0, var olan satırın yeniden kurulumu 0, kurulan 8 = 6
+  üye + kaydırmayla görünür olan 2 satır. Bütçe `budgets.json` S10. **Cihazda 30 maddeli
+  paketli notta aç → yaz → kalın yap → kapat akışı denenmedi; ölçüm kapısı (ab_klavye) koşulmadı.**)*
   *Önce test (S10):* 6 maddeli paket aç → bir maddeye odaklan → alt çubuktaki Biçim
   düğmesine `tester.tap` → beklenen: paket AÇIK, odak yerinde. Bugün kapanıyorsa hipotez
   doğrulandı.
@@ -391,6 +399,7 @@ doğrulanır).
   kurulan satır = üye sayısı.
   *Kabul:* S10 yeşil; KALANLAR I1'e "kök: <bulunan>" yaz; cihazda 30 maddeli paketli notta
   aç → yaz → kalın yap → kapat akışı takılmasız.
+  Cihaz A/B (2026-11-10, Mi Note 10 Lite, `ab_klavye.py`, taban 4bdd6eb4, 2. koşular): klavye kapa 190 → 194 ms, aç 285 → 293 ms (LAYOUT 73 → 78) — regresyon yok. `yaz`/`not-kapa` evreleri iki değerli (kare sayısı 68↔208 / 5↔66; A1 ve B2 yüksek, A2/A3/B1 düşük): sürümden bağımsız gürültü, B1 düşük kipte tabanla aynı (yaz %105). Ölçüm arama sonucundan açılan notla yapıldı (OLCUM notları 414 notun dibinde).
 - [ ] **F60.3 "📖 s.N" satırı silinemiyor (sabit → gömülü geçişte).** Yeniden üretim:
   sabit PDF'te "Not al" → görünümü Yüzen/Ek'e çevir → gövdede `📖 s.11 …` satırını
   Backspace ile sil. İncele: `core/utils/pdf_ref.dart`, `WrapTextController.linkSpans`,
@@ -398,7 +407,11 @@ doğrulanır).
   çapası (`stripWrapAnchors`) ya da gömülü kutu `InkExclusionZone`/yüzen kutu dokunuşu
   yutuyor. Widget testiyle üret; üretilemezse maddeye "üretilemedi" yaz, kullanıcıdan ekran
   kaydı iste.
-- [ ] **F60.4 Misafir notunda üst çubuk "Senkronize" diyor.** Misafir/yalnız-bu-cihaz
+- [x] **F60.4 Misafir notunda üst çubuk "Senkronize" diyor.**
+  *(2026-11-10: kanıt `test/editor_guest_sync_badge_test.dart` kırmızı (anonim hesapta
+  "Senkronize") → yeşil. Üst çubuk göstergesi `isAnonymousProvider` true iken yalnız-bu-cihaz
+  dalına girer (`cloud_off` + "Yalnız bu cihazda"); hesaplı kullanıcıda bulut aynen.
+  Düzenek `pumpEditor`'a `overrides` parametresi eklendi.)* Misafir/yalnız-bu-cihaz
   notunda bulut simgesi yerine "yalnız bu cihazda" simgesi + ipucu (ana ekranla aynı dil).
   `watchPendingWrites` zaten `isLocal` için false döner; gösterge bileşeninde misafir dalı.
 - [ ] **F60.5 Yazma ana bloğu 148 → 229 ms (v1.1.671 → v1.1.701).** `tool/perf/prof_type.py`
@@ -469,7 +482,13 @@ doğrulanır).
   (birikim değil, kare başı sabit yük):* kabukta klavye hareketinin orta karesinde
   ~28–50 widget kuruluyor; SABİT PDF'li notta ~180 (`PinnedMediaPane` ve bar
   düğmeleri her karede) — cihazda fark çıkarsa ilk bakılacak yer.
-- [ ] **F60.S3 [Opus] "Tümü" çipi bütün notları göstermeli; klasör çipleri denetimi.**
+- [x] **F60.S3 [Opus] "Tümü" çipi bütün notları göstermeli; klasör çipleri denetimi.**
+  *(2026-11-10: kanıt `test/folder_strip_chips_test.dart` kırmızı (Tümü dokununca
+  `/folders`) → yeşil. `AllNotesChip` dokun = `resetFilters` + `showAllNotes` true (+ not
+  açıksa `goHome`), uzun bas = `/folders`; vurgu artık klasör/Gelen/paylaşılan içindeyken
+  söner (eskiden Tümü açıkken kendi klasörde iki çip vurguluydu). Test ev, Tümü, Gelen,
+  kendi, paylaşılan çipini sırayla dener. Süzgeç açıkken şerit gizli olduğundan süzgeç
+  sıfırlama yalnız kodda (arayüzden o anda Tümü'ye erişilmez). Kılavuz satırı güncellendi.)*
   Bugün (2026-11-06 kararı) "Tümü" DOKUN → `/folders`, UZUN BAS → bütün notlar. Kullanıcı
   (2026-11-09): dokununca ana ekranda tüm notlar. Düzelt: dokun = bütün notlar
   (klasör/süzgeç sıfırlanır, `resetFilters` + `goHome`), uzun bas = `/folders`. Ayrıca

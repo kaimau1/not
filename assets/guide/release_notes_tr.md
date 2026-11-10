@@ -3,6 +3,9 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 10 Kasım 2026 {#2026-11-10}
+- Ana ekranda **Tümü**'ye dokununca bütün notlar gösterilir (klasör ve süzgeç sıfırlanır); Klasörler ekranı için Tümü'ye uzun bas. Aynı anda yalnız bir çip vurgulu.
+- Liste paketi açıkken Biçim'e ya da alt çubuğa dokununca paket artık kapanmıyor; paketleme/çözme sonrası liste baştan kurulmuyor.
+- Misafir hesapta not ekranı artık "Senkronize" değil "Yalnız bu cihazda" diyor.
 - Sabit ya da sayfadaki PDF'e kalemle yazarken her çizgide yaşanan takılma giderildi (her çizgide bütün not yeniden kuruluyor ve kaydediliyordu).
 - Sabit ve sayfadaki PDF'e kalemle yazılamıyordu (kalem kipi açılıyor, iz çıkmıyordu) — düzeltildi; not paketinde de.
 - Kalem görülmüş cihazda kalem kipindeyken parmak çizmez, kaydırır; kalemle yazarken değen avuç sayfayı kaydırmaz.

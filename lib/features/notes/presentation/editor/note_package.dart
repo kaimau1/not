@@ -21,6 +21,12 @@ import 'page_ink_layer.dart';
 
 const kPackageExtra = 'package';
 
+/// Açık liste paketinin "dışarı dokunuş" grubu (F60.2). Tek sabit (açık
+/// paket zaten tek): editörün çubukları (alt çubuk, hızlı satır, biçim
+/// paneli, kalem tepsisi) da bu gruba girer — oraya dokunmak paketi
+/// kapatmaz, odak maddede kalır.
+const kNotePackageTapGroup = 'note-package';
+
 bool isNotePackage(Attachment a) =>
     a.kind == AttachmentKind.text && a.extras[kPackageExtra] == true;
 

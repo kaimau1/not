@@ -13,5 +13,13 @@
     "update_note": 1,
     "bugun": "10 / 10 (2026-11-09, F60.1 öncesi)",
     "neden": "F60.1 hedefi: S6 ile aynı"
+  },
+  "S10": {
+    "senaryo": "30 maddeli notta 6 maddelik paketi aç, üyeye odaklan, Biçim'e dokun; tek üyeyi çöz/paketle (test/note_package_open_test.dart)",
+    "acilis_textfield": 1,
+    "acilis_yeniden_kurulan_satir": 0,
+    "paketle_coz_kurulan_satir": 6,
+    "bugun": "Biçim paketi kapatıyordu; paketle/çöz 19/20 satır kuruyordu (2026-11-10, F60.2 öncesi)",
+    "neden": "F60.2 hedefi: açılışta üyeler düz çizimle, paket dışı satır yeniden kurulmaz; paketle/çözde yalnız değişen madde ve hap çevresi"
   }
 }

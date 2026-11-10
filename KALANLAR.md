@@ -290,7 +290,7 @@ A12. [ ] Not kapanışı (yazdıktan sonra geri, karta küçülme): kasma azald�
 Tam yedek geri yükleme + ikinci yükleme çoğaltmıyor; #47 Gboard; A2, A4, B5–B7, B13, C17, D18–D20, E, F, #6 bildirim. Yazım düzeltme (C3/D1/D2) kapatıldı ("zamanla anlaşılacak").
 
 ### I1–I10 (2026-11-09 oturum H — yazıldı, cihazda doğrulanmadı)
-- I1 Not paketinde × (hapın sağı / açık paketin ilk maddesi) paketi çözüyor mu. **Kasma:** paketli notta tam olarak ne zaman kasıyor (açarken, yazarken, kapatırken)? Kod ölçümünde üretilemedi.
+- I1 Not paketinde × (hapın sağı / açık paketin ilk maddesi) paketi çözüyor mu. **Kasma:** paketli notta tam olarak ne zaman kasıyor (açarken, yazarken, kapatırken)? Kod ölçümünde üretilemedi. **Kök (F60.2, 2026-11-10):** açık paketin `TapRegion` grubu yalnız paket satırlarıydı → Biçim/alt çubuk/hızlı satıra dokunmak paketi KAPATIYORDU (S10 testiyle üretildi); paketle/çözde `_rowCache.clear()` görünen bütün satırları (30 maddede 19–20) sıfırdan kuruyordu. İkisi de düzeltildi; cihazda 30 maddeli paketli notta aç → yaz → kalın yap → kapat akışı denenmedi.
 - I2 Kalem görülen cihazda sağda küçük yuvarlak düğme: dokun → "Kalem dokunur": kalemle metne imleç konuyor, kaydırıyor; tekrar → "Kalem yazar". Sürükle → yeri kalıyor (uygulamayı kapat-aç).
 - I3 "Kalem yazar"da sabit PDF'e kalemle yazılıyor, parmak kaydırıyor; gömülü PDF'e yazınca çizgi PDF'te (sayfaya değil).
 - I4 Tablette not açıkken klavye açılınca soldaki ev/klasör/mikrofon/+ yukarı çıkmıyor (ekran görüntüsündeki karmaşa).
