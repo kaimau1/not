@@ -292,6 +292,23 @@ abstract final class AppUpdate {
     return can == true;
   }
 
+  /// "Diğer uygulamaların üzerinde göster" izni var mı? Güncellemeden sonra
+  /// kendiliğinden açılma (GuncellemeSonrasiAc) Android 10+'da buna bağlı.
+  static Future<bool> canDrawOverlays() async {
+    if (!supported) return false;
+    final can = await _system
+        .invokeMethod<bool>('canDrawOverlays')
+        .catchError((_) => false);
+    return can == true;
+  }
+
+  /// Bu uygulamanın "üzerinde göster" izin sayfasını açar.
+  static Future<void> openOverlaySettings() async {
+    await _system
+        .invokeMethod<bool>('openOverlaySettings')
+        .catchError((_) => false);
+  }
+
   /// İndirilmiş APK'yı kurar. `done` · `aborted` · `need_permission` ·
   /// `missing` · `unsupported` · `error:…`.
   static Future<String> install(AppUpdateInfo info) async {

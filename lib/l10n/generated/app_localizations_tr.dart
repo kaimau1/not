@@ -8139,6 +8139,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get updateTapToCheck => 'Dokun: güncellemeyi denetle';
 
   @override
+  String get updateReopenOn => 'Güncellemeden sonra kendiliğinden açılır';
+
+  @override
+  String get updateReopenOff =>
+      'Güncellemeden sonra kendiliğinden açılsın: izin ver';
+
+  @override
   String get updateChecking => 'Güncelleme denetleniyor…';
 
   @override

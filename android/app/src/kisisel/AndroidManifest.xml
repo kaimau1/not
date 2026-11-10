@@ -16,6 +16,12 @@
          penceresine verir. Play'de kısıtlı izin: yalnız kişisel derlemede. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!-- Güncellemeden sonra kendiliğinden yeniden açılma (GuncellemeSonrasiAc,
+         2026-11-10): Android 10+ arka plandan ekran açmayı yalnız "Diğer
+         uygulamaların üzerinde göster" izniyle bırakır. Bildirilmezse uygulama
+         o ayar listesinde HİÇ görünmez. Kullanıcı Ayarlar'dan verir. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
     <application>
         <!-- Kendi güncellememizden sonra uygulamayı yeniden aç (GuncellemeSonrasiAc). -->
         <receiver android:name=".GuncellemeSonrasiAlici"

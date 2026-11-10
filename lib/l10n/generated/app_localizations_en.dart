@@ -8158,6 +8158,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateTapToCheck => 'Tap to check for updates';
 
   @override
+  String get updateReopenOn => 'Reopens by itself after updating';
+
+  @override
+  String get updateReopenOff => 'Reopen after updating: allow';
+
+  @override
   String get updateChecking => 'Checking for updates…';
 
   @override

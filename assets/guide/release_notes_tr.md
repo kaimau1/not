@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 10 Kasım 2026 {#2026-11-10}
+- **Kendiliğinden yeniden açılma izni:** Notlar artık "Diğer uygulamaların üzerinde göster" listesinde görünüyor. Ayarlar'ın en altındaki "Güncellemeden sonra kendiliğinden açılsın: izin ver"e dokunup izni açınca güncelleme bitince uygulama bildirim beklemeden açılır.
 - **Yenilikler ana ekranda:** uygulama güncellenince bu sürümde neyin değiştiği ana ekranda kısa bir bildirimle gösterilir; "Tümünü gör" sürüm notlarını açar.
 - **Ayarlar'da güncelleme görünür:** sürüm satırına dokununca yeni sürüm iniyorsa yüzde ve çubuk, sonra "kuruluyor" yazar; iptal ya da hata da orada söylenir.
 - **Güncellemeden sonra uygulama yeniden açılır:** kendi kendini güncelleyince kapanıp kalmıyor. Telefon arka plandan açılmayı engellerse "Notlar güncellendi — açmak için dokun" bildirimi çıkar.

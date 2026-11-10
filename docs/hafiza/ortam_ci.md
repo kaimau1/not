@@ -116,6 +116,10 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   `startActivity` dener + yüksek öncelikli "açmak için dokun" bildirimi (izin varsa tam ekran niyeti) — Android 10+
   arka plan başlatma engelinin yedeği. `MainActivity.onCreate` bildirimi kaldırır. Cihazda doğrulanmadı.
 
+- **Bug kökü (2026-11-10, kullanıcı: "Diğer uygulamaların üzerinde göster listesinde çıkmıyor"):** `SYSTEM_ALERT_WINDOW`
+  hiç bildirilmemişti → uygulama o listede yoktu, Android 10+'da `startActivity` hep engellenip bildirime düşüyordu.
+  Kişisel manifeste eklendi; Ayarlar alt bilgisinde izin durumu satırı (`canDrawOverlays` / `openOverlaySettings`).
+
 ## Yenilikler tostu + Ayarlar güncelleme durumu (2026-11-10)
 - `lib/app/release_notes_toast.dart` (`ReleaseNotesToast`, AppUpdateRunner altında, 2,5 sn sonra): kurulu sürüm
   prefs'tekinden farklıysa sürüm notlarından GÖRÜLMEMİŞ maddeler (en yeni bölüm kimliği + o bölümde görülen
