@@ -108,6 +108,15 @@ void main() {
       .opacity
       .value;
 
+  Offset trashCenter(WidgetTester tester) => tester.getCenter(
+    find
+        .descendant(
+          of: find.byType(DragTrashTarget),
+          matching: find.byType(CustomPaint),
+        )
+        .first,
+  );
+
   /// "Birinci not" kartını basılı tutup çöp hedefinin üstüne taşır.
   Future<TestGesture> dragToTrash(WidgetTester tester) async {
     final card = find.ancestor(
@@ -124,15 +133,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 80));
     }
     expect(trashOpacity(tester), 1, reason: 'sürüklerken çöp görünür');
-    final target = tester.getCenter(
-      find
-          .descendant(
-            of: find.byType(DragTrashTarget),
-            matching: find.byType(CustomPaint),
-          )
-          .first,
-    );
-    await g.moveTo(target);
+    await g.moveTo(trashCenter(tester));
     await tester.pump();
     await g.moveBy(const Offset(1, 1));
     await tester.pump();
@@ -157,6 +158,44 @@ void main() {
     // Hedef yeniden gizlenir.
     await tester.pump(const Duration(milliseconds: 400));
     expect(trashOpacity(tester), 0);
+    await tester.pump(const Duration(seconds: 5));
+  });
+
+  // F60.S12 (a) KANIT (kullanıcı 2026-11-12: "çöp işareti ekranda kalıyor"):
+  // kart başka bir kartın üstünden geçince önizleme sırası onu başka
+  // sütuna/satıra taşır, sürüklenen hücre ağaçtan çıkar. Flutter KABUL
+  // edilen bırakmada `onDragEnd`'i yalnız hâlâ bağlı Draggable'a iletir →
+  // `_dragNoteId` temizlenmez, çöp hedefi ekranda kalırdı.
+  testWidgets('başka kartın üstünden geçip çöpe bırakınca hedef gizlenir', (
+    tester,
+  ) async {
+    final repo = await pump(tester);
+    final card = find.ancestor(
+      of: find.text('Birinci not'),
+      matching: find.byType(NoteCard),
+    );
+    final g = await tester.startGesture(tester.getCenter(card));
+    await tester.pump(const Duration(milliseconds: 700));
+    await g.moveBy(const Offset(0, 20));
+    await tester.pump(const Duration(milliseconds: 80));
+    final other = find.ancestor(
+      of: find.text('İkinci not'),
+      matching: find.byType(NoteCard),
+    );
+    await g.moveTo(tester.getCenter(other));
+    await tester.pump();
+    await g.moveBy(const Offset(2, 2));
+    await tester.pump(const Duration(milliseconds: 300));
+    await g.moveTo(trashCenter(tester));
+    await tester.pump();
+    await g.moveBy(const Offset(1, 1));
+    await tester.pump(const Duration(milliseconds: 700));
+    await g.up();
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(repo.deleted, ['a']);
+    expect(trashOpacity(tester), 0, reason: 'sürükleme bitti, çöp gizli');
     await tester.pump(const Duration(seconds: 5));
   });
 

@@ -245,7 +245,14 @@ class _ReorderableNoteCell extends StatelessWidget {
           onDragUpdate: onDragUpdate,
           // Nereye bırakılırsa bırakılsın (kartın üstü, boşluk, ekran dışı)
           // önizlenen sıra kaydedilir; kullanıcı zaten onu görüyordu.
-          onDragEnd: (_) => onDragEnd(),
+          //
+          // KÖK NEDEN (F60.S12, "çöp işareti ekranda kalıyor"): `onDragEnd`
+          // Flutter'da yalnız hücre HÂLÂ bağlıyken çağrılır. Önizleme sırası
+          // kartı başka satıra/sütuna taşıyınca hücre yeniden kurulur; kabul
+          // edilen bırakmada (çöp, başka kart) sürükleme hiç bitmiyordu.
+          // `onDragCompleted`/`onDraggableCanceled` bağlılığa bakmaz ve
+          // birbirini dışlar — ikisi birlikte her bırakmayı tam bir kez verir.
+          onDragCompleted: onDragEnd,
           onDraggableCanceled: (_, _) => onDragEnd(),
           // Elde tutulan kâğıt (F31.4): büyük gölge + 1,03 + −0,8°, YALNIZ
           // sürüklenen kartta. Hareketi azaltta düz durur.
