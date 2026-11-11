@@ -561,7 +561,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   Test: sadeleşmiş çizginin özgün çizgiye en büyük uzaklığı ≤ tolerans; nokta sayısı
   gerçekçi el yazısı örneğinde ≥ %40 azalır; i noktası (tek nokta) ve 2 noktalı çizgi
   dokunulmaz. Şekil tanıma sadeleştirmeden ÖNCE çalışır (bugünkü sıra korunur).
-- [ ] **F61.3 Planlayıcı (saf Dart).** `lib/features/notes/domain/ink_plan.dart`:
+- [x] **F61.3 Planlayıcı (saf Dart).** *(2026-11-11 P13: `ink_plan.dart` + `test/ink_plan_test.dart` yeşil (6 durum + z tükenmesi); yoğun bant `~<bant>`, `b`, `c`… parçalarına bölünür.)* `lib/features/notes/domain/ink_plan.dart`:
 
   ```dart
   const kInkBandHeight = 1.0; // sayfa genişliği biriminde; uzun sayfa bantlara bölünür
