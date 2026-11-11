@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart' show compute;
 import 'package:image/image.dart' as img;
 import 'package:pdfrx/pdfrx.dart';
 
+import '../attachment_thumb.dart';
+
 /// PDF sayfasını çizmenin TEK yolu (kart kapağı, sayfa görüntüsü, PNG
 /// dışa aktarma, OCR). pdfrx'in `PdfImage`i yerel bellekte durur: her yol
 /// `dispose`u burada, tek sırayla yapar.
@@ -72,6 +74,20 @@ Future<Uint8List?> renderPdfPageJpeg(
     ));
   } finally {
     rendered.dispose();
+  }
+}
+
+/// PDF'in ilk sayfasından ≤ [kThumbMaxBytes] JPEG (F65.5, bulut önizlemesi).
+/// Açılamayan/boş belge → null.
+Future<Uint8List?> pdfFirstPageThumb(String path) async {
+  final document = await PdfDocument.openFile(path);
+  try {
+    if (document.pages.isEmpty) return null;
+    final jpg = await renderPdfPageJpeg(document.pages.first, width: 320);
+    if (jpg == null || jpg.lengthInBytes <= kThumbMaxBytes) return jpg;
+    return await compute(makeThumbnail, jpg);
+  } finally {
+    await document.dispose();
   }
 }
 

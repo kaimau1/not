@@ -903,7 +903,7 @@ tur görüntüleri `*-e-*.png`.
   sessiz tek bildirim ("N ek yüklenmeyi bekliyor — açınca yüklenir", yük `upload:` — `note:`
   ile BAŞLAMAZ); uygulama açılınca/kuyruk boşalınca iptal. Ayrıca not ekranında ekin durum
   rozeti (`attachmentStatusOf`) "bekliyor"ken dokununca "şimdi dene".
-- [ ] **F65.5 PDF ilk sayfa önizlemesi buluta.** Görseldeki `thumbs/{ekId}.jpg` (≤ 40 KB)
+- [x] **F65.5 PDF ilk sayfa önizlemesi buluta.** *(2026-11-11: kanıt `test/pdf_cloud_thumb_test.dart` kırmızı (dosyasız PDF kartı önizleme çizmiyor, `wantsCloudThumb` yok) → yeşil. Drive yüklemesinde PDF'in ilk sayfası `pdfFirstPageThumb` (320 px JPEG, ≤ 40 KB) → `thumbs/{ekId}.jpg` → `thumbUrl`; kart `_PdfFirstPage` dosya yokken onu çizer. Storage kuralı ve boyut sınırı testi zaten var (`rules-test/rules.test.js` thumbs: 41 KB ve `application/pdf` reddi) — yeni kural testi gerekmedi. Gerçek PDF çizimi (pdfium) cihazda doğrulanmadı.)* Görseldeki `thumbs/{ekId}.jpg` (≤ 40 KB)
   yolu PDF için de: yüklemede `pdf_page_render.dart` ile ilk sayfa → JPEG → aynı yol →
   `thumbUrl`. Web ve diğer cihaz kartında/yer tutucusunda indirmeden görünür. Storage
   kuralı zaten `thumbs` için var; `rules-test`'e PDF önizleme boyut sınırı testi.

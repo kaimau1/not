@@ -2,12 +2,19 @@ import 'dart:typed_data';
 
 import 'package:image/image.dart' as img;
 
+import '../domain/attachment.dart';
+
 /// Önizleme tavanı (bayt) — `storage.rules` `users/{uid}/thumbs/` ile aynı.
 const kThumbMaxBytes = 40 * 1024;
 
 /// Önizlemenin Storage yolu.
 String thumbStoragePath(String uid, String attachmentId) =>
     'users/$uid/thumbs/$attachmentId.jpg';
+
+/// Buluta önizlemesi giden türler: görsel ve PDF'in ilk sayfası (F65.5 —
+/// dosyası bu cihazda olmayan kart, web dahil, indirmeden çizer).
+bool wantsCloudThumb(AttachmentKind kind) =>
+    kind == AttachmentKind.image || kind == AttachmentKind.pdf;
 
 /// **KART ÖNİZLEMESİ** (F28.2-B, 2026-11-04): görselden ≤ [kThumbMaxBytes]
 /// JPEG üretir; Storage'a yalnız bu gider, asıl dosya Drive'da.
