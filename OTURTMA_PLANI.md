@@ -66,7 +66,7 @@ Gözetimsiz yürütmenin sırası ve kuralları: `OTOMASYON.md`.
 | 60 | Bilinen hatalar + kullanıcı sorun kutusu | Bekliyor | | F60.1 en yüksek getiri |
 | 61 | Mürekkep deposu v2 (1 MiB tavanı, kayıt maliyeti) | Bekliyor | | veri biçimi; yedek şartı |
 | 62 | Mürekkep çizimi v2 (gecikme, dolu sayfada kasma) | Bekliyor | | |
-| 63 | Kalem akışları (her yüzeyde tek kural) | Bekliyor | | KALEM_PLANI K2–K5 burada |
+| 63 | Kalem akışları (her yüzeyde tek kural) | Sürüyor | 2026-11-11 | F63.1–F63.5 yapıldı (P05, P15; K-O5 açık); F63.6 karar, F63.7 cihaz turu bekliyor |
 | 64 | Editör çekirdeği (dar dinleme) | Bekliyor | | ölçüm kapılı |
 | 65 | Ekler: yerleşim, çubuklar, yükleme güvenilirliği | Bekliyor | | KALEM_PLANI K6–K7 burada |
 | 66 | Telefon: ana ekran ve not ekranı yoğunluğu | Bekliyor | | |
@@ -212,6 +212,7 @@ Hepsi koddan doğrulandı; "hesap" yazanlar ölçülmedi, ilgili fazın 0. madde
   **Cihazda A/B, kullanıcı hissine göre** / hiç. En güvenli: kapalı bayrakla yazılır.
 - **K-O5 — Telefon alt çubuğu (F63.5):** **Paylaş ⋮ menüsüne iner, yerine Kalem gelir**
   / Ses dalgası ⋮'e iner / kalem yalnız hızlı satırda kalır. En güvenli: dokunma.
+  *(2026-11-11, P15 gözetimsiz: "dokunma" uygulandı, karar AÇIK — sabah bakılacak.)*
 - **K-O6 — Ek çubuğu sadeleşmesi (F65.1):** **telefonda bölme çubuğu en çok 5 düğme:
   ⛶ · tutamak · birincil iş (Not al / T) · ✏ · ⋮; görünüm anahtarı (Sabit · Yüzen · Ek),
   balon, bağlantı ⋮ levhasının başında** / bugünkü. En güvenli: dokunma.
@@ -820,7 +821,14 @@ gömülü `_docInkFor`, görüntüleyiciler) — B3/B4/B5 hataları buradan çı
   görüntüleyicide widget testi yok (pdfrx); cihazda doğrulanmadı.)*
   `PdfViewerScreen`, `ImageViewerScreen`, `SlideViewerScreen`'e `StylusToggleOverlay`;
   `stylusEver` her mürekkep katmanında işaretlenir (bugün yalnız editör içeriğinde).
-- [ ] **F63.5 Telefonda elle yazma (KALEM K5, B10) — KARAR K-O5.** Klavye kapalıyken alt
+- [x] **F63.5 Telefonda elle yazma (KALEM K5, B10) — KARAR K-O5.** *(2026-11-11, P15, gözetimsiz:
+  K-O5'te "En güvenli: dokunma" uygulandı — alt çubuk DEĞİŞMEDİ, klavye kapalıyken kalem hâlâ yalnız
+  Ekle → "El yazısı"nda ve hızlı satırda (B10 AÇIK kalır); **sabah bakılacak**. Yapılan: kalem kipi
+  parmakla açılınca (yalnız kalem kapalı) bir kez "Tek parmak çizer · iki parmak kaydırır" ipucu
+  (`TipOnce.penTwoFinger`, `_penModeOpened`). Sayfa altı boşluğu için düzeltme YAZILMADI — üretilemedi:
+  boşluk zaten son çizginin altında ekran boyunun %70'i (`page_ink_layer.dart` `viewport * 0.7`),
+  400×800'de 560 dp ve çizgi indikçe uzuyor (test doğruluyor). Test `test/editor_pen_tablet_test.dart`
+  (kırmızı 1 → yeşil). Cihazda doğrulanmadı.)* Klavye kapalıyken alt
   çubukta kalem; kalem kipinde iki parmakla kaydırma ipucu (`TipOnce`); sayfa sonunda
   yazdıkça uzayan boşluk (bugün kalem kipinde "sayfa altı boşluğu" var — telefonda yeterli
   mi tur görüntüsüyle bak). Cihaz: tablette telefon düzeni + `input touchscreen`.

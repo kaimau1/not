@@ -6,6 +6,7 @@ import 'package:notlar/app/split_shell.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
 import 'package:notlar/core/app_update.dart';
+import 'package:notlar/core/tips.dart';
 import 'package:notlar/features/notes/data/attachment_repository.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
@@ -31,6 +32,7 @@ Future<ProviderContainer> _pump(
   WidgetTester tester, {
   Note note = _note,
   Size size = const Size(1200, 800),
+  bool startDrawing = false,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -55,11 +57,11 @@ Future<ProviderContainer> _pump(
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: const MaterialApp(
+      child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        locale: Locale('tr'),
-        home: NoteEditorScreen(noteId: 'n'),
+        locale: const Locale('tr'),
+        home: NoteEditorScreen(noteId: 'n', startDrawing: startDrawing),
       ),
     ),
   );
@@ -242,6 +244,49 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump();
     expect(container.read(sortHeldNoteIdsProvider), isNot(contains('n')));
+    await _end(tester);
+  });
+
+  // F63.5 (KALEM K5): telefonda parmakla yazma.
+  testWidgets('telefonda parmakla kalem kipi: iki parmak ipucu bir kez çıkar, '
+      'sayfa yazdıkça uzar', (tester) async {
+    InkToolMemory.reset();
+    TipOnce.resetSession();
+    addTearDown(InkToolMemory.reset);
+    await _pump(tester, size: const Size(400, 800), startDrawing: true);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(PenTray), findsOneWidget);
+    // Parmak çiziyor: kaydırmanın yolu (iki parmak) söylenir.
+    expect(find.byKey(const ValueKey('tip-pen_two_finger')), findsOneWidget);
+    final l10n = lookupAppLocalizations(const Locale('tr'));
+    expect(find.text(l10n.inkTwoFingerHint), findsOneWidget);
+    // Sayfanın altında yazmaya yer var ve çizgi indikçe uzar.
+    final page = find.byType(PageInkStack);
+    final before = tester.getSize(page).height;
+    expect(before, greaterThanOrEqualTo(800 * 0.7));
+    final finger = await tester.startGesture(const Offset(200, 560));
+    await tester.pump();
+    await finger.moveBy(const Offset(60, 20));
+    await tester.pump();
+    await finger.up();
+    await tester.pump(const Duration(milliseconds: 300));
+    final ink = tester.widget<InkPageLayer>(find.byType(InkPageLayer));
+    expect(ink.controller.ink, hasLength(1));
+    expect(tester.getSize(page).height, greaterThan(before + 200));
+    await _end(tester);
+  });
+
+  testWidgets('kalemli cihazda (parmak kaydırır) iki parmak ipucu çıkmaz', (
+    tester,
+  ) async {
+    InkToolMemory.reset();
+    InkToolMemory.stylusEver = true;
+    TipOnce.resetSession();
+    addTearDown(InkToolMemory.reset);
+    await _pump(tester, startDrawing: true);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(PenTray), findsOneWidget);
+    expect(find.byKey(const ValueKey('tip-pen_two_finger')), findsNothing);
     await _end(tester);
   });
 

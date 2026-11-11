@@ -52,6 +52,10 @@ abstract final class TipOnce {
   static const penShapeHold = 'pen_shape_hold';
   static const penEraserHold = 'pen_eraser_hold';
 
+  /// Kalem kipi PARMAKLA açıldı (telefon, F63.5): tek parmak çizer, iki
+  /// parmak kaydırır.
+  static const penTwoFinger = 'pen_two_finger';
+
   static bool _sessionUsed = false;
 
   /// Bu ipucu gösterilmeli mi? (Gösterilmemiş ve — sınırlıysa — bu
