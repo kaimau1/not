@@ -23,6 +23,14 @@ concurrency:
 env:
   FLUTTER_VERSION: '3.47.9'
 
+# EN AZ YETKİ (F71.3): işlerin GITHUB_TOKEN'ı varsayılan olarak yalnız OKUR.
+# Yazması gereken iş (android, release: Release oluşturma) bunu kendi
+# `permissions:` bloğunda ister. Üçüncü taraf action'lar commit SHA'sına
+# sabittir (etiket sonradan başka koda taşınabilir) — bekçi:
+# test/security_guard_test.dart.
+permissions:
+  contents: read
+
 jobs:
   # Derleme işareti ayrı, saniyelik bir işte okunur: APK işi testi BEKLEMEDEN
   # onunla paralel başlasın (eskiden test bitene dek ~7 dk sırada bekliyordu).
@@ -113,7 +121,7 @@ jobs:
       - uses: actions/checkout@v4
         if: env.MOD != 'atla'
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         if: env.MOD != 'atla'
         with:
           channel: stable
@@ -172,6 +180,46 @@ jobs:
       - name: Functions saf testleri
         working-directory: functions
         run: node --test push.test.js search_match.test.js
+
+  # GÜVENLİK TARAMASI (F71.8): depo geçmişinde sır (gitleaks) ve bilinen
+  # açıklı bağımlılık (osv-scanner). KIRMIZI = UYARI, ENGEL DEĞİL: bulgu işi
+  # düşürmez (sarı uyarı + iş özeti), hiçbir iş bunu beklemez — ~1 dk, testle
+  # paralel. Araçlar sürüm + SHA-256 ile sabit (action değil, tek ikili).
+  # Yanlış alarm: `.gitleaks.toml` izin listesi. Üçüncü kapı (kural testi
+  # kapsam özeti) `rules` işinde, `rules-test/kapsam.js`.
+  guvenlik:
+    name: Güvenlik taraması
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Araçları indir (sürüm + SHA-256 sabit)
+        run: |
+          cd "$RUNNER_TEMP"
+          curl -sSfL -o gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          curl -sSfL -o osv-scanner https://github.com/google/osv-scanner/releases/download/v2.7.1/osv-scanner_linux_amd64
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tgz" | sha256sum -c -
+          echo "fb7dab19a8bd9bbe5c3189f09d4b7ee1820c9553a23bac202648a56efd2f6ee8  osv-scanner" | sha256sum -c -
+          tar -xzf gitleaks.tgz gitleaks
+          chmod +x gitleaks osv-scanner
+      - name: Sır taraması (gitleaks, bütün geçmiş)
+        run: |
+          if "$RUNNER_TEMP/gitleaks" git --redact --no-banner --config .gitleaks.toml . ; then
+            echo "gitleaks: temiz" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning title=gitleaks::Depo geçmişinde olası sır — bu adımın kaydına bak (değerler gizlenir). Yanlış alarmsa .gitleaks.toml."
+            echo "gitleaks: BULGU VAR (adım kaydına bak)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Bağımlılık açıkları (osv-scanner)
+        run: |
+          if "$RUNNER_TEMP/osv-scanner" scan source --lockfile=pubspec.lock --lockfile=rules-test/package-lock.json ; then
+            echo "osv-scanner: temiz" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning title=osv-scanner::Bilinen açıklı bağımlılık (ya da tarama hatası) — bu adımın kaydına bak."
+            echo "osv-scanner: BULGU VAR (adım kaydına bak)" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   # APK yalnız elle tetiklenince (Actions → Run workflow) ya da MAIN'e giren
   # commit'in BAŞLIĞINDA [apk] geçince derlenir; dalda derlenmez (dal ile
@@ -262,7 +310,7 @@ jobs:
           restore-keys: |
             gradle-bc2-${{ runner.os }}-
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -448,7 +496,7 @@ jobs:
 
       - name: Release taslağı oluştur
         if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           draft: true
           target_commitish: ${{ github.sha }}
@@ -524,7 +572,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -624,7 +672,7 @@ jobs:
       # wrangler Pages Functions aramayı bırakıyor. Yayınlanan içerik aynı
       # (`build/web`), yalnız yol göreli hâle geldi.
       - name: Cloudflare Pages'e yayınla
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -650,7 +698,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -682,7 +730,7 @@ jobs:
         run: flutter pub get
 
       - name: Emülatörde ölç
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         # KÖK NEDEN (F18.7, koşu 41412956542 logcat): yayın APK'sı yalnız
         # arm64 paketliyor; x86_64 emülatörde libflutter.so yoktu, uygulama
         # açılışta çöküyordu. Ölçüm derlemesi bütün mimarileri alır.

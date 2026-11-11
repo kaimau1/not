@@ -349,7 +349,10 @@ class ReminderService {
 
   static String _signature(Note n) =>
       '${n.reminderAt?.millisecondsSinceEpoch}|${n.reminderRepeat}|'
-      '${n.reminderLevel}';
+      '${n.reminderLevel}|${n.locked}';
+
+  @visibleForTesting
+  static String signatureForTest(Note n) => _signature(n);
 
   Future<void> _cancelAll(String noteId) async {
     for (var k = 0; k < _repeatAhead; k++) {
@@ -845,13 +848,11 @@ class ReminderService {
     DateTime when,
   ) async {
     final l10n = await loadNotificationL10n(_ref.read(localeProvider));
-    final title = note.displayTitle.trim().isEmpty
-        ? l10n.remindersUntitled
-        : note.displayTitle.trim();
-    final preview = note.toPlainText();
-    final trimmed = preview.length > 120
-        ? '${preview.substring(0, 120)}…'
-        : preview;
+    final (title, trimmed) = reminderNotificationText(
+      note,
+      untitled: l10n.remindersUntitled,
+      locked: l10n.lockedNote,
+    );
     // Önek ÇALMA anına göre: bildirim tam reminderAt'te görünür, yani o an
     // "bugün"dür. Planlama anına göre hesaplansaydı yarına kurulan
     // hatırlatıcı çaldığında hâlâ "Yarın 09:00" yazıyordu.
@@ -918,4 +919,23 @@ class ReminderService {
     _calTasksSub?.close();
     _calRoutinesSub?.close();
   }
+}
+
+/// Hatırlatıcı bildiriminde görünen (başlık, önizleme). Kilitli notun başlığı
+/// ve gövdesi kimlik doğrulamasız yüzeye (kilit ekranı, bildirim gölgesi)
+/// çıkmaz (F71.6) — şerit ve Hatırlatıcılar ekranıyla aynı kural.
+(String, String) reminderNotificationText(
+  Note note, {
+  required String untitled,
+  required String locked,
+}) {
+  if (note.locked) return (locked, '');
+  final title = note.displayTitle.trim().isEmpty
+      ? untitled
+      : note.displayTitle.trim();
+  final preview = note.toPlainText();
+  return (
+    title,
+    preview.length > 120 ? '${preview.substring(0, 120)}…' : preview,
+  );
 }

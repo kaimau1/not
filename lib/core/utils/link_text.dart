@@ -294,8 +294,22 @@ List<InlineSpan> linkSpans(
 /// Şema yoksa https varsayılır (www.x.com, x.com/y). Açılamazsa false döner;
 /// çağıran kullanıcıya haber verir.
 Future<bool> openLink(String raw) async {
+  final uri = linkUri(raw);
+  if (uri == null) return false;
+  try {
+    return await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } catch (_) {
+    return false;
+  }
+}
+
+/// [openLink]'in açacağı adres; açılmayacaksa null. Yalnız http, https ve
+/// mailto (F71.4): not metni paylaşımla/QR'la/gelen kutusundan DIŞARIDAN
+/// gelebilir — `intent:`, `file:`, `content:`, `javascript:` ya da başka bir
+/// uygulamanın özel şeması tek dokunuşla başlatılmasın.
+Uri? linkUri(String raw) {
   final trimmed = raw.trim();
-  if (trimmed.isEmpty) return false;
+  if (trimmed.isEmpty) return null;
   final String withScheme;
   if (trimmed.contains('://') || trimmed.startsWith('mailto:')) {
     withScheme = trimmed;
@@ -305,10 +319,8 @@ Future<bool> openLink(String raw) async {
     withScheme = 'https://$trimmed';
   }
   final uri = Uri.tryParse(withScheme);
-  if (uri == null) return false;
-  try {
-    return await launchUrl(uri, mode: LaunchMode.externalApplication);
-  } catch (_) {
-    return false;
+  if (uri == null || !const {'http', 'https', 'mailto'}.contains(uri.scheme)) {
+    return null;
   }
+  return uri;
 }

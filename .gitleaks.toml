@@ -1,0 +1,12 @@
+# gitleaks ayarı (F71.8) — CI `guvenlik` işi bütün geçmişi tarar.
+# Varsayılan kurallar + bilinen yanlış alarmların izin listesi.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Firebase istemci yapılandırması: API anahtarı tasarım gereği açık (her APK/web paketinde düz metin). Koruma: güvenlik kuralları + App Check + konsolda anahtar kısıtı (docs/guvenlik_denetimi.md G-09)."
+paths = [
+  '''android/app/google-services\.json''',
+  '''android/app/src/profile/google-services\.json''',
+  '''lib/firebase_options\.dart''',
+]
