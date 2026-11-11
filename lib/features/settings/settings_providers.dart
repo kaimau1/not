@@ -259,6 +259,45 @@ final hideBarWhileTypingProvider = boolPref(
   defaultValue: true,
 );
 
+/// Yazarken gizlemenin süreleri (F60.S7, kullanıcı isteği 2026-11-11: "ne
+/// zaman kapanacak, kaç sn sonra açılacak — 0,1 sn adımlı kaydırıcı"). Cihaz
+/// tercihi, SANİYENİN ONDA BİRİ olarak saklanır (0–50 = 0–5 sn): kaydırıcının
+/// adımı tam sayı, yuvarlama kayması yok.
+class TypingBarDelayNotifier extends Notifier<int> {
+  TypingBarDelayNotifier(this.key, this.defaultTenths);
+
+  final String key;
+  final int defaultTenths;
+
+  /// En uzun süre: 5,0 sn.
+  static const maxTenths = 50;
+
+  @override
+  int build() =>
+      (watchPrefs(ref).getInt(key) ?? defaultTenths).clamp(0, maxTenths);
+
+  void set(int tenths) {
+    final value = tenths.clamp(0, maxTenths);
+    state = value;
+    ref.read(sharedPreferencesProvider).setInt(key, value);
+  }
+}
+
+/// **Gizlenme gecikmesi**: yazma (art arda 3 değişiklik) başladıktan sonra
+/// çubuğun inmesi için yazmanın kesintisiz sürmesi gereken süre. Varsayılan 0:
+/// hemen (2026-11-08 davranışı).
+final typingBarHideDelayProvider =
+    NotifierProvider<TypingBarDelayNotifier, int>(
+      () => TypingBarDelayNotifier('typing_bar_hide_delay_ds', 0),
+    );
+
+/// **Yeniden görünme gecikmesi**: son tuştan sonra çubuğun geri gelmesi için
+/// geçmesi gereken duraklama. Varsayılan 1,1 sn (2026-11-08 ikinci tur).
+final typingBarShowDelayProvider =
+    NotifierProvider<TypingBarDelayNotifier, int>(
+      () => TypingBarDelayNotifier('typing_bar_show_delay_ds', 11),
+    );
+
 /// **ANA EKRAN TAKVİM ŞERİDİ** (kullanıcı isteği 2026-11-08; eski "takvim
 /// zemini"nin yerine): ekranın tepesinde bugünden itibaren 10 gün ve
 /// kayıtları. Ayar şeridi tümden gizler; şerit kendi içinde daralır.

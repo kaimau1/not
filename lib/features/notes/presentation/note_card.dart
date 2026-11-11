@@ -116,6 +116,13 @@ double estimateNoteCardHeight(Note note, double width) {
   if (!note.cardMediaHidden) {
     final media = CardMediaPlan.of(note);
     if (!media.isEmpty) height += media.estimateHeight(width) + 8;
+  } else if (!note.locked &&
+      !CardHiddenMedia.of(
+        note,
+        showVisuals: false,
+        showFiles: false,
+      ).isEmpty) {
+    height += 22; // gizli eklerin özet satırı (F60.S8)
   }
 
   // Alt meta satırı (rozet · etiket · tarih) neredeyse her kartta var.
@@ -737,6 +744,13 @@ class NoteCard extends ConsumerWidget {
             showVisuals: display.media,
             showFiles: display.files,
           );
+    // Önizlemesi gizli eklerin tek satırlık özeti (F60.S8): ek var ama kart
+    // çizmiyorsa "hiçbir şey yokmuş gibi" durmasın. Not sürümü başına ucuz.
+    final hiddenMedia = CardHiddenMedia.of(
+      note,
+      showVisuals: display.media,
+      showFiles: display.files,
+    );
     final hero = media?.hero;
     // Balonlu notun belge kapağı (video/görsel kapağıyla aynı yerde).
     final cover = media?.cover;
@@ -858,6 +872,10 @@ class NoteCard extends ConsumerWidget {
                     media.transcriptCount > 0)) ...[
               const SizedBox(height: 8),
               CardMediaBody(plan: media),
+            ],
+            if (!hiddenMedia.isEmpty) ...[
+              const SizedBox(height: 8),
+              CardHiddenMediaLine(media: hiddenMedia),
             ],
             if (note.hasPageInk) ...[
               const SizedBox(height: 8),

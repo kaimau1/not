@@ -3,6 +3,157 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+/// Klavye boşluğunun DAR KANALI (F60.S5, kullanıcı 2026-11-11: "klavye
+/// açılırken alt paneldeki titreme kasmayı kökünden çöz, tekrar yaşanmayacak
+/// şekilde").
+///
+/// **KÖK NEDEN.** Klavye hareket ederken `MediaQuery` her karede değişir
+/// (`viewInsets.bottom` büyür, `padding.bottom` erir). Editörün `Scaffold`'ı
+/// — `resizeToAvoidBottomInset: false` olsa bile — `MediaQuery`'ye bağlıdır:
+/// her karede kendi iskeletini (Material, üst çubuk yuvası, her yuvaya yeni
+/// bir `MediaQuery`) yeniden kurar ve yerleşim kutusunu yeniden dizer;
+/// altındaki her `SafeArea` ve `viewInsetsOf` okuyan her widget da öyle.
+/// Ölçüm (412×915, 18 karelik klavye): hareket karesi başına ≈ 87 kurulum +
+/// 1 yerleşim; klavyeyi GERÇEKTEN izlemesi gereken yapraklar ise 5-6 tane.
+/// Kareler pahalılaşınca kare düşer; klavye ilerler, çubuk bir kare geride
+/// kalır — görülen titreme budur (çubuğun konum hesabı her karede doğru).
+///
+/// **Çözüm — iki ayrı kanal.** Bu kapsam ekranın `Scaffold`'ının ÜSTÜNE
+/// konur:
+/// * Alt ağaca **KARARLI** bir `MediaQuery` verir: `viewInsets.bottom` ve
+///   `padding.bottom` klavye hareket ederken HİÇ değişmez; klavye
+///   [settle] kadar durunca (açılış bitti) gerçek değere oturur, yeniden
+///   kıpırdadığı ilk karede sıfıra döner. Yani bir açılış/kapanış çevriminde
+///   en çok İKİ kez değişir — `Scaffold`, `SafeArea` ve farkında olmadan
+///   `MediaQuery` okuyan her şey kare kare kurulamaz.
+/// * **CANLI** değer yalnız [KeyboardInset.liveOf] ile okunur; bağımlılık
+///   okuyan YAPRAKTA kalır ([KeyboardSlide], klavye anahtarı, seçim çubuğu).
+///
+/// Kapsam yoksa (başka ekranlar, yalın testler) [KeyboardInset.liveOf]
+/// `MediaQuery.viewInsetsOf`'a düşer; [KeyboardSnap] kendi sayacını kullanır.
+///
+/// Kural: bu kapsamın altında klavyeyi kare kare izlemesi gereken yeni bir
+/// widget `MediaQuery.viewInsetsOf` DEĞİL [KeyboardInset.liveOf] okur
+/// (bekçi: `test/keyboard_jank_guard_test.dart` S17).
+class KeyboardInsetScope extends StatefulWidget {
+  const KeyboardInsetScope({
+    super.key,
+    required this.child,
+    this.settle = const Duration(milliseconds: 140),
+  });
+
+  /// Çağıranın kurduğu ağaç: klavye karelerinde AYNI örnek kalır, kurulmaz.
+  final Widget child;
+
+  /// Klavyenin "durdu" sayılması için gereken hareketsizlik süresi.
+  final Duration settle;
+
+  @override
+  State<KeyboardInsetScope> createState() => _KeyboardInsetScopeState();
+}
+
+class _KeyboardInsetScopeState extends State<KeyboardInsetScope> {
+  /// Alt ağacın gördüğü KARARLI boşluk: hareket sırasında 0, durunca gerçek.
+  double _stable = 0;
+  double _lastLive = 0;
+  Timer? _settle;
+
+  @override
+  void dispose() {
+    _settle?.cancel();
+    KeyboardInset.moving.value = false;
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final live = media.viewInsets.bottom;
+    if (live != _lastLive) {
+      _lastLive = live;
+      // HAREKET HÂLİNDE: gövde tam boyda (bkz. [KeyboardSnap]).
+      _stable = 0;
+      KeyboardInset.moving.value = true;
+      _settle?.cancel();
+      _settle = Timer(widget.settle, () {
+        KeyboardInset.moving.value = false;
+        if (!mounted || _stable == live) return;
+        setState(() => _stable = live);
+      });
+    }
+    // Android'in kuralı (alt pay = gezinme çubuğu − klavye), ama KARARLI
+    // boşlukla: hareket boyunca pay yerinde kalır, oturunca tek adımda kalkar.
+    final nav = media.viewPadding.bottom;
+    return _LiveInset(
+      value: live,
+      child: _OpenInset(
+        value: live > 0,
+        child: _StableInset(
+          value: _stable,
+          child: MediaQuery(
+            data: media.copyWith(
+              viewInsets: media.viewInsets.copyWith(bottom: _stable),
+              padding: media.padding.copyWith(
+                bottom: math.max(0.0, nav - _stable),
+              ),
+            ),
+            child: widget.child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OpenInset extends InheritedWidget {
+  const _OpenInset({required this.value, required super.child});
+  final bool value;
+
+  @override
+  bool updateShouldNotify(_OpenInset old) => value != old.value;
+}
+
+class _LiveInset extends InheritedWidget {
+  const _LiveInset({required this.value, required super.child});
+  final double value;
+
+  @override
+  bool updateShouldNotify(_LiveInset old) => value != old.value;
+}
+
+class _StableInset extends InheritedWidget {
+  const _StableInset({required this.value, required super.child});
+  final double value;
+
+  @override
+  bool updateShouldNotify(_StableInset old) => value != old.value;
+}
+
+/// Klavye boşluğunu okuyan yaprakların kapısı (bkz. [KeyboardInsetScope]).
+abstract final class KeyboardInset {
+  /// Klavye ŞU AN hareket ediyor mu (açılış/kapanış animasyonu; durunca
+  /// [KeyboardInsetScope.settle] sonra false). Kimse dinleyerek kurulmaz:
+  /// ertelenebilir işler (ör. uzun listenin kademeli kurulumu,
+  /// `ItemsEditor._growBudget`) yalnız `.value`'ya bakıp beklemeye alınır.
+  static final ValueNotifier<bool> moving = ValueNotifier(false);
+
+  /// CANLI klavye yüksekliği (kare kare). Çağıran widget klavyenin her
+  /// karesinde yeniden kurulur — yalnız küçük yapraklarda oku.
+  static double liveOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_LiveInset>()?.value ??
+      MediaQuery.viewInsetsOf(context).bottom;
+
+  /// Klavye görünüyor mu (canlı değer > 0). Kapsamın altında çağıran
+  /// yalnız klavye BELİRİNCE ve KAYBOLUNCA kurulur — kare kare değil.
+  static bool openOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_OpenInset>()?.value ??
+      MediaQuery.viewInsetsOf(context).bottom > 0;
+
+  /// KARARLI boşluk (hareket sırasında 0); kapsam yoksa null.
+  static double? maybeStableOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_StableInset>()?.value;
+}
+
 /// Klavye boşluğunu İKİ AYRI yoldan veren sarmalayıcı: gövdeye KARARLI
 /// (yerleşim için), alt çubuğa CANLI (yalnız boyama için).
 ///
@@ -124,6 +275,23 @@ class _KeyboardSnapState extends State<KeyboardSnap> {
 
   @override
   Widget build(BuildContext context) {
+    // Kapsam varsa sayaç ONDA (bkz. [KeyboardInsetScope]): bu widget klavye
+    // karelerinde hiç kurulmaz, yalnız kararlı boşluk değişince.
+    final scoped = KeyboardInset.maybeStableOf(context);
+    if (scoped != null) {
+      _settle?.cancel();
+      _settle = null;
+      if (scoped != _inset) {
+        _inset = scoped;
+        _child = null;
+        if (scoped > 0) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) widget.onSettled?.call(scoped);
+          });
+        }
+      }
+      return _child ??= widget.builder(context, _inset);
+    }
     final live = MediaQuery.viewInsetsOf(context).bottom;
     if (live != _lastLive) {
       _lastLive = live;
@@ -168,7 +336,7 @@ class KeyboardSlide extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final live = MediaQuery.viewInsetsOf(context).bottom;
+    final live = KeyboardInset.liveOf(context);
     // **GEZİNME ÇUBUĞU PAYI BURADA, SABİT** (kullanıcı bulgusu 2026-09-23:
     // "klavye açılırken alt alan hâlâ takılarak, kayarak yukarı çıkıyor").
     //
@@ -252,7 +420,7 @@ class _KeyboardPhaseListenerState extends State<KeyboardPhaseListener> {
 
   @override
   Widget build(BuildContext context) {
-    final live = MediaQuery.viewInsetsOf(context).bottom;
+    final live = KeyboardInset.liveOf(context);
     final screen = MediaQuery.sizeOf(context).height;
     KeyboardPhase next;
     if (live <= 0) {

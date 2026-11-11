@@ -21,6 +21,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../app/app_commands.dart';
 import 'due_banner.dart';
+import 'drag_trash_target.dart';
 import '../../../app/app_frame.dart';
 import '../../../app/router.dart';
 import '../../../app/split_shell.dart';
@@ -918,6 +919,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     }
     repo.reorderNotes(order);
     HapticFeedback.mediumImpact();
+  }
+
+  /// Sürüklenen not "silmeye hazır" çöp hedefine bırakıldı (F60.S9).
+  ///
+  /// Bırakma kartın `onDragEnd`'inden ÖNCE gelir: önizlenen sıra burada
+  /// atılır ki [_endCardDrag] çöpe giden notun sürükleme yolunu "yeni sıra"
+  /// diye kaydetmesin. Silme olağan yoldan: kilitli not doğrulama ister,
+  /// kart küçülüp solar ([leavingNotesProvider]), geri al çubuğu çıkar.
+  Future<void> _trashDraggedNote(String id) async {
+    _dragOrder = null;
+    _dragOriginal = null;
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final l10n = context.l10n;
+    final note = _selectedNotes({id}).firstOrNull;
+    if (note == null) return;
+    if (note.locked && !await authenticateForNote(l10n.unlockAuthReason)) {
+      return;
+    }
+    if (!mounted) return;
+    if (ref.read(selectedNoteIdsProvider).contains(id)) {
+      ref.read(selectedNoteIdsProvider.notifier).toggle(id);
+    }
+    await ref.read(leavingNotesProvider.notifier).leave([id], () {
+      repo.softDelete(id);
+    });
+    if (!mounted) return;
+    showUndoSnackBar(
+      context,
+      message: l10n.noteDeleted,
+      undoLabel: l10n.undo,
+      onUndo: () => repo.restore(id),
+    );
   }
 
   /// Yeni notu açar; DÖNÜŞTE o notu ana ekranda vurgular.
@@ -2039,6 +2073,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   end: 144,
                   bottom: 16,
                   child: VoiceAssistantPanel(),
+                ),
+                // SÜRÜKLERKEN ÇÖP KUTUSU (F60.S9): HEP ağaçta, yalnız
+                // boyamada belirir — sürükleme başlayınca ağaç şekli
+                // değişmez (kasma listesi 4, 6).
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 24,
+                  child: Center(
+                    child: DragTrashTarget(
+                      active: _dragNoteId != null,
+                      onTrash: _trashDraggedNote,
+                    ),
+                  ),
                 ),
                 // ✨ YAPAY ZEKÂ DÜĞMESİ KALKTI (geliştirme raporu B2,
                 // 2026-10-20): mikrofon + ✨ + "+" üç ayrı yüzen düğme sağ

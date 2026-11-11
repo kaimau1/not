@@ -5,6 +5,7 @@ import '../../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart' show PointerDeviceKind, kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderFlex, RenderParagraph;
 import 'package:flutter/services.dart';
@@ -13,6 +14,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/frame_loop.dart';
+import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/utils/link_text.dart' show findLinks;
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/sentence_select.dart';
@@ -537,9 +539,21 @@ class ItemsEditorState extends State<ItemsEditor>
   /// tembel değil. Satır düz çizim olsa da (bkz. [_LazyItemField]) 100 satır
   /// geçişin ilk karesinde 100+ ms (telefonda ölçüldü, 2026-11-04) → ilk karede
   /// ekranı dolduran kadarı, geçiş (460 ms) bitince kalanı kare başına birkaç.
+  ///
+  /// **Kare başına 2 değil, büyüyen adım (2026-11-11, F60.S5 yan bulgusu).**
+  /// Her adım `setState` → sürüklenebilir listenin BÜTÜN satır sarmalayıcıları
+  /// (`_ReorderableItem`, `KeepAlive`, `KeyedSubtree` — satır başına ≈ 7)
+  /// yeniden kurulur; maliyet satır sayısıyla büyür. 120 maddede 2'şerlik
+  /// adım 52 kare × 367→1039 kurulum (≈ 35 bin) sürüyordu ve erken dokunuşta
+  /// klavye açılışına denk geliyordu. Adım = mevcut bütçenin yarısı,
+  /// [_kRowsPerFrame]–[_kMaxRowsPerFrame] arası: 120 maddede 11 kare, kare
+  /// başı 833 → 1393, toplam ≈ 12 bin (`test/items_grow_budget_test.dart`).
+  /// Klavye hareket ederken ([KeyboardInset.moving]) adım atılmaz, bekler.
   static const _kFirstRows = 16;
-  static const _kRowsPerFrame = 2;
+  static const _kRowsPerFrame = 4;
+  static const _kMaxRowsPerFrame = 8;
   static const _kGrowAfter = Duration(milliseconds: 500);
+  static const _kGrowRetry = Duration(milliseconds: 120);
 
   /// Kurulacak en çok madde (işaretsizler önce, sonra işaretliler); null = hepsi.
   int? _rowBudget;
@@ -549,8 +563,13 @@ class ItemsEditorState extends State<ItemsEditor>
     _budgetTimer = null;
     final budget = _rowBudget;
     if (!mounted || budget == null) return;
+    if (KeyboardInset.moving.value) {
+      // Klavye açılıp kapanırken kare bütçesi klavyenin: sonra devam.
+      _budgetTimer = Timer(_kGrowRetry, _growBudget);
+      return;
+    }
     setState(() {
-      final next = budget + _kRowsPerFrame;
+      final next = budget + (budget ~/ 2).clamp(_kRowsPerFrame, _kMaxRowsPerFrame);
       _rowBudget = next >= _items.length ? null : next;
     });
     if (_rowBudget != null) {

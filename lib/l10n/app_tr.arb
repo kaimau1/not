@@ -30,6 +30,8 @@
   "newChecklist": "Liste",
   "newOrderedList": "Sıralı liste",
   "noteDeleted": "Not silindi",
+  "dragTrashHint": "Çöpe atmak için üstünde tut",
+  "dragTrashReady": "Bırak: çöpe at",
   "notesDeletedCount": "{count} not silindi",
   "@notesDeletedCount": {
     "placeholders": {
@@ -3642,7 +3644,19 @@
   "quickRowPen": "Kalemle yaz · basılı tut: kalem ayarları",
   "quickRowReminder": "Hatırlatıcı",
   "hideBarWhileTyping": "Yazarken alt çubuğu gizle",
-  "hideBarWhileTypingInfo": "Yazmaya başlayınca alt çubuk iner, bırakınca hemen geri gelir.",
+  "hideBarWhileTypingInfo": "Yazmaya başlayınca alt çubuk iner, durunca geri gelir.",
+  "typingBarHideDelay": "Gizlenme gecikmesi",
+  "typingBarHideDelayInfo": "Yazmaya başladıktan ne kadar sonra gizlensin",
+  "typingBarShowDelay": "Yeniden görünme gecikmesi",
+  "typingBarShowDelayInfo": "Yazmayı bırakınca ne kadar sonra geri gelsin",
+  "secondsValue": "{value} sn",
+  "@secondsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "tipHideBarTyping": "Yazarken alt çubuk gizlenir, durunca geri gelir. Ayarlar → Kartlar bölümünden kapatılabilir.",
   "addToNoteTitle": "Nota ekle",
   "addToNewNote": "Yeni not",
@@ -3796,5 +3810,47 @@
   "releaseNotesToastAll": "Tümünü gör",
   "updateInstalling": "İndirildi — kuruluyor; uygulama kapanıp yeniden açılacak",
   "updateAborted": "Kurulum iptal edildi — yeniden denemek için dokun",
-  "updateOpenedBrowser": "İndirme sayfası tarayıcıda açıldı"
+  "updateOpenedBrowser": "İndirme sayfası tarayıcıda açıldı",
+  "cardHiddenYoutube": "{count, plural, =1{YouTube videosu} other{{count} YouTube videosu}}",
+  "@cardHiddenYoutube": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardHiddenVideo": "{count, plural, =1{Video} other{{count} video}}",
+  "@cardHiddenVideo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardHiddenImage": "{count, plural, =1{Görsel} other{{count} görsel}}",
+  "@cardHiddenImage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardHiddenDoc": "{count, plural, =1{PDF} other{{count} belge}}",
+  "@cardHiddenDoc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardHiddenAudio": "{count, plural, =1{Ses kaydı} other{{count} ses kaydı}}",
+  "@cardHiddenAudio": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quickAddEditHint": "Sürükleyerek sırala, göz ile gizle ya da göster.",
+  "quickAddKeepOne": "En az bir seçenek görünür kalmalı"
 }

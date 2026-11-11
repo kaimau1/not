@@ -204,7 +204,7 @@ class _StableViewportState extends State<StableViewport> {
       if (!mounted || _pending == null) return;
       // Bu arada klavye açıldıysa bekleyen boy unutulur (klavye kapanınca
       // yeniden değerlendirilir).
-      if (MediaQuery.viewInsetsOf(context).bottom > 0) return;
+      if (KeyboardInset.openOf(context)) return;
       setState(() {
         _height = _pending;
         _pending = null;
@@ -216,7 +216,7 @@ class _StableViewportState extends State<StableViewport> {
   Widget build(BuildContext context) {
     // Yalnız BU widget klavye karelerinde tazelenir; [child] aynı örnek
     // olduğundan görüntüleyici yeniden kurulmaz.
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final keyboard = KeyboardInset.openOf(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;

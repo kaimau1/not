@@ -35,6 +35,7 @@ import '../../../core/personalize.dart';
 import '../../../core/tips.dart';
 import 'personalize_screen.dart' show PersonalizeModuleSwitches;
 import 'theme_picker.dart';
+import 'typing_bar_settings.dart';
 import '../../../core/utils/channel_counter.dart';
 import '../../../core/utils/diagnostics.dart';
 import '../../../core/utils/doc_picker.dart';
@@ -359,9 +360,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords: l10n.expandListItemsInfo,
           ),
           _SettingRow(
-            const _HideBarWhileTypingSwitch(),
+            const TypingBarSettings(),
             title: l10n.hideBarWhileTyping,
-            keywords: '${l10n.hideBarWhileTypingInfo} alt cubuk yazarken',
+            keywords:
+                '${l10n.hideBarWhileTypingInfo} alt cubuk yazarken '
+                '${l10n.typingBarHideDelay} ${l10n.typingBarShowDelay} '
+                'gecikme sure saniye panel',
           ),
           _SettingRow(
             ListTile(

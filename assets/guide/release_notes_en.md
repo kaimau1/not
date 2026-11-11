@@ -3,6 +3,12 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 11 November 2026 {#2026-11-11}
+- **No more jitter when the keyboard opens:** the note screen is no longer rebuilt on every keyboard frame; the stutter when you start typing right after opening a long list is gone too.
+- **Bottom bar while typing:** Settings → Cards lets you turn off hiding the bottom bar while typing, and set how long until it hides and reappears in 0.1-second steps.
+- **Hold to select an item:** a long press on an item selects its text; keep holding a little longer and, with a light vibration, item selection starts.
+- **Drag to delete:** on the home screen, while dragging a note a trash can appears at the bottom; let go once the ring fills and the note moves to the trash (Undo brings it back).
+- **Hidden attachments are mentioned:** when a card hides its images, a short line like "YouTube video · 2 images" says what is attached.
+- **Customize the Add menu:** use the settings icon in the + panel to hide, show and reorder options by dragging; "Reset to default" restores it.
 - **New fountain pen:** the pen tray has a fountain pen that gets thicker as you press and thinner when you write fast. Drawing is smoother: the rest of the page is no longer repainted while you draw.
 - **More secure:** reminder notifications for locked notes no longer show the title or content; friend requests and sharing are now more secure.
 - **Auto-correct rebuilt:** it only fixes words it is sure about; if you change a correction or press Backspace right after it, that fix is never made again. Settings → Learned spellings adds a "Rules only" mode and a list of rejected fixes you can restore.

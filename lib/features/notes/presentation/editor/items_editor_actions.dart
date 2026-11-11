@@ -223,6 +223,21 @@ extension _ItemsActions on ItemsEditorState {
     _commit();
   }
 
+  /// Maddeye uzun basıp BASILI TUTMAYA devam edildi (F60.S6, bkz.
+  /// [_HoldToSelect]): uzun basışın açtığı metin seçimi kalkar, madde seçim
+  /// kipine bu madde seçili olarak geçilir. Kip zaten açıksa dokunuş ve uzun
+  /// basış maddeyi kendisi seçiyor; burada bir şey yapılmaz.
+  void _holdSelect(NoteItem item) {
+    if (_selectionMode || !mounted) return;
+    HapticFeedback.lightImpact();
+    final controller = _controllerFor(item);
+    final sel = controller.selection;
+    if (sel.isValid && !sel.isCollapsed) {
+      controller.selection = TextSelection.collapsed(offset: sel.extentOffset);
+    }
+    _toggleSelection(item);
+  }
+
   void _toggleSelection(NoteItem item) {
     if (!_selectionMode) FocusManager.instance.primaryFocus?.unfocus();
     _update(() {

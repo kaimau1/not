@@ -228,6 +228,139 @@ class CardHeroMedia extends StatelessWidget {
   );
 }
 
+/// Kartta önizlemesi GİZLİ olan eklerin özeti (F60.S8): görsel/video/belge
+/// çizilmeyince not "hiçbir şeyi yokmuş gibi" duruyordu; artık tek satır yazı
+/// anar. Yalnız sayar (ucuz; ek yoksa ya da hiçbiri gizli değilse hemen boş).
+/// Zemin görseli ve gizli türev belgeler EK sayılmaz (F60.6 / hayalet ek).
+class CardHiddenMedia {
+  const CardHiddenMedia._({
+    this.youtube = 0,
+    this.videos = 0,
+    this.images = 0,
+    this.docs = 0,
+    this.audio = 0,
+    this.name,
+  });
+
+  static const none = CardHiddenMedia._();
+
+  final int youtube;
+  final int videos;
+  final int images;
+  final int docs;
+  final int audio;
+
+  /// Notta TEK ek varsa (YouTube başlığı / belge adı); yoksa null.
+  final String? name;
+
+  bool get isEmpty => youtube + videos + images + docs + audio == 0;
+
+  /// [showVisuals]/[showFiles]: kartta o grubun önizlemesi ÇİZİLİYOR mu.
+  /// Not başına gizleme (`cardMediaHidden`) her ikisini de kapatır.
+  factory CardHiddenMedia.of(
+    Note note, {
+    required bool showVisuals,
+    required bool showFiles,
+  }) {
+    if (note.locked || note.attachments.isEmpty) return none;
+    final hideVisuals = note.cardMediaHidden || !showVisuals;
+    final hideFiles = note.cardMediaHidden || !showFiles;
+    if (!hideVisuals && !hideFiles) return none;
+    var youtube = 0, videos = 0, images = 0, docs = 0, audio = 0;
+    Attachment? last;
+    for (final a in note.attachments) {
+      if (a.id == note.backgroundImageId || note.hidesDerivedDocument(a)) {
+        continue;
+      }
+      if (CardMediaPlan._visual(a)) {
+        if (!hideVisuals) continue;
+        if (a.isWebVideo) {
+          youtube++;
+        } else if (a.kind == AttachmentKind.video) {
+          videos++;
+        } else {
+          images++;
+        }
+      } else if (hideFiles && CardMediaPlan._document(a)) {
+        docs++;
+      } else if (hideFiles && a.kind == AttachmentKind.audio) {
+        audio++;
+      } else {
+        continue;
+      }
+      last = a;
+    }
+    final total = youtube + videos + images + docs + audio;
+    if (total == 0) return none;
+    String? name;
+    if (total == 1 && last != null) {
+      final n = last.fileName.trim();
+      if (n.isNotEmpty && (youtube == 1 || docs == 1) && n != 'YouTube') {
+        name = n;
+      }
+    }
+    return CardHiddenMedia._(
+      youtube: youtube,
+      videos: videos,
+      images: images,
+      docs: docs,
+      audio: audio,
+      name: name,
+    );
+  }
+
+  /// Tek satırlık yazı: "YouTube videosu · 2 görsel".
+  String label(AppLocalizations l10n) {
+    final parts = <String>[
+      if (youtube > 0) l10n.cardHiddenYoutube(youtube),
+      if (videos > 0) l10n.cardHiddenVideo(videos),
+      if (images > 0) l10n.cardHiddenImage(images),
+      if (docs > 0) l10n.cardHiddenDoc(docs),
+      if (audio > 0) l10n.cardHiddenAudio(audio),
+      ?name,
+    ];
+    return parts.join(' · ');
+  }
+
+  IconData get icon => youtube + videos > 0 && images + docs + audio == 0
+      ? Icons.smart_display_outlined
+      : docs > 0 && youtube + videos + images + audio == 0
+      ? Icons.picture_as_pdf_outlined
+      : audio > 0 && youtube + videos + images + docs == 0
+      ? AppIcons.voiceRecord
+      : images > 0 && youtube + videos + docs + audio == 0
+      ? Icons.image_outlined
+      : Icons.attach_file;
+}
+
+/// [CardHiddenMedia]'nın kartta çizimi: ikonlu, ikincil renkte tek satır.
+class CardHiddenMediaLine extends StatelessWidget {
+  const CardHiddenMediaLine({super.key, required this.media});
+
+  final CardHiddenMedia media;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(media.icon, size: 14, color: scheme.onSurfaceVariant),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            media.label(context.l10n),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Kapak/karonun altındaki gövde: belge kartı, küçük karolar, belge ve ses
 /// satırları.
 class CardMediaBody extends StatelessWidget {
