@@ -3,6 +3,7 @@
 HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski hâl: `HAFIZA_ARSIV_3.md`.
 
 ## Arayüz kararları
+- **Tasarım dili sözleşmesi (2026-11-12, DENEYIM_PLANI §2):** yeni arayüz yazarken ölçü ELLE yazılmaz: köşe/boşluk/punto/süre `AppRadius`/`AppSpace`/`AppText`/`AppMotion` (F72'den sonra mandal testi `design_tokens_guard_test` yeni elle değeri kırmızıya düşürür; sayım `python tool/design/token_sayim.py`). Renk rolü: `primary` = eylem/seçim/oluşturma, `secondary` (sıcak) = zaman ve dikkat (iğne, yıldız, hatırlatıcı, zamanı gelen), `tertiary` = yalnız yapay zekâ, gerisi nötr. Ekran başına tek dolu birincil düğme; arayüz kromunda en kalın w600; levha karosu tek bileşen (`sheet_tile.dart`). Hedef görünüm `docs/deneyim/hedef.html`.
 - **Tema (TEMA_PLANI, 2026-11-04):** beş aile `ThemeFamily` (Adaçayı
   varsayılan, Porselen, Kil; 2026-11-05 gece + Lavanta, Zeytin) × açık/koyu
   (Sistem ve Koyu yine Adaçayı koyusu; seçici dar ekranda 4+3), renkler `app_palette.dart`,

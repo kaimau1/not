@@ -147,11 +147,33 @@ Sıra önceliktir: önce kullanıcının bildirdiği hatalar, sonra kalem/perfor
 | P32 | Panoda işaretli madde işareti kalkmasın | sonnet | F60.S14 | | evet | bitti (2026-11-12): ana ekran kartında işaretli maddenin kutusuna dokunmak işareti kaldırmıyor, notu açıyor (`note_card.dart` toggleCardItem); işaret kaldırma editörde (sabah bakılacak: kartta geri alma istenirse uzun bas). Test `card_checked_item_test` |
 | P18 | Telefon/tablet (kalan) | opus | F66.4, F66.6, F67.3, F67.4, F67.7, F67.9 | A/B | evet | bekliyor |
 | P19 | Liste yükü | fable | F68.1, F68.2 | A/B | | bekliyor |
+| P33 | Tasarım zemini: belirteç, mandal testi, ortak bileşen (görünüm değişmez) | opus | DENEYIM F72.1–F72.5 | | | bekliyor |
+| P34 | Renk rolleri + sakin tipografi | opus | DENEYIM F73.1–F73.4 | | evet | bekliyor |
+| P35 | Ana ekran (telefon önce) | fable | DENEYIM F74.1–F74.8 | A/B | evet | bekliyor |
+| P36 | Not ekranı kromu (geri oku, alt çubuk, sabit ek çubuğu) | fable | DENEYIM F75.1–F75.6 | A/B | evet | bekliyor |
+| P37 | Levha ve menüler tek dil | opus | DENEYIM F76.1–F76.5 | | evet | bekliyor |
+| P38 | Hareket ve dokunsal dil | opus | DENEYIM F77.1–F77.4 | A/B | evet | bekliyor |
+| P39 | Hız hissi (açılış, yeni not, yükleme hâlleri) | fable | DENEYIM F78.1–F78.5 | cihaz | evet | bekliyor |
+| P40 | İkincil ekranlar (takvim, ayarlar, klasörler, çöp, AI, boş hâller) | opus | DENEYIM F79.1–F79.8 | | evet | bekliyor |
+| P41 | Belirteç göçü (mekanik, klasör klasör) | sonnet | DENEYIM F72.6 | | | bekliyor |
+| P42 | Koyu tema, küçük ekran, web cilası, kapanış turu | sonnet + opus | DENEYIM F80.1–F80.5 | | evet | bekliyor |
 | P20 | Editör çekirdeği (başlama şartı tutuyorsa) | fable | Faz 64 | A/B | evet | bekliyor |
 | P21 | Kapanış: konsol listesi, plan/HAFIZA toparlama | sonnet | F69.4, F69.5 | | | bekliyor |
 | P22 | SON PAKET: açıkta kalan her maddeyi değerlendir ve uygun biçimde yap | opus | P01–P21'de adı geçmeyen açık `[ ]` maddeler (F58.1, F58.4, F60.5, F60.7, F61.7, F61.8, F62.4, F62.6, F63.6, F63.7, F65.1–3, F65.6, F66.1–3, F66.5, F67.5, F67.6, F67.8, F68.3–5, F69.1–3) + F60.S2 + "cihazda doğrulanmadı" / "tablette doğrulanmadı" işaretli maddeler + açık K-O kararları | gerekirse | gerekirse | bekliyor — protokol aşağıda |
 
 **P22 protokolü (kullanıcı isteği 2026-11-10):** P01–P21 bitince `OTURTMA_PLANI.md`'yi baştan tara; `[ ]` kalan HER maddeyi otomatik değerlendir, soru sorma. Her madde için sırayla: (1) kanıtla — kod/test/ölçümle hâlâ geçerli mi, başka işle kapanmış mı; (2) kapanmışsa `[x]` + tek satır kanıt, gereksizse `[~]` + neden; (3) geçerliyse kendi modeli neyse ona uygun işle: kısa maddeleri kendin yap, Fable gerektirenleri (güvenlik/performans/editör/kalem) `Agent` ile `model: "fable"` alt ajana ver, mekanik olanları `sonnet` alt ajana; (4) KARAR çıkarsa plandaki "En güvenli" seçenek + maddeye "sabah bakılacak"; (5) telefon/tablet/hesap gerektirenler yapılamaz → "yazıldı, cihazda doğrulanmadı" + `KALANLAR.md` §2'ye adım. Kullanıcı işi olanları (konsol, hesap, telefon) yapma, yalnız `KALANLAR.md`'ye topla. Küçük commit'ler, CI yeşilse `[apk]`; sonunda plan Durum tablosu + HAFIZA güncelle ve geriye kalanın dürüst listesini yaz.
+
+**P33–P42 = `DENEYIM_PLANI.md` (kullanıcı isteği 2026-11-12: "görünen ve hissedilen her
+şeyi mükemmelleştir; tasarım Fable'da, süren oturum main'den devralsın").** Bu paketlerin
+maddeleri, protokolü ve "Önce oku" listeleri O dosyadadır (işçiye `OTURTMA_PLANI.md` yerine
+onu okut); hedef görünüm `docs/deneyim/hedef.html`. Farklar: (1) oradaki **K-D kararları
+VERİLMİŞTİR** — "en güvenli" seçeneğe düşme, yazdığı gibi uygula; her K-D tek başına geri
+alınabilir tek commit. (2) Her paket işe başlamadan ekran turunu `build/tour-once/`'ye alır,
+bitince `TOUR_COMPARE` ile karşılaştırır; yürütücü kabulde adı geçen PNG'lere kendi bakar.
+(3) Bu paketlerle KAPANAN maddeleri P18 ve P22 ATLAR: K-O5, K-O6, K-O10, K-O11, K-O14,
+F60.7, F63.5, F65.1, F66.1, F66.2, F66.3, F67.3'ün arama hapı kısmı. (4) Fable paketleri
+(P35, P36, P39) limit %55'in üstündeyken BAŞLATILMAZ; o turda sıradaki Opus/Sonnet paketi
+öne alınır (P33 her şeyden önce bitmiş olmalı; P41 en erken P40'tan sonra).
 
 Atlananlar (kullanıcı kararı bekliyor, gözetimsiz yapılmaz): K-O1, K-O3 (v2 yazımını açma),
 K-O4, K-O6, K-O7, K-O8, K-O10, K-O11, K-O12, K-O14, F63.6, F65.6 (kullanıcıdan hata metni),

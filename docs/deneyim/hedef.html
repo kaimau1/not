@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notlar — hedef görünüm (DENEYIM_PLANI)</title>
+<style>
+/* Değerler DENEYIM_PLANI.md §2 ile AYNI. Renkler Adaçayı (app_palette.dart _sageLight/_sageDark yaklaşık). */
+:root{
+  --ground:#EAF0EB;--card:#FAFCFA;--sheet:#F5F9F6;--field:#EFF4F0;--high:#DEE5DF;--hair:#D1D8D2;
+  --ink:#1B2420;--muted:#4D5853;--primary:#106561;--on-primary:#fff;--primary-c:#C8E9E6;--on-primary-c:#002E2C;
+  --warm:#A26239;--warm-c:#FBE3D2;--on-warm-c:#412615;--ai:#5A5385;--error:#B3261E;--error-c:#F9DEDC;
+  --r-s:8px;--r-m:12px;--r-l:16px;--r-xl:24px;
+  --page:#F6F7F4;--text:#1B2420;
+}
+@media (prefers-color-scheme:dark){:root{
+  --ground:#121A16;--card:#1E2622;--sheet:#1A221E;--field:#222B27;--high:#2B3530;--hair:#333D38;
+  --ink:#E4EBE6;--muted:#A9B4AE;--primary:#88CDC8;--on-primary:#003735;--primary-c:#0E4D4A;--on-primary-c:#C8E9E6;
+  --warm:#E3A77F;--warm-c:#55331C;--on-warm-c:#FBE3D2;--ai:#C5BFEF;--error:#F2B8B5;--error-c:#5C1A17;
+  --page:#0C110F;--text:#E4EBE6;
+}}
+*{box-sizing:border-box;margin:0}
+body{background:var(--page);color:var(--text);font:14px/20px "Inter Tight",Inter,system-ui,sans-serif;padding:24px 16px 48px}
+h1{font-size:22px;line-height:28px;font-weight:600;margin-bottom:4px}
+.lead{color:var(--muted);max-width:70ch;margin-bottom:28px}
+.wall{display:flex;flex-wrap:wrap;gap:32px 28px;align-items:flex-start}
+figure{width:330px}
+figcaption{margin-top:12px;font-size:13px;line-height:18px;color:var(--muted)}
+figcaption b{display:block;color:var(--text);font-weight:600;font-size:14px;margin-bottom:2px}
+figcaption i{font-style:normal;color:var(--primary);font-weight:600}
+/* Telefon: 412 dp genişlik, 0.8 ölçek */
+.ph{width:330px;height:716px;border-radius:28px;overflow:hidden;border:1px solid var(--hair);background:var(--ground);position:relative}
+.scr{width:412px;height:895px;transform:scale(.8);transform-origin:0 0;position:relative;color:var(--ink);background:var(--ground)}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.l{width:24px;height:24px}svg.s{width:18px;height:18px}
+.row{display:flex;align-items:center}
+.meta{font-size:12px;line-height:16px;color:var(--muted)}
+.label{font-size:13px;line-height:18px;font-weight:500}
+.section{font-size:14px;line-height:20px;font-weight:600;color:var(--primary)}
+/* Ana ekran */
+.search{margin:8px 12px 0;height:48px;border-radius:999px;background:var(--card);border:1px solid var(--hair);padding:0 6px 0 16px;gap:12px}
+.search span{flex:1;color:var(--muted);font-size:16px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--high);display:grid;place-items:center}
+.tap{width:40px;height:40px;display:grid;place-items:center}
+.cal{margin:8px 12px 0;height:44px;justify-content:space-between;padding:0 4px}
+.day{width:44px;text-align:center}
+.day small{display:block;font-size:11px;line-height:14px;font-weight:600;color:var(--muted)}
+.day b{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;font-size:15px;font-weight:500}
+.day.today b{background:var(--primary);color:var(--on-primary)}
+.due{margin:8px 12px 0;height:40px;border-radius:var(--r-m);background:var(--warm-c);color:var(--on-warm-c);padding:0 4px 0 12px;gap:10px}
+.due .label{flex:1}.due .meta{color:inherit;opacity:.75}
+.strip{margin:8px 0 0 12px;height:40px;gap:8px;overflow:hidden;white-space:nowrap}
+.chip{height:32px;border-radius:var(--r-s);border:1px solid var(--hair);padding:0 10px;gap:6px;font-size:13px;font-weight:500;flex:none}
+.chip em{font-style:normal;font-weight:400;color:var(--muted);font-size:12px}
+.chip.on{background:var(--primary-c);color:var(--on-primary-c);border-color:transparent}
+.chip.on em{color:inherit;opacity:.7}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--error)}
+.sep{width:1px;height:20px;background:var(--hair);flex:none}
+.sec{margin:12px 14px 8px;gap:6px}.sec hr{flex:1;border:0;border-top:1px solid var(--hair);margin-left:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 13px;align-items:start}
+.card{background:var(--card);border:1px solid var(--hair);border-radius:var(--r-l);padding:14px 14px 12px;box-shadow:0 1px 0 rgba(27,36,32,.07)}
+.card h3{font-size:18px;line-height:24px;font-weight:400;margin-bottom:6px;padding-right:18px;position:relative}
+.card h3 svg{position:absolute;right:-6px;top:3px;opacity:.6}
+.it{gap:8px;font-size:14px;line-height:22px}.box{width:15px;height:15px;border:1.6px solid currentColor;border-radius:4px;flex:none;opacity:.8}
+.done{font-size:12px;color:var(--muted);margin-top:4px}
+.foot{margin-top:10px;gap:6px}.foot .meta{margin-left:auto}
+.pill{font-size:12px;font-weight:500;background:var(--high);color:var(--muted);border-radius:var(--r-s);padding:1px 6px}
+.card.plum{background:#2A1730;border-color:rgba(235,205,240,.16);color:#F1DDF4}
+.card.plum .done,.card.plum .meta{color:#D6B9DB}.card.plum .pill{background:rgba(241,221,244,.14);color:#F1DDF4}
+.card.mint{background:#C5E8DC;border-color:transparent;color:#12332A}
+.card p{color:var(--muted);font-size:14px}
+.thumb{height:104px;margin:-14px -14px 10px;border-radius:15px 15px 0 0;background:linear-gradient(120deg,#5d8a73,#e6c06a)}
+.fabs{position:absolute;right:16px;bottom:20px;gap:12px}
+.mic{width:48px;height:48px;border-radius:var(--r-l);background:var(--high);display:grid;place-items:center}
+.fab{width:56px;height:56px;border-radius:var(--r-l);background:var(--primary);color:var(--on-primary);display:grid;place-items:center}
+/* Not ekranı */
+.note{background:var(--card);height:100%}
+.bar{height:48px;padding:0 4px;gap:2px}.bar .meta{margin-left:4px}
+.grow{flex:1}
+.title{font-size:26px;line-height:32px;padding:10px 20px 6px}
+.chips{padding:0 20px;gap:8px}
+.rem{height:32px;border-radius:var(--r-s);background:var(--warm-c);color:var(--on-warm-c);padding:0 10px;gap:6px;font-size:13px;font-weight:500}
+.ghost{height:32px;border-radius:var(--r-s);border:1px solid var(--hair);padding:0 10px;gap:6px;font-size:13px;font-weight:500;color:var(--muted)}
+.body{padding:14px 20px;font-size:17px;line-height:27px}
+.dock{position:absolute;left:0;right:0;bottom:0;padding:8px 12px 12px;gap:8px;border-top:1px solid var(--hair);background:var(--card)}
+.caps{height:50px;border-radius:14px;padding:3px;gap:3px;background:var(--field);border:1px solid var(--hair)}
+.caps.r{background:var(--high);border-color:transparent}
+.seg{width:44px;height:44px;border-radius:11px;display:grid;place-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--primary-c);color:var(--on-primary-c);display:grid;place-items:center}
+.note.plum{background:#2A1730;color:#F1DDF4}
+.note.plum .dock{background:#2A1730;border-color:rgba(241,221,244,.12)}
+.note.plum .caps{background:rgba(241,221,244,.08);border-color:rgba(241,221,244,.12)}
+.note.plum .caps.r{background:rgba(241,221,244,.14)}
+.note.plum .badge{background:rgba(241,221,244,.18);color:inherit}
+.note.plum .meta,.note.plum .ghost{color:#D6B9DB;border-color:rgba(241,221,244,.16)}
+.pillp{font-size:12px;font-weight:500;background:rgba(241,221,244,.14);border-radius:var(--r-s);padding:1px 6px}
+.strike{text-decoration:line-through;opacity:.6}
+.cb{width:20px;height:20px;border-radius:5px;background:currentColor;opacity:.75;flex:none;margin-top:4px}
+/* Levha */
+.dim{position:absolute;inset:0;background:rgba(27,36,32,.32)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--sheet);border-radius:var(--r-xl) var(--r-xl) 0 0;padding-bottom:16px}
+.sh{height:56px;padding:0 6px 0 16px}.sh b{flex:1;font-size:18px;font-weight:600}
+.quick{padding:4px 8px 4px;justify-content:space-around}
+.qc{width:72px;text-align:center}.qc i{width:48px;height:48px;border-radius:50%;background:var(--primary-c);color:var(--on-primary-c);display:grid;place-items:center;margin:0 auto 6px}
+.qc span{font-size:12px;line-height:16px;display:block}
+.sl{padding:20px 16px 8px}
+.acts{display:grid;grid-template-columns:1fr 1fr;padding:0 8px}
+.act{height:48px;padding:0 8px;gap:12px;font-size:13px;font-weight:500;border-radius:var(--r-m);white-space:nowrap;overflow:hidden}
+.act svg{color:var(--muted)}
+.destr{margin:12px 16px 0;height:48px;border-radius:var(--r-m);background:color-mix(in srgb,var(--error-c) 50%,transparent);color:var(--error);justify-content:center;gap:8px;font-weight:600}
+/* Ajanda */
+.ag-h{height:56px;padding:0 4px 0 16px}.ag-h b{font-size:20px;font-weight:600}.ag-h a{font-size:14px;font-weight:600;color:var(--primary);padding:0 12px}
+.dayh{padding:14px 16px 6px}
+.ar{margin:0 12px 6px;min-height:56px;border-radius:var(--r-m);background:var(--card);border:1px solid var(--hair);padding:8px 12px 8px 0;gap:12px;overflow:hidden}
+.ar::before{content:"";align-self:stretch;width:4px;border-radius:0 4px 4px 0;background:var(--c,var(--primary));margin:-8px 0}
+.ar .t{flex:1}.ar .t b{display:block;font-size:16px;line-height:22px;font-weight:500}
+.ar svg{color:var(--muted)}
+.swipe{margin:0 12px 6px;border-radius:var(--r-m);background:var(--error-c);color:var(--error);position:relative;height:58px}
+.swipe .ar{position:absolute;inset:0 96px 0 -96px;margin:0}
+.swipe>svg{position:absolute;right:20px;top:19px}
+.notes{margin-top:40px;max-width:78ch}.notes h2{font-size:16px;font-weight:600;margin:20px 0 6px}.notes li{margin:4px 0 4px 18px;color:var(--muted)}
+.notes code{font:12px ui-monospace,Consolas,monospace;color:var(--text)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+<symbol id="more" viewBox="0 0 24 24"><circle cx="12" cy="5.5" r=".9"/><circle cx="12" cy="12" r=".9"/><circle cx="12" cy="18.5" r=".9"/></symbol>
+<symbol id="user" viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.5"/><path d="M5 20c1-4 4-5.5 7-5.5s6 1.500 7 5.500"/></symbol>
+<symbol id="home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8.500h-5.500V14h-5v5.500H4z"/></symbol>
+<symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="3.500" width="6" height="11" rx="3"/><path d="M5.500 11.500a6.500 6.500 0 0013 0M12 18v3"/></symbol>
+<symbol id="pin" viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v7"/></symbol>
+<symbol id="alarm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="6.500"/><path d="M12 9.500V13l2.500 1.500M5 5.500L7.500 3.500M19 5.500l-2.500-2"/></symbol>
+<symbol id="x" viewBox="0 0 24 24"><path d="M6.500 6.500l11 11M17.500 6.500l-11 11"/></symbol>
+<symbol id="back" viewBox="0 0 24 24"><path d="M19 12H5.500M11 6l-6 6 6 6"/></symbol>
+<symbol id="cloud" viewBox="0 0 24 24"><path d="M7 18.500a4 4 0 01-.500-8A5.500 5.500 0 0117 9.500a4.500 4.500 0 01.500 9z"/><path d="M9.500 13.500l2 2 3.500-3.500"/></symbol>
+<symbol id="fmt" viewBox="0 0 24 24"><path d="M7.500 15L12 5l4.500 10M9 12h6M6 19.500h12"/></symbol>
+<symbol id="pen" viewBox="0 0 24 24"><path d="M4.500 19.500l1-4.500L16 4.500l3.500 3.500L9 18.500z"/><path d="M13.500 7l3.500 3.500"/></symbol>
+<symbol id="check" viewBox="0 0 24 24"><rect x="4.500" y="4.500" width="15" height="15" rx="3"/><path d="M8.500 12l2.500 2.500 4.500-5"/></symbol>
+<symbol id="ai" viewBox="0 0 24 24"><path d="M10 4l1.800 4.700L16.500 10.500l-4.700 1.800L10 17l-1.800-4.700L3.500 10.500l4.700-1.800zM18 14.500l.900 2.100 2.100.900-2.100.900-.900 2.100-.900-2.100-2.100-.900 2.100-.900z"/></symbol>
+<symbol id="star" viewBox="0 0 24 24"><path d="M12 4l2.400 5 5.600.700-4.100 3.800 1.100 5.500L12 16.300 7 19l1.100-5.500L4 9.700l5.600-.700z"/></symbol>
+<symbol id="folder" viewBox="0 0 24 24"><path d="M3.500 7V18a1.500 1.500 0 001.500 1.500h14A1.500 1.500 0 0020.500 18V9A1.500 1.500 0 0019 7.500h-7l-2-2.500H5A1.500 1.500 0 003.500 6.500z"/></symbol>
+<symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.500V12l3 2"/></symbol>
+<symbol id="ear" viewBox="0 0 24 24"><path d="M4.500 14v-2a7.500 7.500 0 0115 0v2M4.500 14h3v5h-3zM16.500 14h3v5h-3z"/></symbol>
+<symbol id="share" viewBox="0 0 24 24"><circle cx="6.500" cy="12" r="2.200"/><circle cx="17" cy="6" r="2.200"/><circle cx="17" cy="18" r="2.200"/><path d="M8.500 11l6.500-4M8.500 13l6.500 4"/></symbol>
+<symbol id="tune" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><circle cx="15" cy="7" r="1.800"/><circle cx="9" cy="12" r="1.800"/><circle cx="17" cy="17" r="1.800"/></symbol>
+<symbol id="trash" viewBox="0 0 24 24"><path d="M5 7h14M9.500 7V4.500h5V7M7 7l.800 12h8.400L17 7"/></symbol>
+<symbol id="bell" viewBox="0 0 24 24"><path d="M6.500 16.500V11a5.500 5.500 0 0111 0v5.500l1.500 1.500h-14zM10.500 20.500h3"/></symbol>
+<symbol id="rep" viewBox="0 0 24 24"><path d="M5 10V8.500A2.500 2.500 0 017.500 6H18l-2.500-2.500M19 14v1.500A2.500 2.500 0 0116.500 18H6l2.500 2.500"/></symbol>
+</defs></svg>
+
+<h1>Notlar — hedef görünüm</h1>
+<p class="lead">DENEYIM_PLANI.md (Faz 72–80) için hedef düzenler. Telefon 412 dp, Adaçayı teması; sistem koyu temadaysa koyu hâli görünür. Ölçüler plandaki §2 tablolarıyla aynıdır. Bugünkü hâl için <code>build/tour/telefon-*.png</code>.</p>
+
+<div class="wall">
+
+<figure>
+<div class="ph"><div class="scr">
+  <div class="row search"><svg class="i"><use href="#search"/></svg><span>Notlarda ara</span><div class="avatar"><svg class="i s"><use href="#user"/></svg></div><div class="tap"><svg class="i"><use href="#more"/></svg></div></div>
+  <div class="row cal">
+    <div class="day today"><small>Per</small><b>12</b></div><div class="day"><small>Cum</small><b>13</b></div><div class="day"><small>Cmt</small><b>14</b></div><div class="day"><small>Paz</small><b>15</b></div><div class="day"><small>Pzt</small><b>16</b></div><div class="day"><small>Sal</small><b>17</b></div><div class="day"><small>Çar</small><b>18</b></div>
+  </div>
+  <div class="row due"><svg class="i s"><use href="#alarm"/></svg><span class="label">Toplantı notları <span class="meta">· 5 Kas 15:17</span></span><div class="tap"><svg class="i s"><use href="#x"/></svg></div></div>
+  <div class="row strip">
+    <div class="row chip on"><svg class="i s"><use href="#home"/></svg>Tümü <em>16</em></div><div class="sep"></div>
+    <div class="row chip">Gelen <span class="dot"></span><em>1</em></div><div class="row chip">Genel <em>1</em></div><div class="row chip">Dualar</div><div class="row chip">İş</div><div class="row chip">Ortak işler <em>3</em></div>
+  </div>
+  <div class="row sec"><span class="section">Sabit</span><span class="meta">· 3</span><hr></div>
+  <div class="grid">
+    <div class="card plum"><h3>Not uygulaması geliştirme hataları<svg class="i s"><use href="#more"/></svg></h3><div class="done">✓ Hepsi tamam (7)</div><div class="row foot"><svg class="i s" style="color:#E3A77F"><use href="#pin"/></svg><span class="pill">#yazilim</span><span class="meta">4 Kas</span></div></div>
+    <div>
+      <div class="card"><h3>dosya okuyucu<svg class="i s"><use href="#more"/></svg></h3><div class="row it"><span class="box"></span>kitaplık modunda açılan…</div><div class="done">✓ 4 tamamlandı</div><div class="row foot"><svg class="i s" style="color:var(--warm)"><use href="#pin"/></svg><span class="pill">#yazilim</span><span class="meta">4 Kas</span></div></div>
+      <div class="card mint" style="margin-top:10px"><h3>Bütçem<svg class="i s"><use href="#more"/></svg></h3><div class="row it"><span class="box"></span>hisselerde alım tarihi…</div><div class="done" style="color:inherit;opacity:.7">✓ 2 tamamlandı</div><div class="row foot"><svg class="i s"><use href="#pin"/></svg><span class="meta" style="color:inherit;opacity:.7">3 Kas</span></div></div>
+    </div>
+  </div>
+  <div class="row sec"><span class="section">Daha önce</span><span class="meta">· 12</span><hr></div>
+  <div class="grid">
+    <div class="card"><div class="thumb"></div><h3>Gezi fotoğrafları</h3><p>Ekin yanında yazılan not metni.</p><div class="row foot"><span class="meta">4 Kas</span></div></div>
+    <div class="card"><h3>Toplantı notları<svg class="i s"><use href="#more"/></svg></h3><p>Gündem: bütçe, yol haritası ve yeni tema. Karar: perşembe tekrar bakılacak.</p><div class="row foot"><svg class="i s" style="color:var(--warm)"><use href="#alarm"/></svg><span class="meta">2 Kas</span></div></div>
+  </div>
+  <div class="row fabs"><div class="mic"><svg class="i l"><use href="#mic"/></svg></div><div class="fab"><svg class="i l"><use href="#plus"/></svg></div></div>
+</div></div>
+<figcaption><b>Ana ekran · Faz 74</b>Arama hapında yalnız hesap ve ⋮. Gün adları üç harf. Hatırlatıcı şeridi <i>sıcak</i> tonda. Ev düğmesi yerine şeridin başında kaymayan <i>Tümü</i> çipi; sayılar adın yanında. Kartta işaretliler tek satır, etiket nötr. Dolu birincil yüzey yalnız “+”.</figcaption>
+</figure>
+
+<figure>
+<div class="ph"><div class="scr"><div class="note">
+  <div class="row bar"><div class="tap"><svg class="i l"><use href="#back"/></svg></div><span class="meta">2 Kas 15:17</span><span class="grow"></span><div class="tap" style="color:var(--muted);opacity:.7"><svg class="i"><use href="#cloud"/></svg></div><div class="tap"><svg class="i l"><use href="#pin"/></svg></div><div class="tap"><svg class="i l"><use href="#more"/></svg></div></div>
+  <div class="title">Toplantı notları</div>
+  <div class="row chips"><div class="row rem"><svg class="i s"><use href="#alarm"/></svg>5 Kas 15:17<svg class="i s"><use href="#x"/></svg></div><div class="row ghost"><svg class="i s"><use href="#plus"/></svg></div></div>
+  <div class="body">Gündem: bütçe, yol haritası ve <b>yeni tema</b>.<br>Karar: perşembe tekrar bakılacak.</div>
+  <div class="row dock">
+    <div class="row caps"><div class="seg"><svg class="i l"><use href="#fmt"/></svg></div><div class="seg"><div class="badge"><svg class="i"><use href="#plus"/></svg></div></div><div class="seg"><svg class="i l"><use href="#pen"/></svg></div><div class="seg"><svg class="i l"><use href="#search"/></svg></div><div class="seg"><svg class="i l"><use href="#check"/></svg></div></div>
+    <span class="grow"></span>
+    <div class="row caps r"><div class="seg" style="color:var(--ai)"><svg class="i l"><use href="#ai"/></svg></div><div class="seg"><svg class="i l"><use href="#mic"/></svg></div></div>
+  </div>
+</div></div></div>
+<figcaption><b>Not · renksiz · Faz 75</b>Sol üstte geri oku. Başlığın yanındaki “+” gitti; çip satırının sonunda hayalet “+”. Alt çubuk: Biçim · Ekle · <i>Kalem</i> · Ara · Liste ‖ ✨ · Mikrofon. Segment 44, hedef 48. İki kapsül de nötr; mikrofona basılı tut = ses kaydı / AI sesli not.</figcaption>
+</figure>
+
+<figure>
+<div class="ph"><div class="scr"><div class="note plum">
+  <div class="row bar"><div class="tap"><svg class="i l"><use href="#back"/></svg></div><span class="pillp">#yazilim</span><span class="meta">4 Kas 15:17</span><span class="grow"></span><div class="tap" style="opacity:.6"><svg class="i"><use href="#cloud"/></svg></div><div class="tap" style="color:#E3A77F"><svg class="i l"><use href="#pin"/></svg></div><div class="tap"><svg class="i l"><use href="#more"/></svg></div></div>
+  <div class="title">Not uygulaması geliştirme hataları</div>
+  <div class="row chips"><div class="row ghost"><svg class="i s"><use href="#plus"/></svg>Etiket, hatırlatıcı</div></div>
+  <div class="body">
+    <div class="row" style="gap:12px;align-items:flex-start;margin-bottom:10px"><span class="cb"></span><span class="strike">webte ayarlara gidemiyorum 3 noktadan</span></div>
+    <div class="row" style="gap:12px;align-items:flex-start;margin-bottom:10px"><span class="cb"></span><span class="strike">balonlu ve sabit arasında görsel farklılık var</span></div>
+    <div class="row" style="gap:12px;align-items:flex-start"><span class="cb"></span><span class="strike">ek senkronu olayını baştan yaz</span></div>
+  </div>
+  <div class="row dock">
+    <div class="row caps"><div class="seg"><svg class="i l"><use href="#fmt"/></svg></div><div class="seg"><div class="badge"><svg class="i"><use href="#plus"/></svg></div></div><div class="seg"><svg class="i l"><use href="#pen"/></svg></div><div class="seg"><svg class="i l"><use href="#search"/></svg></div><div class="seg"><svg class="i l"><use href="#check"/></svg></div></div>
+    <span class="grow"></span>
+    <div class="row caps r"><div class="seg"><svg class="i l"><use href="#ai"/></svg></div><div class="seg"><svg class="i l"><use href="#mic"/></svg></div></div>
+  </div>
+</div></div></div>
+<figcaption><b>Not · renkli · F75.4</b>Renkli notta çubuk notun kendi tonundan: zemin mürekkebin %8’i, sağ kapsül %14’ü. Petrol kapsül yok; ekran tek renk ailesinde, yazı öne çıkıyor.</figcaption>
+</figure>
+
+<figure>
+<div class="ph"><div class="scr"><div class="note"><div class="row bar"></div><div class="title">Toplantı notları</div></div>
+  <div class="dim"></div>
+  <div class="sheet">
+    <div class="row sh"><b>Toplantı notları</b><div class="tap"><svg class="i l"><use href="#tune"/></svg></div><div class="tap"><svg class="i l"><use href="#x"/></svg></div></div>
+    <div class="row quick">
+      <div class="qc"><i><svg class="i l"><use href="#star"/></svg></i><span>Yıldızla</span></div><div class="qc"><i><svg class="i l"><use href="#folder"/></svg></i><span>Klasöre taşı</span></div><div class="qc"><i><svg class="i l"><use href="#clock"/></svg></i><span>Sürüm geçmişi</span></div><div class="qc"><i><svg class="i l"><use href="#ear"/></svg></i><span>Sesli dinle</span></div><div class="qc"><i><svg class="i l"><use href="#share"/></svg></i><span>Paylaş</span></div>
+    </div>
+    <div class="sl section">Düzenle</div>
+    <div class="acts"><div class="row act"><svg class="i"><use href="#fmt"/></svg>Zemin rengi</div><div class="row act"><svg class="i"><use href="#pen"/></svg>Çerçeve</div><div class="row act"><svg class="i"><use href="#clock"/></svg>Takvime bağla</div><div class="row act"><svg class="i"><use href="#folder"/></svg>Defter görünümü</div><div class="row act"><svg class="i"><use href="#check"/></svg>Listeye dönüştür</div><div class="row act"><svg class="i"><use href="#x"/></svg>İçeriği temizle</div></div>
+    <div class="sl section">Araçlar</div>
+    <div class="acts"><div class="row act"><svg class="i"><use href="#plus"/></svg>Notu çoğalt</div><div class="row act"><svg class="i"><use href="#star"/></svg>Şablon olarak kaydet</div><div class="row act"><svg class="i"><use href="#home"/></svg>Ana ekrana yerleştir</div><div class="row act"><svg class="i"><use href="#tune"/></svg>Not istatistikleri</div><div class="row act"><svg class="i"><use href="#check"/></svg>Hesap makinesi</div></div>
+    <div class="sl section">Koruma</div>
+    <div class="acts"><div class="row act"><svg class="i"><use href="#folder"/></svg>Arşivle</div><div class="row act"><svg class="i"><use href="#check"/></svg>Kilitle</div></div>
+    <div class="row destr"><svg class="i"><use href="#trash"/></svg>Sil</div>
+  </div>
+</div></div>
+<figcaption><b>Not menüsü · Faz 76</b>Hızlı satır + iki sütun satır. Aynı 17 iş bugün ekranın %85’ini kaplıyor; burada yaklaşık %60. Tutamak yok (✕ var), alttaki iki bağlantı ⚙’ye taşındı. Ekle, AI ve Paylaş levhaları aynı karoları kullanır.</figcaption>
+</figure>
+
+<figure>
+<div class="ph"><div class="scr">
+  <div class="row ag-h"><b>Kasım 2026 ▾</b><span class="grow"></span><a>Bugün</a><div class="tap"><svg class="i l"><use href="#more"/></svg></div></div>
+  <div class="dayh section">Bugün · 12 Kasım Perşembe</div>
+  <div class="row ar" style="--c:#5A5385"><span class="box" style="margin-left:0"></span><div class="t"><b>Faturayı öde</b></div></div>
+  <div class="row ar" style="--c:var(--warm)"><div class="t"><b>İlaç</b><span class="meta">09:00 · Hatırlatıcı</span></div><svg class="i s"><use href="#alarm"/></svg></div>
+  <div class="swipe"><svg class="i"><use href="#trash"/></svg><div class="row ar" style="--c:var(--primary)"><div class="t"><b>Proje toplantısı</b><span class="meta">10:00 – 11:30</span></div><svg class="i s"><use href="#bell"/></svg></div></div>
+  <div class="row ar" style="--c:#C7772E"><div class="t"><b>Diş hekimi</b><span class="meta">10:30 – 11:00</span></div></div>
+  <div class="dayh section" style="color:var(--muted)">13 Kasım Cuma</div>
+  <div class="row ar" style="--c:var(--warm)"><div class="t"><b>İlaç</b><span class="meta">09:00 · Hatırlatıcı</span></div><svg class="i s"><use href="#alarm"/></svg></div>
+  <div class="row ar" style="--c:#4E8F6A"><div class="t"><b>Spor</b><span class="meta">18:00 – 19:00</span></div><svg class="i s"><use href="#rep"/></svg></div>
+  <div class="row fabs"><div class="fab"><svg class="i l"><use href="#plus"/></svg></div></div>
+</div></div>
+<figcaption><b>Ajanda · Faz 79</b>Satır sonundaki çöp kutuları gitti: satırı sola kaydır = sil + Geri al (üçüncü satır kaydırılırken). Her tür aynı satır: başlık 16, alt satır 12. Başlık her görünümde aynı.</figcaption>
+</figure>
+
+</div>
+
+<div class="notes">
+<h2>Bu sayfada olmayanlar</h2>
+<ul>
+<li>Hareket (Faz 77), açılış ve yükleme hâlleri (Faz 78), ayarlar/klasörler/çöp (Faz 79) — ölçüleri planda yazılı.</li>
+<li>Simgeler burada kaba çizimdir; uygulamada <code>AppIcons</code> sözlüğü kullanılır.</li>
+<li>Not başlığı ve gövde yazısı kullanıcının yazı ayarıdır; buradaki puntolar örnek.</li>
+</ul>
+</div>
+</body>
+</html>

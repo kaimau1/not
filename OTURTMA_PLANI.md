@@ -200,6 +200,11 @@ Hepsi koddan doğrulandı; "hesap" yazanlar ölçülmedi, ilgili fazın 0. madde
 
 Önerilen **kalın**. "En güvenli" = gözetimsiz oturumda uygulanacak olan.
 
+> **2026-11-12 — KARAR VERİLDİ (kullanıcı tasarım kararlarını Fable'a bıraktı):** K-O5,
+> K-O6, K-O10, K-O11 ve K-O14 `DENEYIM_PLANI.md` §3'te karara bağlandı (K-D6, K-D9, K-D4,
+> K-D5, K-D12) ve oradaki fazlarda uygulanır; bu dosyada o kararlara bağlı maddeler
+> (F60.7, F63.5, F65.1, F66.1–F66.3) oraya taşındı. **Faz 72–80: `DENEYIM_PLANI.md`.**
+
 - **K-O1 — Özellik dondurma:** **Bu plan bitene dek yeni özellik yok; istekler
   `ISTEK_KUTUSU.md`'ye** / dondurma yok. En güvenli: dondur.
 - **K-O2 — Mürekkep v2 kapsamı (F61):** **sıkı kodlama + bantlı belgeler + artımlı kayıt**
