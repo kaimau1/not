@@ -256,7 +256,9 @@ class _ReorderableNoteCell extends StatelessWidget {
           onDraggableCanceled: (_, _) => onDragEnd(),
           // Elde tutulan kâğıt (F31.4): büyük gölge + 1,03 + −0,8°, YALNIZ
           // sürüklenen kartta. Hareketi azaltta düz durur.
-          feedback: Transform.rotate(
+          // Çöpe yaklaşınca küçülüp hedefe çekilir (F60.S12).
+          feedback: TrashPullFeedback(
+            child: Transform.rotate(
             angle: motionOf(context) ? -0.8 * math.pi / 180 : 0,
             child: Transform.scale(
               scale: motionOf(context) ? 1.03 : 1,
@@ -277,6 +279,7 @@ class _ReorderableNoteCell extends StatelessWidget {
                 ),
               ),
             ),
+          ),
           ),
           // Kart önizlemede zaten YENİ yerinde duruyor; burada soluk bir
           // hayalet bırakmak "gideceği yer" hissini tamamlıyor.

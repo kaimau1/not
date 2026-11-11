@@ -33,9 +33,9 @@ class _TrashRepo extends NotesRepository {
   void reorderNotes(List<Note> ordered) => reorders++;
 }
 
-/// F60.S9 (kullanıcı 2026-11-11): ana ekranda kart sürüklenirken altta çöp
-/// kutusu; üstünde ≈ 600 ms bekleyip bırakınca not çöpe, erken bırakınca
-/// yerinde kalır.
+/// F60.S9 (kullanıcı 2026-11-11) + F60.S12 (2026-11-12): ana ekranda kart
+/// sürüklenirken altta çöp kutusu; hedefe girip BIRAKMAK yeter (bekleme
+/// yok), hedef dışında bırakılan not yerinde kalır; yaklaştıkça kart küçülür.
 void main() {
   Future<_TrashRepo> pump(WidgetTester tester) async {
     tester.view.physicalSize = const Size(412, 915);
@@ -140,12 +140,9 @@ void main() {
     return g;
   }
 
-  testWidgets('hedefte 700 ms bekleyip bırakınca not çöpe gider', (
-    tester,
-  ) async {
+  testWidgets('hedefe gelip hemen bırakınca not çöpe gider', (tester) async {
     final repo = await pump(tester);
     final g = await dragToTrash(tester);
-    await tester.pump(const Duration(milliseconds: 700));
     expect(find.text('Bırak: çöpe at'), findsOneWidget);
     await g.up();
     // Kart küçülüp solar, sonra silinir.
@@ -189,7 +186,7 @@ void main() {
     await g.moveTo(trashCenter(tester));
     await tester.pump();
     await g.moveBy(const Offset(1, 1));
-    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pump();
     await g.up();
     for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 100));
@@ -199,10 +196,11 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
   });
 
-  testWidgets('200 ms\'de bırakınca not yerinde kalır', (tester) async {
+  testWidgets('hedef dışında bırakınca not yerinde kalır', (tester) async {
     final repo = await pump(tester);
     final g = await dragToTrash(tester);
-    await tester.pump(const Duration(milliseconds: 200));
+    await g.moveBy(const Offset(0, -260));
+    await tester.pump();
     await g.up();
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 100));
@@ -210,5 +208,37 @@ void main() {
     expect(repo.deleted, isEmpty);
     expect(find.text('Birinci not'), findsOneWidget);
     expect(trashOpacity(tester), 0);
+  });
+
+  /// Sürüklenen kartın görselindeki ölçek (overlay'de).
+  double feedbackScale(WidgetTester tester) => tester
+      .widget<Transform>(
+        find
+            .descendant(
+              of: find.byType(TrashPullFeedback),
+              matching: find.byType(Transform),
+            )
+            .at(2),
+      )
+      .transform
+      .entry(0, 0); // Transform.scale: köşegen (z ekseni hep 1).
+
+  testWidgets('çöpe yaklaştıkça kart küçülür, uzaklaşınca toparlanır', (
+    tester,
+  ) async {
+    await pump(tester);
+    final g = await dragToTrash(tester);
+    final near = feedbackScale(tester);
+    expect(near, lessThan(0.5), reason: 'hedefte kart küçük');
+    await g.moveBy(const Offset(0, -400));
+    await tester.pump();
+    expect(feedbackScale(tester), closeTo(1, 0.001), reason: 'uzakta tam boy');
+    await g.moveTo(trashCenter(tester) + const Offset(0, -150));
+    await tester.pump();
+    final mid = feedbackScale(tester);
+    expect(mid, inExclusiveRange(near, 1), reason: 'yaklaştıkça kademeli');
+    await g.up();
+    await tester.pump(const Duration(seconds: 1));
+    expect(DragTrashTarget.pull.value, isNull);
   });
 }

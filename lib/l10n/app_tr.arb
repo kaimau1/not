@@ -30,7 +30,7 @@
   "newChecklist": "Liste",
   "newOrderedList": "Sıralı liste",
   "noteDeleted": "Not silindi",
-  "dragTrashHint": "Çöpe atmak için üstünde tut",
+  "dragTrashHint": "Çöpe atmak için buraya bırak",
   "dragTrashReady": "Bırak: çöpe at",
   "notesDeletedCount": "{count} not silindi",
   "@notesDeletedCount": {
