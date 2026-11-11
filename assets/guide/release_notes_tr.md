@@ -3,6 +3,12 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 11 Kasım 2026 {#2026-11-11}
+- **Klavye açılırken alt panel artık titremiyor:** klavye açılıp kapanırken not ekranı her karede baştan kurulmuyor; uzun listelerde açılıştan hemen sonra yazmaya başlayınca yaşanan takılma da giderildi.
+- **Yazarken alt panel ayarı:** Ayarlar → Kartlar'da yazarken alt panelin gizlenmesini kapatabilir, ne kadar sonra gizlenip ne kadar sonra yeniden görüneceğini 0,1 saniyelik adımlarla ayarlayabilirsin.
+- **Maddeyi basılı tutarak seç:** bir maddeye uzun basınca yazı seçilir; parmağını kaldırmadan biraz daha tutarsan hafif titreşimle madde seçimi açılır.
+- **Sürükleyerek sil:** ana ekranda bir notu basılı tutup sürüklerken altta çöp kutusu belirir; üstünde halka dolunca bırakırsan not çöpe gider (Geri al ile geri gelir).
+- **Kartta gizli ekler görünür:** kartta görsel gizliyken "YouTube videosu · 2 görsel" gibi kısa bir satır neyin ekli olduğunu söyler.
+- **Not ekle menüsünü düzenle:** + panelindeki ayar simgesiyle seçenekleri gizleyip gösterebilir, sürükleyerek sıralayabilirsin; "Varsayılana dön" ile eski hâline gelir.
 - **Yeni dolma kalem:** kalem tepsisinde bastırdıkça kalınlaşan, hızlı yazınca incelen dolma kalem var. Kalemle çizim daha akıcı: çizerken sayfanın geri kalanı yeniden boyanmıyor.
 - **Daha güvenli:** kilitli notun hatırlatıcı bildirimi artık başlığı ve içeriği göstermiyor; arkadaş ekleme ve paylaşım güvenliği sıkılaştırıldı.
 - **Yazım düzeltici yenilendi:** yalnız emin olduğu kelimeyi düzeltir; düzeltmeyi değiştirirsen ya da hemen ardından geri silmeye basarsan o düzeltmeyi bir daha yapmaz. Ayarlar → Öğrenilen yazımlar'da "Yalnız kurallar" kipi ve geri alınabilen reddedilenler listesi var.
