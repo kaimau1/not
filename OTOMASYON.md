@@ -140,7 +140,7 @@ Sıra önceliktir: önce kullanıcının bildirdiği hatalar, sonra kalem/perfor
 | P28 | Not ekle menüsü düzen kipi (gizle/göster/sırala) | opus | F60.S10 | | evet | bitti (2026-11-11, bulut): + panelinde düzen kipi |
 | P15 | Kalem akışları (kalan) | fable | F63.3–F63.5 (K-O5 en güvenli) | | | bekliyor |
 | P16 | Doğrulama borcu → cihaz turu belgesi | sonnet | F58.3, F60.6 | | | bitti (2026-11-11): `docs/cihaz_turu.md` (telefon 40, tablet/kalem 27, web 20 adım) + `docs/test_borcu.md`; F58.3 [x]. F60.6 açık: zemin görseli ek sayılıyor (`note_card.dart:1755`, `share_target_sheet.dart:516`) → P22 |
-| P17 | Ekler (kalan) | opus | F65.4 (K-O9 bildirim), F65.5, F65.7, F60.3 | | | bekliyor |
+| P17 | Ekler (kalan) | opus | F65.4 (K-O9 bildirim), F65.5, F65.7, F60.3 | | | bitti (2026-11-12): bekleyen ek yüklemesi için 15 dk sonra sessiz bildirim + "Şimdi dene" (K-O9 en güvenli, sabah bakılacak); PDF ilk sayfası küçük önizleme olarak yüklenir (web/diğer cihaz kartında görünür); yeni ek ipucu tek satır 4 sn; "📖 s.N" satırı PDF yokken bağlantı sayılmıyor (dokununca düzenlenir). Cihazda doğrulanmadı; pdfium ilk sayfa işleme gerçek PDF ile denenmedi; F65.7 tür başı varsayılan yerleşim yapılmadı (K-O8, sabah bakılacak). SÜRÜM NOTU BORCU: bu dört madde |
 | P29 | Madde uzun bas — iki aşama (halka dolumu, tüm yazı → madde seç) | opus | F60.S11 | A/B | evet | bekliyor |
 | P30 | Çöp kutusu: kalan simge hatası + kara delik efekti | opus | F60.S12 | A/B | evet | bekliyor |
 | P31 | Kaydırarak klasör/takvim geçişi ayarı | sonnet | F60.S13 | | evet | bekliyor |
