@@ -22,6 +22,7 @@ import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/pdf_read_style.dart';
 import 'note_images.dart';
+import 'page_ink_layer.dart' show InkClaim;
 import 'attachment_actions.dart';
 import 'audio_card_box.dart';
 import 'pdf_page_box.dart';
@@ -288,8 +289,47 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   /// ("Not al") parmakta çalışmaya devam eder; kalem düğmesiyle açılır.
   bool get _penOn =>
       widget.onChanged != null &&
-      widget.media.kind == AttachmentKind.pdf &&
+      (widget.media.kind == AttachmentKind.pdf || _inkableImage) &&
       _policy.layerActive;
+
+  /// SABİT GÖRSELE KALEM (F63.3): ölçüsü bilinen görsel (çizgi görselin
+  /// `contain` dikdörtgeninde oranlı). Balon bırakma kipinde kalem kapalı —
+  /// dokunuş balon bırakır.
+  bool get _inkableImage =>
+      widget.media.kind == AttachmentKind.image &&
+      (widget.media.width ?? 0) > 0 &&
+      (widget.media.height ?? 0) > 0 &&
+      !_bubbleEdit;
+
+  /// Görselin çizim katmanı (görselin dikdörtgeninde, yakınlaştırma
+  /// dönüşümünün içinde). Kalem açıksa yazılır ([InkClaim]: kalem/izinli
+  /// parmak dokunuşu görüntüleyiciyi açmaz, kaydırmaz; izinsiz parmak
+  /// alttaki jestlere gider), değilse yalnız boyanır.
+  Widget _imageInkLayer() => LayoutBuilder(
+    builder: (context, box) {
+      final rect = _imageRect(box.biggest);
+      if (rect == null) return const SizedBox.shrink();
+      final pen = _penOn ? _inkFor(widget.media) : null;
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fromRect(
+            rect: rect,
+            child: pen == null
+                ? IgnorePointer(
+                    child: CustomPaint(
+                      painter: InkPainter(widget.media.ink, 1),
+                    ),
+                  )
+                : InkClaim(
+                    ink: pen,
+                    child: InkPageLayer(controller: pen, page: 1),
+                  ),
+          ),
+        ],
+      );
+    },
+  );
 
   /// Kalem kuralı tek yerde ([PenPolicy], F63.1).
   PenPolicy get _policy => PenPolicy.resolve(
@@ -980,6 +1020,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                                           key: ValueKey(widget.media.id),
                                           attachment: widget.media,
                                           fit: BoxFit.contain,
+                                          // Çizim görselin dikdörtgeninde,
+                                          // aşağıdaki katmanda (F63.3).
+                                          imageInk: !isImage,
                                           inlineWebVideo: true,
                                           showWebTitle: true,
                                           // Denetim bölmenin çubuğunda.
@@ -991,9 +1034,30 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                                   if (!isVideo && !_pulling)
                                     if (_layerBubbles() case final bubbles?)
                                       _imageBubbleLayer(bubbles),
+                                  if (isImage &&
+                                      !_pulling &&
+                                      (_penOn || widget.media.ink.isNotEmpty))
+                                    _imageInkLayer(),
                                 ],
                               ),
                             ),
+                            // Parmak çizerken (kalem kipi, "yalnız kalem"
+                            // kapalı) iki parmak yakınlaştırır/kaydırır:
+                            // dokunuşları çizim üstlendiği için dönüşümü bu
+                            // katman uygular. Sarmalamaz (ağaç şekli sabit).
+                            if (isImage && _penOn && !_policy.fingerScrolls)
+                              InkNavLayer(
+                                enabled: true,
+                                controller: _inkFor(widget.media),
+                                getMatrix: () => _imageZoom.value,
+                                setMatrix: (m) => _imageZoom.value = m,
+                                minScale: 1,
+                                maxScale: 4,
+                                clampToBounds: true,
+                                child: const SizedBox.expand(),
+                              )
+                            else
+                              const SizedBox.shrink(),
                             if (widget.media.caption.isNotEmpty &&
                                 !_pulling &&
                                 !_imageZoomed)

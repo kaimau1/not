@@ -84,9 +84,17 @@ class _RenderPageMinHeight extends RenderProxyBox {
 /// çizilir — yoksa çizim "kaybolmuş" görünürdü. Kutunun en-boy oranı görselin
 /// oranıyla aynı tutulduğu için oranlı noktalar birebir oturur.
 class _ImageBox extends StatelessWidget {
-  const _ImageBox({required this.img, this.fit = BoxFit.cover});
+  const _ImageBox({
+    required this.img,
+    this.fit = BoxFit.cover,
+    this.ink = true,
+  });
 
   final Attachment img;
+
+  /// false: çizimi çağıran boyar (sabit bölme — görselin `contain`
+  /// dikdörtgeninde; burada kutunun TAMAMINA boyanır).
+  final bool ink;
 
   /// Tuvalde `cover` (kutuyu doldurur), büyük önizlemede `contain`
   /// (görselin tamamı görünsün — önizlemenin amacı bu).
@@ -153,14 +161,15 @@ class _ImageBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (img.ink.isEmpty && img.bubbles.isEmpty) return _content(context);
+    final ink = this.ink && img.ink.isNotEmpty;
+    if (!ink && img.bubbles.isEmpty) return _content(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final box = Size(constraints.maxWidth, constraints.maxHeight);
         return Stack(
           children: [
             Positioned.fill(child: _content(context)),
-            if (img.ink.isNotEmpty)
+            if (ink)
               Positioned.fill(
                 child: IgnorePointer(
                   child: CustomPaint(painter: InkPainter(img.ink, 1)),
@@ -276,7 +285,11 @@ class NoteMediaBox extends StatelessWidget {
     this.showWebTitle = false,
     this.noteAtButton = false,
     this.videoControls = true,
+    this.imageInk = true,
   });
+
+  /// Bkz. [_ImageBox.ink].
+  final bool imageInk;
 
   final Attachment attachment;
   final BoxFit fit;
@@ -343,7 +356,7 @@ class NoteMediaBox extends StatelessWidget {
         controls: videoControls,
       );
     }
-    return _ImageBox(img: a, fit: fit);
+    return _ImageBox(img: a, fit: fit, ink: imageInk);
   }
 }
 

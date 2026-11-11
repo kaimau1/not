@@ -800,7 +800,13 @@ gömülü `_docInkFor`, görüntüleyiciler) — B3/B4/B5 hataları buradan çı
   (`InkToolMemory.activeController`); `PenTray` geri al/yinele/silgiyi ona yollar. Test:
   tepside renk değiştir → sabit PDF'e çizilen çizgi yeni renkte; geri al son dokunulan
   yüzeyde çalışır.
-- [ ] **F63.3 Sabit ve tam ekran GÖRSELE kalem (KALEM K2).** `Attachment.ink`, sayfa 1,
+- [x] **F63.3 Sabit ve tam ekran GÖRSELE kalem (KALEM K2).** *(2026-11-11, P15: tam ekran görselde
+  katman zaten vardı; SABİT görselde yoktu ve var olan çizim bölmenin TAMAMINA boyanıyordu (görsel
+  `contain` ile ortalanınca kayık). Artık `pinned_media_pane._imageInkLayer`: görselin dikdörtgeninde,
+  yakınlaştırmanın içinde, `InkClaim` + `InkPageLayer` (`PenPolicy.pinnedDoc`); parmak çizerken iki
+  parmak `InkNavLayer`. Bölme çubuğuna görsel için ayrı kalem düğmesi EKLENMEDİ (K-O6 çubuk kararı
+  açık) — editörün kalem kipi / yüzen düğme açar. Test `test/pinned_image_ink_test.dart` (kırmızı 3 →
+  yeşil 4). Cihazda doğrulanmadı.)* `Attachment.ink`, sayfa 1,
   `uniform: false`; katman görselin `BoxFit.contain` dikdörtgenine oturur (ölçek/kaydırma
   dönüşümünün İÇİNDE, yakınlaşınca birlikte büyür). Dışa aktarma zaten çizimi basıyor
   (`image_annotations.dart`). Test: 2× yakınlaşmışken çizilen çizgi 1×'te aynı yerde.
