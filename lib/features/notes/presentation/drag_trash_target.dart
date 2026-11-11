@@ -53,6 +53,11 @@ class _DragTrashTargetState extends State<DragTrashTarget>
   )..addStatusListener(_onFillStatus);
 
   /// Bırakılınca kısa "yutma" hareketi (kapak sallanır, hedef küçülür).
+  // Bir kez kurulur (her build'de yeni CurvedAnimation dinleyici bırakır).
+  late final Animation<double> _curved = CurvedAnimation(
+    parent: _show,
+    curve: Curves.easeOutCubic,
+  );
   late final AnimationController _gulp = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 280),
@@ -88,6 +93,7 @@ class _DragTrashTargetState extends State<DragTrashTarget>
 
   @override
   void dispose() {
+    (_curved as CurvedAnimation).dispose();
     _show.dispose();
     _hover.dispose();
     _fill.dispose();
@@ -100,7 +106,6 @@ class _DragTrashTargetState extends State<DragTrashTarget>
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
-    final curved = CurvedAnimation(parent: _show, curve: Curves.easeOutCubic);
     // Büyüme: üstüne gelince 1,12; yutarken 0,85'e iner ve geri döner.
     final scale = Listenable.merge([_hover, _gulp]);
     return IgnorePointer(
@@ -109,9 +114,9 @@ class _DragTrashTargetState extends State<DragTrashTarget>
         position: Tween(
           begin: const Offset(0, 0.8),
           end: Offset.zero,
-        ).animate(curved),
+        ).animate(_curved),
         child: FadeTransition(
-          opacity: curved,
+          opacity: _curved,
           child: DragTarget<String>(
             onWillAcceptWithDetails: (_) {
               if (!widget.active) return false;
