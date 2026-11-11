@@ -665,6 +665,75 @@ class SortHeldNoteIdsNotifier extends Notifier<Set<String>> {
 /// listede ilk görüldüğü değer.
 final _sortAnchorsBox = Provider<Map<String, DateTime?>>((ref) => {});
 
+/// F68.1 (OTURTMA_PLANI, B8): editörde az önce değişmiş notların, değişiklik
+/// BAŞLAMADAN önceki örnekleri (not kimliği → tutulan örnek).
+/// Bölünmüş görünümde her otomatik kayıt liste akışından geri gelip panoyu
+/// yeniden kurduruyordu (tablette yazarken düzenli takılma). Kimlik
+/// buradayken [filteredNotesProvider] o notun TUTULAN örneğini verir → liste
+/// aynı örnek kalır, pano kurulmaz. Son değişiklikten [kPreviewHold] sonra
+/// ya da not kapanınca bırakılır: kart tek seferde güncellenir.
+///
+/// TUZAK: tutulan örnek YALNIZ ana ekran listesine gider — depo, editör,
+/// hatırlatıcılar `notesStreamProvider`'ı okumayı sürdürür.
+final heldNotePreviewProvider =
+    NotifierProvider<HeldNotePreviewNotifier, Map<String, Note>>(
+      HeldNotePreviewNotifier.new,
+    );
+
+const kPreviewHold = Duration(seconds: 3);
+
+class HeldNotePreviewNotifier extends Notifier<Map<String, Note>> {
+  final _timers = <String, Timer>{};
+
+  @override
+  Map<String, Note> build() {
+    ref.onDispose(() {
+      for (final t in _timers.values) {
+        t.cancel();
+      }
+    });
+    return const {};
+  }
+
+  /// Not değişti: tut, süreyi baştan başlat.
+  void touch(String id) {
+    if (!ref.mounted) return;
+    _timers[id]?.cancel();
+    _timers[id] = Timer(kPreviewHold, () => release(id));
+    if (state.containsKey(id)) return;
+    // Örnek ŞİMDİ alınır (kayıt yankısı gelmeden): sağlayıcı tembel
+    // hesaplandığından sonraya bırakılırsa yeni örnek "tutulmuş" olurdu.
+    // Akışta henüz yoksa (yeni not) tutulacak bir şey yok.
+    final list = ref.read(notesStreamProvider).value;
+    if (list == null) return;
+    for (final n in list) {
+      if (n.id == id) {
+        state = {...state, id: n};
+        return;
+      }
+    }
+  }
+
+  /// Zamanlayıcı HEMEN iptal edilir (editör `dispose`unda bekleyen sayaç
+  /// kalmasın); durum mikro görevde yazılır — ağaç kilitliyken çağrılabilir.
+  void release(String id) {
+    _timers.remove(id)?.cancel();
+    unawaited(
+      Future.microtask(() {
+        if (!ref.mounted ||
+            !state.containsKey(id) ||
+            _timers.containsKey(id)) {
+          return;
+        }
+        state = {
+          for (final e in state.entries)
+            if (e.key != id) e.key: e.value,
+        };
+      }),
+    );
+  }
+}
+
 /// Ana ekranın ŞU AN çizdiği notlar, ekrandaki sırayla (bölümler dahil).
 /// Alt+↑/↓ bununla önceki/sonraki notu açar (bkz. `openAdjacentNote`).
 /// Sağlayıcı değil düz değişken: kimse dinlemiyor, yalnız kısayol okur.
@@ -1084,9 +1153,14 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final box = ref.watch(_filteredNotesBox);
   final held = ref.watch(sortHeldNoteIdsProvider);
   final anchors = ref.watch(_sortAnchorsBox);
+  final previewHeld = ref.watch(heldNotePreviewProvider);
 
   return notes.whenData((list) {
     _pruneSearchBodyCache(list);
+    // F68.1: az önce değişen açık not listede eski örneğiyle durur.
+    if (previewHeld.isNotEmpty) {
+      list = [for (final n in list) previewHeld[n.id] ?? n];
+    }
     anchors.removeWhere((id, _) => !held.contains(id));
     if (held.length > anchors.length) {
       for (final n in list) {
