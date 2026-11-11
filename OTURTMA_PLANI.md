@@ -62,7 +62,7 @@ Gözetimsiz yürütmenin sırası ve kuralları: `OTOMASYON.md`.
 | Faz | Konu | Durum | Tarih | Not |
 |---|---|---|---|---|
 | 58 | Fren ve zemin (süreç, hafıza, doğrulama borcu) | Bekliyor | | kod yok |
-| 59 | Otomatik akıcılık kapısı (cihazsız bütçe testleri) | Bekliyor | | |
+| 59 | Otomatik akıcılık kapısı (cihazsız bütçe testleri) | Bitti (`ab_kalem.py` cihazda koşturulmadı) | 2026-11-11 | 16 senaryo CI'da; bütçe = bugünkü ölçüm |
 | 60 | Bilinen hatalar + kullanıcı sorun kutusu | Bekliyor | | F60.1 en yüksek getiri |
 | 61 | Mürekkep deposu v2 (1 MiB tavanı, kayıt maliyeti) | Bekliyor | | veri biçimi; yedek şartı |
 | 62 | Mürekkep çizimi v2 (gecikme, dolu sayfada kasma) | Bekliyor | | |
@@ -312,8 +312,11 @@ süre değil **sayı** (kurulum, çizim çağrısı, yazılan bayt): makineden b
 
   Depo yazımlarını saymak için sahte depoya `int updateNoteCalls` ve `int bytesWritten`
   (`estimateValueBytes` ile) sayaçları.
-- [ ] **F59.2 Bütçe testi.** *(2026-11-09: dosyalar kuruldu, YALNIZ S6/S7 yazıldı — F60.1'in
-  kanıtı; kalan senaryolar aynı dosyalara eklenecek.)* `test/perf_budget_test.dart` + `test/perf_budget/budgets.json`.
+- [x] **F59.2 Bütçe testi.** *(2026-11-09: dosyalar kuruldu, YALNIZ S6/S7 yazıldı — F60.1'in
+  kanıtı. 2026-11-11 (P11): S1–S5, S8, S9, S11–S14 eklendi; S10 `note_package_open_test`'te.
+  Bütçe = bugünkü ölçüm (`bugun`/`hedef`/`neden` alanları), sayılar Ek A'da. Bozma denemesi:
+  `_sameVisual` başına `false &&` → S1, S2, S5, S6, S7 kırmızı (geri alındı). Bulgu: S8 30
+  maddeli notta İLK klavye açılışında `ItemsEditor` her inset karesinde kuruluyor (Ek A).)* `test/perf_budget_test.dart` + `test/perf_budget/budgets.json`.
   Ek A'daki S1–S16 senaryolarının her biri bir `testWidgets`; ölçülen sayı
   `budgets.json`'daki değerle `lessThanOrEqualTo` karşılaştırılır. İlk koşuda bugünkü sayı
   ölçülüp dosyaya **"bugün"** olarak yazılır; Ek A'daki **"hedef"** sütunu ilgili faz
@@ -322,20 +325,27 @@ süre değil **sayı** (kurulum, çizim çağrısı, yazılan bayt): makineden b
   dosyada her girdinin `"neden"`i boş olamaz kuralı yeter).
   Dikkat: test yüzeyi 800×600 = TABLET sayılır (HAFIZA); telefon senaryoları
   `tester.view.physicalSize = Size(400, 800)`, `devicePixelRatio = 1`.
-- [ ] **F59.3 Boyayıcı sayacı (S15).** `flutter_test`'in `TestRecordingCanvas`'ı ile
+- [x] **F59.3 Boyayıcı sayacı (S15).** *(2026-11-11: 2001 çağrı — O(N) doğrulandı.)* `flutter_test`'in `TestRecordingCanvas`'ı ile
   `InkPainter(...).paint(canvas, size)` çağır, `canvas.invocations.length` say: 2000
   çizgili sayfada etkin çizgiye 1 nokta eklenince yapılan çizim çağrısı. Bugün O(N)
   (beklenen ≥ 2000) → hedef ≤ 8 (Faz 62).
-- [ ] **F59.4 Kayıt sayacı (S16).** `fake_cloud_firestore` ile `NotesRepository.updateNote`:
+- [x] **F59.4 Kayıt sayacı (S16).** *(2026-11-11: 2 belge (not + `heavy/data`), 448 925 bayt
+  — bir çizgi için bütün mürekkep yeniden yazılıyor.)* `fake_cloud_firestore` ile `NotesRepository.updateNote`:
   2000 çizgili nota 1 çizgi ekle, yazılan belge sayısı ve toplam bayt. Bugün ≈ bütün
   mürekkep → hedef: 1 bant belgesi, ≤ 64 KB (Faz 61).
-- [ ] **F59.5 Cihaz A/B'ye kalem senaryosu.** `tool/perf/ab_kalem.py` (`ab_klavye.py`'nin
+- [x] **F59.5 Cihaz A/B'ye kalem senaryosu.** *(2026-11-11: araç yazıldı, **cihazda
+  koşturulmadı** (işçi telefona dokunmaz). `python -u ab_kalem.py <etiket> <kart_x> <kart_y>
+  <kalem_x> <kalem_y>`; dolu sayfa `ab_kalem.py hazirla 1500 …` ile cihazda üretilir, çünkü
+  **yedek/not paketi sayfa el yazısını (`Note.pageInk`) TAŞIMIYOR** (`encodeNoteJson`'da alan
+  yok — ayrı bulgu, sabah bakılacak: tam yedekten dönen notta sayfa çizimi kaybolur).
+  `make_dataset.py --ink 1500` → `olcum_kalem.notyedek`: boş not + 1500 çizgili sabit PDF
+  (uygulamanın `decodeNoteJson`'ıyla doğrulandı).)* `tool/perf/ab_kalem.py` (`ab_klavye.py`'nin
   iskeletinden): telefon düzeni, kalem kipi açık (parmak çizer), `input touchscreen swipe`
   ile 30 çizgi; iki veri hâli: boş sayfa ve 1500 çizgili sayfa (`make_dataset.py`'ye
   `--ink 1500` seçeneği: sentetik el yazısı benzeri çizgiler). Çıktı: evre başına UI ms,
   raster ms, > 16,7 ms kare sayısı; ayrıca kayıt anındaki en uzun ana blok. Kapı: bir
   evrede UI ya da raster %20 artarsa birleştirme yok (ÖLÇÜM KAPISI ile aynı kural).
-- [ ] **F59.6 CLAUDE.md kasma listesine tek satır:** "Bu listeyi unutma diye değil:
+- [x] **F59.6 CLAUDE.md kasma listesine tek satır** *(2026-11-11, madde 8)*: "Bu listeyi unutma diye değil:
   `test/perf_budget_test.dart` kırmızıysa birleştirme yok."
 - Kabul: 16 senaryo CI'da koşuyor; bilerek bozulan bir örnek (ör. `_sameVisual`'dan bir
   alanı çıkar) testi kırmızıya çeviriyor (dene, geri al).
@@ -1204,26 +1214,26 @@ düzeltme KARAR'dır; gözetimsiz oturumda yalnız rapor + kırmayan sıkılaşt
 
 ## Ek A — Bütçe senaryoları (F59.2)
 
-"Bugün" sütunu F59.2'de ölçülüp doldurulur. "Hedef" ilgili faz bitince `budgets.json`'a işlenir.
+"Bugün" sütunu F59.2'de ölçüldü (2026-11-11, `budgets.json` ile aynı). "Hedef" ilgili faz bitince `budgets.json`'a işlenir.
 
 | # | Senaryo (telefon 400×800 aksi yazmıyorsa) | Sayılan | Bugün | Hedef | Faz |
 |---|---|---|---|---|---|
-| S1 | Kısa metin notu, gövdeye 20 karakter | kök `NoteEditorScreen` kurulumu | ölç | ≤ 1 (geri al düğmesi) | — |
-| S2 | 30 maddeli liste, bir maddeye 20 karakter | `ItemsEditor` kurulumu / yeniden kurulan satır | ölç | 0 / 0 | — |
-| S3 | 30 maddeli liste, bir kutucuğu işaretle | kök kurulum / kurulan satır | ölç | ≤ 1 / ≤ 2 | 64 |
-| S4 | Maddede Enter (yeni madde) | kök kurulum / kurulan satır | ölç | ≤ 1 / ≤ 2 | 64 |
-| S5 | Kalem kipi, sayfaya 10 çizgi | kök kurulum / `updateNote` | ölç | ≤ 1 / ≤ 1 | — |
+| S1 | Kısa metin notu, gövdeye 20 karakter | kök `NoteEditorScreen` kurulumu | 1 (kayıt 1) | ≤ 1 (geri al düğmesi) | — |
+| S2 | 30 maddeli liste, bir maddeye 20 karakter | `ItemsEditor` kurulumu / yeniden kurulan satır | 5 / 15 | 0 / 0 | — |
+| S3 | 30 maddeli liste, bir kutucuğu işaretle | kök kurulum / kurulan satır | 1 / 13 | ≤ 1 / ≤ 2 | 64 |
+| S4 | Maddede Enter (yeni madde) | kök kurulum / kurulan satır | 1 / 14 | ≤ 1 / ≤ 2 | 64 |
+| S5 | Kalem kipi, sayfaya 10 çizgi | kök kurulum / `updateNote` | 0 / 1 | ≤ 1 / ≤ 1 | — |
 | S6 | Sabit PDF'e 10 çizgi | kök kurulum / `updateNote` | 10 / 10 → **1 / 1** (F60.1, 2026-11-09) | ≤ 1 / ≤ 1 | 60.1 |
 | S7 | Gömülü PDF'e 10 çizgi | aynı | 10 / 10 → **1 / 1** (F60.1, 2026-11-09) | ≤ 1 / ≤ 1 | 60.1 |
-| S8 | Klavye aç/kapa ×3 (inset kareleri) | gövde kurulumu | 0 | 0 | — |
-| S9 | Biçim panelini aç → kapat | tuval kurulumu | ölç | 0 | 64 |
-| S10 | Paketi aç → maddeye odaklan → Biçim'e dokun | paket açık mı / mount edilen `TextField` | ölç | açık / ≤ üye sayısı | 60.2 |
+| S8 | Klavye aç/kapa ×3 (inset kareleri) | gövde kurulumu | kısa not 0; 30 maddede ilk açılış 15 + oturma 3, sonraki turlar 0 | 0 | — |
+| S9 | Biçim panelini aç → kapat | tuval kurulumu | 2 | 0 | 64 |
+| S10 | Paketi aç → maddeye odaklan → Biçim'e dokun | paket açık mı / mount edilen `TextField` | F60.2 (`note_package_open_test`) | açık / ≤ üye sayısı | 60.2 |
 | S11 | Kendi kaydının akış yankısı | kök kurulum | 0 | 0 | — |
-| S12 | 1280×800 bölünmüş: açık nota 20 karakter + kayıt | `DashboardScreen` kurulumu / kurulan `NoteCard` | ölç | 0 / ≤ 1 | 68.1 |
-| S13 | Ana ekran, 300 not, 3 ekran kaydır | kurulan `NoteCard` | ölç | ≤ görünür + önbellek | — |
-| S14 | Sabitle / yıldızla | tuval kurulumu | ölç | 0 | 64 |
-| S15 | 2000 çizgi varken etkin çizgiye 1 nokta | çizim çağrısı (`TestRecordingCanvas`) | ≥ 2000 | ≤ 8 | 62.1 |
-| S16 | 2000 çizgi varken 1 çizgi ekle + kaydet | yazılan belge / bayt | 1–2 / tümü | 1 / ≤ 64 KB | 61.6 |
+| S12 | 1280×800 bölünmüş: açık nota 20 karakter + kayıt | `DashboardScreen` kurulumu / kurulan `NoteCard` | 1 / 13 | 0 / ≤ 1 | 68.1 |
+| S13 | Ana ekran, 300 not, 3 ekran kaydır | kurulan `NoteCard` | 24 (300 notun) | ≤ görünür + önbellek | — |
+| S14 | Sabitle / yıldızla | tuval kurulumu | 1 (yıldız) | 0 | 64 |
+| S15 | 2000 çizgi varken etkin çizgiye 1 nokta | çizim çağrısı (`TestRecordingCanvas`) | 2001 | ≤ 8 | 62.1 |
+| S16 | 2000 çizgi varken 1 çizgi ekle + kaydet | yazılan belge / bayt | 2 / 448 925 bayt | 1 / ≤ 64 KB | 61.6 |
 
 ## Ek B — Mürekkep paketi biçimi (F61.1)
 
