@@ -624,21 +624,30 @@ void main() {
     await endEditor(tester);
   });
 
-  // F59.3
+  // F59.3 → F62.1: kalem 1 nokta ilerleyince BOYANAN iş. Bitmiş katman
+  // yalnız `committedRev` artarsa boyanır (o zaman onun çağrıları da sayılır);
+  // etkin katman her harekette.
   test('S15: 2000 çizgi varken etkin çizgiye 1 nokta — çizim çağrısı', () {
-    final strokes = [
-      ..._ink(2000),
-      // Etkin çizgi (yeni noktası eklenmiş hâliyle).
-      const InkStroke(
-        page: 1,
-        color: 0xFF000000,
-        width: 0.004,
-        points: [0.5, 0.5, 0.51, 0.51, 0.52, 0.51],
-      ),
-    ];
+    InkToolMemory.reset();
+    final ink = InkController(initial: _ink(2000), onChanged: (_) {});
+    addTearDown(ink.dispose);
+    const size = Size(400, 600);
+    ink.pointerDown(
+      1,
+      const Offset(200, 300),
+      size,
+      kind: PointerDeviceKind.mouse,
+    );
+    ink.pointerMove(1, const Offset(204, 304), size);
+    final rev = ink.committedRev.value;
+    ink.pointerMove(1, const Offset(208, 306), size);
     final canvas = TestRecordingCanvas();
-    InkPainter(strokes, 1).paint(canvas, const Size(400, 600));
+    if (ink.committedRev.value != rev) {
+      CommittedInkPainter(ink, 1).paint(canvas, size);
+    }
+    ActiveInkPainter(ink, 1, Colors.blue).paint(canvas, size);
     _expectBudget('S15', {'cizim_cagrisi': canvas.invocations.length});
+    ink.pointerUp(kind: PointerDeviceKind.mouse);
   });
 
   // F59.4
