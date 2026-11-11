@@ -18,6 +18,7 @@ import '../../../core/utils/local_file.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/attachment.dart';
+import '../domain/ink_plan.dart';
 import '../domain/note.dart';
 import '../domain/note_heavy.dart';
 import '../domain/notebook_migration.dart';
@@ -1223,6 +1224,8 @@ class NotesRepository {
     for (final sub in [
       _versions(noteId),
       _notes.doc(noteId).collection(kPresenceCollection),
+      // Mürekkep v2 bant belgeleri (F61.4).
+      _notes.doc(noteId).collection(kInkCollection),
     ]) {
       unawaited(
         sub.get().then((snap) {

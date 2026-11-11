@@ -2,6 +2,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
+import 'package:notlar/features/notes/domain/ink_plan.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_heavy.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
@@ -71,6 +72,18 @@ void main() {
         .collection('users/u1/notes/$id/$kVersionsCollection')
         .get();
     expect(snap.docs.length, kMaxVersions);
+  });
+
+  test('kalıcı silme mürekkep v2 bant belgelerini de siler (F61.4)', () async {
+    final id = await repo.createNote(NoteType.text);
+    await db.doc('users/u1/notes/$id/$kInkCollection/a~1~0').set({'v': 1});
+    await db.doc('users/u1/notes/$id/$kInkCollection/a~1~1').set({'v': 1});
+    repo.hardDelete(id);
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    final left = await db
+        .collection('users/u1/notes/$id/$kInkCollection')
+        .get();
+    expect(left.docs, isEmpty);
   });
 
   test('ağır not iki belgeye yazılır, okurken birleşir (F3.13)', () async {

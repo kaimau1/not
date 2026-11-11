@@ -586,7 +586,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   eklemek yalnız 1 belgeyi değiştirir; (3) ortadan silmek yalnız o bandı değiştirir;
   (4) taşıma (kement) eski ve yeni bandı değiştirir, başka bant değişmez; (5) yerinde
   değiştirme (şekle oturtma) çizim sırasını korur; (6) 20 000 çizgi → hiçbir belge > 256 KB.
-- [ ] **F61.4 Kurallar ve silme listeleri.** `firestore.rules` 275–300: `sub in ['heavy',
+- [ ] **F61.4 Kurallar ve silme listeleri.** *(2026-11-11 P13 — KISMEN: silme listeleri yapıldı (`_deleteCloudCopy` kalıcı silme + "yalnız bu cihaz" ortak yolu, `AccountService.deletedNoteSubcollections`; testler `notes_repository_data_test`, `account_deletion_test`). Kurallara DOKUNULMADI: paket sınırı "yalnız sıkılaştırma"; ortak not/klasör kullanıcısına `ink` erişimi açmak yeni erişim. Sahip `users/{uid}/{collection}/**` genel kuralıyla zaten erişir; v2 yazımı kapalıyken `ink` belgesi oluşmaz. Bayrak açılmadan ÖNCE kural + `rules-test` yazılmalı — sabah bakılacak.)* `firestore.rules` 275–300: `sub in ['heavy',
   'versions']` geçen okuma/oluşturma/güncelleme kurallarına `'ink'` ekle; **silme** de
   gerekir (boşalan bant belgesi silinir) — `heavy` için bugün silme kuralı sahibin genel
   kuralından geliyor; ortak notta 'write' rolü için `ink` belgesinde `delete` izni ekle

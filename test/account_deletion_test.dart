@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/constants.dart';
 import 'package:notlar/features/auth/data/account_service.dart';
+import 'package:notlar/features/notes/domain/ink_plan.dart';
+import 'package:notlar/features/notes/domain/note_heavy.dart';
+import 'package:notlar/features/notes/domain/note_version.dart';
 
 /// Hesap silme (F1.2): kod tabanında yazılan HER Firestore koleksiyonu ya
 /// hesapla birlikte silinmeli ya da bilerek tutulduğu yazılmış olmalı. Yeni
@@ -38,6 +41,18 @@ void main() {
       ...AccountService.keptCollections,
     };
     expect(used.difference(covered), isEmpty);
+  });
+
+  test('notun alt koleksiyonları (mürekkep v2 dahil) hesapla silinir', () {
+    expect(
+      AccountService.deletedNoteSubcollections,
+      containsAll([
+        kHeavyCollection,
+        kVersionsCollection,
+        'presence',
+        kInkCollection,
+      ]),
+    );
   });
 
   test('kişisel veri taşıyan kök kayıtlar silinir', () {
