@@ -13973,8 +13973,38 @@ abstract class AppLocalizations {
   /// No description provided for @hideBarWhileTypingInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Yazmaya başlayınca alt çubuk iner, bırakınca hemen geri gelir.'**
+  /// **'Yazmaya başlayınca alt çubuk iner, durunca geri gelir.'**
   String get hideBarWhileTypingInfo;
+
+  /// No description provided for @typingBarHideDelay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizlenme gecikmesi'**
+  String get typingBarHideDelay;
+
+  /// No description provided for @typingBarHideDelayInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazmaya başladıktan ne kadar sonra gizlensin'**
+  String get typingBarHideDelayInfo;
+
+  /// No description provided for @typingBarShowDelay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeniden görünme gecikmesi'**
+  String get typingBarShowDelay;
+
+  /// No description provided for @typingBarShowDelayInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazmayı bırakınca ne kadar sonra geri gelsin'**
+  String get typingBarShowDelayInfo;
+
+  /// No description provided for @secondsValue.
+  ///
+  /// In tr, this message translates to:
+  /// **'{value} sn'**
+  String secondsValue(String value);
 
   /// No description provided for @tipHideBarTyping.
   ///

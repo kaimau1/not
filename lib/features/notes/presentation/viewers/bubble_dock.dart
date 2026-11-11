@@ -1199,7 +1199,7 @@ class _KeyboardFollow extends StatelessWidget {
   Widget build(BuildContext context) {
     // Bağımlılık YALNIZ bu küçük sarmalayıcıda: klavye karelerinde kartın
     // kendisi yeniden kurulmaz, yalnız çizim kayması güncellenir.
-    final inset = MediaQuery.viewInsetsOf(context).bottom;
+    final inset = KeyboardInset.liveOf(context);
     final view = View.of(context);
     final height = view.physicalSize.height / view.devicePixelRatio;
     // Sistem GEZİNME ÇUBUĞU da bir engel sayılır (kullanıcı ekran görüntüsü

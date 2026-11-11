@@ -11,6 +11,7 @@ import 'package:just_audio/just_audio.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
+import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/widgets/pop_in.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../settings/settings_providers.dart';
@@ -184,7 +185,7 @@ class AttachmentStrip extends StatelessWidget {
     // alt ağacı hiç yeniden kurmaz (aynı örnek → Flutter atlar).
     return Builder(
       builder: (context) {
-        final keyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
+        final keyboard = KeyboardInset.openOf(context);
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [

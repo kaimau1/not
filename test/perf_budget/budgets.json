@@ -55,12 +55,12 @@
     "neden": "F60.1 hedefi: S6 ile aynı"
   },
   "S8": {
-    "senaryo": "Klavye aç/kapa ×3, 30 maddeli + gövdeli not: inset karelerinde ve oturma karesinde NoteEditorScreen + NotePageCanvas + ItemsEditor + EditableText",
-    "govde_kurulum": 15,
-    "oturma_kurulum": 3,
-    "bugun": "hareket 15 / oturma 3 — hepsi İLK açılışta (ItemsEditor 5 karede 5 kez + 2'şer satır alanı), 2. ve 3. tur 0 (2026-11-11)",
+    "senaryo": "Klavye aç/kapa ×3, 30 maddeli + gövdeli not (açılış durulduktan sonra): inset karelerinde ve oturma karesinde NoteEditorScreen + NotePageCanvas + ItemsEditor + EditableText",
+    "govde_kurulum": 0,
+    "oturma_kurulum": 0,
+    "bugun": "0 / 0 (2026-11-11, F60.S5; önce 15 / 3)",
     "hedef": "0",
-    "neden": "İlk ölçüm (bugünkü hâl). Ek A 'bugün 0' diyordu: kısa notta doğru (note_screen_chrome_test), 30 maddede ilk açılış kuruyor — kök neden aranmadı"
+    "neden": "F60.S5: eski 15/3 klavyenin değil ItemsEditor._growBudget'ın (uzun listenin kademeli kurulumu, açılıştan 500 ms sonra kare başına 2 satır) testin klavye karelerine denk gelmesiydi; senaryo artık açılış durulunca ölçüyor"
   },
   "S9": {
     "senaryo": "Biçim panelini aç → kapat",
@@ -120,5 +120,21 @@
     "bugun": "2 belge (not + heavy/data) / 448 925 bayt — bütün mürekkep (2026-11-11)",
     "hedef": "1 bant belgesi / ≤ 64 KB (F61.6)",
     "neden": "İlk ölçüm (bugünkü hâl); hedef Faz 61'de işlenecek"
+  },
+  "S17": {
+    "senaryo": "Klavye aç/kapa ×3, 30 satırlık metin notu, alana dokunulmuş (seçim tutamağı var), 18 karelik hareket (ilk kareler gezinme payının altında): kare başına widget kurulumu ve dizilmek üzere işaretlenen yerleşim sınırı (test/keyboard_jank_guard_test.dart)",
+    "ilk_kare_kurulum": 45,
+    "gecis_karesi_kurulum": 67,
+    "hareket_karesi_kurulum": 54,
+    "hareket_karesi_editor_ici": 7,
+    "hareket_dizilen_sinir": 0,
+    "sabit_pdf_ilk_kare_kurulum": 74,
+    "sabit_pdf_gecis_karesi_kurulum": 323,
+    "sabit_pdf_hareket_karesi_kurulum": 70,
+    "sabit_pdf_hareket_karesi_editor_ici": 11,
+    "sabit_pdf_hareket_dizilen_sinir": 3,
+    "bugun": "ilk kare 45 / geçiş 67 / hareket 54 (editör içi 7) / dizilen 0 (2026-11-11, F60.S5; önce ilk kare 320, hareket 87–96, editör içi 49, her karede Scaffold kutusu diziliyordu). Sabit PDF: ilk 74 / geçiş 323 (gövdenin tam boya döndüğü kare: bölme yeniden kurulur) / hareket 70 (editör içi 11) / 3 sınır; önce hareket 84 ve evre değişiminde 4 × ≈ 310 (şimdi 2: yalnız oturma + geri dönüş)",
+    "hedef": "editör içi ≤ 7 (kapsam + alt çubuk kaydırıcısı); kalan ≈ 45 çerçevenin: kök MediaQuery + metin seçim tutamağı katmanı (EditableText.didChangeMetrics → updateForScroll)",
+    "neden": "F60.S5: KeyboardInsetScope (editör Scaffold'ı klavye karelerini görmez) + hızlı satır klavyeden önce kurulur + parlama yalnız boyamada"
   }
 }

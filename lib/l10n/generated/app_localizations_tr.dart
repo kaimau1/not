@@ -7826,7 +7826,26 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get hideBarWhileTypingInfo =>
-      'Yazmaya başlayınca alt çubuk iner, bırakınca hemen geri gelir.';
+      'Yazmaya başlayınca alt çubuk iner, durunca geri gelir.';
+
+  @override
+  String get typingBarHideDelay => 'Gizlenme gecikmesi';
+
+  @override
+  String get typingBarHideDelayInfo =>
+      'Yazmaya başladıktan ne kadar sonra gizlensin';
+
+  @override
+  String get typingBarShowDelay => 'Yeniden görünme gecikmesi';
+
+  @override
+  String get typingBarShowDelayInfo =>
+      'Yazmayı bırakınca ne kadar sonra geri gelsin';
+
+  @override
+  String secondsValue(String value) {
+    return '$value sn';
+  }
 
   @override
   String get tipHideBarTyping =>

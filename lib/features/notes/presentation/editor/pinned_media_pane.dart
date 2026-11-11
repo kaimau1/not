@@ -549,6 +549,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     _ownBubbles?.dispose();
     _imageBubbles?.dispose();
     _pdfAdding.dispose();
+    _keyboardN.dispose();
     _pdfBar.dispose();
     _pdfPlain.dispose();
     // Ağaç kilitliyken üst ekranın setState'i çağrılmaz: kare sonuna.
@@ -638,7 +639,14 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   }
 
   /// Klavyenin evresi (bkz. [KeyboardPhaseListener]).
-  KeyboardPhase _keyboard = (open: false, estimate: 0);
+  ///
+  /// BİLDİRİCİ, `setState` değil (F60.S5): evre klavye açılırken ve
+  /// kapanırken değişir; eskiden her değişimde BÜTÜN bölme (medya, çubuk
+  /// düğmeleri, ipuçları ≈ 230 widget) klavye animasyonunun ortasında
+  /// yeniden kuruluyordu — çevrim başına 4 kez. Evreyi yalnız medyanın
+  /// görünür penceresi dinler (bkz. [build] içindeki dinleyici).
+  final _keyboardN = ValueNotifier<KeyboardPhase>((open: false, estimate: 0));
+  KeyboardPhase get _keyboard => _keyboardN.value;
 
   /// **KLAVYE AÇILINCA MEDYA KÜÇÜLMEZ** (kullanıcı bulgusu 2026-10-20:
   /// "görsel/video/PDF sabitken klavye açılınca odak kayması, görselin boyut
@@ -770,7 +778,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             : live != null
             ? live.clamp(0.0, max < kPinnedMinHeight ? kPinnedMinHeight : max)
             : _clamp(math.min(widget.media.pinHeight, natural), layoutMax);
-        final visible = widget.fill
+        // Evreye bağlı: pencere dinleyicisinde, o anki evreyle hesaplanır.
+        double visible() => widget.fill
             ? math.max(0.0, constraints.maxHeight - kPinnedBarHeight)
             : live != null
             ? height
@@ -780,19 +789,31 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                 available: constraints.maxHeight,
                 stable: stable,
               );
+        // Canlandırmasız kare yalnız bu kurulumun İLK çizimi içindir.
+        var snap = _takeSnap();
         // Balon yazılırken medya bölmenin TAMAMI (bkz. [_writing]).
         final writing = _writing && constraints.maxHeight.isFinite;
         return Column(
           children: [
-            KeyboardClipWindow(
-              full: writing ? constraints.maxHeight : height,
-              visible: writing ? constraints.maxHeight : visible,
-              animate: live == null && !writing && !_takeSnap(),
-              // Görsel/video/sunum klavye açılınca KIRPILMAZ, küçülür
-              // (kullanıcı isteği 2026-10-20); metin, belge ve ses kartı
-              // okunur kalsın diye kırpılır.
-              shrink: !isText && !isPdf && !isAudio,
-              background: isVideo ? Colors.black : scheme.surfaceContainerHigh,
+            ValueListenableBuilder<KeyboardPhase>(
+              valueListenable: _keyboardN,
+              builder: (_, _, media) {
+                final animate = live == null && !writing && !snap;
+                snap = false;
+                return KeyboardClipWindow(
+                  full: writing ? constraints.maxHeight : height,
+                  visible: writing ? constraints.maxHeight : visible(),
+                  animate: animate,
+                  // Görsel/video/sunum klavye açılınca KIRPILMAZ, küçülür
+                  // (kullanıcı isteği 2026-10-20); metin, belge ve ses
+                  // kartı okunur kalsın diye kırpılır.
+                  shrink: !isText && !isPdf && !isAudio,
+                  background: isVideo
+                      ? Colors.black
+                      : scheme.surfaceContainerHigh,
+                  child: media!,
+                );
+              },
               // NOT AÇILIŞI HAFİF (kullanıcı bulgusu 2026-10-20: "notu
               // açarken ufak donma"): oynatıcı/belge görüntüleyicisi rota
               // geçişi bitince kurulur (bkz. AfterRouteTransition).
@@ -1101,7 +1122,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     );
     return KeyboardPhaseListener(
       onChanged: (phase) {
-        if (mounted) setState(() => _keyboard = phase);
+        if (mounted) _keyboardN.value = phase;
       },
       child: layout,
     );
