@@ -967,7 +967,7 @@ class Note {
       },
       pageInk: [
         for (final raw in (rawPageInk?['ink'] as List<dynamic>? ?? const []))
-          InkStroke.fromMap(Map<String, dynamic>.from(raw as Map)),
+          InkStroke.parse(raw),
       ],
       hasPageInk: rawPageInk != null,
       attachments: [

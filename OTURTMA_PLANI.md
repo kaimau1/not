@@ -595,7 +595,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   `_deleteCloudCopy`'ye `ink` alt koleksiyonu; `account_service.dart:63` listesine `ink`
   (`account_deletion_test` bilerek kırılır → güncelle). Kalıcı silme, "yalnız bu cihaz",
   hesap silme üçü de testle.
-- [ ] **F61.5 Okuma tarafı (iki biçim birden).** `_hydratedDoc`: ana belgede `inkV == 2`
+- [x] **F61.5 Okuma tarafı (iki biçim birden).** *(2026-11-11 P13: `_hydratedDoc` tek `ink` dinleyicisi + `InkDocCache` (bayt bayt aynı belge çözülmez, değişmeyen yüzeyin listesi aynı örnek), `mergeInkV2` (v2 kazanır, `inkV: 2` not `heavyRef` sayılır), `hydrate`/`hydrateNote` → `needsHydrate`; bozuk/bilinmeyen sürüm `ErrorLog`'a, atlanır. v1 notta `heavyLoaded` anlamı AYNEN. Test `test/ink_v2_read_test.dart`. Açık: bozuk bantlı yüzeyin "salt okunur" açılması yazılmadı (yazım kapalıyken üstüne yazan yok) — sabah bakılacak.)* `_hydratedDoc`: ana belgede `inkV == 2`
   ise `notes/{id}/ink` koleksiyonu dinlenir (tek dinleyici); gelen belgeler yüzey→sayfa→bant
   eşlenir, `mergeInkDocs` ile çizgiler kurulur ve ilgili ekin `ink`'ine / `pageInk`'e
   konur. **Yalnız değişen belge çözülür:** belge kimliği → (son görülen paket baytları,

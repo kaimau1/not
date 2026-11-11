@@ -6,10 +6,11 @@ Dal `oto/P13-murekkep-v2` (origin/main 1f6e6fb1'den).
 - F61.0(a) + F61.1: `lib/features/notes/domain/ink_pack.dart` (encode/decodeInkPack, Ek B), `test/ink_pack_test.dart`.
 - F61.3: `lib/features/notes/domain/ink_plan.dart` (InkOrder, planInkDocs, mergeInkDocs), `test/ink_plan_test.dart`.
 - F61.4 (kısmen): `ink` silme listelerine (notes_repository `_deleteCloudCopy`, account_service); KURAL YOK (yalnız sıkılaştırma sınırı).
+- F61.5: okuma — notes_repository `_hydratedDoc`/`hydrate`/`needsHydrate`, ink_plan `InkDocCache`/`mergeInkV2`, `InkStroke.parse`; `test/ink_v2_read_test.dart`.
 - F61.2: `simplifyStroke` (ink_pack.dart) + `InkController.pointerUp` (ink_layer.dart) — `test/ink_simplify_pointer_test.dart`.
 
 ## Şu an
-- F61.5 okuma tarafı (`_hydratedDoc`, `hydrate`) sırada; sonra F61.6.
+- F61.6 yazma tarafı (bayrak `config/app.inkV2Write`, varsayılan false) sırada.
 
 ## Kararlar / notlar
 - F61.0 (b)(c) cihazda ölçülmedi → K-O2 "En güvenli": okuma tarafı yazılır, yazma bayrağı kapalı.
