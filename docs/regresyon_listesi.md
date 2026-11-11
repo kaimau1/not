@@ -24,6 +24,7 @@ liste baştan koşulur: otomatik olanlar test, cihaz isteyenler en az ölçümle
 | F60.S6 | Maddeye basılı tutmaya devam edince madde seçimi açılmalı | `flutter test test/items_editor_hold_select_test.dart --reporter failures-only` | 5/5 yeşil |
 | F60.S7 | Yazarken alt panel gizleme ayarı (anahtar + gecikmeler) uygulanmalı | `flutter test test/typing_bar_hide_settings_test.dart --reporter failures-only` | 9/9 yeşil |
 | F60.S8 | Kartta önizlemesi gizli ek "yokmuş gibi" görünüyordu | `flutter test test/card_hidden_media_test.dart --reporter failures-only` | Yeşil; gizli + YouTube → özet satırı |
-| F60.S9 | Sürüklerken çöp kutusu: dolmadan bırakınca silmemeli | `flutter test test/drag_trash_target_test.dart --reporter failures-only` | 2/2 yeşil |
+| F60.S9 | Sürüklerken çöp kutusu: hedef dışında bırakınca silmemeli | `flutter test test/drag_trash_target_test.dart --reporter failures-only` | 4/4 yeşil |
+| F60.S12 | Kart başka kartın üstünden geçip çöpe atılınca çöp simgesi ekranda kalıyordu; bekleme gerekiyordu | `flutter test test/drag_trash_target_test.dart --reporter failures-only`; cihazda kartı başka kartların üstünden geçirip çöpe bırak | 4/4 yeşil; bırakınca simge kaybolur, beklemeden silinir + geri al |
 | F60.S10 | Not ekle menüsü düzen kipi (gizle/göster/sırala, son öğe gizlenemez) | `flutter test test/quick_add_edit_test.dart --reporter failures-only` | 4/4 yeşil |
 | F60.S5b | Uzun listede açılıştan sonra satırların kademeli kurulumu 50+ kare sürüyor, klavye açılışına denk gelip kasıyordu | `flutter test test/items_grow_budget_test.dart --reporter failures-only` | 120 maddede ≤ 14 kare, kare başı < 1600 kurulum; klavye hareket ederken satır kurulmaz |
