@@ -81,6 +81,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noteDeleted => 'Note deleted';
 
   @override
+  String get dragTrashHint => 'Hold here to delete';
+
+  @override
+  String get dragTrashReady => 'Release to delete';
+
+  @override
   String notesDeletedCount(int count) {
     return '$count notes deleted';
   }

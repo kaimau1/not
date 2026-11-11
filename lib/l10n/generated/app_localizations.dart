@@ -236,6 +236,18 @@ abstract class AppLocalizations {
   /// **'Not silindi'**
   String get noteDeleted;
 
+  /// No description provided for @dragTrashHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çöpe atmak için üstünde tut'**
+  String get dragTrashHint;
+
+  /// No description provided for @dragTrashReady.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bırak: çöpe at'**
+  String get dragTrashReady;
+
   /// No description provided for @notesDeletedCount.
   ///
   /// In tr, this message translates to:
