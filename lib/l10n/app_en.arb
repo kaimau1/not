@@ -23,7 +23,7 @@
   "newChecklist": "List",
   "newOrderedList": "Numbered list",
   "noteDeleted": "Note deleted",
-  "dragTrashHint": "Hold here to delete",
+  "dragTrashHint": "Drop here to delete",
   "dragTrashReady": "Release to delete",
   "notesDeletedCount": "{count} notes deleted",
   "selectedCount": "{count} selected",

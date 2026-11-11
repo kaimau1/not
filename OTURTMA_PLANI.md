@@ -569,7 +569,7 @@ doğrulanır).
   `_HoldToSelect` (F60.S6) üstüne kurulur; yeni yol açma. Widget testi (iki aşama, titreşim
   çağrıları, satır önbelleği `identical`). Cihaz A/B.
   **2026-11-12 (P29, Opus):** `_HoldToSelect` iki aşama: basılan yerde halka (yalnız boyama, 150 ms sonra görünür), 650 ms hafif titreşim + tüm yazı seçili, 1250 ms hafif titreşim + madde seç; test `items_editor_hold_select_test` 10/10. Cihazda doğrulanmadı.
-- [ ] **F60.S12 [Opus] Çöp kutusu: kalan simge hatası + anlaşılır, premium atma efekti**
+- [x] **F60.S12 [Opus] Çöp kutusu: kalan simge hatası + anlaşılır, premium atma efekti**
   (kullanıcı listesi 2026-11-12; F60.S9'un devamı). Kullanıcı: "çöp kutusuna bir şey
   sürükleyince işareti ekranda kalıyor; sürüklenen şey çöp kutusuna gitmiyor gibi —
   aslında gidiyormuş ama üzerine gelip beklemek gerekiyor, ne zaman atılacağı anlaşılmıyor.
@@ -581,6 +581,7 @@ doğrulanır).
   mesafeyle küçülür ve hedefe doğru çekilir, hedef renk geçişiyle kırmızılaşır. (c) Bırakınca
   kara delik animasyonu (küçül + dön + içeri çekil, ≈350 ms) → olağan silme yolu + geri al.
   Hepsi boyamada (Transform/Opacity), ızgara yeniden dizilmez. Cihaz A/B (ana ekran listesi).
+  **2026-11-12 (P30, Opus):** kök: hücre önizlemede yeniden kurulunca Flutter kabul edilen bırakmada `onDragEnd` vermiyordu → `onDragCompleted`+`onDraggableCanceled` (dashboard_widgets); beklemesiz bırak, yakınlıkla küçül/kızar, 350 ms kara delik; test 4/4. Cihazda A/B yapılmadı.
 - [ ] **F60.S13 [Sonnet] Kaydırarak geçişler kapatılabilsin** (kullanıcı listesi
   2026-11-12). Kullanıcı: "Kaydırarak klasör geçişlerini kapatabilmeliyiz; takvim hafta
   da ayar olarak kapatılabilir olmalı." Ayarlar'da iki anahtar (cihaz tercihi, varsayılan

@@ -239,7 +239,7 @@ abstract class AppLocalizations {
   /// No description provided for @dragTrashHint.
   ///
   /// In tr, this message translates to:
-  /// **'Çöpe atmak için üstünde tut'**
+  /// **'Çöpe atmak için buraya bırak'**
   String get dragTrashHint;
 
   /// No description provided for @dragTrashReady.

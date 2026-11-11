@@ -1,11 +1,13 @@
-# DEVIR — P29 uzun bas (F60.S11)
+# DEVIR — P30 / F60.S12 çöp kutusu (oto/P30-cop-kutusu)
 
-Dal: `oto/P29-uzun-bas` (taban origin/main 80c7528d). Durum: kod + test bitti, CI bekleniyor.
+## Yapılanlar
+- (a) KÖK: `lib/features/notes/presentation/dashboard_widgets.dart` `_ReorderableNoteCell` — önizleme sırası kartı başka satır/sütuna taşıyınca sürüklenen hücre yeniden kurulur; Flutter `Draggable.onDragEnd`'i yalnız `mounted` iken verir (drag_target.dart ~536) → kabul edilen bırakmada (çöp/başka kart) `_dragNoteId` temizlenmiyor, çöp simgesi ekranda kalıyordu. Düzeltme: `onDragCompleted` + `onDraggableCanceled` (mounted'a bakmaz, birbirini dışlar).
+- (b) `drag_trash_target.dart`: dolum beklemesi kalktı; bölgeye girip bırakmak yeter (bölge Padding ile geniş). Küresel işaretçi yolu (`pointerRouter.addGlobalRoute`) parmak→hedef vektörünü `DragTrashTarget.pull`'a yazar; hedef yakınlıkla kırmızılaşır, `TrashPullFeedback` sürüklenen kartı küçültür/döndürür/hedefe çeker.
+- (c) Bırakınca 350 ms kara delik (CustomPaint'te dönen kâğıt merkeze) + olağan silme yolu + geri al. Hepsi boyamada.
+- Metin: "Çöpe atmak için buraya bırak" / "Drop here to delete".
 
-- `_HoldToSelect` (items_editor_widgets.dart): iki aşama + dolum halkası
-  (AnimationController → CustomPaint, RepaintBoundary; ağaç şekli sabit, editör setState yok).
-  650 ms → `_holdSelectText` (hafif titreşim + tüm yazı seçili), 1250 ms → `_holdSelect` (titreşim + madde seç).
-  Halka 150 ms basılı kalmadan çizilmez (kısa dokunuşta yanıp sönmesin). Seçim kipinde kapalı (`enabled`).
-- Test: `test/items_editor_hold_select_test.dart` 10/10 (iki aşama, titreşim sayısı, halka çizimi, diğer satırlar `identical`).
-- perf_budget, keyboard_jank_guard, items_editor_* yeşil; `flutter analyze` temiz.
-- Kalan: cihaz A/B (`tool/perf/ab_klavye.py`) yürütücüde; cihazda doğrulanmadı.
+## Test
+`flutter test test/drag_trash_target_test.dart --reporter failures-only` → 4/4 (yeni "başka kartın üstünden geçip…" düzeltmeden önce KIRMIZI idi). perf_budget + home_gestures yeşil; `flutter analyze` temiz.
+
+## Sıradaki
+Cihazda A/B (ana ekran listesi, sürükleme) yürütücüde; sürüm notu maddeleri raporda.

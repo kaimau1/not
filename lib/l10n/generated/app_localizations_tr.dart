@@ -81,7 +81,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get noteDeleted => 'Not silindi';
 
   @override
-  String get dragTrashHint => 'Çöpe atmak için üstünde tut';
+  String get dragTrashHint => 'Çöpe atmak için buraya bırak';
 
   @override
   String get dragTrashReady => 'Bırak: çöpe at';
