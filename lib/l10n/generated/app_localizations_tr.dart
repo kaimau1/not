@@ -8249,4 +8249,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get updateOpenedBrowser => 'İndirme sayfası tarayıcıda açıldı';
+
+  @override
+  String get quickAddEditHint =>
+      'Sürükleyerek sırala, göz ile gizle ya da göster.';
+
+  @override
+  String get quickAddKeepOne => 'En az bir seçenek görünür kalmalı';
 }

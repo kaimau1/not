@@ -2992,5 +2992,7 @@
   "releaseNotesToastAll": "See all",
   "updateInstalling": "Downloaded — installing; the app will close and reopen",
   "updateAborted": "Installation cancelled — tap to try again",
-  "updateOpenedBrowser": "Download page opened in the browser"
+  "updateOpenedBrowser": "Download page opened in the browser",
+  "quickAddEditHint": "Drag to reorder, tap the eye to hide or show.",
+  "quickAddKeepOne": "At least one option must stay visible"
 }

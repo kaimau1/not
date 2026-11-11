@@ -8265,4 +8265,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateOpenedBrowser => 'Download page opened in the browser';
+
+  @override
+  String get quickAddEditHint =>
+      'Drag to reorder, tap the eye to hide or show.';
+
+  @override
+  String get quickAddKeepOne => 'At least one option must stay visible';
 }

@@ -3796,5 +3796,7 @@
   "releaseNotesToastAll": "Tümünü gör",
   "updateInstalling": "İndirildi — kuruluyor; uygulama kapanıp yeniden açılacak",
   "updateAborted": "Kurulum iptal edildi — yeniden denemek için dokun",
-  "updateOpenedBrowser": "İndirme sayfası tarayıcıda açıldı"
+  "updateOpenedBrowser": "İndirme sayfası tarayıcıda açıldı",
+  "quickAddEditHint": "Sürükleyerek sırala, göz ile gizle ya da göster.",
+  "quickAddKeepOne": "En az bir seçenek görünür kalmalı"
 }
