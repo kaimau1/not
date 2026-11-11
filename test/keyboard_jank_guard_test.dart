@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/editor/editor_quick_row.dart';
@@ -94,6 +95,110 @@ int _budget(String key) =>
             as Map<String, dynamic>)[key]
         as int;
 
+/// Klavyeyi [note] açıkken 3 kez açıp kapatır; konumu her karede, sayıları
+/// `budgets.json` S17'nin [key] önekli girdileriyle sınar.
+Future<void> _keyboardScene(
+  WidgetTester tester,
+  Note note, {
+  required String name,
+  String key = '',
+}) async {
+  await pumpEditor(tester, note);
+  // pdfrx'in hata kutusu (testte pdfium yok) testi düşürmesin.
+  tester.takeException();
+  // Açılış sonrası gecikmeli işler bitsin (ölçüme karışmasın).
+  for (var i = 0; i < 20; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+  await tester.tap(find.textContaining('Satır 3').last);
+  await tester.pump(const Duration(milliseconds: 16));
+  await tester.pump(const Duration(milliseconds: 150));
+  final rig = _KeyboardRig(tester);
+  const screen = 915.0, nav = 48.0;
+  final up = _keyboardFrames();
+  final down = [...up.reversed.skip(1), 0.0];
+  // Kareler üç türdür:
+  // * GEÇİŞ: klavyenin göründüğü ilk kare (üst çubukta tarih ↔ hızlı satır)
+  //   ve kapanışın ilk/son karesi (gövde tam boya döner; satır ↔ tarih).
+  //   Çevrim başına birer kez; bir şeyler dizilir.
+  // * HAREKET: aradaki bütün kareler — yalnız klavyeyi dinleyen yapraklar
+  //   kurulur, HİÇBİR ŞEY dizilmez.
+  final first = <_Frame>[];
+  final switching = <_Frame>[];
+  final moving = <_Frame>[];
+  for (var cycle = 0; cycle < 3; cycle++) {
+    for (final seq in [up, down]) {
+      var last = double.nan;
+      for (final (i, inset) in seq.indexed) {
+        final f = await rig.frame(inset);
+        tester.takeException();
+        final edge =
+            (seq == up && i == 0) ||
+            (seq == down && (i == 0 || i == seq.length - 1));
+        (cycle == 0 && seq == up && i == 0
+                ? first
+                : edge
+                ? switching
+                : moving)
+            .add(f);
+        // Çubuğun dibi: klavye gezinme çubuğundan alçaksa onun üstü,
+        // değilse klavyenin üstü — HER KAREDE (gecikme/çift hareket yok).
+        expect(
+          f.bar,
+          moreOrLessEquals(screen - (inset > nav ? inset : nav)),
+          reason: 'tur $cycle, klavye ${inset.toStringAsFixed(1)}',
+        );
+        if (!last.isNaN) {
+          // Tekdüze: açılırken hep yukarı, kapanırken hep aşağı.
+          expect(
+            seq == up ? f.bar <= last : f.bar >= last,
+            isTrue,
+            reason: 'geri sıçrama: $last → ${f.bar}',
+          );
+        }
+        last = f.bar;
+      }
+      // Oturma (140 ms sonra, klavye durmuşken): hareket karesi değil.
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump(const Duration(milliseconds: 200));
+    }
+  }
+  _Frame worst(List<_Frame> l) =>
+      l.reduce((a, b) => a.builds >= b.builds ? a : b);
+  final editorWorst = moving
+      .map((f) => f.editorBuilds)
+      .reduce((a, b) => a > b ? a : b);
+  final laidOut = {for (final f in moving) ...f.layouts};
+  // ignore: avoid_print
+  print(
+    'S17 $name: ilk kare ${first.single.builds} kurulum; geçiş karesi en çok '
+    '${worst(switching).builds}; hareket karesi en çok '
+    '${worst(moving).builds} (klavye '
+    '${worst(moving).inset.toStringAsFixed(0)}), editör içi $editorWorst, '
+    'dizilen $laidOut',
+  );
+  expect(first.single.builds, lessThanOrEqualTo(_budget('${key}ilk_kare_kurulum')));
+  expect(
+    worst(switching).builds,
+    lessThanOrEqualTo(_budget('${key}gecis_karesi_kurulum')),
+  );
+  expect(
+    worst(moving).builds,
+    lessThanOrEqualTo(_budget('${key}hareket_karesi_kurulum')),
+  );
+  expect(
+    editorWorst,
+    lessThanOrEqualTo(_budget('${key}hareket_karesi_editor_ici')),
+  );
+  expect(
+    laidOut.length,
+    lessThanOrEqualTo(_budget('${key}hareket_dizilen_sinir')),
+    reason: '$laidOut',
+  );
+  tester.takeException();
+  await endEditor(tester);
+}
+
 /// **KLAVYE / YAZMA KASMASI BEKÇİSİ** (ölçüm 2026-11-10, kullanıcı: "son
 /// güncellemelerden sonra klavye açılıp kapanırken titriyor, genel
 /// yavaşlık"). A/B (11-06 tabanı → 11-09): yazarken UI işi ×3,3, klavye
@@ -108,97 +213,32 @@ void main() {
       'üstünde; hareket kareleri bütçede, hiçbir şey dizilmez (S17)', (
     tester,
   ) async {
-    await pumpEditor(tester, _typed);
-    // Açılış sonrası gecikmeli işler bitsin (ölçüme karışmasın).
-    for (var i = 0; i < 20; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-    await tester.tap(find.textContaining('Satır 3').last);
-    await tester.pump(const Duration(milliseconds: 16));
-    await tester.pump(const Duration(milliseconds: 150));
-    final rig = _KeyboardRig(tester);
-    const screen = 915.0, nav = 48.0;
-    final up = _keyboardFrames();
-    final down = [...up.reversed.skip(1), 0.0];
-    // Kareler üç türdür:
-    // * GEÇİŞ: klavyenin göründüğü ilk kare (üst çubukta tarih ↔ hızlı satır)
-    //   ve kapanışın ilk/son karesi (gövde tam boya döner; satır ↔ tarih).
-    //   Çevrim başına birer kez; bir şeyler dizilir.
-    // * HAREKET: aradaki bütün kareler — yalnız klavyeyi dinleyen yapraklar
-    //   kurulur, HİÇBİR ŞEY dizilmez.
-    final first = <_Frame>[];
-    final switching = <_Frame>[];
-    final moving = <_Frame>[];
-    for (var cycle = 0; cycle < 3; cycle++) {
-      for (final seq in [up, down]) {
-        var last = double.nan;
-        for (final (i, inset) in seq.indexed) {
-          final f = await rig.frame(inset);
-          final edge =
-              (seq == up && i == 0) ||
-              (seq == down && (i == 0 || i == seq.length - 1));
-          (cycle == 0 && seq == up && i == 0
-                  ? first
-                  : edge
-                  ? switching
-                  : moving)
-              .add(f);
-          // Çubuğun dibi: klavye gezinme çubuğundan alçaksa onun üstü,
-          // değilse klavyenin üstü — HER KAREDE (gecikme/çift hareket yok).
-          expect(
-            f.bar,
-            moreOrLessEquals(screen - (inset > nav ? inset : nav)),
-            reason: 'tur $cycle, klavye ${inset.toStringAsFixed(1)}',
-          );
-          if (!last.isNaN) {
-            // Tekdüze: açılırken hep yukarı, kapanırken hep aşağı.
-            expect(
-              seq == up ? f.bar <= last : f.bar >= last,
-              isTrue,
-              reason: 'geri sıçrama: $last → ${f.bar}',
-            );
-          }
-          last = f.bar;
-        }
-        // Oturma (140 ms sonra, klavye durmuşken): hareket karesi değil.
-        await tester.pump(const Duration(milliseconds: 200));
-        await tester.pump(const Duration(milliseconds: 200));
-      }
-    }
-    _Frame worst(List<_Frame> l) =>
-        l.reduce((a, b) => a.builds >= b.builds ? a : b);
-    final editorWorst = moving
-        .map((f) => f.editorBuilds)
-        .reduce((a, b) => a > b ? a : b);
-    final laidOut = {for (final f in moving) ...f.layouts};
-    // ignore: avoid_print
-    print(
-      'S17: ilk kare ${first.single.builds} kurulum; geçiş karesi en çok '
-      '${worst(switching).builds}; hareket karesi en çok '
-      '${worst(moving).builds} (klavye '
-      '${worst(moving).inset.toStringAsFixed(0)}), editör içi $editorWorst, '
-      'dizilen $laidOut',
-    );
-    expect(first.single.builds, lessThanOrEqualTo(_budget('ilk_kare_kurulum')));
-    expect(
-      worst(switching).builds,
-      lessThanOrEqualTo(_budget('gecis_karesi_kurulum')),
-    );
-    expect(
-      worst(moving).builds,
-      lessThanOrEqualTo(_budget('hareket_karesi_kurulum')),
-    );
-    expect(
-      editorWorst,
-      lessThanOrEqualTo(_budget('hareket_karesi_editor_ici')),
-    );
-    expect(
-      laidOut.length,
-      lessThanOrEqualTo(_budget('hareket_dizilen_sinir')),
-      reason: '$laidOut',
-    );
+    await _keyboardScene(tester, _typed, name: 'metin');
     expect(tester.binding.transientCallbackCount, 0);
-    await endEditor(tester);
+  });
+
+  // Sabit medya: klavyenin evresi (açılıyor/kapanıyor) eskiden bütün bölmeyi
+  // animasyonun ortasında yeniden kuruyordu (çevrim başına 4 × ≈ 230).
+  testWidgets('sabit PDF\'li notta da: konum tekdüze, hareket kareleri '
+      'bütçede (S17)', (tester) async {
+    await _keyboardScene(
+      tester,
+      _typed.copyWith(
+        attachments: const [
+          Attachment(
+            id: 'p',
+            kind: AttachmentKind.pdf,
+            fileName: 'belge.pdf',
+            mimeType: 'application/pdf',
+            width: 600,
+            height: 800,
+            pinHeight: 300,
+          ),
+        ],
+      ),
+      name: 'sabit PDF',
+      key: 'sabit_pdf_',
+    );
   });
 
   testWidgets('KeyboardSwitch: hızlı satır bir kez kurulur, klavye kapanınca '

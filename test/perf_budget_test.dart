@@ -471,6 +471,12 @@ void main() {
       tester,
       _list30.copyWith(body: List.generate(30, (i) => 'Satır $i').join('\n')),
     );
+    // Uzun listenin kademeli kurulumu (ItemsEditor._growBudget: açılıştan
+    // 500 ms sonra kare başına 2 satır) bitsin — klavyenin işi değil; eskiden
+    // bu senaryonun 15 kurulumu oydu (F60.S5).
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
     final counter = BuildCounter()..start();
     addTearDown(counter.stop);
     int body() => _bodyTypes.fold(0, (n, t) => n + counter.of(t));
