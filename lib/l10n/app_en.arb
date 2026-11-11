@@ -2481,8 +2481,6 @@
   "pdfNoteFromSelection": "Take note",
   "pdfNoteAtPage": "Note this page",
   "tipPdfReadNote": "Tip: long-press text, select → \"Take note\": the page and line go into your note, tap to jump back.",
-  "placementHintTitle": "Where should the attachment go?",
-  "placementHintBody": "Pinned: top of the note · Floating: within the text · Bubbles: notes on top · Attached: file below",
   "showMoreChecked": "Show checked ({n} hidden)",
   "hideMoreChecked": "Collapse checked",
   "gmailTitle": "Gmail",

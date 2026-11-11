@@ -913,7 +913,7 @@ tur görüntüleri `*-e-*.png`.
   REST ile o ekin `driveId` / `downloadUrl` / `thumbUrl` alanlarına bak (yöntem HAFIZA "Ek
   senkronu — TEK YOL" sonu). Paylaşılan notta yükleme yolu (`_isShared` → Storage,
   `_processForeign`) testle izlenir. Kök bulunmadan düzeltme yazılmaz.
-- [ ] **F65.7 Ek ekleme sonrası tek soru.** "Nerede dursun?" ipucu (Sabit · Yüzen · Ek)
+- [x] **F65.7 Ek ekleme sonrası tek soru.** *(2026-11-11: kanıt `test/view_mode_switch_test.dart` "F65.7" kırmızı (ipucu uzun, kalkmayan bölümde kaldırılmış "Balonlu" anlatıyordu) → yeşil. İpucu tek satır "Yüzen olarak eklendi · değiştirmek için anahtara dokun", 4 sn sonra boşalır (yer ağaçta kalır), nabızlı anahtar aynı. **Sabah bakılacak:** tür bazlı varsayılan (PDF/video/sunum → Sabit) UYGULANMADI — bugün PDF/sunum alt şeride, video sayfaya iniyor; değiştirmek davranış değişikliği (madde "davranış aynı" diyor, çelişki) ve tek sabit ek kuralıyla (K-O8) çakışır → en güvenli: bugünkü varsayılan. Cihazda doğrulanmadı.)* "Nerede dursun?" ipucu (Sabit · Yüzen · Ek)
   bugün nabızlı anahtar + satır. Ek türüne göre varsayılan: PDF/video/sunum → Sabit,
   görsel → Yüzen, diğer dosya → Ek; ipucu yalnız varsayılan DEĞİŞTİRİLEBİLİR diye 4 sn
   görünür ("Sabitlendi · Değiştir"). KARAR gerekmez (davranış aynı, soru kısalır) —

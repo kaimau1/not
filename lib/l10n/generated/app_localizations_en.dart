@@ -6661,13 +6661,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tip: long-press text, select → \"Take note\": the page and line go into your note, tap to jump back.';
 
   @override
-  String get placementHintTitle => 'Where should the attachment go?';
-
-  @override
-  String get placementHintBody =>
-      'Pinned: top of the note · Floating: within the text · Bubbles: notes on top · Attached: file below';
-
-  @override
   String showMoreChecked(int n) {
     return 'Show checked ($n hidden)';
   }

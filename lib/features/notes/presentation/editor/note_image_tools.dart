@@ -178,38 +178,13 @@ class _ImageTools extends StatelessWidget {
           children: [
             // GÖRÜNÜM satırı: ekin nasıl duracağı tek dokunuşla değişir
             // (kullanıcı isteği 2026-10-16 — "kolay geçişin yeri ve düzeni").
+            // F65.7: tek satır "Yüzen olarak eklendi · değiştir" — 4 sn sonra
+            // kalkar (yer hep ağaçta, yalnız içi boşalır). Yeni ek yalnız
+            // yüzerken bu ipucunu alır (bkz. `_placementHintId`).
             if (viewSwitch != null && placementHint)
-              Padding(
+              _PlacementHintLine(
                 key: const ValueKey('placement-hint'),
-                padding: const EdgeInsets.fromLTRB(10, 0, 10, 4),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.lightbulb_outline,
-                      size: 16,
-                      color: scheme.primary,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: '${l10n.placementHintTitle} ',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            TextSpan(text: l10n.placementHintBody),
-                          ],
-                        ),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurface,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                text: l10n.placementHintShort(l10n.viewModeFloating),
               ),
             if (viewSwitch != null)
               LayoutBuilder(
@@ -246,6 +221,59 @@ class _ImageTools extends StatelessWidget {
             tools,
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Yeni ekin yerleşim ipucu: kısa satır, [_visibleFor] sonra boşalır.
+class _PlacementHintLine extends StatefulWidget {
+  const _PlacementHintLine({super.key, required this.text});
+
+  final String text;
+
+  @override
+  State<_PlacementHintLine> createState() => _PlacementHintLineState();
+}
+
+class _PlacementHintLineState extends State<_PlacementHintLine> {
+  static const _visibleFor = Duration(seconds: 4);
+  late final Timer _timer;
+  bool _shown = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(_visibleFor, () {
+      if (mounted) setState(() => _shown = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_shown) return const SizedBox.shrink();
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 4),
+      child: Row(
+        children: [
+          Icon(Icons.lightbulb_outline, size: 16, color: scheme.primary),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              widget.text,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurface),
+            ),
+          ),
+        ],
       ),
     );
   }

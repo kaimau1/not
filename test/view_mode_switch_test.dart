@@ -197,6 +197,42 @@ void main() {
     expect(changes.single, ('g', AttachmentView.pinned));
   });
 
+  testWidgets('F65.7: yeni ekin ipucu kısa ve 4 sn sonra kalkar', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        SingleChildScrollView(
+          child: SizedBox(
+            width: 400,
+            child: NotePageCanvas(
+              images: const [image],
+              minHeight: 800,
+              onRemove: (_) {},
+              onChanged: (_) {},
+              onViewChange: (_, _) {},
+              placementHintId: 'g',
+              child: const SizedBox(width: 400, height: 400),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.byKey(const ValueKey('placement-hint')), findsOneWidget);
+    // Tek satır: ne olduğu + nasıl değişir (eski uzun açıklama değil).
+    expect(find.textContaining('Yüzen olarak eklendi'), findsOneWidget);
+    expect(find.textContaining('Balonlu'), findsNothing);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Yüzen olarak eklendi'), findsNothing);
+    // Anahtar yerinde kalır.
+    expect(
+      find.byKey(const ValueKey('attachment-view-switch')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('SÜRÜKLERKEN bantlar her karede bildirilmez, bırakınca gelir', (
     tester,
   ) async {

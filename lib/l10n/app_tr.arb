@@ -3245,8 +3245,6 @@
   "pdfNoteFromSelection": "Not al",
   "pdfNoteAtPage": "Bu sayfaya not al",
   "tipPdfReadNote": "İpucu: yazıya basılı tut, seç → \"Not al\": sayfa ve satır nota yazılır, dokununca oraya döner.",
-  "placementHintTitle": "Yeni ek nerede dursun?",
-  "placementHintBody": "Sabit: notun tepesinde · Yüzen: yazının arasında · Balonlu: üstüne not · Ek: altta dosya",
   "showMoreChecked": "İşaretlileri göster ({n} gizli)",
   "hideMoreChecked": "İşaretlileri daralt",
   "@showMoreChecked": {"placeholders": {"n": {"type": "int"}}},

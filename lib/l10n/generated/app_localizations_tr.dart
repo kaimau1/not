@@ -6639,13 +6639,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'İpucu: yazıya basılı tut, seç → \"Not al\": sayfa ve satır nota yazılır, dokununca oraya döner.';
 
   @override
-  String get placementHintTitle => 'Yeni ek nerede dursun?';
-
-  @override
-  String get placementHintBody =>
-      'Sabit: notun tepesinde · Yüzen: yazının arasında · Balonlu: üstüne not · Ek: altta dosya';
-
-  @override
   String showMoreChecked(int n) {
     return 'İşaretlileri göster ($n gizli)';
   }
