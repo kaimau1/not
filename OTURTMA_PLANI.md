@@ -533,14 +533,14 @@ DEĞİŞEN bantla orantılı olsun, (3) ana iş parçacığında `double` listes
 **Güvenlik şartları (CLAUDE.md gece kuralı):** göçten önce yerel tam yedek; göç idempotent;
 eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturumda sınanır.
 
-- [ ] **F61.0 Ölç ve doğrula.** (a) Birim testi: 1000 nokta + basınçlı tek çizginin
+- [ ] **F61.0 Ölç ve doğrula.** *(2026-11-11 P13: (a) yapıldı — `test/ink_pack_test.dart`, 1000 basınçlı nokta 24 000–24 200 bayt; (b) ve (c) cihazda ölçülmedi → kapı açık kaldı, K-O2 "En güvenli" uygulandı: kodlayıcı + planlayıcı + okuma yazıldı, YAZMA bayrağı kapalı — sabah bakılacak.)* (a) Birim testi: 1000 nokta + basınçlı tek çizginin
   `estimateValueBytes(toMap())` değeri (beklenen ≈ 24 000). (b) Tablette gerçek bir el
   yazısı notunda nokta sayısı: editör açılışında debug'da bir kez
   `debugPrint('ink: ${çizgi} çizgi, ${nokta} nokta, ${bayt} bayt')` (profil derlemesinde
   bak, sonra satırı sil). (c) `tool/perf/prof_save.py` ile 1500 çizgili notta kayıt sonrası
   ana blok (ms). Sonuçları maddeye yaz. **Kapı:** (b) bir ekran < 150 KB VE (c) < 8 ms
   çıkarsa K-O2'de "yalnız sıkı kodlama" seçeneğine in; değilse tam kapsam.
-- [ ] **F61.1 Sıkı kodlayıcı (saf Dart).** `lib/features/notes/domain/ink_pack.dart`:
+- [x] **F61.1 Sıkı kodlayıcı (saf Dart).** *(2026-11-11 P13: `ink_pack.dart` + `test/ink_pack_test.dart` yeşil; 1000 basınçlı nokta ≤ 4500 bayt.)* `lib/features/notes/domain/ink_pack.dart`:
 
   ```dart
   /// Çizgileri Ek B'deki ikili biçime yazar / okur. Okunan çizgide `points`
@@ -553,7 +553,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   y > 1 olan uzun sayfa, 5000 çizgi); nokta sapması ≤ 1/16384; bozuk/kısa girdi `FormatException`
   (çökme yok); bilinmeyen sürüm baytı → `FormatException`; boyut: 1000 basınçlı nokta
   ≤ 4500 bayt.
-- [ ] **F61.2 Çizgi sadeleştirme (kalkışta).** `InkController.pointerUp`'ta serbest çizgi
+- [x] **F61.2 Çizgi sadeleştirme (kalkışta).** *(2026-11-11 P13: `simplifyStroke` + `InkController.pointerUp`; öneri sadeleşmiş çizgiden tanınır (sapma ≤ 0,3 dp, kimlik tutarlı kalsın diye) — sabah bakılacak; `ab_kalem.py` cihazda ölçülmedi.)* `InkController.pointerUp`'ta serbest çizgi
   bitince (ok/şekil/oturmuş düz çizgi HARİÇ) RDP: tolerans 0,0004 sayfa genişliği
   (~0,3 dp); basınç dizisi aynı indekslerle süzülür; ilk/son nokta korunur.
   `ink_recognize.dart`'taki `_simplify` `Offset` listesiyle çalışıyor — düz listede çalışan

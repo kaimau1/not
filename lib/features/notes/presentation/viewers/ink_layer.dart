@@ -9,6 +9,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/hold_progress_ring.dart';
 import '../../domain/arrow.dart';
 import '../../domain/attachment.dart';
+import '../../domain/ink_pack.dart';
 import 'ink_pen.dart';
 import 'ink_recognize.dart';
 import 'ink_tools.dart';
@@ -1519,18 +1520,47 @@ class InkController extends ChangeNotifier {
     } else {
       _lastTap = null;
     }
+    // F61.2: serbest çizgi kalkışta sadeleşir (RDP, ~0,3 dp): kayıt ve
+    // bellek küçülür, görünüm değişmez. Ok / şekil / oturmuş çizgi hariç.
+    var done = active;
+    if (done != null &&
+        !done.arrow &&
+        shape == null &&
+        !wasErasing &&
+        !wasSnapped &&
+        !lasso) {
+      final i = _ink.indexWhere((s) => identical(s, done));
+      final r = i < 0
+          ? null
+          : simplifyStroke(
+              done.points,
+              kInkSimplifyTolerance,
+              pressures: done.pressures,
+            );
+      if (r != null && !identical(r.points, done.points)) {
+        done = InkStroke(
+          page: done.page,
+          color: done.color,
+          width: done.width,
+          points: r.points,
+          pressures: r.pressures,
+        );
+        _ink = [..._ink]..[i] = done;
+      }
+    }
     if (base != null && !_sameInstances(base, _ink)) _pushHistory(base);
     save();
     // Serbest çizgi bitti: şekil / tik / çarpı önerisi (tutup oturtulmuşsa
-    // zaten şekil).
-    if (active != null &&
-        !active.arrow &&
+    // zaten şekil). ponytail: sadeleşmiş çizgiden tanınır (sapma ≤ 0,3 dp;
+    // tanıyıcı kendisi köşegenin %10'uyla sadeleştiriyor).
+    if (done != null &&
+        !done.arrow &&
         shape == null &&
         !wasErasing &&
         !wasSnapped &&
         !lasso &&
-        _ink.any((s) => identical(s, active))) {
-      _suggestFor(active, _activeSize);
+        _ink.any((s) => identical(s, done))) {
+      _suggestFor(done, _activeSize);
     }
     notifyListeners();
   }
