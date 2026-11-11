@@ -681,7 +681,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           CalendarView.week => kWeekPages,
           _ => kMonthPages,
         },
-        locked: _pinching,
+        locked: _pinching || !ref.watch(calendarSwipeProvider),
         onPageChanged: (i) => setState(() {
           if (view != _view) return;
           // Sayfa çevirince seçim DEĞİŞMEZ (kullanıcı isteği 2026-11-08):
@@ -818,6 +818,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       now: _today,
       showHeader: wide,
       onSelect: select,
+      swipeEnabled: ref.watch(calendarSwipeProvider),
       onMonthChange: (delta) =>
           setState(() => _month = DateTime(_month.year, _month.month + delta)),
     );
@@ -1718,6 +1719,9 @@ class _CalendarDayScreenState extends ConsumerState<CalendarDayScreen> {
           Expanded(
             child: PageView.builder(
               controller: _controller,
+              physics: ref.watch(calendarSwipeProvider)
+                  ? const PageScrollPhysics()
+                  : const NeverScrollableScrollPhysics(),
               itemCount: 2 * _kCenter + 1,
               onPageChanged: (i) => setState(() => _day = _dayAt(i)),
               itemBuilder: (context, i) => WeekPage(

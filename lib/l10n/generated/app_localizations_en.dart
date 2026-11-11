@@ -7290,6 +7290,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'This month’s calendar behind your notes; card titles stay clear, the rest turns see-through';
 
   @override
+  String get calendarSwipe => 'Swipe to change week/day in calendar';
+
+  @override
+  String get calendarSwipeInfo =>
+      'When off, horizontal swiping changes nothing; the arrow buttons keep working.';
+
+  @override
   String get swipeLeftCalendar => 'Swipe right for calendar';
 
   @override

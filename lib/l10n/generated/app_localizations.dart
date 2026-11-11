@@ -12980,6 +12980,18 @@ abstract class AppLocalizations {
   /// **'Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam'**
   String get dashboardBackgroundCalendarInfo;
 
+  /// No description provided for @calendarSwipe.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvimde kaydırarak hafta/gün değiştir'**
+  String get calendarSwipe;
+
+  /// No description provided for @calendarSwipeInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalıyken yatay kaydırma hiçbir şey değiştirmez; ok düğmeleri çalışmaya devam eder.'**
+  String get calendarSwipeInfo;
+
   /// No description provided for @swipeLeftCalendar.
   ///
   /// In tr, this message translates to:

@@ -580,12 +580,13 @@ doğrulanır).
   mesafeyle küçülür ve hedefe doğru çekilir, hedef renk geçişiyle kırmızılaşır. (c) Bırakınca
   kara delik animasyonu (küçül + dön + içeri çekil, ≈350 ms) → olağan silme yolu + geri al.
   Hepsi boyamada (Transform/Opacity), ızgara yeniden dizilmez. Cihaz A/B (ana ekran listesi).
-- [ ] **F60.S13 [Sonnet] Kaydırarak geçişler kapatılabilsin** (kullanıcı listesi
+- [x] **F60.S13 [Sonnet] Kaydırarak geçişler kapatılabilsin** (kullanıcı listesi
   2026-11-12). Kullanıcı: "Kaydırarak klasör geçişlerini kapatabilmeliyiz; takvim hafta
   da ayar olarak kapatılabilir olmalı." Ayarlar'da iki anahtar (cihaz tercihi, varsayılan
   AÇIK = bugünkü davranış): "Ana ekranda kaydırarak klasör değiştir", "Takvimde kaydırarak
   hafta/gün değiştir". Kapalıyken yatay kaydırma jesti hiç kurulmaz (dikey kaydırma ve
   düğmeler çalışır). Widget testi.
+  **Yapıldı 2026-11-12 (P31):** takvim anahtarı `calendarSwipeProvider` (hafta/gün/ay sayfa kaydırma + ay ızgarası jesti); ana ekran klasör kaydırması zaten Ayarlar → Notlar → "Ana ekranda yana kaydırınca → Kapalı" (SwipeMode.off) ile kapanıyor, yeni anahtar eklenmedi.
 - [ ] **F60.S14 [Sonnet] Panoda işaretli maddeye basınca işaret kalkmamalı** (kullanıcı
   listesi 2026-11-12). Kullanıcı: "dashboard'da işaretli bir maddenin işaretine basınca
   işareti kaldırılıyor; bu doğru bir davranış değil." Önce "dashboard"un hangi yüzey

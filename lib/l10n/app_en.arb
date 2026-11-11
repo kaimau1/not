@@ -2670,6 +2670,8 @@
   "themeStraw": "Straw",
   "dashboardBackgroundCalendar": "Calendar background",
   "dashboardBackgroundCalendarInfo": "This month\u2019s calendar behind your notes; card titles stay clear, the rest turns see-through",
+  "calendarSwipe": "Swipe to change week/day in calendar",
+  "calendarSwipeInfo": "When off, horizontal swiping changes nothing; the arrow buttons keep working.",
   "swipeLeftCalendar": "Swipe right for calendar",
   "swipeLeftCalendarInfo": "In the All view, swiping right opens the calendar",
   "calendarMoved": "Moved to {day}",
