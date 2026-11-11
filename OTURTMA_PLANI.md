@@ -513,6 +513,46 @@ doğrulanır).
   Önce kırmızı test: tepside silgi seç → gömülü PDF'e kalem dokunuşu → çizgi sayısı
   ARTMAZ, dokunulan çizgi silinir (sabit PDF, not paketi önizlemesi için de). Düzeltme
   F63.2 (tek araç durumu).
+**Kullanıcı listesi 2026-11-11** ("şimdi yap" — K-O1 istisnası; kuyrukta P23–P28):
+
+- [ ] **F60.S5 [Fable] Klavye açılırken alt panel titriyor/kasıyor — kökten.** Kullanıcı:
+  "klavye açılırken alt paneldeki titreme kasmayı kökünden çöz, tekrar yaşanmayacak
+  şekilde". F60.S2'nin birikim varsayımı üretilemedi; bu madde açılış ANININ kendisi:
+  klavye hareketinin her karesinde alt panelin (ve gövdenin) yeniden dizilmesi/konum
+  sıçraması. Kanıt: kabukta klavye animasyonu boyunca kare başına kurulum/LAYOUT sayısı
+  (`keyboard_jank_guard_test` kalıbı; F60.S2 yan bulgusu: orta karede 28–50 widget,
+  sabit PDF'li notta ~180) + alt panelin konumunun karelerde ileri-geri gitmesi (titreme).
+  Kök düzeltme CLAUDE.md kasma listesi 6–7 ile: boy tek adımda, hareket yalnız boyamada;
+  `viewInsets` yalnız dar öğede okunur. Bekçi: klavye açılırken alt panel konumu tekdüze
+  (geri sıçrama yok) ve kare başı kurulum ≤ bütçe; `perf_budget` senaryosu. Cihaz A/B.
+- [ ] **F60.S6 [Opus] Madde uzun bas: önce yazı seçilir, basılı tutmaya devam → madde
+  seçimi.** Kullanıcı: "maddenin herhangi bir yerine basılı tutunca tüm yazı seçilir; bu
+  doğru. Basılı tutmaya devam ederse madde seç çalışsın." Uzun basış (≈500 ms) = bugünkü
+  metin seçimi; parmak kalkmadan ≈ +600 ms daha (hafif titreşim) → o madde seçim kipine
+  girer (bugünkü madde seç), metin seçimi kalkar. Kasma listesi 1–4 geçerli. Widget testi.
+- [ ] **F60.S7 [Fable] Yazarken alt panel gizleme ayarlanabilir.** Kullanıcı: "yazarken alt
+  panelin gizlenip gösterilmesi ayarlanabilir olsun, kapatılabilsin; ne zaman kapanacak,
+  kaç sn sonra açılacak — 0,1 sn adımlı kaydırıcı." Ayarlar → (Görünüm/Editör): aç/kapa
+  anahtarı + "Gizlenme gecikmesi" ve "Yeniden görünme gecikmesi" kaydırıcıları (0–5 sn,
+  0,1 adım), cihaz tercihi. Gizleme/gösterme kural 6 gereği yalnız boyamada. F60.S5'ten
+  SONRA (aynı kod).
+- [ ] **F60.S8 [Sonnet] Kartta gizlenen ek içeriği yazıyla anılsın.** Kullanıcı: "YouTube
+  videoları ya da görseller notta; kartta görsel gizlenince hiçbir şeyi yokmuş gibi
+  oluyor. En azından ek içeriği yazsın — 'YouTube videosu var' gibi güzel bir dille."
+  Kart önizlemesi görseli göstermiyorsa (gizli/sığmıyor) tek satır, ikonlu, sade özet:
+  "▶ YouTube videosu · Başlık", "🖼 2 görsel", "📄 PDF · ad" (l10n tr/en). Kart ızgarası
+  kasma listesi 2 (önbellek anahtarı) geçerli. Widget testi.
+- [ ] **F60.S9 [Opus] Ana ekranda sürüklerken çöp kutusu.** Kullanıcı: "notu basılı tutup
+  sürüklerken aşağıda çöp kutusu olsun; üzerine gelince kısa bir dolma, bırakınca çöp
+  kutusuna atılsın — hafif animasyonla." Sürükleme başlayınca altta çöp hedefi kayarak
+  çıkar; üstüne gelince ≈ 600 ms dairesel dolum (yalnız boyama), dolunca titreşim; bırakınca
+  kart küçülüp hedefe süzülür → çöpe taşınır (geri al çubuğu mevcut silme yoluyla). Dolum
+  bitmeden bırakılırsa hiçbir şey olmaz. Mevcut sürükle-bırak (klasöre/sıraya) bozulmaz.
+- [ ] **F60.S10 [Opus] Not ekle menüsü düzenlenebilir.** Kullanıcı: "not ekle menüsünde her
+  düğme düzen kipinde gizle/göster ve yer değiştir olmalı." Menüde "Düzenle" → her öğede
+  göz (gizle/göster) + tutamaçla sıralama; cihaz/hesap tercihi; "Varsayılana dön". Gizli
+  öğeler normal kipte görünmez; en az bir öğe kalır.
+
 - Kabul: F60.1 ve F60.2 bütçe testleriyle kilitli; diğerleri ya düzeltildi ya da
   "üretilemedi + ne gerekli" notuyla kapandı.
 
