@@ -310,6 +310,45 @@ class _AiBanner extends StatelessWidget {
   }
 }
 
+/// **KISA PENCERE + KLAVYE: ALT ÇUBUK GİZLİ** (F67.4). Klavye oturduktan
+/// sonra pencereden kalan < 480 dp ise (yatay tablet + klavye, küçük telefon)
+/// çubuk yazı alanına ~50 dp bırakır; hızlı satır yeter. KARARLI boşluğu
+/// okur ([KeyboardInset.maybeStableOf]): bir klavye çevriminde en çok iki
+/// kez kurulur ve boy TEK ADIMDA değişir (Kasma listesi 6–7). Ağaç şekli
+/// sabit: `Offstage`.
+class ShortKeyboardBarHide extends StatelessWidget {
+  @visibleForTesting
+  const ShortKeyboardBarHide({
+    super.key,
+    required this.keep,
+    required this.child,
+  });
+
+  /// Kayıt/dikte sürüyor: durdur düğmesi görünür kalsın.
+  final bool keep;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    // ponytail: klavye pencerenin %45'inden büyük olamaz sayılır — uzun
+    // telefonda (≥ 873 dp) kısa kalamaz, klavye boşluğuna hiç bağlanmaz
+    // (klavye geçiş karesinde fazladan kurulum yok, S17 bütçesi). Klavyesi
+    // daha büyük bir cihaz çıkarsa oran büyütülür.
+    // Ağaç şekli sabit (Kasma listesi 4): hep Offstage.
+    if (size.height * 0.55 >= 480) {
+      return Offstage(offstage: false, child: child);
+    }
+    final inset = KeyboardInset.maybeStableOf(context) ?? 0;
+    final short =
+        WindowClass.fromSize(
+          Size(size.width, size.height - inset),
+          web: kIsWeb,
+        ).height ==
+        WindowHeight.short;
+    return Offstage(offstage: !keep && inset > 0 && short, child: child);
+  }
+}
 
 /// **YAZARKEN ALT ÇUBUK ÇEKMECEYE İNER** (2026-11-08). [hidden] true iken
 /// çubuk tamamen kaybolmaz: üst şeridi ([_peek]) soluk görünür kalır —

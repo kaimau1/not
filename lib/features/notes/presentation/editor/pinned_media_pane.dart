@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../app/window_class.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
 import '../../../../core/widgets/after_route_transition.dart';
@@ -706,6 +708,16 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     required double stable,
   }) {
     if (!_keyboard.open) return layout;
+    // KISA PENCERE + KLAVYE (F67.4: yatay tablet 640 − 300): medya en küçük
+    // penceresinde, yazı alanı ≥ 200 dp kalsın.
+    final window = MediaQuery.sizeOf(context);
+    if (WindowClass.fromSize(
+          Size(window.width, window.height - _keyboard.estimate),
+          web: kIsWeb,
+        ).height ==
+        WindowHeight.short) {
+      return math.min(layout, kPinnedVisibleFloor);
+    }
     // Gövde henüz kısalmadıysa (klavye açılıyor) kalacak yer tahminle
     // hesaplanır; kısaldıysa gerçek ölçü zaten elde.
     //

@@ -585,7 +585,12 @@ void main() {
     ('ana-kart-menu', '/', () => find.byIcon(Icons.more_vert).at(1)),
     ('ana-hizli', '/', () => find.byTooltip('Yeni not — tip seç')),
     ('paylasilan', '/', () => find.byKey(const ValueKey('shared-chip-sf1'))),
-    ('n4-paylas', '/note/n4', () => find.byTooltip('Paylaş').first),
+    // Dar telefonda (360) Paylaş üst çubukta değil, ⋮ menüsünde: `.first`
+    // boş bulucuda atar, sahne "dokunulacak öğe yok" diye geçilsin (F66.4).
+    ('n4-paylas', '/note/n4', () {
+      final f = find.byTooltip('Paylaş');
+      return f.evaluate().isEmpty ? f : f.first;
+    }),
     ('ayarlar', '/settings', null),
     (
       'ayarlar-gorunum',
