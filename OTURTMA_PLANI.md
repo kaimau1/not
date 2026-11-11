@@ -559,6 +559,39 @@ doğrulanır).
   öğeler normal kipte görünmez; en az bir öğe kalır.
   **2026-11-11 (P28, Opus):** + panelinde "Menüyü düzenle": göz + grup içi sıralama, Bitti, Varsayılana dön, son görünür kilitli; sıra `MenuLayouts` `home.quickAdd`; test 4/4. Cihazda doğrulanmadı.
 
+- [ ] **F60.S11 [Opus] Madde uzun bas — iki aşama görünür olsun** (kullanıcı listesi
+  2026-11-12; F60.S6'nın devamı). Kullanıcı: "Uzun basmada 2 etkileşim: 1. önce yuvarlak
+  bir dolum olur, ufak titreme, yazının tümü seçilir; 2. ufak titreme ile madde seç başlar."
+  Basılan yerde dairesel dolum halkası (yalnız boyama, kasma listesi 3–4/6); 1. aşama
+  (≈500 ms) sonunda hafif titreşim + maddenin TÜM yazısı seçili; parmak kalkmadan devam →
+  halka ikinci tur, 2. aşama sonunda hafif titreşim + madde seçim kipi. Bugünkü
+  `_HoldToSelect` (F60.S6) üstüne kurulur; yeni yol açma. Widget testi (iki aşama, titreşim
+  çağrıları, satır önbelleği `identical`). Cihaz A/B.
+- [ ] **F60.S12 [Opus] Çöp kutusu: kalan simge hatası + anlaşılır, premium atma efekti**
+  (kullanıcı listesi 2026-11-12; F60.S9'un devamı). Kullanıcı: "çöp kutusuna bir şey
+  sürükleyince işareti ekranda kalıyor; sürüklenen şey çöp kutusuna gitmiyor gibi —
+  aslında gidiyormuş ama üzerine gelip beklemek gerekiyor, ne zaman atılacağı anlaşılmıyor.
+  Çöp kutusuna yaklaştıkça notun görseli küçülerek gitsin, sonra kara delik gibi çekilsin,
+  çöp kutusu yavaşça kırmızıya dönsün — premium bir çöp kutusu efekti. Atmanın bir
+  animasyonu olmalı." (a) KANIT önce: sürükleme bitince/iptalde çöp hedefi gizlenmiyor
+  (widget testi kırmızı) → kök düzelt. (b) Bekleme kalkar: hedef bölgesine girip BIRAKMAK
+  yeter (yanlış silmeye karşı geri al çubuğu zaten var); yaklaştıkça sürüklenen kart
+  mesafeyle küçülür ve hedefe doğru çekilir, hedef renk geçişiyle kırmızılaşır. (c) Bırakınca
+  kara delik animasyonu (küçül + dön + içeri çekil, ≈350 ms) → olağan silme yolu + geri al.
+  Hepsi boyamada (Transform/Opacity), ızgara yeniden dizilmez. Cihaz A/B (ana ekran listesi).
+- [ ] **F60.S13 [Sonnet] Kaydırarak geçişler kapatılabilsin** (kullanıcı listesi
+  2026-11-12). Kullanıcı: "Kaydırarak klasör geçişlerini kapatabilmeliyiz; takvim hafta
+  da ayar olarak kapatılabilir olmalı." Ayarlar'da iki anahtar (cihaz tercihi, varsayılan
+  AÇIK = bugünkü davranış): "Ana ekranda kaydırarak klasör değiştir", "Takvimde kaydırarak
+  hafta/gün değiştir". Kapalıyken yatay kaydırma jesti hiç kurulmaz (dikey kaydırma ve
+  düğmeler çalışır). Widget testi.
+- [ ] **F60.S14 [Sonnet] Panoda işaretli maddeye basınca işaret kalkmamalı** (kullanıcı
+  listesi 2026-11-12). Kullanıcı: "dashboard'da işaretli bir maddenin işaretine basınca
+  işareti kaldırılıyor; bu doğru bir davranış değil." Önce "dashboard"un hangi yüzey
+  olduğunu kanıtla (ana ekran kart önizlemesindeki onay kutuları / günlük brifing-pano /
+  takvim görev listesi — kodda `toggle` yollarını ara). En güvenli: o yüzeyde işaretli
+  madde tek dokunuşla geri alınmaz (dokunuş notu/maddeyi açar ya da yok sayılır); işareti
+  kaldırmak editörde. Karar "sabah bakılacak". Widget testi.
 - Kabul: F60.1 ve F60.2 bütçe testleriyle kilitli; diğerleri ya düzeltildi ya da
   "üretilemedi + ne gerekli" notuyla kapandı.
 
