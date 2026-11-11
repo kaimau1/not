@@ -3642,7 +3642,19 @@
   "quickRowPen": "Kalemle yaz · basılı tut: kalem ayarları",
   "quickRowReminder": "Hatırlatıcı",
   "hideBarWhileTyping": "Yazarken alt çubuğu gizle",
-  "hideBarWhileTypingInfo": "Yazmaya başlayınca alt çubuk iner, bırakınca hemen geri gelir.",
+  "hideBarWhileTypingInfo": "Yazmaya başlayınca alt çubuk iner, durunca geri gelir.",
+  "typingBarHideDelay": "Gizlenme gecikmesi",
+  "typingBarHideDelayInfo": "Yazmaya başladıktan ne kadar sonra gizlensin",
+  "typingBarShowDelay": "Yeniden görünme gecikmesi",
+  "typingBarShowDelayInfo": "Yazmayı bırakınca ne kadar sonra geri gelsin",
+  "secondsValue": "{value} sn",
+  "@secondsValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "tipHideBarTyping": "Yazarken alt çubuk gizlenir, durunca geri gelir. Ayarlar → Kartlar bölümünden kapatılabilir.",
   "addToNoteTitle": "Nota ekle",
   "addToNewNote": "Yeni not",

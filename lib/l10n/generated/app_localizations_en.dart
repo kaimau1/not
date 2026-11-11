@@ -7841,7 +7841,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hideBarWhileTypingInfo =>
-      'The bottom bar slides away as you type and returns right when you stop.';
+      'The bottom bar slides away as you type and returns when you stop.';
+
+  @override
+  String get typingBarHideDelay => 'Hide delay';
+
+  @override
+  String get typingBarHideDelayInfo =>
+      'How long after you start typing the bar hides';
+
+  @override
+  String get typingBarShowDelay => 'Reappear delay';
+
+  @override
+  String get typingBarShowDelayInfo =>
+      'How long after you stop typing the bar returns';
+
+  @override
+  String secondsValue(String value) {
+    return '$value s';
+  }
 
   @override
   String get tipHideBarTyping =>
