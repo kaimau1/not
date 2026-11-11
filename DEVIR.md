@@ -26,3 +26,6 @@
 
 ## Komut
 `"C:/src/flutter/bin/flutter.bat" test test/pinned_image_ink_test.dart test/viewer_stylus_toggle_test.dart test/pen_policy_test.dart test/editor_pen_tablet_test.dart --reporter failures-only`
+
+## YÜRÜTÜCÜ NOTU (2026-11-11 ~16:05)
+Kod işi BİTTİ (F63.3–F63.5, son 22161e3b). Kalan yalnız yürütücü adımları: CI (43054698694) yeşilse OTOMASYON P15 satırı bitti + regresyon/HAFIZA kontrol, DEVIR.md sil, main birleştir. Sürüm notu borcu (P05 maddeleri + P15: sabit görsele kalem, tam ekranda yüzen kalem düğmesi, telefonda iki parmak ipucu) bir sonraki [apk]. Tur limit freninde (%98) durdu.
