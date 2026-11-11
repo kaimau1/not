@@ -410,7 +410,7 @@ doğrulanır).
   *Kabul:* S10 yeşil; KALANLAR I1'e "kök: <bulunan>" yaz; cihazda 30 maddeli paketli notta
   aç → yaz → kalın yap → kapat akışı takılmasız.
   Cihaz A/B (2026-11-10, Mi Note 10 Lite, `ab_klavye.py`, taban 4bdd6eb4, 2. koşular): klavye kapa 190 → 194 ms, aç 285 → 293 ms (LAYOUT 73 → 78) — regresyon yok. `yaz`/`not-kapa` evreleri iki değerli (kare sayısı 68↔208 / 5↔66; A1 ve B2 yüksek, A2/A3/B1 düşük): sürümden bağımsız gürültü, B1 düşük kipte tabanla aynı (yaz %105). Ölçüm arama sonucundan açılan notla yapıldı (OLCUM notları 414 notun dibinde).
-- [ ] **F60.3 "📖 s.N" satırı silinemiyor (sabit → gömülü geçişte).** Yeniden üretim:
+- [x] **F60.3 "📖 s.N" satırı silinemiyor (sabit → gömülü geçişte).** *(2026-11-11: KÖK `tag_tap.dart` `linkAtPoint`: PDF referansı, notta dönülecek PDF olmasa da (PDF "Ek" görünümünde alt şeritte → `_pdfForRefs` null; madde satırlarında hiç işleyici yok) bağlantı sayılıyordu → odaksız alanda dokunuş klavyeyi AÇMIYOR, hiçbir şey de yapmıyordu; satıra imleç konamıyordu. Kanıt `test/pdf_ref_keyboard_test.dart` kırmızı → yeşil: `pdfRefs` bayrağı (damga gibi), gövdede `_pdfForRefs != null` iken açık, madde satırında kapalı. `WrapTextController` düzeyinde geri silme sarma açık/kapalı ÇALIŞIYOR (aynı dosyada bekçi). Yüzen görünümde referans bilerek bağlantı (dokununca sayfaya döner; imleç satır sonuna konup silinir). Cihazda doğrulanmadı.)* Yeniden üretim:
   sabit PDF'te "Not al" → görünümü Yüzen/Ek'e çevir → gövdede `📖 s.11 …` satırını
   Backspace ile sil. İncele: `core/utils/pdf_ref.dart`, `WrapTextController.linkSpans`,
   `tag_tap.dart` (dokunuş çözümü), `_setAttachmentView`. Şüpheli: referans satırı sarma

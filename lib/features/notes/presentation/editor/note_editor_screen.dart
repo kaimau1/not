@@ -3707,6 +3707,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           displayText: _bodyField.text,
           global: global,
           timestamps: _note != null && _hasVideo(_note!),
+          pdfRefs: _note != null && _pdfForRefs(_note!) != null,
           tagNames: _bodyController.attachmentNames,
         ),
         ),
