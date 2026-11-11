@@ -3852,5 +3852,12 @@
     }
   },
   "quickAddEditHint": "Sürükleyerek sırala, göz ile gizle ya da göster.",
-  "quickAddKeepOne": "En az bir seçenek görünür kalmalı"
+  "quickAddKeepOne": "En az bir seçenek görünür kalmalı",
+  "attachmentUploadNow": "Şimdi dene",
+  "uploadPendingTitle": "{count, plural, =1{1 ek yüklenmeyi bekliyor} other{{count} ek yüklenmeyi bekliyor}}",
+  "@uploadPendingTitle": {"placeholders": {"count": {"type": "int"}}},
+  "uploadPendingBody": "Uygulamayı açınca yüklenir.",
+  "uploadPendingChannel": "Bekleyen ek yüklemeleri",
+  "placementHintShort": "{view} olarak eklendi · değiştirmek için anahtara dokun",
+  "@placementHintShort": {"placeholders": {"view": {"type": "String"}}}
 }

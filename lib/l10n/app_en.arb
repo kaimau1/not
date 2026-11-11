@@ -3041,5 +3041,10 @@
     }
   },
   "quickAddEditHint": "Drag to reorder, tap the eye to hide or show.",
-  "quickAddKeepOne": "At least one option must stay visible"
+  "quickAddKeepOne": "At least one option must stay visible",
+  "attachmentUploadNow": "Try now",
+  "uploadPendingTitle": "{count, plural, =1{1 attachment waiting to upload} other{{count} attachments waiting to upload}}",
+  "uploadPendingBody": "It uploads when you open the app.",
+  "uploadPendingChannel": "Pending attachment uploads",
+  "placementHintShort": "Added as {view} · tap the switch to change"
 }

@@ -111,7 +111,10 @@ Future<void> showAttachmentStatusSheet(
             Expanded(child: Text(attachmentStatusText(sheet, status))),
           ],
         ),
-        if (onRetry != null && status == AttachmentStatus.failed) ...[
+        // Bekleyen ekte de (F65.4): üstel bekleme saatlere tırmanmış olabilir.
+        if (onRetry != null &&
+            (status == AttachmentStatus.failed ||
+                status == AttachmentStatus.queued)) ...[
           const SizedBox(height: 12),
           Align(
             alignment: AlignmentDirectional.centerEnd,
@@ -120,7 +123,11 @@ Future<void> showAttachmentStatusSheet(
                 Navigator.pop(sheet);
                 onRetry();
               },
-              child: Text(sheet.l10n.retry),
+              child: Text(
+                status == AttachmentStatus.queued
+                    ? sheet.l10n.attachmentUploadNow
+                    : sheet.l10n.retry,
+              ),
             ),
           ),
         ],

@@ -9,6 +9,7 @@ import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -26,6 +27,8 @@ import '../domain/note.dart';
 import '../../../core/utils/run_heavy.dart';
 import '../domain/trash_analysis.dart' show trashReminderPlan;
 import 'notes_repository.dart';
+import 'upload_queue.dart'
+    show kPendingUploadPayload, pendingUploadNotice, pendingUploadsProvider;
 import '../../calendar/domain/routine.dart';
 import '../../calendar/data/calendar_repository.dart';
 import '../../calendar/domain/calendar_alarms.dart';
@@ -112,8 +115,9 @@ final reminderServiceProvider = Provider<ReminderService>((ref) {
 /// sessizce ölüyordu. İki servis de bu işlevi verir.
 void handleNotificationResponse(Ref ref, NotificationResponse response) {
   final payload = response.payload ?? '';
-  // Rozet özeti (zamanı gelenler): ana ekran — şerit orada.
-  if (payload == 'due') {
+  // Rozet özeti (zamanı gelenler): ana ekran — şerit orada. Bekleyen ek
+  // bildirimi (F65.4) de: uygulama açılınca kuyruk kendiliğinden yükler.
+  if (payload == 'due' || payload == kPendingUploadPayload) {
     try {
       ref.read(routerProvider).go('/');
     } catch (e) {
@@ -516,6 +520,11 @@ class ReminderService {
         routinesStreamProvider,
         (_, _) => _scheduleCalendarSync(),
       );
+      // Bekleyen ek bildirimi (F65.4): arka plana geçerken kur, dönünce kaldır.
+      _lifecycle = AppLifecycleListener(
+        onPause: () => unawaited(_armUploadNotice()),
+        onResume: () => unawaited(_cancelUploadNotice()),
+      );
     }
 
     // Ana ekran şeridinin "şimdi"si bir sonraki hatırlatıcıya kurulur ve
@@ -542,6 +551,68 @@ class ReminderService {
   }
 
   ProviderSubscription<BriefingSettings>? _briefingSub;
+
+  AppLifecycleListener? _lifecycle;
+  ProviderSubscription<({int pending, int failed, bool needsDrive})>?
+  _uploadsWhilePaused;
+  bool _uploadNoticeArmed = false;
+  static const _uploadNotificationId = 999004;
+
+  /// **F65.4 (OTURTMA B13, K-O9)**: ek kuyruğu yalnız uygulama açıkken
+  /// çalışır; bekleyen ek varken arka plana geçilirse 15 dk sonra tek sessiz
+  /// bildirim ("N ek yüklenmeyi bekliyor"). Yeni bağımlılık yok (workmanager
+  /// başsız yalıtımda Drive jetonu alamıyor). İzin burada SORULMAZ — arka
+  /// plana geçerken sistem kutusu açılmasın; izin yoksa bildirim çıkmaz.
+  Future<void> _armUploadNotice() async {
+    try {
+      final plan = pendingUploadNotice(
+        _ref.read(pendingUploadsProvider),
+        DateTime.now(),
+      );
+      if (plan == null) return;
+      await _ensureInitialized();
+      final l10n = await loadNotificationL10n(_ref.read(localeProvider));
+      await _plugin.zonedSchedule(
+        id: _uploadNotificationId,
+        title: l10n.uploadPendingTitle(plan.count),
+        body: l10n.uploadPendingBody,
+        scheduledDate: tz.TZDateTime.from(plan.at, tz.local),
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            'upload',
+            l10n.uploadPendingChannel,
+            channelDescription: l10n.uploadPendingBody,
+            importance: Importance.low,
+            priority: Priority.low,
+            playSound: false,
+            enableVibration: false,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: kPendingUploadPayload,
+      );
+      _uploadNoticeArmed = true;
+      // Arkadayken süren yükleme biterse bildirim de kalkar.
+      _uploadsWhilePaused ??= _ref.listen(pendingUploadsProvider, (_, next) {
+        if (next.pending == 0) unawaited(_cancelUploadNotice());
+      });
+    } catch (e) {
+      debugPrint('Bekleyen ek bildirimi kurulamadı: $e');
+    }
+  }
+
+  Future<void> _cancelUploadNotice() async {
+    _uploadsWhilePaused?.close();
+    _uploadsWhilePaused = null;
+    if (!_uploadNoticeArmed) return;
+    _uploadNoticeArmed = false;
+    try {
+      await _plugin.cancel(id: _uploadNotificationId);
+    } catch (e) {
+      debugPrint('Bekleyen ek bildirimi kaldırılamadı: $e');
+    }
+  }
+
   ProviderSubscription<DateTime?>? _dueNextSub;
   ProviderSubscription<int>? _badgeSub;
   Timer? _badgeDebounce;
@@ -906,6 +977,8 @@ class ReminderService {
   }
 
   void dispose() {
+    _lifecycle?.dispose();
+    _uploadsWhilePaused?.close();
     _syncDebounce?.cancel();
     _badgeDebounce?.cancel();
     _badgeSub?.close();

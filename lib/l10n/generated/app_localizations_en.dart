@@ -8352,4 +8352,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickAddKeepOne => 'At least one option must stay visible';
+
+  @override
+  String get attachmentUploadNow => 'Try now';
+
+  @override
+  String uploadPendingTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attachments waiting to upload',
+      one: '1 attachment waiting to upload',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get uploadPendingBody => 'It uploads when you open the app.';
+
+  @override
+  String get uploadPendingChannel => 'Pending attachment uploads';
+
+  @override
+  String placementHintShort(String view) {
+    return 'Added as $view · tap the switch to change';
+  }
 }

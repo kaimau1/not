@@ -898,7 +898,7 @@ tur görüntüleri `*-e-*.png`.
   hiç yazılmamışsa ve pencere ≥ 840 dp + yataysa `side = start`. 1024×640 dp'de (gerçek
   tablet) üstte sabit ek + 3 çubuk + klavye içerik bırakmıyor (F67.4 ile birlikte ölç).
 - [ ] **F65.3 Birden çok sabit ek — KARAR K-O8.**
-- [ ] **F65.4 Yükleme güvenilirliği (B13) — KARAR K-O9.** Öneri (bağımlılıksız): uygulama
+- [x] **F65.4 Yükleme güvenilirliği (B13) — KARAR K-O9.** *(2026-11-11: K-O9 en güvenli = bildirim, sabah bakılacak. Kanıt `test/attachment_status_test.dart` kırmızı (bekleyen ekte düğme yok, `pendingUploadNotice` yok) → yeşil. `ReminderService` `AppLifecycleListener`: arka plana geçerken bekleyen ek varsa (Drive bağlantısı beklemiyorsa) 15 dk sonra sessiz tek bildirim (`upload` kanalı, yük `upload`), dönünce/kuyruk boşalınca iptal; bekleyen ek rozetinde "Şimdi dene" → `retryNow`. Cihazda doğrulanmadı.)* Öneri (bağımlılıksız): uygulama
   `paused` olurken kuyrukta bekleyen ek varsa `ReminderService` üzerinden 15 dk sonrasına
   sessiz tek bildirim ("N ek yüklenmeyi bekliyor — açınca yüklenir", yük `upload:` — `note:`
   ile BAŞLAMAZ); uygulama açılınca/kuyruk boşalınca iptal. Ayrıca not ekranında ekin durum

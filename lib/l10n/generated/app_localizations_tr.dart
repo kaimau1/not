@@ -8336,4 +8336,29 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quickAddKeepOne => 'En az bir seçenek görünür kalmalı';
+
+  @override
+  String get attachmentUploadNow => 'Şimdi dene';
+
+  @override
+  String uploadPendingTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ek yüklenmeyi bekliyor',
+      one: '1 ek yüklenmeyi bekliyor',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get uploadPendingBody => 'Uygulamayı açınca yüklenir.';
+
+  @override
+  String get uploadPendingChannel => 'Bekleyen ek yüklemeleri';
+
+  @override
+  String placementHintShort(String view) {
+    return '$view olarak eklendi · değiştirmek için anahtara dokun';
+  }
 }
