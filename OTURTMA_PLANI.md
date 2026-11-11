@@ -74,7 +74,7 @@ Gözetimsiz yürütmenin sırası ve kuralları: `OTOMASYON.md`.
 | 68 | Liste ve senkron yükü | Bekliyor | | AKICILIK F22.4 burada |
 | 69 | Doğrulama turu ve kapanış | Bekliyor | | |
 | 70 | Yazım düzeltici v2 (baştan) | Bekliyor | | Opus |
-| 71 | Güvenlik denetimi ve altyapısı | Bekliyor | | Fable |
+| 71 | Güvenlik denetimi ve altyapısı | Bitti (cihazda/yayında doğrulanmadı; KARAR: yedek şifresi) | 2026-11-11 | rapor `docs/guvenlik_denetimi.md`; 9 bulgu düzeltildi, açık kritik/yüksek yok |
 
 **Önerilen sıra:** 58 → 59 → 60 → 61 → 62 → 63 → 65 → 66 → 67 → 68 → 64 → 69.
 Faz 64 bilerek sonda: en riskli iş, getirisi Faz 59 ölçümüyle kanıtlanmadan başlanmaz.
@@ -1153,47 +1153,55 @@ düzeltme KARAR'dır; gözetimsiz oturumda yalnız rapor + kırmayan sıkılaşt
 `.github/workflows/*.yml`, `web/_headers`, `web/index.html`, `core/app_update.dart`,
 `auth/data/*` (jeton deposu, `loopback_oauth.dart`), `MainActivity` ve `src/kisisel`.
 
-- [ ] **F71.1 Tehdit modeli (1 sayfa `docs/guvenlik.md`).** Varlıklar: notlar, ekler,
+- [x] **F71.1 Tehdit modeli (1 sayfa `docs/guvenlik.md`).** Varlıklar: notlar, ekler,
   Drive/Gmail/Takvim jetonları, Gemini anahtarı, imza anahtarı. Saldırganlar: başka
   hesap, paylaşım ortağı, cihazı eline geçiren, kötü niyetli dosya/bağlantı/paylaşım,
   tedarik zinciri (paket, CI action).
-- [ ] **F71.2 Firestore / Storage kuralları.** Her `match` için kim-okur/kim-yazar matrisi
+  → **Sonuç (2026-11-11):** `docs/guvenlik.md` (varlık, saldırgan, savunma, kalan risk tabloları).
+- [x] **F71.2 Firestore / Storage kuralları.** Her `match` için kim-okur/kim-yazar matrisi
   ve `rules-test` karşılığı. Özellikle: `userDirectory/{email}` ve `userSearch` ile
   kullanıcı numaralandırma; `noteShares` / `folderShares` rol yükseltme ve kendi rolünü
   değiştirme; `inboxNotes` ve `friendRequests` spam (boyut/sıklık sınırı); `config/*`
   yazımı; alt koleksiyonlar (`heavy`, `versions`, `presence`, F61 `ink`); 'write' rolünün
   `createdBy` kuralı; alan doğrulaması (tür, boyut) eksikleri; Storage'da yol başına
   boyut ve içerik türü, `thumbs` tavanı (HAFIZA: kurallar OR'lanır tuzağı).
-- [ ] **F71.3 Sırlar ve CI.** Depo GEÇMİŞİNDE anahtar taraması (gitleaks; `env.json`,
+  → **Sonuç (2026-11-11):** matris + 12 yeni kural testi (`rules-test`, 26/26). 5 bulgu düzeltildi: e-posta dizini ele geçirme (YÜKSEK), arama dizini / arkadaşlık isteğinde sahte e-posta, üyenin klasörü yeniden adlandırması, tavanlar. Açık: gelen kutusu hız sınırı, presence/versions doğrulaması (G-13, G-16).
+- [x] **F71.3 Sırlar ve CI.** Depo GEÇMİŞİNDE anahtar taraması (gitleaks; `env.json`,
   keystore, servis hesabı, jeton). APK'ya gömülen değerler (`GOOGLE_DESKTOP_CLIENT_SECRET`
   dart-define → düz metin; masaüstü istemci sırrı gizli sayılmaz, kapsam ve onay ekranı
   kısıtlarıyla belgelensin). İş akışları: `permissions:` en az yetki, `pull_request_target`
   yok, secret log'a basılmıyor, üçüncü taraf action'lar commit SHA'sına sabit, Release
   yazma yetkisi yalnız gereken işte.
-- [ ] **F71.4 Android yüzeyi.** `exported` bileşenler; derin bağlantı `notlar://note/<id>`
+  → **Sonuç (2026-11-11):** geçmişte sır yok (elle desen taraması; kalıcısı CI gitleaks). İş akışı: üst düzey `contents: read`, 4 üçüncü taraf action SHA'ya sabit. Masaüstü istemci sırrı belgelendi (G-10). Açık: sırların betiğe gömülme biçimi, sürümsüz `npx firebase-tools` (G-19, yalnız main adımları).
+- [x] **F71.4 Android yüzeyi.** `exported` bileşenler; derin bağlantı `notlar://note/<id>`
   ve bildirim/widget/kısayol açılışı uygulama kilidi ile not kilidini ATLAYABİLİYOR mu;
   paylaşım alıcısı (dosya adıyla yol geçişi, boyut, tür); kişisel köprü izni
   (`signature|knownSigner`); FileProvider yol kapsamı; uygulama içi güncelleme (APK yalnız
   kendi Release adresinden mi; kurulumdan önce paket adı + imza
   `getPackageArchiveInfo` ile doğrulanıyor mu); `allowBackup` / `dataExtractionRules`;
   jeton deposu (şifreli, uid'e bağlı); `FLAG_SECURE`; `url_launcher` şema süzgeci.
-- [ ] **F71.5 Web yüzeyi.** `web/_headers` (CSP, `X-Frame-Options`, `Referrer-Policy`);
+  → **Sonuç (2026-11-11):** dışa açık bileşenler, FileProvider, `allowBackup`, köprü izni, güncelleme (imzayı Android zorlar), jeton deposu incelendi — kritik yok. Bağlantı açıcıya şema süzgeci eklendi. Cihazda denenmedi (derin bağlantı + uygulama kilidi, `FLAG_SECURE`).
+- [x] **F71.5 Web yüzeyi.** `web/_headers` (CSP, `X-Frame-Options`, `Referrer-Policy`);
   `sessionStorage` jetonu; güvenilmeyen HTML basılan yerler (Gmail ileti gövdesi, YouTube
   iframe, bağlantı önizlemesi); App Check durumu; açık yönlendirme.
-- [ ] **F71.6 Uygulama içi veri yolları.** Kilitli not / gizli klasör / parola notu şu
+  → **Sonuç (2026-11-11):** `frame-ancestors` + `X-Frame-Options` eklendi (yayında doğrulanmadı). Tam CSP açık (G-12, deneme gerek). App Check zorlaması konsolda doğrulanmalı (kullanıcı işi).
+- [x] **F71.6 Uygulama içi veri yolları.** Kilitli not / gizli klasör / parola notu şu
   yollardan sızıyor mu: arama, kart önizlemesi, `home_snapshot`, widget, bildirim metni,
   AppFunctions (`Ajan.kt`), AI bağlamı ("Tüm notlar" sohbeti, ilgili notlar, günlük
   brifing), paylaşım, yedek, `ErrorLog`/Crashlytics. İçe aktarma: zip slip, zip bombası,
   dosya sayısı/boyut tavanı (`.notyedek`, Keep Takeout, `.enex`), güvenilmeyen PDF/PPTX.
   Yedek dosyası şifresiz — uyarı ya da parola seçeneği KARAR.
-- [ ] **F71.7 Bağımlılıklar.** `dart pub outdated`, `osv-scanner` (pubspec.lock,
+  → **Sonuç (2026-11-11):** kilitli notun hatırlatıcı BİLDİRİMİ başlık + gövde sızdırıyordu → düzeltildi (G-26). Diğer yollar gizli. Yol geçişi tek noktada kesili; zip bombası açık (G-21). **Yedek şifresiz — KARAR, sabah bakılacak** (G-11). `ErrorLog` incelenmedi.
+- [x] **F71.7 Bağımlılıklar.** `dart pub outdated`, `osv-scanner` (pubspec.lock,
   `functions/`, `rules-test/`), `npm audit`. Bilinen açıklı sürüm → yükseltme maddesi
   (FlutterFire paketleri BİRLİKTE yükseltilir kuralı).
-- [ ] **F71.8 Kalıcı altyapı.** CI'da: gitleaks + osv-scanner (kırmızı = uyarı, engel
+  → **Sonuç (2026-11-11):** `npm audit` (rules-test: 29, yalnız test aracı), `pub outdated` 131 eski paket; osv eşlemesi yerelde yapılamadı → CI `guvenlik` işi. Yükseltme yapılmadı.
+- [x] **F71.8 Kalıcı altyapı.** CI'da: gitleaks + osv-scanner (kırmızı = uyarı, engel
   değil) + kural testi kapsam özeti. `SECURITY.md`. Bekçi testleri: manifestlerde yeni
   `android:exported="true"` listesi sabit (yeni girdi testi kırar); `firestore.rules`'ta
   koşulsuz `allow … if true` deseni yok; F71.6'daki her sızıntı yolu için "kilitli not
   görünmez" testi.
+  → **Sonuç (2026-11-11):** CI `guvenlik` işi (gitleaks + osv-scanner, uyarı düzeyi), `rules-test/kapsam.js` (33/43 koşul), `SECURITY.md`, `test/security_guard_test.dart` (13 bekçi).
 - Kabul: rapor dosyada; kritik/yüksek bulgu 0 açık (ya da KARAR bekliyor diye işaretli);
   CI'da üç yeni kapı çalışıyor; `rules-test` yeşil.
 

@@ -11,3 +11,10 @@
   Cache-Control: public, max-age=604800, stale-while-revalidate=86400
 /assets/assets/google_fonts/*
   Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+# Tıklama tuzağı (F71.5, 2026-11-11): uygulama başka sitenin çerçevesine
+# alınamaz. Yalnız frame-ancestors — betik/kaynak kısıtı YOK (tam CSP,
+# Flutter wasm + Firebase + Google girişiyle denenmeden konmaz; bkz.
+# docs/guvenlik_denetimi.md G-12).
+/*
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'

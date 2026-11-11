@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 11 November 2026 {#2026-11-11}
+- **More secure:** reminder notifications for locked notes no longer show the title or content; friend requests and sharing are now more secure.
 - **Auto-correct rebuilt:** it only fixes words it is sure about; if you change a correction or press Backspace right after it, that fix is never made again. Settings → Learned spellings adds a "Rules only" mode and a list of rejected fixes you can restore.
 - **Handwriting survives backups:** full backups and shared notes now keep the handwriting you drew on the page; previously it was lost when a note was restored or shared.
 - **Large PDFs can be added:** PDFs over the cloud limit (e.g. 1 GB) are no longer refused; they're copied into the app without loading into memory, kept only on this device and not backed up to the cloud.

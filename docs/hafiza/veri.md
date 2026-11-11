@@ -110,3 +110,19 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - `CustomizeModeHost` alanın kendi boyunu `MediaQuery.size` verir (alt çubuk
   ekran dışına itiliyordu).
 
+## Güvenlik denetimi (Faz 71, 2026-11-11)
+
+- Rapor `docs/guvenlik_denetimi.md`, tehdit modeli `docs/guvenlik.md`. Yeni dışa açık
+  bileşen / kural eşleşmesi / kilitli notu gösteren yüzey eklerken
+  `test/security_guard_test.dart` kırmızı olur: liste aynı commit'te güncellenir.
+- **Kök neden (G-01):** kuralın YORUMU doğrulamayı anlatıyordu, kuralın kendisi yapmıyordu
+  (`userDirectory` kimliği e-postayla karşılaştırılmıyordu). Kural yorumuna güvenme; her
+  "yapamaz" cümlesinin `rules-test`te bir `assertFails`i olsun.
+- İstemcinin yazdığı "ben kimim" alanları (e-posta) kuralda `request.auth.token.email` ile
+  karşılaştırılır (`tokenEmail()`); misafirde ikisi de boş, eşleşir. Yalnız Google girişi
+  var — başka giriş yolu eklenirse `email_verified` şartı gözden geçirilmeli.
+- Kural testi yerelde: Java yok sanma — Android Studio JBR:
+  `JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"`. `npm test` sonunda kapsam özeti.
+- CI `guvenlik` işi uyarı düzeyinde (işi düşürmez); yanlış alarm `.gitleaks.toml`.
+  Action sürümü yükseltirken etiketi değil SHA'yı değiştir
+  (`gh api repos/<sahip>/<ad>/commits/<etiket> --jq .sha`).

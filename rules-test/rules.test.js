@@ -51,6 +51,9 @@ beforeEach(async () => {
 
 const as = (uid) => env.authenticatedContext(uid).firestore();
 const anon = () => env.unauthenticatedContext().firestore();
+/** Google ile girmiş kullanıcı: jetonda doğrulanmış e-posta var. */
+const asEmail = (uid, email) =>
+  env.authenticatedContext(uid, { email, email_verified: true }).firestore();
 
 /** Kuralları atlayarak tohum verisi. */
 async function seed(fn) {
@@ -109,7 +112,7 @@ test("takvim ve görevler yalnız sahibinde (TAKVIM_PLANI F46.4)", async () => {
 
 test("kullanıcı dizini taranamaz, yalnız kendi kaydı yazılır (F1.1)", async () => {
   await assertSucceeds(
-    setDoc(doc(as("a"), "userSearch/a"), {
+    setDoc(doc(asEmail("a", "a@x"), "userSearch/a"), {
       uid: "a", name: "A", email: "a@x", nameLower: "a", emailLower: "a@x",
     }),
   );
@@ -208,10 +211,213 @@ test("ortak not aynası yalnız sahibince, gerçek nota yaratılır", async () =
   );
 });
 
+// ── F71.2 güvenlik denetimi (2026-11-11) ───────────────────────────────
+
+test("F71.2 e-posta dizini: yalnız KENDİ doğrulanmış e-postasının kaydı", async () => {
+  const a = asEmail("a", "a@x.com");
+  await assertSucceeds(setDoc(doc(a, "userDirectory/a@x.com"), { uid: "a" }));
+  // Başkasının e-postasını kendine yönlendirme (yaratma ve ÜSTÜNE yazma).
+  const b = asEmail("b", "b@x.com");
+  await assertFails(setDoc(doc(b, "userDirectory/kurban@x.com"), { uid: "b" }));
+  await assertFails(setDoc(doc(b, "userDirectory/a@x.com"), { uid: "b" }));
+  // E-postasız (misafir) ve doğrulanmamış e-posta yazamaz.
+  await assertFails(setDoc(doc(as("m"), "userDirectory/m@x.com"), { uid: "m" }));
+  const d = env.authenticatedContext("d", { email: "d@x.com", email_verified: false }).firestore();
+  await assertFails(setDoc(doc(d, "userDirectory/d@x.com"), { uid: "d" }));
+  // Tek belge okunur, liste yok; yalnız sahibi siler.
+  await assertSucceeds(getDoc(doc(b, "userDirectory/a@x.com")));
+  await assertFails(getDocs(collection(b, "userDirectory")));
+  await assertFails(deleteDoc(doc(b, "userDirectory/a@x.com")));
+  await assertSucceeds(deleteDoc(doc(a, "userDirectory/a@x.com")));
+});
+
+test("F71.2 arama dizini: başkasının e-postasıyla kayıt açılamaz", async () => {
+  await assertFails(
+    setDoc(doc(asEmail("b", "b@x.com"), "userSearch/b"), {
+      uid: "b", name: "Kurban", email: "kurban@x.com",
+      nameLower: "kurban", emailLower: "kurban@x.com",
+    }),
+  );
+});
+
+test("F71.2 arkadaşlık isteği: sahte e-posta ve şişkin alan reddedilir", async () => {
+  const b = asEmail("b", "b@x.com");
+  const istek = (o) => ({ fromEmail: "b@x.com", fromName: "B", createdAt: Timestamp.now(), ...o });
+  await assertFails(setDoc(doc(b, "users/a/friendRequests/b"), istek({ fromEmail: "patron@x.com" })));
+  await assertFails(setDoc(doc(b, "users/a/friendRequests/b"), istek({ fromName: "x".repeat(201) })));
+  // Başkası adına istek.
+  await assertFails(setDoc(doc(b, "users/a/friendRequests/c"), istek({})));
+  await assertSucceeds(setDoc(doc(b, "users/a/friendRequests/b"), istek({})));
+  await assertFails(updateDoc(doc(b, "users/a/friendRequests/b"), { fromName: "Z" }));
+  // Misafir (e-postasız) boş e-postayla gönderebilir — davranış değişmedi.
+  await assertSucceeds(
+    setDoc(doc(as("m"), "users/a/friendRequests/m"), istek({ fromEmail: "", fromName: "" })),
+  );
+  // Kabul: A, B'nin listesine yalnız İSTEK VARSA ve kendi e-postasıyla yazar.
+  const a = asEmail("a", "a@x.com");
+  const kayit = (o) => ({ email: "a@x.com", name: "A", since: Timestamp.now(), ...o });
+  await assertFails(setDoc(doc(a, "users/b/friends/a"), kayit({ email: "patron@x.com" })));
+  await assertSucceeds(setDoc(doc(a, "users/b/friends/a"), kayit({})));
+  // İstek yokken başkasının arkadaş listesine girilemez.
+  await assertFails(setDoc(doc(a, "users/c/friends/a"), kayit({})));
+});
+
+/** A'nın f1 klasörü: b 'read', c 'write', d 'both', p davetli (bekliyor). */
+async function seedSharedFolder() {
+  await seed(async (db) => {
+    const paylasim = { sharedWith: ["b", "c", "d"], pending: ["p"], roles: { b: "read", c: "write" } };
+    await setDoc(doc(db, "users/a/folders/f1"), { name: "Ortak", icon: "folder", ...paylasim });
+    await setDoc(doc(db, "folderShares/f1"), { ownerId: "a", name: "Ortak", icon: "folder", ...paylasim });
+    await setDoc(doc(db, "users/a/notes/n1"), { title: "A'nın", folderId: "f1", createdBy: "a" });
+    await setDoc(doc(db, "users/a/notes/nc"), { title: "C'nin", folderId: "f1", createdBy: "c" });
+    await setDoc(doc(db, "users/a/notes/ozel"), { title: "özel" });
+    await setDoc(doc(db, "users/v/notes/n1"), { title: "kurban", folderId: "f1" });
+  });
+}
+
+test("F71.2 paylaşılan klasör: rol matrisi (read / write / both / davetli / yabancı)", async () => {
+  await seedSharedFolder();
+  const not = (uid) => doc(as(uid), "users/a/notes/n1");
+  // Okuma: read + both; write, davetli ve yabancı okuyamaz.
+  await assertSucceeds(getDoc(not("b")));
+  await assertSucceeds(getDoc(not("d")));
+  await assertFails(getDoc(not("c")));
+  await assertFails(getDoc(not("p")));
+  await assertFails(getDoc(not("x")));
+  // Klasör dışındaki nota ve başka kullanıcının aynı folderId'li notuna erişim yok.
+  await assertFails(getDoc(doc(as("d"), "users/a/notes/ozel")));
+  await assertFails(getDoc(doc(as("d"), "users/v/notes/n1")));
+  await assertFails(
+    setDoc(doc(as("d"), "users/v/notes/yeni"), { folderId: "f1", createdBy: "d", updatedBy: "d" }),
+  );
+  // Yazma: read yazamaz; write yalnız KENDİ notunu; both hepsini.
+  await assertFails(updateDoc(not("b"), { title: "x", updatedBy: "b" }));
+  await assertFails(updateDoc(not("c"), { title: "x", updatedBy: "c" }));
+  await assertSucceeds(updateDoc(doc(as("c"), "users/a/notes/nc"), { title: "y", updatedBy: "c" }));
+  await assertSucceeds(updateDoc(not("d"), { title: "z", updatedBy: "d" }));
+  // Not klasörden çıkarılamaz, createdBy değişemez, kalıcı silinemez.
+  await assertFails(updateDoc(not("d"), { folderId: null, updatedBy: "d" }));
+  await assertFails(updateDoc(not("d"), { createdBy: "d", updatedBy: "d" }));
+  await assertFails(deleteDoc(not("d")));
+  // Yaratma: createdBy kendisi olmalı; read rolü yaratamaz.
+  await assertSucceeds(
+    setDoc(doc(as("c"), "users/a/notes/c2"), { folderId: "f1", createdBy: "c", updatedBy: "c" }),
+  );
+  await assertFails(
+    setDoc(doc(as("c"), "users/a/notes/c3"), { folderId: "f1", createdBy: "a", updatedBy: "c" }),
+  );
+  await assertFails(
+    setDoc(doc(as("b"), "users/a/notes/b1"), { folderId: "f1", createdBy: "b", updatedBy: "b" }),
+  );
+});
+
+test("F71.2 paylaşılan klasör: üye rolünü yükseltemez, klasörü yeniden adlandıramaz", async () => {
+  await seedSharedFolder();
+  for (const yol of ["users/a/folders/f1", "folderShares/f1"]) {
+    await assertFails(updateDoc(doc(as("b"), yol), { roles: { b: "both", c: "write" } }));
+    await assertFails(updateDoc(doc(as("b"), yol), { sharedWith: ["b", "c", "d", "x"] }));
+    await assertFails(updateDoc(doc(as("b"), yol), { name: "Ele geçirildi" }));
+    await assertFails(updateDoc(doc(as("x"), yol), { sharedWith: ["b", "c", "d", "x"] }));
+  }
+  await assertFails(updateDoc(doc(as("b"), "users/a/folders/f1"), { hidden: true }));
+  await assertFails(updateDoc(doc(as("b"), "folderShares/f1"), { ownerId: "b" }));
+  // Davetli yalnız kendi davetini yanıtlar: kabul edebilir, başkasını ekleyemez.
+  await assertFails(
+    updateDoc(doc(as("p"), "folderShares/f1"), { pending: [], sharedWith: ["b", "c", "d", "p", "x"] }),
+  );
+  await assertFails(updateDoc(doc(as("p"), "folderShares/f1"), { pending: [], roles: { p: "both" } }));
+  await assertSucceeds(
+    updateDoc(doc(as("p"), "folderShares/f1"), { pending: [], sharedWith: ["b", "c", "d", "p"] }),
+  );
+  await assertSucceeds(
+    updateDoc(doc(as("p"), "users/a/folders/f1"), { pending: [], sharedWith: ["b", "c", "d", "p"] }),
+  );
+});
+
+test("F71.2 klasör aynası: sahte ayna yaratılamaz", async () => {
+  await seed((db) => setDoc(doc(db, "users/a/folders/f9"), { name: "A'nın" }));
+  const ayna = (ownerId) => ({ ownerId, name: "x", icon: "folder", sharedWith: ["c"], pending: [], roles: {} });
+  // Klasörü olmayan biri başkasının folderId'siyle ayna açamaz; başkası adına da.
+  await assertFails(setDoc(doc(as("c"), "folderShares/f9"), ayna("c")));
+  await assertFails(setDoc(doc(as("c"), "folderShares/f9"), ayna("a")));
+  await assertSucceeds(setDoc(doc(as("a"), "folderShares/f9"), ayna("a")));
+});
+
+test("F71.2 klasör sohbeti: yalnız üyeler, gönderen sahte olamaz, tavanlar", async () => {
+  await seedSharedFolder();
+  const ileti = (o) => ({ senderId: "b", senderName: "B", text: "selam", createdAt: Timestamp.now(), ...o });
+  const b = as("b");
+  await assertSucceeds(setDoc(doc(b, "folderShares/f1/messages/m1"), ileti({})));
+  await assertFails(setDoc(doc(b, "folderShares/f1/messages/m2"), ileti({ senderId: "a" })));
+  await assertFails(setDoc(doc(b, "folderShares/f1/messages/m3"), ileti({ text: "x".repeat(2001) })));
+  await assertFails(setDoc(doc(b, "folderShares/f1/messages/m4"), ileti({ text: "" })));
+  await assertFails(setDoc(doc(b, "folderShares/f1/messages/m5"), ileti({ senderName: "x".repeat(201) })));
+  await assertFails(updateDoc(doc(b, "folderShares/f1/messages/m1"), { text: "değişti" }));
+  // Davetli ve yabancı okuyamaz/yazamaz; yazar ve sahip siler.
+  await assertFails(getDoc(doc(as("p"), "folderShares/f1/messages/m1")));
+  await assertFails(setDoc(doc(as("x"), "folderShares/f1/messages/m6"), ileti({ senderId: "x" })));
+  await assertFails(deleteDoc(doc(as("d"), "folderShares/f1/messages/m1")));
+  await assertSucceeds(deleteDoc(doc(as("a"), "folderShares/f1/messages/m1")));
+});
+
+test("F71.2 gelen notlar: yalnız arkadaş, gönderen sahte olamaz, tavan", async () => {
+  await seed((db) => setDoc(doc(db, "users/a/friends/b"), { email: "b@x.com", name: "B" }));
+  const not = (o) => ({ fromUid: "b", fromName: "B", fromEmail: "b@x.com", title: "t", body: "g", ...o });
+  await assertSucceeds(setDoc(doc(as("b"), "users/a/inboxNotes/i1"), not({})));
+  await assertFails(setDoc(doc(as("b"), "users/a/inboxNotes/i2"), not({ fromUid: "c" })));
+  await assertFails(setDoc(doc(as("b"), "users/a/inboxNotes/i3"), not({ body: "x".repeat(100001) })));
+  await assertFails(setDoc(doc(as("b"), "users/a/inboxNotes/i4"), not({ ek: 1 })));
+  // Arkadaş olmayan gönderemez; gönderen yolladığını okuyamaz/değiştiremez.
+  await assertFails(setDoc(doc(as("c"), "users/a/inboxNotes/i5"), not({ fromUid: "c" })));
+  await assertFails(getDoc(doc(as("b"), "users/a/inboxNotes/i1")));
+  await assertFails(updateDoc(doc(as("b"), "users/a/inboxNotes/i1"), { body: "y" }));
+});
+
+test("F71.2 AI kotası: sayaç geri alınamaz, silinemez, başkası okuyamaz", async () => {
+  await seed((db) =>
+    setDoc(doc(db, "aiQuota/a"), { dayStart: Timestamp.now(), points: 50 }),
+  );
+  const q = doc(as("a"), "aiQuota/a");
+  await assertFails(updateDoc(q, { points: 0 }));
+  await assertFails(updateDoc(q, { points: 50 }));
+  await assertSucceeds(updateDoc(q, { points: 51 }));
+  await assertFails(updateDoc(q, { points: 1001 }));
+  await assertFails(updateDoc(q, { points: 52, ek: "x" }));
+  await assertFails(deleteDoc(q));
+  await assertFails(getDoc(doc(as("b"), "aiQuota/a")));
+});
+
 // ── Storage ────────────────────────────────────────────────────────────
 
 const store = (uid) => env.authenticatedContext(uid).storage();
 const png = { contentType: "image/png" };
+
+test("F71.2 Storage: klasör sohbeti görseli yalnız üyede, yalnız görsel", async () => {
+  await seedSharedFolder();
+  const yol = "folderChats/f1/g.png";
+  await assertSucceeds(uploadString(ref(store("b"), yol), "veri", "raw", png));
+  await assertSucceeds(getBytes(ref(store("a"), yol)));
+  await assertFails(getBytes(ref(store("p"), yol)));
+  await assertFails(getBytes(ref(store("x"), yol)));
+  await assertFails(uploadString(ref(store("x"), "folderChats/f1/x.png"), "veri", "raw", png));
+  await assertFails(
+    uploadString(ref(store("b"), "folderChats/f1/b.pdf"), "veri", "raw", { contentType: "application/pdf" }),
+  );
+});
+
+test("F71.2 Storage: paylaşılan klasörde rol — read yükleyemez, yabancı okuyamaz", async () => {
+  await seedSharedFolder();
+  const yol = "users/a/notes/n1/ek.png";
+  await assertSucceeds(uploadString(ref(store("a"), yol), "veri", "raw", png));
+  await assertSucceeds(getBytes(ref(store("b"), yol)));
+  await assertFails(uploadString(ref(store("b"), "users/a/notes/n1/b.png"), "veri", "raw", png));
+  await assertSucceeds(uploadString(ref(store("d"), "users/a/notes/n1/d.png"), "veri", "raw", png));
+  await assertFails(getBytes(ref(store("x"), yol)));
+  await assertFails(getBytes(ref(store("p"), yol)));
+  // Klasör dışındaki notun eki paylaşım üyesine kapalı.
+  await assertSucceeds(uploadString(ref(store("a"), "users/a/notes/ozel/e.png"), "veri", "raw", png));
+  await assertFails(getBytes(ref(store("d"), "users/a/notes/ozel/e.png")));
+});
 
 test("Storage: sahip kendi ekini yükler/okur, yabancı okuyamaz", async () => {
   await assertSucceeds(uploadString(ref(store("a"), "users/a/notes/n1/x.png"), "x", "raw", png));
