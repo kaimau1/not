@@ -401,7 +401,11 @@ extension _ItemsRow on ItemsEditorState {
                 ),
                 Expanded(
                   // Seçim modunda metne dokunmak düzenlemeye değil seçime gider.
-                  child: _itemRightClick(
+                  // Basılı tutmaya devam → madde seçimi (F60.S6); sarmalayıcı
+                  // koşulsuz (ağaç şekli kiple değişmez).
+                  child: _HoldToSelect(
+                    onHold: () => _holdSelect(item),
+                    child: _itemRightClick(
  item,
  child: GestureDetector(
                     onTap: _selectionMode ? () => _toggleSelection(item) : null,
@@ -588,6 +592,7 @@ extension _ItemsRow on ItemsEditorState {
                     ),
                   ),
 ),
+                  ),
                 ),
                 // YILDIZ ARTIK DÜĞME DEĞİL, İŞARET (kullanıcı isteği 2026-08-30:
                 // "yıldızla tuşu maddeler için yerleşimi kötü, basılı tutunca

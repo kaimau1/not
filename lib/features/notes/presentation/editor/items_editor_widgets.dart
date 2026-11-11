@@ -531,3 +531,77 @@ class _CheckPopState extends State<_CheckPop>
     super.dispose();
   }
 }
+
+/// **BASILI TUTMAYA DEVAM → MADDE SEÇİMİ (F60.S6, kullanıcı isteği
+/// 2026-11-11).** Maddeye uzun basış (≈500 ms) metin alanının kendi jestiyle
+/// yazıyı seçer; parmak kalkmadan ve kaymadan [_kHoldSelectDelay] dolarsa
+/// [_HoldToSelect.onHold] çağrılır (madde seçim kipine geçiş).
+///
+/// Ham [Listener]: jest arenasına KATILMAZ, metin alanının uzun basışını ve
+/// seçim tutamacı sürüklemesini yarıştırıp bozmaz. Yalnız dokunmatik parmak —
+/// kalem ve fare kendi seçim davranışında kalır. Zamanlayıcı bu küçük öğenin
+/// durumunda: editörün kök `setState`'ine dokunmaz (kasma listesi 3), ağaç
+/// şekli sabit (4).
+const _kHoldSelectDelay = Duration(milliseconds: 1100);
+
+class _HoldToSelect extends StatefulWidget {
+  const _HoldToSelect({required this.onHold, required this.child});
+
+  final VoidCallback onHold;
+  final Widget child;
+
+  @override
+  State<_HoldToSelect> createState() => _HoldToSelectState();
+}
+
+class _HoldToSelectState extends State<_HoldToSelect> {
+  Timer? _timer;
+  int? _pointer;
+  Offset _origin = Offset.zero;
+
+  void _cancel() {
+    _timer?.cancel();
+    _timer = null;
+    _pointer = null;
+  }
+
+  void _down(PointerDownEvent e) {
+    if (_pointer != null) {
+      // İkinci parmak (yakınlaştırma vb.): basılı tutma sayılmaz.
+      _cancel();
+      return;
+    }
+    if (e.kind != PointerDeviceKind.touch) return;
+    _pointer = e.pointer;
+    _origin = e.position;
+    _timer = Timer(_kHoldSelectDelay, () {
+      _timer = null;
+      _pointer = null;
+      if (mounted) widget.onHold();
+    });
+  }
+
+  void _move(PointerMoveEvent e) {
+    if (e.pointer != _pointer) return;
+    if ((e.position - _origin).distance > kTouchSlop) _cancel();
+  }
+
+  void _end(PointerEvent e) {
+    if (e.pointer == _pointer) _cancel();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Listener(
+    onPointerDown: _down,
+    onPointerMove: _move,
+    onPointerUp: _end,
+    onPointerCancel: _end,
+    child: widget.child,
+  );
+}
