@@ -13,6 +13,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/frame_loop.dart';
+import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/utils/link_text.dart' show findLinks;
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/sentence_select.dart';

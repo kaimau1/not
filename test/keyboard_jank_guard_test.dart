@@ -18,15 +18,23 @@ List<double> _keyboardFrames({double height = 300, int frames = 18}) => [
     height * Curves.fastOutSlowIn.transform(i / frames),
 ];
 
-/// Bir karede olanlar: toplam widget kurulumu, yeniden dizilmek üzere
-/// işaretlenen yerleşim sınırları, alt çubuğun ekrandaki alt kenarı.
-typedef _Frame = ({double inset, int builds, List<String> layouts, double bar});
+/// Bir karede olanlar: toplam widget kurulumu, bunun EDİTÖRÜN İÇİNDE kalanı
+/// (gerisi çerçevenin kendi işi: kök `MediaQuery`, metin seçim tutamağının
+/// her klavye karesinde tazelenen katmanı — `EditableText.didChangeMetrics`),
+/// yeniden dizilmek üzere işaretlenen yerleşim sınırları, alt çubuğun
+/// ekrandaki alt kenarı.
+typedef _Frame = ({
+  double inset,
+  int builds,
+  int editorBuilds,
+  List<String> layouts,
+  double bar,
+});
 
 /// Klavyeyi tam editörde kare kare süren düzenek (F60.S5).
 class _KeyboardRig {
   _KeyboardRig(this.tester);
   final WidgetTester tester;
-  final _counter = BuildCounter();
   final _marks = <String>[];
 
   Future<_Frame> frame(double inset, {int ms = 16}) async {
@@ -45,17 +53,28 @@ class _KeyboardRig {
       }
     };
     debugPrintMarkNeedsLayoutStacks = true;
-    _counter.start();
+    final rebuilt = <Element>{};
+    debugOnRebuildDirtyWidget = (e, _) => rebuilt.add(e);
     try {
       await tester.pump(Duration(milliseconds: ms));
     } finally {
-      _counter.stop();
+      debugOnRebuildDirtyWidget = null;
       debugPrintMarkNeedsLayoutStacks = false;
       debugPrint = print;
     }
+    bool inEditor(Element e) {
+      var inside = false;
+      e.visitAncestorElements((a) {
+        inside = a.widget is NoteEditorScreen;
+        return !inside;
+      });
+      return inside;
+    }
+
     return (
       inset: inset,
-      builds: _counter.counts.values.fold(0, (a, b) => a + b),
+      builds: rebuilt.length,
+      editorBuilds: rebuilt.where((e) => e.mounted && inEditor(e)).length,
       layouts: List.of(_marks),
       bar: tester.getRect(find.byType(BottomAppBar)).bottom,
     );
@@ -101,13 +120,29 @@ void main() {
     const screen = 915.0, nav = 48.0;
     final up = _keyboardFrames();
     final down = [...up.reversed.skip(1), 0.0];
+    // Kareler üç türdür:
+    // * GEÇİŞ: klavyenin göründüğü ilk kare (üst çubukta tarih ↔ hızlı satır)
+    //   ve kapanışın ilk/son karesi (gövde tam boya döner; satır ↔ tarih).
+    //   Çevrim başına birer kez; bir şeyler dizilir.
+    // * HAREKET: aradaki bütün kareler — yalnız klavyeyi dinleyen yapraklar
+    //   kurulur, HİÇBİR ŞEY dizilmez.
+    final first = <_Frame>[];
+    final switching = <_Frame>[];
     final moving = <_Frame>[];
     for (var cycle = 0; cycle < 3; cycle++) {
       for (final seq in [up, down]) {
         var last = double.nan;
-        for (final inset in seq) {
+        for (final (i, inset) in seq.indexed) {
           final f = await rig.frame(inset);
-          moving.add(f);
+          final edge =
+              (seq == up && i == 0) ||
+              (seq == down && (i == 0 || i == seq.length - 1));
+          (cycle == 0 && seq == up && i == 0
+                  ? first
+                  : edge
+                  ? switching
+                  : moving)
+              .add(f);
           // Çubuğun dibi: klavye gezinme çubuğundan alçaksa onun üstü,
           // değilse klavyenin üstü — HER KAREDE (gecikme/çift hareket yok).
           expect(
@@ -125,29 +160,38 @@ void main() {
           }
           last = f.bar;
         }
-        // Oturma (KeyboardSnap, 140 ms): ayrı — hareket karesi değil.
+        // Oturma (140 ms sonra, klavye durmuşken): hareket karesi değil.
         await tester.pump(const Duration(milliseconds: 200));
         await tester.pump(const Duration(milliseconds: 200));
       }
     }
-    // İlk açılışın ilk karesi hızlı satırı kurar (tek seferlik), ayrı bütçe.
-    final first = moving.first;
-    // Gövdeyi tam boya döndüren kare (kapanışın ilki) oturma sayılır.
-    bool settles(_Frame f) => f.inset == down.first;
-    final rest = [
-      for (final f in moving.skip(1))
-        if (!settles(f)) f,
-    ];
-    final worst = rest.reduce((a, b) => a.builds >= b.builds ? a : b);
-    final laidOut = {for (final f in rest) ...f.layouts};
+    _Frame worst(List<_Frame> l) =>
+        l.reduce((a, b) => a.builds >= b.builds ? a : b);
+    final editorWorst = moving
+        .map((f) => f.editorBuilds)
+        .reduce((a, b) => a > b ? a : b);
+    final laidOut = {for (final f in moving) ...f.layouts};
     // ignore: avoid_print
     print(
-      'S17: ilk kare ${first.builds} kurulum; hareket karesi en çok '
-      '${worst.builds} (klavye ${worst.inset.toStringAsFixed(0)}); '
-      'dizilen sınırlar $laidOut',
+      'S17: ilk kare ${first.single.builds} kurulum; geçiş karesi en çok '
+      '${worst(switching).builds}; hareket karesi en çok '
+      '${worst(moving).builds} (klavye '
+      '${worst(moving).inset.toStringAsFixed(0)}), editör içi $editorWorst, '
+      'dizilen $laidOut',
     );
-    expect(first.builds, lessThanOrEqualTo(_budget('ilk_kare_kurulum')));
-    expect(worst.builds, lessThanOrEqualTo(_budget('hareket_karesi_kurulum')));
+    expect(first.single.builds, lessThanOrEqualTo(_budget('ilk_kare_kurulum')));
+    expect(
+      worst(switching).builds,
+      lessThanOrEqualTo(_budget('gecis_karesi_kurulum')),
+    );
+    expect(
+      worst(moving).builds,
+      lessThanOrEqualTo(_budget('hareket_karesi_kurulum')),
+    );
+    expect(
+      editorWorst,
+      lessThanOrEqualTo(_budget('hareket_karesi_editor_ici')),
+    );
     expect(
       laidOut.length,
       lessThanOrEqualTo(_budget('hareket_dizilen_sinir')),

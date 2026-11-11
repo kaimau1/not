@@ -8,6 +8,7 @@ import '../../../../core/app_icons.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
 import '../../../../core/widgets/customizable.dart';
+import '../../../../core/widgets/keyboard_snap.dart';
 import 'auto_spell.dart';
 
 /// **YAZARKEN ÜSTTE HIZLI İŞLEV SATIRI** (kullanıcı isteği 2026-11-08):
@@ -120,26 +121,6 @@ class EditorQuickRow extends StatefulWidget {
 }
 
 class _EditorQuickRowState extends State<EditorQuickRow> {
-  bool _glow = false;
-  Timer? _fade;
-
-  @override
-  void initState() {
-    super.initState();
-    if (!widget.hint) return;
-    widget.onHinted?.call();
-    _glow = true;
-    _fade = Timer(const Duration(milliseconds: 1400), () {
-      if (mounted) setState(() => _glow = false);
-    });
-  }
-
-  @override
-  void dispose() {
-    _fade?.cancel();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -429,17 +410,10 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
       ],
     );
     return RepaintBoundary(
-      child: AnimatedContainer(
-        duration: reduceMotion
-            ? Duration.zero
-            : const Duration(milliseconds: 600),
-        curve: Curves.easeOut,
-        decoration: BoxDecoration(
-          color: _glow
-              ? scheme.primary.withValues(alpha: 0.12)
-              : scheme.primary.withValues(alpha: 0),
-          borderRadius: BorderRadius.circular(20),
-        ),
+      child: _HintGlow(
+        hint: widget.hint,
+        onHinted: widget.onHinted,
+        reduceMotion: reduceMotion,
         child: ListenableBuilder(
           listenable: Personalize.listenable,
           builder: (context, _) {
@@ -571,6 +545,96 @@ class _QuickEntry {
   final Widget widget;
 }
 
+/// Satırın İLK GÖRÜNÜŞÜNDEKİ kısa parlama ("burada yeni bir şey var").
+///
+/// Ayrı yaprak (F60.S5): eskiden parlama satırın kendi durumuydu — 1,4 sn
+/// sonra sönerken BÜTÜN satır (≈ 250 widget) yazmanın ortasında yeniden
+/// kuruluyordu. Burada yalnız zemin kutusu kurulur; [child] aynı örnek.
+/// Satır klavyeden önce görünmeden kurulduğu için (bkz. [KeyboardSwitch])
+/// parlama kurulunca değil GÖRÜNÜNCE başlar (`TickerMode`).
+class _HintGlow extends StatefulWidget {
+  const _HintGlow({
+    required this.hint,
+    required this.onHinted,
+    required this.reduceMotion,
+    required this.child,
+  });
+
+  final bool hint;
+  final VoidCallback? onHinted;
+  final bool reduceMotion;
+  final Widget child;
+
+  @override
+  State<_HintGlow> createState() => _HintGlowState();
+}
+
+class _HintGlowState extends State<_HintGlow>
+    with SingleTickerProviderStateMixin {
+  /// 1 = parlak, 0 = sönük. Yalnız BOYAMAYI sürer ([CustomPaint.painter]'ın
+  /// `repaint`'i): sönerken kare başına ne kurulum ne yerleşim — satır üst
+  /// çubuğun `LayoutBuilder`'ı altında, oradaki her `setState` çubuğu
+  /// yeniden dizilmek üzere işaretler.
+  late final AnimationController _light = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 600),
+  );
+  bool _started = false;
+  Timer? _fade;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started || !widget.hint) return;
+    if (!TickerMode.valuesOf(context).enabled) return;
+    _started = true;
+    widget.onHinted?.call();
+    _light.value = 1;
+    _fade = Timer(const Duration(milliseconds: 1400), () {
+      if (!mounted) return;
+      if (widget.reduceMotion) {
+        _light.value = 0;
+      } else {
+        unawaited(_light.animateBack(0, curve: Curves.easeOut));
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _fade?.cancel();
+    _light.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    painter: _GlowPainter(_light, Theme.of(context).colorScheme.primary),
+    child: widget.child,
+  );
+}
+
+class _GlowPainter extends CustomPainter {
+  _GlowPainter(this.light, this.color) : super(repaint: light);
+
+  final Animation<double> light;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final t = light.value;
+    if (t <= 0) return;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(20)),
+      Paint()..color = color.withValues(alpha: 0.12 * t),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_GlowPainter old) =>
+      old.light != light || old.color != color;
+}
+
 /// Klavye açıkken [open], kapalıyken [closed]. Yalnız bu yaprak klavye
 /// boşluğuna bağlı (MediaQuery bölümü); hazır verilen alt ağaçlar aynı örnek
 /// olduğundan animasyon karelerinde alt ağaç yeniden kurulmaz.
@@ -605,13 +669,64 @@ class _KeyboardSwitchState extends State<KeyboardSwitch> {
   static final _never = ValueNotifier<bool>(false);
   bool _built = false;
 
+  /// **[open] KLAVYEDEN ÖNCE KURULUR** (F60.S5). Eskiden ilk klavye
+  /// karesinde kuruluyordu: hızlı satır ≈ 230 widget — klavye animasyonunun
+  /// TAM BAŞINDA tek pahalı kare (ölçüm: o kare 320 kurulum, sonrakiler 87).
+  /// Artık not açılışı durulunca ([_kIdle]) ya da bir alana odaklanınca
+  /// (klavye birkaç kare sonra gelir) görünmeden kurulur; klavyenin ilk
+  /// karesi yalnız görüneni değiştirir.
+  static const _kIdle = Duration(milliseconds: 900);
+  Timer? _idle;
+
+  @override
+  void initState() {
+    super.initState();
+    _idle = Timer(_kIdle, _prebuild);
+    widget.editing?.addListener(_onEditing);
+  }
+
+  @override
+  void didUpdateWidget(KeyboardSwitch old) {
+    super.didUpdateWidget(old);
+    if (old.editing != widget.editing) {
+      old.editing?.removeListener(_onEditing);
+      widget.editing?.addListener(_onEditing);
+    }
+  }
+
+  @override
+  void dispose() {
+    _idle?.cancel();
+    widget.editing?.removeListener(_onEditing);
+    super.dispose();
+  }
+
+  /// Odak geldi: odak karesini ağırlaştırmadan, bir SONRAKİ karede kur.
+  void _onEditing() {
+    if (_built || widget.editing?.value != true) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _prebuild());
+    WidgetsBinding.instance.scheduleFrame();
+  }
+
+  void _prebuild() {
+    _idle?.cancel();
+    _idle = null;
+    if (!mounted || _built) return;
+    setState(() => _built = true);
+  }
+
   Widget _pick(bool showOpen) {
     if (showOpen) _built = true;
     return Stack(
       children: [
         Offstage(
           offstage: !showOpen,
-          child: _built ? widget.open : const SizedBox.shrink(),
+          // Görünmeyen taraf animasyon sürmez; ilk görünüşü bekleyenler
+          // (satırın parlaması) buradan öğrenir.
+          child: TickerMode(
+            enabled: showOpen,
+            child: _built ? widget.open : const SizedBox.shrink(),
+          ),
         ),
         Offstage(
           offstage: showOpen,
@@ -623,7 +738,7 @@ class _KeyboardSwitchState extends State<KeyboardSwitch> {
 
   @override
   Widget build(BuildContext context) {
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final keyboard = KeyboardInset.openOf(context);
     final e = widget.editing;
     final win = WindowClass.of(context);
     final tablet = e != null && win.touchFirst && !win.compactDevice;

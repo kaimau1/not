@@ -15,6 +15,7 @@ import 'package:video_player/video_player.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
 import '../../../../core/widgets/customizable.dart';
+import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/widgets/pop_in.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/video_time.dart';
@@ -1573,7 +1574,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   Widget _multiToolbar(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    final keyboard = KeyboardInset.liveOf(context);
     final systemBar = MediaQuery.viewPaddingOf(context).bottom;
     final chosen = _multiSelected;
     return Positioned(

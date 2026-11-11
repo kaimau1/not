@@ -122,12 +122,14 @@
     "neden": "İlk ölçüm (bugünkü hâl); hedef Faz 61'de işlenecek"
   },
   "S17": {
-    "senaryo": "Klavye aç/kapa ×3, 30 satırlık metin notu, 18 karelik hareket (ilk kareler gezinme payının altında): kare başına toplam widget kurulumu ve dizilmek üzere işaretlenen yerleşim sınırı (test/keyboard_jank_guard_test.dart)",
-    "ilk_kare_kurulum": 60,
-    "hareket_karesi_kurulum": 20,
+    "senaryo": "Klavye aç/kapa ×3, 30 satırlık metin notu, alana dokunulmuş (seçim tutamağı var), 18 karelik hareket (ilk kareler gezinme payının altında): kare başına widget kurulumu ve dizilmek üzere işaretlenen yerleşim sınırı (test/keyboard_jank_guard_test.dart)",
+    "ilk_kare_kurulum": 45,
+    "gecis_karesi_kurulum": 67,
+    "hareket_karesi_kurulum": 54,
+    "hareket_karesi_editor_ici": 7,
     "hareket_dizilen_sinir": 0,
-    "bugun": "?",
-    "hedef": "hareket karesinde yalnız klavyeyi dinleyen yapraklar; dizilen sınır 0",
-    "neden": "F60.S5"
+    "bugun": "ilk kare 45 / geçiş 67 / hareket 54 (editör içi 7) / dizilen 0 (2026-11-11, F60.S5; önce ilk kare 320, hareket 87–96, editör içi 49, her karede Scaffold kutusu diziliyordu)",
+    "hedef": "editör içi ≤ 7 (kapsam + alt çubuk kaydırıcısı); kalan ≈ 45 çerçevenin: kök MediaQuery + metin seçim tutamağı katmanı (EditableText.didChangeMetrics → updateForScroll)",
+    "neden": "F60.S5: KeyboardInsetScope (editör Scaffold'ı klavye karelerini görmez) + hızlı satır klavyeden önce kurulur + parlama yalnız boyamada"
   }
 }

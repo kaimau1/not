@@ -706,7 +706,7 @@ extension _ItemsRow on ItemsEditorState {
     // `MediaQuery.of` DEĞİL: o, MediaQuery'nin HERHANGİ bir alanı değişince
     // (yönelim, metin ölçeği, erişilebilirlik…) çubuğu yeniden kurar. Çubuğun
     // ihtiyacı yalnız iki ölçü.
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    final keyboard = KeyboardInset.liveOf(context);
     final systemBar = MediaQuery.viewPaddingOf(context).bottom;
     final allSelected = _items.isNotEmpty && _selected.length == _items.length;
     final hasSelection = _selected.isNotEmpty;

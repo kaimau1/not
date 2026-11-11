@@ -4698,6 +4698,10 @@ child: NoteFindBar(
           identity: (note.id, Theme.of(context).brightness),
           builder: (context, color, child) =>
               ColoredBox(color: color, child: child),
+          // Scaffold ve altı klavyenin karelerini GÖRMEZ (F60.S5): kararlı
+          // MediaQuery; canlı değer yalnız [KeyboardInset.liveOf] okuyan
+          // yapraklarda (bkz. [KeyboardInsetScope]).
+          child: KeyboardInsetScope(
           child: Scaffold(
           backgroundColor: Colors.transparent,
           // **KASMA — klavye boşluğu artık KARARLI** (bkz. [KeyboardSnap]).
@@ -5198,7 +5202,7 @@ child: NoteFindBar(
             },
           ),
           ),
-        ))),
+        )))),
         ),
         ),
         ),
