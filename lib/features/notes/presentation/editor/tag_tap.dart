@@ -96,6 +96,7 @@ bool linkAtPoint({
   required String displayText,
   required Offset global,
   bool timestamps = false,
+  bool pdfRefs = false,
   Iterable<String> tagNames = const [],
   bool links = true,
 }) {
@@ -114,8 +115,12 @@ bool linkAtPoint({
   }
 
   final offset = render.getPositionForPoint(global).offset;
-  final pdfRef = pdfPageRefAt(displayText, offset);
-  if (pdfRef != null && hits(pdfRef.start, pdfRef.end, 3)) return true;
+  // PDF REFERANSI yalnız döneceği PDF varken bağlantı (F60.3): yoksa dokunuş
+  // klavyeyi açmıyor ve hiçbir şey yapmıyordu — satır silinemiyordu.
+  if (pdfRefs) {
+    final pdfRef = pdfPageRefAt(displayText, offset);
+    if (pdfRef != null && hits(pdfRef.start, pdfRef.end, 3)) return true;
+  }
   if (timestamps) {
     final hit = videoTimestampAt(displayText, offset);
     if (hit != null && hits(hit.start, hit.end, 3)) return true;

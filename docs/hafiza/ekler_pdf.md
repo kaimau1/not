@@ -130,4 +130,4 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 ## 2026-11-09 — Baştan sona inceleme → `OTURTMA_PLANI.md` (Faz 58–69)
 - **Ekran turu gerçek tableti çekmiyor:** tur 800×1280 / 1280×800; MatePad 11 = 640×1024 / 1024×640 dp (F67.2).
 - Bu dosya 109 KB (hedef 30): bölme işi F58.2; o yapılana dek buraya yalnız kök neden/tuzak, tek satır.
-
+- **PDF referansı yalnız dönülecek PDF varken bağlantı (F60.3, 2026-11-11):** `linkAtPoint(pdfRefs:)` damga (`timestamps`) gibi bayraklı; gövdede `_pdfForRefs(note) != null`. Bayraksızken PDF "Ek"e alınınca `📖 s.N` satırı dokunuşla klavye açmıyordu (silinemiyor). Bekleyen ek bildirimi (F65.4): `ReminderService._armUploadNotice` (`AppLifecycleListener`, id 999004, yük `upload`); PDF bulut önizlemesi (F65.5): `pdfFirstPageThumb` → `thumbs/{id}.jpg`, kart `_PdfFirstPage` dosyasızken çizer.

@@ -411,7 +411,7 @@ doğrulanır).
   *Kabul:* S10 yeşil; KALANLAR I1'e "kök: <bulunan>" yaz; cihazda 30 maddeli paketli notta
   aç → yaz → kalın yap → kapat akışı takılmasız.
   Cihaz A/B (2026-11-10, Mi Note 10 Lite, `ab_klavye.py`, taban 4bdd6eb4, 2. koşular): klavye kapa 190 → 194 ms, aç 285 → 293 ms (LAYOUT 73 → 78) — regresyon yok. `yaz`/`not-kapa` evreleri iki değerli (kare sayısı 68↔208 / 5↔66; A1 ve B2 yüksek, A2/A3/B1 düşük): sürümden bağımsız gürültü, B1 düşük kipte tabanla aynı (yaz %105). Ölçüm arama sonucundan açılan notla yapıldı (OLCUM notları 414 notun dibinde).
-- [ ] **F60.3 "📖 s.N" satırı silinemiyor (sabit → gömülü geçişte).** Yeniden üretim:
+- [x] **F60.3 "📖 s.N" satırı silinemiyor (sabit → gömülü geçişte).** *(2026-11-11: KÖK `tag_tap.dart` `linkAtPoint`: PDF referansı, notta dönülecek PDF olmasa da (PDF "Ek" görünümünde alt şeritte → `_pdfForRefs` null; madde satırlarında hiç işleyici yok) bağlantı sayılıyordu → odaksız alanda dokunuş klavyeyi AÇMIYOR, hiçbir şey de yapmıyordu; satıra imleç konamıyordu. Kanıt `test/pdf_ref_keyboard_test.dart` kırmızı → yeşil: `pdfRefs` bayrağı (damga gibi), gövdede `_pdfForRefs != null` iken açık, madde satırında kapalı. `WrapTextController` düzeyinde geri silme sarma açık/kapalı ÇALIŞIYOR (aynı dosyada bekçi). Yüzen görünümde referans bilerek bağlantı (dokununca sayfaya döner; imleç satır sonuna konup silinir). Cihazda doğrulanmadı.)* Yeniden üretim:
   sabit PDF'te "Not al" → görünümü Yüzen/Ek'e çevir → gövdede `📖 s.11 …` satırını
   Backspace ile sil. İncele: `core/utils/pdf_ref.dart`, `WrapTextController.linkSpans`,
   `tag_tap.dart` (dokunuş çözümü), `_setAttachmentView`. Şüpheli: referans satırı sarma
@@ -952,12 +952,12 @@ tur görüntüleri `*-e-*.png`.
   hiç yazılmamışsa ve pencere ≥ 840 dp + yataysa `side = start`. 1024×640 dp'de (gerçek
   tablet) üstte sabit ek + 3 çubuk + klavye içerik bırakmıyor (F67.4 ile birlikte ölç).
 - [ ] **F65.3 Birden çok sabit ek — KARAR K-O8.**
-- [ ] **F65.4 Yükleme güvenilirliği (B13) — KARAR K-O9.** Öneri (bağımlılıksız): uygulama
+- [x] **F65.4 Yükleme güvenilirliği (B13) — KARAR K-O9.** *(2026-11-11: K-O9 en güvenli = bildirim, sabah bakılacak. Kanıt `test/attachment_status_test.dart` kırmızı (bekleyen ekte düğme yok, `pendingUploadNotice` yok) → yeşil. `ReminderService` `AppLifecycleListener`: arka plana geçerken bekleyen ek varsa (Drive bağlantısı beklemiyorsa) 15 dk sonra sessiz tek bildirim (`upload` kanalı, yük `upload`), dönünce/kuyruk boşalınca iptal; bekleyen ek rozetinde "Şimdi dene" → `retryNow`. Cihazda doğrulanmadı.)* Öneri (bağımlılıksız): uygulama
   `paused` olurken kuyrukta bekleyen ek varsa `ReminderService` üzerinden 15 dk sonrasına
   sessiz tek bildirim ("N ek yüklenmeyi bekliyor — açınca yüklenir", yük `upload:` — `note:`
   ile BAŞLAMAZ); uygulama açılınca/kuyruk boşalınca iptal. Ayrıca not ekranında ekin durum
   rozeti (`attachmentStatusOf`) "bekliyor"ken dokununca "şimdi dene".
-- [ ] **F65.5 PDF ilk sayfa önizlemesi buluta.** Görseldeki `thumbs/{ekId}.jpg` (≤ 40 KB)
+- [x] **F65.5 PDF ilk sayfa önizlemesi buluta.** *(2026-11-11: kanıt `test/pdf_cloud_thumb_test.dart` kırmızı (dosyasız PDF kartı önizleme çizmiyor, `wantsCloudThumb` yok) → yeşil. Drive yüklemesinde PDF'in ilk sayfası `pdfFirstPageThumb` (320 px JPEG, ≤ 40 KB) → `thumbs/{ekId}.jpg` → `thumbUrl`; kart `_PdfFirstPage` dosya yokken onu çizer. Storage kuralı ve boyut sınırı testi zaten var (`rules-test/rules.test.js` thumbs: 41 KB ve `application/pdf` reddi) — yeni kural testi gerekmedi. Gerçek PDF çizimi (pdfium) cihazda doğrulanmadı.)* Görseldeki `thumbs/{ekId}.jpg` (≤ 40 KB)
   yolu PDF için de: yüklemede `pdf_page_render.dart` ile ilk sayfa → JPEG → aynı yol →
   `thumbUrl`. Web ve diğer cihaz kartında/yer tutucusunda indirmeden görünür. Storage
   kuralı zaten `thumbs` için var; `rules-test`'e PDF önizleme boyut sınırı testi.
@@ -967,7 +967,7 @@ tur görüntüleri `*-e-*.png`.
   REST ile o ekin `driveId` / `downloadUrl` / `thumbUrl` alanlarına bak (yöntem HAFIZA "Ek
   senkronu — TEK YOL" sonu). Paylaşılan notta yükleme yolu (`_isShared` → Storage,
   `_processForeign`) testle izlenir. Kök bulunmadan düzeltme yazılmaz.
-- [ ] **F65.7 Ek ekleme sonrası tek soru.** "Nerede dursun?" ipucu (Sabit · Yüzen · Ek)
+- [x] **F65.7 Ek ekleme sonrası tek soru.** *(2026-11-11: kanıt `test/view_mode_switch_test.dart` "F65.7" kırmızı (ipucu uzun, kalkmayan bölümde kaldırılmış "Balonlu" anlatıyordu) → yeşil. İpucu tek satır "Yüzen olarak eklendi · değiştirmek için anahtara dokun", 4 sn sonra boşalır (yer ağaçta kalır), nabızlı anahtar aynı. **Sabah bakılacak:** tür bazlı varsayılan (PDF/video/sunum → Sabit) UYGULANMADI — bugün PDF/sunum alt şeride, video sayfaya iniyor; değiştirmek davranış değişikliği (madde "davranış aynı" diyor, çelişki) ve tek sabit ek kuralıyla (K-O8) çakışır → en güvenli: bugünkü varsayılan. Cihazda doğrulanmadı.)* "Nerede dursun?" ipucu (Sabit · Yüzen · Ek)
   bugün nabızlı anahtar + satır. Ek türüne göre varsayılan: PDF/video/sunum → Sabit,
   görsel → Yüzen, diğer dosya → Ek; ipucu yalnız varsayılan DEĞİŞTİRİLEBİLİR diye 4 sn
   görünür ("Sabitlendi · Değiştir"). KARAR gerekmez (davranış aynı, soru kısalır) —

@@ -6639,13 +6639,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'İpucu: yazıya basılı tut, seç → \"Not al\": sayfa ve satır nota yazılır, dokununca oraya döner.';
 
   @override
-  String get placementHintTitle => 'Yeni ek nerede dursun?';
-
-  @override
-  String get placementHintBody =>
-      'Sabit: notun tepesinde · Yüzen: yazının arasında · Balonlu: üstüne not · Ek: altta dosya';
-
-  @override
   String showMoreChecked(int n) {
     return 'İşaretlileri göster ($n gizli)';
   }
@@ -8336,4 +8329,29 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quickAddKeepOne => 'En az bir seçenek görünür kalmalı';
+
+  @override
+  String get attachmentUploadNow => 'Şimdi dene';
+
+  @override
+  String uploadPendingTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ek yüklenmeyi bekliyor',
+      one: '1 ek yüklenmeyi bekliyor',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get uploadPendingBody => 'Uygulamayı açınca yüklenir.';
+
+  @override
+  String get uploadPendingChannel => 'Bekleyen ek yüklemeleri';
+
+  @override
+  String placementHintShort(String view) {
+    return '$view olarak eklendi · değiştirmek için anahtara dokun';
+  }
 }

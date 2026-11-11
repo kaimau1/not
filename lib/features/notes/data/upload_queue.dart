@@ -241,6 +241,23 @@ final pendingUploadsProvider =
       return (pending: pending, failed: failed, needsDrive: waitingDrive);
     });
 
+/// Bekleyen ek bildiriminin yükü — `note:` ile BAŞLAMAZ (hatırlatıcı
+/// mutabakatı onu yetim sanıp iptal ederdi).
+const kPendingUploadPayload = 'upload';
+
+/// **F65.4 (OTURTMA B13, K-O9 "bildirim")**: uygulama arka plana geçerken
+/// yüklenmeyi bekleyen ek varsa 15 dk sonrasına tek sessiz bildirim — kuyruk
+/// yalnız uygulama açıkken çalışır, kullanıcı eklerin telefonda kaldığını
+/// bilmiyordu. Drive bağlantısı bekleyen ek, uygulama açılınca da yüklenmez:
+/// bildirim yalan olmasın diye o durumda kurulmaz.
+({DateTime at, int count})? pendingUploadNotice(
+  ({int pending, int failed, bool needsDrive}) uploads,
+  DateTime now,
+) {
+  if (uploads.pending <= 0 || uploads.needsDrive) return null;
+  return (at: now.add(const Duration(minutes: 15)), count: uploads.pending);
+}
+
 /// BAŞKASININ koleksiyonunda yaşayıp BENİM düzenleyebildiğim notlar: ortak
 /// notlar ve yazma yetkim olan paylaşılan klasörlerin notları.
 ///
@@ -631,9 +648,7 @@ class UploadQueue {
       }
     }
     if (jobs.isEmpty) return;
-    jobs.sort(
-      (a, b) => a.attachment.sizeBytes.compareTo(b.attachment.sizeBytes),
-    );
+    jobs.sort((a, b) => a.attachment.sizeBytes.compareTo(b.attachment.sizeBytes));
     var fetched = 0;
     await _runPool(jobs, (job) async {
       final key = 'dl:${job.note.id}/${job.attachment.id}';

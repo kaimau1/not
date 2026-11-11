@@ -20,6 +20,7 @@ import '../../auth/presentation/auth_providers.dart';
 import '../domain/attachment.dart';
 import 'attachment_thumb.dart';
 import 'drive_store.dart';
+import 'pdf/pdf_page_render.dart' show pdfFirstPageThumb;
 import 'media_transcriber.dart' show audioMimeFromName, audioMimeOf;
 import 'notes_repository.dart' show storageUsedBytesProvider;
 
@@ -984,12 +985,15 @@ class AttachmentRepository {
           ? 'application/octet-stream'
           : attachment.mimeType,
     );
-    // Önizleme (yalnız görsel): Drive izni olmayan sekme/cihaz kartı hemen
-    // çizsin. Düşerse yükleme yine başarılı — kart Drive'dan iner.
+    // Önizleme (görsel; PDF'te ilk sayfa — F65.5): Drive izni olmayan
+    // sekme/cihaz kartı hemen çizsin. Düşerse yükleme yine başarılı — kart
+    // Drive'dan iner.
     var thumbUrl = '';
-    if (attachment.kind == AttachmentKind.image) {
+    if (wantsCloudThumb(attachment.kind)) {
       try {
-        final thumb = await compute(makeThumbnail, await file.readAsBytes());
+        final thumb = attachment.kind == AttachmentKind.pdf
+            ? await pdfFirstPageThumb(file.path)
+            : await compute(makeThumbnail, await file.readAsBytes());
         if (thumb != null) {
           final ref = _storage.ref(thumbStoragePath(uid, attachment.id));
           await ref

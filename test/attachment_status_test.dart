@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/features/notes/data/upload_queue.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/presentation/editor/attachment_status.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
@@ -98,5 +99,51 @@ void main() {
     await tester.tap(find.text('Tekrar dene'));
     await tester.pumpAndSettle();
     expect(retried, isTrue);
+  });
+
+  testWidgets('F65.4: bekleyen ekte "Şimdi dene"', (tester) async {
+    var retried = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('tr'),
+        home: Scaffold(
+          body: Center(
+            child: AttachmentStatusBadge(
+              status: AttachmentStatus.queued,
+              onRetry: () => retried = true,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('attachment-status-queued')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Şimdi dene'));
+    await tester.pumpAndSettle();
+    expect(retried, isTrue);
+  });
+
+  test('F65.4: arka plana geçerken bekleyen ek bildirimi', () {
+    final now = DateTime(2026, 11, 11, 10);
+    expect(
+      pendingUploadNotice((pending: 0, failed: 0, needsDrive: false), now),
+      isNull,
+    );
+    // Drive bağlı değilse uygulamayı açmak yüklemez: bildirim yalan olurdu.
+    expect(
+      pendingUploadNotice((pending: 2, failed: 0, needsDrive: true), now),
+      isNull,
+    );
+    final plan = pendingUploadNotice((
+      pending: 3,
+      failed: 1,
+      needsDrive: false,
+    ), now)!;
+    expect(plan.count, 3);
+    expect(plan.at, now.add(const Duration(minutes: 15)));
+    // Hatırlatıcı mutabakatı `note:` yüklerini yetim sayıp iptal eder.
+    expect(kPendingUploadPayload.startsWith('note:'), isFalse);
   });
 }

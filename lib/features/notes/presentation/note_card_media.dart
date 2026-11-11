@@ -1063,7 +1063,18 @@ class _PdfFirstPage extends StatelessWidget {
         size: iconSize,
       ),
     );
-    if (!localFileExists(attachment.localPath)) return fallback;
+    if (!localFileExists(attachment.localPath)) {
+      // Bulut önizlemesi (F65.5, ilk sayfa): web/diğer cihaz indirmeden çizer.
+      if (attachment.thumbUrl.isEmpty) return fallback;
+      return CachedNetworkImage(
+        imageUrl: attachment.thumbUrl,
+        fit: BoxFit.cover,
+        alignment: Alignment.topCenter,
+        fadeInDuration: const Duration(milliseconds: 150),
+        placeholder: (context, _) => fallback,
+        errorWidget: (_, _, _) => fallback,
+      );
+    }
     return _AsyncThumb(
       future: CardThumbs.pdfPage(attachment, math.max(1, attachment.pdfPage)),
       fallback: fallback,

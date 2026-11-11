@@ -11846,18 +11846,6 @@ abstract class AppLocalizations {
   /// **'İpucu: yazıya basılı tut, seç → \"Not al\": sayfa ve satır nota yazılır, dokununca oraya döner.'**
   String get tipPdfReadNote;
 
-  /// No description provided for @placementHintTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yeni ek nerede dursun?'**
-  String get placementHintTitle;
-
-  /// No description provided for @placementHintBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sabit: notun tepesinde · Yüzen: yazının arasında · Balonlu: üstüne not · Ek: altta dosya'**
-  String get placementHintBody;
-
   /// No description provided for @showMoreChecked.
   ///
   /// In tr, this message translates to:
@@ -14797,6 +14785,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'En az bir seçenek görünür kalmalı'**
   String get quickAddKeepOne;
+
+  /// No description provided for @attachmentUploadNow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdi dene'**
+  String get attachmentUploadNow;
+
+  /// No description provided for @uploadPendingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 ek yüklenmeyi bekliyor} other{{count} ek yüklenmeyi bekliyor}}'**
+  String uploadPendingTitle(int count);
+
+  /// No description provided for @uploadPendingBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulamayı açınca yüklenir.'**
+  String get uploadPendingBody;
+
+  /// No description provided for @uploadPendingChannel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bekleyen ek yüklemeleri'**
+  String get uploadPendingChannel;
+
+  /// No description provided for @placementHintShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'{view} olarak eklendi · değiştirmek için anahtara dokun'**
+  String placementHintShort(String view);
 }
 
 class _AppLocalizationsDelegate
