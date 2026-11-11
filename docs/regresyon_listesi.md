@@ -27,3 +27,4 @@ liste baştan koşulur: otomatik olanlar test, cihaz isteyenler en az ölçümle
 | F60.S9 | Sürüklerken çöp kutusu: dolmadan bırakınca silmemeli | `flutter test test/drag_trash_target_test.dart --reporter failures-only` | 2/2 yeşil |
 | F60.S10 | Not ekle menüsü düzen kipi (gizle/göster/sırala, son öğe gizlenemez) | `flutter test test/quick_add_edit_test.dart --reporter failures-only` | 4/4 yeşil |
 | F60.S5b | Uzun listede açılıştan sonra satırların kademeli kurulumu 50+ kare sürüyor, klavye açılışına denk gelip kasıyordu | `flutter test test/items_grow_budget_test.dart --reporter failures-only` | 120 maddede ≤ 14 kare, kare başı < 1600 kurulum; klavye hareket ederken satır kurulmaz |
+| F60.S14 | Ana ekran kartında işaretli maddenin kutusuna dokunmak işareti sessizce kaldırıyordu | `flutter test test/card_checked_item_test.dart --reporter failures-only` | Yeşil; işaretli kutuya dokunuş notu açar, boş kutu işaretlenir |
