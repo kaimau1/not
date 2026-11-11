@@ -198,6 +198,14 @@ const _bodyTypes = [
   'EditableText',
 ];
 
+/// Uzun listenin kademeli kurulumu (`ItemsEditor._growBudget`) bitsin —
+/// ölçülen işin değil; ölçüm penceresine girerse satır sayısını şişirir.
+Future<void> _settleGrowth(WidgetTester tester) async {
+  for (var i = 0; i < 20; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
 /// Levha/panel animasyonu otursun (ilk pump saati başlatır).
 Future<void> _settle(WidgetTester tester) async {
   await tester.pump();
@@ -383,6 +391,7 @@ void main() {
   testWidgets('S2: 30 maddeli liste, bir maddeye 20 karakter', (tester) async {
     final repo = CountingNotesRepository();
     await pumpEditor(tester, _list30, repo: repo);
+    await _settleGrowth(tester);
     await tester.tap(find.text('madde 7'));
     await tester.pump(const Duration(milliseconds: 400));
     final c = await _count(() async {
@@ -400,6 +409,7 @@ void main() {
   testWidgets('S3: 30 maddeli liste, bir kutucuğu işaretle', (tester) async {
     final repo = CountingNotesRepository();
     await pumpEditor(tester, _list30, repo: repo);
+    await _settleGrowth(tester);
     final c = await _count(() async {
       await tester.tap(find.byType(Checkbox).at(7));
       await tester.pump(const Duration(seconds: 3));
@@ -415,6 +425,7 @@ void main() {
   testWidgets('S4: maddede Enter (yeni madde)', (tester) async {
     final repo = CountingNotesRepository();
     await pumpEditor(tester, _list30, repo: repo);
+    await _settleGrowth(tester);
     await tester.tap(find.text('madde 7'));
     await tester.pump(const Duration(milliseconds: 400));
     final c = await _count(() async {

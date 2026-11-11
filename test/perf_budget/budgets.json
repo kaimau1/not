@@ -19,18 +19,18 @@
   "S3": {
     "senaryo": "30 maddeli liste, bir kutucuğu işaretle",
     "kok_kurulum": 1,
-    "satir": 13,
-    "bugun": "kök 1 / satır 13 — görünen bütün satırlar (2026-11-11)",
+    "satir": 23,
+    "bugun": "kök 1 / satır 23 — işaretlenen maddeden sonraki bütün satırlar (2026-11-11)",
     "hedef": "≤ 1 / ≤ 2 (Faz 64)",
-    "neden": "İlk ölçüm (bugünkü hâl); satır hedefi Faz 64'te işlenecek"
+    "neden": "13 ölçüm artığıydı: liste yarım kuruluyken ölçülmüştü (_growBudget). Ölçüm artık kurulum bitince; ESKİ kod da bu ölçümle 23 veriyor (2026-11-11 doğrulandı) — gerileme değil. Satır hedefi Faz 64"
   },
   "S4": {
     "senaryo": "Maddede Enter (yeni madde)",
     "kok_kurulum": 1,
-    "satir": 14,
-    "bugun": "kök 1 / satır 14 (2026-11-11)",
+    "satir": 23,
+    "bugun": "kök 1 / satır 23 (2026-11-11)",
     "hedef": "≤ 1 / ≤ 2 (Faz 64)",
-    "neden": "İlk ölçüm (bugünkü hâl); satır hedefi Faz 64'te işlenecek"
+    "neden": "14 ölçüm artığıydı: liste yarım kuruluyken ölçülmüştü (_growBudget). Ölçüm artık kurulum bitince; ESKİ kod da bu ölçümle 23 veriyor (2026-11-11 doğrulandı) — gerileme değil. Satır hedefi Faz 64"
   },
   "S5": {
     "senaryo": "Kalem kipi açık, sayfaya 10 çizgi (ilk çizgi kipi açar, sayılmaz)",

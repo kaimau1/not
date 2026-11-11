@@ -61,6 +61,7 @@ class _KeyboardInsetScopeState extends State<KeyboardInsetScope> {
   @override
   void dispose() {
     _settle?.cancel();
+    KeyboardInset.moving.value = false;
     super.dispose();
   }
 
@@ -72,8 +73,10 @@ class _KeyboardInsetScopeState extends State<KeyboardInsetScope> {
       _lastLive = live;
       // HAREKET HÂLİNDE: gövde tam boyda (bkz. [KeyboardSnap]).
       _stable = 0;
+      KeyboardInset.moving.value = true;
       _settle?.cancel();
       _settle = Timer(widget.settle, () {
+        KeyboardInset.moving.value = false;
         if (!mounted || _stable == live) return;
         setState(() => _stable = live);
       });
@@ -128,6 +131,12 @@ class _StableInset extends InheritedWidget {
 
 /// Klavye boşluğunu okuyan yaprakların kapısı (bkz. [KeyboardInsetScope]).
 abstract final class KeyboardInset {
+  /// Klavye ŞU AN hareket ediyor mu (açılış/kapanış animasyonu; durunca
+  /// [KeyboardInsetScope.settle] sonra false). Kimse dinleyerek kurulmaz:
+  /// ertelenebilir işler (ör. uzun listenin kademeli kurulumu,
+  /// `ItemsEditor._growBudget`) yalnız `.value`'ya bakıp beklemeye alınır.
+  static final ValueNotifier<bool> moving = ValueNotifier(false);
+
   /// CANLI klavye yüksekliği (kare kare). Çağıran widget klavyenin her
   /// karesinde yeniden kurulur — yalnız küçük yapraklarda oku.
   static double liveOf(BuildContext context) =>
