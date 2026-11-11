@@ -1,7 +1,7 @@
 # DENEYİM PLANI — Faz 72–80 (görünüş · his · hız · tutarlılık)
 
 **Tarih:** 2026-11-12 · **Taban commit:** `d2491206` · **Yazan:** Fable 5.2 incelemesi
-(ekran turu 9 boyut × 31 sahne + takvim + koyu tema = 320 görüntü; kod sayımı
+(ekran turu 9 boyut × 31 sahne + takvim + koyu tema = 312 görüntü; kod sayımı
 `tool/design/token_sayim.py`; tema, hareket, levha ve editör kromu kodunun okunması).
 
 **Kullanıcı isteği (2026-11-12):** "Son kullanıcının gördüğü ve uygulamayı kullanırken
@@ -378,8 +378,9 @@ Bu faz **ekranda hiçbir şeyi değiştirmez** (kabul: tur farkı her sahnede < 
   (`fontScale` ile çarpılan değerler).
 - [ ] **F73.4 Tema seçici grupları (K-D16).** `theme_picker.dart` `themeChoiceOptions`:
   sıra ve üç `SectionLabel`: **Sakin** (Sistem, Adaçayı, Porselen, Kil, Lavanta, Zeytin,
-  Nane, Şeftali) · **Kâğıt** (Beyaz, Saman, Krem, Klasik, Gazete, Defter, Grafit, Defter-i
-  kebir) · **Canlı** (Okyanus, Gül, Mandalina, Zümrüt, Ametist). Alçak levhadaki seçici de
+  Nane, Şeftali) · **Kâğıt** (Beyaz, Saman, Krem + beş sade klasik aile: `classic`,
+  `newsprint`, `notebook`, `graphite`, `ledger` — adları ARB'de neyse o) · **Canlı**
+  (Okyanus, Gül, Mandalina, Zümrüt, Ametist). Alçak levhadaki seçici de
   aynı listeyi kullanıyor (tek kaynak) — orada grup adı yerine 12 dp boşluk yeter.
 - Kabul: `telefon-ana.png`, `telefon-ayarlar.png`, `telefon-n4-paylas.png` önce/sonra
   dosyada; bekçiler yeşil; koyu turda aynı sahneler okunur.
@@ -539,10 +540,9 @@ Bekçiler: `keyboard_jank_guard_test`, `perf_budget_test`, `items_editor_row_cac
   ⛶ · tutamak · birincil iş (PDF/video "Not al", görsel "T") · ✏ · ⋮. ⋮ levhasının
   BAŞINDA görünüm anahtarı (Sabit · Yüzen · Ek — anahtar olarak, eşanlamlı menü maddesi
   yok; TUTARLILIK K6), altında `attachmentActionsFor` sırası (balon, bağlantı, yer imi,
-  döndür, paylaş…). ≥ 600 dp bugünkü geniş çubuk. Kabul (OTURTMA Faz 65): telefonda sabit
-  ekli notta toplam görünür denetim ≤ 14 (5 + üst 4 + alt 7 = 16 → üst çubukta "+" F75.2
-  ile kalktığı için 15; hedefi tutturmak için belge notunda üstteki "+" de çip satırına
-  iner).
+  döndür, paylaş…). ≥ 600 dp bugünkü geniş çubuk. Belge notunda üst çubuktaki "+" da
+  F75.2'deki gibi çip satırına iner. Kabul: telefonda sabit ekli notta görünür denetim
+  ≤ 15 (bugün ~21): bölme çubuğu 5 + alt çubuk 7 + üst çubuk 3 (geri, iğne, ⋮).
 - Kabul: tur `telefon-n1/n2/n4/e-pdf-sabit` önce/sonra; `telefon-kucuk` + klavye taşmasız;
   A/B `ab_klavye.py` (klavye aç/kapa, yazma, not kapanışı) hiçbir evrede +%20 yok;
   `perf_budget_test` yeşil; mor ve sarı notta çubukta tema vurgusu yok.
