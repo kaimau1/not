@@ -110,8 +110,13 @@ bool _sentenceStart(String text, int start) {
 
 /// Kullanıcı [caret]'ten hemen önce bir sınır karakteri (boşluk, noktalama,
 /// satır sonu) yazdı: önündeki kelime ve noktalama düzeltilir. Değişiklik
-/// yoksa null; varsa [start, end) aralığı [text] ile değişir.
-({int start, int end, String text})? spellFixAt(String text, int caret) {
+/// yoksa null; varsa [start, end) aralığı [text] ile değişir. [fixWord]:
+/// kelime kuralı (yazım motoru kelimeye kendisi karar verince kimlik işlevi).
+({int start, int end, String text})? spellFixAt(
+  String text,
+  int caret, {
+  String Function(String) fixWord = fixTurkishWord,
+}) {
   if (caret < 2 || caret > text.length) return null;
   final boundary = text[caret - 1];
   if (!' \n.,;:!?'.contains(boundary)) return null;
@@ -138,7 +143,7 @@ bool _sentenceStart(String text, int start) {
         : null;
   }
   final word = m.group(0)!;
-  var fixed = fixTurkishWord(word);
+  var fixed = fixWord(word);
   if (_sentenceStart(text, start)) fixed = _trCapitalize(fixed);
   if (fixed == word && !spaceBefore) return null;
   return (start: start, end: caret, text: fixed + boundary);
@@ -166,8 +171,12 @@ String finalizeLine(String line) {
 /// düzeltme — kelimelerin ilk harfi büyür"): [spellFixAt] kuralları + biten
 /// kelimenin baş harfi büyük (Türkçe i → İ). Tamamı büyük kelime (kısaltma)
 /// ve bağlantı/e-posta parçası olduğu gibi kalır.
-({int start, int end, String text})? titleFixAt(String text, int caret) {
-  final base = spellFixAt(text, caret);
+({int start, int end, String text})? titleFixAt(
+  String text,
+  int caret, {
+  String Function(String) fixWord = fixTurkishWord,
+}) {
+  final base = spellFixAt(text, caret, fixWord: fixWord);
   var t = text;
   var c = caret;
   if (base != null) {

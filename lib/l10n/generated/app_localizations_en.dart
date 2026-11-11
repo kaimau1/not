@@ -7961,14 +7961,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get spellAutoSubtitle =>
-      'Every finished word is corrected without asking; title words are capitalized.';
+      'A finished word is corrected only when it is a sure fix; Backspace right after undoes it. Title words are capitalized.';
 
   @override
   String get spellLearnTitle => 'Learning correction';
 
   @override
   String get spellLearnSubtitle =>
-      'Learns the words you correct yourself and the keys you often mix up (Turkish, English, Chinese). Kept only on this device.';
+      'Learns the words you correct yourself or pick from keyboard suggestions (Turkish, English, Chinese). Kept only on this device.';
 
   @override
   String spellLearnedCount(int count) {
@@ -8077,6 +8077,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get spellLearnedKept => 'Words left alone (you undid the fix)';
+
+  @override
+  String get spellRulesOnlyTitle => 'Rules only';
+
+  @override
+  String get spellRulesOnlySubtitle =>
+      'Only known misspellings and the fixes you taught are corrected; no guessing.';
+
+  @override
+  String get spellRejectedTitle =>
+      'Fixes that won\'t be made again (you undid or changed them)';
 
   @override
   String get inkEraserOffer => 'Pick eraser';

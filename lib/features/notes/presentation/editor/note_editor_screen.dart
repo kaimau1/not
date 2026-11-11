@@ -1153,6 +1153,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   @override
   void initState() {
     super.initState();
+    // Yazım v2: "bu notta dokunma" listesi her not için baştan (Faz 70).
+    AutoSpell.beginNote();
     unawaited(AutoSpell.load().then((_) => _seedSpell()));
     FocusManager.instance.addListener(_onAnyFocusChange);
     InkToolMemory.autoStylusListenable.addListener(_onStylusToggle);

@@ -7940,14 +7940,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get spellAutoSubtitle =>
-      'Biten her kelime sormadan düzeltilir; başlıkta kelime başları büyür.';
+      'Biten kelime yalnız emin olunca düzeltilir; hemen ardından Backspace geri alır. Başlıkta kelime başları büyür.';
 
   @override
   String get spellLearnTitle => 'Öğrenen düzeltme';
 
   @override
   String get spellLearnSubtitle =>
-      'Kendi düzelttiğin kelimeleri ve sık karıştırdığın tuşları öğrenir (Türkçe, İngilizce, Çince). Yalnız bu cihazda tutulur.';
+      'Kendi düzelttiğin ve klavye önerisinden seçtiğin kelimeleri öğrenir (Türkçe, İngilizce, Çince). Yalnız bu cihazda tutulur.';
 
   @override
   String spellLearnedCount(int count) {
@@ -8058,6 +8058,17 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get spellLearnedKept =>
       'Dokunulmayan kelimeler (düzeltmeyi geri aldıkların)';
+
+  @override
+  String get spellRulesOnlyTitle => 'Yalnız kurallar';
+
+  @override
+  String get spellRulesOnlySubtitle =>
+      'Yalnız bilinen yazım hataları (herşey → her şey) ve senin öğrettiklerin düzeltilir; tahmin yok.';
+
+  @override
+  String get spellRejectedTitle =>
+      'Bir daha yapılmayacak düzeltmeler (geri aldıkların ya da değiştirdiklerin)';
 
   @override
   String get inkEraserOffer => 'Silgiyi seç';
