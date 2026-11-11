@@ -515,7 +515,7 @@ doğrulanır).
   F63.2 (tek araç durumu).
 **Kullanıcı listesi 2026-11-11** ("şimdi yap" — K-O1 istisnası; kuyrukta P23–P28):
 
-- [ ] **F60.S5 [Fable] Klavye açılırken alt panel titriyor/kasıyor — kökten.** Kullanıcı:
+- [x] **F60.S5 [Fable] Klavye açılırken alt panel titriyor/kasıyor — kökten.** Kullanıcı:
   "klavye açılırken alt paneldeki titreme kasmayı kökünden çöz, tekrar yaşanmayacak
   şekilde". F60.S2'nin birikim varsayımı üretilemedi; bu madde açılış ANININ kendisi:
   klavye hareketinin her karesinde alt panelin (ve gövdenin) yeniden dizilmesi/konum
@@ -525,33 +525,39 @@ doğrulanır).
   Kök düzeltme CLAUDE.md kasma listesi 6–7 ile: boy tek adımda, hareket yalnız boyamada;
   `viewInsets` yalnız dar öğede okunur. Bekçi: klavye açılırken alt panel konumu tekdüze
   (geri sıçrama yok) ve kare başı kurulum ≤ bütçe; `perf_budget` senaryosu. Cihaz A/B.
-- [ ] **F60.S6 [Opus] Madde uzun bas: önce yazı seçilir, basılı tutmaya devam → madde
+  **2026-11-11 (P23, Fable):** kök editör Scaffold'ı MediaQuery'ye bağlıydı (her klavye karesinde kurulum + dizim), hızlı satır ilk klavye karesinde kuruluyordu, PinnedMediaPane evreyi setState'le alıyordu → `KeyboardInsetScope`; S17 ilk kare 320 → 45, hareket 87–96 → 54, dizilen 1 → 0. Bekçi `keyboard_jank_guard_test` (konum tekdüze) + S17. Cihazda A/B BEKLİYOR.
+- [x] **F60.S6 [Opus] Madde uzun bas: önce yazı seçilir, basılı tutmaya devam → madde
   seçimi.** Kullanıcı: "maddenin herhangi bir yerine basılı tutunca tüm yazı seçilir; bu
   doğru. Basılı tutmaya devam ederse madde seç çalışsın." Uzun basış (≈500 ms) = bugünkü
   metin seçimi; parmak kalkmadan ≈ +600 ms daha (hafif titreşim) → o madde seçim kipine
   girer (bugünkü madde seç), metin seçimi kalkar. Kasma listesi 1–4 geçerli. Widget testi.
-- [ ] **F60.S7 [Fable] Yazarken alt panel gizleme ayarlanabilir.** Kullanıcı: "yazarken alt
+  **2026-11-11 (P24, Opus):** `_HoldToSelect` (ham Listener, yalnız parmak, 1100 ms, kTouchSlop) → titreşim + madde seçim kipi; test `items_editor_hold_select_test` 5/5. Cihazda doğrulanmadı.
+- [x] **F60.S7 [Fable] Yazarken alt panel gizleme ayarlanabilir.** Kullanıcı: "yazarken alt
   panelin gizlenip gösterilmesi ayarlanabilir olsun, kapatılabilsin; ne zaman kapanacak,
   kaç sn sonra açılacak — 0,1 sn adımlı kaydırıcı." Ayarlar → (Görünüm/Editör): aç/kapa
   anahtarı + "Gizlenme gecikmesi" ve "Yeniden görünme gecikmesi" kaydırıcıları (0–5 sn,
   0,1 adım), cihaz tercihi. Gizleme/gösterme kural 6 gereği yalnız boyamada. F60.S5'ten
   SONRA (aynı kod).
-- [ ] **F60.S8 [Sonnet] Kartta gizlenen ek içeriği yazıyla anılsın.** Kullanıcı: "YouTube
+  **2026-11-11 (P25, Fable):** Ayarlar → Kartlar `TypingBarSettings`: anahtar + gizlenme/yeniden görünme gecikmesi (0–5 sn, 0,1; varsayılan 0 / 1,1 sn = eski davranış), cihaz tercihi; test 9/9. Cihazda doğrulanmadı.
+- [x] **F60.S8 [Sonnet] Kartta gizlenen ek içeriği yazıyla anılsın.** Kullanıcı: "YouTube
   videoları ya da görseller notta; kartta görsel gizlenince hiçbir şeyi yokmuş gibi
   oluyor. En azından ek içeriği yazsın — 'YouTube videosu var' gibi güzel bir dille."
   Kart önizlemesi görseli göstermiyorsa (gizli/sığmıyor) tek satır, ikonlu, sade özet:
   "▶ YouTube videosu · Başlık", "🖼 2 görsel", "📄 PDF · ad" (l10n tr/en). Kart ızgarası
   kasma listesi 2 (önbellek anahtarı) geçerli. Widget testi.
-- [ ] **F60.S9 [Opus] Ana ekranda sürüklerken çöp kutusu.** Kullanıcı: "notu basılı tutup
+  **2026-11-11 (P26, Sonnet):** `CardHiddenMedia` + tek satır özet (YouTube/video/görsel/PDF/ses, çoğul l10n), zemin görseli sayılmaz, kilitli notta yok; test `card_hidden_media_test`. Cihazda bakılmadı.
+- [x] **F60.S9 [Opus] Ana ekranda sürüklerken çöp kutusu.** Kullanıcı: "notu basılı tutup
   sürüklerken aşağıda çöp kutusu olsun; üzerine gelince kısa bir dolma, bırakınca çöp
   kutusuna atılsın — hafif animasyonla." Sürükleme başlayınca altta çöp hedefi kayarak
   çıkar; üstüne gelince ≈ 600 ms dairesel dolum (yalnız boyama), dolunca titreşim; bırakınca
   kart küçülüp hedefe süzülür → çöpe taşınır (geri al çubuğu mevcut silme yoluyla). Dolum
   bitmeden bırakılırsa hiçbir şey olmaz. Mevcut sürükle-bırak (klasöre/sıraya) bozulmaz.
-- [ ] **F60.S10 [Opus] Not ekle menüsü düzenlenebilir.** Kullanıcı: "not ekle menüsünde her
+  **2026-11-11 (P27, Opus):** `DragTrashTarget` (hep ağaçta, boyamada belirir; 600 ms dolum, titreşim; olağan silme yolu + geri al); test 2/2. Cihazda doğrulanmadı.
+- [x] **F60.S10 [Opus] Not ekle menüsü düzenlenebilir.** Kullanıcı: "not ekle menüsünde her
   düğme düzen kipinde gizle/göster ve yer değiştir olmalı." Menüde "Düzenle" → her öğede
   göz (gizle/göster) + tutamaçla sıralama; cihaz/hesap tercihi; "Varsayılana dön". Gizli
   öğeler normal kipte görünmez; en az bir öğe kalır.
+  **2026-11-11 (P28, Opus):** + panelinde "Menüyü düzenle": göz + grup içi sıralama, Bitti, Varsayılana dön, son görünür kilitli; sıra `MenuLayouts` `home.quickAdd`; test 4/4. Cihazda doğrulanmadı.
 
 - Kabul: F60.1 ve F60.2 bütçe testleriyle kilitli; diğerleri ya düzeltildi ya da
   "üretilemedi + ne gerekli" notuyla kapandı.
