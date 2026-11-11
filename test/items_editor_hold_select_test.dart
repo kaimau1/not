@@ -57,9 +57,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('uzun bas + bekle (1200 ms) → madde seçim kipi, o madde seçili', (
-    tester,
-  ) async {
+  List<String> mockHaptics(WidgetTester tester) {
     final haptics = <String>[];
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
       SystemChannels.platform,
@@ -76,9 +74,30 @@ void main() {
         null,
       ),
     );
+    return haptics;
+  }
+
+  /// Satır 1'in halkası (her satırda bir halka kurulu).
+  Finder ring() => find.byKey(const ValueKey('item-hold-ring')).at(1);
+
+  Future<TestGesture> pressFor(WidgetTester tester, Duration hold) async {
+    final gesture = await tester.startGesture(textPoint(tester));
+    var waited = Duration.zero;
+    const step = Duration(milliseconds: 50);
+    while (waited < hold) {
+      await tester.pump(step);
+      waited += step;
+    }
+    return gesture;
+  }
+
+  testWidgets('uzun bas + bekle (1400 ms) → madde seçim kipi, o madde seçili', (
+    tester,
+  ) async {
+    final haptics = mockHaptics(tester);
 
     await pumpEditor(tester);
-    await holdOnItem(tester, const Duration(milliseconds: 1200));
+    await holdOnItem(tester, const Duration(milliseconds: 1400));
 
     expect(editor(tester).isSelecting, isTrue);
     expect(find.text('1 madde seçildi'), findsOneWidget);
@@ -97,6 +116,77 @@ void main() {
     expect(find.byType(AdaptiveTextSelectionToolbar), findsNothing);
   });
 
+  // F60.S11 — iki aşama görünür: halka dolar; 1. aşama sonunda hafif
+  // titreşim + maddenin TÜM yazısı seçili; devam → 2. titreşim + madde seç.
+  for (final eager in [true, false]) {
+    testWidgets('1. aşama: tüm yazı seçili + tek hafif titreşim '
+        '(${eager ? 'gerçek alan' : 'tembel'})', (tester) async {
+      debugEagerItemFields = eager;
+      addTearDown(() => debugEagerItemFields = true);
+      final haptics = mockHaptics(tester);
+      await pumpEditor(tester);
+      final gesture = await pressFor(tester, const Duration(milliseconds: 800));
+
+      final field = tester
+          .widgetList<EditableText>(find.byType(EditableText))
+          .singleWhere((f) => f.controller.text == 'Madde numara 1');
+      expect(
+        field.controller.selection,
+        const TextSelection(baseOffset: 0, extentOffset: 14),
+      );
+      expect(editor(tester).isSelecting, isFalse);
+      expect(
+        haptics.where((h) => h == 'HapticFeedbackType.lightImpact'),
+        hasLength(1),
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(editor(tester).isSelecting, isFalse);
+    });
+  }
+
+  testWidgets('2. aşama: ikinci hafif titreşim + madde seç', (tester) async {
+    final haptics = mockHaptics(tester);
+    await pumpEditor(tester);
+    await holdOnItem(tester, const Duration(milliseconds: 1400));
+    expect(editor(tester).isSelecting, isTrue);
+    expect(
+      haptics.where((h) => h == 'HapticFeedbackType.lightImpact'),
+      hasLength(2),
+    );
+  });
+
+  testWidgets('halka basılıyken çizilir, bırakınca kaybolur', (tester) async {
+    await pumpEditor(tester);
+    expect(find.byKey(const ValueKey('item-hold-ring')), findsNWidgets(5));
+    expect(tester.renderObject(ring()), paintsNothing);
+    final gesture = await pressFor(tester, const Duration(milliseconds: 400));
+    expect(tester.renderObject(ring()), paints..arc());
+    await gesture.up();
+    await tester.pump();
+    expect(tester.renderObject(ring()), paintsNothing);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('basılı tutarken diğer satırlar önbellekten (identical)', (
+    tester,
+  ) async {
+    await pumpEditor(tester);
+    List<EditableText> others() => tester
+        .widgetList<EditableText>(find.byType(EditableText))
+        .where((f) => f.controller.text != 'Madde numara 1')
+        .toList();
+    final before = others();
+    final gesture = await pressFor(tester, const Duration(milliseconds: 800));
+    final during = others();
+    expect(during, hasLength(before.length));
+    for (var i = 0; i < before.length; i++) {
+      expect(identical(before[i], during[i]), isTrue);
+    }
+    await gesture.up();
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('düz çizilen (tembel) maddede de basılı tutma madde seçer', (
     tester,
   ) async {
@@ -104,7 +194,7 @@ void main() {
     addTearDown(() => debugEagerItemFields = true);
     await pumpEditor(tester);
     expect(find.byType(EditableText), findsNothing);
-    await holdOnItem(tester, const Duration(milliseconds: 1200));
+    await holdOnItem(tester, const Duration(milliseconds: 1400));
 
     expect(editor(tester).isSelecting, isTrue);
     expect(find.text('1 madde seçildi'), findsOneWidget);

@@ -227,6 +227,21 @@ extension _ItemsActions on ItemsEditorState {
   /// [_HoldToSelect]): uzun basışın açtığı metin seçimi kalkar, madde seçim
   /// kipine bu madde seçili olarak geçilir. Kip zaten açıksa dokunuş ve uzun
   /// basış maddeyi kendisi seçiyor; burada bir şey yapılmaz.
+  /// Basılı tutmanın 1. aşaması (F60.S11): hafif titreşim + maddenin TÜM
+  /// yazısı seçili (alanın uzun basışı sözcük seçtiyse genişletilir).
+  void _holdSelectText(NoteItem item) {
+    if (_selectionMode || !mounted) return;
+    HapticFeedback.lightImpact();
+    final controller = _controllerFor(item);
+    final all = TextSelection(
+      baseOffset: 0,
+      extentOffset: controller.text.length,
+    );
+    if (controller.text.isNotEmpty && controller.selection != all) {
+      controller.selection = all;
+    }
+  }
+
   void _holdSelect(NoteItem item) {
     if (_selectionMode || !mounted) return;
     HapticFeedback.lightImpact();
