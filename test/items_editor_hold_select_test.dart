@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,7 +37,7 @@ void main() {
   /// Satır 1'in İLK sözcüğünün üstü (alan geniş; ortası yazının sağındaki
   /// boşluğa düşer).
   Offset textPoint(WidgetTester tester) {
-    final r = tester.getRect(find.text('Madde numara 1'));
+    final r = tester.getRect(find.text('Madde numara 1', findRichText: true));
     return Offset(r.left + 20, r.center.dy);
   }
 
@@ -56,8 +57,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('uzun bas + bekle (1200 ms) → madde seçim kipi, o madde seçili',
-      (tester) async {
+  testWidgets('uzun bas + bekle (1200 ms) → madde seçim kipi, o madde seçili', (
+    tester,
+  ) async {
     final haptics = <String>[];
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
       SystemChannels.platform,
@@ -81,23 +83,70 @@ void main() {
     expect(editor(tester).isSelecting, isTrue);
     expect(find.text('1 madde seçildi'), findsOneWidget);
     // Metin seçimi temizlendi: hiçbir alan seçili metin taşımıyor.
-    for (final f in tester.widgetList<EditableText>(find.byType(EditableText))) {
-      expect(f.controller.selection.isCollapsed ||
-          !f.controller.selection.isValid, isTrue);
+    for (final f in tester.widgetList<EditableText>(
+      find.byType(EditableText),
+    )) {
+      expect(
+        f.controller.selection.isCollapsed || !f.controller.selection.isValid,
+        isTrue,
+      );
     }
-    expect(haptics, isNotEmpty);
+    // Uzun basışın kendi titreşimi ayrı; geçişin hafif titreşimi de geldi.
+    expect(haptics, contains('HapticFeedbackType.lightImpact'));
+    // Metin seçim araç çubuğu da açık kalmadı.
+    expect(find.byType(AdaptiveTextSelectionToolbar), findsNothing);
   });
 
-  testWidgets('600 ms’de bırakınca yalnız metin seçili, seçim kipi yok',
-      (tester) async {
+  testWidgets('düz çizilen (tembel) maddede de basılı tutma madde seçer', (
+    tester,
+  ) async {
+    debugEagerItemFields = false;
+    addTearDown(() => debugEagerItemFields = true);
+    await pumpEditor(tester);
+    expect(find.byType(EditableText), findsNothing);
+    await holdOnItem(tester, const Duration(milliseconds: 1200));
+
+    expect(editor(tester).isSelecting, isTrue);
+    expect(find.text('1 madde seçildi'), findsOneWidget);
+    for (final f in tester.widgetList<EditableText>(
+      find.byType(EditableText),
+    )) {
+      expect(
+        f.controller.selection.isCollapsed || !f.controller.selection.isValid,
+        isTrue,
+      );
+    }
+    expect(find.byType(AdaptiveTextSelectionToolbar), findsNothing);
+  });
+
+  testWidgets('fare ile basılı tutma madde seçimine geçmez', (tester) async {
+    await pumpEditor(tester);
+    final gesture = await tester.startGesture(
+      textPoint(tester),
+      kind: PointerDeviceKind.mouse,
+    );
+    for (var i = 0; i < 26; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(editor(tester).isSelecting, isFalse);
+  });
+
+  testWidgets('600 ms’de bırakınca yalnız metin seçili, seçim kipi yok', (
+    tester,
+  ) async {
     await pumpEditor(tester);
     await holdOnItem(tester, const Duration(milliseconds: 600));
 
     expect(editor(tester).isSelecting, isFalse);
     final selected = tester
         .widgetList<EditableText>(find.byType(EditableText))
-        .where((f) => f.controller.selection.isValid &&
-            !f.controller.selection.isCollapsed);
+        .where(
+          (f) =>
+              f.controller.selection.isValid &&
+              !f.controller.selection.isCollapsed,
+        );
     expect(selected, isNotEmpty);
   });
 

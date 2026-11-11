@@ -5,6 +5,7 @@ import '../../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart' show PointerDeviceKind, kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderFlex, RenderParagraph;
 import 'package:flutter/services.dart';
