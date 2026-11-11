@@ -327,7 +327,7 @@ class CardHiddenMedia {
       : docs > 0 && youtube + videos + images + audio == 0
       ? Icons.picture_as_pdf_outlined
       : audio > 0 && youtube + videos + images + docs == 0
-      ? Icons.graphic_eq
+      ? AppIcons.voiceRecord
       : images > 0 && youtube + videos + docs + audio == 0
       ? Icons.image_outlined
       : Icons.attach_file;
