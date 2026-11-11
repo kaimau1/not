@@ -206,7 +206,7 @@ jobs:
           chmod +x gitleaks osv-scanner
       - name: Sır taraması (gitleaks, bütün geçmiş)
         run: |
-          if "$RUNNER_TEMP/gitleaks" git --redact --no-banner --config .gitleaks.toml . ; then
+          if "$RUNNER_TEMP/gitleaks" git --redact --verbose --no-banner --config .gitleaks.toml . ; then
             echo "gitleaks: temiz" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "::warning title=gitleaks::Depo geçmişinde olası sır — bu adımın kaydına bak (değerler gizlenir). Yanlış alarmsa .gitleaks.toml."
@@ -214,12 +214,16 @@ jobs:
           fi
       - name: Bağımlılık açıkları (osv-scanner)
         run: |
-          if "$RUNNER_TEMP/osv-scanner" scan source --lockfile=pubspec.lock --lockfile=rules-test/package-lock.json ; then
-            echo "osv-scanner: temiz" >> "$GITHUB_STEP_SUMMARY"
+          # Uyarı eşiği UYGULAMANIN paketleri (pubspec.lock; ilk koşu 2026-11-11: temiz).
+          if "$RUNNER_TEMP/osv-scanner" scan source --lockfile=pubspec.lock ; then
+            echo "osv-scanner (pubspec.lock): temiz" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "::warning title=osv-scanner::Bilinen açıklı bağımlılık (ya da tarama hatası) — bu adımın kaydına bak."
-            echo "osv-scanner: BULGU VAR (adım kaydına bak)" >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning title=osv-scanner::Uygulama bağımlılığında bilinen açık (ya da tarama hatası) — bu adımın kaydına bak."
+            echo "osv-scanner (pubspec.lock): BULGU VAR (adım kaydına bak)" >> "$GITHUB_STEP_SUMMARY"
           fi
+          # rules-test yalnız test aracı (firebase-tools ağacı; dağıtılmaz): ilk koşuda
+          # 31 bilinen açık — uyarı vermez, yalnız özet satırı (denetim G-22).
+          "$RUNNER_TEMP/osv-scanner" scan source --lockfile=rules-test/package-lock.json | grep -E '^Total|^No issues' | sed 's/^/osv-scanner (rules-test, bilgi): /' >> "$GITHUB_STEP_SUMMARY" || true
 
   # APK yalnız elle tetiklenince (Actions → Run workflow) ya da MAIN'e giren
   # commit'in BAŞLIĞINDA [apk] geçince derlenir; dalda derlenmez (dal ile

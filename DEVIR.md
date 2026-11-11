@@ -15,10 +15,16 @@ Dal: `oto/P12-guvenlik` (origin/main 8e0f787a'dan).
   kilitli notun hatırlatıcı bildirimi artık başlık/gövde göstermiyor (reminder_service.dart),
   bekçi `test/security_guard_test.dart` (13 test yeşil). Tam analyze temiz.
 
+- Belgeler: docs/guvenlik.md, docs/guvenlik_denetimi.md (G-01…G-26), SECURITY.md; plan F71.1–8
+  [x] + Durum; regresyon listesi; docs/hafiza/veri.md.
+- CI ilk koşu (42967262678): guvenlik işi yeşil; osv pubspec.lock TEMİZ, rules-test 31 açık
+  (test aracı → uyarıdan çıkarıldı, özet satırı); gitleaks 1 bulgu (ayrıntı görünmüyordu →
+  --verbose eklendi).
+
 ## Şu an
-- Sırada: `docs/guvenlik.md`, `docs/guvenlik_denetimi.md`, `SECURITY.md`, plan `[x]`,
-  HAFIZA konu dosyası, regresyon listesi. Sonra CI izle; `guvenlik` işinin ilk koşusunda
-  gitleaks/osv yanlış alarm verirse `.gitleaks.toml` / komut satırını oturt.
+- Sırada: yeni koşuda gitleaks bulgusunun dosya/kuralına bak; yanlış alarmsa
+  .gitleaks.toml izin listesine ekle (gerçek sırsa denetime YÜKSEK olarak yaz, değeri yazma).
+  Sonra test parçalarının yeşilini bekle, rapor.
 
 ## Kanıt / kök neden
 - `firestore.rules` userDirectory: yorum "kimlik e-postayla eşleşir" diyordu, kural yalnız
