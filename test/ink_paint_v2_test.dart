@@ -4,6 +4,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_layer.dart';
+import 'package:notlar/features/notes/presentation/viewers/ink_pen.dart';
+import 'package:notlar/features/notes/presentation/viewers/ink_stroke_paint.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
@@ -83,16 +85,19 @@ void main() {
     expect(ink.strokesOf(1), hasLength(2));
   });
 
-  test('1500 basınçlı (saydam) çizgi: çizgi başına tek çağrı, saveLayer yok', () {
-    final strokes = _strokes(1500, pressure: true);
-    final canvas = TestRecordingCanvas();
-    InkPainter(strokes, 1).paint(canvas, const Size(400, 600));
-    expect(canvas.invocations.length, lessThanOrEqualTo(strokes.length + 4));
-    expect(
-      canvas.invocations.where((i) => i.invocation.memberName == #saveLayer),
-      isEmpty,
-    );
-  });
+  test(
+    '1500 basınçlı (saydam) çizgi: çizgi başına tek çağrı, saveLayer yok',
+    () {
+      final strokes = _strokes(1500, pressure: true);
+      final canvas = TestRecordingCanvas();
+      InkPainter(strokes, 1).paint(canvas, const Size(400, 600));
+      expect(canvas.invocations.length, lessThanOrEqualTo(strokes.length + 4));
+      expect(
+        canvas.invocations.where((i) => i.invocation.memberName == #saveLayer),
+        isEmpty,
+      );
+    },
+  );
 
   test('i noktası ve basınç 0 çizgi görünür', () {
     final canvas = TestRecordingCanvas();
@@ -118,5 +123,74 @@ void main() {
     expect(circle.invocation.positionalArguments[1], closeTo(0.7, 1e-9));
     final path = canvas.invocations.last.invocation.positionalArguments[0];
     expect((path as Path).getBounds().height, greaterThan(1));
+  });
+
+  group('F62.5 dolma kalem', () {
+    const size = Size(400, 600);
+    InkStroke line(double step, {List<double>? q}) => InkStroke(
+      page: 1,
+      color: InkPen.fountain.apply(Colors.black).toARGB32(),
+      width: 4 / 400,
+      points: [
+        for (var k = 0; k < 6; k++) ...[0.1 + k * step, 0.5],
+      ],
+      pressures: q,
+    );
+
+    test('seçilince renk 0xFE saydamlıkla yazılır, şeffaflık sabit', () {
+      final ink = InkController(initial: const [], onChanged: (_) {});
+      addTearDown(ink.dispose);
+      ink.setOpacity(0.5);
+      ink.setPen(InkPen.fountain);
+      expect(inkIsFountain(ink.penColor.toARGB32()), isTrue);
+      expect(InkPen.fountain.fixedOpacity, 1.0);
+      expect(inkIsFountain(Colors.black.toARGB32()), isFalse);
+    });
+
+    test('hızlı çizgi yavaştan ince', () {
+      final slow = fountainRadii(line(0.003), size);
+      final fast = fountainRadii(line(0.03), size);
+      expect(fast[3], lessThan(slow[3] * 0.7));
+    });
+
+    test('basınç eğrisi dik: ×0,2 … ×1,8', () {
+      // Büyük sayfa: ince uç 0,5 px tabanına takılmasın.
+      const big = Size(800, 1200);
+      final light = fountainRadii(line(0.003, q: List.filled(6, 0)), big);
+      final hard = fountainRadii(line(0.003, q: List.filled(6, 1)), big);
+      expect(hard[3] / light[3], closeTo(9, 0.01));
+    });
+
+    test('tek çağrıyla dolgu; nokta taban yarıçapla', () {
+      final canvas = TestRecordingCanvas();
+      InkPainter([
+        line(0.01),
+        InkStroke(
+          page: 1,
+          color: InkPen.fountain.apply(Colors.black).toARGB32(),
+          width: 4 / 400,
+          points: const [0.5, 0.5],
+        ),
+      ], 1).paint(canvas, size);
+      expect(canvas.invocations, hasLength(2));
+      expect(canvas.invocations.first.invocation.memberName, #drawPath);
+      final dot = canvas.invocations.last.invocation;
+      expect(dot.memberName, #drawCircle);
+      expect(dot.positionalArguments[1], closeTo(2, 1e-9));
+    });
+
+    test('kalkışta sadeleşmez (hız nokta aralığında)', () {
+      final ink = InkController(initial: const [], onChanged: (_) {});
+      addTearDown(ink.dispose);
+      ink.setPen(InkPen.fountain);
+      for (var k = 0; k <= 20; k++) {
+        final at = Offset(40 + k * 4.0, 300);
+        k == 0
+            ? ink.pointerDown(1, at, size, kind: PointerDeviceKind.mouse)
+            : ink.pointerMove(1, at, size);
+      }
+      ink.pointerUp(kind: PointerDeviceKind.mouse);
+      expect(ink.ink.single.points.length, 42);
+    });
   });
 }

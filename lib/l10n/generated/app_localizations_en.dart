@@ -1463,6 +1463,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get penBallpoint => 'Ballpoint pen';
 
   @override
+  String get penFountain => 'Fountain pen';
+
+  @override
   String get penMarker => 'Marker';
 
   @override

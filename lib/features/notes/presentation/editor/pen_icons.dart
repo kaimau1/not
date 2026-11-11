@@ -110,6 +110,8 @@ class PenToolPainter extends CustomPainter {
     switch (tool) {
       case PenTrayTool.pen:
         _ballpoint(canvas, size, cx);
+      case PenTrayTool.fountain:
+        _fountain(canvas, size, cx);
       case PenTrayTool.marker:
         _marker(canvas, size, cx);
       case PenTrayTool.highlighter:
@@ -180,6 +182,50 @@ class PenToolPainter extends CustomPainter {
       Paint()..color = dark ? const Color(0xFF8A8A93) : const Color(0xFFB6B8BF),
     );
     c.drawRRect(clip, _stroke);
+  }
+
+  /// Dolma kalem: koyu gövde, metal uç (ortasında yarık), renkli bant.
+  void _fountain(Canvas c, Size s, double cx) {
+    const half = 8.5;
+    final body = Rect.fromLTRB(cx - half, 40, cx + half, s.height + 4);
+    final barrel = dark ? const Color(0xFF2E2E34) : const Color(0xFF3B3F4A);
+    _barrel(c, body, base: barrel);
+    // Kesik koni bölüm.
+    final grip = Path()
+      ..moveTo(cx - half, 41)
+      ..lineTo(cx - 6, 30)
+      ..lineTo(cx + 6, 30)
+      ..lineTo(cx + half, 41)
+      ..close();
+    c.drawPath(
+      grip,
+      _grad(Rect.fromLTRB(cx - half, 30, cx + half, 41), barrel),
+    );
+    c.drawPath(grip, _stroke);
+    // Metal uç: sivri badem, ortada yarık ve nefes deliği.
+    final nibBox = Rect.fromLTRB(cx - 6, 5, cx + 6, 31);
+    final nib = Path()
+      ..moveTo(cx - 6, 31)
+      ..quadraticBezierTo(cx - 6, 16, cx, 5)
+      ..quadraticBezierTo(cx + 6, 16, cx + 6, 31)
+      ..close();
+    c.drawPath(
+      nib,
+      _grad(
+        nibBox,
+        dark ? const Color(0xFFB8A46A) : const Color(0xFFD9C27E),
+        dark ? const Color(0xFF6E6038) : const Color(0xFF9C8546),
+        Colors.white,
+      ),
+    );
+    c.drawPath(nib, _stroke);
+    final slit = Paint()
+      ..color = _opaque
+      ..strokeWidth = 1.1
+      ..strokeCap = StrokeCap.round;
+    c.drawLine(Offset(cx, 7), Offset(cx, 21), slit);
+    c.drawCircle(Offset(cx, 22.5), 1.6, Paint()..color = _opaque);
+    _band(c, Rect.fromLTRB(cx - half, 48, cx + half, 53));
   }
 
   void _marker(Canvas c, Size s, double cx) {

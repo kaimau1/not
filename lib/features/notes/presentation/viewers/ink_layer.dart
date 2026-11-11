@@ -533,7 +533,7 @@ class InkController extends ChangeNotifier {
   Offset? _snapLineFrom;
 
   /// Çizgiye yazılan renk: seçilen renk + kalemin saydamlığı (+ şeffaflık).
-  Color get penColor => pen == InkPen.highlighter
+  Color get penColor => pen.fixedOpacity != null
       ? pen.apply(color)
       : color.withAlpha((pen.alpha * opacity).round().clamp(26, 255));
 
@@ -1570,12 +1570,15 @@ class InkController extends ChangeNotifier {
     // F61.2: serbest çizgi kalkışta sadeleşir (RDP, ~0,3 dp): kayıt ve
     // bellek küçülür, görünüm değişmez. Ok / şekil / oturmuş çizgi hariç.
     var done = active;
+    // ponytail: dolma kalem sadeleşmez — hızı nokta ARALIĞINDAN okunuyor,
+    // RDP düz yerde noktaları seyreltip çizgiyi incelterdi (F62.5).
     if (done != null &&
         !done.arrow &&
         shape == null &&
         !wasErasing &&
         !wasSnapped &&
-        !lasso) {
+        !lasso &&
+        !inkIsFountain(done.color)) {
       final i = _ink.indexWhere((s) => identical(s, done));
       final r = i < 0
           ? null
@@ -2313,7 +2316,7 @@ class InkSettingsSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final pen = controller.pen;
-    final highlighter = pen == InkPen.highlighter;
+    final fixed = pen.fixedOpacity;
     return SafeArea(
       top: false,
       child: SingleChildScrollView(
@@ -2370,19 +2373,19 @@ class InkSettingsSheet extends StatelessWidget {
                 SizedBox(width: 96, child: Text(l10n.inkOpacity)),
                 Expanded(
                   child: Slider(
-                    // Fosforlunun saydamlığı sabit (türü ondan okunuyor).
-                    value: highlighter ? 0.4 : controller.opacity,
+                    // Fosforlu / dolma kalemin saydamlığı sabit (türü
+                    // ondan okunuyor).
+                    value: fixed ?? controller.opacity,
                     min: 0.1,
                     divisions: 9,
-                    label:
-                        '%${((highlighter ? 0.4 : controller.opacity) * 100).round()}',
-                    onChanged: highlighter ? null : controller.setOpacity,
+                    label: '%${((fixed ?? controller.opacity) * 100).round()}',
+                    onChanged: fixed != null ? null : controller.setOpacity,
                   ),
                 ),
                 SizedBox(
                   width: 36,
                   child: Text(
-                    '%${((highlighter ? 0.4 : controller.opacity) * 100).round()}',
+                    '%${((fixed ?? controller.opacity) * 100).round()}',
                   ),
                 ),
               ],

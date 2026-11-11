@@ -20,7 +20,7 @@ import '../viewers/ink_tools.dart';
 import '../../../../core/a11y/chip_roles.dart';
 
 /// Tepsideki araçlar (soldan sağa).
-enum PenTrayTool { lasso, shapes, eraser, pen, marker, highlighter }
+enum PenTrayTool { lasso, shapes, eraser, pen, fountain, marker, highlighter }
 
 /// **KALEM TEPSİSİ** (kullanıcı isteği 2026-10-28: "örnek çizim ekranı daha
 /// görsel olarak bütün ve menüsü güzel"). Araçlar simge değil, tepside
@@ -197,6 +197,7 @@ class _PenTrayState extends State<PenTray> {
     InkPen.pen => PenTrayTool.pen,
     InkPen.marker => PenTrayTool.marker,
     InkPen.highlighter => PenTrayTool.highlighter,
+    InkPen.fountain => PenTrayTool.fountain,
   };
 
   PenTrayTool get _current {
@@ -223,6 +224,8 @@ class _PenTrayState extends State<PenTray> {
         _ink.setEraser(true);
       case PenTrayTool.pen:
         _ink.setPen(InkPen.pen);
+      case PenTrayTool.fountain:
+        _ink.setPen(InkPen.fountain);
       case PenTrayTool.marker:
         _ink.setPen(InkPen.marker);
       case PenTrayTool.highlighter:
@@ -813,6 +816,7 @@ class _PenTrayState extends State<PenTray> {
     PenTrayTool.shapes: l10n.inkShapes,
     PenTrayTool.eraser: l10n.eraser,
     PenTrayTool.pen: l10n.penBallpoint,
+    PenTrayTool.fountain: l10n.penFountain,
     PenTrayTool.marker: l10n.penMarker,
     PenTrayTool.highlighter: l10n.penHighlighter,
   };
@@ -1403,12 +1407,12 @@ class _Options extends StatelessWidget {
                 ),
                 Expanded(
                   child: Slider(
-                    value: pen == InkPen.highlighter ? 0.4 : controller.opacity,
+                    value: pen.fixedOpacity ?? controller.opacity,
                     min: 0.1,
                     divisions: 9,
                     label:
-                        '%${((pen == InkPen.highlighter ? 0.4 : controller.opacity) * 100).round()}',
-                    onChanged: pen == InkPen.highlighter
+                        '%${((pen.fixedOpacity ?? controller.opacity) * 100).round()}',
+                    onChanged: pen.fixedOpacity != null
                         ? null
                         : controller.setOpacity,
                   ),
@@ -1416,7 +1420,7 @@ class _Options extends StatelessWidget {
                 SizedBox(
                   width: 30,
                   child: Text(
-                    '%${((pen == InkPen.highlighter ? 0.4 : controller.opacity) * 100).round()}',
+                    '%${((pen.fixedOpacity ?? controller.opacity) * 100).round()}',
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                 ),

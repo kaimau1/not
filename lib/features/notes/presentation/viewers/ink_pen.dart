@@ -31,7 +31,13 @@ enum InkPen {
 
   /// Fosforlu: çok kalın ve yarı saydam; uç düz (kare) olduğu için satır
   /// başı/sonu gerçek bir fosforlu kalem gibi keskin biter.
-  highlighter(defaultWidth: 22, minWidth: 10, maxWidth: 46, alpha: 0x66);
+  highlighter(defaultWidth: 22, minWidth: 10, maxWidth: 46, alpha: 0x66),
+
+  /// Dolma kalem (F62.5, Play yorumu F55.4): basınca daha dik tepki
+  /// (×0,2–×1,8), hızlı çizgide incelir. Saydamlığı SABİT 0xFE — türü
+  /// buradan tanınır (şeffaflık kaydırıcısı %10 adımlı: 254 hiç üretmez).
+  /// Sıra SONDA: kayıtlı ön ayarlar tür SIRASINI tutuyor.
+  fountain(defaultWidth: 4, minWidth: 2, maxWidth: 14, alpha: 0xFE);
 
   const InkPen({
     required this.defaultWidth,
@@ -53,6 +59,14 @@ enum InkPen {
   /// Kullanıcının seçtiği [base] rengi bu kalemin saydamlığıyla döndürür.
   Color apply(Color base) => base.withAlpha(alpha);
 
+  /// Şeffaflığı kullanıcı seçemeyen (türü saydamlıktan okunan) kalemin
+  /// sabit şeffaflığı; seçilebilirse null.
+  double? get fixedOpacity => switch (this) {
+    highlighter => 0.4,
+    fountain => 1.0,
+    _ => null,
+  };
+
   /// [width] değerini bu kalemin aralığına sıkıştırır (tür değişince
   /// kaydırıcının eski değeri aralık dışında kalabilir).
   double clampWidth(double width) => width.clamp(minWidth, maxWidth);
@@ -72,3 +86,6 @@ Paint inkPaint(Color color, double strokeWidth) {
     ..strokeJoin = highlighter ? StrokeJoin.bevel : StrokeJoin.round
     ..style = PaintingStyle.stroke;
 }
+
+/// Çizginin rengi dolma kalemin mi (bkz. [InkPen.fountain]).
+bool inkIsFountain(int argb) => (argb >> 24) & 0xFF == InkPen.fountain.alpha;

@@ -2726,6 +2726,12 @@ abstract class AppLocalizations {
   /// **'Tükenmez kalem'**
   String get penBallpoint;
 
+  /// No description provided for @penFountain.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dolma kalem'**
+  String get penFountain;
+
   /// No description provided for @penMarker.
   ///
   /// In tr, this message translates to:

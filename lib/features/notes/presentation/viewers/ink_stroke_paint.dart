@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/painting.dart';
 
 import '../../domain/arrow.dart';
@@ -44,10 +45,14 @@ void paintInkStroke(
       );
     return;
   }
-  final fill = s.hasPressure;
+  final fountain = inkIsFountain(s.color);
+  final fill = s.hasPressure || fountain;
   if (s.points.length == 2) {
-    // i/ö/ü noktası: taban kalınlıkta (basınçlıda ×0,35 alt sınır korunur).
-    final r = fill ? base * inkPressureFactor(s.pressures![0]) / 2 : base / 2;
+    // i/ö/ü noktası: taban kalınlıkta (basınçlıda ×0,35 alt sınır korunur;
+    // dolma kalemde taban yarıçap).
+    final r = s.hasPressure && !fountain
+        ? base * inkPressureFactor(s.pressures![0]) / 2
+        : base / 2;
     canvas.drawCircle(
       Offset(s.points[0] * size.width, s.points[1] * size.height),
       r,
@@ -57,7 +62,10 @@ void paintInkStroke(
   }
   var g = cache ? _geom[s] : null;
   if (g == null || g.size != size) {
-    g = _StrokeGeom(size, fill ? _pressurePath(s, size) : _linePath(s, size));
+    g = _StrokeGeom(
+      size,
+      fill ? _variablePath(s, size, fountain) : _linePath(s, size),
+    );
     if (cache) _geom[s] = g;
   }
   canvas.drawPath(
@@ -110,31 +118,65 @@ Path _linePath(InkStroke s, Size size) {
   return path;
 }
 
-/// Basınçlı çizgi: her parça uçları yuvarlak, kalınlığı iki ucun basıncıyla
-/// değişen bir "kapsül" çokgeni; hepsi TEK yolda, aynı dönüş yönünde →
-/// `nonZero` dolgu birleşimi boşluksuz doldurur, saydam renkte üst üste
-/// binen yer koyulaşmaz (eski `saveLayer`'ın işi).
+/// Basınçlı / dolma kalem çizgisi: her parça uçları yuvarlak, kalınlığı
+/// iki ucun yarıçapıyla değişen bir "kapsül" çokgeni; hepsi TEK yolda, aynı
+/// dönüş yönünde → `nonZero` dolgu birleşimi boşluksuz doldurur, saydam
+/// renkte üst üste binen yer koyulaşmaz (eski `saveLayer`'ın işi).
 ///
 /// ponytail: tek şerit çokgen (normal ± yarı kalınlık) yerine parça başına
 /// kapsül — şerit keskin dönüşte kendini keser, ters dönen bölge `nonZero`'da
 /// delik olabilir; kapsül birleşimi her zaman dolu. Bedel parça başına 10 köşe.
-Path _pressurePath(InkStroke s, Size size) {
+Path _variablePath(InkStroke s, Size size, bool fountain) {
   final p = s.points;
-  final q = s.pressures!;
-  final base = s.width * size.width;
   final w = size.width, h = size.height;
+  final r = fountain ? fountainRadii(s, size) : _pressureRadii(s, size);
   final path = Path();
   for (var i = 2; i + 1 < p.length; i += 2) {
     final j = i ~/ 2;
     _capsule(
       path,
       Offset(p[i - 2] * w, p[i - 1] * h),
-      base * inkPressureFactor(q[j - 1]) / 2,
+      r[j - 1],
       Offset(p[i] * w, p[i + 1] * h),
-      base * inkPressureFactor(q[j]) / 2,
+      r[j],
     );
   }
   return path;
+}
+
+List<double> _pressureRadii(InkStroke s, Size size) {
+  final base = s.width * size.width;
+  return [for (final q in s.pressures!) base * inkPressureFactor(q) / 2];
+}
+
+/// Dolma kalemin nokta başına yarıçapı (F62.5): basınç eğrisi dik
+/// (×0,2–×1,8; basınçsız girdide ×1), ardışık nokta ARALIĞI büyüdükçe
+/// (hızlı çizgi) ×1,15'ten ×0,45'e incelir. Aralık iki komşu parçanın
+/// ortalaması — tek titrek parça kalınlığı zıplatmasın. Şema değişmez.
+@visibleForTesting
+List<double> fountainRadii(InkStroke s, Size size) {
+  final p = s.points;
+  final n = p.length ~/ 2;
+  final q = s.hasPressure ? s.pressures : null;
+  final base = s.width * size.width;
+  double seg(int i) {
+    // i-1 → i parçasının sayfa genişliğine oranlı boyu.
+    if (i <= 0 || i >= n) return -1;
+    final dx = p[2 * i] - p[2 * i - 2];
+    final dy = (p[2 * i + 1] - p[2 * i - 1]) * size.height / size.width;
+    return math.sqrt(dx * dx + dy * dy);
+  }
+
+  return [
+    for (var i = 0; i < n; i++)
+      () {
+        final a = seg(i), b = seg(i + 1);
+        final v = a < 0 ? b : (b < 0 ? a : (a + b) / 2);
+        final speed = (1.15 - 20 * math.max(0.0, v)).clamp(0.45, 1.15);
+        final press = q == null ? 1.0 : 0.2 + 1.6 * q[i].clamp(0.0, 1.0);
+        return math.max(0.5, base * press * speed / 2);
+      }(),
+  ];
 }
 
 /// [a] (yarıçap [ra]) → [b] (yarıçap [rb]) kapsülü; açılar hep artan yönde.
