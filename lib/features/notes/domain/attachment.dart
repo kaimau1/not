@@ -112,6 +112,12 @@ class InkStroke {
     pressures: map['q'] is List ? _points(map['q'] as List?) : null,
   );
 
+  /// Haritadan ya da hazır çizgiden (F61.5: v2 okuması çözülmüş çizgileri
+  /// haritaya koyar, yeniden ayrıştırılmaz).
+  static InkStroke parse(Object? e) => e is InkStroke
+      ? e
+      : InkStroke.fromMap(Map<String, dynamic>.from(e! as Map));
+
   /// Aynı çizginin yeni nokta listesiyle kopyası (kırp/yerleştir/döndür):
   /// basınç nokta başına olduğundan dönüşümlerden aynen geçer.
   InkStroke copyWith({int? page, double? width, List<double>? points}) =>
@@ -1273,7 +1279,7 @@ class Attachment {
         section: map['section'] as String? ?? '',
         ink: [
           for (final e in (map['ink'] as List?) ?? const [])
-            InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
+            InkStroke.parse(e),
         ],
         bubbles: [
           for (final e in (map['bubbles'] as List?) ?? const [])

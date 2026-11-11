@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants.dart';
 import '../../notes/data/drive_store.dart';
 import '../../notes/data/local_notes_store.dart';
+import '../../notes/domain/ink_plan.dart';
 import '../../notes/domain/note_heavy.dart';
 import '../../notes/domain/note_version.dart';
 import '../presentation/auth_providers.dart';
@@ -63,6 +64,8 @@ class AccountService {
     kHeavyCollection,
     kVersionsCollection,
     'presence',
+    // Mürekkep v2 bant belgeleri (F61.4).
+    kInkCollection,
   ];
 
   /// Kök koleksiyonlarda silinen KENDİ kayıtlarım (sırası

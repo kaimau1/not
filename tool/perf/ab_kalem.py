@@ -54,6 +54,7 @@ def opt(name, n, default):
 
 x0, y0, x1, y1 = opt('--alan', 4, [140, 700, 940, 1700])
 count = opt('--cizgi', 1, [30])[0]
+then = opt('--sonra', 2, None)  # ikinci dokunuş (Ekle sayfasındaki 'Sayfaya yaz')
 prepare = args[0] == 'hazirla'
 if prepare:
     total = int(args[1])
@@ -81,6 +82,8 @@ wake()
 print('sıcaklık', temp())
 tap(cx, cy); time.sleep(2.8)
 tap(px, py); time.sleep(1.5)
+if then:
+    tap(*then); time.sleep(1.5)
 
 if prepare:
     # Ölçüm yok: sayfayı doldur. 20'şerli tek adb çağrısı (çağrı başına

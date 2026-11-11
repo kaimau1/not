@@ -533,14 +533,14 @@ DEĞİŞEN bantla orantılı olsun, (3) ana iş parçacığında `double` listes
 **Güvenlik şartları (CLAUDE.md gece kuralı):** göçten önce yerel tam yedek; göç idempotent;
 eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturumda sınanır.
 
-- [ ] **F61.0 Ölç ve doğrula.** (a) Birim testi: 1000 nokta + basınçlı tek çizginin
+- [ ] **F61.0 Ölç ve doğrula.** *(2026-11-11 P13: (a) yapıldı — `test/ink_pack_test.dart`, 1000 basınçlı nokta 24 000–24 200 bayt; (b) ve (c) cihazda ölçülmedi → kapı açık kaldı, K-O2 "En güvenli" uygulandı: kodlayıcı + planlayıcı + okuma yazıldı, YAZMA bayrağı kapalı — sabah bakılacak.)* (a) Birim testi: 1000 nokta + basınçlı tek çizginin
   `estimateValueBytes(toMap())` değeri (beklenen ≈ 24 000). (b) Tablette gerçek bir el
   yazısı notunda nokta sayısı: editör açılışında debug'da bir kez
   `debugPrint('ink: ${çizgi} çizgi, ${nokta} nokta, ${bayt} bayt')` (profil derlemesinde
   bak, sonra satırı sil). (c) `tool/perf/prof_save.py` ile 1500 çizgili notta kayıt sonrası
   ana blok (ms). Sonuçları maddeye yaz. **Kapı:** (b) bir ekran < 150 KB VE (c) < 8 ms
   çıkarsa K-O2'de "yalnız sıkı kodlama" seçeneğine in; değilse tam kapsam.
-- [ ] **F61.1 Sıkı kodlayıcı (saf Dart).** `lib/features/notes/domain/ink_pack.dart`:
+- [x] **F61.1 Sıkı kodlayıcı (saf Dart).** *(2026-11-11 P13: `ink_pack.dart` + `test/ink_pack_test.dart` yeşil; 1000 basınçlı nokta ≤ 4500 bayt.)* `lib/features/notes/domain/ink_pack.dart`:
 
   ```dart
   /// Çizgileri Ek B'deki ikili biçime yazar / okur. Okunan çizgide `points`
@@ -553,7 +553,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   y > 1 olan uzun sayfa, 5000 çizgi); nokta sapması ≤ 1/16384; bozuk/kısa girdi `FormatException`
   (çökme yok); bilinmeyen sürüm baytı → `FormatException`; boyut: 1000 basınçlı nokta
   ≤ 4500 bayt.
-- [ ] **F61.2 Çizgi sadeleştirme (kalkışta).** `InkController.pointerUp`'ta serbest çizgi
+- [x] **F61.2 Çizgi sadeleştirme (kalkışta).** *(2026-11-11 P13: `simplifyStroke` + `InkController.pointerUp`; öneri sadeleşmiş çizgiden tanınır (sapma ≤ 0,3 dp, kimlik tutarlı kalsın diye) — sabah bakılacak; `ab_kalem.py` cihazda ölçülmedi.)* `InkController.pointerUp`'ta serbest çizgi
   bitince (ok/şekil/oturmuş düz çizgi HARİÇ) RDP: tolerans 0,0004 sayfa genişliği
   (~0,3 dp); basınç dizisi aynı indekslerle süzülür; ilk/son nokta korunur.
   `ink_recognize.dart`'taki `_simplify` `Offset` listesiyle çalışıyor — düz listede çalışan
@@ -561,7 +561,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   Test: sadeleşmiş çizginin özgün çizgiye en büyük uzaklığı ≤ tolerans; nokta sayısı
   gerçekçi el yazısı örneğinde ≥ %40 azalır; i noktası (tek nokta) ve 2 noktalı çizgi
   dokunulmaz. Şekil tanıma sadeleştirmeden ÖNCE çalışır (bugünkü sıra korunur).
-- [ ] **F61.3 Planlayıcı (saf Dart).** `lib/features/notes/domain/ink_plan.dart`:
+- [x] **F61.3 Planlayıcı (saf Dart).** *(2026-11-11 P13: `ink_plan.dart` + `test/ink_plan_test.dart` yeşil (6 durum + z tükenmesi); yoğun bant `~<bant>`, `b`, `c`… parçalarına bölünür.)* `lib/features/notes/domain/ink_plan.dart`:
 
   ```dart
   const kInkBandHeight = 1.0; // sayfa genişliği biriminde; uzun sayfa bantlara bölünür
@@ -586,7 +586,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   eklemek yalnız 1 belgeyi değiştirir; (3) ortadan silmek yalnız o bandı değiştirir;
   (4) taşıma (kement) eski ve yeni bandı değiştirir, başka bant değişmez; (5) yerinde
   değiştirme (şekle oturtma) çizim sırasını korur; (6) 20 000 çizgi → hiçbir belge > 256 KB.
-- [ ] **F61.4 Kurallar ve silme listeleri.** `firestore.rules` 275–300: `sub in ['heavy',
+- [ ] **F61.4 Kurallar ve silme listeleri.** *(2026-11-11 P13 — KISMEN: silme listeleri yapıldı (`_deleteCloudCopy` kalıcı silme + "yalnız bu cihaz" ortak yolu, `AccountService.deletedNoteSubcollections`; testler `notes_repository_data_test`, `account_deletion_test`). Kurallara DOKUNULMADI: paket sınırı "yalnız sıkılaştırma"; ortak not/klasör kullanıcısına `ink` erişimi açmak yeni erişim. Sahip `users/{uid}/{collection}/**` genel kuralıyla zaten erişir; v2 yazımı kapalıyken `ink` belgesi oluşmaz. Bayrak açılmadan ÖNCE kural + `rules-test` yazılmalı — sabah bakılacak.)* `firestore.rules` 275–300: `sub in ['heavy',
   'versions']` geçen okuma/oluşturma/güncelleme kurallarına `'ink'` ekle; **silme** de
   gerekir (boşalan bant belgesi silinir) — `heavy` için bugün silme kuralı sahibin genel
   kuralından geliyor; ortak notta 'write' rolü için `ink` belgesinde `delete` izni ekle
@@ -595,7 +595,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   `_deleteCloudCopy`'ye `ink` alt koleksiyonu; `account_service.dart:63` listesine `ink`
   (`account_deletion_test` bilerek kırılır → güncelle). Kalıcı silme, "yalnız bu cihaz",
   hesap silme üçü de testle.
-- [ ] **F61.5 Okuma tarafı (iki biçim birden).** `_hydratedDoc`: ana belgede `inkV == 2`
+- [x] **F61.5 Okuma tarafı (iki biçim birden).** *(2026-11-11 P13: `_hydratedDoc` tek `ink` dinleyicisi + `InkDocCache` (bayt bayt aynı belge çözülmez, değişmeyen yüzeyin listesi aynı örnek), `mergeInkV2` (v2 kazanır, `inkV: 2` not `heavyRef` sayılır), `hydrate`/`hydrateNote` → `needsHydrate`; bozuk/bilinmeyen sürüm `ErrorLog`'a, atlanır. v1 notta `heavyLoaded` anlamı AYNEN. Test `test/ink_v2_read_test.dart`. Açık: bozuk bantlı yüzeyin "salt okunur" açılması yazılmadı (yazım kapalıyken üstüne yazan yok) — sabah bakılacak.)* `_hydratedDoc`: ana belgede `inkV == 2`
   ise `notes/{id}/ink` koleksiyonu dinlenir (tek dinleyici); gelen belgeler yüzey→sayfa→bant
   eşlenir, `mergeInkDocs` ile çizgiler kurulur ve ilgili ekin `ink`'ine / `pageInk`'e
   konur. **Yalnız değişen belge çözülür:** belge kimliği → (son görülen paket baytları,
@@ -608,7 +608,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   riski).
   Test: v1 not olduğu gibi açılır; elle kurulmuş v2 not açılır; karışık (bir ek v1, sayfa
   v2) açılır; `hydrate` v2'yi doldurur.
-- [ ] **F61.6 Yazma tarafı + tembel göç.** Bayrak: `config/app.inkV2Write` (bool, yoksa
+- [ ] **F61.6 Yazma tarafı + tembel göç.** *(2026-11-11 P13 — YAZILMADI: K-O2 "En güvenli" = kodlayıcı + planlayıcı + okuma, YAZMA kapalı; F61.0 kapısı (b)(c) cihazda ölçülmediği için kapsam da kesin değil ("yalnız sıkı kodlama"ya inebilir). Bekçi: `ink_v2_read_test` "v2 YAZIMI KAPALI" (kayıt `ink`'e yazmaz, `inkV` koymaz). Not: v1 yazan istemci v2 notu düzenlerse mürekkebi v1'e yazar, okumada v2 kazanır → değişiklik görünmez; bayrak açılmadan önce `minClient` (K-O3) ŞART — sabah bakılacak.)* Bayrak: `config/app.inkV2Write` (bool, yoksa
   false) + debug'da yerel tercih `ink_v2_write`. Bayrak açıkken `updateNote`: mürekkep ana
   belgeye/`heavy`'ye YAZILMAZ; `planInkDocs` çıktısı son yazılanla (docId → bayt özdeşliği)
   karşılaştırılır, yalnız değişen belgeler `set`, boşalanlar `delete`, ana belge

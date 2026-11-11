@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
@@ -12,12 +13,14 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/crash_reporting.dart';
+import '../../../core/error_log.dart';
 import '../../../core/utils/diagnostics.dart';
 import '../../../core/utils/firestore_size.dart';
 import '../../../core/utils/local_file.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/attachment.dart';
+import '../domain/ink_plan.dart';
 import '../domain/note.dart';
 import '../domain/note_heavy.dart';
 import '../domain/notebook_migration.dart';
@@ -156,7 +159,7 @@ final noteStreamProvider = StreamProvider.autoDispose.family<Note?, String>((
 /// Listeden gelen (bölünmüşse HAFİF) notu tam hâline getirir (F3.13);
 /// [ownerId] doluysa not onun koleksiyonundandır (paylaşılan klasör).
 Future<Note> hydrateNote(WidgetRef ref, Note note, {String? ownerId}) {
-  if (!note.heavyMissing) return Future.value(note);
+  if (!needsHydrate(note)) return Future.value(note);
   final repo = ownerId == null
       ? ref.read(notesRepositoryProvider)
       : NotesRepository(FirebaseFirestore.instance, ownerId);
@@ -378,18 +381,46 @@ class NotesRepository {
 
   Stream<Note?> watchNote(String noteId) => _withLocal(
     _hydratedDoc(noteId),
-    (({DocumentSnapshot<Map<String, dynamic>> doc, Map<String, dynamic>? heavy})
-            e) =>
+    (_NoteDocs e) =>
         local?.note(noteId) ??
         (e.doc.exists
             ? Note.fromMap(
                 noteId,
-                mergeHeavy(e.doc.data()!, e.heavy),
+                mergeInkV2(mergeHeavy(e.doc.data()!, e.heavy), e.ink),
                 pending: e.doc.metadata.hasPendingWrites,
-                heavyLoaded: e.heavy != null,
+                heavyLoaded: e.loaded,
               )
             : null),
   );
+
+  /// Mürekkep v2 çizgi sırası (F61.3): örnek kimliğiyle, bütün notlar için
+  /// tek tablo (Expando — çizgi bırakılınca kaydı da gider).
+  final _inkOrder = InkOrder();
+
+  CollectionReference<Map<String, dynamic>> _inkDocs(String noteId) =>
+      _notes.doc(noteId).collection(kInkCollection);
+
+  /// `ink` koleksiyonu anlık görüntüsü → docId → paket. Bilinmeyen sürüm /
+  /// biçim atlanır ve kayda yazılır (Ek B: çökme yok).
+  Map<String, Uint8List> _inkPacks(
+    String noteId,
+    Iterable<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+  ) {
+    final out = <String, Uint8List>{};
+    for (final d in docs) {
+      final data = d.data();
+      final b = data['b'];
+      if (data['v'] == 1 && b is Blob) {
+        out[d.id] = b.bytes;
+      } else {
+        ErrorLog.record('ink_v2', 'okunamayan mürekkep belgesi $noteId/${d.id}');
+      }
+    }
+    return out;
+  }
+
+  void _badInk(String noteId, String docId, Object error) =>
+      ErrorLog.record('ink_v2', 'bozuk mürekkep paketi $noteId/$docId: $error');
 
   DocumentReference<Map<String, dynamic>> _heavyDoc(String noteId) =>
       _notes.doc(noteId).collection(kHeavyCollection).doc(kHeavyDocId);
@@ -398,19 +429,35 @@ class NotesRepository {
   /// yalnız ana belgede `heavyRef` varken dinlenir; ilk anlık görüntüsü
   /// gelene dek not HAFİF yayınlanır (`heavy: null` — yazım ağır belgeye
   /// dokunmaz, bkz. [updateNote]).
-  Stream<({DocumentSnapshot<Map<String, dynamic>> doc, Map<String, dynamic>? heavy})>
-  _hydratedDoc(String noteId) {
-    late StreamController<
-      ({DocumentSnapshot<Map<String, dynamic>> doc, Map<String, dynamic>? heavy})
-    >
-    controller;
+  ///
+  /// **Mürekkep v2** (F61.5): ana belgede `inkV: 2` varsa `ink` koleksiyonu
+  /// da TEK dinleyiciyle dinlenir; yalnız değişen bant çözülür
+  /// ([InkDocCache]). Not, ilk mürekkep görüntüsü de gelince yüklü sayılır.
+  Stream<_NoteDocs> _hydratedDoc(String noteId) {
+    late StreamController<_NoteDocs> controller;
     StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? mainSub;
     StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? heavySub;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? inkSub;
     DocumentSnapshot<Map<String, dynamic>>? last;
     Map<String, dynamic>? heavy;
+    Map<String, List<InkStroke>>? ink;
+    final inkCache = InkDocCache();
     void emit() {
       final doc = last;
-      if (doc != null) controller.add((doc: doc, heavy: heavy));
+      if (doc == null) return;
+      final data = doc.data();
+      final split = data?['heavyRef'] == true;
+      final v2 = data?['inkV'] == 2;
+      controller.add((
+        doc: doc,
+        heavy: heavy,
+        ink: ink,
+        // v1: bugünkü anlam AYNEN (`heavy != null`; editörün "ağır veri ilk
+        // kez geldi" dalı buna bağlı). v2: mürekkep de beklenir.
+        loaded: v2
+            ? (!split || heavy != null) && ink != null
+            : heavy != null,
+      ));
     }
 
     controller = StreamController(
@@ -424,12 +471,23 @@ class NotesRepository {
               emit();
             }, onError: controller.addError);
           }
+          if (doc.data()?['inkV'] == 2 && inkSub == null) {
+            inkSub = _inkDocs(noteId).snapshots().listen((q) {
+              ink = inkCache.apply(
+                _inkPacks(noteId, q.docs),
+                _inkOrder,
+                onBad: (id, e) => _badInk(noteId, id, e),
+              );
+              emit();
+            }, onError: controller.addError);
+          }
           emit();
         }, onError: controller.addError);
       },
       onCancel: () async {
         await mainSub?.cancel();
         await heavySub?.cancel();
+        await inkSub?.cancel();
       },
     );
     return controller.stream;
@@ -439,14 +497,26 @@ class NotesRepository {
   /// Bölünmemiş, zaten yüklü ya da yerel not olduğu gibi döner. Paylaşım,
   /// dışa aktarma, çoğaltma, yedek ve "yalnız bu cihaz" bunu çağırır.
   Future<Note> hydrate(Note note) async {
-    if (!note.heavyMissing || isLocal(note.id)) return note;
+    if (!needsHydrate(note) || isLocal(note.id)) return note;
     final main = await _notes.doc(note.id).get();
     final data = main.data();
     if (data == null) return note;
     final heavy = await _heavyDoc(note.id).get();
+    Map<String, List<InkStroke>>? ink;
+    if (data['inkV'] == 2) {
+      final q = await _inkDocs(note.id).get();
+      ink = InkDocCache().apply(
+        _inkPacks(note.id, q.docs),
+        _inkOrder,
+        onBad: (id, e) => _badInk(note.id, id, e),
+      );
+    }
     return Note.fromMap(
       note.id,
-      mergeHeavy(data, heavy.data() ?? const <String, dynamic>{}),
+      mergeInkV2(
+        mergeHeavy(data, heavy.data() ?? const <String, dynamic>{}),
+        ink,
+      ),
       heavyLoaded: true,
     );
   }
@@ -1223,6 +1293,8 @@ class NotesRepository {
     for (final sub in [
       _versions(noteId),
       _notes.doc(noteId).collection(kPresenceCollection),
+      // Mürekkep v2 bant belgeleri (F61.4).
+      _notes.doc(noteId).collection(kInkCollection),
     ]) {
       unawaited(
         sub.get().then((snap) {
@@ -1677,3 +1749,17 @@ class _DocHub {
     return c.stream;
   }
 }
+
+/// Not belgesi + ağır belge + v2 mürekkebi ([NotesRepository._hydratedDoc]).
+typedef _NoteDocs = ({
+  DocumentSnapshot<Map<String, dynamic>> doc,
+  Map<String, dynamic>? heavy,
+  Map<String, List<InkStroke>>? ink,
+  bool loaded,
+});
+
+/// Not tam değil mi: bölünmüş ağır kısmı ya da v2 mürekkebi (F61.5) henüz
+/// okunmadı. Hafif listedeki v2 not `heavyRef` taşımayabilir; `inkV`
+/// tanınmayan alan olarak [Note.extras]'ta durur.
+bool needsHydrate(Note note) =>
+    !note.heavyLoaded && (note.heavyRef || note.extras['inkV'] == 2);
