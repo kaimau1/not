@@ -2992,5 +2992,45 @@
   "releaseNotesToastAll": "See all",
   "updateInstalling": "Downloaded — installing; the app will close and reopen",
   "updateAborted": "Installation cancelled — tap to try again",
-  "updateOpenedBrowser": "Download page opened in the browser"
+  "updateOpenedBrowser": "Download page opened in the browser",
+  "cardHiddenYoutube": "{count, plural, =1{YouTube video} other{{count} YouTube videos}}",
+  "@cardHiddenYoutube": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardHiddenVideo": "{count, plural, =1{Video} other{{count} videos}}",
+  "@cardHiddenVideo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardHiddenImage": "{count, plural, =1{Image} other{{count} images}}",
+  "@cardHiddenImage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardHiddenDoc": "{count, plural, =1{PDF} other{{count} documents}}",
+  "@cardHiddenDoc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardHiddenAudio": "{count, plural, =1{Voice recording} other{{count} voice recordings}}",
+  "@cardHiddenAudio": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

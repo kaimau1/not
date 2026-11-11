@@ -8265,4 +8265,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateOpenedBrowser => 'Download page opened in the browser';
+
+  @override
+  String cardHiddenYoutube(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count YouTube videos',
+      one: 'YouTube video',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardHiddenVideo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count videos',
+      one: 'Video',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardHiddenImage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count images',
+      one: 'Image',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardHiddenDoc(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count documents',
+      one: 'PDF',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardHiddenAudio(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voice recordings',
+      one: 'Voice recording',
+    );
+    return '$_temp0';
+  }
 }

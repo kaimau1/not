@@ -3796,5 +3796,45 @@
   "releaseNotesToastAll": "Tümünü gör",
   "updateInstalling": "İndirildi — kuruluyor; uygulama kapanıp yeniden açılacak",
   "updateAborted": "Kurulum iptal edildi — yeniden denemek için dokun",
-  "updateOpenedBrowser": "İndirme sayfası tarayıcıda açıldı"
+  "updateOpenedBrowser": "İndirme sayfası tarayıcıda açıldı",
+  "cardHiddenYoutube": "{count, plural, =1{YouTube videosu} other{{count} YouTube videosu}}",
+  "@cardHiddenYoutube": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardHiddenVideo": "{count, plural, =1{Video} other{{count} video}}",
+  "@cardHiddenVideo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardHiddenImage": "{count, plural, =1{Görsel} other{{count} görsel}}",
+  "@cardHiddenImage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardHiddenDoc": "{count, plural, =1{PDF} other{{count} belge}}",
+  "@cardHiddenDoc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardHiddenAudio": "{count, plural, =1{Ses kaydı} other{{count} ses kaydı}}",
+  "@cardHiddenAudio": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

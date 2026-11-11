@@ -8249,4 +8249,59 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get updateOpenedBrowser => 'İndirme sayfası tarayıcıda açıldı';
+
+  @override
+  String cardHiddenYoutube(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count YouTube videosu',
+      one: 'YouTube videosu',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardHiddenVideo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count video',
+      one: 'Video',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardHiddenImage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count görsel',
+      one: 'Görsel',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardHiddenDoc(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count belge',
+      one: 'PDF',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardHiddenAudio(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ses kaydı',
+      one: 'Ses kaydı',
+    );
+    return '$_temp0';
+  }
 }

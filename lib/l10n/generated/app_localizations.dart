@@ -14713,6 +14713,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'İndirme sayfası tarayıcıda açıldı'**
   String get updateOpenedBrowser;
+
+  /// No description provided for @cardHiddenYoutube.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{YouTube videosu} other{{count} YouTube videosu}}'**
+  String cardHiddenYoutube(int count);
+
+  /// No description provided for @cardHiddenVideo.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{Video} other{{count} video}}'**
+  String cardHiddenVideo(int count);
+
+  /// No description provided for @cardHiddenImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{Görsel} other{{count} görsel}}'**
+  String cardHiddenImage(int count);
+
+  /// No description provided for @cardHiddenDoc.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{PDF} other{{count} belge}}'**
+  String cardHiddenDoc(int count);
+
+  /// No description provided for @cardHiddenAudio.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{Ses kaydı} other{{count} ses kaydı}}'**
+  String cardHiddenAudio(int count);
 }
 
 class _AppLocalizationsDelegate
