@@ -161,6 +161,13 @@ Future<void> _keyboardScene(
       // Oturma (140 ms sonra, klavye durmuşken): hareket karesi değil.
       await tester.pump(const Duration(milliseconds: 200));
       await tester.pump(const Duration(milliseconds: 200));
+      tester.takeException();
+      // Gövde oturdu (yerleşim değişti): çubuk yerinden oynamaz.
+      expect(
+        tester.getRect(find.byType(BottomAppBar)).bottom,
+        moreOrLessEquals(last),
+        reason: 'oturma karesinde sıçrama (tur $cycle)',
+      );
     }
   }
   _Frame worst(List<_Frame> l) =>

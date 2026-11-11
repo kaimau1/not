@@ -34,10 +34,11 @@ Geçici dosya: iş bitince silinir.
 
 ### Durum
 - [x] kırmızı bekçi yazıldı (S17: 320 / 280 / 2 sınır)
-- [ ] KeyboardInsetScope
-- [ ] hızlı satır ön kurulum
-- [ ] S8 test artığı → bütçe 0
-- [ ] kabuk (AppFrame + SplitShell) ölçümü
+- [x] KeyboardInsetScope (S17: ilk kare 320 → 45, hareket 87–96 → 54, editör içi 49 → 7, dizilen 1 → 0)
+- [x] hızlı satır ön kurulum + parlama yalnız boyamada
+- [x] S8 test artığı → bütçe 0/0; sabit medya bölmesi evreyi bildiriciyle alır
+- [x] kabuk ölçüldü: SplitShell/AppFrame Scaffold klavye karesinde kurulmuyor (+≈ 6 / kare, MediaQuery sarmalayıcıları)
+- Kalan ≈ 45 / kare çerçevenin: metin seçim tutamağı katmanı (EditableText.didChangeMetrics → updateForScroll)
 
 ## P25 — yazarken alt panel gizleme ayarı
-- [ ] başlanmadı (P23'ten sonra, aynı dal)
+- [ ] sıradaki: ayar + kaydırıcılar + TypingBarHide gecikmeleri

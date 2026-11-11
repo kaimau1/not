@@ -245,4 +245,126 @@ void main() {
       expect(barBottom(tester), screen.height - nav);
     },
   );
+
+  // F60.S5: kapsamın altı klavyenin karelerini GÖRMEZ; canlı değer yalnız
+  // [KeyboardInset.liveOf] okuyan yaprakta.
+  testWidgets('KeyboardInsetScope: alt ağaç hareket karelerinde kurulmaz, '
+      'kararlı MediaQuery yalnız oturunca değişir', (tester) async {
+    const nav = 48.0;
+    var stableBuilds = 0;
+    var liveBuilds = 0;
+    var openBuilds = 0;
+    late MediaQueryData seen;
+    late double live;
+    final child = Column(
+      children: [
+        // MediaQuery'nin TAMAMINA bağlı (Scaffold gibi).
+        Builder(
+          builder: (context) {
+            stableBuilds++;
+            seen = MediaQuery.of(context);
+            return const SizedBox();
+          },
+        ),
+        Builder(
+          builder: (context) {
+            liveBuilds++;
+            live = KeyboardInset.liveOf(context);
+            return const SizedBox();
+          },
+        ),
+        Builder(
+          builder: (context) {
+            openBuilds++;
+            KeyboardInset.openOf(context);
+            return const SizedBox();
+          },
+        ),
+      ],
+    );
+    Widget app(double inset) => MediaQuery(
+      data: MediaQueryData(
+        size: screen,
+        viewInsets: EdgeInsets.only(bottom: inset),
+        viewPadding: const EdgeInsets.only(bottom: nav),
+        // Android: alt pay klavye yükseldikçe erir.
+        padding: EdgeInsets.only(bottom: (nav - inset).clamp(0.0, nav)),
+      ),
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: KeyboardInsetScope(child: child),
+      ),
+    );
+    await tester.pumpWidget(app(0));
+    expect((stableBuilds, liveBuilds, openBuilds), (1, 1, 1));
+    expect(seen.padding.bottom, nav);
+
+    for (final inset in [5.0, 30.0, 120.0, 250.0, 300.0]) {
+      await tester.pumpWidget(app(inset));
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(live, inset);
+    }
+    expect(stableBuilds, 1, reason: 'hareket boyunca kararlı taraf kurulmaz');
+    expect(liveBuilds, 6);
+    expect(openBuilds, 2, reason: 'yalnız klavye belirince');
+    expect(seen.viewInsets.bottom, 0);
+    expect(seen.padding.bottom, nav, reason: 'pay hareket boyunca erimez');
+
+    // Klavye durdu: tek adımda oturur.
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(stableBuilds, 2);
+    expect(seen.viewInsets.bottom, 300);
+    expect(seen.padding.bottom, 0);
+
+    // Kapanışın İLK karesinde kararlı taraf tam boya döner, sonra kıpırdamaz.
+    for (final inset in [280.0, 150.0, 20.0, 0.0]) {
+      await tester.pumpWidget(app(inset));
+    }
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(stableBuilds, 3);
+    expect(seen.viewInsets.bottom, 0);
+    expect(seen.padding.bottom, nav);
+    expect(openBuilds, 3);
+  });
+
+  testWidgets('KeyboardSnap kapsamın altında: klavye karelerinde kurulmaz, '
+      'oturunca bir kez; onSettled açılışta gelir', (tester) async {
+    final insets = <double>[];
+    final settled = <double>[];
+    final tree = KeyboardInsetScope(
+      child: KeyboardSnap(
+        onSettled: settled.add,
+        builder: (context, inset) {
+          insets.add(inset);
+          return Padding(
+            padding: EdgeInsets.only(bottom: inset),
+            child: Column(
+              children: [
+                const Expanded(child: SizedBox.expand()),
+                KeyboardSlide(inset: inset, child: bar),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+    await tester.pumpWidget(host(0, tree));
+    for (final live in [12.0, 133.0, 300.0]) {
+      await tester.pumpWidget(host(live, tree));
+      expect(barBottom(tester), screen.height - live);
+    }
+    expect(insets, [0.0]);
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(insets, [0.0, 300.0]);
+    expect(barBottom(tester), screen.height - 300);
+    await tester.pump();
+    expect(settled, [300.0]);
+    for (final live in [200.0, 0.0]) {
+      await tester.pumpWidget(host(live, tree));
+      expect(barBottom(tester), screen.height - live);
+    }
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(insets, [0.0, 300.0, 0.0]);
+    expect(settled, [300.0], reason: 'kapanışta gelmez');
+  });
 }
