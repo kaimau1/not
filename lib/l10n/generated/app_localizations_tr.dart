@@ -7269,6 +7269,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam';
 
   @override
+  String get calendarSwipe => 'Takvimde kaydırarak hafta/gün değiştir';
+
+  @override
+  String get calendarSwipeInfo =>
+      'Kapalıyken yatay kaydırma hiçbir şey değiştirmez; ok düğmeleri çalışmaya devam eder.';
+
+  @override
   String get swipeLeftCalendar => 'Sağa kaydırınca takvim';
 
   @override

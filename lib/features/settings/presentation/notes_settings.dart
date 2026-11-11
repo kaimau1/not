@@ -116,6 +116,24 @@ class SwipeCalendarSetting extends ConsumerWidget {
   }
 }
 
+/// Takvimde kaydırarak hafta/gün/ay değiştirme (bkz. [calendarSwipeProvider]).
+class CalendarSwipeSetting extends ConsumerWidget {
+  const CalendarSwipeSetting({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      key: const ValueKey('calendar-swipe'),
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.calendarSwipe),
+      subtitle: Text(l10n.calendarSwipeInfo),
+      value: ref.watch(calendarSwipeProvider),
+      onChanged: ref.read(calendarSwipeProvider.notifier).set,
+    );
+  }
+}
+
 String swipeModeLabel(BuildContext context, SwipeMode mode) {
   final l10n = context.l10n;
   return switch (mode) {

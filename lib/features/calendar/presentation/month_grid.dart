@@ -27,6 +27,7 @@ class MonthGrid extends StatelessWidget {
     required this.onSelect,
     required this.onMonthChange,
     this.showHeader = true,
+    this.swipeEnabled = true,
     this.now,
   });
 
@@ -40,6 +41,9 @@ class MonthGrid extends StatelessWidget {
   /// −1 önceki ay, +1 sonraki ay.
   final ValueChanged<int> onMonthChange;
   final bool showHeader;
+
+  /// Yatay kaydırmayla ay değişimi (Ayarlar → Takvim kaydırma).
+  final bool swipeEnabled;
 
   /// Test için "bugün".
   final DateTime? now;
@@ -57,11 +61,13 @@ class MonthGrid extends StatelessWidget {
 
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onHorizontalDragEnd: (d) {
-        final v = d.primaryVelocity ?? 0;
-        if (v < -200) onMonthChange(1);
-        if (v > 200) onMonthChange(-1);
-      },
+      onHorizontalDragEnd: !swipeEnabled
+          ? null
+          : (d) {
+              final v = d.primaryVelocity ?? 0;
+              if (v < -200) onMonthChange(1);
+              if (v > 200) onMonthChange(-1);
+            },
       child: Padding(
         padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
         child: Column(

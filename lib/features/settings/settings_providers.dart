@@ -1009,6 +1009,13 @@ final swipeLeftCalendarProvider = boolPref(
   defaultValue: true,
 );
 
+/// Takvimde yatay kaydırmayla hafta/gün/ay değiştirme (F60.S13, kullanıcı
+/// isteği 2026-11-12). Kapalıyken yatay jest kurulmaz; düğmeler çalışır.
+final calendarSwipeProvider = boolPref(
+  'calendar_swipe',
+  defaultValue: true,
+);
+
 /// Ana ekranın (dashboard) ZEMİNİ: **renk + desen + görsel**.
 ///
 /// Nota özel zeminden farkı: bu ayar cihaza aittir, buluta yazılmaz. Seçilen
