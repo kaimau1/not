@@ -64,6 +64,10 @@ void main() {
         title: 'Başlık',
         body: 'gövde',
         attachments: [att],
+        // P11b: sayfa üstü el yazısı da yedekle gider.
+        pageInk: const [
+          InkStroke(page: 0, color: 0xFF0000FF, width: 3, points: [2, 2, 3, 3]),
+        ],
         textPages: const [
           NoteTextPage(id: ''),
           NoteTextPage(id: 'p2', body: 'ikinci sayfa'),
@@ -103,6 +107,10 @@ void main() {
     expect(a.ink.single.points, [0, 0, 1, 1]);
     expect(a.bubbles.single.text, 'balon');
     expect(files2.store['a1'], [1, 2, 3]);
+    final full = (await repo2
+        .watchNote(restored.id)
+        .firstWhere((n) => n != null))!;
+    expect(full.pageInk.single.points, [2, 2, 3, 3]);
     final f2 = await folders2.watchFolders().first;
     expect(f2.single.name, 'İş');
     expect(restored.folderId, f2.single.id);

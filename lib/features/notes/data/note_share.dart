@@ -201,6 +201,7 @@ class NoteShare {
         body: source.body,
         items: source.items,
         pageNotes: source.pageNotes,
+        pageInk: source.pageInk,
         attachments: stored,
         tags: source.tags,
         color: source.color,

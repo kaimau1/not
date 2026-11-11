@@ -63,6 +63,10 @@ Map<String, dynamic> encodeNoteJson(Note note) => {
   'body': note.body,
   'items': [for (final item in note.items) item.toMap()],
   if (note.pageNotes.isNotEmpty) 'pageNotes': note.pageNotes,
+  // Sayfa üstü el yazısı (P11b): yazılmadığı için yedek ve paket onu
+  // sessizce düşürüyordu. Eski dosyada alan yoksa boş liste okunur.
+  if (note.pageInk.isNotEmpty)
+    'pageInk': [for (final s in note.pageInk) s.toMap()],
   'attachments': [for (final a in note.attachments) _encodeAttachment(a)],
   'tags': note.tags,
   'color': note.color.id,
@@ -142,6 +146,10 @@ Note decodeNoteJson(Map<String, dynamic> map) {
       for (final e in (map['pageNotes'] as Map? ?? const {}).entries)
         e.key.toString(): e.value?.toString() ?? '',
     },
+    pageInk: [
+      for (final raw in (map['pageInk'] as List? ?? const []))
+        InkStroke.fromMap(Map<String, dynamic>.from(raw as Map)),
+    ],
     attachments: [
       for (final raw in (map['attachments'] as List? ?? const []))
         _decodeAttachment(Map<String, dynamic>.from(raw as Map)),

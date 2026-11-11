@@ -46,6 +46,9 @@ void main() {
         pageIds: const ['p1', 'p2'],
       ),
     ],
+    pageInk: const [
+      InkStroke(page: 0, color: 0xFF445566, width: 0.02, points: [0.3, 0.4]),
+    ],
     tags: const ['is'],
     color: NoteColor.values.last,
     fontScale: 1.4,
@@ -97,6 +100,24 @@ void main() {
     // paketten gelen notun sayfa notlari kaybolur.
     expect(attachment.id, 'ek1');
     expect(attachment.pageIds, ['p1', 'p2']);
+  });
+
+  test('sayfa ustu el yazisi (pageInk) pakete girer ve aynen doner', () {
+    final note = readNotePackage(
+      buildNotePackage(buildNote(), const {}),
+    ).note;
+    expect(note.pageInk.single.color, 0xFF445566);
+    expect(note.pageInk.single.points, [
+      closeTo(0.3, 1e-7),
+      closeTo(0.4, 1e-7),
+    ]);
+  });
+
+  test('pageInk alani olmayan eski paket sorunsuz acilir', () {
+    final json = encodeNoteJson(buildNote())..remove('pageInk');
+    final note = decodeNoteJson(json);
+    expect(note.pageInk, isEmpty);
+    expect(note.title, 'Toplanti');
   });
 
   test('gonderenin depo/cihaz alanlari pakete YAZILMAZ', () {
