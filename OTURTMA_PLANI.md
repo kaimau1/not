@@ -586,13 +586,17 @@ doğrulanır).
   AÇIK = bugünkü davranış): "Ana ekranda kaydırarak klasör değiştir", "Takvimde kaydırarak
   hafta/gün değiştir". Kapalıyken yatay kaydırma jesti hiç kurulmaz (dikey kaydırma ve
   düğmeler çalışır). Widget testi.
-- [ ] **F60.S14 [Sonnet] Panoda işaretli maddeye basınca işaret kalkmamalı** (kullanıcı
+- [x] **F60.S14 [Sonnet] Panoda işaretli maddeye basınca işaret kalkmamalı** (kullanıcı
   listesi 2026-11-12). Kullanıcı: "dashboard'da işaretli bir maddenin işaretine basınca
   işareti kaldırılıyor; bu doğru bir davranış değil." Önce "dashboard"un hangi yüzey
   olduğunu kanıtla (ana ekran kart önizlemesindeki onay kutuları / günlük brifing-pano /
   takvim görev listesi — kodda `toggle` yollarını ara). En güvenli: o yüzeyde işaretli
   madde tek dokunuşla geri alınmaz (dokunuş notu/maddeyi açar ya da yok sayılır); işareti
   kaldırmak editörde. Karar "sabah bakılacak". Widget testi.
+  **Yapıldı 2026-11-12:** yüzey ana ekran kart önizlemesi (`note_card.dart` madde satırı +
+  `toggleCardItem`; tek `toggle` yolu). İşaretli kutuya dokunuş artık notu açar, işareti
+  kaldırmaz; boş kutu işaretlenir. `test/card_checked_item_test.dart`. Sabah bakılacak:
+  kart önizlemesinde işaret geri alma isteniyorsa uzun basma gibi ayrı bir yol gerekir.
 - Kabul: F60.1 ve F60.2 bütçe testleriyle kilitli; diğerleri ya düzeltildi ya da
   "üretilemedi + ne gerekli" notuyla kapandı.
 

@@ -1371,7 +1371,7 @@ class _FolderBadge extends StatelessWidget {
 /// birleştirilir (F4.1).
 void toggleCardItem(WidgetRef ref, Note note, NoteItem target) {
   final repo = ref.read(notesRepositoryProvider);
-  if (repo == null || target.text.trim().isEmpty) return;
+  if (repo == null || target.text.trim().isEmpty || target.checked) return;
   repo.updateFields(note.id, {
     'items': [
       for (final i in note.items)
@@ -1477,7 +1477,10 @@ class _CardItemRow extends StatelessWidget {
             ? NoteCheckColors.checked(scheme, accent)
             : NoteCheckColors.unchecked(scheme, accent),
       );
-      leading = onToggle == null
+      // F60.S14: işaretli madde kartta tek dokunuşla geri alınmaz (yanlışlıkla
+      // dokunuş sessizce işareti siliyordu); dokunuş notu açar. İşareti
+      // kaldırmak editörde.
+      leading = onToggle == null || item.checked
           ? Padding(
               padding: const EdgeInsetsDirectional.only(end: 6, top: 1),
               child: icon,

@@ -144,7 +144,7 @@ Sıra önceliktir: önce kullanıcının bildirdiği hatalar, sonra kalem/perfor
 | P29 | Madde uzun bas — iki aşama (halka dolumu, tüm yazı → madde seç) | opus | F60.S11 | A/B | evet | bekliyor |
 | P30 | Çöp kutusu: kalan simge hatası + kara delik efekti | opus | F60.S12 | A/B | evet | bekliyor |
 | P31 | Kaydırarak klasör/takvim geçişi ayarı | sonnet | F60.S13 | | evet | bekliyor |
-| P32 | Panoda işaretli madde işareti kalkmasın | sonnet | F60.S14 | | evet | bekliyor |
+| P32 | Panoda işaretli madde işareti kalkmasın | sonnet | F60.S14 | | evet | bitti (2026-11-12): ana ekran kartında işaretli maddenin kutusuna dokunmak işareti kaldırmıyor, notu açıyor (`note_card.dart` toggleCardItem); işaret kaldırma editörde (sabah bakılacak: kartta geri alma istenirse uzun bas). Test `card_checked_item_test` |
 | P18 | Telefon/tablet (kalan) | opus | F66.4, F66.6, F67.3, F67.4, F67.7, F67.9 | A/B | evet | bekliyor |
 | P19 | Liste yükü | fable | F68.1, F68.2 | A/B | | bekliyor |
 | P20 | Editör çekirdeği (başlama şartı tutuyorsa) | fable | Faz 64 | A/B | evet | bekliyor |
