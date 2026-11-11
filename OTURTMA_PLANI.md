@@ -650,10 +650,10 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
 `editor/page_ink_layer.dart`, `viewers/ink_pen.dart` (`inkPaint`), `note_card_media.dart`
 (`CardPageInk`).
 
-- [ ] **F62.0 Ölç (kapı).** `ab_kalem.py` boş / 1500 / 4000 çizgili sayfada: çizerken kare
+- [ ] **F62.0 Ölç (kapı).** *(2026-11-11, P14: yapılmadı — cihaz işi, işçi telefona dokunmaz; F62.1–F62.2 sonrası `ab_kalem.py` boş/1500/4000 yürütücüde.)* `ab_kalem.py` boş / 1500 / 4000 çizgili sayfada: çizerken kare
   başına UI ms ve raster ms (p50/p90), > 16,7 ms kare oranı. Beklenen: çizgi sayısıyla
   doğrusal. Raster p90 dolu sayfada < 6 ms çıkarsa F62.3 yapılmaz. Sonuçları yaz.
-- [ ] **F62.1 Etkin çizgi ayrı katman.** `InkController`'a `ValueNotifier<int>
+- [x] **F62.1 Etkin çizgi ayrı katman.** *(2026-11-11, P14: S15 2001 → 1 çağrı; `committedRev` `notifyListeners`'ta kimlik karşılaştırmasıyla artar (her yolu ayrı ayrı işaretlemek yerine), `test/ink_paint_v2_test.dart`: çizerken bitmiş katman `debugNeedsPaint` false. Kement taşıma sürerken seçili çizgiler bitmiş katmanda kaldı (bugünkü maliyet). `TOUR_COMPARE` piksel denetimi koşulmadı — F62.2 pikselleri bilerek değiştiriyor.)* `InkController`'a `ValueNotifier<int>
   committedRev` (yalnız BİTMİŞ çizgi kümesi değişince artar: çizgi sonu, silgi, geri al,
   yerine koy, taşıma bitişi) ve `InkStroke? get activeStroke`. `InkPageLayer`:
   `ListenableBuilder` KALKAR; yerine `Stack[ RepaintBoundary(CustomPaint(painter:
@@ -670,7 +670,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   *Kabul:* S15 ≤ 8 çizim çağrısı; 16 InkController kuran dosyanın hepsi derlenir
   (`ink_editing_guard_test` yeşil); ekran turu `TOUR_COMPARE` ile mürekkepli ekranlarda
   piksel farkı %0.
-- [ ] **F62.2 Çizgi başına geometri önbelleği.** `Expando<_StrokeGeom>` (anahtar: çizgi
+- [x] **F62.2 Çizgi başına geometri önbelleği.** *(2026-11-11, P14: `viewers/ink_stroke_paint.dart` tek çizim yolu (katman, kart, PDF/görsel dışa aktarma `InkPainter` üstünden); 1500 saydam basınçlı çizgi = 1500 çağrı, `saveLayer` 0. Basınçlı dolgu şerit yerine parça başına kapsül birleşimi (keskin dönüşte delik olmasın). Seyrek çizgi (şekil, %2'den uzun parça) yumuşatılmaz — köşe keskin kalır. Altın görüntü gözle onayı yapılmadı: sabah bakılacak.)* `Expando<_StrokeGeom>` (anahtar: çizgi
   örneği): (boyut, `Path`, sınır kutusu). Düz kalınlıkta çizgi: tek `Path`, **orta nokta
   yumuşatmalı** (`quadraticBezierTo(p[i], mid(p[i], p[i+1]))`; 2–3 noktalıda düz).
   Basınçlı çizgi: değişken kalınlıkta **tek dolgu çokgeni** (her noktada normal ± yarı
@@ -681,7 +681,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   *Kabul:* 1500 basınçlı çizgide `TestRecordingCanvas` çağrı sayısı ≤ çizgi sayısı + 4;
   altın görüntü: eski/yeni çizim yan yana `build/tour`'da; fark gözle onaylanır (köşeler
   yumuşar — beklenen); i noktası ve basınç 0 çizgi görünür (taban kalınlık ×0,35 korunur).
-- [ ] **F62.3 Bant karoları (uzun sayfa).** `PageInkStack` (uniform sayfa) bitmiş katmanı
+- [ ] **F62.3 Bant karoları (uzun sayfa).** *(2026-11-11, P14: yapılmadı — F62.0 kapısı ölçülmeden (raster p90 dolu sayfada < 6 ms ise gereksiz) en güvenli seçenek beklemek; sabah bakılacak.)* `PageInkStack` (uniform sayfa) bitmiş katmanı
   tek `CustomPaint` yerine `kInkBandHeight` yüksekliğinde karo `RepaintBoundary`'lerine
   böler; karo, sınır kutusu kendisiyle kesişen çizgileri `clipRect` ile çizer. Bir çizgi
   eklenince yalnız kesiştiği karolar yeniden boyanır (`committedRev` yerine karo başına
@@ -694,7 +694,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   `Picture.toImageSync` ile aygıt pikselinde görüntüye çevrilir, çizimde `drawImageRect`;
   değişince düşer. Bellek tavanı 8 karo. Zamanlayıcı YOK (test tuzağı): "değişmeden geçen
   kare sayısı ≥ 18" ile.
-- [ ] **F62.5 Dolma kalem (YORUM F55.4).** Yeni `InkPen` türü: basınç eğrisi daha dik
+- [x] **F62.5 Dolma kalem (YORUM F55.4).** *(2026-11-11, P14: `InkPen.fountain` (sırada SONDA — ön ayarlar sıra tutuyor), tür saydamlık 0xFE'den tanınır (şeffaflık kaydırıcısı %10 adımlı, 254 üretmez), şeffaflığı sabit; tepside tükenmezin yanında. Dolma kalem çizgisi kalkışta RDP ile sadeleşmez (hız nokta aralığında). Paylaşılan PDF damgası (`pdf_edit.dart`) basınçlı çizgi gibi düz kalınlıkta kalır. Testler `test/ink_paint_v2_test.dart`. Cihazda denenmedi.)* Yeni `InkPen` türü: basınç eğrisi daha dik
   (×0,2–×1,8) + hızla incelme (ardışık nokta aralığı büyüdükçe kalınlık azalır; hız
   bilgisi noktalardan türetilir, şema değişmez). F62.2'nin çokgen yoluyla çizilir.
   Tepside 5. kalem. i/ö/ü noktası: tek noktalı çizgi taban yarıçapla çizilir.

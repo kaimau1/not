@@ -490,6 +490,7 @@
   "cropHint": "Drag the corners to choose an area. Cropping can't be undone.",
   "cropFailed": "Couldn't crop the image.",
   "penBallpoint": "Ballpoint pen",
+  "penFountain": "Fountain pen",
   "penMarker": "Marker",
   "penHighlighter": "Highlighter",
   "eraser": "Eraser",

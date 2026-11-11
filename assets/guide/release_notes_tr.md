@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 11 Kasım 2026 {#2026-11-11}
+- **Yeni dolma kalem:** kalem tepsisinde bastırdıkça kalınlaşan, hızlı yazınca incelen dolma kalem var. Kalemle çizim daha akıcı: çizerken sayfanın geri kalanı yeniden boyanmıyor.
 - **Daha güvenli:** kilitli notun hatırlatıcı bildirimi artık başlığı ve içeriği göstermiyor; arkadaş ekleme ve paylaşım güvenliği sıkılaştırıldı.
 - **Yazım düzeltici yenilendi:** yalnız emin olduğu kelimeyi düzeltir; düzeltmeyi değiştirirsen ya da hemen ardından geri silmeye basarsan o düzeltmeyi bir daha yapmaz. Ayarlar → Öğrenilen yazımlar'da "Yalnız kurallar" kipi ve geri alınabilen reddedilenler listesi var.
 - **El yazısı yedekte kaybolmuyor:** tam yedek ve not paylaşımı artık sayfaya yazdığın el yazısını da taşıyor; önceden geri yüklenen ya da paylaşılan notlarda bu el yazısı kayboluyordu.

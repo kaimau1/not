@@ -7,11 +7,11 @@ import 'package:flutter/services.dart' show HapticFeedback;
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/hold_progress_ring.dart';
-import '../../domain/arrow.dart';
 import '../../domain/attachment.dart';
 import '../../domain/ink_pack.dart';
 import 'ink_pen.dart';
 import 'ink_recognize.dart';
+import 'ink_stroke_paint.dart';
 import 'ink_tools.dart';
 
 /// PDF ve slayt görüntüleyicilerinin ortak elle-yazma katmanı. Çizim dosyaya
@@ -533,7 +533,7 @@ class InkController extends ChangeNotifier {
   Offset? _snapLineFrom;
 
   /// Çizgiye yazılan renk: seçilen renk + kalemin saydamlığı (+ şeffaflık).
-  Color get penColor => pen == InkPen.highlighter
+  Color get penColor => pen.fixedOpacity != null
       ? pen.apply(color)
       : color.withAlpha((pen.alpha * opacity).round().clamp(26, 255));
 
@@ -549,7 +549,53 @@ class InkController extends ChangeNotifier {
   @override
   void notifyListeners() {
     _revision++;
+    _checkCommitted();
     super.notifyListeners();
+  }
+
+  /// **BİTMİŞ ÇİZGİ SÜRÜMÜ** (F62.1, B4): yalnız etkin çizgi DIŞINDAKİ
+  /// çizgi kümesi değişince artar (çizgi sonu, silgi, geri al, yerine koy,
+  /// taşıma). Bitmiş katman ([CommittedInkPainter]) yalnız buna bağlı: kalem
+  /// ilerlerken sayfadaki binlerce çizgi yeniden boyanmaz, yalnız etkin çizgi.
+  ///
+  /// Ayrı ayrı her yolda artırmak yerine [notifyListeners] karşılaştırır:
+  /// serbest çizimde liste ve etkin çizgi aynı nesne kalır (nokta yerinde
+  /// eklenir) → tek kimlik bakışı; liste değişince O(N) kimlik karşılaştırma.
+  /// ponytail: kement taşıma/döndürme sürerken seçili çizgiler bitmiş
+  /// katmanda kalır (her harekette bitmiş katman boyanır — bugünkü maliyet).
+  final committedRev = ValueNotifier<int>(0);
+  List<InkStroke>? _seenInk;
+  InkStroke? _seenActive;
+  List<InkStroke> _committed = const [];
+  final Map<int, List<InkStroke>> _committedByPage = {};
+
+  /// Çizilmekte olan çizgi (bitmiş katmanda çizilmez).
+  InkStroke? get activeStroke => _active;
+
+  void _checkCommitted() {
+    if (identical(_ink, _seenInk) && identical(_active, _seenActive)) return;
+    _seenInk = _ink;
+    _seenActive = _active;
+    final active = _active;
+    final committed = active == null
+        ? _ink
+        : [
+            for (final s in _ink)
+              if (!identical(s, active)) s,
+          ];
+    if (_sameInstances(committed, _committed)) return;
+    _committed = committed;
+    _committedByPage.clear();
+    committedRev.value++;
+  }
+
+  /// [page] sayfasının bitmiş çizgileri ([committedRev] başına bir kez süzülür).
+  List<InkStroke> strokesOf(int page) {
+    _checkCommitted();
+    return _committedByPage[page] ??= [
+      for (final s in _committed)
+        if (s.page == page) s,
+    ];
   }
 
   int _pointers = 0;
@@ -1211,6 +1257,7 @@ class InkController extends ChangeNotifier {
     hover.dispose();
     suggestion.dispose();
     eraserOffer.dispose();
+    committedRev.dispose();
     super.dispose();
   }
 
@@ -1523,12 +1570,15 @@ class InkController extends ChangeNotifier {
     // F61.2: serbest çizgi kalkışta sadeleşir (RDP, ~0,3 dp): kayıt ve
     // bellek küçülür, görünüm değişmez. Ok / şekil / oturmuş çizgi hariç.
     var done = active;
+    // ponytail: dolma kalem sadeleşmez — hızı nokta ARALIĞINDAN okunuyor,
+    // RDP düz yerde noktaları seyreltip çizgiyi incelterdi (F62.5).
     if (done != null &&
         !done.arrow &&
         shape == null &&
         !wasErasing &&
         !wasSnapped &&
-        !lasso) {
+        !lasso &&
+        !inkIsFountain(done.color)) {
       final i = _ink.indexWhere((s) => identical(s, done));
       final r = i < 0
           ? null
@@ -1810,47 +1860,23 @@ class InkPageLayer extends StatelessWidget {
               // RepaintBoundary: tek bir çizgi uzarken üstteki PDF/slayt
               // katmanının yeniden boyanmasına gerek yok.
               child: RepaintBoundary(
-                child: ListenableBuilder(
-                  listenable: controller,
-                  builder: (context, _) {
-                    final painter = InkPainter(
-                      controller.ink,
-                      page,
-                      revision: controller.revision,
-                    );
+                // F62.1: widget YENİDEN KURULMAZ; iki boyayıcı kendi
+                // bildiricisini dinler. Bitmiş çizgiler kendi
+                // RepaintBoundary'sinde, yalnız [committedRev] ile boyanır;
+                // etkin çizgi + kement/seçim/havadaki uç her harekette.
+                child: ValueListenableBuilder<int>(
+                  valueListenable: controller.committedRev,
+                  builder: (context, _, child) {
                     // Ekran okuyucu (F4.7): tuval kendisi okunamaz; en azından
                     // sayfada çizim olduğu ve kaç çizgi olduğu söylenir.
-                    final paint = CustomPaint(
-                      painter: painter,
-                      foregroundPainter: _InkOverlayPainter.of(
-                        controller,
-                        page,
-                        Theme.of(context).colorScheme.primary,
-                      ),
-                      size: uniform ? size : Size.infinite,
-                    );
+                    final count = controller.strokesOf(page).length;
                     return Semantics(
-                      image: painter.strokes.isNotEmpty,
-                      label: painter.strokes.isEmpty
-                          ? null
-                          : context.l10n.inkSemantics(painter.strokes.length),
-                      // Kare kutudan taşan çizgi de boyanır (kırpılmaz).
-                      // OverflowBox: Align'la tuval katmanın boyuna
-                      // sıkışıyordu — kalem kipi kapanınca (sayfa altı boşluğu
-                      // gidince) çizim dikeyde basılıp yukarı kayıyordu
-                      // (tablet bulgusu 2026-11-07).
-                      child: uniform
-                          ? OverflowBox(
-                              alignment: Alignment.topLeft,
-                              minWidth: size.width,
-                              maxWidth: size.width,
-                              minHeight: size.height,
-                              maxHeight: size.height,
-                              child: paint,
-                            )
-                          : paint,
+                      image: count > 0,
+                      label: count == 0 ? null : context.l10n.inkSemantics(count),
+                      child: child,
                     );
                   },
+                  child: _paintStack(context, size),
                 ),
               ),
             ),
@@ -1939,6 +1965,43 @@ class InkPageLayer extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Widget _paintStack(BuildContext context, Size size) {
+    final paintSize = uniform ? size : Size.infinite;
+    final stack = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        RepaintBoundary(
+          child: CustomPaint(
+            painter: CommittedInkPainter(controller, page),
+            size: paintSize,
+          ),
+        ),
+        CustomPaint(
+          painter: ActiveInkPainter(
+            controller,
+            page,
+            Theme.of(context).colorScheme.primary,
+          ),
+          size: paintSize,
+        ),
+      ],
+    );
+    return uniform
+        ? OverflowBox(
+            alignment: Alignment.topLeft,
+            minWidth: size.width,
+            maxWidth: size.width,
+            minHeight: size.height,
+            maxHeight: size.height,
+            child: stack,
+          )
+        // Kare kutudan taşan çizgi de boyanır (kırpılmaz). OverflowBox:
+        // Align'la tuval katmanın boyuna sıkışıyordu — kalem kipi kapanınca
+        // (sayfa altı boşluğu gidince) çizim dikeyde basılıp yukarı
+        // kayıyordu (tablet bulgusu 2026-11-07).
+        : stack;
   }
 
   /// Tik/çarpı ilk kez: "otomatik düzeltme açılsın mı" (varsayılan kapalı).
@@ -2090,38 +2153,58 @@ class InkFixMarker extends StatelessWidget {
   }
 }
 
-/// Kement çizgisi, seçimin çerçevesi ve kalemin havadaki ucunun önizlemesi.
-class _InkOverlayPainter extends CustomPainter {
-  _InkOverlayPainter({
-    required this.lassoPath,
-    required this.selection,
-    required this.accent,
-    required this.hover,
-  }) : super(repaint: hover);
+/// Bitmiş çizgiler (F62.1): yalnız [InkController.committedRev] artınca
+/// boyanır — kalem ilerlerken sayfadaki çizgiler yeniden çizilmez.
+class CommittedInkPainter extends CustomPainter {
+  CommittedInkPainter(this.controller, this.page)
+    : super(repaint: controller.committedRev);
 
-  /// Sayfanın o anki kement/seçim durumu; havadaki kalem kendi
-  /// dinleyicisiyle ([_HoverLook]) yalnız bu boyayıcıyı tazeler.
-  static _InkOverlayPainter? of(
-    InkController controller,
-    int page,
-    Color accent,
-  ) => _InkOverlayPainter(
-    lassoPath: controller.lassoPathOn(page),
-    selection: controller.selectionPage == page
-        ? controller.selectionBounds
-        : null,
-    accent: accent,
-    hover: _HoverLook(controller, page),
-  );
-
-  final List<double>? lassoPath;
-  final Rect? selection;
-  final Color accent;
-  final _HoverLook hover;
+  final InkController controller;
+  final int page;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final path = lassoPath;
+    for (final s in controller.strokesOf(page)) {
+      paintInkStroke(canvas, size, s);
+    }
+  }
+
+  @override
+  bool shouldRepaint(CommittedInkPainter old) =>
+      !identical(old.controller, controller) || old.page != page;
+}
+
+/// Etkin çizgi + kement çizgisi, seçimin çerçevesi ve kalemin havadaki
+/// ucunun önizlemesi. Her bildirimde boyanır; işi sayfadaki çizgi
+/// sayısından bağımsız (F62.1).
+class ActiveInkPainter extends CustomPainter {
+  ActiveInkPainter(this.controller, this.page, this.accent)
+    : super(repaint: Listenable.merge([controller, controller.hover]));
+
+  final InkController controller;
+  final int page;
+  final Color accent;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final active = controller.activeStroke;
+    if (active != null && active.page == page) {
+      paintInkStroke(canvas, size, active, cache: false);
+    }
+    final path = controller.lassoPathOn(page);
+    final selection = controller.selectionPage == page
+        ? controller.selectionBounds
+        : null;
+    _paintOverlay(canvas, size, path, selection);
+  }
+
+  void _paintOverlay(
+    Canvas canvas,
+    Size size,
+    List<double>? path,
+    Rect? selection,
+  ) {
+
     if (path != null && path.length >= 4) {
       final p = Path()..moveTo(path[0] * size.width, path[1] * size.height);
       for (var i = 2; i + 1 < path.length; i += 2) {
@@ -2183,9 +2266,9 @@ class _InkOverlayPainter extends CustomPainter {
           Paint()..color = const Color(0xFFFFFFFF),
         );
     }
-    final at = hover.position;
+    final h = controller.hover.value;
+    final at = h != null && h.$1 == page ? h.$2 : null;
     if (at != null) {
-      final controller = hover.controller;
       if (controller.eraser) {
         canvas.drawCircle(
           at,
@@ -2209,36 +2292,12 @@ class _InkOverlayPainter extends CustomPainter {
   bool hitTest(Offset position) => false;
 
   @override
-  bool shouldRepaint(_InkOverlayPainter old) =>
-      !identical(old.lassoPath, lassoPath) ||
-      (lassoPath?.length ?? 0) != (old.lassoPath?.length ?? 0) ||
-      old.selection != selection ||
+  bool shouldRepaint(ActiveInkPainter old) =>
+      !identical(old.controller, controller) ||
+      old.page != page ||
       old.accent != accent;
 }
 
-/// Havadaki kalemin bu sayfadaki yeri — yalnız önizleme yeniden boyanır.
-class _HoverLook extends Listenable {
-  _HoverLook(this.controller, this.page);
-
-  final InkController controller;
-  final int page;
-
-  Offset? get position {
-    final value = controller.hover.value;
-    return value != null && value.$1 == page ? value.$2 : null;
-  }
-
-  @override
-  void addListener(VoidCallback listener) =>
-      controller.hover.addListener(listener);
-
-  @override
-  void removeListener(VoidCallback listener) =>
-      controller.hover.removeListener(listener);
-}
-
-/// Kalem ayarları levhası: kalınlık önizlemesi, ŞEFFAFLIK, basınç algısı,
-/// "yalnız kalemle yaz", son kullanılan renkler ve tümünü temizle.
 class InkSettingsSheet extends StatelessWidget {
   const InkSettingsSheet({super.key, required this.controller});
 
@@ -2257,7 +2316,7 @@ class InkSettingsSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final pen = controller.pen;
-    final highlighter = pen == InkPen.highlighter;
+    final fixed = pen.fixedOpacity;
     return SafeArea(
       top: false,
       child: SingleChildScrollView(
@@ -2314,19 +2373,19 @@ class InkSettingsSheet extends StatelessWidget {
                 SizedBox(width: 96, child: Text(l10n.inkOpacity)),
                 Expanded(
                   child: Slider(
-                    // Fosforlunun saydamlığı sabit (türü ondan okunuyor).
-                    value: highlighter ? 0.4 : controller.opacity,
+                    // Fosforlu / dolma kalemin saydamlığı sabit (türü
+                    // ondan okunuyor).
+                    value: fixed ?? controller.opacity,
                     min: 0.1,
                     divisions: 9,
-                    label:
-                        '%${((highlighter ? 0.4 : controller.opacity) * 100).round()}',
-                    onChanged: highlighter ? null : controller.setOpacity,
+                    label: '%${((fixed ?? controller.opacity) * 100).round()}',
+                    onChanged: fixed != null ? null : controller.setOpacity,
                   ),
                 ),
                 SizedBox(
                   width: 36,
                   child: Text(
-                    '%${((highlighter ? 0.4 : controller.opacity) * 100).round()}',
+                    '%${((fixed ?? controller.opacity) * 100).round()}',
                   ),
                 ),
               ],
@@ -2668,87 +2727,8 @@ class InkPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final s in strokes) {
-      if (s.hasPressure && !s.arrow) {
-        _paintPressure(canvas, size, s);
-        continue;
-      }
-      final paint = inkPaint(Color(s.color), s.width * size.width);
-      if (s.arrow && s.points.length >= 4) {
-        final tail = Offset(
-          s.points[0] * size.width,
-          s.points[1] * size.height,
-        );
-        final head = Offset(
-          s.points[2] * size.width,
-          s.points[3] * size.height,
-        );
-        final geo = arrowGeometry(tail, head, s.width * size.width);
-        canvas
-          ..drawLine(tail, geo.lineEnd, paint)
-          ..drawPath(
-            Path()
-              ..moveTo(head.dx, head.dy)
-              ..lineTo(geo.left.dx, geo.left.dy)
-              ..lineTo(geo.right.dx, geo.right.dy)
-              ..close(),
-            Paint()
-              ..color = Color(s.color)
-              ..style = PaintingStyle.fill,
-          );
-        continue;
-      }
-      if (s.points.length == 2) {
-        canvas.drawCircle(
-          Offset(s.points[0] * size.width, s.points[1] * size.height),
-          s.width * size.width / 2,
-          paint..style = PaintingStyle.fill,
-        );
-        continue;
-      }
-      final path = Path()
-        ..moveTo(s.points[0] * size.width, s.points[1] * size.height);
-      for (var i = 2; i < s.points.length; i += 2) {
-        path.lineTo(s.points[i] * size.width, s.points[i + 1] * size.height);
-      }
-      canvas.drawPath(path, paint);
+      paintInkStroke(canvas, size, s);
     }
-  }
-
-  /// Basınçlı çizgi: her parça kendi kalınlığıyla. Saydam renkte parçalar
-  /// birleşim yerlerinde üst üste binip koyu boncuklar bırakmasın diye
-  /// çizgi OPAK çizilip katman saydamlıkla birleştirilir.
-  static void _paintPressure(Canvas canvas, Size size, InkStroke s) {
-    final color = Color(s.color);
-    final translucent = color.a < 1;
-    final base = s.width * size.width;
-    final p = s.points;
-    final q = s.pressures!;
-    final paint = inkPaint(translucent ? color.withAlpha(255) : color, base)
-      ..strokeCap = StrokeCap.round;
-    if (translucent) {
-      canvas.saveLayer(
-        null,
-        Paint()..color = Color.fromARGB((color.a * 255).round(), 0, 0, 0),
-      );
-    }
-    if (p.length == 2) {
-      canvas.drawCircle(
-        Offset(p[0] * size.width, p[1] * size.height),
-        base * inkPressureFactor(q[0]) / 2,
-        paint..style = PaintingStyle.fill,
-      );
-    } else {
-      for (var i = 2; i + 1 < p.length; i += 2) {
-        final j = i ~/ 2;
-        paint.strokeWidth = base * inkPressureFactor((q[j - 1] + q[j]) / 2);
-        canvas.drawLine(
-          Offset(p[i - 2] * size.width, p[i - 1] * size.height),
-          Offset(p[i] * size.width, p[i + 1] * size.height),
-          paint,
-        );
-      }
-    }
-    if (translucent) canvas.restore();
   }
 
   /// KÖK NEDEN: burası KOŞULSUZ `true` döndürüyordu — çizgiler hiç

@@ -108,10 +108,10 @@
   },
   "S15": {
     "senaryo": "2000 çizgi varken etkin çizgiye 1 nokta: InkPainter.paint çizim çağrısı",
-    "cizim_cagrisi": 2001,
-    "bugun": "2001 — O(N) (2026-11-11)",
+    "cizim_cagrisi": 1,
+    "bugun": "1 — yalnız etkin çizgi; bitmiş katman boyanmıyor (2026-11-11, F62.1; önce 2001)",
     "hedef": "≤ 8 (F62.1)",
-    "neden": "İlk ölçüm (bugünkü hâl); hedef Faz 62'de işlenecek"
+    "neden": "F62.1: etkin çizgi ayrı katman, bitmiş katman yalnız committedRev ile"
   },
   "S16": {
     "senaryo": "2000 çizgili (12'şer nokta) nota 1 çizgi ekle + kaydet: yazılan belge / bayt",

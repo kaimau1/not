@@ -1458,6 +1458,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get penBallpoint => 'Tükenmez kalem';
 
   @override
+  String get penFountain => 'Dolma kalem';
+
+  @override
   String get penMarker => 'Keçeli kalem';
 
   @override
