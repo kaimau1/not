@@ -2346,6 +2346,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 onPressed: () => showInkSettings(context, ink),
               ),
       );
+    // TELEFONDA ELLE YAZMA (F63.5, KALEM K5): parmak çiziyorsa sayfayı
+    // kaydırmanın yolu iki parmak — cihazda bir kez söylenir.
+    if (page && !penOnly) {
+      TipOnce.show(
+        context,
+        ref.read(sharedPreferencesProvider),
+        TipOnce.penTwoFinger,
+        l10n.inkTwoFingerHint,
+        sessionLimit: false,
+      );
+    }
   }
 
   /// Bu oturumda sayfaya çizilen çizgi sayısı (kalem ipuçlarının sırası).

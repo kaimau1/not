@@ -1042,6 +1042,9 @@ class InkController extends ChangeNotifier {
     if (stylus) {
       _stylusDown++;
       stylusSeen = true;
+      // Her mürekkep katmanında (çizim ekranı, paket, görüntüleyici) kalıcı
+      // işaret — eskiden yalnız editör içeriğinde (F63.4).
+      InkToolMemory.noteStylusEver();
       noteStylus();
       _dropPalms();
       // İlk kalem dokunuşu: kullanıcı seçmediyse "yalnız kalem" açılır —

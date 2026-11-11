@@ -15,6 +15,7 @@ import 'area_select.dart';
 import 'image_crop.dart';
 import 'ink_layer.dart';
 import 'text_recognize_screen.dart';
+import 'viewer_pen.dart';
 import 'zoom_math.dart';
 import '../editor/attachment_clipboard.dart';
 import '../editor/pen_tray.dart';
@@ -200,7 +201,7 @@ class _ImageViewerPage extends StatefulWidget {
 }
 
 class _ImageViewerPageState extends State<_ImageViewerPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, ViewerPen {
   /// EKRANIN GÖSTERDİĞİ ek. Döndürme dosyayı yeniden yazdığı için
   /// `_attachment` o andan sonra bayat: boyutlar takas olmuş, bulut
   /// kopyası silinmiş olur. Yerel kopya döndürme sonrası tazelenir.
@@ -235,6 +236,20 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
   );
   final _zoom = TransformationController();
   bool _editing = false;
+
+  // ── Yüzen kalem düğmesi + kalem kuralı (bkz. [ViewerPen], F63.4) ──────
+  @override
+  InkController get penInk => _ink;
+  @override
+  BubbleController get penBubbles => _bubbles;
+  @override
+  bool get penEditing => _editing;
+  @override
+  bool get penAllowed => widget.onChanged != null;
+  @override
+  bool get penBlocked => _areaMode;
+  @override
+  void penStopEditing() => _toggleEditing();
 
   // ── ÇİFT DOKUNUŞLA YAKINLAŞTIRMA (Google Fotoğraflar mantığı) ──────────
   // Kullanıcı isteği 2026-09-06: "görsel açılınca çift tık zoom mantığı
@@ -657,7 +672,8 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
             ),
           ],
         ),
-        body: _busy
+        body: penScope(
+          child: _busy
             ? const Center(child: CircularProgressIndicator())
             : Stack(
                 children: [
@@ -690,6 +706,7 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
                     ),
                 ],
               ),
+        ),
         // Metni tanı düğmesi: çizim kipinde gizlenir (o an araç çubuğu
         // kalem/silgi için kullanılıyor).
         // Metni tanı düğmesi metin/çizim kiplerinde gizlenir. `AnimatedBuilder`
@@ -768,7 +785,7 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
                     ),
                   ),
                   Positioned.fill(
-                    child: InkPageLayer(controller: _ink, page: 1),
+                    child: penLayer(1),
                   ),
                   // Metin katmanı görselin KUTUSUYLA aynı: konumlar sayfa
                   // oranı olduğu için yakınlaştırmada da yerinde kalır

@@ -16,6 +16,7 @@ import 'bubble_layer.dart';
 import 'ink_layer.dart';
 import 'slide_canvas.dart';
 import 'slide_scroll.dart';
+import 'viewer_pen.dart';
 import 'zoom_box.dart';
 import '../editor/attachment_clipboard.dart';
 import '../editor/pen_tray.dart';
@@ -42,7 +43,8 @@ class SlideViewerScreen extends ConsumerStatefulWidget {
   ConsumerState<SlideViewerScreen> createState() => _SlideViewerScreenState();
 }
 
-class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
+class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen>
+    with ViewerPen {
   late final InkController _ink = InkController(
     initial: widget.attachment.ink,
     onChanged: (strokes) => _emit(_current.copyWith(ink: strokes)),
@@ -88,6 +90,20 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
   /// panoya alınır veya yapay zekâya sorulur.
   bool _areaMode = false;
   final _areaBoundary = GlobalKey();
+
+  // ── Yüzen kalem düğmesi + kalem kuralı (bkz. [ViewerPen], F63.4) ──────
+  @override
+  InkController get penInk => _ink;
+  @override
+  BubbleController get penBubbles => _bubbles;
+  @override
+  bool get penEditing => _editing;
+  @override
+  bool get penAllowed => widget.onChanged != null;
+  @override
+  bool get penBlocked => _areaMode;
+  @override
+  void penStopEditing() => _toggleEditing();
 
   /// Alan seçimini açar/kapatır; çizim ve balon bırakma kipleri kapanır.
   void _toggleAreaMode() {
@@ -298,7 +314,8 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
               ),
           ],
         ),
-        body: Stack(
+        body: penScope(
+          child: Stack(
           key: _viewportKey,
           children: [
             Positioned.fill(
@@ -323,6 +340,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
                 ),
               ),
           ],
+        ),
         ),
         bottomNavigationBar: _editing
             ? PenTray(
@@ -394,7 +412,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
                         children: [
                           Positioned.fill(child: SlideCanvas(slide: slides[i])),
                           Positioned.fill(
-                            child: InkPageLayer(controller: _ink, page: i + 1),
+                            child: penLayer(i + 1),
                           ),
                           Positioned.fill(
                             child: BubblePageLayer(
