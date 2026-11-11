@@ -542,11 +542,31 @@ class _CheckPopState extends State<_CheckPop>
 /// kalem ve fare kendi seçim davranışında kalır. Zamanlayıcı bu küçük öğenin
 /// durumunda: editörün kök `setState`'ine dokunmaz (kasma listesi 3), ağaç
 /// şekli sabit (4).
-const _kHoldSelectDelay = Duration(milliseconds: 1100);
+///
+/// **İKİ AŞAMA GÖRÜNÜR (F60.S11, 2026-11-12).** Basılan yerde halka dolar:
+/// 1. tur [_kHoldTextStage]'de biter → [_HoldToSelect.onText] (hafif titreşim
+/// + maddenin tüm yazısı seçili); 2. tur [_kHoldSelectDelay]'de → `onHold`.
+/// Halka yalnız BOYAMADA (AnimationController → CustomPaint repaint,
+/// RepaintBoundary): editör de bu öğe de yeniden kurulmaz (kasma listesi 3/6).
+/// 1. aşama metin alanının kendi uzun basışından (500 ms) ve tembel alanın
+/// iki kare sonraki sözcük seçiminden SONRA gelsin diye 650 ms.
+const _kHoldTextStage = Duration(milliseconds: 650);
+const _kHoldSelectDelay = Duration(milliseconds: 1250);
+
+/// Kısa dokunuşta halka yanıp sönmesin: bu kadar basılı kalmadan çizilmez.
+const _kHoldRingShow = Duration(milliseconds: 150);
 
 class _HoldToSelect extends StatefulWidget {
-  const _HoldToSelect({required this.onHold, required this.child});
+  const _HoldToSelect({
+    required this.enabled,
+    required this.onText,
+    required this.onHold,
+    required this.child,
+  });
 
+  /// Madde seçim kipinde kapalı (dokunuş zaten maddeyi seçiyor).
+  final bool enabled;
+  final VoidCallback onText;
   final VoidCallback onHold;
   final Widget child;
 
@@ -554,15 +574,27 @@ class _HoldToSelect extends StatefulWidget {
   State<_HoldToSelect> createState() => _HoldToSelectState();
 }
 
-class _HoldToSelectState extends State<_HoldToSelect> {
+class _HoldToSelectState extends State<_HoldToSelect>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ring = AnimationController(
+    vsync: this,
+    duration: _kHoldSelectDelay,
+  );
+  Timer? _textTimer;
   Timer? _timer;
   int? _pointer;
   Offset _origin = Offset.zero;
 
+  /// Halkanın merkezi (yerel); boyayıcı okur, yeniden kurulum yok.
+  Offset _center = Offset.zero;
+
   void _cancel() {
+    _textTimer?.cancel();
+    _textTimer = null;
     _timer?.cancel();
     _timer = null;
     _pointer = null;
+    _ring.reset();
   }
 
   void _down(PointerDownEvent e) {
@@ -571,12 +603,17 @@ class _HoldToSelectState extends State<_HoldToSelect> {
       _cancel();
       return;
     }
-    if (e.kind != PointerDeviceKind.touch) return;
+    if (!widget.enabled || e.kind != PointerDeviceKind.touch) return;
     _pointer = e.pointer;
     _origin = e.position;
+    _center = e.localPosition;
+    _ring.forward(from: 0);
+    _textTimer = Timer(_kHoldTextStage, () {
+      _textTimer = null;
+      if (mounted) widget.onText();
+    });
     _timer = Timer(_kHoldSelectDelay, () {
-      _timer = null;
-      _pointer = null;
+      _cancel();
       if (mounted) widget.onHold();
     });
   }
@@ -592,7 +629,9 @@ class _HoldToSelectState extends State<_HoldToSelect> {
 
   @override
   void dispose() {
+    _textTimer?.cancel();
     _timer?.cancel();
+    _ring.dispose();
     super.dispose();
   }
 
@@ -602,6 +641,77 @@ class _HoldToSelectState extends State<_HoldToSelect> {
     onPointerMove: _move,
     onPointerUp: _end,
     onPointerCancel: _end,
-    child: widget.child,
+    // Ağaç şekli sabit: halka hep kurulu, boştayken hiçbir şey çizmez.
+    child: Stack(
+      fit: StackFit.passthrough,
+      clipBehavior: Clip.none,
+      children: [
+        widget.child,
+        Positioned.fill(
+          child: IgnorePointer(
+            child: RepaintBoundary(
+              child: CustomPaint(
+                key: const ValueKey('item-hold-ring'),
+                painter: _HoldRingPainter(
+                  this,
+                  Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
   );
+}
+
+/// İki turlu dolum halkası: 1. tur soluk, 2. tur tam renk (1. turun izi
+/// altta kalır — kullanıcı iki aşamayı ayırt etsin).
+class _HoldRingPainter extends CustomPainter {
+  _HoldRingPainter(this.state, this.color) : super(repaint: state._ring);
+
+  final _HoldToSelectState state;
+  final Color color;
+
+  static const _radius = 22.0;
+  static const _stroke = 3.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final ms = state._ring.value * _kHoldSelectDelay.inMilliseconds;
+    final show = _kHoldRingShow.inMilliseconds;
+    if (ms <= show) return;
+    final stage1 = _kHoldTextStage.inMilliseconds;
+    final rect = Rect.fromCircle(center: state._center, radius: _radius);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _stroke
+      ..strokeCap = StrokeCap.round;
+    const start = -math.pi / 2;
+    if (ms < stage1) {
+      paint.color = color.withValues(alpha: 0.45);
+      canvas.drawArc(
+        rect,
+        start,
+        2 * math.pi * (ms - show) / (stage1 - show),
+        false,
+        paint,
+      );
+      return;
+    }
+    paint.color = color.withValues(alpha: 0.25);
+    canvas.drawCircle(state._center, _radius, paint);
+    paint.color = color;
+    canvas.drawArc(
+      rect,
+      start,
+      2 * math.pi * (ms - stage1) / (_kHoldSelectDelay.inMilliseconds - stage1),
+      false,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_HoldRingPainter old) =>
+      old.state != state || old.color != color;
 }

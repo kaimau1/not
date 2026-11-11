@@ -404,6 +404,8 @@ extension _ItemsRow on ItemsEditorState {
                   // Basılı tutmaya devam → madde seçimi (F60.S6); sarmalayıcı
                   // koşulsuz (ağaç şekli kiple değişmez).
                   child: _HoldToSelect(
+                    enabled: !_selectionMode,
+                    onText: () => _holdSelectText(item),
                     onHold: () => _holdSelect(item),
                     child: _itemRightClick(
  item,
