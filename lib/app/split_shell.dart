@@ -95,6 +95,10 @@ class SplitScope extends InheritedWidget {
       listAutoHides != oldWidget.listAutoHides;
 }
 
+/// Bu genişliğin altındaki liste bölmesi "dar" (F67.3): şeritler gizli,
+/// arama hapı kısa, mikrofon yok (bkz. DashboardScreen).
+const double kNarrowListPane = 420;
+
 /// Sol paneldeki listeye "tek sütun çiz" der (bkz. DashboardScreen).
 class DashboardPaneScope extends InheritedWidget {
   const DashboardPaneScope({
