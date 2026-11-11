@@ -259,7 +259,7 @@ Hepsi koddan doğrulandı; "hesap" yazanlar ölçülmedi, ilgili fazın 0. madde
   tablosu ("şuna dokunacaksan şunu oku"). (d) Bekçi: `test/hafiza_size_test.dart`:
   `File('HAFIZA.md').lengthSync() <= 30 * 1024`. (e) CLAUDE.md "Hafıza" bölümünü güncelle.
   Kabul: `wc -c HAFIZA.md` ≤ 30720; `HAFIZA_ARSIV_3.md` eski dosyayla bayt bayt aynı.
-- [ ] **F58.3 Doğrulama borcunu çalıştırılabilir yap.** `KALANLAR.md` §2'deki her maddeyi
+- [x] **F58.3 Doğrulama borcunu çalıştırılabilir yap.** *(2026-11-11: `docs/cihaz_turu.md` telefon 40 / tablet 27 / web 20 adım, `docs/test_borcu.md` (O), KALANLAR §2 başına işaret; eski liste arşiv olarak kaldı, X listesi cihaz_turu bölüm E.)* `KALANLAR.md` §2'deki her maddeyi
   üç kovaya ayır: **(O) otomatikleşir** → karşılığında widget/akış testi var mı bak; yoksa
   test adını `docs/test_borcu.md`'ye yaz (bu fazda test YAZILMAZ); **(E) elle** (kalem,
   avuç, mikrofon, bildirim, ikinci hesap) → `docs/cihaz_turu.md`'ye risk sırasıyla, cihaz
@@ -427,7 +427,7 @@ doğrulanır).
 - [ ] **F60.5 Yazma ana bloğu 148 → 229 ms (v1.1.671 → v1.1.701).** `tool/perf/prof_type.py`
   ile iki sürümü profil derlemesinde karşılaştır; fark F60.1/Faz 59 sonrası sürüyorsa en
   pahalı 5 çerçeveyi maddeye yaz. Düzeltme ayrı madde olarak açılır.
-- [ ] **F60.6 Kart ve liste: ek sayacı/rozet tutarlılığı taraması.** `Note.attachments`'ı
+- [ ] **F60.6 Kart ve liste: ek sayacı/rozet tutarlılığı taraması.** *(2026-11-11: tarama yapıldı, bulgular `docs/cihaz_turu.md` bölüm D — `note_card.dart:1755` ve `share_target_sheet.dart:516` düzeltme adayı; kod değişmedi, düzeltme açık.)* `Note.attachments`'ı
   doğrudan sayan yerleri `Grep "attachments.length\|attachments.isNotEmpty"` ile bul;
   zemin görselini saymaması gerekenler `attachmentsWithoutBackground` kullansın (HAFIZA
   "hayalet ek sayacı" kuralı).

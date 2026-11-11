@@ -131,7 +131,7 @@ Sıra önceliktir: önce kullanıcının bildirdiği hatalar, sonra kalem/perfor
 | P13 | Mürekkep deposu v2 (yazma bayrağı KAPALI kalır) | fable | F61.0–F61.6 | ölçüm | | bekliyor |
 | P14 | Mürekkep çizimi v2 | fable | F62.0–F62.3, F62.5 | A/B | evet | bekliyor |
 | P15 | Kalem akışları (kalan) | fable | F63.3–F63.5 (K-O5 en güvenli) | | | bekliyor |
-| P16 | Doğrulama borcu → cihaz turu belgesi | sonnet | F58.3, F60.6 | | | bekliyor |
+| P16 | Doğrulama borcu → cihaz turu belgesi | sonnet | F58.3, F60.6 | | | bitti (2026-11-11): `docs/cihaz_turu.md` (telefon 40, tablet/kalem 27, web 20 adım) + `docs/test_borcu.md`; F58.3 [x]. F60.6 açık: zemin görseli ek sayılıyor (`note_card.dart:1755`, `share_target_sheet.dart:516`) → P22 |
 | P17 | Ekler (kalan) | opus | F65.4 (K-O9 bildirim), F65.5, F65.7, F60.3 | | | bekliyor |
 | P18 | Telefon/tablet (kalan) | opus | F66.4, F66.6, F67.3, F67.4, F67.7, F67.9 | A/B | evet | bekliyor |
 | P19 | Liste yükü | fable | F68.1, F68.2 | A/B | | bekliyor |

@@ -15,6 +15,8 @@ indirildi, sonradan geri alınan/eskiyen maddeler atıldı. Eski hâli
 ## 1. Senin yapacakların → `KALAN_ISLER_PLANI.md` Faz 19 (B, D)
 
 ## 2. Duman testi (~10 dk telefon + web) — F18.31, 2026-11-02
+
+> **2026-11-11 (F58.3):** Yapilacak cihaz adimlari artik docs/cihaz_turu.md icinde (telefon 40, tablet 27, web 20; yap -> beklenen). Otomatiklesebilenler docs/test_borcu.md. Asagidaki liste ARSIV olarak kalir; yeni dogrulama oraya yazilir.
 143 maddelik eski liste `KALANLAR_ARSIV.md` sonunda (olduğu gibi). Hepsi
 testlerle korunuyor; burada alan başına 1–2 adım. F18.8 akış testleri
 (yaz → paylaş, iki sayfalı kopya, işaretlileri sil, tam yedek) ve birim
