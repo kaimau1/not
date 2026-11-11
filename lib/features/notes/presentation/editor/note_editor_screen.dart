@@ -923,7 +923,26 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Duraklamasız art arda yazılan değişiklik sayısı (bkz. [_noteTyping]).
   int _typedBurst = 0;
 
+  /// Gizlenme gecikmesi sayacı (bkz. [typingBarHideDelayProvider]): yazma
+  /// kesintisiz sürerse dolunca çubuk iner; duraklama ([_typingTimer]) iptal
+  /// eder.
+  Timer? _hideTimer;
+
+  /// Son tuştan beri [_kStillTyping] geçmediyse etkin: gizlenme gecikmesi
+  /// dolduğunda yazma HÂLÂ sürüyor mu (birkaç harf yazıp duran kullanıcının
+  /// çubuğu, durduktan sonra inmesin).
+  Timer? _recentKey;
+  static const _kStillTyping = Duration(milliseconds: 500);
+
+  /// Yazma "sürüyor" sayılırken iki tuş arası en uzun ara. Çubuk görünürken
+  /// sabit (2026-11-08 ölçüsü); gizliyken ara ayardan gelir.
+  static const _kTypingPause = Duration(milliseconds: 1100);
+
+  static Duration _tenths(int value) => Duration(milliseconds: value * 100);
+
   /// Klavye açıkken her metin değişiminde çağrılır; durunca çubuk geri gelir.
+  /// Süreler AYARLANABİLİR (F60.S7): gizlenme gecikmesi (varsayılan 0) ve
+  /// yeniden görünme gecikmesi (varsayılan 1,1 sn) — Ayarlar → Kartlar.
   void _noteTyping() {
     if (_keyboardInset <= 0 || !ref.read(hideBarWhileTypingProvider)) return;
     // ÜÇ HARF KURALI (kullanıcı isteği 2026-11-08 üçüncü tur): çubuk tek
@@ -931,35 +950,63 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // arda 3 değişiklikten sonra (gerçekten yazılıyorsa) gizlenir. Sayaç,
     // duraklama zamanlayıcısı dolunca ([_showBarNow]) sıfırlanır.
     _typedBurst++;
-    if (!_typingN.value && _typedBurst < 3) {
-      _typingTimer?.cancel();
-      _typingTimer = Timer(const Duration(milliseconds: 1100), _showBarNow);
+    _typingTimer?.cancel();
+    _recentKey?.cancel();
+    _recentKey = Timer(_kStillTyping, () {});
+    if (_typingN.value) {
+      // Gizli: son tuştan "yeniden görünme gecikmesi" kadar sonra gelir.
+      _typingTimer = Timer(
+        _tenths(ref.read(typingBarShowDelayProvider)),
+        _showBarNow,
+      );
       return;
     }
-    if (!_typingN.value) {
-      _typingN.value = true;
-      final prefs = ref.read(sharedPreferencesProvider);
-      if (TipOnce.due(prefs, TipOnce.typingBarHide, sessionLimit: false)) {
-        TipOnce.show(
-          context,
-          prefs,
-          TipOnce.typingBarHide,
-          context.l10n.tipHideBarTyping,
-          sessionLimit: false,
-        );
-      }
+    // Görünür: duraklama sayacı sıfırlar (ve bekleyen gizlemeyi iptal eder).
+    _typingTimer = Timer(_kTypingPause, _showBarNow);
+    if (_typedBurst < 3) return;
+    final delay = _tenths(ref.read(typingBarHideDelayProvider));
+    if (delay == Duration.zero) {
+      _hideBarNow();
+    } else {
+      // Gecikme 3. değişiklikten sayılır; sonraki tuşlar uzatmaz.
+      _hideTimer ??= Timer(delay, _hideBarNow);
     }
+  }
+
+  void _hideBarNow() {
+    _hideTimer?.cancel();
+    _hideTimer = null;
+    if (!mounted || _typingN.value) return;
+    // Bu arada klavye kapandıysa ya da ayar kapatıldıysa gizlenmez.
+    if (_keyboardInset <= 0 || !ref.read(hideBarWhileTypingProvider)) return;
+    // Gecikme doldu ama yazma durmuş: gizleme; sonraki tuş yeniden sayar.
+    if (_recentKey?.isActive != true) return;
+    _typingN.value = true;
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (TipOnce.due(prefs, TipOnce.typingBarHide, sessionLimit: false)) {
+      TipOnce.show(
+        context,
+        prefs,
+        TipOnce.typingBarHide,
+        context.l10n.tipHideBarTyping,
+        sessionLimit: false,
+      );
+    }
+    // Gizlendiği andan itibaren yeniden görünme gecikmesi işler.
     _typingTimer?.cancel();
-    // 1,1 sn duraklama (kullanıcı isteği 2026-11-08 ikinci tur; 650 ms'de
-    // çubuk her nefeste gidip geliyordu, 1,6 sn ise geç geliyordu).
-    _typingTimer = Timer(const Duration(milliseconds: 1100), _showBarNow);
+    _typingTimer = Timer(
+      _tenths(ref.read(typingBarShowDelayProvider)),
+      _showBarNow,
+    );
   }
 
   /// Alt çubuk HEMEN geri gelir: yeni maddeye/alana geçince ve klavye
-  /// kapanınca (kullanıcı isteği 2026-11-08) — 1,1 sn beklemeden.
+  /// kapanınca (kullanıcı isteği 2026-11-08) — beklemeden.
   void _showBarNow() {
     _typingTimer?.cancel();
     _typingTimer = null;
+    _hideTimer?.cancel();
+    _hideTimer = null;
     _typedBurst = 0;
     if (_typingN.value) _typingN.value = false;
   }
@@ -1611,6 +1658,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void dispose() {
     _stopFileDrops();
     _typingTimer?.cancel();
+    _hideTimer?.cancel();
+    _recentKey?.cancel();
     _typingN.dispose();
     FocusManager.instance.removeListener(_onAnyFocusChange);
     InkToolMemory.autoStylusListenable.removeListener(_onStylusToggle);
@@ -4698,6 +4747,10 @@ child: NoteFindBar(
           identity: (note.id, Theme.of(context).brightness),
           builder: (context, color, child) =>
               ColoredBox(color: color, child: child),
+          // Scaffold ve altı klavyenin karelerini GÖRMEZ (F60.S5): kararlı
+          // MediaQuery; canlı değer yalnız [KeyboardInset.liveOf] okuyan
+          // yapraklarda (bkz. [KeyboardInsetScope]).
+          child: KeyboardInsetScope(
           child: Scaffold(
           backgroundColor: Colors.transparent,
           // **KASMA — klavye boşluğu artık KARARLI** (bkz. [KeyboardSnap]).
@@ -5198,7 +5251,7 @@ child: NoteFindBar(
             },
           ),
           ),
-        ))),
+        )))),
         ),
         ),
         ),

@@ -81,6 +81,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get noteDeleted => 'Not silindi';
 
   @override
+  String get dragTrashHint => 'Çöpe atmak için üstünde tut';
+
+  @override
+  String get dragTrashReady => 'Bırak: çöpe at';
+
+  @override
   String notesDeletedCount(int count) {
     return '$count not silindi';
   }
@@ -7820,7 +7826,26 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get hideBarWhileTypingInfo =>
-      'Yazmaya başlayınca alt çubuk iner, bırakınca hemen geri gelir.';
+      'Yazmaya başlayınca alt çubuk iner, durunca geri gelir.';
+
+  @override
+  String get typingBarHideDelay => 'Gizlenme gecikmesi';
+
+  @override
+  String get typingBarHideDelayInfo =>
+      'Yazmaya başladıktan ne kadar sonra gizlensin';
+
+  @override
+  String get typingBarShowDelay => 'Yeniden görünme gecikmesi';
+
+  @override
+  String get typingBarShowDelayInfo =>
+      'Yazmayı bırakınca ne kadar sonra geri gelsin';
+
+  @override
+  String secondsValue(String value) {
+    return '$value sn';
+  }
 
   @override
   String get tipHideBarTyping =>
@@ -8249,4 +8274,66 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get updateOpenedBrowser => 'İndirme sayfası tarayıcıda açıldı';
+
+  @override
+  String cardHiddenYoutube(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count YouTube videosu',
+      one: 'YouTube videosu',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardHiddenVideo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count video',
+      one: 'Video',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardHiddenImage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count görsel',
+      one: 'Görsel',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardHiddenDoc(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count belge',
+      one: 'PDF',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardHiddenAudio(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ses kaydı',
+      one: 'Ses kaydı',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get quickAddEditHint =>
+      'Sürükleyerek sırala, göz ile gizle ya da göster.';
+
+  @override
+  String get quickAddKeepOne => 'En az bir seçenek görünür kalmalı';
 }

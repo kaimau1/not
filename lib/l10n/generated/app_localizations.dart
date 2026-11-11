@@ -236,6 +236,18 @@ abstract class AppLocalizations {
   /// **'Not silindi'**
   String get noteDeleted;
 
+  /// No description provided for @dragTrashHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çöpe atmak için üstünde tut'**
+  String get dragTrashHint;
+
+  /// No description provided for @dragTrashReady.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bırak: çöpe at'**
+  String get dragTrashReady;
+
   /// No description provided for @notesDeletedCount.
   ///
   /// In tr, this message translates to:
@@ -13961,8 +13973,38 @@ abstract class AppLocalizations {
   /// No description provided for @hideBarWhileTypingInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Yazmaya başlayınca alt çubuk iner, bırakınca hemen geri gelir.'**
+  /// **'Yazmaya başlayınca alt çubuk iner, durunca geri gelir.'**
   String get hideBarWhileTypingInfo;
+
+  /// No description provided for @typingBarHideDelay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizlenme gecikmesi'**
+  String get typingBarHideDelay;
+
+  /// No description provided for @typingBarHideDelayInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazmaya başladıktan ne kadar sonra gizlensin'**
+  String get typingBarHideDelayInfo;
+
+  /// No description provided for @typingBarShowDelay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeniden görünme gecikmesi'**
+  String get typingBarShowDelay;
+
+  /// No description provided for @typingBarShowDelayInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazmayı bırakınca ne kadar sonra geri gelsin'**
+  String get typingBarShowDelayInfo;
+
+  /// No description provided for @secondsValue.
+  ///
+  /// In tr, this message translates to:
+  /// **'{value} sn'**
+  String secondsValue(String value);
 
   /// No description provided for @tipHideBarTyping.
   ///
@@ -14713,6 +14755,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'İndirme sayfası tarayıcıda açıldı'**
   String get updateOpenedBrowser;
+
+  /// No description provided for @cardHiddenYoutube.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{YouTube videosu} other{{count} YouTube videosu}}'**
+  String cardHiddenYoutube(int count);
+
+  /// No description provided for @cardHiddenVideo.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{Video} other{{count} video}}'**
+  String cardHiddenVideo(int count);
+
+  /// No description provided for @cardHiddenImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{Görsel} other{{count} görsel}}'**
+  String cardHiddenImage(int count);
+
+  /// No description provided for @cardHiddenDoc.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{PDF} other{{count} belge}}'**
+  String cardHiddenDoc(int count);
+
+  /// No description provided for @cardHiddenAudio.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{Ses kaydı} other{{count} ses kaydı}}'**
+  String cardHiddenAudio(int count);
+
+  /// No description provided for @quickAddEditHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sürükleyerek sırala, göz ile gizle ya da göster.'**
+  String get quickAddEditHint;
+
+  /// No description provided for @quickAddKeepOne.
+  ///
+  /// In tr, this message translates to:
+  /// **'En az bir seçenek görünür kalmalı'**
+  String get quickAddKeepOne;
 }
 
 class _AppLocalizationsDelegate

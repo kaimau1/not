@@ -132,12 +132,12 @@ Sıra önceliktir: önce kullanıcının bildirdiği hatalar, sonra kalem/perfor
 | P12 | Güvenlik denetimi + CI kapıları | fable | Faz 71 | | | bitti (2026-11-11): 9 bulgu düzeltildi (YÜKSEK G-01 userDirectory ele geçirme; kilitli not bildirimi; action SHA sabit); rules-test 14→26; CI `guvenlik` işi (gitleaks + osv). Açık: yedek şifresiz G-11 (karar), CSP, konsol işleri `docs/guvenlik_denetimi.md` |
 | P13 | Mürekkep deposu v2 (yazma bayrağı KAPALI kalır) | fable | F61.0–F61.6 | ölçüm | | bitti (2026-11-11): okuma tarafı v2 (paket kodlayıcı ≤4,5 KB/1000 nokta, bant planlayıcı, çift okuma, kalem kalkınca sadeleştirme); yazma YOK, bayraklar aynı. Kalem A/B (B,A,B): UI +%11,5, raster −%4 — gürültü içinde. Sabah bakılacak: K-O2 en güvenli, F61.0 b/c cihaz ölçümü, ink kuralları paylaşılan not için bayrak öncesi, F61.6 yazma yolu |
 | P14 | Mürekkep çizimi v2 | fable | F62.0–F62.3, F62.5 | A/B | evet | bitti (2026-11-11): çizilen çizgi ayrı katman, tek ortak çizim yolu (`ink_stroke_paint.dart`), basınçlı çizgi saveLayer yok, S15 2001→1 çağrı; dolma kalem. Kalem A/B (B,A,B): çizim UI −%30, raster +%3,6 (gürültü), görsel aynı. Açık: F62.0 dolu sayfa (1500/4000) ölçümü, F62.3 ona bağlı (sabah bakılacak); basınçlı çizgi parmakla sınanamadı |
-| P23 | Klavye açılırken alt panel titremesi — kökten | fable | F60.S5 | A/B | evet | bulutta: sürüyor (2026-11-11, bulut oturumu) |
-| P24 | Madde uzun bas → devam edince madde seçimi | opus | F60.S6 | A/B | evet | bulutta: sürüyor (2026-11-11, bulut oturumu) |
-| P25 | Yazarken alt panel gizleme ayarları (0,1 sn kaydırıcı) | fable | F60.S7 (P23'ten sonra) | A/B | evet | bulutta: sürüyor (2026-11-11, bulut oturumu) |
-| P26 | Kartta gizlenen eke yazılı özet (YouTube/görsel) | sonnet | F60.S8 | | evet | bulutta: sürüyor (2026-11-11, bulut oturumu) |
-| P27 | Ana ekranda sürüklerken çöp kutusu | opus | F60.S9 | A/B | evet | bulutta: sürüyor (2026-11-11, bulut oturumu) |
-| P28 | Not ekle menüsü düzen kipi (gizle/göster/sırala) | opus | F60.S10 | | evet | bulutta: sürüyor (2026-11-11, bulut oturumu) |
+| P23 | Klavye açılırken alt panel titremesi — kökten | fable | F60.S5 | A/B | evet | bitti (2026-11-11, bulut): KeyboardInsetScope — S17 ilk kare 320 → 45, hareket 87–96 → 54; cihaz A/B SONRA (kullanıcı kararı 2026-11-11: "APK derlensin, ölçümler sonra") — zincir sıradaki cihaz turunda taban fa47d832 ile ölçsün |
+| P24 | Madde uzun bas → devam edince madde seçimi | opus | F60.S6 | A/B | evet | bitti (2026-11-11, bulut): basılı tutmaya devam (1,1 sn) → madde seçimi; cihaz A/B bekliyor |
+| P25 | Yazarken alt panel gizleme ayarları (0,1 sn kaydırıcı) | fable | F60.S7 (P23'ten sonra) | A/B | evet | bitti (2026-11-11, bulut): Ayarlar → Kartlar anahtar + 2 gecikme kaydırıcısı; cihaz A/B bekliyor |
+| P26 | Kartta gizlenen eke yazılı özet (YouTube/görsel) | sonnet | F60.S8 | | evet | bitti (2026-11-11, bulut): kartta gizli eke tek satır özet |
+| P27 | Ana ekranda sürüklerken çöp kutusu | opus | F60.S9 | A/B | evet | bitti (2026-11-11, bulut): sürüklerken çöp hedefi (600 ms dolum); cihaz A/B bekliyor |
+| P28 | Not ekle menüsü düzen kipi (gizle/göster/sırala) | opus | F60.S10 | | evet | bitti (2026-11-11, bulut): + panelinde düzen kipi |
 | P15 | Kalem akışları (kalan) | fable | F63.3–F63.5 (K-O5 en güvenli) | | | bekliyor |
 | P16 | Doğrulama borcu → cihaz turu belgesi | sonnet | F58.3, F60.6 | | | bitti (2026-11-11): `docs/cihaz_turu.md` (telefon 40, tablet/kalem 27, web 20 adım) + `docs/test_borcu.md`; F58.3 [x]. F60.6 açık: zemin görseli ek sayılıyor (`note_card.dart:1755`, `share_target_sheet.dart:516`) → P22 |
 | P17 | Ekler (kalan) | opus | F65.4 (K-O9 bildirim), F65.5, F65.7, F60.3 | | | bekliyor |

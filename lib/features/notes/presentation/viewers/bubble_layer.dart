@@ -18,6 +18,7 @@ import '../../../../core/a11y/color_names.dart';
 import '../../../../core/widgets/color_palette.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/frame_loop.dart';
+import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../domain/arrow.dart';
 import '../../domain/attachment.dart';
