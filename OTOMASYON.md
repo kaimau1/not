@@ -138,7 +138,7 @@ Sıra önceliktir: önce kullanıcının bildirdiği hatalar, sonra kalem/perfor
 | P26 | Kartta gizlenen eke yazılı özet (YouTube/görsel) | sonnet | F60.S8 | | evet | bitti (2026-11-11, bulut): kartta gizli eke tek satır özet |
 | P27 | Ana ekranda sürüklerken çöp kutusu | opus | F60.S9 | A/B | evet | bitti (2026-11-11, bulut): sürüklerken çöp hedefi (600 ms dolum); cihaz A/B bekliyor |
 | P28 | Not ekle menüsü düzen kipi (gizle/göster/sırala) | opus | F60.S10 | | evet | bitti (2026-11-11, bulut): + panelinde düzen kipi |
-| P15 | Kalem akışları (kalan) | fable | F63.3–F63.5 (K-O5 en güvenli) | | | bekliyor |
+| P15 | Kalem akışları (kalan) | fable | F63.3–F63.5 (K-O5 en güvenli) | | | bitti (2026-11-11): sabit görsele kalem (çizgi görselin dikdörtgeninde, yakınlaştırmayla), tam ekran PDF/görsel/slaytta yüzen kalem düğmesi (`ViewerPen`, `PenPolicy.viewer` = sabit belge), telefonda parmakla kalem kipinde iki parmak ipucu; K-O5 en güvenli (dokunma, sabah bakılacak). Cihazda doğrulanmadı; PDF/slayt tam ekran widget testi yok. SÜRÜM NOTU BORCU (sonraki `[apk]`): bu üç madde |
 | P16 | Doğrulama borcu → cihaz turu belgesi | sonnet | F58.3, F60.6 | | | bitti (2026-11-11): `docs/cihaz_turu.md` (telefon 40, tablet/kalem 27, web 20 adım) + `docs/test_borcu.md`; F58.3 [x]. F60.6 açık: zemin görseli ek sayılıyor (`note_card.dart:1755`, `share_target_sheet.dart:516`) → P22 |
 | P17 | Ekler (kalan) | opus | F65.4 (K-O9 bildirim), F65.5, F65.7, F60.3 | | | bekliyor |
 | P18 | Telefon/tablet (kalan) | opus | F66.4, F66.6, F67.3, F67.4, F67.7, F67.9 | A/B | evet | bekliyor |
