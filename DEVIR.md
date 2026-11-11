@@ -21,10 +21,11 @@ Dal: `oto/P12-guvenlik` (origin/main 8e0f787a'dan).
   (test aracı → uyarıdan çıkarıldı, özet satırı); gitleaks 1 bulgu (ayrıntı görünmüyordu →
   --verbose eklendi).
 
+- gitleaks tek bulgusu yanlış alarm (eski DEVIR.md satırı, düz cümle) → .gitleaksignore.
+
 ## Şu an
-- Sırada: yeni koşuda gitleaks bulgusunun dosya/kuralına bak; yanlış alarmsa
-  .gitleaks.toml izin listesine ekle (gerçek sırsa denetime YÜKSEK olarak yaz, değeri yazma).
-  Sonra test parçalarının yeşilini bekle, rapor.
+- Bitti; son CI koşusu izleniyor. Yürütücü: birleştirmeden önce DEVIR.md'yi sil. main'de
+  ilk koşuda web/deploy/android işlerinin SHA'ya sabit action'larla çalıştığını izle.
 
 ## Kanıt / kök neden
 - `firestore.rules` userDirectory: yorum "kimlik e-postayla eşleşir" diyordu, kural yalnız

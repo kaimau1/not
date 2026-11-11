@@ -85,6 +85,9 @@ değerlendiriliyor. Değerlendirilmeyenler çoğunlukla sahibin kendi silme/okum
 - Geçmiş (elle desen taraması, bütün dallar): özel anahtar, OAuth istemci sırrı, GitHub/Google
   jetonu, servis hesabı, keystore parolası **bulunmadı**. `.jks`, `key.properties`, `env.json`
   hiç commit'lenmemiş. Tek eşleşme Firebase API anahtarı (G-09). Kalıcı tarama: CI gitleaks.
+  CI ilk koşusu (791 commit): tek bulgu eski bir `DEVIR.md` satırı — yanlış alarm
+  (`.gitleaksignore`). osv-scanner: `pubspec.lock` (268 paket) temiz; `rules-test`
+  31 bilinen açık (G-22, uyarı vermez).
 - `pull_request_target` yok; iş akışı yalnız `push` + elle tetikleme. Release yazma yetkisi
   yalnız `android` ve `release` işlerinde.
 - `dart pub outdated`: 131 paketin daha yeni sürümü var (kısıtla uyumsuz). Bilinen açık
