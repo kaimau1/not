@@ -6,6 +6,13 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == uid;
     }
 
+    // Jetondaki e-posta (küçük harf); misafirde (anonim) boş. İstemcinin
+    // yazdığı "ben kimim" alanları bununla karşılaştırılır (F71.2): aksi
+    // hâlde herkes başkasının e-postasıyla istek/kayıt bırakabiliyordu.
+    function tokenEmail() {
+      return request.auth.token.get('email', '').lower();
+    }
+
     // `folderShares/{folderId}` aynasını okur — klasör paylaşım kurallarının
     // hepsi aynı iki soruyu sorar ("bu folderId'nin gerçek sahibi kim",
     // "kimlerle paylaşılmış"); tek yerden okumak kopya `get()` çağrılarını
@@ -115,7 +122,11 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(
             ['fromEmail', 'fromName', 'createdAt'])
         && request.resource.data.fromEmail is string
-        && request.resource.data.fromName is string;
+        && request.resource.data.fromName is string
+        // F71.2: e-posta jetondakiyle aynı (sahte gönderen yok) + tavanlar.
+        && request.resource.data.fromEmail.lower() == tokenEmail()
+        && request.resource.data.fromEmail.size() <= 320
+        && request.resource.data.fromName.size() <= 200;
       // Silme: ALICI reddeder/kabul kaydını temizler, GÖNDEREN isteğini
       // geri çeker — ikisi de kendi payına düşeni kaldırabilir.
       allow delete: if request.auth != null
@@ -148,7 +159,11 @@ service cloud.firestore {
             /databases/$(database)/documents/users/$(friendUid)/friendRequests/$(ownerUid))
         && request.resource.data.keys().hasOnly(['email', 'name', 'since'])
         && request.resource.data.email is string
-        && request.resource.data.name is string;
+        && request.resource.data.name is string
+        // F71.2: kabul eden kendi e-postasını yazar + tavanlar.
+        && request.resource.data.email.lower() == tokenEmail()
+        && request.resource.data.email.size() <= 320
+        && request.resource.data.name.size() <= 200;
       // Kaldırma: iki taraf da (ben ya da arkadaşım) her iki aynayı
       // silebilir — arkadaşlığı bozmak KARŞILIKLI rıza gerektirmez.
       allow delete: if request.auth != null
@@ -176,7 +191,12 @@ service cloud.firestore {
         && request.resource.data.get('pending', [])
             == resource.data.get('pending', [])
         && request.resource.data.get('roles', {})
-            == resource.data.get('roles', {});
+            == resource.data.get('roles', {})
+        // F71.2: yukarıdaki cümle yalnız yorumdaydı — 'read' rolündeki üye
+        // bile klasörü yeniden adlandırıp gizleyebiliyordu. İstemcide üyenin
+        // bu alanlara yazdığı yol yok (yalnız sahip: updateFolder).
+        && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['name', 'icon', 'hidden', 'color', 'ownerId']);
       // **DAVETİ YANITLAMA.** Klasör dokümanı sahibin arayüzünün doğrusu
       // olduğundan davetli kabul/reddi buraya da yazar (aynaya yazdığının
       // aynısı). Okuma izni GEREKMEZ: istemci `arrayUnion`/`arrayRemove`
@@ -438,7 +458,8 @@ service cloud.firestore {
         && request.resource.data.get('imageUrl', '').size() <= 1000
         && request.resource.data.get('imagePath', '') is string
         && request.resource.data.get('imagePath', '').size() <= 500
-        && request.resource.data.senderName is string;
+        && request.resource.data.senderName is string
+        && request.resource.data.senderName.size() <= 200;
       // Mesaj DEĞİŞTİRİLEMEZ (gönderilmiş söz geri alınır, düzeltilmez);
       // silmek yazarında ve klasör sahibinde.
       allow update: if false;
@@ -487,7 +508,16 @@ service cloud.firestore {
     match /userDirectory/{email} {
       allow get: if request.auth != null;
       allow list: if false;
+      // F71.2 (YÜKSEK, 2026-11-11): yukarıdaki "kimlik e-postayla eşleşir"
+      // doğrulaması YOKTU — herkes `userDirectory/{kurbanın e-postası}`
+      // kaydını kendi uid'ine yazabiliyor (var olanın ÜSTÜNE de), kurbana
+      // e-postayla gönderilen arkadaşlık isteği ve ardından paylaşılan
+      // notlar saldırgana gidiyordu. Artık kimlik, jetondaki DOĞRULANMIŞ
+      // e-postanın kendisi olmalı (uygulamada yalnız Google girişi var).
       allow create, update: if request.auth != null
+        && request.auth.token.get('email_verified', false) == true
+        && tokenEmail() != ''
+        && email == tokenEmail()
         && request.resource.data.keys().hasOnly(['uid'])
         && request.resource.data.uid == request.auth.uid;
       allow delete: if request.auth != null
@@ -511,7 +541,10 @@ service cloud.firestore {
         && request.resource.data.uid == uid
         && request.resource.data.keys().hasOnly(
           ['uid', 'name', 'email', 'nameLower', 'emailLower']
-        );
+        )
+        // F71.2: aramada başkasının e-postasıyla görünülemez.
+        && request.resource.data.get('email', '').lower() == tokenEmail()
+        && request.resource.data.get('emailLower', '') == tokenEmail();
       allow delete: if request.auth != null && request.auth.uid == uid;
     }
 
