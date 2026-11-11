@@ -60,6 +60,19 @@ void main() {
     return id;
   }
 
+  test(
+    'v2 YAZIMI KAPALI: kayıt ink koleksiyonuna yazmaz, inkV koymaz',
+    () async {
+      final id = await v1Note();
+      final main = (await db.doc('users/u1/notes/$id').get()).data()!;
+      expect(main.containsKey('inkV'), isFalse);
+      final ink = await db
+          .collection('users/u1/notes/$id/$kInkCollection')
+          .get();
+      expect(ink.docs, isEmpty);
+    },
+  );
+
   test('v1 not olduğu gibi açılır', () async {
     final id = await v1Note();
     final n = (await repo.watchNote(id).firstWhere((n) => n != null))!;
@@ -83,10 +96,7 @@ void main() {
 
   test('yalnız v2 (ana belgede mürekkep yok) not açılır', () async {
     final id = await repo.createNote(NoteType.text);
-    await putInk(id, 'a9', [
-      stroke(0xFF0000B1),
-      stroke(0xFF0000B2, y: 2.5),
-    ]);
+    await putInk(id, 'a9', [stroke(0xFF0000B1), stroke(0xFF0000B2, y: 2.5)]);
     await db.doc('users/u1/notes/$id').update({
       'inkV': 2,
       'attachments': [

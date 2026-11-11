@@ -608,7 +608,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   riski).
   Test: v1 not olduğu gibi açılır; elle kurulmuş v2 not açılır; karışık (bir ek v1, sayfa
   v2) açılır; `hydrate` v2'yi doldurur.
-- [ ] **F61.6 Yazma tarafı + tembel göç.** Bayrak: `config/app.inkV2Write` (bool, yoksa
+- [ ] **F61.6 Yazma tarafı + tembel göç.** *(2026-11-11 P13 — YAZILMADI: K-O2 "En güvenli" = kodlayıcı + planlayıcı + okuma, YAZMA kapalı; F61.0 kapısı (b)(c) cihazda ölçülmediği için kapsam da kesin değil ("yalnız sıkı kodlama"ya inebilir). Bekçi: `ink_v2_read_test` "v2 YAZIMI KAPALI" (kayıt `ink`'e yazmaz, `inkV` koymaz). Not: v1 yazan istemci v2 notu düzenlerse mürekkebi v1'e yazar, okumada v2 kazanır → değişiklik görünmez; bayrak açılmadan önce `minClient` (K-O3) ŞART — sabah bakılacak.)* Bayrak: `config/app.inkV2Write` (bool, yoksa
   false) + debug'da yerel tercih `ink_v2_write`. Bayrak açıkken `updateNote`: mürekkep ana
   belgeye/`heavy`'ye YAZILMAZ; `planInkDocs` çıktısı son yazılanla (docId → bayt özdeşliği)
   karşılaştırılır, yalnız değişen belgeler `set`, boşalanlar `delete`, ana belge
