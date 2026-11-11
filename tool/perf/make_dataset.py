@@ -4,11 +4,17 @@
   keep_olcum.zip  — 140 metin (5'i 300-600 satır), 70 liste (5'i 90-150 madde), 30 görselli (40 foto)
   olcum_ozel.zip  — "OLCUM uzun liste" (120 madde), "OLCUM uzun metin" (500 satır),
                     "OLCUM gorselli" (2 foto), "OLCUM kisa metin" (6 satır)
+  olcum_kalem.notyedek — YALNIZ `--ink N` ile (varsayılan 1500): kalem A/B verisi
+                    (ab_kalem.py); tam yedek biçimi → Ayarlar → Yedekten geri yükle
 Telefona: adb push <zip> /sdcard/Download/ → uygulamada Ayarlar → Senkronizasyon →
 "Başka uygulamadan içe aktar" (ya da perf.open_import("<zip>")).
 """
-import io, json, os, random, sys, zipfile, time
-from PIL import Image, ImageDraw, ImageFilter
+import hashlib, io, json, math, os, random, sys, zipfile, time
+
+try:  # --ink Pillow istemez
+    from PIL import Image, ImageDraw, ImageFilter
+except ImportError:
+    Image = None
 
 random.seed(int(os.environ.get("OLCUM_SEED", 42)))  # başka tohum = kopya sayılmayan ikinci set
 OUT = os.path.join(os.environ.get("PERF_OUT") or __import__("tempfile").gettempdir(), "keep_olcum.zip")
@@ -179,9 +185,76 @@ def main_boyut():
     print(out)
 
 
+def ink_strokes(n, seed=5):
+    """Sentetik el yazısı: satırlara dizilmiş, 10–18 noktalı dalgalı kısa çizgiler.
+    Uygulamanın çizgi kaydı (InkStroke.toMap): p sayfa, c ARGB, w kalınlık
+    (sayfa genişliği oranı), d düz [x1, y1, x2, y2, …] (0–1)."""
+    rnd = random.Random(seed)
+    out = []
+    cols, rows = 14, 40
+    for i in range(n):
+        c, r = i % cols, (i // cols) % rows
+        x = 0.05 + c * 0.065 + rnd.uniform(-0.004, 0.004)
+        y = 0.04 + r * 0.023 + (i // (cols * rows)) * 0.004
+        pts = []
+        for k in range(rnd.randint(10, 18)):
+            pts += [round(x + k * 0.003 + rnd.uniform(-0.001, 0.001), 5),
+                    round(y + 0.006 * math.sin(k * 0.9 + i) + rnd.uniform(-0.001, 0.001), 5)]
+        out.append({"p": 1, "c": 0xFF1A1A1A, "w": 0.004, "d": pts})
+    return out
+
+
+def minimal_pdf():
+    """Tek boş A4 sayfa (elle yazılmış, xref'li)."""
+    objs = [b"<< /Type /Catalog /Pages 2 0 R >>",
+            b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] >>"]
+    out, offs = b"%PDF-1.4\n", []
+    for i, o in enumerate(objs):
+        offs.append(len(out))
+        out += b"%d 0 obj\n" % (i + 1) + o + b"\nendobj\n"
+    xref = len(out)
+    out += b"xref\n0 4\n0000000000 65535 f \n" + b"".join(b"%010d 00000 n \n" % o for o in offs)
+    return out + b"trailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % xref
+
+
+def main_ink(n):
+    """`--ink N`: kalem A/B verisi (ab_kalem.py) — TAM YEDEK biçiminde
+    (Ayarlar → Yedekten geri yükle): "OLCUM kalem bos" (boş metin notu) ve
+    "OLCUM kalem pdf" (sabit tek sayfa PDF, üstünde N çizgi).
+    SINIR: sayfanın kendi el yazısı (`Note.pageInk`) yedek/not paketiyle
+    taşınmıyor — N çizgili SAYFA `ab_kalem.py hazirla N` ile cihazda üretilir."""
+    iso = time.strftime("%Y-%m-%dT%H:%M:%S")
+    pdf = minimal_pdf()
+
+    def entry(nid, title, attachments):
+        digest = hashlib.sha1("\0".join(["text", title, ""]).encode()).hexdigest()
+        return {"id": nid, "digest": digest, "createdAt": iso, "updatedAt": iso,
+                "note": {"v": 1, "type": "text", "title": title, "body": "", "items": [],
+                         "attachments": attachments, "tags": []}}
+
+    notes = [
+        entry("olcum-kalem-bos", "OLCUM kalem bos", []),
+        entry("olcum-kalem-pdf", "OLCUM kalem pdf", [{
+            "id": "olcumpdf", "kind": "pdf", "fileName": "olcum.pdf", "mimeType": "application/pdf",
+            "sizeBytes": len(pdf), "width": 595, "height": 842, "align": "center",
+            "pinHeight": 300, "ink": ink_strokes(n)}]),
+    ]
+    out = os.path.join(os.path.dirname(OUT), "olcum_kalem.notyedek")
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("yedek.json", json.dumps({
+            "app": "notlar", "kind": "full-backup", "v": 1, "exportedAt": iso,
+            "folders": [], "notes": notes}, ensure_ascii=False))
+        z.writestr("dosyalar/olcum-kalem-pdf/olcumpdf", pdf)
+    print(out, os.path.getsize(out) // 1024, "KB", n, "çizgi")
+
+
 if __name__ == "__main__":
     if sys.argv[1:] == ["boyut"]:
         main_boyut()
+        sys.exit()
+    if sys.argv[1:2] == ["--ink"]:
+        main_ink(int(sys.argv[2]) if len(sys.argv) > 2 else 1500)
         sys.exit()
     main()
     main_ozel()

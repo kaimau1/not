@@ -19,9 +19,10 @@
 | `video.py` | ekran videosu, kare farkıyla flaş/zıplama (F26.1, ffmpeg) |
 | `jest.py`, `Pinch.java` | iki parmak zoom + yana kaydırma kareleri (F39); `Pinch` `app_process` ile gerçek çoklu dokunuş enjekte eder |
 | `ab_klavye.py` | **A/B kapısı** (2026-11-10): klavye aç/kapa ×3, yazma ×4, not kapanışı — evre başına UI kare/ms/LAYOUT; taban = önceki `[apk]`'nın profil derlemesi (CLAUDE.md ÖLÇÜM KAPISI) |
+| `ab_kalem.py` | **A/B kapısı, kalem** (F59.5): kalem kipi açık, parmakla 30 çizgi + kayıt + kapanış — evre başına UI ve raster kare/ms/>16,7, kayıt anında en uzun UI bloğu; `hazirla N` sayfayı N çizgiyle doldurur (dolu sayfa hâli). Kapı: UI ya da raster +%20 → birleştirme yok |
 | `ab_liste.py` | ana ekran 8 fırlatma — UI kare/ms, BUILD/LAYOUT toplamı |
 | `prof_kb2.py` | klavye döngüsü + kapanış, SF kareleriyle; `w` = evre başına widget build dökümü |
-| `make_dataset.py` | Keep Takeout zip'leri: 240 not + 4 adlı stres notu (`OLCUM …`) |
+| `make_dataset.py` | Keep Takeout zip'leri: 240 not + 4 adlı stres notu (`OLCUM …`); `--ink 1500` → `olcum_kalem.notyedek` (boş not + 1500 çizgili sabit PDF, tam yedek biçimi) |
 
 ## Hazırlık
 

@@ -71,13 +71,15 @@ class CountingNotesRepository extends NotesRepository {
 /// tam [NoteEditorScreen] kurar. [repo] verilirse editör ona kaydeder.
 /// [home] verilirse editör yerine o kurulur (editörü rota olarak açıp
 /// kapatan testler: `editor_leak_test.dart`). [overrides] yukarıdakilere
-/// eklenir (onları yeniden geçersiz kılma).
+/// eklenir (onları yeniden geçersiz kılma). [noteStream] verilirse not akışı
+/// odur (kendi kaydının yankısını sınayan testler: depo → akış → editör).
 Future<ProviderContainer> pumpEditor(
   WidgetTester tester,
   Note note, {
   Size size = const Size(412, 915),
   NotesRepository? repo,
   Widget? home,
+  Stream<Note?>? noteStream,
   List<Override> overrides = const [],
 }) async {
   tester.view.physicalSize = size;
@@ -97,7 +99,9 @@ Future<ProviderContainer> pumpEditor(
       notesRepositoryProvider.overrideWithValue(repo),
       attachmentRepositoryProvider.overrideWithValue(null),
       foldersRepositoryProvider.overrideWithValue(null),
-      noteStreamProvider(note.id).overrideWith((ref) => Stream.value(note)),
+      noteStreamProvider(
+        note.id,
+      ).overrideWith((ref) => noteStream ?? Stream.value(note)),
       ...overrides,
     ],
   );
