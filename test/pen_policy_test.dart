@@ -38,7 +38,12 @@ const _all = {
   PenSurface.embeddedDoc => (kinds: _stylus, active: auto && ever, toggle: ever),
   // note_package build
   PenSurface.package => (kinds: pen ? null : _stylus, active: true, toggle: false),
-  PenSurface.viewer => (kinds: null, active: pen, toggle: false),
+  // F63.4: tam ekran görüntüleyici sabit belgeyle aynı kural + yüzen düğme.
+  PenSurface.viewer => (
+    kinds: pen ? null : _stylus,
+    active: pen || (auto && ever),
+    toggle: ever,
+  ),
   PenSurface.drawing => (kinds: null, active: true, toggle: false),
 };
 
@@ -105,6 +110,12 @@ void main() {
     expect(r(PenSurface.page, auto: false).allowedKinds, isEmpty);
     expect(r(PenSurface.pinnedDoc, auto: false).layerActive, isFalse);
     expect(r(PenSurface.embeddedDoc, auto: false).layerActive, isFalse);
+    expect(r(PenSurface.viewer, auto: false).layerActive, isFalse);
+    // K3: tam ekranda da yüzen düğme; kalem düğmesiz yazar, parmak gezinir.
+    expect(r(PenSurface.viewer).showFloatingToggle, isTrue);
+    expect(r(PenSurface.viewer).layerActive, isTrue);
+    expect(r(PenSurface.viewer).fingerScrolls, isTrue);
+    expect(r(PenSurface.viewer, ever: false).layerActive, isFalse);
   });
 
   test('yerel kural kopyası yok: allowedKinds yalnız PenPolicy\'den atanır', () {

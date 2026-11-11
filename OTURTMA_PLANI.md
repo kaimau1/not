@@ -810,7 +810,14 @@ gömülü `_docInkFor`, görüntüleyiciler) — B3/B4/B5 hataları buradan çı
   `uniform: false`; katman görselin `BoxFit.contain` dikdörtgenine oturur (ölçek/kaydırma
   dönüşümünün İÇİNDE, yakınlaşınca birlikte büyür). Dışa aktarma zaten çizimi basıyor
   (`image_annotations.dart`). Test: 2× yakınlaşmışken çizilen çizgi 1×'te aynı yerde.
-- [ ] **F63.4 Tam ekran görüntüleyicilerde yüzen kalem düğmesi (KALEM K3).**
+- [x] **F63.4 Tam ekran görüntüleyicilerde yüzen kalem düğmesi (KALEM K3).** *(2026-11-11, P15:
+  `viewers/viewer_pen.dart` (`ViewerPen` karışımı) üç görüntüleyicide: `StylusToggleOverlay` + kalemin
+  ilk görülüşü; `PenPolicy.viewer` artık sabit belgeyle aynı kural (tablo testte değişti): "kalem
+  yazar"ken kalem çizim düğmesine basmadan yazar (`InkClaim`), parmak gezinir; "dokunur" açık çizim
+  kipini de kapatır. `stylusEver` ayrıca `InkController.pointerDown`'da (her katman). Kalem kipi kapalı
+  yazarken kalem tepsisi yok (araç son seçilen) — tepsi için çizim düğmesi. Testler
+  `test/viewer_stylus_toggle_test.dart` (kırmızı 3 → yeşil 4), `test/pen_policy_test.dart`. PDF/slayt
+  görüntüleyicide widget testi yok (pdfrx); cihazda doğrulanmadı.)*
   `PdfViewerScreen`, `ImageViewerScreen`, `SlideViewerScreen`'e `StylusToggleOverlay`;
   `stylusEver` her mürekkep katmanında işaretlenir (bugün yalnız editör içeriğinde).
 - [ ] **F63.5 Telefonda elle yazma (KALEM K5, B10) — KARAR K-O5.** Klavye kapalıyken alt

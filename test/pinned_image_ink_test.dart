@@ -141,7 +141,10 @@ void main() {
     );
     expect(painters, findsOneWidget, reason: 'çizim tam bir kez boyanmalı');
     final origin = tester.getTopLeft(find.byType(PinnedMediaPane));
-    final layer = find.ancestor(of: painters, matching: find.byType(Positioned));
+    final layer = find.ancestor(
+      of: painters,
+      matching: find.byType(Positioned),
+    );
     expect(tester.getRect(layer.first), rect.shift(origin));
   });
 

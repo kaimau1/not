@@ -22,6 +22,7 @@ import 'pdf_document_view.dart';
 import 'pdf_read_style.dart';
 import 'pdf_select_layer.dart';
 import 'pdf_selection_bar.dart';
+import 'viewer_pen.dart';
 import '../editor/attachment_clipboard.dart';
 import '../editor/pen_tray.dart';
 
@@ -73,7 +74,7 @@ class PdfViewerScreen extends StatefulWidget {
 }
 
 class _PdfViewerScreenState extends State<PdfViewerScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, ViewerPen {
   /// Ekin GÜNCEL hâli. KÖK NEDEN: değişiklikler eskiden hep AÇILIŞTAKİ
   /// `widget.attachment` üstüne kuruluyordu (rota yeniden kurulmaz) — önce
   /// çizip sonra balon bırakınca balon yazımı çizimi açılıştaki hâline
@@ -107,6 +108,20 @@ class _PdfViewerScreenState extends State<PdfViewerScreen>
 
   /// Çizim modu ekran durumu.
   bool _editing = false;
+
+  // ── Yüzen kalem düğmesi + kalem kuralı (bkz. [ViewerPen], F63.4) ──────
+  @override
+  InkController get penInk => _ink;
+  @override
+  BubbleController get penBubbles => _bubbles;
+  @override
+  bool get penEditing => _editing;
+  @override
+  bool get penAllowed => widget.onChanged != null;
+  @override
+  bool get penBlocked => _areaMode;
+  @override
+  void penStopEditing() => _toggleEditing();
 
   /// **ALAN SEÇİMİ** kipi (bkz. [AreaSelectLayer]): açıkken sayfanın üstünde
   /// dikdörtgen çizilir, kapalıyken katman hiç kurulmaz.
@@ -246,7 +261,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen>
           style: PdfReadStyle.of(context),
           selection: _selection,
           bubbles: _bubbles,
-          inkLayer: (page) => InkPageLayer(controller: _ink, page: page),
+          inkLayer: penLayer,
           inkEditing: _editing,
           dragging: dragging,
           editable: editable,
@@ -377,7 +392,8 @@ class _PdfViewerScreenState extends State<PdfViewerScreen>
           ],
         ),
         // Ctrl/Cmd+C: seçili metni panoya kopyalar (masaüstü alışkanlığı).
-        body: CallbackShortcuts(
+        body: penScope(
+          child: CallbackShortcuts(
           bindings: {
             const SingleActivator(LogicalKeyboardKey.keyC, control: true):
                 _copySelection,
@@ -442,6 +458,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen>
               ],
             ),
           ),
+        ),
         ),
         bottomNavigationBar: _editing
             ? PenTray(

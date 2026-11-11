@@ -86,8 +86,10 @@ class PenPolicy {
         kinds = penMode ? null : stylusKinds;
         active = true;
       case PenSurface.viewer:
-        kinds = null;
-        active = penMode;
+        // F63.4: sabit belgeyle aynı — çizim kipi herkesi çizdirir; kip
+        // kapalıyken yüzen düğme "kalem yazar" ise yalnız kalem.
+        kinds = penMode ? null : stylusKinds;
+        active = penMode || (autoStylus && stylusEver);
       case PenSurface.drawing:
         kinds = null;
         active = true;
@@ -99,13 +101,14 @@ class PenPolicy {
     return PenPolicy(
       allowedKinds: kinds,
       fingerScrolls: !fingerDraws,
-      // Düğme editörün örtüsünde: sayfa + sabit + gömülü. Tam ekran
-      // görüntüleyiciler ayrı rota (F63.4'te eklenecek).
+      // Düğme editörün örtüsünde (sayfa + sabit + gömülü) ve tam ekran
+      // görüntüleyicilerin kendi örtüsünde (`ViewerPen`).
       showFloatingToggle:
           stylusEver &&
           (surface == PenSurface.page ||
               surface == PenSurface.pinnedDoc ||
-              surface == PenSurface.embeddedDoc),
+              surface == PenSurface.embeddedDoc ||
+              surface == PenSurface.viewer),
       layerActive: active,
     );
   }
