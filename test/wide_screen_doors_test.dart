@@ -393,6 +393,27 @@ void main() {
       await end(tester);
     });
 
+    testWidgets('liste sağa alınır: ayraçta uzun bas → menü (F67.9)', (
+      tester,
+    ) async {
+      await pump(tester, const Size(1280, 800), initial: '/note/n1');
+      double listX() => tester.getCenter(find.byType(DashboardScreen)).dx;
+      double noteX() => tester.getCenter(find.byType(_NoteProbe)).dx;
+      expect(listX(), lessThan(noteX()));
+      // Ayraç: listenin sağ kenarı (varsayılan 320 dp).
+      await tester.longPressAt(const Offset(324, 400));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.text('Listeyi sağa al'));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(container.read(listPaneRightProvider), isTrue);
+      expect(listX(), greaterThan(noteX()));
+      expect(
+        tester.getSize(find.byType(DashboardScreen)).width,
+        moreOrLessEquals(320),
+      );
+      await end(tester);
+    });
+
     testWidgets('yatay tablette liste yerinde (değişmedi)', (tester) async {
       await pump(tester, const Size(1280, 800), initial: '/note/n1');
       expect(find.text('gizli:false'), findsOneWidget);

@@ -14827,6 +14827,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{view} olarak eklendi · değiştirmek için anahtara dokun'**
   String placementHintShort(String view);
+
+  /// No description provided for @listPaneRight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not listesi sağda'**
+  String get listPaneRight;
+
+  /// No description provided for @listPaneRightInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bölünmüş görünümde (tablet, geniş pencere) liste notun sağında durur'**
+  String get listPaneRightInfo;
+
+  /// No description provided for @listPaneMoveRight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeyi sağa al'**
+  String get listPaneMoveRight;
+
+  /// No description provided for @listPaneMoveLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeyi sola al'**
+  String get listPaneMoveLeft;
 }
 
 class _AppLocalizationsDelegate

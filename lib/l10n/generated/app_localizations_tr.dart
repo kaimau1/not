@@ -8361,4 +8361,17 @@ class AppLocalizationsTr extends AppLocalizations {
   String placementHintShort(String view) {
     return '$view olarak eklendi · değiştirmek için anahtara dokun';
   }
+
+  @override
+  String get listPaneRight => 'Not listesi sağda';
+
+  @override
+  String get listPaneRightInfo =>
+      'Bölünmüş görünümde (tablet, geniş pencere) liste notun sağında durur';
+
+  @override
+  String get listPaneMoveRight => 'Listeyi sağa al';
+
+  @override
+  String get listPaneMoveLeft => 'Listeyi sola al';
 }

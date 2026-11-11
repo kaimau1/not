@@ -3859,5 +3859,9 @@
   "uploadPendingBody": "Uygulamayı açınca yüklenir.",
   "uploadPendingChannel": "Bekleyen ek yüklemeleri",
   "placementHintShort": "{view} olarak eklendi · değiştirmek için anahtara dokun",
-  "@placementHintShort": {"placeholders": {"view": {"type": "String"}}}
+  "@placementHintShort": {"placeholders": {"view": {"type": "String"}}},
+  "listPaneRight": "Not listesi sağda",
+  "listPaneRightInfo": "Bölünmüş görünümde (tablet, geniş pencere) liste notun sağında durur",
+  "listPaneMoveRight": "Listeyi sağa al",
+  "listPaneMoveLeft": "Listeyi sola al"
 }

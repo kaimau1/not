@@ -17,6 +17,25 @@ class _ExpandListItemsSwitch extends ConsumerWidget {
   }
 }
 
+/// Bölünmüş görünümde liste sağda (bkz. [listPaneRightProvider]).
+class _ListPaneRightSwitch extends ConsumerWidget {
+  const _ListPaneRightSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      key: const ValueKey('list-pane-right-switch'),
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.listPaneRight),
+      subtitle: Text(l10n.listPaneRightInfo),
+      value: ref.watch(listPaneRightProvider),
+      onChanged: (value) =>
+          ref.read(listPaneRightProvider.notifier).set(value),
+    );
+  }
+}
+
 /// Madde jestleri (bkz. [itemGesturesProvider]).
 class _ItemGesturesSwitch extends ConsumerWidget {
   const _ItemGesturesSwitch();
