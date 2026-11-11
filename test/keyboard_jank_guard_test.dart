@@ -1,13 +1,162 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/features/notes/domain/note.dart';
+import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/editor/editor_quick_row.dart';
 import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
+import 'support/editor_harness.dart';
+
+/// Klavye hareketinin kareleri (dp): yavaş başlar (ilk kareler gezinme
+/// çubuğu payının — 48 dp — ALTINDA: `padding.bottom` o karelerde erir),
+/// hızlanır, yavaşlayarak oturur.
+List<double> _keyboardFrames({double height = 300, int frames = 18}) => [
+  for (var i = 1; i <= frames; i++)
+    height * Curves.fastOutSlowIn.transform(i / frames),
+];
+
+/// Bir karede olanlar: toplam widget kurulumu, yeniden dizilmek üzere
+/// işaretlenen yerleşim sınırları, alt çubuğun ekrandaki alt kenarı.
+typedef _Frame = ({double inset, int builds, List<String> layouts, double bar});
+
+/// Klavyeyi tam editörde kare kare süren düzenek (F60.S5).
+class _KeyboardRig {
+  _KeyboardRig(this.tester);
+  final WidgetTester tester;
+  final _counter = BuildCounter();
+  final _marks = <String>[];
+
+  Future<_Frame> frame(double inset, {int ms = 16}) async {
+    tester.view.viewInsets = FakeViewPadding(bottom: inset);
+    // Android: alt sistem payı klavye yükseldikçe erir.
+    tester.view.padding = FakeViewPadding(
+      top: 30,
+      bottom: (48 - inset).clamp(0.0, 48.0),
+    );
+    final print = debugPrint;
+    _marks.clear();
+    debugPrint = (String? m, {int? wrapWidth}) {
+      const head = 'markNeedsLayout() called for ';
+      if (m != null && m.startsWith(head)) {
+        _marks.add(m.substring(head.length).split('#').first);
+      }
+    };
+    debugPrintMarkNeedsLayoutStacks = true;
+    _counter.start();
+    try {
+      await tester.pump(Duration(milliseconds: ms));
+    } finally {
+      _counter.stop();
+      debugPrintMarkNeedsLayoutStacks = false;
+      debugPrint = print;
+    }
+    return (
+      inset: inset,
+      builds: _counter.counts.values.fold(0, (a, b) => a + b),
+      layouts: List.of(_marks),
+      bar: tester.getRect(find.byType(BottomAppBar)).bottom,
+    );
+  }
+}
+
+final _typed = Note(
+  id: 'n',
+  type: NoteType.text,
+  title: 'Not',
+  body: List.generate(30, (i) => 'Satır $i').join('\n'),
+);
+
+int _budget(String key) =>
+    ((jsonDecode(File('test/perf_budget/budgets.json').readAsStringSync())
+                as Map<String, dynamic>)['S17']
+            as Map<String, dynamic>)[key]
+        as int;
 
 /// **KLAVYE / YAZMA KASMASI BEKÇİSİ** (ölçüm 2026-11-10, kullanıcı: "son
 /// güncellemelerden sonra klavye açılıp kapanırken titriyor, genel
 /// yavaşlık"). A/B (11-06 tabanı → 11-09): yazarken UI işi ×3,3, klavye
 /// aç/kapa +%65. İki kök neden; ikisi de burada kilitli.
 void main() {
+  // F60.S5 (kullanıcı 2026-11-11: "klavye açılırken alt paneldeki titreme
+  // kasmayı kökünden çöz, tekrar yaşanmayacak şekilde"). İki ölçü:
+  // TİTREME = alt çubuğun alt kenarı her karede klavyenin üst kenarında değil
+  // (geri sıçrama, gecikme); KASMA = hareket karelerinde kurulan widget ve
+  // yeniden dizilen sınır sayısı.
+  testWidgets('klavye açılıp kapanırken alt çubuk her karede klavyenin '
+      'üstünde; hareket kareleri bütçede, hiçbir şey dizilmez (S17)', (
+    tester,
+  ) async {
+    await pumpEditor(tester, _typed);
+    // Açılış sonrası gecikmeli işler bitsin (ölçüme karışmasın).
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await tester.tap(find.textContaining('Satır 3').last);
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 150));
+    final rig = _KeyboardRig(tester);
+    const screen = 915.0, nav = 48.0;
+    final up = _keyboardFrames();
+    final down = [...up.reversed.skip(1), 0.0];
+    final moving = <_Frame>[];
+    for (var cycle = 0; cycle < 3; cycle++) {
+      for (final seq in [up, down]) {
+        var last = double.nan;
+        for (final inset in seq) {
+          final f = await rig.frame(inset);
+          moving.add(f);
+          // Çubuğun dibi: klavye gezinme çubuğundan alçaksa onun üstü,
+          // değilse klavyenin üstü — HER KAREDE (gecikme/çift hareket yok).
+          expect(
+            f.bar,
+            moreOrLessEquals(screen - (inset > nav ? inset : nav)),
+            reason: 'tur $cycle, klavye ${inset.toStringAsFixed(1)}',
+          );
+          if (!last.isNaN) {
+            // Tekdüze: açılırken hep yukarı, kapanırken hep aşağı.
+            expect(
+              seq == up ? f.bar <= last : f.bar >= last,
+              isTrue,
+              reason: 'geri sıçrama: $last → ${f.bar}',
+            );
+          }
+          last = f.bar;
+        }
+        // Oturma (KeyboardSnap, 140 ms): ayrı — hareket karesi değil.
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+    }
+    // İlk açılışın ilk karesi hızlı satırı kurar (tek seferlik), ayrı bütçe.
+    final first = moving.first;
+    // Gövdeyi tam boya döndüren kare (kapanışın ilki) oturma sayılır.
+    bool settles(_Frame f) => f.inset == down.first;
+    final rest = [
+      for (final f in moving.skip(1))
+        if (!settles(f)) f,
+    ];
+    final worst = rest.reduce((a, b) => a.builds >= b.builds ? a : b);
+    final laidOut = {for (final f in rest) ...f.layouts};
+    // ignore: avoid_print
+    print(
+      'S17: ilk kare ${first.builds} kurulum; hareket karesi en çok '
+      '${worst.builds} (klavye ${worst.inset.toStringAsFixed(0)}); '
+      'dizilen sınırlar $laidOut',
+    );
+    expect(first.builds, lessThanOrEqualTo(_budget('ilk_kare_kurulum')));
+    expect(worst.builds, lessThanOrEqualTo(_budget('hareket_karesi_kurulum')));
+    expect(
+      laidOut.length,
+      lessThanOrEqualTo(_budget('hareket_dizilen_sinir')),
+      reason: '$laidOut',
+    );
+    expect(tester.binding.transientCallbackCount, 0);
+    await endEditor(tester);
+  });
+
   testWidgets('KeyboardSwitch: hızlı satır bir kez kurulur, klavye kapanınca '
       'sökülmez', (tester) async {
     var inits = 0;

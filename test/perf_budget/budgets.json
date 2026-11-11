@@ -120,5 +120,14 @@
     "bugun": "2 belge (not + heavy/data) / 448 925 bayt — bütün mürekkep (2026-11-11)",
     "hedef": "1 bant belgesi / ≤ 64 KB (F61.6)",
     "neden": "İlk ölçüm (bugünkü hâl); hedef Faz 61'de işlenecek"
+  },
+  "S17": {
+    "senaryo": "Klavye aç/kapa ×3, 30 satırlık metin notu, 18 karelik hareket (ilk kareler gezinme payının altında): kare başına toplam widget kurulumu ve dizilmek üzere işaretlenen yerleşim sınırı (test/keyboard_jank_guard_test.dart)",
+    "ilk_kare_kurulum": 60,
+    "hareket_karesi_kurulum": 20,
+    "hareket_dizilen_sinir": 0,
+    "bugun": "?",
+    "hedef": "hareket karesinde yalnız klavyeyi dinleyen yapraklar; dizilen sınır 0",
+    "neden": "F60.S5"
   }
 }
