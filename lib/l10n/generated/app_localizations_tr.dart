@@ -8310,4 +8310,11 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get quickAddEditHint =>
+      'Sürükleyerek sırala, göz ile gizle ya da göster.';
+
+  @override
+  String get quickAddKeepOne => 'En az bir seçenek görünür kalmalı';
 }

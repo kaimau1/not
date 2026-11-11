@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/menu_layout.dart';
 import '../../../core/personalize.dart';
 import '../../../core/widgets/customizable.dart';
 import '../data/user_templates.dart';
@@ -32,6 +33,18 @@ import '../../../core/widgets/press_scale.dart';
 /// hem paneli hem seçim modunu birden kapatıyordu. Ana ekran bunu okuyup
 /// sırayı panele bırakır.
 final quickAddPanelOpen = ValueNotifier(false);
+
+/// "+" menüsünün SIRA kaydının kimliği ([MenuLayouts]; F60.S10). Gizleme
+/// eskisi gibi `Personalize`'da (`UiItem.quickAdd`) — Ayarlar'daki
+/// kişiselleştirme ve eklentiler aynı kaydı okumaya devam eder.
+const quickAddMenuId = 'home.quickAdd';
+
+/// Panelin dinlediği iki kayıt: gizleme (Personalize) ve sıra (MenuLayouts).
+/// TEK örnek: her build'de yeni birleşik dinlenebilir kurulmasın.
+final Listenable _panelListenable = Listenable.merge([
+  Personalize.listenable,
+  MenuLayouts.layouts,
+]);
 
 class QuickAddFab extends StatefulWidget {
   const QuickAddFab({
@@ -412,18 +425,36 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
     super.dispose();
   }
 
+  /// MENÜ DÜZEN KİPİ (F60.S10): panelin içinde, karolar yerine satırlar —
+  /// göz (gizle/göster) + tutamaç (sırala). Yerel durum: kök ekranı
+  /// yeniden kurmaz.
+  bool _arranging = false;
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    // Kişiselleştirme (gizlenen seçenekler) ve düzenleme modu: panel açıkken
-    // değişirse hemen yansır.
-    listenable: Personalize.listenable,
+    // Kişiselleştirme (gizlenen seçenekler), sıra ve düzenleme modu: panel
+    // açıkken değişirse hemen yansır.
+    listenable: _panelListenable,
     builder: (context, _) => _build(context),
   );
 
   Widget _build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final width = widget.fit.width;
+    // Kullanıcı sırası (bilinmeyen/yeni seçenek grubunun sonunda).
+    final options = MenuLayouts.of(quickAddMenuId)
+        .sorted(widget.options, (o) => o.key);
+
+    if (_arranging) {
+      return _wrap(
+        context,
+        _QuickAddArranger(
+          options: options,
+          maxHeight: widget.fit.maxHeight,
+          onDone: () => setState(() => _arranging = false),
+        ),
+      );
+    }
 
     // Gizlenen seçenek panelde yer kaplamaz; DÜZENLEME MODUNDA hepsi
     // görünür (gizliler soluk) ve dokunmak gizle/göster yapar.
@@ -432,7 +463,7 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
     bool shown(QuickAddOption o) =>
         editing || prefs.shows(UiItem.quickAdd(o.key));
     List<QuickAddOption> of(AddGroup g) => [
-      for (final o in widget.options)
+      for (final o in options)
         if (o.group == g && shown(o)) o,
     ];
     final primary = of(AddGroup.write);
@@ -470,6 +501,21 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // "Menüyü düzenle" (F60.S10). Uygulama geneli düzenleme
+              // modunda karolar zaten düzenlenir: düğme yer tutmaz.
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: editing
+                    ? const SizedBox.shrink()
+                    : IconButton(
+                        key: const ValueKey('quick-add-edit'),
+                        tooltip: l10n.menuEdit,
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 20,
+                        icon: Icon(Icons.tune, color: scheme.onSurfaceVariant),
+                        onPressed: () => setState(() => _arranging = true),
+                      ),
+              ),
               for (final section in sections) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
@@ -512,7 +558,12 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
       ),
     );
 
-    final sized = SizedBox(width: width, child: panel);
+    return _wrap(context, panel);
+  }
+
+  /// Genişlik + açılış hareketi (normal ve düzen kipinde aynı).
+  Widget _wrap(BuildContext context, Widget panel) {
+    final sized = SizedBox(width: widget.fit.width, child: panel);
     if (MediaQuery.disableAnimationsOf(context)) return sized;
     // Saydamlık hızlı ve düz gelir; ölçek ise "+" düğmesinden YAYLI
     // açılır (hafifçe taşıp yerine oturur — iOS menülerinin açılışı).
@@ -533,6 +584,213 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
           scale: 0.86 + 0.14 * spring.value,
           alignment: Alignment.bottomRight,
           child: inner,
+        ),
+      ),
+    );
+  }
+}
+
+/// "+" MENÜSÜNÜ DÜZENLE (F60.S10, kullanıcı isteği 2026-11-11: "not ekle
+/// menüsünde her buton düzenlenebilir olmalı; gizle, göster, yer değiştir").
+///
+/// Menü düzenleyicisinin ([ActionMenu] "Menüyü düzenle") aynı deseni: satır
+/// başına göz (gizle/göster) + sürükleme tutamacı; panelle aynı gruplar,
+/// panelle aynı sırada (başparmaktan yukarı). Sıra grubun İÇİNDE değişir —
+/// panel gruplu çizildiğinden gruplar arası taşıma anlamsız olurdu.
+/// Değişiklik ANINDA kaydedilir (gizleme `Personalize`, sıra `MenuLayouts`);
+/// "Bitti" yalnız kipten çıkar. Son görünür seçenek gizlenemez.
+class _QuickAddArranger extends StatelessWidget {
+  const _QuickAddArranger({
+    required this.options,
+    required this.maxHeight,
+    required this.onDone,
+  });
+
+  /// Kullanıcı sırasındaki BÜTÜN seçenekler (gizliler dahil).
+  final List<QuickAddOption> options;
+  final double maxHeight;
+  final VoidCallback onDone;
+
+  static String _id(QuickAddOption o) => UiItem.quickAdd(o.key);
+
+  /// [group] içinde [from] → [to]; tam sıra (bütün gruplar) kaydedilir.
+  void _reorder(AddGroup group, int from, int to) {
+    final inGroup = [
+      for (final o in options)
+        if (o.group == group) o.key,
+    ];
+    inGroup.insert(to, inGroup.removeAt(from));
+    final moved = inGroup.iterator;
+    final order = [
+      for (final o in options)
+        if (o.group == group) (moved..moveNext()).current else o.key,
+    ];
+    final cur = MenuLayouts.of(quickAddMenuId);
+    MenuLayouts.set(
+      quickAddMenuId,
+      MenuLayout(hidden: cur.hidden, quick: cur.quick, order: order),
+    );
+  }
+
+  static void _reset() {
+    Personalize.update(
+      (p) => p.copyWith(
+        hidden: {
+          for (final h in p.hidden)
+            if (!h.startsWith(UiItem.quickAdd(''))) h,
+        },
+      ),
+    );
+    MenuLayouts.set(quickAddMenuId, const MenuLayout());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    // Kayıt (taslak değil): bu düzenleyici doğrudan kaydeder.
+    final prefs = Personalize.prefs.value;
+    final visibleCount = options.where((o) => prefs.shows(_id(o))).length;
+
+    Widget row(QuickAddOption o, int index) {
+      final shown = prefs.shows(_id(o));
+      final locked = shown && visibleCount <= 1;
+      final faded = scheme.onSurfaceVariant.withValues(alpha: 0.5);
+      return ListTile(
+        key: ValueKey('quick-edit-row-${o.key}'),
+        dense: true,
+        contentPadding: const EdgeInsetsDirectional.only(start: 8),
+        leading: Icon(o.icon, size: 20, color: shown ? scheme.primary : faded),
+        title: Text(
+          o.label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(color: shown ? null : faded),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              key: ValueKey('quick-edit-eye-${o.key}'),
+              tooltip: locked
+                  ? l10n.quickAddKeepOne
+                  : shown
+                  ? l10n.customizeHideItem
+                  : l10n.customizeShowItem,
+              icon: Icon(
+                shown
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+              ),
+              onPressed: locked
+                  ? null
+                  : () {
+                      HapticFeedback.selectionClick();
+                      Personalize.update((p) => p.withVisible(_id(o), !shown));
+                    },
+            ),
+            ReorderableDragStartListener(
+              key: ValueKey('quick-edit-handle-${o.key}'),
+              index: index,
+              child: const Padding(
+                padding: EdgeInsets.all(8),
+                child: Icon(Icons.drag_handle),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final groups = [
+      for (final g in AddGroup.values.reversed)
+        (
+          group: g,
+          options: [
+            for (final o in options)
+              if (o.group == g) o,
+          ],
+        ),
+    ].where((e) => e.options.isNotEmpty);
+
+    return Material(
+      color: scheme.surface,
+      elevation: 8,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Flexible(
+              child: SingleChildScrollView(
+                // Panel gibi başparmaktan yukarı: açılınca alt uç görünür.
+                reverse: true,
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(6, 0, 6, 2),
+                      child: Text(
+                        l10n.menuEdit,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
+                      child: Text(
+                        l10n.quickAddEditHint,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    for (final g in groups) ...[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(4, 6, 4, 2),
+                        child: SectionLabel(addGroupTitle(l10n, g.group)),
+                      ),
+                      ReorderableListView(
+                        key: ValueKey('quick-edit-group-${g.group.name}'),
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        buildDefaultDragHandles: false,
+                        onReorderItem: (from, to) =>
+                            _reorder(g.group, from, to),
+                        children: [
+                          for (var i = 0; i < g.options.length; i++)
+                            row(g.options[i], i),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 4, 10, 10),
+              child: Row(
+                children: [
+                  TextButton(
+                    key: const ValueKey('quick-edit-reset'),
+                    onPressed: _reset,
+                    child: Text(l10n.personalizeReset),
+                  ),
+                  const Spacer(),
+                  FilledButton(
+                    key: const ValueKey('quick-edit-done'),
+                    onPressed: onDone,
+                    child: Text(l10n.reorderDone),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

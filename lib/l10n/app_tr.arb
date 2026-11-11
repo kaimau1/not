@@ -3838,5 +3838,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "quickAddEditHint": "Sürükleyerek sırala, göz ile gizle ya da göster.",
+  "quickAddKeepOne": "En az bir seçenek görünür kalmalı"
 }

@@ -3034,5 +3034,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "quickAddEditHint": "Drag to reorder, tap the eye to hide or show.",
+  "quickAddKeepOne": "At least one option must stay visible"
 }

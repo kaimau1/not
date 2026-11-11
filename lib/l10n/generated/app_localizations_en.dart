@@ -8326,4 +8326,11 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get quickAddEditHint =>
+      'Drag to reorder, tap the eye to hide or show.';
+
+  @override
+  String get quickAddKeepOne => 'At least one option must stay visible';
 }
