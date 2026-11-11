@@ -1,0 +1,175 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:notlar/features/auth/presentation/auth_providers.dart';
+import 'package:notlar/features/folders/data/folder_activity.dart';
+import 'package:notlar/features/folders/data/folders_repository.dart';
+import 'package:notlar/features/folders/domain/note_folder.dart';
+import 'package:notlar/features/friends/data/friends_repository.dart';
+import 'package:notlar/features/inbox/data/inbox_repository.dart';
+import 'package:notlar/features/notes/data/note_shares_repository.dart';
+import 'package:notlar/features/notes/data/notes_repository.dart';
+import 'package:notlar/features/notes/domain/note.dart';
+import 'package:notlar/features/notes/domain/note_type.dart';
+import 'package:notlar/features/notes/presentation/dashboard_screen.dart';
+import 'package:notlar/features/notes/presentation/drag_trash_target.dart';
+import 'package:notlar/features/notes/presentation/note_card.dart';
+import 'package:notlar/features/settings/settings_providers.dart';
+import 'package:notlar/l10n/generated/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Silmeleri ve sıra kayıtlarını sayan depo (Firestore sahte).
+class _TrashRepo extends NotesRepository {
+  _TrashRepo() : super(FakeFirebaseFirestore(), 'ben');
+  final deleted = <String>[];
+  int reorders = 0;
+
+  @override
+  void softDelete(String noteId) => deleted.add(noteId);
+
+  @override
+  void reorderNotes(List<Note> ordered) => reorders++;
+}
+
+/// F60.S9 (kullanıcı 2026-11-11): ana ekranda kart sürüklenirken altta çöp
+/// kutusu; üstünde ≈ 600 ms bekleyip bırakınca not çöpe, erken bırakınca
+/// yerinde kalır.
+void main() {
+  Future<_TrashRepo> pump(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final repo = _TrashRepo();
+    final container = ProviderContainer(
+      retry: (_, _) => null,
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        currentUidProvider.overrideWithValue('ben'),
+        notesRepositoryProvider.overrideWithValue(repo),
+        foldersRepositoryProvider.overrideWithValue(null),
+        friendsRepositoryProvider.overrideWithValue(null),
+        notesStreamProvider.overrideWith(
+          (ref) => Stream.value(const [
+            Note(id: 'a', type: NoteType.text, title: 'Birinci not'),
+            Note(id: 'b', type: NoteType.text, title: 'İkinci not'),
+          ]),
+        ),
+        foldersStreamProvider.overrideWith(
+          (ref) => Stream.value(const <NoteFolder>[]),
+        ),
+        sharedFolderRefsProvider.overrideWith(
+          (ref) => Stream.value(const <SharedFolderRef>[]),
+        ),
+        folderUnreadProvider.overrideWith((ref, key) => 0),
+        myNoteSharesProvider.overrideWith((ref) => Stream.value(const {})),
+        sharedNotesWithMeProvider.overrideWith(
+          (ref) => Stream.value(const <NoteShare>[]),
+        ),
+        inboxNotesProvider.overrideWith(
+          (ref) => Stream.value(const <InboxNote>[]),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final router = GoRouter(
+      routes: [GoRoute(path: '/', builder: (_, _) => const DashboardScreen())],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    return repo;
+  }
+
+  double trashOpacity(WidgetTester tester) => tester
+      .widget<FadeTransition>(
+        find
+            .descendant(
+              of: find.byType(DragTrashTarget),
+              matching: find.byType(FadeTransition),
+            )
+            .first,
+      )
+      .opacity
+      .value;
+
+  /// "Birinci not" kartını basılı tutup çöp hedefinin üstüne taşır.
+  Future<TestGesture> dragToTrash(WidgetTester tester) async {
+    final card = find.ancestor(
+      of: find.text('Birinci not'),
+      matching: find.byType(NoteCard),
+    );
+    expect(card, findsOneWidget);
+    expect(trashOpacity(tester), 0, reason: 'sürükleme yokken gizli');
+    final g = await tester.startGesture(tester.getCenter(card));
+    await tester.pump(const Duration(milliseconds: 700));
+    // Hedef kayarak belirir.
+    for (var i = 0; i < 4; i++) {
+      await g.moveBy(const Offset(0, 20));
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    expect(trashOpacity(tester), 1, reason: 'sürüklerken çöp görünür');
+    final target = tester.getCenter(
+      find
+          .descendant(
+            of: find.byType(DragTrashTarget),
+            matching: find.byType(CustomPaint),
+          )
+          .first,
+    );
+    await g.moveTo(target);
+    await tester.pump();
+    await g.moveBy(const Offset(1, 1));
+    await tester.pump();
+    return g;
+  }
+
+  testWidgets('hedefte 700 ms bekleyip bırakınca not çöpe gider', (
+    tester,
+  ) async {
+    final repo = await pump(tester);
+    final g = await dragToTrash(tester);
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(find.text('Bırak: çöpe at'), findsOneWidget);
+    await g.up();
+    // Kart küçülüp solar, sonra silinir.
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(repo.deleted, ['a']);
+    expect(repo.reorders, 0, reason: 'çöpe giden not sırayı yazmaz');
+    expect(find.text('Not silindi'), findsOneWidget);
+    // Hedef yeniden gizlenir.
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(trashOpacity(tester), 0);
+    await tester.pump(const Duration(seconds: 5));
+  });
+
+  testWidgets('200 ms\'de bırakınca not yerinde kalır', (tester) async {
+    final repo = await pump(tester);
+    final g = await dragToTrash(tester);
+    await tester.pump(const Duration(milliseconds: 200));
+    await g.up();
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(repo.deleted, isEmpty);
+    expect(find.text('Birinci not'), findsOneWidget);
+    expect(trashOpacity(tester), 0);
+  });
+}
