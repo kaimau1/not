@@ -81,7 +81,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get noteDeleted => 'Not silindi';
 
   @override
-  String get dragTrashHint => 'Çöpe atmak için üstünde tut';
+  String get dragTrashHint => 'Çöpe atmak için buraya bırak';
 
   @override
   String get dragTrashReady => 'Bırak: çöpe at';
@@ -7267,6 +7267,13 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get dashboardBackgroundCalendarInfo =>
       'Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam';
+
+  @override
+  String get calendarSwipe => 'Takvimde kaydırarak hafta/gün değiştir';
+
+  @override
+  String get calendarSwipeInfo =>
+      'Kapalıyken yatay kaydırma hiçbir şey değiştirmez; ok düğmeleri çalışmaya devam eder.';
 
   @override
   String get swipeLeftCalendar => 'Sağa kaydırınca takvim';

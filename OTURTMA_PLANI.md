@@ -560,7 +560,7 @@ doğrulanır).
   öğeler normal kipte görünmez; en az bir öğe kalır.
   **2026-11-11 (P28, Opus):** + panelinde "Menüyü düzenle": göz + grup içi sıralama, Bitti, Varsayılana dön, son görünür kilitli; sıra `MenuLayouts` `home.quickAdd`; test 4/4. Cihazda doğrulanmadı.
 
-- [ ] **F60.S11 [Opus] Madde uzun bas — iki aşama görünür olsun** (kullanıcı listesi
+- [x] **F60.S11 [Opus] Madde uzun bas — iki aşama görünür olsun** (kullanıcı listesi
   2026-11-12; F60.S6'nın devamı). Kullanıcı: "Uzun basmada 2 etkileşim: 1. önce yuvarlak
   bir dolum olur, ufak titreme, yazının tümü seçilir; 2. ufak titreme ile madde seç başlar."
   Basılan yerde dairesel dolum halkası (yalnız boyama, kasma listesi 3–4/6); 1. aşama
@@ -568,7 +568,8 @@ doğrulanır).
   halka ikinci tur, 2. aşama sonunda hafif titreşim + madde seçim kipi. Bugünkü
   `_HoldToSelect` (F60.S6) üstüne kurulur; yeni yol açma. Widget testi (iki aşama, titreşim
   çağrıları, satır önbelleği `identical`). Cihaz A/B.
-- [ ] **F60.S12 [Opus] Çöp kutusu: kalan simge hatası + anlaşılır, premium atma efekti**
+  **2026-11-12 (P29, Opus):** `_HoldToSelect` iki aşama: basılan yerde halka (yalnız boyama, 150 ms sonra görünür), 650 ms hafif titreşim + tüm yazı seçili, 1250 ms hafif titreşim + madde seç; test `items_editor_hold_select_test` 10/10. Cihazda doğrulanmadı.
+- [x] **F60.S12 [Opus] Çöp kutusu: kalan simge hatası + anlaşılır, premium atma efekti**
   (kullanıcı listesi 2026-11-12; F60.S9'un devamı). Kullanıcı: "çöp kutusuna bir şey
   sürükleyince işareti ekranda kalıyor; sürüklenen şey çöp kutusuna gitmiyor gibi —
   aslında gidiyormuş ama üzerine gelip beklemek gerekiyor, ne zaman atılacağı anlaşılmıyor.
@@ -580,12 +581,14 @@ doğrulanır).
   mesafeyle küçülür ve hedefe doğru çekilir, hedef renk geçişiyle kırmızılaşır. (c) Bırakınca
   kara delik animasyonu (küçül + dön + içeri çekil, ≈350 ms) → olağan silme yolu + geri al.
   Hepsi boyamada (Transform/Opacity), ızgara yeniden dizilmez. Cihaz A/B (ana ekran listesi).
-- [ ] **F60.S13 [Sonnet] Kaydırarak geçişler kapatılabilsin** (kullanıcı listesi
+  **2026-11-12 (P30, Opus):** kök: hücre önizlemede yeniden kurulunca Flutter kabul edilen bırakmada `onDragEnd` vermiyordu → `onDragCompleted`+`onDraggableCanceled` (dashboard_widgets); beklemesiz bırak, yakınlıkla küçül/kızar, 350 ms kara delik; test 4/4. Cihazda A/B yapılmadı.
+- [x] **F60.S13 [Sonnet] Kaydırarak geçişler kapatılabilsin** (kullanıcı listesi
   2026-11-12). Kullanıcı: "Kaydırarak klasör geçişlerini kapatabilmeliyiz; takvim hafta
   da ayar olarak kapatılabilir olmalı." Ayarlar'da iki anahtar (cihaz tercihi, varsayılan
   AÇIK = bugünkü davranış): "Ana ekranda kaydırarak klasör değiştir", "Takvimde kaydırarak
   hafta/gün değiştir". Kapalıyken yatay kaydırma jesti hiç kurulmaz (dikey kaydırma ve
   düğmeler çalışır). Widget testi.
+  **Yapıldı 2026-11-12 (P31):** takvim anahtarı `calendarSwipeProvider` (hafta/gün/ay sayfa kaydırma + ay ızgarası jesti); ana ekran klasör kaydırması zaten Ayarlar → Notlar → "Ana ekranda yana kaydırınca → Kapalı" (SwipeMode.off) ile kapanıyor, yeni anahtar eklenmedi.
 - [x] **F60.S14 [Sonnet] Panoda işaretli maddeye basınca işaret kalkmamalı** (kullanıcı
   listesi 2026-11-12). Kullanıcı: "dashboard'da işaretli bir maddenin işaretine basınca
   işareti kaldırılıyor; bu doğru bir davranış değil." Önce "dashboard"un hangi yüzey

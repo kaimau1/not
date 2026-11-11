@@ -2,6 +2,20 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 12 Kasım 2026 {#2026-11-12}
+- **Çöp kutusu yenilendi:** notu sürükleyip çöp kutusuna getirmek ve bırakmak yeter, beklemeye gerek yok. Not çöpe yaklaştıkça küçülüp ona doğru çekilir, çöp kutusu kızarır; bırakınca not dönerek içine çekilir. "Geri al" ile geri alabilirsin. Çöp simgesinin bıraktıktan sonra ekranda kalması düzeltildi.
+- **Maddeye basılı tutma iki aşamalı:** basılı tutunca dolan bir halka çıkar; ilk hafif titreşimde maddenin bütün yazısı seçilir, tutmaya devam edersen ikinci titreşimde madde seçimi başlar.
+- **Kartta işaretli madde korunur:** ana ekrandaki kartta işaretli bir maddenin kutusuna yanlışlıkla dokunmak artık işareti kaldırmıyor; not açılır, işareti not içinde kaldırabilirsin.
+- **Takvimde kaydırma kapatılabilir:** Ayarlar → Notlar'dan takvimde kaydırarak hafta/gün değiştirmeyi kapatabilirsin. Ana ekranda kaydırarak klasör değiştirmeyi kapatmak için aynı yerde "Ana ekranda yana kaydırınca → Kapalı".
+- **Sabit görsele kalemle yazma:** üste sabitlenen görselin üzerine doğrudan kalemle yazabilirsin; çizgi yakınlaştırınca görselle birlikte büyür.
+- **Tam ekranda kalem düğmesi:** PDF, görsel ve sunum tam ekranında "kalem yazar / dokunur" düğmesi var; kalem çizim düğmesine basmadan yazar, parmak gezdirir.
+- **Telefonda parmakla yazma ipucu:** kalem kipini parmakla açınca "tek parmak çizer, iki parmak kaydırır" bir kez hatırlatılır.
+- **PDF'te silgi ve tepsi ayarları:** silgi eklenmiş PDF'te de siler; tepsideki renk ve kalınlık PDF'e yazarken de geçerli; geri al en son yazdığın yerdeki çizgiyi alır.
+- **Bekleyen ek hatırlatması:** uygulamayı kapatırken yüklenmeyi bekleyen ek varsa bir süre sonra sessiz bir hatırlatma gelir; bekleyen eke dokununca "Şimdi dene".
+- **PDF kartı her yerde:** PDF'li notların kartında web'de ve diğer cihazlarda da ilk sayfa görünür.
+- **Daha kısa ek ipucu:** yeni ek eklenince çıkan ipucu tek satır ve birkaç saniyede kaybolur.
+- **"📖 s.N" satırı düzenlenebilir:** PDF "Ek" görünümündeyken notta kalan sayfa satırına dokununca düzenleyip silebilirsin.
+
 ## 11 Kasım 2026 {#2026-11-11}
 - **Klavye açılırken alt panel artık titremiyor:** klavye açılıp kapanırken not ekranı her karede baştan kurulmuyor; uzun listelerde açılıştan hemen sonra yazmaya başlayınca yaşanan takılma da giderildi.
 - **Yazarken alt panel ayarı:** Ayarlar → Kartlar'da yazarken alt panelin gizlenmesini kapatabilir, ne kadar sonra gizlenip ne kadar sonra yeniden görüneceğini 0,1 saniyelik adımlarla ayarlayabilirsin.

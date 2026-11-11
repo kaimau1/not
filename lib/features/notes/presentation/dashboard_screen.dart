@@ -2080,7 +2080,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 Positioned(
                   left: 0,
                   right: 0,
-                  bottom: 24,
+                  bottom: 16,
                   child: Center(
                     child: DragTrashTarget(
                       active: _dragNoteId != null,

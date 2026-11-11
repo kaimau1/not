@@ -2,6 +2,20 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 12 November 2026 {#2026-11-12}
+- **New trash can:** just drag a note onto the trash and let go, no waiting. The note shrinks and is pulled in as it gets closer, the trash turns red, and on release the note spins into it. "Undo" brings it back. The trash icon no longer stays on screen after dropping.
+- **Two-step hold on items:** holding an item shows a filling ring; at the first light vibration all of the item's text is selected, keep holding and at the second vibration item selection starts.
+- **Checked items stay checked on cards:** tapping a checked item's box on a home screen card no longer unchecks it; the note opens and you can uncheck it there.
+- **Calendar swipe can be turned off:** Settings → Notes lets you turn off swiping between weeks/days in the calendar. To stop swiping between folders on the home screen, set "Swiping left/right on the home screen" to "Off" in the same place.
+- **Write on pinned images:** you can write with the pen directly on a pinned image; the ink scales with the image when you zoom.
+- **Pen button in full screen:** PDF, image and slide full screen views have a "pen writes / touches" button; the pen writes without pressing the draw button, the finger pans.
+- **Finger writing hint on phones:** turning on pen mode with a finger shows a one-time hint: one finger draws, two fingers scroll.
+- **Eraser and tray in PDFs:** the eraser works on attached PDFs too; the tray's colour and width apply when writing on PDFs; undo removes the last stroke where you wrote last.
+- **Pending attachment reminder:** if attachments are still waiting to upload when you close the app, a quiet reminder comes later; tap a pending attachment for "Try now".
+- **PDF cards everywhere:** cards of notes with PDFs show the first page on the web and other devices too.
+- **Shorter attachment hint:** the hint after adding an attachment is one line and disappears in a few seconds.
+- **"📖 s.N" line is editable:** with a PDF in "Attachment" view, tapping the leftover page line in the note lets you edit or delete it.
+
 ## 11 November 2026 {#2026-11-11}
 - **No more jitter when the keyboard opens:** the note screen is no longer rebuilt on every keyboard frame; the stutter when you start typing right after opening a long list is gone too.
 - **Bottom bar while typing:** Settings → Cards lets you turn off hiding the bottom bar while typing, and set how long until it hides and reappears in 0.1-second steps.

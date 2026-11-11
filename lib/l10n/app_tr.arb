@@ -30,7 +30,7 @@
   "newChecklist": "Liste",
   "newOrderedList": "Sıralı liste",
   "noteDeleted": "Not silindi",
-  "dragTrashHint": "Çöpe atmak için üstünde tut",
+  "dragTrashHint": "Çöpe atmak için buraya bırak",
   "dragTrashReady": "Bırak: çöpe at",
   "notesDeletedCount": "{count} not silindi",
   "@notesDeletedCount": {
@@ -3463,6 +3463,8 @@
   "themeStraw": "Saman",
   "dashboardBackgroundCalendar": "Takvim zemini",
   "dashboardBackgroundCalendarInfo": "Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam",
+  "calendarSwipe": "Takvimde kaydırarak hafta/gün değiştir",
+  "calendarSwipeInfo": "Kapalıyken yatay kaydırma hiçbir şey değiştirmez; ok düğmeleri çalışmaya devam eder.",
   "swipeLeftCalendar": "Sağa kaydırınca takvim",
   "swipeLeftCalendarInfo": "Tümü görünümünde ekranı sağa kaydırınca takvim açılır",
   "calendarMoved": "{day} gününe taşındı",
