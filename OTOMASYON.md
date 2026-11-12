@@ -176,9 +176,11 @@ kararları VERİLMİŞTİR** — "en güvenli"ye düşme; her K-D tek başına g
 commit. (2) **Önce eski isteğe bak:** görünüş/yer değiştirmeden önce `python
 tool/design/istek_tara.py <dosya>`; çelişen iş YAPILMAZ (plan §4'teki 16 fikir dahil).
 (3) **Kapsam çiti = plan Ek D:** her paket yalnız orada adına yazılı dosyalara dokunur.
-(4) **Sıra:** P19 → P18 → P33 → P34 … P40 → P41 → P42 → P20 → P21 → P22. P34–P40 kendi
-arasında yer değiştirebilir (Fable paketleri P36, P39 limit %55'in üstündeyken başlatılmaz,
-sıradaki Opus paketi öne alınır); tek şart P33 bitmiş olsun. P41 yalnız Kuyruk'ta `sürüyor`
+(4) **Sıra (kullanıcı kararı 2026-11-12: "Fable işleri limit ilk açıldığında ilk yapılsın"):**
+FABLE ÖNCE — P36 → P39 → P20, sonra Opus/Sonnet: P37 → P38 → P40 → P41 → P42 → P21 → P22.
+Fable paketi yalnız 5 saatlik limit taze/düşükken (%55 altı) başlar; %55 üstündeyse sıradaki
+Opus/Sonnet paketi yapılır, Fable paketi `bekliyor` kalır ve limit yenilenince (resetsAt sonrası
+ilk tur) EN BAŞTA alınır. P20 başlama şartı tutmuyorsa atla; tek şart P33 bitmiş olsun. P41 yalnız Kuyruk'ta `sürüyor`
 / `bulutta:` satırı yokken. (5) Her paket işe başlamadan ekran turunu `build/tour-once/`'ye
 alır, bitince `TOUR_COMPARE` ile karşılaştırır; yürütücü kabulde adı geçen PNG'lere kendi
 bakar. (6) **P22 ATLAR** (bu planla kapandı ya da taşındı): K-O5, K-O10, K-O11, K-O14,

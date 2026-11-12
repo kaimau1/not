@@ -245,6 +245,22 @@ Hepsi koddan doğrulandı; "hesap" yazanlar ölçülmedi, ilgili fazın 0. madde
 - **K-O14 — MIUI beyaz açılış (F60.7):** **`androidx.core:core-splashscreen` ile ilk Flutter
   karesine dek açılış ekranını tut (yerel bağımlılık)** / bırak. En güvenli: bırak.
 
+
+**KARARLAR (kullanıcı, 2026-11-12) — P22 sormadan uygular. Genel ilke: uygulamayı yalnız
+kullanıcı kullanıyor, Play'de yayında değil → HİÇBİR özellik "kapalı bayrakla" bekletilmez;
+yazılan özellik varsayılan AÇIK gelir ve sürüm notuna girer (bayrak yalnız Ayarlar'da
+kapatma seçeneği olarak kalabilir).**
+- **K-O1:** İstek/yeni özellik dursun (`ISTEK_KUTUSU.md`), AMA düzeltme ve bug fix'ler yapılır.
+- **K-O2:** Ölçümsüz açma YOK → v2 YAZMA kodlanır; F61.0 (b)(c) cihaz ölçümü yapılınca açılır
+  (veri güvenliği kapısı; ölçüm sonrası varsayılan AÇIK).
+- **K-O3:** Doğrudan v2'ye geçilir: yazma açılınca `config/app.minClient` = 4 (çift yazım yok).
+- **K-O4:** Uç tahmini yazılır (bayrak yalnız A/B içindir; kullanıcı denedikten sonra açık).
+- **K-O6:** Sadeleştir — telefonda bölme çubuğu en çok 5 düğme (⛶ · tutamak · birincil iş ·
+  ✏ · ⋮); görünüm anahtarı, balon, bağlantı ⋮ levhasının başına. Düğmeler ⋮ içinde KALIR, silinmez.
+- **K-O7:** Yatay ve ≥ 840 dp'de yeni sabit ek YANDA açılır; kullanıcı üste alabilir, hatırlanır.
+- **K-O8:** Tek sabit ek (bugünkü).
+- **K-O12:** Tablet yatayda iki not yan yana OLSUN (ikinci not bölmesi; F67.6 yapılır).
+- **F63.6:** Parmağa ayrı araç YAZILIR ve release'e (`[apk]`) girer; kapalı bırakılmaz.
 ---
 
 ## FAZ 58 — Fren ve zemin (kod yok)
