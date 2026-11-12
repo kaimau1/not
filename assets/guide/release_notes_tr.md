@@ -3,6 +3,16 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 12 Kasım 2026 {#2026-11-12}
+- **Koyu tema daha okunur:** koyu temada kartlar zeminden biraz daha ayrışıyor, PDF önizlemesi gözü yormayan hafif bir perdeyle, Sil satırı daha belirgin.
+- **Büyük yazıda takvim şeridi sığıyor:** sistem yazı boyu büyükken gün adları küçülür, şerit taşmaz.
+- **Bilgisayarda (web) daha rahat:** klavyeyle gezerken odaklanan öğe belirgin halkayla görünür; geniş ekranda bölüm çizgileri ızgaranın sonuna dek uzanır.
+- **Not alt çubuğu yenilendi:** Kalem artık sol kapsülde (Biçim · Ekle · Kalem · Ara · Ekler); Paylaş not menüsünde (⋮). Çok dar ekranda Kalem çubuktan düşer, klavye açıkken hızlı satırda durur.
+- **Çubukta kolay dokunma:** alt çubuktaki her düğmenin dokunma alanı en az 48 dp.
+- **Renkli notta çubuk notun renginde:** kapsüller, simgeler ve seçili düğme notun tonunu alır.
+- **Not menüsü kısaldı:** tutamak kalktı; Menüyü/Ekranı düzenle ve Ayarlar ⚙ düğmesinde; Sil en altta kırmızı. Küçük telefonda Sil'e ulaşmak için neredeyse hiç kaydırmak gerekmiyor.
+- **Levhalar tek düzende:** yapay zekâ ve Paylaş levhalarında karolar aynı biçimde; levha başlıkları aynı boyda; silme onayları kırmızı düğmeli.
+- **Boş ve çevrimdışı ekranlar:** boş listeler "Burada … yok" diye tek kalıpla söyler; bağlantı yoksa "Bağlantı yok", yüklenemezse "Yüklenemedi" görünür (Gelen kutusu hata olunca artık boş görünmüyor).
+- **Klasörler, Çöp, Arşiv, Ayarlar:** boş klasör kartı küçüldü, ızgaradaki "Yeni klasör" karosu kalktı; Çöp ve Arşiv'de üstte Ara ve ⋮, kartta yazılı "Geri al" ve "Sil"; Ayarlar'da sade simge kutuları ve misafir kartı; ajanda satırları aynı ölçüde.
 - **Ana ekran daha sakin:** ev düğmesi ve mikrofon artık göz almıyor; tek dolu düğme "+".
 - **Takvim şeridinde gün kısaltmaları:** günler tek harf yerine kısaltmayla yazıyor (Pzt, Sal, Çar…).
 - **Kartta tamamlananlar tek satırda:** işaretli maddeler kartta "✓ 3 tamamlandı" diye tek satıra iner; eski görünüm için Ayarlar → Görünüm → Kartta görünenler → "Tamamlanan maddeler".

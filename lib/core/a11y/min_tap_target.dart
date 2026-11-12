@@ -18,24 +18,32 @@ class MinTapTarget extends SingleChildRenderObjectWidget {
   const MinTapTarget({
     super.key,
     this.minSize = kMinInteractiveDimension,
+    this.minWidth,
     required super.child,
   });
 
   final double minSize;
 
+  /// Yatayda ayrı alt sınır (verilmezse [minSize]). Bitişik düğmelerde
+  /// (not alt çubuğunun segmentleri, F75.2) pay komşunun GÖRÜNEN kutusuna
+  /// taşmasın diye: segment + aradaki boşluk.
+  final double? minWidth;
+
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderMinTapTarget(minSize);
+      _RenderMinTapTarget(minSize, minWidth ?? minSize);
 
   @override
   void updateRenderObject(
     BuildContext context,
     covariant RenderObject renderObject,
-  ) => (renderObject as _RenderMinTapTarget).minSize = minSize;
+  ) => (renderObject as _RenderMinTapTarget)
+    ..minSize = minSize
+    ..minWidth = minWidth ?? minSize;
 }
 
 class _RenderMinTapTarget extends RenderProxyBox {
-  _RenderMinTapTarget(this._minSize);
+  _RenderMinTapTarget(this._minSize, this._minWidth);
 
   double _minSize;
   set minSize(double value) {
@@ -44,8 +52,15 @@ class _RenderMinTapTarget extends RenderProxyBox {
     markNeedsSemanticsUpdate();
   }
 
+  double _minWidth;
+  set minWidth(double value) {
+    if (value == _minWidth) return;
+    _minWidth = value;
+    markNeedsSemanticsUpdate();
+  }
+
   Rect get _target {
-    final dx = math.max(0.0, (_minSize - size.width) / 2);
+    final dx = math.max(0.0, (_minWidth - size.width) / 2);
     final dy = math.max(0.0, (_minSize - size.height) / 2);
     return (Offset.zero & size).grow(dx: dx, dy: dy);
   }
