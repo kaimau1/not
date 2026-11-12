@@ -85,6 +85,12 @@ class EmptyState extends StatelessWidget {
 /// hep aynı simge, aynı okunur metin (F10.4 `friendlyError`) ve — verilirse
 /// — "Tekrar dene". Ekranlar `EmptyState(icon: error_outline, …)`ı ayrı
 /// ayrı kuruyordu.
+///
+/// F79.6 (çevrimdışı turu): başlık eskiden "Bir şeyler ters gitti: <iki
+/// cümle>" idi — boş hâl başlığı ölçüsünde üç satırlık bir paragraf. Artık
+/// başlık kısa ("Bağlantı yok" / "Yüklenemedi"), neden ve ne yapılacağı
+/// açıklamada; bağlantı yokken simge bulut (ekranlardaki bekleyen-yükleme
+/// diliyle aynı), hata simgesi yalnız gerçek hatada.
 class ErrorState extends StatelessWidget {
   const ErrorState({super.key, required this.error, this.onRetry});
 
@@ -94,10 +100,12 @@ class ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final offline = classifyError(error) == ErrorKind.offline;
     return EmptyState(
       key: const ValueKey('error-state'),
-      icon: Icons.error_outline,
-      title: l10n.genericError(friendlyError(l10n, error)),
+      icon: offline ? Icons.cloud_off_outlined : Icons.error_outline,
+      title: offline ? l10n.errorStateOfflineTitle : l10n.errorStateTitle,
+      subtitle: friendlyError(l10n, error),
       actionLabel: onRetry == null ? null : l10n.retry,
       actionIcon: Icons.refresh,
       onAction: onRetry,

@@ -3011,6 +3011,8 @@
   "errorTooLarge": "Dosya çok büyük.",
   "errorUnsupported": "Bu işlem burada desteklenmiyor.",
   "errorUnknown": "Beklenmeyen bir sorun oldu. Ayrıntı hata günlüğünde.",
+  "errorStateTitle": "Yüklenemedi",
+  "errorStateOfflineTitle": "Bağlantı yok",
   "copyErrorDetail": "Ayrıntıyı kopyala",
   "accountRequiredTitle": "Google hesabı gerekir",
   "accountRequiredBody": "Kişiler, ortak çalışma ve kopya gönderme e-posta adresiyle çalışır; hesapsız kullanımda seni kimse bulamaz. Google hesabını bağla — notların olduğu gibi kalır.",

@@ -118,6 +118,8 @@ void main() {
   test('F79.5: boş hâl başlığı "Burada … yok", açıklaması tek cümle', () {
     const notEmpty = {
       'genericError',
+      'errorStateTitle',
+      'errorStateOfflineTitle',
       'gmailGoogleOnly',
       'folderWriteOnlyTitle',
       'folderWriteOnlyHint',

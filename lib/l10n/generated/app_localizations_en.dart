@@ -6285,6 +6285,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Something unexpected happened. Details are in the error log.';
 
   @override
+  String get errorStateTitle => 'Couldn’t load';
+
+  @override
+  String get errorStateOfflineTitle => 'You’re offline';
+
+  @override
   String get copyErrorDetail => 'Copy details';
 
   @override

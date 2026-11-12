@@ -11192,6 +11192,18 @@ abstract class AppLocalizations {
   /// **'Beklenmeyen bir sorun oldu. Ayrıntı hata günlüğünde.'**
   String get errorUnknown;
 
+  /// No description provided for @errorStateTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yüklenemedi'**
+  String get errorStateTitle;
+
+  /// No description provided for @errorStateOfflineTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantı yok'**
+  String get errorStateOfflineTitle;
+
   /// No description provided for @copyErrorDetail.
   ///
   /// In tr, this message translates to:

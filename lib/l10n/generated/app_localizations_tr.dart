@@ -6262,6 +6262,12 @@ class AppLocalizationsTr extends AppLocalizations {
       'Beklenmeyen bir sorun oldu. Ayrıntı hata günlüğünde.';
 
   @override
+  String get errorStateTitle => 'Yüklenemedi';
+
+  @override
+  String get errorStateOfflineTitle => 'Bağlantı yok';
+
+  @override
   String get copyErrorDetail => 'Ayrıntıyı kopyala';
 
   @override

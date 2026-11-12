@@ -2344,6 +2344,8 @@
   "errorTooLarge": "The file is too large.",
   "errorUnsupported": "This isn't supported here.",
   "errorUnknown": "Something unexpected happened. Details are in the error log.",
+  "errorStateTitle": "Couldn’t load",
+  "errorStateOfflineTitle": "You’re offline",
   "copyErrorDetail": "Copy details",
   "accountRequiredTitle": "Google account needed",
   "accountRequiredBody": "Contacts, collaboration and sending copies work through your email address; without an account nobody can find you. Link your Google account — your notes stay as they are.",
