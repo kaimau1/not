@@ -23,12 +23,11 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
 
 ## Bir turun adımları
 
-0. **Kilit.** `.git/oto.lock` varsa ve son değişimi 40 dakikadan yeniyse: hiçbir şey
+0. **Kilit.** `.git/oto.lock` varsa ve son değişimi 60 dakikadan yeniyse: hiçbir şey
    yapmadan "başka yürütücü çalışıyor" de ve BİTİR. Değilse kilidi şimdi yaz. Aşağıdaki
    her adımın başında kilidi tazele. Tur nasıl biterse bitsin kilidi sil.
-   **Kilidi arka plan döngüsüyle TAZELEME YASAK** (oturum ölünce döngü yaşar, kilit sonsuza
-   dek taze kalır; 2026-11-12'de 8 tur boşa kapandı). Tazeleme yalnız adım başındaki tek `date >`
-   satırı; uzun beklemede bildirim gelince tazele.
+   Kilit yalnız adım başında tek `date >` ile tazelenir; arka plan döngüsüyle ASLA (oturum
+   ölünce döngü yaşar, kilit sonsuza dek taze kalır). Eşik tek: 60 dk (zamanlanmış görevle aynı).
 1. **Depo.** `git status` temiz olmalı (değilse: `git stash -u` + Kuyruk notuna yaz),
    `git checkout main && git pull --ff-only`.
 2. **main sağlığı.** `gh run list -b main -L 3` (yoksa GitHub MCP `actions_list`). Son
@@ -74,6 +73,13 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
     **Devam.** Limit elverdikçe 3. adıma dön. Dur ve bitir: art arda 3 `takıldı`; main iki
     kez üst üste kırmızı; Kuyruk boş. Bitirirken kilidi sil, 5 satır özet yaz.
 
+11. **Takılma önleme.** Her arka plan bekleme süre sınırlı: `timeout 2700 gh run watch <id>
+    --exit-status` (45 dk; yalnız tek koşu, döngü yok); dolunca `gh run view <id> --json
+    status,conclusion`. Alt ajandan 90 dk bildirim gelmezse `SendMessage` ile "commit + push +
+    dur"; yine dönmezse `TaskStop`, satır `sürüyor` kalır (DEVIR.md devralana yeter). Tur
+    bitince (başarılı/takıldı/limit): kendi arka plan görevlerini `TaskStop`, telefon ekranını
+    kapat (`KEYCODE_SLEEP`), kilidi sil — kilidi silmeden özet yazma.
+
 ## İşçi kuralları (alt ajana aynen verilir)
 
 - Depo: Flutter not uygulaması, `C:\Users\sena\Desktop\not`. Önce `CLAUDE.md`, sonra
@@ -99,6 +105,7 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
   uygulama (`flutter run/drive` varsayılan kimlikle ASLA — veri gider; ölçüm uygulaması
   `dev.kaimau.notlar.olcum`).
 - Kanıt üretilemiyorsa düzeltme yazma: maddeye "üretilemedi: <ne denendi>" yaz, bitir.
+- Arka planda başlattığın her komut (`flutter`, `gh run watch`, `adb`, betik) `timeout` ile; raporu yazmadan önce hepsini bitir/öldür.
 - Rapor ≤ 15 satır: ne değişti (dosyalar), hangi test/ölçüm kırmızıdan yeşile döndü,
   doğrulanamayan ne kaldı, dal adı ve son commit.
 
