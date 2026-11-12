@@ -316,6 +316,12 @@ Tam yedek geri yükleme + ikinci yükleme çoğaltmıyor; #47 Gboard; A2, A4, B5
 - J8 Tablette not açıkken liste ile not arasındaki tutamağı parmakla sürükle → genişledikçe 2, sonra 3 sütun.
 - J9 Nottan Telegram'a kopyala → Telegram'dan nota yapıştır → maddeler "☐ " olmadan, ☑ olanlar işaretli geliyor; tekrar kopyalayınca "☐ ☐" yok. Otomatik düzeltme harflerin çoğunu değiştiren öneri UYGULAMIYOR; yanlış düzeltmenin üstüne başka kelime yazınca bir dahaki sefere o kelime geliyor.
 
+### K1–K4 (2026-11-12 P39 hız hissi — yazıldı, cihazda doğrulanmadı)
+- K1 **Açılış (F78.1, K-D8):** uygulamayı tamamen kapat → aç: beyaz ekran yerine zemin renginde simgeli açılış, sonra ana ekran. Ölçüm: `adb shell screenrecord` + `tool/perf/video.py` ile beyaz kare sayısı (önce/sonra). Beyaz kare kalıyorsa F78.1 commit'i geri alınır. Güncelleme sonrası açılış ve "Notlar Ölçüm" kimliği de denenir; açılış ekranında 3 sn'den uzun takılma olmamalı.
+- K2 **Yeni not süresi (F78.2):** `cd tool/perf && python -u prof_new.py taban` → ortanca ≤ 450 ms mi; sayı DENEYIM_PLANI F78.2'ye yazılır.
+- K3 **Sabit PDF/video (F78.3b):** sabit PDF'li ve sabit videolu notu aç: açılırken gri kutu yerine belgenin/videonun küçük resmi (hafif karartılmış), sonra belge. Bölme boyu oynamıyor.
+- K4 **A/B kapısı:** `tool/perf/ab_liste.py` (kart görseli solması) ve `ab_klavye.py` — UI ms / LAYOUT ms +%20'yi aşmamalı.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)

@@ -67,7 +67,7 @@ dosya geçerli).
 | 75 | Not ekranı alt çubuğu | P36 | Fable | Bekliyor |
 | 76 | Levhalar: ortak başlık, ortak karo | P37 | Opus | F76.1–F76.4 bitti (dalda `oto/P37-levhalar`, 2026-11-12; F76.3 kalanı sabah bakılacak) |
 | 77 | Hareket ve dokunsal dil | P38 | Opus | Bekliyor |
-| 78 | Hız hissi (açılış, yeni not, yükleme hâlleri) | P39 | Fable | Bekliyor |
+| 78 | Hız hissi (açılış, yeni not, yükleme hâlleri) | P39 | Fable | F78.1–F78.5 yazıldı (dalda `oto/P39-hiz-hissi`, 2026-11-12); F78.1 beyaz kare ve F78.2 sayısı cihazda ölçülecek |
 | 79 | İkincil ekranlar + boş/çevrimdışı hâller | P40 | Opus | F79.1–F79.6 bitti (dalda `oto/P40-ikincil-ekranlar`, 2026-11-12) |
 | 72.6 | Belirteç göçü (mekanik) | P41 | Sonnet | Bekliyor |
 | 80 | Koyu tema, küçük ekran, web cilası, önce/sonra dosyası | P42 | Sonnet + Opus | Bekliyor |
@@ -561,7 +561,7 @@ not içi AI levhası (Grep `Bugünkü puan` ARB anahtarı), `test/note_menu_mode
 `android/app/src/main/res/` (`launch_bg`, `styles.xml`), `MainActivity`,
 `pinned_media_pane.dart` (yükleme hâli), `note_card.dart` (görsel yer tutucusu).
 
-- [ ] **F78.1 Beyaz açılış (D14, K-D8; OTURTMA F60.7).** `androidx.core:core-splashscreen`:
+- [x] *(2026-11-12: yazıldı, cihazda doğrulanmadı — `LaunchTheme` = `Theme.SplashScreen` (ad korundu, manifest aynı), `MainActivity` `installSplashScreen` + ilk kareye dek tut (3 sn emniyet); debug APK derlendi. Yürütücü `screenrecord` ile beyaz kare sayar; kalıyorsa commit geri alınır.)* **F78.1 Beyaz açılış (D14, K-D8; OTURTMA F60.7).** `androidx.core:core-splashscreen`:
   `Theme.App.Starting` (`windowSplashScreenBackground` = Adaçayı zemini `#EAF0EB`,
   `values-night` karşılığı; simge uygulama simgesi), `postSplashScreenTheme` = bugünkü
   `NormalTheme`; `MainActivity.onCreate`'te `installSplashScreen()` +
@@ -571,21 +571,21 @@ not içi AI levhası (Grep `Bugünkü puan` ARB anahtarı), `test/note_menu_mode
   *Tuzak:* `FlutterFragmentActivity`; iki uygulama kimliği (kişisel / `dev.kaimau.notlar.olcum`);
   P10'un güncelleme yolu (`ApkGuncelleme.kt`, `GuncellemeSonrasiAc.kt`) açılışla aynı
   Activity'yi kullanır — güncelleme sonrası açılışı da dene.
-- [ ] **F78.2 "Yeni not" süresi.** Yeni ölçüm `tool/perf/prof_new.py`: "+" → "Metin notu"
+- [x] *(2026-11-12: `tool/perf/prof_new.py` yazıldı, cihazda ölçülmedi — sayı yok; ≤ 450 ms ise kod gerekmez, üstündeyse kök neden ayrı iş. Sabah bakılacak.)* **F78.2 "Yeni not" süresi.** Yeni ölçüm `tool/perf/prof_new.py`: "+" → "Metin notu"
   dokunuşundan editörün ilk karesi + klavye görünür (`dumpsys input_method` `mInputShown`)
   olana dek. 5 koşu ortanca. Hedef ≤ 450 ms. Üstündeyse kök neden + düzeltme; altındaysa
   yalnız sayı yazılır, kod yok.
-- [ ] **F78.3 Yükleme hâlleri (D15).** (a) `DelayedSpinner`: içerik alanındaki halkalar
+- [x] *(2026-11-12: (a) 20 içerik halkası `DelayedSpinner`, döküm `docs/deneyim/yukleme.md`; (b) `MediaLoadingCover` — sabit/gömülü PDF + sabit video; (c) yerel görsel `fadeInFrame` 150 ms, kart kapağı boyu zaten ekin oranından. `test/loading_states_test.dart`.)* **F78.3 Yükleme hâlleri (D15).** (a) `DelayedSpinner`: içerik alanındaki halkalar
   (liste, levha gövdesi, önizleme kutusu) buna çevrilir; düğme içi halkalar kalır. Döküm
   `docs/deneyim/yukleme.md`. (b) Sabit/gömülü PDF ve video bölmesi yüklenirken gri kutu
   yerine ekin `thumbUrl`/yerel küçük resmi (P17/F65.5 ile var) + %24 siyah perde +
   `DelayedSpinner`; küçük resim yoksa `surfaceContainer` + tür simgesi. Bölmenin boyu ve
   çubuğu DEĞİŞMEZ. (c) Kart ve görüntüleyicide görseller 150 ms solarak gelir; yer tutucu
   görselin en/boy oranında (test: görsel gelmeden ve geldikten sonra kart yüksekliği aynı).
-- [ ] **F78.4 Dokunuş tepkisi denetimi.** `GestureDetector(onTap:` kullanımları: görünür
+- [x] *(2026-11-12: 42 `GestureDetector(onTap:)` dökümü `docs/deneyim/dokunus.md`; başka yere götüren 3 yüzey `PressScale` (paylaşım hedefi kartı, not hedefi hücresi, sohbet görseli); gerisi aynı karede durum değiştiriyor ya da kapsam dışı.)* **F78.4 Dokunuş tepkisi denetimi.** `GestureDetector(onTap:` kullanımları: görünür
   basma tepkisi olmayanların dökümü; sık dokunulan yüzeyler düzeltilir. Jest alanları
   (kalem yüzeyi, ayraç, tutamak) kapsam dışı.
-- [ ] **F78.5 İyimser işlemler.** Sabitle, yıldızla, arşivle, çöpe at, madde işaretle,
+- [x] *(2026-11-12: kanıt yeşil, kod değişmedi — bütün yollar ateşle-unut (`updateFields`/`batchUpdate` beklenmiyor). `test/optimistic_actions_test.dart`: onayı hiç gelmeyen depoyla arşivle/sabitle/yıldızla/çöp/madde + toplu yazımı `await` eden arayüze kaynak bekçisi.)* **F78.5 İyimser işlemler.** Sabitle, yıldızla, arşivle, çöpe at, madde işaretle,
   klasöre taşı: arayüz ağ beklemeden aynı karede değişiyor mu — yavaş sahte depoyla widget
   testi; bekleyen varsa kök neden + düzeltme.
 - Kabul: soğuk açılışta beyaz kare 0; `prof_new.py` sayısı dosyada; sabit PDF turunda gri
