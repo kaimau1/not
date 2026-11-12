@@ -157,7 +157,9 @@ abstract final class AppTheme {
       // boyuyordu; seçili kelime yazının üstüne basılmış koyu bir blok gibi
       // duruyordu. Daha açık bir zemin seçimi gösterir ama yazıyı örtmez.
       textSelectionTheme: TextSelectionThemeData(
-        cursorColor: scheme.primary,
+        // İmleç yazı rengiyle (kullanıcı bulgusu 2026-11-12: webde imleç açık
+        // kalıp renkli notta görünmüyordu); onSurface zeminde hep okunur.
+        cursorColor: scheme.onSurface,
         selectionColor: scheme.primary.withValues(alpha: isDark ? 0.38 : 0.24),
         selectionHandleColor: scheme.primary,
       ),

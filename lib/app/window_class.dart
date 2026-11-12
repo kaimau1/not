@@ -101,7 +101,8 @@ const double kNoteSplitBreakpoint = 640;
 const double kPortraitListBreakpoint = 960;
 
 /// Sabit ekin yan yerleşiminin açıldığı en dar editör genişliği (dp).
-const double kPinnedSideMinWidth = 840;
+// Tam ekran olmayan tablet penceresinde (liste + not bölünmesi, ~560-700 dp) de yan yerleşim açık olsun (2026-11-12 kullanıcı isteği).
+const double kPinnedSideMinWidth = 560;
 
 /// Not sayfasının en geniş hâli (bkz. `_buildCanvas`) — geniş ekranda
 /// satırlar okunur uzunlukta kalsın.

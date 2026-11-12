@@ -3,6 +3,10 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 12 Kasım 2026 {#2026-11-12}
+- **Sabit ek panelinde sadeleşme:** "T" düğmesi kalktı; Açık metin ve balonları gizle/göster tek balon menüsünde.
+- **Tablette yan sabitleme:** sabit ek solda/sağda artık tam ekran olmayan pencerede de (liste + not yan yana) kullanılabiliyor.
+- **Çöpe sürüklerken notlar zıplamıyor:** çöpe yaklaşınca sıra değişikliği donar.
+- **Web:** madde jestleri varsayılan kapalı (yazı seçmeyi bozuyordu); imleç yazı renginde, renkli notta kaybolmuyor.
 - **Koyu tema daha okunur:** koyu temada kartlar zeminden biraz daha ayrışıyor, PDF önizlemesi gözü yormayan hafif bir perdeyle, Sil satırı daha belirgin.
 - **Büyük yazıda takvim şeridi sığıyor:** sistem yazı boyu büyükken gün adları küçülür, şerit taşmaz.
 - **Bilgisayarda (web) daha rahat:** klavyeyle gezerken odaklanan öğe belirgin halkayla görünür; geniş ekranda bölüm çizgileri ızgaranın sonuna dek uzanır.

@@ -1338,40 +1338,20 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         // AÇIK METİN TEK DOKUNUŞ (kullanıcı isteği 2026-11-09): menüye
         // girmeden "T" → görsele/PDF'e dokunulan yere yazı kutusu. Kip
         // açıkken düğme ✓ (yanındaki balon düğmesi de) ve kipi kapatır.
-        if (_canEditBubbles && !_bubbleEdit)
-          _quickTextButton(context)
-        else if (_canEditPdfBubbles)
-          ValueListenableBuilder<bool>(
-            valueListenable: _pdfAdding,
-            builder: (context, adding, _) => adding
-                ? const SizedBox.shrink()
-                : _quickTextButton(context),
-          ),
+        // "T" düğmesi kaldırıldı (kullanıcı isteği 2026-11-12): Açık metin
+        // balon menüsünde; gizle/göster de oraya taşındı.
         if (_canEditBubbles)
-          _addBubbleButton(context, active: _bubbleEdit)
+          _addBubbleButton(
+            context,
+            active: _bubbleEdit,
+            hideCtl: isVideo ? null : _ownController(),
+          )
         else if (_canEditPdfBubbles)
           ValueListenableBuilder<bool>(
             valueListenable: _pdfAdding,
             builder: (context, adding, _) =>
                 _addBubbleButton(context, active: adding),
           ),
-        // Balonları göster/gizle (görselde balon varken; PDF'te kutunun
-        // şeridinde).
-        if (_canEditBubbles && !isVideo)
-          if (_ownController() case final own when own.bubbles.isNotEmpty)
-            IconButton(
-              key: const ValueKey('pinned-bubbles-toggle'),
-              tooltip: own.hidden ? l10n.bubblesShow : l10n.bubblesHide,
-              visualDensity: VisualDensity.compact,
-              iconSize: 20,
-              isSelected: own.hidden,
-              icon: Icon(
-                own.hidden
-                    ? Icons.speaker_notes_off_outlined
-                    : Icons.chat_bubble_outline,
-              ),
-              onPressed: () => own.setHidden(!own.hidden),
-            ),
         // Salt okunurda görselden türetilmiş belgenin balonları.
         if (widget.bubbleDoc case final doc?
             when doc.bubbles.isNotEmpty &&
@@ -1428,16 +1408,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   /// görünmüyordu. Artık düğme iki YAZILI seçenek açar — **Balon** (tutamaçlı
   /// not) · **Açık metin** (sayfanın üstüne doğrudan yazı) —, seçilen türle
   /// bırakma kipi açılır; kip açıkken düğme ✓ olur ve kipi kapatır.
-  Widget _quickTextButton(BuildContext context) => IconButton(
-    key: const ValueKey('pinned-quick-text'),
-    tooltip: context.l10n.attachmentAddText,
-    visualDensity: VisualDensity.compact,
-    iconSize: 20,
-    icon: const Icon(Icons.title),
-    onPressed: () => _startAdding(plain: true),
-  );
-
-  Widget _addBubbleButton(BuildContext context, {required bool active}) {
+  Widget _addBubbleButton(
+    BuildContext context, {
+    required bool active,
+    BubbleController? hideCtl,
+  }) {
     final l10n = context.l10n;
     if (active) {
       return IconButton(
@@ -1450,15 +1425,18 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         onPressed: _stopAdding,
       );
     }
-    return PopupMenuButton<bool>(
+    final canToggle = hideCtl != null && hideCtl.bubbles.isNotEmpty;
+    return PopupMenuButton<String>(
       key: const ValueKey('pinned-add-bubble'),
       tooltip: l10n.bubbleAdd,
       icon: const Icon(Icons.add_comment_outlined, size: 20),
-      onSelected: (plain) => _startAdding(plain: plain),
+      onSelected: (v) => v == 'toggle'
+          ? hideCtl!.setHidden(!hideCtl.hidden)
+          : _startAdding(plain: v == 'plain'),
       itemBuilder: (context) => [
         PopupMenuItem(
           key: const ValueKey('pinned-add-bubble-note'),
-          value: false,
+          value: 'note',
           child: ListTile(
             dense: true,
             contentPadding: EdgeInsets.zero,
@@ -1469,7 +1447,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         ),
         PopupMenuItem(
           key: const ValueKey('pinned-add-bubble-plain'),
-          value: true,
+          value: 'plain',
           child: ListTile(
             dense: true,
             contentPadding: EdgeInsets.zero,
@@ -1478,6 +1456,23 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             subtitle: Text(l10n.bubbleAddPlainHint),
           ),
         ),
+        if (canToggle)
+          PopupMenuItem(
+            key: const ValueKey('pinned-bubbles-toggle'),
+            value: 'toggle',
+            child: ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                hideCtl.hidden
+                    ? Icons.speaker_notes_off_outlined
+                    : Icons.chat_bubble_outline,
+              ),
+              title: Text(
+                hideCtl.hidden ? l10n.bubblesShow : l10n.bubblesHide,
+              ),
+            ),
+          ),
       ],
     );
   }

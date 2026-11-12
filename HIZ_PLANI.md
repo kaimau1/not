@@ -37,7 +37,7 @@ madde başı ayrı commit, kötüleştiren tek commit geri alınır, iyiler birl
 - [ ] **F81.5** OTOMASYON 6. adımı ve CLAUDE.md ÖLÇÜM KAPISI `ab_klavye.py` yerine `ab_hepsi.py`'ye geçer (ölçüm Sonnet alt ajanda kalır; istem kısalır: "iki APK, `ab_hepsi.py`, son satırı getir").
 - Kabul: aynı APK'yı A ve B diye verince 3 tekrarda üçü de GEÇTİ (yanlış alarm yok); bilerek yavaşlatılmış B (örn. `ItemsEditor`'a 5 ms bekleme) KALDI.
 
-## FAZ 82 — Cihazsız bekçileri genişlet (her push'ta, telefonsuz) [Opus · P44]
+## FAZ 82 — Cihazsız bekçileri genişlet (her push'ta, telefonsuz) [Opus · P43 (P44 katıldı)]
 
 - [ ] **F82.1 Bütçe senaryoları S18–S25** (`perf_budget_test`, OTURTMA Ek A'ya satır): S18 ana ekran → not açma geçişi (kurulan `NoteCard`/kök kurulum, geçiş karesi başına build); S19 not kapanışı → ana ekran (kartlar yeniden kurulmaz); S20 not menüsü levhası açma (levha dışında kurulum 0); S21 arama kutusuna 5 harf (harf başına kurulan kart ≤ görünür); S22 takvim hafta kaydırma; S23 klasör yana kaydırma (komşu sayfa önceden kurulu, yeniden kurulmaz); S24 soğuk açılış ilk kare kadar kurulan widget sayısı (taban + mandal); S25 görsel ekli 50 not listesinde decode boyutu ≤ kart boyu × dpr (`cacheWidth` unutulmasın). Her biri önce bugünkü değeri ölçer, `budgets.json`'a o yazılır (mandal).
 - [ ] **F82.2 Kasma listesi md. 3–5 bekçisi** `test/jank_patterns_guard_test.dart` (`keyboard_jank_guard_test` kalıbı, kaynak tarama): editör ve pano kök durumlarında yeni `setState` sayısı mandalı; `_syncRowCache` env'ine satır içi `{}`/`[]`/kapanış yasak; `MediaQuery.of(context)` kabuk/kök dosyalarında yasak (`sizeOf`/`viewInsetsOf`); editör Column/Row içinde `AnimatedSize`/`AnimatedContainer` yasak (md. 6 zaten var — tek dosyada birleştir). Her kural bozma denemesinde kırmızı.
@@ -66,4 +66,4 @@ madde başı ayrı commit, kötüleştiren tek commit geri alınır, iyiler birl
 
 ## Sıra ve model
 
-P39 (açık, cihaz A/B) → **P43 = Faz 81** (Opus) → **P44 = Faz 82** (Opus) → **P45 = Faz 83** (Sonnet) → **P46 = Faz 84** (Fable; Fable limiti %55 üstüyse Opus) → kalan kuyruk (P20 ölçüm altyapısı kurulduktan sonra daha güvenli).
+P39 (açık, cihaz A/B) → **P43 = Faz 81** (Opus) → Faz 82 de P43 içinde (P44 katıldı, 2026-11-12) → **P45 = Faz 83** (Sonnet) → **P46 = Faz 84** (Fable; Fable limiti %55 üstüyse Opus) → kalan kuyruk (P20 ölçüm altyapısı kurulduktan sonra daha güvenli).

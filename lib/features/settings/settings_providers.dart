@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -639,7 +640,8 @@ final listPaneRightProvider = boolPref('list_pane_right', defaultValue: false);
 /// MADDE JESTLERİ (kullanıcı isteği 2026-10-30: "jestler direkt çalışmalı,
 /// aktif edilmeden; ayarlardan opsiyonel"): maddenin üstüne parmakla/kalemle
 /// çizmek — üstünü çiz/✓ işaretle, karala sil, daire yazım düzelt.
-final itemGesturesProvider = boolPref('item_gestures', defaultValue: true);
+// Webde varsayılan KAPALI (2026-11-12): fare ile yazı seçmeyle çakışıyor.
+final itemGesturesProvider = boolPref('item_gestures', defaultValue: !kIsWeb);
 
 /// Karalama (siler) ve daire (AI ile düzeltir) parmakta da çalışsın mı (K10,
 /// F42.6): varsayılan KAPALI, kaydırırken kazara çalışmasın.
