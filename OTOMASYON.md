@@ -65,8 +65,11 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
    (~onlarca GB) birikmişti. Silinemeyen klasörü tutan Gradle sürecini durdur.
 8. **APK noktası** (Kuyruk'ta APK = `evet`): birleştirme başlığına `[apk]`; aynı commit'te
    `assets/guide/release_notes_tr.md` + `_en.md`'ye günün bölümü (kullanıcı diliyle, o
-   APK'ya giren bütün paketler). Push'tan sonra APK işi BİTENE dek main'e başka push yok
-   (`gh run watch`). main kırmızıysa düzelt ya da `git revert -m 1`.
+   APK'ya giren bütün paketler).
+   **APK izlenmez (kullanıcı kararı 2026-11-12):** dal CI'ı yeşilse main APK'sı da yeşil olur;
+   birleştir, push, özeti ver, sıradaki pakete geç. Yalnız sonraki main push'undan ÖNCE tek bakış:
+   `gh run list -b main -L 1` — APK işi sürüyorsa push'u bekletip dalda çalışmaya devam et
+   (yeni push süren APK'yı iptal eder). main kırmızıysa 2. adım (main sağlığı) yakalar.
 9. **Regresyon turu** (protokol madde 8): her APK noktasından önce `docs/regresyon_listesi.md`
    baştan koşulur.
 10. **Limit freni (%90).** Paket başında, alt ajan dönünce, birleştirmeden önce

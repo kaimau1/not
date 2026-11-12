@@ -83,6 +83,10 @@ test cihazı: [USB telefon modeli / yok] · ana model: [ ] · plan: [Pro / Max].
 - Yürütücünün yaptığı belge/kuyruk değişikliği de commit'lenir ve push edilir; tur sonunda
   `git status` temiz ve `git log origin/main..main` BOŞ olmalı (özetin son satırı bunu söyler).
 - İstisna: yayın (APK/deploy) koşusu sürerken main'e push etme — bekle, sonra gönder.
+- Main'e birleştirdikten sonra yayın (APK/deploy) koşusunu İZLEME: dal CI'ı yeşilse yayın da
+  yeşil olur; izlemek boşa token. Birleştir → push → özet → sıradaki iş. Yalnız sonraki main
+  push'undan önce tek `gh run list -b main -L 1` bakışı; yayın sürüyorsa push'u beklet. main
+  kırmızıya dönerse sonraki turun "main sağlığı" adımı yakalar.
 
 ## 3. İşçi (alt ajan) kuralları
 - Önce `CLAUDE.md`, sonra yalnız kendi paketinin plan bölümü. Protokol: önce kanıtı üret
