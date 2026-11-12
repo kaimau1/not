@@ -87,12 +87,14 @@ class HomeEmptyNotes extends ConsumerWidget {
         },
       );
     }
+    final inFolder = ref.watch(selectedFolderProvider) != null;
     return EmptyState(
       icon: Icons.sticky_note_2_outlined,
-      title: ref.watch(selectedFolderProvider) != null
-          ? l10n.emptyFolderTitle
-          : l10n.emptyNotes,
-      actionLabel: l10n.newNoteAction,
+      title: inFolder ? l10n.emptyFolderTitle : l10n.emptyNotes,
+      // Hiç not yokken tek, davetkâr eylem (F74.6, D23): "+" panelindeki
+      // Metin notunun aynısı — yeni iş yok.
+      actionLabel: inFolder ? l10n.newNoteAction : l10n.emptyNotesFirstAction,
+      actionIcon: inFolder ? null : Icons.edit_outlined,
       onAction: onNewNote,
     );
   }
