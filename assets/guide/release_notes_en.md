@@ -3,6 +3,13 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 12 November 2026 {#2026-11-12}
+- **Note bottom bar refreshed:** Pen now sits in the left capsule (Format · Add · Pen · Find · Attachments); Share moved to the note menu (⋮). On very narrow screens Pen leaves the bar and stays in the quick row while typing.
+- **Easier taps on the bar:** every bottom bar button has at least a 48 dp touch area.
+- **Bar follows the note colour:** in coloured notes the capsules, icons and active button take the note's tone.
+- **Shorter note menu:** no drag handle; Edit menu/screen and Settings are under ⚙; Delete sits at the bottom in red. On small phones Delete needs almost no scrolling.
+- **Sheets look alike:** AI and Share sheets use the same tiles; sheet titles are one size; delete confirmations have a red button.
+- **Empty and offline screens:** empty lists say "No … here" in one pattern; without a connection you see "No connection", on failure "Couldn't load" (Inbox no longer looks empty on errors).
+- **Folders, Trash, Archive, Settings:** the empty folder card is smaller and the "New folder" tile left the grid; Trash and Archive have Search and ⋮ on top and labelled "Restore" and "Delete" on cards; Settings has plain icon boxes and a guest card; agenda rows share one size.
 - **Calmer home screen:** the home button and microphone no longer stand out; "+" is the only filled button.
 - **Day abbreviations in the calendar strip:** days show short names instead of a single letter.
 - **Completed items in one line on cards:** checked items collapse to "✓ 3 completed"; to see them as before, Settings → Appearance → Shown on cards → "Completed items".

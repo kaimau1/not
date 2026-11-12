@@ -7,18 +7,23 @@ import 'package:notlar/app/theme/app_palette.dart';
 import 'package:notlar/app/theme/app_theme.dart';
 import 'package:notlar/core/a11y/chip_roles.dart';
 import 'package:notlar/core/a11y/color_names.dart';
+import 'package:notlar/core/a11y/min_tap_target.dart';
 import 'package:notlar/core/a11y/motion.dart';
+import 'package:notlar/core/app_update.dart';
+import 'package:notlar/core/tips.dart';
 import 'package:notlar/core/widgets/color_palette.dart';
 import 'package:notlar/features/ai/presentation/ai_sheet.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
 import 'package:notlar/features/folders/domain/note_folder.dart';
+import 'package:notlar/features/notes/data/attachment_repository.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/editor/format_menu.dart';
 import 'package:notlar/features/notes/presentation/editor/items_editor.dart';
+import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
 import 'package:notlar/features/notes/presentation/editor/text_wrap.dart';
 import 'package:notlar/features/notes/presentation/filter_sheet.dart';
 import 'package:notlar/features/notes/presentation/note_actions_sheet.dart';
@@ -454,6 +459,82 @@ void main() {
       await meetsAll(tester);
       semantics.dispose();
     });
+  });
+
+  // F75.2 (DENEYIM D8): segment 40 dp GÖRÜNÜR, dokunma alanı 48 dp yüksek;
+  // yatayda yalnız aradaki boşluğa uzanır — komşunun kutusuna taşmaz.
+  testWidgets('not alt çubuğu: segmentler 48 dp dokunma alanı', (tester) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final semantics = tester.ensureSemantics();
+    // Kalem ipucu görülmüş say: 5 sn içinde ikinci ipucu çıkınca ilkinin
+    // zamanlayıcısı kalkmış katmanı yeniden kaldırmaya çalışıyor (debug
+    // assert, `core/tips.dart` — bu testin konusu değil).
+    await prefs.setStringList(TipOnce.prefsKey, [TipOnce.penTwoFinger]);
+    final container = ProviderContainer(
+      retry: (_, _) => null,
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        currentUidProvider.overrideWithValue(null),
+        updateRequiredProvider.overrideWithValue(false),
+        notesRepositoryProvider.overrideWithValue(null),
+        attachmentRepositoryProvider.overrideWithValue(null),
+        foldersRepositoryProvider.overrideWithValue(null),
+        noteStreamProvider('n1').overrideWith((ref) => Stream.value(note)),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const NoteEditorScreen(noteId: 'n1'),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final targets = find.descendant(
+      of: find.byType(BottomAppBar),
+      matching: find.byType(MinTapTarget),
+    );
+    // Biçim · Ekle · Kalem · Ara · Seç + AI · ses kaydı · dikte.
+    expect(targets, findsNWidgets(8));
+    for (final element in targets.evaluate()) {
+      final visible = tester.getRect(find.byWidget(element.widget));
+      final node = tester.getSemantics(find.byWidget(element.widget));
+      expect(visible.height, 40, reason: 'görünen boy değişmez');
+      expect(node.rect.height, greaterThanOrEqualTo(48));
+      expect(node.rect.width, greaterThan(visible.width));
+    }
+    expect(tester.getSize(find.byType(BottomAppBar)).height, 50);
+
+    final pen = find.byKey(const ValueKey('editor-bar-pen'));
+    final box = tester.getRect(pen);
+    final target = tester.renderObject(pen);
+    bool hitsPen(Offset at) =>
+        tester.hitTestOnBinding(at).path.any((e) => e.target == target);
+    // Görünen kutunun en sağ ve en sol pikseli KALEM (komşunun payı çalmaz);
+    // aradaki boşluğun ötesi komşunun.
+    expect(hitsPen(box.center), isTrue);
+    expect(hitsPen(box.centerRight - const Offset(0.5, 0)), isTrue);
+    expect(hitsPen(box.centerLeft + const Offset(0.5, 0)), isTrue);
+    expect(hitsPen(box.centerRight + const Offset(3.5, 0)), isFalse);
+    // Segmentin 3 dp ÜSTÜ (kapsülün dolgusu) kalemi açar: alt çubuğun yerini
+    // kalem tepsisi alır.
+    expect(find.byKey(const ValueKey('pen-close')), findsNothing);
+    await tester.tapAt(box.topCenter - const Offset(0, 3));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byKey(const ValueKey('pen-close')), findsOneWidget);
+
+    semantics.dispose();
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 30));
   });
 }
 

@@ -478,9 +478,9 @@ class _EditorSection extends StatelessWidget {
                 label: l10n.noteSearchTitle,
               ),
               (
-                id: UiItem.barShare,
-                icon: Icons.share_outlined,
-                label: l10n.share,
+                id: UiItem.barPen,
+                icon: Icons.draw_outlined,
+                label: l10n.quickRowPen,
               ),
               (
                 id: UiItem.barAttachments,
