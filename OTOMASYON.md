@@ -46,8 +46,8 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
 6. **Cihaz kapısı** (Kuyruk'ta Cihaz = `A/B`): CLAUDE.md ÖLÇÜM KAPISI. Taban = son `[apk]`
    commit'i (`git worktree add ../not_ab <commit>` → profil derlemesi). Telefon kuralları
    aşağıda. **Ölçümü yürütücü KENDİ yapmaz:** derlemeler bitince `Agent` `model: "sonnet"`
-   alt ajana (iki APK yolu, telefon kuralları, `ab_klavye.py` A sonra B ikişer koşu, ikinci
-   koşuların tablosu); kararı yürütücü verir. **Hız hissi / açılış / yükleme / akıcılık
+   alt ajana ("iki APK, `ab_hepsi.py <A> <B> --altin`, tabloyu ve son satırı getir"); karar
+   `KARAR:` satırıdır (F81.2 kuralı + altın taban %15). **Hız hissi / açılış / yükleme / akıcılık
    paketlerinde (P39 vb.) eşik %20 DEĞİL: hiçbir evre kötüleşmez, hedef evre ölçülebilir
    iyileşir.** Kötüleşirse paket çöpe gitmez: maddeler ayrı commit; kötüleştiren `git revert`
    + maddeye "iyileşme kanıtlanamadı", iyiler yeniden ölçülüp birleşir.
