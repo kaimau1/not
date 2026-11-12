@@ -1223,6 +1223,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final sortHold = ref.read(sortHeldNoteIdsProvider.notifier);
     _sortHold = sortHold;
     unawaited(Future.microtask(() => sortHold.hold(openId)));
+    _previewHold = ref.read(heldNotePreviewProvider.notifier);
     // Notu AÇMAK da bir çalışma izidir ("en çok çalışılan" sıralaması).
     // GEÇİŞ BİTİNCE (kullanıcı bulgusu 2026-10-20: "notu açarken ufak
     // donma"): ilk kareden hemen sonra yazılınca "en çok çalışılan"
@@ -1588,6 +1589,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// F26.3 (bkz. [sortHeldNoteIdsProvider]); dispose'da `ref` yok.
   SortHeldNoteIdsNotifier? _sortHold;
 
+  /// F68.1 (bkz. [heldNotePreviewProvider]); dispose'da `ref` yok.
+  HeldNotePreviewNotifier? _previewHold;
+
   NavigatorState? _rootNavigator;
 
   /// Bu oturumda önerilmiş (not, zaman) çiftleri — aynı öneri yinelenmez.
@@ -1672,6 +1676,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     unawaited(Future.microtask(() => openNotes.close(openId)));
     final sortHold = _sortHold;
     unawaited(Future.microtask(() => sortHold?.release(openId)));
+    _previewHold?.release(openId);
     _pageInkCtl?.dispose();
     // Tam ekran nota bağlı; ağaç kilitliyken durum yazılamaz. Başka bir nota
     // GEÇİLDİYSE (yeni editör çoktan açık) tam ekran sürer.
@@ -1896,6 +1901,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final note = _note;
     if (note == null) return;
     if (!immediate && !inkOnly) _noteTyping();
+    // F68.1: yazım/çizim sürerken listedeki kart beklesin; anında kayıt
+    // (yıldız, sabitle, renk) kartta hemen görünsün.
+    if (immediate) {
+      _previewHold?.release(widget.noteId);
+    } else {
+      _previewHold?.touch(widget.noteId);
+    }
     final wasUndo = _undoStack.canUndo;
     final wasRedo = _undoStack.canRedo;
     // Tek boğaz noktası: sarma çapaları düzenleme tamponunda yaşar, nota

@@ -117,9 +117,11 @@ class DashboardPaneScope extends InheritedWidget {
       maybeOf(context)?.singleColumn ?? false;
 
   @override
+  // Çapa yalnız sütun kipi değişirken okunur (DashboardScreen
+  // `didChangeDependencies`). Tek başına değişince (açık nottan başka nota
+  // geçiş) bildirilmez: bütün pano boşuna kuruluyordu (F68.2, bütçe S12b).
   bool updateShouldNotify(DashboardPaneScope oldWidget) =>
-      singleColumn != oldWidget.singleColumn ||
-      anchorNoteId != oldWidget.anchorNoteId;
+      singleColumn != oldWidget.singleColumn;
 }
 
 /// Not açıkken sol listenin varsayılan genişliği (tek sütun kart).

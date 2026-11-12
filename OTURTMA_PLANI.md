@@ -71,7 +71,7 @@ Gözetimsiz yürütmenin sırası ve kuralları: `OTOMASYON.md`.
 | 65 | Ekler: yerleşim, çubuklar, yükleme güvenilirliği | Bekliyor | | KALEM_PLANI K6–K7 burada |
 | 66 | Telefon: ana ekran ve not ekranı yoğunluğu | Bekliyor | | |
 | 67 | Tablet ve geniş ekran | Bekliyor | | |
-| 68 | Liste ve senkron yükü | Bekliyor | | AKICILIK F22.4 burada |
+| 68 | Liste ve senkron yükü | Sürüyor (F68.1 bitti, F68.2 kısmen — 2026-11-12) | | AKICILIK F22.4 burada |
 | 69 | Doğrulama turu ve kapanış | Bekliyor | | |
 | 70 | Yazım düzeltici v2 (baştan) | Bekliyor | | Opus |
 | 71 | Güvenlik denetimi ve altyapısı | Bitti (cihazda/yayında doğrulanmadı; KARAR: yedek şifresi) | 2026-11-11 | rapor `docs/guvenlik_denetimi.md`; 9 bulgu düzeltildi, açık kritik/yüksek yok |
@@ -1083,7 +1083,7 @@ tur `telefon-*.png`.
 `openNoteIdsProvider`), `dashboard_screen.dart` `build`, `dashboard_slivers.dart`,
 `AKICILIK_PLANI.md` Faz 21–22, `tool/perf/prof_save.py`, `ab_liste.py`.
 
-- [ ] **F68.1 Açık notun kartı yazarken beklesin (B8).** Bölünmüş görünümde liste
+- [x] **F68.1 Açık notun kartı yazarken beklesin (B8).** *(2026-11-12, P19: `heldNotePreviewProvider` (kimlik → değişiklik öncesi örnek, editörün `_mutate`'inden; 3 sn tek seferlik `Timer`, kapanışta/anında kayıtta bırakılır) → `filteredNotesProvider` tutulan örneği verir. S12 kırmızı 1/13 → yazarken+kayıt 0/0, durunca pano 1 / kart 1. Eski "13 kart" ölçüm artığıydı: kayıt notu "Bugün" bölümüne taşıyıp ızgarayı yeniden diziyordu (düzenek artık hepsi bugün). Cihazda doğrulanmadı.)* Bölünmüş görünümde liste
   görünürken, editörü açık ve son 3 sn içinde değişmiş notun listeye giden örneği TUTULUR
   (sıralama tutmasının içerik karşılığı: `heldNotePreviewProvider`, not kimliği → tutulan
   örnek). Yazma 3 sn durunca ya da not kapanınca bırakılır (tek seferlik `Timer`; editörün
@@ -1092,7 +1092,7 @@ tur `telefon-*.png`.
   *Tuzak:* tutulan örnek YALNIZ listeye gider; depoya/editöre/hatırlatıcı servisine değil
   (HAFIZA `home_snapshot` tuzağıyla aynı sınıf).
   *Kabul:* S12 (yazarken `DashboardScreen` kurulumu 0; durunca ≤ 1 kart).
-- [ ] **F68.2 Pano gövdesini böl (ölçüm kapılı).** F68.1'den sonra tablette not kapanış
+- [ ] **F68.2 Pano gövdesini böl (ölçüm kapılı).** *(2026-11-12, P19 — KISMEN, sabah bakılacak: cihazsız kanıtı üretilen tek boşa kurulum düzeltildi — açık nottan başka nota geçişte `DashboardPaneScope` çapa notu değişince bütün pano kuruluyordu (yeni bütçe S12b: pano 1 / hücre 13 → 0 / 0; çapa artık bildirim sebebi değil). Gövdeyi üçe bölme YAZILMADI — üretilemedi: S12/S12b'de girdisi değişmeyen pano kurulumu kalmadı; yatay bölünmüşte not aç/kapa sütun sayısını değiştiriyor (meşru yeniden dizim), kapı koşulu "tablette kapanış karesi > 33 ms" cihaz ölçümü ister. Cihazda `ab_klavye.py` tablet evresi > 33 ms verirse bölme ayrı iş.)* F68.1'den sonra tablette not kapanış
   karesi hâlâ > 33 ms ise: `dashboard_screen.dart` `build`'in üç parçası ayrı widget:
   başlık yığını, klasör şeridi, ızgara. Her biri kendi `ref.watch` kümesiyle. Izgara girdisi
   (sıralı kimlikler + sütun sayısı) değişmedikçe `sliverBalancedNoteColumns` ve
@@ -1351,7 +1351,8 @@ düzeltme KARAR'dır; gözetimsiz oturumda yalnız rapor + kırmayan sıkılaşt
 | S9 | Biçim panelini aç → kapat | tuval kurulumu | 2 | 0 | 64 |
 | S10 | Paketi aç → maddeye odaklan → Biçim'e dokun | paket açık mı / mount edilen `TextField` | F60.2 (`note_package_open_test`) | açık / ≤ üye sayısı | 60.2 |
 | S11 | Kendi kaydının akış yankısı | kök kurulum | 0 | 0 | — |
-| S12 | 1280×800 bölünmüş: açık nota 20 karakter + kayıt | `DashboardScreen` kurulumu / kurulan `NoteCard` | 1 / 13 | 0 / ≤ 1 | 68.1 |
+| S12 | 1280×800 bölünmüş: açık nota 20 karakter + kayıt | `DashboardScreen` kurulumu / kurulan `NoteCard` | 1 / 13 → **0 / 0** yazarken+kayıt; durunca 1 / 1 (F68.1, 2026-11-12) | 0 / ≤ 1 | 68.1 |
+| S12b | 1280×800 bölünmüş: açık nottan başka nota geç (içerik aynı) | `DashboardScreen` / hücre / `NoteCard` | 1 / 13 / 2 → **0 / 0 / 2** (F68.2, 2026-11-12) | 0 / 0 / ≤ 2 | 68.2 |
 | S13 | Ana ekran, 300 not, 3 ekran kaydır | kurulan `NoteCard` | 24 (300 notun) | ≤ görünür + önbellek | — |
 | S14 | Sabitle / yıldızla | tuval kurulumu | 1 (yıldız) | 0 | 64 |
 | S15 | 2000 çizgi varken etkin çizgiye 1 nokta | çizim çağrısı (`TestRecordingCanvas`) | 2001 | ≤ 8 | 62.1 |
