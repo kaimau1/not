@@ -19,6 +19,9 @@ import 'viewer_pen.dart';
 import 'zoom_math.dart';
 import '../editor/attachment_clipboard.dart';
 import '../editor/pen_tray.dart';
+import '../../../../core/widgets/delayed_spinner.dart';
+import '../../../../core/widgets/fade_in_frame.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Tam ekran görsel görüntüleyici (yakınlaştırma/kaydırma destekli).
 ///
@@ -517,6 +520,7 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
         // eski kareyi göstermeye devam eder (bkz. [_rotate]).
         key: ValueKey('${a.localPath}#$_reloadKey'),
         fit: BoxFit.contain,
+        frameBuilder: fadeInFrame,
         cacheWidth: decodeWidthBucket(
           MediaQuery.sizeOf(context).width * 2,
           MediaQuery.devicePixelRatioOf(context),
@@ -526,8 +530,13 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
       image = CachedNetworkImage(
         imageUrl: a.downloadUrl,
         fit: BoxFit.contain,
-        progressIndicatorBuilder: (context, url, progress) =>
-            Center(child: CircularProgressIndicator(value: progress.progress)),
+        // 150 ms solarak gelir (F78.3c); varsayılan 500 ms ağır kalıyordu.
+        fadeInDuration: AppMotion.quick,
+        progressIndicatorBuilder: (context, url, progress) => Center(
+          child: DelayedSpinner(
+            child: CircularProgressIndicator(value: progress.progress),
+          ),
+        ),
       );
     } else {
       image = const Icon(Icons.broken_image_outlined, size: 64);
@@ -674,7 +683,7 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
         ),
         body: penScope(
           child: _busy
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: DelayedSpinner())
             : Stack(
                 children: [
                   Positioned.fill(

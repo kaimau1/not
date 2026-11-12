@@ -10,6 +10,7 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../data/scan/doc_edges.dart';
 import '../data/scan/perspective.dart';
 import '../../../core/friendly_error.dart';
+import '../../../core/widgets/delayed_spinner.dart';
 
 /// Taranan bir sayfanın **köşelerini elle ayarlama** ekranı.
 ///
@@ -212,7 +213,7 @@ class _ScanEditScreenState extends State<ScanEditScreen> {
               ),
             )
           : img == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: DelayedSpinner())
           : Column(children: [Expanded(child: _editor(img)), _hint()]),
       bottomNavigationBar: img == null
           ? null

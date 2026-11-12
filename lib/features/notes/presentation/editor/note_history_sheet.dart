@@ -7,6 +7,7 @@ import '../../../../core/widgets/app_sheet.dart';
 import '../../data/notes_repository.dart';
 import '../../domain/note_version.dart';
 import '../../../../core/friendly_error.dart';
+import '../../../../core/widgets/delayed_spinner.dart';
 
 /// **SÜRÜM GEÇMİŞİ** levhası (F4.2): notun saklanan sürümleri, yeniden
 /// eskiye. Birine dokunmak önizlemeyi açar; "Bu sürüme dön" seçilen sürümü
@@ -61,7 +62,7 @@ class _HistoryList extends StatelessWidget {
         if (versions == null) {
           return const Padding(
             padding: EdgeInsets.all(32),
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(child: DelayedSpinner()),
           );
         }
         return ListView(

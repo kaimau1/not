@@ -17,6 +17,7 @@ import '../editor/video_transport.dart' show SeekIcon;
 import 'youtube_viewer.dart';
 import '../editor/attachment_clipboard.dart';
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../core/widgets/delayed_spinner.dart';
 
 /// Süreyi `s:sn` (bir saatten uzunsa `s:dd:sn`) olarak yazar.
 String formatVideoPosition(Duration d) {
@@ -304,7 +305,7 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
                 ),
               )
             : controller == null
-            ? const CircularProgressIndicator()
+            ? const DelayedSpinner()
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
