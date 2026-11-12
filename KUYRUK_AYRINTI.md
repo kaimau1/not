@@ -27,6 +27,14 @@ Model: fable (limit %55 üstü → opus) · Cihaz: A/B · APK: evet
 
 **Durum:** bekliyor — `pinned_media_pane.dart`'a DOKUNMAZ: sabit ek + klavye kasması P49'da (aynı dosya iki kez değişmesin); ölçüm sabit ekte yavaşlık bulursa bulguyu P49 satırına yaz
 
+**P43 cihazsız bekçi bulguları (2026-11-12, mandallı, düzeltilmedi — düzeltince ilgili mandalı düşür):**
+1. S21 arama: harf başına 114 `NoteCard` kuruluyor (görünür 18 — 6 katı).
+2. S25 `note_card_media.dart` `_image` `thumbUrl` dalında `memCacheWidth` yok → Drive küçük resmi tam boy çözülüyor (21 kart).
+3. S22 takvim hafta fırlatma tek karede ~980 kurulum.
+4. S23 süzgeç kaydırma en ağır kare 2941 kurulum.
+5. Kasma listesi md. 6: editör kökünde gövdeyle aynı Column'da 3 `AnimatedSize` (ses hapı, biçim paneli, alt çubuk takası — `jank_patterns_guard_test` mandalı 4).
+6. S18 not açma geçişinde ikinci kare 788 kurulum (editör iki karede kuruluyor).
+
 ## P48 — Web yazı seçimi + takvim senkronu (tek ajan)
 
 Model: opus · Cihaz: cihaz (b) · APK: evet
@@ -42,6 +50,8 @@ Model: fable (limit %55 üstü → opus) · Cihaz: A/B · APK: evet
 **Plan maddeleri:** kullanıcı 2026-11-12: "sabit ek tasarımı, tuşları, özellikleri fable baştan yazdır"
 
 **Durum:** bekliyor — BAŞTAN TASARIM (yama değil): önce mevcut sabit ek çubuğu/bölmesinin bütün düğmelerini ve özelliklerini (görsel, PDF, video, ses, balon, kalem, yerleşim üst/sol/sağ, sığdır, tam ekran) dök, DENEYIM §2 diliyle yeni düzen öner ve uygula. Kesin istekler: (a) ⋮ ile "sayfalara göz at" menüleri TEK ⋮ menüde; kart düğmesi bizim stilde, yer açılır; (b) yüzen kalem düğmesi ↔ paneldeki kalem TAM senkron (yüzenden açınca paneldeki kayboluyor, panelden açınca yüzen bilmiyor); (c) paneldeki kalem açılınca silgili hızlı kalem menüsü; (d) "kalem yazar, parmak dokunur" gibi ipuçları alt kalem panelini KAPATMASIN, sürekli çıkmasın. (e) SABİT EK + KLAVYE KASMASI (kullanıcı 2026-11-12: "sabit ek varken klavye açılırken hem sabit ek paneli hem klavye kasıyor"; P46'dan alındı, senaryo P43'te): yeni tasarım kasma listesi §6–§7'ye uysun, A/B'de bu evre ölçülsün. (f) P22'den alınanlar (hepsi sabit ek): OTURTMA F65.1 bölme çubuğu sadeleşmesi (K-O6 — bu paketle açıldı), F65.2/F67.5 yatayda yandan sabitleme varsayılanı (K-O7), F65.3 birden çok sabit ek (K-O8); K-O7/K-O8 için en güvenli seçenek + "sabah bakılacak". (g) P42 kalanı: sabit PDF çubuğu 1,3× yazıda ve 360/393 dp'de taşıyor. KORU: P47 ("T" kalktı, balon gizle/göster balon menüsünde, `kPinnedSideMinWidth` 560), P39 F78.3(b) bölmenin içindeki yükleme hâli. `pinned_media_pane.dart`, `ViewerPen`, P15. Önce `istek_tara.py`
+
+**P43 bulgusu (2026-11-12):** S17 sabit görsel/PDF klavye hareket karelerinde sabit bölme diziliyor (görsel 2, PDF 3 sınır: `_RenderLayoutBuilder`, `RenderCustomMultiChildLayoutBox`), editör içi 12/11 (metin 7) — `budgets.json` S17 `sabit_*` mandalları; yeni tasarım bunları düşürsün.
 
 ## P50 — Düzenleme modu baştan: her şey düzenlenebilsin + hızlı menü
 
