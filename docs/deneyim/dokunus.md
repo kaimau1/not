@@ -11,7 +11,6 @@ zaten tepkili: ana ekran kartı ve klasör karoları `PressScale`, düğmeler `I
 |---|---|
 | `share_target_sheet.dart` `_PickableCard` | paylaşım hedefi: kartı seçer, levha kapanır |
 | `note_target_picker.dart` hücre | not hedefi seçici: kartı seçer |
-| `folder_chat_screen.dart` görsel balonu | görseli tam ekran açar |
 
 ## Dokunmadan bırakıldı — tepki zaten AYNI KAREDE görünen durum değişimi
 
@@ -21,6 +20,10 @@ zaten tepkili: ana ekran kartı ve klasör karoları `PressScale`, düğmeler `I
 | Oynat / duraklat, denetimleri göster | `note_video_boxes.dart:136/428/518`, `video_viewer.dart:315/361` |
 | Odak verir, satır ekler, düzenlemeye geçer | `dashboard_widgets.dart:348`, `items_editor.dart:2123` ("Yeni madde"), `note_image_caption.dart:140`, `attachment_actions.dart:326` (açıklama bandı), `note_images.dart:1362` |
 | Şerit / hap aç-kapa | `pdf_page_box.dart:989`, `pdf_page_column.dart:203`, `pinned_media_pane.dart:1287`, `attachment_status.dart:207`, `note_video_boxes.dart:602` |
+
+Kanıt: `test/note_target_picker_test.dart` "basılıyken küçülür" (önce: ölçek hep 1).
+Sohbet görsel balonu (`folder_chat_screen.dart:411`, tam ekran açar) da tepkisiz; F78.3 ile
+aynı satırlara dokunduğu için (maddeler ayrı ayrı geri alınabilsin) bu pakette yapılmadı.
 
 ## Kapsam dışı
 

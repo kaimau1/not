@@ -22,7 +22,11 @@ void main() {
     Note(id: 'k', type: NoteType.text, title: 'Gizli', locked: true),
   ];
 
-  Future<NoteTarget?> run(WidgetTester tester, Finder tap) async {
+  Future<NoteTarget?> run(
+    WidgetTester tester,
+    Finder tap, {
+    VoidCallback? pressed,
+  }) async {
     NoteTarget? result;
     await tester.pumpWidget(
       ProviderScope(
@@ -46,7 +50,15 @@ void main() {
     );
     await tester.tap(find.text('aç'));
     await tester.pumpAndSettle();
-    await tester.tap(tap);
+    if (pressed != null) {
+      final g = await tester.startGesture(tester.getCenter(tap));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 200));
+      pressed();
+      await g.up();
+    } else {
+      await tester.tap(tap);
+    }
     await tester.pumpAndSettle();
     return result;
   }
@@ -63,5 +75,21 @@ void main() {
     final r = await run(tester, find.byKey(const ValueKey('target-b')));
     expect(r?.note?.id, 'b');
     expect(find.byKey(const ValueKey('target-k')), findsNothing);
+  });
+
+  // DENEYIM F78.4: hücre basılıyken çöker (önce: görünür basma tepkisi yoktu).
+  testWidgets('küçük kart basılıyken küçülür, bırakınca seçer', (tester) async {
+    final cell = find.byKey(const ValueKey('target-b'));
+    double scale() => tester
+        .widget<AnimatedScale>(
+          find.descendant(of: cell, matching: find.byType(AnimatedScale)).first,
+        )
+        .scale;
+    final r = await run(
+      tester,
+      cell,
+      pressed: () => expect(scale(), lessThan(1)),
+    );
+    expect(r?.note?.id, 'b');
   });
 }
