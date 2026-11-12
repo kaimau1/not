@@ -558,7 +558,13 @@ class _DocumentCard extends StatelessWidget {
               border: Border.all(color: scheme.outlineVariant),
             ),
             clipBehavior: Clip.antiAlias,
-            child: Column(
+            // Perde kırpmanın İÇİNDE: kâğıdın köşesini izler.
+            child: DecoratedBox(
+              position: DecorationPosition.foreground,
+              decoration: BoxDecoration(
+                color: documentPreviewScrim(Theme.of(context).brightness),
+              ),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
@@ -582,6 +588,7 @@ class _DocumentCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
             ),
           ),
           // Çok dar kartta (4 sütun) ad sığmıyor, harf harf kesiliyordu:
@@ -609,6 +616,15 @@ class _DocumentCard extends StatelessWidget {
     );
   }
 }
+
+/// Koyu temada kartın belge ÖNİZLEMESİNİN üstüne %8 siyah perde (DENEYIM
+/// F80.1-3): beyaz sayfa koyu ekranda tek parlak leke oluyordu
+/// (`telefon-ana-koyu.png`). Açık belgenin kendisi ve görsel kartları
+/// değişmez. Ağaç şekli sabit: açıkta saydam.
+Color documentPreviewScrim(Brightness brightness) =>
+    brightness == Brightness.dark
+    ? Colors.black.withValues(alpha: AppAlpha.hairline)
+    : Colors.transparent;
 
 /// BALONLU notun kapağı: belgenin ilk sayfası kartın tepesinde KENARDAN
 /// KENARA — video/görsel kapağıyla aynı yer, aynı dil.
@@ -642,9 +658,15 @@ class CardDocumentCover extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             if (pdf)
-              ColoredBox(
-                color: Colors.white,
-                child: _PdfFirstPage(attachment: document, iconSize: 36),
+              DecoratedBox(
+                position: DecorationPosition.foreground,
+                decoration: BoxDecoration(
+                  color: documentPreviewScrim(Theme.of(context).brightness),
+                ),
+                child: ColoredBox(
+                  color: Colors.white,
+                  child: _PdfFirstPage(attachment: document, iconSize: 36),
+                ),
               )
             else
               DecoratedBox(

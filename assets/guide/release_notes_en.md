@@ -3,6 +3,9 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 12 November 2026 {#2026-11-12}
+- **More readable dark theme:** cards stand out a bit more from the background in dark mode, PDF previews get a soft dimming layer, and the Delete row is clearer.
+- **Calendar strip fits with large text:** with a large system font, day names shrink so the strip no longer overflows.
+- **Nicer on the computer (web):** the focused item shows a clear ring when you move with the keyboard; section lines on wide screens run to the end of the grid.
 - **Note bottom bar refreshed:** Pen now sits in the left capsule (Format · Add · Pen · Find · Attachments); Share moved to the note menu (⋮). On very narrow screens Pen leaves the bar and stays in the quick row while typing.
 - **Easier taps on the bar:** every bottom bar button has at least a 48 dp touch area.
 - **Bar follows the note colour:** in coloured notes the capsules, icons and active button take the note's tone.

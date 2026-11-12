@@ -73,6 +73,31 @@ void main() {
     }
   });
 
+  // DENEYIM F80.1-5 (2026-11-12): koyu temada kart masaya karışmasın. Ölçüm
+  // OKLab L (algısal açıklık); 0,04 altı dört aile (adaçayı 0,038, lavanta
+  // 0,037, krem 0,039, saman 0,0399) +1/kanal açıldı. Açık tema yukarıdaki
+  // "kart zeminden açık" testinde (beyaz kâğıt bilerek 0,033 — klasik beyaz).
+  test('koyu temada kart zeminden en az 0,04 L açık', () {
+    double okL(Color c) {
+      double lin(double v) => v <= 0.04045
+          ? v / 12.92
+          : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
+      final r = lin(c.r), g = lin(c.g), b = lin(c.b);
+      double cbrt(double v) => math.pow(v, 1 / 3).toDouble();
+      final l = cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+      final m = cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+      final s = cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+      return 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s;
+    }
+
+    for (final (f, b, theme) in themes) {
+      if (b != Brightness.dark) continue;
+      final ground = okL(theme.colorScheme.surface);
+      final card = okL(AppTokens.fromTheme(theme).card);
+      expect(card - ground, greaterThanOrEqualTo(0.04), reason: '$f $b');
+    }
+  });
+
   test('her not renginde her ailenin yazısı ve rengin koyu tonu okunur', () {
     for (final (f, b, theme) in themes) {
       final dark = b == Brightness.dark;

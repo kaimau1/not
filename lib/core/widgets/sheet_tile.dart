@@ -110,8 +110,8 @@ class SheetTile extends StatelessWidget {
   }
 }
 
-/// Yıkıcı satır ("Sil", "Kalıcı sil"): 48 dp, zemin `errorContainer` %50,
-/// yazı ve simge `error`.
+/// Yıkıcı satır ("Sil", "Kalıcı sil"): 48 dp, zemin `errorContainer` %50
+/// (koyuda %24), yazı ve simge `error`.
 class DestructiveRow extends StatelessWidget {
   const DestructiveRow({
     super.key,
@@ -129,7 +129,12 @@ class DestructiveRow extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return _TileSurface(
-      color: scheme.errorContainer.withValues(alpha: 0.5),
+      // Koyu temada %50 dolu koyu kırmızı bir blok oluyordu (DENEYIM F80.1,
+      // `telefon-n4-menu-koyu.png`): koyuda %24 — satır kırmızıya çalar,
+      // bağırmaz; yazı ve simge `error` olduğu gibi.
+      color: scheme.errorContainer.withValues(
+        alpha: theme.brightness == Brightness.dark ? AppAlpha.soft : 0.5,
+      ),
       hover: scheme.error.withValues(alpha: AppAlpha.pressed),
       label: label,
       onTap: onTap,

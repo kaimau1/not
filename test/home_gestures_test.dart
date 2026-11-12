@@ -47,6 +47,28 @@ void main() {
       final label = tester.getTopRight(find.text('Sabit')).dx;
       final count = tester.getTopLeft(find.text('· 3')).dx;
       expect(count - label, lessThan(12));
+      // F80.3a (D22): geniş pencerede çizgi yok (ızgaranın ortasında
+      // bitiyordu).
+      expect(find.byType(Divider), findsNothing);
+    });
+
+    testWidgets('dar pencerede çizgi sayıdan sonra ve sınırlı', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: HomeSectionHeader(text: 'Sabit', count: 3),
+          ),
+        ),
+      );
+      final count = tester.getTopLeft(find.text('· 3')).dx;
       final line = tester.getRect(find.byType(Divider));
       expect(line.left, greaterThan(count));
       expect(line.right, lessThanOrEqualTo(14 + kSectionHeaderMaxWidth));

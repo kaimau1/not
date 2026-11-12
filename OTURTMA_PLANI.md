@@ -1082,7 +1082,7 @@ tur `telefon-*.png`.
   doğrula.
 - [ ] **F67.5 Yandan sabitleme varsayılanı (F65.2 ile aynı karar).**
 - [ ] **F67.6 İki not yan yana — KARAR K-O12 (öneri: şimdilik yok).**
-- [ ] **F67.7 Klavye ve fare.** Kısayol listesi levhası (Ctrl+/; `app.dart` `shortcuts`
+- [x] **F67.7 Klavye ve fare.** → DENEYIM F80.3 (P42, 2026-11-12: kısayol levhası tablodan, odak halkası, D22; sağ tık/üstüne gelme doğrulandı). Kısayol listesi levhası (Ctrl+/; `app.dart` `shortcuts`
   haritasından üretilir, elle liste tutulmaz); kart ve madde üzerinde sağ tık = uzun basış
   menüsü (var olanları doğrula, eksikleri ekle); fareyle üstüne gelince kart ve satır
   vurgusu (yalnız `touchFirst == false`); Tab sırası: arama → klasör şeridi → kartlar.

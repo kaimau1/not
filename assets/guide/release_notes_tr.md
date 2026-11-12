@@ -3,6 +3,9 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 12 Kasım 2026 {#2026-11-12}
+- **Koyu tema daha okunur:** koyu temada kartlar zeminden biraz daha ayrışıyor, PDF önizlemesi gözü yormayan hafif bir perdeyle, Sil satırı daha belirgin.
+- **Büyük yazıda takvim şeridi sığıyor:** sistem yazı boyu büyükken gün adları küçülür, şerit taşmaz.
+- **Bilgisayarda (web) daha rahat:** klavyeyle gezerken odaklanan öğe belirgin halkayla görünür; geniş ekranda bölüm çizgileri ızgaranın sonuna dek uzanır.
 - **Not alt çubuğu yenilendi:** Kalem artık sol kapsülde (Biçim · Ekle · Kalem · Ara · Ekler); Paylaş not menüsünde (⋮). Çok dar ekranda Kalem çubuktan düşer, klavye açıkken hızlı satırda durur.
 - **Çubukta kolay dokunma:** alt çubuktaki her düğmenin dokunma alanı en az 48 dp.
 - **Renkli notta çubuk notun renginde:** kapsüller, simgeler ve seçili düğme notun tonunu alır.
