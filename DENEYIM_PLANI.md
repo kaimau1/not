@@ -68,7 +68,7 @@ dosya geçerli).
 | 76 | Levhalar: ortak başlık, ortak karo | P37 | Opus | Bekliyor |
 | 77 | Hareket ve dokunsal dil | P38 | Opus | Bekliyor |
 | 78 | Hız hissi (açılış, yeni not, yükleme hâlleri) | P39 | Fable | Bekliyor |
-| 79 | İkincil ekranlar + boş/çevrimdışı hâller | P40 | Opus | Bekliyor |
+| 79 | İkincil ekranlar + boş/çevrimdışı hâller | P40 | Opus | F79.1–F79.6 bitti (dalda `oto/P40-ikincil-ekranlar`, 2026-11-12) |
 | 72.6 | Belirteç göçü (mekanik) | P41 | Sonnet | Bekliyor |
 | 80 | Koyu tema, küçük ekran, web cilası, önce/sonra dosyası | P42 | Sonnet + Opus | Bekliyor |
 
@@ -601,27 +601,27 @@ not içi AI levhası (Grep `Bugünkü puan` ARB anahtarı), `test/note_menu_mode
 `archive_screen.dart`, `inbox_screen.dart`. **Önce `istek_tara.py`** (takvim ve ayarlar
 dosyaları kullanıcı isteğiyle dolu — §4 Y11–Y13).
 
-- [ ] **F79.1 Ajanda satırı (D16).** Yerleşim aynı; yalnız ölçü birliği: başlık her türde
+- [x] **F79.1 Ajanda satırı (D16).** *(2026-11-12: `_EntryShell` 56/64 dp, başlık `rowTitle`, alt `meta`, durum simgeleri 18; `QuickDeleteButton` 18 dp %60, hedef 48 — çöp kaldı; gün levhası da aynı satırı kullanır. Test `calendar_screen_test`.)* Yerleşim aynı; yalnız ölçü birliği: başlık her türde
   `rowTitle` (16), alt satır `meta`; satır yüksekliği tek satırlıda 56, iki satırlıda 64;
   sağdaki durum simgeleri (🔔 ↻) 18 dp `onSurfaceVariant`. Çöp düğmesi (`QuickDeleteButton`)
   KALIR (§4 Y11); simgesi 18 dp, `onSurfaceVariant` %60 (sessiz ama görünür), hedef 48.
   Ay/hafta/yıl görünümlerine ve takvim başlığına DOKUNMA (§4 Y12, Y13).
-- [ ] **F79.2 Ayarlar (D18).** Kök: simge kutuları nötr (F73.1-5), 40 dp, köşe `m`; satır
+- [x] **F79.2 Ayarlar (D18).** *(2026-11-12: `_AreaIcon` köşe `m`, `_CategoryTile` `rowTitle`+`meta`, kısayollar kategori kartıyla aynı nötr zemin; misafir kartı "Misafir" + "Yalnız bu cihazda" + "Giriş yap" (`linkGuestAccount`). Test `settings_profile_card_test`. Turda misafir hâli yok — cihazda doğrulanmadı.)* Kök: simge kutuları nötr (F73.1-5), 40 dp, köşe `m`; satır
   başlığı `rowTitle`, alt yazı `meta`; "Kullanım kılavuzu" ve "Kişiselleştir" kartları AYNI
   nötr ton. `_ProfileCard` misafirde: "Misafir · Yalnız bu cihazda" + "Giriş yap" düğmesi
   (var olan giriş akışı). Sıra ve gruplar (Hesap en üstte, ayar arama sabit — kullanıcı
   istekleri) AYNEN.
-- [ ] **F79.3 Klasörler (D19).** Üstteki "Yeni klasör" düğmesi kalır (F73.1-3 tonu);
+- [x] **F79.3 Klasörler (D19).** *(2026-11-12: satır satır ızgara (sıra korunur), boş kart 72 dp "Boş", ızgaradaki Yeni klasör karosu kalktı; sırala düğmesinin ipucu zaten vardı. Test `folders_screen_test`.)* Üstteki "Yeni klasör" düğmesi kalır (F73.1-3 tonu);
   ızgaradaki "Yeni klasör" karosu kalkar. Boş klasör kartı 72 dp (simge + ad + "Boş"),
   dolu kart bugünkü 128 dp. Sıralama simgesine `Tooltip`.
-- [ ] **F79.4 Çöp / Arşiv / Gelen (D19).** Üst çubuk: Ara + ⋮ (Analiz, Geçmiş, Çöpü boşalt
+- [x] **F79.4 Çöp / Arşiv / Gelen (D19).** *(2026-11-12: Çöp ⋮ = Akıllı analiz · Hepsini geri yükle · Çöpü boşalt (`error`); kartta etiketli "Geri al" · "Sil" (dar kartta birlikte küçülür). Arşiv ⋮ = özet + sıralama (`NoteSortMenu(extras:)`). Gelen'in tek düğmesi (hepsini okundu) olduğu gibi. Test `trash_archive_bar_test`.)* Üst çubuk: Ara + ⋮ (Analiz, Geçmiş, Çöpü boşalt
   ⋮'e; "Çöpü boşalt" `error` renkli). Çöp kartının altı: iki ETİKETLİ metin düğmesi "Geri
   al" · "Sil" (`error`). Düzenli ızgara (kullanıcı isteği 2026-09-23) aynen.
-- [ ] **F79.5 Boş hâller (D23).** `EmptyState` kullanımları: metinler tek kalıp — başlık
+- [x] **F79.5 Boş hâller (D23).** *(2026-11-12: `EmptyState` §2.3 ölçüsü (72 dp nötr daire, simge 32, `rowTitle` + `body`, dikeyde %38); bütün boş hâl başlıkları "Burada … yok", açıklama tek cümle — bekçi `terminology_test` (koddaki `EmptyState(` çağrılarından toplar). Tur `TOUR_EMPTY=1`: ana-bos, klasor-bos, arsiv-bos, cop-bos, gelen-bos, arama-bos.)* `EmptyState` kullanımları: metinler tek kalıp — başlık
   "Burada … yok", açıklama bir cümle, düğme bir sonraki adım (`terminology_test`). Tura
   `TOUR_EMPTY=1`: boş ana ekran, boş klasör, boş arşiv, boş çöp, boş Gelen, boş arama
   sonucu.
-- [ ] **F79.6 Çevrimdışı / hata hâlleri (OTURTMA F66.6 — P18'den buraya taşındı).**
+- [x] **F79.6 Çevrimdışı / hata hâlleri (OTURTMA F66.6 — P18'den buraya taşındı).** *(2026-11-12: tur `TOUR_OFFLINE=1` → cevrimdisi-ana, -n1, -ek, -ai, -cop, -gelen. Bulgular: (1) `ErrorState` başlığı üç satırlık "Bir şeyler ters gitti: …" paragrafıydı → kısa başlık ("Bağlantı yok" / "Yüklenemedi") + açıklama, çevrimdışıyken bulut simgesi — DÜZELDİ; (2) Gelen ve paylaşılanlar okuma hatasında "burada not yok" diyordu → hata görünümü + Tekrar dene — DÜZELDİ; (3) ana ekranın "Gelen" süzgecinde (`dashboard_slivers._hubSlivers`, P19 alanı) aynı kalıp — **sabah bakılacak**; (4) AI levhası çevrimdışıyken düğmeleri etkin gösteriyor, hata ancak dokununca bildirim (levha P37 alanı) — **sabah bakılacak**; (5) bekleyen ek şeridi bağlantı yokken de "yükleniyor" diyor — bağlantı algısı yeni özellik (K-O1), **sabah bakılacak**; (6) editörün bulut simgesi (bekliyor = yükleme bulutu %90) tutarlı; ek rozeti turda görünmüyor (turda oturum yok) — cihazda doğrulanmadı.)*
   Çevrimdışıyken not ekranı bulut simgesi, bekleyen ek, AI düğmeleri ne gösteriyor; tura
   `TOUR_OFFLINE=1` ile 6 görüntü. Tutarsızlıklar madde olur ve §2.3 bileşenleriyle
   düzeltilir. OTURTMA'da F66.6 `[x]` + "→ DENEYIM F79.6".
