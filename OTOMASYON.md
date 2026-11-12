@@ -124,11 +124,10 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
 
 Durum: `bekliyor` · `sürüyor` · `bitti` · `takıldı: <neden>` · `cihaz bekliyor`.
 
-Biten paketler: P01–P19, P23–P37, P40, P42, P47 (38; ayrıntı sürüm geçmişinde: `-S '| P01 |'`).
+Biten paketler: P01–P19, P23–P37, P39, P40, P42, P47 (39; P39 cihaz A/B 2026-11-12: soğuk açılış −5…−11 %, beyaz kare −11…−20 %, liste −46 % kare, klavye gürültü sınırında; ayrıntı sürüm geçmişinde: `-S '| P01 |'`).
 
 | No | Paket | Model | Plan maddeleri | Cihaz | APK | Durum / sonuç |
 |---|---|---|---|---|---|---|
-| P39 | Hız hissi (açılış, yeni not, yükleme) | fable | DENEYIM F78.1–F78.5 | cihaz | evet | sürüyor — dal oto/P39-hiz-hissi CI yeşil, main birleşti; kalan: cihaz A/B (DEVIR.md) + birleştirme; ayrıntı: KUYRUK_AYRINTI.md §P39 |
 | P43 | Hız: tek komutla tam ölçüm + karar + altın taban + cihazsız bekçiler (P44 katıldı) | opus | HIZ_PLANI F81–F82 + F68.4 | cihaz |  | bekliyor — önce F82, sonra F81; + F68.4; sabit ek düzeltmesi P49'da; ayrıntı: KUYRUK_AYRINTI.md §P43 |
 | P45 | Hız: her [apk]'da ölçüm + geçmiş | sonnet | HIZ_PLANI F83.1–F83.3 | cihaz |  | bekliyor — HIZ_PLANI F83; ayrıntı: KUYRUK_AYRINTI.md §P45 |
 | P46 | Hız: ölçümün bulduğu yavaşlıkları düzelt | fable (limit %55 üstü → opus) | HIZ_PLANI F84 + F60.S2/F60.5/F68.3 | A/B | evet | bekliyor — `pinned_media_pane.dart`'a DOKUNMAZ (P49'un); sabit ekte bulgu P49 satırına yazılır; ayrıntı: KUYRUK_AYRINTI.md §P46 |

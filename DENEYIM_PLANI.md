@@ -561,7 +561,7 @@ not içi AI levhası (Grep `Bugünkü puan` ARB anahtarı), `test/note_menu_mode
 `android/app/src/main/res/` (`launch_bg`, `styles.xml`), `MainActivity`,
 `pinned_media_pane.dart` (yükleme hâli), `note_card.dart` (görsel yer tutucusu).
 
-- [x] *(2026-11-12: yazıldı, cihazda doğrulanmadı — `LaunchTheme` = `Theme.SplashScreen` (ad korundu, manifest aynı), `MainActivity` `installSplashScreen` + ilk kareye dek tut (3 sn emniyet); debug APK derlendi. Yürütücü `screenrecord` ile beyaz kare sayar; kalıyorsa commit geri alınır.)* **F78.1 Beyaz açılış (D14, K-D8; OTURTMA F60.7).** `androidx.core:core-splashscreen`:
+- [x] *(2026-11-12: yazıldı; cihaz A/B 2026-11-12: `am start -W` 2015/1894 → 1793/1800 ms, açılışta beyaz kare 56/53 → 45/47 (30 fps) — `LaunchTheme` = `Theme.SplashScreen` (ad korundu, manifest aynı), `MainActivity` `installSplashScreen` + ilk kareye dek tut (3 sn emniyet); debug APK derlendi. Yürütücü `screenrecord` ile beyaz kare sayar; kalıyorsa commit geri alınır.)* **F78.1 Beyaz açılış (D14, K-D8; OTURTMA F60.7).** `androidx.core:core-splashscreen`:
   `Theme.App.Starting` (`windowSplashScreenBackground` = Adaçayı zemini `#EAF0EB`,
   `values-night` karşılığı; simge uygulama simgesi), `postSplashScreenTheme` = bugünkü
   `NormalTheme`; `MainActivity.onCreate`'te `installSplashScreen()` +
