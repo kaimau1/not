@@ -8377,4 +8377,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String placementHintShort(String view) {
     return 'Added as $view · tap the switch to change';
   }
+
+  @override
+  String get listPaneRight => 'Note list on the right';
+
+  @override
+  String get listPaneRightInfo =>
+      'In split view (tablet, wide window) the list sits to the right of the note';
+
+  @override
+  String get listPaneMoveRight => 'Move list to the right';
+
+  @override
+  String get listPaneMoveLeft => 'Move list to the left';
 }

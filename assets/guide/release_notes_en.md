@@ -3,6 +3,10 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 12 November 2026 {#2026-11-12}
+- **No list stutter while typing on tablets:** in side-by-side view the list no longer rebuilds on every save while you type; the card updates a few seconds after you stop. Switching from the open note to another one is lighter too.
+- **More writing space on landscape tablets:** in a short window with the keyboard open, the bottom bar hides, the top bar gets thinner and a pinned attachment shrinks to its smallest size.
+- **Simpler narrow list pane:** when the list pane is narrow, the calendar and due strips hide and the AI and filter buttons move into the ⋮ menu.
+- **List pane on the right:** on tablets, long-press the divider or use Settings → Appearance to move the note list to the right.
 - **New trash can:** just drag a note onto the trash and let go, no waiting. The note shrinks and is pulled in as it gets closer, the trash turns red, and on release the note spins into it. "Undo" brings it back. The trash icon no longer stays on screen after dropping.
 - **Two-step hold on items:** holding an item shows a filling ring; at the first light vibration all of the item's text is selected, keep holding and at the second vibration item selection starts.
 - **Checked items stay checked on cards:** tapping a checked item's box on a home screen card no longer unchecks it; the note opens and you can uncheck it there.

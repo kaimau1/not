@@ -3,6 +3,10 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 12 Kasım 2026 {#2026-11-12}
+- **Tablette yazarken liste takılmıyor:** yan yana görünümde not yazarken soldaki liste her kayıtta yeniden kurulmuyor; kart, yazmayı bırakınca birkaç saniye içinde güncellenir. Açık nottan başka nota geçmek de daha hafif.
+- **Yatay tablette klavyeyle daha çok yazı alanı:** pencere kısaysa klavye açıkken alt çubuk gizlenir, üst çubuk incelir, sabit ek en küçük boya iner.
+- **Dar liste bölmesi sadeleşti:** liste bölmesi darken takvim ve zamanı gelenler şeridi gizlenir, AI ve süz düğmeleri ⋮ menüsüne iner.
+- **Liste bölmesi sağa alınabilir:** tablette ayraca uzun basıp ya da Ayarlar → Görünüm'den not listesini sağ tarafa alabilirsin.
 - **Çöp kutusu yenilendi:** notu sürükleyip çöp kutusuna getirmek ve bırakmak yeter, beklemeye gerek yok. Not çöpe yaklaştıkça küçülüp ona doğru çekilir, çöp kutusu kızarır; bırakınca not dönerek içine çekilir. "Geri al" ile geri alabilirsin. Çöp simgesinin bıraktıktan sonra ekranda kalması düzeltildi.
 - **Maddeye basılı tutma iki aşamalı:** basılı tutunca dolan bir halka çıkar; ilk hafif titreşimde maddenin bütün yazısı seçilir, tutmaya devam edersen ikinci titreşimde madde seçimi başlar.
 - **Kartta işaretli madde korunur:** ana ekrandaki kartta işaretli bir maddenin kutusuna yanlışlıkla dokunmak artık işareti kaldırmıyor; not açılır, işareti not içinde kaldırabilirsin.

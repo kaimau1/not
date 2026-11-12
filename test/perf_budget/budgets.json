@@ -86,11 +86,22 @@
   },
   "S12": {
     "senaryo": "1280×800 bölünmüş: açık nota 20 karakter + kayıt (liste akışı kaydı yansıtır)",
-    "dashboard_kurulum": 1,
-    "note_card": 13,
+    "dashboard_kurulum": 0,
+    "note_card": 0,
+    "durunca_dashboard_kurulum": 1,
+    "durunca_note_card": 1,
     "bugun": "DashboardScreen 1 / NoteCard 13 — bütün kartlar (2026-11-11)",
     "hedef": "0 / ≤ 1 (F68.1)",
-    "neden": "İlk ölçüm (bugünkü hâl); hedef F68.1'de işlenecek"
+    "neden": "F68.1 (2026-11-12): yazarken + kayıt penceresinde 0 / 0; yazma durunca (3 sn) pano 1 kez, yalnız o kart"
+  },
+  "S12b": {
+    "senaryo": "1280×800 bölünmüş: açık nottan başka nota geç, içerik değişmedi (F68.2 kapısı)",
+    "dashboard_kurulum": 0,
+    "hucre": 0,
+    "note_card": 2,
+    "bugun": "DashboardScreen 1 / hücre 13 / NoteCard 2 (2026-11-12, düzeltme öncesi) → 0 / 0 / 2",
+    "hedef": "0 / 0 / ≤ 2 (yalnız eski ve yeni açık kartın halesi)",
+    "neden": "F68.2 (2026-11-12): DashboardPaneScope çapa notu değişince bağımlıları uyandırıyordu; çapa yalnız sütun kipi değişince okunur"
   },
   "S13": {
     "senaryo": "Ana ekran (telefon), 300 not, 3 ekran kaydır",

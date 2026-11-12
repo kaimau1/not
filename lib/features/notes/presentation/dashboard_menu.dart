@@ -82,6 +82,14 @@ extension _DashMenu on _DashboardScreenState {
             // menüsü ana menüdeki 3 nokta içinde de olsun"): arama
             // kutusundaki ayar düğmesiyle aynı levha.
             MenuAction('view', l10n.homeViewMenu, Icons.view_quilt_outlined),
+            // DAR LİSTE BÖLMESİ (F67.3): arama hapındaki AI anahtarı burada.
+            if (_narrowPane)
+              MenuAction(
+                'semantic',
+                l10n.semanticSearchToggle,
+                Icons.manage_search,
+                selected: ref.read(semanticSearchEnabledProvider),
+              ),
             // TEMA (kullanıcı isteği 2026-11-06): alçak levha, ana ekran
             // üstte canlı değişir.
             MenuAction('theme', l10n.themePickerTitle, AppIcons.appearance),
@@ -125,6 +133,8 @@ extension _DashMenu on _DashboardScreenState {
         unawaited(context.push('/ai'));
       case 'view':
         unawaited(showFilterSheet(context));
+      case 'semantic':
+        ref.read(semanticSearchEnabledProvider.notifier).toggle();
       case 'theme':
         unawaited(showThemePickerSheet(context));
       case 'account':

@@ -95,6 +95,10 @@ class SplitScope extends InheritedWidget {
       listAutoHides != oldWidget.listAutoHides;
 }
 
+/// Bu genişliğin altındaki liste bölmesi "dar" (F67.3): şeritler gizli,
+/// arama hapı kısa, mikrofon yok (bkz. DashboardScreen).
+const double kNarrowListPane = 420;
+
 /// Sol paneldeki listeye "tek sütun çiz" der (bkz. DashboardScreen).
 class DashboardPaneScope extends InheritedWidget {
   const DashboardPaneScope({
@@ -117,9 +121,11 @@ class DashboardPaneScope extends InheritedWidget {
       maybeOf(context)?.singleColumn ?? false;
 
   @override
+  // Çapa yalnız sütun kipi değişirken okunur (DashboardScreen
+  // `didChangeDependencies`). Tek başına değişince (açık nottan başka nota
+  // geçiş) bildirilmez: bütün pano boşuna kuruluyordu (F68.2, bütçe S12b).
   bool updateShouldNotify(DashboardPaneScope oldWidget) =>
-      singleColumn != oldWidget.singleColumn ||
-      anchorNoteId != oldWidget.anchorNoteId;
+      singleColumn != oldWidget.singleColumn;
 }
 
 /// Not açıkken sol listenin varsayılan genişliği (tek sütun kart).
@@ -265,9 +271,12 @@ class _SplitShellState extends ConsumerState<SplitShell> {
         // oturur — liste bir yarıda, not öbür yarıda; hiçbir şey kıvrımın
         // altında kalmaz. Kullanıcı sürüklerse onun seçimi geçerli.
         final hinge = verticalHingeOf(context);
+        // LİSTE SAĞDA (F67.9): genişlik pencerenin sağ kenarından ölçülür.
+        final right = ref.watch(listPaneRightProvider);
         final hingeWidth = hinge == null || _dragWidth != null
             ? null
-            : hinge.center.dx - _dividerWidth / 2;
+            : (right ? total - hinge.center.dx : hinge.center.dx) -
+                  _dividerWidth / 2;
         // Not yokken liste TAM genişlik (sağda yer tutucu yok — kullanıcı
         // isteği 2026-11-02). Aynı sol panel örneği genişler: arama, süzgeç
         // ve kaydırma not açılıp kapanınca korunur.
@@ -310,6 +319,7 @@ class _SplitShellState extends ConsumerState<SplitShell> {
             noteOpen,
             listNarrow: listNarrow,
             animate: !autoHides,
+            right: right,
           ),
         );
       },
@@ -324,7 +334,14 @@ class _SplitShellState extends ConsumerState<SplitShell> {
     bool noteOpen, {
     required bool listNarrow,
     required bool animate,
+    required bool right,
   }) {
+    // Liste sağdaysa Row ters dizilir; çocuk SIRASI aynı kalır — liste ve
+    // not State'i yön değişince korunur.
+    final ambient = Directionality.of(context);
+    final rowDirection = right
+        ? (ambient == TextDirection.ltr ? TextDirection.rtl : TextDirection.ltr)
+        : ambient;
     return Scaffold(
       // **KLAVYEDE KABUK KISALMAZ** (tablet bulgusu 2026-11-09, ekran
       // görüntüsü: yazarken soldaki ev/klasör/mikrofon/+ düğmeleri listenin
@@ -340,6 +357,7 @@ class _SplitShellState extends ConsumerState<SplitShell> {
         builder: (context, box) {
           final paneWidth = notePaneWidth ?? box.maxWidth;
           return Row(
+            textDirection: rowDirection,
             children: [
               // ShellRoute sol paneli rota değişse de aynı konumda tuttuğu için
               // DashboardScreen'in State'i korunur — not değiştirince liste
@@ -374,7 +392,10 @@ class _SplitShellState extends ConsumerState<SplitShell> {
                 ),
                 builder: (context, open, pane) => ClipRect(
                   child: Align(
-                    alignment: AlignmentDirectional.centerEnd,
+                    // Ayraç tarafına yaslı: liste dış kenara doğru çekilir.
+                    alignment: right
+                        ? AlignmentDirectional.centerStart
+                        : AlignmentDirectional.centerEnd,
                     // Lastik: en dar hâlden sonra itiş görünür daralma verir
                     // (çekişin üçte biri kadar), liste yeniden dizilmez.
                     widthFactor:
@@ -393,7 +414,9 @@ class _SplitShellState extends ConsumerState<SplitShell> {
                   // farenin gerisinde kalıyordu. İmlecin x'ini doğrudan kullanmak
                   // kare zamanlamasından tamamen bağımsız.
                   onDrag: (globalX) {
-                    final raw = globalX - _dividerWidth / 2;
+                    final raw =
+                        (right ? box.maxWidth - globalX : globalX) -
+                        _dividerWidth / 2;
                     final over = (_minListPaneWidth - raw).clamp(0.0, 200.0);
                     final wasArmed = _armed;
                     setState(() {
@@ -422,6 +445,12 @@ class _SplitShellState extends ConsumerState<SplitShell> {
                   onReset: () => ref
                       .read(notePaneWidthProvider.notifier)
                       .set(_defaultNotePaneWidth),
+                  // Uzun bas: listeyi öbür yana al (F67.9).
+                  onMoveSide: () =>
+                      ref.read(listPaneRightProvider.notifier).set(!right),
+                  moveSideLabel: right
+                      ? context.l10n.listPaneMoveLeft
+                      : context.l10n.listPaneMoveRight,
                 ),
               Expanded(
                 child: Stack(
@@ -429,7 +458,8 @@ class _SplitShellState extends ConsumerState<SplitShell> {
                     widget.child,
                     if (_overPull > 0)
                       PositionedDirectional(
-                        start: 12,
+                        start: right ? null : 12,
+                        end: right ? 12 : null,
                         top: 0,
                         bottom: 0,
                         child: Center(
@@ -528,7 +558,13 @@ class _PaneDivider extends StatefulWidget {
     required this.onDrag,
     required this.onDragEnd,
     required this.onReset,
+    required this.onMoveSide,
+    required this.moveSideLabel,
   });
+
+  /// Uzun basış menüsünün tek maddesi: listeyi öbür yana al.
+  final VoidCallback onMoveSide;
+  final String moveSideLabel;
 
   final void Function(double globalX) onDrag;
   final VoidCallback onDragEnd;
@@ -544,6 +580,21 @@ class _PaneDividerState extends State<_PaneDivider> {
   bool _hovering = false;
   bool _dragging = false;
 
+  Future<void> _sideMenu(Offset at) async {
+    final picked = await showMenu<bool>(
+      context: context,
+      position: RelativeRect.fromLTRB(at.dx, at.dy, at.dx, at.dy),
+      items: [
+        PopupMenuItem(
+          key: const ValueKey('list-pane-side'),
+          value: true,
+          child: Text(widget.moveSideLabel),
+        ),
+      ],
+    );
+    if (picked == true) widget.onMoveSide();
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -555,6 +606,9 @@ class _PaneDividerState extends State<_PaneDivider> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onDoubleTap: widget.onReset,
+        onLongPressStart: (d) => unawaited(_sideMenu(d.globalPosition)),
+        // Fare: sağ tık aynı menü.
+        onSecondaryTapUp: (d) => unawaited(_sideMenu(d.globalPosition)),
         // Fare imleci pikselden piksele atlar; `pan` yerine yatay sürükleme
         // kullanmak dikey kaydırmayı ayraca kaptırmamak için.
         onHorizontalDragStart: (_) => setState(() => _dragging = true),

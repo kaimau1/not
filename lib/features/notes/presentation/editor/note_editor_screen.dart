@@ -1223,6 +1223,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final sortHold = ref.read(sortHeldNoteIdsProvider.notifier);
     _sortHold = sortHold;
     unawaited(Future.microtask(() => sortHold.hold(openId)));
+    _previewHold = ref.read(heldNotePreviewProvider.notifier);
     // Notu AÇMAK da bir çalışma izidir ("en çok çalışılan" sıralaması).
     // GEÇİŞ BİTİNCE (kullanıcı bulgusu 2026-10-20: "notu açarken ufak
     // donma"): ilk kareden hemen sonra yazılınca "en çok çalışılan"
@@ -1588,6 +1589,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// F26.3 (bkz. [sortHeldNoteIdsProvider]); dispose'da `ref` yok.
   SortHeldNoteIdsNotifier? _sortHold;
 
+  /// F68.1 (bkz. [heldNotePreviewProvider]); dispose'da `ref` yok.
+  HeldNotePreviewNotifier? _previewHold;
+
   NavigatorState? _rootNavigator;
 
   /// Bu oturumda önerilmiş (not, zaman) çiftleri — aynı öneri yinelenmez.
@@ -1672,6 +1676,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     unawaited(Future.microtask(() => openNotes.close(openId)));
     final sortHold = _sortHold;
     unawaited(Future.microtask(() => sortHold?.release(openId)));
+    _previewHold?.release(openId);
     _pageInkCtl?.dispose();
     // Tam ekran nota bağlı; ağaç kilitliyken durum yazılamaz. Başka bir nota
     // GEÇİLDİYSE (yeni editör çoktan açık) tam ekran sürer.
@@ -1896,6 +1901,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final note = _note;
     if (note == null) return;
     if (!immediate && !inkOnly) _noteTyping();
+    // F68.1: yazım/çizim sürerken listedeki kart beklesin; anında kayıt
+    // (yıldız, sabitle, renk) kartta hemen görünsün.
+    if (immediate) {
+      _previewHold?.release(widget.noteId);
+    } else {
+      _previewHold?.touch(widget.noteId);
+    }
     final wasUndo = _undoStack.canUndo;
     final wasRedo = _undoStack.canRedo;
     // Tek boğaz noktası: sarma çapaları düzenleme tamponunda yaşar, nota
@@ -3998,6 +4010,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Sayfa ortada okuma sütununda mı (bkz. [_buildCanvas]): sabit medya ve
     // belge notunda sayfa bölmeyi doldurur, çubuklar da.
     final readingColumn = !note.type.isPageNoteType && !_titleInBar(note);
+    // KISA PENCERE (F66.7/F67.4: yatay telefon, < 480 dp): üst çubuk 40 dp.
+    // `sizeOf` klavyeyle değişmez — klavye kareleri kök kurulumu görmez.
+    final toolbarHeight =
+        WindowClass.of(context).height == WindowHeight.short
+        ? 40.0
+        : _kEditorToolbarHeight;
     final Widget? bottomBar = _immersiveBubble || _pagePen
         ? null
         : RepaintBoundary(
@@ -4335,7 +4353,11 @@ child: NoteFindBar(
                 // AnimatedSize onun tek adımlık boy değişimini de 260 ms'lik
                 // kare kare yerleşime çeviriyordu.
                 // Paket grubu (F60.2): alt çubuk açık paketi kapatmaz.
-                TapRegion(
+                // KISA PENCERE + KLAVYE (F67.4): alt çubuk gizli, hızlı satır
+                // yeter. Kayıt/dikte sürerken durdur düğmesi kalsın.
+                ShortKeyboardBarHide(
+                keep: _voiceRecorder != null || _dictation != null,
+                child: TapRegion(
                 groupId: kNotePackageTapGroup,
                 child: TypingBarHide(
                   hidden: _typingN,
@@ -4663,6 +4685,7 @@ child: NoteFindBar(
                 ),
                 ),
                 ),
+                ),
               ],
             ),
           );
@@ -4777,7 +4800,7 @@ child: NoteFindBar(
           appBar: _pagePen && ref.watch(noteFullscreenProvider)
               ? null
               : HomeInBar(appBar: PreferredSize(
-                  preferredSize: const Size.fromHeight(_kEditorToolbarHeight),
+                  preferredSize: Size.fromHeight(toolbarHeight),
                   // Bölmenin genişliği: tarih okuma sütunuyla hizalı (F38.2).
                   // `_`: `_themeOf` ekranın kendi bağlamından okur.
                   child: LayoutBuilder(
@@ -4785,7 +4808,7 @@ child: NoteFindBar(
             // SIKI ÜST ÇUBUK (kullanıcı isteği 2026-11-03): 56 → 48 dp —
             // durum çubuğu ile düğmeler arasındaki boşluk yer harcıyordu;
             // simge düğmeleri 48 dp dokunma alanını korur.
-            toolbarHeight: _kEditorToolbarHeight,
+            toolbarHeight: toolbarHeight,
             // Liste gizliyken (tam ekran / odak modu) geri okunun yerinde ☰:
             // tek dokunuşla liste geri gelir (kullanıcı isteği 2026-11-02:
             // "tam ekrandan çıkmak çok zor").
