@@ -132,6 +132,7 @@ Biten paketler: P01–P19, P23–P37, P39, P40, P42, P47 (39; P39 cihaz A/B 2026
 
 | No | Paket | Model | Plan maddeleri | Cihaz | APK | Durum / sonuç |
 |---|---|---|---|---|---|---|
+| P54b | .md başlık düzeltmesi | opus | P54 devamı | | evet | bekliyor — dal `oto/P54b-md-baslik` (119d96f6) CI YEŞİL, yalnız main'e birleştir (sürüm notu P54 maddesinde) |
 | P43 | Hız: tek komutla tam ölçüm + karar + altın taban + cihazsız bekçiler (P44 katıldı) | opus | HIZ_PLANI F81–F82 + F68.4 | cihaz |  | bekliyor — önce F82, sonra F81; + F68.4; sabit ek düzeltmesi P49'da; ayrıntı: KUYRUK_AYRINTI.md §P43 |
 | P45 | Hız: her [apk]'da ölçüm + geçmiş | sonnet | HIZ_PLANI F83.1–F83.3 | cihaz |  | bekliyor — HIZ_PLANI F83; ayrıntı: KUYRUK_AYRINTI.md §P45 |
 | P46 | Hız: ölçümün bulduğu yavaşlıkları düzelt | fable (limit %55 üstü → opus) | HIZ_PLANI F84 + F60.S2/F60.5/F68.3 | A/B | evet | bekliyor — `pinned_media_pane.dart`'a DOKUNMAZ (P49'un); sabit ekte bulgu P49 satırına yazılır; ayrıntı: KUYRUK_AYRINTI.md §P46 |
