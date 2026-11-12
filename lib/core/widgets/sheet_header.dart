@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_tokens.dart';
 import '../l10n_ext.dart';
 
 /// Levha iskeleti (F16.2, 2026-10-31): bütün alt levhalar AYNI başlıkla açılır
@@ -78,13 +79,11 @@ TextStyle? sheetTitleStyle(BuildContext context) =>
         ?.copyWith(fontWeight: FontWeight.w700);
 
 /// Bölüm başlığı stili: CÜMLE DÜZENİ (`toUpperCase` yok — Türkçede
-/// "i" → "I" bozuyordu), `labelLarge`, kalın, varsayılan `primary`.
+/// "i" → "I" bozuyordu), `AppText.section` (14/20 w600, DENEYIM F72.5),
+/// varsayılan `primary`.
 TextStyle? sectionLabelStyle(BuildContext context, {Color? color}) {
-  final theme = Theme.of(context);
-  return theme.textTheme.labelLarge?.copyWith(
-    fontWeight: FontWeight.w700,
-    color: color ?? theme.colorScheme.primary,
-  );
+  final section = AppText.of(Theme.of(context)).section;
+  return color == null ? section : section.copyWith(color: color);
 }
 
 /// Tek bölüm başlığı bileşeni (levha ve liste ekranları).
