@@ -218,7 +218,7 @@ class ActionMenu extends StatelessWidget {
         ? null
         : _settingsButton(context, scheme, compact: true);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, AppSpace.s),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
@@ -268,7 +268,7 @@ class ActionMenu extends StatelessWidget {
               child: inlineEdit,
             ),
           if (danger case final d?) ...[
-            const SizedBox(height: AppSpace.m),
+            const SizedBox(height: AppSpace.s),
             DestructiveRow(
               key: ValueKey('menu-tile-${d.id}'),
               icon: d.icon,
