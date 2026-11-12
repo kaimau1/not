@@ -64,7 +64,7 @@ dosya geçerli).
 | 72 | Zemin: belirteçler, mandal testi, ortak bileşenler | P33 | Opus | F72.1–F72.4 bitti, F72.5 kısmi (dalda, 2026-11-12) |
 | 73 | Renk rolleri + sakin tipografi | P34 | Opus | F73.1–F73.4 bitti (dalda, 2026-11-12; F73.1-2 P36'ya) |
 | 74 | Ana ekran cilası | P35 | Opus | Dalda (oto/P35-ana-ekran), cihaz A/B bekliyor |
-| 75 | Not ekranı alt çubuğu | P36 | Fable | Bekliyor |
+| 75 | Not ekranı alt çubuğu | P36 | Fable | F75.1–F75.3 bitti (dalda `oto/P36-not-alt-cubuk`, 2026-11-12; cihazda A/B bekliyor) |
 | 76 | Levhalar: ortak başlık, ortak karo | P37 | Opus | Bekliyor |
 | 77 | Hareket ve dokunsal dil | P38 | Opus | Bekliyor |
 | 78 | Hız hissi (açılış, yeni not, yükleme hâlleri) | P39 | Fable | Bekliyor |
@@ -360,7 +360,7 @@ Bu faz, F72.5'teki bölüm adı puntosu dışında **ekranda hiçbir şeyi deği
 **Önce oku:** `app_palette.dart` (başlık + `FamilyTokens`), `test/theme_contrast_test.dart`,
 `test/visual_consistency_test.dart`, `test/note_accent_consistency_test.dart`, `due_banner.dart`.
 
-- [x] **F73.1 Rol sözleşmesi + bekçi (K-D1).** *(2026-11-12: 1,3,4,5,6 yapıldı + `test/color_roles_test.dart` (eski `due_banner` ile kırmızı → yeşil); **2 (`_addToolButton`) YAPILMADI — `editor/` P36'nın (Ek D.1), sabah bakılacak**; AiIcon dolu düğmede/devre dışıyken miras renkte.)* §2.2 tablosu `app_palette.dart` başlığına.
+- [x] **F73.1 Rol sözleşmesi + bekçi (K-D1).** *(2026-11-12: 1,3,4,5,6 yapıldı + `test/color_roles_test.dart` (eski `due_banner` ile kırmızı → yeşil); 2 (`_addToolButton`) P36'da yapıldı (2026-11-12); AiIcon dolu düğmede/devre dışıyken miras renkte.)* §2.2 tablosu `app_palette.dart` başlığına.
   Düzeltilecekler:
   1. `due_banner.dart`: `tertiaryContainer/onTertiaryContainer` → `secondaryContainer/
      onSecondaryContainer`.
@@ -455,18 +455,18 @@ Yerleşim DEĞİŞMEZ (arama hapı, şeritler, çipler, "+" paneli bugünkü yer
 ek çubuğu, hızlı satır, çubuk YÜKSEKLİĞİ ve klavyeyle gizlenme (P23, P25; OTURTMA F67.4 —
 P18'in işi) DEĞİŞMEZ.
 
-- [ ] **F75.1 Sol kapsülde Kalem (D8, K-D6).** Sıra: Biçim · Ekle · **Kalem** · Ara ·
+- [x] **F75.1 Sol kapsülde Kalem (D8, K-D6).** *(2026-11-12: sıra Biçim · Ekle · Kalem · Ara · Ekler · ☑|Seç; `planEditorBar`'dan `share` kalktı, 36 dp adımı geldi; 360/393/412 dp testte taşma yok. YENİ KARAR (en güvenli, sabah bakılacak): 360 dp + ekli metin notunda Kalem sığmıyor (24 dp) → o durumda Kalem kapsülden düşer (`plan.pen`; hızlı satırda duruyor), ☑/Ekler eski yerinde kalır — kesik kapsül yerine. Çit dışı zorunlu dokunuş, sabah bakılacak: `UiItem.barPen` + kişiselleştirme satırı (Paylaş → Kalem), `_barHasShare`; tur sahnesi `n4-paylas` artık atlanıyor.)* Sıra: Biçim · Ekle · **Kalem** · Ara ·
   (Ekler) · (☑|Seç). Kalem = hızlı satırdaki kalem düğmesinin yaptığı iş (aynı işlev
   çağrılır; yeni durum yok). Paylaş kapsülden çıkar (`planEditorBar`'ın `share` alanı ve
   "önce Paylaş'ı düşür" adımı kalkar; "Ara'yı düşür" kalır). Belge notundaki ayrı kalem
   düğmesi (`_penWidth`) bu segmentle birleşir — iki kalem düğmesi yan yana durmaz.
   `planEditorBar` testine 360 / 393 / 412 dp: taşma yok.
   HAFIZA `arayuz.md`'deki "Alt çubuk sırası sabit: …" satırı yeni sırayla güncellenir.
-- [ ] **F75.2 Dokunma hedefi (D8).** Segmentin GÖRÜNEN boyu ve çubuk yüksekliği aynı kalır;
+- [x] **F75.2 Dokunma hedefi (D8).** *(2026-11-12: 8 segment `MinTapTarget`, 48 dp yüksek, yatayda segment + boşluk (`minWidth` eklendi — çit dışı, sabah bakılacak); kapsül dolgusu Row'un içine alındı (yoksa pay yakalanmıyordu); görünen boy 40, çubuk 50 dp aynı; `accessibility_test` "not alt çubuğu".)* Segmentin GÖRÜNEN boyu ve çubuk yüksekliği aynı kalır;
   her segment `MinTapTarget` ile 48 dp'lik dokunma alanı alır (komşu alanlar çakışmasın:
   yatayda segment + boşluk payı, dikeyde çubuğun tamamı). `accessibility_test`'e not ekranı
   alt çubuğu satırı.
-- [ ] **F75.3 Renkli notta kapsül rengi (D8, K-D6).** `NoteAccent` doluyken (renkli not):
+- [x] **F75.3 Renkli notta kapsül rengi (D8, K-D6).** *(2026-11-12: `_barInk`/`_barPage` build'de `NoteAccent` değerlerinden; açık kayıt/dikte düğmesi dolu not tonu; `note_accent_consistency_test` 3 yeni test; tur `telefon-n1`/`n4` çubukta petrol yok. Koyu tur ve cihazda A/B (`ab_klavye.py`) YAPILMADI — yürütücüde.)* `NoteAccent` doluyken (renkli not):
   sol kapsül zemini `Color.alphaBlend(noteInk %8, sayfa rengi)`, çerçeve `noteInk %12`; sağ
   kapsül (`_aiCapsule`) `noteInk %14`, çerçevesiz; simgeler `noteInk`; etkin segment
   `noteInk %18`; "+" rozeti `noteInk %18`. Renksiz notta bugünkü renkler (F73.1'in rozet

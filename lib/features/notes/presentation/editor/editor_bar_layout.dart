@@ -14,7 +14,9 @@
 ///  2. Ara'yı kapsülden çıkarır — ⋮ menüsünde zaten duruyor, yani hiçbir iş
 ///     erişilemez hâle gelmez;
 ///  3. sağdaki düğmeleri 36 dp'ye indirir (393 dp + ekli not; dokunma alanı
-///     yine 48 dp yüksek — bkz. `MinTapTarget`).
+///     yine 48 dp yüksek — bkz. `MinTapTarget`);
+///  4. Kalem'i çıkarır (360 dp + ekli metin notu) — klavye açıkken hızlı
+///     satırda duruyor; eski yerleşimdeki düğmeler (☑/Seç, Ekler) kalır.
 ///
 /// 2026-10-11: sağdaki üç düğme artık AYRI gölgeli kareler değil, TEK vurgu
 /// renkli kapsülün segmentleri (bkz. editördeki `_aiCapsule`). [button]
@@ -22,10 +24,10 @@
 /// segmentler arası boşluk.
 ///
 /// 2026-11-12 (F75.1, K-D6): Paylaş kapsülden çıktı (⋮ menüsünün hızlı
-/// satırında), yerine KALEM geldi. Kalem sabit bir segment — çağıran
-/// `fixedSegments`'e sayar; belge notunun ayrı kalem düğmesi de o segment
-/// oldu (eski `pen` girdisi ve `share` alanı kalktı).
-typedef EditorBarPlan = ({double button, double gap, bool search});
+/// satırında), yerine KALEM geldi; belge notunun ayrı kalem düğmesi de o
+/// segment oldu (`share` alanı kalktı). `pen` girdisi "kalem isteniyor mu",
+/// plandaki [pen] "sığdı mı" — çağıran kalemi `fixedSegments`'e SAYMAZ.
+typedef EditorBarPlan = ({double button, double gap, bool search, bool pen});
 
 /// Kapsüldeki bir segmentin kenarı ve aralığı (editördeki `_kToolSegment`).
 const double kEditorBarSegment = 40;
@@ -47,6 +49,7 @@ EditorBarPlan planEditorBar({
   required double width,
   required int fixedSegments,
   required bool attachments,
+  bool pen = true,
   int aiButtons = 3,
 }) {
   double need(double button, double gap, int optional) {
@@ -65,13 +68,22 @@ EditorBarPlan planEditorBar({
             : 0);
   }
 
-  const steps = [(44.0, 2.0, 1), (40.0, 2.0, 1), (40.0, 2.0, 0), (36.0, 2.0, 0)];
-  for (final (button, gap, optional) in steps) {
-    if (need(button, gap, optional) <= width) {
-      return (button: button, gap: gap, search: optional >= 1);
+  // (düğme, boşluk, Ara, Kalem)
+  const steps = [
+    (44.0, 2.0, true, true),
+    (40.0, 2.0, true, true),
+    (40.0, 2.0, false, true),
+    (36.0, 2.0, false, true),
+    (40.0, 2.0, false, false),
+    (36.0, 2.0, false, false),
+  ];
+  for (final (button, gap, search, keepPen) in steps) {
+    final withPen = pen && keepPen;
+    if (need(button, gap, (search ? 1 : 0) + (withPen ? 1 : 0)) <= width) {
+      return (button: button, gap: gap, search: search, pen: withPen);
     }
   }
-  // Hiçbiri sığmadı (360 dp + ekli not ya da çok dar pencere): en sıkı plan;
-  // kapsül kendi içinde kayar.
-  return (button: 36.0, gap: 2.0, search: false);
+  // Hiçbiri sığmadı (çok dar pencere): en sıkı plan; kapsül kendi içinde
+  // kayar.
+  return (button: 36.0, gap: 2.0, search: false, pen: false);
 }

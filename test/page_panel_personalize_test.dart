@@ -302,12 +302,12 @@ void main() {
     test('alt çubuk: gizlenen AI düğmeleri yer açar', () {
       final full = planEditorBar(
         width: 260,
-        fixedSegments: 2,
+        fixedSegments: 1,
         attachments: false,
       );
       final noAi = planEditorBar(
         width: 260,
-        fixedSegments: 2,
+        fixedSegments: 1,
         attachments: false,
         aiButtons: 0,
       );

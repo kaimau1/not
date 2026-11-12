@@ -4431,7 +4431,7 @@ child: NoteFindBar(
                       // KALEM (F75.1): metin/liste notunda sayfa kalemi
                       // (salt okunurda yok — hızlı satırla aynı kural), belge
                       // notunda sayfanın üzerine yazma.
-                      final showPen =
+                      final wantPen =
                           (isDocumentNote || !_readOnly) &&
                           on(UiItem.barPen);
                       final showAi = on(UiItem.barAi);
@@ -4462,18 +4462,20 @@ child: NoteFindBar(
                       ].where((v) => v).length;
                       // Genişliğe göre plan: taşma/kesik kapsül yerine önce
                       // düğmeler küçülür, sonra ⋮ menüsünde de bulunan
-                      // Ara kapsülden çıkar (bkz. planEditorBar).
+                      // Ara, en son Kalem kapsülden çıkar (bkz.
+                      // planEditorBar).
                       final plan = planEditorBar(
                         width: constraints.maxWidth,
                         fixedSegments:
                             (showFormat ? 1 : 0) +
                             (showAdd ? 1 : 0) +
-                            (showPen ? 1 : 0) +
                             (showCheckbox ? 1 : 0) +
                             (showSelect ? 1 : 0),
                         attachments: showAttachments,
+                        pen: wantPen,
                         aiButtons: aiCount,
                       );
+                      final showPen = plan.pen;
                       final showSearch =
                           plan.search && on(UiItem.barSearch);
                       _barHasSearch = showSearch && !editingUi;

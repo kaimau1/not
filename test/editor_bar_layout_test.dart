@@ -3,14 +3,14 @@ import 'package:notlar/features/notes/presentation/editor/editor_bar_layout.dart
 
 /// Editörün alt çubuğu taşmak yerine sığar (bkz. [planEditorBar]).
 ///
-/// F75.1 (K-D6): Paylaş kapsülden çıktı, Kalem sabit segment. Metin notunun
-/// sabitleri: Biçim · Ekle · Kalem · ☑ = 4. Genişlik = ekran − 24
-/// (BottomAppBar dolgusu).
+/// F75.1 (K-D6): Paylaş kapsülden çıktı, yerine Kalem geldi. Metin notunun
+/// sabitleri Biçim · Ekle · ☑ = 3 (+ Kalem, + Ara plandan). Genişlik =
+/// ekran − 24 (BottomAppBar dolgusu).
 void main() {
   /// Planın gerçekten SIĞDIĞI: sol kapsül + boşluk + sağ kapsül ≤ genişlik
   /// (planEditorBar'ın kendi hesabının bağımsız tekrarı).
-  double used(EditorBarPlan plan, {required int fixed, bool files = false}) {
-    final n = fixed + (plan.search ? 1 : 0);
+  double used(EditorBarPlan plan, {bool files = false}) {
+    final n = 3 + (plan.search ? 1 : 0) + (plan.pen ? 1 : 0);
     return 8 +
         n * kEditorBarSegment +
         (n - 1) * kEditorBarSegmentGap +
@@ -19,69 +19,87 @@ void main() {
         (8 + 3 * plan.button + 2 * plan.gap);
   }
 
+  EditorBarPlan plan(double screen, {required bool files}) =>
+      planEditorBar(width: screen - 24, fixedSegments: 3, attachments: files);
+
   test('geniş ekranda her şey tam boy', () {
-    final plan = planEditorBar(width: 600, fixedSegments: 4, attachments: true);
-    expect(plan, (button: 44.0, gap: 2.0, search: true));
+    expect(plan(624, files: true), (
+      button: 44.0,
+      gap: 2.0,
+      search: true,
+      pen: true,
+    ));
   });
 
-  test('412 dp: ekler yokken tam boy; ekliyken Ara çıkar, taşma yok', () {
-    const width = 412.0 - 24;
-    final plain = planEditorBar(
-      width: width,
-      fixedSegments: 4,
-      attachments: false,
-    );
-    expect(plain, (button: 44.0, gap: 2.0, search: true));
-    expect(used(plain, fixed: 4), lessThanOrEqualTo(width));
-
-    final files = planEditorBar(
-      width: width,
-      fixedSegments: 4,
-      attachments: true,
-    );
-    expect(files, (button: 40.0, gap: 2.0, search: false));
-    expect(used(files, fixed: 4, files: true), lessThanOrEqualTo(width));
+  test('412 dp: ekler yokken tam boy; ekliyken Ara çıkar', () {
+    expect(plan(412, files: false), (
+      button: 44.0,
+      gap: 2.0,
+      search: true,
+      pen: true,
+    ));
+    expect(plan(412, files: true), (
+      button: 40.0,
+      gap: 2.0,
+      search: false,
+      pen: true,
+    ));
   });
 
-  test('393 dp: önce düğmeler küçülür, ekliyken Ara çıkar; taşma yok', () {
-    const width = 393.0 - 24;
-    final plain = planEditorBar(
-      width: width,
-      fixedSegments: 4,
-      attachments: false,
-    );
-    expect(plain, (button: 40.0, gap: 2.0, search: true));
-    expect(used(plain, fixed: 4), lessThanOrEqualTo(width));
-
-    final files = planEditorBar(
-      width: width,
-      fixedSegments: 4,
-      attachments: true,
-    );
-    expect(files, (button: 36.0, gap: 2.0, search: false));
-    expect(used(files, fixed: 4, files: true), lessThanOrEqualTo(width));
+  test('393 dp: önce düğmeler küçülür, ekliyken Ara çıkar', () {
+    expect(plan(393, files: false), (
+      button: 40.0,
+      gap: 2.0,
+      search: true,
+      pen: true,
+    ));
+    expect(plan(393, files: true), (
+      button: 36.0,
+      gap: 2.0,
+      search: false,
+      pen: true,
+    ));
   });
 
-  test('360 dp: Ara çıkar, Kalem kalır; taşma yok', () {
-    const width = 360.0 - 24;
-    final plain = planEditorBar(
-      width: width,
-      fixedSegments: 4,
-      attachments: false,
-    );
-    expect(plain, (button: 40.0, gap: 2.0, search: false));
-    expect(used(plain, fixed: 4), lessThanOrEqualTo(width));
-    // Liste/belge notu (Biçim · Ekle · Kalem) + ekler de sığar.
-    final files = planEditorBar(
-      width: width,
+  test('360 dp: Ara çıkar, Kalem kalır; ekliyken Kalem de çıkar', () {
+    expect(plan(360, files: false), (
+      button: 40.0,
+      gap: 2.0,
+      search: false,
+      pen: true,
+    ));
+    expect(plan(360, files: true), (
+      button: 40.0,
+      gap: 2.0,
+      search: false,
+      pen: false,
+    ));
+  });
+
+  test('360 / 393 / 412 dp: taşma yok (ekli ve eksiz)', () {
+    for (final screen in [360.0, 393.0, 412.0]) {
+      for (final files in [false, true]) {
+        expect(
+          used(plan(screen, files: files), files: files),
+          lessThanOrEqualTo(screen - 24),
+          reason: '$screen dp, ek: $files',
+        );
+      }
+    }
+  });
+
+  test('kalem istenmiyorsa (gizli / salt okunur) planda da yok', () {
+    final plan = planEditorBar(
+      width: 600,
       fixedSegments: 3,
-      attachments: true,
+      attachments: false,
+      pen: false,
     );
-    expect(used(files, fixed: 3, files: true), lessThanOrEqualTo(width));
+    expect(plan.pen, isFalse);
   });
 
   test('çok dar pencerede en sıkı plan (kapsül kendi içinde kayar)', () {
-    final plan = planEditorBar(width: 200, fixedSegments: 4, attachments: true);
-    expect(plan, (button: 36.0, gap: 2.0, search: false));
+    final plan = planEditorBar(width: 200, fixedSegments: 3, attachments: true);
+    expect(plan, (button: 36.0, gap: 2.0, search: false, pen: false));
   });
 }
