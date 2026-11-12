@@ -19,7 +19,12 @@ class SheetHeader extends StatelessWidget {
     this.actions = const [],
     this.onClose,
     this.showClose = true,
-    this.padding = const EdgeInsets.fromLTRB(20, 0, 8, 8),
+    this.padding = const EdgeInsets.fromLTRB(
+      AppSpace.l,
+      0,
+      AppSpace.s,
+      AppSpace.s,
+    ),
   });
 
   final String title;
@@ -34,7 +39,9 @@ class SheetHeader extends StatelessWidget {
     return Padding(
       padding: padding,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 48),
+        // 56 dp (DENEYIM §2.3): ✕ olan levhada tutamak yok (K-D7), başlık
+        // levhanın tepesinden başlar — 48'de üst kenara yapışıyordu.
+        constraints: const BoxConstraints(minHeight: 56),
         child: Row(
           children: [
             // Expanded: Flexible + Spacer boş alanı yarı yarıya bölüyor, ✕ sağ
@@ -74,9 +81,9 @@ class SheetHeader extends StatelessWidget {
 
 /// Levha başlığının yazı stili — başlığı kendi düzeninde çizen levhalar da
 /// (ör. önizlemeli Paylaş) bunu kullanır.
+/// `AppText.sheetTitle` (18/24 w600, DENEYIM §2.1) — bütün levhalarda aynı.
 TextStyle? sheetTitleStyle(BuildContext context) =>
-    Theme.of(context).textTheme.titleMedium
-        ?.copyWith(fontWeight: AppWeight.strong);
+    AppText.of(Theme.of(context)).sheetTitle;
 
 /// Bölüm başlığı stili: CÜMLE DÜZENİ (`toUpperCase` yok — Türkçede
 /// "i" → "I" bozuyordu), `AppText.section` (14/20 w600, DENEYIM F72.5),

@@ -35,24 +35,23 @@ Future<void> showNoteActionsSheet(
   Note note,
 ) async {
   final l10n = context.l10n;
+  final menu = noteMenuModel(
+    l10n,
+    note,
+    surface: NoteMenuSurface.card,
+    canPinHome: NoteShortcut.supported,
+    localOnlyAvailable: localOnlySupported(ref),
+    localOnly: note.localOnly,
+  );
   final action = await showAppSheet<String>(
     context: context,
-    showDragHandle: true,
+    // Başlıklı menüde ✕ var, tutamak yok (DENEYIM K-D7).
+    showDragHandle: !menu.hasHeader,
     // Izgara varsayılan yükseklik sınırına (ekranın 9/16'sı) sığar ama büyük
     // yazı ölçeğinde taşabilir; isScrollControlled + kaydırma güvenlik ağı.
     isScrollControlled: true,
-    builder: (sheetContext) => SafeArea(
-      child: SingleChildScrollView(
-        child: noteMenuModel(
-          l10n,
-          note,
-          surface: NoteMenuSurface.card,
-          canPinHome: NoteShortcut.supported,
-          localOnlyAvailable: localOnlySupported(ref),
-          localOnly: note.localOnly,
-        ),
-      ),
-    ),
+    builder: (sheetContext) =>
+        SafeArea(child: SingleChildScrollView(child: menu)),
   );
   if (action == null || !context.mounted) return;
   await _runNoteAction(context, ref, note, action);
