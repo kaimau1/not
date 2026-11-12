@@ -2723,7 +2723,7 @@
   "gtasksFailed": "Couldn't sync with Google Tasks",
   "gtasksSyncNow": "Sync now",
   "gtasksSynced": "Tasks synced",
-  "eventSaveLocal": "This device",
+  "eventSaveLocal": "All devices",
   "gcalWriteDenied": "Permission to write to Google Calendar wasn't granted",
   "gcalDeleteConfirm": "Delete this event from Google Calendar? This can't be undone.",
   "gcalEdit": "Edit",

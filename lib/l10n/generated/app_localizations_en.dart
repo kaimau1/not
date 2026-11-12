@@ -7458,7 +7458,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gtasksSynced => 'Tasks synced';
 
   @override
-  String get eventSaveLocal => 'This device';
+  String get eventSaveLocal => 'All devices';
 
   @override
   String get gcalWriteDenied =>

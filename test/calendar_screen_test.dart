@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:notlar/features/calendar/data/calendar_repository.dart';
+import 'package:notlar/features/calendar/data/google_calendar_sync.dart';
 import 'package:notlar/features/calendar/domain/agenda.dart';
 import 'package:notlar/features/calendar/domain/calendar_alarms.dart';
 import 'package:notlar/features/calendar/domain/calendar_event.dart';
@@ -173,8 +174,11 @@ void main() {
     Widget app({
       List<CalendarEvent> events = const [],
       List<Note> reminders = const [],
+      bool googleConnected = false,
     }) => ProviderScope(
       overrides: [
+        if (googleConnected)
+          googleCalendarProvider.overrideWith(_ConnectedGoogle.new),
         sharedPreferencesProvider.overrideWithValue(prefs),
         calendarRepositoryProvider.overrideWithValue(
           CalendarRepository(db, 'u1'),
@@ -418,6 +422,28 @@ void main() {
       expect(find.text('29 Ekim Bayramı'), findsNothing);
     });
 
+    // P48 (kullanıcı 2026-11-12): "telefonda eklediğim etkinlikler tablette
+    // görülmüyor". Google Takvim bağlantısı CİHAZA özgü (SharedPreferences);
+    // bağlı telefonda yeni etkinlik varsayılan Google'a gidiyordu → bağlı
+    // olmayan tablet/web görmüyordu. Varsayılan: bütün cihazlarda görünen depo.
+    testWidgets('Google bağlıyken de yeni etkinlik bütün cihazlara yazılır', (
+      tester,
+    ) async {
+      phone(tester);
+      await tester.pumpWidget(app(googleConnected: true));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('calendar-new-event')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('event-target')), findsOneWidget);
+      await tester.enterText(find.byKey(const ValueKey('event-title')), 'Yoga');
+      await tester.ensureVisible(find.byKey(const ValueKey('event-save')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('event-save')));
+      await tester.pumpAndSettle();
+      final docs = await db.collection('users/u1/events').get();
+      expect(docs.docs.single.data()['title'], 'Yoga');
+    });
+
     // "Yeni etkinlik açılırken ciddi kasma": klavye levha açıldıktan SONRA.
     testWidgets('yeni etkinlik: başlık odağı açılış animasyonu bitince', (
       tester,
@@ -524,4 +550,14 @@ void main() {
       );
     });
   });
+}
+
+/// Google Takvim'e bağlı cihaz (yazma izni yok — Google yoluna düşerse
+/// kayıt hiç yapılmaz).
+class _ConnectedGoogle extends GoogleCalendarController {
+  @override
+  GoogleCalendarState build() => const GoogleCalendarState(connected: true);
+
+  @override
+  Future<bool> connectWrite() async => false;
 }

@@ -122,11 +122,12 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
   late Recurrence _repeat = Recurrence.parse(widget.existing?.repeat);
   late int? _reminder;
 
-  /// Yeni etkinlik nereye kaydedilsin (Faz 51, K2): Google bağlıysa
-  /// varsayılan Google; nottan bağlanırken bu cihaz (bağ yerel etkinliğe).
-  late bool _toGoogle =
-      widget.existing?.fromGoogle ??
-      (widget.linkNoteId == null && ref.read(googleCalendarProvider).connected);
+  /// Yeni etkinlik nereye kaydedilsin (Faz 51). Varsayılan HER ZAMAN
+  /// bütün cihazlarda görünen depo (Firestore). P48 (2026-11-12): Google
+  /// bağlantısı cihaza özgü — K2'nin "bağlıysa Google" varsayılanıyla
+  /// telefonda eklenen etkinlik, Google'ı bağlamamış tablet/webde hiç
+  /// görünmüyordu. Google'a yazmak elle seçilir. (K2 sapması: sabah bakılacak.)
+  late bool _toGoogle = widget.existing?.fromGoogle ?? false;
 
   @override
   void initState() {
@@ -500,7 +501,7 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
                         segments: [
                           ButtonSegment(
                             value: false,
-                            icon: const Icon(Icons.smartphone, size: 18),
+                            icon: const Icon(Icons.devices_outlined, size: 18),
                             label: Text(l10n.eventSaveLocal),
                           ),
                           ButtonSegment(
