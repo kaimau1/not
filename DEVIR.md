@@ -18,9 +18,10 @@
 - Tur sahnesi `n4-paylas` artık "dokunulacak öğe yok" (Paylaş çubukta değil) — P37 turundan önce sahne ⋮ üzerinden açılmalı.
 - YENİ KARAR (en güvenli): 360 dp + ekli METİN notunda Kalem sığmıyor (24 dp; ilk turda ☑ kesik çıktı) →
   `planEditorBar` son adımda Kalem'i düşürür (`plan.pen`), ☑/Ekler kalır. Kalem klavye açıkken hızlı satırda.
-**Açık**
-- Cihazda A/B (`tool/perf/ab_klavye.py`) YAPILMADI — yürütücünün işi; `[apk]` öncesi şart.
-**Komutlar**
-- `flutter test test/editor_bar_layout_test.dart test/note_accent_consistency_test.dart test/accessibility_test.dart
-  test/page_panel_personalize_test.dart test/keyboard_jank_guard_test.dart test/perf_budget_test.dart --reporter failures-only`
-- Tur: `TOUR_COMPARE=build/tour-once flutter test tool/tour/screen_tour_test.dart`
+**Durum:** bitti; commit 95f65b71 (iş), e52670a1 (Kalem düşer + plan), 102d6b1a (AppAlpha + bütçe) — CI yeşil (102d6b1a).
+İlk CI kırmızısı: `design_tokens_guard_test` (elle saydamlık; radius/iconSize bütçesi düşmeliydi) → belirteç + bütçe.
+Tur (önce/sonra, 266 PNG): değişen yalnız not sahneleri (n1, n2, n4, n1/n4-menu, n4-ekle, n4-ai, e-*); `n4-paylas` çekilmedi.
+**Açık:** cihazda A/B (`tool/perf/ab_klavye.py`) YAPILMADI — yürütücünün işi, `[apk]` öncesi şart. Sürüm notu eklenmedi (birleştirmede).
+**Komutlar:** `flutter test test/editor_bar_layout_test.dart test/note_accent_consistency_test.dart test/accessibility_test.dart
+test/design_tokens_guard_test.dart test/keyboard_jank_guard_test.dart test/perf_budget_test.dart --reporter failures-only` ·
+tur: `TOUR_COMPARE=build/tour-once flutter test tool/tour/screen_tour_test.dart`
