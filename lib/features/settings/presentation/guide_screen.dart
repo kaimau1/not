@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/utils/search_fold.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/app_icons.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// KULLANIM KILAVUZU (kullanıcı isteği 2026-10-11: "tüm özellikleri anlatan,
 /// gösteren bir kullanım kılavuzu").
@@ -463,7 +464,7 @@ class _GuideBlockView extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final base = theme.textTheme.bodyMedium?.copyWith(height: 1.45);
-    final bold = base?.copyWith(fontWeight: FontWeight.w700);
+    final bold = base?.copyWith(fontWeight: AppWeight.strong);
     final text = Text.rich(
       TextSpan(style: base, children: guideInlineSpans(block.text, bold)),
     );
@@ -516,7 +517,7 @@ class _GuideBlockView extends StatelessWidget {
                   style: TextStyle(
                     color: scheme.onPrimary,
                     fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: AppWeight.strong,
                   ),
                 ),
               ),

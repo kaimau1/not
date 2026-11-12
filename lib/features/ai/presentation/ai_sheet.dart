@@ -1053,7 +1053,7 @@ class _AiRow extends StatelessWidget {
                       Text(
                         title,
                         style: const TextStyle(
-                          fontSize: 14.5,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -1122,7 +1122,7 @@ class _AiTileGrid extends StatelessWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 13.5,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

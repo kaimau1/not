@@ -21,6 +21,7 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/friendly_error.dart';
 import '../../../core/a11y/chip_roles.dart';
 import '../../../core/app_icons.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Sesli yakalama levhası — ana ekran ve not editörünün ORTAK bileşeni.
 ///
@@ -1020,7 +1021,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                       Text(
                         '${context.l10n.recordAudio} · ${_format(_elapsed)}',
                         style: TextStyle(
-                          fontSize: 12.5,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: scheme.primary,
                         ),
@@ -1033,7 +1034,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                 TextField(
                   key: const ValueKey('voice-title'),
                   controller: _titleController,
-                  style: style.copyWith(fontWeight: FontWeight.w700),
+                  style: style.copyWith(fontWeight: AppWeight.strong),
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
@@ -1084,7 +1085,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                   child: Text(
                     '${context.l10n.noteTitleLabel}: $title',
                     style: style.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppWeight.strong,
                       color: scheme.primary,
                     ),
                   ),
@@ -1380,7 +1381,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         avatar: const Icon(Icons.expand_more, size: 18),
         label: Text(
           l10n.more,
-          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
         ),
         labelPadding: const EdgeInsets.symmetric(horizontal: 2),
         visualDensity: VisualDensity.compact,
@@ -1399,7 +1400,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
             label: Text(
               label,
               style: const TextStyle(
-                fontSize: 12.5,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),

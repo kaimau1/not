@@ -15,6 +15,7 @@ import 'template_editor_screen.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../../core/a11y/chip_roles.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **ŞABLON GALERİSİ + ÖNİZLEME/DÜZENLEME** (bkz. [NoteTemplate]).
 ///
@@ -791,7 +792,7 @@ class _TemplateCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: scheme.onSurfaceVariant,
-                        fontSize: 11,
+                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -1176,7 +1177,7 @@ class _TemplateComposerState extends State<TemplateComposer> {
                     plain.isEmpty ? ' ' : plain,
                     style: heading
                         ? theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
+                            fontWeight: AppWeight.strong,
                           )
                         : theme.textTheme.bodyMedium?.copyWith(
                             color: scheme.onSurfaceVariant,

@@ -21,6 +21,7 @@ import 'read_document.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
 import '../../../core/app_icons.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Tüm yapay zekâ özelliklerinin tek giriş noktası.
 ///
@@ -426,7 +427,7 @@ class _Hero extends StatelessWidget {
                     Text(
                       l10n.aiHubTagline,
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppWeight.strong,
                         color: scheme.onPrimaryContainer,
                       ),
                     ),
@@ -517,7 +518,7 @@ class _PointsPill extends StatelessWidget {
                       l10n.aiPointsOf(remaining, limit),
                       style: const TextStyle(
                         fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppWeight.strong,
                       ),
                     ),
                   ],
@@ -746,7 +747,7 @@ class _ChatCard extends StatelessWidget {
                   l10n.aiChatWithNotes,
                   style: const TextStyle(
                     fontSize: 15.5,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: AppWeight.strong,
                   ),
                 ),
               ),
@@ -1003,7 +1004,7 @@ class _ToolCard extends StatelessWidget {
                         title,
                         style: const TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: AppWeight.strong,
                         ),
                       ),
                       const SizedBox(height: 2),

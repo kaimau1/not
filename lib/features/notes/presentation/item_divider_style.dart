@@ -6,6 +6,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/color_palette.dart';
 import '../domain/note_item.dart';
 import '../../../core/a11y/chip_roles.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Madde altı ayırıcıyı ([ItemDivider]) çizer — editör satırı ve ana ekran
 /// kartı aynı çizimi kullanır (yalnız temel kalınlık ve kenar payı farklı).
@@ -196,7 +197,7 @@ class _ItemDividerSheetState extends State<_ItemDividerSheet> {
             Text(
               l10n.dividerSettings,
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: AppWeight.strong,
               ),
             ),
             const SizedBox(height: 12),

@@ -22,6 +22,7 @@ import '../../settings/data/permissions_service.dart';
 import '../../settings/settings_providers.dart' show sharedPreferencesProvider;
 import 'note_card.dart';
 import 'notes_providers.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// MIUI'de bir kez: "Otomatik başlatma" yoksa telefon yeniden başlayınca
 /// hatırlatıcılar uygulama açılana dek kurulmaz (izin durumu okunamıyor,
@@ -350,8 +351,8 @@ class _ReminderTile extends ConsumerWidget {
                     child: Text(
                       l10n.reminderOverdue,
                       style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                        fontWeight: AppWeight.strong,
                         color: scheme.onErrorContainer,
                       ),
                     ),

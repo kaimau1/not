@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../l10n_ext.dart';
 import '../personalize.dart';
 import 'undo_snackbar.dart';
+import '../../app/theme/app_tokens.dart';
 
 /// Kişiselleştirilebilir bir alan/düğme (bkz. `Personalize`).
 ///
@@ -211,7 +212,7 @@ class _CustomizeStrip extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: scheme.onInverseSurface,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppWeight.strong,
                       fontSize: 13,
                     ),
                   ),

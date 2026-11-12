@@ -14,6 +14,7 @@ import '../domain/note_folder.dart';
 import 'folder_nav.dart';
 import 'folder_sheets.dart';
 import 'folder_tile.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **KLASÖRLER** — geniş ekran gezinme rayının bölümü (kullanıcı isteği
 /// 2026-09-22: rayda "Gelen kutusu ve Klasörler de eklensin").
@@ -63,6 +64,13 @@ class FoldersScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsetsDirectional.only(end: 12),
             child: FilledButton.tonalIcon(
+              // Oluşturma = primary rolü (DENEYIM §2.2 K-D1); tonal varsayılanı
+              // secondaryContainer (sıcak = zaman/dikkat) idi.
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                foregroundColor:
+                    Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
               onPressed: () async {
                 final id = await showFolderEditorDialog(context, ref);
                 if (id != null && context.mounted) {
@@ -336,7 +344,7 @@ class FolderCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
+                                fontWeight: AppWeight.strong,
                               ),
                             ),
                             Text(

@@ -24,6 +24,7 @@ import 'viewers/ink_layer.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 import '../../../core/app_icons.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **KARTIN MEDYA PLANI** — ana ekran kartında hangi ekin nasıl görüneceği.
 ///
@@ -412,7 +413,7 @@ class CardMediaBody extends StatelessWidget {
                                 '+$more',
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: AppWeight.strong,
                                   fontSize: 15,
                                 ),
                               ),
@@ -573,9 +574,9 @@ class _DocumentCard extends StatelessWidget {
                     maxLines: 1,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 9,
+                      fontSize: 11,
                       height: 1.5,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: AppWeight.strong,
                       letterSpacing: 0.4,
                     ),
                   ),
@@ -701,7 +702,7 @@ class CardDocumentCover extends StatelessWidget {
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: AppWeight.strong,
                         ),
                       ),
                     ],

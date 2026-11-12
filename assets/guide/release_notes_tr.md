@@ -3,6 +3,10 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 12 Kasım 2026 {#2026-11-12}
+- **Ekran daha sakin:** başlık ve etiketler biraz daha ince, çok küçük yazılar okunur boya getirildi.
+- **Renkler anlam taşıyor:** temanın ana rengi eylem, sıcak renk zaman ve hatırlatma, üçüncü renk yalnız yapay zekâ (✨). "Zamanı gelenler" şeridi sıcak renkte.
+- **Sade simge daireleri:** Paylaş ekranındaki Kopyala/PDF/Görsel daireleri ve Ayarlar'daki simge kutuları nötr renkte.
+- **Tema seçici üç grupta:** Sakin, Kâğıt ve Canlı.
 - **Tablette yazarken liste takılmıyor:** yan yana görünümde not yazarken soldaki liste her kayıtta yeniden kurulmuyor; kart, yazmayı bırakınca birkaç saniye içinde güncellenir. Açık nottan başka nota geçmek de daha hafif.
 - **Yatay tablette klavyeyle daha çok yazı alanı:** pencere kısaysa klavye açıkken alt çubuk gizlenir, üst çubuk incelir, sabit ek en küçük boya iner.
 - **Dar liste bölmesi sadeleşti:** liste bölmesi darken takvim ve zamanı gelenler şeridi gizlenir, AI ve süz düğmeleri ⋮ menüsüne iner.

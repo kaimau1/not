@@ -15,6 +15,7 @@ import '../domain/note_type.dart';
 import 'add_catalog.dart';
 import 'quick_add_actions.dart';
 import '../../../core/widgets/press_scale.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// "+" düğmesi: dokununca tek panel açılır — bütün seçenekler gruplu ve TEK
 /// dokunuşla (bkz. [_QuickAddPanel]). Basılı tutmak da açar.
@@ -831,7 +832,7 @@ class _PrimaryButton extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: scheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppWeight.strong,
                     ),
                   ),
                 ),

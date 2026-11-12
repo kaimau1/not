@@ -3,6 +3,10 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 12 November 2026 {#2026-11-12}
+- **Calmer screens:** headings and labels are slightly lighter, and very small text was raised to a readable size.
+- **Colours carry meaning:** the theme's main colour is for actions, the warm colour for time and reminders, the third colour only for AI (✨). The "Due" strip is now warm.
+- **Plain icon circles:** the Copy/PDF/Image circles in Share and the icon tiles in Settings are neutral.
+- **Theme picker in three groups:** Calm, Paper and Vivid.
 - **No list stutter while typing on tablets:** in side-by-side view the list no longer rebuilds on every save while you type; the card updates a few seconds after you stop. Switching from the open note to another one is lighter too.
 - **More writing space on landscape tablets:** in a short window with the keyboard open, the bottom bar hides, the top bar gets thinner and a pinned attachment shrinks to its smallest size.
 - **Simpler narrow list pane:** when the list pane is narrow, the calendar and due strips hide and the AI and filter buttons move into the ⋮ menu.

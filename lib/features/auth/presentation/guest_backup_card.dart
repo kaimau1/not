@@ -8,6 +8,7 @@ import '../../notes/data/notes_repository.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../settings/settings_providers.dart';
 import 'auth_providers.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **MİSAFİR HESAP HATIRLATMASI** (F4.3, 2026-10-19).
 ///
@@ -167,7 +168,7 @@ class _GuestBackupCardState extends ConsumerState<GuestBackupCard> {
                   Text(
                     l10n.guestReminderConnect,
                     style: TextStyle(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppWeight.strong,
                       color: scheme.onTertiaryContainer,
                     ),
                   ),

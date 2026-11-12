@@ -8,6 +8,7 @@ import 'package:flutter/scheduler.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/a11y/min_tap_target.dart';
 import '../../../core/app_icons.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Dinlemenin KİPİ: sesli yakalama (yapay zekâ levhası) ya da doğrudan
 /// yazdırma (editördeki canlı dikte).
@@ -184,8 +185,8 @@ class ListeningModeTag extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                fontWeight: AppWeight.strong,
                 color: accent,
               ),
             ),

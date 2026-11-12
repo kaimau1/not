@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Yuvarlak klasör menüsündeki bir durak. [id] `null` = "Tümü".
 class FolderStop {
@@ -445,7 +446,7 @@ class _RadialFolderMenu extends StatelessWidget {
                           child: Text(
                             l10n.foldersTitle,
                             style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
+                              fontWeight: AppWeight.strong,
                             ),
                           ),
                         ),
@@ -523,7 +524,7 @@ class _CenterDisc extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: AppWeight.strong,
                   color: scheme.onSurfaceVariant,
                 ),
               ),
@@ -625,7 +626,7 @@ class _FolderTile extends StatelessWidget {
                             count > 999 ? '999+' : '$count',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: 11,
                               height: 1.2,
                               color: scheme.onSurfaceVariant,
                             ),
@@ -644,7 +645,7 @@ class _FolderTile extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: current ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: current ? AppWeight.strong : FontWeight.w500,
                       color: current ? accent : scheme.onSurface,
                     ),
                   ),

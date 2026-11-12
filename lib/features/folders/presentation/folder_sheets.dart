@@ -20,6 +20,7 @@ import 'folder_tile.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../auth/presentation/account_required.dart';
 import '../../../core/a11y/chip_roles.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Klasör oluşturma/düzenleme diyaloğu: ad alanı + simge seçici.
 /// [existing] verilirse düzenleme modunda açılır. Oluşturulan/düzenlenen
@@ -438,7 +439,7 @@ Future<void> showFolderShareSheet(
                 Text(
                   l10n.folderShareTitle(liveFolder.name),
                   style: Theme.of(sheetContext).textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                      ?.copyWith(fontWeight: AppWeight.strong),
                 ),
                 const SizedBox(height: 4),
                 Text(

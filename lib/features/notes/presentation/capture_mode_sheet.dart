@@ -6,6 +6,7 @@ import '../../../core/l10n_ext.dart';
 import '../../settings/settings_providers.dart';
 import '../../../core/widgets/app_sheet.dart';
 import 'viewers/bubble_layer.dart' show BubbleController;
+import '../../../app/theme/app_tokens.dart';
 
 /// Bir İÇERİKTEN (fotoğraf, tarama, video, görsel, PDF, sunum) not alırken
 /// notun hangi biçimde açılacağı.
@@ -144,7 +145,7 @@ class _CaptureModeSheetState extends State<_CaptureModeSheet> {
             Text(
               title,
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: AppWeight.strong,
               ),
             ),
             const SizedBox(height: 10),
@@ -278,7 +279,7 @@ class _ModeCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppWeight.strong,
                       ),
                     ),
                   ),
@@ -296,8 +297,8 @@ class _ModeCard extends StatelessWidget {
                       child: Text(
                         badgeText,
                         style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          fontWeight: AppWeight.strong,
                           color: scheme.onPrimaryContainer,
                         ),
                       ),

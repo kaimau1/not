@@ -16,6 +16,7 @@ import '../../domain/attachment.dart';
 import '../editor/video_transport.dart' show SeekIcon;
 import 'youtube_viewer.dart';
 import '../editor/attachment_clipboard.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Süreyi `s:sn` (bir saatten uzunsa `s:dd:sn`) olarak yazar.
 String formatVideoPosition(Duration d) {
@@ -507,7 +508,7 @@ class _Controls extends StatelessWidget {
                       ),
                       child: Text(
                         formatVideoSpeed(value.playbackSpeed),
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                        style: const TextStyle(fontWeight: AppWeight.strong),
                       ),
                     ),
                   ),

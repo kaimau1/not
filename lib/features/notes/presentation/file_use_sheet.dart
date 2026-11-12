@@ -12,6 +12,7 @@ import '../../../core/utils/doc_picker.dart';
 import '../../../core/widgets/app_sheet.dart';
 import 'capture_mode_sheet.dart';
 import '../../../core/app_icons.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// "+ → Dosya"da seçilen dosyanın TÜRÜ (uzantıdan).
 enum PickedFileKind {
@@ -466,7 +467,7 @@ class _UseTile extends StatelessWidget {
                           child: Text(
                             title,
                             style: textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
+                              fontWeight: AppWeight.strong,
                             ),
                           ),
                         ),
@@ -484,8 +485,8 @@ class _UseTile extends StatelessWidget {
                             child: Text(
                               badge!,
                               style: TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 11,
+                                fontWeight: AppWeight.strong,
                                 color: scheme.onPrimary,
                               ),
                             ),

@@ -29,6 +29,7 @@ import 'pdf_export_screen.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Notun PAYLAŞ levhası.
 ///
@@ -171,7 +172,7 @@ class _ShareSheetState extends State<_ShareSheet> {
         label,
         style: theme.textTheme.labelMedium?.copyWith(
           color: scheme.primary,
-          fontWeight: FontWeight.w700,
+          fontWeight: AppWeight.strong,
         ),
       ),
     );
@@ -399,8 +400,9 @@ class _QuickShareButton extends StatelessWidget {
     final enabled = onTap != null;
     final background = primary
         ? scheme.primary
-        : scheme.secondaryContainer.withValues(alpha: 0.8);
-    final foreground = primary ? scheme.onPrimary : scheme.onSecondaryContainer;
+        // Nötr daire (DENEYIM §2.2 K-D1): sıcak secondary zaman/dikkat içindir.
+        : scheme.surfaceContainerHigh;
+    final foreground = primary ? scheme.onPrimary : scheme.onSurfaceVariant;
     final button = Semantics(
       button: true,
       enabled: enabled,

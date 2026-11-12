@@ -174,7 +174,7 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
+                              fontWeight: AppWeight.strong,
                             ),
                           ),
                           if (email.isNotEmpty && email != name)
@@ -414,7 +414,7 @@ class _Badge extends StatelessWidget {
         '$count',
         style: TextStyle(
           fontSize: 12,
-          fontWeight: FontWeight.w700,
+          fontWeight: AppWeight.strong,
           color: scheme.onPrimary,
         ),
       ),

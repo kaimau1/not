@@ -16,6 +16,7 @@ import '../domain/note.dart';
 import 'notes_providers.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/a11y/min_tap_target.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Süz levhası — eski çip barının yerini alır.
 ///
@@ -191,8 +192,8 @@ class HomeFilterButton extends ConsumerWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                    fontWeight: AppWeight.strong,
                                     color: scheme.onSecondaryContainer,
                                   ),
                                 ),
@@ -463,7 +464,7 @@ class _FilterSheet extends ConsumerWidget {
                       '$appliedCount',
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppWeight.strong,
                         color: scheme.onPrimary,
                       ),
                     ),

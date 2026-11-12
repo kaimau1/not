@@ -506,7 +506,7 @@ class _ModelPickerSheetState extends ConsumerState<_ModelPickerSheet> {
               child: Text(
                 widget.recommendedLabel,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 11,
                   color: scheme.onPrimaryContainer,
                 ),
               ),
@@ -770,7 +770,7 @@ class _AiSwitchTile extends StatelessWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 14.5,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

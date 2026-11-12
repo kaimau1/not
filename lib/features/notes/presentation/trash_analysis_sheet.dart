@@ -378,7 +378,7 @@ class _StatChip extends StatelessWidget {
         children: [
           Icon(icon, size: 15, color: color),
           const SizedBox(width: 6),
-          Text(label, style: TextStyle(fontSize: 12.5, color: color)),
+          Text(label, style: TextStyle(fontSize: 12, color: color)),
         ],
       ),
     );

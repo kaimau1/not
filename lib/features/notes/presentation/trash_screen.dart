@@ -20,6 +20,7 @@ import '../domain/attachment.dart';
 import '../domain/note.dart';
 import 'editor/title_fit.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Çöp kutusu: silinen notlar geri alınabilir veya kalıcı silinebilir.
 ///
@@ -662,7 +663,7 @@ class _TrashCard extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: urgent
-                              ? FontWeight.w700
+                              ? AppWeight.strong
                               : FontWeight.w500,
                           color: urgent
                               ? scheme.error

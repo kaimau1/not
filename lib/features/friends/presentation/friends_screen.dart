@@ -19,6 +19,7 @@ import '../../folders/data/folders_repository.dart';
 import '../data/friends_repository.dart';
 import '../domain/friend.dart';
 import '../domain/friend_list.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **KİŞİLER** — BAŞTAN yazıldı (kullanıcı isteği 2026-11-06: "kişiler
 /// ekranının yeniden yazılması").
@@ -178,7 +179,7 @@ class _LetterLabel extends StatelessWidget {
       letter,
       style: Theme.of(context).textTheme.labelLarge?.copyWith(
         color: Theme.of(context).colorScheme.primary,
-        fontWeight: FontWeight.w700,
+        fontWeight: AppWeight.strong,
       ),
     ),
   );

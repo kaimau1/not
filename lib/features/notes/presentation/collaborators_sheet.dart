@@ -12,6 +12,7 @@ import '../data/note_shares_repository.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **ORTAK ÇALIŞANLAR** levhası — Keep'teki "Ortak çalışan" düğmesinin
 /// karşılığı (kullanıcı isteği 2026-09-22: "ortak not butonu keepteki gibi").
@@ -141,7 +142,7 @@ class _OwnerViewState extends ConsumerState<_OwnerView> {
             Text(
               l10n.collaborators,
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: AppWeight.strong,
               ),
             ),
             const SizedBox(height: 4),
@@ -298,7 +299,7 @@ class _CollaboratorView extends ConsumerWidget {
             Text(
               l10n.collaborators,
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: AppWeight.strong,
               ),
             ),
             const SizedBox(height: 4),

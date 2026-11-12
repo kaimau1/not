@@ -79,7 +79,7 @@ class _DuplicatesSheet extends ConsumerWidget {
               Text(
                 l10n.duplicatesHint,
                 style: TextStyle(
-                  fontSize: 12.5,
+                  fontSize: 12,
                   color: scheme.onSurfaceVariant,
                 ),
               ),
@@ -178,7 +178,7 @@ class _GroupCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 13.5,
+                      fontSize: 13,
                       color: i == 0
                           ? scheme.onSurface
                           : scheme.onSurfaceVariant,

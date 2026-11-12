@@ -435,7 +435,7 @@ class _MailRow extends StatelessWidget {
     final theme = Theme.of(context);
     final s = theme.colorScheme;
     final l10n = context.l10n;
-    final strong = mail.unread ? FontWeight.w700 : FontWeight.w500;
+    final strong = mail.unread ? AppWeight.strong : FontWeight.w500;
     final subject = mail.subject.trim().isEmpty
         ? l10n.gmailNoSubject
         : mail.subject.trim();
@@ -495,7 +495,7 @@ class _MailRow extends StatelessWidget {
                           date,
                           style: theme.textTheme.labelMedium?.copyWith(
                             color: mail.unread ? s.primary : s.onSurfaceVariant,
-                            fontWeight: mail.unread ? FontWeight.w700 : null,
+                            fontWeight: mail.unread ? AppWeight.strong : null,
                           ),
                         ),
                       ],

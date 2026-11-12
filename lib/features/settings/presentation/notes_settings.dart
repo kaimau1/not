@@ -12,6 +12,7 @@ import '../../notes/presentation/filter_sheet.dart' show sortLabel;
 import '../settings_providers.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../../../core/a11y/chip_roles.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **AYARLAR → NOTLAR VE KLASÖRLER** (kullanıcı isteği 2026-09-26: "eksik
 /// ayarların düzenlenmesi").
@@ -323,7 +324,7 @@ class _DeviceStorageSectionState extends State<DeviceStorageSection> {
                         label,
                         style: bold
                             ? theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
+                                fontWeight: AppWeight.strong,
                               )
                             : theme.textTheme.bodyMedium,
                       ),
@@ -331,7 +332,7 @@ class _DeviceStorageSectionState extends State<DeviceStorageSection> {
                     Text(
                       bytes == null ? '…' : formatBytes(bytes),
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: bold ? FontWeight.w700 : null,
+                        fontWeight: bold ? AppWeight.strong : null,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),

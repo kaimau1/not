@@ -9,6 +9,7 @@ import '../../settings/settings_providers.dart';
 import '../data/auth_repository.dart';
 import 'auth_errors.dart';
 import 'auth_providers.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// İLK AÇILIŞTA giriş ekranı GÖSTERİLMEZ (kullanıcı isteği 2026-08-07:
 /// "uygulama ilk açılışında ilk giriş itiyor onu kaldıralım").
@@ -188,7 +189,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             textAlign: TextAlign.center,
             style: Theme.of(
               context,
-            ).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700),
+            ).textTheme.displaySmall?.copyWith(fontWeight: AppWeight.strong),
           ),
           const SizedBox(height: 8),
           Text(
@@ -205,7 +206,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             textAlign: TextAlign.center,
             style: Theme.of(
               context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+            ).textTheme.headlineSmall?.copyWith(fontWeight: AppWeight.strong),
           ),
           const SizedBox(height: 24),
         ],
@@ -331,7 +332,7 @@ class _Showcase extends StatelessWidget {
                   Text(
                     l10n.appName,
                     style: theme.textTheme.displayMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
+                      fontWeight: AppWeight.strong,
                       color: scheme.onPrimaryContainer,
                     ),
                   ),
@@ -366,7 +367,7 @@ class _Showcase extends StatelessWidget {
                                 Text(
                                   title,
                                   style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: AppWeight.strong,
                                     color: scheme.onPrimaryContainer,
                                   ),
                                 ),

@@ -13,6 +13,7 @@ import '../../notes/presentation/note_card.dart';
 import '../data/inbox_repository.dart';
 import 'shared_hub_screen.dart';
 import '../../../core/friendly_error.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **GELEN NOTLAR** ekranı — kullanıcı isteği 2026-08-18: "paylaşılan not
 /// alıcıda farklı gelen notlar klasöründe görülsün ve oradan normal
@@ -194,7 +195,7 @@ class InboxCard extends ConsumerWidget {
                     l10n.inboxFrom(note.senderLabel),
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppWeight.strong,
                       color: scheme.primary,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -209,7 +210,7 @@ class InboxCard extends ConsumerWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleSmall
-                    ?.copyWith(fontWeight: FontWeight.w700),
+                    ?.copyWith(fontWeight: AppWeight.strong),
               ),
             if (preview.isNotEmpty) ...[
               const SizedBox(height: 4),
