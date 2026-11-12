@@ -63,6 +63,11 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
    (`git worktree remove --force <ağaç>`), uzak dalı (`git push origin --delete oto/<no>-*`)
    ve yerel dalı silinir; A/B taban ağacı (`../not_ab`) ölçüm bitince silinir. 34 kopya
    (~onlarca GB) birikmişti. Silinemeyen klasörü tutan Gradle sürecini durdur.
+   **Yarım iş devri (kullanıcı kararı 2026-11-12):** paket yarıda kalırsa (limit/durdurma) Kuyruk
+   satırı HEMEN `sürüyor — dal <ad> (<commit>): bitti <x>, kalan <y>; DEVIR.md'den sür` olur ve main'e
+   push edilir ("bekliyor" kalırsa sonraki tur sıfırdan başlar). Önce `git log origin/<dal>..HEAD`
+   boş olmalı. Ölçüm ham sayıları DEVIR'e/plana yazılır, sohbette kalmaz. Tur başında uzaktaki
+   `oto/*` dallarına bak; satırı olmayan dalı DEVIR'iyle satıra bağla.
 8. **APK noktası** (Kuyruk'ta APK = `evet`): birleştirme başlığına `[apk]`; aynı commit'te
    `assets/guide/release_notes_tr.md` + `_en.md`'ye günün bölümü (kullanıcı diliyle, o
    APK'ya giren bütün paketler).

@@ -88,6 +88,27 @@ test cihazı: [USB telefon modeli / yok] · ana model: [ ] · plan: [Pro / Max].
   push'undan önce tek `gh run list -b main -L 1` bakışı; yayın sürüyorsa push'u beklet. main
   kırmızıya dönerse sonraki turun "main sağlığı" adımı yakalar.
 
+## 2c. Yarım iş devredilsin (limit/kesinti anında — ÇOK ÖNEMLİ)
+- Bir paket yarıda kalırsa (limit, durdurma, hata) Kuyruk satırı HEMEN `sürüyor — dal
+  <dal adı> (<son commit>): <ne bitti>, kalan <ne>; dalın DEVIR.md'sinden sür` yapılır ve
+  bu değişiklik commit + main'e push edilir. "bekliyor" kalan yarım paketi sonraki tur
+  SIFIRDAN başlatır, dal ve emek boşa gider.
+- Durdurmadan önce: alt ajana "DEVIR.md'yi güncelle, commit + push, dur" de; sonra
+  `git log origin/<dal> -1` ile dalın GERÇEKTEN uzakta olduğunu ve çalışma kopyasında
+  push edilmemiş commit kalmadığını kontrol et (`git log origin/<dal>..HEAD` boş).
+- Ölçüm/test sonuçları yalnız sohbette ya da geçici dosyada kalmaz: ham sayılar dalın
+  DEVIR.md'sine, biten ölçüm planın maddesine ve birleştirme commit açıklamasına yazılır.
+- Tur başında yürütücü önce `sürüyor` satırlarına ve uzaktaki `oto/*` dallarına bakar;
+  Kuyruk'ta adı olmayan ama uzakta duran dal varsa DEVIR.md'sini okuyup satıra bağlar.
+- CI'ı yeşil olup birleştirilmeyi bekleyen dal için Kuyruk'a ayrı satır: "yalnız birleştir".
+
+## 2d. Telefon ısınması (USB hata ayıklama = sürekli şarj)
+- USB bağlıyken telefon hep şarj olur, ölçümde 40 °C'yi geçip ölçümü durdurur. Tercih:
+  kablosuz hata ayıklama (`adb tcpip 5555` → kabloyu çıkar → `adb connect <ip>:5555`;
+  yeniden başlatınca kabloyla tekrarla). Betikler cihazı `-s <seri/ip>` ile seçer.
+- `dumpsys battery unplug` yalnız kandırır, ısıyı azaltmaz. Ölçümden önce pil dolu,
+  kılıf çıkık, ekran yalnız ölçümde açık; sıcaklık eşiğinin altına inmeden ölçme.
+
 ## 3. İşçi (alt ajan) kuralları
 - Önce `CLAUDE.md`, sonra yalnız kendi paketinin plan bölümü. Protokol: önce kanıtı üret
   (test/ölçüm kırmızı) → düzelt → aynı kanıt yeşil. Kanıt üretilemiyorsa düzeltme YAZMA,
