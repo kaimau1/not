@@ -11,6 +11,7 @@ import 'capture_mode_sheet.dart';
 import 'note_grid.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/press_scale.dart';
 
 /// Paylaşımla / "Birlikte aç" ile gelen içeriğin levhada görünen özeti.
 @immutable
@@ -448,7 +449,9 @@ class _PickableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return GestureDetector(
+    // Basma tepkisi (F78.4): ana ekran kartıyla aynı çökme.
+    return PressScale(
+      child: GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Stack(
@@ -471,6 +474,7 @@ class _PickableCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

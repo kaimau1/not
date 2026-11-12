@@ -2,13 +2,6 @@
 
 OTOMASYON.md Kuyruk satırları kısa özettir; asıl kapsam, KORU çitleri ve kullanıcı istekleri burada, AYNEN. Alt ajana paketin satırı + bu dosyadaki `## P..` bölümü verilir.
 
-## P39 — Hız hissi (açılış, yeni not, yükleme hâlleri)
-
-Model: fable · Cihaz: cihaz · APK: evet
-
-**Plan maddeleri:** DENEYIM F78.1–F78.5
-
-**Durum:** sürüyor — dal oto/P39-hiz-hissi yazıldı (CI yeşil), main birleşti; kalan: cihaz A/B (APK'lar hazır, DEVIR.md) + birleştirme
 
 ## P43 — Hız: tek komutla tam ölçüm + otomatik karar + altın taban + cihazsız bekçiler (P44 katıldı, tek ajan)
 

@@ -13,6 +13,7 @@
 | `prof_oc.py`, `prof_scroll.py`, `prof_type.py` | profil uygulamasında aç/kapa, kaydırma, yazma + kök neden dökümü |
 | `taban.py` | **duman testi / Ek B satırı** (F20.4, F27.4): açılış, kaydırma, 4 not aç/kapa, yazma; sıcaklık yazar |
 | `prof_cold.py` | soğuk açılış profili (start-paused): kareler, kanallar, CPU |
+| `prof_new.py` | **"Yeni not" süresi** (DENEYIM F78.2): "+" → "Metin notu" dokunuşundan klavye görünene dek, telefon saatiyle; 5 koşu ortanca, hedef ≤ 450 ms |
 | `prof_sizes.py` | metin boyutuna göre tuş maliyeti (F24.1; `make_dataset.py boyut`) |
 | `prof_save.py` | kayıt başına Firestore olayı + Dart bloğu (F22.1) |
 | `prof_a11y.py` | erişilebilirlik istemcisi açıkken SEMANTICS maliyeti (F27.2) |

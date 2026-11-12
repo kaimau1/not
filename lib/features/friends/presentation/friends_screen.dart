@@ -20,6 +20,7 @@ import '../data/friends_repository.dart';
 import '../domain/friend.dart';
 import '../domain/friend_list.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/delayed_spinner.dart';
 
 /// **KİŞİLER** — BAŞTAN yazıldı (kullanıcı isteği 2026-11-06: "kişiler
 /// ekranının yeniden yazılması").
@@ -72,7 +73,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
     Widget body;
     if (loading) {
-      body = const Center(child: CircularProgressIndicator());
+      body = const Center(child: DelayedSpinner());
     } else if (friends.isEmpty && requests.isEmpty) {
       body = EmptyState(
         key: const ValueKey('friends-empty'),

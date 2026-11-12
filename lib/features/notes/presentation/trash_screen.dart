@@ -22,6 +22,7 @@ import 'editor/title_fit.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/confirm_dialog.dart';
+import '../../../core/widgets/delayed_spinner.dart';
 
 /// Çöp kutusu: silinen notlar geri alınabilir veya kalıcı silinebilir.
 ///
@@ -236,7 +237,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
             final needle = result.needle;
             if (notes.isEmpty) {
               if (result.loading) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: DelayedSpinner());
               }
               return EmptyState(
                 icon: needle.isEmpty ? Icons.delete_outline : Icons.search_off,

@@ -10,6 +10,7 @@ import '../data/auth_repository.dart';
 import 'auth_errors.dart';
 import 'auth_providers.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/delayed_spinner.dart';
 
 /// İLK AÇILIŞTA giriş ekranı GÖSTERİLMEZ (kullanıcı isteği 2026-08-07:
 /// "uygulama ilk açılışında ilk giriş itiyor onu kaldıralım").
@@ -213,7 +214,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // Sessiz ilk giriş sürerken hiçbir düğme çizilmez: kullanıcı
         // bir an için görüp dokunamadığı bir giriş ekranı görmesin.
         if (_autoSigningIn)
-          const Center(child: CircularProgressIndicator())
+          const Center(child: DelayedSpinner())
         else ...[
           FilledButton.icon(
             onPressed: _busy ? null : _signIn,

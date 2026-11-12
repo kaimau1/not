@@ -20,6 +20,6 @@
 
     <color name="widget_icon">#E1E8E4</color>
     <color name="widget_icon_accent">#76CDC5</color>
-    <!-- Açılış zemini (launch_background.xml): AppTheme Adaçayı zemini. -->
+    <!-- Açılış zemini (LaunchTheme + NormalTheme): AppTheme Adaçayı zemini. -->
     <color name="launch_bg">#131916</color>
 </resources>

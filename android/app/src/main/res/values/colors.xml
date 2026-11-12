@@ -82,6 +82,6 @@
     <color name="widget_dark_on_note">#C8E9E5</color>
     <color name="widget_dark_icon">#E1E8E4</color>
     <color name="widget_dark_icon_accent">#76CDC5</color>
-    <!-- Açılış zemini (launch_background.xml): AppTheme Adaçayı zemini. -->
+    <!-- Açılış zemini (LaunchTheme + NormalTheme): AppTheme Adaçayı zemini. -->
     <color name="launch_bg">#EAF0EB</color>
 </resources>

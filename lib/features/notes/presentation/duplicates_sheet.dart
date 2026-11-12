@@ -7,6 +7,7 @@ import '../domain/note.dart';
 import 'notes_providers.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
+import '../../../core/widgets/delayed_spinner.dart';
 
 /// Kopya notlar levhası — Yapay Zeka sayfasındaki "Kopyaları temizle".
 ///
@@ -39,7 +40,7 @@ class _DuplicatesSheet extends ConsumerWidget {
     if (groups == null) {
       return const Padding(
         padding: EdgeInsets.fromLTRB(24, 24, 24, 48),
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(child: DelayedSpinner()),
       );
     }
 

@@ -23,6 +23,7 @@ import 'page_note_pane.dart';
 import 'text_wrap.dart';
 import '../../../../core/widgets/smooth_routes.dart';
 import 'pen_tray.dart';
+import '../../../../core/widgets/delayed_spinner.dart';
 
 /// "Sunum ekle not al" notunun gövdesi: ÜSTTE slayt, ALTTA o slaydın notu.
 ///
@@ -413,7 +414,7 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
     }
     final slides = widget.slides;
     if (slides == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: DelayedSpinner());
     }
     if (slides.isEmpty) {
       return Center(

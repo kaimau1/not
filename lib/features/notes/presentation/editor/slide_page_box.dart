@@ -13,6 +13,7 @@ import '../../domain/attachment.dart';
 import '../viewers/slide_canvas.dart';
 import '../viewers/slide_scroll.dart';
 import '../viewers/slide_viewer_screen.dart';
+import '../../../../core/widgets/delayed_spinner.dart';
 
 /// Sunumun yüklenmiş slaytları — aynı dosya sayfada, bölmede ve büyük
 /// önizlemede aynı anda çizilebiliyor; .pptx her kutuda yeniden
@@ -194,7 +195,9 @@ class _SlidePageBoxState extends ConsumerState<SlidePageBox> {
         child: SizedBox(
           width: 22,
           height: 22,
-          child: CircularProgressIndicator(strokeWidth: 2),
+          child: DelayedSpinner(
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
         ),
       );
     } else {
