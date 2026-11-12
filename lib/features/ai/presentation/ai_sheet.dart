@@ -1,5 +1,7 @@
 import '../../../core/app_icons.dart';
 import '../../../core/widgets/sheet_header.dart';
+import '../../../core/widgets/sheet_tile.dart';
+import '../../../app/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,7 +52,8 @@ Future<void> showAiSheet(
 }) => showAppSheet<void>(
   context: context,
   isScrollControlled: true,
-  showDragHandle: true,
+  // SheetHeader'da ✕ var → tutamak yok (DENEYIM K-D7).
+  showDragHandle: false,
   builder: (_) => AiSheet(
     note: note,
     onAppendText: onAppendText,
@@ -1025,59 +1028,18 @@ class _AiRow extends StatelessWidget {
   /// null: yapacak iş yok (boş not) — satır soluk ve dokunulamaz.
   final VoidCallback? onTap;
 
+  // ORTAK ZENGİN KARO (DENEYIM F76.2): çerçeveli kart yerine
+  // `SheetTile.rich` — zeminli, çerçevesiz; Paylaş levhasıyla aynı kılık.
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Opacity(
-      opacity: onTap == null ? 0.5 : 1,
-      child: Material(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: scheme.outlineVariant),
-            ),
-            child: Row(
-              children: [
-                AppIcons.glyph(icon, size: 20, color: scheme.primary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        subtitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          height: 1.35,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Opacity(
+    opacity: onTap == null ? 0.5 : 1,
+    child: SheetTile.rich(
+      icon: icon,
+      label: title,
+      description: subtitle,
+      onTap: onTap,
+    ),
+  );
 }
 
 /// İki sütunlu iş kutuları (özetle / analiz / çevir…). Yapay Zeka sayfasındaki
@@ -1100,19 +1062,17 @@ class _AiTileGrid extends StatelessWidget {
       final (icon, title, info, onTap) = t;
       return Opacity(
         opacity: onTap == null ? 0.5 : 1,
+        // Çerçeve yerine `surfaceContainer` zemin, köşe `AppRadius.m`
+        // (DENEYIM F76.2 — `SheetTile` ile aynı yüzey).
         child: Material(
-          color: scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(14),
+          color: scheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          clipBehavior: Clip.antiAlias,
           child: InkWell(
-            borderRadius: BorderRadius.circular(14),
             onTap: onTap,
             child: Container(
               constraints: const BoxConstraints(minHeight: 96),
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: scheme.outlineVariant),
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1171,7 +1131,7 @@ class _AiTileGrid extends StatelessWidget {
 /// nota, hangisinin eke ait olduğunu göstermiyordu.
 // Uygulamanın tek bölüm başlığı (TUTARLILIK F36.7).
 Widget _sectionLabel(BuildContext context, String text) => Padding(
-  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
   child: SectionLabel(text),
 );
 
