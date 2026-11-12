@@ -557,12 +557,14 @@ class _DocumentCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(5),
               border: Border.all(color: scheme.outlineVariant),
             ),
-            foregroundDecoration: BoxDecoration(
-              color: documentPreviewScrim(Theme.of(context).brightness),
-              borderRadius: BorderRadius.circular(5),
-            ),
             clipBehavior: Clip.antiAlias,
-            child: Column(
+            // Perde kırpmanın İÇİNDE: kâğıdın köşesini izler.
+            child: DecoratedBox(
+              position: DecorationPosition.foreground,
+              decoration: BoxDecoration(
+                color: documentPreviewScrim(Theme.of(context).brightness),
+              ),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
@@ -586,6 +588,7 @@ class _DocumentCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
             ),
           ),
           // Çok dar kartta (4 sütun) ad sığmıyor, harf harf kesiliyordu:
