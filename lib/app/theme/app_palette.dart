@@ -16,6 +16,16 @@ import 'package:flutter/material.dart';
 ///
 /// Değerler OKLCH'ten türetildi (zemin L≈0,95, kart L≈0,99); kontrastlar
 /// `theme_contrast_test` ile korunur. Yeni renk gerekiyorsa buraya ekle.
+///
+/// **RENK ROLLERİ** (DENEYIM_PLANI §2.2, K-D1 — bekçi `test/color_roles_test.dart`):
+/// - `primary`/`primaryContainer` = eylem, seçim, oluşturma, odak ("+", seçili
+///   çip, imleç, bağlantı, bugünün günü, bölüm adı).
+/// - `secondary`/`secondaryContainer` (sıcak) = zaman, dikkat, etiket (sabitli,
+///   yıldız, hatırlatıcı, zamanı gelen şeridi, bekleyen yükleme, etiket hapı).
+/// - `tertiary`/`tertiaryContainer` = YALNIZ yapay zekâ kimliği (`AiIcon`, AI
+///   levhası).
+/// - `error` = yıkıcı (sil, kalıcı sil).
+/// - nötr (`surfaceContainer*`, `onSurfaceVariant`) = geri kalan her şey.
 enum ThemeFamily {
   /// A · Adaçayı (varsayılan): yeşile çalan taş grisi, petrol, bakır.
   sage,
