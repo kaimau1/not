@@ -199,7 +199,7 @@ void main() {
       phone(tester);
       await tester.pumpWidget(app());
       await tester.pumpAndSettle();
-      expect(find.text('Takvim boş'), findsOneWidget);
+      expect(find.text('Burada henüz etkinlik yok'), findsOneWidget);
       await tester.tap(find.text('Yeni etkinlik'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('event-title')), findsOneWidget);
@@ -485,7 +485,7 @@ void main() {
       await tester.tap(find.text('Ajanda').last);
       await tester.pumpAndSettle();
       expect(find.byType(MonthPage), findsNothing);
-      expect(find.text('Takvim boş'), findsOneWidget);
+      expect(find.text('Burada henüz etkinlik yok'), findsOneWidget);
     });
 
     test('çakışan bloklar yan yana', () {

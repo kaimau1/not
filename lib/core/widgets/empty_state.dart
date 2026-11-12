@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_tokens.dart';
 import '../friendly_error.dart';
 import '../l10n_ext.dart';
 
@@ -31,43 +32,45 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Center(
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
+    // §2.3 (F79.5): simge 32, 72 dp nötr dairede; başlık `rowTitle`,
+    // açıklama `body`; dikeyde %38'de (tam ortada değil — göz biraz yukarıda
+    // arar). Sınırsız yükseklikte (kaydırılan liste) `Align` çocuğa sarılır.
+    return Align(
+      alignment: const Alignment(0, -0.24),
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpace.xxxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 56,
-              color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHigh,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 32, color: scheme.onSurfaceVariant),
             ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(color: scheme.onSurfaceVariant),
-            ),
+            const SizedBox(height: AppSpace.l),
+            Text(title, textAlign: TextAlign.center, style: text.rowTitle),
             if (subtitle != null) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpace.xs),
               Text(
                 subtitle!,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  // Tam ikincil renk (F15.6): %70 saydamlık kırık beyaz ve
-                  // kâğıt temada 4,5:1'in altına iniyordu.
-                  color: scheme.onSurfaceVariant,
-                ),
+                // Tam ikincil renk (F15.6): %70 saydamlık kırık beyaz ve
+                // kâğıt temada 4,5:1'in altına iniyordu.
+                style: text.body.copyWith(color: scheme.onSurfaceVariant),
               ),
             ],
             if (onAction != null && actionLabel != null) ...[
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpace.xl),
               FilledButton.tonalIcon(
                 onPressed: onAction,
-                icon: Icon(actionIcon ?? Icons.add, size: 18),
+                icon: Icon(actionIcon ?? Icons.add, size: AppIconSize.s),
                 label: Text(actionLabel!),
               ),
             ],

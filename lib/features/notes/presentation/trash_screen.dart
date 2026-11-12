@@ -229,7 +229,10 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
               }
               return EmptyState(
                 icon: needle.isEmpty ? Icons.delete_outline : Icons.search_off,
-                title: needle.isEmpty ? l10n.trashEmpty : l10n.noteSearchNoHit,
+                title: needle.isEmpty ? l10n.trashEmpty : l10n.emptySearch,
+                subtitle: needle.isEmpty
+                    ? l10n.trashEmptyHint
+                    : l10n.emptySearchHint,
               );
             }
             // **DÜZENLİ IZGARA** (kullanıcı isteği 2026-09-23: "çöp kutusu

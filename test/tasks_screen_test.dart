@@ -52,7 +52,7 @@ void main() {
 
   testWidgets('görev ekle, tamamla, tamamlananlarda görün', (tester) async {
     await pump(tester);
-    expect(find.text('Görev yok'), findsOneWidget);
+    expect(find.text('Burada görev yok'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('tasks-new')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const ValueKey('task-title')), 'Süt al');

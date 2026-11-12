@@ -470,7 +470,7 @@ void main() {
       final c = ProviderContainer();
       addTearDown(c.dispose);
       await tester.pumpWidget(empty(c, search: true));
-      expect(find.text('Sonuç bulunamadı'), findsOneWidget);
+      expect(find.text('Burada aramana uyan not yok'), findsOneWidget);
       expect(find.text('Aramayı temizle'), findsOneWidget);
     });
 
@@ -479,11 +479,11 @@ void main() {
       addTearDown(c.dispose);
       c.read(noteFilterProvider.notifier).set(NoteFilter.starred);
       await tester.pumpWidget(empty(c));
-      expect(find.text('Bu süzgeçle not yok'), findsOneWidget);
+      expect(find.text('Burada bu süzgece uyan not yok'), findsOneWidget);
       await tester.tap(find.text('Süzgeci kaldır'));
       await tester.pump();
       expect(c.read(noteFilterProvider), NoteFilter.all);
-      expect(find.text('Bu süzgeçle not yok'), findsNothing);
+      expect(find.text('Burada bu süzgece uyan not yok'), findsNothing);
     });
 
     testWidgets('klasör ve ana ekran: tek eylem not ekle', (tester) async {
@@ -491,13 +491,19 @@ void main() {
       addTearDown(c.dispose);
       var added = 0;
       await tester.pumpWidget(empty(c, add: () => added++));
-      expect(find.text('Henüz not yok'), findsOneWidget);
+      expect(
+        find.text('Yazdığın notlar burada kart olarak görünür.'),
+        findsOneWidget,
+      );
       // F74.6: hiç not yokken tek düğme "İlk notunu yaz" (Metin notu işi).
       await tester.tap(find.text('İlk notunu yaz'));
       expect(added, 1);
       c.read(selectedFolderProvider.notifier).set('k1');
       await tester.pump();
-      expect(find.text('Bu klasör boş'), findsOneWidget);
+      expect(
+        find.text('Bu klasöre eklediğin notlar burada toplanır.'),
+        findsOneWidget,
+      );
       await tester.tap(find.text('Not ekle'));
       expect(added, 2);
     });

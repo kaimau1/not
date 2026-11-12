@@ -119,10 +119,12 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
                   ? EmptyState(
                       icon: AppIcons.archive,
                       title: l10n.archiveEmpty,
+                      subtitle: l10n.archiveEmptyHint,
                     )
                   : EmptyState(
                       icon: Icons.search_off,
-                      title: l10n.noteSearchNoHit,
+                      title: l10n.emptySearch,
+                      subtitle: l10n.emptySearchHint,
                     );
             }
             return Column(

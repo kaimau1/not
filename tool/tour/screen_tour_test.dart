@@ -1,5 +1,8 @@
 import 'package:notlar/features/notes/presentation/notes_providers.dart'
-    show sharedFolderNotesProvider;
+    show searchQueryProvider, selectedFolderProvider, sharedFolderNotesProvider;
+import 'package:firebase_core/firebase_core.dart' show FirebaseException;
+import 'package:notlar/features/notes/data/upload_queue.dart'
+    show pendingUploadsProvider;
 // EKRAN TURU (TUTARLILIK_PLANI F36.1): gerçek ana ekran ve not ekranı,
 // Firebase'siz sahte verilerle, telefon / tablet / masaüstü boyutlarında
 // çizilir ve PNG olarak yazılır. CI'da KOŞMAZ (test/ dışında); elle:
@@ -9,7 +12,8 @@ import 'package:notlar/features/notes/presentation/notes_providers.dart'
 //   TOUR_ONLY=ana,n1  süz · TOUR_DARK=1  koyu · TOUR_WEB=1  dar web
 //   TOUR_COLUMNS=3  ana ekran sütun sayısı
 //   TOUR_SIZES=telefon-yatay,matepad-yatay  yalnız bu boyutlar
-//   TOUR_EMPTY=1  hiç notu olmayan ana ekran (yalnız `ana-bos` sahnesi)
+//   TOUR_EMPTY=1  boş hâller (F79.5): ana, klasör, arşiv, çöp, Gelen, arama
+//   TOUR_OFFLINE=1  çevrimdışı hâller (F79.6): bekleyen yazım/ek, AI, hata
 //   TOUR_KEYBOARD=300  klavyeli hâl (viewInsets.bottom dp; ada `-klavye`)
 //   TOUR_COMPARE=<eski klasör>  önce/sonra: her PNG için değişen piksel yüzdesi
 //   basılır (`TOUR_FARK ad %x`), özet `<çıktı>/_fark.txt`.
@@ -397,16 +401,29 @@ Future<void> _settle(WidgetTester tester) async {
   }
 }
 
-/// TOUR_EMPTY=1: not akışı boş (bkz. `ana-bos`).
+/// TOUR_EMPTY=1: not akışı, çöp ve Gelen boş (F79.5). `arama-bos` notlarla
+/// çizilir (eşleşmeyen arama).
 final _tourEmpty = Platform.environment['TOUR_EMPTY'] == '1';
+
+/// TOUR_OFFLINE=1: bağlantı yok (F79.6) — not yazımları ve ekler sunucuyu
+/// bekliyor, uzaktan okunan listeler `unavailable` hatası veriyor.
+final _tourOffline = Platform.environment['TOUR_OFFLINE'] == '1';
+
+/// Firestore'un çevrimdışı hatası (`friendlyError` → "bağlantı yok").
+final _offlineError = FirebaseException(
+  plugin: 'cloud_firestore',
+  code: 'unavailable',
+);
 
 Future<void> _pumpApp(
   WidgetTester tester, {
   required _Size size,
   required String location,
   required GlobalKey key,
+  String scene = '',
   Brightness brightness = Brightness.light,
 }) async {
+  final emptyData = _tourEmpty && scene != 'arama-bos';
   // Araç bir TEST dosyası (flutter test ile koşar) ama test/ dışında.
   // ignore: invalid_use_of_visible_for_testing_member
   SharedPreferences.setMockInitialValues({
@@ -485,17 +502,32 @@ Future<void> _pumpApp(
       foldersRepositoryProvider.overrideWithValue(null),
       notesStreamProvider.overrideWith(
         (ref) => Stream.value(
-          _tourEmpty ? const <Note>[] : [..._notes, ..._attachmentNotes],
+          emptyData ? const <Note>[] : [..._notes, ..._attachmentNotes],
         ),
       ),
-      trashStreamProvider.overrideWith((ref) => Stream.value(_trash)),
-      inboxNotesProvider.overrideWith((ref) => Stream.value(_inbox)),
+      trashStreamProvider.overrideWith(
+        (ref) => _tourOffline
+            ? Stream.error(_offlineError)
+            : Stream.value(emptyData ? const <Note>[] : _trash),
+      ),
+      inboxNotesProvider.overrideWith(
+        (ref) => _tourOffline
+            ? Stream.error(_offlineError)
+            : Stream.value(emptyData ? const <InboxNote>[] : _inbox),
+      ),
+      if (_tourOffline) ...[
+        // Her not "sunucuya yazılmayı bekliyor" (editördeki bulut simgesi).
+        pendingWritesProvider.overrideWith((ref, id) => Stream.value(true)),
+        pendingUploadsProvider.overrideWithValue(
+          (pending: 3, failed: 0, needsDrive: false),
+        ),
+      ],
       foldersStreamProvider.overrideWith((ref) => Stream.value(_folders)),
       for (final n in [..._notes, ..._attachmentNotes])
         noteStreamProvider(n.id).overrideWith((ref) => Stream.value(n)),
       // Paylaşılan klasör (F43.2): salt okunur şeritle çizilir.
       sharedFolderRefsProvider.overrideWith(
-        (ref) => Stream.value(const [
+        (ref) => Stream.value(emptyData ? const <SharedFolderRef>[] : const [
           SharedFolderRef(
             folderId: 'sf1',
             ownerId: 'ayse',
@@ -506,12 +538,22 @@ Future<void> _pumpApp(
         ]),
       ),
       sharedFolderNotesProvider.overrideWith(
-        (ref, key) => Stream.value(_notes.take(3).toList()),
+        (ref, key) => Stream.value(
+          emptyData ? const <Note>[] : _notes.take(3).toList(),
+        ),
       ),
       folderUnreadProvider.overrideWith((ref, key) => 0),
     ],
   );
   addTearDown(container.dispose);
+  // Boş hâl sahneleri: seçili klasör / eşleşmeyen arama pompadan ÖNCE
+  // (arama kutusu açılışta sorguyu sağlayıcıdan okur).
+  if (scene == 'klasor-bos') {
+    container.read(selectedFolderProvider.notifier).set('f1');
+  }
+  if (scene == 'arama-bos') {
+    container.read(searchQueryProvider.notifier).set('zqxw');
+  }
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
@@ -574,9 +616,29 @@ void main() {
   final dark = Platform.environment['TOUR_DARK'] == '1';
   // Sahne: (kimlik, adres, dokunulacak şey — null = yalnız ekran).
   final scenes = <(String, String, Finder Function()?)>[
-    // TOUR_EMPTY=1: yalnız boş ana ekran (F74.6).
-    if (_tourEmpty) ('ana-bos', '/', null),
-    if (!_tourEmpty) ...[
+    // TOUR_EMPTY=1: boş hâller (F74.6, F79.5).
+    if (_tourEmpty) ...[
+      ('ana-bos', '/', null),
+      ('klasor-bos', '/', null),
+      ('arsiv-bos', '/archive', null),
+      ('cop-bos', '/trash', null),
+      ('gelen-bos', '/inbox', null),
+      ('arama-bos', '/', null),
+    ],
+    // TOUR_OFFLINE=1: çevrimdışı hâller (F79.6, OTURTMA F66.6).
+    if (_tourOffline && !_tourEmpty) ...[
+      ('cevrimdisi-ana', '/', null),
+      ('cevrimdisi-n1', '/note/n1', null),
+      ('cevrimdisi-ek', '/note/e-image-ek', null),
+      (
+        'cevrimdisi-ai',
+        '/note/n4',
+        () => find.byTooltip('Yapay zekâ').last,
+      ),
+      ('cevrimdisi-cop', '/trash', null),
+      ('cevrimdisi-gelen', '/inbox', null),
+    ],
+    if (!_tourEmpty && !_tourOffline) ...[
     ('ana', '/', null),
     ('n1', '/note/n1', null),
     ('n2', '/note/n2', null),
@@ -634,6 +696,7 @@ void main() {
           size: size,
           location: location,
           key: key,
+          scene: id,
           brightness: dark ? Brightness.dark : Brightness.light,
         );
         if (tap != null) {

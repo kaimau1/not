@@ -51,22 +51,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionOthers => 'Others';
 
   @override
-  String get emptyNotes => 'No notes yet';
+  String get emptyNotes => 'No notes here yet';
 
   @override
-  String get emptyFilter => 'No notes match this filter';
+  String get emptyFilter => 'No notes here match this filter';
 
   @override
   String get clearFilter => 'Clear filter';
 
   @override
-  String get emptyFolderTitle => 'This folder is empty';
+  String get emptyFolderTitle => 'No notes here yet';
 
   @override
   String get newNoteAction => 'Add note';
 
   @override
-  String get emptySearch => 'No results found';
+  String get emptySearch => 'Nothing here matches your search';
 
   @override
   String get newTextNote => 'Text note';
@@ -632,13 +632,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archiveTitle => 'Archive';
 
   @override
-  String get archiveEmpty => 'No notes in the archive';
+  String get archiveEmpty => 'No archived notes here';
 
   @override
   String get trashTitle => 'Bin';
 
   @override
-  String get trashEmpty => 'The bin is empty';
+  String get trashEmpty => 'No deleted notes here';
 
   @override
   String get trashInfo =>
@@ -825,11 +825,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get remindersTitle => 'Reminders';
 
   @override
-  String get remindersEmpty => 'No reminders';
+  String get remindersEmpty => 'No reminders here';
 
   @override
   String get remindersEmptyHint =>
-      'Add a reminder to a note, or create a new note with a reminder using the + button';
+      'Add a reminder to a note, or write a new note with a reminder using +.';
 
   @override
   String get remindersUpcoming => 'Upcoming';
@@ -2911,7 +2911,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get folderManage => 'Manage folder';
 
   @override
-  String get folderEmpty => 'This folder is empty';
+  String get folderEmpty => 'No notes here yet';
 
   @override
   String folderNoteCount(int count) {
@@ -2949,7 +2949,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get friendsEmpty =>
-      'No one yet. Add a friend by email to share folders with them.';
+      'Add a friend by email to share folders with them.';
 
   @override
   String get friendsRequestsTitle => 'Requests';
@@ -3082,7 +3082,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get folderChatSend => 'Send';
 
   @override
-  String get folderChatEmptyTitle => 'No messages yet';
+  String get folderChatEmptyTitle => 'No messages here yet';
 
   @override
   String get folderChatEmptyHint =>
@@ -3126,7 +3126,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inboxTitle => 'Incoming notes';
 
   @override
-  String get inboxEmpty => 'No incoming notes';
+  String get inboxEmpty => 'No incoming notes here';
 
   @override
   String get inboxEmptyHint => 'Notes your friends send you collect here.';
@@ -5731,6 +5731,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emptyNotesFirstAction => 'Write your first note';
 
   @override
+  String get emptyNotesHint => 'Notes you write show up here as cards.';
+
+  @override
+  String get emptyFolderHint => 'Notes you add to this folder gather here.';
+
+  @override
+  String get emptyFilterHint => 'Clear the filter to see all your notes again.';
+
+  @override
+  String get emptySearchHint => 'Try a different word.';
+
+  @override
+  String get archiveEmptyHint =>
+      'Notes you archive leave the home screen and are kept here.';
+
+  @override
+  String get trashEmptyHint =>
+      'Deleted notes stay here for 30 days; you can restore them until then.';
+
+  @override
   String get cardShowMoreCount => '“+N more items” line';
 
   @override
@@ -6368,7 +6388,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharedHubTagShared => 'Shared';
 
   @override
-  String get sharedHubEmpty => 'Nothing received or shared yet';
+  String get sharedHubEmpty => 'Nothing received or shared here yet';
 
   @override
   String get sharedHubEmptyHint =>
@@ -6606,7 +6626,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get studyCardsEmpty => 'No cards due today';
+  String get studyCardsEmpty => 'No cards due here today';
 
   @override
   String get studyCardsDone => 'All done for today!';
@@ -6705,7 +6725,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gmailSearchHint => 'Search mail (Gmail search syntax)';
 
   @override
-  String get gmailEmpty => 'No emails';
+  String get gmailEmpty => 'No emails here';
 
   @override
   String get gmailLoadMore => 'Load more';
@@ -7097,7 +7117,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarNewEvent => 'New event';
 
   @override
-  String get calendarEmpty => 'Your calendar is empty';
+  String get calendarEmpty => 'No events here yet';
 
   @override
   String get calendarEmptyHint =>
@@ -7221,7 +7241,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksDeleteListConfirm => 'Delete the list and its tasks?';
 
   @override
-  String get tasksEmpty => 'No tasks';
+  String get tasksEmpty => 'No tasks here';
 
   @override
   String get tasksEmptyHint =>
@@ -7473,7 +7493,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get routineEdit => 'Edit routine';
 
   @override
-  String get routinesEmpty => 'No routines yet';
+  String get routinesEmpty => 'No routines here yet';
 
   @override
   String get routinesEmptyHint =>
@@ -7615,7 +7635,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gmailRefresh => 'Refresh';
 
   @override
-  String get gmailNoResults => 'No emails match your search';
+  String get gmailNoResults => 'No emails here match your search';
 
   @override
   String get gmailFilterInbox => 'Inbox';
@@ -7662,7 +7682,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gmailOpenInGmail => 'Open in Gmail';
 
   @override
-  String get friendsEmptyTitle => 'No contacts yet';
+  String get friendsEmptyTitle => 'No contacts here yet';
 
   @override
   String get friendsFilterHint => 'Search contacts';
