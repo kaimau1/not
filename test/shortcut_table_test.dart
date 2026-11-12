@@ -41,9 +41,7 @@ void main() {
     expect(keys, hasLength(keys.toSet().length));
   });
 
-  testWidgets('yardım satırları tablodan, eski yazılarla aynı', (
-    tester,
-  ) async {
+  testWidgets('yardım satırları tablodan, eski yazılarla aynı', (tester) async {
     late List<({String keys, String label})> rows;
     await tester.pumpWidget(
       MaterialApp(
