@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../notes/data/due_state.dart' show dueClockProvider;
 import '../../settings/settings_providers.dart';
@@ -281,13 +282,21 @@ class _DayCell extends StatelessWidget {
                     child: count == 0
                         ? (wide
                               ? const SizedBox.shrink()
+                              // Gün adı ÜÇ HARF (K-D4, F74.2): tek harf
+                              // "P" Pazartesi mi Perşembe mi Pazar mı
+                              // söylemiyordu. 360 dp'de hücre içi ~26 dp,
+                              // "Cmt" 11 pt sığar; daha darda tek harf.
                               : Center(
                                   child: Text(
-                                    weekday.characters.first,
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      color: scheme.onSurfaceVariant,
-                                    ),
+                                    c.maxWidth >= 24
+                                        ? weekday
+                                        : weekday.characters.first,
+                                    maxLines: 1,
+                                    style: AppText.of(Theme.of(context)).badge
+                                        .copyWith(
+                                          height: 1.15,
+                                          color: scheme.onSurfaceVariant,
+                                        ),
                                   ),
                                 ))
                         : wide && title != null
