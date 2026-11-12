@@ -4,6 +4,11 @@ part of 'dashboard_screen.dart';
 /// Bölüm başlığının çizgisi en çok okuma genişliğine uzanır (F39.1).
 const double kSectionHeaderMaxWidth = 760;
 
+/// Bu genişlikte ve üstünde bölüm çizgisi ÇİZİLMEZ (DENEYIM F80.3a, D22):
+/// geniş ızgarada 760 dp'de biten çizgi kartların ortasında kesiliyordu
+/// (`masaustu-ana.png`); başlık + sayı tek başına yeter.
+const double kSectionLineHideWidth = 840;
+
 /// Bölüm başlığı: sayı başlığın yanında, çizgi sonra (F39.1). Masaüstünde sayı
 /// başlıktan ~1800 px uzağa düşüyordu.
 class HomeSectionHeader extends StatelessWidget {
@@ -38,8 +43,11 @@ class HomeSectionHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
+              // Ağaç şekli sabit: genişte çizginin yerinde boş kutu.
               Expanded(
-                child: Divider(height: 1, color: scheme.outlineVariant),
+                child: MediaQuery.sizeOf(context).width >= kSectionLineHideWidth
+                    ? const SizedBox(height: 1)
+                    : Divider(height: 1, color: scheme.outlineVariant),
               ),
             ],
           ),
