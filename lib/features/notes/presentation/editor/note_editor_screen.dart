@@ -9,6 +9,7 @@ import '../reminders_screen.dart'
     show maybeShowAutoStartHint;
 import '../reminder_sheet.dart';
 import '../../domain/reminder_repeat.dart';
+import '../../../../core/a11y/min_tap_target.dart';
 import '../../../../core/app_icons.dart';
 import 'dart:async';
 import 'dart:io';
@@ -1015,7 +1016,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// ⋮ menüsü çubukta duranı tekrar etmez, düşeni Araçlar'da gösterir.
   /// Kurulum sırasında yazılır (setState yok — yalnız menü açılınca okunur).
   bool _barHasSearch = false;
-  bool _barHasShare = false;
+
+  /// Alt çubuğun renkli nottaki tonu (F75.3, K-D6): notun koyu tonu ve sayfa
+  /// rengi; renksiz/temalı notta [_barInk] null → çubuk temanın renklerinde.
+  /// Build'de [NoteAccent]'e giden değerlerden beslenir (yeni sağlayıcı yok).
+  Color? _barInk;
+  Color _barPage = Colors.transparent;
 
   /// Çubuğun yazacağı alan: en son odaklanan metin alanı (gövde ya da bir
   /// liste maddesi). Çubuğun kendisi odak İSTEMEDİĞİ için bu değer düğmeye
@@ -3081,6 +3087,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // etiket/klasör/hatırlatıcı hapları ve raptiye bu tondan. Dış temadan
     // hesaplanır (zıt temada zemin yanlış hesaplanırdı).
     final noteAccent = NoteColors.noteInk(context, note);
+    _barInk = noteAccent;
+    _barPage = background;
     // Çizilmiş tema varsa sayfa ve üst çubuk saydam: süsleme arkadan görünür
     // (bkz. NoteThemeBackdrop); alt çubuk temanın alt tonunda düz kalır.
     final themed = NoteThemes.byId(note.theme) != null;
@@ -4420,6 +4428,12 @@ child: NoteFindBar(
                       final showAttachments =
                           fileAttachments.isNotEmpty &&
                           on(UiItem.barAttachments);
+                      // KALEM (F75.1): metin/liste notunda sayfa kalemi
+                      // (salt okunurda yok — hızlı satırla aynı kural), belge
+                      // notunda sayfanın üzerine yazma.
+                      final showPen =
+                          (isDocumentNote || !_readOnly) &&
+                          on(UiItem.barPen);
                       final showAi = on(UiItem.barAi);
                       // "AI ile sesli not" ÇUBUKTAN KALKTI (kullanıcı isteği
                       // 2026-10-20: "AI sesli notu AI menüsünün üzerine
@@ -4448,31 +4462,30 @@ child: NoteFindBar(
                       ].where((v) => v).length;
                       // Genişliğe göre plan: taşma/kesik kapsül yerine önce
                       // düğmeler küçülür, sonra ⋮ menüsünde de bulunan
-                      // Ara/Paylaş kapsülden çıkar (bkz. planEditorBar).
+                      // Ara kapsülden çıkar (bkz. planEditorBar).
                       final plan = planEditorBar(
                         width: constraints.maxWidth,
                         fixedSegments:
                             (showFormat ? 1 : 0) +
                             (showAdd ? 1 : 0) +
+                            (showPen ? 1 : 0) +
                             (showCheckbox ? 1 : 0) +
                             (showSelect ? 1 : 0),
                         attachments: showAttachments,
-                        pen: isDocumentNote,
                         aiButtons: aiCount,
                       );
                       final showSearch =
                           plan.search && on(UiItem.barSearch);
-                      final showShare = plan.share && on(UiItem.barShare);
                       _barHasSearch = showSearch && !editingUi;
-                      _barHasShare = showShare && !editingUi;
-                      // Biçim · Ekle · Ara · Paylaş · Ekler · (☑ | Seç).
+                      // Biçim · Ekle · Kalem · Ara · Ekler · (☑ | Seç).
                       // Gerekçeler:
                       // "Metin/Liste ekle" Ekle levhasında (attach_sheet);
                       // SEÇ burada (2026-08-09), simgesi `select_all`
                       // (2026-09-01: `checklist` "liste ekle" ile
-                      // karışıyordu), madde yoksa gizli; ARA ve PAYLAŞ alt
-                      // çubukta (2026-09-01) ve ⋮ menüsünde de; EKLER şeridin
-                      // aç/kapası (2026-08-08).
+                      // karışıyordu), madde yoksa gizli; ARA alt çubukta
+                      // (2026-09-01) ve ⋮ menüsünde de; PAYLAŞ'ın yerine
+                      // KALEM (K-D6, 2026-11-12 — Paylaş ⋮ menüsünün hızlı
+                      // satırında); EKLER şeridin aç/kapası (2026-08-08).
                       final segments = <Widget>[
                         if (showFormat)
                           Customizable(
@@ -4494,6 +4507,11 @@ child: NoteFindBar(
                             id: UiItem.barAdd,
                             child: _addToolButton(l10n),
                           ),
+                        if (showPen)
+                          Customizable(
+                            id: UiItem.barPen,
+                            child: _penSegment(l10n, note),
+                          ),
                         if (showSearch)
                           Customizable(
                             id: UiItem.barSearch,
@@ -4503,19 +4521,10 @@ child: NoteFindBar(
                               onTap: _openNoteSearch,
                             ),
                           ),
-                        if (showShare)
-                          Customizable(
-                            id: UiItem.barShare,
-                            child: _toolSegment(
-                              icon: Icons.share_outlined,
-                              label: l10n.share,
-                              onTap: () => unawaited(_share()),
-                            ),
-                          ),
                         // EKLER ortak dörtlüden SONRA (F12.3): yalnız ekli
-                        // notta var; önde dururken Ara/Paylaş'ı nota göre
+                        // notta var; önde dururken Ara'yı nota göre
                         // kaydırıyordu. Plan (planEditorBar) eki hesaba
-                        // katıp önce Ara/Paylaş'ı düşürdüğü için kaydırma
+                        // katıp önce Ara'yı düşürdüğü için kaydırma
                         // dışında kalmaz (2026-10-17 bulgusunun kök nedeni).
                         if (showAttachments)
                           Customizable(
@@ -4528,7 +4537,6 @@ child: NoteFindBar(
                         // TÜRE ÖZGÜ düğme (☑ metinde, Seç listede) HER ZAMAN
                         // sol grubun EN SONUNDA (F12.3, kas hafızası): aynı
                         // konumdaki düğme türe göre başka iş yapıyordu.
-                        // Belge notunun kalemi kapsülün hemen sağında.
                         if (showCheckbox)
                           Customizable(
                             id: UiItem.barCheckbox,
@@ -4559,42 +4567,55 @@ child: NoteFindBar(
                           Expanded(
                             child: SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
-                              child: Container(
-                                padding: const EdgeInsets.all(3),
+                              // Dolgu Row'un DIŞINDA değil içinde (F75.2):
+                              // Row kapsülün tam boyunda (48 dp) olmalı ki
+                              // segmentlerin dokunma payı (bkz. _barTarget)
+                              // yakalansın. Görünüş aynı: çerçeve 1 + dolgu 3.
+                              child: DecoratedBox(
+                                key: const ValueKey('editor-tool-capsule'),
+                                // Renkli notta notun tonu (F75.3, K-D6).
                                 decoration: BoxDecoration(
-                                  color: _themeOf(
-                                    context,
-                                  ).colorScheme.surface,
+                                  color: noteAccent == null
+                                      ? _themeOf(context).colorScheme.surface
+                                      : Color.alphaBlend(
+                                          noteAccent.withValues(alpha: 0.08),
+                                          background,
+                                        ),
                                   borderRadius: BorderRadius.circular(13),
                                   border: Border.all(
-                                    color: _themeOf(
-                                      context,
-                                    ).colorScheme.outlineVariant,
+                                    color:
+                                        noteAccent?.withValues(alpha: 0.12) ??
+                                        _themeOf(
+                                          context,
+                                        ).colorScheme.outlineVariant,
                                   ),
                                 ),
-                                child: Row(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  child: SizedBox(
+                                  height: _kToolSegment + 8,
+                                  child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     for (var i = 0;
                                         i < segments.length;
                                         i++) ...[
-                                      if (i > 0) const SizedBox(width: 3),
+                                      if (i > 0)
+                                        const SizedBox(
+                                          width: kEditorBarSegmentGap,
+                                        ),
                                       segments[i],
                                     ],
                                   ],
+                                ),
+                                ),
                                 ),
                               ),
                             ),
                           ),
                           const SizedBox(width: 8),
-                          // PDF/sunum notunda KALEM alt çubukta: tam ekrana
-                          // geçmeden sayfanın üzerine yazılabilsin (kullanıcı
-                          // isteği 2026-08-08 — ekran görüntüsünde işaretlenen
-                          // boşluk).
-                          if (isDocumentNote) ...[
-                            _penToolButton(l10n),
-                            const SizedBox(width: 8),
-                          ],
                           // AI + SES TEK KAPSÜLDE (kullanıcı isteği
                           // 2026-10-11: "işaretli alanlar mantıklı biçimde
                           // düzenlenmeli"). Üç ayrı gölgeli kare düğme
@@ -4616,6 +4637,7 @@ child: NoteFindBar(
                                     child: Consumer(
                                       builder: (context, ref, _) => _voiceButton(
                                       size: plan.button,
+                                      gap: plan.gap,
                                       // Rozet görünmeyen için de durum.
                                       tooltip: aiStatusTitle(
                                         l10n,
@@ -4644,6 +4666,7 @@ child: NoteFindBar(
                                     id: UiItem.barVoiceRecord,
                                     child: _voiceButton(
                                       size: plan.button,
+                                      gap: plan.gap,
                                       tooltip: _voiceRecorder == null
                                           ? l10n.recordAudio
                                           : l10n.stopAndSave,
@@ -4661,6 +4684,7 @@ child: NoteFindBar(
                                     id: UiItem.barDictation,
                                     child: _voiceButton(
                                       size: plan.button,
+                                      gap: plan.gap,
                                       tooltip: l10n.liveDictation,
                                       icon: _dictating
                                           ? Icons.stop

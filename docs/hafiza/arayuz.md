@@ -63,7 +63,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   (`migrateDefaultNoteSort`).
 - Kartta görünenler `card_show_*`; kart TEK semantik düğüm, ⋮ ayrı.
 - Menüler `ActionMenu`; not ⋮ ve kart ⋮ TEK katalog `noteMenuModel` (F38.1): yeni iş oraya + iki handler (`note_menu_model_test` ölü düğmeyi yakalar). Çok işlemli = levha, tek seçimli ya da ≤ 4 madde = açılır menü (F38.6). Hızlı satır en çok 5: 6'da dar ekranda ad kesilir. Alt çubuk
-  sırası sabit: Biçim · Ekle · Ara · Paylaş · Ekler · (☑|Seç).
+  sırası sabit: Biçim · Ekle · Kalem · Ara · Ekler · (☑|Seç) (F75.1, 2026-11-12: Paylaş ⋮ menüsünde; kalem = `_togglePen`, belge notunda üzerine yazma; kimlik `UiItem.barPen`). Segment 40 dp görünür, dokunma 48 dp (`MinTapTarget(minWidth: segment + boşluk)` — yatay pay komşunun kutusuna taşmasın). Renkli notta çubuk notun tonunda (`_barInk`/`_barPage`, F75.3): yeni çubuk düğmesi rengi `_barInk ?? tema` ile alsın.
 - Simgeler `lib/core/app_icons.dart` sözlüğünden (`visual_consistency_test`
   doğrudan `Icons.archive/move_to_inbox/…` kullanımını yakalar; F18.15'te
   yakaladı). Levha `SheetHeader` + `SectionLabel` (asla `toUpperCase`).

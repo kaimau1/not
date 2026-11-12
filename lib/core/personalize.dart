@@ -130,7 +130,10 @@ abstract final class UiItem {
   static const barAdd = 'editor.bar.add';
   static const barSelect = 'editor.bar.select';
   static const barSearch = 'editor.bar.search';
+  /// ESKİ Paylaş segmenti — 2026-11-12'de (K-D6) yerini Kalem aldı; kimlik
+  /// eski tercihler için duruyor.
   static const barShare = 'editor.bar.share';
+  static const barPen = 'editor.bar.pen';
   static const barAttachments = 'editor.bar.attachments';
   static const barAi = 'editor.bar.ai';
   /// ESKİ "AI ile sesli not" çubuk düğmesi — 2026-10-20'de yapay zekâ

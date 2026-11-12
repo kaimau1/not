@@ -397,7 +397,6 @@ extension _EditorActions on _NoteEditorScreenState {
         visibleElsewhere: {
           if (_barTitle == null && Customizable.shows(UiItem.topPin)) 'pin',
           if (_barHasSearch) 'search',
-          if (_barHasShare) 'share',
         },
         // bubbleView verilmez: balonlu görünüm kalktı (2026-11-05).
         canRemoveParts: !_readOnly && _hasBothParts(note),

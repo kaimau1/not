@@ -186,6 +186,91 @@ void main() {
     await _end(tester);
   });
 
+  // F75.1 + F75.3 (K-D6): alt çubukta Paylaş yerine Kalem; renkli notta iki
+  // kapsül de notun tonunda — temanın vurgusu (petrol) çubukta kalmaz.
+  Color capsuleFill(WidgetTester tester, String key) =>
+      (tester.widget<DecoratedBox>(find.byKey(ValueKey(key))).decoration
+              as BoxDecoration)
+          .color!;
+  Iterable<Icon> barIcons(WidgetTester tester) => tester.widgetList<Icon>(
+    find.descendant(
+      of: find.byType(BottomAppBar),
+      matching: find.byType(Icon),
+    ),
+  );
+
+  testWidgets('alt çubuk sırası: Biçim · Ekle · Kalem · Ara · Seç', (
+    tester,
+  ) async {
+    await _pumpEditor(tester, _note());
+    final icons = tester
+        .widgetList<Icon>(
+          find.descendant(
+            of: find.byKey(const ValueKey('editor-tool-capsule')),
+            matching: find.byType(Icon),
+          ),
+        )
+        .map((i) => i.icon);
+    expect(icons, [
+      Icons.text_format,
+      Icons.add_rounded,
+      Icons.draw_outlined,
+      Icons.search,
+      Icons.select_all,
+    ]);
+    await _end(tester);
+  });
+
+  testWidgets('renkli notta alt çubuk notun tonunda', (tester) async {
+    final note = _note(color: NoteColor.sage);
+    await _pumpEditor(tester, note);
+    final ink = NoteColors.noteInkIn(_light, note)!;
+    final page = NoteColors.noteSurfaceIn(_light, note);
+    expect(
+      capsuleFill(tester, 'editor-tool-capsule'),
+      Color.alphaBlend(ink.withValues(alpha: 0.08), page),
+    );
+    expect(
+      capsuleFill(tester, 'editor-ai-capsule'),
+      Color.alphaBlend(ink.withValues(alpha: 0.14), page),
+    );
+    expect(barIcons(tester), isNotEmpty);
+    for (final icon in barIcons(tester)) {
+      expect(icon.color, ink, reason: '${icon.icon}');
+    }
+    await _end(tester);
+  });
+
+  testWidgets('renksiz notta alt çubuk temanın renklerinde; "+" birincil', (
+    tester,
+  ) async {
+    await _pumpEditor(tester, _note());
+    final scheme = _light.colorScheme;
+    expect(capsuleFill(tester, 'editor-tool-capsule'), scheme.surface);
+    expect(capsuleFill(tester, 'editor-ai-capsule'), scheme.primaryContainer);
+    final add = find.byKey(const ValueKey('editor-add-button'));
+    expect(
+      tester
+          .widget<Icon>(find.descendant(of: add, matching: find.byType(Icon)))
+          .color,
+      scheme.onPrimaryContainer,
+    );
+    expect(
+      (tester
+                  .widget<DecoratedBox>(
+                    find.descendant(
+                      of: add,
+                      matching: find.byType(DecoratedBox),
+                    ),
+                  )
+                  .decoration
+              as BoxDecoration)
+          .color,
+      scheme.primaryContainer,
+    );
+    await _end(tester);
+  });
+
   test('başlık ölçümü alanın birleşik stiliyle (harf aralığı dahil)', () {
     // TextField M3'te stilini `bodyLarge`ın üstüne birleştirir: başlık harf
     // aralığı vermezse alan 0,5'i miras alır — ölçüm de almalı.

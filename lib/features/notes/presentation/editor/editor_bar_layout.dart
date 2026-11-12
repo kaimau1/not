@@ -10,28 +10,32 @@
 /// çareydi.
 ///
 /// Artık plan önce sığdırmayı dener, taşma yerine sırayla:
-///  1. sağdaki üç düğmeyi 48 → 44 dp'ye, aralarını 6 → 4 dp'ye indirir;
-///  2. Paylaş'ı, sonra Ara'yı kapsülden çıkarır — ikisi de ⋮ menüsünde
-///     zaten duruyor, yani hiçbir iş erişilemez hâle gelmez.
+///  1. sağdaki üç düğmeyi 44 → 40 dp'ye indirir;
+///  2. Ara'yı kapsülden çıkarır — ⋮ menüsünde zaten duruyor, yani hiçbir iş
+///     erişilemez hâle gelmez;
+///  3. sağdaki düğmeleri 36 dp'ye indirir (393 dp + ekli not; dokunma alanı
+///     yine 48 dp yüksek — bkz. `MinTapTarget`).
 ///
 /// 2026-10-11: sağdaki üç düğme artık AYRI gölgeli kareler değil, TEK vurgu
 /// renkli kapsülün segmentleri (bkz. editördeki `_aiCapsule`). [button]
 /// segmentin GENİŞLİĞİ (yükseklik soldaki kapsülle aynı, 40 dp), [gap]
 /// segmentler arası boşluk.
-typedef EditorBarPlan = ({double button, double gap, bool search, bool share});
+///
+/// 2026-11-12 (F75.1, K-D6): Paylaş kapsülden çıktı (⋮ menüsünün hızlı
+/// satırında), yerine KALEM geldi. Kalem sabit bir segment — çağıran
+/// `fixedSegments`'e sayar; belge notunun ayrı kalem düğmesi de o segment
+/// oldu (eski `pen` girdisi ve `share` alanı kalktı).
+typedef EditorBarPlan = ({double button, double gap, bool search});
 
 /// Kapsüldeki bir segmentin kenarı ve aralığı (editördeki `_kToolSegment`).
 const double kEditorBarSegment = 40;
-const double _segmentGap = 3;
+const double kEditorBarSegmentGap = 3;
 
 /// Kapsülün iç dolgusu (3 + 3) ve çerçevesi (1 + 1).
 const double _pillChrome = 8;
 
 /// "Ekler (n)" düğmesinin yaklaşık genişliği (simge + sayı + dolgu).
 const double _attachmentsWidth = 52;
-
-/// Belge notundaki kalem düğmesi + ardındaki boşluk.
-const double _penWidth = 46 + 8;
 
 /// Kapsül ile sağdaki düğmeler arasındaki boşluk.
 const double _pillGap = 8;
@@ -43,7 +47,6 @@ EditorBarPlan planEditorBar({
   required double width,
   required int fixedSegments,
   required bool attachments,
-  required bool pen,
   int aiButtons = 3,
 }) {
   double need(double button, double gap, int optional) {
@@ -51,35 +54,24 @@ EditorBarPlan planEditorBar({
     final pill =
         _pillChrome +
         n * kEditorBarSegment +
-        (n - 1).clamp(0, n) * _segmentGap +
-        (attachments ? _attachmentsWidth + _segmentGap : 0);
+        (n - 1).clamp(0, n) * kEditorBarSegmentGap +
+        (attachments ? _attachmentsWidth + kEditorBarSegmentGap : 0);
     // Kişiselleştirmede gizlenen AI düğmeleri yer tutmaz; hiçbiri yoksa
     // kapsülün kendisi de çizilmez.
     return pill +
         _pillGap +
-        (pen ? _penWidth : 0) +
         (aiButtons > 0
             ? _aiChrome + aiButtons * button + (aiButtons - 1) * gap
             : 0);
   }
 
-  const steps = [
-    (44.0, 2.0, 2),
-    (40.0, 2.0, 2),
-    (40.0, 2.0, 1),
-    (40.0, 2.0, 0),
-  ];
+  const steps = [(44.0, 2.0, 1), (40.0, 2.0, 1), (40.0, 2.0, 0), (36.0, 2.0, 0)];
   for (final (button, gap, optional) in steps) {
     if (need(button, gap, optional) <= width) {
-      return (
-        button: button,
-        gap: gap,
-        search: optional >= 1,
-        share: optional >= 2,
-      );
+      return (button: button, gap: gap, search: optional >= 1);
     }
   }
-  // Hiçbiri sığmadı (çok dar pencere): en sıkı plan; kapsül kendi içinde
-  // kayar.
-  return (button: 40.0, gap: 2.0, search: false, share: false);
+  // Hiçbiri sığmadı (360 dp + ekli not ya da çok dar pencere): en sıkı plan;
+  // kapsül kendi içinde kayar.
+  return (button: 36.0, gap: 2.0, search: false);
 }

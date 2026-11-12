@@ -7,33 +7,77 @@ extension _EditorToolbar on _NoteEditorScreenState {
   /// Sesli yazdırma. Cihazın yerleşik tanıması varsa düğme DOĞRUDAN dikteyi
   /// başlatır (alt sayfa açılmaz): konuşma anında nota akar, düğmeye tekrar
   /// basınca durur. Yerleşik tanıma yoksa (web) eski alt sayfa açılır.
-  /// Alt bardaki üç araç segmentinden biri.
+  /// Alt bardaki araç segmentlerinden biri.
+  ///
+  /// RENKLİ NOTTA (F75.3, K-D6) çubuk notun tonunda: [_barInk] doluysa simge
+  /// ve etkin zemin ondan, yoksa temanın renkleri.
   Widget _toolSegment({
+    Key? key,
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    VoidCallback? onLongPress,
     bool active = false,
   }) {
     final scheme = _themeOf(context).colorScheme;
-    return Tooltip(
-      message: label,
-      child: Material(
-        color: active ? scheme.primaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
+    final ink = _barInk;
+    return _barTarget(
+      Tooltip(
+        message: label,
+        child: Material(
+          color: !active
+              ? Colors.transparent
+              : ink?.withValues(alpha: 0.18) ?? scheme.primaryContainer,
           borderRadius: BorderRadius.circular(10),
-          onTap: onTap,
-          child: SizedBox(
-            height: _NoteEditorScreenState._kToolSegment,
-            width: _NoteEditorScreenState._kToolSegment,
-            child: Icon(
-              icon,
-              size: 21,
-              color: active ? scheme.onPrimaryContainer : scheme.onSurface,
+          child: InkWell(
+            key: key,
+            borderRadius: BorderRadius.circular(10),
+            onTap: onTap,
+            onLongPress: onLongPress,
+            child: SizedBox(
+              height: _NoteEditorScreenState._kToolSegment,
+              width: _NoteEditorScreenState._kToolSegment,
+              child: Icon(
+                icon,
+                size: 21,
+                color:
+                    ink ??
+                    (active ? scheme.onPrimaryContainer : scheme.onSurface),
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  /// 48 dp DOKUNMA ALANI (F75.2): segment 40 dp görünür, çubuk 50 dp kalır;
+  /// pay dikeyde kapsülün dolgusuna (4 + 4), yatayda yalnız komşuyla aradaki
+  /// boşluğun yarısına uzanır — komşunun görünen kutusuna taşmaz. Yer
+  /// kaplamaz (bkz. [MinTapTarget]); ağaç şekli hep aynı.
+  Widget _barTarget(Widget child) => MinTapTarget(
+    minWidth: _NoteEditorScreenState._kToolSegment + kEditorBarSegmentGap,
+    child: child,
+  );
+
+  /// KALEM segmenti (F75.1, K-D6): hızlı satırdaki kalemle AYNI iş
+  /// ([_togglePen]; basılı tut = kalem ayarları). Belge notunda sayfanın
+  /// ÜZERİNE yazma kipini açar/kapatır — eskiden kapsülün sağındaki ayrı
+  /// düğmeydi (kullanıcı isteği 2026-08-08), iki kalem yan yana durmasın
+  /// diye bu segmentle birleşti.
+  Widget _penSegment(AppLocalizations l10n, Note note) {
+    final document = note.type.isPageNoteType;
+    return _toolSegment(
+      key: const ValueKey('editor-bar-pen'),
+      icon: Icons.draw_outlined,
+      label: document
+          ? (_penMode ? l10n.annotateDone : l10n.annotate)
+          : l10n.quickRowPen,
+      active: _penMode,
+      onTap: document ? () => _update(() => _penMode = !_penMode) : _togglePen,
+      onLongPress: document
+          ? null
+          : () => showInkSettings(context, _pageInkOf(note)),
     );
   }
 
@@ -54,7 +98,9 @@ extension _EditorToolbar on _NoteEditorScreenState {
   Widget _attachmentsToggle(AppLocalizations l10n, int count) {
     final scheme = _themeOf(context).colorScheme;
     final open = ref.watch(attachmentsExpandedProvider);
-    return Tooltip(
+    final noteInk = _barInk;
+    return MinTapTarget(
+      child: Tooltip(
       message: open ? l10n.hideAttachments : l10n.showAttachments,
       child: AnimatedBuilder(
         animation: _attachPulse,
@@ -63,11 +109,17 @@ extension _EditorToolbar on _NoteEditorScreenState {
           // döner ki rozet okunur kalsın.
           final t = _attachPulse.value;
           final glow = Color.lerp(
-            open ? scheme.secondaryContainer : Colors.transparent,
-            scheme.primary,
+            !open
+                ? Colors.transparent
+                : noteInk?.withValues(alpha: 0.18) ?? scheme.secondaryContainer,
+            noteInk ?? scheme.primary,
             t,
           )!;
-          final ink = Color.lerp(scheme.onSurface, scheme.onPrimary, t)!;
+          final ink = Color.lerp(
+            noteInk ?? scheme.onSurface,
+            noteInk != null ? _barPage : scheme.onPrimary,
+            t,
+          )!;
           return Material(
             color: glow,
             borderRadius: BorderRadius.circular(10),
@@ -99,32 +151,6 @@ extension _EditorToolbar on _NoteEditorScreenState {
           );
         },
       ),
-    );
-  }
-
-  /// PDF/sunum sayfasının ÜZERİNE yazma kalemi. Açıkken bölmede tek parmak
-  /// çizer, iki parmak gezinir; renk/kalınlık/silgi/ok çubuğu bölmenin
-  /// altında belirir (bkz. PdfNotePane.penMode).
-  Widget _penToolButton(AppLocalizations l10n) {
-    final scheme = _themeOf(context).colorScheme;
-    return Tooltip(
-      message: _penMode ? l10n.annotateDone : l10n.annotate,
-      child: SizedBox(
-        height: 44,
-        width: 46,
-        child: Material(
-          color: _penMode ? scheme.primary : scheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(13),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(13),
-            onTap: () => _update(() => _penMode = !_penMode),
-            child: Icon(
-              _penMode ? Icons.edit : Icons.edit_outlined,
-              size: 20,
-              color: _penMode ? scheme.onPrimary : scheme.onSurfaceVariant,
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -141,11 +167,20 @@ extension _EditorToolbar on _NoteEditorScreenState {
     IconData? badge,
     bool active = false,
     double size = 48,
+    double gap = 2,
   }) {
     final scheme = _themeOf(context).colorScheme;
-    final background = active ? scheme.primary : Colors.transparent;
-    final ink = active ? scheme.onPrimary : scheme.onPrimaryContainer;
-    return Tooltip(
+    // Renkli notta notun tonu (F75.3): açıkken dolu ton + sayfa rengi simge.
+    final noteInk = _barInk;
+    final background = !active
+        ? Colors.transparent
+        : noteInk ?? scheme.primary;
+    final ink = noteInk != null
+        ? (active ? _barPage : noteInk)
+        : (active ? scheme.onPrimary : scheme.onPrimaryContainer);
+    return MinTapTarget(
+      minWidth: size + gap,
+      child: Tooltip(
       message: tooltip,
       child: SizedBox(
         width: size,
@@ -171,6 +206,7 @@ extension _EditorToolbar on _NoteEditorScreenState {
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -183,22 +219,33 @@ extension _EditorToolbar on _NoteEditorScreenState {
     required List<Widget> children,
   }) {
     final scheme = _themeOf(context).colorScheme;
-    return Container(
+    // Renkli notta notun tonu (F75.3), çerçevesiz.
+    final ink = _barInk;
+    final fill = ink == null
+        ? scheme.primaryContainer
+        : Color.alphaBlend(ink.withValues(alpha: 0.14), _barPage);
+    // Dolgu yatayda; dikeyde Row kapsülün tam boyunda (48 dp) — düğmelerin
+    // dokunma payı yakalansın (F75.2). Görünüş aynı.
+    return DecoratedBox(
       key: const ValueKey('editor-ai-capsule'),
-      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: scheme.primaryContainer,
+        color: fill,
         borderRadius: BorderRadius.circular(13),
-        border: Border.all(color: scheme.primaryContainer),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) SizedBox(width: gap),
-            children[i],
-          ],
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: SizedBox(
+          height: _NoteEditorScreenState._kToolSegment + 8,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < children.length; i++) ...[
+                if (i > 0) SizedBox(width: gap),
+                children[i],
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -207,10 +254,15 @@ extension _EditorToolbar on _NoteEditorScreenState {
   /// işareti güzel değil"): çıplak ince "+" yerine segmentin içinde TONLU
   /// yuvarlak rozet ve kalın, yuvarlak uçlu artı — kapsüldeki diğer
   /// simgelerden ayrışır, "buradan ekle" diye okunur.
+  ///
+  /// Rozet "oluşturma" rolünde (K-D1, F73.1-2): `primaryContainer`; renkli
+  /// notta notun tonu (F75.3).
   Widget _addToolButton(AppLocalizations l10n) {
     final scheme = _themeOf(context).colorScheme;
+    final ink = _barInk;
     const segment = _NoteEditorScreenState._kToolSegment;
-    return Tooltip(
+    return _barTarget(
+      Tooltip(
       message: l10n.addAttachment,
       child: Material(
         color: Colors.transparent,
@@ -225,7 +277,8 @@ extension _EditorToolbar on _NoteEditorScreenState {
             child: Center(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: scheme.secondaryContainer,
+                  color:
+                      ink?.withValues(alpha: 0.18) ?? scheme.primaryContainer,
                   shape: BoxShape.circle,
                 ),
                 child: SizedBox.square(
@@ -234,13 +287,14 @@ extension _EditorToolbar on _NoteEditorScreenState {
                     Icons.add_rounded,
                     size: 20,
                     weight: 700,
-                    color: scheme.onSecondaryContainer,
+                    color: ink ?? scheme.onPrimaryContainer,
                   ),
                 ),
               ),
             ),
           ),
         ),
+      ),
       ),
     );
   }
