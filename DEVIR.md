@@ -31,3 +31,5 @@ commit'leri geri alınır (yeniden eskiye sırayla `git revert`). Maddeler birbi
 - Açılışta beyaz parlama yerine uygulama simgeli açılış ekranı.
 - Kısa süren yüklemelerde dönen halka görünmez (0,3 sn'den uzun sürerse belirir).
 - PDF açılırken gri kutu yerine belgenin küçük resmi.
+
+**Yürütücü (2026-11-12 ~19:40):** main (P36+P42) bu dala birleşti (02ebd989, çakışma yalnız DENEYIM tablosu). Profil APK'ları HAZIR: taban `C:\Users\sena\Desktop\ab_A_9c837495.apk` (main = son [apk], 72,6 MB), aday `C:\Users\sena\Desktop\ab_B_P39_02ebd989.apk` (60 MB; boyut farkı not_ab derleme önbelleğinden olabilir). Limit %82'de durdu. SIRADAKİ: Sonnet alt ajanla A/B — `ab_klavye.py` + `ab_liste.py` (A,B ikişer), F78.1 soğuk açılış beyaz kare (screenrecord + video.py), F78.2 `prof_new.py`. Kural (OTOMASYON 6. adım): hiçbir evre kötüleşmez; kötüleşen maddenin commit'i revert, iyiler birleşir. Sonra sürüm notu + `[apk]`.
