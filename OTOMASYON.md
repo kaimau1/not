@@ -27,6 +27,11 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
 0. **Kilit.** `.git/oto.lock` varsa ve son değişimi 40 dakikadan yeniyse: hiçbir şey
    yapmadan "başka yürütücü çalışıyor" de ve BİTİR. Değilse kilidi şimdi yaz. Aşağıdaki
    her adımın başında kilidi tazele. Tur nasıl biterse bitsin kilidi sil.
+   **Kilidi arka plan döngüsüyle TAZELEME** (`while …; do date > .git/oto.lock; sleep …; done`
+   YASAK): oturum limitte ölünce döngü yaşar, kilit sonsuza dek taze kalır. 2026-11-11 23:51'de
+   açılan döngü 2026-11-12 09:47'ye dek kilidi tuttu; 02:02–09:02 arası 8 devam turu "başka
+   yürütücü çalışıyor" deyip boşa kapandı. Tazeleme yalnız adım başındaki tek `date >` satırıdır;
+   40 dakikadan uzun süren adımda (alt ajan bekleme) bildirim geldiğinde tazele.
 1. **Depo.** `git status` temiz olmalı (değilse: `git stash -u` + Kuyruk notuna yaz),
    `git checkout main && git pull --ff-only`.
 2. **main sağlığı.** `gh run list -b main -L 3` (yoksa GitHub MCP `actions_list`). Son
