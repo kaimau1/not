@@ -65,7 +65,7 @@ dosya geçerli).
 | 73 | Renk rolleri + sakin tipografi | P34 | Opus | F73.1–F73.4 bitti (dalda, 2026-11-12; F73.1-2 P36'ya) |
 | 74 | Ana ekran cilası | P35 | Opus | Dalda (oto/P35-ana-ekran), cihaz A/B bekliyor |
 | 75 | Not ekranı alt çubuğu | P36 | Fable | Bekliyor |
-| 76 | Levhalar: ortak başlık, ortak karo | P37 | Opus | Bekliyor |
+| 76 | Levhalar: ortak başlık, ortak karo | P37 | Opus | F76.1–F76.4 bitti (dalda `oto/P37-levhalar`, 2026-11-12; F76.3 kalanı sabah bakılacak) |
 | 77 | Hareket ve dokunsal dil | P38 | Opus | Bekliyor |
 | 78 | Hız hissi (açılış, yeni not, yükleme hâlleri) | P39 | Fable | Bekliyor |
 | 79 | İkincil ekranlar + boş/çevrimdışı hâller | P40 | Opus | Bekliyor |
@@ -485,7 +485,7 @@ P18'in işi) DEĞİŞMEZ.
 not içi AI levhası (Grep `Bugünkü puan` ARB anahtarı), `test/note_menu_model_test.dart`,
 `test/undo_over_sheet_test.dart`. **Önce `istek_tara.py`.**
 
-- [ ] **F76.1 `ActionMenu` ölü alanı (D11, K-D7, K-D10).** Simge ızgarası (hızlı satır + 3
+- [x] **F76.1 `ActionMenu` ölü alanı (D11, K-D7, K-D10).** *(2026-11-12: tutamak yok (başlıklı menüde), ⚙ açılır menü (Menüyü düzenle · Ekranı düzenle · Ayarlar), Sil `DestructiveRow`, `SheetHeader` 56 dp / 16 dp / `sheetTitle` 18; 412×915 levha **774 → 670 dp (−104)**, 360×640'ta Sil'e **50 dp** kaydırma (önce 96) — bekçi `test/note_menu_sheet_height_test.dart`. `SectionLabel` iç dolgusu (üst 20 / alt 8) YAPILMADI: menüyü 4×16 dp uzatır, kabulle çelişir — sabah bakılacak.)* Simge ızgarası (hızlı satır + 3
   sütun daire + alt etiket) AYNEN (§4 Y6). Değişenler: tutamak yok (F72.5); bölüm adları
   `section` rolü (F72.5 ile kendiliğinden); alttaki "Ekranı düzenle" + "Ayarlar" satırı
   kalkar, başlıktaki ⚙ küçük açılır menü olur (Menüyü düzenle · Ekranı düzenle · Ayarlar);
@@ -493,16 +493,16 @@ not içi AI levhası (Grep `Bugünkü puan` ARB anahtarı), `test/note_menu_mode
   Kabul: `telefon-n4-menu.png` levha yüksekliği bugünkünden ≥ 100 dp kısa;
   `telefon-kucuk-n4-menu.png`'de "Sil"e ≤ 120 dp kaydırmayla ulaşılır; `note_menu_model_test`
   yeşil.
-- [ ] **F76.2 AI levhası ve Paylaş levhası (D12).** Yerleşim ve sıra AYNI; yalnız kılık:
+- [x] **F76.2 AI levhası ve Paylaş levhası (D12).** *(2026-11-12: AI satırları `SheetTile.rich`, "Bu not" kutuları çerçevesiz `surfaceContainer` köşe `m`; Paylaş bölüm adları `SectionLabel` (12 → 14 pt), 6 alt satır `SheetTile.rich` (misafir kilidi `badge`); ikisinde de tutamak yok. `SheetTile` artık `AppIcons.glyph` çizer (AI sesli not simgesi).)* Yerleşim ve sıra AYNI; yalnız kılık:
   AI levhasındaki çerçeveli kartlar → `SheetTile.rich` (zeminli, çerçevesiz); "Bu not"
   işleri aynı 2 sütunda aynı açıklamalarıyla, çerçeve yerine `surfaceContainer` zemin.
   Paylaş: üst sıra daireler F73.1 renkleri; "Ayarlı PDF / Word", "Not paketi", "Arkadaşa
   gönder", "Birlikte düzenle" → `SheetTile.rich`.
-- [ ] **F76.3 Kalan levhaların dökümü.** `showAppSheet` çağıran yerler (Grep): her biri
+- [x] **F76.3 Kalan levhaların dökümü.** *(2026-11-12: 84 `showAppSheet` çağrısı `docs/deneyim/levhalar.md`'de; kapsam içinde tutamak + ✕ birlikte kalan YOK. **Sabah bakılacak:** kapsam dışı Ekle/tema/takvim editörleri/kalem tepsisinde hâlâ tutamak + ✕; 34 levha el yazısı 16 pt başlıkla (✕'siz, K-D7'ye uyuyor) — `SheetHeader`'a çevirme ayrı paket; 8 doğrudan `showModalBottomSheet`.)* `showAppSheet` çağıran yerler (Grep): her biri
   `SheetHeader` + `SectionLabel` kullanıyor mu, tutamak + ✕ birlikte mi, alt güvenli alan
   var mı. Uymayanlar çevrilir. KAPSAM DIŞI: kalem tepsisi, biçim çubuğu, takvim editörleri,
   tema levhası, Ekle levhası ve "+" paneli (§4 Y16). Döküm `docs/deneyim/levhalar.md`.
-- [ ] **F76.4 Onay pencereleri.** `showDialog` kullanımlarının dökümü: başlık `sheetTitle`,
+- [x] **F76.4 Onay pencereleri.** *(2026-11-12: `dialogTheme` başlık `sheetTitle` (24 → 18 pt), gövde `body`; `core/widgets/confirm_dialog.dart` `showConfirmDialog(destructive:)`; klasör sil ×2 ve kalıcı sil `error` tonuna çekildi, etiket sil + çöpü boşalt yardımcıya geçti. 5 yıkıcı onay `error`'suz — döküm dosyasında, sabah bakılacak.)* `showDialog` kullanımlarının dökümü: başlık `sheetTitle`,
   gövde `body`, düğmeler sağda; yıkıcı onay `FilledButton` + `error` tonu, vazgeç
   `TextButton`. Ortak yardımcı varsa ona, yoksa `core/widgets/`'e tek yardımcı.
   *Tuzak:* profil levhasına `FilledButton` koyma (test onay kutusunu onunla bulur).
