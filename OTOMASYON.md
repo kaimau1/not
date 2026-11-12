@@ -52,7 +52,12 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
    aşağıda. **Ölçümü yürütücü KENDİ yapmaz (kullanıcı kararı 2026-11-10):** derlemeler
    bitince `Agent` ile `model: "sonnet"` alt ajana verilir (istem: iki APK yolu, telefon
    kuralları, `ab_klavye.py` A sonra B ikişer koşu, ikinci koşuların tablosu); kararı
-   yürütücü verir. Bir evrede UI ms ya da LAYOUT ms %20'den fazla kötüyse birleştirme YOK:
+   yürütücü verir. **Hız hissi / açılış / yükleme / akıcılık paketlerinde (P39 ve benzeri;
+   kullanıcı kararı 2026-11-12) eşik %20 DEĞİL: hiçbir evre kötüleşmez, hedef evre ölçülebilir
+   iyileşir.** Kötüleşme çıkarsa paket çöpe gitmez: maddeler ayrı commit'tir (DEVIR'de madde →
+   commit), şüpheli commit'i çıkarıp yeniden ölç, kötüleştireni `git revert` et + maddeye
+   "iyileşme kanıtlanamadı", iyi maddeleri yeniden ölçüp birleştir.
+   Bir evrede UI ms ya da LAYOUT ms %20'den fazla kötüyse birleştirme YOK:
    satır `takıldı: ölçüm` + sayılar, sıradaki pakete geç. Telefon yoksa/ısınmışsa satır
    `cihaz bekliyor` olur, birleştirme `[apk]`'sız yapılır ve ilk APK noktası ertelenir.
 7. **Birleştir.** Dalda: Kuyruk satırını `bitti` + tek satır sonuç yap, `OTURTMA_PLANI.md`
@@ -93,6 +98,9 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
 - Doğrulama: değişenin testi `--reporter failures-only`; push'tan önce tam
   `flutter analyze` (CI info düzeyini de hata sayar). Tam test takımını yerelde koşma.
   `dart format lib` yok.
+- **Hız hissi işi (kullanıcı kararı 2026-11-12):** kötüleşme kabul edilmez, her değişiklik
+  ölçülebilir iyileşme getirir (önce/sonra kanıtı DEVIR'e); kanıtlanamayan değişiklik yapılmaz.
+  Her madde AYRI, bağımsız commit (kötüleşen tek başına geri alınabilsin). Sık ara commit + push.
 - KARAR çıkarsa plandaki **"En güvenli"** seçenek + maddeye "sabah bakılacak". Kullanıcıya
   soru sorma. Madde kapsamı dışına çıkma, yeni özellik ekleme.
 - **Dokunma:** `config/app` bayrakları (`inkV2Write`, `minClient`), veri silen/taşıyan göç,
