@@ -168,9 +168,25 @@ void main() {
     expect(highlighted(), {'Benim'});
 
     // Ev düğmesi: klasör kalkar, "Tümü" seçimi korunur.
+    final goHomeSize = tester.getSize(
+      find.byKey(const ValueKey('home-strip-go-home')),
+    );
     await tester.tap(find.byKey(const ValueKey('home-strip-go-home')));
     await settle();
     expect(container.read(selectedFolderProvider), isNull);
+    // F74.1 (K-D3): ana sayfadaki ev düğmesi sessiz — dolu `primary` değil
+    // `primaryContainer`; klasördeki hâliyle aynı boy (şerit sıçramaz).
+    final atHome = find.byKey(const ValueKey('home-strip-at-home'));
+    expect(tester.getSize(atHome), goHomeSize);
+    final homeScheme = Theme.of(tester.element(atHome)).colorScheme;
+    final fills = tester
+        .widgetList<Material>(
+          find.descendant(of: atHome, matching: find.byType(Material)),
+        )
+        .map((m) => m.color)
+        .toList();
+    expect(fills, contains(homeScheme.primaryContainer));
+    expect(fills, isNot(contains(homeScheme.primary)));
     expect(visible(), {'k', 'f'});
     expect(highlighted(), {'Tümü'});
 

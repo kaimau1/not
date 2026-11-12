@@ -206,11 +206,22 @@ extension _DashShelf on _DashboardScreenState {
                         unawaited(HapticFeedback.selectionClick());
                       },
                     )
+                  // SESSİZ (K-D3, F74.1): dolu `primary` ekranın en
+                  // bağıran yüzeyiydi; "+" tek dolu birincil kalsın. Boy
+                  // klasördeki tonlu hâliyle aynı (40 dp, dokunma 48).
                   : IconButton.filled(
                       key: const ValueKey('home-strip-at-home'),
                       tooltip: context.l10n.goHome,
                       isSelected: true,
-                      icon: const Icon(Icons.home, size: 20),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer,
+                        foregroundColor: Theme.of(
+                          context,
+                        ).colorScheme.onPrimaryContainer,
+                      ),
+                      icon: const Icon(Icons.home, size: AppIconSize.m),
                       // Geniş ekranda sağda not açıkken 🏠 yalnız listeyi
                       // kaydırıyordu — "ana sayfaya dön çalışmıyor"
                       // (kullanıcı bulgusu 2026-11-09). Önce notu kapatır.
