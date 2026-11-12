@@ -75,4 +75,15 @@ void main() {
     });
     expect(errors, isEmpty, reason: errors.join('\n'));
   });
+
+  // F74.5: ana ekranda tek dolu birincil yüzey "+"; yanındaki mikrofon nötr.
+  test('ana ekran mikrofonu nötr zeminde (primaryContainer değil)', () {
+    final src = File(
+      'lib/features/notes/presentation/dashboard_widgets.dart',
+    ).readAsStringSync().replaceAll('\r\n', '\n');
+    final start = src.indexOf('class _DashVoiceButton');
+    final body = src.substring(start, src.indexOf('\n}\n', start));
+    expect(body.contains('scheme.surfaceContainerHigh'), isTrue);
+    expect(body.contains('primaryContainer'), isFalse);
+  });
 }
