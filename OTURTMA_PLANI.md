@@ -1373,6 +1373,15 @@ düzeltme KARAR'dır; gözetimsiz oturumda yalnız rapor + kırmayan sıkılaşt
 | S14 | Sabitle / yıldızla | tuval kurulumu | 1 (yıldız) | 0 | 64 |
 | S15 | 2000 çizgi varken etkin çizgiye 1 nokta | çizim çağrısı (`TestRecordingCanvas`) | 2001 | ≤ 8 | 62.1 |
 | S16 | 2000 çizgi varken 1 çizgi ekle + kaydet | yazılan belge / bayt | 2 / 448 925 bayt | 1 / ≤ 64 KB | 61.6 |
+| S17 | Klavye aç/kapa ×3, 18 karelik hareket (`keyboard_jank_guard_test`): metin / sabit PDF / **sabit görsel** (P43, 2026-11-12) | kare başına kurulum / editör içi / dizilen sınır | sabit görsel: ilk 63 / geçiş 240 / hareket 59 (editör içi 12) / 2 sınır | editör içi ≤ 7, dizilen 0 | P49 |
+| S18 | Telefon 412×915, 30 not: karttan not aç (`NoteOpenPage`), 40 kare | `NoteCard` / `DashboardScreen` / ilk kare / sonraki en ağır kare | 2 / 0 / 877 / 788 (2026-11-12) | ≤ 1 / 0 / — / editör ikinci kez kurulmaz | 84 |
+| S19 | S18'in devamı: sistem geri ile ana ekrana dön | `NoteCard` / `DashboardScreen` / en ağır kare | 2 / 0 / 523 | ≤ 1 / 0 | 84 |
+| S20 | 30 maddeli not: ⋮ levhası aç → kapat | editör gövdesi kurulumu | 0 | 0 | — |
+| S21 | Telefon, 60 not (18 görünür): arama kutusuna 5 harf | harf başına `NoteCard` / pano | **114** (görünürün 6 katı) / 6 | ≤ görünür | 84 |
+| S22 | Takvim haftalık, 21 etkinlik: bir hafta ileri fırlat | `WeekPage` / toplam / tek kare | 3 / 979 / **978** (hepsi tek karede) | yalnız gelen sayfa | 84 |
+| S23 | Ana ekran, `swipe_mode=filters`: yana fırlat → sonraki süzgeç → geri | `NoteCard` ileri / geri / pano / en ağır kare | 30 / 30 / 1 / 2941 | görünür kadar | 84 |
+| S24 | Soğuk açılış (30 not) | kurulum: ilk kare / kartlara dek / 2 sn | 930 / 4019 / 4031 | taban (mandal) | — |
+| S25 | Görselli 50 not, dpr 2,625, 6 ekran kaydır | çözme boyu sınırsız küçük resim | **21** (hepsi `thumbUrl` dalı, `memCacheWidth` yok) | 0 | 84 |
 
 ## Ek B — Mürekkep paketi biçimi (F61.1)
 

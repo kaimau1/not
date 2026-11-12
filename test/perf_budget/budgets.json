@@ -146,6 +146,81 @@
     "sabit_pdf_hareket_dizilen_sinir": 3,
     "bugun": "ilk kare 45 / geçiş 67 / hareket 54 (editör içi 7) / dizilen 0 (2026-11-11, F60.S5; önce ilk kare 320, hareket 87–96, editör içi 49, her karede Scaffold kutusu diziliyordu). Sabit PDF: ilk 74 / geçiş 323 (gövdenin tam boya döndüğü kare: bölme yeniden kurulur) / hareket 70 (editör içi 11) / 3 sınır; önce hareket 84 ve evre değişiminde 4 × ≈ 310 (şimdi 2: yalnız oturma + geri dönüş)",
     "hedef": "editör içi ≤ 7 (kapsam + alt çubuk kaydırıcısı); kalan ≈ 45 çerçevenin: kök MediaQuery + metin seçim tutamağı katmanı (EditableText.didChangeMetrics → updateForScroll)",
-    "neden": "F60.S5: KeyboardInsetScope (editör Scaffold'ı klavye karelerini görmez) + hızlı satır klavyeden önce kurulur + parlama yalnız boyamada"
+    "neden": "F60.S5: KeyboardInsetScope (editör Scaffold'ı klavye karelerini görmez) + hızlı satır klavyeden önce kurulur + parlama yalnız boyamada",
+    "sabit_gorsel_ilk_kare_kurulum": 63,
+    "sabit_gorsel_gecis_karesi_kurulum": 240,
+    "sabit_gorsel_hareket_karesi_kurulum": 59,
+    "sabit_gorsel_hareket_karesi_editor_ici": 12,
+    "sabit_gorsel_hareket_dizilen_sinir": 2,
+    "sabit_gorsel_bugun": "P43 (2026-11-12) ilk ölçüm: ilk 63 / geçiş 240 / hareket 59 (editör içi 12) / dizilen 2 (_RenderLayoutBuilder, RenderCustomMultiChildLayoutBox — hareket karelerinde sabit bölme diziliyor; düzeltmesi P49)"
+  },
+  "S18": {
+    "senaryo": "Telefon 412×915, 30 not: karttan not aç (gerçek NoteOpenPage geçişi), 40 kare — ana ekran kurulumu, kart kurulumu, ilk kare ve sonraki en ağır kare",
+    "note_card": 2,
+    "dashboard_kurulum": 0,
+    "ilk_kare_kurulum": 877,
+    "gecis_karesi_kurulum": 788,
+    "bugun": "NoteCard 2 / DashboardScreen 0 / ilk kare 877 / geçiş karesi en çok 788 (2026-11-12)",
+    "hedef": "NoteCard ≤ 1 (yalnız açılan kartın halesi); geçiş kareleri editörü ikinci kez kurmasın",
+    "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl) — mandal"
+  },
+  "S19": {
+    "senaryo": "S18'in devamı: sistem geri ile nottan ana ekrana dön, 40 kare",
+    "note_card": 2,
+    "dashboard_kurulum": 0,
+    "kare_kurulum": 523,
+    "bugun": "NoteCard 2 (kapanan kart) / DashboardScreen 0 / en ağır kare 523 (2026-11-12)",
+    "hedef": "NoteCard ≤ 1 (yalnız kapanan kart); öbür kartlar yeniden kurulmaz",
+    "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl) — mandal"
+  },
+  "S20": {
+    "senaryo": "30 maddeli not: ⋮ levhasını aç → sistem geri ile kapat; editör gövdesi (NoteEditorScreen + NotePageCanvas + ItemsEditor + EditableText) kurulumu",
+    "govde_kurulum": 0,
+    "bugun": "0 (2026-11-12)",
+    "hedef": "0",
+    "neden": "HIZ_PLANI F82.1 ilk ölçüm = hedef"
+  },
+  "S21": {
+    "senaryo": "Telefon, 60 not (18 görünür): arama kutusuna 5 harf ('N'…'Not 1'), harf başına kurulan NoteCard (en kötü harf) ve DashboardScreen toplamı",
+    "harf_basina_kart": 114,
+    "dashboard_kurulum": 6,
+    "bugun": "harf başına 114 kart (görünür 18 — 6 katı) / pano 6 (2026-11-12)",
+    "hedef": "harf başına ≤ görünür (18)",
+    "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl); hedefin 6 katı — bulgu P46'ya yazıldı, düşürülecek"
+  },
+  "S22": {
+    "senaryo": "Takvim haftalık görünüm (telefon, 21 etkinlik): bir hafta ileri fırlat, 40 kare",
+    "hafta_sayfasi": 3,
+    "toplam_kurulum": 979,
+    "kare_kurulum": 978,
+    "bugun": "WeekPage 3 / toplam 979 / tek karede 978 (2026-11-12)",
+    "hedef": "yalnız gelen hafta sayfası kurulur (komşu önceden kurulu)",
+    "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl); tek karede ~980 kurulum — bulgu P46'ya yazıldı"
+  },
+  "S23": {
+    "senaryo": "Ana ekran (telefon, 30 not, 17 görünür, swipe_mode=filters): yana fırlat Tümü → sonraki süzgeç, sonra geri; 40'ar kare",
+    "ileri_kart": 30,
+    "geri_kart": 30,
+    "ileri_dashboard_kurulum": 1,
+    "kare_kurulum": 2941,
+    "bugun": "ileri 30 kart / geri 30 kart / pano 1 / en ağır kare 2941 (2026-11-12)",
+    "hedef": "gelen görünümün görünür kartları kadar; tek kare ≤ ilk açılış karesi",
+    "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl). FolderSwipe komşu sayfayı BİLEREK kurmaz (dashboard_widgets.dart FolderSwipe belgesi); geçişte giden + gelen ızgara aynı karede"
+  },
+  "S24": {
+    "senaryo": "Soğuk açılış (telefon, 30 not, AppFrame + SplitShell + DashboardScreen): ilk karede, kartlar görünene dek ve 2 sn içinde kurulan widget (tür toplamı)",
+    "ilk_kare_kurulum": 930,
+    "kartlara_dek_kurulum": 4019,
+    "iki_sn_kurulum": 4031,
+    "bugun": "ilk kare 930 / kartlar (1 kare sonra) 4019 / 2 sn 4031 (2026-11-12)",
+    "hedef": "taban + mandal",
+    "neden": "HIZ_PLANI F82.1 ilk ölçüm (taban) — mandal"
+  },
+  "S25": {
+    "senaryo": "Görselli 50 not (dpr 2,625, 6 ekran kaydır): kart küçük resmi çözme boyu sınırsız (memCacheWidth/cacheWidth yok ya da kart boyu × dpr ve 480'den büyük) olan görsel sayısı",
+    "sinirsiz_cozum": 21,
+    "bugun": "21 — hepsi yalnız Drive küçük resmi (thumbUrl) olan ekler: note_card_media.dart _image thumbUrl dalında memCacheWidth yok (2026-11-12)",
+    "hedef": "0",
+    "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl); bulgu P46'ya yazıldı — düzeltilince 0'a iner"
   }
 }
