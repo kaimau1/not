@@ -1358,6 +1358,7 @@
   "folderManage": "Klasörü yönet",
   "folderEmpty": "Burada henüz not yok",
   "folderNoteCount": "{count} not",
+  "folderCardEmpty": "Boş",
   "@folderNoteCount": {
     "placeholders": {
       "count": {

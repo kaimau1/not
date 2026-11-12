@@ -2919,6 +2919,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get folderCardEmpty => 'Empty';
+
+  @override
   String get folderEmptyHint =>
       'Add a note with + below, or move a note here while editing it.';
 

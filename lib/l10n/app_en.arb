@@ -1081,6 +1081,7 @@
   "folderManage": "Manage folder",
   "folderEmpty": "No notes here yet",
   "folderNoteCount": "{count} notes",
+  "folderCardEmpty": "Empty",
   "@folderNoteCount": {
     "placeholders": {
       "count": {

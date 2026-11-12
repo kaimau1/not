@@ -2912,6 +2912,9 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get folderCardEmpty => 'Boş';
+
+  @override
   String get folderEmptyHint =>
       'Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.';
 

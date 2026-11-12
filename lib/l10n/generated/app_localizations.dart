@@ -5384,6 +5384,12 @@ abstract class AppLocalizations {
   /// **'{count} not'**
   String folderNoteCount(int count);
 
+  /// No description provided for @folderCardEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boş'**
+  String get folderCardEmpty;
+
   /// No description provided for @folderEmptyHint.
   ///
   /// In tr, this message translates to:

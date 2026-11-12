@@ -1,6 +1,7 @@
 import '../../../app/app_frame.dart';
 import '../../../core/app_icons.dart';
 import '../../../core/widgets/sheet_header.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -37,6 +38,15 @@ class FoldersScreen extends ConsumerWidget {
   /// 204 → 128; simge adın yanında, önizleme iki satır.
   static const double cardHeight = 128;
 
+  /// Boş klasörün kartı (F79.3, D19): simge + ad + "Boş" — önizlemesiz
+  /// kart dolu kartın boyunda bomboş bir kutu bırakıyordu.
+  static const double emptyCardHeight = 72;
+
+  /// Izgaranın en geniş sütunu ve aralığı (eski
+  /// `SliverGridDelegateWithMaxCrossAxisExtent` ile aynı sütun sayısı).
+  static const double _maxCardWidth = 260;
+  static const double _gap = 10;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -45,44 +55,78 @@ class FoldersScreen extends ConsumerWidget {
     final folders = ref.watch(visibleOrderedFoldersProvider);
     final shared = ref.watch(sharedFolderRefsProvider).value ?? const [];
 
-    SliverGridDelegate grid() => const SliverGridDelegateWithMaxCrossAxisExtent(
-      maxCrossAxisExtent: 260,
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      mainAxisExtent: cardHeight,
+    // Satır satır ızgara: kart boyu içeriğe göre (boş 72, dolu 128), satır
+    // en uzun kartın boyunda, kartlar üste yaslı. Sıra kullanıcının klasör
+    // sırası (soldan sağa) — dengeli (masonry) dizilim sırayı bozardı.
+    Widget grid(List<Widget> cards) => SliverLayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.crossAxisExtent - 2 * AppSpace.l;
+        final columns = (width / (_maxCardWidth + _gap)).ceil().clamp(1, 12);
+        final rows = (cards.length / columns).ceil();
+        return SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpace.l,
+            AppSpace.xs,
+            AppSpace.l,
+            AppSpace.s,
+          ),
+          sliver: SliverList.separated(
+            itemCount: rows,
+            separatorBuilder: (_, _) => const SizedBox(height: _gap),
+            itemBuilder: (context, row) => Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var c = 0; c < columns; c++) ...[
+                  if (c > 0) const SizedBox(width: _gap),
+                  Expanded(
+                    child: row * columns + c < cards.length
+                        ? cards[row * columns + c]
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
 
     return Scaffold(
-      appBar: HomeInBar(appBar: AppBar(
-        title: Text(l10n.foldersTitle),
-        actions: [
-          IconButton(
-            tooltip: l10n.folderReorder,
-            icon: const Icon(Icons.swap_vert),
-            onPressed: () => showFolderOrderSheet(context),
-          ),
-          Padding(
-            padding: const EdgeInsetsDirectional.only(end: 12),
-            child: FilledButton.tonalIcon(
-              // Oluşturma = primary rolü (DENEYIM §2.2 K-D1); tonal varsayılanı
-              // secondaryContainer (sıcak = zaman/dikkat) idi.
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                foregroundColor:
-                    Theme.of(context).colorScheme.onPrimaryContainer,
-              ),
-              onPressed: () async {
-                final id = await showFolderEditorDialog(context, ref);
-                if (id != null && context.mounted) {
-                  openFolder(context, id);
-                }
-              },
-              icon: const Icon(Icons.create_new_folder_outlined, size: 18),
-              label: Text(l10n.newFolder),
+      appBar: HomeInBar(
+        appBar: AppBar(
+          title: Text(l10n.foldersTitle),
+          actions: [
+            IconButton(
+              tooltip: l10n.folderReorder,
+              icon: const Icon(Icons.swap_vert),
+              onPressed: () => showFolderOrderSheet(context),
             ),
-          ),
-        ],
-      )),
+            Padding(
+              padding: const EdgeInsetsDirectional.only(end: 12),
+              child: FilledButton.tonalIcon(
+                // Oluşturma = primary rolü (DENEYIM §2.2 K-D1); tonal varsayılanı
+                // secondaryContainer (sıcak = zaman/dikkat) idi.
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer,
+                  foregroundColor: Theme.of(context)
+                      .colorScheme
+                      .onPrimaryContainer,
+                ),
+                onPressed: () async {
+                  final id = await showFolderEditorDialog(context, ref);
+                  if (id != null && context.mounted) {
+                    openFolder(context, id);
+                  }
+                },
+                icon: const Icon(Icons.create_new_folder_outlined, size: 18),
+                label: Text(l10n.newFolder),
+              ),
+            ),
+          ],
+        ),
+      ),
       body: CustomScrollView(
         slivers: [
           const SliverPadding(
@@ -115,40 +159,27 @@ class FoldersScreen extends ConsumerWidget {
                 ),
               ),
             ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-            sliver: SliverGrid(
-              gridDelegate: grid(),
-              delegate: SliverChildBuilderDelegate((context, index) {
-                if (index == folders.length) {
-                  return const NewFolderTile(height: cardHeight);
-                }
-                final folder = folders[index];
-                return _OwnFolderCard(
-                  key: ValueKey('folder-card-${folder.id}'),
-                  folder: folder,
-                );
-              }, childCount: folders.length + 1),
-            ),
-          ),
+          // Izgaradaki "Yeni klasör" karosu kalktı (F79.3): aynı iş üst
+          // çubuktaki düğmede; ikisi yan yana iki birincil eylemdi.
+          grid([
+            for (final folder in folders)
+              _OwnFolderCard(
+                key: ValueKey('folder-card-${folder.id}'),
+                folder: folder,
+              ),
+          ]),
           if (shared.isNotEmpty) ...[
             _SectionHeader(
               title: l10n.foldersSharedSection,
               count: shared.length,
             ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-              sliver: SliverGrid(
-                gridDelegate: grid(),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final share = shared[index];
-                  return _SharedFolderCard(
-                    key: ValueKey('shared-card-${share.folderId}'),
-                    share: share,
-                  );
-                }, childCount: shared.length),
-              ),
-            ),
+            grid([
+              for (final share in shared)
+                _SharedFolderCard(
+                  key: ValueKey('shared-card-${share.folderId}'),
+                  share: share,
+                ),
+            ]),
           ],
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
@@ -172,14 +203,9 @@ class _SectionHeader extends StatelessWidget {
         child: Row(
           children: [
             SectionLabel(title),
-            const SizedBox(width: 8),
-            Text(
-              '$count',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpace.xs),
+            Text('· $count', style: AppText.of(theme).meta),
+            const SizedBox(width: AppSpace.m),
             Expanded(child: Divider(color: theme.colorScheme.outlineVariant)),
           ],
         ),
@@ -249,8 +275,7 @@ class _SharedFolderCard extends ConsumerWidget {
       notes: notes,
       shared: true,
       unread: unread,
-      onTap: () =>
-          openFolder(context, share.folderId, ownerId: share.ownerId),
+      onTap: () => openFolder(context, share.folderId, ownerId: share.ownerId),
     );
   }
 }
@@ -301,137 +326,142 @@ class FolderCard extends StatelessWidget {
         (a, b) =>
             (b.updatedAt ?? DateTime(0)).compareTo(a.updatedAt ?? DateTime(0)),
       );
-    final preview = [
-      for (final n in recent.take(2)) previewTitle(context, n),
-    ].where((t) => t.isNotEmpty).toList();
+    final preview = [for (final n in recent.take(2)) previewTitle(context, n)]
+        .where((t) => t.isNotEmpty)
+        .toList();
+    final empty = notes.isEmpty;
 
-    return Material(
-      color: scheme.surfaceContainerLowest,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onMenu,
-        child: Stack(
-          children: [
-            // Klasörün rengi kartın tepesinde ince bir şerit: ızgarada
-            // renkler bir bakışta sıralanır.
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 0,
-              child: Container(height: 4, color: accent),
-            ),
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(12, 12, 4, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      FolderIconBox(accent: accent, icon: icon, size: 34),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: AppWeight.strong,
-                              ),
-                            ),
-                            Text(
-                              l10n.folderNoteCount(notes.length),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (shared)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: Icon(
-                            AppIcons.shared,
-                            size: 16,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      if (hidden)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: Icon(
-                            Icons.visibility_off_outlined,
-                            size: 16,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      if (onMenu != null)
-                        IconButton(
-                          visualDensity: VisualDensity.compact,
-                          tooltip: l10n.editFolder,
-                          icon: Icon(
-                            Icons.more_vert,
-                            size: 20,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                          onPressed: onMenu,
-                        )
-                      else
-                        const SizedBox(width: 8),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  if (preview.isEmpty)
-                    Text(
-                      l10n.folderEmpty,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontStyle: FontStyle.italic,
-                        color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
-                      ),
-                    )
-                  else
-                    for (final title in preview)
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(
-                          end: 8,
-                          bottom: 2,
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 5,
-                              height: 5,
-                              decoration: BoxDecoration(
-                                color: accent,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                title,
+    return SizedBox(
+      height: empty ? FoldersScreen.emptyCardHeight : FoldersScreen.cardHeight,
+      child: Material(
+        color: scheme.surfaceContainerLowest,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onMenu,
+          child: Stack(
+            children: [
+              // Klasörün rengi kartın tepesinde ince bir şerit: ızgarada
+              // renkler bir bakışta sıralanır.
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 0,
+                child: Container(height: 4, color: accent),
+              ),
+              Padding(
+                padding: empty
+                    ? const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 0)
+                    : const EdgeInsetsDirectional.fromSTEB(12, 12, 4, 10),
+                child: Column(
+                  mainAxisAlignment: empty
+                      ? MainAxisAlignment.center
+                      : MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        FolderIconBox(accent: accent, icon: icon, size: 34),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: AppWeight.strong,
+                                ),
                               ),
-                            ),
-                          ],
+                              Text(
+                                empty
+                                    ? l10n.folderCardEmpty
+                                    : l10n.folderNoteCount(notes.length),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                ],
+                        if (shared)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: Icon(
+                              AppIcons.shared,
+                              size: 16,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        if (hidden)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: Icon(
+                              Icons.visibility_off_outlined,
+                              size: 16,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        if (onMenu != null)
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            tooltip: l10n.editFolder,
+                            icon: Icon(
+                              Icons.more_vert,
+                              size: 20,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                            onPressed: onMenu,
+                          )
+                        else
+                          const SizedBox(width: 8),
+                      ],
+                    ),
+                    if (!empty) const SizedBox(height: 8),
+                    // Not var ama başlıkları boş (kilitli değil, yalnız ek):
+                    // önizleme satırı yok, sayı yeter.
+                    if (!empty)
+                      for (final title in preview)
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(
+                            end: 8,
+                            bottom: 2,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 5,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: accent,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                  ],
+                ),
               ),
-            ),
-            if (unread > 0) FolderUnreadBadge(count: unread),
-          ],
+              if (unread > 0) FolderUnreadBadge(count: unread),
+            ],
+          ),
         ),
       ),
     );
