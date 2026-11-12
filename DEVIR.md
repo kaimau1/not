@@ -13,6 +13,15 @@
   ekranı değiştirmez" kuralıyla çelişiyor. P37 (F76.1/F76.3) ve P40 (F79.5) kendi turunda yapsın.
 - `SectionLabel` içine "üst 20, alt 8" dolgu: çağıranlar kendi dolgusunu veriyor; içeri eklemek çift dolgu = görünür fark.
 
+## Kanıt
+- Tur: 274 PNG, hepsi %0,00 fark (`build/tour-sonra/_fark.txt`). Neden: tur yalnız Roboto Regular/Medium/Bold
+  yükler (`tool/tour/screen_tour_test.dart` `_loadFonts`), w600=w700=Bold. Eski sheet_header ile `ana` yeniden
+  çekildi: yine %0,00 → taban kirli değil. Cihazda doğrulanmadı.
+- Mandal bozma denemesi: `BorderRadius.circular(7)` eklenince "radius: 345 > bütçe 344" kırmızı.
+
+## Sıradaki
+- CI'ı izle; yeşilse yürütücü birleştirir (görünür fark ihmal edilebilir; `[apk]` gerekmez).
+
 ## Test
 `flutter test test/design_components_test.dart test/design_tokens_guard_test.dart --reporter failures-only`
 Tur: `TOUR_OUT=build/tour-sonra TOUR_COMPARE=build/tour-once flutter test tool/tour/screen_tour_test.dart` (FLUTTER_ROOT=C:/src/flutter)

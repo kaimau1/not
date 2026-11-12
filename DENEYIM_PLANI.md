@@ -61,7 +61,7 @@ dosya geçerli).
 
 | Faz | Konu | Paket | Model | Durum |
 |---|---|---|---|---|
-| 72 | Zemin: belirteçler, mandal testi, ortak bileşenler | P33 | Opus | Bekliyor |
+| 72 | Zemin: belirteçler, mandal testi, ortak bileşenler | P33 | Opus | F72.1–F72.4 bitti, F72.5 kısmi (dalda, 2026-11-12) |
 | 73 | Renk rolleri + sakin tipografi | P34 | Opus | Bekliyor |
 | 74 | Ana ekran cilası | P35 | Opus | Bekliyor |
 | 75 | Not ekranı alt çubuğu | P36 | Fable | Bekliyor |
@@ -304,14 +304,14 @@ isteği (§4 Y10); hangisinin ⋮'e ineceğine yalnız kullanıcı karar verir.
 
 Bu faz, F72.5'teki bölüm adı puntosu dışında **ekranda hiçbir şeyi değiştirmez**.
 
-- [ ] **F72.1 Belirteçler.** §2.1'deki sınıflar `app_tokens.dart`'a; `AppMotion.quick/long`.
+- [x] **F72.1 Belirteçler.** *(2026-11-12: `AppSpace/AppRadius/AppIconSize/AppAlpha/AppWeight` + `AppMotion.quick/long` `app_tokens.dart`ta; `_base` aynı.)* §2.1'deki sınıflar `app_tokens.dart`'a; `AppMotion.quick/long`.
   `AppTheme._base` içindeki değerlere DOKUNMA (çip 10, giriş 14, "+" 18 bugünkü kalır;
   göçü F72.6 yapar).
-- [ ] **F72.2 `AppText`.** §2.1 tablosu; `static AppText of(ThemeData theme)`; her rol
+- [x] **F72.2 `AppText`.** *(2026-11-12: `AppText.of(ThemeData)`, tema başına `Expando`; `test/design_components_test.dart` 8 rol × açık/zıt/düz tema yeşil.)* §2.1 tablosu; `static AppText of(ThemeData theme)`; her rol
   `TextTheme`'in en yakın rolünden `copyWith` ile. Birim testi: 8 rolün pt/ağırlığı
   tabloyla aynı; `AppTheme.opposite` temasında (HAFIZA: ham tema, M3 ölçüleri null) null
   dönmez.
-- [ ] **F72.3 Mandal testi.** `test/design_tokens_guard_test.dart` +
+- [x] **F72.3 Mandal testi.** *(2026-11-12: bütçe yeniden ölçüldü `{radius 344, fontSize 215, duration 220, curve 96, iconSize 509, alpha 243, fontWeight 225, haptic 88}`; bozma denemesinde (`BorderRadius.circular(7)`) kırmızı.)* `test/design_tokens_guard_test.dart` +
   `test/design_tokens/budget.json`. Test `token_sayim.py` ile AYNI desenleri Dart'ta sayar
   (yorum satırı ve tanım dosyaları hariç). Sayı > bütçe → kırmızı ("yeni elle değer:
   `AppRadius`/`AppText`/`AppMotion` kullan"); sayı < bütçe → kırmızı ("bütçeyi şuna indir")
@@ -320,17 +320,25 @@ Bu faz, F72.5'teki bölüm adı puntosu dışında **ekranda hiçbir şeyi deği
   *Çakışma notu:* bu test, o sırada dalda çalışan BAŞKA paketi kırmızıya düşürebilir (o
   paket yeni elle değer eklediyse). Yürütücü birleştirirken bütçeyi o dalın sayısına göre
   bir kez yukarı ayarlayabilir; bunu Kuyruk notuna yazar.
-- [ ] **F72.4 Ortak bileşenler.** `lib/core/widgets/sheet_tile.dart`: `SheetTile.tile`,
+- [x] **F72.4 Ortak bileşenler.** *(2026-11-12: `sheet_tile.dart` + `delayed_spinner.dart`; 360 dp taşma/üç nokta/Tooltip/3 sütun/zamanlayıcı testleri yeşil.)* `lib/core/widgets/sheet_tile.dart`: `SheetTile.tile`,
   `SheetTile.rich`, `DestructiveRow`, `SheetTileGrid(columns:)` (2; ≥ 600 dp 3;
   `LayoutBuilder` ile eşit genişlik). Hepsi `MinTapTarget` ≥ 48, `Semantics(button)`,
   fareyle üstüne gelince `pressed` tonu. `DelayedSpinner`: 300 ms `Timer` → `AnimatedOpacity`
   150 ms; hareket azaltılmışsa doğrudan. Widget testleri: 360 dp'de taşma yok; uzun etiket
   tek satırda üç noktayla biter, `Tooltip` tam adı verir.
-- [ ] **F72.5 `SheetHeader` / `SectionLabel` / `EmptyState` ölçüleri** §2.3'e çekilir
+- [x] **F72.5 `SheetHeader` / `SectionLabel` / `EmptyState` ölçüleri** §2.3'e çekilir
   (bileşenin İÇİ; çağıranlar değişmez). K-D7: `SheetHeader(onClose:)` taşıyan levhalarda
   `showDragHandle: false` (Grep `SheetHeader(` → çağıran `showAppSheet`).
   *Tuzak:* ana ekrandaki "Sabit · 3" başlığı da `SectionLabel` — punto 18 → 14 olur; tur
   farkında beklenir (bu fazın TEK görünür farkı), `telefon-ana.png`'de iyi durduğuna bak.
+  *(2026-11-12, KISMİ: `SectionLabel`/`sectionLabelStyle` → `AppText.section` (14/20 w600; eskisi
+  `labelLarge` 14 w700 — "18 → 14" varsayımı yanlıştı, punto zaten 14, değişen yalnız ağırlık).
+  Tur farkı 274 PNG'nin hepsinde %0,00: tur yalnız Roboto Regular/Medium/Bold yükler, w600 ve
+  w700 ikisi de Bold'a düşer; cihazda (Inter Tight) bölüm adı biraz incelir — cihazda doğrulanmadı.
+  **Sabah bakılacak:** `SheetHeader` 56 dp / 16 dp sol / `sheetTitle` 18, `EmptyState` 32+72 daire,
+  `SectionLabel` iç dolgusu (üst 20 alt 8) ve K-D7 tutamak kaldırma YAPILMADI — her levhada görünür
+  fark yaratıyor ("bölüm adı dışında ekran değişmez" kuralıyla çelişki) ve K-D7 ~15 çağıran
+  dosyaya (P37/P20 alanı) dokunuyor. Önerilen: P37 F76.1/F76.3'te, `EmptyState` P40 F79.5'te.)*
 - [ ] **F72.6 Göç (mekanik) [Sonnet · P41].** `python tool/design/token_sayim.py radius`
   dökümü üzerinden KLASÖR KLASÖR (sıra: `core/widgets` → `features/settings` →
   `features/calendar` → `features/folders` + `inbox` + `friends` + `gmail` → `features/ai`
