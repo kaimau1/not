@@ -210,7 +210,7 @@ class HubSourceTag extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               height: 1.2,
               fontWeight: FontWeight.w700,
               color: color,
@@ -244,7 +244,7 @@ class HubCountBadge extends StatelessWidget {
       child: Text(
         count > 99 ? '99+' : '$count',
         style: TextStyle(
-          fontSize: 10.5,
+          fontSize: 11,
           height: 1.2,
           fontWeight: FontWeight.w700,
           color: scheme.onError,

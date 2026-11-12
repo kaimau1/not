@@ -625,7 +625,7 @@ class _FolderTile extends StatelessWidget {
                             count > 999 ? '999+' : '$count',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: 11,
                               height: 1.2,
                               color: scheme.onSurfaceVariant,
                             ),

@@ -791,7 +791,7 @@ class _TemplateCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: scheme.onSurfaceVariant,
-                        fontSize: 11,
+                        fontSize: 12,
                       ),
                     ),
                   ],

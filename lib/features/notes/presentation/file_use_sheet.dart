@@ -484,7 +484,7 @@ class _UseTile extends StatelessWidget {
                             child: Text(
                               badge!,
                               style: TextStyle(
-                                fontSize: 10.5,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w700,
                                 color: scheme.onPrimary,
                               ),

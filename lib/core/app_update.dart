@@ -553,7 +553,7 @@ class _UpdateBannerState extends State<UpdateBanner> {
                       child: Text(
                         text,
                         style: TextStyle(
-                          fontSize: 13.5,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: fg,
                         ),

@@ -169,7 +169,7 @@ class _BubbleReadCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 14.5,
+                            fontSize: 14,
                             fontWeight: FontWeight.w700,
                             height: 1.2,
                           ),
@@ -182,7 +182,7 @@ class _BubbleReadCard extends StatelessWidget {
                             maxLines: 10,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 13.5,
+                              fontSize: 13,
                               height: 1.4,
                               color: title.isEmpty
                                   ? scheme.onSurface

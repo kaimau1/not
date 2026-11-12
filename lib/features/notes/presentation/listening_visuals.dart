@@ -184,7 +184,7 @@ class ListeningModeTag extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 10.5,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: accent,
               ),

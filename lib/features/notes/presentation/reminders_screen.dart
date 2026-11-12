@@ -350,7 +350,7 @@ class _ReminderTile extends ConsumerWidget {
                     child: Text(
                       l10n.reminderOverdue,
                       style: TextStyle(
-                        fontSize: 10.5,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: scheme.onErrorContainer,
                       ),

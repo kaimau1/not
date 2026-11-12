@@ -296,7 +296,7 @@ class _ModeCard extends StatelessWidget {
                       child: Text(
                         badgeText,
                         style: TextStyle(
-                          fontSize: 9,
+                          fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: scheme.onPrimaryContainer,
                         ),

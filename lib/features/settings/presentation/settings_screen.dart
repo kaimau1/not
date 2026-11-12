@@ -1061,7 +1061,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ? l10n.settingsAiSearchHint
                         : l10n.settingsSearchHint,
                     hintStyle: TextStyle(
-                      fontSize: 13.5,
+                      fontSize: 13,
                       color: scheme.onSurfaceVariant,
                     ),
                     border: InputBorder.none,

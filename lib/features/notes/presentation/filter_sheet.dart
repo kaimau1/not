@@ -191,7 +191,7 @@ class HomeFilterButton extends ConsumerWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    fontSize: 12.5,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w700,
                                     color: scheme.onSecondaryContainer,
                                   ),

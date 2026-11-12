@@ -103,7 +103,7 @@ class _ReorderTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 13.5,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -376,13 +376,13 @@ class _SearchField extends ConsumerWidget {
                 onSubmitted: (value) =>
                     ref.read(searchHistoryProvider.notifier).remember(value),
                 textInputAction: TextInputAction.search,
-                style: const TextStyle(fontSize: 13.5),
+                style: const TextStyle(fontSize: 13),
                 decoration: InputDecoration(
                   hintText: semantic
                       ? l10n.semanticSearchHint
                       : l10n.searchHint,
                   hintStyle: TextStyle(
-                    fontSize: 13.5,
+                    fontSize: 13,
                     color: scheme.onSurfaceVariant,
                   ),
                   border: InputBorder.none,
@@ -813,13 +813,13 @@ class _QuickCaptureRowState extends ConsumerState<_QuickCaptureRow> {
                 onSubmitted: (_) => _save(),
                 textInputAction: TextInputAction.done,
                 style: const TextStyle(
-                  fontSize: 14.5,
+                  fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
                 decoration: InputDecoration(
                   hintText: l10n.quickCaptureHint,
                   hintStyle: TextStyle(
-                    fontSize: 14.5,
+                    fontSize: 14,
                     color: scheme.onSurfaceVariant,
                   ),
                   border: InputBorder.none,
@@ -843,7 +843,7 @@ class _QuickCaptureRowState extends ConsumerState<_QuickCaptureRow> {
                   label: Text(
                     l10n.quickCaptureSave,
                     style: const TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1738,7 +1738,7 @@ class _PendingUploadsBar extends ConsumerWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 12.5,
+                              fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: failing
                                   ? scheme.onErrorContainer

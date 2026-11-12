@@ -1020,7 +1020,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                       Text(
                         '${context.l10n.recordAudio} · ${_format(_elapsed)}',
                         style: TextStyle(
-                          fontSize: 12.5,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: scheme.primary,
                         ),
@@ -1380,7 +1380,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         avatar: const Icon(Icons.expand_more, size: 18),
         label: Text(
           l10n.more,
-          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
         ),
         labelPadding: const EdgeInsets.symmetric(horizontal: 2),
         visualDensity: VisualDensity.compact,
@@ -1399,7 +1399,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
             label: Text(
               label,
               style: const TextStyle(
-                fontSize: 12.5,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),

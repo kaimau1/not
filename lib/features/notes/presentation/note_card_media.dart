@@ -573,7 +573,7 @@ class _DocumentCard extends StatelessWidget {
                     maxLines: 1,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 9,
+                      fontSize: 11,
                       height: 1.5,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.4,

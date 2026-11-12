@@ -322,7 +322,7 @@ class _TextRecognizeScreenState extends State<TextRecognizeScreen> {
                                 : l10n.imageOcrSelectHint,
                             style: const TextStyle(
                               color: Colors.white70,
-                              fontSize: 12.5,
+                              fontSize: 12,
                             ),
                           ),
                         ),

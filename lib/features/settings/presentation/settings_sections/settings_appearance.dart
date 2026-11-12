@@ -450,7 +450,7 @@ class _TypographySection extends ConsumerWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: applyNoteFont(
-                      const TextStyle(fontSize: 15.5),
+                      const TextStyle(fontSize: 16),
                       font,
                     ).copyWith(color: scheme.onSurface),
                   ),
