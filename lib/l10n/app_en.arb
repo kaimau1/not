@@ -3046,5 +3046,9 @@
   "uploadPendingTitle": "{count, plural, =1{1 attachment waiting to upload} other{{count} attachments waiting to upload}}",
   "uploadPendingBody": "It uploads when you open the app.",
   "uploadPendingChannel": "Pending attachment uploads",
-  "placementHintShort": "Added as {view} · tap the switch to change"
+  "placementHintShort": "Added as {view} · tap the switch to change",
+  "listPaneRight": "Note list on the right",
+  "listPaneRightInfo": "In split view (tablet, wide window) the list sits to the right of the note",
+  "listPaneMoveRight": "Move list to the right",
+  "listPaneMoveLeft": "Move list to the left"
 }

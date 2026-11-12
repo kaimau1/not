@@ -4010,6 +4010,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Sayfa ortada okuma sütununda mı (bkz. [_buildCanvas]): sabit medya ve
     // belge notunda sayfa bölmeyi doldurur, çubuklar da.
     final readingColumn = !note.type.isPageNoteType && !_titleInBar(note);
+    // KISA PENCERE (F66.7/F67.4: yatay telefon, < 480 dp): üst çubuk 40 dp.
+    // `sizeOf` klavyeyle değişmez — klavye kareleri kök kurulumu görmez.
+    final toolbarHeight =
+        WindowClass.of(context).height == WindowHeight.short
+        ? 40.0
+        : _kEditorToolbarHeight;
     final Widget? bottomBar = _immersiveBubble || _pagePen
         ? null
         : RepaintBoundary(
@@ -4347,7 +4353,11 @@ child: NoteFindBar(
                 // AnimatedSize onun tek adımlık boy değişimini de 260 ms'lik
                 // kare kare yerleşime çeviriyordu.
                 // Paket grubu (F60.2): alt çubuk açık paketi kapatmaz.
-                TapRegion(
+                // KISA PENCERE + KLAVYE (F67.4): alt çubuk gizli, hızlı satır
+                // yeter. Kayıt/dikte sürerken durdur düğmesi kalsın.
+                ShortKeyboardBarHide(
+                keep: _voiceRecorder != null || _dictation != null,
+                child: TapRegion(
                 groupId: kNotePackageTapGroup,
                 child: TypingBarHide(
                   hidden: _typingN,
@@ -4675,6 +4685,7 @@ child: NoteFindBar(
                 ),
                 ),
                 ),
+                ),
               ],
             ),
           );
@@ -4789,7 +4800,7 @@ child: NoteFindBar(
           appBar: _pagePen && ref.watch(noteFullscreenProvider)
               ? null
               : HomeInBar(appBar: PreferredSize(
-                  preferredSize: const Size.fromHeight(_kEditorToolbarHeight),
+                  preferredSize: Size.fromHeight(toolbarHeight),
                   // Bölmenin genişliği: tarih okuma sütunuyla hizalı (F38.2).
                   // `_`: `_themeOf` ekranın kendi bağlamından okur.
                   child: LayoutBuilder(
@@ -4797,7 +4808,7 @@ child: NoteFindBar(
             // SIKI ÜST ÇUBUK (kullanıcı isteği 2026-11-03): 56 → 48 dp —
             // durum çubuğu ile düğmeler arasındaki boşluk yer harcıyordu;
             // simge düğmeleri 48 dp dokunma alanını korur.
-            toolbarHeight: _kEditorToolbarHeight,
+            toolbarHeight: toolbarHeight,
             // Liste gizliyken (tam ekran / odak modu) geri okunun yerinde ☰:
             // tek dokunuşla liste geri gelir (kullanıcı isteği 2026-11-02:
             // "tam ekrandan çıkmak çok zor").

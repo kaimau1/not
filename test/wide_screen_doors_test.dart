@@ -11,6 +11,7 @@ import 'package:notlar/app/app_commands.dart';
 import 'package:notlar/app/app_frame.dart';
 import 'package:notlar/app/split_shell.dart';
 import 'package:notlar/core/app_update.dart';
+import 'package:notlar/features/calendar/presentation/home_calendar_strip.dart';
 import 'package:notlar/features/ai/data/ai_gate.dart';
 import 'package:notlar/features/auth/data/auth_repository.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
@@ -206,7 +207,16 @@ void main() {
     ) async {
       await pump(tester, const Size(1400, 900), initial: '/note/n1');
       expect(find.byType(NavigationRail), findsNothing);
-      expect(find.byKey(const ValueKey('home-mic')), findsOneWidget);
+      // Dar liste bölmesi (varsayılan 320 < 420, F67.3): tek "+" kalır,
+      // mikrofon, AI anahtarı ve şeritler gizli (ağaçta, Offstage).
+      expect(find.byTooltip('Yeni not — tip seç'), findsOneWidget);
+      expect(find.byKey(const ValueKey('home-mic')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('home-mic'), skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(find.byType(HomeCalendarStrip), findsNothing);
+      expect(find.byTooltip('AI ile anlamsal arama'), findsNothing);
       await end(tester);
     });
 
@@ -380,6 +390,27 @@ void main() {
       router.go('/note/n2');
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('gizli:true'), findsOneWidget);
+      await end(tester);
+    });
+
+    testWidgets('liste sağa alınır: ayraçta uzun bas → menü (F67.9)', (
+      tester,
+    ) async {
+      await pump(tester, const Size(1280, 800), initial: '/note/n1');
+      double listX() => tester.getCenter(find.byType(DashboardScreen)).dx;
+      double noteX() => tester.getCenter(find.byType(_NoteProbe)).dx;
+      expect(listX(), lessThan(noteX()));
+      // Ayraç: listenin sağ kenarı (varsayılan 320 dp).
+      await tester.longPressAt(const Offset(324, 400));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.text('Listeyi sağa al'));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(container.read(listPaneRightProvider), isTrue);
+      expect(listX(), greaterThan(noteX()));
+      expect(
+        tester.getSize(find.byType(DashboardScreen)).width,
+        moreOrLessEquals(320),
+      );
       await end(tester);
     });
 

@@ -631,6 +631,11 @@ final aiSkipCheckedProvider = boolPref('ai_skip_checked', defaultValue: true);
 /// false: satır tek satırda kalır, dokununca (odaklanınca) açılır.
 final expandListItemsProvider = boolPref('expand_list_items', defaultValue: true);
 
+/// BÖLÜNMÜŞ GÖRÜNÜMDE LİSTE SAĞDA (F67.9, kullanıcı: "not menüsü sağa
+/// alınabilsin (tablette)" — en olası anlam). Cihaz tercihi; ayraçta uzun
+/// basış ya da Ayarlar → Görünüm.
+final listPaneRightProvider = boolPref('list_pane_right', defaultValue: false);
+
 /// MADDE JESTLERİ (kullanıcı isteği 2026-10-30: "jestler direkt çalışmalı,
 /// aktif edilmeden; ayarlardan opsiyonel"): maddenin üstüne parmakla/kalemle
 /// çizmek — üstünü çiz/✓ işaretle, karala sil, daire yazım düzelt.

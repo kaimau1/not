@@ -353,6 +353,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: l10n.settingsLanguage,
             keywords: 'dil language uygulama dili',
           ),
+          _SettingRow(
+            const _ListPaneRightSwitch(),
+            title: l10n.listPaneRight,
+            keywords: '${l10n.listPaneRightInfo} liste sag sol tablet bolunmus',
+          ),
           _SettingRow(_SubHeader(l10n.settingsCardsHeader)),
           _SettingRow(
             const _ExpandListItemsSwitch(),
