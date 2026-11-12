@@ -76,6 +76,7 @@ import 'stylus_toggle.dart';
 import 'pinned_side.dart';
 import '../../data/note_format_memory.dart';
 import '../../data/attachment_save.dart';
+import '../../data/import_service.dart' show markdownAttachment;
 import '../../data/note_shortcut.dart';
 import '../../../ai/data/ai_gate.dart';
 import '../../../auth/presentation/account_required.dart';

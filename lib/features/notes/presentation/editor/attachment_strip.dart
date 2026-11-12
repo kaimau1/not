@@ -1,4 +1,5 @@
 import '../../../../app/theme/fixed_colors.dart';
+import '../../../../core/utils/markdown.dart';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -547,7 +548,7 @@ class _AttachmentTile extends ConsumerWidget {
       content = _PreviewTile(
         preview: _TextPreview(text: attachment.text),
         name: attachment.fileName,
-        badge: 'TXT',
+        badge: isMarkdownFile(attachment.fileName) ? 'MD' : 'TXT',
         badgeColor: FixedColors.kindText,
       );
     } else if (attachment.kind == AttachmentKind.pdf) {

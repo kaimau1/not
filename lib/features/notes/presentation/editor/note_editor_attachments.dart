@@ -207,6 +207,26 @@ extension _EditorAttachments on _NoteEditorScreenState {
     final l10n = context.l10n;
     if (files.isEmpty || !mounted) return;
     String nameOf(XFile f) => f.name.isEmpty ? f.path : f.name;
+    // MARKDOWN (P54): .md METİN EKİ olur — dokununca okunur hâli açılır,
+    // oradan nota eklenir ya da yeni not olur. Kalan dosyalar her zamanki yol.
+    final rest = <XFile>[];
+    for (final f in files) {
+      if (!isMarkdownFile(nameOf(f))) {
+        rest.add(f);
+        continue;
+      }
+      final a = markdownAttachment(
+        nameOf(f).split(RegExp(r'[\\/]')).last,
+        await f.readAsBytes(),
+      );
+      if (!mounted) return;
+      _mutate(
+        (n) => n.copyWith(attachments: [...n.attachments, a]),
+        immediate: true,
+      );
+    }
+    if (rest.isEmpty) return;
+    files = rest;
     final kind = PickedFileKind.of(nameOf(files.first));
     if (kind == null) {
       _showSnack(l10n.quickAddFileUnsupported);

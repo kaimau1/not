@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 12 Kasım 2026 {#2026-11-12}
+- **Markdown (.md) dosyaları:** notun içinden "Dosya ekle" ile ya da sürükleyip bırakarak .md eklenebilir; dokununca işaretsiz, okunur hâliyle açılır ve tamamı ya da seçilen kısmı nota eklenir. Başka uygulamadan paylaşılan ya da "Birlikte aç" ile açılan .md dosyası başlığı, maddeleri ve onay kutularıyla yeni not olur.
 - **Daha hızlı açılış:** açılışta beyaz parlama yerine uygulama simgeli açılış ekranı; uygulama biraz daha çabuk hazır.
 - **Gereksiz yükleme halkası yok:** kısa süren yüklemelerde dönen halka görünmez (0,3 saniyeden uzun sürerse belirir).
 - **PDF açılırken önizleme:** gri kutu yerine belgenin küçük resmi görünür.

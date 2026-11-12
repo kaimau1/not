@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -11,11 +12,13 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/doc_picker.dart';
+import '../../../core/utils/markdown.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../settings/data/permissions_service.dart';
 import '../../settings/settings_providers.dart';
 import '../data/attachment_repository.dart';
 import '../data/document_scan.dart';
+import '../data/import_service.dart' show markdownNoteDraft;
 import '../data/note_share.dart';
 import '../data/notes_repository.dart';
 import '../data/scan/scan_pdf.dart';
@@ -468,6 +471,25 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     final l10n = context.l10n;
     if (files.isEmpty || !mounted) return;
     String nameOf(XFile f) => f.name.isEmpty ? f.path : f.name;
+    // MARKDOWN (P54): ilk dosya .md ise not olur (başlık, maddeler, onay
+    // kutuları korunur — bkz. markdownNoteDraft); levha sorulmaz.
+    if (isMarkdownFile(nameOf(files.first))) {
+      final repo = ref.read(notesRepositoryProvider);
+      final draft = markdownNoteDraft(
+        p.basename(nameOf(files.first)),
+        utf8.decode(await files.first.readAsBytes(), allowMalformed: true),
+      );
+      if (repo == null || draft == null || !mounted) return;
+      final id = await repo.createNote(
+        draft.type,
+        title: draft.title,
+        body: draft.body,
+        items: draft.items,
+        folderId: quickAddFolderId,
+      );
+      await openNewNote(id);
+      return;
+    }
     final kind = PickedFileKind.of(nameOf(files.first));
     // Türün bu platformda hiç kullanımı yoksa (web'de ses) boş levha açılmaz.
     if (kind == null || fileUsesFor(kind).isEmpty) {

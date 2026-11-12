@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 12 November 2026 {#2026-11-12}
+- **Markdown (.md) files:** add a .md from "Add file" inside a note or by drag and drop; tapping it opens a clean, readable view and you can add all or part of it to the note. A .md shared from another app or opened with "Open with" becomes a new note with its title, items and checkboxes.
 - **Faster start:** a splash screen with the app icon instead of a white flash; the app is ready a bit sooner.
 - **No needless spinners:** short loads no longer flash a spinner (it appears only after 0.3 s).
 - **PDF preview while opening:** a thumbnail of the document instead of a grey box.
