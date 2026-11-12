@@ -9,6 +9,7 @@ import '../../../core/utils/search_fold.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/app_icons.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/delayed_spinner.dart';
 
 /// KULLANIM KILAVUZU (kullanıcı isteği 2026-10-11: "tüm özellikleri anlatan,
 /// gösteren bir kullanım kılavuzu").
@@ -269,7 +270,7 @@ class _GuideScreenState extends State<GuideScreen> {
         builder: (context, snapshot) {
           final guide = snapshot.data;
           if (guide == null) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: DelayedSpinner());
           }
           final query = foldForSearch(_query.trim());
           final visible = [

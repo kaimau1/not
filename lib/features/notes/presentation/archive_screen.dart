@@ -13,6 +13,7 @@ import 'note_sort_menu.dart';
 import 'notes_providers.dart';
 import 'archive_insights_sheet.dart';
 import 'screen_search.dart';
+import '../../../core/widgets/delayed_spinner.dart';
 
 /// Arşivlenen notlar. Karta dokununca editör açılır; menüden arşivden
 /// çıkarılabilir veya silinebilir.
@@ -119,7 +120,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
             final needle = result.needle;
             if (notes.isEmpty) {
               if (result.loading) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: DelayedSpinner());
               }
               return needle.isEmpty
                   ? EmptyState(

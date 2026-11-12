@@ -3,6 +3,9 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 12 November 2026 {#2026-11-12}
+- **Faster start:** a splash screen with the app icon instead of a white flash; the app is ready a bit sooner.
+- **No needless spinners:** short loads no longer flash a spinner (it appears only after 0.3 s).
+- **PDF preview while opening:** a thumbnail of the document instead of a grey box.
 - **Simpler pinned-attachment panel:** the "T" button is gone; Plain text and hide/show bubbles live in one bubble menu.
 - **Side pinning on tablets:** a pinned attachment can sit left/right in non-fullscreen windows too (list + note side by side).
 - **No jumping when dragging to the bin:** reordering freezes as you approach the bin.

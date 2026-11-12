@@ -635,7 +635,7 @@ class _VoicePickerSheetState extends ConsumerState<_VoicePickerSheet> {
               child: voices == null
                   ? const Padding(
                       padding: EdgeInsets.symmetric(vertical: 24),
-                      child: Center(child: CircularProgressIndicator()),
+                      child: Center(child: DelayedSpinner()),
                     )
                   : voices.isEmpty
                   ? Padding(

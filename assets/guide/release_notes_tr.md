@@ -3,6 +3,9 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 12 Kasım 2026 {#2026-11-12}
+- **Daha hızlı açılış:** açılışta beyaz parlama yerine uygulama simgeli açılış ekranı; uygulama biraz daha çabuk hazır.
+- **Gereksiz yükleme halkası yok:** kısa süren yüklemelerde dönen halka görünmez (0,3 saniyeden uzun sürerse belirir).
+- **PDF açılırken önizleme:** gri kutu yerine belgenin küçük resmi görünür.
 - **Sabit ek panelinde sadeleşme:** "T" düğmesi kalktı; Açık metin ve balonları gizle/göster tek balon menüsünde.
 - **Tablette yan sabitleme:** sabit ek solda/sağda artık tam ekran olmayan pencerede de (liste + not yan yana) kullanılabiliyor.
 - **Çöpe sürüklerken notlar zıplamıyor:** çöpe yaklaşınca sıra değişikliği donar.

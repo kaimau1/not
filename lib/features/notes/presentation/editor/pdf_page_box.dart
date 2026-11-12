@@ -25,6 +25,7 @@ import '../viewers/pdf_selection_bar.dart' show PdfSelectionState;
 import '../viewers/pdf_viewer_screen.dart';
 import '../../../../core/widgets/smooth_routes.dart';
 import '../../../../core/widgets/app_sheet.dart';
+import 'media_loading_cover.dart';
 import 'pdf_page_column.dart';
 
 /// **SAYFAYA GÖMÜLÜ PDF** (kullanıcı isteği 2026-09-06: "PDF'yi sayfaya
@@ -896,16 +897,8 @@ class _PdfPageBoxState extends State<PdfPageBox> {
 
   Widget _document(BuildContext context, PdfDocument? document) {
     if (document == null) {
-      return const ColoredBox(
-        color: Color(0xFFF2F2F2),
-        child: Center(
-          child: SizedBox(
-            width: 22,
-            height: 22,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
+      // Belge açılırken gri kutu değil küçük resim + gecikmeli halka (F78.3b).
+      return MediaLoadingCover(attachment: widget.attachment);
     }
     if (_count != document.pages.length) {
       _count = document.pages.length;

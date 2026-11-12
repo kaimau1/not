@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/delayed_spinner.dart';
 
 /// Gizlilik Politikası — depo kökündeki PRIVACY_POLICY.md dosyasını gösterir
 /// (tek kaynak: aynı metin hem uygulamada hem depoda durur). Play'in Veri
@@ -20,7 +21,7 @@ class PrivacyScreen extends StatelessWidget {
         builder: (context, snapshot) {
           final text = snapshot.data;
           if (text == null) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: DelayedSpinner());
           }
           return Center(
             child: ConstrainedBox(

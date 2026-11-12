@@ -20,6 +20,7 @@ import 'viewer_pen.dart';
 import 'zoom_box.dart';
 import '../editor/attachment_clipboard.dart';
 import '../editor/pen_tray.dart';
+import '../../../../core/widgets/delayed_spinner.dart';
 
 /// Sunum (.pptx) ekini gerçek tasarımıyla slayt slayt gösterir. PDF'teki gibi
 /// üzerine elle yazılabilir: çizim slayt oranlı vektör olarak ekin `ink`
@@ -364,7 +365,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen>
     }
     final slides = _slides;
     if (slides == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: DelayedSpinner());
     }
     if (slides.isEmpty) {
       return Center(

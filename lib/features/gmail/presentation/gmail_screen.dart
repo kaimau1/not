@@ -34,6 +34,7 @@ import '../data/gmail_api.dart';
 import '../data/gmail_auth.dart';
 import '../domain/gmail_note.dart';
 import '../domain/gmail_smart.dart';
+import '../../../core/widgets/delayed_spinner.dart';
 
 /// **GMAIL** (F28.1; ekran BAŞTAN yazıldı 2026-11-06, kullanıcı isteği
 /// "Gmail ekranının yeniden yazılması"): üstte arama + hızlı süzgeç çipleri
@@ -1158,7 +1159,7 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
           else if (m == null)
             const Padding(
               padding: EdgeInsets.only(top: 48),
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(child: DelayedSpinner()),
             )
           else ...[
             if (m.attachments.isNotEmpty) ...[
@@ -1510,7 +1511,7 @@ class _MailImages extends StatelessWidget {
                     ? _thumb(context, MemoryImage(snap.data!))
                     : const SizedBox(
                         width: 120,
-                        child: Center(child: CircularProgressIndicator()),
+                        child: Center(child: DelayedSpinner()),
                       ),
               ),
             for (final url in message.imageUrls)

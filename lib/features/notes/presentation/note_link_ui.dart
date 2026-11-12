@@ -8,6 +8,7 @@ import '../../../core/utils/search_fold.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../domain/note.dart';
 import '../domain/note_links.dart';
+import '../../../core/widgets/delayed_spinner.dart';
 import 'note_card.dart' show openNoteRoute;
 
 /// Bağlantı etiketinin yazısı: hedefin başlığı (kilitliyse de başlık —
@@ -207,7 +208,7 @@ Future<void> showRelatedNotesSheet(
               loading: () => const [
                 Padding(
                   padding: EdgeInsets.all(24),
-                  child: Center(child: CircularProgressIndicator()),
+                  child: Center(child: DelayedSpinner()),
                 ),
               ],
               error: (_, _) => [

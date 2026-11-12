@@ -5,6 +5,7 @@ import '../../../core/l10n_ext.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import 'note_card.dart';
+import '../../../core/widgets/press_scale.dart';
 
 /// **"NOTA EKLE" SEÇİCİSİ** (2026-11-08, yeniden kullanılabilir): bir metnin
 /// (Gmail'de seçilen kısım, ileride paylaşılan yazı…) HANGİ NOTA gideceğini
@@ -121,8 +122,10 @@ class NoteTargetPicker extends ConsumerWidget {
                     itemCount: notes.length,
                     itemBuilder: (context, i) {
                       final n = notes[i];
-                      return GestureDetector(
+                      // Basma tepkisi (F78.4): ana ekran kartıyla aynı.
+                      return PressScale(
                         key: ValueKey('target-${n.id}'),
+                        child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () =>
                             Navigator.of(context).pop(NoteTarget.existing(n)),
@@ -140,6 +143,7 @@ class NoteTargetPicker extends ConsumerWidget {
                               ),
                             ),
                           ),
+                        ),
                         ),
                       );
                     },

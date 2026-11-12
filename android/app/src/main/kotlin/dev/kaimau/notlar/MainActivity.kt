@@ -27,10 +27,12 @@ import android.util.Log
 import android.util.Rational
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.renderer.FlutterUiDisplayListener
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
@@ -55,7 +57,16 @@ private val sharedMediaExecutor: java.util.concurrent.ExecutorService by lazy {
 //    mikrofon iznini SORMADAN denetleme, sistem ayarı ekranlarını açma.
 // 2) Cihazın YERLEŞİK konuşma tanıması (EventChannel): dikte ve sesli not
 //    asistanı bunu kullanır — ücretsiz, anlık ve Gemini kotası yakmaz.
-class MainActivity : FlutterFragmentActivity() {
+class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
+    // İlk Flutter karesi çizildi mi (FlutterFragment bu Activity'ye bildirir).
+    @Volatile private var firstFrameShown = false
+
+    override fun onFlutterUiDisplayed() {
+        firstFrameShown = true
+    }
+
+    override fun onFlutterUiNoLongerDisplayed() {}
+
     private val channelName = "dev.kaimau.notlar/system"
     private val speechChannelName = "dev.kaimau.notlar/speech"
 
@@ -249,6 +260,14 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         dropUnreadableShare(intent)
+        // Açılış ekranı ilk Flutter karesine dek kalır (DENEYIM F78.1, K-D8):
+        // arada beyaz/boş pencere görünmesin. super.onCreate'ten ÖNCE çağrılır.
+        // ponytail: 3 sn emniyet — kare bildirimi hiç gelmezse uygulama açılış
+        // ekranında asılı kalmasın; soğuk açılış bunu aşarsa süreyi büyüt.
+        val splashStart = SystemClock.uptimeMillis()
+        installSplashScreen().setKeepOnScreenCondition {
+            !firstFrameShown && SystemClock.uptimeMillis() - splashStart < 3000
+        }
         super.onCreate(savedInstanceState)
         GuncellemeSonrasiAc.clear(this)
     }

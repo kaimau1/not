@@ -21,6 +21,7 @@ import '../data/folder_chat_repository.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/friendly_error.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/delayed_spinner.dart';
 
 /// **PAYLAŞILAN KLASÖRÜN SOHBETİ** (kullanıcı isteği 2026-08-18: "birde
 /// birbirine mesaj gönderme alanı olabilir").
@@ -263,7 +264,7 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
             Expanded(
               child: messagesAsync.when(
                 loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                    const Center(child: DelayedSpinner()),
                 error: (e, _) => EmptyState(
                   icon: Icons.error_outline,
                   title: l10n.genericError(friendlyError(l10n, e)),
@@ -422,7 +423,7 @@ class _MessageBubble extends ConsumerWidget {
           memCacheWidth: 720,
           placeholder: (context, _) => const SizedBox(
             height: 120,
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(child: DelayedSpinner()),
           ),
           errorWidget: (context, _, _) =>
               const SizedBox(height: 80, child: Icon(Icons.broken_image)),
