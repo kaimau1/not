@@ -214,11 +214,11 @@ void main() {
       expect(find.text('Sabitle'), findsNothing);
       // Editörde eksik olan işler eklendi.
       expect(find.text('Notu çoğalt'), findsOneWidget);
-      // Ekran/ayar en altta, Sil'in ALTINDA ince satır.
-      final delete = tester.getRect(find.byKey(const ValueKey('menu-tile-delete')));
+      // Ekran/ayar Sil'in altında değil, başlıktaki ⚙'nin açılır
+      // menüsünde (DENEYIM K-D10).
+      expect(find.byKey(const ValueKey('menu-tile-delete')), findsOneWidget);
       for (final id in ['customize', 'settings']) {
-        final r = tester.getRect(find.byKey(ValueKey('menu-footer-$id')));
-        expect(r.top, greaterThan(delete.bottom), reason: id);
+        expect(find.byKey(ValueKey('menu-footer-$id')), findsNothing);
       }
 
       await tester.tap(find.byKey(const ValueKey('menu-tile-calculator')));

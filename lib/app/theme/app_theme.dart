@@ -143,7 +143,7 @@ abstract final class AppTheme {
     final sheetShape = const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     );
-    return ThemeData(
+    final theme = ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       brightness: brightness,
@@ -313,6 +313,15 @@ abstract final class AppTheme {
           TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
           TargetPlatform.macOS: FadeForwardsPageTransitionsBuilder(),
         },
+      ),
+    );
+    // ONAY PENCERELERİ levhalarla aynı dili konuşsun (DENEYIM F76.4): başlık
+    // `sheetTitle` (M3 varsayılanı 24 pt `headlineSmall`), gövde `body`.
+    final text = AppText.of(theme);
+    return theme.copyWith(
+      dialogTheme: theme.dialogTheme.copyWith(
+        titleTextStyle: text.sheetTitle,
+        contentTextStyle: text.body,
       ),
     );
   }

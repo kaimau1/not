@@ -88,14 +88,22 @@ class _AreaIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = _areaColors(Theme.of(context).colorScheme, area.id);
+    // F79.2 (D18): nötr kutu, 40 dp, köşe `m` (arama sonucundaki küçük
+    // başlıkta 30 dp, köşe `s`).
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         color: c.bg,
-        borderRadius: BorderRadius.circular(size * 0.3),
+        borderRadius: BorderRadius.circular(
+          size >= 40 ? AppRadius.m : AppRadius.s,
+        ),
       ),
-      child: Icon(area.icon, size: size * 0.52, color: c.fg),
+      child: Icon(
+        area.icon,
+        size: size >= 40 ? AppIconSize.m : AppIconSize.xs,
+        color: c.fg,
+      ),
     );
   }
 }
@@ -181,26 +189,23 @@ class _CategoryTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Satır başlığı `rowTitle`, özet `meta` (F79.2, §2.1).
                     Text(
                       area.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style:
-                          (compact
-                                  ? theme.textTheme.titleSmall
-                                  : theme.textTheme.titleMedium)
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                      style: compact
+                          ? AppText.of(theme).label
+                          : AppText.of(theme).rowTitle,
                     ),
                     if (area.summary.isNotEmpty && !compact)
                       Padding(
-                        padding: const EdgeInsets.only(top: 2),
+                        padding: const EdgeInsets.only(top: AppSpace.xxs),
                         child: Text(
                           area.summary,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                          style: AppText.of(theme).meta,
                         ),
                       ),
                   ],
@@ -750,47 +755,57 @@ class _ShortcutTiles extends StatelessWidget {
   }
 }
 
+/// Kısayol kartı (Kullanım kılavuzu, Kişiselleştir). F79.2 (D18): iki kart
+/// da AYNI nötr tonda — kategori kartlarıyla aynı zemin, aynı 40 dp nötr
+/// simge kutusu, başlık `rowTitle`, alt yazı `meta`.
 class _ShortcutTile extends StatelessWidget {
   const _ShortcutTile({
     super.key,
     required this.icon,
     required this.title,
     required this.subtitle,
-    required this.color,
     required this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
-  final Color color;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     // Basınca hafifçe çöker (bkz. PressScale).
     return PressScale(
       child: Material(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppRadius.l),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpace.m,
+              vertical: AppSpace.s,
+            ),
             child: Row(
               children: [
                 Container(
-                  width: 36,
-                  height: 36,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(11),
+                    color: scheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(AppRadius.m),
                   ),
-                  child: Icon(icon, size: 20, color: color),
+                  child: Icon(
+                    icon,
+                    size: AppIconSize.m,
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpace.m),
                 Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -800,26 +815,20 @@ class _ShortcutTile extends StatelessWidget {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: AppWeight.strong,
-                        ),
+                        style: text.rowTitle,
                       ),
                       Text(
                         subtitle,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: scheme.onSurfaceVariant,
-                        ),
+                        style: text.meta,
                       ),
                     ],
                   ),
                 ),
                 Icon(
                   Icons.chevron_right,
-                  size: 20,
+                  size: AppIconSize.m,
                   color: scheme.onSurfaceVariant,
                 ),
               ],

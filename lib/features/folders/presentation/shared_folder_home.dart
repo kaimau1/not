@@ -124,7 +124,8 @@ List<Widget> sharedFolderSlivers(
                         )
                       : EmptyState(
                           icon: Icons.search_off,
-                          title: l10n.noteSearchNoHit,
+                          title: l10n.emptySearch,
+                          subtitle: l10n.emptySearchHint,
                         ),
                 ),
               ];

@@ -1,4 +1,5 @@
 import '../../../core/widgets/sheet_header.dart';
+import '../../../core/widgets/sheet_tile.dart';
 import '../../../core/app_icons.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -29,7 +30,6 @@ import 'pdf_export_screen.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
-import '../../../app/theme/app_tokens.dart';
 
 /// Notun PAYLAŞ levhası.
 ///
@@ -78,7 +78,8 @@ Future<void> showNoteShareSheet(
   final initial = ShareTextOptions.decode(prefs.getString(_optionsKey));
   final result = await showAppSheet<(String, ShareTextOptions)>(
     context: context,
-    showDragHandle: true,
+    // SheetHeader'da ✕ var → tutamak yok (DENEYIM K-D7).
+    showDragHandle: false,
     isScrollControlled: true,
     useSafeArea: true,
     constraints: const BoxConstraints(maxWidth: 640),
@@ -147,8 +148,6 @@ class _ShareSheetState extends State<_ShareSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final note = widget.note;
     final text = noteShareText(
       note,
@@ -166,15 +165,11 @@ class _ShareSheetState extends State<_ShareSheet> {
     final stamped = countStampablePdfs(note);
     final files = shareableAttachments(note).length;
 
+    // Ortak bölüm adı (DENEYIM F76.2): eskiden 12 pt `labelMedium`, not
+    // menüsünde 14 pt `SectionLabel` — iki levha iki dil konuşuyordu (D12).
     Widget section(String label) => Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-      child: Text(
-        label,
-        style: theme.textTheme.labelMedium?.copyWith(
-          color: scheme.primary,
-          fontWeight: AppWeight.strong,
-        ),
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: SectionLabel(label),
     );
 
     return SingleChildScrollView(
@@ -256,7 +251,7 @@ class _ShareSheetState extends State<_ShareSheet> {
           // TEK DOKUNUŞLUK IZGARA: dışarıya kopya (metin, PDF, görsel…).
           // Uzun basınca kısa açıklama (ne gönderildiği).
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+            padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final columns = constraints.maxWidth >= 520 ? 5 : 4;
@@ -785,15 +780,16 @@ Widget _tile(
   required String title,
   required String subtitle,
   bool locked = false,
-}) {
-  final scheme = Theme.of(context).colorScheme;
-  return ListTile(
+}) => Padding(
+  // ORTAK ZENGİN KARO (DENEYIM F76.2): eskiden kutusuz büyük `ListTile`;
+  // AI levhasıyla aynı `SheetTile.rich` (zeminli, çerçevesiz, ›).
+  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+  child: SheetTile.rich(
     key: key,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-    leading: Icon(icon, color: scheme.primary),
-    title: Text(title),
-    subtitle: Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
-    trailing: locked ? const AccountLockBadge() : null,
+    icon: icon,
+    label: title,
+    description: subtitle,
+    badge: locked ? const AccountLockBadge() : null,
     onTap: onTap,
-  );
-}
+  ),
+);

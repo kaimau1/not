@@ -1027,7 +1027,7 @@ tur `telefon-*.png`.
 - [ ] **F66.5 Tek elle erişim taraması.** Sık işler (yeni not, ara, klasör değiştir, geri)
   alt yarıda mı: not ekranında "+" (üst sağ) yerine alt çubuktaki "+" yeterli mi — yalnız
   rapor; değişiklik KARAR.
-- [ ] **F66.6 Boş / hata / çevrimdışı hâlleri.** Çevrimdışıyken not ekranı bulut simgesi,
+- [x] **F66.6 Boş / hata / çevrimdışı hâlleri.** *(2026-11-12 → DENEYIM F79.6, P40.)* Çevrimdışıyken not ekranı bulut simgesi,
   bekleyen ek, AI düğmeleri ne gösteriyor; uçak kipinde widget testiyle 6 ekran görüntüsü
   (tura `TOUR_OFFLINE=1`). Tutarsızlıklar madde olur.
 - Kabul: `telefon-ana.png` önce/sonra; ilk not ≤ 150 dp'de başlıyor; 360×640'ta taşma yok.

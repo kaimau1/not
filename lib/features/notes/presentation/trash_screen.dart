@@ -21,6 +21,7 @@ import '../domain/note.dart';
 import 'editor/title_fit.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/confirm_dialog.dart';
 
 /// Çöp kutusu: silinen notlar geri alınabilir veya kalıcı silinebilir.
 ///
@@ -67,28 +68,14 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
   Future<void> _emptyTrash(List<Note> notes) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.emptyTrash),
-        content: Text(l10n.emptyTrashConfirm(notes.length)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(dialogContext).colorScheme.error,
-              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.deleteForever),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: l10n.emptyTrash,
+      message: l10n.emptyTrashConfirm(notes.length),
+      confirmLabel: l10n.deleteForever,
+      destructive: true,
     );
-    if (!(confirmed ?? false)) return;
+    if (!confirmed) return;
     // İçlerinde kilitli not varsa toplu boşaltma da doğrulama ister.
     if (notes.any((n) => n.locked) &&
         !await authenticateForNote(l10n.unlockAuthReason)) {
@@ -177,27 +164,51 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                 ref.watch(trashStreamProvider).value ?? const <Note>[],
               );
               if (notes.isEmpty) return const SizedBox.shrink();
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+              // Üst çubuk: Ara + ⋮ (F79.4, D19). Üç toplu iş (analiz, hepsini
+              // geri yükle, çöpü boşalt) yan yana üç simgeydi; yıkıcı olanı
+              // ötekilerden ayırt edilmiyordu. Menüde adlarıyla, "Çöpü
+              // boşalt" en altta `error` renginde.
+              final error = Theme.of(context).colorScheme.error;
+              return PopupMenuButton<_TrashBulk>(
+                key: const ValueKey('trash-more'),
+                tooltip: l10n.more,
+                enabled: !_emptying,
+                icon: const Icon(Icons.more_vert),
+                onSelected: (action) => switch (action) {
                   // AKILLI ANALİZ (2026-10-20): neyi geri yükleyip neyi
                   // güvenle silebileceğini söyler (cihaz kuralları + AI).
-                  IconButton(
-                    tooltip: l10n.trashAnalyze,
-                    icon: const Icon(Icons.insights_outlined),
-                    onPressed: _emptying
-                        ? null
-                        : () => showTrashAnalysisSheet(context, notes),
+                  _TrashBulk.analyze => showTrashAnalysisSheet(context, notes),
+                  _TrashBulk.restoreAll => _restoreAll(notes),
+                  _TrashBulk.empty => _emptyTrash(notes),
+                },
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                    value: _TrashBulk.analyze,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.insights_outlined),
+                      title: Text(l10n.trashAnalyze),
+                    ),
                   ),
-                  IconButton(
-                    tooltip: l10n.restoreAll,
-                    icon: const Icon(Icons.restore_outlined),
-                    onPressed: _emptying ? null : () => _restoreAll(notes),
+                  PopupMenuItem(
+                    value: _TrashBulk.restoreAll,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.restore_outlined),
+                      title: Text(l10n.restoreAll),
+                    ),
                   ),
-                  IconButton(
-                    tooltip: l10n.emptyTrash,
-                    icon: const Icon(Icons.delete_sweep_outlined),
-                    onPressed: _emptying ? null : () => _emptyTrash(notes),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: _TrashBulk.empty,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.delete_sweep_outlined, color: error),
+                      title: Text(
+                        l10n.emptyTrash,
+                        style: TextStyle(color: error),
+                      ),
+                    ),
                   ),
                 ],
               );
@@ -229,7 +240,10 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
               }
               return EmptyState(
                 icon: needle.isEmpty ? Icons.delete_outline : Icons.search_off,
-                title: needle.isEmpty ? l10n.trashEmpty : l10n.noteSearchNoHit,
+                title: needle.isEmpty ? l10n.trashEmpty : l10n.emptySearch,
+                subtitle: needle.isEmpty
+                    ? l10n.trashEmptyHint
+                    : l10n.emptySearchHint,
               );
             }
             // **DÜZENLİ IZGARA** (kullanıcı isteği 2026-09-23: "çöp kutusu
@@ -332,6 +346,9 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
   }
 }
 
+/// Çöp ekranının ⋮ menüsündeki toplu işler.
+enum _TrashBulk { analyze, restoreAll, empty }
+
 /// Çöpteki notun kalıcı silinmesine kaç gün kaldı? 0 = bugün gidiyor,
 /// null = silinme zamanı bilinmiyor (eski kayıt).
 int? trashDaysLeft(Note note, {DateTime? now}) {
@@ -398,24 +415,15 @@ class _TrashCard extends ConsumerWidget {
       return;
     }
     if (!context.mounted) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.deleteForever),
-        content: Text(l10n.deleteForeverConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+    // Geri alınamaz: onay `error` tonunda (DENEYIM F76.4).
+    final confirmed = await showConfirmDialog(
+      context,
+      title: l10n.deleteForever,
+      message: l10n.deleteForeverConfirm,
+      confirmLabel: l10n.delete,
+      destructive: true,
     );
-    if (confirmed ?? false) {
+    if (confirmed) {
       // Ekler de Storage'dan silinsin; yalnız dokümanı silmek dosya bırakır.
       await ref.read(notesRepositoryProvider)?.deleteNotePermanently(note);
     }
@@ -634,10 +642,17 @@ class _TrashCard extends ConsumerWidget {
             ),
             // Alt bilgi KARTIN İÇİNDE: kalan gün + geri yükle + kalıcı sil.
             Container(
-              height: 40,
+              height: 44,
               color: scheme.onSurface.withValues(alpha: 0.04),
-              padding: const EdgeInsetsDirectional.only(start: 12, end: 2),
-              child: Row(
+              padding: const EdgeInsetsDirectional.only(
+                start: AppSpace.m,
+                end: AppSpace.xxs,
+              ),
+              // Düğmeler kendi boylarında; dar kartta (küçük telefon, büyük
+              // yazı) satır taşmasın diye en çok "genişlik − 56" ve gerekirse
+              // birlikte küçülür. Kalan gün yazısı kalan yere sığar.
+              child: LayoutBuilder(
+                builder: (context, footer) => Row(
                 children: [
                   Icon(
                     Icons.hourglass_bottom,
@@ -672,24 +687,36 @@ class _TrashCard extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    iconSize: 20,
-                    tooltip: l10n.restore,
-                    icon: const Icon(AppIcons.restore),
-                    onPressed: () => _restore(context, ref),
-                  ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    iconSize: 20,
-                    tooltip: l10n.deleteForever,
-                    icon: Icon(
-                      Icons.delete_forever_outlined,
-                      color: scheme.error,
+                  // İki ETİKETLİ düğme (F79.4, D19): yan yana iki çöp kutusu
+                  // simgesi hangisinin geri getirdiğini söylemiyordu. "Sil"
+                  // kalıcı silmedir (onay penceresi aynen), `error` renginde.
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: (footer.maxWidth - 56).clamp(0, 400),
                     ),
-                    onPressed: () => _deleteForever(context, ref),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _FooterButton(
+                            label: l10n.restore,
+                            tooltip: l10n.restore,
+                            color: scheme.primary,
+                            onPressed: () => _restore(context, ref),
+                          ),
+                          _FooterButton(
+                            label: l10n.delete,
+                            tooltip: l10n.deleteForever,
+                            color: scheme.error,
+                            onPressed: () => _deleteForever(context, ref),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
+              ),
               ),
             ),
           ],
@@ -697,6 +724,38 @@ class _TrashCard extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Çöp kartının altındaki etiketli metin düğmesi: sıkı ama dokunma alanı
+/// 48 dp genişlik (kart ~184 dp: gün + "Geri al" + "Sil" sığmalı).
+class _FooterButton extends StatelessWidget {
+  const _FooterButton({
+    required this.label,
+    required this.tooltip,
+    required this.color,
+    required this.onPressed,
+  });
+
+  final String label;
+  final String tooltip;
+  final Color color;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: tooltip,
+    child: TextButton(
+      style: TextButton.styleFrom(
+        foregroundColor: color,
+        minimumSize: const Size(48, 40),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
+        textStyle: AppText.of(Theme.of(context)).label,
+        visualDensity: VisualDensity.compact,
+      ),
+      onPressed: onPressed,
+      child: Text(label, maxLines: 1),
+    ),
+  );
 }
 
 class _MetaChip extends StatelessWidget {

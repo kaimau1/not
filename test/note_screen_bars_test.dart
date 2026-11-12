@@ -84,7 +84,7 @@ void main() {
     expect(find.text('Madde yaz'), findsWidgets);
   });
 
-  testWidgets('menünün ince alt satırı Sil\'in altında ve seçilebilir', (
+  testWidgets('ekran/ayar maddeleri başlıktaki ⚙ açılır menüsünde (K-D10)', (
     tester,
   ) async {
     String? picked;
@@ -96,6 +96,7 @@ void main() {
               picked = await showActionMenuSheet(
                 context,
                 const ActionMenu(
+                  title: 'Not',
                   quick: [MenuAction('a', 'A', Icons.star)],
                   sections: [],
                   danger: MenuAction('delete', 'Sil', Icons.delete),
@@ -110,9 +111,16 @@ void main() {
     );
     await tester.tap(find.text('aç'));
     await tester.pumpAndSettle();
-    final del = tester.getRect(find.byKey(const ValueKey('menu-tile-delete')));
+    // Sil'in altında satır YOK; ✕ olan levhada tutamak yok (K-D7).
+    expect(find.byKey(const ValueKey('menu-footer-settings')), findsNothing);
+    expect(find.byKey(const ValueKey('sheet-close')), findsOneWidget);
+    // Tutamak (48 dp) çizilseydi ✕ levhanın tepesinden ≥ 48 aşağıda olurdu.
+    final sheetTop = tester.getRect(find.byType(BottomSheet)).top;
+    final closeTop = tester.getRect(find.byKey(const ValueKey('sheet-close'))).top;
+    expect(closeTop - sheetTop, lessThan(16));
+    await tester.tap(find.byKey(const ValueKey('menu-edit')));
+    await tester.pumpAndSettle();
     final foot = find.byKey(const ValueKey('menu-footer-settings'));
-    expect(tester.getRect(foot).top, greaterThan(del.bottom));
     expect(tester.getSize(foot).height, greaterThanOrEqualTo(48));
     await tester.tap(foot);
     await tester.pumpAndSettle();

@@ -51,22 +51,22 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sectionOthers => 'Diğerleri';
 
   @override
-  String get emptyNotes => 'Henüz not yok';
+  String get emptyNotes => 'Burada henüz not yok';
 
   @override
-  String get emptyFilter => 'Bu süzgeçle not yok';
+  String get emptyFilter => 'Burada bu süzgece uyan not yok';
 
   @override
   String get clearFilter => 'Süzgeci kaldır';
 
   @override
-  String get emptyFolderTitle => 'Bu klasör boş';
+  String get emptyFolderTitle => 'Burada henüz not yok';
 
   @override
   String get newNoteAction => 'Not ekle';
 
   @override
-  String get emptySearch => 'Sonuç bulunamadı';
+  String get emptySearch => 'Burada aramana uyan not yok';
 
   @override
   String get newTextNote => 'Metin notu';
@@ -630,13 +630,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get archiveTitle => 'Arşiv';
 
   @override
-  String get archiveEmpty => 'Arşivde not yok';
+  String get archiveEmpty => 'Burada arşivlenmiş not yok';
 
   @override
   String get trashTitle => 'Çöp kutusu';
 
   @override
-  String get trashEmpty => 'Çöp kutusu boş';
+  String get trashEmpty => 'Burada silinmiş not yok';
 
   @override
   String get trashInfo =>
@@ -823,11 +823,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get remindersTitle => 'Hatırlatıcılar';
 
   @override
-  String get remindersEmpty => 'Hatırlatıcı yok';
+  String get remindersEmpty => 'Burada hatırlatıcı yok';
 
   @override
   String get remindersEmptyHint =>
-      'Bir nota hatırlatıcı ekle veya + düğmesiyle yeni bir hatırlatıcılı not oluştur';
+      'Bir nota hatırlatıcı ekle ya da + ile hatırlatıcılı yeni bir not yaz.';
 
   @override
   String get remindersUpcoming => 'Yaklaşan';
@@ -1957,6 +1957,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get localAccountBadge => 'Yerel hesap';
 
   @override
+  String get profileGuestName => 'Misafir';
+
+  @override
+  String get profileGuestSignIn => 'Giriş yap';
+
+  @override
   String get linkGoogleAccount => 'Google hesabı bağla';
 
   @override
@@ -2904,12 +2910,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get folderManage => 'Klasörü yönet';
 
   @override
-  String get folderEmpty => 'Bu klasör boş';
+  String get folderEmpty => 'Burada henüz not yok';
 
   @override
   String folderNoteCount(int count) {
     return '$count not';
   }
+
+  @override
+  String get folderCardEmpty => 'Boş';
 
   @override
   String get folderEmptyHint =>
@@ -2942,7 +2951,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get friendsEmpty =>
-      'Henüz kimse yok. E-postayla bir arkadaş ekle, klasörlerini onunla paylaş.';
+      'E-postayla bir arkadaş ekle, klasörlerini onunla paylaş.';
 
   @override
   String get friendsRequestsTitle => 'İstekler';
@@ -3076,7 +3085,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get folderChatSend => 'Gönder';
 
   @override
-  String get folderChatEmptyTitle => 'Henüz mesaj yok';
+  String get folderChatEmptyTitle => 'Burada henüz mesaj yok';
 
   @override
   String get folderChatEmptyHint =>
@@ -3120,7 +3129,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get inboxTitle => 'Gelen notlar';
 
   @override
-  String get inboxEmpty => 'Gelen not yok';
+  String get inboxEmpty => 'Burada gelen not yok';
 
   @override
   String get inboxEmptyHint =>
@@ -5708,6 +5717,27 @@ class AppLocalizationsTr extends AppLocalizations {
   String get emptyNotesFirstAction => 'İlk notunu yaz';
 
   @override
+  String get emptyNotesHint => 'Yazdığın notlar burada kart olarak görünür.';
+
+  @override
+  String get emptyFolderHint => 'Bu klasöre eklediğin notlar burada toplanır.';
+
+  @override
+  String get emptyFilterHint =>
+      'Süzgeci kaldırınca bütün notların yeniden görünür.';
+
+  @override
+  String get emptySearchHint => 'Başka bir sözcükle dene.';
+
+  @override
+  String get archiveEmptyHint =>
+      'Arşivlediğin notlar ana ekrandan kalkar, burada saklanır.';
+
+  @override
+  String get trashEmptyHint =>
+      'Sildiğin notlar 30 gün burada kalır; o sürede geri alabilirsin.';
+
+  @override
   String get cardShowMoreCount => '“+N madde daha” satırı';
 
   @override
@@ -6241,6 +6271,12 @@ class AppLocalizationsTr extends AppLocalizations {
       'Beklenmeyen bir sorun oldu. Ayrıntı hata günlüğünde.';
 
   @override
+  String get errorStateTitle => 'Yüklenemedi';
+
+  @override
+  String get errorStateOfflineTitle => 'Bağlantı yok';
+
+  @override
   String get copyErrorDetail => 'Ayrıntıyı kopyala';
 
   @override
@@ -6346,7 +6382,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sharedHubTagShared => 'Paylaşılan';
 
   @override
-  String get sharedHubEmpty => 'Gelen ya da seninle paylaşılan not yok';
+  String get sharedHubEmpty => 'Burada gelen ya da paylaşılan not yok';
 
   @override
   String get sharedHubEmptyHint =>
@@ -6584,7 +6620,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get studyCardsEmpty => 'Bugün tekrar edilecek kart yok';
+  String get studyCardsEmpty => 'Burada bugün tekrar edilecek kart yok';
 
   @override
   String get studyCardsDone => 'Bugünlük bitti!';
@@ -6683,7 +6719,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gmailSearchHint => 'E-postalarda ara (Gmail arama sözdizimi)';
 
   @override
-  String get gmailEmpty => 'E-posta yok';
+  String get gmailEmpty => 'Burada e-posta yok';
 
   @override
   String get gmailLoadMore => 'Daha fazla';
@@ -7075,7 +7111,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get calendarNewEvent => 'Yeni etkinlik';
 
   @override
-  String get calendarEmpty => 'Takvim boş';
+  String get calendarEmpty => 'Burada henüz etkinlik yok';
 
   @override
   String get calendarEmptyHint =>
@@ -7200,7 +7236,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Liste ve içindeki görevler silinsin mi?';
 
   @override
-  String get tasksEmpty => 'Görev yok';
+  String get tasksEmpty => 'Burada görev yok';
 
   @override
   String get tasksEmptyHint =>
@@ -7451,7 +7487,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get routineEdit => 'Rutini düzenle';
 
   @override
-  String get routinesEmpty => 'Henüz rutin yok';
+  String get routinesEmpty => 'Burada henüz rutin yok';
 
   @override
   String get routinesEmptyHint =>
@@ -7594,7 +7630,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gmailRefresh => 'Yenile';
 
   @override
-  String get gmailNoResults => 'Aramaya uyan e-posta yok';
+  String get gmailNoResults => 'Burada aramana uyan e-posta yok';
 
   @override
   String get gmailFilterInbox => 'Gelen kutusu';
@@ -7641,7 +7677,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gmailOpenInGmail => 'Gmail\'de aç';
 
   @override
-  String get friendsEmptyTitle => 'Henüz kişi yok';
+  String get friendsEmptyTitle => 'Burada henüz kişi yok';
 
   @override
   String get friendsFilterHint => 'Kişilerde ara';

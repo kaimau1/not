@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_tokens.dart';
 import '../l10n_ext.dart';
 import '../menu_layout.dart';
 import 'app_sheet.dart';
 import 'sheet_header.dart';
+import 'sheet_tile.dart';
 
 /// Menü levhasındaki tek işlem.
 class MenuAction {
@@ -80,10 +82,13 @@ class MenuSection {
 }
 
 /// [ActionMenu]'yü alt levhada açar; seçilen işlemin anahtarını döner.
+///
+/// Başlıklı menüde ✕ var → tutamak ÇİZİLMEZ (DENEYIM K-D7; aşağı çekerek
+/// kapatma yine çalışır). Başlıksız menüde ✕ yok, tutamak kalır.
 Future<String?> showActionMenuSheet(BuildContext context, ActionMenu menu) =>
     showAppSheet<String>(
       context: context,
-      showDragHandle: true,
+      showDragHandle: !menu.hasHeader,
       // Büyük yazı ölçeğinde levha varsayılan tavanı aşabilir; kaydırma ağı.
       isScrollControlled: true,
       builder: (sheetContext) =>
@@ -123,10 +128,15 @@ class ActionMenu extends StatelessWidget {
   /// başlıkta "Düzenle" düğmesi çıkar (gizle/göster, sırala, hızlı satır).
   final String? menuId;
 
-  /// En altta, Sil'in ALTINDA ince metin satırı: notun değil ekranın/
-  /// uygulamanın işi olan maddeler (Ekranı düzenle, Ayarlar — F12.1).
-  /// Araçların arasında durunca not işi sanılıyordu.
+  /// Notun değil ekranın/uygulamanın işi olan maddeler (Ekranı düzenle,
+  /// Ayarlar — F12.1). Araçların arasında durunca not işi sanılıyordu; Sil'in
+  /// altındaki ince satır da levhayı ~50 dp uzatıyor ve başlıktaki ⚙ ile
+  /// üç ayrı "düzenle" kapısı oluyordu (DENEYIM D11). Şimdi başlıktaki ⚙'nin
+  /// açılır menüsünde: Menüyü düzenle · Ekranı düzenle · Ayarlar (K-D10).
   final List<MenuAction> footer;
+
+  /// Başlık satırı (ad + ✕) çizilecek mi — çizilirse levhada tutamak yok.
+  bool get hasHeader => (title?.trim() ?? '').isNotEmpty;
 
   final String? title;
   final List<MenuAction> quick;
@@ -186,7 +196,8 @@ class ActionMenu extends StatelessWidget {
 
   Future<void> _edit(BuildContext context) => showAppSheet<void>(
     context: context,
-    showDragHandle: true,
+    // Düzenleyicide SheetHeader (✕) var → tutamak yok (K-D7).
+    showDragHandle: false,
     isScrollControlled: true,
     builder: (_) => _MenuLayoutEditor(menu: this),
   );
@@ -198,41 +209,27 @@ class ActionMenu extends StatelessWidget {
   ) {
     final scheme = Theme.of(context).colorScheme;
     final heading = title?.trim() ?? '';
-    final editButton = menuId == null
-        ? null
-        : IconButton(
-            key: const ValueKey('menu-edit'),
-            tooltip: context.l10n.menuEdit,
-            icon: const Icon(Icons.tune),
-            onPressed: () => _edit(context),
-          );
+    final editButton = _settingsButton(context, scheme, compact: false);
     final visibleSections = [
       for (final section in sections)
         if (section.actions.isNotEmpty) section,
     ];
-    final inlineEdit = heading.isNotEmpty || menuId == null
+    final inlineEdit = heading.isNotEmpty
         ? null
-        : IconButton(
-            key: const ValueKey('menu-edit'),
-            tooltip: context.l10n.menuEdit,
-            visualDensity: VisualDensity.compact,
-            padding: EdgeInsets.zero,
-            iconSize: 20,
-            icon: Icon(Icons.tune, color: scheme.onSurfaceVariant),
-            onPressed: () => _edit(context),
-          );
+        : _settingsButton(context, scheme, compact: true);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, AppSpace.s),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
           // Menü levhasında başlık = notun adı, ✕ sağda (F16.2).
+          // Tutamak yok (K-D7): başlık levhanın tepesinden 56 dp'lik satır.
           if (heading.isNotEmpty)
             SheetHeader(
               title: heading,
               actions: [?editButton],
-              padding: const EdgeInsets.fromLTRB(4, 0, 0, 4),
+              padding: EdgeInsets.zero,
             ),
           if (quick.isNotEmpty)
             Row(
@@ -270,34 +267,95 @@ class ActionMenu extends StatelessWidget {
               alignment: AlignmentDirectional.centerEnd,
               child: inlineEdit,
             ),
-          if (danger != null) ...[
-            const SizedBox(height: 10),
-            _Tile(action: danger!, scheme: scheme, danger: true),
-          ],
-          if (footer.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 4,
-              children: [
-                for (final a in footer)
-                  TextButton.icon(
-                    key: ValueKey('menu-footer-${a.id}'),
-                    onPressed: () => Navigator.pop(context, a.id),
-                    icon: Icon(a.icon, size: 18),
-                    label: Text(a.label),
-                    style: TextButton.styleFrom(
-                      foregroundColor: scheme.onSurfaceVariant,
-                      minimumSize: const Size(48, 48),
-                    ),
-                  ),
-              ],
+          if (danger case final d?) ...[
+            const SizedBox(height: AppSpace.s),
+            DestructiveRow(
+              key: ValueKey('menu-tile-${d.id}'),
+              icon: d.icon,
+              label: d.label,
+              onTap: () => Navigator.pop(context, d.id),
             ),
           ],
         ],
       ),
     );
   }
+
+  /// Başlıktaki ⚙: düzenlenebilir menüde "Menüyü düzenle"; [footer] varsa
+  /// küçük açılır menü (Menüyü düzenle · Ekranı düzenle · Ayarlar — K-D10).
+  /// İkisi de yoksa null.
+  Widget? _settingsButton(
+    BuildContext context,
+    ColorScheme scheme, {
+    required bool compact,
+  }) {
+    if (menuId == null && footer.isEmpty) return null;
+    final l10n = context.l10n;
+    final icon = Icon(
+      footer.isEmpty ? Icons.tune : Icons.settings_outlined,
+      size: compact ? AppIconSize.m : null,
+      color: compact ? scheme.onSurfaceVariant : null,
+    );
+    if (footer.isEmpty) {
+      return IconButton(
+        key: const ValueKey('menu-edit'),
+        tooltip: l10n.menuEdit,
+        visualDensity: compact ? VisualDensity.compact : null,
+        padding: compact ? EdgeInsets.zero : null,
+        icon: icon,
+        onPressed: () => _edit(context),
+      );
+    }
+    const editId = 'menu.editLayout';
+    return PopupMenuButton<String>(
+      key: const ValueKey('menu-edit'),
+      tooltip: l10n.settings,
+      icon: icon,
+      padding: compact ? EdgeInsets.zero : const EdgeInsets.all(8),
+      onSelected: (id) {
+        if (id == editId) {
+          _edit(context);
+        } else {
+          Navigator.pop(context, id);
+        }
+      },
+      itemBuilder: (_) => [
+        if (menuId != null)
+          PopupMenuItem(
+            key: const ValueKey('menu-edit-layout'),
+            value: editId,
+            child: _PopupRow(icon: Icons.tune, label: l10n.menuEdit),
+          ),
+        for (final a in footer)
+          PopupMenuItem(
+            key: ValueKey('menu-footer-${a.id}'),
+            value: a.id,
+            child: _PopupRow(icon: a.icon, label: a.label),
+          ),
+      ],
+    );
+  }
+}
+
+/// ⚙ açılır menüsünün satırı: simge + ad.
+class _PopupRow extends StatelessWidget {
+  const _PopupRow({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(
+        icon,
+        size: AppIconSize.m,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+      const SizedBox(width: AppSpace.m),
+      Flexible(child: Text(label)),
+    ],
+  );
 }
 
 /// Hızlı satırın düğmesi: yuvarlak simge, altında en çok iki satır ad.
@@ -467,84 +525,6 @@ class _GridTile extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Tile extends StatelessWidget {
-  const _Tile({
-    required this.action,
-    required this.scheme,
-    this.danger = false,
-  });
-
-  final MenuAction action;
-  final ColorScheme scheme;
-  final bool danger;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = danger ? scheme.error : scheme.onSurface;
-    return Material(
-      key: ValueKey('menu-tile-${action.id}'),
-      color: danger
-          ? scheme.errorContainer.withValues(alpha: 0.4)
-          : scheme.surfaceContainerHighest.withValues(alpha: 0.45),
-      borderRadius: BorderRadius.circular(12),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => Navigator.pop(context, action.id),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 48),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: danger ? 12 : 8,
-              vertical: 8,
-            ),
-            child: Row(
-              mainAxisAlignment: danger
-                  ? MainAxisAlignment.center
-                  : MainAxisAlignment.start,
-              children: [
-                if (danger)
-                  Icon(action.icon, size: 20, color: color)
-                else
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: action.selected
-                          ? scheme.primary
-                          : scheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      action.icon,
-                      size: 18,
-                      color: action.selected ? scheme.onPrimary : color,
-                    ),
-                  ),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Text(
-                    action.label,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: color,
-                      fontSize: 13.5,
-                    ),
-                  ),
-                ),
-                if (action.count > 0) ...[
-                  const SizedBox(width: 6),
-                  _CountPill(count: action.count, highlight: action.highlight),
-                ],
-              ],
-            ),
-          ),
         ),
       ),
     );
