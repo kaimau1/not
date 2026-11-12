@@ -70,7 +70,7 @@ dosya geçerli).
 | 78 | Hız hissi (açılış, yeni not, yükleme hâlleri) | P39 | Fable | Bekliyor |
 | 79 | İkincil ekranlar + boş/çevrimdışı hâller | P40 | Opus | F79.1–F79.6 bitti, main'de (2026-11-12) |
 | 72.6 | Belirteç göçü (mekanik) | P41 | Sonnet | Bekliyor |
-| 80 | Koyu tema, küçük ekran, web cilası, önce/sonra dosyası | P42 | Sonnet + Opus | F80.1–F80.5 bitti (dalda `oto/P42-koyu-kucuk-web`, 2026-11-12; sabit PDF çubuğu 1,3× taşması ve şerit çipleri sabah bakılacak) |
+| 80 | Koyu tema, küçük ekran, web cilası, önce/sonra dosyası | P42 | Sonnet + Opus | F80.1–F80.4 bitti, F80.5 kısmi (dalda `oto/P42-koyu-kucuk-web`, 2026-11-12; once-sonra.md, sabit PDF çubuğu 1,3× taşması ve şerit çipleri sabah bakılacak) |
 
 **Sıra (Ek D'de gerekçesi):** P19 + P18 (ikisi de dalda sürüyor) → **P33 → P34 → P35 → P36 → P37 → P38 →
 P39 → P40 → P41 → P42** → P20 → P21 → P22.
@@ -666,7 +666,7 @@ dosyaları kullanıcı isteğiyle dolu — §4 Y11–Y13).
 - [x] **F80.4 Dokunma hedefi taraması.** — 2026-11-12: `test/tap_targets_test.dart` (6 sahne). Not menüsü ve ayarlar 0; kalan 27 küçük hedef gerekçeli istisna: not alt çubuğu 8 (P36), editör içi 10 (P20/P36), arama hapı 4 (Y1), klasör şeridi 3 (K-D3, sabah bakılacak), takvim ‹ › 2 (Y13). Yeni küçük hedef testi kırar. `accessibility_test` kalıbıyla: ana ekran, not
   ekranı (klavyeli/klavyesiz), menü, takvim, ayarlar — 48 dp altı hedef 0 (istisna listesi
   testte, gerekçeli).
-- [ ] **F80.5 Önce/sonra dosyası.** `docs/deneyim/once-sonra.md`: 12 sahnenin önce/sonra
+- [ ] **F80.5 Önce/sonra dosyası.** — 2026-11-12 kısmi: `docs/cihaz_turu.md`'ye adımlar eklendi (web 21–23, tablet 28); `once-sonra.md` YAZILMADI (limit) — **sabah bakılacak** (önce turu `build/tour-once*`, sonra turu koyu/yazı bitti, açık tam tur yarıda kaldı). `docs/deneyim/once-sonra.md`: 12 sahnenin önce/sonra
   görüntü adları + ölçülen sayılar (mandal bütçeleri, A/B tabloları, `prof_new.py`, beyaz
   kare). `docs/cihaz_turu.md`'ye bu planın elle bakılacak adımları. **HAFIZA / CLAUDE.md /
   KALANLAR toparlaması BURADA YAPILMAZ — P21'in (F69.5) işidir; tek kapanış.**
