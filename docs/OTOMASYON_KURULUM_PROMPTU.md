@@ -73,6 +73,17 @@ test cihazı: [USB telefon modeli / yok] · ana model: [ ] · plan: [Pro / Max].
    durdur → cihaz ekranını kapat → kilidi sil → 5 satır özet.
 9. Dur: art arda 3 `takıldı`, main iki kez üst üste kırmızı, Kuyruk boş, limit.
 
+## 2b. İş kaybolmasın: commit + push + main'e gönder
+- Hiçbir iş yalnız yerelde ya da yalnız çalışma kopyasında kalmaz: her anlamlı adımda
+  commit + push (dalda). Limit, uyku ya da çökme her an kesebilir.
+- Paket CI'da yeşil olunca BEKLETMEDEN main'e birleştir ve push et; "turun sonunda toplu
+  birleştiririm" yok. Uzun paket ara noktalarda da (bağımsız, yeşil, kendi başına çalışan
+  kısım bitince) main'e girer — böylece başka oturum/hesap/bulut oturumu güncel main'den
+  başlar, aynı işi baştan yapmaz, çakışma küçük kalır.
+- Yürütücünün yaptığı belge/kuyruk değişikliği de commit'lenir ve push edilir; tur sonunda
+  `git status` temiz ve `git log origin/main..main` BOŞ olmalı (özetin son satırı bunu söyler).
+- İstisna: yayın (APK/deploy) koşusu sürerken main'e push etme — bekle, sonra gönder.
+
 ## 3. İşçi (alt ajan) kuralları
 - Önce `CLAUDE.md`, sonra yalnız kendi paketinin plan bölümü. Protokol: önce kanıtı üret
   (test/ölçüm kırmızı) → düzelt → aynı kanıt yeşil. Kanıt üretilemiyorsa düzeltme YAZMA,
