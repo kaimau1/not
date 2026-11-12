@@ -1053,12 +1053,12 @@ tur `telefon-*.png`.
   `telefon-uzun 393×851`. Klavyeli hâl: `TOUR_KEYBOARD=300` → `viewInsets.bottom`. Çıkan
   görüntülerde taşma/sıkışma madde olarak listelenir.
   **Yapıldı (2026-11-11, P07):** 5 boyut (+`telefon-yatay 851×393`), `TOUR_KEYBOARD`, `TOUR_SIZES` süzgeci. ana/n1/n4/e-pdf-sabit 5 boyutta + telefon-yatay klavyeli (220): taşma istisnası YOK. Göze çarpan: telefon-yatay+klavye'de yazı alanı ~70 dp (üst çubuk + hızlı satır) → F67.4 kapsamı; telefon-yatay ana ekranda takvim + zamanı gelen şeridi ~130 dp yiyor.
-- [ ] **F67.3 Bölünmüş görünümde liste bölmesi (B15).** Liste bölmesi < 420 dp iken:
+- [x] **F67.3 Bölünmüş görünümde liste bölmesi (B15).** *(2026-11-12, P18: `kNarrowListPane` < 420 dp → takvim/zamanı gelen şeridi Offstage, arama hapında AI+süz ⋮ levhasına, mikrofon gizli. Yapılmadı: "+" liste başlığına taşınmadı (sabah bakılacak). Tablette doğrulanmadı.)* Liste bölmesi < 420 dp iken:
   takvim şeridi ve zamanı gelen şeridi çizilmez (tam ekran listede durur), arama hapı
   kısalır (AI hapı ve süz ⋮'e iner), "+"/mikrofon yüzen düğmeleri yerine liste başlığında
   tek "+" (rayın çekmece olduğu durumda). Ağaç şekli sabit kalsın (`Offstage`/koşullu
   sliver, State korunur — HAFIZA "Tek liste örneği").
-- [ ] **F67.4 Yatay + klavye yükseklik bütçesi.** 1024×640 dp, klavye 300 dp: görünür
+- [x] **F67.4 Yatay + klavye yükseklik bütçesi.** *(2026-11-12, P18: `ShortKeyboardBarHide` alt çubuğu kararlı klavye boşluğuyla tek adımda gizler (Offstage), sabit medya en küçük, pencere < 480 dp üst çubuk 40 dp; tur matepad-yatay+klavye300 yazı alanı 73 → 197 dp. ≥ 873 dp pencerede bağlanmıyor (S17 bütçesi). Tablette doğrulanmadı.)* 1024×640 dp, klavye 300 dp: görünür
   içerik ≥ 200 dp olmalı. Bugünkü kesintiler: üst çubuk 48 + hızlı satır + alt çubuk 50 +
   (sabit ek çubuğu 40). `WindowHeight.short` (klavye sonrası kalan < 480) iken: alt çubuk
   gizli (hızlı satır yeter), üst çubuk 40 dp, sabit bölme en küçük boyda. Boy değişimi TEK
@@ -1193,7 +1193,7 @@ Numaralar ait oldukları fazı gösterir; o fazın "Önce oku" listesi geçerlid
   Kabul: tur görüntülerinde taşma/üst üste binme yok; `wide_screen_*` testleri
   telefon-yatay için "bölünme yok" der; cihazda döndür → not aç → yaz → kapat.
   **Kısmen (2026-11-11, P07):** kök düzeldi — telefon cihazı yatayda bölünmüyor (`splitActiveFor` + not açılış hareketi aynı kural), kalem tepsisi yatay telefonda sütun değil alt dok; ray zaten yükseklik < 500'de yoktu. Döndürmede aynı örnek kaldığı için sütun değişince kaydırma ORANI yeniden uygulanıyor (`wide_screen_doors` F18.11 testi bu yüzden kırmızıya düştü → yeşil). YAPILMADI (sabah bakılacak): kısa yükseklikte üst çubuk 40 dp, yazarken alt çubuk gizleme, sabit ek yanda, takvim/zamanı gelen şeridi kapalı (F67.4 ve K-O10 ile birlikte; kural 6/7 gereği cihaz A/B ister). Cihazda döndür→aç→yaz→kapat doğrulanmadı.
-- [ ] **F67.9 [Opus] "Not menüsü sağa alınabilsin (tablette)".** Anlam belirsiz. Gözetimsiz
+- [x] **F67.9 [Opus] "Not menüsü sağa alınabilsin (tablette)".** *(2026-11-12, P18, en olası anlam — sabah bakılacak: `listPaneRightProvider` (`list_pane_right`), SplitShell Row `textDirection` ters, ayraçta uzun bas/sağ tık menüsü + Ayarlar → Görünüm; ray yerinde kaldı. Tablette doğrulanmadı.)* Anlam belirsiz. Gözetimsiz
   oturumda yalnız EN OLASI anlam yapılır: **not listesi bölmesi sağa alınabilsin**
   (`SplitShell`: cihaz tercihi `list_pane_side`; ayraçta uzun bas → "Listeyi sağa / sola
   al" + Ayarlar → Görünüm; ray da aynı tarafa; menteşe ve "çekerek tam ekran" yönü
