@@ -3,6 +3,10 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 12 November 2026 {#2026-11-12}
+- **Calmer home screen:** the home button and microphone no longer stand out; "+" is the only filled button.
+- **Day abbreviations in the calendar strip:** days show short names instead of a single letter.
+- **Completed items in one line on cards:** checked items collapse to "✓ 3 completed"; to see them as before, Settings → Appearance → Shown on cards → "Completed items".
+- **One button on an empty home screen:** with no notes yet, "Write your first note".
 - **Calmer screens:** headings and labels are slightly lighter, and very small text was raised to a readable size.
 - **Colours carry meaning:** the theme's main colour is for actions, the warm colour for time and reminders, the third colour only for AI (✨). The "Due" strip is now warm.
 - **Plain icon circles:** the Copy/PDF/Image circles in Share and the icon tiles in Settings are neutral.

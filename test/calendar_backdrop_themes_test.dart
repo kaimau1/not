@@ -133,6 +133,12 @@ void main() {
         ),
       );
       expect(find.text('Diş hekimi'), findsNothing);
+      // F74.2 (K-D4): dar düzende gün adı üç harf ("Pzt"), tek harf değil.
+      // 6–15 Kasım'da tek Pazartesi 9 Kasım.
+      expect(
+        find.text(DateFormat.E().format(DateTime(2026, 11, 9))),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
     });
   });

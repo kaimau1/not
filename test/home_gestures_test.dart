@@ -492,11 +492,14 @@ void main() {
       var added = 0;
       await tester.pumpWidget(empty(c, add: () => added++));
       expect(find.text('Henüz not yok'), findsOneWidget);
+      // F74.6: hiç not yokken tek düğme "İlk notunu yaz" (Metin notu işi).
+      await tester.tap(find.text('İlk notunu yaz'));
+      expect(added, 1);
       c.read(selectedFolderProvider.notifier).set('k1');
       await tester.pump();
       expect(find.text('Bu klasör boş'), findsOneWidget);
       await tester.tap(find.text('Not ekle'));
-      expect(added, 1);
+      expect(added, 2);
     });
   });
 }

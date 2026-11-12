@@ -5711,6 +5711,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Shows how many to-do items are checked, with a bar and a count.';
 
   @override
+  String get cardShowChecked => 'Completed items';
+
+  @override
+  String get cardShowCheckedInfo =>
+      'When off, checked items collapse into one line on the card: ✓ 3 done.';
+
+  @override
+  String cardItemsDone(int count) {
+    return '✓ $count done';
+  }
+
+  @override
+  String cardItemsAllDone(int count) {
+    return '✓ All done ($count)';
+  }
+
+  @override
+  String get emptyNotesFirstAction => 'Write your first note';
+
+  @override
   String get cardShowMoreCount => '“+N more items” line';
 
   @override

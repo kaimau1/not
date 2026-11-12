@@ -9,6 +9,7 @@ import 'package:notlar/features/notes/presentation/notes_providers.dart'
 //   TOUR_ONLY=ana,n1  süz · TOUR_DARK=1  koyu · TOUR_WEB=1  dar web
 //   TOUR_COLUMNS=3  ana ekran sütun sayısı
 //   TOUR_SIZES=telefon-yatay,matepad-yatay  yalnız bu boyutlar
+//   TOUR_EMPTY=1  hiç notu olmayan ana ekran (yalnız `ana-bos` sahnesi)
 //   TOUR_KEYBOARD=300  klavyeli hâl (viewInsets.bottom dp; ada `-klavye`)
 //   TOUR_COMPARE=<eski klasör>  önce/sonra: her PNG için değişen piksel yüzdesi
 //   basılır (`TOUR_FARK ad %x`), özet `<çıktı>/_fark.txt`.
@@ -396,6 +397,9 @@ Future<void> _settle(WidgetTester tester) async {
   }
 }
 
+/// TOUR_EMPTY=1: not akışı boş (bkz. `ana-bos`).
+final _tourEmpty = Platform.environment['TOUR_EMPTY'] == '1';
+
 Future<void> _pumpApp(
   WidgetTester tester, {
   required _Size size,
@@ -480,7 +484,9 @@ Future<void> _pumpApp(
       attachmentRepositoryProvider.overrideWithValue(null),
       foldersRepositoryProvider.overrideWithValue(null),
       notesStreamProvider.overrideWith(
-        (ref) => Stream.value([..._notes, ..._attachmentNotes]),
+        (ref) => Stream.value(
+          _tourEmpty ? const <Note>[] : [..._notes, ..._attachmentNotes],
+        ),
       ),
       trashStreamProvider.overrideWith((ref) => Stream.value(_trash)),
       inboxNotesProvider.overrideWith((ref) => Stream.value(_inbox)),
@@ -568,6 +574,9 @@ void main() {
   final dark = Platform.environment['TOUR_DARK'] == '1';
   // Sahne: (kimlik, adres, dokunulacak şey — null = yalnız ekran).
   final scenes = <(String, String, Finder Function()?)>[
+    // TOUR_EMPTY=1: yalnız boş ana ekran (F74.6).
+    if (_tourEmpty) ('ana-bos', '/', null),
+    if (!_tourEmpty) ...[
     ('ana', '/', null),
     ('n1', '/note/n1', null),
     ('n2', '/note/n2', null),
@@ -606,6 +615,7 @@ void main() {
       for (final view in const ['sabit', 'yuzen', 'ek'])
         ('e-$kind-$view', '/note/e-$kind-$view', null),
     ('e-pdf-balonlu', '/note/e-pdf-balonlu', null),
+    ],
   ];
   // TOUR_SIZES=telefon-yatay,matepad-yatay: yalnız bu boyutlar.
   final sizesWanted = (Platform.environment['TOUR_SIZES'] ?? '')

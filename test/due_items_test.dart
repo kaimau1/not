@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/a11y/min_tap_target.dart';
 import 'package:notlar/features/calendar/data/calendar_repository.dart';
 import 'package:notlar/features/calendar/domain/task_item.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
@@ -125,6 +126,15 @@ void main() {
     expect(find.byKey(const ValueKey('due-banner')), findsOneWidget);
     expect(find.textContaining('Süt al'), findsOneWidget);
     expect(find.text('+1'), findsOneWidget);
+    // F74.3: ✕ görünen simge 18, dokunma hedefi 48; şerit tek satır 44 dp.
+    expect(
+      find.ancestor(
+        of: find.byKey(const ValueKey('due-banner-close')),
+        matching: find.byType(MinTapTarget),
+      ),
+      findsOneWidget,
+    );
+    expect(tester.getSize(find.byKey(const ValueKey('due-banner'))).height, 44);
     await tester.tap(find.byKey(const ValueKey('due-banner-close')));
     await tester.pump();
     expect(find.byKey(const ValueKey('due-banner')), findsNothing);

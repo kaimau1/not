@@ -685,6 +685,13 @@ final cardShowProgressProvider = boolPref(
   defaultValue: false,
 );
 
+/// İşaretli maddeler kartta tek tek (F74.4, K-D5). Varsayılan KAPALI: işaretsiz
+/// madde varken işaretliler tek satır "✓ N tamamlandı" (bkz. `cardItemSlice`).
+final cardShowCheckedProvider = boolPref(
+  'card_show_checked',
+  defaultValue: false,
+);
+
 /// "+N öğe daha" satırı.
 final cardShowMoreCountProvider = boolPref(
   'card_show_more_count',
@@ -746,6 +753,7 @@ final cardShowPaperProvider = boolPref('card_show_paper', defaultValue: true);
 /// kartları yeniden kurmaz).
 typedef CardDisplay = ({
   bool progress,
+  bool checked,
   bool moreCount,
   bool statusIcons,
   bool tag,
@@ -759,6 +767,7 @@ typedef CardDisplay = ({
 final cardDisplayProvider = Provider<CardDisplay>(
   (ref) => (
     progress: ref.watch(cardShowProgressProvider),
+    checked: ref.watch(cardShowCheckedProvider),
     moreCount: ref.watch(cardShowMoreCountProvider),
     statusIcons: ref.watch(cardShowStatusIconsProvider),
     tag: ref.watch(cardShowTagProvider),

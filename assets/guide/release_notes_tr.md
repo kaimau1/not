@@ -3,6 +3,10 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 12 Kasım 2026 {#2026-11-12}
+- **Ana ekran daha sakin:** ev düğmesi ve mikrofon artık göz almıyor; tek dolu düğme "+".
+- **Takvim şeridinde gün kısaltmaları:** günler tek harf yerine kısaltmayla yazıyor (Pzt, Sal, Çar…).
+- **Kartta tamamlananlar tek satırda:** işaretli maddeler kartta "✓ 3 tamamlandı" diye tek satıra iner; eski görünüm için Ayarlar → Görünüm → Kartta görünenler → "Tamamlanan maddeler".
+- **Boş ana ekranda tek düğme:** hiç not yokken "İlk notunu yaz".
 - **Ekran daha sakin:** başlık ve etiketler biraz daha ince, çok küçük yazılar okunur boya getirildi.
 - **Renkler anlam taşıyor:** temanın ana rengi eylem, sıcak renk zaman ve hatırlatma, üçüncü renk yalnız yapay zekâ (✨). "Zamanı gelenler" şeridi sıcak renkte.
 - **Sade simge daireleri:** Paylaş ekranındaki Kopyala/PDF/Görsel daireleri ve Ayarlar'daki simge kutuları nötr renkte.

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../core/a11y/min_tap_target.dart';
 import '../../../core/l10n_ext.dart';
 import '../data/due_state.dart';
 import '../data/reminder_service.dart' show reminderTimePrefix;
@@ -64,6 +65,7 @@ class _DueBannerState extends ConsumerState<DueBanner> {
     if (items.isEmpty) return const SizedBox.shrink();
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    final text = AppText.of(Theme.of(context));
     final first = items.first;
     final title = first.title.isEmpty ? l10n.remindersUntitled : first.title;
     final when = reminderTimePrefix(first.at, l10n: l10n);
@@ -72,9 +74,9 @@ class _DueBannerState extends ConsumerState<DueBanner> {
       child: Material(
         key: const ValueKey('due-banner'),
         color: scheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.m),
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           onTap: () => _open(first),
           child: SizedBox(
             height: 44,
@@ -85,7 +87,7 @@ class _DueBannerState extends ConsumerState<DueBanner> {
                   first.taskId.isEmpty
                       ? Icons.alarm_rounded
                       : Icons.task_alt_rounded,
-                  size: 20,
+                  size: AppIconSize.m,
                   color: scheme.onSecondaryContainer,
                 ),
                 const SizedBox(width: 10),
@@ -93,17 +95,24 @@ class _DueBannerState extends ConsumerState<DueBanner> {
                   child: Text.rich(
                     TextSpan(
                       children: [
+                        // F74.3: başlık `label`, tarih `meta` — ikisi de
+                        // şeridin tonunda.
                         TextSpan(
                           text: title,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          style: text.label.copyWith(
+                            color: scheme.onSecondaryContainer,
+                          ),
                         ),
-                        TextSpan(text: '  ·  $when'),
+                        TextSpan(
+                          text: '  ·  $when',
+                          style: text.meta.copyWith(
+                            color: scheme.onSecondaryContainer,
+                          ),
+                        ),
                       ],
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium
-                        ?.copyWith(color: scheme.onSecondaryContainer),
                   ),
                 ),
                 if (items.length > 1)
@@ -115,28 +124,31 @@ class _DueBannerState extends ConsumerState<DueBanner> {
                     ),
                     decoration: BoxDecoration(
                       color: scheme.onSecondaryContainer.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
                     child: Text(
                       '+${items.length - 1}',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      style: text.badge.copyWith(
                         color: scheme.onSecondaryContainer,
-                        fontWeight: AppWeight.strong,
                       ),
                     ),
                   ),
-                IconButton(
-                  key: const ValueKey('due-banner-close'),
-                  tooltip: l10n.close,
-                  visualDensity: VisualDensity.compact,
-                  icon: Icon(
-                    Icons.close_rounded,
-                    size: 18,
-                    color: scheme.onSecondaryContainer,
+                // Görünen simge 18, dokunma hedefi 48 (F74.3) — şerit 44 dp
+                // kalır (yerleşim değişmez).
+                MinTapTarget(
+                  child: IconButton(
+                    key: const ValueKey('due-banner-close'),
+                    tooltip: l10n.close,
+                    visualDensity: VisualDensity.compact,
+                    icon: Icon(
+                      Icons.close_rounded,
+                      size: AppIconSize.s,
+                      color: scheme.onSecondaryContainer,
+                    ),
+                    onPressed: () => ref
+                        .read(dueDismissedProvider.notifier)
+                        .dismiss([for (final i in items) i.key]),
                   ),
-                  onPressed: () => ref
-                      .read(dueDismissedProvider.notifier)
-                      .dismiss([for (final i in items) i.key]),
                 ),
               ],
             ),

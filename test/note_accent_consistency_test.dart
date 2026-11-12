@@ -45,7 +45,8 @@ Future<void> _pumpEditor(WidgetTester tester, Note note) async {
   tester.view.physicalSize = const Size(412, 915);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  SharedPreferences.setMockInitialValues({});
+  // Kartta işaretli kutu görünsün (F74.4: varsayılan tek satır özet).
+  SharedPreferences.setMockInitialValues({'card_show_checked': true});
   final prefs = await SharedPreferences.getInstance();
   final container = ProviderContainer(
     retry: (_, _) => null,
@@ -77,7 +78,8 @@ Future<void> _pumpEditor(WidgetTester tester, Note note) async {
 }
 
 Future<void> _pumpCard(WidgetTester tester, Note note) async {
-  SharedPreferences.setMockInitialValues({});
+  // Kartta işaretli kutu görünsün (F74.4: varsayılan tek satır özet).
+  SharedPreferences.setMockInitialValues({'card_show_checked': true});
   final prefs = await SharedPreferences.getInstance();
   await tester.pumpWidget(
     ProviderScope(

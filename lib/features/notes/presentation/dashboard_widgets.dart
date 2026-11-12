@@ -1548,14 +1548,16 @@ class _DashVoiceButton extends StatelessWidget {
       child: SizedBox(
         width: 48,
         height: 48,
+        // NÖTR (F74.5): "+" ekranın tek dolu birincil yüzeyi; yanındaki
+        // mikrofon onunla yarışmasın. Yer, boy ve davranış aynı.
         child: Material(
-          color: scheme.primaryContainer,
+          color: scheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(14),
           child: InkWell(
             borderRadius: BorderRadius.circular(14),
             onTap: onTap,
             onLongPress: onLongPress,
-            child: Icon(icon, size: 24, color: scheme.onPrimaryContainer),
+            child: Icon(icon, size: 24, color: scheme.onSurface),
           ),
         ),
       ),

@@ -47,6 +47,7 @@ const kSyncedPrefKeys = <String>[
   'card_rich_preview',
   'card_hide_sensitive',
   'card_show_progress',
+  'card_show_checked',
   'card_show_more_count',
   'card_show_status_icons',
   'card_show_tag',
