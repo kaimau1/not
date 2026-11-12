@@ -898,6 +898,8 @@
   "continueWithoutAccount": "Hesapsız devam et",
   "localAccountInfo": "Notların yalnız bu cihazda kalır: başka cihazdan açılamaz, uygulamayı silersen geri getirilemez. Dahili yapay zekâ, kişiler ve paylaşım Google hesabı ister; yapay zekâyı kendi API anahtarınla kullanabilirsin. İstediğin an Google hesabı bağlayabilirsin — notların olduğu gibi kalır.",
   "localAccountBadge": "Yerel hesap",
+  "profileGuestName": "Misafir",
+  "profileGuestSignIn": "Giriş yap",
   "linkGoogleAccount": "Google hesabı bağla",
   "accountLinked": "Google hesabın bağlandı. Notların artık yedekleniyor.",
   "scanReviewPage": "Sayfa {current} / {total}",

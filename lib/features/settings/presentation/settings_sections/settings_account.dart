@@ -88,12 +88,16 @@ class _ProfileCard extends ConsumerWidget {
     final user = ref.watch(authStateProvider).value;
     // Yerel (anonim) hesabın adı da e-postası da yok; kart adsız kalmasın —
     // kullanıcı hangi hesap türünde olduğunu buradan görür.
-    final name = (user?.displayName?.trim().isNotEmpty ?? false)
+    final anonymous = ref.watch(isAnonymousProvider);
+    // Misafir (F79.2, D18): "Misafir · Yalnız bu cihazda" + "Giriş yap".
+    // Eskiden ad satırı da durum satırı da "Yerel hesap" diyordu.
+    final name = anonymous
+        ? l10n.profileGuestName
+        : (user?.displayName?.trim().isNotEmpty ?? false)
         ? user!.displayName!
         : (user?.email?.trim().isNotEmpty ?? false)
         ? user!.email!
-        : (ref.watch(isAnonymousProvider) ? l10n.localAccountBadge : '');
-    final anonymous = ref.watch(isAnonymousProvider);
+        : '';
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -130,7 +134,7 @@ class _ProfileCard extends ConsumerWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    if ((user?.email ?? '').isNotEmpty) ...[
+                    if (!anonymous && (user?.email ?? '').isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
                         user!.email!,
@@ -157,9 +161,7 @@ class _ProfileCard extends ConsumerWidget {
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          ref.watch(isAnonymousProvider)
-                              ? l10n.localAccountBadge
-                              : l10n.synced,
+                          anonymous ? l10n.localOnlyBadge : l10n.synced,
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
@@ -179,7 +181,7 @@ class _ProfileCard extends ConsumerWidget {
             FilledButton.icon(
               key: const ValueKey('profile-google-sign-in'),
               icon: const Icon(Icons.login_rounded),
-              label: Text(l10n.signInWithGoogle),
+              label: Text(l10n.profileGuestSignIn),
               onPressed: () => linkGuestAccount(context, ref),
             ),
           ],

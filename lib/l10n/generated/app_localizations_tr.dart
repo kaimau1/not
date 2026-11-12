@@ -1957,6 +1957,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get localAccountBadge => 'Yerel hesap';
 
   @override
+  String get profileGuestName => 'Misafir';
+
+  @override
+  String get profileGuestSignIn => 'Giriş yap';
+
+  @override
   String get linkGoogleAccount => 'Google hesabı bağla';
 
   @override

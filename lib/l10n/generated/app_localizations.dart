@@ -3656,6 +3656,18 @@ abstract class AppLocalizations {
   /// **'Yerel hesap'**
   String get localAccountBadge;
 
+  /// No description provided for @profileGuestName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Misafir'**
+  String get profileGuestName;
+
+  /// No description provided for @profileGuestSignIn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Giriş yap'**
+  String get profileGuestSignIn;
+
   /// No description provided for @linkGoogleAccount.
   ///
   /// In tr, this message translates to:

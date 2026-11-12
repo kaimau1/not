@@ -1963,6 +1963,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get localAccountBadge => 'Local account';
 
   @override
+  String get profileGuestName => 'Guest';
+
+  @override
+  String get profileGuestSignIn => 'Sign in';
+
+  @override
   String get linkGoogleAccount => 'Link a Google account';
 
   @override
