@@ -72,7 +72,7 @@ dosya geçerli).
 | 72.6 | Belirteç göçü (mekanik) | P41 | Sonnet | Bekliyor |
 | 80 | Koyu tema, küçük ekran, web cilası, önce/sonra dosyası | P42 | Sonnet + Opus | Bekliyor |
 
-**Sıra (Ek D'de gerekçesi):** P19 (sürüyor) → P18 → **P33 → P34 → P35 → P36 → P37 → P38 →
+**Sıra (Ek D'de gerekçesi):** P19 + P18 (ikisi de dalda sürüyor) → **P33 → P34 → P35 → P36 → P37 → P38 →
 P39 → P40 → P41 → P42** → P20 → P21 → P22.
 
 ---
@@ -638,9 +638,11 @@ dosyaları kullanıcı isteğiyle dolu — §4 Y11–Y13).
      < 0,04 olanlar dökülür; düzeltme palet değerinde, `theme_contrast_test`'e "kart
      zeminden en az 0,04 L açık" satırı. Ölçmeden değer değiştirme.
   Döküm `docs/deneyim/koyu.md`.
-- [ ] **F80.2 Küçük ekran + büyük yazı (OTURTMA F66.4 — P18'den buraya taşındı).**
-  `TOUR_SIZES=telefon-kucuk,telefon-uzun` + yazı ölçeği 1,3 (tura `TOUR_FONT=1.3`): taşan/
-  kesilen her yer madde olur ve düzeltilir. OTURTMA'da F66.4 `[x]` + "→ DENEYIM F80.2".
+- [ ] **F80.2 Küçük ekran + büyük yazı.** OTURTMA F66.4'ü P18 yaptı (2026-11-12:
+  telefon-kucuk/uzun turu taşmasız) — o iş TEKRARLANMAZ. Burada yalnız: bu planın krom
+  değişikliklerinden SONRA aynı turun yeniden koşulması (`TOUR_SIZES=telefon-kucuk,
+  telefon-uzun` + `TOUR_COMPARE`) ve yeni olan büyük yazı turu (tura `TOUR_FONT=1.3`):
+  taşan/kesilen her yer madde olur ve düzeltilir.
 - [ ] **F80.3 Web / masaüstü (OTURTMA F67.7 — P18'den buraya taşındı).** (a) D22: bölüm
   çizgisi ızgara genişliğinde bitsin ya da ≥ 840 dp'de çizilmesin (turda hangisi temizse).
   (b) Fareyle üstüne gelme: kart, karo, satır, çip — yalnız `touchFirst == false`. (c) Odak
@@ -708,7 +710,7 @@ dosyaları kullanıcı isteğiyle dolu — §4 Y11–Y13).
 | P39 | Hız hissi | fable | F78.1–F78.5 | cihaz | evet |
 | P40 | İkincil ekranlar + boş/çevrimdışı hâller | opus | F79.1–F79.6 (F66.6 dahil) | | evet |
 | P41 | Belirteç göçü (mekanik; editör hariç) | sonnet | F72.6 | | |
-| P42 | Koyu tema, küçük ekran, web cilası | sonnet + opus | F80.1–F80.5 (F66.4, F67.7 dahil) | | evet |
+| P42 | Koyu tema, küçük ekran, web cilası | sonnet + opus | F80.1–F80.5 (F67.7 dahil) | | evet |
 
 ## Ek C — Tuzaklar (HAFIZA'dan, bu planın dokunduğu yerler)
 
@@ -755,7 +757,7 @@ kurallar onu keser.
 
 | OTURTMA maddesi | Eski paket | Yeni yeri | Neden |
 |---|---|---|---|
-| F66.4 küçük telefon turu | P18 | F80.2 (P42) | krom değişiklikleri bittikten sonra bir kez taransın |
+| F66.4 küçük telefon turu | P18 | P18'de YAPILDI (dalda, 2026-11-12) | F80.2 yalnız krom sonrası yeniden tur + büyük yazı |
 | F66.6 boş/hata/çevrimdışı hâller | P18 | F79.6 (P40) | `EmptyState` yeni ölçüsüyle bir kez yapılsın |
 | F67.7 klavye ve fare | P18 | F80.3 (P42) | üstüne gelme/odak halkası aynı tur |
 | F60.7 beyaz açılış (K-O14) | P22 | F78.1 (P39) | karar verildi (K-D8) |
@@ -763,14 +765,18 @@ kurallar onu keser.
 | F66.1 ana ekran tepesi (K-O10) | P22 | kapanır: "bugünkü" (K-D4) + F74.2 | şerit kullanıcı isteği |
 | F66.3 kartta işaretliler (K-O11) | P22 | F74.4 (P35) | karar verildi (K-D5) |
 
-P18'de KALAN: F67.3, F67.4, F67.9. P22'de bu plandan dolayı ATLANACAK: yukarıdaki yedi
-madde + K-O5, K-O10, K-O11, K-O14. **K-O6 / F65.1 P22'de de yapılmaz** (kullanıcıda açık).
+**P18'in dalı (`oto/P18-telefon-tablet`, 2026-11-12 01:17) F67.3, F67.4, F67.9 ve F66.4'ü
+yapmış durumda; sırada bekleyen F66.6 ve F67.7'yi YAPMADAN doğrulanıp birleştirilir.**
+P18'in getirdikleri bu planın sınırıdır: dar liste bölmesinde (< 420 dp) arama hapında AI
+ve süz gizli (`kNarrowListPane`), kısa pencerede klavyeyle alt çubuk gizli
+(`ShortKeyboardBarHide`), pencere < 480 dp iken üst çubuk 40 dp — P35/P36 bunlara dokunmaz.
+P22'de bu plandan dolayı ATLANACAK: yukarıdaki maddeler + K-O5, K-O10, K-O11, K-O14. **K-O6 / F65.1 P22'de de yapılmaz** (kullanıcıda açık).
 OTURTMA F66.5 (tek elle erişim raporu) P22'de yalnız RAPOR olarak kalır; §4 Y7–Y8 gereği
 "+" ve geri oku için değişiklik önermez.
 
 ### D.3 Sıra ve gerekçe
 
-1. **P19** (sürüyor) → **P18**: önce yerleşimi değiştiren işler bitsin (pano bölünmesi,
+1. **P19** ve **P18** (ikisi de dalda, 2026-11-12): önce yerleşimi değiştiren işler bitsin (pano bölünmesi,
    liste bölmesi, çubuk yükseklikleri). Cila onların ÜSTÜNE gelir; tersi olursa cila iki
    kez yapılır.
 2. **P33** hemen ardından: sonraki her paket onun bileşenlerini kullanır. P33 görünümü

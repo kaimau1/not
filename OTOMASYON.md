@@ -145,7 +145,7 @@ Sıra önceliktir: önce kullanıcının bildirdiği hatalar, sonra kalem/perfor
 | P30 | Çöp kutusu: kalan simge hatası + kara delik efekti | opus | F60.S12 | A/B | evet | bitti (2026-11-12): kök — önizlemede hücre yeniden kurulunca onDragEnd gelmiyordu → onDragCompleted/onDraggableCanceled; beklemesiz bırak, yakınlıkla küçül/kızar, 350 ms kara delik; test 4/4 · cihaz A/B 2026-11-12 (taban fa47d832, aday P23–P32, 2. koşular): klavye aç UI −%22 LAYOUT −%39, kapa −%19/−%37, yazma +%10/+%9, liste +%9/+%11 — regresyon yok. Sürükleme efektinin kendisi cihazda gözle denenmedi |
 | P31 | Kaydırarak klasör/takvim geçişi ayarı | sonnet | F60.S13 | | evet | bitti (2026-11-12): takvim kaydırma anahtarı (Ayarlar → Notlar); ana ekran klasör kaydırması zaten "Ana ekranda yana kaydırınca → Kapalı" ile kapanıyor, yeni anahtar eklenmedi |
 | P32 | Panoda işaretli madde işareti kalkmasın | sonnet | F60.S14 | | evet | bitti (2026-11-12): ana ekran kartında işaretli maddenin kutusuna dokunmak işareti kaldırmıyor, notu açıyor (`note_card.dart` toggleCardItem); işaret kaldırma editörde (sabah bakılacak: kartta geri alma istenirse uzun bas). Test `card_checked_item_test` |
-| P18 | Telefon/tablet (kalan) | opus | F67.3, F67.4, F67.9 (F66.4 → P42, F66.6 → P40, F67.7 → P42: DENEYIM Ek D.2) | A/B | evet | bekliyor |
+| P18 | Telefon/tablet (kalan) | opus | F67.3, F67.4, F67.9 (+ F66.4 dalda yapıldı). F66.6 → P40, F67.7 → P42 (DENEYIM Ek D.2): bu pakette YAPILMAZ — dal `oto/P18-telefon-tablet` bu hâliyle doğrulanıp birleştirilir | A/B | evet | bekliyor |
 | P19 | Liste yükü | fable | F68.1, F68.2 | A/B | | bekliyor |
 | P33 | Tasarım zemini: belirteç, mandal testi, ortak bileşen (görünüm değişmez) | opus | DENEYIM F72.1–F72.5 | | | bekliyor |
 | P34 | Renk rolleri + sakin tipografi | opus | DENEYIM F73.1–F73.4 | | evet | bekliyor |
@@ -156,7 +156,7 @@ Sıra önceliktir: önce kullanıcının bildirdiği hatalar, sonra kalem/perfor
 | P39 | Hız hissi (açılış, yeni not, yükleme hâlleri) | fable | DENEYIM F78.1–F78.5 | cihaz | evet | bekliyor |
 | P40 | İkincil ekranlar + boş/çevrimdışı hâller | opus | DENEYIM F79.1–F79.6 (OTURTMA F66.6 dahil) | | evet | bekliyor |
 | P41 | Belirteç göçü (mekanik; editör klasörü hariç; açık dal yokken) | sonnet | DENEYIM F72.6 | | | bekliyor |
-| P42 | Koyu tema, küçük ekran, web cilası, önce/sonra dosyası | sonnet + opus | DENEYIM F80.1–F80.5 (OTURTMA F66.4, F67.7 dahil) | | evet | bekliyor |
+| P42 | Koyu tema, küçük ekran, web cilası, önce/sonra dosyası | sonnet + opus | DENEYIM F80.1–F80.5 (OTURTMA F67.7 dahil) | | evet | bekliyor |
 | P20 | Editör çekirdeği (başlama şartı tutuyorsa) | fable | Faz 64 | A/B | evet | bekliyor |
 | P21 | Kapanış: konsol listesi, plan/HAFIZA toparlama | sonnet | F69.4, F69.5 | | | bekliyor |
 | P22 | SON PAKET: açıkta kalan her maddeyi değerlendir ve uygun biçimde yap | opus | P01–P21'de adı geçmeyen açık `[ ]` maddeler (F58.1, F58.4, F60.5, F60.7, F61.7, F61.8, F62.4, F62.6, F63.6, F63.7, F65.1–3, F65.6, F66.1–3, F66.5, F67.5, F67.6, F67.8, F68.3–5, F69.1–3) + F60.S2 + "cihazda doğrulanmadı" / "tablette doğrulanmadı" işaretli maddeler + açık K-O kararları | gerekirse | gerekirse | bekliyor — protokol aşağıda |
