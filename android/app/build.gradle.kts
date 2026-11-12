@@ -227,6 +227,8 @@ dependencies {
     // beta01 AGP 9.1+ ve compileSdk 37 istiyor (AAR metadata'sı).
     implementation("androidx.appfunctions:appfunctions:1.0.0-beta01")
     ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-beta01")
+    // Açılış ekranı ilk Flutter karesine dek kalsın (DENEYIM F78.1, K-D8).
+    implementation("androidx.core:core-splashscreen:1.0.1")
 }
 
 fun firebaseSdkVersion(): String = Properties().apply {
